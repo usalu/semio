@@ -21,6 +21,7 @@ use semio_framework_value::native_decoding::NativeDecodeControl;
 #[path="🛫️encoding/🦀️.rs"]
 mod controlled_encoding;
 pub use controlled_encoding::ControlledPackWriter;
+pub use controlled_encoding::retained as retained_encoding;
 
 #[path = "🧮️controlled-allocation/🦀️.rs"]
 mod controlled_allocation;

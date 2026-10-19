@@ -20,6 +20,11 @@
 
 import { ACTIVITIES, TICKS_PER_SECOND, type Activity, type Actor, type Cast, type Menagerie, type Needs, type PetMode, type Rapport, type Slug, type Species, type Temperament, type Ticks } from "../../🧬️schema/🟦️.ts";
 import { CAST_STREAM, randomWords, weightedIndex } from "../🎲️randomness/🟦️.ts";
+
+/** 🎬️ The explicitly authored cast of a scene; unknown contexts show nobody. */
+export function petCast(menagerie: Menagerie, scene: string): Cast | null {
+  return menagerie.casts.find((cast) => cast.scene === scene) ?? null;
+}
 import { clamp } from "../📐️trigonometry/🟦️.ts";
 
 //#region 🔖️Modes

@@ -66,7 +66,9 @@ use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use crate::tool_contract::ArtifactInstanceOperationOwnerHandle;
 
 use crate::tool_run_contract::ToolRunView;
+pub use crate::tool_run_contract::ToolRunPollView;
 use semio_framework_plugin_interaction::UiAssemblyResult;
+
 
 /// 🧾️ Read-only view of an app's document handed to `ArtifactApp::handle_action`/`render`:
 /// the materialized snapshot plus the history metadata (checkpoints/alternatives/undo state)
@@ -79,13 +81,27 @@ pub struct ArtifactView<'a, P> {
     pub children: ChildContentView,
     operation: Option<AppOperationContext>,
     render_operation: Option<AppRenderOperationContext>,
-    parent_document_id: Option<String>,
+    parent_document_id: Option<&'a str>,
     snapshot_read: std::sync::Mutex<Option<store::os_store::snapshot_read::SnapshotRead<P>>>,
     tool_run: Option<ToolRunView>,
     operations: &'a [ArtifactOperationProgress],
     provisional_generation: u64,
     instance: Option<ArtifactInstanceOperationOwnerHandle>,
 }
+
+/// 🧵️ A poll borrows original committed inputs without materializing a renderer history projection.
+ pub struct ArtifactPendingView<'a,P>{pub snapshot:&'a P,pub children:&'a ChildContentView,render_operation:AppRenderOperationContext,parent_document_id:&'a str,snapshot_read:std::sync::Mutex<Option<store::os_store::snapshot_read::SnapshotRead<P>>>,tool_run:Option<crate::ToolRunPollView<'a>>,provisional_generation:u64,instance:&'a ArtifactInstanceOperationOwnerHandle}
+ impl<'a,P> ArtifactPendingView<'a,P>{
+ /// 🌱️ Binds the original store, admitted read and live run for one mounted poll.
+ pub fn new(snapshot:&'a P,children:&'a ChildContentView,render_operation:AppRenderOperationContext,parent_document_id:&'a str,snapshot_read:Option<store::os_store::snapshot_read::SnapshotRead<P>>,tool_run:Option<crate::ToolRunPollView<'a>>,provisional_generation:u64,instance:&'a ArtifactInstanceOperationOwnerHandle)->Self{Self{snapshot,children,render_operation,parent_document_id,snapshot_read:std::sync::Mutex::new(snapshot_read),tool_run,provisional_generation,instance}}
+ pub fn render_operation(&self)->AppRenderOperationContext{self.render_operation}
+ pub fn parent_document_id(&self)->&str{self.parent_document_id}
+ pub fn instance(&self)->&ArtifactInstanceOperationOwnerHandle{self.instance}
+ pub fn provisional_generation(&self)->u64{self.provisional_generation}
+ pub fn tool_run(&self)->Option<crate::ToolRunPollView<'a>>{self.tool_run}
+ pub fn source_version(&self)->semio_framework_value::RequestSourceVersion{semio_framework_value::RequestSourceVersion{base_revision:self.render_operation.base_revision.0,generation:self.render_operation.generation.0,canonical_revision:self.render_operation.canonical_base_revision}}
+ pub fn take_snapshot_read(&self)->Result<store::os_store::snapshot_read::SnapshotRead<P>,Fault>{let mut owner=self.snapshot_read.try_lock().map_err(|_|plugin_sdk_fault("original poll snapshot-read lease is busy"))?;owner.take().ok_or_else(||plugin_sdk_fault("original poll has no admitted snapshot-read lease"))}
+ }
 
 /// 🪪️ Durable authority captured once at public command admission and copied into every
 /// plugin continuation record.
@@ -103,6 +119,12 @@ pub struct AppOperationContext {
     pub authoring_seed: String,
 }
 
+impl semio_framework_value::retirement::RetireOwned for AppOperationContext {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{let Self{parent_document_id,authoring_seed,..}=self;semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(parent_document_id),semio_framework_value::retirement::deferred(authoring_seed)])}
+    fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.parent_document_id),semio_framework_value::retirement::deferred_birth_bytes_for(&self.authoring_seed)])}
+    fn controlled_retirement_supported()->bool{true}
+}
+
 /// 🎨️ Fixed authority for one live renderer-observed document revision. Unlike a command
 /// operation, this carries no user invocation id: it binds an app-owned retained background job to
 /// the exact instance, base revision and store generation observed by the renderer/refresh pass.
@@ -115,6 +137,40 @@ pub struct AppRenderOperationContext {
     pub mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,
 }
 
+/// 🧾️ Original mounted snapshot preparation readiness and its actual retained effects.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct MountedSnapshotReadPreparation {
+    pub ready: bool,
+    pub progress: RetainedCloneProgress,
+}
+
+impl MountedSnapshotReadPreparation {
+    /// 📏️ Intersects mounted policy with the original caller's unspent physical and CPU authority.
+    pub fn grant(policy: RetainedCloneGrant, cx: &semio_framework_job::StepContext<'_>) -> Option<RetainedCloneGrant> {
+        if cx.is_cancelled() || cx.should_yield() { return None; }
+        let mut grant = semio_framework_plugin_ownership::bounded_ownership::original_plugin_turn_grant(policy, cx.retained_grant());
+        grant.maximum_items = grant.maximum_items.min(cx.fuel_remaining().try_into().unwrap_or(usize::MAX));
+        Some(grant)
+    }
+
+    /// 🎟️ Records effects against the original caller before refusing excess authority.
+    pub fn record(self, grant: RetainedCloneGrant, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, Fault> {
+        let remaining = cx.retained_grant();
+        let covered = grant.maximum_items <= remaining.maximum_items && grant.maximum_copy_bytes <= remaining.maximum_copy_bytes && grant.maximum_capacity_bytes <= remaining.maximum_capacity_bytes && grant.maximum_release_bytes <= remaining.maximum_release_bytes && grant.maximum_depth <= remaining.maximum_depth && self.progress.fits(grant) && (grant.maximum_depth != 0 || self.progress == RetainedCloneProgress::default()) && self.progress.copied_items as u64 <= cx.fuel_remaining();
+        let receipt = cx.consume_retained(self.progress).map_err(|error| plugin_sdk_fault(error.into_message()));
+        cx.consume_fuel(self.progress.copied_items as u64);
+        receipt?;
+        if !covered { return Err(plugin_sdk_fault("mounted snapshot preparation exceeds its original granted turn")); }
+        Ok(self.ready)
+    }
+}
+
+impl AppRenderOperationContext {
+    /// 🔐️ Matches complete document authority independently of retained work grants.
+    pub fn matches_revision(&self, app_instance_id: u32, base_revision: semio_framework_job::RevisionId, generation: semio_framework_job::Generation, canonical_base_revision: &[u8; 32]) -> bool {
+        self.app_instance_id == app_instance_id && self.base_revision == base_revision && self.generation == generation && &self.canonical_base_revision == canonical_base_revision
+    }
+}
 /// 🧾️ Projects the exact render-pinned store revision onto the decimal-u64 completion lane.
 pub fn render_operation_publication_revision(operation: AppRenderOperationContext) -> UiPublicationRevision {
     UiPublicationRevision(u64::from_be_bytes(operation.canonical_base_revision[..8].try_into().expect("revision lane width")))
@@ -126,6 +182,15 @@ pub fn artifact_render_publication_revision<P>(doc: &ArtifactView<'_, P>) -> UiA
 }
 
 impl AppOperationContext {
+    /// 🌱️ Mints a replay-stable entity identity from the document and actor-clock command admission.
+    pub fn entity_id(&self, prefix: &str, local_key: &str) -> Result<String, Fault> {
+        if self.authoring_seed.is_empty() {
+            return Err(plugin_sdk_fault("entity creation requires an admitted authoring seed"));
+        }
+        let bytes = format!("{}:{}{}:{}{}:{}", self.parent_document_id.len(), self.parent_document_id, self.authoring_seed.len(), self.authoring_seed, local_key.len(), local_key);
+        Ok(store::content_id(prefix, bytes.as_bytes()))
+    }
+
     /// 🧬️ Fixed-width lowercase encoding for typed persisted continuation fields.
     pub fn canonical_base_revision_hex(&self) -> String {
         const HEX: &[u8; 16] = b"0123456789abcdef";
@@ -137,6 +202,14 @@ impl AppOperationContext {
         result
     }
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🪪️entity-id/🦀️.rs"]
+mod entity_id_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🪪️render-revision/🦀️.rs"]
+mod render_revision_tests;
 
 impl<'a, P> ArtifactView<'a, P> {
     /// 🏗️ A view over a document with no composed children — the overwhelming majority, and the
@@ -183,7 +256,7 @@ impl<'a, P> ArtifactView<'a, P> {
     /// `context_menu`, `interaction_topology`, `export_media`, `media_fingerprint` — goes through
     /// here, so [`ArtifactView::render_operation`] is total on the host and an app that leases a
     /// per-instance session off it (puzzle 3d's `puzzle3d_view_session_key`) never runs cold.
-    pub async fn with_render_context(snapshot: &'a P, history: &'a HistoryView, children: ChildContentView, render_operation: AppRenderOperationContext, parent_document_id: String, snapshot_read: Option<store::os_store::snapshot_read::SnapshotRead<P>>) -> Self {
+    pub async fn with_render_context(snapshot: &'a P, history: &'a HistoryView, children: ChildContentView, render_operation: AppRenderOperationContext, parent_document_id: &'a str, snapshot_read: Option<store::os_store::snapshot_read::SnapshotRead<P>>) -> Self {
         Self {
             snapshot,
             history,
@@ -307,6 +380,8 @@ pub struct PresencePeersView<'a, P> {
 }
 
 impl<'a, P> PresencePeersView<'a, P> {
+    /// 👥️ Borrows the canonical immutable roster without granting mutable peer authority.
+    pub fn new(root: &'a store::os_store::presence::PresencePeersRoot<P>) -> Self { Self { root } }
     /// 👥️ Iterates the already-sorted immutable peer root without projecting a roster.
     pub fn iter(&self) -> impl Iterator<Item = (&'a str, &'a P)> {
         self.root.peers()
@@ -349,6 +424,8 @@ pub struct InteractionView<'a> {
 }
 
 impl<'a> InteractionView<'a> {
+    /// 👁️ Borrows already admitted immutable interaction owners for one dispatch.
+    pub fn new(state: &'a protocol::InteractionState, hover: &'a InteractionHoverState, peers: &'a PeerPresenceRoot, draft_references: &'a BTreeMap<String, Vec<String>>) -> Self { Self { state, hover, peers, draft_references } }
     /// 🔗️ `domain`'s ids the open time-travel draft references — every id its `Reference` inputs of that domain
     /// hold, so a render highlights what the edited mutation acts on; empty while no draft editor is open.
     pub fn draft_references(&self, domain: &str) -> &[String] {
@@ -502,20 +579,28 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 
 impl store::ConfigRecord for NoConfig {}
 
-impl ::protocol::DiffAlgebra<NoConfig> for NoStateDiff {
+impl ::protocol::ColdDiffAlgebra<NoConfig> for NoStateDiff {
     fn inverse(&self, _base: &NoConfig) -> Self {
         Self {}
     }
+}
+
+impl ::protocol::DiffAlgebra<NoConfig> for NoStateDiff {
     fn is_empty(&self) -> bool {
         true
     }
 }
 
-impl ::protocol::MutationDiff<NoConfig> for NoStateDiff {
-    fn apply(&self, base: &NoConfig, _capability: ::protocol::ApplyCapability) -> protocol::MutationApplyResult<NoConfig> {
-        Ok(base.clone())
-    }
+impl ::protocol::ColdMutationDiff<NoConfig> for NoStateDiff {
     fn absorb(&mut self, _other: Self) {}
+
+    fn apply(&self, _unpublished: &mut NoConfig, _capability: ::protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        Ok(())
+    }
+}
+
+impl ::protocol::MutationDiff<NoConfig> for NoStateDiff {
+
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
@@ -523,6 +608,16 @@ impl ::protocol::MutationDiff<NoConfig> for NoStateDiff {
 pub enum NoConfigMutation {}
 semio_framework_os_kernel::original_ordinal_operation_receiving!(NoConfigMutation);
 
+
+impl ::protocol::ColdMutation<NoConfig> for NoConfigMutation {
+    type ReferenceDiff = NoStateDiff;
+    fn diff(&self, _base: &NoConfig) -> ::protocol::MutationOutcome<NoStateDiff> {
+        match *self {}
+    }
+
+    fn inverse(&self, _base: &NoConfig) -> Result<Vec<Self>, ValueError> {
+        Ok((|| match *self {})())
+    }}
 impl ::protocol::Mutation<NoConfig> for NoConfigMutation {
     type Diff = NoStateDiff;
     const DESCRIPTORS: &'static [::protocol::MutationLeafDescriptor] = &[];
@@ -531,13 +626,7 @@ impl ::protocol::Mutation<NoConfig> for NoConfigMutation {
         match *self {}
     }
 
-    fn diff(&self, _base: &NoConfig) -> ::protocol::MutationOutcome<NoStateDiff> {
-        match *self {}
-    }
 
-    fn inverse(&self, _base: &NoConfig) -> Result<Vec<Self>, ValueError> {
-        Ok((|| match *self {})())
-    }
 }
 
 /// 🕳️ The uninhabited lane has no kinds, so no operation of it is ever labelled.
@@ -635,25 +724,43 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 
 }
 
-impl ::protocol::DiffAlgebra<NoPresence> for NoStateDiff {
+impl ::protocol::ColdDiffAlgebra<NoPresence> for NoStateDiff {
     fn inverse(&self, _base: &NoPresence) -> Self {
         Self {}
     }
+}
+
+impl ::protocol::DiffAlgebra<NoPresence> for NoStateDiff {
     fn is_empty(&self) -> bool {
         true
     }
 }
 
-impl ::protocol::MutationDiff<NoPresence> for NoStateDiff {
-    fn apply(&self, base: &NoPresence, _capability: ::protocol::ApplyCapability) -> protocol::MutationApplyResult<NoPresence> {
-        Ok(base.clone())
-    }
+impl ::protocol::ColdMutationDiff<NoPresence> for NoStateDiff {
     fn absorb(&mut self, _other: Self) {}
+
+    fn apply(&self, _unpublished: &mut NoPresence, _capability: ::protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        Ok(())
+    }
+}
+
+impl ::protocol::MutationDiff<NoPresence> for NoStateDiff {
+
 }
 
 #[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
 #[derive(semio_framework_value::RetireOwned)]
 pub enum NoPresenceMutation {}
+
+impl ::protocol::ColdMutation<NoPresence> for NoPresenceMutation {
+    type ReferenceDiff = NoStateDiff;
+    fn diff(&self, _base: &NoPresence) -> ::protocol::MutationOutcome<NoStateDiff> {
+        match *self {}
+    }
+
+    fn inverse(&self, _base: &NoPresence) -> Result<Vec<Self>, ValueError> {
+        Ok((|| match *self {})())
+    }}
 
 impl ::protocol::Mutation<NoPresence> for NoPresenceMutation {
     type Diff = NoStateDiff;
@@ -663,13 +770,7 @@ impl ::protocol::Mutation<NoPresence> for NoPresenceMutation {
         match *self {}
     }
 
-    fn diff(&self, _base: &NoPresence) -> ::protocol::MutationOutcome<NoStateDiff> {
-        match *self {}
-    }
 
-    fn inverse(&self, _base: &NoPresence) -> Result<Vec<Self>, ValueError> {
-        Ok((|| match *self {})())
-    }
 }
 
 impl ::protocol::OpText for NoPresenceMutation {
@@ -736,25 +837,43 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 
 }
 
-impl ::protocol::DiffAlgebra<NoTransient> for NoStateDiff {
+impl ::protocol::ColdDiffAlgebra<NoTransient> for NoStateDiff {
     fn inverse(&self, _base: &NoTransient) -> Self {
         Self {}
     }
+}
+
+impl ::protocol::DiffAlgebra<NoTransient> for NoStateDiff {
     fn is_empty(&self) -> bool {
         true
     }
 }
 
-impl ::protocol::MutationDiff<NoTransient> for NoStateDiff {
-    fn apply(&self, base: &NoTransient, _capability: ::protocol::ApplyCapability) -> protocol::MutationApplyResult<NoTransient> {
-        Ok(base.clone())
-    }
+impl ::protocol::ColdMutationDiff<NoTransient> for NoStateDiff {
     fn absorb(&mut self, _other: Self) {}
+
+    fn apply(&self, _unpublished: &mut NoTransient, _capability: ::protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        Ok(())
+    }
+}
+
+impl ::protocol::MutationDiff<NoTransient> for NoStateDiff {
+
 }
 
 #[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
 #[derive(semio_framework_value::RetireOwned)]
 pub enum NoTransientMutation {}
+
+impl ::protocol::ColdMutation<NoTransient> for NoTransientMutation {
+    type ReferenceDiff = NoStateDiff;
+    fn diff(&self, _base: &NoTransient) -> ::protocol::MutationOutcome<NoStateDiff> {
+        match *self {}
+    }
+
+    fn inverse(&self, _base: &NoTransient) -> Result<Vec<Self>, ValueError> {
+        Ok((|| match *self {})())
+    }}
 
 impl ::protocol::Mutation<NoTransient> for NoTransientMutation {
     type Diff = NoStateDiff;
@@ -764,13 +883,7 @@ impl ::protocol::Mutation<NoTransient> for NoTransientMutation {
         match *self {}
     }
 
-    fn diff(&self, _base: &NoTransient) -> ::protocol::MutationOutcome<NoStateDiff> {
-        match *self {}
-    }
 
-    fn inverse(&self, _base: &NoTransient) -> Result<Vec<Self>, ValueError> {
-        Ok((|| match *self {})())
-    }
 }
 
 impl ::protocol::OpText for NoTransientMutation {

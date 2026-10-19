@@ -1,0 +1,44 @@
+{
+  "cases": [
+    {
+      "name": "denied",
+      "admitted": false,
+      "primary": false,
+      "accept": false,
+      "output": false,
+      "receipt": false
+    },
+    {
+      "name": "complete",
+      "admitted": true,
+      "primary": false,
+      "accept": true,
+      "output": true,
+      "receipt": false
+    },
+    {
+      "name": "resultAndReceipt",
+      "admitted": true,
+      "primary": false,
+      "accept": false,
+      "output": true,
+      "receipt": true
+    },
+    {
+      "name": "primaryOnly",
+      "admitted": true,
+      "primary": true,
+      "accept": true,
+      "output": false,
+      "receipt": false
+    },
+    {
+      "name": "primaryAndReceipt",
+      "admitted": true,
+      "primary": true,
+      "accept": false,
+      "output": false,
+      "receipt": true
+    }
+  ]
+}

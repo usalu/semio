@@ -136,6 +136,16 @@ fn is_ident_continue(c: char) -> bool {
     c.is_alphanumeric() || matches!(c, '_' | '-' | '.' | '/')
 }
 
+/// 🌱️ Shares one original lexical character decision with retained name readers.
+pub fn identifier_character(value:char,first:bool)->bool{if first{is_ident_start(value)}else{is_ident_continue(value)}}
+/// 🪪️ Classifies bounded reserved prefixes without allocating lexical tokens or source strings.
+pub fn identifier_reserved_prefix(bytes:&[u8],length:usize)->bool{
+ if length==bytes.len()&&matches!(bytes,b"_"|b"true"|b"false"|b"null"|b"nan"|b"inf"){return true;}
+ for(prefix,width)in[(b"nan64_".as_slice(),16),(b"nan32_".as_slice(),8)]{if bytes.starts_with(prefix)&&bytes.get(prefix.len()..prefix.len()+width).is_some_and(|word|word.iter().all(u8::is_ascii_hexdigit)){return true;}}
+ if length==bytes.len(){for prefix in [b"inf".as_slice(),b"nan".as_slice()]{if let Some(suffix)=bytes.strip_prefix(prefix).filter(|suffix|!suffix.is_empty()){if std::str::from_utf8(suffix).ok().is_some_and(|suffix|unit_by_symbol(suffix).is_some()){return true;}}}}
+ false
+}
+
 /// 🔢️ Bounds an explicitly sized IEEE NaN word before any adjacent unit suffix.
 fn ieee_word_end(chars:&[char],start:usize)->Option<usize>{for(prefix,width)in[("nan64_",16),("nan32_",8)]{let first=start+prefix.len();let end=first+width;if end<=chars.len()&&chars[start..first].iter().copied().eq(prefix.chars())&&chars[first..end].iter().all(|value|value.is_ascii_hexdigit()){return Some(end);}}None}
 fn nonfinite_unit_end(chars:&[char],start:usize)->Option<usize>{for prefix in ["inf","-inf","nan"]{let first=start+prefix.len();if first<chars.len()&&chars[start..first].iter().copied().eq(prefix.chars())&&is_ident_start(chars[first]){let mut end=first+1;while end<chars.len()&&is_ident_continue(chars[end]){end+=1;}let suffix:String=chars[first..end].iter().collect();if unit_by_symbol(&suffix).is_some(){return Some(first);}}}None}

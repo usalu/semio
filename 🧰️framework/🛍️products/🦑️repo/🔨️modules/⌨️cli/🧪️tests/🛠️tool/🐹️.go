@@ -3,20 +3,22 @@
 package cli
 
 import (
-	json "encoding/json"
-	os "os"
-	exec "os/exec"
-	filepath "path/filepath"
-	strings "strings"
-	testing "testing"
+	"encoding/json"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"testing"
+	"github.com/usalu/semio/repo/codebase"
+	"github.com/usalu/semio/repo/model"
+	"github.com/usalu/semio/repo/move"
+	"github.com/usalu/semio/repo/providers"
+	"github.com/usalu/semio/repo/todos"
+	"github.com/usalu/semio/repo/workspace"
+	"github.com/usalu/semio/repo/workspace/sandbox"
+	"reflect"
+	"runtime"
 
-	codebase "github.com/usalu/semio/repo/codebase"
-	model "github.com/usalu/semio/repo/model"
-	move "github.com/usalu/semio/repo/move"
-	providers "github.com/usalu/semio/repo/providers"
-	todos "github.com/usalu/semio/repo/todos"
-	workspace "github.com/usalu/semio/repo/workspace"
-	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 const fixtureSectionedTypeScript = `// #region 🔖️Header
@@ -374,5 +376,113 @@ func TestAutofixCommandRunsTheFixMutation(t *testing.T) {
 	}
 	if string(content) == original {
 		t.Error("autofix must repair the header of a bare source")
+	}
+}
+
+
+func TestDashboardAnalysisScopesAndPolicies(t *testing.T) {
+	fixturePath := filepath.Join("..", "..", "..", "🎛️dashboard", "🧫️fixtures", "🏛️repo-action", "🔣️.json")
+	data, err := os.ReadFile(fixturePath)
+	if err != nil { t.Fatal(err) }
+	var fixture struct { Valid []struct { Action map[string]json.RawMessage `json:"action"`; Argv []string `json:"argv"` } `json:"valid"` }
+	if err := json.Unmarshal(data, &fixture); err != nil { t.Fatal(err) }
+	for _, vector := range fixture.Valid {
+		if action, present := vector.Action["Analyze"]; present {
+			var selected struct { Scope string `json:"scope"`; Policy *string `json:"policy"` }
+			if err := json.Unmarshal(action, &selected); err != nil { t.Fatal(err) }
+			extensions, found := analysisScopeExtensions(selected.Scope)
+			if !found || len(extensions) == 0 { t.Fatalf("missing scope %s", selected.Scope) }
+			if selected.Scope == "rust" && !reflect.DeepEqual(extensions, map[string]bool{".rs": true}) { t.Fatal(extensions) }
+			if selected.Scope == "typescript" && !reflect.DeepEqual(extensions, map[string]bool{".ts": true, ".tsx": true}) { t.Fatal(extensions) }
+		}
+	}
+	if result := ToolAnalyze("rust", []string{"NOT-A-POLICY"}); result.Error == "" { t.Fatal("unknown policy produced false success") }
+	root := NewRoot(nil)
+	root.SetArgs([]string{"analyze", "rust", "--policy", "NOT-A-POLICY"})
+	root.SetOut(&bytes.Buffer{})
+	root.SetErr(&bytes.Buffer{})
+	if err := root.Execute(); err == nil || !strings.Contains(err.Error(), "unknown analysis policy") { t.Fatalf("policy CLI dispatch: %v", err) }
+}
+
+func TestMcpBootstrapAssetsStayRepoRelative(t *testing.T) {
+	_, sourceFile, _, ok := runtime.Caller(0)
+	if !ok { t.Fatal("defining test source unavailable") }
+	repoRoot := filepath.Dir(sourceFile)
+	for { if _, err := os.Stat(filepath.Join(repoRoot, "nx.json")); err == nil { break }; parent := filepath.Dir(repoRoot); if parent == repoRoot { t.Fatal("defining repository unavailable") }; repoRoot = parent }
+
+	cases := []struct {
+		name               string
+		path               string
+		requiredFragments  []string
+		forbiddenFragments []string
+	}{
+		{
+			name: "codex uses the cross-platform repo bootstrap",
+			path: filepath.Join(repoRoot, ".codex", "config.toml"),
+			requiredFragments: []string{
+				`command = "bun"`,
+				`args = ["./📜️script.ts", "dev", "mcp", "stdio", "codex"]`,
+			},
+			forbiddenFragments: []string{
+				"repo/client/client",
+			},
+		},
+		{
+			name: "generic clients use the cross-platform repo bootstrap",
+			path: filepath.Join(repoRoot, ".mcp.json"),
+			requiredFragments: []string{
+				`"command": "bun"`,
+				`"args": ["./📜️script.ts", "dev", "mcp", "stdio", "client"]`,
+			},
+			forbiddenFragments: []string{
+				"repo/client/client",
+			},
+		},
+		{
+			name:               "devcontainer builds the repo client from its canonical source",
+			path:               filepath.Join(repoRoot, ".devcontainer", "devcontainer.json"),
+			requiredFragments:  []string{`"postCreateCommand": ["bun", "repo", "run", "workspace:setup"]`},
+			forbiddenFragments: []string{"customizations", "editor-overlay.json"},
+		},
+		{
+			name:               "native shell bootstrap builds the repo client from its canonical source",
+			path:               filepath.Join(repoRoot, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "🔩️native", "🥾️bootstrap", "🐚️.sh"),
+			requiredFragments:  []string{"bun repo run workspace:setup", "bun repo run @semio-tech/repo-client:build"},
+			forbiddenFragments: []string{"repo/client/client", "cargo build --release -p semio-framework-repo-cli"},
+		},
+		{
+			name:               "native windows bootstrap builds the repo client from its canonical source",
+			path:               filepath.Join(repoRoot, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "🔩️native", "🥾️bootstrap", "🔵️.ps1"),
+			requiredFragments:  []string{`@("repo", "run", "workspace:setup")`, `@("repo", "run", "@semio-tech/repo-client:build")`},
+			forbiddenFragments: []string{"repo/client/client.exe", `@("build", "--release", "-p", "semio-framework-repo-cli")`},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			data, err := os.ReadFile(tc.path)
+			if err != nil {
+				t.Fatalf("failed to read %s: %v", tc.path, err)
+			}
+			text := string(data)
+			compact := func(value string) string {
+				return strings.Map(func(character rune) rune {
+					if unicode.IsSpace(character) {
+						return -1
+					}
+					return character
+				}, value)
+			}
+			for _, fragment := range tc.requiredFragments {
+				if !strings.Contains(compact(text), compact(fragment)) {
+					t.Fatalf("expected %s to contain %q", tc.path, fragment)
+				}
+			}
+			for _, fragment := range tc.forbiddenFragments {
+				if strings.Contains(text, fragment) {
+					t.Fatalf("expected %s to exclude %q", tc.path, fragment)
+				}
+			}
+		})
 	}
 }

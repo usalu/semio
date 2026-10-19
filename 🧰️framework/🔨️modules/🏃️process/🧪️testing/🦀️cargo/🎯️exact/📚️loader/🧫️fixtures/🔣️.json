@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "cases": [
+    { "name": "windows-uppercase", "platform": "win32", "directory": "C:\\Rust\\lib", "environment": { "PATH": "C:\\bin;C:\\tools", "KEEP": "yes" }, "expected": { "PATH": "C:\\Rust\\lib;C:\\bin;C:\\tools", "KEEP": "yes" } },
+    { "name": "windows-titlecase", "platform": "win32", "directory": "C:\\Rust Tools\\lib", "environment": { "Path": "C:\\bin" }, "expected": { "PATH": "C:\\Rust Tools\\lib;C:\\bin" } },
+    { "name": "windows-case-collision-matches-node-key-order", "platform": "win32", "directory": "C:\\Rust\\lib", "environment": { "Path": "ignored", "PATH": "C:\\winner", "path": "also ignored" }, "expected": { "PATH": "C:\\Rust\\lib;C:\\winner" } },
+    { "name": "windows-absent", "platform": "win32", "directory": "C:\\Rust\\lib", "environment": {}, "expected": { "PATH": "C:\\Rust\\lib" } },
+    { "name": "linux-case-sensitive", "platform": "linux", "directory": "/opt/rust/lib", "environment": { "LD_LIBRARY_PATH": "/usr/lib:/custom", "ld_library_path": "untouched", "PATH": "/bin" }, "expected": { "LD_LIBRARY_PATH": "/opt/rust/lib:/usr/lib:/custom", "ld_library_path": "untouched", "PATH": "/bin" } },
+    { "name": "linux-empty", "platform": "linux", "directory": "/opt/rust/lib", "environment": { "LD_LIBRARY_PATH": "" }, "expected": { "LD_LIBRARY_PATH": "/opt/rust/lib" } },
+    { "name": "mac-fallback", "platform": "darwin", "directory": "/opt/rust/lib", "environment": { "DYLD_FALLBACK_LIBRARY_PATH": "/usr/lib", "DYLD_LIBRARY_PATH": "/custom" }, "expected": { "DYLD_FALLBACK_LIBRARY_PATH": "/opt/rust/lib:/usr/lib", "DYLD_LIBRARY_PATH": "/custom" } }
+  ]
+}

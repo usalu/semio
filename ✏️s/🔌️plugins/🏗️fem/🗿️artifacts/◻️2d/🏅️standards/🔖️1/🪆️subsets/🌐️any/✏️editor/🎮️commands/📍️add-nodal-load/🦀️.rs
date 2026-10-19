@@ -1,6 +1,8 @@
 //! 🏋️ 🏋️ Fem2d play app commands command — `add-nodal-load`.
 
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_framework_plugin::NoConfig;
+
+use semio_framework_plugin::NoConfigMutation;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::add_load;
 use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::create_load_case;
@@ -8,34 +10,22 @@ use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 
 type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
-/// 🔎️ Resolves the target load case for a load-adding command: the named `case_id` if given and
-/// found, else the document's first load case, else `None` — a missing case is not resolved here,
-/// the caller decides between `add-load` (existing case) and `create-load-case` (pre-seeded with the
-/// new load, synthesized `"case-1"`/`"Load Case 1"`) once it knows which branch it's in.
-fn resolve_load_case(doc: &Fem2dSnapshot, case_id: Option<&str>) -> Option<FemLoadCase> {
-    case_id.and_then(|id| doc.load_cases.iter().find(|lc| lc.id == id).cloned()).or_else(|| doc.load_cases.first().cloned())
-}
-
-/// 🌉️ Shared resolve-or-create gesture behind `add-nodal-load`/`add-member-udl`/`add-area-load`:
-/// attaches `load` to the named/first load case via `add-load` if one exists, else synthesizes a
-/// fresh `"case-1"`/`"Load Case 1"` case pre-seeded with `load` via `create-load-case`.
-fn add_load_mutation(doc: &Fem2dSnapshot, case_id: Option<&str>, load: FemLoad) -> Fem2dMutation {
-    match resolve_load_case(doc, case_id) {
-        Some(existing) => Fem2dMutation::AddLoad(add_load::AddLoad { case_id: existing.id, load: Box::new(load), index: None }),
-        None => Fem2dMutation::CreateLoadCase(create_load_case::CreateLoadCase { load_case: FemLoadCase { id: "case-1".into(), name: "Load Case 1".into(), loads: vec![load], self_weight: false }, index: None }),
-    }
-}
-
-/// 🌉️ The load id a new load on the (possibly not-yet-existing) target case should get — reads the
-/// existing case's loads for `next_id` continuity, or starts fresh for a synthesized case.
-fn next_load_id(doc: &Fem2dSnapshot, case_id: Option<&str>) -> String {
-    let loads = resolve_load_case(doc, case_id).map(|lc| lc.loads).unwrap_or_default();
-    semio_s_fem_app_surface::next_id(loads.iter().map(|l| semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id(l).to_string()), "l")
+/// 🏋️ Resolves a named case exactly, or seeds one case from the admitted command authority.
+pub(super) fn add_load_mutation(doc: &ArtifactView<'_, Fem2dSnapshot>, case_id: Option<&str>, load: FemLoad) -> Result<Fem2dMutation, Fault> {
+    let target = case_id.or_else(|| doc.snapshot.load_cases.first().map(|case| case.id.as_str()));
+    Ok(match target {
+        Some(id) => Fem2dMutation::AddLoad(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::add_load::AddLoad { case_id: id.into(), load: Box::new(load), index: None }),
+        None => Fem2dMutation::CreateLoadCase(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::create_load_case::CreateLoadCase { load_case: FemLoadCase { id: doc.operation()?.entity_id("case", "load_cases")?, name: "Load Case 1".into(), loads: vec![load], self_weight: false }, index: None }),
+    })
 }
 
 //#region 🔖️AddNodalLoad
@@ -66,9 +56,9 @@ pub struct AddNodalLoad {
 }
 
 pub fn handle(payload: &AddNodalLoad, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
-    let load_id = next_load_id(doc.snapshot, payload.case_id.as_deref());
+    let load_id = doc.operation()?.entity_id("l", "loads")?;
     let load = FemLoad::Nodal { id: load_id, node_id: payload.node_id.clone(), dof: payload.dof, value: payload.value };
-    Ok(Emit::mutations(vec![add_load_mutation(doc.snapshot, payload.case_id.as_deref(), load)]))
+    Ok(Emit::mutations(vec![add_load_mutation(doc, payload.case_id.as_deref(), load)?]))
 }
 
 //#region 🧪️Tests

@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "text": "",
+      "aliases": 1,
+      "expectedChildHandoffs": 1,
+      "expectedNativePayloadFrames": 1,
+      "expectedNestedQueues": 0
+    },
+    {
+      "text": "α🙂",
+      "aliases": 2,
+      "expectedChildHandoffs": 1,
+      "expectedNativePayloadFrames": 1,
+      "expectedNestedQueues": 0
+    },
+    {
+      "text": "original typed payload",
+      "aliases": 3,
+      "expectedChildHandoffs": 1,
+      "expectedNativePayloadFrames": 1,
+      "expectedNestedQueues": 0
+    }
+  ]
+}

@@ -29,6 +29,9 @@ pub use semio_framework_os_kernel as __kernel;
 pub use semio_framework_pack_json as __pack_json;
 #[doc(hidden)]
 pub use semio_framework_value as __value;
+/// 🧵️ Factory macro signatures resolve the owned job contract through this explicit SDK export.
+#[doc(hidden)]
+pub use semio_framework_job as __job;
 
 #[path = "../../🦀️.rs"]
 pub mod component;

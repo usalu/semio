@@ -345,9 +345,13 @@
       ]
     ],
     "maximumChildMilliseconds": 120000,
-    "launchInputs": {
-      "en": "repoBazelPhaseEN",
-      "de": "repoBazelPhaseDE"
+    "dashboardParameter": {
+      "id": "phase",
+      "kind": "choice",
+      "locales": [
+        "en",
+        "de"
+      ]
     }
   },
   "birthParameterGrants": {

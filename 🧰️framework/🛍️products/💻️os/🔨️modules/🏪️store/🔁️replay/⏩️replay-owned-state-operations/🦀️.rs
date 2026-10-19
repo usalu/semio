@@ -51,7 +51,7 @@ where
             prepared_operation: None,
             operation_retirement: None,
             operation_message_settlement: None,
-            preparation_completed: ArtifactReplayPreparationProgress::default(),
+            preparation_completed: ArtifactReplayPreparationProgress::default(),native_receipt:Default::default(),
             replay_retirement_factory: None,
             replay_retirement: None,
             prefix_message_retirement: None,
@@ -155,7 +155,7 @@ where
 
     /// ⏭️ Replays operations until the replay finishes or `deadline`, asked after every operation, answers `true`.
     pub fn step(&mut self, edits: &impl ReplayEdits<Mutation>, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
-        self.step_with_operation_cap(edits, usize::MAX, deadline)
+        self.step_with_operation_cap(edits, usize::MAX, None, None, deadline)
     }
 
     /// 🔢️ Caps folded mutations while retaining every structural deadline and owner check.
@@ -165,19 +165,18 @@ where
             self.progress.total = self.progress.total.saturating_sub(u32::try_from(self.order.len().saturating_sub(self.from)).unwrap_or(u32::MAX));
             self.operation_progress = true;
         }
-        self.step_with_operation_cap(edits, maximum_operations, deadline)
+        self.step_with_operation_cap(edits, maximum_operations, None, None, deadline)
     }
 
-    fn step_with_operation_cap(&mut self, edits: &impl ReplayEdits<Mutation>, maximum_operations: usize, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
+    fn step_with_operation_cap(&mut self, edits: &impl ReplayEdits<Mutation>, maximum_operations: usize, original:Option<RetainedCloneGrant>, mut control:Option<&mut semio_framework_value::NativeDecodeControl<'_>>, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
         if maximum_operations == 0 && !self.finished { return Ok(ReplayStep::Pending(self.progress)); }
         let mut completed_operations = 0usize;
         while !self.finished {
             if let Some(retirement) = self.replay_retirement.as_mut() {
                 let body = retirement.next_copy_byte_demand().map_err(VcsError::InverseRefused)?;
                 let capacity = retirement.next_capacity_byte_demand(body).map_err(VcsError::InverseRefused)?;
-                if body.saturating_add(capacity) > 4096 { return Err(VcsError::ValidationFailed("replay cleanup native frame exceeds one body/capacity grant".into())); }
-                let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: body, maximum_capacity_bytes: capacity, maximum_release_bytes: retirement.next_release_byte_demand().map_err(VcsError::InverseRefused)?, maximum_depth: retirement.next_depth_demand().map_err(VcsError::InverseRefused)? };
-                let step = retirement.close_step(grant).map_err(VcsError::InverseRefused)?;
+                let grant=original.ok_or_else(||VcsError::ValidationFailed("native replay cleanup requires the original caller grant".into()))?;
+                let step = retirement.close_step(grant).map_err(VcsError::InverseRefused)?;self.native_receipt=step.progress();
                 if !step.progress().fits(grant) { return Err(VcsError::ValidationFailed("replay cleanup exceeded its admitted grant".into())); }
                 if retirement.terminal_is_empty() {
                     self.replay_retirement = None;
@@ -187,8 +186,8 @@ where
             }
             if let Some(owner) = self.prefix_message_retirement.as_mut() {
                 let body = owner.next_copy_byte_demand();
-                let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: body, maximum_capacity_bytes: 0, maximum_release_bytes: owner.next_release_byte_demand().map_err(VcsError::InverseRefused)?, maximum_depth: owner.next_depth_demand().map_err(VcsError::InverseRefused)? };
-                let step = owner.close_step(grant).map_err(VcsError::InverseRefused)?;
+                let grant=original.ok_or_else(||VcsError::ValidationFailed("native prefix cleanup requires the original caller grant".into()))?;
+                let step = owner.close_step(grant).map_err(VcsError::InverseRefused)?;self.native_receipt=step.progress();
                 if !step.progress().fits(grant) { return Err(VcsError::ValidationFailed("prefix diagnostic cleanup exceeded its actual grant".into())); }
                 if owner.terminal_is_empty() { self.prefix_message_retirement = None; }
                 if deadline() || step.progress().copied_items == 0 { return Ok(ReplayStep::Pending(self.progress)); }
@@ -237,28 +236,17 @@ where
                     if deadline() || completed_operations >= maximum_operations { return Ok(ReplayStep::Pending(self.progress)); }
                     continue;
                 }
-                self.cursor += 1;
-                self.operation = 0;
-                self.record();
-                continue;
+                self.cursor+=1;self.operation=0;self.record();continue;
             }
             if self.operation < edit.forwards.len() {
-                if self.operation_preparation_factory.is_some() {
-                    if !self.step_prepared_operation(edit, false, deadline)? { deadline(); return Ok(ReplayStep::Pending(self.progress)); }
-                    self.operation += 1;
-                    completed_operations = completed_operations.saturating_add(1);
-                    self.progress.done = self.progress.done.saturating_add(1);
-                    if deadline() || completed_operations >= maximum_operations { return Ok(ReplayStep::Pending(self.progress)); }
-                    continue;
-                }
-                self.replay_operation(edit)?;
-                self.operation += 1;
-                    completed_operations = completed_operations.saturating_add(1);
-                self.progress.done = self.progress.done.saturating_add(1);
-                if deadline() || completed_operations >= maximum_operations { return Ok(ReplayStep::Pending(self.progress)); }
+                if self.operation_preparation_factory.is_none(){return Err(VcsError::InverseRefused(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native replay requires its retained original preparation issuer")));}
+                if !self.step_prepared_operation(edit,false,original,control.as_deref_mut(),deadline)?{deadline();return Ok(ReplayStep::Pending(self.progress));}
+                self.operation+=1;
+                completed_operations=completed_operations.saturating_add(1);
+                if deadline()||completed_operations>=maximum_operations{return Ok(ReplayStep::Pending(self.progress));}
                 continue;
             }
-            if !self.step_close_edit(&edit.id)? {
+            if !self.step_close_edit(&edit.id,original)? {
                 if deadline() { return Ok(ReplayStep::Pending(self.progress)); }
                 continue;
             }
@@ -352,14 +340,14 @@ where
     }
 
     /// 📨️ Settles one bounded diagnostic unit before sealing an edit's staged owners.
-    fn step_close_edit(&mut self, edit_id: &str) -> Result<bool, VcsError> {
+    fn step_close_edit(&mut self, edit_id: &str, original:Option<RetainedCloneGrant>) -> Result<bool, VcsError> {
         let Some(settlement) = self.message_settlement.as_mut() else {
             self.message_settlement = Some(semio_framework_os_store_ledger::edit_message_clamp::settlement::EditMessageSettlement::new(edit_id, &self.edit_messages, self.closed_outcomes, self.outcomes.len()));
             return Ok(false);
         };
         if !settlement.is_finished() {
-            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: settlement.next_copy_byte_demand(&self.edit_messages).map_err(VcsError::InverseRefused)?, maximum_capacity_bytes: settlement.next_capacity_byte_demand().map_err(VcsError::InverseRefused)?, maximum_release_bytes: settlement.next_release_byte_demand(&self.edit_messages).map_err(VcsError::InverseRefused)?, maximum_depth: 64 };
-            if grant.maximum_copy_bytes.saturating_add(grant.maximum_capacity_bytes) > ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES { return Err(VcsError::ValidationFailed("edit message settlement exceeds its body/capacity grant".into())); }
+            let grant=original.ok_or_else(||VcsError::ValidationFailed("native edit settlement requires the original caller grant".into()))?;
+
             settlement.step(&mut self.edit_messages, &mut self.outcomes, grant).map_err(VcsError::InverseRefused)?;
             return Ok(false);
         }

@@ -27,6 +27,7 @@ semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixt
 semio-framework-value = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
 
 [dev-dependencies]
+blake3 = "1.8.2"
 semio-framework-artifact-reference = { workspace = true }
 encoding_rs = "=0.8.35"
 semio-framework-dsl-record-derive = { path = "../../../../../🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }

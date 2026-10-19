@@ -16,6 +16,14 @@ pub struct RenameMini {
 //#region ⚙️Behavior
 impl MutationKind<MiniDoc, MiniMutation> for RenameMini {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "mini", kind: "rename-mini", record: "RenamedMini" };
+
+
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native(&format!("Rename mini to \"{}\"", self.new_name), &format!("Mini in \"{}\" umbenennen", self.new_name))
+    }
+}
+
+impl crate::os_spr::ColdMutationKind<MiniDoc, MiniMutation> for RenameMini {
     fn diff(&self, _base: &MiniDoc) -> MutationOutcome<MiniDiff> {
         MutationOutcome::new(MiniDiff { name: Some(self.new_name.clone()) })
     }
@@ -25,8 +33,9 @@ impl MutationKind<MiniDoc, MiniMutation> for RenameMini {
     
     })())
 }
-    fn label(&self) -> crate::LocalizedLabel {
-        crate::LocalizedLabel::native(&format!("Rename mini to \"{}\"", self.new_name), &format!("Mini in \"{}\" umbenennen", self.new_name))
-    }
 }
 //#endregion ⚙️Behavior
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

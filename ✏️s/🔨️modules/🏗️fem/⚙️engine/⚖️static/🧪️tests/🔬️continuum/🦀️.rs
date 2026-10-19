@@ -1,8 +1,10 @@
-use crate::{solve_linear_static, Elements, Model};
+use crate::solve_linear_static;
+use crate::Elements;
+use crate::Model;
 use semio_s_fem_algebra::*;
-use semio_s_fem_model::*;
-use semio_s_fem_elements2d::*;
-use semio_s_fem_formulation::*;
+use semio_s_fem_algebra::*;
+use semio_s_fem_algebra::*;
+use semio_s_fem_algebra::*;
 
 /// 📐️ Builds a node-major `[u_i,v_i]` displacement vector by sampling the linear field
 /// `u = a.0 + a.1*x + a.2*y`, `v = b.0 + b.1*x + b.2*y` at every node coordinate — the standard

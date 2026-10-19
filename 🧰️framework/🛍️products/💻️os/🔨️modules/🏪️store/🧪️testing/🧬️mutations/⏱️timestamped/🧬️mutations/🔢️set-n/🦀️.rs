@@ -15,15 +15,8 @@ pub struct SetN {
 
 impl semio_framework_os_spr::MutationKind<DemoSnapshot, TimestampedMutation> for SetN {
     const SEMANTICS: semio_framework_os_spr::SemanticDescriptor = semio_framework_os_spr::SemanticDescriptor { verb: "set", entity: "n", kind: "set-n", record: "SetN" };
-    fn diff(&self, _base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<DemoDiff> {
-        semio_framework_os_spr::MutationOutcome::new(DemoDiff::value(Some(self.n)))
-    }
-    fn inverse(&self, base: &DemoSnapshot) -> Result<Vec<TimestampedMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![TimestampedMutation::AssignN(AssignN { n: base.n, physical_ms: 0 })]
-    
-    })())
-}
+
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set N", "N setzen")
     }
@@ -34,3 +27,19 @@ impl semio_framework_os_spr::MutationKind<DemoSnapshot, TimestampedMutation> for
         Some(semio_framework_os_spr::ids::HybridLogicalTimestamp::new(0, self.physical_ms))
     }
 }
+
+impl semio_framework_os_spr::ColdMutationKind<DemoSnapshot, TimestampedMutation> for SetN {
+    fn diff(&self, _base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<DemoDiff> {
+        semio_framework_os_spr::MutationOutcome::new(DemoDiff::value(Some(self.n)))
+    }
+    fn inverse(&self, base: &DemoSnapshot) -> Result<Vec<TimestampedMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+        vec![TimestampedMutation::AssignN(AssignN { n: base.n, physical_ms: 0 })]
+
+    })())
+}
+}
+
+#[cfg(test)]
+#[path = "../../../../../🧪️tests/🧪️fixture-timestamped-set-n/🦀️.rs"]
+mod tests;

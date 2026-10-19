@@ -119,7 +119,7 @@ enum FillRunOwed {
 
 /// 🧾️ Test-only record of one verdict the run reached, with what the oracle needs to recompute it.
 #[cfg(any(test, feature = "testing"))]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct FillRunVerdictRecord {
     pub key: u64,
     pub reason: FillRunReason,
@@ -138,14 +138,30 @@ pub struct FillRunVerdictRecord {
 /// call after the tick that led to them. [`FillRunJob::resume`] with a new requested count continues the
 /// same deterministic sequence (raise) or retracts the tail (lower); a job rebuilt after the framework
 /// closed its predecessor reaches that checkpoint first by a silent replay ([`FillRunJob::replaying`]).
+#[derive(semio_framework_value::RetireOwned)]
+struct FillRunClosingOwners {
+    writer: ToolRunTickWriter,
+    mesh_lane: Vec<String>,
+    mesh_index: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, u32>,
+    events: Vec<FillRunEvent>,
+    deferred: Vec<FillRunEvent>,
+    placement_keys: Vec<(u64, ToolRunTraceSubject)>,
+    #[cfg(any(test, feature = "testing"))]
+    verdicts: Vec<FillRunVerdictRecord>,
+    #[cfg(any(test, feature = "testing"))]
+    live_record: Option<FillRunVerdictRecord>,
+}
+
 pub struct FillRunJob {
+    close_started: bool,
+    close_owners: semio_s_plugin_puzzle_jobs::WorkClosing<FillRunClosingOwners>,
     pub(super) outbox: semio_s_plugin_puzzle_jobs::JobOutbox,
     pub builder: FillBuilder,
     pub(super) writer: ToolRunTickWriter,
     pub inputs: [u8; 32],
     replay: Option<FillRunReplay>,
     mesh_lane: Vec<String>,
-    mesh_index: HashMap<String, u32>,
+    mesh_index: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, u32>,
     pub(super) events: Vec<FillRunEvent>,
     deferred: Vec<FillRunEvent>,
     live: Option<(u64, ToolRunTraceSubject)>,
@@ -227,6 +243,8 @@ impl FillRunJob {
         builder.observe_run();
         let mesh_index = mesh_lane.iter().enumerate().map(|(index, url)| (url.clone(), index as u32)).collect();
         Self {
+            close_started: false,
+            close_owners: Default::default(),
             outbox: Default::default(),
             builder,
             writer,
@@ -332,7 +350,7 @@ impl FillRunJob {
         }
         let index = self.mesh_lane.len() as u32;
         self.mesh_lane.push(url.to_string());
-        self.mesh_index.insert(url.to_string(), index);
+        self.mesh_index.cold_insert(url.to_string(), index);
         index
     }
 
@@ -623,9 +641,9 @@ impl FillRunJob {
 
 impl FillRunJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         match self.outbox.phase(cx)? {
-            semio_s_plugin_puzzle_jobs::OutboxPhase::Building => return self.outbox.advance(cx),
+            semio_s_plugin_puzzle_jobs::OutboxPhase::Building => return self.outbox.advance(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
             semio_s_plugin_puzzle_jobs::OutboxPhase::Delivered | semio_s_plugin_puzzle_jobs::OutboxPhase::Retiring => {
                 self.outbox.retire_step(cx)?;
                 return Ok(None);
@@ -633,7 +651,7 @@ impl FillRunJob {
             semio_s_plugin_puzzle_jobs::OutboxPhase::Idle => {}
         }
         let turn = self.turn(cx);
-        self.outbox.settle(turn, cx)
+        self.outbox.settle(turn, cx).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
@@ -648,46 +666,70 @@ impl InteractiveJob for FillRunJob {
         self.builder.begin_close();
     }
 
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            self.begin_close();
-            if !self.outbox.terminal_is_empty() {
-                return Ok(match self.outbox.close_step(grant) {
-                    Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) | semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)) => semio_framework_job::InteractiveJobCloseStep::Pending { progress },
-                    Err(error) => return Err(error),
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+        semio_framework_job::close_original_nested_step(cx, |cx, _grant| {
+
+        self.begin_close();
+        if !self.outbox.terminal_is_empty() {
+            let demand = self.outbox.retirement_demands()?;
+            return semio_framework_job::close_original_retained_step(cx, demand, |grant| self.outbox.close_step(grant));
+        }
+        if !self.builder.terminal_is_empty() {
+            let step = self.builder.close_turn(cx)?;
+            return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
+        }
+        if !self.close_started {
+            let demand = self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
+            return semio_framework_job::close_original_retained_step(cx, demand, |_| {
+                let identity = self.writer.identity();
+                self.close_owners.stage(FillRunClosingOwners {
+                    writer: std::mem::replace(&mut self.writer, ToolRunTickWriter::new(identity)),
+                    mesh_lane: std::mem::take(&mut self.mesh_lane),
+                    mesh_index: std::mem::take(&mut self.mesh_index),
+                    events: std::mem::take(&mut self.events),
+                    deferred: std::mem::take(&mut self.deferred),
+                    placement_keys: std::mem::take(&mut self.placement_keys),
+                    #[cfg(any(test, feature = "testing"))]
+                    verdicts: std::mem::take(&mut self.verdicts),
+                    #[cfg(any(test, feature = "testing"))]
+                    live_record: self.live_record.take(),
                 });
-            }
-            Ok(self.builder.close_turn(grant))
+                self.close_started = true;
+                Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
+            });
+        }
+        self.close_owners.close_step(cx)
+    
         })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(self.close_demands()?.copy_bytes)
+        Ok(self.close_demands(0)?.copy_bytes)
     }
 
-    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(self.close_demands()?.capacity_bytes)
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(maximum_copy_bytes)?.capacity_bytes)
     }
 
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(self.close_demands()?.release_bytes)
+        Ok(self.close_demands(0)?.release_bytes)
     }
 
     fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(self.close_demands()?.depth)
+        Ok(self.close_demands(0)?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.outbox.terminal_is_empty() && self.builder.terminal_is_empty()
+        self.outbox.terminal_is_empty() && self.builder.terminal_is_empty() && self.close_started && self.close_owners.is_empty()
     }
 }
 
 impl FillRunJob {
-    pub(super) fn close_demands(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        if !self.outbox.terminal_is_empty() {
-            return self.outbox.retirement_demands();
-        }
-        Ok(self.builder.close_demands())
+    pub fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if !self.outbox.terminal_is_empty() { return self.outbox.retirement_demands(); }
+        if !self.builder.terminal_is_empty() { return self.builder.close_demands(body); }
+        if !self.close_started { return Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<FillRunClosingOwners>(), depth: 1, ..Default::default() }); }
+        self.close_owners.demands(body)
     }
 }
 //#endregion ⏯️FillRunJob

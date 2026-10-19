@@ -1,26 +1,12 @@
 {
   "artifact": null,
-  "attractions": {
-    "inserted": [],
-    "modified": [
-      {
-        "id": "attraction-bc",
-        "patch": {
-          "gap": -2.999999999999999,
-          "rise": 6.661338147750937e-16,
-          "rotation": -90.00000000000001,
-          "shift": -2.999999999999999,
-          "tilt": -89.99999809090409
-        }
-      }
-    ],
-    "moved": [],
-    "removed": []
-  },
+  "schema": null,
   "domain": null,
   "meta": null,
   "objects": {
+    "removed": [],
     "inserted": [],
+    "moved": [],
     "modified": [
       {
         "id": "object-a",
@@ -28,7 +14,7 @@
           "orientation": [
             0.0,
             0.0,
-            0.7071067811865475,
+            0.7071067811865476,
             0.7071067811865476
           ]
         }
@@ -37,9 +23,9 @@
         "id": "object-b",
         "patch": {
           "orientation": [
-            7.850462293418877e-17,
-            -7.850462293418876e-17,
-            0.7071067811865475,
+            0.0,
+            0.0,
+            0.7071067811865476,
             0.7071067811865476
           ]
         }
@@ -47,24 +33,36 @@
       {
         "id": "object-d",
         "patch": {
-          "orientation": [
-            7.850462293418878e-17,
-            -7.850462293418875e-17,
-            0.7071067811865476,
-            0.7071067811865475
-          ],
           "origin": [
             2.0000000000000004,
-            2.0,
+            1.9999999999999996,
             0.0
+          ],
+          "orientation": [
+            0.0,
+            0.0,
+            0.7071067811865476,
+            0.7071067811865476
           ]
         }
       }
-    ],
-    "moved": [],
-    "removed": []
+    ]
   },
-  "references": null,
-  "schema": null,
-  "targetVolumes": null
+  "attractions": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "attraction-bc",
+        "patch": {
+          "gap": -2.999999999999999,
+          "shift": -2.9999999999999996,
+          "tilt": -89.99999829245272
+        }
+      }
+    ]
+  },
+  "targetVolumes": null,
+  "references": null
 }

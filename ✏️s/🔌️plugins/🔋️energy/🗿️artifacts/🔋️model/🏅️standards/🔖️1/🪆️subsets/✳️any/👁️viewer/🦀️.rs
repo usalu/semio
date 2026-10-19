@@ -136,9 +136,7 @@ impl semio_framework_plugin::ToolJobFactory for EnergyModelViewCommandJobFactory
         energy_model_view_contract()
     }
 
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
+    semio_framework_plugin::retained_command_factory_admission!(maximum_raw_bytes: ENERGY_MODEL_VIEW_RAW_BYTES, checkpoint_resume: false);
 
     fn create_job_from_wire_pages_with_payload(
         &mut self,
@@ -276,43 +274,16 @@ impl ArtifactViewer for EnergyModelViewer {
         registry.register(EnergyModelViewCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: ArtifactOwnedToolJobRequest<ViewerApp<Self>>) -> Result<Option<semio_framework_plugin::ToolOperationSpec>, Fault> {
-        if !ENERGY_MODEL_VIEW_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            return Ok(None);
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<ViewerApp<Self>>>, output: &mut Option<semio_framework::ErasedToolJob>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original tool producer request is absent"))?;
+        if !ENERGY_MODEL_VIEW_TOOL_IDS.contains(&original.tool_id.as_str()) {
+            return Ok(false);
         }
-        if request.command.action_id() != request.tool_id {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "the energy model view command does not match its exact registered tool"));
+        if original.command.action_id() != original.tool_id {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "the energy model view command does not match its exact registered tool").into());
         }
-        let tool_id = request.command.action_id();
-        let work = Box::new(BoundedArtifactCommandWork::new(tool_id, energy_model_view_reduce, energy_model_view_extent));
-        let operation_context = AppOperationContext {
-            app_instance_id: request.app_instance_id,
-            parent_document_id: request.parent_document_id,
-            operation_id: request.operation.operation.0,
-            generation: request.operation.generation.0,
-            canonical_base_revision: request.canonical_base_revision,
-            retained: request.retained,
-            authoring_seed: request.authoring_seed.clone(),
-        };
-        let payload = ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
-                command: *request.command,
-                snapshot: request.snapshot,
-                snapshot_read: request.snapshot_read,
-                config: request.config,
-                history: request.history,
-                interaction_state: request.interaction_state,
-                interaction_hover: request.interaction_hover,
-                context: Some(request.context),
-                operation: operation_context,
-                completion: request.completion,
-            },
-            EnergyModelViewCommand::action_id,
-            ENERGY_MODEL_VIEW_RAW_BYTES,
-            1,
-            work,
-        );
-        Ok(Some(semio_framework_plugin::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+        let tool_id = original.command.action_id();
+                semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, EnergyModelViewCommand::action_id, ENERGY_MODEL_VIEW_RAW_BYTES, 1, false, |_request| BoundedArtifactCommandWork::new(tool_id, energy_model_view_reduce, energy_model_view_extent))
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {

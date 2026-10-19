@@ -116,6 +116,7 @@ impl<PA: PluginApp> RuntimeAppCell<PA> {
             mounted_policy,
             instance: std::sync::Mutex::new(instance),
             maintenance_pump: std::sync::Mutex::new(RuntimeLiveCleanupPump::new()),
+            result_pages: std::sync::Mutex::new(result_publication::NativeResultPages::new()),
             maintenance_status: AtomicU8::new(RuntimeMaintenanceStatus::Ready.repr()),
             maintenance_fault_us: AtomicU64::new(0),
             maintenance_generation: AtomicU64::new(0),

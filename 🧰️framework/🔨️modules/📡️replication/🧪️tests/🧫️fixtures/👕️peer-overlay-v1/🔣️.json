@@ -1,6 +1,11 @@
 {
   "id": "peer-overlay-v1",
   "description": "Presence interaction + window views reduce to canvas peer overlays (ephemeral shared only).",
+  "projectionCases": [
+    { "id": "measured-orbit", "position": [0, 0, 5], "target": [0, 0, 0], "up": [0, 1, 0], "fov": 45, "size": [640, 480], "world": [0, 0, 0], "expected": [320, 240] },
+    { "id": "unmeasured-width", "position": [0, 0, 5], "target": [0, 0, 0], "up": [0, 1, 0], "fov": 45, "size": [0, 480], "world": [0, 0, 0], "expected": null },
+    { "id": "unmeasured-height", "position": [0, 0, 5], "target": [0, 0, 0], "up": [0, 1, 0], "fov": 45, "size": [640, 0], "world": [0, 0, 0], "expected": null }
+  ],
   "cases": [
     {
       "id": "canvas-pointer-and-selection",

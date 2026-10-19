@@ -17,7 +17,7 @@ fn samples()->Vec<Vec<u8>>{let f=fixture();let mut samples:Vec<_>=f["cases"].as_
 fn deflate_controlled_exact_stream_and_independent_zlib_oracles(){
  use std::io::Write;use std::process::{Command,Stdio};
  let f=fixture();for raw in samples(){let mut control=Control::new(f["maximumBytes"].as_u64().unwrap() as usize);let stored=deflate_controlled(&raw,&mut control).unwrap();assert_eq!(stored,deflate(&raw));assert_eq!(btype_of(&stored),1);assert_eq!(miniz_oxide::inflate::decompress_to_vec_with_limit(&stored,raw.len().max(1)).unwrap(),raw);
- let script="import{inflateRawSync}from'node:zlib';const input=new Uint8Array(await Bun.stdin.arrayBuffer());await Bun.write(Bun.stdout,inflateRawSync(input));";let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&stored).unwrap();let result=child.wait_with_output().unwrap();assert!(result.status.success(),"{}",String::from_utf8_lossy(&result.stderr));assert_eq!(result.stdout,raw);assert_eq!(control.events.last(),Some(&DeflateEncodeProgress{phase:DeflateEncodePhase::Finish,completed:stored.len(),total:stored.len()}));}
+ let script="import{inflateRawSync}from'node:zlib';const input=new Uint8Array(await Bun.stdin.arrayBuffer());process.stdout.write(inflateRawSync(input));";let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&stored).unwrap();let result=child.wait_with_output().unwrap();assert!(result.status.success(),"{}",String::from_utf8_lossy(&result.stderr));assert_eq!(result.stdout,raw);assert_eq!(control.events.last(),Some(&DeflateEncodeProgress{phase:DeflateEncodePhase::Finish,completed:stored.len(),total:stored.len()}));}
 }
 
 #[test]
@@ -31,15 +31,21 @@ fn deflate_controlled_real_interior_phases_and_admission(){
 fn deflate_controlled_fixed_huffman_capacity_proof(){let lit=fixed_literal_length_lengths();let dist=fixed_distance_lengths();for length in MIN_MATCH..=MAX_MATCH{let index=length_index_for(length as u16);for distance in 1..=WINDOW_SIZE{let di=distance_index_for(distance as u32);assert!((lit[257+index]+LENGTH_EXTRA[index]+dist[di]+DIST_EXTRA[di]) as usize<=9*length);}}for raw in samples(){let output=deflate(&raw);assert!(output.len()<=(9*raw.len()+17)/8);}}
 
 struct ObservedAllocator;
+thread_local! { static BACKING: std::cell::Cell<(bool, usize, usize)> = const { std::cell::Cell::new((false, 0, 0)) }; }
+pub(crate) fn observe_backing<T>(work: impl FnOnce() -> T) -> (T, usize, usize) {
+ BACKING.with(|counter| counter.set((true, 0, 0))); let result = work(); let (_, allocated, released) = BACKING.with(|counter| counter.replace((false, 0, 0))); (result, allocated, released)
+}
+fn observe_release(bytes: usize) { let _ = BACKING.try_with(|counter| { let (watch, allocated, released) = counter.get(); if watch { counter.set((true, allocated, released + bytes)); } }); }
+fn observe_created(bytes: usize) { let _ = BACKING.try_with(|counter| { let (watch, allocated, released) = counter.get(); if watch { counter.set((true, allocated + bytes, released)); } }); }
 static OBSERVE_ALLOCATIONS:std::sync::atomic::AtomicBool=std::sync::atomic::AtomicBool::new(false);
 static WATCHED_SIZE:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);
 static WATCHED_ALLOCATIONS:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);
 static LARGEST_ALLOCATION:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);
 unsafe impl std::alloc::GlobalAlloc for ObservedAllocator{
- unsafe fn alloc(&self,layout:std::alloc::Layout)->*mut u8{observe_allocation(layout.size());if DENY_ALLOCATION_SIZE.load(std::sync::atomic::Ordering::Relaxed)==layout.size(){return std::ptr::null_mut()}unsafe{std::alloc::GlobalAlloc::alloc(&std::alloc::System,layout)}}
- unsafe fn alloc_zeroed(&self,layout:std::alloc::Layout)->*mut u8{observe_allocation(layout.size());if DENY_ALLOCATION_SIZE.load(std::sync::atomic::Ordering::Relaxed)==layout.size(){return std::ptr::null_mut()}unsafe{std::alloc::GlobalAlloc::alloc_zeroed(&std::alloc::System,layout)}}
- unsafe fn realloc(&self,pointer:*mut u8,layout:std::alloc::Layout,size:usize)->*mut u8{observe_allocation(size);if DENY_ALLOCATION_SIZE.load(std::sync::atomic::Ordering::Relaxed)==size{return std::ptr::null_mut()}unsafe{std::alloc::GlobalAlloc::realloc(&std::alloc::System,pointer,layout,size)}}
- unsafe fn dealloc(&self,pointer:*mut u8,layout:std::alloc::Layout){unsafe{std::alloc::GlobalAlloc::dealloc(&std::alloc::System,pointer,layout)}}
+ unsafe fn alloc(&self,layout:std::alloc::Layout)->*mut u8{observe_allocation(layout.size());if DENY_ALLOCATION_SIZE.load(std::sync::atomic::Ordering::Relaxed)==layout.size(){return std::ptr::null_mut()}let pointer=unsafe{std::alloc::GlobalAlloc::alloc(&std::alloc::System,layout)};if !pointer.is_null(){observe_created(layout.size());}pointer}
+ unsafe fn alloc_zeroed(&self,layout:std::alloc::Layout)->*mut u8{observe_allocation(layout.size());if DENY_ALLOCATION_SIZE.load(std::sync::atomic::Ordering::Relaxed)==layout.size(){return std::ptr::null_mut()}let pointer=unsafe{std::alloc::GlobalAlloc::alloc_zeroed(&std::alloc::System,layout)};if !pointer.is_null(){observe_created(layout.size());}pointer}
+ unsafe fn realloc(&self,pointer:*mut u8,layout:std::alloc::Layout,size:usize)->*mut u8{observe_allocation(size);if DENY_ALLOCATION_SIZE.load(std::sync::atomic::Ordering::Relaxed)==size{return std::ptr::null_mut()}let result=unsafe{std::alloc::GlobalAlloc::realloc(&std::alloc::System,pointer,layout,size)};if !result.is_null(){observe_release(layout.size());observe_created(size);}result}
+ unsafe fn dealloc(&self,pointer:*mut u8,layout:std::alloc::Layout){observe_release(layout.size());unsafe{std::alloc::GlobalAlloc::dealloc(&std::alloc::System,pointer,layout)}}
 }
 fn observe_allocation(bytes:usize){if OBSERVE_ALLOCATIONS.load(std::sync::atomic::Ordering::Relaxed){LARGEST_ALLOCATION.fetch_max(bytes,std::sync::atomic::Ordering::Relaxed);if bytes==WATCHED_SIZE.load(std::sync::atomic::Ordering::Relaxed){WATCHED_ALLOCATIONS.fetch_add(1,std::sync::atomic::Ordering::Relaxed);}}}
 #[global_allocator]

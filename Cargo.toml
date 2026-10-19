@@ -7,12 +7,12 @@ members = [
     "🧰️framework/🔨️modules/🧪️test/⚖️transient-preparation-law/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🧪️test/⚖️typed-input-law/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust",
-    "🧰️framework/🛍️products/❓️quiz/📦️packages/🦀️rust",
-    "🧰️framework/🛍️products/❓️quiz/🧪️tests/🍰️companion-primitives/📦️packages/🦀️rust",
-    "🧰️framework/🛍️products/❓️quiz/🧪️tests/🥣️companion/📦️packages/🦀️rust",
-    "🧰️framework/🛍️products/❓️quiz/🧪️tests/🧷️companion-support/📦️packages/🦀️rust",
-    "🧰️framework/🛍️products/❓️quiz/🧪️tests/🎞️companion-runs/📦️packages/🦀️rust",
-    "🧰️framework/🛍️products/❓️quiz/🧬️schema/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/📚️course/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/📚️course/🧪️tests/🍰️companion-primitives/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/📚️course/🧪️tests/🥣️companion/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/📚️course/🧪️tests/🧷️companion-support/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/📚️course/🧪️tests/🎞️companion-runs/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/📚️course/🧬️schema/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🐾️pets/🔨️modules/⚙️kinematics/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🐾️pets/🔨️modules/🎬️staging/📦️packages/🦀️rust",
@@ -863,7 +863,7 @@ semio-framework-value-resident = { path = "🧰️framework/🔨️modules/🌱�
 semio-framework-pack = { path = "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 pack = { path = "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 semio-framework-server = { path = "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust" }
-semio-framework-quiz = { path = "🧰️framework/🛍️products/❓️quiz/📦️packages/🦀️rust" }
+semio-framework-course = { path = "🧰️framework/🛍️products/📚️course/📦️packages/🦀️rust" }
 semio-framework-pets = { path = "🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust" }
 semio-framework-async = { path = "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
@@ -967,3 +967,6 @@ semicolon_if_nothing_returned = "warn"
 unnecessary_wraps = "warn"
 redundant_clone = "warn"
 # phase B (enable after the T2/T3 waves land): unwrap_used = "warn"
+
+[workspace.dependencies.semio-framework-plugin-ownership]
+path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust"

@@ -14,34 +14,34 @@ pub struct MutationApplyError {
 /// 🌱️ Hand-written, not derived — same DAG reason `MutationMessage`'s hand-written twin below
 /// documents (this crate sits below `os-kernel`). Mirrors the pre-existing `#[serde(default,
 /// skip_serializing_if = "Vec::is_empty")]` sparse-emission on `target` byte-for-byte.
-impl crate::value::ToValue for MutationApplyError {
-    fn to_value(&self) -> crate::value::DslValue {
-        let mut entries = vec![("code".to_string(), crate::value::ToValue::to_value(&self.code)), ("message".to_string(), crate::value::ToValue::to_value(&self.message))];
+impl semio_framework_value::ToValue for MutationApplyError {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        let mut entries = vec![("code".to_string(), semio_framework_value::ToValue::to_value(&self.code)), ("message".to_string(), semio_framework_value::ToValue::to_value(&self.message))];
         if !self.target.is_empty() {
-            entries.push(("target".to_string(), crate::value::ToValue::to_value(&self.target)));
+            entries.push(("target".to_string(), semio_framework_value::ToValue::to_value(&self.target)));
         }
-        crate::value::DslValue::object(entries)
+        semio_framework_value::DslValue::object(entries)
     }
 }
-impl crate::value::FromValue for MutationApplyError {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for MutationApplyError, found {value:?}")));
+impl semio_framework_value::FromValue for MutationApplyError {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(fields) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for MutationApplyError, found {value:?}")));
         };
         let mut code = None;
         let mut message = None;
         let mut target = Vec::new();
         for (key, entry) in fields {
             match key.as_str() {
-                "code" => code = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("code"))?),
-                "message" => message = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("message"))?),
-                "target" => target = <Vec<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("target"))?,
+                "code" => code = Some(<String as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("code"))?),
+                "message" => message = Some(<String as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("message"))?),
+                "target" => target = <Vec<String> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("target"))?,
                 _ => {}
             }
         }
         Ok(MutationApplyError {
-            code: code.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationApplyError missing code"))?,
-            message: message.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationApplyError missing message"))?,
+            code: code.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "MutationApplyError missing code"))?,
+            message: message.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "MutationApplyError missing message"))?,
             target,
         })
     }
@@ -80,7 +80,7 @@ impl MutationApplyError {
 pub type MutationApplyResult<P> = Result<P, MutationApplyError>;
 
 /// 🔑️ Proof that the caller is the central applier. The private field makes this module the only place that can construct it,
-/// and [`apply_diff`] is the only function here that does.
+/// and [`commit_retained_diff`] is the only function here that does.
 #[derive(Clone, Copy, Debug)]
 pub struct ApplyCapability {
     _sealed: (),
@@ -88,49 +88,78 @@ pub struct ApplyCapability {
 
 /// 🎯️ THE central applier: the only mint point of [`ApplyCapability`] and the one callable entry that turns a diff into a
 /// snapshot. Store lanes, replay, merge, backbone, plugin transaction folds, tool folds, the db and composite planners all
-/// route through it; mutation leaves never call [`MutationDiff::apply`].
-pub fn apply_diff<P, D: MutationDiff<P>>(diff: &D, base: &P) -> MutationApplyResult<P> {
-    apply_with(diff, base, mint_capability())
+/// route through it; mutation leaves never call [`ColdMutationDiff::apply`].
+pub fn apply_diff_cold_into<P, D: ColdMutationDiff<P>>(diff: &D, unpublished: &mut P) -> MutationApplyResult<()> {
+    apply_with(diff, unpublished, mint_capability())
 }
 
-/// 🔑️ The one place the sealed capability is constructed; private, so only [`apply_diff`] reaches it.
+/// ❄️ Evaluates a diff on an owned cold scratch projection; live retained owners use [`commit_retained_diff`].
+pub fn apply_diff_cold<P: Clone, D: ColdMutationDiff<P>>(diff: &D, base: &P) -> MutationApplyResult<P> {
+    let mut unpublished = base.clone();
+    if let Err(error) = apply_diff_cold_into(diff, &mut unpublished) {
+        D::retire_projection(unpublished);
+        return Err(error);
+    }
+    Ok(unpublished)
+}
+
+/// 🔑️ The one place the sealed capability is constructed; private, so only [`commit_retained_diff`] reaches it.
 fn mint_capability() -> ApplyCapability {
     ApplyCapability { _sealed: () }
 }
 
-/// ▶️ Hands the capability to the diff's own step; every caller above this function holds the capability only through [`apply_diff`].
-fn apply_with<P, D: MutationDiff<P>>(diff: &D, base: &P, capability: ApplyCapability) -> MutationApplyResult<P> {
-    diff.apply(base, capability)
+/// ▶️ Hands the capability to the mandatory typed unpublished-owner step.
+fn apply_with<P, D: ColdMutationDiff<P>>(diff: &D, unpublished: &mut P, capability: ApplyCapability) -> MutationApplyResult<()> {
+    diff.apply(unpublished, capability)
 }
 
-/// 📦️ Centralized snapshot mutation — one fallible `apply` per technology. A
-/// malformed or base-incompatible persisted diff must return [`MutationApplyError`]; it must never
-/// clamp an index, ignore a missing target, or return the unchanged base as implicit success.
+/// 📦️ Owns one prepared field until atomic installation or typed retirement on refusal.
+pub struct PreparedField<T> {
+    value: Option<T>,
+    retire: fn(T),
+    capability: ApplyCapability,
+}
+
+impl<T> PreparedField<T> {
+    /// 🎟️ Retains a prepared field under the central applier's capability and its disposal owner.
+    pub fn new(value: T, retire: fn(T), capability: ApplyCapability) -> Self {
+        Self { value: Some(value), retire, capability }
+    }
+
+    /// 🧰️ Stages one changed field, retaining its candidate through refusal until atomic installation.
+    pub fn prepare(base: &T, retire: fn(T), capability: ApplyCapability, edit: impl FnOnce(&mut T) -> MutationApplyResult<()>) -> MutationApplyResult<Self>
+    where
+        T: Clone,
+    {
+        let mut prepared = Self::new(base.clone(), retire, capability);
+        edit(prepared.value_mut())?;
+        Ok(prepared)
+    }
+
+    /// 🛠️ Advances sequential work inside the guarded candidate before its final installation.
+    pub fn value_mut(&mut self) -> &mut T {
+        self.value.as_mut().expect("prepared field owns its candidate until installation")
+    }
+
+    /// 📥️ Installs a validated field and retires the displaced field through the same typed owner.
+    pub fn install(mut self, field: &mut T) {
+        let _capability = self.capability;
+        let next = self.value.take().expect("prepared field owns its value until installation");
+        (self.retire)(std::mem::replace(field, next));
+    }
+}
+
+impl<T> Drop for PreparedField<T> {
+    fn drop(&mut self) {
+        if let Some(value) = self.value.take() { (self.retire)(value); }
+    }
+}
+
+/// 📦️ Typed persisted delta vocabulary shared by retained native application and explicit wire reference algebra.
 ///
-/// Bound on [`crate::value::ToValue`]/[`crate::value::FromValue`], not `serde::Serialize`/
-/// `serde::de::DeserializeOwned` — every plugin technology implementing this trait used to be
-/// forced onto `serde` by this supertrait alone; see
-/// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/
-/// 🔍️research/📓️serde-replacement-surface.md`.
-pub trait MutationDiff<P>: Clone + Default + PartialEq + crate::value::ToValue + crate::value::FromValue + DiffAlgebra<P> {
-    /// 🔑️ Turns the diff into the next snapshot. Callable only with an [`ApplyCapability`], which only [`apply_diff`] mints,
-    /// so leaves cannot apply diffs; a composite diff forwards the capability it received to its sub-diffs.
-    fn apply(&self, base: &P, capability: ApplyCapability) -> MutationApplyResult<P>;
-    /// ➕️ Composes `self` (base→mid) with `other` (mid→after) into base→after, in place.
-    /// Normative absorb contract (`.claude/plans/the-current-schemas-are-scalable-journal.md`
-    /// `## Absorb`): **structural** (operates on the diff's own key/index/field shape, never on
-    /// applied snapshot values), **total** (defined for every pair of diffs over the same
-    /// artifact, including out-of-range/no-op cases — never panics), **base-free** (no snapshot
-    /// parameter; the two diffs alone determine the result), and **sequential-coalesce only**
-    /// (this composes two diffs known to have been applied in sequence by the same actor;
-    /// concurrent-edit merging is an authority's `MergePolicy`/`📡️spr/⚔️conflict` job, never this
-    /// method's — the CRDT-era concurrent-diff merge helper this docstring used to point at is
-    /// deleted, see `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`).
-    /// LAW: whenever sequential application succeeds,
-    /// `apply_diff(&absorb(d1, d2), base) == apply_diff(&d1, base).and_then(|mid| apply_diff(&d2, &mid))`, associative
-    /// over further absorbs of the same artifact's diff vocabulary. A rejection remains a
-    /// rejection; absorb must not manufacture an implicit success path.
-    fn absorb(&mut self, other: Self);
+/// 🛬️ Typed delta admission belongs to its funded native receiver; stored diff ownership does not require a synchronous decoder.
+pub trait MutationDiff<P>: Default + PartialEq + semio_framework_value::ToValue + DiffAlgebra<P> {
+
 
     /// 🧊️ Explicit cold disposal of a diff nobody will apply again. The default IS a plain drop,
     /// which is correct for every diff built out of plain values; a technology whose delta owns a
@@ -157,15 +186,42 @@ pub trait MutationDiff<P>: Clone + Default + PartialEq + crate::value::ToValue +
     }
 }
 
-/// 🧮️ Diff-level algebra for a technology's [`MutationDiff`] type: the concrete negative diff and emptiness.
+
+/// 🧮️ Base-independent emptiness of a technology's typed delta.
 /// There is deliberately no snapshot-differencing constructor: import, example switch and load are load paths, and sync
 /// travels its own frontier delta.
-/// LAW (for valid diffs): `d.inverse(base).apply(&d.apply(base)) == Ok(*base)`.
 pub trait DiffAlgebra<P>: Sized {
-    /// 🔁️ Diff-level undo: the diff that, applied after `self`, restores `base`.
-    fn inverse(&self, base: &P) -> Self;
     /// 🕳️ Whether this diff changes nothing relative to whatever base it was built against.
     fn is_empty(&self) -> bool;
+}
+
+/// 🧮️ Wire values provide reference inversion without sharing or allocating retained native row authorities.
+pub trait ColdDiffAlgebra<P>:DiffAlgebra<P>{fn inverse(&self,base:&P)->Self;}
+/// ❄️ Reference projections apply synchronously only when callers select this distinct wire-value contract.
+pub trait ColdMutationDiff<P>:MutationDiff<P>+semio_framework_value::FromValue{
+    /// ➕️ Composes `self` (base→mid) with `other` (mid→after) into base→after, in place.
+    /// Normative absorb contract (`.claude/plans/the-current-schemas-are-scalable-journal.md`
+    /// `## Absorb`): **structural** (operates on the diff's own key/index/field shape, never on
+    /// applied snapshot values), **total** (defined for every pair of diffs over the same
+    /// artifact, including out-of-range/no-op cases — never panics), **base-free** (no snapshot
+    /// parameter; the two diffs alone determine the result), and **sequential-coalesce only**
+    /// (this composes two diffs known to have been applied in sequence by the same actor;
+    /// concurrent-edit merging is an authority's `MergePolicy`/`📡️spr/⚔️conflict` job, never this
+    /// method's — the CRDT-era concurrent-diff merge helper this docstring used to point at is
+    /// deleted, see `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`).
+    /// LAW: whenever sequential application succeeds,
+    /// `apply_diff_cold(&absorb(d1, d2), base) == apply_diff_cold(&d1, base).and_then(|mid| apply_diff_cold(&d2, &mid))`, associative
+    /// over further absorbs of the same artifact's diff vocabulary. A rejection remains a
+    /// rejection; absorb must not manufacture an implicit success path.
+    fn absorb(&mut self, other: Self);
+    fn apply(&self,unpublished:&mut P,capability:ApplyCapability)->MutationApplyResult<()>;
+}
+
+/// 🎟️ Authorizes one typed original retained commit after its caller admitted the finite work grant.
+pub fn with_retained_apply_capability<P,D:MutationDiff<P>,T>(diff:semio_framework_value_retirement::RetainedCloneRef<'_,D>,grant:semio_framework_value_retirement::RetainedCloneGrant,commit:impl FnOnce(ApplyCapability)->Result<T,ValueError>)->Result<T,ValueError>{
+    if grant.maximum_items==0||grant.maximum_copy_bytes<std::mem::size_of::<bool>()||grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"retained diff capability requires original source and admitted commit grant"));}
+    let _original=diff;
+    commit(mint_capability())
 }
 
 /// 🧬️ One keyed row of a map-valued field's sparse diff: insert a new key, replace an existing key's value, or remove an existing
@@ -381,24 +437,28 @@ macro_rules! sparse_record_diff {
         }
 
         impl $crate::DiffAlgebra<$record> for $diff {
-            fn inverse(&self, base: &$record) -> Self {
-                Self {
-                    $($field: self.$field.as_ref().map(|_| base.$field.clone()),)+
-                    $($kf: $crate::keyed_rows_inverse(&base.$kf, &self.$kf),)*
-                }
-            }
+
 
             fn is_empty(&self) -> bool {
                 true $(&& self.$field.is_none())+ $(&& self.$kf.is_empty())*
             }
         }
+impl $crate::ColdDiffAlgebra<$record> for $diff {
+fn inverse(&self, base: &$record) -> Self {
+                Self {
+                    $($field: self.$field.as_ref().map(|_| base.$field.clone()),)+
+                    $($kf: $crate::keyed_rows_inverse(&base.$kf, &self.$kf),)*
+                }
+            }
+}
 
-        impl $crate::MutationDiff<$record> for $diff {
-            fn apply(&self, base: &$record, _capability: $crate::ApplyCapability) -> $crate::MutationApplyResult<$record> {
-                Ok($record {
+        impl $crate::MutationDiff<$record> for $diff {}
+        impl $crate::ColdMutationDiff<$record> for $diff {
+            fn apply(&self, base: &mut $record, capability: $crate::ApplyCapability) -> $crate::MutationApplyResult<()> {
+                let prepared=$crate::PreparedField::new($record {
                     $($field: self.$field.clone().unwrap_or_else(|| base.$field.clone()),)+
                     $($kf: $crate::keyed_rows_apply(&base.$kf, &self.$kf, stringify!($kf))?,)*
-                })
+                },drop,capability);prepared.install(base);Ok(())
             }
 
             fn absorb(&mut self, other: Self) {
@@ -460,18 +520,22 @@ macro_rules! sparse_whole_diff {
         }
 
         impl $crate::DiffAlgebra<$record> for $diff {
-            fn inverse(&self, base: &$record) -> Self {
-                Self { replacement: self.replacement.as_ref().map(|_| base.clone()) }
-            }
+
 
             fn is_empty(&self) -> bool {
                 self.replacement.is_none()
             }
         }
+impl $crate::ColdDiffAlgebra<$record> for $diff {
+fn inverse(&self, base: &$record) -> Self {
+                Self { replacement: self.replacement.as_ref().map(|_| base.clone()) }
+            }
+}
 
-        impl $crate::MutationDiff<$record> for $diff {
-            fn apply(&self, base: &$record, _capability: $crate::ApplyCapability) -> $crate::MutationApplyResult<$record> {
-                Ok(self.replacement.clone().unwrap_or_else(|| base.clone()))
+        impl $crate::MutationDiff<$record> for $diff {}
+        impl $crate::ColdMutationDiff<$record> for $diff {
+            fn apply(&self, base: &mut $record, capability: $crate::ApplyCapability) -> $crate::MutationApplyResult<()> {
+                if let Some(replacement)=&self.replacement{$crate::PreparedField::new(replacement.clone(),drop,capability).install(base);}Ok(())
             }
 
             fn absorb(&mut self, other: Self) {

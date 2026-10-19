@@ -1245,6 +1245,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
+ "semio-framework-value-snapshot-read",
 ]
 
 [[package]]
@@ -4453,6 +4454,7 @@ dependencies = [
  "semio-framework-value-shared-issuance",
  "serde",
  "serde_json",
+ "semio-framework-hash",
 ]
 
 [[package]]

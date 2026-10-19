@@ -1,5 +1,5 @@
-//! ↩️ Inverse for `DisconnectKindCompatibility` — reconstructs a `connect-kind-compatibility` of
 //! the captured BASE row. Missing target ⇒ `Vec::new()`.
+//! ↩️ Inverse for `DisconnectKindCompatibility` — reconstructs a `connect-kind-compatibility` of
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Inverse

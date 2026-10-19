@@ -6,6 +6,7 @@
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1).
 
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::{LocalCatalogDiff, LocalCatalog, LocalCatalogConfigMutation};
 use semio_framework_test_fixtures::fixture_path;
 
@@ -33,7 +34,7 @@ fn mutation() -> LocalCatalogConfigMutation {
 fn unlists_the_studio_and_keeps_its_sibling() {
     let base = before();
     let outcome = <LocalCatalogConfigMutation as protocol::Mutation<LocalCatalog>>::diff(&mutation(), &base);
-    let applied = protocol::apply_diff(outcome.diff(), &base).expect("retire applies to its committed before-catalog");
+    let applied = protocol::apply_diff_cold(outcome.diff(), &base).expect("retire applies to its committed before-catalog");
     assert_eq!(applied, expected_after(), "retire-local-document: the catalog differs from the committed after-snapshot");
     assert_eq!(applied.documents, vec![base.documents[1].clone()], "retire-local-document: the sibling must survive untouched");
 }
@@ -45,10 +46,10 @@ fn undoing_the_retirement_restores_before() {
     let inverse = <LocalCatalogConfigMutation as protocol::Mutation<LocalCatalog>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert!(matches!(inverse.as_slice(), [LocalCatalogConfigMutation::AdmitLocalDocument(undo)] if undo.document_id == "studio-alpha" && undo.admitted_at_ms == base.documents[0].admitted_at_ms), "retire-local-document: the undo re-admits BASE's own entry");
     let forward = <LocalCatalogConfigMutation as protocol::Mutation<LocalCatalog>>::diff(&mutation(), &base);
-    let mut snapshot = protocol::apply_diff(forward.diff(), &base).expect("forward retire applies");
+    let mut snapshot = protocol::apply_diff_cold(forward.diff(), &base).expect("forward retire applies");
     for step in &inverse {
         let undo = <LocalCatalogConfigMutation as protocol::Mutation<LocalCatalog>>::diff(step, &snapshot);
-        snapshot = protocol::apply_diff(undo.diff(), &snapshot).expect("the retire inverse step applies");
+        snapshot = protocol::apply_diff_cold(undo.diff(), &snapshot).expect("the retire inverse step applies");
     }
     assert_eq!(snapshot, base, "retire-local-document: undoing the retirement did not restore the before-catalog");
 }
@@ -75,7 +76,7 @@ fn declared_outcome_and_diff_hold() {
     let committed: serde_json::Value = serde_json::from_str(DIFF.as_str()).expect("committed diff decodes");
     assert_eq!(json_value(produced.diff()), committed);
     let decoded: LocalCatalogDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    assert_eq!(protocol::apply_diff(&decoded, &before()).expect("committed diff applies"), expected_after());
+    assert_eq!(protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies"), expected_after());
 }
 
 /// ➕️ The concrete inverse's diffs sum to the negative of the forward diff (L3).

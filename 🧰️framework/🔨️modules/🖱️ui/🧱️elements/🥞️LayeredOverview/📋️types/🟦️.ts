@@ -1,6 +1,6 @@
 import type { IconName } from "../../🔣️Icons/🟦️.tsx";
 import * as React from "react";
-import type { LayeredDirection, LayeredCell, LayeredLifecycle } from "../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
+import type { LayeredDirection, LayeredCell, LayeredLifecycle, LayeredRevealSource } from "../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
 
 /** 🧭️ How the one strip under the one glass is read. `strip`: the app's card grid stays put above it and the mouse pans the pages behind
  * (desktop, tablet); `swipe`: the view is one cell of the same grid, each card rides on its own page, and a swipe along either axis — or the
@@ -67,6 +67,21 @@ export interface LayeredInsets {
  * pan, glide and settle give way to stillness — `"never"` (the default), `"auto"` (when the device asks for it) or `"always"`; `openedId`
  * makes the open page controlled. */
 export interface LayeredOverviewProps {
+  /** 🎛️ Whether this overview handles input; inactive ancestor and preview grids still render their controlled panes. */
+  readonly interactive?: boolean;
+  /** 👀️ A controlled revealed page, including an inactive observed overview. */
+  readonly revealedId?: string | null;
+  /** ⌨️ The source of a controlled reveal, so keyboard reveals keep neighbouring cards visible. */
+  readonly revealedBy?: LayeredRevealSource;
+  /** 📷️ The normalized pointer position controlling the overview camera. */
+  readonly camera?: { readonly x: number; readonly y: number };
+  /** 📤️ Reports normalized pointer input before the local camera follows it. */
+  readonly onCameraChange?: (camera: { readonly x: number; readonly y: number }) => void;
+  /** 📱️ The settled page controlling an observed swipe overview. */
+  readonly swipeId?: string;
+  /** 📡️ Reports settled swipe pages without publishing gesture frames. */
+  readonly onSwipeIdChange?: (id: string) => void;
+
   readonly panes: readonly LayeredPane[];
   readonly cells: Readonly<Record<string, LayeredCell>>;
   readonly renderCard: (pane: LayeredPane, state: LayeredCardState) => React.ReactNode;
@@ -79,7 +94,7 @@ export interface LayeredOverviewProps {
   readonly routing?: "hash" | "none";
   readonly openedId?: string | null;
   readonly onOpenedIdChange?: (id: string | null) => void;
-  readonly onRevealedIdChange?: (id: string | null) => void;
+  readonly onRevealedIdChange?: (id: string | null, source?: LayeredRevealSource) => void;
   readonly lifecycle?: Partial<LayeredLifecycle>;
   readonly windowing?: { readonly radius: number };
   readonly reducedMotion?: "auto" | "always" | "never";

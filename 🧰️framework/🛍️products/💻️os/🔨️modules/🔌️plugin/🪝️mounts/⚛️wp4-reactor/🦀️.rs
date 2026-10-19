@@ -16,6 +16,7 @@ pub mod reactor {
     pub use semio_framework_plugin_reactor_context as original_actor_context;
     pub use semio_framework_plugin_reactor_jobs as jobs;
     pub use semio_framework_plugin_reactor_turn as turn;
+    pub(crate) use semio_framework_plugin_reactor_turn::settle_failed_original_publication;
     pub use semio_framework_plugin_reactor_turn::turn_close_step::*;
     #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
     pub use semio_framework_plugin_reactor_turn::drain_task_resumes;

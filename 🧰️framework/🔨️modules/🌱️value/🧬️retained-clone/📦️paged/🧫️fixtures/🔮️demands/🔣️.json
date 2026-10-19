@@ -1,0 +1,22 @@
+{
+  "schema": "framework.value.retained-clone.handwritten-demands.v1",
+  "maximumPayloadCopyBytes": 3,
+  "maximumTurns": 4096,
+  "deniedAxes": ["items", "copy", "capacity", "release", "depth"],
+  "cases": [
+    {"name": "paged-octets", "kind": "bytes", "value": [1, 2, 255]},
+    {"name": "paged-text", "kind": "text", "value": "ä日🌱"},
+    {"name": "paged-object", "kind": "map", "value": {"a": 17, "β": 23}},
+    {"name": "paged-owner-list", "kind": "list", "value": ["alpha", "β"]}
+  ],
+  "expected": {
+    "quoteAllocatesBytes": 0,
+    "shortGrantProgressesItems": 0,
+    "shortGrantMovesBytes": 0,
+    "everyNormalPrefixCloses": true,
+    "sourceIdentityPreserved": true,
+    "fundedOwnerMovementRequired": true,
+    "physicalOwnerBytesConserved": true,
+    "terminalDropBytes": 0
+  }
+}

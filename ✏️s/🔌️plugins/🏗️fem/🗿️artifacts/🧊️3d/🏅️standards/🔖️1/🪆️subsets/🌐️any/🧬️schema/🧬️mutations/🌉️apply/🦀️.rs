@@ -3,8 +3,8 @@
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
-/// 🎬️ Applies one mutation to a projection through the central applier (`vcs::apply_mutation` runs `diff`, `apply_diff` and the cold retirement).
-pub fn apply_fem3d_mutation(snapshot: &mut Fem3dSnapshot, mutation: &Fem3dMutation) -> protocol::MutationApplyResult<()> {
+/// 🎬️ Applies one mutation to a projection through the central applier (`vcs::apply_mutation` runs `diff`, `apply_diff_cold` and the cold retirement).
+pub fn apply_fem3d_mutation(snapshot: &mut Fem3dSnapshotValue, mutation: &Fem3dMutation) -> protocol::MutationApplyResult<()> {
     let (next, _) = vcs::apply_mutation(snapshot, mutation)?;
     *snapshot = next;
     Ok(())

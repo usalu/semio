@@ -270,12 +270,9 @@ pub fn durable_owned_group_journal_test_record(snapshot_json: &str) -> DurableOw
 #[cfg(feature = "durable-group-testing")]
 pub fn durable_owned_group_journal_test_record_from_edits<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(
     document: semio_framework_artifact_reference::ArtifactRef,
-    parent_edit: Edit<ParentMutation>,
-    parent_post_snapshot: ParentP,
-    drawing_edit: Edit<DrawingMutation>,
-    drawing_post_snapshot: DrawingP,
-    value_edit: Edit<ValueMutation>,
-    value_post_snapshot: ValueP,
+    parent: DurableOwnedGroupTestMember<ParentP, ParentMutation>,
+    drawing: DurableOwnedGroupTestMember<DrawingP, DrawingMutation>,
+    value: DurableOwnedGroupTestMember<ValueP, ValueMutation>,
 ) -> Result<DurableOwnedGroupJournalRecordV1, DurableOwnedGroupDecisionError>
 where
     ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot,
@@ -285,9 +282,10 @@ where
     ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot,
     ValueMutation: ValueToValue + ValueFromValue,
 {
-    let parent_outcome = durable_group_test_outcome(PARENT_RECOVERY_SCHEMA, 1, parent_edit, parent_post_snapshot)?;
-    let drawing_outcome = durable_group_test_outcome(DRAWING_RECOVERY_SCHEMA, 2, drawing_edit, drawing_post_snapshot)?;
-    let value_outcome = durable_group_test_outcome(VALUE_RECOVERY_SCHEMA, 3, value_edit, value_post_snapshot)?;
+    let parent_outcome = durable_group_test_outcome(PARENT_RECOVERY_SCHEMA, 1, parent);
+    let drawing_outcome = durable_group_test_outcome(DRAWING_RECOVERY_SCHEMA, 2, drawing);
+    let value_outcome = durable_group_test_outcome(VALUE_RECOVERY_SCHEMA, 3, value);
+    let (parent_outcome, drawing_outcome, value_outcome) = (parent_outcome?, drawing_outcome?, value_outcome?);
     let drawing_reference = semio_framework_artifact_reference::ArtifactRef { artifact_id: "gismap-drawing".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: DRAWING_ROLE.into() } };
     let value_reference = semio_framework_artifact_reference::ArtifactRef { artifact_id: "gismap-value".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: VALUE_ROLE.into() } };
     let anchor = DurableOwnedGroupAnchorV1 { schema: DURABLE_OWNED_GROUP_ANCHOR_SCHEMA_V1.into(), parent: document.clone(), shape: DURABLE_OWNED_GROUP_SHAPE_V1.into() };

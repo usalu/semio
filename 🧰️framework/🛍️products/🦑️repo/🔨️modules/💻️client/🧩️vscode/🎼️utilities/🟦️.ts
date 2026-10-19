@@ -4,21 +4,17 @@
  */
 
 // #region 🔌️Adapters
-import { exec, execFile } from "child_process";
+import { execFile } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import { promisify } from "util";
 import * as vscode from "vscode";
 import { type RepoEvent } from "../⚙️data-models/🟦️.ts";
 import { UI_STRINGS } from "../🎞️constants/🟦️.ts";
-import { acquireCliSlot, cachedRepoBaseUrl, outputChannel, releaseCliSlot } from "../🎩️globals/🟦️.ts";
+import { cachedRepoBaseUrl, outputChannel } from "../🎩️globals/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🔌️Adapters
-/**
- * execAsync holds the data fields for a execAsync record.
- **/
-export const execAsync = promisify(exec);
 /**
  * execFileAsync holds the data fields for a execFileAsync record.
  **/
@@ -26,7 +22,7 @@ export const execFileAsync = promisify(execFile);
 // #endregion 🔌️Adapters
 
 // #region 🎼️Utilities
-// Utilities MUST provide shared functions for logging, shell execution, and binary resolution.
+// Utilities provide logging, fixed read-only query execution and binary resolution.
 
 /**
  * writeLog holds the data fields for a writeLog record.
@@ -75,18 +71,6 @@ export function resolveRepoBinaryPath(root: string, env: NodeJS.ProcessEnv = pro
 export function getRepoBinaryPath(): string | undefined {
   const root = getWorkspaceRoot();
   return root ? resolveRepoBinaryPath(root) : undefined;
-}
-
-/**
- * execShell holds the data fields for a execShell record.
- **/
-export function execShell(cmd: string, cwd: string | undefined): Promise<string> {
-  return new Promise((resolve, reject) => {
-    exec(cmd, { cwd, maxBuffer: 1024 * 1024 * 10 }, (err, stdout, stderr) => {
-      if (err) return reject(err);
-      resolve(stdout);
-    });
-  });
 }
 
 /** getRepoCommand holds the data fields for a getRepoCommand record.
@@ -140,33 +124,6 @@ export function getGitHubRepoBaseUrl(): string | undefined {
   }
   cachedRepoBaseUrl.current = cleaned.startsWith("http://") || cleaned.startsWith("https://") ? cleaned : undefined;
   return cachedRepoBaseUrl.current;
-}
-
-/**
- * runRepoCommandJson holds the data fields for a runRepoCommandJson record.
- **/
-export async function runRepoCommandJson<T>(args: string): Promise<T | null> {
-  const root = getWorkspaceRoot();
-  if (!root || !hasRepoAccess()) return null;
-  const command = getRepoCommand();
-  if (!command) return null;
-  const fullCommand = `"${command}" --json ${args}`;
-  await acquireCliSlot();
-  try {
-    const { stdout } = await execAsync(fullCommand, { cwd: root, timeout: 60000, maxBuffer: 10 * 1024 * 1024 });
-    if (!stdout.trim()) return null;
-    const events = parseRepoEvents(stdout);
-    const result = extractRepoResult(events);
-    if (result && "data" in result) {
-      return { data: result.data, output: { exitCode: 0, lines: [] } } as any;
-    }
-    return result as T;
-  } catch (error) {
-    logError("[runRepoCommandJson] error:", error);
-    return null;
-  } finally {
-    releaseCliSlot();
-  }
 }
 
 /**

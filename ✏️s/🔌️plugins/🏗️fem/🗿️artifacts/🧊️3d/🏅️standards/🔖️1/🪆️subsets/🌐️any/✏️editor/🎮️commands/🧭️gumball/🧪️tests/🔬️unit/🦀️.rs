@@ -8,23 +8,39 @@ use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dPlayApp;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
-use semio_framework_plugin::{AppOperationContext, ArtifactView, ConfigView, EditorApp, Emit, EphemeralEmit, Fault, NoConfig, NoConfigMutation, ViewModel};
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::EphemeralEmit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::ViewModel;
 use semio_framework_tool_machine::GesturePhase;
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::fem_gumball_drive;
 use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballTransientMutation;
 use semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model;
-use crate::context::{close, dispatch, dispatch_rows, fem3d_demo_app, history_verb, render, view, Fem3dApp};
+use crate::context::close;
+use crate::context::dispatch;
+use crate::context::dispatch_rows;
+use crate::context::fem3d_demo_app;
+use crate::context::history_verb;
+use crate::context::render;
+use crate::context::view;
+use crate::context::Fem3dApp;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
 use semio_framework::kernel::HistoryEntry;
-use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig, ViewModel};
-
+use semio_framework_plugin::HistoryView;
 fn demo() -> Fem3dSnapshot {
     semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()
 }
 
 fn translate(dx: f64, phase: Option<&str>) -> Fem3dCommand {
-    Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: vec!["n20_l1".into()], dx, dy: 0.0, dz: 0.0, phase: phase.map(str::to_string), reason: None })
+    Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: vec![semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("node", "n20_l1").unwrap()], dx, dy: 0.0, dz: 0.0, phase: phase.map(str::to_string), reason: None })
 }
 
 fn node_position(app: &Fem3dApp, id: &str) -> [f64; 3] {
@@ -46,18 +62,18 @@ fn the_unmounted_route_commits_one_relative_leaf_and_refuses_a_stream() {
     let history = HistoryView::empty();
     let view = ArtifactView::new(&doc, &history);
     let cfg = ConfigView { snapshot: &NoConfig::default(), window: None };
-    let emit = translate_selection::handle(&translate_selection::TranslateSelection { ids: vec!["n20_l1".into()], dx: 0.5, dy: -0.25, dz: 0.0, phase: None, reason: None }, &view, &cfg).expect("emit");
+    let emit = translate_selection::handle(&translate_selection::TranslateSelection { ids: vec![semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("node", "n20_l1").unwrap()], dx: 0.5, dy: -0.25, dz: 0.0, phase: None, reason: None }, &view, &cfg).expect("emit");
     let [Fem3dMutation::MoveSelection(leaf)] = emit.artifact_mutations.as_slice() else { panic!("one relative leaf: {:?}", emit.artifact_mutations) };
     assert_eq!((leaf.node_ids.clone(), leaf.dx, leaf.dy), (vec!["n20_l1".to_string()], 0.5, -0.25));
     let UiDirtyScope::Partial { window_bodies, .. } = &emit.ui_scope else { panic!("partial scope") };
     assert_eq!(window_bodies, &vec![model::FEM3D_BODY_MODEL.to_string(), results_window::FEM3D_BODY_RESULTS.to_string()]);
-    let idle = translate_selection::handle(&translate_selection::TranslateSelection { ids: vec!["n20_l1".into()], dx: 0.0, dy: 0.0, dz: 0.0, phase: None, reason: None }, &view, &cfg).expect("emit");
+    let idle = translate_selection::handle(&translate_selection::TranslateSelection { ids: vec![semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("node", "n20_l1").unwrap()], dx: 0.0, dy: 0.0, dz: 0.0, phase: None, reason: None }, &view, &cfg).expect("emit");
     assert!(idle.artifact_mutations.is_empty(), "a zero step publishes nothing");
-    let rotate = rotate_selection::handle(&rotate_selection::RotateSelection { ids: vec!["n20_l1".into(), "n00_l1".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 0.3, phase: None, reason: None }, &view, &cfg).expect("emit");
+    let rotate = rotate_selection::handle(&rotate_selection::RotateSelection { ids: vec![semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("node", "n20_l1").unwrap(), semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("node", "n00_l1").unwrap()], ax: 0.0, ay: 0.0, az: 1.0, angle: 0.3, phase: None, reason: None }, &view, &cfg).expect("emit");
     assert!(matches!(rotate.artifact_mutations.as_slice(), [Fem3dMutation::MoveSelection(leaf)] if leaf.angle == 0.3));
-    let scale = scale_selection::handle(&scale_selection::ScaleSelection { ids: vec!["sol1".into()], sx: 2.0, sy: 1.0, sz: 1.0, phase: None, reason: None }, &view, &cfg).expect("emit");
+    let scale = scale_selection::handle(&scale_selection::ScaleSelection { ids: vec![semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("solid", "sol1").unwrap()], sx: 2.0, sy: 1.0, sz: 1.0, phase: None, reason: None }, &view, &cfg).expect("emit");
     assert!(matches!(scale.artifact_mutations.as_slice(), [Fem3dMutation::MoveSelection(leaf)] if leaf.solid_ids == ["sol1"] && leaf.sx == 2.0));
-    assert!(translate_selection::handle(&translate_selection::TranslateSelection { ids: vec!["n20_l1".into()], dx: 0.5, dy: 0.0, dz: 0.0, phase: Some("stream".into()), reason: None }, &view, &cfg).is_err());
+    assert!(translate_selection::handle(&translate_selection::TranslateSelection { ids: vec![semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("node", "n20_l1").unwrap()], dx: 0.5, dy: 0.0, dz: 0.0, phase: Some("stream".into()), reason: None }, &view, &cfg).is_err());
 }
 
 /// 🕹️ LAW: an id-less payload moves the live framework selection.
@@ -67,7 +83,7 @@ fn an_id_less_payload_moves_the_live_selection() {
     let history = HistoryView::empty();
     let view = ArtifactView::new(&doc, &history);
     let cfg = ConfigView { snapshot: &NoConfig::default(), window: None };
-    let live = semio_s_artifact_fem_3d_editor::editor::fem3d::fem3d_route(&Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: Vec::new(), dx: 0.0, dy: 0.0, dz: 1.0, phase: None, reason: None }), &view, &cfg, || vec!["n20_l1".into()], None).expect("route");
+    let live = crate::editor::fem3d::fem3d_route(&Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: Vec::new(), dx: 0.0, dy: 0.0, dz: 1.0, phase: None, reason: None }), &view, &cfg, || vec![semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("node", "n20_l1").unwrap()], None).expect("route");
     let [Fem3dMutation::MoveSelection(leaf)] = live.artifact_mutations.as_slice() else { panic!("the live selection moved") };
     assert_eq!(leaf.node_ids, vec!["n20_l1".to_string()]);
 }
@@ -115,7 +131,7 @@ async fn an_abort_leaves_zero_trace_and_two_drags_are_two_transactions() {
     let mut app = fem3d_demo_app().await;
     let before = node_position(&app, "n20_l1");
     dispatch(&mut app, translate(0.25, Some("stream"))).await;
-    let aborted = dispatch_rows(&mut app, Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: vec!["n20_l1".into()], dx: 0.0, dy: 0.0, dz: 0.0, phase: Some("abort".into()), reason: Some("captureLost".into()) })).await;
+    let aborted = dispatch_rows(&mut app, Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: vec![semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("node", "n20_l1").unwrap()], dx: 0.0, dy: 0.0, dz: 0.0, phase: Some("abort".into()), reason: Some("captureLost".into()) })).await;
     assert!(aborted.is_empty(), "an abort publishes nothing");
     assert_eq!(node_position(&app, "n20_l1"), before);
     let first = dispatch_rows(&mut app, translate(0.5, None)).await;

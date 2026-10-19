@@ -5,7 +5,7 @@ Feature: Route terminal pointer events to the right control
   `🧪️tests/🧫️fixtures/🖱️pointer-routing/🔣️.json` declares a two-stack dashboard scene, its painted chrome rows, the
   geometry of every chip and control, and the signals each pointer sequence must produce.
 
-  Three readers share that table and nothing else. The Rust engine adapter replays every case. The vitest oracle in
+  Three readers share that table and nothing else. The Rust engine adapter replays every case. The Bun oracle in
   this folder re-derives every chrome case from the declared geometry with its own small model, checks the
   declared geometry against the golden frame rows, and uses `string-width` and `cli-truncate` as third-party
   oracles for cell width and ellipsis.
@@ -19,7 +19,7 @@ Feature: Route terminal pointer events to the right control
     Then the window reports a close for tab 1 and focus does not move
     And a right or middle press on the same glyph reports nothing
     And a right press on a chip asks for that tab's context menu at the pointer cell
-    And the maximize control names the active tab of its own window
+    And the maximize control names the tab whose glyph was pressed
 
   @id-press-focuses-the-containing-focusable
   @level-fundamental
@@ -61,10 +61,14 @@ Feature: Route terminal pointer events to the right control
   @id-drags
   @level-fundamental
   @mode-conformance
-  Scenario: Dragging a chip reorders tabs and dragging the gutter resizes the stacks
+  Scenario: Dragging a window chip previews and commits a corner-local insertion
     Given the two-stack scene painted at 80 by 40 cells
-    When a chip is pressed, dragged over a later chip and released
-    Then the window reports the tab move once, on release
+    When the second chip is pressed and dragged to column 23
+    Then it previews source w3 into target w1 at top-left insertion index 1
+    When it crosses the later chip midpoint to column 35 and is released
+    Then it previews insertion index 2 during the drag and again on release
+    And it commits WindowDocked with source w3, target w1, top-left corner and index 2
+    And dragging back to column 18 commits corner index 1 without changing tab order
     And dragging the gutter reports incremental splitter deltas for the axis path
     And releasing or dragging without a press is harmless
 
@@ -73,7 +77,8 @@ Feature: Route terminal pointer events to the right control
   @mode-conformance
   Scenario: The hit-tested geometry is the painted geometry
     Given the golden chrome rows and the declared chips and controls
-    Then every declared wall, close glyph and maximize glyph is at its declared column
+    Then every declared wall, grip, close glyph and maximize glyph is at its declared column
+    And mounted grips replace leading padding without shifting label or control columns
     And the Rust painter reproduces the golden rows cell for cell
     And an independent width model agrees every row is exactly as wide as the terminal
 

@@ -26,3 +26,12 @@ pub mod input_wire;
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
+
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "../⌨️native-entrypoint/🎟️launch/🦀️.rs"]
+pub mod native_launch;
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "../🧊️renderer/🚪️native-io/🦀️.rs"]
+pub mod native_io;
+#[cfg(not(target_arch = "wasm32"))]
+pub use semio_framework_os_renderer_wgpu_host_base::{renderer_worker_pool, RENDERER_IO_WAKE};

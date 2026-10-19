@@ -10,7 +10,7 @@ fn permits(d:RetirementDemand,g:RetainedCloneGrant)->bool{g.maximum_items>0&&d.c
 impl<T:RetireOwned,E:RetireOwned> ActiveResult<T,E>{
  fn terminal_is_empty(&self)->bool{match self{Self::Ok(v)=>v.terminal_is_empty(),Self::Err(v)=>v.terminal_is_empty()}}
  fn demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
-  macro_rules! demand{($v:expr)=>{Ok(RetirementDemand{copy_bytes:$v.next_copy_byte_demand()?,capacity_bytes:$v.next_capacity_byte_demand(body)?,release_bytes:$v.next_release_byte_demand()?,depth:$v.next_depth_demand()?.checked_add(1).ok_or_else(refusal)?})};}
+  macro_rules! demand{($v:expr)=>{{let mut d=$v.next_demand(body)?;d.depth=d.depth.checked_add(1).ok_or_else(refusal)?;Ok(d)}};}
   match self{Self::Ok(v)=>demand!(v),Self::Err(v)=>demand!(v)}
  }
  fn step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{match self{Self::Ok(v)=>v.step(g),Self::Err(v)=>v.step(g)}}
@@ -27,6 +27,7 @@ impl<T:RetireOwned,E:RetireOwned> RetireOwned for Result<T,E>{
  fn controlled_retirement_supported()->bool{T::controlled_retirement_supported()&&E::controlled_retirement_supported()}
 }
 impl<T:RetireOwned,E:RetireOwned> RetirementCursor for OriginalResult<T,E>{
+ fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.demand(body)}
  fn close_step(&mut self,g:RetainedCloneGrant)->RetirementStep{
   if self.terminal_is_empty(){return RetirementStep::Complete;}
   let d=match self.demand(g.maximum_copy_bytes){Ok(d)=>d,Err(e)=>return RetirementStep::Failure(e)};

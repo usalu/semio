@@ -78,10 +78,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             }
             Phase::Fold => {
                 let mut fold_grant = match hydration_child_grant(grant, cx.fuel_remaining()) { Ok(child) => child, Err(diagnostic) => return self.reject(diagnostic) };
-                let job = self.fold_job.as_mut().expect("history fold job remains retained");
+                                let body = fold_grant.maximum_copy_bytes;
+let job = self.fold_job.as_mut().expect("history fold job remains retained");
                 let required_copy = match job.next_step_grant(1, fold_grant.maximum_copy_bytes) { Ok(required) => required.maximum_copy_bytes, Err(_) => return self.reject(MemberOpenDiagnostic::Replay) };
                 fold_grant.maximum_copy_bytes = fold_grant.maximum_copy_bytes.max(required_copy.min(grant.maximum_copy_bytes));
-                let result = job.step(fold_grant, &mut || cx.should_yield());
+                let result = job.step(fold_grant, body, &mut || cx.should_yield());
                 self.fold_completed = job.completed();
                 match result {
                     Ok(semio_framework_os_spr::HistoryFoldJobStep::Pending { progress, .. }) if progress.fits(fold_grant) => {
@@ -508,7 +509,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             Phase::DecodeTarget => {
                 let decode_grant = match hydration_child_grant(grant, cx.fuel_remaining()) { Ok(child) => child, Err(diagnostic) => return self.reject(diagnostic) };
                 let job = self.target_decoder.as_mut().expect("transition target decoder remains retained");
-                match job.step(decode_grant, &mut || cx.should_yield()) {
+                match job.step(decode_grant, decode_grant.maximum_copy_bytes, &mut || cx.should_yield()) {
                     Ok(semio_framework_os_spr::HistoryFoldJobStep::Pending { progress, .. }) if progress.fits(decode_grant) => {
                         if let Err(diagnostic) = semio_framework_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
                     }

@@ -1,0 +1,24 @@
+{
+  "speciesCount": 39,
+  "topics": [
+    { "id": "energy", "scene": "topic-energy", "species": ["sunny", "cloudy", "housy", "solary", "radiatory", "pumpy", "windowy", "waly", "battery", "windy", "boily", "roofy", "insuly", "shady", "venty", "chilly", "kettly", "flamy", "thermy", "servy"] },
+    { "id": "grasshopper", "scene": "topic-grasshopper", "species": ["rhino", "grasshopper", "slider", "colour-wheel"] },
+    { "id": "excel", "scene": "topic-excel", "species": ["workbook", "worksheet", "cell", "formula"] },
+    { "id": "parametric", "scene": "topic-parametric", "species": ["double-curved-surface", "continuous-parameter", "discrete-parameter"] },
+    { "id": "bim", "scene": "topic-bim", "species": ["execution-plan", "model-3d", "plan-2d", "quantities"] },
+    { "id": "optimization", "scene": "topic-optimization", "species": ["pareto", "heatmap", "minimized-surface", "bar-chart"] }
+  ],
+  "questions": [
+    { "quiz": "physics", "task": "power-or-energy", "core": ["kettly", "battery", "solary"], "rotation": ["flamy", "housy", "radiatory", "boily", "cloudy", "roofy", "sunny"] },
+    { "quiz": "physics", "task": "powers", "core": ["sunny", "windy", "kettly"], "rotation": ["flamy", "solary", "battery", "radiatory", "housy", "cloudy"] },
+    { "quiz": "physics", "task": "energies", "core": ["battery", "kettly", "housy"], "rotation": ["windy", "boily", "sunny", "thermy"] },
+    { "quiz": "heating", "task": "u-values", "core": ["waly", "windowy", "insuly"], "rotation": ["roofy", "radiatory", "shady"] },
+    { "quiz": "heating", "task": "heating-load-and-demand", "core": ["radiatory", "housy", "pumpy"], "rotation": ["waly", "insuly", "venty", "thermy"] },
+    { "quiz": "ventilation", "task": "ventilation-statements", "core": ["venty", "windowy"], "rotation": [] },
+    { "quiz": "ventilation", "task": "ventilation-profiles", "core": ["venty", "windowy"], "rotation": [] },
+    { "quiz": "ventilation", "task": "air-change-rates", "core": ["venty", "windowy"], "rotation": [] },
+    { "quiz": "cooling", "task": "cooling-load-and-demand", "core": ["chilly", "shady", "servy"], "rotation": ["sunny", "cloudy", "venty", "windowy", "roofy", "thermy"] },
+    { "quiz": "demand", "task": "standard-profiles", "core": ["housy", "pumpy", "solary"], "rotation": ["boily", "insuly", "roofy", "shady", "venty", "windowy"] },
+    { "quiz": "demand", "task": "final-energy", "core": ["pumpy", "boily", "solary"], "rotation": ["housy", "insuly", "venty", "radiatory"] }
+  ]
+}

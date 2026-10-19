@@ -1,5 +1,5 @@
 /**
- * 💨️ Real-workspace smoke (feature: ./🥒️.feature): real Nx commands of this monorepo through a dashboard daemon of
+ * 💨️ Real-workspace smoke (feature: ./🥒️.feature): real build-runner commands through a dashboard daemon of
  * their own. The developer's daemon must never be started, stopped or contacted, so the suite runs only when the
  * binary isolates daemons by `SEMIO_DASHBOARD_INSTANCE` (a name mixed into the workspace key and the cache
  * directory); the suite starts only the named instance and fails if an instance-less client reaches the same daemon.
@@ -53,7 +53,7 @@ describe("real workspace smoke", () => {
     expect(plain(logs.stdout)).toMatch(/Successfully ran target build/);
   }, 1_300_000);
 
-  test("A finite real Nx command runs to completion with exit code 0", async () => {
+  test("A finite real command runs to completion with exit code 0", async () => {
     expect(await isolation()).toBeUndefined();
     const result = await run(["run", "@semio-tech/repo-dashboard-rs:test", "--param", "dependencies", "--", "execution"], 1_200_000);
     const text = plain(result.stdout);
@@ -65,14 +65,14 @@ describe("real workspace smoke", () => {
   test("A real development server starts detached, answers and stops", async () => {
     expect(await isolation()).toBeUndefined();
     const busy = await get("http://127.0.0.1:6061/").then(() => true, () => false);
-    if (busy) { console.log("[smoke] port 6061 is in use (a developer's quiz is running): scenario skipped"); return; }
-    const started = await run(["run", "@teaching/architecture-quiz:dev", "--detach", "--wait-ready", "--timeout", "900"], 1_000_000);
+    expect(busy, "Course port 6061 is occupied; readiness and cancellation cannot be verified").toBe(false);
+    const started = await run(["run", "@teaching/architecture-course:dev", "--detach", "--wait-ready", "--timeout", "900"], 1_000_000);
     expect(started.code, `${started.stderr}\n${started.stdout}`).toBe(0);
     const address = /http:\/\/(?:127\.0\.0\.1|localhost):6061\S*/.exec(started.stdout)?.[0];
     if (address === undefined) throw new Error(`No ready address in ${started.stdout}`);
     const early = await get(address).then(() => false, () => true);
     expect((await get(address, 240)).status).toBe(200);
-    const mine = async () => (JSON.parse((await run(["tasks", "--json"])).stdout) as { session: string; commandId: string; status: string; readyUrl: string | null; startedMs: number }[]).filter((task) => task.commandId === "@teaching/architecture-quiz:dev").sort((a, b) => b.startedMs - a.startedMs)[0]!;
+    const mine = async () => (JSON.parse((await run(["tasks", "--json"])).stdout) as { session: string; commandId: string; status: string; readyUrl: string | null; startedMs: number }[]).filter((task) => task.commandId === "@teaching/architecture-course:dev").sort((a, b) => b.startedMs - a.startedMs)[0]!;
     const task = await mine();
     expect(task.status).toBe("running");
     expect(task.readyUrl).toBe(address);

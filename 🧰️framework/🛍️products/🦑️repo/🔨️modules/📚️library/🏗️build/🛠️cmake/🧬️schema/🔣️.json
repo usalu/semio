@@ -35,7 +35,7 @@
       "const": {
         "source": {
           "CMakeLists.txt": "4d986d0836743aa21cfbe2fb9cd80a0bfb74f34dc98c88bc655813a886c484d7",
-          "CMakePresets.json": "dd0cc1f54aaf2a6313ce6ef751562bcc60cb69cd7062fc7ef0253e57ff4a374f"
+          "CMakePresets.json": "8cb2337644c2579f297200d25febaedd6692da409653330d904a86d3ce8c19da"
         },
         "maximumInputFiles": 12,
         "maximumInputBytes": 536870912,
@@ -47,7 +47,7 @@
         "generator": {
           "linux": "Ninja",
           "macos": "Ninja",
-          "windows": "Visual Studio 18 2026"
+          "windows": "Ninja"
         },
         "materialized": [
           "source",
@@ -214,10 +214,64 @@
           ]
         },
         "generator": {
-          "enum": [
-            "Ninja",
-            "Visual Studio 18 2026"
-          ]
+          "const": "Ninja"
+        }
+      }
+    },
+    "NativePresets": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "🛠️ IDE-independent native build presets",
+      "type": "object",
+      "required": [
+        "configurePresets"
+      ],
+      "properties": {
+        "configurePresets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "if": {
+              "required": [
+                "hidden"
+              ],
+              "properties": {
+                "hidden": {
+                  "const": true
+                }
+              }
+            },
+            "then": {},
+            "else": {
+              "required": [
+                "generator",
+                "cacheVariables"
+              ],
+              "properties": {
+                "generator": {
+                  "const": "Ninja"
+                },
+                "cacheVariables": {
+                  "type": "object",
+                  "required": [
+                    "CMAKE_BUILD_TYPE"
+                  ],
+                  "properties": {
+                    "CMAKE_BUILD_TYPE": {
+                      "enum": [
+                        "Debug",
+                        "Release"
+                      ]
+                    }
+                  }
+                }
+              },
+              "not": {
+                "required": [
+                  "architecture"
+                ]
+              }
+            }
+          }
         }
       }
     }

@@ -155,7 +155,7 @@ pub(super) fn wal_frontier_len(frontier: &Frontier) -> usize {
 }
 
 pub async fn wal_record_write(record: &mut protocol::SprIdentityRecord<'_, SharedBuf>, bytes: &[u8]) -> Result<(), DbError> {
-    record.write_fragment(bytes).await.map_err(protocol_err)
+    record.write_fragment(bytes).await.map_err(DbError::from)
 }
 
 pub(super) async fn wal_record_write_field(record: &mut protocol::SprIdentityRecord<'_, SharedBuf>, bytes: &[u8]) -> Result<(), DbError> {

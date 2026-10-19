@@ -1,5 +1,5 @@
-//! ↩️ Inverse for `ScaleSelection` — the absolute setters restoring every BASE position and extent the
 //! scaling changes (exact, never a reciprocal factor that would accumulate float error). Nothing moved ⇒
+//! ↩️ Inverse for `ScaleSelection` — the absolute setters restoring every BASE position and extent the
 //! `Vec::new()`.
 use crate::standards::v1::subsets::any::schema::mutations::move_node::MoveNode;
 use crate::standards::v1::subsets::any::schema::mutations::move_target_region::MoveTargetRegion;

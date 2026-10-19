@@ -510,6 +510,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
+ "semio-framework-value-snapshot-read",
  "serde",
  "serde_json",
 ]
@@ -858,6 +859,7 @@ dependencies = [
 name = "semio-framework-value"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-value-derive",
  "serde",
@@ -873,6 +875,13 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-native-build-compiler-resources",
  "syn 2.0.119",
+]
+
+[[package]]
+name = "semio-framework-value-snapshot-read"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
 ]
 
 [[package]]

@@ -1,12 +1,17 @@
-//! 🔍️ Puzzle 2d play app — the Detail window: a non-interactive canvas pane zoomed into the
 //! last-placed node, framed by `🎭️modes/✏️edit`'s triptych camera.
+//! 🔍️ Puzzle 2d play app — the Detail window: a non-interactive canvas pane zoomed into the
 
 use crate::editor::puzzle2d::engine::BoardHost;
 use crate::editor::puzzle2d::modes::edit;
 use crate::editor::puzzle2d::modes::edit::options;
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use {crate::editor::puzzle2d::terminology::puzzle2d_localized, crate::editor::puzzle2d::snapshot::Puzzle2dScene, crate::editor::puzzle2d::config::PUZZLE2D_LOD_MODE_AUTOMATIC};
-use semio_framework_plugin::{SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::WindowEngagement;
+use semio_framework_plugin::WindowEngagementSlot;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_BODY_KEY;

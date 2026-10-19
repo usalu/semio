@@ -131,7 +131,7 @@ where
     #[inline] pub fn transition_envelope(&self, transition: &semio_framework_os_spr::HistoryTransition, dependencies: Vec<MutationId>, target: Vec<String>, timestamp: HybridLogicalTimestamp) -> semio_framework_os_spr::MutationEnvelope { self.log.transition_envelope(transition, dependencies, target, timestamp) }
 
     /// 🪞️ Delegates to [`StoreLive::reproject`].
-    #[inline] pub async fn reproject(&mut self) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> { self.live.reproject(&mut self.log, &mut self.owners, &mut self.cursor).await }
+    #[inline] async fn reproject(&mut self) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError>  where P: Clone, Mutation: ColdMutation<P> { self.live.reproject(&mut self.log, &mut self.owners, &mut self.cursor).await }
 
     /// 🪞️ Delegates to [`StoreReplay::tail_step`].
     #[inline] pub(super) fn tail_step(&self, envelope: &semio_framework_os_spr::MutationEnvelope) -> Option<TailStep> { self.replay.tail_step(&self.log, &self.cursor, &self.live, envelope) }

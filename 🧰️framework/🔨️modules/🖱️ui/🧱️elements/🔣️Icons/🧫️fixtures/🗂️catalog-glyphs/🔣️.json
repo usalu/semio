@@ -1,0 +1,19 @@
+{
+  "catalog": [
+    { "icon": "chevron-right", "canonical": "chevron-right", "size": "small", "title": "Next", "class": "size-small" },
+    { "icon": "user", "canonical": "user", "size": "base", "title": "Learner", "class": "size-workbench" },
+    { "icon": "info", "canonical": "info", "size": "tiny", "title": "Information", "class": "size-tiny" },
+    { "icon": "trash", "canonical": "trash-2", "size": "small", "title": "Remove", "class": "size-small" }
+  ],
+  "boxes": [
+    { "icon": "info", "size": 24, "className": "catalog-custom-size", "hidden": "true" }
+  ],
+  "themes": [
+    { "id": "alias", "icon": "info", "alias": "user", "svg": "" },
+    { "id": "variant", "icon": "info", "alias": "", "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M1 2 L3 4\"/></svg>" }
+  ],
+  "rich": [
+    { "icon": ":rocket:", "kind": "emoji", "text": "🚀" },
+    { "icon": "text:Quiz", "kind": "text", "text": "Quiz" }
+  ]
+}

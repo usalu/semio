@@ -15,6 +15,7 @@ import {
   UI_TABLET_MAX_WIDTH_PX,
   UI_TABLET_MEDIA_QUERY,
   availableViewportHeightPx,
+  elementsSurfaceDeviceForLayout,
   elementsSurfaceDeviceForMatches,
   elementsSurfaceDeviceForWidth,
   elementsSurfaceDeviceIsMobile,
@@ -59,6 +60,16 @@ describe("📱️ breakpoint policy", () => {
     expect(elementsSurfaceDeviceForMatches({ mobile: false, tablet: true })).toBe("tablet");
     expect(elementsSurfaceDeviceForMatches({ mobile: false, tablet: false })).toBe("desktop");
     expect(elementsSurfaceDeviceForMatches({ mobile: true, tablet: true })).toBe("mobile");
+  });
+
+  it("offers desktop and tablet on anything that is not a phone, and a phone ignores the pin", () => {
+    expect(elementsSurfaceDeviceForLayout("desktop", undefined)).toBe("desktop");
+    expect(elementsSurfaceDeviceForLayout("tablet", undefined)).toBe("tablet");
+    expect(elementsSurfaceDeviceForLayout("desktop", "tablet")).toBe("tablet");
+    expect(elementsSurfaceDeviceForLayout("tablet", "desktop")).toBe("desktop");
+    expect(elementsSurfaceDeviceForLayout("mobile", "desktop")).toBe("mobile");
+    expect(elementsSurfaceDeviceForLayout("mobile", "tablet")).toBe("mobile");
+    expect(elementsSurfaceDeviceForLayout("mobile", undefined)).toBe("mobile");
   });
 
   it("only a phone collapses the dock anchors and loses tab drag", () => {
@@ -123,6 +134,9 @@ describe("📐 available viewport height", () => {
     const root = repoRoot();
     const css = readFileSync(resolve(root, CSS_PATH), "utf8");
     expect(css).toContain("--ui-available-height: 100dvh");
+    expect(css).toContain('[data-ui-device="tablet"]');
+    expect(css).toContain("min-height: var(--layout-touch-min)");
+    expect(css).toContain("min-width: var(--layout-touch-min)");
     expect(css).toContain(".h-screen {\n  height: var(--ui-available-height, 100dvh);");
     const host = readFileSync(resolve(root, HOST_PATH), "utf8");
     const script = /export const PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT = `([\s\S]*?)`;/.exec(host);

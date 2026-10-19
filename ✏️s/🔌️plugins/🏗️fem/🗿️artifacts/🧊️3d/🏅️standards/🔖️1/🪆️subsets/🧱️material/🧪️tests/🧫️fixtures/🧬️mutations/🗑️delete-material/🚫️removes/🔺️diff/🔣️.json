@@ -2,13 +2,13 @@
   "nodes": null,
   "elements": null,
   "materials": {
-    "inserted": [],
     "removed": [
       {
         "id": "alu",
         "index": 1
       }
     ],
+    "inserted": [],
     "moved": [],
     "modified": []
   },

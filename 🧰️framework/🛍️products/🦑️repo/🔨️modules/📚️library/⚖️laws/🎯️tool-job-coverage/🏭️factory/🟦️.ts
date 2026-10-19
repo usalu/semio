@@ -18,7 +18,7 @@ function toolJobArtifactCrateRoot(file: string): string | undefined {
 }
 
 /** 🧭️ Resolves one crate module through its package's explicit taxonomy declarations. */
-function toolJobFactoryModuleFile(files: ReadonlyMap<string, string>, ownerFile: string, modulePath: string): string | undefined {
+export function toolJobFactoryModuleFile(files: ReadonlyMap<string, string>, ownerFile: string, modulePath: string): string | undefined {
   const candidates = new Set<string>();
   const visit = (source: string, directory: string, prefix: string): void => {
     const declaration = /#\[path\s*=\s*"([^"]+)"\]\s*(?:pub(?:\([^)]*\))?\s+)?mod\s+([A-Za-z_][A-Za-z0-9_]*)\s*([;{])/g;
@@ -29,6 +29,7 @@ function toolJobFactoryModuleFile(files: ReadonlyMap<string, string>, ownerFile:
       if (match[3] === ";") {
         const exportedComponent = prefix === modulePath && match[2] === "component" && /pub\s+use\s+component::\*\s*;/.test(source);
         if ((name === modulePath || exportedComponent) && files.has(target)) candidates.add(target);
+        else if (modulePath.startsWith(`${name}::`) && files.has(target)) visit(files.get(target)!, posix.dirname(target), name);
       } else {
         const block = toolJobRustBlock(source, source.indexOf("{", match.index));
         if (!block) return;

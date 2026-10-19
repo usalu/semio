@@ -2,13 +2,12 @@
  * `postAttachCommand` → `bun ./📜️script.ts setup devcontainer start|attach`), replacing the retired Bash hooks with one
  * owned, testable implementation. Start: emoji font fallback, ownership of the persisted home volumes and submodules,
  * Claude Code auth storage, git `safe.directory` for the bind-mounted checkout, the SSH commit-signing agent. Attach: the
- * optional GUI tools (GitKraken Desktop + CLI, F3D), the GitKraken workspace, the git hooks, and the
- * workspace VS Code extension packaged through Nx and installed into every reachable editor CLI. Every external program
+ * optional GUI tools (GitKraken Desktop + CLI, F3D), the GitKraken workspace, and the git hooks. Every external program
  * runs through an injected {@link LifecycleHost} (one argv, never a shell), so each step is exercised against recording
  * hosts on any machine; failures of optional steps are reported and never block the container.
  * https://containers.dev/implementors/json_reference/#lifecycle-scripts */
 import { spawn, spawnSync } from "node:child_process";
-import { closeSync, existsSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, renameSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -118,7 +117,7 @@ export function configureEmojiFonts(host: LifecycleHost): boolean {
 
 //#region 🔒️Ownership
 /** 🔒️ The home directories the devcontainer persists in named volumes, which Docker creates owned by root. */
-export const PERSISTED_HOME_DIRECTORIES = [".cache", ".claude", ".codex", ".config", ".codeium", ".gitkraken", ".local/share/GitKrakenCLI", ".local/share/gk", ".config/F3D", ".cursor-server", ".antigravity-server", ".vscode-server", ".windsurf-server", ".kiro"] as const;
+export const PERSISTED_HOME_DIRECTORIES = [".cache", ".claude", ".codex", ".config", ".gitkraken", ".local/share/GitKrakenCLI", ".local/share/gk", ".config/F3D"] as const;
 
 /** 🧭️ The submodule paths `.gitmodules` declares, from git's own configuration parser. */
 export function submodulePaths(host: LifecycleHost, workspace: string): string[] {
@@ -324,96 +323,11 @@ export function launchGitKraken(host: LifecycleHost, context: LifecycleContext):
   host.spawnDetached("gitkraken", ["--no-sandbox", "--no-debug", "--disable-gpu", "--disable-dev-shm-usage", "--path", context.workspace], { DISPLAY: display });
   host.log("GitKraken launched.");
 }
-//#endregion 🐙️GitKrakenWorkspace
 
-//#region 🧩️Extension
-/** 🧩️ The workspace extension's Nx package (`@semio-tech/repo-vscode`) and its packaged VSIX. */
-export const WORKSPACE_EXTENSION = { target: "@semio-tech/repo-vscode:build-vsix", packageRoot: "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript", vsix: "🧩️repo.vsix" } as const;
 
-/** 🧩️ The editor CLIs in preference order: the editor this attach came from first (its IPC hook or `TERM_PROGRAM`), then
- * every other known one. */
-export function editorCliOrder(env: Readonly<Record<string, string | undefined>>): string[] {
-  const order: string[] = [];
-  const add = (cli: string): void => void (order.includes(cli) || order.push(cli));
-  if (env.ANTIGRAVITY_IPC_HOOK_CLI || env.TERM_PROGRAM === "antigravity") add("antigravity");
-  if (env.WINDSURF_IPC_HOOK_CLI || env.TERM_PROGRAM === "windsurf") add("windsurf");
-  if (env.CURSOR_IPC_HOOK_CLI || env.TERM_PROGRAM === "cursor") add("cursor");
-  if (env.VSCODE_IPC_HOOK_CLI || env.TERM_PROGRAM === "vscode") for (const cli of ["code", "code-insiders"]) add(cli);
-  for (const cli of ["antigravity", "windsurf", "cursor", "code-insiders", "code"]) add(cli);
-  return order;
-}
 
-/** 🧩️ The remote CLI binaries each editor's server ships under the home directory, newest server layout first. */
-export function editorServerClis(home: string, cli: string): string[] {
-  const servers: Readonly<Record<string, readonly string[]>> = { antigravity: [".antigravity-server"], windsurf: [".windsurf-server"], cursor: [".cursor-server"], code: [".vscode-server"], "code-insiders": [".vscode-server-insiders"] };
-  return (servers[cli] ?? []).flatMap((server) => {
-    const bin = join(home, server, "bin");
-    return existsSync(bin) ? readdirSync(bin).map((build) => join(bin, build, "bin", "remote-cli", cli)).filter((path) => existsSync(path)) : [];
-  });
-}
 
-/** 🧩️ Every editor CLI that answers `--version`: PATH entries in {@link editorCliOrder}, then the servers' remote CLIs. */
-export function workingEditorClis(host: LifecycleHost, context: LifecycleContext): string[] {
-  const clis: string[] = [];
-  for (const cli of editorCliOrder(context.env)) {
-    for (const path of host.run("which", ["-a", cli]).stdout.split("\n").filter(Boolean)) if (!clis.includes(path) && host.run(path, ["--version"]).status === 0) clis.push(path);
-    for (const path of editorServerClis(context.home, cli)) if (!clis.includes(path) && host.run(path, ["--version"]).status === 0) clis.push(path);
-  }
-  return clis;
-}
 
-const EDITOR_UNREACHABLE = "Command is only available in WSL or inside a Visual Studio Code terminal.";
-
-/** 🧩️ Packages the workspace extension through its Nx target and installs it into the first editor CLI that confirms it
- * in `--list-extensions`; one attach at a time (an exclusive lock file, waited on for up to 180 s). Answers the CLI. */
-export async function installWorkspaceExtension(host: LifecycleHost, context: LifecycleContext, clis: readonly string[], lockPath = join(tmpdir(), "semio-devcontainer-extension.lock")): Promise<string | null> {
-  if (!clis.length) {
-    host.log("ℹ  No IDE CLIs detected, skipping extension installation.");
-    return null;
-  }
-  let lock = -1;
-  for (let waited = 0; lock < 0 && waited <= 180_000; waited += 1_000) {
-    try {
-      lock = openSync(lockPath, "wx");
-    } catch {
-      await host.sleep(1_000);
-    }
-  }
-  if (lock < 0) {
-    host.log("⚠️  Timed out waiting for the extension install lock, skipping extension install for this attach.");
-    return null;
-  }
-  try {
-    host.log("📦️ Resolving the extension package through Nx...");
-    if (host.run("bun", ["repo", "run", WORKSPACE_EXTENSION.target], { cwd: context.workspace }).status !== 0) {
-      host.log("⚠️  Extension packaging failed; skipping installation for this attach.");
-      return null;
-    }
-    const root = join(context.workspace, WORKSPACE_EXTENSION.packageRoot), vsix = join(root, WORKSPACE_EXTENSION.vsix);
-    if (!existsSync(vsix)) {
-      host.log(`⚠️  Extension file not found at ${vsix}`);
-      return null;
-    }
-    const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as { publisher?: string; name?: string };
-    const id = manifest.publisher && manifest.name ? `${manifest.publisher}.${manifest.name}` : "";
-    for (const cli of clis) {
-      host.log(`📦️ Trying to install extension via ${cli}...`);
-      const installed = host.run(cli, ["--install-extension", vsix, "--force"]);
-      if (`${installed.stdout}${installed.stderr}`.includes(EDITOR_UNREACHABLE)) continue;
-      const listed = id ? host.run(cli, ["--list-extensions"]) : installed;
-      if (id && `${listed.stdout}${listed.stderr}`.includes(EDITOR_UNREACHABLE)) continue;
-      if (!id || listed.stdout.split(/\r?\n/u).map((line) => line.trim()).includes(id)) {
-        host.log(`✅️ Extension installed via ${cli}`);
-        return cli;
-      }
-    }
-    host.log(`⚠️  No IDE CLI could install the extension from this attach session; install ${vsix} manually.`);
-    return null;
-  } finally {
-    closeSync(lock);
-    rmSync(lockPath, { force: true });
-  }
-}
 //#endregion 🧩️Extension
 
 //#region 🔁️Lifecycle
@@ -435,7 +349,7 @@ export function devcontainerStart(host: LifecycleHost, context: LifecycleContext
 }
 
 /** 🔁️ `setup devcontainer attach`: optional GUI tools (`SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL`), the GitKraken workspace,
- * git hooks and the workspace extension (`SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL`). */
+ * and git hooks. */
 export async function devcontainerAttach(host: LifecycleHost, context: LifecycleContext): Promise<void> {
   const skipTools = Boolean(context.env.SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL);
   if (skipTools) host.log("ℹ  Tool installation skipped.");
@@ -443,7 +357,6 @@ export async function devcontainerAttach(host: LifecycleHost, context: Lifecycle
   configureGitKrakenWorkspace(host, context);
   if (!skipTools) await installF3d(host, context).catch((error: unknown) => host.log(`⚠️  ${String(error)}`));
   configureRepoHooks(host, context);
-  await installWorkspaceExtension(host, context, context.env.SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL ? [] : workingEditorClis(host, context));
   host.log("✅️ Post-attach setup complete.");
 }
 //#endregion 🔁️Lifecycle

@@ -848,3 +848,17 @@ fn original_canonical_tree_nested_headers_preserve_body_minima_and_complete_cust
         }}
     }
 }
+
+/// 🗺️ Actual retained dictionary traversal lends each original ranked value and matches Serde bytes.
+#[test]
+fn retained_ordered_map_canonical_tree_matches_serde_without_projection_allocations(){
+ use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🗺️retained-map.json")).unwrap();
+ for row in law["cases"].as_array().unwrap(){let entries:Vec<(String,u64)>=row["entries"].as_array().unwrap().iter().map(|entry|(entry["key"].as_str().unwrap().to_owned(),entry["value"].as_u64().unwrap())).collect();let oracle:std::collections::BTreeMap<String,u64>=entries.iter().cloned().collect();let expected=serde_json::to_vec(&oracle).unwrap();assert_eq!(expected,row["expected"].as_str().unwrap().as_bytes());let map:RetainedOrderedMap<String,u64>=entries.into_iter().collect();
+  for ordinal in 0..map.len(){let((node,key),heap)=observe_heap_allocations_on_this_thread(||(map.canonical_tree_child(ordinal).unwrap().canonical_tree_node().unwrap(),map.canonical_tree_key(ordinal).unwrap()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(matches!(node,Node::U64(value)if value==*map.get_index(ordinal).unwrap().1));let(mut chunk,mut offset)=(0,0);let mut key_bytes=Vec::new();while let Some(byte)=key.next_byte(&mut chunk,&mut offset).unwrap(){key_bytes.push(byte)}assert_eq!(key_bytes,map.get_index(ordinal).unwrap().0.as_bytes());}
+  assert!(map.canonical_tree_child(map.len()).is_err());assert!(map.canonical_tree_key(map.len()).is_err());
+  let grant=admitted(Default::default());let(mut source,_)=RetainedCloneSource::admit_owned(map,(),grant).unwrap_or_else(|(error,_,_)|panic!("retained map source birth: {error}"));let projection_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:source.borrow().binding_copy_bytes(),maximum_depth:1,..Default::default()};let projection=source.project_owned(0,|map|map as&dyn ArtifactCanonicalJsonTree,projection_grant).unwrap().0;let(mut cursor,_)=ArtifactCanonicalJsonTreeCursor::admit(projection,grant).unwrap_or_else(|(error,_)|panic!("retained map cursor birth: {error}"));let mut output=Vec::new();let mut turns=0;while !cursor.terminal_is_empty(){let mut bytes=[0];let step=observe_step(&mut cursor,&mut bytes);output.extend_from_slice(&bytes[..step.written_bytes]);turns+=1;assert!(turns<100_000);}assert!(cursor.is_complete());assert_eq!(output,expected);drop(cursor);
+  for _ in 0..100_000{if source.terminal_is_empty(){break}let(step,heap)=observe_heap_allocations_on_this_thread(||source.close_step(grant).unwrap());let progress=step.progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));}assert!(source.terminal_is_empty());let((),heap)=observe_heap_allocations_on_this_thread(||drop(source));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+ }
+ println!("[DEBUG] actual retained map CQT ranked borrows0heap, canonical bytes match Serde, original source controlled close and terminalDrop0");
+}

@@ -1,0 +1,8 @@
+{
+  "mutation": "changeRegion",
+  "id": "r1",
+  "patch": {
+    "holes": [],
+    "thickness": 0.3
+  }
+}

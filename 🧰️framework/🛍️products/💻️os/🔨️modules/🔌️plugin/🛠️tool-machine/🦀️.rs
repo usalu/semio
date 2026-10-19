@@ -63,12 +63,12 @@ use semio_framework_value::retirement::controlled::ControlledRetirement;
 
 /// 🧮️ Folds the provisional `leaf` onto `running` (else `committed`) and answers whether it applied (a leaf its base refuses
 /// is skipped); the displaced intermediate joins `displaced`, which the caller retires through its store, never plainly.
-fn fold_leaf<P, M: Mutation<P>>(committed: &Arc<P>, running: &mut Option<Arc<P>>, displaced: &mut Vec<Arc<P>>, leaf: &M) -> bool {
+fn fold_leaf<P: Clone, M: Mutation<P>>(committed: &Arc<P>, running: &mut Option<Arc<P>>, displaced: &mut Vec<Arc<P>>, leaf: &M) -> bool {
     let base: &P = running.as_deref().unwrap_or(committed.as_ref());
     let outcome = leaf.diff(base);
     let applicable = outcome.is_applicable(protocol::MergePolicy::default());
     let (diff, _) = outcome.into_parts();
-    let applied = applicable.then(|| protocol::apply_diff(&diff, base));
+    let applied = applicable.then(|| protocol::apply_diff_cold(&diff, base));
     MutationDiff::retire_cold(diff);
     match applied {
         Some(Ok(next)) => {
@@ -144,7 +144,7 @@ pub fn gesture_host_event(event: &HostEvent) -> GestureHostEvent {
 /// them all: a tick holds them as the press's provisional overlay, the release commits them as ONE transaction, a late input
 /// of a closed press and a refused input leave every lane as it was, a host abort drops them all with zero trace.
 #[doc(hidden)]
-#[derive(Clone)]
+#[derive(Clone,semio_framework_value::RetireOwned)]
 pub enum PressLeaf<M, CM> {
     Member(M),
     Child(ChildEmit),
@@ -284,6 +284,8 @@ impl<P, M: Mutation<P> + RetireOwned+Send+'static, C, CM: Mutation<C> + 'static>
         self.operations.push((operation, tag));
     }
 
+    pub(crate) fn operation_tag(&self,operation:u64)->Option<&ToolTag>{self.operations.iter().find(|(owner,_)|*owner==operation).map(|(_,tag)|tag)}
+
     pub fn take_operation(&mut self, operation: u64) -> Option<ToolTag> {
         let index = self.operations.iter().position(|(owner, _)| *owner == operation)?;
         Some(self.operations.remove(index).1)
@@ -293,7 +295,7 @@ impl<P, M: Mutation<P> + RetireOwned+Send+'static, C, CM: Mutation<C> + 'static>
     /// moved under one. Scrub leaves are absolute and fold on any base (a leaf the base refuses is skipped); a typing run
     /// whose leaves the moved base refuses is a conflict and aborts with zero trace (`baseMoved`). Answers every snapshot
     /// alias the refold displaced (the caller retires them through the store, never plainly) and every aborted run.
-    pub fn follow(&mut self, committed: &Arc<P>, generation: u64, changed: bool) -> (Vec<Arc<P>>, Vec<ToolStep<M>>) {
+    pub fn follow(&mut self, committed: &Arc<P>, generation: u64, changed: bool) -> (Vec<Arc<P>>, Vec<ToolStep<M>>) where P: Clone {
         if self.presses.provisional().all(|leaf| leaf.member().is_none()) && self.gestures.is_empty() && self.typing.is_empty() {
             let dropped: Vec<Arc<P>> = self.overlay.take().into_iter().collect();
             self.provisional_generation = self.provisional_generation.wrapping_add(u64::from(!dropped.is_empty()));
@@ -336,7 +338,7 @@ impl<P, M: Mutation<P> + RetireOwned+Send+'static, C, CM: Mutation<C> + 'static>
 
     /// 🪞️ Refolds the app-config overlay on `committed` (config generation `generation`) when a held press changed or the
     /// config moved under one; answers the displaced aliases (retired by the caller through the config store).
-    pub fn follow_config(&mut self, committed: &Arc<C>, generation: u64, changed: bool) -> Vec<Arc<C>> {
+    pub fn follow_config(&mut self, committed: &Arc<C>, generation: u64, changed: bool) -> Vec<Arc<C>> where C: Clone {
         if self.presses.provisional().all(|leaf| leaf.config().is_none()) {
             return self.config_overlay.take().into_iter().collect();
         }

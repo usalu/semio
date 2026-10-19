@@ -181,13 +181,7 @@ surface_builder_forward!(
     }
 );
 
-/// 🏗️ A generic [`ArtifactBuilder`] for a subset with no custom build logic — everything is one
-/// snapshot value and the ordinary `Mutation`/`MutationDiff` algebra, so a trivial subset writes
-/// zero builder boilerplate (Task 3): `type Construction = SnapshotBuilder<Snapshot, Mutation>;`
-/// where old code hand-wrote its own `empty`/`from_snapshot`/`from_text`/`from_binary`/`mutate`/
-/// `absorb`/`build`. `mutate` reuses `store::os_store::replay::apply_outcome` (this crate's own established
-/// "apply once, fold a rejection into a Fatal message" idiom) rather than re-deriving it, matching
-/// the trait's own doc: "the builder applies `outcome.diff()` once and returns that outcome intact".
+/// ❄️ Owns wire DTOs for explicitly selected reference decisions and synchronous diff application.
 pub struct SnapshotBuilder<S, M> {
     pub(super) snapshot: S,
     _mutation: std::marker::PhantomData<fn() -> M>,
@@ -207,7 +201,7 @@ where
 {
     type Snapshot = S;
     type Mutation = M;
-    type Diff = M::Diff;
+    type Diff = M::ReferenceDiff;
 
     fn empty() -> Self {
         Self::wrap(S::default())
@@ -221,20 +215,26 @@ where
     fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
         Ok(Self::wrap(S::decode_pack(bytes)?))
     }
-    fn mutate(self, mutation: M) -> (Self, protocol::MutationOutcome<M::Diff>) {
+    fn mutate(self, mutation: M) -> (Self, protocol::MutationOutcome<M::ReferenceDiff>) {
         let (snapshot, outcome) = store::os_store::replay::apply_outcome(&self.snapshot, mutation.diff(&self.snapshot));
+        drop(mutation);
+        drop(self.snapshot);
         (Self::wrap(snapshot), outcome)
     }
-    fn absorb(self, diff: M::Diff) -> protocol::MutationApplyResult<Self> {
-        match protocol::apply_diff(&diff, &self.snapshot) {
-            Ok(snapshot) => Ok(Self::wrap(snapshot)),
-            Err(error) => Err(error),
-        }
+    fn absorb(self, diff: M::ReferenceDiff) -> protocol::MutationApplyResult<Self> {
+        let applied = protocol::apply_diff_cold(&diff, &self.snapshot);
+        drop(diff);
+        drop(self.snapshot);
+        applied.map(Self::wrap)
     }
     fn build(self) -> Result<S, Vec<semio_framework_diagnostic::Diagnostic>> {
         Ok(self.snapshot)
     }
 }
+
+#[cfg(test)]
+#[path = "🏗️snapshot-builder/🧪️tests/🦀️.rs"]
+mod snapshot_builder_ownership_tests;
 
 fn subset_example_table() -> &'static std::sync::Mutex<HashMap<Dialect, Vec<ExampleSource>>> {
     static TABLE: std::sync::OnceLock<std::sync::Mutex<HashMap<Dialect, Vec<ExampleSource>>>> = std::sync::OnceLock::new();

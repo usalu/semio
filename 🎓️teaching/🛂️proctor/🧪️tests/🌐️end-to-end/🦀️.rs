@@ -1,11 +1,11 @@
 //! 🌐️ The proctor end to end: booted on an ephemeral port over a fresh data directory and the
-//! fixture catalog, driven through its real HTTP API with the §9a encoding by an independent HTTP
+//! fixture course, driven through its real HTTP API with the §9a encoding by an independent HTTP
 //! client (`ureq`), exactly as the browser client talks to it — then stopped, reopened from the same
 //! SQLite file and asked again. Its presence rooms are joined by an independent websocket client
 //! (`tungstenite`) speaking `semio.presence.v1`.
 //!
 //! @see ../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️28/QUIZ-PRODUCT-AND-TEACHING-PROCTOR/📓️design.md — §8, §9, §9a, §15
-//! @see ../../🧫️fixtures/📚️catalog/🔣️.json — the catalog played
+//! @see ../../🧫️fixtures/📚️course/🔣️.json — the course played
 //!
 //! The suite is split into the child folders next to this file: `🧰️harness` (scratch, the booted server, the wire, presence and answers), `🎮️learner-journey`,
 //! `🏆️challenge-sheets`, `🛠️operator` and `🛡️edge` (the tests); this file mounts them and is the crate root of the `end_to_end` test.
@@ -17,7 +17,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
-use teaching_proctor_base::catalog::load_catalog;
+use teaching_proctor_base::course::load_course;
 use teaching_proctor_base::config::{CrossOriginPolicy, Forwarding, Gate, SIGN_UP};
 use proctor::instance::Proctor;
 use semio_framework_async::CancelToken;

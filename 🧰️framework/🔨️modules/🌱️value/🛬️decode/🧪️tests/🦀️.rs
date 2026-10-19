@@ -85,6 +85,7 @@ fn native_decode_explicit_one_slot_preserves_success_and_refusal_physical_owners
     #[repr(C)]
     struct Pages{pages:[Option<Box<[u8;4096]>>;3],next:usize}
     impl ErasedSnapshotRetirement for Pages{
+ fn next_demand(&self,_:usize)->Result<crate::RetirementDemand,ValueError>{Ok(crate::RetirementDemand{release_bytes:if self.terminal_is_empty(){0}else{4096},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
         
         fn terminal_is_empty(&self)->bool{self.pages.iter().all(Option::is_none)}
         fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}

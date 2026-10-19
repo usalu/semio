@@ -1,0 +1,1 @@
+{"name":"external-product","private":true,"workspaces":["../source-a/kernel","../source-b/module","local/app"],"semio":{"workspace":{"schemaVersion":1,"members":["../source*/**","local/**","!**/node_modules/**","!**/target/**"],"owners":[]}},"dependencies":{"external-member-0":"workspace:*","external-member-1":"workspace:*","external-member-4":"workspace:*"}}

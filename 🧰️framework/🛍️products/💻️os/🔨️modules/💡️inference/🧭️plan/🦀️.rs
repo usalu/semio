@@ -1,5 +1,5 @@
 //! 🧭️ Original graph planning retains borrowed identities and funds each comparison and scalar page event.
-use super::{InferenceWorkFailure,InferredField};
+use super::{InferenceWorkFailure,OriginalInferredField};
 use semio_framework_job::{OriginalTurnFailure,StepContext};
 use semio_framework_value::{list::PagedList,RetainedCloneProgress,RetirementDemand,ValueError,ValueRefusalKind};
 
@@ -22,8 +22,8 @@ impl OriginalInferencePlan{
  pub fn cyclic_start(&self)->usize{self.cyclic_start}
  pub fn edge_source_ordinals(&self,index:usize)->Option<(usize,usize)>{let(from,to)=*self.edges.get(index)?;Some((*self.nodes.get(from)?,*self.nodes.get(to)?))}
  /// 🔎️ Quotes the same next borrowed probe or reserved scalar event without advancing its source.
- pub fn demands<P,F:InferredField<P>>(&self,snapshot:&P)->Result<RetirementDemand,ValueError>{
-  let(nodes,links)=F::plan_source_extent(snapshot).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original inferred field plan has no borrowed graph producer"))?;
+ pub fn demands<P,F:OriginalInferredField<P>>(&self,snapshot:&P,original:&F::Source)->Result<RetirementDemand,ValueError>{
+  let(nodes,links)=F::plan_source_extent(snapshot,original).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original inferred field plan has no borrowed graph producer"))?;
   match self.phase{
    0 if self.source<nodes&&self.scan==self.nodes.len()=>append_demand(&self.nodes,nodes),
    1=>append_demand(&self.degrees,nodes),
@@ -60,14 +60,14 @@ impl OriginalInferencePlan{
  }
  pub fn terminal_is_empty(&self)->bool{self.nodes.terminal_is_empty()&&self.degrees.terminal_is_empty()&&self.edges.terminal_is_empty()&&self.queue.terminal_is_empty()&&self.order.terminal_is_empty()}
  /// 🎟️ Advances one defining graph event under the caller's original context.
- pub fn step<P,F:InferredField<P>>(&mut self,snapshot:&P,cx:&mut StepContext<'_>)->Result<bool,InferenceWorkFailure>{
-  let before=cx.fuel_remaining();self.advance::<P,F>(snapshot,cx)?;Ok(cx.fuel_remaining()<before)
+ pub fn step<P,F:OriginalInferredField<P>>(&mut self,snapshot:&P,original:&F::Source,cx:&mut StepContext<'_>)->Result<bool,InferenceWorkFailure>{
+  let before=cx.fuel_remaining();self.advance::<P,F>(snapshot,original,cx)?;Ok(cx.fuel_remaining()<before)
  }
- fn advance<P,F:InferredField<P>>(&mut self,snapshot:&P,cx:&mut StepContext<'_>)->Result<bool,InferenceWorkFailure>{
+ fn advance<P,F:OriginalInferredField<P>>(&mut self,snapshot:&P,original:&F::Source,cx:&mut StepContext<'_>)->Result<bool,InferenceWorkFailure>{
   if self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original inferred graph planning is closing").into())}
   if cx.is_cancelled()||cx.should_yield(){return Ok(false)}
-  let(nodes,links)=F::plan_source_extent(snapshot).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original inferred field plan has no borrowed graph producer"))?;
-  let node=|source|F::plan_source_node(snapshot,source).ok_or_else(source_changed);
+  let(nodes,links)=F::plan_source_extent(snapshot,original).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original inferred field plan has no borrowed graph producer"))?;
+  let node=|source|F::plan_source_node(snapshot,original,source).ok_or_else(source_changed);
   match self.phase{
    0=>{
     if self.source==nodes{if !metadata(cx)?{return Ok(false)}self.phase=2;self.source=0;self.scan=0;return Ok(true)}
@@ -82,7 +82,7 @@ impl OriginalInferencePlan{
    2|3=>{
     if self.source==links{if !metadata(cx)?{return Ok(false)}self.phase=7;self.scan=0;return Ok(true)}
     if self.scan==self.nodes.len(){if !metadata(cx)?{return Ok(false)}self.source+=1;self.scan=0;self.byte=0;self.phase=2;return Ok(true)}
-    let(from,to)=F::plan_source_link(snapshot,self.source).ok_or_else(source_changed)?;
+    let(from,to)=F::plan_source_link(snapshot,original,self.source).ok_or_else(source_changed)?;
     let target=if self.phase==2{from}else{to};let candidate=node(*self.nodes.get(self.scan).ok_or_else(source_changed)?)?;
     match compare(target,candidate,&mut self.byte,cx)?{
      Some(true)=>{if self.phase==2{self.from=self.scan;self.phase=3}else{self.to=self.scan;self.phase=4}self.scan=0;self.byte=0},

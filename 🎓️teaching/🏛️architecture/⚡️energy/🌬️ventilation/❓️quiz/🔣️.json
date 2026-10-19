@@ -1,0 +1,2603 @@
+{
+  "$schema": "../../../../../🧰️framework/🛍️products/📚️course/🧬️schema/🔣️.json#/$defs/Quiz",
+  "schema": "semio.quiz/v1",
+  "id": "ventilation",
+  "emoji": "🌬️",
+  "title": {
+    "en": "Ventilation",
+    "de": "Lüften"
+  },
+  "description": {
+    "en": "Ventilation for air quality, moisture transport, heating and cooling: true or false statements, air change rates by use and spider profiles of ventilation types.",
+    "de": "Lüften für Luftqualität, Feuchtetransport, Heizen und Kühlen: wahre oder falsche Aussagen, Luftwechselzahlen nach Nutzung und Spinnenprofile der Lüftungsarten."
+  },
+  "tasks": [
+    {
+      "kind": "classification",
+      "id": "ventilation-statements",
+      "title": {
+        "en": "Ventilation: True or False?",
+        "de": "Lüften: Wahr oder falsch?"
+      },
+      "icon": {
+        "emoji": "💬",
+        "motion": "pulse"
+      },
+      "prompt": {
+        "en": "Classify each statement as true or false. Consider air quality, moisture, heating, natural airflow and summer operation. Allow about five minutes and review the conditions stated in each claim.",
+        "de": "Ordne jede Aussage als wahr oder falsch ein. Berücksichtige Luftqualität, Feuchte, Heizen, freie Luftströmung und Sommerbetrieb. Plane etwa fünf Minuten ein und prüfe die Bedingungen jeder Aussage."
+      },
+      "categories": [
+        {
+          "id": "true",
+          "label": {
+            "en": "True",
+            "de": "Wahr"
+          },
+          "icon": {
+            "emoji": "✅",
+            "motion": "bounce"
+          },
+          "description": {
+            "en": "The statement is correct under its stated conditions.",
+            "de": "Die Aussage ist unter den genannten Bedingungen richtig."
+          }
+        },
+        {
+          "id": "false",
+          "label": {
+            "en": "False",
+            "de": "Falsch"
+          },
+          "icon": {
+            "emoji": "❌",
+            "motion": "sway"
+          },
+          "description": {
+            "en": "The statement confuses a physical mechanism or claims something that is not generally guaranteed.",
+            "de": "Die Aussage verwechselt einen physikalischen Zusammenhang oder behauptet etwas, das nicht allgemein garantiert ist."
+          }
+        }
+      ],
+      "items": [
+        {
+          "id": "co2-dilution",
+          "label": {
+            "en": "Outdoor-air ventilation dilutes the CO₂ released by occupants.",
+            "de": "Außenluftlüftung verdünnt das von Personen freigesetzte CO₂."
+          },
+          "short": {
+            "en": "CO₂ dilution",
+            "de": "CO₂-Abfuhr"
+          },
+          "icon": {
+            "emoji": "🫁",
+            "motion": "bounce"
+          },
+          "category": "true",
+          "explanation": {
+            "en": "Replacing indoor air removes exhaled CO₂ when outdoor concentrations are lower.",
+            "de": "Der Luftaustausch führt ausgeatmetes CO₂ ab, wenn die Außenluftkonzentration niedriger ist."
+          }
+        },
+        {
+          "id": "co2-recirculation",
+          "label": {
+            "en": "Recirculating indoor air alone provides the same CO₂ removal as outdoor-air ventilation.",
+            "de": "Reine Umluft führt CO₂ genauso ab wie Außenluftlüftung."
+          },
+          "short": {
+            "en": "Recirculation and CO₂",
+            "de": "Umluft und CO₂"
+          },
+          "icon": {
+            "emoji": "🫁",
+            "motion": "pulse"
+          },
+          "category": "false",
+          "explanation": {
+            "en": "Recirculation moves air around; without outdoor air or CO₂ capture it does not remove CO₂.",
+            "de": "Umluft verteilt Luft; ohne Außenluft oder CO₂-Abscheidung führt sie kein CO₂ ab."
+          }
+        },
+        {
+          "id": "filters-co2",
+          "label": {
+            "en": "An ordinary particle filter removes the CO₂ produced in a classroom.",
+            "de": "Ein gewöhnlicher Partikelfilter entfernt das CO₂ im Klassenzimmer."
+          },
+          "short": {
+            "en": "Particle filter and CO₂",
+            "de": "Partikelfilter und CO₂"
+          },
+          "icon": {
+            "emoji": "🫁",
+            "motion": "spin"
+          },
+          "category": "false",
+          "explanation": {
+            "en": "Particle filters capture particles, not gaseous CO₂.",
+            "de": "Partikelfilter halten Partikel zurück, kein gasförmiges CO₂."
+          }
+        },
+        {
+          "id": "co2-demand",
+          "label": {
+            "en": "CO₂ measurements can help adjust outdoor-air flow to occupancy.",
+            "de": "CO₂-Messungen können den Außenluftstrom an die Belegung anpassen."
+          },
+          "short": {
+            "en": "CO₂-based control",
+            "de": "CO₂-Regelung"
+          },
+          "icon": {
+            "emoji": "🫁",
+            "motion": "sway"
+          },
+          "category": "true",
+          "explanation": {
+            "en": "CO₂ indicates occupant-related air demand; other pollutants still require attention.",
+            "de": "CO₂ zeigt den personenbedingten Luftbedarf an; andere Schadstoffe müssen ebenfalls berücksichtigt werden."
+          }
+        },
+        {
+          "id": "smell-indicator",
+          "label": {
+            "en": "The absence of odours proves that ventilation is sufficient.",
+            "de": "Geruchsfreiheit beweist einen ausreichenden Luftwechsel."
+          },
+          "short": {
+            "en": "Odour-free air",
+            "de": "Geruchsfreie Luft"
+          },
+          "icon": {
+            "emoji": "🫁",
+            "motion": "float"
+          },
+          "category": "false",
+          "explanation": {
+            "en": "CO₂ is odourless; smell alone cannot assess indoor air quality.",
+            "de": "CO₂ ist geruchlos; Geruch allein erlaubt keine Bewertung der Raumluftqualität."
+          }
+        },
+        {
+          "id": "moisture-removal",
+          "label": {
+            "en": "Ventilation removes indoor moisture when outdoor air contains less water vapour.",
+            "de": "Lüften führt Raumfeuchte ab, wenn Außenluft weniger Wasserdampf enthält."
+          },
+          "short": {
+            "en": "Moisture removal",
+            "de": "Feuchteabfuhr"
+          },
+          "icon": {
+            "emoji": "💧",
+            "motion": "bounce"
+          },
+          "category": "true",
+          "explanation": {
+            "en": "The difference in absolute humidity determines the direction of moisture transport.",
+            "de": "Die Differenz der absoluten Feuchte bestimmt die Richtung des Feuchtetransports."
+          }
+        },
+        {
+          "id": "winter-dry",
+          "label": {
+            "en": "Cold outdoor air can dry indoor air after it is warmed, even when its relative humidity was high.",
+            "de": "Kalte Außenluft kann nach dem Erwärmen den Raum trocknen, auch bei hoher relativer Außenluftfeuchte."
+          },
+          "short": {
+            "en": "Winter drying",
+            "de": "Winterliche Trocknung"
+          },
+          "icon": {
+            "emoji": "💧",
+            "motion": "pulse"
+          },
+          "category": "true",
+          "explanation": {
+            "en": "Cold air often contains little water vapour; warming it lowers relative humidity without adding water.",
+            "de": "Kalte Luft enthält häufig wenig Wasserdampf; Erwärmung senkt ihre relative Feuchte ohne Wasserzugabe."
+          }
+        },
+        {
+          "id": "summer-cellar",
+          "label": {
+            "en": "Warm humid summer air always dries a cool cellar when the windows are opened.",
+            "de": "Warme feuchte Sommerluft trocknet einen kühlen Keller beim Fensteröffnen immer."
+          },
+          "short": {
+            "en": "Summer cellar drying",
+            "de": "Kellertrocknung im Sommer"
+          },
+          "icon": {
+            "emoji": "💧",
+            "motion": "spin"
+          },
+          "category": "false",
+          "explanation": {
+            "en": "Warm humid air can condense on cold cellar surfaces; compare absolute humidity and surface temperatures.",
+            "de": "Warme feuchte Luft kann an kalten Kellerflächen kondensieren; absolute Feuchte und Oberflächentemperaturen sind entscheidend."
+          }
+        },
+        {
+          "id": "heat-removes-moisture",
+          "label": {
+            "en": "Heating a closed room removes the water vapour without any ventilation or dehumidification.",
+            "de": "Heizen entfernt Wasserdampf aus einem geschlossenen Raum ohne Lüftung oder Entfeuchtung."
+          },
+          "short": {
+            "en": "Heating and water vapour",
+            "de": "Heizen und Wasserdampf"
+          },
+          "icon": {
+            "emoji": "💧",
+            "motion": "sway"
+          },
+          "category": "false",
+          "explanation": {
+            "en": "Heating lowers relative humidity but does not remove the water contained in the air.",
+            "de": "Heizen senkt die relative Feuchte, entfernt aber nicht das in der Luft enthaltene Wasser."
+          }
+        },
+        {
+          "id": "humidity-source",
+          "label": {
+            "en": "Extracting air from bathrooms can carry away moisture from showering.",
+            "de": "Abluft aus Bädern kann die Feuchte vom Duschen abtransportieren."
+          },
+          "short": {
+            "en": "Bathroom moisture extraction",
+            "de": "Feuchteabfuhr im Bad"
+          },
+          "icon": {
+            "emoji": "💧",
+            "motion": "float"
+          },
+          "category": "true",
+          "explanation": {
+            "en": "Moisture-laden air leaves through extract outlets and replacement air enters through the planned airflow path.",
+            "de": "Feuchte Luft verlässt den Raum über Abluftöffnungen; Ersatzluft folgt dem geplanten Strömungsweg."
+          }
+        },
+        {
+          "id": "passive-air-heating",
+          "label": {
+            "en": "With a sufficiently low design heating load, a passive house can be heated through its supply air.",
+            "de": "Bei ausreichend kleiner Auslegungs-Heizlast kann ein Passivhaus über seine Zuluft beheizt werden."
+          },
+          "short": {
+            "en": "Passive-house air heating",
+            "de": "Passivhaus-Zuluftheizung"
+          },
+          "icon": {
+            "emoji": "🔥",
+            "motion": "bounce"
+          },
+          "category": "true",
+          "explanation": {
+            "en": "Feasibility depends on airflow, temperature rise and room heating loads; the passive-house label alone is insufficient.",
+            "de": "Entscheidend sind Volumenstrom, Temperaturerhöhung und Raumheizlasten; die Bezeichnung Passivhaus allein genügt nicht."
+          }
+        },
+        {
+          "id": "airheat-unlimited",
+          "label": {
+            "en": "Supply-air heating can deliver any heating output without changing the airflow or supply temperature.",
+            "de": "Zuluftheizung liefert beliebige Heizleistung bei unverändertem Volumenstrom und unveränderter Zulufttemperatur."
+          },
+          "short": {
+            "en": "Unlimited air heating",
+            "de": "Unbegrenzte Zuluftheizung"
+          },
+          "icon": {
+            "emoji": "🔥",
+            "motion": "pulse"
+          },
+          "category": "false",
+          "explanation": {
+            "en": "Heat output equals air heat capacity times airflow times temperature rise, so it is limited.",
+            "de": "Die Heizleistung entspricht Luftwärmekapazität mal Volumenstrom mal Temperaturerhöhung und ist daher begrenzt."
+          }
+        },
+        {
+          "id": "heat-recovery",
+          "label": {
+            "en": "Heat recovery can reduce ventilation heat losses during the heating season.",
+            "de": "Wärmerückgewinnung kann Lüftungswärmeverluste in der Heizperiode verringern."
+          },
+          "short": {
+            "en": "Ventilation heat recovery",
+            "de": "Lüftungs-Wärmerückgewinnung"
+          },
+          "icon": {
+            "emoji": "🔥",
+            "motion": "spin"
+          },
+          "category": "true",
+          "explanation": {
+            "en": "A heat exchanger transfers heat from extract air to incoming outdoor air.",
+            "de": "Ein Wärmetauscher überträgt Wärme von der Abluft auf die einströmende Außenluft."
+          }
+        },
+        {
+          "id": "heat-recovery-source",
+          "label": {
+            "en": "A heat exchanger creates heat even when both air streams have the same temperature.",
+            "de": "Ein Wärmetauscher erzeugt Wärme, selbst wenn beide Luftströme gleich warm sind."
+          },
+          "short": {
+            "en": "Heat creation in an exchanger",
+            "de": "Wärmeerzeugung im Tauscher"
+          },
+          "icon": {
+            "emoji": "🔥",
+            "motion": "sway"
+          },
+          "category": "false",
+          "explanation": {
+            "en": "A passive heat exchanger transfers existing heat and needs a temperature difference; it is not a heat generator.",
+            "de": "Ein passiver Wärmetauscher überträgt vorhandene Wärme und benötigt eine Temperaturdifferenz; er ist kein Wärmeerzeuger."
+          }
+        },
+        {
+          "id": "ventilation-heat-loss",
+          "label": {
+            "en": "Replacing warm indoor air with colder outdoor air increases heating demand unless that heat is recovered.",
+            "de": "Der Austausch warmer Raumluft gegen kalte Außenluft erhöht ohne Wärmerückgewinnung den Heizbedarf."
+          },
+          "short": {
+            "en": "Cold-air heating demand",
+            "de": "Heizbedarf durch kalte Luft"
+          },
+          "icon": {
+            "emoji": "🔥",
+            "motion": "float"
+          },
+          "category": "true",
+          "explanation": {
+            "en": "The incoming air must be warmed; recovery reduces this additional heat input.",
+            "de": "Die einströmende Luft muss erwärmt werden; Rückgewinnung verringert die zusätzliche Wärmezufuhr."
+          }
+        },
+        {
+          "id": "passive-natural-only",
+          "label": {
+            "en": "Especially in a passive house, natural ventilation should replace heat-recovery ventilation to save services energy, guarantee user satisfaction and exploit thermal effects such as the Venturi effect.",
+            "de": "Gerade im Passivhaus sollte natürliche Lüftung die Wärmerückgewinnungslüftung ersetzen, um Technikenergie zu sparen, Nutzerzufriedenheit zu garantieren und thermische Effekte wie den Venturi-Effekt auszunutzen."
+          },
+          "short": {
+            "en": "Natural-only passive house",
+            "de": "Passivhaus nur mit freier Lüftung"
+          },
+          "icon": {
+            "emoji": "🪟",
+            "motion": "bounce"
+          },
+          "category": "false",
+          "explanation": {
+            "en": "That blanket claim is false: winter heat losses matter, comfort is not guaranteed, and Venturi pressure changes are not thermal buoyancy.",
+            "de": "Diese Pauschalaussage ist falsch: winterliche Wärmeverluste zählen, Komfort ist nicht garantiert und Venturi-Druckänderungen sind kein thermischer Auftrieb."
+          }
+        },
+        {
+          "id": "passive-window-ban",
+          "label": {
+            "en": "Windows must never be opened in a passive house with mechanical ventilation.",
+            "de": "Fenster dürfen in einem Passivhaus mit mechanischer Lüftung nie geöffnet werden."
+          },
+          "short": {
+            "en": "Passive-house window ban",
+            "de": "Fensterverbot im Passivhaus"
+          },
+          "icon": {
+            "emoji": "🪟",
+            "motion": "pulse"
+          },
+          "category": "false",
+          "explanation": {
+            "en": "Windows may be opened; a planned heat-recovery system provides the regular winter air exchange independently.",
+            "de": "Fenster dürfen geöffnet werden; eine geplante Wärmerückgewinnungslüftung übernimmt den regelmäßigen winterlichen Luftwechsel unabhängig davon."
+          }
+        },
+        {
+          "id": "wind-dependence",
+          "label": {
+            "en": "Natural ventilation airflow depends on wind, temperature differences and the positions of openings.",
+            "de": "Der Volumenstrom freier Lüftung hängt von Wind, Temperaturdifferenzen und Öffnungspositionen ab."
+          },
+          "short": {
+            "en": "Weather-dependent airflow",
+            "de": "Wetterabhängiger Luftstrom"
+          },
+          "icon": {
+            "emoji": "🪟",
+            "motion": "spin"
+          },
+          "category": "true",
+          "explanation": {
+            "en": "Driving pressure and opening resistance determine airflow, so changing weather changes the result.",
+            "de": "Antriebsdruck und Öffnungswiderstand bestimmen den Luftstrom; wechselndes Wetter verändert ihn."
+          }
+        },
+        {
+          "id": "natural-free",
+          "label": {
+            "en": "Window ventilation has no operating energy cost because it uses no fans.",
+            "de": "Fensterlüftung verursacht keine Betriebsenergiekosten, weil sie keine Ventilatoren braucht."
+          },
+          "short": {
+            "en": "Fan-free ventilation costs",
+            "de": "Kosten ventilatorfreier Lüftung"
+          },
+          "icon": {
+            "emoji": "🪟",
+            "motion": "sway"
+          },
+          "category": "false",
+          "explanation": {
+            "en": "There is no fan electricity, but heat carried outdoors must be replaced during the heating season.",
+            "de": "Ventilatorstrom entfällt, doch die nach außen abgeführte Wärme muss in der Heizperiode ersetzt werden."
+          }
+        },
+        {
+          "id": "window-satisfaction",
+          "label": {
+            "en": "Natural ventilation guarantees high satisfaction regardless of outdoor noise, draughts or user behaviour.",
+            "de": "Natürliche Lüftung garantiert hohe Zufriedenheit unabhängig von Außenlärm, Zugluft oder Nutzerverhalten."
+          },
+          "short": {
+            "en": "Guaranteed window comfort",
+            "de": "Garantierter Fensterkomfort"
+          },
+          "icon": {
+            "emoji": "🪟",
+            "motion": "float"
+          },
+          "category": "false",
+          "explanation": {
+            "en": "Satisfaction depends on design, surroundings and operation; no ventilation principle guarantees it on its own.",
+            "de": "Zufriedenheit hängt von Planung, Umgebung und Betrieb ab; kein Lüftungsprinzip garantiert sie allein."
+          }
+        },
+        {
+          "id": "venturi-thermal",
+          "label": {
+            "en": "The Venturi effect is a thermal effect driven by warm air rising.",
+            "de": "Der Venturi-Effekt ist ein thermischer Effekt durch aufsteigende Warmluft."
+          },
+          "short": {
+            "en": "Thermal Venturi effect",
+            "de": "Thermischer Venturi-Effekt"
+          },
+          "icon": {
+            "emoji": "🌪️",
+            "motion": "bounce"
+          },
+          "category": "false",
+          "explanation": {
+            "en": "Venturi describes velocity and pressure changes in a constriction; thermal buoyancy drives the stack effect.",
+            "de": "Venturi beschreibt Geschwindigkeits- und Druckänderungen in einer Verengung; thermischer Auftrieb treibt den Kamineffekt an."
+          }
+        },
+        {
+          "id": "stack-buoyancy",
+          "label": {
+            "en": "A temperature difference can drive airflow between low and high openings through buoyancy.",
+            "de": "Eine Temperaturdifferenz kann durch Auftrieb Luft zwischen tiefen und hohen Öffnungen bewegen."
+          },
+          "short": {
+            "en": "Thermal stack effect",
+            "de": "Thermischer Kamineffekt"
+          },
+          "icon": {
+            "emoji": "🌪️",
+            "motion": "pulse"
+          },
+          "category": "true",
+          "explanation": {
+            "en": "Different air densities create a pressure difference over height; openings allow airflow.",
+            "de": "Unterschiedliche Luftdichten erzeugen über die Höhe eine Druckdifferenz; Öffnungen ermöglichen den Luftstrom."
+          }
+        },
+        {
+          "id": "cross-ventilation",
+          "label": {
+            "en": "Wind pressure differences across a building can drive cross-ventilation.",
+            "de": "Winddruckunterschiede am Gebäude können Querlüftung antreiben."
+          },
+          "short": {
+            "en": "Wind-driven cross-ventilation",
+            "de": "Windgetriebene Querlüftung"
+          },
+          "icon": {
+            "emoji": "🌪️",
+            "motion": "spin"
+          },
+          "category": "true",
+          "explanation": {
+            "en": "Openings on different facades can connect areas of different wind pressure.",
+            "de": "Öffnungen an verschiedenen Fassaden können Bereiche unterschiedlichen Winddrucks verbinden."
+          }
+        },
+        {
+          "id": "calm-stack-always",
+          "label": {
+            "en": "Natural ventilation guarantees the required airflow even with no wind and no temperature difference.",
+            "de": "Freie Lüftung garantiert den nötigen Volumenstrom auch ohne Wind und Temperaturdifferenz."
+          },
+          "short": {
+            "en": "Airflow without driving pressure",
+            "de": "Luftstrom ohne Antriebsdruck"
+          },
+          "icon": {
+            "emoji": "🌪️",
+            "motion": "sway"
+          },
+          "category": "false",
+          "explanation": {
+            "en": "Without sufficient driving pressure, natural airflow can become inadequate.",
+            "de": "Ohne ausreichenden Antriebsdruck kann der natürliche Luftstrom zu klein werden."
+          }
+        },
+        {
+          "id": "airtight-no-air",
+          "label": {
+            "en": "An airtight building envelope makes fresh-air ventilation unnecessary.",
+            "de": "Eine luftdichte Gebäudehülle macht Frischluftlüftung überflüssig."
+          },
+          "short": {
+            "en": "Airtightness without ventilation",
+            "de": "Luftdichtheit ohne Lüftung"
+          },
+          "icon": {
+            "emoji": "🌪️",
+            "motion": "float"
+          },
+          "category": "false",
+          "explanation": {
+            "en": "Airtightness controls leakage; occupants and moisture sources still require planned air exchange.",
+            "de": "Luftdichtheit begrenzt Leckagen; Personen und Feuchtequellen benötigen weiterhin geplanten Luftaustausch."
+          }
+        },
+        {
+          "id": "summer-hot-air",
+          "label": {
+            "en": "More outdoor-air ventilation always cools a room, even when outdoor air is hotter than indoor air.",
+            "de": "Mehr Außenluftlüftung kühlt einen Raum immer, auch wenn die Außenluft wärmer als die Raumluft ist."
+          },
+          "short": {
+            "en": "Cooling with hotter outdoor air",
+            "de": "Kühlen mit wärmerer Außenluft"
+          },
+          "icon": {
+            "emoji": "🌙",
+            "motion": "bounce"
+          },
+          "category": "false",
+          "explanation": {
+            "en": "Hotter incoming air adds sensible heat; ventilation cooling needs appropriate outdoor conditions.",
+            "de": "Wärmere einströmende Luft führt fühlbare Wärme zu; Lüftungskühlung braucht passende Außenbedingungen."
+          }
+        },
+        {
+          "id": "night-cooling",
+          "label": {
+            "en": "Cooler night air can remove stored building heat through a suitable ventilation strategy.",
+            "de": "Kühlere Nachtluft kann mit einer geeigneten Lüftungsstrategie gespeicherte Gebäudewärme abführen."
+          },
+          "short": {
+            "en": "Night ventilation cooling",
+            "de": "Nächtliche Lüftungskühlung"
+          },
+          "icon": {
+            "emoji": "🌙",
+            "motion": "pulse"
+          },
+          "category": "true",
+          "explanation": {
+            "en": "Heat flows to the cooler air; effectiveness depends on airflow, thermal mass and available temperature difference.",
+            "de": "Wärme geht an die kühlere Luft über; die Wirkung hängt von Luftstrom, Speichermasse und Temperaturdifferenz ab."
+          }
+        },
+        {
+          "id": "bypass-summer",
+          "label": {
+            "en": "A summer bypass can prevent heat recovery from warming cool supply air when cooling is desired.",
+            "de": "Ein Sommerbypass kann verhindern, dass Wärmerückgewinnung kühle Zuluft bei Kühlbedarf erwärmt."
+          },
+          "short": {
+            "en": "Summer heat-recovery bypass",
+            "de": "Sommerbypass der Rückgewinnung"
+          },
+          "icon": {
+            "emoji": "🌙",
+            "motion": "spin"
+          },
+          "category": "true",
+          "explanation": {
+            "en": "A controlled bypass is useful when outdoor air is cooler and indoor heat should be discharged.",
+            "de": "Ein geregelter Bypass ist sinnvoll, wenn die Außenluft kühler ist und Raumwärme abgeführt werden soll."
+          }
+        },
+        {
+          "id": "humid-heat",
+          "label": {
+            "en": "Hot humid outdoor air always reduces both the cooling load and the dehumidification load.",
+            "de": "Heiße feuchte Außenluft senkt immer sowohl Kühllast als auch Entfeuchtungsbedarf."
+          },
+          "short": {
+            "en": "Hot humid outdoor-air load",
+            "de": "Last heißer feuchter Außenluft"
+          },
+          "icon": {
+            "emoji": "🌙",
+            "motion": "sway"
+          },
+          "category": "false",
+          "explanation": {
+            "en": "Incoming heat and moisture can add sensible and latent loads to conditioned rooms.",
+            "de": "Einströmende Wärme und Feuchte können fühlbare und latente Lasten klimatisierter Räume erhöhen."
+          }
+        },
+        {
+          "id": "outdoor-cooling",
+          "label": {
+            "en": "Ventilation and active cooling must be coordinated so that unnecessary outdoor heat is not added.",
+            "de": "Lüftung und aktive Kühlung müssen abgestimmt werden, damit keine unnötige Außenwärme eingetragen wird."
+          },
+          "short": {
+            "en": "Coordinated ventilation and cooling",
+            "de": "Abgestimmte Lüftung und Kühlung"
+          },
+          "icon": {
+            "emoji": "🌙",
+            "motion": "float"
+          },
+          "category": "true",
+          "explanation": {
+            "en": "Maintain hygienic outdoor-air supply while controlling avoidable thermal loads.",
+            "de": "Der hygienische Außenluftbedarf bleibt gedeckt, während vermeidbare thermische Lasten begrenzt werden."
+          }
+        }
+      ],
+      "draw": 6,
+      "pool": {
+        "seconds": 300,
+        "slots": [
+          [
+            "co2-dilution",
+            "co2-recirculation",
+            "filters-co2",
+            "co2-demand",
+            "smell-indicator"
+          ],
+          [
+            "moisture-removal",
+            "winter-dry",
+            "summer-cellar",
+            "heat-removes-moisture",
+            "humidity-source"
+          ],
+          [
+            "passive-air-heating",
+            "airheat-unlimited",
+            "heat-recovery",
+            "heat-recovery-source",
+            "ventilation-heat-loss"
+          ],
+          [
+            "passive-natural-only",
+            "passive-window-ban",
+            "wind-dependence",
+            "natural-free",
+            "window-satisfaction"
+          ],
+          [
+            "venturi-thermal",
+            "stack-buoyancy",
+            "cross-ventilation",
+            "calm-stack-always",
+            "airtight-no-air"
+          ],
+          [
+            "summer-hot-air",
+            "night-cooling",
+            "bypass-summer",
+            "humid-heat",
+            "outdoor-cooling"
+          ]
+        ]
+      }
+    },
+    {
+      "kind": "sorting",
+      "id": "air-change-rates",
+      "title": {
+        "en": "Air Change Rates by Use",
+        "de": "Luftwechselzahlen nach Nutzung"
+      },
+      "icon": {
+        "emoji": "🌬️",
+        "motion": "sway"
+      },
+      "prompt": {
+        "en": "Sort the room uses from the lowest to the highest typical design air change rate in 1/h: hourly airflow divided by room volume. Ordinary rooms refer to outdoor or supply air; cleanrooms include filtered recirculation. Values are representative teaching examples, not universal requirements. Allow about five minutes to compare and review.",
+        "de": "Sortiere die Raumnutzungen von der kleinsten zur größten typischen Auslegungs-Luftwechselzahl in 1/h: stündlicher Luftvolumenstrom geteilt durch Raumvolumen. Normale Räume beziehen sich auf Außen- oder Zuluft; Reinräume enthalten gefilterte Umluft. Die Werte sind typische Lehrbeispiele, keine allgemeingültigen Vorgaben. Plane etwa fünf Minuten zum Vergleichen und Prüfen ein."
+      },
+      "quantity": {
+        "label": {
+          "en": "Air change rate",
+          "de": "Luftwechselrate"
+        },
+        "unit": "1/h",
+        "scale": "logarithmic",
+        "prefixed": false,
+        "additive": false
+      },
+      "items": [
+        {
+          "id": "warehouse",
+          "label": {
+            "en": "High-bay warehouse without workplaces (10 m high)",
+            "de": "Hochregallager ohne Arbeitsplätze (10 m hoch)"
+          },
+          "short": {
+            "en": "High-bay warehouse",
+            "de": "Hochregallager"
+          },
+          "icon": {
+            "emoji": "📦",
+            "motion": "bounce"
+          },
+          "explanation": {
+            "en": "About 0.13 1/h: only the building's own emissions need diluting, 0.35 l/(s·m²) for very low-polluting buildings (EN 16798-1) = 1.26 m³/(h·m²) spread over 10 m of height.",
+            "de": "Rund 0,13 1/h: nur die Emissionen des Gebäudes selbst sind zu verdünnen, 0,35 l/(s·m²) für sehr schadstoffarme Gebäude (EN 16798-1) = 1,26 m³/(h·m²) verteilt auf 10 m Höhe."
+          },
+          "value": 0.13
+        },
+        {
+          "id": "passive-house-dwelling",
+          "label": {
+            "en": "Passive-house apartment with heat-recovery ventilation",
+            "de": "Passivhauswohnung mit Wärmerückgewinnungslüftung"
+          },
+          "short": {
+            "en": "Passive-house apartment",
+            "de": "Passivhauswohnung"
+          },
+          "icon": {
+            "emoji": "🌱",
+            "motion": "sway"
+          },
+          "explanation": {
+            "en": "About 0.3 1/h: about 30 m³/h of fresh air per person gives good air quality without drying out the air in winter. Source: Passive House Institute.",
+            "de": "Rund 0,3 1/h: etwa 30 m³/h Frischluft pro Person sorgen für gute Luftqualität, ohne die Luft im Winter auszutrocknen. Quelle: Passivhaus Institut."
+          },
+          "value": 0.3
+        },
+        {
+          "id": "apartment",
+          "label": {
+            "en": "Apartment, nominal ventilation",
+            "de": "Wohnung, Nennlüftung"
+          },
+          "short": {
+            "en": "Apartment at nominal ventilation",
+            "de": "Wohnung bei Nennlüftung"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "pulse"
+          },
+          "familiar": true,
+          "explanation": {
+            "en": "About 0.5 1/h: DIN 1946-6 requires −0.001·A² + 1.15·A + 20 = 125 m³/h for a 100 m² apartment with 250 m³ of air.",
+            "de": "Rund 0,5 1/h: DIN 1946-6 verlangt −0,001·A² + 1,15·A + 20 = 125 m³/h für eine 100-m²-Wohnung mit 250 m³ Luft."
+          },
+          "value": 0.5
+        },
+        {
+          "id": "sports-hall",
+          "label": {
+            "en": "Single sports hall (15 × 27 m, 5.5 m high) with 30 athletes",
+            "de": "Einfeldsporthalle (15 × 27 m, 5,5 m hoch) mit 30 Sporttreibenden"
+          },
+          "short": {
+            "en": "Sports hall during training",
+            "de": "Sporthalle beim Training"
+          },
+          "icon": {
+            "emoji": "🏀",
+            "motion": "bounce"
+          },
+          "familiar": true,
+          "explanation": {
+            "en": "About 0.8 1/h: 60 m³/h per athlete (DIN 18032-1) × 30 = 1,800 m³/h in 2,230 m³ – a large volume for few people.",
+            "de": "Rund 0,8 1/h: 60 m³/h je sporttreibender Person (DIN 18032-1) × 30 = 1.800 m³/h in 2.230 m³ – viel Volumen für wenige Menschen."
+          },
+          "value": 0.8
+        },
+        {
+          "id": "single-office",
+          "label": {
+            "en": "Single office (12 m², one person)",
+            "de": "Einzelbüro (12 m², eine Person)"
+          },
+          "short": {
+            "en": "Single office",
+            "de": "Einzelbüro"
+          },
+          "icon": {
+            "emoji": "💼",
+            "motion": "sway"
+          },
+          "explanation": {
+            "en": "About 1.5 1/h: category II of EN 16798-1 requires 7 l/s per person + 0.7 l/(s·m²), i.e. 55 m³/h for 36 m³ of room.",
+            "de": "Rund 1,5 1/h: Kategorie II der EN 16798-1 verlangt 7 l/s je Person + 0,7 l/(s·m²), also 55 m³/h für 36 m³ Raum."
+          },
+          "value": 1.5
+        },
+        {
+          "id": "residential-car-park",
+          "label": {
+            "en": "Underground car park of a residential building, mechanically ventilated",
+            "de": "Tiefgarage eines Wohngebäudes, maschinell belüftet"
+          },
+          "short": {
+            "en": "Underground car park",
+            "de": "Tiefgarage"
+          },
+          "icon": {
+            "emoji": "🚗",
+            "motion": "bounce"
+          },
+          "explanation": {
+            "en": "About 2.4 1/h: the garage ordinances of the German states require 6 m³/h of exhaust air per m² for garages with little traffic; at 2.5 m height that is 2.4 air changes.",
+            "de": "Rund 2,4 1/h: die Garagenverordnungen der Länder verlangen 6 m³/h Abluft je m² für Garagen mit geringem Verkehr; bei 2,5 m Höhe sind das 2,4 Luftwechsel."
+          },
+          "value": 2.4
+        },
+        {
+          "id": "cinema",
+          "label": {
+            "en": "Cinema auditorium, sold out",
+            "de": "Kinosaal, ausverkauft"
+          },
+          "short": {
+            "en": "Sold-out cinema auditorium",
+            "de": "Ausverkaufter Kinosaal"
+          },
+          "icon": {
+            "emoji": "🎬",
+            "motion": "flip"
+          },
+          "familiar": true,
+          "explanation": {
+            "en": "About 3.5 1/h: EN 16798-1 category II with one seat per m² (27.7 m³/(h·m²)) spread over about 8 m of room height.",
+            "de": "Rund 3,5 1/h: EN 16798-1 Kategorie II mit einem Sitz je m² (27,7 m³/(h·m²)) verteilt auf rund 8 m Raumhöhe."
+          },
+          "value": 3.5
+        },
+        {
+          "id": "classroom",
+          "label": {
+            "en": "Classroom with 28 pupils (60 m², 3 m high)",
+            "de": "Klassenzimmer mit 28 Schulkindern (60 m², 3 m hoch)"
+          },
+          "short": {
+            "en": "Classroom during lessons",
+            "de": "Klassenzimmer im Unterricht"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "pulse"
+          },
+          "familiar": true,
+          "explanation": {
+            "en": "About 4.8 1/h: EN 16798-1 category II gives 28 × 25 m³/h + 60 m² × 2.5 m³/(h·m²) ≈ 860 m³/h for 180 m³, which is why window ventilation alone struggles.",
+            "de": "Rund 4,8 1/h: EN 16798-1 Kategorie II ergibt 28 × 25 m³/h + 60 m² × 2,5 m³/(h·m²) ≈ 860 m³/h für 180 m³, deshalb kommt Fensterlüftung allein kaum hinterher."
+          },
+          "value": 4.8
+        },
+        {
+          "id": "restaurant",
+          "label": {
+            "en": "Restaurant dining room",
+            "de": "Gastraum eines Restaurants"
+          },
+          "icon": {
+            "emoji": "🍽️",
+            "motion": "sway"
+          },
+          "familiar": true,
+          "explanation": {
+            "en": "About 6.4 1/h: EN 16798-1 category II with 1.5 m² per guest and 3 m room height.",
+            "de": "Rund 6,4 1/h: EN 16798-1 Kategorie II mit 1,5 m² je Gast und 3 m Raumhöhe."
+          },
+          "value": 6.4
+        },
+        {
+          "id": "laboratory",
+          "label": {
+            "en": "Chemistry laboratory",
+            "de": "Chemielabor"
+          },
+          "icon": {
+            "emoji": "🧪",
+            "motion": "sway"
+          },
+          "explanation": {
+            "en": "About 8.3 1/h: DIN 1946-7 requires at least 25 m³/h of outdoor air per m² of floor; at 3 m height that is 8.3 air changes.",
+            "de": "Rund 8,3 1/h: DIN 1946-7 fordert mindestens 25 m³/h Außenluft je m² Grundfläche; bei 3 m Höhe sind das 8,3 Luftwechsel."
+          },
+          "value": 8.3
+        },
+        {
+          "id": "operating-room",
+          "label": {
+            "en": "Operating room, room class Ib",
+            "de": "Operationssaal, Raumklasse Ib"
+          },
+          "short": {
+            "en": "Class Ib operating room",
+            "de": "Operationssaal der Raumklasse Ib"
+          },
+          "icon": {
+            "emoji": "🩺",
+            "motion": "sway"
+          },
+          "explanation": {
+            "en": "About 20 1/h: DIN 1946-4 requires 60 m³/(h·m²) of filtered supply air, 20 air changes at 3 m height (and at least 1,200 m³/h of outdoor air).",
+            "de": "Rund 20 1/h: DIN 1946-4 verlangt 60 m³/(h·m²) gefilterte Zuluft, also 20 Luftwechsel bei 3 m Höhe (und mindestens 1.200 m³/h Außenluft)."
+          },
+          "value": 20
+        },
+        {
+          "id": "commercial-kitchen",
+          "label": {
+            "en": "Commercial kitchen",
+            "de": "Gewerbeküche"
+          },
+          "icon": {
+            "emoji": "🍳",
+            "motion": "bounce"
+          },
+          "explanation": {
+            "en": "About 25 1/h: the exhaust air is sized to the heat and vapour of the cooking appliances (VDI 2052), typically 12–30 air changes per hour.",
+            "de": "Rund 25 1/h: die Abluft wird nach Wärme und Dampf der Kochgeräte bemessen (VDI 2052), typisch 12–30 Luftwechsel pro Stunde."
+          },
+          "value": 25
+        },
+        {
+          "id": "cleanroom-iso-7",
+          "label": {
+            "en": "Cleanroom ISO class 7 (e.g. pharmacy compounding)",
+            "de": "Reinraum ISO-Klasse 7 (z. B. Apothekenherstellung)"
+          },
+          "short": {
+            "en": "Cleanroom ISO class 7",
+            "de": "Reinraum ISO-Klasse 7"
+          },
+          "icon": {
+            "emoji": "💊",
+            "motion": "flip"
+          },
+          "explanation": {
+            "en": "About 60 1/h: HEPA-filtered air dilutes the particles; guideline value of IEST-RP-CC012 for ISO class 7.",
+            "de": "Rund 60 1/h: HEPA-gefilterte Luft verdünnt die Partikel; Richtwert der IEST-RP-CC012 für ISO-Klasse 7."
+          },
+          "value": 60
+        },
+        {
+          "id": "cleanroom-iso-6",
+          "label": {
+            "en": "Cleanroom ISO class 6",
+            "de": "Reinraum ISO-Klasse 6"
+          },
+          "icon": {
+            "emoji": "🥼",
+            "motion": "sway"
+          },
+          "explanation": {
+            "en": "About 150 1/h (90–180 1/h, IEST-RP-CC012): ten times fewer particles than ISO 7 need about two and a half times the air.",
+            "de": "Rund 150 1/h (90–180 1/h, IEST-RP-CC012): zehnmal weniger Partikel als ISO 7 brauchen etwa zweieinhalbmal so viel Luft."
+          },
+          "value": 150
+        },
+        {
+          "id": "cleanroom-iso-5",
+          "label": {
+            "en": "Cleanroom ISO class 5 with unidirectional airflow (e.g. chip fab)",
+            "de": "Reinraum ISO-Klasse 5 mit turbulenzarmer Verdrängungsströmung (z. B. Chipfabrik)"
+          },
+          "short": {
+            "en": "Cleanroom ISO class 5",
+            "de": "Reinraum ISO-Klasse 5"
+          },
+          "icon": {
+            "emoji": "🔬",
+            "motion": "pulse"
+          },
+          "explanation": {
+            "en": "About 540 1/h: the whole ceiling blows filtered air downwards at about 0.45 m/s (ISO 14644-4: 0.2–0.5 m/s); 0.45 m/s × 3,600 s ÷ 3 m = 540.",
+            "de": "Rund 540 1/h: die ganze Decke bläst gefilterte Luft mit etwa 0,45 m/s nach unten (ISO 14644-4: 0,2–0,5 m/s); 0,45 m/s × 3.600 s ÷ 3 m = 540."
+          },
+          "value": 540
+        },
+        {
+          "id": "archive-vault",
+          "label": {
+            "en": "Large low-occupancy archive vault",
+            "de": "Großer schwach belegter Archivraum"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "bounce"
+          },
+          "explanation": {
+            "en": "0.2 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "0,2 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Large low-occupancy archive vault",
+            "de": "Großer schwach belegter Archivraum"
+          },
+          "value": 0.2
+        },
+        {
+          "id": "storage-shed",
+          "label": {
+            "en": "High storage shed without permanent staff",
+            "de": "Hohe Lagerhalle ohne ständiges Personal"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "spin"
+          },
+          "explanation": {
+            "en": "0.15 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "0,15 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Unstaffed high storage shed",
+            "de": "Hohe unbesetzte Lagerhalle"
+          },
+          "value": 0.15
+        },
+        {
+          "id": "efficient-flat",
+          "label": {
+            "en": "Efficient flat with demand-controlled ventilation",
+            "de": "Effiziente Wohnung mit bedarfsgeregelter Lüftung"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "sway"
+          },
+          "explanation": {
+            "en": "0.35 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "0,35 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Demand-ventilated efficient flat",
+            "de": "Bedarfsgelüftete Effizienzwohnung"
+          },
+          "value": 0.35
+        },
+        {
+          "id": "museum-store",
+          "label": {
+            "en": "Tall museum collection store",
+            "de": "Hohes Museumsdepot"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "float"
+          },
+          "explanation": {
+            "en": "0.25 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "0,25 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Tall museum collection store",
+            "de": "Hohes Museumsdepot"
+          },
+          "value": 0.25
+        },
+        {
+          "id": "bedroom-night",
+          "label": {
+            "en": "Dwelling bedroom with nominal overnight ventilation",
+            "de": "Wohnungsschlafzimmer mit nächtlicher Nennlüftung"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "flip"
+          },
+          "explanation": {
+            "en": "0.5 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "0,5 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Dwelling bedroom overnight",
+            "de": "Wohnungsschlafzimmer bei Nacht"
+          },
+          "value": 0.5
+        },
+        {
+          "id": "living-room",
+          "label": {
+            "en": "Dwelling living room under nominal ventilation",
+            "de": "Wohnungswohnzimmer bei Nennlüftung"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "bounce"
+          },
+          "explanation": {
+            "en": "0.6 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "0,6 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Dwelling living room",
+            "de": "Wohnungswohnzimmer"
+          },
+          "value": 0.6
+        },
+        {
+          "id": "student-flat",
+          "label": {
+            "en": "Student flat with balanced ventilation",
+            "de": "Studierendenwohnung mit balancierter Lüftung"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "pulse"
+          },
+          "explanation": {
+            "en": "0.55 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "0,55 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Student flat with balanced ventilation",
+            "de": "Wohnung mit balancierter Lüftung"
+          },
+          "value": 0.55
+        },
+        {
+          "id": "retrofitted-flat",
+          "label": {
+            "en": "Retrofitted apartment with nominal ventilation",
+            "de": "Sanierte Wohnung mit Nennlüftung"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "spin"
+          },
+          "explanation": {
+            "en": "0.45 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "0,45 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Retrofitted apartment ventilation",
+            "de": "Lüftung einer sanierten Wohnung"
+          },
+          "value": 0.45
+        },
+        {
+          "id": "gym-hall",
+          "label": {
+            "en": "High gymnasium with moderate occupancy",
+            "de": "Hohe Sporthalle bei mäßiger Belegung"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "sway"
+          },
+          "explanation": {
+            "en": "0.9 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "0,9 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "High gymnasium + moderate occupancy",
+            "de": "Hohe Sporthalle bei mäßiger Belegung"
+          },
+          "value": 0.9
+        },
+        {
+          "id": "warehouse-staff",
+          "label": {
+            "en": "Large warehouse with a few permanent staff",
+            "de": "Große Lagerhalle mit wenigen festen Arbeitsplätzen"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "float"
+          },
+          "explanation": {
+            "en": "0.8 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "0,8 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Warehouse with a few permanent staff",
+            "de": "Lagerhalle mit wenig festem Personal"
+          },
+          "value": 0.8
+        },
+        {
+          "id": "exhibition-hall",
+          "label": {
+            "en": "High exhibition hall at low occupancy",
+            "de": "Hohe Ausstellungshalle bei geringer Belegung"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "flip"
+          },
+          "explanation": {
+            "en": "0.7 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "0,7 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Quiet high exhibition hall",
+            "de": "Wenig belegte hohe Ausstellungshalle"
+          },
+          "value": 0.7
+        },
+        {
+          "id": "dance-hall",
+          "label": {
+            "en": "High dance practice hall",
+            "de": "Hohe Tanzübungshalle"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "bounce"
+          },
+          "explanation": {
+            "en": "1 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "1 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "High dance practice hall",
+            "de": "Hohe Tanzübungshalle"
+          },
+          "value": 1
+        },
+        {
+          "id": "small-office",
+          "label": {
+            "en": "Small office occupied by one person",
+            "de": "Kleines Büro mit einer Person"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "pulse"
+          },
+          "explanation": {
+            "en": "1.6 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "1,6 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Small office occupied by one person",
+            "de": "Kleines Büro + einer Person"
+          },
+          "value": 1.6
+        },
+        {
+          "id": "library-reading",
+          "label": {
+            "en": "Spacious library reading room",
+            "de": "Großzügiger Bibliothekslesesaal"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "spin"
+          },
+          "explanation": {
+            "en": "1.8 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "1,8 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Spacious library reading room",
+            "de": "Großzügiger Bibliothekslesesaal"
+          },
+          "value": 1.8
+        },
+        {
+          "id": "reception-office",
+          "label": {
+            "en": "Reception office with intermittent visitors",
+            "de": "Empfangsbüro mit gelegentlichen Besuchern"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "sway"
+          },
+          "explanation": {
+            "en": "2 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "2 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Reception office + intermittent visitors",
+            "de": "Empfangsbüro + gelegentlichen Besuchern"
+          },
+          "value": 2
+        },
+        {
+          "id": "quiet-workroom",
+          "label": {
+            "en": "Shared workroom at low occupancy",
+            "de": "Gemeinschaftsarbeitsraum bei geringer Belegung"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "float"
+          },
+          "explanation": {
+            "en": "1.4 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "1,4 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Lightly occupied shared workroom",
+            "de": "Wenig belegter Gemeinschaftsarbeitsraum"
+          },
+          "value": 1.4
+        },
+        {
+          "id": "lecture-room",
+          "label": {
+            "en": "Occupied university lecture room",
+            "de": "Belegter universitärer Seminarraum"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "flip"
+          },
+          "explanation": {
+            "en": "4 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "4 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Occupied university lecture room",
+            "de": "Belegter universitärer Seminarraum"
+          },
+          "value": 4
+        },
+        {
+          "id": "training-room",
+          "label": {
+            "en": "Full workplace training room",
+            "de": "Voll belegter betrieblicher Schulungsraum"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "bounce"
+          },
+          "explanation": {
+            "en": "4.5 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "4,5 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Fully occupied workplace training room",
+            "de": "Voll belegter Schulungsraum"
+          },
+          "value": 4.5
+        },
+        {
+          "id": "meeting-room",
+          "label": {
+            "en": "Densely occupied meeting room",
+            "de": "Dicht belegter Besprechungsraum"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "pulse"
+          },
+          "explanation": {
+            "en": "5 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "5 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Densely occupied meeting room",
+            "de": "Dicht belegter Besprechungsraum"
+          },
+          "value": 5
+        },
+        {
+          "id": "theatre-audience",
+          "label": {
+            "en": "Full theatre auditorium",
+            "de": "Voll belegter Theatersaal"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "spin"
+          },
+          "explanation": {
+            "en": "3.8 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "3,8 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Full theatre auditorium",
+            "de": "Voll belegter Theatersaal"
+          },
+          "value": 3.8
+        },
+        {
+          "id": "busy-cafe",
+          "label": {
+            "en": "Busy cafe dining area",
+            "de": "Stark besetzter Café-Gastraum"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "sway"
+          },
+          "explanation": {
+            "en": "6 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "6 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Busy cafe dining area",
+            "de": "Stark besetzter Café-Gastraum"
+          },
+          "value": 6
+        },
+        {
+          "id": "canteen",
+          "label": {
+            "en": "Occupied staff canteen dining area",
+            "de": "Belegter Speiseraum einer Betriebskantine"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "float"
+          },
+          "explanation": {
+            "en": "6.5 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "6,5 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Staff canteen dining room",
+            "de": "Speiseraum einer Betriebskantine"
+          },
+          "value": 6.5
+        },
+        {
+          "id": "fitness-studio",
+          "label": {
+            "en": "Fitness studio with active occupants",
+            "de": "Fitnessstudio mit aktiven Nutzenden"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "flip"
+          },
+          "explanation": {
+            "en": "7 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "7 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Fitness studio + active occupants",
+            "de": "Fitnessstudio + aktiven Nutzenden"
+          },
+          "value": 7
+        },
+        {
+          "id": "restaurant-banquet",
+          "label": {
+            "en": "Occupied restaurant banquet room",
+            "de": "Belegter Bankettraum eines Restaurants"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "bounce"
+          },
+          "explanation": {
+            "en": "6.8 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "6,8 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Occupied restaurant banquet room",
+            "de": "Belegter Bankettraum eines Restaurants"
+          },
+          "value": 6.8
+        },
+        {
+          "id": "teaching-lab",
+          "label": {
+            "en": "Ventilated teaching chemistry laboratory",
+            "de": "Belüftetes Chemie-Lehrlabor"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "spin"
+          },
+          "explanation": {
+            "en": "8 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "8 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Ventilated teaching chemistry laboratory",
+            "de": "Belüftetes Chemie-Lehrlabor"
+          },
+          "value": 8
+        },
+        {
+          "id": "wet-lab",
+          "label": {
+            "en": "Wet laboratory with general exhaust ventilation",
+            "de": "Nasslabor mit allgemeiner Abluftlüftung"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "sway"
+          },
+          "explanation": {
+            "en": "9 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "9 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Wet laboratory + general exhaust",
+            "de": "Nasslabor + allgemeiner Abluftlüftung"
+          },
+          "value": 9
+        },
+        {
+          "id": "sample-lab",
+          "label": {
+            "en": "Sample preparation laboratory",
+            "de": "Labor zur Probenvorbereitung"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "float"
+          },
+          "explanation": {
+            "en": "10 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "10 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Sample preparation laboratory",
+            "de": "Labor zur Probenvorbereitung"
+          },
+          "value": 10
+        },
+        {
+          "id": "workshop-extract",
+          "label": {
+            "en": "Small workshop with process exhaust",
+            "de": "Kleine Werkstatt mit Prozessabluft"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "flip"
+          },
+          "explanation": {
+            "en": "8.5 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "8,5 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Small workshop + process exhaust",
+            "de": "Kleine Werkstatt + Prozessabluft"
+          },
+          "value": 8.5
+        },
+        {
+          "id": "food-preparation",
+          "label": {
+            "en": "Hot commercial food preparation room",
+            "de": "Warmer gewerblicher Speisenzubereitungsraum"
+          },
+          "icon": {
+            "emoji": "🏚️",
+            "motion": "bounce"
+          },
+          "explanation": {
+            "en": "22 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "22 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Hot commercial food preparation room",
+            "de": "Warmer gewerblicher Küchenarbeitsraum"
+          },
+          "value": 22
+        },
+        {
+          "id": "sterile-preparation",
+          "label": {
+            "en": "Sterile preparation room, teaching design",
+            "de": "Steriler Vorbereitungsraum, Lehrauslegung"
+          },
+          "icon": {
+            "emoji": "🏚️",
+            "motion": "pulse"
+          },
+          "explanation": {
+            "en": "20 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "20 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Sterile preparation room teaching design",
+            "de": "Steriler Vorbereitungsraum Lehrauslegung"
+          },
+          "value": 20
+        },
+        {
+          "id": "dishwashing-room",
+          "label": {
+            "en": "Commercial dishwashing room",
+            "de": "Gewerblicher Spülraum"
+          },
+          "icon": {
+            "emoji": "🏚️",
+            "motion": "spin"
+          },
+          "explanation": {
+            "en": "24 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "24 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Commercial dishwashing room",
+            "de": "Gewerblicher Spülraum"
+          },
+          "value": 24
+        },
+        {
+          "id": "test-chamber",
+          "label": {
+            "en": "Ventilated process test chamber",
+            "de": "Belüftete Prozessprüfkammer"
+          },
+          "icon": {
+            "emoji": "🏚️",
+            "motion": "sway"
+          },
+          "explanation": {
+            "en": "25 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "25 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Ventilated process test chamber",
+            "de": "Belüftete Prozessprüfkammer"
+          },
+          "value": 25
+        },
+        {
+          "id": "filtered-packing",
+          "label": {
+            "en": "Filtered clean packing room, teaching design",
+            "de": "Gefilterter sauberer Verpackungsraum, Lehrauslegung"
+          },
+          "icon": {
+            "emoji": "🏚️",
+            "motion": "float"
+          },
+          "explanation": {
+            "en": "50 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "50 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Filtered clean packing room",
+            "de": "Sauberer gefilterter Verpackungsraum"
+          },
+          "value": 50
+        },
+        {
+          "id": "precision-assembly",
+          "label": {
+            "en": "Clean precision assembly room",
+            "de": "Sauberer Präzisionsmontageraum"
+          },
+          "icon": {
+            "emoji": "🏚️",
+            "motion": "flip"
+          },
+          "explanation": {
+            "en": "70 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "70 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Clean precision assembly room",
+            "de": "Sauberer Präzisionsmontageraum"
+          },
+          "value": 70
+        },
+        {
+          "id": "clean-pharmacy",
+          "label": {
+            "en": "Clean pharmacy preparation room, teaching design",
+            "de": "Sauberer Apotheken-Vorbereitungsraum, Lehrauslegung"
+          },
+          "icon": {
+            "emoji": "🏭",
+            "motion": "bounce"
+          },
+          "explanation": {
+            "en": "60 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "60 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Clean pharmacy preparation room",
+            "de": "Sauberer Apotheken-Vorbereitungsraum"
+          },
+          "value": 60
+        },
+        {
+          "id": "clean-testing",
+          "label": {
+            "en": "Clean testing room with filtered supply air",
+            "de": "Sauberer Prüfraum mit gefilterter Zuluft"
+          },
+          "icon": {
+            "emoji": "🏭",
+            "motion": "pulse"
+          },
+          "explanation": {
+            "en": "80 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "80 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Clean testing room + filtered supply air",
+            "de": "Sauberer Prüfraum + gefilterter Zuluft"
+          },
+          "value": 80
+        },
+        {
+          "id": "microelectronics-clean",
+          "label": {
+            "en": "Microelectronics room with high filtered recirculation",
+            "de": "Mikroelektronikraum mit hoher gefilterter Umluft"
+          },
+          "icon": {
+            "emoji": "🏭",
+            "motion": "spin"
+          },
+          "explanation": {
+            "en": "180 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "180 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Highly filtered microelectronics room",
+            "de": "Stark gefilterter Mikroelektronikraum"
+          },
+          "value": 180
+        },
+        {
+          "id": "laminar-clean",
+          "label": {
+            "en": "Clean process room with unidirectional airflow",
+            "de": "Sauberer Prozessraum mit gerichteter Luftströmung"
+          },
+          "icon": {
+            "emoji": "🏭",
+            "motion": "sway"
+          },
+          "explanation": {
+            "en": "400 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "400 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Directional-flow clean process room",
+            "de": "Sauberer Prozessraum mit Richtströmung"
+          },
+          "value": 400
+        },
+        {
+          "id": "wafer-room",
+          "label": {
+            "en": "Wafer processing room, teaching design",
+            "de": "Wafer-Prozessraum, Lehrauslegung"
+          },
+          "icon": {
+            "emoji": "🏭",
+            "motion": "float"
+          },
+          "explanation": {
+            "en": "500 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "500 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Wafer processing room teaching design",
+            "de": "Wafer-Prozessraum Lehrauslegung"
+          },
+          "value": 500
+        },
+        {
+          "id": "optics-clean",
+          "label": {
+            "en": "Precision optics clean room",
+            "de": "Reinraum für Präzisionsoptik"
+          },
+          "icon": {
+            "emoji": "🏭",
+            "motion": "flip"
+          },
+          "explanation": {
+            "en": "150 1/h. Representative teaching design: air changes equal volume flow divided by room volume. Occupancy and process loads explain the order; clean-process examples include filtered recirculation, unlike outdoor-air ventilation.",
+            "de": "150 1/h. Typische Lehrauslegung: Luftwechsel entsprechen Volumenstrom geteilt durch Raumvolumen. Belegung und Prozesslasten erklären die Reihenfolge; reine Prozessräume enthalten gefilterte Umluft, anders als Außenluftlüftung."
+          },
+          "short": {
+            "en": "Precision optics clean room",
+            "de": "Reinraum für Präzisionsoptik"
+          },
+          "value": 150
+        }
+      ],
+      "draw": 10,
+      "pool": {
+        "seconds": 300,
+        "slots": [
+          [
+            "warehouse",
+            "passive-house-dwelling",
+            "archive-vault",
+            "storage-shed",
+            "efficient-flat",
+            "museum-store"
+          ],
+          [
+            "apartment",
+            "bedroom-night",
+            "living-room",
+            "student-flat",
+            "retrofitted-flat"
+          ],
+          [
+            "sports-hall",
+            "gym-hall",
+            "warehouse-staff",
+            "exhibition-hall",
+            "dance-hall"
+          ],
+          [
+            "single-office",
+            "residential-car-park",
+            "small-office",
+            "library-reading",
+            "reception-office",
+            "quiet-workroom"
+          ],
+          [
+            "cinema",
+            "classroom",
+            "lecture-room",
+            "training-room",
+            "meeting-room",
+            "theatre-audience"
+          ],
+          [
+            "restaurant",
+            "busy-cafe",
+            "canteen",
+            "fitness-studio",
+            "restaurant-banquet"
+          ],
+          [
+            "laboratory",
+            "teaching-lab",
+            "wet-lab",
+            "sample-lab",
+            "workshop-extract"
+          ],
+          [
+            "operating-room",
+            "commercial-kitchen",
+            "food-preparation",
+            "sterile-preparation",
+            "dishwashing-room",
+            "test-chamber"
+          ],
+          [
+            "cleanroom-iso-7",
+            "filtered-packing",
+            "precision-assembly",
+            "clean-pharmacy",
+            "clean-testing"
+          ],
+          [
+            "cleanroom-iso-6",
+            "cleanroom-iso-5",
+            "microelectronics-clean",
+            "laminar-clean",
+            "wafer-room",
+            "optics-clean"
+          ]
+        ]
+      }
+    },
+    {
+      "kind": "classification",
+      "id": "ventilation-profiles",
+      "title": {
+        "en": "Ventilation Types and Their Profiles",
+        "de": "Lüftungsarten und ihre Profile"
+      },
+      "icon": {
+        "emoji": "🕸️",
+        "motion": "sway"
+      },
+      "prompt": {
+        "en": "Assign each ventilation type to a spider diagram. Compare representative residential systems in a heating-dominated climate at similar hygienic airflow, quiet outdoor surroundings and proper installation. Each axis uses a relative teaching scale from 1 (low) to 5 (high): noise heard in occupied rooms, overall energy efficiency including heat recovery, maintenance effort, installed purchase costs and operating costs including fan electricity and ventilation heating losses. High efficiency is favourable; high noise, effort and costs are unfavourable. These illustrative ratings are not measured product data; specific designs can differ. Allow about five minutes.",
+        "de": "Ordne jede Lüftungsart einem Spinnendiagramm zu. Verglichen werden typische Wohngebäudesysteme im heizungsdominierten Klima bei ähnlichem hygienischem Luftstrom, ruhiger Außenumgebung und fachgerechtem Einbau. Jede Achse nutzt eine relative Lehrskala von 1 (niedrig) bis 5 (hoch): Geräuschpegel im Aufenthaltsraum, Gesamtenergieeffizienz einschließlich Wärmerückgewinnung, Wartungsintensität, Anschaffungskosten einschließlich Einbau und Betriebskosten einschließlich Ventilatorstrom und Lüftungswärmeverlusten. Hohe Effizienz ist günstig; hohe Geräusche, hoher Aufwand und hohe Kosten sind ungünstig. Die veranschaulichenden Bewertungen sind keine gemessenen Produktdaten; konkrete Ausführungen können abweichen. Plane etwa fünf Minuten ein."
+      },
+      "axes": [
+        {
+          "id": "noise",
+          "label": {
+            "en": "Noise level",
+            "de": "Geräuschpegel"
+          },
+          "unit": "1",
+          "min": 1,
+          "max": 5
+        },
+        {
+          "id": "efficiency",
+          "label": {
+            "en": "Energy efficiency",
+            "de": "Energieeffizienz"
+          },
+          "unit": "1",
+          "min": 1,
+          "max": 5
+        },
+        {
+          "id": "maintenance",
+          "label": {
+            "en": "Maintenance intensity",
+            "de": "Wartungsintensität"
+          },
+          "unit": "1",
+          "min": 1,
+          "max": 5
+        },
+        {
+          "id": "purchase-costs",
+          "label": {
+            "en": "Purchase costs",
+            "de": "Anschaffungskosten"
+          },
+          "unit": "1",
+          "min": 1,
+          "max": 5
+        },
+        {
+          "id": "operating-costs",
+          "label": {
+            "en": "Operating costs",
+            "de": "Betriebskosten"
+          },
+          "unit": "1",
+          "min": 1,
+          "max": 5
+        }
+      ],
+      "categories": [
+        {
+          "id": "profile-a",
+          "label": {
+            "en": "Profile A",
+            "de": "Profil A"
+          },
+          "icon": {
+            "emoji": "🔺",
+            "motion": "pulse"
+          },
+          "profile": {
+            "noise": 2,
+            "efficiency": 1,
+            "maintenance": 1,
+            "purchase-costs": 1,
+            "operating-costs": 4
+          }
+        },
+        {
+          "id": "profile-b",
+          "label": {
+            "en": "Profile B",
+            "de": "Profil B"
+          },
+          "icon": {
+            "emoji": "⬛",
+            "motion": "sway"
+          },
+          "profile": {
+            "noise": 1,
+            "efficiency": 2,
+            "maintenance": 2,
+            "purchase-costs": 2,
+            "operating-costs": 4
+          }
+        },
+        {
+          "id": "profile-c",
+          "label": {
+            "en": "Profile C",
+            "de": "Profil C"
+          },
+          "icon": {
+            "emoji": "⚫",
+            "motion": "bounce"
+          },
+          "profile": {
+            "noise": 3,
+            "efficiency": 2,
+            "maintenance": 3,
+            "purchase-costs": 3,
+            "operating-costs": 4
+          }
+        },
+        {
+          "id": "profile-d",
+          "label": {
+            "en": "Profile D",
+            "de": "Profil D"
+          },
+          "icon": {
+            "emoji": "🔷",
+            "motion": "float"
+          },
+          "profile": {
+            "noise": 2,
+            "efficiency": 5,
+            "maintenance": 4,
+            "purchase-costs": 5,
+            "operating-costs": 2
+          }
+        },
+        {
+          "id": "profile-e",
+          "label": {
+            "en": "Profile E",
+            "de": "Profil E"
+          },
+          "icon": {
+            "emoji": "⭐",
+            "motion": "spin"
+          },
+          "profile": {
+            "noise": 4,
+            "efficiency": 4,
+            "maintenance": 4,
+            "purchase-costs": 4,
+            "operating-costs": 2
+          }
+        }
+      ],
+      "items": [
+        {
+          "id": "window-ventilation",
+          "label": {
+            "en": "Window ventilation",
+            "de": "Fensterlüftung"
+          },
+          "icon": {
+            "emoji": "🪟",
+            "motion": "sway"
+          },
+          "category": "profile-a",
+          "explanation": {
+            "en": "Low installation and maintenance effort, no fan electricity and no heat recovery; winter heat losses contribute to operating costs. Outdoor noise and user behaviour strongly affect comfort.",
+            "de": "Geringer Einbau- und Wartungsaufwand, kein Ventilatorstrom und keine Wärmerückgewinnung; winterliche Wärmeverluste zählen zu den Betriebskosten. Außenlärm und Nutzerverhalten beeinflussen den Komfort stark."
+          }
+        },
+        {
+          "id": "window-flat",
+          "label": {
+            "en": "Flat with manual purge ventilation",
+            "de": "Wohnung mit manueller Stoßlüftung"
+          },
+          "short": {
+            "en": "Manually ventilated flat",
+            "de": "Manuell gelüftete Wohnung"
+          },
+          "icon": {
+            "emoji": "🪟",
+            "motion": "bounce"
+          },
+          "category": "profile-a",
+          "explanation": {
+            "en": "Low installation and maintenance effort, no fan electricity and no heat recovery; winter heat losses contribute to operating costs. Outdoor noise and user behaviour strongly affect comfort.",
+            "de": "Geringer Einbau- und Wartungsaufwand, kein Ventilatorstrom und keine Wärmerückgewinnung; winterliche Wärmeverluste zählen zu den Betriebskosten. Außenlärm und Nutzerverhalten beeinflussen den Komfort stark."
+          }
+        },
+        {
+          "id": "window-cross",
+          "label": {
+            "en": "Home with manual cross-ventilation",
+            "de": "Wohnhaus mit manueller Querlüftung"
+          },
+          "short": {
+            "en": "Cross-ventilated home",
+            "de": "Quergelüftetes Wohnhaus"
+          },
+          "icon": {
+            "emoji": "🪟",
+            "motion": "pulse"
+          },
+          "category": "profile-a",
+          "explanation": {
+            "en": "Low installation and maintenance effort, no fan electricity and no heat recovery; winter heat losses contribute to operating costs. Outdoor noise and user behaviour strongly affect comfort.",
+            "de": "Geringer Einbau- und Wartungsaufwand, kein Ventilatorstrom und keine Wärmerückgewinnung; winterliche Wärmeverluste zählen zu den Betriebskosten. Außenlärm und Nutzerverhalten beeinflussen den Komfort stark."
+          }
+        },
+        {
+          "id": "window-bedroom",
+          "label": {
+            "en": "Bedroom with manually opened windows",
+            "de": "Schlafzimmer mit manuell geöffneten Fenstern"
+          },
+          "short": {
+            "en": "Window-ventilated bedroom",
+            "de": "Fenstergelüftetes Schlafzimmer"
+          },
+          "icon": {
+            "emoji": "🪟",
+            "motion": "float"
+          },
+          "category": "profile-a",
+          "explanation": {
+            "en": "Low installation and maintenance effort, no fan electricity and no heat recovery; winter heat losses contribute to operating costs. Outdoor noise and user behaviour strongly affect comfort.",
+            "de": "Geringer Einbau- und Wartungsaufwand, kein Ventilatorstrom und keine Wärmerückgewinnung; winterliche Wärmeverluste zählen zu den Betriebskosten. Außenlärm und Nutzerverhalten beeinflussen den Komfort stark."
+          }
+        },
+        {
+          "id": "window-study",
+          "label": {
+            "en": "Study with manual window ventilation",
+            "de": "Arbeitszimmer mit manueller Fensterlüftung"
+          },
+          "short": {
+            "en": "Window-ventilated study",
+            "de": "Fenstergelüftetes Arbeitszimmer"
+          },
+          "icon": {
+            "emoji": "🪟",
+            "motion": "flip"
+          },
+          "category": "profile-a",
+          "explanation": {
+            "en": "Low installation and maintenance effort, no fan electricity and no heat recovery; winter heat losses contribute to operating costs. Outdoor noise and user behaviour strongly affect comfort.",
+            "de": "Geringer Einbau- und Wartungsaufwand, kein Ventilatorstrom und keine Wärmerückgewinnung; winterliche Wärmeverluste zählen zu den Betriebskosten. Außenlärm und Nutzerverhalten beeinflussen den Komfort stark."
+          }
+        },
+        {
+          "id": "shaft-ventilation",
+          "label": {
+            "en": "Natural shaft ventilation",
+            "de": "Freie Schachtlüftung"
+          },
+          "icon": {
+            "emoji": "🏗️",
+            "motion": "sway"
+          },
+          "category": "profile-b",
+          "explanation": {
+            "en": "A natural shaft uses buoyancy and wind without a fan. Shafts and inlets need care; airflow varies with weather and the reference system has no heat recovery.",
+            "de": "Ein freier Schacht nutzt Auftrieb und Wind ohne Ventilator. Schächte und Nachströmöffnungen benötigen Pflege; der Luftstrom schwankt mit dem Wetter und das Referenzsystem hat keine Wärmerückgewinnung."
+          }
+        },
+        {
+          "id": "shaft-flat",
+          "label": {
+            "en": "Flat with passive extract shafts",
+            "de": "Wohnung mit freien Abluftschächten"
+          },
+          "short": {
+            "en": "Flat with passive extract shafts",
+            "de": "Wohnung mit freien Abluftschächten"
+          },
+          "icon": {
+            "emoji": "🏗️",
+            "motion": "bounce"
+          },
+          "category": "profile-b",
+          "explanation": {
+            "en": "A natural shaft uses buoyancy and wind without a fan. Shafts and inlets need care; airflow varies with weather and the reference system has no heat recovery.",
+            "de": "Ein freier Schacht nutzt Auftrieb und Wind ohne Ventilator. Schächte und Nachströmöffnungen benötigen Pflege; der Luftstrom schwankt mit dem Wetter und das Referenzsystem hat keine Wärmerückgewinnung."
+          }
+        },
+        {
+          "id": "shaft-stair",
+          "label": {
+            "en": "Home with a natural ventilation shaft",
+            "de": "Wohnhaus mit freiem Lüftungsschacht"
+          },
+          "short": {
+            "en": "Home with natural ventilation shaft",
+            "de": "Haus mit freiem Lüftungsschacht"
+          },
+          "icon": {
+            "emoji": "🏗️",
+            "motion": "pulse"
+          },
+          "category": "profile-b",
+          "explanation": {
+            "en": "A natural shaft uses buoyancy and wind without a fan. Shafts and inlets need care; airflow varies with weather and the reference system has no heat recovery.",
+            "de": "Ein freier Schacht nutzt Auftrieb und Wind ohne Ventilator. Schächte und Nachströmöffnungen benötigen Pflege; der Luftstrom schwankt mit dem Wetter und das Referenzsystem hat keine Wärmerückgewinnung."
+          }
+        },
+        {
+          "id": "shaft-bathroom",
+          "label": {
+            "en": "Bathroom with a natural extract shaft",
+            "de": "Bad mit freiem Abluftschacht"
+          },
+          "short": {
+            "en": "Bathroom with natural extract shaft",
+            "de": "Bad mit freiem Abluftschacht"
+          },
+          "icon": {
+            "emoji": "🏗️",
+            "motion": "float"
+          },
+          "category": "profile-b",
+          "explanation": {
+            "en": "A natural shaft uses buoyancy and wind without a fan. Shafts and inlets need care; airflow varies with weather and the reference system has no heat recovery.",
+            "de": "Ein freier Schacht nutzt Auftrieb und Wind ohne Ventilator. Schächte und Nachströmöffnungen benötigen Pflege; der Luftstrom schwankt mit dem Wetter und das Referenzsystem hat keine Wärmerückgewinnung."
+          }
+        },
+        {
+          "id": "shaft-inlets",
+          "label": {
+            "en": "Dwelling with shaft and outdoor-air inlets",
+            "de": "Wohnung mit Schacht und Außenluftöffnungen"
+          },
+          "short": {
+            "en": "Dwelling with shaft and air inlets",
+            "de": "Wohnung mit Schacht und Luftöffnungen"
+          },
+          "icon": {
+            "emoji": "🏗️",
+            "motion": "flip"
+          },
+          "category": "profile-b",
+          "explanation": {
+            "en": "A natural shaft uses buoyancy and wind without a fan. Shafts and inlets need care; airflow varies with weather and the reference system has no heat recovery.",
+            "de": "Ein freier Schacht nutzt Auftrieb und Wind ohne Ventilator. Schächte und Nachströmöffnungen benötigen Pflege; der Luftstrom schwankt mit dem Wetter und das Referenzsystem hat keine Wärmerückgewinnung."
+          }
+        },
+        {
+          "id": "exhaust-ventilation",
+          "label": {
+            "en": "Mechanical extract ventilation",
+            "de": "Mechanische Abluftlüftung"
+          },
+          "icon": {
+            "emoji": "💨",
+            "motion": "sway"
+          },
+          "category": "profile-c",
+          "explanation": {
+            "en": "An extract fan offers controlled airflow with moderate installation effort. Fan noise, electricity and maintenance occur; outdoor-air inlets admit air without recovering the extract heat.",
+            "de": "Ein Abluftventilator ermöglicht geregelten Luftstrom bei mittlerem Einbauaufwand. Geräusch, Strom und Wartung fallen an; Außenluftöffnungen führen Luft ohne Rückgewinnung der Abluftwärme zu."
+          }
+        },
+        {
+          "id": "exhaust-flat",
+          "label": {
+            "en": "Flat with extract fan and air inlets",
+            "de": "Wohnung mit Abluftventilator und Zuluftöffnungen"
+          },
+          "short": {
+            "en": "Extract-fan flat",
+            "de": "Wohnung mit Abluftventilator"
+          },
+          "icon": {
+            "emoji": "💨",
+            "motion": "bounce"
+          },
+          "category": "profile-c",
+          "explanation": {
+            "en": "An extract fan offers controlled airflow with moderate installation effort. Fan noise, electricity and maintenance occur; outdoor-air inlets admit air without recovering the extract heat.",
+            "de": "Ein Abluftventilator ermöglicht geregelten Luftstrom bei mittlerem Einbauaufwand. Geräusch, Strom und Wartung fallen an; Außenluftöffnungen führen Luft ohne Rückgewinnung der Abluftwärme zu."
+          }
+        },
+        {
+          "id": "exhaust-wet-rooms",
+          "label": {
+            "en": "Home with mechanical wet-room extraction",
+            "de": "Wohnhaus mit mechanischer Nassraumabluft"
+          },
+          "short": {
+            "en": "Mechanically extracted wet rooms",
+            "de": "Nassräume mit mechanischer Abluft"
+          },
+          "icon": {
+            "emoji": "💨",
+            "motion": "pulse"
+          },
+          "category": "profile-c",
+          "explanation": {
+            "en": "An extract fan offers controlled airflow with moderate installation effort. Fan noise, electricity and maintenance occur; outdoor-air inlets admit air without recovering the extract heat.",
+            "de": "Ein Abluftventilator ermöglicht geregelten Luftstrom bei mittlerem Einbauaufwand. Geräusch, Strom und Wartung fallen an; Außenluftöffnungen führen Luft ohne Rückgewinnung der Abluftwärme zu."
+          }
+        },
+        {
+          "id": "exhaust-central-fan",
+          "label": {
+            "en": "Dwelling with central extract fan",
+            "de": "Wohnung mit zentralem Abluftventilator"
+          },
+          "short": {
+            "en": "Central extract-fan dwelling",
+            "de": "Wohnung mit zentraler Abluft"
+          },
+          "icon": {
+            "emoji": "💨",
+            "motion": "float"
+          },
+          "category": "profile-c",
+          "explanation": {
+            "en": "An extract fan offers controlled airflow with moderate installation effort. Fan noise, electricity and maintenance occur; outdoor-air inlets admit air without recovering the extract heat.",
+            "de": "Ein Abluftventilator ermöglicht geregelten Luftstrom bei mittlerem Einbauaufwand. Geräusch, Strom und Wartung fallen an; Außenluftöffnungen führen Luft ohne Rückgewinnung der Abluftwärme zu."
+          }
+        },
+        {
+          "id": "exhaust-demand",
+          "label": {
+            "en": "Dwelling with demand-controlled extract fan",
+            "de": "Wohnung mit bedarfsgeregeltem Abluftventilator"
+          },
+          "short": {
+            "en": "Demand-controlled extract dwelling",
+            "de": "Wohnung mit bedarfsgeregelter Abluft"
+          },
+          "icon": {
+            "emoji": "💨",
+            "motion": "flip"
+          },
+          "category": "profile-c",
+          "explanation": {
+            "en": "An extract fan offers controlled airflow with moderate installation effort. Fan noise, electricity and maintenance occur; outdoor-air inlets admit air without recovering the extract heat.",
+            "de": "Ein Abluftventilator ermöglicht geregelten Luftstrom bei mittlerem Einbauaufwand. Geräusch, Strom und Wartung fallen an; Außenluftöffnungen führen Luft ohne Rückgewinnung der Abluftwärme zu."
+          }
+        },
+        {
+          "id": "central-heat-recovery",
+          "label": {
+            "en": "Central ventilation with heat recovery",
+            "de": "Zentrale Lüftung mit Wärmerückgewinnung"
+          },
+          "short": {
+            "en": "Central heat-recovery ventilation",
+            "de": "Zentrale Wärmerückgewinnung"
+          },
+          "icon": {
+            "emoji": "🌬️",
+            "motion": "sway"
+          },
+          "category": "profile-d",
+          "explanation": {
+            "en": "The reference central unit balances supply and extract air with effective heat recovery. Ducts, filters and commissioning cost more; a remote silenced fan keeps room noise low and recovered heat lowers winter energy costs.",
+            "de": "Das zentrale Referenzgerät führt Zu- und Abluft mit wirksamer Wärmerückgewinnung. Kanäle, Filter und Einregulierung kosten mehr; ein entfernter schallgedämpfter Ventilator hält Raumgeräusche niedrig und Rückgewinnung senkt winterliche Energiekosten."
+          }
+        },
+        {
+          "id": "central-passive-home",
+          "label": {
+            "en": "Passive house with central heat recovery",
+            "de": "Passivhaus mit zentraler Wärmerückgewinnung"
+          },
+          "short": {
+            "en": "Passive house with central recovery",
+            "de": "Passivhaus mit zentraler Rückgewinnung"
+          },
+          "icon": {
+            "emoji": "🌬️",
+            "motion": "bounce"
+          },
+          "category": "profile-d",
+          "explanation": {
+            "en": "The reference central unit balances supply and extract air with effective heat recovery. Ducts, filters and commissioning cost more; a remote silenced fan keeps room noise low and recovered heat lowers winter energy costs.",
+            "de": "Das zentrale Referenzgerät führt Zu- und Abluft mit wirksamer Wärmerückgewinnung. Kanäle, Filter und Einregulierung kosten mehr; ein entfernter schallgedämpfter Ventilator hält Raumgeräusche niedrig und Rückgewinnung senkt winterliche Energiekosten."
+          }
+        },
+        {
+          "id": "central-flat",
+          "label": {
+            "en": "Flat with ducted heat-recovery ventilation",
+            "de": "Wohnung mit kanalgeführter Wärmerückgewinnung"
+          },
+          "short": {
+            "en": "Flat with ducted heat recovery",
+            "de": "Wohnung mit kanalgeführter Rückgewinnung"
+          },
+          "icon": {
+            "emoji": "🌬️",
+            "motion": "pulse"
+          },
+          "category": "profile-d",
+          "explanation": {
+            "en": "The reference central unit balances supply and extract air with effective heat recovery. Ducts, filters and commissioning cost more; a remote silenced fan keeps room noise low and recovered heat lowers winter energy costs.",
+            "de": "Das zentrale Referenzgerät führt Zu- und Abluft mit wirksamer Wärmerückgewinnung. Kanäle, Filter und Einregulierung kosten mehr; ein entfernter schallgedämpfter Ventilator hält Raumgeräusche niedrig und Rückgewinnung senkt winterliche Energiekosten."
+          }
+        },
+        {
+          "id": "central-retrofit",
+          "label": {
+            "en": "Renovated home with central heat recovery",
+            "de": "Saniertes Haus mit zentraler Wärmerückgewinnung"
+          },
+          "short": {
+            "en": "Renovated home with central recovery",
+            "de": "Saniertes Haus mit zentraler Lüftung"
+          },
+          "icon": {
+            "emoji": "🌬️",
+            "motion": "float"
+          },
+          "category": "profile-d",
+          "explanation": {
+            "en": "The reference central unit balances supply and extract air with effective heat recovery. Ducts, filters and commissioning cost more; a remote silenced fan keeps room noise low and recovered heat lowers winter energy costs.",
+            "de": "Das zentrale Referenzgerät führt Zu- und Abluft mit wirksamer Wärmerückgewinnung. Kanäle, Filter und Einregulierung kosten mehr; ein entfernter schallgedämpfter Ventilator hält Raumgeräusche niedrig und Rückgewinnung senkt winterliche Energiekosten."
+          }
+        },
+        {
+          "id": "central-silenced",
+          "label": {
+            "en": "Home with silenced central ventilation",
+            "de": "Haus mit schallgedämpfter zentraler Lüftung"
+          },
+          "short": {
+            "en": "Silenced central ventilation",
+            "de": "Schallgedämpfte zentrale Lüftung"
+          },
+          "icon": {
+            "emoji": "🌬️",
+            "motion": "flip"
+          },
+          "category": "profile-d",
+          "explanation": {
+            "en": "The reference central unit balances supply and extract air with effective heat recovery. Ducts, filters and commissioning cost more; a remote silenced fan keeps room noise low and recovered heat lowers winter energy costs.",
+            "de": "Das zentrale Referenzgerät führt Zu- und Abluft mit wirksamer Wärmerückgewinnung. Kanäle, Filter und Einregulierung kosten mehr; ein entfernter schallgedämpfter Ventilator hält Raumgeräusche niedrig und Rückgewinnung senkt winterliche Energiekosten."
+          }
+        },
+        {
+          "id": "decentral-heat-recovery",
+          "label": {
+            "en": "Decentral ventilation with heat recovery",
+            "de": "Dezentrale Lüftung mit Wärmerückgewinnung"
+          },
+          "short": {
+            "en": "Decentral heat-recovery ventilation",
+            "de": "Dezentrale Wärmerückgewinnung"
+          },
+          "icon": {
+            "emoji": "🔁",
+            "motion": "sway"
+          },
+          "category": "profile-e",
+          "explanation": {
+            "en": "Room units recover heat without a full duct network. Several local fans and filters require care and are heard near occupants; the reference system has somewhat lower efficiency than the central system.",
+            "de": "Raumgeräte gewinnen Wärme ohne vollständiges Kanalnetz zurück. Mehrere lokale Ventilatoren und Filter benötigen Pflege und sind in Nutzernähe hörbar; das Referenzsystem ist etwas weniger effizient als die zentrale Anlage."
+          }
+        },
+        {
+          "id": "decentral-paired",
+          "label": {
+            "en": "Flat with paired regenerative wall units",
+            "de": "Wohnung mit paarweisen regenerativen Wandgeräten"
+          },
+          "short": {
+            "en": "Paired regenerative wall units",
+            "de": "Paarweise regenerative Wandgeräte"
+          },
+          "icon": {
+            "emoji": "🔁",
+            "motion": "bounce"
+          },
+          "category": "profile-e",
+          "explanation": {
+            "en": "Room units recover heat without a full duct network. Several local fans and filters require care and are heard near occupants; the reference system has somewhat lower efficiency than the central system.",
+            "de": "Raumgeräte gewinnen Wärme ohne vollständiges Kanalnetz zurück. Mehrere lokale Ventilatoren und Filter benötigen Pflege und sind in Nutzernähe hörbar; das Referenzsystem ist etwas weniger effizient als die zentrale Anlage."
+          }
+        },
+        {
+          "id": "decentral-retrofit",
+          "label": {
+            "en": "Renovated flat with heat-recovery room units",
+            "de": "Sanierte Wohnung mit Wärmerückgewinnungs-Raumgeräten"
+          },
+          "short": {
+            "en": "Renovated flat with room recovery",
+            "de": "Sanierte Wohnung mit Raumrückgewinnung"
+          },
+          "icon": {
+            "emoji": "🔁",
+            "motion": "pulse"
+          },
+          "category": "profile-e",
+          "explanation": {
+            "en": "Room units recover heat without a full duct network. Several local fans and filters require care and are heard near occupants; the reference system has somewhat lower efficiency than the central system.",
+            "de": "Raumgeräte gewinnen Wärme ohne vollständiges Kanalnetz zurück. Mehrere lokale Ventilatoren und Filter benötigen Pflege und sind in Nutzernähe hörbar; das Referenzsystem ist etwas weniger effizient als die zentrale Anlage."
+          }
+        },
+        {
+          "id": "decentral-bedroom",
+          "label": {
+            "en": "Bedroom with a heat-recovery wall unit",
+            "de": "Schlafzimmer mit Wärmerückgewinnungs-Wandgerät"
+          },
+          "short": {
+            "en": "Bedroom with wall heat recovery",
+            "de": "Schlafzimmer mit Wandrückgewinnung"
+          },
+          "icon": {
+            "emoji": "🔁",
+            "motion": "float"
+          },
+          "category": "profile-e",
+          "explanation": {
+            "en": "Room units recover heat without a full duct network. Several local fans and filters require care and are heard near occupants; the reference system has somewhat lower efficiency than the central system.",
+            "de": "Raumgeräte gewinnen Wärme ohne vollständiges Kanalnetz zurück. Mehrere lokale Ventilatoren und Filter benötigen Pflege und sind in Nutzernähe hörbar; das Referenzsystem ist etwas weniger effizient als die zentrale Anlage."
+          }
+        },
+        {
+          "id": "decentral-study",
+          "label": {
+            "en": "Study with decentral heat recovery",
+            "de": "Arbeitszimmer mit dezentraler Wärmerückgewinnung"
+          },
+          "short": {
+            "en": "Study with room heat recovery",
+            "de": "Arbeitszimmer mit Raumrückgewinnung"
+          },
+          "icon": {
+            "emoji": "🔁",
+            "motion": "flip"
+          },
+          "category": "profile-e",
+          "explanation": {
+            "en": "Room units recover heat without a full duct network. Several local fans and filters require care and are heard near occupants; the reference system has somewhat lower efficiency than the central system.",
+            "de": "Raumgeräte gewinnen Wärme ohne vollständiges Kanalnetz zurück. Mehrere lokale Ventilatoren und Filter benötigen Pflege und sind in Nutzernähe hörbar; das Referenzsystem ist etwas weniger effizient als die zentrale Anlage."
+          }
+        }
+      ],
+      "draw": 5,
+      "pool": {
+        "seconds": 300,
+        "slots": [
+          [
+            "window-ventilation",
+            "window-flat",
+            "window-cross",
+            "window-bedroom",
+            "window-study"
+          ],
+          [
+            "shaft-ventilation",
+            "shaft-flat",
+            "shaft-stair",
+            "shaft-bathroom",
+            "shaft-inlets"
+          ],
+          [
+            "exhaust-ventilation",
+            "exhaust-flat",
+            "exhaust-wet-rooms",
+            "exhaust-central-fan",
+            "exhaust-demand"
+          ],
+          [
+            "central-heat-recovery",
+            "central-passive-home",
+            "central-flat",
+            "central-retrofit",
+            "central-silenced"
+          ],
+          [
+            "decentral-heat-recovery",
+            "decentral-paired",
+            "decentral-retrofit",
+            "decentral-bedroom",
+            "decentral-study"
+          ]
+        ]
+      }
+    }
+  ]
+}

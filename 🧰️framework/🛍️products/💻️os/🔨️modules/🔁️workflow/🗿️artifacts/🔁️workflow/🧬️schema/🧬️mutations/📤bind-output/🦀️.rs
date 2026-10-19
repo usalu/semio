@@ -15,6 +15,17 @@ pub struct BindOutput {
 //#region ⚙️Semantics
 impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for BindOutput {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "workflow", kind: "bind-output", record: "BoundWorkflowOutput" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Bind workflow output {}", self.binding.node_id), &format!("Arbeitsablaufausgabe {} binden", self.binding.node_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["output-bindings".into(), self.binding.node_id.clone(), self.binding.port_id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<WorkflowSnapshot, WorkflowMutation> for BindOutput {
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
         protocol::MutationOutcome::new(WorkflowDiff::BindOutput { binding: self.binding.clone() })
     }
@@ -27,11 +38,5 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for BindOutput {
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Bind workflow output {}", self.binding.node_id), &format!("Arbeitsablaufausgabe {} binden", self.binding.node_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["output-bindings".into(), self.binding.node_id.clone(), self.binding.port_id.clone()]
-    }
 }
 //#endregion ⚙️Semantics

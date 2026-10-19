@@ -11,8 +11,8 @@ impl OriginalToyEmission{
  pub fn new()->Self{Self{cursor:None,preview:RetainedPayloadBuilder::new(JobPayloadStream::Preview),checkpoint:RetainedJobPublication::new(),position:0,state:[0;4],prepared:false}}
  pub fn metadata(cx:&mut StepContext<'_>)->Result<bool,ValueError>{let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;Ok(true)}
  pub fn advance_preview<'a>(&'a mut self,writer:&ToolRunTickWriter,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,ValueError>{
-  if self.cursor.is_none(){if let Some((cursor,receipt))=ToolRunTickWireCursor::admit(writer,cx.retained_grant()){cx.consume_retained(receipt)?;self.cursor=Some(cursor);}return Ok(None)}
-  if self.preview.published().is_none(){semio_framework_plugin_tool_run::original_tick_payload::advance_original_tick_payload(writer,self.cursor.as_mut().unwrap(),&mut self.preview,&mut self.position,cx)?;return Ok(None)}
+  if self.cursor.is_none(){if let Some((cursor,receipt))=ToolRunTickWireCursor::admit(writer,None,cx.retained_grant())?{cx.consume_retained(receipt)?;self.cursor=Some(cursor);}return Ok(None)}
+  if self.preview.published().is_none(){semio_framework_plugin_tool_run::original_tick_payload::advance_original_tick_payload(writer,None,self.cursor.as_mut().unwrap(),&mut self.preview,&mut self.position,cx)?;return Ok(None)}
   JobOutcomeBorrow::admit_preview(cx,self.preview.published().unwrap())
  }
  pub(super) fn advance_checkpoint<'a>(&'a mut self,value:u32,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,ValueError>{

@@ -214,6 +214,9 @@ pub(super) struct BalanceWork {
     pub(super) air_diagonal_w_k: f64,
     pub(super) air_rhs_w: f64,
     pub(super) mean_radiant_sums: [f64; 6],
+    pub(super) thermal_phase: u8,
+    pub(super) thermal_cursor: usize,
+    pub(super) dense: Option<DenseSolveCursor>,
     pub(super) free_temp_c: f64,
     pub(super) target_temp_c: Option<f64>,
     pub(super) required_w: f64,
@@ -239,6 +242,9 @@ impl BalanceWork {
             air_diagonal_w_k: 0.0,
             air_rhs_w: 0.0,
             mean_radiant_sums: [0.0; 6],
+            thermal_phase: 0,
+            thermal_cursor: 0,
+            dense: None,
             free_temp_c: 0.0,
             target_temp_c: None,
             required_w: 0.0,
@@ -391,9 +397,13 @@ impl TimestepBuilder {
     }
 }
 
+/// 🧾️ The numerical consumer receives the funded original work receipt even on a typed fault.
+pub(crate) struct TimestepStep {pub(crate) progress:RetainedCloneProgress,pub(crate) fault:Option<DenseSolveFault>}
+
 impl TimestepWork {
-    pub fn retained_wire_signature(&self) -> [u64; 16] {
-        [
+    pub(crate) fn retained_wire_signature(&self) -> [u64; 32] {
+        let mut signature=[0;32];
+        signature[..16].copy_from_slice(&[
             self.stage as u64,
             self.substep_cursor as u64,
             self.substeps as u64,
@@ -410,7 +420,15 @@ impl TimestepWork {
             self.zone_steps as u64,
             self.hour.to_bits(),
             self.pv_generation_w.to_bits(),
-        ]
+        ]);
+        if let Some(work)=self.balance.as_ref() {
+            signature[16]=work.thermal_phase as u64;
+            signature[17]=work.thermal_cursor as u64;
+            signature[18]=work.dense.is_some() as u64;
+            if let Some(cursor)=work.dense.as_ref() {signature[19..31].copy_from_slice(&cursor.snapshot());}
+            signature[31]=work.required_w.to_bits();
+        }
+        signature
     }
 
     pub fn new(model: &Model, pre: &PrecomputedModel, weather: HourWeather, date: SimDate, hour: f64) -> Self {
@@ -488,18 +506,27 @@ impl TimestepWork {
         true
     }
 
-    pub fn step(&mut self, model: &Model, config: &SimulationConfig, pre: &PrecomputedModel, state: &mut SimulationModel) {
+    #[cfg(test)]
+    pub(crate) fn step(&mut self,model:&Model,config:&SimulationConfig,pre:&PrecomputedModel,state:&mut SimulationModel)->Result<(),Error>{
+        let turn=self.step_funded(model,config,pre,state,RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:512,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1});
+        turn.fault.map_or(Ok(()),|fault|Err(Error::severe(format!("energy heat-balance {}",fault.name()))))
+    }
+
+    pub(crate) fn step_funded(&mut self,model:&Model,config:&SimulationConfig,pre:&PrecomputedModel,state:&mut SimulationModel,grant:RetainedCloneGrant)->TimestepStep {
+        let demand=self.thermal_demand();
+        if grant.maximum_items<(demand.items as usize)||grant.maximum_copy_bytes<(demand.copy_bytes as usize)||grant.maximum_depth<(demand.depth as usize){return TimestepStep {progress:Default::default(),fault:None};}
+        let budget=DenseSolveBudget {items:grant.maximum_items as u64,copy_bytes:grant.maximum_copy_bytes as u64,depth:grant.maximum_depth.min(u32::MAX as usize) as u32,capacity_bytes:grant.maximum_capacity_bytes as u64};
         match self.stage {
-            TimestepStage::Zone => self.step_zone_preparation(model, config, pre, state),
-            TimestepStage::Balance => self.step_balance(model, pre, state),
-            TimestepStage::ZoneCommit => self.step_zone_commit(pre, state),
-            TimestepStage::SecondaryPlant => self.step_plant_bounded(model, pre, state),
-            TimestepStage::SecondaryPv => self.step_pv(model, state),
-            TimestepStage::SecondaryBattery => self.step_battery_bounded(model, pre, state),
-            TimestepStage::SecondaryServiceHotWater => self.step_service_hot_water(model, config, state),
-            TimestepStage::SecondaryRefrigeration => self.step_refrigeration(model, config, state),
-            TimestepStage::SecondaryWater => self.step_water(model, config, state),
-            TimestepStage::Complete => {}
+            TimestepStage::Zone=>self.step_zone_preparation(model,config,pre,state),
+            TimestepStage::Balance=>return self.step_balance(model,pre,state,budget),
+            TimestepStage::ZoneCommit=>self.step_zone_commit(pre,state),
+            TimestepStage::SecondaryPlant=>self.step_plant_bounded(model,pre,state),
+            TimestepStage::SecondaryPv=>self.step_pv(model,state),
+            TimestepStage::SecondaryBattery=>self.step_battery_bounded(model,pre,state),
+            TimestepStage::SecondaryServiceHotWater=>self.step_service_hot_water(model,config,state),
+            TimestepStage::SecondaryRefrigeration=>self.step_refrigeration(model,config,state),
+            TimestepStage::SecondaryWater=>self.step_water(model,config,state),
+            TimestepStage::Complete=>{},
         }
     }
 }

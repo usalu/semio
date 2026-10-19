@@ -2,7 +2,8 @@
 use super::*;
 use crate::dsl::InferredField;
 use {semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction, semio_s_artifact_puzzle_3d_model::Puzzle3dObject, semio_s_artifact_puzzle_3d_model::Puzzle3dVortex};
-use store::{InferenceCache, InferenceCacheConfig};
+use store::InferenceCache;
+use store::InferenceCacheConfig;
 
 //#region 🧸️Fixtures
 fn vortex(id: &str, position: [f64; 3], direction: [f64; 3]) -> Puzzle3dVortex {

@@ -164,3 +164,7 @@ pub mod standards {
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
 mod sqlite_snapshot_declaration_tests;
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[global_allocator]
+static ENERGY_PUBLICATION_HEAP_WITNESS:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

@@ -13,7 +13,11 @@
     "tiltDeg",
     "azimuthDeg",
     "moduleEfficiency",
-    "inverterEfficiency"
+    "inverterEfficiency",
+    "temperatureCoefficient",
+    "faimanHeatLossConstantWM2k",
+    "faimanHeatLossWindWSM3k",
+    "mounting"
   ],
   "properties": {
     "mutation": {
@@ -189,6 +193,87 @@
         "softMax": 1,
         "group": "efficiency",
         "order": 80
+      }
+    },
+    "faimanHeatLossWindWSM3k": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Wind heat loss",
+          "de": "Windwärmeverlust"
+        },
+        "group": "thermal",
+        "order": 20,
+        "displayUnit": "W·s/(m³·K)",
+        "precision": 2
+      }
+    },
+    "mounting": {
+      "type": "string",
+      "enum": [
+        "OpenRack",
+        "CloseRoof",
+        "InsulatedBack"
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Mounting",
+          "de": "Montage"
+        },
+        "group": "thermal",
+        "order": 20,
+        "options": {
+          "OpenRack": {
+            "en": "Open rack",
+            "de": "Offenes Gestell"
+          },
+          "CloseRoof": {
+            "en": "Close roof mount",
+            "de": "Dachnahe Montage"
+          },
+          "InsulatedBack": {
+            "en": "Insulated back",
+            "de": "Rückseitig gedämmt"
+          }
+        }
+      }
+    },
+    "faimanHeatLossConstantWM2k": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Constant heat loss",
+          "de": "Konstanter Wärmeverlust"
+        },
+        "group": "thermal",
+        "order": 20,
+        "displayUnit": "W/(m²·K)",
+        "precision": 2
+      }
+    },
+    "temperatureCoefficient": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Temperature coefficient",
+          "de": "Temperaturkoeffizient"
+        },
+        "group": "thermal",
+        "order": 20,
+        "displayUnit": "%/K",
+        "displayFactor": 100,
+        "step": 0.0001,
+        "precision": 2
       }
     }
   }

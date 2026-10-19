@@ -7,10 +7,10 @@ use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::invariant;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::solid_breach;
 
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ReplaceSolid, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {
+pub fn diff(payload: &ReplaceSolid, base: &Fem3dSnapshotValue) -> protocol::MutationOutcome<Fem3dDiff> {
     let Some(existing) = base.solids.iter().find(|solid| solid.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Solid \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
@@ -26,6 +26,6 @@ pub fn diff(payload: &ReplaceSolid, base: &Fem3dSnapshot) -> protocol::MutationO
     if let Some(breach) = solid_breach(&payload.new_solid) {
         return invariant(breach, vec![payload.id.clone()]);
     }
-    protocol::MutationOutcome::new(Fem3dDiff { solids: Some(Fem3dSolidsDelta { modified: vec![Fem3dSolidsModification { id: payload.id.clone(), patch: payload.new_solid.clone() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem3dDiff { solids: Some(Fem3dSolidsDelta { modified: vec![Fem3dSolidsModification { id: payload.id.clone(), patch: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSolidPatch::replacement(&payload.new_solid) }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

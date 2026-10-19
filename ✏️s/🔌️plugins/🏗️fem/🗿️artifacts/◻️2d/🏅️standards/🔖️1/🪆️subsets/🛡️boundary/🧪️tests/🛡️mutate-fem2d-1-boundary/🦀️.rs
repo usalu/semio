@@ -1,5 +1,5 @@
-//! 🏗️ `s.fem.fem2d` boundary mutation case — Rust SUBJECT adapter. Relocated out of the
 //! artifact-level `mutate-fem2d-1` case in ticket
+//! 🏗️ `s.fem.fem2d` boundary mutation case — Rust SUBJECT adapter. Relocated out of the
 //! `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION` so
 //! this subset's own kinds have a subset-owned test.
 //!
@@ -15,14 +15,18 @@
 //! report shapes rather than parts of the document, so they stay asserted HERE, in role, in
 //! [`subject::spec_vector`].
 
-use semio_repo_test_host::{parse_json, Adapter, Json};
+use semio_repo_test_host::parse_json;
+
+use semio_repo_test_host::Adapter;
+
+use semio_repo_test_host::Json;
 
 //#region 🔖️Kinds
 /// 🏷️ This subset's own slice of `KINDS` in `../../🧬️schema/🧬️mutations/🦀️.rs` — duplicated, not
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and that file's own
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against both the enum and the manifest.
-const KINDS: &[&str] = &["create-support", "delete-support", "replace-support"];
+const KINDS: &[&str] = &["change-support", "create-support", "delete-support", "replace-support"];
 
 /// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
 /// [`law::mutation_is_observable`] must not demand one of them.
@@ -43,6 +47,8 @@ const DERIVED_ASSET: &str = "shared://🛡️mutate-fem2d-1-boundary/🏗️timb
 /// 📇️ Every FORWARD committed vector this subset owns, as `(scenario id, kind)`. Two per kind:
 /// the pre-existing `spec-vector-<kind>` and the steel-frame `frame-vector-<kind>`.
 const COMMITTED: &[(&str, &str)] = &[
+    ("spec-vector-change-support", "change-support"),
+    ("frame-vector-change-support", "change-support"),
     ("spec-vector-create-support", "create-support"),
     ("frame-vector-create-support", "create-support"),
     ("spec-vector-delete-support", "delete-support"),
@@ -53,6 +59,9 @@ const COMMITTED: &[(&str, &str)] = &[
 
 /// 📇️ Every REFUSAL or no-op vector this subset owns, numbered in the catalog's own order.
 const REFUSED: &[(&str, &str)] = &[
+    ("reject-change-support-3", "change-support"),
+    ("reject-change-support-2", "change-support"),
+    ("reject-change-support-1", "change-support"),
     ("reject-create-support-1", "create-support"),
     ("reject-delete-support-1", "delete-support"),
     ("reject-replace-support-1", "replace-support"),
@@ -75,6 +84,45 @@ struct Vector {
 
 fn vector(scenario: &str) -> Vector {
     match scenario {
+        "reject-change-support-3" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⚗️invalid/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⚗️invalid/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⚗️invalid/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⚗️invalid/🎯️outcome/🔣️.json"),
+        },
+
+        "reject-change-support-2" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⛔️missing/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⛔️missing/🎯️outcome/🔣️.json"),
+        },
+
+        "reject-change-support-1" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⏸️same/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⏸️same/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⏸️same/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⏸️same/🎯️outcome/🔣️.json"),
+        },
+
+        "spec-vector-change-support" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-change-support" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/📌️toggles/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/📌️toggles/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/📌️toggles/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/📌️toggles/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/📌️toggles/🎯️outcome/🔣️.json"),
+        },
+
         "spec-vector-create-support" => Vector {
             before: include_str!("../🧫️fixtures/🧬️mutations/🛡️create-support/🛞️adds/📸️snapshot/⬅️before/🔣️.json"),
             mutation: include_str!("../🧫️fixtures/🧬️mutations/🛡️create-support/🛞️adds/🦠️mutation/🔣️.json"),
@@ -166,8 +214,14 @@ fn canonical(text: &str) -> Json {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{canonical, vector, DERIVED_ASSET, UNOBSERVABLE};
-    use semio_repo_test_host::{parse_json, Context, Json, Outcome};
+    use super::canonical;
+    use super::vector;
+    use super::DERIVED_ASSET;
+    use super::UNOBSERVABLE;
+    use semio_repo_test_host::parse_json;
+    use semio_repo_test_host::Context;
+    use semio_repo_test_host::Json;
+    use semio_repo_test_host::Outcome;
     use semio_repo_test_host::law;
     use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::io::text::mutations::fem2d_mutation_report_json;
 

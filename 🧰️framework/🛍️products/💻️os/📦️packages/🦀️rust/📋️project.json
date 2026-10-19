@@ -948,7 +948,8 @@
       "outputs": [],
       "inputs": [
         "sharedGlobals",
-        "{workspaceRoot}/.vscode/launch.json",
+        "{workspaceRoot}/📋️build-owners.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
         "{projectRoot}/📜️script.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/**/🦀️.rs",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/**/Cargo.toml",
@@ -962,6 +963,233 @@
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-crate-boundaries"
+      }
+    },
+    "db-error-ownership-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts db-error-ownership-check"
+      }
+    },
+    "db-error-ownership-native-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts db-error-ownership-check --native",
+        "forwardAllArgs": true
+      }
+    },
+    "stable-identity-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts stable-identity-check",
+        "forwardAllArgs": true
+      }
+    },
+    "test-diagnostic-admission": {
+      "executor": "repo:script",
+      "options": {
+        "command": "bun 📜️script.ts test-diagnostic-admission",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+      }
+    },
+    "test-owned-replay": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-owned-replay"
+      }
+    },
+    "canonical-source-identity-source": {
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-canonical-source-identity source"
+      },
+      "executor": "repo:script",
+      "cache": false
+    },
+    "canonical-source-identity-native": {
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-canonical-source-identity native"
+      },
+      "executor": "repo:script",
+      "cache": false
+    },
+    "test-retained-lane-source": {
+      "executor": "repo:script",
+      "options": {
+        "command": "bun 📜️script.ts test-retained-lane source",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+      }
+    },
+    "test-retained-lane-native": {
+      "executor": "repo:script",
+      "options": {
+        "command": "bun 📜️script.ts test-retained-lane native",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+      }
+    },
+    "test-original-ingress-source": {
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-original-ingress source"
+      },
+      "executor": "repo:script"
+    },
+    "test-original-history-input-source": {
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-original-history-input source"
+      },
+      "executor": "repo:script"
+    },
+    "test-original-history-input-native": {
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-original-history-input native"
+      },
+      "executor": "repo:script"
+    },
+    "test-original-ingress-native": {
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-original-ingress native"
+      },
+      "executor": "repo:script"
+    },
+    "test-original-io-retirement-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-original-io-retirement source"
+      }
+    },
+    "test-original-io-retirement-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-original-io-retirement native"
+      }
+    },
+    "semantic-source-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "command": "bun 📜️script.ts semantic-source source",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+      },
+      "metadata": {
+        "dashboard": {
+          "workspaceCommand": "@semio-tech/framework-os-kernel:semantic-source-source"
+        }
+      }
+    },
+    "semantic-source-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "command": "bun 📜️script.ts semantic-source native",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+      },
+      "metadata": {
+        "dashboard": {
+          "workspaceCommand": "@semio-tech/framework-os-kernel:semantic-source-native"
+        }
+      }
+    },
+    "member-facets-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "command": "bun 📜️script.ts member-facets source",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+      },
+      "metadata": {
+        "dashboard": {
+          "workspaceCommand": "@semio-tech/framework-os-kernel:member-facets-source"
+        }
+      }
+    },
+    "member-facets-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "command": "bun 📜️script.ts member-facets native",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+      },
+      "metadata": {
+        "dashboard": {
+          "workspaceCommand": "@semio-tech/framework-os-kernel:member-facets-native"
+        }
+      }
+    },
+    "test-original-vcs-command-source": {
+      "metadata": {
+        "dashboard": {
+          "workspaceCommand": "@semio-tech/framework-os-kernel:test-original-vcs-command-source"
+        }
+      },
+      "outputs": [],
+      "dependsOn": [],
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "command": "bun 📜️script.ts test-original-vcs-command source"
+      },
+      "cache": false
+    },
+    "test-original-vcs-command-native": {
+      "metadata": {
+        "dashboard": {
+          "workspaceCommand": "@semio-tech/framework-os-kernel:test-original-vcs-command-native"
+        }
+      },
+      "outputs": [],
+      "dependsOn": [],
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "command": "bun 📜️script.ts test-original-vcs-command native"
+      },
+      "cache": false
+    },
+    "test-original-snapshot-receiving-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-snapshot-receiving source"
+      }
+    },
+    "test-original-snapshot-receiving-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-snapshot-receiving native"
       }
     }
   },

@@ -5,7 +5,11 @@ use super::*;
     // #region board_host
     //#region 🧵️FillJob
 impl BoardHost {
-    /// 🖌️ Mirrors brush slot + preview from another authoring pane (no pointer input on this host).
+        /// 📷️ Captures the board's current style and brush through the original fill issuer.
+    pub fn begin_board_fill_snapshot(&self, output: &mut Option<semio_framework_os_infinite_board_normal_fill::BoardFillSnapshotCapture>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        semio_framework_os_infinite_board_normal_fill::begin_board_fill_snapshot(&self.style, &self.brush, output, cx)
+    }
+/// 🖌️ Mirrors brush slot + preview from another authoring pane (no pointer input on this host).
     pub fn set_brush_session_mirror_json(&mut self, json: &str) -> Result<(), NormalPortError> {
         if json.trim().is_empty() {
             self.brush.brush_slot_suggestions_active = false;

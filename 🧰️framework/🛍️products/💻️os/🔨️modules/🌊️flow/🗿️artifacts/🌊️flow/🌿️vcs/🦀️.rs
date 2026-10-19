@@ -44,7 +44,17 @@ fn flow_native_index(index: u32, length: usize) -> MutationApplyResult<usize> {
     Ok(index)
 }
 
-/// 🧱️ Structural collection edits retain insertion positions independently of mutation payloads.
+/// 🔀️ One positional reorder row: `id` leaves position `from` and lands at position `to`, both read in the list as it stands when the row applies.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct FlowMove {
+    pub id: String,
+    pub from: u32,
+    pub to: u32,
+}
+
+/// 🧱️ Structural collection edits retain insertion positions independently of mutation payloads; `moved` rows apply last, in order.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -52,6 +62,15 @@ pub struct FlowCollectionDelta<T> {
     pub removed: Vec<String>,
     pub inserted: Vec<(u32, T)>,
     pub replaced: Vec<(String, T)>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub moved: Vec<FlowMove>,
+}
+
+impl<T> Default for FlowCollectionDelta<T> {
+    fn default() -> Self {
+        Self { removed: Vec::new(), inserted: Vec::new(), replaced: Vec::new(), moved: Vec::new() }
+    }
 }
 
 /// ▶️ Validates one structural fragment without copying or dropping its payload owners.
@@ -81,6 +100,15 @@ pub fn apply_flow_collection_delta<'a, T: Identified<String>>(items: &mut Vec<&'
             return Err(MutationApplyError::new("mutation.apply.duplicate-target", "inserted Flow identity already exists").at([item.id().as_str()]));
         }
         items.insert(index, item);
+    }
+    for row in &delta.moved {
+        let from = usize::try_from(row.from).ok().filter(|from| *from < items.len()).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "moved Flow item has no such source position").at([row.id.as_str()]))?;
+        if items[from].id() != &row.id {
+            return Err(MutationApplyError::new("mutation.apply.order-mismatch", "moved Flow item is not at its source position").at([row.id.as_str()]));
+        }
+        let to = usize::try_from(row.to).ok().filter(|to| *to < items.len()).ok_or_else(|| MutationApplyError::new("mutation.apply.index-range", "Flow move target is outside the collection").at([row.id.as_str()]))?;
+        let item = items.remove(from);
+        items.insert(to, item);
     }
     Ok(())
 }
@@ -168,6 +196,8 @@ impl ArtifactStoreOneItemPreparationFactory<FlowHostSnapshot, FlowMutation> for 
     fn begin_demand(&self, _mutation: &FlowMutation, _lane: HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "flow catalog prepares no retained gesture"))
     }
+    fn begin_copy_byte_demand(&self,input:&FlowMutation,lane:HistoryLane)->Result<usize,semio_framework_value::ValueError>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "flow catalog prepares no retained gesture"))}
+
 
     fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<FlowHostSnapshot, FlowMutation, FlowMutation>, _grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<FlowHostSnapshot, FlowMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, ArtifactStoreOneItemPreparationRequest<FlowHostSnapshot, FlowMutation, FlowMutation>)> {
         Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "flow catalog prepares no retained gesture"), request))

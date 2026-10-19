@@ -1,7 +1,8 @@
-//! 🔺️ Sparse diff builder for `ConnectHandles` — an exact ordered insert (never a
 //! whole-snapshot capture). No-op when the id already exists in `base`. A payload that states a `tolerance` connects
+//! 🔺️ Sparse diff builder for `ConnectHandles` — an exact ordered insert (never a
 //! on any base and warns `mutation.precondition-drifted` where its two handles are no longer within it.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dEdgesDelta};
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dEdgesDelta;
 use {crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge, crate::Puzzle2dSnapshot};
 use {crate::standards::v1::subsets::any::schema::records::puzzle2d_finite, crate::standards::v1::subsets::any::schema::puzzle2d_handle_distance};
 

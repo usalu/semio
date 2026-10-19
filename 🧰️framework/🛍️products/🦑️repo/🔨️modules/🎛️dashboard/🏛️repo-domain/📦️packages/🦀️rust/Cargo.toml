@@ -34,5 +34,8 @@ semio-framework-repo-statutes = { path = "../../../../📜️statutes/📦️pac
 semio-framework-repo-tickets = { path = "../../../../🎫️tickets/📦️packages/🦀️rust" }
 semio-framework-repo-tree = { path = "../../../../🌳️tree/📦️packages/🦀️rust" }
 
+semio-framework-repo-todos = { path = "../../../../📝️todos/📦️packages/🦀️rust" }
+semio-framework-repo-identity = { path = "../../../../🪪️identity/📦️packages/🦀️rust" }
+
 [dev-dependencies]
 dashboard_core = { path = "../../../🧱️invocation-catalog/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-repo-dashboard-core" }

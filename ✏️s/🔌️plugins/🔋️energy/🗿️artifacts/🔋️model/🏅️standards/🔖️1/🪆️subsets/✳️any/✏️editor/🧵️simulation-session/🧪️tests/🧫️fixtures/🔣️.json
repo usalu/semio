@@ -9,7 +9,7 @@
     "warmupTimesteps": 24,
     "runTimesteps": 24,
     "tiers": ["steadyStateEstimate", "coarseTimestep", "final"],
-    "stagesVisited": ["warmup", "run", "encode"],
+    "stagesVisited": ["prepare", "warmup", "run", "encode"],
     "finalState": "complete",
     "finalStage": "encode"
   },

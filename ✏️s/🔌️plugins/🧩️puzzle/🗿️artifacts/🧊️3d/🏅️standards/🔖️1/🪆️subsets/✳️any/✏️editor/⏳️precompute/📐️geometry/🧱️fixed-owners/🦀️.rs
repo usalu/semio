@@ -595,6 +595,8 @@ pub enum FixedOwnerSetInsert<K> {
 }
 
 impl<K, const N: usize, const S: usize> FixedOwnerSet<K, N, S> {
+    pub fn original_empty() -> Self { Self { values: FixedOwnerMap::refused() } }
+
     pub fn new() -> Self {
         Self { values: FixedOwnerMap::new() }
     }

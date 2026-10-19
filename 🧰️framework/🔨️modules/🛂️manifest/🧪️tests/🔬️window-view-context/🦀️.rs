@@ -62,3 +62,21 @@ async fn window_view_context_uses_the_addressed_instance() {
         assert_eq!(panel.window_instances, view.window_instances, "panel focus row {} must not touch the roster", row["id"]);
     }
 }
+
+/// 🧰️ Window utility lookup resolves roster identities and never borrows a sibling's overlay.
+#[test]
+fn window_utility_uses_exact_instance_ownership() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window-view-context/🔣️.json")).unwrap();
+    for case in fixture["utilityCases"].as_array().unwrap() {
+        let mut input = fixture["view"].clone();
+        for (source, target) in [("currentWindowId", "windowId"), ("focusedWindowId", "focusedWindowId"), ("utilities", "activeUtilityByWindowId"), ("windows", "windowInstances")] {
+            if let Some(value) = case.get(source) { input[target] = value.clone(); }
+        }
+        let view: ViewModel = serde_json::from_value(input.clone()).unwrap();
+        let owned: ViewModel = semio_framework_pack_json::from_json_str(&input.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let actual = owned.window_utility(case["windowId"].as_str());
+        assert_eq!(actual, case["activeUtilityId"].as_str(), "{case}");
+        assert_eq!(actual, view.window_utility(case["windowId"].as_str()));
+    }
+    println!("[DEBUG] shared window utility routing preserves exact instance ownership");
+}

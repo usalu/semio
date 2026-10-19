@@ -8,10 +8,11 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fe
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dRegionInsertion;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dRegionsDelta;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &CreateRegion, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
+pub fn diff(payload: &CreateRegion, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<Fem2dDiff> {
+    if let Some(rejection) = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards::scoped_identity(&["region", &payload.region.id]) { return rejection; }
     if base.regions.iter().any(|region| region.id == payload.region.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A region with id \"{}\" already exists.", payload.region.id), [payload.region.id.clone()]);
     }

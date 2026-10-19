@@ -42,8 +42,8 @@ pub async fn assert_policy_matrix(rejects: impl AsyncFn(crate::MergePolicy, semi
 /// no diff at all.
 pub async fn assert_outcome_policy_matrix<P, Op>(base: &P, mutation: &Op)
 where
-    Op: crate::Mutation<P>,
-    Op::Diff: PartialEq + std::fmt::Debug + Default,
+    Op: crate::Mutation<P> + crate::ColdMutation<P>,
+    Op::ReferenceDiff: PartialEq + std::fmt::Debug + Default,
 {
     let outcome = mutation.diff(base);
     let worst = outcome.worst_level();

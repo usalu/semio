@@ -1,0 +1,7 @@
+{"chunkBytes":4,"cases":[
+ {"id":"unique","keys":["node-🧱-0001","node-🧱-0002","node-🧱-0003"],"needle":"node-🧱-0002","expectedIndices":[1]},
+ {"id":"missing","keys":["alpha","beta"],"needle":"gamma","expectedIndices":[]},
+ {"id":"duplicate","keys":["same","other","same"],"needle":"same","expectedIndices":[0,2]},
+ {"id":"empty-key","keys":["first",""],"needle":"","expectedIndices":[1]},
+ {"id":"empty-list","keys":[],"needle":"unused","expectedIndices":[]}
+]}

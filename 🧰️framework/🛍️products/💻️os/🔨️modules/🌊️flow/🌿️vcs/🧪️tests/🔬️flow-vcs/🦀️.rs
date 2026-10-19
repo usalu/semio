@@ -1,4 +1,5 @@
 
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::*;
 use semio_framework_os_kernel::os_spr::{ArtifactId, Edit, Identified, Mutation, MutationDiff, SchemaId};
 use semio_framework_os_kernel::os_store::{document_materialize::create_document_envelope, store_schema::ArtifactCommand, ArtifactStore, SnapshotRetirementFactory};

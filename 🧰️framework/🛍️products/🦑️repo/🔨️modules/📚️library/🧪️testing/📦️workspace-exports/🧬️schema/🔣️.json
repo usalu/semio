@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/testing/workspace-exports.json",
+  "title": "Public Runtime Package Exports",
+  "type": "array",
+  "$defs": {
+    "SourceLockWorkspace": {
+      "type": "object",
+      "required": ["name", "version", "dependencies", "devDependencies"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "dependencies": { "type": "object", "additionalProperties": { "type": "string" } },
+        "devDependencies": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    }
+  },
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["specifier", "target"],
+    "properties": {
+      "specifier": { "type": "string", "minLength": 1 },
+      "target": { "type": "string", "pattern": "^\\./[^\\\\]+$" }
+    }
+  }
+}

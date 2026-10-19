@@ -16,7 +16,7 @@ impl<P:Send+Sync+'static> PresencePeersRead<P>{
  }
 }
 fn admit(grant:RetainedCloneGrant,copied_bytes:usize)->Result<(),ValueError>{if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original peer read requires its complete root and factory alias transfer"))}if grant.maximum_depth<2{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original peer read requires root and factory depth"))}Ok(())}
-impl<P:Clone+Send+Sync+'static,M:Mutation<P>> PresenceStore<P,M>{
+impl<P: Send+Sync+'static,M:Mutation<P>> PresenceStore<P,M>{
  /// 👁️ Captures the installed original root and factory without copying any peer payload.
  pub fn capture_peer_root(&self,grant:RetainedCloneGrant)->Result<(PresencePeersRead<P>,RetainedCloneProgress),ValueError>{
   admit(grant,size_of::<PresencePeersRead<P>>())?;let root=self.peers.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original peer store root is absent"))?;let factory=self.peer_retirement_factory.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original peer store factory is absent"))?;

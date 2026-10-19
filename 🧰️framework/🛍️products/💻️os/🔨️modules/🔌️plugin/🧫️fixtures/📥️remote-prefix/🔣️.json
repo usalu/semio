@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "accepted-prefix-refusal",
+      "steps": [
+        "valid",
+        "malformed"
+      ],
+      "refused": true,
+      "count": 1,
+      "notifications": 1
+    },
+    {
+      "name": "failed-first",
+      "steps": [
+        "malformed",
+        "valid"
+      ],
+      "refused": true,
+      "count": 0,
+      "notifications": 0
+    },
+    {
+      "name": "exact-duplicate",
+      "steps": [
+        "valid",
+        "duplicate"
+      ],
+      "refused": false,
+      "count": 1,
+      "notifications": 1
+    },
+    {
+      "name": "accepted-only",
+      "steps": [
+        "valid"
+      ],
+      "refused": false,
+      "count": 1,
+      "notifications": 1
+    }
+  ]
+}

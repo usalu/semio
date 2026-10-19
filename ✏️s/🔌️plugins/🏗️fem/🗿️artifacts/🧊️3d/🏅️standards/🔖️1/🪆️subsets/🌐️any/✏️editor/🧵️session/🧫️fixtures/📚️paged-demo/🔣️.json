@@ -1,0 +1,24 @@
+{
+  "oracle": {
+    "package": "numpy",
+    "implementation": "Symmetric two-storey axial frame condensed independently from the shipped geometry and consistent gravity loads"
+  },
+  "physicalPageBytes": 4096,
+  "frame": {
+    "elasticModulus": 210000000000,
+    "area": 0.00538,
+    "density": 7850,
+    "gravity": 9.81,
+    "storeyHeight": 2.8,
+    "beamLengths": [8, 10],
+    "storeyVerticalDisplacements": [-0.000022794516, -0.000033473028],
+    "rootVerticalReaction": 9777.615228
+  },
+  "slab": {
+    "area": 4,
+    "height": 0.5,
+    "density": 2400,
+    "pressure": 800,
+    "verticalReactionSum": 50288
+  }
+}

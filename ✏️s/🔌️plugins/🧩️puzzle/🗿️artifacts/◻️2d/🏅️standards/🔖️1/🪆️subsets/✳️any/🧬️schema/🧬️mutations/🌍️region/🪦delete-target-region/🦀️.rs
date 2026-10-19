@@ -27,23 +27,32 @@ pub fn delete_target_region<Op: From<DeleteTargetRegion>>(id: PagedUtf8<{ usize:
 impl<Op> protocol::MutationKind<Puzzle2dSnapshot, Op> for DeleteTargetRegion
 where
     Op: protocol::Mutation<Puzzle2dSnapshot, Diff = Puzzle2dDiff> + From<DeleteTargetRegion> + From<CreateTargetRegion>,
-{
+ {
+
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "target region", kind: "delete-target-region", record: "DeletedTargetRegion" };
 
-    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete target region \"{}\"", self.id), &format!("Zielregion \"{}\" löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.to_string_owner()]
     }
+
+}
+impl<Op> protocol::ColdMutationKind<Puzzle2dSnapshot, Op> for DeleteTargetRegion
+where
+    Op: protocol::ColdMutation<Puzzle2dSnapshot, ReferenceDiff = Puzzle2dDiff> + From<DeleteTargetRegion> + From<CreateTargetRegion>,
+ {
+fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+        super::diff::diff(self, base)
+    }
+fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Mutation

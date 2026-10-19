@@ -1,6 +1,11 @@
 {
   "name": "@semio-tech/fixture-generator-fem-3d-1-any",
   "targets": {
+    "test-carrier": {
+      "cache": false,
+      "options": {"command": "bun ./📜️script.ts test-carrier", "forwardAllArgs": true},
+      "outputs": []
+    },
     "🏭️generator": {
       "cache": true,
       "options": {

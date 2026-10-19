@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contracts",
+    "cases",
+    "receiptLaw",
+    "retirementCases"
+  ],
+  "properties": {
+    "contracts": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "string"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "text",
+          "turnCapacity",
+          "expectedOwned",
+          "cancelled"
+        ],
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "turnCapacity": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "expectedOwned": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "cancelled": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "receiptLaw": {
+      "required": [
+        "childCopy",
+        "childCapacity",
+        "parentCopy",
+        "expectedCopy",
+        "expectedCapacity"
+      ],
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "childCapacity": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expectedCapacity": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "parentCopy": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "childCopy": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expectedCopy": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "retirementCases": {
+      "items": {
+        "properties": {
+          "fuel": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "cancelled": {
+            "type": "boolean"
+          },
+          "deadlineOpen": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "visited": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "cancelled",
+          "deadlineOpen",
+          "fuel",
+          "visited"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "type": "array",
+      "minItems": 4
+    }
+  }
+}

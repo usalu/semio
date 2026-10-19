@@ -1,25 +1,65 @@
-//! 🪣️ Puzzle 2d fill tool run (`📋️tool-run-contract.md` §2.7, §3.2, §3.3, §3.7): the run job streams the
 //! document into the board engine's fill ingress, drives its `BoardFillJob` search and reports every
+//! 🪣️ Puzzle 2d fill tool run (`📋️tool-run-contract.md` §2.7, §3.2, §3.3, §3.7): the run job streams the
 //! candidate the search decides as a `placement2d` trace record — `testing`, then `danger` (collision),
 //! `warning` (port or kind rule) or `success` (placed). Every placement appends its `create_node` +
 //! `connect_handles` ops and one entity to the tool run ledger; nothing touches the store before
 //! finalize, where the revalidate job re-tests the provisional placements against the head.
 //! Vocabulary source of record: `$defs.Puzzle2dFillRun` in `✳️any/🧬️schema/🔣️.json`.
 
-use crate::editor::puzzle2d::engine::{
-    BoardFillCandidateEvent, BoardFillCandidateVerdict, BoardFillCaptureFault, BoardFillIngressHandleText, BoardFillIngressKindText, BoardFillIngressRuleText, BoardFillIngressTemplateText, BoardFillJob, BoardFillPlacement, BoardFillSnapshot, BoardFillSnapshotIngress, BoardFillStage,
-};
-#[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::{};
-use crate::editor::puzzle2d::engine::board_host::PUZZLE_2D_BOARD_NAMING;
+use crate::editor::puzzle2d::engine::BoardFillCandidateEvent;
+
+use crate::editor::puzzle2d::engine::BoardFillCandidateVerdict;
+
+use crate::editor::puzzle2d::engine::BoardFillCaptureFault;
+
+use crate::editor::puzzle2d::engine::BoardFillIngressHandleText;
+
+use crate::editor::puzzle2d::engine::BoardFillIngressKindText;
+
+use crate::editor::puzzle2d::engine::BoardFillIngressRuleText;
+
+use crate::editor::puzzle2d::engine::BoardFillIngressTemplateText;
+
+use crate::editor::puzzle2d::engine::BoardFillJob;
+
+use crate::editor::puzzle2d::engine::BoardFillPlacement;
+
+use crate::editor::puzzle2d::engine::BoardFillSnapshot;
+
+use crate::editor::puzzle2d::engine::BoardFillSnapshotIngress;
+
+use crate::editor::puzzle2d::engine::BoardFillStage;
+
 use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
+use crate::editor::puzzle2d::engine::board_host::PUZZLE_2D_BOARD_NAMING;
 
-use crate::standards::v1::subsets::any::schema::mutations::{Puzzle2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 
-use crate::standards::v1::subsets::any::schema::mutations::{connect_handles,create_node};
+use crate::standards::v1::subsets::any::schema::mutations::connect_handles;
+
+use crate::standards::v1::subsets::any::schema::mutations::create_node;
 
 use crate::puzzle_job::JobTurn;
-use semio_framework_job::{Generation, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, Operation, OperationId, RevisionId, StepBudget, StepContext};
-use semio_framework_tool_run::{ToolRunCounter, ToolRunIdentity, ToolRunProgress, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTickWriter, ToolRunTraceSubject, ToolRunVerdict, TOOL_RUN_REASON_CONFLICT};
+use semio_framework_job::Generation;
+use semio_framework_job::InteractiveJob;
+use semio_framework_job::InteractiveJobCloseStep;
+use semio_framework_job::JobOutcomeBorrow;
+use semio_framework_job::Operation;
+use semio_framework_job::OperationId;
+use semio_framework_job::RevisionId;
+use semio_framework_job::StepBudget;
+use semio_framework_job::StepContext;
+use semio_framework_tool_run::ToolRunCounter;
+use semio_framework_tool_run::ToolRunIdentity;
+use semio_framework_tool_run::ToolRunProgress;
+use semio_framework_tool_run::ToolRunState;
+use semio_framework_tool_run::ToolRunStepArg;
+use semio_framework_tool_run::ToolRunStepKind;
+use semio_framework_tool_run::ToolRunStepRing;
+use semio_framework_tool_run::ToolRunTickWriter;
+use semio_framework_tool_run::ToolRunTraceSubject;
+use semio_framework_tool_run::ToolRunVerdict;
+use semio_framework_tool_run::TOOL_RUN_REASON_CONFLICT;
 use semio_framework_pack_json::Value;
 use std::collections::HashSet;
 use std::sync::Arc;

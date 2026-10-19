@@ -23,6 +23,7 @@ fn original_controlled_failed_reservation_retains_actual_receipt_and_same_owner(
 fn original_retirement_queue_keeps_actual_controlled_child_failure_receipt(){
     struct FailedChild { original:ControlledRetirement<String>,failed:bool,source_pointer:usize }
     impl crate::ErasedSnapshotRetirement for FailedChild {
+ fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.original.next_demand(body)}
         fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
             if !self.failed { self.failed=true;let quote=self.original.next_capacity_byte_demand(grant.maximum_copy_bytes)?;let result=self.original.reserve_cursor_slot(quote,|list,grant|list.reserve_one_using::<ExcessAllocation>(grant));assert_eq!(self.original.original().unwrap().as_ptr()as usize,self.source_pointer);return result; }
             self.original.step(grant)
@@ -92,4 +93,10 @@ fn original_controlled_selected_array_leaf_preserves_future_atoms_and_exact_curr
   }
   assert!(arrays>0,"original array raw atom remains12 before its separately funded source spill");if copy<law["futureElementBytes"].as_u64().unwrap()as usize{assert!(spills>0);}assert_eq!(born,freed);let(_,heap)=crate::allocation_testing::observe_retirement_allocations(||drop(slot));assert_eq!(heap,(0,0));
  }
+}
+
+#[test]
+fn retained_unsupported_original_stays_inline_through_demand_and_step_refusal(){
+ struct Unsupported(String);impl RetireOwned for Unsupported{fn retirement(self)->Box<dyn RetirementCursor>{panic!("unsupported original must never construct a cursor")}}
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/📥️root/🔣️.json")).unwrap();let original=Unsupported(law["source"].as_str().unwrap().to_owned());let pointer=original.0.as_ptr();let(mut owner,heap)=crate::allocation_testing::observe_retirement_allocations(||ControlledRetirement::retain(original));assert_eq!(heap,(0,0));assert_eq!(owner.original().unwrap().0.as_ptr(),pointer);let(error,heap)=crate::allocation_testing::observe_retirement_allocations(||owner.next_demand(4096).unwrap_err());assert_eq!(error.kind,ValueRefusalKind::UnsupportedOwner);assert_eq!(heap,(0,0));let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64};let(error,heap)=crate::allocation_testing::observe_retirement_allocations(||owner.step(grant).unwrap_err());assert_eq!(error.kind,ValueRefusalKind::UnsupportedOwner);assert_eq!(error.retained_progress(),Default::default());assert_eq!(heap,(0,0));assert!(owner.original_is_untouched());let(recovered,heap)=crate::allocation_testing::observe_retirement_allocations(||owner.take_original().unwrap());assert_eq!(heap,(0,0));assert_eq!(recovered.0.as_ptr(),pointer);assert!(owner.terminal_is_empty());drop(owner);drop(recovered);println!("[DEBUG] retainedUnsupportedOriginal constructor0Heap=true refusal0Heap=true sameOriginalRecovered=true independentNeutralContract=true");
 }

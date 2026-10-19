@@ -263,7 +263,7 @@ where
     Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     /// 🫸️ [`Self::merge_persisted_history`] over the pair's undecoded `.spr` bytes.
-    pub async fn merge_persisted_pair(&mut self, pack: &[u8], spr: &[u8]) -> Result<PairMerge, VcsError> {
+    pub async fn merge_persisted_pair(&mut self, pack: &[u8], spr: &[u8]) -> Result<PairMerge, VcsError> where P: Clone, Mutation: Clone + ColdMutation<P> {
         let history = semio_framework_os_spr::decode_history(spr, &semio_framework_os_spr::DecodeOptions::default()).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
         self.merge_persisted_history(pack, history).await
     }
@@ -275,7 +275,7 @@ where
     /// of another document (id, schema or genesis) is refused before anything is parsed: replacing a document is a load, not
     /// a merge. An ingest refusal stops the merge; what was taken before it stays, as with any remote batch (every ingest is
     /// atomic).
-    pub async fn merge_persisted_history(&mut self, pack: &[u8], history: semio_framework_os_spr::HistoryLog) -> Result<PairMerge, VcsError> {
+    pub async fn merge_persisted_history(&mut self, pack: &[u8], history: semio_framework_os_spr::HistoryLog) -> Result<PairMerge, VcsError> where P: Clone, Mutation: Clone + ColdMutation<P> {
         self.ensure_durable_group_idle()?;
         if history.doc_id != self.log.envelope.id || history.schema != self.log.envelope.schema || artifact_initial_digest_of_pack(pack) != self.log.initial_digest {
             return Err(VcsError::ValidationFailed(format!("the persisted pair holds document {}, not {}: a merge takes this document's own log only", history.doc_id, self.log.envelope.id)));

@@ -1,7 +1,13 @@
-//! 🔺️ Sparse diff builder for `ReplacePartGrip` — patches the fields of one grip inside the owner part. An absent
 //! part or an absent grip is `mutation.target-missing`; a replacement that keeps every field is the `mutation.no-op`
+//! 🔺️ Sparse diff builder for `ReplacePartGrip` — patches the fields of one grip inside the owner part. An absent
 //! warning. A replacement keeps the addressed grip's id.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dGrip2dPatch, Puzzle5dGrip3dPatch, Puzzle5dGripPatch, Puzzle5dGripsDelta, Puzzle5dPartPatch, Puzzle5dPartsDelta};
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dGrip2dPatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dGrip3dPatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dGripPatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dGripsDelta;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dPartPatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dPartsDelta;
 use protocol::list_delta::RowPatch;
 use crate::Puzzle5dSnapshot;
 

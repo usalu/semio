@@ -1,5 +1,5 @@
-//! 🎯️ 2D-window option — the board pane's selection group: which entity kinds (parts/grips/fasteners)
 //! a pick may even reach. Renders the shared three-toggle body declared once under the world pane's
+//! 🎯️ 2D-window option — the board pane's selection group: which entity kinds (parts/grips/fasteners)
 //! `🧊️3d/☑️options/🎯️select` over THIS pane's own `selectable_kinds` record.
 
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;

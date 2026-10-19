@@ -1,5 +1,5 @@
-//! 🧪️ The select tool machine on its own: gesture records decode, a record yields its parametric leaf plus the
 //! connections its drop lands with minted ids, the commit is ONE transaction under a deterministic ref,
+//! 🧪️ The select tool machine on its own: gesture records decode, a record yields its parametric leaf plus the
 //! all-locked, identity, missing and empty requests leave zero trace, a streamed gesture is the window's ONE gesture on
 //! the framework runner (resumed by stable ids, committed as ONE transaction or dropped with zero trace), and a committed
 //! leaf states its inputs at their declared precision.
@@ -27,10 +27,17 @@ use semio_framework_tool_machine::{GestureChart, ToolMachineRunner, ToolStep, To
 use semio_framework_pack_json::Value;
 use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select::*;
 use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
-use crate::standards::v1::subsets::any::schema::mutations::{ConnectHandles,DragSelection};
+use crate::standards::v1::subsets::any::schema::mutations::ConnectHandles;
+use crate::standards::v1::subsets::any::schema::mutations::DragSelection;
 
 use protocol::Mutation as _;
-use semio_framework_tool_machine::{drive_chart_gesture, ChartGesture, GestureDrive, GestureState, GestureTool, ToolAbortReason, ToolRefusal};
+use semio_framework_tool_machine::drive_chart_gesture;
+use semio_framework_tool_machine::ChartGesture;
+use semio_framework_tool_machine::GestureDrive;
+use semio_framework_tool_machine::GestureState;
+use semio_framework_tool_machine::GestureTool;
+use semio_framework_tool_machine::ToolAbortReason;
+use semio_framework_tool_machine::ToolRefusal;
 use semio_framework_pack_json::json;
 
 /// 🧱️ Two facing circle nodes 1000 apart whose `v0` handles are compatible, a locked node, and one free region.
@@ -46,7 +53,7 @@ fn board() -> Puzzle2dSnapshot {
         "edges": [],
         "targetRegions": [{ "id": "region-1", "x": 10.0, "y": 10.0, "width": 20.0, "height": 20.0, "hidden": false, "locked": false }]
     });
-    semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&(&snapshot))).expect("typed board")
+    semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&snapshot)).expect("typed board")
 }
 
 fn ids(values: &[&str]) -> Vec<String> {

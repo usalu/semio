@@ -1,7 +1,12 @@
-//! 🔺️ Sparse diff builder for `RotateSelection` — every unlocked addressed node turns about the pivot (its
 //! position and each of its handle angles), read off the BASE, so the leaf replays on any base. Target
+//! 🔺️ Sparse diff builder for `RotateSelection` — every unlocked addressed node turns about the pivot (its
 //! regions are axis-aligned rectangles and are skipped.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dHandlePatch, Puzzle2dHandleModification, Puzzle2dHandlesDelta, Puzzle2dNodePatch, Puzzle2dNodeModification};
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dHandlePatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dHandleModification;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dHandlesDelta;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dNodePatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dNodeModification;
 use protocol::list_delta::RowPatch;
 use {crate::standards::v1::subsets::any::schema::mutations::selection::puzzle2d_rotated, crate::standards::v1::subsets::any::schema::mutations::selection::puzzle2d_selection, crate::standards::v1::subsets::any::schema::mutations::selection::puzzle2d_selection_outcome};
 use crate::Puzzle2dSnapshot;

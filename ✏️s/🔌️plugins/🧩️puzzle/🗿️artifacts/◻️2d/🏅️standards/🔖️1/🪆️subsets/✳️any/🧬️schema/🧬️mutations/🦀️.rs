@@ -1,5 +1,5 @@
-//! 🧬️ Puzzle 2d artifact — semantic document mutation dispatch enum. Every variant is a
 //! single-field tuple wrapping a handcrafted `protocol::MutationKind` payload (see the
+//! 🧬️ Puzzle 2d artifact — semantic document mutation dispatch enum. Every variant is a
 //! `🧬️mutations/<slug>/` triad leaves); `#[derive(dsl::Mutations)]` generates
 //! `impl protocol::Mutation<Puzzle2dSnapshot>` and `impl protocol::SemanticMutation<Puzzle2dSnapshot>`
 //! from those payloads — no hand-written apply/diff/inverse dispatch here. `dsl::DslEnum` supplies
@@ -12,8 +12,12 @@
 use crate::standards::v1::subsets::any::schema::records::puzzle2d_targets_invariant;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::Puzzle2dSnapshot;
-use protocol::{DiffAlgebra, Mutation};
-use semio_framework_value::{list::PagedList, paged::PagedUtf8};
+use protocol::ColdMutation;
+use protocol::ColdDiffAlgebra;
+use protocol::DiffAlgebra;
+use protocol::Mutation;
+use semio_framework_value::list::PagedList;
+use semio_framework_value::paged::PagedUtf8;
 
 //#region 🔖️Mutations
 /// 🧮️ Semantic puzzle-2d document mutation vocabulary: id-keyed node/edge create-delete plus
@@ -30,7 +34,7 @@ use semio_framework_value::{list::PagedList, paged::PagedUtf8};
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
-#[mutations(snapshot = Puzzle2dSnapshot, diff = Puzzle2dDiff, schema = "puzzle.puzzle2d")]
+#[mutations(snapshot = Puzzle2dSnapshot, diff = Puzzle2dDiff, schema = "puzzle.puzzle2d", reference = Puzzle2dSnapshot, reference_diff = Puzzle2dDiff)]
 pub enum Puzzle2dMutation {
     CreateNode(CreateNode),
     DeleteNode(DeleteNode),
@@ -116,46 +120,92 @@ pub const KINDS: &[&str] = &[
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
 
-pub use crate::standards::v1::subsets::any::schema::mutations::add_node_handle::{add_node_handle, AddNodeHandle};
-pub use crate::standards::v1::subsets::any::schema::mutations::change_edge_kind::{change_edge_kind, ChangeEdgeKind};
-pub use crate::standards::v1::subsets::any::schema::mutations::change_edge_locked::{change_edge_locked, ChangeEdgeLocked};
-pub use crate::standards::v1::subsets::any::schema::mutations::change_edge_tips::{change_edge_tips, ChangeEdgeTips};
-pub use crate::standards::v1::subsets::any::schema::mutations::change_edge_visible::{change_edge_visible, ChangeEdgeVisible};
-pub use crate::standards::v1::subsets::any::schema::mutations::change_manifest_id::{change_manifest_id, ChangeManifestId};
-pub use crate::standards::v1::subsets::any::schema::mutations::change_node_anchor::{change_node_anchor, ChangeNodeAnchor};
-pub use crate::standards::v1::subsets::any::schema::mutations::change_node_icon::{change_node_icon, ChangeNodeIcon};
-pub use crate::standards::v1::subsets::any::schema::mutations::change_node_kind::{change_node_kind, ChangeNodeKind};
-pub use crate::standards::v1::subsets::any::schema::mutations::change_node_locked::{change_node_locked, ChangeNodeLocked};
-pub use crate::standards::v1::subsets::any::schema::mutations::change_node_root::{change_node_root, ChangeNodeRoot};
-pub use crate::standards::v1::subsets::any::schema::mutations::change_node_visible::{change_node_visible, ChangeNodeVisible};
-pub use crate::standards::v1::subsets::any::schema::mutations::change_target_region_hidden::{change_target_region_hidden, ChangeTargetRegionHidden};
-pub use crate::standards::v1::subsets::any::schema::mutations::change_target_region_locked::{change_target_region_locked, ChangeTargetRegionLocked};
-pub use crate::standards::v1::subsets::any::schema::mutations::connect_handles::{connect_handles, connect_handles_in_proximity, ConnectHandles};
-pub use crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility::{connect_kind_compatibility, ConnectKindCompatibility};
-pub use crate::standards::v1::subsets::any::schema::mutations::create_node::{create_node, CreateNode};
-pub use crate::standards::v1::subsets::any::schema::mutations::create_target_region::{create_target_region, CreateTargetRegion};
-pub use crate::standards::v1::subsets::any::schema::mutations::delete_node::{delete_node, DeleteNode};
-pub use crate::standards::v1::subsets::any::schema::mutations::delete_target_region::{delete_target_region, DeleteTargetRegion};
-pub use crate::standards::v1::subsets::any::schema::mutations::drag_selection::{drag_selection, DragSelection};
-pub use crate::standards::v1::subsets::any::schema::mutations::disconnect_handles::{disconnect_handles, DisconnectHandles};
-pub use crate::standards::v1::subsets::any::schema::mutations::disconnect_kind_compatibility::{disconnect_kind_compatibility, DisconnectKindCompatibility};
-pub use crate::standards::v1::subsets::any::schema::mutations::edit_node_text::{edit_node_text, EditNodeText};
-pub use crate::standards::v1::subsets::any::schema::mutations::edit_target_region_label::{edit_target_region_label, EditTargetRegionLabel};
-pub use crate::standards::v1::subsets::any::schema::mutations::move_node::{move_node, MoveNode};
-pub use crate::standards::v1::subsets::any::schema::mutations::move_target_region::{move_target_region, MoveTargetRegion};
-pub use crate::standards::v1::subsets::any::schema::mutations::remove_node_handle::{remove_node_handle, RemoveNodeHandle};
-pub use crate::standards::v1::subsets::any::schema::mutations::replace_edge_geometry::{replace_edge_geometry, ReplaceEdgeGeometry};
-pub use crate::standards::v1::subsets::any::schema::mutations::replace_kind_catalogs::{replace_kind_catalogs, ReplaceKindCatalogs};
-pub use crate::standards::v1::subsets::any::schema::mutations::replace_node_geometry::{replace_node_geometry, ReplaceNodeGeometry};
-pub use crate::standards::v1::subsets::any::schema::mutations::replace_node_handle::{replace_node_handle, ReplaceNodeHandle};
-pub use crate::standards::v1::subsets::any::schema::mutations::resize_target_region::{resize_target_region, ResizeTargetRegion};
-pub use crate::standards::v1::subsets::any::schema::mutations::rotate_selection::{rotate_selection, RotateSelection};
-pub use crate::standards::v1::subsets::any::schema::mutations::scale_node::{scale_node, ScaleNode};
-pub use crate::standards::v1::subsets::any::schema::mutations::scale_selection::{scale_selection, ScaleSelection};
+pub use crate::standards::v1::subsets::any::schema::mutations::add_node_handle::add_node_handle;
+
+pub use super::add_node_handle::AddNodeHandle;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_edge_kind::change_edge_kind;
+pub use super::change_edge_kind::ChangeEdgeKind;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_edge_locked::change_edge_locked;
+pub use super::change_edge_locked::ChangeEdgeLocked;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_edge_tips::change_edge_tips;
+pub use super::change_edge_tips::ChangeEdgeTips;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_edge_visible::change_edge_visible;
+pub use super::change_edge_visible::ChangeEdgeVisible;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_manifest_id::change_manifest_id;
+pub use super::change_manifest_id::ChangeManifestId;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_node_anchor::change_node_anchor;
+pub use super::change_node_anchor::ChangeNodeAnchor;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_node_icon::change_node_icon;
+pub use super::change_node_icon::ChangeNodeIcon;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_node_kind::change_node_kind;
+pub use super::change_node_kind::ChangeNodeKind;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_node_locked::change_node_locked;
+pub use super::change_node_locked::ChangeNodeLocked;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_node_root::change_node_root;
+pub use super::change_node_root::ChangeNodeRoot;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_node_visible::change_node_visible;
+pub use super::change_node_visible::ChangeNodeVisible;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_target_region_hidden::change_target_region_hidden;
+pub use super::change_target_region_hidden::ChangeTargetRegionHidden;
+pub use crate::standards::v1::subsets::any::schema::mutations::change_target_region_locked::change_target_region_locked;
+pub use super::change_target_region_locked::ChangeTargetRegionLocked;
+pub use crate::standards::v1::subsets::any::schema::mutations::connect_handles::connect_handles;
+pub use super::connect_handles::connect_handles_in_proximity;
+pub use super::connect_handles::ConnectHandles;
+pub use crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility::connect_kind_compatibility;
+pub use super::connect_kind_compatibility::ConnectKindCompatibility;
+pub use crate::standards::v1::subsets::any::schema::mutations::create_node::create_node;
+pub use super::create_node::CreateNode;
+pub use crate::standards::v1::subsets::any::schema::mutations::create_target_region::create_target_region;
+pub use super::create_target_region::CreateTargetRegion;
+pub use crate::standards::v1::subsets::any::schema::mutations::delete_node::delete_node;
+pub use super::delete_node::DeleteNode;
+pub use crate::standards::v1::subsets::any::schema::mutations::delete_target_region::delete_target_region;
+pub use super::delete_target_region::DeleteTargetRegion;
+pub use crate::standards::v1::subsets::any::schema::mutations::drag_selection::drag_selection;
+pub use super::drag_selection::DragSelection;
+pub use crate::standards::v1::subsets::any::schema::mutations::disconnect_handles::disconnect_handles;
+pub use super::disconnect_handles::DisconnectHandles;
+pub use crate::standards::v1::subsets::any::schema::mutations::disconnect_kind_compatibility::disconnect_kind_compatibility;
+pub use super::disconnect_kind_compatibility::DisconnectKindCompatibility;
+pub use crate::standards::v1::subsets::any::schema::mutations::edit_node_text::edit_node_text;
+pub use super::edit_node_text::EditNodeText;
+pub use crate::standards::v1::subsets::any::schema::mutations::edit_target_region_label::edit_target_region_label;
+pub use super::edit_target_region_label::EditTargetRegionLabel;
+pub use crate::standards::v1::subsets::any::schema::mutations::move_node::move_node;
+pub use super::move_node::MoveNode;
+pub use crate::standards::v1::subsets::any::schema::mutations::move_target_region::move_target_region;
+pub use super::move_target_region::MoveTargetRegion;
+pub use crate::standards::v1::subsets::any::schema::mutations::remove_node_handle::remove_node_handle;
+pub use super::remove_node_handle::RemoveNodeHandle;
+pub use crate::standards::v1::subsets::any::schema::mutations::replace_edge_geometry::replace_edge_geometry;
+pub use super::replace_edge_geometry::ReplaceEdgeGeometry;
+pub use crate::standards::v1::subsets::any::schema::mutations::replace_kind_catalogs::replace_kind_catalogs;
+pub use super::replace_kind_catalogs::ReplaceKindCatalogs;
+pub use crate::standards::v1::subsets::any::schema::mutations::replace_node_geometry::replace_node_geometry;
+pub use super::replace_node_geometry::ReplaceNodeGeometry;
+pub use crate::standards::v1::subsets::any::schema::mutations::replace_node_handle::replace_node_handle;
+pub use super::replace_node_handle::ReplaceNodeHandle;
+pub use crate::standards::v1::subsets::any::schema::mutations::resize_target_region::resize_target_region;
+pub use super::resize_target_region::ResizeTargetRegion;
+pub use crate::standards::v1::subsets::any::schema::mutations::rotate_selection::rotate_selection;
+pub use super::rotate_selection::RotateSelection;
+pub use crate::standards::v1::subsets::any::schema::mutations::scale_node::scale_node;
+pub use super::scale_node::ScaleNode;
+pub use crate::standards::v1::subsets::any::schema::mutations::scale_selection::scale_selection;
+pub use super::scale_selection::ScaleSelection;
 
 //#region 🔖️SelectionTransform
 
 
+
+
+
+/// 🔍️ One coordinate scaled about a pivot. The unit factor is the identity exactly (`pivot + (value - pivot)` alone lands a ulp off
+/// for an awkward pivot), so an identity scaling states no row.
+pub fn puzzle2d_scaled(pivot: f64, value: f64, factor: f64) -> f64 {
+    if factor == 1.0 { value } else { pivot + (value - pivot) * factor }
+}
 
 
 
@@ -215,8 +265,6 @@ mod tests;
 //#endregion 🧪️Tests
 
 
-
-use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
 
 /// ▶️ Applies one mutation to a projection through the central applier (`vcs::apply_mutation`): the step of the editor tools' charts and of the mutation tests.
 pub fn apply_puzzle2d_mutation(projection: &mut Puzzle2dSnapshot, mutation: &Puzzle2dMutation) -> protocol::MutationApplyResult<()> {

@@ -1,4 +1,69 @@
 {
+  "startup": {
+    "arguments": [
+      "nx",
+      "run",
+      "@semio-tech/repo-dashboard-rs:run",
+      "--outputStyle=stream",
+      "--help"
+    ],
+    "policy": {
+      "version": 1,
+      "owner": "dashboard.startup",
+      "maximumElapsedMilliseconds": 60000
+    },
+    "now": 100000,
+    "inheritedDeadline": 130000
+  },
+  "processes": [
+    {
+      "name": "success",
+      "code": 0,
+      "cancel": false,
+      "expected": 0
+    },
+    {
+      "name": "failure",
+      "code": 7,
+      "cancel": false,
+      "expected": 7
+    },
+    {
+      "name": "cancelled",
+      "code": 0,
+      "cancel": true,
+      "expected": 130
+    }
+  ],
+  "testLevels": [
+    {
+      "arguments": [],
+      "expected": "quick"
+    },
+    {
+      "arguments": [
+        "fundamental"
+      ],
+      "expected": "quick"
+    },
+    {
+      "arguments": [
+        "quick"
+      ],
+      "expected": "quick"
+    },
+    {
+      "arguments": [
+        "long"
+      ],
+      "expected": "long"
+    }
+  ],
+  "metadataConcurrency": {
+    "directories": 40,
+    "minimum": 2,
+    "maximum": 64
+  },
   "cases": [
     {
       "args": [
@@ -278,6 +343,37 @@
         },
         "stale": false
       }
+    ]
+  },
+  "releasePublication": {
+    "mode": "release",
+    "directory": "dist/build/release",
+    "obsoleteDirectory": "dist/build",
+    "releaseBytes": "current optimized release executable",
+    "obsoleteBytes": "obsolete unprofiled executable"
+  },
+  "compilerCustody": [
+    {
+      "name": "preparation edits are compiled",
+      "initial": "original source",
+      "prepared": "current prepared source",
+      "compiled": "current prepared source",
+      "outcome": "installed"
+    },
+    {
+      "name": "compilation edits refuse installation",
+      "initial": "original source",
+      "prepared": "current prepared source",
+      "compiled": "peer changed source",
+      "outcome": "refused"
+    }
+  ],
+  "buildIntent": {
+    "mode": "release",
+    "arguments": [
+      "--release",
+      "--bin",
+      "semio"
     ]
   },
   "installationModes": [

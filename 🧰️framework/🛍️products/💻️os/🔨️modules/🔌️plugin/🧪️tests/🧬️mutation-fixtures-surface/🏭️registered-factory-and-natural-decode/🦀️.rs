@@ -35,7 +35,7 @@ impl semio_framework_job::InteractiveJob for SurfaceFixtureJob {
             self.page += 1;
             return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(Into::into);
         }
-        let Some(SurfaceEditorCommand::Increment) = self.owners.command.as_deref() else {
+        let Some(SurfaceEditorCommand::Increment) = self.owners.command() else {
             return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(Into::into);
         };
         if self.owners.pending_is_empty(){let value=self.count+1;if !self.owners.prepare_emission(cx,std::mem::size_of::<i32>(),0,||Ok(Emit{artifact_mutations:vec![SetSurfaceCount{value}.into()],..Default::default()}))?{return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)}return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)}
@@ -93,22 +93,9 @@ impl ToolJobFactory for SurfaceFixtureFactory {
     fn execution_contract(&self) -> ToolExecutionContract {
         SURFACE_TOOL_CONTRACT
     }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
-        Ok(payload)
-    }
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        mut payload: Self::Payload,
-        input: action_bus::RetainedToolWireInput,
-        checkpoint: Option<action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, action_bus::RetainedToolWireInput, Option<action_bus::RetainedToolWireInput>)> {
-        if checkpoint.is_some() {
-            return Err((semio_framework::ToolJobFactoryError::new("surface fixture resume starts a fresh command owner"), input, checkpoint));
-        }
-        payload.owners.raw = Some(input);
-        Ok(payload)
-    }
+    fn admission_demands(&self,_operation:&semio_framework_job::Operation,payload:&Self::Payload,input:Option<&semio_framework::RetainedToolWireInput>,checkpoint:Option<&semio_framework::RetainedToolWireInput>)->Result<semio_framework::action_bus::ToolJobAdmissionDemand,semio_framework_value::ValueError>{if checkpoint.is_some()||(input.is_some()&&payload.owners.raw.is_some()){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original typed job refuses a replacement wire owner or restart checkpoint"));}Ok(semio_framework::action_bus::ToolJobAdmissionDemand::reused_job())}
+fn admit_job(&mut self,context:&mut semio_framework_job::StepContext<'_>,operation:&semio_framework_job::Operation,payload:&mut Option<Box<Self::Payload>>,input:&mut Option<semio_framework::RetainedToolWireInput>,checkpoint:&mut Option<semio_framework::RetainedToolWireInput>,output:&mut Option<Box<Self::Job>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let demand=self.admission_demands(operation,payload.as_deref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typed job payload is absent"))?,input.as_ref(),checkpoint.as_ref())?;semio_framework::action_bus::admit_original_tool_job_controlled(context,operation,payload,input,checkpoint,output,demand,|_,payload,input,_|{if input.is_some(){payload.as_mut().expect("retained original job").owners.raw=input.take();}let job=payload.take().expect("admitted same original job");Ok((job,semio_framework_job::RetainedCloneProgress{copied_items:1,..Default::default()}))})}
+
 }
 
 impl ArtifactOwnedToolJobFactory for SurfaceFixtureFactory {

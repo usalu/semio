@@ -15,7 +15,8 @@ fn presenter_restores_only_the_checked_out_interaction_and_retains_its_deferred_
         queue.finish(returned_completion(121, RuntimeApply::ResumeFrameDeferred { interaction: Some(checked_out), cursor: Some(cursor) }));
     }
 
-    assert_eq!(runtime.restore_presenter_interaction_step(), PresenterInteractionStep::Restored);
+    let mut original = OriginalRendererFixture::new();
+    assert_eq!(original.turn(|cx| runtime.restore_presenter_interaction_step(cx)).unwrap(), PresenterInteractionStep::Restored);
     assert!(runtime.try_lock().expect("restored runtime").interaction_available(), "the presenter-only step returns the exact checked-out state");
     let mut completion = runtime.0.completions.lock().expect("runtime completion mailbox lock").take_at(0).expect("deferred cursor remains queued");
     assert!(!completion.restores_interaction);
@@ -23,8 +24,55 @@ fn presenter_restores_only_the_checked_out_interaction_and_retains_its_deferred_
     assert!(interaction.is_none(), "the returned state cannot be applied twice");
     let mut cursor = cursor.take().expect("the deferred cursor remains owned for post-presentation apply");
     cursor.begin_close();
-    while !cursor.close_step() {}
+    while !original.turn(|cx| cursor.close_step(cx)).unwrap() {}
     assert!(cursor.terminal_is_empty());
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn original_mailbox_apply_and_removal_progress_with_one_unit_loans() {
+    let runtime = native_reference_runtime();
+    assert!(runtime.0.completions.lock().unwrap().enqueue(RuntimeCompletion { key: Some("window-metrics"), revision: 121, requires_interaction: false, restores_interaction: false, apply: RuntimeApply::Resize { width: 640.0, height: 480.0, dpr: 1.0 } }));
+    let mut original = OriginalRendererFixture::new();
+    for turn in 0..2 {
+        assert!(original.turn(|cx| { let deadline = cx.deadline_us(); cx.with_original_work_loan(1, deadline, |cx| runtime.apply_pending_step(cx)) }).unwrap());
+        let queue = runtime.0.completions.lock().unwrap();
+        assert_eq!(queue.len(), usize::from(turn == 0));
+        if turn == 0 { assert!(matches!(queue.ready.front().unwrap().apply, RuntimeApply::Applied)); }
+    }
+    assert_eq!(runtime.0.applied_window_metrics_revision.load(Ordering::Acquire), 121);
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn original_recovery_returns_the_same_interaction_and_cursor_before_unique_cell_release() {
+    let runtime = native_reference_runtime();
+    let owner = frame_maintenance_test_owner(241, 1);
+    let identity = owner.interaction.as_ref().unwrap().shell.plugin_filter.as_ptr();
+    let cell = Arc::new(FrameExecutionOwnerCell::new(owner));
+    let witness = cell.clone();
+    *runtime.0.original_recovery.lock().unwrap() = Some(FrameOriginalRecovery::Maintenance(FrameMaintenanceRefusal { owner: cell, reservation_live: false }));
+    let mut original = OriginalRendererFixture::new();
+    let before = original.receipt();
+    assert!(!original.limited(semio_framework_value::RetainedCloneGrant { maximum_items: 0, ..renderer_law_stock() }, |cx| { let mut owner = runtime.try_lock().unwrap(); runtime.recover_original_frame_step(&mut owner, cx) }).unwrap());
+    assert_eq!(original.receipt(), before);
+    assert!(original.turn(|cx| { let mut owner = runtime.try_lock().unwrap(); runtime.recover_original_frame_step(&mut owner, cx) }).unwrap());
+    assert_eq!(runtime.try_lock().unwrap().interaction.as_ref().unwrap().shell.plugin_filter.as_ptr(), identity);
+    assert!(original.turn(|cx| { let mut owner = runtime.try_lock().unwrap(); runtime.recover_original_frame_step(&mut owner, cx) }).unwrap());
+    assert!(runtime.try_lock().unwrap().pending_frame_deferred.is_some());
+    let (_, denied_heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original.turn(|cx| { let mut owner = runtime.try_lock().unwrap(); runtime.recover_original_frame_step(&mut owner, cx) }).unwrap());
+    assert_eq!((denied_heap.requested_bytes, denied_heap.released_bytes), (0, 0));
+    assert!(runtime.0.original_recovery.lock().unwrap().is_some());
+    drop(witness);
+    let before = original.receipt();
+    let (released, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original.turn(|cx| { let mut owner = runtime.try_lock().unwrap(); runtime.recover_original_frame_step(&mut owner, cx) }).unwrap());
+    assert!(released);
+    let after = original.receipt();
+    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, semio_framework_value::shared_retirement_allocation_bytes::<FrameExecutionOwnerCell<FrameMaintenanceOwner>>()));
+    assert_eq!(after.released_bytes - before.released_bytes, heap.released_bytes);
+    assert!(runtime.0.original_recovery.lock().unwrap().is_none());
+    for _ in 0..32768 { if original.turn(|cx| runtime.close_input_step(cx)).unwrap() { return; } }
+    panic!("returned original cursor did not finish bounded close");
 }
 
 #[test]
@@ -84,10 +132,11 @@ fn runtime_dispatch_cursor_retires_one_owned_event_per_step() {
 
 #[test]
 fn frame_deferred_cursor_advances_one_owned_operation_in_order() {
+    let mut caller = crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let mut actions = FrameActionOwners::default();
     assert!(actions.try_push(ActionDescriptor { controller_id: "a".to_string(), action: "one".to_string(), args: None }).is_ok());
     assert!(actions.try_push(ActionDescriptor { controller_id: "b".to_string(), action: "two".to_string(), args: None }).is_ok());
-    let mut cursor = FrameDeferredCursor::new(actions, true, true, true, true, 1, semio_framework_job::root_cancel_token());
+    let mut cursor = FrameDeferredCursor::new(actions, true, true, true, true, 1, caller.alias());
     assert_eq!(cursor.checkout_site(), "frame-deferred-shell-maintenance");
     assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::ShellMaintenance)));
     assert_eq!(cursor.checkout_site(), "frame-deferred-pump-sync");
@@ -102,7 +151,7 @@ fn frame_deferred_cursor_advances_one_owned_operation_in_order() {
     assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::Settle)));
     assert_eq!(cursor.checkout_site(), "frame-deferred-empty");
     assert!(cursor.take_next().is_none());
-    assert!(caller.turn(|cx|cursor.close_step(cx)).unwrap());
+    while !caller.turn(|cx|cursor.close_step(cx)).unwrap() {}
     assert!(cursor.terminal_is_empty());caller.finish();
 }
 
@@ -175,17 +224,22 @@ fn renderer_input_retirement_drains_ready_handback_resident_cursor_and_staged_ac
 
 #[test]
 fn frame_deferred_cancel_retires_one_action_per_step() {
+    let mut caller = crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let mut actions = FrameActionOwners::default();
     for index in 0..WORLD3D_DEADLINE_CAPACITY {
         assert!(actions.try_push(ActionDescriptor { controller_id: index.to_string(), action: "cancel".to_string(), args: None }).is_ok());
     }
-    let mut cursor = FrameDeferredCursor::new(actions, false, true, false, false, 1, semio_framework_job::root_cancel_token());
-    for _ in 0..WORLD3D_DEADLINE_CAPACITY {
-        assert!(!caller.turn(|cx|cursor.close_step(cx)).unwrap());
+    let mut cursor = FrameDeferredCursor::new(actions, false, true, false, false, 1, caller.alias());
+    let mut turns = 0;
+    while !cursor.terminal_is_empty() {
+        let before = cursor.actions.len;
+        caller.turn(|cx| cursor.close_step(cx)).unwrap();
+        assert!(before - cursor.actions.len <= 1, "one original callback cannot discard two admitted actions");
+        turns += 1;
+        assert!(turns < 32768, "all descriptor scaffolds and original fields must reach paid close");
     }
-    assert!(!caller.turn(|cx|cursor.close_step(cx)).unwrap());
-    assert!(caller.turn(|cx|cursor.close_step(cx)).unwrap());
-    assert!(cursor.terminal_is_empty());caller.finish();
+    assert!(cursor.terminal_is_empty());
+    caller.finish();
 }
 
 #[test]
@@ -262,19 +316,18 @@ fn a_fault_after_staging_leave_retires_the_source_drop_before_a_later_single_dis
 
 #[test]
 fn frame_deferred_cancel_token_closes_one_exact_owner_per_grant() {
-    let cancel = semio_framework_job::root_cancel_token();
+    let mut caller = crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let mut actions = FrameActionOwners::default();
     assert!(actions.try_push(ActionDescriptor { controller_id: "cancel-owner".to_string(), action: "one".to_string(), args: None }).is_ok());
-    let mut cursor = FrameDeferredCursor::new(actions, true, true, true, false, 17, cancel.clone());
-    cancel.cancel_now();
-    assert!(cursor.cancel.is_cancelled_now());
+    let mut cursor = FrameDeferredCursor::new(actions, true, true, true, false, 17, caller.alias());
+    caller.turn(|cx| { cx.original_cancel_token().cancel_now(); Ok(()) }).unwrap();
+    assert!(cursor.cancel.as_ref().is_some_and(|cancel| cancel.is_cancelled_now()));
     cursor.begin_close();
-    assert!(!caller.turn(|cx|cursor.close_step(cx)).unwrap());
-    assert!(!caller.turn(|cx|cursor.close_step(cx)).unwrap());
-    assert!(!caller.turn(|cx|cursor.close_step(cx)).unwrap());
-    assert!(!caller.turn(|cx|cursor.close_step(cx)).unwrap());
-    assert!(caller.turn(|cx|cursor.close_step(cx)).unwrap());
-    assert!(cursor.terminal_is_empty());caller.finish();
+    let mut turns = 0;
+    while !cursor.terminal_is_empty() { caller.turn(|cx| cursor.close_step(cx)).unwrap(); turns += 1; assert!(turns < 1024); }
+    assert!(turns > 4, "descriptor fields, cancellation return and scalar removal have distinct original frontiers");
+    assert!(cursor.terminal_is_empty());
+    caller.finish();
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -310,17 +363,17 @@ fn frame_maintenance_refusal_cell_recovers_exact_identity_without_blocking() {
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn frame_maintenance_cancel_and_stale_each_close_one_populated_owner_per_grant() {
-    let cancel = semio_framework_job::root_cancel_token();
+    let mut caller = crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let mut cancelled_actions = FrameActionOwners::default();
     assert!(cancelled_actions.try_push(ActionDescriptor { controller_id: "cancelled".to_string(), action: "one".to_string(), args: None }).is_ok());
-    let mut cancelled = FrameDeferredCursor::new(cancelled_actions, false, false, false, false, 81, cancel.clone());
-    cancel.cancel_now();
-    assert_eq!(frame_maintenance_terminal_fault(cancelled.cancel.is_cancelled_now(), false, false), Some("frame maintenance cancelled"));
+    let mut cancelled = FrameDeferredCursor::new(cancelled_actions, false, false, false, false, 81, caller.alias());
+    caller.turn(|cx| { cx.original_cancel_token().cancel_now(); Ok(()) }).unwrap();
+    assert_eq!(frame_maintenance_terminal_fault(cancelled.cancel.as_ref().is_some_and(|cancel| cancel.is_cancelled_now()), false, false), Some("frame maintenance cancelled"));
     cancelled.begin_close();
     let before = cancelled.actions.len;
-    assert!(!cancelled.close_step());
+    assert!(!caller.turn(|cx| cancelled.close_step(cx)).unwrap());
     assert_eq!(before - cancelled.actions.len, 1);
-    assert!(cancelled.close_step());
+    while !caller.turn(|cx| cancelled.close_step(cx)).unwrap() {}
     assert!(cancelled.terminal_is_empty());
 
     let authority = FrameMaintenanceAuthority::new();
@@ -328,14 +381,15 @@ fn frame_maintenance_cancel_and_stale_each_close_one_populated_owner_per_grant()
     assert!(authority.release(82));
     let mut stale_actions = FrameActionOwners::default();
     assert!(stale_actions.try_push(ActionDescriptor { controller_id: "stale".to_string(), action: "one".to_string(), args: None }).is_ok());
-    let mut stale = FrameDeferredCursor::new(stale_actions, false, false, false, false, 82, semio_framework_job::root_cancel_token());
+    let mut stale = FrameDeferredCursor::new(stale_actions, false, false, false, false, 82, caller.alias());
     assert_eq!(frame_maintenance_terminal_fault(false, !authority.is_live(stale.generation), false), Some("frame maintenance generation became stale"));
     stale.begin_close();
     let before = stale.actions.len;
-    assert!(!stale.close_step());
+    assert!(!caller.turn(|cx| stale.close_step(cx)).unwrap());
     assert_eq!(before - stale.actions.len, 1);
-    assert!(stale.close_step());
+    while !caller.turn(|cx| stale.close_step(cx)).unwrap() {}
     assert!(stale.terminal_is_empty());
+    caller.finish();
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -363,5 +417,5 @@ fn frame_maintenance_test_owner(generation: u64, actions: usize) -> FrameMainten
         text_cancel_pending: false,
         last_sync_pump_ms: 0.0,
     };
-    FrameMaintenanceOwner { interaction: Some(interaction), cursor: Some(FrameDeferredCursor::new(action_owners, true, true, true, false, generation, semio_framework_job::root_cancel_token())), deadline_ms: Some(u64::MAX) }
+    FrameMaintenanceOwner { interaction: Some(interaction), cursor: Some(FrameDeferredCursor::new(action_owners, true, true, true, false, generation, semio_framework_job::root_cancel_token())), deadline_ms: Some(u64::MAX), restart: true }
 }

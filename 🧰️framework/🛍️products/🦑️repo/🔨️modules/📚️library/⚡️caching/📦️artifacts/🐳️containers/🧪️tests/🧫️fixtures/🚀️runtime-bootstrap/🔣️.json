@@ -1,5 +1,5 @@
 {
-  "bun": "1.3.14",
+  "bun": "1.4.2",
   "node": "24.15.0",
   "workspaceVolumeTargets": [
     "/workspaces/semio/node_modules",
@@ -7,11 +7,12 @@
   ],
   "postCreateCommand": [
     "bun",
-    "nx",
+    "repo",
     "run",
     "workspace:setup"
   ],
   "postCreateDependsOn": [
+    "deps-build-tools",
     "deps-js-all",
     "deps-python",
     "deps-cargo",
@@ -36,14 +37,14 @@
     {
       "architecture": "amd64",
       "bunArchive": "x64-baseline",
-      "bunSha256": "a063908ae08b7852ca10939bbdc6ceed3ddabce8fb9402dce83d65d73b36e6c7",
+      "bunSha256": "c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f",
       "nodeArchive": "x64",
       "nodeSha256": "472655581fb851559730c48763e0c9d3bc25975c59d518003fc0849d3e4ba0f6"
     },
     {
       "architecture": "arm64",
       "bunArchive": "aarch64",
-      "bunSha256": "a27ffb63a8310375836e0d6f668ae17fa8d8d18b88c37c821c65331973a19a3b",
+      "bunSha256": "54328bbc2d9c8e0c9f892c544d66c57a83b84139e34909e5ee81758f1ac8fda7",
       "nodeArchive": "arm64",
       "nodeSha256": "f3d5a797b5d210ce8e2cb265544c8e482eaedcb8aa409a8b46da7e8595d0dda0"
     }
@@ -65,17 +66,62 @@
     }
   },
   "forwardedCommands": [
-    { "label": "os-hub", "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json", "target": "dev" },
-    { "label": "s React", "playground": "s", "surface": "react", "slot": 0 },
-    { "label": "s React user 1", "playground": "s", "surface": "react", "slot": 1 },
-    { "label": "s React user 2", "playground": "s", "surface": "react", "slot": 2 },
-    { "label": "s wgpu", "playground": "s", "surface": "wgpu", "slot": 0 },
-    { "label": "s wgpu user 1", "playground": "s", "surface": "wgpu", "slot": 1 },
-    { "label": "s wgpu user 2", "playground": "s", "surface": "wgpu", "slot": 2 },
-    { "label": "Storybook", "manifest": "📋️project.json", "target": "dev-storybook" },
-    { "label": "MCP Inspector", "manifest": "📋️project.json", "tool": "mcp-inspector-os" }
+    {
+      "label": "os-hub",
+      "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+      "target": "dev"
+    },
+    {
+      "label": "s React",
+      "playground": "s",
+      "surface": "react",
+      "slot": 0
+    },
+    {
+      "label": "s React user 1",
+      "playground": "s",
+      "surface": "react",
+      "slot": 1
+    },
+    {
+      "label": "s React user 2",
+      "playground": "s",
+      "surface": "react",
+      "slot": 2
+    },
+    {
+      "label": "s wgpu",
+      "playground": "s",
+      "surface": "wgpu",
+      "slot": 0
+    },
+    {
+      "label": "s wgpu user 1",
+      "playground": "s",
+      "surface": "wgpu",
+      "slot": 1
+    },
+    {
+      "label": "s wgpu user 2",
+      "playground": "s",
+      "surface": "wgpu",
+      "slot": 2
+    },
+    {
+      "label": "Storybook",
+      "manifest": "📋️project.json",
+      "target": "dev-storybook"
+    },
+    {
+      "label": "MCP Inspector",
+      "manifest": "📋️project.json",
+      "tool": "mcp-inspector-os"
+    }
   ],
   "forwardedUndeclaredPorts": [
-    { "label": "MCP Inspector Proxy", "port": 6277 }
+    {
+      "label": "MCP Inspector Proxy",
+      "port": 6277
+    }
   ]
 }

@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original History Read Laws",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "axes",
+    "cases",
+    "refusals"
+  ],
+  "properties": {
+    "contract": {
+      "const": "semio.history.original-read/v1"
+    },
+    "axes": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "items",
+          "copy",
+          "capacity",
+          "release",
+          "depth"
+        ]
+      },
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "input",
+          "operations",
+          "expected",
+          "readOrder",
+          "returnAfter"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "input": {
+            "type": "object"
+          },
+          "operations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "op",
+                "path",
+                "value"
+              ],
+              "properties": {
+                "op": {
+                  "const": "replace"
+                },
+                "path": {
+                  "type": "string"
+                },
+                "value": {}
+              },
+              "additionalProperties": false
+            }
+          },
+          "expected": {
+            "type": "object"
+          },
+          "readOrder": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "returnAfter": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "refusals": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "foreign-ledger",
+          "stale-generation",
+          "unpublished-group",
+          "read-before-birth",
+          "write-while-read",
+          "remove-while-read",
+          "return-with-live-projection"
+        ]
+      },
+      "minItems": 7,
+      "maxItems": 7,
+      "uniqueItems": true
+    }
+  }
+}

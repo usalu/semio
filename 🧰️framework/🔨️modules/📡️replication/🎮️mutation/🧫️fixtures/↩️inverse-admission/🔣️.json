@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    { "id": "local-effect", "level": null, "empty": false, "foreignSteps": false, "inverseAdmitted": true },
+    { "id": "info-effect", "level": "info", "empty": false, "foreignSteps": false, "inverseAdmitted": true },
+    { "id": "warning-effect", "level": "warning", "empty": false, "foreignSteps": false, "inverseAdmitted": true },
+    { "id": "local-noop", "level": null, "empty": true, "foreignSteps": false, "inverseAdmitted": false },
+    { "id": "info-noop", "level": "info", "empty": true, "foreignSteps": false, "inverseAdmitted": false },
+    { "id": "warning-noop", "level": "warning", "empty": true, "foreignSteps": false, "inverseAdmitted": false },
+    { "id": "error-effect", "level": "error", "empty": false, "foreignSteps": false, "inverseAdmitted": false },
+    { "id": "fatal-effect", "level": "fatal", "empty": false, "foreignSteps": false, "inverseAdmitted": false },
+    { "id": "foreign-capability-without-output", "level": null, "empty": true, "foreignSteps": false, "inverseAdmitted": false },
+    { "id": "foreign-only", "level": null, "empty": true, "foreignSteps": true, "inverseAdmitted": true },
+    { "id": "warning-foreign-only", "level": "warning", "empty": true, "foreignSteps": true, "inverseAdmitted": true },
+    { "id": "error-foreign-only", "level": "error", "empty": true, "foreignSteps": true, "inverseAdmitted": false },
+    { "id": "fatal-foreign-effect", "level": "fatal", "empty": false, "foreignSteps": true, "inverseAdmitted": false }
+  ]
+}

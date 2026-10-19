@@ -469,16 +469,22 @@ describe("exact analytic component interaction targets", () => {
           for (const geometry of geometries) {
             if (geometry === null || geometry.getAttribute("position").count === 0) continue;
             geometry.computeBoundingBox();
+        edgeOracle.computeBoundingBox();
             box.union(geometry.boundingBox!);
           }
           return [box.min.toArray(), box.max.toArray()];
         };
+        visuals.edge?.computeBoundingBox();
+        const bounds = visuals.geometry!.boundingBox!.clone();
+        if (visuals.edge?.boundingBox) bounds.union(visuals.edge.boundingBox);
+        const oracleBounds = oracle.boundingBox!.clone().union(edgeOracle.boundingBox!);
         expect(visuals.geometry!.getIndex()?.count ?? 0, row.kind).toBe(oracle.getIndex()!.count);
         expect(Array.from(visuals.vertexPick?.geometry.getAttribute("position").array ?? []), row.kind).toEqual(row.vertexIds.length ? Array.from(oracle.getAttribute("position").array) : []);
         expect(visuals.vertexPick?.vertexIds ?? [], row.kind).toEqual(row.vertexIds);
         expect(Array.from(visuals.edge?.getAttribute("position").array ?? []), row.kind).toEqual(Array.from(edgeOracle.getAttribute("position").array));
         expect(aabb(visuals.geometry, visuals.edge), row.kind).toEqual(row.bounds);
         expect(aabb(oracle, edgeOracle), row.kind).toEqual(row.bounds);
+        console.info(`[DEBUG] React zero-index ${row.kind}: vertices=${row.vertexIds.length} edges=${row.edgeIds.length} indices=0 bounds=${JSON.stringify(row.bounds)}`);
       } finally {
         disposeMeshVisuals(visuals);
         oracle.dispose();

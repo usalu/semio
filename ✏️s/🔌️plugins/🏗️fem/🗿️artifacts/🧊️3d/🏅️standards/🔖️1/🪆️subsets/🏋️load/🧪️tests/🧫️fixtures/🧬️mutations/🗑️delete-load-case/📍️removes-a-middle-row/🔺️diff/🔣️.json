@@ -6,13 +6,13 @@
   "solids": null,
   "supports": null,
   "loadCases": {
-    "inserted": [],
     "removed": [
       {
         "id": "crane_spare",
         "index": 4
       }
     ],
+    "inserted": [],
     "moved": [],
     "modified": []
   },

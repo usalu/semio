@@ -88,7 +88,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
     }
 
-    /// 👥️ Puzzle 2d presence is three inline camera scalars, so the default root is its exact empty terminal.
+    /// 👥️ Canonical window views own camera publication, leaving the app presence root empty.
     fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
         Some(Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |_| true).expect("default Puzzle2d presence is the exact empty terminal")))
     }
@@ -132,9 +132,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         puzzle2d_fault_notices()
     }
 
-    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
-        if let Some(fault) = original_fault.take() { return Err(fault); }
-        let args = args.as_ref();
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         let window_id = args.and_then(|value| value.get("windowId").or_else(|| value.get("window_id"))).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
         if let Some(flag) = puzzle2d_flag_value_argument(action) {
             args.and_then(|value| value.get(flag)).and_then(semio_framework_value::DslValue::as_bool).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("puzzle2d.action.flag-value-required"), format!("action '{action}' requires the boolean '{flag}' it sets")))?;
@@ -161,7 +159,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         }
         let window_config = window::config_from_view_or_document(cfg, doc.snapshot.value());
         let window_transient = Puzzle2dWindowTransient::default();
-        let window_kind = view_state.and_then(window::kind_for_view).unwrap_or(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
+        let window_kind = view_state.and_then(window::kind_for_view).unwrap_or(overview::WINDOW_KIND_ID);
         let authoring_seed = doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str());
         let base_revision = doc.operation_optional().map(|operation| puzzle2d_revision_hex(&operation.canonical_base_revision)).unwrap_or_default();
         puzzle2d_dispatch_emit::<Self>(command, doc.snapshot, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), authoring_seed, &base_revision, &semio_framework_plugin::app::GestureSlot::detached(), doc.operation_optional().cloned())
@@ -191,53 +189,33 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         registry.register(Puzzle2dRetainedCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: semio_framework_plugin::app::ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !PUZZLE2D_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            return Ok(None);
+    fn build_tool_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework::ErasedToolJob>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
+        let original=request.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original puzzle2d producer request is absent"))?;
+        if !PUZZLE2D_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {return Ok(false);}
+        if original.command.action_id()!=original.tool_id {return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"puzzle2d-command-tool-mismatch").into());}
+        let tool_id=original.command.action_id();
+        macro_rules! work {
+            (|$request:ident| $make:expr) => {
+                semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,Puzzle2dCommand::action_id,PUZZLE2D_COMMAND_RAW_BYTES,crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS,true,|$request|{let _=&$request;$make})
+            };
         }
-        if request.command.action_id() != request.tool_id {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "puzzle2d-command-tool-mismatch"));
+        macro_rules! owned {
+            ($owner:ty,|$scope:ident| $make:expr) => {
+                semio_framework_plugin::retained_command::producer::admit_retained_tool_producer_measured_scoped(request,output,cx,Puzzle2dCommand::action_id,PUZZLE2D_COMMAND_RAW_BYTES,crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS,true,<$owner>::original_birth_demands()?,|_request,$scope|$make)
+            };
         }
-        let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Self>>> = match request.command.action_id() {
-            "setActiveExample" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new("setActiveExample", puzzle2d_active_example_reduce, puzzle2d_active_example_extent)),
-            "forceLayout" => Box::new(Puzzle2dForceLayoutWork::default()),
-            "reorganize" => Box::new(Puzzle2dForceLayoutWork::new("reorganize")),
-            "addNode" => Box::new(Puzzle2dWindowCommandWork::<Puzzle2dPlayApp>::new("addNode", puzzle2d_add_node_extent, request.authoring_seed.clone(), puzzle2d_revision_hex(&request.canonical_base_revision))),
-            "exportSnapshot" => Box::new(Puzzle2dExportWork::default()),
-            "applyBoardEvents" => Box::new(Puzzle2dWindowCommandWork::<Puzzle2dPlayApp>::new("applyBoardEvents", puzzle2d_board_events_extent, request.authoring_seed.clone(), puzzle2d_revision_hex(&request.canonical_base_revision))),
-            generic if PUZZLE2D_GENERIC_TOOL_IDS.contains(&generic) => Box::new(Puzzle2dWindowCommandWork::<Puzzle2dPlayApp>::new(generic, puzzle2d_generic_extent, request.authoring_seed.clone(), puzzle2d_revision_hex(&request.canonical_base_revision))),
-            host_only if PUZZLE2D_HOST_ONLY_TOOL_IDS.contains(&host_only) => Box::new(crate::retained_command::NoopPuzzleCommandWork::new(host_only)),
-            "redrawHandles" => Box::new(Puzzle2dRedrawHandlesWork::default()),
-            _ => return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.unsupported"), "puzzle2d-command-tool-unmapped")),
-        };
-        let operation_context = semio_framework_plugin::AppOperationContext {
-            app_instance_id: request.app_instance_id,
-            parent_document_id: request.parent_document_id.clone(),
-            operation_id: request.operation.operation.0,
-            generation: request.operation.generation.0,
-            canonical_base_revision: request.canonical_base_revision,
-            retained: request.retained,
-            authoring_seed: request.authoring_seed.clone(),
-        };
-        let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
-                command: *request.command,
-                snapshot: request.snapshot,
-                snapshot_read: request.snapshot_read,
-                config: request.config,
-                history: request.history,
-                interaction_state: request.interaction_state,
-                interaction_hover: request.interaction_hover,
-                context: Some(request.context),
-                operation: operation_context,
-                completion: request.completion,
-            },
-            Puzzle2dCommand::action_id,
-            PUZZLE2D_COMMAND_RAW_BYTES,
-            crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS,
-            work,
-        );
-        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+        match tool_id {
+            "setActiveExample" => work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new("setActiveExample", puzzle2d_active_example_reduce, puzzle2d_active_example_extent)),
+            "forceLayout" => owned!(Puzzle2dForceLayoutWork,|scope| Puzzle2dForceLayoutWork::from_original_construction("forceLayout",scope)),
+            "reorganize" => owned!(Puzzle2dForceLayoutWork,|scope| Puzzle2dForceLayoutWork::from_original_construction("reorganize",scope)),
+            "addNode" => work!(|request| Puzzle2dWindowCommandWork::<Puzzle2dPlayApp>::new("addNode", puzzle2d_add_node_extent)),
+            "exportSnapshot" => work!(|request| Puzzle2dExportWork::default()),
+            "applyBoardEvents" => work!(|request| Puzzle2dWindowCommandWork::<Puzzle2dPlayApp>::new("applyBoardEvents", puzzle2d_board_events_extent)),
+            generic if PUZZLE2D_GENERIC_TOOL_IDS.contains(&generic) => work!(|request| Puzzle2dWindowCommandWork::<Puzzle2dPlayApp>::new(generic, puzzle2d_generic_extent)),
+            host_only if PUZZLE2D_HOST_ONLY_TOOL_IDS.contains(&host_only) => work!(|request| crate::retained_command::NoopPuzzleCommandWork::new(host_only)),
+            "redrawHandles" => owned!(Puzzle2dRedrawHandlesWork,|scope| Puzzle2dRedrawHandlesWork::from_original_construction(scope)),
+            _ => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"puzzle2d-command-tool-unmapped").into()),
+        }
     }
 
     /// ⏯️ Builds the fill tool run's jobs (`ToolRunDefinition.runJob` / `.revalidateJob`): the run job over the run's
@@ -356,14 +334,9 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
-        cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         Self::render_body(body_key, doc, cfg, view_state, &window::transient_from_view(transient), Puzzle2dInteractionSnapshot::from_interaction(interaction))
-
-        })();
-        rendered.map(Some).map_err(Into::into)
-        }
+    }
 
     fn window_engagements(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
         let labels = puzzle2d_labels(view_state);
@@ -384,7 +357,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
         let window_config = window::config_from_view_or_document(cfg, doc.snapshot.value());
         let window_transient = window::transient_from_view(transient);
-        let window_kind = window::kind_for_view(view_state).unwrap_or(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
+        let window_kind = window::kind_for_view(view_state).unwrap_or(overview::WINDOW_KIND_ID);
         let envelope = puzzle2d_scene_for(doc.snapshot.value().clone(), window::runtime(cfg.snapshot, &window_config, &window_transient, Some(window_kind)), puzzle2d_active_utility(Some(view_state)));
         HashMap::from([(window_id.to_string(), edit::canvas::puzzle2d_engagement(&envelope, &puzzle_board_host(), window_kind, puzzle2d_labels(view_state)))])
     }
@@ -393,11 +366,11 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         let labels = puzzle2d_labels(view_state);
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
         let window_config = window::config_from_view_or_document(cfg, doc.snapshot.value());
-        let window_kind = window::kind_for_view(view_state).unwrap_or(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
+        let window_kind = window::kind_for_view(view_state).unwrap_or(overview::WINDOW_KIND_ID);
         let envelope = puzzle2d_scene_for(doc.snapshot.value().clone(), window::runtime(cfg.snapshot, &window_config, &Puzzle2dWindowTransient::default(), Some(window_kind)), puzzle2d_active_utility(Some(view_state)));
         let measures = match window_kind {
-            crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID => detail::window_measures(&envelope, labels),
-            crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID => selection::window_measures(&envelope, labels),
+            detail::WINDOW_KIND_ID => detail::window_measures(&envelope, labels),
+            crate::standards::v1::subsets::any::schema::mutations::selection::WINDOW_KIND_ID => selection::window_measures(&envelope, labels),
             _ => overview::window_measures(&envelope, labels),
         };
         HashMap::from([(window_id.to_string(), measures)])
@@ -405,7 +378,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
 
     fn tool_measures(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let window_config = window::config_from_view_or_document(cfg, doc.snapshot.value());
-        let window_kind = window::kind_for_view(view_state).unwrap_or(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
+        let window_kind = window::kind_for_view(view_state).unwrap_or(overview::WINDOW_KIND_ID);
         let envelope = puzzle2d_scene_for(doc.snapshot.value().clone(), window::runtime(cfg.snapshot, &window_config, &Puzzle2dWindowTransient::default(), Some(window_kind)), puzzle2d_active_utility(Some(view_state)));
         let labels = puzzle2d_labels(view_state);
         HashMap::from([(fill::TOOL_ID.to_string(), vec![fill::measures(&envelope, labels)])])

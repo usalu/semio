@@ -1,5 +1,5 @@
-//! 🔍️ Fem3d play app panel — the inspection panel: real editable controls for whatever the
 //! framework-owned `"fem3d"` selection resolves to (a node, element, solid, material, section,
+//! 🔍️ Fem3d play app panel — the inspection panel: real editable controls for whatever the
 //! support, load, load case or combination), or the document summary when nothing is selected.
 //!
 //! The body is a `Component::Tree` built through [`PanelTreeBuilder`]: each section holds
@@ -23,6 +23,8 @@ use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_comb
 use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_combination::REMOVE_TERM_FIELD;
 use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_combination::TERM_FIELD_PREFIX;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_kind;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_id;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_load_target;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_load_owner;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::Fem3dInteractionSnapshot;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_COMBINATION;
@@ -44,16 +46,19 @@ use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structur
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemCombination;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_fem_material::volumetric::FemMaterialValue;
+use semio_s_fem_node::volumetric::FemNodeValue;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSection;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind};
+use semio_framework_plugin::plugin_app_close_prelude::Buildable;
+use semio_framework_plugin::plugin_app_close_prelude::HasBase;
+use semio_framework_plugin::plugin_app_close_prelude::HasChildren;
+use semio_framework_plugin::plugin_app_close_prelude::InputKind;
 use semio_framework_plugin::tree_item;
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::tree_item_with_action;
@@ -215,7 +220,7 @@ fn axis_options() -> Vec<(String, String)> {
 //#endregion 🔖️Entities
 
 //#region 🔖️Sections
-fn node_rows(node: &FemNode, labels: &Fem3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn node_rows(node: &FemNodeValue, labels: &Fem3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut rows = UiFixedList::default();
     push(&mut rows, read_only_row("node.id", labels.id.as_str(), &node.id))?;
     push(&mut rows, number_row("node.x", labels.x.as_str(), node.x, 0.1, "patchNode", "x", &node.id))?;
@@ -243,7 +248,7 @@ fn element_rows(doc: &Fem3dSnapshot, element: &FemElement, labels: &Fem3dLabels)
     Ok(rows)
 }
 
-fn material_rows(material: &FemMaterial, labels: &Fem3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn material_rows(material: &FemMaterialValue, labels: &Fem3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut rows = UiFixedList::default();
     push(&mut rows, read_only_row("material.id", labels.id.as_str(), &material.id))?;
     push(&mut rows, text_row("material.name", labels.name.as_str(), &material.name, "patchMaterial", "name", &material.id))?;
@@ -290,10 +295,10 @@ fn solid_rows(doc: &Fem3dSnapshot, solid: &FemSolid, labels: &Fem3dLabels) -> Ui
     Ok(rows)
 }
 
-fn load_rows(doc: &Fem3dSnapshot, load: &FemLoad, labels: &Fem3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
-    let id = load_id(load);
+fn load_rows(doc: &Fem3dSnapshot, identity: &str, load: &FemLoad, labels: &Fem3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+    let id = identity;
     let mut rows = UiFixedList::default();
-    push(&mut rows, read_only_row("load.id", labels.id.as_str(), id))?;
+    push(&mut rows, read_only_row("load.id", labels.id.as_str(), load_id(load)))?;
     let case = fem3d_load_owner(doc, id).and_then(|(case_id, _)| doc.load_cases.iter().find(|case| case.id == case_id));
     push(&mut rows, read_only_row("load.case", labels.load_case.as_str(), case.map_or_else(|| labels.none.as_str().to_string(), |case| case.name.clone())))?;
     match load {
@@ -327,14 +332,15 @@ fn load_case_rows(case: &FemLoadCase, labels: &Fem3dLabels) -> UiAssemblyResult<
 
 /// 🕹️ A load button inside its case — activating it hands the load to the framework-owned `"fem3d"`
 /// selection, the same `interactionSelect` a viewport pick or an artifact-tree row dispatches.
-fn load_pick_row(load: &FemLoad, labels: &Fem3dLabels) -> UiAssemblyResult<BuiltNode> {
+fn load_pick_row(case_id: &str, load: &FemLoad, labels: &Fem3dLabels) -> UiAssemblyResult<BuiltNode> {
     let id = load_id(load);
     let (kind, detail) = match load {
         FemLoad::Nodal { node_id, dof, value, .. } => (labels.node.as_str(), format!("{node_id} {} {value}", dof_symbol(*dof))),
         FemLoad::MemberUdl { element_id: member, wx, wy, wz, .. } => (labels.element.as_str(), format!("{member} {wx} / {wy} / {wz}")),
         FemLoad::Area { solid_id, pressure, .. } => (labels.solid.as_str(), format!("{solid_id} {pressure}")),
     };
-    action_button(id, &format!("{id} · {kind} · {detail}"), select_action(id)?)
+    let identity = fem3d_load_target(case_id, id).map_err(|_| ui_error("fem3d.load-identity"))?;
+    action_button(&identity, &format!("{id} · {kind} · {detail}"), select_action(&identity)?)
 }
 
 fn select_action(id: &str) -> UiAssemblyResult<(ActionId, Option<UiValue>)> {
@@ -439,21 +445,36 @@ fn action_rows(id: &str, kind: &str, labels: &Fem3dLabels) -> UiAssemblyResult<U
 /// 🔢️ One text row per selected id, keyed by the id itself so a window over a wide selection names
 /// the same row at any offset — the fields below belong to the FIRST of them, which is the one every
 /// viewport pick leaves at the head of the selection.
-fn selection_row(id: &str) -> UiAssemblyResult<BuiltNode> {
-    tree_item(format!("{ROOT}.selection.{id}"), id.to_owned())
+fn selection_row(identity: &str, labels: &Fem3dLabels) -> UiAssemblyResult<BuiltNode> {
+    let segments = protocol::wire::decode_scoped_identity(identity).map_err(|_| ui_error("fem3d.entity-identity"))?;
+    let text = match segments.as_slice() {
+        ["load", owner, id] => format!("{} {owner} / {id}", labels.load.as_str()),
+        [kind, id] => {
+            let noun = match *kind {
+                "node" => &labels.node, "element" => &labels.element, "solid" => &labels.solid,
+                "material" => &labels.material, "section" => &labels.section, "support" => &labels.support,
+                "loadCase" => &labels.load_case, "combination" => &labels.combination,
+                _ => return Err(ui_error("fem3d.entity-identity")),
+            };
+            format!("{} {id}", noun.as_str())
+        }
+        _ => return Err(ui_error("fem3d.entity-identity")),
+    };
+    tree_item(format!("{ROOT}.selection.{identity}"), text)
 }
 
 /// 🔍️ The panel body: the first resolvable selected entity's editable fields, or the document
 /// summary. Every group title is the entity's own noun, so the panel reads as "Node" / "Load Case"
 /// rather than as a generic "Properties".
 pub fn render(doc: &Fem3dSnapshot, interaction: &Fem3dInteractionSnapshot, labels: &Fem3dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
-    let Some((id, kind)) = interaction.selected_ids.iter().find_map(|id| fem3d_entity_kind(doc, id).map(|kind| (id.as_str(), kind))) else {
+    let Some((identity, kind)) = interaction.selected_ids.iter().find_map(|id| fem3d_entity_kind(doc, id).map(|kind| (id.as_str(), kind))) else {
         return summary(doc, labels);
     };
+    let id = fem3d_entity_id(identity).ok_or_else(|| ui_error("fem3d.entity-identity"))?;
     let mut builder = PanelTreeBuilder::new(ROOT)?;
     if interaction.selected_ids.len() > 1 {
         let title = format!("{} {}", interaction.selected_ids.len(), labels.selected.as_str());
-        builder = builder.window_section(windows, &format!("{ROOT}.selection"), Some(ui_label(&title)?), true, &interaction.selected_ids, |id| selection_row(id))?;
+        builder = builder.window_section(windows, &format!("{ROOT}.selection"), Some(ui_label(&title)?), true, &interaction.selected_ids, |id| selection_row(id, labels))?;
     }
     builder = match kind {
         FEM3D_GRANULARITY_NODE => {
@@ -481,14 +502,14 @@ pub fn render(doc: &Fem3dSnapshot, interaction: &Fem3dInteractionSnapshot, label
             builder.section(format!("{ROOT}.support"), Some(ui_label(labels.support.as_str())?), true, support_rows(doc, support, labels)?)?
         }
         FEM3D_GRANULARITY_LOAD => {
-            let load = doc.load_cases.iter().flat_map(|case| case.loads.iter()).find(|load| load_id(load) == id).ok_or_else(|| ui_error("ui.document"))?;
-            builder.section(format!("{ROOT}.load"), Some(ui_label(labels.load.as_str())?), true, load_rows(doc, load, labels)?)?
+            let (_, load) = fem3d_load_owner(doc, identity).ok_or_else(|| ui_error("ui.document"))?;
+            builder.section(format!("{ROOT}.load"), Some(ui_label(labels.load.as_str())?), true, load_rows(doc, identity, load, labels)?)?
         }
         FEM3D_GRANULARITY_LOAD_CASE => {
             let case = doc.load_cases.iter().find(|case| case.id == id).ok_or_else(|| ui_error("ui.document"))?;
             builder
                 .section(format!("{ROOT}.load-case"), Some(ui_label(labels.load_case.as_str())?), true, load_case_rows(case, labels)?)?
-                .window_section(windows, &format!("{ROOT}.load-case.loads"), Some(ui_label(labels.loads.as_str())?), true, &case.loads, |load| load_pick_row(load, labels))?
+                .window_section(windows, &format!("{ROOT}.load-case.loads"), Some(ui_label(labels.loads.as_str())?), true, &case.loads, |load| load_pick_row(&case.id, load, labels))?
         }
         FEM3D_GRANULARITY_COMBINATION => {
             let combination = doc.combinations.iter().find(|combination| combination.id == id).ok_or_else(|| ui_error("ui.document"))?;
@@ -499,7 +520,7 @@ pub fn render(doc: &Fem3dSnapshot, interaction: &Fem3dInteractionSnapshot, label
         }
         _ => return summary(doc, labels),
     };
-    builder.section(format!("{ROOT}.actions"), Some(ui_label(labels.actions.as_str())?), true, action_rows(id, kind, labels)?)?.build()
+    builder.section(format!("{ROOT}.actions"), Some(ui_label(labels.actions.as_str())?), true, action_rows(identity, kind, labels)?)?.build()
 }
 //#endregion 🔖️Render
 

@@ -22,7 +22,7 @@ impl<T: RetainedClone> RetainedCloneCursor<Option<T>> for OptionCursor<T> {
     fn output_ready(&self)->bool{self.output.is_some()}
     fn advance_demands(&self,source:RetainedCloneRef<'_,Option<T>>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(demand)=source.binding_demand(&self.source)?{return Ok(demand)}if self.closing||self.spent{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"optional original clone is closing or spent"))}if self.output.is_some()||source.get().is_none(){return Ok(crate::RetirementDemand{depth:1,..Default::default()})}if self.child_value.is_some(){let mut demand=clone_cursor_close_demand::<T>(&self.child,body)?;demand.depth=demand.depth.max(1);return Ok(demand)}if self.child.output_ready(){return Ok(crate::RetirementDemand{depth:1,..Default::default()})}self.child.advance_demands(source.project(1,|value|value.as_ref().unwrap()),body)}
 
-    fn advance(&mut self, source: RetainedCloneRef<'_, Option<T>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+    fn advance(&mut self, source: RetainedCloneRef<'_, Option<T>>, body: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if self.closing {
             return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained optional clone cursor is closing"));
         }
@@ -58,7 +58,7 @@ impl<T: RetainedClone> RetainedCloneCursor<Option<T>> for OptionCursor<T> {
                     self.output = Some(Some(self.child_value.take().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained optional child owner is missing"))?));
                     return Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
                 }
-                match self.child.advance(source.project(1, |value| value.as_ref().expect("validated retained optional child")), grant)? {
+                match self.child.advance(source.project(1, |value| value.as_ref().expect("validated retained optional child")),body, grant)? {
                     RetainedCloneStep::Progress(progress) => Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(grant, progress, "retained optional child")?)),
                     RetainedCloneStep::Complete(progress) => {
                         let progress = admit_retained_clone_progress(grant, progress, "retained optional child")?;

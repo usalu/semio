@@ -261,6 +261,41 @@ async fn reload_replays_the_event_log_into_the_same_positions() {
     drop(identity.pause().expect("original Unit cumulative identity receipt"));
 }
 
+/// 🎯️ A reload adopts the central fold: after `reset` the store's current projection is exactly the genesis snapshot taken through
+/// [`protocol::apply_diff_cold`] once per applied operation, in applied order — the oracle below calls the central applier directly and
+/// the store holds no other route from an event log to a projection.
+#[semio_framework_async_macros::async_test]
+async fn a_reload_adopts_the_central_apply_fold_of_the_applied_event_log() {
+    const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
+    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    let mut store = fresh_demo_store().await;
+    for command in [
+        ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None },
+        ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None },
+        ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 8 })], transaction: None },
+        ArtifactCommand::Undo,
+    ] {
+        store.dispatch(command, &mut identity).await.expect("history step");
+    }
+    let candidate = owned_test_envelope(&store).await;
+    let mut reloaded = fresh_demo_store().await;
+    reloaded.reset(candidate).await.expect("reload");
+
+    let envelope = reloaded.envelope();
+    let mut oracle = envelope.vcs.genesis.facts().snapshot().clone();
+    for edit_id in reloaded.applied_edit_ids().iter() {
+        let edit = envelope.vcs.edits.iter().find(|edit| edit.id == *edit_id).expect("the applied edit is in the log");
+        for operation in edit.forwards.iter() {
+            oracle = protocol::apply_diff_cold(operation.diff(&oracle).diff(), &oracle).expect("the central applier folds the applied operation");
+        }
+    }
+    assert_eq!(reloaded.snapshot().expect("snapshot"), oracle, "the reloaded projection is the central apply fold of the applied operations");
+    assert_eq!(oracle.n, Some(3), "the undone edit is not part of the fold");
+    identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
+    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+}
+
 //#endregion 🔖️EventLogCatchUp
 
 //#region 🔖️SpaceMemberCheckoutRouting
@@ -276,13 +311,13 @@ async fn space_member_checkout_switches_at_the_alternative_tip_and_falls_back_to
     let alt_id = store.envelope().vcs.alternatives.last().expect("the branched alternative").id.clone();
     let tip = store.envelope().vcs.alternatives.last().expect("the branched alternative").checkpoint_ids.last().expect("alt has a tip").clone();
 
-    SpaceMember::checkout(&mut store, &tip, &alt_id, &mut identity).await.expect("checkout at the tip routes through SwitchAlternative");
+    ReferenceSpaceMember::checkout(&mut store, &tip, &alt_id, &mut identity).await.expect("checkout at the tip routes through SwitchAlternative");
     assert_eq!(store.envelope().active_alternative_id, Some(alt_id.clone()), "switching to the tip keeps it active");
 
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, &mut identity).await.expect("apply on branch");
     store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c2".into()), authors: Vec::new() }, &mut identity).await.expect("commit c2, advancing the alt's tip past `tip`");
 
-    SpaceMember::checkout(&mut store, &tip, &alt_id, &mut identity).await.expect("checkout of the now-stale tip falls back to CheckoutCheckpoint");
+    ReferenceSpaceMember::checkout(&mut store, &tip, &alt_id, &mut identity).await.expect("checkout of the now-stale tip falls back to CheckoutCheckpoint");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(1), "restored the old checkpoint's state");
     assert_eq!(store.envelope().active_alternative_id.as_deref(), Some(alt_id.as_str()), "the checkpoint is still on this alternative, so the line stays");
     assert_eq!(store.envelope().viewer_checkpoint_id.as_deref(), Some(tip.as_str()));

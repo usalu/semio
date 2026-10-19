@@ -1,5 +1,45 @@
 {
   "definitions": {
+    "HostPrivilegeProtocol": {
+      "const": {
+        "version": 1,
+        "privilege": "SeManageVolumePrivilege",
+        "tokenAccess": 40,
+        "informationClass": 3,
+        "bufferBytes": 65536,
+        "maximumPrivileges": 128,
+        "entryBytes": 12,
+        "headerBytes": 4,
+        "enabledAttributes": 2,
+        "removedAttributes": 4,
+        "notAllAssigned": 1300,
+        "absent": "refuse-before-effects",
+        "disabled": "enable-existing-assignment",
+        "elevation": false
+      }
+    },
+    "HostPrivilegeCheckCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "accepted", "adjustments"],
+      "properties": {
+        "state": {"enum": ["enabled", "disabled", "absent", "removed", "adjust-refused", "query-error"]},
+        "accepted": {"type": "boolean"},
+        "adjustments": {"type": "integer", "minimum": 0, "maximum": 1}
+      }
+    },
+    "HostPrivilegeCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "attributes", "count", "truncated", "expected"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1, "maxLength": 64},
+        "attributes": {"type": "integer", "minimum": 0, "maximum": 7},
+        "count": {"type": "integer", "minimum": 0, "maximum": 129},
+        "truncated": {"type": "boolean"},
+        "expected": {"enum": ["enabled", "available", "absent", "refused"]}
+      }
+    },
     "Protocol": {
       "const": {
         "maximumPathUnits": 256,

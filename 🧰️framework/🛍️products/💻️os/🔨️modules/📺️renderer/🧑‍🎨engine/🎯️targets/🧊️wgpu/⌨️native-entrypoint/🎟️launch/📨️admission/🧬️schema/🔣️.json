@@ -1,0 +1,32 @@
+{
+  "$id": "urn:semio:native-launch-admission:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "declaration",
+    "scriptOwner",
+    "scriptDeadlineEpochMilliseconds"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "declaration": {
+      "$ref": "urn:semio:native-launch-declaration:v1"
+    },
+    "scriptOwner": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "scriptDeadlineEpochMilliseconds": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 9007199254740991
+    }
+  }
+}

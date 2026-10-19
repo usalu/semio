@@ -1,0 +1,10 @@
+{
+  "schema": "semio.plugin.retained-completion-close/v1",
+  "modes": ["refused", "cancelled"],
+  "maximumCopyBytes": 4096,
+  "cases": [
+    {"id": "empty", "artifactMutations": 0, "presenceMutations": 0, "transientMutations": 0, "returnedMutations": 0, "zeroGrantPreservesOwner": true, "terminal": true},
+    {"id": "shared-and-local", "artifactMutations": 1, "presenceMutations": 1, "transientMutations": 1, "returnedMutations": 3, "zeroGrantPreservesOwner": true, "terminal": true},
+    {"id": "multiple-pages", "artifactMutations": 8, "presenceMutations": 7, "transientMutations": 6, "returnedMutations": 21, "zeroGrantPreservesOwner": true, "terminal": true}
+  ]
+}

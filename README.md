@@ -89,10 +89,6 @@ Let me walk you through 🚶️
        - [❄️ ChatGPT](#-chatgpt-)
        - [🌟️ Gemini](#-gemini-)
        - [AI studio](#-ai-studio-)
-     - [💻️ Editor](#-editor-)
-       - [✈️ Copilot](#-copilot-)
-       - [🖱️ Cursor](#-cursor-)
-     - [🌊️ Windsurf](#-windsurf-)
      - [⌨️ CLI](#-cli-)
        - [⌨️ Claude Code](#-claude-code-)
        - [🧾️ Codex](#-codex-)
@@ -129,7 +125,7 @@ Let me walk you through 🚶️
 > **Status, plainly.** This repository is the source, not a distribution. There is no installer, no
 > published container image, no package on any registry and no hosted instance; `.github/workflows/`
 > is empty and nothing is uploaded anywhere. Everything below is built from this checkout after
-> `bun run setup`, and every release binary named below lands under its own product's `dist/`.
+> `bun run dashboard run workspace:setup`, and every release binary named below lands under its own product's `dist/`.
 
 
 ## ✏️ sketchpad [↑](#%EF%B8%8F-products-)
@@ -143,7 +139,7 @@ It is the digital pencil for sketching plans and digital scalpel for building mo
 **Getting started** — the browser shell, hosting every plugin in one window:
 
 ```bash
-bun run setup                                                                    # once, after cloning
+bun run dashboard run workspace:setup                                           # once, after cloning
 bun run dashboard run playground:s --param renderer=react --detach --wait-ready  # prints http://127.0.0.1:6070/
 ```
 
@@ -175,7 +171,7 @@ decides whether your hub boots at all.
 
 ```bash
 bun repo run os-hub:build              # → 🌎️hub/📦️packages/🦀️rust/dist/build/os-hub
-bun ./📜️script.ts publish os-hub     # → dist/publish/os-hub-<version>-<platform>-<arch>.tar.gz
+bun repo run workspace:publish -- os-hub     # → dist/publish/os-hub-<version>-<platform>-<arch>.tar.gz
 ```
 
 
@@ -492,7 +488,7 @@ The core design-information-modeling technology, containing the main schema, eng
 
 ### [🧰️ repo](🧰️framework/🛍️products/🦑️repo/README.md) [↑](#-technologies-)
 
-Infrastructure and tooling for the monorepo, including CLI, vscode integrations, MCP servers, and generic utilities.
+Infrastructure and tooling for the monorepo: the dashboard exclusively controls developer operations; MCP servers, generic utilities, and passive editor source navigation support it.
 
 ### 🔬️ coda [↑](#-technologies-)
 
@@ -623,14 +619,14 @@ The recommended way to develop is using the devcontainer which provides a consis
 **Prerequisites:**
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) or compatible container runtime
-- [VS Code](https://code.visualstudio.com/) with [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+- A devcontainer runtime implementing the checked-in `.devcontainer/devcontainer.json`
 
 **Getting Started:**
 
 1. Clone the repository
-2. Open in VS Code
-3. Click "Reopen in Container" when prompted (or run "Dev Containers: Reopen in Container" from command palette)
-4. Wait for container build and setup to complete
+2. Start the checked-in devcontainer with your container runtime
+3. Wait for container build and setup to complete
+4. Run `bun run dashboard` inside the container
 
 Container creation runs `bun repo run workspace:setup`, which is the whole zero-touch bootstrap: every
 language environment (`deps-javascript`, `deps-python`, `deps-cargo`, `deps-go`, `deps-dotnet`,
@@ -648,9 +644,9 @@ The devcontainer includes:
 - Rust via rustup with **no** image-pinned toolchain — `rust-toolchain.toml` is the single source of
   truth (currently `nightly-2026-07-07` with `wasm32-unknown-unknown` + `wasm32-wasip2`), installed on
   the first `cargo` invocation inside the repo
-- All required VS Code extensions
+- The dashboard developer control plane
 - Pre-configured development environment
-- Port forwarding for all dev servers (3000, 4000, 4321, 5678, 6006, 2507)
+- Port forwarding for dashboard services (8787, 6070, 6072/6073, 6066, 6067/6068, 6010, 6274/6277)
 
 ### 🏁️ The four golden paths
 
@@ -678,13 +674,37 @@ A command id is `<project>:<target>[:configuration]` for a repository build task
 arguments follow `--`. Runnable things that the build graph does not describe are declared next to their owner in
 `metadata.semio.dashboard` of a `📋️project.json`.
 
+For daily work, choose **New Task**, search for the action and complete its form. Titles and help are
+available in English and German; Settings chooses the language, appearance and keyboard bindings.
+
+| Action | Dashboard command | Form inputs |
+| --- | --- | --- |
+| Open a source file | `@semio-tech/repo-developer-tools:open-source` | Workspace-relative file, optional line, editor |
+| Inspect changed files | `@semio-tech/repo-developer-tools:git-status` | Path and untracked-file visibility |
+| Review a diff | `@semio-tech/repo-developer-tools:git-diff` | Path, worktree or staged changes; a staged comparison takes one base revision |
+| Browse history | `@semio-tech/repo-developer-tools:git-history` | Path, optional revision and result count |
+| Inspect a revision | `@semio-tech/repo-developer-tools:git-show` | Single revision, path, summary or patch |
+| Inspect line history | `@semio-tech/repo-developer-tools:git-blame` | File, optional revision, starting line and line count |
+| Use an interactive terminal | `@semio-tech/repo-developer-tools:terminal` | Working directory and system shell |
+| Run several project targets | `tool:workspace/run-targets` | Targets, projects, parallel tasks and cache |
+| Run a particular test file | `tool:workspace/bun-test` | Test file and owning project |
+| Setup, build, test and check | `workspace:setup`, `workspace:build`, `workspace:test`, `workspace:verify` | Owner, scope and command-specific choices |
+| Start a server or preview | `playground:s`, `os-hub:dev`, `workspace:dev-storybook` | Renderer, example and service options |
+| Run an authored operation | `tool:workspace/run-script` | Script path, owner project, working directory and arguments |
+| Manage tickets and goals | `repo:<action>` | Select the named repo action and complete its form |
+
+The source-file action opens a passive editor; build, test and process controls remain in the dashboard.
+For debugging, select **Workspace Terminal**, choose the working directory and system shell, and invoke the installed debugger inside that task. Toggle input with `Ctrl+B t`; its task menu provides **Restart**, **Stop** and **Kill**. The [daily dashboard guide](🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/README.md#-daily-work) covers setup, testing, checks, build, serve and repository operations.
+Task output, restart, stop and cancellation use the same dashboard controls. A ready service offers
+**Open ready address** in its task menu and overview; the default binding is `Ctrl+B u`.
+
 | what | dashboard command id | build task it resolves to |
 |---|---|---|
 | `s` React frontend | `playground:s` (6070), `@semio-tech/framework-os-dev:serve-s-react-dev` (no rebuild) | `@semio-tech/framework-os-dev:dev-s-react-dev` / `serve-s-react-dev` |
 | `s` wgpu frontend | `playground:s renderer=wgpu-wasm` (6066) | `@semio-tech/framework-os-dev:dev-s-wgpu-dev` |
 | hub backend | `os-hub:dev` (8787, `/admin`) | `os-hub:dev` |
 | two-user collaboration | `compound:workspace/s-users-with-hub` (hub + `playground:s renderer=react user-slot=1` 6072 + `user-slot=2` 6073), or `os-hub:dev-collaboration` for the automated scenario | `os-hub:dev` + `@semio-tech/framework-os-dev:dev-s-react-dev` ×2 |
-| MCP servers | `tool:workspace/repo-mcp` (repo, stdio; `client=<name>`), `tool:workspace/os-mcp-stdio` (os, `bun ./📜️script.ts dev mcp stdio os`: started by the MCP clients from the configurations `bun ./📜️script.ts agents write` writes, not by developers) / `tool:workspace/os-mcp-http` (os, port 8792) | `bun ./📜️script.ts dev mcp stdio …` / `@semio-tech/framework-os-mcp-rs:dev -- http --port 6300` |
+| MCP servers | `tool:workspace/repo-mcp` (repo, stdio; `client=<name>`), `tool:workspace/os-mcp-stdio` (os, stdio) / `tool:workspace/os-mcp-http` (os, port 8792) | Select HTTP or Inspector in New Task for development. `workspace:agents-write` derives headless agent client files from the stdio tool declarations. |
 
 The `renderer` parameter of a playground command (`react`, `wgpu-wasm`, `wgpu-native`) picks the build
 target (`dev-<variant>-react-dev`, `dev-<variant>-wgpu-dev`, `run-<variant>-native-dev`); no server
@@ -702,7 +722,9 @@ cd semio
 powershell -NoProfile -ExecutionPolicy Bypass -File "🧰️framework\🛍️products\🦑️repo\🔨️modules\🔩️native\🥾️bootstrap\🔵️.ps1" setup
 ```
 
-Once Bun is installed, `bun ./📜️script.ts setup native` re-runs the same script. It never writes user-global tool
+Native C/C++ builds use Ninja. The registered build commands activate the installed Build Tools compiler environment automatically on Windows; no editor session or solution launch is required.
+
+After initial bootstrap, `bun run dashboard run workspace:setup-native` re-runs the same script. It never writes user-global tool
 configuration (`~/.cargo/config.toml`, global git config). It reports, in English and German, when the machine-wide
 `LongPathsEnabled` switch is off and prints the one elevated command that enables it: Python, CMake and every other tool
 that relies on that switch fail past 260 characters, and Rust build outputs reach ~246 characters below the clone root, so
@@ -712,14 +734,14 @@ The script installs the same baseline toolchain the devcontainer provides on a f
 
 - Git, Git LFS, GitHub CLI, ripgrep, jq, SQLite
 - Node.js 24 LTS + npm 11.7, Go 1.26, Python 3.14, uv, rustup, .NET SDK 8/9/10
-- GitKraken Desktop + CLI, F3D, VS Code + `code`
+- GitKraken Desktop + CLI and F3D
 - Gemini CLI, TypeScript LSP, Pyright
-- repo hooks, MCP client config, Python/Rust/Playwright setup, npm/uv dependencies, and the local repo VSIX
+- dashboard-declared agent client configuration, Python/Rust/Playwright setup and Bun/uv dependencies
 
-After the bootstrap completes, open a new terminal and use the same repo commands as in the devcontainer. The script also keeps `PLAYWRIGHT_BROWSERS_PATH` on the repo-local shared cache so Playwright downloads stay warm across runs.
+After the bootstrap completes, start `bun run dashboard` and choose **New Task** for the same registered operations as in the devcontainer. The script also keeps `PLAYWRIGHT_BROWSERS_PATH` on the repo-local shared cache so Playwright downloads stay warm across runs.
 
 Native macOS and Linux bootstrap from a fresh clone with the checked-in shell script (no Bun needed yet); afterwards
-`bun ./📜️script.ts setup native` re-runs it:
+`bun run dashboard run workspace:setup-native` re-runs it:
 
 ```bash
 bash "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh" setup
@@ -751,7 +773,7 @@ bun repo cargo --store=shared --configuration=prototype -- check -p <crate> --li
 
 - **Cargo** is only reachable through `bun repo cargo`: raw `cargo` and `rustc` are refused at the compiler ingress gate in `.cargo/config.toml`, and private target directories are not allowed.
 - **Caches** are fixed-capacity partitions `.cache/b/<d,t,g,o,p,l,n>` (dependencies, tools, graph, observations, products, leases, Nx). On macOS each one is a case-sensitive APFS disk image `fixed.dmg` mounted at `m`. If every `bun repo` call refuses at startup (pending publication, ambiguous image association), follow the [recovery steps](🧰️framework/🛍️products/🦑️repo/README.md#-recovery) instead of deleting files by hand.
-- **Launch (F5).** `.vscode/🧩️launch.seed.jsonc` is the only authored launch file. Edit it, then `bun repo run workspace:generate-launch`; `.vscode/launch.json` is generated and must not be edited.
+- **Developer dashboard.** Open the dashboard, choose **New Task**, select the owning command and complete its typed form. The dashboard controls startup, output, readiness, cancellation and restart. Add recurring operations to their project target or ticket `🎮️commands.json`; the [daily workflow](🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/README.md#-daily-work) covers tests, builds, servers, debugging and source navigation.
 - **Go** code lives in member directories with one `🐹️.go` leaf (`📦️packages/🐹️go/<member>/🐹️.go`, tests in `🧪️tests/<case>/🐹️.go`); run it through the package `📜️script.ts` or `bun repo run <project>:test`, not plain `go test`.
 - **Zero-touch.** The build CLI boots from a fresh clone without `node_modules`, so its import closure uses relative imports only; check it with `bun repo --help` after touching the build library. Bootstrap works unchanged in the devcontainer and on native Windows, macOS and Linux.
 
@@ -813,40 +835,6 @@ The free quota is very quickly reached but resets regularly and hence we just us
 
 Good for larger experiments due to more generous free quota 🥼️
 
-### 💻️ Editor [↑](#-tools-)
-
-#### ✈️ [Copilot](.github/agents/compose.agent.md) [↑](#-ai-)
-
-<details>
-<summary><strong>📚️ Resources:</strong></summary>
-
-- [Chat modes](https://code.visualstudio.com/doc/copilot/chat/chat-modes)
-
-</details>
-
-Copilot is our default for most tickets because request-based billing makes fast interaction cheap 💳️
-
-#### 🖱️ [Cursor](.cursor) [↑](#-ai-)
-
-<details>
-<summary><strong>📚️ Resources:</strong></summary>
-
-- [Rules](https://docs.cursor.com/context/rules)
-
-</details>
-
-We have the [Pro](https://www.anthropic.com/claude/pricing) plan 💳️
-
-We use [Cursor](https://www.cursor.com) as our main editor for typing code mostly with [Tab](https://docs.cursor.com/tab/overview) ➡️
-
-For tasks that require updated large docs that are too large to paste into the prompt, we use the agent 📚️
-
-But in general, we don't use the chat because it is way too expensive 💰️
-
-#### 🌊️ Windsurf [↑](#-editor-)
-
-Used for token-heavy test-driven-development workflows with MCP (especially Playwright) 🥼️
-
 ### ⌨️ CLI [↑](#-tools-)
 
 #### ⌨️ [Claude Code](CLAUDE.md) [↑](#-ai-)
@@ -859,9 +847,9 @@ Used for small bugs and focused fixes with strong repo context 🧠️
 
 Used for simple tasks (small edits, small refactors, small doc updates) 🧩️
 
-The canonical root agent instructions live in `AGENTS.md`. `codex`, `cursor-chat`, `windsurf-chat`, `droid` and `kiro-cli` read that file directly; the clients that cannot are served by links recreated from it — `CLAUDE.md` (`claude-code`), `GEMINI.md` (`antigravity-chat`) and `.github/copilot-instructions.md` (`copilot-chat`). `bun ./📜️script.ts setup git` writes them, using symlinks when the shell supports them and a hard-link fallback on restricted Windows shells. It is a `dependsOn` of `workspace:setup`, so a fresh clone or devcontainer gets them without a manual step.
+The canonical root agent instructions live in `AGENTS.md`. The retained Codex headless client reads that file directly; the Claude headless client reads `CLAUDE.md`, which `bun run dashboard run workspace:setup -- git` recreates as a link to the canonical instructions. Setup uses a symlink when supported and a hard-link fallback on restricted Windows shells. This step is a dependency of `workspace:setup`, so a fresh clone or devcontainer needs no manual link creation.
 
-Run `bun run setup` once after cloning for the full workspace bootstrap, or run `bun ./📜️script.ts setup git` if you only need git symlink checkout, root alias files, and removal of any legacy repo-managed git hooks on Windows, macOS, and Linux. On Windows, true symlink creation may require Developer Mode or an elevated shell.
+Run `bun run dashboard run workspace:setup` after the initial toolchain bootstrap for the full workspace setup, or choose `workspace:setup-git` for git symlink checkout, root alias files, and removal of any old repo-managed git hooks on Windows, macOS, and Linux. On Windows, true symlink creation may require Developer Mode or an elevated shell.
 
 ### ☁️ Cloud [↑](#-tools-)
 
@@ -902,7 +890,7 @@ All automation, CI runs, and agent workflows are controlled through the canonica
 The repository framework owns the build graph, task selection, configuration, inputs, outputs, progress, and cancellation. All entry points use `bun repo`: `bun repo run <project>:<task>`, `bun repo run-many --targets=test --projects=<projects>`, and `bun repo graph`. The root `📋️project.json` and package manifests use the owned project schema and `repo:script` executor.
 
 Nx remains the default build tool (`defaultTool` in `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json`); see [Build](#-build-) for Bazel, tool provisioning, dependencies, cargo and cache recovery. The shared flags `--skip-cache`, `--skip-remote-cache`, `--exclude-dependencies`, `--parallel`, `--configuration`, and `--output=stream` are translated by the selected backend. Bazel qualification does not change the default automatically.
-Git hooks are not installed by this repo; run `workspace:lint`, `workspace:format` and `workspace:test` (`bun run dashboard run workspace:lint`, …) explicitly before pushing. `bun ./📜️script.ts setup git` removes any legacy pre-commit or post-commit hooks that would block commits, rebases, or squashes.
+Git hooks are not installed by this repo; run `workspace:lint`, `workspace:format` and `workspace:test` (`bun run dashboard run workspace:lint`, …) explicitly before pushing. Choose `workspace:setup-git` in the dashboard to remove installed pre-commit or post-commit hooks that would block commits, rebases, or squashes.
 
 # 🏘️ Examples [↑](#-overview)
 

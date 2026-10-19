@@ -33,6 +33,18 @@ pub(super) fn substitute(text: &str, value: &dyn Fn(&str) -> Result<String, Stri
 pub(super) struct Scope<'a> { pub(super) file: &'a str, pub(super) at: String, pub(super) problems: &'a mut Vec<Problem> }
 
 impl Scope<'_> {
+    pub(super) fn localized(&mut self, name: &str, value: Option<&LocalizedText>) -> Option<LocalizedText> {
+        let value = value?;
+        if value.valid() { Some(value.clone()) } else { self.within(name).report("both en and de need non-whitespace single-line text of at most 1024 characters without terminal controls"); None }
+    }
+
+    pub(super) fn presentation(&mut self, entry: &mut Entry, title: Option<&LocalizedText>, description: Option<&LocalizedText>) {
+        entry.title = self.localized("title", title);
+        entry.description = self.localized("description", description);
+        entry.relabel();
+    }
+
+
     pub(super) fn report(&mut self, message: impl Into<String>) { self.problems.push(Problem { file: self.file.to_string(), at: self.at.clone(), message: message.into() }); }
     pub(super) fn within(&mut self, part: impl std::fmt::Display) -> Scope<'_> { Scope { file: self.file, at: if self.at.is_empty() { part.to_string() } else { format!("{}.{part}", self.at) }, problems: self.problems } }
     pub(super) fn text(&mut self, what: &str, value: &str) { if value.contains('\0') || is_absolute_literal(value) { self.report(format!("{what} {value:?} is an absolute path or carries a NUL; write `{{workspace}}/…`")); } }
@@ -102,6 +114,13 @@ impl Scope<'_> {
             if ["workspace", "port"].contains(&declaration.id.as_str()) { scope.report(format!("parameter id {:?} is a built-in token", declaration.id)); }
             if parameters.iter().any(|known| known.id == declaration.id) { scope.report(format!("parameter {:?} is declared twice", declaration.id)); }
             if declaration.applies_to.is_some() && origin != Origin::Axis { scope.report("`appliesTo` belongs to the global axes of the workspace root project"); }
+            if let Some(suggestions) = &declaration.suggestions {
+                if declaration.kind != ParameterKind::Text { scope.report("`suggestions` belongs to text parameters"); }
+                if suggestions.source == SuggestionSource::Projects && (suggestions.project_parameter.is_some() || suggestions.directory_parameter.is_some()) { scope.report("project suggestions have no related fields"); }
+                for related in [&suggestions.project_parameter, &suggestions.directory_parameter].into_iter().flatten() {
+                    if related == &declaration.id || !declarations.iter().any(|known| &known.id == related && known.kind == ParameterKind::Text) { scope.report(format!("suggestion field {related:?} must name another text parameter")); }
+                }
+            }
             let applies = declaration.applies_to.clone().unwrap_or_default();
             if declaration.applies_to.is_some() && applies.verbs.is_none() && applies.playground.is_none() { scope.report("`appliesTo` needs `verbs` or `playground`"); }
             if declaration.applies_to.is_some() && applies.verbs.is_none() && applies.playground == Some(false) { scope.report("`appliesTo` selects nothing"); }
@@ -109,7 +128,7 @@ impl Scope<'_> {
             if applies.verbs.as_ref().is_some_and(Vec::is_empty) { scope.report("`appliesTo.verbs` lists no verb"); }
             let forbid = |scope: &mut Scope<'_>, kind: &str, members: &[(&str, bool)]| for (name, present) in members { if *present { scope.report(format!("a {kind} has no `{name}`")); } };
             let (effects, values, destinations) = ([("env", declaration.env.is_some()), ("buildFlags", declaration.build_flags.is_some()), ("args", declaration.args.is_some())], [("values", declaration.values.is_some())], [("valueEnv", declaration.value_env.is_some()), ("valueFlag", declaration.value_flag.is_some()), ("valuePositional", declaration.value_positional.is_some())]);
-            let mut parameter = Parameter { id: declaration.id.clone(), kind: declaration.kind, origin, default: None, required: declaration.required.unwrap_or(false), values: Vec::new(), effect: Effect::default(), destination: Destination::Token, verbs: applies.verbs.clone(), playground: applies.playground.unwrap_or(false), scoped: declaration.applies_to.is_some() };
+            let mut parameter = Parameter { id: declaration.id.clone(), title: scope.localized("title", declaration.title.as_ref()), description: scope.localized("description", declaration.description.as_ref()), kind: declaration.kind, origin, default: None, required: declaration.required.unwrap_or(false), values: Vec::new(), effect: Effect::default(), destination: Destination::Token, suggestions: declaration.suggestions.clone(), verbs: applies.verbs.clone(), playground: applies.playground.unwrap_or(false), scoped: declaration.applies_to.is_some() };
             match declaration.kind {
                 ParameterKind::Choice => {
                     forbid(&mut scope, "choice", &effects); forbid(&mut scope, "choice", &destinations);

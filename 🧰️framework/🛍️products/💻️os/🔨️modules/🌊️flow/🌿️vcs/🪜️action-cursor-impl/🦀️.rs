@@ -217,7 +217,7 @@ fn flow_vcs_step_cursor(document: &mut FlowVcsDocument, operation: &mut FlowVcsO
     match operation.cursor.phase {
         FlowVcsCursorPhase::Scan => flow_vcs_step_scan(document.host_snapshot(), operation),
         FlowVcsCursorPhase::Mutate => flow_vcs_step_mutation(document, operation, grant),
-        FlowVcsCursorPhase::Shift => flow_vcs_step_shift(document.host_snapshot_mut(), operation),
+        FlowVcsCursorPhase::Shift => flow_vcs_step_shift(document, operation),
         FlowVcsCursorPhase::ReserveReplacement
         | FlowVcsCursorPhase::ReplaceSchema
         | FlowVcsCursorPhase::ReplaceCameraX

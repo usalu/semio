@@ -1,6 +1,7 @@
 {
   "nodes": null,
   "elements": {
+    "removed": [],
     "inserted": [
       {
         "index": 7,
@@ -14,7 +15,6 @@
         }
       }
     ],
-    "removed": [],
     "moved": [],
     "modified": []
   },

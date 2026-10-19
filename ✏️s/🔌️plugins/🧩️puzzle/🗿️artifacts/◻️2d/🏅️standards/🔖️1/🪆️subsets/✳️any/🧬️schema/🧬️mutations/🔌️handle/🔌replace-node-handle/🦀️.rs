@@ -1,5 +1,5 @@
-//! 🔌 Puzzle2d mutation — `ReplaceNodeHandle`: whole-value swap of one handle's presentation
 //! fields (kind/angle/radius/color/icon/scale/visible/locked together, one property-panel gesture).
+//! 🔌 Puzzle2d mutation — `ReplaceNodeHandle`: whole-value swap of one handle's presentation
 
 use semio_framework_value::paged::PagedUtf8;
 
@@ -30,23 +30,32 @@ pub fn replace_node_handle<Op: From<ReplaceNodeHandle>>(node_id: PagedUtf8<{ usi
 impl<Op> protocol::MutationKind<Puzzle2dSnapshot, Op> for ReplaceNodeHandle
 where
     Op: protocol::Mutation<Puzzle2dSnapshot, Diff = Puzzle2dDiff> + From<ReplaceNodeHandle>,
-{
+ {
+
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "node-handle", kind: "replace-node-handle", record: "ReplacedNodeHandle" };
 
-    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace handle \"{}\" on node \"{}\"", self.handle_id, self.node_id), &format!("Griff \"{}\" an Knoten \"{}\" ersetzen", self.handle_id, self.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node_id.to_string_owner(), self.handle_id.to_string_owner()]
     }
+
+}
+impl<Op> protocol::ColdMutationKind<Puzzle2dSnapshot, Op> for ReplaceNodeHandle
+where
+    Op: protocol::ColdMutation<Puzzle2dSnapshot, ReferenceDiff = Puzzle2dDiff> + From<ReplaceNodeHandle>,
+ {
+fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+        super::diff::diff(self, base)
+    }
+fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Mutation

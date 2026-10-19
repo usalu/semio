@@ -21,7 +21,14 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+default = ["deflate"]
+deflate = ["semio-framework-replication-codec/deflate"]
+
 [dependencies]
+semio-framework-pack-record-preflight = { path = "../../../🫳️preflight/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../../../🔏️hash/📦️packages/🦀️rust" }
+
 semio-framework-dsl-record = { path = "../../../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-pack-error = { path = "../../../../⚠️error/📦️packages/🦀️rust" }
 semio-framework-pack-format = { path = "../../../../📐️format/📦️packages/🦀️rust" }

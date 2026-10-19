@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "invalid-edit-receipt-keeps-returned-inverse",
+      "inverseRows": 1,
+      "expectedIssuerCalls": 2
+    }
+  ]
+}

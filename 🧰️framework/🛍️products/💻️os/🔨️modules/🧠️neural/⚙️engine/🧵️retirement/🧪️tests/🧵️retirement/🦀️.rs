@@ -268,6 +268,7 @@ fn body_dependent_birth_uses_the_same_borrowed_body_and_finite_progress() {
         fn controlled_retirement_supported()->bool {true}
     }
     impl RetirementCursor for BodyCursor {
+    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand { copy_bytes:usize::from(self.storage.is_none()&&!self.finished), capacity_bytes:if self.storage.is_none()&&!self.finished{self.overhead.checked_add(body).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"fixture body extent overflow"))?}else{0}, release_bytes:self.storage.as_ref().map_or(0,Vec::capacity), depth:usize::from(!self.terminal_is_empty()) })}
         fn close_step(&mut self,grant:RetainedCloneGrant)->TypedStep {
             if grant.maximum_items==0 {return TypedStep::BudgetExhausted;}
             if self.finished {return TypedStep::Complete;}

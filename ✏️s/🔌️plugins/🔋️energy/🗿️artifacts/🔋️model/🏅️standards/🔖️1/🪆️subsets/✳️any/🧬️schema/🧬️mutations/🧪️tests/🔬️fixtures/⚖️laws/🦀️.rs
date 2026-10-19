@@ -4,7 +4,7 @@ use super::case::{fixture_root, Case};
 use crate::diff::EnergyModelDiff;
 use crate::mutations::EnergyModelMutation;
 use crate::snapshot::EnergyModelSnapshot;
-use protocol::{Mutation, SemanticMutation};
+use protocol::{ColdMutation, Mutation, SemanticMutation};
 use semio_framework_value::ToValue;
 
 fn committed_document(case: &Case, label: &str, text: &str) -> semio_framework_pack_json::Value {
@@ -18,7 +18,7 @@ fn decode(case: &Case, label: &str, text: &str) -> EnergyModelSnapshot {
 fn built(case: &Case) -> protocol::MutationOutcome<EnergyModelDiff> {
     let base = decode(case, "before-snapshot", case.before.as_str());
     let mutation: EnergyModelMutation = semio_framework_pack_json::from_json_str(case.mutation.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed mutation payload decodes");
-    <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::diff(&mutation, &base)
+    <EnergyModelMutation as ColdMutation<EnergyModelSnapshot>>::diff(&mutation, &base)
 }
 
 fn level_name(level: semio_framework_diagnostic::Severity) -> &'static str {
@@ -70,8 +70,8 @@ pub fn write_when_requested(case: &Case) {
         return;
     }
     let (before, mutation) = (case.scenario)();
-    let outcome = <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::diff(&mutation, &before);
-    let after = protocol::apply_diff(outcome.diff(), &before).expect("the scenario's forward diff applies");
+    let outcome = <EnergyModelMutation as ColdMutation<EnergyModelSnapshot>>::diff(&mutation, &before);
+    let after = protocol::apply_diff_cold(outcome.diff(), &before).expect("the scenario's forward diff applies");
     let root = fixture_root().join(case.directory);
     let json = |value: semio_framework_pack_json::Value| semio_framework_pack_json::to_string_pretty(&value);
     write_file(root.join("📸️snapshot/⬅️before/🔣️.json"), &json(semio_framework_pack_json::from_dsl_value(&before.to_value())));
@@ -95,7 +95,7 @@ pub fn committed(case: &Case) -> (EnergyModelSnapshot, EnergyModelMutation) {
 /// after-snapshot exactly, composed child handles included.
 pub fn assert_forward(case: &Case) {
     let base = decode(case, "before-snapshot", case.before.as_str());
-    let applied = protocol::apply_diff(built(case).diff(), &base).expect("committed mutation applies to its committed before-snapshot");
+    let applied = protocol::apply_diff_cold(built(case).diff(), &base).expect("committed mutation applies to its committed before-snapshot");
     assert_eq!(applied, decode(case, "after-snapshot", case.after.as_str()), "{}/{}: the applied document is not the committed after-snapshot", case.kind, case.directory);
     assert_eq!((applied.structure.child_id.as_str(), applied.zones.child_id.as_str()), (base.structure.child_id.as_str(), base.zones.child_id.as_str()), "{}/{}: structure and zones must stay one scene", case.kind, case.directory);
 }
@@ -108,11 +108,11 @@ pub fn assert_forward(case: &Case) {
 pub fn assert_inverse(case: &Case) {
     let base = decode(case, "before-snapshot", case.before.as_str());
     let mutation: EnergyModelMutation = semio_framework_pack_json::from_json_str(case.mutation.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed mutation payload decodes");
-    let mut snapshot = protocol::apply_diff(built(case).diff(), &base).expect("committed mutation applies");
-    for step in <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
-        let outcome = <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::diff(&step, &snapshot);
+    let mut snapshot = protocol::apply_diff_cold(built(case).diff(), &base).expect("committed mutation applies");
+    for step in <EnergyModelMutation as ColdMutation<EnergyModelSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+        let outcome = <EnergyModelMutation as ColdMutation<EnergyModelSnapshot>>::diff(&step, &snapshot);
         assert!(!outcome.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error), "{}/{}: an inverse step was itself refused", case.kind, case.directory);
-        snapshot = protocol::apply_diff(outcome.diff(), &snapshot).expect("the inverse step applies");
+        snapshot = protocol::apply_diff_cold(outcome.diff(), &snapshot).expect("the inverse step applies");
     }
     assert_eq!(snapshot, base, "{}/{}: undoing did not land back on the committed before-snapshot", case.kind, case.directory);
 }
@@ -175,7 +175,7 @@ pub fn assert_diff_canonical(case: &Case) {
 /// 🩹 The committed delta ALONE carries the before-document to the after-document.
 pub fn assert_diff_applies(case: &Case) {
     let decoded: EnergyModelDiff = semio_framework_pack_json::from_json_str(case.diff.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &decode(case, "before-snapshot", case.before.as_str())).expect("committed diff applies to the before-document");
+    let produced = protocol::apply_diff_cold(&decoded, &decode(case, "before-snapshot", case.before.as_str())).expect("committed diff applies to the before-document");
     assert_eq!(produced, decode(case, "after-snapshot", case.after.as_str()), "{}/{}: the committed diff did not carry before to after", case.kind, case.directory);
 }
 
@@ -214,9 +214,9 @@ pub async fn assert_laws(case: &Case) {
     }
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
-    let after = protocol::apply_diff(&first, &base).expect("the committed forward diff applies");
-    let undo = <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").pop();
-    let second = undo.map_or_else(EnergyModelDiff::default, |step| <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::diff(&step, &after).diff().clone());
+    let after = protocol::apply_diff_cold(&first, &base).expect("the committed forward diff applies");
+    let undo = <EnergyModelMutation as ColdMutation<EnergyModelSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").pop();
+    let second = undo.map_or_else(EnergyModelDiff::default, |step| <EnergyModelMutation as ColdMutation<EnergyModelSnapshot>>::diff(&step, &after).diff().clone());
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, first, second).await;
 }
 

@@ -116,6 +116,7 @@ impl ArtifactPreparedOperationsOwner {
 }
 
 impl ErasedSnapshotRetirement for ArtifactPreparedOperationsOwner {
+    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.retirement_demands()}
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.retirement_demands()?.copy_bytes)}
  fn next_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}
  fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.retirement_demands()?.release_bytes)}

@@ -1,0 +1,24 @@
+{
+  "topics": ["energy", "parametric", "grasshopper", "excel", "bim", "optimization"],
+  "follow": [
+    { "run": "r1", "following": false, "expected": "question-heating-systems" },
+    { "run": "r2", "following": true, "expected": "question-cooling-air" },
+    { "run": "r1", "following": false, "expected": "question-heating-systems" }
+  ],
+  "cases": [
+    { "step": { "screen": "home" }, "expected": "home" },
+    { "step": { "screen": "home", "page": "quizzes" }, "expected": "home" },
+    { "step": { "screen": "home", "page": "energy" }, "expected": "topic-energy" },
+    { "step": { "screen": "home", "page": "parametric" }, "expected": "topic-parametric" },
+    { "step": { "screen": "home", "page": "grasshopper" }, "expected": "topic-grasshopper" },
+    { "step": { "screen": "home", "page": "excel" }, "expected": "topic-excel" },
+    { "step": { "screen": "home", "page": "bim" }, "expected": "topic-bim" },
+    { "step": { "screen": "home", "page": "optimization" }, "expected": "topic-optimization" },
+    { "step": { "screen": "home", "page": "heating" }, "expected": "heating" },
+    { "step": { "screen": "run", "run": "r1" }, "expected": "heating" },
+    { "step": { "screen": "run", "run": "r1" }, "question": "systems", "expected": "question-heating-systems" },
+    { "step": { "screen": "run", "run": "r2" }, "question": "air", "expected": "question-cooling-air" },
+    { "step": { "screen": "results", "run": "r1" }, "question": "systems", "expected": "heating" },
+    { "step": { "screen": "results", "run": "r2" }, "expected": "cooling" }
+  ]
+}

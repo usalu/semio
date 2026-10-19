@@ -409,6 +409,88 @@
         0
       ],
       "dropped": 1
+    },
+    {
+      "name": "aggregate-bounded-rows",
+      "editId": "aggregate-edit",
+      "rows": [
+        {
+          "level": 1,
+          "text": "0",
+          "repeat": 512,
+          "targets": []
+        },
+        {
+          "level": 1,
+          "text": "1",
+          "repeat": 512,
+          "targets": []
+        },
+        {
+          "level": 1,
+          "text": "2",
+          "repeat": 512,
+          "targets": []
+        },
+        {
+          "level": 1,
+          "text": "3",
+          "repeat": 512,
+          "targets": []
+        },
+        {
+          "level": 1,
+          "text": "4",
+          "repeat": 512,
+          "targets": []
+        },
+        {
+          "level": 1,
+          "text": "5",
+          "repeat": 512,
+          "targets": []
+        },
+        {
+          "level": 1,
+          "text": "6",
+          "repeat": 512,
+          "targets": []
+        },
+        {
+          "level": 1,
+          "text": "7",
+          "repeat": 512,
+          "targets": []
+        }
+      ],
+      "expectedKept": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "dropped": 2
     }
-  ]
+  ],
+  "publication": {
+    "sourceKinds": [
+      "paged",
+      "vector"
+    ],
+    "owners": [
+      "original",
+      "independent-report"
+    ],
+    "selection": "same-stable-severity-policy",
+    "context": "actual-edit-identity",
+    "terminalSourceCapacity": 0,
+    "copyBeforeSelection": false,
+    "reservation": "min(originalRows,retainedRows)",
+    "copyableCases": [
+      "unchanged",
+      "aggregate-bounded-rows"
+    ]
+  }
 }

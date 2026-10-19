@@ -1,9 +1,10 @@
-//! 📚 Puzzle5d mutation — `ReplaceKindCatalogs`: whole-value swap of the fixture-carried typed
 //! kind-catalog bundle (`parts`/`grips`/`fasteners`/`ropes` catalogs together, one manifest-import
+//! 📚 Puzzle5d mutation — `ReplaceKindCatalogs`: whole-value swap of the fixture-carried typed
 //! gesture).
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::{Puzzle5dSnapshot};
-use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dKindCatalogs};
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dKindCatalogs;
+
 
 //#region 🔖️Mutation
 /// 📚 `replace-kind-catalogs` payload — `None` clears the catalogs.
@@ -32,6 +33,14 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "kind-catalogs", kind: "replace-kind-catalogs", record: "ReplacedKindCatalogs" };
 
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace kind catalogs", "Artkataloge ersetzen")
+    }
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ReplaceKindCatalogs {
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
@@ -41,8 +50,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace kind catalogs", "Artkataloge ersetzen")
-    }
 }
 //#endregion 🔖️Mutation

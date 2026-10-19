@@ -456,6 +456,10 @@ message EnergyPvSystemPatch {
   optional double azimuth_deg = 5;
   optional double module_efficiency = 6;
   optional double inverter_efficiency = 7;
+  optional double temperature_coefficient = 8;
+  optional double faiman_heat_loss_constant_w_m2k = 9;
+  optional double faiman_heat_loss_wind_w_s_m3k = 10;
+  optional string mounting = 11;
 }
 
 message EnergyPvSystemRows {

@@ -455,6 +455,10 @@ type EnergyPvSystemPatch {
   azimuth_deg: Float
   module_efficiency: Float
   inverter_efficiency: Float
+  temperature_coefficient: Float
+  faiman_heat_loss_constant_w_m2k: Float
+  faiman_heat_loss_wind_w_s_m3k: Float
+  mounting: String
 }
 
 type EnergyPvSystemRows {

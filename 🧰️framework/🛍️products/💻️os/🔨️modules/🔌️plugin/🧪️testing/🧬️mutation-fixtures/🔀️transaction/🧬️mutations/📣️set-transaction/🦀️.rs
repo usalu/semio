@@ -42,12 +42,8 @@ impl OpBinary for SetTransactionCountAndNotify {
 }
 impl MutationKind<TxnSnapshot, TxnMutation> for SetTransactionCountAndNotify {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "transaction-count-and-notify", kind: "set-transaction-count-and-notify", record: "SetTransactionCountAndNotify" };
-    fn diff(&self, _: &TxnSnapshot) -> MutationOutcome<TxnDiff> {
-        MutationOutcome::new(TxnDiff { count: Some(self.value) })
-    }
-    fn inverse(&self, base: &TxnSnapshot) -> Result<Vec<TxnMutation>, semio_framework_value::ValueError> {
-        Ok((|| vec![SetTransactionCount { value: base.count }.into()])())
-    }
+
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set transaction count and notify to {}", self.value), &format!("Transaktionsanzahl und Benachrichtigung auf {} setzen", self.value))
     }
@@ -58,4 +54,20 @@ impl MutationKind<TxnSnapshot, TxnMutation> for SetTransactionCountAndNotify {
         true
     }
 }
+
+impl crate::os_spr::ColdMutationKind<TxnSnapshot, TxnMutation> for SetTransactionCountAndNotify {
+    fn diff(&self, _: &TxnSnapshot) -> MutationOutcome<TxnDiff> {
+        MutationOutcome::new(TxnDiff { count: Some(self.value) })
+    }
+    fn inverse(&self, base: &TxnSnapshot) -> Result<Vec<TxnMutation>, semio_framework_value::ValueError> {
+        Ok((|| vec![SetTransactionCount { value: base.count }.into()])())
+    }
+    fn foreign_step_source<'a>(&'a self, _: &'a TxnSnapshot, index: usize) -> Result<Option<protocol::ForeignStepSource<'a>>, semio_framework_value::ValueError> {
+        Ok((index == 0).then_some(protocol::ForeignStepSource { artifact_id: "peer-doc", artifact_kind: "s.testkit.txn", dialect: None, mutation_id: "semio.testkit-txn/v1#notify", payload: &[], label: "notify" }))
+    }
+}
 use crate::testing_laws_unit_1::mutation_fixture::transaction::mutations::set_transaction_count::SetTransactionCount;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️sum-law/🦀️.rs"]
+mod sum_law_tests;

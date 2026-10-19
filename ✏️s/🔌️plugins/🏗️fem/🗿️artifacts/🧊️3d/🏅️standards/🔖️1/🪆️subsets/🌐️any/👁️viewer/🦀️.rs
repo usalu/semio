@@ -1,5 +1,5 @@
-//! 👁️ FEM 3D viewer — the read-only counterpart of `✏️editor` for this subset (ticket
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.2). `Fem3dViewer` implements
+//! 👁️ FEM 3D viewer — the read-only counterpart of `✏️editor` for this subset (ticket
 //! `ArtifactViewer`, never `ArtifactEditor`/`ArtifactApp` — `ViewerApp<Fem3dViewer>` (framework SDK) is
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
@@ -67,32 +67,32 @@ impl ArtifactViewer for Fem3dViewer {
     }
 
     fn mounted_job_maintenance_demands(instance_id: u32, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::close_demands(instance_id))
+        semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::close_demands(instance_id)
     }
 
     fn mounted_job_close_demands(instance_id: u32, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::close_demands(instance_id))
+        semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::close_demands(instance_id)
     }
 
     fn mounted_job_maintenance_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_plugin::PluginLifecycleFailure> {
-        Ok(semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::maintenance_step(instance_id, cx, grant))
+        semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::maintenance_step(instance_id, cx, grant)
     }
 
     fn mounted_job_close_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_plugin::PluginLifecycleFailure> {
-        Ok(semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::close_step(instance_id, cx, grant))
+        semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::close_step(instance_id, cx, grant)
     }
 
     fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
         semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::terminal_is_empty(instance_id)
     }
 
-    fn mounted_job_prepare_snapshot_read(operation: semio_framework_plugin::AppRenderOperationContext, snapshot: &Self::Snapshot) -> bool {
-        semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::prepare_snapshot_read(operation, snapshot)
+    fn mounted_job_prepare_snapshot_read(operation: semio_framework_plugin::AppRenderOperationContext, snapshot: &Self::Snapshot, windows: &semio_framework_plugin::WindowConfigOwnerRegistry, view: Option<&semio_framework_plugin::ViewModel>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_plugin::MountedSnapshotReadPreparation {
+        crate::live_visual::prepare_snapshot_read(operation, snapshot, windows, view, grant)
     }
 
     /// 👁️ Real, non-empty default scene: the artifact's own shared boot document (the bundled `default`
     /// example DSL), the very same one `Fem3dPlayApp::initial_snapshot` boots — see
-    /// `crate::standards::v1::subsets::any::io::fem3d_boot_snapshot`.
+    /// `semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::fem3d_boot_snapshot`.
     fn initial_snapshot() -> Fem3dSnapshot {
         let snapshot = semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot();
         eprintln!("[TRACE] fem3d viewer boot snapshot: nodes={} elements={} solids={}", snapshot.nodes.len(), snapshot.elements.len(), snapshot.solids.len());
@@ -114,8 +114,8 @@ impl ArtifactViewer for Fem3dViewer {
         Ok(ViewEmit::default())
     }
 
-    fn pending_effects(_owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view: Option<&semio_framework_plugin::ViewModel>) -> Vec<semio_framework::kernel::Effect> {
-        semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::reconcile(doc)
+    fn pending_effects(_owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_framework_plugin::ArtifactPendingView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view: Option<&semio_framework_plugin::ViewModel>) -> Vec<semio_framework::kernel::Effect> {
+        crate::live_visual::reconcile(doc)
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {

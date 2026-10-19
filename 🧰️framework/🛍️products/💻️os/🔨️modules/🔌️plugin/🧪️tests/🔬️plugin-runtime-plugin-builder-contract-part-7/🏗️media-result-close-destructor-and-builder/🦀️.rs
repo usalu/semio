@@ -81,7 +81,7 @@
         assert_eq!(error.code.0, "interactive-job.not-ui-safe", "a verb with no proof is a verb that was never migrated, and the backstop names the cause");
         assert_eq!(app.stores.test_snapshot().await.count, 0, "the over-budget reducer never started");
         artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -127,6 +127,6 @@
         assert_eq!(owner.store.local_actor_id(), &actor, "reload retains the opened actor");
         assert!(bundle.create_app("unknown-app", actor, mounted_policy, &mut identity).is_none());
         artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }

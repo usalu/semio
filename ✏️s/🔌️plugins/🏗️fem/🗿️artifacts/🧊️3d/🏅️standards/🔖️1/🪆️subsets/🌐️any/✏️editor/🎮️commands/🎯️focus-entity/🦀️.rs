@@ -1,13 +1,21 @@
 //! 🎯️ Fem3d play app command — `focus-entity`: aims the addressed window's orbit at one entity.
 
-use crate::editor::fem3d::commands::set_camera::{self, SetCamera};
+use crate::editor::fem3d::commands::set_camera::self;
+
+use crate::editor::fem3d::commands::set_camera::SetCamera;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_point;
 use semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model;
 use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_framework_os_kernel::Viewport3dOrbit;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 
 type Fem3dSnapshot = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 

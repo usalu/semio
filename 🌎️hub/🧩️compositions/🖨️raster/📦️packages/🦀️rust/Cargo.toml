@@ -16,11 +16,11 @@ role = "hub"
 path = "🦀️.rs"
 
 [dependencies]
+semio-s-artifact-raster-raster-viewer = { path = "../../../../../✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust" }
+semio-s-artifact-raster-raster-editor = { path = "../../../../../✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-raster-raster = { workspace = true }
-semio-s-artifact-raster-raster-editor = { workspace = true }
-semio-s-artifact-raster-raster-viewer = { workspace = true }
 semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-s-artifact-stdio-bmp = { workspace = true }
 semio-s-artifact-stdio-dwg = { workspace = true }

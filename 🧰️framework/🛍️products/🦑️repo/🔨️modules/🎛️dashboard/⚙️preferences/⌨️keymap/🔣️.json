@@ -2,46 +2,421 @@
   "$schema": "../../🧬️schema/⚙️preferences/⌨️keymap/🔣️.json",
   "prefix": "ctrl+b",
   "bindings": [
-    { "scope": "prefix", "action": "new-task", "keys": ["n"] },
-    { "scope": "prefix", "action": "show-tasks", "keys": ["h"] },
-    { "scope": "prefix", "action": "show-settings", "keys": ["p"] },
-    { "scope": "prefix", "action": "show-help", "keys": ["?"] },
-    { "scope": "prefix", "action": "show-hidden-tasks", "keys": ["s"] },
-    { "scope": "prefix", "action": "refresh-commands", "keys": ["f"] },
-    { "scope": "prefix", "action": "cancel-discovery", "keys": ["e"] },
-    { "scope": "prefix", "action": "restart-task", "keys": ["r"] },
-    { "scope": "prefix", "action": "stop-task", "keys": ["c"] },
-    { "scope": "prefix", "action": "kill-task", "keys": ["k"] },
-    { "scope": "prefix", "action": "copy-selection", "keys": ["y"] },
-    { "scope": "prefix", "action": "search-output", "keys": ["/"] },
-    { "scope": "prefix", "action": "toggle-input", "keys": ["t"] },
-    { "scope": "prefix", "action": "toggle-appearance", "keys": ["a"] },
-    { "scope": "prefix", "action": "toggle-language", "keys": ["l"] },
-    { "scope": "prefix", "action": "next-window", "keys": ["]", "o"] },
-    { "scope": "prefix", "action": "previous-window", "keys": ["[", "O"] },
-    { "scope": "prefix", "action": "split-down", "keys": ["-"] },
-    { "scope": "prefix", "action": "split-right", "keys": ["|", "v"] },
-    { "scope": "prefix", "action": "grow-window", "keys": ["+"] },
-    { "scope": "prefix", "action": "shrink-window", "keys": ["_"] },
-    { "scope": "prefix", "action": "zoom", "keys": ["z"] },
-    { "scope": "prefix", "action": "close-window", "keys": ["x"] },
-    { "scope": "prefix", "action": "detach", "keys": ["d"] },
-    { "scope": "prefix", "action": "shutdown", "keys": ["Q"] },
-    { "scope": "prefix", "action": "cancel-prefix", "keys": ["esc"] },
-    { "scope": "window", "action": "next-window", "keys": ["tab"] },
-    { "scope": "window", "action": "previous-window", "keys": ["backtab"] },
-    { "scope": "window", "action": "close-window", "keys": ["ctrl+w"] },
-    { "scope": "view", "action": "up", "keys": ["up"] },
-    { "scope": "view", "action": "down", "keys": ["down"] },
-    { "scope": "view", "action": "left", "keys": ["left"] },
-    { "scope": "view", "action": "right", "keys": ["right"] },
-    { "scope": "view", "action": "page-up", "keys": ["pageup"] },
-    { "scope": "view", "action": "page-down", "keys": ["pagedown"] },
-    { "scope": "view", "action": "activate", "keys": ["enter"] },
-    { "scope": "view", "action": "first", "keys": ["home"] },
-    { "scope": "view", "action": "last", "keys": ["end"] },
-    { "scope": "view", "action": "clear", "keys": ["ctrl+u"] },
-    { "scope": "view", "action": "delete-word", "keys": ["alt+backspace"] },
-    { "scope": "view", "action": "back", "keys": ["esc"] }
+    {
+      "scope": "prefix",
+      "action": "new-task",
+      "keys": [
+        "n"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "show-tasks",
+      "keys": [
+        "h"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "show-settings",
+      "keys": [
+        "p"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "show-help",
+      "keys": [
+        "?"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "show-hidden-tasks",
+      "keys": [
+        "s"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "refresh-commands",
+      "keys": [
+        "f"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "cancel-discovery",
+      "keys": [
+        "e"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "restart-task",
+      "keys": [
+        "r"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "stop-task",
+      "keys": [
+        "c"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "kill-task",
+      "keys": [
+        "k"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "open-ready",
+      "keys": [
+        "u"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "cancel-open-ready",
+      "keys": [
+        "U"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "copy-selection",
+      "keys": [
+        "y"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "search-output",
+      "keys": [
+        "/"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "toggle-input",
+      "keys": [
+        "t"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "toggle-appearance",
+      "keys": [
+        "a"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "toggle-language",
+      "keys": [
+        "l"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "next-window",
+      "keys": [
+        "]",
+        "o"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "previous-window",
+      "keys": [
+        "[",
+        "O"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "split-down",
+      "keys": [
+        "-"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "split-right",
+      "keys": [
+        "|",
+        "v"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "dock-left",
+      "keys": [
+        "ctrl+left"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "dock-right",
+      "keys": [
+        "ctrl+right"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "dock-top",
+      "keys": [
+        "ctrl+up"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "dock-bottom",
+      "keys": [
+        "ctrl+down"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "tab-top-left",
+      "keys": [
+        "alt+1"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "tab-top-right",
+      "keys": [
+        "alt+2"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "tab-bottom-left",
+      "keys": [
+        "alt+3"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "tab-bottom-right",
+      "keys": [
+        "alt+4"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "join-window",
+      "keys": [
+        "m"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "tab-left",
+      "keys": [
+        "shift+left"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "tab-right",
+      "keys": [
+        "shift+right"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "grow-window",
+      "keys": [
+        "+"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "shrink-window",
+      "keys": [
+        "_"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "zoom",
+      "keys": [
+        "z"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "close-window",
+      "keys": [
+        "x"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "detach",
+      "keys": [
+        "d"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "shutdown",
+      "keys": [
+        "Q"
+      ]
+    },
+    {
+      "scope": "prefix",
+      "action": "cancel-prefix",
+      "keys": [
+        "esc"
+      ]
+    },
+    {
+      "scope": "window",
+      "action": "next-window",
+      "keys": [
+        "tab"
+      ]
+    },
+    {
+      "scope": "window",
+      "action": "previous-window",
+      "keys": [
+        "backtab"
+      ]
+    },
+    {
+      "scope": "window",
+      "action": "close-window",
+      "keys": [
+        "ctrl+w"
+      ]
+    },
+    {
+      "scope": "view",
+      "action": "up",
+      "keys": [
+        "up"
+      ]
+    },
+    {
+      "scope": "view",
+      "action": "down",
+      "keys": [
+        "down"
+      ]
+    },
+    {
+      "scope": "view",
+      "action": "left",
+      "keys": [
+        "left"
+      ]
+    },
+    {
+      "scope": "view",
+      "action": "right",
+      "keys": [
+        "right"
+      ]
+    },
+    {
+      "scope": "view",
+      "action": "page-up",
+      "keys": [
+        "pageup"
+      ]
+    },
+    {
+      "scope": "view",
+      "action": "page-down",
+      "keys": [
+        "pagedown"
+      ]
+    },
+    {
+      "scope": "view",
+      "action": "activate",
+      "keys": [
+        "enter"
+      ]
+    },
+    {
+      "scope": "view",
+      "action": "first",
+      "keys": [
+        "home"
+      ]
+    },
+    {
+      "scope": "view",
+      "action": "last",
+      "keys": [
+        "end"
+      ]
+    },
+    {
+      "scope": "view",
+      "action": "clear",
+      "keys": [
+        "ctrl+u"
+      ]
+    },
+    {
+      "scope": "view",
+      "action": "delete-word",
+      "keys": [
+        "alt+backspace"
+      ]
+    },
+    {
+      "scope": "view",
+      "action": "back",
+      "keys": [
+        "esc"
+      ]
+    },
+    {
+      "scope": "view",
+      "action": "suggest-previous",
+      "keys": [
+        "alt+up"
+      ]
+    },
+    {
+      "scope": "view",
+      "action": "suggest-next",
+      "keys": [
+        "alt+down"
+      ]
+    },
+    {
+      "scope": "view",
+      "action": "suggest-accept",
+      "keys": [
+        "alt+enter"
+      ]
+    },
+    {
+      "scope": "view",
+      "action": "suggest-refresh",
+      "keys": [
+        "ctrl+r"
+      ]
+    },
+    {
+      "scope": "view",
+      "action": "suggest-cancel",
+      "keys": [
+        "ctrl+g"
+      ]
+    }
   ]
 }

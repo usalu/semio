@@ -85,8 +85,6 @@
     "../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
     "../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust",
     "../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust",
-    "../🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript",
-    "../🧰️framework/🛍️products/❓️quiz/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react",
     "../🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript",
@@ -292,7 +290,9 @@
     "🧑‍💻dev/🧩️catalog/📦️packages/🟦️typescript",
     "🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript",
     "🧑‍💻dev/🧱️block/📦️packages/🟦️typescript",
-    "🧑‍💻dev/🪐️space/📦️packages/🟦️typescript"
+    "🧑‍💻dev/🪐️space/📦️packages/🟦️typescript",
+    "../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+    "../🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript"
   ],
   "semio": {
     "workspace": {

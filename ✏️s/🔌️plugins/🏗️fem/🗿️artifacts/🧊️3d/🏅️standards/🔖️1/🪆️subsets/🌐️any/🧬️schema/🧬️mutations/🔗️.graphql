@@ -1,14 +1,197 @@
-# 🧬️ Fem3d mutation schema — artifact-lane fields only.
+# 🧬️ Typed Fem3d mutation payloads and their discriminated union.
+scalar Binary64
 
-type Fem3dMutation {
-  nodes: [FemNode!]! @state(class: ARTIFACT)
-  elements: [FemElement!]! @state(class: ARTIFACT)
-  materials: [FemMaterial!]! @state(class: ARTIFACT)
-  sections: [FemSection!]! @state(class: ARTIFACT)
-  solids: [FemSolid!]! @state(class: ARTIFACT)
-  supports: [FemSupport!]! @state(class: ARTIFACT)
-  loadCases: [FemLoadCase!]! @state(class: ARTIFACT)
-  combinations: [FemCombination!]! @state(class: ARTIFACT)
-  analysis: FemAnalysisSettings! @state(class: ARTIFACT)
+union Fem3dMutation = Fem3dCreateNode | Fem3dDeleteNode | Fem3dCreateElement | Fem3dDeleteElement | Fem3dReplaceElement | Fem3dCreateMaterial | Fem3dDeleteMaterial | Fem3dReplaceMaterial | Fem3dChangeMaterial | Fem3dCreateSection | Fem3dDeleteSection | Fem3dReplaceSection | Fem3dCreateSupport | Fem3dDeleteSupport | Fem3dReplaceSupport | Fem3dCreateSolid | Fem3dDeleteSolid | Fem3dReplaceSolid | Fem3dCreateLoadCase | Fem3dDeleteLoadCase | Fem3dAddLoad | Fem3dRemoveLoad | Fem3dChangeLoadCaseSelfWeight | Fem3dCreateCombination | Fem3dDeleteCombination | Fem3dUpdateAnalysisSettings | Fem3dReplaceNode | Fem3dReplaceLoad | Fem3dChangeLoadCaseName | Fem3dReplaceCombination | Fem3dMoveSelection | Fem3dChangeNode | Fem3dChangeSection | Fem3dChangeSolid | Fem3dChangeSupport | Fem3dChangeElement | Fem3dChangeLoad | Fem3dChangeCombinationName | Fem3dChangeCombinationTerm
+
+type Fem3dCreateNode {
+  node: FemNode!
+  index: Int
 }
 
+type Fem3dDeleteNode {
+  id: String!
+}
+
+type Fem3dCreateElement {
+  element: FemElement!
+  index: Int
+}
+
+type Fem3dDeleteElement {
+  id: String!
+}
+
+type Fem3dReplaceElement {
+  id: String!
+  newElement: FemElement!
+}
+
+type Fem3dCreateMaterial {
+  material: FemMaterial!
+  index: Int
+}
+
+type Fem3dDeleteMaterial {
+  id: String!
+}
+
+type Fem3dReplaceMaterial {
+  id: String!
+  newMaterial: FemMaterial!
+}
+
+type Fem3dChangeMaterial {
+  id: String!
+  patch: Fem3dMaterialPatch!
+}
+
+type Fem3dCreateSection {
+  section: FemSection!
+  index: Int
+}
+
+type Fem3dDeleteSection {
+  id: String!
+}
+
+type Fem3dReplaceSection {
+  id: String!
+  newSection: FemSection!
+}
+
+type Fem3dCreateSupport {
+  support: FemSupport!
+  index: Int
+}
+
+type Fem3dDeleteSupport {
+  id: String!
+}
+
+type Fem3dReplaceSupport {
+  id: String!
+  newSupport: FemSupport!
+}
+
+type Fem3dCreateSolid {
+  solid: FemSolid!
+  index: Int
+}
+
+type Fem3dDeleteSolid {
+  id: String!
+}
+
+type Fem3dReplaceSolid {
+  id: String!
+  newSolid: FemSolid!
+}
+
+type Fem3dCreateLoadCase {
+  loadCase: FemLoadCase!
+  index: Int
+}
+
+type Fem3dDeleteLoadCase {
+  id: String!
+}
+
+type Fem3dAddLoad {
+  caseId: String!
+  load: FemLoad!
+  index: Int
+}
+
+type Fem3dRemoveLoad {
+  caseId: String!
+  loadId: String!
+}
+
+type Fem3dChangeLoadCaseSelfWeight {
+  caseId: String!
+  newSelfWeight: Boolean!
+}
+
+type Fem3dCreateCombination {
+  combination: FemCombination!
+  index: Int
+}
+
+type Fem3dDeleteCombination {
+  id: String!
+}
+
+type Fem3dUpdateAnalysisSettings {
+  settings: FemAnalysisSettings!
+}
+
+type Fem3dReplaceNode {
+  id: String!
+  newNode: FemNode!
+}
+
+type Fem3dReplaceLoad {
+  caseId: String!
+  loadId: String!
+  newLoad: FemLoad!
+}
+
+type Fem3dChangeLoadCaseName {
+  caseId: String!
+  newName: String!
+}
+
+type Fem3dReplaceCombination {
+  id: String!
+  newCombination: FemCombination!
+}
+
+type Fem3dMoveSelection {
+  nodeIds: [String!]!
+  solidIds: [String!]!
+  pivotX: Binary64!
+  pivotY: Binary64!
+  pivotZ: Binary64!
+  dx: Binary64!
+  dy: Binary64!
+  dz: Binary64!
+  axisX: Binary64!
+  axisY: Binary64!
+  axisZ: Binary64!
+  angle: Binary64!
+  sx: Binary64!
+  sy: Binary64!
+  sz: Binary64!
+}
+
+
+type Fem3dChangeNode {
+  id: String!
+  patch: Fem3dNodePatch!
+}
+
+type Fem3dChangeSection {
+  id: String!
+  patch: Fem3dSectionPatch!
+}
+
+type Fem3dChangeSolid {
+  id: String!
+  patch: Fem3dSolidPatch!
+}
+
+type Fem3dChangeSupport {
+  id: String!
+  patch: Fem3dSupportPatch!
+}
+
+type Fem3dChangeElement {
+  id: String!
+  patch: Fem3dElementPatch!
+}
+
+type Fem3dChangeLoad { caseId: String! id: String! patch: Fem3dLoadPatch! }
+type Fem3dChangeCombinationName { id: String! name: String! }
+"""⚖️ Required owned numeric factor or explicit removal marker."""
+type Fem3dCombinationFactor { value: Binary64 remove: Boolean }
+type Fem3dChangeCombinationTerm { id: String! caseId: String! factor: Fem3dCombinationFactor! }

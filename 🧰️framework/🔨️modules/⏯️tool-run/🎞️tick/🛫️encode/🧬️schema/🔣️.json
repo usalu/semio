@@ -5,7 +5,10 @@
   "required": [
     "counts",
     "payloadBytes",
-    "grant"
+    "grant",
+    "outputQuantum",
+    "metadataFunding",
+    "streamingCase"
   ],
   "properties": {
     "counts": {
@@ -34,7 +37,7 @@
           "const": 1
         },
         "maximumCopyBytes": {
-          "const": 17
+          "const": 4096
         },
         "maximumCapacityBytes": {
           "const": 4096
@@ -44,6 +47,40 @@
         },
         "maximumDepth": {
           "const": 64
+        }
+      }
+    },
+    "outputQuantum": {
+      "const": 64
+    },
+    "metadataFunding": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 6,
+      "maxItems": 6
+    },
+    "streamingCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumCopyBytes",
+        "nativeColumnBytes",
+        "expectedChunks"
+      ],
+      "properties": {
+        "maximumCopyBytes": {
+          "const": 17
+        },
+        "nativeColumnBytes": {
+          "const": 32
+        },
+        "expectedChunks": {
+          "const": [
+            17,
+            15
+          ]
         }
       }
     }

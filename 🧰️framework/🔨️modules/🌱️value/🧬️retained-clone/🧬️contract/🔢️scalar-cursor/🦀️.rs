@@ -25,7 +25,7 @@ where
         if self.closing||self.spent{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"scalar clone cannot quote a closing or spent owner"));}
         Ok(if self.source.is_none(){crate::RetirementDemand{copy_bytes:source.binding_copy_bytes().max(size_of::<T>()),depth:1,..Default::default()}}else if self.value.is_none(){crate::RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()}}else{Default::default()})
     }
-    fn advance(&mut self, source: RetainedCloneRef<'_, T>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+    fn advance(&mut self, source: RetainedCloneRef<'_, T>, body: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if self.closing {
             return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained scalar clone cursor is closing"));
         }

@@ -6,7 +6,8 @@
   "required": [
     "cases",
     "currency",
-    "bindingIdentity"
+    "bindingIdentity",
+    "closeQuery"
   ],
   "properties": {
     "cases": {
@@ -127,6 +128,51 @@
         },
         "differentOrigin": {
           "const": false
+        }
+      }
+    },
+    "closeQuery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "callers"
+      ],
+      "properties": {
+        "method": {
+          "const": "next_close_demand"
+        },
+        "callers": {
+          "type": "array",
+          "minItems": 10,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "calls",
+              "owner"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "calls": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 2
+              },
+              "owner": {
+                "enum": [
+                  "source",
+                  "borrowAuthority"
+                ]
+              }
+            }
+          }
         }
       }
     }

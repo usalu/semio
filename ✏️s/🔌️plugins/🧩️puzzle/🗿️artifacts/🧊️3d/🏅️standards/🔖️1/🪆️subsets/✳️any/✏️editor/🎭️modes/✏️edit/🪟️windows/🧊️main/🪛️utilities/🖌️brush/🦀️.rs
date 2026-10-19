@@ -1,13 +1,19 @@
-//! 🖌️ Main-window utility — Brush: point at a vortex and WATCH the engine test every candidate that could dock
 //! there, then click to place a free one. The candidate search is a read-only framework tool run
+//! 🖌️ Main-window utility — Brush: point at a vortex and WATCH the engine test every candidate that could dock
 //! (`📋️tool-run-contract.md` §2.4, §3.7): the manifest carries its [`ToolRunDefinition`], the framework owns the
 //! run, its progress panel and its trace, and the viewport paints every tested candidate with its verdict.
 //! Accepting a candidate stays the separate one-shot `acceptSuggestion` placement.
 
 use semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_PLAY_CONTROLLER_ID;
-use semio_s_artifact_puzzle_3d_precompute_brush::{BrushSuggestionsLink, BrushSuggestionsRequest, BrushSuggestionsRunJob};
+use semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsLink;
+use semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsRequest;
+use semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsRunJob;
 use semio_s_artifact_puzzle_3d_precompute::shared_brush_mesh;
-use semio_s_artifact_puzzle_3d_editor_terminology::{puzzle3d_brush_suggestions_run_counters, puzzle3d_brush_suggestions_run_reasons, puzzle3d_brush_suggestions_run_stages, puzzle3d_brush_suggestions_run_unit, Puzzle3dLabels};
+use semio_s_artifact_puzzle_3d_editor_terminology::puzzle3d_brush_suggestions_run_counters;
+use semio_s_artifact_puzzle_3d_editor_terminology::puzzle3d_brush_suggestions_run_reasons;
+use semio_s_artifact_puzzle_3d_editor_terminology::puzzle3d_brush_suggestions_run_stages;
+use semio_s_artifact_puzzle_3d_editor_terminology::puzzle3d_brush_suggestions_run_unit;
+use semio_s_artifact_puzzle_3d_editor_terminology::Puzzle3dLabels;
 use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dRuntime;
 use {semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_action, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_distribution_group, semio_s_artifact_puzzle_3d_editor_session::puzzle3d_fallback_mesh_buffers, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_scene_snapshot_from_document, semio_s_artifact_puzzle_3d_editor_session::scene_config, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dInstanceOperationOwner, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dEditor, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene};
 use semio_framework_plugin::Effect;
@@ -21,7 +27,18 @@ use semio_framework_plugin::ToolRunJobRequest;
 use semio_framework_plugin::ToolRunView;
 use semio_framework_plugin::UtilityDefinition;
 use semio_framework_plugin::WindowMeasure;
-use semio_framework_tool_run::{JobKindId, ToolRunDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunState, ToolRunTraceKind, TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_ARG_GENERATION, TOOL_RUN_ARG_RUN_ID, TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_START_ACTION_ID};
+use semio_framework_tool_run::JobKindId;
+use semio_framework_tool_run::ToolRunDefinition;
+use semio_framework_tool_run::ToolRunRebasePolicy;
+use semio_framework_tool_run::ToolRunReconfigurePolicy;
+use semio_framework_tool_run::ToolRunSettingsReads;
+use semio_framework_tool_run::ToolRunState;
+use semio_framework_tool_run::ToolRunTraceKind;
+use semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID;
+use semio_framework_tool_run::TOOL_RUN_ARG_GENERATION;
+use semio_framework_tool_run::TOOL_RUN_ARG_RUN_ID;
+use semio_framework_tool_run::TOOL_RUN_ARG_TOOL_ID;
+use semio_framework_tool_run::TOOL_RUN_START_ACTION_ID;
 use std::sync::Arc;
 
 //#region 🔖️Constants
@@ -113,7 +130,7 @@ pub fn build_run_job<A: Puzzle3dEditor>(request: ToolRunJobRequest<'_, EditorApp
 /// run with a target is woken to re-read it. A request stays outstanding until the run view answers it (a new
 /// run for a start, no live run for an abort), so a refresh never repeats it; a gesture releases it. A faulted
 /// run is only restarted by a gesture, never by a refresh.
-pub fn run_effects(link: &mut BrushSuggestionsLink, run: Option<&ToolRunView>) -> Vec<Effect> {
+pub fn run_effects(link: &mut BrushSuggestionsLink, run: Option<semio_framework_plugin::ToolRunPollView<'_>>) -> Vec<Effect> {
     let run = run.filter(|run| run.tool_id == UTILITY_ID);
     let identity = run.map(|run| run.identity.id.run);
     let live = run.filter(|run| !run.state.is_terminal());

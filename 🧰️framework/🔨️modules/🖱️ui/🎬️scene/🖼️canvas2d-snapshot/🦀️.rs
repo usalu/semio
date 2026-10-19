@@ -6,7 +6,8 @@ use std::sync::Mutex;
 
 //#region 🖼️Canvas2dSnapshot
 pub const CANVAS2D_SNAPSHOT_CAPACITY: usize = 8;
-pub const CANVAS2D_SNAPSHOT_PAGE_CAPACITY: usize = 4;
+/// 📏️ The shared page policy follows `🧬️schema/🔣️.json`; admission and retirement transfer one 4 KiB page per call.
+pub const CANVAS2D_SNAPSHOT_PAGE_CAPACITY: usize = 32;
 pub const CANVAS2D_SNAPSHOT_PAGE_BYTE_CAPACITY: usize = 4_096;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -143,7 +144,7 @@ pub struct Canvas2dRejectedSnapshotPage {
 struct Canvas2dSnapshotSlot {
     epoch: u64,
     descriptor: Canvas2dSnapshotDescriptor,
-    pages: [Option<Box<Canvas2dSnapshotPage>>; CANVAS2D_SNAPSHOT_PAGE_CAPACITY],
+    pages: [Option<Canvas2dSnapshotPage>; CANVAS2D_SNAPSHOT_PAGE_CAPACITY],
     admitted_pages: u8,
     admitted_bytes: u32,
     sealed: bool,
@@ -206,7 +207,7 @@ pub fn canvas2d_snapshot_admit_page(token: Canvas2dSnapshotWriteToken, page: Can
     let (Some(next_pages), Some(next_bytes)) = (next_pages, next_bytes) else {
         return Err(Canvas2dRejectedSnapshotPage { fault: Canvas2dSnapshotFault::Capacity, page });
     };
-    slot.pages[usize::from(slot.admitted_pages)] = Some(Box::new(page));
+    slot.pages[usize::from(slot.admitted_pages)] = Some(page);
     slot.admitted_pages = next_pages;
     slot.admitted_bytes = next_bytes;
     Ok(())
@@ -264,7 +265,7 @@ pub fn canvas2d_snapshot_with_page<R>(lease: Canvas2dSnapshotLease, page: u8, op
     if slot.epoch != lease.epoch || slot.descriptor.revision != lease.revision || slot.descriptor.generation != lease.generation || !slot.sealed || slot.closing {
         return Err(Canvas2dSnapshotFault::Stale);
     }
-    let page = slot.pages.get(usize::from(page)).and_then(Option::as_deref).ok_or(Canvas2dSnapshotFault::Capacity)?;
+    let page = slot.pages.get(usize::from(page)).and_then(Option::as_ref).ok_or(Canvas2dSnapshotFault::Capacity)?;
     Ok(operation(page))
 }
 

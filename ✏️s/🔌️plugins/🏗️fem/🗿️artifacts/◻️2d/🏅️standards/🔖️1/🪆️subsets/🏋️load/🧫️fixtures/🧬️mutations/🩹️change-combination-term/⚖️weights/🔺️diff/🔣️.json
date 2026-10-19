@@ -1,0 +1,35 @@
+{
+  "nodes": null,
+  "elements": null,
+  "regions": null,
+  "materials": null,
+  "sections": null,
+  "supports": null,
+  "loadCases": null,
+  "combinations": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "c1",
+        "patch": {
+          "terms": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": [
+              {
+                "id": "lc1",
+                "patch": {
+                  "factor": 2
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "analysis": null
+}

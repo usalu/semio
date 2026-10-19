@@ -1,0 +1,97 @@
+{
+  "policy": {
+    "maximumItems": 1,
+    "combinedBodyCapacity": 4096,
+    "separateRelease": true,
+    "originalIssuer": true,
+    "foreignKeyRefused": true,
+    "returnBeforeMutation": true,
+    "readBirthPrefixes": [
+      0,
+      1,
+      2
+    ],
+    "capturedIssuerRetiresPayload": true
+  },
+  "cases": [
+    {
+      "name": "one-original-scalar",
+      "original": {
+        "n": 1
+      },
+      "replacement": {
+        "n": 9
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/n",
+          "value": 9
+        }
+      ],
+      "expected": {
+        "n": 9
+      }
+    },
+    {
+      "name": "unicode-original-allocation",
+      "original": {
+        "text": "original α\\0😀"
+      },
+      "replacement": {
+        "text": "next β"
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/text",
+          "value": "next β"
+        }
+      ],
+      "expected": {
+        "text": "next β"
+      }
+    },
+    {
+      "name": "empty-native-vector",
+      "original": {
+        "rows": []
+      },
+      "replacement": {
+        "rows": [
+          3,
+          7
+        ]
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/rows",
+          "value": [
+            3,
+            7
+          ]
+        }
+      ],
+      "expected": {
+        "rows": [
+          3,
+          7
+        ]
+      }
+    },
+    {
+      "name": "unchanged-payload",
+      "original": {
+        "text": "same"
+      },
+      "replacement": {
+        "text": "same"
+      },
+      "patch": [],
+      "expected": {
+        "text": "same"
+      }
+    }
+  ]
+}

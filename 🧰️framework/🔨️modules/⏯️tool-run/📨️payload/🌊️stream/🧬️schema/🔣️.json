@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.tool-run.payload-update.v1",
+  "title": "Tool Run Payload Update",
+  "oneOf": [
+    {"type":"object","additionalProperties":false,"required":["kind"],"properties":{"kind":{"const":"replace"}}},
+    {"type":"object","additionalProperties":false,"required":["kind","publication","totalBytes","offset","chunkBytes","final"],"properties":{"kind":{"const":"range"},"publication":{"type":"integer","minimum":1},"totalBytes":{"type":"integer","minimum":1},"offset":{"type":"integer","minimum":0},"chunkBytes":{"type":"integer","minimum":1,"maximum":65536},"final":{"type":"boolean"}}}
+  ]
+}

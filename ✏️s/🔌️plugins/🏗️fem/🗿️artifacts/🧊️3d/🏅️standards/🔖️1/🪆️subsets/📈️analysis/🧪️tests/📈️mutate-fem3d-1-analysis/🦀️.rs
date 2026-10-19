@@ -1,5 +1,5 @@
-//! 🧊 `s.fem.fem3d` analysis mutation case — Rust SUBJECT adapter. Relocated out of the
 //! artifact-level `mutate-fem3d-1` case in ticket
+//! 🧊 `s.fem.fem3d` analysis mutation case — Rust SUBJECT adapter. Relocated out of the
 //! `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION` so
 //! this subset's own kinds have a subset-owned test.
 //!
@@ -15,7 +15,11 @@
 //! report shapes rather than parts of the document, so they stay asserted HERE, in role, in
 //! [`subject::spec_vector`].
 
-use semio_repo_test_host::{parse_json, Adapter, Json};
+use semio_repo_test_host::parse_json;
+
+use semio_repo_test_host::Adapter;
+
+use semio_repo_test_host::Json;
 
 //#region 🔖️Kinds
 /// 🏷️ This subset's own slice of `KINDS` in `../../🧬️schema/🧬️mutations/🦀️.rs` — duplicated, not
@@ -116,8 +120,16 @@ fn reject_vector_of(identifier: &str) -> Vector {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{canonical, hall_vector_of, reject_vector_of, vector, DERIVED_ASSET, UNOBSERVABLE};
-    use semio_repo_test_host::{parse_json, Context, Json, Outcome};
+    use super::canonical;
+    use super::hall_vector_of;
+    use super::reject_vector_of;
+    use super::vector;
+    use super::DERIVED_ASSET;
+    use super::UNOBSERVABLE;
+    use semio_repo_test_host::parse_json;
+    use semio_repo_test_host::Context;
+    use semio_repo_test_host::Json;
+    use semio_repo_test_host::Outcome;
     use semio_repo_test_host::law;
     use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::io::text::mutations::fem3d_mutation_report_json;
 

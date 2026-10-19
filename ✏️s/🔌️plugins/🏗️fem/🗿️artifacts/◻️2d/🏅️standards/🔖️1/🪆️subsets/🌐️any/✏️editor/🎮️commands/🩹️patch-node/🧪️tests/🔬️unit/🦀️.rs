@@ -1,12 +1,34 @@
-use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_node::*;
-use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_node;
-use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
-use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_active_example::SetActiveExample;
-use crate::context::{dispatch, fem2d_app};
+use super::*;
+
+/// 🤝️ Independently authored node properties remain independent during replay and inverse replay.
+#[test]
+fn concurrent_node_fields_preserve_both_authors_intent() {
+    let base = Fem2dSnapshot { nodes: vec![semio_s_fem_node::planar::FemNodeValue { id: "target".into(), x: 0.0, y: 0.0 }], ..Default::default() };
+    let lower = |field: &str, value: &str| {
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&base, &history);
+        let config = NoConfig::default();
+        handle(&PatchNode { id: "target".into(), field: field.into(), value: value.into() }, &doc, &ConfigView { snapshot: &config, window: None }).expect("field intent").artifact_mutations.remove(0)
+    };
+    let first = lower("x", "3");
+    let second = lower("y", "4");
+    for sequence in [[&first, &second], [&second, &first]] {
+        let mut snapshot = base.clone();
+        for mutation in sequence { semio_s_artifact_fem_2d_mutations::central_apply::apply_fem2d_mutation(&mut snapshot, mutation).expect("independent field replay"); }
+        assert_eq!(snapshot.nodes[0].x, 3.0);
+        assert_eq!(snapshot.nodes[0].y, 4.0);
+        for inverse in protocol::Mutation::inverse(&first, &base).expect("field inverse").iter().rev() {
+            semio_s_artifact_fem_2d_mutations::central_apply::apply_fem2d_mutation(&mut snapshot, inverse).expect("independent field inverse replay");
+        }
+        assert_eq!(snapshot.nodes[0].x, base.nodes[0].x);
+        assert_eq!(snapshot.nodes[0].y, 4.0);
+    }
+}
+use crate::editor::fem2d::commands::set_active_example::SetActiveExample;
+use crate::context::dispatch;
+use crate::context::fem2d_app;
 use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand;
-use pack::snapshot::ArtifactDsl;
+use store::os_store::serialization::ArtifactDsl;
 
 fn demo() -> Fem2dSnapshot {
     Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("the bundled demo fixture parses")
@@ -31,11 +53,11 @@ async fn patch_node_moves_an_ordinate_on_the_demo_2d() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn patch_node_emits_one_whole_record_replace_2d() {
+async fn patch_node_emits_one_coordinate_intent_2d() {
     let emitted = emit(&demo(), PatchNode { id: "ridge".into(), field: "y".into(), value: "8.2".into() }).expect("handle");
-    let [Fem2dMutation::ReplaceNode(replace)] = emitted.artifact_mutations.as_slice() else { panic!("one replace-node") };
-    assert_eq!(replace.id, "ridge");
-    assert_eq!((replace.new_node.id.as_str(), replace.new_node.x, replace.new_node.y), ("ridge", 4.0, 8.2));
+    let [Fem2dMutation::ChangeNode(change)] = emitted.artifact_mutations.as_slice() else { panic!("one change-node") };
+    assert_eq!(change.id, "ridge");
+    assert_eq!((change.patch.x, change.patch.y), (None, Some(8.2)));
 }
 
 #[semio_framework_async_macros::async_test]

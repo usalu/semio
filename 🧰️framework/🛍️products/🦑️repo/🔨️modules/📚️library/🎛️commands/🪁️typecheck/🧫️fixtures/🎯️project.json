@@ -1,0 +1,7 @@
+{
+  "accepted": [
+    { "words": ["tsconfig.json"], "selection": { "project": "tsconfig.json", "args": [] } },
+    { "words": ["🧰️framework/tsconfig.json", "--extendedDiagnostics", "--noErrorTruncation"], "selection": { "project": "🧰️framework/tsconfig.json", "args": ["--extendedDiagnostics", "--noErrorTruncation"] } }
+  ],
+  "rejected": [[], ["../outside.json"], ["C:/outside.json"], ["/outside.json"], ["source.ts"], ["tsconfig.json", "--outDir", "elsewhere"], ["tsconfig.json", "--project", "other.json"], ["tsconfig.json", "--diagnostics", "--diagnostics"]]
+}

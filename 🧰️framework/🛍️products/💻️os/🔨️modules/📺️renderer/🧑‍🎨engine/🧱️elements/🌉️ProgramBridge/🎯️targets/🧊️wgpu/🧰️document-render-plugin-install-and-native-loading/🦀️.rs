@@ -268,9 +268,9 @@ pub fn filter_plugins(entries: Vec<ProgramBridgeEntry>, _plugin_filter: &str) ->
 /// 📋️ Loads only the completed components named by the build runtime manifest.
 pub async fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) -> Result<Vec<ProgramBridgeEntry>, String> {
     use crate::native_runtime_modules::{NativeJsonPages, NativeRuntimeManifest};
-    let mut pages = read_native_json_pages(&modules_root.join("🔣️runtime.json"), NATIVE_RUNTIME_MANIFEST_MAX_BYTES).await?;
-    let runtime = NativeRuntimeManifest::read(NativeJsonPages::new(pages.iter().flat_map(|page| (0..page.page_count()).filter_map(move |index| page.page(index)))), plugin_filter);
-    close_native_json_pages(&mut pages);
+    let bytes=crate::read_renderer_source_bytes(&modules_root.join("🔣️runtime.json"),NATIVE_RUNTIME_MANIFEST_MAX_BYTES).await.map_err(|error|error.to_string())?;
+    let runtime=NativeRuntimeManifest::read(NativeJsonPages::new(std::iter::once(bytes.bytes())),plugin_filter);
+    drop(bytes);
     let mut entries = Vec::new();
     for module in runtime?.modules {
         let descriptor = read_descriptor_manifest(&modules_root.join(module.descriptor_path), &module.plugin_id).await?;
@@ -286,20 +286,17 @@ pub async fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Pa
 /// those descriptor bytes — the same admission the semio MCP remote workspace applies to the same bytes.
 #[cfg(not(target_arch = "wasm32"))]
 pub async fn load_resolved_program(plugin_id: &str, component: &std::path::Path, descriptor: &std::path::Path, receipt: &semio_framework_os_kernel::os_component_receipt::ComponentReceiptV1) -> Result<ProgramBridgeEntry, String> {
-    use crate::native_runtime_modules::NativeJsonPages;
+
     use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-    let mut pages = read_native_json_pages(descriptor, semio_framework_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES).await?;
-    let mut bytes = Vec::new();
-    let read = std::io::Read::read_to_end(&mut NativeJsonPages::new(pages.iter().flat_map(|page| (0..page.page_count()).filter_map(move |index| page.page(index)))), &mut bytes);
-    close_native_json_pages(&mut pages);
-    read.map_err(|error| format!("hub descriptor {}: {error}", descriptor.display()))?;
-    let value = store::pack_rt::decode_wire_value(&bytes).map_err(|_| "hub execution-target descriptor is not a canonical pack".to_string())?;
+    let bytes=crate::read_renderer_source_bytes(descriptor,semio_framework_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES).await.map_err(|error|error.to_string())?;
+    let wire=bytes.bytes();
+    let value = store::pack_rt::decode_wire_value(wire).map_err(|_| "hub execution-target descriptor is not a canonical pack".to_string())?;
     let package = semio_framework::manifest::PackageDescriptor::from_value(value.clone()).map_err(|_| "hub execution-target descriptor is not a package descriptor".to_string())?;
-    if store::pack_rt::encode_wire_value(&value) != bytes || store::pack_rt::encode_wire_value(&package.to_value()) != bytes {
+    if store::pack_rt::encode_wire_value(&value).as_slice() != wire || store::pack_rt::encode_wire_value(&package.to_value()).as_slice() != wire {
         return Err("hub execution-target descriptor is not its exact canonical package projection".into());
     }
-    if package.descriptor_version != 1 || package.manifest.plugin_id != plugin_id || receipt.binds(semio_framework_os_kernel::os_component_receipt::ComponentProfileV1::Release, plugin_id, &package.package_id, &receipt.wasm_sha256, &semio_framework_hash::sha256_hex(&bytes)).is_err() {
+    if package.descriptor_version != 1 || package.manifest.plugin_id != plugin_id || receipt.binds(semio_framework_os_kernel::os_component_receipt::ComponentProfileV1::Release, plugin_id, &package.package_id, &receipt.wasm_sha256, &semio_framework_hash::sha256_hex(wire)).is_err() {
         return Err((format!("hub execution-target descriptor identity mismatch: {plugin_id}")).into());
     }
     ProgramBridgeEntry::from_wasm(plugin_id.to_string(), Some(package.package_id), Some(receipt.wasm_sha256.clone()), component.to_path_buf(), package.manifest)
@@ -313,10 +310,10 @@ const NATIVE_RUNTIME_MANIFEST_MAX_BYTES: u64 = 1024 * 1024;
 /// `wasmSha256` is the component identity it is loaded under.
 #[cfg(not(target_arch = "wasm32"))]
 async fn read_descriptor_manifest(path: &std::path::Path, plugin_id: &str) -> Result<semio_framework::manifest::PackageDescriptor, String> {
-    use crate::native_runtime_modules::NativeJsonPages;
-    let mut pages = read_native_json_pages(path, semio_framework_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES).await?;
-    let descriptor = serde_json::from_reader::<_, semio_framework::manifest::PackageDescriptor>(NativeJsonPages::new(pages.iter().flat_map(|page| (0..page.page_count()).filter_map(move |index| page.page(index)))));
-    close_native_json_pages(&mut pages);
+
+    let bytes=crate::read_renderer_source_bytes(path,semio_framework_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES).await.map_err(|error|error.to_string())?;
+    let descriptor=serde_json::from_slice::<semio_framework::manifest::PackageDescriptor>(bytes.bytes());
+    drop(bytes);
     let descriptor = descriptor.map_err(|error| format!("Native descriptor {}: {error}", path.display()))?;
     if descriptor.manifest.plugin_id != plugin_id {
         return Err((format!("Native descriptor identity mismatch: {plugin_id}")).into());
@@ -324,48 +321,3 @@ async fn read_descriptor_manifest(path: &std::path::Path, plugin_id: &str) -> Re
     Ok(descriptor)
 }
 
-/// 📄️ Reads one bounded JSON file as consecutive `ReadPage` payloads. The mounted native I/O
-/// authority answers at most one `JOB_PAYLOAD_PAGE_BYTES` page per request, so a whole-file
-/// `ReadBytes` refuses every real descriptor (block's is 344 KB); the pages stay borrowed until the
-/// caller's reader is done and are then closed together.
-#[cfg(not(target_arch = "wasm32"))]
-async fn read_native_json_pages(path: &std::path::Path, max_bytes: u64) -> Result<Vec<semio_framework_job::RetainedJobPayload>, String> {
-    let mut pages = Vec::new();
-    let mut offset = 0u64;
-    loop {
-        let value = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadPage { path: path.to_path_buf(), offset, max_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES }).await {
-            Ok(value) => value,
-            Err(error) => {
-                close_native_json_pages(&mut pages);
-                return Err((error).into());
-            }
-        };
-        let semio_framework_os_services::NativeIoValue::Page { bytes, eof } = value else {
-            close_native_json_pages(&mut pages);
-            return Err((format!("{}: native I/O returned the wrong value for a page read", path.display())).into());
-        };
-        let count = bytes.len() as u64;
-        pages.push(bytes);
-        offset = offset.saturating_add(count);
-        if offset > max_bytes || (count == 0 && !eof) {
-            close_native_json_pages(&mut pages);
-            return Err((format!("{}: native JSON exceeds {max_bytes} bytes or produced an empty nonterminal page", path.display())).into());
-        }
-        if eof {
-            return Ok(pages);
-        }
-    }
-}
-
-/// 🧹️ Closes every borrowed page a native JSON read retained.
-#[cfg(not(target_arch = "wasm32"))]
-fn close_native_json_pages(pages: &mut Vec<semio_framework_job::RetainedJobPayload>) {
-    for page in pages.iter_mut() {
-        while !page.terminal_is_empty() {
-            let demand = page.retirement_demands().expect("native JSON page retirement demand");
-            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-            page.close_step(grant).expect("native JSON page retirement turn");
-        }
-    }
-    pages.clear();
-}

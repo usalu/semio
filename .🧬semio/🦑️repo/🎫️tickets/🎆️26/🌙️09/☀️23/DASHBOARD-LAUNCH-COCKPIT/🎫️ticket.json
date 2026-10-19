@@ -1,7 +1,7 @@
 {
   "title": "Dashboard Launch Cockpit",
   "emoji": "🎛️",
-  "status": "closed",
+  "status": "open",
   "description": "The dashboard (`bun run dashboard`, `semio …`) is the only developer control plane: no launch.json anywhere, every runnable thing declared next to its owner, configs derived and drift-checked, battle tested across the monorepo.",
   "summary": "Completed the sole declarative dashboard control plane, retiring active VS Code launch catalogs and canonicalizing bootstrap/command authority. Repaired shared TUI text/caret/hover/mouse/layout/borders, task naming, paginated restore and cancellable HTTP readiness. Native Windows verification: authority 6; exhaustive coverage 9 with 16,384 target IDs; UI 367; native dashboard 213; canonical combined 6+11+8+2+213; CLI journeys 13; independent PTY journeys 16; CLI/PTY load 4/3, one exploratory ignore; real Nx test/server/native-build smokes each passed. Stronger independent absolute caret replay passed. Current release freshness verified. Owned instances stopped, authored evidence retained, generated outputs removed. Native Linux/macOS runtime and execution of every destructive command are not claimed. See the final verification report.",
   "github": {
@@ -12,6 +12,18 @@
     "⚪20f03a5d4cd7405a8e7728c2ab997865",
     "⚪8aebc0d3385b4cfca97aadfdc3b2989b",
     "⚪6725bd3f14e547798a482d94f1b97a18",
-    "⚪8e0009016f824748a7d204725a7ca4f4"
+    "⚪8e0009016f824748a7d204725a7ca4f4",
+    "1670a127-bddb-4f32-87dc-c1a18b6c038c"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-10-19 03:03:32",
+      "author": "",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Continue dashboard-only developer control plane goal on Oct19. Audit current state, remove resurrected IDE launch files, authoring/generation/projection paths and active IDE instructions. Preserve all declared command inputs, environment, readiness and compounds through neutral dashboard owner metadata. Fix authority gate regressions and prove current dashboard runtime and developer workflows."
+    }
   ]
 }

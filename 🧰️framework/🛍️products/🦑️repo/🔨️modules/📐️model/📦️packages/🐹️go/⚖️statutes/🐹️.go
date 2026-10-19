@@ -9,7 +9,8 @@
 package model
 
 import (
-	strings "strings"
+	"strings"
+
 )
 
 // #region ⚖️Statutes
@@ -140,9 +141,7 @@ const BreachRepoMissingCommand Statute = "repo/missing-command"
 
 const BreachRepoMissingTicketTracking Statute = "repo/missing-ticket-tracking"
 
-const BreachSystemDevcontainerVscodeSettingsDrift Statute = "system/devcontainer/vscode/settings-drift"
-
-const BreachSystemDevcontainerVscodeExtensionsDrift Statute = "system/devcontainer/vscode/extensions-drift"
+const BreachSystemIdeConfiguration Statute = "system/ide-configuration"
 
 const BreachFolderIllegalEmpty Statute = "folder/illegal/empty"
 

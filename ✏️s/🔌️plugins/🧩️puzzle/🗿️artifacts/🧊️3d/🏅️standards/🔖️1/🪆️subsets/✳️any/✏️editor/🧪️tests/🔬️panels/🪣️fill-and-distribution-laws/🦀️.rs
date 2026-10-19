@@ -24,7 +24,10 @@ fn fill_tool_wins_the_world_lane_over_a_select_window_utility() {
 #[semio_framework_async_macros::async_test]
 async fn the_fill_tool_declares_its_tool_run_through_the_manifest() {
     use semio_s_artifact_puzzle_3d_model::FillRunReason;
-    use semio_framework_tool_run::{ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunTraceKind, TOOL_RUN_ACTION_IDS};
+    use semio_framework_tool_run::ToolRunRebasePolicy;
+    use semio_framework_tool_run::ToolRunReconfigurePolicy;
+    use semio_framework_tool_run::ToolRunTraceKind;
+    use semio_framework_tool_run::TOOL_RUN_ACTION_IDS;
     let definition = create_puzzle3d_app();
     let fill = definition.tools.iter().find(|tool| tool.id == semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID).expect("fill tool");
     let run = fill.run.as_ref().expect("the fill tool declares its ToolRunDefinition");

@@ -1,5 +1,5 @@
-//! 🧩️ FEM 3D module engine — solid meshing (pure FE algorithm, moved out of the artifact tree). Meshes
 //! every `FemSolid` footprint into `Tet4` elements — extruded along the solid's own `FemAxis`, with the
+//! 🧩️ FEM 3D module engine — solid meshing (pure FE algorithm, moved out of the artifact tree). Meshes
 //! nodes of every solid merged into ONE node set so touching solids share their interface nodes — and
 //! translates document loads (incl. `FemLoad::Area`, a pressure on a solid's upward-facing surface)
 //! into `semio_s_fem_static::Model` inputs. Shared by `crate::fem3d_engine`'s `build_model`/`fem3d_solve_all`,
@@ -10,15 +10,23 @@
 pub type TranslatedLoads = (Vec<NodalLoad>, Vec<(String, MemberUdl)>);
 
 use crate::fem3d_engine::Fem3dError;
-use semio_s_fem_elements3d::{Bar3, Frame3};
-use semio_s_fem_model::{Dof, MemberUdl, NodalLoad, Node, Support};
+use semio_s_fem_elements3d::Bar3;
+use semio_s_fem_elements3d::Frame3;
+use semio_s_fem_model::Dof;
+use semio_s_fem_model::MemberUdl;
+use semio_s_fem_model::NodalLoad;
+use semio_s_fem_model::Node;
+use semio_s_fem_model::Support;
 use semio_s_fem_static::Elements;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
-use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMesh;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioPrimitive;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioTopology;
 use std::collections::HashMap;
 
 // #region 🔖️NodeMerge

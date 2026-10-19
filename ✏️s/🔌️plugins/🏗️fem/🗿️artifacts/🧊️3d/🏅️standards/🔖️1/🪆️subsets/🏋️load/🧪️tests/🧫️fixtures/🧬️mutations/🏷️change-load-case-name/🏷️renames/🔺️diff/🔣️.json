@@ -6,8 +6,8 @@
   "solids": null,
   "supports": null,
   "loadCases": {
-    "inserted": [],
     "removed": [],
+    "inserted": [],
     "moved": [],
     "modified": [
       {

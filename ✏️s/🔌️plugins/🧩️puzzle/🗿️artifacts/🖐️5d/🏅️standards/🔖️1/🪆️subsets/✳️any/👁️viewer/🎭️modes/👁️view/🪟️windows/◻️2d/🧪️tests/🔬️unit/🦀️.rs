@@ -56,7 +56,7 @@ fn fixture_carries_one_node_per_part_and_one_edge_per_fastener() {
     let fixture: serde_json::Value = serde_json::from_str(&board_snapshot_json(&document)).expect("board fixture json");
     assert_eq!(fixture["nodes"].as_array().map(Vec::len), Some(2));
     assert_eq!(fixture["edges"].as_array().map(Vec::len), Some(1));
-    assert_eq!(fixture["edges"][0]["source"], serde_json::json!("teil-ä:g1"));
+    assert_eq!(fixture["edges"][0]["source"], semio_framework_pack_json::json!("teil-ä:g1"));
 }
 
 #[test]

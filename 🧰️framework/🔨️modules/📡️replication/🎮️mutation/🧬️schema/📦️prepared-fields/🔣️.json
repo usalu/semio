@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "base", "cases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "base": { "$ref": "#/$defs/projection" },
+    "cases": { "type": "array", "minItems": 1, "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "diff", "expected", "refused"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "diff": { "type": "object", "additionalProperties": false, "properties": {
+          "first": { "type": "integer" }, "second": { "type": "integer" }, "refuse": { "type": "boolean" }
+        } },
+        "expected": { "$ref": "#/$defs/projection" },
+        "refused": { "type": "boolean" }
+      }
+    } }
+  },
+  "$defs": { "projection": {
+    "type": "object", "additionalProperties": false, "required": ["first", "second"],
+    "properties": { "first": { "type": "integer" }, "second": { "type": "integer" } }
+  } }
+}

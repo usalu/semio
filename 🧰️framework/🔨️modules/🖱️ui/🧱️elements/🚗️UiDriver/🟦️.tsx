@@ -8,7 +8,7 @@
 import * as React from "react";
 import { type StoragePort, createBrowserStoragePort } from "../../🔨️modules/🗄️storage-port/🟦️.ts";
 import { ephemeralBox } from "../../../🫧️transient/🟦️.ts";
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 // #endregion Adapters
 
 // #region UiDriver

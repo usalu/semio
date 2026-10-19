@@ -1,5 +1,5 @@
-//! 🧬️ Meshes derived from a triangulation or a rectangle: structured quad grids, quadratic promotion, 3D extrusion
 //! (wedge/hex) with tet splitting and boundary faces, the element quality report, and the binary64 region
+//! 🧬️ Meshes derived from a triangulation or a rectangle: structured quad grids, quadratic promotion, 3D extrusion
 //! volume/surface records.
 
 use std::collections::HashMap;

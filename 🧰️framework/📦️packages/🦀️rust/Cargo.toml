@@ -52,6 +52,7 @@ semio-framework-tool-run-actions = { path = "../../🔨️modules/⏯️tool-run
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
+semio-framework-job = { path = "../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async = { workspace = true }
 
 [[test]]

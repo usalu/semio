@@ -60,3 +60,7 @@ semio-framework-hash = { path = "../../../🔏️hash/📦️packages/🦀️rus
 semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../../../🧬️schema/📇️registry/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
+
+[[test]]
+name = "retained_diff_sequence"
+path = "../../🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧪️tests/🦀️.rs"

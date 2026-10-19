@@ -1,5 +1,5 @@
-//! 🚪️ IO s.puzzle2d (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from ⚙️engine::register), not per-leaf register().
+//! 🚪️ IO s.puzzle2d (1/✳️any) — registration now flows through 🎹️composer::register
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.json", "stdio.txt"]
 }
@@ -180,7 +180,12 @@ pub mod io_registry {
 /// defaults) labelled with their text, edges between node centres, target regions as labelled frames;
 /// hidden items are left out. Every page export (svg, pdf, png, dxf, dwg) draws this one picture.
 pub fn puzzle2d_board_drawing(snapshot: &crate::Puzzle2dSnapshot) -> semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot {
-    use semio_s_artifact_stdio_semio_drawing::io::{diagram_drawing, SemioDiagram, SemioDiagramFrame, SemioDiagramLink, SemioDiagramNode, SemioDiagramShape};
+    use semio_s_artifact_stdio_semio_drawing::io::diagram_drawing;
+    use semio_s_artifact_stdio_semio_drawing::io::SemioDiagram;
+    use semio_s_artifact_stdio_semio_drawing::io::SemioDiagramFrame;
+    use semio_s_artifact_stdio_semio_drawing::io::SemioDiagramLink;
+    use semio_s_artifact_stdio_semio_drawing::io::SemioDiagramNode;
+    use semio_s_artifact_stdio_semio_drawing::io::SemioDiagramShape;
     let nodes = snapshot
         .nodes
         .iter()
@@ -218,7 +223,9 @@ pub mod text {
 pub use semio_s_artifact_puzzle_2d_inferences::standards::v1::subsets::any::io::sqlite;
 
 pub mod derived_construction {
-    use crate::{Puzzle2dDiff, Puzzle2dMutation, Puzzle2dSnapshot};
+    use crate::Puzzle2dDiff;
+    use crate::Puzzle2dMutation;
+    use crate::Puzzle2dSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -244,15 +251,15 @@ pub mod derived_construction {
             Ok(Self { snapshot: <Puzzle2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?, diagnostics: Vec::new() })
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match protocol::apply_diff(outcome.diff(), &self.snapshot) {
+            let outcome = <Self::Mutation as protocol::ColdMutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
+            match protocol::apply_diff_cold(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
                 Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
+            let snapshot = protocol::apply_diff_cold(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }

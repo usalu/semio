@@ -57,7 +57,7 @@ impl SimDate {
 
 // #region 🔖️RunPeriod
 /// 📅️ Run period specification.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct RunPeriod {
     pub start_month: u8,
@@ -77,11 +77,11 @@ impl RunPeriod {
     /// 📅️ Total simulation hours in run period.
     pub fn total_hours(&self) -> u32 {
         let mut date = SimDate::new(self.year, self.start_month, self.start_day);
-        let end = SimDate::new(self.year, self.end_month, self.end_day);
+        let end = self.end_date();
         let mut hours = 0u32;
         loop {
             hours += 24;
-            if date.month == end.month && date.day == end.day {
+            if date == end {
                 break;
             }
             date.advance_day();
@@ -92,17 +92,15 @@ impl RunPeriod {
         hours
     }
 
-    /// 🗓️ Whether the period names a calendar interval of its year: both bounds are real dates of `year` and the start
-    /// does not lie after the end.
-    pub fn is_interval(&self) -> bool {
-        let leap = is_leap_year(self.year);
-        let exists = |month: u8, day: u8| (1..=12).contains(&month) && (1..=days_in_month(month, leap)).contains(&day);
-        exists(self.start_month, self.start_day) && exists(self.end_month, self.end_day) && (self.start_month, self.start_day) <= (self.end_month, self.end_day)
-    }
+    /// 🗓️ Calendar bounds are real dates; an earlier end month/day names the following year.
+    pub fn is_interval(&self)->bool{let year=self.year.checked_add(u16::from((self.end_month,self.end_day)<(self.start_month,self.start_day)));let exists=|year:u16,month:u8,day:u8|year!=0&&(1..=12).contains(&month)&&(1..=days_in_month(month,is_leap_year(year))).contains(&day);exists(self.year,self.start_month,self.start_day)&&year.is_some_and(|year|exists(year,self.end_month,self.end_day))}
+
+    /// 📆️ Resolved end date for the authored one-year-or-shorter run interval.
+    pub fn end_date(&self)->SimDate{SimDate::new(self.year.saturating_add(u16::from((self.end_month,self.end_day)<(self.start_month,self.start_day))),self.end_month,self.end_day)}
 
     /// 📅️ Iterator over (date, hour) pairs.
     pub fn hours(&self) -> RunPeriodHours {
-        RunPeriodHours { current: SimDate::new(self.year, self.start_month, self.start_day), end: SimDate::new(self.year, self.end_month, self.end_day), hour: 0u8, index: 0u32, finished: false }
+        RunPeriodHours { current: SimDate::new(self.year, self.start_month, self.start_day), end: self.end_date(), hour: 0u8, index: 0u32, finished: false }
     }
 }
 
@@ -129,12 +127,12 @@ impl Iterator for RunPeriodHours {
         if self.finished {
             return None;
         }
-        if self.current.month > self.end.month || (self.current.month == self.end.month && self.current.day > self.end.day) {
+        if (self.current.year,self.current.month,self.current.day)>(self.end.year,self.end.month,self.end.day) {
             return None;
         }
         let item = (self.current, self.hour, self.index);
         self.index += 1;
-        if self.current.month == self.end.month && self.current.day == self.end.day && self.hour == 23 {
+        if self.current == self.end && self.hour == 23 {
             self.finished = true;
             return Some(item);
         }

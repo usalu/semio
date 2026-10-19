@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Retained Mutation Ownership Laws",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "phases",
+    "cases",
+    "grants",
+    "issuer"
+  ],
+  "properties": {
+    "phases": {
+      "const": [
+        "decide",
+        "preflight",
+        "inverse",
+        "commit",
+        "retire",
+        "complete",
+        "close"
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "base",
+          "set",
+          "refused",
+          "expected",
+          "inverseCalls",
+          "applyCalls"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "base": {
+            "type": "integer"
+          },
+          "set": {
+            "type": "integer"
+          },
+          "refused": {
+            "type": "boolean"
+          },
+          "expected": {
+            "type": "integer"
+          },
+          "inverseCalls": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "applyCalls": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    "grants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "grant": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "maximumItems": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "maximumDepth": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "maximumCopyBytes": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "maximumReleaseBytes": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "maximumCapacityBytes": {
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "maximumItems",
+              "maximumCopyBytes",
+              "maximumCapacityBytes",
+              "maximumReleaseBytes",
+              "maximumDepth"
+            ]
+          },
+          "demand": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "depth": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "releaseBytes": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "capacityBytes": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "copyBytes": {
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "copyBytes",
+              "capacityBytes",
+              "releaseBytes",
+              "depth"
+            ]
+          },
+          "admitted": {
+            "type": "boolean"
+          },
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "demand",
+          "grant",
+          "admitted"
+        ]
+      },
+      "minItems": 1
+    },
+    "issuer": {
+      "required": [
+        "inverseSet",
+        "attempts",
+        "issued"
+      ],
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "attempts": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "inverseSet": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "issued": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

@@ -8,7 +8,7 @@ import { Action } from "../../⚡️ActionGroup/🟦️.tsx";
 import { DisabledReasonHint } from "../../💡️ChromeControlHint/🟦️.tsx";
 
 /** ⚡️ Layout of the section header action cluster. */
-const treeHeaderActionsClassName = "flex flex-shrink-0 items-center gap-single";
+export const treeHeaderActionsClassName = "flex flex-shrink-0 items-center gap-single";
 
 export type TreeActionPlacement = "row" | "menu";
 

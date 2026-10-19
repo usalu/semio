@@ -405,3 +405,7 @@ mod owned_retirement {
     semio_framework_value::artifact_retire_leaf!(MergePolicy);
     semio_framework_value::artifact_retire_leaf!(UndoPolicy);
 }
+
+#[path = "🪪️scoped-identity/🦀️.rs"]
+pub mod scoped_identity;
+pub use scoped_identity::*;

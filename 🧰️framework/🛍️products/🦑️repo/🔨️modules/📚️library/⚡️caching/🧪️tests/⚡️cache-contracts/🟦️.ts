@@ -361,7 +361,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     assert.ok(dotnet!.targets.build.dependsOn.includes("deps"));
     assert.equal(dotnet!.targets.deps.cache, false);
     assert.ok(workspace.targets["deps-dotnet"].dependsOn.includes(`${bootstrap.dotnetProject}:deps`));
-    assert.ok(readFileSync(join(root, "Monorepo.sln"), "utf8").includes(bootstrap.dotnetPath.replaceAll("/", "\\")));
+    assert.ok(existsSync(join(root, bootstrap.dotnetPath, "🧪️Semio.Repo.Test.csproj")), "The .NET owner builds its explicit compiler project without an IDE solution");
     assert.ok(readFileSync(join(root, bootstrap.dotnetPath, "🧪️Semio.Repo.Test.csproj"), "utf8").includes(`Include="${bootstrap.compile}"`));
     assert.ok(existsSync(join(root, bootstrap.dotnetPath, bootstrap.compile)), "The .NET compile item must resolve to its current source file");
     const python = createRequire(testSource.url)("@iarna/toml").parse(readFileSync(join(root, "pyproject.toml"), "utf8"));
@@ -398,8 +398,8 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     const nxSource = ts.createSourceFile("nx.ts", readFileSync(join(SCRIPT_ROOT, "🚀️bootstrap/📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
     const { testNxCoordinator } = await import("../🛑️coordinator/🟦️.ts");
     await testNxCoordinator(root);
-    const invocationNode = nxSource.statements.find((node: any) => ts.isFunctionDeclaration(node) && node.name?.text === "resolveNxInvocation");
-    const route = ts.transpileModule(invocationNode.getText(nxSource).replace(/^export /, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+    const invocationFunction = nxSource.statements.find((node: any) => ts.isFunctionDeclaration(node) && node.name?.text === "resolveNxInvocation");
+    const route = ts.transpileModule(invocationFunction.getText(nxSource).replace(/^export /, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
     const resolveInvocation = new Function("process", "WORKSPACE_ROOT", "resolveBuildSelectionV1", "resolveNxBuildMode", `${route}; return resolveNxInvocation;`)({ env: {} }, root, resolveBuildSelectionV1, resolveNxBuildMode);
     const resolvePrint = new Function("process", "WORKSPACE_ROOT", "resolveBuildSelectionV1", "resolveNxBuildMode", `${route}; return resolveNxInvocation;`)({ env: {} }, root, resolveBuildSelectionV1, resolveNxBuildMode);
     for (const path of ["🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🧫️invocations.json", "♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/🧫️invocations.json", "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/🧫️invocations.json"]) {
@@ -598,7 +598,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     for (const retired of [["run", "workspace:dev", "--", "s"], ["run", "workspace:dev", "--", "mcp", "http", "os"], ["run", "@semio-tech/framework-os-dev:dev"]]) assert.deepEqual(resolveNxInvocation(retired).args, retired, `${retired.join(" ")}: the bootstrap is no playground or MCP resolver; the dashboard registry resolves playgrounds`);
     const osDevProject = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json"), "utf8")) as { targets: Record<string, { dependsOn?: readonly string[]; options?: { command?: string } }> };
     assert.equal(osDevProject.targets.dev, undefined, "the framework-os-dev dev alias is dissolved: playgrounds are the generated dev-<variant>-<renderer>-<profile> targets");
-    assert.ok(!invocationNode.getText(nxSource).includes("PlaygroundSelections") && !invocationNode.getText(nxSource).includes("PlaygroundCatalog"), "the bootstrap resolves no playground variant");
+    assert.ok(!invocationFunction.getText(nxSource).includes("PlaygroundSelections") && !invocationFunction.getText(nxSource).includes("PlaygroundCatalog"), "the bootstrap resolves no playground variant");
     assert.equal(root.length > 0, true);
     rmSync(fixture, { recursive: true });
     console.log("[cache-contract] schema, graph ownership, source-byte discovery, native dependency oracles and materializer cancellation passed");

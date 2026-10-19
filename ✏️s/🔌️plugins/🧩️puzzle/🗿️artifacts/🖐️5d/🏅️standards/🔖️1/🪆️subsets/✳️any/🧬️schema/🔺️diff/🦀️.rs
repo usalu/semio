@@ -5,7 +5,10 @@ use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dCompa
 use crate::standards::v1::subsets::any::schema::kind_catalogs::{Puzzle5dKindCatalogsExtra};
 use crate::Puzzle5dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
-use protocol::{DiffAlgebra, MutationDiff};
+use protocol::DiffAlgebra;
+use protocol::ColdDiffAlgebra;
+use protocol::MutationDiff;
+use protocol::ColdMutationDiff;
 use protocol::list_delta::RowPatch;
 use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 use semio_s_artifact_puzzle_3d_mutations_selection::puzzle3d_targets_invariant as puzzle5d_targets_invariant;
@@ -744,43 +747,11 @@ impl RowPatch<Puzzle5dMeta> for Puzzle5dMetaPatch {
 }
 
 impl MutationDiff<Puzzle5dSnapshot> for Puzzle5dDiff {
-    fn apply(&self, base: &Puzzle5dSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Puzzle5dSnapshot> {
-        let mut item = match &self.artifact {
-            Some(artifact) => artifact.to_snapshot(),
-            None => base.clone(),
-        };
-        if let Some(value) = &self.schema {
-            item.schema = value.clone();
-        }
-        if let Some(value) = &self.domain {
-            item.domain = value.clone();
-        }
-        if let Some(value) = &self.label {
-            item.label = value.clone();
-        }
-        if let Some(patch) = &self.meta {
-            patch.commit_into(&mut item.meta, capability).map_err(|error| error.under(["meta"]))?;
-        }
-        if let Some(value) = &self.kind_catalogs {
-            item.kind_catalogs = value.clone();
-        }
-        if let Some(value) = &self.kind_catalogs_extra {
-            item.kind_catalogs_extra = value.clone();
-        }
-        if let Some(delta) = &self.kind_compatibility {
-            item.kind_compatibility = delta.commit_onto(&item.kind_compatibility, capability).map_err(|error| error.under(["kindCompatibility"]))?;
-        }
-        if let Some(delta) = &self.parts {
-            item.parts = delta.commit_onto(&item.parts, capability).map_err(|error| error.under(["parts"]))?;
-        }
-        if let Some(delta) = &self.fasteners {
-            item.fasteners = delta.commit_onto(&item.fasteners, capability).map_err(|error| error.under(["fasteners"]))?;
-        }
-        if let Some(delta) = &self.target_volumes {
-            item.target_volumes = delta.commit_onto(&item.target_volumes, capability).map_err(|error| error.under(["targetVolumes"]))?;
-        }
-        Ok(item)
-    }
+
+
+}
+
+impl ColdMutationDiff<Puzzle5dSnapshot> for Puzzle5dDiff {
     fn absorb(&mut self, later: Self) {
         if later.artifact.is_some() {
             *self = later;
@@ -827,9 +798,56 @@ impl MutationDiff<Puzzle5dSnapshot> for Puzzle5dDiff {
             (Some(_), None) => {}
         }
     }
+
+    fn apply(&self, base: &mut Puzzle5dSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let mut prepared = protocol::PreparedField::new(match &self.artifact {
+            Some(artifact) => artifact.to_snapshot(),
+            None => base.clone(),
+        }, <Self as protocol::MutationDiff<Puzzle5dSnapshot>>::retire_projection, capability);
+        let mut item = prepared.value_mut();
+        if let Some(value) = &self.schema {
+            item.schema = value.clone();
+        }
+        if let Some(value) = &self.domain {
+            item.domain = value.clone();
+        }
+        if let Some(value) = &self.label {
+            item.label = value.clone();
+        }
+        if let Some(patch) = &self.meta {
+            patch.commit_into(&mut item.meta, capability).map_err(|error| error.under(["meta"]))?;
+        }
+        if let Some(value) = &self.kind_catalogs {
+            item.kind_catalogs = value.clone();
+        }
+        if let Some(value) = &self.kind_catalogs_extra {
+            item.kind_catalogs_extra = value.clone();
+        }
+        if let Some(delta) = &self.kind_compatibility {
+            item.kind_compatibility = delta.commit_onto(&item.kind_compatibility, capability).map_err(|error| error.under(["kindCompatibility"]))?;
+        }
+        if let Some(delta) = &self.parts {
+            item.parts = delta.commit_onto(&item.parts, capability).map_err(|error| error.under(["parts"]))?;
+        }
+        if let Some(delta) = &self.fasteners {
+            item.fasteners = delta.commit_onto(&item.fasteners, capability).map_err(|error| error.under(["fasteners"]))?;
+        }
+        if let Some(delta) = &self.target_volumes {
+            item.target_volumes = delta.commit_onto(&item.target_volumes, capability).map_err(|error| error.under(["targetVolumes"]))?;
+        }
+        prepared.install(base);
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<Puzzle5dSnapshot> for Puzzle5dDiff {
+
+    fn is_empty(&self) -> bool {
+        self.artifact.is_none() && self.schema.is_none() && self.domain.is_none() && self.label.is_none() && self.meta.as_ref().is_none_or(|patch| patch.is_empty()) && self.kind_catalogs.is_none() && self.kind_catalogs_extra.is_none() && self.kind_compatibility.as_ref().is_none_or(Puzzle5dKindCompatibilityDelta::is_empty) && self.parts.as_ref().is_none_or(Puzzle5dPartsDelta::is_empty) && self.fasteners.as_ref().is_none_or(Puzzle5dFastenersDelta::is_empty) && self.target_volumes.as_ref().is_none_or(Puzzle5dTargetVolumesDelta::is_empty)
+    }
+}
+
+impl ColdDiffAlgebra<Puzzle5dSnapshot> for Puzzle5dDiff {
     fn inverse(&self, base: &Puzzle5dSnapshot) -> Self {
         if self.artifact.is_some() {
             return Self { artifact: Some(Box::new(Puzzle5dArtifact::from_snapshot(base.clone()))), ..Default::default() };
@@ -847,9 +865,6 @@ impl DiffAlgebra<Puzzle5dSnapshot> for Puzzle5dDiff {
             fasteners: self.fasteners.as_ref().map(|delta| delta.inverse(&base.fasteners)),
             target_volumes: self.target_volumes.as_ref().map(|delta| delta.inverse(&base.target_volumes)),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.artifact.is_none() && self.schema.is_none() && self.domain.is_none() && self.label.is_none() && self.meta.as_ref().is_none_or(|patch| patch.is_empty()) && self.kind_catalogs.is_none() && self.kind_catalogs_extra.is_none() && self.kind_compatibility.as_ref().is_none_or(Puzzle5dKindCompatibilityDelta::is_empty) && self.parts.as_ref().is_none_or(Puzzle5dPartsDelta::is_empty) && self.fasteners.as_ref().is_none_or(Puzzle5dFastenersDelta::is_empty) && self.target_volumes.as_ref().is_none_or(Puzzle5dTargetVolumesDelta::is_empty)
     }
 }
 

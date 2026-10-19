@@ -588,10 +588,9 @@ impl<R> Drop for NativeAssetTransportGuard<R> {
 #[cfg(not(target_arch = "wasm32"))]
 pub enum NativeAssetStreamFailure {
     Cancelled,
-    CancelledPage { payload: semio_framework_job::RetainedJobPayload },
+    Original(RendererSourceIoError),
     Unavailable(String),
     Fault(String),
-    Page { detail: &'static str, payload: semio_framework_job::RetainedJobPayload },
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -614,9 +613,11 @@ pub struct RuntimeMailboxInner<R> {
     pub raster_operation_authority: RuntimeRasterOperationAuthority,
     pub world_cursor_wake: infinite_world::world::WorldCursorWakeAuthority,
     pub completions: Mutex<RuntimeCompletionQueue>,
+    #[cfg(not(target_arch = "wasm32"))]
+    pub original_recovery: Mutex<Option<FrameOriginalRecovery>>,
     pub waker: Mutex<Option<RuntimeHostWaker>>,
     pub next_revision: AtomicU64,
-    pub applied_revisions: Mutex<std::collections::HashMap<&'static str, u64>>,
+    pub applied_window_metrics_revision: AtomicU64,
     pub frame_inputs: Mutex<FrameBuildInputs>,
     pub retained_control_deadline_us: AtomicU64,
     pub shell_clock_deadline_us: AtomicU64,
@@ -737,7 +738,7 @@ impl<R> FrameMaintenanceExecutionEnvelope<R> {
 impl<R> Drop for FrameMaintenanceExecutionEnvelope<R> {
     fn drop(&mut self) {
         if self.armed && self.registry.abandon(self.generation) {
-            self.mailbox.0.finish(returned_completion(self.revision, RuntimeApply::ResumeFrameDeferred { interaction: None, cursor: None }));
+            self.mailbox.0.finish(returned_completion(self.revision, RuntimeApply::FrameExecutionReturned));
         }
     }
 }
@@ -760,15 +761,11 @@ impl<R> FrameMaintenanceExecutionGuard<R> {
     }
 
     pub(crate) fn finish(mut self) -> bool {
-        let Some(owner) = self.owner.as_mut() else { return false };
-        let Some((interaction, cursor)) = owner.take_pair() else { return false };
-        if !self.registry.complete(self.generation) {
-            owner.interaction = Some(interaction);
-            owner.cursor = Some(cursor);
-            return false;
-        }
+        let Some(owner) = self.owner.take() else { return false; };
+        self.owner_cell.restore_taken(owner);
         self.completed = true;
-        self.mailbox.0.finish(returned_completion(self.revision, RuntimeApply::ResumeFrameDeferred { interaction: Some(interaction), cursor: Some(cursor) }));
+        if !self.registry.return_to_caller(self.generation) { return false; }
+        self.mailbox.0.finish(returned_completion(self.revision, RuntimeApply::FrameExecutionReturned));
         true
     }
 }
@@ -783,7 +780,7 @@ impl<R> Drop for FrameMaintenanceExecutionGuard<R> {
             self.owner_cell.restore_taken(owner);
         }
         if self.registry.abandon(self.generation) {
-            self.mailbox.0.finish(returned_completion(self.revision, RuntimeApply::ResumeFrameDeferred { interaction: None, cursor: None }));
+            self.mailbox.0.finish(returned_completion(self.revision, RuntimeApply::FrameExecutionReturned));
         }
     }
 }
@@ -846,7 +843,7 @@ impl<R> FrameDeferredExecutionEnvelope<R> {
 impl<R> Drop for FrameDeferredExecutionEnvelope<R> {
     fn drop(&mut self) {
         if self.armed && self.registry.abandon(self.generation) {
-            self.mailbox.0.finish(returned_completion(self.revision, RuntimeApply::ResumeFrameDeferred { interaction: None, cursor: None }));
+            self.mailbox.0.finish(returned_completion(self.revision, RuntimeApply::FrameExecutionReturned));
         }
     }
 }
@@ -869,15 +866,11 @@ impl<R> FrameDeferredExecutionGuard<R> {
     }
 
     pub(crate) fn finish(mut self) -> bool {
-        let Some(owner) = self.owner.as_mut() else { return false };
-        let Some((interaction, cursor)) = owner.take_pair() else { return false };
-        if !self.registry.complete(self.generation) {
-            owner.interaction = Some(interaction);
-            owner.cursor = Some(cursor);
-            return false;
-        }
+        let Some(owner) = self.owner.take() else { return false; };
+        self.owner_cell.restore_taken(owner);
         self.completed = true;
-        self.mailbox.0.finish(returned_completion(self.revision, RuntimeApply::ResumeFrameDeferred { interaction: Some(interaction), cursor: Some(cursor) }));
+        if !self.registry.return_to_caller(self.generation) { return false; }
+        self.mailbox.0.finish(returned_completion(self.revision, RuntimeApply::FrameExecutionReturned));
         true
     }
 }
@@ -892,7 +885,7 @@ impl<R> Drop for FrameDeferredExecutionGuard<R> {
             self.owner_cell.restore_taken(owner);
         }
         if self.registry.abandon(self.generation) {
-            self.mailbox.0.finish(returned_completion(self.revision, RuntimeApply::ResumeFrameDeferred { interaction: None, cursor: None }));
+            self.mailbox.0.finish(returned_completion(self.revision, RuntimeApply::FrameExecutionReturned));
         }
     }
 }

@@ -77,9 +77,9 @@ impl Puzzle3dClipboardJob {
 
 impl Puzzle3dClipboardJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         match self.outbox.phase(cx)? {
-            semio_s_plugin_puzzle_jobs::OutboxPhase::Building => return self.outbox.advance(cx),
+            semio_s_plugin_puzzle_jobs::OutboxPhase::Building => return self.outbox.advance(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
             semio_s_plugin_puzzle_jobs::OutboxPhase::Delivered | semio_s_plugin_puzzle_jobs::OutboxPhase::Retiring => {
                 self.outbox.retire_step(cx)?;
                 return Ok(None);
@@ -87,7 +87,7 @@ impl Puzzle3dClipboardJob {
             semio_s_plugin_puzzle_jobs::OutboxPhase::Idle => {}
         }
         let turn = self.turn(cx);
-        self.outbox.settle(turn, cx)
+        self.outbox.settle(turn, cx).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
@@ -105,12 +105,10 @@ impl InteractiveJob for Puzzle3dClipboardJob {
         self.owners.stage(Puzzle3dClipboardOwners { args: self.args.take(), interaction: self.interaction.take(), hover: self.hover.take(), tool_id: std::mem::take(&mut self.tool_id), snapshot: self.snapshot.take(), raw_wire: std::mem::take(&mut self.raw_wire), completion: self.completion.take(), rejection: self.rejection.take() });
     }
 
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            self.begin_close();
-            semio_s_plugin_puzzle_jobs::job_close_step(&mut self.outbox, &mut self.owners, grant)
-        })
-    }
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> { semio_framework_job::close_original_nested_step(cx, |cx, _grant| {
+        self.begin_close();
+        semio_s_plugin_puzzle_jobs::job_close_step(&mut self.outbox, &mut self.owners, cx)
+    }) }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
         Ok(semio_s_plugin_puzzle_jobs::job_close_demands(&self.outbox, &self.owners, 0)?.copy_bytes)

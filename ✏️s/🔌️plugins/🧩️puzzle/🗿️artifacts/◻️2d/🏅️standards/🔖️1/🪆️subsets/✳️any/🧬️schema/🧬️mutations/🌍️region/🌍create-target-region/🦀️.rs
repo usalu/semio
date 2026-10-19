@@ -30,23 +30,32 @@ pub fn create_target_region<Op: From<CreateTargetRegion>>(target_region: Puzzle2
 impl<Op> protocol::MutationKind<Puzzle2dSnapshot, Op> for CreateTargetRegion
 where
     Op: protocol::Mutation<Puzzle2dSnapshot, Diff = Puzzle2dDiff> + From<CreateTargetRegion> + From<DeleteTargetRegion>,
-{
+ {
+
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "target region", kind: "create-target-region", record: "CreatedTargetRegion" };
 
-    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create target region \"{}\"", self.target_region.id), &format!("Zielregion \"{}\" erstellen", self.target_region.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.target_region.id.to_string_owner()]
     }
+
+}
+impl<Op> protocol::ColdMutationKind<Puzzle2dSnapshot, Op> for CreateTargetRegion
+where
+    Op: protocol::ColdMutation<Puzzle2dSnapshot, ReferenceDiff = Puzzle2dDiff> + From<CreateTargetRegion> + From<DeleteTargetRegion>,
+ {
+fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+        super::diff::diff(self, base)
+    }
+fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Mutation

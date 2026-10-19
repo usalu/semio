@@ -1,16 +1,21 @@
 #!/usr/bin/env bun
 import { GenerateScript as GraphGenerateScript, PreviewGeneratedScript as GraphPreviewScript, OwnerGraphWireCheckScript } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts";
 /** 📦️ puzzle-3d Rust artifact package router. */
-import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { runArtifactRustPackageMain, runArtifactRustPackagesTests } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 
 import { runCmd } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
-import { BundleScript } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readdirSync } from "node:fs";
 import { resolve } from "node:path";
 
 /** 🛂️ Verify the exact canonical provider through every published owning Source consumer. */
 class OwnedVerifyScript extends BundleScript {
-  run(args: string[]): void {
+  async run(args: string[]): Promise<void> {
+    if(args[0]==="original-fill-fixture"&&(args.length===1||args.length===2&&args[1]==="native")){runCmd("bun",["test",resolve(this.repoRoot,"✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🎟️caller/🧪️tests/🟦️.ts")],{cwd:this.repoRoot});if(args[1]==="native")await runArtifactRustPackagesTests(["semio-s-artifact-puzzle-3d-editor-session"],this.repoRoot,["--offline","--test","precompute-fill","--","--nocapture"],this.invocation);return;}
+    if (args.length === 1 && args[0] === "original-work-construction") {
+      runCmd("bun", ["test", resolve(this.repoRoot, "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🎬️action/🧪️tests/🟦️.ts"), resolve(this.repoRoot, "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️tests/🟦️.ts")], { cwd: this.repoRoot });
+      return;
+    }
     if (args.length !== 1 || args[0] !== "snapshot-sqlite-source") throw new Error("verify snapshot-sqlite-source");
     const roots: string[] = [];
     const visit = (dir: string): void => {

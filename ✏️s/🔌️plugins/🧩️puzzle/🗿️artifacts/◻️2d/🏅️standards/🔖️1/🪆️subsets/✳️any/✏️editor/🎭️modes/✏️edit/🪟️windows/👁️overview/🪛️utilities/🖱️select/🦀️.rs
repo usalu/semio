@@ -1,5 +1,5 @@
-//! 🖱️ Overview-window utility — Select: the default pointer utility (rectangle/lasso marquee plus
 //! click picking). Together with `🖌️brush` it forms this window's entire exclusive utility set, so it
+//! 🖱️ Overview-window utility — Select: the default pointer utility (rectangle/lasso marquee plus
 //! carries `group: None` and renders as its own flat utility-bar icon, never a collapsed dropdown.
 //!
 //! 🛠️ It is also the select TOOL: a `🔄️machine` statechart whose effects are `ToolYield`s, driven by the
@@ -14,14 +14,19 @@
 use {crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::puzzle2d_occupied_handles, crate::editor::puzzle2d::snapshot::puzzle2d_push_edge, crate::editor::puzzle2d::snapshot::PUZZLE2D_PROXIMITY_GESTURE_MAX};
 use {crate::standards::v1::subsets::any::schema::mutations::connect_handles_in_proximity, crate::standards::v1::subsets::any::schema::mutations::drag_selection, crate::standards::v1::subsets::any::schema::puzzle2d_handle_distance, crate::standards::v1::subsets::any::schema::mutations::rotate_selection, crate::standards::v1::subsets::any::schema::mutations::scale_selection, crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation};
 
-use crate::standards::v1::subsets::any::io::text::mutations::{puzzle2d_declared_precision};
+use crate::standards::v1::subsets::any::io::text::mutations::puzzle2d_declared_precision;
 use crate::Puzzle2dSnapshot;
 use machine::Command;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::UtilityCategory;
 use semio_framework_plugin::UtilityDefinition;
-use semio_framework_tool_machine::{GestureChart, GesturePhase, ToolMachineRunner, ToolStep, ToolYield};
-use semio_framework_pack_json::{json,Value};
+use semio_framework_tool_machine::GestureChart;
+use semio_framework_tool_machine::GesturePhase;
+use semio_framework_tool_machine::ToolMachineRunner;
+use semio_framework_tool_machine::ToolStep;
+use semio_framework_tool_machine::ToolYield;
+use semio_framework_pack_json::json;
+use semio_framework_pack_json::Value;
 use std::sync::Arc;
 use semio_s_artifact_puzzle_2d::editor::puzzle2d::commands::proximity_connect::puzzle2d_proximity_pairs;
 

@@ -25,7 +25,11 @@ pub enum WidgetSignal {
     /// 🔆 Keyboard focus moved into the emitting window.
     WindowFocus,
     TabMoved { from: usize, to: usize },
-    /// ↕️ `path` names the splitter inside its window layout, `delta` the cells the pointer moved along the axis since the last report.
+        /// 🧲️ A held tab was released over a group or one of its split edges.
+    WindowDocked { source: String, target: String, placement: crate::tui::layout::DockPlacement, tab_index: Option<usize> },
+    /// 🔲️ A proposal lets the owning layout resolve the preview after reclaiming the source group.
+    WindowDockPreview { source: String, target: String, placement: crate::tui::layout::DockPlacement, tab_index: Option<usize> },
+/// ↕️ `path` names the splitter inside its window layout, `delta` the cells the pointer moved along the axis since the last report.
     SplitterDragged { path: Vec<usize>, delta: i16 },
     /// 🙈 The emitting overlay was closed without a choice (Escape or a click outside).
     Dismissed,

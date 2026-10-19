@@ -1,5 +1,7 @@
 //! 🔺️ Sparse diff builder for `ConnectKindCompatibility` — appends one row to `meta.kindCompatibility`.
-use semio_s_artifact_puzzle_3d_diff::{Puzzle3dDiff, Puzzle3dKindCompatibilityDelta, Puzzle3dMetaPatch};
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dKindCompatibilityDelta;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dMetaPatch;
 use {semio_s_artifact_puzzle_3d_model::Puzzle3dKindCompatibility, semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot};
 
 //#region 🔖️Diff

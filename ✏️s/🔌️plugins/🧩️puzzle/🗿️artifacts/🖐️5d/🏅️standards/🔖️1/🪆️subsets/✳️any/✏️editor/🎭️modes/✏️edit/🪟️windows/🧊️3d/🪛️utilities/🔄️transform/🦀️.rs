@@ -1,5 +1,5 @@
-//! 🔄️ 3D-window utility — Transform: the world gumball, puzzle 3d's `🪛️utilities/🔄️transform` twin. Its
 //! Utility Options are the Move/Rotate flags that compose which handles the gumball draws (scale handles
+//! 🔄️ 3D-window utility — Transform: the world gumball, puzzle 3d's `🪛️utilities/🔄️transform` twin. Its
 //! are deliberately absent — a part's scale comes from its kind catalog, not from a free drag). Bound
 //! only by the 3D world window — the 2D board window drags parts natively.
 //!
@@ -18,7 +18,12 @@ use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::entities::{puzzle5d_action, puzzle5d_axis_index, puzzle5d_grip_full_id, quat_rotate_vector, PUZZLE5D_PLAY_CONTROLLER_ID};
 use semio_framework_pack_json::Value;
-use crate::standards::v1::subsets::any::schema::mutations::{connect_grips,drag_selection_2d,drag_selection_3d,rotate_selection_3d,scale_selection_3d,Puzzle5dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::connect_grips;
+use crate::standards::v1::subsets::any::schema::mutations::drag_selection_2d;
+use crate::standards::v1::subsets::any::schema::mutations::drag_selection_3d;
+use crate::standards::v1::subsets::any::schema::mutations::rotate_selection_3d;
+use crate::standards::v1::subsets::any::schema::mutations::scale_selection_3d;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 
 use crate::Puzzle5dSnapshot;
 
@@ -26,7 +31,9 @@ use machine::Command;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::UtilityDefinition;
 use semio_framework_plugin::WindowMeasure;
-use semio_framework_tool_machine::{GestureChart, GesturePhase, ToolYield};
+use semio_framework_tool_machine::GestureChart;
+use semio_framework_tool_machine::GesturePhase;
+use semio_framework_tool_machine::ToolYield;
 use {semio_s_artifact_puzzle_3d_editor_transform::puzzle3d_unique_targets, semio_s_artifact_puzzle_3d_editor_transform::Puzzle3dSelectionMotion, semio_s_artifact_puzzle_3d_editor_transform::Puzzle3dSelectionRecord};
 use std::sync::Arc;
 

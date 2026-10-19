@@ -25,19 +25,9 @@ pub fn retire_local_document(document_id: &str) -> LocalCatalogConfigMutation {
 impl MutationKind<LocalCatalog, LocalCatalogConfigMutation> for RetireLocalDocument {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "clear", entity: "local-document", kind: "retire-local-document", record: "Cleared" };
 
-    fn diff(&self, base: &LocalCatalog) -> MutationOutcome<LocalCatalogDiff> {
-        if !base.documents.iter().any(|entry| entry.document_id == self.document_id) {
-            return MutationOutcome::new(LocalCatalogDiff::default()).warning("mutation.no-op", format!("\"{}\" is not listed in the local catalog.", self.document_id));
-        }
-        MutationOutcome::new(LocalCatalogDiff { documents: vec![KeyedEdit::new(self.document_id.clone(), None)] })
-    }
 
-    fn inverse(&self, base: &LocalCatalog) -> Result<Vec<LocalCatalogConfigMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        base.documents.iter().find(|entry| entry.document_id == self.document_id).map(|prior| vec![admit_local_document(prior.clone())]).unwrap_or_default()
-    
-    })())
-}
+
+
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Stop keeping \"{}\" on this device", self.document_id), &format!("\"{}\" nicht mehr auf diesem Gerät behalten", self.document_id))
@@ -46,5 +36,20 @@ impl MutationKind<LocalCatalog, LocalCatalogConfigMutation> for RetireLocalDocum
     fn target(&self) -> Vec<String> {
         vec![self.document_id.clone()]
     }
+}
+
+impl crate::os_spr::ColdMutationKind<LocalCatalog, LocalCatalogConfigMutation> for RetireLocalDocument {
+    fn diff(&self, base: &LocalCatalog) -> MutationOutcome<LocalCatalogDiff> {
+        if !base.documents.iter().any(|entry| entry.document_id == self.document_id) {
+            return MutationOutcome::new(LocalCatalogDiff::default()).warning("mutation.no-op", format!("\"{}\" is not listed in the local catalog.", self.document_id));
+        }
+        MutationOutcome::new(LocalCatalogDiff { documents: vec![KeyedEdit::new(self.document_id.clone(), None)] })
+    }
+    fn inverse(&self, base: &LocalCatalog) -> Result<Vec<LocalCatalogConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+        base.documents.iter().find(|entry| entry.document_id == self.document_id).map(|prior| vec![admit_local_document(prior.clone())]).unwrap_or_default()
+    
+    })())
+}
 }
 //#endregion 🔖️Mutation

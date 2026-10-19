@@ -19,3 +19,6 @@ path = "../../🦀️.rs"
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 serde = { workspace = true }
+
+[dev-dependencies]
+semio-framework-math-dense = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/📦️packages/🦀️rust" }

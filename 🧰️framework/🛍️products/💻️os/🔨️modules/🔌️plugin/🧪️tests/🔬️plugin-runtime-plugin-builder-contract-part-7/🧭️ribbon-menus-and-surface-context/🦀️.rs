@@ -96,7 +96,9 @@
         let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         let app = contract_app_raw(mounted_policy, &mut identity).await;
         runtime.instances.borrow_mut().insert_admitted(7, std::sync::Arc::new(semio_framework_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell::new(AppInstance { id: 7, app, surface_contexts: Default::default() }, runtime.mounted_policy)));
-        let response = semio_framework_plugin_runtime_ops::ops_surface_render::plugin_refresh_ui(&runtime, 7, &serde_json::to_string(&json!({"viewState":focused,"panels":[{"key":"properties","bodyKey":"properties"}]})).unwrap()).await.unwrap();
+        let mut sequence = 0;
+        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(4_096, u64::MAX, mounted_policy.preparation), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, crate::artifact_app_laws::fixture_progress());
+        let response = semio_framework_plugin_runtime_ops::ops_surface_render::plugin_refresh_ui(&runtime, 7, &serde_json::to_string(&json!({"viewState":focused,"panels":[{"key":"properties","bodyKey":"properties"}]})).unwrap(), &mut cx).await.unwrap();
         let response: Value = serde_json::from_str(&response).unwrap();
         assert_eq!(response["panels"][0]["key"], "properties");
         let (body, actual) = RENDER_CONTEXT_PROBE.with(|probe| probe.take().unwrap());
@@ -214,6 +216,6 @@
             artifact_app_laws::close_registered_fixture_app(&mut action_app, mounted_policy,cx).expect("original contract fixture paid terminal close");
             artifact_app_laws::close_registered_fixture_app(&mut command_app, mounted_policy,cx).expect("original contract fixture paid terminal close");
         }
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }

@@ -1,11 +1,12 @@
-//! 🔍️ The READER: projects a committed fem3d JSON carrier through `json` (json-rust) and compares two of
 //! them. Nothing here applies a mutation or predicts what one should produce.
+//! 🔍️ The READER: projects a committed fem3d JSON carrier through `json` (json-rust) and compares two of
 //!
 //! usage: reader project <file.json> | reader compare <expected.json> <actual.json>
 use std::process::exit;
 
 use fem3d_json::project;
-use json::{object, JsonValue};
+use json::object;
+use json::JsonValue;
 
 fn report(probe: &str, status: &str, measurements: JsonValue) -> String {
     object! {

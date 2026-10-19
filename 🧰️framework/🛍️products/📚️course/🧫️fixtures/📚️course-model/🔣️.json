@@ -1,0 +1,30 @@
+{
+  "course": {
+    "schema": "semio.course/v1",
+    "id": "physics",
+    "title": { "en": "Physics Course", "de": "Physikkurs" },
+    "introduction": {
+      "title": { "en": "Welcome", "de": "Willkommen" },
+      "paragraphs": [{ "en": "Learn, then practise.", "de": "Lerne und übe anschließend." }]
+    },
+    "quizzes": ["warmup/❓️quiz/🔣️.json"],
+    "topics": [{ "id": "basics", "emoji": "📚", "title": { "en": "Basics", "de": "Grundlagen" }, "quizzes": ["warmup"] }],
+    "badges": []
+  },
+  "quizzes": [{
+    "schema": "semio.quiz/v1",
+    "id": "warmup",
+    "emoji": "🌡️",
+    "title": { "en": "Warm Up", "de": "Aufwärmen" },
+    "description": { "en": "Order temperatures.", "de": "Ordne Temperaturen." },
+    "tasks": [{
+      "kind": "sorting",
+      "id": "temperature",
+      "title": { "en": "Temperature", "de": "Temperatur" },
+      "prompt": { "en": "Order from cold to warm.", "de": "Ordne von kalt nach warm." },
+      "quantity": { "label": { "en": "Temperature", "de": "Temperatur" }, "unit": "°C", "scale": "linear", "prefixed": false, "additive": false },
+      "items": [{ "id": "ice", "label": { "en": "Ice", "de": "Eis" }, "value": 0 }, { "id": "water", "label": { "en": "Water", "de": "Wasser" }, "value": 20 }]
+    }]
+  }],
+  "expected": { "courseIssues": [], "quizIssues": [], "rootAcceptsCourse": true, "rootAcceptsQuiz": false }
+}

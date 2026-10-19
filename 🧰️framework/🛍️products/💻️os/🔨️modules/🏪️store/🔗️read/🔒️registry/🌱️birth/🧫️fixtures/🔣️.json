@@ -1,0 +1,1 @@
+{"capacity":1024,"freePage":512,"slotPage":128,"generationPage":512,"copyQuantum":4096,"cancelAt":[0,1,2,3,7,11,13],"queue":[{"issue":3,"return":[1,0],"next":[3,4]},{"issue":1024,"return":[1023,0,512],"next":[1023,0,512]}],"contracts":["original-ledger","one-paid-page","exact-global-balance","cancel-all-born-pages","same-registry-handoff","no-unpublished-read"]}

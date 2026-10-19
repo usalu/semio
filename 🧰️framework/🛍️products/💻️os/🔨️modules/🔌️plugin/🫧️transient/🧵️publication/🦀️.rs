@@ -51,7 +51,7 @@ impl<P, M> Default for BoundedTransientPreparationFactory<P, M> {
 
 impl<P, M> store::ArtifactEphemeralOneItemPreparationFactory<P, M> for BoundedTransientPreparationFactory<P, M>
 where
-    P: Clone + Send + Sync + 'static,
+    P: Send + Sync + 'static,
     M: protocol::Mutation<P> + protocol::OpBinary + Send + 'static,
 {
     fn preflight(&self, mutation: &M) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
@@ -68,7 +68,7 @@ where
 
 impl<P, M> store::ArtifactEphemeralOneItemPreparation<P, M> for BoundedTransientPreparation<P, M>
 where
-    P: Clone + Send + Sync + 'static,
+    P: Send + Sync + 'static,
     M: protocol::Mutation<P> + Send + 'static,
 {
     /// 🎒️ The byte cost is admitted by `preflight` against the one-item bound, so the per-turn grant
@@ -90,7 +90,7 @@ where
             if outcome.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error) {
                 return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "transient mutation was rejected against its captured base"));
             }
-            let next_root = protocol::apply_diff(outcome.diff(), request.base.as_ref()).map_err(|error| ValueError::new(ValueRefusalKind::InvalidValue, error.to_string()))?;
+            let next_root = protocol::apply_diff_cold(outcome.diff(), request.base.as_ref()).map_err(|error| ValueError::new(ValueRefusalKind::InvalidValue, error.to_string()))?;
             self.prepared = Some(store::ArtifactEphemeralOneItemPrepared { next_root: Arc::new(next_root) });
             self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: [0; 32] };
         }
@@ -174,6 +174,8 @@ impl<P> BoundedTransientRootRetirement<P> {
 }
 
 impl<P: Send + Sync + 'static> store::ErasedSnapshotRetirement for BoundedTransientRootRetirement<P> {
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Ok(self.demand())}
+
     /// 🎒️ Pages its byte accounting on the copy axis: a displaced transient root larger than one grant (lowpoly's mesh
     /// workspace) otherwise never retires, and every later publication blocks behind it.
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
@@ -253,7 +255,7 @@ impl<P, M> Default for BoundedTransientStoreDisposer<P, M> {
 
 impl<P, M> BoundedTransientStoreDisposer<P, M>
 where
-    P: Clone + Default,
+    P: Default,
     M: protocol::Mutation<P>,
 {
     fn owns_terminal(&self, owner: &store::TransientStore<P, M>) -> bool {
@@ -322,7 +324,7 @@ where
 
 pub fn bounded_transient_preparation_factory<P, M>() -> Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<P, M>>
 where
-    P: Clone + Send + Sync + 'static,
+    P: Send + Sync + 'static,
     M: protocol::Mutation<P> + protocol::OpBinary + Send + 'static,
 {
     Arc::new(BoundedTransientPreparationFactory::<P, M>::default())
@@ -358,7 +360,7 @@ impl<P, M> TransientStoreDisposer<P, M> {
 }
 
 impl<P, M> ArtifactOwnedDisposer<store::TransientStore<P, M>> for TransientStoreDisposer<P, M>
-where P: Clone + Default + Send + Sync + 'static, M: protocol::Mutation<P> + Send + 'static {
+where P: Default + Send + Sync + 'static, M: protocol::Mutation<P> + Send + 'static {
     fn close_step(&mut self, owner: &mut store::TransientStore<P, M>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
         if self.terminal_is_empty(owner) { return Ok(PluginLifecycleStep::Complete(Default::default())); }
         if self.retirement.as_ref().is_some_and(store::TransientStoreRetirement::awaits_live_read) { return Ok(PluginLifecycleStep::Blocked { reason: "transient store retirement awaits the live tracked snapshot read that holds its registry" }); }
@@ -407,7 +409,7 @@ where P: Clone + Default + Send + Sync + 'static, M: protocol::Mutation<P> + Sen
 
 pub fn transient_store_disposer<P, M>(factory: Arc<dyn store::ArtifactOwnedValueRetirementFactory<P>>) -> Box<dyn ArtifactOwnedDisposer<store::TransientStore<P, M>>>
 where
-    P: Clone + Default + Send + Sync + 'static,
+    P: Default + Send + Sync + 'static,
     M: protocol::Mutation<P> + Send + 'static,
 {
     Box::new(TransientStoreDisposer::<P, M>::new(factory))

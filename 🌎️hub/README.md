@@ -111,8 +111,8 @@ The startup line reports the three postures it resolved:
 ### As the dev loop (development mode)
 
 ```bash
-bun run dashboard run os-hub:dev --detach --wait-ready               # loopback hub, fd-3 supervised, data root ./.🧬semio/🌐hub
-bun run dashboard run os-hub:dev-secure-suite --detach --wait-ready  # hub + React `s` + native + MCP children, one credential each
+bun repo run os-hub:dev --detach --wait-ready               # loopback hub, fd-3 supervised, data root ./.🧬semio/🌐hub
+bun repo run os-hub:dev-secure-suite --detach --wait-ready  # hub + React `s` + native + MCP children, one credential each
 ```
 
 `dev` publishes a trusted catalog into the data root on first run if none is there yet (it
@@ -210,7 +210,7 @@ Chosen independently of the document store.
 | `OS_HUB_DIRECTORY_NEO4J_USER` | `neo4j` | Neo4j user. |
 | `OS_HUB_DIRECTORY_NEO4J_PASSWORD` | empty string | Neo4j password. |
 
-Launching both halves on PostgreSQL in development: `bun run dashboard run os-hub:dev-postgres --detach --wait-ready` (dashboard
+Launching both halves on PostgreSQL in development: `bun repo run os-hub:dev-postgres --detach --wait-ready` (dashboard
 commands `os-hub:dev-postgres` / `os-hub:build-dev-postgres`; `semio …` is `bun run dashboard …`). It stages its own binary with the
 `postgres,neo4j` features into `dist/build-dev-postgres`, requires `OS_HUB_DATABASE_URL`, and points the
 directory at the same database unless `OS_HUB_DIRECTORY_BACKEND`/`OS_HUB_DIRECTORY_DATABASE_URL` say
@@ -552,8 +552,8 @@ docker compose -f 🌎️hub/compose.yaml --profile postgres up --build
 ```
 
 Both steps are permanent `os-hub-ts` verbs (`🌎️hub/🧪️tests/🐳️docker-image`), each publishing an acceptance record:
-`bun ./📜️script.ts docker-image-build [--tag <t>] [--jobs <n>]` is the cold build (full client output in
-`🗑️generated/docker-image-build.log`), and `bun ./📜️script.ts docker-image-check [--tag <t>] [--catalog-root <root>]
+`bun repo run os-hub-ts:docker-image-build -- [--tag <t>] [--jobs <n>]` is the cold build (full client output in
+`🗑️generated/docker-image-build.log`), and `bun repo run os-hub-ts:docker-image-check -- [--tag <t>] [--catalog-root <root>]
 [--kind <kindId>]` runs that image in the posture above on a fresh volume — the catalog goes in with `docker cp` and the
 credential on stdin, nothing is bind-mounted — behind a loopback stand-in for the TLS terminator
 (`hubForwardingProxy`), then requires `/readyz`, `/healthz`, the cleartext refusal, a two-client relay over one new
@@ -656,11 +656,16 @@ delegated to it.
 Every tool, the approval model for destructive capabilities and configs for the other clients are in
 [the MCP README](../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/README.md).
 
+For local Docker or operator rehearsals, choose **New Task** (`Ctrl+B n`), search
+**Workspace Terminal**, select the working directory and system shell, and run the
+operator commands within that supervised dashboard task. Its task menu provides
+restart, stop and cancellation; named repository checks use their registered targets.
+
 ## Distribution tarball
 
 ```bash
-bun ./📜️script.ts publish os-hub     # → 🌎️hub/📦️packages/🦀️rust/dist/publish/…tar.gz + .sha256
-bun ./📜️script.ts publish os-mcp     # the end-user MCP binary, same shape
+bun repo run workspace:publish -- os-hub     # → 🌎️hub/📦️packages/🦀️rust/dist/publish/…tar.gz + .sha256
+bun repo run workspace:publish -- os-mcp     # the end-user MCP binary, same shape
 ```
 
 Each slice runs its project's `publish` target, which depends on that project's release build and

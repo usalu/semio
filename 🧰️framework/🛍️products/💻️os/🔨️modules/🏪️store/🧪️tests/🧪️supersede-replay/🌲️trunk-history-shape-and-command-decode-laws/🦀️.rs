@@ -231,7 +231,15 @@ impl Mutation<DemoSnapshot> for WitnessOp {
         self.0.descriptor()
     }
 
-    fn diff(&self, base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<Self::Diff> {
+    fn retire_cold(mut self) {
+        self.1 = false;
+        WITNESS_RETIRED.with(|retired| retired.set(retired.get() + 1));
+    }
+}
+
+impl semio_framework_os_spr::ColdMutation<DemoSnapshot> for WitnessOp {
+    type ReferenceDiff = <DemoMutation as Mutation<DemoSnapshot>>::Diff;
+    fn diff(&self, base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<Self::ReferenceDiff> {
         self.0.diff(base)
     }
 
@@ -242,10 +250,7 @@ impl Mutation<DemoSnapshot> for WitnessOp {
     })
 }
 
-    fn retire_cold(mut self) {
-        self.1 = false;
-        WITNESS_RETIRED.with(|retired| retired.set(retired.get() + 1));
-    }
+    
 }
 
 /// 🧷️ Command decoding is all-or-nothing, binary and text alike: a command whose operation list, supersede inputs or

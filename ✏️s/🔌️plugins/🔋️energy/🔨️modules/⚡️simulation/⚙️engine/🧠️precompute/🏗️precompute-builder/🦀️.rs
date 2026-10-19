@@ -116,10 +116,6 @@ impl PrecomputeBuilder {
         self.output
     }
 
-    pub fn close_step(&mut self, maximum_items: usize) -> bool {
-        self.output.close_step(maximum_items)
-    }
-
     fn advance(&mut self, stage: PrecomputeStage) {
         self.stage = stage;
         self.cursor = 0;

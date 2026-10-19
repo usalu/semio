@@ -16,14 +16,12 @@ enum Puzzle3dFocusSelectionStage {
 /// ♻️ The owners one `Puzzle3dFocusSelectionWork` still holds when its job closes, retired as one controlled bundle.
 #[derive(semio_framework_value::RetireOwned)]
 pub(super) struct Puzzle3dFocusSelectionWorkOwners {
-    pub(super) selected: HashSet<String>,
 }
 
 pub struct Puzzle3dFocusSelectionWork {
     pub(super) stage: Puzzle3dFocusSelectionStage,
     selection_cursor: usize,
     pub(super) object_cursor: usize,
-    pub(super) selected: HashSet<String>,
     center: [f64; 3],
     matched: usize,
     maximum_distance: f64,
@@ -36,7 +34,6 @@ impl Default for Puzzle3dFocusSelectionWork {
             stage: Puzzle3dFocusSelectionStage::Selection,
             selection_cursor: 0,
             object_cursor: 0,
-            selected: HashSet::with_capacity(semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_DECODED_ITEMS),
             center: [0.0; 3],
             matched: 0,
             maximum_distance: 1.0,
@@ -54,8 +51,12 @@ impl Puzzle3dFocusSelectionWork {
     /// (everything), and the silent no-op made `f` a dead key on every boot before the user had picked
     /// anything (`📓️2026-09-11-wave-B1-battery-extension.md` §5 defect 14). Costs no extra capacity: the
     /// two object scans this work already declares in `extent` run either way.
-    fn frames(&self, object_id: &str) -> bool {
-        self.selected.is_empty() || self.selected.contains(object_id)
+    fn frames(&self, interaction: &protocol::InteractionState, object_id: &str) -> bool {
+        Self::frames_source(Self::selection(interaction), object_id)
+    }
+
+    fn frames_source(selected: &[String], object_id: &str) -> bool {
+        selected.is_empty() || selected.iter().any(|id| id == object_id)
     }
 
 }
@@ -77,17 +78,18 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
         let window_config_snapshot = context.and_then(|context| context.window_config.as_ref());
         match self.stage {
             Puzzle3dFocusSelectionStage::Selection => {
-                if let Some(id) = Self::selection(interaction).get(self.selection_cursor) {
-                    if self.selected.len() >= semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_DECODED_ITEMS {
+                if Self::selection(interaction).get(self.selection_cursor).is_some() {
+                    if self.selection_cursor >= semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_DECODED_ITEMS {
                         return Err(Fault::from("puzzle3d-focus-selection-capacity"));
                     }
-                    self.selected.insert(id.clone());
                     self.selection_cursor += 1;
                     return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle3d-focus-selection-owner", "Reading selected object", "Ausgewähltes Objekt wird gelesen"));
                 }
@@ -105,7 +107,7 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle3d-focus-selection-distance", "Measuring selection radius", "Auswahlradius wird gemessen"));
                 };
                 self.object_cursor += 1;
-                if self.frames(&object.id) {
+                if self.frames(interaction, &object.id) {
                     self.center[0] += object.origin[0];
                     self.center[1] += object.origin[1];
                     self.center[2] += object.origin[2];
@@ -119,7 +121,7 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle3d-focus-selection-publish", "Preparing camera focus", "Kamerafokus wird vorbereitet"));
                 };
                 self.object_cursor += 1;
-                if self.frames(&object.id) {
+                if self.frames(interaction, &object.id) {
                     let delta = [object.origin[0] - self.center[0], object.origin[1] - self.center[1], object.origin[2] - self.center[2]];
                     self.maximum_distance = self.maximum_distance.max((delta[0] * delta[0] + delta[1] * delta[1] + delta[2] * delta[2]).sqrt());
                 }
@@ -140,6 +142,8 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle3dFocusSelectionStage::Complete => Err(Fault::from("puzzle3d-focus-selection-complete-repolled")),
             Puzzle3dFocusSelectionStage::Closing => Err(Fault::from("puzzle3d-focus-selection-closing")),
         }
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
@@ -147,14 +151,12 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
 
     fn begin_close(&mut self) {
         self.stage = Puzzle3dFocusSelectionStage::Closing;
-        self.close_owners.stage(Puzzle3dFocusSelectionWorkOwners { selected: std::mem::take(&mut self.selected) });
+        self.close_owners.stage(Puzzle3dFocusSelectionWorkOwners {});
     }
 
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            self.close_owners.close_step(grant)
-        })
-    }
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> { semio_framework_job::close_original_nested_step(cx, |cx, _grant| {
+        self.close_owners.close_step(cx)
+    }) }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
         Ok(self.close_owners.demands(0)?.copy_bytes)

@@ -19,7 +19,8 @@
 //! geometry needs full f64 precision fail its lossless-round-trip oracle.
 use crate::Puzzle2dSnapshot;
 use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text;
-use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_json::JsonSnapshot;
+use semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA;
 
 pub fn register() {}
 

@@ -9,7 +9,9 @@
 
 extern crate semio_framework_os_kernel as protocol;
 
-use protocol::{Mutation, MutationLeafDescriptor};
+use protocol::Mutation;
+
+use protocol::MutationLeafDescriptor;
 
 /// 🧬️ One aggregate's descriptors, for the snapshot its `#[mutations(snapshot = …)]` names.
 fn descriptors<S, M: Mutation<S>>() -> &'static [MutationLeafDescriptor] {

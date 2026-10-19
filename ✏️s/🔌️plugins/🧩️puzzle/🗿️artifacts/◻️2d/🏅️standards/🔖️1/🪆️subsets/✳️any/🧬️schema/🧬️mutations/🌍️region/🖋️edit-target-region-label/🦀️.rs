@@ -27,23 +27,32 @@ pub fn edit_target_region_label<Op: From<EditTargetRegionLabel>>(id: PagedUtf8<{
 impl<Op> protocol::MutationKind<Puzzle2dSnapshot, Op> for EditTargetRegionLabel
 where
     Op: protocol::Mutation<Puzzle2dSnapshot, Diff = Puzzle2dDiff> + From<EditTargetRegionLabel>,
-{
+ {
+
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "target region", kind: "edit-target-region-label", record: "EditedTargetRegionLabel" };
 
-    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Edit target region label \"{}\"", self.id), &format!("Beschriftung von Zielregion \"{}\" bearbeiten", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.to_string_owner()]
     }
+
+}
+impl<Op> protocol::ColdMutationKind<Puzzle2dSnapshot, Op> for EditTargetRegionLabel
+where
+    Op: protocol::ColdMutation<Puzzle2dSnapshot, ReferenceDiff = Puzzle2dDiff> + From<EditTargetRegionLabel>,
+ {
+fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+        super::diff::diff(self, base)
+    }
+fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Mutation

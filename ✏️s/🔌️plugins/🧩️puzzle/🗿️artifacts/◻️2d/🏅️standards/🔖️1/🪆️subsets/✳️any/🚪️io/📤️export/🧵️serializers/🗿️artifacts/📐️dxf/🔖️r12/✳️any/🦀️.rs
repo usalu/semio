@@ -1,5 +1,5 @@
-//! puzzle2d → dxf — the page drawing (`puzzle2d_board_drawing`) written as DXF R12 entities by `s.stdio.semio/v1/drawing`'s own
 //! export leaf, the one dxf writer every owner shares.
+//! puzzle2d → dxf — the page drawing (`puzzle2d_board_drawing`) written as DXF R12 entities by `s.stdio.semio/v1/drawing`'s own
 //!
 //! 🔖 `IoFidelity::Lossy`: a page drawing, not the document — there is no dxf import.
 use crate::standards::v1::subsets::any::io::puzzle2d_board_drawing;

@@ -1,8 +1,12 @@
 //! 🏷️ Fem3d mutation — `ChangeLoadCaseName` payload + `MutationKind` impl.
 
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-use protocol::{MutationKind, SemanticDescriptor};
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
+use protocol::MutationKind;
+use protocol::SemanticDescriptor;
+use protocol::ColdMutationKind;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 
 //#region 🔖️Mutation
 /// 🏷️ Sets an existing load case's human-readable `name`. The `id` is the identity every
@@ -19,24 +23,32 @@ pub struct ChangeLoadCaseName {
 
 impl<Op> MutationKind<Fem3dSnapshot, Op> for ChangeLoadCaseName
 where
-    Op: protocol::Mutation<Fem3dSnapshot, Diff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<change_load_case_name::ChangeLoadCaseName>,
-{
-    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "load-case", kind: "change-load-case-name", record: "ChangedLoadCaseName" };
+    Op: protocol::Mutation<Fem3dSnapshot, Diff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::change_load_case_name::ChangeLoadCaseName>, {
 
-    fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Fem3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "load-case", kind: "change-load-case-name", record: "ChangedLoadCaseName" };
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename case \"{}\" to \"{}\"", self.case_id, self.new_name), &format!("Lastfall \"{}\" in \"{}\" umbenennen", self.case_id, self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.case_id.clone()]
     }
+
+}
+impl<Op> protocol::ColdMutationKind<Fem3dSnapshotValue, Op> for ChangeLoadCaseName
+where
+    Op: protocol::ColdMutation<Fem3dSnapshotValue, ReferenceDiff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::change_load_case_name::ChangeLoadCaseName>, {
+
+
+    fn diff(&self, base: &Fem3dSnapshotValue) -> protocol::MutationOutcome<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> {
+        super::diff::diff(self, base)
+    }
+
+    fn inverse(&self, base: &Fem3dSnapshotValue) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
+
 }
 //#endregion 🔖️Mutation

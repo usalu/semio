@@ -1,4 +1,3 @@
-
 use super::*;
 use directory::os_directory::schema::space_artifact_creation::{SpaceArtifactCreateV1, SpaceArtifactCreationCatalogV1, SpaceArtifactCreationStatusV1};
 

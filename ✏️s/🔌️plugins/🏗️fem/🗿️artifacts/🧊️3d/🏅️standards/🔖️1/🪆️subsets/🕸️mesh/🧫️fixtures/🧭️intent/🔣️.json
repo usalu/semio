@@ -1,0 +1,41 @@
+{
+  "base": {
+    "nodes": [{ "id": "n1", "x": 1, "y": 2, "z": 3 }],
+    "elements": [],
+    "materials": [{ "id": "steel", "name": "Steel", "e": 200000000000, "g": 80000000000, "nu": 0.25, "rho": 7850 }],
+    "sections": [],
+    "solids": [{ "id": "slab", "name": "Slab", "outline": [[0, 0], [2, 0], [2, 2], [0, 2]], "holes": [], "baseZ": 0, "height": 2, "layers": 1, "meshSize": 1, "materialId": "steel", "axis": "z" }],
+    "supports": [],
+    "loadCases": [],
+    "combinations": [],
+    "analysis": { "modalCount": 3, "bucklingCount": 3, "deformationScale": 50 }
+  },
+  "move": {
+    "mutation": "moveSelection", "nodeIds": ["n1"], "solidIds": ["slab"],
+    "pivotX": 0, "pivotY": 0, "pivotZ": 0,
+    "dx": 4, "dy": 0, "dz": 0,
+    "axisX": 0, "axisY": 0, "axisZ": 1, "angle": 0,
+    "sx": 1, "sy": 1, "sz": 1
+  },
+  "peer": [
+    { "mutation": "changeNode", "id": "n1", "patch": { "y": 7 } },
+    { "mutation": "changeSolid", "id": "slab", "patch": { "name": "Peer Slab", "height": 5, "layers": 2, "meshSize": 0.5 } }
+  ],
+  "motions": [
+    { "name": "rotate", "dx": 0, "axisX": 1, "axisZ": 0, "angle": 1.5707963267948966, "sx": 1, "position": [1, -3, 2], "authored": ["y", "z"], "peerPatch": { "x": 9 } },
+    { "name": "scale", "dx": 0, "axisX": 0, "axisZ": 1, "angle": 0, "sx": 2, "position": [2, 2, 3], "authored": ["x"], "peerPatch": { "y": 9 } }
+  ],
+  "overflowNode": { "id": "n1", "x": 1.7976931348623157e308, "y": 2, "z": 3 },
+  "overflowOffset": 1.7976931348623157e308,
+  "overflowCode": "mutation.invariant",
+  "nodePatch": { "x": 5 },
+  "solidPatch": { "outline": [[4, 0], [6, 0], [6, 2], [4, 2]] },
+  "inverse": [
+    { "mutation": "changeSolid", "id": "slab", "patch": { "outline": [[0, 0], [2, 0], [2, 2], [0, 2]] } },
+    { "mutation": "changeNode", "id": "n1", "patch": { "x": 1 } }
+  ],
+  "combinedNode": { "id": "n1", "x": 5, "y": 7, "z": 3 },
+  "combinedSolid": { "id": "slab", "name": "Peer Slab", "outline": [[4, 0], [6, 0], [6, 2], [4, 2]], "holes": [], "baseZ": 0, "height": 5, "layers": 2, "meshSize": 0.5, "materialId": "steel", "axis": "z" },
+  "undoneNode": { "id": "n1", "x": 1, "y": 7, "z": 3 },
+  "undoneSolid": { "id": "slab", "name": "Peer Slab", "outline": [[0, 0], [2, 0], [2, 2], [0, 2]], "holes": [], "baseZ": 0, "height": 5, "layers": 2, "meshSize": 0.5, "materialId": "steel", "axis": "z" }
+}

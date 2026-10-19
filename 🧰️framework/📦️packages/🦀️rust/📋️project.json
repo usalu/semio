@@ -2,6 +2,54 @@
   "name": "@semio-tech/framework-rs",
   "$schema": "../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "targets": {
+    "test-staged-payload-funding": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🧵️job/📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/⏯️tool-run/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-staged-payload-funding"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-staged-payload-funding"
+          ]
+        }
+      }
+    },
+    "test-retained-pack-encoding": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🎒️pack/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-retained-pack-encoding"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-retained-pack-encoding"
+          ]
+        }
+      }
+    },
+    "test-window-utility-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-window-utility-native"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-window-utility-native"
+          ]
+        }
+      }
+    },
     "test-source-projection": {
       "executor": "repo:script",
       "cache": false,
@@ -223,6 +271,34 @@
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-argument-retirement-native",
         "forwardAllArgs": true
+      }
+    },
+    "test-original-factory-admission": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎯️action-bus/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-original-factory-admission"
+      }
+    },
+    "test-original-factory-admission-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎯️action-bus/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-original-factory-admission source"
       }
     }
   }

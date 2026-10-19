@@ -43,7 +43,19 @@ describe("styling resolve", () => {
     );
     expect(uiCss).toMatch(
       /@media \(forced-colors: active\) \{[\s\S]*?:is\(\.ui-glass, \.ui-veil\) \{[\s\S]*?background-color: Canvas;\s*color: CanvasText;[\s\S]*?\[data-window-silhouette-border\] path \{\s*stroke: CanvasText !important;[\s\S]*?\[data-window-silhouette-gap\] \{\s*background: transparent !important;\s*background-color: transparent !important;\s*forced-color-adjust: none;/,
+        );
+  });
+
+  it("tints the hovered card with the veil so the page behind it stays the crisp surface", () => {
+    expect(uiCss).toMatch(
+      /\[data-layered-card\]\[data-tinted\] > \*::after \{[\s\S]*?background-color: color-mix\(in srgb, var\(--surface-bg\) calc\(var\(--veil-alpha\) \* 100%\), transparent\);/,
     );
+    expect(uiCss).toMatch(
+      /@media \(prefers-reduced-transparency: reduce\) \{[\s\S]*?\[data-layered-card\]\[data-tinted\] > \*::after \{\s*background-color: var\(--surface-bg\);/,
+    );
+    expect(uiCss).toMatch(
+      /@media \(forced-colors: active\) \{[\s\S]*?\[data-layered-card\]\[data-tinted\] > \*::after \{\s*background-color: Canvas;/,
+);
   });
 
   it("expands the clipped content plane without changing document or auto-size clearances", () => {

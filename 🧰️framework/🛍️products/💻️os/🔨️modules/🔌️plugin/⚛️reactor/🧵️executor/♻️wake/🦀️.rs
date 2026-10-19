@@ -12,6 +12,8 @@ impl RetireOwned for WakerData{
  fn retirement_element_copy_bytes()->usize{size_of::<Self>()}
 }
 impl RetirementCursor for ExecutorSignalLease{
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;if self.terminal_is_empty(){return Ok(Default::default())}Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<Arc<ExecutorWakeSignal>>>()+size_of::<Arc<ExecutorWakeSignal>>()+size_of::<Option<TaskId>>(),release_bytes:semio_framework_value::shared_retirement_allocation_bytes::<ExecutorWakeSignal>(),depth:1,..Default::default()})}
+
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
   if self.terminal_is_empty(){return RetirementStep::Complete}
   let copy=self.next_work_byte_demand().unwrap();let release=self.next_close_byte_demand().unwrap();

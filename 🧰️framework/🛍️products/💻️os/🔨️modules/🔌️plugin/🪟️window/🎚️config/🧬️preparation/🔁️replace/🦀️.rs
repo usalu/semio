@@ -59,7 +59,8 @@ impl<S: Copy + RetireOwned + 'static, M: RetireOwned + 'static> WindowConfigRepl
 
 impl<S, M> RetainedCloneEditCursor<S, M> for WindowConfigReplaceCursor<S, M>
 where S: RetainedClone + Copy + RetireOwned + Send + Sync + 'static, M: WindowConfigReplaceMutation<S> + RetireOwned {
-    fn advance(&mut self, base: RetainedCloneRef<'_, S>, post: &mut S, mutation: RetainedCloneRef<'_, M>, grant: RetainedCloneGrant) -> Result<RetainedCloneEditStep, ValueError> {
+    fn advance_demands(&self, _: RetainedCloneRef<'_, S>, _: &S, _: RetainedCloneRef<'_, M>, _: usize) -> Result<RetirementDemand, ValueError> { Ok(if self.cancelled || self.custody.is_closing() || self.stage == 4 { Default::default() } else { self.normal_demand() }) }
+    fn advance(&mut self, base: RetainedCloneRef<'_, S>, post: &mut S, mutation: RetainedCloneRef<'_, M>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneEditStep, ValueError> {
         if self.cancelled || self.custody.is_closing() || grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneEditStep::Progress(Default::default())); }
         if self.stage == 4 { return Ok(RetainedCloneEditStep::Complete(Default::default())); }
         let demand = self.normal_demand();

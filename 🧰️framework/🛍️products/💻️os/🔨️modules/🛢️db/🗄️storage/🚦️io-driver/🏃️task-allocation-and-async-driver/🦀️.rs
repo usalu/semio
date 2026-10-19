@@ -4,7 +4,10 @@ use super::*;
 
 //#region 🔖️Limits
 pub(super) fn db_io_allocate_task(mut task: DbIoTask) -> Result<DbIoTaskHandle, (DbError, DbIoTask)> {
-    let mut arena = db_io_task_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let fault_custody = match db_io_fault_custody_reserve() { Ok(custody) => custody, Err(error) => return Err((error, task)) };
+    let poll_custody = match db_io_fault_custody_reserve() { Ok(custody) => custody, Err(error) => return Err((error, task)) };
+    let cleanup_custody = match db_io_fault_custody_reserve() { Ok(custody) => custody, Err(error) => return Err((error, task)) };
+let mut arena = db_io_task_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     if arena.free_len == 0 || arena.next_generation == u64::MAX {
         return Err((DbError::Unavailable(DB_IO_TASK_CAPACITY_EXHAUSTED.to_string()), task));
     }
@@ -86,7 +89,10 @@ pub(super) fn db_io_allocate_task(mut task: DbIoTask) -> Result<DbIoTaskHandle, 
         async_driver: None,
         async_driver_scheduled: false,
         async_driver_wake_requested: false,
-    };
+            fault_custody: Some(fault_custody),
+        poll_custody: Some(poll_custody),
+        cleanup_custody: Some(cleanup_custody),
+};
     let _ = attached;
     BLOCKING_QUEUE.enqueued(aggregate_credit.bytes);
     Ok(handle)
@@ -116,7 +122,7 @@ pub(super) fn db_io_submit_job(handle: DbIoTaskHandle, job: Job, attempt: u8) {
                     let Some(generation) = owner.retry_generation.checked_add(1).filter(|generation| *generation != 0) else {
                         owner.retry_attempt = None;
                         owner.phase = DbIoTaskPhase::Faulted;
-                        owner.terminal = Some(DbIoTerminal::Fault(db_io_literal_fault(DbIoFaultKind::Saturated, DbIoFaultCause::Unavailable, "DB I/O retry generation exhausted")));
+                        owner.terminal = Some(DbIoTerminal::Fault(db_io_literal_fault(owner.fault_custody.take().expect("preborn task fault custody"), DbIoFaultKind::Saturated, DbIoFaultCause::Unavailable, "DB I/O retry generation exhausted")));
                         if let Some(waker) = db_io_wake(&mut owner) {
                             drop(owner);
                             waker.wake();
@@ -140,7 +146,7 @@ pub(super) fn db_io_submit_job(handle: DbIoTaskHandle, job: Job, attempt: u8) {
                 owner.async_driver_scheduled = false;
                 owner.phase = DbIoTaskPhase::Faulted;
                 owner.terminal_submit_kind = Some(kind);
-                owner.terminal = Some(DbIoTerminal::Fault(db_io_literal_fault(DbIoFaultKind::Saturated, DbIoFaultCause::Unavailable, "DB I/O WorkerPool submission failed")));
+                owner.terminal = Some(DbIoTerminal::Fault(db_io_literal_fault(owner.fault_custody.take().expect("preborn task fault custody"), DbIoFaultKind::Saturated, DbIoFaultCause::Unavailable, "DB I/O WorkerPool submission failed")));
                 if let Some(waker) = db_io_wake(&mut owner) {
                     drop(owner);
                     waker.wake();
@@ -221,7 +227,7 @@ pub(super) fn db_io_drive_one(handle: DbIoTaskHandle) {
                 }
                 Err(error) => {
                     owner.phase = DbIoTaskPhase::Faulted;
-                    owner.terminal = Some(DbIoTerminal::Fault(db_io_task_fault(DbIoFaultKind::Backend, &error)));
+                    owner.terminal = Some(DbIoTerminal::Fault(db_io_task_fault(owner.fault_custody.take().expect("preborn task fault custody"), DbIoFaultKind::Backend, error)));
                 }
             }
             if let Some(waker) = db_io_wake(&mut owner) {
@@ -235,7 +241,7 @@ pub(super) fn db_io_drive_one(handle: DbIoTaskHandle) {
             let mut owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             owner.task = Some(task_owner);
             owner.phase = DbIoTaskPhase::Faulted;
-            owner.terminal = Some(DbIoTerminal::Fault(db_io_task_fault(DbIoFaultKind::Backend, &error)));
+            owner.terminal = Some(DbIoTerminal::Fault(db_io_task_fault(owner.fault_custody.take().expect("preborn task fault custody"), DbIoFaultKind::Backend, error)));
             if let Some(waker) = db_io_wake(&mut owner) {
                 drop(owner);
                 waker.wake();
@@ -295,12 +301,12 @@ pub(super) fn db_io_drive_one(handle: DbIoTaskHandle) {
             }
             Ok(_) => {
                 owner.phase = DbIoTaskPhase::Faulted;
-                owner.terminal = Some(DbIoTerminal::Fault(db_io_literal_fault(DbIoFaultKind::Backend, DbIoFaultCause::Internal, "DB I/O executor returned an invalid typed step")));
+                owner.terminal = Some(DbIoTerminal::Fault(db_io_literal_fault(owner.fault_custody.take().expect("preborn task fault custody"), DbIoFaultKind::Backend, DbIoFaultCause::Internal, "DB I/O executor returned an invalid typed step")));
                 waker = db_io_wake(&mut owner);
             }
             Err(error) => {
                 owner.phase = DbIoTaskPhase::Faulted;
-                owner.terminal = Some(DbIoTerminal::Fault(db_io_task_fault(if panicked { DbIoFaultKind::Panic } else { DbIoFaultKind::Backend }, &error)));
+                owner.terminal = Some(DbIoTerminal::Fault(db_io_task_fault(owner.fault_custody.take().expect("preborn task fault custody"), if panicked { DbIoFaultKind::Panic } else { DbIoFaultKind::Backend }, error)));
                 waker = db_io_wake(&mut owner);
             }
         }
@@ -359,7 +365,7 @@ fn db_io_finish_async_driver(handle: DbIoTaskHandle, backend: DbIoBackendControl
     owner.async_driver_wake_requested = false;
     owner.task = Some(task);
     owner.terminal = Some(match transition {
-        Err(error) => DbIoTerminal::Fault(db_io_task_fault(DbIoFaultKind::Backend, &error)),
+        Err(error) => DbIoTerminal::Fault(db_io_task_fault(owner.fault_custody.take().expect("preborn task fault custody"), DbIoFaultKind::Backend, error)),
         Ok(()) if owner.cancelled => DbIoTerminal::Cancelled(terminal.ok()),
         Ok(()) => match terminal {
             Ok(result) => DbIoTerminal::Result(result),
@@ -423,7 +429,7 @@ fn db_io_poll_async_driver(handle: DbIoTaskHandle) {
             owner.async_lane_turn = false;
             owner.cancelled = true;
             owner.phase = DbIoTaskPhase::Cancelled;
-            owner.terminal = Some(DbIoTerminal::Fault(db_io_literal_fault(DbIoFaultKind::Panic, DbIoFaultCause::Internal, "DB I/O async driver panicked")));
+            owner.terminal = Some(DbIoTerminal::Fault(db_io_literal_fault(owner.fault_custody.take().expect("preborn task fault custody"), DbIoFaultKind::Panic, DbIoFaultCause::Internal, "DB I/O async driver panicked")));
             let waker = db_io_wake(&mut owner);
             drop(owner);
             let _ = db_io_enqueue_close(handle);

@@ -1,6 +1,7 @@
-//! 🔺️ Sparse diff builder for `CreateReference` — a real append-only insert. No-op when the id already
 //! exists in `base`.
-use semio_s_artifact_puzzle_3d_diff::{Puzzle3dDiff, Puzzle3dReferencesDelta};
+//! 🔺️ Sparse diff builder for `CreateReference` — a real append-only insert. No-op when the id already
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dReferencesDelta;
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Diff

@@ -3,6 +3,7 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config/📦️packages/🦀️rust",
     "⚙️engine/◻️2d/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/📦️packages/🦀️rust",
@@ -291,3 +292,6 @@ redundant_clone = "warn"
   level = "warn"
   priority = -1
 
+
+[workspace.dependencies.semio-framework-trace]
+path = "../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust"

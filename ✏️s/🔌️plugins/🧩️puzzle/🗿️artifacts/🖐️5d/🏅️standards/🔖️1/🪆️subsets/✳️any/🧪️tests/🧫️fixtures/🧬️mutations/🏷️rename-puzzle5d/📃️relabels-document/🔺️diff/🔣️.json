@@ -1,13 +1,11 @@
 {
   "artifact": null,
+  "schema": null,
   "domain": null,
-  "fasteners": null,
-  "kindCatalogs": null,
-  "kindCatalogsExtra": null,
-  "kindCompatibility": null,
   "label": "Fixture Renamed",
   "meta": null,
+  "kindCompatibility": null,
   "parts": null,
-  "schema": null,
+  "fasteners": null,
   "targetVolumes": null
 }

@@ -4,6 +4,7 @@
   "regions": null,
   "materials": null,
   "sections": {
+    "removed": [],
     "inserted": [
       {
         "index": 5,
@@ -15,7 +16,6 @@
         }
       }
     ],
-    "removed": [],
     "moved": [],
     "modified": []
   },

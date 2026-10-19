@@ -4,52 +4,59 @@ use super::*;
 
 //#region ⏯️RunJob
 impl Puzzle2dFillRunJob {
-    pub(super) fn turn(&mut self, context: &mut StepContext<'_>) -> JobTurn {
+    pub(super) fn turn(&mut self, context: &mut StepContext<'_>) -> Result<JobTurn, semio_framework_job::OriginalTurnFailure> {
         if self.closing || context.is_cancelled() {
-            return JobTurn::Cancelled;
+            return Ok(JobTurn::Cancelled);
         }
         if let Some(placement) = self.retiring_placement.as_mut() {
-            let step = placement.close_step(context.retained_grant());
-            if matches!(step, InteractiveJobCloseStep::Blocked) || context.consume_retained(step.progress()).is_err() {
-                return fill_run_fault("puzzle2d-fill-placement-retirement");
-            }
+            let demand = semio_framework_value::RetirementDemand { release_bytes: placement.next_close_release_byte_demand(), depth: 1, ..Default::default() };
+            semio_framework_job::close_original_retained_step(context, demand, |grant| Ok(match placement.close_step(grant) {
+                InteractiveJobCloseStep::Complete { progress } => semio_framework_value::RetainedCloneStep::Complete(progress),
+                step => semio_framework_value::RetainedCloneStep::Progress(step.progress()),
+            }))?;
             if placement.terminal_is_empty() {
                 self.retiring_placement = None;
             }
-            return JobTurn::Yield;
+            return Ok(JobTurn::Yield);
         }
         if let Some(owed) = self.owed.take() {
-            return self.settle_owed(context, owed);
+            return Ok(self.settle_owed(context, owed));
         }
         loop {
             if self.finished {
                 self.settle();
-                return self.flush_then(context, FillRunOwed::Checkpoint);
+                return Ok(self.flush_then(context, FillRunOwed::Checkpoint));
             }
             if context.fuel_exhausted() || context.deadline_exceeded() || self.writer.pending_bytes() >= FILL_RUN_TICK_FLUSH_BYTES {
-                return self.flush(context).unwrap_or(JobTurn::Yield);
+                return Ok(self.flush(context).unwrap_or(JobTurn::Yield));
+            }
+            if self.pending_snapshot.is_some() {
+                let operation = Operation::new(OperationId(self.pending_search_serial), RevisionId(0), Generation(0), self.seed);
+                if !BoardFillJob::admit_original(&mut self.pending_snapshot, u32::MAX, operation, &mut self.search, context)? { return Ok(JobTurn::Yield); }
+                self.stage = FillRunStage::Search;
+                continue;
             }
             if let Some(capture) = self.capture.as_mut() {
-                match capture.advance(self.document.value(), &self.kinds, FILL_RUN_CAPTURE_UNITS) {
+                if capture.ingress.is_none() && !BoardFillSnapshotIngress::admit_original(capture.suggestion_offset, &PUZZLE_2D_BOARD_NAMING, &mut capture.ingress, context)? { return Ok(JobTurn::Yield); }
+                match capture.advance(self.document.as_ref().expect("original fill snapshot remains until close").value(), &self.kinds, FILL_RUN_CAPTURE_UNITS) {
                     Ok(None) => {}
                     Ok(Some(snapshot)) => {
-                        let serial = capture.serial;
+                        self.pending_search_serial = capture.serial;
                         self.open_handles = capture.open_handles;
                         self.capture = None;
-                        self.search = Some(BoardFillJob::with_operation(snapshot, u32::MAX, Operation::new(OperationId(serial), RevisionId(0), Generation(0), self.seed)));
-                        self.stage = FillRunStage::Search;
+                        self.pending_snapshot = Some(snapshot);
                     }
-                    Err(code) => return fill_run_fault(code),
+                    Err(code) => return Ok(fill_run_fault(code)),
                 }
                 continue;
             }
-            let Some(search) = self.search.as_mut() else { return fill_run_fault("puzzle2d-fill-run-search-owner") };
+            let Some(search) = self.search.as_mut() else { return Ok(fill_run_fault("puzzle2d-fill-run-search-owner")); };
             if search.stage() == BoardFillStage::Complete {
                 let reason = self.stall_reason();
                 self.stall(context, reason);
                 continue;
             }
-            let (outcome, event) = Self::search_batch(search, &mut self.search_sequence, context);
+            let (outcome, event) = Self::search_batch(search, context)?;
             let fault = match &outcome {
                 Some(FillSearch::Fault) => search.take_fault(),
                 _ => None,
@@ -60,18 +67,18 @@ impl Puzzle2dFillRunJob {
             }
             match outcome {
                 None => {}
-                Some(FillSearch::Cancelled) => return JobTurn::Cancelled,
+                Some(FillSearch::Cancelled) => return Ok(JobTurn::Cancelled),
                 Some(outcome) => {
                     let checkpoint = matches!(outcome, FillSearch::Checkpoint);
                     match (checkpoint, fault) {
                         (true, _) => match self.accept(context) {
-                            Ok(true) => return self.flush_then(context, FillRunOwed::Checkpoint),
+                            Ok(true) => return Ok(self.flush_then(context, FillRunOwed::Checkpoint)),
                             Ok(false) => {}
-                            Err(code) => return fill_run_fault(code),
+                            Err(code) => return Ok(fill_run_fault(code)),
                         },
                         (false, Some("placement-capacity")) => self.stall(context, FillRunReason::ArtifactCapacity),
-                        (false, Some(code)) => return fill_run_fault(code),
-                        (false, None) => return fill_run_fault("puzzle2d-fill-run-search-outcome"),
+                        (false, Some(code)) => return Ok(fill_run_fault(code)),
+                        (false, None) => return Ok(fill_run_fault("puzzle2d-fill-run-search-outcome")),
                     }
                 }
             }
@@ -81,17 +88,17 @@ impl Puzzle2dFillRunJob {
 
 impl Puzzle2dFillRunJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         match self.outbox.phase(cx)? {
-            crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx),
+            crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
             crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {
                 self.outbox.retire_step(cx)?;
                 return Ok(None);
             }
             crate::puzzle_job::OutboxPhase::Idle => {}
         }
-        let turn = self.turn(cx);
-        self.outbox.settle(turn, cx)
+        let turn = self.turn(cx)?;
+        self.outbox.settle(turn, cx).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
@@ -109,65 +116,50 @@ impl InteractiveJob for Puzzle2dFillRunJob {
         }
     }
 
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_nested_step(cx,|cx,grant|{
-            self.begin_close();
-            if !self.outbox.terminal_is_empty() {
-                return Ok(match self.outbox.close_step(grant) {
-                    Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) | semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
-                    Err(error) => return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx)),
-                });
-            }
-            if grant.maximum_items == 0 {
-                return Ok(InteractiveJobCloseStep::Pending { progress: Default::default() });
-            }
-            let one = semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() };
-            let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
-            if let Some(capture) = self.capture.as_mut() {
-                let step = capture.close_one(child);
-                if capture.is_closed() {
-                    self.capture = None;
-                }
-                return Ok(match step {
-                    InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress } },
-                    step => step,
-                });
-            }
-            if let Some(placement) = self.retiring_placement.as_mut() {
-                let step = placement.close_step(child);
-                if placement.terminal_is_empty() {
-                    self.retiring_placement = None;
-                }
-                return Ok(match step {
-                    InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress } },
-                    step => step,
-                });
-            }
-            for slot in [&mut self.closing_search, &mut self.search] {
-                let Some(job) = slot.as_mut() else { continue };
-                let step = cx.with_retained_loan(child, |same| InteractiveJob::close_step(job, same))?;
-                if InteractiveJob::terminal_is_empty(job) {
-                    *slot = None;
-                }
-                return Ok(match step {
-                    InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress } },
-                    step => step,
-                });
-            }
-            if !self.owners_staged {
-                self.owners_staged = true;
-                let identity = self.writer.identity();
-                self.close_owners.stage(Puzzle2dFillRunOwners {
-                    document: Arc::clone(&self.document),
-                    kinds: std::mem::take(&mut self.kinds),
-                    writer: std::mem::replace(&mut self.writer, ToolRunTickWriter::new(identity)),
-                    replay: self.replay.take(),
-                    placements: std::mem::take(&mut self.placements),
-                    target_regions: std::mem::take(&mut self.target_regions),
-                });
-                return Ok(InteractiveJobCloseStep::Pending { progress: one });
-            }
-            self.close_owners.close_step(grant).map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+        semio_framework_job::close_original_nested_step(cx, |cx, _grant| {
+
+        self.begin_close();
+        if !self.outbox.terminal_is_empty() {
+            let demand = self.outbox.retirement_demands()?;
+            return semio_framework_job::close_original_retained_step(cx, demand, |grant| self.outbox.close_step(grant));
+        }
+        if let Some(snapshot) = self.pending_snapshot.as_mut() {
+            let step = snapshot.close_step(cx)?;
+            if snapshot.terminal_is_empty() { self.pending_snapshot = None; }
+            return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
+        }
+        if let Some(capture) = self.capture.as_mut() {
+            let step = capture.close_one(cx)?;
+            if capture.is_closed() { self.capture = None; }
+            return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
+        }
+        if let Some(placement) = self.retiring_placement.as_mut() {
+            let demand = semio_framework_value::RetirementDemand { release_bytes: placement.next_close_release_byte_demand(), depth: 1, ..Default::default() };
+            let step = semio_framework_job::close_original_retained_step(cx, demand, |grant| Ok(match placement.close_step(grant) {
+                InteractiveJobCloseStep::Complete { progress } => semio_framework_value::RetainedCloneStep::Complete(progress),
+                step => semio_framework_value::RetainedCloneStep::Progress(step.progress()),
+            }))?;
+            if placement.terminal_is_empty() { self.retiring_placement = None; }
+            return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
+        }
+        for slot in [&mut self.closing_search, &mut self.search] {
+            let Some(job) = slot.as_mut() else { continue };
+            let step = InteractiveJob::close_step(job, cx)?;
+            if InteractiveJob::terminal_is_empty(job) { *slot = None; }
+            return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
+        }
+        if !self.owners_staged {
+            self.owners_staged = true;
+            let identity = self.writer.identity();
+            self.close_owners.stage(Puzzle2dFillRunOwners {
+                document: self.document.take(), kinds: std::mem::take(&mut self.kinds),
+                writer: std::mem::replace(&mut self.writer, ToolRunTickWriter::new(identity)),
+                replay: self.replay.take(), placements: std::mem::take(&mut self.placements), target_regions: std::mem::take(&mut self.target_regions),
+            });
+        }
+        self.close_owners.close_step(cx)
+    
         })
     }
 
@@ -188,7 +180,7 @@ impl InteractiveJob for Puzzle2dFillRunJob {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.outbox.terminal_is_empty() && self.capture.is_none() && self.search.is_none() && self.closing_search.is_none() && self.retiring_placement.is_none() && self.owners_staged && self.close_owners.is_empty()
+        self.closing && self.pending_snapshot.is_none() && self.document.is_none() && self.outbox.terminal_is_empty() && self.capture.is_none() && self.search.is_none() && self.closing_search.is_none() && self.retiring_placement.is_none() && self.owners_staged && self.close_owners.is_empty()
     }
 }
 
@@ -197,6 +189,7 @@ impl Puzzle2dFillRunJob {
         if !self.outbox.terminal_is_empty() {
             return self.outbox.retirement_demands();
         }
+        if let Some(snapshot) = self.pending_snapshot.as_ref() { return snapshot.next_close_demands(0); }
         if let Some(placement) = self.retiring_placement.as_ref() {
             return Ok(semio_framework_value::RetirementDemand { release_bytes: placement.next_close_release_byte_demand(), depth: 1, ..Default::default() });
         }

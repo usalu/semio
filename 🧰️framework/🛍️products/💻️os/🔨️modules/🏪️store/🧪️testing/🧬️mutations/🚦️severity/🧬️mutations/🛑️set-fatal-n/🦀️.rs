@@ -19,6 +19,17 @@ pub struct SetFatalN {
 //#region ⚙️Behavior
 impl semio_framework_os_spr::MutationKind<DemoSnapshot, SeverityMutation> for SetFatalN {
     const SEMANTICS: semio_framework_os_spr::SemanticDescriptor = semio_framework_os_spr::SemanticDescriptor { verb: "set", entity: "fatal-n", kind: "set-fatal-n", record: "SetFatalN" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Fatal N", "Schwerwiegend N setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["n".into()]
+    }
+}
+
+impl semio_framework_os_spr::ColdMutationKind<DemoSnapshot, SeverityMutation> for SetFatalN {
     fn diff(&self, _base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<DemoDiff> {
         semio_framework_os_spr::MutationOutcome::fatal("mutation.invariant", "n invariant violated", ["n"])
     }
@@ -28,11 +39,5 @@ impl semio_framework_os_spr::MutationKind<DemoSnapshot, SeverityMutation> for Se
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Fatal N", "Schwerwiegend N setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["n".into()]
-    }
 }
 //#endregion ⚙️Behavior

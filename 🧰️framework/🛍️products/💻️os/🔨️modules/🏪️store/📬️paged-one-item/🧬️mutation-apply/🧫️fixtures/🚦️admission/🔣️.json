@@ -1,0 +1,10 @@
+{
+  "base": 7,
+  "diff": 5,
+  "cases": [
+    {"level":"info","code":"mutation.cascade","message":"admitted cascade","target":["a"],"opIndex":0,"applied":true,"post":12,"applyCalls":1,"inverseCalls":1},
+    {"level":"warning","code":"mutation.partial","message":"admitted partial","target":["a"],"opIndex":0,"applied":true,"post":12,"applyCalls":1,"inverseCalls":1},
+    {"level":"error","code":"mutation.target-missing","message":"refused target","target":["a"],"opIndex":0,"applied":false,"post":7,"applyCalls":0,"inverseCalls":0},
+    {"level":"fatal","code":"mutation.invariant","message":"refused invariant","target":["a"],"opIndex":0,"applied":false,"post":7,"applyCalls":0,"inverseCalls":0}
+  ]
+}

@@ -64,20 +64,33 @@ impl<K:BoundedOrd> RetainedOrderedMapLookupCursor<K>{
     }
     pub fn advance_retirement_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{
         if self.complete.is_some(){return Ok(Default::default());}
-        if self.source.is_none()||self.target.is_none(){return Ok(crate::RetirementDemand{copy_bytes:super::super::RetainedCloneSource::<u64>::constructor_copy_bytes(),depth:1,..Default::default()});}
-        if self.pending.is_some(){return self.comparison.as_ref().map_or(Ok(Default::default()),|cursor|Ok(crate::RetirementDemand{copy_bytes:cursor.next_close_copy_byte_demand()?,capacity_bytes:cursor.next_close_capacity_byte_demand(body)?,release_bytes:cursor.next_close_release_byte_demand()?,depth:cursor.next_close_depth_demand()?}));}
+        if self.source.is_none()||self.target.is_none(){return Ok(crate::RetirementDemand{copy_bytes:RetainedCloneBinding::alias_copy_bytes(),depth:1,..Default::default()});}
+        if self.pending.is_some(){return self.comparison.as_ref().map_or(Ok(Default::default()),|cursor|cursor.close_demands(body));}
         if !self.initialized||self.low==self.high{return Ok(Default::default());}
-        self.comparison.as_ref().map_or(Ok(crate::RetirementDemand{copy_bytes:super::super::RetainedCloneSource::<u64>::constructor_copy_bytes(),depth:1,..Default::default()}),|cursor|cursor.advance_retirement_demands(body))
+        self.comparison.as_ref().map_or(Ok(crate::RetirementDemand{copy_bytes:RetainedCloneBinding::alias_copy_bytes(),depth:1,..Default::default()}),|cursor|cursor.advance_retirement_demands(body))
     }
     pub fn begin_close(&mut self)->bool{let started=!self.closing;self.closing=true;if let Some(c)=self.comparison.as_mut(){c.begin_close();}started}
-    pub fn next_close_copy_byte_demand(&self)->Result<usize,crate::ValueError>{if let Some(c)=self.comparison.as_ref(){c.next_close_copy_byte_demand()}else{RetainedCloneBinding::copy_demand(if self.source.is_some(){&self.source}else{&self.target})}}
-    pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueError>{if let Some(c)=self.comparison.as_ref(){c.next_close_capacity_byte_demand(body)}else{RetainedCloneBinding::capacity_demand(if self.source.is_some(){&self.source}else{&self.target},body)}}
-    pub fn next_close_release_byte_demand(&self)->Result<usize,crate::ValueError>{if let Some(c)=self.comparison.as_ref(){c.next_close_release_byte_demand()}else{RetainedCloneBinding::release_demand(if self.source.is_some(){&self.source}else{&self.target})}}
-    pub fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{if let Some(c)=self.comparison.as_ref(){c.next_close_depth_demand()}else{RetainedCloneBinding::depth_demand(if self.source.is_some(){&self.source}else{&self.target})}}
+    /// 🎟️ Retains the original comparator or projected binding through one complete next-action quote.
+    pub(super) fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{
+        if let Some(cursor)=self.comparison.as_ref(){if cursor.terminal_is_empty(){return Ok(crate::RetirementDemand{copy_bytes:size_of::<K::Cursor>(),depth:1,..Default::default()});}let mut d=cursor.close_demands(body)?;d.depth=d.depth.checked_add(1).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::DepthLimit,"original lookup comparator close depth overflow"))?;return Ok(d);}
+        RetainedCloneBinding::close_demand(if self.source.is_some(){&self.source}else{&self.target},body)
+    }    pub fn next_close_copy_byte_demand(&self)->Result<usize,crate::ValueError>{if let Some(c)=self.comparison.as_ref(){if c.terminal_is_empty(){Ok(size_of::<K::Cursor>())}else{c.next_close_copy_byte_demand()}}else{RetainedCloneBinding::copy_demand(if self.source.is_some(){&self.source}else{&self.target})}}
+    pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueError>{if let Some(c)=self.comparison.as_ref(){if c.terminal_is_empty(){Ok(0)}else{c.next_close_capacity_byte_demand(body)}}else{RetainedCloneBinding::capacity_demand(if self.source.is_some(){&self.source}else{&self.target},body)}}
+    pub fn next_close_release_byte_demand(&self)->Result<usize,crate::ValueError>{if let Some(c)=self.comparison.as_ref(){if c.terminal_is_empty(){Ok(0)}else{c.next_close_release_byte_demand()}}else{RetainedCloneBinding::release_demand(if self.source.is_some(){&self.source}else{&self.target})}}
+    pub fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{if let Some(c)=self.comparison.as_ref(){if c.terminal_is_empty(){Ok(1)}else{c.next_close_depth_demand()?.checked_add(1).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::DepthLimit,"original lookup comparator close depth overflow"))}}else{RetainedCloneBinding::depth_demand(if self.source.is_some(){&self.source}else{&self.target})}}
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError>{
         if !self.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"lookup must begin close"));}
-        if let Some(c)=self.comparison.as_mut(){let step=c.close_step(grant)?;if c.terminal_is_empty(){self.comparison=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
-        close_retained_binding(if self.source.is_some(){&mut self.source}else{&mut self.target},grant)
+        let demand=self.close_demands(grant.maximum_copy_bytes)?;
+        if !super::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
+        if let Some(c)=self.comparison.as_mut(){
+            if c.terminal_is_empty(){self.comparison=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
+            let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
+            let step=c.close_step(child)?;
+            let step=super::admit_retained_clone_close(child,step,c.terminal_is_empty(),"original lookup comparator close")?;
+            return Ok(RetainedCloneStep::Progress(step.progress()));
+        }
+        let step=close_retained_binding(if self.source.is_some(){&mut self.source}else{&mut self.target},grant)?;
+        Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
     }
     pub fn terminal_is_empty(&self)->bool{self.comparison.is_none()&&self.source.is_none()&&self.target.is_none()}
 }

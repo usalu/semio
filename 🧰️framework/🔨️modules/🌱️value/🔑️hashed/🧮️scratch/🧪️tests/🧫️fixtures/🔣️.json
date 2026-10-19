@@ -1,0 +1,68 @@
+{
+  "schema": "semio.value.scratch-hash.v1",
+  "maximum": 3,
+  "operations": [
+    {
+      "kind": "insert",
+      "key": "a",
+      "value": 1
+    },
+    {
+      "kind": "insert",
+      "key": "b",
+      "value": 2
+    },
+    {
+      "kind": "get",
+      "key": "a"
+    },
+    {
+      "kind": "remove",
+      "key": "a"
+    },
+    {
+      "kind": "insert",
+      "key": "c",
+      "value": 3
+    },
+    {
+      "kind": "insert",
+      "key": "d",
+      "value": 4
+    },
+    {
+      "kind": "insert",
+      "key": "overflow",
+      "value": 5
+    },
+    {
+      "kind": "insert",
+      "key": "b",
+      "value": 6
+    },
+    {
+      "kind": "get",
+      "key": "b"
+    },
+    {
+      "kind": "remove",
+      "key": "missing"
+    },
+    {
+      "kind": "remove",
+      "key": "c"
+    },
+    {
+      "kind": "insert",
+      "key": "源🌊",
+      "value": 7
+    },
+    {
+      "kind": "get",
+      "key": "源🌊"
+    },
+    {
+      "kind": "entries"
+    }
+  ]
+}

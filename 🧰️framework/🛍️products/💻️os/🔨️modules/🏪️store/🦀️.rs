@@ -36,8 +36,19 @@ pub use retained_codec_catalog::{ArtifactCodecCatalogStep, RetainedArtifactCodec
 
 pub use semio_framework_os_store_snapshot_clone as snapshot_clone_preparation;
 
-use semio_framework_os_store_replay::replay_preparation;
-pub use replay_preparation::{ArtifactReplayPreparation, ArtifactReplayPreparationContext, ArtifactReplayPreparationFactory, ArtifactReplayPreparationMode, ArtifactReplayPreparationProgress, ArtifactReplayPreparationRetirement, ArtifactReplayPreparationStep, ArtifactReplayPreparationTask, ArtifactReplayPrepared, admit_replay_preparation_step};
+pub use semio_framework_os_store_replay::replay_preparation;
+pub use replay_preparation::{ArtifactMutationSource, ArtifactReplayPreparationRequest, ArtifactReplayPreparation, ArtifactReplayPreparationContext, ArtifactReplayPreparationFactory, ArtifactReplayPreparationMode, ArtifactReplayPreparationProgress, ArtifactReplayPreparationRetirement, ArtifactReplayPreparationStep, ArtifactReplayPreparationTask, ArtifactReplayPrepared, admit_replay_preparation_step};
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+pub use replay_preparation::{ArtifactDerivedOperation,ArtifactDerivedOperationMode};
+#[path="🔁️replay/🎮️operation/🌱️derived/🧩️store/🦀️.rs"]
+mod derived_operation_store;
+#[path="🕰️history/🎮️command/🦀️.rs"]
+mod native_vcs_command;
+pub use native_vcs_command::{ArtifactNativeVcsRequest,ArtifactNativeVcsKind,ArtifactNativeVcsSelection,ArtifactNativeVcsResult,ArtifactNativeVcsPhase,ArtifactNativeVcsAdvance,ArtifactNativeVcsCommand};
+#[path="🔁️replay/🎮️operation/🧬️native/🔗️history/📜️report/🦀️.rs"]
+mod original_history_report;
+use semio_framework_value_snapshot_read as snapshot_read_registry_handle;
+use semio_framework_value_snapshot_read as snapshot_read_registry_retirement;
 pub use semio_framework_os_spr::command::MessageCopyCursor;
 
 use semio_framework_os_store_ledger::edit_message_clamp;
@@ -95,7 +106,7 @@ use semio_framework_os_store_engine::member_group;
 use semio_framework_os_store_one_item_batch as one_item_owners;
 pub use one_item_owners::OneItemOwners;
 
-use semio_framework_os_store_one_item_batch::paged_one_item;
+pub use semio_framework_os_store_one_item_batch::paged_one_item;
 pub use paged_one_item::{mutation_apply_preparation_factory, paged_one_item_factory_birth_bytes, MutationApplyEdit, PagedOneItemEdit, PagedOneItemEditStep, PagedOneItemPreparationFactory};
 
 // The `crate::os_dsl::DslArtifact`/`crate::os_dsl::DslOps` derive macros emit `::pack::snapshot::ArtifactDsl`/`::crate::os_store::OpText`
@@ -141,7 +152,7 @@ use semio_framework_os_store_retirement::resident_backing;
 
 pub(crate) use semio_framework_value_snapshot_read::{SnapshotReadRegistryHandle, SnapshotReadRegistryAliasRetirement, snapshot_registry_alias_demands, snapshot_registry_alias_close_step};
 pub use semio_framework_value_snapshot_read::snapshot_read_projection;
-pub use semio_framework_value_snapshot_read::SnapshotReadProjection;
+pub use semio_framework_value_snapshot_read::{SnapshotReadProjection,CapturedSnapshotSource};
 
 pub(crate) use semio_framework_os_store_ledger::edit_retirement;
 use edit_retirement::{ArtifactStoreChangeRetirementFactory, ArtifactStoreDecodedEditRetirement, ArtifactStoreDecodedEditRetirementFactory, ArtifactStoreOperationRowsRetirement};

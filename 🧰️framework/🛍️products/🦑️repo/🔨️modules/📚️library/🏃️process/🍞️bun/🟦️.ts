@@ -43,6 +43,12 @@ function viteCliEntry(cwd: string): string {
   return join(dirname(createRequire(join(findWorkspaceRoot(cwd), "package.json")).resolve("vite/package.json")), "bin/vite.js");
 }
 
+/** 🪁️ Resolves the installed Vite CLI under the explicitly selected development runtime. */
+export function viteDevInvocation(cwd: string, args: string[], runtime: "bun" | "node"): { command: string; args: string[] } {
+  const configured = args.some(arg => arg === "--configLoader" || arg.startsWith("--configLoader=")) ? args : ["--configLoader", runtime === "node" ? "bundle" : "native", ...args];
+  return { command: runtime === "node" ? "node" : process.versions.bun ? process.execPath : "bun", args: [...(runtime === "node" ? ["--experimental-transform-types"] : []), viteCliEntry(cwd), ...configured] };
+}
+
 function bunxCmdArgs(args: readonly string[], cwd: string): string[] {
   const formatted = bunArgsForVite(args);
   const viteIdx = formatted.indexOf("vite");
@@ -84,8 +90,12 @@ export function runBunx(args: string[], cwd: string, env: NodeJS.ProcessEnv = pr
 
 /** 🥖️Spawns `bunx` asynchronously; exits with child code. */
 export function spawnBunx(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): Promise<void> {
+  return spawnPackageCli(process.execPath, bunxCmdArgs(args, cwd), cwd, env);
+}
+
+function spawnPackageCli(runtime: string, args: string[], cwd: string, env: NodeJS.ProcessEnv): Promise<void> {
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, bunxCmdArgs(args, cwd), { cwd, env, shell: false, stdio: "inherit" });
+    const child = spawn(runtime, args, { cwd, env, shell: false, stdio: "inherit", windowsHide: true });
     child.on("exit", (code) => {
       if ((code ?? 0) === 0) resolve();
       else process.exit(code ?? 0);

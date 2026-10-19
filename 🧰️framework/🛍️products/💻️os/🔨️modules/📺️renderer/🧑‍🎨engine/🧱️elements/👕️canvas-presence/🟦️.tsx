@@ -1,7 +1,8 @@
 /** 👕️ In-canvas remote presence overlays — peer cursors, viewport rects, selection chips.
  * Domain-neutral; Board2d / World3d / TextEditor hosts mount this over their surface.
  */
-import { useMemo, useSyncExternalStore, type CSSProperties, type ReactElement } from "react";
+import { useCallback, useContext, useMemo, useSyncExternalStore, type CSSProperties, type ReactElement } from "react";
+import { LocalDocumentOwnerContext } from "../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
 import {
   canvasPeerViewportRect,
   canvasPointToScreen,
@@ -41,6 +42,13 @@ export type CanvasPresenceSurfaceV1 = {
   readonly domain?: string;
 };
 
+/** 🪪️ Binds every host publication and peer overlay to its actual live document owner. */
+export function usePresenceRuntimeKeyV1(): string | null {
+  const owner = useContext(LocalDocumentOwnerContext);
+  const subscribe = useCallback((listener: () => void) => owner?.subscribeRetirement(listener) ?? (() => {}), [owner]);
+  return useSyncExternalStore(subscribe, () => owner?.active ? owner.identity.runtimeKey : null, () => null);
+}
+
 function useArtifactRoster(runtimeKey: string | null | undefined): readonly PresencePeerInput[] {
   return useSyncExternalStore(
     subscribeArtifactPresenceRosterV1,
@@ -63,7 +71,7 @@ function useLocalPresenceActor(runtimeKey: string | null | undefined, fallback: 
 }
 
 /** Hub-admitted local actor id for host self-exclusion (null until socket-actor). */
-export function useLocalPresenceActorIdV1(runtimeKey: string | null | undefined = "local"): string | null {
+export function useLocalPresenceActorIdV1(runtimeKey: string | null | undefined): string | null {
   return useSyncExternalStore(subscribeLocalPresenceActorV1, () => admittedActorId(localPresenceActorV1(runtimeKey)), () => null);
 }
 
@@ -265,8 +273,9 @@ export function TextPeerCaretsOverlayV1(props: {
   readonly lineHeightPx: number;
   readonly locale?: string;
 }): ReactElement | null {
-  const roster = useArtifactRoster("local");
-  const myActor = useLocalPresenceActor("local", "");
+  const runtimeKey = usePresenceRuntimeKeyV1();
+  const roster = useArtifactRoster(runtimeKey);
+  const myActor = useLocalPresenceActor(runtimeKey, "");
   const labels = peerOverlayLabels(props.locale);
   const { project, frame } = props;
   const carets = useMemo(

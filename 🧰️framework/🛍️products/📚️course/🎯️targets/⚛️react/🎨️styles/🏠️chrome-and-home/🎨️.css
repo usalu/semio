@@ -1,0 +1,172 @@
+/* 🏠 Card titles, the touch target size, the navbar title, the home card layer, the first-visit screen and the basics of the adaptive layouts. */
+
+/* 🏷️ The title of a card is read in full: it wraps inside its chip instead of ending in an ellipsis when the card is
+   narrower than its title — a narrow window, a strongly zoomed page, large text. */
+.course-app [data-slot="course-card-title-chip"] {
+  height: auto;
+  max-height: none;
+  white-space: normal;
+}
+
+.course-app [data-slot="course-card-title-chip"] > :is(h1, h2, h3) {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  line-height: 1.25;
+}
+
+/* 🎯️ Every control of the quiz is at least 24 px tall (WCAG 2.2 SC 2.5.8); touch spacing makes it taller. */
+.course-target {
+  min-height: max(1.5rem, calc(7 * var(--ui-spacing)));
+}
+
+/* 🏷️ What the quizzes are about, in the middle of the navbar: the logo and the title on one line, as wide as the band
+   the navbar leaves between its ways and its right side. Where the band is narrower, the title gives way first — it
+   ends in an ellipsis, and leaves the line once fewer than three of its letters would show — and then the logo, which
+   is never cut: whatever does not fit beside the zero-wide strut that holds the line wraps below it and is clipped, so
+   nothing ever lies over a control of the navbar. The line is as tall as the logo. */
+.course-brand {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  align-items: center;
+  height: var(--size-workbench);
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.course-brand::before {
+  content: "";
+  width: 0;
+  height: 100%;
+}
+
+.course-brand-logo {
+  flex: none;
+}
+
+.course-brand-title {
+  flex: 1 1 0;
+  min-width: 3em;
+}
+
+/* 🏠️ The overview's cards over the glass, fixed on a grid while the pages pan behind it: the card layer takes its
+   track lists from home (`--course-home-columns`, `--course-home-rows`) with no gaps (the spacing lies inside the cells),
+   and each card is compact and centred in its cell. The grid is only laid out where every card fits its cell; a card
+   that is taller after all starts at the top of its cell (never above it, under the navbar) and scrolls inside it,
+   so it never lies over the card below. Where the learner swipes through the grid instead (below 768 px, short
+   windows) the overview places every card on its page itself. DOM order is reading order at every width. */
+.course-home-grid {
+  display: grid;
+  grid-template-columns: var(--course-home-columns);
+  grid-template-rows: var(--course-home-rows);
+}
+
+.course-home-cell {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  align-items: safe center;
+  justify-content: safe center;
+  padding: var(--spacing-double);
+  overflow-y: auto;
+}
+
+/* 🃏️ The card itself takes the width — the overview hosts each card in a `display: contents` element, which has no box
+   to size, and a card whose content measures its own room (a size container) cannot be sized by that content: left to
+   its content it collapses to its title. */
+.course-home-cell [data-overview-card] {
+  inline-size: 100%;
+}
+
+/* 👆️ A card the learner swipes to (phones, short windows, large text) is as wide as the screen leaves it, up to a
+   width that keeps its lines readable on a wide one; its width never follows its content, which its card lays out for
+   the width it gets. */
+.course-home-entry {
+  inline-size: min(100%, 36rem);
+}
+
+.course-home-entry [data-overview-card] {
+  inline-size: 100%;
+}
+
+.course-home-card {
+  position: relative;
+  inline-size: 100%;
+}
+
+.course-card-presence {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-single);
+  margin: var(--spacing-single) 0 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+}
+
+.course-card-peer {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+  align-items: center;
+  gap: var(--spacing-single);
+  border-radius: var(--spacing-single);
+  padding: 0 var(--spacing-single);
+  background: var(--base);
+  color: var(--foreground);
+  font-size: 0.75rem;
+}
+
+/* 🖼️ A first-visit screen with the preferences beside it from 1024 px. */
+.course-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-double);
+}
+
+/* 📐️ Adaptive layouts. Every part is laid out by hand for the room it actually has — the width of its own card, task
+   or list, never of the window, because the same card stands in a phone's column, a pane of the overview, a dialog and
+   a desktop page — measured in rem, so larger text gets the layout of the narrower room it leaves. A control that fits
+   beside what it belongs to stands on the same line, left and right; only where the room ends do they stack. A touch
+   device gets targets a finger hits. DOM order is reading order in every layout. */
+.course-app [data-slot="course-card-content"] {
+  container: course-card / inline-size;
+}
+
+.course-task {
+  container: course-task / inline-size;
+}
+
+.course-rows {
+  container: course-rows / inline-size;
+}
+
+/* 📖️ Running text keeps a line length that reads, however wide its card is. */
+.course-prose {
+  max-inline-size: 80ch;
+}
+
+@media (pointer: coarse) {
+  .course-task .course-target {
+    min-block-size: 2.5rem;
+  }
+
+  .course-task :is([data-course-grip], button.course-target) {
+    min-inline-size: 2.5rem;
+  }
+
+  .course-task .course-value > [data-course-grip] {
+    min-inline-size: 1.75rem;
+  }
+}
+
+[data-ui-device="tablet"] .course-task .course-target {
+  min-block-size: var(--layout-touch-min);
+}
+
+[data-ui-device="tablet"] .course-task :is([data-course-grip], button.course-target) {
+  min-inline-size: var(--layout-touch-min);
+}

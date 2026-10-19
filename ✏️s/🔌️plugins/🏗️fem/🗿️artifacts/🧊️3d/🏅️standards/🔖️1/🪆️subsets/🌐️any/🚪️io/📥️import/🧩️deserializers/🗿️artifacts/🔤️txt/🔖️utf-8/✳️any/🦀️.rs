@@ -1,7 +1,8 @@
 //! txt import via framework `io_mechanism::deserialize_dsl_txt` (UTF-8 DSL carrier).
 
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-use semio_framework_os_kernel::io::io_mechanism::{deserialize_dsl_txt, Deserializer};
+use semio_framework_os_kernel::io::io_mechanism::deserialize_dsl_txt;
+use semio_framework_os_kernel::io::io_mechanism::Deserializer;
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 
 pub const TXT_DIALECT: Dialect = semio_framework::io_schema::CARRIER_TEXT;

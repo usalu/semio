@@ -1,5 +1,6 @@
 //! 🔺️ Sparse diff builder for `DisconnectHandles` — a real removal, never a whole-snapshot capture.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dEdgesDelta};
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dEdgesDelta;
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Diff

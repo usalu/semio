@@ -41,13 +41,15 @@
             let more = scan.runnable || scan.contended;
             spent += u64::from(scan.runnable || !scan.contended);
             turns.push((scan.runnable, scan.contended, output.is_some()));
-            if let Some((receiver, output)) = output {
+            if let Some((receiver, _output)) = output {
                 assert_eq!(receiver, id);
-                for page in output.typed_operation_results {
+            }
+            {
+                for page in native_pages {
                     assert_ne!(page.lane, TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
                     terminal |= page.lane == TypedOperationResultLane::Terminal;
                     receipts += 1;
-                    semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_acknowledge_typed_operation_result(&runtime, page.token).await.unwrap();
+                    semio_framework_plugin_runtime_ops::ops_typed_operations::semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_acknowledge_typed_operation_result(&runtime, page.close(issued.unwrap_or(mounted_policy.close))).await.unwrap();
                 }
             }
             if !more {
@@ -145,8 +147,8 @@
         assert_eq!(chunks.chunks_remaining(), 0);
         assert_eq!(app_close_turn(&mut *app,cx).expect("terminal close slice"), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         assert!(!app.media.segmented_downloads.contains(37));
-    
-        
+
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
@@ -159,19 +161,16 @@
         let wire = <TestCommand as protocol::OpBinary>::encode_op(&command).expect("test retained command wire");
         let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(41), semio_framework_job::RevisionId(2), semio_framework_job::Generation(3), 5);
         let policy=semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy();
-        let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(operation.operation,operation.generation,policy.preparation,||Some(0),u64::MAX,1);
+        let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(operation.operation,operation.generation,crate::app_testing::mutation_fixture::job_close::original_fixture_stock(),||Some(0),u64::MAX,1<<24);
+        let mut decoder=semio_framework_job::OriginalJobDecodeOwner::empty();
         let original_completion = ArtifactToolCompletion::<TestApp>::new();
         let original_consumer = original_completion.clone();
-        let original_payload = test_retained_command_payload(original_completion).await;
-        let original_spec = ToolOperationSpec::new(TEST_RETAINED_COMMAND_CONTROLLER, TEST_RETAINED_COMMAND_TOOL, TEST_RETAINED_COMMAND_SCHEMA, original_payload, operation);
+        let (original_payload,original_issuer) = test_retained_command_payload(original_completion).await;
         let (original_admission, original_input) = test_retained_wire_input(&bus, &wire);
-        let mut original = match bus.dispatch_wire_retained_with_spec(&original_admission, original_input, None, original_spec) {
-            Ok(dispatch) => dispatch,
-            Err(_) => panic!("test retained command initial dispatch"),
-        };
+        let mut original=crate::app_testing::mutation_fixture::job_close::admit_registered_fixture(&bus,&mut caller,&mut decoder,operation,action_bus::ToolFactoryKey::new(TEST_RETAINED_COMMAND_CONTROLLER,TEST_RETAINED_COMMAND_TOOL),TEST_RETAINED_COMMAND_SCHEMA.into(),original_payload,Some(original_input),None);
         let mut checkpoint_bytes = None;
         for _ in 0..64 {
-            match caller.turn(policy.maintenance,|cx|Ok(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step(&mut original.job,cx))).unwrap() {
+            match caller.turn(policy.maintenance,|cx|Ok(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step(&mut original,cx))).unwrap() {
                 semio_framework_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Preview(_) => {},
                 semio_framework_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Checkpoint { state: bytes, .. } => {
                     if bytes.get(4) == Some(&3) && bytes.get(5) == Some(&1) && bytes.get(48) == Some(&1) {
@@ -190,25 +189,22 @@
             }
         }
         let checkpoint_bytes = checkpoint_bytes.expect("work checkpoint after one custom cursor step");
-        original.job.begin_close();
-        drive_job_close(&mut original.job,&mut caller);
-        assert!(original.job.terminal_is_empty(), "interrupted original retires every retained owner incrementally");
+        original.begin_close();
+        drive_job_close(&mut original,&mut caller);
+        assert!(original.terminal_is_empty(), "interrupted original retires every retained owner incrementally");
         assert!(original_consumer.take_emit().expect("original completion cell").is_none(), "interrupted original never publishes a result");
 
+        original_issuer.close(&mut caller);crate::app_testing::mutation_fixture::job_close::retire_fixture_owned(original_consumer,&mut caller);
         TEST_RETAINED_COMMAND_STEP_CALLS.store(0, std::sync::atomic::Ordering::SeqCst);
         let resumed_completion = ArtifactToolCompletion::<TestApp>::new();
         let resumed_consumer = resumed_completion.clone();
-        let resumed_payload = test_retained_command_payload(resumed_completion).await;
-        let resumed_spec = ToolOperationSpec::new(TEST_RETAINED_COMMAND_CONTROLLER, TEST_RETAINED_COMMAND_TOOL, TEST_RETAINED_COMMAND_SCHEMA, resumed_payload, operation);
+        let (resumed_payload,resumed_issuer) = test_retained_command_payload(resumed_completion).await;
         let (resumed_admission, resumed_input) = test_retained_wire_input(&bus, &wire);
         let (_, resumed_checkpoint) = test_retained_wire_input(&bus, &checkpoint_bytes);
-        let mut resumed = match bus.dispatch_wire_retained_with_spec(&resumed_admission, resumed_input, Some(resumed_checkpoint), resumed_spec) {
-            Ok(dispatch) => dispatch,
-            Err(_) => panic!("test retained command resume dispatch"),
-        };
+        let mut resumed=crate::app_testing::mutation_fixture::job_close::admit_registered_fixture(&bus,&mut caller,&mut decoder,operation,action_bus::ToolFactoryKey::new(TEST_RETAINED_COMMAND_CONTROLLER,TEST_RETAINED_COMMAND_TOOL),TEST_RETAINED_COMMAND_SCHEMA.into(),resumed_payload,Some(resumed_input),Some(resumed_checkpoint));
         let mut completed = false;
         for _ in 0..96 {
-            match caller.turn(policy.maintenance,|cx|Ok(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step(&mut resumed.job,cx))).unwrap() {
+            match caller.turn(policy.maintenance,|cx|Ok(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step(&mut resumed,cx))).unwrap() {
                 semio_framework_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Preview(_) => {},
                 semio_framework_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Checkpoint { .. } => {},
                 semio_framework_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Yield | semio_framework_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Idle => {}
@@ -225,27 +221,24 @@
         assert!(completed, "resumed retained command reaches its commit boundary");
         assert_eq!(TEST_RETAINED_COMMAND_STEP_CALLS.load(std::sync::atomic::Ordering::SeqCst), 2, "resume continues after cursor one instead of replaying completed custom work");
         let (result, _) = resumed_consumer.take_emit().expect("resumed completion cell").expect("resumed completion value");
-        assert_eq!(result.expect("resumed command emit").artifact_mutations, vec![TestMutation::SetLabel(SetLabel { value: "resumed".into() })]);
-        resumed.job.begin_close();
-        drive_job_close(&mut resumed.job,&mut caller);
-        assert!(resumed.job.terminal_is_empty(), "completed resume retires every retained owner incrementally");
+        let result=result.expect("resumed command emit");assert_eq!(result.artifact_mutations,vec![TestMutation::SetLabel(SetLabel{value:"resumed".into()})]);crate::app_testing::mutation_fixture::job_close::retire_fixture_owned(result,&mut caller);
+        resumed.begin_close();
+        drive_job_close(&mut resumed,&mut caller);
+        assert!(resumed.terminal_is_empty(), "completed resume retires every retained owner incrementally");
 
+        resumed_issuer.close(&mut caller);crate::app_testing::mutation_fixture::job_close::retire_fixture_owned(resumed_consumer,&mut caller);
         let cancelled_completion = ArtifactToolCompletion::<TestApp>::new();
         let cancelled_consumer = cancelled_completion.clone();
-        let cancelled_payload = test_retained_command_payload(cancelled_completion).await;
-        let cancelled_spec = ToolOperationSpec::new(TEST_RETAINED_COMMAND_CONTROLLER, TEST_RETAINED_COMMAND_TOOL, TEST_RETAINED_COMMAND_SCHEMA, cancelled_payload, operation);
+        let (cancelled_payload,cancelled_issuer) = test_retained_command_payload(cancelled_completion).await;
         let (cancelled_admission, cancelled_input) = test_retained_wire_input(&bus, &wire);
-        let mut cancelled = match bus.dispatch_wire_retained_with_spec(&cancelled_admission, cancelled_input, None, cancelled_spec) {
-            Ok(dispatch) => dispatch,
-            Err(_) => panic!("test retained command cancellation dispatch"),
-        };
+        let mut cancelled=crate::app_testing::mutation_fixture::job_close::admit_registered_fixture(&bus,&mut caller,&mut decoder,operation,action_bus::ToolFactoryKey::new(TEST_RETAINED_COMMAND_CONTROLLER,TEST_RETAINED_COMMAND_TOOL),TEST_RETAINED_COMMAND_SCHEMA.into(),cancelled_payload,Some(cancelled_input),None);
         caller.cancel().cancel_now();
-        assert!(matches!(caller.turn(policy.maintenance,|cx|Ok(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step(&mut cancelled.job,cx))).unwrap(),semio_framework_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Cancelled));
-        cancelled.job.begin_close();
-        drive_job_close(&mut cancelled.job,&mut caller);
-        assert!(cancelled.job.terminal_is_empty(), "cancelled retained command retires every owner incrementally");
+        assert!(matches!(caller.turn(policy.maintenance,|cx|Ok(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step(&mut cancelled,cx))).unwrap(),semio_framework_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Cancelled));
+        cancelled.begin_close();
+        drive_job_close(&mut cancelled,&mut caller);
+        assert!(cancelled.terminal_is_empty(), "cancelled retained command retires every owner incrementally");
         assert!(cancelled_consumer.take_emit().expect("cancelled completion cell").is_none(), "cancelled retained command never publishes a result");
-        caller.retire(policy.close);
+        cancelled_issuer.close(&mut caller);crate::app_testing::mutation_fixture::job_close::retire_fixture_owned(cancelled_consumer,&mut caller);crate::app_testing::mutation_fixture::job_close::close_fixture_decoder(&mut caller,&mut decoder);caller.retire(crate::app_testing::mutation_fixture::job_close::original_fixture_stock());
     }
 
     /// 👥️ Contract-freeze §C7.6: `adopt_presence` (1) adopts an app-typed `presence_pack` into
@@ -285,8 +278,8 @@
         assert!(app.roster.peer_presence.contains_key("user:alice#s1"));
         assert!(!app.roster.peer_presence.contains_key("user:bob#s1"), "an actor absent from the roster must be dropped, not left stale");
         drain_and_close_fixture(&mut app, mounted_policy,cx);
-    
-        
+
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }

@@ -1,5 +1,5 @@
-//! 🔺️ Sparse diff builder for `ReplaceKindCatalogs` — patches the document `kindCatalogs`. The
 //! payload keeps its pre-migration `Option<Puzzle5dKindCatalogs>` shape (recipe's "granular
+//! 🔺️ Sparse diff builder for `ReplaceKindCatalogs` — patches the document `kindCatalogs`. The
 //! mutations keep unchanged public payload shapes"); internally it now splits into the composed
 //! `kind_catalogs` handle + `kind_catalogs_extra` overflow the snapshot actually carries, minting a
 //! fresh content-addressed handle and seeding the working-scene cache so the diff is resolvable

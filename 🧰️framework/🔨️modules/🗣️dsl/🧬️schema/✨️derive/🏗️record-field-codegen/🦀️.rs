@@ -44,7 +44,7 @@ pub(super) fn plan_fields(fields: &Fields) -> Vec<FieldPlan> {
         let ident = field.ident.clone().expect("dsl_derive only supports named fields");
         let (kind, elem_ty) = classify_field(&field.ty, &attrs);
         let key = attrs.key.clone().unwrap_or_else(|| to_kebab(&ident.to_string()));
-        let optional = matches!(kind, FieldKind::OptionScalar(_) | FieldKind::OptionStatements(_));
+        let optional = !attrs.required && matches!(kind, FieldKind::OptionScalar(_) | FieldKind::OptionStatements(_));
         let positional = if attrs.positional && !attrs.skip {
             let p = positional_counter;
             positional_counter += 1;
@@ -370,10 +370,12 @@ pub(super) fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>,
             record.fields.insert(#id, #to_value_expr);
         });
         let local = field_local(ident);
-        from_value_stmts.push(quote! {
+                let presence=if *optional{quote!{}}else{quote!{if matches!(value,::semio_framework_dsl_record::FieldValue::Absent){return Err(::semio_framework_dsl_record::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,concat!("missing required field '",#key,"'"),::semio_framework_dsl_record::TextSpan::at(1,1)));}}};
+from_value_stmts.push(quote! {
             let #local = {
                 let value = record.get(#id).ok_or_else(|| ::semio_framework_dsl_record::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("missing field '{}'", #key),::semio_framework_dsl_record::TextSpan::at(1,1)))?;
-                #from_value_expr
+                                #presence
+#from_value_expr
             };
         });
     }

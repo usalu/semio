@@ -67,24 +67,14 @@ pub fn puzzle3d_addressed_window_id<'a>(view_state: Option<&'a semio_framework_p
     .unwrap_or(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)
 }
 
-/// 🛠️ The effective interaction id threaded through `Puzzle3dScene.active_utility`: the host-owned
-/// per-window utility from `ViewModel`, unless the mode-level fill tool is active
-/// (`active_tool_id`), in which case fill wins. Fill keeps its viewport interaction even though it is
-/// declared as a windowless tool, not a `WindowKindDefinition` utility.
-///
-/// 🎯️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B18: `SET_ACTIVE_UTILITY` keys the map by window
-/// INSTANCE. A kind-valued lookup (`puzzle3d-main`) — `registerBrushMesh` when `view.window_id` is the
-/// kind — is a map miss (`map_hit=false`, `utility=` empty default). Kind lookups fall through to the
-/// focused pane, then the first instance-prefixed map key.
+/// 🛠️ The shared window owner resolves pane utilities; the mode-wide fill tool retains its viewport interaction.
 pub fn puzzle3d_scene_active_utility(config: &Puzzle3dRuntime, view_state: Option<&semio_framework_plugin::ViewModel>, window_id: Option<&str>) -> String {
     if puzzle3d_fill_tool_active(config) {
-        return PUZZLE3D_FILL_TOOL_ID.to_string();
+        return fill_tool::TOOL_ID.to_string();
     }
-    window_id
-        .and_then(|wid| view_state.and_then(|view| puzzle3d_utility_map_hit(view, wid)))
-        .or_else(|| view_state.and_then(|view| view.active_utility_id.as_ref()))
-        .filter(|utility| !utility.is_empty())
-        .cloned()
+    view_state
+        .and_then(|view| view.window_utility(window_id))
+        .map(str::to_string)
         .unwrap_or_else(|| PUZZLE3D_DEFAULT_UTILITY.to_string())
 }
 

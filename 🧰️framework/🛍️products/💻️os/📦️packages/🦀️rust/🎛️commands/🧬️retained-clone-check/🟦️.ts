@@ -1,3 +1,11 @@
+import { SchemaCheck } from "../🧱️script-bases/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
+import { runBudgetedTestCommand } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+import { runRepositoryTestCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { resolve } from "node:path";
+import { runExactCargoLaws } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 /** 🧬️ Retained clone command: the fixture shapes of retained clone choices, grants, ordered map paging and paged copies, and the retained clone check.
  *
  * @see ../../📜️script.ts — the package script that registers the commands of this module
@@ -195,13 +203,26 @@ export class RetainedCloneCheckScript extends BundleScript {
     assert.equal(preparationFixture.handoff.expected.terminalEmpty, true);
     const storeSource = readModuleTreeSource(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/🦀️.rs"));
     const handoffMethod = storeSource.slice(storeSource.indexOf("pub fn handoff_batch_publication_close("), storeSource.indexOf("pub fn maintenance_retirements_terminal_is_empty", storeSource.indexOf("pub fn handoff_batch_publication_close(")));
-    assert(handoffMethod.indexOf("displaced_retirements.reserve(1)?") < handoffMethod.indexOf("publication.take()"), "Store reserves surviving close authority before taking the scheduler owner");
+    const reservedBeforeTake = (reserve: number, take: number): boolean => reserve >= 0 && take >= 0 && reserve < take;
+    const assemblySchema = JSON.parse(readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧬️schema/📦️assembly/🔣️.json"), "utf8"));
+    const validateOrder: SchemaCheck = semioSchemaAjvV1({ strict: true, allErrors: true }).compile({ $defs: assemblySchema.$defs, $ref: "#/$defs/SourceAuthorityOrder" });
+    for (const row of preparationFixture.handoff.sourceAuthorityOrder) {
+      assert(validateOrder(row), JSON.stringify(validateOrder.errors));
+      assert.equal(reservedBeforeTake(row.reservePosition, row.takePosition), row.expected, row.id);
+    }
+    assert(reservedBeforeTake(handoffMethod.indexOf("displaced_retirements.reserve(1)?"), handoffMethod.indexOf("publication.take()")), "Store reserves surviving close authority before taking the scheduler owner");
+    console.log(`[DEBUG] Source authority order: ${preparationFixture.handoff.sourceAuthorityOrder.length} neutral/Ajv cases and actual reserve-before-take checked`);
     assert(readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️one-item-owners/📥️lifted/📬️publication/🦀️.rs"), "utf8").includes("ErasedSnapshotRetirement for ArtifactStoreBatchPublication"));
-    const pluginSource = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs"), "utf8");
+    const pluginSource = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🦀️.rs"), "utf8");
     assert(pluginSource.includes("fn handoff_mounted_durable_publication("));
-    assert(pluginSource.match(/handoff_mounted_durable_publication\(/g)?.length ?? 0 >= 4, "cancel, stale and terminal-error paths transfer durable publications");
+    assert((pluginSource.match(/handoff_mounted_durable_publication\(/g)?.length ?? 0) >= 4, "cancel, stale and terminal-error paths transfer durable publications");
     const toolRunSource = readModuleTreeSource(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🦀️.rs"));
-    assert(toolRunSource.includes("store.handoff_batch_publication_close(&mut owner)"), "tool-run replacement and abort transfer publications to Store maintenance");
+    for (const binding of ["self.retired_publications.push(publication)", "publication.retirement_demands(body)?", "if self.has_original_receipt()", "if !tool_grant_funds(grant,demand)", "publication.begin_close()", "maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant", "publication.close_step(child)", "admit_retained_clone_close(child,step,publication.terminal_is_empty()", "if publication.terminal_is_empty(){drop(self.retired_publications.pop())", "ledger_release!(retired_publications)", "ledger_backing_is_empty(&self.retired_publications)"]) assert(toolRunSource.includes(binding), `tool-run retains and retires its original publication under caller authority: ${binding}`);
+    const grantStart = toolRunSource.indexOf("pub(crate) fn tool_grant_funds(");
+    const grantEnd = toolRunSource.indexOf("fn close_tool_erased_retirement(", grantStart);
+    assert(grantStart >= 0 && grantEnd > grantStart, "tool-run has its actual qualified five-currency admission owner");
+    const grantSource = toolRunSource.slice(grantStart, grantEnd);
+    for (const binding of ["grant.maximum_items!=0", "grant.maximum_copy_bytes>=demand.copy_bytes", "grant.maximum_capacity_bytes>=demand.capacity_bytes", "grant.maximum_release_bytes>=demand.release_bytes", "grant.maximum_depth>=demand.depth"]) assert(grantSource.includes(binding), `tool-run admission preserves each independent caller currency: ${binding}`);
     for (const row of preparationFixture.cases) {
       let value = row.initial;
       let history = 0;
@@ -257,4 +278,45 @@ export class RetainedCloneCheckScript extends BundleScript {
     assert.equal(pagedOwnerFixture.expected.terminalEmpty, true);
     console.log(`retained-clone-check: choices=${fixture.source.choices.length} payload=${fixture.payloadByteLength} cancellation=${fixture.cancellationStops.length} orderedMap=${ordered.length} growth=${growth.size} preparation=${preparationFixture.cases.length} paged=${pagedOracle.length} pagedText=${new TextEncoder().encode(pagedTextOracle).byteLength} pagedBytes=${pagedBytesOracle.byteLength} pagedMap=${pagedMapOracle.length}`);
   }
+}
+
+export class RetainedLaneScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  if(args.length!==1||!["source","native"].includes(args[0]!))throw Error("test-retained-lane source|native");
+  const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/🛤️lane/🟦️.ts");
+  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
+  await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot});
+  if(args[0]==="source")return;
+  const native=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");assert.equal(resolve(native.manifestPath),manifest);const receipts=await runExactCargoLaws({invocation:this.invocation,policy:configuredExactCargoLawPolicyV1(),cwd:this.repoRoot,env:process.env,artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,manifestPaths:{"semio-framework-os-kernel":manifest},cargoTargetDir:native.targetDirectory,nativeEnv:{RUST_MIN_STACK:native.rustMinStack},groups:[{package:"semio-framework-os-kernel",target:{kind:"lib",name:"semio_framework_os_kernel"},cargoArgs:["--locked"],laws:["os_store::tests::original_side_lane_comparison_uses_granted_utf8_chunks","os_store::tests::original_envelope_parse_preserves_genesis_without_a_discarded_projection_clone","os_store::tests::native_command_publication_preserves_original_context_issuer_and_denied_inputs","os_store::tests::interaction_store_apply_updates_hover_and_bumps_generation","os_store::tests::interaction_store_reset_discards_hover_and_bumps_generation","os_store::tests::interaction_store_default_seeds_from_hover_default"]}]});
+  console.log("[DEBUG] retained side lane exact native "+receipts[0]!.assertions+" original owner laws");
+ }
+}
+
+export class OriginalIngressScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  if(args.length!==1||!["source","native"].includes(args[0]!))throw Error("test-original-ingress source|native");
+  const oracle=await import("../../../../🔨️modules/🏪️store/📥️ingress/📚️original/🧪️tests/🟦️.ts");oracle.originalIngressOracle();
+  if(args[0]==="source")return;
+  const native=readCargoTestPolicyV1(process.env);await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:this.invocation.control.remainingMilliseconds()},cwd:this.repoRoot,cargoTargetDir:native.targetDirectory,nativeEnv:{RUST_MIN_STACK:native.rustMinStack},artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,manifestPaths:{"semio-framework-os-kernel":resolve(this.root,"Cargo.toml")},groups:[{package:"semio-framework-os-kernel",target:{kind:"lib",name:"semio_framework_os_kernel"},cargoArgs:["--locked"],laws:["os_store::component::original_ingress::tests::original_ingress_borrows_exact_rows_and_moves_only_accepted_owners"]}]});
+ }
+}
+
+export class OriginalHistoryInputScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  if(args.length!==1||!["source","native"].includes(args[0]!))throw Error("test-original-history-input source|native");
+  const oracle=await import("../../../../🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🔗️history/🧪️tests/🟦️.ts");oracle.originalHistoryInputOracle();
+  if(args[0]==="source")return;
+  const native=readCargoTestPolicyV1(process.env);await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:this.invocation.control.remainingMilliseconds()},cwd:this.repoRoot,cargoTargetDir:native.targetDirectory,nativeEnv:{RUST_MIN_STACK:native.rustMinStack},artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,manifestPaths:{"semio-framework-os-kernel":resolve(this.root,"Cargo.toml")},groups:[{package:"semio-framework-os-kernel",target:{kind:"lib",name:"semio_framework_os_kernel"},cargoArgs:["--locked"],laws:["os_store::component::replay_preparation::native::history::tests::original_history_input_returns_same_backing_and_captured_issuer","os_store::component::replay_preparation::native::history::tests::original_history_input_cancellation_restores_each_partial_birth_and_waits_for_live_producer"]}]});
+ }
+}
+
+export class OriginalIoRetirementScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  if(args.length!==1||!["source","native"].includes(args[0]!))throw Error("test-original-io-retirement source|native");
+  const source=join(this.repoRoot,"🧰️framework/🔨️modules/🚪️io/⏱️control/♻️retirement/🧪️tests/🟦️.ts");
+  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
+  await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot});
+  if(args[0]==="source")return;
+  const native=readCargoTestPolicyV1(process.env);await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:this.invocation.control.remainingMilliseconds()},cwd:this.repoRoot,cargoTargetDir:native.targetDirectory,nativeEnv:{RUST_MIN_STACK:native.rustMinStack},artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,manifestPaths:{"semio-framework-os-kernel":resolve(this.root,"Cargo.toml")},groups:[{package:"semio-framework-os-kernel",target:{kind:"lib",name:"semio_framework_os_kernel"},cargoArgs:["--locked"],laws:["io::control::retirement_tests::original_io_retirement_keeps_canceled_decoder_and_remaining_physical_wallet","io::control::retirement_tests::original_io_retirement_preserves_active_encoder_and_refuses_encoder_only_authority"]}]});
+ }
 }

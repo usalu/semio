@@ -16,7 +16,7 @@ fn layer(value:&Value)->RasterStackLayer {
 }
 fn input(case:&Value)->RasterStackInput {
     let data=fixture();
-    RasterStackInput {layers:case["layers"].as_array().unwrap().iter().map(layer).collect(),images:data["images"].as_object().unwrap().iter().map(|(key,v)|(key.clone(),Arc::new(RasterImage {width:v["width"].as_u64().unwrap() as u32,height:v["height"].as_u64().unwrap() as u32,pixels:v["pixels"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap() as u8).collect()}))).collect()}
+    RasterStackInput {layers:case["layers"].as_array().unwrap().iter().map(layer).collect(),images:data["images"].as_object().unwrap().iter().map(|(key,v)|(key.clone(),RasterLease(Arc::new(RasterImage {width:v["width"].as_u64().unwrap() as u32,height:v["height"].as_u64().unwrap() as u32,pixels:v["pixels"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap() as u8).collect()})))).collect()}
 }
 #[test]
 fn raster_stack_matches_shared_svg_mask_vectors(){

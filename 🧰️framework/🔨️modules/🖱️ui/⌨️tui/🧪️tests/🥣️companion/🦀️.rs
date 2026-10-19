@@ -23,3 +23,7 @@ mod overlays;
 #[path = "../🔬️pointer-routing/🦀️.rs"]
 #[cfg(test)]
 mod pointer_routing;
+
+#[cfg(test)]
+#[path = "../🖼️window-contour/🦀️.rs"]
+mod window_contour;

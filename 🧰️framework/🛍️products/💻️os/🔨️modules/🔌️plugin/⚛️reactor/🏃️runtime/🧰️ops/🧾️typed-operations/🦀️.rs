@@ -86,10 +86,7 @@ pub fn advance_typed_operation_output_with_leftover<PA: PluginApp>(app: &mut PA,
         }
         None => {}
     }
-    while output.typed_operation_results.len() < TYPED_OPERATION_PAGES_PER_TURN_MAXIMUM {
-        let Some(page) = app.take_typed_operation_result_page(instance) else { break };
-        output.typed_operation_results.push(page);
-    }
+    output.typed_operation_pages=pages.capture(app,instance,cx)?;
     if let Some(effect) = app.take_typed_operation_effect() {
         output.effects.push(encode_wire_serialized(&effect));
     }
@@ -281,7 +278,10 @@ pub async fn plugin_continue_typed_operations<PA: PluginApp>(runtime: &PluginRun
         runtime.typed_continuation_cursor.set((index + 1) % PLUGIN_RUNTIME_INSTANCE_SLOTS);
         let cell = runtime_instance_cell(runtime, instance)?;
         let output = match cell.instance.try_lock() {
-            Ok(mut active) => advance_typed_operation_output(&mut active.app, instance, identity,cx)?,
+            Ok(mut active) => {
+                let mut pages=match cell.result_pages.try_lock(){Ok(pages)=>pages,Err(std::sync::TryLockError::WouldBlock)=>return Ok((driven,TypedOperationScan{runnable:false,contended:true})),Err(std::sync::TryLockError::Poisoned(_))=>return Err(plugin_internal_fault("original result receiving authority is poisoned"))};
+                advance_typed_operation_output(&mut active.app, instance, &mut pages, identity,cx)?
+            },
             Err(std::sync::TryLockError::WouldBlock) => return Ok((driven, TypedOperationScan { runnable: false, contended: true })),
             Err(std::sync::TryLockError::Poisoned(_)) => return Err(plugin_internal_fault(format!("runtime operation authority is poisoned for instance {instance}")).into()),
         };
@@ -297,7 +297,7 @@ pub async fn plugin_continue_typed_operations<PA: PluginApp>(runtime: &PluginRun
         collected.1.frames.extend(output.frames);
         collected.1.effects.extend(output.effects);
         collected.1.events.extend(output.events);
-        collected.1.typed_operation_results.extend(output.typed_operation_results);
+        collected.1.typed_operation_pages+=output.typed_operation_pages;
         if grant.spent(&collected.1) {
             let (_, scan) = pending_typed_operation_instance(runtime, runtime.typed_continuation_cursor.get())?;
             return Ok((driven, scan));
@@ -383,7 +383,7 @@ pub async fn plugin_resume_task<PA: PluginApp>(runtime: &PluginRuntime<PA>, inst
         presence_pending: None,
         presence_terminal: None,
         presence_terminal_fault: None,
-        typed_operation_results: Vec::new(),
+        typed_operation_pages: 0,
     }
 }
 /// 🔁️ Dispatches one extension invocation's OUTCOME back into the instance that asked for it —
@@ -484,7 +484,8 @@ pub async fn plugin_complete_reserved_spawned_job<PA: PluginApp>(runtime: &Plugi
         Ok(true) => {
             with_instances_original_mut(runtime, |list| {
                 let mut instance = find_instance(list, instance_id)?;
-                advance_typed_operation_output(&mut instance.app, instance_id, identity,cx)
+                let cell=instance.cell;let mut pages=match cell.result_pages.try_lock(){Ok(pages)=>pages,Err(std::sync::TryLockError::WouldBlock)=>return Ok(PluginExchangeOutput::default()),Err(std::sync::TryLockError::Poisoned(_))=>return Err(plugin_internal_fault("original result receiving authority is poisoned"))};
+                advance_typed_operation_output(&mut instance.app, instance_id, &mut pages, identity,cx)
             })
             .await
         }

@@ -1,0 +1,368 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "empty",
+      "input": [],
+      "output": []
+    },
+    {
+      "name": "plain",
+      "input": [
+        97,
+        98,
+        99
+      ],
+      "output": [
+        97,
+        98,
+        99
+      ]
+    },
+    {
+      "name": "framed-unicode",
+      "input": [
+        70,
+        82,
+        82,
+        69,
+        83,
+        86,
+        48,
+        49,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        230,
+        150,
+        135,
+        65
+      ],
+      "output": [
+        230,
+        150,
+        135,
+        65
+      ]
+    },
+    {
+      "name": "unmatched-magic",
+      "input": [
+        71,
+        82,
+        82,
+        69,
+        83,
+        86,
+        48,
+        49,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        230,
+        150,
+        135,
+        65
+      ],
+      "output": [
+        71,
+        82,
+        82,
+        69,
+        83,
+        86,
+        48,
+        49,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        230,
+        150,
+        135,
+        65
+      ]
+    },
+    {
+      "name": "two-copy-frontiers",
+      "input": [
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81
+      ],
+      "output": [
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        81
+      ]
+    }
+  ],
+  "work": [
+    {
+      "fuel": 0,
+      "expired": false,
+      "items": 1,
+      "advanced": false,
+      "remainingFuel": 0,
+      "cancelled": false
+    },
+    {
+      "fuel": 1,
+      "expired": false,
+      "items": 0,
+      "advanced": false,
+      "remainingFuel": 1,
+      "cancelled": false
+    },
+    {
+      "fuel": 1,
+      "expired": true,
+      "items": 1,
+      "advanced": false,
+      "remainingFuel": 1,
+      "cancelled": false
+    },
+    {
+      "fuel": 1,
+      "expired": false,
+      "items": 1,
+      "advanced": true,
+      "remainingFuel": 0,
+      "cancelled": false
+    },
+    {
+      "fuel": 1,
+      "expired": false,
+      "items": 1,
+      "advanced": false,
+      "remainingFuel": 1,
+      "cancelled": true
+    }
+  ],
+  "retirement": [
+    {
+      "now": 101,
+      "deadline": 100,
+      "retirement": false,
+      "fuel": 1,
+      "items": 1,
+      "advanced": false
+    },
+    {
+      "now": 101,
+      "deadline": 100,
+      "retirement": true,
+      "fuel": 1,
+      "items": 1,
+      "advanced": true
+    },
+    {
+      "now": 101,
+      "deadline": 100,
+      "retirement": true,
+      "fuel": 0,
+      "items": 1,
+      "advanced": false
+    },
+    {
+      "now": 101,
+      "deadline": 100,
+      "retirement": true,
+      "fuel": 1,
+      "items": 0,
+      "advanced": false
+    },
+    {
+      "now": 1,
+      "deadline": 100,
+      "retirement": false,
+      "fuel": 1,
+      "items": 1,
+      "advanced": true
+    }
+  ],
+  "registrySources": [
+    {
+      "payload": 11,
+      "clock": 13,
+      "deadline": 100,
+      "accepted": true
+    },
+    {
+      "payload": 12,
+      "clock": 13,
+      "deadline": 100,
+      "accepted": false
+    },
+    {
+      "payload": 11,
+      "clock": 14,
+      "deadline": 100,
+      "accepted": false
+    },
+    {
+      "payload": 11,
+      "clock": 13,
+      "deadline": 101,
+      "accepted": false
+    }
+  ],
+  "closeChildWork": [
+    {
+      "items": 0,
+      "capacity": 0,
+      "release": 0,
+      "spent": 0
+    },
+    {
+      "items": 1,
+      "capacity": 0,
+      "release": 0,
+      "spent": 1
+    },
+    {
+      "items": 1,
+      "capacity": 0,
+      "release": 65,
+      "spent": 1
+    }
+  ]
+}

@@ -16,6 +16,17 @@ pub struct UnbindParameterField {
 //#region ⚙️Semantics
 impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for UnbindParameterField {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "unbind", entity: "workflow", kind: "unbind-parameter-field", record: "UnboundWorkflowParameterField" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Unbind workflow parameter field {}", self.field_path), &format!("Bindung des Arbeitsablaufparameterfelds {} aufheben", self.field_path))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["parameter-bindings".into(), self.node_id.clone(), self.field_path.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<WorkflowSnapshot, WorkflowMutation> for UnbindParameterField {
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
         protocol::MutationOutcome::new(WorkflowDiff::UnbindParameterField { node_id: self.node_id.clone(), field_path: self.field_path.clone() })
     }
@@ -29,11 +40,5 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for UnbindParame
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Unbind workflow parameter field {}", self.field_path), &format!("Bindung des Arbeitsablaufparameterfelds {} aufheben", self.field_path))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["parameter-bindings".into(), self.node_id.clone(), self.field_path.clone()]
-    }
 }
 //#endregion ⚙️Semantics

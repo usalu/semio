@@ -38,6 +38,8 @@ impl CanvasStrokeRetirement {
 }
 
 impl ErasedSnapshotRetirement for CanvasStrokeRetirement {
+    fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if self.terminal_is_empty(){return Ok(Default::default())}if self.needs_dash_transfer(){return Ok(semio_framework_value::RetirementDemand{copy_bytes:2*size_of::<Vec<f64>>(),depth:2,..Default::default()})}if let Some(active)=self.active.as_ref().filter(|active|!active.terminal_is_empty()){let mut demand=active.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"Canvas Stroke child depth overflow"))?;return Ok(demand)}Ok(semio_framework_value::RetirementDemand{copy_bytes:2*size_of::<Self>(),depth:1,..Default::default()})}
+
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }

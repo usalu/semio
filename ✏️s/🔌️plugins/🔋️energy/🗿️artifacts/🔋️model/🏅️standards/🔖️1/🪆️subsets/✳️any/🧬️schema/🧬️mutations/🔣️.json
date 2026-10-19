@@ -894,6 +894,33 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-material-roughness/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-glazing-material-solar-reflectance-front/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-glazing-material-solar-reflectance-back/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-glazing-material-visible-reflectance-front/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-glazing-material-visible-reflectance-back/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-glazing-material-infrared-transmittance/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-pv-system-temperature-coefficient/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-pv-system-faiman-heat-loss-constant/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-pv-system-faiman-heat-loss-wind/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-pv-system-mounting/schema.json"
     }
   ]
 }

@@ -3,7 +3,7 @@
  * and Bun TOML and the declaration is validated by Ajv against the registry schema. @see ../🧫️fixtures/🤖️agent-client-configuration/🔣️.json */
 import { describe, expect, test } from "bun:test";
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+
 import { dirname, join, resolve } from "node:path";
 import Ajv2020 from "ajv/dist/2020";
 import { parse as parseJsonc } from "jsonc-parser";
@@ -133,7 +133,9 @@ describe("the checked-in client files", () => {
 
 describe("check and write on a scratch workspace", () => {
   function scratch(): string {
-    const root = mkdtempSync(join(tmpdir(), "agent-clients-"));
+    const temporary = process.env.SEMIO_TEST_OUTPUT_DIR ?? join(repoRoot, ".🧬semio/🦑️repo/⚡️cache/tests/agent-clients");
+    mkdirSync(temporary, { recursive: true });
+    const root = mkdtempSync(join(temporary, "agent-clients-"));
     cpSync(join(repoRoot, AGENT_CLIENT_DECLARATION_MANIFEST), join(root, AGENT_CLIENT_DECLARATION_MANIFEST));
     for (const file of deriveAgentClientFiles(readDeclaredTools(repoRoot))) {
       mkdirSync(dirname(join(root, file.path)), { recursive: true });
@@ -148,13 +150,12 @@ describe("check and write on a scratch workspace", () => {
       expect(checkAgentClients(root)).toEqual([]);
       writeFileSync(join(root, ".mcp.json"), readFileSync(join(root, ".mcp.json"), "utf8").replace("stdio", "http"));
       writeFileSync(join(root, ".codex/config.toml"), readFileSync(join(root, ".codex/config.toml"), "utf8").replace('"."', '"os"'));
-      rmSync(join(root, ".cursor/mcp.json"));
+      rmSync(join(root, ".codex/config.toml"));
       expect(checkAgentClients(root).map((drift) => [drift.path, drift.reason])).toEqual([
         [".mcp.json", "drift"],
-        [".cursor/mcp.json", "missing"],
-        [".codex/config.toml", "drift"],
+        [".codex/config.toml", "missing"],
       ]);
-      expect([...writeAgentClients(root)].sort()).toEqual([".codex/config.toml", ".cursor/mcp.json", ".mcp.json"]);
+      expect([...writeAgentClients(root)].sort()).toEqual([".codex/config.toml", ".mcp.json"]);
       expect(checkAgentClients(root)).toEqual([]);
       expect(writeAgentClients(root)).toEqual([]);
     } finally {
@@ -167,7 +168,7 @@ describe("check and write on a scratch workspace", () => {
     try {
       const manifestPath = join(root, AGENT_CLIENT_DECLARATION_MANIFEST);
       writeFileSync(manifestPath, readFileSync(manifestPath, "utf8").replace("conversation.write", "conversation.read"));
-      expect(checkAgentClients(root).map((drift) => drift.path)).toEqual([".mcp.json", ".vscode/mcp.json", ".cursor/mcp.json", ".codex/config.toml"]);
+      expect(checkAgentClients(root).map((drift) => drift.path)).toEqual([".mcp.json", ".codex/config.toml"]);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

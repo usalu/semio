@@ -4,14 +4,16 @@ use super::*;
 
 /// 🧷️ Store-owned fixed-three coordinator retaining all candidates through journal resolution.
 pub(crate) struct DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
-    pub parent: Option<DurableStoreBoundOutcomeV1<ParentP, ParentMutation>>,
-    pub drawing: Option<DurableStoreBoundOutcomeV1<DrawingP, DrawingMutation>>,
-    pub value: Option<DurableStoreBoundOutcomeV1<ValueP, ValueMutation>>,
-    pub decision: Option<DurableOwnedThreeMemberDecisionV1>,
-    pub decision_pack: Option<Vec<u8>>,
-    pub decision_sha256: String,
+    parent: Option<DurableStoreBoundOutcomeV1<ParentP, ParentMutation>>,
+    drawing: Option<DurableStoreBoundOutcomeV1<DrawingP, DrawingMutation>>,
+    value: Option<DurableStoreBoundOutcomeV1<ValueP, ValueMutation>>,
+    decision: Option<Box<DurableOwnedThreeMemberDecisionV1>>,
+    decision_retirement:Option<semio_framework_value::retirement::controlled::ControlledRetirement<Box<DurableOwnedThreeMemberDecisionV1>>>,
+    output_retirement:Option<semio_framework_value::retirement::controlled::ControlledRetirement<DurablePlanningOutputV1>>,
+    decision_pack: Option<Vec<u8>>,
+    decision_sha256: String,
     pub(super) visibility_owner: Option<semio_framework_os_vcs::ArtifactGroupVisibilityOwner>,
-    pub visibility: Option<Arc<semio_framework_os_vcs::ArtifactGroupVisibility>>,
+    visibility: Option<Arc<semio_framework_os_vcs::ArtifactGroupVisibility>>,
     pub(super) journal: Option<Box<dyn DurableOwnedGroupJournalCommitV1>>,
     pub receipt: Option<DurableOwnedGroupJournalReceiptV1>,
     pub phase: DurableOwnedThreeStoreCommitPhaseV1,
@@ -43,12 +45,12 @@ where
 /// to a request owner and cannot be replaced before its exact terminal handoff.
 pub struct DurableOwnedMapCommitHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: Clone + ValueToValue + ValueFromValue,
-    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
-    DrawingP: Clone + ValueToValue + ValueFromValue,
-    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
-    ValueP: Clone + ValueToValue + ValueFromValue,
-    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+    ParentP: ValueToValue,
+    ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    DrawingP: ValueToValue,
+    DrawingMutation: StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    ValueP: ValueToValue,
+    ValueMutation: StoreMutation<ValueP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
 {
     pub operation: std::mem::ManuallyDrop<Option<DurableOwnedMapCommitOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>>,
 }
@@ -56,12 +58,12 @@ where
 /// 🧳 Exact live owners returned after one retained Map publication reaches terminal emptiness.
 pub struct DurableOwnedMapCommitOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: Clone + ValueToValue + ValueFromValue,
-    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
-    DrawingP: Clone + ValueToValue + ValueFromValue,
-    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
-    ValueP: Clone + ValueToValue + ValueFromValue,
-    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+    ParentP: ValueToValue,
+    ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    DrawingP: ValueToValue,
+    DrawingMutation: StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    ValueP: ValueToValue,
+    ValueMutation: StoreMutation<ValueP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
 {
     pub parent: ArtifactStore<ParentP, ParentMutation>,
     pub drawing: ArtifactStore<DrawingP, DrawingMutation>,
@@ -73,12 +75,12 @@ where
 #[must_use = "the exact three Store owners must transfer into recovery or remain retained"]
 pub struct DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: Clone + ValueToValue + ValueFromValue,
-    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
-    DrawingP: Clone + ValueToValue + ValueFromValue,
-    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
-    ValueP: Clone + ValueToValue + ValueFromValue,
-    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+    ParentP: ValueToValue,
+    ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    DrawingP: ValueToValue,
+    DrawingMutation: StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    ValueP: ValueToValue,
+    ValueMutation: StoreMutation<ValueP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
 {
     pub parent: std::mem::ManuallyDrop<Option<ArtifactStore<ParentP, ParentMutation>>>,
     pub drawing: std::mem::ManuallyDrop<Option<ArtifactStore<DrawingP, DrawingMutation>>>,
@@ -88,12 +90,12 @@ where
 /// ♻️ Exact three Store owners returned by committed recovery after terminal publication or an idempotent post-frontier match.
 pub struct DurableOwnedMapRecoveryOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: Clone + ValueToValue + ValueFromValue,
-    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
-    DrawingP: Clone + ValueToValue + ValueFromValue,
-    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
-    ValueP: Clone + ValueToValue + ValueFromValue,
-    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+    ParentP: ValueToValue,
+    ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    DrawingP: ValueToValue,
+    DrawingMutation: StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    ValueP: ValueToValue,
+    ValueMutation: StoreMutation<ValueP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
 {
     pub parent: ArtifactStore<ParentP, ParentMutation>,
     pub drawing: ArtifactStore<DrawingP, DrawingMutation>,
@@ -103,12 +105,12 @@ where
 /// 🚧 Committed recovery rejection preserves every Store owner for corrected retry or close.
 pub struct DurableOwnedMapRecoveryRejectedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: Clone + ValueToValue + ValueFromValue,
-    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
-    DrawingP: Clone + ValueToValue + ValueFromValue,
-    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
-    ValueP: Clone + ValueToValue + ValueFromValue,
-    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+    ParentP: ValueToValue,
+    ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    DrawingP: ValueToValue,
+    DrawingMutation: StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    ValueP: ValueToValue,
+    ValueMutation: StoreMutation<ValueP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
 {
     pub error: DurableOwnedGroupDecisionError,
     pub parent: ArtifactStore<ParentP, ParentMutation>,
@@ -134,12 +136,12 @@ where
 /// 🧭 Retained committed-recovery host; no journal sink exists because its opaque DB witness already proves the transaction committed.
 pub struct DurableOwnedMapRecoveryHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: Clone + ValueToValue + ValueFromValue,
-    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
-    DrawingP: Clone + ValueToValue + ValueFromValue,
-    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
-    ValueP: Clone + ValueToValue + ValueFromValue,
-    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+    ParentP: ValueToValue,
+    ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    DrawingP: ValueToValue,
+    DrawingMutation: StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    ValueP: ValueToValue,
+    ValueMutation: StoreMutation<ValueP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
 {
     pub operation: std::mem::ManuallyDrop<Option<DurableOwnedMapRecoveryOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>>,
 }
@@ -148,12 +150,12 @@ where
 #[expect(clippy::large_enum_variant, reason = "Recovery transfers the exact admitted operation or original store owners without allocating during handoff.")]
 pub enum DurableOwnedMapRecoveryStartV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: Clone + ValueToValue + ValueFromValue,
-    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
-    DrawingP: Clone + ValueToValue + ValueFromValue,
-    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
-    ValueP: Clone + ValueToValue + ValueFromValue,
-    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+    ParentP: ValueToValue,
+    ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    DrawingP: ValueToValue,
+    DrawingMutation: StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    ValueP: ValueToValue,
+    ValueMutation: StoreMutation<ValueP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
 {
     Apply(DurableOwnedMapRecoveryHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>),
     AlreadyApplied(DurableOwnedMapRecoveryOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>),
@@ -196,12 +198,12 @@ where
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: Clone + ValueToValue + ValueFromValue,
-    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
-    DrawingP: Clone + ValueToValue + ValueFromValue,
-    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
-    ValueP: Clone + ValueToValue + ValueFromValue,
-    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+    ParentP: ValueToValue,
+    ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    DrawingP: ValueToValue,
+    DrawingMutation: StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    ValueP: ValueToValue,
+    ValueMutation: StoreMutation<ValueP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
 {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || (self.parent.is_none() && self.drawing.is_none() && self.value.is_none()), "committed recovery admission reached Drop before exact DB witness transfer");
@@ -211,12 +213,12 @@ where
 /// 🧳 Exact owners returned after a pre-journal rejection or cancellation reaches terminal emptiness.
 pub struct DurableOwnedThreeStoreMapAssemblyOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: Clone + ValueToValue + ValueFromValue,
-    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
-    DrawingP: Clone + ValueToValue + ValueFromValue,
-    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
-    ValueP: Clone + ValueToValue + ValueFromValue,
-    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+    ParentP: ValueToValue,
+    ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    DrawingP: ValueToValue,
+    DrawingMutation: StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    ValueP: ValueToValue,
+    ValueMutation: StoreMutation<ValueP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
 {
     pub parent: ArtifactStore<ParentP, ParentMutation>,
     pub drawing: ArtifactStore<DrawingP, DrawingMutation>,
@@ -231,12 +233,12 @@ where
 /// 🏗️ Store-owned fixed-three admission and preparation owner. It never publishes an individual member.
 pub struct DurableOwnedThreeStoreMapAssemblyV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: Clone + ValueToValue + ValueFromValue,
-    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
-    DrawingP: Clone + ValueToValue + ValueFromValue,
-    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
-    ValueP: Clone + ValueToValue + ValueFromValue,
-    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+    ParentP: ValueToValue,
+    ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    DrawingP: ValueToValue,
+    DrawingMutation: StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    ValueP: ValueToValue,
+    ValueMutation: StoreMutation<ValueP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
 {
     pub parent: std::mem::ManuallyDrop<Option<ArtifactStore<ParentP, ParentMutation>>>,
     pub drawing: std::mem::ManuallyDrop<Option<ArtifactStore<DrawingP, DrawingMutation>>>,
@@ -255,4 +257,8 @@ where
     pub sink: std::mem::ManuallyDrop<Option<Box<dyn DurableOwnedGroupJournalSinkV1>>>,
     pub phase: DurableOwnedThreeStoreMapAssemblyPhaseV1,
     pub failure: Option<DurableOwnedThreeStoreMapAssemblyFailureV1>,
+
+    pub parent_prepared: Option<DurableStorePreparedOwnerV1<ParentP, ParentMutation>>,
+    pub drawing_prepared: Option<DurableStorePreparedOwnerV1<DrawingP, DrawingMutation>>,
+    pub value_prepared: Option<DurableStorePreparedOwnerV1<ValueP, ValueMutation>>,
 }

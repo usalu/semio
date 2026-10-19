@@ -254,6 +254,7 @@ async fn tool_run_overlay_append_per_tick_stays_below_two_milliseconds_for_nakag
             append_entities: vec![index + 1],
             retract_to: None,
             payload: None,
+            payload_update:None,
         };
         let started = std::time::Instant::now();
         let receipt = app.tool_runs.apply_tick(tick).expect("tick applies");

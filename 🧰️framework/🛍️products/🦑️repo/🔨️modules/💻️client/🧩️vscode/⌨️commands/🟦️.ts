@@ -189,70 +189,6 @@ export function registerCommands(context: vscode.ExtensionContext): void {
     return vscode.commands.executeCommand("compose.navigateToFile", p);
   });
 
-  register("compose.ticketClose", (item: MonorepoTreeItem) => {
-    const node = item?.data as TreeNodeData | undefined;
-    if (!node) return;
-    const year = node.Year ?? node.Data?.year;
-    const month = node.Month ?? node.Data?.month;
-    const day = node.Day ?? node.Data?.day;
-    const slug = node.Data?.slug ?? node.Label;
-    if (!year || !month || !day || !slug) return;
-    const ticketId = `🎆️${year}/🌙️${String(month).padStart(2, "0")}/☀️${String(day).padStart(2, "0")}/${slug}`;
-    return vscode.window.showInformationMessage(`Close ticket: ${ticketId}?`, "Yes", "No").then((answer) => {
-      if (answer === "Yes") {
-        const binaryPath = getRepoBinaryPath();
-        if (!binaryPath) return;
-        const cp = require("child_process");
-        cp.execSync(`${binaryPath} ticket close ${ticketId} "Closed via VS Code" .`, { cwd: getWorkspaceRoot() });
-        monorepoProvider.current?.refresh();
-      }
-    });
-  });
-
-  register("compose.ticketReopen", (item: MonorepoTreeItem) => {
-    const node = item?.data as TreeNodeData | undefined;
-    if (!node) return;
-    const year = node.Year ?? node.Data?.year;
-    const month = node.Month ?? node.Data?.month;
-    const day = node.Day ?? node.Data?.day;
-    const slug = node.Data?.slug ?? node.Label;
-    if (!year || !month || !day || !slug) return;
-    const ticketId = `🎆️${year}/🌙️${String(month).padStart(2, "0")}/☀️${String(day).padStart(2, "0")}/${slug}`;
-    return vscode.window.showInputBox({ prompt: "Reopen prompt" }).then((prompt) => {
-      if (!prompt) return;
-      const binaryPath = getRepoBinaryPath();
-      if (!binaryPath) return;
-      const cp = require("child_process");
-      cp.execSync(`${binaryPath} ticket reopen ${ticketId} "${prompt}" copilot-chat`, { cwd: getWorkspaceRoot() });
-      monorepoProvider.current?.refresh();
-    });
-  });
-
-  register("compose.draftCreate", async () => {
-    const title = await vscode.window.showInputBox({ prompt: "Draft title" });
-    if (!title) return;
-    const binaryPath = getRepoBinaryPath();
-    if (!binaryPath) return;
-    const cp = require("child_process");
-    cp.execSync(`${binaryPath} draft create "${title}"`, { cwd: getWorkspaceRoot() });
-    monorepoProvider.current?.refresh();
-  });
-
-  register("compose.draftDelete", (item: MonorepoTreeItem) => {
-    const node = item?.data as TreeNodeData | undefined;
-    const slug = node?.Data?.slug ?? node?.Label;
-    if (!slug) return;
-    return vscode.window.showInformationMessage(`Delete draft: ${slug}?`, "Yes", "No").then((answer) => {
-      if (answer === "Yes") {
-        const binaryPath = getRepoBinaryPath();
-        if (!binaryPath) return;
-        const cp = require("child_process");
-        cp.execSync(`${binaryPath} draft delete ${slug}`, { cwd: getWorkspaceRoot() });
-        monorepoProvider.current?.refresh();
-      }
-    });
-  });
-
   register("compose.copyCheckpointSha", (item: MonorepoTreeItem) => {
     const node = item?.data as TreeNodeData | undefined;
     const sha = node?.Data?.sha;
@@ -268,90 +204,11 @@ export function registerCommands(context: vscode.ExtensionContext): void {
     if (sha) vscode.env.openExternal(vscode.Uri.parse(`https://github.com/usalu/semio/commit/${sha}`));
   });
 
-  register("compose.policyCheck", (item: MonorepoTreeItem) => {
-    const node = item?.data as TreeNodeData | undefined;
-    const policyId = node?.Data?.id || node?.Label;
-    if (!policyId) return;
-    const binaryPath = getRepoBinaryPath();
-    if (!binaryPath) return;
-    const cp = require("child_process");
-    cp.execSync(`${binaryPath} policy check ${policyId}`, { cwd: getWorkspaceRoot() });
-  });
-
   register("compose.open", (target: string) => {
     if (target) {
       vscode.commands.executeCommand("compose.navigate", target);
     }
   });
-
-  register("compose.analyze", async (id: string) => {
-    if (!id) return;
-    const binaryPath = getRepoBinaryPath();
-    if (!binaryPath) return;
-    const cp = require("child_process");
-    try {
-      const output = await new Promise<string>((resolve, reject) => {
-        cp.exec(`"${binaryPath}" analyze "${id}"`, { cwd: getWorkspaceRoot(), encoding: "utf-8" }, (error: any, stdout: string, stderr: string) => {
-          if (error && !stdout && !stderr) reject(error);
-          else resolve((stdout || "") + (stderr ? "\n" + stderr : ""));
-        });
-      });
-      const doc = await vscode.workspace.openTextDocument({ content: output, language: "markdown" });
-      await vscode.window.showTextDocument(doc, { preview: true, preserveFocus: true, viewColumn: vscode.ViewColumn.Beside });
-    } catch (e: any) {
-      vscode.window.showErrorMessage(`Failed to analyze ${id}: ${e.message}`);
-    }
-  });
-
-  const contributedCommands: string[] = [
-    "compose.analyze",
-    "compose.analyzeFile",
-    "compose.autofix",
-    "compose.autofixFile",
-    "compose.policyList",
-    "compose.policyTree",
-    "compose.ticketList",
-    "compose.ticketRead",
-    "compose.ticketTree",
-    "compose.technologyList",
-    "compose.technologyTree",
-    "compose.contributorAdd",
-    "compose.contributorList",
-    "compose.contributorRemove",
-    "compose.sectionTree",
-    "compose.sectionList",
-    "compose.sectionCreate",
-    "compose.sectionMove",
-    "compose.sectionDelete",
-    "compose.sectionOpen",
-    "compose.sectionRename",
-    "compose.sectionCreateChild",
-    "compose.sectionRemove",
-    "compose.sectionIntegrate",
-    "compose.definitionList",
-    "compose.definitionTree",
-    "compose.folderTree",
-    "compose.folderCreate",
-    "compose.folderMove",
-    "compose.folderDelete",
-    "compose.folderList",
-    "compose.fileCreate",
-    "compose.fileMove",
-    "compose.fileDelete",
-    "compose.fileList",
-    "compose.fileTree",
-    "compose.refreshDiagnostics",
-    "compose.autofixBreach",
-    "compose.navigateToRepo",
-    "compose.navigateTo",
-    "compose.goalOpen",
-    "compose.goalList",
-  ];
-
-  for (const command of contributedCommands) {
-    if (registered.has(command)) continue;
-    register(command, (..._args: unknown[]) => undefined);
-  }
 
   loadAvailableFilterValues();
 }

@@ -1,8 +1,8 @@
-//! 🧭️ Host gesture protocol laws for the 5d editor: gestures (verbs with ids and values) become the concrete mutation
 //! kinds they consist of, built from the typed base alone; every law replays the kinds forward through the central
+//! 🧭️ Host gesture protocol laws for the 5d editor: gestures (verbs with ids and values) become the concrete mutation
 //! applier and the recorded inverse rows last-to-first, and requires the base back.
 
-use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 use crate::editor::puzzle5d::commands::{delete_selection, set_selection_flag};
@@ -184,10 +184,15 @@ use crate::editor::puzzle5d::dispatch::puzzle5d_handle_action;
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::modes::edit::windows::world3d::utilities::transform::puzzle5d_inspector_nudge;
 use crate::editor::puzzle5d::*;
-use crate::standards::v1::subsets::any::schema::mutations::{change_part_2d_hidden, change_part_2d_locked, delete_part, disconnect_grips, remove_part_grip};
+use crate::editor::puzzle5d::commands;
+use crate::standards::v1::subsets::any::schema::mutations::change_part_2d_hidden;
+use crate::standards::v1::subsets::any::schema::mutations::change_part_2d_locked;
+use crate::standards::v1::subsets::any::schema::mutations::delete_part;
+use crate::standards::v1::subsets::any::schema::mutations::disconnect_grips;
+use crate::standards::v1::subsets::any::schema::mutations::remove_part_grip;
 
 fn base() -> Puzzle5dSnapshot {
-    let part = |id: &str, x: f64| serde_json::json!({ "id": id, "2d": { "x": x, "y": 0.0 }, "3d": { "origin": [x, 0.0, 0.0] }, "grips": [{ "id": "g0" }] });
+    let part = |id: &str, x: f64| serde_json::json!({ "id": id, "partKind": "part-kind-a", "2d": { "x": x, "y": 0.0 }, "3d": { "origin": [x, 0.0, 0.0] }, "grips": [{ "id": "g0" }] });
     let value = serde_json::json!({
         "schema": crate::PUZZLE_5D_SCHEMA, "domain": "architecture", "meta": { "description": "" },
         "parts": [part("a", 0.0), part("b", 1.0), part("c", 2.0)],
@@ -201,11 +206,11 @@ fn replay(before: &Puzzle5dSnapshot, operations: &[Puzzle5dMutation]) -> (Puzzle
     let mut inverses = Vec::new();
     for operation in operations {
         inverses.extend(protocol::Mutation::<Puzzle5dSnapshot>::inverse(operation, &state).expect("concrete inverse"));
-        state = protocol::apply_diff(protocol::Mutation::<Puzzle5dSnapshot>::diff(operation, &state).diff(), &state).expect("central apply");
+        state = protocol::apply_diff_cold(protocol::Mutation::<Puzzle5dSnapshot>::diff(operation, &state).diff(), &state).expect("central apply");
     }
     let after = state.clone();
     for inverse in inverses.iter().rev() {
-        state = protocol::apply_diff(protocol::Mutation::<Puzzle5dSnapshot>::diff(inverse, &state).diff(), &state).expect("central inverse apply");
+        state = protocol::apply_diff_cold(protocol::Mutation::<Puzzle5dSnapshot>::diff(inverse, &state).diff(), &state).expect("central inverse apply");
     }
     (after, state)
 }

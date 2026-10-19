@@ -80,8 +80,11 @@
       "required": [
         "bindingCount",
         "bindingsPerTurn",
+        "bindingTurns",
+        "headerTurns",
         "turns",
-        "copiedBytes",
+        "slotFields",
+        "headerFields",
         "policy"
       ],
       "properties": {
@@ -89,13 +92,32 @@
           "const": 256
         },
         "bindingsPerTurn": {
-          "const": 16
+          "const": 1
+        },
+        "bindingTurns": {
+          "const": 256
+        },
+        "headerTurns": {
+          "const": 1
         },
         "turns": {
-          "const": 16
+          "const": 257
         },
-        "copiedBytes": {
-          "const": 0
+        "slotFields": {
+          "const": [
+            "binding",
+            "initialized"
+          ]
+        },
+        "headerFields": {
+          "const": [
+            "stream",
+            "pageCount",
+            "length",
+            "ledger",
+            "ready",
+            "sealed"
+          ]
         },
         "policy": {
           "type": "object",
@@ -112,7 +134,7 @@
               "const": 1
             },
             "copy": {
-              "const": 0
+              "const": 4096
             },
             "capacity": {
               "const": 0

@@ -10,6 +10,18 @@ function abortReason(signal: AbortSignal): unknown {
   return signal.reason ?? new Error("retryWithJitteredBackoff: aborted");
 }
 
+/** ✋️ Ends a pending attempt on cancellation while observing its eventual settlement. */
+function abortableAttempt<T>(pending: Promise<T>, signal: AbortSignal | undefined): Promise<T> {
+  if (!signal) return pending;
+  if (signal.aborted) { pending.catch(() => undefined); return Promise.reject(abortReason(signal)); }
+  return new Promise<T>((resolve, reject) => {
+    const cleanup = (): void => signal.removeEventListener("abort", abort);
+    const abort = (): void => { cleanup(); reject(abortReason(signal)); };
+    signal.addEventListener("abort", abort, { once: true });
+    pending.then(value => { cleanup(); resolve(value); }, error => { cleanup(); reject(error); });
+  });
+}
+
 function abortableDelay(ms: number, signal: AbortSignal | undefined): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     if (signal?.aborted) {
@@ -49,7 +61,7 @@ export async function retryWithJitteredBackoff<T>(fn: () => Promise<T>, options:
   for (;;) {
     if (signal?.aborted) throw abortReason(signal);
     try {
-      return await fn();
+      return await abortableAttempt(fn(), signal);
     } catch (error) {
       if (signal?.aborted) throw abortReason(signal);
       attempt += 1;

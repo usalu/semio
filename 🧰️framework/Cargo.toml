@@ -391,6 +391,8 @@ members = [
     "🔨️modules/🧵️job/🔭️preview/🎟️drive/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/🗄️registry/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/🧪️conformance/📦️packages/🦀️rust",
+    "🔨️modules/🧮️math/🧮️algebra/🔲️dense/📦️packages/🦀️rust",
+    "🔨️modules/🧮️math/📶️rank/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏅️standards/**",

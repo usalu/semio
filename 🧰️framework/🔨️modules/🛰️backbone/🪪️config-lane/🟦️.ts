@@ -1,3 +1,4 @@
+import { applyIdentityDiff, decodeIdentityDiff } from "../../🎚️config/🧬️schema/🧬️mutations/⚙️apply-diff/🟦️.ts";
 /** 🪪️ The identity and local-catalog config lanes of the document backbone: the actor configs that open the two OS-wide config facets over the local folder lane, and the event fold that materializes the identity. */
 import type { PersistenceBinding } from "../🔑️persistence-binding/🟦️.ts";
 import type { ArtifactActorConfig, ArtifactEvent } from "../🎭️artifact-actor/🟦️.ts";
@@ -32,12 +33,12 @@ export function localCatalogActorConfig(actor: string, actorIdentityGrant: Artif
  * already-diffed `diff.payload` IS the next `Identity` (or `null` for a signed-out session) —
  * folding is "last envelope wins". `decodePayload` returning `undefined` means "not this facet's
  * payload", distinct from a legit `null` (signed out), so both must be distinguishable. */
-export function foldIdentityEvent(base: Identity | null, event: ArtifactEvent, decodePayload: (payload: unknown) => Identity | null | undefined): Identity | null {
+export function foldIdentityEvent(base: Identity | null, event: ArtifactEvent): Identity | null {
   if (event.kind !== "remoteMutations") return base;
   let next = base;
   for (const envelope of event.envelopes) {
-    const decoded = decodePayload(envelope.diff.payload);
-    if (decoded !== undefined) next = decoded;
+    const diff = decodeIdentityDiff(envelope.diff.payload);
+    if (diff !== undefined) next = applyIdentityDiff(next, diff);
   }
   return next;
 }

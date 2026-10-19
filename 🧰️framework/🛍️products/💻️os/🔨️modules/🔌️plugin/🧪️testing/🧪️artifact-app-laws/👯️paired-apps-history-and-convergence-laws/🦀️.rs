@@ -73,12 +73,13 @@ where
 /// nothing pending and settles in zero turns (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 pub async fn assert_undo_redo_round_trip<A, M, P>(app: &mut VcsArtifactApp<A, M>, command: A::Command, probe: impl Fn(&VcsArtifactApp<A, M>) -> P, before: P, after: P, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)
 where
+    A::Command:semio_framework_value::ToValue,
     A: ArtifactApp,
     M: store::SpaceMember + store::MemberFactory + Send + 'static,
     P: PartialEq + std::fmt::Debug,
 {
     let receiver = meta("local").instance_id;
-    app.dispatch_typed(command, &meta("local"), identity,cx).await.expect("apply command");
+    dispatch_original_fixture_command(app,&command,&meta("local"),mounted_policy,identity,cx).await.expect("apply command");
     settle_registered_typed_operation(app, receiver, mounted_policy, identity,cx).await.expect("apply command publication");
     assert_eq!(probe(app), after, "command did not produce the expected snapshot");
     settle_history_verb(app, "undo", receiver, mounted_policy, identity,cx).await;
@@ -151,14 +152,15 @@ pub async fn assert_declared_actions_bridge_to_commands<A: ArtifactApp + Default
 /// app-specific version).
 pub async fn assert_two_instances_converge<A, P>(channel: &str, command_a: A::Command, command_b: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)
 where
+    A::Command:semio_framework_value::ToValue,
     A: ArtifactApp + Default,
     P: PartialEq + std::fmt::Debug,
 {
     let mut original_caller=OriginalFixtureCaller::admit().unwrap();let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let (mut instance_a, mut instance_b) = paired_apps::<A>(channel, mounted_policy, identity).await;
     let genesis = probe(&instance_a);
-    instance_a.dispatch_typed(command_a, &meta("actor-a"), identity,cx).await.expect("a applies its edit");
-    instance_b.dispatch_typed(command_b, &meta("actor-b"), identity,cx).await.expect("b applies its edit");
+    dispatch_original_fixture_command(&mut instance_a,&command_a,&meta("actor-a"),mounted_policy,identity,cx).await.expect("a applies its edit");
+        dispatch_original_fixture_command(&mut instance_b,&command_b,&meta("actor-b"),mounted_policy,identity,cx).await.expect("b applies its edit");
     exchange_and_assert_convergence(&mut instance_a, &mut instance_b, "actor-a", &probe, mounted_policy, identity,cx).await;
     assert_ne!(probe(&instance_a), genesis, "the replicated edits must actually land, not converge on the untouched genesis");
 
@@ -184,6 +186,7 @@ where
 /// [`new_registered_app_with_members`] for why a composing app needs it.
 pub async fn assert_two_registered_instances_converge_with_members<A, M, P, Manifest, Build>(channel: &str, manifest: Build, command_a: A::Command, command_b: A::Command, probe: impl Fn(&VcsArtifactApp<A, M>) -> P, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)
 where
+    A::Command:semio_framework_value::ToValue,
     A: ArtifactApp + Default,
     M: store::SpaceMember + store::MemberFactory + Send + 'static,
     P: PartialEq + std::fmt::Debug,
@@ -246,6 +249,7 @@ where
 /// twice must not double-apply.
 pub async fn assert_ingest_idempotent<A, P>(command: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)
 where
+    A::Command:semio_framework_value::ToValue,
     A: ArtifactApp + Default,
     P: PartialEq + std::fmt::Debug,
 {
@@ -253,7 +257,7 @@ where
     let mut sender = new_app::<A>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity).await;
     let (near, mut far) = MemoryBackbone::pair("mem://testkit-idempotent", "mem://testkit-idempotent").await;
     sender.attach_backbone(store::os_store::backbone::Backbones::Memory(near)).await.expect("attach sender");
-    sender.dispatch_typed(command, &meta("local"), identity,cx).await.expect("apply command");
+    dispatch_original_fixture_command(&mut sender,&command,&meta("local"),mounted_policy,identity,cx).await.expect("apply command");
 
     let mut envelopes = Vec::new();
     for message in far.receive().await.expect("receive") {
@@ -288,6 +292,7 @@ where
 /// [`new_registered_app_with_members`] for why a composing app needs it.
 pub async fn assert_registered_ingest_idempotent_with_members<A, M, P, Manifest, Build>(manifest: Build, command: A::Command, probe: impl Fn(&VcsArtifactApp<A, M>) -> P, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)
 where
+    A::Command:semio_framework_value::ToValue,
     A: ArtifactApp + Default,
     M: store::SpaceMember + store::MemberFactory + Send + 'static,
     P: PartialEq + std::fmt::Debug,
@@ -301,7 +306,7 @@ where
     sender.bind_instance_id(meta("local").instance_id).await;
     let (near, mut far) = MemoryBackbone::pair("mem://testkit-idempotent", "mem://testkit-idempotent").await;
     sender.attach_backbone(store::os_store::backbone::Backbones::Memory(near)).await.expect("attach sender");
-    sender.dispatch_typed(command, &meta("local"), identity,cx).await.expect("apply command");
+    dispatch_original_fixture_command(&mut sender,&command,&meta("local"),mounted_policy,identity,cx).await.expect("apply command");
     settle_registered_typed_operation(&mut sender, meta("local").instance_id, mounted_policy, identity,cx).await.expect("the edit publishes");
     let mut envelopes = Vec::new();
     for message in far.receive().await.expect("receive") {
@@ -331,10 +336,10 @@ where
 /// 🔀️ Dispatches `command` and asserts it produced a `TransactionProposalDraft` instead of
 /// applying anything (contract §5.1) — the guest-side half of "propose instead of apply".
 /// Returns the draft so a test can inspect `local_ops`/`foreign`.
-pub async fn assert_proposes_transaction<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, command: A::Command, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> semio_framework_plugin_job::TransactionProposalDraft {
+pub  async fn assert_proposes_transaction<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, command: A::Command, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> semio_framework_plugin_job::TransactionProposalDraft where A::Command:semio_framework_value::ToValue {
     let generation_before = app.stores.store.generation();
     let edits_before = app.stores.store.envelope().vcs.edits.len();
-    app.dispatch_typed(command, &meta("local"), identity,cx).await.expect("dispatch a command whose mutations carry foreign steps");
+    dispatch_original_fixture_command(app,&command,&meta("local"),mounted_policy,identity,cx).await.expect("dispatch a command whose mutations carry foreign steps");
     settle_registered_typed_operation(app, meta("local").instance_id, mounted_policy, identity,cx).await.expect("a proposing dispatch settles its own operation");
     assert_eq!(app.stores.store.generation(), generation_before, "a proposed transaction must not bump the document store's generation");
     assert_eq!(app.stores.store.envelope().vcs.edits.len(), edits_before, "a proposed transaction must not add an Edit");

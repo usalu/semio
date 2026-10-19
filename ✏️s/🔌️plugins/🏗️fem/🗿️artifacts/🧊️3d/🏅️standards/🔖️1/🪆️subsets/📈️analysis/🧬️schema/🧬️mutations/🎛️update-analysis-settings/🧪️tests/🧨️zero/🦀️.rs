@@ -14,21 +14,21 @@
 //! target because analysis settings are one inseparable document facet with no id of their own.
 
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::{inverse_fem3d_mutation};
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::inverse_fem3d_mutation;
 use semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation;
 
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 
 static BEFORE: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../📈️analysis/🧪️tests/🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🧨️zero/📸️snapshot/⬅️before/🔣️.json");
 static AFTER: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../📈️analysis/🧪️tests/🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🧨️zero/📸️snapshot/➡️after/🔣️.json");
 static MUTATION: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../📈️analysis/🧪️tests/🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🧨️zero/🦠️mutation/🔣️.json");
 static OUTCOME: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../📈️analysis/🧪️tests/🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🧨️zero/🎯️outcome/🔣️.json");
 
-fn before() -> Fem3dSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+fn before() -> Fem3dSnapshotValue {
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
-fn expected_after() -> Fem3dSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+fn expected_after() -> Fem3dSnapshotValue {
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Fem3dMutation {
     semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
@@ -49,7 +49,7 @@ fn rejection_leaves_the_document_at_the_committed_after() {
 /// 🚨️ The branch this vector pins, level and address together.
 #[test]
 fn the_refusal_is_the_declared_diagnostic() {
-    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "update-analysis-settings/zero-modes-a27c74: a refused mutation must carry the empty diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "update-analysis-settings/zero-modes-a27c74: exactly one diagnostic is expected, got {messages:?}");
@@ -58,13 +58,11 @@ fn the_refusal_is_the_declared_diagnostic() {
     assert_eq!(messages[0].target, Vec::<String>::new(), "update-analysis-settings/zero-modes-a27c74: the diagnostic addresses exactly no target at all");
 }
 
-/// ↩️ The inverse is computed from `before` and the mutation payload alone, never from the verdict,
-/// so a refused request still has the one well-formed undo step its kind always emits.
+/// ↩️ A refused mutation has no admitted diff and no executable inverse.
 #[test]
-fn inverse_has_the_declared_shape() {
-    let inverse = inverse_fem3d_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
-    assert_eq!(inverse.len(), 1, "update-analysis-settings/zero-modes-a27c74: this kind always emits exactly one undo step, got {inverse:?}");
-    assert!(matches!(inverse[0], Fem3dMutation::UpdateAnalysisSettings(_)), "update-analysis-settings/zero-modes-a27c74: the inverse of update-analysis-settings is a UpdateAnalysisSettings, got {:?}", inverse[0]);
+fn inverse_of_refused_mutation_is_empty() {
+    let inverse = inverse_fem3d_mutation(&before(), &mutation()).expect("refused inverse verdict");
+    assert!(inverse.is_empty(), "a refused mutation cannot author an inverse: {inverse:?}");
 }
 
 /// 🎯️ The declared outcome — status, code, level and path — is exactly what the diff builder emits.
@@ -72,7 +70,7 @@ fn inverse_has_the_declared_shape() {
 fn declared_outcome_holds() {
     let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(semio_framework_value::DslValue::as_str), Some("rejected"), "update-analysis-settings/zero-modes-a27c74: this vector declares a rejected outcome");
-    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
     assert_eq!(outcome.get("code").and_then(semio_framework_value::DslValue::as_str), Some(message.code.0.as_str()), "update-analysis-settings/zero-modes-a27c74: the declared code must match the emitted one");
     let declared_path: Vec<String> = outcome.get("path").and_then(semio_framework_value::DslValue::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
@@ -82,8 +80,8 @@ fn declared_outcome_holds() {
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical: decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE.as_str()), ("after", AFTER.as_str())] {
-        let decoded: Fem3dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+        let decoded: Fem3dSnapshotValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = semio_framework_value::ToValue::to_value(&decoded);
         let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
         assert_eq!(reencoded, original, "update-analysis-settings/zero-modes-a27c74: committed {label} JSON is not canonical");
@@ -96,7 +94,7 @@ fn committed_json_is_canonical() {
 /// 🪪️ The fixture is bound to this very kind's own semantic descriptor, never a sibling's.
 #[test]
 fn semantics_bind_the_declared_kind() {
-    let semantics = <Fem3dMutation as protocol::SemanticMutation<Fem3dSnapshot>>::semantics(&mutation());
+    let semantics = <Fem3dMutation as protocol::SemanticMutation<Fem3dSnapshotValue>>::semantics(&mutation());
     assert_eq!(
         (semantics.verb, semantics.entity, semantics.kind, semantics.record),
         ("update", "analysis-settings", "update-analysis-settings", "UpdatedAnalysisSettings"),

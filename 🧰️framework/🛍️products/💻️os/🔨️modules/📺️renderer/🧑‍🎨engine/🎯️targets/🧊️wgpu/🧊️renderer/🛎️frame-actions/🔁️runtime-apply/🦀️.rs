@@ -7,12 +7,13 @@ pub struct FrameMaintenanceOwner {
     pub interaction: Option<AppInteractionState>,
     pub cursor: Option<FrameDeferredCursor>,
     pub deadline_ms: Option<u64>,
+    pub restart: bool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl FrameMaintenanceOwner {
     pub fn new(interaction: AppInteractionState, cursor: FrameDeferredCursor) -> Self {
-        Self { interaction: Some(interaction), cursor: Some(cursor), deadline_ms: renderer_worker_pool().now_ms().checked_add(8) }
+        Self { interaction: Some(interaction), cursor: Some(cursor), deadline_ms: renderer_worker_pool().now_ms().checked_add(8), restart: true }
     }
 
     pub fn generation(&self) -> Option<u64> {
@@ -45,10 +46,10 @@ impl FrameDeferredExecutionOwner {
     }
 
     pub fn cancel_current(&mut self) {
-        if let Some(FrameDeferredWork::Action(action)) = self.work.take() {
-            action.cancel();
-        } else {
-            self.work = None;
+        let Some(work) = self.work.take() else { return; };
+        if let FrameDeferredWork::Action(action) = work {
+            let Some(cursor) = self.cursor.as_mut() else { self.work = Some(FrameDeferredWork::Action(action)); return; };
+            if let Err(action) = cursor.actions.retain_cancelled_action(action) { self.work = Some(FrameDeferredWork::Action(action)); }
         }
     }
 
@@ -57,6 +58,43 @@ impl FrameDeferredExecutionOwner {
             return None;
         }
         Some((self.interaction.take()?, self.cursor.take()?))
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub enum FrameOriginalRecovery {
+    Maintenance(FrameMaintenanceRefusal),
+    Deferred(Arc<FrameExecutionOwnerCell<FrameDeferredExecutionOwner>>),
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl FrameOriginalRecovery {
+    pub fn empty(&self) -> bool {
+        match self {
+            Self::Maintenance(original) => !original.reservation_live && original.owner.try_borrow_mut(|owner| owner.interaction.is_none() && owner.cursor.is_none()).unwrap_or(false),
+            Self::Deferred(original) => original.try_borrow_mut(|owner| owner.interaction.is_none() && owner.cursor.is_none() && owner.work.is_none()).unwrap_or(false),
+        }
+    }
+
+    pub fn release_demand(&self) -> semio_framework_value::RetirementDemand {
+        let release_bytes = match self {
+            Self::Maintenance(_) => semio_framework_value::shared_retirement_allocation_bytes::<FrameExecutionOwnerCell<FrameMaintenanceOwner>>(),
+            Self::Deferred(_) => semio_framework_value::shared_retirement_allocation_bytes::<FrameExecutionOwnerCell<FrameDeferredExecutionOwner>>(),
+        };
+        semio_framework_value::RetirementDemand { release_bytes, depth: 1, ..Default::default() }
+    }
+
+    pub fn release_empty(slot: &mut Option<Self>, grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_value::RetainedCloneStep, semio_framework_value::ValueError> {
+        let Some(original) = slot.as_ref() else { return Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default())); };
+        let demand = original.release_demand();
+        if !original.empty() || !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) { return Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())); }
+        let weak = match original { Self::Maintenance(original) => Arc::weak_count(&original.owner), Self::Deferred(original) => Arc::weak_count(original) };
+        if weak != 0 { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "original frame recovery retains a weak cell supplier")); }
+        let released = match slot.take().unwrap() {
+            Self::Maintenance(original) => match Arc::try_unwrap(original.owner) { Ok(cell) => { drop(cell); true }, Err(owner) => { *slot = Some(Self::Maintenance(FrameMaintenanceRefusal { owner, reservation_live: original.reservation_live })); false } },
+            Self::Deferred(original) => match Arc::try_unwrap(original) { Ok(cell) => { drop(cell); true }, Err(owner) => { *slot = Some(Self::Deferred(owner)); false } },
+        };
+        Ok(semio_framework_value::RetainedCloneStep::Progress(if released { semio_framework_value::RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() } } else { Default::default() }))
     }
 }
 
@@ -74,6 +112,9 @@ impl FrameMaintenanceRefusal {
 }
 
 pub enum RuntimeApply {
+    Applied,
+    #[cfg(not(target_arch = "wasm32"))]
+    FrameExecutionReturned,
     Resize {
         width: f32,
         height: f32,
@@ -95,13 +136,29 @@ pub enum RuntimeApply {
 }
 
 impl RuntimeApply {
-    pub fn close_returned_interaction_step<R: MailboxRuntime>(&mut self,runtime: &mut R,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        match self{
-            Self::ResumeFrameDeferred{interaction,cursor}=>{if let Some(returned)=interaction.take(){runtime.return_interaction(returned);return Ok(false)}if let Some(owner)=cursor.as_mut(){owner.begin_close();if !owner.close_step(){return Ok(false)}}cursor.take();Ok(true)},
-            Self::DispatchEvents(cursor)=>{if let Some(owner)=cursor.as_mut(){if !owner.close_step(cx)?{return Ok(false)}}cursor.take();Ok(true)},
-            Self::ResumeDispatch{interaction,cursor}=>{if let Some(returned)=interaction.as_mut(){if let Some(original)=cursor.as_ref(){original.validate_original(cx)?}if !semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::close_clipboard_io_step(&mut returned.input,cx)?{return Ok(false)}}if let Some(returned)=interaction.take(){runtime.return_interaction(returned);return Ok(false)}if let Some(owner)=cursor.as_mut(){if !owner.close_step(cx)?{return Ok(false)}}cursor.take();Ok(true)},
-            #[cfg(not(target_arch="wasm32"))]Self::RestoreInteraction(interaction)=>{if let Some(returned)=interaction.take(){runtime.return_interaction(returned)}Ok(true)},
-            _=>Ok(false),
+    pub fn close_returned_interaction_step<R: MailboxRuntime>(&mut self, runtime: &mut R, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        match self {
+            Self::Applied => Ok(true),
+            #[cfg(not(target_arch = "wasm32"))]
+            Self::FrameExecutionReturned => Ok(true),
+            Self::ResumeFrameDeferred { interaction, cursor } => {
+                if interaction.is_some() { if !frame_action_metadata(cx)? { return Ok(false); } runtime.return_interaction(interaction.take().unwrap()); return Ok(false); }
+                if let Some(owner) = cursor.as_mut() { owner.begin_close(); if !owner.close_step(cx)? { return Ok(false); } if !frame_action_metadata(cx)? { return Ok(false); } cursor.take(); return Ok(false); }
+                Ok(true)
+            }
+            Self::DispatchEvents(cursor) => {
+                if let Some(owner) = cursor.as_mut() { if !owner.close_step(cx)? { return Ok(false); } if !frame_action_metadata(cx)? { return Ok(false); } cursor.take(); return Ok(false); }
+                Ok(true)
+            }
+            Self::ResumeDispatch { interaction, cursor } => {
+                if let Some(returned) = interaction.as_mut() { if let Some(original) = cursor.as_ref() { original.validate_original(cx)?; } if !semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::close_clipboard_io_step(&mut returned.input, cx)? { return Ok(false); } }
+                if interaction.is_some() { if !frame_action_metadata(cx)? { return Ok(false); } runtime.return_interaction(interaction.take().unwrap()); return Ok(false); }
+                if let Some(owner) = cursor.as_mut() { if !owner.close_step(cx)? { return Ok(false); } if !frame_action_metadata(cx)? { return Ok(false); } cursor.take(); return Ok(false); }
+                Ok(true)
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            Self::RestoreInteraction(interaction) => { if interaction.is_some() { if !frame_action_metadata(cx)? { return Ok(false); } runtime.return_interaction(interaction.take().unwrap()); return Ok(false); } Ok(true) }
+            _ => Ok(false),
         }
     }
 
@@ -119,7 +176,7 @@ impl RuntimeApply {
         }
     }
 
-    fn restore_interaction_only<R: MailboxRuntime>(&mut self, runtime: &mut R) -> bool {
+    pub fn restore_interaction_only<R: MailboxRuntime>(&mut self, runtime: &mut R) -> bool {
         match self {
             Self::ResumeDispatch { interaction, cursor } => {
                 let Some(returned) = interaction.take() else { return cursor.is_none() };
@@ -177,61 +234,19 @@ impl RuntimeApply {
         Ok(true)
     }
 
-    pub fn start_frame_deferred<R: MailboxRuntime>(cursor: &mut Option<FrameDeferredCursor>, runtime: &mut R, handle: &RuntimeHandle<R>) -> bool {
-        #[cfg(not(target_arch = "wasm32"))]
-        if cursor.is_none() && !runtime.interaction_available() {
-            if let Some(mailbox) = handle.upgrade().map(RuntimeMailbox) {
-                if let Some(mut owner) = mailbox.try_take_abandoned_frame_deferred() {
-                    owner.cancel_current();
-                    let Some((interaction, returned_cursor)) = owner.take_pair() else { return false };
-                    runtime.return_interaction(interaction);
-                    *cursor = Some(returned_cursor);
-                    return false;
-                }
-            }
+    pub fn start_frame_deferred<R: MailboxRuntime>(cursor: &mut Option<FrameDeferredCursor>, runtime: &mut R, handle: &RuntimeHandle<R>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        if let Some(owner) = cursor.as_mut() { if !owner.actions.close_retained_action_step(cx)? { return Ok(false); } }
+        if cursor.as_ref().is_some_and(|owner| owner.closing) {
+            if let Some(owner) = cursor.as_mut() { if !owner.close_step(cx)? { return Ok(false); } }
+            if !frame_action_metadata(cx)? { return Ok(false); }
+            cursor.take();
+            return Ok(true);
         }
-        #[cfg(not(target_arch = "wasm32"))]
-        if runtime.pending_frame_maintenance_refusal().is_none() {
-            if let Some(mailbox) = handle.upgrade().map(RuntimeMailbox) {
-                *runtime.pending_frame_maintenance_refusal_mut() = mailbox.try_take_abandoned_frame_maintenance();
-            }
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        if let Some(mut refusal) = runtime.pending_frame_maintenance_refusal_mut().take() {
-            let Some(mailbox) = handle.upgrade().map(RuntimeMailbox) else {
-                *runtime.pending_frame_maintenance_refusal_mut() = Some(refusal);
-                return false;
-            };
-            if refusal.reservation_live {
-                if !mailbox.cancel_interaction_future_reservation() {
-                    *runtime.pending_frame_maintenance_refusal_mut() = Some(refusal);
-                    return false;
-                }
-                refusal.reservation_live = false;
-            }
-            let Some(mut owner) = refusal.try_take() else {
-                *runtime.pending_frame_maintenance_refusal_mut() = Some(refusal);
-                return false;
-            };
-            let Some((interaction, mut returned_cursor)) = owner.take_pair() else {
-                if let Err(owner) = refusal.owner.try_restore(owner) {
-                    refusal.owner = Arc::new(FrameExecutionOwnerCell::new(owner));
-                }
-                *runtime.pending_frame_maintenance_refusal_mut() = Some(refusal);
-                return false;
-            };
-            returned_cursor.return_shell_maintenance();
-            runtime.return_interaction(interaction);
-            *cursor = Some(returned_cursor);
-            return false;
-        }
-        if cursor.as_ref().is_some_and(|cursor| cursor.closing) {
-            let complete = cursor.as_mut().is_some_and(FrameDeferredCursor::close_step);
-            if complete {
-                cursor.take();
-            }
-            return complete;
-        }
+        if cx.should_yield() { return Ok(false); }
+        Ok(Self::dispatch_frame_deferred(cursor, runtime, handle))
+    }
+
+    fn dispatch_frame_deferred<R: MailboxRuntime>(cursor: &mut Option<FrameDeferredCursor>, runtime: &mut R, handle: &RuntimeHandle<R>) -> bool {
         let Some(cursor_value) = cursor.as_mut() else { return true };
         if cursor_value.terminal_is_empty() {
             cursor.take();
@@ -338,31 +353,58 @@ impl RuntimeApply {
         false
     }
 
-    fn apply_step<R: MailboxRuntime>(&mut self, runtime: &mut R, handle: &RuntimeHandle<R>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
+    pub fn apply_step<R: MailboxRuntime>(&mut self, runtime: &mut R, handle: &RuntimeHandle<R>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
         if let Self::DispatchEvents(cursor) = self {
             log_debug(&format!("[TRACE] apply_step DispatchEvents present={} terminal-empty={:?}", cursor.is_some(), cursor.as_ref().map(RuntimeDispatchCursor::terminal_is_empty)));
         }
-        match self{Self::DispatchEvents(cursor)=>return Self::start_dispatch(cursor,runtime,handle,cx),Self::ResumeDispatch{interaction,cursor}=>{if let Some(returned)=interaction.as_mut(){if let Some(original)=cursor.as_ref(){original.validate_original(cx)?;}if semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::drive_clipboard_io_step(&mut returned.input,cx)?{return Ok(false)}}if let Some(returned)=interaction.take(){runtime.return_interaction(returned)}return Self::start_dispatch(cursor,runtime,handle,cx)},_=>{}}
-        Ok((||{match self {
-            Self::DispatchEvents(_)|Self::ResumeDispatch{..}=>unreachable!(),
-            Self::Resize { width, height, dpr } => runtime.resize(*width, *height, *dpr),
-            Self::ResumeFrameDeferred { interaction, cursor } => {
-                if let Some(returned) = interaction.take() {
-                    runtime.return_interaction(returned);
+        match self {
+            Self::DispatchEvents(cursor) => return Self::start_dispatch(cursor, runtime, handle, cx),
+            Self::ResumeDispatch { interaction, cursor } => {
+                if let Some(returned) = interaction.as_mut() {
+                    if let Some(original) = cursor.as_ref() { original.validate_original(cx)?; }
+                    if semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::drive_clipboard_io_step(&mut returned.input, cx)? { return Ok(false); }
                 }
-                return Self::start_frame_deferred(cursor, runtime, handle);
+                if interaction.is_some() {
+                    if !frame_action_metadata(cx)? { return Ok(false); }
+                    runtime.return_interaction(interaction.take().unwrap());
+                    return Ok(false);
+                }
+                return Self::start_dispatch(cursor, runtime, handle, cx);
+            }
+            Self::ResumeFrameDeferred { interaction, cursor } => {
+                if interaction.is_some() {
+                    if !frame_action_metadata(cx)? { return Ok(false); }
+                    runtime.return_interaction(interaction.take().unwrap());
+                    return Ok(false);
+                }
+                return Self::start_frame_deferred(cursor, runtime, handle, cx);
             }
             #[cfg(not(target_arch = "wasm32"))]
             Self::RestoreInteraction(interaction) => {
-                if let Some(returned) = interaction.take() {
-                    runtime.return_interaction(returned);
+                if interaction.is_some() {
+                    if !frame_action_metadata(cx)? { return Ok(false); }
+                    runtime.return_interaction(interaction.take().unwrap());
+                    return Ok(false);
                 }
+                return Ok(true);
             }
+            _ => {}
+        }
+
+        Ok((||{match self {
+            Self::Applied => return true,
+            #[cfg(not(target_arch = "wasm32"))]
+            Self::FrameExecutionReturned => return true,
+            Self::DispatchEvents(_)|Self::ResumeDispatch{..}=>unreachable!(),
+            Self::Resize { width, height, dpr } => runtime.resize(*width, *height, *dpr),
+            Self::ResumeFrameDeferred { .. } => unreachable!(),
+            #[cfg(not(target_arch = "wasm32"))]
+            Self::RestoreInteraction(_) => unreachable!(),
             #[cfg(not(target_arch = "wasm32"))]
             Self::PluginReload(result) => match result.take() {
                 Some(Ok(entries)) => {
                     let handle = handle.clone();
-                    RuntimeMailbox::submit_interaction(runtime, &handle, Some("plugin-boot"), move |mut interaction| async move {
+                    RuntimeMailbox::submit_interaction(runtime,&handle, Some("plugin-boot"), move |mut interaction| async move {
                         interaction.shell.docs.prepare_hot_reload(entries, &mut interaction.shell.plugins, &mut interaction.shell.directory);
                         if let Err(error) = semio_framework_os_renderer_wgpu_shell_actions::ActionsCtx::of(&mut interaction.shell).boot().await {
                             log_debug(&format!("wasm program hot reload failed: {error}"));

@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "cases": [
+    {"id":"unchanged","base":3,"removed":[],"modified":[],"added":[],"fault":null,"output":["b0","b1","b2"]},
+    {"id":"mixed-unsorted","base":5,"removed":[3,1],"modified":[4,0],"added":[3,0],"fault":null,"output":["a1","b0","b2","a0","b4"]},
+    {"id":"all-removed","base":3,"removed":[2,0,1],"modified":[],"added":[],"fault":null,"output":[]},
+    {"id":"only-additions","base":0,"removed":[],"modified":[],"added":[2,0,1],"fault":null,"output":["a1","a2","a0"]},
+    {"id":"base-final-coordinates","base":3,"removed":[1],"modified":[2],"added":[1],"fault":null,"output":["b0","a0","b2"]},
+    {"id":"append","base":2,"removed":[],"modified":[],"added":[3,2],"fault":null,"output":["b0","b1","a1","a0"]},
+    {"id":"duplicate-removal","base":3,"removed":[1,1],"modified":[],"added":[],"fault":"remove","output":null},
+    {"id":"absent-removal","base":3,"removed":[3],"modified":[],"added":[],"fault":"remove","output":null},
+    {"id":"duplicate-modification","base":3,"removed":[],"modified":[0,0],"added":[],"fault":"modify","output":null},
+    {"id":"removed-modification","base":3,"removed":[1],"modified":[1],"added":[],"fault":"modify","output":null},
+    {"id":"absent-modification","base":3,"removed":[],"modified":[3],"added":[],"fault":"modify","output":null},
+    {"id":"duplicate-addition","base":2,"removed":[],"modified":[],"added":[1,1],"fault":"add","output":null},
+    {"id":"addition-hole","base":2,"removed":[],"modified":[],"added":[3],"fault":"add","output":null},
+    {"id":"addition-after-removal","base":2,"removed":[1],"modified":[],"added":[2],"fault":"add","output":null}
+  ]
+}

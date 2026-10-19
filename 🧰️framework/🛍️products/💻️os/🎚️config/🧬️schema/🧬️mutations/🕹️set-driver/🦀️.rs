@@ -14,16 +14,9 @@ pub fn set_driver(driver_id: Option<String>) -> UiPreferencesConfigMutation {
 impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetDriver {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "driver", kind: "set-driver", record: "Set" };
 
-    fn diff(&self, base: &UiPreferences) -> protocol::MutationOutcome<UiPreferencesDiff> {
-        if base.driver_id == self.driver_id {
-            return protocol::MutationOutcome::new(UiPreferencesDiff::default()).warning("mutation.no-op", "driver is already selected.");
-        }
-        protocol::MutationOutcome::new(UiPreferencesDiff { driver_id: Some(SettingEdit::new(self.driver_id.clone())), ..UiPreferencesDiff::default() })
-    }
 
-    fn inverse(&self, base: &UiPreferences) -> Result<Vec<UiPreferencesConfigMutation>, semio_framework_value::ValueError> {
-        Ok(vec![UiPreferencesConfigMutation::SetDriver(Self { driver_id: base.driver_id.clone() })])
-    }
+
+
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set driver to {:?}", self.driver_id), &format!("Treiber auf {:?} setzen", self.driver_id))
@@ -31,5 +24,17 @@ impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetD
 
     fn target(&self) -> Vec<String> {
         vec!["driver-id".to_string()]
+    }
+}
+
+impl protocol::ColdMutationKind<UiPreferences, UiPreferencesConfigMutation> for SetDriver {
+    fn diff(&self, base: &UiPreferences) -> protocol::MutationOutcome<UiPreferencesDiff> {
+        if base.driver_id == self.driver_id {
+            return protocol::MutationOutcome::new(UiPreferencesDiff::default()).warning("mutation.no-op", "driver is already selected.");
+        }
+        protocol::MutationOutcome::new(UiPreferencesDiff { driver_id: Some(SettingEdit::new(self.driver_id.clone())), ..UiPreferencesDiff::default() })
+    }
+    fn inverse(&self, base: &UiPreferences) -> Result<Vec<UiPreferencesConfigMutation>, semio_framework_value::ValueError> {
+        Ok(vec![UiPreferencesConfigMutation::SetDriver(Self { driver_id: base.driver_id.clone() })])
     }
 }

@@ -531,9 +531,25 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
         Data::Union(_) => return Err(syn::Error::new_spanned(&input.ident, "#[derive(FromValue)] does not support unions")),
     };
 
+    let body = if let Some(path) = &container.validate {
+        let validator: syn::Path = syn::parse_str(path)?;
+        quote! {
+            let decoded = (|| -> ::core::result::Result<Self, #value_crate::ValueError> { #body })()?;
+            if let Err(error) = #validator(&decoded) {
+                <Self as #value_crate::FromValue>::retire_decoded(decoded);
+                return Err(error);
+            }
+            Ok(decoded)
+        }
+    } else { body };
     let controlled_body = controlled_from_body(input, &container, &value_crate)?;
+    let controlled_body = controlled_semantic_admission(controlled_body, &container, &value_crate, container.deserialize_controlled_with.is_some())?;
     let retirement_body = controlled_retirement_body(input, &container, &value_crate)?;
-    let controlled_default_method=if let Some(path)=&container.default_controlled{let path:syn::Path=syn::parse_str(path)?;quote!{fn default_value_controlled(control:&mut #value_crate::NativeDecodeControl<'_>)->Result<Self,#value_crate::ValueError>{#path(control)}}}else{quote!{}};
+    let controlled_default_method = if let Some(path) = &container.default_controlled {
+        let path: syn::Path = syn::parse_str(path)?;
+        let body = controlled_semantic_admission(quote! { #path(control) }, &container, &value_crate, true)?;
+        quote! { fn default_value_controlled(control: &mut #value_crate::NativeDecodeControl<'_>) -> Result<Self, #value_crate::ValueError> { #body } }
+    } else { quote! {} };
     let edit_body = match &input.data {
         Data::Struct(data) if container.transparent => match &data.fields {
             Fields::Named(named) if named.named.len() == 1 => {

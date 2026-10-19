@@ -16,21 +16,21 @@
 //! pointing at nothing. `mutation.target-mismatch`, an Error.
 
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::inverse_fem2d_mutation;
 use semio_s_artifact_fem_2d_mutations::central_apply::apply_fem2d_mutation;
 
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
 static BEFORE: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/📏️replace-section/🪪️denies-rename-1d02dd/📸️snapshot/⬅️before/🔣️.json");
 static AFTER: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/📏️replace-section/🪪️denies-rename-1d02dd/📸️snapshot/➡️after/🔣️.json");
 static MUTATION: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/📏️replace-section/🪪️denies-rename-1d02dd/🦠️mutation/🔣️.json");
 static OUTCOME: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/📏️replace-section/🪪️denies-rename-1d02dd/🎯️outcome/🔣️.json");
 
-fn before() -> Fem2dSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+fn before() -> Fem2dSnapshotValue {
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
-fn expected_after() -> Fem2dSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+fn expected_after() -> Fem2dSnapshotValue {
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Fem2dMutation {
     semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
@@ -51,27 +51,32 @@ fn rejection_leaves_the_document_untouched() {
 /// 🚨️ The refusal is the diagnostic this kind's own diff builder raises, at its own level.
 #[test]
 fn the_refusal_is_the_declared_diagnostic() {
-    let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff::default(), "replace-section/denies-rename-1d02dd: a rejecting replace-section must carry the empty diff, never a half-built delta");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.target-mismatch", "replace-section/denies-rename-1d02dd: the refusal is reported as mutation.target-mismatch");
     assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Error, "a replacement that renames its target contradicts the target it selects — the state-dependent Error");
     assert_eq!(messages[0].target, vec!["ipe240".to_string(), "ipe240a".to_string()], "the diagnostic addresses the target first, then every referrer");
-    let semantics = <Fem2dMutation as protocol::SemanticMutation<Fem2dSnapshot>>::semantics(&mutation());
+    let semantics = <Fem2dMutation as protocol::SemanticMutation<Fem2dSnapshotValue>>::semantics(&mutation());
     assert_eq!(semantics.kind, "replace-section", "the fixture must be bound to replace-section's own descriptor");
 }
 
-/// ↩️ `replace-section`'s inverse is BASE-derived: it restores the section `before` holds, addressed by the SELECTED id.
+/// ↩️ A refused aggregate mutation has no executable inverse and preserves its fixture snapshot.
 #[test]
 fn inverse_of_the_refused_mutation() {
-    let inverse = inverse_fem2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
-    assert_eq!(inverse.len(), 1, "replace-section/denies-rename-1d02dd: replace-section undoes with exactly one step, got {inverse:?}");
-    let Fem2dMutation::ReplaceSection(undo) = &inverse[0] else {
-        panic!("replace-section's inverse must be a ReplaceSection, got {:?}", inverse[0]);
-    };
-    assert_eq!(undo.id, "ipe240", "the inverse addresses the selected id, not the one the replacement carried");
-    assert_eq!(&undo.new_section, before().sections.iter().find(|item| item.id == "ipe240").expect("the target survives a refusal"), "the inverse restores the pre-mutation section");
+    let base = before();
+    let operation = mutation();
+    let inverse = inverse_fem2d_mutation(&base, &operation).expect("aggregate inverse admission");
+    assert!(inverse.is_empty(), "refused mutations cannot publish inverse candidates: {inverse:?}");
+    let mut snapshot = base.clone();
+    apply_fem2d_mutation(&mut snapshot, &operation).expect("unchanged forward outcome");
+    for step in &inverse {
+        apply_fem2d_mutation(&mut snapshot, step).expect("admitted inverse step");
+    }
+    assert_eq!(snapshot, expected_after());
+    assert_eq!(snapshot, base);
+    println!("[DEBUG] FEM2d refused fixture retains its snapshot with an empty aggregate inverse");
 }
 
 /// 🎯️ The declared rejection — status, code and path — is exactly what the diff builder emits.
@@ -79,7 +84,7 @@ fn inverse_of_the_refused_mutation() {
 fn declared_outcome_holds() {
     let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(semio_framework_value::DslValue::as_str), Some("rejected"), "replace-section/denies-rename-1d02dd declares a rejected outcome");
-    let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
     assert_eq!(outcome.get("code").and_then(semio_framework_value::DslValue::as_str), Some(message.code.0.as_str()), "the declared code must match the emitted one");
     let declared: Vec<String> = outcome.get("path").and_then(semio_framework_value::DslValue::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
@@ -89,8 +94,8 @@ fn declared_outcome_holds() {
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE.as_str()), ("after", AFTER.as_str())] {
-        let decoded: Fem2dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+        let decoded: Fem2dSnapshotValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = semio_framework_value::ToValue::to_value(&decoded);
         let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
         assert_eq!(reencoded, original, "replace-section/denies-rename-1d02dd: committed {label} JSON is not canonical");

@@ -24,6 +24,7 @@
 //!
 //! @see ./🧪️tests/🔬️unit/🦀️.rs — the randomized sequence laws
 
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use semio_framework_mutation_diff::{ApplyCapability, MutationApplyError};
 use semio_framework_value::list::PagedList;
 
@@ -81,6 +82,26 @@ impl<R: Keyed> KeyOf<R> for ByKeyed {
 
 /// 🏷️ The key type of the list rows `R` under the marker `K`.
 pub type KeyOfRow<R, K> = <K as KeyOf<R>>::Key;
+
+/// 🎁️ Decodes a supplied sparse setter through its value type; absence remains the owning field's default.
+pub fn supplied_value<T: semio_framework_value::FromValue>(value: semio_framework_value::DslValue) -> Result<Option<T>, semio_framework_value::ValueError> {
+    T::from_value(value).map(Some)
+}
+
+/// 🎟️ Admits a supplied sparse setter under its original native decode control.
+pub fn supplied_value_controlled<T: semio_framework_value::FromValue>(value: &semio_framework_value::DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Option<T>, semio_framework_value::ValueError> {
+    T::from_value_controlled(value, control).map(Some)
+}
+
+/// 🕳️ Admits absence through the optional value's native default owner.
+pub fn supplied_value_default<T: semio_framework_value::FromValue>(control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Option<T>, semio_framework_value::ValueError> {
+    <Option<T> as semio_framework_value::FromValue>::default_value_controlled(control)
+}
+
+/// ♻️ Retires a supplied sparse setter through its typed decode owner.
+pub fn supplied_value_retire<T: semio_framework_value::FromValue>(value: Option<T>) {
+    <Option<T> as semio_framework_value::FromValue>::retire_decoded(value)
+}
 
 /// 🔑️ A `(key, value)` pair is keyed by its first member: the rows of an ordered map kept as a list.
 impl<K: Clone + Eq + Hash + std::fmt::Debug, V> Keyed for (K, V) {
@@ -286,7 +307,16 @@ impl<R: Clone + PartialEq, Q: RowPatch<R>, K: KeyOf<R>> Parts<R, Q, K> {
 
     /// ➖️ The delta that removes the rows at `indices` of `base` (indices past the end are skipped).
     pub fn removals<L: ItemList<R> + ?Sized>(base: &L, indices: &[usize]) -> Self {
-        Self { removed: indices.iter().filter_map(|index| base.at(*index).map(|row| (K::key_of(row), *index))).collect(), ..Self::default() }
+        Self { removed: indices.iter().filter_map(|index| base.at(*index).map(|row| (K::key_of(row), *index))).collect(), ..Self::default() }.canonical()
+    }
+
+    /// 🧭️ The canonical row order: every coordinate set is unique, so ordering by coordinate (`removed` and `moved` by base index, `inserted` by after index) makes
+    /// two deltas that name the same coordinates equal whichever order their rows were built in.
+    fn canonical(mut self) -> Self {
+        self.removed.sort_by_key(|(_, at)| *at);
+        self.inserted.sort_by_key(|(at, _)| *at);
+        self.moved.sort_by_key(|(_, from, _)| *from);
+        self
     }
 
     /// ➖️ The delta that removes the row `id` found at `index` of the base list.
@@ -296,7 +326,7 @@ impl<R: Clone + PartialEq, Q: RowPatch<R>, K: KeyOf<R>> Parts<R, Q, K> {
 
     /// ➖️ The delta that removes several rows, each named with its base index.
     pub fn removals_by_id(rows: Vec<(KeyOfRow<R, K>, usize)>) -> Self {
-        Self { removed: rows, ..Self::default() }
+        Self { removed: rows, ..Self::default() }.canonical()
     }
 
     /// ↕️ The delta that moves the row at `from` of `base` to `to` of the after list (empty when `base` has no such row).
@@ -382,6 +412,9 @@ impl<R: Clone + PartialEq, Q: RowPatch<R>, K: KeyOf<R>> Parts<R, Q, K> {
             let at = *positions.get(id).ok_or_else(|| refusal("mutation.apply.missing-target", "modified row does not exist", "modified", index))?;
             let row = after.0[at].as_mut().expect("a slot of the after list holds its row");
             patch.commit_into(row, capability).map_err(|error| error.under(["modified".to_string(), index.to_string()]))?;
+            if K::key_of(row) != *id {
+                return Err(refusal("mutation.apply.identity-change", "modified row must retain its stable key", "modified", index));
+            }
         }
         Ok(L::from_rows(std::mem::take(&mut after.0).into_iter().flatten().collect()))
     }
@@ -392,13 +425,25 @@ impl<R: Clone + PartialEq, Q: RowPatch<R>, K: KeyOf<R>> Parts<R, Q, K> {
         let inserted = self.removed.iter().filter_map(|(_, at)| base.at(*at).map(|row| (*at, row.clone()))).collect();
         let moved = self.moved.iter().map(|(id, from, to)| (id.clone(), *to, *from)).collect();
         let created: HashSet<KeyOfRow<R, K>> = self.inserted.iter().map(|(_, row)| K::key_of(row)).collect();
-        let modified = self
-            .modified
-            .iter()
-            .filter(|(id, _)| !created.contains(id))
-            .filter_map(|(id, patch)| (0..base.count()).filter_map(|at| base.at(at)).find(|row| K::key_of(row) == *id).map(|row| (id.clone(), patch.inverse(row))))
+        let mut composed: Vec<(KeyOfRow<R, K>, Q)> = Vec::new();
+        let mut positions: HashMap<KeyOfRow<R, K>, usize> = HashMap::new();
+        for (id, patch) in &self.modified {
+            if created.contains(id) { continue; }
+            if let Some(index) = positions.get(id).copied() {
+                composed[index].1.absorb(patch.clone());
+            } else {
+                positions.insert(id.clone(), composed.len());
+                composed.push((id.clone(), patch.clone()));
+            }
+        }
+        let modified = composed.into_iter()
+            .filter_map(|(id, patch)| {
+                let inverse = (0..base.count()).filter_map(|at| base.at(at)).find(|row| K::key_of(row) == id).map(|row| (id, patch.inverse(row)));
+                patch.retire_cold();
+                inverse
+            })
             .collect();
-        Self { removed, inserted, moved, modified }
+        Self { removed, inserted, moved, modified }.canonical()
     }
 
     /// ➕️ Composes `self` (base→mid) with `later` (mid→after) into base→after, in place. A row or patch the composition cancels is
@@ -465,7 +510,7 @@ impl<R: Clone + PartialEq, Q: RowPatch<R>, K: KeyOf<R>> Parts<R, Q, K> {
                 None => modified.push((id, patch)),
             }
         }
-        *self = Self { removed, inserted, moved, modified };
+        *self = Self { removed, inserted, moved, modified }.canonical();
     }
 }
 
@@ -536,6 +581,7 @@ macro_rules! list_delta {
             pub moved: Vec<$relocation>,
             pub modified: Vec<$modification>,
         }
+
 
         impl $delta {
             fn into_parts(self) -> $crate::Parts<$row, $patch, $keyer> {
@@ -721,6 +767,7 @@ macro_rules! plain_list_delta {
             pub inserted: Vec<$insertion>,
             pub moved: Vec<$relocation>,
         }
+
 
         impl $delta {
             fn into_parts(self) -> $crate::Parts<$row, $crate::NoPatch, $keyer> {

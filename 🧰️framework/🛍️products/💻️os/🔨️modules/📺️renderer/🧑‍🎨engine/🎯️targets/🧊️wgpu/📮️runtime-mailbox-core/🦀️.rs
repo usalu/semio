@@ -30,16 +30,18 @@ pub struct Completion<T> {
 pub struct BoundedCompletionQueue<T, const CAPACITY: usize> {
     pub ready: VecDeque<Completion<T>>,
     in_flight: usize,
+    checked_out: usize,
+    returning: usize,
 }
 
 impl<T, const CAPACITY: usize> BoundedCompletionQueue<T, CAPACITY> {
     pub fn new() -> Self {
         assert!(CAPACITY > 1, "completion mailbox needs an interaction reserve");
-        Self { ready: VecDeque::with_capacity(CAPACITY), in_flight: 0 }
+        Self { ready: VecDeque::with_capacity(CAPACITY), in_flight: 0, checked_out: 0, returning: 0 }
     }
 
     pub fn len(&self) -> usize {
-        self.ready.len() + self.in_flight
+        self.ready.len() + self.in_flight + self.checked_out
     }
 
     fn make_room_for(&mut self, key: Option<&'static str>, limit: usize) -> bool {
@@ -100,7 +102,7 @@ impl<T, const CAPACITY: usize> BoundedCompletionQueue<T, CAPACITY> {
     /// has not finished yet, or a ready completion that restores it. This is the exact predicate the
     /// checkout ledger ages against — a slow owner is an owner, and an absent one is a leak now.
     pub fn interaction_owner_outstanding(&self) -> bool {
-        self.in_flight > 0 || self.ready.iter().any(|completion| completion.restores_interaction)
+        self.in_flight > 0 || self.returning > 0 || self.ready.iter().any(|completion| completion.restores_interaction)
     }
 
     /// 🎯️ The first completion this turn may apply.
@@ -122,6 +124,26 @@ impl<T, const CAPACITY: usize> BoundedCompletionQueue<T, CAPACITY> {
         self.ready.iter().position(|completion| completion.restores_interaction)
     }
 
+    /// 🎟️ The borrowed completion retains its original capacity and interaction-return reservation.
+    pub(crate) fn checkout_at(&mut self, index: usize) -> Option<(Completion<T>, CompletionCheckout)> {
+        let completion = self.ready.remove(index)?;
+        self.checked_out += 1;
+        self.returning += usize::from(completion.restores_interaction);
+        let checkout = CompletionCheckout { returns_interaction: completion.restores_interaction };
+        Some((completion, checkout))
+    }
+
+    pub(crate) fn return_checkout(&mut self, index: usize, completion: Completion<T>, checkout: CompletionCheckout) {
+        self.finish_checkout(checkout);
+        self.ready.insert(index.min(self.ready.len()), completion);
+        assert!(self.len() <= CAPACITY, "returned original completion exceeded its retained capacity");
+    }
+
+    pub(crate) fn finish_checkout(&mut self, checkout: CompletionCheckout) {
+        self.checked_out = self.checked_out.checked_sub(1).expect("original completion checkout");
+        self.returning = self.returning.checked_sub(usize::from(checkout.returns_interaction)).expect("original interaction-return checkout");
+    }
+
     pub fn take_at(&mut self, index: usize) -> Option<Completion<T>> {
         self.ready.remove(index)
     }
@@ -129,6 +151,10 @@ impl<T, const CAPACITY: usize> BoundedCompletionQueue<T, CAPACITY> {
     pub fn restore_at(&mut self, index: usize, completion: Completion<T>) {
         self.ready.insert(index.min(self.ready.len()), completion);
     }
+}
+
+pub(crate) struct CompletionCheckout {
+    returns_interaction: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -215,3 +241,7 @@ mod tests;
 #[cfg(test)]
 #[path = "../../../🧪️tests/🎮️wgpu-runtime-mailbox-admission/🦀️.rs"]
 mod admission_laws;
+
+#[cfg(test)]
+#[path = "🎟️apply/🧪️tests/🦀️.rs"]
+mod original_apply_laws;

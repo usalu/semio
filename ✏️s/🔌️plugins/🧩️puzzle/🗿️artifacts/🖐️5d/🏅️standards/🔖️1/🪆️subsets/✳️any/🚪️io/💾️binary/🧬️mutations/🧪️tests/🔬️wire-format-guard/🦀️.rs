@@ -7,7 +7,12 @@
 //! deliberately changed.
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
 use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart;
-use crate::standards::v1::subsets::any::schema::mutations::{change_description,change_domain,connect_grips,create_part,delete_part,disconnect_grips};
+use crate::standards::v1::subsets::any::schema::mutations::change_description;
+use crate::standards::v1::subsets::any::schema::mutations::change_domain;
+use crate::standards::v1::subsets::any::schema::mutations::connect_grips;
+use crate::standards::v1::subsets::any::schema::mutations::create_part;
+use crate::standards::v1::subsets::any::schema::mutations::delete_part;
+use crate::standards::v1::subsets::any::schema::mutations::disconnect_grips;
 
 use protocol::OpText;
 

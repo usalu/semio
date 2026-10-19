@@ -1,0 +1,71 @@
+{
+  "schema": "semio.retained-command.original-producer.v1",
+  "sourceSlots": [
+    "request",
+    "job"
+  ],
+  "jobOutput": "samePrebornErasedBox",
+  "context": "originalStepContext",
+  "carriedSources": [
+    "producer_window_config",
+    "producer_instance_operation_owner",
+    "producer_output_chunks",
+    "producer_controller_id",
+    "producer_tool_id",
+    "producer_payload_schema_id"
+  ],
+  "rawCapacity": "actualMeasuredCapacity",
+  "originalRelease": "originalCommandBox",
+  "cases": [
+    {
+      "name": "typed",
+      "work": 24,
+      "job": 512,
+      "raw": 0,
+      "actualRaw": 0,
+      "extra": 0,
+      "command": 16,
+      "capacity": 536
+    },
+    {
+      "name": "wire",
+      "work": 24,
+      "job": 512,
+      "raw": 37,
+      "actualRaw": 37,
+      "extra": 0,
+      "command": 16,
+      "capacity": 573
+    },
+    {
+      "name": "rawAllocationRefused",
+      "work": 24,
+      "job": 512,
+      "raw": 37,
+      "actualRaw": 0,
+      "extra": 0,
+      "command": 16,
+      "capacity": 536
+    },
+    {
+      "name": "measuredWork",
+      "work": 24,
+      "job": 512,
+      "raw": 0,
+      "actualRaw": 0,
+      "extra": 128,
+      "command": 16,
+      "capacity": 664
+    },
+    {
+      "name": "zeroSizedWork",
+      "work": 0,
+      "job": 512,
+      "raw": 1,
+      "actualRaw": 1,
+      "extra": 0,
+      "command": 0,
+      "capacity": 513
+    }
+  ]
+}

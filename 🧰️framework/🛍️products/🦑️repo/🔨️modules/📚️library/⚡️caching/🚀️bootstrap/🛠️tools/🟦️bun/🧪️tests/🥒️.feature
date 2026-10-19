@@ -1,6 +1,6 @@
 Feature: Workspace-Owned Bun Bootstrap
   Scenario: A developer uses a different installed Bun version
-    Given the tooling recipe pins Bun 1.3.14
+    Given the tooling recipe pins Bun 1.4.2
     And the installed Bun is 1.4.2
     When Nx needs to acquire its frozen toolset
     Then it acquires the pinned executable for the current platform

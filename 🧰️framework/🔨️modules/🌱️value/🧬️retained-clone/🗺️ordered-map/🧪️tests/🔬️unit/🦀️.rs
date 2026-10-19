@@ -31,10 +31,10 @@ fn ordered_map_clone_advance_quotes_balance_original_heap_and_refused_currencies
                 for axis in fixture["deniedAxes"].as_array().unwrap(){
                     let mut denied=grant;
                     match axis.as_str().unwrap(){"items"=>denied.maximum_items=0,"copy" if demand.copy_bytes>0=>denied.maximum_copy_bytes=demand.copy_bytes-1,"capacity" if demand.capacity_bytes>0=>denied.maximum_capacity_bytes=demand.capacity_bytes-1,"release" if demand.release_bytes>0=>denied.maximum_release_bytes=demand.release_bytes-1,"depth" if demand.depth>0=>denied.maximum_depth=demand.depth-1,_=>continue}
-                    let(result,heap)=crate::observe_retirement_allocations(||cursor.advance(source.borrow(),denied));
+                    let(result,heap)=crate::observe_retirement_allocations(||cursor.advance(source.borrow(), body, denied));
                     assert_eq!(heap,(0,0));match result{Ok(step)=>assert_eq!(step.progress(),Default::default()),Err(error)=>assert!(matches!(error.kind,crate::ValueRefusalKind::DepthLimit|crate::ValueRefusalKind::WorkLimit|crate::ValueRefusalKind::OwnershipLimit))};assert_eq!(cursor.advance_demands(source.borrow(),body).unwrap(),demand);
                 }
-                let(step,heap)=crate::observe_retirement_allocations(||cursor.advance(source.borrow(),grant).unwrap());let receipt=step.progress();
+                let(step,heap)=crate::observe_retirement_allocations(||cursor.advance(source.borrow(), body, grant).unwrap());let receipt=step.progress();
                 assert!(receipt.fits(grant));assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.0;freed+=heap.1;
                 if matches!(step,RetainedCloneStep::Complete(_)){output=cursor.take();break;}
             }
@@ -56,15 +56,29 @@ fn insert(map:RetainedOrderedMap<String,String>,key:String,value:String)->Retain
     assert_eq!(receipt.retained_capacity_bytes,bytes);cursor
 }
 fn close_insert(cursor:&mut RetainedOrderedMapInsertCursor<String,String>){
-    cursor.begin_close();for _ in 0..100000{if cursor.terminal_is_empty(){break;}let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:cursor.next_close_release_byte_demand().unwrap(),maximum_depth:cursor.next_close_depth_demand().unwrap()};assert!(cursor.close_step(grant).unwrap().progress().fits(grant));}assert!(cursor.terminal_is_empty());
+    cursor.begin_close();for _ in 0..100000{if cursor.terminal_is_empty(){break;}let copy=7.max(cursor.next_close_copy_byte_demand().unwrap());let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:cursor.next_close_release_byte_demand().unwrap(),maximum_depth:cursor.next_close_depth_demand().unwrap()};assert!(cursor.close_step(grant).unwrap().progress().fits(grant));}assert!(cursor.terminal_is_empty());
 }
 fn close_comparator<K:BoundedOrd>(cursor:&mut K::Cursor){
-    cursor.begin_close();for _ in 0..100000{if cursor.terminal_is_empty(){break;}let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:cursor.next_close_release_byte_demand().unwrap(),maximum_depth:cursor.next_close_depth_demand().unwrap()};assert!(cursor.close_step(grant).unwrap().progress().fits(grant));}assert!(cursor.terminal_is_empty());
+    cursor.begin_close();for _ in 0..100000{if cursor.terminal_is_empty(){break;}let copy=7.max(cursor.next_close_copy_byte_demand().unwrap());let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:cursor.next_close_release_byte_demand().unwrap(),maximum_depth:cursor.next_close_depth_demand().unwrap()};assert!(cursor.close_step(grant).unwrap().progress().fits(grant));}assert!(cursor.terminal_is_empty());
 }
 fn close_lookup<K:BoundedOrd>(cursor:&mut RetainedOrderedMapLookupCursor<K>){
-    cursor.begin_close();for _ in 0..100000{if cursor.terminal_is_empty(){break;}let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:cursor.next_close_release_byte_demand().unwrap(),maximum_depth:cursor.next_close_depth_demand().unwrap()};assert!(cursor.close_step(grant).unwrap().progress().fits(grant));}assert!(cursor.terminal_is_empty());
+    cursor.begin_close();
+    for _ in 0..100000{
+        if cursor.terminal_is_empty(){break;}
+        let copy=7.max(cursor.next_close_copy_byte_demand().unwrap());let minimum=cursor.next_close_copy_byte_demand().unwrap();
+        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:cursor.next_close_release_byte_demand().unwrap(),maximum_depth:cursor.next_close_depth_demand().unwrap()};
+        for axis in 0..5{
+            if (axis==1&&minimum==0)||(axis==2&&grant.maximum_capacity_bytes==0)||(axis==3&&grant.maximum_release_bytes==0)||(axis==4&&grant.maximum_depth==0){continue;}
+            let denied=match axis{0=>RetainedCloneGrant{maximum_items:0,..grant},1=>RetainedCloneGrant{maximum_copy_bytes:minimum-1,..grant},2=>RetainedCloneGrant{maximum_capacity_bytes:grant.maximum_capacity_bytes-1,..grant},3=>RetainedCloneGrant{maximum_release_bytes:grant.maximum_release_bytes-1,..grant},_=>RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}};
+            let(step,heap)=crate::value::observe_retirement_allocations(||cursor.close_step(denied).unwrap());
+            assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(cursor.next_close_copy_byte_demand().unwrap(),minimum);
+        }
+        let(step,heap)=crate::value::observe_retirement_allocations(||cursor.close_step(grant).unwrap());
+        assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));
+        if matches!(step,RetainedCloneStep::Complete(_)){assert!(cursor.terminal_is_empty());}
+    }
+    assert!(cursor.terminal_is_empty());
 }
-
 
 #[test]
 fn ordered_comparison_custody_refuses_unadmitted_constructor_and_closes_original_aliases() {
@@ -167,7 +181,9 @@ fn retained_map(source: &RetainedOrderedMap<String, String>) -> RetainedOrderedM
     let grant = RetainedCloneGrant { maximum_items: 2, maximum_copy_bytes: 64, maximum_capacity_bytes: 65_536, maximum_depth: 64, maximum_release_bytes: 65_536 };
     let mut cursor = RetainedOrderedMap::<String, String>::retained_clone_cursor();
     let output = loop {
-        let step = cursor.advance(source.borrow(), grant).expect("retained ordered-map clone");
+        let demand=cursor.advance_demands(source.borrow(),grant.maximum_copy_bytes).unwrap();
+        let grant=RetainedCloneGrant {maximum_copy_bytes:grant.maximum_copy_bytes.max(demand.copy_bytes),..grant};
+        let step = cursor.advance(source.borrow(), 64, grant).expect("retained ordered-map clone");
         assert!(step.progress().fits(grant));
         if matches!(step, RetainedCloneStep::Complete(_)) {
             break cursor.take().expect("retained ordered-map output");
@@ -177,7 +193,7 @@ fn retained_map(source: &RetainedOrderedMap<String, String>) -> RetainedOrderedM
     while !cursor.terminal_is_empty() {
         let bytes = cursor.next_close_release_byte_demand().unwrap();
         assert!(bytes <= grant.maximum_release_bytes);
-        let step = cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:bytes,maximum_depth:64}).expect("retained ordered-map cursor close");
+        let step = cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7.max(cursor.next_close_copy_byte_demand().unwrap()),maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:bytes,maximum_depth:64}).expect("retained ordered-map cursor close");
         if matches!(step, RetainedCloneStep::Complete(_)) {
             assert!(cursor.terminal_is_empty());
         }
@@ -274,7 +290,7 @@ fn bounded_lookup_insert_and_duplicate_refusal_match_btree_oracle() {
                 while !cursor.terminal_is_empty() {
                     let bytes = cursor.next_close_release_byte_demand().unwrap();
                     assert!(bytes <= 65_536);
-                    let step = cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:bytes,maximum_depth:64}).expect("duplicate cursor close");
+                    let step = cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7.max(cursor.next_close_copy_byte_demand().unwrap()),maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:bytes,maximum_depth:64}).expect("duplicate cursor close");
                     if matches!(step, RetainedCloneStep::Complete(_)) {
                         assert!(cursor.terminal_is_empty());
                     }
@@ -368,7 +384,7 @@ fn immutable_lookup_target_and_repeated_directory_growth_match_btree_oracle() {
         while !cursor.terminal_is_empty() {
             let bytes = cursor.next_close_release_byte_demand().unwrap();
                     assert!(bytes <= 65_536);
-                    let step = cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:bytes,maximum_depth:64}).expect("grown insertion close");
+                    let step = cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7.max(cursor.next_close_copy_byte_demand().unwrap()),maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:bytes,maximum_depth:64}).expect("grown insertion close");
             if matches!(step, RetainedCloneStep::Complete(_)) {
                 assert!(cursor.terminal_is_empty());
             }
@@ -444,7 +460,7 @@ fn cancelled_partial_insertion_retires_candidate_and_shifted_workspace() {
     while !cursor.terminal_is_empty() {
         let bytes = cursor.next_close_release_byte_demand().unwrap();
                     assert!(bytes <= 65_536);
-                    let step = cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:bytes,maximum_depth:64}).expect("cancelled insertion cursor close");
+                    let step = cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7.max(cursor.next_close_copy_byte_demand().unwrap()),maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(7).unwrap(),maximum_release_bytes:bytes,maximum_depth:64}).expect("cancelled insertion cursor close");
         if matches!(step, RetainedCloneStep::Complete(_)) {
             assert!(cursor.terminal_is_empty());
         }
@@ -491,4 +507,37 @@ fn ordered_wire_cold_context_map_matches_serde_and_bun() {
     let result=oracle.wait_with_output().unwrap();assert!(result.status.success());
     let independent:Vec<serde_json::Value>=serde_json::from_slice(&result.stdout).unwrap();
     assert_eq!(independent,fixture["cases"].as_array().unwrap().iter().map(|case|case["expected"].clone()).collect::<Vec<_>>());
+}
+
+#[test]
+fn insertion_next_action_quotes_every_page_directory_and_move_receipt() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📋️wire/🔣️.json")).unwrap();
+    let count = fixture["pageBoundaryEntries"].as_u64().unwrap();
+    let mut map = RetainedOrderedMap::<u64, ()>::new();
+    for key in (0..count).rev() {
+        let grant = RetainedCloneGrant { maximum_items: 1,
+            maximum_copy_bytes: RetainedOrderedMapInsertCursor::<u64, ()>::constructor_copy_bytes(),
+            maximum_capacity_bytes: RetainedOrderedMapInsertCursor::<u64, ()>::constructor_capacity_bytes(), maximum_depth: 1, ..Default::default() };
+        let mut cursor = RetainedOrderedMapInsertCursor::admit(map, key, (), grant).unwrap_or_else(|_| panic!("original insertion constructor")).0;
+        let mut output = None;
+        for _ in 0..10000 {
+            let grant = cursor.next_advance_demands(128).unwrap();
+            let (step, heap) = crate::observe_retirement_allocations(|| cursor.advance(grant).unwrap());
+            let progress = match step { RetainedOrderedMapInsertStep::Progress(progress) | RetainedOrderedMapInsertStep::Complete { progress, .. } => progress };
+            assert!(progress.fits(grant));
+            assert_eq!(heap, (progress.retained_capacity_bytes + progress.retirement.retained_capacity_bytes, progress.retirement.released_bytes));
+            if cursor.output_ready() { output = cursor.take(); break; }
+        }
+        map = output.expect("exactly quoted insertion completes across every page boundary");
+        cursor.begin_close();
+        for _ in 0..10000 {
+            if cursor.terminal_is_empty() { break; }
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: cursor.next_close_copy_byte_demand().unwrap().max(128),
+                maximum_capacity_bytes: cursor.next_close_capacity_byte_demand(128).unwrap(), maximum_release_bytes: cursor.next_close_release_byte_demand().unwrap(), maximum_depth: cursor.next_close_depth_demand().unwrap() };
+            cursor.close_step(grant).unwrap();
+        }
+        assert!(cursor.terminal_is_empty());
+    }
+    assert_eq!(map.iter().map(|(key, ())| *key).collect::<Vec<_>>(), (0..count).collect::<Vec<_>>());
+    println!("[DEBUG] Original ordered-map next-action quote laws cover {count} descending insertions");
 }

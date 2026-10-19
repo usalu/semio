@@ -15,7 +15,7 @@
 
         let state = InteractionState::default();
         let hover = InteractionHoverState::new();
-        let view = InteractionView { state: &state, hover: &hover, peers: &peers, draft_references: &std::collections::BTreeMap::new() };
+        let view = InteractionView::new(&state, &hover, &peers, &std::collections::BTreeMap::new());
 
         let selecting = view.peers_selecting("items", "item-1");
         assert_eq!(selecting.len(), 2, "only alice and zed selected item-1");

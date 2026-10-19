@@ -1,5 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceFastenerGeometry` — patches the one addressed fastener in place.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dFastenerPatch, Puzzle5dFastenersDelta};
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dFastenerPatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dFastenersDelta;
 use protocol::list_delta::RowPatch;
 use crate::Puzzle5dSnapshot;
 

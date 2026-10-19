@@ -56,7 +56,7 @@ export const UNCOPYABLE = "canvas, video, audio, iframe, object, embed";
 
 const TABLE_PARTS = "tr, td, th, thead, tbody, tfoot, caption, col, colgroup";
 const XHTML = "http://www.w3.org/1999/xhtml";
-const UNSEEN = "[inert], [hidden]";
+const UNSEEN = "[inert], [hidden], [data-concealed]";
 const EDGE_SLACK = 0.5;
 const NO_EDGES: readonly Surface[] = [];
 const SHOW_ELEMENT = 1;
@@ -161,10 +161,10 @@ function clipOf(element: Element, view: Window | null, known: Map<Element, Edges
   return clip;
 }
 
-/** 👁️ For every selector, the elements under `root` that match it, in document order, without whatever is inert or hidden or inside something that is, and without the element `apart` and everything in it (the stage's own element, whose drawings are no part of the page); an absent selector finds nothing.
+/** 👁️ For every selector, the elements under `root` that match it, in document order, without whatever is inert, hidden or concealed or inside something that is, and without the element `apart` and everything in it (the stage's own element, whose drawings are no part of the page); an absent selector finds nothing.
  *
  * Where the page hides nothing, the browser's own queries answer. Otherwise one walk over the tree passes over every
- * inert or hidden subtree and over `apart` at their roots, so a page that keeps most of itself inert behind the scenes
+ * inert, hidden or concealed subtree and over `apart` at their roots, so a page that keeps most of itself inert behind the scenes
  * costs what it shows, not what it holds, and a stage full of pets costs nothing; an element the walk reaches is asked
  * once whether it matches any of the selectors, and only then which. */
 function seen(root: Document | Element, selectors: readonly (string | undefined)[], apart: Element | null): Element[][] {
@@ -173,7 +173,7 @@ function seen(root: Document | Element, selectors: readonly (string | undefined)
   const found = selectors.map((): Element[] => []);
   const named = selectors.filter((selector) => selector !== undefined);
   const any = named.length > 1 ? named.join(", ") : null;
-  const walker = documentOf(root).createTreeWalker(root, SHOW_ELEMENT, (node) => (node === apart || (node as Element).hasAttribute("inert") || (node as Element).hasAttribute("hidden") ? FILTER_REJECT : FILTER_ACCEPT));
+  const walker = documentOf(root).createTreeWalker(root, SHOW_ELEMENT, (node) => (node === apart || (node as Element).hasAttribute("inert") || (node as Element).hasAttribute("hidden") || (node as Element).hasAttribute("data-concealed") ? FILTER_REJECT : FILTER_ACCEPT));
   for (let node = walker.nextNode() as Element | null; node !== null; node = walker.nextNode() as Element | null) {
     if (any !== null && !node.matches(any)) continue;
     for (const [index, selector] of selectors.entries()) if (selector !== undefined && node.matches(selector)) found[index]!.push(node);
@@ -213,7 +213,7 @@ function keepout(region: Edges, margin: number, edges: readonly Surface[], stage
 
 /** 🗺️ Measures `root` into the `surveyed` event of a stage, reads only.
  *
- * Surfaces are the top edges of the elements matching `surfaces` that are neither inert nor hidden, cross the stage,
+ * Surfaces are the top edges of the elements matching `surfaces` that are neither inert, hidden nor concealed, cross the stage,
  * are not clipped away by a scrolling ancestor and stay at least {@link SURFACE_WIDTH} wide, in document order, each
  * under the id of its element ({@link surfaceId}); the last surface is the {@link FLOOR}. A host that wants pets to
  * follow a silhouette — a card with a title tab standing up on its body — names every part: each part carries pets on
@@ -238,7 +238,7 @@ function keepout(region: Edges, margin: number, edges: readonly Surface[], stage
  * Which stretches of a wall are free to climb is the core's to cut.
  *
  * Fixtures are the elements matching `props` that carry a key ({@link PROP_KEY}), in document order, each under the id
- * of its element ({@link fixtureId}) with its whole box: only an element that is neither inert nor hidden, that shows
+ * of its element ({@link fixtureId}) with its whole box: only an element that is neither inert, hidden nor concealed, that shows
  * whole (no scrolling or clipping ancestor cuts any of it, and it lies wholly on the stage — a copy of it is drawn
  * beyond every clip), that neither holds the focus nor lies under the pointer (its edges included) and that a copy
  * can stand in for ({@link copyable}). Nothing about an element but its key decides whether it is a fixture: no value,
@@ -328,8 +328,8 @@ export interface SurveyWatchOptions {
   readonly ignore?: Element | null;
 }
 
-/** 🧬️ The attributes whose change can move, hide or reveal a surface or a keep-out. */
-export const SURVEY_ATTRIBUTES = ["class", "hidden", "inert", "open"] as const;
+/** 🧬️ The attributes whose change can move, hide, reveal or conceal a surface or a keep-out. */
+export const SURVEY_ATTRIBUTES = ["class", "hidden", "inert", "open", "data-concealed"] as const;
 
 /** 👂️ Calls `stale` whenever the last survey of `root` may no longer hold, and returns the function that ends the watch.
  *

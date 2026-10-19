@@ -139,3 +139,59 @@ include!("📜️manifest-convergence-and-registry-laws/🦀️.rs");
 include!("🧩️engine-parse-and-handle-suggestion-laws/🦀️.rs");
 include!("🏷️display-label-inspector-edit-and-window-option-laws/🦀️.rs");
 include!("🕹️gumball-region-set-verb-and-snapshot-laws/🦀️.rs");
+
+/// 👥️ Puzzle camera publication uses the same native transport and departure law as FEM.
+#[semio_framework_async_macros::async_test]
+async fn mounted_camera_and_interaction_presence_reaches_peers_without_document_edits() {
+    use semio_framework_value::FromValue;
+    use semio_framework_plugin::ArtifactEditor;
+    use semio_framework_plugin::EditorApp;
+    use semio_framework_plugin::artifact_app_laws::assert_presence_round_trip;
+    use semio_framework_plugin::artifact_app_laws::fixture_identity;
+    use semio_framework_plugin::artifact_app_laws::fixture_mounted_policy;
+    use semio_framework_plugin::artifact_app_laws::meta;
+    use semio_framework_plugin::artifact_app_laws::paired_registered_apps;
+    use semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation;
+    use semio_framework_plugin::artifact_app_laws::with_document_view;
+    use semio_framework_plugin::PluginApp;
+    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/📷️camera/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("portable shared presence fixture");
+    let expected = protocol::PresenceWindowView::from_value(semio_framework_pack_json::to_dsl_value(&fixture["admission"][0]["value"])).expect("admitted shared camera");
+    let kind = overview::WINDOW_KIND_ID;
+    let view = window_view(kind, &expected.window_id);
+    let protocol::PresenceViewKind::Canvas { x, y, zoom } = expected.kind else { panic!("portable canvas pose") };
+    let command = <Puzzle2dPlayApp as ArtifactEditor>::command_from_action("setCamera", Some(&semio_framework_value::DslValue::from(&json!({"camera": {"x": x, "y": y, "zoom": zoom}})))).expect("typed shared camera command");
+    let mut identity=fixture_identity();let policy=fixture_mounted_policy();
+    let(mut a,mut b)=paired_registered_apps::<EditorApp<Puzzle2dPlayApp>,_,_>("mem://puzzle-presence-real-node",||async{semio_framework_plugin::App{definition:create_puzzle2d_app(),examples:Vec::new()}},policy,&mut identity).await;
+    let setup=<Puzzle2dPlayApp as ArtifactEditor>::command_from_action("addNode",Some(&semio_framework_value::DslValue::from(&json!({"kind":"node"})))).expect("registered source entity command");a.dispatch_typed(setup,&meta("local"),&mut identity).await.expect("source node event admission");settle_registered_typed_operation(&mut a,meta("local").instance_id,policy,&mut identity).await.expect("source node event publication");b.tick_backbone(&mut identity).await.expect("peer receives original node event");
+    let selected=with_document_view(&mut a,|doc|doc.snapshot.typed().nodes.first().expect("actual published source node").id.to_string_owner()).await.expect("original source document lease");
+    assert_eq!(a.document_pack().await.expect("source shared document"),b.document_pack().await.expect("peer shared document"),"original source events converge before ephemeral interaction");
+    assert_presence_round_trip(&mut a,&mut b,command,view,expected,(PUZZLE2D_INTERACTION_DOMAIN,Some((PUZZLE2D_GRANULARITY_NODE,selected.as_str()))),policy,&mut identity).await;
+}
+
+/// 👥️ Puzzle camera publication uses the same native transport and departure law as FEM.
+#[semio_framework_async_macros::async_test]
+async fn mounted_camera_and_interaction_presence_reaches_peers_without_document_edits() {
+    use semio_framework_value::FromValue;
+    use semio_framework_plugin::ArtifactEditor;
+    use semio_framework_plugin::EditorApp;
+    use semio_framework_plugin::artifact_app_laws::assert_presence_round_trip;
+    use semio_framework_plugin::artifact_app_laws::fixture_identity;
+    use semio_framework_plugin::artifact_app_laws::fixture_mounted_policy;
+    use semio_framework_plugin::artifact_app_laws::meta;
+    use semio_framework_plugin::artifact_app_laws::paired_registered_apps;
+    use semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation;
+    use semio_framework_plugin::artifact_app_laws::with_document_view;
+    use semio_framework_plugin::PluginApp;
+    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/📷️camera/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("portable shared presence fixture");
+    let expected = protocol::PresenceWindowView::from_value(semio_framework_pack_json::to_dsl_value(&fixture["admission"][0]["value"])).expect("admitted shared camera");
+    let kind = overview::WINDOW_KIND_ID;
+    let view = window_view(kind, &expected.window_id);
+    let protocol::PresenceViewKind::Canvas { x, y, zoom } = expected.kind else { panic!("portable canvas pose") };
+    let command = <Puzzle2dPlayApp as ArtifactEditor>::command_from_action("setCamera", Some(&semio_framework_value::DslValue::from(&json!({"camera": {"x": x, "y": y, "zoom": zoom}})))).expect("typed shared camera command");
+    let mut identity=fixture_identity();let policy=fixture_mounted_policy();
+    let(mut a,mut b)=paired_registered_apps::<EditorApp<Puzzle2dPlayApp>,_,_>("mem://puzzle-presence-real-node",||async{semio_framework_plugin::App{definition:create_puzzle2d_app(),examples:Vec::new()}},policy,&mut identity).await;
+    let setup=<Puzzle2dPlayApp as ArtifactEditor>::command_from_action("addNode",Some(&semio_framework_value::DslValue::from(&json!({"kind":"node"})))).expect("registered source entity command");a.dispatch_typed(setup,&meta("local"),&mut identity).await.expect("source node event admission");settle_registered_typed_operation(&mut a,meta("local").instance_id,policy,&mut identity).await.expect("source node event publication");b.tick_backbone(&mut identity).await.expect("peer receives original node event");
+    let selected=with_document_view(&mut a,|doc|doc.snapshot.typed().nodes.first().expect("actual published source node").id.to_string_owner()).await.expect("original source document lease");
+    assert_eq!(a.document_pack().await.expect("source shared document"),b.document_pack().await.expect("peer shared document"),"original source events converge before ephemeral interaction");
+    assert_presence_round_trip(&mut a,&mut b,command,view,expected,(PUZZLE2D_INTERACTION_DOMAIN,Some((PUZZLE2D_GRANULARITY_NODE,selected.as_str()))),policy,&mut identity).await;
+}

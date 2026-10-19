@@ -2,7 +2,7 @@
 #
 # 2026 Ueli Saluz <ueli@semio-tech.com>
 #
-# Specs: Zero-touch Windows-native bootstrap that upgrades machine dependencies to the current supported baseline with winget, prepares repo-local caches and env vars, syncs workspace dependencies, and installs the local VS Code extension when editor CLIs are available.
+# Specs: Zero-touch Windows-native bootstrap that upgrades machine dependencies to the current supported baseline with winget, prepares repo-local caches and env vars, syncs workspace dependencies..
 #
 # Summary: Windows-native bootstrap for the compose monorepo. Invoke from a fresh clone with Windows PowerShell 5.1 or PowerShell 7:
 # `powershell -NoProfile -ExecutionPolicy Bypass -File "🧰️framework\🛍️products\🦑️repo\🔨️modules\🔩️native\🥾️bootstrap\🔵️.ps1" setup`
@@ -18,7 +18,6 @@ param(
     [string]$Command = "setup",
     [switch]$SkipMachineInstall,
     [switch]$SkipGlobalCliInstall,
-    [switch]$SkipEditorInstall,
     [switch]$SkipPlaywrightInstall,
     [switch]$SkipRepoBootstrap
 )
@@ -231,34 +230,6 @@ function Install-UvTool {
     Invoke-RepoCommand -FilePath $UvPath -ArgumentList $arguments -WorkingDirectory (Get-RepoRoot)
 }
 
-function Install-EditorExtensions {
-    param(
-        [string]$RepoRoot,
-        [string[]]$EditorCliPaths
-    )
-
-    if ($EditorCliPaths.Count -eq 0) {
-        Write-Step "No editor CLI detected; skipping extension install."
-        return
-    }
-
-    $extensionsPath = Join-Path $RepoRoot ".vscode\extensions.json"
-    $recommendations = (Get-Content $extensionsPath -Raw | ConvertFrom-Json).recommendations
-    $vsixPath = Join-Path $RepoRoot "🧰️framework\🛍️products\🦑️repo\🔨️modules\🧩️vscode\📦️packages\🟦️typescript\🧩️repo.vsix"
-
-    $bunPathLocal = Get-CommandPathOrThrow -Label "bun" -Candidates @("bun.exe", "bun")
-    Invoke-RepoCommand -FilePath $bunPathLocal -ArgumentList @("repo", "run", "@semio-tech/repo-vscode:build") -WorkingDirectory $RepoRoot
-    Invoke-RepoCommand -FilePath $bunPathLocal -ArgumentList @("repo", "run", "@semio-tech/repo-vscode:build-vsix") -WorkingDirectory $RepoRoot
-
-    foreach ($editorCli in $EditorCliPaths) {
-        foreach ($extension in $recommendations) {
-            & $editorCli --install-extension $extension --force | Out-Null
-        }
-        & $editorCli --install-extension $vsixPath --force | Out-Null
-        Write-Step "Installed workspace extensions via $editorCli."
-    }
-}
-
 function Test-WindowsLongPathsEnabled {
     $setting = Get-ItemProperty -LiteralPath "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -ErrorAction SilentlyContinue
     return ($null -ne $setting) -and ($setting.LongPathsEnabled -eq 1)
@@ -376,17 +347,11 @@ if (-not $SkipMachineInstall) {
     Sync-WingetPackage -Id "Microsoft.DotNet.SDK.8" -Label ".NET SDK 8.0"
     Sync-WingetPackage -Id "Microsoft.DotNet.SDK.9" -Label ".NET SDK 9.0"
     Sync-WingetPackage -Id "Microsoft.DotNet.SDK.10" -Label ".NET SDK 10.0"
-    $vs2026CppOverride = @("--override", "--wait --quiet --norestart --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended")
-    if (Test-WingetPackageInstalled -Id "Microsoft.VisualStudio.Community") {
-        Sync-WingetPackage -Id "Microsoft.VisualStudio.Community" -Label "Visual Studio 2026 Community" -AdditionalArguments $vs2026CppOverride
-    } else {
-        Sync-WingetPackage -Id "Microsoft.VisualStudio.BuildTools" -Label "Visual Studio 2026 Build Tools" -AdditionalArguments $vs2026CppOverride
-    }
+    $msvcCppOverride = @("--override", "--wait --quiet --norestart --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended")
+    Sync-WingetPackage -Id "Microsoft.VisualStudio.BuildTools" -Label "Microsoft C++ Build Tools" -AdditionalArguments $msvcCppOverride
     Sync-WingetPackage -Id "Axosoft.GitKraken" -Label "GitKraken Desktop"
     Sync-WingetPackage -Id "GitKraken.cli" -Label "GitKraken CLI"
     Sync-WingetPackage -Id "f3d-app.f3d" -Label "F3D"
-    Sync-WingetPackage -Id "Microsoft.VisualStudioCode" -Label "VS Code"
-    Sync-WingetPackage -Id "Microsoft.VisualStudioCode.CLI" -Label "VS Code CLI"
     Set-UserPathPriority -PreferredEntries @(
         (Join-Path $env:LOCALAPPDATA "Programs\Python\Python314\Scripts"),
         (Join-Path $env:LOCALAPPDATA "Programs\Python\Python314"),
@@ -405,10 +370,7 @@ if (-not $SkipMachineInstall) {
     (Join-HomePath @(".claude")),
     (Join-HomePath @(".codex")),
     (Join-HomePath @(".config", "gh")),
-    (Join-HomePath @(".config", "cursor")),
-    (Join-HomePath @(".config", "antigravity")),
     (Join-HomePath @(".config", "openai")),
-    (Join-HomePath @(".codeium", "windsurf")),
     (Join-HomePath @(".gitkraken")),
     (Join-HomePath @(".local", "share", "GitKrakenCLI")),
     (Join-HomePath @(".local", "share", "gk")),
@@ -425,8 +387,6 @@ Set-UserEnvironmentVariable -Name "CMAKE_PRESET" -Value "windows"
 Set-UserEnvironmentVariable -Name "DOTNET_CLI_TELEMETRY_OPTOUT" -Value "1"
 Set-UserEnvironmentVariable -Name "PLAYWRIGHT_BROWSERS_PATH" -Value $playwrightPath
 Set-UserEnvironmentVariable -Name "SEMIO_GITKRAKEN_WORKSPACE_NAME" -Value "semio"
-Set-UserEnvironmentVariable -Name "SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL" -Value ""
-Set-UserEnvironmentVariable -Name "EDITOR" -Value "code --wait"
 #endregion 🗂️UserState
 
 #region 🌐️GlobalCliInstall
@@ -455,18 +415,7 @@ if (-not $SkipRepoBootstrap) {
 }
 #endregion 🧱️RepoBootstrap
 
-#region 🎭️Editors
-if (-not $SkipEditorInstall) {
-    Refresh-CurrentProcessPath
-    $editorCliPaths = @(
-        (Get-FirstCommandPath @((Join-Path $env:LOCALAPPDATA "Programs\Microsoft VS Code\bin\code.cmd"), "code.cmd", "code")),
-        (Get-FirstCommandPath @((Join-Path $env:LOCALAPPDATA "Programs\cursor\resources\app\bin\cursor.cmd"), "cursor.cmd", "cursor")),
-        (Get-FirstCommandPath @((Join-Path $env:LOCALAPPDATA "Programs\Windsurf\bin\windsurf.cmd"), "windsurf.cmd", "windsurf")),
-        (Get-FirstCommandPath @((Join-Path $env:LOCALAPPDATA "Programs\Antigravity\bin\antigravity.cmd"), "antigravity.cmd", "antigravity"))
-    ) | Where-Object { $_ } | Select-Object -Unique
-    Install-EditorExtensions -RepoRoot $repoRoot -EditorCliPaths $editorCliPaths
-}
-#endregion 🎭️Editors
+
 
 #region 🎬️Playwright
 if (-not $SkipPlaywrightInstall) {

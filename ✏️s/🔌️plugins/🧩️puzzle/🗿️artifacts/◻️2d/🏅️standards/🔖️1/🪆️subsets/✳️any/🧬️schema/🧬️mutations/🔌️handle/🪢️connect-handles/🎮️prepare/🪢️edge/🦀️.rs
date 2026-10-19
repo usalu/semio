@@ -29,7 +29,7 @@ impl Default for Puzzle2dConnectEdgeCursor {
 }
 
 impl Puzzle2dConnectEdgeCursor {
-    pub fn advance(&mut self, mutation: RetainedCloneRef<'_, ConnectHandles>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn advance(&mut self, mutation: RetainedCloneRef<'_, ConnectHandles>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.closing || self.phase == 5 { return Err(refusal("edge assembly is closing or spent")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if let Some(progress)=mutation.bind(&mut self.mutation,grant)?{return Ok(RetainedCloneStep::Progress(progress))}
@@ -52,8 +52,8 @@ impl Puzzle2dConnectEdgeCursor {
         if self.phase == 2 {
             let field = self.field;
             if self.child == 0 {
-                let step = if field < 3 { self.text.advance(mutation.project(field as usize + 1, |payload| match field { 0 => &payload.id, 1 => &payload.source, _ => &payload.target }), grant)? }
-                else { self.optional.advance(mutation.project(field as usize + 1, |payload| match field { 3 => &payload.edge_kind, 4 => &payload.source_tip, _ => &payload.target_tip }), grant)? };
+                let step = if field < 3 { self.text.advance(mutation.project(field as usize + 1, |payload| match field { 0 => &payload.id, 1 => &payload.source, _ => &payload.target }),body, grant)? }
+                else { self.optional.advance(mutation.project(field as usize + 1, |payload| match field { 3 => &payload.edge_kind, 4 => &payload.source_tip, _ => &payload.target_tip }),body, grant)? };
                 if matches!(step, RetainedCloneStep::Complete(_)) { self.child = 1; }
                 return Ok(RetainedCloneStep::Progress(step.progress()));
             }

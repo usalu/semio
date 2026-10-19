@@ -108,6 +108,7 @@ fn a_frame_drains_its_input_actions_before_it_takes_a_settle_step() {
     let fixture = fixture();
     for row in fixture["frameRows"].as_array().expect("the fixture declares its frame rows") {
         let id = row["id"].as_str().expect("every row is named");
+        let mut caller = crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
         let mut actions = FrameActionOwners::default();
         for index in 0..row["actions"].as_u64().expect("actions") {
             let descriptor = ActionDescriptor { controller_id: "s.procedural.generation3d@1/*#editor".to_string(), action: format!("setNodeInput{index}"), args: None };
@@ -120,7 +121,7 @@ fn a_frame_drains_its_input_actions_before_it_takes_a_settle_step() {
             row["shellMaintenance"].as_bool().expect("shellMaintenance"),
             row["settle"].as_bool().expect("settle"),
             1,
-            semio_framework_job::root_cancel_token(),
+            caller.alias(),
         );
         let mut order: Vec<&'static str> = Vec::new();
         while let Some(work) = cursor.take_next() {
@@ -134,6 +135,10 @@ fn a_frame_drains_its_input_actions_before_it_takes_a_settle_step() {
         }
         let expected: Vec<&str> = row["expect"]["order"].as_array().expect("order").iter().map(|entry| entry.as_str().expect("order entry")).collect();
         assert_eq!(order, expected, "{id}: the deferred order the runtime drains");
+        assert!(cursor.work_is_empty());
+        cursor.begin_close();
+        for _ in 0..32768 { if cursor.terminal_is_empty() { break; } caller.turn(|cx| cursor.close_step(cx)).unwrap(); }
+        caller.finish();
         assert_eq!(cursor.terminal_is_empty(), row["expect"]["terminalIsEmpty"].as_bool().expect("terminalIsEmpty"), "{id}: a drained owner is terminal-empty");
     }
 }

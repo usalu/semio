@@ -1,6 +1,7 @@
-//! ↩️ Inverse for `ScaleSelection3d` — the absolute setters restoring every BASE pose field the transform changes (exact,
 //! never a negated parameter that would accumulate float error). Nothing moved ⇒ `Vec::new()`.
-use crate::standards::v1::subsets::any::schema::mutations::{puzzle5d_scaled, scale_part_3d, scale_target_volume};
+//! ↩️ Inverse for `ScaleSelection3d` — the absolute setters restoring every BASE pose field the transform changes (exact,
+use crate::standards::v1::subsets::any::schema::mutations::puzzle5d_scaled;
+use crate::standards::v1::subsets::any::schema::mutations::{scale_part_3d, scale_target_volume};
 use crate::standards::v1::subsets::any::schema::diff::{puzzle5d_selection};
 use crate::Puzzle5dSnapshot;
 
@@ -16,6 +17,8 @@ where
     let factors = payload.factors;
     let parts = selection.parts.iter().filter(|part| Some(puzzle5d_scaled(part.part_3d.scale, factors)) != part.part_3d.scale).map(|part| scale_part_3d(part.id.clone(), part.part_3d.scale));
     let volumes = selection.volumes.iter().filter(|volume| Some(puzzle5d_scaled(volume.scale, factors)) != volume.scale).map(|volume| scale_target_volume(volume.id.clone(), volume.scale));
-    Ok(parts.chain(volumes).collect())
+    let mut inverse = parts.chain(volumes).collect::<Vec<_>>();
+    inverse.reverse();
+    Ok(inverse)
 }
 //#endregion 🔖️Inverse

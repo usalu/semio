@@ -1,7 +1,8 @@
-//! 🧊️ Puzzle3d document commands — the action arms that edit the document or the selection: selection transforms,
 //! deletion and duplication, target volumes, attractions and the snapshot import and export.
+//! 🧊️ Puzzle3d document commands — the action arms that edit the document or the selection: selection transforms,
 
 #![allow(clippy::result_large_err)]
+
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;

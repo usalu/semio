@@ -4,7 +4,7 @@
 #[path = "../📦️prepared/♻️retirement/🧪️tests/🦀️.rs"]
 pub mod tests;
 #[path = "../📬️paged-one-item/🦀️.rs"]
-pub mod paged_one_item;
+pub pub mod paged_one_item;
 #[path = "../🧩️composition/📨️emission/📦️owned/🦀️.rs"]
 pub mod member_owned_batch;
 #[path = "../🫧️ephemeral/📢️publication/🔁️transfer/🦀️.rs"]
@@ -131,6 +131,27 @@ impl<P: RetireOwned + Send + Sync + 'static, M: RetireOwned + Send + 'static> On
         }
     }
 
+    /// 🧪️ Captures the caller's exact returned edit, post root and retirement issuers for durable fixture closure.
+    #[cfg(feature = "durable-group-testing")]
+    pub(crate) fn from_returned(edit: Edit<M>, post: Arc<P>, mutation_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<M>>, snapshot_retirement: Arc<dyn SnapshotRetirementFactory<P>>) -> Self {
+        Self { base: ManuallyDrop::new(None), mutation: ManuallyDrop::new(None), inverse: ManuallyDrop::new(None), candidate: ManuallyDrop::new(None), sealed: ManuallyDrop::new(None), refused: ManuallyDrop::new(Some((edit, post))), failure: ManuallyDrop::new(None), authority: ManuallyDrop::new(None), prepared: ManuallyDrop::new(None), mutation_retirement: ManuallyDrop::new(Some(mutation_retirement)), snapshot_retirement: ManuallyDrop::new(Some(snapshot_retirement)), active: ManuallyDrop::new(None), factories: ManuallyDrop::new(Default::default()), closing: false }
+    }
+    /// 📮️ Quotes returned fixture closure before handing its originals to their captured retirement authorities.
+    #[cfg(feature = "durable-group-testing")]
+    pub(crate) fn begin_returned_close(&mut self) -> Result<(), ValueError> {
+        if let Some((edit, post)) = self.refused.take() {
+            let mutations = self.mutation_retirement.take().expect("original returned mutation issuer");
+            let snapshots = self.snapshot_retirement.take().expect("original returned snapshot issuer");
+            let birth = ArtifactStoreOneItemPrepared::<P, M>::retirement_birth_demand();
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: birth.capacity_bytes, maximum_release_bytes: 0, maximum_depth: birth.depth };
+            match super::prepared_retirement::ArtifactStorePreparedRetirement::admit_returned(edit, post, mutations, snapshots, grant) {
+                Ok((owner, progress)) => { assert!(progress.fits(grant)); *self.active = Some(owner); }
+                Err((error, edit, post, mutations, snapshots)) => { *self.refused = Some((edit, post)); *self.mutation_retirement = Some(mutations); *self.snapshot_retirement = Some(snapshots); return Err(error); }
+            }
+        }
+        self.begin_close();
+        Ok(())
+    }
     /// 📏️ Quotes the single indivisible turn the next close action will spend.
     pub fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         let nested = |mut demand: RetirementDemand| -> Result<RetirementDemand, ValueError> {

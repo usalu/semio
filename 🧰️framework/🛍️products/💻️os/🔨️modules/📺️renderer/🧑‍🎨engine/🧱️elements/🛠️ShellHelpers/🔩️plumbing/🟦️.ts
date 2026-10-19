@@ -54,20 +54,21 @@ export type ShellHistoryProjectionV1 = {
   readonly canUndo: boolean;
   readonly canRedo: boolean;
   readonly currentCheckpointId: string | undefined;
+  readonly activeAlternativeId: string | undefined;
   readonly timeTravel: HistoryTimeTravel | null;
   readonly reprojection: HistoryReprojection | null;
   readonly editCount: number;
 };
 
 /** 🧾️ What a program whose history has not been read yet projects: no rows, no session. */
-export const EMPTY_SHELL_HISTORY_PROJECTION_V1: ShellHistoryProjectionV1 = { cursor: 0, entries: {}, canUndo: false, canRedo: false, currentCheckpointId: undefined, timeTravel: null, reprojection: null, editCount: 0 };
+export const EMPTY_SHELL_HISTORY_PROJECTION_V1: ShellHistoryProjectionV1 = { cursor: 0, entries: {}, canUndo: false, canRedo: false, currentCheckpointId: undefined, activeAlternativeId: undefined, timeTravel: null, reprojection: null, editCount: 0 };
 
 /** 🧾️ `current` after one admitted patch ({@link historyPatchShouldApplyV1}): a snapshot replaces the rows, a delta
  * upserts them, and the session is the patch's own — a patch without one closes it. */
 export function shellHistoryProjectionAfterPatchV1(current: ShellHistoryProjectionV1, patch: HistoryPatch, replace: boolean): ShellHistoryProjectionV1 {
   const entries: Record<string, HistoryEntry> = replace ? {} : { ...current.entries };
   for (const entry of patch.upserts ?? []) entries[historyEntryKey(entry)] = entry;
-  return { cursor: patch.cursor, entries, canUndo: patch.canUndo ?? false, canRedo: patch.canRedo ?? false, currentCheckpointId: replace ? patch.currentCheckpointId : (patch.currentCheckpointId ?? current.currentCheckpointId), timeTravel: patch.timeTravel ?? null, reprojection: patch.reprojection ?? null, editCount: patch.editCount ?? 0 };
+  return { cursor: patch.cursor, entries, canUndo: patch.canUndo ?? false, canRedo: patch.canRedo ?? false, currentCheckpointId: replace ? patch.currentCheckpointId : (patch.currentCheckpointId ?? current.currentCheckpointId), activeAlternativeId: replace ? patch.activeAlternativeId : (patch.activeAlternativeId ?? current.activeAlternativeId), timeTravel: patch.timeTravel ?? null, reprojection: patch.reprojection ?? null, editCount: patch.editCount ?? 0 };
 }
 
 /** 🚛️ One program's projection while its document loads in steps: the host's own polled progress as the `load`

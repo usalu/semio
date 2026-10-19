@@ -29,6 +29,7 @@ impl Registry {
                 path.push(segment(format!(":{}", target.name), target.name.as_str()));
                 let qualifier = target.name.strip_prefix(verb.as_str()).map_or(target.name.as_str(), |rest| rest.trim_start_matches(['-', ':', '_'])).to_string();
                 entries.push(Entry::new(Draft { id: format!("{}:{}", project.name, target.name), kind: Kind::Target, verb, path, owner: keys.clone(), subject: short_name(&project.name).into(), qualifier, long_running: target.continuous.unwrap_or(false) || ready.is_some(), source: &file, own, action: Action::Target { project: project.name.clone(), target: target.name.clone(), configurations: target.configurations.clone(), ready, requires } }));
+                if let Some(entry) = entries.last_mut() { scope.presentation(entry, declaration.title.as_ref(), declaration.description.as_ref()); }
             }
             let Some(declaration) = project.dashboard.as_ref().and_then(|value| decode::<ProjectDeclaration>(&file, "metadata.semio.dashboard", value, &mut problems)) else { continue };
             let mut scope = Scope { file: &file, at: "metadata.semio.dashboard".into(), problems: &mut problems };
@@ -52,6 +53,7 @@ impl Registry {
                 path.push(segment(format!("group:{}", group.id), group.id.as_str()));
                 let qualifier = if group.targets.len() > 1 { group.targets.join("+") } else { first.strip_prefix(verb.as_str()).map_or(first, |rest| rest.trim_start_matches(['-', ':', '_'])).to_string() };
                 entries.push(Entry::new(Draft { id: format!("group:{}/{}", project.name, group.id), kind: Kind::Group, verb, path, owner: keys.clone(), subject: group.id.clone(), qualifier, long_running: false, source: &file, own: Vec::new(), action: Action::Group { targets: group.targets.clone(), projects: group.projects.clone() } }));
+                if let Some(entry) = entries.last_mut() { scope.presentation(entry, group.title.as_ref(), group.description.as_ref()); }
             }
         }
         for playground in &facts.playgrounds {
@@ -63,10 +65,11 @@ impl Registry {
         }
         for ticket in &facts.tickets {
             let head = segment(ticket.id.as_str(), format!("{} [{}] {}", ticket.id, if ticket.open { "open" } else { "closed" }, elide_end(&ticket.title, LABEL_CELLS)));
-            let actions = [("show", RepoAction::TicketShow { id: ticket.id.clone() }, false), ("files", RepoAction::TicketFiles { id: ticket.id.clone() }, false), if ticket.open { ("close", RepoAction::TicketClose { id: ticket.id.clone() }, true) } else { ("reopen", RepoAction::TicketReopen { id: ticket.id.clone() }, true) }];
+            let actions = [("show", RepoAction::TicketShow { id: ticket.id.clone() }, false), ("files", RepoAction::TicketFiles { id: ticket.id.clone() }, false), if ticket.open { ("close", RepoAction::TicketClose { id: ticket.id.clone() }, true) } else { ("reopen", RepoAction::TicketReopen { id: ticket.id.clone(), prompt: String::new() }, true) }];
             for (key, action, mutating) in actions {
                 let mut entry = Entry::new(Draft { id: format!("repo:{}", dashboard_repo_domain::action_key(&action)), kind: Kind::Repo, verb: "tickets".into(), path: vec![head.clone(), segment(key, key)], owner: Vec::new(), subject: ticket.id.clone(), qualifier: key.into(), long_running: false, source: "", own: Vec::new(), action: Action::Repo(action) });
-                (entry.listed, entry.mutating) = (ticket.open, mutating);
+                (entry.listed, entry.mutating) = (ticket.open || key == "reopen", mutating);
+                if key == "reopen" { entry.title = Some(LocalizedText { en: format!("Reopen Ticket {}", ticket.id), de: format!("Ticket {} Wiederöffnen", ticket.id) }); entry.description = Some(LocalizedText { en: "Continue a closed ticket with a saved human reason.".into(), de: "Setze ein geschlossenes Ticket mit einem gespeicherten Grund fort.".into() }); }
                 entries.push(entry);
             }
             let (Some(document), true) = (&ticket.commands, ticket.open) else { continue };
@@ -77,12 +80,18 @@ impl Registry {
             Self::tools(&mut scope, &mut entries, &declaration.tools, &owner, &keys, &|id| format!("ticket:{}/{id}", ticket.id), Kind::Ticket);
             Self::compounds(&mut scope, &mut entries, &declaration.compounds, &owner, &keys, &|id| format!("ticket:{}/{id}", ticket.id), Kind::Ticket);
         }
-        let fixed = [("goals", "list", RepoAction::GoalsList), ("goals", "tree", RepoAction::GoalsTree), ("tree", "monorepo", RepoAction::TreeMonorepo), ("tree", "goal", RepoAction::TreeGoal), ("tree", "statute", RepoAction::TreeStatute), ("tree", "territory", RepoAction::TreeTerritory), ("statutes", "catalog", RepoAction::StatutesCatalog)];
-        let scopes = dashboard_repo_domain::ANALYZE_SCOPES.iter().map(|(scope, _)| ("analyze", *scope, RepoAction::Analyze { scope: (*scope).to_string() }));
+        let fixed = [("goals", "list", RepoAction::GoalsList), ("goals", "tree", RepoAction::GoalsTree), ("tree", "monorepo", RepoAction::TreeMonorepo), ("tree", "goal", RepoAction::TreeGoal), ("tree", "statute", RepoAction::TreeStatute), ("tree", "territory", RepoAction::TreeTerritory), ("statutes", "catalog", RepoAction::StatutesCatalog), ("draft", "start", RepoAction::DraftStart { title: String::new() }), ("draft", "discard", RepoAction::DraftDiscard { slug: String::new() })];
+        let scopes = dashboard_repo_domain::ANALYZE_SCOPES.iter().map(|(scope, _)| ("analyze", *scope, RepoAction::Analyze { scope: (*scope).to_string(), policy: None }));
         for (verb, key, action) in fixed.into_iter().chain(scopes) {
-            entries.push(Entry::new(Draft { id: format!("repo:{}", dashboard_repo_domain::action_key(&action)), kind: Kind::Repo, verb: verb.into(), path: vec![segment(key, key)], owner: Vec::new(), subject: key.into(), qualifier: String::new(), long_running: false, source: "", own: Vec::new(), action: Action::Repo(action) }));
+            let mutating = action.mutates();
+            let mut entry = Entry::new(Draft { id: format!("repo:{}", dashboard_repo_domain::action_key(&action)), kind: Kind::Repo, verb: verb.into(), path: vec![segment(key, key)], owner: Vec::new(), subject: key.into(), qualifier: String::new(), long_running: false, source: "", own: Vec::new(), action: Action::Repo(action) });
+            entry.mutating = mutating;
+            match key { "start" => { entry.title = Some(LocalizedText { en: "Start Draft".into(), de: "Entwurf Beginnen".into() }); }, "discard" => { entry.title = Some(LocalizedText { en: "Discard Draft".into(), de: "Entwurf Verwerfen".into() }); }, _ => {} }
+            match key { "start" => entry.description = Some(LocalizedText { en: "Create an empty local draft for notes and unfinished work.".into(), de: "Erstelle einen leeren lokalen Entwurf für Notizen und laufende Arbeit.".into() }), "discard" => entry.description = Some(LocalizedText { en: "Remove the selected draft and its contents after confirmation.".into(), de: "Entferne den ausgewählten Entwurf samt Inhalt nach Bestätigung.".into() }), _ => {} }
+            entries.push(entry);
         }
         entries.sort_by(|left, right| verb_rank(&left.verb).cmp(&verb_rank(&right.verb)).then_with(|| left.verb.cmp(&right.verb)).then_with(|| left.label.cmp(&right.label)).then_with(|| left.id.cmp(&right.id)));
+        for entry in &mut entries { if matches!(entry.action, Action::Repo(_)) { for text in [&entry.title, &entry.description].into_iter().flatten() { entry.haystack.push_str(&format!(" {} {}", text.en.to_lowercase(), text.de.to_lowercase())); } } }
         let mut index = HashMap::with_capacity(entries.len());
         entries.retain(|entry| {
             let fresh = !index.contains_key(&entry.id);
@@ -91,7 +100,8 @@ impl Registry {
         });
         let mut definitions: Vec<String> = facts.projects.iter().filter(|project| !project.manifest.is_empty()).map(|project| project.manifest.clone()).chain(GRAPH_OWNERS.iter().map(|owner| (*owner).to_string())).collect();
         definitions.sort(); definitions.dedup();
-        let mut registry = Self { root: root.to_path_buf(), entries, index, axes, axes_source, problems, definitions, basis: std::sync::Mutex::new(None) };
+        let mut source_projects = facts.projects.iter().filter(|project| source_path(&project.root)).map(|project| (project.name.clone(), project.root.clone())).collect::<Vec<_>>(); source_projects.sort(); source_projects.dedup();
+        let mut registry = Self { root: root.to_path_buf(), source_projects, source_discovery: std::sync::Mutex::new(HashMap::new()), source_cancelled: std::sync::Mutex::new(HashSet::new()), entries, index, axes, axes_source, problems, definitions, basis: std::sync::Mutex::new(None) };
         registry.settle();
         registry
     }
@@ -113,7 +123,7 @@ impl Registry {
             let mut path = owner.to_vec();
             path.push(segment(format!("tool:{}", tool.id), tool.id.as_str()));
             entries.push(Entry::new(Draft { id: id_of(&tool.id), kind, verb: verb_of(tool.verb.as_deref().filter(|verb| is_verb(verb)), &tool.id), path, owner: keys.to_vec(), subject: tool.id.clone(), qualifier: String::new(), long_running: tool.continuous || ready.is_some(), source: scope.file, own, action: Action::Tool { command: tool.command.clone(), cwd: tool.cwd.clone(), env, ready, requires } }));
-            if let Some(entry) = entries.last_mut() { entry.mcp.clone_from(&tool.mcp); }
+            if let Some(entry) = entries.last_mut() { entry.mcp.clone_from(&tool.mcp); scope.presentation(entry, tool.title.as_ref(), tool.description.as_ref()); }
         }
     }
 
@@ -129,6 +139,7 @@ impl Registry {
             path.push(segment(format!("compound:{}", compound.id), compound.id.as_str()));
             let verb = compound.verb.clone().filter(|verb| is_verb(verb)).unwrap_or_else(|| match verb_of(None, &compound.id) { verb if verb == FALLBACK_VERB => String::new(), verb => verb });
             entries.push(Entry::new(Draft { id: id_of(&compound.id), kind, verb, path, owner: keys.to_vec(), subject: compound.id.clone(), qualifier: String::new(), long_running: false, source: scope.file, own: Vec::new(), action: Action::Compound { members, stop: compound.stop.unwrap_or_default() } }));
+                if let Some(entry) = entries.last_mut() { scope.presentation(entry, compound.title.as_ref(), compound.description.as_ref()); }
         }
     }
 

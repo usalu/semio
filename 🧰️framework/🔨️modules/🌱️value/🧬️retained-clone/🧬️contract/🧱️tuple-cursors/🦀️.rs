@@ -34,7 +34,7 @@ macro_rules! retained_clone_tuple {
     fn output_ready(&self)->bool{self.output.is_some()}
             fn advance_demands(&self,source:RetainedCloneRef<'_,($($type,)+)>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(demand)=source.binding_demand(&self.source)?{return Ok(demand)}if self.closing||self.spent{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"tuple original clone is closing or spent"))}if self.output.is_some(){return Ok(Default::default())}match self.phase{$($index=>if self.draining{clone_cursor_close_demand::<$type>(&self.$child,body)}else{self.$child.advance_demands(source.project($index+1,|value|&value.$index),body)},)+_=>Ok(crate::RetirementDemand{depth:1,..Default::default()})}}
 
-            fn advance(&mut self, source: RetainedCloneRef<'_, ($($type,)+)>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+            fn advance(&mut self, source: RetainedCloneRef<'_, ($($type,)+)>, body: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
                 if self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained tuple clone cursor is closing")); }
                 if self.spent { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained tuple clone cursor is spent")); }
                 if self.output.is_some() { return Ok(RetainedCloneStep::Complete(Default::default())); }
@@ -57,7 +57,7 @@ macro_rules! retained_clone_tuple {
                     }
                 }
                 match self.phase {
-                    $($index => match self.$child.advance(source.project($index + 1, |value| &value.$index), grant)? {
+                    $($index => match self.$child.advance(source.project($index + 1, |value| &value.$index),body, grant)? {
                         RetainedCloneStep::Progress(progress) => Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(grant, progress, "retained tuple child")?)),
                         RetainedCloneStep::Complete(progress) => {
                             let progress = admit_retained_clone_progress(grant, progress, "retained tuple child")?;

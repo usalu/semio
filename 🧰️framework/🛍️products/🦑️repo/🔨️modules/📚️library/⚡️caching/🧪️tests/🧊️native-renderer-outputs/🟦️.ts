@@ -32,7 +32,7 @@ export async function testNativeRendererOutputs(workspace: string, output: strin
   put("package.json", JSON.stringify({ name: "native-renderer-output-fixture", private: true }));
   put(".cargo/config.toml", `[profile.prototype]\ninherits="dev"\n[profile.release]\nopt-level=3\n`);
   put("nx.json", JSON.stringify({ useDaemonProcess: false }));
-  const selectedTarget=targets[mode];assert(selectedTarget);
+  const selectedTarget=targets[mode];assert(selectedTarget!==undefined&&typeof selectedTarget==="object");
   put(`${typescript}/project.json`, JSON.stringify({ name: "native-renderer", targets: { "native-build": { ...selectedTarget,outputs:project.targets["native-build"].outputs.map((path:string)=>path.replaceAll(authoredRust,rust)),configurations:Object.fromEntries(profiles.map((row:any)=>[row.profile,{command:`bun ./📜️script.ts ${row.profile}`,env:{SEMIO_BUILD_MODE:row.profile}}])), defaultConfiguration:mode } } }));
   put(".gitignore", "node_modules\n.nx\ndist\noracle\n.runs\n");
   put(`${rust}/Cargo.toml`, `[workspace]\n[package]\nname=${JSON.stringify(fixture.crate)}\nversion="0.0.0"\nedition="2021"\n[features]\nnative-bin=[]\n[[bin]]\nname=${JSON.stringify(fixture.binary)}\npath="🦀️.rs"\nrequired-features=["native-bin"]\n`);

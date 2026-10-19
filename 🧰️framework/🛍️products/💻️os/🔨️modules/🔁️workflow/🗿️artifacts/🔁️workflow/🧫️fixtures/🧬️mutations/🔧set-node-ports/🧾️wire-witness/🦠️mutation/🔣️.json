@@ -1,0 +1,31 @@
+{
+  "operation": "setNodePorts",
+  "nodes": [
+    {
+      "nodeId": "n1",
+      "inputs": [
+        {
+          "id": "n1:in:in",
+          "spec": {
+            "id": "in",
+            "label": "In",
+            "direction": "in",
+            "mediaType": {
+              "class": "data",
+              "form": "value"
+            },
+            "kindId": "kind.a",
+            "required": false,
+            "multiplicity": "one"
+          }
+        }
+      ],
+      "height": 74.0
+    },
+    {
+      "nodeId": "n2",
+      "inputs": [],
+      "height": 74.0
+    }
+  ]
+}

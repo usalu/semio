@@ -1,0 +1,161 @@
+# 🚚️ Architecture course releases, started by hand only (Actions → "architecture course" → Run workflow → repository default branch):
+#   site    — `bun repo run @teaching/architecture-course:publish` builds and verifies the CDN artifact against the production
+#             proctor, then GitHub Pages serves it at architektur-und-technologie.de.
+#   proctor — `bun repo run @teaching/architecture-course:docker-image-build` builds the proctor image;
+#             `bun repo run @teaching/architecture-course:docker-image-publish` checks the image and the stack and only then
+#             pushes it to ghcr.io/usalu/architecture-course-proctor as `sha-<12 commit hex>-<64 image-config hex>`
+#             (the content-addressed rollback target), `<workspace version>` and `latest`, printing the digest and rollback tag.
+# Release jobs run only on the repository's configured default branch. A run started from another branch skips them.
+# Each input deploys one part; both are on by default.
+# Managed release commands inherit SEMIO_BUILD_MODE=release from this workflow. Their capable Debian 12 x64 runner
+# must pass the authored preflight: at least 72 GiB available and seven writable unused loop devices, before stores open.
+# The shared check job gates either release on unit tests, course typechecking and the learner release rehearsal
+# against the current checkout's proctor. Its isolated cross-origin artifact is separate from the production CDN build.
+# One-time repository settings (the runbook lists them in order): Settings → Pages → Source "GitHub Actions", custom
+# domain architektur-und-technologie.de (with this source the domain is the repository setting; the artifact's
+# `CNAME` file is ignored and dot files are not uploaded) and the domain verified for the account; after the first push,
+# the GHCR package made public so hosts pull without login.
+# No stored secrets: Pages deploys with the OIDC token, the registry push with GITHUB_TOKEN, which no step sees before
+# the image is built. Every action is pinned to a commit; the checkout leaves no credential in the workspace.
+# @see ../../🎓️teaching/🏛️architecture/📚️course/README.md — the runbook
+
+name: architecture course
+
+on:
+  workflow_dispatch:
+    inputs:
+      site:
+        description: Publish the site to GitHub Pages
+        type: boolean
+        default: true
+      proctor:
+        description: Build, check and push the proctor image to GHCR
+        type: boolean
+        default: true
+
+env:
+  SEMIO_BUILD_MODE: release
+
+permissions:
+  contents: read
+
+concurrency:
+  group: architecture-course
+  cancel-in-progress: false
+
+jobs:
+  configuration:
+    if: ${{ (inputs.site || inputs.proctor) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      runner: ${{ vars.ARCHITECTURE_COURSE_RUNNER }}
+    steps:
+      - name: Configure ARCHITECTURE_COURSE_RUNNER with a capable Debian 12 x64 runner label (see course README)
+        env:
+          ARCHITECTURE_COURSE_RUNNER: ${{ vars.ARCHITECTURE_COURSE_RUNNER }}
+        run: test -n "$ARCHITECTURE_COURSE_RUNNER"
+
+  check:
+    needs: configuration
+    if: ${{ (inputs.site || inputs.proctor) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+    runs-on: ${{ needs.configuration.outputs.runner }}
+    outputs:
+      runner: ${{ needs.configuration.outputs.runner }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.15.0
+          package-manager-cache: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
+      - name: Check process capabilities, ABI and finite storage before allocation
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo preflight --scope @teaching/architecture-course
+      - name: Install the authored dependency scopes into their owned storage
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo dependencies sync --all
+      - name: Test the course and the deployment files
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo run @teaching/architecture-course:test
+      - name: Typecheck the course sources
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo run @teaching/architecture-course:typecheck
+      - name: Install Chromium system dependencies
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo run @teaching/architecture-course:ci-browser-prepare
+      - name: Rehearse the learner release against the current proctor
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo run @teaching/architecture-course:test-e2e -- --topology rehearsal --
+
+  site:
+    needs: check
+    if: ${{ inputs.site && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+    runs-on: ${{ needs.check.outputs.runner }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.15.0
+          package-manager-cache: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
+      - name: Check process capabilities, ABI and finite storage before allocation
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo preflight --scope @teaching/architecture-course
+      - name: Install the authored dependency scopes into their owned storage
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo dependencies sync --all
+      - name: Build and verify the CDN artifact
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo run @teaching/architecture-course:publish --configuration=release
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: 🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/dist/release/pages/course
+
+  pages:
+    needs: site
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+  proctor:
+    needs: check
+    if: ${{ inputs.proctor && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+    runs-on: ${{ needs.check.outputs.runner }}
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.15.0
+          package-manager-cache: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
+      - name: Check process capabilities, ABI and finite storage before allocation
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo preflight --scope @teaching/architecture-course
+      - name: Install the authored dependency scopes into their owned storage
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo dependencies sync --all
+      - name: Build the proctor image
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo run @teaching/architecture-course:docker-image-build
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check the image and the stack, then push
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo run @teaching/architecture-course:docker-image-publish

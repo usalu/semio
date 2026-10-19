@@ -1,24 +1,12 @@
 {
   "artifact": null,
-  "attractions": {
-    "inserted": [],
-    "modified": [
-      {
-        "id": "attraction-1",
-        "patch": {
-          "gap": 0.0,
-          "shift": 1.9999999999999996,
-          "turn": -180.0
-        }
-      }
-    ],
-    "moved": [],
-    "removed": []
-  },
+  "schema": null,
   "domain": null,
   "meta": null,
   "objects": {
+    "removed": [],
     "inserted": [],
+    "moved": [],
     "modified": [
       {
         "id": "object-a",
@@ -26,7 +14,7 @@
           "orientation": [
             0.0,
             0.0,
-            0.7071067811865475,
+            0.7071067811865476,
             0.7071067811865476
           ]
         }
@@ -37,16 +25,28 @@
           "orientation": [
             0.0,
             0.0,
-            0.7071067811865475,
+            0.7071067811865476,
             0.7071067811865476
           ]
         }
       }
-    ],
-    "moved": [],
-    "removed": []
+    ]
   },
-  "references": null,
-  "schema": null,
-  "targetVolumes": null
+  "attractions": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "attraction-1",
+        "patch": {
+          "gap": 0.0,
+          "shift": 1.9999999999999996,
+          "turn": -180.0
+        }
+      }
+    ]
+  },
+  "targetVolumes": null,
+  "references": null
 }

@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dCloseAxis;
 use super::{Puzzle2dConnectHandlesDisposition, Puzzle2dConnectHandlesPlan, Puzzle2dConnectHandlesPreparationCursor, Puzzle2dConnectHandlesPreparationStep};
-use crate::standards::v1::subsets::any::schema::mutations::{ConnectHandles};
+use crate::standards::v1::subsets::any::schema::mutations::ConnectHandles;
 use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
 use crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge;
 use super::edge::Puzzle2dConnectEdgeCursor;
@@ -38,7 +38,7 @@ impl Default for Puzzle2dConnectHandlesCandidateCursor {
 }
 
 impl Puzzle2dConnectHandlesCandidateCursor {
-    pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, mutation: RetainedCloneRef<'_, ConnectHandles>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, mutation: RetainedCloneRef<'_, ConnectHandles>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.closing || self.phase == 13 { return Err(refusal("connect candidate is closing or spent")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(RetainedCloneStep::Progress(progress))}
@@ -56,7 +56,7 @@ impl Puzzle2dConnectHandlesCandidateCursor {
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             2 => {
-                let step = self.snapshot_clone.advance(source, grant)?;
+                let step = self.snapshot_clone.advance(source,body, grant)?;
                 if matches!(step, RetainedCloneStep::Complete(_)) { self.phase = 3; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
@@ -73,7 +73,7 @@ impl Puzzle2dConnectHandlesCandidateCursor {
             }
             5 => {
                 if let Some(step)=self.edge_assembly.ensure(grant)? {return Ok(step);}
-                let step = self.edge_assembly.owner_mut().advance(mutation, grant)?;
+                let step = self.edge_assembly.owner_mut().advance(mutation, body, grant)?;
                 if matches!(step, RetainedCloneStep::Complete(_)) { self.phase = 6; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }

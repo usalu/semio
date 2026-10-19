@@ -2,6 +2,7 @@
 
 use super::*;
 
+#[derive(semio_framework_value::RetireOwned)]
 pub(super) enum FillRetiredOwner {
     String(String),
     EngineSceneObject(EngineSceneObject),

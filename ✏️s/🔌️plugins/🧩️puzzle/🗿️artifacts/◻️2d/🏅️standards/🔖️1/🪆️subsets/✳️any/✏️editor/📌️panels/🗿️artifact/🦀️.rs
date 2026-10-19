@@ -1,5 +1,5 @@
-//! 📄️ Puzzle 2d play app panel — the document tree: one row per node and per edge, each a pick
 //! target of the `vortex` interaction domain (ticket
+//! 📄️ Puzzle 2d play app panel — the document tree: one row per node and per edge, each a pick
 //! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), so the framework paints selected/hovered
 //! presence after render.
 //!
@@ -16,6 +16,8 @@ use crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_LAYERS;
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use {crate::editor::puzzle2d::snapshot::board_snapshot_edges, crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::snapshot_target_regions, crate::editor::puzzle2d::snapshot::puzzle2d_node_display_label, crate::editor::puzzle2d::interaction::ui_label, crate::editor::puzzle2d::snapshot::Puzzle2dScene, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_EDGE, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_NODE, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_TARGET_REGION, crate::editor::puzzle2d::snapshot::PUZZLE2D_INTERACTION_DOMAIN, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::plugin_app_close_prelude::RowActionPlacement;
+use semio_framework_plugin::plugin_app_close_prelude::HasBase;
+
 use semio_framework_plugin::row_action;
 use semio_framework_plugin::row_target;
 use semio_framework_plugin::BuiltNode;

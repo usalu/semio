@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schemas/repo/dashboard-control-retirement",
+  "title": "Dashboard Control Retirement",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "absentFiles",
+    "targets",
+    "sources",
+    "readerFiles",
+    "instructionAliases"
+  ],
+  "properties": {
+    "absentFiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "file",
+          "absent",
+          "present"
+        ],
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "absent": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "present": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "inputTarget": {
+            "type": "string"
+          },
+          "absentInputs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "presentInputs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "file",
+          "absent"
+        ],
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "absent": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "readerFiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "instructionAliases": {
+      "const": [
+        "CLAUDE.md"
+      ]
+    }
+  }
+}

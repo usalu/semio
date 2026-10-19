@@ -1,5 +1,5 @@
-//! 🪆️ Subset root for `s.puzzle.puzzle2d@1/*` (ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-
 //! RUNTIME`, `terra-descriptors` packet, following the `terra-fleet-trinity-recipe` recipe —
+//! 🪆️ Subset root for `s.puzzle.puzzle2d@1/*` (ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-
 //! `📓️terra-fleet-trinity-recipe-report.md`). Exports `subset() -> SubsetDeclaration`, assembling the
 //! `🧬️schema`/`🚪️io`/`👁️viewer`/`✏️editor`/`📚️examples` children — `crate::editor::puzzle2d`/
 //! `crate::viewer::puzzle2d` stay mounted at the plugin's top-level `editor`/`viewer` modules
@@ -29,7 +29,13 @@ use crate::editor::puzzle2d as editor;
 use crate::standards::v1::subsets::any::schema;
 use crate::viewer::puzzle2d as viewer;
 use {crate::Puzzle2dMutation, crate::Puzzle2dSnapshot, crate::standards::v1::subsets::any::schema::records::PUZZLE2D_DIALECT, crate::standards::v1::subsets::any::schema::records::PUZZLE_2D_SCHEMA};
-use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, IoDeclaration, LanguagePair, NativeCodecs, SchemaDeclaration, SubsetDeclaration};
+use semio_framework_plugin::app::declarations::editor_surface;
+use semio_framework_plugin::app::declarations::viewer_surface;
+use semio_framework_plugin::app::declarations::IoDeclaration;
+use semio_framework_plugin::app::declarations::LanguagePair;
+use semio_framework_plugin::app::declarations::NativeCodecs;
+use semio_framework_plugin::app::declarations::SchemaDeclaration;
+use semio_framework_plugin::app::declarations::SubsetDeclaration;
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 

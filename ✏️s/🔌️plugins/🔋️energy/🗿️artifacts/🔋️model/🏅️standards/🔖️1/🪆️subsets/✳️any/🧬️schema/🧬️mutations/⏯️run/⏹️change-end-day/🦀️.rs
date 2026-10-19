@@ -26,6 +26,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "run", kind: "change-run-end-day", record: "ChangedRunEndDay" };
 
+
+
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change run period end day to {}", self.new_end_day), &format!("Endtag des Simulationszeitraums auf {} ändern", self.new_end_day))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for ChangeRunEndDay
+where
+    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<ChangeRunEndDay>,
+{
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
@@ -36,9 +49,5 @@ where
     
     })
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change run period end day to {}", self.new_end_day), &format!("Endtag des Simulationszeitraums auf {} ändern", self.new_end_day))
-    }
 }
 //#endregion 🔖️Mutation

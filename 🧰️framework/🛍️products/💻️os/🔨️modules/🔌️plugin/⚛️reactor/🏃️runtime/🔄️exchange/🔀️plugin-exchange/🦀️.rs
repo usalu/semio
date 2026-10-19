@@ -111,7 +111,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     presence_pending,
                     presence_terminal,
                     presence_terminal_fault,
-                    typed_operation_results: Vec::new(),
+                    typed_operation_pages: 0,
                 });
             }
             PluginCommandIngressStep::Ready(owner) => Some((envelope_seq, owner)),
@@ -134,7 +134,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     presence_pending,
                     presence_terminal,
                     presence_terminal_fault,
-                    typed_operation_results: Vec::new(),
+                    typed_operation_pages: 0,
                 });
             }
         },
@@ -166,7 +166,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     presence_pending,
                     presence_terminal,
                     presence_terminal_fault,
-                    typed_operation_results: Vec::new(),
+                    typed_operation_pages: 0,
                 });
             }
             return Err(fault.into());
@@ -734,17 +734,18 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let effects = with_instances_mut(runtime, |list| {
             let mut instance = find_instance(list, instance_id)?;
             let view = instance.surface_contexts.view().cloned();
-            Ok(::semio_framework_async::poll::resolve_ready(instance.app.pending_effects(view.as_ref())))
+            ::semio_framework_async::poll::resolve_ready(instance.app.pending_effects(view.as_ref(), cx))
         })
         .await
-        .unwrap_or_default();
+        ?;
         for effect in effects.iter() {
             effect_bytes.push(encode_wire_serialized(effect));
         }
     }
     let (mut typed_output, mut typed_leftover) = with_instances_original_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
-        advance_typed_operation_output_with_leftover(&mut instance.app, instance_id, identity,cx)
+        let cell=instance.cell;let mut pages=match cell.result_pages.try_lock(){Ok(pages)=>pages,Err(std::sync::TryLockError::WouldBlock)=>return Ok((PluginExchangeOutput::default(),None)),Err(std::sync::TryLockError::Poisoned(_))=>return Err(plugin_internal_fault("original result receiving authority is poisoned"))};
+        advance_typed_operation_output_with_leftover(&mut instance.app, instance_id, &mut pages, identity,cx)
     })
     .await?;
     if let Some(operation) = started_typed_operation {
@@ -755,7 +756,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 if !instance.app.has_runnable_typed_operations() {
                     return Ok((None, None));
                 }
-                advance_typed_operation_output_with_leftover(&mut instance.app, instance_id, identity,cx).map(|(output, leftover)| (Some(output), leftover))
+                let cell=instance.cell;let mut pages=match cell.result_pages.try_lock(){Ok(pages)=>pages,Err(std::sync::TryLockError::WouldBlock)=>return Ok((None,None)),Err(std::sync::TryLockError::Poisoned(_))=>return Err(plugin_internal_fault("original result receiving authority is poisoned"))};
+                advance_typed_operation_output_with_leftover(&mut instance.app, instance_id, &mut pages, identity,cx).map(|(output, leftover)| (Some(output), leftover))
             })
             .await?;
             let Some(more) = more else { break };
@@ -768,7 +770,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             typed_output.frames.extend(more.frames);
             typed_output.effects.extend(more.effects);
             typed_output.events.extend(more.events);
-            typed_output.typed_operation_results.extend(more.typed_operation_results);
+            typed_output.typed_operation_pages+=more.typed_operation_pages;
             if leftover.is_some() {
                 typed_leftover = leftover;
             }
@@ -828,6 +830,6 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         presence_pending,
         presence_terminal,
         presence_terminal_fault,
-        typed_operation_results: typed_output.typed_operation_results,
+        typed_operation_pages: typed_output.typed_operation_pages,
     })
 }

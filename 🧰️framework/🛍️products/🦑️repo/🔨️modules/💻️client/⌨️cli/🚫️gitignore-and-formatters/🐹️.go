@@ -9,14 +9,16 @@
 package client
 
 import (
+	"github.com/usalu/semio/repo/workspace"
 	"encoding/json"
-	glob "github.com/usalu/semio/repo/client/internal/glob"
-	ignore "github.com/usalu/semio/repo/client/internal/ignore"
+	"github.com/usalu/semio/repo/client/internal/glob"
+	"github.com/usalu/semio/repo/client/internal/ignore"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
+
 )
 
 // GitignorePattern holds the data fields for a gitignore pattern record.
@@ -171,10 +173,11 @@ func formatterPlansForLanguage(languageName string, relPath string) []formatterP
 			prettierPlan,
 		}
 	case "csharp":
-		return []formatterPlan{
-			{binary: "dotnet", args: []string{"format", "Monorepo.sln", "--include", relPath, "--verbosity", "minimal"}, requirement: []string{"Monorepo.sln"}},
-			prettierPlan,
+		plans := []formatterPlan{}
+		for _, project := range workspace.DotnetFormatterProjects(rootDir, relPath) {
+			plans = append(plans, formatterPlan{binary: "dotnet", args: []string{"format", project, "--include", relPath, "--verbosity", "minimal"}, requirement: []string{project}})
 		}
+		return append(plans, prettierPlan)
 	case "rust":
 		return []formatterPlan{
 			{binary: "rustfmt", args: []string{relPath}, requirement: []string{"Cargo.toml"}},

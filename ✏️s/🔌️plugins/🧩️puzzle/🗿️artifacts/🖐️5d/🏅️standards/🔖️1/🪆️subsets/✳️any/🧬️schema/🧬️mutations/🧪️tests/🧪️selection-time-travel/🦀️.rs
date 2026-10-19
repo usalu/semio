@@ -1,5 +1,5 @@
-//! ⏪️ The language-agnostic time-travel corpus of the puzzle 5d selection leaves (board and world) (`🧫️fixtures/🧫️selection-time-travel/🔣️.json`,
 //! schema `🧬️schema/🔣️selection-time-travel/🔣️.json`), driven through the store's time-travel reads: every recorded
+//! ⏪️ The language-agnostic time-travel corpus of the puzzle 5d selection leaves (board and world) (`🧫️fixtures/🧫️selection-time-travel/🔣️.json`,
 //! gesture is ONE edit carrying its `TransactionRef`; editing one gesture's inputs — its offset, angle, factors or
 //! targets — previews as the state right before it plus the draft with nothing downstream applied, its Report replay
 //! re-applies the whole downstream suffix with the committed per-mutation outcomes, a cancelled replay leaves zero
@@ -75,11 +75,35 @@ fn gesture_transaction(index: usize) -> protocol::TransactionRef {
     protocol::TransactionRef { id: format!("tx-{index:016x}"), tool: format!("s.puzzle.puzzle5d@1/*#editor#gesture{index}") }
 }
 
+/// 🗂️ The corpus tree as `serde_json` text input with every object's members sorted by name and every number carried exactly (the
+/// corpus file is written in that canonical layout, so a regeneration only changes the numbers it recomputed).
+fn sorted_serde(value: &semio_framework_pack_json::Value) -> serde_json::Value {
+    use semio_framework_pack_json::Number;
+    use semio_framework_pack_json::Value;
+    match value {
+        Value::Null => serde_json::Value::Null,
+        Value::Bool(flag) => serde_json::Value::Bool(*flag),
+        Value::Number(Number::UInt(number)) => serde_json::Value::from(*number),
+        Value::Number(Number::Int(number)) => serde_json::Value::from(*number),
+        Value::Number(Number::Float(number)) => serde_json::Number::from_f64(*number).map_or(serde_json::Value::Null, serde_json::Value::Number),
+        Value::String(text) => serde_json::Value::String(text.clone()),
+        Value::Array(items) => serde_json::Value::Array(items.iter().map(sorted_serde).collect()),
+        Value::Object(members) => {
+            let mut members: Vec<_> = members.iter().collect();
+            members.sort_by_key(|(name, _)| *name);
+            serde_json::Value::Object(members.into_iter().map(|(name, member)| (name.to_string(), sorted_serde(member))).collect())
+        }
+    }
+}
+
 /// ⏪️ Every corpus edit of a selection leaf's offset, angle, factors or targets previews without downstream, replays
 /// the downstream suffix with the committed outcomes and overwrites to the corpus' fresh fold; a cancelled replay
-/// leaves zero trace; one gesture stays one edit with its `TransactionRef` throughout.
+/// leaves zero trace; one gesture stays one edit with its `TransactionRef` throughout. With `SEMIO_PUZZLE5D_WRITE_FIXTURES=1` the
+/// corpus' `preview` and `replayed` snapshots are rewritten from this run instead of asserted.
 #[semio_framework_async_macros::async_test]
 async fn every_corpus_edit_previews_replays_and_overwrites_like_the_fresh_fold() {
+    let write = std::env::var("SEMIO_PUZZLE5D_WRITE_FIXTURES").ok().as_deref() == Some("1");
+    let mut regenerated: Vec<(String, semio_framework_pack_json::Value, semio_framework_pack_json::Value)> = Vec::new();
     let cases = cases();
     assert!(cases.len() >= 7, "the corpus edits every selection leaf's parameters and targets");
     for case in cases {
@@ -98,8 +122,11 @@ async fn every_corpus_edit_previews_replays_and_overwrites_like_the_fresh_fold()
         let drafts: protocol::HistoryInputDrafts = [(ids[case.at].clone(), protocol::InputReplacement::Input { schema: crate::PUZZLE_5D_SCHEMA.into(), payload: case.replacement.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
         let mut preview = store.state_before(&ids[case.at], &drafts).expect("the preview base folds").as_ref().clone();
         apply_puzzle5d_mutation(&mut preview, &case.replacement).expect("the draft applies to its base");
+        if write {
+            case.preview = preview.clone();
+        }
         assert_eq!(preview, case.preview, "{id}: the preview is the state before the edited gesture plus the draft, nothing downstream");
-        store.begin_report_replay(&drafts, Some(&ids[case.at])).expect("a replay begins").cancel();
+        store.begin_report_replay(&drafts, Some(&ids[case.at])).expect("a replay begins").retire_unscheduled().expect("a cancelled replay retires to its terminal-empty witness");
         assert_eq!(store.snapshot_ref(), &head, "{id}: a cancelled replay leaves the head untouched");
         assert!(store.mutation_ops().expect("applied operations").iter().all(|operation| operation.supersession.is_none()), "{id}: a cancelled replay supersedes nothing");
         let mut replay = store.begin_report_replay(&drafts, Some(&ids[case.at])).expect("the replay begins at the edited gesture");
@@ -111,9 +138,14 @@ async fn every_corpus_edit_previews_replays_and_overwrites_like_the_fresh_fold()
             let outcome = report.outcomes.iter().find(|outcome| outcome.mutation_id == ids[*at]).unwrap_or_else(|| panic!("{id}: gesture {at} is reported"));
             assert_eq!((outcome.worst, outcome.messages.iter().map(|message| message.code.0.clone()).collect::<Vec<_>>()), (*worst, codes.clone()), "{id}: the outcome of gesture {at}");
         }
+        if write {
+            case.replayed = result.state().expect("the replay reached a state").as_ref().clone();
+            let value = |snapshot: &Puzzle5dSnapshot| semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(snapshot));
+            regenerated.push((case.id.clone(), value(&case.preview), value(&case.replayed)));
+        }
         assert_eq!(result.state().expect("the replay reached a state").as_ref(), &case.replayed, "{id}: the replay is the fresh fold of the edited log");
         if case.blocks {
-            drop(result);
+            result.retire_unscheduled().expect("a blocked replay retires to its terminal-empty witness");
             assert_eq!(store.snapshot_ref(), &head, "{id}: a blocked replay is never committed");
         } else {
             semio_framework_plugin::with_authoring_identity!(|identity| store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut identity).await).expect("overwrite commits");
@@ -123,5 +155,15 @@ async fn every_corpus_edit_previews_replays_and_overwrites_like_the_fresh_fold()
             assert!(operations.iter().enumerate().all(|(index, operation)| operation.transaction == Some(&gesture_transaction(index))), "{id}: time travel edits the mutation, never the tool transaction");
         }
         crate::host::owned::close_puzzle5d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
+    }
+    if write {
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧫️selection-time-travel/🔣️.json");
+        let mut corpus = semio_framework_pack_json::parse(&std::fs::read_to_string(path).expect("the corpus reads"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the corpus parses");
+        for (id, preview, replayed) in &regenerated {
+            let case = corpus.get_mut("cases").and_then(semio_framework_pack_json::Value::as_array_mut).expect("the corpus lists its cases").iter_mut().find(|case| case.get("id").and_then(semio_framework_pack_json::Value::as_str) == Some(id.as_str())).and_then(semio_framework_pack_json::Value::as_object_mut).expect("the regenerated case exists");
+            case.insert("preview", preview.clone());
+            case.insert("replayed", replayed.clone());
+        }
+        std::fs::write(path, format!("{}\n", serde_json::to_string_pretty(&sorted_serde(&corpus)).expect("the corpus encodes"))).expect("the corpus is writable");
     }
 }

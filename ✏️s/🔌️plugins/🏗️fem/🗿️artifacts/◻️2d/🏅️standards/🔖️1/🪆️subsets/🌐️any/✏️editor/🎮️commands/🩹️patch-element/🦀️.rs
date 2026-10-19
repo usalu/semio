@@ -1,11 +1,17 @@
-//! 🩹️ Fem2d play app command — `patch-element`: one-field edit of an element (`kind`, `start`, `end`, `materialId`, `sectionId`) → `ReplaceElement`.
+//! 🩹️ Fem2d play app command — `patch-element`: one-field edit of an element (`kind`, `start`, `end`, `materialId`, `sectionId`) → `ChangeElement`.
 
-use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_element;
+use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::change_element::ChangeElement;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dElementPatch;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 
 type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
@@ -20,33 +26,24 @@ pub struct PatchElement {
 
 /// 🩹️ Re-points one element reference, or swaps `Bar`↔`Beam` while keeping the element's own id and
 /// every other field — `FemElement`'s two variants carry the identical five fields, so a `kind` edit
-/// is a variant swap and nothing else. Emitted as one `ReplaceElement`.
+/// is a variant swap and nothing else. Emitted as one `ChangeElement`.
 pub fn handle(payload: &PatchElement, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
-    let element = doc.snapshot.elements.iter().find(|element| element_id(element) == payload.id).ok_or_else(|| Fault::from("fem2d.patch.element-missing"))?;
-    let (id, start, end, material_id, section_id, beam) = match element {
-        FemElement::Bar { id, start, end, material_id, section_id } => (id, start, end, material_id, section_id, false),
-        FemElement::Beam { id, start, end, material_id, section_id } => (id, start, end, material_id, section_id, true),
-    };
-    let (id, mut start, mut end, mut material_id, mut section_id, mut beam) = (id.clone(), start.clone(), end.clone(), material_id.clone(), section_id.clone(), beam);
+    let row = doc.snapshot.elements.iter().find(|row| element_id(row) == payload.id).ok_or_else(|| Fault::from("fem2d.patch.element-missing"))?;
+    let mut patch = Fem2dElementPatch::default();
+    let value = payload.value.trim();
     match payload.field.as_str() {
-        "kind" => {
-            beam = match payload.value.trim() {
-                "beam" => true,
-                "bar" => false,
-                _ => return Err(Fault::from("fem2d.patch.element-value")),
-            }
-        }
-        "start" => start = payload.value.clone(),
-        "end" => end = payload.value.clone(),
-        "materialId" => material_id = payload.value.clone(),
-        "sectionId" => section_id = payload.value.clone(),
+        "kind" if matches!(value, "bar" | "beam") => patch.kind = Some(value.into()),
+        "kind" => return Err(Fault::from("fem2d.patch.element-value")),
+        "start" => patch.start = Some(value.into()),
+        "end" => patch.end = Some(value.into()),
+        "materialId" => patch.material_id = Some(value.into()),
+        "sectionId" => patch.section_id = Some(value.into()),
+
         _ => return Err(Fault::from("fem2d.patch.element-field")),
     }
-    let new_element = if beam { FemElement::Beam { id, start, end, material_id, section_id } } else { FemElement::Bar { id, start, end, material_id, section_id } };
-    if &new_element == element {
-        return Ok(Emit::default());
-    }
-    Ok(Emit::mutations(vec![Fem2dMutation::ReplaceElement(replace_element::ReplaceElement { id: payload.id.clone(), new_element: Box::new(new_element) })]))
+    let candidate = patch.candidate(row).map_err(|_| Fault::from("fem2d.patch.element-field"))?;
+    if candidate == *row { return Ok(Emit::default()); }
+    Ok(Emit::mutations(vec![Fem2dMutation::ChangeElement(ChangeElement { id: payload.id.clone(), patch })]))
 }
 //#endregion 🔖️PatchElement
 

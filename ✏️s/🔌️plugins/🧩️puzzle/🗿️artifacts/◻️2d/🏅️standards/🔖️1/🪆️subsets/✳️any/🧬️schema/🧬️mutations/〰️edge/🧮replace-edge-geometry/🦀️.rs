@@ -1,5 +1,5 @@
-//! 🧮 Puzzle2d mutation — `ReplaceEdgeGeometry`: whole-value swap of an edge's connection-pose —
 //! `gap`+`shift`+`rise`+`rotation`+`turn`+`tilt`+`x`+`y` together are the one connection geometry.
+//! 🧮 Puzzle2d mutation — `ReplaceEdgeGeometry`: whole-value swap of an edge's connection-pose —
 
 use semio_framework_value::paged::PagedUtf8;
 
@@ -36,23 +36,32 @@ pub fn replace_edge_geometry<Op: From<ReplaceEdgeGeometry>>(id: PagedUtf8<{ usiz
 impl<Op> protocol::MutationKind<Puzzle2dSnapshot, Op> for ReplaceEdgeGeometry
 where
     Op: protocol::Mutation<Puzzle2dSnapshot, Diff = Puzzle2dDiff> + From<ReplaceEdgeGeometry>,
-{
+ {
+
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "edge", kind: "replace-edge-geometry", record: "ReplacedEdgeGeometry" };
 
-    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace edge \"{}\" geometry", self.id), &format!("Geometrie von Kante \"{}\" ersetzen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.to_string_owner()]
     }
+
+}
+impl<Op> protocol::ColdMutationKind<Puzzle2dSnapshot, Op> for ReplaceEdgeGeometry
+where
+    Op: protocol::ColdMutation<Puzzle2dSnapshot, ReferenceDiff = Puzzle2dDiff> + From<ReplaceEdgeGeometry>,
+ {
+fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+        super::diff::diff(self, base)
+    }
+fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Mutation

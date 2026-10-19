@@ -8,6 +8,17 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// `ArtifactRef` uris. Registering a member is the runtime's job; DECLARING it on the parent
 /// snapshot is the app's, and only a declared member is admitted back by `ChildRestoreProjection`
 /// when the parent document is reloaded.
+impl crate::os_spr::ColdMutationKind<TestSnapshot, TestMutation> for SetSlotChildren {
+    fn diff(&self, _: &TestSnapshot) -> MutationOutcome<TestDiff> {
+        MutationOutcome::new(TestDiff { count: None, label: None, slot: Some(self.children.clone()) })
+    }
+    fn inverse(&self, base: &TestSnapshot) -> Result<Vec<TestMutation>, semio_framework_value::ValueError> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
+
+        Ok((|| vec![Self { children: base.slot.iter().map(|child| child.target.to_uri()).collect() }.into()])())
+    }
+}
+
 #[doc(hidden)]
 #[derive(Clone, semio_framework_value::CanonicalJsonTree, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, semio_framework_value_derive::RetireOwned, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -21,15 +32,9 @@ pub struct SetSlotChildren {
 impl MutationKind<TestSnapshot, TestMutation> for SetSlotChildren {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "slot-children", kind: "set-slot-children", record: "SetSlotChildren" };
 
-    fn diff(&self, _: &TestSnapshot) -> MutationOutcome<TestDiff> {
-        MutationOutcome::new(TestDiff { count: None, label: None, slot: Some(self.children.clone()) })
-    }
 
-    fn inverse(&self, base: &TestSnapshot) -> Result<Vec<TestMutation>, semio_framework_value::ValueError> {
-use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
-        Ok((|| vec![Self { children: base.slot.iter().map(|child| child.target.to_uri()).collect() }.into()])())
-    }
+
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(
@@ -51,4 +56,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 #[cfg(test)]
 #[path = "../../../../../🧪️tests/🧒️test-app-document-set-slot-children-unit/🦀️.rs"]
 pub mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️sum-law/🦀️.rs"]
+mod sum_law_tests;
 //#endregion 🧒️SetSlotChildren

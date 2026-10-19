@@ -7,12 +7,12 @@
   "tags": [
     "lang:rust",
     "role:hub",
-    "family:quiz"
+    "family:course"
   ],
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🎓️teaching/🛂️proctor/**/*",
-      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/**/*.rs",
       "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/**/*.rs",
       "{projectRoot}/**/*"
     ]
@@ -25,10 +25,7 @@
         "command": "bun ./📜️script.ts build",
         "forwardAllArgs": true
       },
-      "cache": true,
-      "outputs": [
-        "{projectRoot}/dist/build"
-      ]
+      "cache": false
     },
     "test": {
       "executor": "repo:script",

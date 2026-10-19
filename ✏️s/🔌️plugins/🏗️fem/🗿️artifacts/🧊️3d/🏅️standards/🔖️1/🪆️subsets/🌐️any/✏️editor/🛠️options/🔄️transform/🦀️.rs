@@ -1,5 +1,5 @@
-//! 🔄️ Transform utility options — the gumball handle toggles of the focused fem3d model window.
 //! Read from that window's captured config (a panel/measure projection binds to the focused pane),
+//! 🔄️ Transform utility options — the gumball handle toggles of the focused fem3d model window.
 //! written through `setTransformGumballFlag`.
 
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_UTILITY_TRANSFORM;

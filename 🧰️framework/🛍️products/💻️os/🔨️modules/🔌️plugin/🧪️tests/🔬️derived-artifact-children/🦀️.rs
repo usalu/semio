@@ -10,19 +10,29 @@ struct ChildrenTestSnapshot;
 struct ChildrenTestDiff {}
 
 impl protocol::DiffAlgebra<ChildrenTestSnapshot> for ChildrenTestDiff {
-    fn inverse(&self, _base: &ChildrenTestSnapshot) -> Self {
-        Self {}
-    }
+
     fn is_empty(&self) -> bool {
         true
     }
 }
 
-impl protocol::MutationDiff<ChildrenTestSnapshot> for ChildrenTestDiff {
-    fn apply(&self, snapshot: &ChildrenTestSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<ChildrenTestSnapshot> {
-        Ok(snapshot.clone())
+impl protocol::ColdDiffAlgebra<ChildrenTestSnapshot> for ChildrenTestDiff {
+    fn inverse(&self, _base: &ChildrenTestSnapshot) -> Self {
+        Self {}
     }
+}
+
+impl protocol::MutationDiff<ChildrenTestSnapshot> for ChildrenTestDiff {
+
+
+}
+
+impl protocol::ColdMutationDiff<ChildrenTestSnapshot> for ChildrenTestDiff {
     fn absorb(&mut self, _other: Self) {}
+
+    fn apply(&self, _unpublished: &mut ChildrenTestSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        Ok(())
+    }
 }
 
 //#region 🧬️ChildrenMutationRoster
@@ -54,7 +64,7 @@ impl ArtifactBuilder for ChildrenTestConstruction {
     }
     fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
         let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.0);
-        self.0 = protocol::apply_diff(outcome.diff(), &self.0).expect("children test diff applies");
+        self.0 = protocol::apply_diff_cold(outcome.diff(), &self.0).expect("children test diff applies");
         (self, outcome)
     }
     fn absorb(self, _diff: Self::Diff) -> protocol::MutationApplyResult<Self> {

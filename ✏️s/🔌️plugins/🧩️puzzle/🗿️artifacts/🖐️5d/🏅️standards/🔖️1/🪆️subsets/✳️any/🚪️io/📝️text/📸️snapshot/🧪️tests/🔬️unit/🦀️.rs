@@ -1,7 +1,18 @@
 use crate::Puzzle5dSnapshot;
 
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
-use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dCompatSpecificity, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor, Puzzle5dScale};
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dCompatSpecificity;
+use crate::Puzzle5dFastener;
+use crate::Puzzle5dGrip;
+use crate::Puzzle5dGrip2d;
+use crate::Puzzle5dGrip3d;
+use crate::Puzzle5dKindCompatibility;
+use crate::Puzzle5dMeta;
+use crate::Puzzle5dPart;
+use crate::Puzzle5dPart2d;
+use crate::Puzzle5dPart3d;
+use crate::Puzzle5dPartAnchor;
+use crate::Puzzle5dScale;
 
 #[test]
 fn puzzle5d_projection_dsl_round_trips() {
@@ -100,9 +111,13 @@ fn puzzle5d_example_fixtures_parse_and_round_trip_as_dsl() {
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
-    use crate::host::owned::{close_puzzle5d_store,puzzle5d_store};
-    use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{os_store::store_schema::ArtifactCommand, os_store::document_materialize::create_document_envelope};
+    use crate::host::owned::close_puzzle5d_store;
+    use crate::host::owned::puzzle5d_store;
+    use protocol::ArtifactId;
+    use protocol::Edit;
+    use protocol::SchemaId;
+    use store::os_store::store_schema::ArtifactCommand;
+    use store::os_store::document_materialize::create_document_envelope;
 
     let mut store = (puzzle5d_store(create_document_envelope(crate::PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("store");
     let part = Puzzle5dPart { id: "p1".into(), anchor: Puzzle5dPartAnchor::Fixed, part_kind: None, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };

@@ -1,0 +1,25 @@
+{
+  "name": "@semio-tech/framework-window-semantic-preview",
+  "tags": [
+    "framework",
+    "plugin"
+  ],
+  "targets": {
+    "verify-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧬️preview",
+        "command": "bun ./📜️script.ts verify source"
+      }
+    },
+    "verify-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧬️preview",
+        "command": "bun ./📜️script.ts verify native"
+      }
+    }
+  }
+}

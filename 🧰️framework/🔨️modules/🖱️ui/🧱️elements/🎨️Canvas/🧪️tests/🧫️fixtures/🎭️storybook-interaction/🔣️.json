@@ -1,0 +1,34 @@
+{
+  "locales": [
+    "en",
+    "de"
+  ],
+  "quad": {
+    "windows": [
+      "overview",
+      "detail",
+      "selection",
+      "context"
+    ],
+    "activate": "selection"
+  },
+  "maximize": {
+    "windows": [
+      "a",
+      "b"
+    ],
+    "counts": [
+      2,
+      1,
+      2
+    ]
+  },
+  "glass": {
+    "window": "flow",
+    "alternative": "reference",
+    "content": "silhouette-visual-content",
+    "label": "silhouette-visual-label",
+    "layout": "edgeless",
+    "transparentClass": "bg-transparent"
+  }
+}

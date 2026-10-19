@@ -1,5 +1,5 @@
-//! 🖌️ Brush utility — point at a grip and watch every compatible part being tested for it, then place a free one,
 //! in both projections at once. The candidate search is the puzzle 3d read-only brush suggestions run
+//! 🖌️ Brush utility — point at a grip and watch every compatible part being tested for it, then place a free one,
 //! (`📋️tool-run-contract.md` §2.4, §3.7) behind the planner bridge: the framework owns the run, its panel and its
 //! trace, which the world window paints as instances and the board as placements.
 //!
@@ -9,10 +9,21 @@
 //! Its live options are the mode-level `🎭️modes/✏️edit/☑️options/🖌️brush` measure group, tagged with
 //! this utility's id.
 
-use crate::editor::puzzle5d::terminology::{puzzle5d_brush_suggestions_run_counters, puzzle5d_brush_suggestions_run_reasons, puzzle5d_brush_suggestions_run_stages, puzzle5d_brush_suggestions_run_unit};
+use crate::editor::puzzle5d::terminology::puzzle5d_brush_suggestions_run_counters;
+
+use crate::editor::puzzle5d::terminology::puzzle5d_brush_suggestions_run_reasons;
+
+use crate::editor::puzzle5d::terminology::puzzle5d_brush_suggestions_run_stages;
+
+use crate::editor::puzzle5d::terminology::puzzle5d_brush_suggestions_run_unit;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::UtilityDefinition;
-use semio_framework_tool_run::{JobKindId, ToolRunDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunTraceKind};
+use semio_framework_tool_run::JobKindId;
+use semio_framework_tool_run::ToolRunDefinition;
+use semio_framework_tool_run::ToolRunRebasePolicy;
+use semio_framework_tool_run::ToolRunReconfigurePolicy;
+use semio_framework_tool_run::ToolRunSettingsReads;
+use semio_framework_tool_run::ToolRunTraceKind;
 
 pub const UTILITY_ID: &str = crate::editor::puzzle5d::entities::PUZZLE5D_BRUSH_UTILITY_ID;
 /// 🧵️ `ToolRunDefinition.runJob` of the brush suggestions run.

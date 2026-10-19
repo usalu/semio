@@ -1,5 +1,5 @@
-//! ⚙️ `set-brush-placement-overlap-budget` command — the world-unit footprint overlap a brush/fill
 //! placement may spend before it counts as a collision, a shared `Puzzle2dConfig` preference a live
+//! ⚙️ `set-brush-placement-overlap-budget` command — the world-unit footprint overlap a brush/fill
 //! fill run re-reads through `ToolRunSettingsReads`.
 
 use {crate::editor::puzzle2d::snapshot::puzzle2d_absolute_or_delta, crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLACEMENT_MEASURE_MAX};

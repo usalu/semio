@@ -24,6 +24,7 @@ name = "editor_app_2"
 path = "../../🧪️tests/🔬️app-2/🦀️.rs"
 
 [dependencies]
+semio-s-fem-analyses-model = { path = "../../../../../../../../../../../🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🗂️model/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-action-bus = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }

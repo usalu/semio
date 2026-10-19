@@ -52,7 +52,9 @@ use semio_framework_ui_locale::Locale;
 use semio_framework_plugin::TreeWindowRequest;
 use semio_framework_plugin::ViewModel;
 use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
-use semio_framework_ui_contract::{TreeWindow, TREE_WINDOW_PATH_SEPARATOR, UI_BUILT_CHILDREN_MAX};
+use semio_framework_ui_contract::TreeWindow;
+use semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR;
+use semio_framework_ui_contract::UI_BUILT_CHILDREN_MAX;
 
 //#region 🔖️Fixtures
 fn demo() -> Fem3dSnapshot {
@@ -145,7 +147,9 @@ fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWi
 /// then its own key — never by its bare id. That is what lets a load case and a combination both
 /// called `uls` keep independent windows while their node keys stay the raw pick target ids.
 fn nested_request(section_suffix: &str, node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWindowRequest {
-    request(&format!("{TREE_NAMESPACE}.{section_suffix}{TREE_WINDOW_PATH_SEPARATOR}{node_key}"), open, offset, rows)
+    let kind = if section_suffix == "load-cases" { "loadCase" } else { "combination" };
+    let identity = fem3d_entity_target(kind, node_key).unwrap();
+    request(&format!("{TREE_NAMESPACE}.{section_suffix}{TREE_WINDOW_PATH_SEPARATOR}{identity}"), open, offset, rows)
 }
 
 fn viewing(requests: Vec<TreeWindowRequest>) -> ViewModel {
@@ -155,7 +159,7 @@ fn viewing(requests: Vec<TreeWindowRequest>) -> ViewModel {
 /// 🧱️ A document an order of magnitude past one viewport: 60 nodes and a 40-load wind case.
 fn oversized() -> Fem3dSnapshot {
     let mut document = demo();
-    document.nodes = (0..60).map(|index| FemNode { id: format!("g{index}"), x: index as f64, y: 0.0, z: 0.0 }).collect();
+    document.nodes = (0..60).map(|index| FemNodeValue { id: format!("g{index}"), x: index as f64, y: 0.0, z: 0.0 }).collect();
     document.load_cases.push(FemLoadCase {
         id: "wind".into(),
         name: "Wind".into(),
@@ -171,7 +175,7 @@ fn oversized() -> Fem3dSnapshot {
 /// CONTAINER; only the body-wide node ledger bounds the BODY.
 fn house() -> Fem3dSnapshot {
     let mut document = demo();
-    document.nodes = (0..63).map(|index| FemNode { id: format!("h{index}"), x: index as f64, y: 0.0, z: 0.0 }).collect();
+    document.nodes = (0..63).map(|index| FemNodeValue { id: format!("h{index}"), x: index as f64, y: 0.0, z: 0.0 }).collect();
     document.supports = (0..63).map(|index| semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport { id: format!("hs{index}"), node_id: format!("h{index}"), fixed: vec![FemDof::Tx, FemDof::Ty, FemDof::Tz] }).collect();
     document.solids = (0..8)
         .map(|index| FemSolid {
@@ -244,18 +248,18 @@ async fn demo_document_lists_every_section_with_its_own_count() {
 /// 🌳️ Row ids ARE the raw entity ids: the framework marks domain selection by them, so a composite
 /// key would never match a viewport pick.
 #[semio_framework_async_macros::async_test]
-async fn rows_are_keyed_by_the_raw_entity_id_and_bound_to_the_fem3d_domain() {
+async fn rows_are_keyed_by_scoped_entity_identity_and_bound_to_the_fem3d_domain() {
     let document = demo();
     let tree = build(&document, english());
     let Component::Tree(props) = &tree.component else { panic!("panel tree") };
     assert_eq!(props.interaction_domain.as_ref().map(|domain| domain.as_str()), Some(FEM3D_INTERACTION_DOMAIN));
-    assert!(row_keys(section_node(&tree, "nodes")).contains(&"lc1b"));
-    assert!(row_keys(section_node(&tree, "elements")).contains(&"l_col1"));
-    assert!(row_keys(section_node(&tree, "supports")).contains(&"s_c1"));
-    assert!(row_keys(section_node(&tree, "load-cases")).contains(&"dead"));
-    assert!(row_keys(section_node(&tree, "combinations")).contains(&"uls"));
-    assert!(row_keys(section_node(&tree, "materials")).contains(&"c30"));
-    assert!(row_keys(section_node(&tree, "sections")).contains(&"hex30"));
+    assert!(row_keys(section_node(&tree, "nodes")).contains(&fem3d_entity_target("node", "lc1b").unwrap().as_str()));
+    assert!(row_keys(section_node(&tree, "elements")).contains(&fem3d_entity_target("element", "l_col1").unwrap().as_str()));
+    assert!(row_keys(section_node(&tree, "supports")).contains(&fem3d_entity_target("support", "s_c1").unwrap().as_str()));
+    assert!(row_keys(section_node(&tree, "load-cases")).contains(&fem3d_entity_target("loadCase", "dead").unwrap().as_str()));
+    assert!(row_keys(section_node(&tree, "combinations")).contains(&fem3d_entity_target("combination", "uls").unwrap().as_str()));
+    assert!(row_keys(section_node(&tree, "materials")).contains(&fem3d_entity_target("material", "c30").unwrap().as_str()));
+    assert!(row_keys(section_node(&tree, "sections")).contains(&fem3d_entity_target("section", "hex30").unwrap().as_str()));
 }
 
 /// 📋️ A load case row owns one child row per load, and a combination row one read-only child per
@@ -265,13 +269,13 @@ async fn load_case_rows_nest_their_loads_and_combination_rows_nest_their_terms()
     let document = demo();
     let tree = build(&document, english());
     let cases = section_node(&tree, "load-cases");
-    let dead = cases.children.iter().find(|row| row.key.as_str() == "dead").expect("dead case row");
+    let dead = cases.children.iter().find(|row| row.key.as_str() == fem3d_entity_target("loadCase", "dead").unwrap()).expect("dead case row");
     assert_eq!(window_of(dead).total, 16, "a case row stamps the extent of its own loads");
-    assert!(row_keys(dead).contains(&"d_l_spine"), "{:?}", row_keys(dead));
-    let live = cases.children.iter().find(|row| row.key.as_str() == "live").expect("live case row");
+    assert!(row_keys(dead).contains(&fem3d_load_target("dead", "d_l_spine").unwrap().as_str()), "{:?}", row_keys(dead));
+    let live = cases.children.iter().find(|row| row.key.as_str() == fem3d_entity_target("loadCase", "live").unwrap()).expect("live case row");
     assert_eq!(window_of(live).total, 16);
-    assert!(row_keys(live).contains(&"q_l_spine"), "{:?}", row_keys(live));
-    let uls = section_node(&tree, "combinations").children.iter().find(|row| row.key.as_str() == "uls").expect("uls row");
+    assert!(row_keys(live).contains(&fem3d_load_target("live", "q_l_spine").unwrap().as_str()), "{:?}", row_keys(live));
+    let uls = section_node(&tree, "combinations").children.iter().find(|row| row.key.as_str() == fem3d_entity_target("combination", "uls").unwrap()).expect("uls row");
     assert_eq!(row_keys(uls), vec![format!("{TREE_NAMESPACE}.term.uls.dead").as_str(), format!("{TREE_NAMESPACE}.term.uls.live").as_str()]);
     assert_eq!(row_labels(uls), vec!["1.35 dead".to_string(), "1.5 live".to_string()]);
     assert_eq!(window_of(uls).total, 2, "a combination row stamps the extent of its own terms");
@@ -298,7 +302,7 @@ async fn rows_carry_the_human_label_of_their_entity() {
     assert!(row_labels(section_node(&tree, "materials")).contains(&"C30/37 Concrete · E 33 GPa".to_string()));
     assert!(row_labels(section_node(&tree, "sections")).contains(&"Hexagonal Column R 0.30 · A 0.233827 m² · Iy 0.00438425 m⁴".to_string()));
 
-    let live = section_node(&tree, "load-cases").children.iter().find(|row| row.key.as_str() == "live").expect("live case row");
+    let live = section_node(&tree, "load-cases").children.iter().find(|row| row.key.as_str() == fem3d_entity_target("loadCase", "live").unwrap()).expect("live case row");
     let loads = row_labels(live);
     assert!(loads.contains(&"wz −4952 N/m @ l_spine".to_string()), "{loads:?}");
 }
@@ -346,7 +350,7 @@ async fn german_labels_resolve_across_the_whole_tree() {
 async fn rows_declare_their_granularity_while_the_tree_binds_the_one_interaction_select() {
     let document = demo();
     let tree = build(&document, english());
-    let row = section_node(&tree, "nodes").children.iter().find(|row| row.key.as_str() == "lc1b").expect("lc1b row");
+    let row = section_node(&tree, "nodes").children.iter().find(|row| row.key.as_str() == fem3d_entity_target("node", "lc1b").unwrap()).expect("lc1b row");
     assert!(row.bindings.iter().next().is_none(), "a pick row binds no action of its own");
     let Component::TreeItem(props) = &row.component else { panic!("tree item") };
     assert_eq!(props.granularity.as_ref().map(|text| text.as_str()), Some(FEM3D_GRANULARITY_NODE));
@@ -370,11 +374,11 @@ async fn selected_and_hovered_ids_are_marked_from_the_interaction_snapshot() {
     let document = demo();
     let view = wide_view();
     let windows = TreeWindows::for_body(&view, BODY_KEY);
-    let interaction = Fem3dInteractionSnapshot { selected_ids: vec!["lc1b".into(), "l_col1".into()], hovered_ids: vec!["s_c1".into()] };
+    let interaction = Fem3dInteractionSnapshot { selected_ids: vec![fem3d_entity_target("node", "lc1b").unwrap(), fem3d_entity_target("element", "l_col1").unwrap()], hovered_ids: vec![fem3d_entity_target("support", "s_c1").unwrap()] };
     let tree = render(&document, &interaction, english(), &windows).expect("marked tree");
     let Component::Tree(props) = &tree.component else { panic!("panel tree") };
     assert_eq!(props.interaction_domain.as_ref().map(|domain| domain.as_str()), Some(FEM3D_INTERACTION_DOMAIN));
-    let wide: Vec<String> = (0..80).map(|index| format!("n{index}")).collect();
+    let wide: Vec<String> = (0..80).map(|index| fem3d_entity_target("node", &format!("n{index}")).unwrap()).collect();
     assert_eq!(marked_ids(&wide).len(), MARKED_IDS_LIMIT, "a wider selection marks its first page rather than refusing the render");
     let interaction = Fem3dInteractionSnapshot { selected_ids: wide, hovered_ids: Vec::new() };
     // 🪟️ A fresh `TreeWindows` per render: the value carries the render's first-paint budget and its
@@ -415,7 +419,7 @@ async fn an_oversized_document_stamps_every_extent_and_materialises_one_viewport
     let nodes = section_node(&tree, "nodes");
     assert_eq!(window_of(nodes).total, 60, "60 nodes are announced whole");
     assert!(nodes.children.len() < 60, "a first paint materialises one viewport, not the whole list");
-    let wind = section_node(&tree, "load-cases").children.iter().find(|row| row.key.as_str() == "wind");
+    let wind = section_node(&tree, "load-cases").children.iter().find(|row| row.key.as_str() == fem3d_entity_target("loadCase", "wind").unwrap());
     if let Some(wind) = wind {
         assert_eq!(window_of(wind).total, 40, "a case row announces every load it owns");
     }
@@ -436,7 +440,7 @@ async fn a_closed_container_stamps_its_extent_and_builds_no_child() {
     let nodes = section_node(&tree, "nodes");
     assert_eq!(window_of(nodes).total, 60, "a closed section still announces its extent");
     assert!(nodes.children.is_empty(), "a closed section builds no row");
-    let wind = section_node(&tree, "load-cases").children.iter().find(|row| row.key.as_str() == "wind").expect("wind case row");
+    let wind = section_node(&tree, "load-cases").children.iter().find(|row| row.key.as_str() == fem3d_entity_target("loadCase", "wind").unwrap()).expect("wind case row");
     assert_eq!(window_of(wind).total, 40);
     assert!(wind.children.is_empty(), "a closed case row builds no load");
 }
@@ -450,10 +454,10 @@ async fn a_window_request_materialises_exactly_its_own_range() {
     let tree = render(&document, &Fem3dInteractionSnapshot::default(), english(), &TreeWindows::for_body(&view, BODY_KEY)).expect("a windowed document assembles");
     let nodes = section_node(&tree, "nodes");
     assert_eq!(window_of(nodes), TreeWindow { row_extent: Default::default(), total: 60, offset: 20 });
-    assert_eq!(row_keys(nodes), (20..28).map(|index| format!("g{index}")).collect::<Vec<_>>(), "exactly entries [20, 28) keyed by the raw node id");
-    let wind = section_node(&tree, "load-cases").children.iter().find(|row| row.key.as_str() == "wind").expect("wind case row");
+    assert_eq!(row_keys(nodes), (20..28).map(|index| fem3d_entity_target("node", &format!("g{index}")).unwrap()).collect::<Vec<_>>(), "exactly entries [20, 28) keyed by the raw node id");
+    let wind = section_node(&tree, "load-cases").children.iter().find(|row| row.key.as_str() == fem3d_entity_target("loadCase", "wind").unwrap()).expect("wind case row");
     assert_eq!(window_of(wind), TreeWindow { row_extent: Default::default(), total: 40, offset: 5 });
-    assert_eq!(row_keys(wind), (5..9).map(|index| format!("wl{index}")).collect::<Vec<_>>(), "a nested window is the same law one level down");
+    assert_eq!(row_keys(wind), (5..9).map(|index| fem3d_load_target("wind", &format!("wl{index}")).unwrap()).collect::<Vec<_>>(), "a nested window is the same law one level down");
 }
 
 /// 🏠️ The House regression: the whole BODY reconciles, not just each container. A first paint of a

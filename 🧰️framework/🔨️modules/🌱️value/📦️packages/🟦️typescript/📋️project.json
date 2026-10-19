@@ -2,14 +2,21 @@
   "name": "@semio-tech/value-ts",
   "projectType": "library",
   "sourceRoot": "🧰️framework/🔨️modules/🌱️value",
-  "tags": ["lang:typescript", "role:framework"],
+  "tags": [
+    "lang:typescript",
+    "role:framework"
+  ],
   "targets": {
     "test-numeric-api": {
       "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
-      "inputs": ["{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*", "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/🌱️value/**/*", "sharedGlobals"],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*",
+        "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/🌱️value/**/*",
+        "sharedGlobals"
+      ],
       "options": {
         "command": "bun 📜️script.ts test-numeric-api",
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript"
@@ -20,7 +27,10 @@
       "cache": false,
       "dependsOn": [],
       "outputs": [],
-      "inputs": ["{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧾️dictionary/**/*", "sharedGlobals"],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧾️dictionary/**/*",
+        "sharedGlobals"
+      ],
       "options": {
         "command": "bun 📜️script.ts test-dictionary",
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript"
@@ -31,9 +41,28 @@
       "cache": false,
       "dependsOn": [],
       "outputs": [],
-      "inputs": ["{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*", "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/🌱️value/**/*", "sharedGlobals"],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*",
+        "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/🌱️value/**/*",
+        "sharedGlobals"
+      ],
       "options": {
         "command": "bun 📜️script.ts test-scalars-api",
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript"
+      }
+    },
+    "test-scratch-hash": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*",
+        "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/🌱️value/**/*",
+        "sharedGlobals"
+      ],
+      "options": {
+        "command": "bun 📜️script.ts test-scratch-hash",
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript"
       }
     }

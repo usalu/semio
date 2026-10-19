@@ -16,6 +16,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-s-fem-analyses-model = { path = "../../../../../../../../../../../../../../../🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🗂️model/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { workspace = true }

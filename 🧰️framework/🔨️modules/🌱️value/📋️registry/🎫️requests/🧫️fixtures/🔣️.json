@@ -1,0 +1,392 @@
+{
+  "capacity": 3,
+  "consumerCapacity": 4,
+  "actions": [
+    {
+      "kind": "admit",
+      "scope": 1,
+      "consumer": 10,
+      "request": 100,
+      "owner": 0,
+      "references": 1
+    },
+    {
+      "kind": "admit",
+      "scope": 1,
+      "consumer": 11,
+      "request": 100,
+      "owner": 0,
+      "references": 2
+    },
+    {
+      "kind": "admit",
+      "scope": 1,
+      "consumer": 12,
+      "request": 200,
+      "owner": 1,
+      "references": 1
+    },
+    {
+      "kind": "admit",
+      "scope": 33,
+      "consumer": 10,
+      "request": 100,
+      "owner": 2,
+      "references": 1
+    },
+    {
+      "kind": "admit",
+      "scope": 1,
+      "consumer": 10,
+      "request": 300,
+      "owner": null
+    },
+    {
+      "kind": "remove",
+      "scope": 1,
+      "consumer": 11,
+      "owner": 0,
+      "references": 1
+    },
+    {
+      "kind": "remove",
+      "scope": 1,
+      "consumer": 10,
+      "owner": 0,
+      "references": 0
+    },
+    {
+      "kind": "admit",
+      "scope": 1,
+      "consumer": 10,
+      "request": 100,
+      "owner": null
+    },
+    {
+      "kind": "release",
+      "scope": 1,
+      "request": 100,
+      "accepted": true
+    },
+    {
+      "kind": "admit",
+      "scope": 1,
+      "consumer": 10,
+      "request": 300,
+      "owner": 0,
+      "references": 1
+    },
+    {
+      "kind": "release",
+      "scope": 1,
+      "request": 200,
+      "accepted": false
+    },
+    {
+      "kind": "remove",
+      "scope": 1,
+      "consumer": 12,
+      "owner": 1,
+      "references": 0
+    },
+    {
+      "kind": "release",
+      "scope": 1,
+      "request": 200,
+      "accepted": true
+    },
+    {
+      "kind": "remove",
+      "scope": 1,
+      "consumer": 10,
+      "owner": 0,
+      "references": 0
+    },
+    {
+      "kind": "release",
+      "scope": 1,
+      "request": 300,
+      "accepted": true
+    },
+    {
+      "kind": "remove",
+      "scope": 33,
+      "consumer": 10,
+      "owner": 2,
+      "references": 0
+    },
+    {
+      "kind": "release",
+      "scope": 33,
+      "request": 100,
+      "accepted": true
+    }
+  ],
+  "identityCases": [
+    {
+      "kind": "source",
+      "bytes": 6500,
+      "accepted": true
+    },
+    {
+      "kind": "source",
+      "bytes": 16384,
+      "accepted": true
+    },
+    {
+      "kind": "consumer",
+      "bytes": 6500,
+      "accepted": true
+    },
+    {
+      "kind": "consumer",
+      "bytes": 65536,
+      "accepted": true
+    },
+    {
+      "kind": "consumer",
+      "bytes": 65537,
+      "accepted": false
+    }
+  ],
+  "terminalCases": [
+    {
+      "kind": "begin",
+      "job": 10,
+      "accepted": true
+    },
+    {
+      "kind": "begin",
+      "job": 11,
+      "accepted": false
+    },
+    {
+      "kind": "fault",
+      "job": 11,
+      "accepted": false
+    },
+    {
+      "kind": "fault",
+      "job": 10,
+      "accepted": true
+    },
+    {
+      "kind": "begin",
+      "job": 12,
+      "accepted": false
+    },
+    {
+      "kind": "retry",
+      "job": 0,
+      "accepted": true
+    },
+    {
+      "kind": "begin",
+      "job": 12,
+      "accepted": true
+    },
+    {
+      "kind": "cancel",
+      "job": 12,
+      "accepted": true
+    },
+    {
+      "kind": "begin",
+      "job": 13,
+      "accepted": false
+    },
+    {
+      "kind": "newRevision",
+      "job": 14,
+      "accepted": true
+    },
+    {
+      "kind": "validate",
+      "job": 14,
+      "accepted": true
+    },
+    {
+      "kind": "begin",
+      "job": 15,
+      "accepted": false
+    }
+  ],
+  "selectorCases": [
+    {
+      "sourceBytes": 16384,
+      "consumerBytes": 65536,
+      "chunkBytes": 257,
+      "changedConsumerRevision": 2
+    }
+  ],
+  "lookupCases": [
+    {
+      "sourceBytes": 6500,
+      "originalSuffix": "z",
+      "candidateSuffixes": [
+        "x",
+        "y",
+        "z"
+      ],
+      "matchedPosition": 2,
+      "chunkBytes": 257
+    }
+  ],
+  "comparisonCases": [
+    {
+      "original": "same-long-prefix-original",
+      "candidate": "same-long-prefix-altered!",
+      "accepted": false,
+      "fault": "request-original-selector-collision"
+    }
+  ],
+  "stageTransitions": [
+    {
+      "op": "admit",
+      "consumer": 1,
+      "request": 10,
+      "accepted": true,
+      "live1": 10,
+      "pending1": null,
+      "ref10": 1,
+      "ref20": 0
+    },
+    {
+      "op": "stage",
+      "consumer": 1,
+      "request": 20,
+      "accepted": true,
+      "live1": 10,
+      "pending1": 20,
+      "ref10": 1,
+      "ref20": 1
+    },
+    {
+      "op": "admit",
+      "consumer": 2,
+      "request": 10,
+      "accepted": true,
+      "live1": 10,
+      "pending1": 20,
+      "ref10": 2,
+      "ref20": 1
+    },
+    {
+      "op": "stage",
+      "consumer": 1,
+      "request": 30,
+      "accepted": false,
+      "live1": 10,
+      "pending1": 20,
+      "ref10": 2,
+      "ref20": 1
+    },
+    {
+      "op": "remove",
+      "consumer": 1,
+      "request": 10,
+      "accepted": true,
+      "live1": null,
+      "pending1": null,
+      "ref10": 1,
+      "ref20": 0
+    },
+    {
+      "op": "release",
+      "consumer": 1,
+      "request": 20,
+      "accepted": true,
+      "live1": null,
+      "pending1": null,
+      "ref10": 1,
+      "ref20": 0
+    },
+    {
+      "op": "stage",
+      "consumer": 1,
+      "request": 20,
+      "accepted": true,
+      "live1": null,
+      "pending1": 20,
+      "ref10": 1,
+      "ref20": 1
+    },
+    {
+      "op": "admit",
+      "consumer": 1,
+      "request": 20,
+      "accepted": true,
+      "live1": 20,
+      "pending1": null,
+      "ref10": 1,
+      "ref20": 1
+    },
+    {
+      "op": "remove",
+      "consumer": 2,
+      "request": 10,
+      "accepted": true,
+      "live1": 20,
+      "pending1": null,
+      "ref10": 0,
+      "ref20": 1
+    },
+    {
+      "op": "stage",
+      "consumer": 1,
+      "request": 10,
+      "accepted": false,
+      "live1": 20,
+      "pending1": null,
+      "ref10": 0,
+      "ref20": 1
+    },
+    {
+      "op": "release",
+      "consumer": 2,
+      "request": 10,
+      "accepted": true,
+      "live1": 20,
+      "pending1": null,
+      "ref10": 0,
+      "ref20": 1
+    },
+    {
+      "op": "remove",
+      "consumer": 1,
+      "request": 20,
+      "accepted": true,
+      "live1": null,
+      "pending1": null,
+      "ref10": 0,
+      "ref20": 0
+    },
+    {
+      "op": "release",
+      "consumer": 1,
+      "request": 20,
+      "accepted": true,
+      "live1": null,
+      "pending1": null,
+      "ref10": 0,
+      "ref20": 0
+    }
+  ],
+  "closeCases": [
+    {
+      "name": "empty-partial",
+      "sourceBytes": 6500,
+      "copiedBytes": 0
+    },
+    {
+      "name": "copied-partial",
+      "sourceBytes": 6500,
+      "copiedBytes": 32
+    },
+    {
+      "name": "complete",
+      "sourceBytes": 6500,
+      "copiedBytes": 6500
+    }
+  ]
+}

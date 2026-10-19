@@ -1,10 +1,11 @@
 //! 📎️ `AttachLocalFolder` is the authoritative direct Rust leaf for remembering which local folder one program's document is
 //! attached to on this device.
 
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::super::{absorb_keyed_rows, KeyedEdit};
 use super::detach_local_folder::DetachLocalFolder;
 use super::LocalFoldersConfigMutation;
-use protocol::{MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
+use protocol::{MutationDiff, ColdMutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Schema
@@ -49,7 +50,17 @@ pub struct LocalFoldersDiff {
 }
 
 impl MutationDiff<LocalFolderBindings> for LocalFoldersDiff {
-    fn apply(&self, base: &LocalFolderBindings, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<LocalFolderBindings> {
+
+
+
+}
+
+impl ColdMutationDiff<LocalFolderBindings> for LocalFoldersDiff {
+    fn absorb(&mut self, other: Self) {
+        absorb_keyed_rows(&mut self.bindings, other.bindings);
+    }
+
+    fn apply(&self, base: &mut LocalFolderBindings, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         let mut bindings = base.bindings.clone();
         for row in &self.bindings {
             bindings.retain(|entry| entry.document_id != row.key);
@@ -58,21 +69,22 @@ impl MutationDiff<LocalFolderBindings> for LocalFoldersDiff {
             }
         }
         bindings.sort_by(|left, right| left.document_id.cmp(&right.document_id));
-        Ok(LocalFolderBindings { bindings })
-    }
-
-    fn absorb(&mut self, other: Self) {
-        absorb_keyed_rows(&mut self.bindings, other.bindings);
+                base.bindings = bindings;
+        Ok(())
     }
 }
 
 impl protocol::DiffAlgebra<LocalFolderBindings> for LocalFoldersDiff {
-    fn inverse(&self, base: &LocalFolderBindings) -> Self {
-        Self { bindings: self.bindings.iter().map(|row| KeyedEdit::new(row.key.clone(), base.bindings.iter().find(|entry| entry.document_id == row.key).cloned())).collect() }
-    }
+
 
     fn is_empty(&self) -> bool {
         self.bindings.is_empty()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<LocalFolderBindings> for LocalFoldersDiff {
+    fn inverse(&self, base: &LocalFolderBindings) -> Self {
+        Self { bindings: self.bindings.iter().map(|row| KeyedEdit::new(row.key.clone(), base.bindings.iter().find(|entry| entry.document_id == row.key).cloned())).collect() }
     }
 }
 //#endregion 🔖️Schema
@@ -110,6 +122,20 @@ impl From<&AttachLocalFolder> for LocalFolderBinding {
 impl MutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for AttachLocalFolder {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "local-folder", kind: "attach-local-folder", record: "Set" };
 
+
+
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Attach \"{}\" to a folder on this device", self.document_id), &format!("\"{}\" mit einem Ordner auf diesem Gerät verbinden", self.document_id))
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec![self.document_id.clone()]
+    }
+}
+
+impl crate::os_spr::ColdMutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for AttachLocalFolder {
     fn diff(&self, base: &LocalFolderBindings) -> MutationOutcome<LocalFoldersDiff> {
         let attached = LocalFolderBinding::from(self);
         if base.bindings.iter().any(|entry| *entry == attached) {
@@ -117,7 +143,6 @@ impl MutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for AttachLoc
         }
         MutationOutcome::new(LocalFoldersDiff { bindings: vec![KeyedEdit::new(self.document_id.clone(), Some(attached))] })
     }
-
     fn inverse(&self, base: &LocalFolderBindings) -> Result<Vec<LocalFoldersConfigMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         match base.bindings.iter().find(|entry| entry.document_id == self.document_id) {
@@ -127,14 +152,6 @@ impl MutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for AttachLoc
     
     })())
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Attach \"{}\" to a folder on this device", self.document_id), &format!("\"{}\" mit einem Ordner auf diesem Gerät verbinden", self.document_id))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.document_id.clone()]
-    }
 }
 //#endregion 🔖️Mutation
 

@@ -1,5 +1,6 @@
 use super::*;
-use semio_framework_tool_run::{ToolRunId, ToolRunIdentity};
+use semio_framework_tool_run::ToolRunId;
+use semio_framework_tool_run::ToolRunIdentity;
 
 fn run_view(tool_id: &str, run: u64, generation: u32, state: ToolRunState) -> ToolRunView {
     ToolRunView::new(tool_id, ToolRunIdentity { generation, ..ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run }, [0; 32]) }, state)
@@ -26,26 +27,26 @@ fn the_brush_suggestions_reconciler_starts_wakes_and_aborts_exactly_once_per_ans
     assert_eq!(actions(&run_effects(&mut link, None)), vec![(TOOL_RUN_START_ACTION_ID.to_string(), serde_json::json!({ "toolId": UTILITY_ID }))]);
     assert!(run_effects(&mut link, None).is_empty(), "an unanswered start is never repeated by a refresh");
     let starting = run_view(UTILITY_ID, 1, 0, ToolRunState::Starting);
-    assert!(run_effects(&mut link, Some(&starting)).is_empty(), "a live run for the target is woken, not restarted");
+    assert!(run_effects(&mut link, Some(&starting).map(|original| original.poll_view())).is_empty(), "a live run for the target is woken, not restarted");
     link.hover(Some("host:v1".into()));
-    assert!(run_effects(&mut link, Some(&run_view(UTILITY_ID, 1, 2, ToolRunState::Running))).is_empty(), "retargeting a live run is a wake");
+    assert!(run_effects(&mut link, Some(&run_view(UTILITY_ID, 1, 2, ToolRunState::Running)).map(|original| original.poll_view())).is_empty(), "retargeting a live run is a wake");
     link.hover(None);
     let running = run_view(UTILITY_ID, 1, 2, ToolRunState::Running);
-    assert_eq!(actions(&run_effects(&mut link, Some(&running))), vec![(TOOL_RUN_ABORT_ACTION_ID.to_string(), serde_json::json!({ "runId": "1", "generation": 2 }))]);
-    assert!(run_effects(&mut link, Some(&run_view(UTILITY_ID, 1, 2, ToolRunState::Aborting))).is_empty(), "the abort is outstanding while the run tears down");
-    assert!(run_effects(&mut link, Some(&run_view(UTILITY_ID, 1, 2, ToolRunState::Aborted))).is_empty(), "an aborted run with no target owes nothing");
+    assert_eq!(actions(&run_effects(&mut link, Some(&running).map(|original| original.poll_view()))), vec![(TOOL_RUN_ABORT_ACTION_ID.to_string(), serde_json::json!({ "runId": "1", "generation": 2 }))]);
+    assert!(run_effects(&mut link, Some(&run_view(UTILITY_ID, 1, 2, ToolRunState::Aborting)).map(|original| original.poll_view())).is_empty(), "the abort is outstanding while the run tears down");
+    assert!(run_effects(&mut link, Some(&run_view(UTILITY_ID, 1, 2, ToolRunState::Aborted)).map(|original| original.poll_view())).is_empty(), "an aborted run with no target owes nothing");
     link.open_menu("host:v0");
     let aborted = run_view(UTILITY_ID, 1, 2, ToolRunState::Aborted);
-    assert_eq!(actions(&run_effects(&mut link, Some(&aborted))).len(), 1, "a popup on a terminal run starts a fresh one");
+    assert_eq!(actions(&run_effects(&mut link, Some(&aborted).map(|original| original.poll_view()))).len(), 1, "a popup on a terminal run starts a fresh one");
     let faulted = run_view(UTILITY_ID, 2, 0, ToolRunState::Faulted);
-    assert!(run_effects(&mut link, Some(&faulted)).is_empty(), "the start was answered by the faulted run, which a refresh never restarts");
-    assert!(run_effects(&mut link, Some(&faulted)).is_empty());
+    assert!(run_effects(&mut link, Some(&faulted).map(|original| original.poll_view())).is_empty(), "the start was answered by the faulted run, which a refresh never restarts");
+    assert!(run_effects(&mut link, Some(&faulted).map(|original| original.poll_view())).is_empty());
     link.close_menu();
     link.open_menu("host:v0");
-    assert_eq!(actions(&run_effects(&mut link, Some(&faulted))).len(), 1, "a gesture restarts a faulted run");
+    assert_eq!(actions(&run_effects(&mut link, Some(&faulted).map(|original| original.poll_view()))).len(), 1, "a gesture restarts a faulted run");
     let fill = run_view("fill", 3, 0, ToolRunState::Running);
     let mut busy = BrushSuggestionsLink::default();
     busy.hover(Some("host:v0".into()));
-    assert_eq!(actions(&run_effects(&mut busy, Some(&fill))).len(), 1, "another tool's run is the framework's busy refusal to give");
-    assert!(run_effects(&mut busy, Some(&fill)).is_empty(), "and the refused start is not repeated until a gesture");
+    assert_eq!(actions(&run_effects(&mut busy, Some(&fill).map(|original| original.poll_view()))).len(), 1, "another tool's run is the framework's busy refusal to give");
+    assert!(run_effects(&mut busy, Some(&fill).map(|original| original.poll_view())).is_empty(), "and the refused start is not repeated until a gesture");
 }

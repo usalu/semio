@@ -21,6 +21,18 @@ pub struct MoveNodes {
 //#region ⚙️Semantics
 impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for MoveNodes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "workflow", kind: "move-nodes", record: "MovedWorkflowNodes" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        let [(x_en, x_de), (y_en, y_de)] = [self.dx, self.dy].map(workflow_label_number);
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move {} workflow node(s) by ({x_en}, {y_en})", self.node_ids.len()), &format!("{} Arbeitsablaufknoten um ({x_de}; {y_de}) verschieben", self.node_ids.len()))
+    }
+    fn target(&self) -> Vec<String> {
+        std::iter::once("nodes".to_string()).chain(self.node_ids.iter().cloned()).collect()
+    }
+}
+
+impl protocol::ColdMutationKind<WorkflowSnapshot, WorkflowMutation> for MoveNodes {
     /// 🔺️ A malformed target list or a non-finite offset is `mutation.invariant`; nodes the graph lacks are skipped
     /// (`mutation.partial`), none left is `mutation.target-missing`; a zero offset is `mutation.no-op`. The diff carries
     /// the ABSOLUTE positions the offset lands on.
@@ -59,12 +71,5 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for MoveNodes {
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        let [(x_en, x_de), (y_en, y_de)] = [self.dx, self.dy].map(workflow_label_number);
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move {} workflow node(s) by ({x_en}, {y_en})", self.node_ids.len()), &format!("{} Arbeitsablaufknoten um ({x_de}; {y_de}) verschieben", self.node_ids.len()))
-    }
-    fn target(&self) -> Vec<String> {
-        std::iter::once("nodes".to_string()).chain(self.node_ids.iter().cloned()).collect()
-    }
 }
 //#endregion ⚙️Semantics

@@ -47,7 +47,8 @@ use crate::fenestration::{gap_conductance_w_m2k, glazing_interior_convection_w_m
 use crate::gains::{compute_equipment_gain_w, compute_lighting_gain_w, compute_people_gain_w, ActivityLevel, GainDecomposition};
 use crate::ideal_hvac::{ideal_loads_deliver, IdealLoadsConfig, IdealLoadsInput};
 use crate::model::{EntityId, FixedTable, Model, OutsideBoundary, MAX_PANES};
-use crate::num::solve_dense_in_place;
+use semio_framework_math_dense::{DenseSolveBudget,DenseSolveCursor,DenseSolveDemand,DenseSolveFault,DenseSolveStatus,DenseSolveTurn};
+use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress};
 use crate::plant::{PlantLoopSimulation, PlantStream, Pump};
 use crate::precompute::{EnclosureFace, EnclosureRadiation, PrecomputedModel};
 use crate::props::{moist_air_cp_j_per_kg_k, moist_air_density};
@@ -111,7 +112,7 @@ impl SimulationKernel {
     pub(crate) fn advance_timestep(model: &Model, config: &SimulationConfig, pre: &PrecomputedModel, state: &mut SimulationModel, weather: &WeatherRecord, date: &SimDate, hour: f64) -> Result<(), Error> {
         let mut work = TimestepWork::new(model, pre, HourWeather { previous: *weather, current: *weather, next: *weather }, *date, hour);
         while !work.is_complete() {
-            work.step(model, config, pre, state);
+            work.step(model, config, pre, state)?;
         }
         Ok(())
     }
@@ -123,7 +124,7 @@ impl SimulationKernel {
 
     /// 📅️ Build run period from config.
     pub fn run_period(config: &SimulationConfig) -> RunPeriod {
-        RunPeriod { start_month: config.run_period_start_month, start_day: config.run_period_start_day, end_month: config.run_period_end_month, end_day: config.run_period_end_day, year: 2026 }
+        RunPeriod { start_month: config.run_period_start_month, start_day: config.run_period_start_day, end_month: config.run_period_end_month, end_day: config.run_period_end_day, year: config.run_period_year }
     }
 }
 // #endregion 🔖️Kernel

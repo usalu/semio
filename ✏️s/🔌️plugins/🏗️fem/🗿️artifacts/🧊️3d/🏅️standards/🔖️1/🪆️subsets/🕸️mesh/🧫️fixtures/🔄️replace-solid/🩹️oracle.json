@@ -1,0 +1,35 @@
+[
+  {
+    "op": "replace",
+    "path": "/solids/0",
+    "value": {
+      "axis": "z",
+      "baseZ": 0,
+      "height": 3,
+      "holes": [],
+      "id": "sol1",
+      "layers": 4,
+      "materialId": "m1",
+      "meshSize": 0.5,
+      "name": "Expanded Core",
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          0,
+          3
+        ]
+      ]
+    }
+  }
+]

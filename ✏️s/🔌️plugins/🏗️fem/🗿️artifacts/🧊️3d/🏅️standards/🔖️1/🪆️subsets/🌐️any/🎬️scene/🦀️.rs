@@ -1,5 +1,5 @@
-//! 🎬️ Fem3d — the `World3d` scene the editor's windows and the viewer draw: the `"box"`/`"cone"` primitives plus
 //! every solid's surface mesh, and one pickable instance per document entity — nodes and members
+//! 🎬️ Fem3d — the `World3d` scene the editor's windows and the viewer draw: the `"box"`/`"cone"` primitives plus
 //! as boxes, solids as their meshed surface, supports as cones under their node, loads as arrows —
 //! every instance keyed by the RAW entity id it stands for and tagged with its `fem3d` granularity,
 //! so a `World3dHost` raycast hit IS the framework `interactionSelect` the artifact tree and the
@@ -34,6 +34,16 @@ pub const FEM3D_GRANULARITY_MATERIAL: &str = "material";
 pub const FEM3D_GRANULARITY_SECTION: &str = "section";
 pub const FEM3D_GRANULARITY_LOAD_CASE: &str = "loadCase";
 pub const FEM3D_GRANULARITY_COMBINATION: &str = "combination";
+
+/// 🪪️ The canonical interaction address of an entity in its semantic namespace.
+pub fn fem3d_entity_target(kind: &str, id: &str) -> Result<String, protocol::wire::ScopedIdentityError> {
+    protocol::wire::encode_scoped_identity(&[kind, id])
+}
+
+/// 🏋️ A load's interaction address includes the case owning its semantic ID.
+pub fn fem3d_load_target(case_id: &str, load_id: &str) -> Result<String, protocol::wire::ScopedIdentityError> {
+    protocol::wire::encode_scoped_identity(&[FEM3D_GRANULARITY_LOAD, case_id, load_id])
+}
 //#endregion 🔖️Granularities
 
 //#region 🔖️Geometry
@@ -158,26 +168,27 @@ pub fn fem3d_deformed_position(pos: [f64; 3], node_id: &str, displacements: Opti
     p
 }
 
-fn instance(id: &str, granularity: &str, mesh_id: &str, position: [f64; 3], rotation: [f64; 4], scale: [f64; 3], label: &str) -> Value {
-    semio_framework_pack_json::json!({
-        "id": id,
+fn instance(id: &str, granularity: &str, mesh_id: &str, position: [f64; 3], rotation: [f64; 4], scale: [f64; 3], label: &str) -> Result<Value, protocol::wire::ScopedIdentityError> {
+    let identity = fem3d_entity_target(granularity, id)?;
+    Ok(semio_framework_pack_json::json!({
+        "id": identity,
         "interactionGranularityId": granularity,
         "meshId": mesh_id,
         "position": position,
         "rotation": rotation,
         "scale": scale,
         "label": label,
-    })
+    }))
 }
 
 /// 🏹️ One arrow glyph pointing along unit `direction` and ENDING at `tip`: a cone head whose apex is
 /// the tip and a box shaft behind it. Both instances redirect their hit onto `interaction_id`.
-fn arrow_instances(id_prefix: &str, interaction_id: &str, tip: [f64; 3], direction: [f64; 3], length: f64, label: &str, out: &mut Vec<Value>) {
+fn arrow_instances(id_prefix: &str, interaction_id: &str, tip: [f64; 3], direction: [f64; 3], length: f64, label: &str, out: &mut Vec<Value>) -> Result<(), protocol::wire::ScopedIdentityError> {
     let head_base = [tip[0] - direction[0] * LOAD_ARROW_HEAD_3D, tip[1] - direction[1] * LOAD_ARROW_HEAD_3D, tip[2] - direction[2] * LOAD_ARROW_HEAD_3D];
     let shaft_length = (length - LOAD_ARROW_HEAD_3D).max(LOAD_ARROW_HEAD_3D);
     let shaft_centre = [head_base[0] - direction[0] * shaft_length * 0.5, head_base[1] - direction[1] * shaft_length * 0.5, head_base[2] - direction[2] * shaft_length * 0.5];
-    let mut head = instance(&format!("{id_prefix}:head"), FEM3D_GRANULARITY_LOAD, "cone", head_base, quat_y_to(direction), [LOAD_ARROW_HEAD_3D * 0.6, LOAD_ARROW_HEAD_3D, LOAD_ARROW_HEAD_3D * 0.6], label);
-    let mut shaft = instance(&format!("{id_prefix}:shaft"), FEM3D_GRANULARITY_LOAD, "box", shaft_centre, quat_z_to(direction), [LOAD_ARROW_SHAFT_3D, LOAD_ARROW_SHAFT_3D, shaft_length], label);
+    let mut head = instance(&format!("{id_prefix}:head"), FEM3D_GRANULARITY_LOAD, "cone", head_base, quat_y_to(direction), [LOAD_ARROW_HEAD_3D * 0.6, LOAD_ARROW_HEAD_3D, LOAD_ARROW_HEAD_3D * 0.6], label)?;
+    let mut shaft = instance(&format!("{id_prefix}:shaft"), FEM3D_GRANULARITY_LOAD, "box", shaft_centre, quat_z_to(direction), [LOAD_ARROW_SHAFT_3D, LOAD_ARROW_SHAFT_3D, shaft_length], label)?;
     for glyph in [&mut head, &mut shaft] {
         if let Some(object) = glyph.as_object_mut() {
             object.insert("interactionId", semio_framework_pack_json::json!(interaction_id));
@@ -185,6 +196,7 @@ fn arrow_instances(id_prefix: &str, interaction_id: &str, tip: [f64; 3], directi
     }
     out.push(head);
     out.push(shaft);
+    Ok(())
 }
 
 /// 🧭️ The unit world direction a signed load along `dof` points in, or `None` for a moment.
@@ -202,11 +214,11 @@ fn dof_direction(dof: FemDof, value: f64) -> Option<[f64; 3]> {
 /// at the (possibly deformed) midpoint, `scale=[t,t,length]` so the mesh's own long (local Z) axis
 /// stretches along the member, `rotation` a quaternion aligning that axis to the member's direction
 /// (composed with a `Frame`'s own `roll` about its own axis; `Bar`s have no roll).
-pub fn fem3d_structural_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> Vec<Value> {
-    let node_pos = |node: &semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNode| fem3d_deformed_position([node.x, node.y, node.z], &node.id, displacements, deform_scale);
+pub fn fem3d_structural_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> Result<Vec<Value>, protocol::wire::ScopedIdentityError> {
+    let node_pos = |node: &semio_s_fem_node::volumetric::FemNodeValue| fem3d_deformed_position([node.x, node.y, node.z], &node.id, displacements, deform_scale);
     let mut instances: Vec<Value> = Vec::new();
     for node in &doc.nodes {
-        instances.push(instance(&node.id, FEM3D_GRANULARITY_NODE, "box", node_pos(node), [0.0, 0.0, 0.0, 1.0], [NODE_SIZE_3D, NODE_SIZE_3D, NODE_SIZE_3D], &node.id));
+        instances.push(instance(&node.id, FEM3D_GRANULARITY_NODE, "box", node_pos(node), [0.0, 0.0, 0.0, 1.0], [NODE_SIZE_3D, NODE_SIZE_3D, NODE_SIZE_3D], &node.id)?);
     }
     for element in &doc.elements {
         let (start, end) = fem3d_element_endpoints(element);
@@ -223,37 +235,38 @@ pub fn fem3d_structural_instances(doc: &Fem3dSnapshot, displacements: Option<&Ha
         let rotation = quat_mul(quat_z_to(dir), quat_roll_z(roll));
         let mid = [(p1[0] + p2[0]) / 2.0, (p1[1] + p2[1]) / 2.0, (p1[2] + p2[2]) / 2.0];
         let id = element_id(element);
-        instances.push(instance(id, FEM3D_GRANULARITY_ELEMENT, "box", mid, rotation, [MEMBER_THICKNESS_3D, MEMBER_THICKNESS_3D, length], id));
+        instances.push(instance(id, FEM3D_GRANULARITY_ELEMENT, "box", mid, rotation, [MEMBER_THICKNESS_3D, MEMBER_THICKNESS_3D, length], id)?);
     }
-    instances
+    Ok(instances)
 }
 
 /// 🛡️ One cone per support, apex at the supported node and base hanging below it.
-pub fn fem3d_support_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> Vec<Value> {
+pub fn fem3d_support_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> Result<Vec<Value>, protocol::wire::ScopedIdentityError> {
     let mut instances = Vec::new();
     for support in &doc.supports {
         let Some(node) = doc.nodes.iter().find(|node| node.id == support.node_id) else { continue };
         let apex = fem3d_deformed_position([node.x, node.y, node.z], &node.id, displacements, deform_scale);
         let base = [apex[0], apex[1], apex[2] - SUPPORT_SIZE_3D];
-        instances.push(instance(&support.id, FEM3D_GRANULARITY_SUPPORT, "cone", base, quat_y_to([0.0, 0.0, 1.0]), [SUPPORT_SIZE_3D, SUPPORT_SIZE_3D, SUPPORT_SIZE_3D], &support.id));
+        instances.push(instance(&support.id, FEM3D_GRANULARITY_SUPPORT, "cone", base, quat_y_to([0.0, 0.0, 1.0]), [SUPPORT_SIZE_3D, SUPPORT_SIZE_3D, SUPPORT_SIZE_3D], &support.id)?);
     }
-    instances
+    Ok(instances)
 }
 
 /// 🏋️ Arrow glyphs for every load of every case: a nodal force as one arrow ending at its node
 /// (a moment as a short arrow about its axis), a member load as [`MEMBER_LOAD_ARROWS_3D`] arrows
 /// along the member, a surface pressure as one arrow ending on the solid's top.
-pub fn fem3d_load_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> Vec<Value> {
+pub fn fem3d_load_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> Result<Vec<Value>, protocol::wire::ScopedIdentityError> {
     let mut instances = Vec::new();
     let position = |id: &str| fem3d_node_point(doc, id).map(|point| fem3d_deformed_position(point, id, displacements, deform_scale));
     for case in &doc.load_cases {
         for load in &case.loads {
             let id = load_id(load);
+            let identity = fem3d_load_target(&case.id, id)?;
             match load {
                 FemLoad::Nodal { node_id, dof, value, .. } => {
                     let Some(tip) = position(node_id) else { continue };
                     let direction = dof_direction(*dof, *value).unwrap_or([0.0, 0.0, 1.0]);
-                    arrow_instances(id, id, tip, direction, LOAD_ARROW_LENGTH_3D, id, &mut instances);
+                    arrow_instances(&identity, &identity, tip, direction, LOAD_ARROW_LENGTH_3D, id, &mut instances)?;
                 }
                 FemLoad::MemberUdl { element_id: target, wx, wy, wz, .. } => {
                     let Some(element) = doc.elements.iter().find(|element| element_id(element) == target) else { continue };
@@ -264,18 +277,18 @@ pub fn fem3d_load_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMap<
                     for index in 0..MEMBER_LOAD_ARROWS_3D {
                         let t = (index as f64 + 0.5) / MEMBER_LOAD_ARROWS_3D as f64;
                         let tip = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
-                        arrow_instances(&format!("{id}#{index}"), id, tip, direction, LOAD_ARROW_LENGTH_3D * 0.7, id, &mut instances);
+                        arrow_instances(&format!("{identity}#{index}"), &identity, tip, direction, LOAD_ARROW_LENGTH_3D * 0.7, id, &mut instances)?;
                     }
                 }
                 FemLoad::Area { solid_id, pressure, .. } => {
                     let Some(tip) = doc.solids.iter().find(|solid| &solid.id == solid_id).and_then(fem3d_solid_top_point) else { continue };
                     let direction = if *pressure < 0.0 { [0.0, 0.0, 1.0] } else { [0.0, 0.0, -1.0] };
-                    arrow_instances(id, id, tip, direction, LOAD_ARROW_LENGTH_3D, id, &mut instances);
+                    arrow_instances(&identity, &identity, tip, direction, LOAD_ARROW_LENGTH_3D, id, &mut instances)?;
                 }
             }
         }
     }
-    instances
+    Ok(instances)
 }
 
 /// 🧱️ Every `FemSolid`'s boundary surface as a custom `meshes_json` entry (flat per-face normals, one
@@ -284,12 +297,13 @@ pub fn fem3d_load_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMap<
 /// `semio_s_fem_app_surface::von_mises_color` (min/max taken across ALL solids' averaged values), driving
 /// the react renderer's vertex-color contour (see `PaintTexturedMesh`). `displacements` deforms vertex
 /// positions the same way `fem3d_structural_instances` deforms node/member instances.
-pub fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> (Vec<Value>, Vec<Value>) {
-    use semio_s_fem_app_surface::{hex_to_rgb01, von_mises_color};
+pub fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> Result<(Vec<Value>, Vec<Value>), protocol::wire::ScopedIdentityError> {
+    use semio_s_fem_app_surface::hex_to_rgb01;
+    use semio_s_fem_app_surface::von_mises_color;
 
     let mut meshes = Vec::new();
     let mut instances = Vec::new();
-    let Ok(solid_meshes) = mesh_preview::fem3d_mesh_preview(doc) else { return (meshes, instances) };
+    let Ok(solid_meshes) = mesh_preview::fem3d_mesh_preview(doc) else { return Ok((meshes, instances)) };
     let (min, max) = match nodal_stress {
         Some(map) if !map.is_empty() => (map.values().cloned().fold(f64::INFINITY, f64::min), map.values().cloned().fold(f64::NEG_INFINITY, f64::max)),
         _ => (0.0, 1.0),
@@ -327,23 +341,23 @@ pub fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&Hash
 
         let mesh_id = format!("solid-{}", solid.solid_id);
         meshes.push(semio_framework_pack_json::json!({ "id": mesh_id, "data": { "positions": positions, "normals": normals, "colors": colors, "indices": indices } }));
-        instances.push(instance(&solid.solid_id, FEM3D_GRANULARITY_SOLID, &mesh_id, [0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0], &solid.solid_id));
+        instances.push(instance(&solid.solid_id, FEM3D_GRANULARITY_SOLID, &mesh_id, [0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0], &solid.solid_id)?);
     }
-    (meshes, instances)
+    Ok((meshes, instances))
 }
 
 /// 🧊️ Builds the FULL `(meshes_json, instances_json)` pair for a 3D scene: the `"box"` and `"cone"`
 /// primitive meshes plus every `FemSolid`'s custom surface mesh, and every node/member/solid/support/
 /// load instance — shared by the model window and every results view (static/modal/buckling).
-pub fn fem3d_scene_parts(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> (String, String) {
+pub fn fem3d_scene_parts(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> Result<(String, String), protocol::wire::ScopedIdentityError> {
     let mut meshes = semio_framework_pack_json::parse(&semio_framework_plugin::world3d_meshes_json_from_kinds(&["box".to_string(), "cone".to_string()]), semio_framework_pack_json::JsonMemberPolicy::Reject).ok().and_then(|value| value.as_array().cloned()).unwrap_or_default();
-    let mut instances = fem3d_structural_instances(doc, displacements, deform_scale);
-    let (solid_meshes, solid_instances) = fem3d_solid_mesh_entries(doc, displacements, deform_scale, nodal_stress);
+    let mut instances = fem3d_structural_instances(doc, displacements, deform_scale)?;
+    let (solid_meshes, solid_instances) = fem3d_solid_mesh_entries(doc, displacements, deform_scale, nodal_stress)?;
     meshes.extend(solid_meshes);
     instances.extend(solid_instances);
-    instances.extend(fem3d_support_instances(doc, displacements, deform_scale));
-    instances.extend(fem3d_load_instances(doc, displacements, deform_scale));
-    (semio_framework_pack_json::to_string(&Value::Array(meshes)), semio_framework_pack_json::to_string(&Value::Array(instances)))
+    instances.extend(fem3d_support_instances(doc, displacements, deform_scale)?);
+    instances.extend(fem3d_load_instances(doc, displacements, deform_scale)?);
+    Ok((semio_framework_pack_json::to_string(&Value::Array(meshes)), semio_framework_pack_json::to_string(&Value::Array(instances))))
 }
 //#endregion 🔖️Instances
 

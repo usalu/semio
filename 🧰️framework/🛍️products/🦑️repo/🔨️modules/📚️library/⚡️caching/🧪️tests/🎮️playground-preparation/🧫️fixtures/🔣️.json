@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+  "manifest": "component/Cargo.toml",
+  "catalog": {
+    "version": 1,
+    "publication": {
+      "version": 1,
+      "ownerRoot": "catalog/publication",
+      "outputRoot": "catalog/publication/generated",
+      "contributions": [
+        {
+          "ownerRoot": "component",
+          "packageRoots": [
+            "component"
+          ]
+        }
+      ]
+    },
+    "projectRoot": "catalog",
+    "project": "fixture-catalog",
+    "generateTarget": "generate",
+    "inputs": [
+      "component/Cargo.toml"
+    ]
+  },
+  "files": {
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json": "{\"name\": \"@semio-tech/framework-os-dev\", \"private\": true}",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json": "{\"name\": \"renderer\", \"targets\": {\"wasm\": {\"configurations\": {\"prototype\": {\"env\": {\"SEMIO_BUILD_MODE\": \"prototype\"}}, \"release\": {\"env\": {\"SEMIO_BUILD_MODE\": \"release\"}}}}}}",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📋️project.json": "{\"name\": \"flow\", \"targets\": {\"wasm\": {}}}",
+    "component/Cargo.toml": "[package]\nname=\"sample\"\nversion=\"0.1.0\"\n[lib]\npath=\"🦀️.rs\"\n[package.metadata.component]\npackage=\"semio:sample\"\n[package.metadata.semio]\ncomponent-kind=\"plugin\"\n[[package.metadata.semio.playground]]\nvariant=\"fixture\"\n[package.metadata.semio.playground.ports]\nreact=12344\nwgpu=12345\n",
+    "component/🦀️.rs": "pub fn fixture() {}\n"
+  },
+  "profiles": [
+    "prototype",
+    "release"
+  ],
+  "expected": [
+    {
+      "name": "prepare-fixture-native-prototype",
+      "outputs": [
+        "{projectRoot}/dist/runtime/native/prototype/fixture"
+      ]
+    },
+    {
+      "name": "activate-fixture-wgpu-prototype",
+      "outputs": [
+        "{projectRoot}/dist/runtime/wgpu/prototype/fixture"
+      ]
+    },
+    {
+      "name": "prepare-fixture-native-release",
+      "outputs": [
+        "{projectRoot}/dist/runtime/native/release/fixture"
+      ]
+    },
+    {
+      "name": "activate-fixture-wgpu-release",
+      "outputs": [
+        "{projectRoot}/dist/runtime/wgpu/release/fixture"
+      ]
+    }
+  ]
+}

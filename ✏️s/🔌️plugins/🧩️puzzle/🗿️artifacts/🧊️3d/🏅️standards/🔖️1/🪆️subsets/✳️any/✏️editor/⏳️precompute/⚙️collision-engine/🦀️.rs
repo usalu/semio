@@ -321,7 +321,7 @@ impl Puzzle3dCollision {
         self.re_enqueue_brush_targets();
     }
 
-    pub fn update_kind_weights(&mut self, object_weights: std::collections::BTreeMap<String, f64>, vortex_weights: std::collections::BTreeMap<String, f64>) {
+    pub fn update_kind_weights(&mut self, object_weights: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, f64>, vortex_weights: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, f64>) {
         if let Some(scene) = &mut self.scene {
             let scene = Arc::make_mut(scene);
             scene.weights.object_weights = object_weights;

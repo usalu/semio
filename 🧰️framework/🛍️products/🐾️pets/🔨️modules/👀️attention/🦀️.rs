@@ -28,8 +28,7 @@ const EYE_HEIGHT: f64 = 0.6;
 const BLINK_AGAIN: Ticks = 7;
 const WAKE_REACH: f64 = 1.5;
 const SHY_OPACITY: f64 = 0.35;
-const SHY_REACH: f64 = 4.0;
-pub(crate) const TURN_TICKS: Ticks = 8;
+pub(crate) const PURR_TICKS: Ticks = 192;
 pub(crate) const TURN_REST: Ticks = 56;
 const TURN_CLEAR: f64 = 12.0;
 const LEAN_TURN: f64 = 5.0;
@@ -53,21 +52,21 @@ pub(crate) fn watched(pointer: Option<Point>, actor: &Actor, kind: &Species) -> 
     dx * dx + dy * dy <= reach * reach
 }
 
-/// 🫣️ How visible an actor wants to be: see-through (0.35) while the pointer rests on it — inside its box, grown by 4 px — so that whoever points can see what lies beneath, else whole.
-pub(crate) fn presence_of(pointer: Option<Point>, actor: &Actor, kind: &Species) -> f64 {
-    let Some(pointer) = pointer else {
-        return 1.0;
-    };
-    let reach = kind.size.width / 2.0 + SHY_REACH;
-    let across = pointer.x - actor.x;
-    if across > reach || across < 0.0 - reach {
+/// 🫣️ Airborne and climbing actors yield to page keep-outs; actors on a perch, a head or in the hand stay whole.
+pub(crate) fn presence_of(keepouts: &[Rect], actor: &Actor, kind: &Species) -> f64 {
+    if matches!(actor.footing, Footing::Perch | Footing::Head | Footing::Hand) {
         return 1.0;
     }
-    if pointer.y >= actor.y - kind.size.height - SHY_REACH && pointer.y <= actor.y + SHY_REACH {
-        SHY_OPACITY
-    } else {
-        1.0
+    let x0 = actor.x - kind.size.width / 2.0 + WALL_LIP;
+    let x1 = actor.x + kind.size.width / 2.0 - WALL_LIP;
+    let y0 = actor.y - kind.size.height + WALL_LIP;
+    let y1 = actor.y - WALL_LIP;
+    for keepout in keepouts {
+        if keepout.width > 0.0 && keepout.height > 0.0 && x0 < keepout.x + keepout.width && keepout.x < x1 && y0 < keepout.y + keepout.height && keepout.y < y1 {
+            return SHY_OPACITY;
+        }
     }
+    1.0
 }
 //#endregion 🔖️Presence
 
@@ -86,7 +85,7 @@ pub(crate) fn heading_of<A: Borrow<Actor>>(stage: &Stage, actors: &[A], kinds: &
         };
     }
     if let Some(partner) = actor.partner.as_deref() {
-        if !matches!(activity, Activity::Idle | Activity::Greet | Activity::Cuddle | Activity::Squabble | Activity::Sulk) {
+        if !matches!(activity, Activity::Idle | Activity::Greet | Activity::Cuddle | Activity::Squabble | Activity::Sulk | Activity::Trick) {
             return None;
         }
         let other = index_of(actors, partner)?;
@@ -94,7 +93,7 @@ pub(crate) fn heading_of<A: Borrow<Actor>>(stage: &Stage, actors: &[A], kinds: &
         return Some(if activity == Activity::Sulk { towards.reversed() } else { towards });
     }
     let pointer = stage.pointer?;
-    if activity != Activity::Idle || actor.perch.is_none() || actor.leaving || stage.quiet || now - stage.pointed >= POINTER_TICKS || now < actor.faced + TURN_REST {
+    if activity != Activity::Idle || actor.footing != Footing::Perch || actor.leaving || stage.quiet || now - stage.pointed >= POINTER_TICKS || now < actor.faced + TURN_REST {
         return None;
     }
     let across = pointer.x - actor.x;
@@ -108,14 +107,10 @@ pub(crate) fn heading_of<A: Borrow<Actor>>(stage: &Stage, actors: &[A], kinds: &
     }
 }
 
-/// 🔄️ An actor turns to face `way`: it faces that way at once, and its drawing follows — squeezed through a line — over the next 8 ticks, up to `faced`. An actor that is still turning turns back from where its drawing is: the turn back takes as long as the turn has run.
-fn turn(body: &mut Actor, way: Facing, now: Ticks) {
-    if way == body.facing {
-        return;
-    }
-    let left = if body.faced > now { body.faced - now } else { 0 };
-    body.facing = way;
-    body.faced = now + TURN_TICKS - left;
+/// 👂️ Turn towards the learner's attention at the tick it arrives.
+pub(crate) fn heed(draft: &mut Draft<'_>, index: usize, x: f64, now: Ticks) {
+    let body = &mut draft.stage.actors[index];
+    turn(body, facing_to(x, body.x), now);
 }
 //#endregion 🔖️Turning
 
@@ -125,7 +120,7 @@ fn turn(body: &mut Actor, way: Facing, now: Ticks) {
 /// Asleep: the centre. Sulking: ahead and down. Else the pointer while it moved within the last 4 s and the actor
 /// neither walks nor flies; else its partner; else, standing, the nearest glance point; else down while falling and
 /// straight ahead otherwise. Points are looked at from 0.6 of the height above the feet with `look_offset`.
-fn gaze_goal<A: Borrow<Actor>>(stage: &Stage, actors: &[A], kinds: &[&Species], index: usize, now: Ticks) -> Point {
+fn sought<A: Borrow<Actor>>(stage: &Stage, actors: &[A], kinds: &[&Species], index: usize, now: Ticks) -> Point {
     let actor: &Actor = actors[index].borrow();
     let activity = actor.activity;
     if activity == Activity::Sleep {
@@ -161,6 +156,23 @@ fn gaze_goal<A: Borrow<Actor>>(stage: &Stage, actors: &[A], kinds: &[&Species], 
         return Point { x: 0.0, y: GAZE_FALL };
     }
     Point { x: GAZE_AHEAD * actor.facing.sign(), y: 0.0 }
+}
+
+/// 👀️ A mood averts or lowers the gaze without changing its target selection.
+fn gaze_goal<A: Borrow<Actor>>(stage: &Stage, actors: &[A], kinds: &[&Species], index: usize, now: Ticks) -> Point {
+    let actor: &Actor = actors[index].borrow();
+    if matches!(actor.activity, Activity::Sleep | Activity::Sulk) {
+        return sought(stage, actors, kinds, index, now);
+    }
+    let feeling = settled(actor.feeling, kinds[index].mood, now);
+    let mood = shown_mood(feeling.mood, feeling.intensity);
+    let mut goal = sought(stage, actors, kinds, index, now);
+    if mood == Mood::Grumpy && stage.pointer.is_some() && !matches!(actor.activity, Activity::Walk | Activity::Hop | Activity::Fall) && now - stage.pointed < POINTER_TICKS {
+        goal.x = 0.0 - goal.x;
+    }
+    let floor = match mood { Mood::Sad => 0.5, Mood::Sleepy => 0.3, _ => -1.0 };
+    if goal.y < floor { goal.y = floor; }
+    goal
 }
 
 /// 🧘️ Whether the pupils of an actor rest on what it wants to look at at tick `now`: on the goal, without velocity.
@@ -223,7 +235,7 @@ pub(crate) fn swivel(draft: &mut Draft<'_>, index: usize, now: Ticks) -> bool {
 }
 
 /// 🫡️ An actor greets towards `x`: one actor draw picks the span and the clip, it turns to face `x` and lets go of any goal and partner.
-fn hail(draft: &mut Draft<'_>, index: usize, x: f64, now: Ticks) {
+pub(crate) fn hail(draft: &mut Draft<'_>, index: usize, x: f64, now: Ticks) {
     let words = random_words(&actor_key(draft, index), 2);
     shift(draft, index, Activity::Greet, now);
     let mode = draft.stage.mode;
@@ -236,7 +248,7 @@ fn hail(draft: &mut Draft<'_>, index: usize, x: f64, now: Ticks) {
     body.partner = None;
 }
 
-/// 🐿️ An idle actor perks up when the pointer has come to rest beside it: outside a time of concentration, on the tick the pointer has not moved for half a second while it is within 1.5 × the actor's height of the middle of its body but not on it (there the actor turns see-through instead: whoever points wants to see what lies beneath), an actor that stands by itself on a perch and whose curiosity — as it stands now — is at least 0.5 greets the pointer ([`hail`]) and spends 0.6 of its curiosity on it (as far as it has any): more than the 0.5 it can have left to spare, so no pet greets twice in a row. Curiosity grows back at rest, faster for a curious species — ten seconds to a minute: that is the pause between two greetings, and a species that is not curious by temperament needs as long before its first one.
+/// 🐿️ An idle actor perks up when the pointer has come to rest beside it: outside a time of concentration, on the tick the pointer has not moved for half a second while it is within 1.5 × the actor's height of the middle of its body but not on it, an actor that stands by itself on a perch and whose curiosity — as it stands now — is at least 0.5 greets the pointer ([`hail`]) and spends 0.6 of its curiosity on it (as far as it has any): more than the 0.5 it can have left to spare, so no pet greets twice in a row. Curiosity grows back at rest, faster for a curious species — ten seconds to a minute: that is the pause between two greetings, and a species that is not curious by temperament needs as long before its first one.
 #[allow(clippy::neg_cmp_op_on_partial_ord)]
 pub(crate) fn perk(draft: &mut Draft<'_>, index: usize, now: Ticks) {
     let body = &draft.stage.actors[index];
@@ -244,7 +256,7 @@ pub(crate) fn perk(draft: &mut Draft<'_>, index: usize, now: Ticks) {
     let Some(pointer) = draft.stage.pointer else {
         return;
     };
-    if draft.stage.quiet || now != draft.stage.pointed + PERK_LINGER || body.partner.is_some() || body.leaving || body.perch.is_none() || !watched(Some(pointer), body, kind) || presence_of(Some(pointer), body, kind) != 1.0 {
+    if draft.stage.quiet || now != draft.stage.pointed + PERK_LINGER || body.partner.is_some() || body.leaving || body.footing != Footing::Perch || !watched(Some(pointer), body, kind) {
         return;
     }
     if !(needs_after(body.needs, Activity::Idle, now - body.since, kind.temperament).curiosity >= PERK_URGE) {
@@ -255,6 +267,142 @@ pub(crate) fn perk(draft: &mut Draft<'_>, index: usize, now: Ticks) {
     body.needs.curiosity = larger(body.needs.curiosity - PERK_COST, 0.0);
 }
 //#endregion 🔖️Manners
+
+/// 🙌️ Perched actors doing independent activities are free to answer the hand.
+pub(crate) fn loose(actor: &Actor) -> bool {
+    actor.footing == Footing::Perch && actor.perch.is_some() && !actor.leaving && actor.partner.is_none() && matches!(actor.activity, Activity::Idle | Activity::Fidget | Activity::Walk | Activity::Land | Activity::Sleep | Activity::Greet | Activity::Trick | Activity::Purr | Activity::Dizzy | Activity::Shrug)
+}
+
+/// 📦️ The species' size box at an actor's feet is the gesture target.
+fn box_of(actor: &Actor, kind: &Species) -> Rect {
+    Rect { x: actor.x - kind.size.width / 2.0, y: actor.y - kind.size.height, width: kind.size.width, height: kind.size.height }
+}
+
+/// 📌️ Select the last-drawn non-leaving actor whose size box contains a press.
+pub(crate) fn touched_at(draft: &Draft<'_>, x: f64, y: f64) -> Option<Slug> {
+    let mut hit: Option<&Actor> = None;
+    for (index, body) in draft.stage.actors.iter().enumerate() {
+        let rect = box_of(body, draft.kinds[index]);
+        if body.leaving || x < rect.x || x > rect.x + rect.width || y < rect.y || y > rect.y + rect.height { continue; }
+        if hit.is_none_or(|hit| body.y > hit.y || (body.y == hit.y && body.species.encode_utf16().cmp(hit.species.encode_utf16()).is_gt())) { hit = Some(body); }
+    }
+    hit.map(|body| body.species.clone())
+}
+
+/// 🤲️ Apply the hand's lift, release or cancellation signal to its pressed actor.
+pub(crate) fn grasp(draft: &mut Draft<'_>, signal: Option<PressSignal>, touched: Option<&str>, now: Ticks) {
+    let Some((signal, index)) = signal.zip(touched.and_then(|touched| index_of(&draft.stage.actors, touched))) else { return; };
+    let body = &draft.stage.actors[index];
+    if signal == PressSignal::Lift {
+        if !draft.stage.play || body.leaving || body.footing == Footing::Hand { return; }
+        lift(draft, index, now);
+        draft.stage.shaking = no_shaking(now);
+        feel(draft, index, Occasion::Lifted, now);
+        return;
+    }
+    if body.footing != Footing::Hand { return; }
+    if signal == PressSignal::Drop { let_go(draft, index, release_velocity(&draft.stage.trail), now); }
+    else if signal == PressSignal::Abort { give_back(draft, index, now); }
+}
+
+/// 🎾️ A permitted keyboard toss carries a loose pet to the top before release.
+pub(crate) fn tossed(draft: &mut Draft<'_>, species: &str, now: Ticks) {
+    let Some(index) = index_of(&draft.stage.actors, species) else { return; };
+    if !draft.stage.play || draft.stage.mode == PetMode::Still || !loose(&draft.stage.actors[index]) { return; }
+    toss(draft, index, now);
+    feel(draft, index, Occasion::Lifted, now);
+}
+
+/// 🫨️ A shake applies an authored state transition and particle burst while held.
+fn shaken(draft: &mut Draft<'_>, index: usize, now: Ticks) {
+    let kind = draft.kinds[index];
+    feel(draft, index, Occasion::Shaken, now);
+    let current = standing(draft, index, now);
+    let Some(trick) = tricks_for(kind, Cue::Shake, &current.state, present(draft, index, now)).first().copied() else { return; };
+    let after = state_after_trick(kind, &current.state, trick);
+    if after != current.state || trick.to.is_some() { enter(draft, index, &after, now, now); }
+    ignite(draft, index, trick.emitter.as_deref(), now);
+    douse(draft, index, trick.emitter.as_deref(), now, now);
+    draft.stage.actors[index].feeling = performed(present(draft, index, now), trick, kind.into(), now);
+}
+
+/// ✊️ Step the resting press and follow held pets, pointer trails and shakes.
+pub(crate) fn handle(draft: &mut Draft<'_>, now: Ticks) {
+    let guards = Guards { control: false, scrolled: false, quiet: draft.stage.quiet, still: draft.stage.mode == PetMode::Still };
+    let step = press_step(draft.stage.press, PressInput::Ticked, now, guards);
+    draft.stage.press = step.state;
+    let pressed = draft.stage.touched.as_deref().and_then(|touched| index_of(&draft.stage.actors, touched));
+    if step.signal == Some(PressSignal::Hold) {
+        if let Some(index) = pressed.filter(|&index| loose(&draft.stage.actors[index])) { feel(draft, index, Occasion::Purred, now); purr(draft, index, PURR_TICKS, now); }
+    }
+    for index in 0..draft.stage.actors.len() {
+        let body = &draft.stage.actors[index];
+        if body.footing != Footing::Hand { continue; }
+        if draft.stage.press.phase == PressPhase::Lifted && Some(index) == pressed {
+            let pointer = draft.stage.pointer.or_else(|| draft.stage.trail.last().copied()).unwrap_or(Point { x: body.x, y: body.y - draft.kinds[index].grip });
+            if draft.stage.trail.len() >= RELEASE_WEIGHTS.len() { draft.stage.trail.drain(..draft.stage.trail.len() - RELEASE_WEIGHTS.len() + 1); }
+            draft.stage.trail.push(pointer);
+            hold(draft, index, pointer, now);
+            if let Some(hang) = draft.stage.actors[index].hang {
+                let shake = shake_step(draft.stage.shaking, Point { x: hang.grip.x, y: hang.grip.y }, draft.kinds[index].size.height, now, guards);
+                draft.stage.shaking = shake.state;
+                if shake.cue.is_some() { shaken(draft, index, now); }
+            }
+            if now == draft.stage.actors[index].since + 64 { feel(draft, index, Occasion::Dangled, now); }
+            continue;
+        }
+        if now >= body.until { let_go(draft, index, ORIGIN, now); } else { hold(draft, index, toss_target(draft, index), now); }
+    }
+}
+
+/// 🛡️ Controls, scrolling, concentration and stillness silence gestures.
+fn guards_of(draft: &Draft<'_>, now: Ticks) -> Guards {
+    Guards { control: draft.stage.over == Over::Control, scrolled: now - draft.stage.scrolled <= 1, quiet: draft.stage.quiet, still: draft.stage.mode == PetMode::Still }
+}
+
+/// 🌀️ Perched actors recognise pointer gestures before the stage beat.
+pub(crate) fn hovers(draft: &mut Draft<'_>, now: Ticks) {
+    let Some(pointer) = draft.stage.pointer.filter(|_| draft.stage.play && draft.stage.press.phase == PressPhase::Idle) else { return; };
+    let guards = guards_of(draft, now);
+    for index in 0..draft.stage.actors.len() {
+        let body = &draft.stage.actors[index];
+        if body.leaving || body.footing != Footing::Perch { continue; }
+        let step = hover_step(body.hover, pointer, box_of(body, draft.kinds[index]), now, guards);
+        draft.stage.actors[index].hover = step.state;
+        if let Some(cue) = step.cue { cued(draft, index, cue, now); }
+    }
+}
+
+/// 🖐️ Leaving the stage forgets every unfinished pointer gesture.
+pub(crate) fn unhovered(draft: &mut Draft<'_>, now: Ticks) {
+    for body in &mut draft.stage.actors { body.hover = no_hover(now); }
+}
+
+/// 🔔️ A free actor answers a stroke or circle with its authored trick or a purr.
+fn cued(draft: &mut Draft<'_>, index: usize, cue: Cue, now: Ticks) {
+    if !loose(&draft.stage.actors[index]) { return; }
+    let kind = draft.kinds[index];
+    let offer = tricks_for(kind, cue, &standing(draft, index, now).state, present(draft, index, now)).into_iter().next();
+    if cue == Cue::Stroke && (offer.is_none() || draft.stage.actors[index].activity == Activity::Purr) {
+        feel(draft, index, Occasion::Purred, now);
+        purr(draft, index, PURR_TICKS, now);
+    } else if let Some(offer) = offer { perform(draft, index, offer, now); } else { feel(draft, index, Occasion::Watched, now); }
+}
+
+/// 🤷️ Excess attention draws a bounded shrug facing away from the learner.
+pub(crate) fn shrug(draft: &mut Draft<'_>, index: usize, x: f64, now: Ticks) {
+    let kind = draft.kinds[index];
+    feel(draft, index, Occasion::Pestered, now);
+    shift(draft, index, Activity::Shrug, now);
+    let body = &mut draft.stage.actors[index];
+    turn(body, facing_to(x, body.x).reversed(), now);
+    body.clip = clip_at(kind, Activity::Shrug, 0.0);
+    let clip = kind.clips.iter().find(|entry| Some(entry.id.as_str()) == body.clip.as_deref());
+    body.until = now + clip.filter(|clip| !clip.looping).map_or_else(|| dwell_of(Activity::Shrug, draft.stage.mode, 0.0), clip_ticks);
+    body.goal = body.x;
+    body.vx = 0.0;
+    body.vy = 0.0;
+}
 
 //#region 🔖️Drawing
 /// 🌾️ A pose in which the head leans after the eyes: the bone that carries the first eye of the species turns by 5° and shifts by 1.5 px per unit of the gaze `across` (in the actor's own orientation: ahead is positive) and sinks by 1 px per unit of the gaze `down`. The gaze is a spring, so the lean eases with it. A species without eyes does not lean.

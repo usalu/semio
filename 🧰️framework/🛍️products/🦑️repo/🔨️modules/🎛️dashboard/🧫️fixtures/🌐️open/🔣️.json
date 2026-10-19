@@ -1,0 +1,34 @@
+{
+  "action": "open-ready",
+  "key": "u",
+  "cancelAction": "cancel-open-ready",
+  "cancelKey": "U",
+  "labels": { "en": "Open ready address", "de": "Bereite Adresse öffnen" },
+  "platforms": {
+    "windows": ["rundll32.exe", "url.dll,FileProtocolHandler"],
+    "macos": ["open"],
+    "linux": ["xdg-open"]
+  },
+  "openers": [
+    { "value": ["browser"], "accepted": true },
+    { "value": ["browser", "--private"], "accepted": true },
+    { "value": [], "accepted": false },
+    { "value": [""], "accepted": false },
+    { "value": "browser --private", "accepted": false },
+    { "value": ["browser", "bad\nargument"], "accepted": false },
+    { "value": ["browser", "bad\u0000argument"], "accepted": false }
+  ],
+  "tasks": [
+    { "status": "running", "url": "http://127.0.0.1:8791/health", "accepted": true },
+    { "status": "running", "url": "http://localhost:6061/path?q=a%20b&next=x", "accepted": true },
+    { "status": "running", "url": "https://127.0.0.1:8791/health", "accepted": true },
+    { "status": "running", "url": null, "accepted": false },
+    { "status": "pending", "url": "http://127.0.0.1:8791/health", "accepted": false },
+    { "status": "stopping", "url": "http://127.0.0.1:8791/health", "accepted": false },
+    { "status": "exited", "url": "http://127.0.0.1:8791/health", "accepted": false },
+    { "status": "failed", "url": "http://127.0.0.1:8791/health", "accepted": false },
+    { "status": "interrupted", "url": "http://127.0.0.1:8791/health", "accepted": false },
+    { "status": "running", "url": "file:///tmp/document", "accepted": false },
+    { "status": "running", "url": "http://", "accepted": false }
+  ]
+}

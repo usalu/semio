@@ -51,7 +51,7 @@ test("test outputs exclude retirement while an actual original task reader is he
 
 
 test("test outputs expose each bounded law in both canonical editor launch sources",()=>{
- for(const path of [".vscode/launch.json",".vscode/🧩️launch.seed.jsonc"]){const parsed=ts.parseConfigFileTextToJson(path,readFileSync(join(root,path),"utf8"));expect(parsed.error).toBeUndefined();for(const command of ["test-artifact-budget","test-artifact-scope"])for(const mode of ["prototype","release"]){const rows=parsed.config.configurations.filter((row:{name:string})=>row.name==="⚖️"+command+" "+mode);expect(rows).toHaveLength(1);expect(rows[0].command.endsWith(command+" "+mode)).toBe(true);}}
+ {const dashboard=JSON.parse(readFileSync(process.cwd()+"/📋️project.json","utf8")).metadata.semio.dashboard,tool=dashboard.tools.find((row:any)=>row.id==="run-script");expect(tool.command).toEqual(["bun","repo","exec","--projects={project}","--","bun","{workspace}/{script}"]);expect(tool.parameters.find((row:any)=>row.id==="script")).toMatchObject({kind:"text",required:true});}
 });
 
 

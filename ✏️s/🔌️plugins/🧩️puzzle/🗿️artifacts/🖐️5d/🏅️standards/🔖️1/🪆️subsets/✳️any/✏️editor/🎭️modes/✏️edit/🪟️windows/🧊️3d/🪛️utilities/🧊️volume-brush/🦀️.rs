@@ -1,11 +1,14 @@
-//! 🧊️ 3D-window utility — Volume Brush: Alt+click paints grid-snapped target volumes that constrain
 //! where the Fill tool may place. Its Utility Options are the voxel width/depth/height steppers that
+//! 🧊️ 3D-window utility — Volume Brush: Alt+click paints grid-snapped target volumes that constrain
 //! size each painted volume (in grid-spacing units). Bound only by the 3D world window — a target
 //! volume is a pose-space box, and the flat board paints its projection rather than painting it.
 
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
-use crate::editor::puzzle5d::entities::{puzzle5d_action, PUZZLE5D_PLAY_CONTROLLER_ID, PUZZLE5D_VOXEL_DIM_MAX, PUZZLE5D_VOXEL_DIM_MIN};
+use crate::editor::puzzle5d::entities::puzzle5d_action;
+use crate::editor::puzzle5d::PUZZLE5D_PLAY_CONTROLLER_ID;
+use crate::editor::puzzle5d::PUZZLE5D_VOXEL_DIM_MAX;
+use crate::editor::puzzle5d::PUZZLE5D_VOXEL_DIM_MIN;
 use semio_framework_pack_json::object;
 use semio_framework_ui_locale::LabelText;
 use semio_framework_ui_locale::LocalizedLabel;

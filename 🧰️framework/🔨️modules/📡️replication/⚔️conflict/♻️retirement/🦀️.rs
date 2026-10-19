@@ -6,6 +6,7 @@ use semio_framework_value::{ErasedSnapshotRetirement,ValueError,retirement::{Ret
 struct OriginalProtocolOwner<T:RetireOwned>(ControlledRetirement<T>);
 impl<T:RetireOwned> OriginalProtocolOwner<T> {
     fn new(original:T)->Self {Self(ControlledRetirement::new(original).unwrap_or_else(|_|unreachable!("protocol family declares exact controlled retirement")))}
+    fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.0.next_demand(body)}
     fn original(&self)->Option<&T> {self.0.original()}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.0.next_copy_byte_demand()}
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{self.0.next_capacity_byte_demand(copy)}
@@ -22,6 +23,7 @@ impl ProtocolConflictRetirement {
     pub fn causal_envelope(original:MutationEnvelope)->Self {Self{owner:ProtocolOwner::Envelope(OriginalProtocolOwner::new(original))}}
 }
 impl ErasedSnapshotRetirement for ProtocolConflictRetirement {
+    fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{match &self.owner{ProtocolOwner::Conflict(owner)=>owner.next_demand(body),ProtocolOwner::Envelope(owner)=>owner.next_demand(body)}}
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{match &mut self.owner{ProtocolOwner::Conflict(owner)=>owner.close_step(grant),ProtocolOwner::Envelope(owner)=>owner.close_step(grant)}}
     fn terminal_is_empty(&self)->bool{match &self.owner{ProtocolOwner::Conflict(owner)=>owner.terminal_is_empty(),ProtocolOwner::Envelope(owner)=>owner.terminal_is_empty()}}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{match &self.owner{ProtocolOwner::Conflict(owner)=>owner.next_copy_byte_demand(),ProtocolOwner::Envelope(owner)=>owner.next_copy_byte_demand()}}

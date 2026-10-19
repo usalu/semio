@@ -83,10 +83,12 @@ pub fn drive_framework_reserved_registry_job_counted(job: u64, input: Vec<u8>, p
 pub(crate) fn framework_reserved_job_demands(_job:u64,input:&Option<Vec<u8>>,restored:&Option<Vec<u8>>,_cx:&semio_framework_job::StepContext<'_>)->Result<RetainedCloneGrant,ValueError>{crate::original_job_admission_demands::<FrameworkReservedBoundedJob>(input,restored)}
 
 pub(crate) fn framework_reserved_job_factory(_job:u64,input:&mut Option<Vec<u8>>,restored:&mut Option<Vec<u8>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Box<dyn crate::BoundedJob>>,ValueError>{
-    crate::admit_original_job(input,restored,cx,|input,restored|FrameworkReservedBoundedJob{source:Some((input,restored)),source_close:None,output:None,output_close:None,phase:0,scan:0,prefix:0,matched:true,cancelled:false})
+    cx.original_source_parent()?;let binding=semio_framework_job::OriginalSourceBinding::borrow(cx);
+    crate::admit_original_job(input,restored,cx,|input,restored|FrameworkReservedBoundedJob::new(input,restored,binding))
 }
 
 struct FrameworkReservedBoundedJob {
+    binding:semio_framework_job::OriginalSourceBinding,
     pub source:Option<(Vec<u8>,Option<Vec<u8>>)>,
     pub source_close:Option<ControlledRetirement<(Vec<u8>,Option<Vec<u8>>)>>,
     pub output:Option<Vec<u8>>,
@@ -96,51 +98,70 @@ struct FrameworkReservedBoundedJob {
     pub prefix:usize,
     pub matched:bool,
     pub cancelled:bool,
+
+}
+
+impl FrameworkReservedBoundedJob{
+ fn new(input:Vec<u8>,restored:Option<Vec<u8>>,binding:semio_framework_job::OriginalSourceBinding)->Self{Self{binding,source:Some((input,restored)),source_close:None,output:None,output_close:None,phase:0,scan:0,prefix:0,matched:true,cancelled:false}}
+ fn validate_original(&self,cx:&semio_framework_job::StepContext<'_>)->Result<(),ValueError>{cx.original_source_parent()?;if !self.binding.matches(cx){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"reserved job requires its exact original source and clock"))}Ok(())}
+ fn step_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_actor::OriginalJobStep,OriginalTurnFailure>{
+  use semio_framework_actor::OriginalJobStep as JobStep;
+  self.validate_original(cx)?;if !cx.retained_recipient_is_admitted(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"reserved job recipient exceeds its original grant").into())}
+  if self.cancelled||cx.is_cancelled()||cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(JobStep::Running(None))}
+  let before=cx.retained_progress();let work=cx.original_work_units_spent();let result=self.advance_original(cx);
+  if cx.retained_progress()!=before&&cx.original_work_units_spent()==work{cx.consume_fuel(1);}
+  result
+ }
+ fn advance_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_actor::OriginalJobStep,OriginalTurnFailure>{
+  use semio_framework_actor::OriginalJobStep as JobStep;let grant=cx.retained_grant();
+  match self.phase{
+   0=>{
+    let raw=&self.source.as_ref().unwrap().0;
+    if raw.len()<16{cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;self.phase=1;return Ok(JobStep::Running(None))}
+    if grant.maximum_copy_bytes==0{return Ok(JobStep::Running(None))}
+    self.matched&=raw[self.scan]==FRAMEWORK_RESERVED_JOB_MAGIC[self.scan];self.scan+=1;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()})?;
+    if self.scan==FRAMEWORK_RESERVED_JOB_MAGIC.len(){self.prefix=if self.matched{16}else{0};self.phase=1;self.scan=0}
+    Ok(JobStep::Running(None))
+   },
+   1=>{
+    let length=self.source.as_ref().unwrap().0.len()-self.prefix;
+    let result=semio_framework_job::admit_original_construction(cx,&mut self.output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:0,capacity_bytes:length,release_bytes:0,depth:1},|_|{let mut output=Vec::new();output.try_reserve_exact(length).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original reserved job output allocation refused"))?;let capacity=output.capacity();Ok((output,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()}))});
+    if self.output.is_some(){self.phase=2;}result?;Ok(JobStep::Running(None))
+   },
+   2=>{
+    let raw=&self.source.as_ref().unwrap().0;let remaining=raw.len()-self.prefix-self.scan;
+    if remaining==0{cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;self.phase=3;return Ok(JobStep::Running(None))}
+    let count=remaining.min(grant.maximum_copy_bytes).min(64);if count==0{return Ok(JobStep::Running(None))}
+    self.output.as_mut().unwrap().extend_from_slice(&raw[self.prefix+self.scan..self.prefix+self.scan+count]);self.scan+=count;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:count,..Default::default()})?;Ok(JobStep::Running(None))
+   },
+   3=>{if crate::close_original(&mut self.source,&mut self.source_close,cx)?{self.phase=4}Ok(JobStep::Running(None))},
+   4=>{cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;self.phase=5;Ok(JobStep::Done(self.output.take().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original reserved job has no ready output"))?))},
+   _=>Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original reserved job is terminal").into()),
+  }
+ }
 }
 
 impl crate::BoundedJob for FrameworkReservedBoundedJob {
-    fn step(&mut self,_original:&mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_,'_>,_snapshot:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_actor::OriginalJobStep,OriginalTurnFailure>{
-        use semio_framework_actor::OriginalJobStep;
-        if self.cancelled||cx.is_cancelled(){return Ok(JobStep::Running(None))}
-        let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(JobStep::Running(None))}
-        match self.phase{
-            0=>{
-                let raw=&self.source.as_ref().unwrap().0;
-                if raw.len()<16{self.phase=1;return Ok(JobStep::Running(None))}
-                if grant.maximum_copy_bytes==0{return Ok(JobStep::Running(None))}
-                self.matched&=raw[self.scan]==FRAMEWORK_RESERVED_JOB_MAGIC[self.scan];self.scan+=1;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()})?;
-                if self.scan==FRAMEWORK_RESERVED_JOB_MAGIC.len(){self.prefix=if self.matched{16}else{0};self.phase=1;self.scan=0}
-                Ok(JobStep::Running(None))
-            },
-            1=>{
-                let length=self.source.as_ref().unwrap().0.len()-self.prefix;if grant.maximum_capacity_bytes<length{return Ok(JobStep::Running(None))}
-                let output=self.output.get_or_insert_with(Vec::new);let before=output.capacity();output.try_reserve_exact(length).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original reserved job output allocation refused"))?;
-                self.phase=2;cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:output.capacity()-before,..Default::default()})?;Ok(JobStep::Running(None))
-            },
-            2=>{
-                let raw=&self.source.as_ref().unwrap().0;let remaining=raw.len()-self.prefix-self.scan;if remaining==0{self.phase=3;return Ok(JobStep::Running(None))}
-                let count=remaining.min(grant.maximum_copy_bytes).min(64);if count==0{return Ok(JobStep::Running(None))}
-                self.output.as_mut().unwrap().extend_from_slice(&raw[self.prefix+self.scan..self.prefix+self.scan+count]);self.scan+=count;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:count,..Default::default()})?;Ok(JobStep::Running(None))
-            },
-            3=>{if crate::close_original(&mut self.source,&mut self.source_close,cx)?{self.phase=4}Ok(JobStep::Running(None))},
-            4=>{cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;self.phase=5;Ok(JobStep::Done(self.output.take().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original reserved job has no ready output"))?))},
-            _=>Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original reserved job is terminal").into()),
-        }
-    }
-
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-        self.cancelled=true;
-        Ok(crate::close_original(&mut self.source,&mut self.source_close,cx)?&&crate::close_original(&mut self.output,&mut self.output_close,cx)?)
-    }
-
-    fn retirement_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
-        if let Some(owner)=&self.source_close{return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?,..Default::default()})}
-        if let Some(owner)=&self.output_close{return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?,..Default::default()})}
-        if self.cancelled{return Ok(RetirementDemand{depth:usize::from(self.source.is_some()||self.output.is_some()),..Default::default()})}
-        Ok(match self.phase{0|2=>RetirementDemand{copy_bytes:1,depth:1,..Default::default()},1=>RetirementDemand{capacity_bytes:self.source.as_ref().unwrap().0.len()-self.prefix,depth:1,..Default::default()},3|4=>RetirementDemand{depth:1,..Default::default()},_=>Default::default()})
-    }
-
-    fn cancel(&mut self){self.cancelled=true}
-    fn checkpoint(&self)->Option<Vec<u8>>{None}
-    fn terminal_drop_is_shallow(&self)->bool{self.source.is_none()&&self.source_close.is_none()&&self.output.is_none()&&self.output_close.is_none()}
+ fn step(&mut self,_original:&mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_,'_>,_snapshot:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_actor::OriginalJobStep,OriginalTurnFailure>{self.step_original(cx)}
+ fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  self.validate_original(cx)?;if self.terminal_drop_is_shallow(){return Ok(true)}
+  if !self.cancelled{let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.cancelled=true;return Ok(false)}
+  Ok(crate::close_original(&mut self.source,&mut self.source_close,cx)?&&crate::close_original(&mut self.output,&mut self.output_close,cx)?)
+ }
+ fn retirement_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
+  if self.terminal_drop_is_shallow(){return Ok(Default::default())}
+  if !self.cancelled{return Ok(RetirementDemand{depth:1,..Default::default()})}
+  if let Some(owner)=&self.source_close{return owner.next_demand(copy)}
+  if let Some(owner)=&self.output_close{return owner.next_demand(copy)}
+  Ok(RetirementDemand{depth:1,..Default::default()})
+ }
+ fn cancel(&mut self){self.cancelled=true}
+ fn checkpoint(&self)->Option<Vec<u8>>{None}
+ fn terminal_drop_is_shallow(&self)->bool{self.source.is_none()&&self.source_close.is_none()&&self.output.is_none()&&self.output_close.is_none()}
 }
+
+
+#[cfg(test)]
+#[path="🧪️tests/🦀️.rs"]
+mod tests;
+

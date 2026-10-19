@@ -338,7 +338,7 @@ impl Content {
     pub(super) fn json(&self) -> J {
         J::object(vec![
             ("type", Some(J::Str(self.kind.clone()))),
-            ("text", (!self.text.is_empty()).then(|| J::Str(self.text.clone()))),
+            ("text", self.blob.is_empty().then(|| J::Str(self.text.clone()))),
             ("data", (!self.data.is_empty()).then(|| J::Str(self.data.clone()))),
             ("mimeType", (!self.mime_type.is_empty()).then(|| J::Str(self.mime_type.clone()))),
             ("uri", (!self.uri.is_empty()).then(|| J::Str(self.uri.clone()))),
@@ -378,7 +378,7 @@ impl ResourceContent {
         J::object(vec![
             ("uri", Some(J::Str(self.uri.clone()))),
             ("mimeType", (!self.mime_type.is_empty()).then(|| J::Str(self.mime_type.clone()))),
-            ("text", (!self.text.is_empty()).then(|| J::Str(self.text.clone()))),
+            ("text", self.blob.is_empty().then(|| J::Str(self.text.clone()))),
             ("blob", (!self.blob.is_empty()).then(|| J::Str(self.blob.clone()))),
         ])
     }

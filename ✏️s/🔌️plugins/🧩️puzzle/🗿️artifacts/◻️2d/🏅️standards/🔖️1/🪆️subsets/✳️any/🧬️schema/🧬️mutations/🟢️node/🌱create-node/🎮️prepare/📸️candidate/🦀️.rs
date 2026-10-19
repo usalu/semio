@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dCloseAxis;
 use super::{Puzzle2dCreateNodeDisposition, Puzzle2dCreateNodePlan, Puzzle2dCreateNodePreparationCursor, Puzzle2dCreateNodePreparationStep};
-use crate::standards::v1::subsets::any::schema::mutations::{CreateNode};
+use crate::standards::v1::subsets::any::schema::mutations::CreateNode;
 use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
 use crate::standards::v1::subsets::any::schema::records::Puzzle2dNode;
 use semio_framework_value::{ValueError, ValueRefusalKind, list::PagedListEditCursor, retirement::controlled::ControlledRetirement, retained_clone::{RetainedCloneBinding, RetainedFieldCursor, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep}};
@@ -36,7 +36,7 @@ impl Default for Puzzle2dCreateNodeCandidateCursor {
 }
 
 impl Puzzle2dCreateNodeCandidateCursor {
-    pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, mutation: RetainedCloneRef<'_, CreateNode>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, mutation: RetainedCloneRef<'_, CreateNode>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.closing || self.phase == 13 { return Err(refusal("create candidate is closing or spent")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(RetainedCloneStep::Progress(progress))}
@@ -53,7 +53,7 @@ impl Puzzle2dCreateNodeCandidateCursor {
                 Ok(close_progress(step))
             }
             2 => {
-                let step = self.snapshot_clone.advance(source, grant)?;
+                let step = self.snapshot_clone.advance(source,body, grant)?;
                 if matches!(step, RetainedCloneStep::Complete(_)) { self.phase = 3; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
@@ -69,7 +69,7 @@ impl Puzzle2dCreateNodeCandidateCursor {
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             5 => {
-                let step = self.node_clone.advance(mutation.project(1, |payload| &payload.node), grant)?;
+                let step = self.node_clone.advance(mutation.project(1, |payload| &payload.node),body, grant)?;
                 if matches!(step, RetainedCloneStep::Complete(_)) { self.phase = 6; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }

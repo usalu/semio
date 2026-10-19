@@ -61,8 +61,10 @@ fn portable_weather_vectors_match_csv_and_serde_oracles() {
             rows.len() > 8
                 && rows[0].len() == 10
                 && &rows[0][0] == "LOCATION"
+                && &rows[7][2] == "1"
+                && rows[7][5].split('/').count().eq(&rows[7][6].split('/').count())
                 && [6, 7, 8, 9].iter().all(|index| rows[0][*index].parse::<f64>().is_ok())
-                && rows[8..].iter().all(|record| record.len() == 35 && [0, 1, 2, 3, 4, 6, 7, 8, 9, 12, 14, 15, 20, 21, 30, 33].iter().all(|index| record[*index].parse::<f64>().is_ok()))
+                && rows[8..].iter().all(|record| record.len() == 35 && record[3].parse::<u8>().is_ok_and(|hour| (1..=24).contains(&hour)) && [0, 1, 2, 3, 4, 6, 7, 8, 9, 12, 14, 15, 20, 21, 30, 33].iter().all(|index| record[*index].parse::<f64>().is_ok()))
         });
         assert_eq!(actual.is_ok(), oracle_accepted, "independent CSV admission {}", row["id"]);
         assert_eq!(actual.is_ok(), row["accepted"].as_bool().unwrap(), "{}", row["id"]);
@@ -79,7 +81,7 @@ fn portable_weather_vectors_match_csv_and_serde_oracles() {
             for (mapped, wire) in weather.records.iter().zip(&records[8..]) {
                 assert_eq!(wire.len(), 35);
                 let number = |index: usize| wire[index].parse::<f64>().unwrap();
-                let expected = serde_json::json!({ "year": number(0) as u16, "month": number(1) as u8, "day": number(2) as u8, "hour": number(3) as u8 - 1, "minute": number(4) as u8, "dry_bulb_c": number(6), "dew_point_c": number(7), "relative_humidity": number(8)/100.0, "atmospheric_pressure_pa": number(9), "wind_speed_m_s": number(21), "wind_direction_deg": number(20), "direct_normal_irradiance_w_m2": number(14), "diffuse_horizontal_irradiance_w_m2": number(15), "horizontal_infrared_w_m2": number(12), "precipitation_mm": number(33), "snow_depth_mm": number(30) });
+                let expected = serde_json::json!({ "year": number(0) as u16, "month": number(1) as u8, "day": number(2) as u8, "hour": number(3) as u8 - 1, "minute": number(4) as u8, "dry_bulb_c": number(6), "dew_point_c": number(7), "relative_humidity": number(8)/100.0, "atmospheric_pressure_pa": number(9), "wind_speed_m_s": number(21), "wind_direction_deg": number(20), "direct_normal_irradiance_w_m2": number(14), "diffuse_horizontal_irradiance_w_m2": number(15), "horizontal_infrared_w_m2": number(12), "precipitation_mm": number(33), "snow_depth_mm": number(30) * 10.0 });
                 assert_eq!(serde_json::to_value(mapped).unwrap(), expected);
             }
             assert_eq!(weather.records.len(), records.len() - 8);

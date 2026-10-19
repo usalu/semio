@@ -1,5 +1,5 @@
-//! 🖌️ Edit-mode window option — the Brush utility's Utility Options group: suggestion offset, contact
 //! tolerance and the part/grip distribution trees; the brush suggestions run's candidates show as its trace in the
+//! 🖌️ Edit-mode window option — the Brush utility's Utility Options group: suggestion offset, contact
 //! windows. Tagged `Some("brush")`.
 //!
 //! 🎚️ SHARED at MODE level, not per window (TEMPLATE.md §12.2): BOTH the 2D board window and the 3D
@@ -12,10 +12,10 @@ use crate::editor::puzzle5d::catalog::{puzzle5d_kind_ids, puzzle5d_kind_weight_s
 use crate::editor::puzzle5d::view::Puzzle5dScene;
 use semio_framework_plugin::WindowMeasure;
 
-use std::collections::HashMap;
+use crate::editor::puzzle5d::config::Puzzle5dKindWeights;
 
 //#region 🔖️Distribution
-fn kind_weight_measures(prefix: &str, action: &str, ids: &[String], weights: &HashMap<String, f64>) -> Vec<WindowMeasure> {
+fn kind_weight_measures(prefix: &str, action: &str, ids: &[String], weights: &Puzzle5dKindWeights) -> Vec<WindowMeasure> {
     ids.iter()
         .map(|kind_id| {
             let weight = weights.get(kind_id).copied().unwrap_or_else(|| if ids.is_empty() { 0.0 } else { 1.0 / ids.len() as f64 });

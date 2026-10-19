@@ -9,7 +9,7 @@ pub use set_camera::SetCamera;
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "kind", rename_all = "kebab-case")]
-#[mutations(snapshot = EnergyModelWindowConfig, diff = EnergyModelWindowConfigDiff, schema = "energy.model3dwindowconfig")]
+#[mutations(snapshot = EnergyModelWindowConfig, diff = EnergyModelWindowConfigDiff, schema = "energy.model3dwindowconfig", reference = EnergyModelWindowConfig, reference_diff = EnergyModelWindowConfigDiff)]
 pub enum EnergyModelWindowConfigMutation {
     #[dsl(key = "set-camera")]
     SetCamera(SetCamera),

@@ -198,7 +198,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                 if !outcome.is_applicable(protocol::MergePolicy::default()) {
                     return Err(MediaTransfers::<A>::transaction_fault(FaultOrigin::App, "transaction.member-rejected", format!("mutation outcome was rejected: {:?}", outcome.messages())));
                 }
-                running = protocol::apply_diff(outcome.diff(), &running).map_err(|error| MediaTransfers::<A>::transaction_fault(FaultOrigin::App, "transaction.member-rejected", error.to_string()))?;
+                running = protocol::apply_diff_cold(outcome.diff(), &running).map_err(|error| MediaTransfers::<A>::transaction_fault(FaultOrigin::App, "transaction.member-rejected", error.to_string()))?;
             }
             if !foreign.is_empty() {
                 let mut local_ops = Vec::with_capacity(artifact_mutations.len());

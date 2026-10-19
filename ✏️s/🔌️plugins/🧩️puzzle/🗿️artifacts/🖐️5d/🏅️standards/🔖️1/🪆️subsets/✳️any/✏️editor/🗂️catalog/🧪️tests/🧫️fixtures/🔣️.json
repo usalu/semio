@@ -1,0 +1,94 @@
+{
+  "cases": [
+    {
+      "ids": [],
+      "weights": {},
+      "changed": "a",
+      "value": 0.5,
+      "expected": {}
+    },
+    {
+      "ids": [
+        "only"
+      ],
+      "weights": {},
+      "changed": "only",
+      "value": 0.2,
+      "expected": {
+        "only": 1
+      }
+    },
+    {
+      "ids": [
+        "a",
+        "b",
+        "c"
+      ],
+      "weights": {
+        "a": 0.2,
+        "b": 0.6,
+        "c": 0.2
+      },
+      "changed": "a",
+      "value": 0.6,
+      "expected": {
+        "a": 0.6,
+        "b": 0.3,
+        "c": 0.1
+      }
+    },
+    {
+      "ids": [
+        "ä",
+        "🧩",
+        "__proto__"
+      ],
+      "weights": {},
+      "changed": "ä",
+      "value": 0.5,
+      "expected": {
+        "ä": 0.5,
+        "🧩": 0.25,
+        "__proto__": 0.25
+      }
+    },
+    {
+      "ids": [
+        "a",
+        "b"
+      ],
+      "weights": {
+        "a": 0.5,
+        "b": 0.5
+      },
+      "changed": "a",
+      "value": 2,
+      "expected": {
+        "a": 1,
+        "b": 0
+      }
+    },
+    {
+      "ids": [
+        "a",
+        "b"
+      ],
+      "weights": {
+        "a": 0.5,
+        "b": 0.5
+      },
+      "changed": "a",
+      "value": -2,
+      "expected": {
+        "a": 0,
+        "b": 1
+      }
+    }
+  ],
+  "construction": {
+    "pageCapacity": 16,
+    "catalogSlots": 512,
+    "maximumMutationSlots": 4096,
+    "pendingSemanticItems": 0
+  }
+}

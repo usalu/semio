@@ -29,6 +29,14 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "description", kind: "change-description", record: "ChangedDescription" };
 
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change description", "Beschreibung ändern")
+    }
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangeDescription {
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
@@ -38,8 +46,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change description", "Beschreibung ändern")
-    }
 }
 //#endregion 🔖️Mutation

@@ -359,3 +359,21 @@ mod tests;
 mod checkout_integration;
 
 //#endregion 🧪️Tests
+
+impl semio_framework_value::retirement::RetireOwned for NodeId{
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::leaf(self)}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::leaf_birth_bytes::<Self>())}
+ fn controlled_retirement_supported()->bool{true}
+ fn retirement_element_copy_bytes()->usize{std::mem::size_of::<Self>()}
+}
+impl<O:semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetireOwned for Status<O>{
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{match self{Self::Done(output)=>output.retirement(),Self::Running|Self::Stopped=>semio_framework_value::retirement::leaf(())}}
+ fn retirement_birth_bytes(&self)->Option<usize>{match self{Self::Done(output)=>output.retirement_birth_bytes(),Self::Running|Self::Stopped=>Some(semio_framework_value::retirement::leaf_birth_bytes::<()>())}}
+ fn controlled_retirement_supported()->bool{O::controlled_retirement_supported()}
+}
+impl<M:Machine+'static> semio_framework_value::retirement::RetireOwned for Snapshot<M>
+where M::Config:Copy+Send+'static,M::Context:semio_framework_value::retirement::RetireOwned,M::Output:semio_framework_value::retirement::RetireOwned{
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{let Self{context,status,history,..}=self;semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(context),semio_framework_value::retirement::deferred(status),semio_framework_value::retirement::deferred(history)])}
+ fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.context),deferred_birth_bytes_for(&self.status),deferred_birth_bytes_for(&self.history)])}
+ fn controlled_retirement_supported()->bool{M::Context::controlled_retirement_supported()&&M::Output::controlled_retirement_supported()}
+}

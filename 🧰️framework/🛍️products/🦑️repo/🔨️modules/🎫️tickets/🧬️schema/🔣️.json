@@ -55,10 +55,18 @@
         "sessions": { "type": "array", "items": { "type": "string" } },
         "parent": { "description": "📥️ Read-only: absorbed on decoding, never re-encoded.", "type": "string" },
         "prompt": { "description": "📥️ Pre-schema spelling of `description`, absorbed when `description` is absent.", "type": "string" },
-        "interactions": { "description": "📥️ Pre-schema interaction log, absorbed but never re-encoded.", "type": "array" },
+        "interactions": { "description": "🧾️ Durable ordered human and agent interactions, preserved on every save.", "type": "array", "items": { "$ref": "#/$defs/Interaction" } },
         "agents": { "description": "📥️ Pre-schema agent log, absorbed but never re-encoded.", "type": "array" }
       },
       "required": ["title", "status"]
+    },
+    "Interaction": {
+      "type": "object",
+      "properties": {
+        "kind": { "type": "string" }, "date": { "type": "string" }, "author": { "type": "string" }, "system": { "type": "string" }, "client": { "type": "string" }, "checkpoint": { "type": "string" }, "prompt": { "type": "string" }, "summary": { "type": "string" }, "llm": { "type": "string" }, "effort": { "type": "string" },
+        "files": { "type": "array", "items": { "type": "object", "properties": { "path": { "type": "string" }, "id": { "type": "string" }, "uri": { "type": "string" } }, "required": ["path"] } }
+      },
+      "required": ["kind", "date", "author", "system", "client", "checkpoint"]
     },
     "TicketOpenRequest": {
       "type": "object",

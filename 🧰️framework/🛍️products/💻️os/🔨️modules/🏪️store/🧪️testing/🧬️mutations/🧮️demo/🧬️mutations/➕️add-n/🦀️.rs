@@ -14,6 +14,17 @@ pub struct AddN {
 
 impl semio_framework_os_spr::MutationKind<DemoSnapshot, DemoMutation> for AddN {
     const SEMANTICS: semio_framework_os_spr::SemanticDescriptor = semio_framework_os_spr::SemanticDescriptor { verb: "add", entity: "n", kind: "add-n", record: "AddedN" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Add N", "N hinzufügen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["n".into()]
+    }
+}
+
+impl semio_framework_os_spr::ColdMutationKind<DemoSnapshot, DemoMutation> for AddN {
     fn diff(&self, base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<DemoDiff> {
         let Some(n) = base.n else {
             return semio_framework_os_spr::MutationOutcome::error("mutation.target-missing", "n was deleted by a concurrent edit", ["n"]);
@@ -29,10 +40,4 @@ impl semio_framework_os_spr::MutationKind<DemoSnapshot, DemoMutation> for AddN {
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Add N", "N hinzufügen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["n".into()]
-    }
 }

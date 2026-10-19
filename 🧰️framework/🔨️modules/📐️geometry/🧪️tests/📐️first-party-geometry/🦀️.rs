@@ -1,5 +1,30 @@
 use semio_framework_geometry::{Affine, Arc, BezPath, Circle, CubicBez, Line, PathEl, Point, Rect, RoundedRect, RoundedRectRadii, Vec2};
 
+#[test]
+fn shared_selection_geometry_matches_language_neutral_cases() {
+    use semio_framework_geometry::geom_sel;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔲️selection/🔣️.json")).expect("selection fixture");
+    let points = |value: &serde_json::Value| value.as_array().expect("points").iter().map(|point| Point::new(point[0].as_f64().expect("x"), point[1].as_f64().expect("y"))).collect::<Vec<_>>();
+    for case in fixture["cases"].as_array().expect("cases") {
+        let selection = points(&case["selection"]);
+        let entity = points(&case["entity"]);
+        let holes = case["holes"].as_array().expect("holes").iter().map(points).collect::<Vec<_>>();
+        let enclosing = case["enclosing"].as_bool().expect("enclosing");
+        let actual = if entity.len() == 2 {
+            if enclosing { geom_sel::polygon_contains_segment(&selection, entity[0], entity[1]) } else { geom_sel::segment_intersects_polygon(entity[0], entity[1], &selection) }
+        } else if enclosing {
+            geom_sel::polygon_contains_polygon(&selection, &entity)
+        } else {
+            geom_sel::polygon_region_intersects_polygon(&entity, &holes, &selection)
+        };
+        assert_eq!(actual, case["expected"].as_bool().expect("expected"), "{}", case["id"]);
+        if enclosing && entity.len() == 4 {
+            assert_eq!(geom_sel::polygon_contains_world_box(&selection, geom_sel::world_box_from_points(&entity).expect("box")), actual, "{} box", case["id"]);
+        }
+    }
+    eprintln!("[DEBUG] Shared selection geometry reproduced {} language-neutral cases", fixture["cases"].as_array().expect("cases").len());
+}
+
 struct Lcg(u64);
 
 impl Lcg {

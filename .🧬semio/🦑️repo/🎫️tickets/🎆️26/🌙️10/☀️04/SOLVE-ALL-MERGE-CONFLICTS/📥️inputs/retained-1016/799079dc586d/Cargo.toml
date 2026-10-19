@@ -1,0 +1,10 @@
+[workspace]
+members = ["base", "comp-a", "comp-b"]
+resolver = "2"
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = "s"
+
+[profile.wasm-iterate]
+inherits = "dev"

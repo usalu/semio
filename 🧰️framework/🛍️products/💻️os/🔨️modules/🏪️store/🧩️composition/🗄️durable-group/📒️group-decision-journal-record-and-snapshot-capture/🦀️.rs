@@ -2,7 +2,7 @@
 
 use super::*;
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Eq, ToValue, FromValue, semio_framework_os_dsl::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Eq, ToValue, FromValue, crate::os_dsl::DslArtifact,semio_framework_value_derive::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact(id = "store.durable-owned-three-member-decision")]
 pub struct DurableOwnedThreeMemberDecisionV1 {
@@ -19,13 +19,26 @@ pub struct DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, D
     pub parent: DurableStorePreparedOwnerV1<ParentP, ParentMutation>,
     pub drawing: DurableStorePreparedOwnerV1<DrawingP, DrawingMutation>,
     pub value: DurableStorePreparedOwnerV1<ValueP, ValueMutation>,
+    decision: Option<Box<DurableOwnedThreeMemberDecisionV1>>,
+    decision_pack: Option<Vec<u8>>,
+    binding_step: u8,
+    decision_plan_phase: u8,
+    decision_packet_hash: Option<semio_framework_hash::Sha256>,
+    decision_identity:planning::DurableDecisionIdentityV1,
+    issuers_captured:bool,
+    decision_retirement:Option<semio_framework_value::retirement::controlled::ControlledRetirement<Box<DurableOwnedThreeMemberDecisionV1>>>,
+    decision_pack_retirement:Option<semio_framework_value::retirement::controlled::ControlledRetirement<DurablePlanningOutputV1>>,
+    retirement_progress:semio_framework_value::RetainedCloneProgress,
+    #[cfg(feature = "deflate")]
+    decision_encoding: planning::DurablePackOutputV1,
 }
 
 pub struct DurableOwnedThreeStoreBoundV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
-    pub decision: DurableOwnedThreeMemberDecisionV1,
+    pub decision: Box<DurableOwnedThreeMemberDecisionV1>,
     pub parent: DurableStoreBoundOutcomeV1<ParentP, ParentMutation>,
     pub drawing: DurableStoreBoundOutcomeV1<DrawingP, DrawingMutation>,
     pub value: DurableStoreBoundOutcomeV1<ValueP, ValueMutation>,
+    decision_pack: Option<Vec<u8>>,
 }
 
 #[expect(clippy::large_enum_variant, reason = "Recovery hands back all three exact preadmitted store outcomes without allocating at the ownership transition.")]
@@ -172,8 +185,8 @@ impl DurableOwnedGroupJournalRecordV1 {
 
 fn captured_store_snapshot<P, Mutation>(store: &ArtifactStore<P, Mutation>, visibility: Option<&Arc<semio_framework_os_vcs::ArtifactGroupVisibility>>, committed: bool) -> Result<(Arc<P>, u64, [u8; 32]), DurableOwnedGroupDecisionError>
 where
-    P: Clone + ValueToValue + ValueFromValue,
-    Mutation: StoreMutation<P> + Clone + ValueToValue + ValueFromValue,
+    P: ValueToValue,
+    Mutation: StoreMutation<P> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
 {
     match store.wire.durable_group_root.as_ref() {
         Some(root) => {
@@ -201,12 +214,12 @@ pub fn capture_store_owned_three_snapshot<ParentP, ParentMutation, DrawingP, Dra
     value_store: &ArtifactStore<ValueP, ValueMutation>,
 ) -> Result<DurableOwnedThreeStoreSnapshotV1<ParentP, DrawingP, ValueP>, DurableOwnedGroupDecisionError>
 where
-    ParentP: Clone + ValueToValue + ValueFromValue,
-    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
-    DrawingP: Clone + ValueToValue + ValueFromValue,
-    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
-    ValueP: Clone + ValueToValue + ValueFromValue,
-    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+    ParentP: ValueToValue,
+    ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    DrawingP: ValueToValue,
+    DrawingMutation: StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    ValueP: ValueToValue,
+    ValueMutation: StoreMutation<ValueP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
 {
     let roots = [parent_store.wire.durable_group_root.as_ref().map(|root| &root.visibility), drawing_store.wire.durable_group_root.as_ref().map(|root| &root.visibility), value_store.wire.durable_group_root.as_ref().map(|root| &root.visibility)];
     let visibility = roots.iter().flatten().next().copied();

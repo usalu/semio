@@ -36,7 +36,7 @@ pub trait MemberStoreVisitor {
     type Output;
     fn visit<P, Mu>(self, store: &ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+        P: ToValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
         Mu: Clone + ToValue + FromValue + Mutation<P> + semio_framework_os_spr::SemanticMutation<P> + OpBinary + OpText + Send + 'static;
 }
 
@@ -45,7 +45,7 @@ pub trait MemberStoreVisitorMut {
     type Output;
     async fn visit_mut<P, Mu>(self, store: &mut ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+        P: ToValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
         Mu: Clone + ToValue + FromValue + Mutation<P> + semio_framework_os_spr::SemanticMutation<P> + OpBinary + OpText + Send + 'static;
 }
 

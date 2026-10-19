@@ -9,9 +9,18 @@
 //#region 🗂️OrderedOwnership
 pub use semio_framework_value_ordered::ordered;
 
+#[path = "📋️registry/🎫️slots/🦀️.rs"]
+pub mod fixed_key_slots;
+pub use fixed_key_slots::{FixedKeySlot, FixedKeySlots};
+#[path = "📋️registry/🎫️requests/🦀️.rs"]
+pub mod fixed_request_owners;
+pub use fixed_request_owners::{ContentRequestKey,ContentRequestKeyCursor,FixedRequestAdmission,FixedRequestAdmissionStep,FixedRequestDepartureStep,FixedRequestKey,FixedRequestOwners,RequestCandidateVersion,RequestSelectorStep,RequestLookupOutcome,RequestLookupStep,RequestSourceVersion,RequestTerminalKind,RequestTerminalReceipt,RequestTextDemand,RequestTextStep};
 #[path = "🗂️ordered/🔢️numeric/🧮️scratch/🦀️.rs"]
 pub mod numeric_scratch;
-pub use semio_framework_value_paged_list::list;
+#[path="🔑️hashed/🧮️scratch/🦀️.rs"]
+pub mod scratch_hash;
+#[path="📋️list/🌳️roots/🦀️.rs"]
+pub mod list;
 #[path = "📦️paged/🦀️.rs"]
 pub mod paged;
 #[path = "📝️shared-utf8/🦀️.rs"]
@@ -24,11 +33,14 @@ pub use semio_framework_value_intrinsic::bytes;
 #[path = "🧬️schema/🔗️graphql/🔢️int64/🦀️.rs"]
 pub mod graphql_int64;
 
+#[path="📽️projection/🦀️.rs"]
+pub mod snapshot_projection;
+
 #[path = "🧬️clone/🦀️.rs"]
 pub mod bounded_clone;
 
 pub use semio_framework_value_native_decoding::native_decoding;
-pub use native_decoding::{NativeDecodeControl, NativeDecodeProgress, NativeDecodeRetirementRecipient};
+pub use native_decoding::{NativeDecodeConstructionRecipient, NativeDecodeContinuation, NativeDecodeControl, NativeDecodeProgress, NativeDecodeRetirementRecipient, NativeDetachedRetirementDecodeContinuation, NativeOwnedDecodeControl, NativeReceive, NativeReceiver, NativeRetirementDecodeContinuation};
 
 pub use semio_framework_value_native_encoding::native_encoding;
 pub use native_encoding::{NativeEncodeControl,NativeEncodeContinuation};
@@ -59,3 +71,5 @@ pub fn register_value_schema_exports() -> Result<(), semio_framework_schema_regi
 pub mod intrinsic_json;
 
 pub use semio_framework_value_paged_text::paged_text;
+#[path="🌳️tree/🟰️equal/🦀️.rs"] pub mod retained_equality;
+pub use retained_equality::{RetainedEquality,RetainedEqualityCursor,RetainedEqualityFields,RetainedEqualityOwner,RetainedEqualityStep,RetainedRecordEquality};

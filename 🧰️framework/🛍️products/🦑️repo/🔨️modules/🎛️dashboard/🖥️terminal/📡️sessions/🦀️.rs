@@ -163,6 +163,47 @@ impl Dashboard {
         if let Err(error) = self.send(&message) { self.notice = Some(error.to_string()); }
     }
 
+    /// 🎯️ The task selected by an output window or an overview row.
+    pub fn selected_session_id(&self, index: usize) -> Option<&str> {
+        let window = self.windows.get(index)?;
+        window.session().map(|session| session.session_id.as_str()).or_else(|| match window.pane.current() { Some(super::panes::RowAction::Session(id) | super::panes::RowAction::OpenReady(id)) => Some(id.as_str()), _ => None })
+    }
+
+    pub fn ready_address(&self, index: usize) -> Option<&str> {
+        let session = self.sessions.get(self.selected_session_id(index)?)?;
+        dashboard_cli::browser::ready_url(session.status, session.ready_url.as_deref())
+    }
+
+    fn opening_notice(&self) -> String {
+        let cancel = self.keymap.keys_label(dashboard_preferences::keymap::Scope::Prefix, "cancel-open-ready").unwrap_or_else(|| self.text().action_cancel_open_ready.as_str().into());
+        self.text().open_starting.fill(&[("cancel", &cancel)]).into_string()
+    }
+
+    /// 🌐️ Queues a verified address once without starting a process inside event dispatch.
+    pub fn request_open_ready(&mut self, session_id: &str) {
+        if self.opening_url.is_some() || self.effects.iter().any(|effect| matches!(effect, super::windows::Effect::OpenReady(_))) { self.notice = Some(self.opening_notice()); return; }
+        let address = self.sessions.get(session_id).and_then(|session| dashboard_cli::browser::ready_url(session.status, session.ready_url.as_deref())).map(str::to_string);
+        match address {
+            Some(url) => { self.effects.push(super::windows::Effect::OpenReady(url)); self.notice = Some(self.opening_notice()); }
+            None => self.notice = Some(self.text().open_unavailable.as_str().into()),
+        }
+    }
+
+    /// ⏳️ Starts the opener outside the UI loop and reports its completion through the wake queue.
+    pub fn begin_open_ready(&mut self, url: &str) {
+        match dashboard_cli::browser::Job::start(url, self.waker.clone()) {
+            Ok(job) => { self.opening_url = Some(job); self.notice = Some(self.opening_notice()); }
+            Err(error) => self.notice = Some(self.text().open_failed.fill(&[("problem", &error.to_string())]).into_string()),
+        }
+    }
+
+    /// 🛑️ Cancels a queued opening or its owned helper without stopping the task.
+    pub fn cancel_open_ready(&mut self) {
+        self.effects.retain(|effect| !matches!(effect, super::windows::Effect::OpenReady(_)));
+        self.opening_url = None;
+        self.notice = Some(self.text().open_cancelled.as_str().into());
+    }
+
     /// ⌨️ Sends terminal input of a window to its session.
     pub fn send_input(&mut self, session_id: &str, data: Vec<u8>) {
         if !self.link.enabled { self.link.outbox.push(ClientMsg::Input { session_id: session_id.to_string(), data }); return; }
@@ -356,6 +397,12 @@ impl Dashboard {
     /// 🔃️ Takes what discovery and the preference writer have finished since the last poll.
     pub fn poll_background(&mut self, tui: &mut Tui) -> bool {
         let mut changed = false;
+        if let Some(result) = self.opening_url.as_ref().and_then(|job| job.receiver.try_recv().ok()) {
+            self.opening_url = None;
+            self.notice = Some(match result { Ok(()) => self.text().open_finished.as_str().into(), Err(error) => self.text().open_failed.fill(&[("problem", &error.to_string())]).into_string() });
+            self.refresh_panes(tui);
+            changed = true;
+        }
         if let Some((change, result)) = self.saving_preferences.as_ref().and_then(|receiver| receiver.try_recv().ok()) {
             self.saving_preferences = None;
             match result { Ok(_) => self.adopt_preference(tui, &change), Err(error) => self.notice = Some(error.to_string()) }

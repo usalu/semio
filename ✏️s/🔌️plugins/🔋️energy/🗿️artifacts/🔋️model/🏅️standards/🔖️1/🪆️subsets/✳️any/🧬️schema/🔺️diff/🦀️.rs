@@ -17,7 +17,7 @@ extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 use crate::diff_patch::Unchanged;
 use crate::snapshot::EnergyModelSnapshot;
 use framework_schema::ArtifactSchema;
-use protocol::{ApplyCapability, DiffAlgebra, MutationApplyResult, MutationDiff};
+use protocol::{ApplyCapability, DiffAlgebra, ColdDiffAlgebra, MutationApplyResult, MutationDiff, ColdMutationDiff};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 #[path = "🧱️entities/🦀️.rs"]
@@ -87,18 +87,12 @@ impl EnergyModelDiff {
 }
 
 impl MutationDiff<EnergyModelSnapshot> for EnergyModelDiff {
-    fn apply(&self, base: &EnergyModelSnapshot, _capability: ApplyCapability) -> MutationApplyResult<EnergyModelSnapshot> {
-        let mut next = base.clone();
-        self.model.commit_onto(&mut next.model)?;
-        if let Some(delta) = &self.referenced_model {
-            next.referenced_model = delta.link();
-        }
-        if let Some(delta) = &self.weather_link {
-            next.weather_link = delta.link();
-        }
-        Ok(next)
-    }
 
+
+
+}
+
+impl ColdMutationDiff<EnergyModelSnapshot> for EnergyModelDiff {
     fn absorb(&mut self, other: Self) {
         self.model.absorb(other.model);
         if other.referenced_model.is_some() {
@@ -108,19 +102,34 @@ impl MutationDiff<EnergyModelSnapshot> for EnergyModelDiff {
             self.weather_link = other.weather_link;
         }
     }
+
+    fn apply(&self, base: &mut EnergyModelSnapshot, _capability: ApplyCapability) -> MutationApplyResult<()> {
+        if <Self as protocol::DiffAlgebra<EnergyModelSnapshot>>::is_empty(self) { return Ok(()); }
+        let install_model = self.model.prepare_fields(&base.model, _capability)?;
+        let referenced = self.referenced_model.as_ref().map(|delta| protocol::PreparedField::new(delta.link(), semio_framework_value::FromValue::retire_decoded, _capability));
+        let weather = self.weather_link.as_ref().map(|delta| protocol::PreparedField::new(delta.link(), semio_framework_value::FromValue::retire_decoded, _capability));
+        install_model(&mut base.model);
+        if let Some(prepared) = referenced { prepared.install(&mut base.referenced_model); }
+        if let Some(prepared) = weather { prepared.install(&mut base.weather_link); }
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<EnergyModelSnapshot> for EnergyModelDiff {
+
+
+    fn is_empty(&self) -> bool {
+        self.model.unchanged() && self.referenced_model.is_none() && self.weather_link.is_none()
+    }
+}
+
+impl ColdDiffAlgebra<EnergyModelSnapshot> for EnergyModelDiff {
     fn inverse(&self, base: &EnergyModelSnapshot) -> Self {
         Self {
             model: self.model.inverse(&base.model),
             referenced_model: self.referenced_model.as_ref().map(|_| EnergyLinkSlotDelta::leaving(&base.referenced_model)),
             weather_link: self.weather_link.as_ref().map(|_| EnergyLinkSlotDelta::leaving(&base.weather_link)),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.model.unchanged() && self.referenced_model.is_none() && self.weather_link.is_none()
     }
 }
 //#endregion 🔖️Diff

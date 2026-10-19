@@ -124,3 +124,36 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 #[path = "🧪️tests/🔬️play-pack/🦀️.rs"]
 mod play_pack_tests;
 //#endregion 🧪️Tests
+
+impl ColdMutationDiff<Puzzle3dPlaySnapshot> for Puzzle3dDiff {
+    fn absorb(&mut self, other: Self) {
+        ColdMutationDiff::<Puzzle3dSnapshot>::absorb(self, other);
+    }
+
+    fn apply(&self, projection: &mut Puzzle3dPlaySnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        ColdMutationDiff::<Puzzle3dSnapshot>::apply(self, std::sync::Arc::make_mut(&mut projection.typed), capability).map_err(|error| error.under(["document"]))?;
+        projection.value = std::sync::OnceLock::new();
+        Ok(())
+    }
+}
+
+impl ColdDiffAlgebra<Puzzle3dPlaySnapshot> for Puzzle3dDiff {
+    fn inverse(&self, base: &Puzzle3dPlaySnapshot) -> Self {
+        ColdDiffAlgebra::<Puzzle3dSnapshot>::inverse(self, base.typed())
+    }
+}
+
+impl protocol::ColdMutation<Puzzle3dPlaySnapshot> for Puzzle3dMutation {
+    type ReferenceDiff = Puzzle3dDiff;
+    fn diff(&self, projection: &Puzzle3dPlaySnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+        ColdMutation::<Puzzle3dSnapshot>::diff(self, projection.typed.as_ref())
+    }
+    fn inverse(&self, projection: &Puzzle3dPlaySnapshot) -> Result<Vec<Puzzle3dMutation>, semio_framework_value::ValueError> {
+    Ok({
+        ColdMutation::<Puzzle3dSnapshot>::inverse(self, projection.typed.as_ref())?
+    
+    })
+}
+}
+
+use protocol::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};

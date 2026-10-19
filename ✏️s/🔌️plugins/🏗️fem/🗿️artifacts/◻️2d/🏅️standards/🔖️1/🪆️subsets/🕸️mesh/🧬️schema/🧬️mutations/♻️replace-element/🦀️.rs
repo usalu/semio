@@ -1,9 +1,13 @@
 //! 🔁️ Fem2d mutation — `ReplaceElement` payload + `MutationKind` impl.
 
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
-use protocol::{MutationKind, SemanticDescriptor};
-use semio_framework_value_derive::{FromValue, ToValue};
+use protocol::MutationKind;
+use protocol::SemanticDescriptor;
+use protocol::ColdMutationKind;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 
 //#region 🔖️Mutation
 /// 🔁️ Whole-value swap of an existing element's payload (`Bar`/`Beam` fields, including a possible
@@ -21,24 +25,32 @@ pub struct ReplaceElement {
 
 impl<Op> MutationKind<Fem2dSnapshot, Op> for ReplaceElement
 where
-    Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<replace_element::ReplaceElement>,
-{
-    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "element", kind: "replace-element", record: "ReplacedElement" };
+    Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::replace_element::ReplaceElement>, {
 
-    fn diff(&self, base: &Fem2dSnapshot) -> protocol::MutationOutcome<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Fem2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "element", kind: "replace-element", record: "ReplacedElement" };
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace element \"{}\"", self.id), &format!("Element \"{}\" ersetzen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
+
+}
+impl<Op> protocol::ColdMutationKind<Fem2dSnapshotValue, Op> for ReplaceElement
+where
+    Op: protocol::ColdMutation<Fem2dSnapshotValue, ReferenceDiff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::replace_element::ReplaceElement>, {
+
+
+    fn diff(&self, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> {
+        super::diff::diff(self, base)
+    }
+
+    fn inverse(&self, base: &Fem2dSnapshotValue) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
+
 }
 //#endregion 🔖️Mutation

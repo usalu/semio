@@ -61,10 +61,10 @@ COLLECTIONS = {
 """🗂️ Per noun: its collection, the argument `create-` carries, and the one `replace-` carries when
 the vocabulary has a `replace-` for it at all."""
 
-KINDS = ("create-support", "delete-support", "replace-support")
+KINDS = ("create-support", "delete-support", "replace-support", "change-support")
 """🏷️ This subset's own kinds, in the catalog's declared order."""
 
-REFUSALS = {"create-support": 1, "delete-support": 1, "replace-support": 3}
+REFUSALS = {"create-support": 1, "delete-support": 1, "replace-support": 3, "change-support": 3}
 """🚫️ How many refusal-or-no-op vectors each kind declares — the `reject-<kind>-<n>` rows the
 feature's `@id-reject` Outline carries, numbered in the catalog's own order."""
 
@@ -419,6 +419,38 @@ def check_record(document, noun, record):
 def apply_mutation(document, mutation):
     """🧬️ Applies one typed mutation, returning the resulting model or raising a [`Refusal`]."""
     kind = kind_of(mutation)
+    if kind == "change-support":
+        result = copy.deepcopy(document)
+        collection = "supports"
+        at = find(result[collection], mutation["id"])
+        if at is None:
+            error(TARGET_MISSING, [mutation["id"]], "Target does not exist.")
+        patch = mutation["patch"]
+        if not isinstance(patch, dict) or set(patch) - {"nodeId", "fixed", "tx", "ty", "rz"} or any(value is None for value in patch.values()):
+            fatal(INVARIANT, [mutation["id"]], "Invalid sparse field patch.")
+        row = copy.deepcopy(result[collection][at])
+        order = ["Tx", "Ty", "Tz", "Rx", "Ry", "Rz"]
+        toggles = {key: key[0].upper() + key[1:] for key in patch if key in ("tx", "ty", "tz", "rx", "ry", "rz")}
+        if "fixed" in patch and toggles or any(type(patch[key]) is not bool for key in toggles):
+            fatal(INVARIANT, [mutation["id"]], "Invalid sparse field patch.")
+        if "fixed" in patch:
+            fixed = patch["fixed"]
+            if not isinstance(fixed, list) or any(dof not in order for dof in fixed) or fixed != [dof for dof in order if dof in fixed]:
+                fatal(INVARIANT, [mutation["id"]], "Invalid sparse field patch.")
+            row["fixed"] = copy.deepcopy(fixed)
+        else:
+            held = set(row["fixed"])
+            for key, dof in toggles.items():
+                if patch[key]: held.add(dof)
+                else: held.discard(dof)
+            row["fixed"] = [dof for dof in order if dof in held]
+        if "nodeId" in patch: row["nodeId"] = patch["nodeId"]
+        check_record(result, "support", row)
+        if row == result[collection][at]:
+            warn(NO_OP, "Fields are unchanged.")
+        result[collection][at] = row
+        validate(result)
+        return result
     result = copy.deepcopy(document)
     if kind == "update-analysis-settings":
         check_analysis(mutation["settings"])
@@ -496,6 +528,18 @@ def inverse_mutation(document, mutation):
     record at its original position, whatever that is.
     """
     kind = kind_of(mutation)
+    if kind == "change-support":
+        collection = "supports"
+        at = find(document[collection], mutation["id"])
+        if at is None: raise AssertionError("Target does not exist for inverse.")
+        row = document[collection][at]
+        patch = {}
+        for key in mutation["patch"]:
+            if key in ("tx", "ty", "tz", "rx", "ry", "rz"):
+                patch[key] = key[0].upper() + key[1:] in row["fixed"]
+            elif key in row: patch[key] = copy.deepcopy(row[key])
+
+        return {"mutation": TAGS[kind], "id": mutation["id"], "patch": patch}
     if kind == "update-analysis-settings":
         return {"mutation": TAGS[kind], "settings": copy.deepcopy(document["analysis"])}
     if kind == "add-load":

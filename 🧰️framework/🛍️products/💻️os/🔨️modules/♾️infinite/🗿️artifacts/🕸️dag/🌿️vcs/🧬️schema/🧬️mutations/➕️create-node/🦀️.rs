@@ -13,6 +13,17 @@ pub struct CreateNode {
 
 impl protocol::MutationKind<DagSnapshot, DagMutation> for CreateNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "node", kind: "create-node", record: "CreatedNode" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create node {}", self.node.id), &format!("Knoten {} erstellen", self.node.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["nodes".into(), self.node.id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<DagSnapshot, DagMutation> for CreateNode {
     fn diff(&self, _base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         protocol::MutationOutcome::new(DagDiff::from(DagDelta { created_node: Some(self.node.clone()), created_node_at: Some(self.index), ..Default::default() }))
     }
@@ -22,10 +33,4 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for CreateNode {
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create node {}", self.node.id), &format!("Knoten {} erstellen", self.node.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["nodes".into(), self.node.id.clone()]
-    }
 }

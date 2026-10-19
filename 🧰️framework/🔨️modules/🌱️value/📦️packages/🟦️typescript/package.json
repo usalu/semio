@@ -35,7 +35,8 @@
     "./text": "./📝️text/🟦️.ts",
     "./type": "./🏷️type/🟦️.ts",
     "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts",
-    "./retirement/testing/fixtures": "./♻️retirement/🧪️testing/🧫️fixtures/🟦️.ts"
+    "./retirement/testing/fixtures": "./♻️retirement/🧪️testing/🧫️fixtures/🟦️.ts",
+    "./scratch-hash": "./🔑️hashed/🧮️scratch/🟦️.ts"
   },
   "scripts": {
     "test-numeric-api": "bun --cwd \"../../../../..\" repo run @semio-tech/value-ts:test-numeric-api",
@@ -44,7 +45,9 @@
   "devDependencies": {
     "@semio-tech/framework": "workspace:*",
     "@semio-tech/framework-pack-ts": "workspace:*",
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "ajv": "^8.17.1",
+    "fast-json-patch": "^3.1.1"
   },
   "dependencies": {
     "@semio-tech/framework-async": "workspace:*",

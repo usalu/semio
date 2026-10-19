@@ -8,20 +8,24 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "add-counter-four-times")]
-#[composite(snapshot = Counter, op = CounterMutation)]
+#[composite(snapshot = Counter, op = CounterMutation, reference = Counter)]
 pub struct AddCounterFourTimes {
     pub delta: i64,
 }
 
 impl CompositeMutationKind<Counter, CounterMutation> for AddCounterFourTimes {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "counter", kind: "add-counter-four-times", record: "AddedCounterFourTimes" };
+
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native(&format!("Add {} four times", self.delta), &format!("{} viermal hinzufügen", self.delta))
+    }
+}
+
+impl crate::os_spr::ColdCompositeMutationKind<Counter, CounterMutation> for AddCounterFourTimes {
     fn plan(&self, base: &Counter, planner: &mut Planner<Counter, CounterMutation>) -> Result<(), PlanError> {
         AddCounterTwice { delta: self.delta }.plan(base, planner)?;
         let mid = *planner.base();
         AddCounterTwice { delta: self.delta }.plan(&mid, planner)
-    }
-    fn label(&self) -> crate::LocalizedLabel {
-        crate::LocalizedLabel::native(&format!("Add {} four times", self.delta), &format!("{} viermal hinzufügen", self.delta))
     }
 }
 

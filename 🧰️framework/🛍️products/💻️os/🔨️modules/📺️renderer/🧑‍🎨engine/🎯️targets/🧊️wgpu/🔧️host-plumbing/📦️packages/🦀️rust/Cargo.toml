@@ -40,6 +40,7 @@ semio-framework-ui-wgpu-input = { path = "../../../../../../../../../../🔨️m
 semio-framework-actor = { workspace = true }
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-framework-plugin-guest-contract = { workspace = true }
+semio-framework-os-services = { workspace = true }
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 semio-framework-async = { workspace = true }

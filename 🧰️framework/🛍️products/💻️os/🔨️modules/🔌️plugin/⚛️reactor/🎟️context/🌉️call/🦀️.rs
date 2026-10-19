@@ -100,22 +100,22 @@ impl OriginalActorGuestEntry{
   if self.has_close_failure(){return OriginalActorCall{input,receipt_spent:*recipient,work_units_spent:0,result:Err(OriginalActorEntryFailure::Authority(refusal("original guest child and debit causes require original paid closure")))}}
   let Self{context,registered_jobs,job_output,job_output_retirement,job_output_identity,job_output_offset,job_output_ack,job_output_chunk,job_output_chunk_borrowed,job_output_chunk_retirement,cleanup_fault,cleanup_fault_retirement,close_fault,debit_fault,..}=self;
   let mut failed=false;
-  let original=context.dispatch_step(input,budget,recipient,clock,|cx|{
-   if cx.should_yield(){return Ok(false)}let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}let child=RetainedCloneGrant{maximum_items:1,..grant};let mut actual_work=0;
+  let original=context.dispatch_step(input,budget,recipient,clock,|cx|cx.with_original_retirement(|cx|{
+   if cx.retirement_should_yield(){return Ok(false)}let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}let child=RetainedCloneGrant{maximum_items:1,..grant};let mut actual_work=0;
    if cleanup_fault.is_some()||cleanup_fault_retirement.is_some(){match Self::close_original_slot(cleanup_fault,cleanup_fault_retirement,child,&mut actual_work){Ok(step)=>{cx.consume_fuel(actual_work);if let Err(error)=cx.consume_retained(step.progress()){**debit_fault=Some(error);failed=true}},Err(error)=>{cx.consume_fuel(actual_work);Self::debit_original_error(error,close_fault,cx);failed=true}}return Ok(false)}
    if *job_output_chunk_borrowed{return Ok(false)}
    if job_output_chunk.is_some()||job_output_chunk_retirement.is_some(){match Self::close_original_slot(job_output_chunk,job_output_chunk_retirement,child,&mut actual_work){Ok(step)=>{cx.consume_fuel(actual_work);if let Err(error)=cx.consume_retained(step.progress()){**debit_fault=Some(error);failed=true}},Err(error)=>{cx.consume_fuel(actual_work);Self::debit_original_error(error,close_fault,cx);failed=true}}return Ok(false)}
    if job_output.is_some()||job_output_retirement.is_some(){match Self::close_original_slot(job_output,job_output_retirement,child,&mut actual_work){Ok(step)=>{cx.consume_fuel(actual_work);if let Err(error)=cx.consume_retained(step.progress()){**debit_fault=Some(error);failed=true}if job_output.is_none()&&job_output_retirement.is_none(){*job_output_identity=None;*job_output_offset=0}},Err(error)=>{cx.consume_fuel(actual_work);Self::debit_original_error(error,close_fault,cx);failed=true}}return Ok(false)}
    if *job_output_ack{cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);*job_output_ack=false;*job_output_identity=None;*job_output_offset=0;return Ok(false)}
-   let Some(job)=provider.next_owned()else{return Ok(true)};
+   let Some(job)=provider.next_owned()else{cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(true)};
    if !cx.is_cancelled(){let Some(progress)=cx.borrowed_original_cancel_token()?.signal_cancelled_flag_step(child)else{return Ok(false)};cx.consume_fuel(progress.copied_items as u64);cx.consume_retained(progress)?;return Ok(false)}
    if provider.is_cancelled(job)==Some(false){provider.cancel(job,cx)?;return Ok(false)}
-   if let Some(output)=provider.step(job,cx)?{**job_output=Some(output);*job_output_identity=Some((job,input.operation,input.generation))}Ok(false)
-  });let result=match original.result{Ok(_)if failed=>Err(OriginalActorEntryFailure::Semantic),Ok(value)=>{if value{*registered_jobs=false}Ok(value)},Err(OriginalActorCallError::Authority(error))=>Err(OriginalActorEntryFailure::Authority(error)),Err(OriginalActorCallError::Semantic(error))=>{**cleanup_fault=Some(error);Err(OriginalActorEntryFailure::Semantic)}};OriginalActorCall{input:original.input,receipt_spent:original.receipt_spent,work_units_spent:original.work_units_spent,result}
+   provider.close(job,cx)?;Ok(false)
+  }));let result=match original.result{Ok(_)if failed=>Err(OriginalActorEntryFailure::Semantic),Ok(value)=>{if value{*registered_jobs=false}Ok(value)},Err(OriginalActorCallError::Authority(error))=>Err(OriginalActorEntryFailure::Authority(error)),Err(OriginalActorCallError::Semantic(error))=>{**cleanup_fault=Some(error);Err(OriginalActorEntryFailure::Semantic)}};OriginalActorCall{input:original.input,receipt_spent:original.receipt_spent,work_units_spent:original.work_units_spent,result}
  }
  /// ⚖️ The admitted entry holds both causes while the original child receipt reaches its original recipient.
  fn debit_original_error(original:ValueError,close:&mut ManuallyDrop<Option<OriginalTurnFailure>>,cx:&mut StepContext<'_>)->bool{
-  **close=Some(OriginalTurnFailure::from(original));let error=close.as_mut().unwrap();let progress=error.primary.retained_progress();error.receipt_refusal=cx.consume_retained(progress).err();error.receipt_refusal.is_none()
+  **close=Some(OriginalTurnFailure::from(original));let error=close.as_mut().unwrap();let progress=error.retained_progress();error.receipt_refusal=cx.consume_retained(progress).err();error.receipt_refusal.is_none()
  }
 
  fn has_close_failure(&self)->bool{self.close_fault.is_some()||self.close_fault_retirement.is_some()||self.debit_fault.is_some()||self.debit_fault_retirement.is_some()}

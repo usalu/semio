@@ -1,5 +1,5 @@
-//! 🚪️ IO `s.fem.fem2d` (1/🌐️any) — `io() -> IoDeclaration`: this subset's native codecs plus every
 //! foreign hop, aggregated from the typed `Serializer<Fem2dSnapshot>`/`Deserializer<Fem2dSnapshot>`
+//! 🚪️ IO `s.fem.fem2d` (1/🌐️any) — `io() -> IoDeclaration`: this subset's native codecs plus every
 //! leaves under `📥️import/🧩️deserializers`/`📤️export/🧵️serializers`. Foreign io goes EXCLUSIVELY
 //! through the framework's `io_mechanism` registry, reached from the sibling `🪆️subsets/🌐️any/🦀️.rs`'s
 //! `io: io::io()` — the same wiring `🗒️note`/`🧱️block` use.
@@ -98,7 +98,7 @@ pub fn document_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 }
 
 /// 🔌️ The computed-results output artifact kind (`results:out`'s `kind_id`, see
-/// `crate::editor::fem2d::fem2d_io`) — the OS-catalog-level resource descriptor for
+/// `semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::fem2d_io`) — the OS-catalog-level resource descriptor for
 /// `computation.fem2d`; deliberately a different `media_type` (`Computation`×`Value`) than the PORT's
 /// wire-level `Data`×`Value` (see WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE's
 /// port recipe). Lifted verbatim out of the pre-migration `fem2d_ui::create_fem2d_app`'s
@@ -210,8 +210,12 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
     use crate::standards::v1::subsets::any::io::FEM2D_DIALECT;
     use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA;
-    use semio_framework_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
-    use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
+    use semio_framework_os_kernel::io::io_mechanism::deserializer_entry;
+    use semio_framework_os_kernel::io::io_mechanism::serializer_entry;
+    use semio_framework_os_kernel::io::io_mechanism::IoEntry;
+    use semio_framework_plugin::app::declarations::IoDeclaration;
+    use semio_framework_plugin::app::declarations::LanguagePair;
+    use semio_framework_plugin::app::declarations::NativeCodecs;
     use std::sync::OnceLock;
 
     /// 🎹️ One vtable row per typed leaf — the single place this subset advertises what it can and
@@ -283,14 +287,14 @@ pub mod derived_construction {
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match protocol::apply_diff(outcome.diff(), &self.snapshot) {
+            match protocol::apply_diff_cold(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
                 Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
+            let snapshot = protocol::apply_diff_cold(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }

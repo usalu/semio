@@ -452,3 +452,20 @@ export function scheduleIdle(callback: () => void, delayMs: number, scheduler: L
   };
 }
 // #endregion 🧮️LayeredLifecycle
+
+// #region 🫥LayeredCardConcealment
+/** 🫥 How a card became the revealed one. */
+export type LayeredRevealSource = "pointer" | "focus";
+
+/** 🫥 A card is concealed exactly when a pointer hover reveals a different card. Keyboard focus conceals nothing, so every card stays reachable.
+ * The concealed card keeps its grid slot.
+ * @see ../../🧱️elements/🥞️LayeredOverview/🟦️.tsx — paints this onto each card host */
+export function layeredCardConcealed(id: string, revealedId: string | null, source: LayeredRevealSource | null): boolean {
+  return source === "pointer" && revealedId !== null && id !== revealedId;
+}
+
+/** 🌫 The card under the pointer wears the veil's tint, so the page behind it is the only crisp surface. Keyboard focus tints nothing. */
+export function layeredCardTinted(id: string, revealedId: string | null, source: LayeredRevealSource | null): boolean {
+  return source === "pointer" && revealedId === id;
+}
+// #endregion 🫥LayeredCardConcealment

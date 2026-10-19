@@ -25,9 +25,9 @@
 
         reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&dv(json!({ "domainId": "items", "channel": "pointer", "targets": "[]" }))), &mut identity).await;
         assert!(app.interaction_state().await.hover.get("items").is_none(), "an emptied hover channel is removed, not left as an empty entry");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -54,7 +54,7 @@
         assert_eq!(gumball.get("active").and_then(semio_framework_value::DslValue::as_bool), Some(false), "leftover selection must not arm the world gumball — the guest selectionJson lane owns utility-aware gumballActive");
         assert_eq!(gumball.get("anchorId").and_then(semio_framework_value::DslValue::as_str), Some("item-1"));
         close_reserved_app(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -80,7 +80,7 @@
         assert!(snapshot.selection.get("items").is_none_or(|selection| selection.anchor_id.is_none()));
         assert_eq!(app.interaction_state().await.hover.get("items").map(|hover| hover.ids.as_slice()), Some(["item-1".to_string()].as_slice()));
         close_reserved_app(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -105,7 +105,7 @@
         let hover = view.get("hoverTarget").expect("hoverTarget");
         assert_eq!(hover.get("id").and_then(semio_framework_value::DslValue::as_str), Some("item-1"));
         close_reserved_app(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -146,7 +146,7 @@
         let history = app.render_ctx().test_history().await;
         assert!(!history.commands.iter().any(|entry| entry.action_id == INTERACTION_SELECT_ACTION_ID || entry.kind == ActionKind::Interaction), "the folded verb is never a history row");
         close_reserved_app(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -183,7 +183,7 @@
         assert!(panel_bodies.iter().any(|body| body == FRAMEWORK_HISTORY_BODY_KEY), "the verb's declared panel body joins it: {panel_bodies:?}");
         assert!(*utilities, "the carrier's own section flag survives the merge");
         close_reserved_app(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -221,6 +221,6 @@
         let history = app.render_ctx().test_history().await;
         assert!(!history.commands.iter().any(|entry| entry.action_id == INTERACTION_SELECT_ACTION_ID || entry.kind == ActionKind::Interaction), "the folded verb is never a history row");
         close_reserved_app(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }

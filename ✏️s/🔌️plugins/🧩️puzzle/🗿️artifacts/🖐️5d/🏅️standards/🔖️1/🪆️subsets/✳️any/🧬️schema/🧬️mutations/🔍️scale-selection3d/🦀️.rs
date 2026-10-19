@@ -1,8 +1,10 @@
-//! 🔍️ Puzzle5d mutation — `ScaleSelection3d`: a relative, parametric per-axis scaling of a set of parts and target volumes, each about
 //! its own world origin. The gesture's own inputs (which ids, which factors) are the payload, so editing the scaling in
+//! 🔍️ Puzzle5d mutation — `ScaleSelection3d`: a relative, parametric per-axis scaling of a set of parts and target volumes, each about
 //! history re-derives every scale from whatever base it replays on.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::{puzzle5d_selection_items, puzzle5d_selection_triple};
+
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 
 use crate::Puzzle5dSnapshot;
 
@@ -26,6 +28,24 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "selection", kind: "scale-selection3d", record: "ScaledSelection3d" };
 
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        let (factors_en, factors_de) = puzzle5d_selection_triple(self.factors);
+        let (en, de) = puzzle5d_selection_items(self.targets.len());
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale {en} by {factors_en}"), &format!("{de} um {factors_de} skalieren"))
+    }
+    fn target(&self) -> Vec<String> {
+        self.targets.clone()
+    }
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ScaleSelection3d {
+
+
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ScaleSelection3d {
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
@@ -35,14 +55,6 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        let (factors_en, factors_de) = puzzle5d_selection_triple(self.factors);
-        let (en, de) = puzzle5d_selection_items(self.targets.len());
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale {en} by {factors_en}"), &format!("{de} um {factors_de} skalieren"))
-    }
-    fn target(&self) -> Vec<String> {
-        self.targets.clone()
-    }
 }
 //#endregion 🔖️Mutation
 

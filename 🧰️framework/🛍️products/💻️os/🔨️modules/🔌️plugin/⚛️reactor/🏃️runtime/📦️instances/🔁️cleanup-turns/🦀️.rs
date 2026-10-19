@@ -216,6 +216,10 @@ pub fn runtime_close_retire_cell<PA: PluginApp>(state: &RuntimeCloseWorkerState<
             return runtime_close_fault(state, RuntimeCleanupFault::MaintenanceNotDrained);
         }
     }
+    {
+        let pages=match cell.result_pages.try_lock(){Ok(pages)=>pages,Err(std::sync::TryLockError::WouldBlock)=>return RuntimeCloseStatus::Ready,Err(std::sync::TryLockError::Poisoned(_))=>return runtime_close_fault(state,RuntimeCleanupFault::OwnerPoisoned)};
+        if !pages.terminal_is_empty(){return runtime_close_fault(state,RuntimeCleanupFault::InstanceNotDrained)}
+    }
     let detached = owner.take().expect("captured owner remains under the same guard");
     match std::sync::Arc::try_unwrap(detached) {
         Ok(cell) => {

@@ -12,7 +12,7 @@ use semio_framework_ui_tui_widgets::widget::WidgetState;
 
 /// 🎬️ What activating a row does.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) enum RowAction { None, NewTask, Settings, Help, Refresh, CancelDiscovery, Session(String), Language, Appearance, Terminology, Renderer, Layout, SaveScope, Back }
+pub(super) enum RowAction { None, NewTask, Settings, Help, Refresh, CancelDiscovery, Session(String), OpenReady(String), CancelOpenReady, Language, Appearance, Terminology, Renderer, Layout, SaveScope, Back }
 
 /// 🪧️ The rows of one list window and where the selection and the visible slice are.
 #[derive(Default)]
@@ -39,7 +39,11 @@ impl Dashboard {
             Body::Overview => {
                 let mut rows = vec![(text.row_new_task.as_str().into(), RowAction::NewTask), (text.row_settings.as_str().into(), RowAction::Settings), (text.row_keyboard.as_str().into(), RowAction::Help), (text.row_refresh.as_str().into(), RowAction::Refresh), (text.row_cancel_discovery.as_str().into(), RowAction::CancelDiscovery)];
                 if self.sessions.is_empty() { rows.push((text.row_no_tasks.as_str().into(), RowAction::None)); }
-                rows.extend(self.sessions.values().map(|session| (self.session_row(session), RowAction::Session(session.session_id.clone()))));
+                if self.opening_url.is_some() { rows.push((text.action_cancel_open_ready.as_str().into(), RowAction::CancelOpenReady)); }
+                for session in self.sessions.values() {
+                    rows.push((self.session_row(session), RowAction::Session(session.session_id.clone())));
+                    if let Some(url) = dashboard_cli::browser::ready_url(session.status, session.ready_url.as_deref()) { rows.push((format!("  {}: {url}", text.action_open_ready.as_str()), RowAction::OpenReady(session.session_id.clone()))); }
+                }
                 rows
             }
             Body::Settings => {
@@ -136,6 +140,8 @@ impl Dashboard {
             RowAction::Refresh => self.refresh_inventory(),
             RowAction::CancelDiscovery => self.cancel_inventory(),
             RowAction::Session(id) => self.reveal_session(tui, &id),
+            RowAction::OpenReady(id) => self.request_open_ready(&id),
+            RowAction::CancelOpenReady => self.cancel_open_ready(),
             RowAction::Language => self.queue_preference(Change { language: Some(if self.preferences.language == "en" { "de" } else { "en" }.into()), ..Default::default() }),
             RowAction::Appearance => self.queue_preference(Change { appearance: Some(if self.light { "dark" } else { "light" }.into()), ..Default::default() }),
             RowAction::Terminology => self.queue_preference(Change { terminology: Some(if self.preferences.terminology == "native" { "reuse" } else { "native" }.into()), ..Default::default() }),

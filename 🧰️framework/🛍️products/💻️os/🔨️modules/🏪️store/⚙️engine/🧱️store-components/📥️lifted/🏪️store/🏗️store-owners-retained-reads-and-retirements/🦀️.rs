@@ -20,13 +20,7 @@ where
     Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     /// 🧳️ Retains an original projection from this exact issuer, including an older captured frontier, for readonly custody.
-    pub fn retained_derived_read(&self, source: &ArtifactDerivedSnapshot<P>) -> Result<ErasedSnapshotRead, ValueError>
-    where P: Sync {
-        if !source.registry.ptr_eq(&self.snapshot_read_leases) { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "projection read requires its original Store issuer")); }
-        let owner = Arc::clone(&source.owner);
-        let lease = match source.registry.try_issue(Arc::clone(&owner)) { Ok(lease) => lease, Err(alias) => { drop(alias); return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "original projection read issuer is unavailable")); } };
-        Ok(ErasedSnapshotRead::new(owner, lease))
-    }
+    
 
     /// 🧰️ Prepares the exact history retirement frame before the caller commits its original Session.
     pub fn prepare_history_read_retirement(&self,grant:RetainedCloneGrant)->Result<Option<(PreparedHistoryReadRetirement<P,Mutation>,RetainedCloneProgress)>,ValueError>
@@ -46,20 +40,10 @@ where
     }
 
     /// 🛑️ Transfers a cancelled preview's exact owners to bounded cold retirement, including stale frontiers.
-    pub fn retire_derived_history_preview(&self, owner: &mut Option<ArtifactDerivedHistoryPreview<P, Mutation>>,grant:RetainedCloneGrant) -> Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>, ValueError>
-    where P: Sync {
-        let Some(preview) = owner.as_ref() else { return Ok(None) };
-        if !preview.registry.ptr_eq(&self.snapshot_read_leases) { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"foreign history preview cannot retire through this Store")); }
-        self.admit_history_owner_retirement(owner,grant,|retirement,preview|*retirement.preview=Some(preview))
-    }
+    
 
     /// 🛑️ Transfers a cancelled replay and its planner to bounded cold retirement without publishing any fold.
-    pub fn retire_derived_report_replay(&self, owner: &mut Option<ArtifactDerivedReplay<P, Mutation>>,grant:RetainedCloneGrant) -> Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>, ValueError>
-    where P: Sync {
-        let Some(replay) = owner.as_ref() else { return Ok(None) };
-        if !replay.registry.ptr_eq(&self.snapshot_read_leases) { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"foreign history replay cannot retire through this Store")); }
-        self.admit_history_owner_retirement(owner,grant,|retirement,replay|*retirement.replay=Some(replay))
-    }
+    
 
     /// 🧹️ Transfers a discarded completed history review to the same bounded registered owner retirement.
     pub fn retire_finished_history_replay(&self, owner: &mut Option<EditReplayResult<P, Mutation>>,grant:RetainedCloneGrant) -> Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>, ValueError>

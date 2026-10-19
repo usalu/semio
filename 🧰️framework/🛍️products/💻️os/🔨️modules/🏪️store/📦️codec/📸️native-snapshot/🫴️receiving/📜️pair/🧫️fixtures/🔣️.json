@@ -1,0 +1,22 @@
+{
+  "document": {
+    "id": "original.pair.源",
+    "schema": "test.wfc2d.original",
+    "edits": [],
+    "transitions": []
+  },
+  "cancelPrefixes": [
+    0,
+    64,
+    1024,
+    1000000
+  ],
+  "deniedAxes": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "maximumTurns": 1000000
+}

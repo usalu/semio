@@ -3,7 +3,7 @@ use semio_framework_job::{OriginalClosureFailure,OriginalTurnFailure,OriginalDom
 use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,retirement::controlled::ControlledRetirement};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 fn clock()->Option<u64>{Some(1000)}
-fn turn(primary:ValueRefusalKind,message:&'static str,receipt:&'static str,context:&'static str,receipt_kind:ValueRefusalKind,context_kind:ValueRefusalKind)->OriginalTurnFailure{OriginalTurnFailure{primary:ValueError::literal(primary,message).into(),receipt_refusal:Some(ValueError::literal(receipt_kind,receipt)),context_refusal:Some(ValueError::literal(context_kind,context))}}
+fn turn(primary:ValueRefusalKind,message:&'static str,receipt:&'static str,context:&'static str,receipt_kind:ValueRefusalKind,context_kind:ValueRefusalKind)->OriginalTurnFailure{{let original=OriginalTurnFailure::from(ValueError::literal(primary,message));OriginalTurnFailure{receipt_refusal:Some(ValueError::literal(receipt_kind,receipt)),context_refusal:Some(ValueError::literal(context_kind,context)),..original}}}
 #[test]
 fn original_source_closure_full_pair_same_caller_denials_and_paid_close(){
  let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let policy:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap();let stock:RetainedCloneGrant=serde_json::from_value(policy["grant"].clone()).unwrap();

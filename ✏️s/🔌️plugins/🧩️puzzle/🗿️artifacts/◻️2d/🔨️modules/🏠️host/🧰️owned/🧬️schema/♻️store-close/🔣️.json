@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "maximumItems", "maximumBodyBytes", "histories", "deniedItems", "terminal"],
+  "properties": {
+    "version": { "const": 1 },
+    "maximumItems": { "const": 1 },
+    "maximumBodyBytes": { "type": "integer", "minimum": 1 },
+    "histories": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["edits"],
+        "properties": { "edits": { "type": "integer", "minimum": 0 } }
+      }
+    },
+    "deniedItems": { "const": 0 },
+    "terminal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["history", "current"],
+      "properties": { "history": { "const": [] }, "current": { "const": null } }
+    }
+  }
+}

@@ -96,7 +96,8 @@ async fn settings_steppers_address_the_focused_pane_or_no_pane() {
 /// 🛠️ Fill is a mode-level tool (a whole-document generator), not a window utility.
 #[test]
 fn tool_registry_declares_fill_tool() {
-    use semio_framework_plugin::{ToolRef, SET_ACTIVE_TOOL_ACTION_ID};
+    use semio_framework_plugin::ToolRef;
+    use semio_framework_plugin::SET_ACTIVE_TOOL_ACTION_ID;
     let definition = create_puzzle2d_app();
     let tool_ids: Vec<&str> = definition.tools.iter().map(|tool| tool.id.as_str()).collect();
     assert_eq!(tool_ids, vec![fill::TOOL_ID]);
@@ -203,7 +204,10 @@ async fn view_actions_emit_no_ops_through_the_registry() {
 /// combined) and the known `deleteSelection` destructive row stays last.
 #[semio_framework_async_macros::async_test]
 async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
-    use semio_framework_plugin::{ContextMenuRequest, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, UiMenuRef};
+    use semio_framework_plugin::ContextMenuRequest;
+    use semio_framework_plugin::ContextMenuSelectionGroup;
+    use semio_framework_plugin::ContextMenuSurfaceTarget;
+    use semio_framework_plugin::UiMenuRef;
 
     let mut app = app_with_registry();
     load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);

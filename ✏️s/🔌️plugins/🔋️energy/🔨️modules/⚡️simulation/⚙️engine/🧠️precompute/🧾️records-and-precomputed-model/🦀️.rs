@@ -151,33 +151,5 @@ impl PrecomputedModel {
         self.system_timestep_s.min(self.zone_timestep_s).max(1.0)
     }
 
-    pub fn close_step(&mut self, maximum_items: usize) -> bool {
-        if maximum_items == 0 {
-            return false;
-        }
-        macro_rules! remove_entry {
-            ($owners:expr) => {{
-                if $owners.pop().is_some() {
-                    return false;
-                }
-            }};
-        }
-        remove_entry!(self.zone_geometry);
-        remove_entry!(self.surfaces);
-        remove_entry!(self.windows);
-        remove_entry!(self.enclosures);
-        remove_entry!(self.default_setpoints);
-        remove_entry!(self.zone_indices);
-        remove_entry!(self.surface_indices);
-        remove_entry!(self.material_indices);
-        remove_entry!(self.glazing_indices);
-        remove_entry!(self.gas_indices);
-        remove_entry!(self.construction_indices);
-        remove_entry!(self.fault_severity);
-        if self.casters.pop().is_some() {
-            return false;
-        }
-        self.zone_order.pop().is_none() && self.surface_order.pop().is_none() && self.window_order.pop().is_none()
-    }
 }
 // #endregion 🔖️PrecomputedModel

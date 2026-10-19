@@ -3,13 +3,17 @@ import { GenerateScript as GraphGenerateScript, PreviewGeneratedScript as GraphP
 /** 📦️ puzzle-5d Rust artifact package router. */
 import { runArtifactRustPackageMain, runArtifactRustTests } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 import { runCmd } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
-import { BundleScript } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readdirSync } from "node:fs";
 import { resolve } from "node:path";
 
 /** 🛂️ Verify the exact canonical provider through every published owning Source consumer. */
 class OwnedVerifyScript extends BundleScript {
   run(args: string[]): void {
+    if (args.length === 1 && args[0] === "original-work-construction") {
+      runCmd("bun", ["test", resolve(this.repoRoot, "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🧪️tests/🟦️.ts")], { cwd: this.repoRoot });
+      return;
+    }
     if (args.length !== 1 || args[0] !== "snapshot-sqlite-source") throw new Error("verify snapshot-sqlite-source");
     const roots: string[] = [];
     const visit = (dir: string): void => {
@@ -26,7 +30,7 @@ class OwnedVerifyScript extends BundleScript {
 class HostAdmissionTest extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Expected test host-admission");
-    await runArtifactRustTests("semio-s-artifact-puzzle-5d", this.repoRoot, ["--lib", "puzzle5d_host_admission_", "--", "--nocapture"], this.invocation);
+    await runArtifactRustTests("semio-s-artifact-puzzle-5d", this.repoRoot, ["--features", "component-app-assembly", "--lib", "puzzle5d_host_admission_", "--", "--nocapture"], this.invocation);
   }
 }
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-puzzle-5d", { packages: ["semio-s-artifact-puzzle-5d", "semio-s-artifact-puzzle-5d-catalog", "semio-s-artifact-puzzle-5d-diff", "semio-s-artifact-puzzle-5d-diff-2", "semio-s-artifact-puzzle-5d-dispatch", "semio-s-artifact-puzzle-5d-document-records", "semio-s-artifact-puzzle-5d-host-admission-tests", "semio-s-artifact-puzzle-5d-interaction", "semio-s-artifact-puzzle-5d-kind-catalogs", "semio-s-artifact-puzzle-5d-mut-any", "semio-s-artifact-puzzle-5d-mut-any-2", "semio-s-artifact-puzzle-5d-mut-any-3", "semio-s-artifact-puzzle-5d-mut-any-4", "semio-s-artifact-puzzle-5d-mut-any-5", "semio-s-artifact-puzzle-5d-mut-any-6", "semio-s-artifact-puzzle-5d-mut-any-7", "semio-s-artifact-puzzle-5d-mut-any-8", "semio-s-artifact-puzzle-5d-puzzle5d", "semio-s-artifact-puzzle-5d-retained", "semio-s-artifact-puzzle-5d-schema", "semio-s-artifact-puzzle-5d-snapshot", "semio-s-artifact-puzzle-5d-store-preparation", "semio-s-artifact-puzzle-5d-tests", "semio-s-artifact-puzzle-5d-v1"],testCommands:{"host-admission":HostAdmissionTest},commands:{"graph-generate":GraphGenerateScript,"preview-generated":GraphPreviewScript,"graph-wire-check":OwnerGraphWireCheckScript,verify:OwnedVerifyScript},snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});

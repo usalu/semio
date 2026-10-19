@@ -190,7 +190,8 @@ where
     /// rebased mid-history overrides this tail-diff guess via `PendingCommandReport::declare_edit_ids`.
     pub async fn dispatch(&mut self, command: ArtifactCommand<Mutation>, identity: &mut EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError>
     where
-        P: Sync,
+        P:  Clone + Sync,
+     Mutation: ColdMutation<P> ,
     {
         self.ensure_durable_group_idle()?;
         self.pump().await?;
@@ -206,7 +207,8 @@ where
 
     pub async fn dispatch_apply_exact(&mut self, mutations: Vec<Mutation>, identity: &mut EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError>
     where
-        P: Sync,
+        P:  Clone + Sync,
+     Mutation: ColdMutation<P> ,
     {
         self.ensure_durable_group_idle()?;
         self.pump().await?;
@@ -229,11 +231,11 @@ where
     //#region 📬️OneItemPublication
     /// 🪞️ Delegates to [`semio_framework_os_store_engine_bundle::advance_apply_batch`]: advances at most one preparation, fold, cursor, preflight or atomic move-publication unit of the batched publication.
     #[inline]
-    pub fn advance_apply_batch(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemAdvance, VcsError>
+    pub fn advance_apply_batch(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mutation>,  body:usize, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, VcsError>
     where
         P: Sync,
     {
-        semio_framework_os_store_engine_bundle::advance_apply_batch(&mut self.parts(), publication, grant)
+        semio_framework_os_store_engine_bundle::advance_apply_batch(&mut self.parts(), publication, body, grant, receiving)
     }
 
 
@@ -241,7 +243,8 @@ where
     pub async fn apply_one(&mut self, expected_generation: u64, mutation: Mutation, lane: HistoryLane, identity: &mut EntityIdentityAuthority<'_>) -> Result<(CommandReceipt, LaneItemReceipt), VcsError>
     where
         P: Sync,
-    {
+         Mutation: ColdMutation<P>,
+{
         self.ensure_durable_group_idle()?;
         self.pump().await?;
         if self.cursor.generation != expected_generation {
@@ -273,7 +276,7 @@ where
     /// is the Report replay of exactly the resulting log, replaying otherwise (under [`Self::defer_local_replays`] a replay
     /// longer than one budget waits for later turns). All of them leave in this dispatch's outbound batch, or none is
     /// recorded.
-    pub(super) async fn install_transitions(&mut self, envelopes: Vec<semio_framework_os_spr::MutationEnvelope>, clock: HybridLogicalTimestamp, replayed: Option<EditReplayResult<P, Mutation>>) -> Result<(), VcsError> {
+    pub(super) async fn install_transitions(&mut self, envelopes: Vec<semio_framework_os_spr::MutationEnvelope>, clock: HybridLogicalTimestamp, replayed: Option<EditReplayResult<P, Mutation>>) -> Result<(), VcsError> where P: Clone, Mutation: ColdMutation<P> {
         if let Err(error) = self.admit_history_shape(&envelopes) {
             if let Some(replayed) = replayed {
                 let _ = self.retire_replay_result(replayed);
@@ -317,7 +320,7 @@ where
     /// retained prefix folded forward (undo), or the edit's effective forwards folded onto the head (redo), records `envelope`,
     /// moves the edit between the stacks and keeps the prefixes it folded through. The edit's inverse and messages stand — its
     /// base is the projection it was last replayed on — and the announcement leaves in this dispatch's outbound batch.
-    fn adopt_tail_step(&mut self, step: TailStep, envelope: semio_framework_os_spr::MutationEnvelope, clock: HybridLogicalTimestamp) -> Result<(), VcsError> {
+    fn adopt_tail_step(&mut self, step: TailStep, envelope: semio_framework_os_spr::MutationEnvelope, clock: HybridLogicalTimestamp) -> Result<(), VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let key = envelope.timestamp.cmp_key();
         let (projection, tail, recorded) = match step {
             TailStep::Undo => {
@@ -373,7 +376,8 @@ where
     /// the implicit `Document` default — see `HistoryLane`'s doc.
     pub(super) async fn dispatch_inner(&mut self, command: ArtifactCommand<Mutation>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError>
     where
-        P: Sync,
+        P:  Clone + Sync,
+     Mutation: ColdMutation<P> ,
     {
         let shape = self.log.envelope.history_shape;
         if let Some(kind) = command.history_transition_kinds().iter().copied().find(|kind| !shape.admits(*kind)) {

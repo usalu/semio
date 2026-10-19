@@ -1,0 +1,39 @@
+/* 🔤 The learner's text size as the root font size, word wrapping and the monochrome emoji glyphs. */
+
+:root {
+  font-size: calc(100% * var(--course-text-scale, 1));
+}
+
+.course-app {
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.course-app :where(p, h1, h2, h3, h4, li, label, legend, summary, figcaption, dd, dt) {
+  overflow-wrap: anywhere;
+}
+
+/* 🔤️ Table headings and numbers never break inside a word (the table scrolls in its card instead); learner names are
+   the one column that wraps, anywhere if a handle is one long word. */
+.course-nowrap {
+  white-space: nowrap;
+  hyphens: none;
+  overflow-wrap: normal;
+}
+
+.course-name {
+  hyphens: none;
+  overflow-wrap: anywhere;
+}
+
+/* 😀️ Emoji as glyphs of the monochrome emoji face, so a VS16 sequence (❄️) does not fall back to a colour font. */
+.course-glyph {
+  font-variant-emoji: text;
+  line-height: 1;
+}
+
+/* 🏷️ The icon before the label it belongs to (an item, a category, a value card, a task): one glyph, a small gap. */
+.course-label-icon {
+  display: inline-block;
+  margin-inline-end: 0.4em;
+}

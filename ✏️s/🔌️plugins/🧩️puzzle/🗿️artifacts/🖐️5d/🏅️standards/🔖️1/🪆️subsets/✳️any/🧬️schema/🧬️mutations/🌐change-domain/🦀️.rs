@@ -29,6 +29,14 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "domain", kind: "change-domain", record: "ChangedDomain" };
 
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change domain to \"{}\"", self.new_domain), &format!("Domäne auf \"{}\" ändern", self.new_domain))
+    }
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangeDomain {
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
@@ -38,8 +46,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change domain to \"{}\"", self.new_domain), &format!("Domäne auf \"{}\" ändern", self.new_domain))
-    }
 }
 //#endregion 🔖️Mutation

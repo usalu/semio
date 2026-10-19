@@ -73,12 +73,40 @@
               "directoryName": "👻️dangling"
             }
           ]
+        },
+        {
+          "scenarios": [
+            {
+              "id": "changes",
+              "directoryName": "🩹️changes"
+            },
+            {
+              "id": "toggles",
+              "directoryName": "📌️toggles"
+            },
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "invalid",
+              "directoryName": "⚗️invalid"
+            }
+          ],
+          "mutationId": "change-support",
+          "sourceMutationDirectoryName": "🩹️change-support",
+          "mutationDirectoryName": "🩹️change-support"
         }
       ],
       "kinds": [
         "create-support",
         "delete-support",
-        "replace-support"
+        "replace-support",
+        "change-support"
       ]
     }
   ],

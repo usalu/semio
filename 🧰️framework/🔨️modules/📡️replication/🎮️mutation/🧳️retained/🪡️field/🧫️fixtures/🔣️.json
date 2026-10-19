@@ -1,0 +1,5 @@
+[
+ {"id":"empty-setter","before":"original","authored":"","expected":""},
+ {"id":"ascii","before":"original","authored":"authored field","expected":"authored field"},
+ {"id":"utf8","before":"🧱️ original","authored":"Feldgröße 🧱️","expected":"Feldgröße 🧱️"}
+]

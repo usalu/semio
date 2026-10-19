@@ -378,16 +378,16 @@ async fn config_lane_verbs_publish_the_shared_app_config_only() {
 #[test]
 fn kind_weight_group_normalization_keeps_the_group_summing_to_one() {
     let ids = ["a".to_string(), "b".to_string(), "c".to_string()];
-    let weights: HashMap<String, f64> = ids.iter().map(|id| (id.clone(), 1.0 / 3.0)).collect();
+    let weights: Puzzle5dKindWeights = ids.iter().map(|id| (id.clone(), 1.0 / 3.0)).collect();
     let normalized = puzzle5d_normalize_kind_weight_group(&weights, &ids, "a", 0.5);
     assert!((normalized["a"] - 0.5).abs() < 1e-9, "the changed kind keeps exactly what was asked for");
     assert!((normalized.values().sum::<f64>() - 1.0).abs() < 1e-9, "the group sums to 1");
     assert!((normalized["b"] - normalized["c"]).abs() < 1e-9, "equal siblings stay equal");
-    let skewed: HashMap<String, f64> = [("a", 0.2), ("b", 0.6), ("c", 0.2)].into_iter().map(|(id, weight)| (id.to_string(), weight)).collect();
+    let skewed: Puzzle5dKindWeights = [("a", 0.2), ("b", 0.6), ("c", 0.2)].into_iter().map(|(id, weight)| (id.to_string(), weight)).collect();
     let normalized = puzzle5d_normalize_kind_weight_group(&skewed, &ids, "a", 0.5);
     assert!((normalized.values().sum::<f64>() - 1.0).abs() < 1e-9);
     assert!(normalized["b"] > normalized["c"], "the remainder is redistributed in proportion to what the siblings held");
-    let single = [("only".to_string(), 1.0)].into_iter().collect::<HashMap<String, f64>>();
+    let single = [("only".to_string(), 1.0)].into_iter().collect::<Puzzle5dKindWeights>();
     let normalized = puzzle5d_normalize_kind_weight_group(&single, &["only".to_string()], "only", 0.0);
     assert!((normalized["only"] - 1.0).abs() < 1e-9, "a one-kind group is always the whole distribution");
 }

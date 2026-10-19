@@ -4,14 +4,13 @@
   "materials": null,
   "sections": null,
   "solids": {
-    "inserted": [],
     "removed": [],
+    "inserted": [],
     "moved": [],
     "modified": [
       {
         "id": "slab_raft",
         "patch": {
-          "id": "slab_raft",
           "name": "Workshop Raft Slab",
           "outline": [
             [

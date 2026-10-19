@@ -1,6 +1,8 @@
-//! 🔺️ Sparse diff builder for `DeleteNode` — a real cascade-aware removal (node + any edge that
 //! touches one of its handles), never a whole-snapshot capture.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dEdgesDelta, Puzzle2dNodesDelta};
+//! 🔺️ Sparse diff builder for `DeleteNode` — a real cascade-aware removal (node + any edge that
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dEdgesDelta;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dNodesDelta;
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Diff

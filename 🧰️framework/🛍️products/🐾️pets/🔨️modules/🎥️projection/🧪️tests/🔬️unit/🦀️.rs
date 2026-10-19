@@ -19,8 +19,8 @@ fn a_frame_is_drawn_back_to_front() {
     let mut reversed = stage.clone();
     reversed.actors.reverse();
     assert_eq!(frame_of(&menagerie, &reversed), frame);
-    let mut one = stage.actors[0].clone();
-    let mut other = stage.actors[0].clone();
+    let mut one = frame.actors[0].clone();
+    let mut other = frame.actors[0].clone();
     (one.species, other.species) = ("\u{ff5e}".to_string(), "\u{1f600}".to_string());
     assert!(behind(&other, &one) && !behind(&one, &other) && one.species < other.species);
     other.y = f64::NAN;

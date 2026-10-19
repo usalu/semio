@@ -243,7 +243,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     ///
     /// 🧭️ Why this cannot be `AppCommand::Command`. The shell's dispatch lane APPLIES: it runs
     /// `handle_action_invocation` → `dispatch_typed_command_inner`, which mounts a typed
-    /// operation whose publication ladder commits into `self.store` and mints an undo group. An
+    /// operation whose publication ladder commits into `self.stores.store` and mints an undo group. An
     /// agent's `action_prepare` must not do that — its own protocol commits separately
     /// (`TransactionPrepare{ops}` → `TransactionCommit`), and `RoutingArtifactChannel` caches ONE
     /// guest instance per plugin, so a prepare that applied would leave the commit applying the
@@ -389,7 +389,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
             let Some(caller)=cx.original_source_parent()?.admit_loan(cx)?else{return Ok(false)};
             cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;
             let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:grant,site:"plugin_agent_lane_preview",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:0,step_budget_us:0};
-            self.tools.agent_lane_preview=Some(semio_framework_plugin_job::AgentLanePreview{key:Some(key),caller:std::mem::ManuallyDrop::new(Some(caller)),starting:true,producer:None,children:None,completion:None,completion_close:None,lease:None,lease_close:None,config,maximum_bytes:0,steps:0,publication:None,complete:false,closing:false,publication_close:None});
+            self.tools.agent_lane_preview=Some(semio_framework_plugin_job::AgentLanePreview{key:Some(key),caller:std::mem::ManuallyDrop::new(Some(caller)),starting:true,producer_request:None,producer_request_retirement:None,producer:None,children:None,completion:None,completion_close:None,lease:None,lease_close:None,config,maximum_bytes:0,steps:0,publication:None,complete:false,closing:false,publication_close:None});
         }
         let state=self.tools.agent_lane_preview.as_mut().unwrap();
         if state.closing{return Ok(false)}
@@ -434,10 +434,12 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         );
         let key = admission.proof.key();
         let contract = admission.proof.contract();
-        let spec = A::build_tool_job(ArtifactOwnedToolJobRequest {
+        let request = ArtifactOwnedToolJobRequest {
+            source_binding: semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx),
                 retained:self.mounted_policy.maintenance,
-            command,
-            raw_wire: ArtifactToolRawInput::transferred_to_factory(),
+            command: crate::tool_contract::ArtifactOriginalToolCommand::from_admitted_op_binary(command,&admission.raw_wire,semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx)),
+            input: Some(admission.raw_wire),
+            checkpoint: None,
             operation,
             controller_id: key.controller_id,
             tool_id: key.tool_id,
@@ -459,14 +461,9 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
             instance_operation_owner: self.tools.instance_operation_owner.clone(),
             output_chunks: ArtifactOutputChunks::new(contract.max_output_bytes),
             completion: completion.clone(),
-        })
-        .await?
-        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.missing-owned-builder"), format!("app-owned tool '{verb}' registered a factory but supplied no exact payload builder")))?;
-        let wire_admission = admission.wire_admission.clone();
-        let dispatch =
-            self.tools.tool_jobs.dispatch_wire_retained_with_spec(&wire_admission, admission.raw_wire, None, spec).map_err(|rejected| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.dispatch"), rejected.error.to_string()))?;
+        };
         let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:cx.retained_grant(),site:"plugin_agent_lane_preview",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:contract.max_work_units_per_step,step_budget_us:u64::from(contract.max_step_micros)};
-        let state=self.tools.agent_lane_preview.as_mut().expect("original preview lease remains received");state.producer=Some(semio_framework_plugin_job::OriginalPreviewDrive::new(dispatch.job,config,cx));state.completion=Some(completion);state.config=config;state.maximum_bytes=contract.max_output_bytes;state.starting=false;
+        let state=self.tools.agent_lane_preview.as_mut().expect("original preview lease remains received");state.producer_request=Some(request);state.completion=Some(completion);state.config=config;state.maximum_bytes=contract.max_output_bytes;state.starting=false;
         Ok(())
     }
 

@@ -1,0 +1,133 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "oracle",
+    "relativeTolerance",
+    "maximumScalarBytes",
+    "cases",
+    "large"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "oracle": {
+      "const": "mathjs.inv(normalized)/scale"
+    },
+    "relativeTolerance": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "maximumScalarBytes": {
+      "const": 32
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "order",
+          "matrix",
+          "inverse"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "matrix": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "inverse": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "number"
+            }
+          },
+          "fault": {
+            "enum": [
+              "singular",
+              "dimensions"
+            ]
+          }
+        }
+      }
+    },
+    "large": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "order",
+        "diagonal",
+        "adjacent",
+        "residualTolerance",
+        "samples"
+      ],
+      "properties": {
+        "order": {
+          "const": 49
+        },
+        "diagonal": {
+          "type": "number"
+        },
+        "adjacent": {
+          "type": "number"
+        },
+        "residualTolerance": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "samples": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "diagonal",
+            "first",
+            "last"
+          ],
+          "properties": {
+            "diagonal": {
+              "type": "array",
+              "minItems": 49,
+              "maxItems": 49,
+              "items": {
+                "type": "number"
+              }
+            },
+            "first": {
+              "type": "array",
+              "minItems": 49,
+              "maxItems": 49,
+              "items": {
+                "type": "number"
+              }
+            },
+            "last": {
+              "type": "array",
+              "minItems": 49,
+              "maxItems": 49,
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

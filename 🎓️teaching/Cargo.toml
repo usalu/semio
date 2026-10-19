@@ -26,7 +26,7 @@ rust-version = "1.95"
 [workspace.dependencies]
 semio-framework-replication = { path = "../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust" }
 semio-framework-server = { path = "../🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust" }
-semio-framework-quiz = { path = "../🧰️framework/🛍️products/❓️quiz/📦️packages/🦀️rust" }
+semio-framework-course = { path = "../🧰️framework/🛍️products/📚️course/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-dispatch-macros = { path = "../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }

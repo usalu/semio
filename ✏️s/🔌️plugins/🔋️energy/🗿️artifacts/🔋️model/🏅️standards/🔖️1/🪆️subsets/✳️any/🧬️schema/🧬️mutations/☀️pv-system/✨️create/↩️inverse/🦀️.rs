@@ -10,7 +10,7 @@ where
     Op: From<super::CreatePvSystem> + From<crate::DeletePvSystem>,
 {
     Ok((|| {
-    if base.model.pv_systems.iter().any(|item| item.id == payload.id) || payload.index as usize > base.model.pv_systems.len() {
+    if base.model.pv_systems.iter().any(|item| item.id == payload.id) || payload.index as usize > base.model.pv_systems.len() || !payload.temperature_coefficient.is_finite() || !payload.faiman_heat_loss_constant_w_m2k.is_finite() || payload.faiman_heat_loss_constant_w_m2k <= 0.0 || !payload.faiman_heat_loss_wind_w_s_m3k.is_finite() || payload.faiman_heat_loss_wind_w_s_m3k < 0.0 {
         return Vec::new();
     }
     vec![vocabulary::delete_pv_system(payload.id)]

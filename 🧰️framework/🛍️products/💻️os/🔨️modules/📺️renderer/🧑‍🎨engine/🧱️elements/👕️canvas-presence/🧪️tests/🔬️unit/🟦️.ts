@@ -34,9 +34,9 @@ describe("👕️canvas-presence registry", () => {
     });
     expect(collectLocalPresenceWindowViewsV1("doc-a")).toHaveLength(1);
     expect(collectLocalPresenceWindowViewsV1("doc-a")[0]?.windowId).toBe("w1");
-    clearLocalPresenceWindowViewV1("w1");
+    clearLocalPresenceWindowViewV1("w1", "doc-a");
     expect(collectLocalPresenceWindowViewsV1("doc-a")).toHaveLength(0);
-    clearLocalPresenceWindowViewV1("w2");
+    clearLocalPresenceWindowViewV1("w2", "doc-b");
   });
 
   it("stores artifact roster for host overlays", () => {
@@ -66,7 +66,7 @@ describe("👕️canvas-presence registry", () => {
     expect(collectLocalActiveToolV1("doc-a")).toBe("brush");
     expect(collectLocalActiveToolV1("local")).toBeUndefined();
     publishLocalActiveToolV1("local", "select");
-    expect(collectLocalActiveToolV1("missing")).toBe("select");
+    expect(collectLocalActiveToolV1("missing")).toBeUndefined();
     publishLocalActiveToolV1("doc-a", null);
     publishLocalActiveToolV1("local", null);
     expect(collectLocalActiveToolV1("doc-a")).toBeUndefined();
@@ -75,7 +75,7 @@ describe("👕️canvas-presence registry", () => {
   it("publishes hub-admitted actor so overlays exclude self", () => {
     publishLocalPresenceActorV1("doc-a", "actor-self");
     expect(localPresenceActorV1("doc-a")).toBe("actor-self");
-    expect(localPresenceActorV1("local")).toBe("actor-self");
+    expect(localPresenceActorV1("local")).toBeNull();
     publishArtifactPresenceRosterV1("doc-a", [
       {
         actor: "actor-self",
@@ -129,7 +129,7 @@ describe("👕️canvas-presence registry", () => {
     });
     const views = collectLocalPresenceWindowViewsV1("doc-a");
     expect(views[0]?.rayOrigin).toEqual([2, 3, 4]);
-    clearLocalPresenceWindowViewV1("world-main");
+    clearLocalPresenceWindowViewV1("world-main", "doc-a");
   });
 
 

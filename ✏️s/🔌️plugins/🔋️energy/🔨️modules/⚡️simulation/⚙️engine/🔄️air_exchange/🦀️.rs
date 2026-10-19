@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖️InfiltrationMethod
 /// 🚪️ Infiltration flow calculation method.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum InfiltrationMethod {
     ScheduledAch,

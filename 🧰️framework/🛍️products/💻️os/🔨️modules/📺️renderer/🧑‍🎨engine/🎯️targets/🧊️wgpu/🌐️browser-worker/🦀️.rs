@@ -473,16 +473,21 @@ impl BrowserRendererWorker {
         let original=self.original_frame.as_mut().expect("original frame entry available").close_step(original_frame_input(operation,generation,epoch,items,copy,capacity,release,depth));
         let reply=semio_framework_actor::retained_context::OriginalActorCloseReply::borrow_original(&original);self.original_receipt.write_close(&reply);reply.complete
     }
-    /// 🧵️ Executes one private decoder opportunity without producing a frame or input acknowledgement.
+    /// 🧵️ A decoder opportunity borrows the exact issued original frame input and returns one fixed scalar receipt.
     #[wasm_bindgen(js_name = assetDecodeStep)]
-    pub fn asset_decode_step(&mut self) -> Result<String, JsValue> {
+    pub fn asset_decode_step(&mut self, operation:u64,generation:u64,epoch:u64,items:usize,copy:usize,capacity:usize,release:usize,depth:usize,fuel:u64,deadline_us:u64) -> Result<u8, JsValue> {
         self.ensure_live()?;
-        let host = self.host.as_mut().ok_or_else(|| js_error("closed", "asset decoder has no live host"))?;
-        let turn = match host.with_asset_decode_context(|runtime, cx| runtime.asset_decode_step(cx)).map_err(|failure| js_error("asset-decode-step", &format!("{failure:?}")))? {
-            Some(turn) => turn,
-            None => host.runtime.asset_decode_deferred_turn(),
-        };
-        serde_json::to_string(&turn).map_err(|error| js_error("asset-decode-result", &error.to_string()))
+        let input = original_frame_input(operation,generation,epoch,items,copy,capacity,release,depth);
+        let mut recipient = Default::default();
+        let host = self.host.as_ref().ok_or_else(|| js_error("closed", "asset decoder has no live host"))?;
+        let original = self.original_frame.as_mut().expect("original frame entry available").dispatch_value_step(input,semio_framework_job::StepBudget::new(fuel,deadline_us,input.grant),&mut recipient,original_frame_now_us,|cx| {
+            let turn = host.runtime.asset_decode_step(cx)?;
+            let kind = match turn.kind { crate::RendererAssetDecodeTurnKind::Pending => 0, crate::RendererAssetDecodeTurnKind::Idle => 1, crate::RendererAssetDecodeTurnKind::Published => 2, crate::RendererAssetDecodeTurnKind::Cancelled => 3, crate::RendererAssetDecodeTurnKind::Fault => 4 };
+            Ok(kind | if turn.pending { 8 } else { 0 })
+        });
+        let authority = match &original.result { Err(semio_framework_plugin::reactor::original_actor_context::OriginalActorEntryFailure::Authority(error)) => Some(error.kind), _ => None };
+        self.original_receipt.write(semio_framework_plugin::reactor::original_actor_context::OriginalActorFixedCall { input:original.input, spent:original.receipt_spent, work_units_spent:original.work_units_spent, kind:semio_framework_plugin::reactor::original_actor_context::OriginalActorFixedKind::Failure { authority } });
+        match original.result { Ok(status) => Ok(status), Err(semio_framework_plugin::reactor::original_actor_context::OriginalActorEntryFailure::Semantic) => Ok(8), Err(_) => Err(js_error("original-decoder-source", "original decoder retains its complete native failure")) }
     }
 
     /// 🎞️ A live frame build and an unapplied runtime completion each owe the shell another

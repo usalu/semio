@@ -45,7 +45,7 @@ impl PeerPresenceRootRetirement {
 
     pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if let Some(entry) = self.entry.as_ref() {
-            return Ok(RetirementDemand { copy_bytes: entry.next_copy_byte_demand()?, capacity_bytes: entry.next_capacity_byte_demand(body)?, release_bytes: entry.next_release_byte_demand()?, depth: entry.next_depth_demand()?.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "peer entry retirement depth overflow"))? });
+            return Ok({let mut demand=entry.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "peer entry retirement depth overflow"))?;demand});
         }
         if self.root.is_some() {
             return Ok(RetirementDemand { copy_bytes: size_of::<PeerPresenceRoot>(), release_bytes: semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<PeerPresenceRoot>(), depth: 1, ..Default::default() });
@@ -401,6 +401,12 @@ pub struct PeerRosterCandidate<P> {
 #[doc(hidden)]
 pub struct ValidatedPeerRosterCommit {
     pub generation: u64,
+}
+impl ValidatedPeerRosterCommit {
+    /// 👥️ Seals the generation after the mounted instance validated every original roster owner.
+    pub fn admitted(generation: u64) -> Self { Self { generation } }
+    /// 👥️ Consumes the original roster admission for its exact generation.
+    pub fn into_generation(self) -> u64 { self.generation }
 }
 
 #[doc(hidden)]

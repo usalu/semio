@@ -10,6 +10,8 @@ impl LocalizedLabelRetirement{
  fn current(&self)->Option<&Cow<'static,str>>{if self.terminal_is_empty(){None}else{Some(&self.cells[self.index/Locale::COUNT][self.index%Locale::COUNT])}}
 }
 impl RetirementCursor for LocalizedLabelRetirement{
+    fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{release_bytes:match self.current(){Some(Cow::Owned(text))=>text.capacity(),_=>0},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
+
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
   if self.terminal_is_empty(){return RetirementStep::Complete;}
   if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}

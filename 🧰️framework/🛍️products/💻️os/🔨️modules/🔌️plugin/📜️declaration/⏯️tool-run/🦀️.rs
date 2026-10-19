@@ -183,6 +183,8 @@ impl semio_framework_value::retirement::RetireOwned for ToolRunJobPort {
 }
 
 impl semio_framework_value::retirement::RetirementCursor for OriginalToolRunJobPortRetirement {
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;self.demands()}
+
     fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{
         use semio_framework_value::retirement::RetirementStep;
         match OriginalToolRunJobPortRetirement::close_step(self,grant){
@@ -210,7 +212,11 @@ pub struct ToolRunView {
     pub payload: Option<Arc<Vec<u8>>>,
 }
 
-impl ToolRunView {
+/// ⏯️ Fixed live run identity and state borrowed directly from its original ledger entry.
+ #[derive(Clone,Copy,Debug,PartialEq,Eq)]
+ pub struct ToolRunPollView<'a>{pub tool_id:&'a str,pub identity:ToolRunIdentity,pub state:ToolRunState}
+ impl ToolRunView {
+ pub fn poll_view(&self)->ToolRunPollView<'_>{ToolRunPollView{tool_id:&self.tool_id,identity:self.identity,state:self.state}}
     /// 🏗️ A view of a run with no provisional entities, no progress yet and no payload.
     pub fn new(tool_id: impl Into<String>, identity: ToolRunIdentity, state: ToolRunState) -> Self {
         let progress = semio_framework_tool_run::ToolRunProgress { identity, sequence: 0, state, stage: 0, completed: 0, total: None, counters: Vec::new(), units_per_second: 0.0, conflicts: 0, steps: ToolRunStepRing::new() };

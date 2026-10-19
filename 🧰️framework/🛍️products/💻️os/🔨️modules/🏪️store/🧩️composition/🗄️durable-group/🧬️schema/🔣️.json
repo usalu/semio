@@ -3,6 +3,18 @@
   "$id": "https://json.schemas.assets.semio-tech.com/os/store/composition/durable-group/schema.json",
   "title": "Store Durable Owned Group",
   "$defs": {
+    "DurableRecoveryOctetOwner": {
+      "type": "object",
+      "required": ["record", "field", "valueNode", "jsonProjection", "maximumBytes"],
+      "properties": {
+        "record": { "const": "decision-member" },
+        "field": { "const": "recoveryPack" },
+        "valueNode": { "const": "intrinsic-octets" },
+        "jsonProjection": { "const": "array" },
+        "maximumBytes": { "const": 162000 }
+      },
+      "additionalProperties": false
+    },
     "DurableOwnedGroupLimits": {
       "type": "object",
       "additionalProperties": false,

@@ -23,20 +23,29 @@ pub fn change_domain<Op: From<ChangeDomain>>(new_domain: String) -> Op {
 impl<Op> protocol::MutationKind<Puzzle3dSnapshot, Op> for ChangeDomain
 where
     Op: protocol::Mutation<Puzzle3dSnapshot, Diff = Puzzle3dDiff> + From<ChangeDomain>,
-{
+ {
+
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "domain", kind: "change-domain", record: "ChangedDomain" };
 
-    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change domain to \"{}\"", self.new_domain), &format!("Domäne auf \"{}\" ändern", self.new_domain))
+    }
+
+}
+impl<Op> protocol::ColdMutationKind<Puzzle3dSnapshot, Op> for ChangeDomain
+where
+    Op: protocol::ColdMutation<Puzzle3dSnapshot, ReferenceDiff = Puzzle3dDiff> + From<ChangeDomain>,
+ {
+fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+fn inverse(&self, base: &Puzzle3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change domain to \"{}\"", self.new_domain), &format!("Domäne auf \"{}\" ändern", self.new_domain))
-    }
 }
 //#endregion 🔖️Mutation

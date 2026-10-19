@@ -1,14 +1,10 @@
-use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_element::*;
-use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_element;
-use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
+use super::*;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
-use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_active_example::SetActiveExample;
-use crate::context::{dispatch, fem2d_app};
+use crate::editor::fem2d::commands::set_active_example::SetActiveExample;
+use crate::context::dispatch;
+use crate::context::fem2d_app;
 use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand;
-use pack::snapshot::ArtifactDsl;
+use store::os_store::serialization::ArtifactDsl;
 
 fn demo() -> Fem2dSnapshot {
     Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("the bundled demo fixture parses")
@@ -36,9 +32,9 @@ async fn patch_element_repoints_a_section_on_the_demo_2d() {
 #[semio_framework_async_macros::async_test]
 async fn patch_element_kind_swaps_the_variant_and_keeps_every_id_2d() {
     let emitted = emit(&demo(), PatchElement { id: "e3".into(), field: "kind".into(), value: "bar".into() }).expect("handle");
-    let [Fem2dMutation::ReplaceElement(replace)] = emitted.artifact_mutations.as_slice() else { panic!("one replace-element") };
-    let FemElement::Bar { id, start, end, material_id, section_id } = replace.new_element.as_ref() else { panic!("the kind edit swaps the variant") };
-    assert_eq!((id.as_str(), start.as_str(), end.as_str(), material_id.as_str(), section_id.as_str()), ("e3", "n1", "n2", "steel", "chs76"));
+    let [Fem2dMutation::ChangeElement(change)] = emitted.artifact_mutations.as_slice() else { panic!("one change-element") };
+    assert_eq!(change.id, "e3");
+    assert_eq!(change.patch, Fem2dElementPatch { kind: Some("bar".into()), ..Default::default() });
 }
 
 #[semio_framework_async_macros::async_test]
@@ -53,4 +49,23 @@ async fn patch_element_rejects_an_unknown_field_an_unknown_kind_and_a_missing_el
 async fn patch_element_with_the_current_reference_emits_nothing_2d() {
     let emitted = emit(&demo(), PatchElement { id: "e3".into(), field: "materialId".into(), value: "steel".into() }).expect("handle");
     assert!(emitted.artifact_mutations.is_empty());
+}
+
+/// 👥️ Two inspector commands authored on one base compose their independent intent in either replay order.
+#[test]
+fn sibling_field_commands_and_inverse_preserve_concurrent_intent(){
+    let base=semio_framework_pack_json::from_json_str::<Fem2dSnapshot>(include_str!("../../../../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-element/🩹️changes/📸️snapshot/⬅️before/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral fixture");
+    let first=emit(&base,PatchElement{id:"e1".into(),field:"start".into(),value:"n3".into()}).unwrap().artifact_mutations.remove(0);
+    let second=emit(&base,PatchElement{id:"e1".into(),field:"kind".into(),value:"beam".into()}).unwrap().artifact_mutations.remove(0);
+    let first_then_second=vcs::apply_mutation(&vcs::apply_mutation(&base,&first).unwrap().0,&second).unwrap().0;
+    let combined=vcs::apply_mutation(&vcs::apply_mutation(&base,&second).unwrap().0,&first).unwrap().0;
+    assert_eq!(combined,first_then_second);
+    assert!(matches!(&combined.elements[0],crate::FemElement::Beam{start,..} if start=="n3"));
+    let mut undo=combined.clone();for inverse in protocol::Mutation::inverse(&first,&base).unwrap().iter().rev(){undo=vcs::apply_mutation(&undo,inverse).unwrap().0;}
+    assert_eq!(undo,vcs::apply_mutation(&base,&second).unwrap().0,"undo owns no sibling field");
+    let first_diff=protocol::Mutation::diff(&first,&base).into_parts().0;let second_diff=protocol::Mutation::diff(&second,&base).into_parts().0;
+    let mut sum=first_diff.clone();protocol::ColdMutationDiff::absorb(&mut sum,second_diff);
+    assert_eq!(protocol::apply_diff_cold(&sum,&base).unwrap(),combined);
+    assert_eq!(protocol::apply_diff_cold(&protocol::DiffAlgebra::inverse(&sum,&base),&combined).unwrap(),base);
+    eprintln!("[DEBUG] element same-base inspector fields and sparse inverse preserve concurrent sibling intent");
 }

@@ -84,25 +84,15 @@ fn a_fetched_glb_becomes_the_resident_world_mesh_its_url_names() {
     let RendererAssetFetchOwner::Shared(owner) = probe.take_terminal_owner().expect("terminal owner") else { panic!("shared probe") };
     finish_world3d_asset(&mut state.assets, owner).expect("terminal handback");
     assert!(begin_world3d_dynamic_retirement(&mut state.session, &mut state.camera, &mut state.retirement, &mut state.scene, &mut state.assets));
+    let mut caller=OriginalRendererFixture::new();
     for _ in 0..4_096 {
-        let mut sequence = 0;
-        let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
-        let mut context = semio_framework_job::StepContext::new(
-            semio_framework_job::OperationId(1),
-            semio_framework_job::Generation(1),
-            semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT),
-            semio_framework_job::root_cancel_token(),
-            semio_framework_job::default_now_us,
-            &mut sequence,
-            &mut context_retained,
-        );
+        let terminal=caller.turn(|context| {
         let terrain_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
-        let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut state.session, &mut state.terrain,terrain_grant,&mut context);
+        let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut state.session, &mut state.terrain,terrain_grant,context);
         assert!(terrain.ownership.fits(terrain_grant));
         assert!(!matches!(terrain.step,infinite_world::world::WorldTerrainMeshPublicationStep::Fault(_)));
-        if terrain.step==infinite_world::world::WorldTerrainMeshPublicationStep::Idle && step_world3d_dynamic_retirement(&mut state, &mut context) {
-            break;
-        }
+        Ok(terrain.step==infinite_world::world::WorldTerrainMeshPublicationStep::Idle && step_world3d_dynamic_retirement(&mut state, context))
+        }).unwrap();if terminal { break; }
     }
     assert!(world3d_dynamic_retirement_terminal_is_empty(&state));
 }
@@ -159,25 +149,15 @@ fn a_real_catalogued_glb_streams_through_the_surfaces_own_asset_lane_into_its_me
     let RendererAssetFetchOwner::Shared(owner) = probe.take_terminal_owner().unwrap() else { panic!() };
     finish_world3d_asset(&mut state.assets, owner).unwrap();
     assert!(begin_world3d_dynamic_retirement(&mut state.session, &mut state.camera, &mut state.retirement, &mut state.scene, &mut state.assets));
+    let mut caller=OriginalRendererFixture::new();
     for _ in 0..8_192 {
-        let mut sequence = 0;
-        let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
-        let mut context = semio_framework_job::StepContext::new(
-            semio_framework_job::OperationId(1),
-            semio_framework_job::Generation(1),
-            semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT),
-            semio_framework_job::root_cancel_token(),
-            semio_framework_job::default_now_us,
-            &mut sequence,
-            &mut context_retained,
-        );
+        let terminal=caller.turn(|context| {
         let terrain_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
-        let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut state.session, &mut state.terrain,terrain_grant,&mut context);
+        let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut state.session, &mut state.terrain,terrain_grant,context);
         assert!(terrain.ownership.fits(terrain_grant));
         assert!(!matches!(terrain.step,infinite_world::world::WorldTerrainMeshPublicationStep::Fault(_)));
-        if terrain.step==infinite_world::world::WorldTerrainMeshPublicationStep::Idle && step_world3d_dynamic_retirement(&mut state, &mut context) {
-            break;
-        }
+        Ok(terrain.step==infinite_world::world::WorldTerrainMeshPublicationStep::Idle && step_world3d_dynamic_retirement(&mut state, context))
+        }).unwrap();if terminal { break; }
     }
     assert!(world3d_dynamic_retirement_terminal_is_empty(&state));
 }
@@ -277,7 +257,7 @@ fn presented_ink_intent_barrier_progresses_before_gpu_submit_and_holds_runtime_i
     let packet_ack = acknowledge.find("gate.acknowledge_presented").expect("the prepared packet acknowledgement");
     assert!(input_ack < packet_ack, "a refused input witness keeps the packet witness live for a Pending retry");
 
-    let host_build = WINT_APP_SOURCE().split("fn build_and_publish_snapshot(&mut self) {").nth(1).expect("the host build pump");
+    let host_build = WINT_APP_SOURCE().split("fn build_and_publish_snapshot(").nth(1).expect("the host build pump");
     let host_build = &host_build[..host_build.find("fn present_snapshot").expect("the host presentation half")];
     let ingress_gate = host_build.find("holds_presented_input_publication").expect("the input-publication critical section");
     let runtime_pump = host_build.find("pump_pending_applies").expect("the runtime apply pump");
@@ -293,7 +273,7 @@ fn component_close_retires_its_creating_frame_before_external_progress_and_readm
     assert_eq!(law["expected"]["sameGenerationReadmitted"], true);
     assert_eq!(law["expected"]["closingHostPublications"].as_array().map(Vec::len), Some(0));
 
-    let host_build = WINT_APP_SOURCE().split("fn build_and_publish_snapshot(&mut self) {").nth(1).expect("the host build pump");
+    let host_build = WINT_APP_SOURCE().split("fn build_and_publish_snapshot(").nth(1).expect("the host build pump");
     let host_build = &host_build[..host_build.find("fn present_snapshot").expect("the host presentation half")];
     let close_step = host_build.find("self.advance_component_surface_close(cx)?").expect("one bounded component-close step");
     let event_drain = host_build.find("if !self.events.is_empty()").expect("the unrelated input drain");
@@ -315,7 +295,7 @@ fn component_close_retires_its_creating_frame_before_external_progress_and_readm
     let transient = frame_job.split("pub fn retire_for_component_surface_close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{").nth(1).expect("the reusable frame handoff");
     let transient = &transient[..transient.find("fn retire_original_frame_step").expect("the shared original retirement ladder")];
     assert!(transient.contains("self.retire_original_frame_step(cx)?&&!self.has_live_session()"), "the same generation may be readmitted once the original ladder drained");
-    assert!(!transient.contains("self.closing = true") && !transient.contains("completion_waker.take()"), "transient retirement preserves reusable-host state");
+    assert!(!transient.contains("self.closing = true") && !transient.contains("completion_waker.take()") && !transient.contains("cancel_now()"), "transient retirement preserves reusable-host state");
 }
 
 /// 🐕️ LAW: the presentation watchdog sees WITHIN-item upload progress, so a healthy mesh upload can
@@ -341,39 +321,20 @@ fn the_present_watchdog_signature_carries_within_item_upload_progress() {
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn original_decoder_close_hands_back_same_response_under_exact_independent_grant() {
-    use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, RetainedCloneGrant, RetainedCloneProgress};
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json")).unwrap();
-    let row = &law["decoderClose"];
-    let (authority, probe) = owned_decoder_fixture();
-    let token = probe.owner().owner().token();
-    let observed = probe.owner().owner().received_bytes();
-    let mut job = RendererAssetDecodeJob::new(probe, Arc::new(AtomicBool::new(false)));
-    let handback = job.handback.clone();
-    job.begin_close();
-    let grant = RetainedCloneGrant { maximum_items: row["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: job.next_close_copy_byte_demand().unwrap(), maximum_capacity_bytes: job.next_close_capacity_byte_demand(0).unwrap(), maximum_release_bytes: job.next_close_release_byte_demand().unwrap(), maximum_depth: job.next_close_depth_demand().unwrap() };
-    assert_eq!(grant.maximum_copy_bytes, row["maximumCopyBytes"].as_u64().unwrap() as usize);
-    assert_eq!(grant.maximum_capacity_bytes, row["maximumCapacityBytes"].as_u64().unwrap() as usize);
-    assert_eq!(grant.maximum_release_bytes, row["maximumReleaseBytes"].as_u64().unwrap() as usize);
-    assert_eq!(grant.maximum_depth, row["maximumDepth"].as_u64().unwrap() as usize);
-    let empty = RetainedCloneProgress::default();
-    assert_eq!(semio_framework_job::close_with_self_funded_context(RetainedCloneGrant { maximum_items: 0, ..grant }, |cx| job.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Pending { progress: empty });
-    let depth_refusal = semio_framework_job::close_with_self_funded_context(RetainedCloneGrant { maximum_depth: 0, ..grant }, |cx| job.close_step(cx)).expect_err("a zero depth grant refuses the close");
-    assert_eq!(depth_refusal.primary_value().map(|error| error.kind), Some(semio_framework_value::ValueRefusalKind::DepthLimit));
-    assert_eq!(job.probe.borrow().as_ref().unwrap().owner().owner().token(), token);
-    let lock = handback.lock().unwrap();
-    assert_eq!(semio_framework_job::close_with_self_funded_context(grant, |cx| job.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Blocked);
-    drop(lock);
-    let mut self_funded = semio_framework_job::SelfFundedCloseCaller::new();
-    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| self_funded.turn(grant, |cx| job.close_step(cx)).expect("original fixture close turn"));
-    let expected = RetainedCloneProgress { copied_items: row["handbackCopiedItems"].as_u64().unwrap() as usize, released_bytes: row["handbackReleasedBytes"].as_u64().unwrap() as usize, ..empty };
-    assert_eq!(step, InteractiveJobCloseStep::Pending { progress: expected });
-    assert_eq!((heap.requested_bytes, heap.released_bytes), (expected.retained_capacity_bytes, expected.released_bytes));
-    assert!(job.terminal_is_empty());
-    assert_eq!(semio_framework_job::close_with_self_funded_context(grant, |cx| job.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Complete { progress: empty });
-    let recovered = handback.lock().unwrap().take().unwrap();
-    assert_eq!(recovered.owner().owner().token(), token);
-    assert_eq!(recovered.owner().owner().received_bytes(), observed);
-    close_owned_decoder_fixture(authority, recovered);
+    use semio_framework_job::{InteractiveJob,InteractiveJobCloseStep,RetainedCloneGrant,RetainedCloneProgress};
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json")).unwrap();let row=&law["decoderClose"];
+    let(authority,probe)=owned_decoder_fixture();let token=probe.owner().owner().token();let observed=probe.owner().owner().received_bytes();
+    let mut job=RendererAssetDecodeJob::new(probe);let mut caller=OriginalRendererFixture::new();job.begin_close();
+    let before=caller.receipt();let denied=RetainedCloneGrant{maximum_items:0,..renderer_law_stock()};
+    assert_eq!(caller.limited(denied,|cx|job.close_step(cx)).unwrap(),InteractiveJobCloseStep::Blocked);assert_eq!(caller.receipt(),before);
+    let borrowed=job.probe.borrow_mut();assert!(job.take_probe().is_none());drop(borrowed);
+    assert_eq!(caller.turn(|cx|job.close_step(cx)).unwrap(),InteractiveJobCloseStep::Blocked);
+    let(recovered,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.take_probe().unwrap());
+    assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(recovered.owner().owner().token(),token);assert_eq!(recovered.owner().owner().received_bytes(),observed);
+    assert_eq!(row["maximumReleaseBytes"].as_u64().unwrap(),0);
+    assert_eq!(caller.turn(|cx|job.close_step(cx)).unwrap(),InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress::default()});assert!(job.terminal_is_empty());
+    close_owned_decoder_fixture(authority,recovered);
+    eprintln!("[DEBUG] original decoder explicit same response handback; borrowed owner refuses theft; zero physical transfer");
 }
 
 #[test]

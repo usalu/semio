@@ -74,25 +74,7 @@ pub enum ArtifactToolCompletionValue<A: ArtifactApp> {
     Download(Result<ArtifactDownloadOutput, ArtifactCompletionFault>, EphemeralEmit<A>),
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub enum TypedOperationResultLane {
-    Artifact,
-    Config,
-    Draft,
-    Presence,
-    Transient,
-    WindowConfig,
-    WindowTransient,
-    Child,
-    Interaction,
-    Effect,
-    Event,
-    Ui,
-    Download,
-    Terminal,
-    Fault,
-}
+pub use semio_framework_actor::typed_operation_page::TypedOperationResultLane;
 
 pub(crate) struct OriginalAuthoringEffect {
     pub(super) receipt: Option<semio_framework_value::native_encoding::NativeEncodeContinuation>,

@@ -1,5 +1,5 @@
-//! 🔗 Puzzle2d mutation — `ConnectHandles`: creates a directed link between two handles, full
 //! initial connection-parameterization payload included (rule 4: `connect-<nouns>{endpoints,
+//! 🔗 Puzzle2d mutation — `ConnectHandles`: creates a directed link between two handles, full
 //! payload}`). A connection a drop records from proximity also states its precondition, the `tolerance` its two
 //! handles lay within: replayed on a base where they no longer do, it still connects and reports
 //! `mutation.precondition-drifted` (design
@@ -88,24 +88,33 @@ pub fn restore_edge<Op: From<ConnectHandles> + From<ChangeEdgeVisible> + From<Ch
 impl<Op> protocol::MutationKind<Puzzle2dSnapshot, Op> for ConnectHandles
 where
     Op: protocol::Mutation<Puzzle2dSnapshot, Diff = Puzzle2dDiff> + From<ConnectHandles> + From<DisconnectHandles>,
-{
+ {
+
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "handles", kind: "connect-handles", record: "ConnectedHandles" };
 
-    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect \"{}\" to \"{}\"", self.source, self.target), &format!("\"{}\" mit \"{}\" verbinden", self.source, self.target))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.to_string_owner()]
     }
+
+}
+impl<Op> protocol::ColdMutationKind<Puzzle2dSnapshot, Op> for ConnectHandles
+where
+    Op: protocol::ColdMutation<Puzzle2dSnapshot, ReferenceDiff = Puzzle2dDiff> + From<ConnectHandles> + From<DisconnectHandles>,
+ {
+fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+        super::diff::diff(self, base)
+    }
+fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Mutation
 

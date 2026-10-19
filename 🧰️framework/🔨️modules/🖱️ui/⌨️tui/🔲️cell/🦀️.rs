@@ -1,5 +1,5 @@
 use crate::geometry::{Pos, Rect, Size};
-use crate::text::{char_cells, cluster_cells_in, clusters, scalar_mark, WidthMode};
+use crate::text::{char_cells, cluster_cells_in, clusters, scalar_cells_in, scalar_mark, WidthMode};
 use crate::theme::Rgb;
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
@@ -214,6 +214,10 @@ impl CellBuffer {
 
     /// 🧩️ Writes one whole grapheme cluster at `at`; `template` supplies the colours, attributes and cell width, its character is replaced by the cluster's lead scalar.
     pub fn put_cluster(&mut self, at: Pos, cluster: &str, template: Cell) {
+        if self.mode == WidthMode::WindowsConsole {
+            self.put_str(at, cluster, template.fg, template.bg, template.attrs, Rect::new(at.x, at.y, u16::from(template.width), 1));
+            return;
+        }
         let mut chars = cluster.chars();
         let Some(lead) = chars.next() else { return };
         let rest = chars.as_str();
@@ -229,15 +233,17 @@ impl CellBuffer {
             return 0;
         }
         for cluster in clusters(s) {
-            if self.mode == WidthMode::Scalar {
+            if self.mode != WidthMode::Cluster {
                 let mut scalars = cluster.chars().peekable();
                 while let Some(c) = scalars.next() {
-                    let w = char_cells(c);
+                    let w = scalar_cells_in(c, self.mode);
                     if w == 0 {
                         continue;
                     }
                     let mut marks = String::new();
-                    while scalars.peek().is_some_and(|c| char_cells(*c) == 0) { let mark = scalars.next().unwrap(); if scalar_mark(mark) { marks.push(mark); } }
+                    if self.mode == WidthMode::Scalar {
+                        while scalars.peek().is_some_and(|c| char_cells(*c) == 0) { let mark = scalars.next().unwrap(); if scalar_mark(mark) { marks.push(mark); } }
+                    }
                     if x + u16::from(w) > clip.x + clip.width {
                         return written;
                     }

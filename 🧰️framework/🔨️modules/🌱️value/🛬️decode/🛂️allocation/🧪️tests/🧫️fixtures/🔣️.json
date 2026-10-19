@@ -52,12 +52,14 @@
     {
       "nativeWordBytes": 4,
       "optionalByteHeaderBytes": 12,
-      "ownerSlotHeaderBytes": 0
+      "ownerSlotHeaderBytes": 8,
+      "ownerSlotCloseCopyBytes": 0
     },
     {
       "nativeWordBytes": 8,
       "optionalByteHeaderBytes": 24,
-      "ownerSlotHeaderBytes": 0
+      "ownerSlotHeaderBytes": 16,
+      "ownerSlotCloseCopyBytes": 0
     }
   ]
 }

@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:fem:paged-ldlt-corpus",
+  "type": "object", "additionalProperties": false, "required": ["cases", "tolerance"],
+  "properties": {
+    "tolerance": { "type": "number", "exclusiveMinimum": 0 },
+    "cases": {
+      "type": "array", "minItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "order", "diagonal", "offDiagonal", "samples"],
+        "properties": {
+          "id": { "type": "string" },
+          "order": { "type": "integer", "minimum": 1 },
+          "diagonal": { "type": "number" },
+          "offDiagonal": { "type": "number" },
+          "samples": {
+            "type": "array", "items": {
+              "type": "object", "additionalProperties": false,
+              "required": ["row", "solution"],
+              "properties": { "row": { "type": "integer", "minimum": 0 }, "solution": { "type": "number" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

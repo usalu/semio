@@ -17,7 +17,8 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use pets::serde_json::{self, json, Map, Value};
-    use pets::{advance, followers_of, frame_of, open_stage, Activity, Frame, Gait, Menagerie, Rate, Stage, StageEvent, Ticked, Ticks, ACTIVITIES, HOP_TICKS, MODE_LIMITS};
+    use pets::{advance, followers_of, frame_of, open_stage, overlaps, Activity, Footing, Frame, Gait, Menagerie, Rate, Stage, StageEvent, Ticked, Ticks, ToolFrame, ACTIVITIES, FOOTINGS, MOODS, HOP_TICKS, MODE_LIMITS};
+    use pets::spacing::{bodies_of, extent_of};
     use semio_repo_test_host::{parse_json, Context, Outcome};
     use std::collections::BTreeMap;
 
@@ -25,7 +26,6 @@ mod subject {
     const FNV_OFFSET_BASIS: u32 = 2_166_136_261;
     const FNV_PRIME: u32 = 16_777_619;
     const CHUNKS: [Ticks; 8] = [1, 7, 64, 3, 500, 2, 19, 1000];
-    const CONTACT: f64 = 0.0078125;
 
     /// 📜️ A scripted event log: the seed of the stage, how many ticks pass, how often a checkpoint is taken, the events by the tick they happen at (before that tick passes), and the committed trace.
     struct Script {
@@ -96,8 +96,38 @@ mod subject {
             folded = actor.bones.iter().copied().fold(folded, fold);
             folded = actor.eyes.iter().flat_map(|eye| [eye.x, eye.y, eye.lid]).fold(folded, fold);
             folded = fold(folded, actor.spirits);
+            let kind = menagerie.species.iter().find(|species| species.id == actor.species);
+            folded = [FOOTINGS.iter().position(|footing| *footing == actor.footing).map_or(-1.0, |index| index as f64), kind.and_then(|kind| kind.states.iter().position(|state| state.id == actor.state)).map_or(-1.0, |index| index as f64), MOODS.iter().position(|mood| *mood == actor.mood).map_or(-1.0, |index| index as f64), actor.intensity, actor.tilt, actor.pivot.x, actor.pivot.y, actor.tools.len() as f64].into_iter().fold(folded, fold);
+            for tool in &actor.tools {
+                let numbers = match tool {
+                    ToolFrame::Chute(tool) => vec![0.0, tool.open, tool.sway],
+                    ToolFrame::Rope(tool) => vec![1.0, tool.x, tool.y, tool.slack],
+                    ToolFrame::Hook(tool) => vec![2.0, tool.x, tool.y],
+                    ToolFrame::Gun(tool) => vec![3.0, tool.aim],
+                    ToolFrame::Ladder(tool) => vec![4.0, tool.lean, tool.length],
+                };
+                folded = numbers.into_iter().fold(folded, fold);
+            }
+            folded = [actor.body.x, actor.body.y, actor.body.width, actor.body.height].into_iter().fold(folded, fold);
         }
-        folded
+        folded = fold(folded, frame.ladders.len() as f64);
+        for ladder in &frame.ladders {
+            folded = [ladder.x0, ladder.y0, ladder.x1, ladder.y1, ladder.rungs as f64, ladder.opacity].into_iter().fold(folded, fold);
+        }
+        folded = fold(folded, frame.particles.len() as f64);
+        for particle in &frame.particles {
+            let kind = menagerie.species.iter().find(|species| species.id == particle.species);
+            folded = [menagerie.species.iter().position(|species| species.id == particle.species).map_or(-1.0, |index| index as f64), kind.and_then(|kind| kind.emitters.iter().position(|emitter| emitter.id == particle.emitter)).map_or(-1.0, |index| index as f64), particle.x, particle.y, particle.scale, particle.rotation, particle.opacity].into_iter().fold(folded, fold);
+        }
+        folded = fold(folded, frame.lifts.len() as f64);
+        for lift in &frame.lifts {
+            folded = [lift.dx, lift.dy, lift.tilt, lift.opacity].into_iter().fold(folded, fold);
+        }
+        folded = fold(folded, frame.puffs.len() as f64);
+        for puff in &frame.puffs {
+            folded = [puff.x, puff.y, puff.width, puff.height, puff.phase].into_iter().fold(folded, fold);
+        }
+        fold(folded, frame.held.as_ref().and_then(|held| menagerie.species.iter().position(|species| species.id == *held)).map_or(-1.0, |index| index as f64))
     }
 
     /// 🎭️ What every actor on stage does, by species: what a later stage is held against for the activity graph.
@@ -137,16 +167,27 @@ mod subject {
             if !(0.0..=1.0).contains(&actor.opacity) {
                 whole = false;
             }
+            if (actor.footing == Footing::Perch) != actor.perch.is_some() {
+                perched = false;
+            }
+            if (actor.footing == Footing::Wall) != actor.pitch.is_some() || actor.pitch.as_ref().is_some_and(|pitch| !stage.walls.iter().any(|wall| wall.id == pitch.wall && wall.side == pitch.side && wall.x == pitch.x)) {
+                perched = false;
+            }
+            if actor.footing == Footing::Ladder && !stage.ladders.iter().any(|ladder| ladder.rider.as_ref() == Some(&actor.species)) {
+                perched = false;
+            }
             let Some(surface) = &actor.perch else {
                 continue;
             };
-            if !stage.perches.iter().any(|perch| perch.surface == *surface && perch.x0 <= actor.x && actor.x <= perch.x1 && actor.y == perch.y - hover) {
+            let scoots = actor.activity == Activity::Scoot;
+            let slack = if scoots { 2.0 * species.size.width } else { 0.0 };
+            if !stage.perches.iter().any(|perch| perch.surface == *surface && perch.x0 - slack <= actor.x && actor.x <= perch.x1 + slack && actor.y == perch.y - hover) {
                 perched = false;
             }
             let left = actor.x - species.size.width / 2.0;
             let right = actor.x + species.size.width / 2.0;
             let top = actor.y - species.size.height;
-            if stage.keepouts.iter().any(|keepout| keepout.width > 0.0 && keepout.height > 0.0 && left.max(keepout.x) < right.min(keepout.x + keepout.width) && top.max(keepout.y) < actor.y.min(keepout.y + keepout.height)) {
+            if !scoots && stage.keepouts.iter().any(|keepout| keepout.width > 0.0 && keepout.height > 0.0 && left.max(keepout.x) < right.min(keepout.x + keepout.width) && top.max(keepout.y) < actor.y.min(keepout.y + keepout.height)) {
                 clear = false;
             }
             if actor.x < 0.0 || actor.x > stage.width {
@@ -158,24 +199,9 @@ mod subject {
                 whole = false;
             }
         }
-        let mut apart = true;
-        for one in &stage.actors {
-            for two in &stage.actors {
-                if one.perch.is_none() || one.perch != two.perch || !before(&one.species, &two.species) {
-                    continue;
-                }
-                let shoulders = (width_of(menagerie, &one.species)? + width_of(menagerie, &two.species)?) / 2.0;
-                if (one.x - two.x).abs() < shoulders - CONTACT {
-                    apart = false;
-                }
-            }
-        }
+        let kinds: Vec<_> = stage.actors.iter().map(|actor| menagerie.species.iter().find(|kind| kind.id == actor.species).ok_or_else(|| format!("unknown species {}", actor.species))).collect::<Result<_, _>>()?;
+        let apart = overlaps(&bodies_of(&stage.actors, &kinds)).is_empty();
         Ok(Laws { perched, clear, apart, paced: movers <= MODE_LIMITS[stage.mode].movers || stage.tick - tuned <= HOP_TICKS + 1, paired: partners <= 2, graphed: true, whole })
-    }
-
-    /// ↔️ The width of the species of an actor.
-    fn width_of(menagerie: &Menagerie, species: &str) -> Result<f64, String> {
-        menagerie.species.iter().find(|candidate| candidate.id == species).map(|kind| kind.size.width).ok_or_else(|| format!("{species} is on stage and not in the menagerie"))
     }
 
     /// 🎬️ The trace of a script over a menagerie, replayed tick by tick from an empty stage with a seed: the events of a tick are folded first, then the tick passes, then the frame is digested and the laws are checked.
@@ -214,9 +240,9 @@ mod subject {
             let actors: Vec<Value> = stage
                 .actors
                 .iter()
-                .map(|actor| json!({ "species": actor.species, "perch": actor.perch, "x": actor.x, "y": actor.y, "activity": actor.activity, "partner": actor.partner, "leaving": actor.leaving, "opacity": actor.opacity }))
+                .map(|actor| json!({ "species": actor.species, "perch": actor.perch, "wall": actor.pitch.as_ref().map(|pitch| &pitch.wall), "footing": actor.footing, "x": actor.x, "y": actor.y, "activity": actor.activity, "partner": actor.partner, "leaving": actor.leaving, "opacity": actor.opacity, "body": extent_of(actor, menagerie.species.iter().find(|kind| kind.id == actor.species).unwrap()) }))
                 .collect();
-            checkpoints.push(json!({ "tick": tick, "digest": hash, "mode": stage.mode, "actors": actors }));
+            checkpoints.push(json!({ "tick": tick, "digest": hash, "mode": stage.mode, "actors": actors, "drawn": { "particles": frame.particles.len(), "ladders": frame.ladders.len(), "lifts": frame.lifts.len(), "puffs": frame.puffs.len(), "held": frame.held } }));
         }
         Ok(Replay { trace: json!({ "frames": script.ticks, "digest": hash, "checkpoints": checkpoints, "laws": lawful(laws) }), digest: hash, laws, stage })
     }

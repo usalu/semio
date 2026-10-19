@@ -19,6 +19,7 @@ impl EnergyJobAuthority {
         }
         match self.stage {
             EnergyJobStage::Validate => {
+                if self.input_identity.digest().is_none() { return match self.step_input_identity(context) { Ok(_) => EnergyRun::Yield, Err(_) => self.begin_fault() }; }
                 let complete = self.step_validation();
                 if self.validation.fatal_code != 0 {
                     { return self.begin_fault(); }
@@ -32,17 +33,24 @@ impl EnergyJobAuthority {
             }
             EnergyJobStage::ResolveWeather => {
                 if self.weather_cursor < self.weather_target {
+                    let receipt=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<WeatherRecord>()*4,..Default::default()};
+                    if !receipt.fits(context.retained_grant()){return EnergyRun::Yield;}
                     let record = self.weather_record(self.weather_cursor);
+                    let first=self.weather.get_index(0).copied().unwrap_or(record);let previous=self.weather_cursor.checked_sub(1).and_then(|i|self.weather.get_index(i)).copied();
+                    if !crate::site::chronology::admit_row(self.weather_calendar(),first,previous,record){self.weather_fault=Some(WeatherFault::ChronologyRejected);return self.begin_fault();}
                     if self.weather.insert_stable(self.weather_cursor, record).is_err() {
                         self.weather_fault = Some(WeatherFault::SlotRejected);
                         { return self.begin_fault(); }
                     }
+                    if context.consume_retained(receipt).is_err(){return self.begin_fault();}
                     self.weather_cursor += 1;
                     if self.weather_cursor.is_multiple_of(256) {
                         return self.begin_preview(context);
                     }
                     return EnergyRun::Yield;
                 }
+                let period=SimulationKernel::run_period(&self.config);let start=self.run_start_record();let end=crate::site::chronology::date_after_days(crate::calendar::SimDate::new(period.year,period.start_month,period.start_day),period.total_hours()/24-1).and_then(|date|self.weather_index(date,23));
+                if start.zip(end).is_none_or(|(start,end)|end.checked_sub(start).and_then(|n|n.checked_add(1))!=Some(period.total_hours()as usize)){self.weather_fault=Some(WeatherFault::RunHourMissing);return self.begin_fault();}
                 self.precompute = Some(PrecomputeBuilder::new(self.config.zone_timestep_minutes, self.config.system_timestep_minutes));
                 self.set_stage(context, EnergyJobStage::Precompute);
                 EnergyRun::Yield
@@ -71,7 +79,7 @@ impl EnergyJobAuthority {
                     return EnergyRun::Yield;
                 }
                 if let Some(zone) = self.model.zones.get(self.initialize_cursor) {
-                    let weather = *self.weather.get_index(0).expect("admitted weather record");
+                    let weather = *self.weather.get_index(self.run_start_record().expect("admitted run start")).expect("admitted weather record");
                     if self.state.as_mut().expect("state exists while initializing").zones.insert(zone.id, ZoneState::new(INITIAL_TEMPERATURE_C, weather.humidity_ratio())).is_err() {
                         { return self.begin_fault(); }
                     }
@@ -185,8 +193,8 @@ impl EnergyJobAuthority {
                 }
                 let pre = self.pre.as_ref().expect("precompute complete before warmup");
                 if self.timestep_work.is_none() && self.timestep_builder.is_none() {
-                    let start = self.run_start_record();
-                    let weather = self.hour_weather(start + self.warmup_hour as usize % 24, true);
+                    let Some(start)=self.run_start_record()else{return self.begin_fault();};
+                    let Some(weather)=self.hour_weather(start+self.warmup_hour as usize%24,true)else{return self.begin_fault();};
                     let date = calendar::SimDate::new(weather.current.year, weather.current.month, weather.current.day);
                     self.timestep_builder = Some(TimestepBuilder::new(weather, date, self.warmup_hour as f64));
                     return EnergyRun::Yield;
@@ -201,7 +209,8 @@ impl EnergyJobAuthority {
                         Err(_) => return self.begin_fault(),
                     }
                 }
-                self.timestep_work.as_mut().expect("warmup timestep work exists").step(&self.model, &self.config, pre, self.state.as_mut().expect("state initialized before warmup"));
+                let turn=self.timestep_work.as_mut().expect("warmup timestep work exists").step_funded(&self.model,&self.config,pre,self.state.as_mut().expect("state initialized before warmup"),context.retained_grant());
+                if context.consume_retained(turn.progress).is_err()||turn.fault.is_some(){return self.begin_fault();}
                 // 🧵️ Completion is acknowledged BEFORE the fuel check and the rng rotates ONCE per
                 // completed timestep: `step` already charged this call's unit at entry, so a one-unit
                 // grant is always exhausted here — checking `should_yield` first starved the job in
@@ -342,14 +351,8 @@ impl EnergyJobAuthority {
                         self.set_stage(context, EnergyJobStage::Finalize);
                         return EnergyRun::Yield;
                     };
-                    let record = if self.weather.len() >= 8_760 { (date.day_of_year() as usize - 1) * 24 + hour as usize } else { self.hour_index as usize };
-                    let mut weather = self.hour_weather(record, self.hour_index == 0);
-                    for record in [&mut weather.previous, &mut weather.current, &mut weather.next] {
-                        record.year = date.year;
-                        record.month = date.month;
-                        record.day = date.day;
-                    }
-                    weather.current.hour = hour;
+                    let Some(record)=self.weather_index(date,hour)else{self.weather_fault=Some(WeatherFault::RunHourMissing);return self.begin_fault();};
+                    let Some(weather)=self.hour_weather(record,false)else{return self.begin_fault();};
                     self.timestep_builder = Some(TimestepBuilder::new(weather, date, self.hour_index as f64));
                     return EnergyRun::Yield;
                 }
@@ -363,7 +366,8 @@ impl EnergyJobAuthority {
                         Err(_) => return self.begin_fault(),
                     }
                 }
-                self.timestep_work.as_mut().expect("run timestep work exists").step(&self.model, &self.config, pre, self.state.as_mut().expect("state initialized before run"));
+                let turn=self.timestep_work.as_mut().expect("run timestep work exists").step_funded(&self.model,&self.config,pre,self.state.as_mut().expect("state initialized before run"),context.retained_grant());
+                if context.consume_retained(turn.progress).is_err()||turn.fault.is_some(){return self.begin_fault();}
                 // 🧵️ Same order as the warmup stage: acknowledge completion first, rotate once per timestep.
                 if !self.timestep_work.as_ref().is_some_and(TimestepWork::is_complete) {
                     return EnergyRun::Yield;

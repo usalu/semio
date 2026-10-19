@@ -13,6 +13,17 @@ pub struct ReplaceNodeKind {
 
 impl protocol::MutationKind<DagSnapshot, DagMutation> for ReplaceNodeKind {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "node-kind", kind: "replace-node-kind", record: "ReplacedNodeKind" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace node kind {}", self.id), &format!("Knotenart {} ersetzen", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["nodes".into(), self.id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<DagSnapshot, DagMutation> for ReplaceNodeKind {
     fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         if !base.nodes.iter().any(|node| node.id == self.id) {
             return protocol::MutationOutcome::new(DagDiff::default());
@@ -25,10 +36,4 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for ReplaceNodeKind {
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace node kind {}", self.id), &format!("Knotenart {} ersetzen", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["nodes".into(), self.id.clone()]
-    }
 }

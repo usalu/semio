@@ -1,8 +1,10 @@
-//! ✋️ Puzzle5d mutation — `DragSelection2d`: a relative, parametric drag of a set of parts on the board by one flat offset. The gesture's own inputs (which
 //! ids, which offset) are the payload, so editing the drag in history re-derives every board position from whatever base
+//! ✋️ Puzzle5d mutation — `DragSelection2d`: a relative, parametric drag of a set of parts on the board by one flat offset. The gesture's own inputs (which
 //! it replays on.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::{puzzle5d_selection_items, puzzle5d_selection_number};
+
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 
 use crate::Puzzle5dSnapshot;
 
@@ -27,6 +29,24 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "drag", entity: "selection", kind: "drag-selection2d", record: "DraggedSelection2d" };
 
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        let ((dx_en, dx_de), (dy_en, dy_de)) = (puzzle5d_selection_number(self.dx), puzzle5d_selection_number(self.dy));
+        let (en, de) = puzzle5d_selection_items(self.targets.len());
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Drag {en} by ({dx_en}, {dy_en}) on the board"), &format!("{de} auf dem Brett um ({dx_de}; {dy_de}) ziehen"))
+    }
+    fn target(&self) -> Vec<String> {
+        self.targets.clone()
+    }
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for DragSelection2d {
+
+
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for DragSelection2d {
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
@@ -36,14 +56,6 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        let ((dx_en, dx_de), (dy_en, dy_de)) = (puzzle5d_selection_number(self.dx), puzzle5d_selection_number(self.dy));
-        let (en, de) = puzzle5d_selection_items(self.targets.len());
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Drag {en} by ({dx_en}, {dy_en}) on the board"), &format!("{de} auf dem Brett um ({dx_de}; {dy_de}) ziehen"))
-    }
-    fn target(&self) -> Vec<String> {
-        self.targets.clone()
-    }
 }
 //#endregion 🔖️Mutation
 

@@ -1,9 +1,9 @@
 //! ↩️ Inverse for `ReplaceCombination` — recovers the pre-mutation combination from `base`.
 use super::ReplaceCombination;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
 //#region 🔖️Inverse
-pub fn inverse<Op: From<replace_combination::ReplaceCombination>>(payload: &ReplaceCombination, base: &Fem2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::standards::v1::subsets::any::schema::mutations::replace_combination::ReplaceCombination>>(payload: &ReplaceCombination, base: &Fem2dSnapshotValue) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     base.combinations
         .iter()

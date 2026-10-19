@@ -85,10 +85,10 @@ pub(super) struct Puzzle2dForceLayoutWorkOwners {
     pub(super) velocities: Vec<[f64; 2]>,
     pub(super) forces: Vec<[f64; 2]>,
     pub(super) radii: Vec<f64>,
-    pub(super) id_to_index: HashMap<String, usize>,
-    pub(super) handle_to_node: HashMap<String, String>,
+    pub(super) id_to_index: ScratchHashMap<String, usize>,
+    pub(super) handle_to_node: ScratchHashMap<String, String>,
     pub edges: Vec<(usize, usize)>,
-    pub(super) edge_set: HashSet<(usize, usize)>,
+    pub(super) edge_set: ScratchHashSet<(usize, usize)>,
     pub mutations: Vec<Puzzle2dMutation>,
 }
 
@@ -114,10 +114,10 @@ pub struct Puzzle2dForceLayoutWork {
     pub(super) velocities: Vec<[f64; 2]>,
     pub(super) forces: Vec<[f64; 2]>,
     pub(super) radii: Vec<f64>,
-    pub(super) id_to_index: HashMap<String, usize>,
-    pub(super) handle_to_node: HashMap<String, String>,
+    pub(super) id_to_index: ScratchHashMap<String, usize>,
+    pub(super) handle_to_node: ScratchHashMap<String, String>,
     pub edges: Vec<(usize, usize)>,
-    pub(super) edge_set: HashSet<(usize, usize)>,
+    pub(super) edge_set: ScratchHashSet<(usize, usize)>,
     pub mutations: Vec<Puzzle2dMutation>,
     pub retained_bytes: usize,
     pub(super) close_owners: crate::puzzle_job::WorkClosing<Puzzle2dForceLayoutWorkOwners>,
@@ -156,10 +156,10 @@ impl Puzzle2dForceLayoutWork {
             velocities: Vec::with_capacity(PUZZLE2D_FORCE_MAX_NODES),
             forces: Vec::with_capacity(PUZZLE2D_FORCE_MAX_NODES),
             radii: Vec::with_capacity(PUZZLE2D_FORCE_MAX_NODES),
-            id_to_index: HashMap::with_capacity(PUZZLE2D_FORCE_MAX_NODES),
-            handle_to_node: HashMap::with_capacity(PUZZLE2D_FORCE_MAX_HANDLES),
+            id_to_index: ScratchHashMap::try_with_capacity(PUZZLE2D_FORCE_MAX_NODES).expect("bounded Puzzle2D scratch table allocation"),
+            handle_to_node: ScratchHashMap::try_with_capacity(PUZZLE2D_FORCE_MAX_HANDLES).expect("bounded Puzzle2D scratch table allocation"),
             edges: Vec::with_capacity(PUZZLE2D_FORCE_MAX_EDGES),
-            edge_set: HashSet::with_capacity(PUZZLE2D_FORCE_MAX_EDGES),
+            edge_set: ScratchHashSet::try_with_capacity(PUZZLE2D_FORCE_MAX_EDGES).expect("bounded Puzzle2D scratch table allocation"),
             mutations: Vec::with_capacity(PUZZLE2D_FORCE_MAX_NODES),
             retained_bytes: 0,
         }
@@ -451,3 +451,22 @@ impl Puzzle2dForceLayoutWork {
 }
 //#endregion 🧵️RetainedCommands
 //#endregion 🔖️PlayApp
+
+impl Puzzle2dForceLayoutWork{
+ /// 📏️ Every typed buffer and initialized scratch vacancy has a concrete native construction quote.
+ pub fn original_birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+  let id_to_index=ScratchHashMap::<String,usize>::allocation_demands(PUZZLE2D_FORCE_MAX_NODES)?;
+let handle_to_node=ScratchHashMap::<String,String>::allocation_demands(PUZZLE2D_FORCE_MAX_HANDLES)?;
+let edge_set=ScratchHashSet::<(usize,usize)>::allocation_demands(PUZZLE2D_FORCE_MAX_EDGES)?;
+
+  Ok(semio_framework_value::RetirementDemand{copy_bytes:id_to_index.copy_bytes + handle_to_node.copy_bytes + edge_set.copy_bytes,capacity_bytes:(PUZZLE2D_FORCE_MAX_NODES as usize)*size_of::<String>() + (PUZZLE2D_FORCE_MAX_NODES as usize)*size_of::<usize>() + (PUZZLE2D_FORCE_MAX_NODES as usize)*size_of::<Option<[f64;2]>>() + (PUZZLE2D_FORCE_MAX_NODES as usize)*size_of::<[f64;2]>() + (PUZZLE2D_FORCE_MAX_NODES as usize)*size_of::<[f64;2]>() + (PUZZLE2D_FORCE_MAX_NODES as usize)*size_of::<[f64;2]>() + (PUZZLE2D_FORCE_MAX_NODES as usize)*size_of::<f64>() + (PUZZLE2D_FORCE_MAX_EDGES as usize)*size_of::<(usize,usize)>() + (PUZZLE2D_FORCE_MAX_NODES as usize)*size_of::<Puzzle2dMutation>()+id_to_index.capacity_bytes + handle_to_node.capacity_bytes + edge_set.capacity_bytes,depth:1,..Default::default()})
+ }
+ /// 🏭️ The initiating original scope authorizes the whole workspace before any backing is born.
+ pub fn from_original_construction(tool_id:&'static str, scope:&mut semio_framework_action_bus::OriginalToolConstructionScope<'_>)->Result<(Self,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>{
+  scope.admit_owner(Self::original_birth_demands()?)?;let work=Self::new(tool_id);let id_to_index=work.id_to_index.allocation_progress();
+let handle_to_node=work.handle_to_node.allocation_progress();
+let edge_set=work.edge_set.allocation_progress();
+
+  let progress=semio_framework_value::RetainedCloneProgress{copied_bytes:id_to_index.copied_bytes + handle_to_node.copied_bytes + edge_set.copied_bytes,retained_capacity_bytes:work.node_ids.capacity()*size_of::<String>() + work.raw_node_indices.capacity()*size_of::<usize>() + work.original.capacity()*size_of::<Option<[f64;2]>>() + work.positions.capacity()*size_of::<[f64;2]>() + work.velocities.capacity()*size_of::<[f64;2]>() + work.forces.capacity()*size_of::<[f64;2]>() + work.radii.capacity()*size_of::<f64>() + work.edges.capacity()*size_of::<(usize,usize)>() + work.mutations.capacity()*size_of::<Puzzle2dMutation>() + id_to_index.retained_capacity_bytes + handle_to_node.retained_capacity_bytes + edge_set.retained_capacity_bytes,..Default::default()};Ok((work,progress))
+ }
+}

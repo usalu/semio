@@ -1782,7 +1782,7 @@
         },
         "target": {
           "phase": "Rollback",
-          "rollbackSteps": 9,
+          "rollbackSteps": 1,
           "historyTransferred": true,
           "surfaceTransferred": true,
           "visibilityPublished": false,
@@ -1885,7 +1885,7 @@
         },
         "target": {
           "phase": "Rollback",
-          "rollbackSteps": 10,
+          "rollbackSteps": 2,
           "historyTransferred": true,
           "surfaceTransferred": false,
           "visibilityPublished": false,
@@ -1988,7 +1988,7 @@
         },
         "target": {
           "phase": "Rollback",
-          "rollbackSteps": 11,
+          "rollbackSteps": 3,
           "historyTransferred": false,
           "surfaceTransferred": false,
           "visibilityPublished": false,
@@ -2091,7 +2091,7 @@
         },
         "target": {
           "phase": "Rollback",
-          "rollbackSteps": 14,
+          "rollbackSteps": 6,
           "historyTransferred": false,
           "surfaceTransferred": false,
           "visibilityPublished": false,
@@ -2194,7 +2194,7 @@
         },
         "target": {
           "phase": "Scan",
-          "rollbackSteps": 15,
+          "rollbackSteps": 7,
           "historyTransferred": false,
           "surfaceTransferred": false,
           "visibilityPublished": false,
@@ -2973,11 +2973,11 @@
       "1724461104434883625"
     ],
     "grantVectors": [
-      "2043935194715277475",
-      "5678830288263736152",
-      "1970616640544683551",
-      "10084645191644459677",
-      "10144779741749516250"
+      "10660922119538759796",
+      "16155998853586692421",
+      "10497788627984278896",
+      "4071747054816537930",
+      "6197749919416889691"
     ],
     "transferControlLedger": [
       "16321170944435367556",
@@ -2999,11 +2999,11 @@
       "6670380168659571917",
       "7990330587134555549",
       "1936733399001868215",
-      "8512093244745714229",
-      "7975368054280624629",
-      "4147921482329213583",
-      "4309954611733785992",
-      "1839132044169579372"
+      "17922552276160874724",
+      "7048606562888364787",
+      "5508508074825649303",
+      "12537281780130619414",
+      "4323772329486665967"
     ],
     "fingerprints": {
       "base": "14062942916437410942",

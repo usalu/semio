@@ -25,6 +25,11 @@ async fn header_hand_built_bytes_parse_round_trip() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn required_chunked_forgery_with_valid_header_and_footer_crc_is_refused(){
+ for chunked in [false,true]{let source=semio_framework_dsl_record::RecordValue::default();let spec=semio_framework_dsl_record::RecordSpec::new(None,semio_framework_dsl_record::RecordLayout::Inline,vec![]);let mut bytes=if chunked{build_sample_pack(CodecId(1)).await.0}else{crate::record::encode_document(&spec,&source,&Default::default()).unwrap()};let flags=if chunked{REQUIRED_COMPRESSED}else{REQUIRED_COMPRESSED|REQUIRED_CHUNKED};bytes[12..16].copy_from_slice(&flags.to_le_bytes());let header_crc=crc32c(&bytes[..20]);bytes[20..24].copy_from_slice(&header_crc.to_le_bytes());let footer=bytes.len()-FOOTER_SIZE;bytes[footer+12..footer+16].copy_from_slice(&flags.to_le_bytes());let footer_crc=crc32c(&bytes[footer..footer+80]);bytes[footer+80..footer+84].copy_from_slice(&footer_crc.to_le_bytes());let result=PackFile::open_manifest(bytes.as_slice(),&PackLimits::default(),VerificationLevel::Standard).await;assert!(matches!(result,Err(PackRefusal::RetainedMalformed{what:"required_chunked",..})));eprintln!("[DEBUG] canonical container original chunk custody{chunked} rejects forged required flag despite valid header/footer CRC");}
+}
+
+#[semio_framework_async_macros::async_test]
 async fn header_parse_rejects_bad_magic() {
     let bytes = [0u8; HEADER_SIZE];
     assert_eq!(Header::parse(&bytes).await, Err(PackRefusal::BadMagic));
@@ -200,7 +205,7 @@ async fn segment_crc_mismatch_ignored_at_trusted_level() {
 
 //#region 🔖️Writer
 async fn build_sample_pack(codec: CodecId) -> (Vec<u8>, ChunkId, Vec<u8>) {
-    let options = WriteOptions { required_flags: 0, optional_flags: OPTIONAL_CANONICAL, codec };
+    let options = WriteOptions { required_flags: REQUIRED_CHUNKED, optional_flags: OPTIONAL_CANONICAL, codec };
     let mut writer = PackWriter::begin(Vec::<u8>::new(), &options).await.unwrap();
 
     writer.write_segment(semio_framework_replication_codec::KIND_SYMBOLS, &encode_symbols(&["widget.v1".to_string(), "name".to_string()]).await).await.unwrap();

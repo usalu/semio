@@ -28,7 +28,7 @@
         assert_eq!(app.stores.test_snapshot().await.label, "xy");
         reserved_action(&mut app, "undo", None, &mut identity).await;
         assert_eq!(app.stores.test_snapshot().await.label, "x");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -52,7 +52,7 @@
         assert_eq!(result.mutations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestMutation::SetCount(SetCount { value: 1 })).unwrap());
         assert_eq!(result.mutations[0].inverse.inverse_diff.payload, protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestMutation::SetCount(SetCount { value: 0 })).unwrap()]));
         assert_eq!(app.stores.test_snapshot().await.count, 1);
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -79,7 +79,7 @@
         let mut unknown = CommandInvocation { address: CommandAddress { command_id: "nope".into(), ..valid.address }, arguments: Default::default() };
         let error = app.handle_command(&mut unknown, None, Some("edit"), &meta(), &mut identity).await.expect_err("undeclared app command");
         assert!(error.message.contains("not owned by app"), "unexpected error: {}", error.message);
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -108,7 +108,7 @@
         assert_eq!(app.stores.test_snapshot().await.count, 1);
         let error = app.handle_command(&mut invocation, None, None, &meta(), &mut identity).await.expect_err("inactive mode command");
         assert!(error.message.contains("not owned by active mode edit"), "unexpected error: {}", error.message);
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -135,7 +135,7 @@
         let mut args=Some(DslValue::Object(invocation.arguments.into_iter().collect()));let mut fault=None;artifact_app_laws::dispatch_addressed_fixture_on_original(&mut app.0,&invocation.address,&mut args,&mut fault,Some("edit"),&meta(),&mut identity,cx).await.expect("addressed window action");
         settle_contract_app(&mut app,&mut identity,cx).await;
         assert_eq!(app.stores.test_snapshot().await.label, "main-instance-2");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -159,9 +159,9 @@
         assert_eq!(app.stores.test_snapshot().await.count, 2);
         reserved_action(&mut app, "undo", None, &mut identity).await;
         assert_eq!(app.stores.test_snapshot().await.count, 1);
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -184,7 +184,7 @@
         let selection = app.interaction_state().await.selection.get("items").cloned().expect("items domain selected");
         assert_eq!(selection.ids, vec!["item-1".to_string()]);
         assert_eq!(selection.granularity, "item");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -212,8 +212,8 @@
         reserved_action(&mut app, "undo", None, &mut identity).await;
         assert_eq!(app.stores.test_snapshot().await.label, "", "undo must revert the document edit (seeding the label)");
         assert_eq!(app.interaction_state().await.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]), "the pick itself must survive an unrelated document undo — lane discipline");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }

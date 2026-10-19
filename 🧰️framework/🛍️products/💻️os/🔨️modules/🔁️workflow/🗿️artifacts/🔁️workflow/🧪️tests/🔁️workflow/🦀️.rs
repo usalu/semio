@@ -1,4 +1,5 @@
 //! 🧪️ Workflow artifact replay, connection, and serialization laws.
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::*;
 use semio_framework_dsl_record::DslField as _;
 fn assert_workflow_manual_binding<T:semio_framework_dsl_record::DslField+PartialEq+std::fmt::Debug>(value:&T,maximum:usize,tiny:usize){
@@ -75,7 +76,7 @@ async fn media_port_spec(id: &str, direction: MediaPortDirection, kind_id: Optio
     MediaPortSpec { id: id.into(), label: id.into(), direction, media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, kind_id: kind_id.map(Into::into), required: true, multiplicity: PortMultiplicity::One }
 }
 
-async fn workflow_node(id: &str, outputs: Vec<WorkflowMediaPort>, inputs: Vec<WorkflowMediaPort>) -> WorkflowNode {
+pub(crate) async fn workflow_node(id: &str, outputs: Vec<WorkflowMediaPort>, inputs: Vec<WorkflowMediaPort>) -> WorkflowNode {
     WorkflowNode {
         id: id.into(),
         plugin_id: "plugin".into(),
@@ -93,7 +94,7 @@ async fn workflow_node(id: &str, outputs: Vec<WorkflowMediaPort>, inputs: Vec<Wo
     }
 }
 
-async fn workflow_edge(id: &str, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> WorkflowEdge {
+pub(crate) async fn workflow_edge(id: &str, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> WorkflowEdge {
     WorkflowEdge { id: id.into(), source_node_id: source_node_id.into(), source_port_id: source_port_id.into(), target_node_id: target_node_id.into(), target_port_id: target_port_id.into(), contract: placeholder_media_contract("data.value").await }
 }
 
@@ -207,7 +208,7 @@ async fn plan_workflow_skips_clean_nodes() {
 }
 
 //#region 🧪️WorkflowSnapshotLaws
-async fn sample_workflow_snapshot() -> WorkflowSnapshot {
+pub(crate) async fn sample_workflow_snapshot() -> WorkflowSnapshot {
     let node_a = workflow_node("a", vec![WorkflowMediaPort { id: "a:out:out".into(), spec: media_port_spec("out", MediaPortDirection::Out, Some("kind.a")).await }], vec![]);
     let node_b = workflow_node("b", vec![], vec![WorkflowMediaPort { id: "b:in:in".into(), spec: MediaPortSpec { required: true, ..media_port_spec("in", MediaPortDirection::In, Some("kind.a")).await } }]);
     let graph = Workflow { schema: WORKFLOW_SCHEMA.into(), nodes: vec![node_a.await, node_b.await], edges: vec![workflow_edge("e1", "a", "a:out:out", "b", "b:in:in").await] };
@@ -262,6 +263,7 @@ async fn workflow_operation_op_text_round_trips_every_variant() {
     store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindParameterField(BindParameterField { binding: WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "n1".into(), field_path: "/zoom".into() } }));
     store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindParameterField(UnbindParameterField { node_id: "n1".into(), field_path: "/zoom".into() }));
     store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UpdateNodePorts(UpdateNodePorts {}));
+    store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::SetNodePorts(SetNodePorts { nodes: vec![WorkflowNodePorts { node_id: "n1".into(), inputs: Vec::new(), height: 74.0 }, WorkflowNodePorts { node_id: "n2".into(), inputs: Vec::new(), height: 56.0 }] }));
     store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddInput(AddInput {
         input: WorkflowInput { id: "in-1".into(), kind_id: "kind.a".into(), selector: "**/*".into(), required: true, multiplicity: PortMultiplicity::Many },
     }));
@@ -321,36 +323,39 @@ async fn remove_operations_backwards_restores_cascade_deleted_dependents() {
     store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveInput(RemoveInput { input_id: "in-1".into() })).await;
 }
 
-/// ➕️ L3 for every workflow kind: the concrete inverse's diffs sum to the negative of the forward diff.
+/// 🎛️ A document whose middle node `b` and last node `c` have parameter bindings that were never resynced into their ports (`a` stays synced).
+pub(crate) async fn stale_ports_snapshot() -> WorkflowSnapshot {
+    let mut document = sample_workflow_snapshot().await;
+    document.graph.nodes.push(workflow_node("c", Vec::new(), Vec::new()).await);
+    document.parameter_bindings.push(WorkflowParameterBinding { parameter_id: "p2".into(), node_id: "b".into(), field_path: "/mode".into() });
+    document.parameter_bindings.push(WorkflowParameterBinding { parameter_id: "p3".into(), node_id: "c".into(), field_path: "/flag".into() });
+    document
+}
+
+/// ↩️ V2-EMPTY-INVERSE: resyncing stale ports is ONE `set-node-ports` row per stale node carrying the BASE ports, positional in node order (the
+/// middle node first, then the last); the negative diff reads the same rows from the base, and a synced document has nothing to restore.
 #[semio_framework_async_macros::async_test]
-async fn every_workflow_kind_inverse_diffs_sum_to_the_negative_diff() {
-    use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law as law;
-    let document = sample_workflow_snapshot().await;
-    let node_c = workflow_node("c", Vec::new(), Vec::new()).await;
-    law(&WorkflowMutation::AddNode(AddNode { node: node_c }), &document).await;
-    law(&WorkflowMutation::RemoveNode(RemoveNode { node_id: "b".into() }), &document).await;
-    law(&WorkflowMutation::MoveNode(MoveNode { node_id: "a".into(), x: 99.0, y: -1.0 }), &document).await;
-    law(&WorkflowMutation::RenameNode(RenameNode { node_id: "a".into(), label: "Renamed".into() }), &document).await;
-    law(&WorkflowMutation::MoveNodes(MoveNodes { node_ids: vec!["a".into(), "b".into()], dx: 40.0, dy: -12.5 }), &document).await;
-    law(&WorkflowMutation::SetNodePositions(SetNodePositions { positions: vec![WorkflowNodePosition { node_id: "a".into(), x: 7.0, y: 8.0 }] }), &document).await;
-    let mut unwired = document.clone();
-    unwired.graph.edges.clear();
-    law(&WorkflowMutation::ConnectPorts(ConnectPorts { edge: workflow_edge("e9", "a", "a:out:out", "b", "b:in:in").await }), &unwired).await;
-    law(&WorkflowMutation::DisconnectEdge(DisconnectEdge { edge_id: "e1".into() }), &document).await;
-    law(&WorkflowMutation::AddParameter(AddParameter { parameter: Box::new(WorkflowParameter::Toggle { id: "p9".into(), name: "New".into(), value: true }) }), &document).await;
-    law(&WorkflowMutation::RemoveParameter(RemoveParameter { parameter_id: "p4".into() }), &document).await;
-    law(&WorkflowMutation::ChangeParameter(ChangeParameter { parameter_id: "p3".into(), parameter: Box::new(WorkflowParameter::Toggle { id: "p3".into(), name: "Flag".into(), value: false }) }), &document).await;
-    law(&WorkflowMutation::BindParameterField(BindParameterField { binding: WorkflowParameterBinding { parameter_id: "p2".into(), node_id: "a".into(), field_path: "/mode".into() } }), &document).await;
-    law(&WorkflowMutation::UnbindParameterField(UnbindParameterField { node_id: "a".into(), field_path: "/zoom".into() }), &document).await;
-    law(&WorkflowMutation::UpdateNodePorts(UpdateNodePorts {}), &document).await;
-    law(&WorkflowMutation::AddInput(AddInput { input: WorkflowInput { id: "in-2".into(), kind_id: "kind.b".into(), selector: "**/*".into(), required: false, multiplicity: PortMultiplicity::One } }), &document).await;
-    let mut bound = document.clone();
-    bound.input_bindings.push(WorkflowInputBinding { input_id: "in-1".into(), node_id: "b".into(), port_id: "b:in:in".into() });
-    law(&WorkflowMutation::RemoveInput(RemoveInput { input_id: "in-1".into() }), &bound).await;
-    law(&WorkflowMutation::BindInput(BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "b".into(), port_id: "b:in:in".into() } }), &document).await;
-    law(&WorkflowMutation::UnbindInput(UnbindInput { input_id: "in-1".into() }), &bound).await;
-    law(&WorkflowMutation::BindOutput(BindOutput { binding: WorkflowOutputBinding { node_id: "a".into(), port_id: "a:out:out".into(), path_template: "renders/other.out".into() } }), &document).await;
-    law(&WorkflowMutation::UnbindOutput(UnbindOutput { node_id: "a".into(), port_id: "a:out:out".into() }), &document).await;
+async fn update_node_ports_inverts_to_the_base_ports_per_stale_node() {
+    use protocol::{DiffAlgebra, Mutation};
+    let stale = stale_ports_snapshot().await;
+    let mutation = WorkflowMutation::UpdateNodePorts(UpdateNodePorts {});
+    let (diff, messages) = mutation.diff(&stale).into_parts();
+    assert!(messages.is_empty(), "{messages:?}");
+    let WorkflowDiff::SetNodePorts { nodes: forward } = &diff else { panic!("a stale document resyncs through set-node-ports rows, found {diff:?}") };
+    assert_eq!(forward.iter().map(|row| row.node_id.as_str()).collect::<Vec<_>>(), ["b", "c"]);
+    assert!(forward.iter().all(|row| row.inputs.iter().any(|port| is_workflow_parameter_port_id(&port.id))));
+    let negative = diff.inverse(&stale);
+    let WorkflowDiff::SetNodePorts { nodes: restored } = &negative else { panic!("the negative diff restores ports, found {negative:?}") };
+    assert_eq!(restored.iter().map(|row| row.node_id.as_str()).collect::<Vec<_>>(), ["b", "c"]);
+    assert!(restored.iter().all(|row| row.inputs.iter().all(|port| !is_workflow_parameter_port_id(&port.id))));
+    let after = protocol::apply_diff_cold(&diff, &stale).expect("resync applies");
+    assert_eq!(after.graph, sync_workflow_parameter_ports(&stale.graph, &stale.parameter_bindings));
+    assert_eq!(protocol::apply_diff_cold(&negative, &after).expect("negative applies"), stale);
+    let inverse = mutation.inverse(&stale).expect("a stale document has a concrete inverse");
+    assert!(matches!(inverse.as_slice(), [WorkflowMutation::SetNodePorts(SetNodePorts { nodes })] if nodes.len() == 2));
+    let synced = sample_workflow_snapshot().await;
+    assert!(mutation.inverse(&synced).expect("a synced document has nothing to restore").is_empty());
+    assert!(protocol::DiffAlgebra::<WorkflowSnapshot>::is_empty(&mutation.diff(&synced).into_parts().0));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -361,7 +366,7 @@ async fn workflow_diff_print_parse_and_encode_decode_round_trip() {
         WorkflowDiff::Empty,
     ];
     for diff in diffs {
-        let applied = protocol::apply_diff(&diff, &empty_workflow_snapshot().await).expect("valid workflow diff");
+        let applied = protocol::apply_diff_cold(&diff, &empty_workflow_snapshot().await).expect("valid workflow diff");
         let _ = applied;
     }
 }
@@ -423,7 +428,7 @@ async fn move_nodes_is_relative_and_inverts_to_one_absolute_row() {
     let document = sample_workflow_snapshot().await;
     let mutation = WorkflowMutation::MoveNodes(MoveNodes { node_ids: vec!["a".into(), "b".into()], dx: 40.0, dy: -12.5 });
     let outcome = mutation.diff(&document);
-    let moved = protocol::apply_diff(outcome.diff(), &document).expect("the drag applies");
+    let moved = protocol::apply_diff_cold(outcome.diff(), &document).expect("the drag applies");
     for id in ["a", "b"] {
         let (before, after) = (document.graph.nodes.iter().find(|node| node.id == id).expect("base"), moved.graph.nodes.iter().find(|node| node.id == id).expect("moved"));
         assert_eq!((after.x, after.y), (before.x + 40.0, before.y - 12.5));

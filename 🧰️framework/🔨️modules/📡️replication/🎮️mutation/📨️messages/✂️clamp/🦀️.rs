@@ -6,6 +6,34 @@ use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedClonePr
 use std::mem::{ManuallyDrop, size_of};
 const ROWS: usize = MUTATION_MESSAGE_ENTRY_BYTES / MUTATION_MESSAGE_OWNER_BYTES;
 const CASCADE: &str = "mutation.cascade";
+/// 🗃️ Original diagnostic sources expose one row and one allocation release per selection turn.
+pub trait FinalMessageSource {
+    fn len(&self)->usize;
+    fn get(&self,index:usize)->Option<&MutationMessage>;
+    fn pop(&mut self)->Option<MutationMessage>;
+    fn release_copy_demand(&self)->usize;
+    fn release_byte_demand(&self)->Result<usize,ValueError>;
+    fn release(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>;
+    fn terminal_is_empty(&self)->bool;
+}
+impl FinalMessageSource for ReplayMessageAccumulator {
+    fn len(&self)->usize{self.rows().len()}
+    fn get(&self,index:usize)->Option<&MutationMessage>{self.rows().get(index)}
+    fn pop(&mut self)->Option<MutationMessage>{self.rows_mut().pop()}
+    fn release_copy_demand(&self)->usize{0}
+    fn release_byte_demand(&self)->Result<usize,ValueError>{self.rows().next_release_allocation_bytes().map_err(ValueError::from)}
+    fn release(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{let step=self.rows_mut().release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;Ok(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..Default::default()})}
+    fn terminal_is_empty(&self)->bool{ReplayMessageAccumulator::terminal_is_empty(self)}
+}
+impl FinalMessageSource for Vec<MutationMessage> {
+    fn len(&self)->usize{Vec::len(self)}
+    fn get(&self,index:usize)->Option<&MutationMessage>{self.as_slice().get(index)}
+    fn pop(&mut self)->Option<MutationMessage>{Vec::pop(self)}
+    fn release_copy_demand(&self)->usize{usize::from(self.capacity()!=0)*size_of::<Vec<MutationMessage>>()}
+    fn release_byte_demand(&self)->Result<usize,ValueError>{self.capacity().checked_mul(size_of::<MutationMessage>()).ok_or_else(failure)}
+    fn release(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{if !self.is_empty(){return Err(failure());}let copy=self.release_copy_demand();let bytes=self.release_byte_demand()?;if grant.maximum_copy_bytes<copy||grant.maximum_release_bytes<bytes{return Ok(Default::default());}drop(std::mem::take(self));Ok(RetainedCloneProgress{copied_items:usize::from(bytes!=0),copied_bytes:copy,released_bytes:bytes,..Default::default()})}
+    fn terminal_is_empty(&self)->bool{self.is_empty()&&self.capacity()==0}
+}
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Phase { Reserve, Measure, Rank, Drain, PrefixReserve, PrefixCopy, PrefixPlace, Summary, CodeReserve, CodeCopy, BodyReserve, BodyCopy, SummaryPlace, Reverse, Pages, Finished }
 
@@ -44,14 +72,14 @@ impl FinalMessageSelection {
     pub fn completed_work(&self) -> u64 { self.work }
     pub fn is_finished(&self) -> bool { self.phase == Phase::Finished && !self.closing }
     pub fn messages(&self) -> &[MutationMessage] { &self.output }
-    pub fn next_capacity_byte_demand(&self) -> usize { match self.phase { Phase::Reserve => ROWS * size_of::<MutationMessage>(), Phase::PrefixReserve => self.cut, Phase::CodeReserve => CASCADE.len(), Phase::BodyReserve => self.summary_len, _ => 0 } }
-    pub fn next_copy_byte_demand(&self, source: &ReplayMessageAccumulator) -> usize {
+    pub fn next_capacity_byte_demand(&self) -> usize { match self.phase { Phase::Reserve => self.original.min(ROWS) * size_of::<MutationMessage>(), Phase::PrefixReserve => self.cut, Phase::CodeReserve => CASCADE.len(), Phase::BodyReserve => self.summary_len, _ => 0 } }
+    pub fn next_copy_byte_demand(&self, source: &impl FinalMessageSource) -> usize {
         if self.active.is_some() && !matches!(self.phase, Phase::PrefixReserve | Phase::PrefixCopy) { return self.active.as_ref().unwrap().next_copy_byte_demand(); }
-        match self.phase { Phase::Drain if !source.rows().is_empty() => size_of::<MutationMessage>(), Phase::PrefixCopy => self.active.as_ref().and_then(|active| active.body()).and_then(|body| body.get(self.pending.as_ref().map_or(0, |row| row.message.len())..self.cut)).and_then(|body| body.chars().next()).map_or(0, char::len_utf8), Phase::PrefixPlace => size_of::<MutationMessage>(), Phase::CodeCopy if self.pending.as_ref().is_some_and(|row| row.code.0.len() < CASCADE.len()) => 1, Phase::BodyCopy if self.pending.as_ref().is_some_and(|row| row.message.len() < self.summary_len) => 1, Phase::Summary => self.summary.len(), Phase::Reverse if self.index < self.cut/2 => 2 * size_of::<MutationMessage>(), Phase::Reverse if self.pending.is_some() => size_of::<MutationMessage>(), _ => 0 }
+        match self.phase { Phase::Drain if source.len()!=0 => size_of::<MutationMessage>(), Phase::PrefixCopy => self.active.as_ref().and_then(|active| active.body()).and_then(|body| body.get(self.pending.as_ref().map_or(0, |row| row.message.len())..self.cut)).and_then(|body| body.chars().next()).map_or(0, char::len_utf8), Phase::PrefixPlace => size_of::<MutationMessage>(), Phase::CodeCopy if self.pending.as_ref().is_some_and(|row| row.code.0.len() < CASCADE.len()) => 1, Phase::BodyCopy if self.pending.as_ref().is_some_and(|row| row.message.len() < self.summary_len) => 1, Phase::Summary => self.summary.len(), Phase::Reverse if self.index < self.cut/2 => 2 * size_of::<MutationMessage>(), Phase::Reverse if self.pending.is_some() => size_of::<MutationMessage>(), Phase::Pages => source.release_copy_demand(), _ => 0 }
     }
-    pub fn next_release_byte_demand(&self, source: &ReplayMessageAccumulator) -> Result<usize, ValueError> { if let Some(active) = self.active.as_ref().filter(|_| !matches!(self.phase, Phase::PrefixReserve | Phase::PrefixCopy)) { return Ok(active.next_release_byte_demand()); } if self.phase == Phase::Pages { source.rows().next_release_allocation_bytes().map_err(ValueError::from) } else { Ok(0) } }
+    pub fn next_release_byte_demand(&self, source: &impl FinalMessageSource) -> Result<usize, ValueError> { if let Some(active) = self.active.as_ref().filter(|_| !matches!(self.phase, Phase::PrefixReserve | Phase::PrefixCopy)) { return Ok(active.next_release_byte_demand()); } if self.phase == Phase::Pages { source.release_byte_demand() } else { Ok(0) } }
     pub fn next_depth_demand(&self) -> usize { usize::from(!self.is_finished()) }
-    pub fn step(&mut self, source: &mut ReplayMessageAccumulator, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
+    pub fn step(&mut self, source: &mut impl FinalMessageSource, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
         let idle = RetainedCloneProgress::default();
         if self.closing || self.is_finished() || grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(idle); }
         let capacity = self.next_capacity_byte_demand(); let copy = self.next_copy_byte_demand(source); let release = self.next_release_byte_demand(source)?;
@@ -59,10 +87,10 @@ impl FinalMessageSelection {
         if let Some(active) = self.active.as_mut().filter(|_| !matches!(self.phase, Phase::PrefixReserve | Phase::PrefixCopy)) { let progress = active.close_step(grant); if active.terminal_is_empty() { self.active = None; } self.work = self.work.saturating_add(progress.copied_items as u64); return Ok(progress); }
         let mut progress = RetainedCloneProgress { copied_items: 1, ..idle };
         match self.phase {
-            Phase::Reserve => { self.output.try_reserve_exact(ROWS).map_err(|_| failure())?; progress.retained_capacity_bytes = self.output.capacity() * size_of::<MutationMessage>(); self.phase = Phase::Measure; }
+            Phase::Reserve => { self.output.try_reserve_exact(self.original.min(ROWS)).map_err(|_| failure())?; progress.retained_capacity_bytes = self.output.capacity() * size_of::<MutationMessage>(); self.phase = Phase::Measure; }
             Phase::Measure | Phase::Rank => {
                 if self.phase == Phase::Rank && self.level == 4 { self.phase = Phase::Drain; }
-                else if let Some(row) = source.rows().get(self.index) {
+                else if let Some(row) = source.get(self.index) {
                     let matching = self.phase == Phase::Measure || row.level == [Severity::Fatal, Severity::Error, Severity::Warning, Severity::Info][self.level];
                     if !matching { self.index += 1; }
                     else if self.measuring.is_none() { self.measuring = Some(MUTATION_MESSAGE_OWNER_BYTES.saturating_add(row.code.0.len()).saturating_add(row.message.len())); self.target = 0; if self.phase == Phase::Measure && self.worst.is_none_or(|(level, _)| row.level > level) { self.worst = Some((row.level, self.index)); } }
@@ -72,8 +100,8 @@ impl FinalMessageSelection {
                 else { self.level += 1; self.index = 0; }
             }
             Phase::Drain => {
-                if let Some(mut row) = source.rows_mut().pop() {
-                    progress.copied_bytes = size_of::<MutationMessage>(); let index = source.rows().len();
+                if let Some(mut row) = source.pop() {
+                    progress.copied_bytes = size_of::<MutationMessage>(); let index = source.len();
                     let keep = !self.changed || self.threshold.is_some_and(|(level, last)| row.level > level || row.level == level && index <= last);
                     if keep { self.push(row)?; }
                     else if self.kept == 0 && self.worst.is_some_and(|(_, worst)| worst == index) {
@@ -96,7 +124,7 @@ impl FinalMessageSelection {
             Phase::BodyCopy => { let row = self.pending.as_mut().ok_or_else(failure)?; if row.message.len() < self.summary_len { row.message.push(self.summary[row.message.len()] as char); progress.copied_bytes = 1; } else { self.phase = Phase::SummaryPlace; } }
             Phase::SummaryPlace => { self.cut = self.output.len(); self.phase = Phase::Reverse; self.index = 0; }
             Phase::Reverse => { if self.index < self.cut/2 { let last = self.cut - self.index - 1; self.output.swap(self.index, last); self.index += 1; progress.copied_bytes = 2 * size_of::<MutationMessage>(); } else if let Some(row) = self.pending.take() { self.push(row)?; progress.copied_bytes = size_of::<MutationMessage>(); } else { self.phase = Phase::Pages; } }
-            Phase::Pages => { let page = source.rows_mut().release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?; progress.copied_items = usize::from(page.progressed); progress.released_bytes = page.released_allocation_bytes; if source.terminal_is_empty() { self.phase = Phase::Finished; } }
+            Phase::Pages => { progress=source.release(grant)?; if source.terminal_is_empty() { self.phase = Phase::Finished; } }
             Phase::Finished => {}
         }
         self.work = self.work.saturating_add(progress.copied_items as u64); Ok(progress)

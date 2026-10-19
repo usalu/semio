@@ -1,3 +1,4 @@
+import { updateBundleCache } from "../🗺️file-analysis/🟦️.ts";
 /** 🌳️ Tree view providers
  *
  * The filter, monorepo and sections tree views with their providers and filter values.
@@ -8,7 +9,7 @@ import { ephemeralBox } from "@semio-tech/framework";
 import * as path from "path";
 import * as vscode from "vscode";
 import { type SectionInfo } from "../⚙️data-models/🟦️.ts";
-import { execShell, getRepoBinaryPath, getWorkspaceRoot } from "../🎼️utilities/🟦️.ts";
+import { execFileAsync, getRepoBinaryPath, getWorkspaceRoot } from "../🎼️utilities/🟦️.ts";
 import { fetchTreeWithArgs, getTreeRoot, treeNodeCommand, treeNodeContextValue, type TreeNodeData, treeNodeDisplayLabel } from "../🏬️uri-resolution/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -428,7 +429,7 @@ export class SectionsTreeDataProvider implements vscode.TreeDataProvider<Section
       if (!binaryPath) return [];
 
       try {
-        const output = await execShell(`"${binaryPath}" section list --file "${filePath}" --json`, root);
+        const { stdout: output } = await execFileAsync(binaryPath, ["section", "list", "--file", filePath, "--json"], { cwd: root, timeout: 60000 });
 
         const sections: SectionInfo[] = [];
         const lines = output.split("\n");
@@ -464,6 +465,7 @@ export class SectionsTreeDataProvider implements vscode.TreeDataProvider<Section
  * loadAvailableFilterValues holds the data fields for a loadAvailableFilterValues record.
  **/
 export async function loadAvailableFilterValues(): Promise<void> {
+  await updateBundleCache();
   const years = new Set<number>();
   const months = new Set<number>();
   const days = new Set<number>();

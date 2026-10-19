@@ -287,7 +287,7 @@ impl InferencePending for SlowJob {
     }
     fn close_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let Some(original)=self.cancelled.as_ref()else{return Ok(true)};let grant=cx.retained_grant();
-        if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<size_of::<Arc<AtomicUsize>>(){return Ok(false)}
+        if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes < size_of::<Arc<AtomicUsize>>(){return Ok(false)}
         if Arc::strong_count(original)<=1{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"fixture cancellation witness must retain its actual original").into())}
         cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Arc<AtomicUsize>>(),..Default::default()})?;cx.consume_fuel(1);self.cancelled=None;Ok(true)
     }
@@ -307,14 +307,11 @@ impl InferredField<SlowSnapshot> for SlowWeightSum {
     fn plan(snapshot: &SlowSnapshot) -> Vec<InferenceStep<Self::Key>> {
         snapshot.nodes.iter().map(|(key, _, parents)| InferenceStep { key: key.clone(), parents: parents.clone() }).collect()
     }
-    fn plan_source_extent(snapshot:&SlowSnapshot)->Option<(usize,usize)>{Some((snapshot.nodes.len(),snapshot.nodes.iter().map(|row|row.2.len()).sum()))}
-    fn plan_source_node(snapshot:&SlowSnapshot,ordinal:usize)->Option<&str>{snapshot.nodes.get(ordinal).map(|row|row.0.as_str())}
-    fn plan_source_key(snapshot:&SlowSnapshot,ordinal:usize)->Option<&String>{snapshot.nodes.get(ordinal).map(|row|&row.0)}
-    fn plan_source_link(snapshot:&SlowSnapshot,mut ordinal:usize)->Option<(&str,&str)>{for row in &snapshot.nodes{if ordinal<row.2.len(){return Some((row.2[ordinal].as_str(),row.0.as_str()))}ordinal-=row.2.len()}None}
-    fn clone_original_parent(original:&i64,output:&mut Option<i64>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,InferenceWorkFailure>{
-        if output.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"fixture parent donor is occupied").into())}
-        if !original_field_metadata(cx,size_of::<i64>())?{return Ok(false)}*output=Some(*original);Ok(true)
-    }
+
+
+
+
+
     fn dep_input(snapshot: &SlowSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Self::Dependency {
         vec![snapshot.weight(key)]
     }
@@ -322,22 +319,7 @@ impl InferredField<SlowSnapshot> for SlowWeightSum {
         snapshot.computes.fetch_add(1, Ordering::SeqCst);
         snapshot.weight(key) + parents.iter().sum::<i64>()
     }
-    fn compute_step(snapshot: &SlowSnapshot, key: &Self::Key, parents: &[Self::Value], pending:&mut Option<Box<dyn InferencePending>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure> {
-        if pending.is_none(){
-            let grant=cx.retained_grant();let copy=size_of::<SlowJob>()+size_of::<Arc<AtomicUsize>>();let capacity=size_of::<SlowJob>();
-            if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<capacity{return Ok(ComputeStep::Working{fuel_used:0,progress:0.0})}
-            cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:capacity,..Default::default()})?;cx.consume_fuel(1);
-            *pending=Some(Box::new(SlowJob{remaining:snapshot.slices,total:snapshot.slices,cancelled:Some(Arc::clone(&snapshot.cancelled))}));return Ok(ComputeStep::Working{fuel_used:1,progress:0.0})
-        }
-        let job = pending.as_mut().unwrap();
-        let job = job.as_any_mut().downcast_mut::<SlowJob>().ok_or_else(|| InferenceFault::new("test.pending-type", "the pending slot holds another job"))?;
-        let copy=if job.remaining==1{size_of::<i64>()}else{0};if !original_field_metadata(cx,copy)?{return Ok(ComputeStep::Working{fuel_used:0,progress:1.0-job.remaining as f32/job.total as f32})}
-        let spent=1;job.remaining=job.remaining.checked_sub(1).expect("fixture pending producer advances once");
-        if job.remaining > 0 {
-            return Ok(ComputeStep::Working { fuel_used: spent, progress: 1.0 - job.remaining as f32 / job.total as f32 });
-        }
-        Ok(ComputeStep::Done { value: Self::compute(snapshot, key, parents), fuel_used: spent })
-    }
+
 }
 
 fn stepped_fixture() -> serde_json::Value {
@@ -365,7 +347,7 @@ fn stepped_projection(snapshot:&SlowSnapshot,values:&InferenceValues<i64>)->BTre
 fn run_stepped(snapshot:&SlowSnapshot,mut cache:Option<&mut InferenceCache>,items:usize)->(BTreeMap<String,i64>,usize,usize){
  let mut cursor=InferenceCursor::new();let mut values=InferenceValues::new();let(mut calls,mut spent)=(0,0);let mut progress=0.0;let(mut caller,grant)=original_inference_fixture_caller(items);
  loop{
-  let(report,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(grant,|cx|Ok(infer_field_step::<SlowSnapshot,SlowWeightSum>(snapshot,cache.as_deref_mut(),&mut cursor,&mut values,cx))).unwrap().unwrap());
+  let(report,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(grant,|cx|Ok(infer_field_step::<SlowSnapshot,SlowWeightSum>(snapshot,snapshot,cache.as_deref_mut(),&mut cursor,&mut values,cx))).unwrap().unwrap());
   assert_eq!((born,freed),(caller.receipt().retained_capacity_bytes,caller.receipt().released_bytes));assert!(report.fuel_used<=items);assert!(report.progress>=progress);progress=report.progress;calls+=1;spent+=report.fuel_used;assert!(calls<10000);
   if report.done{let projection=stepped_projection(snapshot,&values);close_stepped(&mut caller,grant,&mut cursor,&mut values);caller.retire(grant);return(projection,calls,spent)}
  }
@@ -389,11 +371,11 @@ async fn original_stepped_cache_option_preserves_values_without_unfunded_cache_p
 async fn original_stepped_cancel_retains_finished_rows_and_closes_pending_before_source(){
  let fixture=stepped_fixture();let snapshot=SlowSnapshot::from_fixture(&fixture);let mut cursor=InferenceCursor::new();let mut values=InferenceValues::new();let(mut caller,grant)=original_inference_fixture_caller(1);
  for turn in 0..10000{
-  let report=caller.turn(grant,|cx|Ok(infer_field_step::<SlowSnapshot,SlowWeightSum>(&snapshot,None,&mut cursor,&mut values,cx))).unwrap().unwrap();assert!(!report.done);assert!(turn<9999);
+  let report=caller.turn(grant,|cx|Ok(infer_field_step::<SlowSnapshot,SlowWeightSum>(&snapshot,&snapshot,None,&mut cursor,&mut values,cx))).unwrap().unwrap();assert!(!report.done);assert!(turn<9999);
   if cursor.completed()==1&&cursor.pending.is_some(){break}
  }
  cursor.cancel();assert!(cursor.is_cancelled());assert_eq!(snapshot.cancelled.load(Ordering::SeqCst),1);let finished:BTreeMap<String,i64>=serde_json::from_value(fixture["cancelledValues"].clone()).unwrap();assert_eq!(stepped_projection(&snapshot,&values),finished);
- let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(grant,|cx|Ok(infer_field_step::<SlowSnapshot,SlowWeightSum>(&snapshot,None,&mut cursor,&mut values,cx))).unwrap());assert!(matches!(result,Err(InferenceWorkFailure::Driver(InferenceError::Cancelled))));assert_eq!((born,freed),(0,0));
+ let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(grant,|cx|Ok(infer_field_step::<SlowSnapshot,SlowWeightSum>(&snapshot,&snapshot,None,&mut cursor,&mut values,cx))).unwrap());assert!(matches!(result,Err(InferenceWorkFailure::Driver(InferenceError::Cancelled))));assert_eq!((born,freed),(0,0));
  caller.cancel().cancel().await;close_stepped(&mut caller,grant,&mut cursor,&mut values);caller.retire(grant);assert!(values.terminal_is_empty());
  let before=snapshot.computes.load(Ordering::SeqCst);let(resumed,_,_)=run_stepped(&snapshot,None,1);assert_eq!(resumed,expected_values(&fixture));assert_eq!(snapshot.computes.load(Ordering::SeqCst)-before,fixture["resumeComputes"].as_u64().unwrap()as usize);
 }
@@ -411,30 +393,25 @@ impl InferredField<SlowSnapshot> for FailingField {
     fn plan(snapshot: &SlowSnapshot) -> Vec<InferenceStep<Self::Key>> {
         SlowWeightSum::plan(snapshot)
     }
-    fn plan_source_extent(snapshot:&SlowSnapshot)->Option<(usize,usize)>{SlowWeightSum::plan_source_extent(snapshot)}
-    fn plan_source_node(snapshot:&SlowSnapshot,ordinal:usize)->Option<&str>{SlowWeightSum::plan_source_node(snapshot,ordinal)}
-    fn plan_source_key(snapshot:&SlowSnapshot,ordinal:usize)->Option<&String>{SlowWeightSum::plan_source_key(snapshot,ordinal)}
-    fn plan_source_link(snapshot:&SlowSnapshot,ordinal:usize)->Option<(&str,&str)>{SlowWeightSum::plan_source_link(snapshot,ordinal)}
-    fn clone_original_parent(original:&i64,output:&mut Option<i64>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,InferenceWorkFailure>{SlowWeightSum::clone_original_parent(original,output,cx)}
+
+
+
+
+
     fn dep_input(snapshot: &SlowSnapshot, key: &Self::Key, parents: &[Self::Key]) -> Self::Dependency {
         SlowWeightSum::dep_input(snapshot, key, parents)
     }
     fn compute(snapshot: &SlowSnapshot, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
         SlowWeightSum::compute(snapshot, key, parents)
     }
-    fn compute_step(snapshot: &SlowSnapshot, key: &Self::Key, parents: &[Self::Value], pending:&mut Option<Box<dyn InferencePending>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure> {
-        if key == "leaf_b" {
-            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"leaf_b refuses").into());
-        }
-        SlowWeightSum::compute_step(snapshot,key,parents,pending,cx)
-    }
+
 }
 
 #[semio_framework_async_macros::async_test]
 async fn a_failing_compute_is_an_error_naming_the_entity_and_keeps_the_values_before_it(){
  let snapshot=SlowSnapshot::from_fixture(&stepped_fixture());let mut cursor=InferenceCursor::new();let mut values=InferenceValues::new();let(mut caller,grant)=original_inference_fixture_caller(1);
  for turn in 0..10000{
-  let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(grant,|cx|Ok(infer_field_step::<SlowSnapshot,FailingField>(&snapshot,None,&mut cursor,&mut values,cx))).unwrap());assert_eq!((born,freed),(caller.receipt().retained_capacity_bytes,caller.receipt().released_bytes));assert!(turn<9999);
+  let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(grant,|cx|Ok(infer_field_step::<SlowSnapshot,FailingField>(&snapshot,&snapshot,None,&mut cursor,&mut values,cx))).unwrap());assert_eq!((born,freed),(caller.receipt().retained_capacity_bytes,caller.receipt().released_bytes));assert!(turn<9999);
   match result{Ok(report)=>assert!(!report.done),Err(failure)=>{assert!(matches!(&failure,InferenceWorkFailure::Original(original)if original.primary_value().unwrap().message=="leaf_b refuses"));break}}
  }
  assert_eq!(cursor.completed(),2);assert_eq!(stepped_projection(&snapshot,&values).keys().cloned().collect::<Vec<_>>(),vec!["leaf_a".to_string(),"root".to_string()]);close_stepped(&mut caller,grant,&mut cursor,&mut values);caller.retire(grant);
@@ -778,10 +755,10 @@ async fn a_cancelled_diff_update_leaves_the_session_distrusting_its_values_until
     snapshot.edit(cancel);
     let mut update = session.begin_update::<EditSnapshot, EditSum, _>(&touches_of(cancel), true);
     let (mut caller,grant)=original_inference_fixture_caller(count_of(cancel,"fuel"));
-    let report=caller.turn(grant,|cx|Ok(step_field_update::<EditSnapshot,EditSum>(&snapshot,&mut cache,&mut update,cx))).unwrap().unwrap();
+    let report=caller.turn(grant,|cx|Ok(update_field_cold::<EditSnapshot,EditSum>(&snapshot,&mut cache,&mut update))).unwrap().unwrap();
     assert_eq!(report.done, cancel["doneAfterFuel"].as_bool().unwrap());
     update.cancel();
-    assert!(matches!(caller.turn(grant,|cx|Ok(step_field_update::<EditSnapshot,EditSum>(&snapshot,&mut cache,&mut update,cx))).unwrap(),Err(InferenceWorkFailure::Driver(InferenceError::Cancelled))));
+    assert!(matches!(caller.turn(grant,|cx|Ok(update_field_cold::<EditSnapshot,EditSum>(&snapshot,&mut cache,&mut update))).unwrap(),Err(InferenceWorkFailure::Driver(InferenceError::Cancelled))));
     caller.retire(grant);
     let partial = session.finish_update(update);
     assert!(!partial.done);
@@ -841,9 +818,9 @@ async fn original_inferred_source_binding_preserves_actual_caller_before_unfunde
  use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
  let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️caller/🔣️.json")).unwrap();let p=&law["caller"];let v=p["sourceGrant"].as_array().unwrap();let source=RetainedCloneGrant{maximum_items:v[0].as_u64().unwrap()as usize,maximum_copy_bytes:v[1].as_u64().unwrap()as usize,maximum_capacity_bytes:v[2].as_u64().unwrap()as usize,maximum_release_bytes:v[3].as_u64().unwrap()as usize,maximum_depth:v[4].as_u64().unwrap()as usize};
  let mut caller=OriginalJobFixtureCaller::admit(OperationId(p["operation"].as_u64().unwrap()),Generation(p["generation"].as_u64().unwrap()),source,||Some(1),p["deadlineUs"].as_u64().unwrap(),p["fuel"].as_u64().unwrap());let snapshot=base_snapshot().await;let original=&snapshot as*const _ as usize;let mut cursor=InferenceCursor::new();let mut values=InferenceValues::new();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};
- for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(denied,|cx|Ok(infer_field_step::<DagSnapshot,WeightSum>(&snapshot,None,&mut cursor,&mut values,cx))).unwrap());let step=result.unwrap();assert_eq!(step.fuel_used,0);assert_eq!((born,freed),(0,0));assert_eq!(caller.receipt(),Default::default());assert!(cursor.original_caller.is_none()&&cursor.plan.is_none()&&values.is_empty());}
- let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(grant,|cx|Ok(infer_field_step::<DagSnapshot,WeightSum>(&snapshot,None,&mut cursor,&mut values,cx))).unwrap());assert_eq!(result.unwrap().fuel_used,1);assert_eq!((born,freed),(0,0));assert_eq!(caller.receipt(),RetainedCloneProgress{copied_items:1,..Default::default()});assert_eq!(cursor.original_caller,Some((961,13,original)));assert!(cursor.plan.is_none()&&values.is_empty());
- let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(grant,|cx|Ok(infer_field_step::<DagSnapshot,WeightSum>(&snapshot,None,&mut cursor,&mut values,cx))).unwrap());let failure=result.unwrap_err();assert_eq!((born,freed),(0,0));assert_eq!(caller.receipt(),Default::default());assert!(matches!(&failure,InferenceWorkFailure::Original(original) if original.primary_value().unwrap().kind==semio_framework_value::ValueRefusalKind::UnsupportedOwner));assert_eq!(cursor.original_caller,Some((961,13,original)));assert!(cursor.plan.is_none()&&values.is_empty());drop(failure);
+ for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(denied,|cx|Ok(infer_field_step::<DagSnapshot,WeightSum>(&snapshot,&snapshot,None,&mut cursor,&mut values,cx))).unwrap());let step=result.unwrap();assert_eq!(step.fuel_used,0);assert_eq!((born,freed),(0,0));assert_eq!(caller.receipt(),Default::default());assert!(cursor.original_caller.is_none()&&cursor.plan.is_none()&&values.is_empty());}
+ let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(grant,|cx|Ok(infer_field_step::<DagSnapshot,WeightSum>(&snapshot,&snapshot,None,&mut cursor,&mut values,cx))).unwrap());assert_eq!(result.unwrap().fuel_used,1);assert_eq!((born,freed),(0,0));assert_eq!(caller.receipt(),RetainedCloneProgress{copied_items:1,..Default::default()});assert_eq!(cursor.original_caller,Some((961,13,original)));assert!(cursor.plan.is_none()&&values.is_empty());
+ let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(grant,|cx|Ok(infer_field_step::<DagSnapshot,WeightSum>(&snapshot,&snapshot,None,&mut cursor,&mut values,cx))).unwrap());let failure=result.unwrap_err();assert_eq!((born,freed),(0,0));assert_eq!(caller.receipt(),Default::default());assert!(matches!(&failure,InferenceWorkFailure::Original(original) if original.primary_value().unwrap().kind==semio_framework_value::ValueRefusalKind::UnsupportedOwner));assert_eq!(cursor.original_caller,Some((961,13,original)));assert!(cursor.plan.is_none()&&values.is_empty());drop(failure);
  assert!(!caller.turn(grant,|cx|Ok(cursor.close_original_plan_step(cx))).unwrap().unwrap());assert!(caller.turn(grant,|cx|Ok(cursor.close_original_plan_step(cx))).unwrap().unwrap());caller.retire(source);let(_,born,freed)=semio_framework_trace_memory_testing::observe_backing(||drop((cursor,values)));assert_eq!((born,freed),(0,0));
 }
 
@@ -854,9 +831,9 @@ impl InferredField<OriginalPlanSnapshot>for OriginalPlanField{
  const FIELD_ID:&'static str="test.original.inference.plan";const SCHEMA_VERSION:u32=1;
  fn reads()->&'static[&'static str]{&["nodes","links"]}
  fn plan(_snapshot:&OriginalPlanSnapshot)->Vec<InferenceStep<String>>{panic!("whole planning is not the original funded route")}
- fn plan_source_extent(snapshot:&OriginalPlanSnapshot)->Option<(usize,usize)>{Some((snapshot.nodes.len(),snapshot.links.len()))}
- fn plan_source_node(snapshot:&OriginalPlanSnapshot,index:usize)->Option<&str>{snapshot.nodes.get(index).map(String::as_str)}
- fn plan_source_link(snapshot:&OriginalPlanSnapshot,index:usize)->Option<(&str,&str)>{snapshot.links.get(index).map(|(from,to)|(from.as_str(),to.as_str()))}
+
+
+
  fn dep_input(_snapshot:&OriginalPlanSnapshot,_key:&String,_parents:&[String])->Vec<u8>{panic!("dependency is outside this planning law")}
  fn compute(_snapshot:&OriginalPlanSnapshot,_key:&String,_parents:&[i64])->i64{panic!("compute is outside this planning law")}
 }
@@ -869,10 +846,10 @@ async fn original_inferred_graph_planning_quotes_each_borrowed_source_and_page()
   let(mut caller,source)=original_inference_fixture_caller(1);let mut cursor=InferenceCursor::new();let mut values=InferenceValues::new();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64};let(mut turns,mut births,mut releases)=(0usize,0usize,0usize);
   loop{
    if turns==stop{cursor.cancel();caller.cancel().cancel().await;break}
-   let position=cursor.original_plan().map(OriginalInferencePlan::position);let demand=cursor.original_plan().map(|plan|plan.demands::<OriginalPlanSnapshot,OriginalPlanField>(&snapshot).unwrap()).unwrap_or(semio_framework_value::RetirementDemand{depth:1,..Default::default()});
+   let position=cursor.original_plan().map(OriginalInferencePlan::position);let demand=cursor.original_plan().map(|plan|plan.demands::<OriginalPlanSnapshot,OriginalPlanField>(&snapshot,&snapshot).unwrap()).unwrap_or(semio_framework_value::RetirementDemand{depth:1,..Default::default()});
    let mut denials=vec![RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:demand.depth.saturating_sub(1),..grant}];if demand.copy_bytes!=0{denials.push(RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant})}if demand.capacity_bytes!=0{denials.push(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..grant})}
-   for denied in denials{let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(denied,|cx|Ok(infer_field_step::<OriginalPlanSnapshot,OriginalPlanField>(&snapshot,None,&mut cursor,&mut values,cx))).unwrap());assert_eq!(result.unwrap().fuel_used,0);assert_eq!((born,freed),(0,0));assert_eq!(caller.receipt(),RetainedCloneProgress::default());assert_eq!(cursor.original_plan().map(OriginalInferencePlan::position),position);}
-   let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(grant,|cx|Ok(infer_field_step::<OriginalPlanSnapshot,OriginalPlanField>(&snapshot,None,&mut cursor,&mut values,cx))).unwrap());
+   for denied in denials{let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(denied,|cx|Ok(infer_field_step::<OriginalPlanSnapshot,OriginalPlanField>(&snapshot,&snapshot,None,&mut cursor,&mut values,cx))).unwrap());assert_eq!(result.unwrap().fuel_used,0);assert_eq!((born,freed),(0,0));assert_eq!(caller.receipt(),RetainedCloneProgress::default());assert_eq!(cursor.original_plan().map(OriginalInferencePlan::position),position);}
+   let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(grant,|cx|Ok(infer_field_step::<OriginalPlanSnapshot,OriginalPlanField>(&snapshot,&snapshot,None,&mut cursor,&mut values,cx))).unwrap());
    let receipt=caller.receipt();assert_eq!(born,receipt.retained_capacity_bytes);assert_eq!(freed,receipt.released_bytes);births+=born;releases+=freed;assert!(receipt.fits(grant));turns+=1;assert!(turns<10000);
    match result{Ok(report)=>{assert!(report.fuel_used<=1);if cursor.original_plan().is_some_and(OriginalInferencePlan::complete){break}},Err(error)=>panic!("original graph planning refused: {error:?}")}
   }
@@ -895,8 +872,8 @@ async fn original_inferred_scope_refuses_foreign_clock_binding_on_same_parent_an
  use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueRefusalKind};
  let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️caller/🔣️.json")).unwrap();let input=&law["caller"];let raw=law["sourceIdentity"]["nativeStock"].as_array().unwrap();let stock=RetainedCloneGrant{maximum_items:raw[0].as_u64().unwrap()as usize,maximum_copy_bytes:raw[1].as_u64().unwrap()as usize,maximum_capacity_bytes:raw[2].as_u64().unwrap()as usize,maximum_release_bytes:raw[3].as_u64().unwrap()as usize,maximum_depth:raw[4].as_u64().unwrap()as usize};
  let mut caller=OriginalJobFixtureCaller::admit(OperationId(input["operation"].as_u64().unwrap()),Generation(input["generation"].as_u64().unwrap()),stock,original_inference_scope_clock,input["deadlineUs"].as_u64().unwrap(),law["sourceIdentity"]["nativeFuel"].as_u64().unwrap());let original=caller.original_clock_binding();let snapshot=base_snapshot().await;let mut cursor=InferenceCursor::new();let mut values=InferenceValues::new();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};
- caller.turn(grant,|cx|{cx.bind_original_clock_binding(original)?;Ok(infer_field_step::<DagSnapshot,WeightSum>(&snapshot,None,&mut cursor,&mut values,cx))}).unwrap().unwrap();
- let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(grant,|cx|{Ok(match cx.bind_original_clock_binding(original+1){Err(error)=>Err(InferenceWorkFailure::from(error)),Ok(())=>infer_field_step::<DagSnapshot,WeightSum>(&snapshot,None,&mut cursor,&mut values,cx)})}).unwrap());assert!(matches!(&result,Err(InferenceWorkFailure::Original(failure))if failure.primary_value().unwrap().kind==ValueRefusalKind::InvariantViolated));assert_eq!((born,freed),(0,0));assert_eq!(caller.receipt(),RetainedCloneProgress::default());drop(result);
+ caller.turn(grant,|cx|{cx.bind_original_clock_binding(original)?;Ok(infer_field_step::<DagSnapshot,WeightSum>(&snapshot,&snapshot,None,&mut cursor,&mut values,cx))}).unwrap().unwrap();
+ let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(grant,|cx|{Ok(match cx.bind_original_clock_binding(original+1){Err(error)=>Err(InferenceWorkFailure::from(error)),Ok(())=>infer_field_step::<DagSnapshot,WeightSum>(&snapshot,&snapshot,None,&mut cursor,&mut values,cx)})}).unwrap());assert!(matches!(&result,Err(InferenceWorkFailure::Original(failure))if failure.primary_value().unwrap().kind==ValueRefusalKind::InvariantViolated));assert_eq!((born,freed),(0,0));assert_eq!(caller.receipt(),RetainedCloneProgress::default());drop(result);
  assert!(!caller.turn(grant,|cx|{cx.bind_original_clock_binding(original)?;Ok(cursor.close_original_plan_step(cx))}).unwrap().unwrap());assert!(caller.turn(grant,|cx|{cx.bind_original_clock_binding(original)?;Ok(cursor.close_original_plan_step(cx))}).unwrap().unwrap());caller.retire(stock);
 }
 
@@ -908,8 +885,72 @@ async fn original_inferred_source_scope_refuses_foreign_root_with_same_business_
  let operation=OperationId(declared["operation"].as_u64().unwrap());let generation=Generation(declared["generation"].as_u64().unwrap());let deadline=declared["deadlineUs"].as_u64().unwrap();let fuel=law["sourceIdentity"]["nativeFuel"].as_u64().unwrap();let snapshot=base_snapshot().await;let mut cursor=InferenceCursor::new();let mut values=InferenceValues::new();
  let mut caller=OriginalJobFixtureCaller::admit(operation,generation,stock,original_inference_scope_clock,deadline,fuel);
  let metadata=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};
- let first=caller.turn(metadata,|cx|Ok(infer_field_step::<DagSnapshot,WeightSum>(&snapshot,None,&mut cursor,&mut values,cx))).unwrap().unwrap();assert_eq!(first.fuel_used,1);
+ let first=caller.turn(metadata,|cx|Ok(infer_field_step::<DagSnapshot,WeightSum>(&snapshot,&snapshot,None,&mut cursor,&mut values,cx))).unwrap().unwrap();assert_eq!(first.fuel_used,1);
  let mut foreign=OriginalJobFixtureCaller::admit(operation,generation,stock,original_inference_scope_clock,deadline,fuel);
- let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||foreign.turn(metadata,|cx|Ok(infer_field_step::<DagSnapshot,WeightSum>(&snapshot,None,&mut cursor,&mut values,cx))).unwrap());let failure=result.unwrap_err();assert!(matches!(&failure,InferenceWorkFailure::Original(original)if original.primary_value().unwrap().kind==ValueRefusalKind::InvariantViolated));assert_eq!((born,freed),(0,0));assert_eq!(foreign.receipt(),RetainedCloneProgress::default());assert!(values.is_empty());drop(failure);foreign.retire(stock);
+ let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||foreign.turn(metadata,|cx|Ok(infer_field_step::<DagSnapshot,WeightSum>(&snapshot,&snapshot,None,&mut cursor,&mut values,cx))).unwrap());let failure=result.unwrap_err();assert!(matches!(&failure,InferenceWorkFailure::Original(original)if original.primary_value().unwrap().kind==ValueRefusalKind::InvariantViolated));assert_eq!((born,freed),(0,0));assert_eq!(foreign.receipt(),RetainedCloneProgress::default());assert!(values.is_empty());drop(failure);foreign.retire(stock);
  assert!(!caller.turn(metadata,|cx|Ok(cursor.close_original_plan_step(cx))).unwrap().unwrap());assert!(caller.turn(metadata,|cx|Ok(cursor.close_original_plan_step(cx))).unwrap().unwrap());assert!(cursor.original_scope.is_none()&&cursor.original_caller.is_none());caller.retire(stock);
+}
+
+impl OriginalInferredField<DagSnapshot> for WeightSum {
+ type Source=DagSnapshot;
+ fn validate_source(snapshot:&DagSnapshot,source:&Self::Source,cx:&semio_framework_job::StepContext<'_>)->Result<(),InferenceWorkFailure>{cx.original_source_parent()?.validate_borrowed_context(cx)?;if !std::ptr::eq(snapshot,source){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native test inference changed its original input owner").into())}Ok(())}
+fn compute_step(_snapshot:&DagSnapshot,_source:&Self::Source,_key:&Self::Key,_parents:&[Self::Value],_pending:&mut Option<Box<dyn InferencePending>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"authored field has no original compute_step producer").into())}
+fn compute_cyclic_step(_snapshot:&DagSnapshot,_source:&Self::Source,_key:&Self::Key,_pending:&mut Option<Box<dyn InferencePending>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"authored field has no original compute_cyclic_step producer").into())}
+}
+
+impl OriginalInferredField<SlowSnapshot> for SlowWeightSum {
+ type Source=SlowSnapshot;
+ fn validate_source(snapshot:&SlowSnapshot,source:&Self::Source,cx:&semio_framework_job::StepContext<'_>)->Result<(),InferenceWorkFailure>{cx.original_source_parent()?.validate_borrowed_context(cx)?;if !std::ptr::eq(snapshot,source){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native test inference changed its original input owner").into())}Ok(())}
+fn plan_source_extent(snapshot:&SlowSnapshot,_source:&Self::Source)->Option<(usize,usize)>{Some((snapshot.nodes.len(),snapshot.nodes.iter().map(|row|row.2.len()).sum()))}
+fn plan_source_node<'view>(snapshot:&'view SlowSnapshot,_source:&'view Self::Source,ordinal:usize)->Option<&'view str>{snapshot.nodes.get(ordinal).map(|row|row.0.as_str())}
+fn plan_source_key<'view>(snapshot:&'view SlowSnapshot,_source:&'view Self::Source,ordinal:usize)->Option<&'view String>{snapshot.nodes.get(ordinal).map(|row|&row.0)}
+fn plan_source_link<'view>(snapshot:&'view SlowSnapshot,_source:&'view Self::Source,mut ordinal:usize)->Option<(&'view str,&'view str)>{for row in &snapshot.nodes{if ordinal<row.2.len(){return Some((row.2[ordinal].as_str(),row.0.as_str()))}ordinal-=row.2.len()}None}
+fn clone_original_parent(original:&i64,output:&mut Option<i64>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,InferenceWorkFailure>{
+        if output.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"fixture parent donor is occupied").into())}
+        if !original_field_metadata(cx,size_of::<i64>())?{return Ok(false)}*output=Some(*original);Ok(true)
+    }
+fn compute_step(snapshot: &SlowSnapshot,_source:&Self::Source, key: &Self::Key, parents: &[Self::Value], pending:&mut Option<Box<dyn InferencePending>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure> {
+        if pending.is_none(){
+            let grant=cx.retained_grant();let copy=size_of::<SlowJob>()+size_of::<Arc<AtomicUsize>>();let capacity=size_of::<SlowJob>();
+            if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<capacity{return Ok(ComputeStep::Working{fuel_used:0,progress:0.0})}
+            cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:capacity,..Default::default()})?;cx.consume_fuel(1);
+            *pending=Some(Box::new(SlowJob{remaining:snapshot.slices,total:snapshot.slices,cancelled:Some(Arc::clone(&snapshot.cancelled))}));return Ok(ComputeStep::Working{fuel_used:1,progress:0.0})
+        }
+        let job = pending.as_mut().unwrap();
+        let job = job.as_any_mut().downcast_mut::<SlowJob>().ok_or_else(|| InferenceFault::new("test.pending-type", "the pending slot holds another job"))?;
+        let copy=if job.remaining==1{size_of::<i64>()}else{0};if !original_field_metadata(cx,copy)?{return Ok(ComputeStep::Working{fuel_used:0,progress:1.0-job.remaining as f32/job.total as f32})}
+        let spent=1;job.remaining=job.remaining.checked_sub(1).expect("fixture pending producer advances once");
+        if job.remaining > 0 {
+            return Ok(ComputeStep::Working { fuel_used: spent, progress: 1.0 - job.remaining as f32 / job.total as f32 });
+        }
+        Ok(ComputeStep::Done { value: Self::compute(snapshot, key, parents), fuel_used: spent })
+    }
+fn compute_cyclic_step(_snapshot:&SlowSnapshot,_source:&Self::Source,_key:&Self::Key,_pending:&mut Option<Box<dyn InferencePending>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"authored field has no original compute_cyclic_step producer").into())}
+}
+
+impl OriginalInferredField<SlowSnapshot> for FailingField {
+ type Source=SlowSnapshot;
+ fn validate_source(snapshot:&SlowSnapshot,source:&Self::Source,cx:&semio_framework_job::StepContext<'_>)->Result<(),InferenceWorkFailure>{cx.original_source_parent()?.validate_borrowed_context(cx)?;if !std::ptr::eq(snapshot,source){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native test inference changed its original input owner").into())}Ok(())}
+fn plan_source_extent(snapshot:&SlowSnapshot,_source:&Self::Source)->Option<(usize,usize)>{SlowWeightSum::plan_source_extent(snapshot,_source)}
+fn plan_source_node<'view>(snapshot:&'view SlowSnapshot,_source:&'view Self::Source,ordinal:usize)->Option<&'view str>{SlowWeightSum::plan_source_node(snapshot,_source,ordinal)}
+fn plan_source_key<'view>(snapshot:&'view SlowSnapshot,_source:&'view Self::Source,ordinal:usize)->Option<&'view String>{SlowWeightSum::plan_source_key(snapshot,_source,ordinal)}
+fn plan_source_link<'view>(snapshot:&'view SlowSnapshot,_source:&'view Self::Source,ordinal:usize)->Option<(&'view str,&'view str)>{SlowWeightSum::plan_source_link(snapshot,_source,ordinal)}
+fn clone_original_parent(original:&i64,output:&mut Option<i64>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,InferenceWorkFailure>{SlowWeightSum::clone_original_parent(original,output,cx)}
+fn compute_step(snapshot: &SlowSnapshot,_source:&Self::Source, key: &Self::Key, parents: &[Self::Value], pending:&mut Option<Box<dyn InferencePending>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure> {
+        if key == "leaf_b" {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"leaf_b refuses").into());
+        }
+        SlowWeightSum::compute_step(snapshot,_source,key,parents,pending,cx)
+    }
+fn compute_cyclic_step(_snapshot:&SlowSnapshot,_source:&Self::Source,_key:&Self::Key,_pending:&mut Option<Box<dyn InferencePending>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"authored field has no original compute_cyclic_step producer").into())}
+}
+
+impl OriginalInferredField<OriginalPlanSnapshot>for OriginalPlanField{
+ type Source=OriginalPlanSnapshot;
+ fn validate_source(snapshot:&OriginalPlanSnapshot,source:&Self::Source,cx:&semio_framework_job::StepContext<'_>)->Result<(),InferenceWorkFailure>{cx.original_source_parent()?.validate_borrowed_context(cx)?;if !std::ptr::eq(snapshot,source){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native test inference changed its original input owner").into())}Ok(())}
+fn plan_source_extent(snapshot:&OriginalPlanSnapshot,_source:&Self::Source)->Option<(usize,usize)>{Some((snapshot.nodes.len(),snapshot.links.len()))}
+fn plan_source_node<'view>(snapshot:&'view OriginalPlanSnapshot,_source:&'view Self::Source,index:usize)->Option<&'view str>{snapshot.nodes.get(index).map(String::as_str)}
+fn plan_source_link<'view>(snapshot:&'view OriginalPlanSnapshot,_source:&'view Self::Source,index:usize)->Option<(&'view str,&'view str)>{snapshot.links.get(index).map(|(from,to)|(from.as_str(),to.as_str()))}
+fn compute_step(_snapshot:&OriginalPlanSnapshot,_source:&Self::Source,_key:&Self::Key,_parents:&[Self::Value],_pending:&mut Option<Box<dyn InferencePending>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"authored field has no original compute_step producer").into())}
+fn compute_cyclic_step(_snapshot:&OriginalPlanSnapshot,_source:&Self::Source,_key:&Self::Key,_pending:&mut Option<Box<dyn InferencePending>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"authored field has no original compute_cyclic_step producer").into())}
 }

@@ -1,5 +1,5 @@
-//! ✂️ Puzzle 5d schema — the typed copy/paste/translate transfer rules over a `Puzzle5dSnapshot`:
 //! the closure selection a copy fragment expands to, its centroid, the fresh-id materialization a
+//! ✂️ Puzzle 5d schema — the typed copy/paste/translate transfer rules over a `Puzzle5dSnapshot`:
 //! paste performs, the direct position write a translate is, and the replace-kind candidate walk.
 //! Mirrors semio-compose's `copyDesign`/`pasteDesign`/`dragPieces`/`findReplaceableTypesForSelection`.
 //!
@@ -9,8 +9,10 @@
 
 use crate::standards::v1::subsets::any::schema::next_id;
 use crate::{Puzzle5dSnapshot};
-use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dFastener, Puzzle5dPart};
-use std::collections::{HashMap, HashSet};
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dFastener;
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart;
+use std::collections::HashMap;
+use std::collections::HashSet;
 
 //#region 🔖️GripRefs
 /// 🧩️ The part id a `"part_id:grip_id"` full grip reference belongs to.

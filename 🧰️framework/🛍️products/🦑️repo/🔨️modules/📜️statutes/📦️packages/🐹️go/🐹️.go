@@ -9,11 +9,11 @@
 package statutes
 
 import (
-	context "context"
-	strings "strings"
+	"context"
+	"strings"
+	"github.com/usalu/semio/repo/model"
+	"github.com/usalu/semio/repo/workspace"
 
-	model "github.com/usalu/semio/repo/model"
-	workspace "github.com/usalu/semio/repo/workspace"
 )
 
 // #region 📜️Statutes
@@ -274,26 +274,11 @@ var policies = []PolicyDef{
 	{
 		ID:          "system",
 		Name:        "System",
-		Description: "Validates system configuration files like devcontainer and editor settings",
-		Scopes:      []string{".vscode/settings.json", ".vscode/extensions.json", ".devcontainer/devcontainer.json", ".devcontainer/editor-overlay.json"},
+		Description: "Enforces repository dashboard authority over developer configuration",
+		Scopes:      []string{"**/*"},
 		Priority:    model.BreachPriorityHigh,
-		Groups: []model.Territory{
-			{
-				Name:        "Devcontainer",
-				Description: "Devcontainer configuration breachs",
-				Groups: []model.Territory{
-					{
-						Name:        "VSCode",
-						Description: "The devcontainer editor block must equal its derivation from the host editor files",
-						Kinds: []model.Statute{
-							model.BreachSystemDevcontainerVscodeSettingsDrift,
-							model.BreachSystemDevcontainerVscodeExtensionsDrift,
-						},
-					},
-				},
-			},
-		},
-		Run: SystemPolicy,
+		Groups:      []model.Territory{{Name: "Developer Configuration", Description: "Editor-owned configuration is forbidden", Kinds: []model.Statute{model.BreachSystemIdeConfiguration}}},
+		Run:         SystemPolicy,
 	},
 	{
 		ID:          "folder",

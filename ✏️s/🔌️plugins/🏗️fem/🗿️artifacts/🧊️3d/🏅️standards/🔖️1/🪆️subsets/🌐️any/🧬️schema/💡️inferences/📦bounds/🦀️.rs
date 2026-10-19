@@ -1,10 +1,11 @@
-//! 📦 `bounds` — one named inference: the 3d extent and entity counts derivable from a fem3d
 //! snapshot's `nodes`/`elements` alone. A whole-snapshot scalar (not per-entity), so this leaf
+//! 📦 `bounds` — one named inference: the 3d extent and entity counts derivable from a fem3d
 //! holds a plain pure function rather than an `InferredField` dependency chain — nothing here
 //! benefits from per-entity incremental caching, unlike `puzzle3d`'s `flatPosition`.
 
 use crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 
 //#region 🔖️Bounds
 /// 📦️ Axis-aligned 3d bounding box in meters (empty snapshot: both corners at the origin).

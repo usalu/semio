@@ -88,7 +88,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                         _ => unreachable!("pending artifact publication has one durable store lane"),
                     }
                     let token = mounted.next_token();
-                    mounted.queue_page(TypedOperationResultPage::try_serialize(token, pending_lane, &receipt)?)
+                    mounted.queue_page(TypedOperationResultPage::try_serialize_cold(token, pending_lane, &receipt)?)
                 }
                 store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Progress(checkpoint) => {
                     mounted.note_publication_checkpoint(checkpoint);
@@ -174,7 +174,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                         }
                     }
                 } else {
-                    TypedOperationResultPage::try_serialize(
+                    TypedOperationResultPage::try_serialize_cold(
                         token,
                         TypedOperationResultLane::Download,
                         &DownloadResultPayload { filename: download.filename.as_str(), mime_type: download.mime_type.as_str(), encoding: download.encoding.as_deref(), bytes: download.chunks.bytes() },
@@ -224,7 +224,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                             if !outcome.is_applicable(protocol::MergePolicy::default()) {
                                 return Err(MediaTransfers::<A>::transaction_fault(FaultOrigin::App, "transaction.member-rejected", format!("mutation outcome was rejected: {:?}", outcome.messages())));
                             }
-                            running = protocol::apply_diff(outcome.diff(), &running).map_err(|error| MediaTransfers::<A>::transaction_fault(FaultOrigin::App, "transaction.member-rejected", error.to_string()))?;
+                            running = protocol::apply_diff_cold(outcome.diff(), &running).map_err(|error| MediaTransfers::<A>::transaction_fault(FaultOrigin::App, "transaction.member-rejected", error.to_string()))?;
                         }
                         if !foreign.is_empty() {
                             let mut local_ops = Vec::with_capacity(emit.artifact_mutations.len());
@@ -367,13 +367,13 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                             emit.effects.push(effect);
                             return Err(plugin_sdk_fault("typed-operation effect receiver is saturated"));
                         }
-                        TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::Effect, &("accepted", self.tools.typed_effect_outbox.len()))?
+                        TypedOperationResultPage::try_serialize_cold(token, TypedOperationResultLane::Effect, &("accepted", self.tools.typed_effect_outbox.len()))?
                     } else if let Some(event) = emit.events.pop() {
                         if let Err(event) = self.tools.typed_event_outbox.push(event) {
                             emit.events.push(event);
                             return Err(plugin_sdk_fault("typed-operation event receiver is saturated"));
                         }
-                        TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::Event, &("accepted", self.tools.typed_event_outbox.len()))?
+                        TypedOperationResultPage::try_serialize_cold(token, TypedOperationResultLane::Event, &("accepted", self.tools.typed_event_outbox.len()))?
                     } else {
                         match () {
                             () if !emit.tasks.is_empty() => {
@@ -386,7 +386,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                                     return Err(plugin_sdk_fault("typed-operation UI receiver is saturated"));
                                 }
                                 mounted.ui_pending = false;
-                                TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::Ui, &emit.ui_scope)?
+                                TypedOperationResultPage::try_serialize_cold(token, TypedOperationResultLane::Ui, &emit.ui_scope)?
                             }
                             () => {
                                 if self.tools.typed_completion_outbox.push(TypedOperationCompletionWitness { operation: token.operation, ui_scope: emit.ui_scope.clone() }).is_err() {

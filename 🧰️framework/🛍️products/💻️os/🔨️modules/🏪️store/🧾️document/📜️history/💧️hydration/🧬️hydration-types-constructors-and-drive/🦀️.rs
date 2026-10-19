@@ -55,8 +55,8 @@ pub enum PersistedDocumentHydrationTarget {
 
 pub enum PersistedDocumentHydrationOutput<P, M>
 where
-    P: Clone + ToValue + FromValue,
-    M: Clone + ToValue + FromValue + Mutation<P>,
+    P: ToValue,
+    M: ToValue + FromValue + Mutation<P>,
 {
     Store(Box<ArtifactStore<P, M>>),
     Envelope(ArtifactEnvelope<P, M>),
@@ -70,8 +70,8 @@ pub struct PersistedDocumentHydrationProgress {
 
 pub enum PersistedDocumentHydrationStep<P, M>
 where
-    P: Clone + ToValue + FromValue,
-    M: Clone + ToValue + FromValue + Mutation<P>,
+    P: ToValue,
+    M: ToValue + FromValue + Mutation<P>,
 {
     Pending(PersistedDocumentHydrationProgress),
     Ready(PersistedDocumentHydrationOutput<P, M>),
@@ -81,8 +81,8 @@ where
 /// 🏪️ A Store-only hydration handoff preserves its declared output authority.
 pub enum PersistedDocumentStoreHydrationStep<P, M>
 where
-    P: Clone + ToValue + FromValue,
-    M: Clone + ToValue + FromValue + Mutation<P>,
+    P: ToValue,
+    M: ToValue + FromValue + Mutation<P>,
 {
     Pending(PersistedDocumentHydrationProgress),
     Ready(Box<ArtifactStore<P, M>>),
@@ -140,8 +140,8 @@ impl<M> semio_framework_os_store_replay::ReplayEdits<M> for HydratedReplayEdits<
 
 pub struct RetainedPersistedDocumentHydration<P, M>
 where
-    P: Clone + ToValue + FromValue,
-    M: Clone + ToValue + FromValue + Mutation<P>,
+    P: ToValue,
+    M: ToValue + FromValue + Mutation<P>,
 {
     pub actor: ManuallyDrop<semio_framework_os_spr::ActorId>,
     pub pack: ManuallyDrop<Option<Vec<u8>>>,

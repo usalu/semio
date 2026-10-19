@@ -1,7 +1,9 @@
 //! 🔎️ Borrowed native identifier lookup retains topology and exact comparison grants.
 
 use crate::Puzzle2dSnapshot;
-use semio_framework_value::{paged::PagedUtf8, ValueError, ValueRefusalKind};
+use semio_framework_value::paged::PagedUtf8;
+use semio_framework_value::ValueError;
+use semio_framework_value::ValueRefusalKind;
 use semio_framework_value::retained_clone::{RetainedCloneBinding, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, paged::PagedUtf8BoundedOrdCursor, ordered_map::{BoundedOrdCursor, BoundedOrdGrant, BoundedOrdStep}};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

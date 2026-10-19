@@ -34,8 +34,8 @@ export function toolJobLatestWinsSelfTests(): number {
   }
   if (Buffer.byteLength(integration.keyRetirement.text, "utf8") !== integration.keyRetirement.utf8Bytes
     || JSON.stringify(Array.from(integration.keyRetirement.text as string).reverse().map((scalar) => Buffer.byteLength(scalar, "utf8"))) !== JSON.stringify(integration.keyRetirement.scalarBytes)) throw new Error("latest-wins UTF-8 retirement byte oracle");
-  const source = toolJobPluginInstanceSource(WORKSPACE_ROOT);
-  const contractRoot = join(base, "🧪️tests");
+  const source=toolJobPluginInstanceSource(WORKSPACE_ROOT);
+  const contractRoot=join(base,"🧪️tests");
   const runtimeContractTests = readdirSync(contractRoot).filter((name) => name.startsWith("🔬️plugin-runtime-plugin-builder-contract")).sort().map((name) => readModuleTreeSource(join(contractRoot, name, "🦀️.rs"))).join("\n");
   const body = (text: string, name: string): string => {
     const owner = name === "has_runnable_typed_operations" ? "impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp for VcsArtifactApp<A, M>" : ["take_result_page", "reject_cancelled_publication"].includes(name) ? "impl<A: ArtifactApp> MountedTypedCommandFullOperation<A>" : undefined;
@@ -44,6 +44,9 @@ export function toolJobLatestWinsSelfTests(): number {
     const start = scope.lastIndexOf(`fn ${name}(`);
     return start < 0 ? "" : toolJobRustBlock(scope, scope.indexOf("{", start))?.body ?? "";
   };
+  const claimSource = readFileSync(join(WORKSPACE_ROOT, "🧰️framework/🔨️modules/⏳️async/♻️cancel-return/📬️claim/🦀️.rs"), "utf8");
+  const claimIdentityExact = (text: string): boolean => body(text, "same_original").replace(/\s+/gu, "") === "Arc::ptr_eq(&left.inner,&right.inner)" && body(text, "try_claim").replace(/\s+/gu, "").includes("self.inner.state.compare_exchange(0,1,Ordering::AcqRel,Ordering::Acquire).ok()?");
+  if (!claimIdentityExact(claimSource) || claimIdentityExact(claimSource.replace("Arc::ptr_eq(&left.inner,&right.inner)", "true")) || claimIdentityExact(claimSource.replace("compare_exchange(0,1,Ordering::AcqRel,Ordering::Acquire).ok()?", "store(1,Ordering::Release)"))) throw new Error("publication claim identity accepts a different original issuer");
   const obligations: Array<[string, string]> = [
     ["publish_mounted_typed_operation_unit", "mounted.reject_cancelled_publication()?"],
     ["publish_mounted_typed_operation_unit", "ToolCancellationLease::try_claim_publication"],
@@ -135,7 +138,7 @@ export function toolJobLatestWinsSelfTests(): number {
       && !handles.includes("pub async fn new(registry:") && handles.includes("pub fn new(registry:")
       && !admission.includes(".await") && !admission.includes("run(ctx)")
       && execution.includes("let future = cold_run.take().run(ctx);") && execution.includes("future.await")
-      && ordered(admission, ["instance_task_quota(instance)", "if live >= quota", "task.into_parts()", "executor.reserve()", "insert_admitted(task_id"]);
+      && ordered(admission, ["instance_task_quota(instance)", "if live >= quota", "task.into_parts()", "executor.reserve()", "insert_admitted(task_id", "let mut cold_run = crate::app_emission::ColdTaskRun::new(run)"]);
   };
   if (!taskAdmissionExact(source, reactor, host)) throw new Error("task publication invokes or polls user work before releasing its synchronous admission claim");
   const taskHostiles = [
@@ -147,8 +150,9 @@ export function toolJobLatestWinsSelfTests(): number {
   for (const [main, tasks, handles] of taskHostiles) if (taskAdmissionExact(main, tasks, handles)) throw new Error("task admission accepts a suspended or prematurely invoked user factory");
   const rawFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧪️tests/🧫️fixtures/🚪️raw-allocation-close.json"), "utf8"));
   for (const law of rawFixture.cases) {
-    const oracle = Buffer.alloc(law.capacity).subarray(0, law.initializedBytes);
-    if (law.initializedBytes > law.capacity || oracle.byteLength !== law.initializedBytes || law.expectedCopiedBytes !== 0 || oracle.buffer.byteLength !== law.expectedReleasedBytes) throw new Error(`retained raw allocation copy and physical release oracle: ${law.id}`);
+    const allocation=new ArrayBuffer(law.capacity);
+    const oracle=Buffer.from(allocation).subarray(0,law.initializedBytes);
+    if (law.initializedBytes > law.capacity || oracle.byteLength !== law.initializedBytes || oracle.buffer !== allocation || law.expectedCopiedBytes !== 0 || rawFixture.maximumCopyBytes !== 0 || oracle.buffer.byteLength !== law.expectedReleasedBytes) throw new Error(`retained raw allocation copy and physical release oracle: ${law.id}`);
   }
   const rawSource = readModuleTreeSource(join(base, "🧵️retained-command/🦀️.rs"));
   const rawCloseSignature = "fn close_one_original(&mut self,cx:&mut StepContext<'_>,grant:RetainedCloneGrant)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>";
@@ -195,27 +199,60 @@ export function toolJobLatestWinsSelfTests(): number {
   if (childCloseFixture.children.some((child: { slot: string; childId: string; value: string }) => [child.slot, child.childId, child.value].some(value => Buffer.byteLength(value, "utf8") <= value.length))) throw new Error("retained child close fixture lost its multibyte scalar oracle");
   const childMain = [source, ...["📜️declaration/📨️emission/🦀️.rs", "📜️declaration/👷️job/🎯️completion-and-owned-context/🦀️.rs"].map((file) => readFileSync(join(base, file), "utf8"))].join("\n");
   const childCloseExact = (main: string, retained: string): boolean => main.includes("pub fn close_one(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>")
+  const completionHandbackExact = (text: string): boolean => {
+    const owner = text.indexOf("impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A>");
+    const start = owner < 0 ? -1 : text.indexOf("fn step", owner);
+    const publication = start < 0 ? "" : toolJobRustBlock(text, text.indexOf("{", start))?.body.replace(/\s+/gu, "") ?? "";
+    return ["Emit", "Download"].every(lane => new RegExp("self\\.rejected_completion=Some\\(ArtifactToolCompletionValue::" + lane + "\\(rejected\\." + lane.toLowerCase() + "\\.map_err\\((?:crate::completion_fault::)?ArtifactCompletionFault::new\\),rejected\\.ephemeral\\)\\);self\\.reducer_fault\\(rejected\\.fault\\);returnOk\\(None\\);").test(publication));
+  };
+  const rejectedCloseExact = (text: string): boolean => {
+    const close = rawCloseBlock(text)?.body;
+    const start = close?.indexOf("if self.rejected_completion.is_some()") ?? -1;
+    const admission = close && start >= 0 ? toolJobRustBlock(close, close.indexOf("{", start))?.body.replace(/\s+/gu, "") ?? "" : "";
+    return admission.includes("matchA::admit_completion_retirement(&mutself.rejected_completion,grant)")
+      && admission.includes("Ok(Some((owner,progress)))=>{self.rejected_retirement=Some(owner);InteractiveJobCloseStep::Pending{progress}}")
+      && admission.includes("Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}");
+  };
+  const rejectedDepthExact = (text: string): boolean => {
+    const start = text.indexOf("if let Some(value)=self.rejected_completion.as_ref()");
+    const demand = start < 0 ? "" : toolJobRustBlock(text, text.indexOf("{", start))?.body.replace(/\s+/gu, "") ?? "";
+    return demand.includes("emit.child_close_demands(copy)?") && demand.includes('demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"retained rejected emitted child depth overflow"))?;returnOk(demand);'.replace(/\s+/gu, ""));
+  };
+  const childCloseExact = (main: string, retained: string): boolean => main.includes("pub(crate) fn close_one(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>")
     && main.includes("pub fn close_child_one(&mut self, grant: RetainedCloneGrant) -> Result<Option<PluginLifecycleStep>, Fault>")
-    && retained.includes("emit.close_child_one(child)")
+    && rawCloseBlock(retained)?.body.split("emit.close_child_one(child)").length === 3
     && retained.includes("InteractiveJobCloseStep::Pending{progress}")
-    && retained.includes("self.emit = rejected.emit.ok()")
-    && retained.includes("self.ephemeral = Some(rejected.ephemeral)")
+    && rawCloseBlock(retained)?.body.split("if progress.fits(child)").length === 3
+    && completionHandbackExact(retained)
+    && rejectedCloseExact(retained)
+    && rejectedDepthExact(retained)
+    && retained.includes("artifact_retirement_box_close_step(&mut self.rejected_retirement,grant)")
+    && retained.includes("self.rejected_completion.is_none()") && retained.includes("self.rejected_retirement.is_none()")
     && main.split("return Err(ArtifactToolCompletionRejection { emit, ephemeral, fault:").length - 1 === 2
     && main.includes("mounted owned child group requires its one exact admitted typed source family");
   if (!childCloseExact(childMain, rawSource)) throw new Error("retained ChildEmit full grant, physical receipt and rejected completion handback are incomplete");
   const childCloseHostiles = [
     [childMain.replaceAll("pub fn close_one(&mut self, grant: RetainedCloneGrant)", "fn close_one(&mut self, grant: RetainedCloneGrant)"), rawSource],
     [childMain, rawSource.replace("emit.close_child_one(child)", "drop(self.emit.take())")],
-    [childMain, rawSource.replace("self.emit = rejected.emit.ok()", "drop(rejected.emit)")],
+    [childMain, rawSource.replace("if progress.fits(child)", "if true")],
+    [source, rawSource.replace("rejected.emit.map_err", "discarded_emit.map_err")],
+    [source, rawSource.replace("rejected.download.map_err", "discarded_download.map_err")],
+    [source, rawSource.replace("rejected.ephemeral", "discarded_ephemeral")],
+    [source, rawSource.replace("A::admit_completion_retirement(&mut self.rejected_completion,grant)", "A::admit_completion_retirement(&mut discarded_completion,grant)")],
+    [source, rawSource.replace("self.rejected_retirement=Some(owner)", "drop(owner)")],
+    [source, rawSource.replace("self.rejected_retirement=Some(owner);InteractiveJobCloseStep::Pending{progress}", "self.rejected_retirement=Some(owner);InteractiveJobCloseStep::Pending{progress:Default::default()}")],
+    [source, mutateRawClose("Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}", "Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:Default::default()}")],
+    [source, rawSource.replace('demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"retained rejected emitted child depth overflow"))?', "demand.depth+=1")],
+    [source, rawSource.replace("artifact_retirement_box_close_step(&mut self.rejected_retirement,grant)", "artifact_retirement_box_close_step(&mut self.rejected_retirement,Default::default())")],
     [childMain.replace("return Err(ArtifactToolCompletionRejection { emit, ephemeral, fault:", "return Err(ArtifactToolCompletionRejection { emit: discarded_emit, ephemeral, fault:"), rawSource],
     [childMain.replace("mounted owned child group requires its one exact admitted typed source family", "typed child output is accepted"), rawSource],
   ] as const;
   for (const [hostileMain, hostileRetained] of childCloseHostiles) if (childCloseExact(hostileMain, hostileRetained)) throw new Error("retained ChildEmit close oracle accepted lost ownership or bounded-factory publication");
   for (const path of ["🦀️.rs", "📜️declaration/📨️emission/🦀️.rs", "🧵️retained-command/🦀️.rs", "🧪️tests/🧩️composition/📨️emission/🦀️.rs"]) {
     const result = spawnSync("rustfmt", ["--edition", "2021", "--emit", "stdout", "--config", "skip_children=true", join(base, path)], { stdio: ["ignore", "ignore", "pipe"], timeout: 60000 });
-    if (result.status !== 0) throw new Error(`original child source grammar refused ${path}: status ${result.status} signal ${result.signal} ${result.error?.message ?? ""} ${result.stderr?.toString()}`);
+    if (result.status !== 0) throw new Error(`original child source grammar refused ${path}: ${result.error?.message ?? result.signal ?? result.status}; ${result.stderr?.toString()}`);
   }
-  const storeSource = toolJobStoreSource(WORKSPACE_ROOT);
+  const storeSource=toolJobStoreSource(WORKSPACE_ROOT);
   const publisherStart = source.lastIndexOf("fn publish_mounted_typed_operation_unit(");
   const mutatePublisher = (before: string, after: string): string => source.slice(0, publisherStart) + source.slice(publisherStart).replace(before, after);
   const admittedBatchSourceExact = (text: string): boolean => {
@@ -285,6 +322,6 @@ export function toolJobLatestWinsSelfTests(): number {
     if (validDispatch(law.mutation) !== law.admitted || (law.mutation !== "none" && changed === production)) throw new Error(`mounted dispatch fixture oracle: ${law.mutation}`);
     if (toolJobMountedDispatchOneTurnExact(changed) !== law.admitted) throw new Error(`mounted dispatch exact helper law: ${law.mutation}`);
   }
-  return fixture.cases.length + 3 + obligations.length + integration.cases.length + taskFixture.observations.length + taskHostiles.length + rawFixture.cases.length + 4 + rawHostiles.length + 3 + mountedChecks.length * 2 + 2 + dispatchFixture.cases.length * 2 + childCloseHostiles.length + 3;
+  return fixture.cases.length + 6 + obligations.length + integration.cases.length + taskFixture.observations.length + taskHostiles.length + rawFixture.cases.length + 4 + rawHostiles.length + 3 + mountedChecks.length * 2 + 2 + dispatchFixture.cases.length * 2 + childCloseHostiles.length + 3;
 }
 

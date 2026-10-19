@@ -121,3 +121,94 @@ export class SpaceHistoryValidationScript extends BundleScript{
   }else await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel"],cwd:this.repoRoot,extraArgs:["--lib","sqlite_snapshot_framework_space_history_borrowed_validation_","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
  }
 }
+
+export class StableIdentityCheckScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length > 1 || (args.length && args[0] !== "--native")) throw Error("stable-identity-check accepts only --native");
+    const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🪡️list-delta");
+    const fixtures = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🪪️stable-identity/🔣️.json"), "utf8")) as { vectors: { id: string; base: { id: string; value: number }[]; patches: { target: string; row: { id: string; value: number } }[]; accepted: boolean; expected: { id: string; value: number }[] }[] };
+    const { Database } = await import("bun:sqlite");
+    for (const vector of fixtures.vectors) {
+      const database = new Database(":memory:");
+      try {
+        database.run("CREATE TABLE rows (position INTEGER PRIMARY KEY, id TEXT UNIQUE NOT NULL, value INTEGER NOT NULL)");
+        database.run("CREATE TRIGGER immutable_identity BEFORE UPDATE OF id ON rows WHEN NEW.id <> OLD.id BEGIN SELECT RAISE(ABORT, 'identity changed'); END");
+        vector.base.forEach((row, position) => database.run("INSERT INTO rows VALUES (?, ?, ?)", [position, row.id, row.value]));
+        let accepted = true;
+        database.run("BEGIN");
+        try {
+          for (const patch of vector.patches) {
+            const result = database.run("UPDATE rows SET id = ?, value = ? WHERE id = ?", [patch.row.id, patch.row.value, patch.target]);
+            if (result.changes !== 1) throw Error("missing target");
+          }
+          database.run("COMMIT");
+        } catch {
+          accepted = false;
+          database.run("ROLLBACK");
+        }
+        assert.equal(accepted, vector.accepted, vector.id);
+        assert.deepEqual(database.query("SELECT id, value FROM rows ORDER BY position").all(), vector.expected, vector.id);
+      } finally {
+        database.close();
+      }
+    }
+    const nested = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🪆️nested-inverse/🔣️.json"), "utf8")) as { vectors: { id: string; base: { id: string; value: number; label: string; parts: { id: string; weight: number }[] }[]; patches: { id: string; patch: { parts: { removed: { id: string; index: number }[]; inserted: { index: number; row: { id: string; weight: number } }[] } } }[]; expected: unknown }[] };
+    for (const vector of nested.vectors) {
+      const database = new Database(":memory:");
+      try {
+        database.run("CREATE TABLE parts (parent TEXT NOT NULL, position INTEGER NOT NULL, id TEXT UNIQUE NOT NULL, weight INTEGER NOT NULL)");
+        vector.base.forEach(row => row.parts.forEach((part, position) => database.run("INSERT INTO parts VALUES (?, ?, ?, ?)", [row.id, position, part.id, part.weight])));
+        const insert = (parent: string, index: number, row: { id: string; weight: number }): void => {
+          database.run("UPDATE parts SET position = position + 1 WHERE parent = ? AND position >= ?", [parent, index]);
+          database.run("INSERT INTO parts VALUES (?, ?, ?, ?)", [parent, index, row.id, row.weight]);
+        };
+        const remove = (parent: string, index: number, id: string): void => {
+          assert.equal(database.run("DELETE FROM parts WHERE parent = ? AND position = ? AND id = ?", [parent, index, id]).changes, 1);
+          database.run("UPDATE parts SET position = position - 1 WHERE parent = ? AND position > ?", [parent, index]);
+        };
+        const inverse: (() => void)[] = [];
+        for (const mutation of vector.patches) {
+          for (const row of mutation.patch.parts.removed) {
+            const before = database.query("SELECT id, weight FROM parts WHERE parent = ? AND position = ?").get(mutation.id, row.index) as { id: string; weight: number };
+            remove(mutation.id, row.index, row.id);
+            inverse.push(() => insert(mutation.id, row.index, before));
+          }
+          for (const row of mutation.patch.parts.inserted) {
+            insert(mutation.id, row.index, row.row);
+            inverse.push(() => remove(mutation.id, row.index, row.row.id));
+          }
+        }
+        const projection = () => vector.base.map(row => ({ ...row, parts: database.query("SELECT id, weight FROM parts WHERE parent = ? ORDER BY position").all(row.id) }));
+        assert.deepEqual(projection(), vector.expected, vector.id);
+        inverse.reverse().forEach(replay => replay());
+        assert.deepEqual(projection(), vector.base, vector.id + " inverse");
+      } finally {
+        database.close();
+      }
+    }
+    if (args[0] === "--native") {
+      await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib", "-E", "test(stable_identity_) | test(nested_inverse_)", "--no-fail-fast"]);
+    }
+    console.log(`[DEBUG] stable-identity-check: identity=${fixtures.vectors.length} nested=${nested.vectors.length} SQLite projection and inverse oracles passed`);
+  }
+}
+
+export class SnapshotReceivingNativeScript extends BundleScript{
+ async run(args:string[]):Promise<void>{
+  if(args.length)throw Error("Expected test-snapshot-receiving-native");
+  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel"],cwd:this.repoRoot,extraArgs:["--lib","original_receiving_","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env));
+ }
+}
+
+export class OriginalSnapshotReceivingScript extends BundleScript{
+ async run(segments:string[]):Promise<void>{
+  const mode=segments[0];if(segments.length!==1||(mode!=="source"&&mode!=="native"))throw Error("test-original-snapshot-receiving source|native");
+  const sources=[join(this.repoRoot,"🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🧪️tests/🟦️.ts"),join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📸️native-snapshot/🫴️receiving/📜️pair/🧪️tests/🟦️.ts"),join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🛬️receive/🧪️tests/🟦️.ts")];
+  for(const source of sources){
+  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:this.invocation.control.remainingMilliseconds(),signal:this.invocation.control.signal,throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:this.invocation.control.remainingMilliseconds(),signal:this.invocation.control.signal,throwOnFailure:true});
+  }
+  if(mode==="native")await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel"],cwd:this.repoRoot,extraArgs:["--lib","original_snapshot_pack_receiving_preserves_same_source_control_and_paid_close","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env),this.repoRoot,this.invocation);
+  if(mode==="native")await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel"],cwd:this.repoRoot,extraArgs:["--lib","original_child_receive_same_caller_all_partial_prefixes_and_literal_target","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env),this.repoRoot,this.invocation);
+ }
+}

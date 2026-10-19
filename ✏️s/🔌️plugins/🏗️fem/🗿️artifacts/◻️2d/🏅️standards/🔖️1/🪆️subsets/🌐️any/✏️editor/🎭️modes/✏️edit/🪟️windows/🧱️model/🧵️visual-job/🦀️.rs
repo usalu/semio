@@ -6,15 +6,15 @@ use super::*;
 //#region 🧵️MountedVisualJob
 pub(super) const FEM2D_VISUAL_MAXIMUM_REGIONS: usize = 64;
 
-const FEM2D_VISUAL_MAXIMUM_NODES: usize = 16;
+const FEM2D_VISUAL_MAXIMUM_NODES: usize = semio_s_fem_analyses_model::MOUNTED_ANALYSIS_NODE_SLOTS;
 
-pub(super) const FEM2D_VISUAL_MAXIMUM_ELEMENTS: usize = 16;
+pub(super) const FEM2D_VISUAL_MAXIMUM_ELEMENTS: usize = semio_s_fem_analyses_model::MOUNTED_ANALYSIS_ELEMENT_SLOTS;
 
 const FEM2D_VISUAL_MAXIMUM_SUPPORTS: usize = 64;
 
 const FEM2D_VISUAL_MAXIMUM_LOADS: usize = 64;
 
-pub(super) const FEM2D_VISUAL_MAXIMUM_FIELDS: usize = 16;
+pub(super) const FEM2D_VISUAL_MAXIMUM_FIELDS: usize = semio_s_fem_analyses_model::MOUNTED_ANALYSIS_NODE_SLOTS;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Fem2dVisualJobStage {

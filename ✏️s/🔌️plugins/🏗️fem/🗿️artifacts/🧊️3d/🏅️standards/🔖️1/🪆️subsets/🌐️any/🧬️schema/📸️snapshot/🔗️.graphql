@@ -12,3 +12,24 @@ type Fem3dSnapshot {
   analysis: FemAnalysisSettings! @state(class: ARTIFACT)
 }
 
+
+# 🧱️ Complete domain records referenced by snapshot, mutation and diff mirrors.
+enum FemDof { Tx Ty Tz Rx Ry Rz }
+type FemMaterial { id: String! name: String! e: Float! nu: Float! rho: Float! g: Float! }
+type FemSection { id: String! name: String! area: Float! iy: Float! iz: Float! j: Float! }
+type FemSupport { id: String! nodeId: String! fixed: [FemDof!]! }
+type FemLoadCase { id: String! name: String! loads: [FemLoad!]! selfWeight: Boolean! }
+type FemNodalLoad { id: String! nodeId: String! dof: FemDof! value: Float! }
+type FemMemberLoad { id: String! elementId: String! wx: Float! wy: Float! wz: Float! }
+type FemAreaLoad { id: String! solidId: String! pressure: Float! }
+union FemLoad = FemNodalLoad | FemMemberLoad | FemAreaLoad
+type FemBar { id: String! start: String! end: String! materialId: String! sectionId: String! }
+type FemNode { id: String! x: Float! y: Float! z: Float! }
+type FemFrame { id: String! start: String! end: String! materialId: String! sectionId: String! roll: Float! }
+union FemElement = FemBar | FemFrame
+enum FemAxis { x y z }
+type FemSolid { id: String! name: String! outline: [[Float!]!]! holes: [[[Float!]!]!]! baseZ: Float! height: Float! layers: Int! meshSize: Float! materialId: String! axis: FemAxis! }
+scalar FemCombinationTerms
+type FemCombination { id: String! name: String! terms: FemCombinationTerms! }
+
+type FemAnalysisSettings { modalCount: Int! bucklingCount: Int! deformationScale: Float! }

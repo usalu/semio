@@ -231,7 +231,7 @@ impl<A: ArtifactApp> ArtifactOwnedToolJobContext<A> {
 
     /// 👥️ Borrows immutable captured presence without projecting or granting publication authority.
     pub fn presence_view(&self) -> Option<PresenceView<'_, A::Presence>> {
-        Some(PresenceView { local: self.presence_local.as_ref()?.get(), peers: PresencePeersView { root: self.presence_peers.as_deref()? } })
+        Some(PresenceView { local: self.presence_local.as_ref()?.get(), peers: PresencePeersView::new(self.presence_peers.as_deref()?) })
     }
 
     /// ⏯️ Binds the instance's tool run as of command admission (identity, state, provisional entities).

@@ -38,7 +38,7 @@ impl FlowRetainedVcs {
         let handle = FlowVcsHandle { operation: self.next_operation, slot: slot as u8, generation: self.slot_generations[slot] };
         self.charge(source);
         let cursor = FlowVcsCursor::new(&action);
-        self.operations[slot] = Some(FlowVcsOperation { handle, authority, source, action: Some(action), rollback_owner: None, layout_update: None, retirement: None, cursor, page: None, page_leased: false, delivery_held: true, stage: FlowVcsStage::Admitted, close_phase: 0 });
+        self.operations[slot] = Some(FlowVcsOperation { handle, authority, source, action: Some(action), rollback_owner: None, retirement: None, cursor, page: None, page_leased: false, delivery_held: true, stage: FlowVcsStage::Admitted, close_phase: 0 });
         self.next_operation += 1;
         Ok(handle)
     }

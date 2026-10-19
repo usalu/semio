@@ -13,7 +13,7 @@ pub use assign_n::AssignN;
 #[canonical_json(owner=semio_framework_pack_json)]
 #[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
-#[mutations(snapshot = DemoSnapshot, diff = DemoDiff, schema = "timestamped.doc")]
+#[mutations(snapshot = DemoSnapshot, diff = DemoDiff, schema = "timestamped.doc", reference = DemoSnapshot, reference_diff = DemoDiff)]
 pub enum TimestampedMutation {
     SetN(SetN),
     AssignN(AssignN),

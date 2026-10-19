@@ -23,7 +23,9 @@
 //! every case and combination, so the differential covers every number, not only the ones this file
 //! names.
 
-use semio_repo_test_host::{Adapter, Json};
+use semio_repo_test_host::Adapter;
+
+use semio_repo_test_host::Json;
 
 //#region 🔖️Corpus
 /// 🧫️ `(scenario suffix, committed snapshot)` per benchmark, in the order the feature states them.
@@ -72,7 +74,9 @@ const KINDS: &[&str] = &[
 #[cfg(feature = "sut")]
 mod subject {
     use super::Json;
-    use semio_repo_test_host::{parse_json, Context, Outcome};
+    use semio_repo_test_host::parse_json;
+    use semio_repo_test_host::Context;
+    use semio_repo_test_host::Outcome;
     use semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::reports::fem2d_buckling_report_json;
     use semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::reports::fem2d_modal_report_json;
     use semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::reports::fem2d_mutated_analysis_report_json;

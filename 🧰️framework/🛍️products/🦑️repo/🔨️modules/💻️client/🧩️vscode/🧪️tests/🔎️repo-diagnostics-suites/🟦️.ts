@@ -167,17 +167,5 @@ suite("Repo Diagnostics Test Suite", function () {
 // #region 🏆️Refresh Diagnostics Tests
 suite("Refresh Diagnostics Test Suite", function () {
   this.timeout(15000);
-
-  test("compose.refreshDiagnostics updates all open documents", async function () {
-    const document = await openFixture("compose/invalid.kit.compose.json");
-    await vscode.commands.executeCommand("compose.refreshDiagnostics");
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    const diagnostics = vscode.languages.getDiagnostics(document.uri).filter((d) => d.source === "compose");
-    if (diagnostics.length === 0) {
-      console.log("Skipping: validation may be disabled due to bundling issues");
-      return;
-    }
-    assert.ok(diagnostics.length > 0, "Diagnostics should be present after refresh");
-  });
 });
 // #endregion 🏆️Refresh Diagnostics Tests

@@ -14,10 +14,7 @@ test("the actual S consumer admits only its explicit owner publication",()=>{
  expect(projection.entries.length).toBeGreaterThan(0);expect(projection.playgrounds.length).toBeGreaterThan(0);
  for(const row of projection.entries)expect(request.contributions.some(owner=>owner.packageRoots.some(root=>row.cratePath.startsWith(root+"/")))).toBe(true);
 });
-test("the exact canonical publication routes survive both launch sources",()=>{
- const root=new URL("../../../../../",import.meta.url),seed=parseJsonc(readFileSync(new URL(".vscode/🧩️launch.seed.jsonc",root),"utf8")),launch=parseJsonc(readFileSync(new URL(".vscode/launch.json",root),"utf8"));
- for(const target of ["generate","check-generated","preview-generated","verify-catalog","test-catalog-publication"]){const command="bun repo run @semio-tech/s-dev-composition:"+target,authored=seed.configurations.filter((row:{command:string})=>row.command===command),published=launch.configurations.filter((row:{command:string})=>row.command===command);expect(authored.length).toBe(1);expect(published).toEqual(authored);}
-});
+test("canonical publication routes remain owned by the dashboard project",()=>{const root=new URL("../../../../../",import.meta.url),text=readFileSync(new URL("✏️s/🧑‍💻dev/📋️project.json",root),"utf8"),manifest=parseJsonc(text);expect(manifest).toEqual(JSON.parse(text));expect(manifest.name).toBe("@semio-tech/s-dev-composition");for(const target of ["generate","check-generated","preview-generated","verify-catalog","test-catalog-publication"])expect(manifest.targets[target].options.command).toContain("bun ./📜️script.ts ");});
 
 import {catalogBuildContributionV1} from "../🟦️.ts";
 import { cacheInternals, libraryBootstrap } from "@semio-tech/repo-lib/build/inference";

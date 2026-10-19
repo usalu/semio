@@ -63,24 +63,37 @@ pub struct InteractionStateDiff {
 }
 
 impl protocol::MutationDiff<InteractionState> for InteractionStateDiff {
-    fn apply(&self, base: &InteractionState, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<InteractionState> {
-        let mut next = base.clone();
-        DomainEdit::write(&mut next.selection, &self.selection);
-        DomainEdit::write(&mut next.hover, &self.hover);
-        DomainEdit::write(&mut next.active_mode, &self.active_mode);
-        DomainEdit::write(&mut next.active_granularity, &self.active_granularity);
-        Ok(next)
-    }
 
+
+
+}
+
+impl protocol::ColdMutationDiff<InteractionState> for InteractionStateDiff {
     fn absorb(&mut self, other: Self) {
         DomainEdit::absorb(&mut self.selection, other.selection);
         DomainEdit::absorb(&mut self.hover, other.hover);
         DomainEdit::absorb(&mut self.active_mode, other.active_mode);
         DomainEdit::absorb(&mut self.active_granularity, other.active_granularity);
     }
+
+    fn apply(&self, next: &mut InteractionState, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        DomainEdit::write(&mut next.selection, &self.selection);
+        DomainEdit::write(&mut next.hover, &self.hover);
+        DomainEdit::write(&mut next.active_mode, &self.active_mode);
+        DomainEdit::write(&mut next.active_granularity, &self.active_granularity);
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<InteractionState> for InteractionStateDiff {
+
+
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<InteractionState> for InteractionStateDiff {
     fn inverse(&self, base: &InteractionState) -> Self {
         Self {
             selection: DomainEdit::restoring(&self.selection, &base.selection),
@@ -88,9 +101,5 @@ impl protocol::DiffAlgebra<InteractionState> for InteractionStateDiff {
             active_mode: DomainEdit::restoring(&self.active_mode, &base.active_mode),
             active_granularity: DomainEdit::restoring(&self.active_granularity, &base.active_granularity),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self == &Self::default()
     }
 }

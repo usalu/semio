@@ -1,0 +1,1 @@
+{"name":"external-root","private":true,"workspaces":[],"semio":{"workspace":{"schemaVersion":1,"members":["source*/**"],"owners":["*/package.json"]}}}

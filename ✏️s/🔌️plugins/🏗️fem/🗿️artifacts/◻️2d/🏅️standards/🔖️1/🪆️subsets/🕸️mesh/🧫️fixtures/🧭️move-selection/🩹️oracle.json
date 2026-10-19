@@ -1,0 +1,12 @@
+[
+  {
+    "op": "replace",
+    "path": "/nodes/0/x",
+    "value": 1
+  },
+  {
+    "op": "replace",
+    "path": "/nodes/0/y",
+    "value": 2
+  }
+]

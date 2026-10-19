@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.history.invariants.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "cases"],
+  "properties": {
+    "schema": { "const": "semio.history.invariants.v1" },
+    "cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/case" } }
+  },
+  "definitions": {
+    "ids": { "type": "array", "items": { "type": "string" } },
+    "edit": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "actor", "logicalMs", "mutationIds"],
+      "properties": { "id": { "type": "string" }, "actor": { "type": "string" }, "logicalMs": { "type": "integer", "minimum": 0 }, "mutationIds": { "$ref": "#/definitions/ids" } }
+    },
+    "transition": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "actor", "logicalMs", "mutationIds", "kind"],
+      "properties": { "id": { "type": "string" }, "actor": { "type": "string" }, "logicalMs": { "type": "integer", "minimum": 0 }, "mutationIds": { "$ref": "#/definitions/ids" }, "kind": { "enum": ["revert", "reinstate"] } }
+    },
+    "expected": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["outcome", "detail"], "properties": { "outcome": { "const": "malformed" }, "detail": { "type": "string" } } },
+        { "type": "object", "additionalProperties": false, "required": ["outcome", "applied", "redo", "refused"], "properties": { "outcome": { "const": "accepted" }, "applied": { "$ref": "#/definitions/ids" }, "redo": { "$ref": "#/definitions/ids" }, "refused": { "$ref": "#/definitions/ids" } } }
+      ]
+    },
+    "case": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "edits", "transitions", "expected"],
+      "properties": { "id": { "type": "string" }, "edits": { "type": "array", "items": { "$ref": "#/definitions/edit" } }, "transitions": { "type": "array", "items": { "$ref": "#/definitions/transition" } }, "expected": { "$ref": "#/definitions/expected" } }
+    }
+  }
+}

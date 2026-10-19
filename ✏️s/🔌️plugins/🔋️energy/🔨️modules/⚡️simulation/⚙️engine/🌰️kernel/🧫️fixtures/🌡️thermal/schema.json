@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "oracle",
+    "matrix",
+    "rhs",
+    "tolerance",
+    "cases",
+    "checkpoint"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "oracle": {
+      "const": "mathjs.lusolve"
+    },
+    "matrix": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "number"
+      }
+    },
+    "rhs": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      }
+    },
+    "tolerance": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "target",
+          "delivered",
+          "free",
+          "required",
+          "settled"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "delivered": {
+            "type": "number"
+          },
+          "required": {
+            "type": "number"
+          },
+          "free": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "settled": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "checkpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "words",
+        "thermalPhase",
+        "thermalCursor",
+        "densePresent",
+        "denseStart",
+        "denseWords",
+        "requiredBits"
+      ],
+      "properties": {
+        "words": {
+          "const": 32
+        },
+        "thermalPhase": {
+          "const": 16
+        },
+        "thermalCursor": {
+          "const": 17
+        },
+        "densePresent": {
+          "const": 18
+        },
+        "denseStart": {
+          "const": 19
+        },
+        "denseWords": {
+          "const": 12
+        },
+        "requiredBits": {
+          "const": 31
+        }
+      }
+    }
+  }
+}

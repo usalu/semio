@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "source": { "operation": 71, "generation": 3, "authority": 101, "clock": 17, "deadline": 1000 },
+  "foreign": { "operation": 71, "generation": 3, "authority": 102, "clock": 17, "deadline": 1000 },
+  "quote": [1, 32, 32, 16, 1],
+  "denials": [[0,32,32,16,1],[1,31,32,16,1],[1,32,31,16,1],[1,32,32,15,1],[1,32,32,16,0]],
+  "requestPointer": 201,
+  "cases": [
+    { "name": "denied", "events": ["bind","deny","closeInput","returnSource"], "births": 0, "capacity": 0, "release": 16, "committed": false },
+    { "name": "accepted", "events": ["bind","birth","commit","closeCandidate","returnSource"], "births": 1, "capacity": 32, "release": 48, "committed": true },
+    { "name": "receiptRefused", "events": ["bind","birth","receiptRefused","closeCandidate","returnSource"], "births": 1, "capacity": 32, "release": 48, "committed": false },
+    { "name": "cancelled", "events": ["bind","cancel","closeInput","returnSource"], "births": 0, "capacity": 0, "release": 16, "committed": false }
+  ],
+  "stock": { "items": 100000, "copyBytes": 16777216, "capacityBytes": 16777216, "releaseBytes": 16777216, "depth": 128, "fuel": 1000000 }
+}

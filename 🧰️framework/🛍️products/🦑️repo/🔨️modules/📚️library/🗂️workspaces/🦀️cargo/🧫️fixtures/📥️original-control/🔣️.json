@@ -1,0 +1,1 @@
+{"version":1,"parentMilliseconds":8000,"queueMilliseconds":80,"queuedDeadlineMilliseconds":80,"physicalCancelAfter":3,"cases":["queued","blocked-progress","physical","child","budget","deadline"],"dependencyCases":["update","fetch"],"expected":{"completed":false,"originalReason":true,"nextOwner":true}}

@@ -12,7 +12,7 @@ import type { WorldCore6 } from "../🎛️marquee-and-gumball/🟦️.ts";
 // #region World3dHost
 /** 👆️ Wires the pointer handlers and the catalogue drag and drop. */
 export function useWorldPointerAndDrop(core: WorldCore6) {
-  const { activeUtility, beginRelocateDrag, cameraRef, cameraState, catalogueDragDepthRef, catalogueDragEncodedRef, connectDropConsumedRef, contextMenu, dismissContextMenu, dispatch, endRelocateDrag, engagementPointerMoveInFlightRef, engagementPointerMoveLastPointRef, faceDragSession, gestureRecognizer, gridFactor, gridSnapEnabled, handleConnectDragCancel, handleInstancePointerDown, handleSuggestionClose, handleVoxelPlace, hostRef, hoveredInstanceInteractionIdRef, instances, instancesRef, interaction, interactionDomainId, interactionGranularity, marqueeDown, marqueeDragActiveRef, marqueeFinalizeOnceRef, marqueePreviewRef, marqueeStartRef, meshesRef, method, node, paintMode, pendingCelebrateCatalogueDropIdsRef, persistentSelectionMode, publishWorldPresenceView, relocateMode, scene, selection, selectionMode, setFaceDragSession, setMarqueeCommitHold, setMarqueeModifiers, setMarqueePath, setVortexPointerArm, setVoxelHoverOrigin, stepPaintGesture, toLocalPoint, updateRelocateDrag, volumeBrushMode, voxelGroundOriginAt, wasMarqueeDragRef, windowInstanceId, yieldToPinch } = core;
+  const { activeUtility, beginRelocateDrag, cameraRef, cameraState, catalogueDragDepthRef, catalogueDragEncodedRef, connectDropConsumedRef, contextMenu, dismissContextMenu, dispatch, endRelocateDrag, engagementPointerMoveInFlightRef, engagementPointerMoveLastPointRef, faceDragSession, gestureRecognizer, gridFactor, gridSnapEnabled, handleConnectDragCancel, handleInstancePointerDown, handleSuggestionClose, handleVoxelPlace, hostRef, hoveredInstanceInteractionTargetRef, instances, instancesRef, interaction, interactionDomainId, interactionGranularity, marqueeDown, marqueeDragActiveRef, marqueeFinalizeOnceRef, marqueePreviewRef, marqueeStartRef, meshesRef, method, node, paintMode, pendingCelebrateCatalogueDropIdsRef, persistentSelectionMode, publishWorldPresenceView, relocateMode, scene, selection, selectionMode, setFaceDragSession, setMarqueeCommitHold, setMarqueeModifiers, setMarqueePath, setVortexPointerArm, setVoxelHoverOrigin, stepPaintGesture, toLocalPoint, updateRelocateDrag, volumeBrushMode, voxelGroundOriginAt, wasMarqueeDragRef, windowInstanceId, yieldToPinch } = core;
   const handlePointerDown = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       const verdict = gestureRecognizer.down({ pointerId: event.pointerId, x: event.clientX, y: event.clientY });
@@ -234,9 +234,9 @@ export function useWorldPointerAndDrop(core: WorldCore6) {
       // `🐍️world-pick-recon.mjs` records both halves). The hover this pane published IS the target under
       // the pointer, so a click there is a pick of it; a click on genuinely empty canvas has no hover
       // and still clears.
-      const hovered = hoveredInteractionTargetV1(hoveredInstanceInteractionIdRef.current ?? selection.hoveredId);
+      const hovered = hoveredInteractionTargetV1(hoveredInstanceInteractionTargetRef.current);
       if (interactionDomainId && hovered) {
-        dispatch("interactionSelect", world3dSelectionActionArgs(interactionDomainId, hovered.granularity, [hovered.id], merge));
+        dispatch("interactionSelect", world3dSelectionTargetsActionArgs(interactionDomainId, [hovered], merge));
         return;
       }
       if (interactionDomainId) {
@@ -249,7 +249,7 @@ export function useWorldPointerAndDrop(core: WorldCore6) {
       }
       dispatch("worldPick", { granularity: selectionMode, id: null, merge });
     },
-    [contextMenu, dismissContextMenu, dispatch, handleSuggestionClose, interaction.suggestionMenu?.open, interactionDomainId, interactionGranularity, paintMode, persistentSelectionMode, selection.engagementSessionActive, selection.hoveredId, selection.selectionMergeMode, selectionMode],
+    [contextMenu, dismissContextMenu, dispatch, handleSuggestionClose, interaction.suggestionMenu?.open, interactionDomainId, interactionGranularity, paintMode, persistentSelectionMode, selection.engagementSessionActive, selection.selectionMergeMode, selectionMode],
   );
 
   const clearCatalogueDrop = useCallback(() => {

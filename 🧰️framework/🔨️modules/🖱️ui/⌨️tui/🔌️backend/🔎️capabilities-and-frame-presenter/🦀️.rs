@@ -42,7 +42,8 @@ impl Waker {
 
 /// 🔌️ A platform terminal I/O implementation, kept out of the retained-mode core.
 pub trait TerminalBackend {
-    fn enter(&mut self) -> io::Result<()>;
+        fn width_mode(&self) -> crate::tui::text::WidthMode { crate::tui::text::WidthMode::Scalar }
+fn enter(&mut self) -> io::Result<()>;
     fn leave(&mut self) -> io::Result<()>;
     fn size(&self) -> io::Result<Size>;
     fn capabilities(&self) -> Capabilities;

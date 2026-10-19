@@ -1,0 +1,2275 @@
+# Framework and Hub Source Merge Disposition
+
+Source-only merge; no compilation, resolver, typecheck, runtime, or tests executed. Uncontested incoming bytes and non-overlapping source edits merged with fresh-byte guards. Current build orchestration retained pending individual review. Current deletions retained pending transfer to split owners.
+
+{"incoming": 1563, "partial": 227, "merged": 393, "already": 3, "config-pending": 72, "head-dissolution": 11}
+
+- `🌎️hub/README.md`: incoming; 114–115 incoming, 213–213 incoming, 555–556 incoming, 659–658 incoming, 662–663 incoming
+- `🌎️hub/package.json`: partial; 157–157 conflict, 161–161 incoming, 228–229 incoming, 255–255 incoming, 258–257 incoming
+- `🌎️hub/💡️inference/🧾️wal/🧪️tests/🔬️unit/🦀️.rs`: incoming; 175–180 incoming
+- `🌎️hub/📇️directory/🧪️tests/🔬️unit/🦀️.rs`: partial; 48–1779 conflict
+- `🌎️hub/📇️directory/🪶️sqlite/🧪️tests/🔬️unit/🦀️.rs`: merged; 43–43 same, 264–270 incoming
+- `🌎️hub/🗿️artifact-authority/🌱️creation/🧪️tests/🔬️unit/🦀️.rs`: merged; 1–1 incoming, 63–63 same, 210–210 same, 239–239 same
+- `🌎️hub/🧩️compositions/➗️mathematical/🧪️tests/🔬️surface/🦀️.rs`: already; 
+- `🌎️hub/🧩️compositions/🖨️raster/📦️packages/🦀️rust/Cargo.toml`: merged; 19–18 incoming
+- `🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🧪️tests/🏷️type/🟦️.ts`: partial; 26–26 conflict
+- `🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🧪️tests/🖊️drawing-reader/🟦️.ts`: merged; 65–66 token-merge
+- `🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🎚️config/🦀️.rs`: incoming; 5–4 incoming, 584–584 incoming, 613–614 incoming
+- `🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/👥️presence/🦀️.rs`: incoming; 7–6 incoming, 156–156 incoming, 175–176 incoming
+- `🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🦀️.rs`: partial; 41–41 incoming, 71–1016 conflict
+- `🧰️framework/📦️packages/🟦️typescript/package.json`: merged; 25–24 incoming
+- `🧰️framework/📦️packages/🟦️typescript/⏳️async/🟦️.ts`: incoming; 
+- `🧰️framework/📦️packages/🟦️typescript/📋️project.json`: config-pending; 11–10 config-pending
+- `🧰️framework/📦️packages/🟦️typescript/📜️script.ts`: config-pending; 2–1 incoming, 425–424 incoming, 449–449 incoming
+- `🧰️framework/📦️packages/🦀️rust/Cargo.toml`: merged; 54–53 incoming
+- `🧰️framework/📦️packages/🦀️rust/📋️project.json`: config-pending; 5–4 config-pending, 227–226 config-pending
+- `🧰️framework/📦️packages/🦀️rust/📜️script.ts`: config-pending; 2–4 conflict, 152–151 incoming, 161–160 incoming, 313–312 incoming, 315–315 incoming, 318–317 incoming
+- `🧰️framework/📦️packages/🦀️rust/🦀️.rs`: merged; 46–46 incoming
+- `🧰️framework/🔨️modules/⏪️time-travel/🎮️decision/🗑️discard/🦀️.rs`: incoming; 106–105 incoming, 114–114 incoming
+- `🧰️framework/🔨️modules/⏯️tool-run/⏱️tick-writer/🦀️.rs`: incoming; 21–20 incoming, 26–25 incoming, 50–49 incoming, 61–61 incoming, 72–72 incoming, 74–74 incoming, 77–77 incoming, 130–129 incoming, 163–162 incoming, 172–171 incoming, 173–172 incoming, 174–174 incoming, 180–180 incoming, 263–263 incoming, 299–298 incoming, 303–302 incoming, 340–339 incoming
+- `🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/⏭️successor/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 1–41 incoming
+- `🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛫️encode/🦀️.rs`: incoming; 3–3 incoming, 6–6 incoming, 12–12 incoming, 17–26 incoming, 28–27 incoming, 36–36 incoming, 42–42 incoming, 52–52 incoming, 54–55 incoming, 57–57 incoming, 63–63 incoming, 70–69 incoming, 71–72 incoming, 75–75 incoming, 81–81 incoming, 85–85 incoming, 87–87 incoming, 90–90 incoming
+- `🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛫️encode/🧪️tests/🟦️.ts`: merged; 5–5 token-merge
+- `🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛫️encode/🧪️tests/🦀️.rs`: partial; 14–18 conflict
+- `🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛫️encode/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 10–10 incoming, 14–13 incoming
+- `🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛫️encode/🧬️schema/🔣️.json`: incoming; 8–8 incoming, 37–37 incoming, 49–48 incoming
+- `🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/📼️trace/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/⏯️tool-run/👥️entities/📸️version/🦀️.rs`: incoming; 38–40 incoming
+- `🧰️framework/🔨️modules/⏯️tool-run/👥️entities/🧪️tests/🦀️.rs`: merged; 11–11 incoming, 30–30 incoming, 47–47 incoming
+- `🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust/📋️project.json`: config-pending; 33–32 config-pending, 38–37 config-pending, 74–87 config-pending
+- `🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust/📜️script.ts`: config-pending; 5–6 conflict, 29–29 incoming, 53–53 incoming, 64–64 incoming, 125–125 incoming
+- `🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust/🦀️.rs`: incoming; 11–10 incoming, 26–25 incoming
+- `🧰️framework/🔨️modules/⏯️tool-run/📨️payload/🌊️stream/📡️wire/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/⏯️tool-run/📨️payload/🌊️stream/📡️wire/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/⏯️tool-run/📨️payload/🌊️stream/📡️wire/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/⏯️tool-run/📨️payload/🌊️stream/📡️wire/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/⏯️tool-run/📨️payload/🌊️stream/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/⏯️tool-run/📨️payload/🌊️stream/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/⏯️tool-run/📨️payload/🌊️stream/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/⏯️tool-run/📨️payload/🌊️stream/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/⏯️tool-run/📨️payload/🌊️stream/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/⏯️tool-run/📨️payload/🌊️stream/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/⏯️tool-run/📨️payload/🌊️stream/🧳️update/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/⏯️tool-run/🔤️codec/🦀️.rs`: incoming; 63–62 incoming, 93–92 incoming
+- `🧰️framework/🔨️modules/⏯️tool-run/🟦️.ts`: partial; 8–7 incoming, 49–449 conflict, 462–982 conflict, 984–1276 conflict
+- `🧰️framework/🔨️modules/⏯️tool-run/🦀️.rs`: incoming; 61–60 incoming, 181–181 incoming
+- `🧰️framework/🔨️modules/⏯️tool-run/🧪️tests/🔬️unit/🦀️.rs`: merged; 185–184 incoming, 747–747 incoming
+- `🧰️framework/🔨️modules/⏯️tool-run/🧪️tests/🧫️fixtures/🎞️ticks.json`: incoming; 229–229 incoming, 231–231 incoming
+- `🧰️framework/🔨️modules/⏯️tool-run/🧬️schema/🔣️.json`: incoming; 738–737 incoming, 743–742 incoming, 791–790 incoming
+- `🧰️framework/🔨️modules/⏱️trace/🦀️.rs`: merged; 209–209 incoming
+- `🧰️framework/🔨️modules/⏱️trace/🧮️memory/🦀️.rs`: incoming; 161–160 incoming
+- `🧰️framework/🔨️modules/⏳️async/♻️cancel-return/📬️claim/🦀️.rs`: merged; 48–47 incoming
+- `🧰️framework/🔨️modules/⏳️async/✨️macros/🦀️.rs`: incoming; 48–47 incoming, 53–53 incoming, 63–63 incoming, 73–73 incoming
+- `🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/📋️project.json`: config-pending; 7–7 config-pending
+- `🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts`: incoming; 11–10 incoming, 52–52 incoming
+- `🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/⏳️async/🔔️wake/🧵️thread/🦀️.rs`: incoming; 15–14 incoming
+- `🧰️framework/🔨️modules/⏳️async/🛑️cancel/♻️retirement/🦀️.rs`: incoming; 62–61 incoming
+- `🧰️framework/🔨️modules/⏳️async/🧪️tests/🎚️config/🟦️.ts`: merged; 22–23 incoming
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧪️tests/🟦️.ts`: partial; 5–5 same, 26–30 conflict
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🧪️tests/🟦️.ts`: partial; 8–8 same, 14–14 conflict
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🧪️tests/🟦️.ts`: partial; 8–8 same, 10–12 conflict
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts`: partial; 8–8 conflict, 10–10 conflict
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧪️tests/🟦️.ts`: partial; 7–7 same, 12–14 conflict
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🧪️tests/🟦️.ts`: partial; 4–4 same, 8–9 conflict
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🧪️tests/🟦️.ts`: partial; 4–4 same, 8–9 conflict
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🧪️tests/🟦️.ts`: partial; 6–6 same, 11–11 conflict
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧵️layout/🧪️tests/🟦️.ts`: partial; 7–7 same, 12–12 conflict
+- `🧰️framework/🔨️modules/⚠️diagnostic/📤️wire/👣️cursor/🧩️domain/🧪️tests/🟦️.ts`: merged; 15–15 incoming
+- `🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🟦️.ts`: partial; 16–22 conflict
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/⚖️result/🦀️.rs`: incoming; 13–13 incoming, 30–29 incoming
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/⚖️result/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 1–1 incoming
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️demand/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️demand/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️demand/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🦀️.rs`: incoming; 28–27 incoming, 59–58 incoming, 64–64 incoming, 78–78 incoming, 80–79 incoming, 92–92 incoming, 94–95 incoming, 100–105 incoming, 108–107 incoming, 135–134 incoming, 164–165 incoming, 189–189 incoming, 192–192 incoming, 226–225 incoming, 245–244 incoming
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🟦️.ts`: partial; 15–15 conflict, 35–35 conflict, 43–43 conflict, 55–55 conflict, 57–58 token-merge, 69–69 conflict, 85–85 conflict, 87–89 conflict, 95–95 incoming, 98–98 conflict, 100–100 conflict, 109–109 conflict, 124–125 conflict, 129–129 incoming, 135–135 incoming, 138–140 conflict, 148–148 incoming, 152–153 conflict, 156–156 conflict, 166–166 incoming, 173–173 conflict, 178–179 token-merge, 187–188 conflict, 190–191 conflict, 198–198 conflict, 200–201 conflict, 207–208 conflict, 214–214 conflict, 222–222 conflict, 226–225 incoming
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🦀️.rs`: merged; 25–24 incoming, 95–94 incoming
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🧫️fixtures/📥️root/🔣️.json`: incoming; 14–14 incoming
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧬️schema/📥️root/🔣️.json`: incoming; 14–14 incoming, 47–46 incoming
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📋️vector/🔑️identity/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📋️vector/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📋️vector/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📋️vector/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📋️vector/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️boxed/🦀️.rs`: incoming; 26–25 incoming, 59–58 incoming
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🦀️.rs`: incoming; 65–64 incoming
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🧪️tests/🦀️.rs`: merged; 4–5 incoming, 17–17 incoming, 22–22 incoming, 28–28 incoming, 55–54 incoming
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🧫️fixtures/🔗️source/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🧬️schema/🔗️source/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🦀️.rs`: merged; 8–7 incoming, 113–112 incoming, 181–180 incoming
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🧪️tests/🦀️.rs`: merged; 103–102 incoming
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️original-vector/🦀️.rs`: incoming; 29–30 incoming, 39–39 incoming, 53–52 incoming, 55–58 incoming
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️original-vector/🧪️tests/🦀️.rs`: merged; 16–16 incoming
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️queue/🦀️.rs`: incoming; 54–54 incoming, 80–81 incoming, 112–111 incoming
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🦀️.rs`: incoming; 12–11 incoming
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🚚️frontier/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🚚️frontier/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🚚️frontier/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🚚️frontier/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🦀️.rs`: head-dissolution; 
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🦀️.rs`: head-dissolution; 
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🦀️.rs`: merged; 22–21 incoming, 35–34 incoming, 72–71 incoming, 130–129 incoming, 175–174 incoming, 196–195 incoming, 230–229 incoming, 257–256 incoming, 270–269 incoming, 291–290 incoming, 309–308 incoming, 338–337 incoming, 370–369 incoming, 373–372 incoming, 395–394 incoming, 429–428 incoming, 442–441 incoming, 465–464 incoming, 515–514 incoming, 538–537 incoming, 567–566 incoming
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🔬️unit/🦀️.rs`: merged; 153–153 incoming, 191–191 incoming, 269–271 incoming, 534–534 incoming, 542–542 incoming, 676–675 incoming
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧫️fixtures/🌳️intrinsic/🔣️.json`: incoming; 11–11 incoming, 16–16 incoming, 21–21 incoming, 26–26 incoming, 31–31 incoming, 36–36 incoming, 45–45 incoming, 57–57 incoming, 68–68 incoming, 74–74 incoming, 80–80 incoming, 86–86 incoming, 92–92 incoming
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧫️fixtures/🎮️erased-controlled/🔣️.json`: incoming; 12–12 incoming
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧫️fixtures/📏️shared-physical/🔣️.json`: incoming; 31–31 incoming
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧮️plain-elements/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧮️plain-elements/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧫️fixtures/🧮️plain-elements/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️contract/🦀️.rs`: incoming; 12–15 incoming
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️schema/🧮️plain-elements/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/⚠️refusal/🧪️tests/🦀️.rs`: merged; 37–37 incoming
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/⚙️expansion/🎚️controlled-output/🦀️.rs`: incoming; 6–5 incoming
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/⚙️expansion/🎯️expand-entries/🦀️.rs`: incoming; 534–533 incoming, 535–534 incoming, 536–536 incoming
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/⚙️expansion/🦀️.rs`: incoming; 30–29 incoming, 245–244 incoming, 339–338 incoming, 733–732 incoming
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml`: merged; 74–73 incoming
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/📋️project.json`: config-pending; 12–11 config-pending
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/📜️script.ts`: config-pending; 2–1 config-pending, 16–16 config-pending
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/📽️projection/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/🟰️equality/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/🦀️.rs`: incoming; 13–12 incoming, 107–106 incoming
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️admission/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️admission/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️admission/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️admission/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️retained-clone/🦀️.rs`: merged; 119–118 incoming, 126–125 incoming, 156–158 incoming, 161–164 incoming, 166–203 incoming, 227–229 incoming, 231–244 incoming, 248–248 incoming, 250–252 incoming, 254–256 incoming, 258–261 incoming, 271–272 incoming, 298–303 incoming, 305–305 incoming, 307–309 incoming, 313–316 incoming, 318–318 incoming, 331–331 incoming, 335–334 incoming, 409–414 incoming, 416–438 incoming, 442–446 incoming, 448–450 incoming, 452–455 incoming, 458–465 incoming, 467–478 incoming, 480–486 incoming, 493–494 incoming, 520–525 incoming, 527–527 incoming, 530–532 incoming, 534–534 incoming, 536–536 incoming, 549–549 incoming, 553–552 incoming
+- `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🎚️record/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/📋️sequence/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🤝️tuple/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🏷️type/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 538–538 incoming
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🌳️roots/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/⚖️observation/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/⚖️observation/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/⚖️observation/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/⚖️observation/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎮️splice/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎮️splice/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎮️splice/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎮️splice/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🔎️traversal/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🔎️traversal/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🔎️traversal/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🔎️traversal/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧳️read/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧳️read/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧳️read/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧳️read/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧳️ranked/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🟰️equal/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🟰️equal/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🟰️equal/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🟰️equal/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🟰️equal/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🟰️equal/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs`: incoming; 4–3 incoming
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/📋️list/🟦️.ts`: merged; 1–0 incoming, 7–6 incoming, 76–77 incoming
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/🔬️counter/🦀️.rs`: merged; 131–130 incoming
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🪢️concat/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🪢️concat/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🪢️concat/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🪢️concat/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🪢️concat/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🪢️concat/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️requests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️requests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️requests/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️requests/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️requests/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️requests/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️slots/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️slots/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️slots/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️slots/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️slots/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/🦀️.rs`: incoming; 63–62 incoming, 87–86 incoming
+- `🧰️framework/🔨️modules/🌱️value/📝️text/🚶️utf8/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📝️text/🚶️utf8/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📝️text/🚶️utf8/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📝️text/🚶️utf8/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📝️text/🚶️utf8/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📝️text/🚶️utf8/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/package.json`: partial; 36–36 conflict, 43–43 token-merge
+- `🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/📋️project.json`: config-pending; 5–5 config-pending, 12–12 config-pending, 23–23 config-pending, 34–34 config-pending, 37–36 config-pending
+- `🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/📜️script.ts`: config-pending; 30–30 config-pending
+- `🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/🔑️hashed/🧮️scratch/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml`: merged; 45–44 incoming
+- `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/package.json`: merged; 14–14 incoming
+- `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`: config-pending; 11–10 config-pending, 333–332 config-pending
+- `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📜️script.ts`: config-pending; 3–3 conflict, 26–25 incoming, 124–124 incoming
+- `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/🦀️.rs`: incoming; 9–9 incoming, 15–15 incoming, 47–46 incoming
+- `🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🦀️.rs`: incoming; 29–29 incoming, 69–69 incoming, 90–93 incoming, 95–103 incoming, 107–106 incoming, 121–120 incoming, 126–126 incoming
+- `🧰️framework/🔨️modules/🌱️value/📶️sort/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📶️sort/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📶️sort/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📶️sort/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📶️sort/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📶️sort/🧬️schema/📸️snapshot.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📶️sort/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/🔗️source/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/🔗️source/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/🔗️source/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/🔗️source/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/🦀️.rs`: partial; 150–149 incoming, 829–828 conflict
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/📋️field/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/📦️owned/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/🧪️tests/📦️owned/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/🧫️fixtures/📦️owned/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/🧬️clone/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/🧬️schema/📦️owned.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/📋️project.json`: config-pending; 
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/📜️script.ts`: config-pending; 
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🔁️codec/🦀️.rs`: partial; 330–329 incoming, 399–1346 conflict
+- `🧰️framework/🔨️modules/🌱️value/🔑️hashed/🧮️scratch/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🔑️hashed/🧮️scratch/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🔑️hashed/🧮️scratch/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🔑️hashed/🧮️scratch/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🔑️hashed/🧮️scratch/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🔑️lookup/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🔑️lookup/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🔑️lookup/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🔑️lookup/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🔑️lookup/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🔑️lookup/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🔗️read/🦀️.rs`: merged; 101–100 incoming, 137–137 incoming, 165–165 incoming, 168–167 incoming
+- `🧰️framework/🔨️modules/🌱️value/🔗️read/🧬️clone/🦀️.rs`: incoming; 31–30 incoming
+- `🧰️framework/🔨️modules/🌱️value/🔗️read/🪪️authority/🦀️.rs`: incoming; 70–69 incoming
+- `🧰️framework/🔨️modules/🌱️value/🔗️read/🪪️lease/🦀️.rs`: incoming; 46–46 incoming, 71–70 incoming
+- `🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🦀️.rs`: incoming; 75–74 incoming
+- `🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs`: merged; 152–152 incoming, 155–155 incoming, 193–192 incoming
+- `🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧪️tests/🗂️ordered/🦀️.rs`: merged; 16–15 incoming, 456–455 incoming
+- `🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧺️set/🦀️.rs`: incoming; 22–22 incoming
+- `🧰️framework/🔨️modules/🌱️value/🛫️encode/🛂️allocation/🧪️tests/🦀️.rs`: merged; 69–68 incoming, 78–78 incoming
+- `🧰️framework/🔨️modules/🌱️value/🛫️encode/🛂️allocation/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 119–119 incoming, 124–124 incoming
+- `🧰️framework/🔨️modules/🌱️value/🛫️encode/🦀️.rs`: incoming; 27–26 incoming
+- `🧰️framework/🔨️modules/🌱️value/🛫️encode/🫴️recipient/🦀️.rs`: incoming; 15–14 incoming, 18–17 incoming
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🔒️close/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🔒️close/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🛬️receiving/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🛬️receiving/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🔭️observer/🦀️.rs`: incoming; 7–7 incoming
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🦀️.rs`: incoming; 34–33 incoming, 44–44 incoming
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🧪️tests/🦀️.rs`: merged; 36–35 incoming, 45–45 incoming
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 55–55 incoming, 60–60 incoming
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts`: merged; 3–2 incoming, 6–6 incoming, 13–12 incoming, 18–18 incoming, 23–22 incoming, 25–24 incoming, 33–33 incoming, 35–35 incoming, 37–37 incoming, 39–39 incoming, 42–41 incoming, 51–51 incoming
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🦀️.rs`: incoming; 13–12 incoming, 21–20 incoming, 33–33 incoming, 83–83 incoming, 93–93 incoming, 97–97 incoming
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🦀️.rs`: merged; 87–86 incoming
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧬️child/🦀️.rs`: incoming; 9–9 incoming
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/📋️project.json`: config-pending; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/📜️script.ts`: config-pending; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️shared/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️shared/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️shared/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️shared/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️shared/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧳️receiver/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧳️receiver/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🪡️field/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/♻️retirement/🦀️.rs`: incoming; 12–11 incoming
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🔁️continuation/🦀️.rs`: incoming; 17–17 incoming, 22–21 incoming
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🦀️.rs`: incoming; 5–4 incoming, 23–22 incoming, 26–25 incoming, 36–38 incoming
+- `🧰️framework/🔨️modules/🌱️value/🦀️.rs`: incoming; 12–11 incoming, 14–14 incoming, 27–26 incoming, 31–31 incoming, 62–61 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧪️tests/🥣️companion/🌱️retained-clone/🦀️.rs`: incoming; 16–15 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧪️tests/🥣️companion/📦️packages/🦀️rust/Cargo.toml`: merged; 29–28 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧪️tests/🧩️neutral-owner/🦀️.rs`: merged; 42–41 incoming, 103–103 incoming, 111–111 incoming, 134–134 incoming, 142–142 incoming, 171–171 incoming, 195–195 incoming, 200–200 incoming, 205–205 incoming, 207–207 incoming, 213–214 incoming, 216–216 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🦀️.rs`: incoming; 55–57 incoming, 65–64 incoming, 69–75 incoming, 80–80 incoming, 84–84 incoming, 86–86 incoming, 88–90 incoming, 122–122 incoming, 124–124 incoming, 130–130 incoming, 134–134 incoming, 141–141 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/🦀️.rs`: merged; 44–44 incoming, 82–82 incoming, 105–106 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️field/🦀️.rs`: incoming; 19–19 incoming, 24–24 incoming, 34–44 incoming, 46–46 incoming, 48–54 incoming, 56–79 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🦀️.rs`: incoming; 51–50 incoming, 66–71 incoming, 73–171 incoming, 174–173 incoming, 195–194 incoming, 198–198 incoming, 200–200 incoming, 211–232 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🧪️tests/🔬️unit/🦀️.rs`: merged; 13–13 incoming, 42–41 incoming, 83–83 incoming, 147–147 incoming, 199–199 incoming, 268–268 incoming, 296–298 incoming, 300–300 incoming, 312–312 incoming, 326–326 incoming, 329–330 incoming, 332–332 incoming, 367–367 incoming, 404–403 incoming, 475–475 incoming, 486–485 incoming, 487–486 incoming, 495–495 incoming, 513–513 incoming, 526–526 incoming, 533–532 incoming, 534–533 incoming, 554–556 incoming, 558–558 incoming, 561–562 incoming, 564–563 incoming, 565–564 incoming, 575–577 incoming, 579–579 incoming, 582–583 incoming, 585–584 incoming, 586–585 incoming, 602–602 incoming, 609–608 incoming, 610–609 incoming, 632–632 incoming, 634–634 incoming, 647–646 incoming, 648–647 incoming, 666–666 incoming, 668–668 incoming, 683–682 incoming, 684–683 incoming, 707–707 incoming, 714–714 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/♻️retirement/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📋️project.json`: config-pending; 
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📜️script.ts`: config-pending; 
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🦀️.rs`: merged; 56–55 incoming, 57–57 incoming, 61–61 incoming, 84–84 incoming, 96–96 incoming, 124–123 incoming, 131–142 incoming, 178–177 incoming, 179–179 incoming, 183–183 incoming, 186–186 incoming, 199–199 incoming, 203–203 incoming, 208–208 incoming, 216–216 incoming, 245–245 incoming, 252–269 incoming, 304–303 incoming, 311–311 incoming, 391–390 incoming, 392–392 incoming, 396–396 incoming, 399–399 incoming, 412–412 incoming, 416–416 incoming, 421–421 incoming, 429–429 incoming, 458–458 incoming, 465–482 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🧪️tests/🔬️unit/🦀️.rs`: merged; 3–3 incoming, 77–77 incoming, 92–92 incoming, 130–130 incoming, 144–143 incoming, 194–194 incoming, 254–254 incoming, 264–264 incoming, 279–279 incoming, 290–290 incoming, 307–307 incoming, 318–318 incoming, 326–326 incoming, 377–377 incoming, 395–395 incoming, 402–401 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🧫️fixtures/🔮️demands/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🧬️schema/🔮️demands/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️projection/🦀️.rs`: incoming; 20–19 incoming, 22–21 incoming, 33–32 incoming, 36–35 incoming, 43–42 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared/📋️list/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared/📋️list/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared/📋️list/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared/📋️list/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared/🦀️.rs`: head-dissolution; 
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/🦀️.rs`: incoming; 28–27 incoming, 30–29 incoming, 63–62 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🦀️.rs`: incoming; 11–10 incoming, 17–17 incoming, 21–20 incoming, 80–79 incoming, 121–120 incoming, 134–134 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🏭️factory/🦀️.rs`: merged; 15–15 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔐️custody/🟦️.ts`: incoming; 37–36 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔬️unit/🦀️.rs`: partial; 37–37 conflict, 43–43 incoming, 66–66 conflict, 80–79 incoming, 113–114 incoming, 154–154 incoming, 159–159 incoming, 165–165 incoming, 190–190 incoming, 210–210 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🧫️fixtures/🔐️custody.json`: incoming; 74–73 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧬️schema/🔣️.json`: incoming; 9–9 incoming, 132–131 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔮️demands/🦀️.rs`: incoming; 10–9 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔮️demands/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔮️demands/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔮️demands/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/♻️retirement/🦀️.rs`: incoming; 8–7 incoming, 9–12 incoming, 18–17 incoming, 20–23 incoming, 31–30 incoming, 32–35 incoming, 50–49 incoming, 51–54 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/➖️remove/🦀️.rs`: incoming; 32–33 incoming, 40–40 incoming, 52–56 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/➖️remove/🧪️tests/🦀️.rs`: merged; 13–13 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs`: partial; 126–992 conflict
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🧪️tests/🔬️unit/🦀️.rs`: merged; 34–34 incoming, 37–37 incoming, 60–60 incoming, 63–63 incoming, 66–66 incoming, 68–68 incoming, 171–171 incoming, 181–181 incoming, 278–278 incoming, 372–372 incoming, 448–448 incoming, 497–496 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧪️tests/🟦️.ts`: partial; 2–1 incoming, 16–17 incoming, 20–20 conflict, 22–21 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧪️tests/🦀️.rs`: merged; 62–62 incoming, 71–71 incoming, 116–116 incoming, 140–140 incoming, 153–153 incoming, 166–167 incoming, 196–196 incoming, 205–204 incoming, 213–213 incoming, 219–219 incoming, 224–224 incoming, 231–231 incoming, 237–237 incoming, 260–260 incoming, 289–290 incoming, 304–304 incoming, 307–306 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 1–28 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧬️schema/🔣️.json`: incoming; 12–12 incoming, 15–15 incoming, 18–20 incoming, 24–24 incoming, 26–28 incoming, 34–34 incoming, 36–37 incoming, 41–41 incoming, 43–44 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs`: partial; 35–36 token-merge, 38–43 conflict, 54–83 conflict, 85–125 conflict, 129–1124 conflict, 1138–1137 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧪️tests/🟦️.ts`: partial; 9–10 conflict
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧪️tests/🦀️.rs`: merged; 22–23 token-merge
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧳️owner/🦀️.rs`: incoming; 10–10 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧺️std-collections/🦀️.rs`: incoming; 16–15 incoming, 17–16 incoming, 56–55 incoming, 70–69 incoming, 116–115 incoming, 120–121 incoming, 126–131 incoming, 137–137 incoming, 140–141 incoming, 158–165 incoming, 167–167 incoming, 170–170 incoming, 180–180 incoming, 182–189 incoming, 191–191 incoming, 194–194 incoming, 199–199 incoming, 202–203 incoming, 213–213 incoming, 242–241 incoming, 244–244 incoming, 249–249 incoming, 260–288 incoming
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧺️std-collections/🧪️tests/🦀️.rs`: merged; 63–63 incoming, 66–66 incoming, 73–73 incoming, 91–91 incoming, 157–157 token-merge
+- `🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/📦️document/🦀️.rs`: incoming; 12–12 incoming, 16–16 incoming, 29–28 incoming, 36–36 incoming, 44–44 incoming, 69–75 incoming, 85–85 incoming, 88–87 incoming, 98–97 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/🦀️.rs`: incoming; 175–175 incoming, 238–238 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🦀️.rs`: incoming; 17–16 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🚪️document-codec/🦀️.rs`: incoming; 36–36 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/📦️packages/🦀️rust/Cargo.toml`: incoming; 24–23 incoming, 25–24 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🦀️.rs`: incoming; 38–37 incoming, 134–134 incoming, 225–225 incoming, 240–240 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🧭️symbols/🦀️.rs`: incoming; 25–25 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🧮️expression/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🧱️chunks/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🦀️.rs`: incoming; 5–4 incoming, 6–5 incoming, 18–19 incoming, 24–24 incoming, 27–27 incoming, 50–50 incoming, 54–53 incoming, 57–57 incoming, 61–60 incoming, 64–63 incoming, 65–66 incoming, 77–77 incoming, 83–82 incoming, 85–85 incoming, 91–91 incoming, 96–96 incoming, 98–98 incoming, 113–115 incoming, 117–117 incoming, 120–120 incoming, 131–131 incoming, 133–133 incoming, 137–137 incoming, 141–141 incoming, 146–146 incoming, 149–149 incoming, 153–154 incoming, 158–159 incoming, 164–164 incoming, 168–167 incoming, 170–170 incoming, 172–172 incoming, 175–175 incoming, 181–181 incoming, 185–184 incoming, 188–188 incoming, 224–224 incoming, 229–230 incoming, 239–241 incoming, 244–244 incoming, 254–255 incoming, 261–262 incoming, 264–264 incoming, 268–267 incoming, 269–268 incoming, 273–272 incoming, 281–280 incoming, 283–283 incoming, 288–289 incoming, 330–330 incoming, 333–334 incoming, 344–348 incoming, 378–378 incoming, 385–385 incoming, 387–387 incoming, 394–394 incoming, 397–397 incoming, 399–399 incoming, 404–403 incoming, 410–409 incoming, 411–412 incoming, 422–422 incoming, 425–425 incoming, 427–426 incoming, 436–436 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🟦️.ts`: incoming; 6–5 incoming, 9–8 incoming, 16–15 incoming, 120–120 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🦀️.rs`: partial; 13–12 incoming, 46–46 incoming, 121–121 incoming, 150–151 incoming, 175–175 incoming, 177–177 incoming, 185–187 conflict
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🧫️fixtures/⚠️failure/🔣️.json`: incoming; 46–46 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧫️fixtures/🌿️native-text/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧫️fixtures/🧩️branches/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧫️fixtures/🧮️expression/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🎒️document/⏳️cursor/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🎒️document/⏳️cursor/🧪️tests/🥒️.feature`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🎒️document/⏳️cursor/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🎒️document/⏳️cursor/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🎒️document/⏳️cursor/🧫️fixtures/🧱️chunks/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🎒️document/⏳️cursor/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🦀️.rs`: incoming; 30–30 incoming, 72–71 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🧬️static/🦀️.rs`: incoming; 86–86 incoming, 137–136 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/📦️document/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🦀️.rs`: incoming; 6–5 incoming, 16–16 incoming, 31–31 incoming, 57–57 incoming, 116–116 incoming, 121–121 incoming, 124–125 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🧪️tests/🟦️.ts`: incoming; 10–9 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🧪️tests/🦀️.rs`: merged; 39–38 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 1–1 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🧬️schema/🔣️.json`: incoming; 2–11 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🏭️schema/⏳️cursor/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🏭️schema/🦀️.rs`: incoming; 4–3 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🏭️schema/🧪️tests/🦀️.rs`: merged; 27–26 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🏭️schema/🧫️fixtures/⏳️cursor/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🏭️schema/🧫️fixtures/⏳️cursor/🧬️schema.json`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🦀️.rs`: incoming; 17–16 incoming
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/🗂️catalog/🧭️catalog-cursor/🦀️.rs`: incoming; 51–50 incoming, 464–463 incoming
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/🛫️encoding/⏳️retained/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/🛫️encoding/⏳️retained/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/🛫️encoding/⏳️retained/🧫️fixtures/🧱️flags/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/🛫️encoding/🦀️.rs`: incoming; 8–7 incoming, 39–38 incoming, 44–43 incoming
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs`: partial; 24–23 incoming, 54–656 conflict, 662–1366 conflict
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/🧪️tests/🔬️unit/🦀️.rs`: incoming; 25–24 incoming, 203–203 incoming
+- `🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/🦀️.rs`: incoming; 67–67 incoming, 74–74 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs`: incoming; 120–120 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🟦️.ts`: merged; 36–35 incoming, 41–41 incoming, 44–44 incoming, 53–53 incoming, 128–127 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📋️project.json`: config-pending; 13–12 config-pending, 46–45 config-pending
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📜️script.ts`: config-pending; 4–5 conflict, 19–18 incoming, 71–71 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/📋️persistent/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/📋️persistent/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/📋️persistent/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/📋️persistent/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🔒️immutable/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🔒️immutable/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🔒️immutable/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🔒️immutable/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🦀️.rs`: incoming; 7–6 incoming, 13–12 incoming, 195–194 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧪️tests/🟦️.ts`: merged; 1–0 incoming, 75–74 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧪️tests/🦀️.rs`: merged; 867–866 incoming
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧪️tests/🧫️fixtures/🗺️retained-map.json`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧬️schema/🗺️retained-map.json`: incoming; 
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs`: partial; 649–648 incoming, 886–1248 conflict
+- `🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/⚙️apply-diff/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🆔️identity-config-mutation/🟦️.ts`: incoming; 36–35 incoming
+- `🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/📤️retire-local-document/🟦️.ts`: incoming; 1–0 incoming, 9–11 incoming
+- `🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🟦️.ts`: incoming; 1–0 incoming, 18–18 incoming, 20–21 incoming
+- `🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🗃️local-catalog-config-mutation/🟦️.ts`: incoming; 42–41 incoming
+- `🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🟦️.ts`: incoming; 1–0 incoming, 8–9 incoming
+- `🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🟦️.ts`: incoming; 1–0 incoming, 10–10 incoming, 20–20 incoming, 64–64 incoming, 75–75 incoming, 79–79 incoming, 85–85 incoming, 94–94 incoming, 111–110 incoming
+- `🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️.ts`: incoming; 1–0 incoming, 13–20 incoming
+- `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🦀️.rs`: incoming; 4–4 incoming, 11–11 incoming, 13–13 incoming, 15–15 incoming, 30–30 incoming, 35–35 incoming, 38–38 incoming, 40–41 incoming, 77–77 incoming, 79–79 incoming, 95–95 incoming
+- `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧪️tests/🛬️decoder/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧪️tests/🟦️.ts`: merged; 42–41 incoming
+- `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧪️tests/🦀️.rs`: merged; 260–259 incoming
+- `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧪️tests/🧫️fixtures/🛬️decoder.json`: incoming; 
+- `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧬️schema/🛬️decoder.json`: incoming; 
+- `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/💼️job/🤝️provider/🦀️.rs`: incoming; 16–15 incoming
+- `🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml`: merged; 45–44 incoming
+- `🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📋️project.json`: config-pending; 90–89 incoming
+- `🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📜️script.ts`: config-pending; 2–2 token-merge, 58–58 incoming, 78–78 incoming
+- `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🌲️source/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/📣️delivery/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📣️delivery/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📥️receiving/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📥️receiving/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📥️receiving/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📥️receiving/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📥️receiving/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📦️bytes/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📦️bytes/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📦️bytes/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📦️bytes/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts`: merged; 233–233 incoming, 240–239 incoming, 265–264 incoming, 315–314 incoming, 321–320 incoming, 329–328 incoming, 332–332 incoming
+- `🧰️framework/🔨️modules/🎭️actor/🦀️.rs`: merged; 30–29 incoming
+- `🧰️framework/🔨️modules/🎭️actor/🧪️tests/🔬️unit/🦀️.rs`: incoming; 94–94 incoming, 362–362 incoming, 515–515 incoming, 593–593 incoming, 611–611 incoming, 623–623 incoming
+- `🧰️framework/🔨️modules/🎯️action-bus/🚪️admission/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🎯️action-bus/🚪️admission/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🎯️action-bus/🚪️admission/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🎯️action-bus/🚪️admission/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 2–1 incoming
+- `🧰️framework/🔨️modules/🎯️action-bus/🚪️admission/🧪️tests/🧫️fixtures/🧰️scope/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🎯️action-bus/🚪️admission/🧬️schema/🔣️.json`: incoming; 23–23 incoming, 125–124 incoming
+- `🧰️framework/🔨️modules/🎯️action-bus/🚪️admission/🧬️schema/🧰️scope/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🎯️action-bus/🦀️.rs`: partial; 26–25 incoming, 41–41 incoming, 45–51 incoming, 55–56 incoming, 59–58 incoming, 62–73 incoming, 206–210 incoming, 259–259 conflict, 275–275 conflict, 312–316 incoming, 403–403 incoming, 405–410 incoming, 412–431 incoming, 501–512 incoming, 515–516 incoming, 518–551 incoming, 713–740 incoming, 743–776 incoming, 779–815 incoming
+- `🧰️framework/🔨️modules/🎯️action-bus/🧪️tests/🔬️unit/🦀️.rs`: partial; 1–0 incoming, 2–3 incoming, 5–515 conflict
+- `🧰️framework/🔨️modules/🏃️process/📋️project.json`: config-pending; 500–500 incoming, 513–512 incoming
+- `🧰️framework/🔨️modules/🏃️process/📜️script.ts`: config-pending; 44–43 incoming, 82–83 token-merge
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/🟦️.ts`: merged; 27–28 incoming
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎰️jobserver/🧪️tests/🟦️.ts`: incoming; 19–19 incoming, 40–40 incoming, 123–123 incoming
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️custody/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🟦️.ts`: merged; 3–3 token-merge, 84–84 incoming
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧪️tests/🟦️.ts`: merged; 29–28 incoming, 138–138 incoming
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 3–2 incoming
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🧪️tests/🟦️.ts`: merged; 10–10 incoming, 67–68 incoming, 228–229 incoming, 238–239 incoming
+- `🧰️framework/🔨️modules/🏃️process/🔒️leases/⏳️wait/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🏃️process/🔒️leases/⏳️wait/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🏃️process/🔒️leases/⏳️wait/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts`: merged; 69–68 incoming, 71–73 incoming, 75–76 incoming
+- `🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📚️loader/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📚️loader/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📚️loader/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🔬️fingerprint/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🔬️fingerprint/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🔬️fingerprint/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts`: merged; 5–4 incoming, 9–10 token-merge, 28–28 incoming, 37–37 incoming, 230–230 incoming, 250–251 incoming, 253–253 incoming, 270–269 incoming, 332–332 incoming, 334–334 incoming, 339–340 incoming, 342–342 incoming, 354–354 incoming
+- `🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts`: merged; 9–8 incoming, 14–13 incoming, 82–81 incoming
+- `🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts`: partial; 2–2 conflict, 39–38 incoming, 42–42 incoming, 142–141 incoming
+- `🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧪️tests/🟦️.ts`: partial; 7–6 conflict, 66–66 incoming, 75–75 token-merge, 110–111 token-merge, 127–127 token-merge
+- `🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧪️tests/🧫️fixtures/🎬️execution/🔣️.json`: incoming; 12–14 incoming, 19–22 incoming, 26–28 incoming, 32–32 incoming
+- `🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧫️fixtures/📊️profile-path/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🧪️tests/🟦️.ts`: merged; 4–3 incoming, 10–9 incoming
+- `🧰️framework/🔨️modules/🏃️process/🧭️routing/🏠️workspace/🧪️tests/🟦️.ts`: partial; 104–144 conflict
+- `🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/⏱️output-budget/🔣️.json`: incoming; 500–499 incoming
+- `🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📜️script.ts`: config-pending; 18–18 config-pending, 22–22 config-pending
+- `🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🧪️tests/🟦️.ts`: merged; 7–6 incoming, 17–17 incoming, 41–40 incoming
+- `🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 20–19 incoming
+- `🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🧬️schema/🔣️.json`: incoming; 7–6 incoming
+- `🧰️framework/🔨️modules/📐️geometry/⚙️engine/🦀️.rs`: partial; 1262–1446 conflict
+- `🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust/📋️project.json`: config-pending; 11–10 config-pending
+- `🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust/📜️script.ts`: config-pending; 12–12 incoming, 24–24 incoming, 30–29 incoming
+- `🧰️framework/🔨️modules/📐️geometry/🧪️tests/🏙️aec-oracles/🐍️.py`: incoming; 22–21 incoming
+- `🧰️framework/🔨️modules/📐️geometry/🧪️tests/📐️first-party-geometry/🦀️.rs`: incoming; 2–1 incoming
+- `🧰️framework/🔨️modules/📐️geometry/🧫️fixtures/🔲️selection/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🦀️.rs`: incoming; 9–8 incoming, 25–24 incoming
+- `🧰️framework/🔨️modules/📡️replication/⚙️codec/🦀️.rs`: incoming; 415–414 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/♻️retirement/🦀️.rs`: incoming; 96–95 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/✏️edit/🦀️.rs`: incoming; 413–412 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/❄️reference/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/❄️reference/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/❄️reference/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🦀️.rs`: incoming; 187–186 incoming, 200–199 incoming, 243–242 incoming, 316–315 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📦️packages/🦀️rust/Cargo.toml`: incoming; 25–24 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🦀️.rs`: incoming; 13–12 incoming, 16–16 incoming, 18–18 incoming, 41–40 incoming, 65–64 incoming, 115–114 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧪️tests/📤️transfer/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧪️tests/🦀️.rs`: merged; 14–13 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 1–96 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/✂️clamp/🦀️.rs`: incoming; 9–8 incoming, 47–48 incoming, 50–50 incoming, 52–52 incoming, 54–54 incoming, 62–62 incoming, 65–65 incoming, 75–76 incoming, 99–99 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/✂️clamp/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 1–414 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📋️copy/🦀️.rs`: incoming; 15–14 incoming, 28–27 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📤️publication/👁️borrow/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📤️publication/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📤️publication/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📤️publication/🪢️join/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📦️packages/🦀️rust/Cargo.toml`: incoming; 32–31 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📦️packages/🦀️rust/🦀️.rs`: incoming; 14–14 incoming, 24–23 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🔗️concat/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🔗️concat/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🔗️concat/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🔗️concat/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🦀️.rs`: incoming; 325–324 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📬️preparation/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📬️preparation/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/🦀️.rs`: incoming; 17–19 incoming, 21–21 incoming, 23–23 incoming, 26–29 incoming, 36–38 incoming, 43–44 incoming, 83–83 incoming, 91–93 incoming, 96–96 incoming, 101–103 incoming, 106–108 incoming, 110–133 incoming, 160–160 incoming, 163–163 incoming, 165–166 incoming, 169–168 incoming, 384–384 incoming, 390–389 incoming, 391–398 incoming, 401–401 incoming, 463–465 incoming, 471–470 incoming, 472–474 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/🧪️tests/🦀️.rs`: merged; 14–14 token-merge, 20–20 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🗣️dsl/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🛬️controlled/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🦀️.rs`: incoming; 92–91 incoming, 133–135 incoming, 137–136 incoming, 142–142 incoming, 144–150 incoming, 159–159 incoming, 161–162 incoming, 166–165 incoming, 168–167 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧪️tests/🧪️shared-map-delta-native/🦀️.rs`: incoming; 19–19 incoming, 48–48 incoming, 66–65 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧪️tests/🧪️shared-map-delta-source/🟦️.ts`: incoming; 8–8 incoming, 11–11 incoming, 26–25 incoming, 30–31 incoming, 35–35 incoming, 39–39 incoming, 44–44 incoming, 49–50 incoming, 57–57 incoming, 61–61 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 1–446 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🔗️.graphql`: incoming; 8–9 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🔣️.json`: incoming; 12–13 incoming, 23–23 incoming, 28–30 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🛰️.proto`: incoming; 3–3 incoming, 14–15 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🟦️.ts`: incoming; 1–1 incoming, 6–7 incoming, 13–17 incoming, 27–29 incoming, 32–31 incoming, 33–33 incoming, 36–41 incoming, 44–46 incoming, 50–50 incoming, 52–52 incoming, 57–60 incoming, 63–63 incoming, 72–75 incoming, 77–77 incoming, 79–79 incoming, 81–80 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧭️canonical/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs`: partial; 15–14 incoming, 21–20 incoming, 22–35 incoming, 42–43 incoming, 87–87 incoming, 877–1220 conflict, 1228–1230 incoming, 1237–1237 incoming, 1240–1241 incoming, 1244–1243 incoming
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/↩️inverse-admission/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/↩️inverse-admission/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/📦️unpublished-owner/🥒️.feature`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/📦️unpublished-owner/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧳️native-contract/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧳️native-contract/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧳️native-contract/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧳️native-contract/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/↩️inverse-admission/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/📦️prepared-fields/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/↩️inverse-admission/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/📦️prepared-fields/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/⚠️diagnostic/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/⚠️diagnostic/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/⚠️diagnostic/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/⚠️diagnostic/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/✂️span/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/✂️span/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/📏️body/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/📏️body/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/📏️body/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔎️key/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔎️key/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔎️key/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔎️key/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🫴️receiving/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🫴️receiving/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🫴️receiving/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🫴️receiving/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧱️row/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧱️row/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧱️row/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧱️row/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🚚️apply/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧪️tests/🎟️demand/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧫️fixtures/schema.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧫️fixtures/🎟️close/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧬️schema/🎟️close/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🎚️record/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🎚️record/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🎚️record/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🎚️record/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🎚️record/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🎚️record/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/📋️indexed/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/📋️indexed/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/📋️indexed/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/📋️indexed/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/📋️indexed/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/📋️indexed/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🧫️fixtures/🎟️close-axes/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🧬️schema/🎟️close-axes/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/👕️peer-overlay/🟦️.ts`: incoming; 170–170 incoming, 181–180 incoming, 189–189 incoming
+- `🧰️framework/🔨️modules/📡️replication/👕️peer-overlay/🦀️.rs`: incoming; 153–152 incoming, 163–163 incoming
+- `🧰️framework/🔨️modules/📡️replication/👕️peer-overlay/🧪️tests/🔬️unit/🟦️.ts`: incoming; 21–20 incoming
+- `🧰️framework/🔨️modules/📡️replication/👕️peer-overlay/🧪️tests/🔬️unit/🦀️.rs`: incoming; 90–89 incoming
+- `🧰️framework/🔨️modules/📡️replication/📐️format/🦀️.rs`: incoming; 132–132 incoming, 154–154 incoming, 421–422 incoming, 425–425 incoming, 429–429 incoming, 433–433 incoming, 435–435 incoming, 441–441 incoming, 450–450 incoming, 452–452 incoming, 455–455 incoming, 458–458 incoming, 468–468 incoming, 471–471 incoming, 500–500 incoming, 513–513 incoming, 522–522 incoming, 541–541 incoming
+- `🧰️framework/🔨️modules/📡️replication/📐️format/🧪️tests/🔬️unit/🦀️.rs`: incoming; 378–378 incoming, 390–389 incoming
+- `🧰️framework/🔨️modules/📡️replication/📐️format/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/📐️format/🧪️tests/🧫️fixtures/🧬️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/📡️wire/🕹️interaction/🦀️.rs`: incoming; 3–3 incoming, 487–488 incoming, 502–505 incoming, 511–511 incoming, 513–514 incoming, 520–524 incoming, 526–525 incoming, 527–526 incoming, 622–622 incoming, 639–651 incoming, 657–661 incoming, 664–664 incoming, 666–674 incoming, 685–684 incoming, 686–686 incoming, 737–754 incoming
+- `🧰️framework/🔨️modules/📡️replication/📡️wire/🧪️tests/🔬️interaction/🦀️.rs`: incoming; 3–2 incoming
+- `🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/📋️project.json`: config-pending; 58–57 config-pending
+- `🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/📜️script.ts`: config-pending; 29–29 config-pending
+- `🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml`: incoming; 63–62 incoming
+- `🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/package.json`: merged; 6–6 incoming
+- `🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`: config-pending; 21–20 config-pending, 182–181 config-pending
+- `🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts`: config-pending; 20–20 token-merge, 52–51 incoming, 429–430 incoming, 432–431 incoming
+- `🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/🦀️.rs`: incoming; 47–47 incoming, 113–112 incoming, 162–161 incoming, 163–162 incoming, 171–171 incoming, 195–194 incoming, 222–221 incoming
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🍂️remove/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🎟️original/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/👁️read/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/📋️vector/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🔏️hash/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🗂️index/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🧾️bytes/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧪️tests/🦀️.rs`: merged; 18–18 token-merge, 39–39 incoming, 47–47 incoming, 53–53 incoming, 98–98 incoming
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/👁️read/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🦀️.rs`: incoming; 5–4 incoming, 213–212 incoming
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🪴️insert/🦀️.rs`: incoming; 9–8 incoming, 14–13 incoming, 52–51 incoming
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🦀️.rs`: merged; 12–12 incoming, 26–25 incoming, 31–30 incoming, 33–32 incoming, 41–40 incoming, 50–50 incoming, 54–54 incoming, 159–158 incoming, 173–173 incoming, 178–178 incoming, 187–188 incoming, 191–191 incoming, 197–197 incoming, 211–211 incoming, 223–223 incoming, 248–247 incoming, 253–253 incoming, 260–259 incoming, 261–279 incoming, 282–282 incoming, 284–304 incoming, 308–307 incoming, 310–310 incoming, 315–317 incoming, 324–328 incoming, 336–336 incoming, 346–348 incoming, 370–372 incoming, 378–382 incoming, 386–387 incoming, 390–390 incoming, 396–396 incoming, 399–399 incoming, 404–404 incoming, 406–406 incoming, 411–411 incoming, 417–419 incoming, 423–425 incoming, 428–429 incoming, 440–441 incoming, 446–448 incoming, 463–466 incoming, 468–468 incoming, 474–474 incoming, 476–476 incoming, 480–480 incoming, 482–483 incoming, 487–487 incoming, 494–497 incoming, 499–499 incoming, 501–501 incoming, 504–505 incoming, 508–508 incoming, 511–511 incoming, 520–520 incoming, 527–529 incoming, 534–534 incoming, 537–537 incoming, 544–544 incoming, 547–548 incoming, 553–554 incoming, 557–558 incoming, 568–568 incoming, 571–571 incoming, 581–582 incoming, 584–586 incoming, 591–592 incoming, 595–597 incoming, 601–601 incoming, 607–608 incoming, 624–627 incoming, 634–636 incoming, 644–644 incoming
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🦀️.rs`: incoming; 9–9 incoming, 585–585 incoming
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🧪️tests/🔬️unit/🦀️.rs`: merged; 129–128 incoming, 530–530 incoming, 534–534 incoming, 546–547 incoming, 578–578 incoming, 615–615 incoming, 629–629 incoming, 656–656 incoming
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🧪️tests/🔬️unit/🦀️.rs`: merged; 24–26 incoming, 31–30 incoming, 32–34 incoming, 37–36 incoming, 78–77 incoming
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🧪️tests/🪪️history-invariants/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🧫️fixtures/🪪️history-invariants/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🧬️schema/🪪️history-invariants/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/📦️bytes/🦀️.rs`: incoming; 160–159 incoming
+- `🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/🦀️.rs`: incoming; 29–29 incoming
+- `🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🔏️seal/🦀️.rs`: incoming; 13–12 incoming, 89–91 incoming
+- `🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🦀️.rs`: incoming; 4–4 incoming, 34–33 incoming
+- `🧰️framework/🔨️modules/📡️replication/🟦️.ts`: merged; 7–6 incoming
+- `🧰️framework/🔨️modules/📡️replication/🧪️tests/🗄️durable-collaborative-redo/🟦️.ts`: incoming; 25–25 incoming, 30–30 incoming, 39–39 incoming, 76–76 incoming
+- `🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/👕️peer-overlay-v1/🔣️.json`: incoming; 4–3 incoming
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs`: incoming; 408–407 incoming
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🧫️fixtures/👁️visitor/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🧬️schema/👁️visitor/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust/Cargo.toml`: incoming; 26–25 incoming
+- `🧰️framework/🔨️modules/🔄️machine/🦀️.rs`: incoming; 362–361 incoming
+- `🧰️framework/🔨️modules/🔲️pixels/📷️png/📥️decode/🦀️.rs`: incoming; 27–26 incoming
+- `🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🗂️layers/🦀️.rs`: incoming; 10–9 incoming, 12–11 incoming, 14–13 incoming, 16–15 incoming, 17–17 incoming, 19–20 incoming, 30–30 incoming, 47–47 incoming, 64–64 incoming, 90–89 incoming, 109–109 incoming, 115–115 incoming, 118–118 incoming, 123–122 incoming, 129–129 incoming
+- `🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🗂️layers/🧪️tests/🦀️.rs`: merged; 19–19 incoming
+- `🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🦀️.rs`: incoming; 36–36 incoming, 160–160 incoming
+- `🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🧪️tests/🦀️.rs`: merged; 25–25 incoming
+- `🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/🏃️job/🦀️.rs`: incoming; 901–901 incoming
+- `🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/📦️packages/🦀️rust/Cargo.toml`: merged; 38–37 incoming
+- `🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/🧪️tests/🔬️unit/🦀️.rs`: partial; 6–6 incoming, 173–180 conflict, 182–195 incoming, 208–212 incoming, 215–215 incoming, 233–237 incoming, 252–253 incoming, 258–258 incoming, 263–263 incoming, 268–270 incoming, 272–272 incoming, 274–275 incoming, 279–280 incoming, 289–291 incoming, 297–297 incoming, 330–330 incoming, 397–398 incoming, 401–401 incoming, 404–403 incoming, 409–410 incoming, 435–435 incoming, 451–451 incoming, 459–459 incoming, 560–560 incoming, 562–564 incoming, 570–575 incoming, 584–586 incoming, 641–642 incoming, 645–645 incoming, 647–647 incoming, 657–657 incoming, 659–659 incoming, 661–664 incoming, 667–667 incoming, 677–677 incoming, 681–681 incoming, 685–685 same, 720–721 incoming
+- `🧰️framework/🔨️modules/🕹️interaction/👆️gesture/🟦️.ts`: incoming; 44–43 incoming, 462–461 incoming
+- `🧰️framework/🔨️modules/🕹️interaction/👆️gesture/🦀️.rs`: incoming; 2–1 incoming, 192–191 incoming
+- `🧰️framework/🔨️modules/🕹️interaction/👆️gesture/🧪️tests/🔬️unit/🟦️.ts`: incoming; 36–35 incoming, 63–62 incoming, 69–68 incoming
+- `🧰️framework/🔨️modules/🕹️interaction/👆️gesture/🧪️tests/🧫️fixtures/🔲️selection-drag.json`: incoming; 
+- `🧰️framework/🔨️modules/🕹️interaction/🟦️.ts`: incoming; 7–6 incoming, 136–138 incoming, 144–146 incoming, 152–153 incoming, 155–155 incoming, 175–185 incoming, 225–225 incoming, 233–234 incoming, 238–238 incoming, 241–246 incoming, 271–276 incoming, 289–292 incoming, 295–295 incoming, 300–300 incoming, 304–304 incoming, 307–307 incoming, 310–310 incoming, 316–316 incoming, 318–318 incoming
+- `🧰️framework/🔨️modules/🕹️interaction/🦀️.rs`: merged; 16–15 incoming
+- `🧰️framework/🔨️modules/🕹️interaction/🧪️tests/🎯️set-laws/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🕹️interaction/🧪️tests/🧫️fixtures/🎯️merge-modes.json`: partial; 156–156 conflict, 158–157 incoming
+- `🧰️framework/🔨️modules/🕹️interaction/🧫️fixtures/🎯️set-laws/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🕹️interaction/🧬️schema/🎯️set-laws/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🕹️interaction/🧬️schema/🔣️.json`: incoming; 359–358 incoming
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs`: partial; 1–13 token-merge, 30–31 incoming, 33–32 incoming, 67–66 incoming, 69–68 incoming, 132–165 conflict, 176–183 conflict, 185–1042 conflict
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🎬️scene/🦀️.rs`: merged; 1–5 token-merge, 81–80 incoming, 87–86 incoming, 96–96 incoming, 132–131 incoming
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📏️layout/🦀️.rs`: merged; 152–151 incoming, 392–399 incoming, 425–424 incoming, 433–433 incoming, 508–530 incoming, 533–532 incoming, 537–537 incoming
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/📝️text/🦀️.rs`: merged; 163–162 incoming, 249–248 incoming, 264–263 incoming, 286–286 incoming
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔌️backend/🦀️.rs`: partial; 225–344 conflict, 964–1469 conflict
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔲️cell/🦀️.rs`: merged; 1–3 token-merge, 217–216 incoming, 232–232 incoming, 235–235 incoming, 240–240 incoming
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🖥️chrome/🦀️.rs`: merged; 63–62 incoming, 82–81 incoming, 96–95 incoming, 121–120 incoming, 167–166 incoming, 168–169 incoming, 173–173 incoming, 194–193 incoming, 196–196 incoming, 228–227 incoming, 229–229 incoming, 231–230 incoming, 232–231 incoming, 237–236 incoming, 257–256 incoming, 259–259 incoming, 266–265 incoming, 314–316 token-merge, 362–361 incoming, 370–372 incoming, 378–377 incoming, 379–379 incoming, 385–385 incoming, 388–407 incoming, 416–415 incoming, 422–422 incoming, 435–435 incoming, 462–462 incoming, 466–466 incoming, 468–473 incoming, 475–476 incoming, 478–480 incoming, 483–483 incoming, 489–489 incoming, 493–493 incoming, 495–495 incoming, 497–499 incoming, 506–505 incoming, 515–516 incoming, 520–520 incoming, 687–686 incoming, 702–702 incoming, 704–705 incoming, 713–713 incoming, 782–783 incoming
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🦀️.rs`: head-dissolution; 
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🌳️tree-emphasis/🥒️.feature`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🎨️emphasis/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/📏️text-width/🦀️.rs`: merged; 30–29 incoming
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/📜️rows/🦀️.rs`: merged; 282–281 incoming
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️chrome/🦀️.rs`: merged; 9–8 incoming, 88–88 incoming, 165–165 incoming
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️engine/🦀️.rs`: merged; 4–11 token-merge, 247–247 incoming, 296–296 incoming, 298–298 incoming, 300–302 incoming, 305–305 incoming, 308–307 incoming
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️pointer-routing/🦀️.rs`: merged; 5–12 token-merge, 99–98 incoming, 106–105 incoming, 160–160 incoming, 163–162 incoming, 164–173 incoming
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️text-elements/🦀️.rs`: merged; 421–421 incoming
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🦀️.rs`: partial; 14–1593 conflict
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🖱️pointer-routing/🟦️.ts`: incoming; 13–14 incoming, 19–19 incoming, 26–25 incoming, 30–30 incoming, 37–36 incoming, 41–41 incoming, 45–46 incoming, 51–51 incoming, 58–64 incoming, 78–78 incoming, 84–83 incoming, 86–91 incoming, 97–96 incoming
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🖱️pointer-routing/🥒️.feature`: incoming; 8–8 incoming, 22–22 incoming, 64–64 incoming, 66–67 incoming, 76–76 incoming
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🖼️chrome-emphasis/🥒️.feature`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🖼️window-contour/🥒️.feature`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🖼️window-contour/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🧫️fixtures/🖱️pointer-routing/🔣️.json`: incoming; 2–8 incoming, 10–28 incoming, 30–31 incoming, 34–41 incoming, 44–50 incoming, 56–57 incoming, 64–65 incoming, 72–73 incoming, 80–80 incoming, 88–89 incoming, 94–94 incoming, 96–97 incoming, 102–102 incoming, 104–105 incoming, 110–110 incoming, 112–113 incoming, 118–118 incoming, 120–121 incoming, 127–128 incoming, 134–135 incoming, 141–142 incoming, 149–150 incoming, 156–156 incoming, 164–165 incoming, 171–172 incoming, 178–179 incoming, 185–185 incoming, 192–192 incoming, 199–199 incoming, 206–207 incoming, 213–213 incoming, 217–216 incoming
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🪟️drag-preview/🥒️.feature`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🪟️drag-preview/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧫️fixtures/🌳️tree-emphasis/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧫️fixtures/📏️text-width/🪟️console/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧫️fixtures/🖼️chrome-emphasis/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧫️fixtures/🖼️window-contour/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧫️fixtures/🪟️drag-preview/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧬️schema/🌳️tree-emphasis/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧬️schema/📏️text-width/🪟️console/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧬️schema/🖼️chrome-emphasis/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧬️schema/🖼️window-contour/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧬️schema/🪟️drag-preview/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/⌨️tui/🪀️widget/🦀️.rs`: partial; 25–80 conflict
+- `🧰️framework/🔨️modules/🖱️ui/🌐️locale/🏷️label/♻️retirement/🦀️.rs`: incoming; 13–12 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts`: partial; 54–1306 conflict
+- `🧰️framework/🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css`: incoming; 716–715 incoming, 7065–7064 incoming, 7074–7073 incoming, 7080–7079 incoming, 7095–7094 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧩️suite/🟦️.ts`: partial; 57–1279 conflict
+- `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🖼️canvas2d-snapshot/🦀️.rs`: incoming; 9–9 incoming, 146–146 incoming, 209–209 incoming, 267–267 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🖼️canvas2d-snapshot/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🔬️canvas2d-snapshot-value-round-trip/🦀️.rs`: incoming; 10–9 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/👋️introduction/🟦️.tsx`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json`: partial; 22–22 conflict, 67–66 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/tsconfig.json`: partial; 6–6 conflict, 25–25 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/👋️introduction.ts`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗣️terminology/🟦️.tsx`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx`: partial; 102–154 conflict, 735–1168 conflict, 1172–1505 conflict, 1509–1574 conflict, 1578–1627 conflict, 1632–1837 conflict, 1857–1902 conflict, 1908–4016 conflict, 4026–4090 conflict, 4134–4182 conflict, 4706–4932 conflict, 4965–4992 conflict, 5434–5485 conflict, 5489–5502 conflict, 5522–5533 conflict, 5553–5594 conflict, 5598–5623 conflict, 5820–5834 conflict, 6113–6142 conflict, 6146–6287 conflict, 6301–6360 conflict, 6363–6570 conflict
+- `🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts`: partial; 17–17 conflict, 24–24 conflict, 32–31 incoming, 58–57 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts`: merged; 84–84 incoming, 86–86 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs`: partial; 162–221 conflict, 229–4096 conflict
+- `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json`: config-pending; 25–24 incoming
+- `🧰️framework/🔨️modules/🖱️ui/📱️device/🟦️.ts`: incoming; 69–68 incoming
+- `🧰️framework/🔨️modules/🖱️ui/📱️device/🧪️tests/🔬️unit/🟦️.ts`: merged; 17–16 incoming, 67–66 incoming, 131–130 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🔨️modules/🎉️celebration/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/🔨️modules/🕹️control-keybinding-context/🟦️.tsx`: incoming; 11–11 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🔨️modules/🥞️layered-overview-geometry/🟦️.ts`: incoming; 455–454 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🔨️modules/🥞️layered-overview-geometry/🧪️tests/🔬️unit/🟦️.ts`: incoming; 24–23 incoming, 51–50 incoming, 393–392 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🔨️modules/🧭️flow-direction-context/🟦️.tsx`: incoming; 9–9 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🔨️modules/🫳️pointer-drag/🟦️.tsx`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️pool/🦀️.rs`: merged; 243–242 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🧪️tests/👋️introduction/🟦️.tsx`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/🧪️tests/📦️react-package-export/🟦️.ts`: incoming; 1–0 incoming, 18–17 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-engine-unit/🦀️.rs`: partial; 21–3319 conflict
+- `🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧹️react-environment/🟦️.ts`: incoming; 7–11 incoming, 13–13 incoming, 15–18 incoming, 20–29 incoming, 31–43 incoming, 45–44 incoming, 46–46 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/👋️introduction/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎬️action/🦀️.rs`: incoming; 161–160 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🃏️OverviewCard/🟦️.tsx`: incoming; 10–10 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🆔️ElementId/🟦️.tsx`: incoming; 8–8 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌈️Surface/🟦️.tsx`: incoming; 10–10 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🎯️targets/⌨️tui/🦀️.rs`: merged; 2–2 incoming, 182–181 incoming, 315–316 incoming, 373–372 incoming, 376–376 incoming, 379–378 incoming, 387–390 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/📐️layout/🟦️.tsx`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx`: partial; 63–3462 conflict
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🧪️tests/🧫️fixtures/🎭️storybook-interaction/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️.tsx`: incoming; 13–13 incoming, 16–16 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/⚛️react/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.tsx`: incoming; 8–8 incoming, 27–89 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔚️Footer/🎯️targets/⌨️tui/🦀️.rs`: merged; 14–14 token-merge, 17–17 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔝️Navbar/🎯️targets/⌨️tui/🦀️.rs`: merged; 32–32 token-merge, 53–53 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️.tsx`: incoming; 315–314 incoming, 318–324 incoming, 370–369 incoming, 403–402 incoming, 473–473 incoming, 477–485 incoming, 487–487 incoming, 489–494 incoming, 496–586 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🧪️tests/🧩️component/🟦️.tsx`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🧫️fixtures/🗂️catalog-glyphs/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔳️ButtonGroup/🟦️.tsx`: incoming; 10–10 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖼️Panel/🟦️.tsx`: incoming; 74–112 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/🟦️.tsx`: incoming; 10–10 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🚗️UiDriver/🟦️.tsx`: incoming; 11–11 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟦️.tsx`: partial; 10–107 token-merge, 110–747 conflict, 755–755 incoming, 770–770 incoming, 779–779 incoming, 785–785 incoming, 803–802 incoming, 811–810 incoming, 967–967 incoming, 1013–1014 incoming, 1016–1015 incoming, 1017–1017 incoming, 1028–1027 incoming, 1030–1029 incoming, 1031–1030 incoming, 1037–1036 incoming, 1038–1038 incoming, 1045–1046 incoming, 1052–1052 incoming, 1057–1057 incoming, 1063–1063 incoming, 1066–1066 incoming, 1070–1070 incoming, 1073–1073 incoming, 1081–1081 incoming, 1084–1084 incoming, 1086–1086 incoming, 1090–1090 incoming, 1095–1095 incoming, 1098–1097 incoming, 1099–1099 incoming, 1129–1128 incoming, 1155–1155 incoming, 1159–1159 incoming, 1177–1176 incoming, 1178–1177 incoming, 1191–1191 incoming, 1201–1201 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🧪️tests/🧩️component/🟦️.tsx`: merged; 7–7 token-merge, 60–59 incoming, 93–93 incoming, 118–117 incoming, 459–458 incoming, 489–488 incoming
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🧫️fixtures/👀️controlled-swipe/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪟️Window/🎯️targets/⌨️tui/🦀️.rs`: merged; 9–13 token-merge, 37–36 incoming, 67–67 incoming, 73–73 incoming, 79–78 incoming, 90–89 incoming, 100–99 incoming, 102–102 incoming, 109–108 incoming, 138–139 incoming, 150–150 incoming, 155–155 incoming, 205–204 incoming, 206–206 incoming, 210–210 incoming, 216–216 token-merge, 221–221 incoming, 227–227 incoming, 274–274 incoming, 294–294 incoming, 314–314 incoming
+- `🧰️framework/🔨️modules/🖼️assets/🏗️builder/📦️publication/🟦️.ts`: incoming; 96–95 incoming, 98–97 incoming
+- `🧰️framework/🔨️modules/🖼️assets/🏗️builder/📦️publication/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🦀️.rs`: incoming; 41–40 incoming
+- `🧰️framework/🔨️modules/🖼️canvas/♻️retirement/🖊️stroke/🦀️.rs`: incoming; 41–40 incoming
+- `🧰️framework/🔨️modules/🗜️deflate/🛫️encode/⏳️cursor/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🗜️deflate/🛫️encode/⏳️cursor/🧪️tests/🥒️.feature`: incoming; 
+- `🧰️framework/🔨️modules/🗜️deflate/🛫️encode/⏳️cursor/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🗜️deflate/🛫️encode/⏳️cursor/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🗜️deflate/🛫️encode/⏳️cursor/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🗜️deflate/🦀️.rs`: merged; 1092–1091 incoming, 1100–1099 incoming
+- `🧰️framework/🔨️modules/🗜️deflate/🧪️tests/🔬️unit/🛫️controlled/🦀️.rs`: incoming; 20–20 incoming, 34–33 incoming, 39–42 incoming
+- `🧰️framework/🔨️modules/🗜️deflate/🧪️tests/🔬️unit/🦀️.rs`: incoming; 5–5 incoming, 7–7 incoming
+- `🧰️framework/🔨️modules/🗣️dsl/🔍️lexer/🦀️.rs`: incoming; 137–136 incoming
+- `🧰️framework/🔨️modules/🗣️dsl/🔤️token/🦀️.rs`: incoming; 233–232 incoming
+- `🧰️framework/🔨️modules/🗣️dsl/🧪️tests/🧫️fixtures/🧵️continuation/🔣️.json`: incoming; 1–169 incoming
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/♻️retirement/🦀️.rs`: incoming; 63–62 incoming
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📥️owned/🦀️.rs`: incoming; 10–10 incoming, 22–22 incoming, 40–40 incoming, 43–43 incoming
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🦀️.rs`: partial; 9–9 incoming, 16–17 incoming, 69–1339 conflict
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🧪️tests/🦀️.rs`: merged; 2–1 incoming
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/📋️project.json`: config-pending; 6–6 config-pending, 9–8 config-pending, 10–11 config-pending, 14–23 config-pending
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/📜️script.ts`: config-pending; 19–18 incoming, 43–43 incoming
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🛫️encode/🦀️.rs`: incoming; 3–2 incoming, 5–5 incoming, 14–13 incoming, 87–87 incoming
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🛫️encode/🧮️expression/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🛫️encoding/🦀️.rs`: incoming; 287–286 incoming, 378–378 incoming
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🛬️decoding/🦀️.rs`: merged; 149–149 incoming, 217–217 incoming
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🛬️receive/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🛬️receive/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🦀️.rs`: partial; 13–12 incoming, 69–1109 conflict
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧩️record/🗂️fields/🦀️.rs`: incoming; 10–9 incoming
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️fixtures/📨️presence/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/♻️retirement/🦀️.rs`: merged; 27–27 incoming
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🌿️variant-field/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/📨️presence/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/📨️presence/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🔬️unit/🦀️.rs`: partial; 765–766 incoming, 831–836 conflict
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🫳️borrowed-object/🦀️.rs`: partial; 2–1 conflict
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🫳️borrowed-object/🧫️fixtures/🌿️variant-field/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/📖️grammar/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs`: incoming; 115–114 incoming, 612–611 incoming
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫳️borrowed/🏭️authored/🦀️.rs`: incoming; 38–37 incoming
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫴️receiving/📥️owned/🦀️.rs`: incoming; 22–22 incoming, 81–81 incoming, 117–119 incoming, 161–162 incoming, 187–187 incoming
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫴️receiving/🧪️tests/🦀️.rs`: merged; 20–20 token-merge, 24–24 incoming, 32–33 incoming, 40–42 token-merge, 48–48 incoming, 68–69 incoming, 81–80 incoming
+- `🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧩️compositing/🦀️.rs`: incoming; 74–74 incoming, 76–76 incoming, 78–78 incoming
+- `🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust/package.json`: incoming; 9–9 incoming
+- `🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust/📋️project.json`: config-pending; 34–33 config-pending
+- `🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust/📜️script.ts`: config-pending; 3–3 conflict, 33–33 incoming
+- `🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust/🦀️.rs`: incoming; 33–32 incoming
+- `🧰️framework/🔨️modules/🚪️io/⏱️control/♻️retirement/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🚪️io/⏱️control/♻️retirement/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🚪️io/⏱️control/♻️retirement/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🚪️io/⏱️control/♻️retirement/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🦀️.rs`: incoming; 40–39 incoming
+- `🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts`: partial; 26–27 conflict
+- `🧰️framework/🔨️modules/🚪️io/⏱️control/🦀️.rs`: incoming; 114–113 incoming, 123–122 incoming
+- `🧰️framework/🔨️modules/🚪️io/🔤️base64/🎮️cursor/🦀️.rs`: incoming; 88–87 incoming
+- `🧰️framework/🔨️modules/🚪️io/🔤️base64/🟦️.ts`: merged; 174–173 incoming
+- `🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/📜️script.ts`: config-pending; 89–88 incoming
+- `🧰️framework/🔨️modules/🛂️manifest/🖼️view-model/🦀️.rs`: incoming; 217–216 incoming
+- `🧰️framework/🔨️modules/🛂️manifest/🟦️.ts`: partial; 377–1919 conflict
+- `🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🔬️window-view-context/🟦️.ts`: merged; 1–0 incoming, 3–3 token-merge, 7–13 incoming, 15–21 incoming, 23–50 incoming
+- `🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🔬️window-view-context/🦀️.rs`: incoming; 65–64 incoming
+- `🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧪️mutation-inputs/🐍️.py`: incoming; 203–202 incoming
+- `🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🔬️window-view-context/🔣️.json`: incoming; 75–74 incoming
+- `🧰️framework/🔨️modules/🛠️tool-machine/🌊️gesture/🦀️.rs`: incoming; 341–341 incoming, 343–343 incoming, 361–361 incoming, 372–372 incoming, 391–391 incoming, 394–394 incoming, 400–399 incoming, 419–419 incoming, 421–421 incoming, 432–432 incoming, 442–442 incoming, 464–463 incoming
+- `🧰️framework/🔨️modules/🛠️tool-machine/🦀️.rs`: incoming; 14–13 incoming, 472–471 incoming
+- `🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🔬️unit/🦀️.rs`: partial; 40–1174 conflict
+- `🧰️framework/🔨️modules/🛠️tool-machine/🫧️scrub/🦀️.rs`: incoming; 192–191 incoming, 275–275 incoming, 277–277 incoming, 296–296 incoming, 301–301 incoming, 307–307 incoming, 315–316 incoming, 324–324 incoming, 329–329 incoming, 332–332 incoming, 340–340 incoming, 351–351 incoming, 357–357 incoming, 366–366 incoming, 372–372 incoming, 379–378 incoming
+- `🧰️framework/🔨️modules/🛰️backbone/🟦️.ts`: partial; 627–1631 conflict
+- `🧰️framework/🔨️modules/🛰️backbone/🪪️config-lane/🟦️.ts`: merged; 1–0 incoming, 34–34 incoming, 38–39 incoming
+- `🧰️framework/🔨️modules/🧊️3d/🥽️mesh/📝️journal/✍️editor/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧊️3d/🥽️mesh/📝️journal/🏗️gestures/⬆️inflate/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧊️3d/🥽️mesh/📝️journal/🏗️gestures/🔳️subdivide/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧊️3d/🥽️mesh/📝️journal/🏗️gestures/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧊️3d/🥽️mesh/📝️journal/🏗️gestures/🧮️in-place/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧊️3d/🥽️mesh/📝️journal/🏗️gestures/🧲️weld/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧊️3d/🥽️mesh/📝️journal/🏗️gestures/🪚️bevel/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧊️3d/🥽️mesh/📝️journal/🏗️gestures/🪶️decimate/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧊️3d/🥽️mesh/📝️journal/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧊️3d/🥽️mesh/📝️journal/🧪️tests/🔬️unit/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🔍️structure/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🛠️modeling/📥️input/↔️translation/🦀️.rs`: incoming; 22–23 incoming, 27–27 incoming
+- `🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🦀️.rs`: partial; 16–1519 conflict
+- `🧰️framework/🔨️modules/🧪️test/⚖️transient-preparation-law/🦀️.rs`: incoming; 5–5 incoming
+- `🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟰️equal/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟰️equal/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟰️equal/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟰️equal/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🦀️.rs`: incoming; 23–23 incoming, 77–77 incoming
+- `🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/📋️project.json`: config-pending; 12–11 config-pending, 26–25 config-pending
+- `🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/📜️script.ts`: config-pending; 3–3 conflict, 31–31 incoming
+- `🧰️framework/🔨️modules/🧮️math/📶️rank/📦️packages/🦀️rust/Cargo.toml`: incoming; 
+- `🧰️framework/🔨️modules/🧮️math/📶️rank/📦️packages/🦀️rust/📋️project.json`: config-pending; 
+- `🧰️framework/🔨️modules/🧮️math/📶️rank/📦️packages/🦀️rust/📜️script.ts`: config-pending; 
+- `🧰️framework/🔨️modules/🧮️math/📶️rank/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧮️math/📶️rank/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🧮️math/📶️rank/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧮️math/📶️rank/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🧮️math/📶️rank/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/↔️inverse/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/↔️inverse/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/↔️inverse/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/↔️inverse/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/↔️inverse/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/↔️inverse/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/📦️packages/🦀️rust/Cargo.toml`: incoming; 
+- `🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/📦️packages/🦀️rust/📋️project.json`: config-pending; 
+- `🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/📦️packages/🦀️rust/📜️script.ts`: config-pending; 
+- `🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/⏱️budget/🧪️tests/🔬️tool-job-microsecond-budget/🟦️.ts`: partial; 46–72 conflict
+- `🧰️framework/🔨️modules/🧵️job/⏱️budget/🪢️binding.json`: partial; 38–37 conflict
+- `🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/🦀️.rs`: incoming; 64–64 incoming
+- `🧰️framework/🔨️modules/🧵️job/⏱️context/📸️capture/🦀️.rs`: incoming; 44–44 incoming
+- `🧰️framework/🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/🦀️.rs`: incoming; 22–21 incoming, 24–23 incoming, 42–42 incoming
+- `🧰️framework/🔨️modules/🧵️job/♻️retirement/🎟️context/🦀️.rs`: merged; 7–6 incoming
+- `🧰️framework/🔨️modules/🧵️job/♻️retirement/🎟️context/🧪️tests/🟦️.ts`: partial; 1–3 incoming, 5–13 conflict, 15–34 conflict
+- `🧰️framework/🔨️modules/🧵️job/♻️retirement/🎟️context/🧪️tests/🧫️fixtures/🔣️.json`: partial; 2–27 conflict
+- `🧰️framework/🔨️modules/🧵️job/♻️retirement/🎟️context/🧬️schema/🔣️.json`: partial; 2–3 incoming, 5–4 incoming, 6–17 conflict, 19–63 conflict, 66–66 incoming
+- `🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🦀️.rs`: merged; 60–61 token-merge, 67–67 incoming, 71–71 incoming, 73–73 incoming
+- `🧰️framework/🔨️modules/🧵️job/⚠️failure/📦️domain/🤝️closure/🧪️tests/🟦️.ts`: merged; 11–11 incoming
+- `🧰️framework/🔨️modules/🧵️job/⚠️failure/📦️domain/🤝️closure/🧪️tests/🦀️.rs`: merged; 6–6 incoming
+- `🧰️framework/🔨️modules/🧵️job/⚠️failure/📦️domain/🦀️.rs`: incoming; 68–68 incoming
+- `🧰️framework/🔨️modules/🧵️job/⚠️failure/🛬️receiving/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/⚠️failure/🟦️.ts`: merged; 6–5 incoming, 7–7 incoming, 9–9 incoming
+- `🧰️framework/🔨️modules/🧵️job/⚠️failure/🦀️.rs`: incoming; 4–3 incoming, 13–13 incoming, 16–16 incoming, 18–18 incoming, 25–25 incoming, 27–26 incoming, 28–28 incoming, 35–34 incoming, 37–37 incoming, 39–39 incoming, 41–40 incoming
+- `🧰️framework/🔨️modules/🧵️job/⚠️failure/🧪️tests/🟦️.ts`: merged; 22–22 incoming, 43–43 incoming, 51–52 incoming, 63–63 incoming, 66–66 incoming, 71–73 token-merge
+- `🧰️framework/🔨️modules/🧵️job/⚠️failure/🧪️tests/🦀️.rs`: merged; 59–59 incoming, 72–72 incoming, 88–88 incoming, 99–98 incoming
+- `🧰️framework/🔨️modules/🧵️job/⚠️failure/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 1–200 incoming
+- `🧰️framework/🔨️modules/🧵️job/⚠️failure/🧬️schema/🔣️.json`: incoming; 12–12 incoming, 161–160 incoming, 589–588 incoming
+- `🧰️framework/🔨️modules/🧵️job/⚠️failure/🫴️projection/🦀️.rs`: incoming; 2–2 incoming, 6–6 incoming, 11–11 incoming, 13–12 incoming, 20–21 incoming, 28–28 incoming, 44–43 incoming
+- `🧰️framework/🔨️modules/🧵️job/🎟️context/🪙️loan/🧪️tests/🦀️.rs`: merged; 35–35 incoming
+- `🧰️framework/🔨️modules/🧵️job/🏭️construction/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/🏭️construction/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/🏭️construction/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/🏭️construction/🧪️tests/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/👷️worker/⚠️failure/🧪️tests/🦀️.rs`: merged; 29–29 incoming
+- `🧰️framework/🔨️modules/🧵️job/👷️worker/🦀️.rs`: partial; 87–1239 conflict
+- `🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/Cargo.toml`: merged; 134–133 incoming
+- `🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/📋️project.json`: config-pending; 12–12 config-pending, 17–17 config-pending, 20–20 config-pending, 25–25 config-pending, 106–105 config-pending
+- `🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/📜️script.ts`: config-pending; 78–78 token-merge, 106–106 incoming
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/✍️writer/⛽️staged/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🦀️.rs`: incoming; 18–17 incoming, 29–29 incoming
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/⛽️staged/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📮️return/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🦀️.rs`: incoming; 29–30 incoming, 33–33 incoming, 37–38 incoming, 48–48 incoming, 50–51 incoming, 54–55 incoming, 57–59 incoming, 63–63 incoming, 69–69 incoming, 74–75 incoming, 77–77 incoming, 86–85 incoming
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🧪️tests/🏗️initialization/🟦️.ts`: partial; 1–1 incoming, 7–7 conflict
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🧪️tests/🏗️initialization/🦀️.rs`: partial; 1–1 incoming, 3–2 incoming, 6–6 incoming, 8–9 incoming, 11–11 incoming, 13–14 incoming, 16–17 conflict
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🧪️tests/🟦️.ts`: partial; 3–3 incoming, 5–6 conflict
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🧪️tests/🦀️.rs`: incoming; 5–7 incoming, 9–8 incoming
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 35–37 incoming, 40–40 incoming
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🧬️schema/🏗️initialization.json`: incoming; 1–1 incoming
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🧬️schema/🔣️.json`: incoming; 83–82 incoming, 84–84 incoming, 92–92 incoming, 95–95 incoming, 97–98 incoming, 115–115 incoming
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/📦️bytes/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/📦️bytes/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/📦️bytes/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/📦️bytes/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🦀️.rs`: incoming; 22–22 incoming, 25–24 incoming
+- `🧰️framework/🔨️modules/🧵️job/🗄️registry/🦀️.rs`: incoming; 98–97 incoming
+- `🧰️framework/🔨️modules/🧵️job/🛬️receiving/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/🛬️receiving/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/🛬️receiving/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/🛬️receiving/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/🛬️receiving/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/🦀️.rs`: partial; 24–24 incoming, 30–30 conflict, 110–677 conflict, 695–694 incoming, 709–708 incoming, 725–724 incoming, 778–778 token-merge, 788–788 incoming, 797–797 token-merge, 1032–1031 incoming, 1249–1259 conflict, 1279–1281 conflict
+- `🧰️framework/🔨️modules/🧵️job/🧪️testing/📬️payload/🦀️.rs`: incoming; 9–8 incoming
+- `🧰️framework/🔨️modules/🧵️job/🧪️tests/⛽️staged-projection/🟦️.ts`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/🧪️tests/⛽️staged-projection/🦀️.rs`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/🧪️tests/🔬️fixed-operation-registry/🦀️.rs`: incoming; 5–4 incoming, 130–130 incoming, 161–161 incoming
+- `🧰️framework/🔨️modules/🧵️job/🧪️tests/🧪️fixed-operation-registry-cases/🦀️.rs`: incoming; 4–4 incoming
+- `🧰️framework/🔨️modules/🧵️job/🧫️fixtures/⛽️staged-projection/🔣️.json`: incoming; 
+- `🧰️framework/🔨️modules/🧵️job/🧬️schema/⛽️staged-projection/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/🎤️presentation/README.md`: incoming; 22–23 incoming, 26–27 incoming, 29–34 incoming
+- `🧰️framework/🛍️products/🐾️pets/README.md`: partial; 11–10 incoming, 55–56 conflict, 59–62 incoming, 64–75 conflict, 291–291 incoming
+- `🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🎨️.css`: incoming; 35–34 incoming
+- `🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🏗️builder/🌐️vite/🟦️.ts`: merged; 2–2 incoming, 6–6 incoming, 19–18 incoming, 20–20 incoming, 34–33 incoming, 36–38 incoming, 40–42 incoming, 58–58 incoming, 95–95 incoming, 100–100 token-merge
+- `🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json`: config-pending; 7–6 config-pending
+- `🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🔨️modules/📡️survey/🟦️.ts`: incoming; 59–59 incoming, 164–164 incoming, 167–167 incoming, 176–176 incoming, 216–216 incoming, 241–241 incoming, 331–332 incoming
+- `🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🔨️modules/🫧️layer/🟦️.tsx`: incoming; 26–26 incoming, 37–37 incoming, 77–80 incoming, 157–157 incoming, 258–257 incoming, 385–384 incoming, 553–552 incoming, 587–588 incoming, 610–609 incoming, 644–644 incoming, 652–652 incoming, 660–662 incoming
+- `🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust/📜️script.ts`: config-pending; 31–30 incoming
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/🎥️projection/🦀️.rs`: incoming; 23–22 incoming, 28–28 incoming, 34–33 incoming, 35–35 incoming, 37–37 incoming, 55–55 incoming, 58–57 incoming, 59–59 incoming, 61–64 incoming, 66–67 incoming, 76–76 incoming, 80–80 incoming, 84–84 incoming, 88–88 incoming, 97–97 incoming, 105–105 incoming, 116–116 incoming, 137–146 incoming, 150–149 incoming, 155–155 incoming, 169–169 incoming, 176–177 incoming, 180–181 incoming, 184–184 incoming, 188–188 incoming, 192–195 incoming, 199–198 incoming, 207–206 incoming, 210–210 incoming, 234–233 incoming, 236–236 incoming
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/🎥️projection/🧪️tests/🔬️unit/🦀️.rs`: incoming; 22–23 incoming
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/🎪️stage/🦀️.rs`: incoming; 1–1 incoming, 3–12 incoming, 14–70 incoming, 72–71 incoming, 74–73 incoming, 128–128 incoming, 137–137 incoming, 146–145 incoming, 149–149 incoming, 151–150 incoming
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/🎪️stage/🧪️tests/🔬️unit/🦀️.rs`: incoming; 78–78 incoming, 82–81 incoming, 83–83 incoming, 97–97 incoming, 102–103 incoming, 217–217 incoming, 266–266 incoming
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/🎬️staging/🦀️.rs`: incoming; 10–10 incoming
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/🎯️choice/🦀️.rs`: incoming; 23–22 incoming, 26–25 incoming, 27–27 incoming, 32–33 incoming, 41–41 incoming, 47–47 incoming, 52–52 incoming, 54–54 incoming, 56–55 incoming, 57–58 incoming, 60–61 incoming, 65–65 incoming, 69–68 incoming, 87–86 incoming, 88–87 incoming, 93–94 incoming, 96–102 incoming, 116–116 incoming, 119–118 incoming, 120–120 incoming, 126–125 incoming, 136–135 incoming
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/👀️attention/🦀️.rs`: incoming; 31–32 incoming, 56–63 incoming, 66–69 incoming, 71–70 incoming, 89–89 incoming, 97–97 incoming, 111–118 incoming, 128–128 incoming, 164–163 incoming, 226–226 incoming, 239–239 incoming, 247–247 incoming, 258–257 incoming
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/👀️attention/🧪️tests/🔬️unit/🦀️.rs`: incoming; 1–1 incoming, 7–7 incoming, 43–43 incoming, 48–50 incoming, 53–54 incoming, 56–56 incoming, 61–61 incoming, 166–166 incoming, 194–194 incoming
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/👆️gesture/🦀️.rs`: incoming; 726–725 incoming
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/👥️population/🦀️.rs`: incoming; 22–22 incoming, 30–29 incoming, 36–35 incoming, 38–37 incoming, 40–47 incoming, 51–188 incoming, 193–194 incoming, 196–198 incoming, 201–209 incoming, 211–211 incoming, 276–276 incoming, 327–327 incoming, 354–353 incoming, 355–354 incoming, 358–358 incoming, 362–362 incoming, 379–379 incoming, 392–391 incoming, 393–393 incoming, 399–398 incoming, 401–401 incoming, 405–404 incoming, 448–448 incoming, 451–451 incoming, 458–457 incoming
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/👥️population/🧪️tests/🔬️unit/🦀️.rs`: incoming; 7–6 incoming
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/💞️sociability/🦀️.rs`: incoming; 84–83 incoming, 87–86 incoming, 96–96 incoming, 106–106 incoming, 111–111 incoming, 145–145 incoming, 168–168 incoming, 204–204 incoming, 217–216 incoming, 221–220 incoming
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/📏️spacing/🦀️.rs`: incoming; 1–1 incoming, 17–17 incoming, 20–46 incoming, 49–48 incoming, 76–76 incoming, 82–82 incoming, 85–86 incoming, 101–118 incoming, 123–122 incoming, 128–133 incoming
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/📝️draft/🦀️.rs`: incoming; 28–27 incoming, 39–39 incoming, 42–41 incoming, 60–60 incoming, 170–169 incoming, 211–210 incoming, 216–215 incoming
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/🕰️clock/🦀️.rs`: incoming; 27–27 incoming, 44–43 incoming, 50–60 incoming, 63–62 incoming, 78–77 incoming, 80–80 incoming, 83–83 incoming, 100–99 incoming, 115–114 incoming, 127–126 incoming, 133–132 incoming, 135–134 incoming, 144–144 incoming
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/🗓️schedule/🦀️.rs`: incoming; 20–21 incoming, 36–36 incoming, 60–59 incoming
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/🚶️locomotion/🦀️.rs`: incoming; 21–20 incoming, 24–23 incoming, 31–32 incoming, 34–36 incoming, 39–39 incoming, 41–41 incoming, 43–44 incoming, 47–59 incoming, 62–63 incoming, 65–64 incoming, 66–82 incoming, 84–83 incoming, 85–85 incoming, 134–133 incoming, 145–157 incoming, 168–168 incoming, 182–182 incoming, 185–184 incoming, 194–193 incoming, 196–197 incoming, 200–200 incoming, 204–204 incoming, 206–210 incoming, 227–232 incoming, 235–238 incoming, 241–241 incoming, 244–244 incoming, 246–245 incoming, 247–259 incoming, 263–264 incoming, 266–266 incoming, 268–282 incoming, 285–287 incoming, 290–291 incoming, 293–296 incoming, 299–299 incoming, 307–306 incoming
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/🚶️locomotion/🧪️tests/🔬️unit/🦀️.rs`: incoming; 19–19 incoming, 21–21 incoming
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🦀️.rs`: incoming; 129–129 incoming, 201–201 incoming, 641–642 incoming, 646–647 incoming, 656–656 incoming, 659–659 incoming, 666–666 incoming, 669–671 incoming, 739–739 incoming, 749–749 incoming, 752–752 incoming, 754–754 incoming, 923–923 incoming, 938–938 incoming
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🦀️.rs`: partial; 223–1228 conflict
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/🧠️behavior/🟦️.ts`: incoming; 23–22 incoming
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/🧠️behavior/🦀️.rs`: incoming; 30–29 incoming
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/🧠️behavior/🧪️tests/🔬️unit/🟦️.ts`: incoming; 11–10 incoming, 14–14 incoming, 56–55 incoming
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/🧠️behavior/🧪️tests/🔬️unit/🦀️.rs`: incoming; 23–22 incoming
+- `🧰️framework/🛍️products/🐾️pets/🦀️.rs`: incoming; 65–64 incoming
+- `🧰️framework/🛍️products/🐾️pets/🧪️tests/🎪️stage-trace/🦀️.rs`: incoming; 20–20 incoming, 28–28 incoming, 99–98 incoming, 100–100 incoming, 140–139 incoming, 143–143 incoming, 149–149 incoming, 161–172 incoming, 174–178 incoming, 217–217 incoming, 219–219 incoming
+- `🧰️framework/🛍️products/🐾️pets/🧪️tests/📡️surface-survey/🟦️.tsx`: incoming; 329–329 incoming, 370–370 incoming
+- `🧰️framework/🛍️products/🐾️pets/🧪️tests/🧫️fixtures/📡️surface-survey/🔣️.json`: incoming; 531–530 incoming, 5085–5085 incoming, 5276–5276 incoming
+- `🧰️framework/🛍️products/🐾️pets/🧪️tests/🧰️gear-depiction/🟦️.tsx`: incoming; 489–488 incoming
+- `🧰️framework/🛍️products/🐾️pets/🧪️tests/🪜️ladder-geometry/🦀️.rs`: incoming; 18–18 incoming, 105–104 incoming, 143–143 incoming
+- `🧰️framework/🛍️products/🐾️pets/🧪️tests/🫥️decorative-layer/🟦️.tsx`: incoming; 23–23 incoming, 240–239 incoming, 251–251 incoming, 310–310 incoming, 564–563 incoming, 565–565 incoming, 571–571 incoming, 659–659 incoming, 662–662 incoming, 664–664 incoming
+- `🧰️framework/🛍️products/🐾️pets/🧫️fixtures/🎬️context-casts/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🎚️config/🏭️bridge/Cargo.lock`: incoming; 513–512 incoming, 861–860 incoming, 876–875 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🚪️io/📝️text/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 54–54 incoming, 58–58 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/📐️set-layout/🟰️keeps-layout/🔺️diff/🔣️.json`: incoming; 1–1 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/📖️set-terminology/🟰️keeps-terminology/🔺️diff/🔣️.json`: incoming; 1–1 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/🕹️set-driver/🟰️keeps-driver/🔺️diff/🔣️.json`: incoming; 1–1 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/🖼️set-theme/🟰️keeps-theme/🔺️diff/🔣️.json`: incoming; 1–1 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/🗂️set-named-layout/🟰️keeps-named-layout/🔺️diff/🔣️.json`: incoming; 1–1 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/🗣️set-locale/🟰️keeps-locale/🔺️diff/🔣️.json`: incoming; 1–1 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/🚗️set-custom-driver/🟰️keeps-custom-driver/🔺️diff/🔣️.json`: incoming; 1–1 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🎨️ui-preferences/🧪️tests/🌱️owned-customization/🦀️.rs`: merged; 1–0 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🦀️.rs`: incoming; 10–9 incoming, 144–154 incoming, 156–155 incoming, 164–163 incoming, 167–166 incoming, 175–178 incoming, 278–279 incoming, 315–345 incoming, 350–349 incoming, 368–371 incoming, 379–379 incoming, 402–402 incoming, 420–420 incoming, 443–443 incoming, 461–461 incoming, 469–469 incoming, 478–478 incoming, 486–486 incoming, 495–495 incoming, 503–503 incoming, 512–512 incoming, 520–520 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/⌨️set-keybinding-override/🦀️.rs`: incoming; 18–23 incoming, 25–27 incoming, 37–36 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/⌨️set-keybinding-override/🧪️tests/✏️sets-keybinding/🦀️.rs`: merged; 8–7 incoming, 35–35 incoming, 55–55 incoming, 63–63 incoming, 66–66 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/⌨️set-keybinding-override/🧪️tests/🟰️keeps-keybinding/🦀️.rs`: merged; 8–7 incoming, 35–35 incoming, 47–47 incoming, 57–57 incoming, 65–65 incoming, 68–68 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/✂️detach-local-folder/🦀️.rs`: incoming; 29–34 incoming, 36–41 incoming, 51–50 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/✂️detach-local-folder/🧪️tests/✂️forgets-the-folder-and-keeps-its-sibling/🦀️.rs`: merged; 9–8 incoming, 35–35 incoming, 48–48 incoming, 51–51 incoming, 87–87 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/✂️detach-local-folder/🧪️tests/🔬️unit/🦀️.rs`: incoming; 1–0 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🌗️set-appearance/🦀️.rs`: incoming; 17–22 incoming, 24–26 incoming, 36–35 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🌗️set-appearance/🧪️tests/✏️sets-appearance/🦀️.rs`: merged; 8–7 incoming, 35–35 incoming, 55–55 incoming, 63–63 incoming, 66–66 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🌗️set-appearance/🧪️tests/🟰️keeps-appearance/🦀️.rs`: merged; 8–7 incoming, 35–35 incoming, 47–47 incoming, 57–57 incoming, 65–65 incoming, 68–68 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🎨️set-custom-theme/🦀️.rs`: incoming; 18–23 incoming, 25–27 incoming, 37–36 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🎨️set-custom-theme/🧪️tests/✏️sets-custom-theme/🦀️.rs`: merged; 8–7 incoming, 35–35 incoming, 55–55 incoming, 63–63 incoming, 66–66 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🎨️set-custom-theme/🧪️tests/🟰️keeps-custom-theme/🦀️.rs`: merged; 8–7 incoming, 35–35 incoming, 47–47 incoming, 57–57 incoming, 65–65 incoming, 68–68 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🎨️ui-preferences/🧪️tests/🎨️updates-every-os-ui-preference/🦀️.rs`: merged; 3–2 incoming, 34–34 incoming, 41–41 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🦀️.rs`: incoming; 29–28 incoming, 36–36 incoming, 46–53 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧪️tests/✏️repins-the-cad-editor-to-the-drafting-app/🦀️.rs`: merged; 14–13 incoming, 42–42 incoming, 58–58 incoming, 61–61 incoming, 115–115 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📎️attach-local-folder/🦀️.rs`: incoming; 4–3 incoming, 7–7 incoming, 52–52 incoming, 61–65 incoming, 70–72 incoming, 76–75 incoming, 113–112 incoming, 120–120 incoming, 130–137 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📎️attach-local-folder/🧪️tests/📎️remembers-the-folder-beside-another-document/🦀️.rs`: merged; 10–9 incoming, 36–36 incoming, 49–49 incoming, 52–52 incoming, 88–88 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📎️attach-local-folder/🧪️tests/🔬️unit/🦀️.rs`: incoming; 1–0 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📐️set-layout/🦀️.rs`: incoming; 17–22 incoming, 24–26 incoming, 36–35 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📐️set-layout/🧪️tests/✏️sets-layout/🦀️.rs`: merged; 8–7 incoming, 35–35 incoming, 55–55 incoming, 63–63 incoming, 66–66 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📐️set-layout/🧪️tests/🟰️keeps-layout/🦀️.rs`: merged; 8–7 incoming, 35–35 incoming, 47–47 incoming, 57–57 incoming, 65–65 incoming, 68–68 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📖️set-terminology/🦀️.rs`: incoming; 17–22 incoming, 24–26 incoming, 36–35 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📖️set-terminology/🧪️tests/✏️sets-terminology/🦀️.rs`: merged; 8–7 incoming, 35–35 incoming, 55–55 incoming, 63–63 incoming, 66–66 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📖️set-terminology/🧪️tests/🟰️keeps-terminology/🦀️.rs`: merged; 8–7 incoming, 35–35 incoming, 47–47 incoming, 57–57 incoming, 65–65 incoming, 68–68 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📤️retire-local-document/🦀️.rs`: incoming; 28–33 incoming, 35–40 incoming, 50–49 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📤️retire-local-document/🧪️tests/📤️unlists-the-studio-and-keeps-its-sibling/🦀️.rs`: merged; 9–8 incoming, 35–35 incoming, 47–47 incoming, 50–50 incoming, 77–77 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📤️retire-local-document/🧪️tests/🔬️unit/🦀️.rs`: incoming; 1–0 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🦀️.rs`: incoming; 3–2 incoming, 6–6 incoming, 52–52 incoming, 61–65 incoming, 70–72 incoming, 76–75 incoming, 115–114 incoming, 122–122 incoming, 132–139 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🧪️tests/📥️lists-a-persisted-studio-beside-an-imported-one/🦀️.rs`: merged; 9–8 incoming, 35–35 incoming, 48–48 incoming, 51–51 incoming, 87–87 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🧪️tests/🔬️unit/🦀️.rs`: incoming; 1–0 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🕹️set-driver/🦀️.rs`: incoming; 17–22 incoming, 24–26 incoming, 36–35 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🕹️set-driver/🧪️tests/✏️sets-driver/🦀️.rs`: merged; 8–7 incoming, 35–35 incoming, 55–55 incoming, 63–63 incoming, 66–66 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🕹️set-driver/🧪️tests/🟰️keeps-driver/🦀️.rs`: merged; 8–7 incoming, 35–35 incoming, 47–47 incoming, 57–57 incoming, 65–65 incoming, 68–68 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🖼️set-theme/🦀️.rs`: incoming; 17–22 incoming, 24–26 incoming, 36–35 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🖼️set-theme/🧪️tests/✏️sets-theme/🦀️.rs`: merged; 8–7 incoming, 35–35 incoming, 55–55 incoming, 63–63 incoming, 66–66 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🖼️set-theme/🧪️tests/🟰️keeps-theme/🦀️.rs`: merged; 8–7 incoming, 35–35 incoming, 47–47 incoming, 57–57 incoming, 65–65 incoming, 68–68 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🗂️set-named-layout/🦀️.rs`: incoming; 25–24 incoming, 37–45 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🗂️set-named-layout/🧪️tests/✏️sets-named-layout/🦀️.rs`: merged; 8–7 incoming, 35–35 incoming, 55–55 incoming, 63–63 incoming, 66–66 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🗂️set-named-layout/🧪️tests/🟰️keeps-named-layout/🦀️.rs`: merged; 8–7 incoming, 35–35 incoming, 47–47 incoming, 57–57 incoming, 65–65 incoming, 68–68 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🗣️set-locale/🦀️.rs`: incoming; 17–22 incoming, 24–26 incoming, 36–35 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🗣️set-locale/🧪️tests/✏️sets-locale/🦀️.rs`: merged; 8–7 incoming, 35–35 incoming, 55–55 incoming, 63–63 incoming, 66–66 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🗣️set-locale/🧪️tests/🟰️keeps-locale/🦀️.rs`: merged; 8–7 incoming, 35–35 incoming, 47–47 incoming, 57–57 incoming, 65–65 incoming, 68–68 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚗️set-custom-driver/🦀️.rs`: incoming; 18–23 incoming, 25–27 incoming, 37–36 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚗️set-custom-driver/🧪️tests/✏️sets-custom-driver/🦀️.rs`: merged; 8–7 incoming, 35–35 incoming, 55–55 incoming, 63–63 incoming, 66–66 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚗️set-custom-driver/🧪️tests/🟰️keeps-custom-driver/🦀️.rs`: merged; 8–7 incoming, 35–35 incoming, 47–47 incoming, 57–57 incoming, 65–65 incoming, 68–68 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🦀️.rs`: incoming; 24–29 incoming, 31–36 incoming, 46–45 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🧪️tests/🔬️unit/🦀️.rs`: incoming; 1–0 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🧪️tests/🪪️clears-the-active-session/🦀️.rs`: merged; 15–14 incoming, 47–47 incoming, 65–65 incoming, 68–68 incoming, 124–124 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🦀️.rs`: incoming; 3–2 incoming, 4–4 incoming, 27–29 incoming, 31–30 incoming, 36–35 incoming, 39–41 incoming, 45–44 incoming, 66–71 incoming, 73–78 incoming, 87–86 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🧪️tests/🪪️tightens-the-authority-to-vigilant/🦀️.rs`: merged; 17–16 incoming, 44–44 incoming, 60–60 incoming, 63–63 incoming, 117–117 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🦀️.rs`: incoming; 16–16 incoming, 32–32 incoming, 55–55 incoming, 72–72 incoming, 90–90 incoming, 107–107 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🦀️.rs`: incoming; 30–29 incoming, 37–37 incoming, 48–55 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧪️tests/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/🦀️.rs`: merged; 15–14 incoming, 43–43 incoming, 59–59 incoming, 62–62 incoming, 116–116 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🦀️.rs`: incoming; 3–2 incoming, 6–6 incoming, 55–60 incoming, 62–61 incoming, 67–66 incoming, 70–72 incoming, 76–75 incoming, 114–113 incoming, 121–121 incoming, 131–138 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🧪️tests/🔬️unit/🦀️.rs`: incoming; 1–0 incoming
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🧪️tests/🪪️replaces-the-active-session-with-a-second-account/🦀️.rs`: merged; 19–18 incoming, 49–49 incoming, 69–69 incoming, 72–72 incoming, 128–128 incoming
+- `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/package.json`: merged; 13–13 incoming
+- `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/👥️member-dialect-checks/🟦️.ts`: merged; 1–0 incoming, 121–120 incoming
+- `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/📄️document-checks/🟦️.ts`: merged; 345–344 incoming
+- `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/📸️snapshot-checks/🟦️.ts`: merged; 126–125 incoming
+- `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/🗄️database-checks/🟦️.ts`: merged; 1–0 incoming, 422–421 incoming
+- `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/🧪️source-and-native-tests/🟦️.ts`: merged; 1–0 incoming, 44–44 token-merge, 284–283 incoming
+- `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/🧬️retained-clone-check/🟦️.ts`: merged; 1–0 incoming, 197–197 incoming, 199–199 incoming, 201–201 incoming, 203–203 incoming, 260–259 incoming
+- `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json`: config-pending; 12–12 incoming, 17–25 incoming, 963–962 incoming
+- `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts`: config-pending; 2–1 config-pending, 124–123 config-pending
+- `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs`: merged; 130–129 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/🦀️.rs`: partial; 134–2407 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/🧪️tests/🔬️unit/🦀️.rs`: merged; 945–944 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/⚙️engine/🦀️.rs`: partial; 48–59 conflict, 86–967 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🗃️model/🧪️tests/🎟️admission/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🗃️model/🧪️tests/🧫️fixtures/🎟️admission/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🗃️model/🧬️schema/🎟️admission/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🧭️host/🦀️.rs`: partial; 22–89 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/📦️packages/🦀️rust/Cargo.toml`: merged; 28–27 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs`: partial; 57–3144 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🧪️tests/🔬️board-host/🦀️.rs`: partial; 4–3 conflict, 126–126 incoming, 133–133 incoming, 142–142 incoming, 145–145 incoming, 153–153 incoming, 158–158 incoming, 171–171 conflict, 174–174 token-merge, 184–183 incoming, 190–190 incoming, 196–196 incoming, 201–201 incoming, 210–210 incoming, 214–214 incoming, 223–223 conflict, 225–224 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/📋️project.json`: config-pending; 86–85 config-pending
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/📜️script.ts`: config-pending; 2–1 incoming, 62–62 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🦀️.rs`: merged; 16–16 incoming, 224–223 incoming, 252–252 incoming, 262–261 incoming, 276–287 incoming, 294–293 incoming, 329–331 incoming, 333–347 incoming, 380–380 incoming, 382–384 incoming, 386–400 incoming, 403–402 incoming, 426–426 incoming, 432–436 incoming, 471–472 incoming, 477–478 incoming, 485–489 incoming, 491–491 incoming, 517–518 incoming, 528–539 incoming, 545–544 incoming, 546–549 incoming, 556–555 incoming, 557–558 incoming, 562–566 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧪️tests/🔬️dag-direct/🦀️.rs`: merged; 5–4 incoming, 60–60 incoming, 64–64 incoming, 77–77 incoming, 90–89 incoming, 203–202 incoming, 229–229 incoming, 242–242 incoming, 253–253 incoming, 255–255 incoming, 272–272 incoming, 306–305 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧪️tests/🔬️dag-vcs/🦀️.rs`: merged; 2–1 incoming, 13–13 incoming, 16–16 incoming, 101–101 incoming, 130–130 incoming, 141–141 incoming, 144–144 incoming, 311–311 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧪️tests/🧫️fixtures/🔣️mutations.json`: incoming; 229–229 incoming, 232–234 incoming, 240–240 incoming, 243–243 incoming, 1214–1217 incoming, 1269–1269 incoming, 1272–1274 incoming, 1280–1280 incoming, 1283–1283 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧪️tests/🧫️fixtures/🧬️mutations/🔀️reorder-nodes/🧾️wire-witness/🦠️mutation/🔣️.json`: incoming; 3–6 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🧬️mutations/↔️move-node/🦀️.rs`: incoming; 17–16 incoming, 29–34 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🧬️mutations/✂️disconnect-nodes/🦀️.rs`: incoming; 15–14 incoming, 34–39 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🧬️mutations/✏️rename-node/🦀️.rs`: incoming; 16–15 incoming, 41–46 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🧬️mutations/➕️create-node/🦀️.rs`: incoming; 16–15 incoming, 25–30 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🧬️mutations/📐️resize-node/🦀️.rs`: incoming; 17–16 incoming, 29–34 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🧬️mutations/🔀️reorder-nodes/🦀️.rs`: incoming; 1–1 incoming, 3–2 incoming, 10–10 incoming, 15–23 incoming, 31–30 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🧬️mutations/🔀️reorder-nodes/🧬️schema/🔣️.json`: incoming; 8–8 incoming, 15–15 incoming, 21–21 incoming, 24–24 incoming, 29–30 incoming, 33–34 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🧬️mutations/🔁️replace-node-kind/🦀️.rs`: incoming; 16–15 incoming, 28–33 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🧬️mutations/🔗️connect-nodes/🦀️.rs`: incoming; 20–19 incoming, 33–38 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🧬️mutations/🔡️change-node-abbreviation/🦀️.rs`: incoming; 16–15 incoming, 28–33 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🧬️mutations/🔤️change-node-name/🦀️.rs`: incoming; 16–15 incoming, 28–33 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🧬️mutations/🖼️change-node-icon/🦀️.rs`: incoming; 16–15 incoming, 28–33 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🧬️mutations/🗃️replace-node-properties/🦀️.rs`: incoming; 16–15 incoming, 28–33 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🧬️mutations/🗑️delete-node/🦀️.rs`: incoming; 15–14 incoming, 42–47 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🧬️mutations/🦀️.rs`: incoming; 43–43 incoming, 51–51 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🧬️mutations/🧮️change-node-operator-kind/🦀️.rs`: incoming; 16–15 incoming, 28–33 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/📦️packages/🦀️rust/Cargo.toml`: merged; 32–32 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/README.md`: incoming; 10–12 incoming, 14–17 incoming, 81–81 incoming, 84–84 incoming, 106–107 incoming, 281–281 incoming, 285–287 incoming, 491–491 incoming, 541–541 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🔗️remote/🦀️.rs.orig`: incoming; 7–7 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🔬️probe-document/🦀️.rs`: incoming; 107–109 incoming, 115–114 incoming, 116–118 incoming, 175–175 incoming, 179–180 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🧪️tests/🔬️quick/🦀️.rs`: partial; 198–1099 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/📜️script.ts`: config-pending; 622–621 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🗂️catalog/🦀️.rs`: merged; 12–11 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🦀️.rs`: incoming; 3–3 incoming, 7–7 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 24–24 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs`: partial; 3–2 incoming, 99–1827 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🔬️flow-vcs/🦀️.rs`: partial; 2–1 incoming, 8–2005 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🧫️fixtures/🔄️lifecycle/🔣️.json`: incoming; 1785–1785 incoming, 1888–1888 incoming, 1991–1991 incoming, 2094–2094 incoming, 2197–2197 incoming, 2976–2980 incoming, 3002–3006 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 16–16 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/✏️host-authoring/🦀️.rs`: partial; 46–99 conflict, 114–139 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🌳️host-evaluation-history/🦀️.rs`: partial; 33–97 conflict, 111–1356 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️preview/🦀️.rs`: already; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🔌️ports/🦀️.rs`: incoming; 5–5 incoming, 7–7 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗂️catalogue/🦀️.rs`: merged; 98–98 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🦀️.rs`: merged; 47–47 incoming, 55–54 incoming, 84–83 incoming, 171–170 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🧪️tests/🌿️vcs/🦀️.rs`: incoming; 2–1 incoming, 31–32 incoming, 48–48 incoming, 52–52 incoming, 110–109 incoming, 198–197 incoming, 207–207 incoming, 212–212 incoming, 261–261 incoming, 332–338 incoming, 341–340 incoming, 360–359 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🧪️tests/🧫️fixtures/🔺️diff/🔣️.json`: incoming; 14–13 incoming, 25–24 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🧪️tests/🧫️fixtures/🔺️diff/🧾️ownership/🔣️.json`: incoming; 21–20 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🧬️schema/🔺️diff/🔣️.json`: incoming; 28–27 incoming, 75–74 incoming, 123–122 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🧬️schema/🔺️diff/🦀️.rs`: incoming; 2–3 incoming, 119–131 incoming, 142–141 incoming, 143–149 incoming, 151–151 incoming, 163–162 incoming, 167–167 incoming, 170–170 incoming, 173–173 incoming, 187–186 incoming, 204–223 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🧬️schema/🔺️diff/🧪️tests/🧾️ownership/🦀️.rs`: incoming; 2–1 incoming, 20–21 incoming, 38–38 incoming, 58–58 incoming, 65–65 incoming, 71–72 incoming, 75–75 incoming, 78–78 incoming, 118–118 incoming, 125–125 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🧬️schema/🧬️mutations/↔️move-widget/🦀️.rs`: incoming; 2–2 incoming, 19–18 incoming, 20–20 incoming, 28–31 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🧬️schema/🧬️mutations/✂️remove-synapse/🦀️.rs`: incoming; 19–18 incoming, 20–20 incoming, 28–31 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🧬️schema/🧬️mutations/➕️add-widget/🦀️.rs`: incoming; 20–19 incoming, 21–21 incoming, 29–32 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🧬️schema/🧬️mutations/📐️change-layout/🦀️.rs`: incoming; 19–18 incoming, 36–39 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🧬️schema/🧬️mutations/🔀️move-synapse/🦀️.rs`: incoming; 2–2 incoming, 19–18 incoming, 20–20 incoming, 28–31 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🧬️schema/🧬️mutations/🔄change-synapse/🦀️.rs`: incoming; 19–18 incoming, 20–20 incoming, 28–31 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🧬️schema/🧬️mutations/🔗️add-synapse/🦀️.rs`: incoming; 19–18 incoming, 20–20 incoming, 28–31 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🧬️schema/🧬️mutations/🗑️remove-widget/🦀️.rs`: incoming; 19–18 incoming, 20–20 incoming, 28–31 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🧬️schema/🧬️mutations/🦀️.rs`: incoming; 32–32 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🧬️schema/🧬️mutations/🩹change-widget/🦀️.rs`: incoming; 20–19 incoming, 21–21 incoming, 29–32 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🧬️schema/🧹️retirement/🧪️tests/🧹️retirement/🦀️.rs`: merged; 22–21 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/📨️intent/🦀️.rs`: incoming; 66–65 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs`: merged; 105–107 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/📑️copy/🦀️.rs`: merged; 137–136 incoming, 245–244 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts`: merged; 41–45 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🧪️tests/🧬️fields/🦀️.rs`: merged; 16–15 incoming, 27–27 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧾️document/📦️packages/🦀️rust/Cargo.toml`: merged; 43–43 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/⚠️failure/🦀️.rs`: incoming; 20–20 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/🦀️.rs`: partial; 352–1066 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/♻️retirement/🦀️.rs`: incoming; 17–16 incoming, 72–71 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🔗️read/📋️project.json`: config-pending; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🔗️read/📜️script.ts`: config-pending; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🔗️read/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🔗️read/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🔗️read/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🔗️read/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🔗️read/🧫️fixtures/🔗️projection.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🔗️read/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🔗️read/🧬️schema/🔗️projection.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🔗️read/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🗃️history-ledger/🦀️.rs`: incoming; 20–19 incoming, 27–26 incoming, 73–72 incoming, 76–75 incoming, 105–105 incoming, 257–257 incoming, 399–399 incoming, 441–441 incoming, 456–456 incoming, 460–460 incoming, 474–474 incoming, 482–482 incoming, 523–523 incoming, 525–525 incoming, 561–561 incoming, 613–612 incoming, 617–617 incoming, 631–631 incoming, 759–759 incoming, 776–776 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️.rs`: merged; 6–5 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🧮️diff-and-mutation/🦀️.rs`: incoming; 63–63 incoming, 66–66 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🏃️space-runner/🦀️.rs`: incoming; 398–398 incoming, 463–463 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/♻️retirement/📦️backing/🦀️.rs`: incoming; 72–72 incoming, 94–93 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs`: partial; 60–114 conflict, 116–138 conflict, 140–161 conflict, 163–175 conflict, 177–196 conflict, 228–245 conflict, 247–2673 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs`: partial; 2–1 incoming, 125–166 conflict, 182–212 conflict, 214–3185 conflict, 3190–3189 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📦️packages/🦀️rust/Cargo.toml`: merged; 25–24 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🗄️stage/📥️lifted/🗄️durable-group/🦀️.rs`: merged; 2–1 incoming, 31–32 incoming, 34–33 incoming, 37–36 incoming, 153–155 incoming, 161–160 incoming, 173–172 incoming, 206–206 incoming, 211–210 incoming, 215–215 incoming, 229–229 incoming, 237–236 incoming, 256–256 incoming, 269–268 incoming, 294–293 incoming, 307–307 incoming, 312–313 incoming, 334–335 incoming, 342–342 incoming, 347–347 incoming, 351–354 incoming, 356–357 incoming, 361–360 incoming, 369–371 incoming, 433–434 incoming, 455–497 incoming, 499–509 incoming, 590–589 incoming, 632–633 incoming, 640–642 incoming, 647–647 incoming, 652–652 incoming, 655–655 incoming, 660–659 incoming, 679–680 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🗄️stage/📦️packages/🦀️rust/Cargo.toml`: incoming; 25–24 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs`: head-dissolution; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🧾️document/🦀️.rs`: head-dissolution; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🦀️.rs`: partial; 31–1055 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📨️diagnostics/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📨️diagnostics/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📨️diagnostics/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📬️publication/📥️lifted/🏪️store/🦀️.rs`: incoming; 32–31 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📬️publication/📥️lifted/🧵️canonical-edit/🦀️.rs`: merged; 34–33 incoming, 168–167 incoming, 304–304 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📬️publication/🦀️.rs`: merged; 24–23 incoming, 292–292 incoming, 319–318 incoming, 331–330 incoming, 365–366 incoming, 391–390 incoming, 419–419 incoming, 445–444 incoming, 474–473 incoming, 503–502 incoming, 526–525 incoming, 565–564 incoming, 585–585 token-merge, 608–607 incoming, 611–610 incoming, 615–616 incoming, 620–620 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📬️publication/🪪️authority/🦀️.rs`: incoming; 24–23 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/🛤️lane/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/🛤️lane/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/🛤️lane/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/🦀️.rs`: incoming; 232–232 incoming, 237–236 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/🧬️semantic/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏃️runtime/📥️lifted/🏪️store/🦀️.rs`: merged; 227–247 incoming, 274–273 incoming, 566–566 incoming, 577–576 incoming, 578–578 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏃️runtime/📥️lifted/🔁️replay/🦀️.rs`: merged; 23–22 incoming, 28–28 incoming, 30–30 incoming, 45–45 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📜️script.ts`: config-pending; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs`: incoming; 22–23 incoming, 41–42 incoming, 49–50 incoming, 67–68 incoming, 109–110 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🦀️.rs`: merged; 81–82 incoming, 97–97 incoming, 106–107 incoming, 118–117 incoming, 177–176 incoming, 434–434 incoming, 440–440 incoming, 447–447 incoming, 477–477 incoming, 510–511 incoming, 535–536 incoming, 549–550 incoming, 623–622 incoming, 626–627 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🔁️replay/🦀️.rs`: incoming; 85–85 incoming, 89–89 incoming, 232–232 incoming, 235–235 incoming, 239–242 incoming, 471–471 incoming, 620–620 incoming, 767–768 incoming, 776–776 incoming, 798–798 incoming, 817–817 incoming, 825–824 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🔁️replay/🧪️tests/🔬️unit/🦀️.rs`: incoming; 18–18 incoming, 117–117 incoming, 122–132 incoming, 134–135 incoming, 143–146 incoming, 154–154 incoming, 166–168 incoming, 182–182 incoming, 185–184 incoming, 187–187 incoming, 205–205 incoming, 222–222 incoming, 236–236 incoming, 243–243 incoming, 251–251 incoming, 255–255 incoming, 259–259 incoming, 262–262 incoming, 267–266 incoming, 275–275 incoming, 278–278 incoming, 281–280 incoming, 287–289 incoming, 292–297 incoming, 301–300 incoming, 307–307 incoming, 310–310 incoming, 318–318 incoming, 323–323 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🤝️authority/🦀️.rs`: incoming; 6–6 incoming, 13–13 incoming, 17–18 incoming, 21–21 incoming, 38–38 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🦀️.rs`: incoming; 101–100 incoming, 121–121 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️testing/🧬️mutations/🔢️set-value/🦀️.rs`: incoming; 14–17 incoming, 36–35 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️testing/🧬️mutations/🔢️set-value/🧪️tests/🧪️sum-law/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️testing/🧬️mutations/🦀️.rs`: incoming; 12–12 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs`: merged; 2–1 incoming, 44–44 incoming, 46–46 incoming, 70–72 incoming, 77–76 incoming, 79–81 incoming, 84–83 incoming, 239–238 incoming, 246–246 incoming, 248–248 incoming, 250–250 incoming, 588–588 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🧪️fixture-mutations-set-value/🦀️.rs`: incoming; 2–1 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/📸️snapshot/🔤️json/🦀️.rs`: incoming; 4–4 incoming, 15–42 incoming, 44–43 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/📸️snapshot/🔤️json/🧪️tests/🔬️unit/🦀️.rs`: merged; 9–9 incoming, 14–14 incoming, 19–19 incoming, 24–24 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/📸️snapshot/🦀️.rs`: incoming; 3–4 incoming, 9–12 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🔗️read/🦀️.rs`: incoming; 19–19 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🚫️rejection/🦀️.rs`: incoming; 92–91 incoming, 96–95 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🦀️.rs`: incoming; 287–286 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts`: partial; 1–80 conflict, 338–6902 conflict, 7079–7078 incoming, 7086–7085 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/♻️retirement/🦀️.rs`: incoming; 144–143 incoming, 168–168 incoming, 174–174 incoming, 176–176 incoming, 201–203 incoming, 208–208 incoming, 217–217 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/📥️lifted/🏪️store/🦀️.rs`: incoming; 8–8 incoming, 12–13 incoming, 17–17 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/📥️lifted/🔗️read/🦀️.rs`: incoming; 20–19 incoming, 55–54 incoming, 121–120 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/🦀️.rs`: merged; 474–474 incoming, 480–480 incoming, 482–482 incoming, 489–488 incoming, 492–492 incoming, 501–501 incoming, 503–503 incoming, 511–511 incoming, 513–513 incoming, 517–517 incoming, 590–590 incoming, 592–592 incoming, 594–595 incoming, 599–599 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🏠️space/📥️lifted/🏪️store/🦀️.rs`: incoming; 68–69 incoming, 93–94 incoming, 110–111 incoming, 120–121 incoming, 271–271 incoming, 287–287 incoming, 304–304 incoming, 316–316 incoming, 328–328 incoming, 342–342 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📥️ingress/📚️original/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📥️ingress/📚️original/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📥️ingress/📚️original/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📥️ingress/📚️original/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📥️ingress/📚️original/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🎮️operation/🦀️.rs`: incoming; 12–12 incoming, 23–23 incoming, 108–108 incoming, 112–112 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🏭️factory/📥️lifted/🏪️store/🦀️.rs`: merged; 129–129 incoming, 186–186 incoming, 232–233 incoming, 291–292 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📸️native-snapshot/🦀️.rs`: incoming; 40–39 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📸️native-snapshot/🫴️receiving/📜️pair/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📸️native-snapshot/🫴️receiving/📜️pair/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📸️native-snapshot/🫴️receiving/📜️pair/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📸️native-snapshot/🫴️receiving/📜️pair/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📸️native-snapshot/🫴️receiving/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📸️native-snapshot/🫴️receiving/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs`: partial; 43–2625 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-retirement/🧪️tests/🦀️.rs`: merged; 17–16 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️prepared/♻️retirement/🦀️.rs`: incoming; 22–22 incoming, 26–26 incoming, 32–31 incoming, 43–42 incoming, 45–44 incoming, 61–61 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️prepared/🔗️binding/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️prepared/🔗️binding/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️prepared/🔗️binding/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️prepared/🔗️binding/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️command/🛬️receiving/🧪️tests/🦀️.rs`: incoming; 19–19 incoming, 40–41 incoming, 47–48 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️command/🛬️receiving/🪜️cursor/🦀️.rs`: merged; 39–39 incoming, 41–41 incoming, 61–62 incoming, 64–64 incoming, 71–71 incoming, 73–73 incoming, 97–97 incoming, 107–107 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️one-item-owners/📥️lifted/📬️publication/🦀️.rs`: incoming; 196–195 incoming, 219–218 incoming, 250–250 incoming, 303–302 incoming, 317–316 incoming, 358–358 incoming, 362–361 incoming, 364–364 incoming, 367–367 incoming, 439–438 incoming, 481–480 incoming, 544–543 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️one-item-owners/🦀️.rs`: incoming; 7–7 incoming, 134–133 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🦀️.rs`: incoming; 3–5 incoming, 11–10 incoming, 17–18 incoming, 21–25 incoming, 31–42 incoming, 44–45 incoming, 47–48 incoming, 51–51 incoming, 75–75 incoming, 98–98 incoming, 103–102 incoming, 117–116 incoming, 130–130 incoming, 132–131 incoming, 141–141 incoming, 152–151 incoming, 154–155 incoming, 157–156 incoming, 161–161 incoming, 168–168 incoming, 186–186 incoming, 201–201 incoming, 204–204 incoming, 217–216 incoming, 224–223 incoming, 225–226 incoming, 230–229 incoming, 255–258 incoming, 267–267 incoming, 271–271 incoming, 278–277 incoming, 297–299 incoming, 301–310 incoming, 314–320 incoming, 322–323 incoming, 328–329 incoming, 336–335 incoming, 338–337 incoming, 339–339 incoming, 341–340 incoming, 365–364 incoming, 390–389 incoming, 394–394 incoming, 401–401 incoming, 408–408 incoming, 413–414 incoming, 416–417 incoming, 419–418 incoming, 424–424 incoming, 427–430 incoming, 432–434 incoming, 495–496 incoming, 507–506 incoming, 508–507 incoming, 523–522 incoming, 527–527 incoming, 530–530 incoming, 534–534 incoming, 536–536 incoming, 543–543 incoming, 545–546 incoming, 548–547 incoming, 550–550 incoming, 557–557 incoming, 576–576 incoming, 586–585 incoming, 587–586 incoming, 598–597 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧪️tests/🔗️source-custody/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧫️fixtures/🔗️source-custody/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🦀️.rs`: incoming; 30–34 incoming, 36–46 incoming, 48–177 incoming, 179–180 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🧪️tests/🌳️immutable-root/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🧪️tests/🦀️.rs`: partial; 2–1 incoming, 16–17 incoming, 19–22 incoming, 26–26 incoming, 30–30 incoming, 32–41 incoming, 43–43 incoming, 45–45 incoming, 47–57 incoming, 59–60 incoming, 62–62 incoming, 64–64 incoming, 69–69 incoming, 92–92 incoming, 94–94 incoming, 96–96 incoming, 98–99 incoming, 105–104 incoming, 106–105 incoming, 108–118 incoming, 130–130 incoming, 137–136 incoming, 142–145 incoming, 147–147 incoming, 154–154 incoming, 160–160 incoming, 165–165 incoming, 173–173 incoming, 175–175 incoming, 180–180 incoming, 187–186 incoming, 190–190 incoming, 202–202 incoming, 217–239 conflict, 260–268 incoming, 280–279 incoming, 281–281 incoming, 295–294 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🧪️tests/🧳️semantics/🔺️apply/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🧪️tests/🧳️semantics/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🧫️fixtures/♻️inverse-cancellation/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🧫️fixtures/♻️inverse-cancellation/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🧫️fixtures/♻️inverse-issuer/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🧫️fixtures/♻️inverse-issuer/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🧫️fixtures/🚦️admission/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🧫️fixtures/🚦️admission/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️schema/🔗️source-custody/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🌱️derived/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🌱️derived/🧩️store/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🌱️derived/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🌱️derived/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🌱️derived/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🦀️.rs`: incoming; 21–21 incoming, 23–24 incoming, 90–89 incoming, 93–97 incoming, 101–100 incoming, 105–105 incoming, 110–112 incoming, 129–129 incoming, 131–131 incoming, 137–137 incoming, 146–145 incoming, 147–147 incoming, 149–154 incoming, 168–168 incoming, 170–171 incoming, 174–174 incoming, 192–193 incoming, 196–196 incoming, 204–204 incoming, 207–211 incoming, 258–258 incoming, 262–262 incoming, 264–264 incoming, 274–277 incoming, 287–300 incoming, 304–313 incoming, 399–398 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧪️tests/🔬️unit/🦀️.rs`: merged; 7–6 incoming, 14–13 incoming, 29–30 incoming, 43–47 incoming, 49–49 incoming, 57–57 incoming, 70–70 incoming, 119–123 incoming, 126–125 incoming, 137–136 incoming, 139–139 incoming, 147–147 incoming, 152–152 incoming, 167–167 incoming, 169–169 incoming, 172–172 incoming, 174–174 incoming, 177–177 incoming, 195–195 incoming, 198–198 incoming, 200–200 incoming, 203–203 incoming, 205–205 incoming, 215–219 incoming, 227–227 incoming, 243–243 incoming, 245–246 incoming, 248–249 incoming, 251–251 incoming, 255–256 incoming, 262–261 incoming, 272–272 incoming, 277–277 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/📋️project.json`: config-pending; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/📜️script.ts`: config-pending; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🔌️drivers/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🔗️history/📜️report/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🔗️history/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🔗️history/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🔗️history/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🔗️history/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🔗️history/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🔗️input/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/📥️lifted/🔗️read/🦀️.rs`: merged; 21–20 incoming, 41–40 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/📦️packages/🦀️rust/Cargo.toml`: incoming; 28–27 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🛑️cancel/🦀️.rs`: incoming; 146–145 incoming, 209–208 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs`: partial; 5–4 incoming, 16–16 incoming, 48–198 conflict, 202–279 conflict, 281–1170 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs`: partial; 37–954 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️persistence-data-class/🦀️.rs`: merged; 70–69 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️unit/🦀️.rs`: partial; 23–22 incoming, 26–2656 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/♻️retirement/🦀️.rs`: merged; 84–83 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/♻️retirement/🦀️.rs`: merged; 42–41 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🔒️registry/♻️retirement/🦀️.rs`: incoming; 55–54 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🔒️registry/🌱️birth/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🔒️registry/🌱️birth/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🔒️registry/🌱️birth/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🔒️registry/🌱️birth/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🔒️registry/🦀️.rs`: incoming; 4–3 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs`: partial; 68–332 conflict, 335–498 conflict, 509–1100 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧾️return/🦀️.rs`: incoming; 64–63 incoming, 114–113 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🪞️projection/🦀️.rs`: incoming; 34–33 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/🎮️command/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/🎮️command/🧪️tests/🟦️.test.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/🎮️command/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/🎮️command/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🎟️admission/🦀️.rs`: incoming; 49–48 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🎟️admission/🧪️tests/🦀️.rs`: merged; 27–27 incoming, 54–54 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🦀️.rs`: merged; 61–61 incoming, 89–89 incoming, 94–94 incoming, 126–126 incoming, 151–151 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/💾️binary/🪪️operation-identity/📑️rows/🦀️.rs`: merged; 13–12 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/💾️binary/🪪️operation-identity/🦀️.rs`: merged; 45–44 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/📝️text/🦀️.rs`: partial; 67–1433 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/🦀️.rs`: incoming; 15–14 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs`: partial; 39–40 incoming, 98–98 incoming, 145–145 incoming, 658–967 conflict, 1027–1034 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️graph/🤝️group/🧪️tests/🟦️.ts`: merged; 28–28 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🦀️.rs`: partial; 98–1206 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏭️operation/🦀️.rs`: incoming; 40–39 incoming, 73–72 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🧾️document/🦀️.rs`: incoming; 31–31 incoming, 36–36 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/🔏️digest/🦀️.rs`: incoming; 40–39 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/🦀️.rs`: merged; 146–145 incoming, 164–164 incoming, 167–167 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 28–27 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs`: partial; 2–1 incoming, 26–1118 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs`: partial; 7–6 incoming, 28–27 incoming, 34–2142 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs`: partial; 15–1294 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 4–3 incoming, 360–359 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧬️schema/🔣️.json`: incoming; 6–5 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧵️planning/🎒️pack/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧵️planning/📐️budget/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧵️planning/📤️source/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧵️planning/🔗️bound/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧵️planning/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧵️planning/🧷️member/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧵️planning/🪪️decision/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📥️lifted/🚪️open/🦀️.rs`: incoming; 10–11 incoming, 27–28 incoming, 111–112 incoming, 130–131 incoming, 133–132 incoming, 202–203 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs`: incoming; 776–775 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🦀️.rs`: merged; 176–175 incoming, 238–237 incoming, 279–278 incoming, 338–337 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/📇️index/🦀️.rs`: incoming; 169–168 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🦀️.rs`: merged; 71–70 incoming, 441–440 incoming, 536–535 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🦀️.rs`: incoming; 208–207 incoming, 236–235 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🦀️.rs`: merged; 48–48 incoming, 428–427 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🍰️companion/🔬️unit/🦀️.rs`: merged; 107–106 incoming, 135–135 incoming, 142–143 incoming, 154–154 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🦀️.rs`: incoming; 43–43 incoming, 580–580 incoming, 603–603 incoming, 620–620 incoming, 697–697 incoming, 818–818 incoming, 845–845 incoming, 861–861 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🪪️member-facets/🧊️reference/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🪪️member-facets/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🪪️member-facets/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🪪️member-facets/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🪪️member-facets/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🎭️doubles/♻️retirement/🦀️.rs`: merged; 56–55 incoming, 152–152 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🎭️doubles/🏭️preparation/🦀️.rs`: incoming; 178–177 incoming, 230–230 incoming, 242–242 incoming, 281–281 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🎭️doubles/🗄️store/🦀️.rs`: merged; 128–128 incoming, 180–182 incoming, 187–188 incoming, 190–191 incoming, 256–258 incoming, 265–270 incoming, 277–282 incoming, 286–303 incoming, 313–312 incoming, 314–314 incoming, 317–317 incoming, 320–320 incoming, 323–323 incoming, 326–326 incoming, 329–329 incoming, 402–401 incoming, 404–403 incoming, 430–431 incoming, 516–515 incoming, 601–601 incoming, 605–605 incoming, 721–721 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/↩️assign-n/🦀️.rs`: incoming; 18–26 incoming, 37–36 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/🔢️set-n/🦀️.rs`: incoming; 18–26 incoming, 37–36 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/🦀️.rs`: incoming; 16–16 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/↩️assign-n/🦀️.rs`: incoming; 17–16 incoming, 26–31 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/⚠️set-warning-n/🦀️.rs`: incoming; 22–21 incoming, 31–36 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🔢️set-n/🦀️.rs`: incoming; 22–21 incoming, 31–36 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🚫️set-error-n/🦀️.rs`: incoming; 22–21 incoming, 31–36 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🛑️set-fatal-n/🦀️.rs`: incoming; 22–21 incoming, 31–36 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🦀️.rs`: incoming; 25–25 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/↩️assign-n/🦀️.rs`: incoming; 22–21 incoming, 31–36 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/🔢️set-n/🦀️.rs`: incoming; 22–21 incoming, 34–39 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/🦀️.rs`: incoming; 16–16 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/↩️assign-n/🦀️.rs`: incoming; 17–16 incoming, 26–31 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/➕️add-n/🦀️.rs`: incoming; 17–16 incoming, 32–37 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🔢️set-n/🦀️.rs`: incoming; 17–16 incoming, 32–37 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🗑️delete-n/🦀️.rs`: incoming; 15–14 incoming, 27–32 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🦀️.rs`: incoming; 22–22 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🪤️lossy/🧬️mutations/🔢️set-n/🦀️.rs`: incoming; 47–46 incoming, 56–61 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🪤️lossy/🧬️mutations/🦀️.rs`: incoming; 13–13 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧮️snapshot/🦀️.rs`: incoming; 27–27 incoming, 31–30 incoming, 169–171 incoming, 177–176 incoming, 178–180 incoming, 182–181 incoming, 186–185 incoming, 193–195 incoming, 201–200 incoming, 202–203 incoming, 205–205 incoming, 244–246 incoming, 252–251 incoming, 253–255 incoming, 257–256 incoming, 261–260 incoming, 288–287 incoming, 299–302 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌅️bin-05/🔬️unit/🦀️.rs`: partial; 5–4 incoming, 6–5 incoming, 22–1862 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌆️bin-02/🔬️unit/🦀️.rs`: merged; 33–32 incoming, 47–46 incoming, 64–64 incoming, 68–68 incoming, 73–73 incoming, 112–111 incoming, 264–263 incoming, 284–284 incoming, 288–288 incoming, 294–294 incoming, 300–300 incoming, 313–312 incoming, 342–342 incoming, 356–356 incoming, 363–363 incoming, 365–365 incoming, 368–368 incoming, 393–392 incoming, 423–423 incoming, 629–628 incoming, 641–641 incoming, 670–670 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs`: partial; 7–2489 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/🔬️unit/🦀️.rs`: partial; 7–2001 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌴️bin-06/🔬️unit/🦀️.rs`: partial; 7–1539 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🦀️.rs`: partial; 7–1374 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/📤️outbound-announcement/🦀️.rs`: merged; 77–76 incoming, 89–89 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🗄️durable-owned-group/🟦️.ts`: partial; 1–0 incoming, 7–6 conflict, 17–17 incoming, 23–22 incoming, 146–146 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️deferred-reprojection/🦀️.rs`: merged; 6–5 incoming, 83–83 incoming, 305–308 incoming, 310–315 incoming, 330–331 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-demo/🦀️.rs`: incoming; 12–11 incoming, 21–20 incoming, 30–29 incoming, 39–38 incoming, 40–39 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-severity/🦀️.rs`: incoming; 12–11 incoming, 39–38 incoming, 48–47 incoming, 49–48 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-timestamped/🦀️.rs`: incoming; 12–11 incoming, 21–20 incoming, 22–21 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-validated/🦀️.rs`: incoming; 12–11 incoming, 21–20 incoming, 22–21 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️replay-retirement/🦀️.rs`: incoming; 8–7 incoming, 79–78 incoming, 160–162 incoming, 168–167 incoming, 169–169 incoming, 175–184 incoming, 196–196 incoming, 202–202 incoming, 215–219 incoming, 295–295 incoming, 302–301 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-law/🦀️.rs`: incoming; 6–5 incoming, 69–71 incoming, 73–78 incoming, 93–94 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🦀️.rs`: partial; 4–3 incoming, 6–1458 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️tool-transaction/🦀️.rs`: incoming; 80–79 incoming, 87–87 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧫️fixtures/persistence-data-class-v1/🔣️.json`: incoming; 92–92 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧫️fixtures/🧫️replay-retirement/🔣️.json`: incoming; 4–10 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧬️retained-clone/🦀️.rs`: merged; 215–215 incoming, 225–225 incoming, 232–232 incoming, 258–258 incoming, 282–282 incoming, 304–304 incoming, 328–328 incoming, 334–336 incoming, 339–339 incoming, 350–351 incoming, 367–367 incoming, 371–371 incoming, 390–391 incoming, 419–420 incoming, 423–423 incoming, 436–436 incoming, 440–440 incoming, 442–442 incoming, 456–456 incoming, 469–469 incoming, 471–471 incoming, 475–475 incoming, 491–491 incoming, 548–548 incoming, 571–572 incoming, 576–576 incoming, 582–584 incoming, 592–592 incoming, 600–600 incoming, 608–608 incoming, 616–616 incoming, 624–624 incoming, 677–677 incoming, 682–682 incoming, 701–701 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️replay-retirement/🧬️schema/📥️owned-replay/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/📜️space-history/🦀️.rs`: incoming; 81–81 incoming, 85–86 incoming, 111–110 incoming, 112–113 incoming, 117–118 incoming, 134–134 incoming, 138–138 incoming, 140–141 incoming, 143–142 incoming, 144–144 incoming, 178–180 incoming, 184–185 incoming, 189–189 incoming, 200–199 incoming, 207–207 incoming, 218–218 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🌿️create-space-alternative/🦀️.rs`: incoming; 38–37 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🌿️create-space-alternative/🧪️tests/🔬️unit/🦀️.rs`: incoming; 1–0 incoming, 10–9 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🎯️set-active-space-alternative/🦀️.rs`: incoming; 51–50 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🎯️set-active-space-alternative/🧪️tests/🔬️unit/🦀️.rs`: incoming; 18–17 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/📌️commit-space-checkpoint/🦀️.rs`: incoming; 14–13 incoming, 20–21 incoming, 26–26 incoming, 29–28 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/📌️commit-space-checkpoint/🧪️tests/🔬️unit/🦀️.rs`: incoming; 1–0 incoming, 7–8 incoming, 10–9 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/📌️commit-space-checkpoint/🧬️schema/🔣️.json`: incoming; 274–273 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🔀️switch-space-alternative/🦀️.rs`: incoming; 34–33 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🔀️switch-space-alternative/🧪️tests/🔬️unit/🦀️.rs`: incoming; 1–0 incoming, 10–9 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🗑️remove-space-checkpoint/🦀️.rs`: incoming; 25–26 incoming, 30–31 incoming, 34–33 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🗑️remove-space-checkpoint/🧪️tests/🔬️unit/🦀️.rs`: incoming; 1–0 incoming, 10–9 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🦀️.rs`: incoming; 30–30 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs`: incoming; 1–0 incoming, 44–45 incoming, 56–55 incoming, 58–57 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🧹️remove-space-alternative/🦀️.rs`: incoming; 44–43 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🧹️remove-space-alternative/🧪️tests/🔬️unit/🦀️.rs`: incoming; 1–0 incoming, 22–21 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/⚖️law/🦀️.rs`: merged; 12–11 incoming, 23–24 incoming, 27–27 incoming, 44–43 incoming, 53–52 incoming, 55–55 incoming, 84–83 incoming, 95–94 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/⚖️law/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/⚖️law/🧫️fixtures/🧾️request.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/✏️config-apply/🦀️.rs`: incoming; 95–95 incoming, 103–103 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🚚️handoff/🦀️.rs`: incoming; 40–39 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🚚️handoff/🧪️tests/🔬️unit/🦀️.rs`: merged; 35–35 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🦀️.rs`: merged; 33–33 incoming, 52–52 incoming, 113–112 incoming, 293–293 incoming, 325–325 incoming, 353–353 incoming, 407–407 incoming, 439–439 incoming, 469–469 incoming, 505–506 incoming, 685–684 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧪️tests/🔬️unit/🦀️.rs`: merged; 101–100 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧪️tests/🧫️fixtures/📦️lifecycle/🔣️.json`: incoming; 19–18 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧬️schema/📦️assembly/🔣️.json`: incoming; 1–1 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/🦀️.rs`: merged; 49–49 incoming, 157–156 incoming, 171–172 incoming, 189–190 incoming, 479–480 incoming, 538–539 incoming, 550–551 incoming, 698–698 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🦀️.rs`: partial; 9–9 incoming, 13–12 incoming, 289–288 conflict, 296–295 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️canonical-error-progress/🟦️.ts`: partial; 10–9 incoming, 29–29 incoming, 47–47 token-merge, 157–158 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️store-canonical-edit-sealer/🟦️.ts`: partial; 7–7 incoming, 75–78 conflict, 81–83 conflict, 89–93 conflict, 96–103 conflict, 105–106 incoming, 131–132 conflict, 134–133 incoming, 135–136 conflict, 138–141 conflict, 144–151 conflict, 153–154 incoming, 165–167 conflict, 169–169 token-merge, 173–173 same, 178–178 token-merge, 180–181 same
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🪪️source-identity/🎮️birth/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🪪️source-identity/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🪪️source-identity/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🪪️source-identity/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🪪️source-identity/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🪪️source-identity/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️output/📋️operations/🦀️.rs`: incoming; 119–118 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️output/🦀️.rs`: incoming; 145–144 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🦀️.rs`: incoming; 11–11 incoming, 232–231 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧪️tests/🦀️.rs`: merged; 291–290 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs`: partial; 34–1264 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs`: merged; 69–68 incoming, 189–188 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/🦀️.rs`: incoming; 20–20 incoming, 39–39 incoming, 46–46 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🛬️receive/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🛬️receive/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🛬️receive/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🛬️receive/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🛬️receive/🧫️fixtures/🔣️.schema.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🦀️.rs`: merged; 21–20 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️retained-clone/🦀️.rs`: incoming; 4–4 incoming, 14–13 incoming, 80–93 incoming, 96–95 incoming, 101–101 incoming, 120–120 incoming, 124–123 incoming, 125–125 incoming, 132–137 incoming, 149–150 incoming, 152–153 incoming, 172–172 incoming, 201–200 incoming, 225–288 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🫧️ephemeral/📢️publication/🔁️transfer/🦀️.rs`: incoming; 59–59 incoming, 73–72 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🫧️ephemeral/📢️publication/🧩️preparation/🦀️.rs`: incoming; 17–17 incoming, 118–118 incoming, 132–132 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🎟️source/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🎟️source/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/📦️packages/🦀️rust/Cargo.toml`: merged; 25–24 incoming, 34–33 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs`: partial; 85–710 conflict, 726–835 conflict, 837–1091 conflict, 1098–1097 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🧪️tests/🔬️unit/🦀️.rs`: merged; 291–291 token-merge, 311–318 incoming, 326–341 incoming, 369–369 incoming, 395–395 incoming, 399–399 incoming, 418–422 incoming, 429–434 incoming, 441–441 incoming, 786–786 incoming, 789–789 incoming, 849–851 incoming, 862–864 incoming, 877–877 incoming, 879–880 incoming, 903–904 incoming, 917–917 incoming, 919–919 incoming, 923–922 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🧭️plan/🦀️.rs`: incoming; 2–2 incoming, 25–26 incoming, 63–64 incoming, 66–66 incoming, 69–70 incoming, 85–85 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🧺️values/🦀️.rs`: incoming; 118–117 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🧬️generation/🦀️.rs`: merged; 94–93 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs`: incoming; 239–239 incoming, 245–249 incoming, 274–273 incoming, 653–653 incoming, 700–700 incoming, 706–706 incoming, 724–724 incoming, 759–759 incoming, 800–817 incoming, 819–819 incoming, 834–838 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️testing/📔️registry/🧬️mutations/📛️rename-mini/🦀️.rs`: incoming; 19–18 incoming, 28–30 incoming, 33–32 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️testing/📔️registry/🧬️mutations/📛️rename-mini/🧪️tests/🔬️unit/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️testing/📔️registry/🧬️mutations/🦀️.rs`: incoming; 13–13 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️testing/🧬️mutation-laws/🧬️mutations/4️⃣add-counter-four-times/🦀️.rs`: incoming; 11–11 incoming, 18–17 incoming, 22–24 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️testing/🧬️mutation-laws/🧬️mutations/✌️add-counter-twice/🦀️.rs`: incoming; 11–11 incoming, 18–17 incoming, 21–23 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️testing/🧬️mutation-laws/🧬️mutations/➕️add-counter/🦀️.rs`: incoming; 17–16 incoming, 30–35 incoming, 39–39 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️testing/🧬️mutation-laws/🧬️mutations/➕️add-counter/🧪️tests/🔬️unit/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️testing/🧬️mutation-laws/🧬️mutations/🌐️add-counter-then-notify/🦀️.rs`: incoming; 11–11 incoming, 19–25 incoming, 40–39 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️testing/🧬️mutation-laws/🧬️mutations/🔢️add-counter-sequence/🦀️.rs`: incoming; 11–11 incoming, 18–17 incoming, 24–26 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️testing/🧬️mutation-laws/🧬️mutations/🦀️.rs`: incoming; 24–24 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/📔️registry/🦀️.rs`: merged; 3–2 incoming, 14–15 incoming, 19–22 incoming, 27–26 incoming, 40–40 token-merge, 45–46 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs`: merged; 1–0 incoming, 51–51 incoming, 54–54 incoming, 63–63 incoming, 76–76 incoming, 283–283 incoming, 287–287 incoming, 703–703 incoming, 707–707 incoming, 774–774 incoming, 780–780 incoming, 783–783 incoming, 790–790 incoming, 795–795 incoming, 805–805 incoming, 818–818 incoming, 820–820 incoming, 849–849 incoming, 874–877 incoming, 879–879 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🧪️mutation-payload/🦀️.rs`: merged; 5–4 incoming, 71–71 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws-mutations-add-counter-four-times/🦀️.rs`: merged; 2–1 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws-mutations-add-counter-then-notify-foreign/🦀️.rs`: merged; 2–1 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws-mutations-add-counter-twice/🦀️.rs`: merged; 2–1 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs`: merged; 2–1 incoming, 26–25 incoming, 27–27 incoming, 31–33 incoming, 36–35 incoming, 102–102 incoming, 105–105 incoming, 133–133 incoming, 140–140 incoming, 142–142 incoming, 156–156 incoming, 168–168 incoming, 194–194 incoming, 203–204 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/💎️materialize/🧪️tests/🔬️unit/🦀️.rs`: incoming; 66–66 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/👁️source/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/👁️source/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/👁️source/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🔁️fold/🦀️.rs`: incoming; 18–18 incoming, 24–24 incoming, 30–30 incoming, 34–34 incoming, 36–37 incoming, 39–39 incoming, 47–47 incoming, 50–50 incoming, 53–53 incoming, 57–58 incoming, 60–62 incoming, 65–66 incoming, 70–70 incoming, 72–74 incoming, 77–80 incoming, 82–82 incoming, 85–87 incoming, 90–92 incoming, 94–94 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/⚔️conflict/🦀️.rs`: incoming; 2–1 incoming, 19–19 incoming, 30–30 incoming, 33–33 incoming, 72–72 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/📇️identity-records/🦀️.rs`: incoming; 2–1 incoming, 20–20 incoming, 29–29 incoming, 40–40 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/📋️records/📦️paged/🧪️tests/🟦️.ts`: partial; 1–1 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/📨️message/🧪️tests/🟦️.ts`: merged; 4–4 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🔀️origin/🔣️json/🦀️.rs`: incoming; 2–1 incoming, 27–27 incoming, 34–34 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🔀️origin/🔣️json/🧪️tests/🟦️.ts`: merged; 7–7 same
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🔀️transition/🛂️payload/🦀️.rs`: incoming; 2–1 incoming, 7–7 incoming, 16–16 incoming, 22–22 incoming, 30–30 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🔀️transition/🦀️.rs`: incoming; 2–1 incoming, 18–18 incoming, 27–27 incoming, 53–53 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🗂️file/📚️frames/🦀️.rs`: incoming; 2–1 incoming, 21–21 incoming, 31–31 incoming, 38–38 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🗂️file/📚️frames/🧪️tests/🟦️.ts`: merged; 6–6 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🗂️file/🗜️deflate/🦀️.rs`: incoming; 2–1 incoming, 31–31 incoming, 38–38 incoming, 45–45 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🗂️file/🦀️.rs`: incoming; 2–1 incoming, 21–21 incoming, 34–34 incoming, 36–36 incoming, 40–40 incoming, 59–63 incoming, 65–64 incoming, 71–71 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🗂️file/🧪️tests/🟦️.ts`: merged; 6–6 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🧪️tests/🟦️.ts`: partial; 1–1 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🧵️edit/🦀️.rs`: incoming; 2–1 incoming, 20–20 incoming, 31–31 incoming, 37–37 incoming, 73–73 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🧾️metadata/🦀️.rs`: incoming; 2–1 incoming, 33–33 incoming, 45–45 incoming, 57–59 incoming, 73–73 incoming, 102–102 incoming, 105–105 incoming, 109–108 incoming, 117–117 incoming, 121–121 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🧾️operation/🧪️tests/🟦️.ts`: merged; 4–4 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🪪️identity/🧪️tests/🟦️.ts`: merged; 5–6 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🦀️.rs`: merged; 532–532 incoming, 539–539 incoming, 548–548 incoming, 555–555 incoming, 559–559 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🧪️tests/🔬️unit/🦀️.rs`: merged; 958–958 incoming, 978–978 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🧬️schema/🦀️.rs`: incoming; 10–9 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🦀️.rs`: merged; 83–83 incoming, 86–86 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testing/🧬️mutation-laws/🧬️mutations/⛔️add-rejected-counter/🦀️.rs`: incoming; 17–16 incoming, 49–49 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testing/🧬️mutation-laws/🧬️mutations/➕️add-counter/🦀️.rs`: incoming; 19–18 incoming, 49–49 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testing/🧬️mutation-laws/🧬️mutations/🐛️add-unchecked-counter/🦀️.rs`: incoming; 17–16 incoming, 49–49 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testing/🧬️mutation-laws/🧬️mutations/👁️add-observed-counter/🦀️.rs`: incoming; 7–7 incoming, 14–14 incoming, 16–15 incoming, 21–20 incoming, 22–23 incoming, 55–55 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testing/🧬️mutation-laws/🧬️mutations/🚫️add-missing-counter/🦀️.rs`: incoming; 17–16 incoming, 49–49 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testing/🧬️mutation-laws/🧬️mutations/🦀️.rs`: incoming; 27–27 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws-unit/🦀️.rs`: partial; 1–0 incoming, 203–203 incoming, 222–222 incoming, 225–225 incoming, 253–253 incoming, 296–298 incoming, 300–305 incoming, 311–310 incoming, 323–323 incoming, 335–344 incoming, 381–380 incoming, 384–384 incoming, 403–414 incoming, 487–499 conflict, 511–512 incoming, 530–530 incoming, 535–536 incoming, 559–559 incoming, 566–566 incoming, 568–569 incoming, 892–892 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs`: partial; 14–20 conflict, 274–866 conflict, 875–1093 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/🧬️mutation-laws/🦀️.rs`: incoming; 3–2 incoming, 34–35 incoming, 38–37 incoming, 41–40 incoming, 44–46 incoming, 50–49 incoming, 105–105 incoming, 117–117 incoming, 119–119 incoming, 121–121 incoming, 135–135 incoming, 142–142 incoming, 145–145 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧮️fold/🦀️.rs`: merged; 2–3 incoming, 6–6 incoming, 8–8 incoming, 16–16 incoming, 28–28 incoming, 32–32 incoming, 36–36 incoming, 40–40 incoming, 54–54 incoming, 59–59 incoming, 69–71 incoming, 75–75 incoming, 79–80 incoming, 95–95 token-merge, 120–120 incoming, 128–128 incoming, 133–133 incoming, 138–138 incoming, 140–140 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎚️UiPreferences/🟦️.ts`: head-dissolution; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎚️UiPreferences/🧪️tests/🌐️preference-lane/🟦️.ts`: merged; 4–4 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json`: config-pending; 19–18 config-pending, 239–238 config-pending
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts`: config-pending; 38–37 incoming, 584–584 conflict, 609–612 conflict, 639–639 token-merge, 713–716 conflict, 769–768 incoming, 772–773 incoming, 961–961 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts`: merged; 289–289 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🎟️launch/📨️admission/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🎟️launch/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🎟️launch/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🎟️launch/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🎟️launch/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🎟️launch/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🎟️launch/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📜️script.ts`: config-pending; 15–14 incoming, 86–88 incoming, 94–95 incoming, 126–129 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs`: partial; 4–4 same, 16–17 conflict, 29–28 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🧪️tests/📇️catalog/🟦️.ts`: merged; 21–21 incoming, 24–24 token-merge, 31–31 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs`: partial; 151–152 token-merge, 471–471 incoming, 473–473 incoming, 475–476 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🎟️original/🟦️.ts`: incoming; 12–11 incoming, 39–38 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🎟️original/🧪️tests/📡️decoder/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🎟️original/🧪️tests/📡️decoder/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🎟️original/🧪️tests/🟦️.ts`: merged; 12–12 incoming, 22–22 incoming, 27–26 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts`: partial; 20–341 conflict, 361–1015 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎟️native-caller/🦀️.rs`: incoming; 20–20 incoming, 31–30 incoming, 55–55 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎟️native-caller/🧪️tests/🦀️.rs`: merged; 25–25 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎪️host-winit/📦️packages/🦀️rust/Cargo.toml`: merged; 25–25 token-merge, 84–83 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️media-slots/🎟️collect/🦀️.rs`: merged; 86–86 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️media-slots/📤️slot/🦀️.rs`: incoming; 31–31 incoming, 37–37 incoming, 46–46 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏠️os-host/🦀️.rs`: partial; 251–252 incoming, 263–263 incoming, 266–266 incoming, 268–268 incoming, 277–283 conflict, 286–285 incoming, 294–293 incoming, 296–296 conflict, 299–302 incoming, 344–344 conflict, 393–394 incoming, 405–405 incoming, 408–408 conflict, 464–464 conflict, 548–549 token-merge, 631–631 same, 634–634 same, 637–638 same, 642–644 conflict, 647–647 same, 651–651 same, 654–654 same, 663–665 conflict, 668–668 same, 732–732 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏠️os-host/🧰️fixtures/🦀️.rs`: merged; 70–70 incoming, 72–72 incoming, 85–84 incoming, 89–89 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📐️surface-lane/🦀️.rs`: partial; 3–7 conflict, 17–17 incoming, 95–99 conflict, 101–101 conflict, 125–128 conflict, 131–131 same, 133–133 conflict, 135–135 conflict, 137–137 conflict, 140–142 incoming, 144–161 conflict, 179–182 conflict, 188–188 incoming, 210–210 incoming, 226–229 same, 232–231 incoming, 235–237 conflict, 240–254 conflict, 256–256 conflict, 258–259 conflict, 261–281 conflict, 284–304 conflict, 306–306 conflict, 322–322 incoming, 327–326 incoming, 328–331 same, 336–336 same, 338–350 conflict, 352–355 conflict, 359–359 incoming, 362–376 conflict, 399–402 conflict, 432–432 same, 434–435 conflict, 448–473 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📐️surface-lane/🧪️tests/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📐️surface-lane/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📐️surface-lane/🧪️tests/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📡️kernel-protocol/📥️lifted/🏊️kernel-pool/🦀️.rs`: merged; 220–221 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📡️kernel-protocol/📥️lifted/📦️kernel-runtime/🦀️.rs`: incoming; 8–38 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📡️kernel-protocol/📦️packages/🦀️rust/Cargo.toml`: incoming; 34–33 incoming, 38–37 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📡️kernel-protocol/🦀️.rs`: incoming; 43–42 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json`: config-pending; 379–378 incoming, 389–388 incoming, 760–759 incoming, 812–811 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📜️script.ts`: config-pending; 114–115 incoming, 118–117 incoming, 506–505 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml`: merged; 53–52 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📮️runtime-mailbox-core/🎟️apply/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📮️runtime-mailbox-core/🎟️apply/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📮️runtime-mailbox-core/🎟️apply/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📮️runtime-mailbox-core/🎟️apply/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📮️runtime-mailbox-core/🦀️.rs`: incoming; 33–32 incoming, 38–38 incoming, 42–42 incoming, 103–103 incoming, 125–124 incoming, 132–131 incoming, 218–217 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔧️host-plumbing/📦️packages/🦀️rust/Cargo.toml`: merged; 42–41 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔧️host-plumbing/🦀️.rs`: incoming; 29–28 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🤝️contracts/📥️lifted/🌉️ProgramBridge/🦀️.rs`: incoming; 18–17 incoming, 22–22 incoming, 28–28 incoming, 34–34 incoming, 38–38 incoming, 40–40 incoming, 49–48 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🦴️asset-decode/📦️packages/🦀️rust/Cargo.toml`: merged; 28–27 incoming, 30–29 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🦴️asset-decode/🦀️.rs`: merged; 36–35 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🎨️presentation-raster/🌐️native-asset-stream/🦀️.rs`: partial; 6–6 incoming, 9–9 incoming, 12–12 incoming, 15–15 incoming, 17–17 incoming, 25–26 incoming, 31–31 incoming, 34–34 incoming, 36–36 incoming, 38–49 incoming, 52–62 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🎨️presentation-raster/🦀️.rs`: merged; 569–569 incoming, 572–572 incoming, 595–594 incoming, 597–597 incoming, 718–718 incoming, 741–747 incoming, 749–749 incoming, 764–764 incoming, 806–806 incoming, 829–835 incoming, 837–837 incoming, 852–852 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📊️scale-bench/🦀️.rs`: partial; 374–379 incoming, 520–520 incoming, 833–842 incoming, 844–849 conflict, 857–866 incoming, 868–871 incoming, 875–875 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🏊️kernel-pool/🎟️task-ingress/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🏊️kernel-pool/🎟️task-ingress/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🏊️kernel-pool/🎟️task-ingress/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🏊️kernel-pool/🎟️task-ingress/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🏊️kernel-pool/🎟️task-ingress/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🏊️kernel-pool/🦀️.rs`: partial; 3–2 incoming, 90–1953 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/📬️kernel-replay-client/🦀️.rs`: incoming; 95–96 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🧮️kernel-core/🐣️create-app/🎟️source/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🧮️kernel-core/🐣️create-app/🎟️source/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🧮️kernel-core/🐣️create-app/🎟️source/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🧮️kernel-core/🐣️create-app/🎟️source/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🧮️kernel-core/🐣️create-app/🎟️source/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🧮️kernel-core/🐣️create-app/🧩️compile/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🧮️kernel-core/🐣️create-app/🧩️compile/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🧮️kernel-core/🐣️create-app/🧩️compile/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🧮️kernel-core/🐣️create-app/🧩️compile/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🧮️kernel-core/🐣️create-app/🧩️compile/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🧮️kernel-core/🐣️create-app/🧩️compile/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🧮️kernel-core/🦀️.rs`: merged; 438–444 incoming, 448–501 incoming, 694–694 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📮️mailbox-impl/🦀️.rs`: partial; 4–79 conflict, 108–1576 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🔁️asset-decode-jobs/🦀️.rs`: partial; 276–277 incoming, 284–285 incoming, 303–303 incoming, 337–337 incoming, 339–354 incoming, 370–383 token-merge, 385–388 conflict, 390–390 incoming, 393–395 incoming, 397–397 incoming, 399–405 token-merge, 407–438 conflict, 440–439 incoming, 564–566 conflict, 570–573 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🔬️native-socket-probe/🦀️.rs`: merged; 86–88 incoming, 94–93 incoming, 96–98 incoming, 158–158 incoming, 162–163 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🖥️frame-presentation/🦀️.rs`: partial; 43–1213 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🚪️native-io/🎟️invocation/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🚪️native-io/🎟️invocation/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🚪️native-io/🎟️invocation/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🚪️native-io/🎟️invocation/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🚪️native-io/🎟️invocation/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🚪️native-io/🎟️source/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🚪️native-io/🎟️source/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🚪️native-io/🎟️source/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🚪️native-io/🎟️source/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🚪️native-io/🎟️source/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🚪️native-io/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🛎️frame-actions/🔁️runtime-apply/🦀️.rs`: merged; 10–9 incoming, 15–15 incoming, 48–51 incoming, 60–59 incoming, 77–76 incoming, 98–104 incoming, 122–122 incoming, 180–191 incoming, 193–234 incoming, 341–341 incoming, 345–348 incoming, 350–351 incoming, 353–353 incoming, 357–358 incoming, 360–359 incoming, 361–360 incoming, 365–365 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🛎️frame-actions/🦀️.rs`: merged; 63–63 incoming, 71–71 incoming, 167–166 incoming, 171–171 incoming, 334–341 incoming, 343–342 incoming, 344–344 incoming, 346–348 incoming, 350–350 incoming, 362–362 incoming, 364–363 incoming, 436–436 incoming, 459–459 incoming, 509–510 incoming, 513–515 incoming, 517–519 incoming, 521–523 incoming, 525–527 incoming, 529–535 incoming, 539–539 incoming, 566–565 incoming, 614–613 incoming, 650–658 incoming, 677–678 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs`: merged; 127–127 token-merge, 254–253 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🧠️app-runtime/🦀️.rs`: merged; 84–95 incoming, 97–105 incoming, 107–115 incoming, 117–117 incoming, 503–503 incoming, 641–644 incoming, 646–645 incoming, 658–658 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🧾️frame-build/🦀️.rs`: merged; 33–33 incoming, 35–37 incoming, 463–462 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🧾️frame-build/🧮️frame-transaction/🦀️.rs`: merged; 416–416 incoming, 418–418 incoming, 714–713 incoming, 895–896 incoming, 899–899 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧠️kernel-runtime/🦀️.rs`: incoming; 22–22 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/📬️outcome/🧪️tests/🟦️.ts`: partial; 4–4 conflict, 6–6 conflict, 11–11 token-merge, 13–13 token-merge, 15–15 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/📬️outcome/🧪️tests/🦀️.rs`: partial; 1–1 incoming, 6–7 incoming, 11–15 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/📬️outcome/🧬️schema/🔣️.json`: incoming; 35–35 incoming, 62–62 incoming, 86–86 incoming, 108–108 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs`: partial; 2–6 token-merge, 13–16 conflict, 18–18 incoming, 120–132 same, 134–138 conflict, 140–141 same, 143–143 same, 153–157 conflict, 159–168 same, 354–354 same, 533–533 incoming, 566–585 same, 594–595 conflict, 635–635 conflict, 645–645 same, 648–648 same, 650–651 same, 653–653 same, 663–667 conflict, 670–884 conflict, 888–888 same, 893–950 conflict, 952–961 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs`: partial; 37–987 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️editable-controls/🟦️.tsx`: merged; 630–629 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎟️original-turn/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎟️original-turn/🦀️.rs`: incoming; 1–1 incoming, 3–3 incoming, 6–7 incoming, 9–9 incoming, 14–20 incoming, 22–22 incoming, 24–24 incoming, 29–36 incoming, 38–39 incoming, 43–45 incoming, 47–46 incoming, 48–47 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎫️shell-holds/🟦️.ts`: merged; 63–62 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎯️world3d-pick-bounds/🟦️.ts`: merged; 13–12 incoming, 14–14 token-merge, 81–82 incoming, 88–94 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📃️typed-operation-pages/🟦️.tsx`: merged; 1–0 incoming, 9–9 incoming, 106–107 incoming, 114–114 incoming, 119–118 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-frame-job-unit/🦀️.rs`: partial; 15–15 conflict, 94–93 incoming, 95–104 conflict, 105–109 conflict, 139–138 incoming, 140–149 incoming, 151–152 incoming, 159–168 conflict, 188–193 conflict, 234–234 incoming, 236–236 incoming, 244–244 conflict, 248–248 conflict, 273–272 incoming, 278–278 conflict, 280–280 conflict, 290–289 incoming, 302–302 conflict, 304–304 conflict, 314–313 incoming, 326–326 conflict, 329–329 conflict, 339–338 incoming, 342–342 conflict, 344–344 conflict, 354–353 incoming, 359–359 conflict, 364–365 token-merge, 368–369 conflict, 371–371 conflict, 373–373 conflict, 378–377 incoming, 379–380 conflict, 383–383 conflict, 386–386 conflict, 404–422 incoming, 424–431 incoming, 434–454 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-renderer-async-boundary/🦀️.rs`: partial; 2–1 incoming, 3–2670 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-renderer-renderer-io-retained/🦀️.rs`: partial; 5–81 conflict, 86–86 incoming, 94–98 conflict, 102–102 incoming, 123–123 incoming, 133–137 conflict, 142–141 incoming, 148–148 incoming, 158–162 conflict, 167–166 incoming, 174–174 incoming, 190–195 incoming, 198–199 incoming, 206–206 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-surface-lane-unit/🦀️.rs`: partial; 2–1 conflict, 9–17 conflict, 33–38 conflict, 55–60 conflict, 64–75 conflict, 77–82 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🖱️world3d-interaction/🟦️.tsx`: merged; 22–21 incoming, 97–96 incoming, 113–113 incoming, 115–116 incoming, 144–144 incoming, 170–170 incoming, 352–351 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🗣️dialog-origin/🟦️.ts`: merged; 14–14 incoming, 79–79 incoming, 86–87 incoming, 89–93 incoming, 95–94 incoming, 99–99 incoming, 105–105 incoming, 108–108 incoming, 111–110 incoming, 391–391 incoming, 396–402 incoming, 404–404 incoming, 406–406 incoming, 408–411 incoming, 415–415 incoming, 419–423 incoming, 425–426 incoming, 428–427 incoming, 430–432 incoming, 434–434 incoming, 436–435 incoming, 437–436 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧊️wgpu-os-host-standalone/🦀️.rs`: merged; 24–23 incoming, 35–36 incoming, 90–89 incoming, 273–273 incoming, 283–283 incoming, 625–624 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🧊️wgpu/🧵️frame-job/📬️outcome/🔣️.json`: incoming; 1–128 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🧵️component-close-frame-turn/🔣️.json`: incoming; 1–19 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🧵️component-close-frame-turn/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧾️frame-action-ledger/🦀️.rs`: incoming; 28–27 incoming, 30–29 incoming, 54–54 incoming, 71–71 incoming, 77–76 incoming, 92–92 incoming, 130–130 incoming, 145–145 incoming, 153–152 incoming, 182–181 incoming, 184–184 incoming, 197–198 incoming, 203–203 incoming, 209–208 incoming, 216–216 incoming, 218–220 incoming, 222–221 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🫀️settle-pump/🦀️.rs`: merged; 111–110 incoming, 123–123 incoming, 137–136 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🧱️field-intent/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🟦️.tsx`: partial; 1–1 conflict, 605–1103 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`: partial; 57–548 conflict, 553–1078 conflict, 1092–1724 conflict, 1740–1849 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts`: merged; 1–0 incoming, 535–542 incoming, 686–686 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx`: partial; 22–102 conflict, 104–126 conflict, 564–2486 conflict, 2558–2558 incoming, 2604–2604 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧩️component/🟦️.tsx`: partial; 470–471 conflict, 476–478 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🎯️hover-targets.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/⚡️host-effects/🟦️.ts`: merged; 649–648 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎥️tutorial-orchestration/🟦️.ts`: merged; 7–7 incoming, 33–32 incoming, 41–40 incoming, 49–49 incoming, 90–90 incoming, 94–94 incoming, 172–172 incoming, 183–183 incoming, 192–191 incoming, 194–199 incoming, 210–210 incoming, 268–268 incoming, 370–371 incoming, 373–373 incoming, 375–375 incoming, 383–383 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔐️identity-binding/🟦️.ts`: merged; 23–23 incoming, 134–137 incoming, 139–139 incoming, 146–147 incoming, 149–160 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔒️identity-document-ports/🟦️.ts`: merged; 20–20 incoming, 686–686 incoming, 702–706 incoming, 808–808 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗂️local-catalog/🟦️.ts`: incoming; 17–17 incoming, 21–20 incoming, 23–23 incoming, 25–24 incoming, 30–29 incoming, 122–123 incoming, 125–124 incoming, 131–132 incoming, 136–143 incoming, 145–150 incoming, 156–156 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗨️dialog-origin/🎥️tutorial/🟦️.ts`: incoming; 1–0 incoming, 91–93 incoming, 95–95 incoming, 98–99 incoming, 102–102 incoming, 110–110 incoming, 114–113 incoming, 119–119 incoming, 123–129 incoming, 134–134 incoming, 137–138 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🛂️directory-route/🟦️.ts`: merged; 31–31 incoming, 40–40 incoming, 138–139 incoming, 145–145 incoming, 147–148 incoming, 362–363 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧩️shell-core-state/🟦️.ts`: merged; 8–8 incoming, 159–159 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🗨️dialog-origin/🎥️tutorial/🔣️.json`: incoming; 2–2 incoming, 4–6 incoming, 10–10 incoming, 12–12 incoming, 15–16 incoming, 19–19 incoming, 21–22 incoming, 25–26 incoming, 29–29 incoming, 31–31 incoming, 35–36 incoming, 39–39 incoming, 42–42 incoming, 44–45 incoming, 48–48 incoming, 50–51 incoming, 54–55 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧵️backbone-worker/🟦️.ts`: merged; 36–36 incoming, 66–66 incoming, 566–567 incoming, 582–582 incoming, 589–589 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎛️prefs/🗨️chrome-overlays-and-tour/🦀️.rs`: merged; 53–52 incoming, 78–78 incoming, 81–84 incoming, 93–92 incoming, 95–95 incoming, 98–98 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔗️hub-projection-workspace/🦀️.rs`: partial; 74–1411 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🧪️wgpu-fault-notices/🦀️.rs`: incoming; 95–95 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/👕️canvas-presence/🟦️.ts`: incoming; 15–14 incoming, 25–25 incoming, 29–30 incoming, 37–37 incoming, 49–49 incoming, 51–51 incoming, 55–55 incoming, 64–64 incoming, 84–86 incoming, 119–119 incoming, 129–129 incoming, 132–132 incoming, 138–138 incoming, 140–140 incoming, 145–146 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/👕️canvas-presence/🟦️.tsx`: incoming; 4–4 incoming, 44–43 incoming, 66–66 incoming, 268–269 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/👕️canvas-presence/🧪️tests/✏️text-carets/🟦️.tsx`: incoming; 11–10 incoming, 22–22 incoming, 39–39 incoming, 51–51 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/👕️canvas-presence/🧪️tests/🔬️unit/🟦️.ts`: incoming; 37–37 incoming, 39–39 incoming, 69–69 incoming, 78–78 incoming, 132–132 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🟦️.tsx`: merged; 20–20 incoming, 661–660 incoming, 662–662 incoming, 674–674 incoming, 681–682 incoming, 984–984 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🧪️tests/👕️peer-presence/🟦️.tsx`: incoming; 5–5 incoming, 11–10 incoming, 30–29 incoming, 42–42 incoming, 45–45 incoming, 48–48 incoming, 56–56 incoming, 62–61 incoming, 74–74 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/📥️invocation-frames/🟦️.ts`: incoming; 1–0 incoming, 206–206 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/📬️typed-result/🟦️.ts`: merged; 1–0 incoming, 54–53 incoming, 55–54 incoming, 56–57 incoming, 71–71 incoming, 74–74 incoming, 80–81 incoming, 83–84 incoming, 87–89 incoming, 101–100 incoming, 105–104 incoming, 107–107 incoming, 132–131 incoming, 141–141 incoming, 173–173 incoming, 176–176 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🔁️turn-settle/🟦️.ts`: merged; 378–377 incoming, 380–379 incoming, 437–437 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🔗️channel-adapter/🟦️.ts`: merged; 1–0 incoming, 260–260 incoming, 286–286 incoming, 304–303 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx`: partial; 1–1 conflict, 372–372 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧵️turn-dispatch/🟦️.ts`: merged; 360–359 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧷️handle-contract/🟦️.ts`: incoming; 1–0 incoming, 209–209 incoming, 227–227 incoming, 234–233 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🪢️handle-scope/🟦️.ts`: merged; 1–0 incoming, 143–142 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖋️InkCanvasHost/🟦️.tsx`: partial; 1–0 incoming, 10–24 conflict, 26–30 conflict, 979–1666 conflict, 1751–1751 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖥️Board2dHost/🟦️.tsx`: partial; 1–0 incoming, 11–31 conflict, 35–39 conflict, 660–1746 conflict, 1800–1800 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🔩️plumbing/🟦️.ts`: merged; 113–112 incoming, 119–119 incoming, 126–126 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🔩️plumbing/🧪️tests/🧫️fixtures/🔀️history-alternatives/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🦀️.rs`: incoming; 2–1 incoming, 27–27 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧪️tests/🏃️run/🦀️.rs`: incoming; 2–1 incoming, 20–21 incoming, 64–64 incoming, 77–77 incoming, 92–92 incoming, 132–132 incoming, 178–178 incoming, 204–204 incoming, 218–218 incoming, 222–222 incoming, 239–239 incoming, 243–243 incoming, 270–270 incoming, 278–278 incoming, 296–296 incoming, 306–306 incoming, 316–347 incoming, 404–405 incoming, 409–409 incoming, 412–412 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🔺️diff/🦀️.rs`: incoming; 56–56 incoming, 64–63 incoming, 111–111 incoming, 113–113 incoming, 115–114 incoming, 146–145 incoming, 152–152 incoming, 165–166 incoming, 168–168 incoming, 195–196 incoming, 200–204 incoming, 209–208 incoming, 214–217 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/▶️start-run-node/🦀️.rs`: incoming; 18–23 incoming, 31–30 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/✅️finish-run-node/🦀️.rs`: incoming; 12–11 incoming, 18–26 incoming, 34–33 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/✅️finish-run-node/🧬️schema/🔣️.json`: incoming; 8–7 incoming, 179–178 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/🔏️seal-run/🦀️.rs`: incoming; 18–23 incoming, 31–30 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/🔓️set-run-seal/🦀️.rs`: incoming; 21–20 incoming, 31–39 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/🚀️start-run/🦀️.rs`: incoming; 26–25 incoming, 52–57 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/🦀️.rs`: incoming; 39–39 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs`: incoming; 1–1 incoming, 10–9 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/🧷️set-run-header/🦀️.rs`: incoming; 29–28 incoming, 59–64 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/🧽️remove-run-log/🦀️.rs`: incoming; 19–18 incoming, 32–37 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/🪵️append-run-log/🦀️.rs`: incoming; 21–26 incoming, 34–33 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/🫥️remove-run-node/🦀️.rs`: incoming; 19–27 incoming, 35–34 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧪️tests/🔁️workflow/🦀️.rs`: incoming; 2–1 incoming, 78–78 incoming, 96–96 incoming, 210–210 incoming, 265–264 incoming, 324–324 incoming, 326–353 incoming, 364–364 incoming, 426–426 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧫️fixtures/🧬️mutations/🔧set-node-ports/🧾️wire-witness/🦠️mutation/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🦀️.rs`: incoming; 14–14 incoming, 72–71 incoming, 156–156 incoming, 203–203 incoming, 274–274 incoming, 404–404 incoming, 416–423 incoming, 430–429 incoming, 433–432 incoming, 437–440 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/↔️move-node/🦀️.rs`: incoming; 21–20 incoming, 30–35 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/⛔️unbind-output/🦀️.rs`: incoming; 19–18 incoming, 28–33 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/✂️disconnect-edge/🦀️.rs`: incoming; 19–18 incoming, 28–33 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/✏️rename-node/🦀️.rs`: incoming; 20–19 incoming, 29–34 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/➕️add-node/🦀️.rs`: incoming; 18–17 incoming, 27–32 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/📍️set-node-positions/🦀️.rs`: incoming; 39–38 incoming, 79–84 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/📤bind-output/🦀️.rs`: incoming; 18–17 incoming, 30–35 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/📥add-input/🦀️.rs`: incoming; 18–17 incoming, 27–32 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/🔄update-node-ports/🔣️.json`: incoming; 1–1 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/🔄update-node-ports/🦀️.rs`: incoming; 1–1 incoming, 14–13 incoming, 16–27 incoming, 35–34 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/🔄update-node-ports/🧪️tests/🔬️unit/🦀️.rs`: incoming; 8–7 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/🔌bind-input/🦀️.rs`: incoming; 18–17 incoming, 30–35 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/🔒bind-parameter-field/🦀️.rs`: incoming; 18–17 incoming, 27–32 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/🔓unbind-parameter-field/🦀️.rs`: incoming; 19–18 incoming, 32–37 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/🔗connect-ports/🦀️.rs`: incoming; 18–17 incoming, 27–32 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/🔣️.json`: incoming; 65–64 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/🔧set-node-ports/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/🔧set-node-ports/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/🔧set-node-ports/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/🔧set-node-ports/🧪️tests/🔬️unit/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/🔧set-node-ports/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/🗑️remove-node/🦀️.rs`: incoming; 19–18 incoming, 37–42 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/🚚️move-nodes/🦀️.rs`: incoming; 24–23 incoming, 62–68 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/🚪unbind-input/🦀️.rs`: incoming; 19–18 incoming, 28–33 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/🚮remove-input/🦀️.rs`: incoming; 19–18 incoming, 33–38 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/🦀️.rs`: incoming; 45–44 incoming, 61–60 incoming, 72–72 incoming, 94–93 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/🧩add-parameter/🦀️.rs`: incoming; 19–18 incoming, 28–33 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs`: incoming; 28–28 incoming, 33–33 incoming, 36–35 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/🧹remove-parameter/🦀️.rs`: incoming; 19–18 incoming, 34–39 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/🩹change-parameter/🦀️.rs`: incoming; 21–20 incoming, 33–38 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/♻️retirement/🦀️.rs`: merged; 2–5 token-merge, 11–12 incoming, 31–31 incoming, 60–59 incoming, 69–69 incoming, 77–76 incoming, 94–94 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/♻️retirement/🧪️tests/🟦️.ts`: merged; 13–13 incoming, 89–88 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 7–7 incoming, 13–13 incoming, 565–564 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/♻️retirement/🧬️schema/🔣️.json`: incoming; 18–18 incoming, 49–49 incoming, 581–580 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/🎮️decision/🗑️discard/🦀️.rs`: merged; 51–50 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/🦀️.rs`: partial; 11–17 conflict, 63–602 conflict, 623–648 conflict, 650–656 conflict, 658–1141 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/🧵️instance/🦀️.rs`: partial; 34–48 conflict, 85–105 conflict, 130–140 conflict, 150–1220 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🎞️tick/📦️payload/🦀️.rs`: merged; 2–4 token-merge, 11–11 incoming, 17–17 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🎞️tick/📦️payload/🧪️tests/🚪️public/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🎞️tick/📦️payload/🧪️tests/🟦️.ts`: partial; 1–17 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🎞️tick/📦️payload/🧪️tests/🦀️.rs`: partial; 2–3 token-merge, 6–5 incoming, 9–12 incoming, 15–15 conflict, 18–17 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🎞️tick/📦️payload/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🎞️tick/📦️payload/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🎟️publication/🦀️.rs`: merged; 7–7 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🦀️.rs`: partial; 32–37 token-merge, 138–1692 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🧵️instance/🦀️.rs`: partial; 222–1078 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️cancellation/🦀️.rs`: merged; 63–62 incoming, 273–273 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️lifecycle/🏪️stores/🧪️tests/🦀️.rs`: merged; 8–8 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️lifecycle/🦀️.rs`: partial; 208–207 incoming, 242–243 incoming, 259–259 incoming, 392–392 incoming, 403–403 incoming, 461–461 incoming, 475–475 incoming, 499–503 conflict, 514–514 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚖️authoring-law/🦀️.rs`: merged; 9–10 incoming, 13–15 incoming, 42–45 incoming, 54–54 incoming, 57–57 incoming, 59–59 incoming, 61–61 incoming, 68–71 incoming, 79–79 incoming, 82–82 incoming, 84–84 incoming, 86–86 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/⚖️failure-debit/🧪️tests/🟦️.ts`: partial; 49–50 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/💼️job/📤️output/🧪️tests/🦀️.rs`: merged; 17–17 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/📤️failure/🧪️tests/🦀️.rs`: merged; 14–14 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/📤️output/🧪️tests/🦀️.rs`: merged; 16–15 incoming, 35–35 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/🦀️.rs`: incoming; 103–104 incoming, 110–110 incoming, 113–114 incoming, 118–118 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/🧪️tests/🟦️.ts`: merged; 12–12 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/🧪️tests/🧫️fixtures/📨️decoder-admission.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/🧬️schema/📨️decoder-admission/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🧪️tests/🟦️.ts`: merged; 1–1 incoming, 4–4 token-merge, 6–6 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🎞️command/📥️custody/🧪️tests/🦀️.rs`: merged; 21–21 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/📥️staging/♻️reactor-lifecycle/🛎️app-cell/🦀️.rs`: merged; 121–120 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/📥️staging/🔌️reactor-app/🛠️runtime-helpers/🦀️.rs`: incoming; 78–80 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/📦️instances/🔁️cleanup-turns/🦀️.rs`: merged; 223–222 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/📮️publication/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/📮️publication/🧪️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/📮️publication/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/📮️publication/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/📮️publication/🧬️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🔄️exchange/🔀️plugin-exchange/🦀️.rs`: incoming; 114–114 incoming, 137–137 incoming, 169–169 incoming, 737–737 incoming, 740–740 incoming, 747–747 incoming, 758–758 incoming, 771–771 incoming, 831–831 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🧰️ops/📥️ingress/🦀️.rs`: incoming; 283–283 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🧰️ops/🖥️surface-render/🦀️.rs`: incoming; 273–273 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🧰️ops/🧾️typed-operations/🦀️.rs`: incoming; 89–92 incoming, 284–284 incoming, 300–300 incoming, 386–386 incoming, 487–487 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🏛️reserved/🦀️.rs`: incoming; 86–86 incoming, 90–89 incoming, 99–98 incoming, 102–129 incoming, 131–134 incoming, 136–141 incoming, 143–146 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🏛️reserved/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🏛️reserved/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🏛️reserved/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🏛️reserved/🧪️tests/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🦀️.rs`: incoming; 64–64 incoming, 72–71 incoming, 149–151 incoming, 213–212 incoming, 218–217 incoming, 227–226 incoming, 229–229 incoming, 266–266 incoming, 276–276 incoming, 283–283 incoming, 292–293 incoming, 301–301 incoming, 308–309 incoming, 316–316 incoming, 319–319 incoming, 334–334 incoming, 336–335 incoming, 343–343 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️testing/🧬️job-test-mutations/🧬️mutations/➕️add-value/🦀️.rs`: incoming; 18–17 incoming, 27–29 incoming, 34–33 incoming, 36–38 incoming, 47–46 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️testing/🧬️job-test-mutations/🧬️mutations/➕️add-value/🧪️tests/🧪️sum-law/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🧬️job-test-mutations-mutations-add-value-unit/🦀️.rs`: incoming; 14–14 incoming, 51–51 incoming, 61–61 incoming, 80–80 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🧬️job-test-mutations-unit/🦀️.rs`: incoming; 7–7 incoming, 33–33 incoming, 39–39 incoming, 68–68 incoming, 86–86 incoming, 92–92 incoming, 118–120 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🧬️job-test-mutations/🦀️.rs`: incoming; 33–35 incoming, 41–40 incoming, 42–45 incoming, 48–47 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs`: partial; 1131–1463 conflict, 1474–1831 conflict, 2104–2162 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🧪️tests/⚖️invocation-failure/🦀️.rs`: merged; 17–17 incoming, 48–48 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔌️app/🦀️.rs`: merged; 189–189 incoming, 455–456 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️.rs`: incoming; 372–371 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧵️executor/♻️wake/🦀️.rs`: incoming; 15–14 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts`: config-pending; 202–202 incoming, 209–209 incoming, 217–217 incoming, 392–392 incoming, 402–402 incoming, 428–428 incoming, 461–461 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️tests/🧫️fixtures/📦️codegen-manifest/🔣️.json`: incoming; 3–3 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️tests/🧫️fixtures/🔏️codegen-policy/🔣️.json`: incoming; 3–3 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧬️schema/🔣️.json`: incoming; 237–237 incoming, 311–311 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌱️initialization/♻️retirement/🦀️.rs`: incoming; 4–4 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌱️initialization/♻️retirement/🧪️tests/🟦️.ts`: partial; 9–10 conflict, 12–11 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌱️initialization/♻️retirement/🧪️tests/🦀️.rs`: partial; 13–13 incoming, 18–19 incoming, 25–28 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎞️media/🛫️intrinsic/🦀️.rs`: incoming; 16–16 incoming, 37–36 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/📥️admission/🦀️.rs`: incoming; 188–188 incoming, 206–206 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧪️testing/🔗️dependency-contribution/🧬️mutations/➕️add-value/🦀️.rs`: partial; 20–19 incoming, 32–37 incoming, 42–44 incoming, 53–52 conflict, 57–56 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧪️testing/🔗️dependency-contribution/🧬️mutations/➕️add-value/🧪️tests/🧪️sum-law/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧪️testing/🔗️dependency-contribution/🧬️mutations/🦀️.rs`: merged; 14–14 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧪️tests/🔗️dependency-contribution-unit/🦀️.rs`: merged; 4–4 incoming, 20–20 incoming, 55–55 incoming, 79–79 incoming, 90–92 incoming, 102–103 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧪️tests/🔗️dependency-contribution/🦀️.rs`: merged; 33–35 incoming, 41–40 incoming, 42–42 incoming, 47–50 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/⚠️failure/🦀️.rs`: incoming; 9–9 incoming, 13–13 incoming, 16–16 incoming, 20–21 incoming, 23–23 incoming, 26–26 incoming, 58–57 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/⚠️failure/🧪️tests/🟦️.ts`: partial; 14–14 conflict, 18–17 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/⚠️failure/🧪️tests/🦀️.rs`: merged; 11–11 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/⚠️failure/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 38–38 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/⚠️failure/🧬️schema/🔣️.json`: incoming; 23–23 incoming, 96–95 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🦀️.rs`: incoming; 153–153 incoming, 436–435 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️peer/🦀️.rs`: merged; 48–48 incoming, 411–410 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/♻️retirement/🦀️.rs`: merged; 52–52 incoming, 128–127 incoming, 186–186 incoming, 192–192 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/📷️camera/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/📷️camera/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/📷️camera/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🏛️reserved/⚙️worker/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🏛️reserved/⚙️worker/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🏛️reserved/⚙️worker/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🏛️reserved/⚙️worker/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🏛️reserved/🦀️.rs`: merged; 223–226 incoming, 372–372 incoming, 459–459 incoming, 537–540 incoming, 918–917 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/📦️packages/🦀️rust/Cargo.toml`: merged; 28–27 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🚪️session/🦀️.rs`: incoming; 31–31 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🚪️session/🫴️refusal/🧪️tests/🦀️.rs`: merged; 21–21 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🛬️lifted/🔄️full-operation/🦀️.rs`: incoming; 264–267 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🦀️.rs`: incoming; 234–234 incoming, 362–370 incoming, 421–427 incoming, 448–450 incoming, 452–519 incoming, 843–843 incoming, 866–865 incoming, 882–881 incoming, 890–890 incoming, 894–893 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/💡️inference/🫴️receiving/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/💡️inference/🫴️receiving/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/💡️inference/🫴️receiving/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/💡️inference/🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/💡️inference/🫴️receiving/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/⏯️tool-run/🦀️.rs`: merged; 186–185 incoming, 213–213 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🎞️media/🏭️construction/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🎞️media/🏭️construction/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🎞️media/🏭️construction/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🎞️media/🏭️construction/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🎞️media/🦀️.rs`: merged; 104–109 incoming, 473–472 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/📸️preparation/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/📸️preparation/🧪️tests/🚪️public/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/📸️preparation/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/📸️preparation/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/📸️preparation/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/📸️preparation/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🦀️.rs`: incoming; 69–68 incoming, 70–69 incoming, 82–82 incoming, 89–88 incoming, 106–105 incoming, 118–117 incoming, 129–128 incoming, 140–139 incoming, 186–186 incoming, 310–309 incoming, 352–351 incoming, 505–505 incoming, 509–508 incoming, 514–513 incoming, 515–518 incoming, 526–525 incoming, 534–536 incoming, 538–540 incoming, 638–638 incoming, 642–641 incoming, 647–646 incoming, 648–651 incoming, 657–656 incoming, 666–668 incoming, 670–672 incoming, 739–739 incoming, 743–742 incoming, 748–747 incoming, 749–752 incoming, 758–757 incoming, 767–769 incoming, 771–773 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🧪️tests/🪪️entity-id/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🧪️tests/🪪️render-revision/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🧫️fixtures/🪪️entity-id/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🧫️fixtures/🪪️render-revision/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🧬️schema/🪪️entity-id/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🧬️schema/🪪️entity-id/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🧬️schema/🪪️render-revision/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🧬️schema/🪪️render-revision/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👷️job/🎟️request/♻️retirement/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👷️job/🎟️request/♻️retirement/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👷️job/🎟️request/♻️retirement/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👷️job/🎟️request/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👷️job/🎟️request/🔒️command/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👷️job/🎟️request/🔒️command/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👷️job/🎟️request/🔒️command/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👷️job/🦀️.rs`: partial; 13–14 same, 84–866 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/📥️natural-file/🦀️.rs`: incoming; 293–293 incoming, 303–302 incoming, 319–318 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/📨️emission/🛬️lifted/📦️preparation/♻️retirement/🦀️.rs`: incoming; 6–5 incoming, 30–30 incoming, 35–34 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🛬️lifted/💡️inference/🦀️.rs`: incoming; 96–96 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/📦️packages/🦀️rust/Cargo.toml`: merged; 29–28 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/🛬️lifted/♻️retirement/🦀️.rs`: merged; 38–37 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/🛬️lifted/📸️fields/🦀️.rs`: merged; 34–34 incoming, 36–36 incoming, 47–46 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/🛬️lifted/🧬️context/🦀️.rs`: merged; 33–33 incoming, 36–35 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/🦀️.rs`: partial; 113–113 incoming, 217–1160 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪆️child/🛬️lifted/👁️read/🦀️.rs`: incoming; 28–28 incoming, 45–44 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪟️surface/🏗️snapshot-builder/🧪️tests/🚪️public/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪟️surface/🏗️snapshot-builder/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪟️surface/🏗️snapshot-builder/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪟️surface/🏗️snapshot-builder/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪟️surface/🏗️snapshot-builder/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪟️surface/🦀️.rs`: partial; 128–128 incoming, 220–2093 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📝️draft/🚫️none/♻️retirement/🦀️.rs`: incoming; 20–19 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📣️macros/🌱️wp1-window/🦀️.rs`: incoming; 66–66 incoming, 74–75 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml`: partial; 23–22 incoming, 189–188 conflict, 192–192 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📋️project.json`: config-pending; 12–12 incoming, 16–16 incoming, 19–19 incoming, 22–22 incoming, 26–26 incoming, 29–29 incoming, 32–32 incoming, 36–36 incoming, 39–39 incoming, 42–42 incoming, 46–46 incoming, 49–52 incoming, 55–55 incoming, 58–59 incoming, 62–133 incoming, 355–355 incoming, 473–472 incoming, 479–479 incoming, 487–487 incoming, 608–607 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📜️script.ts`: config-pending; 2–2 token-merge, 17–17 incoming, 66–66 incoming, 143–143 incoming, 432–432 incoming, 563–563 token-merge, 614–613 incoming, 636–636 incoming, 644–644 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🦀️.rs`: incoming; 32–31 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📬️completion/♻️effects/🦀️.rs`: incoming; 12–11 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📬️completion/♻️retirement/🚫️refusal/🧪️tests/🧫️fixtures/🔣️.json`: merged; 174–173 same, 180–179 same, 181–180 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📬️completion/♻️vacant/🦀️.rs`: incoming; 13–12 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/♻️retirement/🦀️.rs`: incoming; 133–132 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs`: merged; 281–280 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📖️capture/🦀️.rs`: incoming; 125–124 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs`: merged; 526–526 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🔺️diff/🦀️.rs`: incoming; 66–73 incoming, 75–74 incoming, 81–80 incoming, 84–83 incoming, 92–95 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🧬️mutations/🔁️set-state/🦀️.rs`: incoming; 21–20 incoming, 32–34 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🧬️mutations/🔁️set-state/🧪️tests/🧪️set-state/🦀️.rs`: incoming; 30–30 incoming, 32–32 incoming, 51–50 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🧬️mutations/🦀️.rs`: incoming; 24–24 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️effects/🦀️.rs`: partial; 85–1426 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️effects/🧪️tests/🔬️unit/🦀️.rs`: partial; 2–1 incoming, 75–75 incoming, 415–414 incoming, 423–423 conflict, 428–428 conflict, 430–430 same, 435–434 incoming, 451–450 incoming, 465–465 incoming, 467–467 token-merge, 471–471 conflict, 478–477 incoming, 481–482 conflict, 485–487 conflict, 490–489 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️effects/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/🎟️root/🦀️.rs`: incoming; 66–66 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/📃️policy/🦀️.rs`: incoming; 60–60 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🚪️io/🪶️snapshot/🦀️.rs`: merged; 97–97 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust/🦀️.rs`: incoming; 3–3 incoming, 6–6 incoming, 9–9 incoming, 12–12 incoming, 25–25 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🗿️artifacts/🚫️snapshot-refusal/🧬️schema/🔺️diff/🦀️.rs`: incoming; 8–8 incoming, 11–10 incoming, 12–12 incoming, 14–13 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🗿️artifacts/🚫️snapshot-refusal/🧬️schema/🧬️mutations/🦀️.rs`: incoming; 12–11 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🧬️schema/🔺️diff/🦀️.rs`: incoming; 8–8 incoming, 11–10 incoming, 12–12 incoming, 14–13 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🧬️schema/🧬️mutations/🦀️.rs`: incoming; 12–11 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🎚️mutate-os-config-identity/🟦️.ts`: merged; 28–28 token-merge, 40–40 incoming, 51–50 incoming, 78–78 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/📇️mutate-os-config-local-catalog/🟦️.ts`: merged; 22–22 token-merge, 34–34 incoming, 43–42 incoming, 66–66 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🔬️runtime-metrics-publisher/🦀️.rs`: merged; 56–56 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🦀️.rs`: incoming; 65–64 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🟦️.ts`: partial; 6–6 incoming, 8–8 incoming, 10–10 conflict, 12–12 token-merge, 14–14 token-merge, 16–16 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 13–12 incoming, 74–75 incoming, 77–77 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧬️schema/📦️batch.json`: already; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧬️schema/🔣️.json`: incoming; 12–12 incoming, 30–29 incoming, 103–104 incoming, 107–106 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs`: partial; 115–131 conflict, 133–153 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🧪️tests/🔬️unit/🦀️.rs`: partial; 20–1660 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🗃️document/🦀️.rs`: partial; 81–1887 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🚪️io/🦀️.rs`: incoming; 196–200 incoming, 203–204 incoming, 328–328 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/🦀️.rs`: merged; 72–72 incoming, 77–77 incoming, 150–150 token-merge, 290–290 token-merge, 299–299 token-merge, 342–342 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`: merged; 129–129 incoming, 249–249 incoming, 267–266 incoming, 305–304 incoming, 310–309 incoming, 328–327 incoming, 372–371 incoming, 391–390 incoming, 485–484 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🎛️operation/📥️input/🦀️.rs`: merged; 12–11 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🦀️.rs`: partial; 2760–3135 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/📦️owner/🦀️.rs`: incoming; 1–0 incoming, 422–422 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪆️child/🦀️.rs`: incoming; 1–0 incoming, 123–123 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🪪️identity/🦀️.rs`: incoming; 8–7 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🦀️.rs`: merged; 154–154 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️extension/📨️invoke/⚠️failure/🦀️.rs`: incoming; 28–28 incoming, 33–33 incoming, 43–43 incoming, 45–45 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️extension/📨️invoke/⚠️failure/🧪️tests/🦀️.rs`: merged; 63–63 incoming, 83–83 incoming, 101–100 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️extension/🧪️tests/📨️invoke/🦀️.rs`: merged; 28–28 incoming, 91–91 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/👷️work/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/🦀️.rs`: merged; 15–15 incoming, 21–21 incoming, 24–24 incoming, 27–26 incoming, 29–28 incoming, 36–35 incoming, 66–65 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/🧪️tests/🟦️.ts`: merged; 1–0 incoming, 41–41 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/📨️command.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/🧬️schema/📨️command.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/📡️contributed-mutation-wire/🧬️mutations/➕️add-value/🦀️.rs`: partial; 22–24 incoming, 26–34 incoming, 45–44 incoming, 48–50 incoming, 61–60 conflict, 65–64 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/📡️contributed-mutation-wire/🧬️mutations/➕️add-value/🧪️tests/🧪️sum-law/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/📢️publication-fixtures/👥️presence/🧬️mutations/📝️change-publication/🦀️.rs`: partial; 60–62 conflict, 64–66 incoming, 72–71 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/📢️publication-fixtures/👥️presence/🧬️mutations/📝️change-publication/🧪️tests/🧪️sum-law/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/📢️publication-fixtures/👥️presence/🧬️mutations/🦀️.rs`: merged; 11–11 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/📢️publication-fixtures/🫧️transient/🧬️mutations/📝️change-publication/🦀️.rs`: partial; 60–62 conflict, 64–66 incoming, 72–71 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/📢️publication-fixtures/🫧️transient/🧬️mutations/📝️change-publication/🧪️tests/🧪️sum-law/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/📢️publication-fixtures/🫧️transient/🧬️mutations/🦀️.rs`: merged; 11–11 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🎚️config/🧬️mutations/📝️change-test-config/🦀️.rs`: partial; 35–43 incoming, 62–61 conflict, 64–64 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🎚️config/🧬️mutations/📝️change-test-config/🧪️tests/🧪️sum-law/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🏷️set-label/🦀️.rs`: merged; 17–16 incoming, 27–29 incoming, 34–34 token-merge, 58–57 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🏷️set-label/🧪️tests/🧪️sum-law/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/📝️set-test-count/🦀️.rs`: merged; 17–16 incoming, 23–25 incoming, 30–30 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/📝️set-test-count/🧪️tests/🧪️sum-law/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🧒️set-slot-children/🦀️.rs`: partial; 22–24 incoming, 26–27 incoming, 29–30 incoming, 48–47 conflict, 50–50 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🧒️set-slot-children/🧪️tests/🧪️sum-law/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🛰️declaration-channels/1standard/🌐️any/🧬️mutations/📝️set-value/🦀️.rs`: partial; 18–23 incoming, 32–31 conflict, 36–35 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🛰️declaration-channels/1standard/🌐️any/🧬️mutations/📝️set-value/🧪️tests/🧪️sum-law/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🛰️declaration-channels/1standard/🔒️strict/🧬️mutations/📝️set-value/🦀️.rs`: partial; 18–23 incoming, 32–31 conflict, 36–35 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🛰️declaration-channels/1standard/🔒️strict/🧬️mutations/📝️set-value/🧪️tests/🧪️sum-law/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🛰️declaration-channels/2standard/🌐️any/🧬️mutations/📝️set-value/🦀️.rs`: partial; 18–23 incoming, 32–31 conflict, 36–35 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🛰️declaration-channels/2standard/🌐️any/🧬️mutations/📝️set-value/🧪️tests/🧪️sum-law/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🦀️.rs`: partial; 2–24 conflict, 257–2746 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🎲️dummy/🧬️mutations/📝️set-dummy-count/🦀️.rs`: merged; 45–44 incoming, 51–53 incoming, 55–54 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🎲️dummy/🧬️mutations/📝️set-dummy-count/🧪️tests/🧪️sum-law/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/⏩️set-transaction/🦀️.rs`: merged; 44–49 incoming, 57–57 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/⏩️set-transaction/🧪️tests/🧪️sum-law/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/📝️set-transaction/🦀️.rs`: merged; 44–43 incoming, 50–52 incoming, 54–53 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/📝️set-transaction/🧪️tests/🧪️sum-law/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/📣️set-transaction/🦀️.rs`: merged; 44–49 incoming, 60–60 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/📣️set-transaction/🧪️tests/🧪️sum-law/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/📝️set-surface-count/🦀️.rs`: merged; 44–43 incoming, 50–52 incoming, 54–53 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/📝️set-surface-count/🧪️tests/🧪️sum-law/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/⏳️completion/🦀️.rs`: head-dissolution; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/♻️publication-retirement-authority/🦀️.rs`: merged; 41–44 token-merge, 128–129 token-merge, 264–267 token-merge, 307–307 incoming, 312–313 incoming, 329–329 incoming, 400–400 incoming, 419–419 incoming, 438–438 incoming, 450–450 incoming, 452–452 incoming, 464–464 incoming, 466–466 incoming, 474–474 incoming, 488–488 incoming, 532–532 incoming, 568–568 incoming, 624–624 incoming, 640–640 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/➕️contributed-mutation-wire-add-value-unit/🦀️.rs`: merged; 22–22 incoming, 25–25 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌐️browser-bundle/🟦️.ts`: incoming; 196–196 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎚️test-app-config-selection-unit/🦀️.rs`: merged; 69–70 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📡️contributed-mutation-wire-unit/🦀️.rs`: merged; 5–5 incoming, 50–50 incoming, 73–73 incoming, 79–80 incoming, 93–93 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📡️contributed-mutation-wire/🦀️.rs`: merged; 35–37 incoming, 43–42 incoming, 44–44 incoming, 49–53 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📢️publication-fixtures-presence/🦀️.rs`: merged; 47–49 incoming, 55–54 incoming, 56–58 incoming, 60–59 incoming, 64–63 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📢️publication-fixtures-transient/🦀️.rs`: merged; 47–49 incoming, 55–54 incoming, 56–58 incoming, 60–59 incoming, 64–63 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📢️publication-fixtures/🦀️.rs`: partial; 11–106 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-artifact-fixed-registry/🦀️.rs`: incoming; 41–42 incoming, 79–79 incoming, 109–110 incoming, 152–152 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-child-member-registry/🦀️.rs`: partial; 75–77 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-declarations-fixture/🦀️.rs`: merged; 22–21 incoming, 81–80 incoming, 173–175 incoming, 180–179 incoming, 181–183 incoming, 189–188 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs`: partial; 18–1562 conflict, 1564–1951 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/📢️publication/🦀️.rs`: incoming; 34–33 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🛫️encoder/🦀️.rs`: incoming; 28–28 incoming, 81–80 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🪪️registry/🦀️.rs`: incoming; 32–31 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🫙️owner/🦀️.rs`: incoming; 10–10 incoming, 34–33 incoming, 59–58 incoming, 87–86 incoming, 128–127 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️derived-artifact-children/🦀️.rs`: incoming; 13–15 incoming, 21–20 incoming, 22–23 incoming, 25–25 incoming, 57–57 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/📨️owned-child-dispatch/🪪️admission/🦀️.rs`: partial; 15–16 token-merge, 23–23 incoming, 24–24 token-merge, 26–28 conflict, 34–34 incoming, 39–38 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs`: partial; 30–10650 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🪟️mounted-owned-child/📦️driver/🦀️.rs`: merged; 12–12 incoming, 16–16 incoming, 42–42 incoming, 51–51 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🧾️fixture-caller/🔣️.json`: incoming; 57–57 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-coverage/🟦️.ts`: partial; 1–9 conflict, 23–22 incoming, 24–23 incoming, 25–51 token-merge, 53–670 conflict, 672–1854 conflict, 1857–1857 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-coverage/🧫️fixtures/🖨️raster-source.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-coverage/🧫️fixtures/🧾️contract-expression.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-coverage/🧫️fixtures/🧾️funded-batch.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-coverage/🧫️fixtures/🧾️persistent-foundation.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-coverage/🧬️schema/🖨️raster-source.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-factory-proof-join/🟦️.ts`: merged; 28–28 token-merge, 32–31 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts`: partial; 37–38 conflict, 46–45 incoming, 90–92 token-merge, 102–103 conflict, 134–135 token-merge, 147–148 conflict, 193–193 conflict, 195–195 incoming, 197–198 incoming, 203–207 token-merge, 210–212 token-merge, 214–215 token-merge, 225–225 conflict, 234–238 conflict, 254–254 conflict, 272–277 conflict, 285–285 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-run/📬️outcome/🦀️.rs`: merged; 13–14 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-run/🦀️.rs`: partial; 139–140 token-merge, 146–146 token-merge, 233–233 incoming, 349–350 token-merge, 439–439 incoming, 693–2382 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations-config/🦀️.rs`: merged; 2–1 incoming, 68–67 incoming, 75–77 incoming, 80–86 incoming, 92–91 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations-config/🧬️preparation/🦀️.rs`: merged; 25–25 incoming, 35–35 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations-document/🦀️.rs`: merged; 209–211 incoming, 217–216 incoming, 218–224 incoming, 226–225 incoming, 237–236 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🛰️declaration-channels-unit/🦀️.rs`: merged; 3–3 incoming, 63–63 incoming, 69–69 incoming, 79–79 incoming, 83–83 incoming, 182–182 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧒️children-fixture-mutations/🦀️.rs`: incoming; 12–11 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧒️children-fixture-unit/🦀️.rs`: incoming; 3–3 incoming, 38–38 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/📨️emission/🦀️.rs`: merged; 228–228 incoming, 230–230 incoming, 293–293 incoming, 295–295 incoming, 305–304 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs`: head-dissolution; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️artifact-admission-and-completion-oracles/🟦️.ts`: partial; 12–13 incoming, 58–58 incoming, 60–61 incoming, 69–86 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️bounded-reload/🦀️.rs`: partial; 18–18 incoming, 24–24 incoming, 39–38 incoming, 46–47 conflict, 53–53 conflict, 55–56 conflict, 64–64 conflict, 124–127 incoming, 129–131 incoming, 139–138 incoming, 176–176 incoming, 181–187 incoming, 210–210 conflict, 216–216 conflict, 230–229 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️history-edit-acceptance/🦀️.rs`: partial; 27–1876 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️scrub/🦀️.rs`: merged; 27–27 incoming, 32–32 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️time-travel/🦀️.rs`: partial; 2189–2189 token-merge, 2939–3393 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️tool-run-member/🦀️.rs`: merged; 55–55 incoming, 164–164 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/⏳️completion/🔣️.json`: partial; 91–90 incoming, 93–93 incoming, 95–120 conflict, 125–125 token-merge, 129–140 incoming, 144–143 incoming, 147–147 incoming, 149–174 incoming, 181–183 conflict, 186–185 incoming, 187–194 incoming, 198–200 conflict, 203–202 incoming, 204–211 incoming, 215–217 conflict, 220–219 incoming, 221–228 incoming, 232–233 conflict, 237–236 incoming, 238–245 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🔬️app-typed-command-full-operation/🔣️renderer-result-lanes.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🕹️selection-set.json`: partial; 52–55 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-dummy/🦀️.rs`: merged; 25–24 incoming, 38–40 incoming, 86–86 incoming, 110–112 incoming, 118–117 incoming, 119–121 incoming, 123–122 incoming, 127–126 incoming, 198–198 incoming, 256–271 incoming, 343–346 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs`: merged; 14–18 token-merge, 30–30 incoming, 33–32 incoming, 53–53 incoming, 64–64 incoming, 69–69 incoming, 84–84 incoming, 94–94 incoming, 120–119 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs`: partial; 33–32 incoming, 39–1448 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-transaction/🦀️.rs`: merged; 28–27 incoming, 42–44 incoming, 89–89 incoming, 113–115 incoming, 121–120 incoming, 122–124 incoming, 129–128 incoming, 211–211 incoming, 270–285 incoming, 349–352 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-wire/🦀️.rs`: merged; 41–40 incoming, 51–50 incoming, 63–62 incoming, 73–72 incoming, 83–82 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️test-app-document-mutation-roster-unit/🦀️.rs`: merged; 15–15 incoming, 18–18 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧾️document-archive-load-legs/🦀️.rs`: head-dissolution; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/📥️remote-prefix/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/📥️remote-prefix/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/🦀️.rs`: incoming; 36–35 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🏪️stores/📥️staging/🧾️typed-operations/🦀️.rs`: merged; 116–116 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/👷️jobs/📥️staging/🧱️components/🦀️.rs`: merged; 15–15 token-merge, 43–42 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/👷️jobs/📥️staging/🧷️command-routes/🦀️.rs`: merged; 82–81 incoming, 85–84 incoming, 113–112 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/👷️jobs/📥️staging/🧾️typed-operations/🦀️.rs`: partial; 7–7 token-merge, 9–9 token-merge, 11–11 token-merge, 36–36 incoming, 39–40 conflict, 42–42 incoming, 245–245 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📄️docs/📥️staging/🪜️maintenance-ladder/🦀️.rs`: merged; 38–38 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📨️dispatch/📥️staging/⌨️typed-command/🦀️.rs`: partial; 52–52 incoming, 146–145 incoming, 181–181 incoming, 184–184 incoming, 213–244 conflict, 246–247 incoming, 269–283 incoming, 290–290 incoming, 302–301 incoming, 306–306 incoming, 392–392 token-merge, 394–395 incoming, 397–397 incoming, 403–410 conflict, 425–425 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📨️dispatch/📥️staging/🎟️producers/🦀️.rs`: merged; 36–39 incoming, 41–43 incoming, 101–101 token-merge, 105–106 incoming, 120–120 incoming, 128–136 token-merge, 142–142 incoming, 181–181 incoming, 184–184 incoming, 188–188 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📨️dispatch/📥️staging/📤️emit/🦀️.rs`: merged; 176–176 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🔌️plugin-app-impl/🦀️.rs`: partial; 119–179 conflict, 233–233 conflict, 415–416 incoming, 419–421 incoming, 541–569 conflict, 572–572 incoming, 576–576 incoming, 612–614 incoming, 660–731 conflict, 1372–1419 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🖼️render/📥️staging/🛠️tool-machine/🦀️.rs`: merged; 66–66 incoming, 70–70 incoming, 193–193 token-merge, 202–202 incoming, 206–207 incoming, 283–283 incoming, 299–299 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🦀️.rs`: partial; 110–154 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧷️command-routes/📥️staging/🚦️actions/🦀️.rs`: partial; 213–213 incoming, 359–359 token-merge, 404–404 incoming, 406–407 incoming, 429–434 incoming, 436–436 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📥️staging/♻️retirement/🦀️.rs`: partial; 64–64 conflict, 71–71 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📥️staging/📬️publication/🦀️.rs`: partial; 74–144 conflict, 146–977 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🪆️children/📥️staging/⏯️tool-run/🦀️.rs`: merged; 48–48 token-merge, 56–56 incoming, 59–59 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🏭️factory/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🏭️factory/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🏭️factory/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🏭️factory/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🏭️factory/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🏭️producer/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🏭️producer/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🏭️producer/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🏭️producer/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/🏭️producer/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/🏭️producer/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/🏭️producer/🧪️tests/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/🦀️.rs`: partial; 4–3 incoming, 16–16 incoming, 53–53 incoming, 65–64 incoming, 92–91 incoming, 127–127 incoming, 187–188 incoming, 193–192 conflict, 194–194 incoming, 351–356 incoming, 381–381 incoming, 383–383 incoming, 390–389 incoming, 397–396 incoming, 410–410 incoming, 416–415 incoming, 433–432 incoming, 437–436 incoming, 489–488 incoming, 491–490 incoming, 507–506 incoming, 513–512 incoming, 566–565 incoming, 580–579 incoming, 591–590 incoming, 656–655 incoming, 657–656 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔗️read/🦀️.rs`: incoming; 9–10 incoming, 13–12 incoming, 15–16 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs`: partial; 31–30 incoming, 32–31 incoming, 58–934 conflict, 936–1012 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/♻️completion-rejection/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-scalar-config-cohort/🟦️.ts`: partial; 36–35 incoming, 37–45 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧫️fixtures/♻️completion-rejection.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧫️fixtures/🎚️scalar-config-cohort.json`: partial; 13–13 conflict, 118–117 same, 126–125 same, 129–129 same, 145–145 same, 153–153 same, 164–163 same, 165–164 incoming, 174–176 same, 180–182 same, 218–220 same, 224–226 same, 238–240 same, 244–246 same, 250–249 same, 257–260 same, 263–284 same, 288–290 same, 302–304 same, 306–306 incoming, 315–317 same, 321–323 same, 329–329 same, 337–337 same, 343–345 same, 349–351 same, 355–357 same, 368–367 same, 371–371 same, 419–419 same, 425–427 same, 431–433 same, 439–439 same, 447–447 same, 451–450 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/♻️completion-rejection.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🪟️mounted/♻️frontier/🦀️.rs`: partial; 1–1 conflict, 32–32 incoming, 43–43 incoming, 45–45 incoming, 47–47 incoming, 90–90 token-merge, 116–116 token-merge, 121–121 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️task/🛬️source/🦀️.rs`: incoming; 17–17 incoming, 24–23 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪆️child/🦀️.rs`: partial; 2–1 incoming, 55–1020 conflict, 1022–1097 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️maintenance-ladder/📥️staging/🗝️envelope-ladder/🦀️.rs`: merged; 18–18 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪝️mounts/⚛️wp4-reactor/🦀️.rs`: merged; 21–20 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪝️mounts/👥️wp3-owners/🧪️test-hosts/🧵️retained-command/🦀️.rs`: partial; 271–272 conflict, 279–279 incoming, 281–282 incoming, 292–293 token-merge, 304–304 incoming, 306–306 incoming, 310–310 incoming, 331–331 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🏠️catalog/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🏠️catalog/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🏠️catalog/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🏠️catalog/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📥️retained/🦀️.rs`: partial; 13–20 conflict, 22–1596 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📬️mutation/🦀️.rs`: incoming; 11–11 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🦀️.rs`: partial; 17–16 incoming, 49–54 conflict, 56–1013 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧪️tests/📥️retained-pack-load/🟦️.ts`: incoming; 38–37 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧪️tests/📥️retained-pack-load/🦀️.rs`: merged; 37–36 incoming, 40–40 incoming, 121–123 incoming, 128–127 incoming, 131–130 incoming, 133–135 incoming, 197–197 incoming, 226–227 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧪️tests/📥️retained-pack-load/🧬️preparation/🦀️.rs`: merged; 21–21 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧪️tests/🪟️retained-window-config/🦀️.rs`: merged; 70–70 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧪️tests/🪪️pack-identity/🦀️.rs`: merged; 17–18 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧬️preparation/✏️apply/🧪️tests/🦀️.rs`: merged; 150–150 incoming, 154–154 incoming, 169–169 incoming, 176–176 incoming, 184–184 incoming, 189–189 incoming, 208–208 incoming, 247–247 incoming, 263–264 incoming, 267–267 incoming, 271–271 incoming, 303–304 incoming, 325–325 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧬️preparation/🔁️replace/🦀️.rs`: incoming; 62–62 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧬️preparation/🔁️replace/🧪️tests/🦀️.rs`: merged; 25–25 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧬️preview/📋️project.json`: config-pending; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧬️preview/📜️script.ts`: config-pending; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧬️preview/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧬️preview/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧬️preview/🧪️tests/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧬️preview/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧬️preview/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/📬️mutation/🦀️.rs`: incoming; 6–6 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🫧️transient/🦀️.rs`: incoming; 175–175 incoming, 216–216 incoming, 243–243 incoming, 318–318 incoming, 323–323 incoming, 351–351 incoming, 510–510 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🫧️transient/🧪️tests/🧪️transient-root/🦀️.rs`: merged; 54–54 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🫧️transient/🧪️tests/🪟️retained-window-input/🦀️.rs`: merged; 119–119 incoming, 183–183 incoming, 186–189 incoming, 192–192 incoming, 203–203 incoming, 247–247 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🫧️transient/🧵️publication/🦀️.rs`: incoming; 54–54 incoming, 71–71 incoming, 93–93 incoming, 177–176 incoming, 256–256 incoming, 325–325 incoming, 361–361 incoming, 410–410 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📋️project.json`: config-pending; 118–117 config-pending, 120–120 config-pending
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📜️script.ts`: config-pending; 2–1 incoming, 92–91 incoming, 134–133 incoming, 136–135 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🗂️schema-document-index.json`: partial; 134–134 incoming, 162–162 incoming, 238–237 incoming, 265–264 incoming, 386–387 incoming, 404–404 incoming, 486–485 incoming, 489–488 incoming, 494–493 incoming, 496–495 incoming, 504–503 incoming, 508–507 incoming, 524–523 incoming, 529–528 incoming, 531–530 incoming, 539–538 incoming, 543–542 incoming, 569–569 incoming, 859–862 incoming, 865–864 incoming, 867–866 incoming, 868–867 incoming, 869–868 incoming, 879–878 incoming, 880–879 incoming, 900–900 incoming, 1697–1697 incoming, 1713–1713 incoming, 1788–1787 incoming, 1791–2087 conflict, 2089–2088 incoming, 2090–2090 incoming, 2138–2138 incoming, 3407–3406 incoming, 3510–3509 incoming, 3512–3512 incoming, 3667–3667 incoming, 3731–3731 incoming, 3734–3734 incoming, 3736–3736 incoming, 3738–3737 incoming, 4007–4006 incoming, 4041–4041 incoming, 4052–4051 incoming, 4093–4092 incoming, 4104–4103 incoming, 4124–4123 incoming, 4125–4125 token-merge, 4173–4176 conflict, 4194–4193 conflict, 4220–4220 token-merge, 4267–4266 incoming, 4325–4325 incoming, 4329–4328 incoming, 4435–4434 incoming, 4483–4482 incoming, 4568–4567 incoming, 4607–4606 incoming, 4643–4642 incoming, 4645–4644 incoming, 4649–4648 incoming, 4653–4652 incoming, 4720–4719 incoming, 4726–4725 incoming, 4727–4727 incoming, 4743–4743 incoming, 4788–4787 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs`: partial; 33–1398 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🔬️composite-timestamp/🦀️.rs`: incoming; 31–30 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🔬️mandatory-mutations/🦀️.rs`: incoming; 57–56 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🧫️fixtures/🏷️mutation-attributes/🔣️.json`: incoming; 1–1 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🧫️fixtures/🧬️mandatory-mutations/🔣️.json`: incoming; 3–2 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧳️retained/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧳️retained/🧫️fixtures/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧳️retained/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫴️receiving/🦀️.rs`: incoming; 5–5 incoming, 58–59 incoming, 62–62 incoming, 94–94 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫴️receiving/🧪️tests/🦀️.rs`: merged; 16–16 incoming, 28–28 token-merge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🧪️tests/🪶️transfer/🦀️.rs`: merged; 25–25 incoming, 28–27 incoming, 29–29 incoming, 31–30 incoming, 36–35 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🎟️original/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🎟️original/🧪️tests/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🎟️original/🧬️schema/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📮️path-return/🦀️.rs`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🦀️.rs`: incoming; 8–7 incoming, 114–114 incoming, 127–126 incoming, 128–127 incoming, 147–147 incoming, 157–157 incoming, 182–183 incoming, 190–190 incoming, 194–193 incoming, 204–204 incoming, 212–211 incoming, 218–218 incoming, 233–232 incoming, 243–242 incoming, 272–272 incoming, 274–273 incoming, 278–277 incoming, 280–279 incoming, 283–283 incoming, 289–288 incoming, 301–301 incoming, 303–303 incoming, 307–306 incoming, 318–318 incoming, 324–323 incoming, 404–414 incoming, 417–417 incoming, 421–422 incoming, 426–426 incoming, 432–432 incoming, 434–448 incoming, 452–452 incoming, 457–456 incoming, 461–475 incoming, 480–479 incoming, 494–493 incoming, 525–525 incoming, 552–552 incoming, 581–581 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧪️tests/🔬️native-io-unit/🦀️.rs`: merged; 3–3 incoming, 5–9 incoming, 12–12 incoming, 15–26 incoming, 36–36 incoming, 38–57 incoming, 62–78 incoming, 80–86 incoming, 88–88 incoming, 91–93 incoming, 95–108 incoming, 110–110 incoming, 113–115 incoming, 118–124 incoming, 126–128 incoming, 135–134 incoming, 145–145 incoming, 160–160 incoming, 195–195 incoming, 227–226 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⌨️cli/🦀️.rs`: partial; 113–1542 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⌨️cli/🧪️tests/🔬️unit/🦀️.rs`: merged; 53–53 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚔️conflict/🧪️tests/🔬️unit/🦀️.rs`: incoming; 9–9 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🎫️handle/🦀️.rs`: partial; 77–1990 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️tests/⏱️throughput/🦀️.rs`: incoming; 61–61 incoming, 125–125 incoming, 216–216 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️tests/🔬️unit/🦀️.rs`: partial; 7–1777 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🆔️ids/🦀️.rs`: incoming; 75–74 incoming, 115–115 incoming, 122–121 incoming, 142–142 incoming, 145–148 incoming, 150–155 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🆔️ids/🧪️tests/🔬️unit/🦀️.rs`: partial; 28–39 incoming, 52–52 incoming, 59–63 incoming, 67–69 incoming, 71–71 conflict, 73–72 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🆔️ids/🧪️tests/🧫️fixtures/⚠️error/🎒️pack/🔣️.json`: incoming; 6–7 incoming, 12–12 incoming, 19–22 incoming, 25–25 incoming, 32–35 incoming, 38–38 incoming, 45–48 incoming, 51–51 incoming, 58–61 incoming, 64–64 incoming, 71–74 incoming, 77–77 incoming, 84–87 incoming, 90–90 incoming, 97–100 incoming, 103–103 incoming, 110–113 incoming, 116–136 incoming, 138–143 incoming, 148–153 incoming, 155–155 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🆔️ids/🧬️schema/⚠️error/🎒️pack/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🌐️cluster/🧪️tests/🔬️unit/🦀️.rs`: incoming; 169–169 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🦀️.rs`: incoming; 64–64 incoming, 89–89 incoming, 132–132 incoming, 169–169 incoming, 171–171 incoming, 204–204 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧾️log/🦀️.rs`: partial; 58–2464 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/🦀️.rs`: partial; 90–1411 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📽️projection/🧪️tests/🔬️unit/🦀️.rs`: incoming; 166–166 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️.rs`: partial; 29–28 incoming, 125–2821 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🦀️.rs`: head-dissolution; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧫️fixtures/📝️actor-retirement/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔒️security/🦀️.rs`: incoming; 290–290 incoming, 508–508 incoming, 525–525 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔒️security/🧪️tests/🔬️unit/🦀️.rs`: incoming; 7–7 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔮️preview/🦀️.rs`: incoming; 259–259 incoming, 263–263 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔮️preview/🧪️tests/🔬️unit/🦀️.rs`: incoming; 11–11 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📁️fs/🦀️.rs`: partial; 28–1277 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs`: partial; 1–0 incoming, 53–1966 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs`: incoming; 39–39 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🦀️.rs`: partial; 1–0 incoming, 56–1853 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs`: partial; 6–1558 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️.rs`: merged; 53–52 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧪️tests/🔬️unit/🦀️.rs`: incoming; 2–1 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧫️fixtures/⚠️fault-custody/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧬️schema/⚠️fault-custody/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🦀️.rs`: partial; 103–2585 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🦀️.rs`: partial; 83–2070 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🧪️tests/🔬️unit/🦀️.rs`: partial; 7–1013 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs`: partial; 34–37 incoming, 44–43 incoming, 108–1716 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/⚔️concurrent-write/🦀️.rs`: incoming; 75–75 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs`: partial; 7–1318 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs`: partial; 24–27 conflict, 29–36 conflict, 52–1063 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🧪️tests/🔬️unit/🦀️.rs`: merged; 12–12 incoming, 47–49 incoming, 55–57 incoming, 62–61 incoming, 92–91 incoming, 96–100 incoming, 104–104 incoming, 107–107 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️tests/🔬️unit/🦀️.rs`: incoming; 49–49 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️tests/🧯️fault-storage/🦀️.rs`: incoming; 101–101 incoming, 603–603 incoming, 634–634 incoming, 637–637 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json`: config-pending; 517–517 incoming, 536–536 incoming, 808–807 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts`: config-pending; 2–1 incoming, 56–55 incoming, 70–70 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🌊️wave/🦀️.rs`: incoming; 26–26 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🦀️.rs`: merged; 168–167 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⚠️failure/🦀️.rs`: incoming; 39–39 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🌳️tree/📋️copy/🦀️.rs`: incoming; 55–54 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🦀️.rs`: partial; 126–125 incoming, 148–191 conflict
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️input/🦀️.rs`: incoming; 66–65 incoming, 117–116 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧭️topology/🦀️.rs`: merged; 208–207 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧱️model/⚙️operator-record/🦀️.rs`: merged; 49–49 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🦀️.rs`: merged; 95–94 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧵️retirement/🦀️.rs`: merged; 277–276 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`: incoming; 144–143 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs`: merged; 152–154 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🦀️.rs`: incoming; 3–2 incoming, 449–461 incoming, 463–462 incoming, 482–481 incoming, 485–484 incoming, 491–494 incoming, 684–683 incoming, 735–735 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs`: incoming; 173–175 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🦀️.rs`: incoming; 3–2 incoming, 382–406 incoming, 408–407 incoming, 435–434 incoming, 438–437 incoming, 448–451 incoming, 693–692 incoming, 759–759 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🧪️tests/🔬️unit/🦀️.rs`: incoming; 2–1 incoming, 307–307 incoming, 338–338 incoming, 340–340 incoming, 343–343 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🧪️tests/🪶️sqlite/🫴️native-caller/🦀️.rs`: incoming; 56–55 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪡️list-delta/🦀️.rs`: incoming; 27–26 incoming, 84–83 incoming, 289–289 incoming, 299–299 incoming, 385–384 incoming, 395–399 incoming, 401–401 incoming, 468–468 incoming, 539–538 incoming, 724–723 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪡️list-delta/🧪️tests/🔬️unit/🦀️.rs`: incoming; 6–5 incoming, 38–38 incoming, 44–46 incoming, 52–51 incoming, 53–53 incoming, 55–55 incoming, 60–59 incoming, 63–63 incoming, 192–191 incoming, 201–200 incoming, 275–274 incoming
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪡️list-delta/🧪️tests/🪪️stable-identity/🥒️.feature`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪡️list-delta/🧫️fixtures/🪆️nested-inverse/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪡️list-delta/🧫️fixtures/🪪️stable-identity/🔣️.json`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🖥️host/🧪️tests/🧫️fixtures/🛡️hostile-batch-edge/🦀️.rs`: incoming; 4–4 incoming
+- `🧰️framework/🛍️products/💻️os/🧪️tests/⚙️config-diff-twin/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🧪️tests/🎚️config-facet-fold/🟦️.ts`: incoming; 
+- `🧰️framework/🛍️products/💻️os/🧪️tests/🎚️config/🟦️.ts`: merged; 26–26 token-merge
+- `🧰️framework/🛍️products/💻️os/🧪️tests/🗃️persistence-data-class/🟦️.ts`: merged; 26–25 incoming
+- `🧰️framework/🛍️products/📓️print/README.md`: partial; 21–22 conflict, 25–32 incoming, 34–33 incoming, 84–84 incoming
+- `🧰️framework/🛍️products/📓️print/🚪️io/💾️binary/💡️inferences/🦀️.rs`: incoming; 4–4 incoming, 7–7 incoming
+- `🧰️framework/🛍️products/📓️print/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs`: merged; 35–35 incoming, 59–59 incoming
+- `🧰️framework/🛍️products/📓️print/🧪️tests/🧬️chart-mutations/🦀️.rs`: merged; 20–20 incoming, 54–54 incoming, 59–60 incoming, 66–66 incoming, 80–81 incoming, 83–83 incoming, 118–120 incoming, 122–122 incoming, 131–132 incoming, 230–230 incoming, 303–303 incoming, 317–317 incoming, 331–331 incoming, 336–336 incoming, 344–344 incoming, 351–351 incoming, 359–362 incoming, 373–373 incoming
+- `🧰️framework/🛍️products/📓️print/🧬️schema/🔀️diff/🦀️.rs`: incoming; 4–4 incoming, 138–143 incoming, 155–154 incoming, 158–157 incoming, 163–163 incoming
+- `🧰️framework/🛍️products/📓️print/🧬️schema/🧬️mutations/🦀️.rs`: incoming; 7–7 incoming, 21–20 incoming, 44–44 incoming
+- `🧰️framework/🛍️products/🔣️.json`: incoming; 24–25 incoming, 27–27 incoming

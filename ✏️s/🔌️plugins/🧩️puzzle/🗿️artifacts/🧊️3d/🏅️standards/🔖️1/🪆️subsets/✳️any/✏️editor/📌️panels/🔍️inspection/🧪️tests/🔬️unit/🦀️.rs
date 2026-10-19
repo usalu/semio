@@ -3,7 +3,8 @@
     use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dRuntime;
     use semio_s_artifact_puzzle_3d_editor_terminology::puzzle3d_labels;
     use {semio_s_artifact_puzzle_3d_editor_snapshot::empty_scene_snapshot, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dObject, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_OBJECT, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_VORTEX};
-    use semio_framework_plugin::{TreeWindowRequest, ViewModel};
+    use semio_framework_plugin::TreeWindowRequest;
+    use semio_framework_plugin::ViewModel;
 
     fn labels() -> &'static Puzzle3dLabels {
         puzzle3d_labels(&ViewModel { terminology: semio_framework_ui_locale::Terminology::Native, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }).expect("admitted host axis")

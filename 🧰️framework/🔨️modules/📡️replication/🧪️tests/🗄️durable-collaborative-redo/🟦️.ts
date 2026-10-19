@@ -22,12 +22,15 @@ type Fixture = Readonly<{
 
 /** ♻️ Pure fold twin of Rust `fold_history` for revert/reinstate durability scenarios: an undo belongs to its author, so a
  * transition naming another actor's operation changes nothing and is listed in `refused`. */
-function foldHistory(edits: readonly Edit[], transitions: readonly TransitionStep[]): { applied: string[]; redo: string[]; refused: string[] } {
+export function foldHistory(edits: readonly Edit[], transitions: readonly TransitionStep[]): { applied: string[]; redo: string[]; refused: string[] } {
   const owners = new Map<string, string>();
   const authors = new Map<string, string>();
   for (const edit of edits) {
     authors.set(edit.id, edit.actor);
-    for (const mutationId of edit.mutationIds) owners.set(mutationId, edit.id);
+    for (const mutationId of edit.mutationIds) {
+      if (owners.has(mutationId)) throw new Error(`history repeats operation ${mutationId}`);
+      owners.set(mutationId, edit.id);
+    }
   }
   type Event =
     | { key: readonly [number, string]; kind: "edit"; edit: Edit }
@@ -36,7 +39,7 @@ function foldHistory(edits: readonly Edit[], transitions: readonly TransitionSte
     ...edits.map((edit) => ({ key: [edit.logicalMs, edit.id] as const, kind: "edit" as const, edit })),
     ...transitions.map((transition) => ({ key: [transition.logicalMs, transition.id] as const, kind: "transition" as const, transition })),
   ];
-  events.sort((left, right) => left.key[0] - right.key[0] || left.key[1].localeCompare(right.key[1]));
+  events.sort((left, right) => left.key[0] - right.key[0] || Buffer.compare(Buffer.from(left.key[1]), Buffer.from(right.key[1])));
   const active = new Set<string>();
   const redo: string[] = [];
   const refused: string[] = [];
@@ -73,7 +76,7 @@ function foldHistory(edits: readonly Edit[], transitions: readonly TransitionSte
   }
   const applied = edits
     .filter((edit) => active.has(edit.id))
-    .sort((left, right) => left.logicalMs - right.logicalMs || left.id.localeCompare(right.id))
+    .sort((left, right) => left.logicalMs - right.logicalMs || Buffer.compare(Buffer.from(left.id), Buffer.from(right.id)))
     .map((edit) => edit.id);
   return { applied, redo: [...redo], refused };
 }

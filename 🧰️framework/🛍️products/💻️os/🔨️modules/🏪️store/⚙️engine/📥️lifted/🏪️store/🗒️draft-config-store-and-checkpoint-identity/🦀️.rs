@@ -54,7 +54,7 @@ pub async fn merge_base<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, a
 /// `CompositionCoordinator` that populates real `CompositionPin`s on commit is a later wave.
 pub async fn reconcile_alternative<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, alternative_name: &str, checkpoint_message: Option<String>, authors: Vec<Author>, identity: &mut EntityIdentityAuthority<'_>) -> Result<String, VcsError>
 where
-    P: Clone + ToValue + FromValue,
+    P:  ToValue ,
     Mutation: Clone + ToValue + FromValue,
 {
     if envelope.vcs.checkpoints.is_empty() {
@@ -185,7 +185,7 @@ where
     P: Clone + ToValue + FromValue,
     Mutation: Clone + ToValue + FromValue + super::Mutation<P>,
 {
-    let (current, applied_edit_ids, redo_edit_ids, cursor, local_actor_id, dag, edit_sequence, clock, initial_digest, revision_accumulator, supersessions) = runtime.into_parts();
+    let (current, applied_edit_ids, redo_edit_ids, cursor, local_actor_id, dag, edit_sequence, clock, initial_digest, revision_accumulator, supersessions, read_registry) = runtime.into_parts();
     let current_checkpoint_id = cursor.checkpoint_id.clone();
     envelope.cursor = Some(cursor);
     let content_revision = revision_accumulator.revision(current_checkpoint_id.as_deref());
@@ -204,13 +204,13 @@ where
             merge_policy: semio_framework_os_spr::MergePolicy::default(),
             clock,
             initial_digest,
-            operation_wire: None,
+            operation_wire: Some(owners.operation_wire),
         },
         owners: StoreOwners {
             snapshot_retirement_factory: std::mem::ManuallyDrop::new(owners.snapshot_retirement.take()),
             initial_snapshot_retirement_factory: std::mem::ManuallyDrop::new(owners.initial_snapshot_retirement.take()),
             mutation_retirement_factory: std::mem::ManuallyDrop::new(owners.mutation_retirement.take()),
-            snapshot_read_leases: std::mem::ManuallyDrop::new(SnapshotReadLeaseRegistryOwner::new()),
+            snapshot_read_leases: std::mem::ManuallyDrop::new(read_registry),
             displaced_retirements: std::mem::ManuallyDrop::new(ArtifactStoreDisplacedRetirements::new()),
             owned_disposer: std::mem::ManuallyDrop::new(owners.store_disposer.take()),
             owned_disposer_terminal: false,

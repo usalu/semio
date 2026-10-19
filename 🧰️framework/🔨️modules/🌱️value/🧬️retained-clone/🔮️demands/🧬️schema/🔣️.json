@@ -1,0 +1,257 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximumCopyBytes",
+    "maximumTurns",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumCopyBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65536
+    },
+    "maximumTurns": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100000
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "kind",
+          "source"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96
+          },
+          "kind": {
+            "enum": [
+              "vec-scalar",
+              "vec-string",
+              "array-string",
+              "record",
+              "enum",
+              "option-box",
+              "tuple"
+            ]
+          },
+          "source": {}
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "vec-scalar"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "source": {
+                  "type": "array",
+                  "maxItems": 128,
+                  "items": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "vec-string"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "source": {
+                  "type": "array",
+                  "maxItems": 128,
+                  "items": {
+                    "type": "string",
+                    "maxLength": 1024
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "array-string"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "source": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "type": "string",
+                    "maxLength": 1024
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "record"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "source": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "name",
+                    "values"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "values": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "enum"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "source": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "kind"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "const": "unit"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "kind",
+                        "label",
+                        "values"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "const": "record"
+                        },
+                        "label": {
+                          "type": "string"
+                        },
+                        "values": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "option-box"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "source": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "tuple"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "source": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "integer"
+                      }
+                    }
+                  ],
+                  "additionalItems": false
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

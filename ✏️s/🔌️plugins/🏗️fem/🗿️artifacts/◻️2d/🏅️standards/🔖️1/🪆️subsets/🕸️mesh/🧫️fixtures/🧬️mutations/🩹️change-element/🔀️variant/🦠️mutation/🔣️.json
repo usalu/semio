@@ -1,0 +1,7 @@
+{
+  "mutation": "changeElement",
+  "patch": {
+    "kind": "beam"
+  },
+  "id": "e1"
+}

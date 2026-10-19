@@ -15,7 +15,7 @@ fn bounded_history_fold_physical_retirement_preserves_whole_queued_owners_and_te
 
 #[test]
 fn bounded_history_fold_cancellation_preserves_tracked_future_and_error_backings(){
-    for extent in [1usize,8194,65536,262144]{let original=String::from_utf8(vec![37u8;extent]).unwrap();let pointer=original.as_ptr()as usize;let mut job=HistoryFoldJob::new(move|control|async move{let original=control.track(original).unwrap_or_else(|_| unreachable!()).await;assert_eq!(original.as_ptr()as usize,pointer);std::future::pending::<()>().await;drop(original);Ok(())});assert!(matches!(job.step(job.next_step_grant(1,1).unwrap(),&mut||false).unwrap(),HistoryFoldJobStep::Pending{released_bytes:0,..}));close_fold_and_check_original_grants(&mut job);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let detail=String::from_utf8(vec![37u8;extent]).unwrap();let mut job=HistoryFoldJob::<()>::new(move|_|std::future::ready(Err(semio_framework_replication_error::ProtocolError::Io(detail))));assert!(matches!(job.step(job.next_step_grant(1,1).unwrap(),&mut||false).unwrap(),HistoryFoldJobStep::Pending{released_bytes:0,..}));close_fold_and_check_original_grants(&mut job);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
+    for extent in [1usize,8194,65536,262144]{let original=String::from_utf8(vec![37u8;extent]).unwrap();let pointer=original.as_ptr()as usize;let mut job=HistoryFoldJob::new(move|control|async move{let original=control.track(original).unwrap_or_else(|_| unreachable!()).await;assert_eq!(original.as_ptr()as usize,pointer);std::future::pending::<()>().await;drop(original);Ok(())});assert!(matches!(job.step(job.next_step_grant(1,1).unwrap(),1,&mut||false).unwrap(),HistoryFoldJobStep::Pending{released_bytes:0,..}));close_fold_and_check_original_grants(&mut job);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let detail=String::from_utf8(vec![37u8;extent]).unwrap();let mut job=HistoryFoldJob::<()>::new(move|_|std::future::ready(Err(semio_framework_replication_error::ProtocolError::Io(detail))));assert!(matches!(job.step(job.next_step_grant(1,1).unwrap(),1,&mut||false).unwrap(),HistoryFoldJobStep::Pending{released_bytes:0,..}));close_fold_and_check_original_grants(&mut job);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
 }
 
 #[test]
@@ -36,7 +36,7 @@ fn bounded_history_fold_new_local_admission_retains_original_across_same_poll_re
         });
         let grant = job.next_step_grant(1, 7).unwrap();
         assert_eq!(grant.maximum_capacity_bytes, 0);
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| job.step(grant, &mut || false).unwrap());
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| job.step(grant,7, &mut || false).unwrap());
         assert!(matches!(step, HistoryFoldJobStep::Pending { .. }));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert_eq!(witness.load(Ordering::Relaxed), 0);
@@ -44,13 +44,13 @@ fn bounded_history_fold_new_local_admission_retains_original_across_same_poll_re
         assert_eq!(job.next_capacity_byte_demand(7).unwrap(), birth);
         let grant = job.next_step_grant(1, 7).unwrap();
         for capacity in [0, birth - 1] {
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| job.step(RetainedCloneGrant { maximum_capacity_bytes: capacity, ..grant }, &mut || false).unwrap());
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| job.step(RetainedCloneGrant { maximum_capacity_bytes: capacity, ..grant },7, &mut || false).unwrap());
             match step { HistoryFoldJobStep::Pending { progress, .. } => assert_eq!(progress, RetainedCloneProgress::default()), _ => panic!("unfunded admission transferred its original") }
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             assert_eq!(witness.load(Ordering::Relaxed), 0);
             assert_eq!(job.next_capacity_byte_demand(7).unwrap(), birth);
         }
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| job.step(grant, &mut || false).unwrap());
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| job.step(grant,7, &mut || false).unwrap());
         let HistoryFoldJobStep::Pending { progress, .. } = step else { panic!("owner retirement precedes handoff") };
         assert_eq!(witness.load(Ordering::Relaxed), pointer);
         assert_eq!(progress.retained_capacity_bytes, birth);
@@ -93,7 +93,7 @@ fn bounded_history_fold_cancellation_keeps_multiple_preborn_locals_and_waiting_o
             drop((first, second, third));
             Ok(())
         });
-        for _ in 0..=admitted { let _ = job.step(job.next_step_grant(1, 7).unwrap(), &mut || false).unwrap(); }
+        for _ in 0..=admitted { let _ = job.step(job.next_step_grant(1, 7).unwrap(),7, &mut || false).unwrap(); }
         close_fold_and_check_original_grants(&mut job);
         let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(job));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️solar-back",
+  "semanticKind": "change-glazing-material-solar-reflectance-back",
+  "displayName": "Change Glazing Material Solar back reflectance",
+  "emoji": "🔆️",
+  "aggregateVariant": "ChangeGlazingMaterialSolarReflectanceBack",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-glazing-material-solar-reflectance-back",
+  "binaryTag": 301,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

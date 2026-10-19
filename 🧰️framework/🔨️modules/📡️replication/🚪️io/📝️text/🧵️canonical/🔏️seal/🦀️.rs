@@ -11,6 +11,9 @@ fn admitted(demand:RetirementDemand,grant:RetainedCloneGrant)->bool{grant.maximu
 fn child(mut demand:RetirementDemand)->Result<RetirementDemand,ValueError>{demand.depth=demand.depth.checked_add(1).ok_or_else(||refusal("seal child depth overflow"))?;Ok(demand)}
 fn child_grant(mut grant:RetainedCloneGrant)->RetainedCloneGrant{grant.maximum_depth-=1;grant}
 
+/// 🧾️ Borrows the original canonical edit seal framing independently of source ownership.
+pub fn canonical_edit_seal_header_byte(id:&str,length:u64,mut offset:usize)->Option<u8>{for bytes in [b"semio.artifact.cursor.v2".as_slice(),&4u64.to_be_bytes(),b"edit".as_slice(),&(id.len()as u64).to_be_bytes(),id.as_bytes(),&length.to_be_bytes()]{if offset<bytes.len(){return Some(bytes[offset]);}offset-=bytes.len();}None}
+
 /// 📄️ The window one canonical turn fills and one hash turn consumes; it lives inline in the cursor, so it is bounded by the Store contract that a sealer constructor needs at most 4096 bytes of capacity.
 pub const SEAL_PAGE_BYTES:usize=1024;
 /// 📄️ The free window below which a partly filled page is hashed instead of starving the next canonical turn.
@@ -86,9 +89,7 @@ impl<M:RetireOwned+ArtifactCanonicalJsonTree> ArtifactCanonicalEditSealCursor<M>
  pub fn next_take_demand(&self)->RetirementDemand{if self.is_ready(){copy(size_of::<Option<Box<Edit<M>>>>()+32)}else{Default::default()}}
  fn header_byte(&self)->Result<Option<u8>,ValueError>{
   let reference=self.source.as_ref().ok_or_else(||refusal("seal header source is absent"))?.borrow();let id=&reference.get().id;
-  let mut ordinal=self.header;
-  for bytes in [b"semio.artifact.cursor.v2".as_slice(),&4u64.to_be_bytes(),b"edit".as_slice(),&(id.len()as u64).to_be_bytes(),id.as_bytes(),&self.length.to_be_bytes()]{if ordinal<bytes.len(){return Ok(Some(bytes[ordinal]));}ordinal-=bytes.len();}
-  Ok(None)
+  Ok(canonical_edit_seal_header_byte(id,self.length,self.header))
  }
  pub fn advance(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   if self.closing&&self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}

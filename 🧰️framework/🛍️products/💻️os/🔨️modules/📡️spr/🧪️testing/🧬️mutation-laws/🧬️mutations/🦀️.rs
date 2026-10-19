@@ -24,7 +24,7 @@ pub use add_unchecked_counter::AddUncheckedCounter;
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl_derive::Mutations, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
-#[mutations(snapshot = i64, diff = super::CounterDiff, schema = "testkit.counter")]
+#[mutations(snapshot = i64, diff = super::CounterDiff, schema = "testkit.counter", reference = i64, reference_diff = super::CounterDiff)]
 #[expect(clippy::enum_variant_names, reason = "Aggregate variants preserve the exact schema-owned mutation leaf names required by their descriptors.")]
 pub enum CounterMutation {
     AddCounter(AddCounter),

@@ -10,6 +10,8 @@ pub mod standards {
             pub mod any {
                 #[path = "."]
                 pub mod schema {
+pub use semio_s_artifact_puzzle_5d_mut_any_5::standards::v1::subsets::any::schema::play_snapshot;
+
                     pub use semio_s_artifact_puzzle_5d_snapshot::standards::v1::subsets::any::schema::snapshot;
                     #[path = "."]
                     pub mod mutations {
@@ -85,7 +87,7 @@ pub mod editor {
             #[path = "../../../../../🌉️wasm/🌉️bridge/🦀️.rs"]
             pub mod bridge;
         }
-        pub use semio_s_artifact_puzzle_5d_mut_any_5::editor::puzzle5d::snapshot;
+
         pub use semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities;
         pub use semio_s_artifact_puzzle_5d_tests::editor::puzzle5d::view;
         pub use semio_s_artifact_puzzle_5d_catalog::editor::puzzle5d::catalog;

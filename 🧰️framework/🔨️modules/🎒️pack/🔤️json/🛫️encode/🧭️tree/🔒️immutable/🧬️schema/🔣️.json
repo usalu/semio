@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Borrowed Immutable Canonical Tables",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "label",
+    "cases",
+    "borrowedHeap",
+    "payloadCloneCalls",
+    "terminalHeap"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "label": {
+      "const": "β"
+    },
+    "borrowedHeap": {
+      "const": 0
+    },
+    "payloadCloneCalls": {
+      "const": 0
+    },
+    "terminalHeap": {
+      "const": 0
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "rows",
+          "output"
+        ],
+        "properties": {
+          "rows": {
+            "enum": [
+              0,
+              1,
+              16,
+              17,
+              33
+            ]
+          },
+          "output": {
+            "type": "string",
+            "minLength": 2
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,10 +1,13 @@
 //! 🧪️ Proximity auto-connect laws: the radius gate, the spatial bound, and the one-edit drop.
 
-use crate::editor::puzzle2d::commands::proximity_connect::{puzzle2d_proximity_connect, puzzle2d_proximity_pairs};
+use crate::editor::puzzle2d::commands::proximity_connect::puzzle2d_proximity_connect;
+
+use super::puzzle2d_proximity_pairs;
 use crate::editor::puzzle2d::testkit::*;
 use {crate::editor::puzzle2d::snapshot::board_snapshot_edges, crate::editor::puzzle2d::snapshot::PUZZLE2D_PROXIMITY_GESTURE_MAX};
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use semio_framework_pack_json::{json, Value};
+use semio_framework_pack_json::json;
+use semio_framework_pack_json::Value;
 
 /// 🧱️ Two circle nodes whose `v0` handles face each other: the left node's rim handle sits at
 /// `(x + 24, y)` (east-zero angle 0) and the right node's at `(gap - 24, y)` (angle π), so the two
@@ -43,7 +46,7 @@ fn proximity_respects_the_radius_gate_and_the_compatibility_table() {
     assert_eq!(puzzle2d_proximity_connect(&mut zero, &["right".to_string()], 0.0), 0, "a zero radius disarms the auto-connect");
 
     let mut incompatible = facing_pair(52.0);
-    incompatible["nodes"][1]["handles"][0]["handleKind"] = json!("b");
+    set_at(&mut incompatible, "nodes/1/handles/0/handleKind", json!("b"));
     assert!(puzzle2d_proximity_pairs(&incompatible, "right", 12.0).is_empty(), "no compatibility row admits an `a`/`b` pair");
 }
 
@@ -51,11 +54,11 @@ fn proximity_respects_the_radius_gate_and_the_compatibility_table() {
 #[test]
 fn proximity_skips_locked_hidden_and_occupied_handles() {
     let mut locked = facing_pair(52.0);
-    locked["nodes"][1]["locked"] = json!(true);
+    set_at(&mut locked, "nodes/1/locked", json!(true));
     assert!(puzzle2d_proximity_pairs(&locked, "right", 12.0).is_empty(), "a locked node refuses the auto-connect");
 
     let mut occupied = facing_pair(52.0);
-    occupied["edges"] = json!([{ "id": "e0", "source": "left:v0", "target": "right:v0" }]);
+    set_at(&mut occupied, "edges", json!([{ "id": "e0", "source": "left:v0", "target": "right:v0" }]));
     assert!(puzzle2d_proximity_pairs(&occupied, "right", 12.0).is_empty(), "an occupied handle is never connected twice");
 }
 

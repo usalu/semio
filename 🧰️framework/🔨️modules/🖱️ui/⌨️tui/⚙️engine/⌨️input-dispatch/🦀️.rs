@@ -36,7 +36,7 @@ impl Tui {
             }
             Event::FocusLost => {
                 self.set_hover_node(None);
-                self.press = None;
+                self.cancel_pointer();
                 self.app_focused = false;
                 if let Some(id) = self.focus() {
                     self.notify_focus(id, false);
@@ -67,12 +67,12 @@ impl Tui {
         }
         let stale = match &self.press {
             Some(Press::Widget { node, .. }) => !self.scene.contains(*node),
-            Some(Press::Splitter { axis, .. }) => !self.scene.contains(*axis),
-            Some(Press::Tab { chrome, .. }) => !self.scene.contains(*chrome),
+            Some(Press::Splitter { root, path, index, .. }) => axis_at(&self.scene, *root, path).is_none_or(|axis| self.scene.node(axis).children().len() <= index + 1),
+            Some(Press::Tab { chrome, source, .. }) => !self.scene.contains(*chrome) || !matches!(&self.scene.node(*chrome).content, NodeContent::Chrome(ChromeState::Window(window)) if window.tab_ids.contains(source)),
             None => false,
         };
         if stale {
-            self.press = None;
+            self.cancel_pointer();
         }
         let gone: Vec<NodeId> = self.overlays.iter().filter(|overlay| !self.scene.contains(overlay.id)).map(|overlay| overlay.id).collect();
         for id in gone {
@@ -84,7 +84,8 @@ impl Tui {
     }
 
     fn dispatch_key(&mut self, key: &KeyEvent, out: &mut Signals) {
-        self.hide_tooltip();
+                if key.key == Key::Esc && self.dragging_window() && self.cancel_pointer() { return; }
+self.hide_tooltip();
         let target = self.focus();
         let claims = target.is_some_and(|id| matches!(&self.scene.node(id).content, NodeContent::Widget(widget) if widget.claims_tab()));
         if matches!(key.key, Key::Tab | Key::BackTab) && !claims {

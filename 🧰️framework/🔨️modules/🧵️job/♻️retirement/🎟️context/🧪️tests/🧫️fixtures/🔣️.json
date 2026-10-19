@@ -42,5 +42,169 @@
     "fuel": "unbounded",
     "deadline": "unbounded",
     "failure": "returned-whole"
-  }
+  },
+  "cases": [
+    {
+      "id": "deny-axis-0",
+      "quote": [
+        1,
+        7,
+        11,
+        13,
+        2
+      ],
+      "grant": [
+        0,
+        7,
+        11,
+        13,
+        2
+      ],
+      "admitted": false
+    },
+    {
+      "id": "deny-axis-1",
+      "quote": [
+        1,
+        7,
+        11,
+        13,
+        2
+      ],
+      "grant": [
+        1,
+        6,
+        11,
+        13,
+        2
+      ],
+      "admitted": false
+    },
+    {
+      "id": "deny-axis-2",
+      "quote": [
+        1,
+        7,
+        11,
+        13,
+        2
+      ],
+      "grant": [
+        1,
+        7,
+        10,
+        13,
+        2
+      ],
+      "admitted": false
+    },
+    {
+      "id": "deny-axis-3",
+      "quote": [
+        1,
+        7,
+        11,
+        13,
+        2
+      ],
+      "grant": [
+        1,
+        7,
+        11,
+        12,
+        2
+      ],
+      "admitted": false
+    },
+    {
+      "id": "deny-axis-4",
+      "quote": [
+        1,
+        7,
+        11,
+        13,
+        2
+      ],
+      "grant": [
+        1,
+        7,
+        11,
+        13,
+        1
+      ],
+      "admitted": false
+    },
+    {
+      "id": "exact",
+      "quote": [
+        1,
+        7,
+        11,
+        13,
+        2
+      ],
+      "grant": [
+        1,
+        7,
+        11,
+        13,
+        2
+      ],
+      "admitted": true
+    },
+    {
+      "id": "larger-independent-currencies",
+      "quote": [
+        1,
+        7,
+        11,
+        13,
+        2
+      ],
+      "grant": [
+        3,
+        17,
+        19,
+        23,
+        5
+      ],
+      "admitted": true
+    },
+    {
+      "id": "inline-copy-slot-has-no-heap-release",
+      "quote": [
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      "grant": [
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      "admitted": true
+    },
+    {
+      "id": "inline-copy-slot-awaits-original-event",
+      "quote": [
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      "grant": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "admitted": false
+    }
+  ]
 }

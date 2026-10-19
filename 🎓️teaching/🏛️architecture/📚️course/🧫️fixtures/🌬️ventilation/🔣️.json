@@ -1,0 +1,139 @@
+{
+  "order": [
+    "physics",
+    "ventilation",
+    "heating",
+    "cooling",
+    "demand"
+  ],
+  "tasks": [
+    {
+      "id": "ventilation-statements",
+      "kind": "classification"
+    },
+    {
+      "id": "air-change-rates",
+      "kind": "sorting"
+    },
+    {
+      "id": "ventilation-profiles",
+      "kind": "classification"
+    }
+  ],
+  "statements": {
+    "co2-dilution": "true",
+    "moisture-removal": "true",
+    "passive-air-heating": "true",
+    "passive-natural-only": "false",
+    "venturi-thermal": "false",
+    "summer-hot-air": "false"
+  },
+  "rates": {
+    "warehouse": 0.13,
+    "passive-house-dwelling": 0.3,
+    "apartment": 0.5,
+    "sports-hall": 0.8,
+    "single-office": 1.5,
+    "residential-car-park": 2.4,
+    "cinema": 3.5,
+    "classroom": 4.8,
+    "restaurant": 6.4,
+    "laboratory": 8.3,
+    "operating-room": 20,
+    "commercial-kitchen": 25,
+    "cleanroom-iso-7": 60,
+    "cleanroom-iso-6": 150,
+    "cleanroom-iso-5": 540,
+    "archive-vault": 0.2,
+    "storage-shed": 0.15,
+    "efficient-flat": 0.35,
+    "museum-store": 0.25,
+    "bedroom-night": 0.5,
+    "living-room": 0.6,
+    "student-flat": 0.55,
+    "retrofitted-flat": 0.45,
+    "gym-hall": 0.9,
+    "warehouse-staff": 0.8,
+    "exhibition-hall": 0.7,
+    "dance-hall": 1,
+    "small-office": 1.6,
+    "library-reading": 1.8,
+    "reception-office": 2,
+    "quiet-workroom": 1.4,
+    "lecture-room": 4,
+    "training-room": 4.5,
+    "meeting-room": 5,
+    "theatre-audience": 3.8,
+    "busy-cafe": 6,
+    "canteen": 6.5,
+    "fitness-studio": 7,
+    "restaurant-banquet": 6.8,
+    "teaching-lab": 8,
+    "wet-lab": 9,
+    "sample-lab": 10,
+    "workshop-extract": 8.5,
+    "food-preparation": 22,
+    "sterile-preparation": 20,
+    "dishwashing-room": 24,
+    "test-chamber": 25,
+    "filtered-packing": 50,
+    "precision-assembly": 70,
+    "clean-pharmacy": 60,
+    "clean-testing": 80,
+    "microelectronics-clean": 180,
+    "laminar-clean": 400,
+    "wafer-room": 500,
+    "optics-clean": 150
+  },
+  "axes": [
+    "noise",
+    "efficiency",
+    "maintenance",
+    "purchase-costs",
+    "operating-costs"
+  ],
+  "profiles": {
+    "profile-a": {
+      "noise": 2,
+      "efficiency": 1,
+      "maintenance": 1,
+      "purchase-costs": 1,
+      "operating-costs": 4
+    },
+    "profile-b": {
+      "noise": 1,
+      "efficiency": 2,
+      "maintenance": 2,
+      "purchase-costs": 2,
+      "operating-costs": 4
+    },
+    "profile-c": {
+      "noise": 3,
+      "efficiency": 2,
+      "maintenance": 3,
+      "purchase-costs": 3,
+      "operating-costs": 4
+    },
+    "profile-d": {
+      "noise": 2,
+      "efficiency": 5,
+      "maintenance": 4,
+      "purchase-costs": 5,
+      "operating-costs": 2
+    },
+    "profile-e": {
+      "noise": 4,
+      "efficiency": 4,
+      "maintenance": 4,
+      "purchase-costs": 4,
+      "operating-costs": 2
+    }
+  },
+  "systems": {
+    "window-ventilation": "profile-a",
+    "shaft-ventilation": "profile-b",
+    "exhaust-ventilation": "profile-c",
+    "central-heat-recovery": "profile-d",
+    "decentral-heat-recovery": "profile-e"
+  }
+}

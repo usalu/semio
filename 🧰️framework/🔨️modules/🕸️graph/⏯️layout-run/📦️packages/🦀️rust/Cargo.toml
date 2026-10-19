@@ -34,6 +34,7 @@ fdg-sim = { version = "0.9.1", optional = true }
 testing = ["dep:fdg-sim"]
 
 [dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
 serde_json = { workspace = true }
 # 🔮️ Third-party oracle (test-only): Fruchterman-Reingold layouts to compare normalized stress against.
 fdg-sim = "0.9.1"

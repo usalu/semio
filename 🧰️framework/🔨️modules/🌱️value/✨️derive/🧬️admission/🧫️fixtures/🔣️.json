@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "unitCase": { "input": "empty", "normalized": { "value": 0 }, "admitted": false, "retired": 1 },
+  "cases": [
+    { "id": "positive", "input": { "value": 3 }, "admitted": true, "retired": 0 },
+    { "id": "minimum", "input": { "value": 1 }, "admitted": true, "retired": 0 },
+    { "id": "zero", "input": { "value": 0 }, "admitted": false, "retired": 1 },
+    { "id": "negative", "input": { "value": -1 }, "admitted": false, "retired": 1 },
+    { "id": "wrong-type", "input": { "value": "one" }, "admitted": false, "retired": 0 },
+    { "id": "missing", "input": {}, "admitted": false, "retired": 0 }
+  ]
+}

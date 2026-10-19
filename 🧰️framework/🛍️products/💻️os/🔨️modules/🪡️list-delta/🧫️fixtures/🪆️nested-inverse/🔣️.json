@@ -1,0 +1,22 @@
+{
+  "vectors": [
+    {
+      "id":"insert-then-remove-shifted-row",
+      "base":[{"id":"a","value":1,"label":"label-a","parts":[{"id":"p1","weight":1},{"id":"p2","weight":2}]}],
+      "patches":[
+        {"id":"a","patch":{"parts":{"removed":[],"inserted":[{"index":1,"row":{"id":"p9","weight":9}}],"moved":[],"modified":[]}}},
+        {"id":"a","patch":{"parts":{"removed":[{"id":"p2","index":2}],"inserted":[],"moved":[],"modified":[]}}}
+      ],
+      "expected":[{"id":"a","value":1,"label":"label-a","parts":[{"id":"p1","weight":1},{"id":"p9","weight":9}]}]
+    },
+    {
+      "id":"remove-then-insert-at-same-position",
+      "base":[{"id":"a","value":1,"label":"label-a","parts":[{"id":"p1","weight":1},{"id":"p2","weight":2}]}],
+      "patches":[
+        {"id":"a","patch":{"parts":{"removed":[{"id":"p2","index":1}],"inserted":[],"moved":[],"modified":[]}}},
+        {"id":"a","patch":{"parts":{"removed":[],"inserted":[{"index":1,"row":{"id":"p9","weight":9}}],"moved":[],"modified":[]}}}
+      ],
+      "expected":[{"id":"a","value":1,"label":"label-a","parts":[{"id":"p1","weight":1},{"id":"p9","weight":9}]}]
+    }
+  ]
+}

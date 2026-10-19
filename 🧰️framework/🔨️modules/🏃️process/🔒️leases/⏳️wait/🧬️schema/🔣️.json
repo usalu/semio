@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "deadlineMilliseconds",
+    "observationMilliseconds",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "deadlineMilliseconds": {
+      "const": 150
+    },
+    "observationMilliseconds": {
+      "const": 700
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "api",
+          "phase",
+          "halt",
+          "waiterAcquired"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "api": {
+            "enum": [
+              "direct",
+              "queued"
+            ]
+          },
+          "phase": {
+            "enum": [
+              "onWait",
+              "publish",
+              "yield"
+            ]
+          },
+          "halt": {
+            "enum": [
+              "cancel",
+              "timeout",
+              "deadline",
+              "reject"
+            ]
+          },
+          "waiterAcquired": {
+            "const": false
+          }
+        }
+      }
+    }
+  }
+}

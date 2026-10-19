@@ -1,0 +1,1 @@
+{"schema":"value.named.independent-root/v1","laws":{"indexOutsideSourcePayload":true,"actualOriginalIssuance":true,"projectionSharesSealedOwner":true,"changedPathProducerRequired":true,"foreignSourceRefused":true,"emptyTerminalDropBytes":0}}

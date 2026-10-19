@@ -1,3 +1,10 @@
+import { GUEST_HOST_ANSWER_CEILING_BYTES } from "@semio-tech/framework";
+import { type TypedOperationToken, typedOperationDiagnosticFragment } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { OperationDiagnosticObservers } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/📣️delivery/🟦️.ts";
+import { OperationDiagnosticInbox } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🟦️.ts";
+import { NativeDecodeControl } from "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🟦️.ts";
+import type { Diagnostic as OwnedOperationDiagnostic } from "../../../../../../../../🔨️modules/⚠️diagnostic/🎛️controlled/🟦️.ts";
+import { yieldPluginUiContinuation } from "../🔁️turn-settle/🟦️.ts";
 /** 📬️ Typed-operation result pages: terminal and pending output carriers, the per-instance owner ledger routing fault pages to the host call that owns them, and the effect consumer.
  *
  * 🧱️ Child module of {@link ../🟦️.tsx | PluginRuntime}, which re-exports every public name below so import specifiers stay unchanged.
@@ -51,10 +58,30 @@ function reportTypedOperationFault(code: string, message: string): void {
 /** 🧭️ One host call's typed-operation ownership scope — one queued command turn, one `refreshUi`, one
  * instance-open settle, one extension completion, one document-port exchange. Opened by
  * {@link TypedOperationRouter.open}, closed exactly once by {@link withTypedOperationCall}. */
+export type PluginOperationDiagnostic = Readonly<{ token: TypedOperationToken; diagnostic: OwnedOperationDiagnostic }>;
+
+export const operationDiagnosticFanouts = new Map<number, OperationDiagnosticObservers<PluginOperationDiagnostic>>();
+
+export function publishOperationDiagnostic(token: TypedOperationToken, diagnostic: OwnedOperationDiagnostic): void {
+  const listeners = operationDiagnosticFanouts.get(token.receiver);
+  if (!listeners?.size) { console[diagnostic.severity === "info" ? "info" : diagnostic.severity === "warning" ? "warn" : "error"](diagnostic.code + ": " + diagnostic.message); return; }
+  const receipt = { token, diagnostic };
+  listeners.publish(receipt);
+}
+
+export const TYPED_OPERATION_DIAGNOSTIC = "typed-operation-diagnostic";
+
+export function typedOperationOwnerKey(token: TypedOperationToken): string { return `${token.receiver}/${token.operation}/${token.generation}`; }
+
 export class TypedOperationCall {
+  readonly diagnostics: OwnedOperationDiagnostic[] = [];
+  diagnosticProgress: { readonly bytes: number; readonly nodes: number } | null = null;
+  diagnosticOwnedBytes = 0;
   constructor(readonly router: TypedOperationRouter, readonly label: string) {}
-  observe(operation: bigint, sequence: number): boolean { return this.router.observe(this, operation, sequence); }
-  fault(operation: bigint, sequence: number, message: string): boolean { return this.router.fault(this, operation, sequence, message); }
+  observe(token: TypedOperationToken): boolean { return this.router.observe(this, token); }
+  fault(token: TypedOperationToken, message: string): boolean { return this.router.fault(this, token, message); }
+  accept(effects: readonly WireVariant[]): Promise<void> { return this.router.accept(this, effects); }
+  takeDiagnosticEffects(): WireVariant[] { return this.diagnostics.splice(0).map(val => ({ tag: TYPED_OPERATION_DIAGNOSTIC, val })); }
   takeFault(): string | null { return this.router.takeFault(this); }
   close(): void { this.router.close(this); }
 }
@@ -68,25 +95,32 @@ export class TypedOperationCall {
  * the ACK — instead of rejecting the observer; a fault whose owner already returned, or whose
  * operation never revealed a first page here, goes to the shell fault path exactly once. */
 export class TypedOperationRouter {
-  private readonly owners = new Map<bigint, TypedOperationCall>();
+  private readonly owners = new Map<string, TypedOperationCall>();
+  private closed = false;
+  private readonly diagnosticInbox = new OperationDiagnosticInbox(32, token => {
+    const original = this.owners.get(typedOperationOwnerKey(token));
+    const ownership = new NativeDecodeControl(GUEST_HOST_ANSWER_CEILING_BYTES, event => { if (original) original.diagnosticOwnedBytes = event.ownedBytes; return !this.closed; });
+    return { syntax: { maximumBytes: 65536, maximumNodes: 4096, maximumDepth: 8, chunk: 256, cancelled: () => this.closed, progress: value => { if (original) original.diagnosticProgress = value; }, yield: yieldPluginUiContinuation }, ownership };
+  });
   private readonly live = new Set<TypedOperationCall>();
   private readonly parked: { readonly call: TypedOperationCall; readonly operation: bigint; readonly message: string }[] = [];
-  constructor(private readonly report: (code: string, message: string) => void = reportTypedOperationFault) {}
+  constructor(private readonly report: (code: string, message: string) => void = reportTypedOperationFault, private readonly publishDiagnostic: (token: TypedOperationToken, diagnostic: OwnedOperationDiagnostic) => void = publishOperationDiagnostic) {}
   open(label: string): TypedOperationCall {
     const call = new TypedOperationCall(this, label);
     this.live.add(call);
     return call;
   }
-  observe(call: TypedOperationCall, operation: bigint, sequence: number): boolean {
-    const owner = this.owners.get(operation);
+  observe(call: TypedOperationCall, token: TypedOperationToken): boolean {
+    const key = typedOperationOwnerKey(token), owner = this.owners.get(key);
     if (owner) return owner === call;
-    if (sequence !== 0 || !this.live.has(call)) return false;
-    this.owners.set(operation, call);
+    if (token.sequence !== 0 || !this.live.has(call)) return false;
+    this.owners.set(key, call);
     return true;
   }
-  fault(call: TypedOperationCall, operation: bigint, sequence: number, message: string): boolean {
-    if (this.observe(call, operation, sequence)) return true;
-    const owner = this.owners.get(operation);
+  fault(call: TypedOperationCall, token: TypedOperationToken, message: string): boolean {
+    const { operation, sequence } = token;
+    if (this.observe(call, token)) return true;
+    const owner = this.owners.get(typedOperationOwnerKey(token));
     if (!owner || !this.live.has(owner)) {
       this.report(TYPED_OPERATION_UNATTRIBUTED_FAULT, `${message} (operation ${operation} sequence ${sequence} observed by ${call.label})`);
       return false;
@@ -98,13 +132,33 @@ export class TypedOperationRouter {
     this.parked.push({ call: owner, operation, message });
     return false;
   }
+  isLive(call: TypedOperationCall): boolean { return this.live.has(call); }
+  async accept(call: TypedOperationCall, effects: readonly WireVariant[]): Promise<void> {
+    for (const effect of effects) {
+      const page = typedOperationResult(effect);
+      if (!page) continue;
+      this.observe(call, page.token);
+      const key = typedOperationOwnerKey(page.token), owner = this.owners.get(key);
+      const fragment = typedOperationDiagnosticFragment(page);
+      if (fragment) {
+        const receipt = await this.diagnosticInbox.receive(fragment);
+        if (receipt) {
+          if (owner && this.live.has(owner)) owner.diagnostics.push(receipt.diagnostic);
+          this.publishDiagnostic(receipt.token, receipt.diagnostic);
+        }
+      } else if (page.lane === TYPED_OPERATION_LANE_TERMINAL) this.diagnosticInbox.finish(page.token);
+      else if (page.lane === TYPED_OPERATION_LANE_FAULT) this.diagnosticInbox.cancel(page.token);
+    }
+  }
   takeFault(call: TypedOperationCall): string | null {
     const index = this.parked.findIndex((entry) => entry.call === call);
     return index === -1 ? null : this.parked.splice(index, 1)[0]!.message;
   }
+  closeAll(): void { this.closed = true; this.diagnosticInbox.cancelAll(); for (const call of this.live) this.close(call); }
   close(call: TypedOperationCall): void {
     this.live.delete(call);
-    for (const [operation, owner] of [...this.owners]) if (owner === call) this.owners.delete(operation);
+    for (const [key, owner] of [...this.owners]) if (owner === call) this.owners.delete(key);
+    for (const diagnostic of call.diagnostics.splice(0)) this.report(TYPED_OPERATION_UNATTRIBUTED_FAULT, `${diagnostic.code}: ${diagnostic.message} (diagnostic outlived ${call.label})`);
     for (let index = this.parked.length - 1; index >= 0; index -= 1) {
       if (this.parked[index]!.call !== call) continue;
       const dropped = this.parked.splice(index, 1)[0]!;
@@ -129,6 +183,7 @@ export async function withTypedOperationCall<T>(actorId: string, label: string, 
   const call = router.open(`${actorId}:${label}`);
   try {
     const value = await body(call);
+    if (!router.isLive(call)) throw Error(`typed-operation owner cancelled: ${call.label}`);
     const fault = call.takeFault();
     if (fault !== null) throw new Error(`typed-operation failed: ${fault}`);
     return value;
@@ -138,7 +193,7 @@ export async function withTypedOperationCall<T>(actorId: string, label: string, 
 }
 
 export function consumeTypedOperationEffects(effects: readonly WireVariant[], call?: TypedOperationCall): WireVariant[] {
-  const consumed: WireVariant[] = [];
+  const consumed: WireVariant[] = call?.takeDiagnosticEffects() ?? [];
   let terminal = false;
   let terminalOutput: unknown = undefined;
   for (const effect of effects) {
@@ -170,10 +225,10 @@ export function consumeTypedOperationEffects(effects: readonly WireVariant[], ca
     }
     if (page.lane === TYPED_OPERATION_LANE_FAULT) {
       const message = new TextDecoder().decode(page.payload);
-      if (!call || call.fault(page.token.operation, page.token.sequence, message)) throw new Error(`typed-operation failed: ${message}`);
+      if (!call || call.fault(page.token, message)) throw new Error(`typed-operation failed: ${message}`);
       continue;
     }
-    call?.observe(page.token.operation, page.token.sequence);
+    call?.observe(page.token);
     if (page.lane === TYPED_OPERATION_LANE_TERMINAL) {
       terminal = true;
       continue;

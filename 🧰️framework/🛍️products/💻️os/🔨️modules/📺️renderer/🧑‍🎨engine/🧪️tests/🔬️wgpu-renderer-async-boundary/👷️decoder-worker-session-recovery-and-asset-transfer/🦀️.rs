@@ -19,120 +19,41 @@ fn an_independent_decoder_job_recovers_its_response_from_an_unadmitted_session()
         return;
     }
     use semio_framework_job::*;
-    use semio_framework_job_worker::{WorkerJobDemandError, WorkerJobSession, WORKER_JOB_SESSION_SLOTS};
-    use semio_framework_job_worker_authority::{BatchDriveConfig, BatchJobParams};
+    use semio_framework_job_worker::{WORKER_JOB_SESSION_SLOTS, MountedWorkerJobSession};
+    use semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource;
     struct Occupied;
     impl InteractiveJob for Occupied {
-        fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
-            JobOutcomeBorrow::admit_yield(cx).map_err(OriginalTurnFailure::from)
-        }
-        fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
-            descriptor.yielded()
-        }
-        fn begin_close(&mut self) {}
-        fn close_step(&mut self, _: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
-            Ok(InteractiveJobCloseStep::Complete { progress: Default::default() })
-        }
-        fn terminal_is_empty(&self) -> bool {
-            true
-        }
+        fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure>{JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)}
+        fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,semio_framework_value::ValueError>{descriptor.yielded()}
+        fn begin_close(&mut self){}
+        fn close_step(&mut self,_:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}
+        fn terminal_is_empty(&self)->bool{true}
     }
-    const STOCK: RetainedCloneGrant = RetainedCloneGrant { maximum_items: usize::MAX / 4, maximum_copy_bytes: usize::MAX / 4, maximum_capacity_bytes: usize::MAX / 4, maximum_release_bytes: usize::MAX / 4, maximum_depth: 64 };
-    const TURN: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 22, maximum_release_bytes: 1 << 22, maximum_depth: 32 };
-    let identity = (OperationId(76), Generation(1));
-    let mut caller = OriginalJobFixtureCaller::admit(identity.0, identity.1, STOCK, default_now_us, u64::MAX, u64::MAX);
-    fn params(caller: &mut OriginalJobFixtureCaller) -> BatchJobParams {
-        BatchJobParams {
-            operation: OperationId(76),
-            generation: Generation(1),
-            cancel: caller.admit_alias(TURN),
-            now_us: default_now_us,
-            config: BatchDriveConfig { retained: TURN, site: "decoder_admission_law", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: INTERACTIVE_LANE_WALL_US },
-        }
-    }
-    let mut occupied = Vec::with_capacity(WORKER_JOB_SESSION_SLOTS);
+    fn config()->semio_framework_job_worker_authority::BatchDriveConfig{semio_framework_job_worker_authority::BatchDriveConfig{retained:renderer_law_stock(),site:"decoder_admission_law",stage:InteractiveStage::InteractiveStep,fuel_per_step:1,step_budget_us:INTERACTIVE_LANE_WALL_US}}
+    let mut caller=OriginalRendererFixture::new();let mut occupied=Vec::with_capacity(WORKER_JOB_SESSION_SLOTS);
     for _ in 0..WORKER_JOB_SESSION_SLOTS {
-        let mut job = Some(Occupied);
-        let mut original = Some(params(&mut caller));
-        let admitted = caller.turn(TURN, |cx| WorkerJobSession::try_admit_owned(&mut job, &mut original, cx).map_err(OriginalTurnFailure::from)).expect("the original admission turn is not refused");
-        occupied.push(admitted.unwrap_or_else(|| panic!("fixed session admits its owner")).0);
+        let mut source=caller.turn(|cx|Ok(RefusedWorkerSource::pending(Occupied,(cx.operation(),cx.generation())))).unwrap();
+        let mut admitted=None;for _ in 0..16{admitted=caller.turn(|cx|source.admit_pending(config(),cx)).unwrap();if admitted.is_some(){break}}
+        assert!(source.terminal_is_empty());occupied.push(admitted.expect("real original worker slot admits its exact owner"));
     }
-    let (authority, probe) = owned_decoder_fixture();
-    let token = probe.owner().owner().token();
-    let bytes = probe.owner().owner().received_bytes();
-    let mut job = Some(RendererAssetDecodeJob::new(probe, Arc::new(AtomicBool::new(false))));
-    let mut original = Some(params(&mut caller));
-    let refused = caller.turn(TURN, |cx| WorkerJobSession::try_admit_owned(&mut job, &mut original, cx).map_err(OriginalTurnFailure::from)).expect("the original admission turn is not refused");
-    assert!(refused.is_none(), "maximum plus one must stay unadmitted");
-    assert!(job.is_some() && original.is_some(), "the refused admission leaves both original owners with the caller");
-    let recovered = job.as_ref().and_then(RendererAssetDecodeJob::take_probe).expect("the sole unadmitted job returns its exact response");
-    assert_eq!(recovered.owner().owner().token(), token);
-    assert_eq!(recovered.owner().owner().received_bytes(), bytes);
-    assert_eq!(recovered.observed_bytes, 0);
-    assert!(job.as_ref().and_then(RendererAssetDecodeJob::take_probe).is_none());
-    let mut unadmitted = job.take().expect("the unadmitted job remains owned");
-    unadmitted.begin_close();
-    for _ in 0..64 {
-        if unadmitted.terminal_is_empty() {
-            break;
-        }
-        caller.turn(TURN, |cx| unadmitted.close_step(cx)).expect("the unadmitted job close turn is not refused");
-    }
-    assert!(unadmitted.terminal_is_empty());
-    drop(unadmitted);
-    let mut retirement = semio_framework_async::CancelTokenRetirement::from_token(original.take().expect("the refused parameters remain owned").cancel);
-    for _ in 0..64 {
-        if retirement.terminal_is_empty() {
-            break;
-        }
-        caller
-            .turn(TURN, |cx| {
-                match retirement.return_alias_step(cx.original_cancel_token(), cx.retained_grant()) {
-                    Ok(step) => {
-                        cx.consume_retained(step.progress())?;
-                        cx.consume_fuel(1);
-                    }
-                    Err(semio_framework_async::CancelTokenRetirementError::Blocked(_)) => {}
-                    Err(semio_framework_async::CancelTokenRetirementError::Refused(error)) => return Err(OriginalTurnFailure::from(error)),
-                }
-                Ok(())
-            })
-            .expect("the refused alias return turn is not refused");
-    }
-    assert!(retirement.terminal_is_empty());
-    drop(retirement);
-    for mut session in occupied {
-        let _ = session.begin_close();
-        for _ in 0..64 {
-            if session.terminal_is_empty() {
-                break;
-            }
-            caller
-                .turn(TURN, |cx| {
-                    match session.has_original_cancel_alias_witness(cx.original_cancel_token()) {
-                        Ok(true) => {
-                            if let Some(step) = session.return_original_cancel_alias_step(cx.original_cancel_token(), cx.retained_grant()).map_err(|error| match error {
-                                WorkerJobDemandError::Refused(error) => OriginalTurnFailure::from(error),
-                                WorkerJobDemandError::Contention(_) => OriginalTurnFailure::from(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "occupied session alias remains checked out")),
-                            })? {
-                                cx.consume_retained(step.progress())?;
-                                cx.consume_fuel(1);
-                            }
-                        }
-                        Ok(false) => {
-                            session.close_step(cx)?;
-                        }
-                        Err(WorkerJobDemandError::Contention(_)) => {}
-                        Err(WorkerJobDemandError::Refused(error)) => return Err(OriginalTurnFailure::from(error)),
-                    }
-                    Ok(())
-                })
-                .expect("the occupied session close turn is not refused");
+    let (authority,probe)=owned_decoder_fixture();let token=probe.owner().owner().token();let bytes=probe.owner().owner().received_bytes();
+    let mut rejected=caller.turn(|cx|Ok(RefusedWorkerSource::pending(RendererAssetDecodeJob::new(probe),(cx.operation(),cx.generation())))).unwrap();
+    for _ in 0..4{assert!(caller.turn(|cx|rejected.admit_pending(config(),cx)).unwrap().is_none());}
+    let recovered=rejected.job().unwrap().take_probe().expect("maximum-plus-one retains its original exact response");assert_eq!(recovered.owner().owner().token(),token);assert_eq!(recovered.owner().owner().received_bytes(),bytes);assert_eq!(recovered.observed_bytes,0);assert!(rejected.job().unwrap().take_probe().is_none());
+    for _ in 0..65536{caller.turn(|cx|{rejected.close_step(cx)?;Ok(())}).unwrap();if rejected.terminal_is_empty(){break}}assert!(rejected.terminal_is_empty());
+    for session in &mut occupied {
+        session.begin_close();
+        for _ in 0..65536 {
+            caller.turn(|cx| {
+                let witness=cx.borrowed_original_cancel_token()?;
+                if matches!(session.has_original_cancel_alias_witness(witness),Ok(true)){
+                    close_original_retained_step(cx,semio_framework_value::RetirementDemand{depth:1,..Default::default()},|grant|session.return_original_cancel_alias_step(witness,grant).map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(|error|match error{semio_framework_job_worker::WorkerJobDemandError::Refused(error)=>error,semio_framework_job_worker::WorkerJobDemandError::Contention(_)=>semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original saturation cancellation return contended")}))?;
+                } else { session.close_step(cx)?; }Ok(())
+            }).unwrap();if session.terminal_is_empty(){break}
         }
         assert!(session.terminal_is_empty());
     }
-    caller.retire(STOCK);
-    close_owned_decoder_fixture(authority, recovered);
+    close_owned_decoder_fixture(authority,recovered);
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -153,22 +74,19 @@ fn decoder_worker_boundary(cancel_after_ready: bool) {
     let wake: RuntimeHostWaker = Arc::new(move || {
         observed_wakes.fetch_add(1, Ordering::AcqRel);
     });
-    let mut sequence = 0;
-    let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
-    let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(75), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(u64::MAX, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence, &mut context_retained);
-    let invocation = RendererAssetDecodeInvocation::admit(&mut cx).expect("the original context admits its cancellation alias").expect("the unbounded original context funds the alias");
-    let mut decoder = RendererAssetDecodeSession::new(RendererAssetProbe::new(RendererAssetFetchOwner::Shared(owner)), Some(wake), invocation);
+    let mut caller = OriginalRendererFixture::new();
+    let mut decoder = caller.turn(|cx|Ok(RendererAssetDecodeSession::new(RendererAssetProbe::new(RendererAssetFetchOwner::Shared(owner)), cx))).unwrap();
     let deadline = Instant::now() + Duration::from_secs(10);
     while decoder.boundary.is_none() && Instant::now() < deadline {
-        decoder.pump_one(&mut cx).expect("the original decoder turn is not refused");
+        if caller.turn(|cx|decoder.pump_one(cx)).unwrap() { wake(); }
         std::thread::yield_now();
     }
     let completed = decoder.boundary.as_ref().map(|(_, result)| *result);
     if cancel_after_ready {
         decoder.cancel();
     }
-    while decoder.session.is_some() && Instant::now() < deadline {
-        decoder.pump_one(&mut cx).expect("the original decoder turn is not refused");
+    while (decoder.session.is_some() || decoder.source.is_some()) && Instant::now() < deadline {
+        if caller.turn(|cx|decoder.pump_one(cx)).unwrap() { wake(); }
         std::thread::yield_now();
     }
     let (probe, outcome) = decoder.take_boundary().expect("the exact completed worker returns its response");
@@ -202,58 +120,19 @@ fn an_independent_decoder_job_returns_a_ready_response_after_session_retirement(
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn native_asset_response_transfers_each_credited_page_without_losing_its_bytes() {
-    use semio_framework_job::{JobPayloadStream, RetainedJobPayloadWriter};
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📄️native-asset-response/🔣️.json")).unwrap();
-    assert_eq!(law["pageBytes"].as_u64().unwrap() as usize, WORLD_ASSET_RESPONSE_PAGE_BYTES);
-    for case in law["cases"].as_array().unwrap() {
-        let length = case["bytes"].as_u64().unwrap() as usize;
-        let bytes: Vec<u8> = (0..length).map(|index| (index % law["patternPeriod"].as_u64().unwrap() as usize) as u8).collect();
-        let mut authority = WorldAssetIoAuthority::default();
-        authority.reserve(1, 1, WorldAssetRequestKind::Glb, "native-page.glb", length).unwrap();
-        let mut fetch = RendererAssetFetchOwner::Shared(authority.take_next().unwrap());
-        let mut writer = RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput);
-        let mut sequence = 0;
-        for source in bytes.chunks(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
-            let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
-            let mut context =
-                semio_framework_job::StepContext::new(semio_framework_job::OperationId(74), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut context_retained);
-            let mut page = writer.admit_page(&mut context).unwrap();
-            page.write(source).unwrap();
-            page.commit();
-        }
-        let mut payload = writer.finish().unwrap_or_else(|_| panic!("the fixture owns complete native pages"));
-        let result = push_renderer_asset_page(&mut fetch, &mut payload);
-        let source_released = payload.terminal_is_empty();
-        let retained_source = payload.len();
-        while !payload.terminal_is_empty() {
-            let _ = payload.close_step(semio_framework_job::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES, maximum_capacity_bytes: 0, maximum_release_bytes: 2 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 3 });
-        }
-        let observed = fetch.owner().received_bytes();
-        let decoded = if result.is_ok() {
-            let RendererAssetFetchOwner::Shared(owner) = &mut fetch else { unreachable!() };
-            owner.seal().unwrap();
-            owner.decode_page().unwrap().unwrap().bytes().to_vec()
-        } else {
-            Vec::new()
-        };
-        fetch.begin_close();
-        let RendererAssetFetchOwner::Shared(owner) = fetch else { unreachable!() };
-        assert!(authority.return_owner(owner).is_ok());
-        authority.begin_close();
-        for _ in 0..4096 {
-            if authority.close_step() {
-                break;
-            }
-        }
-        assert!(authority.terminal_is_empty());
-        println!("native response transferred {observed}/{length} bytes with result {result:?}");
-        assert_eq!(result.is_ok(), case["accepted"].as_bool().unwrap());
-        assert_eq!(observed as u64, case["transferredBytes"].as_u64().unwrap());
-        if result.is_ok() {
-            assert_eq!(decoded, bytes);
-        }
-        assert_eq!(source_released, case["accepted"].as_bool().unwrap());
-        assert_eq!(retained_source, if result.is_ok() { 0 } else { length });
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📄️native-asset-response/🔣️.json")).unwrap();
+    assert_eq!(law["pageBytes"].as_u64().unwrap()as usize,WORLD_ASSET_RESPONSE_PAGE_BYTES);
+    for case in law["cases"].as_array().unwrap(){
+        let length=case["bytes"].as_u64().unwrap()as usize;let period=law["patternPeriod"].as_u64().unwrap()as usize;
+        let bytes:Vec<u8>=(0..length).map(|index|(index%period)as u8).collect();let pointer=bytes.as_ptr();
+        let mut authority=WorldAssetIoAuthority::default();authority.reserve(1,1,WorldAssetRequestKind::Glb,"native-page.glb",length).unwrap();let mut fetch=RendererAssetFetchOwner::Shared(authority.take_next().unwrap());
+        let mut rejected=None;let accepted=match WorldAssetResponsePage::try_from_owned(bytes){Ok(page)=>{assert_eq!(page.bytes().as_ptr(),pointer);fetch.owner_mut().push_page(page).unwrap();true},Err(bytes)=>{assert_eq!(bytes.as_ptr(),pointer);rejected=Some(bytes);false}};
+        let observed=fetch.owner().received_bytes();let source_released=rejected.is_none();let retained_source=rejected.as_ref().map_or(0,Vec::len);
+        if accepted{let RendererAssetFetchOwner::Shared(owner)=&mut fetch else{unreachable!()};owner.seal().unwrap();let decoded=owner.decode_page().unwrap().unwrap().bytes();assert_eq!(decoded.len(),length);assert!(decoded.iter().enumerate().all(|(index,byte)|*byte==(index%period)as u8));}
+        fetch.begin_close();let RendererAssetFetchOwner::Shared(owner)=fetch else{unreachable!()};assert!(authority.return_owner(owner).is_ok());authority.begin_close();for _ in 0..4096{if authority.close_step(){break}}assert!(authority.terminal_is_empty());
+        if let Some(bytes)=rejected.as_ref(){let capacity=bytes.capacity();let mut caller=OriginalRendererFixture::new();caller.turn(|cx|{semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{release_bytes:capacity,depth:1,..Default::default()},|_|{rejected.take();Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,released_bytes:capacity,..Default::default()}))})?;Ok(())}).unwrap();assert!(rejected.is_none());}
+        assert_eq!(accepted,case["accepted"].as_bool().unwrap());assert_eq!(observed as u64,case["transferredBytes"].as_u64().unwrap());assert_eq!(source_released,accepted);assert_eq!(retained_source,if accepted{0}else{length});
+        eprintln!("[DEBUG] exact World response page boundary {observed}/{length}, retained source on refusal, original backing pointer and authored byte pattern preserved");
     }
 }
 
@@ -285,9 +164,8 @@ fn a_frame_candidate_never_advances_the_independently_owned_asset_decoder() {
         frame_actions: FrameActionOwners::default(),
         pending_frame_maintenance_refusal: None,
         plugin_modules_root: Default::default(),
-        native_plugin_mtimes: Default::default(),
         native_hot_swap_scan: None,
-        native_hot_swap_modified: None,
+        native_hot_swap_program: None,
         native_hot_swap_cursor: 0,
         native_reload_pending: false,
     });
@@ -295,10 +173,8 @@ fn a_frame_candidate_never_advances_the_independently_owned_asset_decoder() {
     let operation = semio_framework_job::OperationId(71);
     let generation = semio_framework_job::Generation(0);
     let mut candidate = FrameTransaction::new(Default::default(), operation, generation, semio_framework_job::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 65_536, maximum_capacity_bytes: 65_536, maximum_release_bytes: 16_777_216, maximum_depth: 64 });
-    let mut sequence = 0;
-    let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
-    let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut context_retained);
-    let result = candidate.step(&runtime, &Arc::downgrade(&runtime.0), &mut context);
+    let mut caller = OriginalRendererFixture::with_identity(operation, generation);
+    let result = caller.turn(|cx| Ok(candidate.step(&runtime, &Arc::downgrade(&runtime.0), cx))).unwrap();
     let mut probe = runtime.0.asset_probe.lock().unwrap().take().expect("the decoder retains its exact response");
     let observed = probe.observed_bytes;
     for _ in 0..4096 {
@@ -325,7 +201,7 @@ fn a_frame_candidate_never_advances_the_independently_owned_asset_decoder() {
     }
     assert!(authority.terminal_is_empty());
     for _ in 0..4096 {
-        if runtime.close_renderer_asset_step() {
+        if caller.turn(|cx|runtime.close_renderer_asset_step(cx)).unwrap() {
             break;
         }
     }

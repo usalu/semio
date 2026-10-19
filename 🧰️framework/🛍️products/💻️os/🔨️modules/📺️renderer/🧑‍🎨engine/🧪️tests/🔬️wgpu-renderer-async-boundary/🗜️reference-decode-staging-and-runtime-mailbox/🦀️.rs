@@ -158,6 +158,8 @@ fn reference_decode_staging_reports_exact_pool_reuse_before_browser_decode() {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn native_reference_runtime() -> AppMailbox {
+    let admission=format!("{{\"version\":1,\"declaration\":{},\"scriptOwner\":\"fixture:renderer-original-io\",\"scriptDeadlineEpochMilliseconds\":null}}",include_str!("../../../🎯️targets/🧊️wgpu/⌨️native-entrypoint/🎟️launch/🔣️.json"));
+    crate::native_launch::install_native_launch_fixture(&admission).expect("fixture declares the actual native original launch policy before any asset operation");
     RuntimeMailbox::new(AppRuntime {
         atlas: FontAtlas::builtin(),
         icons: IconAtlas::default(),
@@ -171,9 +173,8 @@ fn native_reference_runtime() -> AppMailbox {
         frame_actions: FrameActionOwners::default(),
         pending_frame_maintenance_refusal: None,
         plugin_modules_root: Default::default(),
-        native_plugin_mtimes: Default::default(),
         native_hot_swap_scan: None,
-        native_hot_swap_modified: None,
+        native_hot_swap_program: None,
         native_hot_swap_cursor: 0,
         native_reload_pending: false,
     })
@@ -236,11 +237,12 @@ fn native_reference_decode_phase_two_waiting_output_stays_in_the_mailbox_after_o
     job.phase.store(2, Ordering::Release);
     let runtime = native_reference_runtime();
     *runtime.0.native_reference_decode.lock().expect("native reference decode slot") = Some(job);
-    let _ = runtime.close_renderer_asset_step();
+    let mut caller = OriginalRendererFixture::new();
+    let _ = caller.turn(|cx|runtime.close_renderer_asset_step(cx)).unwrap();
     let retained_after_one_turn = runtime.0.native_reference_decode.lock().expect("native reference decode slot after one close turn").is_some();
     let mut close_turns = 1;
     while runtime.0.native_reference_decode.lock().expect("native reference decode terminal probe").is_some() && close_turns < 32 {
-        let _ = runtime.close_renderer_asset_step();
+        let _ = caller.turn(|cx|runtime.close_renderer_asset_step(cx)).unwrap();
         close_turns += 1;
     }
     io.begin_close();

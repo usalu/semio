@@ -41,12 +41,12 @@ pub fn admission(learners: u64) -> Arc<Admission> {
 
 /// 💯️ The perfect answer to one presented task, read off the quiz's solutions: the keys assigned
 /// where the sheet shows them, the true values guessed where it hides them.
-pub fn perfect(quiz: &quiz::Quiz, presented: &quiz::SheetTask) -> quiz::Answer {
-    use quiz::{Answer, ClassificationAnswer, MatchingAnswer, SheetTask, SortingAnswer, Task};
+pub fn perfect(quiz: &course::Quiz, presented: &course::SheetTask) -> course::Answer {
+    use course::{Answer, ClassificationAnswer, MatchingAnswer, SheetTask, SortingAnswer, Task};
     let task = quiz.tasks.iter().find(|task| task.id() == presented.id()).expect("the sheet task exists");
     match (task, presented) {
         (Task::Sorting(task), SheetTask::Sorting(sheet)) => {
-            let mut order: Vec<&quiz::SortingItem> = task.items.iter().filter(|item| sheet.items.iter().any(|shown| shown.id == item.id)).collect();
+            let mut order: Vec<&course::SortingItem> = task.items.iter().filter(|item| sheet.items.iter().any(|shown| shown.id == item.id)).collect();
             order.sort_by(|left, right| left.value.total_cmp(&right.value));
             let guesses = sheet.keys.is_none().then(|| order.iter().map(|item| (item.id.clone(), item.value)).collect());
             Answer::Sorting(SortingAnswer { order: order.iter().map(|item| item.id.clone()).collect(), guesses })

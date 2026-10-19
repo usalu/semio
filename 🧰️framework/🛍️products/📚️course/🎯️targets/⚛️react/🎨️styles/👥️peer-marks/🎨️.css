@@ -1,0 +1,55 @@
+/* 👥 The pointers, focus frames and name labels of the other learners on the page. */
+
+/* 👥️ Other learners on this page: a pointer and a keyboard-focus frame per learner in its palette colour
+   (`--course-peer`), labelled with its name; they glide between the proctor's frames. */
+.course-peer,
+.course-peer-focus {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: transform 120ms linear;
+  will-change: transform;
+}
+
+.course-peer-focus {
+  box-sizing: border-box;
+  border: var(--stroke-default) solid var(--course-peer);
+  transition-property: transform, width, height;
+}
+
+.course-peer-arrow {
+  display: block;
+  overflow: visible;
+  fill: var(--course-peer);
+  stroke: var(--base);
+  stroke-width: 0.5;
+  stroke-miterlimit: 5;
+}
+
+/* 🖋️ A learner's name on its palette colour: the ink is the one that reads on that colour (black or white, computed per
+   slot for either appearance — WCAG 2.2 SC 1.4.3), and the stylesheet takes the one of the appearance it shows. */
+.course-peer-label {
+  position: absolute;
+  top: 1.5rem;
+  left: 1rem;
+  padding: 0 var(--spacing-single);
+  background: var(--course-peer);
+  color: var(--course-peer-ink-light);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.dark .course-peer-label {
+  color: var(--course-peer-ink-dark);
+}
+
+.course-peer-focus > .course-peer-label {
+  top: -1.25rem;
+  left: -2px;
+}
+
+/* 🫣️ A name label that would cover the control with keyboard focus steps aside; the pointer or frame stays. */
+[data-shy] > .course-peer-label {
+  visibility: hidden;
+}

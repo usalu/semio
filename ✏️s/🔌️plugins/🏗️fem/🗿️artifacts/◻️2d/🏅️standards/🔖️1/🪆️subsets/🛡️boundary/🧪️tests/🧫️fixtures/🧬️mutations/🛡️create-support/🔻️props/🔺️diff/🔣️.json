@@ -5,6 +5,7 @@
   "materials": null,
   "sections": null,
   "supports": {
+    "removed": [],
     "inserted": [
       {
         "index": 3,
@@ -17,7 +18,6 @@
         }
       }
     ],
-    "removed": [],
     "moved": [],
     "modified": []
   },

@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Interaction Set Laws",
+  "description": "A selection batch is one ordered set. Duplicate targets and overlapping descendant closures toggle each entity once. Topology traversal terminates at revisited identities.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["topology", "cases", "traversals", "scale", "domains"],
+  "properties": {
+    "topology": { "$ref": "#/$defs/topology" },
+    "domains": { "$ref": "#/$defs/ids" },
+    "scale": { "type": "integer", "minimum": 1000, "maximum": 20000 },
+    "cases": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "seed", "targets", "merge", "transitive", "expected"],
+        "properties": {
+          "id": { "type": "string" }, "seed": { "$ref": "#/$defs/ids" }, "targets": { "$ref": "#/$defs/ids" },
+          "merge": { "enum": ["replace", "additive", "subtractive", "invertive"] },
+          "transitive": { "type": "boolean" }, "expected": { "$ref": "#/$defs/ids" }
+        }
+      }
+    },
+    "traversals": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "topology", "root", "descendants", "ancestors"],
+        "properties": {
+          "id": { "type": "string" }, "topology": { "$ref": "#/$defs/topology" }, "root": { "type": "string" },
+          "descendants": { "$ref": "#/$defs/ids" }, "ancestors": { "$ref": "#/$defs/ids" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "ids": { "type": "array", "items": { "type": "string" } },
+    "topology": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["id", "granularity"],
+        "properties": { "id": { "type": "string" }, "granularity": { "type": "string" }, "parent": { "type": "string" } }
+      }
+    }
+  }
+}

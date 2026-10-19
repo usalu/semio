@@ -36,7 +36,7 @@ pub use start_run_node::StartRunNode;
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
-#[mutations(snapshot = RunArtifact, diff = RunDiff, schema = "os.run")]
+#[mutations(snapshot = RunArtifact, diff = RunDiff, schema = "os.run", reference = RunArtifact, reference_diff = RunDiff)]
 pub enum RunMutation {
     StartRun(StartRun),
     StartRunNode(StartRunNode),

@@ -949,3 +949,11 @@ fn world_original_fixture_grant()->semio_framework_value::RetainedCloneGrant{
     let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🔬️unit/🧫️retained-attributes.json")).unwrap();let axes=&law["grant"];
     semio_framework_value::RetainedCloneGrant{maximum_items:axes["items"].as_u64().unwrap()as usize,maximum_copy_bytes:axes["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:axes["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:axes["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:axes["depth"].as_u64().unwrap()as usize}
 }
+
+#[test]
+fn original_asset_page_ordinals_retain_gaps_until_complete_seal(){
+    let mut lane=WorldAssetIoAuthority::default();let token=lane.reserve(41,9,WorldAssetRequestKind::Glb,"original-order",3).unwrap();let mut fetch=lane.take_next().unwrap();
+    for index in[2u16,1,0]{fetch.push_page_at(index,WorldAssetResponsePage::try_from_owned(vec![index as u8]).unwrap()).unwrap();if index!=0{assert_eq!(fetch.seal(),Err(WorldAssetFault::Incomplete));}}
+    let duplicate=WorldAssetResponsePage::try_from_owned(vec![7]).unwrap();assert_eq!(fetch.push_page_at(1,duplicate).unwrap_err().bytes(),&[7]);fetch.seal().unwrap();
+    for index in 0..3{let page=fetch.take_decode_page().unwrap().unwrap();assert_eq!(page.bytes(),&[index]);}assert!(fetch.take_decode_page().unwrap().is_none());fetch.begin_close();while !fetch.close_step(){}lane.finish(fetch).unwrap();assert!(lane.terminal_is_empty());let _=token;
+}

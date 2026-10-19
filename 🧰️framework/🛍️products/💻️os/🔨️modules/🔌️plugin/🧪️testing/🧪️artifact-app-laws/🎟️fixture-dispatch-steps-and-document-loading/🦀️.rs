@@ -433,3 +433,185 @@ pub fn assert_editor_genesis_children_declared<E: semio_framework_plugin_decl_su
 pub fn assert_viewer_genesis_children_declared<V: semio_framework_plugin_decl_surface::ArtifactViewer>() -> Result<usize, semio_framework::Fault> {
     genesis_children_declared::<V::Snapshot, V::Members>(V::initial_snapshot(), |snapshot, slot, child_id| V::genesis_child_pack(snapshot, slot, child_id).map(|value| value.is_some()))
 }
+
+    /// 📨️ Projects authored external unit and data variants before their fixture action enters the original source.
+
+    fn original_fixture_command_arguments(command:&impl semio_framework_value::ToValue)->Result<Option<semio_framework_value::DslValue>,semio_framework_value::ValueError>{
+
+        match semio_framework_value::ToValue::to_value(command){semio_framework_value::DslValue::String(_)=>Ok(None),semio_framework_value::DslValue::Object(mut rows)if rows.len()==1=>Ok(Some(rows.pop().unwrap().1)),_=>Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"typed fixture command requires its authored external variant"))}
+
+    }
+
+
+
+    #[cfg(test)]
+
+    #[test]
+
+    fn original_fixture_command_projection_matches_the_closed_unit_and_data_cases(){
+
+        #[derive(semio_framework_value_derive::ToValue)]
+
+        enum Command{Noop,Set{value:u64}}
+
+        let law:serde_json::Value=serde_json::from_str(include_str!("../../🎟️caller/🧪️tests/🧫️fixtures/📨️command.json")).unwrap();
+
+        for row in law["cases"].as_array().unwrap(){let command=match row["variant"].as_str().unwrap(){"Noop"=>Command::Noop,"Set"=>Command::Set{value:row["value"].as_u64().unwrap()},_=>panic!("closed fixture command variant")};let actual=original_fixture_command_arguments(&command).unwrap();if row["variant"]=="Noop"{assert!(actual.is_none());assert!(row["expectedArgs"].is_null());}else{assert_eq!(actual,Some(semio_framework_value::DslValue::object([("value".to_owned(),semio_framework_value::ToValue::to_value(&row["expectedArgs"]["value"].as_u64().unwrap()))])));}}
+
+        println!("[DEBUG] actual derived external unit/data fixture command projection preserves authored arguments");
+
+    }
+
+
+
+    /// 🎟️ Projects a cold typed fixture input into the actual retained action ingress under its persistent original caller.
+
+    pub async fn dispatch_original_fixture_command<A,M>(app:&mut VcsArtifactApp<A,M>,command:&A::Command,meta:&ActionMeta,mounted_policy:semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework::kernel::InvocationResult,semio_framework_job::OriginalTurnFailure>
+
+    where A:ArtifactApp,A::Command:semio_framework_value::ToValue,M:store::SpaceMember+store::MemberFactory+Send+'static{
+
+        let action=A::command_id(command).await;
+
+        let args=original_fixture_command_arguments(command)?;
+
+        dispatch_fixture_action(app,action,args,meta,identity,cx,mounted_policy.maintenance).await
+
+    }
+
+    /// 🧳️ A fixture job retains one original consuming decoder and closes it under its caller's supplied grant.
+
+    pub struct FixtureOriginalJob {
+
+        decoder: semio_framework_job::OriginalJobDecodeOwner,
+
+        cancel: Option<semio_framework_job::CancelToken>,
+
+        payload: semio_framework_job::JobPayloadAuthority,
+
+        turn: semio_framework::kernel::RetainedTurnInput,
+
+        sequence: u64,
+
+        progress: semio_framework_value::RetainedCloneProgress,
+
+    }
+
+
+
+    impl FixtureOriginalJob {
+
+        /// 🎟️ Captures an explicit original input without allocating decoder capacity.
+
+        pub fn new(turn: semio_framework::kernel::RetainedTurnInput) -> Self {
+
+            let ((cancel,progress),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job::CancelToken::admit_root(turn.grant).expect("fixture original cancellation admission").expect("fixture original input funds cancellation"));
+
+            assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
+
+            assert!(progress.fits(turn.grant));
+
+            let ((payload,progress),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job::JobPayloadAuthority::admit(semio_framework_job::OperationId(turn.operation),semio_framework_job::Generation(turn.generation),turn.grant).expect("fixture original payload admission").expect("fixture original input funds payload"));
+
+            assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
+
+            assert!(progress.fits(turn.grant));
+
+            Self { decoder: semio_framework_job::OriginalJobDecodeOwner::empty(),cancel:Some(cancel),payload,turn, sequence: 0, progress: Default::default() }
+
+        }
+
+
+
+        /// 🫴️ Reborrows the same issuer for one context carrying the caller's exact turn grant.
+
+        pub fn context(&mut self, grant: RetainedCloneGrant) -> semio_framework_job::StepContext<'_> {
+
+            self.progress = Default::default();
+
+            semio_framework_job::StepContext::with_payload_authority(semio_framework_job::OperationId(self.turn.operation), semio_framework_job::Generation(self.turn.generation), semio_framework_job::StepBudget::new(1_000_000, u64::MAX, grant), self.cancel.as_ref().expect("fixture original cancellation retained"), || Some(0), &mut self.sequence, &mut self.progress,&self.payload).expect("fixture original payload loan").with_original_decoder(&mut self.decoder)
+
+        }
+
+
+
+        /// 🛬️ Loans original receiving to a synchronous semantic unit through its real context recipient.
+
+        pub fn receive<T>(&mut self, grant: RetainedCloneGrant, operation: impl FnOnce(&mut semio_framework_value::NativeDecodeControl<'_>) -> T) -> T {
+
+            self.context(grant).with_native_receiving(|receiving| Ok::<_, semio_framework_value::ValueError>(operation(receiving))).expect("fixture original receiving loan")
+
+        }
+
+
+
+        /// ♻️ Pays every original receiving retirement action with the supplied fixture input.
+
+        pub fn close(&mut self) {
+
+            for _ in 0..100_000 {
+
+                if self.decoder.terminal_is_empty() { break; }
+
+                let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self.decoder.close_step(self.turn.grant).expect("fixture original decoder paid closure"));
+
+                let progress = match step { semio_framework_value::RetainedCloneStep::Progress(progress) | semio_framework_value::RetainedCloneStep::Complete(progress) => progress };
+
+                assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
+
+                assert!(progress.fits(self.turn.grant), "fixture receiving closure exceeded its original input");
+
+                assert_ne!(progress, semio_framework_value::RetainedCloneProgress::default(), "fixture receiving closure stalled under its original input");
+
+            }
+
+            assert!(self.decoder.terminal_is_empty(),"fixture original receiving retirement did not finish");
+
+            for _ in 0..100_000 {
+
+                if self.payload.terminal_is_empty() { break; }
+
+                let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self.payload.close_step(self.turn.grant).expect("fixture original payload paid closure"));let progress=step.progress();
+
+                assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
+
+                assert!(progress.fits(self.turn.grant));
+
+                assert_ne!(progress,semio_framework_value::RetainedCloneProgress::default(),"fixture original payload closure stalled");
+
+            }
+
+            assert!(self.payload.terminal_is_empty());
+
+            if let Some(cancel)=self.cancel.take() {
+
+                let mut owner=semio_framework_async::CancelTokenRetirement::from_token(cancel);
+
+                for _ in 0..100_000 {
+
+                    if owner.terminal_is_empty() { break; }
+
+                    let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(self.turn.grant).expect("fixture original cancellation paid closure"));let progress=step.progress();
+
+                    assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
+
+                    assert!(progress.fits(self.turn.grant));
+
+                    assert_ne!(progress,semio_framework_value::RetainedCloneProgress::default(),"fixture original cancellation closure stalled");
+
+                }
+
+                assert!(owner.terminal_is_empty());
+
+            }
+
+        }
+
+    }
+
+
+
+    impl Drop for FixtureOriginalJob {
+
+        fn drop(&mut self) { if !std::thread::panicking() { self.close(); } }
+
+    }

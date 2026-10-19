@@ -10,10 +10,10 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fe
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dElementsModification;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ReplaceElement, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
+pub fn diff(payload: &ReplaceElement, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<Fem2dDiff> {
     let Some(existing) = base.elements.iter().find(|element| element_id(element) == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Element \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
@@ -26,6 +26,6 @@ pub fn diff(payload: &ReplaceElement, base: &Fem2dSnapshot) -> protocol::Mutatio
     if existing == payload.new_element.as_ref() {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Element \"{}\" is already equal to the replacement value.", payload.id));
     }
-    protocol::MutationOutcome::new(Fem2dDiff { elements: Some(Fem2dElementsDelta { modified: vec![Fem2dElementsModification { id: payload.id.clone(), patch: payload.new_element.clone() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem2dDiff { elements: Some(Fem2dElementsDelta { modified: vec![Fem2dElementsModification { id: payload.id.clone(), patch: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dElementPatch::replacement(&payload.new_element) }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

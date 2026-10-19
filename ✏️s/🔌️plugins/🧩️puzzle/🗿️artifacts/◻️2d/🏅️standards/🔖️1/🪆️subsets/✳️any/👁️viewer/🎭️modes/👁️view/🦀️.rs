@@ -1,5 +1,5 @@
-//! 👁️ Puzzle 2d viewer — the `view` mode: a single full-pane Board window, the read-only counterpart
 //! of the editor's `edit` mode (whose quad selection/overview/detail panes all mutate). Ticket
+//! 👁️ Puzzle 2d viewer — the `view` mode: a single full-pane Board window, the read-only counterpart
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1 only requires "one real view mode
 //! with ≥1 real window" for a viewer packet — read-only twins of the editor's selection/detail panes
 //! are a follow-up, not a purity or completeness requirement.

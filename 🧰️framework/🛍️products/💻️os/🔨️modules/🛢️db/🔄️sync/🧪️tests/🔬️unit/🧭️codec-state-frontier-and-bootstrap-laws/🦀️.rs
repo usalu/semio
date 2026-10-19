@@ -237,7 +237,7 @@ async fn handle_hello_bootstraps_a_fresh_replica_via_tail_and_issues_a_resume_to
     seed_wal(&storage, &document, 3).await;
     let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(storage));
 
-    let response = db_actor::block_on(handle_hello(db_io_driver::db_io_test_pool(), storage, document, None, "session-1".to_string(), protocol::ActorId("semio_hub".to_string()), 64 * 1024)).unwrap();
+    let response = db_actor::block_on(handle_hello(db_io_driver::db_io_test_pool(), storage, document, None, "session-1".to_string(), protocol::ActorId("semio_hub".to_string().into()), 64 * 1024)).unwrap();
     let protocol::ServerFrame::Welcome { bootstrap, server_frontier, resume_token, .. } = &response.welcome else {
         panic!("expected a Welcome frame");
     };
@@ -260,7 +260,7 @@ async fn handle_hello_reports_no_follow_up_for_an_already_caught_up_replica() {
     let hello_frontier = state_frontier_summary(&state).await;
     let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(storage));
 
-    let response = db_actor::block_on(handle_hello(db_io_driver::db_io_test_pool(), storage, document, Some(hello_frontier), "session-2".to_string(), protocol::ActorId("semio_hub".to_string()), 64 * 1024)).unwrap();
+    let response = db_actor::block_on(handle_hello(db_io_driver::db_io_test_pool(), storage, document, Some(hello_frontier), "session-2".to_string(), protocol::ActorId("semio_hub".to_string().into()), 64 * 1024)).unwrap();
     let protocol::ServerFrame::Welcome { bootstrap, .. } = &response.welcome else {
         panic!("expected a Welcome frame");
     };
@@ -281,7 +281,7 @@ async fn handle_hello_chunks_a_snapshot_larger_than_the_requested_chunk_size() {
     let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(storage));
 
     let stale_hello_frontier = protocol::RuntimeFrontierSummary { document_id: protocol::ArtifactId(document.0.clone()), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: [0u8; 32] };
-    let response = db_actor::block_on(handle_hello(db_io_driver::db_io_test_pool(), storage, document, Some(stale_hello_frontier), "session-3".to_string(), protocol::ActorId("semio_hub".to_string()), 4)).unwrap();
+    let response = db_actor::block_on(handle_hello(db_io_driver::db_io_test_pool(), storage, document, Some(stale_hello_frontier), "session-3".to_string(), protocol::ActorId("semio_hub".to_string().into()), 4)).unwrap();
 
     let protocol::ServerFrame::Welcome { bootstrap, .. } = &response.welcome else {
         panic!("expected a Welcome frame");
@@ -298,7 +298,7 @@ async fn handle_hello_rejects_zero_snapshot_chunk_bytes() {
     let document: ArtifactId = "doc-1".into();
     seed_wal(&storage, &document, 1).await;
     let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(storage));
-    assert!(matches!(db_actor::block_on(handle_hello(db_io_driver::db_io_test_pool(), storage, document, None, "s".to_string(), protocol::ActorId("semio_hub".to_string()), 0)), Err(DbError::InvalidArgument(_))));
+    assert!(matches!(db_actor::block_on(handle_hello(db_io_driver::db_io_test_pool(), storage, document, None, "s".to_string(), protocol::ActorId("semio_hub".to_string().into()), 0)), Err(DbError::InvalidArgument(_))));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -315,7 +315,7 @@ async fn handle_frontier_advertise_relays_missing_commands_and_none_when_caught_
         submit_record(&storage, &mut wal, command_record(&envelope).await, 100).await;
     }
 
-    let frame = db_actor::block_on(handle_frontier_advertise(&storage, document.clone(), &replica_summary, protocol::ActorId("semio_hub".to_string()))).unwrap();
+    let frame = db_actor::block_on(handle_frontier_advertise(&storage, document.clone(), &replica_summary, protocol::ActorId("semio_hub".to_string().into()))).unwrap();
     match frame {
         Some(protocol::ServerFrame::Commands { envelopes, .. }) => {
             assert_eq!(envelopes.len(), 1);
@@ -326,6 +326,6 @@ async fn handle_frontier_advertise_relays_missing_commands_and_none_when_caught_
 
     let up_to_date_state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
     let up_to_date_summary = state_frontier_summary(&up_to_date_state).await;
-    assert!(db_actor::block_on(handle_frontier_advertise(&storage, document, &up_to_date_summary, protocol::ActorId("semio_hub".to_string()))).unwrap().is_none());
+    assert!(db_actor::block_on(handle_frontier_advertise(&storage, document, &up_to_date_summary, protocol::ActorId("semio_hub".to_string().into()))).unwrap().is_none());
 }
 //#endregion 🔖️Hello

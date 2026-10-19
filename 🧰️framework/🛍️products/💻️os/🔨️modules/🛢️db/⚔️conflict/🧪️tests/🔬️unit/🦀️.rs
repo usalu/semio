@@ -6,7 +6,7 @@ fn hlt(physical_ms: u64, actor: u64) -> protocol::HybridLogicalTimestamp {
 }
 
 fn command(id: &str, actor: u64, physical_ms: u64, kind: &str) -> CommandTouch {
-    CommandTouch::new(protocol::MutationId(id.into()), protocol::ActorId(format!("actor-{actor}")), CommandKind::from(kind), hlt(physical_ms, actor))
+    CommandTouch::new(protocol::MutationId(id.into()), protocol::ActorId(format!("actor-{actor}").into()), CommandKind::from(kind), hlt(physical_ms, actor))
 }
 //#endregion 🧸️Fixtures
 

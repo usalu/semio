@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.coms/repo/dashboard/repo-action.json",
+  "title": "🏛️ Dashboard Repo Actions",
+  "description": "🦑️ Typed repository actions selected by the dashboard launcher and executed by either repository implementation.",
+  "oneOf": [
+    { "enum": ["GoalsList", "GoalsTree", "TreeMonorepo", "TreeGoal", "TreeStatute", "TreeTerritory", "StatutesCatalog"] },
+    { "type": "object", "properties": { "TicketShow": { "$ref": "#/$defs/Ticket" } }, "required": ["TicketShow"], "additionalProperties": false },
+    { "type": "object", "properties": { "TicketFiles": { "$ref": "#/$defs/Ticket" } }, "required": ["TicketFiles"], "additionalProperties": false },
+    { "type": "object", "properties": { "TicketClose": { "$ref": "#/$defs/Ticket" } }, "required": ["TicketClose"], "additionalProperties": false },
+    { "type": "object", "properties": { "TicketReopen": { "$ref": "#/$defs/Reopen" } }, "required": ["TicketReopen"], "additionalProperties": false },
+    { "type": "object", "properties": { "DraftStart": { "$ref": "#/$defs/DraftStart" } }, "required": ["DraftStart"], "additionalProperties": false },
+    { "type": "object", "properties": { "DraftDiscard": { "$ref": "#/$defs/DraftDiscard" } }, "required": ["DraftDiscard"], "additionalProperties": false },
+    { "type": "object", "properties": { "Analyze": { "$ref": "#/$defs/Analyze" } }, "required": ["Analyze"], "additionalProperties": false }
+  ],
+  "$defs": {
+    "HumanText": { "type": "string", "minLength": 1, "maxLength": 1024, "pattern": "\\S", "not": { "pattern": "[\\u0000-\\u001f\\u007f]" } },
+    "TicketId": { "type": "string", "pattern": "^\\d{2}/\\d{2}/\\d{2}/[A-Z0-9]+(?:-[A-Z0-9]+)*(?:/[A-Z0-9]+(?:-[A-Z0-9]+)*)*$" },
+    "Ticket": { "type": "object", "properties": { "id": { "$ref": "#/$defs/TicketId" } }, "required": ["id"], "additionalProperties": false },
+    "Reopen": { "type": "object", "properties": { "id": { "$ref": "#/$defs/TicketId" }, "prompt": { "$ref": "#/$defs/HumanText" } }, "required": ["id", "prompt"], "additionalProperties": false },
+    "DraftStart": { "type": "object", "properties": { "title": { "$ref": "#/$defs/HumanText" } }, "required": ["title"], "additionalProperties": false },
+    "DraftDiscard": { "type": "object", "properties": { "slug": { "type": "string", "pattern": "^[A-Z0-9]+(?:-[A-Z0-9]+)*$", "maxLength": 1024 } }, "required": ["slug"], "additionalProperties": false },
+    "Analyze": { "type": "object", "properties": { "scope": { "enum": ["all", "rust", "typescript", "go", "python", "markdown"] }, "policy": { "enum": [null, "code"] } }, "required": ["scope", "policy"], "additionalProperties": false }
+  }
+}

@@ -1,0 +1,110 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "lanes",
+    "source",
+    "phases",
+    "grant",
+    "denied",
+    "zeroReleaseBirth",
+    "cancelCuts",
+    "maximumTurns",
+    "terminalDropBytes"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "lanes": {
+      "const": [
+        "document",
+        "config",
+        "draft"
+      ]
+    },
+    "source": {
+      "const": {
+        "allocations": 1,
+        "aliases": [
+          "publication",
+          "replay"
+        ],
+        "sameIdentity": true,
+        "constructorBeforeGrant": false
+      }
+    },
+    "phases": {
+      "const": [
+        "quote",
+        "source",
+        "factory-tickets",
+        "install",
+        "publication-or-replay",
+        "acknowledge",
+        "original-close"
+      ]
+    },
+    "grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "copy": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "release": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "denied": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "depth"
+      ]
+    },
+    "zeroReleaseBirth": {
+      "const": true
+    },
+    "cancelCuts": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 9,
+      "uniqueItems": true
+    },
+    "maximumTurns": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "terminalDropBytes": {
+      "const": 0
+    }
+  }
+}

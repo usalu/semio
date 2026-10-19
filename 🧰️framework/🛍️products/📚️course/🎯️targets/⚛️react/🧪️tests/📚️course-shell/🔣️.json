@@ -1,0 +1,19 @@
+{
+  "schema": "semio.course.shell-tests/v1",
+  "locales": [
+    { "locale": "en", "home": "Course", "quizzes": "Quizzes" },
+    { "locale": "de", "home": "Kurs", "quizzes": "Quizze" }
+  ],
+  "screens": [
+    { "screen": "home", "module": "HomeScreen" },
+    { "screen": "identity", "module": "HomeScreen" },
+    { "screen": "introduction", "module": "HomeScreen" },
+    { "screen": "run", "module": "RunScreen" },
+    { "screen": "results", "module": "ResultsScreen" }
+  ],
+  "pages": ["learner", "quizzes", "board", "badges", "prefs"],
+  "overlayCards": [
+    { "openable": false, "actions": 1, "openings": 0 },
+    { "openable": true, "actions": 1, "openings": 0 }
+  ]
+}

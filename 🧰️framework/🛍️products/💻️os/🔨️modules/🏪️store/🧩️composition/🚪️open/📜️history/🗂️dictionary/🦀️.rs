@@ -68,6 +68,7 @@ impl DictionaryOwners {
     }
 }
 impl ErasedSnapshotRetirement for DictionaryOwners {
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands(body) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.index.is_some() {
             let step = semio_framework_os_store_read::retirement_owner_close(&mut self.index, grant)?;
@@ -438,6 +439,7 @@ impl MemberHistoryDictionaryOwner {
     }
 }
 impl ErasedSnapshotRetirement for MemberHistoryDictionaryOwner {
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands(body) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -533,6 +535,7 @@ impl VerifiedMemberHistoryDictionary {
 }
 
 impl ErasedSnapshotRetirement for VerifiedMemberHistoryDictionary {
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { crate::os_store::snapshot_read::artifact_retirement_owner_demands(&self.owners, body) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if grant.maximum_items != 0 && grant.maximum_depth >= self.next_depth_demand()? { self.closing = true; }
         semio_framework_os_store_read::retirement_owner_close(&mut self.owners, grant)

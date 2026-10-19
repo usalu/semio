@@ -95,8 +95,8 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     }
 
     /// 🚦️ Starts, wakes or aborts the brush suggestions run for the grip the link points at.
-    fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle5dConfig>, _view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
-        owner.with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| Ok(semio_s_artifact_puzzle_3d_editor_modes::windows::main::utilities::brush::run_effects(&mut owner.brush_suggestions, doc.tool_run()))).unwrap_or_default()
+    fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_framework_plugin::ArtifactPendingView<'_, Puzzle5dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle5dConfig>, _view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
+        owner.with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| Ok(semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::windows::main::utilities::brush::run_effects(&mut owner.brush_suggestions, doc.tool_run()))).unwrap_or_default()
     }
 
 
@@ -105,68 +105,62 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         registry.register(Puzzle5dRetainedCommandJobFactory::new(&controller_id))
     }
 
-    fn build_tool_job(request: semio_framework_plugin::app::ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !PUZZLE5D_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            return Ok(None);
+    fn build_tool_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework::ErasedToolJob>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
+        let original=request.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original puzzle5d producer request is absent"))?;
+        if !PUZZLE5D_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {return Ok(false);}
+        if original.command.action_id()!=original.tool_id {return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"puzzle5d-command-tool-mismatch").into());}
+        let tool_id=original.command.action_id();
+        macro_rules! work {
+            (|$request:ident| $make:expr) => {
+                semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,Puzzle5dCommand::action_id,PUZZLE5D_RETAINED_RAW_BYTES,crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS,true,|$request|{let _=&$request;$make})
+            };
         }
-        if request.command.action_id() != request.tool_id {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "puzzle5d-command-tool-mismatch"));
+        macro_rules! seed {
+            (|$request:ident,$seed:ident| $make:expr) => {{
+                let bytes=original.authoring_seed.len();
+                let demand=semio_framework_value::RetirementDemand{copy_bytes:bytes,capacity_bytes:bytes,depth:1,..Default::default()};
+                semio_framework_plugin::retained_command::producer::admit_retained_tool_producer_measured(request,output,cx,Puzzle5dCommand::action_id,PUZZLE5D_RETAINED_RAW_BYTES,crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS,true,demand,|$request,_|{
+                    let $seed=$request.authoring_seed.clone();let capacity=$seed.capacity();
+                    Ok(($make,semio_framework_job::RetainedCloneProgress{copied_bytes:bytes,retained_capacity_bytes:capacity,..Default::default()}))
+                })
+            }};
         }
-        let tool_id = request.command.action_id();
-        let nonce = puzzle5d_operation_nonce(&request.operation);
-        let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Self>>> = match tool_id {
+        macro_rules! owned {
+            ($owner:ty, |$request:ident, $scope:ident| $make:expr) => {{
+                let demand = <$owner>::original_birth_demands()?;
+                semio_framework_plugin::retained_command::producer::admit_retained_tool_producer_measured_scoped(
+                    request, output, cx, Puzzle5dCommand::action_id, PUZZLE5D_RETAINED_RAW_BYTES,
+                    crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS, true, demand,
+                    |$request, $scope| { let _ = &$request; $make },
+                )
+            }};
+        }
+        let nonce=puzzle5d_operation_nonce(&original.operation);
+        match tool_id {
             // ⏯️ The verbs that start, retarget or abort a run read the instance's live run as of admission.
-            "engagementAbort" | "openVortexSuggestions" | "closeVortexSuggestions" => Box::new(Puzzle5dWindowCommandWork::new(tool_id, request.authoring_seed.clone()).bound(request.instance_operation_owner.clone()).with_tool_run(request.context.tool_run().cloned())),
-            window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => Box::new(Puzzle5dWindowCommandWork::new(window, request.authoring_seed.clone()).bound(request.instance_operation_owner.clone())),
-            "addBrushPart" | "addPartKind" => Box::new(Puzzle5dAddBrushPartWork::new(tool_id).bound(nonce)),
-            "applyBoardEvents" => Box::new(Puzzle5dBoardEventsWork::new(request.authoring_seed.clone()).bound(nonce)),
-            "translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => Box::new(Puzzle5dTransformWork::new(tool_id, request.authoring_seed.clone())),
-            "patchPart" if puzzle5d_inspector_nudge(request.command.args()).is_some() => Box::new(Puzzle5dTransformWork::new(tool_id, request.authoring_seed.clone())),
-            "focusSelection" => Box::new(Puzzle5dFocusSelectionWork::default()),
-            "patchPart" => Box::new(Puzzle5dPatchPartWork::default()),
-            "patchFastener" => Box::new(Puzzle5dPatchFastenerWork::default()),
-            "editFastener" => Box::new(Puzzle5dEditFastenerWork::default()),
-            "retargetFastener" => Box::new(Puzzle5dRetargetFastenerWork::default()),
-            "proximityConnect" => Box::new(Puzzle5dProximityConnectWork::default().bound(nonce)),
-            "patchGrip" => Box::new(Puzzle5dPatchGripWork::default()),
-            "deleteFastener" => Box::new(Puzzle5dDeleteFastenerWork::default()),
-            "addNode" => Box::new(Puzzle5dAddNodeWork::default().bound(nonce)),
-            "createFastener" => Box::new(Puzzle5dCreateFastenerWork::default().bound(nonce)),
-            "exportSnapshot" => Box::new(Puzzle5dExportWork::default()),
-            "setActiveExample" => Box::new(Puzzle5dSetActiveExampleWork::default()),
-            "registerBrushMesh" => Box::new(Puzzle5dRegisterBrushMeshWork::default()),
-            "setPartKindWeight" | "setGripKindWeight" => Box::new(Puzzle5dKindWeightWork::new(tool_id)),
-            "worldPointerDown" | "canvasPointerDown" => Box::new(crate::retained_command::NoopPuzzleCommandWork::new(tool_id)),
-            _ => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce::<Puzzle5dPlayApp>, puzzle5d_retained_extent)),
-        };
-        let operation_context = semio_framework_plugin::AppOperationContext {
-            app_instance_id: request.app_instance_id,
-            parent_document_id: request.parent_document_id.clone(),
-            operation_id: request.operation.operation.0,
-            generation: request.operation.generation.0,
-            canonical_base_revision: request.canonical_base_revision,
-            retained: request.retained,
-            authoring_seed: request.authoring_seed.clone(),
-        };
-        let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
-                command: *request.command,
-                snapshot: request.snapshot,
-                snapshot_read: request.snapshot_read,
-                config: request.config,
-                history: request.history,
-                interaction_state: request.interaction_state,
-                interaction_hover: request.interaction_hover,
-                context: Some(request.context),
-                operation: operation_context,
-                completion: request.completion,
-            },
-            Puzzle5dCommand::action_id,
-            PUZZLE5D_RETAINED_RAW_BYTES,
-            crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS,
-            work,
-        );
-        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+            "engagementAbort" | "openVortexSuggestions" | "closeVortexSuggestions" => seed!(|request, seed| Puzzle5dWindowCommandWork::new(tool_id, seed).bound(request.instance_operation_owner.clone())),
+            window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => seed!(|request, seed| Puzzle5dWindowCommandWork::new(window, seed).bound(request.instance_operation_owner.clone())),
+            "addBrushPart" | "addPartKind" => owned!(Puzzle5dAddBrushPartWork, |request, scope| Puzzle5dAddBrushPartWork::from_original_construction(tool_id, scope).map(|(work, progress)| (work.bound(nonce), progress))),
+            "applyBoardEvents" => owned!(Puzzle5dBoardEventsWork, |request, scope| Puzzle5dBoardEventsWork::from_original_construction(scope).map(|(work, progress)| (work.bound(nonce), progress))),
+            "translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => seed!(|request, seed| Puzzle5dTransformWork::new(tool_id, seed)),
+            "patchPart" if puzzle5d_inspector_nudge(original.command.args()).is_some() => seed!(|request, seed| Puzzle5dTransformWork::new(tool_id, seed)),
+            "focusSelection" => work!(|request| Puzzle5dFocusSelectionWork::default()),
+            "patchPart" => owned!(Puzzle5dPatchPartWork, |request, scope| Puzzle5dPatchPartWork::from_original_construction(scope)),
+            "patchFastener" => owned!(Puzzle5dPatchFastenerWork, |request, scope| Puzzle5dPatchFastenerWork::from_original_construction(scope)),
+            "editFastener" => owned!(Puzzle5dEditFastenerWork, |request, scope| Puzzle5dEditFastenerWork::from_original_construction(scope)),
+            "retargetFastener" => owned!(Puzzle5dRetargetFastenerWork, |request, scope| Puzzle5dRetargetFastenerWork::from_original_construction(scope)),
+            "proximityConnect" => owned!(Puzzle5dProximityConnectWork, |request, scope| Puzzle5dProximityConnectWork::from_original_construction(scope).map(|(work, progress)| (work.bound(nonce), progress))),
+            "patchGrip" => owned!(Puzzle5dPatchGripWork, |request, scope| Puzzle5dPatchGripWork::from_original_construction(scope)),
+            "deleteFastener" => owned!(Puzzle5dDeleteFastenerWork, |request, scope| Puzzle5dDeleteFastenerWork::from_original_construction(scope)),
+            "addNode" => owned!(Puzzle5dAddNodeWork, |request, scope| Puzzle5dAddNodeWork::from_original_construction(scope).map(|(work, progress)| (work.bound(nonce), progress))),
+            "createFastener" => work!(|request| Puzzle5dCreateFastenerWork::default().bound(nonce)),
+            "exportSnapshot" => work!(|request| Puzzle5dExportWork::default()),
+            "setActiveExample" => owned!(Puzzle5dSetActiveExampleWork, |request, scope| Puzzle5dSetActiveExampleWork::from_original_construction(scope)),
+            "registerBrushMesh" => work!(|request| Puzzle5dRegisterBrushMeshWork::default()),
+            "setPartKindWeight" | "setGripKindWeight" => owned!(Puzzle5dKindWeightWork, |_request, scope| Puzzle5dKindWeightWork::from_original_construction(tool_id, scope)),
+            "worldPointerDown" | "canvasPointerDown" => work!(|request| crate::retained_command::NoopPuzzleCommandWork::new(tool_id)),
+            _ => work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce::<Puzzle5dPlayApp>, puzzle5d_retained_extent)),
+        }
     }
 
     fn build_reserved_tool_job(mut request: ArtifactReservedToolJobRequest<EditorApp<Self>>) -> Result<Option<ArtifactReservedToolJob>, Fault> {

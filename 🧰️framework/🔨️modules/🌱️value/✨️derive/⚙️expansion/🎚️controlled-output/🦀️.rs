@@ -4,6 +4,25 @@ use quote::{quote, format_ident};
 use syn::{Data, DeriveInput, Fields};
 use super::{ContainerAttrs, FieldAttrs, FieldDefault, field_wire_name, parse_field_attrs, parse_variant_attrs, type_is_option, variant_wire_name};
 
+fn controlled_semantic_admission(body: proc_macro2::TokenStream, container: &ContainerAttrs, c: &syn::Path, custom_constructor: bool) -> syn::Result<proc_macro2::TokenStream> {
+    if let Some(path) = &container.validate_controlled {
+        let validator: syn::Path = syn::parse_str(path)?;
+        return Ok(quote! {
+            let decoded = (|| -> ::core::result::Result<Self, #c::ValueError> { #body })()?;
+            let admission = control.scoped_stage(|control| { control.begin_stage(0)?; #validator(&decoded, control) });
+            if let Err(error) = admission {
+                <Self as #c::FromValue>::retire_decoded(decoded);
+                return Err(error);
+            }
+            Ok(decoded)
+        });
+    }
+    if container.validate.is_some() && !custom_constructor {
+        return Ok(quote! { control.checkpoint()?; Err(#c::ValueError::literal(#c::ValueRefusalKind::UnsupportedOwner, "semantic value validation requires an explicit controlled hook or constructor")) });
+    }
+    Ok(body)
+}
+
 fn controlled_field_decode(ty:&syn::Type,attrs:&FieldAttrs,value:proc_macro2::TokenStream,c:&syn::Path)->syn::Result<proc_macro2::TokenStream>{
     if attrs.effective_deserialize_with().is_some()&&attrs.retire_with.is_none(){return Ok(quote!{Err(#c::ValueError::new(#c::ValueRefusalKind::UnsupportedOwner, "custom controlled value conversion requires explicit retirement"))})}
     if let Some(path)=attrs.deserialize_controlled_with.clone(){

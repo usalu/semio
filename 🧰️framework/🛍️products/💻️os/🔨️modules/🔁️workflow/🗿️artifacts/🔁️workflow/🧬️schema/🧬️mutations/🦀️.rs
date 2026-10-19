@@ -42,6 +42,8 @@ mod unbind_parameter_field;
 mod set_node_positions;
 #[path = "🔄update-node-ports/🦀️.rs"]
 mod update_node_ports;
+#[path = "🔧set-node-ports/🦀️.rs"]
+mod set_node_ports;
 
 pub use add_input::AddInput;
 pub use add_node::AddNode;
@@ -58,6 +60,7 @@ pub use remove_input::RemoveInput;
 pub use remove_node::RemoveNode;
 pub use remove_parameter::RemoveParameter;
 pub use rename_node::RenameNode;
+pub use set_node_ports::{SetNodePorts, WorkflowNodePorts};
 pub use set_node_positions::{SetNodePositions, WorkflowNodePosition};
 pub use unbind_input::UnbindInput;
 pub use unbind_output::UnbindOutput;
@@ -69,7 +72,7 @@ pub use update_node_ports::UpdateNodePorts;
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
-#[mutations(snapshot = WorkflowSnapshot, diff = WorkflowDiff, schema = "os.workflow")]
+#[mutations(snapshot = WorkflowSnapshot, diff = WorkflowDiff, schema = "os.workflow", reference = WorkflowSnapshot, reference_diff = WorkflowDiff)]
 pub enum WorkflowMutation {
     AddNode(AddNode),
     RemoveNode(RemoveNode),
@@ -91,6 +94,7 @@ pub enum WorkflowMutation {
     UnbindOutput(UnbindOutput),
     MoveNodes(MoveNodes),
     SetNodePositions(SetNodePositions),
+    SetNodePorts(SetNodePorts),
 }
 //#endregion 🔖️Aggregate
 

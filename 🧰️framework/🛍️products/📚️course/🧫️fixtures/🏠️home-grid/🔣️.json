@@ -1,0 +1,823 @@
+{
+  "schema": "semio.course.home-grid/v1",
+  "description": "Every overview uses the same layered grid, with immediate children in reading order. The root has five general cards; quizzes opens the authored topics or flat quiz course; a populated topic opens its quizzes and an empty topic opens a placeholder. Desktop and mobile have three equal columns, tablets two equal columns. Pages remain live but inert behind glass until opened.",
+  "breakpoints": {
+    "mobileMaxPx": 767,
+    "tabletMaxPx": 1023
+  },
+  "layouts": [
+    {
+      "width": 320,
+      "grid": "desktop",
+      "mode": "swipe",
+      "columns": [
+        1,
+        1,
+        1
+      ],
+      "rows": [
+        1,
+        1
+      ]
+    },
+    {
+      "width": 375,
+      "grid": "desktop",
+      "mode": "swipe",
+      "columns": [
+        1,
+        1,
+        1
+      ],
+      "rows": [
+        1,
+        1
+      ]
+    },
+    {
+      "width": 767,
+      "grid": "desktop",
+      "mode": "swipe",
+      "columns": [
+        1,
+        1,
+        1
+      ],
+      "rows": [
+        1,
+        1
+      ]
+    },
+    {
+      "width": 768,
+      "grid": "tablet",
+      "mode": "strip",
+      "columns": [
+        1,
+        1
+      ],
+      "rows": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "width": 1023,
+      "grid": "tablet",
+      "mode": "strip",
+      "columns": [
+        1,
+        1
+      ],
+      "rows": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "width": 1024,
+      "grid": "desktop",
+      "mode": "strip",
+      "columns": [
+        1,
+        1,
+        1
+      ],
+      "rows": [
+        1,
+        1
+      ]
+    },
+    {
+      "width": 1440,
+      "grid": "desktop",
+      "mode": "strip",
+      "columns": [
+        1,
+        1,
+        1
+      ],
+      "rows": [
+        1,
+        1
+      ]
+    }
+  ],
+  "heights": {
+    "description": "Minimum viewport height for five root cards, scaled by learner text size.",
+    "rowHeightPx": 160,
+    "chromeHeightPx": 56,
+    "minimum": {
+      "desktop": 376,
+      "tablet": 536
+    },
+    "vectors": [
+      {
+        "width": 1280,
+        "height": 800,
+        "scale": 1,
+        "grid": "desktop",
+        "mode": "strip"
+      },
+      {
+        "width": 1280,
+        "height": 720,
+        "scale": 1,
+        "grid": "desktop",
+        "mode": "strip"
+      },
+      {
+        "width": 1366,
+        "height": 625,
+        "scale": 1,
+        "grid": "desktop",
+        "mode": "strip"
+      },
+      {
+        "width": 1280,
+        "height": 600,
+        "scale": 1,
+        "grid": "desktop",
+        "mode": "strip"
+      },
+      {
+        "width": 1280,
+        "height": 599,
+        "scale": 1,
+        "grid": "desktop",
+        "mode": "strip"
+      },
+      {
+        "width": 1024,
+        "height": 768,
+        "scale": 1,
+        "grid": "desktop",
+        "mode": "strip"
+      },
+      {
+        "width": 1023,
+        "height": 768,
+        "scale": 1,
+        "grid": "tablet",
+        "mode": "strip"
+      },
+      {
+        "width": 1023,
+        "height": 855,
+        "scale": 1,
+        "grid": "tablet",
+        "mode": "strip"
+      },
+      {
+        "width": 1023,
+        "height": 856,
+        "scale": 1,
+        "grid": "tablet",
+        "mode": "strip"
+      },
+      {
+        "width": 768,
+        "height": 1024,
+        "scale": 1,
+        "grid": "tablet",
+        "mode": "strip"
+      },
+      {
+        "width": 900,
+        "height": 700,
+        "scale": 1,
+        "grid": "tablet",
+        "mode": "strip"
+      },
+      {
+        "width": 900,
+        "height": 400,
+        "scale": 1,
+        "grid": "tablet",
+        "mode": "swipe"
+      },
+      {
+        "width": 767,
+        "height": 1024,
+        "scale": 1,
+        "grid": "desktop",
+        "mode": "swipe"
+      },
+      {
+        "width": 375,
+        "height": 812,
+        "scale": 1,
+        "grid": "desktop",
+        "mode": "swipe"
+      },
+      {
+        "width": 812,
+        "height": 375,
+        "scale": 1,
+        "grid": "tablet",
+        "mode": "swipe"
+      },
+      {
+        "width": 1440,
+        "height": 900,
+        "scale": 1.5,
+        "grid": "tablet",
+        "mode": "strip"
+      },
+      {
+        "width": 1280,
+        "height": 720,
+        "scale": 1.5,
+        "grid": "tablet",
+        "mode": "swipe"
+      },
+      {
+        "width": 1100,
+        "height": 800,
+        "scale": 1.5,
+        "grid": "desktop",
+        "mode": "swipe"
+      },
+      {
+        "width": 1534,
+        "height": 1283,
+        "scale": 1.5,
+        "grid": "tablet",
+        "mode": "strip"
+      },
+      {
+        "width": 1534,
+        "height": 1284,
+        "scale": 1.5,
+        "grid": "tablet",
+        "mode": "strip"
+      },
+      {
+        "width": 1535,
+        "height": 899,
+        "scale": 1.5,
+        "grid": "desktop",
+        "mode": "strip"
+      },
+      {
+        "width": 1535,
+        "height": 900,
+        "scale": 1.5,
+        "grid": "desktop",
+        "mode": "strip"
+      },
+      {
+        "width": 1920,
+        "height": 1080,
+        "scale": 1.5,
+        "grid": "desktop",
+        "mode": "strip"
+      },
+      {
+        "width": 1440,
+        "height": 900,
+        "scale": 1.25,
+        "grid": "desktop",
+        "mode": "strip"
+      },
+      {
+        "width": 1280,
+        "height": 720,
+        "scale": 1.125,
+        "grid": "desktop",
+        "mode": "strip"
+      },
+      {
+        "width": 1280,
+        "height": 674,
+        "scale": 1.125,
+        "grid": "desktop",
+        "mode": "strip"
+      }
+    ]
+  },
+  "orders": [
+    {
+      "quizzes": [
+        "q0",
+        "q1",
+        "q2",
+        "q3"
+      ],
+      "pages": [
+        "learner",
+        "quizzes",
+        "board",
+        "badges",
+        "prefs"
+      ]
+    },
+    {
+      "quizzes": [],
+      "pages": [
+        "learner",
+        "quizzes",
+        "board",
+        "badges",
+        "prefs"
+      ]
+    },
+    {
+      "quizzes": [
+        "q0"
+      ],
+      "pages": [
+        "learner",
+        "quizzes",
+        "board",
+        "badges",
+        "prefs"
+      ]
+    },
+    {
+      "quizzes": [
+        "q0",
+        "q1",
+        "q2"
+      ],
+      "pages": [
+        "learner",
+        "quizzes",
+        "board",
+        "badges",
+        "prefs"
+      ]
+    },
+    {
+      "quizzes": [
+        "q0",
+        "q1",
+        "q2",
+        "q3",
+        "q4",
+        "q5"
+      ],
+      "pages": [
+        "learner",
+        "quizzes",
+        "board",
+        "badges",
+        "prefs"
+      ]
+    }
+  ],
+  "excerpts": [
+    {
+      "id": "own-below-top",
+      "ranks": 8,
+      "mine": 7,
+      "top": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "own": 7
+    },
+    {
+      "id": "own-in-top",
+      "ranks": 8,
+      "mine": 3,
+      "top": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "own": null
+    },
+    {
+      "id": "own-fifth",
+      "ranks": 6,
+      "mine": 5,
+      "top": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "own": null
+    },
+    {
+      "id": "own-sixth",
+      "ranks": 6,
+      "mine": 6,
+      "top": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "own": 6
+    },
+    {
+      "id": "not-ranked",
+      "ranks": 8,
+      "mine": null,
+      "top": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "own": null
+    },
+    {
+      "id": "few",
+      "ranks": 3,
+      "mine": 2,
+      "top": [
+        1,
+        2,
+        3
+      ],
+      "own": null
+    },
+    {
+      "id": "empty",
+      "ranks": 0,
+      "mine": null,
+      "top": [],
+      "own": null
+    },
+    {
+      "id": "own-last-of-the-sent-rows",
+      "ranks": 250,
+      "mine": 100,
+      "top": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "own": 100
+    },
+    {
+      "id": "own-below-the-sent-rows",
+      "ranks": 250,
+      "mine": 180,
+      "top": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "own": 180
+    },
+    {
+      "id": "many-not-ranked",
+      "ranks": 250,
+      "mine": null,
+      "top": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "own": null
+    }
+  ],
+  "board": {
+    "sentRows": 100,
+    "page": [
+      {
+        "id": "all-sent",
+        "ranks": 8,
+        "mine": 7,
+        "rows": 8,
+        "apart": null,
+        "count": "Learners in total: 8",
+        "shown": null
+      },
+      {
+        "id": "own-inside-the-sent-rows",
+        "ranks": 250,
+        "mine": 100,
+        "rows": 100,
+        "apart": null,
+        "count": "Learners in total: 250",
+        "shown": "Shown: the top 100"
+      },
+      {
+        "id": "own-below-the-sent-rows",
+        "ranks": 250,
+        "mine": 180,
+        "rows": 100,
+        "apart": 180,
+        "count": "Learners in total: 250",
+        "shown": "Shown: the top 100"
+      },
+      {
+        "id": "many-not-ranked",
+        "ranks": 250,
+        "mine": null,
+        "rows": 100,
+        "apart": null,
+        "count": "Learners in total: 250",
+        "shown": "Shown: the top 100"
+      }
+    ]
+  },
+  "cells": [
+    {
+      "quizzes": 4,
+      "grid": "desktop",
+      "cells": {
+        "learner": {
+          "column": 0,
+          "row": 0
+        },
+        "quizzes": {
+          "column": 1,
+          "row": 0
+        },
+        "board": {
+          "column": 2,
+          "row": 0
+        },
+        "badges": {
+          "column": 0,
+          "row": 1
+        },
+        "prefs": {
+          "column": 1,
+          "row": 1
+        }
+      }
+    },
+    {
+      "quizzes": 4,
+      "grid": "tablet",
+      "cells": {
+        "learner": {
+          "column": 0,
+          "row": 0
+        },
+        "quizzes": {
+          "column": 1,
+          "row": 0
+        },
+        "board": {
+          "column": 0,
+          "row": 1
+        },
+        "badges": {
+          "column": 1,
+          "row": 1
+        },
+        "prefs": {
+          "column": 0,
+          "row": 2
+        }
+      }
+    },
+    {
+      "quizzes": 3,
+      "grid": "desktop",
+      "cells": {
+        "learner": {
+          "column": 0,
+          "row": 0
+        },
+        "quizzes": {
+          "column": 1,
+          "row": 0
+        },
+        "board": {
+          "column": 2,
+          "row": 0
+        },
+        "badges": {
+          "column": 0,
+          "row": 1
+        },
+        "prefs": {
+          "column": 1,
+          "row": 1
+        }
+      }
+    },
+    {
+      "quizzes": 3,
+      "grid": "tablet",
+      "cells": {
+        "learner": {
+          "column": 0,
+          "row": 0
+        },
+        "quizzes": {
+          "column": 1,
+          "row": 0
+        },
+        "board": {
+          "column": 0,
+          "row": 1
+        },
+        "badges": {
+          "column": 1,
+          "row": 1
+        },
+        "prefs": {
+          "column": 0,
+          "row": 2
+        }
+      }
+    },
+    {
+      "quizzes": 0,
+      "grid": "desktop",
+      "cells": {
+        "learner": {
+          "column": 0,
+          "row": 0
+        },
+        "quizzes": {
+          "column": 1,
+          "row": 0
+        },
+        "board": {
+          "column": 2,
+          "row": 0
+        },
+        "badges": {
+          "column": 0,
+          "row": 1
+        },
+        "prefs": {
+          "column": 1,
+          "row": 1
+        }
+      }
+    },
+    {
+      "quizzes": 0,
+      "grid": "tablet",
+      "cells": {
+        "learner": {
+          "column": 0,
+          "row": 0
+        },
+        "quizzes": {
+          "column": 1,
+          "row": 0
+        },
+        "board": {
+          "column": 0,
+          "row": 1
+        },
+        "badges": {
+          "column": 1,
+          "row": 1
+        },
+        "prefs": {
+          "column": 0,
+          "row": 2
+        }
+      }
+    },
+    {
+      "quizzes": 6,
+      "grid": "desktop",
+      "cells": {
+        "learner": {
+          "column": 0,
+          "row": 0
+        },
+        "quizzes": {
+          "column": 1,
+          "row": 0
+        },
+        "board": {
+          "column": 2,
+          "row": 0
+        },
+        "badges": {
+          "column": 0,
+          "row": 1
+        },
+        "prefs": {
+          "column": 1,
+          "row": 1
+        }
+      }
+    },
+    {
+      "quizzes": 6,
+      "grid": "tablet",
+      "cells": {
+        "learner": {
+          "column": 0,
+          "row": 0
+        },
+        "quizzes": {
+          "column": 1,
+          "row": 0
+        },
+        "board": {
+          "column": 0,
+          "row": 1
+        },
+        "badges": {
+          "column": 1,
+          "row": 1
+        },
+        "prefs": {
+          "column": 0,
+          "row": 2
+        }
+      }
+    }
+  ],
+  "hierarchy": {
+    "topics": [
+      {
+        "id": "energy",
+        "emoji": "🔋",
+        "title": {
+          "en": "Energy",
+          "de": "Energie"
+        },
+        "quizzes": [
+          "q0",
+          "q1",
+          "q2",
+          "q3"
+        ]
+      },
+      {
+        "id": "parametric",
+        "emoji": "📐",
+        "title": {
+          "en": "Parametric Design",
+          "de": "Parametrisches Entwerfen"
+        },
+        "quizzes": []
+      }
+    ],
+    "scopes": [
+      {
+        "page": null,
+        "pages": [
+          "learner",
+          "quizzes",
+          "board",
+          "badges",
+          "prefs"
+        ]
+      },
+      {
+        "page": "quizzes",
+        "pages": [
+          "energy",
+          "parametric"
+        ]
+      },
+      {
+        "page": "energy",
+        "pages": [
+          "q0",
+          "q1",
+          "q2",
+          "q3"
+        ]
+      },
+      {
+        "page": "parametric",
+        "pages": []
+      }
+    ],
+    "parents": [
+      {
+        "page": "quizzes",
+        "parent": null
+      },
+      {
+        "page": "energy",
+        "parent": "quizzes"
+      },
+      {
+        "page": "parametric",
+        "parent": "quizzes"
+      },
+      {
+        "page": "q0",
+        "parent": "energy"
+      }
+    ]
+  }
+}

@@ -130,23 +130,12 @@ pub struct EnergyModelConfigDiff {
 }
 
 impl protocol::MutationDiff<EnergyModelConfig> for EnergyModelConfigDiff {
-    fn apply(&self, base: &EnergyModelConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<EnergyModelConfig> {
-        let mut next = base.clone();
-        if let Some(value) = self.zone_timestep_minutes {
-            next.zone_timestep_minutes = value;
-        }
-        if let Some(value) = self.system_timestep_minutes {
-            next.system_timestep_minutes = value;
-        }
-        if let Some(value) = self.warmup_days {
-            next.warmup_days = value;
-        }
-        if let Some(value) = &self.result_field {
-            next.result_field = value.clone();
-        }
-        Ok(next)
-    }
 
+
+
+}
+
+impl protocol::ColdMutationDiff<EnergyModelConfig> for EnergyModelConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.zone_timestep_minutes.is_some() {
             self.zone_timestep_minutes = other.zone_timestep_minutes;
@@ -161,9 +150,33 @@ impl protocol::MutationDiff<EnergyModelConfig> for EnergyModelConfigDiff {
             self.result_field = other.result_field;
         }
     }
+
+    fn apply(&self, next: &mut EnergyModelConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        if let Some(value) = self.zone_timestep_minutes {
+            next.zone_timestep_minutes = value;
+        }
+        if let Some(value) = self.system_timestep_minutes {
+            next.system_timestep_minutes = value;
+        }
+        if let Some(value) = self.warmup_days {
+            next.warmup_days = value;
+        }
+        if let Some(value) = &self.result_field {
+            next.result_field = value.clone();
+        }
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<EnergyModelConfig> for EnergyModelConfigDiff {
+
+
+    fn is_empty(&self) -> bool {
+        self.zone_timestep_minutes.is_none() && self.system_timestep_minutes.is_none() && self.warmup_days.is_none() && self.result_field.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<EnergyModelConfig> for EnergyModelConfigDiff {
     fn inverse(&self, base: &EnergyModelConfig) -> Self {
         Self {
             zone_timestep_minutes: self.zone_timestep_minutes.map(|_| base.zone_timestep_minutes),
@@ -171,10 +184,6 @@ impl protocol::DiffAlgebra<EnergyModelConfig> for EnergyModelConfigDiff {
             warmup_days: self.warmup_days.map(|_| base.warmup_days),
             result_field: self.result_field.as_ref().map(|_| base.result_field.clone()),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.zone_timestep_minutes.is_none() && self.system_timestep_minutes.is_none() && self.warmup_days.is_none() && self.result_field.is_none()
     }
 }
 //#endregion 🔖️Config

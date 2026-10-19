@@ -1,0 +1,324 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:retained-typed-equality:v1",
+  "type": "object",
+  "required": [
+    "bodyBytes",
+    "cancelCuts",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "bodyBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cancelCuts": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "left",
+          "right",
+          "equal"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "left": {
+            "$ref": "#/$defs/node"
+          },
+          "right": {
+            "$ref": "#/$defs/node"
+          },
+          "equal": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "node": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "value"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "bool"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "value"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "u64"
+            },
+            "value": {
+              "type": "string",
+              "pattern": "^-?[0-9]+$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "value"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "i64"
+            },
+            "value": {
+              "type": "string",
+              "pattern": "^-?[0-9]+$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "word"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "f64"
+            },
+            "word": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "value"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "value"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "bytes"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "items"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "sequence"
+            },
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/node"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "fields"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "record"
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "value"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "$ref": "#/$defs/node"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "tag",
+            "value"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "variant"
+            },
+            "tag": {
+              "type": "string"
+            },
+            "value": {
+              "$ref": "#/$defs/node"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "value"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "optional"
+            },
+            "value": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/$defs/node"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "depth",
+            "leaf"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "chain"
+            },
+            "depth": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 64
+            },
+            "leaf": {
+              "$ref": "#/$defs/node"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "first",
+            "second"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "pair"
+            },
+            "first": {
+              "type": "object",
+              "required": [
+                "kind",
+                "value"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            },
+            "second": {
+              "type": "object",
+              "required": [
+                "kind",
+                "value"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "u64"
+                },
+                "value": {
+                  "type": "string",
+                  "pattern": "^[0-9]+$"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

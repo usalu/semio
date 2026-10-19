@@ -17,7 +17,7 @@ semio_framework_plugin::history_edit_acceptance_law!("energy", EnergyModelEditor
 async fn dispatchable_app() -> EnergyEditorApp {
     use semio_framework_plugin::PluginApp as _;
     let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<EnergyModelEditor>, semio_s_artifact_stdio_semio::SemioMembers>(energy_model_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<EnergyModelEditor>, semio_s_artifact_stdio_semio::SemioMembers>(energy_model_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
     EnergyEditorApp(app, scope)
 }
@@ -49,8 +49,8 @@ async fn every_declared_verb_dispatches_without_an_interactive_job_fault() {
         }
     }
     assert_eq!(reached, ENERGY_MODEL_RETAINED_TOOL_IDS.len());
-    let _ = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    let _ = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), app.1.cx()).expect("original caller paid app close");
 }
 
 /// 🧵️ The positive half of the law: a verb addressing real document state dispatches with NO
@@ -64,8 +64,8 @@ async fn renaming_the_model_dispatches_cleanly_through_the_real_action_route() {
     let args = DslValue::Object(vec![("id".to_string(), DslValue::String("name".to_string())), ("value".to_string(), DslValue::String("BESTEST 600".to_string()))]);
     let result = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, SET_NODE_ACTION_ID, Some(args.clone()), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("set-node dispatches without a fault");
     assert!(!result.mutations.is_empty() || app.has_pending_typed_operations(), "the rename neither published nor retained an operation");
-    let _ = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    let _ = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), app.1.cx()).expect("original caller paid app close");
 }
 //#region 🎚️ScrubLaws
 /// 🎚️ One dispatch of the site latitude slider as the hosts send it: `{field, value, gesture, commit}`, settled.
@@ -81,7 +81,7 @@ async fn slide_site_field(app: &mut EnergyEditorApp, field: &str, extra: Vec<(&s
     args.extend(extra.into_iter().map(|(key, value)| (key.to_string(), value)));
     semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, SET_SITE_ACTION_ID, Some(DslValue::Object(args)), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the slider dispatch is admitted");
     if !aborting {
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the slider dispatch settles");
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the slider dispatch settles");
     }
 }
 
@@ -130,7 +130,7 @@ async fn a_site_slider_press_is_one_transaction_and_a_cancel_leaves_zero_trace()
     let last = transaction_rows(&mut app).await.into_iter().max_by_key(|entry| entry.seq).and_then(|entry| entry.transaction).expect("the second press is a transaction");
     assert_ne!(last.id, first.id, "two presses, two transactions");
     assert_eq!(latitude(&app), 45.0);
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), app.1.cx()).expect("original caller paid app close");
 }
 
 async fn history_edit(app: &mut EnergyEditorApp, verb: &str, args: Vec<(&str, semio_framework_plugin::DslValue)>) {
@@ -157,7 +157,7 @@ async fn rename(app: &mut EnergyEditorApp, name: &str) {
     use semio_framework_plugin::{DslValue, PluginApp as _};
     let args = DslValue::Object(vec![("id".to_string(), DslValue::String("name".to_string())), ("value".to_string(), DslValue::String(name.to_string()))]);
     semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, SET_NODE_ACTION_ID, Some(args.clone()), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the rename is admitted");
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the rename settles");
+    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the rename settles");
 }
 
 /// ⚖️ LAW (W3-T2-CONTROLS, design §13.1): time travel edits the slider press's committed VALUE — the absolute
@@ -186,8 +186,8 @@ async fn a_committed_site_press_edited_in_history_replays_downstream() {
     slide_site(&mut fresh, press(15.0, "site.latitude:5", true)).await;
     rename(&mut fresh, "Edited downstream").await;
     assert_eq!(edited, fresh.snapshot().expect("fresh head").model, "the edited log equals a fresh run of the edited press");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut fresh.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, fresh.1.cx()).expect("original caller paid app close");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), app.1.cx()).expect("original caller paid app close");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut fresh.0, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), fresh.1.cx()).expect("original caller paid app close");
 }
 /// ⚖️ LAW (design §13.1, field-granular site leaves): time travel edits an EARLIER press while a later press of ANOTHER
 /// site field exists — the edited latitude and the later longitude both survive the replay and the overwrite, because
@@ -212,7 +212,7 @@ async fn a_history_edit_of_an_earlier_site_press_keeps_a_later_press_of_another_
     pump_time_travel(&mut app, |stage| stage.is_none()).await;
     let site = app.snapshot().expect("edited head").model.site;
     assert_eq!((site.latitude_deg, site.longitude_deg), (15.0, 50.0), "the edited latitude and the later longitude both survive the replay");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), app.1.cx()).expect("original caller paid app close");
 }
 /// 🎛️ One settled dispatch of `action` addressed at the 3d model window `window-1`, `extra` merged into `args`; a host
 /// cancel is settled by the runtime itself.
@@ -228,7 +228,7 @@ async fn press_in_window(app: &mut EnergyEditorApp, action: &str, args: Vec<(&st
     let args = semio_framework_plugin::DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
     semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(args.clone()), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"));
     if !aborting {
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("{action} settles: {fault:?}"));
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("{action} settles: {fault:?}"));
     }
 }
 
@@ -276,7 +276,7 @@ async fn a_config_press_is_one_config_edit_a_cancel_is_none_and_neither_is_a_his
     press_in_window(&mut app, model_window::SET_CAMERA_ACTION_ID, gesture_args("camera:2", None)).await;
     assert_eq!(app.config_generations(model_window::WINDOW_KIND_ID, "window-1").1, Some(window + 1), "a cancelled window-config press publishes nothing");
     assert_eq!(history_rows_and_mutations(&mut app).await, rows, "config edits are never history rows nor mutation rows");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), app.1.cx()).expect("original caller paid app close");
 }
 //#endregion 🎚️ScrubLaws
 
@@ -411,11 +411,11 @@ async fn durable(app: &mut EnergyEditorApp) -> (Vec<u8>, Vec<u8>, String) {
 
 /// 🔁️ Settles the retained settings operation through the host's exact continuation and ACK protocol.
 async fn settle(app: &mut EnergyEditorApp) {
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the retained settings operation settles");
+    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the retained settings operation settles");
 }
 
 fn close(mut app: EnergyEditorApp) {
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), app.1.cx()).expect("original caller paid app close");
 }
 
 #[semio_framework_async_macros::async_test]

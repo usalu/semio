@@ -19,8 +19,14 @@ impl OriginalJobFixtureCaller{
     pub fn cancel(&self)->&CancelToken{self.parent.as_ref().expect("original fixture caller retains its parent").cancellation().expect("original fixture caller retains its root")}
     pub fn admit_alias(&mut self,source:RetainedCloneGrant)->CancelToken{let alias=self.turn(source,|cx|{let alias=cx.admit_original_cancel_alias()?;if alias.is_some(){cx.consume_fuel(1);}Ok(alias)}).expect("original fixture alias turn").expect("original fixture alias admitted");assert!(alias.is_same_node(self.cancel()));assert_eq!(self.last,RetainedCloneProgress{copied_items:1,..Default::default()});alias}
     pub fn turn<R>(&mut self,grant:RetainedCloneGrant,advance:impl FnOnce(&mut StepContext<'_>)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure>{
+        self.turn_original(grant,None,advance)
+    }
+    /// 🛬️ Borrows the same caller turn and its explicitly supplied original decoder without issuing authority.
+    pub fn turn_with_decoder<R>(&mut self,grant:RetainedCloneGrant,decoder:&mut super::OriginalJobDecodeOwner,advance:impl FnOnce(&mut StepContext<'_>)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure>{self.turn_original(grant,Some(decoder),advance)}
+    fn turn_original<R>(&mut self,grant:RetainedCloneGrant,decoder:Option<&mut super::OriginalJobDecodeOwner>,advance:impl FnOnce(&mut StepContext<'_>)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure>{
         let before=self.spent;let issued_fuel=self.fuel;let mut value=None;self.clock_stride.begin((self.clock)());
         let mut cx=self.parent.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original fixture parent has already closed"))?.borrow_context(StepBudget::new(self.fuel,self.deadline,self.stock),self.clock,&mut self.sequence,&mut self.spent)?;
+        if let Some(decoder)=decoder{cx=cx.with_original_decoder(decoder);}
         cx.bind_original_clock_binding(self.clock_binding)?;cx.clock.set(self.clock_stride);assert_eq!(cx.operation(),self.operation);assert_eq!(cx.generation(),self.generation);
         let result=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||cx.with_retained_loan(grant,|cx|{value=Some(advance(cx)?);Ok(())})));
         self.fuel=cx.fuel_remaining().min(issued_fuel);self.clock_stride=cx.clock.get();drop(cx);self.last=fixture_delta(before,self.spent);
@@ -39,7 +45,7 @@ impl OriginalJobFixtureCaller{
 
 
     pub fn retire_step(&mut self,requested:RetainedCloneGrant)->Result<RetainedCloneStep,OriginalTurnFailure>{
-        self.last=Default::default();if self.parent.is_none(){return Ok(RetainedCloneStep::Complete(Default::default()))}if !fixture_work_open(self.clock,self.deadline,self.fuel,&mut self.clock_stride){return Ok(RetainedCloneStep::Progress(Default::default()))}
+        self.last=Default::default();if self.parent.is_none(){return Ok(RetainedCloneStep::Complete(Default::default()))}if self.fuel==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
         let available=self.remaining_grant();let grant=RetainedCloneGrant{maximum_items:requested.maximum_items.min(available.maximum_items).min(usize::try_from(self.fuel).unwrap_or(usize::MAX)),maximum_copy_bytes:requested.maximum_copy_bytes.min(available.maximum_copy_bytes),maximum_capacity_bytes:requested.maximum_capacity_bytes.min(available.maximum_capacity_bytes),maximum_release_bytes:requested.maximum_release_bytes.min(available.maximum_release_bytes),maximum_depth:requested.maximum_depth.min(available.maximum_depth)};
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
         let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{if self.parent.as_ref().unwrap().terminal_is_empty(){drop(self.parent.take());Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))}else{self.parent.as_mut().unwrap().close_step(grant)}});

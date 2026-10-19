@@ -153,7 +153,7 @@ fn scrub_ledger_replays_every_fixture_scenario() {
                 assert_eq!(scrub_step_json(&step), expect["step"], "{context}");
             } else {
                 let clock = HybridLogicalTimestamp { actor: 0, physical_ms: row["clock"].as_u64().expect("clock"), logical: 0 };
-                let step = ledger.send(text(&row["window"]), text(&row["tool"]), &actor, text(&row["base"]), scrub_input(&row["input"]), clock).expect("scrubs are never refused");
+                let step = ledger.send(text(&row["window"]), text(&row["tool"]), &actor, text(&row["base"]), &mut Some(scrub_input(&row["input"])), clock).expect("scrubs are never refused");
                 let step = match step {
                     ToolStep::Open => json!({ "kind": "open", "transaction": reference_json(&ledger.open(text(&row["window"])).expect("an open step persists").transaction) }),
                     other => scrub_step_json(&other),
@@ -198,7 +198,7 @@ fn explore_scrub_ledger(ledger: &ScrubLedger<Value>, alphabet: &[(&str, &str, Sc
             ScrubInput::Tick { gesture, .. } | ScrubInput::Commit { gesture, .. } => ledger.closed.get("w") == Some(gesture),
             ScrubInput::Abort { .. } => false,
         };
-        let mut next = ledger.clone();
+        let mut next = ledger.reference_fork();
         let step = next.send("w", tool, actor, base, input.clone(), HybridLogicalTimestamp { actor: 0, physical_ms: *sends as u64, logical: 0 }).expect("the scrub ledger never refuses");
         *sends += 1;
         if late {

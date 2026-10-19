@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "source": { "operation": 71, "generation": 3, "fuel": 281474976710656 },
+  "semantic": { "appInstanceId": 7, "run": 1 },
+  "stock": { "items": 16777216, "copyBytes": 1073741824, "capacityBytes": 1073741824, "releaseBytes": 1073741824, "depth": 4096 },
+  "loans": [
+    { "parentFuel": 13, "requestedFuel": 5, "spentFuel": 3, "remainingFuel": 10 },
+    { "parentFuel": 2, "requestedFuel": 5, "spentFuel": 2, "remainingFuel": 0 },
+    { "parentFuel": 9, "requestedFuel": 0, "spentFuel": 0, "remainingFuel": 9 }
+  ],
+  "identityActivity": [
+    { "identityBytes": 4096, "completedBefore": 0, "completedAfter": 0, "timestep": false },
+    { "identityBytes": 8192, "completedBefore": 0, "completedAfter": 0, "timestep": false },
+    { "identityBytes": 8192, "completedBefore": 0, "completedAfter": 1, "timestep": true }
+  ]
+}

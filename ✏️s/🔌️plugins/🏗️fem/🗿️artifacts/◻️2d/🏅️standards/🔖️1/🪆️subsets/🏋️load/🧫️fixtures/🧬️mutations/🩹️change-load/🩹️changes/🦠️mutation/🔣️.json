@@ -1,0 +1,9 @@
+{
+  "patch": {
+    "value": 20,
+    "kind": "nodal"
+  },
+  "mutation": "changeLoad",
+  "id": "l1",
+  "caseId": "lc1"
+}

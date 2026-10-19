@@ -13,16 +13,16 @@
 package model
 
 import (
-	json "encoding/json"
-	errors "errors"
-	fmt "fmt"
-	os "os"
-	filepath "path/filepath"
-	runtime "runtime"
-	strings "strings"
-	sync "sync"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"sync"
+	"github.com/usalu/semio/repo/workspace"
 
-	workspace "github.com/usalu/semio/repo/workspace"
 )
 
 // 📋️AllowedValuesEnvironment overrides the module-relative lookup of the shared vocabulary table.

@@ -36,7 +36,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             && self.pending.render_failure_terminal_is_empty()
             && self.tools.agent_lane_preview.is_none()
             && self.media.media_submission_refusal_terminal_is_empty()
-            && self.ingress.action_ingress_sources_closed()
+            && self.tool_machines.ingress.action_ingress_sources_closed()
             && self.media.media_exports.is_empty()
             && self.pending.pending_reserved.is_empty()
             && self.pending.reserved_commits.is_empty()

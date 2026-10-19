@@ -1,0 +1,44 @@
+//! 🌳️ Independent immutable named roots retain their original row source and admitted sorted directory.
+use super::*;
+use crate::{list::persistent::PersistentList,named_edit::PersistentRankedKeys,retained_clone::RetainedCloneSource};
+#[path="🛬️receive/🦀️.rs"]mod receiving;
+pub use receiving::{NamedRecordKey,NamedPersistentRootReceiver};
+/// 🪢️ Immutable payload contains no mutable directory retirement or projection-binding cursor.
+pub struct NamedPersistentRoot<T:Send+Sync+'static>{source:ManuallyDrop<Option<RetainedCloneSource<PersistentList<T>>>>,directory:ManuallyDrop<Option<SealedShared<Vec<usize>>>>,len:usize,key:fn(&T)->&str}
+impl<T:Send+Sync+'static> NamedPersistentRoot<T>{
+ pub fn constructor_demand()->RetirementDemand{fixed(size_of::<NamedPersistentRootPreparation<T>>()*2)}
+ pub fn admit_parts(source:&mut Option<RetainedCloneSource<PersistentList<T>>>,index:&mut Option<AdmittedNamedKeyIndex>,key:fn(&T)->&str,grant:RetainedCloneGrant)->Result<Option<(NamedPersistentRootPreparation<T>,RetainedCloneProgress)>,ValueError>{let d=Self::constructor_demand();if !retained_clone_grant_admits(grant,d){return Ok(None);}index.as_ref().ok_or_else(invalid)?.check_source(&PersistentRankedKeys{original:source.as_ref().ok_or_else(invalid)?.try_borrow()?,key})?;Ok(Some((NamedPersistentRootPreparation{source:ManuallyDrop::new(source.take()),index:ManuallyDrop::new(index.take()),key,closing:false,ready:false},paid(d))))}
+ pub fn ranked(&self)->Result<PersistentRankedKeys<'_,T>,ValueError>{Ok(PersistentRankedKeys{original:self.source.as_ref().ok_or_else(invalid)?.try_borrow()?,key:self.key})}
+ pub fn len(&self)->usize{self.len}
+ pub fn is_empty(&self)->bool{self.len==0}
+ pub fn project_index_demand(&self)->Result<RetirementDemand,ValueError>{let original=self.ranked()?.original;Ok(fixed(size_of::<AdmittedNamedKeyIndex>()*2+original.binding_copy_bytes()+size_of::<SealedShared<Vec<usize>>>()))}
+ pub fn project_index(&self,grant:RetainedCloneGrant)->Result<Option<(AdmittedNamedKeyIndex,RetainedCloneProgress)>,ValueError>{let d=self.project_index_demand()?;if !retained_clone_grant_admits(grant,d){return Ok(None);}let mut original=None;self.ranked()?.original.bind(&mut original,grant)?.ok_or_else(invalid)?;let directory=self.directory.as_ref().ok_or_else(invalid)?.try_duplicate(grant)?.0;Ok(Some((AdmittedNamedKeyIndex{original:ManuallyDrop::new(original),directory:ManuallyDrop::new(Some(directory)),retirement:Default::default(),len:self.len,projection:self.key as usize,closing:false},paid(d))))}
+ fn terminal_is_empty(&self)->bool{self.source.is_none()&&self.directory.is_none()}
+}
+impl<T:Send+Sync+'static> Drop for NamedPersistentRoot<T>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"independent named root requires its original owned retirement cursor");if empty{unsafe{ManuallyDrop::drop(&mut self.source);ManuallyDrop::drop(&mut self.directory);}}}}
+/// 📥️ Source validation and paid binding closure precede immutable root publication.
+pub struct NamedPersistentRootPreparation<T:Send+Sync+'static>{source:ManuallyDrop<Option<RetainedCloneSource<PersistentList<T>>>>,index:ManuallyDrop<Option<AdmittedNamedKeyIndex>>,key:fn(&T)->&str,closing:bool,ready:bool}
+impl<T:Send+Sync+'static> NamedPersistentRootPreparation<T>{
+ pub fn demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.closing||self.ready{return Err(invalid());}RetainedCloneBinding::demands(&self.index.as_ref().ok_or_else(invalid)?.original,body)}
+ pub fn advance(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let d=self.demand(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()));}let index=self.index.as_mut().ok_or_else(invalid)?;let step=RetainedCloneBinding::close_one(&mut index.original,grant)?;if index.original.is_none(){self.ready=true;}Ok(if self.ready{RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
+ pub fn output_ready(&self)->bool{!self.closing&&self.ready&&self.source.is_some()&&self.index.is_some()}
+ pub fn take_demand(&self)->Result<RetirementDemand,ValueError>{if !self.output_ready(){return Err(invalid());}Ok(fixed(size_of::<NamedPersistentRoot<T>>()*2+size_of::<AdmittedNamedKeyIndex>()))}
+ pub fn take(&mut self,grant:RetainedCloneGrant)->Result<Option<(NamedPersistentRoot<T>,RetainedCloneProgress)>,ValueError>{let d=self.take_demand()?;if !retained_clone_grant_admits(grant,d){return Ok(None);}let index=self.index.as_mut().ok_or_else(invalid)?;let root=NamedPersistentRoot{source:ManuallyDrop::new(self.source.take()),directory:ManuallyDrop::new(index.directory.take()),len:index.len,key:self.key};*self.index=None;Ok(Some((root,paid(d))))}
+ pub fn begin_close(&mut self){self.closing=true;if let Some(index)=self.index.as_mut(){index.begin_close();}}
+ pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid());}if let Some(index)=self.index.as_ref(){return if index.terminal_is_empty(){Ok(fixed(size_of::<AdmittedNamedKeyIndex>()*2))}else{index.close_demand(body)};}if let Some(source)=self.source.as_ref(){return if source.terminal_is_empty(){Ok(fixed(size_of::<RetainedCloneSource<PersistentList<T>>>()*2))}else{source.next_close_demand(body)};}Ok(Default::default())}
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let d=self.close_demand(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()));}if let Some(index)=self.index.as_mut(){if index.terminal_is_empty(){*self.index=None;return Ok(RetainedCloneStep::Progress(paid(d)));}return index.close_step(grant).map(|s|RetainedCloneStep::Progress(s.progress()));}if let Some(source)=self.source.as_mut(){if source.terminal_is_empty(){*self.source=None;return Ok(RetainedCloneStep::Progress(paid(d)));}return source.close_step(grant).map(|s|RetainedCloneStep::Progress(s.progress()));}Ok(RetainedCloneStep::Complete(Default::default()))}
+ pub fn terminal_is_empty(&self)->bool{self.source.is_none()&&self.index.is_none()}
+}
+impl<T:Send+Sync+'static> Drop for NamedPersistentRootPreparation<T>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"independent named root preparation requires funded original closure");if empty{unsafe{ManuallyDrop::drop(&mut self.source);ManuallyDrop::drop(&mut self.index);}}}}
+struct RootRetirement<T:Send+Sync+'static>{root:NamedPersistentRoot<T>,retirement:RetainedCloneClose}
+impl<T:Send+Sync+'static> RetireOwned for NamedPersistentRoot<T>{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(RootRetirement{root:self,retirement:Default::default()})}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<RootRetirement<T>>())}fn controlled_retirement_supported()->bool{true}}
+impl<T:Send+Sync+'static> RetirementCursor for RootRetirement<T>{
+ fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.retirement.is_empty()||self.root.directory.is_some(){return self.retirement.next_owner_demands::<SealedShared<Vec<usize>>>(self.root.directory.is_some(),&None,body);}if let Some(source)=self.root.source.as_ref(){return if source.terminal_is_empty(){Ok(fixed(size_of::<RetainedCloneSource<PersistentList<T>>>()*2))}else{source.next_close_demand(body)};}Ok(Default::default())}
+ fn close_step(&mut self,g:RetainedCloneGrant)->RetirementStep{let result=(||{let d=self.next_demand(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()));}if !self.retirement.is_empty(){return self.retirement.step_granted(g).map(|s|RetainedCloneStep::Progress(s.progress()));}if let Some(s)=self.retirement.begin_granted(&mut self.root.directory,g)?{return Ok(RetainedCloneStep::Progress(s.progress()));}if let Some(source)=self.root.source.as_mut(){if source.terminal_is_empty(){*self.root.source=None;return Ok(RetainedCloneStep::Progress(paid(d)));}return source.close_step(g).map(|s|RetainedCloneStep::Progress(s.progress()));}Ok(RetainedCloneStep::Complete(Default::default()))})();match result{Ok(s)=>RetirementStep::Progress(s.progress()),Err(e)=>RetirementStep::Failure(e)}}
+ fn terminal_is_empty(&self)->bool{self.root.terminal_is_empty()&&self.retirement.is_empty()}
+ fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.next_demand(0)?.copy_bytes)}
+ fn next_birth_bytes(&self,body:usize)->Option<usize>{self.next_demand(body).ok().map(|d|d.capacity_bytes)}
+ fn next_close_byte_demand(&self)->Option<usize>{self.next_demand(0).ok().map(|d|d.release_bytes)}
+ fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.next_demand(0)?.depth)}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
+}

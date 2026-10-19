@@ -1,5 +1,5 @@
-//! 🛍️ Puzzle 5d play app panel — the kind catalogue: the part/grip/fastener/rope kind rows, with the
 //! part rows draggable onto the board (and clickable to place through `addPartKind`) — a catalogue
+//! 🛍️ Puzzle 5d play app panel — the kind catalogue: the part/grip/fastener/rope kind rows, with the
 //! row owns its own binding, so it stays an ordinary interactive row.
 //!
 //! 🪟️ All four sections are windowed: each publishes its full `total` and materialises only the
@@ -26,7 +26,8 @@ use semio_framework_plugin::UiText;
 use semio_framework_plugin::UiValue;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
-use semio_framework_pack_json::{json, Value};
+use semio_framework_pack_json::json;
+use semio_framework_pack_json::Value;
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "puzzle.5d.play.kinds";

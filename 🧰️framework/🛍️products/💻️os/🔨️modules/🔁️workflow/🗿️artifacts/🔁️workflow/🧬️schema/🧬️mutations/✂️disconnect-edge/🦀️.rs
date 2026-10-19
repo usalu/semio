@@ -16,6 +16,17 @@ pub struct DisconnectEdge {
 //#region ⚙️Semantics
 impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for DisconnectEdge {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "disconnect", entity: "workflow", kind: "disconnect-edge", record: "DisconnectedWorkflowEdge" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Disconnect workflow edge {}", self.edge_id), &format!("Arbeitsablaufkante {} trennen", self.edge_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["edges".into(), self.edge_id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<WorkflowSnapshot, WorkflowMutation> for DisconnectEdge {
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
         protocol::MutationOutcome::new(WorkflowDiff::DisconnectEdge { edge_id: self.edge_id.clone() })
     }
@@ -25,11 +36,5 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for DisconnectEd
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Disconnect workflow edge {}", self.edge_id), &format!("Arbeitsablaufkante {} trennen", self.edge_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["edges".into(), self.edge_id.clone()]
-    }
 }
 //#endregion ⚙️Semantics

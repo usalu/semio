@@ -4,17 +4,16 @@
   "regions": null,
   "materials": null,
   "sections": {
-    "inserted": [],
     "removed": [],
+    "inserted": [],
     "moved": [],
     "modified": [
       {
         "id": "ipe200",
         "patch": {
-          "id": "ipe200",
           "name": "IPE 200 reinforced",
           "area": 0.0035,
-          "iy": 2.55e-05
+          "iy": 2.55E-05
         }
       }
     ]

@@ -1,12 +1,46 @@
 dialect grammar
 grammar fem.fem2d.op
 extension fem2d
-use family-sheet
 start mutation
 
-artifact-mark = "fem.2d-op"
-mutation = artifact-mark eng-op+
-eng-op = "add-node" eng-field+ | "set-load" eng-field+ | "set-support" eng-field+ | "commit-step" eng-field+
-eng-field = "node" "=" INT | "element" "=" IDENT | "load" "=" IDENT | "dof" "=" IDENT | "commit" "=" TEXT
-eng-node = "node" "=" INT | "element" "=" IDENT
-eng-record = eng-node*
+mutation = create-node | delete-node | create-element | delete-element | replace-element | create-material | delete-material | replace-material | change-material | create-section | delete-section | replace-section | change-section | create-support | delete-support | replace-support | create-region | delete-region | replace-region | create-load-case | delete-load-case | add-load | remove-load | change-load-case-self-weight | create-combination | delete-combination | update-analysis-settings | replace-node | change-node | change-combination-term | change-combination-name | change-load | change-element | change-support | change-region | replace-load | change-load-case-name | replace-combination | move-selection
+
+create-node = "create-node" create-node-fields
+delete-node = "delete-node" delete-node-fields
+create-element = "create-element" create-element-fields
+delete-element = "delete-element" delete-element-fields
+replace-element = "replace-element" replace-element-fields
+create-material = "create-material" create-material-fields
+delete-material = "delete-material" delete-material-fields
+replace-material = "replace-material" replace-material-fields
+change-material = "change-material" change-material-fields
+create-section = "create-section" create-section-fields
+delete-section = "delete-section" delete-section-fields
+replace-section = "replace-section" replace-section-fields
+change-section = "change-section" change-section-fields
+create-support = "create-support" create-support-fields
+delete-support = "delete-support" delete-support-fields
+replace-support = "replace-support" replace-support-fields
+create-region = "create-region" create-region-fields
+delete-region = "delete-region" delete-region-fields
+replace-region = "replace-region" replace-region-fields
+create-load-case = "create-load-case" create-load-case-fields
+delete-load-case = "delete-load-case" delete-load-case-fields
+add-load = "add-load" add-load-fields
+remove-load = "remove-load" remove-load-fields
+change-load-case-self-weight = "change-load-case-self-weight" change-load-case-self-weight-fields
+create-combination = "create-combination" create-combination-fields
+delete-combination = "delete-combination" delete-combination-fields
+update-analysis-settings = "update-analysis-settings" update-analysis-settings-fields
+replace-node = "replace-node" replace-node-fields
+change-node = "change-node" change-node-fields
+change-combination-term = "change-combination-term" change-combination-term-fields
+change-combination-name = "change-combination-name" change-combination-name-fields
+change-load = "change-load" change-load-fields
+change-element = "change-element" change-element-fields
+change-support = "change-support" change-support-fields
+change-region = "change-region" change-region-fields
+replace-load = "replace-load" replace-load-fields
+change-load-case-name = "change-load-case-name" change-load-case-name-fields
+replace-combination = "replace-combination" replace-combination-fields
+move-selection = "move-selection" move-selection-fields

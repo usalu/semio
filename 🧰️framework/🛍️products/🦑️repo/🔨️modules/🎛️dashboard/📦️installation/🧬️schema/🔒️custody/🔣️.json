@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.dashboard.compiler-custody/v1",
+  "type": "array",
+  "minItems": 2,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["name", "initial", "prepared", "compiled", "outcome"],
+    "properties": {
+      "name": { "type": "string", "minLength": 1 },
+      "initial": { "type": "string", "minLength": 1 },
+      "prepared": { "type": "string", "minLength": 1 },
+      "compiled": { "type": "string", "minLength": 1 },
+      "outcome": { "enum": ["installed", "refused"] }
+    }
+  }
+}

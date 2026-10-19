@@ -1,8 +1,10 @@
-//! 🏗️ FEM element contract: degrees of freedom, nodes, supports, loads, the `Element` trait every finite element
 //! implements, the result records and the error vocabulary. The closed element set, the assembled `Model` and the
+//! 🏗️ FEM element contract: degrees of freedom, nodes, supports, loads, the `Element` trait every finite element
 //! linear-static solve live in `semio-s-fem-static`; the element libraries in `semio-s-fem-elements2d`/`-elements3d`.
 
-use semio_s_fem_algebra::{MatD, VecD};
+use semio_s_fem_algebra::MatD;
+
+use semio_s_fem_algebra::VecD;
 use semio_framework_dispatch_macros::dyn_enum;
 use std::fmt;
 
@@ -105,6 +107,10 @@ pub trait Element {
     fn stiffness_global(&self, ctx: &ElementContext) -> MatD;
     /// 🧮 Returns one fixed-schema mounted stiffness cell without allocating a matrix owner.
     fn mounted_stiffness_cell(&self, _ctx: &ElementContext, _row: usize, _column: usize) -> Option<f64> {
+        None
+    }
+    /// 🌀️ Borrows the original reference displacements to evaluate one geometric stiffness cell.
+    fn mounted_geometric_stiffness_cell(&self, _ctx: &ElementContext, _displacement: &[f64], _row: usize, _column: usize) -> Option<f64> {
         None
     }
     /// 🌬️ Fixed-end nodal loads equivalent to a per-unit-length `MemberUdl` in GLOBAL coordinates.
@@ -284,6 +290,7 @@ pub enum FemError {
     EmptyModel,
     DuplicateNodeId(String),
     DanglingNodeRef(String),
+    ResourceAdmission,
     Singular,
 }
 
@@ -293,6 +300,7 @@ impl fmt::Display for FemError {
             Self::EmptyModel => formatter.write_str("model has no nodes"),
             Self::DuplicateNodeId(id) => write!(formatter, "duplicate node id: {id}"),
             Self::DanglingNodeRef(id) => write!(formatter, "reference to unknown node id: {id}"),
+            Self::ResourceAdmission => formatter.write_str("numerical owner resource admission was refused"),
             Self::Singular => formatter.write_str("stiffness matrix is singular — model is a mechanism or under-constrained"),
         }
     }

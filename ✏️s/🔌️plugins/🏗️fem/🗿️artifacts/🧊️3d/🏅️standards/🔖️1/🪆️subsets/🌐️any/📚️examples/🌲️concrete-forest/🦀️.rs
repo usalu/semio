@@ -1,5 +1,5 @@
-//! 🌲️ Example `concrete-forest` — two Hexagonal Cut Concrete Forest Left pieces stacked on top of
 //! each other, modelled with nodes and line (`Frame`) elements only.
+//! 🌲️ Example `concrete-forest` — two Hexagonal Cut Concrete Forest Left pieces stacked on top of
 //!
 //! 🧭️ Member topology follows the CAD play fixture's `aec.building.structure.classic` model
 //! (`✏️s/🔌️plugins/📐️cad/…/📚️examples/🖼️assets/🎮️play/🔣️.json`, model 3): per piece two

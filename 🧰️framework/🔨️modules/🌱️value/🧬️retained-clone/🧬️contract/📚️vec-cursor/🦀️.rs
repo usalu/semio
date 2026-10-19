@@ -22,14 +22,14 @@ impl<T: RetainedClone> Default for VecCursor<T> {
 
 impl<T: RetainedClone> VecCursor<T> {
     /// 🚚️ Copies one bounded run of a bitwise vector per turn into the capacity reserved up front, so the clone costs one item and at most one page of payload per turn instead of a cursor lifecycle per element.
-    fn advance_bitwise(&mut self, source: &[T], grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+    fn advance_bitwise(&mut self, source: &[T], body: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if self.index != self.values.len() || self.index > source.len() {
             return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained bitwise vector clone progress disagrees with its source"));
         }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         let width = size_of::<T>();
         let remaining = source.len() - self.index;
-        let count = remaining.min(bulk_run_elements(grant, width));
+        let count = remaining.min(bulk_run_elements(RetainedCloneGrant{maximum_copy_bytes:body,..grant}, width).max(1));
         if remaining > 0 && count == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         let end = self.index + count;
         if !T::bitwise_extend(&mut self.values, &source[self.index..end]) {
@@ -38,17 +38,19 @@ impl<T: RetainedClone> VecCursor<T> {
         self.index = end;
         let progress = bulk_run_progress(count, width);
         if end < source.len() { return Ok(RetainedCloneStep::Progress(progress)); }
-        self.output = Some(std::mem::take(&mut self.values));
+        
         self.phase = 2;
-        Ok(RetainedCloneStep::Complete(progress))
+        Ok(RetainedCloneStep::Progress(progress))
     }
 }
 
 impl<T: RetainedClone> RetainedCloneCursor<Vec<T>> for VecCursor<T> {
     fn output_ready(&self)->bool{self.output.is_some()}
-    fn advance_demands(&self,source:RetainedCloneRef<'_,Vec<T>>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(demand)=source.binding_demand(&self.source)?{return Ok(demand)}if self.closing||self.phase==3{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"vector original clone is closing or spent"))}let original=source.get();if self.phase==0{return Ok(crate::RetirementDemand{capacity_bytes:original.len().checked_mul(size_of::<T>()).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"vector original reserve overflow"))?,depth:1,..Default::default()})}if self.phase==2||self.index==original.len(){return Ok(crate::RetirementDemand{depth:1,..Default::default()})}if T::BITWISE{let width=size_of::<T>();let count=(original.len()-self.index).min(if width==0{usize::MAX}else{body.min(RETAINED_CLONE_BULK_PAGE_BYTES)/width}).max(1);return Ok(crate::RetirementDemand{copy_bytes:count.saturating_mul(width),depth:1,..Default::default()})}if self.child_value.is_some(){return clone_cursor_close_demand::<T>(self.child.as_ref().ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"vector original child absent"))?,body)}let projected=source.project(self.index+1,|values|&values[self.index]);match self.child.as_ref(){Some(child)=>child.advance_demands(projected,body),None=>T::retained_clone_cursor().advance_demands(projected,body)}}
+    fn advance_demands(&self,source:RetainedCloneRef<'_,Vec<T>>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(demand)=source.binding_demand(&self.source)?{return Ok(demand)}if self.closing||self.phase==3{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"vector original clone is closing or spent"))}let original=source.get();if self.phase==0{return Ok(crate::RetirementDemand{capacity_bytes:original.len().checked_mul(size_of::<T>()).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"vector original reserve overflow"))?,depth:1,..Default::default()})}if self.phase==2||self.index==original.len(){return Ok(crate::RetirementDemand{copy_bytes:if self.output.is_none(){size_of::<Vec<T>>()}else{0},depth:1,..Default::default()})}if T::BITWISE{let width=size_of::<T>();let count=(original.len()-self.index).min(bulk_run_elements(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:body,..Default::default()},width).max(1));return Ok(crate::RetirementDemand{copy_bytes:count.saturating_mul(width),depth:1,..Default::default()})}if self.child_value.is_some(){return clone_cursor_close_demand::<T>(self.child.as_ref().ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"vector original child absent"))?,body)}let projected=source.project(self.index+1,|values|&values[self.index]);match self.child.as_ref(){Some(child)=>child.advance_demands(projected,body),None=>T::retained_clone_cursor().advance_demands(projected,body)}}
 
-    fn advance(&mut self, source: RetainedCloneRef<'_, Vec<T>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+    fn advance(&mut self, source: RetainedCloneRef<'_, Vec<T>>, body: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+        let demand = self.advance_demands(source,body)?;
+        if !retained_clone_grant_admits(grant,demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if self.closing {
             return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained vector clone cursor is closing"));
         }
@@ -69,13 +71,16 @@ impl<T: RetainedClone> RetainedCloneCursor<Vec<T>> for VecCursor<T> {
             self.phase = 1;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { retained_capacity_bytes: actual, ..progress }));
         }
-        if self.phase == 2 {
-            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
+        if self.phase == 2 || self.index == source_value.len() {
+            if self.output.is_some() { return Ok(RetainedCloneStep::Complete(Default::default())); }
+            let progress=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Vec<T>>(),..Default::default()};
+            if !progress.fits(grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
+            self.output=Some(std::mem::take(&mut self.values));self.phase=2;return Ok(RetainedCloneStep::Complete(progress));
         }
         if self.phase == 3 {
             return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained vector clone cursor is spent"));
         }
-        if T::BITWISE { return self.advance_bitwise(source_value, grant); }
+        if T::BITWISE { return self.advance_bitwise(source_value, body, grant); }
         let mut used = RetainedCloneProgress::default();
         loop {
             let remaining = RetainedCloneGrant {
@@ -112,16 +117,18 @@ impl<T: RetainedClone> RetainedCloneCursor<Vec<T>> for VecCursor<T> {
                 if remaining.maximum_items == 0 {
                     return Ok(RetainedCloneStep::Progress(used));
                 }
-                self.output = Some(std::mem::take(&mut self.values));
+                                let progress=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Vec<T>>(),..Default::default()};
+                if !progress.fits(remaining) { return Ok(RetainedCloneStep::Progress(used)); }
+self.output = Some(std::mem::take(&mut self.values));
                 self.phase = 2;
-                used = used.checked_add(RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
+                used = used.checked_add(progress)?;
                 return Ok(RetainedCloneStep::Complete(used));
             }
             if remaining.maximum_items == 0 && remaining.maximum_copy_bytes == 0 && remaining.maximum_capacity_bytes == 0 && remaining.maximum_release_bytes == 0 {
                 return Ok(RetainedCloneStep::Progress(used));
             }
             let child = self.child.get_or_insert_with(T::retained_clone_cursor);
-            match child.advance(source.project(self.index + 1, |values| &values[self.index]), remaining)? {
+            match child.advance(source.project(self.index + 1, |values| &values[self.index]),body, remaining)? {
                 RetainedCloneStep::Progress(progress) => {
                     let progress = admit_retained_clone_progress(remaining, progress, "retained vector child")?;
                     if progress == RetainedCloneProgress::default() {

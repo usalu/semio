@@ -2,13 +2,13 @@
   "nodes": null,
   "elements": null,
   "regions": {
-    "inserted": [],
     "removed": [
       {
         "id": "slab",
         "index": 0
       }
     ],
+    "inserted": [],
     "moved": [],
     "modified": []
   },

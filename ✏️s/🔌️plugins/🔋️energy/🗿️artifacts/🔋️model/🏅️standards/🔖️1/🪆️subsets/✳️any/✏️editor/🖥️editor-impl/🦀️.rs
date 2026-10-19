@@ -87,46 +87,19 @@ impl ArtifactEditor for EnergyModelEditor {
         registry.register(EnergyModelCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework_plugin::ToolOperationSpec>, Fault> {
-        if !ENERGY_MODEL_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            return Ok(None);
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework::ErasedToolJob>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original tool producer request is absent"))?;
+        if !ENERGY_MODEL_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
+            return Ok(false);
         }
-        if request.command.action_id() != request.tool_id {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "the energy model command does not match its exact registered tool"));
+        if original.command.action_id() != original.tool_id {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "the energy model command does not match its exact registered tool").into());
         }
-        if energy_model_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("energy.model.retained.extent"), "the energy model bounded route exceeded its declared work extent"));
+        if energy_model_extent(&original.command, &original.snapshot, &original.interaction_state).is_none() {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "the energy model bounded route exceeded its declared work extent").into());
         }
-        let tool_id = request.command.action_id();
-        let work = Box::new(BoundedArtifactCommandWork::new(tool_id, energy_model_reduce, energy_model_extent));
-        let operation_context = AppOperationContext {
-            app_instance_id: request.app_instance_id,
-            parent_document_id: request.parent_document_id,
-            operation_id: request.operation.operation.0,
-            generation: request.operation.generation.0,
-            canonical_base_revision: request.canonical_base_revision,
-            retained: request.retained,
-            authoring_seed: request.authoring_seed.clone(),
-        };
-        let payload = ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
-                command: *request.command,
-                snapshot: request.snapshot,
-                snapshot_read: request.snapshot_read,
-                config: request.config,
-                history: request.history,
-                interaction_state: request.interaction_state,
-                interaction_hover: request.interaction_hover,
-                context: Some(request.context),
-                operation: operation_context,
-                completion: request.completion,
-            },
-            EnergyModelEditorCommand::action_id,
-            ENERGY_MODEL_RETAINED_RAW_BYTES,
-            1,
-            work,
-        );
-        Ok(Some(semio_framework_plugin::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+        let tool_id = original.command.action_id();
+                semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, EnergyModelEditorCommand::action_id, ENERGY_MODEL_RETAINED_RAW_BYTES, 1, false, |_request| BoundedArtifactCommandWork::new(tool_id, energy_model_reduce, energy_model_extent))
     }
 
 

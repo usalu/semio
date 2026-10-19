@@ -1,0 +1,7 @@
+{
+  "mutation": "changeSolid",
+  "id": "sol1",
+  "patch": {
+    "meshSize": 0
+  }
+}

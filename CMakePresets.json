@@ -78,7 +78,7 @@
       "name": "windows-prototype",
       "displayName": "Windows C++23 Prototype",
       "inherits": "base",
-      "generator": "Visual Studio 18 2026",
+      "generator": "Ninja",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -86,14 +86,13 @@
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
-      },
-      "architecture": "$env{SEMIO_CMAKE_ARCHITECTURE}"
+      }
     },
     {
       "name": "windows-release",
       "displayName": "Windows C++23 Release",
       "inherits": "base",
-      "generator": "Visual Studio 18 2026",
+      "generator": "Ninja",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -101,8 +100,7 @@
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
-      },
-      "architecture": "$env{SEMIO_CMAKE_ARCHITECTURE}"
+      }
     }
   ],
   "buildPresets": [

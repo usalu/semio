@@ -46,7 +46,7 @@
             assert_eq!(gumball.get("anchorId").and_then(semio_framework_value::DslValue::as_str), published.first().map(String::as_str), "{case_id}: the gumball anchor is the first published id");
             close_reserved_app(&mut app, mounted_policy,cx);
         }
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
     /// 🎯️ Ticket 26/09/09/PROCEDURAL-3D-END-TO-END (`📓️selection-merge-vocabulary-2026-09-12.md`): the
@@ -88,7 +88,7 @@
             assert!(format!("{fault:?}").contains(&format!("unknown merge '{word}'")), "the deleted word '{word}' must be rejected outright — no adapter, no silent replace; got {fault:?}");
             close_reserved_app(&mut app, mounted_policy,cx);
         }
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 

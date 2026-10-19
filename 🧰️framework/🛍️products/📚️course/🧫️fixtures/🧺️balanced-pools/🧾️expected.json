@@ -1,0 +1,170 @@
+[
+  {
+    "seed": 0,
+    "items": [
+      "large-a",
+      "tiny-c"
+    ]
+  },
+  {
+    "seed": 1,
+    "items": [
+      "large-c",
+      "tiny-d"
+    ]
+  },
+  {
+    "seed": 2,
+    "items": [
+      "large-b",
+      "tiny-b"
+    ]
+  },
+  {
+    "seed": 3,
+    "items": [
+      "large-d",
+      "tiny-a"
+    ]
+  },
+  {
+    "seed": 4,
+    "items": [
+      "large-a",
+      "tiny-c"
+    ]
+  },
+  {
+    "seed": 5,
+    "items": [
+      "large-c",
+      "tiny-d"
+    ]
+  },
+  {
+    "seed": 6,
+    "items": [
+      "large-b",
+      "tiny-b"
+    ]
+  },
+  {
+    "seed": 7,
+    "items": [
+      "large-d",
+      "tiny-a"
+    ]
+  },
+  {
+    "seed": 8060928,
+    "items": [
+      "large-c",
+      "tiny-d"
+    ]
+  },
+  {
+    "seed": 8060929,
+    "items": [
+      "large-d",
+      "tiny-a"
+    ]
+  },
+  {
+    "seed": 8060930,
+    "items": [
+      "large-a",
+      "tiny-c"
+    ]
+  },
+  {
+    "seed": 8060931,
+    "items": [
+      "large-b",
+      "tiny-b"
+    ]
+  },
+  {
+    "seed": 8060932,
+    "items": [
+      "large-c",
+      "tiny-d"
+    ]
+  },
+  {
+    "seed": 8060933,
+    "items": [
+      "large-d",
+      "tiny-a"
+    ]
+  },
+  {
+    "seed": 8060934,
+    "items": [
+      "large-a",
+      "tiny-c"
+    ]
+  },
+  {
+    "seed": 8060935,
+    "items": [
+      "large-b",
+      "tiny-b"
+    ]
+  },
+  {
+    "seed": 4294901760,
+    "items": [
+      "large-b",
+      "tiny-b"
+    ]
+  },
+  {
+    "seed": 4294901761,
+    "items": [
+      "large-c",
+      "tiny-a"
+    ]
+  },
+  {
+    "seed": 4294901762,
+    "items": [
+      "large-a",
+      "tiny-c"
+    ]
+  },
+  {
+    "seed": 4294901763,
+    "items": [
+      "large-d",
+      "tiny-d"
+    ]
+  },
+  {
+    "seed": 4294901764,
+    "items": [
+      "large-b",
+      "tiny-b"
+    ]
+  },
+  {
+    "seed": 4294901765,
+    "items": [
+      "large-c",
+      "tiny-a"
+    ]
+  },
+  {
+    "seed": 4294901766,
+    "items": [
+      "large-a",
+      "tiny-c"
+    ]
+  },
+  {
+    "seed": 4294901767,
+    "items": [
+      "large-d",
+      "tiny-d"
+    ]
+  }
+]

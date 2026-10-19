@@ -154,7 +154,10 @@ pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyRes
 /// `VcsArtifactApp::context_menu` funnel) sorts groups into `RIBBON_PARENT_CATEGORIES` order and
 /// inserts the pre-destructive separator itself, so no manual `.separator()` calls are needed here.
 pub async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegistry, snapshot: &Value, selected: &[String], view_state: &semio_framework_plugin::ViewModel) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-    use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec, Menu, SelectionKind};
+    use semio_framework_plugin::selection_count_phrase;
+    use semio_framework_plugin::ContextMenuItemSpec;
+    use semio_framework_plugin::Menu;
+    use semio_framework_plugin::SelectionKind;
     let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
     // 🧩️ Bespoke-row helper (dynamic label/icon/args/disabled per selection state — not a plain
     // declared-action lookup) — appended via `Menu::item(...)`, the documented escape hatch.

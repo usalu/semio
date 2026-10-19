@@ -1,5 +1,5 @@
-//! puzzle5d → png — the page drawing (`puzzle5d_board_drawing`) written as an anti-aliased PNG raster by `s.stdio.semio/v1/drawing`'s own
 //! export leaf, the one png writer every owner shares.
+//! puzzle5d → png — the page drawing (`puzzle5d_board_drawing`) written as an anti-aliased PNG raster by `s.stdio.semio/v1/drawing`'s own
 //!
 //! 🔖 `IoFidelity::Lossy`: a page drawing, not the document — there is no png import.
 use crate::standards::v1::subsets::any::io::puzzle5d_board_drawing;

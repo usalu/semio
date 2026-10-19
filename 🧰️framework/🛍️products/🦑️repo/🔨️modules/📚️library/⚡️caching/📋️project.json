@@ -158,6 +158,26 @@
         "command": "bun ./📜️script.ts cache-prune"
       }
     },
+    "cache-prune-stale-incremental": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts cache-prune --stale-incremental-only --profile debug",
+        "cwd": "{projectRoot}"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "cache-prune",
+            "--stale-incremental-only",
+            "--profile",
+            "debug"
+          ]
+        }
+      }
+    },
     "cache-verify": {
       "cache": false,
       "options": {
@@ -1034,6 +1054,30 @@
       "configurations": {
         "prototype": {},
         "release": {}
+      }
+    },
+    "test-bootstrap-original-invocation-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test bootstrap-original-invocation"
+      }
+    },
+    "test-playground-preparation-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test playground-preparation-source"
+      }
+    },
+    "test-runtime-bootstrap": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test runtime-bootstrap"
       }
     }
   },

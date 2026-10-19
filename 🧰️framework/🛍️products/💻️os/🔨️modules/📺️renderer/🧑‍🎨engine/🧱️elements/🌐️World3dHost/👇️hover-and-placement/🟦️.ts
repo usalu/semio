@@ -13,7 +13,7 @@ import type { WorldCore3 } from "../🏗️brush-mesh-and-menus/🟦️.ts";
 // #region World3dHost
 /** 👇️ Wires the hover dispatch, the connect drag and the placement and pick handlers. */
 export function useWorldHoverAndPlacement(core: WorldCore3) {
-  const { activeUtility, altHeldRef, brushMode, cameraRef, connectDropConsumedRef, dispatch, dispatchSettled, gridFactor, hostRef, hoveredInstanceInteractionIdRef, hoveredVortexFullIdRef, instances, instancesRef, interactionDomainId, interactionGranularity, meshesRef, persistentSelectionMode, selection, selectionMode, setConnectDragHoverPosition, setConnectDragSource, setVortexPointerArm, setVoxelHoverOrigin, suggestionMenuOpen, suggestionMenuOwnsThisWindow, volumeBrushMode, vortices, vorticesRef, windowInstanceId } = core;
+  const { activeUtility, altHeldRef, brushMode, cameraRef, connectDropConsumedRef, dispatch, dispatchSettled, gridFactor, hostRef, hoveredInstanceInteractionTargetRef, hoveredVortexFullIdRef, instances, instancesRef, interactionDomainId, interactionGranularity, meshesRef, persistentSelectionMode, selection, selectionMode, setConnectDragHoverPosition, setConnectDragSource, setVortexPointerArm, setVoxelHoverOrigin, suggestionMenuOpen, suggestionMenuOwnsThisWindow, volumeBrushMode, vortices, vorticesRef, windowInstanceId } = core;
   const handleWorldOrbitRightPointerDown = useCallback(
     (event: PointerEvent) => {
       const alt = world3dSuggestionsAltHeld(event.altKey, altHeldRef.current);
@@ -141,6 +141,7 @@ export function useWorldHoverAndPlacement(core: WorldCore3) {
     };
   }, []);
   const releaseLocalHover = useCallback(() => {
+    hoveredInstanceInteractionTargetRef.current = null;
     for (const listener of localHoverReleaseListeners.current) listener();
   }, []);
   // 🩺️ Imperative mirror of the painted hover — no React state, so a hover never re-renders the host.
@@ -157,10 +158,10 @@ export function useWorldHoverAndPlacement(core: WorldCore3) {
       // guest's echo of it: it lags a round trip and any unrelated refresh can clear it, so a
       // background click that consulted it raced the refresh and cleared a live selection instead of
       // re-picking the object under the pointer (`📓️hot-swap-board-remount-2026-09-15.md` §3).
-      hoveredInstanceInteractionIdRef.current = id == null ? null : (instancesRef.current.find((entry) => entry.id === id)?.interactionId ?? id);
+      hoveredInstanceInteractionTargetRef.current = id == null ? null : world3dInstanceInteractionTarget(instancesRef.current, id, interactionGranularity);
       dispatchInstanceHover(id);
     },
-    [dispatchInstanceHover],
+    [dispatchInstanceHover, interactionGranularity],
   );
 
   // 🧭️ `setHover` is the DOMAINLESS hover lane. An app that declares an interaction domain declares

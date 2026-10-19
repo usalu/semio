@@ -1,5 +1,5 @@
-//! 🧊️ Puzzle 3d viewer — the Mesh window: a read-only world-3d render of the real
 //! `Puzzle3dSnapshot`, built directly from the framework `MeshWindowKit` (ticket
+//! 🧊️ Puzzle 3d viewer — the Mesh window: a read-only world-3d render of the real
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.6) plus this file's own small, pure
 //! snapshot→view-model helpers — no selection, no engagement, no gumball/utilities: a viewer has no
 //! utilities that edit and emits no mutations by construction (`ViewEmit`). This file imports nothing
@@ -7,7 +7,11 @@
 
 use {semio_s_artifact_puzzle_3d_model::Puzzle3dObject, semio_s_artifact_puzzle_3d_model::Puzzle3dScale, semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot};
 use {semio_framework_plugin::app::MeshView, semio_framework_plugin::app::MeshWindowKit};
-use semio_framework_plugin::{world3d_default_camera, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_selection_json, WindowKindDefinition};
+use semio_framework_plugin::world3d_default_camera;
+use semio_framework_plugin::world3d_mesh_id_from_url;
+use semio_framework_plugin::world3d_meshes_json_from_kinds_and_urls;
+use semio_framework_plugin::world3d_selection_json;
+use semio_framework_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;

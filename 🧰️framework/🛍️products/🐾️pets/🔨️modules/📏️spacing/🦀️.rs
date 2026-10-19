@@ -1,4 +1,4 @@
-//! 📏️ The spacing of grounded actors: actors of one surface never stand in each other. Where an actor can stand a comfortable gap away from everybody else (`vacancy`, `rooms_for`, `quarters`), how far it can walk (`clearway`), whether somebody is in the way of its next strides (`hindered`) and whether the arc of a hop keeps clear of what must stay free (`soars`) — with the gaps the whole stage keeps: `COMFORT_GAP`, `MEET_GAP` and `CONTACT`.
+//! 📏️ The spacing of grounded actors: actors of one surface never stand in each other. Where an actor can stand a comfortable gap away from everybody else (`rooms_for`, `quarters`), how far it can walk (`clearway`) and whether the arc of a hop keeps clear of what must stay free (`soars`) — with the gaps the whole stage keeps: `COMFORT_GAP`, `MEET_GAP`.
 //!
 //! Everything here measures along one surface: feet on the same perch, distances in x.
 //! A part of the stage, not of the crate: everything is `pub(crate)` at most.
@@ -14,38 +14,73 @@ use semio_framework_pets_kinematics::trigonometry::clamp;
 //#region 🔖️Constants
 pub(crate) const MEET_GAP: f64 = 6.0;
 pub(crate) const COMFORT_GAP: f64 = 8.0;
-const CONTACT: f64 = 0.0078125;
 //#endregion 🔖️Constants
 
-//#region 🔖️Spacing
-/// 🪑️ The place nearest to `x` on a perch where an actor stands a comfortable gap (8 px between the bodies) away from everybody else on that surface, or `None` when the perch has no such place.
-pub(crate) fn vacancy(draft: &Draft<'_>, index: usize, perch: &Perch, x: f64) -> Option<f64> {
-    let kind = draft.kinds[index];
-    let half = kind.size.width / 2.0;
-    if perch.x1 - half < perch.x0 + half {
-        return None;
-    }
-    let mut stretches = vec![[perch.x0 + half, perch.x1 - half]];
-    for (other, neighbour) in draft.stage.actors.iter().enumerate() {
-        if other == index || neighbour.perch.as_deref() != Some(perch.surface.as_str()) {
-            continue;
-        }
-        let room = shoulders(draft.kinds[other], kind) + COMFORT_GAP;
-        stretches = carve(&stretches, neighbour.x - room, neighbour.x + room);
-    }
-    let mut nearest = None;
-    let mut least = f64::INFINITY;
-    for &[low, high] in &stretches {
-        let place = clamp(x, low, high);
-        let distance = (place - x).abs();
-        if distance < least {
-            nearest = Some(place);
-            least = distance;
-        }
-    }
-    nearest
+/// 🦎️ The body's lean towards its wall, given up as its feet leave the line they cling to.
+pub fn wall_lean_of(kind: &Species, footing: Footing, pitch: Option<&crate::schema::Pitch>, x: f64) -> f64 {
+    let Some(pitch) = pitch.filter(|_| footing == Footing::Wall) else { return 0.0; };
+    let share = clamp(1.0 - (x - cling_of(pitch, kind.size)).abs() / (kind.size.width / 2.0), 0.0, 1.0);
+    (if pitch.side.sign() > 0.0 { -1.0 } else { 1.0 }) * 0.04 * share
 }
 
+/// 🙃️ The turned size box, hover and margin about the scruff.
+fn turned(feet: Point, sine: f64, cosine: f64, kind: &Species) -> Extent {
+    let grip = kind.grip;
+    let half = kind.size.width / 2.0;
+    let pivot_x = feet.x + grip * sine;
+    let pivot_y = feet.y - grip * cosine;
+    let top = grip - kind.size.height;
+    let bottom = grip + hover_of(kind);
+    let across = half * cosine.abs();
+    let down = half * sine.abs();
+    let left_top = 0.0 - sine * top;
+    let left_bottom = 0.0 - sine * bottom;
+    let high_top = cosine * top;
+    let high_bottom = cosine * bottom;
+    Extent { x0: pivot_x + smaller(left_top, left_bottom) - across - MARGIN, y0: pivot_y + smaller(high_top, high_bottom) - down - MARGIN, x1: pivot_x + larger(left_top, left_bottom) + across + MARGIN, y1: pivot_y + larger(high_top, high_bottom) + down + MARGIN }
+}
+
+/// ☂️ The canopy's box, leaning with its cords above the scruff.
+fn canopy_extent(feet: Point, canopy: Point, kind: &Species) -> Extent {
+    let height = kind.size.height;
+    let cords = CHUTE_ROD * height;
+    let sine = (canopy.x - feet.x) / cords;
+    let cosine = (feet.y - canopy.y) / cords;
+    let pivot_y = feet.y - kind.grip;
+    let span = 0.75 * kind.size.width;
+    let rim = 0.0 - 0.7 * height;
+    let dome = rim - 0.5625 * height;
+    let across = span * cosine.abs();
+    let down = span * sine.abs();
+    let left_rim = 0.0 - sine * rim;
+    let left_dome = 0.0 - sine * dome;
+    let high_rim = cosine * rim;
+    let high_dome = cosine * dome;
+    Extent { x0: feet.x + smaller(left_rim, left_dome) - across - MARGIN, y0: pivot_y + smaller(high_rim, high_dome) - down - MARGIN, x1: feet.x + larger(left_rim, left_dome) + across + MARGIN, y1: pivot_y + larger(high_rim, high_dome) + down + MARGIN }
+}
+
+/// 📐️ The body at its feet, tilt and optional canopy, including the drawing's complete extent.
+pub fn extent_at(owner: &str, kind: &Species, feet: Point, tilt: f64, canopy: Option<Point>) -> Extent {
+    let body = if tilt == 0.0 { body_of(owner, feet, kind.size, hover_of(kind), UPRIGHT, MARGIN).extent } else { turned(feet, sin_turns(tilt), cos_turns(tilt), kind) };
+    canopy.map_or(body, |canopy| united(body, canopy_extent(feet, canopy, kind)))
+}
+
+/// 🧸️ The actual actor's body, wall lean and canopy.
+pub fn extent_of(actor: &Actor, kind: &Species) -> Extent {
+    extent_at(&actor.species, kind, Point { x: actor.x, y: actor.y }, actor.tilt + wall_lean_of(kind, actor.footing, actor.pitch.as_ref(), actor.x), actor.chute.as_ref().map(|chute| Point { x: chute.canopy.x, y: chute.canopy.y }))
+}
+
+/// 👪️ Every actor's body in stage order.
+pub fn bodies_of(actors: &[Actor], kinds: &[&Species]) -> Vec<Body> {
+    actors.iter().zip(kinds).map(|(actor, kind)| Body { owner: actor.species.clone(), extent: extent_of(actor, kind) }).collect()
+}
+
+/// 🧱️ Every other body, claimed corridor and planned resting place at this tick.
+pub(crate) fn obstacles_for(draft: &Draft<'_>, index: usize, now: Ticks) -> Vec<Extent> {
+    obstacles_of(&draft.stage.actors[index].species, &bodies_of(&draft.stage.actors, &draft.kinds), &draft.stage.claims, now)
+}
+
+//#region 🔖️Spacing
 /// 🪂️ Whether the arc of a hop keeps clear of what must stay free: on every tick on which the feet are above both ends of the hop (lower down the body is beside the things it hops between), the box of the body touches no keep-out and stays below the top of the stage.
 pub(crate) fn soars(draft: &Draft<'_>, kind: &Species, from: Point, to: Point, hop: Hop) -> bool {
     let half = kind.size.width / 2.0;
@@ -73,17 +108,17 @@ pub(crate) fn soars(draft: &Draft<'_>, kind: &Species, from: Point, to: Point, h
 pub(crate) fn clearway(draft: &Draft<'_>, index: usize, gap: f64, except: Option<usize>) -> [f64; 2] {
     let body = &draft.stage.actors[index];
     let kind = draft.kinds[index];
-    let Some(perch) = body.perch.as_deref().and_then(|surface| perch_at(&draft.stage.perches, surface, body.x)) else {
+    let Some(perch) = (body.footing == Footing::Perch).then_some(body.perch.as_deref()).flatten().and_then(|surface| perch_at(&draft.stage.perches, surface, body.x)) else {
         return [body.x, body.x];
     };
     let mut low = perch.x0 + kind.size.width / 2.0;
     let mut high = perch.x1 - kind.size.width / 2.0;
     for (other, neighbour) in draft.stage.actors.iter().enumerate() {
-        if other == index || Some(other) == except || neighbour.perch != body.perch {
+        if other == index || Some(other) == except || neighbour.footing != Footing::Perch || neighbour.perch != body.perch {
             continue;
         }
-        let room = shoulders(draft.kinds[other], kind) + gap;
-        let walks = neighbour.activity == Activity::Walk;
+        let room = shoulders(draft.kinds[other], kind) + gap + SEAM;
+        let walks = matches!(neighbour.activity, Activity::Walk | Activity::Scoot);
         let left = if walks && neighbour.goal < neighbour.x { neighbour.goal } else { neighbour.x };
         let right = if walks && neighbour.goal > neighbour.x { neighbour.goal } else { neighbour.x };
         if right <= body.x {
@@ -98,39 +133,21 @@ pub(crate) fn clearway(draft: &Draft<'_>, index: usize, gap: f64, except: Option
     [smaller(low, body.x), larger(high, body.x)]
 }
 
-/// 🚧️ Whether somebody stands in the way of the next `ticks` strides of a walker: another actor on its surface, ahead of it, whose body its own would come closer to than 6 px (bodies that are that close already count as touching within 1/128 px).
-pub(crate) fn hindered(draft: &Draft<'_>, index: usize, ticks: Ticks) -> bool {
-    let body = &draft.stage.actors[index];
-    let kind = draft.kinds[index];
-    let way = if body.goal > body.x { 1.0 } else { -1.0 };
-    let far = (larger(kind.locomotion.speed, 0.0) * ticks as f64) / RATE;
-    let ahead = clamp(body.goal, body.x - far, body.x + far);
-    for (other, neighbour) in draft.stage.actors.iter().enumerate() {
-        if other == index || neighbour.perch != body.perch || (neighbour.x - body.x) * way <= 0.0 {
-            continue;
-        }
-        if (neighbour.x - ahead) * way < shoulders(draft.kinds[other], kind) + MEET_GAP - CONTACT {
-            return true;
-        }
-    }
-    false
-}
-
 /// 🛏️ Where a species could arrive: per perch that carries it the stretches it can stand on a comfortable gap away from the actors already there (half of both widths plus 8 px), and how many stand there. A perch without such a stretch is full.
 pub(crate) fn rooms_for(draft: &Draft<'_>, kind: &Species) -> Vec<Room> {
     let mut rooms = Vec::new();
     let half = kind.size.width / 2.0;
+    let hover = hover_of(kind);
+    let obstacles = obstacles_of(&kind.id, &bodies_of(&draft.stage.actors, &draft.kinds), &draft.stage.claims, draft.stage.tick);
     for (at, perch) in draft.stage.perches.iter().enumerate() {
         if perch.x1 - half < perch.x0 + half {
             continue;
         }
         let mut stretches = vec![[perch.x0 + half, perch.x1 - half]];
-        for (other, neighbour) in draft.stage.actors.iter().enumerate() {
-            if neighbour.perch.as_deref() != Some(perch.surface.as_str()) {
-                continue;
-            }
-            let gap = shoulders(draft.kinds[other], kind) + COMFORT_GAP;
-            stretches = carve(&stretches, neighbour.x - gap, neighbour.x + gap);
+        let box_at = body_of(&kind.id, Point { x: 0.0, y: perch.y - hover }, kind.size, hover, UPRIGHT, MARGIN).extent;
+        for obstacle in &obstacles {
+            if !(box_at.y0 < obstacle.y1 && obstacle.y0 < box_at.y1) { continue; }
+            stretches = carve(&stretches, obstacle.x0 - box_at.x1 - SEAM, obstacle.x1 - box_at.x0 + SEAM);
         }
         if stretches.is_empty() {
             continue;

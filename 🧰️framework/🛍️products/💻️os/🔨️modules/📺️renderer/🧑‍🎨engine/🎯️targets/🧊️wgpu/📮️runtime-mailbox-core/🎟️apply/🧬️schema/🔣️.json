@@ -1,0 +1,150 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "capacity",
+    "ready",
+    "steps",
+    "application",
+    "recovery"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "capacity": {
+      "type": "integer",
+      "minimum": 2
+    },
+    "ready": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "revision",
+          "restoresInteraction"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "restoresInteraction": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "op",
+          "ready",
+          "held",
+          "length",
+          "ownerOutstanding"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "enum": [
+              "checkout",
+              "enqueue",
+              "refuse",
+              "pending",
+              "complete"
+            ]
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "admitted": {
+            "type": "boolean"
+          },
+          "ready": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "held": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "length": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "ownerOutstanding": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "application": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fuelPerTurn",
+        "phases",
+        "metadataItems"
+      ],
+      "properties": {
+        "fuelPerTurn": {
+          "const": 1
+        },
+        "phases": {
+          "const": [
+            "apply",
+            "remove"
+          ]
+        },
+        "metadataItems": {
+          "const": 2
+        }
+      }
+    },
+    "recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stages",
+        "metadataItems",
+        "releaseWhileShared",
+        "replacementAllocations"
+      ],
+      "properties": {
+        "stages": {
+          "const": [
+            "capture",
+            "return-interaction",
+            "return-cursor",
+            "release-unique-cell"
+          ]
+        },
+        "metadataItems": {
+          "const": 4
+        },
+        "releaseWhileShared": {
+          "const": 0
+        },
+        "replacementAllocations": {
+          "const": 0
+        }
+      }
+    }
+  }
+}

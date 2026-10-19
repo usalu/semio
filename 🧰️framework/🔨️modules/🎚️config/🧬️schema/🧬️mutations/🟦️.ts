@@ -1,3 +1,5 @@
+import { absorbIdentityDiff, absorbLocalCatalogDiff, applyIdentityDiff, applyLocalCatalogDiff } from "./⚙️apply-diff/🟦️.ts";
+export * from "./⚙️apply-diff/🟦️.ts";
 /** 🧬️ Transparent TypeScript dispatch for every OS config mutation vocabulary. */
 
 import type { OpeningPreferences } from "../🟦️.ts";
@@ -7,7 +9,7 @@ import { diff as setDefaultAppDiff, inverse as setDefaultAppInverse } from "./�
 import { diff as clearDefaultAppDiff, inverse as clearDefaultAppInverse } from "./🧹clear-default-app/🟦️.ts";
 import type { ChangeMergePolicy, MergePolicyConfigMutation, MergePolicySetting } from "./🛡️change-merge-policy/🟦️.ts";
 import { changeMergePolicy, diff as changeMergePolicyDiff, inverse as changeMergePolicyInverse } from "./🛡️change-merge-policy/🟦️.ts";
-import type { AdmitLocalDocument, LocalCatalogConfigMutation, LocalDocument, LocalDocumentStorage, RetireLocalDocument } from "./🗃️local-catalog-config-mutation/🟦️.ts";
+import type { AdmitLocalDocument, LocalCatalogConfigMutation, LocalCatalogDiff, LocalCatalogRow, LocalDocument, LocalDocumentStorage, RetireLocalDocument } from "./🗃️local-catalog-config-mutation/🟦️.ts";
 import { admitLocalDocument, retireLocalDocument } from "./🗃️local-catalog-config-mutation/🟦️.ts";
 import type { LocalCatalog } from "./📥️admit-local-document/🟦️.ts";
 import { diff as admitLocalDocumentDiff, inverse as admitLocalDocumentInverse, LOCAL_CATALOG_CONFIG_SCHEMA } from "./📥️admit-local-document/🟦️.ts";
@@ -17,7 +19,7 @@ import { attachLocalFolder, detachLocalFolder } from "./📁️local-folders-con
 import type { LocalFolderBindings } from "./📎️attach-local-folder/🟦️.ts";
 import { diff as attachLocalFolderDiff, inverse as attachLocalFolderInverse, LOCAL_FOLDERS_CONFIG_SCHEMA } from "./📎️attach-local-folder/🟦️.ts";
 import { diff as detachLocalFolderDiff, inverse as detachLocalFolderInverse } from "./✂️detach-local-folder/🟦️.ts";
-import type { Identity, IdentityConfigMutation, SignIn, SignOut } from "./🆔️identity-config-mutation/🟦️.ts";
+import type { Identity, IdentityDiff, IdentitySessionEdit, IdentityConfigMutation, SignIn, SignOut } from "./🆔️identity-config-mutation/🟦️.ts";
 import { signIn, signOut } from "./🆔️identity-config-mutation/🟦️.ts";
 import { diff as signInDiff, inverse as signInInverse } from "./🪪️sign-in/🟦️.ts";
 import { diff as signOutDiff, inverse as signOutInverse } from "./🚪️sign-out/🟦️.ts";
@@ -61,7 +63,7 @@ export function inverseMergePolicyConfigMutation(mutation: MergePolicyConfigMuta
 
 //#region 🔖️Identity
 /** 🧮️ Delegates diff behavior to the direct semantic leaf named by the tag. */
-export function diffIdentityConfigMutation(mutation: IdentityConfigMutation, base: Identity | null): Identity | null {
+export function diffIdentityConfigMutation(mutation: IdentityConfigMutation, base: Identity | null): IdentityDiff {
   return mutation.mutation === "signIn" ? signInDiff(mutation, base) : signOutDiff(base);
 }
 
@@ -72,17 +74,17 @@ export function inverseIdentityConfigMutation(mutation: IdentityConfigMutation, 
 
 /** 🧮️ Applies an identity mutation's whole-record diff. */
 export function applyIdentityConfigMutation(base: Identity | null, mutation: IdentityConfigMutation): Identity | null {
-  return diffIdentityConfigMutation(mutation, base);
+  return applyIdentityDiff(base, diffIdentityConfigMutation(mutation, base));
 }
 
 export { changeMergePolicy, clearDefaultApp, setAppearance, setCustomDriver, setCustomTheme, setDefaultApp, setDriver, setKeybindingOverride, setLayout, setLocale, setNamedLayout, setTerminology, setTheme, signIn, signOut };
-export type { ChangeMergePolicy, ClearDefaultApp, Identity, IdentityConfigMutation, MergePolicyConfigMutation, MergePolicySetting, OpeningConfigMutation, SetAppearance, SetCustomDriver, SetCustomTheme, SetDefaultApp, SetDriver, SetKeybindingOverride, SetLayout, SetLocale, SetNamedLayout, SetTerminology, SetTheme, SignIn, SignOut, UiPreferencesConfigMutation };
+export type { ChangeMergePolicy, ClearDefaultApp, Identity, IdentityDiff, IdentitySessionEdit, IdentityConfigMutation, MergePolicyConfigMutation, MergePolicySetting, OpeningConfigMutation, SetAppearance, SetCustomDriver, SetCustomTheme, SetDefaultApp, SetDriver, SetKeybindingOverride, SetLayout, SetLocale, SetNamedLayout, SetTerminology, SetTheme, SignIn, SignOut, UiPreferencesConfigMutation };
 //#endregion 🔖️Identity
 
 //#region 🔖️LocalCatalog
 /** 🧮️ Delegates local-catalog behavior to the direct semantic leaf named by the tag. */
 export function applyLocalCatalogConfigMutation(base: LocalCatalog, mutation: LocalCatalogConfigMutation): LocalCatalog {
-  return mutation.mutation === "admitLocalDocument" ? admitLocalDocumentDiff(mutation, base) : retireLocalDocumentDiff(mutation, base);
+  return applyLocalCatalogDiff(base, diffLocalCatalogConfigMutation(mutation, base));
 }
 
 /** ↩️ Delegates local-catalog inverse behavior to the direct semantic leaf named by the tag. */
@@ -91,7 +93,7 @@ export function inverseLocalCatalogConfigMutation(mutation: LocalCatalogConfigMu
 }
 
 export { admitLocalDocument, LOCAL_CATALOG_CONFIG_SCHEMA, retireLocalDocument };
-export type { AdmitLocalDocument, LocalCatalog, LocalCatalogConfigMutation, LocalDocument, LocalDocumentStorage, RetireLocalDocument };
+export type { AdmitLocalDocument, LocalCatalog, LocalCatalogConfigMutation, LocalCatalogDiff, LocalCatalogRow, LocalDocument, LocalDocumentStorage, RetireLocalDocument };
 //#endregion 🔖️LocalCatalog
 
 //#region 🔖️LocalFolders
@@ -108,3 +110,34 @@ export function inverseLocalFoldersConfigMutation(mutation: LocalFoldersConfigMu
 export { attachLocalFolder, detachLocalFolder, LOCAL_FOLDERS_CONFIG_SCHEMA };
 export type { AttachLocalFolder, DetachLocalFolder, LocalFolderBinding, LocalFolderBindings, LocalFolderRef, LocalFoldersConfigMutation };
 //#endregion 🔖️LocalFolders
+
+
+export function diffLocalCatalogConfigMutation(mutation: LocalCatalogConfigMutation, base: LocalCatalog): LocalCatalogDiff {
+  return mutation.mutation === "admitLocalDocument" ? admitLocalDocumentDiff(mutation, base) : retireLocalDocumentDiff(mutation, base);
+}
+
+
+export function identityMutationDiffPair(mutation: IdentityConfigMutation, base: Identity | null): { readonly diff: IdentityDiff; readonly inverse: IdentityDiff } {
+  const diff = diffIdentityConfigMutation(mutation, base);
+  let state = applyIdentityDiff(base, diff);
+  let inverse: IdentityDiff = {};
+  for (const step of [...inverseIdentityConfigMutation(mutation, base)].reverse()) {
+    const stepDiff = diffIdentityConfigMutation(step, state);
+    state = applyIdentityDiff(state, stepDiff);
+    inverse = absorbIdentityDiff(inverse, stepDiff);
+  }
+  return { diff, inverse };
+}
+
+
+export function localCatalogMutationDiffPair(mutation: LocalCatalogConfigMutation, base: LocalCatalog): { readonly diff: LocalCatalogDiff; readonly inverse: LocalCatalogDiff } {
+  const diff = diffLocalCatalogConfigMutation(mutation, base);
+  let state = applyLocalCatalogDiff(base, diff);
+  let inverse: LocalCatalogDiff = {};
+  for (const step of [...inverseLocalCatalogConfigMutation(mutation, base)].reverse()) {
+    const stepDiff = diffLocalCatalogConfigMutation(step, state);
+    state = applyLocalCatalogDiff(state, stepDiff);
+    inverse = absorbLocalCatalogDiff(inverse, stepDiff);
+  }
+  return { diff, inverse };
+}

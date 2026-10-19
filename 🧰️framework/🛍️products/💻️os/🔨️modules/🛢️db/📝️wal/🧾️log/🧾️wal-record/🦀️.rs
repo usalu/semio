@@ -249,7 +249,7 @@ impl WalRecord {
 
     pub async fn write_retained(&self, writer: &mut protocol::SprWriter<SharedBuf>) -> Result<u64, DbError> {
         let (kind, payload_len) = self.retained_shape();
-        let mut record = writer.begin_identity_record(kind, true, payload_len).await.map_err(protocol_err)?;
+        let mut record = writer.begin_identity_record(kind, true, payload_len).await.map_err(DbError::from)?;
         match self {
             Self::SegmentHeader { document, segment_index, prev_chain_hash } => {
                 wal_record_write_field(&mut record, document.0.as_bytes()).await?;
@@ -300,7 +300,7 @@ impl WalRecord {
                 wal_record_write(&mut record, &expires_at_ms.to_le_bytes()).await?;
             }
         }
-        record.finish().await.map_err(protocol_err)
+        record.finish().await.map_err(DbError::from)
     }
 
     /// 📖️ Inverse of `encode`. Errors `DbError::Corrupt` on an unrecognized `kind` (a

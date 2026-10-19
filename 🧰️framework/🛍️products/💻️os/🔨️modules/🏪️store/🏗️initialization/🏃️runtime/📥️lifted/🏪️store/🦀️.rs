@@ -224,27 +224,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     }
 
     pub fn new_with_owner_catalog(artifact_id: &str, schema: &str, current: Arc<P>, initial_digest: [u8; 32], actor: ActorId, catalog: ArtifactStoreInitializationOwnerCatalog) -> Self {
-        let identity_digest = CursorRevisionAccumulator::hash_record(b"initial", &[artifact_id.as_bytes(), schema.as_bytes(), &initial_digest]);
-        let ArtifactStoreInitializationOwnerCatalog { applied_edit_ids, redo_edit_ids, cursor_applied_edit_ids, cursor_redo_edit_ids, applied_revision, redo_revision } = catalog;
-        Self {
-            current: std::mem::ManuallyDrop::new(Some(current)),
-            applied_edit_ids: std::mem::ManuallyDrop::new(applied_edit_ids),
-            redo_edit_ids: std::mem::ManuallyDrop::new(redo_edit_ids),
-            cursor_applied_edit_ids: std::mem::ManuallyDrop::new(cursor_applied_edit_ids),
-            cursor_redo_edit_ids: std::mem::ManuallyDrop::new(cursor_redo_edit_ids),
-            current_checkpoint_id: std::mem::ManuallyDrop::new(None),
-            local_actor_id: std::mem::ManuallyDrop::new(actor),
-            dag: std::mem::ManuallyDrop::new(Some(semio_framework_os_spr::MutationDag::new())),
-            edit_sequence: 0,
-            clock: fresh_replica_clock(),
-            initial_digest,
-            revision: std::mem::ManuallyDrop::new(CursorRevisionAccumulator { identity_digest, applied: applied_revision, redo: redo_revision, applied_tail_chains: None, mutation_positions: protocol::HistoryFoldIndex::new(), indexed_edits: protocol::HistoryFoldIndex::new(), unit_flags: protocol::HistoryFoldIndex::new() }),
-            close_active: std::mem::ManuallyDrop::new(None),
-            supersessions: std::mem::ManuallyDrop::new(EffectiveSupersessions::new()),
-            close_phase: 0,
-            taken: false,
-        }
-    }
+        Self::new_with_registry(artifact_id, schema, current,initial_digest, actor, catalog, SnapshotReadLeaseRegistryOwner::new()) }
 
     pub fn current_mut(&mut self) -> Option<&mut P> {
         self.current.as_mut().and_then(Arc::get_mut)
@@ -271,6 +251,8 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
             7 if self.dag.is_some() => size_of::<ArtifactStoreMutationDagRetirement>(),
             8 => size_of::<ArtifactStoreSupersessionRetirement>(),
             9 => size_of::<ArtifactStoreRevisionAccumulatorRetirement>(),
+
+            10 => return self.read_retirement_demands(body),
             _ => 0,
         };
         Ok(semio_framework_value::RetirementDemand { capacity_bytes, depth: if capacity_bytes == 0 { 1 } else { 2 }, ..Default::default() })
@@ -563,7 +545,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     #[allow(clippy::type_complexity)]
     pub fn into_parts(
         mut self,
-    ) -> (Arc<P>, semio_framework_os_vcs::HistoryPageStack<String>, semio_framework_os_vcs::HistoryPageStack<String>, ArtifactCursor, ActorId, semio_framework_os_spr::MutationDag, i32, HybridLogicalTimestamp, [u8; 32], CursorRevisionAccumulator, EffectiveSupersessions) {
+    ) -> (Arc<P>, semio_framework_os_vcs::HistoryPageStack<String>, semio_framework_os_vcs::HistoryPageStack<String>, ArtifactCursor, ActorId, semio_framework_os_spr::MutationDag, i32, HybridLogicalTimestamp, [u8; 32], CursorRevisionAccumulator, EffectiveSupersessions, SnapshotReadLeaseRegistryOwner) {
         assert!(self.close_phase == 0 && self.close_active.is_none(), "a closing initialization runtime cannot be adopted");
         let current = self.current.take().expect("validated initialization owns its current snapshot");
         let applied = unsafe { std::mem::ManuallyDrop::take(&mut self.applied_edit_ids) };
@@ -574,8 +556,10 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         let dag = self.dag.take().expect("validated initialization owns its causal graph");
         let revision = unsafe { std::mem::ManuallyDrop::take(&mut self.revision) };
         let supersessions = unsafe { std::mem::ManuallyDrop::take(&mut self.supersessions) };
+
+        let registry=unsafe{std::mem::ManuallyDrop::take(&mut self.read_registry)};
         self.taken = true;
-        (current, applied, redo, cursor, actor, dag, self.edit_sequence, self.clock, self.initial_digest, revision, supersessions)
+        (current, applied, redo, cursor, actor, dag, self.edit_sequence, self.clock, self.initial_digest, revision, supersessions, registry)
     }
 }
 

@@ -7,7 +7,7 @@ use super::*;
 impl BoardFillSnapshotIngress {
     pub fn new(suggestion_offset: f64, naming: &'static BoardNaming) -> Self {
         Self {
-            snapshot: Some(BoardFillSnapshot { nodes: BoardFillFixedPages::new(), handles: BoardFillFixedPages::new(), kinds: BoardFillFixedPages::new(), rules: BoardFillFixedPages::new(), suggestion_offset, naming }),
+            snapshot: Some(BoardFillSnapshot { original_source: None, nodes: BoardFillFixedPages::unallocated(), handles: BoardFillFixedPages::unallocated(), kinds: BoardFillFixedPages::unallocated(), rules: BoardFillFixedPages::unallocated(), suggestion_offset, naming }),
             node: None,
             handle: None,
             kind: None,

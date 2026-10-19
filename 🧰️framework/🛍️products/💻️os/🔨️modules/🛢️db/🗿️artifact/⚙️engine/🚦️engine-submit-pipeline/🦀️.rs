@@ -29,7 +29,7 @@ impl ArtifactEngine {
     pub(super) async fn commit_one(&mut self, envelope: &protocol::MutationEnvelope, entries: Vec<(String, Option<Vec<u8>>)>) -> Result<(), DbError> {
         self.state.apply_entries(&envelope.mutation_id, entries).await?;
         self.applied.insert(envelope.mutation_id.0.clone(), envelope.clone());
-        *self.actor_seq.entry(envelope.actor.0.clone()).or_insert(0) += 1;
+        *self.actor_seq.entry(envelope.actor.0.as_str().to_owned()).or_insert(0) += 1;
         Ok(())
     }
 
@@ -205,7 +205,7 @@ impl ArtifactEngine {
         let mut newly_applied: Vec<(&protocol::MutationEnvelope, db_state::TouchedSet)> = Vec::with_capacity(planned.len());
         for (envelope, plan) in planned {
             self.commit_one(envelope, plan.entries).await?;
-            applied_actor_seqs.push(*self.actor_seq.get(&envelope.actor.0).unwrap_or(&0));
+            applied_actor_seqs.push(*self.actor_seq.get(envelope.actor.0.as_str()).unwrap_or(&0));
             for region in &plan.touched.regions {
                 touched_all.record(region.clone());
             }

@@ -63,7 +63,7 @@
                     window_transient_authority: None,
                     publication_lanes: &[ArtifactToolPublicationLane::Presence], contract: Some(semio_framework::ToolExecutionContract::bounded_first_step(1 << 20, 1 << 20, 1 << 20, 1 << 20, 7_999)),
                     session: None,
-                    session_rejected: None,
+                    session_rejected: None,producer_source:None,producer_request:None,producer_request_retirement:None,
                     reserved_producer: None, completion: None,
                     completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input: None,
                     output_chunks: None,
@@ -80,7 +80,7 @@
                     owned_child_result_pending: false,
                     captured_child_content: Some(std::sync::Arc::new(ChildContentView::EMPTY)),
                     captured_child_content_generation: 0,
-                    result_page: None,
+                    result_page: None, diagnostics:None,
                     result_page_presented: false,
                     result_sequence: 0,
                     publication_progress: 0,
@@ -110,14 +110,14 @@
         let stuck = app.tools.tool_operations.get(1).expect("the structurally faulted operation stays mounted until it retires");
         assert_eq!(stuck.stage, MountedTypedCommandFullOperationStage::AwaitingAck, "a refused worker step leaves its own operation holding its own terminal fault page");
         let mut pages: Vec<(u64, TypedOperationResultLane, String)> = Vec::new();
-        while let Some(page) = app.take_typed_operation_result_page(7) {
+        while let Some(mut page) = crate::app_testing::artifact_app_laws::take_fixture_result_page(&mut app,7,crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation).expect("original fixture page presentation") {
             let code = if page.lane == TypedOperationResultLane::Fault { semio_framework_plugin_decl_app::tool_contract::decode_typed_operation_fault_page(page.bytes()).code.0 } else { String::new() };
             let operation = page.token.operation;
             pages.push((operation, page.lane, code));
-            if operation == 1 {
-                let acknowledged = app.tools.tool_operations.get_mut(1).expect("the terminated operation stays mounted").acknowledge_result_page(page.token).expect("the terminated operation's own fault page is acknowledgeable");
-                assert!(acknowledged, "a terminated operation must accept the ACK for the page it minted");
-            }
+            let token =crate::app_testing::artifact_app_laws::close_fixture_result_page(&mut page,crate::app_testing::artifact_app_laws::fixture_mounted_policy().close);
+                let acknowledged = app.tools.acknowledge_typed_operation_result(token).expect("each original published page accepts its exact ACK after receiver closure");
+                assert!(acknowledged, "published operation {operation} must retain its original ACK authority");
+
         }
         assert!(
             pages.contains(&(1, TypedOperationResultLane::Fault, "interactive-job.typed-operation-session".to_string())),
@@ -143,7 +143,7 @@
                     window_transient_authority: None,
                     publication_lanes: &[], contract: Some(semio_framework::ToolExecutionContract::bounded_first_step(1 << 20, 1 << 20, 1 << 20, 1 << 20, 7_999)),
                     session: None,
-                    session_rejected: None,
+                    session_rejected: None,producer_source:None,producer_request:None,producer_request_retirement:None,
                     reserved_producer: None, completion: None,
                     completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input: None,
                     output_chunks: None,

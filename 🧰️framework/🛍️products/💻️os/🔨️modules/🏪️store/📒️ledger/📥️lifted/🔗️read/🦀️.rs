@@ -17,6 +17,7 @@ impl ArtifactStoreStringRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreStringRetirement {
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.owner.next_demand(body) }
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.owner.step(grant)}
     fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.owner.next_copy_byte_demand()}
@@ -52,6 +53,7 @@ impl<Mutation> ArtifactStoreEditRetirement<Mutation> {
 }
 
 impl<Mutation:Send+'static> ErasedSnapshotRetirement for ArtifactStoreEditRetirement<Mutation>{
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands(body) }
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         let zero=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(zero));}let demand=self.demands(grant.maximum_copy_bytes)?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(zero));}
@@ -118,6 +120,7 @@ impl ArtifactStoreHistoryMetadataRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreHistoryMetadataRetirement {
+    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand {release_bytes:self.next_release_byte_demand()?,depth:usize::from(self.state.is_some()),..Default::default()})}
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
         let empty = RetainedCloneProgress::default();

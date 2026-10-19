@@ -97,7 +97,7 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
     let (residue,receipt)=store.retire_derived_history_preview(&mut preview,grant).unwrap().unwrap();assert!(receipt.fits(grant));drive_retirement_terminal(residue);
     assert_eq!(before.snapshot().n, Some(law["expected"]["before"].as_i64().unwrap() as i32));
     let replacement = DemoMutation::from_value(law["replacement"].clone().into()).unwrap();
-    let (next, _) = store.derive_history_snapshot(&before, &replacement).unwrap();
+    let (next, _) = store.derive_reference_history_snapshot(&before, &replacement).unwrap();
     assert_eq!(next.unwrap().snapshot().n, Some(law["expected"]["preview"].as_i64().unwrap() as i32));
     let mut changed = accepted.clone();
     changed.insert(target.clone(), draft(Some(replacement)));

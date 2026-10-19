@@ -22,7 +22,7 @@ fn input(value: &Value) -> CompositeInput {
     CompositeInput {
         width:value["width"].as_u64().unwrap() as u32,height:value["height"].as_u64().unwrap() as u32,
         origin:[value["origin"][0].as_f64().unwrap(),value["origin"][1].as_f64().unwrap()],
-        images:value["images"].as_object().unwrap().iter().map(|(key,v)|(key.clone(),Arc::new(RasterImage {width:v["width"].as_u64().unwrap() as u32,height:v["height"].as_u64().unwrap() as u32,pixels:bytes(&v["pixels"])}))).collect(),
+        images:value["images"].as_object().unwrap().iter().map(|(key,v)|(key.clone(),RasterLease(Arc::new(RasterImage {width:v["width"].as_u64().unwrap() as u32,height:v["height"].as_u64().unwrap() as u32,pixels:bytes(&v["pixels"])})))).collect(),
         layers:value["layers"].as_array().unwrap().iter().map(layer).collect(),
     }
 }

@@ -730,6 +730,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-course"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-course-schema",
+ "semio-framework-pack-json",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-framework-diagnostic"
 version = "0.1.0"
 dependencies = [
@@ -746,6 +756,24 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "semio-framework-dsl"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-diagnostic",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-dsl-record"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-diagnostic",
+ "semio-framework-dsl",
+ "semio-framework-pack-json",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -798,16 +826,7 @@ name = "semio-framework-process-routing-workspace"
 version = "0.1.0"
 
 [[package]]
-name = "semio-framework-quiz"
-version = "0.1.0"
-dependencies = [
- "semio-framework-quiz-schema",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semio-framework-quiz-schema"
+name = "semio-framework-course-schema"
 version = "0.1.0"
 dependencies = [
  "serde",
@@ -860,6 +879,7 @@ name = "semio-framework-replication-codec"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
+ "semio-framework-dsl-record",
  "semio-framework-io-base64",
  "semio-framework-pack-error",
  "semio-framework-replication-error",
@@ -1130,6 +1150,7 @@ version = "0.1.0"
 name = "semio-framework-value"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-schema-registry",
  "semio-framework-value-allocation-return",
@@ -1494,7 +1515,7 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "semio-framework-async",
- "semio-framework-quiz",
+ "semio-framework-course",
  "semio-framework-server",
  "semio-framework-test-fixtures",
  "serde_json",
@@ -1511,8 +1532,8 @@ version = "0.1.0"
 dependencies = [
  "rusqlite",
  "semio-framework-async",
+ "semio-framework-course",
  "semio-framework-hash",
- "semio-framework-quiz",
  "semio-framework-replication",
  "semio-framework-server",
  "semio-framework-test-fixtures",
@@ -1528,7 +1549,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-async",
  "semio-framework-dispatch-macros",
- "semio-framework-quiz",
+ "semio-framework-course",
  "semio-framework-server",
  "serde",
  "serde_json",

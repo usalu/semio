@@ -37,7 +37,7 @@ impl ChildContentRetirement {
     /// 📏️ Quotes the next disposer step, lease verification, entry disposal, or Arc release against its exact owning member.
     pub fn retirement_demands<M: SpaceMember>(&self, children: &ChildMemberRegistry<M>, retiring: Option<&ArtifactFixedRegistry<ChildMemberRetirement<M>>>, body: usize) -> Result<RetirementDemand, ValueError> {
         if let Some(active) = self.active.as_ref() { let parent_copy=if active.terminal_is_empty(){size_of_val(&*self.active)}else{0};return Self::parent_snapshot_demand(store::os_store::snapshot_read::artifact_retirement_box_demands(active,body.saturating_sub(parent_copy))?,parent_copy); }
-        if let Some(owner)=self.metadata_close.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of_val(&*self.metadata_close),depth:1,..Default::default()})}else{Self::parent_snapshot_demand(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?},0)}}
+        if let Some(owner)=self.metadata_close.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of_val(&*self.metadata_close),depth:1,..Default::default()})}else{Self::parent_snapshot_demand(owner.next_demand(body)?,0)}}
         if let Some(original) = self.active_member.as_ref() {
             if self.require_member_terminal{
                 let Some(member)=child_snapshot_owner_ref(children,retiring,original.key.borrowed(),&original.artifact_id)else{return Ok(RetirementDemand{depth:1,..Default::default()})};
@@ -236,7 +236,7 @@ impl<M: SpaceMember> ChildMemberRetirement<M> {
     }
 
     pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
-        if let Some(owner)=self.metadata.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of_val(&*self.metadata),depth:1,..Default::default()})}else{ChildContentRetirement::parent_snapshot_demand(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?},0)}}
+        if let Some(owner)=self.metadata.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of_val(&*self.metadata),depth:1,..Default::default()})}else{ChildContentRetirement::parent_snapshot_demand(owner.next_demand(body)?,0)}}
         let Some(entry)=self.entry.as_ref()else{return Ok(Default::default())};
         if !entry.member.snapshot_read_leases_terminal_is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()})}
         if !entry.member.close_owned_terminal_is_empty(){return ChildContentRetirement::parent_snapshot_demand(entry.member.close_owned_demands(body)?,0)}

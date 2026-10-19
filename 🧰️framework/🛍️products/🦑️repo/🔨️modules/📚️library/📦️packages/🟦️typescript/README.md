@@ -23,7 +23,7 @@ await runBundleScriptMain(router, import.meta.url);
 - **`runBundleScriptMain(router, import.meta.url)`**: runs `policy` when `export const policy` is present, then dispatches argv.
 - **`runPolicyOnlyMain(import.meta.url)`**: policy-only bundles (no subcommands).
 - **Workspace root** (`/script.ts`): same `Script` base class with `ScriptRouter` over workspace verbs (see root `script.ts`).
-- **Native bootstrap**: `repo/native/bootstrap/🔵️.ps1` / `🐚️.sh` (invoked via `bun ./📜️script.ts setup native` / `start`).
+- **Native bootstrap**: the checked-in platform bootstrap under `🔨️modules/🔩️native/🥾️bootstrap`, rerun with the dashboard command `workspace:setup-native`.
 - Helpers: `runCmd`, `runBun`, `runBunx`, `runViteDev`, `runViteBuild`, `runVitest`, `runWasmPackWebBuild`, `playPollingEnv`, `dispatchSubcommand`, `runWorkspaceScriptMain`, `devToolingEnv`, `spawnBunx`.
 - Nested verbs inside a command class use `dispatchSubcommand(segments, { … }, usage, defaultKey?)`.
 
@@ -32,11 +32,7 @@ await runBundleScriptMain(router, import.meta.url);
 - **File**: `export const policyFile = "index.ts"` plus `export const policy = defineLint(...)` in the bundle `script.ts`.
 - **Folder / bundle / technology**: `export const policy = defineLint(...)` in `script.ts` at that directory — runner resolves entity kind from `folder(path)` GraphQL.
 
-Run:
-
-```bash
-bun repo run <project>:lint-policy
-```
+Choose **New Task** (`Ctrl+B n`) in `bun run dashboard` and select the owner's registered `lint` or `check` target. For a scoped authored policy route, select `tool:workspace/run-script-verb` and set its `commandLine` to `lint <repo-id> [--markdown]`. The dashboard owns the original command line and streams policy events; inferred `lint-policy` targets remain bound to each owner.
 
 The repository's shared [policy inference](../../🏗️build/🕸️graph/📥️inference/🛡️policy/🟨️.mjs) discovers `📜️script.ts` exports and adds a cacheable `lint-policy` task to the owning project. Its `lint` task depends on `lint-policy`; projects without a declared owner receive a generated `breach-*` project. Both build adapters consume this shared graph.
 

@@ -72,6 +72,7 @@ impl<V:RetireOwned+Sync,R:RootOwner<V>> TypedOwner<V,R> {
     fn new(root:R)->Self{Self{root,payload:ManuallyDrop::new(None)}}
 }
 impl<V:RetireOwned+Sync,R:RootOwner<V>> RetirementCursor for TypedOwner<V,R> {
+ fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(owner)=self.payload.as_ref(){let mut d=owner.next_demand(body)?;d.depth=d.depth.checked_add(self.root.retained_depth()).ok_or_else(||ValueError::literal(crate::ValueRefusalKind::DepthLimit,"ordered nested retirement depth overflow"))?;Ok(d)}else{Ok(crate::RetirementDemand{copy_bytes:self.root.copy_demand(),release_bytes:self.root.release_demand()?,depth:self.root.depth_demand(),..Default::default()})}}
     fn close_step(&mut self,grant:RetainedCloneGrant)->TypedStep {
         if self.terminal_is_empty(){return TypedStep::Complete;}
         if grant.maximum_items==0{return TypedStep::BudgetExhausted;}

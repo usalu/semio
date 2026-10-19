@@ -1,0 +1,13 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "title":"Immutable Shared Page Collection Laws",
+ "type":"object","additionalProperties":false,
+ "required":["fanout","cases","phases"],
+ "properties":{
+  "fanout":{"const":16},
+  "phases":{"const":["retain-root","prepare-path","preflight","publish-root","close"]},
+  "cases":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["id","rowCount","index","before","authored","after","changedPages","unchangedReader"],"properties":{
+   "id":{"type":"string","minLength":1},"rowCount":{"type":"integer","minimum":1},"index":{"type":"integer","minimum":0},"before":{"type":"integer"},"authored":{"type":"integer"},"after":{"type":"integer"},"changedPages":{"type":"integer","minimum":1},"unchangedReader":{"type":"integer"}
+  }}}
+ }
+}

@@ -172,6 +172,10 @@ export class Base64DecodeCursor {
     const bytes=Math.min(this.length-this.offset,4096);
     return bytes+(this.phase==="validate"&&this.offset+bytes<this.length?bytes:0);
   }
+  /** 📐️ Borrows the decoded extent; both strict passes must still complete. */
+  expectedOutputBytes():number{this.active();return this.outputLength;}
+  /** 🎟️ Quotes the exact output ArrayBuffer before its only retained birth. */
+  nextCapacityByteDemand():number{this.active();return !this.complete&&!this.refused&&this.phase==="decode"&&!this.started?this.outputLength:0;}
   private advance(control:Base64Control):void{
     admit(this.outputLength,control);
     if(!this.started){

@@ -16,6 +16,8 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-s-fem-node = { path = "../../../../../../../../../../⚙️engine/📍node/📦️packages/🦀️rust" }
+semio-s-fem-material = { path = "../../../../../../../../../../⚙️engine/🧱️material/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-os-kernel = { workspace = true }

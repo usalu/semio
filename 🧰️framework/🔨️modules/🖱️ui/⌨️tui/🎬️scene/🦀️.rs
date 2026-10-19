@@ -1,6 +1,6 @@
 use crate::chrome::ChromeState;
 use semio_framework_ui_tui_core::geometry::{Pos, Rect};
-use crate::layout::Constraint;
+use crate::layout::{Constraint, WindowLayout};
 use semio_framework_ui_tui_core::theme::{Role, Surface};
 use semio_framework_ui_tui_widgets::widget::WidgetState;
 
@@ -78,12 +78,20 @@ struct Slot {
     generation: u32,
 }
 
+/// 🗺️ The mounted window model and concrete node identities used for exact drag proposals.
+pub(crate) struct MountedWindowLayout {
+    pub(crate) canvas: NodeId,
+    pub(crate) layout: WindowLayout,
+    pub(crate) windows: Vec<(String, NodeId)>,
+}
+
 /// 🗂️ A generational-arena retained scene tree, renderer-agnostic; the overlay root stacks above the main root.
 pub struct Scene {
     slots: Vec<Slot>,
     free: Vec<u32>,
     root: NodeId,
     overlay_root: NodeId,
+    pub(crate) window_layouts: Vec<MountedWindowLayout>,
 }
 
 impl Scene {
@@ -93,7 +101,7 @@ impl Scene {
         let mut overlay = Node::new(NodeContent::Box);
         overlay.constraint.direction = crate::layout::Direction::Stack;
         slots.push(Slot { node: Some(overlay), generation: 0 });
-        Self { slots, free: Vec::new(), root: NodeId { index: 0, generation: 0 }, overlay_root: NodeId { index: 1, generation: 0 } }
+        Self { slots, free: Vec::new(), root: NodeId { index: 0, generation: 0 }, overlay_root: NodeId { index: 1, generation: 0 }, window_layouts: Vec::new() }
     }
 
     pub fn root(&self) -> NodeId {
@@ -129,6 +137,7 @@ impl Scene {
         if !self.valid(id) || id == self.root || id == self.overlay_root {
             return;
         }
+        self.window_layouts.retain(|mounted| mounted.canvas != id);
         let children = self.node(id).children.clone();
         for child in children {
             self.remove(child);

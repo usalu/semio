@@ -65,40 +65,19 @@
         "🛰️protobuf": "🛰️.proto"
       },
       "exports": {
-        "PresentationPresence": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [
-        "app.animate.presentation.presence.mutation.replace-presence"
-      ],
-      "hashes": {
-        "🔗️.graphql": "e45af323989d912c6604912789ec39eb415bb5b0ed16b0040ae4a1d388579628",
-        "🔣️.json": "17fc3a69bfc53aad3adad010f246a0a6b3e6ddb0c33aeeb3fe0850342ec8e0d0",
-        "🛰️.proto": "c906a9ea6e43cabd8b024d37dcdea0125524da28f690728fabe07a6e7b17b5d4",
-        "🟦️.ts": "191d9fc2b6d87421d1075ea2b5d9db4c07ba7708ab820151d3a8867652ab2d89",
-        "🦀️.rs": "819ecb25c89e18c1abedb99c3e732e4e07e8011ebf0884ecee406035e7db2e24",
-        "🧬️mutations/🔣️.json": "a01243fb643634826dac6fd417f5d8fe105e2f2324ec30066d6762b19ee0fa1a",
-        "🧬️mutations/🦀️.rs": "200c6027695229d20194d3cb862b7b28fe6a068213f1aa4f27eac03110ce7388"
-      }
-    },
-    "app.animate.presentation.presence.mutation.replace-presence": {
-      "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🧬️mutations/📸️replace-presence/🧬️schema",
-      "level": "mutation-leaf",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🔣️jsonschema": "🔣️.json"
-      },
-      "exports": {
-        "ReplacePresence": {
+        "NoPresence": {
           "file": "🔣️.json",
           "facet": "schema"
         }
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "6ebc32cf37c8c639109f90709587d978653e7238e695b19a7b6b56f7be6c533d"
+        "🔗️.graphql": "e45af323989d912c6604912789ec39eb415bb5b0ed16b0040ae4a1d388579628",
+        "🔣️.json": "17fc3a69bfc53aad3adad010f246a0a6b3e6ddb0c33aeeb3fe0850342ec8e0d0",
+        "🛰️.proto": "c906a9ea6e43cabd8b024d37dcdea0125524da28f690728fabe07a6e7b17b5d4",
+        "🟦️.ts": "191d9fc2b6d87421d1075ea2b5d9db4c07ba7708ab820151d3a8867652ab2d89",
+        "🦀️.rs": "819ecb25c89e18c1abedb99c3e732e4e07e8011ebf0884ecee406035e7db2e24",
+        "🧬️mutations/🦀️.rs": "200c6027695229d20194d3cb862b7b28fe6a068213f1aa4f27eac03110ce7388"
       }
     },
     "app.architect.architect.config": {
@@ -257,10 +236,10 @@
       "exports": {},
       "dependsOn": [],
       "hashes": {
-        "🔗️.graphql": "1bc01431ffe7afb967516d23682d29da30e6a110690b8537a74176e091d31d9f",
-        "🔣️.json": "04e75c7a678511764df55672f3a8c96909055c127992a4c12d4049ab4ab51b1c",
-        "🛰️.proto": "a34130e061a5a8d91d953bc061ac0c03926c167b04d2efbacc07cd1bac50df65",
-        "🟦️.ts": "3fe40eba53b971890d57dc8b88e076c5eedf9f138341de1beb26e989ae11160d"
+        "🔗️.graphql": "1fe2da8397c4a5d71aba6fb85f98e101744717ded09bef43c94793f82a6519ea",
+        "🔣️.json": "1a3b9dd45864cb6f303856a4d817ed6967635f8d06a9a10d62657edebfc8662d",
+        "🛰️.proto": "cb357b624cec3e9952d01e12422d7a949922eb7aaae9305abd9f3d0772c9ebda",
+        "🟦️.ts": "ff2d6a3cd9f02669afd35e4e62a27ced1dbad2a29b88c64799675b7caf35937b"
       }
     },
     "app.block.2d.config": {
@@ -517,8 +496,7 @@
         }
       },
       "dependsOn": [
-        "app.dag.dag.config.mutation.change-camera",
-        "app.dag.dag.config.mutation.replace-config"
+        "app.dag.dag.config.mutation.change-camera"
       ],
       "hashes": {
         "🔗️.graphql": "c9acf8813b4905fe5c9f797b0082b8754985ef386ac3d697f535223996cc13f6",
@@ -546,24 +524,6 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "32db7cde9805757efda9d3056b614a5d53e3626729f7c6d8d16f497c20f952ee"
-      }
-    },
-    "app.dag.dag.config.mutation.replace-config": {
-      "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🔄️replace-config/🧬️schema",
-      "level": "mutation-leaf",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🔣️jsonschema": "🔣️.json"
-      },
-      "exports": {
-        "ReplaceConfig": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "🔣️.json": "af07f5bd1b53cac4ad37f38bc05ef321c2340470557498f2d4a26371b7a84759"
       }
     },
     "app.dag.dag.presence": {
@@ -741,7 +701,7 @@
         "🟦️.ts": "1c61846c6779f82a3075abfdf5e91b11c044f9a0afa1ee3b5cbfe88f5f8dd35a",
         "🦀️.rs": "b4397c37262d243f65160869116c996315adb265c5aca8597174d2ffa53d620a",
         "🧬️mutations/🔣️.json": "f7c677a0680ffdc797f93a332c2341499292182c3c52d5141796bd4930b9c5a8",
-        "🧬️mutations/🦀️.rs": "33181761ef3006a426cde1b9dcc67139e32dc6175b724a3c679c207d5f00568f"
+        "🧬️mutations/🦀️.rs": "ee3bdbc02958e802c0abc8910a549bad54ca46982af25dee04a9c13451fded15"
       }
     },
     "app.energy.model.config.mutation.change-result-field": {
@@ -890,7 +850,6 @@
         }
       },
       "dependsOn": [
-        "app.forms.forms.config.mutation.replace-config",
         "app.forms.forms.config.mutation.set-contributions"
       ],
       "hashes": {
@@ -901,24 +860,6 @@
         "🦀️.rs": "d4cda513c737eaef469eccf46a34e8d266d4f8c91f64efc10c55f28665a1deec",
         "🧬️mutations/🔣️.json": "05e5ad63c4b4fbd58a50a91076447b9ea2e5578400c4953ae4e9149caeed01c0",
         "🧬️mutations/🦀️.rs": "fe7dd6c6b7690d7980abbd0daa8b074e669e1837b539806a488dd1d615d46211"
-      }
-    },
-    "app.forms.forms.config.mutation.replace-config": {
-      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/📸️replace/🧬️schema",
-      "level": "mutation-leaf",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🔣️jsonschema": "🔣️.json"
-      },
-      "exports": {
-        "ReplaceConfig": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "🔣️.json": "1020b8e030f9f893d93a3f87209e4147ca1818963f31e6227b2e728cedcc0c63"
       }
     },
     "app.forms.forms.config.mutation.set-contributions": {
@@ -1045,7 +986,6 @@
         }
       },
       "dependsOn": [
-        "app.imperative.imperative.config.mutation.replace-config",
         "app.imperative.imperative.config.mutation.set-contributions",
         "app.imperative.imperative.config.mutation.set-run-output"
       ],
@@ -1057,24 +997,6 @@
         "🦀️.rs": "ff600ecb121f0c4f8584f0e4ac7197d86fd7d4e19f303a19d2e8c0fc9f0d4a1b",
         "🧬️mutations/🔣️.json": "4cd0ab595803c1b3332195a427771e523a2b774a9ff18e9b78b90f8cbd071002",
         "🧬️mutations/🦀️.rs": "9de7530b9514010523f9588560a67ca534a8be0f75fd0cc8409f814c0f386653"
-      }
-    },
-    "app.imperative.imperative.config.mutation.replace-config": {
-      "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/📸️replace-config/🧬️schema",
-      "level": "mutation-leaf",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🔣️jsonschema": "🔣️.json"
-      },
-      "exports": {
-        "ReplaceConfig": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "🔣️.json": "6c5db7a907a4b60a43c69e7c030c4570833b4ed85b86e43fb351a1ba0435658c"
       }
     },
     "app.imperative.imperative.config.mutation.set-contributions": {
@@ -2157,7 +2079,6 @@
         }
       },
       "dependsOn": [
-        "app.playbook.playbook.config.mutation.replace-config",
         "app.playbook.playbook.config.mutation.set-contributions"
       ],
       "hashes": {
@@ -2168,24 +2089,6 @@
         "🦀️.rs": "e4a6d06f6d8405eb0ccb08967815d70050cb9c49a48588f82bdedfd1f10e342d",
         "🧬️mutations/🔣️.json": "342aa4b006d9b810fca709506d5e66c441f4dfc5a3906860a2608923d712afa2",
         "🧬️mutations/🦀️.rs": "73b3ac081e9699b4b0e74eae1afd27ec893ac9d3cdc48c48a22c2774cf77d0f9"
-      }
-    },
-    "app.playbook.playbook.config.mutation.replace-config": {
-      "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/📸️replace/🧬️schema",
-      "level": "mutation-leaf",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🔣️jsonschema": "🔣️.json"
-      },
-      "exports": {
-        "ReplaceConfig": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "🔣️.json": "8e09792af335fb90505bc144887eef91025a7b1d6aa551e928db944041b475bf"
       }
     },
     "app.playbook.playbook.config.mutation.set-contributions": {
@@ -2817,11 +2720,11 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔗️.graphql": "210784849050815bd25f3449647d83e72ba4a45c03583e9058ff6833a7542c45",
-        "🔣️.json": "151806a4b38b84d9e498e0372eeda6c06d5187951441e23a85e3ad82053e1fb3",
-        "🛰️.proto": "f155a66f832f5685b63ab8942c56abc208ce03429769178239ac48ae4874f59b",
-        "🟦️.ts": "33bd2e23e6d831679251061693d7326c5abc8fee1da2d67d4f5c8463d8949ab1",
-        "🦀️.rs": "df970951baeba02e155d66474009c91081648faffdffa04696cc4391d11c8cb4"
+        "🔗️.graphql": "e6f4eac427fb49448f2113622c1566df5a79accd33f6b5fb3ae6e2e29d4424ae",
+        "🔣️.json": "029fb6305e7d4a1ed3b3bee5b0ba12cb976691fdd752b4af0e1a4b2257103856",
+        "🛰️.proto": "5d39fc7694fda47e6c69dfa909fe792df7f5bcb8db049d49768d221941212673",
+        "🟦️.ts": "e0fd7c588041c4c161ae46df785fda126258440dcfddf16660eb7608c92dcd6d",
+        "🦀️.rs": "7ac53df7b05f82d642e2b9c2b3e72be3a71ae096efbeccd46630b3c24d39f11f"
       }
     },
     "app.puzzle.puzzle3d.config": {
@@ -2869,11 +2772,11 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔗️.graphql": "57bfba390eeea30e0f742083e8d42fae02696acdc26890823d8d18e116f9616a",
-        "🔣️.json": "3c5401916c2814f38ec1e06f5a60ba292060e02c996adb854e570cf3b7f7df3f",
-        "🛰️.proto": "ef9bf8398579aab66700bd027c06b501eb5f33580342ae885730e9cead3acc1d",
-        "🟦️.ts": "f8af3b2d87237c89f29d2dc3fbeba36c742bbac371148310bc787746d0fe931d",
-        "🦀️.rs": "62e508c343a1f93d78dce54b2de8967cb0c9ce44d2eab4a0eeac37ed631ca960"
+        "🔗️.graphql": "c571da956ade34dd80bfe8ad675db7dfdd6b75f3fbc8518a2b5fd2ffde75fc46",
+        "🔣️.json": "3619efa9a1fe2968681ed3ae0680d11560b7fa0ca1e296e229ba17b27e3a2a6b",
+        "🛰️.proto": "590d10a7857a8aa3638a1fff66b3d18f4594367337844e83b5057e29f36a5a0a",
+        "🟦️.ts": "49d4f2e1ea4bb33d2bebc923813f3041d23ef0dc04cc2ee2982843ef7c87ce01",
+        "🦀️.rs": "d916cefbe4c18c141a4bd8a2ac7d17ba021d4427849dcbe66037a66b2ffc833c"
       }
     },
     "app.puzzle.puzzle5d.config": {
@@ -2899,7 +2802,7 @@
         "🔣️.json": "bd9e60697b66fdb517bbd656e4408b8180cb559f86440899922f7abb3d78c73b",
         "🛰️.proto": "851be8a031d7b1241999bba5afefc057508c05cd937afe4bb143d81ba3c6548d",
         "🟦️.ts": "d10b77e854f0374db1ed9af63c14a327b10fb3362b9c45eb8013bf413529766e",
-        "🦀️.rs": "c4ffbb8c22d625bbc9537002c10e7c91ffc46fabfb0f1e08cc302af2db2c6d17"
+        "🦀️.rs": "7fa470cc3e04851511a0ad88f9aa62d890019a921e886ccfae71c996c2e23ece"
       }
     },
     "app.puzzle.puzzle5d.presence": {
@@ -2921,11 +2824,11 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔗️.graphql": "0b676508b886a3fb9ea67b85c6d4b895463f454459bdeea3a03e443e8f92cce6",
-        "🔣️.json": "e182c0f287eeb962d8a5cc01217b01765dca3dcc0d3a3d81128a1bab04fc55de",
-        "🛰️.proto": "951932b8a25f45d02083a6010aa203bd3d390a183423d8f45fa44b877e144a81",
-        "🟦️.ts": "09dcd204a955d2d8f12283c601bbaef7f7112801baa274f9d68b4f925c12b6d4",
-        "🦀️.rs": "00527321c012ac6a1ea10e7b27f43f8881866d26913c5ae924cdb823021a45aa"
+        "🔗️.graphql": "08371821317ceb6f9c1d3f5c221770ce08cb050ae33904d20e11fbafd5575470",
+        "🔣️.json": "dd802bb5d94a61445051b4fea57f2f3401523e9f834e1944d3cda09429cdcd18",
+        "🛰️.proto": "8f5a7e18f53ca8658a5adbfe6d3cf2caa95e19894fafc198e59f30bdbba5309c",
+        "🟦️.ts": "9a583c548c5a24505ac966989d11ca5f20b5b8b14c952002bfba65ac8bcbfb7b",
+        "🦀️.rs": "059cc936d95f1b45aef2f32a4c38a17160950c58e71fadf60d8a8afe6b33dd66"
       }
     },
     "app.raster.raster.config": {
@@ -3106,7 +3009,6 @@
         }
       },
       "dependsOn": [
-        "app.shooting.shooting.config.mutation.replace-config",
         "app.shooting.shooting.config.mutation.set-camera",
         "app.shooting.shooting.config.mutation.set-center-model",
         "app.shooting.shooting.config.mutation.set-defaults",
@@ -3124,24 +3026,6 @@
         "🦀️.rs": "30b81a475a7b39a14e3b626e3e048f67a545b9ab6217834a76f4252d4eeecd63",
         "🧬️mutations/🔣️.json": "b99dfbc69311c896a81079491fdeec299f36c22b99ec6873e183b3613444cccf",
         "🧬️mutations/🦀️.rs": "5e908e2c2ae572bae5d62671b54249c337a73b5a21547e61def4dc9a823a083d"
-      }
-    },
-    "app.shooting.shooting.config.mutation.replace-config": {
-      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/📸️replace-config/🧬️schema",
-      "level": "mutation-leaf",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🔣️jsonschema": "🔣️.json"
-      },
-      "exports": {
-        "ReplaceConfig": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "🔣️.json": "e9b4b07e698d7ae9b14c4c7c189ced5c2d6d3f2ad3f0ef499d549a0a56caff38"
       }
     },
     "app.shooting.shooting.config.mutation.set-camera": {
@@ -3448,6 +3332,7 @@
       },
       "dependsOn": [
         "app.space.home.transient.mutation.apply-directory-page",
+        "app.space.home.transient.mutation.set-directory",
         "os.directory"
       ],
       "hashes": {
@@ -5627,8 +5512,7 @@
       },
       "dependsOn": [
         "s.wfc.wfc2d.1.any.config.mutation.change-active-tile",
-        "s.wfc.wfc2d.1.any.config.mutation.change-camera",
-        "s.wfc.wfc2d.1.any.config.mutation.replace-config"
+        "s.wfc.wfc2d.1.any.config.mutation.change-camera"
       ],
       "hashes": {
         "🔗️.graphql": "d361c5550caf9273a3759b0c5024f812e734055ba530c33d668ac4aaacb25ced",
@@ -5685,8 +5569,7 @@
       },
       "dependsOn": [
         "s.wfc.wfc3d.1.any.config.mutation.change-active-tile",
-        "s.wfc.wfc3d.1.any.config.mutation.change-camera",
-        "s.wfc.wfc3d.1.any.config.mutation.replace-config"
+        "s.wfc.wfc3d.1.any.config.mutation.change-camera"
       ],
       "hashes": {
         "🔗️.graphql": "d08bc26ceba59c2369497a9cace934688ba7a22eea46295ef6a0dfddd235f4cb",
@@ -6415,7 +6298,7 @@
       "exports": {},
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "e046baf3851db96227db662d54ab985dc7075550863504ce5281da8590ecb5f8"
+        "🔣️.json": "439a17d0bd96fa9dfb6d2b0e8a192c0838d277bbb3a064a8b72d4884a0158f5c"
       }
     },
     "framework.graph.layout-run": {
@@ -6611,7 +6494,7 @@
       "dependsOn": [],
       "hashes": {
         "🔗️.graphql": "6014a1caa54995a5452ed797d1e1c79a96c74ad055d21b564579b9a664e42a3a",
-        "🔣️.json": "f22905f9b400ee0de41bcb1df515c25b7e855bb8dcb2dc6c6e0f8e27efc963ac",
+        "🔣️.json": "b919c7a57d9d863949aa38074ab919bd670212db12ffb46be6d878904f0bdad9",
         "🟦️.ts": "42128dcbd2cca36af390da3b63da97f911bf397d2887f29ec63e90a093835b6e",
         "🦀️.rs": "88fd5ef664ecdbf6480d6e45f7668396842ed7c65d15a94d3f6525bcbddd9a89"
       }
@@ -8419,376 +8302,6 @@
         "🦀️.rs": "e343c72ffe001d1a9344edb60bdc3c53d5f2b7f438022bbb10e81a09e60de89b"
       }
     },
-    "framework.product.quiz": {
-      "path": "🧰️framework/🛍️products/❓️quiz/🧬️schema",
-      "level": "product-root",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🦀️rust": "🦀️.rs",
-        "🟦️typescript": "🟦️.ts",
-        "🔣️jsonschema": "🔣️.json"
-      },
-      "exports": {
-        "Anchor": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Answer": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Axis": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Badge": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "BadgeAward": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "BadgeRule": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Best": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Catalog": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "CatalogQuizView": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "CatalogView": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Category": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "CategoryHint": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Challenge": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "ClassificationAnswer": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "ClassificationItem": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "ClassificationItemResult": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "ClassificationTask": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Command": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "CompareHint": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "CrowdCount": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "CrowdItem": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "CrowdScores": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "CrowdTask": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "CrowdView": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Cursor": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "CursorState": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Dimension": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "DimensionResult": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Event": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "GroupHint": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Handle": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "HandleView": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Hint": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Icon": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Id": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Identity": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "IdentityClaim": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Introduction": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Leaderboard": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "LeaderboardPeriod": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "LeaderboardRow": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "LeaderboardWindow": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "LearnerView": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Limits": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "MatchingAnswer": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "MatchingItem": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "MatchingItemResult": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "MatchingTask": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Motion": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Place": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "PresenceState": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Profile": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "ProfileHint": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Quantity": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Query": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Quiz": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Rejection": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "RunResult": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "RunStatus": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "RunSummary": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "RunView": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Scale": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Score": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Screen": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Sheet": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "SheetAxis": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "SheetClassificationTask": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "SheetDimension": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "SheetItem": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "SheetMatchingTask": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "SheetSortingTask": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "SheetTask": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "ShortText": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Slug": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "SortingAnswer": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "SortingItem": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "SortingItemResult": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "SortingTask": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Task": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "TaskKind": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "TaskResult": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Text": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "ThinkingAnswer": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "ThinkingMatchingAnswer": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "ThinkingState": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Timestamp": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "Verdict": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "WireVersion": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "🔣️.json": "c7d1cfb6851fde76ecc5c88357446bc77ede5adb95665cdc20346c807daa0df7",
-        "🟦️.ts": "cff3ceec10f3cfa8dd046eba1cf91d2124ed3497abb9058a3f9c7c619551e52a",
-        "🦀️.rs": "01564e4b22686202aac40212be9d0a2f3f945f4d5e29ce382e953b809c21ec27"
-      }
-    },
     "framework.public-invocation": {
       "path": "🧰️framework/🔨️modules/🛂️manifest/🎛️public-invocation/🧬️schema",
       "level": "framework-module",
@@ -8911,10 +8424,10 @@
         "framework.value"
       ],
       "hashes": {
-        "🔗️.graphql": "bec1420ef8c78fcbab8e47035d64e846ea41a4f34ef9b7d3cb400fe7a1828c8e",
-        "🔣️.json": "770d9fe03a0efec0b08a0bc7eaedad1d0baba051da2ef1249c96b7cf598b6aba",
-        "🛰️.proto": "1b2d18a6adeb98d52b5062bd5a843341246a498e2019002f1db3583f929a763f",
-        "🟦️.ts": "1f44e582917d3e09354e1a4126e6601c986c1f850f644f9a3b7e858a96f9de17"
+        "🔗️.graphql": "619fd2203bafdad075cfc0fcacd61177a4b1840243f4dd58a7699e3f3a11baf9",
+        "🔣️.json": "22534bf1282c49522927e534a183edf54a58da8c32af80d4ce65da4070245ad8",
+        "🛰️.proto": "1e28b9f4778106a7c3b42d504498a7948f7ccb39e6f205520766a2f505519ff1",
+        "🟦️.ts": "e512530babcfcac96d1f56bbbd61924e3b229b855d96294e0aff864f9f8d5cd4"
       }
     },
     "framework.replication.wire.local-interaction": {
@@ -10044,7 +9557,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "675887c1231acd61fac8c8df4688209879178416f08bcfa9e2107354348363ae"
+        "🔣️.json": "3f821e531529f859d127678bbffd144f3779695e869063500469802fe5c4a386"
       }
     },
     "framework.trace-record": {
@@ -13473,7 +12986,7 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "bb7dd1e2b522a29c04f57712fa3593326270304deb2fb7352e6fb647765cec57",
-        "🦀️.rs": "3f7c4a38af5267465ef790258ba7fe0bf5b1cee410f62266f4ccdfbc8265ea02"
+        "🦀️.rs": "e7a5b0a2f15736a955fd05d4cda340dba93caa5344d2ad12ff71fe46d02b8820"
       }
     },
     "os.dsl.derive": {
@@ -13691,10 +13204,10 @@
       ],
       "hashes": {
         "🔣️.json": "7332ca89a852c627340597f43b12178f696558db6a2e7cb680cb806d1925f380",
-        "🔺️diff/🔣️.json": "f52017dd80c54a1479f93f05a8e7d7c79e66b5cf693b3474fd11160b885a7146",
-        "🔺️diff/🦀️.rs": "30e85eb9cfcce33ba6e3335b034ae7f8797ea91ee92fac6d3db9f16405dedf82",
+        "🔺️diff/🔣️.json": "02ef079e830d6afc1cf74d58e6a8c90af94b7ace0f2c20bc5c4c0f071d7881db",
+        "🔺️diff/🦀️.rs": "8ea647b09e5d9b9bb4aabec4cde48cb23c6e3374d3cde1144563ab22719fc257",
         "🧬️mutations/🔣️.json": "e6bcdc05f9ce543b8a7abb0758c79ff5a58a05c9b931ca4d38e3c43504670b29",
-        "🧬️mutations/🦀️.rs": "351f1519a4e6561f11f8f7d3b0c9ddb21dae381ba1a69d481ff949a3f670c68a"
+        "🧬️mutations/🦀️.rs": "3d362e7b5fc4665f091d47055dfc097942b57a240435b40ccdff2734e878088d"
       }
     },
     "os.flow.artifacts.flow.vcs.mutation.add-synapse": {
@@ -14040,7 +13553,7 @@
       "hashes": {
         "🔣️.json": "cb2c4513654a92206a6b4a529265717da89689c7d661a986643d7460748dccf9",
         "🧬️mutations/🔣️.json": "dd420b03ef8f3a4b1de293b5978f0b60df37294d8342bdb0e508a0e3e137cb27",
-        "🧬️mutations/🦀️.rs": "a57e7ea5bf074f6a44f8c7fe5905f91014361f8a0f05df88a2cc06288f705441"
+        "🧬️mutations/🦀️.rs": "ab5a8c0d1fe20203cda3b64803d09721a6f2fd877bbb103793ac2aa0ad6958d1"
       }
     },
     "os.infinite.artifacts.dag.vcs.mutation.change-node-abbreviation": {
@@ -14242,7 +13755,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "6defafa61c181a594b0bcef940df98cb3f7e923e561ec76cc7bebd9584758227"
+        "🔣️.json": "3afba978d8bd341a480e7b2e2bea2f1f7cc61df49284c1ad9b8ff93593e62fc5"
       }
     },
     "os.infinite.artifacts.dag.vcs.mutation.replace-node-kind": {
@@ -15016,7 +14529,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "65605edb21bc6fa55d63c07018ec4d4275c94a019b5d8413f973db0c33387c55"
+        "🔣️.json": "b48970eb6c50d6bdfda552b06a4283104916cbc80617f20b5ce262d8673c2463"
       }
     },
     "os.plugin.browser-bundle.action-handoff": {
@@ -15517,7 +15030,7 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "edcf06474117d95c454d4a7f11c00e431760071b42f90be12cc0263b75af2eb6",
-        "🟦️.ts": "6aa9411a4b1e16c574c07fdd9b5926f32706431eb9a04ef6be708677386148df"
+        "🟦️.ts": "31b4b1398636809229866b992a394b96c14def9e255e2656acfc59cc4ceb5f0c"
       }
     },
     "os.plugin.registry.deployment": {
@@ -16376,7 +15889,7 @@
         "🔣️.json": "9c769a55646fdfa557b4429ce531f92cb3ac7467bca960ead800ddf1807d6456",
         "🦀️.rs": "1a715eee18e349e356f5423e23cf309774ad623f5a275215a97c391b47527d6b",
         "🧬️mutations/🔣️.json": "1bd5166444ff5fdb72e00b129d56dabd947e97284e3267153331a47a19fc93a7",
-        "🧬️mutations/🦀️.rs": "72fc8e063ab81ad32f6093143b0f7d74b1f79288baec4cba2a5ed45246cf0cd3"
+        "🧬️mutations/🦀️.rs": "c585ea9be08ec16e5c876dad325f25b0b1e1f7555e52f19dd3734fc69673d828"
       }
     },
     "os.store.canonical-edit": {
@@ -16496,7 +16009,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "72503a66a8b3039af99f2e03380aa5497260af9b4f4ea1f774edede2f9e0d73e"
+        "🔣️.json": "20c9fce1ec409979b3d804ebc86b870d47f957c33d84e4ef4549cacce23c4ccf"
       }
     },
     "os.store.composition.initial.identity": {
@@ -16608,7 +16121,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "85030105c236c6f49c9edb7ba9c1612ad36bf915e7e7a3fa1dcab66232024926"
+        "🔣️.json": "b827d8b7ca8c9b62a59310aad92e63803f087fc50a5516d865d9807c3169ec05"
       }
     },
     "os.store.mutation.create-space-alternative": {
@@ -17151,7 +16664,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "bdd90e7811f08055e7f510117decbf503c932eb701632dd877df37c77f506f31"
+        "🔣️.json": "47532fd69b7fa03b88a24d40cc0c164813d6b54f68bc8fa7c0ed9382684fe828"
       }
     },
     "os.workflow.artifacts.run.mutation.remove-run-log": {
@@ -17892,7 +17405,7 @@
         "🟦️.ts": "6d78cd065b190168bf5fe0e93b517481e1d2627a984618de222feb6ff3a7ffb7",
         "🧬️mutations/🔣️.json": "e45a28c298c67c13abafe6ca5ac4e09b4e6ee30345d2d43018cae3eac4bc3358",
         "🧬️mutations/🟦️.ts": "de2393d41ce275ea21aed1f6b2eff312ea5ba6ed54d3d25a29bfee4b76425565",
-        "🧬️mutations/🦀️.rs": "4460c2e274bad09dee31cda0dfd7590aa5419c7fe83bc275039babc6d0cc6355"
+        "🧬️mutations/🦀️.rs": "a1f51262dad8deb325efae3cca45221ce691c3dcedd21d9b4a5e4966b8b5cbde"
       }
     },
     "print.print-font-catalog": {
@@ -18626,7 +18139,7 @@
       ],
       "hashes": {
         "🔣️.json": "c6ab1cc9d1eb425bc73d5b56cf4a72f242cd46431931f51a5ae6b9d550573d04",
-        "🟦️.ts": "05eefab94b0ca961761dd2b1eb201461154ce1e896f924667d7c738743ef4594"
+        "🟦️.ts": "c31f4f9343dc1b171847b78374c9ecf55d79936cdf0247b4c0f8b77fad35f752"
       }
     },
     "repo.discovery.schema-reads": {
@@ -19135,7 +18648,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "e760cf1566e4d09b90600bccd9c82893b4a9703ce56951f3f4baa6355ada8bf9"
+        "🔣️.json": "e0b6ccac338551d3f81ebe103a24fba5b86de20716880323c9bad7d1573dac87"
       }
     },
     "repo.model": {
@@ -19713,7 +19226,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "9652250b48442bccbe3aa3f7c3aa8afff2c3928cf91f7b65f4ffff166baab8cf"
+        "🔣️.json": "92e5e0999402fd4149732016e1dfffad4b191aeed32d384fef2a5a77ea7cb20f"
       }
     },
     "repo.native.observe": {
@@ -20314,6 +19827,10 @@
           "file": "🔣️.json",
           "facet": "schema"
         },
+        "Interaction": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
         "JournalStep": {
           "file": "🔣️.json",
           "facet": "schema"
@@ -20385,7 +19902,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "710a18f9e4ecac7ef7c04f177d1f3a7a1f02b794cf72112e8e5da3ad86ac2a45"
+        "🔣️.json": "7a7da30e5540a2c5ba8dca3e609f40de070a988f77f106652094ac00738e0a3a"
       }
     },
     "repo.todos": {
@@ -32648,7 +32165,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "388b4383837c645964abc70aee20ef744f08e34d25aa0cf545c779770000a218"
+        "🔣️.json": "b19ef98c4db652a933aae7c7a6e9471e863360767a007b06be941c773df7b141"
       }
     },
     "s.draw.drawing.1.style.mutation.update-text": {
@@ -32793,7 +32310,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "b4764f5b7184c97bf7221b38b619eba298444aee4f9778a3ce0e27d603bcce73"
+        "🔣️.json": "1b2ff9b4b7065b47d5bd4a1f02b325eaa1c57c728504f903a5019c5e9c6fa81f"
       }
     },
     "s.draw.drawing.1.transform.mutation.update-layer-trace-params": {
@@ -33015,9 +32532,9 @@
         "🟦️.ts": "d05d5cfc366c7ddb8993f997f5b4441ea50e538aba09953a2565b31680b1b188",
         "🦀️.rs": "1d358a5239af2897cbf1a2a0e21f3898c5ec62fc8683786998c3eb4750f9ff8e",
         "🧬️mutations/🔗️.graphql": "ed296cb480745e6e8a665921385736ea01b352121f559ecaa550e926da5b87ed",
-        "🧬️mutations/🔣️.json": "7a8c66f2a9fc96fb2a23825754798a31bab32e15e07dc26eec0bcf856a33ac0c",
+        "🧬️mutations/🔣️.json": "34a7641346474f2fe78a4bf3c9cf76a896b2e9f650a68b9d255577bbf75f86b2",
         "🧬️mutations/🛰️.proto": "65ac78e019b7c933c6da6375d25a8cf3fd59fc248c3b037e66ec371ed6555057",
-        "🧬️mutations/🟦️.ts": "0e1dc236af6bb7b73a60d349527e2ec6d4060b61ced441d59ada24563e2fd2ce",
+        "🧬️mutations/🟦️.ts": "2897abfefabce7639724eb5f007fa79b0f115fe401362ab314009e049233b2b4",
         "🧬️mutations/🦀️.rs": "1ea0ecd0e3faa8183e0cdece2aea43db053d28da636f4a63409cf838aba4f75f"
       }
     },
@@ -33911,22 +33428,22 @@
         "📸️snapshot/🔣️.json": "f3b471c9f5cb87869ca3eac6e0bd118bbed0504207fd42fce9d2e6df07dab65f",
         "📸️snapshot/🛰️.proto": "bf82313a58d83f45a32d8d64b9b764b090486db00755d7d8b621f85c789025ce",
         "📸️snapshot/🟦️.ts": "ebb9dec6be5548c4a23f396ddb1f73610de8aab12fa0c6e75ac5a04a2e5d796e",
-        "📸️snapshot/🦀️.rs": "c7ccd8be3341fda49bd18ff0a58cdc7a4670c23af3befa52a216b9d85d3a4e2c",
+        "📸️snapshot/🦀️.rs": "3bd359ad86861252da2b858e58140283cb2822eeb969be9f6cac5ae961806363",
         "🔗️.graphql": "a413264d6861b6734050f9943ab7b27c9f7844d4287e6b55a10f65dde1db846a",
         "🔣️.json": "d379e8676182212f834b53f94ca3649d446f0a62c0a4edb898c7585de6054945",
-        "🔺️diff/🔗️.graphql": "43c81923f23d1c13c29f86a45807a23c7c42bc534777b2abd9a5cb3fb732f10b",
-        "🔺️diff/🔣️.json": "b17b5f8aa4a49b095a8b75df4ffde0a5ff32c8ceb26660bc05e30993f1d11676",
-        "🔺️diff/🛰️.proto": "1d79141cad1cbda900c7833e0453ba74f5b9acaeb0b946a48efcdaf19376dfaf",
-        "🔺️diff/🟦️.ts": "4604bf37459d82e0c50eda0cbb0fa57eb4607634ff808660bc0f525b63d03d4f",
-        "🔺️diff/🦀️.rs": "b5918fbd2feda7fc869848e94896def5b08cb4f97b80c7f725e97c6c342f0f12",
+        "🔺️diff/🔗️.graphql": "b98de2ea22b8b1c88093d838a60345256be84fd69f2d217a0dbd0982cd43455e",
+        "🔺️diff/🔣️.json": "70b9fb70f5659b0b6669fb16cfd263ab3b4c7605fc86018f494ddecf8313c463",
+        "🔺️diff/🛰️.proto": "4abf38226c216767b162ff5d539909d51179cbcc953fbbc69c3bd46fdf7cccd9",
+        "🔺️diff/🟦️.ts": "cce4825dd74385551e44d5d3de76128eaa3f52a92b85d643e40e204208f3028a",
+        "🔺️diff/🦀️.rs": "7ff44d27096927328c7f07d43a96de86c1303adf01c40e6bf3f545c3ae7d1792",
         "🛰️.proto": "b04dec86b7de8500a608f92b13cd84edef79ea2c8b21fddcd47969d8bdc170bf",
         "🟦️.ts": "81c18ff3ab8df86807f144dd02ebe493d684f3745bb3f50928a41aa5d7e17d6c",
         "🦀️.rs": "1b0ce004a2b9ea397d5619992f061404aaf1776356c879281dab76807c4f44a3",
-        "🧬️mutations/🔗️.graphql": "d230d1e192f41f7323cf9ff57f5565ee2c84252923c373e3cf65ab73232f408f",
-        "🧬️mutations/🔣️.json": "9f778db097d530b8a57ebcad37f9f4a438bfbd107dd49f34f4d3e6d6b4d69cda",
-        "🧬️mutations/🛰️.proto": "c3941c8ef0de0c2f4665cae84a7a107e13932bfdd8e9e52a0a073a1a008e738a",
-        "🧬️mutations/🟦️.ts": "1e0f98b4a0600a7ebd4c4283703f51f2b9250c7d8c7c17504001b98883660b94",
-        "🧬️mutations/🦀️.rs": "69e7b39430d1dfc904602963817c1ce02e71f1e75536e796db49d0841e3cc7c3"
+        "🧬️mutations/🔗️.graphql": "2aba2a42a985b74ade96b3d75eb336262cb6219e4a3b65ef888c47c83d4e787c",
+        "🧬️mutations/🔣️.json": "6f04247708c91ebb869a68bb14ac0dc14d326efffe80732fb9ffb16da1ed635a",
+        "🧬️mutations/🛰️.proto": "144b8d772c3ed0f62b0bb02016fdefb15b3cb2a8dfe947ed3ffb6edbe0942b42",
+        "🧬️mutations/🟦️.ts": "5f3f68b4224cb67f24887c135bf4690f826f01d801ef134c7586953fc0335910",
+        "🧬️mutations/🦀️.rs": "a93b83fd358914f7b3b2feef4d180adcdd4c4b82fa7bb6f4cbbbadcf8eb5039e"
       }
     },
     "s.energy.model.mutation.add-air-loop-terminal-zone": {
@@ -37580,7 +37097,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "a1410bff31943c3bf754453daa23de0c20b85ef2c7ff7f65bf51a535e98ca888"
+        "🔣️.json": "e41185d507cabef5a6ba09471ea071025cef7e60180c8d8a07e1b0cb94d88409"
       }
     },
     "s.energy.model.mutation.create-refrigeration-system": {
@@ -37922,7 +37439,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "4ff8a3cad07a0732d5e902cb806344c78db86947f803d3ae957225d45dbc8d54"
+        "🔣️.json": "e01ce8b68b8055c1dbb9cab2d71a245d89c169c21ff7f97812fdc569eef4c369"
       }
     },
     "s.energy.model.mutation.delete-battery": {
@@ -39487,7 +39004,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "d35c6e3cd9fa154e946edb46e9f7c57927cd794936bd5445420ad1a118c96d32"
+        "🔣️.json": "c00f939d6f7c632e6d0822255688999ad3bbae236efa21e4de4c054cb567b2e8"
       }
     },
     "s.fem.2d.1.boundary.mutation.delete-support": {
@@ -39523,7 +39040,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "16aaf212d4a4dcc143be0f02ed6dce083fb0dba9da0c2a0ad1eb74cae1d30772"
+        "🔣️.json": "9dc2dc89b1008c07d6aa864f97f6bbec7080e340310b2c229ebd96f69a21ea12"
       }
     },
     "s.fem.2d.1.load": {
@@ -39964,7 +39481,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "24f219d9b8690c7122b670892d9f875b4e3b7c2f2d6e1b7dbf16c11316ef3042"
+        "🔣️.json": "c4446f5d57d9e775505e4416670a58df76b595e3b62fef6c74ccfe8f1b9e804e"
       }
     },
     "s.fem.2d.1.mesh.mutation.replace-element": {
@@ -40102,7 +39619,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "37abd27022212d8cf3fed100160e4872f3f1fcfd23d3b2537083e3e3fcb64111"
+        "🔣️.json": "94c6f6f56a97593ac323a13787007e9d9ef389050156e10c5247282c058a19a2"
       }
     },
     "s.fem.3d.1.boundary.mutation.delete-support": {
@@ -40138,7 +39655,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "c9df01b0d2a772257fc06c92e1c62c76363274c710c2fd3e971de70656d3062a"
+        "🔣️.json": "d86de596aaa38117fc03c4c89e01f85513d361705773abc73193af16bb07cb6f"
       }
     },
     "s.fem.3d.1.load": {
@@ -40579,7 +40096,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "0732c093b56aa6a80937a97dec36a59237916e3ffd6fcd536333cfc4dda9bd6e"
+        "🔣️.json": "b4ce06b2edff4c72f219da621b4a924256f500f1d5570e00a1125563ec6c4f66"
       }
     },
     "s.fem.3d.1.mesh.mutation.replace-element": {
@@ -40704,11 +40221,39 @@
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
+        "Fem2dCombinationPatch": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
         "Fem2dCombinationRelocation": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
         "Fem2dCombinationRemoval": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "Fem2dCombinationTermInsertion": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "Fem2dCombinationTermModification": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "Fem2dCombinationTermPatch": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "Fem2dCombinationTermRelocation": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "Fem2dCombinationTermRemoval": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "Fem2dCombinationTermsDelta": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
@@ -40725,6 +40270,10 @@
           "facet": "diff"
         },
         "Fem2dElementInsertion": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "Fem2dElementPatch": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
@@ -40776,6 +40325,10 @@
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
+        "Fem2dLoadPatch": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
         "Fem2dLoadRelocation": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
@@ -40793,6 +40346,10 @@
           "facet": "diff"
         },
         "Fem2dMaterialInsertion": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "Fem2dMaterialPatch": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
@@ -40816,6 +40373,10 @@
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
+        "Fem2dNodePatch": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
         "Fem2dNodeRelocation": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
@@ -40836,6 +40397,10 @@
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
+        "Fem2dRegionPatch": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
         "Fem2dRegionRelocation": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
@@ -40853,6 +40418,10 @@
           "facet": "diff"
         },
         "Fem2dSectionInsertion": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "Fem2dSectionPatch": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
@@ -40880,6 +40449,10 @@
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
+        "Fem2dSupportPatch": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
         "Fem2dSupportRelocation": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
@@ -40901,44 +40474,60 @@
           "facet": "snapshot"
         },
         "FemCombination": {
-          "file": "🔣️.json",
-          "facet": "artifact"
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "FemCombinationTerm": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "FemDof": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
         },
         "FemElement": {
-          "file": "🔣️.json",
-          "facet": "artifact"
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "FemLoad": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
         },
         "FemLoadCase": {
-          "file": "🔣️.json",
-          "facet": "artifact"
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
         },
         "FemMaterial": {
-          "file": "🔣️.json",
-          "facet": "artifact"
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
         },
         "FemNode": {
-          "file": "🔣️.json",
-          "facet": "artifact"
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
         },
         "FemRegion": {
-          "file": "🔣️.json",
-          "facet": "artifact"
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
         },
         "FemSection": {
-          "file": "🔣️.json",
-          "facet": "artifact"
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
         },
         "FemSupport": {
-          "file": "🔣️.json",
-          "facet": "artifact"
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
         }
       },
       "dependsOn": [
         "s.fem.2d.1.analysis.mutation.update-analysis-settings",
+        "s.fem.2d.1.boundary.mutation.change-support",
         "s.fem.2d.1.boundary.mutation.create-support",
         "s.fem.2d.1.boundary.mutation.delete-support",
         "s.fem.2d.1.boundary.mutation.replace-support",
         "s.fem.2d.1.load.mutation.add-load",
+        "s.fem.2d.1.load.mutation.change-combination-name",
+        "s.fem.2d.1.load.mutation.change-combination-term",
+        "s.fem.2d.1.load.mutation.change-load",
         "s.fem.2d.1.load.mutation.change-load-case-name",
         "s.fem.2d.1.load.mutation.change-load-case-self-weight",
         "s.fem.2d.1.load.mutation.create-combination",
@@ -40948,9 +40537,14 @@
         "s.fem.2d.1.load.mutation.remove-load",
         "s.fem.2d.1.load.mutation.replace-combination",
         "s.fem.2d.1.load.mutation.replace-load",
+        "s.fem.2d.1.material.mutation.change-material",
         "s.fem.2d.1.material.mutation.create-material",
         "s.fem.2d.1.material.mutation.delete-material",
         "s.fem.2d.1.material.mutation.replace-material",
+        "s.fem.2d.1.mesh.mutation.change-element",
+        "s.fem.2d.1.mesh.mutation.change-node",
+        "s.fem.2d.1.mesh.mutation.change-region",
+        "s.fem.2d.1.mesh.mutation.change-section",
         "s.fem.2d.1.mesh.mutation.create-element",
         "s.fem.2d.1.mesh.mutation.create-node",
         "s.fem.2d.1.mesh.mutation.create-region",
@@ -40970,27 +40564,27 @@
         "💡️inferences/🔣️.json": "0896e42e66f25df56dbd49f32b1bab246356d3e96d1d3c6d1ad250c316433bc4",
         "💡️inferences/🛰️.proto": "e397720c77b614dc8a902d2c8159b80c9822eeb3f495945cf198e78ea9175c04",
         "💡️inferences/🟦️.ts": "05bbdb24b5ba5d1f1ac5dac639a5fb585187607baddb7297ce9afb03dbf9a2e3",
-        "💡️inferences/🦀️.rs": "5eebaa0da7d856f5ea9e6fba12d34ca3a76ed85cd1be4a5ab6eedfe7d50febd8",
-        "📸️snapshot/🔗️.graphql": "5753890a3caf9874bcda19de9e86edd0847f38309570120066c7192fd2a7446e",
-        "📸️snapshot/🔣️.json": "96198a1ce33acf50d61e7499d756c5c566d0129cae7147d8d7ed7cc241be8e93",
-        "📸️snapshot/🛰️.proto": "a21ff2554f8f0478a7d81141ed7e253db0e9b2d41e41b53786d1ac98cf1b57a8",
-        "📸️snapshot/🟦️.ts": "9509e109ef037f1409ae0c97daf94effd423ea098e3bfdd676c25ebf2f4357ba",
-        "📸️snapshot/🦀️.rs": "7a6944c95215779bdeb8ee112d38b2c9e0d4048eeea413f46641cf95cda0003f",
+        "💡️inferences/🦀️.rs": "1e3ae46b23cff4f1e243d4f724e9dcdef37c5b747567fb8a556fb3984c04af46",
+        "📸️snapshot/🔗️.graphql": "6f47b4957eb95c643ec7b3b5c34f2303487f35ac5c7dca407312a5a444fc341c",
+        "📸️snapshot/🔣️.json": "9f84a508b716383cbd97e3df414eeb45747d7832dbdba09cd14df2d961e3a949",
+        "📸️snapshot/🛰️.proto": "6502b90e47a6b6ef528846558a360ad52c9ac6c3fb88d1e6421f32e440282703",
+        "📸️snapshot/🟦️.ts": "13f3735aaf1bd4eefce9441ac0d823c551ff2fadae829b4b1ec62b4291c74ac3",
+        "📸️snapshot/🦀️.rs": "13a09184645794a7e650afd8ec66954566d5df1f123cdcafeba0a8aded6b73a7",
         "🔗️.graphql": "1031a91cf08a64d62438ced32e1cdec34c3c926516990cce92bb197f7d5ff5f7",
-        "🔣️.json": "6d229d684bcfc16ef2638d2e5b87bcf06ffabd25ce40305e81d55b5a747d8045",
-        "🔺️diff/🔗️.graphql": "fb867e314611f6313fd0cc5cc9ec2d4345d6098e9ea4bd33bbb8c65015330cc5",
-        "🔺️diff/🔣️.json": "70addea335db851f50de5aae2c190378f3938c0fccf76920c01979284e0b966e",
-        "🔺️diff/🛰️.proto": "dd555f40e92abaeb3d934f58890f084d09f24f52337889eb262caee9acc4d502",
-        "🔺️diff/🟦️.ts": "cf7bd4c8e3593ec25f56b787f24900c972df2e391d7992881bd35695912057d5",
-        "🔺️diff/🦀️.rs": "03980e64acd166980dd14f1a7662e160c67b2d2e7d724549c118e4ccc2106c5f",
+        "🔣️.json": "00fd8afa2f0fab5f598773c546315bb2134e9adf3b66c73d9c2dfd63c115cd4a",
+        "🔺️diff/🔗️.graphql": "9218d9ff89f2005f577bce53a69b6c76aadd004ef62e24b4295319ce6ac1a775",
+        "🔺️diff/🔣️.json": "c33d933fde28fb1ba3328d2c45be2a26f661c167bf24e87c8e34d8b39a1e8924",
+        "🔺️diff/🛰️.proto": "b9639ed87b30fe2bb52476aae5fc5d90ad3d76add90a0048c99589c0dc787507",
+        "🔺️diff/🟦️.ts": "166204ad56c1f76076a0720686fb9149ee3ee7bb25be1d4fcc9b892564505343",
+        "🔺️diff/🦀️.rs": "ee0888ea21fe5856b2258ee1866dc15f3b6f9834916a2401db9e96fbf1ee0ba7",
         "🛰️.proto": "9003d0cc41c475e37d2fd6e8ae40288407a46eecb8ec33ea0c3e44e2b1181f36",
         "🟦️.ts": "d79a5e4f78604f42673545ac182e539b074d43014f1166b3cc6d0ccb1c56d891",
-        "🦀️.rs": "5ba688284d6129400b5b337214d28d0f6aaab67726dfdaed43c996ce441953d9",
-        "🧬️mutations/🔗️.graphql": "d473a26fb69cb37150f88b28f4e66aa0769987301537f1b10f9c716dec641a38",
-        "🧬️mutations/🔣️.json": "afa629a026690001f2453b5f2367c42613817ee0ff8db8d6461fe49a22c293f6",
-        "🧬️mutations/🛰️.proto": "b439800e8733994ae845234d1188874c12ac7a62e59d8eedc578acb84bf825b3",
-        "🧬️mutations/🟦️.ts": "ce814cf66db92ff861879670c5895860eaf607cfe68bdf5e09b87ee79c614b0c",
-        "🧬️mutations/🦀️.rs": "9b25d65a1f6c8c0c803645dbbca135f9683f6130b8372ecd7516c38689aaaa23"
+        "🦀️.rs": "85cf8e04491ec5172e245d91c36f03683b2e25776c06e1b0f82e1d4f43e5f753",
+        "🧬️mutations/🔗️.graphql": "e2d78805a141fbd0246df470451fbd4d8fa730022726573a36a8a3c6a400bf55",
+        "🧬️mutations/🔣️.json": "a063dbe475378328eb2e076dd395284aee732426a40d6b2635fa55bbde75a9f9",
+        "🧬️mutations/🛰️.proto": "2cf14f5477e510625cad559c222aa440a8b3d32706dd31c6b9e2c89a8d5ce718",
+        "🧬️mutations/🟦️.ts": "796b7277355fd4c2602121178baa791bad397a29271f5243d0a711fe17dff20b",
+        "🧬️mutations/🦀️.rs": "c4f6638aea9fc75e6daabb2ff4c99683634ff9e28167682eefa4a94e27471576"
       }
     },
     "s.fem.fem3d": {
@@ -41025,11 +40619,19 @@
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
+        "Fem3dCombinationPatch": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
         "Fem3dCombinationRelocation": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
         "Fem3dCombinationRemoval": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "Fem3dCombinationTermsDelta": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
@@ -41046,6 +40648,10 @@
           "facet": "diff"
         },
         "Fem3dElementInsertion": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "Fem3dElementPatch": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
@@ -41097,6 +40703,10 @@
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
+        "Fem3dLoadPatch": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
         "Fem3dLoadRelocation": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
@@ -41114,6 +40724,10 @@
           "facet": "diff"
         },
         "Fem3dMaterialInsertion": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "Fem3dMaterialPatch": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
@@ -41137,6 +40751,10 @@
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
+        "Fem3dNodePatch": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
         "Fem3dNodeRelocation": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
@@ -41154,6 +40772,10 @@
           "facet": "diff"
         },
         "Fem3dSectionInsertion": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "Fem3dSectionPatch": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
@@ -41181,6 +40803,10 @@
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
+        "Fem3dSolidPatch": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
         "Fem3dSolidRelocation": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
@@ -41201,6 +40827,10 @@
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
+        "Fem3dSupportPatch": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
         "Fem3dSupportRelocation": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
@@ -41218,48 +40848,64 @@
           "facet": "diff"
         },
         "FemAnalysisSettings": {
-          "file": "🔣️.json",
-          "facet": "artifact"
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "FemAxis": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
         },
         "FemCombination": {
-          "file": "🔣️.json",
-          "facet": "artifact"
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "FemDof": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
         },
         "FemElement": {
-          "file": "🔣️.json",
-          "facet": "artifact"
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "FemLoad": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
         },
         "FemLoadCase": {
-          "file": "🔣️.json",
-          "facet": "artifact"
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
         },
         "FemMaterial": {
-          "file": "🔣️.json",
-          "facet": "artifact"
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
         },
         "FemNode": {
-          "file": "🔣️.json",
-          "facet": "artifact"
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
         },
         "FemSection": {
-          "file": "🔣️.json",
-          "facet": "artifact"
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
         },
         "FemSolid": {
-          "file": "🔣️.json",
-          "facet": "artifact"
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
         },
         "FemSupport": {
-          "file": "🔣️.json",
-          "facet": "artifact"
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
         }
       },
       "dependsOn": [
         "s.fem.3d.1.analysis.mutation.update-analysis-settings",
+        "s.fem.3d.1.boundary.mutation.change-support",
         "s.fem.3d.1.boundary.mutation.create-support",
         "s.fem.3d.1.boundary.mutation.delete-support",
         "s.fem.3d.1.boundary.mutation.replace-support",
         "s.fem.3d.1.load.mutation.add-load",
+        "s.fem.3d.1.load.mutation.change-combination-name",
+        "s.fem.3d.1.load.mutation.change-combination-term",
+        "s.fem.3d.1.load.mutation.change-load",
         "s.fem.3d.1.load.mutation.change-load-case-name",
         "s.fem.3d.1.load.mutation.change-load-case-self-weight",
         "s.fem.3d.1.load.mutation.create-combination",
@@ -41269,9 +40915,14 @@
         "s.fem.3d.1.load.mutation.remove-load",
         "s.fem.3d.1.load.mutation.replace-combination",
         "s.fem.3d.1.load.mutation.replace-load",
+        "s.fem.3d.1.material.mutation.change-material",
         "s.fem.3d.1.material.mutation.create-material",
         "s.fem.3d.1.material.mutation.delete-material",
         "s.fem.3d.1.material.mutation.replace-material",
+        "s.fem.3d.1.mesh.mutation.change-element",
+        "s.fem.3d.1.mesh.mutation.change-node",
+        "s.fem.3d.1.mesh.mutation.change-section",
+        "s.fem.3d.1.mesh.mutation.change-solid",
         "s.fem.3d.1.mesh.mutation.create-element",
         "s.fem.3d.1.mesh.mutation.create-node",
         "s.fem.3d.1.mesh.mutation.create-section",
@@ -41291,27 +40942,27 @@
         "💡️inferences/🔣️.json": "b8ba051d5c5953df2a9aef57c71469859d94f180cf50a4c80ce282822d1da3c4",
         "💡️inferences/🛰️.proto": "d2b66c211e7849e3c3a572185ac5d5eb1eefb9b7b58059ab4f0f5a4abf8de892",
         "💡️inferences/🟦️.ts": "7d541ae908ca1ab9320d043e51b03ec0a841723b09d07e48b6751cea1bd4897b",
-        "💡️inferences/🦀️.rs": "d50314b5ce29798ee70b69dacebdaf1ec2de06e74f9c92eb226e9ebb87892f61",
-        "📸️snapshot/🔗️.graphql": "c4586bd8fa4ff667b96c90f92773286a2653f401be2d616b21947f13f7112409",
-        "📸️snapshot/🔣️.json": "89540ac707725c17342ea7997f2f5105ee575d96093bce7169db0d810a4fd44c",
-        "📸️snapshot/🛰️.proto": "9e13a337b77c7dcc792731c58b750912a091b416f36c1041f0b84b99e974f4ee",
-        "📸️snapshot/🟦️.ts": "e1fdcd0fd0ab6bcaa0e6d98dbcfbca879823be5347c31bd6e7ef3d8a893a2457",
-        "📸️snapshot/🦀️.rs": "84b0078b08d9a9254cae02344f38aa10b0bb68c1aec0b7fad11f790112434131",
+        "💡️inferences/🦀️.rs": "f164f8a03c04225a0ac46f72b1729e389786953ea703a6e08aea1c0a095061ba",
+        "📸️snapshot/🔗️.graphql": "eb4629d969e5126b2f79b5eb0b9d309dc6314029947b87d97fa44ac7202f6069",
+        "📸️snapshot/🔣️.json": "85555c05624c40937feeba494fd806d2c3403b788c29e9060832af045c21e491",
+        "📸️snapshot/🛰️.proto": "157eebcb176b0736939f20b9f714547b908232e83597ab7aaf11209dbaef61c9",
+        "📸️snapshot/🟦️.ts": "7336fbab2471d7f75ece0fdd95bfa3597eaf820574a543f649afb99b5d715c5f",
+        "📸️snapshot/🦀️.rs": "0cbc0002a0a661915b88bdfdcff0759adc47261ed294af15e3463d32cddfe10c",
         "🔗️.graphql": "71f15841b8617144edb3bd679a9af4d09ec525d54cde32402c65f28869b915fa",
-        "🔣️.json": "e21a2c2be6cb37435f6a9f3eff558895f5b2bd525073f7dab62902144c2eeada",
-        "🔺️diff/🔗️.graphql": "37ec92bef9d63003780d6bf56c756484563155f1d07b45162e7abfc145992df0",
-        "🔺️diff/🔣️.json": "f931d7011939b9b43b64f6b67172e13858d464ea8325e3d67cb6b240072408f0",
-        "🔺️diff/🛰️.proto": "20256026e82df3d62618065b8c9536466dec1e71fdc1e5359267ef55e59dac5d",
-        "🔺️diff/🟦️.ts": "ce40fb4c1b3f68bef7b124b3ac52b6ba517c90bf5d2f22f5d325a4ef55ac7de3",
-        "🔺️diff/🦀️.rs": "9865ec70c9ef0f6a0bb65f485bb556acf6a1d72ac1f781ad22d7b91cd9f2cdcc",
+        "🔣️.json": "b2bb32835389ef619ee4b1d7567a77746af71790d625c5355b6e7185d4a67123",
+        "🔺️diff/🔗️.graphql": "c26f79f8093f893a13c7eb7df7b98a7d9d261dd0094f66f231b9b35a667bd027",
+        "🔺️diff/🔣️.json": "afcad097ef139692aac098af038c5b31a225e512ac9f1b6d4a93a6156a1ebf85",
+        "🔺️diff/🛰️.proto": "5af78f3d591abbd7604c7f325f08d1f598e89b9e6ef92c83c5e0935b0fcd3753",
+        "🔺️diff/🟦️.ts": "d3c5e5af82db4bc730906c3e35304810e11aadba0228f0d5db361bd73084523f",
+        "🔺️diff/🦀️.rs": "35b85c034f82aa470a2fe0113ffdaefc3a4b25748a90f0c61bb513c33d38d2a2",
         "🛰️.proto": "1c1cc9338449a20ba8c0fb46decfae1726f64f199a4274d683629b25db9a7d6c",
         "🟦️.ts": "b77cff83038b5d579f6c5f9dc9b1005ebf14738794c2e04656baaa244b1b4b82",
-        "🦀️.rs": "09b64e1d54c5d02e8f574bd193e35b27500d3a1f4b43837bc6ec6a3ba433f892",
-        "🧬️mutations/🔗️.graphql": "bc18a7bb1677d4561a067a3f7d48b76676974a5072f369a0d808f45526b2a481",
-        "🧬️mutations/🔣️.json": "8e283f61b4a41d6dd6d79b2f749664eb5aa37e64cc67091f2fb74a1143b9669d",
-        "🧬️mutations/🛰️.proto": "01c641f4ba36189272de4550434a0ad4001a23e057f1831b93f1d418d52af4a7",
-        "🧬️mutations/🟦️.ts": "1f29f63ed53ed5bc8ab481a58f9aefcf400eb1fda5b7e28d97f236942f3a42c7",
-        "🧬️mutations/🦀️.rs": "4704d365f20d8f10b62a4ae643f07f059af2c33f6b4707de596d446c797b7740"
+        "🦀️.rs": "9dcbfbf0c765e1c2f6deb52a9f317eb0f89434cb057fe05bf0561757d83b6306",
+        "🧬️mutations/🔗️.graphql": "9b416ad308c97c3a2444b1731a9404b125236d2cf6c53bcc34512c737ee3e1b3",
+        "🧬️mutations/🔣️.json": "bf02b4055a3ad826b90765c7bd10bf4fb279bbbb2ddb3205aca4135f2f076a31",
+        "🧬️mutations/🛰️.proto": "82b26cf41de4c126eca4e3d75083e5416882731699a15322d608940770fd5cfc",
+        "🧬️mutations/🟦️.ts": "a1dd77c7a2f60d991bf999ff2187f2955411a8656225db4d39a6908998caa5eb",
+        "🧬️mutations/🦀️.rs": "2f0aadf9fd2fed89682eccde0ef040cfd1f7d8b04386947e23cf89c557d814da"
       }
     },
     "s.fem.results-window.transient.mutation.set-playback-clock": {
@@ -43774,6 +43425,74 @@
           "file": "💡️inferences/🔣️.json",
           "facet": "inference"
         },
+        "LowpolyMeshAttributeRow": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "LowpolyMeshAttributesDelta": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "LowpolyMeshEdit": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "LowpolyMeshFaceRow": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "LowpolyMeshFaceValue": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "LowpolyMeshFacesDelta": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "LowpolyMeshHalfedgeRow": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "LowpolyMeshHalfedgeValue": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "LowpolyMeshHalfedgesDelta": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "LowpolyMeshMaterialRow": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "LowpolyMeshMaterialsDelta": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "LowpolyMeshRows": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "LowpolyMeshTextureRow": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "LowpolyMeshTexturesDelta": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "LowpolyMeshVertexRow": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "LowpolyMeshVertexValue": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "LowpolyMeshVerticesDelta": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
         "LowpolyObject": {
           "file": "🔣️.json",
           "facet": "artifact"
@@ -43874,7 +43593,23 @@
         "s.lowpoly.lowpoly.mutation.rotate-selection",
         "s.lowpoly.lowpoly.mutation.scale-object",
         "s.lowpoly.lowpoly.mutation.scale-selection",
-        "s.lowpoly.lowpoly.mutation.set-vertex-positions"
+        "s.lowpoly.lowpoly.mutation.set-vertex-positions",
+        "s.lowpoly.lowpoly.mutation.bevel-edges",
+        "s.lowpoly.lowpoly.mutation.decimate-mesh",
+        "s.lowpoly.lowpoly.mutation.delete-mesh-components",
+        "s.lowpoly.lowpoly.mutation.dissolve-edges",
+        "s.lowpoly.lowpoly.mutation.extrude-faces",
+        "s.lowpoly.lowpoly.mutation.flip-faces",
+        "s.lowpoly.lowpoly.mutation.inset-faces",
+        "s.lowpoly.lowpoly.mutation.loop-cut",
+        "s.lowpoly.lowpoly.mutation.mark-uv-seam",
+        "s.lowpoly.lowpoly.mutation.merge-vertices",
+        "s.lowpoly.lowpoly.mutation.mirror-mesh",
+        "s.lowpoly.lowpoly.mutation.set-mesh-rows",
+        "s.lowpoly.lowpoly.mutation.snap-vertices",
+        "s.lowpoly.lowpoly.mutation.subdivide-faces",
+        "s.lowpoly.lowpoly.mutation.triangulate-mesh",
+        "s.lowpoly.lowpoly.mutation.unwrap-uv"
       ],
       "hashes": {
         "💡️inferences/🔗️.graphql": "e2a174f2e40ced1bfe1ed7c1aa6526b3d02d2f4f85751307371c87e33434ff6c",
@@ -60515,7 +60250,7 @@
         "💡️inferences/🔣️.json": "aa43d5bab3173bdaf28df3d669ef541396fe8a465dc1defa017491d9f6873ad0",
         "💡️inferences/🛰️.proto": "a1325705a1904657e28943f8670d0ca54bfd83110def6fbac45138efe92eed15",
         "💡️inferences/🟦️.ts": "11599c4bb7c205299a6ef82a2526a7950d52ca1b804ca77b5c277f4ea6c1594f",
-        "💡️inferences/🦀️.rs": "71f61cf6fddb1891349d8a5f6986c7f60201a6340a3fe0c69bf463e01289deb9",
+        "💡️inferences/🦀️.rs": "6ecd436d89d01f7707adab67dc7f665e9bc86aacd48f954988804f9f64b6218d",
         "📸️snapshot/🔗️.graphql": "e51e5ec9e99eb23b084a408fcfb63f751a475c9631e81694c24ad1fe0933a449",
         "📸️snapshot/🔣️.json": "8ba38c93bfba39e2d71ea8a8071c4caf617854e0d8a4295edaedf90816df0c5a",
         "📸️snapshot/🛰️.proto": "e2e4171d9a02ec19143584e67b7ba1e93a6534a6944dd3119a760176a4088689",
@@ -62107,6 +61842,7 @@
         "s.procedural.generation2d.mutation.change-generation-value",
         "s.procedural.generation2d.mutation.change-schema",
         "s.procedural.generation2d.mutation.change-slider-value",
+        "s.procedural.generation2d.mutation.clear-generation-value",
         "s.procedural.generation2d.mutation.clear-widget-layout",
         "s.procedural.generation2d.mutation.connect-synapse",
         "s.procedural.generation2d.mutation.create-generation",
@@ -62750,6 +62486,7 @@
         "s.procedural.generation3d.mutation.change-schema",
         "s.procedural.generation3d.mutation.change-slider-value",
         "s.procedural.generation3d.mutation.change-widget-input",
+        "s.procedural.generation3d.mutation.clear-generation-value",
         "s.procedural.generation3d.mutation.connect-synapse",
         "s.procedural.generation3d.mutation.create-generation",
         "s.procedural.generation3d.mutation.create-widget",
@@ -64006,27 +63743,27 @@
         "💡️inferences/🔣️.json": "214758bcd64d46bd107e385d8be3020c311130f79dcbe5a1ea842be81096fc6f",
         "💡️inferences/🛰️.proto": "2c8ae63e05f817ab7b69d812888f91e1b450cbf414a55ee226296f329aa69f3f",
         "💡️inferences/🟦️.ts": "275e2dd00578c20cccba8d65540a9953c28dac93a78e92787ecc5a8ea4e9c1f2",
-        "💡️inferences/🦀️.rs": "132a7de08fb57bee08370dbf4d1800ee1a4217e1b13b7561fe0add6ff53a83df",
+        "💡️inferences/🦀️.rs": "49e9948d2cb4a6f3fb6f977252ebcef8c6b1ed93abe85b12a44eb8b2635b3ed4",
         "📸️snapshot/🔗️.graphql": "324982b0133318ec12f78d879579ec87dd3017944e017ef2f5e8addfb1a58187",
         "📸️snapshot/🔣️.json": "c8a76f32344f3033240c880f251de43668a42647b40a63a5fc69f63dc1523791",
         "📸️snapshot/🛰️.proto": "c8cde4db91a523727ef38bfaa50525c5de38cece64b0026f8073d1e4d0ceaedf",
         "📸️snapshot/🟦️.ts": "69b450792cfd692673d652f3214476382753bba4c39291ef775238515c293faf",
-        "📸️snapshot/🦀️.rs": "8e8999ec2209201ac804e85c92fd8f85b0a8426deb47d1404871fd9c7aab0da8",
+        "📸️snapshot/🦀️.rs": "fd3549bd4ee8b1ea96ca3ea118014c0fe265ce0bf1c51278c3ac968902e75e75",
         "🔗️.graphql": "7e274c70e6ad64f5017f2f89a63683e2515b5e6337b1405f3b1873bf9081426a",
         "🔣️.json": "0b6caf2890eaf0ae6cd6e936100314131866b1e6ee432c6879aa51ec1c849726",
         "🔺️diff/🔗️.graphql": "51cb89e5567fe1bb1d7588c685386ebd1a97617e6bcaed21d37d652f1e7a2f1b",
         "🔺️diff/🔣️.json": "f54d45c463d803f900dae90d7e59700c3589b02f6936827288c83832e17e20da",
         "🔺️diff/🛰️.proto": "ffeec2823824d549102c347ca6690bc9463affcebfcce3c251121628abf83c35",
         "🔺️diff/🟦️.ts": "311697ed736a971fd99fbb1745f887e6a6817fa4bc67ff78876f5c8971d473cb",
-        "🔺️diff/🦀️.rs": "abbc52000e589fb32d1e3d4e8f7689ada5c64a043f6286adf107534af6434aab",
+        "🔺️diff/🦀️.rs": "509a5467636b1dc75f823360b7a565d441826b09ed37d9e59fce7076af372699",
         "🛰️.proto": "2463c5fd400da2ca1919688340f92ce50e438b8738c58c996a810492931b9a6e",
         "🟦️.ts": "43eddd8f428881e52e814f41401d186f26706a61f775c0bd752485c2a73d871f",
-        "🦀️.rs": "40aaf769b0a17c6fb88a102adc6b654e8ef4aa20d16846a0dcdd4f0f3c07b137",
+        "🦀️.rs": "0fab59695a1db35850a15626e4b5289ab9ea36cf70b1b8bbed37b453b73844d9",
         "🧬️mutations/🔗️.graphql": "60e330402aa0e8dba58b9b19288a1104f4bf12bfa6a00768b8e207d5b48cc167",
         "🧬️mutations/🔣️.json": "0602e3530d19fd23a36da8168c3c7f8d76aadc51b6e43551a4f72ab11b57e2ec",
         "🧬️mutations/🛰️.proto": "0c9ec41358857521991f5c88b66622314034c480f3151b1e3c6deab1b401ba03",
         "🧬️mutations/🟦️.ts": "cc2e9e82928b326f8c57b3bb113557cac2b30d11741686546c49032174f8f3c1",
-        "🧬️mutations/🦀️.rs": "bc28ae40249e1ad6127cec7f0f5715a3bb8f2920c49ece570bc53e8de7ff4371"
+        "🧬️mutations/🦀️.rs": "70272220935a2999f778d8df5ea9d4897a2ac85f1b4c79eb33482897b41b3e54"
       }
     },
     "s.puzzle.puzzle2d.mutation.add-node-handle": {
@@ -65099,7 +64836,7 @@
         "💡️inferences/🔣️.json": "2fb5bfcf7e114c38838f5db2da32bb93438833249bbb8e70d420174a251755b0",
         "💡️inferences/🛰️.proto": "8877111c0dbb7a7863a5378e17e57b38de41565f2593d5ed3b90a47cd107eb73",
         "💡️inferences/🟦️.ts": "c51c728e1b01ee55cf7e5fd0e97327a0037531015356eeafde276037f1091a51",
-        "💡️inferences/🦀️.rs": "7b09e3aaf222110846d3bf37cfd09672c6931a35b1276aa8cef9dcb02cef58c8",
+        "💡️inferences/🦀️.rs": "71e8e56dc3024eb13fc3b9077460f318e03aa2e748978424b3ab6155806acd4c",
         "📸️snapshot/🔗️.graphql": "5b803295f9cd4d3dc0eeeebe6b5a155aab3f88056113e1d095b24cac3d6ed1ce",
         "📸️snapshot/🔣️.json": "b60bb984b8335d4bb9a78f4d36b49945f8717be0a98a8c068962fed0ce3cf8b0",
         "📸️snapshot/🛰️.proto": "689c73ff31055803070bd0ce2add68f75b2dd324e6b8a75927632ab6eac1b136",
@@ -65110,8 +64847,8 @@
         "🔺️diff/🔗️.graphql": "b5f1f6770c17b173f0cd7b3dee36ca77f7a6a66dfcea6db6d355f2ed83eab117",
         "🔺️diff/🔣️.json": "c5b6ce151887fe0d2c982b2230f67212f5a3e6eb819ec81af2d44a6557b49336",
         "🔺️diff/🛰️.proto": "b8890ecabcba61845acf378cebef40666a6a1c26f7ce316a10aeefe14313a3fb",
-        "🔺️diff/🟦️.ts": "d58d35e533c742ef8b6d75463c7bb7f2b795c68ff34e4613547fb0060e5f6a4f",
-        "🔺️diff/🦀️.rs": "59aeea4499797ae42c6a2e3d2eb0903b23dce60f7f404b640c03635ae58e10f8",
+        "🔺️diff/🟦️.ts": "f50ac3120c5e2ed1ba1cc7bb28bf9fc370446e7bf1a64e4d96f386ae16cdea9b",
+        "🔺️diff/🦀️.rs": "298662e4f67e3af8b214724935927560f81c87181ef19d1887639efd48b078c5",
         "🛰️.proto": "f513bde6e1379833c1b8b505e24c00450bde1e5ea20f4003eaacac4333c1084c",
         "🟦️.ts": "f717f58c154cffa3f66b0f2dc4e862b183eae6ece8e68578326497f4f16e7c13",
         "🦀️.rs": "894cd7e7aa077ecde8360db2633abaa45e345ca46860ae4dc9c1756e25b36181",
@@ -65119,7 +64856,7 @@
         "🧬️mutations/🔣️.json": "a6f34c6eaa5366f1d77c9ccc7e1acb477e750401de4d568b83d8430ea3ec2b51",
         "🧬️mutations/🛰️.proto": "a55a2e309ed80c8f47e5fa4566c7ffa05eeee2665c5ab785641d3be10e5ef5f0",
         "🧬️mutations/🟦️.ts": "9306607ddee41d02287422867a3d62de1545ff06129e15d9fedc5dda68e0af97",
-        "🧬️mutations/🦀️.rs": "48cb0f84d2dc4aaf75af71d2b4ea3a400a3eb9c9dad5484c713aa4d9cc44f611"
+        "🧬️mutations/🦀️.rs": "627806973a142fdc0b4cbcc609daa57b8f83969451062727dd8bc72f9d697854"
       }
     },
     "s.puzzle.puzzle3d.mutation.add-object-vortex": {
@@ -66161,27 +65898,27 @@
         "💡️inferences/🔣️.json": "e701e7eeee97d5ea4fb3376662e49f43b2a7fb1bc867fb027a6be0b2cf4a74a0",
         "💡️inferences/🛰️.proto": "b404631625a2a09413c9efb91e81fb6c0e99be929a545e43c2c668355c846d53",
         "💡️inferences/🟦️.ts": "c3bf6867ee527ccd6f2d1dd09b896e70d77d160e4f6a8b5af51796b7888fbb3c",
-        "💡️inferences/🦀️.rs": "54c0d16c1d3189a2d8651ba6a720c5a86de341296bc23525b2867f9db7b9323d",
+        "💡️inferences/🦀️.rs": "ecca686979539b3c46946681476ba5f37755c0893a6aed521e7aeba2f0ed34b1",
         "📸️snapshot/🔗️.graphql": "e6f1e38e149e605252515add47ae0b3b98028b69b72653ac1fc0ecbe14294c48",
         "📸️snapshot/🔣️.json": "ac3fd747b22b83b67bc210054525061feed31f58928729bef3b0a8a75efbd542",
         "📸️snapshot/🛰️.proto": "0d1301c7b29f7d22b7ed2545f94498fa357140a6180c25ad57e8e9a84777762b",
         "📸️snapshot/🟦️.ts": "71808ecc89caa43d70d88348c2397dec2dab9fa38146b56005d17bfbd40789fb",
-        "📸️snapshot/🦀️.rs": "3f363580abcf43099127c9a616a1e34ba4d4c7f2ed3ef5a81ca7630817ba1e2a",
+        "📸️snapshot/🦀️.rs": "7d09c99ae8b1b772e9b0d3b2ff15a3dc31cf7a8fd7adb8db604915a8b7c2b23f",
         "🔗️.graphql": "57afee89da75f9466481731b477e0ffc7d13da71f15ee368a214c4b5bef550aa",
         "🔣️.json": "48fd23f861958bdb8be45e305a16612e49f3c48c418aa919dc0addabbb6ab9e3",
         "🔺️diff/🔗️.graphql": "113e69d61c5aebfa50e484b8fde100abff274c6db2f016c434b23d042c1effa4",
         "🔺️diff/🔣️.json": "05149a18a47db94dea86b766a40e64453b3dfe7116dc78bcb31b09a690f27498",
         "🔺️diff/🛰️.proto": "4cdc05746378a57e820404ec26c39579bc36633311ce69d6b5f9e75284b1e2fc",
         "🔺️diff/🟦️.ts": "0e5f0b2e3a9fd11ac6f6eddef70b2456dfe6335f9d3b412023eddfc0f3a366e4",
-        "🔺️diff/🦀️.rs": "86fc409550ecee018f188f6c745c903d01c42cc9fb9f04f626d61410cba6322b",
+        "🔺️diff/🦀️.rs": "2f5738e9ee239f8a46f71851753adc8d53a84c27edd285e3357bf62bcff8067d",
         "🛰️.proto": "3617441bd45e5e4c558fa0b577b24461be6b9f2890351be8707d4fb33ce297eb",
         "🟦️.ts": "5529a1974a9980d86d2b6cedc8b491a2db593681ee58db8097c5183ded11c0e2",
-        "🦀️.rs": "2cc18fc433772c97f925a3ec12c3a436e7e559c285928bedf05ebab8d51eb7df",
+        "🦀️.rs": "80ecf7399bd949fc61e98f76864f22e45fe1a8284f3a394132d8841799be5f92",
         "🧬️mutations/🔗️.graphql": "d144fca1b03be3f73c29561321cc142dce104256679e1602c365ce2e4e3a89ed",
         "🧬️mutations/🔣️.json": "56d55cdab93e020ad2036acfd8636a9abf3b9127d498c3faf7ac931b78029362",
         "🧬️mutations/🛰️.proto": "73ee81770146897c6a1fe6f59c5714c83fd0afc8912bd5ae2383620bd976efab",
         "🧬️mutations/🟦️.ts": "21cc4f3388988674c3f20f374e1c8a9ea75b835730cdc782c7ea44222095811d",
-        "🧬️mutations/🦀️.rs": "abd41f6250417a6ca6448c538aa047ac8e8ac2dd1c19bc499d735ff426d4fb3d"
+        "🧬️mutations/🦀️.rs": "4e1794a1722b2bd08036b178db426c9703878df6fed7d33c57be9a5204395b89"
       }
     },
     "s.puzzle.puzzle5d.mutation.add-part-grip": {
@@ -67489,7 +67226,7 @@
         "📸️snapshot/🔣️.json": "3fcc8e185ece551cdc8827946ca9ab2720ac24176e61a7b7c7f36d2c4e165b6b",
         "📸️snapshot/🛰️.proto": "a0bc465d92c99a1e1318da3b9f30adc1ec064e5652646c5fe50dd04f18c6e57e",
         "📸️snapshot/🟦️.ts": "6f15581b26934038c2c21b5967fcda966b2023b2667bc8ff56f8f1379bcb21d5",
-        "📸️snapshot/🦀️.rs": "871d607f2db97a7d32826d2cd825446a6593b5ca0ba96a462dcfea03f1852f14",
+        "📸️snapshot/🦀️.rs": "10875ad52881991368b40c192f65955afb4a83939e86c441dc2a67548d643f4d",
         "🔗️.graphql": "104b0ab143761419e795f550b39e43d44d4c78629f5ab61583bc58f427c6f695",
         "🔣️.json": "c997f4287cacd9383b4f7a522497e64df56f1e0ca2c27c87fb72dcdc7505327c",
         "🔺️diff/🔗️.graphql": "606f4b54dde668d06336d127dd3ae58cce256488cda64ff3e154e210ed682cc1",
@@ -72234,6 +71971,10 @@
           "file": "🔣️.json",
           "facet": "artifact"
         },
+        "DwgSnapshot": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
         "DwgStructure": {
           "file": "💡️inferences/🔣️.json",
           "facet": "inference"
@@ -72277,7 +72018,12 @@
         "🧬️mutations/🔣️.json": "838494c2f9472644175c395928eb8b7f156b835beff9e4e42a6a3b64405631e4",
         "🧬️mutations/🛰️.proto": "1b55e4d02f434e5e43dd2f04560499a4026701c0f558b65579a51abe4e2c7879",
         "🧬️mutations/🟦️.ts": "795038a8ce83491c64a86f699961d010baf61eca13e287abfd4e4331a7d3c98d",
-        "🧬️mutations/🦀️.rs": "2cccde9e79096f7c6015a7a96fecae9b0d2a7be90dc0175268d116a5fb0e2a0d"
+        "🧬️mutations/🦀️.rs": "2cccde9e79096f7c6015a7a96fecae9b0d2a7be90dc0175268d116a5fb0e2a0d",
+        "📸️snapshot/🔗️.graphql": "8ed1839568905d7b71b539930b5be9f17330284e45cac2732992c6fd5db0dc70",
+        "📸️snapshot/🔣️.json": "dfae207406a429ec627730b237c625dbc6eb41dccb0ded4ab2b99d8cfe5d7530",
+        "📸️snapshot/🛰️.proto": "06e1772dcd68be5522ac85f67685766d928438a92c2643441304d807feb477f8",
+        "📸️snapshot/🟦️.ts": "b9135f58d7178b5a23c18704a81102a877b62ebbe0df369cff7784e17336f03b",
+        "📸️snapshot/🦀️.rs": "c309a207c4aa480d44fe9952a081dc1f2496a609d1c8b46ed7f2b232c77aad59"
       }
     },
     "s.stdio.dwg.ac1024.any.mutation.set-application": {
@@ -81890,6 +81636,22 @@
           "file": "🔣️.json",
           "facet": "artifact"
         },
+        "PdfColorSpaceInsertion": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfColorSpaceRelocation": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfColorSpaceRemoval": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfColorSpacesDelta": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
         "PdfDictAdded": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
@@ -81903,6 +81665,86 @@
           "facet": "diff"
         },
         "PdfDiff": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfEmbeddedFileInsertion": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfEmbeddedFileRelocation": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfEmbeddedFileRemoval": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfEmbeddedFilesDelta": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfExtGStateInsertion": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfExtGStateRelocation": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfExtGStateRemoval": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfExtGStatesDelta": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfFontInsertion": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfFontRelocation": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfFontRemoval": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfFontsDelta": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfFormInsertion": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfFormRelocation": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfFormRemoval": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfFormsDelta": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfImageInsertion": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfImageRelocation": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfImageRemoval": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfImagesDelta": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
@@ -81934,35 +81776,7 @@
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
-        "PdfIndexedItemPdfEmbeddedFile": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfIndexedItemPdfExtGState": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfIndexedItemPdfFont": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfIndexedItemPdfFormXObject": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfIndexedItemPdfImage": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfIndexedItemPdfNamedColorSpace": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
         "PdfIndexedItemPdfNamedDestination": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfIndexedItemPdfNamedProperties": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
@@ -81982,87 +81796,7 @@
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
-        "PdfIndexedItemPdfPattern": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfIndexedItemPdfShading": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
         "PdfInfoDiff": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfKeyedDiffPdfEmbeddedFile": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfKeyedDiffPdfExtGState": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfKeyedDiffPdfFont": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfKeyedDiffPdfFormXObject": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfKeyedDiffPdfImage": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfKeyedDiffPdfNamedColorSpace": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfKeyedDiffPdfNamedProperties": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfKeyedDiffPdfPattern": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfKeyedDiffPdfShading": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfKeyedItemPdfEmbeddedFile": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfKeyedItemPdfExtGState": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfKeyedItemPdfFont": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfKeyedItemPdfFormXObject": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfKeyedItemPdfImage": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfKeyedItemPdfNamedColorSpace": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfKeyedItemPdfNamedProperties": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfKeyedItemPdfPattern": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "PdfKeyedItemPdfShading": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
@@ -82099,6 +81833,38 @@
           "facet": "diff"
         },
         "PdfPathSegment": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfPatternInsertion": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfPatternRelocation": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfPatternRemoval": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfPatternsDelta": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfPropertiesInsertion": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfPropertiesRelocation": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfPropertiesRemoval": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfPropertiessDelta": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
@@ -82155,6 +81921,22 @@
           "facet": "diff"
         },
         "PdfSetu32": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfShadingInsertion": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfShadingRelocation": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfShadingRemoval": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfShadingsDelta": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
@@ -94768,9 +94550,10 @@
       },
       "dependsOn": [
         "s.stdio.svg.1.1.base",
+        "s.stdio.svg.1.1.tiny.mutation.insert-excluded-element",
         "s.stdio.svg.1.1.tiny.mutation.insert-tiny-element",
         "s.stdio.svg.1.1.tiny.mutation.remove-element",
-        "s.stdio.svg.1.1.tiny.mutation.restore-non-tiny",
+        "s.stdio.svg.1.1.tiny.mutation.set-excluded-attribute",
         "s.stdio.svg.1.1.tiny.mutation.set-text",
         "s.stdio.svg.1.1.tiny.mutation.set-tiny-attribute",
         "s.stdio.svg.1.1.tiny.mutation.set-transform",
@@ -94822,26 +94605,6 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "18a5a4e8303bfeed40ede537f688e8ac2d8f5a3612460b638245e7b31beea248"
-      }
-    },
-    "s.stdio.svg.1.1.tiny.mutation.restore-non-tiny": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🧬️schema/🧬️mutations/♻️restore-non-tiny/🧬️schema",
-      "level": "mutation-leaf",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🔣️jsonschema": "🔣️.json"
-      },
-      "exports": {
-        "RestoreNonTiny": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [
-        "s.stdio.svg.1.1.base"
-      ],
-      "hashes": {
-        "🔣️.json": "6214955ff62c5f110998a28045ab77851c9255d3eff1d9a79ecc6dc08b696bbc"
       }
     },
     "s.stdio.svg.1.1.tiny.mutation.set-text": {
@@ -95036,6 +94799,82 @@
         "🛰️protobuf": "🛰️.proto"
       },
       "exports": {
+        "AsciiSequence": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "AsciiValues": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "Binary32": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "Byte": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "ByteSequence": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "ByteValues": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "DoubleValues": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "FloatValues": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "Int16": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "Int32": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "Int8": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "LongValues": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "RationalValues": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "SByteValues": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "SLongValues": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "SRationalValues": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "SShortValues": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "ShortValues": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "SignedRational": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
         "TiffArtifact": {
           "file": "🔣️.json",
           "facet": "artifact"
@@ -95047,6 +94886,14 @@
         "TiffDimensions": {
           "file": "💡️inferences/🔣️.json",
           "facet": "inference"
+        },
+        "TiffFieldType": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "TiffIfd": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
         },
         "TiffIfdAdded": {
           "file": "🔺️diff/🔣️.json",
@@ -95068,9 +94915,21 @@
           "file": "💡️inferences/🔣️.json",
           "facet": "inference"
         },
+        "TiffSampleBlock": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
         "TiffSampleRun": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
+        },
+        "TiffSnapshot": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "TiffTag": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
         },
         "TiffTagAdded": {
           "file": "🔺️diff/🔣️.json",
@@ -95083,6 +94942,34 @@
         "TiffTagsDiff": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
+        },
+        "TiffValues": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "TiffWord64": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "UInt16": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "UInt32": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "UndefinedSequence": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "UndefinedValues": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "UnsignedRational": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
         }
       },
       "dependsOn": [
@@ -95113,7 +95000,12 @@
         "🧬️mutations/🔣️.json": "1732d51738be4e6271e929a1768e94c8894a5530753140e72d76379f9ce717ae",
         "🧬️mutations/🛰️.proto": "36b5c1fd05a588c084ec4542ef7c4fe0afe4293ece4e6bae9c444dcc7c4d1163",
         "🧬️mutations/🟦️.ts": "5c7bba4dda2418deacc1cb36dfb66c7104a84b1e0c3579a7e9f606ec0fc25e8e",
-        "🧬️mutations/🦀️.rs": "02e0148a20e0cafe3bcb73e90118881f84dcd3a83bb78ca018051441311e4bc5"
+        "🧬️mutations/🦀️.rs": "02e0148a20e0cafe3bcb73e90118881f84dcd3a83bb78ca018051441311e4bc5",
+        "📸️snapshot/🔗️.graphql": "ab000a8c7a55dc002bb4de500e3e75177d923e8f033852662caffe7a4161319a",
+        "📸️snapshot/🔣️.json": "72119c67c3602b01027d0966d1162449d94f4913b3dc68dfc858f7426a4a871b",
+        "📸️snapshot/🛰️.proto": "c8f7ff1de27035348cecdb705a326fcfa4df139b8fb28a3eb0b0375a2c1bd129",
+        "📸️snapshot/🟦️.ts": "e7dea25c9e2432e8338162ef8a4ca660d7ab314937b2706ec150bf383b0af06c",
+        "📸️snapshot/🦀️.rs": "0ce81c44903d52211d5253ad4a55cac42ac40ad2d09a8886e94e29eab5b35fa9"
       }
     },
     "s.stdio.tiff.6.0.document.mutation.insert-ifd": {
@@ -95129,7 +95021,9 @@
           "facet": "schema"
         }
       },
-      "dependsOn": [],
+      "dependsOn": [
+        "s.stdio.tiff.6.0.document"
+      ],
       "hashes": {
         "🔣️.json": "131e7e5552df7d9212dfba823e1acd481a74070afc91eaa9323f0c1b6264d853"
       }
@@ -95219,7 +95113,9 @@
           "facet": "schema"
         }
       },
-      "dependsOn": [],
+      "dependsOn": [
+        "s.stdio.tiff.6.0.document"
+      ],
       "hashes": {
         "🔣️.json": "5029f03cd4d08191988e93dc317c9fa94f41e89162b47c0860a93c098f81a475"
       }
@@ -96593,6 +96489,10 @@
           "facet": "diff"
         },
         "XmlAttrModified": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "XmlAttrRemoved": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
@@ -98986,24 +98886,6 @@
         "🔣️.json": "036d3da86e7311dfced2c42f2b367bbd0d69a7af555f3612b1474b0305e0fe0f"
       }
     },
-    "s.wfc.wfc2d.1.any.config.mutation.replace-config": {
-      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🔄️replace-config/🧬️schema",
-      "level": "mutation-leaf",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🔣️jsonschema": "🔣️.json"
-      },
-      "exports": {
-        "ReplaceConfig": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "🔣️.json": "cfeb69603841ff1d78fb78b5998393d1b4a68e49e023655249f834a572506d0f"
-      }
-    },
     "s.wfc.wfc2d.1.any.mutation.change-seed": {
       "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🧬️schema",
       "level": "mutation-leaf",
@@ -99438,24 +99320,6 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "52981057905bb9479d45de4ba615b75c1bdb66d5537500f84a3542a88f1359da"
-      }
-    },
-    "s.wfc.wfc3d.1.any.config.mutation.replace-config": {
-      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🔄️replace-config/🧬️schema",
-      "level": "mutation-leaf",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🔣️jsonschema": "🔣️.json"
-      },
-      "exports": {
-        "ReplaceConfig": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "🔣️.json": "c83b9d35da6e25dc5fd68ff65819914410a307fe0ae61460f3ec21ca2e5a64d7"
       }
     },
     "s.wfc.wfc3d.1.any.mutation.change-seed": {
@@ -100164,6 +100028,2206 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "f563b5eebdf932d21a868d1f2d3cf09b8240da9512d37a95cfb3065d9d97e9f5"
+      }
+    },
+    "app.space.home.transient.mutation.set-directory": {
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/🧬️mutations/🗂️set-directory/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetDirectory": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "1a56c01599795826346d093bd7d1e571ec004df79a0c6f42602f7086ea520ad9"
+      }
+    },
+    "framework.product.course": {
+      "path": "🧰️framework/🛍️products/📚️course/🧬️schema",
+      "level": "product-root",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "Anchor": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Answer": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Axis": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Badge": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "BadgeAward": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "BadgeRule": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Best": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Category": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "CategoryHint": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Challenge": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "ClassificationAnswer": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "ClassificationItem": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "ClassificationItemResult": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "ClassificationTask": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Command": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "CompareHint": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Course": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "CourseQuizView": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "CourseView": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "CrowdCount": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "CrowdItem": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "CrowdScores": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "CrowdTask": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "CrowdView": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Cursor": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "CursorState": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Dimension": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "DimensionResult": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Event": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "GroupHint": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Handle": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "HandleView": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Hint": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Icon": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Id": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Identity": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "IdentityClaim": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Introduction": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Leaderboard": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "LeaderboardPeriod": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "LeaderboardRow": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "LeaderboardWindow": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "LearnerView": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Limits": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "MatchingAnswer": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "MatchingItem": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "MatchingItemResult": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "MatchingTask": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Motion": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Place": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "PresenceBadgeAward": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "PresencePoint": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "PresencePreferences": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "PresencePresentation": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "PresenceProfile": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "PresenceRun": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "PresenceRunSummary": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "PresenceSort": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "PresenceState": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "PresenceSubmission": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Profile": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "ProfileHint": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Quantity": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Query": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "QuestionPool": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Quiz": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Rejection": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "RunResult": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "RunStatus": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "RunSummary": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "RunView": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Scale": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Score": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Screen": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Sheet": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "SheetAxis": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "SheetClassificationTask": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "SheetDimension": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "SheetItem": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "SheetMatchingTask": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "SheetSortingTask": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "SheetTask": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "ShortText": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Slug": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "SortingAnswer": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "SortingItem": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "SortingItemResult": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "SortingTask": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Task": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "TaskKind": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "TaskResult": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Text": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "ThinkingAnswer": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "ThinkingMatchingAnswer": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "ThinkingState": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Timestamp": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Topic": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Verdict": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "WireVersion": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "2ca865763b904881665ba137c456355c9b2ef48f039efecc417947c7c9f6cce8",
+        "🟦️.ts": "1e838cca3aa0005f91ab2dee395336c75728c4f83522bd6821304c5df6510176",
+        "🦀️.rs": "ced3eb478bf77f1642e5016e84119aeb4adaecd8f400ae15b5dadd7fbbfcb4d0"
+      }
+    },
+    "os.dev.activation.browser-host": {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🧬️schema",
+      "level": "product-module",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "GeneratedCoreV1": {
+          "file": "🔣️.json",
+          "facet": "component"
+        },
+        "Sha256Digest": {
+          "file": "🔣️.json",
+          "facet": "component"
+        },
+        "TestBrowserGisMaterializationV1": {
+          "file": "🔣️.json",
+          "facet": "component"
+        },
+        "TestBrowserHostStagingV1": {
+          "file": "🔣️.json",
+          "facet": "component"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "da3631a0cc46adeea06a86e853a541df9edb7bacffa4ba86fb1f22a241ee0dd9"
+      }
+    },
+    "os.workflow.artifacts.workflow.mutation.set-node-ports": {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🧬️mutations/🔧set-node-ports/🧬️schema",
+      "level": "product-module",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetNodePorts": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "os.workflow.artifacts.workflow.mutation.add-node"
+      ],
+      "hashes": {
+        "🔣️.json": "0b7ff69f8dabeca23dd99782a2a0d25c133906f83494fa8667adf27147d1336b"
+      }
+    },
+    "s.architect.program.mutation.rename-quantity-requirement": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️quantity/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameQuantityRequirement": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "eb3843a8312ba202d5b5c22222934b7ce681f7972bf5d0b04e7305217d3b65f6"
+      }
+    },
+    "s.architect.program.mutation.rename-regulatory-requirement": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜️regulatory/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameRegulatoryRequirement": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "9c10438a6ece0d36f7c9929c428bfa06785cc251ec60c82de22adeb99acd32ea"
+      }
+    },
+    "s.architect.program.mutation.rename-relationship": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️relationship/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameRelationship": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "55146c95ee6558603fb9022e01f21c6e724942f67607ee3e721dd79a83918f2f"
+      }
+    },
+    "s.architect.program.mutation.rename-report-record": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️report-record/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameReportRecord": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "abba6177baecb780aa06e47b9ef0a0266c7121df2339cc2496e2bd830a979a80"
+      }
+    },
+    "s.architect.program.mutation.rename-requirement": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️requirement/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameRequirement": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "0eced5139b7e6f1f22052f69d422fa86fca874a4f8bacd33d54caa833ae9739a"
+      }
+    },
+    "s.architect.program.mutation.rename-resilience-requirement": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💪️resilience/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameResilienceRequirement": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "4269aab1478aad9740cdad5b0fbde8de3b61a9e204e59cc294ee70ba15bbfebb"
+      }
+    },
+    "s.architect.program.mutation.rename-resource": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️resource/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameResource": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "fbb14e88ab388696463395041d00aa384b239b396a17894868ab46a1d7277a66"
+      }
+    },
+    "s.architect.program.mutation.rename-risk": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚠️risk/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameRisk": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "c5bd575457039b877f747c2209a1ad3912ef922473c7e3f5276bfc06c5d42302"
+      }
+    },
+    "s.architect.program.mutation.rename-safety-requirement": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦺️safety/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameSafetyRequirement": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "b7378b503249c9c723846494d23100fb6906e272b0aff3c2dd1e5d511ec52a17"
+      }
+    },
+    "s.architect.program.mutation.rename-scenario": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎬️scenario/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameScenario": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "b81efa00dca5efe003b12adbe086d77354c57b5b1d60b13de0a1292c25c6df2c"
+      }
+    },
+    "s.architect.program.mutation.rename-schedule-requirement": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️schedule/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameScheduleRequirement": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "aa5c22ec5f4019f3b9d71c71f702efb23182d1475d9be5514451319af023492d"
+      }
+    },
+    "s.architect.program.mutation.rename-search-filter": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️search-filter/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameSearchFilter": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "0002c3e54d0edbc5e695edf78b66fb5146696fb0234db4d06ae13089d45413f1"
+      }
+    },
+    "s.architect.program.mutation.rename-security-requirement": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️security/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameSecurityRequirement": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "ee03956f525b3a1b1a197629df9f8708021e005da6186d7a7ddfae5916617105"
+      }
+    },
+    "s.architect.program.mutation.rename-service-requirement": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛎️service/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameServiceRequirement": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "b43c29abff19bece28c8cd6b2f72c0c609ca394983ae37361f5444b44d8f4ee7"
+      }
+    },
+    "s.architect.program.mutation.rename-site-context": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️site/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameSiteContext": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "4bccd331b144456cfcb2f0102cbf946690896238b892fad6870b84d24a5adfa5"
+      }
+    },
+    "s.architect.program.mutation.rename-stakeholder": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️stakeholder/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameStakeholder": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "33210b77f6ca7d04fe4522619ad97365d6aa7800d995001da6aed2d18ccd9bb5"
+      }
+    },
+    "s.architect.program.mutation.rename-status-record": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📶️status-record/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameStatusRecord": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "db8edfad9d4183a0fa7c83b8aa2e5bf5b61c6991fd3e85435c6e1bec1da23f2a"
+      }
+    },
+    "s.architect.program.mutation.rename-storage-requirement": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️storage/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameStorageRequirement": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "a1700334d70c871e487c744676fca45c9dd5d55602db972cbfd662b5822d73b2"
+      }
+    },
+    "s.architect.program.mutation.rename-survey": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗳️survey/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameSurvey": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "ed85ffa6ac29c6f3a183d8656fd33e9b1fba2d24caa18342725b92769bb96a38"
+      }
+    },
+    "s.architect.program.mutation.rename-sustainability-requirement": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️sustainability/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameSustainabilityRequirement": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "2201631995d9193dcad64c29f9e394a61c6a548659f124d81b06f9e6222ad2c6"
+      }
+    },
+    "s.architect.program.mutation.rename-template-record": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️template-record/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameTemplateRecord": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "6a25384ae5f519576dc1c49bf39dc82478d895be6fee4873ca36633885fd8632"
+      }
+    },
+    "s.architect.program.mutation.rename-user-profile": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧑️user/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameUserProfile": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "1f46b9873ef8e1324b98bee8386e3bc6c64fdf78a910ec784766de0082481f06"
+      }
+    },
+    "s.architect.program.mutation.rename-validation-record": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✔️validation-record/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameValidationRecord": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "6304eef2f7310cfdb663f3f76dc96986eb13755ad9cd407086c0cb78d4f60b01"
+      }
+    },
+    "s.architect.program.mutation.rename-wayfinding-requirement": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️wayfinding/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameWayfindingRequirement": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "6bc8cc98de3e2cde5385444cab5fe99a57cc586b1f5941652df5715e41e3232e"
+      }
+    },
+    "s.architect.program.mutation.rename-workshop": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎓️workshop/🏷️rename/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameWorkshop": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "2dd8b86904950171f7e7898d4b681b0d5ae4db2fb0ced04b116018f3f556966b"
+      }
+    },
+    "s.architect.program.mutation.replace-access-rule": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔑️access-rule/♻️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceAccessRule": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "7fd14a2869a5c3685df7077e90003457dd3e2016c459e039fbf5289539710585"
+      }
+    },
+    "s.architect.program.mutation.replace-accessibility-requirement": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♿️accessibility/♻️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceAccessibilityRequirement": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "76407c24cb0b2201d4ba7f806bd46d8a98578b8b9a43e3131643f510f8022151"
+      }
+    },
+    "s.architect.program.mutation.replace-activity": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏃️activity/♻️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceActivity": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "a8e3fdecb075468e921064681c9ee95f5a52bb5ab5ebd0a2767ae0b7174e39db"
+      }
+    },
+    "s.architect.program.mutation.replace-analysis-record": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔬️analysis-record/♻️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceAnalysisRecord": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "9e9c311b92674d9bb936d2d2ffc9f8b84d96706b68ac55611ae025f67130ef87"
+      }
+    },
+    "s.architect.program.mutation.replace-approval-record": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👍️approval-record/♻️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceApprovalRecord": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "b1773f1c94072679115a265bf023607d0282c233314f9a48694f9a70d937d7ed"
+      }
+    },
+    "s.architect.program.mutation.replace-assumption": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💭️assumption/♻️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceAssumption": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "8910dbc12b82d3dbe9336f5517c4a7be506f6a9a0898110438ba9213951476cc"
+      }
+    },
+    "s.architect.program.mutation.replace-audit-event": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📒️audit/♻️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceAuditEvent": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "1756c6976ebbc9385543b47141c24bcfb6a275db428155674a05985592e6e1fb"
+      }
+    },
+    "s.architect.program.mutation.replace-benchmark-record": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏁️benchmark-record/♻️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceBenchmarkRecord": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "a416b08331749f16e8e8a46616caeccfde09986cfbeb8aa1fbfef9693dd9d69b"
+      }
+    },
+    "s.architect.program.mutation.replace-change-record": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️change-record/♻️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceChangeRecord": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "28c819459de854a8dae6e255ec2197966fb9a393221b6ea06dca64dc1db4d4a2"
+      }
+    },
+    "s.architect.program.mutation.replace-collaboration-record": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️collaboration/♻️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceCollaborationRecord": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "a9d952739ab8b59de37fdc1ca599fff27bede36c8ab4066bb0df8af616506fd5"
+      }
+    },
+    "s.architect.program.mutation.replace-communication-requirement": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📡️communication/♻️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceCommunicationRequirement": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "f6c80645864c88ba13a9fb07c3eb55d9c6088747ebcc8122c1681679a33e38d2"
+      }
+    },
+    "s.architect.program.mutation.replace-compliance-record": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛂️compliance-record/♻️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceComplianceRecord": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "37588b549d0f20682c1620a29f1a8d1a16a2b21cdb95e1d785c597a6bd6b397c"
+      }
+    },
+    "s.architect.program.mutation.replace-conflict": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚔️conflict/♻️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceConflict": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "fea604df0ac6aa884280086c3481f47bab332ba40351c1be7042a697fbf6e584"
+      }
+    },
+    "s.architect.program.mutation.replace-constraint-record": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️constraint-record/♻️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceConstraintRecord": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "ba417a3f8ce59bfd7fe292f0d27b5d4baaa23bf0ddd26e140608f81210bd7ddb"
+      }
+    },
+    "s.architect.program.mutation.replace-cost-requirement": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💰️cost/♻️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceCostRequirement": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "e2acede4599b2a71faa57ea1c3cc49f028a2044bac8ca7bc57c73cec3b12a0e0"
+      }
+    },
+    "s.architect.program.mutation.replace-decision": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✅️decision/♻️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceDecision": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "31c3416d42852eacde60979d5e2d04e485f3784d971cb6f8500b166122268ba0"
+      }
+    },
+    "s.architect.program.mutation.replace-delivery-constraint": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️delivery-constraint/♻️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceDeliveryConstraint": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "065b5766e46369e3b07e1a340cecea0ab07857c0fcf2638a6bce6bf1062b7cd4"
+      }
+    },
+    "s.architect.program.mutation.replace-document": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📃️document/♻️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceDocument": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "08308f7181a22c0ac64975772cc7919036fe21191f30990da2fe8a01d9fb7af3"
+      }
+    },
+    "s.architect.program.mutation.replace-environmental-requirement": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌿️environmental/♻️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceEnvironmentalRequirement": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "226e349153c896164a90c8491b9b7525fa7baa49c8f8cafb2df265a558412d44"
+      }
+    },
+    "s.architect.program.mutation.replace-equipment": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️equipment/♻️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceEquipment": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "cf70d9861ddee27320ae1c5eae59534d18c5ef5ed83c3e6ce127446489127757"
+      }
+    },
+    "s.architect.program.mutation.replace-flexibility-requirement": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️flexibility/♻️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceFlexibilityRequirement": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "64eac554df8d245f77dfdf0284458c8333b006b3edc4e83994138296eba11ba9"
+      }
+    },
+    "s.architect.program.mutation.replace-flow-requirement": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌊️flow/♻️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceFlowRequirement": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "9420cb6aecd9739b0768503c572cab2d07782c6bb8d5bc2a40e9c318272b02e0"
+      }
+    },
+    "s.architect.program.mutation.replace-function": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️function/♻️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceFunction": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "6257fe963bb168d266957eed5d35bb287ac0bf37c72bcbafcd78f05151b2c000"
+      }
+    },
+    "s.fem.2d.1.boundary.mutation.change-support": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🩹️change-support/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeSupport": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "723eb833c9fe89de4fb2f2aa2b939db783a5345223bf0bb277f429de90b08914"
+      }
+    },
+    "s.fem.2d.1.load.mutation.change-combination-name": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🩹️change-combination-name/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeCombinationName": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "ba2104013052d4babda07106a5375d392c1b3c6dc5b3d072e8908777afc9dff4"
+      }
+    },
+    "s.fem.2d.1.load.mutation.change-combination-term": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🩹️change-combination-term/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeCombinationTerm": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "d8047cc0911486394be786f3fa537c6eb8fb54dce0df64cd4af23bb885cd95f7"
+      }
+    },
+    "s.fem.2d.1.load.mutation.change-load": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🩹️change-load/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeLoad": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "32efec39cc53c92854a302abbb7e0b12057f3d4ddc57a32a7f223287a78dbda8"
+      }
+    },
+    "s.fem.2d.1.material.mutation.change-material": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🩹️change-material/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeMaterial": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "f2d6768d990c4121a814bfb5d0d108b19bf4f51effa4b610cbe1c50d43ed7220"
+      }
+    },
+    "s.fem.2d.1.mesh.mutation.change-element": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🩹️change-element/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeElement": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "1f502ab42b4a238189476ef266bbd21a5b3f74cb4722073e325aea152a26dfec"
+      }
+    },
+    "s.fem.2d.1.mesh.mutation.change-node": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🩹️change-node/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeNode": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "ab52f0c39437eca4d003ce794578b31bde0dc13ece0c71608a7b262824e399f3"
+      }
+    },
+    "s.fem.2d.1.mesh.mutation.change-region": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🩹️change-region/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeRegion": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "5d3c9d8f4e8df30f026206fa142006e5f3254696e4c2f89ff11516119b6ef374"
+      }
+    },
+    "s.fem.2d.1.mesh.mutation.change-section": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🩹️change-section/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeSection": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "a40fa33538aa20d8093949d15489e0537fce28cd4f9ef1b7ab5a3ed368824992"
+      }
+    },
+    "s.fem.3d.1.boundary.mutation.change-support": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🩹️change-support/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeSupport": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "7a2d27caca07e09d10c5903fa128df369c6f1533ede11fed3832b37f3dd6b381"
+      }
+    },
+    "s.fem.3d.1.load.mutation.change-combination-name": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🩹️change-combination-name/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeCombinationName": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "fb81125d26692894f81caa324efe7557f44b3a083b8df42ea198afbf1a8afcfd"
+      }
+    },
+    "s.fem.3d.1.load.mutation.change-combination-term": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🩹️change-combination-term/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeCombinationTerm": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "22ba359321077947d0b109f8b460c50899128e91e917e9f1269bdc9cbe8a43a7"
+      }
+    },
+    "s.fem.3d.1.load.mutation.change-load": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🩹️change-load/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeLoad": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "eaddf88adfb60b0829dc2fde5f076c4932ad934cc4ad25ba274f7b33b9b22b07"
+      }
+    },
+    "s.fem.3d.1.material.mutation.change-material": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🩹️change-material/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeMaterial": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "007396b33e3b6e0c0000a2fde713ccf9bc128590255009f5760a1cacf33b7ad3"
+      }
+    },
+    "s.fem.3d.1.mesh.mutation.change-element": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🩹️change-element/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeElement": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "477bc82d8f040bd95b04564b0d4ae514c2777487dd94495131ecd21b0b584e39"
+      }
+    },
+    "s.fem.3d.1.mesh.mutation.change-node": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🩹️change-node/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeNode": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "c54aa5ef2aedd94ed8026d4aa2436de0ddb8d931594ef7ed2319ba79d14260c6"
+      }
+    },
+    "s.fem.3d.1.mesh.mutation.change-section": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🩹️change-section/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeSection": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "0a9ddee71c5b12646b4c5d8606a22655353c5e6b07eb409441f9a77c4bacf432"
+      }
+    },
+    "s.fem.3d.1.mesh.mutation.change-solid": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🩹️change-solid/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeSolid": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "67b36703c3353b1b9183402a8aca7da8d671b50651f95f1ed714d0e52d220cca"
+      }
+    },
+    "s.lowpoly.lowpoly.mutation.bevel-edges": {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️bevel-edges/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "BevelEdges": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "4c1239046970c65263a23db5bdc0cb0fb14ebda08a64fa8578234dd25bcdc9db"
+      }
+    },
+    "s.lowpoly.lowpoly.mutation.decimate-mesh": {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪶️decimate-mesh/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "DecimateMesh": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "170eb92ca0ea2b4253aec63def17335d23de7bfa25bae20b637d94077b522553"
+      }
+    },
+    "s.lowpoly.lowpoly.mutation.delete-mesh-components": {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-mesh-components/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "DeleteMeshComponents": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "a945c234c4f53354de5ca07647a75b4bc17ff334c227b7c26a58c7df6c5a1cb5"
+      }
+    },
+    "s.lowpoly.lowpoly.mutation.dissolve-edges": {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️dissolve-edges/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "DissolveEdges": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "af5472e21a55515648559c5e294530dcaa9d900c5db97628567624c6a58b3b0f"
+      }
+    },
+    "s.lowpoly.lowpoly.mutation.extrude-faces": {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬆️extrude-faces/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ExtrudeFaces": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "23d44440950391bb7a2e9b6eb3a1f2f89e25474b70a7f283c4c04176c31b795f"
+      }
+    },
+    "s.lowpoly.lowpoly.mutation.flip-faces": {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️flip-faces/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "FlipFaces": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "80a8ffb8c88b71964c1b411e626e96fc11b11535ef185db238e74eff51bf1507"
+      }
+    },
+    "s.lowpoly.lowpoly.mutation.inset-faces": {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲️inset-faces/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "InsetFaces": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "d5d808d8740c09f72b2bd3d96b6315db23bd05371dbf4d8ca31c88c3921082df"
+      }
+    },
+    "s.lowpoly.lowpoly.mutation.loop-cut": {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️loop-cut/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "LoopCut": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "3144f3dde89de364bb11746fd927f8e4a40165437d9816c75e786dd7efb59a94"
+      }
+    },
+    "s.lowpoly.lowpoly.mutation.mark-uv-seam": {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪡️mark-uv-seam/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "MarkUvSeam": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "c6497308585e947002516e770f96f56f7354bb86913fd399c8d24caaeb89b142"
+      }
+    },
+    "s.lowpoly.lowpoly.mutation.merge-vertices": {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️merge-vertices/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "MergeVertices": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "3eb26b0bf82ff8b043349e97d36070a3a15e2ba2eda024424881f61489113ea6"
+      }
+    },
+    "s.lowpoly.lowpoly.mutation.mirror-mesh": {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪞️mirror-mesh/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "MirrorMesh": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "4f6250c0728bb9f90abdd992b67db26fa0441249cda7ffab3f1641bd4e849778"
+      }
+    },
+    "s.lowpoly.lowpoly.mutation.set-mesh-rows": {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️set-mesh-rows/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetMeshRows": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.lowpoly.lowpoly"
+      ],
+      "hashes": {
+        "🔣️.json": "dfd20febf7097802179899181ca2de3cda470303a3d23547dd90c9b99067b904"
+      }
+    },
+    "s.lowpoly.lowpoly.mutation.snap-vertices": {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️snap-vertices/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SnapVertices": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "043d4aa413011e79d580422f8c6c1a638d7008baf8cc2fce19965121739a57df"
+      }
+    },
+    "s.lowpoly.lowpoly.mutation.subdivide-faces": {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔳️subdivide-faces/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SubdivideFaces": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "e64eec8b21ed9ad0595bd0a5a394338c4cafb62fd3642e79021fdf414bf4d3b8"
+      }
+    },
+    "s.lowpoly.lowpoly.mutation.triangulate-mesh": {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔻️triangulate-mesh/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "TriangulateMesh": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "65e948f44308c35085b6d329231b37af8aad1e8f8b42a864ba909309a7fc0fef"
+      }
+    },
+    "s.lowpoly.lowpoly.mutation.unwrap-uv": {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️unwrap-uv/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "UnwrapUv": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "41988aff8f3d24f1b10f1c1e99d65a8f421c7cff48206d9055970976d5ca961e"
+      }
+    },
+    "s.procedural.generation2d.mutation.clear-generation-value": {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽clear-generation-value/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ClearGenerationValue": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "c5abb849906de865a8b138ae9647af0b5834be5d4a105137c6c06174f94264ba"
+      }
+    },
+    "s.procedural.generation3d.mutation.clear-generation-value": {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽clear-generation-value/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ClearGenerationValue": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "f2538aac9f0c0ea6629f80faf69ce19d9fd5c6999f6cec33e51698c3f01dd098"
+      }
+    },
+    "s.stdio.svg.1.1.tiny.mutation.insert-excluded-element": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🧬️schema/🧬️mutations/📥insert-excluded-element/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "InsertExcludedElement": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.svg.1.1.base"
+      ],
+      "hashes": {
+        "🔣️.json": "194c9ddc3493f1ef39aa1f1058a71bd44d8484a18bd19df12a762821f8eb5b7f"
+      }
+    },
+    "s.stdio.svg.1.1.tiny.mutation.set-excluded-attribute": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🧬️schema/🧬️mutations/🚫set-excluded-attribute/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetExcludedAttribute": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.svg.1.1.base"
+      ],
+      "hashes": {
+        "🔣️.json": "bd3a7a64767516afa03ec1313ec247c1470079fd50965e35b6d6cff7263dba7a"
+      }
+    },
+    "app.animate.presentation.presence.mutation.replace-presence": {
+      "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🧬️mutations/📸️replace-presence/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplacePresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "6ebc32cf37c8c639109f90709587d978653e7238e695b19a7b6b56f7be6c533d"
+      }
+    },
+    "app.dag.dag.config.mutation.replace-config": {
+      "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🔄️replace-config/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "af07f5bd1b53cac4ad37f38bc05ef321c2340470557498f2d4a26371b7a84759"
+      }
+    },
+    "app.forms.forms.config.mutation.replace-config": {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/📸️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "1020b8e030f9f893d93a3f87209e4147ca1818963f31e6227b2e728cedcc0c63"
+      }
+    },
+    "app.imperative.imperative.config.mutation.replace-config": {
+      "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/📸️replace-config/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "6c5db7a907a4b60a43c69e7c030c4570833b4ed85b86e43fb351a1ba0435658c"
+      }
+    },
+    "app.playbook.playbook.config.mutation.replace-config": {
+      "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/📸️replace/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "8e09792af335fb90505bc144887eef91025a7b1d6aa551e928db944041b475bf"
+      }
+    },
+    "app.shooting.shooting.config.mutation.replace-config": {
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/📸️replace-config/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "e9b4b07e698d7ae9b14c4c7c189ced5c2d6d3f2ad3f0ef499d549a0a56caff38"
+      }
+    },
+    "s.stdio.svg.1.1.tiny.mutation.restore-non-tiny": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🧬️schema/🧬️mutations/♻️restore-non-tiny/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RestoreNonTiny": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.svg.1.1.base"
+      ],
+      "hashes": {
+        "🔣️.json": "6214955ff62c5f110998a28045ab77851c9255d3eff1d9a79ecc6dc08b696bbc"
+      }
+    },
+    "s.wfc.wfc2d.1.any.config.mutation.replace-config": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🔄️replace-config/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "cfeb69603841ff1d78fb78b5998393d1b4a68e49e023655249f834a572506d0f"
+      }
+    },
+    "s.wfc.wfc3d.1.any.config.mutation.replace-config": {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🔄️replace-config/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "c83b9d35da6e25dc5fd68ff65819914410a307fe0ae61460f3ec21ca2e5a64d7"
       }
     }
   }

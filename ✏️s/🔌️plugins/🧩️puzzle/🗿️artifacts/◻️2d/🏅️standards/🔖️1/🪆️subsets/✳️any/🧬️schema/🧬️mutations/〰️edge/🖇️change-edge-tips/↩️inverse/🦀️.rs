@@ -1,5 +1,5 @@
-//! ↩️ Inverse for `ChangeEdgeTips` — restores the BASE field value on the addressed edge. Missing
 //! target ⇒ `Vec::new()`.
+//! ↩️ Inverse for `ChangeEdgeTips` — restores the BASE field value on the addressed edge. Missing
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Inverse

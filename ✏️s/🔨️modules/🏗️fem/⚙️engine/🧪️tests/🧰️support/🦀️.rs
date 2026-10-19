@@ -1,7 +1,37 @@
-//! 🧪️ Retained numerical payload projection, borrowed-outcome observation and close accounting shared by the fem
 //! engine crates' native contract tests (a dev-dependency only).
+//! 🧪️ Retained numerical payload projection, borrowed-outcome observation and close accounting shared by the fem
 
-use semio_framework_job::{Generation, InteractiveJob, InteractiveJobCloseStep, OriginalTurnFailure, JobOutcomeBorrow, JobPayloadStream, Operation, OperationId, RetainedCloneGrant, RetainedCloneProgress, RetainedJobPayload, RetainedJobPayloadWriter, RevisionId, StepBudget, StepContext, JOB_PAYLOAD_PAGE_BYTES};
+use semio_framework_job::Generation;
+
+use semio_framework_job::InteractiveJob;
+
+use semio_framework_job::InteractiveJobCloseStep;
+
+use semio_framework_job::OriginalTurnFailure;
+
+use semio_framework_job::JobOutcomeBorrow;
+
+use semio_framework_job::JobPayloadStream;
+
+use semio_framework_job::Operation;
+
+use semio_framework_job::OperationId;
+
+use semio_framework_job::RetainedCloneGrant;
+
+use semio_framework_job::RetainedCloneProgress;
+
+use semio_framework_job::RetainedJobPayload;
+
+use semio_framework_job::RetainedJobPayloadWriter;
+
+use semio_framework_job::RevisionId;
+
+use semio_framework_job::StepBudget;
+
+use semio_framework_job::StepContext;
+
+use semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
 use semio_framework_value::RetirementDemand;
 
 /// 🎟️ The wallet one observed test step may spend.
@@ -147,7 +177,7 @@ pub fn checkpoint_payload(operation: Operation, pages: &[Vec<u8>]) -> RetainedJo
 }
 
 /// 🧮️ Drives a close ladder to completion and reports (retired bytes, every turn exact, every turn bounded, complete).
-pub fn accounted_close<C>(owner: &mut C, step: impl Fn(&mut C) -> InteractiveJobCloseStep, physical: impl Fn(&C) -> usize) -> (usize, bool, bool, bool) {
+pub fn accounted_close<C>(owner: &mut C, mut step: impl FnMut(&mut C) -> InteractiveJobCloseStep, physical: impl Fn(&C) -> usize) -> (usize, bool, bool, bool) {
     let (mut retired, mut exact, mut bounded, mut complete) = (0, true, true, false);
     for _ in 0..10_000 {
         let before = physical(owner);
@@ -181,3 +211,39 @@ macro_rules! fixture {
         ::std::sync::LazyLock::new(|| ::std::fs::read_to_string(::std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join($path)).expect(concat!("committed fixture ", $path)))
     };
 }
+
+/// 🎟️ A finite native numerical source owns its original caller and decoder through every child lifetime.
+pub struct OriginalNumericalFixture{caller:semio_framework_job::OriginalJobFixtureCaller,decoder:semio_framework_job::OriginalJobDecodeOwner}
+impl OriginalNumericalFixture{
+    pub const STOCK:RetainedCloneGrant=RetainedCloneGrant{maximum_items:100_000_000,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:128};
+    pub fn new(operation:Operation)->Self{Self{caller:semio_framework_job::OriginalJobFixtureCaller::admit(operation.operation,operation.generation,Self::STOCK,||Some(0),u64::MAX,100_000_000),decoder:semio_framework_job::OriginalJobDecodeOwner::empty()}}
+    pub fn receipt(&self)->RetainedCloneProgress{self.caller.receipt()}
+    pub fn remaining_grant(&self)->RetainedCloneGrant{self.caller.remaining_grant()}
+    pub fn cancel(&self){self.caller.cancel().cancel_now()}
+    pub fn turn<T>(&mut self,grant:RetainedCloneGrant,fuel:u64,deadline:u64,run:impl FnOnce(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->Result<T,OriginalTurnFailure>{
+        let remaining=self.caller.remaining_grant();let grant=RetainedCloneGrant{maximum_items:grant.maximum_items.min(remaining.maximum_items),maximum_copy_bytes:grant.maximum_copy_bytes.min(remaining.maximum_copy_bytes),maximum_capacity_bytes:grant.maximum_capacity_bytes.min(remaining.maximum_capacity_bytes),maximum_release_bytes:grant.maximum_release_bytes.min(remaining.maximum_release_bytes),maximum_depth:grant.maximum_depth.min(remaining.maximum_depth)};
+        let mut result=None;self.caller.turn_with_decoder(grant,&mut self.decoder,|cx|cx.with_original_work_loan(fuel,deadline,|cx|{result=Some(run(cx)?);Ok(())}))?;Ok(result.expect("actual numerical callback retained its result"))
+    }
+    pub fn close_turn(&mut self,job:&mut impl InteractiveJob,grant:RetainedCloneGrant)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{self.turn(grant,1,u64::MAX,|cx|cx.with_original_retirement(|cx|job.close_step(cx)))}
+    pub fn close(&mut self,job:&mut impl InteractiveJob){job.begin_close();for _ in 0..10_000_000{if job.terminal_is_empty(){return}let grant=close_grant(job_close_demand(job));let step=self.close_turn(job,grant).expect("same original numerical close");assert!(!matches!(step,InteractiveJobCloseStep::Blocked));}panic!("same original numerical close stalled")}
+    pub fn step_seen(&mut self,job:&mut impl InteractiveJob,grant:RetainedCloneGrant,fuel:u64,deadline:u64)->Seen{self.turn(grant,fuel,deadline,|cx|Ok(seen_of(job.step(cx)))).expect("same original numerical observation")}
+    pub fn payload_from_pages(&mut self,stream:JobPayloadStream,pages:&[Vec<u8>])->RetainedJobPayload{
+        let mut writer=None;
+        self.turn(TEST_GRANT,1,u64::MAX,|cx|{writer=RetainedJobPayloadWriter::new_funded(stream,cx)?;Ok(())}).expect("original writer header birth");
+        assert!(writer.is_some());
+        for page in pages{
+            assert!(self.turn(TEST_GRANT,1,u64::MAX,|cx|writer.as_mut().unwrap().begin_staged_page_funded(cx).map_err(Into::into)).expect("original staged page birth"));
+            assert!(self.turn(TEST_GRANT,1,u64::MAX,|cx|writer.as_mut().unwrap().write_staged_source_funded(cx,page.as_slice(),0).map_err(Into::into)).expect("original staged source copy"));
+            assert!(self.turn(TEST_GRANT,1,u64::MAX,|cx|writer.as_mut().unwrap().commit_staged_page_funded(cx,0).map_err(Into::into)).expect("original staged page commit"));
+        }
+        let mut output=None;
+        assert!(self.turn(TEST_GRANT,1,u64::MAX,|cx|RetainedJobPayloadWriter::finish_funded(&mut writer,&mut output,cx).map_err(Into::into)).expect("original writer output handoff"));
+        output.unwrap()
+    }
+    pub fn close_payload(&mut self,payload:&mut RetainedJobPayload){while !payload.terminal_is_empty(){let demand=payload.retirement_demands().expect("original payload close quote");self.turn(close_grant(demand),1,u64::MAX,|cx|semio_framework_job::close_original_retained_step(cx,demand,|grant|payload.close_step(grant))).expect("same original payload close");}}
+    pub fn close_writer(&mut self,writer:&mut RetainedJobPayloadWriter){writer.begin_close();while !writer.terminal_is_empty(){let demand=writer.retirement_demands().expect("original writer close quote");self.turn(close_grant(demand),1,u64::MAX,|cx|semio_framework_job::close_original_retained_step(cx,demand,|grant|writer.close_step(grant))).expect("same original writer close");}}
+    pub fn finish(mut self){while !self.decoder.terminal_is_empty(){let grant=self.caller.remaining_grant();self.caller.turn(grant,|cx|semio_framework_job::close_original_retained_step(cx,self.decoder.retirement_demands(grant.maximum_copy_bytes)?,|grant|self.decoder.close_step(grant))).expect("original numerical decoder return");}self.caller.retire(Self::STOCK);}
+}
+
+/// 🔬️ Measures actual caller-thread allocations and releases without constructing an observer backing.
+pub fn observe_original_numerical_allocations<T>(run:impl FnOnce()->T)->(T,(usize,usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(run);assert!(!heap.overflowed);(value,(heap.requested_bytes,heap.released_bytes,heap.requested_bytes.max(heap.largest_release_bytes)))}

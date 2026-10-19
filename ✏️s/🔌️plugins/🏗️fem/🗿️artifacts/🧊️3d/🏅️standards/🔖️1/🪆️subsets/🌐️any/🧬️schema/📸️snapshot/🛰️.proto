@@ -23,3 +23,25 @@ message Fem3dSnapshot {
   FemAnalysisSettings analysis = 9;
 }
 
+
+// 🧱️ Complete domain records referenced by snapshots, mutations and diffs.
+enum FemDof { Tx = 0; Ty = 1; Tz = 2; Rx = 3; Ry = 4; Rz = 5; }
+message FemMaterial { string id = 1; string name = 2; double e = 3; double nu = 4; double rho = 5; double g = 6; }
+message FemSection { string id = 1; string name = 2; double area = 3; double iy = 4; double iz = 5; double j = 6; }
+message FemSupport { string id = 1; string node_id = 2; repeated FemDof fixed = 3; }
+message FemLoadCase { string id = 1; string name = 2; repeated FemLoad loads = 3; bool self_weight = 4; }
+message FemNodalLoad { string id = 1; string node_id = 2; FemDof dof = 3; double value = 4; }
+message FemMemberLoad { string id = 1; string element_id = 2; double wx = 3; double wy = 4; double wz = 5; }
+message FemAreaLoad { string id = 1; string solid_id = 2; double pressure = 3; }
+message FemLoad { oneof kind { FemNodalLoad nodal = 1; FemMemberLoad member_udl = 2; FemAreaLoad area = 3; } }
+message FemPoint2 { double x = 1; double y = 2; }
+message FemRing { repeated FemPoint2 points = 1; }
+message FemBar { string id = 1; string start = 2; string end = 3; string material_id = 4; string section_id = 5; }
+message FemNode { string id = 1; double x = 2; double y = 3; double z = 4; }
+message FemFrame { string id = 1; string start = 2; string end = 3; string material_id = 4; string section_id = 5; double roll = 6; }
+message FemElement { oneof kind { FemBar bar = 1; FemFrame frame = 2; } }
+enum FemAxis { x = 0; y = 1; z = 2; }
+message FemSolid { string id = 1; string name = 2; repeated FemPoint2 outline = 3; repeated FemRing holes = 4; double base_z = 5; double height = 6; uint64 layers = 7; double mesh_size = 8; string material_id = 9; FemAxis axis = 10; }
+message FemCombination { string id = 1; string name = 2; map<string,double> terms = 3; }
+
+message FemAnalysisSettings { uint64 modal_count = 1; uint64 buckling_count = 2; double deformation_scale = 3; }

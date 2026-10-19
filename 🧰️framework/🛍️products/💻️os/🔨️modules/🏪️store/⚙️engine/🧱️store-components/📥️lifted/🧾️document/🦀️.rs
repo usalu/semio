@@ -20,8 +20,7 @@ pub fn now_iso() -> String {
 /// stays_valid_once_the_sender_s_own_checkpoint_snapshot_arrives`'s doc comment warns against.
 pub async fn uncommitted_edit_ids<P, Mutation, I, S>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: I) -> Vec<String>
 where
-    Mutation: Clone,
-    P: Clone,
+    
     I: IntoIterator<Item = S>,
     S: AsRef<str>,
 {

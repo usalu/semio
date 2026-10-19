@@ -173,6 +173,7 @@ impl<M: MemberFactory> MemberFactorySelection<M> {
 }
 
 impl<M: MemberFactory> ErasedSnapshotRetirement for MemberFactorySelection<M> {
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.retirement_demands(body) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if grant.maximum_items != 0 && grant.maximum_depth >= self.next_depth_demand()? { self.closing = true; self.selected = None; }
         close_owner(&mut self.input, grant)
@@ -235,6 +236,7 @@ impl<M: MemberFactory> SelectedMemberHistoryInput<M> {
 }
 
 impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedMemberHistoryInput<M> {
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.retirement_demands(body) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if grant.maximum_items != 0 && grant.maximum_depth >= self.next_depth_demand()? { self.closing = true; }
         close_owner(&mut self.input, grant)
@@ -276,6 +278,7 @@ impl<M: MemberFactory> SelectedMemberHistoryDictionary<M> {
 }
 
 impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedMemberHistoryDictionary<M> {
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.retirement_demands(body) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         close_owner(&mut self.owner, grant)
     }
@@ -335,6 +338,7 @@ impl<M: MemberFactory> SelectedVerifiedMemberHistory<M> {
 }
 
 impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedVerifiedMemberHistory<M> {
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.retirement_demands(body) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         close_owner(&mut self.input, grant)
     }

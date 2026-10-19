@@ -29,6 +29,44 @@ fn oracle_scalar_cells(c: char) -> u8 {
     c.width().map_or(0, |width| width.min(2) as u8)
 }
 
+#[test]
+fn physical_probe_strings_have_independent_unicode_widths() {
+    let fixture = parse(include_str!("../../🧫️fixtures/📏️text-width/🪟️console/🔣️.json"), JsonMemberPolicy::Reject).unwrap();
+    let samples = fixture.as_object().unwrap().get("cases").unwrap().as_array().unwrap();
+    for case in samples {
+        let object = case.as_object().unwrap();
+        let text = object.get("text").unwrap().as_str().unwrap();
+        let scalar = object.get("scalarText").unwrap().as_str().unwrap();
+        let oracle: u16 = scalar.chars().map(|c| u16::from(oracle_scalar_cells(c))).sum();
+        assert_eq!(oracle, object.get("scalarCells").unwrap().as_u64().unwrap() as u16);
+        assert_eq!(text.width(), object.get("clusterCells").unwrap().as_u64().unwrap() as usize);
+        assert_eq!(scalar.chars().map(|c| u16::from(char_cells(c))).sum::<u16>(), oracle);
+        assert_eq!(display_width(text), text.width() as u16);
+    }
+}
+
+#[test]
+fn physical_windows_scalar_profile_matches_the_console_oracle() {
+    let fixture = parse(include_str!("../../🧫️fixtures/📏️text-width/🪟️console/🔣️.json"), JsonMemberPolicy::Reject).unwrap();
+    for case in fixture.as_object().unwrap().get("cases").unwrap().as_array().unwrap() {
+        let object = case.as_object().unwrap();
+        let text = object.get("scalarText").unwrap().as_str().unwrap();
+        let expected = object.get("windowsScalarCells").unwrap().as_u64().unwrap() as u16;
+        assert_eq!(display_width_in(text, WidthMode::WindowsConsole), expected, "{}", object.get("id").unwrap().as_str().unwrap());
+        for budget in 1..=expected {
+            let size = Size { width: budget + 2, height: 1 };
+            let mut buffer = CellBuffer::new(size, Cell::blank([1, 2, 3], [4, 5, 6]));
+            buffer.set_width_mode(WidthMode::WindowsConsole);
+            let clipped = elide_in(text, budget, Elision::End, ELLIPSIS, WidthMode::WindowsConsole);
+            let consumed = buffer.put_str(Pos { x: 1, y: 0 }, &clipped, [1, 2, 3], [4, 5, 6], 0, Rect::new(1, 0, budget, 1));
+            assert!(consumed <= budget);
+            assert_eq!(buffer.get(0, 0).unwrap().ch, ' ');
+            assert_eq!(buffer.get(budget + 1, 0).unwrap().ch, ' ');
+        }
+    }
+    set_active_width_mode(WidthMode::Cluster);
+}
+
 fn oracle_ranges(predicate: impl Fn(char) -> bool) -> Vec<(u32, u32)> {
     let mut out: Vec<(u32, u32)> = Vec::new();
     for codepoint in 0..=0x10ffffu32 {

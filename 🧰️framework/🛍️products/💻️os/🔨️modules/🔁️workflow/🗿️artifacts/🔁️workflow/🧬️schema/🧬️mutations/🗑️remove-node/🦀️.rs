@@ -16,6 +16,17 @@ pub struct RemoveNode {
 //#region ⚙️Semantics
 impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for RemoveNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "workflow", kind: "remove-node", record: "RemovedWorkflowNode" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove workflow node {}", self.node_id), &format!("Arbeitsablaufknoten {} entfernen", self.node_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["nodes".into(), self.node_id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<WorkflowSnapshot, WorkflowMutation> for RemoveNode {
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
         protocol::MutationOutcome::new(WorkflowDiff::RemoveNode { node_id: self.node_id.clone() })
     }
@@ -34,11 +45,5 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for RemoveNode {
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove workflow node {}", self.node_id), &format!("Arbeitsablaufknoten {} entfernen", self.node_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["nodes".into(), self.node_id.clone()]
-    }
 }
 //#endregion ⚙️Semantics

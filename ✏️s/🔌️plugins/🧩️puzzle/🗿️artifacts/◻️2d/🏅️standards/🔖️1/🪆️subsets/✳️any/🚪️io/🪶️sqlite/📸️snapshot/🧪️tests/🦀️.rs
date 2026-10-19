@@ -89,7 +89,12 @@ fn sqlite_snapshot_puzzle2d_play_admits_exact_semantic_rows_and_physical_output_
  let expected=snapshot();let play=<crate::Puzzle2dPlaySnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack::snapshot::ArtifactPack::encode_pack(&expected)).unwrap();let limits=SqliteDatabaseLimits::default();
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let output=original_owners::with_encoding(|native_owner|play.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap();let bytes=match &output{store::io_schema::IoPayload::Binary(value)=>value.len(),store::io_schema::IoPayload::Text(value)=>value.len()};assert!(original_owners::with_encoding(|native_owner|play.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_rows:42,max_file_bytes:bytes,..limits}), native_owner)).is_ok());for restricted in[SqliteDatabaseLimits{max_rows:41,..limits},SqliteDatabaseLimits{max_file_bytes:bytes-1,..limits},SqliteDatabaseLimits{max_value_bytes:1,..limits}]{assert!(original_owners::with_encoding(|native_owner|play.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,restricted), native_owner)).is_err());assert!(<crate::Puzzle2dPlaySnapshot as ArtifactSqliteSnapshotHost>::original_owners::with_decoding(|native_owner|decode_sqlite_snapshot_native(&output,&mut SqliteSnapshotControl::new(&mut |_|true,restricted), native_owner)).is_err());}assert!(original_owners::with_encoding(|native_owner|play.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|false,limits), native_owner)).is_err());}
 }
-use semio_framework_plugin::{PluginApp,VcsArtifactApp,EditorApp,ViewerApp,__semio_dispatch_PluginApp,plugin_app_close_prelude::*};
+use semio_framework_plugin::PluginApp;
+use semio_framework_plugin::VcsArtifactApp;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::ViewerApp;
+use semio_framework_plugin::__semio_dispatch_PluginApp;
+use semio_framework_plugin::plugin_app_close_prelude::*;
 semio_framework_dispatch_macros::dyn_enum_close!{
  /// 🎲️ The actual Puzzle editor and viewer app roster.
  enum SqliteApps:PluginApp{

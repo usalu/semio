@@ -1,0 +1,33 @@
+{
+  "topics": [
+    { "id": "energy", "emoji": "⚡", "title": { "en": "Energy", "de": "Energie" }, "quizzes": ["physics", "ventilation", "heating", "cooling", "demand"] },
+    { "id": "parametric", "emoji": "📐", "title": { "en": "Parametrics", "de": "Parametrik" }, "quizzes": [] },
+    { "id": "grasshopper", "emoji": "🦗", "title": { "en": "Grasshopper", "de": "Grasshopper" }, "quizzes": [] },
+    { "id": "excel", "emoji": "📊", "title": { "en": "Excel", "de": "Excel" }, "quizzes": [] },
+    { "id": "bim", "emoji": "🏗️", "title": { "en": "Building Information Modelling", "de": "Building Information Modelling" }, "quizzes": [] },
+    { "id": "optimization", "emoji": "🎯", "title": { "en": "Optimization", "de": "Optimierung" }, "quizzes": [] }
+  ],
+  "reserved": ["home", "identity", "introduction", "learner", "intro", "board", "badges", "prefs", "quizzes", "run", "results"],
+  "viewRejected": [
+    { "id": "empty-topics", "path": ["topics"], "value": [] },
+    { "id": "missing-topic-language", "path": ["topics", "0", "title"], "value": { "en": "Energy" } },
+    { "id": "empty-topic-emoji", "path": ["topics", "0", "emoji"], "value": "" },
+    { "id": "topic-membership-type", "path": ["topics", "0", "quizzes"], "value": "physics" },
+    { "id": "empty-membership-id", "path": ["topics", "0", "quizzes"], "value": [""] },
+    { "id": "missing-course-language", "path": ["title"], "value": { "de": "Architektur" } },
+    { "id": "foreign-topic-property", "path": ["topics", "0", "extra"], "value": true },
+    { "id": "foreign-course-property", "path": ["extra"], "value": true },
+    { "id": "invalid-task-kind", "path": ["quizzes", "0", "tasks", "0", "kind"], "value": "essay" },
+    { "id": "invalid-badge-title", "path": ["badges", "0", "label"], "value": 0 },
+    { "id": "invalid-introduction", "path": ["introduction", "paragraphs"], "value": [] }
+  ],
+  "rejected": [
+    { "id": "unknown-quiz", "topic": 0, "property": "quizzes", "value": ["unknown"], "path": "/topics/0/quizzes/0", "code": "quiz-unknown" },
+    { "id": "repeated-quiz", "topic": 1, "property": "quizzes", "value": ["physics"], "path": "/topics/1/quizzes/0", "code": "duplicate-id" },
+    { "id": "repeated-topic", "topic": 1, "property": "id", "value": "energy", "path": "/topics/1/id", "code": "duplicate-id" },
+    { "id": "quiz-topic-collision", "topic": 1, "property": "id", "value": "physics", "path": "/topics/1/id", "code": "value-invalid" },
+    { "id": "root-topic-collision", "topic": 1, "property": "id", "value": "board", "path": "/topics/1/id", "code": "value-invalid" },
+    { "id": "quizzes-topic-collision", "topic": 1, "property": "id", "value": "quizzes", "path": "/topics/1/id", "code": "value-invalid" },
+    { "id": "missing-quiz-owner", "topic": 0, "property": "quizzes", "value": ["physics", "heating", "cooling"], "path": "/topics", "code": "quiz-count-mismatch" }
+  ]
+}

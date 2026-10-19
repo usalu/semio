@@ -1,0 +1,8 @@
+[package]
+name="owned-dependency"
+version="0.1.0"
+edition.workspace=true
+[lib]
+path="🦀️.rs"
+[target.'cfg(windows)'.dev-dependencies]
+independent-observer={workspace=true}

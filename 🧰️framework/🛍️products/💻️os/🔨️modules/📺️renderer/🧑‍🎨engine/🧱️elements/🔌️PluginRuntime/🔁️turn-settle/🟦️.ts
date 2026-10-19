@@ -376,8 +376,10 @@ export async function settlePluginTurn(actorId: string, initial: WireTurnResult,
   const acknowledge = async (result: WireTurnResult): Promise<readonly ShardEventEnvelope[]> => {
     activation?.assertActive();
     retainTurnPresence(result);
+    await call?.accept(result.effects);
     const accepted = await acceptPatches?.(result) ?? [];
     if (!isPluginPatchAcceptance(accepted)) return [...accepted, ...typedOperationAcknowledgements(result)];
+    for (const turn of accepted.turns) await call?.accept(turn.effects);
     results.push(...accepted.turns);
     return [...accepted.acknowledgements, ...typedOperationAcknowledgements(result), ...accepted.turns.flatMap(typedOperationAcknowledgements)];
   };
@@ -435,7 +437,7 @@ export async function settlePluginTurn(actorId: string, initial: WireTurnResult,
   };
 }
 export async function settleAcknowledgedPluginTurns(actorId: string, results: readonly WireTurnResult[], acknowledgements: readonly ShardEventEnvelope[], acceptPatches?: (result: WireTurnResult) => PluginPatchAcceptance | Promise<PluginPatchAcceptance>, activation?: ShardActorActivationLease, call?: TypedOperationCall): Promise<WireTurnResult> {
-  for (const settled of results) retainTurnPresence(settled);
+  for (const settled of results) { retainTurnPresence(settled); await call?.accept(settled.effects); }
   const initial: WireTurnResult = {
     uiPatches: [],
     effects: [],

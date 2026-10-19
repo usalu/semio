@@ -28,6 +28,7 @@ impl<T:RetireOwned+Sync> Drop for OriginalErasedReadSource<T>{fn drop(&mut self)
 struct Cursor<S:Send+'static>{original:ManuallyDrop<S>}
 fn unsupported()->ValueError{ValueError::literal(ValueRefusalKind::UnsupportedOwner,"standalone read registry graph still exposes raw Arc/Weak authority; original read remains retained")}
 impl<S:Send+'static> RetirementCursor for Cursor<S>{
+ fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Err(unsupported())}
  fn close_step(&mut self,_grant:RetainedCloneGrant)->RetirementStep{RetirementStep::Failure(unsupported())}
  fn terminal_is_empty(&self)->bool{false}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Err(unsupported())}

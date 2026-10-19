@@ -1,7 +1,9 @@
-use crate::{solve_linear_static, Elements, Model};
+use crate::solve_linear_static;
+use crate::Elements;
+use crate::Model;
 use semio_s_fem_algebra::*;
-use semio_s_fem_model::*;
-use semio_s_fem_elements3d::*;
+use semio_s_fem_algebra::*;
+use semio_s_fem_algebra::*;
 
 fn fixture_number(value: &serde_json::Value, field: &str) -> f64 {
     value[field].as_f64().unwrap_or_else(|| panic!("{field} fixture number"))
@@ -89,7 +91,11 @@ fn frame3_y_plane_mass_and_geometric_blocks_carry_the_theta_y_sign_flip() {
     let l = 3.0;
     let z = [1usize, 5, 7, 11];
     let y = [2usize, 4, 8, 10];
-    for matrix in [frame.local_mass(l), frame.local_geometric_stiffness(l, -1.0e4)] {
+    let mut geometric = MatD::zeros(12, 12);
+    for row in 0..12 {
+        for column in 0..12 { geometric.set(row, column, frame3_local_geometric_cell(l, -1.0e4, row, column)); }
+    }
+    for matrix in [frame.local_mass(l), geometric] {
         for (bi, (&gz, &gy)) in z.iter().zip(y.iter()).enumerate() {
             for (bj, (&hz, &hy)) in z.iter().zip(y.iter()).enumerate() {
                 let expected = Y_PLANE_SIGN[bi] * Y_PLANE_SIGN[bj] * matrix.get(gz, hz);
@@ -306,3 +312,31 @@ fn bar3_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric(
         assert!(f.get(i).abs() < 1e-6, "rigid-body geometric force[{i}] = {}", f.get(i));
     }
 }
+
+/// 🪨️ Fixed tetrahedral recovery matches the cold tensors and NumPy deformation energy.
+#[test]
+fn mounted_tetrahedral_stress_matches_numpy_energy_without_scratch_owners() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧱️elements3d/🧪️tests/🧫️fixtures/🧱️mounted-stiffness/🔣️.json")).unwrap();
+    let case = fixture["cases"].as_array().unwrap().iter().find(|case| case["kind"] == "tet4").unwrap();
+    let positions: [[f64; 3]; 4] = std::array::from_fn(|node| std::array::from_fn(|axis| case["positions"][node][axis].as_f64().unwrap()));
+    let displacement: [f64; 12] = std::array::from_fn(|index| case["displacement"][index].as_f64().unwrap());
+    let tetrahedron = Tet4 { id: "tet".into(), nodes: std::array::from_fn(|index| format!("node{index}")), e: case["properties"]["e"].as_f64().unwrap(), nu: case["properties"]["nu"].as_f64().unwrap(), density: 0.0 };
+    let stress = tetrahedron.mounted_recover_stress(&positions, &displacement).unwrap();
+    let context = ElementContext { positions: positions.to_vec() };
+    let local = VecD::from_vec(displacement.to_vec());
+    let ElementResult::Solid { gauss } = tetrahedron.recover(&context, &local, None) else { unreachable!() };
+    let actual = [stress.sxx, stress.syy, stress.szz, stress.sxy, stress.syz, stress.sxz, stress.von_mises];
+    let cold = gauss[0];
+    let expected = [cold.sxx, cold.syy, cold.szz, cold.sxy, cold.syz, cold.sxz, cold.von_mises];
+    for axis in 0..7 { assert!((actual[axis] - expected[axis]).abs() < 1e-9 * expected[axis].abs().max(1.0)); }
+    let strain = solid_b_matrix(&Tet4::gradients(&context)).mul_vec(&local);
+    let energy = (0..6).map(|axis| strain.get(axis) * actual[axis]).sum::<f64>() * Tet4::volume(&context);
+    let mut reference = 0.0;
+    for row in 0..12 { for column in 0..12 { reference += displacement[row] * case["matrix"][row * 12 + column].as_f64().unwrap() * displacement[column]; } }
+    eprintln!("[DEBUG] fixed Tet4 vonMises={} energy={energy} NumPy={reference}", stress.von_mises);
+    assert!((energy - reference).abs() < 1e-9 * reference.abs().max(1.0));
+    assert!((energy - case["strainEnergy"].as_f64().unwrap()).abs() < 1e-9 * energy.abs());
+    assert!(tetrahedron.mounted_recover_stress(&[[0.0; 3]; 4], &displacement).is_none());
+}
+#[path = "../../../🧱️elements3d/🧪️tests/🌀️geometric-cells/🦀️.rs"]
+mod geometric_cells;

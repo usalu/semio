@@ -1,5 +1,5 @@
-//! 📄️ Fem2d play app panel — the artifact tree (outliner): every document entity as one row, in the
 //! order an engineer builds a model (geometry, then restraints, then actions, then the properties
+//! 📄️ Fem2d play app panel — the artifact tree (outliner): every document entity as one row, in the
 //! they reference, then the analysis settings).
 //!
 //! 🕹️ The tree is bound to the framework-owned `"fem2d"` interaction domain and every row's key is
@@ -32,8 +32,8 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structur
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_fem_material::planar::FemMaterialValue;
+use semio_s_fem_node::planar::FemNodeValue;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
@@ -122,7 +122,7 @@ fn dof_symbol(dof: FemDof, labels: &Fem2dLabels) -> &'static str {
     }
 }
 
-pub fn fem2d_node_label(node: &FemNode) -> String {
+pub fn fem2d_node_label(node: &FemNodeValue) -> String {
     format!("{} · ({}, {})", node.id, fem2d_coordinate(node.x), fem2d_coordinate(node.y))
 }
 
@@ -180,7 +180,7 @@ pub fn fem2d_combination_label(combination: &FemCombination) -> String {
 /// 🧱️ `E` in gigapascals — the unit an engineer reads a stiffness in, never the raw 2.1e11 Pa. The
 /// quantity symbols (`E`, `A`, `Iy`) are ISO notation, identical in every locale, so they are not
 /// label rows: `labels.youngs_modulus` names the same quantity where a row has room to spell it.
-pub fn fem2d_material_label(material: &FemMaterial) -> String {
+pub fn fem2d_material_label(material: &FemMaterialValue) -> String {
     format!("{} · E {} GPa", material.name, fem2d_scalar(material.e / 1e9))
 }
 
@@ -210,7 +210,8 @@ pub fn fem2d_analysis_description(document: &Fem2dSnapshot, labels: &Fem2dLabels
 /// incident, and this ticket's first browser probe), and focus and delete live in the inspector for
 /// the same reason. A clipped label keeps a pathological name from refusing the whole render.
 fn entity_item(id: &str, granularity: &str, label: &str, description: &LabelText, icon: &str, dimmed: bool) -> UiAssemblyResult<ui::TreeItemBuilder> {
-    let item = ui::tree_item(UiLabel(UiText::clipped(label))).try_id(id).map_err(|_| capacity_error("fem2d artifact row id admission failed"))?;
+    let target = if granularity == FEM2D_GRANULARITY_LOAD { id.to_string() } else { semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_entity_target_id(granularity, id).map_err(|_| capacity_error("fem2d artifact identity admission failed"))? };
+    let item = ui::tree_item(UiLabel(UiText::clipped(label))).try_id(&target).map_err(|_| capacity_error("fem2d artifact row id admission failed"))?;
     Ok(item.icon(icon_text(icon)?).description(UiText::clipped(description.as_str())).dimmed(dimmed).granularity(granularity_text(granularity)?))
 }
 
@@ -311,8 +312,9 @@ pub fn build_artifact_tree(document: &Fem2dSnapshot, interaction: &Fem2dInteract
             |case| {
                 let dimmed = case.loads.is_empty() && !case.self_weight;
                 let item = entity_item(&case.id, FEM2D_GRANULARITY_LOAD_CASE, &fem2d_load_case_label(case, labels), &labels.load_case, "list", dimmed)?;
-                tree_window_item(windows, item, &case.id, true, &case.loads, |load| {
-                    entity_row(load_id(load), FEM2D_GRANULARITY_LOAD, &fem2d_load_label(load, labels), &labels.load, "arrow-down", load_is_dangling(document, load))
+                let target = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_entity_target_id(FEM2D_GRANULARITY_LOAD_CASE, &case.id).map_err(|_| capacity_error("fem2d artifact case identity admission failed"))?;
+                tree_window_item(windows, item, &target, true, &case.loads, |load| {
+                    entity_row(&semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_load_target_id(&case.id, load_id(load)).map_err(|_| capacity_error("fem2d artifact load identity admission failed"))?, FEM2D_GRANULARITY_LOAD, &fem2d_load_label(load, labels), &labels.load, "arrow-down", load_is_dangling(document, load))
                 })
             },
             placeholder.clone(),
@@ -326,7 +328,8 @@ pub fn build_artifact_tree(document: &Fem2dSnapshot, interaction: &Fem2dInteract
             |combination| {
                 let dimmed = combination.terms.iter().any(|term| !document.load_cases.iter().any(|case| case.id == term.case_id));
                 let item = entity_item(&combination.id, FEM2D_GRANULARITY_COMBINATION, &fem2d_combination_label(combination), &labels.combination, "link", dimmed)?;
-                tree_window_item(windows, item, &combination.id, true, &combination.terms, |term| term_row(combination, term, labels))
+                let target = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_entity_target_id(FEM2D_GRANULARITY_COMBINATION, &combination.id).map_err(|_| capacity_error("fem2d artifact combination identity admission failed"))?;
+                tree_window_item(windows, item, &target, true, &combination.terms, |term| term_row(combination, term, labels))
             },
             placeholder.clone(),
         )?

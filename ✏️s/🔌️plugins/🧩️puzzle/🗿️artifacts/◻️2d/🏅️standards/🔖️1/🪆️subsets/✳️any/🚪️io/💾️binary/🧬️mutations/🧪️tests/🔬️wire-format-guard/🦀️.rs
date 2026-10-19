@@ -1,11 +1,19 @@
-//! 🔒️ Byte-level `OpBinary` round-trip guard for the semantic-mutations-overhaul vocabulary
 //! (ticket `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`). The pre-overhaul whole-record-upsert / whole-document-replace wire
+//! 🔒️ Byte-level `OpBinary` round-trip guard for the semantic-mutations-overhaul vocabulary
 //! bytes this guard used to freeze no longer exist — that vocabulary is banned outright, not
 //! preserved — so this now asserts the NEW operations' `OpText`/`OpBinary` round-trip
 //! (`print_op`/`parse_op`, `encode_op`/`decode_op`) instead of pinning byte literals for a wire
 //! shape this ticket deliberately changed.
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
-use crate::standards::v1::subsets::any::schema::mutations::{change_manifest_id,connect_handles,create_node,delete_node,disconnect_handles,drag_selection,move_node,rotate_selection,scale_selection};
+use crate::standards::v1::subsets::any::schema::mutations::change_manifest_id;
+use crate::standards::v1::subsets::any::schema::mutations::connect_handles;
+use crate::standards::v1::subsets::any::schema::mutations::create_node;
+use crate::standards::v1::subsets::any::schema::mutations::delete_node;
+use crate::standards::v1::subsets::any::schema::mutations::disconnect_handles;
+use crate::standards::v1::subsets::any::schema::mutations::drag_selection;
+use crate::standards::v1::subsets::any::schema::mutations::move_node;
+use crate::standards::v1::subsets::any::schema::mutations::rotate_selection;
+use crate::standards::v1::subsets::any::schema::mutations::scale_selection;
 
 use crate::standards::v1::subsets::any::schema::records::Puzzle2dNode;
 use protocol::OpText;

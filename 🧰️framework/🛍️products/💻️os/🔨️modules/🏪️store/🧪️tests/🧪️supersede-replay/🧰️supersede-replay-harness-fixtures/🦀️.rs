@@ -13,8 +13,8 @@ fn fixture_demo_owners()->DocumentStoreOwners<DemoSnapshot,DemoMutation> {
 
 pub(super) async fn fixture_author<P, M>(store: &mut ArtifactStore<P, M>, command: ArtifactCommand<M>) -> Result<CommandReceipt, VcsError>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+    M: semio_framework_os_spr::ColdMutation<P> + Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     let mut observed = 0;
     let mut observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {

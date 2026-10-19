@@ -1,0 +1,27 @@
+{
+  "schema": "framework.os.paged-original-source-custody.v1",
+  "base": {"title": "immutable", "nodes": [{"id": "node-β", "text": "kept"}]},
+  "mutation": {"kind": "set-text", "index": 0, "text": "kept"},
+  "copyBytes": 65536,
+  "capacityBytes": 1048576,
+  "releaseBytes": 1048576,
+  "depth": 4096,
+  "maximumTurns": 10000,
+  "cancelAt": [0, 1, 2, 3, 7, 31, 64],
+  "cases": [
+    {"name": "accepted-original", "refuseEdit": false, "refuseIssuerOnce": false, "expectedMutationCalls": 1, "expectedSnapshotCalls": 1},
+    {"name": "refused-original", "refuseEdit": true, "refuseIssuerOnce": false, "expectedMutationCalls": 1, "expectedSnapshotCalls": 1},
+    {"name": "retry-original-issuer", "refuseEdit": true, "refuseIssuerOnce": true, "expectedMutationCalls": 2, "expectedSnapshotCalls": 1}
+  ],
+  "expected": {
+    "genuineBeforeIdentity": true,
+    "genuineMutationPayloadIdentity": true,
+    "exactIssuerIdentity": true,
+    "deniedGrantCallbacks": 0,
+    "cancelledMutationCalls": 1,
+    "failedSealMutationCalls": 1,
+    "failedSealSnapshotCalls": 1,
+    "returnedOwnersPreserved": true,
+    "terminalDropBytes": 0
+  }
+}

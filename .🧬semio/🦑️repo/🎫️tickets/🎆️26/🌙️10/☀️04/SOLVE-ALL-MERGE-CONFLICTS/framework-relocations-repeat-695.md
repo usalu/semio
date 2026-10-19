@@ -1,0 +1,1230 @@
+# Framework Source Span Relocations
+
+Exact token spans mapped incoming edits into current source owners, preserving current facade dissolution and unmatching caller context changes. No builds, tests, resolver, typechecker, or runtime executed.
+
+{'unmapped': 209, 'mapped': 958, 'already-present': 40}
+
+- 🌎️hub/📇️directory/🧪️tests/🔬️unit/🦀️.rs [1767, 1768]: unmapped 
+- 🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🦀️.rs [381, 397]: unmapped 
+- 🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🦀️.rs [541, 544]: mapped 🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🏠️space-app/🦀️.rs
+- 🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🦀️.rs [545, 547]: mapped 🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🏠️space-app/🦀️.rs
+- 🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🦀️.rs [548, 550]: mapped 🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🏠️space-app/🦀️.rs
+- 🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🦀️.rs [551, 570]: mapped 🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🏠️space-app/🦀️.rs
+- 🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛫️encode/🧪️tests/🦀️.rs [14, 19]: unmapped 
+- 🧰️framework/🔨️modules/⏯️tool-run/🟦️.ts [448, 448]: mapped 🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🟦️.ts
+- 🧰️framework/🔨️modules/⏯️tool-run/🟦️.ts [595, 595]: mapped 🧰️framework/🔨️modules/⏯️tool-run/🔤️codec/🟦️.ts
+- 🧰️framework/🔨️modules/⏯️tool-run/🟦️.ts [613, 615]: mapped 🧰️framework/🔨️modules/⏯️tool-run/🔤️codec/🟦️.ts
+- 🧰️framework/🔨️modules/⏯️tool-run/🟦️.ts [665, 666]: mapped 🧰️framework/🔨️modules/⏯️tool-run/🔤️codec/🟦️.ts
+- 🧰️framework/🔨️modules/⏯️tool-run/🟦️.ts [943, 943]: mapped 🧰️framework/🔨️modules/⏯️tool-run/🔤️codec/🟦️.ts
+- 🧰️framework/🔨️modules/⏯️tool-run/🟦️.ts [944, 944]: mapped 🧰️framework/🔨️modules/⏯️tool-run/🔤️codec/🟦️.ts
+- 🧰️framework/🔨️modules/⏯️tool-run/🟦️.ts [956, 956]: mapped 🧰️framework/🔨️modules/⏯️tool-run/🔤️codec/🟦️.ts
+- 🧰️framework/🔨️modules/⏯️tool-run/🟦️.ts [971, 971]: mapped 🧰️framework/🔨️modules/⏯️tool-run/🔤️codec/🟦️.ts
+- 🧰️framework/🔨️modules/⏯️tool-run/🟦️.ts [981, 981]: mapped 🧰️framework/🔨️modules/⏯️tool-run/🔤️codec/🟦️.ts
+- 🧰️framework/🔨️modules/⏯️tool-run/🟦️.ts [1095, 1095]: mapped 🧰️framework/🔨️modules/⏯️tool-run/🧾️json/🟦️.ts
+- 🧰️framework/🔨️modules/⏯️tool-run/🟦️.ts [1104, 1105]: mapped 🧰️framework/🔨️modules/⏯️tool-run/🧾️json/🟦️.ts
+- 🧰️framework/🔨️modules/⏯️tool-run/🟦️.ts [1119, 1119]: mapped 🧰️framework/🔨️modules/⏯️tool-run/🧾️json/🟦️.ts
+- 🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧪️tests/🟦️.ts [28, 30]: unmapped 
+- 🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🧪️tests/🟦️.ts [14, 15]: unmapped 
+- 🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🧪️tests/🟦️.ts [10, 11]: unmapped 
+- 🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🧪️tests/🟦️.ts [12, 13]: unmapped 
+- 🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts [8, 9]: unmapped 
+- 🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts [10, 11]: unmapped 
+- 🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧪️tests/🟦️.ts [12, 13]: unmapped 
+- 🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🧪️tests/🟦️.ts [8, 10]: unmapped 
+- 🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🧪️tests/🟦️.ts [8, 10]: unmapped 
+- 🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🧪️tests/🟦️.ts [11, 12]: unmapped 
+- 🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧵️layout/🧪️tests/🟦️.ts [12, 13]: unmapped 
+- 🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🟦️.ts [20, 22]: unmapped 
+- 🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🟦️.ts [87, 90]: unmapped 
+- 🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🟦️.ts [109, 110]: unmapped 
+- 🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🟦️.ts [138, 139]: unmapped 
+- 🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🟦️.ts [140, 141]: unmapped 
+- 🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🟦️.ts [152, 153]: unmapped 
+- 🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🟦️.ts [190, 191]: unmapped 
+- 🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🟦️.ts [222, 223]: unmapped 
+- 🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🦀️.rs [9, 9]: mapped 🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🦀️.rs [20, 20]: mapped 🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🦀️.rs [88, 88]: mapped 🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🦀️.rs [95, 97]: mapped 🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🦀️.rs [99, 100]: mapped 🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🦀️.rs [101, 102]: mapped 🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🦀️.rs [104, 105]: mapped 🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🦀️.rs [106, 108]: mapped 🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🦀️.rs [112, 113]: mapped 🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🦀️.rs [16, 17]: mapped 🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🦀️.rs [45, 45]: mapped 🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🦀️.rs [69, 69]: mapped 🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/package.json [36, 37]: unmapped 
+- 🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/🦀️.rs [829, 829]: unmapped 
+- 🧰️framework/🔨️modules/🌱️value/🔁️codec/🦀️.rs [490, 490]: mapped 🧰️framework/🔨️modules/🌱️value/🔁️codec/📦️container-codecs/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared/🦀️.rs [4, 5]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️issuance-clone/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared/🦀️.rs [6, 7]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️issuance-clone/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared/🦀️.rs [8, 9]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️issuance-clone/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared/🦀️.rs [11, 16]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️issuance-clone/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared/🦀️.rs [18, 19]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️issuance-clone/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared/🦀️.rs [20, 21]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️issuance-clone/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared/🦀️.rs [27, 27]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️issuance-clone/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared/🦀️.rs [28, 33]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️issuance-clone/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared/🦀️.rs [39, 39]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️issuance-clone/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔬️unit/🦀️.rs [37, 38]: unmapped 
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔬️unit/🦀️.rs [66, 67]: unmapped 
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [181, 181]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [186, 187]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [191, 195]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [196, 197]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [201, 202]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [208, 209]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [231, 244]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [255, 256]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [278, 288]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [289, 289]: unmapped 
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [292, 293]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [300, 301]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [303, 313]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [314, 314]: unmapped 
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [317, 318]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [325, 326]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [365, 365]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [367, 368]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [372, 373]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [386, 416]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [468, 468]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔢️bounded-ord/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [494, 495]: unmapped 
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [501, 502]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔢️bounded-ord/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [541, 542]: unmapped 
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [548, 549]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔢️bounded-ord/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [661, 663]: unmapped 
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [664, 665]: unmapped 
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [667, 671]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔎️lookup-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [673, 675]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔎️lookup-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [760, 762]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/➕️insert-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [763, 763]: unmapped 
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [774, 775]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/➕️insert-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [962, 970]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/➕️insert-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs [971, 974]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/➕️insert-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [41, 42]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📜️clone-and-cursor-traits/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [56, 56]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📜️clone-and-cursor-traits/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [60, 61]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📜️clone-and-cursor-traits/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [88, 88]: unmapped 
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [156, 157]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔢️scalar-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [236, 237]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧮️array-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [238, 241]: unmapped 
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [242, 244]: unmapped 
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [251, 252]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧮️array-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [256, 258]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧮️array-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [259, 270]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧮️array-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [271, 277]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧮️array-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [278, 283]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧮️array-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [285, 292]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧮️array-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [293, 295]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧮️array-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [296, 307]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧮️array-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [310, 313]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧮️array-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [315, 320]: unmapped 
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [323, 324]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧮️array-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [325, 329]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧮️array-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [331, 335]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧮️array-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [337, 362]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧮️array-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [392, 393]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔤️string-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [430, 431]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔤️string-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [439, 440]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔤️string-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [521, 522]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📚️vec-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [528, 529]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📚️vec-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [537, 538]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📚️vec-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [539, 540]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📚️vec-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [545, 546]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📚️vec-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [547, 548]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📚️vec-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [568, 570]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📚️vec-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [574, 575]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📚️vec-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [611, 611]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📚️vec-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [613, 614]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📚️vec-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [620, 621]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📚️vec-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [726, 727]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🎁️option-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [762, 763]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🎁️option-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [857, 858]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🗃️box-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [909, 910]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🗃️box-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [1019, 1020]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧱️tuple-cursors/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs [1042, 1043]: mapped 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧱️tuple-cursors/🦀️.rs
+- 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧪️tests/🟦️.ts [9, 10]: unmapped 
+- 🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🦀️.rs [185, 188]: unmapped 
+- 🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs [135, 135]: mapped 🧰️framework/🔨️modules/🎒️pack/📐️format/🧱️header-and-footer/🦀️.rs
+- 🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs [812, 812]: mapped 🧰️framework/🔨️modules/🎒️pack/📐️format/✍️pack-writer/🦀️.rs
+- 🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs [864, 864]: mapped 🧰️framework/🔨️modules/🎒️pack/📐️format/✍️pack-writer/🦀️.rs
+- 🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs [884, 884]: mapped 🧰️framework/🔨️modules/🎒️pack/📐️format/✍️pack-writer/🦀️.rs
+- 🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs [1070, 1070]: mapped 🧰️framework/🔨️modules/🎒️pack/📐️format/📖️pack-reader-and-recovery/🦀️.rs
+- 🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs [1147, 1147]: mapped 🧰️framework/🔨️modules/🎒️pack/📐️format/📖️pack-reader-and-recovery/🦀️.rs
+- 🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs [1143, 1143]: mapped 🧰️framework/🔨️modules/🎒️pack/🔤️json/🧮️parser-and-grammar-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs [1168, 1168]: mapped 🧰️framework/🔨️modules/🎒️pack/🔤️json/🧮️parser-and-grammar-cursor/🦀️.rs
+- 🧰️framework/🔨️modules/🎯️action-bus/🦀️.rs [259, 260]: unmapped 
+- 🧰️framework/🔨️modules/🎯️action-bus/🦀️.rs [275, 276]: unmapped 
+- 🧰️framework/🔨️modules/🎯️action-bus/🧪️tests/🔬️unit/🦀️.rs [5, 516]: unmapped 
+- 🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧪️tests/🟦️.ts [7, 7]: unmapped 
+- 🧰️framework/🔨️modules/📐️geometry/⚙️engine/🦀️.rs [1263, 1264]: unmapped 
+- 🧰️framework/🔨️modules/📐️geometry/⚙️engine/🦀️.rs [1328, 1328]: mapped 🧰️framework/🔨️modules/📐️geometry/⚙️engine/🎯️world-selection/🦀️.rs
+- 🧰️framework/🔨️modules/📐️geometry/⚙️engine/🦀️.rs [1389, 1396]: mapped 🧰️framework/🔨️modules/📐️geometry/⚙️engine/🎯️world-selection/🦀️.rs
+- 🧰️framework/🔨️modules/📐️geometry/⚙️engine/🦀️.rs [1420, 1421]: mapped 🧰️framework/🔨️modules/📐️geometry/⚙️engine/🎯️world-selection/🦀️.rs
+- 🧰️framework/🔨️modules/📐️geometry/⚙️engine/🦀️.rs [1423, 1425]: mapped 🧰️framework/🔨️modules/📐️geometry/⚙️engine/🎯️world-selection/🦀️.rs
+- 🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs [1101, 1101]: mapped 🧰️framework/🔨️modules/📡️replication/🎮️mutation/🚦️outcome-and-message/🦀️.rs
+- 🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs [1155, 1155]: mapped 🧰️framework/🔨️modules/📡️replication/🎮️mutation/🚦️outcome-and-message/🦀️.rs
+- 🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs [1220, 1220]: mapped 🧰️framework/🔨️modules/📡️replication/🎮️mutation/🚦️outcome-and-message/🦀️.rs
+- 🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/🧪️tests/🔬️unit/🦀️.rs [173, 181]: unmapped 
+- 🧰️framework/🔨️modules/🕹️interaction/🧪️tests/🧫️fixtures/🎯️merge-modes.json [156, 157]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [147, 147]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🎯️construction-and-focus/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [149, 149]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🎯️construction-and-focus/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [177, 177]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🎯️construction-and-focus/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [397, 397]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/⏱️frame-layout-and-overlays/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [619, 620]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/⌨️input-dispatch/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [650, 652]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/⌨️input-dispatch/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [655, 656]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/⌨️input-dispatch/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [667, 667]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/⌨️input-dispatch/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [759, 759]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🖱️mouse-and-hover/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [786, 787]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🖱️mouse-and-hover/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [818, 818]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🖱️mouse-and-hover/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [821, 822]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🖱️mouse-and-hover/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [835, 836]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🖱️mouse-and-hover/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [837, 837]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🖱️mouse-and-hover/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [847, 848]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🖱️mouse-and-hover/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [849, 857]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🖱️mouse-and-hover/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [858, 866]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🖱️mouse-and-hover/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [875, 875]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🖱️mouse-and-hover/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [883, 886]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🖱️mouse-and-hover/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [887, 891]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🖱️mouse-and-hover/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [894, 894]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🖱️mouse-and-hover/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [931, 931]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🖱️mouse-and-hover/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [947, 947]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🖱️mouse-and-hover/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [961, 961]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [962, 963]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🖌️paint-and-gutters/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [969, 970]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🖌️paint-and-gutters/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [979, 980]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🖌️paint-and-gutters/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [985, 987]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🖌️paint-and-gutters/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs [997, 997]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🖌️paint-and-gutters/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔌️backend/🦀️.rs [265, 265]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔌️backend/🔎️capabilities-and-frame-presenter/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔌️backend/🦀️.rs [1278, 1278]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔌️backend/🐧️native-unix/🖥️unix-native-terminal/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🦀️.rs [78, 78]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🦀️.rs [109, 111]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🪟️tui-layout-and-window-laws/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🦀️.rs [1261, 1261]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🎨️tui-widget-paint-and-window-silhouette-laws/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🦀️.rs [1267, 1267]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🎨️tui-widget-paint-and-window-silhouette-laws/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🦀️.rs [1274, 1275]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🎨️tui-widget-paint-and-window-silhouette-laws/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🦀️.rs [1276, 1276]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🎨️tui-widget-paint-and-window-silhouette-laws/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🦀️.rs [1280, 1281]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🎨️tui-widget-paint-and-window-silhouette-laws/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🦀️.rs [1302, 1302]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🎨️tui-widget-paint-and-window-silhouette-laws/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🦀️.rs [1308, 1308]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🎨️tui-widget-paint-and-window-silhouette-laws/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🦀️.rs [1311, 1312]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🎨️tui-widget-paint-and-window-silhouette-laws/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🪀️widget/🦀️.rs [60, 60]: mapped 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔔️signal/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts [934, 934]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧩️suite/🟦️.ts [446, 446]: mapped 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧩️suite/🎨️styling-resolve/🟦️.ts
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json [22, 23]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/tsconfig.json [6, 7]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [135, 153]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [750, 761]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [762, 774]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [796, 807]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [1172, 1173]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [1174, 1174]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [1184, 1184]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [1301, 1434]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [1440, 1473]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [1509, 1545]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [1580, 1596]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [1645, 1645]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [1650, 1651]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [1654, 1657]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [1772, 1804]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [1857, 1875]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [1908, 1923]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [2092, 3467]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [4027, 4045]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [4137, 4160]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [4769, 4780]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [4861, 4861]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [4889, 4933]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [4965, 4979]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [5434, 5460]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [5489, 5502]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [5522, 5532]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [5553, 5574]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [5598, 5611]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [5820, 5833]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [6120, 6141]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [6146, 6217]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [6301, 6331]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [6366, 6367]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [6368, 6369]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [6387, 6388]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx [6390, 6391]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs [164, 165]: mapped 🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🪟️surfaces/📍️window-and-tooltips/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs [2344, 2345]: mapped 🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/📐️layout-stepping/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-engine-unit/🦀️.rs [3314, 3315]: mapped 🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-engine-unit/📐️surface-content-height-and-worker-close-laws/🦀️.rs
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx [191, 262]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟦️.tsx [132, 132]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟦️.tsx [134, 134]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟦️.tsx [135, 136]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟦️.tsx [395, 396]: mapped 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🧵️pane/🟦️.tsx
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟦️.tsx [429, 431]: unmapped 
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟦️.tsx [434, 434]: mapped 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🧵️pane/🟦️.tsx
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟦️.tsx [435, 436]: mapped 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🧵️pane/🟦️.tsx
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟦️.tsx [448, 448]: mapped 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🧵️pane/🟦️.tsx
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟦️.tsx [449, 450]: mapped 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🧵️pane/🟦️.tsx
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟦️.tsx [451, 452]: mapped 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🧵️pane/🟦️.tsx
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟦️.tsx [499, 500]: mapped 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/💡️hints/🟦️.tsx
+- 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🦀️.rs [81, 81]: unmapped 
+- 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🦀️.rs [89, 89]: unmapped 
+- 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🦀️.rs [130, 131]: mapped 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🏷️attribute-parsing/🦀️.rs
+- 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🦀️.rs [150, 150]: mapped 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🏷️attribute-parsing/🦀️.rs
+- 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🦀️.rs [302, 302]: mapped 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🧩️type-shape/🦀️.rs
+- 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🦀️.rs [375, 376]: mapped 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🏗️record-field-codegen/🦀️.rs
+- 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🦀️.rs [701, 701]: mapped 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🏗️record-field-codegen/🦀️.rs
+- 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🦀️.rs [704, 704]: mapped 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🏗️record-field-codegen/🦀️.rs
+- 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🦀️.rs [739, 740]: mapped 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🧹️lifecycle-codegen/🦀️.rs
+- 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🦀️.rs [757, 758]: mapped 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🧹️lifecycle-codegen/🦀️.rs
+- 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🦀️.rs [1168, 1169]: unmapped 
+- 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🦀️.rs [1170, 1170]: unmapped 
+- 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🦀️.rs [849, 849]: mapped 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📒️records-and-tables/🦀️.rs
+- 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🦀️.rs [940, 940]: mapped 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📒️records-and-tables/🦀️.rs
+- 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🦀️.rs [943, 943]: mapped 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📒️records-and-tables/🦀️.rs
+- 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🦀️.rs [951, 952]: mapped 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📒️records-and-tables/🦀️.rs
+- 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🫳️borrowed-object/🦀️.rs [2, 2]: unmapped 
+- 🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts [26, 28]: unmapped 
+- 🧰️framework/🔨️modules/🛂️manifest/🟦️.ts [1668, 1668]: unmapped 
+- 🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🔬️unit/🦀️.rs [776, 777]: mapped 🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🔬️unit/🫧️scrub-laws/🦀️.rs
+- 🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🔬️unit/🦀️.rs [821, 822]: mapped 🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🔬️unit/🫧️scrub-laws/🦀️.rs
+- 🧰️framework/🔨️modules/🛰️backbone/🟦️.ts [660, 663]: mapped 🧰️framework/🔨️modules/🛰️backbone/🔑️persistence-binding/🟦️.ts
+- 🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🦀️.rs [25, 25]: mapped 🧰️framework/🔨️modules/🧊️3d/🥽️mesh/📄️document/🦀️.rs
+- 🧰️framework/🔨️modules/🧵️job/⏱️budget/🧪️tests/🔬️tool-job-microsecond-budget/🟦️.ts [47, 48]: unmapped 
+- 🧰️framework/🔨️modules/🧵️job/⏱️budget/🧪️tests/🔬️tool-job-microsecond-budget/🟦️.ts [61, 61]: unmapped 
+- 🧰️framework/🔨️modules/🧵️job/⏱️budget/🪢️binding.json [38, 38]: unmapped 
+- 🧰️framework/🔨️modules/🧵️job/♻️retirement/🎟️context/🧪️tests/🟦️.ts [5, 14]: unmapped 
+- 🧰️framework/🔨️modules/🧵️job/♻️retirement/🎟️context/🧪️tests/🟦️.ts [15, 35]: unmapped 
+- 🧰️framework/🔨️modules/🧵️job/♻️retirement/🎟️context/🧪️tests/🧫️fixtures/🔣️.json [2, 28]: mapped 🧰️framework/🔨️modules/🧵️job/♻️retirement/🎟️context/🧪️tests/🧫️fixtures/🔣️.json
+- 🧰️framework/🔨️modules/🧵️job/♻️retirement/🎟️context/🧬️schema/🔣️.json [6, 18]: unmapped 
+- 🧰️framework/🔨️modules/🧵️job/👷️worker/🦀️.rs [296, 297]: mapped 🧰️framework/🔨️modules/🧵️job/👷️worker/🧰️mounted-and-batch-sessions/🦀️.rs
+- 🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🧪️tests/🏗️initialization/🟦️.ts [7, 8]: unmapped 
+- 🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🧪️tests/🏗️initialization/🦀️.rs [16, 18]: unmapped 
+- 🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🧪️tests/🟦️.ts [5, 7]: unmapped 
+- 🧰️framework/🔨️modules/🧵️job/🦀️.rs [30, 31]: unmapped 
+- 🧰️framework/🔨️modules/🧵️job/🦀️.rs [324, 324]: unmapped 
+- 🧰️framework/🔨️modules/🧵️job/🦀️.rs [408, 409]: mapped 🧰️framework/🔨️modules/🧵️job/📄️payload-pages-and-ledger/🦀️.rs
+- 🧰️framework/🔨️modules/🧵️job/🦀️.rs [452, 453]: mapped 🧰️framework/🔨️modules/🧵️job/📄️payload-pages-and-ledger/🦀️.rs
+- 🧰️framework/🔨️modules/🧵️job/🦀️.rs [454, 454]: unmapped 
+- 🧰️framework/🔨️modules/🧵️job/🦀️.rs [534, 534]: mapped 🧰️framework/🔨️modules/🧵️job/✍️payload-writer-and-grant/🦀️.rs
+- 🧰️framework/🔨️modules/🧵️job/🦀️.rs [545, 546]: mapped 🧰️framework/🔨️modules/🧵️job/✍️payload-writer-and-grant/🦀️.rs
+- 🧰️framework/🔨️modules/🧵️job/🦀️.rs [591, 591]: mapped 🧰️framework/🔨️modules/🧵️job/✍️payload-writer-and-grant/🦀️.rs
+- 🧰️framework/🔨️modules/🧵️job/🦀️.rs [649, 650]: mapped 🧰️framework/🔨️modules/🧵️job/✍️payload-writer-and-grant/🦀️.rs
+- 🧰️framework/🔨️modules/🧵️job/🦀️.rs [1255, 1255]: mapped 🧰️framework/🔨️modules/🧵️job/👷️worker/🦀️.rs
+- 🧰️framework/🛍️products/🐾️pets/README.md [55, 57]: unmapped 
+- 🧰️framework/🛍️products/🐾️pets/README.md [64, 76]: unmapped 
+- 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🦀️.rs [588, 590]: mapped 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🪜️ladder-laws/🦀️.rs
+- 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🦀️.rs [613, 614]: mapped 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🪝️grapple-shot-and-haul/🦀️.rs
+- 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🦀️.rs [616, 617]: mapped 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🪝️grapple-shot-and-haul/🦀️.rs
+- 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🦀️.rs [619, 621]: mapped 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🪝️grapple-shot-and-haul/🦀️.rs
+- 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🦀️.rs [622, 625]: mapped 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🪝️grapple-shot-and-haul/🦀️.rs
+- 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🦀️.rs [636, 638]: mapped 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🪝️grapple-shot-and-haul/🦀️.rs
+- 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🦀️.rs [652, 654]: mapped 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🪝️grapple-shot-and-haul/🦀️.rs
+- 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🦀️.rs [706, 707]: mapped 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🪝️grapple-shot-and-haul/🦀️.rs
+- 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🦀️.rs [717, 718]: mapped 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🪝️grapple-shot-and-haul/🦀️.rs
+- 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🦀️.rs [721, 721]: mapped 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🪝️grapple-shot-and-haul/🦀️.rs
+- 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🦀️.rs [723, 723]: unmapped 
+- 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🦀️.rs [836, 838]: mapped 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🪝️grapple-shot-and-haul/🦀️.rs
+- 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🦀️.rs [842, 843]: mapped 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🪝️grapple-shot-and-haul/🦀️.rs
+- 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🦀️.rs [890, 892]: mapped 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🗺️routes-and-wall-lines/🦀️.rs
+- 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🦀️.rs [920, 921]: mapped 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🗺️routes-and-wall-lines/🦀️.rs
+- 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/🦀️.rs [1038, 1040]: mapped 🧰️framework/🛍️products/🐾️pets/🔨️modules/🧗️climbing/🧪️tests/🔬️unit/📜️committed-vectors-and-source/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/🦀️.rs [195, 196]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/📡️asset-io/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/🦀️.rs [197, 197]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/🦀️.rs [203, 204]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/📡️asset-io/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/🦀️.rs [206, 206]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/🦀️.rs [207, 208]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/📡️asset-io/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/🦀️.rs [222, 222]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/📡️asset-io/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/🦀️.rs [250, 252]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/📡️asset-io/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/🦀️.rs [254, 256]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/📡️asset-io/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/🦀️.rs [264, 264]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/📡️asset-io/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/🦀️.rs [350, 350]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/📡️asset-io/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/🦀️.rs [437, 437]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/📡️asset-io/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/⚙️engine/🦀️.rs [49, 49]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/⚙️engine/🧷️point-retirement-and-engine-aliases/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/⚙️engine/🦀️.rs [694, 694]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/⚙️engine/🎟️icon-paint-cache/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🧭️host/🦀️.rs [25, 25]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🧭️host/🎨️brush-session-and-event-authority/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs [140, 140]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🏷️naming-capacities-and-pages/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs [145, 153]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🏷️naming-capacities-and-pages/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs [366, 366]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/📸️snapshot-and-capture-stages/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs [681, 681]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/📍️placement-checkpoint-and-commit-records/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs [714, 715]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/📍️placement-checkpoint-and-commit-records/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs [1183, 1183]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/📥️fill-job-and-snapshot-capture/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs [1203, 1207]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/📥️fill-job-and-snapshot-capture/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs [1210, 1211]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs [1212, 1213]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/📥️fill-job-and-snapshot-capture/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs [1507, 1510]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/📥️fill-job-and-snapshot-capture/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs [1511, 1518]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/📥️fill-job-and-snapshot-capture/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs [1519, 1524]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/📥️fill-job-and-snapshot-capture/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs [1634, 1635]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs [1636, 1637]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🚪️snapshot-ingress/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs [2069, 2070]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🧵️job-operation-and-state/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs [2071, 2071]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🧵️job-operation-and-state/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs [2078, 2079]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🧵️job-operation-and-state/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs [2084, 2085]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🧵️job-operation-and-state/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs [2096, 2098]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🧵️job-operation-and-state/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs [2135, 2136]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🧵️job-operation-and-state/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs [2697, 2698]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/✅️job-accept/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs [2820, 2823]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🚫️job-reject-preview-and-complete/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs [3054, 3054]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🏁️job-close-and-interactive/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs [3086, 3086]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🏁️job-close-and-interactive/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🧪️tests/🔬️board-host/🦀️.rs [4, 4]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🧪️tests/🔬️board-host/🦀️.rs [171, 172]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🧪️tests/🔬️quick/🦀️.rs [474, 474]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [306, 307]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🪟️surface-owner-action-and-cursor/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [399, 400]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🪟️surface-owner-action-and-cursor/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [434, 435]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [523, 525]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🎛️retained-vcs-state-and-begin/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [855, 856]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🏁️close-protocol/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [877, 878]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🏁️close-protocol/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1014, 1015]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🏁️close-protocol/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1051, 1052]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🎟️admission-and-slots/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1318, 1319]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🪜️action-cursor-impl/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1417, 1418]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1422, 1427]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1432, 1433]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1434, 1439]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1445, 1445]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1446, 1451]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1456, 1461]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1472, 1484]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1485, 1486]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1488, 1490]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1497, 1498]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1503, 1505]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1509, 1511]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1518, 1519]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1524, 1526]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1529, 1537]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1538, 1539]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1643, 1646]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1649, 1650]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1653, 1656]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1659, 1660]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1663, 1664]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1666, 1668]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1672, 1673]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1678, 1679]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1681, 1683]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1687, 1688]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1693, 1694]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1695, 1696]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1700, 1701]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1712, 1713]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1714, 1715]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1719, 1720]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1732, 1734]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1741, 1743]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs [1751, 1753]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧮️cursor-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🔬️flow-vcs/🦀️.rs [478, 478]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🔬️flow-vcs/🧨️hostile-fingerprints-and-scalars/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🔬️flow-vcs/🦀️.rs [862, 864]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🔬️flow-vcs/🪜️retained-helpers-and-ordered-layout-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🔬️flow-vcs/🦀️.rs [865, 866]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🔬️flow-vcs/🪜️retained-helpers-and-ordered-layout-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🔬️flow-vcs/🦀️.rs [1073, 1074]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🔬️flow-vcs/🔁️rejection-stale-aba-and-vector-signatures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🔬️flow-vcs/🦀️.rs [1080, 1081]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🔬️flow-vcs/🔁️rejection-stale-aba-and-vector-signatures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🔬️flow-vcs/🦀️.rs [1097, 1099]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🔬️flow-vcs/🔁️rejection-stale-aba-and-vector-signatures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🔬️flow-vcs/🦀️.rs [1770, 1773]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🔬️flow-vcs/🏁️complete-route-round-trips-and-close-receipts/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🔬️flow-vcs/🦀️.rs [1774, 1774]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🔬️flow-vcs/🦀️.rs [1801, 1802]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🔬️flow-vcs/🏁️complete-route-round-trips-and-close-receipts/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🔬️flow-vcs/🦀️.rs [1805, 1806]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🔬️flow-vcs/🏁️complete-route-round-trips-and-close-receipts/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/✏️host-authoring/🦀️.rs [50, 52]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/✏️host-authoring/🏗️construction-and-registry/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/✏️host-authoring/🦀️.rs [114, 115]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/✏️host-authoring/🗂️snapshot-catalogue-and-kind-infos/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/✏️host-authoring/🦀️.rs [117, 118]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/✏️host-authoring/🗂️snapshot-catalogue-and-kind-infos/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🌳️host-evaluation-history/🦀️.rs [42, 42]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🌳️host-evaluation-history/🧮️evaluation-steps-and-tree-building/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🌳️host-evaluation-history/🦀️.rs [178, 179]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🌳️host-evaluation-history/🧮️evaluation-steps-and-tree-building/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🌳️host-evaluation-history/🦀️.rs [197, 197]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🌳️host-evaluation-history/🧮️evaluation-steps-and-tree-building/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/🦀️.rs [529, 529]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/🧰️input-preparation-and-envelope-source/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [72, 74]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [119, 121]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [152, 154]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [166, 168]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [179, 181]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [239, 241]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [243, 246]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/📸️snapshot-reads-and-retained-replacements/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [250, 251]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/📸️snapshot-reads-and-retained-replacements/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [271, 321]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/📸️snapshot-reads-and-retained-replacements/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [323, 367]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/📸️snapshot-reads-and-retained-replacements/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [671, 672]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/📸️snapshot-reads-and-retained-replacements/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [782, 783]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🧮️time-travel-reads-publication-and-supersede-inputs/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [870, 870]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🧮️time-travel-reads-publication-and-supersede-inputs/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [906, 907]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🎞️event-sourced-history-reprojection/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [936, 937]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🎞️event-sourced-history-reprojection/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [959, 960]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🎞️event-sourced-history-reprojection/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [1036, 1037]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🎞️event-sourced-history-reprojection/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [1047, 1048]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🎞️event-sourced-history-reprojection/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [1067, 1068]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🎞️event-sourced-history-reprojection/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [1201, 1202]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🎞️event-sourced-history-reprojection/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [1208, 1209]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🎞️event-sourced-history-reprojection/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [1388, 1389]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🧮️time-travel-reads-publication-and-supersede-inputs/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [1499, 1500]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🧮️time-travel-reads-publication-and-supersede-inputs/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [1522, 1524]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [1598, 1598]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/📣️replay-invalidation-announcements-and-transactions/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [1669, 1670]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/📣️replay-invalidation-announcements-and-transactions/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [1727, 1728]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/📣️replay-invalidation-announcements-and-transactions/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [1772, 1773]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/📣️replay-invalidation-announcements-and-transactions/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [1829, 1830]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/📣️replay-invalidation-announcements-and-transactions/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [1852, 1853]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/📣️replay-invalidation-announcements-and-transactions/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [2054, 2055]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/⏳️deferred-reprojection-and-supersede-reports/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [2172, 2173]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🛰️history-lane-commands-and-outbound/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [2191, 2192]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🛰️history-lane-commands-and-outbound/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [2338, 2339]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🛰️history-lane-commands-and-outbound/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [2362, 2365]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🛰️history-lane-commands-and-outbound/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs [2533, 2534]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [134, 135]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🗒️draft-config-store-and-checkpoint-identity/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [194, 196]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [225, 227]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [262, 264]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [265, 266]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🗒️draft-config-store-and-checkpoint-identity/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [284, 285]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🗒️draft-config-store-and-checkpoint-identity/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [290, 291]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🗒️draft-config-store-and-checkpoint-identity/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [376, 378]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [571, 572]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🌱️runtime-seed-construction-and-owned-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [584, 585]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🌱️runtime-seed-construction-and-owned-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [964, 965]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🚦️cursor-admission-dispatch-and-apply-batch/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [980, 981]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🚦️cursor-admission-dispatch-and-apply-batch/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [997, 998]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🚦️cursor-admission-dispatch-and-apply-batch/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1001, 1001]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1046, 1047]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧳️bundle/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1059, 1061]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧳️bundle/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1064, 1065]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1096, 1097]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧳️bundle/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1143, 1145]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧳️bundle/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1175, 1175]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧳️bundle/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1184, 1184]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧳️bundle/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1186, 1187]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧳️bundle/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1214, 1215]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1229, 1230]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧳️bundle/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1231, 1231]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1233, 1234]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧳️bundle/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1249, 1249]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1258, 1259]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧳️bundle/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1279, 1279]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1289, 1290]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1321, 1321]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🚦️cursor-admission-dispatch-and-apply-batch/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1353, 1354]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🚦️cursor-admission-dispatch-and-apply-batch/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1397, 1398]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🚦️cursor-admission-dispatch-and-apply-batch/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1453, 1454]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🚦️cursor-admission-dispatch-and-apply-batch/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1720, 1721]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/↩️supersede-undo-redo-and-backbone-pump/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1770, 1771]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/↩️supersede-undo-redo-and-backbone-pump/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1781, 1782]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/↩️supersede-undo-redo-and-backbone-pump/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1805, 1806]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/↩️supersede-undo-redo-and-backbone-pump/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1850, 1851]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/↩️supersede-undo-redo-and-backbone-pump/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [1946, 1947]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/↩️supersede-undo-redo-and-backbone-pump/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2078, 2079]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2087, 2088]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2106, 2107]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧳️bundle/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2120, 2121]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2148, 2149]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧳️bundle/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2151, 2152]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧳️bundle/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2154, 2155]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2212, 2213]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2215, 2218]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧳️bundle/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2230, 2231]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/↩️supersede-undo-redo-and-backbone-pump/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2273, 2275]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2301, 2302]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🪞️delegating-accessors-and-reads/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2355, 2356]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🪞️delegating-accessors-and-reads/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2367, 2368]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🪞️delegating-accessors-and-reads/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2370, 2371]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🪞️delegating-accessors-and-reads/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2373, 2374]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🪞️delegating-accessors-and-reads/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2376, 2377]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🪞️delegating-accessors-and-reads/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2379, 2380]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🪞️delegating-accessors-and-reads/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2385, 2386]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🪞️delegating-accessors-and-reads/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2388, 2389]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🪞️delegating-accessors-and-reads/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2394, 2395]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🪞️delegating-accessors-and-reads/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2400, 2401]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🪞️delegating-accessors-and-reads/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2403, 2404]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🪞️delegating-accessors-and-reads/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2679, 2680]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/📑️delegating-operations-and-publication/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2882, 2884]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2920, 2921]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2964, 2966]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2974, 2976]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [2983, 2985]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [3127, 3129]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🏭️factory/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [3131, 3132]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🧯️close-host-drop-and-pair-merge/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs [3143, 3144]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🧯️close-host-drop-and-pair-merge/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [2, 2]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [339, 341]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [378, 380]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [399, 401]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [419, 421]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [466, 468]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [496, 498]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [1044, 1046]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [1048, 1055]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/🏗️store-owners-retained-reads-and-retirements/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [1074, 1080]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/🏗️store-owners-retained-reads-and-retirements/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [1082, 1088]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/🏗️store-owners-retained-reads-and-retirements/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [1394, 1394]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/📬️store-owners-batch-fold-and-history/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [1407, 1407]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/📬️store-owners-batch-fold-and-history/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [1439, 1439]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/📬️store-owners-batch-fold-and-history/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [1448, 1448]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/📬️store-owners-batch-fold-and-history/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [1736, 1737]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/📬️store-owners-batch-fold-and-history/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [1745, 1746]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/📬️store-owners-batch-fold-and-history/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [1781, 1782]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/📬️store-owners-batch-fold-and-history/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [1783, 1785]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/📬️store-owners-batch-fold-and-history/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [1854, 1856]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [1971, 1973]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [2042, 2051]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [2053, 2067]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [2069, 2076]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/🖱️store-cursor-operations/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [2085, 2089]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/🖱️store-cursor-operations/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [2205, 2206]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/🖱️store-cursor-operations/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [2224, 2225]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/🖱️store-cursor-operations/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [2368, 2371]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/🖱️store-cursor-operations/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [2419, 2419]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/🖱️store-cursor-operations/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [2446, 2447]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/🖱️store-cursor-operations/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [2451, 2451]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/🖱️store-cursor-operations/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs [2521, 2523]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🧾️document/🦀️.rs [23, 25]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🧾️document/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🦀️.rs [34, 35]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🧬️hydration-types-constructor-and-drive/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🦀️.rs [63, 64]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🧬️hydration-types-constructor-and-drive/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🦀️.rs [66, 67]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🧬️hydration-types-constructor-and-drive/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🦀️.rs [111, 112]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🧬️hydration-types-constructor-and-drive/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🦀️.rs [114, 115]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🧬️hydration-types-constructor-and-drive/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🦀️.rs [265, 266]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🚶️hydration-advance/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🦀️.rs [352, 353]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🚶️hydration-advance/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🦀️.rs [725, 726]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🧬️hydration-types-constructor-and-drive/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🦀️.rs [728, 729]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🧹️hydration-retirement-drop-and-completion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🦀️.rs [743, 744]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🧹️hydration-retirement-drop-and-completion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🦀️.rs [785, 786]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🧹️hydration-retirement-drop-and-completion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🦀️.rs [788, 789]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🧹️hydration-retirement-drop-and-completion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🦀️.rs [790, 790]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🦀️.rs, 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🦀️.rs [1008, 1009]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🧹️hydration-retirement-drop-and-completion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🦀️.rs [1011, 1012]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🧬️hydration-types-constructor-and-drive/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🦀️.rs [1018, 1019]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🧹️hydration-retirement-drop-and-completion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🦀️.rs [1021, 1022]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🧹️hydration-retirement-drop-and-completion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts [466, 466]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧾️document-state/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts [3982, 3982]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/📁️folder/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts [3992, 3992]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/📁️folder/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts [6700, 6700]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/♻️artifact-lifecycle/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts [6752, 6753]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🚪️artifact-open/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts [6755, 6755]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🚪️artifact-open/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts [6816, 6818]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/♻️artifact-lifecycle/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts [6821, 6822]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/♻️artifact-lifecycle/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts [6826, 6827]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/♻️artifact-lifecycle/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts [6830, 6831]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/♻️artifact-lifecycle/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts [6843, 6843]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts [6865, 6866]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/♻️artifact-lifecycle/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts [6869, 6869]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/♻️artifact-lifecycle/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs [1035, 1035]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🚫️decode-rejections-and-erased-retirement/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🧪️tests/🦀️.rs [217, 240]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [179, 180]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🧮️effective-operations-and-folds/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [181, 182]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [185, 188]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🧮️effective-operations-and-folds/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [191, 192]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🧮️effective-operations-and-folds/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [193, 196]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🧮️effective-operations-and-folds/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [202, 203]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🧮️effective-operations-and-folds/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [208, 209]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🧮️effective-operations-and-folds/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [210, 210]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [211, 212]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🧮️effective-operations-and-folds/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [226, 227]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [228, 229]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🧮️effective-operations-and-folds/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [230, 232]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🧮️effective-operations-and-folds/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [236, 236]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🧮️effective-operations-and-folds/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [254, 255]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [484, 484]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🔢️prefix-digests-replay-progress-and-edit-replay/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [557, 558]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [583, 583]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🧱️replay-owned-state-and-result-types/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [609, 610]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🧱️replay-owned-state-and-result-types/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [667, 668]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/⏩️replay-owned-state-operations/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [771, 772]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/⏩️replay-owned-state-operations/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [781, 782]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/⏩️replay-owned-state-operations/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [784, 785]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/⏩️replay-owned-state-operations/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [791, 794]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/⏩️replay-owned-state-operations/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [803, 805]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/⏩️replay-owned-state-operations/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [853, 856]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/⏩️replay-owned-state-operations/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [858, 875]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/⏩️replay-owned-state-operations/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [968, 969]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/⏩️replay-owned-state-operations/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs [974, 976]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/⏩️replay-owned-state-operations/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs [145, 147]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🗄️persistence-binding-actor-config-and-messages/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs [148, 151]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🗄️persistence-binding-actor-config-and-messages/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [288, 291]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️unit/🧸️demo-snapshot-diff-and-mutation-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [296, 296]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️unit/🧸️demo-snapshot-diff-and-mutation-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [297, 300]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️unit/🧸️demo-snapshot-diff-and-mutation-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [301, 301]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧮️snapshot/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [306, 306]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️unit/🧸️demo-snapshot-diff-and-mutation-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [308, 309]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️unit/🧸️demo-snapshot-diff-and-mutation-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [390, 390]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️unit/🧸️demo-snapshot-diff-and-mutation-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [402, 406]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️unit/🧸️demo-snapshot-diff-and-mutation-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs [81, 81]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/📖️derived-snapshots-replays-and-history-read-plan/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs [90, 90]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/📖️derived-snapshots-replays-and-history-read-plan/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs [109, 109]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/📖️derived-snapshots-replays-and-history-read-plan/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs [127, 127]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/📖️derived-snapshots-replays-and-history-read-plan/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs [248, 248]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/📖️derived-snapshots-replays-and-history-read-plan/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs [259, 259]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/📖️derived-snapshots-replays-and-history-read-plan/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs [307, 307]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/📖️derived-snapshots-replays-and-history-read-plan/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs [367, 367]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧮️cursor-ledger-and-vcs-retirements/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs [386, 386]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧮️cursor-ledger-and-vcs-retirements/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs [527, 527]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧮️cursor-ledger-and-vcs-retirements/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs [533, 538]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧮️cursor-ledger-and-vcs-retirements/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs [555, 555]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧮️cursor-ledger-and-vcs-retirements/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs [576, 582]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧮️cursor-ledger-and-vcs-retirements/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/📝️text/🦀️.rs [251, 252]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/📝️text/🦀️.rs [264, 265]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/📑️delegating-operations-and-publication/🦀️.rs, 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/🖱️store-cursor-operations/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/📝️text/🦀️.rs [280, 281]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/📝️text/🦀️.rs [513, 514]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/📝️text/🛂️history-messages-and-persisted-validation/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/📝️text/🦀️.rs [1017, 1018]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/📝️text/📦️document-spr-pack-and-history-composition/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/📝️text/🦀️.rs [1123, 1124]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/📝️text/📦️document-spr-pack-and-history-composition/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs [844, 846]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎲️space-members-macro/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs [847, 849]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎲️space-members-macro/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs [850, 850]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🏠️space/📥️lifted/🏪️store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs [862, 864]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎲️space-members-macro/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs [865, 871]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎲️space-members-macro/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🦀️.rs [435, 437]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🦀️.rs [773, 775]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🏪️space-member-for-artifact-store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🦀️.rs [777, 779]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🏪️space-member-for-artifact-store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🦀️.rs [832, 833]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🏪️space-member-for-artifact-store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🦀️.rs [836, 837]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🏪️space-member-for-artifact-store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🦀️.rs [839, 841]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🏪️space-member-for-artifact-store/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🦀️.rs [931, 932]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🏭️member-factory-visitors-and-no-members/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🦀️.rs [940, 941]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🏭️member-factory-visitors-and-no-members/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🦀️.rs [1091, 1093]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🏭️member-factory-visitors-and-no-members/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🦀️.rs [1095, 1097]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🏭️member-factory-visitors-and-no-members/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🦀️.rs [1116, 1117]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🏭️member-factory-visitors-and-no-members/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🦀️.rs [1119, 1122]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🏭️member-factory-visitors-and-no-members/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🦀️.rs [1123, 1125]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🏭️member-factory-visitors-and-no-members/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [50, 51]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🧾️group-schema-constants-anchors-and-decision-errors/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [58, 59]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🧾️group-schema-constants-anchors-and-decision-errors/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [67, 67]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🧾️group-schema-constants-anchors-and-decision-errors/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [139, 139]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🧾️group-schema-constants-anchors-and-decision-errors/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [145, 146]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [189, 190]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/📋️outcome-and-journal-receipt-types/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [194, 194]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/📋️outcome-and-journal-receipt-types/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [203, 204]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/📋️outcome-and-journal-receipt-types/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [283, 283]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/📋️outcome-and-journal-receipt-types/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [295, 295]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/📋️outcome-and-journal-receipt-types/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [301, 301]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🏗️staged-root-retirement-and-commit-phases/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [302, 303]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🏗️staged-root-retirement-and-commit-phases/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [319, 320]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🏗️staged-root-retirement-and-commit-phases/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [366, 366]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🏗️staged-root-retirement-and-commit-phases/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [369, 370]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🏗️staged-root-retirement-and-commit-phases/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [380, 380]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🏗️staged-root-retirement-and-commit-phases/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [393, 393]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🏗️staged-root-retirement-and-commit-phases/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [427, 428]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🏗️staged-root-retirement-and-commit-phases/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [432, 433]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🏗️staged-root-retirement-and-commit-phases/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [490, 490]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🏗️staged-root-retirement-and-commit-phases/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [508, 508]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🏗️staged-root-retirement-and-commit-phases/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [547, 547]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🏗️staged-root-retirement-and-commit-phases/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [560, 560]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🏗️staged-root-retirement-and-commit-phases/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [580, 581]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🏗️staged-root-retirement-and-commit-phases/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [585, 586]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🏗️staged-root-retirement-and-commit-phases/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [642, 643]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/📦️outcome-codecs-json-budget-and-map-handles/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [744, 789]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/📦️outcome-codecs-json-budget-and-map-handles/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [790, 802]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/📦️outcome-codecs-json-budget-and-map-handles/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [1039, 1039]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🧪️member-identity-and-group-testing-helpers/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs [1063, 1063]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🧪️member-identity-and-group-testing-helpers/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [55, 56]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [57, 57]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [73, 75]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🧾️group-schema-constants-anchors-and-decision-errors/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [79, 84]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📒️group-decision-journal-record-and-snapshot-capture/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [118, 118]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📒️group-decision-journal-record-and-snapshot-capture/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [121, 122]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📒️group-decision-journal-record-and-snapshot-capture/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [125, 125]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📒️group-decision-journal-record-and-snapshot-capture/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [323, 325]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📒️group-decision-journal-record-and-snapshot-capture/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [352, 358]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📒️group-decision-journal-record-and-snapshot-capture/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [376, 382]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🛣️map-commit-recovery-hosts-and-assembly-owners/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [383, 384]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🛣️map-commit-recovery-hosts-and-assembly-owners/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [397, 403]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📒️group-decision-journal-record-and-snapshot-capture/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [415, 421]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🛣️map-commit-recovery-hosts-and-assembly-owners/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [428, 434]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🛣️map-commit-recovery-hosts-and-assembly-owners/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [445, 451]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🛣️map-commit-recovery-hosts-and-assembly-owners/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [460, 466]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🛣️map-commit-recovery-hosts-and-assembly-owners/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [475, 481]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🛣️map-commit-recovery-hosts-and-assembly-owners/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [490, 496]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📒️group-decision-journal-record-and-snapshot-capture/🦀️.rs, 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🛣️map-commit-recovery-hosts-and-assembly-owners/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [506, 512]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🛣️map-commit-recovery-hosts-and-assembly-owners/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [520, 526]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🛣️map-commit-recovery-hosts-and-assembly-owners/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [570, 576]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🛣️map-commit-recovery-hosts-and-assembly-owners/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [595, 601]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🛣️map-commit-recovery-hosts-and-assembly-owners/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [615, 621]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🛣️map-commit-recovery-hosts-and-assembly-owners/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [622, 639]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [680, 680]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧱️map-assembly-open-and-recovery-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [728, 729]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧱️map-assembly-open-and-recovery-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [793, 796]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧱️map-assembly-open-and-recovery-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [803, 806]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧱️map-assembly-open-and-recovery-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [813, 816]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧱️map-assembly-open-and-recovery-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [851, 851]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧱️map-assembly-open-and-recovery-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [864, 864]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧱️map-assembly-open-and-recovery-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [867, 867]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧱️map-assembly-open-and-recovery-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [875, 875]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧱️map-assembly-open-and-recovery-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [876, 879]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧱️map-assembly-open-and-recovery-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [959, 959]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [968, 974]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧱️map-assembly-open-and-recovery-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [988, 988]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [997, 1002]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧱️map-assembly-open-and-recovery-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [1003, 1003]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [1011, 1011]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧱️map-assembly-open-and-recovery-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [1038, 1038]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧱️map-assembly-open-and-recovery-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [1128, 1128]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [1236, 1236]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🚢️map-assembly-commit-and-publication-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [1304, 1306]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🚢️map-assembly-commit-and-publication-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [1308, 1310]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🚢️map-assembly-commit-and-publication-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [1312, 1314]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🚢️map-assembly-commit-and-publication-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [1336, 1337]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🚢️map-assembly-commit-and-publication-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [1344, 1345]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🚢️map-assembly-commit-and-publication-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [1352, 1353]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🚢️map-assembly-commit-and-publication-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [1364, 1365]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🚢️map-assembly-commit-and-publication-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [1366, 1367]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🚢️map-assembly-commit-and-publication-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [1369, 1372]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🚢️map-assembly-commit-and-publication-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [1462, 1468]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🚢️map-assembly-commit-and-publication-steps/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [1568, 1574]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🛠️map-assembly-recovery-completion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [1611, 1611]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🛠️map-assembly-recovery-completion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [1631, 1637]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🛠️map-assembly-recovery-completion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [1645, 1651]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🛠️map-assembly-recovery-completion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [1693, 1694]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🛠️map-assembly-recovery-completion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [1734, 1735]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🛠️map-assembly-recovery-completion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [2104, 2110]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🪪️three-member-decision-operations-codecs-and-testing/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs [2119, 2122]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🪪️three-member-decision-operations-codecs-and-testing/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [143, 143]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🧰️group-outcome-and-store-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [166, 167]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🧰️group-outcome-and-store-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [180, 181]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🧰️group-outcome-and-store-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [197, 199]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🧰️group-outcome-and-store-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [200, 200]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🧰️group-outcome-and-store-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [202, 202]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🧰️group-outcome-and-store-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [205, 206]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🧰️group-outcome-and-store-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [218, 219]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🧰️group-outcome-and-store-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [236, 236]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [328, 328]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/📔️fake-journal-and-map-assembly-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [431, 431]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/📔️fake-journal-and-map-assembly-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [432, 435]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/📔️fake-journal-and-map-assembly-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [443, 443]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/📔️fake-journal-and-map-assembly-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [445, 446]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/📔️fake-journal-and-map-assembly-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [447, 447]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/📔️fake-journal-and-map-assembly-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [472, 473]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🗺️map-assembly-and-decision-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [476, 477]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🗺️map-assembly-and-decision-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [514, 514]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🗺️map-assembly-and-decision-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [519, 520]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🗺️map-assembly-and-decision-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [538, 539]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🗺️map-assembly-and-decision-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [548, 549]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🗺️map-assembly-and-decision-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [796, 797]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🧾️journal-commit-cancellation-and-stage-error-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [809, 810]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🧾️journal-commit-cancellation-and-stage-error-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [880, 881]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🧾️journal-commit-cancellation-and-stage-error-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [959, 960]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🧾️journal-commit-cancellation-and-stage-error-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [989, 989]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🧾️journal-commit-cancellation-and-stage-error-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [993, 994]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🧾️journal-commit-cancellation-and-stage-error-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [1029, 1030]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🧾️journal-commit-cancellation-and-stage-error-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [1060, 1061]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🎰️map-host-slot-foreign-anchor-and-carrier-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [1077, 1078]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🎰️map-host-slot-foreign-anchor-and-carrier-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [1105, 1106]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🎰️map-host-slot-foreign-anchor-and-carrier-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [1115, 1116]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🎰️map-host-slot-foreign-anchor-and-carrier-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [1153, 1154]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🎰️map-host-slot-foreign-anchor-and-carrier-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs [1249, 1249]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🎰️map-host-slot-foreign-anchor-and-carrier-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌅️bin-05/🔬️unit/🦀️.rs [642, 642]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌅️bin-05/🔬️unit/🔀️reconcile-alternative-event-log-and-backbone-port-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌅️bin-05/🔬️unit/🦀️.rs [657, 658]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌅️bin-05/🔬️unit/🔀️reconcile-alternative-event-log-and-backbone-port-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌅️bin-05/🔬️unit/🦀️.rs [663, 664]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌅️bin-05/🔬️unit/🔀️reconcile-alternative-event-log-and-backbone-port-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌅️bin-05/🔬️unit/🦀️.rs [1057, 1058]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌅️bin-05/🔬️unit/🗜️pack-value-fixture-and-typed-child-member-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌅️bin-05/🔬️unit/🦀️.rs [1088, 1089]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌅️bin-05/🔬️unit/🗜️pack-value-fixture-and-typed-child-member-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [69, 70]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🧳️retained-clone-preparation-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [87, 88]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🧳️retained-clone-preparation-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [213, 214]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🧳️retained-clone-preparation-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [247, 248]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🧳️retained-clone-preparation-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [350, 350]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🧳️retained-clone-preparation-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [387, 388]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🧳️retained-clone-preparation-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [389, 390]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🧳️retained-clone-preparation-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [456, 457]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🧳️retained-clone-preparation-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [552, 553]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/♻️retained-clone-preparation-lifecycle-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [554, 555]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/♻️retained-clone-preparation-lifecycle-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [567, 569]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/♻️retained-clone-preparation-lifecycle-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [588, 589]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/♻️retained-clone-preparation-lifecycle-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [591, 592]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/♻️retained-clone-preparation-lifecycle-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [606, 607]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/♻️retained-clone-preparation-lifecycle-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [615, 616]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/♻️retained-clone-preparation-lifecycle-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [621, 622]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/♻️retained-clone-preparation-lifecycle-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [636, 637]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/♻️retained-clone-preparation-lifecycle-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [641, 642]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/♻️retained-clone-preparation-lifecycle-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [703, 704]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/♻️retained-clone-preparation-lifecycle-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [764, 765]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/♻️retained-clone-preparation-lifecycle-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [821, 822]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/♻️retained-clone-preparation-lifecycle-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [859, 859]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/📚️batch-publication-and-stamped-clock-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [865, 867]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/📚️batch-publication-and-stamped-clock-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [940, 941]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/📚️batch-publication-and-stamped-clock-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [945, 946]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/📚️batch-publication-and-stamped-clock-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [1105, 1106]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/📚️batch-publication-and-stamped-clock-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [1108, 1109]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/📚️batch-publication-and-stamped-clock-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [1131, 1132]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/📚️batch-publication-and-stamped-clock-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [1156, 1157]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/📚️batch-publication-and-stamped-clock-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [1169, 1170]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/📚️batch-publication-and-stamped-clock-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [1171, 1172]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/📚️batch-publication-and-stamped-clock-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [1229, 1230]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/📚️batch-publication-and-stamped-clock-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [1255, 1256]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/📚️batch-publication-and-stamped-clock-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [1284, 1285]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/📚️batch-publication-and-stamped-clock-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [1324, 1325]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/📚️batch-publication-and-stamped-clock-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [1340, 1341]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/📚️batch-publication-and-stamped-clock-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [1359, 1360]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/💨️ephemeral-one-item-publication-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [1373, 1373]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/💨️ephemeral-one-item-publication-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [1422, 1423]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/💨️ephemeral-one-item-publication-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [1424, 1425]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/💨️ephemeral-one-item-publication-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [1452, 1452]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/💨️ephemeral-one-item-publication-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [1469, 1470]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/💨️ephemeral-one-item-publication-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [1471, 1472]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/💨️ephemeral-one-item-publication-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [1491, 1491]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/💨️ephemeral-one-item-publication-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [1499, 1500]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/💨️ephemeral-one-item-publication-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs [1533, 1534]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/💨️ephemeral-one-item-publication-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/🔬️unit/🦀️.rs [135, 140]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/🔬️unit/🛤️history-lane-interaction-store-and-immutable-root-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/🔬️unit/🦀️.rs [141, 172]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/🔬️unit/🛤️history-lane-interaction-store-and-immutable-root-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/🔬️unit/🦀️.rs [175, 176]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/🔬️unit/🛤️history-lane-interaction-store-and-immutable-root-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/🔬️unit/🦀️.rs [177, 177]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/🔬️unit/🦀️.rs [198, 198]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/🔬️unit/🛤️history-lane-interaction-store-and-immutable-root-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/🔬️unit/🦀️.rs [205, 206]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/🔬️unit/🛤️history-lane-interaction-store-and-immutable-root-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/🔬️unit/🦀️.rs [1242, 1243]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/🔬️unit/🌌️stateful-current-and-space-history-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/🔬️unit/🦀️.rs [1447, 1448]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/🔬️unit/🌌️stateful-current-and-space-history-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/🔬️unit/🦀️.rs [1487, 1488]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/🔬️unit/🌌️stateful-current-and-space-history-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌴️bin-06/🔬️unit/🦀️.rs [327, 327]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌴️bin-06/🔬️unit/🔄️refused-reload-and-erased-close-demand-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌴️bin-06/🔬️unit/🦀️.rs [351, 351]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌴️bin-06/🔬️unit/🔄️refused-reload-and-erased-close-demand-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌴️bin-06/🔬️unit/🦀️.rs [851, 851]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌴️bin-06/🔬️unit/🪙️retained-backing-and-terminal-cursor-demand-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌴️bin-06/🔬️unit/🦀️.rs [915, 915]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌴️bin-06/🔬️unit/🪙️retained-backing-and-terminal-cursor-demand-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌴️bin-06/🔬️unit/🦀️.rs [967, 967]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌴️bin-06/🔬️unit/🪙️retained-backing-and-terminal-cursor-demand-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌴️bin-06/🔬️unit/🦀️.rs [1297, 1298]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌴️bin-06/🔬️unit/💳️member-publication-denied-axes-and-original-allocation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🦀️.rs [34, 34]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🏷️catalog-staging-command-refusal-and-direct-fixture-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🦀️.rs [48, 48]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🏷️catalog-staging-command-refusal-and-direct-fixture-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🦀️.rs [124, 124]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🦀️.rs [130, 131]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🏷️catalog-staging-command-refusal-and-direct-fixture-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🦀️.rs [152, 153]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🏷️catalog-staging-command-refusal-and-direct-fixture-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🦀️.rs [154, 155]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🏷️catalog-staging-command-refusal-and-direct-fixture-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🦀️.rs [160, 161]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🏷️catalog-staging-command-refusal-and-direct-fixture-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🦀️.rs [176, 177]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🏷️catalog-staging-command-refusal-and-direct-fixture-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🦀️.rs [216, 217]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🏷️catalog-staging-command-refusal-and-direct-fixture-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🦀️.rs [218, 219]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🏷️catalog-staging-command-refusal-and-direct-fixture-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🦀️.rs [230, 231]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🏷️catalog-staging-command-refusal-and-direct-fixture-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🦀️.rs [235, 236]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🏷️catalog-staging-command-refusal-and-direct-fixture-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🦀️.rs [237, 238]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🏷️catalog-staging-command-refusal-and-direct-fixture-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🦀️.rs [239, 240]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🏷️catalog-staging-command-refusal-and-direct-fixture-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🦀️.rs [725, 725]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/📜️edit-retirement-message-ledger-and-displaced-owner-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🗄️durable-owned-group/🟦️.ts [7, 7]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🦀️.rs [19, 21]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🧰️supersede-replay-harness-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🦀️.rs [687, 688]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🪢️fold-site-hydration-and-oversize-message-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🦀️.rs [1185, 1186]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🌲️trunk-history-shape-and-command-decode-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🦀️.rs [1195, 1200]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🌲️trunk-history-shape-and-command-decode-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🦀️.rs [1348, 1349]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/↩️retraction-and-bounded-history-read-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🦀️.rs [289, 289]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️canonical-error-progress/🟦️.ts [157, 158]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️store-canonical-edit-sealer/🟦️.ts [75, 79]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️store-canonical-edit-sealer/🟦️.ts [81, 84]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️store-canonical-edit-sealer/🟦️.ts [90, 94]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️store-canonical-edit-sealer/🟦️.ts [96, 104]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️store-canonical-edit-sealer/🟦️.ts [131, 133]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️store-canonical-edit-sealer/🟦️.ts [135, 137]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️store-canonical-edit-sealer/🟦️.ts [139, 142]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️store-canonical-edit-sealer/🟦️.ts [144, 152]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️store-canonical-edit-sealer/🟦️.ts [165, 166]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs [75, 77]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧬️hydration-types-constructors-and-drive/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs [90, 92]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧬️hydration-types-constructors-and-drive/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs [101, 103]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧬️hydration-types-constructors-and-drive/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs [160, 162]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧬️hydration-types-constructors-and-drive/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs [467, 467]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🚶️hydration-step/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs [470, 471]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🚶️hydration-step/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs [897, 898]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🚶️hydration-step/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs [1101, 1101]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧹️hydration-retirement-drop-and-completion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs [1213, 1215]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧹️hydration-retirement-drop-and-completion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs [1223, 1225]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧹️hydration-retirement-drop-and-completion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [145, 146]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔑️dep-hash-and-failures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [176, 176]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🎯️inferred-field-and-config/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [210, 224]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🎯️inferred-field-and-config/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [245, 249]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🎯️inferred-field-and-config/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [250, 254]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🎯️inferred-field-and-config/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [657, 658]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔄️field-update/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [745, 745]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [757, 758]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🧮️cursor/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [776, 776]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🧮️cursor/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [791, 792]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🧮️cursor/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [847, 848]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🏁️driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [850, 851]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🏁️driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [861, 862]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🏁️driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [865, 865]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🏁️driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [866, 867]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🏁️driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [872, 874]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🏁️driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [877, 878]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🏁️driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [879, 880]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🏁️driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [882, 884]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🏁️driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [888, 889]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🏁️driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [898, 899]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🏁️driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [902, 903]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🏁️driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [908, 909]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🏁️driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [929, 930]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🏁️driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [932, 945]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🏁️driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [953, 954]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🏁️driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [993, 996]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🏁️driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [1016, 1019]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🏁️driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [1037, 1038]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🏁️driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [1051, 1052]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🏁️driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [1055, 1056]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🏁️driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [1061, 1062]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🏁️driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs [1070, 1071]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🏁️driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🧪️tests/🟦️.ts [1, 2]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws-unit/🦀️.rs [487, 500]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [514, 515]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [517, 517]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [519, 521]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [522, 524]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [526, 547]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [550, 551]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [560, 572]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [575, 576]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [580, 581]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [588, 589]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [590, 591]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [594, 594]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [600, 635]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [636, 638]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [639, 640]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [641, 641]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [644, 645]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [646, 699]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [708, 709]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [711, 712]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [714, 715]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [718, 720]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [723, 724]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [726, 727]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [735, 737]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [739, 740]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [741, 744]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [746, 748]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [759, 760]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [761, 763]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🧮️operation-and-mutation-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [882, 884]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🔁️dag-convergence-and-frame-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [888, 889]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🔁️dag-convergence-and-frame-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [906, 908]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🔁️dag-convergence-and-frame-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs [954, 956]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🏛️policy-merge-and-corpus-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🗂️schema-document-index.json [1844, 1844]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🗂️schema-document-index.json [1846, 1846]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🗂️schema-document-index.json [1911, 1911]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🗂️schema-document-index.json [1913, 1913]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🗂️schema-document-index.json [4194, 4194]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs [895, 896]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔁️mutations-expansion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs [902, 902]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs [904, 904]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔁️mutations-expansion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs [920, 920]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔁️mutations-expansion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs [927, 927]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔁️mutations-expansion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs [930, 930]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔁️mutations-expansion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs [954, 955]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔁️mutations-expansion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs [966, 966]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔁️mutations-expansion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs [1020, 1020]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔁️mutations-expansion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs [1022, 1022]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔁️mutations-expansion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs [1059, 1063]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔁️mutations-expansion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs [1112, 1113]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔁️mutations-expansion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs [1120, 1120]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔁️mutations-expansion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs [1136, 1144]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔁️mutations-expansion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs [1180, 1180]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔁️mutations-expansion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs [1224, 1225]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔁️mutations-expansion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs [1241, 1241]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔁️mutations-expansion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs [1283, 1283]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🏗️document-diff-and-composite-expansion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs [1299, 1299]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🏗️document-diff-and-composite-expansion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs [1320, 1320]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🏗️document-diff-and-composite-expansion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs [1331, 1337]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🏗️document-diff-and-composite-expansion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs [1353, 1353]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🏗️document-diff-and-composite-expansion/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⌨️cli/🦀️.rs [1216, 1217]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⌨️cli/🚀️simulate-migrate-profile-and-main/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⌨️cli/🦀️.rs [1453, 1454]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⌨️cli/🚀️simulate-migrate-profile-and-main/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🎫️handle/🦀️.rs [267, 268]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🎫️handle/📨️submit-admission-and-state/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️tests/🔬️unit/🦀️.rs [107, 108]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔮️preview/🧪️tests/🔬️unit/🦀️.rs, 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🧪️tests/🔬️unit/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️tests/🔬️unit/🦀️.rs [254, 255]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️tests/🔬️unit/🏊️worker-pool-use-and-mount-owner-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️tests/🔬️unit/🦀️.rs [1227, 1228]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️tests/🔬️unit/✍️writer-residency-compaction-and-hello/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️tests/🔬️unit/🦀️.rs [1248, 1249]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️tests/🔬️unit/✍️writer-residency-compaction-and-hello/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️tests/🔬️unit/🦀️.rs [1283, 1284]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️tests/🔬️unit/✍️writer-residency-compaction-and-hello/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️tests/🔬️unit/🦀️.rs [1567, 1568]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️tests/🔬️unit/🧭️long-module-and-source-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️tests/🔬️unit/🦀️.rs [1595, 1596]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️tests/🔬️unit/🧭️long-module-and-source-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🆔️ids/🧪️tests/🔬️unit/🦀️.rs [71, 72]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧾️log/🦀️.rs [180, 181]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧾️log/🏷️record-kinds-and-field-codec/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧾️log/🦀️.rs [747, 748]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧾️log/🧾️wal-record/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧾️log/🦀️.rs [798, 799]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧾️log/🧾️wal-record/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧾️log/🦀️.rs [1111, 1112]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧾️log/📤️payload-transform-group-commit-and-sink/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧾️log/🦀️.rs [1113, 1114]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧾️log/📤️payload-transform-group-commit-and-sink/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧾️log/🦀️.rs [1136, 1138]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧾️log/📖️page-source-reader-and-frames/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧾️log/🦀️.rs [1140, 1146]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧾️log/📖️page-source-reader-and-frames/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧾️log/🦀️.rs [1155, 1157]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧾️log/📖️page-source-reader-and-frames/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧾️log/🦀️.rs [1158, 1159]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧾️log/📖️page-source-reader-and-frames/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/🦀️.rs [314, 315]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/🧵️snapshot-segment-io/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/🦀️.rs [316, 317]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/🧵️snapshot-segment-io/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/🦀️.rs [335, 336]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/🧵️snapshot-segment-io/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/🦀️.rs [337, 338]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/🧵️snapshot-segment-io/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/🦀️.rs [339, 340]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/🧵️snapshot-segment-io/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/🦀️.rs [505, 506]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/📚️snapshot-generation-pages/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️.rs [664, 664]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🎟️hello-admission-and-backing/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️.rs [689, 690]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🎟️hello-admission-and-backing/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️.rs [749, 750]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🎟️hello-admission-and-backing/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️.rs [782, 783]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🎟️hello-admission-and-backing/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️.rs [789, 790]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🎟️hello-admission-and-backing/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️.rs [802, 803]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🎟️hello-admission-and-backing/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️.rs [835, 836]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🎟️hello-admission-and-backing/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️.rs [1046, 1047]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🎞️hello-replay-tail-and-execution/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️.rs [1050, 1051]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🎞️hello-replay-tail-and-execution/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️.rs [2173, 2174]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/📬️hello-future-result-and-session/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [2, 2]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [83, 84]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🔁️wal-command-decoder-and-replay-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [215, 216]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🔁️wal-command-decoder-and-replay-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [495, 496]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🧭️codec-state-frontier-and-bootstrap-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [518, 519]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🧭️codec-state-frontier-and-bootstrap-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [539, 540]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🧭️codec-state-frontier-and-bootstrap-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [556, 557]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🧭️codec-state-frontier-and-bootstrap-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [573, 574]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🧭️codec-state-frontier-and-bootstrap-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [584, 585]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🧭️codec-state-frontier-and-bootstrap-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [643, 644]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🪢️retained-sync-hello-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [665, 666]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🪢️retained-sync-hello-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [669, 670]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🪢️retained-sync-hello-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [673, 674]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🪢️retained-sync-hello-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [688, 689]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🪢️retained-sync-hello-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [711, 712]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🪢️retained-sync-hello-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [739, 740]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🪢️retained-sync-hello-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [809, 810]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🪢️retained-sync-hello-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [865, 866]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🪢️retained-sync-hello-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [957, 958]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🪢️retained-sync-hello-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [989, 990]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🪢️retained-sync-hello-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🦀️.rs [1005, 1006]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🪢️retained-sync-hello-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📁️fs/🦀️.rs [396, 397]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📁️fs/💽️fs-storage/🛤️paths-and-lease-files/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📁️fs/🦀️.rs [406, 407]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📁️fs/💽️fs-storage/🛤️paths-and-lease-files/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📁️fs/🦀️.rs [842, 843]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📁️fs/💽️fs-storage/📨️fs-task-executor/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📁️fs/🦀️.rs [854, 855]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📁️fs/💽️fs-storage/📨️fs-task-executor/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1417, 1418]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🧹️task-faults-and-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1422, 1423]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🧹️task-faults-and-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1424, 1425]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1437, 1438]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🧹️task-faults-and-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1439, 1440]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🧹️task-faults-and-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1442, 1444]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🧹️task-faults-and-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1449, 1450]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🧹️task-faults-and-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1451, 1451]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🧹️task-faults-and-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1455, 1455]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🧹️task-faults-and-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1457, 1458]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🧹️task-faults-and-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1514, 1514]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🧹️task-faults-and-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1515, 1529]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🧹️task-faults-and-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1531, 1533]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🧹️task-faults-and-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1534, 1550]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🧹️task-faults-and-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1551, 1552]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1568, 1569]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🧹️task-faults-and-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1676, 1676]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🧹️task-faults-and-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1679, 1679]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🧹️task-faults-and-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1686, 1687]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🧹️task-faults-and-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1689, 1690]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🧹️task-faults-and-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1745, 1745]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🧹️task-faults-and-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1746, 1746]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🧹️task-faults-and-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1753, 1754]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🧹️task-faults-and-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1775, 1776]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🧹️task-faults-and-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs [1789, 1789]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🧹️task-faults-and-close/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🦀️.rs [227, 227]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🏃️task-allocation-and-async-driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🦀️.rs [309, 309]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🏃️task-allocation-and-async-driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🦀️.rs [339, 340]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🏃️task-allocation-and-async-driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🦀️.rs [363, 364]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🏃️task-allocation-and-async-driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🦀️.rs [444, 445]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🏃️task-allocation-and-async-driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🦀️.rs [458, 459]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🏃️task-allocation-and-async-driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🦀️.rs [518, 519]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🏃️task-allocation-and-async-driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🦀️.rs [523, 524]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🏃️task-allocation-and-async-driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🦀️.rs [582, 583]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🏃️task-allocation-and-async-driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🦀️.rs [586, 587]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🏃️task-allocation-and-async-driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🦀️.rs [646, 647]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🏃️task-allocation-and-async-driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🦀️.rs [660, 660]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🎟️task-operation-lease-and-admission/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🦀️.rs [728, 729]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🎟️task-operation-lease-and-admission/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🦀️.rs [732, 733]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🎟️task-operation-lease-and-admission/🦀️.rs, 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🏃️task-allocation-and-async-driver/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🦀️.rs [971, 971]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🎟️task-operation-lease-and-admission/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🦀️.rs [973, 974]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🦀️.rs [1141, 1142]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🔁️task-operation-futures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🦀️.rs [1158, 1159]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🔁️task-operation-futures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🦀️.rs [1163, 1164]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🔁️task-operation-futures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🦀️.rs [1175, 1177]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🔁️task-operation-futures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs [495, 496]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/📏️fixed-page-output-and-lease-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs [712, 713]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🪤️lost-owner-ring-close-interruption-and-queued-callback/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs [718, 719]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🪤️lost-owner-ring-close-interruption-and-queued-callback/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs [721, 722]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🪤️lost-owner-ring-close-interruption-and-queued-callback/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs [723, 724]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🪤️lost-owner-ring-close-interruption-and-queued-callback/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs [735, 737]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🪤️lost-owner-ring-close-interruption-and-queued-callback/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs [738, 753]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🪤️lost-owner-ring-close-interruption-and-queued-callback/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs [756, 757]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🪤️lost-owner-ring-close-interruption-and-queued-callback/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs [761, 762]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🪤️lost-owner-ring-close-interruption-and-queued-callback/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs [767, 768]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🪤️lost-owner-ring-close-interruption-and-queued-callback/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs [770, 771]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🪤️lost-owner-ring-close-interruption-and-queued-callback/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs [775, 776]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🪤️lost-owner-ring-close-interruption-and-queued-callback/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs [882, 883]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🪤️lost-owner-ring-close-interruption-and-queued-callback/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs [899, 900]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🪤️lost-owner-ring-close-interruption-and-queued-callback/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs [922, 923]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🪤️lost-owner-ring-close-interruption-and-queued-callback/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs [1215, 1216]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🧯️pressure-slots-and-lost-backend-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs [1218, 1219]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🧯️pressure-slots-and-lost-backend-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs [1221, 1222]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🧯️pressure-slots-and-lost-backend-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🦀️.rs [1062, 1062]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/📚️pages-text-and-u64-list/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🦀️.rs [2192, 2192]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🚦️executor-driver-and-faults/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🦀️.rs [2212, 2212]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🚦️executor-driver-and-faults/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🦀️.rs [2232, 2232]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🚦️executor-driver-and-faults/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🦀️.rs [2236, 2236]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🚦️executor-driver-and-faults/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🦀️.rs [2247, 2247]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🚦️executor-driver-and-faults/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🦀️.rs [2249, 2249]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🚦️executor-driver-and-faults/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🦀️.rs [2279, 2280]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🚦️executor-driver-and-faults/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🦀️.rs [2281, 2281]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🦀️.rs [2285, 2286]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🚦️executor-driver-and-faults/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🦀️.rs [2288, 2292]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🚦️executor-driver-and-faults/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🦀️.rs [2320, 2320]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🧺️task-slots-lost-owners-and-admission/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🦀️.rs [2374, 2374]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🧺️task-slots-lost-owners-and-admission/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🦀️.rs [856, 857]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🌱️engine-lifecycle/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🦀️.rs [871, 872]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🌱️engine-lifecycle/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🦀️.rs [1022, 1023]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🚦️engine-submit-pipeline/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🦀️.rs [1198, 1199]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🚦️engine-submit-pipeline/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🦀️.rs [1570, 1571]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/↩️engine-undo-durable-group-query-and-preview/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🧪️tests/🔬️unit/🦀️.rs [635, 636]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🧪️tests/🔬️unit/✍️submit-materialize-dedupe-conflict-and-undo-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🧪️tests/🔬️unit/🦀️.rs [647, 648]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🧪️tests/🔬️unit/✍️submit-materialize-dedupe-conflict-and-undo-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🧪️tests/🔬️unit/🦀️.rs [657, 658]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🧪️tests/🔬️unit/✍️submit-materialize-dedupe-conflict-and-undo-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🧪️tests/🔬️unit/🦀️.rs [957, 958]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🧪️tests/🔬️unit/↩️preview-query-and-actor-laws/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs [193, 193]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧾️authority-and-journal-sink/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs [550, 551]: already-present 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔮️preview/🧪️tests/🔬️unit/🦀️.rs, 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🧪️tests/🔬️unit/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs [617, 618]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🗝️hash-projection-and-recovery-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs [632, 635]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🗝️hash-projection-and-recovery-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs [640, 646]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🗝️hash-projection-and-recovery-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs [647, 647]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs [648, 648]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs [653, 653]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🗝️hash-projection-and-recovery-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs [655, 656]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🗝️hash-projection-and-recovery-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs [687, 700]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🗝️hash-projection-and-recovery-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs [706, 706]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🗝️hash-projection-and-recovery-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs [751, 752]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🗝️hash-projection-and-recovery-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs [800, 801]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🗝️hash-projection-and-recovery-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs [897, 897]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🗝️hash-projection-and-recovery-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs [898, 899]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🗝️hash-projection-and-recovery-fixtures/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [26, 27]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🏷️ids-command-and-messages/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [34, 36]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🏷️ids-command-and-messages/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [105, 106]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🗺️pathmap-diff-and-bridge/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [171, 174]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🗺️pathmap-diff-and-bridge/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [176, 178]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🗺️pathmap-diff-and-bridge/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [179, 180]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🗺️pathmap-diff-and-bridge/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [189, 191]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🗺️pathmap-diff-and-bridge/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [192, 194]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🗺️pathmap-diff-and-bridge/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [321, 322]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/⚔️conflict-records/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [522, 523]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [524, 525]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [526, 527]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🧾️receipts-and-checkpoints/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [551, 552]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [553, 554]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [555, 556]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🧾️receipts-and-checkpoints/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [563, 563]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🧾️receipts-and-checkpoints/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [571, 572]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [573, 574]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [575, 576]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🧾️receipts-and-checkpoints/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [586, 587]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [588, 589]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [590, 591]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🧾️receipts-and-checkpoints/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [640, 640]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🛡️durable-group-recovery/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [712, 713]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [714, 715]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [716, 717]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🛡️durable-group-recovery/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [770, 771]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [772, 773]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [774, 775]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🛡️durable-group-recovery/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [785, 786]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [787, 788]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [789, 790]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🛡️durable-group-recovery/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [812, 813]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [814, 815]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [816, 817]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🛡️durable-group-recovery/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [841, 843]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🛡️durable-group-recovery/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [914, 915]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [916, 917]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs [918, 919]: mapped 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🛡️durable-group-recovery/🦀️.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🦀️.rs [150, 150]: unmapped 
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🦀️.rs [183, 183]: unmapped 
+- 🧰️framework/🛍️products/📓️print/README.md [21, 23]: unmapped 
+
+## Cross-Module Current Owner Transfers
+
+- Appended the incoming CapturedSnapshotSource module declaration to the current snapshot/read owner after its current test hooks, preserving both sides of the EOF overlap.
+- Moved incoming receiving-failure diagnostics and whole-effect-span semantics to current job/failure, where HEAD owns faultFromOriginalTurnFailure. Removed the misplaced incoming helper from diagnostic/retained and routed incoming job failure tests to current ../🟦️.ts, retaining the existing first-party API owner.
+
+## Named Value Source Transfers
+
+Carried the incoming ArrayCursor MaybeUninit/ManuallyDrop fields into its exact current array-cursor owner, retaining current pub(super) field visibility. Placed the authored RetainedCloneClose next_owner_demands and ordered-map insertion next_advance_demands methods into their defining current impl owners. Added the authored close_demands methods to the current scalar/string BoundedOrdCursor impls and carried alias-copy quote changes through current bounded ordering/lookup/insertion owners. These are exact source-delta preservation moves; no compiler or runtime validation was performed.
+
+## Controlled Retirement Oracle Preservation
+
+Retained current typed patched wrapper and split-aware contract/oracle helpers. Removed inapplicable incoming type arguments from patched calls (the generic argument belongs inside its existing third-party applyJsonPatch wrapper), ported incoming nested-demand and original Arc custody assertions to actual current source owners. Current retirementCopyDemand already expresses the incoming zero scalar/text work and actual vector extent. All current assertions and cases remain except the superseded direct child demand source spelling, which now follows the authored nested helper. No tests run.
+
+## Typed Declaration Closure
+
+Moved18 canonical JSON tree bounds onto the exact nine authored committed-recovery declarations, retaining the eight plain bounds on unrelated current/incoming methods. Added incoming record derive variant_field/required, MutationsAttrs reference/reference_diff and InferenceCursor original_field_source fields to their named current declarations with existing sibling visibility. Preserved current shared issuance API imports, explicit introduction package export, current DOM.Iterable/AsyncIterable options and caller context constructors. Array field and begin-close overlaps retain the already integrated complete declaration and equivalent H state transition.

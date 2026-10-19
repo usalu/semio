@@ -1,5 +1,5 @@
-//! 🪆️ Subset root for `s.fem.fem3d@1/*` (ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`,
 //! `terra-descriptors` packet, following the `terra-fleet-trinity-recipe` recipe —
+//! 🪆️ Subset root for `s.fem.fem3d@1/*` (ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`,
 //! `📓️terra-fleet-trinity-recipe-report.md`). Exports `subset() -> SubsetDeclaration`, assembling the
 //! `🧬️schema`/`🚪️io`/`👁️viewer`/`✏️editor`/`📚️examples` children — the editor and viewer come from
 //! `semio-s-artifact-fem-3d-editor` and `semio-s-artifact-fem-3d-viewer`.
@@ -18,7 +18,10 @@ use semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema;
 use semio_s_artifact_fem_3d_viewer::viewer::fem3d as viewer;
 use semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::FEM3D_DIALECT;
-use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
+use semio_framework_plugin::app::declarations::editor_surface;
+use semio_framework_plugin::app::declarations::viewer_surface;
+use semio_framework_plugin::app::declarations::SchemaDeclaration;
+use semio_framework_plugin::app::declarations::SubsetDeclaration;
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 

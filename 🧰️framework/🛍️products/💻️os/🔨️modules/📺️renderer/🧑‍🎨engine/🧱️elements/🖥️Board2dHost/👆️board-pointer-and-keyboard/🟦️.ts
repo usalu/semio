@@ -1,6 +1,6 @@
 /** 👆️ Board2dHost pointer and keyboard: the presence publishing, the canvas pointer effect and the keyboard effects. */
 import { useCallback, useEffect, useRef } from "react";
-import { useLocalPresenceActorIdV1 } from "../../👕️canvas-presence/🟦️.tsx";
+import { useLocalPresenceActorIdV1 , usePresenceRuntimeKeyV1} from "../../👕️canvas-presence/🟦️.tsx";
 import { PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS, publishLocalPresenceWindowViewV1, clearLocalPresenceWindowViewV1, publishLocalActiveToolV1 } from "../../👕️canvas-presence/🟦️.ts";
 import { board2dCameraActionArgs, board2dFloat32Decimal, parseBoardCamera } from "../🔬️board-parsing/🟦️.ts";
 import { board2dPinchCamera, boardScreenToWorld } from "../📍️drop-and-camera/🟦️.ts";
@@ -15,9 +15,10 @@ export function useBoardPointerAndKeyboard(core: BoardCore3) {
   //#region Pointer
 
   const presencePublishAtRef = useRef(0);
+  const presenceRuntimeKey = usePresenceRuntimeKeyV1();
   const presenceWindowId = windowInstanceId ?? node.surfaceId ?? "board";
-  const localPresenceActor = useLocalPresenceActorIdV1("local");
-  useEffect(() => () => clearLocalPresenceWindowViewV1(presenceWindowId), [presenceWindowId]);
+  const localPresenceActor = useLocalPresenceActorIdV1(presenceRuntimeKey);
+  useEffect(() => presenceRuntimeKey ? () => clearLocalPresenceWindowViewV1(presenceWindowId, presenceRuntimeKey) : undefined, [presenceWindowId, presenceRuntimeKey]);
   const publishBoardPresenceView = useCallback((screenPoint: { readonly x: number; readonly y: number } | null) => {
     const now = Date.now();
     if (now - presencePublishAtRef.current < PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS) return;
@@ -26,15 +27,16 @@ export function useBoardPointerAndKeyboard(core: BoardCore3) {
     const camera = parseBoardCamera(cameraJson) ?? { x: 0, y: 0, zoom: 1 };
     const size = readContainerSize();
     const world = screenPoint ? boardScreenToWorld(cameraJson, size, screenPoint) : null;
-    publishLocalPresenceWindowViewV1("local", presenceWindowId, {
+    if (!presenceRuntimeKey) return;
+    publishLocalPresenceWindowViewV1(presenceRuntimeKey, presenceWindowId, {
       windowId: presenceWindowId,
       space: "canvas",
       kind: { kind: "canvas", x: camera.x, y: camera.y, zoom: camera.zoom },
       size: [size.w, size.h],
       ...(world ? { pointer: [world.x, world.y, 0] as const } : {}),
     });
-    publishLocalActiveToolV1("local", sceneRef.current?.activeUtility ?? null);
-  }, [presenceWindowId, readContainerSize]);
+    publishLocalActiveToolV1(presenceRuntimeKey, sceneRef.current?.activeUtility ?? null);
+  }, [presenceWindowId, presenceRuntimeKey, readContainerSize]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -242,7 +244,7 @@ export function useBoardPointerAndKeyboard(core: BoardCore3) {
     return () => window.removeEventListener("keydown", onTabCapture, true);
   }, [flushBoardEvents, scene?.activeUtility, scene?.interactive]);
   //#endregion Keyboard
-  return { localPresenceActor, presenceWindowId };
+  return { localPresenceActor, presenceWindowId , presenceRuntimeKey };
 }
 
 export type BoardCore4 = BoardCore3 & ReturnType<typeof useBoardPointerAndKeyboard>;

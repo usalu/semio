@@ -35,6 +35,9 @@ impl semio_framework_os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMuta
     
     })())
 }
+}
+
+impl crate::os_spr::ColdMutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for CreateSpaceAlternative {
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create space alternative {}", self.alternative.name), &format!("Space-Alternative {} erstellen", self.alternative.name))
     }

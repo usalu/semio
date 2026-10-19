@@ -28,7 +28,8 @@ impl<J:InteractiveJob> RefusedWorkerSource<J>{
    let admitted=BatchJobSession::try_admit_owned(&mut self.job,&mut self.params,cx)?;if let Some((session,_posted))=admitted{self.pending=false;return Ok(Some(session))}Ok(None)
   }
  pub fn error(&self)->Option<&OriginalTurnFailure>{self.error.as_ref()}
- fn job(&self)->Option<&J>{self.job.as_ref()}
+ /// 🔎️ Borrows the exact pending source without moving its constructor or cancellation custody.
+ pub fn job(&self)->Option<&J>{self.job.as_ref()}
  pub fn terminal_is_empty(&self)->bool{self.job.is_none()&&self.params.is_none()&&self.cancel.is_none()&&self.error.is_none()&&self.error_retirement.is_none()}
  pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if let Some(job)=self.job.as_ref(){if !self.closing{return Ok(RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()})}if job.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<J>>(),depth:1,..Default::default()})}return Ok(RetirementDemand{copy_bytes:job.next_close_copy_byte_demand()?,capacity_bytes:job.next_close_capacity_byte_demand(body)?,release_bytes:job.next_close_release_byte_demand()?,depth:job.next_close_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original refused job parent depth overflow"))?})}

@@ -1,0 +1,85 @@
+{
+  "cases": [
+    {
+      "id": "empty",
+      "schema": "stdio.binary",
+      "count": 0,
+      "octet": 0,
+      "optionalPayload": false
+    },
+    {
+      "id": "small",
+      "schema": "stdio.binary",
+      "count": 3,
+      "octet": 17,
+      "optionalPayload": true
+    },
+    {
+      "id": "page-boundary",
+      "schema": "Daten · bytes",
+      "count": 65537,
+      "octet": 239,
+      "optionalPayload": true
+    }
+  ],
+  "cancelCuts": [
+    0,
+    1,
+    2,
+    3,
+    8,
+    64
+  ],
+  "expected": {
+    "sourcePreserved": true,
+    "wholeRecordClones": 0,
+    "unfundedHeapBirths": 0
+  },
+  "nestedBodyQuotes": [
+    {
+      "body": 4096,
+      "headers": [
+        8,
+        8
+      ],
+      "payload": 4080,
+      "spent": 4096
+    },
+    {
+      "body": 32,
+      "headers": [
+        8,
+        8
+      ],
+      "payload": 16,
+      "spent": 32
+    },
+    {
+      "body": 16,
+      "headers": [
+        8,
+        8
+      ],
+      "payload": 0,
+      "spent": 16
+    },
+    {
+      "body": 4096,
+      "headers": [
+        4,
+        4
+      ],
+      "payload": 4088,
+      "spent": 4096
+    },
+    {
+      "body": 8,
+      "headers": [
+        4,
+        4
+      ],
+      "payload": 0,
+      "spent": 8
+    }
+  ]
+}

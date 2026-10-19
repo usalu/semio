@@ -1,5 +1,5 @@
-//! 🔗 Puzzle3d mutation — `ConnectVortices`: creates an attraction between two full vortex ids
 //! (`object_id:vortex_id`), full initial connection-parameterization payload included.
+//! 🔗 Puzzle3d mutation — `ConnectVortices`: creates an attraction between two full vortex ids
 use crate::disconnect_vortices::mutation::DisconnectVortices;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
@@ -38,23 +38,32 @@ pub fn connect_vortices<Op: From<ConnectVortices>>(id: String, attracting: Strin
 impl<Op> protocol::MutationKind<Puzzle3dSnapshot, Op> for ConnectVortices
 where
     Op: protocol::Mutation<Puzzle3dSnapshot, Diff = Puzzle3dDiff> + From<ConnectVortices> + From<DisconnectVortices>,
-{
+ {
+
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "vortices", kind: "connect-vortices", record: "ConnectedVortices" };
 
-    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Puzzle3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect \"{}\" to \"{}\"", self.attracting, self.attracted), &format!("\"{}\" mit \"{}\" verbinden", self.attracting, self.attracted))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
+
+}
+impl<Op> protocol::ColdMutationKind<Puzzle3dSnapshot, Op> for ConnectVortices
+where
+    Op: protocol::ColdMutation<Puzzle3dSnapshot, ReferenceDiff = Puzzle3dDiff> + From<ConnectVortices> + From<DisconnectVortices>,
+ {
+fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+        super::diff::diff(self, base)
+    }
+fn inverse(&self, base: &Puzzle3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Mutation

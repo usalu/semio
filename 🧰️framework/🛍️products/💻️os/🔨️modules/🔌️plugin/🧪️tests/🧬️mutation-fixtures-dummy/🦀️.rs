@@ -23,6 +23,7 @@ use semio_framework_plugin_decl_views::{ArtifactView, ConfigView, DraftView, NoC
 use semio_framework_plugin_decl_emission::Emit;
 use semio_framework::ViewModel;
 use protocol::MutationDiff;
+use protocol::ColdMutationDiff;
 use semio_framework::{action_bus, ActionKind, Fault, IconName, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolOperationSpec};
 use semio_framework_2d_compute::EngineHandles;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -36,9 +37,9 @@ pub(crate) struct DummySnapshot {
 }
 
 impl store::os_store::serialization::ArtifactSqliteSnapshotHost for DummySnapshot {
-    
-    
-    
+
+
+
 }
 impl pack::snapshot::ArtifactSqliteSnapshot for DummySnapshot {
 const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
@@ -84,7 +85,7 @@ impl pack::snapshot::ArtifactDsl for DummySnapshot {
 
 impl pack::snapshot::ArtifactPack for DummySnapshot {
     /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    
+
 
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         serde_json::to_vec(self).map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())))
@@ -108,23 +109,34 @@ pub(crate) struct DummyDiff {
 }
 
 impl protocol::DiffAlgebra<DummySnapshot> for DummyDiff {
-    fn inverse(&self, base: &DummySnapshot) -> Self {
-        Self { count: self.count.map(|_| base.count) }
-    }
+
     fn is_empty(&self) -> bool {
         self.count.is_none()
     }
 }
 
-impl MutationDiff<DummySnapshot> for DummyDiff {
-    fn apply(&self, snapshot: &DummySnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<DummySnapshot> {
-        Ok(DummySnapshot { count: self.count.unwrap_or(snapshot.count) })
+impl protocol::ColdDiffAlgebra<DummySnapshot> for DummyDiff {
+    fn inverse(&self, base: &DummySnapshot) -> Self {
+        Self { count: self.count.map(|_| base.count) }
     }
+}
 
+impl MutationDiff<DummySnapshot> for DummyDiff {
+
+
+
+}
+
+impl ColdMutationDiff<DummySnapshot> for DummyDiff {
     fn absorb(&mut self, other: Self) {
         if other.count.is_some() {
             self.count = other.count;
         }
+    }
+
+    fn apply(&self, snapshot: &mut DummySnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+                if let Some(value) = self.count { snapshot.count = value; }
+        Ok(())
     }
 }
 
@@ -196,7 +208,7 @@ impl semio_framework_job::InteractiveJob for DummyFixtureJob {
             self.page += 1;
             return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(Into::into);
         }
-        let Some(DummyCommand::Increment) = self.owners.command.as_deref() else {
+        let Some(DummyCommand::Increment) = self.owners.command() else {
             return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(Into::into);
         };
         if self.owners.pending_is_empty(){let value=self.count+1;if !self.owners.prepare_emission(cx,std::mem::size_of::<i32>(),0,||Ok(Emit::mutations(vec![SetDummyCount{value}.into()])))?{return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)}return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)}
@@ -254,22 +266,9 @@ impl ToolJobFactory for DummyFixtureFactory {
     fn execution_contract(&self) -> ToolExecutionContract {
         ToolExecutionContract::resumable(4_096, 1, 1, 4_096, 500, 1, 1)
     }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
-        Ok(payload)
-    }
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        mut payload: Self::Payload,
-        input: action_bus::RetainedToolWireInput,
-        checkpoint: Option<action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, action_bus::RetainedToolWireInput, Option<action_bus::RetainedToolWireInput>)> {
-        if checkpoint.is_some() {
-            return Err((semio_framework::ToolJobFactoryError::new("dummy fixture resume starts a fresh command owner"), input, checkpoint));
-        }
-        payload.owners.raw = Some(input);
-        Ok(payload)
-    }
+    fn admission_demands(&self,_operation:&semio_framework_job::Operation,payload:&Self::Payload,input:Option<&semio_framework::RetainedToolWireInput>,checkpoint:Option<&semio_framework::RetainedToolWireInput>)->Result<semio_framework::action_bus::ToolJobAdmissionDemand,semio_framework_value::ValueError>{if checkpoint.is_some()||(input.is_some()&&payload.owners.raw.is_some()){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original typed job refuses a replacement wire owner or restart checkpoint"));}Ok(semio_framework::action_bus::ToolJobAdmissionDemand::reused_job())}
+fn admit_job(&mut self,context:&mut semio_framework_job::StepContext<'_>,operation:&semio_framework_job::Operation,payload:&mut Option<Box<Self::Payload>>,input:&mut Option<semio_framework::RetainedToolWireInput>,checkpoint:&mut Option<semio_framework::RetainedToolWireInput>,output:&mut Option<Box<Self::Job>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let demand=self.admission_demands(operation,payload.as_deref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typed job payload is absent"))?,input.as_ref(),checkpoint.as_ref())?;semio_framework::action_bus::admit_original_tool_job_controlled(context,operation,payload,input,checkpoint,output,demand,|_,payload,input,_|{if input.is_some(){payload.as_mut().expect("retained original job").owners.raw=input.take();}let job=payload.take().expect("admitted same original job");Ok((job,semio_framework_job::RetainedCloneProgress{copied_items:1,..Default::default()}))})}
+
 }
 
 impl ArtifactOwnedToolJobFactory for DummyFixtureFactory {
@@ -341,10 +340,7 @@ impl ArtifactApp for DummyApp {
         registry.register(DummyFixtureFactory { keys: vec![ToolFactoryKey::new(registry.controller_id(), DUMMY_TOOL_ID)] })
     }
 
-    async fn build_tool_job(request: ArtifactOwnedToolJobRequest<Self>) -> Result<Option<ToolOperationSpec>, Fault> {
-        let job = DummyFixtureJob { owners: crate::testing_laws_unit_1::mutation_fixture::job_close::FixtureJobOwners::new(request.command, request.completion).with_context(request.context), count: request.snapshot.count, page: 0 };
-        Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, job, request.operation)))
-    }
+    fn build_tool_job(request:&mut Option<ArtifactOwnedToolJobRequest<Self>>,output:&mut Option<semio_framework::ErasedToolJob>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{crate::app_testing::mutation_fixture::job_close::admit_fixture_tool_job(request,output,cx,|request|{let count=request.snapshot.count;DummyFixtureJob{owners:crate::testing_laws_unit_1::mutation_fixture::job_close::FixtureJobOwners::from_request(request),count,page:0}})}
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(crate::testing_laws_unit_1::mutation_fixture::wire::preparation_factory::<Self::Snapshot, Self::Mutation>("testkit-dummy-artifact-retained"))

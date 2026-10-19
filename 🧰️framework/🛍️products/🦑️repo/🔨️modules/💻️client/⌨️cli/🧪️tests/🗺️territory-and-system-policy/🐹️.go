@@ -12,10 +12,9 @@ import (
 	"context"
 	"encoding/json"
 	"os"
-	"path/filepath"
-	"reflect"
 	"strings"
 	"testing"
+
 )
 
 func TestTerritory(t *testing.T) {
@@ -188,117 +187,38 @@ func TestPolicyDefAllKinds(t *testing.T) {
 }
 
 func TestSystemPolicy(t *testing.T) {
-	const settings = `{"editor.fontSize": 14, "python.testing.cwd": "${workspaceFolder}", "terminal.integrated.env.windows": {"A": "b"}}`
-	const extensions = `{"recommendations": ["ms-python.python", "ms-vscode-remote.remote-containers"]}`
-	const overlay = `{"settings": {"omit": ["terminal.integrated.env.windows"], "set": {"python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python"}}, "extensions": {"omit": ["ms-vscode-remote.remote-containers"], "add": ["anthropic.claude-code"]}}`
-	const devcontainer = "// SPDX-License-Identifier: AGPL-3.0-only\n{\n  /* derived */\n  \"name\": \"https://example.test/a\",\n  \"customizations\": {\"vscode\": {\"settings\": {\"editor.fontSize\": 14, \"python.testing.cwd\": \"${containerWorkspaceFolder}\", \"python.defaultInterpreterPath\": \"${containerWorkspaceFolder}/.venv/bin/python\"}, \"extensions\": [\"ms-python.python\", \"anthropic.claude-code\"]}}\n}\n"
-	arrange := func(t *testing.T, files map[string]string) {
-		tmpDir := t.TempDir()
-		oldRoot := rootDir
-		rootDir = tmpDir
-		t.Cleanup(func() { rootDir = oldRoot })
-		for name, content := range files {
-			os.MkdirAll(filepath.Dir(filepath.Join(tmpDir, name)), 0o755)
-			WriteTextFile(filepath.Join(tmpDir, name), content)
+	data, err := os.ReadFile("../../../../🎛️dashboard/🧫️fixtures/🧭️authority/🔣️.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var fixture struct {
+		PathCases []struct {
+			Path     string
+			Accepted bool
 		}
 	}
-	kinds := func() map[Statute]bool {
-		found := map[Statute]bool{}
-		for _, v := range systemPolicy(NewPolicyContext(Scope{Kind: ScopeRepo}, []Bundle{})) {
-			found[v.Kind] = true
-		}
-		return found
+	if err := json.Unmarshal(data, &fixture); err != nil {
+		t.Fatal(err)
 	}
-	files := func(overrides map[string]string) map[string]string {
-		base := map[string]string{".vscode/settings.json": settings, ".vscode/extensions.json": extensions, ".devcontainer/editor-overlay.json": overlay, ".devcontainer/devcontainer.json": devcontainer}
-		for name, content := range overrides {
-			base[name] = content
-		}
-		return base
+	for _, row := range fixture.PathCases {
+		t.Run(row.Path, func(t *testing.T) {
+			ctx := NewPolicyContextWithFiles(Scope{Kind: ScopeRepo}, []Bundle{}, []string{row.Path})
+			breachs := systemPolicy(ctx)
+			if (len(breachs) == 0) != row.Accepted {
+				t.Fatalf("accepted = %v, breachs = %v", row.Accepted, breachs)
+			}
+			if len(breachs) > 0 && breachs[0].Kind != BreachSystemIdeConfiguration {
+				t.Fatalf("unexpected statute %v", breachs[0].Kind)
+			}
+		})
 	}
-	t.Run("no breach when the devcontainer block equals its derivation", func(t *testing.T) {
-		arrange(t, files(nil))
-		if found := kinds(); len(found) != 0 {
-			t.Errorf("expected no breach, got %v", found)
-		}
-	})
-	t.Run("detects drifted settings", func(t *testing.T) {
-		arrange(t, files(map[string]string{".vscode/settings.json": `{"editor.fontSize": 15}`}))
-		found := kinds()
-		if !found[BreachSystemDevcontainerVscodeSettingsDrift] || found[BreachSystemDevcontainerVscodeExtensionsDrift] {
-			t.Errorf("expected only the settings drift breach, got %v", found)
-		}
-	})
-	t.Run("detects drifted extensions", func(t *testing.T) {
-		arrange(t, files(map[string]string{".vscode/extensions.json": `{"recommendations": ["ms-python.python", "golang.go"]}`}))
-		found := kinds()
-		if found[BreachSystemDevcontainerVscodeSettingsDrift] || !found[BreachSystemDevcontainerVscodeExtensionsDrift] {
-			t.Errorf("expected only the extensions drift breach, got %v", found)
-		}
-	})
-	t.Run("a missing overlay declares no overlay", func(t *testing.T) {
-		arrange(t, files(map[string]string{".devcontainer/editor-overlay.json": ""}))
-		found := kinds()
-		if !found[BreachSystemDevcontainerVscodeSettingsDrift] || !found[BreachSystemDevcontainerVscodeExtensionsDrift] {
-			t.Errorf("expected both drift breaches without overlay, got %v", found)
-		}
-	})
-	t.Run("no breachs when the editor files are absent", func(t *testing.T) {
-		arrange(t, nil)
-		if found := kinds(); len(found) != 0 {
-			t.Errorf("expected 0 breachs, got %v", found)
-		}
-	})
-	t.Run("derivation equals the language-agnostic fixture", func(t *testing.T) {
-		data, err := os.ReadFile(moduleFixturePath("..", "..", "📚️library", "⚡️caching", "📦️artifacts", "📝️derived-config", "🧪️tests", "🧫️fixtures", "📝️derived-config", "🔣️.json"))
-		if err != nil {
-			t.Fatal(err)
-		}
-		var fixture struct {
-			Editor []struct {
-				Name      string
-				Canonical EditorSurface
-				Overlay   EditorOverlay
-				Expected  EditorSurface
-			}
-		}
-		if err := json.Unmarshal(data, &fixture); err != nil {
-			t.Fatal(err)
-		}
-		if len(fixture.Editor) == 0 {
-			t.Fatal("fixture holds no editor cases")
-		}
-		for _, row := range fixture.Editor {
-			derived := DeriveContainerEditor(row.Canonical, row.Overlay)
-			if !reflect.DeepEqual(derived.Settings, row.Expected.Settings) || !reflect.DeepEqual(derived.Extensions, row.Expected.Extensions) {
-				t.Errorf("%s: derived %v, expected %v", row.Name, derived, row.Expected)
-			}
-		}
-	})
-	t.Run("policy registered with correct id", func(t *testing.T) {
-		p, found := FindPolicy("system")
-		if !found {
-			t.Fatal("expected system policy to be registered")
-		}
-		if p.Name != "System" {
-			t.Errorf("expected name System, got %s", p.Name)
-		}
-		kinds := p.AllKinds()
-		if len(kinds) != 2 || kinds[0] != BreachSystemDevcontainerVscodeSettingsDrift || kinds[1] != BreachSystemDevcontainerVscodeExtensionsDrift {
-			t.Fatalf("expected the settings and extensions drift statutes, got %v", kinds)
-		}
-	})
-	t.Run("statute meta is correct", func(t *testing.T) {
-		for _, kind := range []Statute{BreachSystemDevcontainerVscodeSettingsDrift, BreachSystemDevcontainerVscodeExtensionsDrift} {
-			meta := kind.Info()
-			if meta.Autofixable {
-				t.Errorf("%s: a derived copy is rewritten by generate-config, never autofixed", kind)
-			}
-			if meta.Priority != BreachPriorityHigh {
-				t.Errorf("%s: expected high priority", kind)
-			}
-		}
-	})
+	policy, found := FindPolicy("system")
+	if !found || len(policy.AllKinds()) != 1 || policy.AllKinds()[0] != BreachSystemIdeConfiguration {
+		t.Fatalf("unexpected system policy %v", policy)
+	}
+	if BreachSystemIdeConfiguration.Info().Autofixable || BreachSystemIdeConfiguration.Info().Priority != BreachPriorityHigh {
+		t.Fatal("IDE configuration removal must be explicit and high priority")
+	}
 }
 
 func TestBuildTerritoryTree(t *testing.T) {

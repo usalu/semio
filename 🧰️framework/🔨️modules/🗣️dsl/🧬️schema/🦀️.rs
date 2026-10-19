@@ -10,6 +10,7 @@ extern crate self as semio_framework_dsl_record;
 use semio_framework_dsl::format_f64;
 use semio_framework_dsl::lex;
 use semio_framework_dsl::parse_f64;
+#[path="🛬️receive/🦀️.rs"]mod native_receive;
 pub use semio_framework_diagnostic::{Limits, TextError, TextSpan};
 use semio_framework_dsl::SpannedToken;
 

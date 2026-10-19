@@ -84,8 +84,8 @@ fn build_config_store_owners(grant: RetainedCloneGrant) -> Option<Result<(store:
         V::mounted_jobs_terminal_is_empty(instance_id)
     }
 
-    fn mounted_job_prepare_snapshot_read(operation: semio_framework_plugin_decl_views::AppRenderOperationContext, snapshot: &Self::Snapshot) -> bool {
-        V::mounted_job_prepare_snapshot_read(operation, snapshot)
+    fn mounted_job_prepare_snapshot_read(operation: semio_framework_plugin_decl_views::AppRenderOperationContext, snapshot: &Self::Snapshot, windows: &semio_framework_plugin_window_config::WindowConfigOwnerRegistry, view: Option<&semio_framework::ViewModel>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> crate::MountedSnapshotReadPreparation {
+            V::mounted_job_prepare_snapshot_read(operation, snapshot, windows, view, grant)
     }
 
     fn register_window_transient_owners(registry: &mut semio_framework_plugin_window_transient::window_transient::WindowTransientOwnerRegistry) -> Result<(), semio_framework::Fault> {
@@ -182,7 +182,7 @@ fn build_config_store_owners(grant: RetainedCloneGrant) -> Option<Result<(store:
         V::render_with_request_context(owner, body_key, doc, cfg, view_state, transient, interaction,cx)
     }
 
-    fn pending_effects(owner: &semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwnerHandle, doc: &semio_framework_plugin_decl_views::ArtifactView<'_, Self::Snapshot>, cfg: &semio_framework_plugin_decl_views::ConfigView<'_, Self::Config>, view: Option<&semio_framework::ViewModel>) -> Vec<semio_framework::kernel::Effect> {
+    fn pending_effects(owner: &semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwnerHandle, doc: &crate::ArtifactPendingView<'_, Self::Snapshot>, cfg: &semio_framework_plugin_decl_views::ConfigView<'_, Self::Config>, view: Option<&semio_framework::ViewModel>) -> Vec<semio_framework::kernel::Effect> {
         V::pending_effects(owner, doc, cfg, view)
     }
 
@@ -284,7 +284,7 @@ pub fn reduce_editor_command<E: ArtifactEditor>(command: &E::Command, snapshot: 
         command,
         &semio_framework_plugin_decl_views::ArtifactView::new(snapshot, &history),
         &semio_framework_plugin_decl_views::ConfigView { snapshot: &config, window: None },
-        &semio_framework_plugin_decl_views::InteractionView { state: &state, hover: &hover, peers: &peers, draft_references: semio_framework_plugin_interaction::interaction_topology::empty_draft_references() },
+        &super::InteractionView::new(&state, &hover, &peers, semio_framework_plugin_interaction::interaction_topology::empty_draft_references()),
         None,
         &semio_framework_plugin_decl_views::DraftView { snapshot: &draft },
         &semio_framework_2d_compute::EngineHandles::empty(),
@@ -320,7 +320,7 @@ where
         let state = protocol::InteractionState::default();
         let hover = InteractionHoverState::new();
         let peers = PeerPresenceRoot::empty();
-        let interaction = InteractionView { state: &state, hover: &hover, peers: &peers, draft_references: semio_framework_plugin_interaction::interaction_topology::empty_draft_references() };
+        let interaction = InteractionView::new(&state, &hover, &peers, semio_framework_plugin_interaction::interaction_topology::empty_draft_references());
         ViewerApp::<V>::handle(&V::Command::default(), &doc, &cfg, &interaction, None, &draft, &semio_framework_2d_compute::EngineHandles::empty()).await.map(|emit| (emit.artifact_mutations.is_empty(), emit.draft_mutations.is_empty()))
     };
     close_registered_fixture_app(&mut app, mounted_policy,cx).expect("registered fixture original close");

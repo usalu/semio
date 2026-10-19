@@ -254,6 +254,9 @@ impl<K: Ord, V> FixedTable<K, V> {
         Some((key, value))
     }
 
+    /// 🔗️ Borrows an original keyed slot without an iterator walk or copied value.
+    pub(crate) fn entry_index(&self,index:usize)->Option<(&K,&V)>{if index>=self.len{return None}self.slots.get(index)?.as_ref().map(|(key,value)|(key,value))}
+
     pub fn get_index(&self, index: usize) -> Option<&V> {
         self.slots.get(index)?.as_ref().map(|(_, value)| value)
     }

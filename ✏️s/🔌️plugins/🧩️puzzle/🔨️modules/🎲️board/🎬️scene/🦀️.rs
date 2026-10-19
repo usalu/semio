@@ -1,6 +1,14 @@
 //! 🧩️ Puzzle-owned projection into the framework's neutral board scene contract.
 
-use semio_framework_value::{DslValue, ErasedSnapshotRetirement, NativeDecodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value::DslValue;
+
+use semio_framework_value::ErasedSnapshotRetirement;
+
+use semio_framework_value::NativeDecodeControl;
+
+use semio_framework_value::ValueError;
+
+use semio_framework_value::ValueRefusalKind;
 
 /// 🧭️ Endpoint semantics selected by the owning Puzzle presentation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

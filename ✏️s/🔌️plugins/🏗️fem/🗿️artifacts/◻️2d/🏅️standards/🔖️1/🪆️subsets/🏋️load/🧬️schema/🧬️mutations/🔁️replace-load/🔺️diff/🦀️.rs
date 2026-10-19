@@ -13,10 +13,10 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fe
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dLoadsModification;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ReplaceLoad, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
+pub fn diff(payload: &ReplaceLoad, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<Fem2dDiff> {
     let Some(existing) = base.load_cases.iter().find(|case| case.id == payload.case_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Load case \"{}\" does not exist.", payload.case_id), [payload.case_id.clone()]);
     };
@@ -35,7 +35,12 @@ pub fn diff(payload: &ReplaceLoad, base: &Fem2dSnapshot) -> protocol::MutationOu
     if *held == *payload.new_load {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Load \"{}\" in case \"{}\" is already equal to the replacement value.", payload.load_id, payload.case_id));
     }
-    let loads = Fem2dLoadsDelta { modified: vec![Fem2dLoadsModification { id: payload.load_id.clone(), patch: payload.new_load.clone() }], ..Default::default() };
+    let loads = if std::mem::discriminant(held) == std::mem::discriminant(payload.new_load.as_ref()) {
+        Fem2dLoadsDelta { modified: vec![Fem2dLoadsModification { id: payload.load_id.clone(), patch: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dLoadPatch::replacement(&payload.new_load) }], ..Default::default() }
+    } else {
+        let index = existing.loads.iter().position(|row| load_id(row) == payload.load_id).expect("validated load position");
+        Fem2dLoadsDelta { removed: vec![semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dLoadRemoval { id: payload.load_id.clone(), index }], inserted: vec![semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dLoadInsertion { index, row: (*payload.new_load).clone() }], ..Default::default() }
+    };
     protocol::MutationOutcome::new(Fem2dDiff {
         load_cases: Some(Fem2dLoadCasesDelta { modified: vec![Fem2dLoadCasesModification { id: payload.case_id.clone(), patch: Fem2dLoadCasePatch { loads: Some(loads), ..Default::default() } }], ..Default::default() }),
         ..Default::default()

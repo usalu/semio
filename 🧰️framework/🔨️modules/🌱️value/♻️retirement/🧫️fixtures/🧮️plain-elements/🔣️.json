@@ -1,0 +1,121 @@
+{
+  "schema": "semio.artifact.plain-element-retirement/v1",
+  "law": "A vector whose element has no drop glue and only plain components retires as bounded payload pages: turns <= ceil(count * elementBytes / workBytes) + overheadTurns, independent of the element field count.",
+  "workBytes": 65536,
+  "overheadTurns": 16,
+  "counts": [
+    100000,
+    1000000
+  ],
+  "elementWiseControlCount": 512,
+  "elementWiseControlMinimumTurns": 512,
+  "widthCases": [
+    {
+      "name": "DerivedCell",
+      "sizeBytes": 16,
+      "needsDrop": false,
+      "componentBytes": [
+        4,
+        4,
+        4,
+        1,
+        1
+      ],
+      "expectedBytes": 16
+    },
+    {
+      "name": "Padded",
+      "sizeBytes": 16,
+      "needsDrop": false,
+      "componentBytes": [
+        1,
+        8
+      ],
+      "expectedBytes": 16
+    },
+    {
+      "name": "Wrapper",
+      "sizeBytes": 16,
+      "needsDrop": false,
+      "componentBytes": [
+        16
+      ],
+      "expectedBytes": 16
+    },
+    {
+      "name": "Kind",
+      "sizeBytes": 1,
+      "needsDrop": false,
+      "componentBytes": [],
+      "expectedBytes": 1
+    },
+    {
+      "name": "Shape",
+      "sizeBytes": 24,
+      "needsDrop": false,
+      "componentBytes": [
+        4,
+        4,
+        8
+      ],
+      "expectedBytes": 24
+    },
+    {
+      "name": "PairU16",
+      "sizeBytes": 4,
+      "needsDrop": false,
+      "componentBytes": [
+        2,
+        2
+      ],
+      "expectedBytes": 4
+    },
+    {
+      "name": "PairString",
+      "sizeBytes": 48,
+      "needsDrop": true,
+      "componentBytes": [
+        0,
+        0
+      ],
+      "expectedBytes": 0
+    },
+    {
+      "name": "Named",
+      "sizeBytes": 32,
+      "needsDrop": true,
+      "componentBytes": [
+        0,
+        4
+      ],
+      "expectedBytes": 0
+    },
+    {
+      "name": "Labeled",
+      "sizeBytes": 24,
+      "needsDrop": true,
+      "componentBytes": [
+        4,
+        0
+      ],
+      "expectedBytes": 0
+    },
+    {
+      "name": "Unit",
+      "sizeBytes": 0,
+      "needsDrop": false,
+      "componentBytes": [],
+      "expectedBytes": 0
+    },
+    {
+      "name": "UnknownComponent",
+      "sizeBytes": 16,
+      "needsDrop": false,
+      "componentBytes": [
+        4,
+        0
+      ],
+      "expectedBytes": 0
+    }
+  ]
+}

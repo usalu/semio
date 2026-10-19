@@ -1,10 +1,10 @@
 import type { BreachRecord } from "../../../../🚨️policy/🔖️breach/🟦️.ts";
-import { policyMutationLawInventory, policyMutationLawRustFiles, policyMutationMessageCodeBreaches, policyMutationOutcomeBreaches } from "../🟦️.ts";
+import { policyMutationLawSourceFiles, policyMutationLawInventory, policyMutationLawRustFiles, policyMutationMessageCodeBreaches, policyMutationOutcomeBreaches } from "../🟦️.ts";
 import { policyReadFileSafe } from "../../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { policyLineOfIndex } from "../../../../🔍️discovery/📍️source-coordinate/🟦️.ts";
 import { POLICY_MUTATIONS_FACET } from "../../../../🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
 import { policyExtractFnBody } from "../../🏛️foundation/🟦️.ts";
-import { policyBaseCloneDiffBreaches, policyDiffDerivedInverseBreaches, policyInverseSumLawUntestedBreaches, policyLeafBetweenBreaches, policyLeafCentralApplyBreaches, policyLeafMutableBaseBreaches, policyOutcomeApplyToBreaches, policyRestoreInverseBreaches, policyWholeStateDiffBreaches } from "../🧪️diff-only-law/🟦️.ts";
+import { policyHostApplyBreaches, policyRowEmitterBreaches, policyBaseCloneDiffBreaches, policyDiffDerivedInverseBreaches, policyInverseSumLawUntestedBreaches, policyLeafBetweenBreaches, policyLeafCentralApplyBreaches, policyLeafMutableBaseBreaches, policyOutcomeApplyToBreaches, policyRestoreInverseBreaches, policyWholeStateDiffBreaches } from "../🧪️diff-only-law/🟦️.ts";
 
 /** 🔎️CRDT-era vocabulary C10 deletes: `merge_strategy`, `MergeStrategyKind`, `merge_concurrent_diffs`, `ConflictRule`, `ResolutionPlan`, `assert_crdt_*`. */
 const POLICY_CRDT_VOCABULARY_TOKENS = ["merge_strategy", "MergeStrategyKind", "merge_concurrent_diffs", "ConflictRule", "ResolutionPlan", "assert_crdt_"] as const;
@@ -98,9 +98,7 @@ export function policyNoValidateOverrideBreaches(repoRoot: string): BreachRecord
 }
 
 /** 🔎️The inventory's source files (`.rs`/`.ts`/`.tsx`) repo-wide — the canonical root router, whose policy literals must not scan themselves, is already out. */
-function policyMutationLawSourceFiles(repoRoot: string): string[] {
-  return policyMutationLawInventory(repoRoot).files.filter((relPath) => relPath.endsWith(".rs") || relPath.endsWith(".ts") || relPath.endsWith(".tsx"));
-}
+
 
 const POLICY_SEVERITY_HINT_STRUCT_RE = /\bSeverity(?:::|\.)Hint\b/g;
 
@@ -222,7 +220,7 @@ export function policyDeriveGlueMountBreaches(repoRoot: string): BreachRecord[] 
   ];
 }
 
-/** ⚖️Aggregates this ticket's 7 mutation-outcome / merge-policy / no-CRDT / no-validate / derive-glue gates plus the nine diff-only mutation rules (R8–R16) over ONE shared inventory (`policyMutationLawInventory`) — the bundle both `policy` (below) and `VerifyScript.runGate`/`verify mutation-outcome-law` share. */
+/** ⚖️Aggregates this ticket's 7 mutation-outcome / merge-policy / no-CRDT / no-validate / derive-glue gates plus the eleven diff-only mutation rules (R8–R18) over ONE shared inventory (`policyMutationLawInventory`) — the bundle both `policy` (below) and `VerifyScript.runGate`/`verify mutation-outcome-law` share. */
 export function policyMutationOutcomeMergePolicyBreaches(repoRoot: string): BreachRecord[] {
   return [
     ...policyMutationOutcomeBreaches(repoRoot),
@@ -241,5 +239,7 @@ export function policyMutationOutcomeMergePolicyBreaches(repoRoot: string): Brea
     ...policyRestoreInverseBreaches(repoRoot),
     ...policyInverseSumLawUntestedBreaches(repoRoot),
     ...policyOutcomeApplyToBreaches(repoRoot),
+    ...policyHostApplyBreaches(repoRoot),
+    ...policyRowEmitterBreaches(repoRoot),
   ];
 }

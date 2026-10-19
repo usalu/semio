@@ -4,157 +4,135 @@ use super::*;
 
 // #region 🔖️SubspaceIteration
 impl SubspaceIterationJob {
-    fn run(&mut self, context: &mut StepContext<'_>) -> NumericalRun {
+    fn run(&mut self, context: &mut StepContext<'_>) -> Result<NumericalRun, OriginalTurnFailure> {
+        if context.is_cancelled() { return Ok(NumericalRun::Cancelled); }
+        if context.should_yield() { return Ok(NumericalRun::Yield); }
+        let result = self.run_admitted(context);
+        context.consume_fuel(1);
+        result
+    }
+
+    fn run_admitted(&mut self, context: &mut StepContext<'_>) -> Result<NumericalRun, OriginalTurnFailure> {
+        if self.terminal_published { return Ok(NumericalRun::Yield); }
         if context.is_cancelled() {
-            return NumericalRun::Cancelled;
+            return Ok(NumericalRun::Cancelled);
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return NumericalRun::Fault;
+            return Ok(NumericalRun::Fault);
         }
-        if !self.state.factor_validation_complete {
-            context.set_stage("fem.subspace.validate-factor-owner");
-            if context.should_yield() {
-                return NumericalRun::Yield;
-            }
-            context.consume_fuel(1);
-            if let Some(column) = self.state.k_factor.l_cols.get(self.state.factor_validation_cursor) {
-                if column.capacity().saturating_mul(size_of::<(u32, f64)>()) > NUMERICAL_OWNER_PAGE_BYTES {
-                    self.state.admission_fault = true;
-                    self.state.factor_validation_complete = true;
-                    return NumericalRun::Fault;
-                }
-                self.state.factor_validation_cursor += 1;
-                return NumericalRun::Yield;
-            }
-            self.state.factor_validation_complete = true;
-            return NumericalRun::Yield;
+        if context.retained_grant().maximum_items==0{return Ok(NumericalRun::Yield)}
+        if self.state.admission_fault {
+            return Ok(NumericalRun::Fault);
         }
-        if self.state.admission_fault || self.state.n > SUBSPACE_MAXIMUM_ORDER || self.state.m > SUBSPACE_MAXIMUM_COLUMNS {
-            return NumericalRun::Fault;
+        if !self.state.factor_validation_complete{
+            context.set_stage("fem.subspace.validate-factor-owner");if context.should_yield(){return Ok(NumericalRun::Yield)}
+            let column=self.state.factor_validation_cursor;let entry=self.state.work.second;
+            if column==self.state.n{self.state.factor_validation_complete=true;return Ok(NumericalRun::Yield)}
+            let depth=match self.state.k_factor.column_entry_depth_demand(column,entry).and_then(|path|self.state.k_factor.diagonal_depth_demand(column).map(|diagonal|path.max(diagonal)+1)){Ok(depth)=>depth,Err(_)=>return Ok(NumericalRun::Fault)};
+            if context.retained_grant().maximum_depth<depth{return Ok(NumericalRun::Yield)}
+            if self.state.k_factor.diagonal(column).is_none_or(|value|!value.is_finite()||value<=0.0){return Ok(NumericalRun::Fault)}
+            if let Some((row,value))=self.state.k_factor.column_entry(column,entry){if !value.is_finite()||row as usize<=column||row as usize>=self.state.n{return Ok(NumericalRun::Fault)}self.state.work.second+=1;}else{self.state.work.second=0;self.state.factor_validation_cursor+=1;}
+            return Ok(NumericalRun::Yield);
         }
         if self.state.checkpoint_due || self.checkpoint_writer.is_some() {
             context.set_stage("fem.subspace.checkpoint-page");
-            if context.should_yield() {
-                return NumericalRun::Yield;
+            if self.checkpoint_writer.is_some() && self.checkpoint_cursor.field == u16::MAX {
+                if !RetainedJobPayloadWriter::finish_funded(&mut self.checkpoint_writer, &mut self.desk.lent, context)? { return Ok(NumericalRun::Yield); }
+                let payload = self.desk.lent.take().expect("finished numerical writer retained its original payload");
+                return Ok(self.desk.lend_checkpoint(payload, self.state.iteration as u64));
             }
-            context.consume_fuel(1);
+
+            if context.should_yield() {
+                return Ok(NumericalRun::Yield);
+            }
             if self.checkpoint_writer.is_none() {
-                self.state.checkpoint_due = false;
-                self.checkpoint_cursor = NumericalPageCursor::new();
-                self.checkpoint_writer = Some(RetainedJobPayloadWriter::new(JobPayloadStream::CheckpointState));
-                return NumericalRun::Yield;
+                self.checkpoint_writer = RetainedJobPayloadWriter::new_funded(JobPayloadStream::CheckpointState, context)?;
+                if self.checkpoint_writer.is_some() { self.state.checkpoint_due = false; self.checkpoint_cursor = NumericalPageCursor::new(); }
+                return Ok(NumericalRun::Yield);
             }
             let Some(writer) = self.checkpoint_writer.as_mut() else {
-                return NumericalRun::Fault;
+                return Ok(NumericalRun::Fault);
             };
             if writer.staged_page_len().is_none() {
-                return match writer.begin_staged_page(context) {
-                    Ok(()) => NumericalRun::Yield,
-                    Err(_) => NumericalRun::Fault,
-                };
+                writer.begin_staged_page_funded(context)?;
+                return Ok(NumericalRun::Yield);
             }
-            let complete = match Self::advance_checkpoint_entry(&self.state, &mut self.checkpoint_cursor, writer) {
-                Ok(complete) => complete,
-                Err(_) => return NumericalRun::Fault,
-            };
+            let complete = Self::advance_checkpoint_entry(&self.state, &mut self.checkpoint_cursor, writer, context)?;
             if !complete {
-                return NumericalRun::Yield;
+                return Ok(NumericalRun::Yield);
             }
-            let Some(writer) = self.checkpoint_writer.take() else {
-                return NumericalRun::Fault;
-            };
-            let state = match writer.finish() {
-                Ok(state) => state,
-                Err(writer) => {
-                    self.checkpoint_writer = Some(writer);
-                    return NumericalRun::Fault;
-                }
-            };
-            return self.desk.lend_checkpoint(state, self.state.iteration as u64);
+            return Ok(NumericalRun::Yield);
         }
         if self.state.preview_due {
             context.set_stage("fem.subspace.preview-entry");
+            if self.preview_writer.is_some() && self.state.publication_stage == 4 {
+                if !RetainedJobPayloadWriter::finish_funded(&mut self.preview_writer, &mut self.desk.lent, context)? { return Ok(NumericalRun::Yield); }
+                self.state.preview_due = false;
+                let payload = self.desk.lent.take().expect("finished numerical writer retained its original payload");
+                return Ok(self.desk.lend_preview(payload));
+            }
+
             if context.should_yield() {
-                return NumericalRun::Yield;
+                return Ok(NumericalRun::Yield);
             }
             if self.preview_writer.is_none() {
-                context.consume_fuel(1);
-                self.preview_writer = Some(RetainedJobPayloadWriter::new(JobPayloadStream::Preview));
+                self.preview_writer = RetainedJobPayloadWriter::new_funded(JobPayloadStream::Preview, context)?;
                 self.preview_page_cursor = 0;
-                return NumericalRun::Yield;
+                return Ok(NumericalRun::Yield);
             }
-            context.consume_fuel(1);
             let Some(writer) = self.preview_writer.as_mut() else {
-                return NumericalRun::Fault;
+                return Ok(NumericalRun::Fault);
             };
             if writer.staged_page_len().is_none() && self.state.publication_stage < 4 {
-                return match writer.begin_staged_page(context) {
-                    Ok(()) => NumericalRun::Yield,
-                    Err(_) => NumericalRun::Fault,
-                };
+                writer.begin_staged_page_funded(context)?;
+                return Ok(NumericalRun::Yield);
             }
-            let complete = match Self::advance_preview_entry(&mut self.state, self.operation, writer) {
-                Ok(complete) => complete,
-                Err(_) => return NumericalRun::Fault,
-            };
+            let complete = Self::advance_preview_entry(&mut self.state, self.operation, writer, context)?;
             if !complete {
-                return NumericalRun::Yield;
+                return Ok(NumericalRun::Yield);
             }
-            let Some(writer) = self.preview_writer.take() else {
-                return NumericalRun::Fault;
-            };
-            let preview = match writer.finish() {
-                Ok(preview) => preview,
-                Err(writer) => {
-                    self.preview_writer = Some(writer);
-                    return NumericalRun::Fault;
-                }
-            };
-            self.preview_page_cursor = 0;
-            self.state.preview_due = false;
-            return self.desk.lend_preview(preview);
+            return Ok(NumericalRun::Yield);
+        }
+        if !self.state.converged&&(self.state.iteration>=self.state.max_iter||(self.state.iteration>0&&self.state.final_theta.len()<self.state.p&&self.state.m<self.state.n)){
+            if self.state.m==self.state.n{return Ok(NumericalRun::Fault)}
+            self.state.m=self.state.m.saturating_mul(2).min(self.state.n);
+            self.state.iteration=0;self.state.initialization_cursor=0;
+            return Ok(NumericalRun::Yield);
         }
         if self.state.iteration >= self.state.max_iter || self.state.converged {
             context.set_stage("fem.subspace.terminal-page");
-            if context.should_yield() {
-                return NumericalRun::Yield;
+            if self.terminal_writer.is_some() && self.state.publication_stage == 4 {
+                let mut demand = RetainedJobPayloadWriter::finish_demand();
+                demand.copy_bytes = demand.copy_bytes.checked_add(size_of::<bool>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "numerical terminal metadata overflow"))?;
+                if !semio_s_fem_sparse::numerical_grant_covers(context.retained_grant(), demand) { return Ok(NumericalRun::Yield); }
+                if !RetainedJobPayloadWriter::finish_funded(&mut self.terminal_writer, &mut self.desk.lent, context)? { return Ok(NumericalRun::Yield); }
+                self.terminal_published = true;
+                context.consume_retained(RetainedCloneProgress { copied_bytes: size_of::<bool>(), ..Default::default() })?;
+                let payload = self.desk.lent.take().expect("finished numerical writer retained its original payload");
+                return Ok(self.desk.lend_complete(payload));
             }
-            context.consume_fuel(1);
+
+            if context.should_yield() {
+                return Ok(NumericalRun::Yield);
+            }
             if self.terminal_writer.is_none() {
-                self.state.publication_stage = 0;
-                self.state.publication_first = 0;
-                self.state.publication_second = 0;
-                self.terminal_writer = Some(RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput));
+                self.terminal_writer = RetainedJobPayloadWriter::new_funded(JobPayloadStream::CommitOutput, context)?;
+                if self.terminal_writer.is_some() { self.state.publication_stage = 0; self.state.publication_first = 0; self.state.publication_second = 0; }
                 self.terminal_page_cursor = 0;
-                return NumericalRun::Yield;
+                return Ok(NumericalRun::Yield);
             }
             let Some(writer) = self.terminal_writer.as_mut() else {
-                return NumericalRun::Fault;
+                return Ok(NumericalRun::Fault);
             };
             if writer.staged_page_len().is_none() && self.state.publication_stage < 4 {
-                return match writer.begin_staged_page(context) {
-                    Ok(()) => NumericalRun::Yield,
-                    Err(_) => NumericalRun::Fault,
-                };
+                writer.begin_staged_page_funded(context)?;
+                return Ok(NumericalRun::Yield);
             }
-            let complete = match Self::advance_preview_entry(&mut self.state, self.operation, writer) {
-                Ok(complete) => complete,
-                Err(_) => return NumericalRun::Fault,
-            };
+            let complete = Self::advance_preview_entry(&mut self.state, self.operation, writer, context)?;
             if !complete {
-                return NumericalRun::Yield;
+                return Ok(NumericalRun::Yield);
             }
-            let Some(writer) = self.terminal_writer.take() else {
-                return NumericalRun::Fault;
-            };
-            let output = match writer.finish() {
-                Ok(output) => output,
-                Err(writer) => {
-                    self.terminal_writer = Some(writer);
-                    return NumericalRun::Fault;
-                }
-            };
-            return self.desk.lend_complete(output);
+            return Ok(NumericalRun::Yield);
         }
         context.set_stage(match self.state.work.stage {
             SubspaceStage::ReserveIteration => "fem.subspace.reserve-iteration",
@@ -173,101 +151,97 @@ impl SubspaceIterationJob {
             SubspaceStage::ResidualColumnRow => "fem.subspace.residual-column-row",
             SubspaceStage::ConvergenceMode => "fem.subspace.convergence-mode",
             SubspaceStage::PublishIteration => "fem.subspace.publish-iteration",
+            SubspaceStage::NormInverseInitialize=>"fem.subspace.norm-inverse-initialize",
+            SubspaceStage::NormInverseAccumulate=>"fem.subspace.norm-inverse-accumulate",
+            SubspaceStage::NormRightRows=>"fem.subspace.norm-right-rows",
+            SubspaceStage::ShiftOperatorColumnRow=>"fem.subspace.shift-operator-column-row",
+            SubspaceStage::CertifyNonPositive=>"fem.subspace.certify-non-positive",
         });
         if context.should_yield() {
-            return NumericalRun::Yield;
+            return Ok(NumericalRun::Yield);
         }
-        context.consume_fuel(1);
+        let arithmetic=!matches!(self.state.work.stage,SubspaceStage::ReserveIteration|SubspaceStage::PublishIteration);
+        if arithmetic{
+            let depth=match self.arithmetic_depth_demand(){Ok(depth)=>depth,Err(_)=>return Ok(NumericalRun::Fault)};
+            let grant=context.retained_grant();
+            if grant.maximum_depth<depth||grant.maximum_copy_bytes<2*size_of::<f64>(){return Ok(NumericalRun::Yield)}
+        }
         let result = match self.state.work.stage {
-            SubspaceStage::ReserveIteration => self.reserve_iteration_owner(),
+            SubspaceStage::ReserveIteration => self.reserve_iteration_owner(context),
             SubspaceStage::ApplyOperatorColumnRow => {
-                self.advance_apply_operator();
+                self.state.advance_apply_operator();
                 Ok(())
             }
             SubspaceStage::FactorForwardEntry => {
-                self.advance_factor_forward();
+                self.state.advance_factor_forward();
                 Ok(())
             }
             SubspaceStage::FactorDiagonalEntry => {
-                self.advance_factor_diagonal();
+                self.state.advance_factor_diagonal();
                 Ok(())
             }
             SubspaceStage::FactorBackwardEntry => {
-                self.advance_factor_backward();
+                self.state.advance_factor_backward();
                 Ok(())
             }
             SubspaceStage::OrthogonalizePairElement => {
-                self.advance_orthogonalize();
+                self.state.advance_orthogonalize();
                 Ok(())
             }
             SubspaceStage::NormalizeColumnElement => {
-                self.advance_normalize();
-                Ok(())
+                self.state.advance_normalize()
             }
             SubspaceStage::ProjectedMatrixCellEntry => {
-                self.advance_projected();
+                self.state.advance_projected();
                 Ok(())
             }
             SubspaceStage::JacobiFindPairCell => {
-                self.advance_jacobi_pair();
+                self.state.advance_jacobi_pair();
                 Ok(())
             }
             SubspaceStage::JacobiRotateCell => {
-                self.advance_jacobi_rotation();
+                self.state.advance_jacobi_rotation();
                 Ok(())
             }
             SubspaceStage::JacobiConvergenceCell => {
-                self.advance_jacobi_convergence();
+                self.state.advance_jacobi_convergence();
                 Ok(())
             }
             SubspaceStage::ModeSortCompare => {
-                self.advance_mode_sort();
-                Ok(())
+                self.state.advance_mode_sort()
             }
             SubspaceStage::ModePermuteElement => {
-                self.advance_mode_permute();
-                Ok(())
+                self.state.advance_mode_permute()
             }
             SubspaceStage::ResidualColumnRow => {
-                self.advance_residual();
+                self.state.advance_residual();
                 Ok(())
             }
             SubspaceStage::ConvergenceMode => {
-                self.advance_convergence();
+                self.state.advance_convergence();
                 Ok(())
             }
-            SubspaceStage::PublishIteration => {
-                self.publish_iteration();
-                Ok(())
-            }
+            SubspaceStage::PublishIteration => self.publish_iteration(context),
+            SubspaceStage::NormInverseInitialize=>{self.state.advance_inverse_norm_initialize();Ok(())},
+            SubspaceStage::NormInverseAccumulate=>{self.state.advance_inverse_norm_accumulate();Ok(())},
+            SubspaceStage::NormRightRows=>self.state.advance_right_norm(),
+            SubspaceStage::ShiftOperatorColumnRow=>{self.state.advance_shift_operator();Ok(())},
+            SubspaceStage::CertifyNonPositive=>self.state.advance_non_positive_certificate(),
         };
         if result.is_err() {
-            return NumericalRun::Fault;
+            return Ok(NumericalRun::Fault);
         }
-        if context.is_cancelled() {
-            return NumericalRun::Cancelled;
+        if arithmetic&&context.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:2*size_of::<f64>(),..Default::default()}).is_err(){return Ok(NumericalRun::Fault)}        if context.is_cancelled() {
+            return Ok(NumericalRun::Cancelled);
         }
-        NumericalRun::Yield
+        Ok(NumericalRun::Yield)
     }
 
-    fn largest_owner_bytes(&self) -> usize {
-        let state = &self.state;
-        [state.k_factor.d.capacity() * size_of::<f64>(), state.x.data.capacity() * size_of::<f64>(), state.prev_theta.capacity() * size_of::<f64>(), state.final_theta.capacity() * size_of::<f64>(), state.residuals.capacity() * size_of::<f64>()]
-            .into_iter()
-            .chain(state.k_factor.l_cols.iter().map(|column| column.capacity() * size_of::<(u32, f64)>()))
-            .max()
-            .unwrap_or(0)
-    }
 
-    fn rung_demand(&self) -> RetirementDemand {
-        let mut demand = numerical_rung_demand(self.close_terminal_is_empty());
-        if self.state.admission_fault {
-            demand.release_bytes = demand.release_bytes.max(self.largest_owner_bytes());
-        }
-        demand
-    }
 
-    pub(super) fn close_frontier(&self) -> Result<Option<RetirementDemand>, ValueError> {
+    fn rung_demand(&self)->Result<RetirementDemand,ValueError>{subspace_checkpoint_retirement_demands(&self.state)}
+
+    fn close_frontier(&self) -> Result<Option<RetirementDemand>, ValueError> {
         if let Some(demand) = self.desk.retirement_demands() {
             return demand.map(Some);
         }
@@ -280,7 +254,7 @@ impl SubspaceIterationJob {
     }
 
     fn close_demand(&self) -> Result<RetirementDemand, ValueError> {
-        Ok(self.close_frontier()?.unwrap_or_else(|| self.rung_demand()))
+        match self.close_frontier()?{Some(demand)=>Ok(demand),None=>self.rung_demand()}
     }
 
     fn close_turn(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
@@ -308,7 +282,7 @@ impl InteractiveJob for SubspaceIterationJob {
         }
         let run = match self.desk.take_pending() {
             Some(run) => run,
-            None => self.run(cx),
+            None => self.run(cx)?,
         };
         Ok(self.desk.admit(cx, run)?)
     }
@@ -362,24 +336,27 @@ impl SubspaceIterationJob {
     }
 }
 
-/// 🎯️ Finds the lowest `p` generalized eigenpairs through the retained subspace cursor.
+/// ❄️ Finds generalized positive eigenpairs through the shared mathematical state without native authority.
 pub fn subspace_iteration(k_factor: &LdltFactor, b: &Csr, n: usize, p: usize, max_iter: usize) -> EigenPairs {
-    let operation = Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), 0);
-    let mut job = SubspaceIterationJob::new(operation, k_factor.clone(), b.clone(), n, p, max_iter);
-    let mut preview_sequence = 0;
-    loop {
-        match numerical_batch_step(&mut job, operation, &mut preview_sequence) {
-            NumericalBatchEnd::Complete => {
-                let solution = job.solution();
-                numerical_batch_close(&mut job);
-                return solution;
-            }
-            NumericalBatchEnd::Fault => {
-                numerical_batch_close(&mut job);
-                panic!("subspace batch adapter faulted")
-            }
-            NumericalBatchEnd::Cancelled | NumericalBatchEnd::Continue => {}
+    let operation = Operation::new(semio_framework_job::OperationId(0), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), 0);
+    let mut state = SubspaceCheckpoint::new(operation, k_factor.clone(), b.clone(), n, p, max_iter);
+    assert!(!state.admission_fault, "subspace mathematical shape refused");
+    for column in 0..n {
+        assert!(state.k_factor.diagonal(column).is_some_and(|value| value.is_finite() && value > 0.0), "subspace elastic diagonal refused");
+        for entry in 0..state.k_factor.column_entries_len(column).expect("subspace factor column") {
+            let (row, value) = state.k_factor.column_entry(column, entry).expect("subspace factor entry");
+            assert!(value.is_finite() && row as usize > column && (row as usize) < n, "subspace elastic column refused");
         }
     }
+    while !state.converged {
+        if state.iteration >= state.max_iter || state.iteration > 0 && state.final_theta.len() < state.p && state.m < state.n {
+            assert!(state.m < state.n, "subspace mathematical convergence exhausted");
+            state.m = state.m.saturating_mul(2).min(state.n);
+            state.iteration = 0;
+            state.initialization_cursor = 0;
+        }
+        state.advance_mathematical().expect("subspace mathematical transition refused");
+    }
+    EigenPairs { values: state.final_theta.iter().take(p).copied().collect(), vectors: (0..p.min(state.final_theta.len()).min(state.x.cols)).map(|column| mat_col(&state.x, column)).collect() }
 }
 // #endregion 🔖️SubspaceIteration

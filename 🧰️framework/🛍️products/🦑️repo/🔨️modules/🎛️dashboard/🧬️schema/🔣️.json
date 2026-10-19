@@ -44,7 +44,7 @@
         "action": {
           "type": "string",
           "description": "🔑️ The action key: a bare name, or `<name>:<argument>` for a ticket or an analysis scope.",
-          "pattern": "^(ticket\\.(show|files|close|reopen):.+|goals\\.(list|tree)|analyze:[a-z]+|tree\\.(monorepo|goal|statute|territory)|statutes\\.catalog)$"
+          "pattern": "^(ticket\\.(show|files|close|reopen):.+|draft\\.(start|discard)|goals\\.(list|tree)|analyze:[a-z]+|tree\\.(monorepo|goal|statute|territory)|statutes\\.catalog)$"
         },
         "goArgv": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
       },

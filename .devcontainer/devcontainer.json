@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-only
-// #region 🔖️Devcontainer
 {
   "name": "semio",
   "dockerComposeFile": "docker-compose.yml",
@@ -38,8 +36,8 @@
   "workspaceFolder": "/workspaces/semio",
   "onCreateCommand": ["sudo", "chown", "vscode:vscode", "/workspaces/semio/node_modules", "/workspaces/semio/.🧬semio/🦑️repo/⚡️cache"],
   "postCreateCommand": ["bun", "repo", "run", "workspace:setup"],
-  "postStartCommand": ["bun", "./📜️script.ts", "setup", "devcontainer", "start"],
-  "postAttachCommand": ["bun", "./📜️script.ts", "setup", "devcontainer", "attach"],
+  "postStartCommand": ["bun", "repo", "run", "workspace:setup-devcontainer-start"],
+  "postAttachCommand": ["bun", "repo", "run", "workspace:setup-devcontainer-attach"],
   "hostRequirements": {
     "cpus": 4,
     "memory": "8gb",
@@ -93,19 +91,11 @@
     "source=${localWorkspaceFolderBasename}-claude,target=/home/vscode/.claude,type=volume",
     "source=${localWorkspaceFolderBasename}-codex,target=/home/vscode/.codex,type=volume",
     "source=${localWorkspaceFolderBasename}-config-gh,target=/home/vscode/.config/gh,type=volume",
-    "source=${localWorkspaceFolderBasename}-config-cursor,target=/home/vscode/.config/cursor,type=volume",
-    "source=${localWorkspaceFolderBasename}-config-antigravity,target=/home/vscode/.config/antigravity,type=volume",
     "source=${localWorkspaceFolderBasename}-config-openai,target=/home/vscode/.config/openai,type=volume",
-    "source=${localWorkspaceFolderBasename}-codeium,target=/home/vscode/.codeium,type=volume",
     "source=${localWorkspaceFolderBasename}-gitkraken-desktop,target=/home/vscode/.gitkraken,type=volume",
     "source=${localWorkspaceFolderBasename}-gitkraken-cli,target=/home/vscode/.local/share/GitKrakenCLI,type=volume",
     "source=${localWorkspaceFolderBasename}-gitkraken-workspaces,target=/home/vscode/.local/share/gk,type=volume",
     "source=${localWorkspaceFolderBasename}-f3d,target=/home/vscode/.config/F3D,type=volume",
-    "source=${localWorkspaceFolderBasename}-cursor-server,target=/home/vscode/.cursor-server,type=volume",
-    "source=${localWorkspaceFolderBasename}-antigravity-server,target=/home/vscode/.antigravity-server,type=volume",
-    "source=${localWorkspaceFolderBasename}-vscode-server,target=/home/vscode/.vscode-server,type=volume",
-    "source=${localWorkspaceFolderBasename}-windsurf-server,target=/home/vscode/.windsurf-server,type=volume",
-    "source=${localWorkspaceFolderBasename}-kiro,target=/home/vscode/.kiro,type=volume",
     "source=semio-cache-${devcontainerId},target=${containerWorkspaceFolder}/.🧬semio/🦑️repo/⚡️cache,type=volume"
   ],
   "remoteUser": "vscode",
@@ -114,184 +104,14 @@
     "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
     "PLAYWRIGHT_BROWSERS_PATH": "${containerWorkspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright",
     "SEMIO_GITKRAKEN_WORKSPACE_NAME": "semio",
-    "SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL": "",
     "LANG": "en_US.UTF-8",
     "LC_ALL": "en_US.UTF-8",
     "LC_CTYPE": "en_US.UTF-8",
     "DISPLAY": ":99",
-    "ELECTRON_DISABLE_SANDBOX": "1",
-    "EDITOR": "code --wait"
+    "ELECTRON_DISABLE_SANDBOX": "1"
   },
   "remoteEnv": {
     "PLAYWRIGHT_BROWSERS_PATH": "${containerWorkspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright",
     "SSH_AUTH_SOCK": "/home/vscode/.ssh/semio-ssh-agent.sock"
-  },
-  "customizations": {
-    "vscode": {
-      "remoteEnv": {
-        "VSCODE_AGENT_FOLDER": "/home/vscode/.antigravity-server"
-      },
-      "extensions": [
-        "vscode-icons-team.vscode-icons",
-        "nrwl.angular-console",
-        "github.vscode-pull-request-github",
-        "github.vscode-github-actions",
-        "tamasfe.even-better-toml",
-        "redhat.vscode-yaml",
-        "ms-toolsai.datawrangler",
-        "mechatroner.rainbow-csv",
-        "graphql.vscode-graphql",
-        "graphql.vscode-graphql-syntax",
-        "esbenp.prettier-vscode",
-        "dbaeumer.vscode-eslint",
-        "bradlc.vscode-tailwindcss",
-        "unifiedjs.vscode-mdx",
-        "statelyai.stately-vscode",
-        "vitest.explorer",
-        "ms-playwright.playwright",
-        "ms-dotnettools.vscode-dotnet-pack",
-        "ms-dotnettools.vscode-dotnet-runtime",
-        "ms-dotnettools.csharp",
-        "ms-dotnettools.csdevkit",
-        "ms-vscode.cmake-tools",
-        "ms-vscode.cpptools",
-        "ms-python.python",
-        "ms-python.vscode-pylance",
-        "charliermarsh.ruff",
-        "ms-toolsai.jupyter",
-        "rust-lang.rust-analyzer",
-        "golang.go",
-        "github.copilot-chat",
-        "openai.chatgpt",
-        "mermaidchart.vscode-mermaid-chart",
-        "gruntfuggly.todo-tree",
-        "jock.svg",
-        "James-Yu.latex-workshop",
-        "anthropic.claude-code"
-      ],
-      "settings": {
-        "git.enabled": false,
-        "git.autorefresh": false,
-        "git.autofetch": false,
-        "git.decorations.enabled": false,
-        "git.timeline.showUncommitted": false,
-        "extensions.showRecommendationsOnlyOnDemand": false,
-        "playwright.reuseBrowser": false,
-        "playwright.showTrace": true,
-        "playwright.useTestServer": false,
-        "playwright.runOptions": {
-          "headless": true
-        },
-        "playwright.env": {
-          "PWDEBUG": "console"
-        },
-        "eslint.useFlatConfig": true,
-        "eslint.packageManager": "bun",
-        "eslint.options": {
-          "overrideConfigFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/📐️source-policy/🟨️.mjs"
-        },
-        "terminal.integrated.env.linux": {
-        },
-        "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
-        "eslint.workingDirectories": [
-          {
-            "directory": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧩️vscode/📦️packages/🟦️typescript",
-            "changeProcessCWD": true
-          }
-        ],
-        "editor.codeActionsOnSave": {
-          "source.fixAll.eslint": "explicit",
-          "source.organizeImports": "always"
-        },
-        "workbench.externalBrowser": "chrome",
-        "workbench.trustedDomains": ["*"],
-        "editor.formatOnSave": true,
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "[typescriptreact]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode"
-        },
-        "prettier.configPath": ".prettierrc.json",
-        "prettier.ignorePath": ".prettierignore",
-        "[python]": {
-          "editor.defaultFormatter": "charliermarsh.ruff"
-        },
-        "[csharp]": {
-          "editor.defaultFormatter": "ms-dotnettools.csharp"
-        },
-        "[rust]": {
-          "editor.defaultFormatter": "rust-lang.rust-analyzer",
-          "editor.formatOnSave": true
-        },
-        "python.analysis.typeCheckingMode": "off",
-        "python.testing.pytestEnabled": true,
-        "python.testing.unittestEnabled": false,
-        "python.testing.pytestArgs": ["--rootdir=${containerWorkspaceFolder}"],
-        "python.testing.cwd": "${containerWorkspaceFolder}",
-        "python.testing.autoTestDiscoverOnSaveEnabled": true,
-        "python.analysis.languageServerMode": "full",
-        "dotnet.defaultSolution": "Monorepo.sln",
-        "cmake.useCMakePresets": "always",
-        "cmake.configureOnOpen": false,
-        "cmake.buildDirectory": "${containerWorkspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cmake/${presetName}",
-        "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
-        "chat.agent.maxRequests": 5000,
-        "editor.minimap.enabled": true,
-        "[svg]": {
-          "editor.defaultFormatter": "jock.svg"
-        },
-        "rust-analyzer.linkedProjects": ["Cargo.toml"],
-        "rust-analyzer.testExplorer": true,
-        "vitest.enable": true,
-        "vitest.configSearchPatternInclude": "**/🧪️tests/🎚️config/🟦️.ts",
-        "tailwindCSS.experimental.configFile": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/💨️tailwind/🟦️.ts",
-        "terminal.integrated.defaultProfile.linux": "bash",
-        "github.copilot.chat.commitMessageGeneration.instructions": [
-          {
-            "file": ".agents/skills/commit/SKILL.md"
-          }
-        ],
-        "chat.subagents.allowInvocationsFromSubagents": false,
-        "python.terminal.activateEnvironment": false,
-        "kiroAgent.configureMCP": "Disabled",
-        "diffEditor.renderIndicators": false,
-        "diffEditor.renderGutterMenu": false,
-        "diffEditor.experimental.showEmptyDecorations": false,
-        "diffEditor.renderMarginRevertIcon": false,
-        "diffEditor.renderSideBySide": false,
-        "chat.editing.autoAcceptDelay": 0,
-        "chat.editing.confirmEditRequestRetry": false,
-        "chat.editing.confirmEditRequestRemoval": false,
-        "inlineChat.showDiff": false,
-        "inlineChat.accessibleDiffView": "off",
-        "cursor.composer.shouldAutoAcceptDiffs": true,
-        "cursor.diffs.useCharacterLevelDiffs": false,
-        "latex-workshop.latex.recipe.default": "semio-dashboard",
-        "latex-workshop.latex.autoBuild.run": "never",
-        "latex-workshop.latex.search.rootFiles.include": ["♻️mit-bestand/📋️bericht/**/*.tex", "🧰️framework/🛍️products/📓️print/🧾️template/**/*.tex"],
-        "latex-workshop.latex.tools": [
-          {
-            "name": "semio-dashboard",
-            "command": "bun",
-            "args": ["run", "--cwd", "%WORKSPACE_FOLDER%", "dashboard", "run", "@semio-tech/mit-bestand-bericht:build"]
-          }
-        ],
-        "latex-workshop.latex.recipes": [
-          {
-            "name": "semio-dashboard",
-            "tools": ["semio-dashboard"]
-          }
-        ],
-        "latex-workshop.intellisense.package.env": {
-          "TEXINPUTS": "${containerWorkspaceFolder}/🧰️framework/🛍️products/📓️print/🖋️latex//:"
-        },
-        "latex-workshop.view.pdf.viewer": "tab",
-        "latex-workshop.synctex.afterBuild.enabled": true,
-        "[latex]": {
-          "editor.defaultFormatter": "James-Yu.latex-workshop"
-        },
-        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python"
-      }
-    }
   }
 }
-// #endregion 🔖️Devcontainer

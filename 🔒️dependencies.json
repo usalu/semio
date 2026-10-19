@@ -302,7 +302,7 @@
         "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
         "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/package.json",
         "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/package.json",
-        "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/package.json",
+        "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/package.json",
         "🏢️semio-tech/🎡️play/package.json",
         "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json"
@@ -319,8 +319,8 @@
       "users": [
         "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
+        "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false
     },
@@ -332,7 +332,7 @@
         "test-oracle"
       ],
       "users": [
-        "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false,
@@ -348,7 +348,7 @@
         "repository-tooling"
       ],
       "users": [
-        "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false
@@ -435,7 +435,7 @@
       ],
       "users": [
         "🧰️framework/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
+        "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false
     },
@@ -459,7 +459,7 @@
         "repository-tooling"
       ],
       "users": [
-        "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
+        "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false
     },
@@ -513,7 +513,7 @@
         "repository-tooling"
       ],
       "users": [
-        "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
+        "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false
     },
@@ -557,13 +557,13 @@
         "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
         "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json"
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false
     },
@@ -581,13 +581,13 @@
         "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
         "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json"
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false
     },
@@ -644,13 +644,13 @@
         "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
         "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/package.json",
         "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/package.json",
-        "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/package.json",
         "🏢️semio-tech/🎡️play/package.json",
         "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
         "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json",
+        "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false
     },
@@ -740,17 +740,18 @@
         "✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript/package.json",
         "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/package.json",
         "🌎️hub/📦️packages/🟦️typescript/package.json",
-        "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/package.json",
         "🧰️framework/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/❓️quiz/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/package.json"
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/package.json",
+        "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false,
       "oracleIds": [
@@ -762,7 +763,7 @@
         "ajv-ticket-schema",
         "ajv-todo-line-vectors",
         "pets-ajv-structure",
-        "quiz-ajv-structure"
+        "course-ajv-structure"
       ]
     },
     {
@@ -785,7 +786,7 @@
         "test-oracle"
       ],
       "users": [
-        "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json"
       ],
@@ -793,7 +794,7 @@
       "oracleIds": [
         "dev-time-travel-aria-query",
         "pets-react-aria-query",
-        "quiz-react-aria-query-live"
+        "course-react-aria-query-live"
       ]
     },
     {
@@ -903,11 +904,11 @@
         "test-oracle"
       ],
       "users": [
-        "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
+        "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false,
       "oracleIds": [
-        "quiz-react-colord-contrast"
+        "course-react-colord-contrast"
       ]
     },
     {
@@ -1259,14 +1260,14 @@
       ],
       "users": [
         "🧰️framework/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false,
       "oracleIds": [
         "d3-scale",
-        "quiz-react-d3-scale",
+        "course-react-d3-scale",
         "ui-number-controls-d3-scale"
       ]
     },
@@ -1651,11 +1652,11 @@
       ],
       "users": [
         "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
+        "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": true,
       "oracleIds": [
-        "quiz-react-i18next-negotiation"
+        "course-react-i18next-negotiation"
       ]
     },
     {
@@ -1696,13 +1697,13 @@
       ],
       "users": [
         "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
-        "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
+        "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false,
       "oracleIds": [
-        "quiz-react-jsdom-session-history"
+        "course-react-jsdom-session-history"
       ]
     },
     {
@@ -1723,7 +1724,7 @@
         "pets-jsonschema",
         "puzzle-2d-jsonschema-js-payloads",
         "puzzle-2d-jsonschema-payloads",
-        "quiz-jsonschema"
+        "course-jsonschema"
       ]
     },
     {
@@ -1734,13 +1735,13 @@
         "test-oracle"
       ],
       "users": [
-        "🧰️framework/🛍️products/❓️quiz/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false,
       "oracleIds": [
         "jstat",
-        "quiz-jstat-spearman"
+        "course-jstat-spearman"
       ]
     },
     {
@@ -1791,11 +1792,11 @@
         "test-oracle"
       ],
       "users": [
-        "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
+        "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false,
       "oracleIds": [
-        "quiz-react-lightningcss"
+        "course-react-lightningcss"
       ]
     },
     {
@@ -1806,13 +1807,13 @@
         "test-oracle"
       ],
       "users": [
-        "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false,
       "oracleIds": [
-        "quiz-react-lodash-crowd",
-        "quiz-react-lodash-throttle"
+        "course-react-lodash-crowd",
+        "course-react-lodash-throttle"
       ]
     },
     {
@@ -1859,13 +1860,13 @@
         "test-oracle"
       ],
       "users": [
-        "🧰️framework/🛍️products/❓️quiz/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false,
       "oracleIds": [
         "mathjs",
-        "quiz-mathjs-distance"
+        "course-mathjs-distance"
       ]
     },
     {
@@ -1951,11 +1952,11 @@
         "test-oracle"
       ],
       "users": [
-        "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
+        "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false,
       "oracleIds": [
-        "quiz-react-opentype"
+        "course-react-opentype"
       ]
     },
     {
@@ -2088,13 +2089,13 @@
         "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
         "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json"
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": true
     },
@@ -2111,13 +2112,13 @@
         "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
         "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json"
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": true
     },
@@ -2391,7 +2392,6 @@
         "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/package.json",
         "🌎️hub/📦️packages/🟦️typescript/package.json",
         "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/package.json",
-        "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/package.json",
         "🏢️semio-tech/🎡️play/package.json",
         "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/package.json",
@@ -2400,8 +2400,6 @@
         "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/❓️quiz/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
         "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
@@ -2418,7 +2416,10 @@
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/package.json"
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/package.json",
+        "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false,
       "oracleIds": [
@@ -2465,13 +2466,13 @@
         "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
         "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/package.json",
         "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/package.json",
-        "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/package.json",
         "🏢️semio-tech/🎡️play/package.json",
         "🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json"
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json",
+        "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false
     },
@@ -2500,14 +2501,11 @@
         "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/package.json",
         "🌎️hub/📦️packages/🟦️typescript/package.json",
         "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/package.json",
-        "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/🔄️machine/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/❓️quiz/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
         "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
@@ -2520,7 +2518,10 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/package.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json"
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json",
+        "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+        "🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false
     },
@@ -2568,7 +2569,7 @@
         "test-oracle"
       ],
       "users": [
-        "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/package.json"
+        "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": false,
       "oracleIds": [
@@ -2726,7 +2727,7 @@
         "pets-jsonschema",
         "puzzle-2d-jsonschema-js-payloads",
         "puzzle-2d-jsonschema-payloads",
-        "quiz-jsonschema"
+        "course-jsonschema"
       ]
     },
     {
@@ -2840,7 +2841,7 @@
       "oracleIds": [
         "bim-1-numpy-expression-families",
         "pets-numpy",
-        "quiz-numpy-mt19937"
+        "course-numpy-mt19937"
       ]
     },
     {
@@ -3053,9 +3054,9 @@
       "oracleIds": [
         "example-geometry-scipy",
         "pets-scipy",
-        "quiz-scipy-stats",
         "scipy-fem2d-eigen-reference",
-        "scipy-fem3d-eigen"
+        "scipy-fem3d-eigen",
+        "course-scipy-stats"
       ]
     },
     {
@@ -5019,8 +5020,8 @@
         "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/❓️quiz/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/❓️quiz/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/📚️course/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/📚️course/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/🐾️pets/🔨️modules/⚙️kinematics/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/🐾️pets/🔨️modules/🎭️character/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/🐾️pets/🔨️modules/📜️contract/📦️packages/🦀️rust/Cargo.toml",
@@ -5972,8 +5973,8 @@
         "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🧵️job/🔭️preview/🎟️drive/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🧵️job/🗄️registry/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/❓️quiz/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/❓️quiz/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/📚️course/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/📚️course/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/🐾️pets/🔨️modules/⚙️kinematics/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/🐾️pets/🔨️modules/🎬️staging/📦️packages/🦀️rust/Cargo.toml",
@@ -6687,7 +6688,7 @@
         "test-runner"
       ],
       "users": [
-        "🧰️framework/🛍️products/❓️quiz/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🛍️products/📚️course/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": false
     },

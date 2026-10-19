@@ -1,3 +1,7 @@
+import { WORKSPACE_ROOT } from "../../../🗂️workspaces/📍️checkout-root/🟦️.ts";
+import { policyReadFileSafe } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
+import { toolJobFactoryModuleFile } from "../🏭️factory/🟦️.ts";
+import { rustTokens, rustTokenPairs, rustTokenSegments, rustAttributes, rustVisibility } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 /** 📋️ Tool-job coverage inventory: reserved ids, static rows, publication contracts, app-owned rows, dispositions and proofs.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run/🟦️.ts
  */
@@ -139,7 +143,7 @@ function toolJobRustArray(source: string, open: number): { body: string; end: nu
 
 export type ToolJobStaticRow = { file: string; id: string; source: "literal" | "macro" };
 
-type ToolJobPublicationLane = "HostOnly" | "Artifact" | "Config" | "Draft" | "Presence" | "Transient" | "WindowConfig" | "WindowTransient" | "Child" | "Interaction";
+type ToolJobPublicationLane = "HostOnly" | "Artifact" | "Config" | "WindowConfig" | "WindowTransient" | "Draft" | "Presence" | "Transient" | "Child" | "Interaction";
 type ToolJobAppOwnedRow = {
   ownerFile: string;
   factoryFile: string;
@@ -195,33 +199,45 @@ export function toolJobProductionSource(source: string): string {
   return lines.join("\n");
 }
 
+/** 🧹️ Masks only test-only Rust items, preserving neighboring fields and production cfg alternatives. */
 export function toolJobProductionProtocolSource(raw: string): string {
-  let source = toolJobProductionSource(raw);
-  const marker = /#\[cfg\((?:all\([^\]]*\btest\b[^\]]*\)|test)\)\]/g;
-  for (;;) {
-    const match = marker.exec(source);
-    if (!match) return source;
-    const item = match.index + match[0].length;
-    let parentheses = 0;
-    let brackets = 0;
-    let end = source.length;
-    for (let index = item; index < source.length; index += 1) {
-      const char = source[index]!;
-      if (char === "(") parentheses += 1;
-      else if (char === ")") parentheses -= 1;
-      else if (char === "[") brackets += 1;
-      else if (char === "]") brackets -= 1;
-      else if (char === ";" && parentheses === 0 && brackets === 0) {
-        end = index + 1;
-        break;
-      } else if (char === "{" && parentheses === 0 && brackets === 0) {
-        end = toolJobRustBlock(source, index)?.end ?? source.length;
-        break;
+  const source = raw, tokens = rustTokens(source), pairs = rustTokenPairs(tokens), spans: [number, number][] = [];
+  const production = (start: number, end: number): number => {
+    if (end === start + 1 && tokens[start]?.text === "test") return 0;
+    const name = tokens[start]?.text, open = start + 1, close = pairs.get(open);
+    if (tokens[open]?.text !== "(" || close !== end - 1 || !["all", "any", "not"].includes(name ?? "")) return 2;
+    const values = rustTokenSegments(tokens, pairs, open + 1, close, ",").map(([a, b]) => production(a, b));
+    if (name === "not") return values.length === 1 && values[0] !== 2 ? 1 - values[0]! : 2;
+    if (name === "all") return values.includes(0) ? 0 : values.every(value => value === 1) ? 1 : 2;
+    return values.includes(1) ? 1 : values.every(value => value === 0) ? 0 : 2;
+  };
+  for (let index = 0; index < tokens.length; index++) {
+    if (tokens[index]?.text !== "#" || tokens[index + 1]?.text !== "[") continue;
+    const attributes = rustAttributes(tokens, pairs, index, tokens.length);
+    const testOnly = attributes.ranges.some(([a, b]) => tokens[a]?.text === "cfg" && tokens[a + 1]?.text === "(" && pairs.get(a + 1) === b - 1 && production(a + 2, b - 1) === 0);
+    if (!testOnly) { index = attributes.next - 1; continue; }
+    const definition = rustVisibility(tokens, pairs, attributes.next).next, field = tokens[definition]?.kind === "identifier" && tokens[definition + 1]?.text === ":";
+    let angle = 0, last = -1, expression = false;
+    for (let cursor = attributes.next; cursor < tokens.length; cursor++) {
+      const text = tokens[cursor]!.text, paired = pairs.get(cursor);
+      if (text === "=") expression = true;
+      if (text === "<" && (!expression || tokens[cursor - 1]?.text === "::")) { angle++; continue; }
+      if (/^>+$/.test(text)) { angle = Math.max(0, angle - text.length); continue; }
+      if (paired !== undefined && paired > cursor) {
+        if (text === "{" && !angle && !field && tokens[cursor - 1]?.text !== "!") { last = paired + (tokens[paired + 1]?.text === "," ? 1 : 0); break; }
+        cursor = paired;
+        continue;
       }
+      if (!angle && [",", ";"].includes(text)) { last = cursor; break; }
+      if (!angle && [")", "}"].includes(text)) { last = cursor - 1; break; }
     }
-    source = `${source.slice(0, match.index)}${" ".repeat(end - match.index)}${source.slice(end)}`;
-    marker.lastIndex = 0;
+    if (last < attributes.next) throw new Error("[production Rust source] test item boundary is not proved");
+    spans.push([tokens[index]!.start, tokens[last]!.end]);
+    index = last;
   }
+  let result = source;
+  for (const [start, end] of spans.reverse()) result = result.slice(0, start) + source.slice(start, end).replace(/[^\r\n]/g, " ") + result.slice(end);
+  return result;
 }
 
 export function toolJobGlobalPayloadStoreInventory(files: ReadonlyMap<string, string>): GlobalPayloadStoreInventoryRow[] {
@@ -359,21 +375,23 @@ export function toolJobPublicationContracts(
   const declaration = constant ? source.search(new RegExp(`(?:pub(?:\\([^)]*\\))?\\s+)?const\\s+${constant}\\s*:\\s*&(?:'static\\s+)?\\[\\s*(?:semio_framework_plugin::)?ArtifactToolPublicationContract\\s*\\]\\s*=`)) : -1;
   const open = declaration < 0 ? -1 : source.indexOf("[", source.indexOf("=", declaration));
   const array = open < 0 ? undefined : toolJobRustArray(source, open);
-  const contracts = constant ? array?.body : expression;
+  const contracts = constant ? array?.body : literal?.body;
   if (!contracts) return undefined;
   const result = new Map<string, ToolJobPublicationLane[]>();
   const row = /(?:semio_framework_plugin::)?ArtifactToolPublicationContract\s*\{\s*tool_id:\s*(?:"([^"]+)"|(?:[A-Za-z_][A-Za-z0-9_]*::)*([A-Z][A-Z0-9_]*))\s*,\s*lanes:\s*&\[([^\]]*)\]\s*\}/g;
   let match: RegExpExecArray | null;
   while ((match = row.exec(contracts))) {
     const toolId = match[1] ?? strings.get(match[2] ?? "");
-    const lanes = [...match[3]!.matchAll(/(?:semio_framework_plugin::)?ArtifactToolPublicationLane::(HostOnly|Artifact|Config|Draft|Presence|Transient|WindowConfig|WindowTransient|Child|Interaction)/g)].map((lane) => lane[1] as ToolJobPublicationLane);
+    const names = match[3]!.split(",").map((lane) => lane.trim()).filter(Boolean);
+    const lanes = names.map((lane) => lane.match(/^(?:semio_framework_plugin::)?ArtifactToolPublicationLane::(HostOnly|Artifact|Config|WindowConfig|WindowTransient|Draft|Presence|Transient|Child|Interaction)$/)?.[1] as ToolJobPublicationLane | undefined);
+    if (lanes.some((lane) => lane === undefined)) return undefined;
     if (!toolId || result.has(toolId) || lanes.length === 0 || new Set(lanes).size !== lanes.length || (lanes.includes("HostOnly") && lanes.length !== 1)) return undefined;
-    result.set(toolId, lanes);
+    result.set(toolId, lanes as ToolJobPublicationLane[]);
   }
   return result.size > 0 ? result : undefined;
 }
 
-export function toolJobPublicationAuthorityReady(ownerBody: string, lanes: readonly ToolJobPublicationLane[]): boolean {
+export function toolJobPublicationAuthorityReady(ownerBody: string, lanes: readonly ToolJobPublicationLane[], files: ReadonlyMap<string, string> = new Map(), ownerFile: string = ""): boolean {
   const factory = (name: string) => {
     const start = ownerBody.search(new RegExp(`fn\\s+${name}\\s*\\(`));
     const open = start < 0 ? -1 : ownerBody.indexOf("{", start);
@@ -481,7 +499,7 @@ export function toolJobAppOwnedRows(files: ReadonlyMap<string, string>): ToolJob
           factory,
           toolId,
           publicationLanes,
-          publicationReady: exactPublication && toolJobPublicationAuthorityReady(owner.body, publicationLanes),
+          publicationReady: exactPublication && toolJobPublicationAuthorityReady(owner.body, publicationLanes, files, owner.file),
         });
       }
     }
@@ -587,6 +605,51 @@ function toolJobSplitArguments(text: string): string[] {
 }
 
 /** 📐️ Reads only owner-local typed bounded-first-step proof catalogs. A contract is spelled inline (`ToolExecutionContract::bounded_first_step(..)`) or as a call of an owner-local `fn name() -> ToolExecutionContract` whose body is that inline form; its arguments are literals or integer constants, evaluated from the constants of the same sources. */
+/** 🧮️ Resolves static contracts through exact constants and side-effect-free zero-argument helpers. */
+export function toolJobContractSource(source: string, expression: string): { execution: "bounded" | "resumable"; values: number[] } | undefined {
+  const external = new Map([
+    ["semio_framework::kernel::COMMAND_MAXIMUM_BYTES", ["🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🦀️.rs", "COMMAND_MAXIMUM_BYTES"]],
+    ["semio_framework_trace::GUEST_HOST_ANSWER_CEILING_BYTES", ["🧰️framework/🔨️modules/⏱️trace/🧮️memory/🦀️.rs", "GUEST_HOST_ANSWER_CEILING_BYTES"]],
+  ]);
+  const number = (text: string, owner: string, seen: Set<string>): number | undefined => {
+    const value = text.trim().replace(/\s+as\s+(?:u64|usize)$/, "");
+    if (/^[0-9][0-9_]*$/.test(value)) { const result = Number(value.replaceAll("_", "")); return Number.isSafeInteger(result) ? result : undefined; }
+    if (seen.has(value) || seen.size > 32) return undefined;
+    const next = new Set(seen).add(value);
+    const imported = external.get(value);
+    if (imported) return number(imported[1]!, policyReadFileSafe(WORKSPACE_ROOT, imported[0]!), next);
+    const work = value.match(/^([A-Z][A-Z0-9_]*)\.work_items\(\)$/);
+    if (work) {
+      const rows = [...owner.matchAll(new RegExp(`const\\s+${work[1]}\\s*:\\s*ArtifactRetainedWorkCapacity\\s*=\\s*ArtifactRetainedWorkCapacity::for_invertible_items\\(([^()]*)\\)\\s*;`, "g"))];
+      const retained = policyReadFileSafe(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs").replace(/\s+/g, "");
+      if (rows.length !== 1 || !retained.includes("pubconstfnwork_items(self)->usize{self.rows(self.invertible_items)}") || !retained.includes("items.saturating_mul(store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS)")) return undefined;
+      const items = number(rows[0]![1]!, owner, next);
+      const itemSource = policyReadFileSafe(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/🦀️.rs");
+      const multiplier = number("ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS", itemSource, next);
+      const result = items === undefined || multiplier === undefined ? undefined : items * multiplier;
+      return result !== undefined && Number.isSafeInteger(result) ? result : undefined;
+    }
+    if (!/^[A-Z][A-Z0-9_]*$/.test(value)) return undefined;
+    const constants = [...owner.matchAll(new RegExp(`(?:pub(?:\\([^)]*\\))?\\s+)?const\\s+${value}\\s*:\\s*(?:usize|u64|u32)\\s*=\\s*([^;]+);`, "g"))];
+    return constants.length === 1 ? number(constants[0]![1]!, owner, next) : undefined;
+  };
+  const resolve = (value: string, seen: Set<string>): { execution: "bounded" | "resumable"; values: number[] } | undefined => {
+    const constructor = value.trim().match(/^(?:[A-Za-z_][A-Za-z0-9_]*::)*ToolExecutionContract::(bounded_first_step|resumable)\(([^()]*)\)$/);
+    if (constructor) {
+      const values = constructor[2]!.split(",").filter((part) => part.trim()).map((part) => number(part, source, new Set()));
+      return values.every((part) => part !== undefined) ? { execution: constructor[1] === "resumable" ? "resumable" : "bounded", values: values as number[] } : undefined;
+    }
+    const call = value.trim().match(/^([a-z_][a-z0-9_]*)\(\)$/);
+    if (!call || seen.has(call[1]!) || seen.size > 32) return undefined;
+    const declarations = [...source.matchAll(new RegExp(`(?:pub(?:\\([^)]*\\))?\\s+)?(?:const\\s+)?fn\\s+${call[1]}\\(\\)\\s*->\\s*ToolExecutionContract\\s*\\{`, "g"))];
+    if (declarations.length !== 1) return undefined;
+    const body = toolJobRustBlock(source, source.indexOf("{", declarations[0]!.index))?.body.trim().replace(/^return\s+/, "").replace(/;$/, "");
+    return body ? resolve(body, new Set(seen).add(call[1]!)) : undefined;
+  };
+  return resolve(expression, new Set());
+}
+
+/** 📐️ Reads only owner-local typed bounded-first-step proof catalogs. */
 export function toolJobProofs(files: ReadonlyMap<string, string>): ToolJobProof[] {
   const proofs: ToolJobProof[] = [];
   const evaluate = toolJobConstantEvaluator(files.values());
@@ -621,14 +684,16 @@ export function toolJobProofs(files: ReadonlyMap<string, string>): ToolJobProof[
         const common = { sourceFile, ownerFile: header[2]!, ownerTypeName: header[1]!.replaceAll(/\s+/g, ""), controllerId: header[3]!, documentSchema: header[4]!, factory: header[5]!, factoryType };
         const mappedRows = [...block.body.matchAll(/"([^"]+)"\s*=>\s*((?:[A-Za-z_][A-Za-z0-9_]*::)*(?:ToolExecutionContract::(?:bounded_first_step|resumable)\([^)]*\)|[a-z_][a-z0-9_]*\(\s*\)))/g)];
         for (const row of mappedRows) {
-          const contract = resolve(row[2]!);
+          const inherited = resolve(row[2]!);
+          const contract = inherited && inherited.values.every(Number.isFinite) ? inherited : toolJobContractSource(source, row[2]!) ?? inherited;
           if (contract && validValues(contract.values)) proofs.push({ ...common, toolId: row[1]!, execution: contract.execution, values: contract.values });
         }
         if (mappedRows.length === 0) {
           const sharedAt = block.body.search(/\bcontract:/);
           const shared = sharedAt < 0 ? undefined : toolJobSplitArguments(block.body.slice(sharedAt + "contract:".length))[0];
           const sharedTools = block.body.match(/tools:\s*\[([^\]]*)\]/s);
-          const contract = shared === undefined ? undefined : resolve(shared.trim());
+          const inherited = shared === undefined ? undefined : resolve(shared.trim());
+          const contract = inherited && inherited.values.every(Number.isFinite) ? inherited : shared === undefined ? undefined : toolJobContractSource(source, shared.trim()) ?? inherited;
           if (sharedTools && contract && validValues(contract.values)) {
             for (const tool of sharedTools[1]!.matchAll(/"([^"]+)"/g)) proofs.push({ ...common, toolId: tool[1]!, execution: contract.execution, values: contract.values });
           }

@@ -1,0 +1,61 @@
+{
+  "schema": "semio.configuration-worker-custody.v1",
+  "cases": [
+    {
+      "event": "pending",
+      "before": "source",
+      "after": "source",
+      "binding": "same",
+      "failure": false
+    },
+    {
+      "event": "admit",
+      "before": "source",
+      "after": "session",
+      "binding": "same",
+      "failure": false
+    },
+    {
+      "event": "pump",
+      "before": "session",
+      "after": "session",
+      "binding": "same",
+      "failure": false
+    },
+    {
+      "event": "terminal",
+      "before": "session",
+      "after": "session",
+      "binding": "same",
+      "failure": false
+    },
+    {
+      "event": "close",
+      "before": "session",
+      "after": "closed",
+      "binding": "same",
+      "failure": false
+    },
+    {
+      "event": "cancel",
+      "before": "source",
+      "after": "source",
+      "binding": "same",
+      "failure": false
+    },
+    {
+      "event": "refusal",
+      "before": "source",
+      "after": "source",
+      "binding": "same",
+      "failure": true
+    },
+    {
+      "event": "wrongRoot",
+      "before": "source",
+      "after": "source",
+      "binding": "foreign",
+      "failure": true
+    }
+  ]
+}

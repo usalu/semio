@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/load/mutation/change-combination-term/schema.json",
+  "title": "ChangeCombinationTerm",
+  "description": "Sets or removes one keyed combination term. A supplied null factor removes the key; other terms and name remain untouched.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "caseId",
+    "factor"
+  ],
+  "x-semio-invariant": [
+    {
+      "id": "combination-not-self-weighted",
+      "description": {
+        "en": "No term weights the combination itself.",
+        "de": "Kein Summand gewichtet die Kombination selbst."
+      }
+    }
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeCombinationTerm",
+      "description": "The internally tagged discriminator `#[value(tag = \"mutation\")]` puts on the wire.",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Load combination",
+          "de": "Lastfallkombination"
+        },
+        "ref": {
+          "kind": "combination",
+          "domain": "fem2d",
+          "granularity": "combination"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "caseId": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "de": "Lastfall",
+          "en": "Load case"
+        },
+        "ref": {
+          "granularity": "load-case",
+          "domain": "fem2d",
+          "kind": "load-case"
+        },
+        "widget": "reference"
+      }
+    },
+    "factor": {
+      "format": "double",
+      "x-semio-ui": {
+        "label": {
+          "de": "Faktor",
+          "en": "Factor"
+        },
+        "widget": "stepper"
+      },
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "index": {
+      "minimum": 0,
+      "x-semio-ui": {
+        "label": {
+          "de": "Termposition",
+          "en": "Term position"
+        },
+        "widget": "hidden"
+      },
+      "type": "integer"
+    }
+  }
+}

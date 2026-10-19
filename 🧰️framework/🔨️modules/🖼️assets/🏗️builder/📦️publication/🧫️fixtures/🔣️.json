@@ -1,0 +1,7 @@
+{
+  "cases": [
+    { "id": "unchanged", "before": "same 🌱", "output": "same 🌱", "rewrite": false },
+    { "id": "changed", "before": "old", "output": "new 🌱", "rewrite": true },
+    { "id": "missing", "before": null, "output": "new 🌱", "rewrite": true }
+  ]
+}

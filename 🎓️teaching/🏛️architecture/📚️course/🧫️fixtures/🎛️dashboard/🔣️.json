@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/teaching/architecture/course/fixtures/dashboard.json",
+  "title": "Architecture Course Dashboard Contract",
+  "definitions": {
+    "Documentation": {
+      "type": "string",
+      "allOf": [
+        { "not": { "pattern": "Run and Debug" } },
+        { "not": { "pattern": "\\.vscode/launch\\.json" } },
+        { "not": { "pattern": "[Ll]aunch configuration" } },
+        { "not": { "pattern": "sixteen course configurations" } },
+        { "pattern": "dashboard" },
+        { "pattern": "@teaching/architecture-course" }
+      ]
+    }
+  },
+  "const": {
+    "project": "@teaching/architecture-course",
+    "host": "architecture-course",
+    "port": { "dev": 6061, "env": "TEACHING_ARCHITECTURE_COURSE_PORT" },
+    "executor": "repo:script",
+    "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
+    "targets": ["build", "check", "ci-browser-prepare", "deploy-check", "dev", "dev-site", "docker-image-build", "docker-image-check", "docker-image-publish", "docker-stack-bundle", "docker-stack-check", "preflight", "publish", "test", "test-e2e", "typecheck"],
+    "compilerModes": {
+      "deploy-check": "release",
+      "docker-image-build": "release",
+      "docker-image-publish": "release",
+      "publish": "release",
+      "test-e2e": "release"
+    },
+    "ready": {
+      "dev": { "port": 6061, "portEnv": "TEACHING_ARCHITECTURE_COURSE_PORT" },
+      "dev-site": { "port": 6061, "portEnv": "TEACHING_ARCHITECTURE_COURSE_PORT" }
+    },
+    "compounds": [
+      {
+        "id": "course-with-proctor",
+        "verb": "dev",
+        "stop": "together",
+        "members": [{ "run": "@teaching/proctor:dev" }, { "run": "@teaching/architecture-course:dev" }]
+      }
+    ]
+  }
+}

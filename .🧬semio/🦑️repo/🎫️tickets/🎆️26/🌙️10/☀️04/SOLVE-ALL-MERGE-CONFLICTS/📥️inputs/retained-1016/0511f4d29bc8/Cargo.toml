@@ -1,0 +1,8 @@
+[package]
+name="selected-app"
+version="0.1.0"
+edition.workspace=true
+[lib]
+path="🦀️.rs"
+[dependencies]
+owned-dependency={path="../../dependency/member"}

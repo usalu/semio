@@ -82,6 +82,7 @@ pub type ArtifactCommandReducer<A> = fn(
 pub type ArtifactCommandExtent<A> = fn(&<A as ArtifactApp>::Command, &<A as ArtifactApp>::Snapshot, &protocol::InteractionState) -> Option<usize>;
 
 pub enum ArtifactCommandWorkStep<A: ArtifactApp> {
+    Pending { stage: &'static str, preview: &'static [u8] },
     Replay { stage: &'static str, preview: &'static [u8] },
     Progress { stage: &'static str, preview: &'static [u8] },
     Complete(Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>),

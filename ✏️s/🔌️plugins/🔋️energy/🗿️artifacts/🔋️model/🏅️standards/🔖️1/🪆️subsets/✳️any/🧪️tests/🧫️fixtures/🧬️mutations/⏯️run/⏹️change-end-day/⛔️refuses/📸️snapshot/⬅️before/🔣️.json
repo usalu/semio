@@ -80,10 +80,10 @@
       "deep_c": 18.0
     },
     "run_period": {
-      "start_month": 3,
+      "start_month": 2,
       "start_day": 15,
-      "end_month": 3,
-      "end_day": 31,
+      "end_month": 2,
+      "end_day": 28,
       "year": 2026
     },
     "schedules": {

@@ -130,6 +130,8 @@ impl InteractionRetirement {
 }
 
 impl ErasedSnapshotRetirement for InteractionRetirement {
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Ok(self.demands())}
+
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let idle = RetainedCloneProgress::default();
         let Some(movement) = self.next_move() else {

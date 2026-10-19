@@ -124,6 +124,42 @@
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"
       }
+    },
+    "verify-original-work-construction": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify original-work-construction",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-original-fill-fixture": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🎟️caller/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🧪️tests/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify original-fill-fixture"
+      }
+    },
+    "verify-original-fill-fixture-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🎟️caller/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🧪️tests/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify original-fill-fixture native"
+      }
     }
   }
 }

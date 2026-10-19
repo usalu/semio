@@ -53,7 +53,9 @@ impl RunSealEdit {
     }
 }
 
-/// 🪜️ One ordered run step: an absolute header, node row or seal edit, or a log tail append or retraction.
+/// 🪜️ One ordered run step: an absolute header, a positional node row or an absolute seal edit, or a log tail append or retraction.
+/// A node row with a record replaces the row of that node in place, or inserts it at `index` (absent = append); a node row without a
+/// record removes the row and names the `index` the removed row sat at, which is where its inverse reinserts it.
 #[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum RunStep {
@@ -61,6 +63,8 @@ pub enum RunStep {
     Node {
         node_id: String,
         record: Option<RunNodeRecord>,
+        #[value(skip_serializing_if = "Option::is_none")]
+        index: Option<u64>,
     },
     LogAppend(RunLogLine),
     LogRetract {
@@ -108,10 +112,18 @@ fn step_into(next: &mut RunArtifact, step: &RunStep) -> protocol::MutationApplyR
             next.status = header.status;
             next.started_at = header.started_at.clone();
         }
-        RunStep::Node { node_id, record } => match (next.node_records.iter().position(|entry| entry.node_id == *node_id), record) {
+        RunStep::Node { node_id, record, index } => match (next.node_records.iter().position(|entry| entry.node_id == *node_id), record) {
             (Some(at), Some(record)) => next.node_records[at] = record.clone(),
-            (None, Some(record)) => next.node_records.push(record.clone()),
+            (None, Some(record)) => {
+                let Some(at) = index.map_or(Some(next.node_records.len()), |index| usize::try_from(index).ok().filter(|at| *at <= next.node_records.len())) else {
+                    return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-index", "run node record is inserted past the end").at(["nodes", node_id.as_str()]));
+                };
+                next.node_records.insert(at, record.clone());
+            }
             (Some(at), None) => {
+                if index.is_some_and(|index| u64::try_from(at) != Ok(index)) {
+                    return Err(protocol::MutationApplyError::new("mutation.apply.order-mismatch", "run node record is not at the named index").at(["nodes", node_id.as_str()]));
+                }
                 next.node_records.remove(at);
             }
             (None, None) => return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "run node record does not exist").at(["nodes", node_id.as_str()])),
@@ -143,13 +155,14 @@ struct RunRows<'a> {
     sealed: bool,
     finished_at: Option<&'a str>,
     nodes: std::collections::BTreeMap<&'a str, Option<&'a RunNodeRecord>>,
+    order: Option<Vec<&'a str>>,
     appended: Vec<&'a RunLogLine>,
     kept: usize,
 }
 
 impl<'a> RunRows<'a> {
     fn new(base: &'a RunArtifact) -> Self {
-        Self { base, header: None, status: base.status, started_at: &base.started_at, sealed: base.sealed, finished_at: base.finished_at.as_deref(), nodes: std::collections::BTreeMap::new(), appended: Vec::new(), kept: base.logs.len() }
+        Self { base, header: None, status: base.status, started_at: &base.started_at, sealed: base.sealed, finished_at: base.finished_at.as_deref(), nodes: std::collections::BTreeMap::new(), order: None, appended: Vec::new(), kept: base.logs.len() }
     }
 
     fn prior_rows(&mut self, step: &'a RunStep) -> Vec<RunStep> {
@@ -162,10 +175,25 @@ impl<'a> RunRows<'a> {
                 self.started_at = &header.started_at;
                 vec![RunStep::Header(negation)]
             }
-            RunStep::Node { node_id, record } => {
-                let prior = self.nodes.get(node_id.as_str()).copied().unwrap_or_else(|| self.base.node_records.iter().find(|entry| entry.node_id == *node_id));
+            RunStep::Node { node_id, record, index } => {
+                let base = self.base;
+                let order = self.order.get_or_insert_with(|| base.node_records.iter().map(|entry| entry.node_id.as_str()).collect());
+                let position = order.iter().position(|id| *id == node_id.as_str());
+                let prior = self.nodes.get(node_id.as_str()).copied().unwrap_or_else(|| base.node_records.iter().find(|entry| entry.node_id == *node_id));
                 self.nodes.insert(node_id.as_str(), record.as_ref());
-                vec![RunStep::Node { node_id: node_id.clone(), record: prior.cloned() }]
+                let negation = match (position, record) {
+                    (Some(_), Some(_)) | (None, None) => RunStep::Node { node_id: node_id.clone(), record: prior.cloned(), index: None },
+                    (None, Some(_)) => {
+                        let at = index.and_then(|index| usize::try_from(index).ok()).map_or(order.len(), |at| at.min(order.len()));
+                        order.insert(at, node_id.as_str());
+                        RunStep::Node { node_id: node_id.clone(), record: None, index: Some(at as u64) }
+                    }
+                    (Some(at), None) => {
+                        order.remove(at);
+                        RunStep::Node { node_id: node_id.clone(), record: prior.cloned(), index: Some(at as u64) }
+                    }
+                };
+                vec![negation]
             }
             RunStep::LogAppend(line) => {
                 self.appended.push(line);
@@ -192,27 +220,39 @@ impl<'a> RunRows<'a> {
 }
 
 impl protocol::MutationDiff<RunArtifact> for RunDiff {
-    fn apply(&self, document: &RunArtifact, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<RunArtifact> {
-        let mut next = document.clone();
+
+
+
+}
+
+impl protocol::ColdMutationDiff<RunArtifact> for RunDiff {
+    fn absorb(&mut self, other: Self) {
+        self.steps.extend(other.steps);
+    }
+
+    fn apply(&self, document: &mut RunArtifact, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let mut prepared = protocol::PreparedField::new(document.clone(), <Self as protocol::MutationDiff<RunArtifact>>::retire_projection, _capability);
+        let mut next = prepared.value_mut();
         for step in &self.steps {
             step_into(&mut next, step)?;
         }
-        Ok(next)
-    }
-
-    fn absorb(&mut self, other: Self) {
-        self.steps.extend(other.steps);
+        prepared.install(document);
+        Ok(())
     }
 }
 
 impl protocol::DiffAlgebra<RunArtifact> for RunDiff {
+
+
+    fn is_empty(&self) -> bool {
+        self.steps.is_empty()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<RunArtifact> for RunDiff {
     fn inverse(&self, base: &RunArtifact) -> Self {
         let mut rows = RunRows::new(base);
         let undo: Vec<Vec<RunStep>> = self.steps.iter().map(|step| rows.prior_rows(step)).collect();
         Self { steps: undo.into_iter().rev().flatten().collect() }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.steps.is_empty()
     }
 }

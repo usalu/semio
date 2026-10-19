@@ -1,5 +1,5 @@
-//! 🧬️ Puzzle 5d artifact — semantic document mutation dispatch enum. Every variant is a
 //! single-field tuple wrapping a handcrafted `protocol::MutationKind` payload (see the
+//! 🧬️ Puzzle 5d artifact — semantic document mutation dispatch enum. Every variant is a
 //! `🧬️mutations/<slug>/` triad leaves); `#[derive(dsl::Mutations)]` generates
 //! `impl protocol::Mutation<Puzzle5dSnapshot>` and `impl protocol::SemanticMutation<Puzzle5dSnapshot>`
 //! from those payloads — no hand-written apply/diff/inverse dispatch here. `dsl::DslEnum` supplies
@@ -11,7 +11,10 @@
 
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::Puzzle5dSnapshot;
-use protocol::{DiffAlgebra, Mutation};
+use protocol::ColdMutation;
+use protocol::ColdDiffAlgebra;
+use protocol::DiffAlgebra;
+use protocol::Mutation;
 
 //#region 🔖️Mutations
 /// 🧮️ Semantic puzzle-5d document mutation vocabulary: id-keyed part create-delete plus per-2d/
@@ -28,7 +31,7 @@ use protocol::{DiffAlgebra, Mutation};
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
-#[mutations(snapshot = Puzzle5dSnapshot, diff = Puzzle5dDiff, schema = "puzzle.puzzle5d")]
+#[mutations(snapshot = Puzzle5dSnapshot, diff = Puzzle5dDiff, schema = "puzzle.puzzle5d", reference = Puzzle5dSnapshot, reference_diff = Puzzle5dDiff)]
 pub enum Puzzle5dMutation {
     CreatePart(CreatePart),
     DeletePart(DeletePart),
@@ -120,7 +123,9 @@ pub const KINDS: &[&str] = &[
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
 
-pub use crate::standards::v1::subsets::any::schema::mutations::add_part_grip::{add_part_grip, AddPartGrip};
+pub use crate::standards::v1::subsets::any::schema::mutations::add_part_grip::add_part_grip;
+
+pub use crate::standards::v1::subsets::any::schema::mutations::add_part_grip::AddPartGrip;
 pub use crate::standards::v1::subsets::any::schema::mutations::change_description::ChangeDescription;
 pub use crate::standards::v1::subsets::any::schema::mutations::change_domain::ChangeDomain;
 pub use crate::standards::v1::subsets::any::schema::mutations::change_fastener_kind::ChangeFastenerKind;
@@ -133,9 +138,12 @@ pub use crate::standards::v1::subsets::any::schema::mutations::change_target_vol
 pub use crate::standards::v1::subsets::any::schema::mutations::change_target_volume_locked::ChangeTargetVolumeLocked;
 pub use crate::standards::v1::subsets::any::schema::mutations::change_part_kind::ChangePartKind;
 pub use crate::standards::v1::subsets::any::schema::mutations::connect_grips::ConnectGrips;
-pub use crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility::{connect_kind_compatibility, ConnectKindCompatibility};
-pub use crate::standards::v1::subsets::any::schema::mutations::create_part::{create_part, CreatePart};
-pub use crate::standards::v1::subsets::any::schema::mutations::create_target_volume::{create_target_volume, CreateTargetVolume};
+pub use crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility::connect_kind_compatibility;
+pub use crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility::ConnectKindCompatibility;
+pub use crate::standards::v1::subsets::any::schema::mutations::create_part::create_part;
+pub use crate::standards::v1::subsets::any::schema::mutations::create_part::CreatePart;
+pub use crate::standards::v1::subsets::any::schema::mutations::create_target_volume::create_target_volume;
+pub use crate::standards::v1::subsets::any::schema::mutations::create_target_volume::CreateTargetVolume;
 pub use crate::standards::v1::subsets::any::schema::mutations::delete_part::DeletePart;
 pub use crate::standards::v1::subsets::any::schema::mutations::delete_target_volume::DeleteTargetVolume;
 pub use crate::standards::v1::subsets::any::schema::mutations::disconnect_grips::DisconnectGrips;
@@ -150,15 +158,18 @@ pub use crate::standards::v1::subsets::any::schema::mutations::move_target_volum
 pub use crate::standards::v1::subsets::any::schema::mutations::remove_part_grip::RemovePartGrip;
 pub use crate::standards::v1::subsets::any::schema::mutations::rename_puzzle5d::RenamePuzzle5d;
 pub use crate::standards::v1::subsets::any::schema::mutations::replace_fastener_geometry::ReplaceFastenerGeometry;
-pub use crate::standards::v1::subsets::any::schema::mutations::replace_kind_catalogs::{replace_kind_catalogs, ReplaceKindCatalogs};
+pub use crate::standards::v1::subsets::any::schema::mutations::replace_kind_catalogs::replace_kind_catalogs;
+pub use crate::standards::v1::subsets::any::schema::mutations::replace_kind_catalogs::ReplaceKindCatalogs;
 pub use crate::standards::v1::subsets::any::schema::mutations::replace_part_2d_geometry::ReplacePart2dGeometry;
-pub use crate::standards::v1::subsets::any::schema::mutations::replace_part_grip::{replace_part_grip, ReplacePartGrip};
+pub use crate::standards::v1::subsets::any::schema::mutations::replace_part_grip::replace_part_grip;
+pub use crate::standards::v1::subsets::any::schema::mutations::replace_part_grip::ReplacePartGrip;
 pub use crate::standards::v1::subsets::any::schema::mutations::rotate_part_3d::RotatePart3d;
 pub use crate::standards::v1::subsets::any::schema::mutations::rotate_selection_3d::RotateSelection3d;
 pub use crate::standards::v1::subsets::any::schema::mutations::rotate_target_volume::RotateTargetVolume;
 pub use crate::standards::v1::subsets::any::schema::mutations::scale_part_3d::ScalePart3d;
 pub use crate::standards::v1::subsets::any::schema::mutations::scale_selection_3d::ScaleSelection3d;
 pub use crate::standards::v1::subsets::any::schema::mutations::scale_target_volume::ScaleTargetVolume;
+
 pub use {semio_s_artifact_puzzle_3d_mutations_selection::puzzle3d_selection_items as puzzle5d_selection_items, semio_s_artifact_puzzle_3d_mutations_selection::puzzle3d_selection_number as puzzle5d_selection_number, semio_s_artifact_puzzle_3d_mutations_selection::puzzle3d_selection_triple as puzzle5d_selection_triple, semio_s_artifact_puzzle_3d_mutations_selection::puzzle3d_targets_invariant as puzzle5d_targets_invariant, semio_s_artifact_puzzle_3d_model::quat_from_axis_angle, semio_s_artifact_puzzle_3d_model::quat_mul};
 pub use semio_s_artifact_puzzle_5d_kind_catalogs::standards::v1::subsets::any::schema::mutations::support;
 pub use support::{PUZZLE5D_FLAT_TO_WORLD, puzzle5d_scaled};

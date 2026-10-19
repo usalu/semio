@@ -97,8 +97,8 @@ pub trait ArtifactApp: Default + Send + 'static {
     }
     /// 🔍️ Requests an opaque immutable snapshot lease only when the mounted owner has
     /// admitted genuinely new work. The default path issues no lease.
-    fn mounted_job_prepare_snapshot_read(_operation: AppRenderOperationContext, _snapshot: &Self::Snapshot) -> bool {
-        false
+    fn mounted_job_prepare_snapshot_read(_operation: AppRenderOperationContext, _snapshot: &Self::Snapshot, _windows: &WindowConfigOwnerRegistry, _view: Option<&ViewModel>, _grant: RetainedCloneGrant) -> crate::MountedSnapshotReadPreparation {
+        crate::MountedSnapshotReadPreparation::default()
     }
     /// 🧩️ Registers only app-owned exact factories. The empty default contributes no execution
     /// authority; implementations must bind every factory's `Owner` associated type to `Self`.
@@ -163,8 +163,8 @@ pub trait ArtifactApp: Default + Send + 'static {
     }
     /// 🏗️ Builds one payload-owning operation for an explicitly registered app factory. Returning
     /// `None` is fail-closed; the framework never substitutes its bounded-first-step factory.
-    async fn build_tool_job(_request: ArtifactOwnedToolJobRequest<Self>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        Ok(None)
+    fn build_tool_job(_request:&mut Option<ArtifactOwnedToolJobRequest<Self>>,_output:&mut Option<semio_framework::ErasedToolJob>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered app tool lacks its original source-preserving producer").into())
     }
     /// 🧭️ Builds a persistent producer/import job for one explicitly registered reserved route.
     /// The empty default grants no route authority and never calls legacy monolithic hooks.
@@ -516,7 +516,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// window's id in its `args` instead of landing on whichever window happens to be current
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). `None` means no surface is mounted yet: an app
     /// with window-scoped work must arm NOTHING and wait for the first `Event::SurfaceVisible`.
-    async fn pending_effects(_owner: &ArtifactInstanceOperationOwnerHandle, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&ViewModel>) -> Vec<Effect> {
+    async fn pending_effects(_owner: &ArtifactInstanceOperationOwnerHandle, _doc: &crate::ArtifactPendingView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&ViewModel>) -> Vec<Effect> {
         Vec::new()
     }
     /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): return type flipped

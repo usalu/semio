@@ -1,0 +1,360 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Operation Diagnostic Publication Laws",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "lane",
+    "fragmentHeaderBytes",
+    "maximumPageBytes",
+    "tokenFields",
+    "retention",
+    "terminalAfterDiagnostics",
+    "cases",
+    "cancelFrontiers",
+    "rejectedAckFields",
+    "host",
+    "originalDriver",
+    "retainedPage",
+    "delivery"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "lane": {
+      "const": 15
+    },
+    "fragmentHeaderBytes": {
+      "const": 5
+    },
+    "maximumPageBytes": {
+      "const": 4096
+    },
+    "tokenFields": {
+      "const": [
+        "receiver",
+        "operation",
+        "generation",
+        "sequence",
+        "attempt"
+      ]
+    },
+    "retention": {
+      "const": "original-until-exact-ack-and-funded-close"
+    },
+    "terminalAfterDiagnostics": {
+      "const": true
+    },
+    "cancelFrontiers": {
+      "type": "array",
+      "minItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "rejectedAckFields": {
+      "const": [
+        "receiver",
+        "operation",
+        "generation",
+        "sequence",
+        "attempt"
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "code",
+          "severity",
+          "pattern",
+          "repeat",
+          "span",
+          "scope",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "severity": {
+            "enum": [
+              "info",
+              "warning",
+              "error",
+              "fatal"
+            ]
+          },
+          "pattern": {
+            "type": "string",
+            "minLength": 1
+          },
+          "repeat": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65536
+          },
+          "span": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "line",
+              "column",
+              "length"
+            ],
+            "properties": {
+              "line": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "column": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "length": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "scope": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "pluginId": {
+                "type": "string"
+              },
+              "appId": {
+                "type": "string"
+              },
+              "instanceId": {
+                "type": "string"
+              },
+              "module": {
+                "type": "string"
+              },
+              "bodyKey": {
+                "type": "string"
+              }
+            }
+          },
+          "expected": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "tokens",
+                  "keywords",
+                  "keys"
+                ],
+                "properties": {
+                  "tokens": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "keywords": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "keys": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cuts",
+        "maximumBytes",
+        "maximumNodes",
+        "maximumDepth",
+        "chunk",
+        "rejectedBindings",
+        "replay",
+        "admissionFrontiers",
+        "observers"
+      ],
+      "properties": {
+        "cuts": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumNodes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "chunk": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "rejectedBindings": {
+          "const": [
+            "receiver",
+            "operation",
+            "generation",
+            "row",
+            "sequence"
+          ]
+        },
+        "replay": {
+          "const": "exact-page-is-idempotent"
+        },
+        "admissionFrontiers": {
+          "const": [
+            "concurrent-birth",
+            "terminal-during-birth",
+            "cancel-during-birth",
+            "close-during-birth"
+          ]
+        },
+        "observers": {
+          "const": {
+            "maximumListeners": 64,
+            "receiver": 1,
+            "capacity": 3,
+            "steps": [
+              {
+                "action": "subscribe",
+                "observer": "broken"
+              },
+              {
+                "action": "subscribe",
+                "observer": "survivor"
+              },
+              {
+                "action": "subscribe",
+                "observer": "self-removing"
+              },
+              {
+                "action": "publish",
+                "receipt": 1,
+                "delivered": [
+                  "survivor",
+                  "self-removing"
+                ],
+                "refused": [
+                  "broken"
+                ]
+              },
+              {
+                "action": "subscribe",
+                "observer": "late"
+              },
+              {
+                "action": "publish",
+                "receipt": 2,
+                "delivered": [
+                  "survivor",
+                  "late"
+                ],
+                "refused": [
+                  "broken"
+                ]
+              },
+              {
+                "action": "unsubscribe",
+                "observer": "broken"
+              },
+              {
+                "action": "publish",
+                "receipt": 3,
+                "delivered": [
+                  "survivor",
+                  "late"
+                ],
+                "refused": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    "originalDriver": {
+      "const": {
+        "maximumCopyBytes": 4096,
+        "maximumDepth": 4096,
+        "maximumReleaseBytes": 262144,
+        "maximumItems": 1,
+        "maximumCapacityBytes": 4096
+      }
+    },
+    "retainedPage": {
+      "const": {
+        "capacity": 4096,
+        "initializeBytes": 2048,
+        "steps": [
+          "allocate-original",
+          "initialize-original",
+          "encode-original",
+          "move-original-page",
+          "seal-original",
+          "project-original",
+          "close-receiver",
+          "exact-ack",
+          "close-original"
+        ],
+        "ordinaryClone": false
+      }
+    },
+    "delivery": {
+      "const": {
+        "wire": "immutable-header-and-original-body",
+        "actorMaximumCapacityBytes": 4096,
+        "copyBytes": 4096,
+        "steps": [
+          "capture-original-projection",
+          "frame-original-header",
+          "transfer-original-descriptor",
+          "copy-header-under-receiver-grant",
+          "copy-original-body-under-receiver-grant",
+          "close-projection-before-output"
+        ],
+        "physicalBodyCopy": false,
+        "laneTag": 15
+      }
+    }
+  }
+}

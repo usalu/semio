@@ -5,13 +5,13 @@
   "materials": null,
   "sections": null,
   "supports": {
-    "inserted": [],
     "removed": [
       {
         "id": "sup_tie",
         "index": 2
       }
     ],
+    "inserted": [],
     "moved": [],
     "modified": []
   },

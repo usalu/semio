@@ -18,6 +18,20 @@ pub struct SetRunSeal {
 //#region ⚙️Semantics
 impl protocol::MutationKind<RunArtifact, RunMutation> for SetRunSeal {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "run-seal", kind: "set-run-seal", record: "SetRunSeal" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        match self.sealed {
+            true => semio_framework_ui_locale::LocalizedLabel::native("Seal run", "Lauf versiegeln"),
+            false => semio_framework_ui_locale::LocalizedLabel::native("Reopen run", "Lauf wieder öffnen"),
+        }
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["sealed".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<RunArtifact, RunMutation> for SetRunSeal {
     fn diff(&self, base: &RunArtifact) -> protocol::MutationOutcome<RunDiff> {
         let seal = RunSealEdit { sealed: self.sealed, status: self.status, finished_at: self.finished_at.clone() };
         if seal == RunSealEdit::of(base) {
@@ -27,15 +41,6 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for SetRunSeal {
     }
     fn inverse(&self, base: &RunArtifact) -> Result<Vec<RunMutation>, semio_framework_value::ValueError> {
         Ok(vec![RunMutation::SetRunSeal(Self { sealed: base.sealed, status: base.status, finished_at: base.finished_at.clone() })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        match self.sealed {
-            true => semio_framework_ui_locale::LocalizedLabel::native("Seal run", "Lauf versiegeln"),
-            false => semio_framework_ui_locale::LocalizedLabel::native("Reopen run", "Lauf wieder öffnen"),
-        }
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["sealed".into()]
     }
 }
 //#endregion ⚙️Semantics

@@ -1,6 +1,8 @@
 //! 🔒️ Store registry shares expose strong custody without raw Arc or Weak capabilities.
 use super::{SnapshotReadLeaseRegistry,SnapshotReadLease,SnapshotReadLeaseSlot,SNAPSHOT_READ_LEASE_CAPACITY};
 use std::sync::Arc;
+#[path="🌱️birth/🦀️.rs"]
+pub mod birth;
 
 #[repr(transparent)]
 pub struct SnapshotReadRegistryHandle {inner:Arc<SnapshotReadLeaseRegistry>}

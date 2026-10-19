@@ -1,0 +1,10 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "title":"Original Vector Factory Retirement",
+ "type":"object","additionalProperties":false,"required":["rows","refuseFirst","expectedOrder","expectedAttempts","issuerAlias"],
+ "properties":{
+  "issuerAlias":{"type":"object","additionalProperties":false,"required":["dataEqual","methodTableEqual","admitted","providerCalls","pendingId"],"properties":{"dataEqual":{"const":true},"methodTableEqual":{"const":false},"admitted":{"const":false},"providerCalls":{"const":0},"pendingId":{"type":"integer","minimum":0}}},
+  "rows":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["id","text"],"properties":{"id":{"type":"integer","minimum":0},"text":{"type":"string"}}}},
+  "refuseFirst":{"type":"boolean"},"expectedOrder":{"type":"array","items":{"type":"integer","minimum":0}},"expectedAttempts":{"type":"integer","minimum":0}
+ }
+}

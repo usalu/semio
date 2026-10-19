@@ -64,10 +64,12 @@ impl Registry {
         let ready = matches!(&entry.action, Action::Playground(_) | Action::Target { ready: Some(_), .. } | Action::Tool { ready: Some(_), .. }).then(|| self.resolve_with(&entry.id, &Request::default(), RunPolicy::default()).ok()).flatten().and_then(|launch| launch.processes.into_iter().find_map(|process| process.ready));
         let mut value = serde_json::json!({
             "id": entry.id, "kind": entry.kind, "verb": entry.verb, "label": entry.label, "owner": entry.owner, "longRunning": entry.long_running, "listed": entry.listed, "mutating": entry.mutating, "source": entry.source,
-            "parameters": self.parameters(entry).iter().map(|parameter| { let mut row = serde_json::json!({ "id": parameter.id, "kind": parameter.kind, "values": parameter.values.iter().map(|(value, _)| value).collect::<Vec<_>>(), "required": parameter.required, "origin": parameter.origin }); if let Some(default) = &parameter.default { row["default"] = default.clone().into(); } row }).collect::<Vec<_>>(),
+            "parameters": self.parameters(entry).iter().map(|parameter| { let mut row = serde_json::json!({ "id": parameter.id, "kind": parameter.kind, "values": parameter.values.iter().map(|(value, _)| value).collect::<Vec<_>>(), "required": parameter.required, "origin": parameter.origin }); if let Some(suggestions) = &parameter.suggestions { row["suggestions"] = serde_json::json!(suggestions); } if let Some(default) = &parameter.default { row["default"] = default.clone().into(); } if let Some(title) = &parameter.title { row["title"] = serde_json::json!(title); } if let Some(description) = &parameter.description { row["description"] = serde_json::json!(description); } row }).collect::<Vec<_>>(),
         });
         if let Some(ready) = ready { value["ready"] = serde_json::json!({ "port": ready.port, "path": ready.path }); if ready.printed { value["ready"]["printed"] = true.into(); } }
         if let Some(mcp) = &entry.mcp { value["mcp"] = serde_json::json!(mcp); }
+        if let Some(title) = &entry.title { value["title"] = serde_json::json!(title); }
+        if let Some(description) = &entry.description { value["description"] = serde_json::json!(description); }
         value
     }
 }

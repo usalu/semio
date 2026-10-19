@@ -5,6 +5,7 @@
   "sections": null,
   "solids": null,
   "supports": {
+    "removed": [],
     "inserted": [
       {
         "index": 7,
@@ -19,7 +20,6 @@
         }
       }
     ],
-    "removed": [],
     "moved": [],
     "modified": []
   },

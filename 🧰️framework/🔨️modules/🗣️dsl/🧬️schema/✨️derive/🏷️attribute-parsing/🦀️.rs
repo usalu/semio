@@ -5,6 +5,7 @@ use super::*;
 //#region 🔖️Attrs
 #[derive(Default, Clone)]
 pub(super) struct ContainerAttrs {
+    pub(super) variant_field: bool,
     pub(super) keyword: Option<String>,
     pub(super) lines_layout: bool,
     pub(super) retire_with: Option<syn::Path>,
@@ -12,6 +13,7 @@ pub(super) struct ContainerAttrs {
 
 #[derive(Default, Clone)]
 pub(super) struct FieldAttrs {
+    pub(super) required: bool,
     pub(super) skip: bool,
     pub(super) key: Option<String>,
     pub(super) positional: bool,
@@ -54,7 +56,9 @@ pub(super) fn parse_container_attrs(input: &DeriveInput) -> ContainerAttrs {
             continue;
         }
         let _ = attr.parse_nested_meta(|meta| {
-            if meta.path.is_ident("keyword") {
+            if meta.path.is_ident("field") {
+                out.variant_field = true;
+            } else if meta.path.is_ident("keyword") {
                 let value: syn::LitStr = meta.value()?.parse()?;
                 out.keyword = Some(value.value());
             } else if meta.path.is_ident("layout") {
@@ -74,7 +78,11 @@ pub(super) fn parse_container_attrs(input: &DeriveInput) -> ContainerAttrs {
 pub(super) fn parse_field_attrs(attrs: &[syn::Attribute]) -> FieldAttrs {
     let mut out = FieldAttrs::default();
     for attr in attrs {
-        if !attr.path().is_ident("dsl") {
+                if attr.path().is_ident("value") {
+            if let Ok(values)=attr.parse_args_with(syn::punctuated::Punctuated::<syn::Meta,syn::Token![,]>::parse_terminated) { out.required|=values.iter().any(|value|matches!(value,syn::Meta::Path(path)if path.is_ident("required"))); }
+            continue;
+        }
+if !attr.path().is_ident("dsl") {
             continue;
         }
         let _ = attr.parse_nested_meta(|meta| {

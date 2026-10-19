@@ -1,7 +1,9 @@
-//! 🔺️ Sparse diff builder for `ScaleSelection` — every unlocked addressed object and target volume keeps
 //! its origin and multiplies its BASE scale (uniform broadcast, absent reads as one) by the payload's
+//! 🔺️ Sparse diff builder for `ScaleSelection` — every unlocked addressed object and target volume keeps
 //! per-axis factors, so the leaf replays on any base.
-use semio_s_artifact_puzzle_3d_diff::{Puzzle3dDiff, Puzzle3dTargetVolumePatch, Puzzle3dTargetVolumeModification};
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dTargetVolumePatch;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dTargetVolumeModification;
 use {semio_s_artifact_puzzle_3d_model::puzzle3d_scaled, crate::puzzle3d_selection, crate::puzzle3d_selection_follow, crate::puzzle3d_selection_outcome, semio_s_artifact_puzzle_3d_model::Puzzle3dPose, crate::Puzzle3dSelectionFollow};
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 

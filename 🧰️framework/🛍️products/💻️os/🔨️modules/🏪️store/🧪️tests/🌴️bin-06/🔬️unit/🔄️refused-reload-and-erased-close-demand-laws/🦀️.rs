@@ -67,7 +67,8 @@ fn initialization_runtime_preserves_physical_backing_and_terminal_cursor_box() {
 }
 
 impl ErasedSnapshotRetirement for DemandingBufferRetirement {
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand { release_bytes: self.buffer.as_ref().map_or(0,Vec::capacity), depth: usize::from(self.buffer.is_some()), ..Default::default() })}
+fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let Some(buffer)=self.buffer.as_ref() else { return Ok(RetainedCloneStep::Complete(Default::default())); };
         if grant.maximum_items==0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if grant.maximum_depth==0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original buffer requires supplied depth")); }
@@ -91,7 +92,8 @@ impl NestedErasedDriver {
 struct UnsupportedDemandRetirement;
 
 impl ErasedSnapshotRetirement for UnsupportedDemandRetirement {
-    fn close_step(&mut self,_:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"owner has no admitted physical retirement contract"))}
+        fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"owner has no admitted physical retirement contract"))}
+fn close_step(&mut self,_:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"owner has no admitted physical retirement contract"))}
     fn terminal_is_empty(&self)->bool{false}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"copy demand is unsupported"))}
     fn next_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"capacity demand is unsupported"))}

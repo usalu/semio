@@ -7,10 +7,10 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fe
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dLoadsDelta;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dLoadRemoval;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &RemoveLoad, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
+pub fn diff(payload: &RemoveLoad, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<Fem2dDiff> {
     let Some(existing) = base.load_cases.iter().find(|case| case.id == payload.case_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Load case \"{}\" does not exist.", payload.case_id), [payload.case_id.clone()]);
     };

@@ -1,0 +1,1 @@
+{"grant":{"maximumItems":2,"maximumCopyBytes":6,"maximumCapacityBytes":6,"maximumReleaseBytes":6,"maximumDepth":1},"receipt":{"copiedItems":1,"copiedBytes":3,"retainedCapacityBytes":3,"releasedBytes":3},"turns":2,"initialOwnedBytes":5,"expectedOwnedBytes":11,"deniedAxes":["items","copy","capacity","release","depth"]}

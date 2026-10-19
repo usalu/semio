@@ -7,7 +7,7 @@ import { buildFem3dSceneNode, fem2dStoryStateFor, fem3dStoryStateFor, reduceFem2
 
 test("story window ownership admits and echoes the renderer's closed orbit pose", () => {
   const initial = fem3dStoryStateFor("demo", "de-DE");
-  const validate = new Ajv({ strict: true }).compile(orbitSchema);
+  const validate = new Ajv({ strict: true }).addKeyword("x-semio-ui").compile(orbitSchema);
   expect(validate(initial.camera)).toBe(true);
   const camera = rendererGestures.gestures.find((row) => row.id === "orbit-completes-into-one-setcamera")!.expect.camera!;
   const next = reduceFem3dStoryAction(initial, "setCamera", { windowId: rendererGestures.scene.windowInstanceId, camera });

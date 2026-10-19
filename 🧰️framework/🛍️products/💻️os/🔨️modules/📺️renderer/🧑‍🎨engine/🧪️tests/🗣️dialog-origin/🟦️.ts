@@ -11,7 +11,7 @@ import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialo
 import admittedInstanceFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🗨️dialog-origin/🛂️admission/🔣️.json";
 import { OwnedShellDialog, type OwnedShellDialogProps } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🌐️browser/🟦️.tsx";
 import tutorialRunFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🗨️dialog-origin/🎥️tutorial/🔣️.json";
-import { OwnedTutorialRunV1, TutorialDriveV1, runPausedTutorialSeekV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🎥️tutorial/🟦️.ts";
+import { OwnedTutorialRunV1, TutorialDriveV1, runPausedTutorialSeekV1, tutorialHistoryStepInverseV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🎥️tutorial/🟦️.ts";
 import tutorialSeekFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🗨️dialog-origin/🎥️tutorial/⏩️seek/🔣️.json";
 import tutorialSerialFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🗨️dialog-origin/🎥️tutorial/🧵️serial/🔣️.json";
 import { fireEvent, render } from "@semio-tech/ui-react/test";
@@ -76,38 +76,44 @@ describe("Shell dialog origin", () => {
     }
   });
 
-  it("restores the original tutorial snapshot only after the admitted write drains", async () => {
+  it("reverts a tutorial's recorded inverses only after the admitted write drains, last to first, and never restores an archive", async () => {
     const drive = new TutorialDriveV1();
     let documentValue = 0;
     let resolve!: () => void;
     const gate = new Promise<void>((done) => {
       resolve = done;
     });
-    const restore = vi.fn(async () => {
-      documentValue = 0;
+    const reverted: string[] = [];
+    const revert = vi.fn(async (inverse: string) => {
+      reverted.push(inverse);
+      documentValue -= 1;
     });
-    const run = new OwnedTutorialRunV1("tour", dialogOriginFixture.owner, () => true, {
-      read: async () => ({ pack: new Uint8Array([0]), spr: new Uint8Array([0]) }),
-      drain: () => drive.drain(),
-      restore,
-    });
+    const settle = vi.fn(async () => {});
+    const run = new OwnedTutorialRunV1<string>("tour", dialogOriginFixture.owner, () => true, { drain: () => drive.drain(), revert, settle });
     await run.start();
+    const first = {};
+    const second = {};
     const write = drive.enqueue(
       () => run.ready,
       async () => {
         await gate;
-        documentValue = 1;
+        documentValue += 1;
+        run.record(first, true, "undo-first");
+        documentValue += 1;
+        run.record(second, true, "undo-second");
       },
     );
     await Promise.resolve();
     drive.retire();
     const stopping = run.stop();
-    expect(restore).not.toHaveBeenCalled();
+    expect(revert).not.toHaveBeenCalled();
     resolve();
     await Promise.all([write, stopping]);
-    expect(restore).toHaveBeenCalledTimes(1);
+    expect(reverted).toEqual(["undo-second", "undo-first"]);
+    expect(settle).toHaveBeenCalledTimes(1);
     expect(documentValue).toBe(0);
     expect(run.ready).toBe(false);
+    expect(run.pending).toBe(0);
   });
 
   it("drains a promoted delayed successor and rejects direct token replacement of admitted writes", async () => {
@@ -388,52 +394,64 @@ describe("Shell dialog origin", () => {
     expect(applyEffects).not.toHaveBeenCalled();
   });
 
-  it("keeps tutorial snapshots on their exact run and never restores into a replacement session", async () => {
+  it("keeps tutorial journals on their exact run and never reverts into a replacement session", async () => {
 
     for (const row of tutorialRunFixture.cases) {
       let current = structuredClone(dialogOriginFixture.owner);
       let epoch = 1;
-      const restore = vi.fn(async () => {});
-      let resolve!: (snapshot: { pack: Uint8Array; spr: Uint8Array }) => void;
-      const run = new OwnedTutorialRunV1("tour", dialogOriginFixture.owner, () => epoch === 1 && shellDialogOriginIsCurrentV1(dialogOriginFixture.owner, current), {
-        read: () =>
-          new Promise<{ pack: Uint8Array; spr: Uint8Array }>((done) => {
-            resolve = done;
-          }),
+      const reverted: string[] = [];
+      const settle = vi.fn(async (unreverted: readonly string[]) => {});
+      const run = new OwnedTutorialRunV1<string>("tour", dialogOriginFixture.owner, () => epoch === 1 && shellDialogOriginIsCurrentV1(dialogOriginFixture.owner, current), {
         drain: async () => {},
-        restore,
+        revert: async (inverse) => {
+          reverted.push(inverse);
+        },
+        settle,
       });
-      const started = run.start();
+      expect(await run.start(), row.id).toBe(true);
+      const steps = new Map<string, object>();
+      const oracle: { step: string; forward: boolean }[] = [];
       let oracleCurrent = true;
-      let oracleClosed = false;
-      let oracleSnapshot = false;
-      let oracleStarted = false;
-      let oracleRestores = 0;
+      let oracleOwned = true;
       for (const event of row.events) {
         if (event === "switch") {
           current = applyPatch(current, [{ op: "replace", path: "/document/clientInstanceId", value: "client-b" }]).newDocument;
-          oracleCurrent = deepEqual(dialogOriginFixture.owner, current);
+          oracleCurrent = oracleCurrent && deepEqual(dialogOriginFixture.owner, current);
         } else if (event === "replace") {
           epoch = 2;
           oracleCurrent = false;
-        } else if (event === "resolve") {
-          resolve({ pack: Uint8Array.of(1, 2), spr: Uint8Array.of(3) });
-          oracleStarted = oracleCurrent && !oracleClosed;
-          oracleSnapshot = oracleStarted;
-          expect(await started, row.id).toBe(oracleStarted);
+        } else if (event.startsWith("unrevertable:")) {
+          run.recordUnrevertable(event.slice("unrevertable:".length));
+        } else if (event.startsWith("record:")) {
+          const [, step, direction] = event.split(":") as [string, string, string];
+          const forward = direction === "f";
+          if (!steps.has(step)) steps.set(step, {});
+          run.record(steps.get(step)!, forward, `inv-${step}-${direction}`);
+          if (oracleCurrent && oracleOwned) {
+            const last = oracle.at(-1);
+            if (last !== undefined && last.step === step && last.forward !== forward) oracle.pop();
+            else oracle.push({ step, forward });
+          }
         } else {
-          if (!oracleClosed && oracleCurrent && oracleSnapshot) oracleRestores += 1;
-          oracleClosed = true;
+          const expected = oracleCurrent && oracleOwned ? oracle.map((entry) => `inv-${entry.step}-${entry.forward ? "f" : "b"}`).reverse() : [];
+          oracleOwned = false;
           await run.stop();
+          expect(reverted, row.id).toEqual(expected);
         }
       }
-      expect(await started, row.id).toBe(row.started);
-      expect(oracleRestores, row.id).toBe(row.restores);
-      expect(restore, row.id).toHaveBeenCalledTimes(row.restores);
+      expect(reverted, row.id).toEqual(row.reverted);
+      expect(settle, row.id).toHaveBeenCalledTimes(row.reverted.length === 0 && row.unreverted.length === 0 ? 0 : 1);
+      if (row.unreverted.length > 0 || row.reverted.length > 0) expect(settle.mock.calls[0]![0], row.id).toEqual(row.unreverted);
       await run.stop();
-      expect(restore, row.id).toHaveBeenCalledTimes(row.restores);
+      expect(reverted, row.id).toEqual(row.reverted);
       expect(run.isCurrent()).toBe(false);
+      expect(run.pending).toBe(0);
     }
+  });
+
+  it("derives the concrete inverse of every forward history step from what the history named before it", () => {
+    expect(tutorialRunFixture.historySteps.length).toBeGreaterThanOrEqual(6);
+    for (const row of tutorialRunFixture.historySteps) expect(tutorialHistoryStepInverseV1(row.step as Parameters<typeof tutorialHistoryStepInverseV1>[0], row.before), row.id).toEqual(row.outcome);
   });
 
   it("remounts staged fields and rejects old callbacks before they can dispatch into or close a replacement", () => {

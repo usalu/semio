@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "fanout",
+    "stride",
+    "prefix",
+    "cases",
+    "cuts",
+    "preparation",
+    "interactionQuantum"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "fanout": {
+      "const": 16
+    },
+    "stride": {
+      "type": "integer"
+    },
+    "prefix": {
+      "type": "string"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "length",
+          "height"
+        ],
+        "properties": {
+          "length": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "height": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "cuts": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "preparation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "length",
+        "cuts"
+      ],
+      "properties": {
+        "length": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cuts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "interactionQuantum": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copyBytes"
+      ],
+      "properties": {
+        "copyBytes": {
+          "const": 4096
+        }
+      }
+    }
+  }
+}

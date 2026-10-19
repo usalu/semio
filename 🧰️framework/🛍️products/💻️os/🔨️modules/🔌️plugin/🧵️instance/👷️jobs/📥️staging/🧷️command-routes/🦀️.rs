@@ -98,9 +98,17 @@ impl<A: ArtifactApp> ToolOperations<A> {
 
     pub fn advance_agent_lane_preview(&mut self,verb:&str,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<(Emit<A::Mutation,A::ConfigMutation,A::DraftMutation>,(usize,usize,usize),u64)>,semio_framework_job::OriginalTurnFailure>{
         if cx.should_yield(){return Ok(None)}
+
+        if cx.is_cancelled()||self.agent_lane_preview.as_ref().is_some_and(|state|state.closing){let grant=cx.retained_grant();self.close_agent_lane_preview(cx,grant)?;return Ok(None)}
         let state=self.agent_lane_preview.as_mut().ok_or_else(||plugin_sdk_fault("original preview source is absent"))?;
         if state.starting||state.closing{return Ok(None)}
         if !state.complete{state.caller.as_ref().ok_or_else(||plugin_sdk_fault("original preview caller source is absent"))?.validate_context(cx)?;}
+        if state.producer_request.is_some(){
+            let mut candidate=None;let result=A::build_tool_job(&mut state.producer_request,&mut candidate,cx);
+            if let Some(job)=candidate{state.producer=Some(crate::tool_jobs::OriginalPreviewDrive::new(job,state.config,cx));}
+            match result{Err(failure)=>{state.closing=true;return Err(failure)},Ok(true)if state.producer.is_none()=>{state.closing=true;return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original preview producer completed without its job").into())},_=>{}}
+            return Ok(None);
+        }
         if let Some(producer)=state.producer.as_mut(){let Some(steps)=(match drive_agent_lane_preview(producer,verb,cx){Ok(result)=>result,Err(failure)=>{state.closing=true;return Err(failure)}})else{return Ok(None)};state.steps=steps;state.producer.take();return Ok(None)}
         if let Some(children)=state.children.as_mut(){let Some(steps)=(match drive_agent_lane_preview(children,verb,cx){Ok(result)=>result,Err(failure)=>{state.closing=true;return Err(failure)}})else{return Ok(None)};state.steps=state.steps.saturating_add(steps);state.children.take();state.complete=true;return Ok(None)}
         if !state.complete{
@@ -129,6 +137,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
 
     pub fn close_agent_lane_preview(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let Some(state)=self.agent_lane_preview.as_mut()else{return Ok(PluginLifecycleStep::Complete(Default::default()))};
+        if state.producer_request.is_some()||state.producer_request_retirement.is_some(){state.caller.as_ref().ok_or_else(||plugin_sdk_fault("original preview caller source is absent"))?.validate_context(cx)?;}
         if state.terminal_is_empty(){if grant.maximum_items==0||grant.maximum_depth==0||cx.should_yield(){return Ok(PluginLifecycleStep::Progress(Default::default()))}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;self.agent_lane_preview.take();return Ok(PluginLifecycleStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))}
         state.close_step(cx,self.tool_cancellations.handle())
     }

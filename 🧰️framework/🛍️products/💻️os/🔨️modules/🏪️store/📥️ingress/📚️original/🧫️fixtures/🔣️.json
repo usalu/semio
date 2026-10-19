@@ -1,0 +1,104 @@
+{
+  "cases": [
+    {
+      "id": "empty",
+      "ledger": [],
+      "batch": [],
+      "order": [],
+      "selected": [],
+      "committed": []
+    },
+    {
+      "id": "both",
+      "ledger": [
+        {
+          "id": "a",
+          "rows": 2
+        },
+        {
+          "id": "b",
+          "rows": 1
+        }
+      ],
+      "batch": [
+        {
+          "id": "c",
+          "rows": 3
+        }
+      ],
+      "order": [
+        "b",
+        "c",
+        "a"
+      ],
+      "selected": [
+        {
+          "id": "b",
+          "offset": 0,
+          "rows": 1
+        },
+        {
+          "id": "c",
+          "offset": 1,
+          "rows": 3
+        },
+        {
+          "id": "a",
+          "offset": 4,
+          "rows": 2
+        }
+      ],
+      "committed": [
+        "c"
+      ]
+    },
+    {
+      "id": "batch-first",
+      "ledger": [
+        {
+          "id": "a",
+          "rows": 2
+        }
+      ],
+      "batch": [
+        {
+          "id": "a",
+          "rows": 4
+        }
+      ],
+      "order": [
+        "a"
+      ],
+      "selected": [
+        {
+          "id": "a",
+          "offset": 0,
+          "rows": 4
+        }
+      ],
+      "committed": []
+    },
+    {
+      "id": "unknown",
+      "ledger": [
+        {
+          "id": "a",
+          "rows": 1
+        }
+      ],
+      "batch": [
+        {
+          "id": "b",
+          "rows": 2
+        }
+      ],
+      "order": [
+        "missing"
+      ],
+      "selected": null,
+      "committed": [
+        "b"
+      ]
+    }
+  ]
+}

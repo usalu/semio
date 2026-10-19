@@ -12,24 +12,31 @@ pub trait ToolRunMemberOwners: Send {
     fn is_empty(&self) -> bool;
 }
 
-struct ToolRunMemberState<P> {
+struct ToolRunMemberState<P,M:Send+Sync+'static> {
+    operation:Option<M>,
+    operation_source:Option<store::os_store::ArtifactMutationSource<M>>,
+    operation_input:Option<semio_framework_value::retained_clone::RetainedOwnedProjection<M>>,
+    operation_consumed:bool,
+    preparation:Option<store::os_store::ArtifactDerivedOperation<P,M>>,
+    operation_retirement:Option<Box<dyn store::ErasedSnapshotRetirement>>,
+    rebase_pending:bool,
     pub base: Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>,
     pub overlay: Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>,
     pub displaced: Vec<Arc<P>>,
     pending_alias: Option<Arc<P>>,
 }
 
-impl<P: Send + Sync + 'static> ToolRunMemberOwners for ToolRunMemberState<P> {
+impl<P: Send + Sync + 'static,M:Send+Sync+'static> ToolRunMemberOwners for ToolRunMemberState<P,M> {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
     }
 
     fn has_displaced(&self) -> bool {
-        !self.displaced.is_empty() || self.pending_alias.is_some()
+        !self.displaced.is_empty() || self.pending_alias.is_some()||self.operation_retirement.is_some()||((self.operation_consumed||self.rebase_pending)&&(self.operation_source.is_some()||self.operation_input.is_some()))||self.preparation.as_ref().is_some_and(|owner|owner.is_closing())
     }
 
     fn is_empty(&self) -> bool {
-        self.base.is_none() && self.overlay.is_none() && self.displaced.is_empty() && self.displaced.capacity()==0 && self.pending_alias.is_none()
+        self.operation.is_none()&&self.operation_source.is_none()&&self.operation_input.is_none()&&self.preparation.is_none()&&self.operation_retirement.is_none()&&self.base.is_none() && self.overlay.is_none() && self.displaced.is_empty() && self.displaced.capacity()==0 && self.pending_alias.is_none()
     }
 }
 
@@ -86,6 +93,8 @@ impl ToolRunMemberRun {
 /// 📏️ Where one member fold left the overlay: the ops it shows, the ops that did not apply, and — once every op is shown —
 /// the leased read of the overlay with the member's revision (`None`: no op, the render seams read the live member).
 pub(crate) struct ToolRunMemberFolded {
+    pub(crate) pending:bool,
+    pub(crate) progress:RetainedCloneProgress,
     pub shown: usize,
     pub conflicts: u32,
     pub read: Option<(store::os_store::snapshot_read::ErasedSnapshotRead, [u8; 32])>,
@@ -101,43 +110,49 @@ pub struct ToolRunMemberFold<'a> {
     pub deadline_us: u64,
 }
 
-impl store::MemberStoreVisitor for ToolRunMemberFold<'_> {
-    type Output = Result<ToolRunMemberFolded, Fault>;
+impl store::MemberStoreVisitor for ToolRunMemberFold<'_,'_> {
+    type Output = Result<ToolRunMemberFolded, ToolRunMemberFoldRefusal>;
 
     fn visit<P, Mu>(self, store: &ArtifactStore<P, Mu>) -> Self::Output
     where
         P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
         Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + protocol::SemanticMutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
     {
-        let owners = self.owners.get_or_insert_with(|| Box::new(ToolRunMemberState::<P> { base: Some(store.derived_snapshot_head()), overlay: None, displaced: Vec::new(), pending_alias: None }));
-        let state = owners.as_any_mut().downcast_mut::<ToolRunMemberState<P>>().ok_or_else(|| Fault::new(FaultOrigin::Plugin, FaultCode::new("toolRun.member-store-kind"), "a member tool run's owners belong to another store kind"))?;
-        let mut shown = self.shown;
-        if self.rebase {
-            let previous = state.base.replace(store.derived_snapshot_head());
-            state.displaced.extend(previous.map(store::os_store::snapshot_read::ArtifactDerivedSnapshot::into_snapshot_owner));
-            state.displaced.extend(state.overlay.take().map(store::os_store::snapshot_read::ArtifactDerivedSnapshot::into_snapshot_owner));
-            shown = 0;
+        let idle=RetainedCloneProgress::default();
+        if self.grant.maximum_items==0{return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:idle,conflicts:0,read:None});}
+        if self.owners.is_none(){let demand=RetirementDemand{capacity_bytes:size_of::<ToolRunMemberState<P,Mu>>(),depth:1,..Default::default()};if !tool_grant_funds(self.grant,demand){return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:idle,conflicts:0,read:None});}*self.owners=Some(Box::new(ToolRunMemberState::<P,Mu>{operation:None,operation_source:None,operation_input:None,operation_consumed:false,preparation:None,operation_retirement:None,rebase_pending:self.rebase,base:Some(store.derived_snapshot_head()),overlay:None,displaced:Vec::new(),pending_alias:None}));return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:RetainedCloneProgress{copied_items:1,retained_capacity_bytes:demand.capacity_bytes,..idle},conflicts:0,read:None});}
+        let state=self.owners.as_mut().unwrap().as_any_mut().downcast_mut::<ToolRunMemberState<P,Mu>>().ok_or_else(||plugin_sdk_fault("member fold owns another exact Store type"))?;
+        state.rebase_pending|=self.rebase;
+        let mut deadline=||semio_framework_job::default_now_us().is_none_or(|now|now>=self.deadline_us);
+        if state.rebase_pending{if let Some(owner)=state.preparation.as_mut(){owner.cancel();}}
+        if let Some(owner)=state.preparation.as_mut(){
+            if owner.is_closing(){let step=owner.close_step(self.grant).map_err(ToolRunMemberFoldRefusal::Native)?;if owner.terminal_is_empty(){drop(state.preparation.take());}return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:step.progress(),conflicts:0,read:None});}
         }
-        let mut conflicts = 0u32;
-        while shown < self.ops.len() {
-            let op = <Mu as ::protocol::OpBinary>::decode_op(&self.ops[shown]).map_err(|error| error.into_fault())?;
-            let source = state.overlay.as_ref().or(state.base.as_ref()).ok_or_else(|| Fault::new(FaultOrigin::Plugin, FaultCode::new("toolRun.member-base-lost"), "a member tool run lost its base"))?;
-            let next = store.derive_provisional_snapshot(source, &op);
-            <Mu as ::protocol::Mutation<P>>::retire_cold(op);
-            match next.map_err(|error| error.into_fault())? {
-                Some(next) => state.displaced.extend(state.overlay.replace(next).map(store::os_store::snapshot_read::ArtifactDerivedSnapshot::into_snapshot_owner)),
-                None => conflicts = conflicts.saturating_add(1),
-            }
-            shown += 1;
-            if shown % TOOL_RUN_REFOLD_CHECK_OPS == 0 && shown < self.ops.len() && semio_framework_job::default_now_us().is_none_or(|now| now >= self.deadline_us) {
-                return Ok(ToolRunMemberFolded { shown, conflicts, read: None });
-            }
+        if state.operation_consumed||state.rebase_pending{
+            if let Some(input)=state.operation_input.as_mut(){let step=input.close_step(self.grant).map_err(ToolRunMemberFoldRefusal::Native)?;if input.terminal_is_empty(){state.operation_input=None;}return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:step.progress(),conflicts:0,read:None});}
+            if let Some(source)=state.operation_source.as_mut(){source.begin_close();let step=source.close_step(self.grant).map_err(ToolRunMemberFoldRefusal::Native)?;if source.terminal_is_empty(){state.operation_source=None;}return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:step.progress(),conflicts:0,read:None});}
         }
-        let read = match state.overlay.as_ref().filter(|_| !self.ops.is_empty()) {
-            Some(overlay) => Some((store.snapshot_read_derived(overlay).map_err(|error| error.into_fault())?, store.content_revision())),
-            None => None,
-        };
-        Ok(ToolRunMemberFolded { shown, conflicts, read })
+        if state.operation_retirement.is_some(){let step=semio_framework_value::close_factory_ticket(&mut state.operation_retirement,self.grant).map_err(ToolRunMemberFoldRefusal::Native)?;return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:step.progress(),conflicts:0,read:None});}
+        if state.operation.is_some()&&(state.operation_consumed||state.rebase_pending){let p=store.retire_owned_mutation(&mut state.operation,self.grant).map_err(ToolRunMemberFoldRefusal::Native)?.map_or(idle,|(owner,p)|{state.operation_retirement=Some(owner);p});return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:p,conflicts:0,read:None});}
+        let mut shown=self.shown;
+        if state.rebase_pending{
+            let copy=3*size_of::<Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>>();if !tool_grant_funds(self.grant,RetirementDemand{copy_bytes:copy,depth:1,..Default::default()}){return Ok(ToolRunMemberFolded{shown,pending:true,progress:idle,conflicts:0,read:None});}
+            if state.base.is_some()||state.overlay.is_some(){let needed=usize::from(state.base.is_some())+usize::from(state.overlay.is_some());if state.displaced.capacity()-state.displaced.len()<needed{let before=state.displaced.capacity();let bytes=(state.displaced.len()+needed)*size_of::<Arc<P>>();if self.grant.maximum_capacity_bytes<bytes||self.grant.maximum_release_bytes<before*size_of::<Arc<P>>(){return Ok(ToolRunMemberFolded{shown,pending:true,progress:idle,conflicts:0,read:None});}state.displaced.try_reserve_exact(needed).map_err(|_|plugin_sdk_fault("member original displaced slots cannot reserve"))?;return Ok(ToolRunMemberFolded{shown,pending:true,progress:RetainedCloneProgress{copied_items:1,retained_capacity_bytes:state.displaced.capacity()*size_of::<Arc<P>>(),released_bytes:before*size_of::<Arc<P>>(),..idle},conflicts:0,read:None});}}
+            state.displaced.extend(state.base.replace(store.derived_snapshot_head()).map(store::os_store::snapshot_read::ArtifactDerivedSnapshot::into_snapshot_owner));state.displaced.extend(state.overlay.take().map(store::os_store::snapshot_read::ArtifactDerivedSnapshot::into_snapshot_owner));state.rebase_pending=false;shown=0;return Ok(ToolRunMemberFolded{shown,pending:true,progress:RetainedCloneProgress{copied_items:1,copied_bytes:copy,..idle},conflicts:0,read:None});
+        }
+        if shown<self.ops.len(){
+            if state.operation.is_none()&&state.operation_source.is_none()&&state.preparation.is_none(){let bytes=self.ops[shown].len();if self.grant.maximum_copy_bytes<bytes||bytes>4096{return Ok(ToolRunMemberFolded{shown,pending:true,progress:idle,conflicts:0,read:None});}state.operation_consumed=false;state.operation=Some(<Mu as ::protocol::OpBinary>::decode_op(&self.ops[shown]).map_err(FaultFrom::into_fault)?);return Ok(ToolRunMemberFolded{shown,pending:true,progress:RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..idle},conflicts:0,read:None});}
+            if state.preparation.is_none(){
+                if state.operation_source.is_none(){let factory=store.owned_mutation_retirement_factory().map_err(ToolRunMemberFoldRefusal::Native)?;let Some((source,p))=store::os_store::ArtifactMutationSource::<Mu>::admit(&mut state.operation,&factory,self.grant).map_err(ToolRunMemberFoldRefusal::Native)?else{return Ok(ToolRunMemberFolded{shown,pending:true,progress:idle,conflicts:0,read:None});};state.operation_source=Some(source);return Ok(ToolRunMemberFolded{shown,pending:true,progress:p,conflicts:0,read:None});}
+                if state.operation_input.is_none(){let source=state.operation_source.as_mut().unwrap();let p=if source.ready(){source.take(&mut state.operation_input,self.grant).map_err(ToolRunMemberFoldRefusal::Native)?.unwrap_or(idle)}else{source.advance(self.grant).map_err(ToolRunMemberFoldRefusal::Native)?.progress()};return Ok(ToolRunMemberFolded{shown,pending:true,progress:p,conflicts:0,read:None});}
+            }
+            if state.preparation.is_none(){let source=state.overlay.as_ref().or(state.base.as_ref()).ok_or_else(||plugin_sdk_fault("member fold retains its original base"))?;let p=store.begin_derived_operation(&mut state.preparation,source,&mut state.operation_input,u32::try_from(shown).unwrap_or(u32::MAX),store::os_store::ArtifactDerivedOperationMode::Provisional,self.grant).map_err(ToolRunMemberFoldRefusal::Native)?.unwrap_or(idle);return Ok(ToolRunMemberFolded{shown,pending:true,progress:p,conflicts:0,read:None});}
+            let owner=state.preparation.as_mut().unwrap();
+            if owner.is_finished(){let Some(((next,_),p))=store.take_derived_operation(owner,self.grant).map_err(ToolRunMemberFoldRefusal::Native)?else{return Ok(ToolRunMemberFolded{shown,pending:true,progress:idle,conflicts:0,read:None});};state.operation_consumed=true;let conflicts=u32::from(next.is_none());if let Some(next)=next{if let Some(previous)=state.overlay.replace(next){state.pending_alias=Some(previous.into_snapshot_owner());}}return Ok(ToolRunMemberFolded{shown:shown+1,pending:true,progress:p,conflicts,read:None});}
+            let step=store.step_derived_operation(owner,self.grant.maximum_copy_bytes,self.grant,self.receiving,&mut deadline).map_err(ToolRunMemberFoldRefusal::Native)?;return Ok(ToolRunMemberFolded{shown,pending:true,progress:step.progress(),conflicts:0,read:None});
+        }
+        let read=state.overlay.as_ref().filter(|_|!self.ops.is_empty()).map(|overlay|store.snapshot_read_derived(overlay).map(|read|(read,store.content_revision()))).transpose().map_err(FaultFrom::into_fault)?;
+        Ok(ToolRunMemberFolded{shown,pending:false,progress:idle,conflicts:0,read})
     }
 }
 
@@ -157,7 +172,7 @@ pub(super) fn close_ledger_backing<T>(owner:&mut Vec<T>,grant:RetainedCloneGrant
 pub(super) fn tool_erased_retirement_demand(owner:&Option<Box<dyn store::ErasedSnapshotRetirement>>,body:usize)->Result<RetirementDemand,ValueError>{
  let Some(owner)=owner.as_ref()else{return Ok(Default::default())};
  if owner.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:size_of_val(owner.as_ref()),copy_bytes:size_of::<Option<Box<dyn store::ErasedSnapshotRetirement>>>(),depth:1,..Default::default()});}
- Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"tool retained close depth overflow"))?})
+ Ok({let mut demand=owner.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"tool retained close depth overflow"))?;demand})
 }
 
 #[doc(hidden)]
@@ -204,7 +219,7 @@ impl<M:Send+'static> ToolRunMemberEmissionOwner for ToolRunMemberEmissionState<M
         if self.current.is_some(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"decoded member mutation retains its exact Store retirement issuer"));}
         if let Some(owner)=self.retirement_refusal_close.as_ref(){
             if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<ValueError>>>(),depth:1,..Default::default()});}
-            return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"member original refusal close depth overflow"))?});
+            return Ok({let mut demand=owner.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"member original refusal close depth overflow"))?;demand});
         }
         if self.retirement_refusal.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<ControlledRetirement<ValueError>>()+size_of::<Option<ValueError>>(),depth:1,..Default::default()});}
         if let Some(schema)=self.schema.as_ref(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<String>>(),release_bytes:schema.capacity(),depth:1,..Default::default()});}
@@ -324,7 +339,14 @@ impl store::MemberStoreVisitor for ToolRunMemberRetire<'_>{
         Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+::protocol::Mutation<P>+protocol::SemanticMutation<P>+::protocol::OpBinary+::protocol::OpText+Send+'static,
     {
         if self.grant.maximum_items==0{return Ok((None,Default::default()));}
-        let state=self.owners.as_any_mut().downcast_mut::<ToolRunMemberState<P>>().ok_or_else(||plugin_sdk_fault("member alias retirement owns another exact Store type"))?;
+        let state=self.owners.as_any_mut().downcast_mut::<ToolRunMemberState<P,Mu>>().ok_or_else(||plugin_sdk_fault("member alias retirement owns another exact Store type"))?;
+        if let Some(owner)=state.preparation.as_mut(){if self.everything{owner.cancel();}if owner.is_closing(){let step=owner.close_step(self.grant).map_err(ValueError::into_fault)?;if owner.terminal_is_empty(){drop(state.preparation.take());}return Ok((None,step.progress()));}}
+        if self.everything||state.operation_consumed{
+            if let Some(input)=state.operation_input.as_mut(){let step=input.close_step(self.grant).map_err(ValueError::into_fault)?;if input.terminal_is_empty(){state.operation_input=None;}return Ok((None,step.progress()));}
+            if let Some(source)=state.operation_source.as_mut(){source.begin_close();let step=source.close_step(self.grant).map_err(ValueError::into_fault)?;if source.terminal_is_empty(){state.operation_source=None;}return Ok((None,step.progress()));}
+        }
+        if state.operation_retirement.is_some(){return semio_framework_value::close_factory_ticket(&mut state.operation_retirement,self.grant).map(|step|(None,step.progress())).map_err(ValueError::into_fault);}
+        if state.operation.is_some()&&(self.everything||state.operation_consumed){return Ok(store.retire_owned_mutation(&mut state.operation,self.grant).map_err(ValueError::into_fault)?.map_or((None,Default::default()),|(frame,p)|(Some(frame),p)));}
         if state.pending_alias.is_some(){return Ok(store.retire_snapshot_alias(&mut state.pending_alias,self.grant).map_err(FaultFrom::into_fault)?.map_or((None,Default::default()),|(owner,progress)|(Some(owner),progress)));}
         let copy=2*size_of::<Option<Arc<P>>>();
         if self.grant.maximum_copy_bytes<copy||self.grant.maximum_depth==0{return Ok((None,Default::default()));}

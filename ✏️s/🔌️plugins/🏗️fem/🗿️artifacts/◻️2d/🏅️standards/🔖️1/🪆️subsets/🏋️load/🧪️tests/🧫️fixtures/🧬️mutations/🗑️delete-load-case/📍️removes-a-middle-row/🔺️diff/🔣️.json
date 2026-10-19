@@ -6,13 +6,13 @@
   "sections": null,
   "supports": null,
   "loadCases": {
-    "inserted": [],
     "removed": [
       {
         "id": "snow_spare",
         "index": 4
       }
     ],
+    "inserted": [],
     "moved": [],
     "modified": []
   },

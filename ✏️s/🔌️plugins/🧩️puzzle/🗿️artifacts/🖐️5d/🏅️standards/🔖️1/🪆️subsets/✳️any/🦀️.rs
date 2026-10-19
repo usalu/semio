@@ -1,5 +1,5 @@
-//! 🪆️ Subset root for `s.puzzle.puzzle5d@1/*` (ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-
 //! RUNTIME`, `terra-descriptors` packet, following the `terra-fleet-trinity-recipe` recipe —
+//! 🪆️ Subset root for `s.puzzle.puzzle5d@1/*` (ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-
 //! `📓️terra-fleet-trinity-recipe-report.md`). Exports `subset() -> SubsetDeclaration`, assembling the
 //! `🧬️schema`/`🚪️io`/`👁️viewer`/`✏️editor`/`📚️examples` children — `crate::editor::puzzle5d`/
 //! `crate::viewer::puzzle5d` stay mounted at the plugin's top-level `editor`/`viewer` modules
@@ -29,7 +29,13 @@ use crate::standards::v1::subsets::any::schema;
 use crate::PUZZLE5D_DIALECT;
 use crate::editor::puzzle5d as editor;
 use crate::viewer::puzzle5d as viewer;
-use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, IoDeclaration, LanguagePair, NativeCodecs, SchemaDeclaration, SubsetDeclaration};
+use semio_framework_plugin::app::declarations::editor_surface;
+use semio_framework_plugin::app::declarations::viewer_surface;
+use semio_framework_plugin::app::declarations::IoDeclaration;
+use semio_framework_plugin::app::declarations::LanguagePair;
+use semio_framework_plugin::app::declarations::NativeCodecs;
+use semio_framework_plugin::app::declarations::SchemaDeclaration;
+use semio_framework_plugin::app::declarations::SubsetDeclaration;
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 

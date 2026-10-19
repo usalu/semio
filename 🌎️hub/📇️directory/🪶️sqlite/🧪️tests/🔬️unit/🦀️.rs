@@ -261,13 +261,7 @@ async fn share_issuance_atomically_requires_the_persisted_scope_and_preserves_ar
     let archived = DocumentScope::new(&archived_space, "share-atomic-archive");
     announce_share_document(&directory, &mut clock, &archived, "seed").await;
     directory
-        .append_events(&[NewDirectoryEvent {
-            hlc: clock.tick(),
-            actor: actor("seed"),
-            space_id: Some(archived_space.clone()),
-            user_id: Some("seed".to_string()),
-            body: DirectoryEventBody::SpaceArchived { space_id: archived_space.clone() },
-        }])
+        .append_events(&[NewDirectoryEvent { hlc: clock.tick(), actor: actor("seed"), space_id: Some(archived_space.clone()), user_id: Some("seed".to_string()), body: DirectoryEventBody::SpaceArchived { space_id: archived_space.clone() } }])
         .await
         .expect("archive the published space");
     assert_eq!(directory.get_role(&archived_space, "seed").await.expect("archived role"), Some(SpaceRole::Spectator));

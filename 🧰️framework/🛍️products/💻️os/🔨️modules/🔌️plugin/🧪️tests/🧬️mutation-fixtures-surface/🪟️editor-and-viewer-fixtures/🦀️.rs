@@ -71,10 +71,7 @@ impl ArtifactEditor for SurfaceEditorFixture {
         registry.register(SurfaceFixtureFactory { keys: vec![ToolFactoryKey::new(registry.controller_id(), SURFACE_TOOL_ID)] })
     }
 
-    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<ToolOperationSpec>, Fault> {
-        let job = SurfaceFixtureJob { owners: crate::app_testing::mutation_fixture::job_close::FixtureJobOwners::new(request.command, request.completion).with_context(request.context), count: request.snapshot.count, page: 0 };
-        Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, job, request.operation)))
-    }
+    fn build_tool_job(request:&mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>,output:&mut Option<semio_framework::ErasedToolJob>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{crate::app_testing::mutation_fixture::job_close::admit_fixture_tool_job(request,output,cx,|request|{let count=request.snapshot.count;SurfaceFixtureJob{owners:crate::app_testing::mutation_fixture::job_close::FixtureJobOwners::from_request(request),count,page:0}})}
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(crate::app_testing::mutation_fixture::wire::preparation_factory::<Self::Snapshot, Self::Mutation>("testkit-surface-artifact-retained"))

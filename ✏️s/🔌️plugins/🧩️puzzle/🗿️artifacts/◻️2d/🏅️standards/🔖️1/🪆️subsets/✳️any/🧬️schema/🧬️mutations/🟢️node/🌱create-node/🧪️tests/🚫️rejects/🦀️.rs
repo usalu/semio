@@ -8,7 +8,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
-use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::inverse_puzzle2d_mutation;
 use semio_framework_test_fixtures::fixture_text;
 
 use crate::Puzzle2dSnapshot;
@@ -44,7 +44,7 @@ fn rejection_leaves_the_document_at_the_committed_after() {
 #[test]
 fn the_refusal_is_the_declared_one() {
     assert!((*DIFF_ABSENT).is_empty(), "create-node/rejects-a-capsule-id-the-tower-already-holds: the D6 sentinel 🔺️diff/🚫️.absent must stay empty");
-    let produced = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Puzzle2dMutation as protocol::ColdMutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff::default(), "create-node/rejects-a-capsule-id-the-tower-already-holds: a refusing diff builder answers the default diff, never a half-built delta");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "create-node/rejects-a-capsule-id-the-tower-already-holds: exactly one diagnostic is expected, got {messages:?}");
@@ -53,11 +53,11 @@ fn the_refusal_is_the_declared_one() {
     assert_eq!(messages[0].target, vec!["f537171c-bacd-4422-abed-09e1ab19c572".to_string()], "create-node/rejects-a-capsule-id-the-tower-already-holds: the diagnostic addresses exactly what the payload named");
 }
 
-/// ↩️ `create-node`'s inverse is PAYLOAD-derived, so a refused create still answers a `delete-node` of the id it was asked to create.
+/// ↩️ A refused create produces no executable inverse that could delete the existing node.
 #[test]
 fn inverse_of_a_refusal() {
     let inverse = inverse_puzzle2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse snapshot");
-    assert_eq!(inverse.len(), 1, "create-node/rejects-a-capsule-id-the-tower-already-holds: got {inverse:?}");
+    assert!(inverse.is_empty(), "create-node/rejects-a-capsule-id-the-tower-already-holds: got {inverse:?}");
 }
 
 /// 🔣️ Both committed snapshots and the committed `create-node` payload are already canonical.
@@ -79,7 +79,7 @@ fn committed_json_is_canonical() {
 fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("rejected"), "create-node/rejects-a-capsule-id-the-tower-already-holds declares a rejected outcome");
-    let produced = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Puzzle2dMutation as protocol::ColdMutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
     assert_eq!(outcome.get("code").and_then(serde_json::Value::as_str), Some(message.code.0.as_str()), "create-node/rejects-a-capsule-id-the-tower-already-holds: the declared code must match the emitted one");
     let declared_path: Vec<String> = outcome.get("path").and_then(serde_json::Value::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();

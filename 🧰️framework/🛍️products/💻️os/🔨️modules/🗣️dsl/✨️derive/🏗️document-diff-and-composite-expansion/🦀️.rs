@@ -90,6 +90,7 @@ pub fn expand_diff_binary(input: TokenStream) -> TokenStream {
 pub struct CompositeAttrs {
     pub(super) snapshot: Option<Type>,
     op: Option<Type>,
+    reference: Option<Type>,
 }
 
 // 🚫️async: E1 pure accessor consumed by external-trait/E3 proc-macro entry points — see R9
@@ -106,7 +107,10 @@ pub struct CompositeAttrs {
             } else if meta.path.is_ident("op") {
                 if out.op.is_some() { return Err(meta.error("duplicate composite op")); }
                 out.op = Some(meta.value()?.parse()?);
-            } else { return Err(meta.error("unsupported composite attribute")); }
+                        } else if meta.path.is_ident("reference") {
+                if out.reference.is_some() { return Err(meta.error("duplicate composite reference")); }
+                out.reference = Some(meta.value()?.parse()?);
+} else { return Err(meta.error("unsupported composite attribute")); }
             Ok(())
         })?;
     }
@@ -128,7 +132,20 @@ pub fn expand_derive_composite_mutation(input: TokenStream) -> TokenStream {
         return Err(syn::Error::new_spanned(input, "#[derive(CompositeMutation)] requires #[composite(snapshot = YourSnapshot, op = YourOp)]"));
     };
 
-    let expected_kebab = to_kebab(&name.to_string());
+        let cold_reference = attrs.reference.map(|reference_ty| quote! {
+        impl ::semio_framework_os_kernel::ColdMutationKind<#reference_ty,#op_ty> for #name {
+            fn diff(&self,base:&#reference_ty)->::semio_framework_os_kernel::MutationOutcome<<#op_ty as ::semio_framework_os_kernel::ColdMutation<#reference_ty>>::ReferenceDiff>{
+                ::semio_framework_os_kernel::os_spr::fold::fold_plan_diff(self,base)
+            }
+            fn inverse(&self,base:&#reference_ty)->Result<Vec<#op_ty>,::semio_framework_value::ValueError>{
+                ::semio_framework_os_kernel::os_spr::fold::fold_plan_inverse::<#snapshot_ty,#reference_ty,#op_ty,Self>(self,base)
+            }
+            fn foreign_step_source<'a>(&'a self,base:&'a #reference_ty,index:usize)->Result<Option<::semio_framework_os_kernel::ForeignStepSource<'a>>,::semio_framework_value::ValueError>{
+                ::semio_framework_os_kernel::ColdCompositeMutationKind::foreign_step_source(self,base,index)
+            }
+        }
+    });
+let expected_kebab = to_kebab(&name.to_string());
     let assert_kind_message = format!("#[derive(CompositeMutation)]: {}'s CompositeMutationKind::SEMANTICS.kind must equal \"{}\" (its own kebab form)", name, expected_kebab);
     let assert_verb_message = format!("#[derive(CompositeMutation)]: {}'s CompositeMutationKind::SEMANTICS.verb must be one of protocol::APPROVED_VERBS", name);
 
@@ -138,12 +155,7 @@ pub fn expand_derive_composite_mutation(input: TokenStream) -> TokenStream {
 
         impl ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #op_ty> for #name {
             const SEMANTICS: ::semio_framework_os_kernel::SemanticDescriptor = <#name as ::semio_framework_os_kernel::CompositeMutationKind<#snapshot_ty, #op_ty>>::SEMANTICS;
-            fn diff(&self, base: &#snapshot_ty) -> ::semio_framework_os_kernel::MutationOutcome<<#op_ty as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::Diff> {
-                ::semio_framework_os_kernel::os_spr::fold::fold_plan_diff(self, base)
-            }
-            fn inverse(&self, base: &#snapshot_ty) -> Result<Vec<#op_ty>, ::semio_framework_value::ValueError> {
-                ::semio_framework_os_kernel::os_spr::fold::fold_plan_inverse(self, base)
-            }
+            
             fn label(&self) -> ::semio_framework_ui_locale::LocalizedLabel {
                 ::semio_framework_os_kernel::CompositeMutationKind::label(self)
             }
@@ -160,7 +172,8 @@ pub fn expand_derive_composite_mutation(input: TokenStream) -> TokenStream {
                 ::semio_framework_os_kernel::CompositeMutationKind::foreign_step_source(self, base, index)
             }
         }
-    };
+            #cold_reference
+};
     Ok(expanded)
 }
 //#endregion 🔖️CompositeMutation

@@ -3,8 +3,8 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structur
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_fem_material::planar::FemMaterialValue;
+use semio_s_fem_node::planar::FemNodeValue;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
 
@@ -12,10 +12,10 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structur
 /// document nodes.
 fn rectangle_region_doc() -> Fem2dSnapshot {
     Fem2dSnapshot {
-        nodes: vec![FemNode { id: "c0".into(), x: 0.0, y: 0.0 }, FemNode { id: "c1".into(), x: 4.0, y: 0.0 }, FemNode { id: "c2".into(), x: 4.0, y: 2.0 }, FemNode { id: "c3".into(), x: 0.0, y: 2.0 }],
+        nodes: vec![FemNodeValue { id: "c0".into(), x: 0.0, y: 0.0 }, FemNodeValue { id: "c1".into(), x: 4.0, y: 0.0 }, FemNodeValue { id: "c2".into(), x: 4.0, y: 2.0 }, FemNodeValue { id: "c3".into(), x: 0.0, y: 2.0 }],
         elements: vec![],
         regions: vec![FemRegion { id: "r1".into(), name: "slab".into(), outline: vec![[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]], holes: vec![], thickness: 0.02, material_id: "steel".into(), mesh_size: 1.0 }],
-        materials: vec![FemMaterial { id: "steel".into(), name: "steel".into(), e: 210e9, nu: 0.3, rho: 7850.0 }],
+        materials: vec![FemMaterialValue { id: "steel".into(), name: "steel".into(), e: 210e9, nu: 0.3, rho: 7850.0 }],
         sections: vec![],
         supports: vec![FemSupport { id: "s1".into(), node_id: "c0".into(), fixed: vec![FemDof::Tx, FemDof::Ty] }, FemSupport { id: "s2".into(), node_id: "c1".into(), fixed: vec![FemDof::Tx, FemDof::Ty] }],
         load_cases: vec![FemLoadCase { id: "self".into(), name: "self weight".into(), loads: vec![], self_weight: true }],

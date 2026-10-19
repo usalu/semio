@@ -115,7 +115,6 @@ export class CleanMechanismNewScript extends Script {
 
   private async crates(packageDir: string, flags: ReadonlySet<string>, dryRun: boolean): Promise<void> {
     const { applyCarveWrites, carveWrites, planArtifactCrates, registerBuildOwnerRows, resolveCarveBackupDir } = await import("../📦️crate-tree/🟦️.ts");
-    const { registerCrateLaunchRoutes } = await import("../🚀️launch-catalog/🟦️.ts");
     if (flags.has("--check-applied")) {
       const sandbox = [...flags].find((flag) => flag.startsWith("--sandbox="))?.slice("--sandbox=".length);
       if (!sandbox) throw new Error("new crates --check-applied needs --sandbox=<dir> (a directory outside the repository)");
@@ -172,8 +171,6 @@ export class CleanMechanismNewScript extends Script {
     applyCarveWrites(this.root, writes, backup);
     const owners = registerBuildOwnerRows(this.root, plan, backup);
     console.log(`owner rows: ${owners.length ? owners.join(", ") : "none added"}`);
-    const routes = registerCrateLaunchRoutes(this.root, plan, backup);
-    console.log(`launch routes: ${routes.length ? `${routes.length} added` : "none added"}`);
     console.log(`new crates: ${plan.artifactCrate} — wrote ${writes.length} file(s) for ${plan.crates.length} crate(s).`);
     await this.unmirror(packageDir, true);
   }

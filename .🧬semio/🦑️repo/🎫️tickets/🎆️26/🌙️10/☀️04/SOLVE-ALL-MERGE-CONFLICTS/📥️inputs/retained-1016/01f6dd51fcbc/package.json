@@ -1,0 +1,1 @@
+{"name":"neutral-fenced","private":true,"workspaces":[],"semio":{"workspace":{"schemaVersion":1,"members":["**"],"owners":["*/package.json"]}},"description":"neutral concurrent Source edit"}

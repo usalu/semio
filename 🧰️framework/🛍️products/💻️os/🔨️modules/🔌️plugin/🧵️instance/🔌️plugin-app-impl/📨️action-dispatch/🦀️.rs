@@ -24,7 +24,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             Some(definition) => definition.kind,
             None => reserved_kind.ok_or_else(|| plugin_sdk_fault(format!("window kind {} does not own action {}", address.window_kind_id, address.action_id)))?,
         };
-        if !self.ingress.action_source_capture_ready(&address.action_id, cx){return Ok(None)}
+        if !self.tool_machines.ingress.action_source_capture_ready(&address.action_id, cx){return Ok(None)}
         let log_generation_before = self.history.log_generation;
         let previous_kind = self.host_events.invocation_kind.replace(kind);
         let result = self.command_ctx().dispatch_action(&address.action_id, source_args, original_fault, meta, identity, cx).await;

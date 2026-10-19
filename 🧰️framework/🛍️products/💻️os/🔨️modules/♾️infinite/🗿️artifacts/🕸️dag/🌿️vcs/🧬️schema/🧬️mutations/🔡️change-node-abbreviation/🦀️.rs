@@ -13,6 +13,17 @@ pub struct ChangeNodeAbbreviation {
 
 impl protocol::MutationKind<DagSnapshot, DagMutation> for ChangeNodeAbbreviation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node-abbreviation", kind: "change-node-abbreviation", record: "ChangedNodeAbbreviation" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change node abbreviation {}", self.id), &format!("Knotenabkürzung {} ändern", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["nodes".into(), self.id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<DagSnapshot, DagMutation> for ChangeNodeAbbreviation {
     fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         if !base.nodes.iter().any(|node| node.id == self.id) {
             return protocol::MutationOutcome::new(DagDiff::default());
@@ -25,10 +36,4 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for ChangeNodeAbbreviation
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change node abbreviation {}", self.id), &format!("Knotenabkürzung {} ändern", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["nodes".into(), self.id.clone()]
-    }
 }

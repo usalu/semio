@@ -1,4 +1,17 @@
 #!/usr/bin/env bun
+import { StableIdentityCheckScript } from "./🎛️commands/📸️snapshot-checks/🟦️.ts";
+import { DiagnosticAdmissionCheckScript } from "./🎛️commands/🧪️source-and-native-tests/🟦️.ts";
+import { OwnedReplayCheckScript } from "./🎛️commands/🧪️source-and-native-tests/🟦️.ts";
+import { CanonicalSourceIdentityCheckScript } from "./🎛️commands/🧪️source-and-native-tests/🟦️.ts";
+import { RetainedLaneScript } from "./🎛️commands/🧬️retained-clone-check/🟦️.ts";
+import { OriginalIngressScript } from "./🎛️commands/🧬️retained-clone-check/🟦️.ts";
+import { OriginalHistoryInputScript } from "./🎛️commands/🧬️retained-clone-check/🟦️.ts";
+import { OriginalIoRetirementScript } from "./🎛️commands/🧬️retained-clone-check/🟦️.ts";
+import { SharedSemanticSourceScript } from "../../🔨️modules/🏪️store/🏗️initialization/🏠️owners/📜️script.ts";
+import { MemberFacetsScript } from "./🎛️commands/👥️member-dialect-checks/🟦️.ts";
+import { OriginalVcsCommandScript } from "./🎛️commands/🧪️source-and-native-tests/🟦️.ts";
+import { DbErrorOwnershipCheckScript } from "./🎛️commands/🗄️database-checks/🟦️.ts";
+import { OriginalSnapshotReceivingScript } from "./🎛️commands/📸️snapshot-checks/🟦️.ts";
 /** 🦀️ `@semio-tech/framework-os-kernel` task router: parses the command and dispatches it to the check and test scripts of `🎛️commands`. */
 import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { ScriptRouter } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -120,5 +133,19 @@ router.register("test-config-paged-source",ConfigPagedSourceScript);
 router.register("test-original-cleanup-context-native",OriginalCleanupContextNativeScript);
 
 router.register("test-crate-boundaries",CrateBoundariesSourceScript);
+
+router.register("stable-identity-check", StableIdentityCheckScript);
+router.register("test-diagnostic-admission", DiagnosticAdmissionCheckScript);
+router.register("test-owned-replay", OwnedReplayCheckScript);
+router.register("test-canonical-source-identity", CanonicalSourceIdentityCheckScript);
+router.register("test-retained-lane", RetainedLaneScript);
+router.register("test-original-ingress", OriginalIngressScript);
+router.register("test-original-history-input", OriginalHistoryInputScript);
+router.register("test-original-io-retirement", OriginalIoRetirementScript);
+router.register("semantic-source", SharedSemanticSourceScript);
+router.register("member-facets", MemberFacetsScript);
+router.register("test-original-vcs-command", OriginalVcsCommandScript);
+router.register("db-error-ownership-check", DbErrorOwnershipCheckScript);
+router.register("test-original-snapshot-receiving", OriginalSnapshotReceivingScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "check" }) }));

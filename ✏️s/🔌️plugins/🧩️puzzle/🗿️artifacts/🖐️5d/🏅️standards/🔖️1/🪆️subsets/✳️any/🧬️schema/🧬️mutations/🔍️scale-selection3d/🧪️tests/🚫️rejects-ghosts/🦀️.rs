@@ -8,7 +8,7 @@
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::apply_puzzle5d_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle5d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::inverse_puzzle5d_mutation;
 use semio_framework_test_fixtures::fixture_text;
 
 use crate::Puzzle5dSnapshot;
@@ -34,7 +34,7 @@ fn outcome() -> serde_json::Value {
 
 /// 🗣️ `(level, code, target)` of every message `scale-selection3d` raises on the committed base.
 fn produced_messages() -> Vec<(semio_framework_diagnostic::Severity, String, Vec<String>)> {
-    let produced = <Puzzle5dMutation as protocol::Mutation<Puzzle5dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Puzzle5dMutation as protocol::ColdMutation<Puzzle5dSnapshot>>::diff(&mutation(), &before());
     produced.messages().iter().map(|message| (message.level, message.code.0.clone(), message.target.clone())).collect()
 }
 
@@ -67,7 +67,7 @@ fn rejection_leaves_the_document_at_the_committed_after() {
 #[test]
 fn the_refusal_is_the_declared_one() {
     assert!((*DIFF_ABSENT).is_empty(), "scale-selection3d/rejects-ghosts: the D6 sentinel 🔺️diff/🚫️.absent must stay empty");
-    let produced = <Puzzle5dMutation as protocol::Mutation<Puzzle5dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Puzzle5dMutation as protocol::ColdMutation<Puzzle5dSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &Puzzle5dDiff::default(), "scale-selection3d/rejects-ghosts: a refusing diff builder answers the default diff");
     let outcome = outcome();
     assert_eq!(outcome["status"].as_str(), Some("rejected"), "scale-selection3d/rejects-ghosts declares a rejected outcome");

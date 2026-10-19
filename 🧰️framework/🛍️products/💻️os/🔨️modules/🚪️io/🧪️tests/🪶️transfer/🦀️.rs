@@ -22,17 +22,36 @@ impl semio_framework_pack_json::ArtifactCanonicalJsonTree for TransferMutation {
  fn canonical_tree_key(&self,ordinal:usize)->Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>,ValueError>{self.literal.canonical_tree_key(ordinal)}
 }
 impl store::DiffAlgebra<TransferSnapshot> for TransferDiff {
- fn inverse(&self,base:&TransferSnapshot)->Self{Self{literal:self.literal.as_ref().map(|_|base.0.clone())}}
+
  fn is_empty(&self)->bool{self.literal.is_none()}
 }
+
+impl store::ColdDiffAlgebra<TransferSnapshot> for TransferDiff {
+ fn inverse(&self,base:&TransferSnapshot)->Self{Self{literal:self.literal.as_ref().map(|_|base.0.clone())}}
+}
 impl store::MutationDiff<TransferSnapshot> for TransferDiff {
- fn apply(&self,base:&TransferSnapshot,_:store::ApplyCapability)->store::MutationApplyResult<TransferSnapshot>{Ok(TransferSnapshot(self.literal.clone().unwrap_or_else(||base.0.clone())))}
+
+
+}
+
+impl store::ColdMutationDiff<TransferSnapshot> for TransferDiff {
  fn absorb(&mut self,other:Self){if other.literal.is_some(){self.literal=other.literal;}}
+
+ fn apply(&self,base:&mut TransferSnapshot,_:store::ApplyCapability)->store::MutationApplyResult<()> {
+        if let Some(value) = &self.literal { base.0 = value.clone(); }
+        Ok(())
+    }
 }
 impl store::Mutation<TransferSnapshot> for TransferMutation {
  type Diff=TransferDiff;
  const DESCRIPTORS:&'static[store::MutationLeafDescriptor]=&[store::MutationLeafDescriptor{schema_version:1,owner:"fixture.sqlite-transfer",semantic_kind:"replace-literal",display_name:"Replace Literal",emoji:"🔁️",aggregate_variant:"TransferMutation",payload_schema:"fixture.sqlite-transfer/replace",text_opcode:None,binary_tag:None,invertibility:store::MutationInvertibility::ExplicitMutation,diff_participation:store::MutationDiffParticipation::Detect,outcome_classes:&[store::MutationOutcomeClass::Applied],composition:store::MutationComposition::Atomic,required_language_surfaces:&[store::MutationLanguageSurface::Rust,store::MutationLanguageSurface::JsonSchema]}];
  fn descriptor(&self)->&'static store::MutationLeafDescriptor{&Self::DESCRIPTORS[0]}
+
+
+}
+
+impl store::ColdMutation<TransferSnapshot> for TransferMutation {
+    type ReferenceDiff = TransferDiff;
  fn diff(&self,base:&TransferSnapshot)->store::MutationOutcome<TransferDiff>{if self.literal==base.0{store::MutationOutcome::empty()}else{store::MutationOutcome::new(TransferDiff{literal:Some(self.literal.clone())})}}
  fn inverse(&self,base:&TransferSnapshot)->Result<Vec<Self>,ValueError>{Ok(vec![Self{literal:base.0.clone()}])}
 }

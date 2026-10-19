@@ -32,6 +32,7 @@ use semio_framework_plugin_decl_emission::surface_contract::ViewEmit;
     use protocol::{OpBinary, OpText};
     use pack::snapshot::ArtifactPack;
     use store::{Mutation, MutationDiff};
+use protocol::{ColdMutationDiff};
     use super::*;
     use serde::{Deserialize, Serialize};
     use crate::declaration_fixture_mutations::std1_any::Std1AnyMutation;
@@ -92,6 +93,26 @@ pub const STD1_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.testkit.w1c-fi
                 }
                 fn print_dsl(&self) -> String {
                     serde_json::to_string(self).unwrap_or_default()
+                }
+            }
+            impl store::ArtifactNativeSnapshot for $snapshot {
+                fn decode_native_snapshot(payload: store::NativeSnapshotInput<'_>, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+                    control.checkpoint()?;
+                    let invalid = |error: serde_json::Error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string());
+                    match payload {
+                        store::NativeSnapshotInput::Binary(bytes) if bytes.is_empty() => Ok(Self::default()),
+                        store::NativeSnapshotInput::Binary(bytes) => serde_json::from_slice(bytes).map_err(invalid),
+                        store::NativeSnapshotInput::Text(text) if text.trim().is_empty() => Ok(Self::default()),
+                        store::NativeSnapshotInput::Text(text) => serde_json::from_str(text).map_err(invalid),
+                    }
+                }
+                fn encode_native_snapshot(&self, encoding: store::NativeSnapshotEncoding, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework::io_schema::IoPayload, semio_framework_value::ValueError> {
+                    control.checkpoint()?;
+                    let invalid = |error: serde_json::Error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string());
+                    match encoding {
+                        store::NativeSnapshotEncoding::Binary => control.copy_bytes(&serde_json::to_vec(self).map_err(invalid)?).map(semio_framework::io_schema::IoPayload::Binary),
+                        store::NativeSnapshotEncoding::Text => control.copy_text(&serde_json::to_string(self).map_err(invalid)?).map(semio_framework::io_schema::IoPayload::Text),
+                    }
                 }
             }
             impl ArtifactPack for $snapshot {
@@ -184,22 +205,33 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
                 pub value: Option<i32>,
             }
             impl protocol::DiffAlgebra<$snapshot> for $diff {
-                fn inverse(&self, base: &$snapshot) -> Self {
-                    Self { value: self.value.map(|_| base.value) }
-                }
+
                 fn is_empty(&self) -> bool {
                     self.value.is_none()
                 }
             }
-            impl MutationDiff<$snapshot> for $diff {
-                fn apply(&self, base: &$snapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<$snapshot> {
-                    Ok($snapshot { value: self.value.unwrap_or(base.value) })
+
+            impl protocol::ColdDiffAlgebra<$snapshot> for $diff {
+                fn inverse(&self, base: &$snapshot) -> Self {
+                    Self { value: self.value.map(|_| base.value) }
                 }
+            }
+            impl MutationDiff<$snapshot> for $diff {
+
+
+            }
+
+            impl ColdMutationDiff<$snapshot> for $diff {
                 fn absorb(&mut self, other: Self) {
                     if other.value.is_some() {
                         self.value = other.value;
                     }
                 }
+
+                fn apply(&self, base: &mut $snapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+                            if let Some(value) = self.value { base.value = value; }
+        Ok(())
+    }
             }
 
             impl protocol::OpText for $mutation {

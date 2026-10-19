@@ -7,29 +7,51 @@
   "supports": null,
   "loadCases": null,
   "combinations": {
-    "inserted": [],
     "removed": [],
+    "inserted": [],
     "moved": [],
     "modified": [
       {
         "id": "uls1",
         "patch": {
-          "id": "uls1",
           "name": "ULS 6.10b",
-          "terms": [
-            {
-              "caseId": "dead",
-              "factor": 1.35
-            },
-            {
-              "caseId": "live",
-              "factor": 1.5
-            },
-            {
-              "caseId": "wind",
-              "factor": 0.9
-            }
-          ]
+          "terms": {
+            "removed": [
+              {
+                "id": "dead",
+                "index": 0
+              },
+              {
+                "id": "live",
+                "index": 1
+              }
+            ],
+            "inserted": [
+              {
+                "index": 0,
+                "row": {
+                  "caseId": "dead",
+                  "factor": 1.35
+                }
+              },
+              {
+                "index": 1,
+                "row": {
+                  "caseId": "live",
+                  "factor": 1.5
+                }
+              },
+              {
+                "index": 2,
+                "row": {
+                  "caseId": "wind",
+                  "factor": 0.9
+                }
+              }
+            ],
+            "moved": [],
+            "modified": []
+          }
         }
       }
     ]

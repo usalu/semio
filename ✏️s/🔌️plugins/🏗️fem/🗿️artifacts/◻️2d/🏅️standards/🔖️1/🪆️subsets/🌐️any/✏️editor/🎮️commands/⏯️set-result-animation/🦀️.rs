@@ -1,5 +1,5 @@
-//! ⏯️ FEM play app command — `result-animation`: results-window playback state (phase, play/pause,
 //! speed, loop mode, waveform) — window config only, never a document mutation. ONE implementation for every
+//! ⏯️ FEM play app command — `result-animation`: results-window playback state (phase, play/pause,
 //! FEM editor: fem 2d and fem 3d each declare their results window as a [`FemPlaybackTransport`] and route
 //! the command through [`set_result_animation_step`].
 //!
@@ -13,14 +13,34 @@
 //! one edit, and a dragged phase or speed slider rides the framework's config-lane press (`gesture`/`commit`
 //! args), whose ticks stay provisional until the release publishes ONE edit and whose cancel leaves none.
 
-use semio_s_fem_app_surface::{FemLoopMode, FemResultsAnimation, FemWaveform, ANIMATION_SPEED_MAXIMUM, ANIMATION_SPEED_MINIMUM, ANIMATION_TICK_MS};
+use semio_s_fem_app_surface::FemLoopMode;
+
+use semio_s_fem_app_surface::FemResultsAnimation;
+
+use semio_s_fem_app_surface::FemWaveform;
+
+use semio_s_fem_app_surface::ANIMATION_SPEED_MAXIMUM;
+
+use semio_s_fem_app_surface::ANIMATION_SPEED_MINIMUM;
+
+use semio_s_fem_app_surface::ANIMATION_TICK_MS;
 use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results;
-use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::transient::addressed_to;
-use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::transient::FemPlaybackClock;
-use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::transient::FemResultsWindowTransientOwner;
+use semio_s_artifact_fem_2d_results_state::transient::addressed_to;
+use semio_s_artifact_fem_2d_results_state::transient::FemPlaybackClock;
+use semio_s_artifact_fem_2d_results_state::transient::FemResultsWindowTransientOwner;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, NoConfig, NoConfigMutation, ViewModel, WindowConfigMutation, WindowTransientMutation};
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Effect;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::ViewModel;
+use semio_framework_plugin::WindowConfigMutation;
+use semio_framework_plugin::WindowTransientMutation;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 
 type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 

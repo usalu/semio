@@ -419,6 +419,12 @@ impl AppPresenter {
         if let Some(cursor)=self.pending.as_mut().filter(|cursor|cursor.phase==AppPresentPhase::Media){
             let Ok(runtime)=self.runtime.try_lock()else{return Ok(AppPresentStep::RetryRuntime)};let Some(interaction)=runtime.interaction.as_ref()else{return Ok(AppPresentStep::AwaitingRuntime)};if !interaction.shell.input.drive_presented_media_slots(&mut cursor.media_collect,&mut cursor.media_slots,cx)?{return Ok(AppPresentStep::Pending)}cursor.phase=AppPresentPhase::ProgressAcknowledge;return Ok(AppPresentStep::Pending)
         }
+        if self.pending.as_ref().is_some_and(|cursor| matches!(cursor.phase, AppPresentPhase::Render | AppPresentPhase::Acknowledge)) {
+            if self.runtime.restore_presenter_interaction_step(cx)? == PresenterInteractionStep::Restored {
+                if let Some(cursor) = self.pending.as_mut() { cursor.input_wait = AppPresentInputWait::None; cursor.input_progress = cursor.input_progress.saturating_add(1); }
+                return Ok(AppPresentStep::Pending);
+            }
+        }
         let owner = self.pending.as_ref().map(|cursor| (cursor.frame.generation.0, cursor.phase.latency_stage())).or_else(|| {
             self.has_pending_presentation().then(|| {
                 let generation = self.retirement.as_ref().and_then(|retirement| retirement.completed_frame.as_ref()).map(|frame| frame.generation.0).unwrap_or_else(frame_latency::latest_frame_generation);

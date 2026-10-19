@@ -49,7 +49,7 @@ pub fn no_presence_store_disposer() -> Box<dyn ArtifactOwnedDisposer<PresenceSto
 /// bound this generic default exists to avoid.
 pub fn bounded_presence_store_disposer<P, M>() -> Box<dyn ArtifactOwnedDisposer<PresenceStore<P, M>>>
 where
-    P: Clone + Default + PartialEq + Send + Sync + 'static,
+    P: Default + PartialEq + Send + Sync + 'static,
     M: Mutation<P> + 'static,
 {
     match PresenceStoreOwnedDisposer::new(Arc::new(P::default()), presence_root_is_its_own_default::<P>) {
@@ -125,6 +125,8 @@ impl<P> BoundedPresenceRootRetirement<P> {
 }
 
 impl<P: Send + Sync + 'static> store::ErasedSnapshotRetirement for BoundedPresenceRootRetirement<P> {
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Ok(self.demand())}
+
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.terminal_is_empty() {
             return Ok(RetainedCloneStep::Complete(Default::default()));
@@ -183,13 +185,13 @@ impl<P> PresenceStoreOwnedDisposer<P> {
     }
 }
 
-impl<P: Clone + Send + Sync + 'static> PresenceStoreOwnedDisposer<P> {
+impl<P: Send + Sync + 'static> PresenceStoreOwnedDisposer<P> {
     fn owns_terminal<M: Mutation<P>>(&self, owner: &PresenceStore<P, M>) -> bool {
         self.terminal_generation == Some(owner.generation_now()) && owner.detached_terminal_is_empty()
     }
 }
 
-impl<P: Clone + Send + Sync + 'static, M: Mutation<P>> ArtifactOwnedDisposer<PresenceStore<P, M>> for PresenceStoreOwnedDisposer<P> {
+impl<P: Send + Sync + 'static, M: Mutation<P>> ArtifactOwnedDisposer<PresenceStore<P, M>> for PresenceStoreOwnedDisposer<P> {
     fn close_step(&mut self, owner: &mut PresenceStore<P, M>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
         if self.retirement.is_some() && !self.owns_terminal(owner) {
             return Err(Fault::from("presence close terminal root or generation changed"));

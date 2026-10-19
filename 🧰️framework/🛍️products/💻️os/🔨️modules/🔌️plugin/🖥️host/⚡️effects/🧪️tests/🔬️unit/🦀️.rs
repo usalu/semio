@@ -1,5 +1,14 @@
 use super::*;
 
+const ROUTER_ORIGINAL_STOCK:semio_framework_job::RetainedCloneGrant=semio_framework_job::RetainedCloneGrant{maximum_items:1<<20,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:4096};
+struct OriginalRouterFixture{caller:semio_framework_job::OriginalJobFixtureCaller,decoder:semio_framework_job::OriginalJobDecodeOwner}
+impl OriginalRouterFixture{
+ fn new()->Self{Self{caller:semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(7301),semio_framework_job::Generation(17),ROUTER_ORIGINAL_STOCK,||Some(1),u64::MAX,1<<20),decoder:semio_framework_job::OriginalJobDecodeOwner::empty()}}
+ fn close<J:InteractiveJob>(&mut self,job:&mut J,grant:semio_framework_job::RetainedCloneGrant)->InteractiveJobCloseStep{self.caller.turn_with_decoder(grant,&mut self.decoder,|cx|cx.with_original_retirement(|cx|job.close_step(cx))).expect("router original close preserves complete failure")}
+ fn finish(mut self){for _ in 0..4096{if self.decoder.terminal_is_empty(){break}self.caller.turn(ROUTER_ORIGINAL_STOCK,|cx|{let demand=self.decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|loan|self.decoder.close_step(loan))?;Ok(())}).expect("router original decoder close");}assert!(self.decoder.terminal_is_empty());self.caller.retire(ROUTER_ORIGINAL_STOCK);}
+}
+
+
 fn fixture_router_grant()->semio_framework_job::RetainedCloneGrant{let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../🛎️services/🧪️tests/🧫️fixtures/🧮️compute-retained/🔣️.json")).unwrap();serde_json::from_value(law["callerGrant"].clone()).unwrap()}
 use semio_framework_async::testkit::ManualRuntime;
 use std::sync::atomic::AtomicUsize;
@@ -72,7 +81,7 @@ impl InteractiveJob for RecordingRouterJob {
 
     fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         self.begin_close();
-        let grant=cx.retained_grant();if cx.should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
+        let grant=cx.retained_grant();if cx.retirement_should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
         use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetirementTurnError};
         if let Some(writer)=self.writer.as_mut(){if writer.terminal_is_empty(){let copied_bytes=std::mem::size_of::<Option<RetainedPayloadBuilder>>();if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth==0{return Ok(InteractiveJobCloseStep::Blocked)}let progress=RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()};cx.consume_retained(progress)?;drop(self.writer.take());cx.consume_fuel(1);return Ok(InteractiveJobCloseStep::Pending{progress})}let step=writer.close_step_granted(grant).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;cx.consume_retained(step.progress())?;cx.consume_fuel(1);return Ok(InteractiveJobCloseStep::Pending{progress:step.progress()})}
         let demand=self.close_demands();
@@ -412,6 +421,7 @@ async fn backbone_delta_fanout_coalesces_a_burst_for_the_same_uri() {
 #[test]
 fn router_effect_original_sources_keep_capacity_until_funded_close() {
     fn verify<J:InteractiveJob>(mut job:J,source:fn(&J)->&Option<Vec<u8>>,text:&str,grant:semio_framework_value::RetainedCloneGrant){
+        let mut original=OriginalRouterFixture::new();
         let pointer=source(&job).as_ref().unwrap().as_ptr();let capacity=source(&job).as_ref().unwrap().capacity();
         job.begin_close();let mut released=0;let mut copies=0;let mut turns=0;
         while !job.terminal_is_empty(){
@@ -420,20 +430,19 @@ fn router_effect_original_sources_keep_capacity_until_funded_close() {
             for axis in 0..4{
                 let mut denied=grant;
                 match axis{0=>denied.maximum_items=0,1 if copy>0=>denied.maximum_copy_bytes=copy-1,2 if release>0=>denied.maximum_release_bytes=release-1,3 if depth>0=>denied.maximum_depth=depth-1,_=>continue}
-                let mut self_funded = semio_framework_job::SelfFundedCloseCaller::new();
-                let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self_funded.turn(denied, |cx| job.close_step(cx)).expect("original fixture close turn"));
+                let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||original.close(&mut job,denied));
                 assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
                 assert!(!matches!(step,InteractiveJobCloseStep::Complete{..}));
                 assert_eq!(source(&job).as_ref().unwrap().as_ptr(),pointer);assert_eq!(source(&job).as_deref().unwrap(),text.as_bytes());
             }
-            let mut self_funded = semio_framework_job::SelfFundedCloseCaller::new();
-            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self_funded.turn(grant, |cx| job.close_step(cx)).expect("original fixture close turn"));
+            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||original.close(&mut job,grant));
             assert!(step.progress().fits(grant));assert_eq!(step.progress().retained_capacity_bytes,heap.requested_bytes);assert_eq!(step.progress().released_bytes,heap.released_bytes);
             assert!(!matches!(step,InteractiveJobCloseStep::Blocked));
             released+=step.progress().released_bytes;copies+=step.progress().copied_bytes;turns+=1;assert!(turns<16);
         }
         assert_eq!(released,capacity);assert!(copies>=std::mem::size_of::<Option<Vec<u8>>>());
         let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!(heap.released_bytes,0);
+        original.finish();
         let oracle:Vec<u8>=serde_json::from_str(&serde_json::to_string(text.as_bytes()).unwrap()).unwrap();assert_eq!(oracle,text.as_bytes());
     }
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
@@ -449,6 +458,7 @@ fn router_effect_original_sources_keep_capacity_until_funded_close() {
 
 #[test]
 fn router_effect_original_box_frame_has_a_separate_funded_terminal_turn(){
+    let mut original_source=OriginalRouterFixture::new();
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["grant"].clone()).unwrap();
     assert_eq!(fixture["wrapper"]["separateTerminalFrame"],true);assert_eq!(fixture["wrapper"]["normalFactoryBirthQualified"],false);
@@ -463,30 +473,37 @@ fn router_effect_original_box_frame_has_a_separate_funded_terminal_turn(){
         if terminal{
             saw_frame=true;assert_eq!(demand.release_bytes,frame);assert_eq!(demand.depth,1);
             let denied=semio_framework_value::RetainedCloneGrant{maximum_release_bytes:frame-1,..grant};
-            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(denied));assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(!owner.terminal_is_empty());assert_eq!((&**owner.0.as_ref().unwrap()as *const dyn InteractiveJob).cast::<()>(),pointer);
+            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||original_source.close(&mut owner,denied));assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(!owner.terminal_is_empty());assert_eq!((&**owner.0.as_ref().unwrap()as *const dyn InteractiveJob).cast::<()>(),pointer);
         }
-        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(grant));assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(!matches!(step,InteractiveJobCloseStep::Blocked));released+=heap.released_bytes;
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||original_source.close(&mut owner,grant));assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(!matches!(step,InteractiveJobCloseStep::Blocked));released+=heap.released_bytes;
         if terminal{assert!(matches!(step,InteractiveJobCloseStep::Complete{..}));}
     }
     assert!(saw_frame&&owner.terminal_is_empty());assert_eq!(released,source_capacity+frame);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!(heap.released_bytes,0);
+    original_source.finish();
+    eprintln!("[DEBUG] original router Box frame{frame} source{source_capacity} released{released} separate terminal frame funded drop0; factory birth unqualified");
 }
 
 #[test]
 fn router_effect_recording_leases_keep_unique_shared_and_weak_backing_custody(){
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["grant"].clone()).unwrap();
     for case in fixture["recordingLeases"].as_array().unwrap(){
+        let mut original=OriginalRouterFixture::new();
         let source=Arc::new(AtomicUsize::new(7));let bytes=semio_framework_value::shared_retirement_allocation_bytes::<AtomicUsize>();
         let mut alias=(case=="alias").then(||RecordingRouterJob{calls:Some(source.clone()),yielded:false,closing:false,cancelled:false,completed:false,cursor:0,writer:None});let weak=(case=="weak").then(||Arc::downgrade(&source));let mut owner=RecordingRouterJob{calls:Some(source),yielded:false,closing:false,cancelled:false,completed:false,cursor:0,writer:None};owner.begin_close();
         let demand=owner.close_demands();
-        let mut self_funded = semio_framework_job::SelfFundedCloseCaller::new();
-        for denied in [semio_framework_value::RetainedCloneGrant{maximum_items:0,..grant},semio_framework_value::RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant},semio_framework_value::RetainedCloneGrant{maximum_release_bytes:bytes-1,..grant},semio_framework_value::RetainedCloneGrant{maximum_depth:0,..grant}]{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self_funded.turn(denied, |cx| owner.close_step(cx)).expect("original fixture close turn"));assert_eq!(step.progress(),Default::default());assert!(!owner.terminal_is_empty());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
-        let mut self_funded = semio_framework_job::SelfFundedCloseCaller::new();
-        if weak.is_some(){let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self_funded.turn(grant, |cx| owner.close_step(cx)).expect("original fixture close turn"));assert_eq!(step.progress(),Default::default());assert!(!owner.terminal_is_empty());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
+        for denied in [semio_framework_value::RetainedCloneGrant{maximum_items:0,..grant},semio_framework_value::RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant},semio_framework_value::RetainedCloneGrant{maximum_release_bytes:bytes-1,..grant},semio_framework_value::RetainedCloneGrant{maximum_depth:0,..grant}]{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||original.close(&mut owner,denied));assert_eq!(step.progress(),Default::default());assert!(!owner.terminal_is_empty());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
+        if weak.is_some(){let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||original.close(&mut owner,grant));assert_eq!(step.progress(),Default::default());assert!(!owner.terminal_is_empty());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
         let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(weak));assert_eq!(heap.released_bytes,0);
         assert_eq!(owner.calls.as_ref().unwrap().load(Ordering::SeqCst),serde_json::from_str::<usize>("7").unwrap());
-        let mut self_funded = semio_framework_job::SelfFundedCloseCaller::new();
-        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self_funded.turn(grant, |cx| owner.close_step(cx)).expect("original fixture close turn"));assert!(owner.terminal_is_empty());assert!(step.progress().fits(grant));assert_eq!(step.progress().released_bytes,heap.released_bytes);let mut released=heap.released_bytes;
-        if let Some(alias)=alias.as_mut(){assert_eq!(released,0);alias.begin_close();let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||alias.close_step(grant));assert!(alias.terminal_is_empty());assert_eq!(step.progress().released_bytes,heap.released_bytes);released+=heap.released_bytes;}
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||original.close(&mut owner,grant));assert!(owner.terminal_is_empty());assert!(step.progress().fits(grant));assert_eq!(step.progress().released_bytes,heap.released_bytes);let mut released=heap.released_bytes;
+        if let Some(alias)=alias.as_mut(){assert_eq!(released,0);alias.begin_close();let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||original.close(alias,grant));assert!(alias.terminal_is_empty());assert_eq!(step.progress().released_bytes,heap.released_bytes);released+=heap.released_bytes;}
         assert_eq!(released,bytes);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{drop(owner);drop(alias);});assert_eq!(heap.released_bytes,0);
     }
+}
+
+#[test]
+fn original_retirement_loan_closes_router_after_semantic_deadline(){
+ let mut original=OriginalRouterFixture::new();let mut job=FaultRouterEffectJob{detail:Some(Vec::with_capacity(4096)),writer:None,cursor:0,closing:true};
+ original.caller.turn_with_decoder(ROUTER_ORIGINAL_STOCK,&mut original.decoder,|cx|{cx.with_original_work_loan(64,0,|cx|{assert!(cx.should_yield());cx.with_original_retirement(|cx|{assert!(!cx.retirement_should_yield());job.close_step(cx)?;Ok(())})})}).unwrap();
+ assert!(job.terminal_is_empty());drop(job);original.finish();
 }

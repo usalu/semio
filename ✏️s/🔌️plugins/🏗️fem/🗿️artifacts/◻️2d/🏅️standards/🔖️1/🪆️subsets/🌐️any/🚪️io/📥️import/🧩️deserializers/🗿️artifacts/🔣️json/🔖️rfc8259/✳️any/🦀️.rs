@@ -1,5 +1,5 @@
-//! 🚪️ fem2d ← json — foreign `Deserializer<Fem2dSnapshot>` on the framework's `io_mechanism`
 //! channel, the exact inverse of the sibling `📤️export` leaf: `IoFidelity::Exact`. Parsing goes
+//! 🚪️ fem2d ← json — foreign `Deserializer<Fem2dSnapshot>` on the framework's `io_mechanism`
 //! through stdio's own real RFC 8259 codec (`parse_json_text`), never a re-derived parser.
 
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;

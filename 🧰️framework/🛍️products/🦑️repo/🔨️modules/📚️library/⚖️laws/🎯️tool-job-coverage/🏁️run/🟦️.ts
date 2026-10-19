@@ -10,7 +10,7 @@ import { policyAllRustFiles } from "../../🧩️plugin-consistency/🏛️found
 import { policyReadMemberStoreProducerSources, policyReadOsStoreSource, policyReadRustPolicySource } from "../../../🔍️discovery/📖️source-access/🦀️rust-evidence/🟦️.ts";
 import { toolJobArtifactEnvelopeOwnedCodecExact, toolJobChildContentRootExact, toolJobImmutableOperationRootsExact } from "../🗄️artifact-store/🟦️.ts";
 import { toolJobArtifactStoreStructuralOwnersExact, toolJobChildRetirementInventoryExact, toolJobPagedIngressExact, toolJobPeerInteractionRootsExact } from "../🗄️artifact-store/🏛️structural-owners/🟦️.ts";
-import { toolJobDrawingEnvelopeCallerRetainedExact, toolJobRasterEnvelopeCallerRetainedExact } from "../🗄️artifact-store/🖼️caller-retained-media/🟦️.ts";
+import { toolJobDrawingEnvelopeCallerRetainedExact, toolJobRasterEnvelopeCallerRetainedExact, toolJobRasterEnvelopeSourceEvidence } from "../🗄️artifact-store/🖼️caller-retained-media/🟦️.ts";
 import { toolJobGisMapEnvelopeCallerRetainedExact, toolJobJackEnvelopeCallerRetainedExact, toolJobPresentationEnvelopeCallerRetainedExact, toolJobTrinityRewriteEnvelopeCallerRetainedExact, toolJobWriterEnvelopeCallerRetainedExact } from "../🗄️artifact-store/📄️caller-retained-documents/🟦️.ts";
 import { toolJobFrameworkReservedRoutesExact, toolJobMicrosecondWorkerExact, toolJobPluginFamilySource, toolJobMicrosecondWorkerSources, toolJobExternalSchemaConstants, toolJobPluginProductionSources, toolJobProofCatalogFailures } from "../🏭️factory/🟦️.ts";
 import { type FixedOperationFixtureOutput, toolJobDrawingGestureOperationOwnerExact, toolJobFixedOperationFixtureRun, toolJobFixedOperationRegistryExact, toolJobFixedOperationRustFixtureSource, toolJobSharedFrameworkActionFixtureRun } from "../⚙️fixed-operation/🟦️.ts";
@@ -201,41 +201,14 @@ export async function toolJobCoverageRun(root: string, lanes: SelfTestLanes): Pr
   const gisMapEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs");
   const gisMapEditor = policyReadModuleTreeSource(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
   const gisMapWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️.rs");
-  const rasterRetainedSource = (file: string): string => {
-    const source = policyReadFileSafe(root, file);
-    if (source.trim() === "") throw new Error(`[verify interactivity tool-jobs] retained Raster envelope source ${JSON.stringify(file)} is missing or empty; the Raster envelope law cannot be evaluated against a path that does not resolve.`);
-    return source;
-  };
-  const rasterMountedOutputSerializers = [
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎞️gif/🔖️87a/✳️any/🦀️.rs",
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖼️tiff/🔖️6.0/✳️any/🦀️.rs",
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️.rs",
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🪟️bmp/🔖️v3/✳️any/🦀️.rs",
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📸️jpg/🔖️jfif-1.01/♾️any/🦀️.rs",
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️.rs",
-  ]
-    .map(rasterRetainedSource);
-  const rasterEnvelopeCodec = [
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs",
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️layer-tree-helpers/🦀️.rs",
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗺️owned-map/🦀️.rs",
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️layer-model/🦀️.rs",
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🖼️asset-content-and-patch/🦀️.rs",
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
-  ]
-    .map(rasterRetainedSource)
-    .concat(rasterMountedOutputSerializers)
-    .join("\n");
-  const rasterEditor = rasterRetainedSource("✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
-  const drawingEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧰️owned/🦀️.rs");
+  const rasterEvidence = toolJobRasterEnvelopeSourceEvidence(root);
+  const drawingEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🦀️.rs");
   const drawingEditorSources = [
     "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
     "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🦀️.rs",
     "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🦀️.rs",
   ].map((file) => POLICY_SPLIT_SOURCE_ROOTS.includes(file) ? policyReadModuleTreeSource(root, file) : policyReadFileSafe(root, file));
-  const drawingEditorTestLaws = drawingEditorSources[0] ?? "";
+  const drawingEditorTestLaws = policyReadFileSafe(root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs");
   const drawingEditor = drawingEditorSources
     .map(toolJobProductionSource)
     .join("\n");
@@ -318,8 +291,8 @@ export async function toolJobCoverageRun(root: string, lanes: SelfTestLanes): Pr
   if (!toolJobJackEnvelopeCallerRetainedExact(store, jackEnvelopeCodec, jackEditor, jackWasm, plugin)) failures.push("Jack `.spr`/`.ops` envelope caller lacks the shared retained edit decoder, exact child retirement, fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement");
   if (!toolJobTrinityRewriteEnvelopeCallerRetainedExact(store, jackEnvelopeCodec, jackEditor, trinityRewrite, plugin)) failures.push("Trinity Rewrite envelope caller lacks the Jack-owned fixed-page operation store, generation handle, bounded progress/cancel/close, exact rejected-page handback, or completion acknowledgement");
   if (!toolJobGisMapEnvelopeCallerRetainedExact(store, gisMapEnvelopeCodec, gisMapEditor, gisMapWasm, plugin)) failures.push("GIS Map `.spr`/`.ops` envelope caller lacks the shared retained edit decoder, exact drawing/image/value child retirement, fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement");
-  if (!toolJobRasterEnvelopeCallerRetainedExact(store, rasterEnvelopeCodec, rasterEditor, plugin)) failures.push("Raster `.spr`/`.ops` envelope caller lacks the shared retained edit decoder, recursive domain retirement, the editor-hosted credit-before-page fixed-page ingress cohort (submit/pump/exact-ack plus cancel), initializer recovery, the guarded owned-map `dsl::ToValue`/`dsl::FromValue` output authority, or its eight mounted export serializers are not the six real format encoders plus two typed `RASTER_*_EXPORT_UNSUPPORTED` declines");
-  if (!toolJobDrawingEnvelopeCallerRetainedExact(store, drawingEnvelopeCodec, drawingEditor, plugin, drawingEditorTestLaws)) failures.push("Drawing `.spr`/`.ops` envelope caller lacks recursive layer/style/asset preflight, one-item clone/retirement, fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement");
+  if (!toolJobRasterEnvelopeCallerRetainedExact(rasterEvidence.store, rasterEvidence.raster, rasterEvidence.editor, rasterEvidence.plugin, rasterEvidence.laws)) failures.push("Raster `.spr`/`.ops` envelope caller lacks its owned field catalog, framework replay initializer, funded central mutation preparation or mounted grant/cancellation laws");
+  if (!toolJobDrawingEnvelopeCallerRetainedExact(store, drawingEnvelopeCodec, drawingEditor, plugin, drawingEditorTestLaws)) failures.push("Drawing `.spr`/`.ops` envelope caller lacks the owned field catalog, the read-only native layer utilities, the framework-default replay initializer through Mutation::diff and protocol::apply_diff (a host or editor owning a second apply lane or initializer is refused), or its live replay/cancellation/acknowledgement laws");
   if (!toolJobChildRetirementInventoryExact(root, allRustFiles)) failures.push("child snapshot retirement domain cohorts or callsites do not match the exact machine-readable owner inventory");
   if (!toolJobPeerInteractionRootsExact(plugin, store, channel, presenceRetirement)) failures.push("peer ingress, app-typed presence, or interaction roots lack reserve-before-decode retained per-entry publication, atomic validated commit, or O(1) immutable capture");
   if (!toolJobPagedIngressExact(kernel, reactor, plugin, pluginHost, channel, componentWit, mcpWorkspace, runHost, wgpuHost)) failures.push("paged command ingress lacks fixed-page ownership, retained streaming decode/fault closure, generic multi-page ACK ordering, or terminal-close registries across MCP/run/WGPU callers");

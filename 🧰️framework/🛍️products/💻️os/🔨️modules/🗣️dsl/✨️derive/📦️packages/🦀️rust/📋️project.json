@@ -115,6 +115,18 @@
         "^production",
         "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json"
       ]
+    },
+    "test-cold-reference": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-cold-reference",
+        "forwardAllArgs": true
+      },
+      "inputs": [
+        "production",
+        "^production"
+      ]
     }
   }
 }

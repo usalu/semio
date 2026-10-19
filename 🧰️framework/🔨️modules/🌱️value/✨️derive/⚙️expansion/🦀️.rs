@@ -28,6 +28,12 @@
 //! (struct-only; every field on the struct falls back to its own `Default::default()`, or the
 //! type's own if the type itself is `Default`, on a missing key), `deny_unknown_fields`.
 //!
+//! 🛂️ Container `validate = "path"` runs `fn(&Self) -> Result<(), ValueError>` after cold
+//! construction. `validate_controlled = "path"` runs the corresponding borrowed hook with the
+//! original NativeDecodeControl in an isolated progress stage. A semantic refusal retires the
+//! decoded owner exactly once. A cold hook without a controlled hook or explicit controlled
+//! constructor refuses controlled construction before it allocates.
+//!
 //! Supported field attributes: `rename = "…"`, `required` (a present wire key is mandatory even
 //! for `Option<T>`), `default` (bare), `default = "path"`,
 //! `skip_serializing_if = "path"`, `serialize_with = "path"` (`fn(&FieldType) ->
@@ -242,6 +248,8 @@ struct ContainerAttrs {
     retire_with: Option<String>,
     default_controlled: Option<String>,
     deserialize_controlled_with: Option<String>,
+    validate: Option<String>,
+    validate_controlled: Option<String>,
 }
 
 impl ContainerAttrs {
@@ -336,6 +344,8 @@ fn parse_container_attrs(attrs: &[syn::Attribute]) -> syn::Result<ContainerAttrs
             "retire_with" => out.retire_with = value,
             "default_controlled" => out.default_controlled = value,
             "deserialize_controlled_with" => out.deserialize_controlled_with = value,
+            "validate" => out.validate = Some(value.ok_or_else(|| syn::Error::new_spanned(&attrs[0], "value semantic validation requires a function path"))?),
+            "validate_controlled" => out.validate_controlled = Some(value.ok_or_else(|| syn::Error::new_spanned(&attrs[0], "controlled value semantic validation requires a function path"))?),
             other => return Err(syn::Error::new_spanned(&attrs[0], format!("#[value(...)] does not support container attribute `{other}`"))),
         }
     }
@@ -730,3 +740,5 @@ pub fn expand_canonical_tree(input:&DeriveInput)->syn::Result<proc_macro2::Token
 
 /// 🧭️ Resolves the authored value namespace for an actual typed generator owner.
 pub(crate) fn declared_value_crate(input:&DeriveInput)->syn::Result<syn::Path>{Ok(container_crate_path(&parse_container_attrs(&input.attrs)?))}
+#[path="../🛬️receive/🦀️.rs"]mod native_receiving;
+pub fn expand_native_receive(input:&syn::DeriveInput)->syn::Result<proc_macro2::TokenStream>{native_receiving::expand(input)}

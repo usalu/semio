@@ -4,6 +4,7 @@
   "title": "Physical File Observation",
   "definitions": {
     "controlCases": {"type":"array","minItems":1,"maxItems":32,"items":{"type":"object","additionalProperties":false,"required":["id","callback","phase","fault","mutation","expected"],"properties":{"id":{"type":"string","minLength":1,"maxLength":64},"callback":{"enum":["cancelled","remainingMs","onProgress",null]},"phase":{"enum":["admit","opened","read","complete",null]},"fault":{"enum":["error","undefined","cancelled","deadline",null]},"mutation":{"enum":["limits","methods","raise-bytes","raise-work",null]},"expected":{"enum":["error","undefined","cancelled","deadline","byte-capacity","work-capacity","value"]}}}},
+    "recheck": {"type":"object","additionalProperties":false,"required":["files","maximumConcurrency","delayMs"],"properties":{"files":{"type":"integer","minimum":17,"maximum":256},"maximumConcurrency":{"const":16},"delayMs":{"type":"integer","minimum":1,"maximum":100}}},
     "retained": {"type":"object","additionalProperties":false,"required":["claim","bytes"],"properties":{"claim":{"$ref":"#/definitions/claim"},"bytes":{"type":"array","items":{"type":"integer","minimum":0,"maximum":255}}}},
     "claim": {
       "type": "object",

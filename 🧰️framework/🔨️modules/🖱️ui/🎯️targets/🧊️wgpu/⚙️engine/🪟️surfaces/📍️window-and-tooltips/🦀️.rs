@@ -127,7 +127,7 @@ pub struct UiWindow {
 
 impl UiWindow {
     pub fn retain_layout_close_failure(&mut self,stage:&'static str,failure:semio_framework_job::OriginalTurnFailure)->UiWorkerRetirementRefusal{
-        let refusal=UiWorkerRetirementRefusal{stage,kind:failure.primary_value().map_or(semio_framework_value::ValueRefusalKind::InvariantViolated,|error|error.kind),progress:failure.primary.retained_progress()};
+        let refusal=UiWorkerRetirementRefusal{stage,kind:failure.primary_value().map_or(semio_framework_value::ValueRefusalKind::InvariantViolated,|error|error.kind),progress:failure.retained_progress()};
         self.layout_close_failure=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(failure).unwrap_or_else(|_|unreachable!("original paired failure defines whole controlled closure")));self.layout_retirement_refusal=Some(refusal);refusal
     }
     pub(super) fn new(window_id: &str) -> Self {

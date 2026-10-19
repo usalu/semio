@@ -19,6 +19,7 @@ import { act, cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { createElement, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import fixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🖱️pointer-gestures.json" with { type: "json" };
+import hoverTargets from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🎯️hover-targets.json";
 import { interactionMergeModesFixture as mergeModes } from "../../../../../../../🔨️modules/🕹️interaction/🧪️tests/🧫️fixtures/🟦️.ts";
 import type { MergeMode } from "../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
 import identity from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🪪️world-surface-identity.json" with { type: "json" };
@@ -98,6 +99,9 @@ import { clearPendingWorldProjection, clearPendingWorldProjections, registerPend
 import { world3dSelectionActionArgs } from "../../🧱️elements/🌐️World3dHost/🖱️interaction-domain-args/🟦️.ts";
 import { WindowInstanceIdContext } from "../../🧱️elements/🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 import { SetWindowIconContext, SetWindowTitleContext } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
+import { LocalDocumentOwnerContext, LocalDocumentOwnerRegistryV1 } from "../../🧱️elements/🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
+import { collectLocalPresenceWindowViewsV1, publishArtifactPresenceRosterV1, clearArtifactPresenceRosterV1, publishLocalPresenceActorV1 } from "../../🧱️elements/👕️canvas-presence/🟦️.ts";
+const presenceOwners = new LocalDocumentOwnerRegistryV1();
 
 describe("leftover brush guest hover retain", () => {
   it("keeps the leftover vortex id on an armed brush window", () => {
@@ -114,10 +118,11 @@ const gesture = (id: string): Gesture => {
   return found;
 };
 
-function mountHost(pane?: { readonly surfaceId: string; readonly windowInstanceId: string; readonly onTitle?: (windowId: string, title: string) => void; readonly onIcon?: (windowId: string, iconId: string) => void; readonly viewStore?: World3dWindowViewStoreV1 }): { readonly dispatched: readonly Dispatched[]; readonly host: HTMLElement; readonly meshes: readonly HTMLElement[]; readonly unmount: () => void } {
+function mountHost(pane?: { readonly runtimeKey?: string; readonly surfaceId: string; readonly windowInstanceId: string; readonly onTitle?: (windowId: string, title: string) => void; readonly onIcon?: (windowId: string, iconId: string) => void; readonly viewStore?: World3dWindowViewStoreV1 }, scene: Omit<typeof fixture.scene, "instances"> & { readonly instances: readonly Record<string, unknown>[] } = fixture.scene): { readonly dispatched: readonly Dispatched[]; readonly host: HTMLElement; readonly meshes: readonly HTMLElement[]; readonly unmount: () => void } {
   const dispatched: Dispatched[] = [];
-  const scene = fixture.scene;
-  const view = render(createElement(SetWindowTitleContext.Provider, { value: pane?.onTitle ?? null }, createElement(SetWindowIconContext.Provider, { value: pane?.onIcon ?? null }, createElement(World3dWindowViewStoreContext.Provider, { value: pane?.viewStore ?? null },
+  const runtimeKey = pane?.runtimeKey ?? "world-fixture";
+  const owner = presenceOwners.acquire({ pluginId: "fem", appId: "fem3d", sessionInstanceId: 1, runtimeKey, clientInstanceId: runtimeKey });
+  const view = render(createElement(LocalDocumentOwnerContext.Provider, { value: owner }, createElement(SetWindowTitleContext.Provider, { value: pane?.onTitle ?? null }, createElement(SetWindowIconContext.Provider, { value: pane?.onIcon ?? null }, createElement(World3dWindowViewStoreContext.Provider, { value: pane?.viewStore ?? null },
     createElement(
       WindowInstanceIdContext.Provider,
       { value: pane?.windowInstanceId ?? scene.windowInstanceId },
@@ -145,7 +150,7 @@ function mountHost(pane?: { readonly surfaceId: string; readonly windowInstanceI
         },
       }),
     ),
-  ))));
+  )))));
   const host = view.container.querySelector(".semio-world-3d-host") as HTMLElement;
   const { left, top, width, height } = fixture.viewport;
   host.getBoundingClientRect = () => ({ x: left, y: top, left, top, width, height, right: left + width, bottom: top + height, toJSON: () => ({}) }) as DOMRect;
@@ -171,7 +176,33 @@ function expectSelection(entry: Dispatched | undefined, expected: Gesture["expec
 export function testWorld3dInteraction(): void {
   describe("🖱️ world 3d host gestures on a domain-bound scene", () => {
     beforeEach(() => seams.resetCamera?.());
-    afterEach(() => cleanup());
+    it("publishes the mounted orbit camera through the canonical document view and clears it on owner retirement", async () => {
+      vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(fixture.viewport.width);
+      vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(fixture.viewport.height);
+      const runtimeKey = "mounted-fem3d-presence";
+      publishLocalPresenceActorV1(runtimeKey, "self-orbit");
+      publishArtifactPresenceRosterV1(runtimeKey, [{ actor: "peer-orbit", connectedAtMs: 1, color: 3, views: [{ windowId: fixture.scene.windowInstanceId, space: "world", kind: { kind: "orbit", position: vector3(fixture.scene.camera.position), target: vector3(fixture.scene.camera.target), up: [0, 0, 1], fov: fixture.scene.camera.fov }, size: [fixture.viewport.width, fixture.viewport.height], pointer: vector3(fixture.scene.camera.target) }] }] as never);
+      const view = mountHost({ surfaceId: fixture.scene.surfaceId, windowInstanceId: fixture.scene.windowInstanceId, runtimeKey });
+      await act(async () => { await new Promise(resolve => setTimeout(resolve, 80)); });
+      const initial = collectLocalPresenceWindowViewsV1(runtimeKey)[0];
+      expect(initial?.windowId).toBe(fixture.scene.windowInstanceId);
+      expect(initial?.kind).toMatchObject({ kind: "orbit", position: fixture.scene.camera.position, target: fixture.scene.camera.target });
+      expect(initial?.pointer).toBeUndefined();
+      expect(view.host.querySelector('[data-peer-actor="peer-orbit"]')).not.toBeNull();
+      const camera = gesture("orbit-completes-into-one-setcamera").steps!.at(-1)!;
+      act(() => seams.onCamera!({ position: vector3(camera.position), target: vector3(camera.target), zoom: camera.zoom }));
+      await act(async () => { await new Promise(resolve => setTimeout(resolve, 80)); });
+      const updated = collectLocalPresenceWindowViewsV1(runtimeKey)[0];
+      expect(updated?.kind).toMatchObject({ kind: "orbit", position: camera.position, target: camera.target });
+      act(() => presenceOwners.retireAll());
+      expect(collectLocalPresenceWindowViewsV1(runtimeKey)).toEqual([]);
+      expect(view.host.querySelector('[data-peer-actor="peer-orbit"]')).toBeNull();
+      view.unmount();
+      clearArtifactPresenceRosterV1(runtimeKey);
+      publishLocalPresenceActorV1(runtimeKey, null);
+      console.log("[DEBUG] mounted World3d presence: initial and settled orbit cameras published on canonical document/window view; no fabricated cursor; owner retirement cleared view");
+    });
+    afterEach(() => { cleanup(); presenceOwners.retireAll(); vi.restoreAllMocks(); });
 
     it("renders exactly one pickable mesh per scene instance", () => {
       const { meshes } = mountHost();
@@ -352,6 +383,22 @@ export function testWorld3dInteraction(): void {
       expect(selects.length).toBe(1);
       expectSelection(selects[0], spec.expect);
     });
+
+    for (const row of hoverTargets.cases) {
+      it(`retains the ${row.name} target when the canvas misses its hovered instance`, () => {
+        const scene = { ...fixture.scene, selectionJson: JSON.stringify({ ...JSON.parse(fixture.scene.selectionJson), hoveredId: row.expected.id }), domainId: row.domain, domainGranularityId: row.defaultGranularity, instances: [{ ...fixture.scene.instances[0]!, interactionId: undefined, ...row.instance }] };
+        const { dispatched, meshes, host } = mountHost(undefined, scene);
+        fireEvent.pointerMove(meshes[0]!);
+        seams.onPointerMissed!(new MouseEvent("click"));
+        expect(JSON.parse(String(only(dispatched, "interactionHover")[0]!.args.targets))).toEqual([row.expected]);
+        const selected = only(dispatched, "interactionSelect")[0]!;
+        expect(selected.args.domainId).toBe(row.domain);
+        expect(JSON.parse(String(selected.args.targets))).toEqual([row.expected]);
+        act(() => { host.dispatchEvent(new PointerEvent("pointerout", { bubbles: true, relatedTarget: document.body })); });
+        seams.onPointerMissed!(new MouseEvent("click"));
+        expect(JSON.parse(String(only(dispatched, "interactionSelect")[1]!.args.targets))).toEqual([]);
+      });
+    }
 
     it("debounces a completed orbit gesture into exactly one setCamera carrying the final pose", async () => {
       const spec = gesture("orbit-completes-into-one-setcamera");

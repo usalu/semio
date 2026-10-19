@@ -2,14 +2,13 @@
   "nodes": null,
   "elements": null,
   "regions": {
-    "inserted": [],
     "removed": [],
+    "inserted": [],
     "moved": [],
     "modified": [
       {
         "id": "wall1",
         "patch": {
-          "id": "wall1",
           "name": "Infill Wall Panel",
           "outline": [
             [

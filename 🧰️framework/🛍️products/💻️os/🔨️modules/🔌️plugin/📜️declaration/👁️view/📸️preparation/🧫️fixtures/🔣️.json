@@ -1,0 +1,298 @@
+{
+  "cases": [
+    {
+      "name": "denied-items",
+      "grant": [
+        0,
+        8,
+        8,
+        8,
+        1
+      ],
+      "progress": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "ready": false,
+      "fault": false
+    },
+    {
+      "name": "partial-copy",
+      "grant": [
+        2,
+        8,
+        8,
+        8,
+        1
+      ],
+      "progress": [
+        1,
+        3,
+        0,
+        0
+      ],
+      "ready": false,
+      "fault": false
+    },
+    {
+      "name": "ready-copy",
+      "grant": [
+        2,
+        8,
+        8,
+        8,
+        1
+      ],
+      "progress": [
+        2,
+        8,
+        8,
+        0
+      ],
+      "ready": true,
+      "fault": false
+    },
+    {
+      "name": "excess-items",
+      "grant": [
+        1,
+        8,
+        8,
+        8,
+        1
+      ],
+      "progress": [
+        2,
+        1,
+        0,
+        0
+      ],
+      "ready": true,
+      "fault": true
+    },
+    {
+      "name": "excess-copy",
+      "grant": [
+        2,
+        7,
+        8,
+        8,
+        1
+      ],
+      "progress": [
+        1,
+        8,
+        0,
+        0
+      ],
+      "ready": true,
+      "fault": true
+    },
+    {
+      "name": "excess-capacity",
+      "grant": [
+        2,
+        8,
+        7,
+        8,
+        1
+      ],
+      "progress": [
+        1,
+        0,
+        8,
+        0
+      ],
+      "ready": true,
+      "fault": true
+    },
+    {
+      "name": "excess-release",
+      "grant": [
+        2,
+        8,
+        8,
+        7,
+        1
+      ],
+      "progress": [
+        1,
+        0,
+        0,
+        8
+      ],
+      "ready": true,
+      "fault": true
+    },
+    {
+      "name": "denied-depth",
+      "grant": [
+        2,
+        8,
+        8,
+        8,
+        0
+      ],
+      "progress": [
+        1,
+        1,
+        0,
+        0
+      ],
+      "ready": true,
+      "fault": true
+    },
+    {
+      "name": "ready-empty",
+      "grant": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "progress": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "ready": true,
+      "fault": false
+    }
+  ],
+  "sourceVersions": [
+    {
+      "name": "same-semantic-version",
+      "before": {
+        "baseRevision": 1,
+        "generation": 1,
+        "canonicalRevision": "0000000000000000000000000000000000000000000000000000000000000001",
+        "overlay": 0,
+        "history": 0
+      },
+      "after": {
+        "baseRevision": 1,
+        "generation": 1,
+        "canonicalRevision": "0000000000000000000000000000000000000000000000000000000000000001",
+        "overlay": 0,
+        "history": 0
+      },
+      "changed": false
+    },
+    {
+      "name": "UI-history-only",
+      "before": {
+        "baseRevision": 1,
+        "generation": 1,
+        "canonicalRevision": "0000000000000000000000000000000000000000000000000000000000000001",
+        "overlay": 0,
+        "history": 0
+      },
+      "after": {
+        "baseRevision": 1,
+        "generation": 1,
+        "canonicalRevision": "0000000000000000000000000000000000000000000000000000000000000001",
+        "overlay": 0,
+        "history": 9
+      },
+      "changed": false
+    },
+    {
+      "name": "edit",
+      "before": {
+        "baseRevision": 1,
+        "generation": 1,
+        "canonicalRevision": "0000000000000000000000000000000000000000000000000000000000000001",
+        "overlay": 0,
+        "history": 0
+      },
+      "after": {
+        "baseRevision": 2,
+        "generation": 2,
+        "canonicalRevision": "0000000000000000000000000000000000000000000000000000000000000002",
+        "overlay": 0,
+        "history": 0
+      },
+      "changed": true
+    },
+    {
+      "name": "undo-same-content",
+      "before": {
+        "baseRevision": 2,
+        "generation": 2,
+        "canonicalRevision": "0000000000000000000000000000000000000000000000000000000000000002",
+        "overlay": 0,
+        "history": 0
+      },
+      "after": {
+        "baseRevision": 3,
+        "generation": 3,
+        "canonicalRevision": "0000000000000000000000000000000000000000000000000000000000000001",
+        "overlay": 0,
+        "history": 0
+      },
+      "changed": true
+    },
+    {
+      "name": "redo",
+      "before": {
+        "baseRevision": 3,
+        "generation": 3,
+        "canonicalRevision": "0000000000000000000000000000000000000000000000000000000000000001",
+        "overlay": 0,
+        "history": 0
+      },
+      "after": {
+        "baseRevision": 4,
+        "generation": 4,
+        "canonicalRevision": "0000000000000000000000000000000000000000000000000000000000000002",
+        "overlay": 0,
+        "history": 0
+      },
+      "changed": true
+    },
+    {
+      "name": "canonical-tail-after-equal-prefix",
+      "before": {
+        "baseRevision": 1,
+        "generation": 1,
+        "canonicalRevision": "0000000000000000000000000000000000000000000000000000000000000001",
+        "overlay": 0,
+        "history": 0
+      },
+      "after": {
+        "baseRevision": 1,
+        "generation": 1,
+        "canonicalRevision": "0000000000000000000000000000000000000000000000000000000000000002",
+        "overlay": 0,
+        "history": 0
+      },
+      "changed": true
+    },
+    {
+      "name": "provisional-run-tick",
+      "before": {
+        "baseRevision": 1,
+        "generation": 1,
+        "canonicalRevision": "0000000000000000000000000000000000000000000000000000000000000001",
+        "overlay": 0,
+        "history": 0
+      },
+      "after": {
+        "baseRevision": 1,
+        "generation": 1,
+        "canonicalRevision": "0000000000000000000000000000000000000000000000000000000000000001",
+        "overlay": 1,
+        "history": 0
+      },
+      "changed": true
+    }
+  ],
+  "preAdmissionHeap": {
+    "requestedBytes": 0,
+    "releasedBytes": 0
+  }
+}

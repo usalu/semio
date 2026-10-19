@@ -1,0 +1,23 @@
+{
+  "entries": [
+    { "path": "Dockerfile", "text": "FROM scratch\n", "mode": 292, "kind": "file" },
+    { "path": "proctor", "text": "release-executable", "mode": 365, "kind": "file" },
+    { "path": "content/🏛️architecture/📚️course/🔣️.json", "text": "{\"quizzes\":[]}", "mode": 292, "kind": "file" },
+    { "path": "content/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json", "text": "{\"id\":\"physics\"}", "mode": 292, "kind": "file" },
+    { "path": "deploy/compose.yaml", "text": "services: {}\n", "mode": 292, "kind": "file" },
+    { "path": "data/", "text": "", "mode": 448, "kind": "directory" }
+  ],
+  "catalogs": [
+    { "id": "one-quiz", "quizzes": ["quiz.json"], "valid": true },
+    { "id": "duplicate-quiz", "quizzes": ["quiz.json", "quiz.json"], "valid": false },
+    { "id": "normalized-duplicate", "quizzes": ["quiz.json", "./quiz.json"], "valid": false },
+    { "id": "outside-teaching", "quizzes": ["../outside.json"], "valid": false }
+  ],
+  "invalid": [
+    { "path": "../proctor", "bytes": 1, "mode": 365, "kind": "file" },
+    { "path": "/proctor", "bytes": 1, "mode": 365, "kind": "file" },
+    { "path": "content\\proctor", "bytes": 1, "mode": 365, "kind": "file" },
+    { "path": "proctor", "bytes": 134217729, "mode": 365, "kind": "file" },
+    { "path": "proctor", "bytes": 1, "mode": 511, "kind": "file" }
+  ]
+}

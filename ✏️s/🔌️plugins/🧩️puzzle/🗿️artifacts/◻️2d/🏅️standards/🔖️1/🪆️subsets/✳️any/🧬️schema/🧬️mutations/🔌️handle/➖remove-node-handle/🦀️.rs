@@ -1,5 +1,5 @@
-//! ➖ Puzzle2d mutation — `RemoveNodeHandle`: detaches a rim port from a node (captures cascade —
 //! any edge whose `source`/`target` referenced this handle is severed too).
+//! ➖ Puzzle2d mutation — `RemoveNodeHandle`: detaches a rim port from a node (captures cascade —
 
 use crate::standards::v1::subsets::any::schema::mutations::change_edge_visible::ChangeEdgeVisible;
 use crate::standards::v1::subsets::any::schema::mutations::change_edge_locked::ChangeEdgeLocked;
@@ -32,23 +32,32 @@ pub fn remove_node_handle<Op: From<RemoveNodeHandle>>(node_id: PagedUtf8<{ usize
 impl<Op> protocol::MutationKind<Puzzle2dSnapshot, Op> for RemoveNodeHandle
 where
     Op: protocol::Mutation<Puzzle2dSnapshot, Diff = Puzzle2dDiff> + From<RemoveNodeHandle> + From<AddNodeHandle> + From<ConnectHandles> + From<ChangeEdgeVisible> + From<ChangeEdgeLocked>,
-{
+ {
+
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "node-handle", kind: "remove-node-handle", record: "RemovedNodeHandle" };
 
-    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove handle \"{}\" from node \"{}\"", self.handle_id, self.node_id), &format!("Griff \"{}\" aus Knoten \"{}\" entfernen", self.handle_id, self.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node_id.to_string_owner(), self.handle_id.to_string_owner()]
     }
+
+}
+impl<Op> protocol::ColdMutationKind<Puzzle2dSnapshot, Op> for RemoveNodeHandle
+where
+    Op: protocol::ColdMutation<Puzzle2dSnapshot, ReferenceDiff = Puzzle2dDiff> + From<RemoveNodeHandle> + From<AddNodeHandle> + From<ConnectHandles> + From<ChangeEdgeVisible> + From<ChangeEdgeLocked>,
+ {
+fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+        super::diff::diff(self, base)
+    }
+fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Mutation

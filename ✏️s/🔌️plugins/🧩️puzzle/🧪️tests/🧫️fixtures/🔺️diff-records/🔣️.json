@@ -1,0 +1,11 @@
+{
+  "cases": [
+    { "name": "first", "value": { "id": "entity", "index": 0 }, "valid": true },
+    { "name": "later", "value": { "id": "entity", "index": 2 }, "valid": true },
+    { "name": "negative", "value": { "id": "entity", "index": -1 }, "valid": false },
+    { "name": "fractional", "value": { "id": "entity", "index": 0.5 }, "valid": false },
+    { "name": "text", "value": { "id": "entity", "index": "0" }, "valid": false },
+    { "name": "missing", "value": { "id": "entity" }, "valid": false },
+    { "name": "foreign", "value": { "id": "entity", "index": 0, "foreign": true }, "valid": false }
+  ]
+}

@@ -257,13 +257,6 @@
       ]
     },
     {
-      "path": ".vscode/settings.json",
-      "tokens": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/📐️source-policy/🟨️.mjs",
-        "🧰️framework/🔨️modules/🖱️ui/🎨️styling/💨️tailwind/🟦️.ts"
-      ]
-    },
-    {
       "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.mts",
       "tokens": [
         "export { default } from \"../../🛠️build-tooling/🎨️styling/🟦️.ts\";"

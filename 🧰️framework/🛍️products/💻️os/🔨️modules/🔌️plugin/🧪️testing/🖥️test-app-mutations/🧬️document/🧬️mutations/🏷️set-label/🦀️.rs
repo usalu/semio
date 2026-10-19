@@ -16,6 +16,14 @@ pub struct SetLabel {
 
 impl MutationKind<TestSnapshot, TestMutation> for SetLabel {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "label", kind: "set-label", record: "SetLabel" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set label to {}", self.value), &format!("Beschriftung auf {} setzen", self.value))
+    }
+}
+
+impl crate::os_spr::ColdMutationKind<TestSnapshot, TestMutation> for SetLabel {
     fn diff(&self, base: &TestSnapshot) -> MutationOutcome<TestDiff> {
         let outcome = MutationOutcome::new(TestDiff { count: None, label: Some(self.value.clone()), slot: None });
         match base.label == self.value {
@@ -26,15 +34,16 @@ impl MutationKind<TestSnapshot, TestMutation> for SetLabel {
     fn inverse(&self, base: &TestSnapshot) -> Result<Vec<TestMutation>, semio_framework_value::ValueError> {
         Ok((|| vec![Self { value: base.label.clone() }.into()])())
     }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set label to {}", self.value), &format!("Beschriftung auf {} setzen", self.value))
-    }
 }
 
 #[doc(hidden)]
 #[cfg(test)]
 #[path = "../../../../../🧪️tests/🏷️test-app-document-set-label-unit/🦀️.rs"]
 pub mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️sum-law/🦀️.rs"]
+mod sum_law_tests;
 //#endregion 🏷️SetLabel
 use semio_framework_value::ErasedSnapshotRetirement;
 /// 🌱️ The authored SetLabel semantic source is born in separately admitted physical pages.
@@ -58,6 +67,8 @@ impl semio_framework_dsl_record::BorrowedDslVariants for SetLabelSource{
     fn projected_borrowed_variant_view(&self,path:&[usize])->Result<semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>,semio_framework_value::ValueError>{use semio_framework_dsl_record::native_encoding::FieldProjectionView as V;match path{[]=>Ok(V::Record(&[0])),[0]=>Ok(V::TextSource(self.value_view()?)),_=>Err(semio_framework_dsl_record::native_encoding::projection_path_error())}}
 }
 impl semio_framework_value::ErasedSnapshotRetirement for SetLabelSource{
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.value.next_demand(maximum_body_bytes)}
+
     fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{self.value.close_step(grant)}
     fn terminal_is_empty(&self)->bool{self.value.terminal_is_empty()}
     fn next_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.value.next_copy_byte_demand()}

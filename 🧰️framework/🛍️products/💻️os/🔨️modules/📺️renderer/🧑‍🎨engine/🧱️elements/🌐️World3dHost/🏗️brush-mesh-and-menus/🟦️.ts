@@ -1,3 +1,4 @@
+import type { InteractionTarget } from "@semio-tech/framework";
 /** 🏗️ World3dHost brush meshes and menus: the brush mesh queue and registration, the mesh re-upload, the frame and zoom handlers, the context menu dispatch and the suggestion rows and submenu search. */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box3, Vector3 } from "@semio-tech/ui-react";
@@ -256,9 +257,9 @@ export function useWorldBrushMeshAndMenus(core: WorldCore2) {
   }, [interaction.brushCandidateIndex, interaction.suggestionMenu, mapSuggestionContextMenuSpecs, suggestionMenuCheckingPlacementLabel, suggestionMenuNoPlacementLabel, suggestionMenuOwnsThisWindow]);
 
   const hoveredVortexFullIdRef = useRef<string | null>(null);
-  /** 🎯️ The interaction id this pane's OWN raycast last resolved under the pointer — see
+  /** 🎯️ The interaction target this pane's OWN raycast last resolved under the pointer — see
    * {@link hoveredInteractionTargetV1}. Null whenever the pointer left every instance. */
-  const hoveredInstanceInteractionIdRef = useRef<string | null>(null);
+  const hoveredInstanceInteractionTargetRef = useRef<InteractionTarget | null>(null);
   const altHeldRef = useRef(false);
   useEffect(() => {
     hoveredVortexFullIdRef.current = world3dRetainLocalVortexHover(hoveredVortexFullIdRef.current, interaction.hoveredVortexFullId);
@@ -290,7 +291,7 @@ export function useWorldBrushMeshAndMenus(core: WorldCore2) {
       window.removeEventListener("keyup", onKey, true);
     };
   }, []);
-  return { altHeldRef, brushMeshRevisions, brushMeshUrls, handleRegisterBrushMesh, hoveredInstanceInteractionIdRef, hoveredVortexFullIdRef, mapWorldContextMenuSpecs, shellContextMenuFallback, suggestionRows };
+  return { altHeldRef, brushMeshRevisions, brushMeshUrls, handleRegisterBrushMesh, hoveredInstanceInteractionTargetRef, hoveredVortexFullIdRef, mapWorldContextMenuSpecs, shellContextMenuFallback, suggestionRows };
 }
 
 export type WorldCore3 = WorldCore2 & ReturnType<typeof useWorldBrushMeshAndMenus>;

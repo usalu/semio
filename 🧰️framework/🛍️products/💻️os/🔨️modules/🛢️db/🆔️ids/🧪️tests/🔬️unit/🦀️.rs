@@ -25,18 +25,11 @@ async fn generation_id_next_is_strictly_monotonic() {
 
 //#region 🔖️Errors
 #[semio_framework_async_macros::async_test]
-async fn pack_error_conversion_never_panics_and_maps_by_category() {
-    let corrupt: DbError = pack::PackError::BadMagic.into();
-    assert!(matches!(corrupt, DbError::Corrupt(_)));
-
-    let limit: DbError = pack::PackError::LimitExceeded("too big").into();
-    assert_eq!(limit, DbError::LimitExceeded("too big"));
-
-    let io: DbError = pack::PackError::Io("disk full".to_string()).into();
-    assert_eq!(io, DbError::Io("disk full".to_string()));
-
-    let schema: DbError = pack::PackError::Schema("bad field".to_string()).into();
-    assert_eq!(schema, DbError::InvalidArgument("bad field".to_string()));
+async fn pack_error_conversion_preserves_complete_typed_semantic_cause() {
+    let refused = pack::PackRefusal::ChecksumMismatch { segment: "manifest", offset: 42 };
+    let converted = DbError::from(refused.clone());
+    assert_eq!(converted, DbError::Pack(pack::PackError::Refusal(refused)));
+    assert!(std::error::Error::source(&converted).unwrap().downcast_ref::<pack::PackError>().is_some());
 }
 //#endregion 🔖️Errors
 
@@ -49,23 +42,67 @@ async fn check_len_rejects_over_limit_before_any_allocation_would_happen() {
 //#endregion 🔖️Limits
 
 #[semio_framework_async_macros::async_test]
-async fn pack_refusal_kind_controls_db_category_and_owned_message() {
+async fn pack_refusal_preserves_kind_fields_and_original_owned_message() {
     use semio_framework_value::{ValueError,ValueRefusalKind};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⚠️error/🎒️pack/🔣️.json")).unwrap();
     fn kind(value:&str)->ValueRefusalKind{match value{"InvalidValue"=>ValueRefusalKind::InvalidValue,"Canceled"=>ValueRefusalKind::Canceled,"OwnershipLimit"=>ValueRefusalKind::OwnershipLimit,"AllocationFailed"=>ValueRefusalKind::AllocationFailed,"WorkLimit"=>ValueRefusalKind::WorkLimit,"DepthLimit"=>ValueRefusalKind::DepthLimit,"UnsupportedOwner"=>ValueRefusalKind::UnsupportedOwner,"InvariantViolated"=>ValueRefusalKind::InvariantViolated,_=>panic!("unknown authored kind")}}
     for row in fixture["cases"].as_array().unwrap(){
         let mut retained=None;
         let error=match row["source"].as_str().unwrap(){
-            "ValueRefusal"=>{let mut cause=ValueError::new(kind(row["kind"].as_str().unwrap()),row["message"].as_str().unwrap());for part in row["path"].as_array().unwrap(){cause=cause.under(part.as_str().unwrap());}if cause.kind==ValueRefusalKind::InvalidValue{retained=Some(cause.message.as_ptr());}pack::PackError::ValueRefusal(cause)},
-            "Io"=>pack::PackError::Io(row["message"].as_str().unwrap().to_owned()),
-            "LimitExceeded"=>pack::PackError::LimitExceeded("too big"),
-            "BadMagic"=>pack::PackError::BadMagic,
-            "Truncated"=>pack::PackError::Truncated(row["offset"].as_u64().unwrap()),
+            "ValueRefusal"=>{let mut cause=ValueError::new(kind(row["kind"].as_str().unwrap()),row["message"].as_str().unwrap());for part in row["path"].as_array().unwrap(){cause=cause.under(part.as_str().unwrap());}retained=Some(cause.message.as_ptr());pack::PackRefusal::ValueRefusal(cause)},
+            "LimitExceeded"=>pack::PackRefusal::LimitExceeded { kind: kind(row["kind"].as_str().unwrap()), limit: "too big" },
+            "BadMagic"=>pack::PackRefusal::BadMagic,
+            "Truncated"=>pack::PackRefusal::Truncated(row["offset"].as_u64().unwrap()),
             _=>panic!("unknown authored source")
         };
         let converted=DbError::from(error);
-        let(category,message)=match &converted{DbError::InvalidArgument(message)=>("InvalidArgument",message.as_str()),DbError::Corrupt(message)=>("Corrupt",message.as_str()),DbError::Io(message)=>("Io",message.as_str()),DbError::LimitExceeded(message)=>("LimitExceeded",*message),_=>panic!("unexpected conversion category")};
-        assert_eq!(serde_json::json!({"category":category,"output":message}),serde_json::json!({"category":row["category"],"output":row["output"]}),"{}",row["id"]);
-        if let Some(pointer)=retained{let DbError::InvalidArgument(message)=converted else{panic!("typed invalid argument")};assert_eq!(message.as_ptr(),pointer);}
+        let DbError::Pack(pack::PackError::Refusal(cause)) = converted else { panic!("typed semantic cause") };
+        assert_eq!(cause.kind(), kind(row["kind"].as_str().unwrap()));
+        match cause {
+            pack::PackRefusal::ValueRefusal(cause) => { let expected = row["path"].as_array().unwrap().iter().rev().map(|part| part.as_str().unwrap()).chain(std::iter::once(row["message"].as_str().unwrap())).collect::<Vec<_>>().join("."); assert_eq!(serde_json::json!({"message":cause.message}), serde_json::json!({"message":expected})); assert_eq!(cause.message.as_ptr(), retained.unwrap()); },
+            pack::PackRefusal::Truncated(offset) => assert_eq!(serde_json::json!({"offset":offset}), serde_json::json!({"offset":row["offset"]})),
+            pack::PackRefusal::LimitExceeded { limit, .. } => assert_eq!(limit, row["limit"].as_str().unwrap()),
+            pack::PackRefusal::BadMagic => assert_eq!(row["source"], "BadMagic"),
+            _ => panic!("unexpected authored refusal"),
+        }
     }
+}
+
+struct DbTransportPolicy;
+impl pack::PackTransportPolicy for DbTransportPolicy {
+    fn checkpoint(&self, _: pack::PackTransportProgress) -> Result<(), semio_framework_value::ValueError> { Ok(()) }
+    fn progress(&self, _: pack::PackTransportProgress) {}
+}
+
+#[semio_framework_async_macros::async_test]
+async fn pack_transport_conversion_preserves_source_identity_and_retry_authority() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⚠️error/🎒️pack/🔣️.json")).unwrap();
+    for row in fixture["transport"].as_array().unwrap() {
+        let retry = match row["retry"].as_str().unwrap() { "Never" => pack::PackRetryDisposition::Never, "Transient" => pack::PackRetryDisposition::Transient, _ => panic!("authored retry disposition") };
+        let context = pack::PackTransportContext::try_new(pack::TransportAdmission::new(4096, 0), DbTransportPolicy).ok().unwrap();
+        let original = context.reserve::<std::io::Error>(pack::PackTransportCategory::NativeIo, retry).unwrap().publish(std::io::Error::from(std::io::ErrorKind::NotFound));
+        let pointer = original.source_error().downcast_ref::<std::io::Error>().unwrap() as *const std::io::Error;
+        let nested = DbError::Protocol(protocol::ProtocolError::Pack(pack::PackError::TransportFailure(original.clone())));
+        assert_eq!(nested.is_transient(), row["transient"].as_bool().unwrap());
+        let converted = DbError::from(pack::PackError::TransportFailure(original));
+        assert_eq!(converted.is_transient(), row["transient"].as_bool().unwrap());
+        let DbError::Pack(pack::PackError::TransportFailure(cause)) = converted else { panic!("original transport cause") };
+        assert_eq!(cause.retry(), retry);
+        assert_eq!(cause.source_error().downcast_ref::<std::io::Error>().unwrap() as *const std::io::Error, pointer);
+    }
+    eprintln!("[DEBUG] DB Pack transport preserves actual native source identity and both authored retry dispositions");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn spr_writer_conversion_returns_original_database_sink_owner() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⚠️error/🎒️pack/🔣️.json")).unwrap();
+    let message = fixture["sink"]["message"].as_str().unwrap().to_owned();
+    let pointer = message.as_ptr();
+    let converted = DbError::from(protocol::SprWriteError::Sink(DbError::Io(message)));
+    let DbError::Io(message) = converted else { panic!("original database sink cause") };
+    assert_eq!(message.as_ptr(), pointer);
+    assert_eq!(serde_json::json!({"message":message}), serde_json::json!({"message":fixture["sink"]["message"]}));
+    let error = protocol::ProtocolError::ChainMismatch { commit_seq: 42 };
+    assert_eq!(DbError::from(protocol::SprWriteError::Protocol(error.clone())), DbError::Protocol(error));
+    eprintln!("[DEBUG] DB SPR writer returns the original sink allocation and typed protocol fields");
 }

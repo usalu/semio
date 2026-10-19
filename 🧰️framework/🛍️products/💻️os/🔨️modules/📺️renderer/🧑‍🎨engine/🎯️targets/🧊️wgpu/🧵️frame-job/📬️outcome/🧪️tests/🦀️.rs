@@ -1,16 +1,31 @@
-//! 🧪️ Original scalar frame outcome admits candidate, publication, acknowledgement and close on separate turns.
+//! 🧪️ One actual finite original source owns candidate, publication, acknowledgement and typed candidate close.
 
 use super::*;
 use serde_json::Value;
 
-use semio_framework_job::{JobPayloadAuthority,StepBudget};
-use semio_framework_async::{CancelToken,CancelTokenRetirement};
+
 fn observe<T>(body:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(body);(value,(heap.requested_bytes,heap.released_bytes))}
 #[test]
 fn original_frame_outcome_keeps_candidate_and_absent_payload_through_funded_descriptor_ack(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/🧵️frame-job/📬️outcome/🔣️.json")).unwrap();let grant:RetainedCloneGrant=serde_json::from_value(fixture["grant"].clone()).unwrap();let operation=OperationId(fixture["identity"]["operation"].as_u64().unwrap());let generation=Generation(fixture["identity"]["generation"].as_u64().unwrap());let init=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:4096,maximum_release_bytes:4096,maximum_depth:8};let(cancel,_)=CancelToken::admit_root(init).unwrap().unwrap();let(mut authority,_)=JobPayloadAuthority::admit(operation,generation,init).unwrap().unwrap();let mut job=FrameBuildJob::new(FrameBuildInputs{wheel_zoom_deadline_ms:1.0,now_ms:2.0});let mut sequence=0;let mut recipient=RetainedCloneProgress::default();let original_recipient=&mut recipient as*mut _;
- for funded in [false,true]{let current=RetainedCloneGrant{maximum_items:usize::from(funded),..grant};let(result,heap)=observe(||{let mut cx=StepContext::with_payload_authority(operation,generation,StepBudget::new(1,u64::MAX,current),&cancel,semio_framework_job::logical_now_us,&mut sequence,&mut recipient,&authority).unwrap();job.step(&mut cx).map(|loan|loan.is_none())});assert!(result.unwrap());assert_eq!(heap,(0,0));assert_eq!(job.complete.is_some(),funded);assert_eq!(recipient.copied_items,usize::from(funded));assert_eq!(recipient.copied_bytes,0)}
- let pointer=job.complete.as_ref().unwrap()as*const FrameDirectives;recipient=Default::default();let(result,heap)=observe(||{let mut cx=StepContext::with_payload_authority(operation,generation,StepBudget::new(1,u64::MAX,RetainedCloneGrant{maximum_items:0,..grant}),&cancel,semio_framework_job::logical_now_us,&mut sequence,&mut recipient,&authority).unwrap();job.step(&mut cx).map(|loan|loan.is_none())});assert!(result.unwrap());assert_eq!(heap,(0,0));assert_eq!(recipient,Default::default());assert_eq!(job.complete.as_ref().unwrap()as*const _,pointer);
- let(mut original,heap)=observe(||{let mut cx=StepContext::with_payload_authority(operation,generation,StepBudget::new(1,u64::MAX,grant),&cancel,semio_framework_job::logical_now_us,&mut sequence,&mut recipient,&authority).unwrap();job.step(&mut cx).unwrap().unwrap().into_descriptor()});assert_eq!(heap,(0,0));assert_eq!(recipient.copied_items,1);assert_eq!(recipient.copied_bytes,0);assert_eq!(&mut recipient as*mut _,original_recipient);assert!(matches!(job.borrow_outcome(&original).unwrap(),JobOutcomeView::Complete{state:None,output:None,..}));assert_eq!(job.complete.as_ref().unwrap()as*const _,pointer);
- let(ack,heap)=observe(||original.acknowledge(grant));assert_eq!(heap,(0,0));assert_eq!(ack.progress().copied_items,1);assert_eq!(ack.progress().copied_bytes,0);drop(original);job.begin_close();let mut self_funded=semio_framework_job::SelfFundedCloseCaller::new();let(close,heap)=observe(||self_funded.turn(grant,|cx|job.close_step(cx)).expect("original fixture close turn"));assert_eq!(heap,(0,0));assert_eq!(close.progress().copied_items,1);assert_eq!(close.progress().copied_bytes,0);assert!(job.terminal_is_empty());while !authority.terminal_is_empty(){authority.close_step(init).unwrap();}let mut cancel=CancelTokenRetirement::from_token(cancel);while !cancel.terminal_is_empty(){cancel.close_step(init).unwrap();}
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/🧵️frame-job/📬️outcome/🔣️.json")).unwrap();
+    let grant:RetainedCloneGrant=serde_json::from_value(fixture["grant"].clone()).unwrap();
+    assert_eq!(grant.maximum_copy_bytes,size_of::<Option<FrameDirectives>>());assert_eq!(grant.maximum_copy_bytes,size_of::<FrameDirectives>());
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::with_identity(grant,OperationId(71),Generation(3));
+    let mut job=FrameBuildJob::new(FrameBuildInputs{wheel_zoom_deadline_ms:1.0,now_ms:2.0});let mut receipts=Vec::new();
+    for funded in [false,true]{
+        let current=RetainedCloneGrant{maximum_items:usize::from(funded),..grant};
+        let(result,heap)=observe(||caller.limited(current,|cx|job.step(cx).map(|loan|loan.is_none())));
+        assert!(result.unwrap());assert_eq!(heap,(0,0));assert_eq!(job.complete.is_some(),funded);receipts.push(caller.receipt());
+    }
+    let pointer=job.complete.as_ref().unwrap()as*const FrameDirectives;
+    let(result,heap)=observe(||caller.limited(RetainedCloneGrant{maximum_items:0,..grant},|cx|job.step(cx).map(|loan|loan.is_none())));
+    assert!(result.unwrap());assert_eq!(heap,(0,0));assert_eq!(job.complete.as_ref().unwrap()as*const _,pointer);receipts.push(caller.receipt());
+    let(mut descriptor,heap)=observe(||caller.turn(|cx|job.step(cx).unwrap().unwrap().into_descriptor()));
+    assert_eq!(heap,(0,0));assert!(matches!(job.borrow_outcome(&descriptor).unwrap(),JobOutcomeView::Complete{state:None,output:None,..}));assert_eq!(job.complete.as_ref().unwrap()as*const _,pointer);receipts.push(caller.receipt());
+    let(step,heap)=observe(||caller.turn(|cx|semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{depth:1,..Default::default()},|grant|Ok(descriptor.acknowledge(grant)))).unwrap());assert_eq!(heap,(0,0));assert_eq!(step.progress().copied_items,1);receipts.push(caller.receipt());drop(descriptor);
+    job.begin_close();let(close,heap)=observe(||caller.turn(|cx|job.close_step(cx)).unwrap());assert_eq!(heap,(0,0));assert_eq!(close.progress().copied_bytes,size_of::<FrameDirectives>());receipts.push(caller.receipt());assert!(job.terminal_is_empty());
+    let(close,heap)=observe(||caller.turn(|cx|job.close_step(cx)).unwrap());assert!(matches!(close,InteractiveJobCloseStep::Complete{..}));assert_eq!(heap,(0,0));receipts.push(caller.receipt());
+    for(actual,expected)in receipts.iter().zip(fixture["progress"].as_array().unwrap()){assert_eq!(*actual,serde_json::from_value::<RetainedCloneProgress>(expected.clone()).unwrap())}
+    assert_eq!(observe(||drop(job)).1,(0,0));caller.finish();
+    eprintln!("[DEBUG] same finite original frame71/3: candidate ABI copy1 + publication/ACK metadata + candidate close copy1, four items, no synthetic contexts, absent semantic payload, denied turns zero heap, terminal source paid");
 }

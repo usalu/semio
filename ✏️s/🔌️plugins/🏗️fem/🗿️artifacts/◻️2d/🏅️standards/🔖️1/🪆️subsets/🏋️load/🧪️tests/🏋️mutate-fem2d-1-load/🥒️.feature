@@ -18,13 +18,7 @@ Feature: Apply every typed fem2d load mutation twice — once in Rust, once in P
   and forces FROM a model; none of them reads `.dsl.semio`, none defines this document. What a
   reference can genuinely adjudicate is the model algebra, and that is what this one does.
 
-  A DEFECT IN THE SPECIFICATION, found while writing the reference and reported rather than worked
-  around. Two of the three schema files here do not say what they claim.
-  `…/🧬️schema/🧬️mutations/🔣️.json` is a verbatim copy of the SNAPSHOT schema with `title`
-  changed to `Fem2dMutation`. And in the snapshot schema itself, every one of the nine record types
-  is an EMPTY `{"title": …, "type": "object"}` with no properties at all. The record shapes the
-  reference implements were read off the committed vectors instead, which agree with one another on
-  every field.
+  All semantic mutation mirrors use strict tagged variants and concrete snapshot record definitions.
 
   The artifact is real. `shared://🏋️mutate-fem2d-1-load/🏗️timber-portal-frame.snapshot.json` is the SAME derived timber-portal-frame model every
   fem2d mutation subset case shares — a twelve-node timber-and-steel portal frame with a ridge at
@@ -75,6 +69,9 @@ Feature: Apply every typed fem2d load mutation twice — once in Rust, once in P
     | replace-load                 | {"mutation":"replaceLoad","caseId":"live","loadId":"l6","newLoad":{"kind":"nodal","id":"l6","nodeId":"p8_l1","dof":"Ty","value":-18000.0}}                               |
     | change-load-case-name        | {"mutation":"changeLoadCaseName","caseId":"live","newName":"Imposed Load"}                                                                                               |
     | replace-combination          | {"mutation":"replaceCombination","id":"uls","newCombination":{"id":"uls","name":"ULS 6.10b","terms":[{"caseId":"dead","factor":1.35},{"caseId":"live","factor":1.5},{"caseId":"snow","factor":0.75}]}} |
+    | change-load | {"mutation":"changeLoad","caseId":"dead","id":"l5","patch":{"kind":"area","pressure":801.0}} |
+    | change-combination-name | {"mutation":"changeCombinationName","id":"uls","name":"ULS Changed"} |
+    | change-combination-term | {"mutation":"changeCombinationTerm","id":"uls","caseId":"dead","factor":2} |
 
   @id-inverse
   @level-exhaustive
@@ -98,6 +95,9 @@ Feature: Apply every typed fem2d load mutation twice — once in Rust, once in P
     | replace-load                 | {"mutation":"replaceLoad","caseId":"live","loadId":"l6","newLoad":{"kind":"nodal","id":"l6","nodeId":"p8_l1","dof":"Ty","value":-18000.0}}                               |
     | change-load-case-name        | {"mutation":"changeLoadCaseName","caseId":"live","newName":"Imposed Load"}                                                                                               |
     | replace-combination          | {"mutation":"replaceCombination","id":"uls","newCombination":{"id":"uls","name":"ULS 6.10b","terms":[{"caseId":"dead","factor":1.35},{"caseId":"live","factor":1.5},{"caseId":"snow","factor":0.75}]}} |
+    | change-load | {"mutation":"changeLoad","caseId":"dead","id":"l5","patch":{"kind":"area","pressure":801.0}} |
+    | change-combination-name | {"mutation":"changeCombinationName","id":"uls","name":"ULS Changed"} |
+    | change-combination-term | {"mutation":"changeCombinationTerm","id":"uls","caseId":"dead","factor":2} |
 
   @id-spec-vector
   @level-exhaustive
@@ -120,6 +120,9 @@ Feature: Apply every typed fem2d load mutation twice — once in Rust, once in P
     | replace-load                 | 🔁️replace-load                 | 🏋️retunes-the-live-f6fd49               |
     | change-load-case-name        | 🏷️change-load-case-name        | 🏷️renames               |
     | replace-combination          | 🔁️replace-combination          | ⚖️reweights              |
+    | change-load | 🩹️change-load | 🩹️changes |
+    | change-combination-name | 🩹️change-combination-name | 🩹️renames |
+    | change-combination-term | 🩹️change-combination-term | ⚖️weights |
 
   @id-frame-vector
   @level-exhaustive
@@ -142,6 +145,9 @@ Feature: Apply every typed fem2d load mutation twice — once in Rust, once in P
     | replace-load                 | 🔁️replace-load                 | 💨️strengthens |
     | change-load-case-name        | 🏷️change-load-case-name        | ✏️renames    |
     | replace-combination          | 🔁️replace-combination          | 🔗️adds    |
+    | change-load | 🩹️change-load | 📍️target |
+    | change-combination-name | 🩹️change-combination-name | ✏️labels |
+    | change-combination-term | 🩹️change-combination-term | 🗑️removes |
 
   @id-reject
   @level-exhaustive
@@ -174,3 +180,22 @@ Feature: Apply every typed fem2d load mutation twice — once in Rust, once in P
     | replace-combination-2          | 🔁️replace-combination          | 🪪️denies      |
     | replace-combination-3          | 🔁️replace-combination          | 👻️dangling      |
     | replace-combination-4          | 🔁️replace-combination          | 👻️self-term-0f54d1          |
+    | change-load-1 | 🩹️change-load | ⏸️same |
+    | change-load-2 | 🩹️change-load | ⛔️missing |
+    | change-load-3 | 🩹️change-load | ⚗️invalid |
+    | change-combination-name-1 | 🩹️change-combination-name | ⏸️same |
+    | change-combination-name-2 | 🩹️change-combination-name | ⛔️missing |
+    | change-combination-term-1 | 🩹️change-combination-term | ⏸️same |
+    | change-combination-term-2 | 🩹️change-combination-term | ⛔️missing |
+    | change-combination-term-3 | 🩹️change-combination-term | ⚗️invalid |
+
+
+  @id-empty-vector-change-combination-name
+  @level-exhaustive
+  @mode-differential
+  Scenario: Own an explicitly empty combination name
+    Given the committed before-model shared://🧬️mutations/🩹️change-combination-name/⚗️empty/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation shared://🧬️mutations/🩹️change-combination-name/⚗️empty/🦠️mutation/🔣️.json
+    And the committed after-model shared://🧬️mutations/🩹️change-combination-name/⚗️empty/📸️snapshot/➡️after/🔣️.json
+    When the committed mutation is applied to the committed before-model
+    Then each implementation lands on the committed after-model in role and restores the authored name

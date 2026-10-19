@@ -8,7 +8,6 @@
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
 use crate::Puzzle2dSnapshot;
 use semio_framework_test_fixtures::fixture_text;
 
@@ -33,7 +32,7 @@ fn outcome() -> serde_json::Value {
 
 /// 🗣️ `(level, code, target)` of every message `scale-node` raises on the committed base.
 fn produced_messages() -> Vec<(semio_framework_diagnostic::Severity, String, Vec<String>)> {
-    let produced = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Puzzle2dMutation as protocol::ColdMutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
     produced.messages().iter().map(|message| (message.level, message.code.0.clone(), message.target.clone())).collect()
 }
 
@@ -66,7 +65,7 @@ fn refusal_leaves_the_document_at_the_committed_after() {
 #[test]
 fn the_invariant_is_the_declared_refusal() {
     assert!((*DIFF_ABSENT).is_empty(), "scale-node/zero-scale: the D6 sentinel 🔺️diff/🚫️.absent must stay empty");
-    let produced = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Puzzle2dMutation as protocol::ColdMutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &Puzzle2dDiff::default(), "scale-node/zero-scale: a Fatal outcome carries the default diff");
     let outcome = outcome();
     assert_eq!(outcome["status"].as_str(), Some("rejected"), "scale-node/zero-scale declares a rejected outcome");
@@ -78,6 +77,6 @@ fn the_invariant_is_the_declared_refusal() {
 /// 🌐️ The refusal does not depend on the board: the empty board refuses the same payload the same way.
 #[test]
 fn the_invariant_is_independent_of_the_base() {
-    let produced = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &Puzzle2dSnapshot::default());
+    let produced = <Puzzle2dMutation as protocol::ColdMutation<Puzzle2dSnapshot>>::diff(&mutation(), &Puzzle2dSnapshot::default());
     assert_eq!(produced.messages().iter().map(|message| (message.level, message.code.0.as_str())).collect::<Vec<_>>(), vec![(semio_framework_diagnostic::Severity::Fatal, "mutation.invariant")], "scale-node/zero-scale: an invariant is a property of the payload alone");
 }

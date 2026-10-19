@@ -41,7 +41,7 @@ fn pointers(value:&DslValue,output:&mut Vec<(usize,usize,usize)>){
     }
 }
 
-fn grant(demand:RetirementDemand,copy:usize)->RetainedCloneGrant {RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}}
+fn grant(demand:RetirementDemand,copy:usize)->RetainedCloneGrant {RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}}
 
 fn denied(grant:RetainedCloneGrant,demand:RetirementDemand)->Vec<RetainedCloneGrant>{
     [Some(RetainedCloneGrant {maximum_items:0,..grant}),(demand.copy_bytes>0).then_some(RetainedCloneGrant {maximum_copy_bytes:demand.copy_bytes.saturating_sub(1),..grant}),(demand.capacity_bytes>0).then_some(RetainedCloneGrant {maximum_capacity_bytes:demand.capacity_bytes.saturating_sub(1),..grant}),(demand.release_bytes>0).then_some(RetainedCloneGrant {maximum_release_bytes:demand.release_bytes.saturating_sub(1),..grant}),(demand.depth>0).then_some(RetainedCloneGrant {maximum_depth:demand.depth.saturating_sub(1),..grant})].into_iter().flatten().collect()
@@ -79,7 +79,7 @@ fn close_source(source:&mut RetainedCloneSource<DslValue>,copy:usize,born:&mut u
 }
 
 fn close_output(value:DslValue,copy:usize,born:&mut usize,freed:&mut usize){
-    let admitted=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:crate::owned_retirement_birth_bytes::<DslValue>(),maximum_release_bytes:0,maximum_depth:1};
+    let admitted=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy.max(size_of::<DslValue>()),maximum_capacity_bytes:crate::owned_retirement_birth_bytes::<DslValue>(),maximum_release_bytes:0,maximum_depth:1};
     let(result,heap)=observe(||crate::admit_owned_retirement(value,admitted));let(ticket,progress)=result.map_err(|(error,_)|error).unwrap();assert!(progress.fits(admitted));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));*born+=heap.0;*freed+=heap.1;let mut ticket=Some(ticket);let mut stalled=0;
     for _ in 0..100000 {
         let Some(owner)=ticket.as_ref()else{assert_eq!(observe(||drop(ticket)).1,(0,0));return;};let demand=crate::factory_ticket_demands(owner,copy).unwrap();let admitted=grant(demand,copy);
@@ -102,8 +102,8 @@ fn original_dynamic_value_clone_fullgrant_and_original_custody(){
         for _ in 0..100000 {
             if cancelled==Some(turns){break;}
             let(demand,heap)=observe(||cursor.normal_demands(source.borrow(),64).unwrap());assert_eq!(heap,(0,0));let admitted=grant(demand,64);
-            for denied in denied(admitted,demand){let bound=cursor.state.source.is_some();let(result,heap)=observe(||cursor.advance(source.borrow(),denied));check_denied(result,heap,denied,demand);assert_eq!(cursor.state.source.is_some(),bound);assert_eq!(cursor.normal_demands(source.borrow(),64).unwrap(),demand);assert_eq!(source.borrow().get()as *const DslValue as usize,root);}
-            let(result,heap)=observe(||cursor.advance(source.borrow(),admitted));let done=matches!(result,Ok(RetainedCloneStep::Complete(_)));let progress=check(result,heap,admitted);assert_eq!(progress.copied_items,1);born+=heap.0;freed+=heap.1;turns+=1;
+            for denied in denied(admitted,demand){let bound=cursor.state.source.is_some();let(result,heap)=observe(||cursor.advance(source.borrow(), 64, denied));check_denied(result,heap,denied,demand);assert_eq!(cursor.state.source.is_some(),bound);assert_eq!(cursor.normal_demands(source.borrow(),64).unwrap(),demand);assert_eq!(source.borrow().get()as *const DslValue as usize,root);}
+            let(result,heap)=observe(||cursor.advance(source.borrow(), 64, admitted));let done=matches!(result,Ok(RetainedCloneStep::Complete(_)));let progress=check(result,heap,admitted);assert_eq!(progress.copied_items,1);born+=heap.0;freed+=heap.1;turns+=1;
             if done {let(value,heap)=observe(||cursor.take());assert_eq!(heap,(0,0));let value=value.unwrap();assert_eq!(encode(&value),encoded);output=Some(value);break;}
         }
         assert!(output.is_some()||cancelled==Some(turns),"[DEBUG] Original dynamic normal clone stalled {name} cancel={cancelled:?}");assert_eq!(encode(source.borrow().get()),encoded);observed.clear();pointers(source.borrow().get(),&mut observed);assert_eq!(observed,original);

@@ -289,9 +289,14 @@ fn mesh_edge_authority_uses_completed_faces_and_closes_exact_backing() {
         assert!(InteractiveJob::terminal_is_empty(&job));
     }
 }
-use semio_framework_job::{root_cancel_token, Generation, OperationId, RevisionId, StepBudget};
+use semio_framework_job::root_cancel_token;
+use semio_framework_job::Generation;
+use semio_framework_job::OperationId;
+use semio_framework_job::RevisionId;
+use semio_framework_job::StepBudget;
 use std::collections::HashSet;
-use std::time::{Duration, Instant};
+use std::time::Duration;
+use std::time::Instant;
 
 fn mesh_operation() -> Operation {
     Operation::new(OperationId(700), RevisionId(11), Generation(3), 19)

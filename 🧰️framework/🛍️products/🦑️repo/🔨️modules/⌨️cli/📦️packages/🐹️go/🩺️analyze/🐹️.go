@@ -9,19 +9,20 @@
 package cli
 
 import (
-	json "encoding/json"
-	filepath "path/filepath"
-	sort "sort"
-	strings "strings"
-	time "time"
-
+	"fmt"
+	"encoding/json"
+	"path/filepath"
+	"sort"
+	"strings"
+	"time"
 	codebasepkg "github.com/usalu/semio/repo/codebase"
 	eventspkg "github.com/usalu/semio/repo/events"
 	graphqlpkg "github.com/usalu/semio/repo/graphql"
 	languagespkg "github.com/usalu/semio/repo/languages"
-	model "github.com/usalu/semio/repo/model"
-	statutes "github.com/usalu/semio/repo/statutes"
-	workspace "github.com/usalu/semio/repo/workspace"
+	"github.com/usalu/semio/repo/model"
+	"github.com/usalu/semio/repo/statutes"
+	"github.com/usalu/semio/repo/workspace"
+
 )
 
 // #region 🪅️Analyze Command
@@ -33,44 +34,14 @@ var analyzeCmd = &Command{
 	Short: "Analyze codebase for breachs",
 	Args:  MaximumNArgs(1),
 	RunE: func(cmd *Command, args []string) error {
-		var scope *string
-		if len(args) > 0 {
-			scope = &args[0]
-		}
-		if scope == nil {
-			ctx := codebasepkg.NewCodebaseContext()
-			ctx.LoadBundles()
-			if err := ctx.LoadFiles(); err != nil {
-				return err
-			}
-			if err := ctx.LoadBreachs(); err != nil {
-				return err
-			}
-			if err := ctx.LoadTickets(); err != nil {
-				return err
-			}
-			ctx.LoadPolicies()
-		}
-		variables := map[string]interface{}{}
-		if scope != nil {
-			variables["scope"] = *scope
-		}
-		return graphqlpkg.PrintGQL(`
-			query Analyze($scope: String) {
-				analyze(scope: $scope) {
-					breachs {
-						id
-						summary
-						scope
-						line
-						column
-						excerpt
-						kind { id priority autofixable reason solution }
-					}
-					metrics { total autofixable byPriority { high medium low } }
-				}
-			}
-		`, variables)
+		scope := "all"
+		if len(args) > 0 { scope = args[0] }
+		policies, err := cmd.Flags().GetStringSlice("policy")
+		if err != nil { return err }
+		result := ToolAnalyze(scope, policies)
+		if result.Error != "" { return fmt.Errorf("%s", result.Error) }
+		for _, line := range result.Output.Lines { fmt.Fprintln(cmd.OutOrStdout(), line.Text) }
+		return nil
 	},
 }
 
@@ -270,10 +241,27 @@ func ensureRepoResolver() {
 
 // 🔬️ToolAnalyze MUST complete the operation successfully.
 func ToolAnalyze(scopeRaw string, policyIDs []string) workspace.ToolResult {
+	for _, id := range policyIDs {
+		if _, found := statutes.FindPolicy(id); !found { return workspace.ToolResult{Error: fmt.Sprintf("unknown analysis policy %q", id)} }
+	}
 	eventspkg.Emit(eventspkg.EventAnalyzeStarting, "repo-cli", eventspkg.FolderPayload{Path: scopeRaw})
 	scope := workspace.ParseScope(scopeRaw)
 	bundles := codebasepkg.GetTechnologies()
-	breachs, err := statutes.CheckPolicies(scope, bundles, policyIDs)
+	extensions, language := analysisScopeExtensions(scopeRaw)
+	var breachs []model.Breach
+	var err error
+	if language {
+		scope = workspace.ParseScope("compose")
+		wanted := []string{}
+		for extension := range extensions { wanted = append(wanted, strings.TrimPrefix(extension, ".")) }
+		files, listErr := workspace.GlobByExtension(workspace.RootDir, "**/*", wanted, []string{"**/node_modules/**", "**/.venv/**"}, true)
+		if listErr != nil { return workspace.ToolResult{Error: listErr.Error()} }
+		selected := make([]string, 0)
+		for _, file := range files { if extensions[strings.ToLower(filepath.Ext(file))] { selected = append(selected, file) } }
+		breachs, err = statutes.CheckPoliciesWithContext(statutes.NewPolicyContextWithFiles(scope, bundles, selected), policyIDs)
+	} else {
+		breachs, err = statutes.CheckPolicies(scope, bundles, policyIDs)
+	}
 	if err != nil {
 		return workspace.ToolResult{Error: err.Error()}
 	}
@@ -298,6 +286,15 @@ func ToolAnalyze(scopeRaw string, policyIDs []string) workspace.ToolResult {
 	bytes, _ := json.MarshalIndent(report, "", "  ")
 	output.Plain(string(bytes))
 	return workspace.ToolResult{Output: *output, Data: report}
+}
+
+// 🔬️ Selects the explicit dashboard language scopes before policies read their files.
+func analysisScopeExtensions(scope string) (map[string]bool, bool) {
+	values := map[string][]string{"all": {".rs", ".ts", ".tsx", ".go", ".py", ".cs", ".md", ".json"}, "rust": {".rs"}, "typescript": {".ts", ".tsx"}, "go": {".go"}, "python": {".py"}, "markdown": {".md"}}
+	exts, found := values[scope]
+	selected := map[string]bool{}
+	for _, extension := range exts { selected[extension] = true }
+	return selected, found
 }
 
 // 🔠️sortedRegisteredPolicies returns the registered policies ordered by identifier, the order every surface renders.

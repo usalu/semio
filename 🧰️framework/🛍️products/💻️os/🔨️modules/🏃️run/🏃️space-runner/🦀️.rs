@@ -395,7 +395,7 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
                 let previous_record = previous.expect("dirty=false implies a prior record exists").clone();
                 let node_record = RunNodeRecord { status: RunNodeStatus::CacheHit, ..previous_record };
                 current_run_records.insert(node_id.clone(), node_record.clone());
-                sink.record(RunMutation::FinishRunNode(FinishRunNode { node_record })).await?;
+                sink.record(RunMutation::FinishRunNode(FinishRunNode { node_record, index: None })).await?;
                 continue;
             }
             report.recomputed.push(node_id.clone());
@@ -460,7 +460,7 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
                 duration_ms,
             };
             current_run_records.insert(node_id.clone(), node_record.clone());
-            sink.record(RunMutation::FinishRunNode(FinishRunNode { node_record })).await?;
+            sink.record(RunMutation::FinishRunNode(FinishRunNode { node_record, index: None })).await?;
         }
 
         Ok(report)

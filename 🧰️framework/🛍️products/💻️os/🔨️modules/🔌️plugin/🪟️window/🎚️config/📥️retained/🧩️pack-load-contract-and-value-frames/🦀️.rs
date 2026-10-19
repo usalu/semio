@@ -6,7 +6,7 @@ pub(super) type Mounted = store::mounted_pack_rt::RetainedValueToken;
 
 #[doc(hidden)]
 pub fn controlled_demands<T: RetireOwned>(owner: &ControlledRetirement<T>, body: usize) -> Result<RetirementDemand, ValueError> {
-    Ok(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(body)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()? })
+    Ok(owner.next_demand(body)?)
 }
 
 pub(super) fn pack_close_receipt(step: store::mounted_pack_rt::RetainedPackCloseStep, demand: RetirementDemand) -> RetainedCloneStep {
@@ -37,6 +37,7 @@ pub enum WindowConfigPackLoadPhase {
     HistoryReplay,
     InputRetirement,
     StoreHydration,
+    StoreAddress,
     Ready,
     RetiringRejectedCandidate,
     RetiringDisplacedStore,
@@ -53,6 +54,7 @@ pub struct WindowConfigPackLoadProgress {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum WindowConfigPackLoadStep {
     Pending(WindowConfigPackLoadProgress),
+    OwnershipProgress(WindowConfigPackLoadProgress,RetainedCloneProgress),
     Ready,
     Rejected(WindowConfigPackLoadDiagnostic),
     Complete,

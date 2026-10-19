@@ -61,10 +61,10 @@ COLLECTIONS = {
 """🗂️ Per noun: its collection, the argument `create-` carries, and the one `replace-` carries when
 the vocabulary has a `replace-` for it at all."""
 
-KINDS = ("create-material", "delete-material", "replace-material")
+KINDS = ("create-material", "delete-material", "replace-material", "change-material")
 """🏷️ This subset's own kinds, in the catalog's declared order."""
 
-REFUSALS = {"create-material": 2, "delete-material": 2, "replace-material": 3}
+REFUSALS = {"create-material": 2, "delete-material": 2, "replace-material": 3, "change-material": 3}
 """🚫️ How many refusal-or-no-op vectors each kind declares — the `reject-<kind>-<n>` rows the
 feature's `@id-reject` Outline carries, numbered in the catalog's own order."""
 
@@ -425,6 +425,22 @@ def apply_mutation(document, mutation):
         if mutation["settings"] == result["analysis"]:
             warn(NO_OP, "Analysis settings are unchanged.")
         result["analysis"] = copy.deepcopy(mutation["settings"])
+    elif kind == "change-material":
+        at = find(result["materials"], mutation["id"])
+        if at is None:
+            error(TARGET_MISSING, [mutation["id"]], "Material does not exist.")
+        patch = mutation["patch"]
+        if not isinstance(patch, dict) or not set(patch) <= RECORDS["materials"] - {"id"}:
+            fatal(INVARIANT, [mutation["id"]], "Invalid material patch fields.")
+        if "name" in patch and not isinstance(patch["name"], str):
+            fatal(INVARIANT, [mutation["id"]], "Invalid material name.")
+        if any(isinstance(value, bool) or not finite(value) for key, value in patch.items() if key != "name"):
+            fatal(INVARIANT, [mutation["id"]], "Invalid material property.")
+        material = dict(result["materials"][at], **patch)
+        check_material(material)
+        if material == result["materials"][at]:
+            warn(NO_OP, "Material fields are unchanged.")
+        result["materials"][at] = material
     elif kind in ("add-load", "remove-load", "replace-load", "change-load-case-self-weight", "change-load-case-name"):
         case = case_of(result, mutation["caseId"])
         if kind == "add-load":
@@ -517,6 +533,11 @@ def inverse_mutation(document, mutation):
         return {"mutation": TAGS[kind], "caseId": mutation["caseId"], "newSelfWeight": case_of(document, mutation["caseId"])["selfWeight"]}
     if kind == "change-load-case-name":
         return {"mutation": TAGS[kind], "caseId": mutation["caseId"], "newName": case_of(document, mutation["caseId"])["name"]}
+    if kind == "change-material":
+        at = find(document["materials"], mutation["id"])
+        if at is None:
+            raise AssertionError("Material does not exist for inverse.")
+        return {"mutation": TAGS[kind], "id": mutation["id"], "patch": {key: document["materials"][at][key] for key in mutation["patch"]}}
     noun = noun_of(kind)
     collection, create_argument, replace_argument = COLLECTIONS[noun]
     if kind.startswith("create-"):

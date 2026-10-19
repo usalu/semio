@@ -39,3 +39,14 @@ export function retireLocalDocument(documentId: string): LocalCatalogConfigMutat
   return { mutation: "retireLocalDocument", documentId };
 }
 //#endregion 🔖️Dispatch
+
+
+export interface LocalCatalogRow {
+  readonly key: string;
+  readonly value?: LocalDocument;
+}
+
+
+export interface LocalCatalogDiff {
+  readonly documents?: readonly LocalCatalogRow[];
+}

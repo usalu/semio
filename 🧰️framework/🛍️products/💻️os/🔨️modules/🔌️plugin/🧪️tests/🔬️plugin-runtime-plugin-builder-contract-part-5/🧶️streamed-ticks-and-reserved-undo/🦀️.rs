@@ -22,9 +22,9 @@
         assert_eq!(app.stores.test_snapshot().await.label, "abc");
         reserved_action(&mut app, "undo", None, &mut identity).await;
         assert_eq!(app.stores.test_snapshot().await.label, "");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -48,9 +48,9 @@
         }
         reserved_action(&mut app, "undo", None, &mut identity).await;
         assert_eq!(app.stores.test_snapshot().await.label, "ab");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -82,9 +82,9 @@
         let checkpoint = reserved_action(&mut app, "commitCheckpoint", None, &mut identity).await;
         assert!(checkpoint.mutations.is_empty());
         assert!(checkpoint.events.iter().any(|event| event.kind == "history-changed"));
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -117,7 +117,7 @@
         let result = settle_reserved(&mut app, admitted).await;
         assert!(result.mutations.is_empty());
         artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 

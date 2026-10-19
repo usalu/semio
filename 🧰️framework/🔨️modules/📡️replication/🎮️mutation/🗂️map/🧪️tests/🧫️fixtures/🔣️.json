@@ -1,4 +1,9 @@
 {
+  "dslFields": {
+    "map": [{"id": 0, "key": "entries", "optional": false}],
+    "entry": [{"id": 0, "key": "operation", "optional": false}, {"id": 1, "key": "precondition", "optional": false}],
+    "operation": [{"id": 0, "key": "kind", "optional": false}, {"id": 1, "key": "value", "optional": true}]
+  },
   "cases": [
     {
       "name": "null stays present",
@@ -14,16 +19,15 @@
         }
       ],
       "compact": {
-        "entries": [
-          {
-            "key": "key",
+        "entries": {
+          "key": {
             "precondition": "any",
             "operation": {
               "kind": "set",
               "value": null
             }
           }
-        ]
+        }
       },
       "after": {
         "key": null
@@ -42,15 +46,14 @@
         }
       ],
       "compact": {
-        "entries": [
-          {
-            "key": "key",
+        "entries": {
+          "key": {
             "precondition": "present",
             "operation": {
               "kind": "remove"
             }
           }
-        ]
+        }
       },
       "error": "mutation.apply.missing-target"
     },
@@ -75,15 +78,14 @@
         }
       ],
       "compact": {
-        "entries": [
-          {
-            "key": "key",
+        "entries": {
+          "key": {
             "precondition": "any",
             "operation": {
               "kind": "remove"
             }
           }
-        ]
+        }
       },
       "after": {}
     },
@@ -110,15 +112,14 @@
         }
       ],
       "compact": {
-        "entries": [
-          {
-            "key": "key",
+        "entries": {
+          "key": {
             "precondition": "any",
             "operation": {
               "kind": "remove"
             }
           }
-        ]
+        }
       },
       "after": {}
     },
@@ -143,16 +144,15 @@
         }
       ],
       "compact": {
-        "entries": [
-          {
-            "key": "key",
+        "entries": {
+          "key": {
             "precondition": "present",
             "operation": {
               "kind": "set",
               "value": null
             }
           }
-        ]
+        }
       },
       "error": "mutation.apply.missing-target"
     },
@@ -179,16 +179,15 @@
         }
       ],
       "compact": {
-        "entries": [
-          {
-            "key": "key",
+        "entries": {
+          "key": {
             "precondition": "present",
             "operation": {
               "kind": "set",
               "value": null
             }
           }
-        ]
+        }
       },
       "after": {
         "key": null
@@ -216,15 +215,14 @@
         }
       ],
       "compact": {
-        "entries": [
-          {
-            "key": "key",
+        "entries": {
+          "key": {
             "precondition": "never",
             "operation": {
               "kind": "reject"
             }
           }
-        ]
+        }
       },
       "error": "mutation.apply.unsatisfiable-precondition"
     },
@@ -258,15 +256,14 @@
         }
       ],
       "compact": {
-        "entries": [
-          {
-            "key": "key",
+        "entries": {
+          "key": {
             "precondition": "present",
             "operation": {
               "kind": "remove"
             }
           }
-        ]
+        }
       },
       "after": {}
     },
@@ -284,16 +281,15 @@
         }
       ],
       "compact": {
-        "entries": [
-          {
-            "key": "key",
+        "entries": {
+          "key": {
             "precondition": "absent",
             "operation": {
               "kind": "set",
               "value": false
             }
           }
-        ]
+        }
       },
       "after": {
         "key": false
@@ -315,16 +311,15 @@
         }
       ],
       "compact": {
-        "entries": [
-          {
-            "key": "key",
+        "entries": {
+          "key": {
             "precondition": "absent",
             "operation": {
               "kind": "set",
               "value": false
             }
           }
-        ]
+        }
       },
       "error": "mutation.apply.target-precondition"
     },
@@ -349,23 +344,21 @@
         }
       ],
       "compact": {
-        "entries": [
-          {
-            "key": "a",
+        "entries": {
+          "a": {
             "precondition": "any",
             "operation": {
               "kind": "set",
               "value": "new"
             }
           },
-          {
-            "key": "z",
+          "z": {
             "precondition": "present",
             "operation": {
               "kind": "remove"
             }
           }
-        ]
+        }
       },
       "error": "mutation.apply.missing-target"
     },
@@ -376,7 +369,7 @@
       },
       "source": [],
       "compact": {
-        "entries": []
+        "entries": {}
       },
       "after": {
         "key": null
@@ -385,63 +378,136 @@
   ],
   "invalid": [
     {
-      "entries": [
-        {
-          "key": "key",
+      "entries": {
+        "key": {
           "precondition": "any",
           "operation": {
             "kind": "set"
           }
         }
-      ]
+      }
     },
     {
-      "entries": [
-        {
-          "key": "key",
+      "entries": {
+        "key": {
           "precondition": "any",
           "operation": {
             "kind": "remove",
             "value": null
           }
         }
-      ]
+      }
     },
     {
-      "entries": [
-        {
-          "key": "key",
+      "entries": {
+        "key": {
           "precondition": "never",
           "operation": {
             "kind": "set",
             "value": null
           }
         }
-      ]
+      }
     },
     {
-      "entries": [
-        {
-          "key": "key",
+      "entries": {
+        "key": {
           "precondition": "any",
           "operation": {
             "kind": "reject"
           }
         }
-      ]
+      }
     },
     {
-      "entries": [
-        {
-          "key": "key",
+      "entries": {
+        "key": {
           "precondition": "any",
           "operation": {
             "kind": "set",
             "value": null
           }
         }
-      ],
+      },
       "locale": "de"
+    },
+    {
+      "entries": []
     }
-  ]
+  ],
+  "inverseCases": [
+    {
+      "name": "existing value preserves sibling",
+      "before": {
+        "a": "old",
+        "b": "sibling"
+      },
+      "diff": {
+        "entries": {
+          "a": {
+            "precondition": "any",
+            "operation": {
+              "kind": "set",
+              "value": "mine"
+            }
+          }
+        }
+      },
+      "collaborator": {
+        "b": "other"
+      },
+      "expected": {
+        "a": "old",
+        "b": "other"
+      }
+    },
+    {
+      "name": "new null removes only authored key",
+      "before": {
+        "b": "sibling"
+      },
+      "diff": {
+        "entries": {
+          "a": {
+            "precondition": "any",
+            "operation": {
+              "kind": "set",
+              "value": null
+            }
+          }
+        }
+      },
+      "collaborator": {
+        "b": "other"
+      },
+      "expected": {
+        "b": "other"
+      }
+    },
+    {
+      "name": "removed null stays present on undo",
+      "before": {
+        "a": null,
+        "b": "sibling"
+      },
+      "diff": {
+        "entries": {
+          "a": {
+            "precondition": "present",
+            "operation": {
+              "kind": "remove"
+            }
+          }
+        }
+      },
+      "collaborator": {
+        "b": "other"
+      },
+      "expected": {
+        "a": null,
+        "b": "other"
+      }
+    }
+  ],
+  "duplicateKeyText": "{\"entries\":{\"a\":{\"precondition\":\"any\",\"operation\":{\"kind\":\"remove\"}},\"a\":{\"precondition\":\"present\",\"operation\":{\"kind\":\"remove\"}}}}"
 }

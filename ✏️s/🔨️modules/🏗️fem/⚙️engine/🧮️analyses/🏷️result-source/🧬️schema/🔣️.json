@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:fem:result-source:v1",
+  "title": "FEM Result Source",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "id"],
+  "properties": {
+    "kind": { "enum": ["loadCase", "combination"] },
+    "id": { "type": "string", "minLength": 1, "maxLength": 65536 }
+  }
+}

@@ -90,7 +90,7 @@ pub const UNKNOWN_SUPERSEDE_TARGET_MESSAGE: &str = "a supersession may only name
 
 /// 🧷️ The recent-window marker of one committed durable group decision (see [`DURABLE_GROUP_TOUCH_KIND`]).
 pub fn durable_group_touch(edit_id: &str) -> db_conflict::CommandTouch {
-    db_conflict::CommandTouch::new(protocol::MutationId(edit_id.to_string()), protocol::ActorId(String::new()), db_conflict::CommandKind::from(DURABLE_GROUP_TOUCH_KIND), protocol::HybridLogicalTimestamp::new(0, 0))
+    db_conflict::CommandTouch::new(protocol::MutationId(edit_id.to_string()), protocol::ActorId(Default::default()), db_conflict::CommandKind::from(DURABLE_GROUP_TOUCH_KIND), protocol::HybridLogicalTimestamp::new(0, 0))
 }
 
 /// 🪟️ Appends one committed touch to the bounded recent commit window, oldest out first.

@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/presence/window/schema.json",
+  "title": "PresenceWindowView",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["windowId", "space", "kind", "size"],
+  "properties": {
+    "windowId": {"type": "string"},
+    "space": {"type": "string"},
+    "size": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "number"}},
+    "pointer": {"$ref": "#/definitions/vector"},
+    "rayOrigin": {"$ref": "#/definitions/vector"},
+    "kind": {
+      "oneOf": [
+        {"type": "object", "additionalProperties": false, "required": ["kind", "x", "y", "zoom"], "properties": {"kind": {"const": "canvas"}, "x": {"type": "number"}, "y": {"type": "number"}, "zoom": {"type": "number"}}},
+        {"type": "object", "additionalProperties": false, "required": ["kind", "position", "target", "up", "fov"], "properties": {"kind": {"const": "orbit"}, "position": {"$ref": "#/definitions/vector"}, "target": {"$ref": "#/definitions/vector"}, "up": {"$ref": "#/definitions/vector"}, "fov": {"type": "number"}}},
+        {"type": "object", "additionalProperties": false, "required": ["kind", "lng", "lat", "zoom", "bearing", "pitch"], "properties": {"kind": {"const": "geo"}, "lng": {"type": "number"}, "lat": {"type": "number"}, "zoom": {"type": "number"}, "bearing": {"type": "number"}, "pitch": {"type": "number"}}}
+      ]
+    }
+  },
+  "definitions": {"vector": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"type": "number"}}}
+}

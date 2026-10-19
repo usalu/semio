@@ -1,0 +1,25 @@
+{
+  "name": "@semio-tech/framework-store-native-semantic",
+  "tags": [
+    "framework",
+    "store"
+  ],
+  "targets": {
+    "verify-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native",
+        "command": "bun ./📜️script.ts verify source"
+      }
+    },
+    "verify-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native",
+        "command": "bun ./📜️script.ts verify native"
+      }
+    }
+  }
+}

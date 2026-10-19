@@ -1,11 +1,13 @@
 {
   "artifact": null,
+  "schema": null,
   "domain": null,
-  "fasteners": null,
-  "kindCompatibility": null,
   "meta": null,
+  "kindCompatibility": null,
   "parts": {
+    "removed": [],
     "inserted": [],
+    "moved": [],
     "modified": [
       {
         "id": "part-a",
@@ -14,7 +16,7 @@
             "orientation": [
               0.0,
               0.0,
-              0.7071067811865475,
+              0.7071067811865476,
               0.7071067811865476
             ]
           }
@@ -27,19 +29,19 @@
             "orientation": [
               0.0,
               0.0,
-              0.7071067811865475,
+              0.7071067811865476,
               0.7071067811865476
             ]
           }
         }
       }
-    ],
-    "moved": [],
-    "removed": []
+    ]
   },
-  "schema": null,
+  "fasteners": null,
   "targetVolumes": {
+    "removed": [],
     "inserted": [],
+    "moved": [],
     "modified": [
       {
         "id": "volume-1",
@@ -47,13 +49,11 @@
           "orientation": [
             0.0,
             0.0,
-            0.7071067811865475,
+            0.7071067811865476,
             0.7071067811865476
           ]
         }
       }
-    ],
-    "moved": [],
-    "removed": []
+    ]
   }
 }

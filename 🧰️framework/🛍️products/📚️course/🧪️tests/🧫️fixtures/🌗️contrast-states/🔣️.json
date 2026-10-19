@@ -1,0 +1,41 @@
+{
+  "schema": "semio.course.contrast-states/v1",
+  "description": "Colour never carries a state or a name alone. (1) The name label of another learner is text on that learner's palette colour: for every palette slot of the presence palette (the 12 base hues and the lighter/darker and desaturated cycles after them) and both appearances, the label's ink must reach the minimum contrast of WCAG 2.2 SC 1.4.3 against the slot colour. (2) With forced colours (Windows high contrast) backgrounds, shadows and custom colours are replaced by system colours, so every state the stylesheet shows through one of them needs its own rule inside `@media (forced-colors: active)`: each entry names the state, the selector of that rule and the properties it must declare. (3) The text of every state the challenges add — hints, miss marks, the clock's last 30 and 10 seconds and its end — is the design system's ink (`ink`, a token of the appearance) on the page's ground (`ground`), over which the low-time states lay a tint (`tint`: a palette colour at a share, as `color-mix(in srgb, colour share, transparent)` composites over the ground); the stylesheet paints none of them in a colour of its own, and in both appearances the ink must reach the minimum contrast of WCAG 2.2 SC 1.4.3 against the ground with its tint.",
+  "labels": {
+    "minimumContrast": 4.5,
+    "slots": 48,
+    "appearances": ["light", "dark"]
+  },
+  "forcedColors": [
+    { "state": "the pressed segment of a choice (language, theme, text size)", "selector": ".course-app [aria-pressed=true]", "properties": ["forced-color-adjust", "background-color", "color"] },
+    { "state": "the current task of a run", "selector": ".course-app [aria-current=step]", "properties": ["forced-color-adjust", "background-color", "color"] },
+    { "state": "the learner's own leaderboard row", "selector": ".course-me", "properties": ["outline"] },
+    { "state": "the drop zone under a dragged item", "selector": ".course-drop-active", "properties": ["outline"] },
+    { "state": "a learner's online mark", "selector": ".course-online", "properties": ["forced-color-adjust", "background-color"] },
+    { "state": "the column of a figure of what everyone answered", "selector": ".course-column-bar", "properties": ["forced-color-adjust", "background-color"] },
+    { "state": "the column of the learner's own answer in a figure", "selector": ".course-column[data-emphasis] > .course-column-bar", "properties": ["background-color"] },
+    { "state": "the mark of the learner's own answer in a figure", "selector": ".course-plot-own", "properties": ["color"] },
+    { "state": "another learner's name label", "selector": ".course-peer-label", "properties": ["forced-color-adjust", "background-color", "color"] },
+    { "state": "the area of a spider diagram", "selector": ".course-radar-area", "properties": ["fill", "stroke"] },
+    { "state": "a control that cannot be used now", "selector": ".course-app [aria-disabled=true]", "properties": ["color"] },
+    { "state": "keyboard focus on any control", "selector": ".course-app :focus-visible", "properties": ["outline"] },
+    { "state": "a hint beside an answer of an easy run", "selector": ".course-hint", "properties": ["border-inline-start"] },
+    { "state": "the last 30 seconds of a task's clock", "selector": ".course-clock[data-clock=thirty]", "properties": ["outline"] },
+    { "state": "the last 10 seconds of a task's clock", "selector": ".course-clock[data-clock=ten]", "properties": ["outline"] },
+    { "state": "a task whose time is up", "selector": ".course-clock[data-clock=up]", "properties": ["outline"] },
+    { "state": "the bar of the time left on a task's clock", "selector": ".course-clock-bar", "properties": ["forced-color-adjust", "background-color"] },
+    { "state": "a guess that lies far off in the results", "selector": ".course-miss", "properties": ["text-decoration-color"] }
+  ],
+  "texts": {
+    "minimumContrast": 4.5,
+    "appearances": ["light", "dark"],
+    "ground": "--base",
+    "states": [
+      { "state": "a hint beside an answer of an easy run", "selector": ".course-hint", "ink": "--foreground" },
+      { "state": "a guess that lies far off in the results", "selector": ".course-miss", "ink": "--foreground" },
+      { "state": "the last 30 seconds of a task's clock", "selector": ".course-clock[data-clock=thirty]", "ink": "--foreground", "tint": { "colour": "--color-warning", "share": 0.12 } },
+      { "state": "the last 10 seconds of a task's clock", "selector": ".course-clock[data-clock=ten]", "ink": "--foreground", "tint": { "colour": "--color-warning", "share": 0.12 } },
+      { "state": "a task whose time is up", "selector": ".course-clock[data-clock=up]", "ink": "--foreground" }
+    ]
+  }
+}

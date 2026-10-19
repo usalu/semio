@@ -13,7 +13,7 @@ impl IntrinsicMediaEncoding {
             if !cursor.terminal_is_empty() { return cursor.retirement_demands(); }
             return Ok(RetirementDemand { copy_bytes: size_of::<Option<Box<MediaPackCursor>>>(), capacity_bytes: 0, release_bytes: size_of::<MediaPackCursor>(), depth: 1 });
         }
-        Ok(RetirementDemand { copy_bytes: self.parts.next_copy_byte_demand()?, capacity_bytes: self.parts.next_capacity_byte_demand(copy)?, release_bytes: self.parts.next_release_byte_demand()?, depth: self.parts.next_depth_demand()? })
+        Ok(self.parts.next_demand(copy)?)
     }
     pub fn close(&mut self, grant: MediaGrant) -> Result<MediaStep, MediaValueError> {
         if let Some(cursor) = &mut self.cursor {
@@ -34,6 +34,7 @@ impl MediaRetireOwned for IntrinsicMediaEncoding {
     fn retirement_element_copy_bytes() -> usize { size_of::<Self>() }
 }
 impl MediaRetirementCursor for IntrinsicMediaEncoding {
+    fn next_demand(&self,body:usize)->Result<RetirementDemand,MediaValueError>{self.demand(body)}
     fn close_step(&mut self, grant: MediaGrant) -> MediaRetirementStep {
         match self.close(grant) { Ok(step) => if self.empty() && step.progress() == MediaProgress::default() { MediaRetirementStep::Complete } else { MediaRetirementStep::Progress(step.progress()) }, Err(error) => MediaRetirementStep::Failure(error) }
     }

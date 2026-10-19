@@ -26,7 +26,7 @@ fn close<T:Puzzle2dTextInverse>(cursor:&mut Puzzle2dTextInverseCursor<T>){
   let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(permit));observed(step,heap,permit);
  }panic!("optional text inverse did not retire")
 }
-fn law<T:Puzzle2dTextInverse+Clone>(snapshot:&Puzzle2dSnapshot,payload:T,expected:&serde_json::Value){
+fn law<T: 'static + Puzzle2dTextInverse+Clone>(snapshot:&Puzzle2dSnapshot,payload:T,expected:&serde_json::Value){
  let original=serde_json::to_value(snapshot).unwrap();let mut source=test_source_custody::admit();let mut mutation=test_source_custody::admit();
  let(mut cursor,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(Puzzle2dTextInverseCursor::<T>::default);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance(source.borrow(snapshot),mutation.borrow(&payload),RetainedCloneGrant::default()));assert_eq!(step.unwrap(),RetainedCloneStep::Progress(Default::default()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
@@ -40,4 +40,28 @@ fn law<T:Puzzle2dTextInverse+Clone>(snapshot:&Puzzle2dSnapshot,payload:T,expecte
 fn history_edit_puzzle2d_optional_text_inverse_clones_only_original_paged_id_and_value_with_exact_cancel(){
  let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔤️text/↩️inverse/🔣️.json")).unwrap();for row in corpus["cases"].as_array().unwrap(){let mut snapshot=Puzzle2dSnapshot::default();let id=if row["target"].as_bool().unwrap(){"retained"}else{"missing"}.into();let previous=row["before"].as_str().map(PagedUtf8::from);let next=row["next"].as_str().map(PagedUtf8::from);if row["role"]=="nodeIcon"{snapshot.nodes.push(crate::standards::v1::subsets::any::schema::records::Puzzle2dNode{id:"retained".into(),icon_kind:previous,..Default::default()});snapshot.nodes.push(crate::standards::v1::subsets::any::schema::records::Puzzle2dNode{id:"retained".into(),icon_kind:Some("second owner".into()),..Default::default()});law(&snapshot,ChangeNodeIcon{id,new_icon_kind:next},&row["expectedInverse"])}else{snapshot.target_regions.push(crate::standards::v1::subsets::any::schema::records::Puzzle2dTargetRegion{id:"retained".into(),label:previous,..Default::default()});snapshot.target_regions.push(crate::standards::v1::subsets::any::schema::records::Puzzle2dTargetRegion{id:"retained".into(),label:Some("second owner".into()),..Default::default()});law(&snapshot,EditTargetRegionLabel{id,new_label:next},&row["expectedInverse"])}}
  let text="😀\0甲".repeat(20000);let mut snapshot=Puzzle2dSnapshot::default();snapshot.nodes.push(crate::standards::v1::subsets::any::schema::records::Puzzle2dNode{id:"retained".into(),icon_kind:Some(text.clone().into()),..Default::default()});law(&snapshot,ChangeNodeIcon{id:"retained".into(),new_icon_kind:None},&serde_json::json!([{"id":"retained","previous":text}]));
+}
+
+/// ➕️ The concrete inverse this owner prepares sums to the negative of the forward diff (law L3) on the committed applied vectors of its family.
+#[semio_framework_async_macros::async_test]
+async fn the_prepared_family_inverse_sums_to_the_negative_diff() {
+    macro_rules! vector {
+        ($kind:literal, $case:literal) => {
+            (
+                include_str!(concat!("../../../../../🧫️fixtures/🧬️mutations/", $kind, "/", $case, "/📸️snapshot/⬅️before/🔣️.json")),
+                include_str!(concat!("../../../../../🧫️fixtures/🧬️mutations/", $kind, "/", $case, "/🦠️mutation/🔣️.json")),
+            )
+        };
+    }
+    for (before, mutation) in [
+    vector!("🎨change-node-icon", "🎨️swaps-a-capsule-icon"),
+    vector!("🎨change-node-icon", "🎨️swaps-node-a-icon"),
+    vector!("🖋️edit-target-region-label", "🖋️renames"),
+    vector!("✏️edit-node-text", "✏️recodes"),
+    vector!("✏️edit-node-text", "✏️retitles-node-a"),
+    ] {
+        let before: crate::Puzzle2dSnapshot = semio_framework_pack_json::from_json_str(before, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes");
+        let mutation: crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation = semio_framework_pack_json::from_json_str(mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes");
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
+    }
 }

@@ -1,41 +1,41 @@
 {
   "artifact": null,
-  "attractions": {
-    "inserted": [],
-    "modified": [
-      {
-        "id": "attraction-1",
-        "patch": {
-          "gap": -2.999999999999999,
-          "shift": -0.9999999999999993,
-          "turn": 90.00000000000001
-        }
-      }
-    ],
-    "moved": [],
-    "removed": []
-  },
+  "schema": null,
   "domain": null,
   "meta": null,
   "objects": {
+    "removed": [],
     "inserted": [],
+    "moved": [],
     "modified": [
       {
         "id": "object-b",
         "patch": {
           "orientation": [
             0.0,
-            0.7071067811865475,
+            0.7071067811865476,
             0.0,
             0.7071067811865476
           ]
         }
       }
-    ],
-    "moved": [],
-    "removed": []
+    ]
   },
-  "references": null,
-  "schema": null,
-  "targetVolumes": null
+  "attractions": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "attraction-1",
+        "patch": {
+          "gap": -2.9999999999999996,
+          "shift": -0.9999999999999998,
+          "turn": 90.0
+        }
+      }
+    ]
+  },
+  "targetVolumes": null,
+  "references": null
 }

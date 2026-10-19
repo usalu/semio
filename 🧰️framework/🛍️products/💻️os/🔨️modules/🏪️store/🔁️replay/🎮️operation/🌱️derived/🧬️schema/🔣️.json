@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://framework/os/store/derived-operation/laws",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contracts",
+    "cases",
+    "independentAxes"
+  ],
+  "properties": {
+    "contracts": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "string"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "base",
+          "patch",
+          "after",
+          "mode",
+          "accepted"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "base": {},
+          "patch": {
+            "type": "array"
+          },
+          "after": {},
+          "mode": {
+            "enum": [
+              "provisional",
+              "history"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "independentAxes": {
+      "properties": {
+        "capacityGrant": {
+          "const": 65536
+        },
+        "copyGrant": {
+          "const": 4096
+        },
+        "capacityBytes": {
+          "const": 8192
+        },
+        "copyBytes": {
+          "const": 64
+        },
+        "ownershipCeiling": {
+          "const": 65536
+        },
+        "admitted": {
+          "const": true
+        }
+      },
+      "required": [
+        "copyBytes",
+        "capacityBytes",
+        "copyGrant",
+        "capacityGrant",
+        "ownershipCeiling",
+        "admitted"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    }
+  }
+}

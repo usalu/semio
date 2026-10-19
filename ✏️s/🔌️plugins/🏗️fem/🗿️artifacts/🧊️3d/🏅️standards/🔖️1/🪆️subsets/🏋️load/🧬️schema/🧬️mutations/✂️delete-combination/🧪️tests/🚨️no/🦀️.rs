@@ -13,21 +13,21 @@
 //! The accidental combination is only ever created by this kind's sibling happy path; against the unmutated hall it does not exist.
 
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::{inverse_fem3d_mutation};
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::inverse_fem3d_mutation;
 use semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation;
 
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 
 static BEFORE: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-combination/🚨️no/📸️snapshot/⬅️before/🔣️.json");
 static AFTER: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-combination/🚨️no/📸️snapshot/➡️after/🔣️.json");
 static MUTATION: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-combination/🚨️no/🦠️mutation/🔣️.json");
 static OUTCOME: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-combination/🚨️no/🎯️outcome/🔣️.json");
 
-fn before() -> Fem3dSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+fn before() -> Fem3dSnapshotValue {
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
-fn expected_after() -> Fem3dSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+fn expected_after() -> Fem3dSnapshotValue {
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Fem3dMutation {
     semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
@@ -48,7 +48,7 @@ fn rejection_leaves_the_document_at_the_committed_after() {
 /// 🚨️ The branch this vector pins, level and address together.
 #[test]
 fn the_refusal_is_the_declared_diagnostic() {
-    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "delete-combination/no-such-combo-f42cd6: a refused mutation must carry the empty diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "delete-combination/no-such-combo-f42cd6: exactly one diagnostic is expected, got {messages:?}");
@@ -69,7 +69,7 @@ fn inverse_has_the_declared_shape() {
 fn declared_outcome_holds() {
     let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(semio_framework_value::DslValue::as_str), Some("rejected"), "delete-combination/no-such-combo-f42cd6: this vector declares a rejected outcome");
-    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
     assert_eq!(outcome.get("code").and_then(semio_framework_value::DslValue::as_str), Some(message.code.0.as_str()), "delete-combination/no-such-combo-f42cd6: the declared code must match the emitted one");
     let declared_path: Vec<String> = outcome.get("path").and_then(semio_framework_value::DslValue::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
@@ -79,8 +79,8 @@ fn declared_outcome_holds() {
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical: decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE.as_str()), ("after", AFTER.as_str())] {
-        let decoded: Fem3dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+        let decoded: Fem3dSnapshotValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = semio_framework_value::ToValue::to_value(&decoded);
         let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-combination/no-such-combo-f42cd6: committed {label} JSON is not canonical");
@@ -93,7 +93,7 @@ fn committed_json_is_canonical() {
 /// 🪪️ The fixture is bound to this very kind's own semantic descriptor, never a sibling's.
 #[test]
 fn semantics_bind_the_declared_kind() {
-    let semantics = <Fem3dMutation as protocol::SemanticMutation<Fem3dSnapshot>>::semantics(&mutation());
+    let semantics = <Fem3dMutation as protocol::SemanticMutation<Fem3dSnapshotValue>>::semantics(&mutation());
     assert_eq!(
         (semantics.verb, semantics.entity, semantics.kind, semantics.record),
         ("delete", "combination", "delete-combination", "DeletedCombination"),

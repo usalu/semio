@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.history.fold-backing-birth/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "lengths", "elementBytes", "axes", "expected"],
+  "properties": {
+    "schema": {"const": "semio.history.fold-backing-birth/v1"},
+    "lengths": {"type": "array", "items": {"type": "integer", "minimum": 0}, "minItems": 4},
+    "elementBytes": {"type": "array", "items": {"type": "integer", "minimum": 0}, "minItems": 4},
+    "axes": {"const": ["items", "copy", "capacity", "depth"]},
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["deniedHeapBytes", "backingBeforeGrant", "cancelWaitingBackingBytes", "retirementFrame", "receipt"],
+      "properties": {
+        "deniedHeapBytes": {"const": 0},
+        "backingBeforeGrant": {"const": false},
+        "cancelWaitingBackingBytes": {"const": 0},
+        "retirementFrame": {"const": "separate-actual-frame"},
+        "receipt": {"const": "frame-plus-actual-backing"}
+      }
+    }
+  }
+}

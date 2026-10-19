@@ -1,11 +1,19 @@
-//! 🔺️ Sparse diff builder for `DragSelection3d` — every unlocked addressed part's world origin and target volume's
 //! origin moves by the payload offset, read off the BASE origin, so the leaf replays on any base. A part's board pin
+//! 🔺️ Sparse diff builder for `DragSelection3d` — every unlocked addressed part's world origin and target volume's
 //! tracks the same ground-plane motion through [`PUZZLE5D_FLAT_TO_WORLD`] (board y points the other way), so the two
 //! poses of a part never drift apart.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dPart2dPatch, Puzzle5dPart3dPatch, Puzzle5dPartPatch, Puzzle5dPartModification, Puzzle5dTargetVolumePatch, Puzzle5dTargetVolumeModification};
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dPart2dPatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dPart3dPatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dPartPatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dPartModification;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dTargetVolumePatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dTargetVolumeModification;
 use protocol::list_delta::RowPatch;
-use crate::standards::v1::subsets::any::schema::mutations::{PUZZLE5D_FLAT_TO_WORLD};
+use crate::standards::v1::subsets::any::schema::mutations::PUZZLE5D_FLAT_TO_WORLD;
 use crate::standards::v1::subsets::any::schema::diff::{puzzle5d_selection, puzzle5d_selection_outcome};
+
+
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff

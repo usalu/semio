@@ -19,6 +19,10 @@ use semio_framework_os_pack::pack_rt;
 use semio_framework_dsl_record::RecordSpecProducer;
 use semio_framework_pack_json::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonText, ArtifactCanonicalJsonTree};
 
+#[path="🛬️receive/🦀️.rs"]
+mod receiving;
+pub use receiving::ArtifactChildNativeReceiver;
+
 // 🧩️ Composable-vs-referenceable artifact primitives (ticket `26/08/12/UNIFIED-COMPOSABLE-
 // ARTIFACT-SYSTEM` `📓️design-full-plan.md` §"1. Kernel primitives"). Two structurally distinct
 // relationships between artifacts:

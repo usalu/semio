@@ -1,5 +1,6 @@
 //! 🧪️ Counter domain and direct operations used by the law helper's own tests.
 
+use semio_framework_os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use semio_framework_os_spr::{DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff};
 
 //#region 🔺️StructuralDiff
@@ -31,22 +32,50 @@ impl CounterDiff {
 }
 
 impl MutationDiff<i64> for CounterDiff {
-    fn apply(&self, base: &i64, _capability: semio_framework_os_spr::ApplyCapability) -> MutationApplyResult<i64> {
-        self.deltas.iter().try_fold(*base, |value, delta| value.checked_add(*delta).ok_or_else(|| MutationApplyError::new("mutation.apply.invariant", "counter addition overflowed")))
+
+
+
+
+    fn retire_cold(self) {
+        RETIRED_DIFFS.with(|count| count.set(count.get() + 1));
     }
 
-    fn absorb(&mut self, other: Self) {
-        self.deltas.extend(other.deltas);
+    fn retire_projection(projection: i64) {
+        let _ = projection;
+        RETIRED_PROJECTIONS.with(|count| count.set(count.get() + 1));
     }
 }
 
-impl DiffAlgebra<i64> for CounterDiff {
-    fn inverse(&self, _base: &i64) -> Self {
-        Self { deltas: self.deltas.iter().rev().flat_map(|delta| Self::from_wide(-i128::from(*delta)).deltas).collect() }
+impl ColdMutationDiff<i64> for CounterDiff {
+    fn absorb(&mut self, other: Self) {
+        self.deltas.extend(other.deltas);
     }
+
+    fn apply(&self, base: &mut i64, _capability: semio_framework_os_spr::ApplyCapability) -> MutationApplyResult<()> {
+        let value = self.deltas.iter().try_fold(*base, |value, delta| value.checked_add(*delta).ok_or_else(|| MutationApplyError::new("mutation.apply.invariant", "counter addition overflowed")))?;
+        *base = value;
+        Ok(())
+    }
+}
+
+std::thread_local! {
+    /// 🧮️ How many diffs a law routed through [`MutationDiff::retire_cold`] on this thread.
+    pub static RETIRED_DIFFS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    /// 🧮️ How many projections a law routed through [`MutationDiff::retire_projection`] on this thread.
+    pub static RETIRED_PROJECTIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
+impl DiffAlgebra<i64> for CounterDiff {
+
 
     fn is_empty(&self) -> bool {
         self.deltas.iter().all(|delta| *delta == 0)
+    }
+}
+
+impl ColdDiffAlgebra<i64> for CounterDiff {
+    fn inverse(&self, _base: &i64) -> Self {
+        Self { deltas: self.deltas.iter().rev().flat_map(|delta| Self::from_wide(-i128::from(*delta)).deltas).collect() }
     }
 }
 //#endregion 🔺️StructuralDiff
@@ -102,7 +131,7 @@ mod tests {
             other => panic!("unexpected fixture outcome {other:?}"),
         };
         assert_eq!(level, row["outcome"].as_str().unwrap());
-        assert_eq!(semio_framework_os_spr::apply_diff(outcome.diff(), &base).unwrap(), row["next"].as_i64().unwrap());
+        assert_eq!(protocol::apply_diff_cold(outcome.diff(), &base).unwrap(), row["next"].as_i64().unwrap());
         assert_eq!(mutation.inverse(&base).expect("valid retained mutation inverse fixture").len(), usize::try_from(row["inverseCount"].as_u64().unwrap()).unwrap());
     }
 
@@ -114,11 +143,11 @@ mod tests {
             let diff = CounterDiff { deltas: row["deltas"].as_array().unwrap().iter().map(|value| value.as_str().unwrap().parse().unwrap()).collect() };
             match row["expected"].as_str() {
                 Some(expected) => {
-                    let after = semio_framework_os_spr::apply_diff(&diff, &base).unwrap();
+                    let after = protocol::apply_diff_cold(&diff, &base).unwrap();
                     assert_eq!(after, expected.parse::<i64>().unwrap());
-                    assert_eq!(semio_framework_os_spr::apply_diff(&diff.inverse(&base), &after).unwrap(), base);
+                    assert_eq!(protocol::apply_diff_cold(&diff.inverse(&base), &after).unwrap(), base);
                 }
-                None => assert!(semio_framework_os_spr::apply_diff(&diff, &base).is_err()),
+                None => assert!(protocol::apply_diff_cold(&diff, &base).is_err()),
             }
         }
         let first = CounterDiff::delta(2);
@@ -132,17 +161,17 @@ mod tests {
         let mut right = first;
         right.absorb(tail);
         assert_eq!(left, right);
-        assert_eq!(semio_framework_os_spr::apply_diff(&left, &10), Ok(19));
+        assert_eq!(protocol::apply_diff_cold(&left, &10), Ok(19));
     }
 
     #[test]
     fn minimum_add_inverse_obeys_store_reverse_order() {
         let mutation = CounterMutation::AddCounter(AddCounter { delta: i64::MIN });
         let before = i64::MAX;
-        let after = semio_framework_os_spr::apply_diff(mutation.diff(&before).diff(), &before).unwrap();
+        let after = protocol::apply_diff_cold(mutation.diff(&before).diff(), &before).unwrap();
         let inverse = mutation.inverse(&before).expect("valid retained mutation inverse fixture");
         assert_eq!(inverse, vec![AddCounter { delta: 1 }.into(), AddCounter { delta: i64::MAX }.into()]);
-        let restored = inverse.into_iter().rev().fold(after, |state, operation| semio_framework_os_spr::apply_diff(operation.diff(&state).diff(), &state).unwrap());
+        let restored = inverse.into_iter().rev().fold(after, |state, operation| protocol::apply_diff_cold(operation.diff(&state).diff(), &state).unwrap());
         assert_eq!(restored, before);
     }
 }

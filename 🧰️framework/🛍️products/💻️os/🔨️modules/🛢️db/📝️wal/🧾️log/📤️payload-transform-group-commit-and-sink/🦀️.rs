@@ -254,9 +254,9 @@ impl semio_framework_pack_source::PackSink for SharedBuf {
     async fn write_all(&mut self, bytes: &[u8]) -> Result<(), pack::PackError> {
         let mut cursor = 0;
         while cursor < bytes.len() {
-            let written = lock(&self.0).write_step(&bytes[cursor..]).map_err(|error| pack::PackError::Io(error.to_string()))?;
+            let written = lock(&self.0).write_step(&bytes[cursor..])?;
             if written == 0 {
-                return Err(pack::PackError::Io("WAL tail window accepted no bytes".to_string()));
+                return Err(DbError::LimitExceeded("WAL tail window accepted no bytes"));
             }
             cursor += written;
             semio_framework_async::yield_once().await;

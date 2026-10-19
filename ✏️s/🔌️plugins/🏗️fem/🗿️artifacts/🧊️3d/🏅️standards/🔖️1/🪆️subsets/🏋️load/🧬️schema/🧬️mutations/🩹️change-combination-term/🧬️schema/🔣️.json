@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/fem/3d/1/load/mutation/change-combination-term/schema.json",
+  "title": "ChangeCombinationTerm",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "caseId",
+    "factor"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeCombinationTerm"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Load combination",
+          "de": "Lastfallkombination"
+        },
+        "ref": {
+          "kind": "combination",
+          "domain": "fem3d",
+          "granularity": "combination"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "caseId": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "de": "Lastfall",
+          "en": "Load case"
+        },
+        "ref": {
+          "granularity": "load-case",
+          "domain": "fem3d",
+          "kind": "load-case"
+        },
+        "widget": "reference"
+      }
+    },
+    "factor": {
+      "format": "double",
+      "x-semio-ui": {
+        "label": {
+          "de": "Faktor",
+          "en": "Factor"
+        },
+        "widget": "stepper"
+      },
+      "type": [
+        "number",
+        "null"
+      ]
+    }
+  },
+  "description": "Sets or removes one keyed combination term. A supplied null factor removes the key; other terms and name remain untouched."
+}

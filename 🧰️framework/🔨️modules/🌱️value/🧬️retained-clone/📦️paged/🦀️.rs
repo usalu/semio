@@ -53,12 +53,32 @@ impl<const N: usize> Drop for PagedBytesCursor<N> {
     }
 }
 
+impl<const N:usize> PagedBytesCursor<N> {
+    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{
+        if !self.closing{return Ok(Default::default());}
+        if !self.bytes.terminal_is_empty(){return self.close.next_owner_demands::<PagedList<u8,N>>(true,&self.source,body);}
+        self.close.next_owner_demands::<PagedBytes<N>>(self.output.is_some(),&self.source,body)
+    }
+}
 impl<const N: usize> RetainedCloneCursor<PagedBytes<N>> for PagedBytesCursor<N> {
-    fn advance(&mut self, source: RetainedCloneRef<'_, PagedBytes<N>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn output_ready(&self) -> bool { !self.closing && self.phase == 1 && self.output.is_some() }
+    fn close_started(&self) -> bool { self.closing }
+    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{PagedBytesCursor::close_demands(self,body)}
+
+    fn advance_demands(&self, source: RetainedCloneRef<'_, PagedBytes<N>>, body: usize) -> Result<crate::RetirementDemand, ValueError> {
+        if self.closing || self.phase == 2 { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "paged bytes clone is closing or spent")); }
+        if !source.check_binding(&self.source)? { return Ok(crate::RetirementDemand { copy_bytes: source.binding_copy_bytes(), depth: 1, ..Default::default() }); }
+        if self.output_ready() { return Ok(Default::default()); }
+        let length = source.get().len();
+        Ok(if self.bytes.capacity() < length { crate::RetirementDemand { capacity_bytes: self.bytes.next_capacity_allocation_bytes(length)?.ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "paged bytes capacity action absent"))?, depth: 1, ..Default::default() } } else { crate::RetirementDemand { copy_bytes: if self.bytes.len() < length { (length-self.bytes.len()).min(body.max(1)).min(PAGED_BYTES_CHUNK_BYTES) } else { size_of::<PagedBytes<N>>() }, depth: 1, ..Default::default() } })
+    }
+    fn advance(&mut self, source: RetainedCloneRef<'_, PagedBytes<N>>, body: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.closing {
             return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "paged octet retained clone cursor is closing"));
         }
-        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        let demand = self.advance_demands(source,body)?;
+        if self.output_ready() { return Ok(RetainedCloneStep::Complete(Default::default())); }
+        if !super::retained_clone_grant_admits(grant,demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(RetainedCloneStep::Progress(progress));}
         match self.phase {
             0 => {
@@ -81,7 +101,7 @@ impl<const N: usize> RetainedCloneCursor<PagedBytes<N>> for PagedBytesCursor<N> 
                     if grant.maximum_items == 0 || grant.maximum_copy_bytes == 0 {
                         return Ok(RetainedCloneStep::Progress(Default::default()));
                     }
-                    let count = (source.len() - self.bytes.len()).min(grant.maximum_copy_bytes).min(PAGED_BYTES_CHUNK_BYTES);
+                    let count = (source.len() - self.bytes.len()).min(body.max(1)).min(PAGED_BYTES_CHUNK_BYTES);
                     let start = self.bytes.len();
                     for index in start..start + count {
                         self.bytes.push_reserved(*source.get(index).ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, "paged octet clone source changed"))?).map_err(|_| ValueError::new(ValueRefusalKind::InvariantViolated, "paged octet clone lost its reserved capacity"))?;
@@ -93,7 +113,7 @@ impl<const N: usize> RetainedCloneCursor<PagedBytes<N>> for PagedBytesCursor<N> 
                 }
                 self.output = Some(PagedBytes::from_retained_bytes(std::mem::take(&mut self.bytes)));
                 self.phase = 1;
-                Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+                Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
             }
             1 => Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())),
             _ => Err(ValueError::new(ValueRefusalKind::InvariantViolated, "paged octet retained clone cursor is spent")),
@@ -121,6 +141,7 @@ impl<const N: usize> RetainedCloneCursor<PagedBytes<N>> for PagedBytesCursor<N> 
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !self.closing { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "paged owner must begin close before granted retirement")); }
+        if !super::retained_clone_grant_admits(grant,super::retained_clone_close_demands::<PagedBytes<N>>(self,grant.maximum_copy_bytes)?) {return Ok(RetainedCloneStep::Progress(Default::default()));}
         if !self.close.is_empty() { return self.close.step_granted(grant); }
         let state = &mut *self.state;
         if !state.bytes.terminal_is_empty() { if let Some(step) = state.close.begin_default_granted(&mut state.bytes, grant)? { return Ok(step); } }
@@ -128,18 +149,10 @@ impl<const N: usize> RetainedCloneCursor<PagedBytes<N>> for PagedBytesCursor<N> 
         super::close_retained_binding(&mut state.source, grant)
     }
 
-    fn next_close_depth_demand(&self)->Result<usize,ValueError>{if !self.closing {return Ok(0);} self.close.next_owner_depth_with_binding(!self.bytes.terminal_is_empty()||self.output.is_some(),&self.source)}
-    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
-        if !self.closing { return Ok(0); }
-        self.close.next_copy_with_binding(&self.source)
-    }
-    fn next_close_capacity_byte_demand(&self, maximum_release_bytes: usize) -> Result<usize, ValueError> {
-        if !self.closing { return Ok(0); }
-        if !self.close.is_empty() { return self.close.next_capacity_byte_demand(maximum_release_bytes); }
-        if !self.bytes.terminal_is_empty() { return self.close.next_owner_capacity_with_binding::<PagedList<u8,N>>(true,maximum_release_bytes,&self.source); }
-        self.close.next_owner_capacity_with_binding::<PagedBytes<N>>(self.output.is_some(),maximum_release_bytes,&self.source)
-    }
-    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { if !self.closing { Ok(0) } else { self.close.next_release_with_binding(&self.source) } }
+    fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
+    fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}
     fn terminal_is_empty(&self) -> bool { self.closing && self.bytes.terminal_is_empty() && self.output.is_none() && self.close.is_empty() && self.source.is_none() }
 }
 
@@ -175,15 +188,42 @@ impl<const N: usize> Default for PagedUtf8Cursor<N> {
     }
 }
 
+impl<const N:usize> PagedUtf8Cursor<N> {
+    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{
+        if !self.closing{return Ok(Default::default());}
+        if !self.inner.terminal_is_empty(){return super::nested_retained_clone_close_demands::<PagedList<String,N>>(&self.inner,body);}
+        if self.chunks.is_some(){return self.close.next_owner_demands::<PagedList<String,N>>(true,&self.source,body);}
+        self.close.next_owner_demands::<PagedUtf8<N>>(self.output.is_some(),&self.source,body)
+    }
+}
 impl<const N: usize> RetainedCloneCursor<PagedUtf8<N>> for PagedUtf8Cursor<N> {
-    fn advance(&mut self, source: RetainedCloneRef<'_, PagedUtf8<N>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn output_ready(&self) -> bool { !self.closing && self.phase == 3 && self.output.is_some() }
+    fn close_started(&self) -> bool { self.closing }
+    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{PagedUtf8Cursor::close_demands(self,body)}
+
+    fn advance_demands(&self, source: RetainedCloneRef<'_, PagedUtf8<N>>, body: usize) -> Result<crate::RetirementDemand, ValueError> {
+        if self.closing || self.phase == 4 { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "paged text clone is closing or spent")); }
+        if !source.check_binding(&self.source)? { return Ok(crate::RetirementDemand { copy_bytes: source.binding_copy_bytes(), depth: 1, ..Default::default() }); }
+        if self.output_ready() { return Ok(Default::default()); }
+        match self.phase {
+            0 => super::nested_retained_clone_demands::<PagedList<String,N>>(&self.inner,source.project(1,PagedUtf8::retained_chunks),body),
+            5 => Ok(crate::RetirementDemand { copy_bytes:size_of::<PagedList<String,N>>(),depth:1,..Default::default() }),
+            1 if !self.inner.terminal_is_empty() => super::nested_retained_clone_close_demands::<PagedList<String,N>>(&self.inner,body),
+            1 => Ok(crate::RetirementDemand { depth:1,..Default::default() }),
+            2 => Ok(crate::RetirementDemand { copy_bytes:size_of::<PagedUtf8<N>>(),depth:1,..Default::default() }),
+            _ => Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"paged text clone phase invalid")),
+        }
+    }
+    fn advance(&mut self, source: RetainedCloneRef<'_, PagedUtf8<N>>, body: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.closing {
             return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "paged UTF-8 retained clone cursor is closing"));
         }
-        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        let demand = self.advance_demands(source,body)?;
+        if self.output_ready() { return Ok(RetainedCloneStep::Complete(Default::default())); }
+        if !super::retained_clone_grant_admits(grant,demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(RetainedCloneStep::Progress(progress));}
         match self.phase {
-            0 => match self.inner.advance(source.project(1, PagedUtf8::retained_chunks), grant)? {
+            0 => match self.inner.advance(source.project(1, PagedUtf8::retained_chunks),body, super::nested_retained_clone_grant(grant)?)? {
                 RetainedCloneStep::Progress(progress) => Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(grant, progress, "paged UTF-8 chunks")?)),
                 RetainedCloneStep::Complete(progress) => {
                     let progress = admit_retained_clone_progress(grant, progress, "paged UTF-8 chunks")?;
@@ -196,16 +236,16 @@ impl<const N: usize> RetainedCloneCursor<PagedUtf8<N>> for PagedUtf8Cursor<N> {
                 self.chunks = Some(self.inner.take().ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, "paged UTF-8 chunk cursor completed without its owner"))?);
                 let _ = self.inner.begin_close();
                 self.phase = 1;
-                Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+                Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
             }
             1 => {
                 if !self.inner.terminal_is_empty() {
-                    let step = self.inner.close_step(grant)?;
+                    let step = self.inner.close_step(super::nested_retained_clone_grant(grant)?)?;
                     return Ok(RetainedCloneStep::Progress(super::admit_retained_clone_close(grant, step, self.inner.terminal_is_empty(), "paged UTF-8 chunk cursor close")?.progress()));
                 }
                 if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
                 self.phase = 2;
-                Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+                Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
             }
             2 => {
                 if grant.maximum_items == 0 || grant.maximum_copy_bytes < size_of::<usize>() {
@@ -213,7 +253,7 @@ impl<const N: usize> RetainedCloneCursor<PagedUtf8<N>> for PagedUtf8Cursor<N> {
                 }
                 self.output = Some(PagedUtf8::from_retained_chunks_cloned(self.chunks.take().ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, "paged UTF-8 retained clone lost its chunks"))?, source.get().len()));
                 self.phase = 3;
-                Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<usize>(), retained_capacity_bytes: 0, released_bytes: 0 }))
+                Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: 0, released_bytes: 0 }))
             }
             3 => Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())),
             _ => Err(ValueError::new(ValueRefusalKind::InvariantViolated, "paged UTF-8 retained clone cursor is spent")),
@@ -242,31 +282,18 @@ impl<const N: usize> RetainedCloneCursor<PagedUtf8<N>> for PagedUtf8Cursor<N> {
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !self.closing { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "paged owner must begin close before granted retirement")); }
-        if !self.inner.terminal_is_empty() { let step = self.inner.close_step(grant)?; return Ok(RetainedCloneStep::Progress(super::admit_retained_clone_close(grant, step, self.inner.terminal_is_empty(), "retained child close")?.progress())); }
+        if !super::retained_clone_grant_admits(grant,super::retained_clone_close_demands::<PagedUtf8<N>>(self,grant.maximum_copy_bytes)?) {return Ok(RetainedCloneStep::Progress(Default::default()));}
+        if !self.inner.terminal_is_empty() { let step = self.inner.close_step(super::nested_retained_clone_grant(grant)?)?; return Ok(RetainedCloneStep::Progress(super::admit_retained_clone_close(grant, step, self.inner.terminal_is_empty(), "retained child close")?.progress())); }
         if !self.close.is_empty() { return self.close.step_granted(grant); }
         if let Some(step) = self.close.begin_granted(&mut self.chunks, grant)? { return Ok(step); }
         if let Some(step) = self.close.begin_granted(&mut self.output, grant)? { return Ok(step); }
         super::close_retained_binding(&mut self.source, grant)
     }
 
-    fn next_close_depth_demand(&self)->Result<usize,ValueError>{if !self.closing {return Ok(0);} if !self.inner.terminal_is_empty(){return self.inner.next_close_depth_demand();} self.close.next_owner_depth_with_binding(self.chunks.is_some()||self.output.is_some(),&self.source)}
-    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
-        if !self.closing { return Ok(0); }
-        if !self.inner.terminal_is_empty() { return self.inner.next_close_copy_byte_demand(); }
-        self.close.next_copy_with_binding(&self.source)
-    }
-    fn next_close_capacity_byte_demand(&self, maximum_release_bytes: usize) -> Result<usize, ValueError> {
-        if !self.closing { return Ok(0); }
-        if !self.inner.terminal_is_empty() { return self.inner.next_close_capacity_byte_demand(maximum_release_bytes); }
-        if !self.close.is_empty() { return self.close.next_capacity_byte_demand(maximum_release_bytes); }
-        if self.chunks.is_some() { return self.close.next_owner_capacity_with_binding::<PagedList<String,N>>(true,maximum_release_bytes,&self.source); }
-        self.close.next_owner_capacity_with_binding::<PagedUtf8<N>>(self.output.is_some(),maximum_release_bytes,&self.source)
-    }
-    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
-        if !self.closing { return Ok(0); }
-        if !self.inner.terminal_is_empty() { return self.inner.next_close_release_byte_demand(); }
-        self.close.next_release_with_binding(&self.source)
-    }
+    fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
+    fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}
     fn terminal_is_empty(&self) -> bool { self.closing && self.inner.terminal_is_empty() && self.chunks.is_none() && self.output.is_none() && self.close.is_empty() && self.source.is_none() }
 }
 
@@ -301,6 +328,7 @@ pub struct PagedUtf8BoundedOrdCursor<const N: usize> {
 }
 
 impl<const N: usize> super::ordered_map::BoundedOrdCursor<PagedUtf8<N>> for PagedUtf8BoundedOrdCursor<N> {
+ fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{RetainedCloneBinding::close_demand(if self.left.is_some(){&self.left}else{&self.right},body)}
 fn advance_retirement_demands(&self,_body:usize)->Result<crate::RetirementDemand,ValueError>{Ok(if self.left.is_none()||self.right.is_none(){crate::RetirementDemand{copy_bytes:super::RetainedCloneSource::<u64>::constructor_copy_bytes(),depth:1,..Default::default()}}else{Default::default()})}
 fn begin_close(&mut self)->bool {let started=!self.closing;self.closing=true;started}
 fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{RetainedCloneBinding::copy_demand(if self.left.is_some(){&self.left}else{&self.right})}
@@ -308,7 +336,7 @@ fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{R
 fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{RetainedCloneBinding::release_demand(if self.left.is_some(){&self.left}else{&self.right})}
 fn next_close_depth_demand(&self)->Result<usize,ValueError>{RetainedCloneBinding::depth_demand(if self.left.is_some(){&self.left}else{&self.right})}
 fn terminal_is_empty(&self)->bool{self.left.is_none()&&self.right.is_none()}
-fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"comparator must begin close"));}super::close_retained_binding(if self.left.is_some(){&mut self.left}else{&mut self.right},grant)}
+fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"comparator must begin close"));}let step=super::close_retained_binding(if self.left.is_some(){&mut self.left}else{&mut self.right},grant)?;Ok(if self.left.is_none()&&self.right.is_none(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
     fn compare(&mut self, left: RetainedCloneRef<'_, PagedUtf8<N>>, right: RetainedCloneRef<'_, PagedUtf8<N>>, grant: super::ordered_map::BoundedOrdGrant, retirement:RetainedCloneGrant) -> Result<super::ordered_map::BoundedOrdStep, ValueError> {
         use super::ordered_map::{BoundedOrdProgress, BoundedOrdStep};
         if self.closing { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "paged identifier comparator is closing")); }
@@ -388,15 +416,42 @@ impl<V: RetainedClone, const N: usize> Default for PagedMapCursor<V, N> {
     }
 }
 
+impl<V:RetainedClone,const N:usize> PagedMapCursor<V,N> {
+    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{
+        if !self.closing{return Ok(Default::default());}
+        if !self.inner.terminal_is_empty(){return super::nested_retained_clone_close_demands::<PagedList<(PagedUtf8<{usize::MAX}>,V),N>>(&self.inner,body);}
+        if self.entries.is_some(){return self.close.next_owner_demands::<PagedList<(PagedUtf8<{usize::MAX}>,V),N>>(true,&self.source,body);}
+        self.close.next_owner_demands::<PagedMap<V,N>>(self.output.is_some(),&self.source,body)
+    }
+}
 impl<V: RetainedClone, const N: usize> RetainedCloneCursor<PagedMap<V, N>> for PagedMapCursor<V, N> {
-    fn advance(&mut self, source: RetainedCloneRef<'_, PagedMap<V, N>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn output_ready(&self) -> bool { !self.closing && self.phase == 3 && self.output.is_some() }
+    fn close_started(&self) -> bool { self.closing }
+    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{PagedMapCursor::close_demands(self,body)}
+
+    fn advance_demands(&self, source: RetainedCloneRef<'_, PagedMap<V,N>>, body: usize) -> Result<crate::RetirementDemand, ValueError> {
+        if self.closing || self.phase == 4 { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "paged map clone is closing or spent")); }
+        if !source.check_binding(&self.source)? { return Ok(crate::RetirementDemand { copy_bytes: source.binding_copy_bytes(), depth: 1, ..Default::default() }); }
+        if self.output_ready() { return Ok(Default::default()); }
+        match self.phase {
+            0 => super::nested_retained_clone_demands::<PagedList<(PagedUtf8<{usize::MAX}>,V),N>>(&self.inner,source.project(1,PagedMap::retained_entries),body),
+            5 => Ok(crate::RetirementDemand { copy_bytes:size_of::<PagedList<(PagedUtf8<{usize::MAX}>,V),N>>(),depth:1,..Default::default() }),
+            1 if !self.inner.terminal_is_empty() => super::nested_retained_clone_close_demands::<PagedList<(PagedUtf8<{usize::MAX}>,V),N>>(&self.inner,body),
+            1 => Ok(crate::RetirementDemand { depth:1,..Default::default() }),
+            2 => Ok(crate::RetirementDemand { copy_bytes:size_of::<PagedMap<V,N>>(),depth:1,..Default::default() }),
+            _ => Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"paged map clone phase invalid")),
+        }
+    }
+    fn advance(&mut self, source: RetainedCloneRef<'_, PagedMap<V, N>>, body: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.closing {
             return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "paged map retained clone cursor is closing"));
         }
-        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        let demand = self.advance_demands(source,body)?;
+        if self.output_ready() { return Ok(RetainedCloneStep::Complete(Default::default())); }
+        if !super::retained_clone_grant_admits(grant,demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(RetainedCloneStep::Progress(progress));}
         match self.phase {
-            0 => match self.inner.advance(source.project(1, PagedMap::retained_entries), grant)? {
+            0 => match self.inner.advance(source.project(1, PagedMap::retained_entries),body, super::nested_retained_clone_grant(grant)?)? {
                 RetainedCloneStep::Progress(progress) => Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(grant, progress, "paged map entries")?)),
                 RetainedCloneStep::Complete(progress) => {
                     let progress = admit_retained_clone_progress(grant, progress, "paged map entries")?;
@@ -409,16 +464,16 @@ impl<V: RetainedClone, const N: usize> RetainedCloneCursor<PagedMap<V, N>> for P
                 self.entries = Some(self.inner.take().ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, "paged map entry cursor completed without its owner"))?);
                 let _ = self.inner.begin_close();
                 self.phase = 1;
-                Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+                Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
             }
             1 => {
                 if !self.inner.terminal_is_empty() {
-                    let step = self.inner.close_step(grant)?;
+                    let step = self.inner.close_step(super::nested_retained_clone_grant(grant)?)?;
                     return Ok(RetainedCloneStep::Progress(super::admit_retained_clone_close(grant, step, self.inner.terminal_is_empty(), "paged object entry cursor close")?.progress()));
                 }
                 if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
                 self.phase = 2;
-                Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+                Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
             }
             2 => {
                 if grant.maximum_items == 0 {
@@ -426,7 +481,7 @@ impl<V: RetainedClone, const N: usize> RetainedCloneCursor<PagedMap<V, N>> for P
                 }
                 self.output = Some(PagedMap::from_retained_entries_cloned(self.entries.take().ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, "paged map retained clone lost its entries"))?));
                 self.phase = 3;
-                Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+                Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
             }
             3 => Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())),
             _ => Err(ValueError::new(ValueRefusalKind::InvariantViolated, "paged map retained clone cursor is spent")),
@@ -455,31 +510,18 @@ impl<V: RetainedClone, const N: usize> RetainedCloneCursor<PagedMap<V, N>> for P
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !self.closing { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "paged owner must begin close before granted retirement")); }
-        if !self.inner.terminal_is_empty() { let step = self.inner.close_step(grant)?; return Ok(RetainedCloneStep::Progress(super::admit_retained_clone_close(grant, step, self.inner.terminal_is_empty(), "retained child close")?.progress())); }
+        if !super::retained_clone_grant_admits(grant,super::retained_clone_close_demands::<PagedMap<V,N>>(self,grant.maximum_copy_bytes)?) {return Ok(RetainedCloneStep::Progress(Default::default()));}
+        if !self.inner.terminal_is_empty() { let step = self.inner.close_step(super::nested_retained_clone_grant(grant)?)?; return Ok(RetainedCloneStep::Progress(super::admit_retained_clone_close(grant, step, self.inner.terminal_is_empty(), "retained child close")?.progress())); }
         if !self.close.is_empty() { return self.close.step_granted(grant); }
         if let Some(step) = self.close.begin_granted(&mut self.entries, grant)? { return Ok(step); }
         if let Some(step) = self.close.begin_granted(&mut self.output, grant)? { return Ok(step); }
         super::close_retained_binding(&mut self.source, grant)
     }
 
-    fn next_close_depth_demand(&self)->Result<usize,ValueError>{if !self.closing {return Ok(0);} if !self.inner.terminal_is_empty(){return self.inner.next_close_depth_demand();} self.close.next_owner_depth_with_binding(self.entries.is_some()||self.output.is_some(),&self.source)}
-    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
-        if !self.closing { return Ok(0); }
-        if !self.inner.terminal_is_empty() { return self.inner.next_close_copy_byte_demand(); }
-        self.close.next_copy_with_binding(&self.source)
-    }
-    fn next_close_capacity_byte_demand(&self, maximum_release_bytes: usize) -> Result<usize, ValueError> {
-        if !self.closing { return Ok(0); }
-        if !self.inner.terminal_is_empty() { return self.inner.next_close_capacity_byte_demand(maximum_release_bytes); }
-        if !self.close.is_empty() { return self.close.next_capacity_byte_demand(maximum_release_bytes); }
-        if self.entries.is_some() { return self.close.next_owner_capacity_with_binding::<PagedList<(PagedUtf8<{usize::MAX}>,V),N>>(true,maximum_release_bytes,&self.source); }
-        self.close.next_owner_capacity_with_binding::<PagedMap<V,N>>(self.output.is_some(),maximum_release_bytes,&self.source)
-    }
-    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
-        if !self.closing { return Ok(0); }
-        if !self.inner.terminal_is_empty() { return self.inner.next_close_release_byte_demand(); }
-        self.close.next_release_with_binding(&self.source)
-    }
+    fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
+    fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}
     fn terminal_is_empty(&self) -> bool { self.closing && self.inner.terminal_is_empty() && self.entries.is_none() && self.output.is_none() && self.close.is_empty() && self.source.is_none() }
 }
 

@@ -1,5 +1,5 @@
-//! ↩️ Inverse for `RemoveObjectVortex` — reconstructs an `add-object-vortex` of the captured BASE
 //! vortex, then re-`connect-vortices`es every attraction BASE shows touching it (severed cascade).
+//! ↩️ Inverse for `RemoveObjectVortex` — reconstructs an `add-object-vortex` of the captured BASE
 //! Missing target ⇒ `Vec::new()`.
 use super::mutation::RemoveObjectVortex;
 use {crate::add_object_vortex::mutation::AddObjectVortex, crate::connect_vortices::mutation::ConnectVortices};

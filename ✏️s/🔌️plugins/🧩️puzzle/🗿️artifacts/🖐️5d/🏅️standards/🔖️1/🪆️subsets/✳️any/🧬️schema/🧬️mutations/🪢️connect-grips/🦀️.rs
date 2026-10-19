@@ -1,5 +1,5 @@
-//! 🔗 Puzzle5d mutation — `ConnectGrips`: creates a fastener between two full grip ids
 //! (`part_id:grip_id`), full initial connection-parameterization payload included.
+//! 🔗 Puzzle5d mutation — `ConnectGrips`: creates a fastener between two full grip ids
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::Puzzle5dSnapshot;
 
@@ -44,6 +44,17 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "grips", kind: "connect-grips", record: "ConnectedGrips" };
 
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect \"{}\" to \"{}\"", self.source, self.target), &format!("\"{}\" mit \"{}\" verbinden", self.source, self.target))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ConnectGrips {
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
@@ -53,11 +64,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect \"{}\" to \"{}\"", self.source, self.target), &format!("\"{}\" mit \"{}\" verbinden", self.source, self.target))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation

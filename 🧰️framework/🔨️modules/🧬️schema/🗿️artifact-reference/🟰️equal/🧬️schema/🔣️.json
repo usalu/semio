@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:artifact-reference-typed-equality:v1",
+  "type": "object",
+  "required": [
+    "bodyBytes",
+    "cancelCuts",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "bodyBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cancelCuts": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "left",
+          "right",
+          "equal"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "left": {
+            "$ref": "#/$defs/reference"
+          },
+          "right": {
+            "$ref": "#/$defs/reference"
+          },
+          "equal": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "reference": {
+      "type": "object",
+      "required": [
+        "artifactId",
+        "dialect"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "dialect": {
+          "type": "object",
+          "required": [
+            "artifactKind",
+            "standard",
+            "subset"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "artifactKind": {
+              "type": "string"
+            },
+            "standard": {
+              "type": "string"
+            },
+            "subset": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

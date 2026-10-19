@@ -1,0 +1,84 @@
+{
+  "policy": {
+    "maximumItems": 1,
+    "combinedBodyCapacity": 4096,
+    "separateRelease": true,
+    "originalBoxIdentity": true,
+    "lastCompleteUntilHandoff": true,
+    "maximumTurns": 65536
+  },
+  "cases": [
+    {
+      "name": "one-original-camera",
+      "before": [
+        0,
+        0,
+        0
+      ],
+      "leaves": [
+        [
+          4,
+          2,
+          1
+        ]
+      ],
+      "expected": [
+        4,
+        2,
+        1
+      ]
+    },
+    {
+      "name": "ordered-original-cameras",
+      "before": [
+        0,
+        0,
+        0
+      ],
+      "leaves": [
+        [
+          4,
+          2,
+          1
+        ],
+        [
+          9,
+          8,
+          7
+        ]
+      ],
+      "expected": [
+        9,
+        8,
+        7
+      ]
+    },
+    {
+      "name": "same-native-value",
+      "before": [
+        0,
+        0,
+        0
+      ],
+      "leaves": [
+        [
+          3,
+          2,
+          1
+        ]
+      ],
+      "expected": [
+        3,
+        2,
+        1
+      ]
+    }
+  ],
+  "cancelPrefixes": [
+    0,
+    1,
+    2,
+    8,
+    16
+  ]
+}

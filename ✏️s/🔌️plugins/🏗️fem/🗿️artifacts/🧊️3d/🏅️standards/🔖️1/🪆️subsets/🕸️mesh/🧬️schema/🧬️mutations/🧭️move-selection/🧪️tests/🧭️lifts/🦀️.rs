@@ -19,7 +19,7 @@ fn applies_to_committed_after_with_the_committed_diff() {
     laws::forward(BEFORE.as_str(), MUTATION.as_str(), AFTER.as_str(), DIFF.as_str());
 }
 
-/// ↩️ The computed inverse — whole-record replacements of every moved node and solid — restores `before` exactly.
+/// ↩️ The computed inverse restores only the changed geometry fields of every moved node and solid.
 #[test]
 fn inverse_restores_before() {
     laws::inverse_restores(BEFORE.as_str(), MUTATION.as_str());

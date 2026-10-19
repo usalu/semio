@@ -1,5 +1,4 @@
-/** 🏭️ Public `@semio-tech/repo-lib/authoring` entry (artifact authoring: generator previews and their contracts, scaffolding, projection adapters, canonical serialization, launch and collection catalogs); explicit re-exports of the library paths that own each member, nothing is defined here. */
-export { checkLaunchCatalog, readLaunchSeed, writeLaunchCatalog, writeLaunchSeed } from "../../../🏗️authoring/🚀️launch-catalog/🟦️.ts";
+/** 🏭️ Public `@semio-tech/repo-lib/authoring` entry (artifact authoring: generator previews and their contracts, scaffolding, projection adapters, canonical serialization, collection catalogs); explicit re-exports of the library paths that own each member, nothing is defined here. */
 export { authorArtifactScaffold } from "../../../🏗️builder/🟦️.ts";
 export type { ArtifactScaffoldLeaf, ArtifactScaffoldOptions, ArtifactScaffoldResult } from "../../../🏗️builder/🟦️.ts";
 export { parseGeneratorPreviewProgressPolicyV1, receiveGeneratorPreviewProgressV1, serializeGeneratorPreviewProgressV1 } from "../../../🏭️generator/👁️preview/📈️progress/🟦️.ts";

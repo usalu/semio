@@ -298,7 +298,7 @@ async fn undo_applies_the_recorded_inverse_and_produces_a_fresh_commit() {
     let original = protocol::MutationEnvelope {
         mutation_id: protocol::MutationId("op-1".to_string()),
         document_id: document_id().await,
-        actor: protocol::ActorId("alice".to_string()),
+        actor: protocol::ActorId("alice".to_string().into()),
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
@@ -310,7 +310,7 @@ async fn undo_applies_the_recorded_inverse_and_produces_a_fresh_commit() {
     engine.submit(CommandBatch::new(vec![original]).await.unwrap(), SubmitOptions::default(), 0).await.unwrap();
     assert!(engine.get("x").await.unwrap().is_some());
 
-    let receipt = engine.undo(&protocol::MutationId("op-1".to_string()), protocol::MutationId("op-1-undo".to_string()), protocol::ActorId("alice".to_string()), 1).await.unwrap();
+    let receipt = engine.undo(&protocol::MutationId("op-1".to_string()), protocol::MutationId("op-1-undo".to_string()), protocol::ActorId("alice".to_string().into()), 1).await.unwrap();
     assert_eq!(receipt.frontier.head_seq, 2);
     assert!(engine.get("x").await.unwrap().is_none(), "undo must have applied the recorded inverse (delete x)");
 }
@@ -320,7 +320,7 @@ async fn undo_of_an_unknown_operation_errs_not_found() {
     let storage = storage().await;
     let mut engine = ArtifactEngine::create(document_id().await, storage, ArtifactEngineConfig::default(), 0).unwrap();
     let never_applied = protocol::MutationId("never-applied".to_string());
-    let result = engine.undo(&never_applied, protocol::MutationId("undo-1".to_string()), protocol::ActorId("alice".to_string()), 0);
+    let result = engine.undo(&never_applied, protocol::MutationId("undo-1".to_string()), protocol::ActorId("alice".to_string().into()), 0);
     assert!(matches!(result.await, Err(DbError::NotFound(_))));
 }
 //#endregion 🔖️Undo

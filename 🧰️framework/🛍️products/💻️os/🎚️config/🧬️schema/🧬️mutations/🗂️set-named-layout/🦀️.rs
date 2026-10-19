@@ -22,6 +22,20 @@ impl SetNamedLayout {
 
 impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetNamedLayout {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "named-layout", kind: "set-named-layout", record: "Set" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        match self.layout {
+            Some(_) => semio_framework_ui_locale::LocalizedLabel::native(&format!("Save layout {:?}", self.layout_id), &format!("Layout {:?} speichern", self.layout_id)),
+            None => semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove layout {:?}", self.layout_id), &format!("Layout {:?} entfernen", self.layout_id)),
+        }
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["named-layouts".to_string(), self.app_id.clone(), self.layout_id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<UiPreferences, UiPreferencesConfigMutation> for SetNamedLayout {
     fn diff(&self, base: &UiPreferences) -> protocol::MutationOutcome<UiPreferencesDiff> {
         if self.saved(base) == self.layout.as_ref() {
             return protocol::MutationOutcome::new(UiPreferencesDiff::default()).warning("mutation.no-op", "named layout already has the requested value.");
@@ -34,13 +48,4 @@ impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetN
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        match self.layout {
-            Some(_) => semio_framework_ui_locale::LocalizedLabel::native(&format!("Save layout {:?}", self.layout_id), &format!("Layout {:?} speichern", self.layout_id)),
-            None => semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove layout {:?}", self.layout_id), &format!("Layout {:?} entfernen", self.layout_id)),
-        }
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["named-layouts".to_string(), self.app_id.clone(), self.layout_id.clone()]
-    }
 }

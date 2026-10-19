@@ -1,6 +1,10 @@
-//! 🔺️ Sparse diff builder for `RemoveObjectVortex` — removes one vortex from the owner object's `vortices`
 //! and severs any attraction referencing the removed vortex (full id `object_id:vortex_id`).
-use semio_s_artifact_puzzle_3d_diff::{Puzzle3dAttractionsDelta, Puzzle3dDiff, Puzzle3dObjectPatch, Puzzle3dObjectsDelta, Puzzle3dVorticesDelta};
+//! 🔺️ Sparse diff builder for `RemoveObjectVortex` — removes one vortex from the owner object's `vortices`
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dAttractionsDelta;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dObjectPatch;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dObjectsDelta;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dVorticesDelta;
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Diff

@@ -37,7 +37,8 @@ use crate::editor::puzzle5d::terminology::puzzle5d_labels;
 use crate::editor::puzzle5d::testkit::*;
 use crate::editor::puzzle5d::entities::empty_document;
 use crate::editor::puzzle5d::view::Puzzle5dInteractionSnapshot;
-use semio_framework_plugin::{ViewModel, ViewWindowInstance};
+use semio_framework_plugin::ViewModel;
+use semio_framework_plugin::ViewWindowInstance;
 
 fn labels() -> &'static Puzzle5dLabels {
     puzzle5d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("an admitted host label axis")

@@ -17,7 +17,7 @@ pub use change_result_field::ChangeResultField;
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "mutation", content = "payload", rename_all = "camelCase"))]
-#[mutations(snapshot = EnergyModelConfig, diff = EnergyModelConfigDiff, schema = "energy.model.config")]
+#[mutations(snapshot = EnergyModelConfig, diff = EnergyModelConfigDiff, schema = "energy.model.config", reference = EnergyModelConfig, reference_diff = EnergyModelConfigDiff)]
 pub enum EnergyModelConfigMutation {
     ChangeSimulationSettings(ChangeSimulationSettings),
     ChangeResultField(ChangeResultField),

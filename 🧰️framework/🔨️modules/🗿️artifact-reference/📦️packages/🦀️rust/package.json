@@ -6,7 +6,9 @@
   "bundleKind": "library",
   "scripts": {
     "test-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-artifact-reference-rs:test-native",
-    "test:binding": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-artifact-reference-rs:test-binding"
+    "test:binding": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-artifact-reference-rs:test-binding",
+    "test-retained-equality-source": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-artifact-reference-rs:test-retained-equality-source",
+    "test-retained-equality-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-artifact-reference-rs:test-retained-equality-native"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

@@ -34,18 +34,22 @@ async fn a_fresh_session_config_names_the_example_its_document_was_seeded_from()
 /// document-replacement emit with no coalesce key — chunked by mutation kind, not one ingress per item.
 #[test]
 fn set_active_example_chunks_by_kind_and_emits_one_uncoalesced_edit() {
+    let mut original = semio_s_plugin_puzzle_retained::testing::OriginalFixture::new(
+        semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_s_plugin_puzzle_retained::testing::fixture_stock(), || Some(0), u64::MAX, 1 << 24);
+
     use semio_s_plugin_puzzle_retained::testing::PuzzleCommandWorkStep;
     let snapshot = Puzzle3dPlaySnapshot::new(semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
     let command = Puzzle3dCommand::from_action("setActiveExample", Some(json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).expect("setActiveExample command decodes");
-    let mut work = Puzzle3dSetActiveExampleWork::default();
+    let mut work = original.construct(Puzzle3dSetActiveExampleWork::original_birth_demands().unwrap(), |scope| Puzzle3dSetActiveExampleWork::from_original_construction(scope));
     let extent = work.extent(&command, &snapshot, &interaction, None).expect("nakagin example fits the fixed bounded work envelope");
     let mut progress_steps = 0usize;
     let emit = loop {
         assert!(progress_steps <= extent + 8, "setActiveExample work did not reach Complete within its own declared extent");
-        match semio_s_plugin_puzzle_retained::testing::step(&mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
+        match semio_s_plugin_puzzle_retained::testing::step(&mut original, &mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
+            PuzzleCommandWorkStep::Pending { .. } => continue,
             PuzzleCommandWorkStep::Progress { .. } => progress_steps += 1,
             PuzzleCommandWorkStep::Complete(emit) => break emit,
             PuzzleCommandWorkStep::Download(_) => panic!("this work must publish a store emission, never a segmented download"),
@@ -72,6 +76,8 @@ fn set_active_example_chunks_by_kind_and_emits_one_uncoalesced_edit() {
         progress_steps <= PUZZLE3D_SET_ACTIVE_EXAMPLE_FIXED_STEPS + items.div_ceil(PUZZLE3D_SET_ACTIVE_EXAMPLE_CHUNK) + 10,
         "per-stage ceil(len/chunk) plus transitions must stay a bounded handful; observed {progress_steps} for {items} items"
     );
+    semio_s_plugin_puzzle_retained::testing::close(&mut original, &mut work);
+    original.finish();
 }
 
 /// 🎵️ Wave W-X: the migrated tool-job path publishes that one emit as one history entry.
@@ -156,21 +162,26 @@ async fn the_nakagin_switch_assembles_every_object_onto_a_mesh_the_same_publicat
 /// `set_active_example_lands_as_one_edit_and_republishes_the_world_scene`.
 #[test]
 fn set_active_example_history_is_one_set_active_example_row() {
+    let mut original = semio_s_plugin_puzzle_retained::testing::OriginalFixture::new(
+        semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_s_plugin_puzzle_retained::testing::fixture_stock(), || Some(0), u64::MAX, 1 << 24);
+
     use semio_s_plugin_puzzle_retained::testing::PuzzleCommandWorkStep;
     let snapshot = Puzzle3dPlaySnapshot::new(semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
     let command = Puzzle3dCommand::from_action("setActiveExample", Some(json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).expect("setActiveExample command decodes");
-    let mut work = Puzzle3dSetActiveExampleWork::default();
+    let mut work = original.construct(Puzzle3dSetActiveExampleWork::original_birth_demands().unwrap(), |scope| Puzzle3dSetActiveExampleWork::from_original_construction(scope));
     let emit = loop {
-        match semio_s_plugin_puzzle_retained::testing::step(&mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
-            PuzzleCommandWorkStep::Progress { .. } => {}
+        match semio_s_plugin_puzzle_retained::testing::step(&mut original, &mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
+            PuzzleCommandWorkStep::Progress { .. } | PuzzleCommandWorkStep::Pending { .. } => {}
             PuzzleCommandWorkStep::Complete(emit) => break emit,
             PuzzleCommandWorkStep::Download(_) => panic!("this work must publish a store emission, never a segmented download"),
         }
     };
     assert!(emit.window_config_mutations.is_empty(), "a scene_snapshot switch must not emit a separate window-resize undo step");
+    semio_s_plugin_puzzle_retained::testing::close(&mut original, &mut work);
+    original.finish();
 }
 
 /// 🎯️ Wave W-S2: a document swap must hand the render host a NEW camera-fit revision, and an

@@ -10,7 +10,7 @@ async fn durable_map_fixed_host_slot_retains_every_live_owner_across_request_err
     let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     let mut observed_uncertain_error = false;
     let mut observed_committed = false;
-    for _ in 0..128 {
+    for _ in 0..4096 {
         let request_observation = host.advance(grant);
         match request_observation {
             Err(DurableOwnedGroupDecisionError::Codec(error)) if error == "uncertain sync result" => {
@@ -27,7 +27,7 @@ async fn durable_map_fixed_host_slot_retains_every_live_owner_across_request_err
                 assert!(host.acknowledge(), "only the receipt retained by the fixed host can unlock terminal handoff");
             }
             Ok(DurableOwnedThreeStoreCommitAdvanceV1::Complete) => break,
-            Ok(DurableOwnedThreeStoreCommitAdvanceV1::Progress(_) | DurableOwnedThreeStoreCommitAdvanceV1::Blocked) => {}
+            Ok(DurableOwnedThreeStoreCommitAdvanceV1::Progress(_) | DurableOwnedThreeStoreCommitAdvanceV1::DiagnosticProgress(_, _) | DurableOwnedThreeStoreCommitAdvanceV1::Blocked) => {}
             Err(error) => panic!("mounted Map operation returned an unexpected terminal error: {error}"),
         }
     }
@@ -55,7 +55,7 @@ async fn durable_map_fixed_host_slot_cancellation_after_uncertain_io_waits_for_t
     let mut host = coordinator.mount_map(parent, drawing, value, sink);
     let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     let mut dropped_uncertain_request = false;
-    for _ in 0..128 {
+    for _ in 0..4096 {
         match host.advance(grant) {
             Err(DurableOwnedGroupDecisionError::Codec(error)) if error == "uncertain sync result" => {
                 dropped_uncertain_request = true;
@@ -65,7 +65,7 @@ async fn durable_map_fixed_host_slot_cancellation_after_uncertain_io_waits_for_t
                 assert_eq!([snapshot.parent.n, snapshot.drawing.n, snapshot.value.n], [Some(0), Some(0), Some(0)]);
             }
             Ok(DurableOwnedThreeStoreCommitAdvanceV1::Complete) => break,
-            Ok(DurableOwnedThreeStoreCommitAdvanceV1::Progress(_) | DurableOwnedThreeStoreCommitAdvanceV1::Blocked) => {}
+            Ok(DurableOwnedThreeStoreCommitAdvanceV1::Progress(_) | DurableOwnedThreeStoreCommitAdvanceV1::DiagnosticProgress(_, _) | DurableOwnedThreeStoreCommitAdvanceV1::Blocked) => {}
             Ok(DurableOwnedThreeStoreCommitAdvanceV1::AwaitingAck(_)) => panic!("trusted absence cannot produce a commit acknowledgement"),
             Err(error) => panic!("fixed Map host returned an unexpected cancellation error: {error}"),
         }
@@ -103,7 +103,7 @@ async fn durable_store_group_rejects_foreign_anchor_receipt_before_visibility_an
     let pending = capture_store_owned_three_snapshot(&parent, &drawing, &value).expect("foreign receipt cannot flip visibility");
     assert_eq!([pending.parent.n, pending.drawing.n, pending.value.n], [Some(0), Some(0), Some(0)]);
     assert!(coordinator.cancel());
-    for _ in 0..64 {
+    for _ in 0..4096 {
         coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant).expect("trusted absence cleanup turn");
         if coordinator.terminal_is_empty() {
             break;
@@ -199,7 +199,17 @@ fn durable_byte_carriers_preserve_octets_under_the_declared_ownership_ceiling() 
         assert_eq!(bytes.len() as u64, case["length"].as_u64().unwrap());
         assert_eq!(semio_framework_hash::sha256_hex(&bytes), case["sha256"].as_str().unwrap());
         assert_eq!(semio_framework_value::bytes::encode_base64(&bytes), case["base64"].as_str().unwrap());
-        let unbound = DurableUnboundOneItemOutcomeV1 {
+                let mut member = decision().parent;
+        member.recovery_pack = bytes.clone();
+        let value = ValueToValue::to_value(&member);
+        let DslValue::Object(fields) = &value else { panic!("member retains its finite original fields"); };
+        let recovery = fields.iter().find(|(key, _)| key == "recoveryPack").unwrap();
+        assert!(matches!(&recovery.1, DslValue::Bytes(octets) if octets == &bytes));
+        let (view, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| DslField::projection_view(&member, &[6]).unwrap());
+        assert!(matches!(view, semio_framework_dsl_record::native_encoding::FieldProjectionView::IntrinsicBytes(octets) if octets.as_ptr() == member.recovery_pack.as_ptr() && octets.len() == bytes.len()));
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        assert_eq!(<DurableOwnedGroupMemberV1 as ValueFromValue>::from_value(value).unwrap(), member);
+let unbound = DurableUnboundOneItemOutcomeV1 {
             schema: DURABLE_OWNED_GROUP_UNBOUND_OUTCOME_SCHEMA_V1.into(),
             recovery_schema: PARENT_RECOVERY_SCHEMA.into(),
             operation: 101,

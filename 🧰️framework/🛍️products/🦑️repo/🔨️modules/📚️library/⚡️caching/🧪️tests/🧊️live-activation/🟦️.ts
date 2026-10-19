@@ -1,5 +1,6 @@
-import {preparePlaygroundSourceFixtureV1} from "../🧊️preparation/🟦️.ts";
 import {testMethodV1,testRecordV1,testStringsV1} from "../📋️values/🟦️.ts";
+import {preparePlaygroundFixtureTargetsV1} from "../🎮️playground-preparation/🟦️.ts";
+import {preparePlaygroundSourceFixtureV1,type PlaygroundPreparationTargetV1} from "../🧊️preparation/🟦️.ts";
 import {type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {type ResourceLeaseControl} from "@semio-tech/process/leases";
 import assert from "node:assert/strict";
@@ -22,6 +23,8 @@ export async function testWgpuLiveActivation(workspace: string, output: string, 
   put(join(owner, "package.json"), JSON.stringify({ name: fixture.project, private: true }));
   const { cacheInternals, libraryBootstrap } = await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
   await libraryBootstrap;
+  const receivedTargets=await preparePlaygroundFixtureTargetsV1(workspace,root,invocation,phaseControl);
+  assert(receivedTargets[`prepare-${fixture.variant}-wgpu-${fixture.profile}`]);
   const {contracts,catalogContributions,context,check}=preparePlaygroundSourceFixtureV1(workspace,root,invocation,phaseControl);
   const targets = testRecordV1(await testMethodV1(cacheInternals,"playgroundPreparationTargets",["component/Cargo.toml"], root, owner, contracts, catalogContributions, context));
   const targetFor = (name:string) => testRecordV1(targets,name);
@@ -35,7 +38,7 @@ export async function testWgpuLiveActivation(workspace: string, output: string, 
     assert.equal(target.continuous, true);
   }
   const prepare = `prepare-${fixture.variant}-wgpu-${fixture.profile}`, activate = `activate-${fixture.variant}-wgpu-${fixture.profile}`;
-  assert.equal(targetFor(prepare).cache, false);
+  assert.equal(targetFor(prepare).cache, false, "Preparation owns its bounded build driver before activation");
   assert.equal(targetFor(activate).cache, false, "Live installation and reload publication must execute after every preparation/cache restoration");
   assert.deepEqual(targetFor(activate).outputs, [`{workspaceRoot}/.cache/b/p/m/browser/${fixture.profile}/runtime/wgpu/${fixture.variant}`], "Uncached activation still owns its complete live output namespace");
   assert.deepEqual(targetFor(activate).dependsOn, [prepare]);

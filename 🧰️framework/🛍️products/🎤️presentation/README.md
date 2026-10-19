@@ -19,19 +19,19 @@ mount it through the renderer.
 
 ## Commands
 
-Everything runs through each package's `📜️script.ts`; `📋️project.json` registers the same entry
-points as build targets, which the dashboard offers as commands (`<project>:<target>`, `bun run dashboard`).
+Start `bun run dashboard`, choose **New Task** (`Ctrl+B n`) and search
+`presentation test` or `projektetage dev/build`. Each owner target routes to its
+`📜️script.ts` through the build graph.
 
 ```bash
-cd "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript"
-bun ./📜️script.ts test quick                # the core model
-
-cd "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react"
-bun ./📜️script.ts test quick                # the reveal.js renderer
-
-bun repo run @semio-tech/mit-bestand-praesentation-projektetage:dev     # the projektetage deck
-bun repo run @semio-tech/mit-bestand-praesentation-projektetage:build   # its static site
+bun run dashboard run @semio-tech/presentation:test -- quick
+bun run dashboard run @semio-tech/presentation-react:test -- quick
+bun run dashboard run @semio-tech/mit-bestand-praesentation-projektetage:dev --detach --wait-ready
+bun run dashboard run @semio-tech/mit-bestand-praesentation-projektetage:build
 ```
+
+The deck's task offers **Open ready address** (`Ctrl+B u`). Task overview retains
+output and its menu offers restart, stop and cancellation.
 
 ## Domain model
 

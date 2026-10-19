@@ -10,7 +10,7 @@ use dashboard_preferences::Change;
 use dashboard_preferences::keymap::{KeyName, KeySpec, Scope};
 use semio_framework_ui_tui_engine::Tui;
 use semio_framework_ui_tui_core::event::{mods, Event, Key, KeyEvent, KeypadKey, MouseButton, MouseEvent, MouseKind};
-use semio_framework_ui_tui_frame::layout::{reorder_stack_tab, resize_split, resize_window, zoom_window};
+use semio_framework_ui_tui_frame::layout::{dock_window, reorder_stack_tab, resize_split, resize_window, zoom_window, DockPlacement};
 use semio_framework_ui_tui_frame::scene::NodeId;
 use semio_framework_ui_tui_core::signal::WidgetSignal;
 use semio_framework_ui_tui_widgets::widget::WidgetState;
@@ -21,7 +21,7 @@ const ARMED_FIRST: &[&str] = &["show-help", "new-task", "show-tasks", "split-rig
 
 /// 🎬️ Every action a keymap binding can name; the ids are data, this is the one place that knows what they do.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Action { NewTask, ShowTasks, ShowSettings, ShowHelp, ShowHiddenTasks, SearchOutput, RefreshCommands, CancelDiscovery, RestartTask, StopTask, KillTask, CopySelection, ToggleInput, ToggleAppearance, ToggleLanguage, NextWindow, PreviousWindow, SplitDown, SplitRight, GrowWindow, ShrinkWindow, Zoom, CloseWindow, Detach, Shutdown, CancelPrefix, SendPrefix }
+pub(super) enum Action { NewTask, ShowTasks, ShowSettings, ShowHelp, ShowHiddenTasks, SearchOutput, RefreshCommands, CancelDiscovery, RestartTask, StopTask, KillTask, OpenReady, CancelOpenReady, CopySelection, ToggleInput, ToggleAppearance, ToggleLanguage, NextWindow, PreviousWindow, SplitDown, SplitRight, DockLeft, DockRight, DockTop, DockBottom, JoinWindow, TabTopLeft, TabTopRight, TabBottomLeft, TabBottomRight, TabLeft, TabRight, GrowWindow, ShrinkWindow, Zoom, CloseWindow, Detach, Shutdown, CancelPrefix, SendPrefix }
 
 impl Action {
     /// 🪪️ The id a keymap binding names this action by.
@@ -29,10 +29,13 @@ impl Action {
         match self {
             Self::NewTask => "new-task", Self::ShowTasks => "show-tasks", Self::ShowSettings => "show-settings", Self::ShowHelp => "show-help", Self::ShowHiddenTasks => "show-hidden-tasks", Self::SearchOutput => "search-output",
             Self::RefreshCommands => "refresh-commands", Self::CancelDiscovery => "cancel-discovery", Self::RestartTask => "restart-task", Self::StopTask => "stop-task", Self::KillTask => "kill-task",
+            Self::OpenReady => "open-ready", Self::CancelOpenReady => "cancel-open-ready",
             Self::CopySelection => "copy-selection", Self::ToggleInput => "toggle-input", Self::ToggleAppearance => "toggle-appearance", Self::ToggleLanguage => "toggle-language",
             Self::NextWindow => "next-window", Self::PreviousWindow => "previous-window", Self::SplitDown => "split-down", Self::SplitRight => "split-right", Self::GrowWindow => "grow-window",
             Self::ShrinkWindow => "shrink-window", Self::Zoom => "zoom", Self::CloseWindow => "close-window", Self::Detach => "detach", Self::Shutdown => "shutdown", Self::CancelPrefix => "cancel-prefix",
+            Self::TabTopLeft => "tab-top-left", Self::TabTopRight => "tab-top-right", Self::TabBottomLeft => "tab-bottom-left", Self::TabBottomRight => "tab-bottom-right",
             Self::SendPrefix => "send-prefix",
+            Self::DockLeft => "dock-left", Self::DockRight => "dock-right", Self::DockTop => "dock-top", Self::DockBottom => "dock-bottom", Self::JoinWindow => "join-window", Self::TabLeft => "tab-left", Self::TabRight => "tab-right",
         }
     }
 
@@ -40,10 +43,13 @@ impl Action {
         Some(match id {
             "new-task" => Self::NewTask, "show-tasks" => Self::ShowTasks, "show-settings" => Self::ShowSettings, "show-help" => Self::ShowHelp, "show-hidden-tasks" => Self::ShowHiddenTasks, "search-output" => Self::SearchOutput,
             "refresh-commands" => Self::RefreshCommands, "cancel-discovery" => Self::CancelDiscovery, "restart-task" => Self::RestartTask, "stop-task" => Self::StopTask, "kill-task" => Self::KillTask,
+            "open-ready" => Self::OpenReady, "cancel-open-ready" => Self::CancelOpenReady,
             "copy-selection" => Self::CopySelection, "toggle-input" => Self::ToggleInput, "toggle-appearance" => Self::ToggleAppearance, "toggle-language" => Self::ToggleLanguage,
             "next-window" => Self::NextWindow, "previous-window" => Self::PreviousWindow, "split-down" => Self::SplitDown, "split-right" => Self::SplitRight, "grow-window" => Self::GrowWindow,
             "shrink-window" => Self::ShrinkWindow, "zoom" => Self::Zoom, "close-window" => Self::CloseWindow, "detach" => Self::Detach, "shutdown" => Self::Shutdown, "cancel-prefix" => Self::CancelPrefix,
+            "tab-top-left" => Self::TabTopLeft, "tab-top-right" => Self::TabTopRight, "tab-bottom-left" => Self::TabBottomLeft, "tab-bottom-right" => Self::TabBottomRight,
             "send-prefix" => Self::SendPrefix,
+            "dock-left" => Self::DockLeft, "dock-right" => Self::DockRight, "dock-top" => Self::DockTop, "dock-bottom" => Self::DockBottom, "join-window" => Self::JoinWindow, "tab-left" => Self::TabLeft, "tab-right" => Self::TabRight,
             _ => return None,
         })
     }
@@ -114,6 +120,7 @@ pub(super) fn event_of(spec: &KeySpec) -> KeyEvent {
 
 fn input_of(action: &str) -> Option<Input> {
     Some(match action {
+        "suggest-previous" => Input::SuggestPrevious, "suggest-next" => Input::SuggestNext, "suggest-accept" => Input::SuggestAccept, "suggest-refresh" => Input::SuggestRefresh, "suggest-cancel" => Input::SuggestCancel,
         "up" => Input::Up, "down" => Input::Down, "left" => Input::Left, "right" => Input::Right, "page-up" => Input::PageUp, "page-down" => Input::PageDown, "first" => Input::First, "last" => Input::Last, "delete-word" => Input::DeleteWord, "activate" => Input::Activate, "clear" => Input::Clear, "back" => Input::Back,
         _ => return None,
     })
@@ -124,6 +131,7 @@ fn input_of(action: &str) -> Option<Input> {
 impl Dashboard {
     /// 🎮️ Routes one event; the only entry point of input, with or without a real terminal.
     pub fn handle(&mut self, tui: &mut Tui, event: &Event) -> Flow {
+        if matches!(event, Event::Key(KeyEvent { key: Key::Esc, .. })) && tui.dragging_window() && tui.cancel_pointer() { return Flow::Continue; }
         match event {
             Event::Key(key) => self.on_key(tui, key),
             Event::Mouse(mouse) => { self.on_mouse(tui, event, mouse); Flow::Continue }
@@ -202,6 +210,7 @@ impl Dashboard {
 
     fn view_key(&mut self, tui: &mut Tui, key: &KeyEvent, spec: &KeySpec) {
         let index = self.focused_index(tui);
+        if let Some(input) = self.keymap.resolve(Scope::View, spec).filter(|action| action.starts_with("suggest-")).and_then(input_of) { if matches!(&self.windows[index].body, Body::Launcher(_)) { self.launcher_input(tui, index, input); } return; }
         if matches!(&self.windows[index].body, Body::Launcher(launcher) if launcher.editing()) && matches!(key.key, Key::Char(_) | Key::Backspace | Key::Delete | Key::Left | Key::Right | Key::Home | Key::End | Key::Keypad(_)) {
             let event = Event::Key(event_of(spec));
             let signals = tui.dispatch(&event);
@@ -297,6 +306,8 @@ impl Dashboard {
             Outcome::Leave => self.set_body(tui, index, Kind::Overview, None),
             Outcome::Start(request) => { if let Err(error) = self.start(tui, index, &request) { self.notice = Some(self.text().form_problem.fill(&[("problem", &error)]).into_string()); } }
         }
+        self.paint_launcher(tui, index);
+        self.follow_stage(tui, self.focused_index(tui));
     }
 
     /// 📣️ Acts on what widgets and window chrome reported.
@@ -321,7 +332,7 @@ impl Dashboard {
                 }
                 (WidgetSignal::Dismissed, _) if self.menu.as_ref().is_some_and(|menu| menu.node == node) => self.menu = None,
                 (WidgetSignal::WindowClose(tab), Some(index)) => { if let Some(target) = self.tab_window(index, tab) { if self.close_window(tui, target) { self.quit_requested = true; } } }
-                (WidgetSignal::WindowMaximize(tab), Some(index)) => { if let Some(target) = self.tab_window(index, tab) { self.toggle_zoom(tui, target); } }
+                (WidgetSignal::WindowMaximize(tab), Some(index)) => { if let Some(target) = self.tab_window(index, tab) { self.focus_window(tui, target); self.toggle_zoom(tui, target); } }
                 (WidgetSignal::WindowNewTab(tab), Some(index)) => {
                     let host = self.tab_window(index, tab).map_or_else(|| self.windows[index].id.clone(), |target| self.windows[target].id.clone());
                     let created = self.create_window(tui, Kind::Launcher, Place::Stack(&host));
@@ -330,10 +341,15 @@ impl Dashboard {
                 (WidgetSignal::WindowTabActivated(tab), Some(index)) => { if let Some(target) = self.tab_window(index, tab) { self.focus_window(tui, target); } }
                 (WidgetSignal::Activated(item), Some(index)) if self.windows[index].tree == Some(node) => {
                     if let Body::Launcher(launcher) = &mut self.windows[index].body { launcher.activated(item); }
+                    self.paint_launcher(tui, index);
                     tui.set_focus(Some(self.windows[index].focus()));
                 }
                 (WidgetSignal::WindowFocus, Some(index)) => self.focus_window(tui, index),
-                (WidgetSignal::TabMoved { from, to }, Some(index)) => { let id = self.windows[index].id.clone(); if reorder_stack_tab(&mut self.layout, &id, from, to) { self.remount(tui); } }
+                (WidgetSignal::WindowDocked { source, target, placement, tab_index }, _) => {
+                    if dock_window(&mut self.layout, &source, &target, placement, tab_index) {
+                        if let Some(index) = self.window_index(&source) { self.focus_window(tui, index); }
+                    }
+                }
                 (WidgetSignal::SplitterDragged { path, delta }, _) => { let area = tui.scene.rect(self.shell.canvas); if resize_split(&mut self.layout, area, &path, delta) { self.remount(tui); } }
                 _ => {}
             }
@@ -347,7 +363,11 @@ impl Dashboard {
         let target = item.and_then(|tab| self.tab_window(window, tab)).unwrap_or(window);
         let output = self.windows[target].is_output();
         let rows: Vec<Option<Action>> = if output {
-            vec![Some(Action::CopySelection), Some(Action::ToggleInput), None, Some(Action::RestartTask), Some(Action::StopTask), Some(Action::KillTask), None, Some(Action::SplitRight), Some(Action::SplitDown), Some(Action::Zoom), Some(Action::CloseWindow)]
+            let mut rows = vec![Some(Action::CopySelection), Some(Action::ToggleInput)];
+            if self.ready_address(target).is_some() { rows.push(Some(Action::OpenReady)); }
+            if self.opening_url.is_some() { rows.push(Some(Action::CancelOpenReady)); }
+            rows.extend([None, Some(Action::RestartTask), Some(Action::StopTask), Some(Action::KillTask), None, Some(Action::SplitRight), Some(Action::SplitDown), Some(Action::Zoom), Some(Action::CloseWindow)]);
+            rows
         } else {
             vec![Some(Action::NewTask), None, Some(Action::SplitRight), Some(Action::SplitDown), Some(Action::Zoom), Some(Action::CloseWindow)]
         };
@@ -369,6 +389,7 @@ impl Dashboard {
     }
 
     fn toggle_zoom(&mut self, tui: &mut Tui, index: usize) {
+        if self.windows.len() < 2 && self.layout.zoomed.is_none() { return; }
         if self.layout.zoomed.is_some() { zoom_window(&mut self.layout, None); } else { zoom_window(&mut self.layout, Some(&self.windows[index].id.clone())); }
         self.remount(tui);
     }
@@ -415,6 +436,10 @@ impl Dashboard {
             Action::RestartTask => self.control_session(tui, index, "restart-task"),
             Action::StopTask => self.control_session(tui, index, "stop-task"),
             Action::KillTask => self.control_session(tui, index, "kill-task"),
+            Action::OpenReady => {
+                if let Some(id) = self.selected_session_id(index).map(str::to_string) { self.request_open_ready(&id); } else { self.notice = Some(self.text().open_unavailable.as_str().into()); }
+            }
+            Action::CancelOpenReady => self.cancel_open_ready(),
             Action::CopySelection => {
                 let signal = self.terminal_node(index).and_then(|node| match tui.scene.node_mut(node).widget() { Some(WidgetState::Terminal(terminal)) => terminal.copy_selection(), _ => None });
                 if let Some(WidgetSignal::Copy(text)) = signal { self.effects.push(Effect::Copy(text)); }
@@ -425,6 +450,30 @@ impl Dashboard {
             Action::NextWindow => self.cycle_window(tui, 1),
             Action::PreviousWindow => self.cycle_window(tui, -1),
             Action::SplitDown | Action::SplitRight => { let created = self.create_window(tui, Kind::Launcher, Place::Split(if action == Action::SplitDown { "column" } else { "row" })); self.focus_window(tui, created); }
+            Action::DockLeft | Action::DockRight | Action::DockTop | Action::DockBottom | Action::JoinWindow => {
+                let source = self.windows[index].id.clone();
+                let order = self.window_order();
+                if order.len() > 1 {
+                    let from = order.iter().position(|id| id == &source).unwrap_or(0);
+                    let target = order[(from + 1) % order.len()].clone();
+                    let placement = match action { Action::DockLeft => DockPlacement::Left, Action::DockRight => DockPlacement::Right, Action::DockTop => DockPlacement::Top, Action::DockBottom => DockPlacement::Bottom, _ => DockPlacement::Tabs };
+                    if dock_window(&mut self.layout, &source, &target, placement, None) { self.focus_window(tui, index); }
+                }
+            }
+            Action::TabTopLeft | Action::TabTopRight | Action::TabBottomLeft | Action::TabBottomRight => {
+                use ui_tui::tui::layout::WindowStackCorner::*;
+                let source = self.windows[index].id.clone();
+                let corner = match action { Action::TabTopLeft => TopLeft, Action::TabTopRight => TopRight, Action::TabBottomLeft => BottomLeft, _ => BottomRight };
+                if dock_window(&mut self.layout, &source, &source, DockPlacement::Corner(corner), None) { self.focus_window(tui, index); }
+            }
+            Action::TabLeft | Action::TabRight => {
+                let source = self.windows[index].id.clone();
+                let tabs = super::windows::stack_of(&self.layout, &source);
+                if let Some(from) = tabs.iter().position(|id| id == &source) {
+                    let to = if action == Action::TabLeft { from.saturating_sub(1) } else { (from + 1).min(tabs.len() - 1) };
+                    if reorder_stack_tab(&mut self.layout, &source, from, to) { self.remount(tui); }
+                }
+            }
             Action::GrowWindow | Action::ShrinkWindow => { let window = self.windows[index].id.clone(); resize_window(&mut self.layout, &window, if action == Action::GrowWindow { GROW_STEP } else { -GROW_STEP }); self.remount(tui); }
             Action::Zoom => self.toggle_zoom(tui, index),
             Action::CloseWindow => { if self.close_window(tui, index) { return Flow::Quit; } }
@@ -442,6 +491,8 @@ impl Dashboard {
 impl Dashboard {
     /// 🖼️ Brings everything that depends on layout up to date before painting: sizes, list slices,
     /// launcher screens, focus marks, the footer.
+    pub fn poll_source_suggestions(&mut self) -> bool { self.windows.iter_mut().fold(false, |changed, window| match &mut window.body { Body::Launcher(launcher) => launcher.poll_suggestions() || changed, _ => changed }) }
+
     pub fn frame(&mut self, tui: &mut Tui) {
         let (focused, input) = (self.focused_index(tui), self.input_mode);
         for (index, window) in self.windows.iter().enumerate() {
@@ -509,7 +560,7 @@ impl Dashboard {
             ARMED_FIRST.iter().filter_map(|action| hint(Scope::Prefix, action).map(strip)).chain(hint(Scope::Prefix, "cancel-prefix").map(strip)).collect()
         } else {
             let controls = KeyHint { key: self.keymap.prefix().label(), label: text.hint_controls.as_str().into() };
-            if self.terminal_has_keyboard(tui) { vec![controls] } else {
+            if self.terminal_has_keyboard(tui) { std::iter::once(controls).chain(hint(Scope::Prefix, if self.opening_url.is_some() { "cancel-open-ready" } else { "open-ready" }).filter(|_| self.opening_url.is_some() || self.ready_address(self.focused_index(tui)).is_some())).collect() } else {
                 std::iter::once(controls).chain([(Scope::View, "activate"), (Scope::View, "back"), (Scope::View, "up"), (Scope::View, "down"), (Scope::Window, "next-window")].into_iter().filter_map(|(scope, action)| hint(scope, action).map(|found| if action == "activate" { KeyHint { label: text.hint_activate.as_str().to_string(), ..found } } else { found }))).collect()
             }
         };
@@ -518,6 +569,10 @@ impl Dashboard {
 
     fn footer_status(&self, tui: &Tui) -> String {
         let text = self.text();
+        if let Some((placement, _)) = tui.docking_preview() {
+            let action = match placement { DockPlacement::Tabs => text.dock_tabs, DockPlacement::Corner(corner) => match corner { ui_tui::tui::layout::WindowStackCorner::TopLeft => text.dock_top_left, ui_tui::tui::layout::WindowStackCorner::TopRight => text.dock_top_right, ui_tui::tui::layout::WindowStackCorner::BottomLeft => text.dock_bottom_left, ui_tui::tui::layout::WindowStackCorner::BottomRight => text.dock_bottom_right }, DockPlacement::Left => text.dock_left, DockPlacement::Right => text.dock_right, DockPlacement::Top => text.dock_top, DockPlacement::Bottom => text.dock_bottom };
+            return text.dock_preview.fill(&[("action", action.as_str())]).into_string();
+        }
         let link = match &self.state {
             LinkState::Connecting => text.state_connecting.as_str().to_string(),
             LinkState::Connected => text.state_connected.as_str().to_string(),

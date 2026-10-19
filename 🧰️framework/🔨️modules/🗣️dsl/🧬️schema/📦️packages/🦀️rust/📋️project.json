@@ -3,24 +3,68 @@
   "$schema": "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🔨️modules/🗣️dsl/🧬️schema/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"]
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🗣️dsl/🧬️schema/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"
+    ]
   },
   "targets": {
-    "test-original-receiving-source": {
-      "executor":"repo:script","cache":false,"dependsOn":[],"inputs":["default"],
-      "options":{"cwd":"🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-receiving source"}
-    },
-    "test-original-receiving-native": {
-      "executor":"repo:script","cache":false,"dependsOn":[],"inputs":["default"],
-      "options":{"cwd":"🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-receiving native"}
+    "test-presence": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-presence"
+      }
     },
     "test-ownership": {
-      "executor": "repo:script", "cache": false, "inputs": ["default"],
-      "options": {"cwd": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-ownership"}
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-ownership"
+      }
     },
     "test-native": {
-      "executor": "repo:script", "cache": false, "inputs": ["default"],
-      "options": {"cwd": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-native"}
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-native"
+      }
+    },
+    "test-original-receiving-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-receiving source"
+      }
+    },
+    "test-original-receiving-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-receiving native"
+      }
     }
   }
 }

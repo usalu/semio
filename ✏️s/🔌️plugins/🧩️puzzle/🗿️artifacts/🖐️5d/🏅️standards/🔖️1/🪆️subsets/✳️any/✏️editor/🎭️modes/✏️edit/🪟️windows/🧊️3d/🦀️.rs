@@ -1,5 +1,5 @@
-//! 🧊️ Puzzle 5d play app — the `World3d` window kind: the volumetric projection of the unified 5d
 //! document. Owns the world scene payload (instances/meshes/grips/fasteners, the selection and
+//! 🧊️ Puzzle 5d play app — the `World3d` window kind: the volumetric projection of the unified 5d
 //! gumball descriptor, the chunking/environment blocks and the interaction channel), binds the
 //! transform-gumball and relocate utilities plus the two shared brush/fill ones, and scopes the
 //! transform/3D-camera actions (`🎬️actions`). Its own chrome lives in `☑️options/*` — projection,
@@ -7,21 +7,38 @@
 //! board pane also renders. The brush Utility Options it shares with the 2D window come from the
 //! mode's own `☑️options/*`, and fill's from the mode-level tool `🛠️tools/🪣️fill`.
 
-use crate::editor::puzzle5d::config::{Puzzle5dCamera3d, Puzzle5dRuntime};
+use crate::editor::puzzle5d::config::Puzzle5dCamera3d;
+use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
+
+use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::modes::edit;
 use crate::editor::puzzle5d::modes::edit::options as mode_options;
-use crate::editor::puzzle5d::modes::edit::windows::world3d::{options, utilities};
-use crate::editor::puzzle5d::precompute::{puzzle5d_placement_entity, PUZZLE5D_WORLD_MESH_KINDS};
-use crate::editor::puzzle5d::terminology::{puzzle5d_localized, Puzzle5dLabels};
+use crate::editor::puzzle5d::modes::edit::windows::world3d::options;
+use crate::editor::puzzle5d::modes::edit::windows::world3d::utilities;
+use crate::editor::puzzle5d::precompute::puzzle5d_placement_entity;
+use crate::editor::puzzle5d::precompute::PUZZLE5D_WORLD_MESH_KINDS;
+use crate::editor::puzzle5d::terminology::puzzle5d_localized;
 use crate::editor::puzzle5d::entities::{part_scale_json, puzzle5d_grip_full_id, resolve_grip_world_position, resolve_part_mesh_url, world_grip_direction, target_volume_scale_json, world_grip_position, Puzzle5dDocument, Puzzle5dPart, PUZZLE5D_FALLBACK_MESH_KIND, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, PUZZLE5D_GRIP_SHOW_ALWAYS, PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_TARGET_VOLUME_COLOR};
 use crate::editor::puzzle5d::view::{puzzle5d_gumball_active, puzzle5d_scene_mode, puzzle5d_transform_handle, Puzzle5dInteractionSnapshot, Puzzle5dScene};
 use semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsFound;
-use semio_framework_plugin::{
-    world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_fit_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, World3dScene, world3d_selection_json, SurfaceKind, ToolRunView, WindowEngagement,
-    WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions,
-};
+use semio_framework_plugin::world3d_camera_projection_json;
+use semio_framework_plugin::world3d_chunking_json;
+use semio_framework_plugin::world3d_environment_json;
+use semio_framework_plugin::world3d_fit_json;
+use semio_framework_plugin::world3d_mesh_id_from_url;
+use semio_framework_plugin::world3d_meshes_json_from_kinds_and_urls;
+use semio_framework_plugin::World3dScene;
+use semio_framework_plugin::world3d_selection_json;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::ToolRunView;
+use semio_framework_plugin::WindowEngagement;
+use semio_framework_plugin::WindowEngagementSlot;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_plugin::WindowOptions;
 use semio_framework_ui_contract::BuiltNode;
-use semio_framework_pack_json::{json, Value};
+use semio_framework_pack_json::json;
+use semio_framework_pack_json::Value;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = crate::editor::puzzle5d::entities::PUZZLE5D_WORLD_WINDOW_KIND_ID;
@@ -140,7 +157,8 @@ pub fn world_instances_json(document: &Puzzle5dDocument, interaction: &Puzzle5dI
 /// do): a part is a mesh URL here, so this crate knows what it asked for but never how big the
 /// delivered geometry is — only the render host, which loaded it, can measure that.
 pub fn world_fit_revision(document: &Puzzle5dDocument) -> u32 {
-    use std::hash::{Hash, Hasher};
+    use std::hash::Hash;
+    use std::hash::Hasher;
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     document.schema.hash(&mut hasher);
     document.domain.hash(&mut hasher);

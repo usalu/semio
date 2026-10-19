@@ -1,0 +1,158 @@
+{
+  "phases": [
+    "decide",
+    "preflight",
+    "inverse",
+    "commit",
+    "retire",
+    "complete",
+    "close"
+  ],
+  "cases": [
+    {
+      "id": "scalar",
+      "base": 1,
+      "set": 7,
+      "refused": false,
+      "expected": 7,
+      "inverseCalls": 1,
+      "applyCalls": 1
+    },
+    {
+      "id": "same",
+      "base": 7,
+      "set": 7,
+      "refused": false,
+      "expected": 7,
+      "inverseCalls": 1,
+      "applyCalls": 1
+    },
+    {
+      "id": "semantic-refusal",
+      "base": 1,
+      "set": 7,
+      "refused": true,
+      "expected": 1,
+      "inverseCalls": 0,
+      "applyCalls": 0
+    },
+    {
+      "id": "negative",
+      "base": 12,
+      "set": -8,
+      "refused": false,
+      "expected": -8,
+      "inverseCalls": 1,
+      "applyCalls": 1
+    }
+  ],
+  "grants": [
+    {
+      "grant": {
+        "maximumCopyBytes": 8,
+        "maximumReleaseBytes": 32,
+        "maximumCapacityBytes": 16,
+        "maximumDepth": 2,
+        "maximumItems": 0
+      },
+      "demand": {
+        "depth": 2,
+        "releaseBytes": 32,
+        "capacityBytes": 16,
+        "copyBytes": 8
+      },
+      "admitted": false,
+      "id": "items"
+    },
+    {
+      "grant": {
+        "maximumCopyBytes": 7,
+        "maximumReleaseBytes": 32,
+        "maximumCapacityBytes": 16,
+        "maximumDepth": 2,
+        "maximumItems": 1
+      },
+      "demand": {
+        "depth": 2,
+        "releaseBytes": 32,
+        "capacityBytes": 16,
+        "copyBytes": 8
+      },
+      "admitted": false,
+      "id": "copy"
+    },
+    {
+      "grant": {
+        "maximumCopyBytes": 8,
+        "maximumReleaseBytes": 32,
+        "maximumCapacityBytes": 15,
+        "maximumDepth": 2,
+        "maximumItems": 1
+      },
+      "demand": {
+        "depth": 2,
+        "releaseBytes": 32,
+        "capacityBytes": 16,
+        "copyBytes": 8
+      },
+      "admitted": false,
+      "id": "capacity"
+    },
+    {
+      "grant": {
+        "maximumCopyBytes": 8,
+        "maximumReleaseBytes": 31,
+        "maximumCapacityBytes": 16,
+        "maximumDepth": 2,
+        "maximumItems": 1
+      },
+      "demand": {
+        "depth": 2,
+        "releaseBytes": 32,
+        "capacityBytes": 16,
+        "copyBytes": 8
+      },
+      "admitted": false,
+      "id": "release"
+    },
+    {
+      "grant": {
+        "maximumCopyBytes": 8,
+        "maximumReleaseBytes": 32,
+        "maximumCapacityBytes": 16,
+        "maximumDepth": 1,
+        "maximumItems": 1
+      },
+      "demand": {
+        "depth": 2,
+        "releaseBytes": 32,
+        "capacityBytes": 16,
+        "copyBytes": 8
+      },
+      "admitted": false,
+      "id": "depth"
+    },
+    {
+      "grant": {
+        "maximumItems": 1,
+        "maximumDepth": 2,
+        "maximumCopyBytes": 8,
+        "maximumReleaseBytes": 32,
+        "maximumCapacityBytes": 16
+      },
+      "demand": {
+        "depth": 2,
+        "releaseBytes": 32,
+        "capacityBytes": 16,
+        "copyBytes": 8
+      },
+      "admitted": true,
+      "id": "exact"
+    }
+  ],
+  "issuer": {
+    "attempts": 2,
+    "inverseSet": 1,
+    "issued": 1
+  }
+}

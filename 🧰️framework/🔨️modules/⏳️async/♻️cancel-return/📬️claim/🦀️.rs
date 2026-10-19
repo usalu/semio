@@ -45,6 +45,8 @@ pub struct PublicationPermit { claim:Option<PublicationClaimHandle> }
 impl Drop for PublicationPermit { fn drop(&mut self){if let Some(original)=self.claim.take(){original.return_permit();}} }
 struct ClaimRetirement { pub source:Option<PublicationClaimHandle> }
 impl RetirementCursor for ClaimRetirement {
+    fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let Some(source)=self.source.as_ref()else{return Ok(Default::default())};if source.is_claimed(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original publication claim still has its permit"));}let returned=source.has_returned_alias();Ok(semio_framework_value::RetirementDemand{copy_bytes:if returned{size_of::<usize>()}else{size_of::<PublicationClaim>()},release_bytes:if returned{0}else{PublicationClaimHandle::frame_bytes()},depth:1,..Default::default()})}
+
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {
   let Some(source)=self.source.as_ref()else{return RetirementStep::Complete;};
   if source.is_claimed(){return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original publication claim still has its permit"));}

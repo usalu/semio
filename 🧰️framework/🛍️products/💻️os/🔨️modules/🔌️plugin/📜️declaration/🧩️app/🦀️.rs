@@ -110,7 +110,7 @@ use semio_framework_plugin_decl_emission::Emit;
 use crate::app_emission::EphemeralEmit;
 use semio_framework_plugin_decl_emission::HostEvent;
 use semio_framework_plugin_decl_views::AppRenderOperationContext;
-use semio_framework_plugin_decl_views::ArtifactView;
+use semio_framework_plugin_decl_views::{ArtifactView,ArtifactPendingView,MountedSnapshotReadPreparation};
 use semio_framework_plugin_decl_views::ConfigView;
 use semio_framework_plugin_decl_views::DraftView;
 use semio_framework_plugin_decl_views::InteractionView;

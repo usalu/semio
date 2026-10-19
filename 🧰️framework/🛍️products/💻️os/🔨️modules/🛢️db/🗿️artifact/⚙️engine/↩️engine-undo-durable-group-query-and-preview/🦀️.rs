@@ -310,7 +310,7 @@ impl ArtifactEngine {
         let envelope = protocol::MutationEnvelope {
             mutation_id: protocol::MutationId(format!("preview-{}", entries.len())),
             document_id: self.protocol_document.clone(),
-            actor: protocol::ActorId("preview".to_string()),
+            actor: protocol::ActorId("preview".into()),
             dependencies: Vec::new(),
             observed: None,
             target: Vec::new(),

@@ -8,7 +8,7 @@
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::inverse_puzzle2d_mutation;
 use semio_framework_test_fixtures::fixture_text;
 
 use crate::Puzzle2dSnapshot;
@@ -34,7 +34,7 @@ fn outcome() -> serde_json::Value {
 
 /// 🗣️ `(level, code, target)` of every message `rotate-selection` raises on the committed base.
 fn produced_messages() -> Vec<(semio_framework_diagnostic::Severity, String, Vec<String>)> {
-    let produced = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Puzzle2dMutation as protocol::ColdMutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
     produced.messages().iter().map(|message| (message.level, message.code.0.clone(), message.target.clone())).collect()
 }
 
@@ -71,7 +71,7 @@ fn declared_messages() -> Vec<(semio_framework_diagnostic::Severity, String, Vec
 /// every patched record whole.
 #[test]
 fn produces_committed_diff() {
-    let outcome = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
+    let outcome = <Puzzle2dMutation as protocol::ColdMutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "rotate-selection/keeps-a-zero-angle: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -82,7 +82,7 @@ fn produces_committed_diff() {
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: Puzzle2dDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rotate-selection/keeps-a-zero-angle: committed diff did not carry before to after");
 }
 
@@ -100,7 +100,7 @@ fn applies_to_committed_after() {
 fn declared_outcome_holds() {
     assert_eq!(outcome()["status"].as_str(), Some("no-op"), "rotate-selection/keeps-a-zero-angle declares a no-op outcome");
     assert_eq!(produced_messages(), declared_messages(), "rotate-selection/keeps-a-zero-angle: the produced messages differ from the declared ones");
-    let produced = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Puzzle2dMutation as protocol::ColdMutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &Puzzle2dDiff::default(), "rotate-selection/keeps-a-zero-angle: a no-op answers the default diff");
 }
 

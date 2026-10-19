@@ -504,5 +504,9 @@
   "gear": ["grapple"],
   "grip": 53,
   "reach": 5,
-  "mood": "curious"
+  "mood": "curious",
+  "canopy": {
+    "kind": "path",
+    "d": "M -30 0 L -30 -24 L 30 -24 L 30 0 Z M -26 -18 H 26 M -26 -10 H 26 M -26 -3 H 26 M -20 -21 H 10 M -20 -14 H 10 M -20 -6 H 10 M 18 -21 L 22 -21 M 18 -14 L 22 -14 M 18 -6 L 22 -6 M -26 -24 V 0 M 26 -24 V 0"
+  }
 }

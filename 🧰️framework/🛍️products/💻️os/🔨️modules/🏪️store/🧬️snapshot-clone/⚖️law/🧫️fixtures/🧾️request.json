@@ -1,0 +1,25 @@
+{
+  "schema": "semio.one-item-preparation-law-request.v1",
+  "cases": [
+    {
+      "snapshot": false,
+      "mutation": true,
+      "expected": {
+        "snapshot": false,
+        "mutation": true,
+        "operation": 1,
+        "generation": 1
+      }
+    },
+    {
+      "snapshot": true,
+      "mutation": false,
+      "expected": {
+        "snapshot": true,
+        "mutation": false,
+        "operation": 1,
+        "generation": 1
+      }
+    }
+  ]
+}

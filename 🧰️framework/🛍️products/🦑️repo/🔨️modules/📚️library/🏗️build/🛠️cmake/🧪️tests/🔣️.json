@@ -241,22 +241,22 @@
       "accepted": true
     },
     {
-      "text": "//Captured cache DATA\nCMAKE_HOME_DIRECTORY:INTERNAL=/state/source\nCMAKE_CXX_COMPILER:FILEPATH=/tools/c++\nCMAKE_BUILD_TYPE:STRING=Debug\nCMAKE_GENERATOR:INTERNAL=Visual Studio 18 2026\n",
+      "text": "//Captured cache DATA\nCMAKE_HOME_DIRECTORY:INTERNAL=/state/source\nCMAKE_CXX_COMPILER:FILEPATH=/tools/c++\nCMAKE_BUILD_TYPE:STRING=Debug\nCMAKE_GENERATOR:INTERNAL=Ninja\n",
       "facts": {
         "sourceRoot": "/state/source",
         "compiler": "/tools/c++",
         "configuration": "Debug",
-        "generator": "Visual Studio 18 2026"
+        "generator": "Ninja"
       },
       "accepted": true
     },
     {
-      "text": "//Captured cache DATA\nCMAKE_HOME_DIRECTORY:INTERNAL=/state/source\nCMAKE_CXX_COMPILER:FILEPATH=/tools/c++\nCMAKE_BUILD_TYPE:STRING=Release\nCMAKE_GENERATOR:INTERNAL=Visual Studio 18 2026\n",
+      "text": "//Captured cache DATA\nCMAKE_HOME_DIRECTORY:INTERNAL=/state/source\nCMAKE_CXX_COMPILER:FILEPATH=/tools/c++\nCMAKE_BUILD_TYPE:STRING=Release\nCMAKE_GENERATOR:INTERNAL=Ninja\n",
       "facts": {
         "sourceRoot": "/state/source",
         "compiler": "/tools/c++",
         "configuration": "Release",
-        "generator": "Visual Studio 18 2026"
+        "generator": "Ninja"
       },
       "accepted": true
     },
@@ -291,12 +291,12 @@
       "accepted": false
     },
     {
-      "text": "//Captured cache DATA\r\nCMAKE_HOME_DIRECTORY:INTERNAL=/state/source\r\nCMAKE_CXX_COMPILER:FILEPATH=/tools/c++\r\nCMAKE_BUILD_TYPE:STRING=Debug\r\nCMAKE_GENERATOR:INTERNAL=Visual Studio 18 2026\r\n",
+      "text": "//Captured cache DATA\r\nCMAKE_HOME_DIRECTORY:INTERNAL=/state/source\r\nCMAKE_CXX_COMPILER:FILEPATH=/tools/c++\r\nCMAKE_BUILD_TYPE:STRING=Debug\r\nCMAKE_GENERATOR:INTERNAL=Ninja\r\n",
       "facts": {
         "sourceRoot": "/state/source",
         "compiler": "/tools/c++",
         "configuration": "Debug",
-        "generator": "Visual Studio 18 2026"
+        "generator": "Ninja"
       },
       "accepted": true
     }

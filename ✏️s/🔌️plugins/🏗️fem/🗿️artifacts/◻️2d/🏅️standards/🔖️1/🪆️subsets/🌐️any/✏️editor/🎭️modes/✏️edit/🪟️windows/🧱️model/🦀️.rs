@@ -1,6 +1,6 @@
-//! 🧱️ Fem2d play app — the model window: the editable 2D structural canvas (nodes/members/supports,
 //! mesh-edge preview overlay). Also hosts the screen-space draw helpers shared with the results window
-//! (`crate::editor::fem2d::modes::edit::windows::results`) — kept here rather than in the artifact's
+//! 🧱️ Fem2d play app — the model window: the editable 2D structural canvas (nodes/members/supports,
+//! (`semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results`) — kept here rather than in the artifact's
 //! `⚙️engine` because they take/return app-facing `semio_framework_plugin` scene types and their only
 //! two consumers are these two sibling windows, both at app level.
 
@@ -17,13 +17,24 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structur
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_framework_os_kernel::Viewport2d;
-use semio_framework_plugin::{BuiltNode, Canvas2dScene};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::Canvas2dScene;
 #[cfg(test)]
 use semio_framework_ui_scene::canvas2d_snapshot_with_page;
-use semio_framework_ui_scene::{
-    canvas2d_snapshot_abort_write, canvas2d_snapshot_abort_write_step, canvas2d_snapshot_admit_page, canvas2d_snapshot_begin, canvas2d_snapshot_begin_close, canvas2d_snapshot_close_step, canvas2d_snapshot_seal, canvas2d_snapshot_terminal_is_empty,
-    canvas2d_snapshot_write_terminal_is_empty, Canvas2dSnapshotDescriptor, Canvas2dSnapshotLease, Canvas2dSnapshotPage, Canvas2dSnapshotWriteToken, CANVAS2D_SNAPSHOT_PAGE_BYTE_CAPACITY,
-};
+use semio_framework_ui_scene::canvas2d_snapshot_abort_write;
+use semio_framework_ui_scene::canvas2d_snapshot_abort_write_step;
+use semio_framework_ui_scene::canvas2d_snapshot_admit_page;
+use semio_framework_ui_scene::canvas2d_snapshot_begin;
+use semio_framework_ui_scene::canvas2d_snapshot_begin_close;
+use semio_framework_ui_scene::canvas2d_snapshot_close_step;
+use semio_framework_ui_scene::canvas2d_snapshot_seal;
+use semio_framework_ui_scene::canvas2d_snapshot_terminal_is_empty;
+use semio_framework_ui_scene::canvas2d_snapshot_write_terminal_is_empty;
+use semio_framework_ui_scene::Canvas2dSnapshotDescriptor;
+use semio_framework_ui_scene::Canvas2dSnapshotLease;
+use semio_framework_ui_scene::Canvas2dSnapshotPage;
+use semio_framework_ui_scene::Canvas2dSnapshotWriteToken;
+use semio_framework_ui_scene::CANVAS2D_SNAPSHOT_PAGE_BYTE_CAPACITY;
 use std::collections::HashMap;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_element_endpoints;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::find_node_2d;

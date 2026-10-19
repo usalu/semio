@@ -1,4 +1,7 @@
 //! 📥️ Items of `durable_group` that belong to `os-store-durable-group-wire` (PLAN-OS-KERNEL-CRATES.md, Appendix C): lifted out of `🏪️store/🧩️composition/🗄️durable-group/🦀️.rs`.
+#[path = "../../../🧵️planning/📐️budget/🦀️.rs"]
+mod planning_budget;
+use semio_framework_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage;
 use semio_framework_os_store_ledger::CursorRevisionAccumulator;
 use pack::snapshot::{ArtifactDsl,ArtifactPack};
 use semio_framework_value::FromValue as ValueFromValue;

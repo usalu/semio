@@ -1,5 +1,5 @@
-//! 🎲️ Puzzle 2d viewer — the Board window: a read-only mesh scene built with the shared
 //! `MeshWindowKit` (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.6), from the
+//! 🎲️ Puzzle 2d viewer — the Board window: a read-only mesh scene built with the shared
 //! same artifact-level `Puzzle2dSnapshot` the editor's own overview/selection/detail panes render —
 //! this file itself imports nothing from the sibling editor surface (`policyViewerPurityBreaches`
 //! forbids it outright). No selection, no engagement, no brush/fill utility chrome: a viewer emits no
@@ -8,7 +8,13 @@
 //! editor's own board host makes for its canvas, not a new simplification introduced here.
 
 use {crate::standards::v1::subsets::any::schema::records::Puzzle2dNode, crate::Puzzle2dSnapshot};
-use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
+use semio_framework_plugin::mesh_from_kind;
+use semio_framework_plugin::world3d_camera_json;
+use semio_framework_plugin::world3d_selection_json;
+use semio_framework_plugin::MeshView;
+use semio_framework_plugin::MeshWindowKit;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowKit;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;

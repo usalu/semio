@@ -106,6 +106,9 @@ where
                         if let Some((index,flag))=stage.unit_flags.last(){let key=(CursorRevisionAccumulator::hash_record(b"edit-id",&[stage.edit.as_ref().unwrap().id.as_bytes()]),*index);let revision=group.revision.as_mut().unwrap();reserve_index!(revision.unit_flags,&key);revision.unit_flags.insert_reserved(key,*flag,grant.retained_grant()).map_err(|(error,_,_)|error.to_string())?;publication.stage.as_mut().unwrap().unit_flags.pop();}else{group.phase=11;}
                     },
                     _=>{
+                        let stage=publication.stage.as_mut().ok_or("member diagnostics lost staged original")?;
+                        if stage.diagnostics.row_count()==0{if !stage.diagnostics.terminal_is_empty(){stage.diagnostics.begin_close();let step=stage.diagnostics.close_step(grant.retained_grant()).map_err(|error|error.to_string())?;return Ok(if step.progress()==RetainedCloneProgress::default(){ArtifactStoreOneItemPreparationStep::Blocked}else{ArtifactStoreOneItemPreparationStep::Progress(publication.progress(),step.progress())});}}
+                        else{let identity=stage.edit.as_ref().ok_or("member diagnostic edit is absent")?.id.as_str();if !stage.diagnostics.prepared(){let step=stage.diagnostics.advance(identity,grant.retained_grant()).map_err(|error|error.to_string())?;return Ok(if step.progress()==RetainedCloneProgress::default(){ArtifactStoreOneItemPreparationStep::Blocked}else{ArtifactStoreOneItemPreparationStep::Progress(publication.progress(),step.progress())});}let bytes=stage.diagnostics.measured_bytes(identity).map_err(|error|error.to_string())?;if !self.envelope.edit_messages.admits_measured(identity,bytes){return Err("member diagnostic ledger lacks its measured fixed authority".into());}if self.envelope.edit_messages.get_by_id(identity).is_some()&&stage.diagnostics.displaced.is_none(){let receipt=stage.diagnostics.admit_displaced(grant.retained_grant()).map_err(|error|error.to_string())?;return Ok(if receipt==RetainedCloneProgress::default(){ArtifactStoreOneItemPreparationStep::Blocked}else{ArtifactStoreOneItemPreparationStep::Progress(publication.progress(),receipt)});}}
                         let capacity=size_of::<semio_framework_os_store_durable_group_wire::lifted_durable_group::StagedRootRetirement<P,Mu>>();let release=size_of::<Edit<Mu>>();group.demand=capacity;
                         if grant.maximum_capacity_bytes<capacity||grant.maximum_release_bytes<release{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
                         let ownership=semio_framework_os_store_engine_stage::lifted_durable_group::stage_prebuilt_batch_root(&mut self.parts(),publication,grant)?;let group=publication.group_preparation.as_mut().unwrap();group.phase=12;group.completed=group.completed.saturating_add(1);
@@ -124,10 +127,12 @@ where
         if !Arc::ptr_eq(&group.visibility, visibility) || !visibility.committed() || group.phase != 12 { return Err("member adoption requires its exact committed common decision".into()); }
         if !grant.permits_one() { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
         let checkpoint=publication.progress();
-        semio_framework_os_store_engine_stage::lifted_durable_group::adopt_staged_store_member(&mut self.parts(),visibility).map_err(|error|error.to_string())?;
+
+        let(done,ownership)=semio_framework_os_store_engine_stage::lifted_durable_group::adopt_staged_store_member(&mut self.parts(),visibility,grant.retained_grant()).map_err(|error|error.to_string())?;
+        if !done{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
         *self.wire.durable_group_root=None;publication.group_preparation=None;publication.retained_checkpoint=checkpoint;
         publication.receipt=Some(LaneItemReceipt{generation_before:publication.expected_generation,generation_after:self.cursor.generation});publication.expected_generation=self.cursor.generation;publication.expected_revision=self.cursor.content_revision;publication.published=true;publication.phase=ArtifactStoreOneItemPublicationPhase::AwaitingAck;
-        Ok(ArtifactStoreOneItemPreparationStep::Prepared(publication.progress(),RetainedCloneProgress{copied_items:1,..Default::default()}))
+        Ok(ArtifactStoreOneItemPreparationStep::Prepared(publication.progress(),RetainedCloneProgress{copied_items:1,..ownership}))
     }
 
     pub fn abort_apply_batch_group(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mu>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {

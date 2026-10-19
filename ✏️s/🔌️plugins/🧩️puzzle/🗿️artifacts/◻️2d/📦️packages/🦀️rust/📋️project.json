@@ -8,6 +8,22 @@
     "family:puzzle"
   ],
   "targets": {
+    "test-store-close-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-store-close source"
+      }
+    },
+    "test-store-close-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-store-close native"
+      }
+    },
     "test-snapshot-sqlite": {
       "executor": "repo:script",
       "cache": false,
@@ -124,6 +140,22 @@
       "options": {
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"
+      }
+    },
+    "test-presence-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-presence source"
+      }
+    },
+    "test-presence-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-presence native"
       }
     }
   }

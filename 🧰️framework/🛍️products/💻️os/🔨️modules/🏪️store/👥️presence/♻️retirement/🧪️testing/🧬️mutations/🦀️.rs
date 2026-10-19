@@ -9,7 +9,7 @@ pub use set_value::SetValue;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl_derive::Mutations)]
 #[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
-#[mutations(snapshot = Value, diff = Value, schema = "presence.fixture")]
+#[mutations(snapshot = Value, diff = Value, schema = "presence.fixture", reference = Value, reference_diff = Value)]
 pub(crate) enum ValueMutation {
     SetValue(SetValue),
 }

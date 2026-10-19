@@ -31,16 +31,17 @@
 //! whose keys are `db_state`-style `/`-segmented paths and whose values are either the new JSON
 //! value to set at that path, or JSON `null` as an explicit tombstone (path deleted). This is a
 //! real, documented limitation, not a workaround: a legitimate application-level `null` value is
-//! indistinguishable from a delete under this convention. `envelope_from_operation` (new this
-//! revision) is the generic ingestion boundary that actually exercises `protocol::Mutation`/
-//! `MutationDiff` (`diff`/`mutation_id`/`dependencies`/`author_id`/`timestamp`, the diff applied once through
-//! `protocol::apply_diff`) to build an envelope in this same convention from a typed operation, persisting only the changed fields — the one place in the `db` family
+//! indistinguishable from a delete under this convention. `envelope_from_operation_cold`
+//! explicitly selects `protocol::ColdMutation` reference arithmetic and `protocol::Mutation`
+//! metadata (`mutation_id`/`dependencies`/`author_id`/`timestamp`, the diff applied once through
+//! `protocol::apply_diff_cold`) to build an envelope in this same convention from a typed operation, persisting only the changed fields — the one place in the `db` family
 //! below `db_artifact` allowed to interpret operation semantics at all (per the contract's hard
 //! dependency rule).
 #![allow(async_fn_in_trait)]
 extern crate semio_framework_os_kernel as pack;
 extern crate semio_framework_os_kernel as store;
 
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use db_artifact_contract::{ArtifactDurableGroupJournalAppendV1, ArtifactDurableGroupRecoveryOwnerV1, ArtifactMessage, CheckpointPublicationSnapshot, CommandBatch, CommandReceipt, SubmitOptions};
 use db_artifact_engine::{ArtifactEngine, ArtifactEngineOpenRejected};
 use db_artifact_history::{ArtifactHistoryView, HistoryReplayFuture, HistoryReplayReservation};

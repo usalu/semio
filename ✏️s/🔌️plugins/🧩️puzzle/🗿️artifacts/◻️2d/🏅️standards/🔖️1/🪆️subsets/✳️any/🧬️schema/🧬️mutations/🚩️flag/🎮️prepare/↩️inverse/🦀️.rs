@@ -34,7 +34,7 @@ impl<T:Puzzle2dFlagIntent> Default for Puzzle2dFlagInverseCursor<T> {
 }
 
 impl<T:Puzzle2dFlagIntent> Puzzle2dFlagInverseCursor<T> {
-    pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, mutation: RetainedCloneRef<'_, T>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, mutation: RetainedCloneRef<'_, T>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.closing || self.phase == 8 { return Err(refusal("owned flag inverse is closing or spent")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(RetainedCloneStep::Progress(progress))}
@@ -55,7 +55,7 @@ impl<T:Puzzle2dFlagIntent> Puzzle2dFlagInverseCursor<T> {
             }
             2 => {
                 let index=self.plan.and_then(|plan|plan.index).ok_or_else(||refusal("flag inverse lost its found ordinal"))?;
-                let step = self.identifier.advance(source.project(1, |snapshot| T::identifier_at(snapshot,index)), grant)?;
+                let step = self.identifier.advance(source.project(1, |snapshot| T::identifier_at(snapshot,index)),body, grant)?;
                 if matches!(step, RetainedCloneStep::Complete(_)) { self.phase = 3; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }

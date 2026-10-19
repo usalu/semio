@@ -1,0 +1,25 @@
+{
+  "name": "@semio-tech/framework-history-read",
+  "tags": [
+    "framework",
+    "vcs"
+  ],
+  "targets": {
+    "verify-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🔗️read",
+        "command": "bun ./📜️script.ts verify source"
+      }
+    },
+    "verify-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🔗️read",
+        "command": "bun ./📜️script.ts verify native"
+      }
+    }
+  }
+}

@@ -1,6 +1,9 @@
 syntax = "proto3";
 package semio.s.fem.fem3d.diff;
 
+import "../📸️snapshot/🛰️.proto";
+import "../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🛰️.proto";
+
 // 🧬️ Fem3d diff schema
 message Fem3dDiff {
   // @state artifact
@@ -30,7 +33,7 @@ message Fem3dNodeRemoval {
 
 message Fem3dNodeInsertion {
   uint64 index = 1;
-  FemNode row = 2;
+  semio.s.fem.fem3d.snapshot.FemNode row = 2;
 }
 
 message Fem3dNodeRelocation {
@@ -41,7 +44,7 @@ message Fem3dNodeRelocation {
 
 message Fem3dNodesModification {
   string id = 1;
-  FemNode patch = 2;
+  Fem3dNodePatch patch = 2;
 }
 
 message Fem3dNodesDelta {
@@ -58,7 +61,7 @@ message Fem3dElementRemoval {
 
 message Fem3dElementInsertion {
   uint64 index = 1;
-  FemElement row = 2;
+  semio.s.fem.fem3d.snapshot.FemElement row = 2;
 }
 
 message Fem3dElementRelocation {
@@ -69,7 +72,7 @@ message Fem3dElementRelocation {
 
 message Fem3dElementsModification {
   string id = 1;
-  FemElement patch = 2;
+  Fem3dElementPatch patch = 2;
 }
 
 message Fem3dElementsDelta {
@@ -86,7 +89,7 @@ message Fem3dMaterialRemoval {
 
 message Fem3dMaterialInsertion {
   uint64 index = 1;
-  FemMaterial row = 2;
+  semio.s.fem.fem3d.snapshot.FemMaterial row = 2;
 }
 
 message Fem3dMaterialRelocation {
@@ -97,7 +100,7 @@ message Fem3dMaterialRelocation {
 
 message Fem3dMaterialsModification {
   string id = 1;
-  FemMaterial patch = 2;
+  Fem3dMaterialPatch patch = 2;
 }
 
 message Fem3dMaterialsDelta {
@@ -114,7 +117,7 @@ message Fem3dSectionRemoval {
 
 message Fem3dSectionInsertion {
   uint64 index = 1;
-  FemSection row = 2;
+  semio.s.fem.fem3d.snapshot.FemSection row = 2;
 }
 
 message Fem3dSectionRelocation {
@@ -125,7 +128,7 @@ message Fem3dSectionRelocation {
 
 message Fem3dSectionsModification {
   string id = 1;
-  FemSection patch = 2;
+  Fem3dSectionPatch patch = 2;
 }
 
 message Fem3dSectionsDelta {
@@ -142,7 +145,7 @@ message Fem3dSolidRemoval {
 
 message Fem3dSolidInsertion {
   uint64 index = 1;
-  FemSolid row = 2;
+  semio.s.fem.fem3d.snapshot.FemSolid row = 2;
 }
 
 message Fem3dSolidRelocation {
@@ -153,7 +156,7 @@ message Fem3dSolidRelocation {
 
 message Fem3dSolidsModification {
   string id = 1;
-  FemSolid patch = 2;
+  Fem3dSolidPatch patch = 2;
 }
 
 message Fem3dSolidsDelta {
@@ -170,7 +173,7 @@ message Fem3dSupportRemoval {
 
 message Fem3dSupportInsertion {
   uint64 index = 1;
-  FemSupport row = 2;
+  semio.s.fem.fem3d.snapshot.FemSupport row = 2;
 }
 
 message Fem3dSupportRelocation {
@@ -181,7 +184,7 @@ message Fem3dSupportRelocation {
 
 message Fem3dSupportsModification {
   string id = 1;
-  FemSupport patch = 2;
+  Fem3dSupportPatch patch = 2;
 }
 
 message Fem3dSupportsDelta {
@@ -198,7 +201,7 @@ message Fem3dLoadCaseRemoval {
 
 message Fem3dLoadCaseInsertion {
   uint64 index = 1;
-  FemLoadCase row = 2;
+  semio.s.fem.fem3d.snapshot.FemLoadCase row = 2;
 }
 
 message Fem3dLoadCaseRelocation {
@@ -232,7 +235,7 @@ message Fem3dLoadRemoval {
 
 message Fem3dLoadInsertion {
   uint64 index = 1;
-  FemLoad row = 2;
+  semio.s.fem.fem3d.snapshot.FemLoad row = 2;
 }
 
 message Fem3dLoadRelocation {
@@ -243,7 +246,7 @@ message Fem3dLoadRelocation {
 
 message Fem3dLoadsModification {
   string id = 1;
-  FemLoad patch = 2;
+  Fem3dLoadPatch patch = 2;
 }
 
 message Fem3dLoadsDelta {
@@ -260,7 +263,7 @@ message Fem3dCombinationRemoval {
 
 message Fem3dCombinationInsertion {
   uint64 index = 1;
-  FemCombination row = 2;
+  semio.s.fem.fem3d.snapshot.FemCombination row = 2;
 }
 
 message Fem3dCombinationRelocation {
@@ -271,7 +274,7 @@ message Fem3dCombinationRelocation {
 
 message Fem3dCombinationsModification {
   string id = 1;
-  FemCombination patch = 2;
+  Fem3dCombinationPatch patch = 2;
 }
 
 message Fem3dCombinationsDelta {
@@ -286,3 +289,66 @@ message Fem3dAnalysisPatch {
   optional uint32 buckling_count = 2;
   optional double deformation_scale = 3;
 }
+
+// 🧱️ Sparse material changes preserve field presence.
+message Fem3dMaterialPatch {
+  optional string name = 1;
+  optional double e = 2;
+  optional double nu = 3;
+  optional double rho = 4;
+  optional double g = 5;
+}
+
+message Fem3dNodePatch {
+  optional double x = 1;
+  optional double y = 2;
+  optional double z = 3;
+}
+
+message Fem3dSectionPatch {
+  optional string name = 1;
+  optional double area = 2;
+  optional double iy = 3;
+  optional double iz = 4;
+  optional double j = 5;
+}
+
+message Fem3dGeometryHoles { repeated semio.s.fem.fem3d.snapshot.FemRing rings = 1; }
+message Fem3dSolidPatch {
+  optional string name = 1;
+  semio.s.fem.fem3d.snapshot.FemRing outline = 2;
+  Fem3dGeometryHoles holes = 3;
+  optional double base_z = 4;
+  optional double height = 5;
+  optional uint64 layers = 6;
+  optional string material_id = 7;
+  optional double mesh_size = 8;
+  optional semio.s.fem.fem3d.snapshot.FemAxis axis = 9;
+}
+
+message Fem3dFixedDofs { repeated semio.s.fem.fem3d.snapshot.FemDof values = 1; }
+message Fem3dSupportPatch {
+  optional string node_id = 1;
+  Fem3dFixedDofs fixed = 2;
+  optional bool tx = 3;
+  optional bool ty = 4;
+  optional bool tz = 5;
+  optional bool rx = 6;
+  optional bool ry = 7;
+  optional bool rz = 8;
+}
+
+message Fem3dElementPatch {
+  optional string kind = 1;
+  optional string start = 2;
+  optional string end = 3;
+  optional string material_id = 4;
+  optional string section_id = 5;
+  optional double roll = 6;
+}
+
+message Fem3dNodalLoadPatch { optional string node_id = 1; optional semio.s.fem.fem3d.snapshot.FemDof dof = 2; optional double value = 3; }
+message Fem3dMemberUdlLoadPatch { optional string element_id = 1; optional double wx = 2; optional double wy = 3; optional double wz = 4; }
+message Fem3dAreaLoadPatch { optional string solid_id = 1; optional double pressure = 2; }
+message Fem3dLoadPatch { oneof kind { Fem3dNodalLoadPatch nodal = 1; Fem3dMemberUdlLoadPatch member_udl = 2; Fem3dAreaLoadPatch area = 3; } }
+message Fem3dCombinationPatch { optional string name = 1; semio.framework.replication.mutation.map.MapDelta terms = 2; }

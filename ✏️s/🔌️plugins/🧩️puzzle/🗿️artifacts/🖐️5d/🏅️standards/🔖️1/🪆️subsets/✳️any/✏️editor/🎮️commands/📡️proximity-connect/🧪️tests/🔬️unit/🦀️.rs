@@ -7,7 +7,7 @@ use crate::editor::puzzle5d::entities::Puzzle5dGrip;
 use std::collections::HashSet;
 use crate::editor::puzzle5d::view::engine_grip_kind;
 use crate::editor::puzzle5d::commands::proximity_connect::*;
-use crate::editor::puzzle5d::entities::{capsule_dream_example_document, concrete_forest_example_document, find_part_by_grip_full_id, nakagin_example_document, Puzzle5dPart, PUZZLE5D_PROXIMITY_RADIUS};
+use crate::editor::puzzle5d::entities::capsule_dream_example_document;
 use semio_framework_test_fixtures::fixture_text;
 
 static PROXIMITY_FIXTURE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🎮️commands/📡️proximity-connect/🧪️tests/🧫️fixtures/🔣️.json"));

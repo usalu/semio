@@ -10,7 +10,7 @@ import type { EditorCore1 } from "../🧰️surface-state-and-delivery/🟦️.t
 // #region WasmEditorSurface
 /** 👥️ Syncs the session, publishes the local caret and projects peer carets. */
 export function useEditorSessionPresence(core: EditorCore1) {
-  const { deliver, readOnlyRef, sessionRef, surfaceId, syncSession, typingRef } = core;
+  const { deliver, readOnlyRef, sessionRef, surfaceId, syncSession, typingRef , presenceRuntimeKey } = core;
   const [sessionEpoch, setSessionEpoch] = useState(0);
 
   useEffect(() => {
@@ -40,19 +40,20 @@ export function useEditorSessionPresence(core: EditorCore1) {
       const world = JSON.parse(session.caretWorldJson()) as { readonly x?: number; readonly y?: number } | null;
       const camera = JSON.parse(session.cameraJson()) as { readonly x?: number; readonly y?: number; readonly zoom?: number };
       const rect = surfaceRef.current?.getBoundingClientRect();
-      publishLocalPresenceWindowViewV1("local", presenceWindowId, {
+      if (!presenceRuntimeKey) return;
+      publishLocalPresenceWindowViewV1(presenceRuntimeKey, presenceWindowId, {
         windowId: presenceWindowId,
         space: "text",
         kind: { kind: "canvas", x: camera.x ?? 0, y: camera.y ?? 0, zoom: camera.zoom ?? 1 },
         size: [rect?.width ?? 0, rect?.height ?? 0],
         ...(world?.x == null || world?.y == null ? {} : { pointer: [world.x, world.y, 0] as const }),
       });
-      publishLocalActiveToolV1("local", "edit");
+      publishLocalActiveToolV1(presenceRuntimeKey, "edit");
     } catch {
       return;
     }
-  }, [presenceWindowId]);
-  useEffect(() => () => clearLocalPresenceWindowViewV1(presenceWindowId), [presenceWindowId]);
+  }, [presenceWindowId, presenceRuntimeKey]);
+  useEffect(() => presenceRuntimeKey ? () => clearLocalPresenceWindowViewV1(presenceWindowId, presenceRuntimeKey) : undefined, [presenceWindowId, presenceRuntimeKey]);
   const projectPeerCaret = useCallback((world: readonly [number, number]): { readonly x: number; readonly y: number } | null => {
     const session = sessionRef.current;
     if (!session) return null;

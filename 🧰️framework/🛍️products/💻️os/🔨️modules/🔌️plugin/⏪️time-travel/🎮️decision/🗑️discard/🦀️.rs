@@ -26,7 +26,7 @@ use semio_framework_value::{ErasedSnapshotRetirement, FactoryAuthority, Artifact
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 
-pub(super) struct TimeTravelDiscardStoreEffects<P,Mu:Mutation<P>> {
+pub(super) struct TimeTravelDiscardStoreEffects<P,Mu:Mutation<P>+Send+'static> {
  residue:ManuallyDrop<Option<TimeTravelStoreState<P,Mu>>>,
  pub frames:ManuallyDrop<[Option<store::PreparedHistoryReadRetirement<P,Mu>>;5]>,
  pub input:Option<ControlledRetirement<protocol::InputReplacement>>,
@@ -74,6 +74,7 @@ impl<P,Mu> ErasedSnapshotRetirement for TimeTravelDiscardStoreEffects<P,Mu> wher
    if let Some(input)=original.preview_input.take(){self.input=Some(ControlledRetirement::new(input).unwrap_or_else(|_|unreachable!("prepared original InputReplacement authority")));return Ok(RetainedCloneStep::Progress(item()))}
    if original.discarded_factory.is_none()&&(original.kind.is_some()||original.staged.is_some()||!original.discarded.is_empty()||original.discarded_pending.is_some()){original.discarded_factory=Some(Arc::clone(self.factory.as_ref().unwrap()));return Ok(RetainedCloneStep::Progress(item()))}
    if original.discarded_pending.is_none()&&(original.kind.is_some()||original.staged.is_some()){original.discarded_pending=original.staged.take().or_else(||original.kind.take());return Ok(RetainedCloneStep::Progress(item()))}
+   original.preview_cancelled=true;if let Some(owner)=original.preview_derived.as_mut(){owner.cancel();}
    if let Some(step)=original.original_retirement_step(child)?{return Ok(RetainedCloneStep::Progress(step.progress()))}
    if original.terminal_is_empty(){drop(self.residue.take());return Ok(RetainedCloneStep::Progress(item()))}
    return Err(refusal("Discard original Store residue did not reach its exact witness"))
@@ -100,7 +101,7 @@ impl<P,Mu> TimeTravelDiscardStoreEffects<P,Mu> where P:Clone+semio_framework_val
   if self.factory.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}if let Some(owner)=self.factory_close.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{let mut quote=owner.demands(body)?;quote.depth=quote.depth.checked_add(1).ok_or_else(||refusal("Discard factory alias depth overflow"))?;Ok(quote)}}Ok(Default::default())
  }
 }
-impl<P,Mu:Mutation<P>> Drop for TimeTravelDiscardStoreEffects<P,Mu>{fn drop(&mut self){let empty=self.residue.is_none()&&self.frames.iter().all(Option::is_none)&&self.input.is_none()&&self.editor.is_none()&&self.factory.is_none()&&self.factory_close.is_none();assert!(std::thread::panicking()||empty,"Discard effect custody abandoned original Store owners");if empty{unsafe{ManuallyDrop::drop(&mut self.residue);ManuallyDrop::drop(&mut self.frames);ManuallyDrop::drop(&mut self.factory)}}}}
+impl<P,Mu:Mutation<P>+Send+'static> Drop for TimeTravelDiscardStoreEffects<P,Mu>{fn drop(&mut self){let empty=self.residue.is_none()&&self.frames.iter().all(Option::is_none)&&self.input.is_none()&&self.editor.is_none()&&self.factory.is_none()&&self.factory_close.is_none();assert!(std::thread::panicking()||empty,"Discard effect custody abandoned original Store owners");if empty{unsafe{ManuallyDrop::drop(&mut self.residue);ManuallyDrop::drop(&mut self.frames);ManuallyDrop::drop(&mut self.factory)}}}}
 
 #[doc(hidden)]
 pub struct DiscardMemberPublication<'a>{pub owners:&'a mut dyn TimeTravelOwners,pub cursor:&'a mut semio_framework_time_travel::TimeTravelDiscardCursor,pub session:&'a mut TimeTravelSession,pub editor:&'a mut Option<TimeTravelEditor>,pub review_children:&'a mut Option<TimeTravelReviewChildren>,pub children:&'a mut Option<ChildContentView>,pub retirements:&'a mut ArtifactFixedRegistry<ChildContentRetirement>,pub child_generation:&'a mut u64,pub view_copy_bytes:usize,pub grant:RetainedCloneGrant}

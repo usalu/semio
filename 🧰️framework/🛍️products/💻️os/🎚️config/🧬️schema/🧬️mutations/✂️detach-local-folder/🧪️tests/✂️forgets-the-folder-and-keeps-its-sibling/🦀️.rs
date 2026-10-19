@@ -6,6 +6,7 @@
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1).
 
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::{LocalFoldersDiff, LocalFolderBindings, LocalFoldersConfigMutation};
 use semio_framework_test_fixtures::fixture_path;
 
@@ -33,7 +34,7 @@ fn mutation() -> LocalFoldersConfigMutation {
 fn forgets_the_folder_and_keeps_its_sibling() {
     let base = before();
     let outcome = <LocalFoldersConfigMutation as protocol::Mutation<LocalFolderBindings>>::diff(&mutation(), &base);
-    let applied = protocol::apply_diff(outcome.diff(), &base).expect("detach applies to its committed before-bindings");
+    let applied = protocol::apply_diff_cold(outcome.diff(), &base).expect("detach applies to its committed before-bindings");
     assert_eq!(applied, expected_after(), "detach-local-folder: the bindings differ from the committed after-snapshot");
     assert!(!applied.bindings.iter().any(|entry| entry.document_id == "cad.drawing.fixture"), "detach-local-folder: the drawing keeps no folder");
     assert_eq!(applied.bindings[0], base.bindings[0], "detach-local-folder: the sibling must survive untouched");
@@ -46,10 +47,10 @@ fn undoing_the_detachment_restores_before() {
     let inverse = <LocalFoldersConfigMutation as protocol::Mutation<LocalFolderBindings>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert!(matches!(inverse.as_slice(), [LocalFoldersConfigMutation::AttachLocalFolder(undo)] if undo.document_id == "cad.drawing.fixture"), "detach-local-folder: the undo of a detachment is exactly one attachment of its prior binding");
     let forward = <LocalFoldersConfigMutation as protocol::Mutation<LocalFolderBindings>>::diff(&mutation(), &base);
-    let mut snapshot = protocol::apply_diff(forward.diff(), &base).expect("forward detach applies");
+    let mut snapshot = protocol::apply_diff_cold(forward.diff(), &base).expect("forward detach applies");
     for step in &inverse {
         let undo = <LocalFoldersConfigMutation as protocol::Mutation<LocalFolderBindings>>::diff(step, &snapshot);
-        snapshot = protocol::apply_diff(undo.diff(), &snapshot).expect("the detach inverse step applies");
+        snapshot = protocol::apply_diff_cold(undo.diff(), &snapshot).expect("the detach inverse step applies");
     }
     assert_eq!(snapshot, base, "detach-local-folder: undoing the detachment did not restore the before-bindings");
 }
@@ -85,7 +86,7 @@ fn produces_and_applies_the_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF.as_str()).expect("committed diff decodes");
     assert_eq!(json_value(outcome.diff()), committed, "detach-local-folder: produced diff differs from the committed 🔺️diff/🔣️.json");
     let decoded: LocalFoldersDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    assert_eq!(protocol::apply_diff(&decoded, &before()).expect("committed diff applies"), expected_after());
+    assert_eq!(protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies"), expected_after());
 }
 
 /// ➕️ The concrete inverse's diffs sum to the negative of the forward diff (L3).

@@ -44,7 +44,7 @@ where
     #[inline] pub fn projection_stamp(&self) -> ArtifactProjectionStamp { self.cursor.projection_stamp(&self.log, &self.wire) }
 
     /// 🪞️ Delegates to [`StoreLive::projection_event`].
-    #[inline] pub fn projection_event<Previous, Policy>(&self, cause: ArtifactProjectionCause, previous: Option<Previous>, cache_mode: ArtifactProjectionCacheMode, policy: Policy) -> Result<ArtifactProjectionEvent<P, Previous, Policy>, VcsError> { self.live.projection_event::<Previous, Policy>(&self.log, &self.wire, &self.cursor, cause, previous, cache_mode, policy) }
+    
 
     /// 🪞️ Delegates to [`StoreCursor::last_projection_invalidation`].
     #[inline] pub fn last_projection_invalidation(&self) -> Option<ArtifactProjectionInvalidation> { self.cursor.last_projection_invalidation(&self.log, &self.wire) }
@@ -98,7 +98,7 @@ where
     #[inline] pub async fn history_columns(&self) -> Vec<HistoryColumn> { self.log.history_columns().await }
 
     /// 🪞️ Delegates to [`StoreLive::snapshot`].
-    #[inline] pub fn snapshot(&self) -> Result<P, VcsError> { self.live.snapshot(&self.wire) }
+    #[inline] pub fn snapshot(&self) -> Result<P, VcsError> where P: Clone { self.live.snapshot(&self.wire) }
 
     /// 🪞️ Delegates to [`StoreLive::snapshot_ref`].
     #[inline] pub fn snapshot_ref(&self) -> &P { self.live.snapshot_ref(&self.wire) }
@@ -110,43 +110,43 @@ where
     #[inline] pub fn snapshot_read_derived(&self, source: &ArtifactDerivedSnapshot<P>) -> Result<ErasedSnapshotRead, VcsError> where P: Sync, { self.cursor.snapshot_read_derived(&self.owners, &self.wire, source) }
 
     /// 🪞️ Delegates to [`StoreOwners::retained_derived_read`].
-    #[inline] pub fn retained_derived_read(&self, source: &ArtifactDerivedSnapshot<P>) -> Result<ErasedSnapshotRead, ValueError> where P: Sync { self.owners.retained_derived_read(source) }
+    
 
     /// 🪞️ Delegates to [`StoreCursor::derive_provisional_snapshot`].
-    #[inline] pub fn derive_provisional_snapshot(&self, source: &ArtifactDerivedSnapshot<P>, op: &Mutation) -> Result<Option<ArtifactDerivedSnapshot<P>>, VcsError> { self.cursor.derive_provisional_snapshot(&self.owners, &self.wire, source, op) }
+    
 
     /// 🪞️ Delegates to [`StoreLive::derived_snapshot_before`].
-    #[inline] pub fn derived_snapshot_before(&mut self, target: &MutationId, drafts: &protocol::HistoryInputDrafts) -> Result<ArtifactDerivedSnapshot<P>, VcsError> { self.live.derived_snapshot_before(&mut self.log, &mut self.owners, &mut self.wire, &mut self.cursor, target, drafts) }
+    #[inline] pub fn derived_snapshot_before(&mut self, target: &MutationId, drafts: &protocol::HistoryInputDrafts) -> Result<ArtifactDerivedSnapshot<P>, VcsError>  where P: Clone, Mutation: ColdMutation<P> { self.live.derived_snapshot_before(&mut self.log, &mut self.owners, &mut self.wire, &mut self.cursor, target, drafts) }
 
     /// 🪞️ Delegates to [`StoreCursor::derive_history_snapshot`].
-    #[inline] pub fn derive_history_snapshot(&self, source: &ArtifactDerivedSnapshot<P>, op: &Mutation) -> Result<(Option<ArtifactDerivedSnapshot<P>>, Vec<protocol::MutationMessage>), VcsError> { self.cursor.derive_history_snapshot(&self.owners, &self.wire, source, op) }
+    
 
     /// 🪞️ Delegates to [`StoreCursor::begin_derived_history_preview`].
-    #[inline] pub fn begin_derived_history_preview(&self, target: MutationId, drafts: protocol::HistoryInputDrafts) -> Result<ArtifactDerivedHistoryPreview<P, Mutation>, VcsError> { self.cursor.begin_derived_history_preview(&self.log, &self.owners, &self.wire, target, drafts) }
+    
 
     /// 🪞️ Delegates to [`StoreOwners::prepare_history_read_retirement`].
     #[inline] pub fn prepare_history_read_retirement(&self,grant:RetainedCloneGrant)->Result<Option<(PreparedHistoryReadRetirement<P,Mutation>,RetainedCloneProgress)>,ValueError> where P:Sync { self.owners.prepare_history_read_retirement(grant) }
 
     /// 🪞️ Delegates to [`StoreOwners::retire_derived_history_preview`].
-    #[inline] pub fn retire_derived_history_preview(&self, owner: &mut Option<ArtifactDerivedHistoryPreview<P, Mutation>>,grant:RetainedCloneGrant) -> Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>, ValueError> where P: Sync { self.owners.retire_derived_history_preview(owner, grant) }
+    
 
     /// 🪞️ Delegates to [`StoreOwners::retire_derived_report_replay`].
-    #[inline] pub fn retire_derived_report_replay(&self, owner: &mut Option<ArtifactDerivedReplay<P, Mutation>>,grant:RetainedCloneGrant) -> Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>, ValueError> where P: Sync { self.owners.retire_derived_report_replay(owner, grant) }
+    
 
     /// 🪞️ Delegates to [`StoreOwners::retire_finished_history_replay`].
     #[inline] pub fn retire_finished_history_replay(&self, owner: &mut Option<EditReplayResult<P, Mutation>>,grant:RetainedCloneGrant) -> Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>, ValueError> where P: Sync { self.owners.retire_finished_history_replay(owner, grant) }
 
     /// 🪞️ Delegates to [`StoreLive::step_derived_history_preview`].
-    #[inline] pub fn step_derived_history_preview(&self, preview: &mut ArtifactDerivedHistoryPreview<P, Mutation>, retirement_grant:RetainedCloneGrant, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> { self.live.step_derived_history_preview(&self.log, &self.owners, &self.wire, &self.cursor, preview, retirement_grant, deadline) }
+    
 
     /// 🪞️ Delegates to [`StoreCursor::finish_derived_history_preview`].
     #[inline] pub fn finish_derived_history_preview(&self, owner: &mut Option<ArtifactDerivedHistoryPreview<P, Mutation>>) -> Result<ArtifactDerivedSnapshot<P>, VcsError> { self.cursor.finish_derived_history_preview(&self.owners, &self.wire, owner) }
 
     /// 🪞️ Delegates to [`StoreCursor::begin_derived_report_replay`].
-    #[inline] pub fn begin_derived_report_replay(&self, drafts: protocol::HistoryInputDrafts, from: Option<MutationId>) -> Result<ArtifactDerivedReplay<P, Mutation>, VcsError> { self.cursor.begin_derived_report_replay(&self.log, &self.owners, &self.wire, drafts, from) }
+    
 
     /// 🪞️ Delegates to [`StoreLive::step_derived_report_replay`].
-    #[inline] pub fn step_derived_report_replay(&self, owner: &mut ArtifactDerivedReplay<P, Mutation>, retirement_grant:RetainedCloneGrant, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> { self.live.step_derived_report_replay(&self.log, &self.owners, &self.wire, &self.cursor, owner, retirement_grant, deadline) }
+    
 
     /// 🪞️ Delegates to [`StoreCursor::finish_derived_report_replay`].
     #[inline] pub fn finish_derived_report_replay(&self, owner: &mut Option<ArtifactDerivedReplay<P, Mutation>>) -> Result<(EditReplayResult<P, Mutation>, Option<ArtifactDerivedSnapshot<P>>), VcsError> { self.cursor.finish_derived_report_replay(&self.owners, &self.wire, owner) }

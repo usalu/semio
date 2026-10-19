@@ -1,0 +1,12 @@
+{
+  "valid":[
+    {"segments":["load","dead","l1"],"identity":"scope:1:4:load4:dead2:l1"},
+    {"segments":["load","live","l1"],"identity":"scope:1:4:load4:live2:l1"},
+    {"segments":["a:b","/🧱️","日本"],"identity":"scope:1:3:a:b8:/🧱️6:日本"},
+    {"segments":["a","bc"],"identity":"scope:1:1:a2:bc"},
+    {"segments":["ab","c"],"identity":"scope:1:2:ab1:c"},
+    {"segments":["scope:1:","12:tail"],"identity":"scope:1:8:scope:1:7:12:tail"}
+  ],
+  "invalidSegments":[[],[""],["load","","l1"]],
+  "invalidIdentities":["", "l1", "scope:0:1:a", "scope:1:", "scope:1:0:", "scope:1:01:a", "scope:1:+1:a", "scope:1:1.0:a", "scope:1:2:a", "scope:1:1:a!", "scope:1:1:ä", "scope:1:999999999999999999999999999:a"]
+}

@@ -6,15 +6,15 @@ use syn::{Data, DeriveInput, Fields, Type, parse_macro_input};
 mod owned_receiving;
 
 /// 🧬️ Derives the complete generic record construction contract.
-#[proc_macro_derive(DslRecord, attributes(dsl))]
+#[proc_macro_derive(DslRecord, attributes(dsl, value))]
 pub fn derive_record(input: TokenStream) -> TokenStream { emit_record(parse_macro_input!(input as DeriveInput)).into() }
 
 /// 🏷️ Derives a generic unit-variant scalar field.
 #[proc_macro_derive(DslScalar, attributes(dsl))]
 pub fn derive_scalar(input: TokenStream) -> TokenStream { emit_scalar(parse_macro_input!(input as DeriveInput)).into() }
 
-/// 🪆️ Derives generic tagged variants without product operation traits.
-#[proc_macro_derive(DslEnum, attributes(dsl))]
+/// 🪆️ Derives tagged variants; `#[dsl(field)]` additionally binds exactly one named record as a typed field.
+#[proc_macro_derive(DslEnum, attributes(dsl, value))]
 pub fn derive_enum(input: TokenStream) -> TokenStream { emit_enum(parse_macro_input!(input as DeriveInput)).into() }
 
 /// 🫴️ Derives typed receiving with every partial authored field retained by the original owner.

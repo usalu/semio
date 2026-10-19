@@ -6,11 +6,11 @@
 // Summary: The window encodes `SurfaceKind::World3d` through `crate::app_surface::world_3d_surface`, which
 // the shell dispatches to `World3dHost` — plain `@react-three/fiber` + `WorldCanvas`, owning no wasm engine
 // (only a `terrainJson` scene would pull one), so this world paints for real with no plugin wasm and no
-// `WASM_LOADERS` entry. The scene is a port of the window's `#[cfg(test)] render` path
-// (`fem3d_scene_parts` → `world3d_meshes_json_from_kinds(["box"])` + `fem3d_structural_instances`), NOT of
-// its runtime `render_with_progress` path: at runtime `meshes_json`/`instances_json` stay the literal `"[]"`
-// and all geometry arrives on `scene.snapshot`, the `live_visual` page lease, which is a mounted-reactor
-// artifact with no browser equivalent. `fem3d_solid_mesh_entries` (the tet-mesher's `solid-*` boundary
+// `WASM_LOADERS` entry. The scene ports the native node/member projection
+// (`fem3d_scene_parts` → `world3d_meshes_json_from_kinds(["box"])` + `fem3d_structural_instances`)
+// with the same scoped interaction targets and framework hover/selection
+// state machine. Native `render_with_progress` also publishes inline meshes and instances alongside
+// its live visual snapshot. `fem3d_solid_mesh_entries` (the tet-mesher's `solid-*` boundary
 // meshes) is likewise Rust-only and is reported as a counted omission rather than approximated.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
@@ -56,9 +56,9 @@ function Fem3dModelStoryHost({ initialExampleId, locale }: { readonly initialExa
   );
 
   const instances = useMemo(() => fem3dStructuralInstances(state.snapshot), [state.snapshot]);
-  const node = useMemo(() => buildFem3dSceneNode(instances, state.camera, FEM3D_MODEL_BODY_KEY, FEM3D_EDITOR_CONTROLLER_ID), [instances, state.camera]);
+  const node = useMemo(() => buildFem3dSceneNode(instances, state.camera, FEM3D_MODEL_BODY_KEY, FEM3D_EDITOR_CONTROLLER_ID, state.selection, state.hover), [instances, state.camera, state.selection, state.hover]);
   const debug = useMemo(
-    () => JSON.stringify({ exampleId: state.exampleId, locale: state.locale, instanceCount: instances.length, nodeIds: state.snapshot.nodes.map((entry) => entry.id), omitted: femStoryOmissions([FEM3D_SOLID_MESH_OMISSION]), lastAction }),
+    () => JSON.stringify({ exampleId: state.exampleId, locale: state.locale, instanceCount: instances.length, nodeIds: state.snapshot.nodes.map((entry) => entry.id), selection: state.selection, hover: state.hover, omitted: femStoryOmissions([FEM3D_SOLID_MESH_OMISSION]), lastAction }),
     [state, instances, lastAction],
   );
 

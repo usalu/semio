@@ -1,12 +1,13 @@
-//! 🔍️ Puzzle2d mutation — `ScaleSelection`: a parametric similarity scale of a set of nodes and target
 //! regions about one pivot. Node positions spread from the pivot while a node's own `scale` stays (a
+//! 🔍️ Puzzle2d mutation — `ScaleSelection`: a parametric similarity scale of a set of nodes and target
 //! node kind's footprint is the kind's, not the layout's); a target region scales its corner AND its
 //! extent — the same rule as the editor's `Puzzle2dTransform::Scale`, with the pivot recorded.
 
 use crate::standards::v1::subsets::any::schema::mutations::move_node::MoveNode;
 use crate::standards::v1::subsets::any::schema::mutations::move_target_region::MoveTargetRegion;
 use crate::standards::v1::subsets::any::schema::mutations::resize_target_region::ResizeTargetRegion;
-use semio_framework_value::{list::PagedList, paged::PagedUtf8};
+use semio_framework_value::list::PagedList;
+use semio_framework_value::paged::PagedUtf8;
 
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use {crate::standards::v1::subsets::any::schema::mutations::selection::puzzle2d_selection_items, crate::standards::v1::subsets::any::schema::mutations::selection::puzzle2d_selection_number};
@@ -37,18 +38,12 @@ pub fn scale_selection<Op: From<ScaleSelection>>(targets: PagedList<PagedUtf8<{ 
 impl<Op> protocol::MutationKind<Puzzle2dSnapshot, Op> for ScaleSelection
 where
     Op: protocol::Mutation<Puzzle2dSnapshot, Diff = Puzzle2dDiff> + From<ScaleSelection> + From<MoveNode> + From<MoveTargetRegion> + From<ResizeTargetRegion>,
-{
+ {
+
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "selection", kind: "scale-selection", record: "ScaledSelection" };
 
-    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
     
-    })
-}
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (factor_en, factor_de) = puzzle2d_selection_number(self.factor);
         let (en, de) = puzzle2d_selection_items(self.targets.len());
@@ -57,5 +52,20 @@ where
     fn target(&self) -> Vec<String> {
         self.targets.iter().map(PagedUtf8::to_string_owner).collect()
     }
+
+}
+impl<Op> protocol::ColdMutationKind<Puzzle2dSnapshot, Op> for ScaleSelection
+where
+    Op: protocol::ColdMutation<Puzzle2dSnapshot, ReferenceDiff = Puzzle2dDiff> + From<ScaleSelection> + From<MoveNode> + From<MoveTargetRegion> + From<ResizeTargetRegion>,
+ {
+fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+        super::diff::diff(self, base)
+    }
+fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+
+    })
+}
 }
 //#endregion 🔖️Mutation

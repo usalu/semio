@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "operation": 71,
+  "generation": 3,
+  "fuel": 17,
+  "rows": [
+    {
+      "status": 8,
+      "kind": "pending",
+      "pending": true
+    },
+    {
+      "status": 10,
+      "kind": "published",
+      "pending": true
+    },
+    {
+      "status": 1,
+      "kind": "idle",
+      "pending": false
+    }
+  ],
+  "workPerPoll": 1,
+  "remainingFuel": 14
+}

@@ -191,7 +191,7 @@ pub fn brush_target_vortex_allows_suggestion(vortex_kind: Option<&str>, weights:
     brush_kind_weight_value(&weights.vortex_weights, vortex_kind.unwrap_or("")) > 0.0
 }
 
-fn brush_joint_weight_value(object_weights: &std::collections::BTreeMap<String, f64>, joint_weights: &std::collections::BTreeMap<String, f64>, object_kind_id: &str, vortex_kind_id: &str) -> f64 {
+fn brush_joint_weight_value(object_weights: &semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, f64>, joint_weights: &semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, f64>, object_kind_id: &str, vortex_kind_id: &str) -> f64 {
     let sep = semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_JOINT_WEIGHT_SEP;
     let composite = format!("{object_kind_id}{sep}{vortex_kind_id}");
     if let Some(weight) = joint_weights.get(&composite) {
@@ -364,7 +364,8 @@ pub fn apply_brush_placement_to_snapshot(scene_snapshot: &EngineSceneSnapshot, p
 /// 🪪️ Content-addressed brush object id — keyed by scene_snapshot size and placement payload (no global counter).
 pub fn brush_object_id(scene_snapshot: &impl BrushSceneView, payload: &BrushPlacePayload) -> String {
     use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
+    use std::hash::Hash;
+    use std::hash::Hasher;
     let mut hasher = DefaultHasher::new();
     scene_snapshot.object_count().hash(&mut hasher);
     payload.target_vortex_full_id.hash(&mut hasher);

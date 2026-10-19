@@ -62,7 +62,7 @@ use semio_framework_value::ToValue;
     /// 🧯️ An `AppFrame::Error` as a [`ProgramFault`]: the decoded guest fault beside its full message.
     fn app_frame_program_fault(fault: &[u8], report: &[u8]) -> ProgramFault {
         let decoded = pack_rt::decode_wire_value(fault).ok().and_then(|value| <semio_framework::Fault as semio_framework_value::FromValue>::from_value(value).ok());
-        ProgramFault { fault: decoded, text: app_frame_error_message(fault, report), frame: None,#[cfg(not(target_arch = "wasm32"))] kernel:None,#[cfg(not(target_arch = "wasm32"))] actor_call:None }
+        ProgramFault { fault: decoded, text: app_frame_error_message(fault, report), frame: None,#[cfg(not(target_arch = "wasm32"))] kernel:None,#[cfg(not(target_arch = "wasm32"))] actor_call:None,#[cfg(not(target_arch = "wasm32"))] create_app_source:None }
     }
 
     /// 🧾 An `AppFrame::Error`'s full message: the generic fault summary, plus — whenever `report`

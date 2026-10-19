@@ -8,7 +8,7 @@ pub trait ErasedWindowMutationValue:Send{
  fn retire_payload(self:Box<Self>)->Box<dyn RetirementCursor>;
  fn payload_birth_bytes(&self)->usize;
 }
-impl<T:Clone+Send+'static> ErasedWindowMutationValue for FactoryBoxedValue<T>{
+impl<T:Clone+Send+Sync+'static> ErasedWindowMutationValue for FactoryBoxedValue<T>{
  fn as_any(&self)->&dyn Any{self.original.as_ref()}
  fn into_any(self:Box<Self>)->Box<dyn Any+Send>{self}
  fn clone_value(&self)->Box<dyn ErasedWindowMutationValue>{Box::new(Self{original:self.original.clone(),factory:self.factory.clone()})}

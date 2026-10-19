@@ -29,21 +29,5 @@ test("observes S deployment composition through real runtime output", () => {
   printRebuildPlanV1(readSRebuildPlanV1());
 });
 
-/** 🧭️ Authored launch registration survives regeneration of the visible launch catalog. */
-test("launch seed and generated launch retain every canonical rebuild route", () => {
-  const root = new URL("../../../../", import.meta.url);
-  const read = (path: string): Record<string, unknown>[] => {
-    const errors: ParseError[] = [];
-    const result = parseJsonc(readFileSync(new URL(path, root), "utf8"), errors, { allowTrailingComma: true });
-    expect(errors).toEqual([]);
-    return result.configurations;
-  };
-  const seed = read(".vscode/🧩️launch.seed.jsonc"), launch = read(".vscode/launch.json");
-  const names = ["🔁️rebuild-all✏️s", "🔁️rebuild-general🔌️plugin-registry", "🧊️check-guest-framework✏️s", "🔬️test-rebuild-contract📇️registry", "🔬️test-rebuild-contract✏️s", "📋️check-rebuild-plan✏️s", "📋️check-rebuild-plan📇️registry", "⚖️verify-staged🧑‍💻dev"];
-  for (const name of names) {
-    const authored = seed.filter(row => row.name === name), generated = launch.filter(row => row.name === name);
-    expect(authored.length).toBe(1);
-    expect(generated).toEqual(authored);
-  }
-  expect(seed.some(row => typeof row.command === "string" && row.command.includes("plugin-registry:verify-staged"))).toBe(false);
-});
+/** 🧭️ Neutral rebuild registration is read directly from the owning project manifests. */
+test("canonical rebuild routes remain owned by their dashboard projects",()=>{const root=new URL("../../../../",import.meta.url);for(const [file,targets] of [["✏️s/🧑‍💻dev/🔁️rebuild/📋️project.json",["rebuild-all","guest-framework-check","plan-check","test"]],["🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📋️project.json",["rebuild-all","test-rebuild-contract"]]] as const){const text=readFileSync(new URL(file,root),"utf8"),parsed=parseJsonc(text),manifest=JSON.parse(text);expect(parsed).toEqual(manifest);for(const target of targets)expect(manifest.targets[target].options.command).toContain("bun ./📜️script.ts ");}const dashboard=JSON.parse(readFileSync(new URL("📋️project.json",root),"utf8")).metadata.semio.dashboard;expect(dashboard.tools.find((row:any)=>row.id==="build-task").command).toEqual(["bun","repo","run","{task}","--output=stream"]);});

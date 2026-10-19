@@ -1,3 +1,4 @@
+import { usePresenceRuntimeKeyV1 } from "../../👕️canvas-presence/🟦️.tsx";
 /** 🧰️ Text editor surface state and delivery: the session, rename, hover, echo and draft refs, the dispatcher, the read-only and splice typing state, the typing run, the edit delivery, the explicit draft history stepping and the session sync. */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createTextEditorTypingRunV1, receiveTextEditorSceneV1, refuseTextEditorSpliceV1, sendTextEditorSpliceV1, settleTextEditorSpliceV1, TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, TEXT_EDITOR_TYPING_HOST_SIGNALS, textEditorActions, textEditorAppliedSpliceV1, textEditorSpliceHostV1, textEditorTypingV1, type TextEditorScene, type TextEditorSpliceHostV1, type TextEditorSpliceViewV1, type TextEditorTypingRunV1 } from "@semio-tech/framework";
@@ -12,6 +13,7 @@ import { showTextEditorSpliceViewV1, textEditorSessionSelectionV1 } from "../�
 // #region WasmEditorSurface
 /** 🧰️ Holds the refs and state of the editor surface and delivers edits and scene syncs. */
 export function useEditorSurfaceState({ scene, controllerId, surfaceId, onAction, explicitDraft, explicitDraftDirty, descriptionId, invalid, onDraftChange, requestContextMenu }: WasmEditorSurfaceProps) {
+  const presenceRuntimeKey = usePresenceRuntimeKeyV1();
   const sessionRef = useRef<FrameworkEditorSession | null>(null);
   const renameActiveRef = useRef(false);
   const lastHoverRangeRef = useRef<SpanRange | null>(null);
@@ -50,12 +52,12 @@ export function useEditorSurfaceState({ scene, controllerId, surfaceId, onAction
    * as the surface and reads its owner through `deliveryOwnerRef`: a dispatcher rebuilt on every new `onAction` identity left
    * the previous one flushing its own stale pending text AFTER the newer one had gone out, so the guest took an older buffer
    * last and the author's final keys vanished (ticket 26/09/23 C11, probe `c11typing3`). */
-  const deliveryOwnerRef = useRef({ controllerId, explicitDraft, onAction, onDraftChange, surfaceId });
-  deliveryOwnerRef.current = { controllerId, explicitDraft, onAction, onDraftChange, surfaceId };
+  const deliveryOwnerRef = useRef({ controllerId, explicitDraft, onAction, onDraftChange, surfaceId, presenceRuntimeKey });
+  deliveryOwnerRef.current = { controllerId, explicitDraft, onAction, onDraftChange, surfaceId, presenceRuntimeKey };
   /** ⌨️ Publishes the editor's pending run as the ephemeral shared preview peers render at its caret (`null` once it ended). */
   const publishTypingPreview = (surfaceId: string, local: string) => {
     const preview = typingRef.current?.preview(local) ?? null;
-    publishLocalPresenceTypingV1("local", surfaceId || "text", preview === null ? null : { deleted: preview.deleted, insert: preview.insert });
+    if (presenceRuntimeKey) publishLocalPresenceTypingV1(presenceRuntimeKey, surfaceId || "text", preview === null ? null : { deleted: preview.deleted, insert: preview.insert });
   };
   /** ⌨️ The editor's live typing run (design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): every delivery the
    * window took names this editor's buffer (`typing`), so the window folds it into ONE run that commits as ONE document edit; the
@@ -63,8 +65,8 @@ export function useEditorSurfaceState({ scene, controllerId, surfaceId, onAction
   const typingRef = useRef<TextEditorTypingRunV1 | null>(null);
   typingRef.current ??= createTextEditorTypingRunV1(
     (verb, reason) => {
-      const { controllerId, onAction, surfaceId } = deliveryOwnerRef.current;
-      publishLocalPresenceTypingV1("local", surfaceId || "text", null);
+      const { controllerId, onAction, surfaceId, presenceRuntimeKey } = deliveryOwnerRef.current;
+      if (presenceRuntimeKey) publishLocalPresenceTypingV1(presenceRuntimeKey, surfaceId || "text", null);
       void onAction({ controllerId, action: verb, args: { surfaceId, [TEXT_EDITOR_TYPING_BUFFER_ARG]: surfaceId, [TEXT_EDITOR_TYPING_COMMIT_ARG]: reason } });
     },
     (run, ms) => {
@@ -217,7 +219,7 @@ export function useEditorSurfaceState({ scene, controllerId, surfaceId, onAction
     [scene],
   );
   syncSessionRef.current = syncSession;
-  return { deliver, descriptionId, dispatch, invalid, lastHoverRangeRef, moveExplicitHistory, readOnly, readOnlyRef, renameActiveRef, requestContextMenu, scene, sessionRef, shellContextMenuFallback, surfaceId, syncSession, textEditorMenuKeysByActionId, typingRef };
+  return { deliver, descriptionId, dispatch, invalid, lastHoverRangeRef, moveExplicitHistory, readOnly, readOnlyRef, renameActiveRef, requestContextMenu, scene, sessionRef, shellContextMenuFallback, surfaceId, syncSession, textEditorMenuKeysByActionId, typingRef , presenceRuntimeKey };
 }
 
 export type EditorCore1 = ReturnType<typeof useEditorSurfaceState>;

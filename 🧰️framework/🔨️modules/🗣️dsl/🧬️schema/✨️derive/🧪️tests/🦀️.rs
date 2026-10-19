@@ -1,6 +1,19 @@
 use super::*;
 
 #[test]
+fn value_presence_metadata_preserves_required_nullable_and_optional_supplied_fields() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧪️fixtures/📨️presence/🔣️.json")).unwrap();
+    let declaration:DeriveInput=syn::parse_str(fixture["declaration"].as_str().unwrap()).unwrap();
+    let Data::Struct(record)=&declaration.data else{panic!("record fixture")};
+    let plans=plan_fields(&record.fields);
+    for (plan,expected) in plans.iter().zip(fixture["fields"].as_array().unwrap()) {
+        let role=match plan.kind{FieldKind::Scalar=>"Scalar",FieldKind::OptionScalar(_)=>"OptionScalar",_=>"other"};
+        assert_eq!(plan.key,expected["key"].as_str().unwrap());assert_eq!(plan.optional,expected["optional"].as_bool().unwrap(),"{}",plan.key);assert_eq!(role,expected["role"].as_str().unwrap());
+    }
+    let emitted=emit_record(declaration);let _:syn::File=syn::parse2(emitted).unwrap();
+}
+
+#[test]
 fn generic_emission_matches_every_neutral_mode_under_independent_syntax_parsing() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/✨️derive/🧩️composition/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {

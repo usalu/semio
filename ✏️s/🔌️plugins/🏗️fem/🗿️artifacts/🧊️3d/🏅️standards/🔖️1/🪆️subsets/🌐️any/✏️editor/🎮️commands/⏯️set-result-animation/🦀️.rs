@@ -1,11 +1,18 @@
-//! ⏯️ Fem3d play app command — `result-animation`: the fem 3d results window as a [`FemPlaybackTransport`]. The
 //! payload, the field vocabulary and the playback step are the ONE FEM implementation in the fem 2d crate
+//! ⏯️ Fem3d play app command — `result-animation`: the fem 3d results window as a [`FemPlaybackTransport`]. The
 //! (`semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation`).
 
 use semio_s_fem_app_surface::FemResultsAnimation;
 use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation, ViewModel, WindowConfigMutation};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::ViewModel;
+use semio_framework_plugin::WindowConfigMutation;
 pub use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation::apply_field;
 pub use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation::merge;
 pub use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation::rearm_effect;

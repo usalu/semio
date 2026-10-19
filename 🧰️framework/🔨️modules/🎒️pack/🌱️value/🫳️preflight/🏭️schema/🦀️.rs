@@ -1,6 +1,8 @@
 //! 🕸️ Canonical schema quotient borrows immutable field metadata and bounded indexed work slots.
 use super::*;
 use std::cmp::Ordering;
+#[path="⏳️cursor/🦀️.rs"]
+pub(super) mod retained;
 const N:usize=64;
 struct Graph{records:[R;N],addresses:[usize;N],slots:[Option<(usize,usize)>;128],length:usize}
 fn order(spec:R)->Result<([usize;256],usize),ValueError>{if spec.fields.len()>256{return Err(error(K::WorkLimit,"borrowed schema exceeds inline field-order frontier"))}let mut indices=[0;256];for(index,slot)in indices[..spec.fields.len()].iter_mut().enumerate(){*slot=index;}indices[..spec.fields.len()].sort_unstable_by_key(|index|(spec.fields[*index].id,*index));Ok((indices,spec.fields.len()))}

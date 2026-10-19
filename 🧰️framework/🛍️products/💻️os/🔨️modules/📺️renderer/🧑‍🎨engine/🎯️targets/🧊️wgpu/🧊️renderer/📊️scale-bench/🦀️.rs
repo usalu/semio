@@ -371,12 +371,7 @@ impl Env {
 }
 //#endregion 🔖️Env
 
-async fn process_rss_bytes() -> Option<u64> {
-    match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ProcessResidentBytes).await.ok()? {
-        semio_framework_os_services::NativeIoValue::ResidentBytes(bytes) => bytes,
-        _ => None,
-    }
-}
+async fn process_rss_bytes()->Result<Option<u64>,crate::RendererSourceIoError>{crate::read_renderer_resident_bytes().await}
 
 //#region 🔖️Budget2ColdBoot
 async fn budget_2_cold_boot(process_start: Instant, runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord], shard_count: u16, native_budget_ms: u64) -> serde_json::Value {
@@ -517,7 +512,7 @@ async fn budget_4_and_5(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle,
     let outcomes = env.drain();
     let by_design: std::collections::HashSet<u64> = activated.iter().zip(records.iter()).filter(|(_, record)| matches!(profile_of(record), "hang" | "crash")).map(|((actor, _), _)| actor.0).collect();
     let faults = outcomes.iter().filter(|o| matches!(o, ShardOutcome::Fault { actor, .. } if !by_design.contains(actor))).count();
-    let rss = process_rss_bytes().await;
+    let rss=match process_rss_bytes().await{Ok(value)=>value,Err(error)=>{let failed=row(4,"memory observation","fail",json!({"error":error.to_string()}),json!({"maxBytes":memory_budget_bytes}),"the actual original resident-memory source refused");return(failed,skipped(5,"interactive command latency","memory observation refused before the latency workload"))}};
     let active = env.kernel().metrics().await.actors;
     let pass4 = faults == 0 && active as usize == activated.len() && rss.map(|bytes| bytes <= memory_budget_bytes).unwrap_or(false);
     let row4 = row(
@@ -830,23 +825,12 @@ async fn budget_8_capability_revoke(runtime: &Arc<GuestRuntimes>, compiled: &Com
 /// not set up (bad registry/wasm/report path).
 pub async fn run(registry_path: PathBuf, wasm_path: PathBuf, shard_count: u16, report_path: PathBuf,original_clock:fn()->Option<u64>) -> Result<i32, semio_framework_os_renderer_wgpu_contracts::ProgramFault> {
     let process_start = Instant::now();
-    let mut registry_bytes = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(registry_path.clone())).await {
-        Ok(semio_framework_os_services::NativeIoValue::Bytes(bytes)) => bytes,
-        Ok(_) => {
-            eprintln!("scale-bench: native I/O returned the wrong value for {}", registry_path.display());
-            return Ok(1);
-        }
-        Err(error) => {
-            eprintln!("scale-bench: failed to read {}: {error}", registry_path.display());
-            return Ok(1);
-        }
+    let registry_bytes=match crate::read_renderer_source_bytes(&registry_path,semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES as u64).await{
+        Ok(bytes)=>bytes,
+        Err(error)=>{eprintln!("scale-bench: failed to read {}: {error}",registry_path.display());return Ok(1)}
     };
-    let Some(registry_page) = registry_bytes.single_page() else {
-        eprintln!("scale-bench: registry exceeds the mounted single-page retained parser authority");
-        return Ok(1);
-    };
-    let registry = serde_json::from_slice(registry_page);
-    let _ = semio_framework_os_renderer_wgpu_host_base::close_renderer_io_payload(&mut registry_bytes);
+    let registry=serde_json::from_slice(registry_bytes.bytes());
+    drop(registry_bytes);
     let registry: RegistryFile = match registry {
         Ok(value) => value,
         Err(error) => {
@@ -854,25 +838,15 @@ pub async fn run(registry_path: PathBuf, wasm_path: PathBuf, shard_count: u16, r
             return Ok(1);
         }
     };
-    let mut wasm_bytes_owner = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(wasm_path.clone())).await {
-        Ok(semio_framework_os_services::NativeIoValue::Bytes(bytes)) => bytes,
-        Ok(_) => {
-            eprintln!("scale-bench: native I/O returned the wrong value for {}", wasm_path.display());
-            return Ok(1);
-        }
-        Err(error) => {
-            eprintln!("scale-bench: failed to read {}: {error}", wasm_path.display());
-            return Ok(1);
-        }
+    let wasm_bytes_owner=match super::kernel_runtime::read_native_component(&wasm_path).await{
+        Ok(bytes)=>bytes,
+        Err(error)=>{eprintln!("scale-bench: failed to read {}: {error}",wasm_path.display());return Ok(1)}
     };
-    let Some(wasm_bytes) = wasm_bytes_owner.single_page() else {
-        eprintln!("scale-bench: Wasm exceeds the mounted single-page retained compiler authority");
-        return Ok(1);
-    };
+    let wasm_bytes=wasm_bytes_owner.bytes();
     let runtime: Arc<GuestRuntimes> = Arc::new(GuestRuntimes::Owned(OwnedRuntime::new(original_clock)));
     let package_ref = PackageRef { package: PackageId("scale-fixture".to_string()), hash: PackageHash(*semio_framework_hash::hash(wasm_bytes).as_bytes()) };
     let compiled = runtime.compile(&package_ref, wasm_bytes).await;
-    let _ = semio_framework_os_renderer_wgpu_host_base::close_renderer_io_payload(&mut wasm_bytes_owner);
+    drop(wasm_bytes_owner);
     let compiled = match compiled {
         Ok(handle) => handle,
         Err(error) => {

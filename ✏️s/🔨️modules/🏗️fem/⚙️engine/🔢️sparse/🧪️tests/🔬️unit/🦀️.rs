@@ -1,5 +1,128 @@
 use super::*;
+use semio_framework_job::StepBudget;
 use semio_s_fem_test_support::{close_payload_page_bytes, close_writer_released, test_operation, TEST_GRANT};
+
+#[test]
+fn numerical_restore_funds_each_original_contributor_frontier_separately() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⛽️restore-funding/🔣️.json")).unwrap();
+    let count = fixture["count"].as_u64().unwrap() as usize;
+    let mut bytes = numerical_page_header(b"FEMLCP1\0", 11, NumericalPageCursor { field: 9, owner: 0, item: 0 }).to_vec();
+    bytes.extend_from_slice(&(count as u64).to_le_bytes());
+    for index in 0..count {
+        bytes.extend_from_slice(&(fixture["columns"][index].as_u64().unwrap() as u32).to_le_bytes());
+        bytes.extend_from_slice(&fixture["next"][index].as_u64().unwrap().to_le_bytes());
+    }
+    let page = parse_numerical_page(&bytes, b"FEMLCP1\0").unwrap();
+    let mut owner: PagedList<RowContributor, SPARSE_INDEX_SPACE> = PagedList::empty();
+    let mut cursor = NumericalOwnerRestoreCursor::default();
+    let mut entry = 0;
+    let operation = test_operation(9999);
+    let mut sequence = 0;
+    let mut births = 0;
+    let mut complete = false;
+    for turn in 0..128 {
+        let demand = numerical_restore_owner_demand(&owner, &page, &cursor, entry, false).unwrap();
+        let exact = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        for axis in fixture["deniedAxes"].as_array().unwrap() {
+            let mut denied = exact;
+            match axis.as_str().unwrap() {
+                "items" => denied.maximum_items = 0,
+                "copyBytes" if demand.copy_bytes != 0 => denied.maximum_copy_bytes -= 1,
+                "capacityBytes" if demand.capacity_bytes != 0 => denied.maximum_capacity_bytes -= 1,
+                "depth" => denied.maximum_depth -= 1,
+                _ => continue,
+            }
+            let before = (owner.len(), owner.capacity(), owner.allocated_bytes(), owner.backing_ptr(0), entry, cursor.next_item, cursor.page_open);
+            let mut receipt = RetainedCloneProgress::default();
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, denied), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
+            let (step, physical) = semio_s_fem_test_support::observe_original_numerical_allocations(|| restore_contributor_entry(&mut owner, &page, count, &mut entry, &mut cursor, &mut context));
+            assert!(!step.unwrap());
+            assert_eq!(physical, (0, 0, 0));
+            assert_eq!(context.retained_progress(), RetainedCloneProgress::default());
+            assert_eq!((owner.len(), owner.capacity(), owner.allocated_bytes(), owner.backing_ptr(0), entry, cursor.next_item, cursor.page_open), before);
+        }
+        let before = (owner.len(), owner.allocated_bytes());
+        let mut receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, exact), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
+        let (step, physical) = semio_s_fem_test_support::observe_original_numerical_allocations(|| restore_contributor_entry(&mut owner, &page, count, &mut entry, &mut cursor, &mut context));
+        complete = step.unwrap();
+        let actual = context.retained_progress();
+        assert_eq!(actual.copied_items, 1);
+        assert_eq!(actual.copied_bytes, demand.copy_bytes);
+        assert_eq!(actual.retained_capacity_bytes, owner.allocated_bytes() - before.1);
+        assert_eq!(actual.retained_capacity_bytes, demand.capacity_bytes);
+        assert_eq!(physical, (actual.retained_capacity_bytes, actual.released_bytes, actual.retained_capacity_bytes));
+        assert!(actual.fits(exact));
+        if demand.capacity_bytes != 0 { births += 1; assert_eq!(owner.len(), before.0); }
+        eprintln!("[DEBUG] restore contributor frontier={turn} len={} copy={} capacity={} depth={}", owner.len(), actual.copied_bytes, actual.retained_capacity_bytes, demand.depth);
+        if complete { break; }
+    }
+    assert!(complete && births > 0);
+    assert_eq!(owner.len(), count);
+    for index in 0..count {
+        let value = owner.get(index).unwrap();
+        assert_eq!(value.column, fixture["columns"][index].as_u64().unwrap() as u32);
+        assert_eq!(value.next, fixture["next"][index].as_u64().unwrap());
+    }
+    while !owner.terminal_is_empty() {
+        if owner.pop().is_none() { owner.release_empty_page(SPARSE_PAGE_BYTES).unwrap(); }
+    }
+}
+
+fn test_funded_restore<T>(step: impl FnOnce(&mut StepContext<'_>) -> T) -> T {
+    let operation = test_operation(9998);
+    let mut sequence = 0;
+    let mut receipt = RetainedCloneProgress::default();
+    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
+    step(&mut context)
+}
+
+fn empty_paged_backing<T>(count: usize) -> PagedList<T, SPARSE_INDEX_SPACE> {
+    let mut owner = PagedList::empty();
+    while owner.capacity() < count { owner.reserve_capacity_one(count, SPARSE_PAGE_BYTES).expect("original fixture backing"); }
+    owner
+}
+
+#[test]
+fn numerical_page_modal_complete_close_retains_empty_capacitated_matrix() {
+    fn physical(owner: &SymmetricPencilConstruction) -> usize {
+        owner.complete.as_ref().map_or(0, |(matrix, _)| matrix.allocated_bytes())
+    }
+    fn inner_owners(owner: &SymmetricPencilConstruction) -> usize {
+        owner.complete.as_ref().map_or(0, |(matrix, _)| usize::from(matrix.vals.capacity() != 0) + usize::from(matrix.rowind.capacity() != 0) + usize::from(matrix.colptr.capacity() != 0))
+    }
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
+    let mut observations = Vec::new();
+    for row in corpus["closeCases"].as_array().unwrap() {
+        let empty = || Csr::from_owned_parts(0, Vec::new(), Vec::new(), Vec::new());
+        let mut owner = SymmetricPencilConstruction::new(empty(), VecD::from_vec(Vec::new()));
+        owner.matrix = None;
+        owner.mass = None;
+        owner.complete = Some((CscSym::from_paged_parts(0, empty_paged_backing(4), empty_paged_backing(4), empty_paged_backing(4)), empty()));
+        let next = owner.complete.as_ref().unwrap().0.vals.next_release_allocation_bytes().unwrap();
+        let grant = match row["grant"].as_str().unwrap() { "zero" => 0, "subexact" => next - 1, "exact" => next, _ => unreachable!() };
+        let before = physical(&owner);
+        let first = owner.close_step(grant);
+        let retired = 3 - inner_owners(&owner);
+        let mut released = first.2;
+        let mut exact = before - physical(&owner) == first.2 && first.2 <= grant;
+        let mut terminal = first.0;
+        for _ in 0..128 {
+            let before = physical(&owner);
+            let step = owner.close_step(NUMERICAL_OWNER_PAGE_BYTES);
+            exact &= before - physical(&owner) == step.2;
+            released += step.2;
+            if step.0 { terminal = true; break; }
+        }
+        observations.push((row["id"].clone(), retired, row["expectedRetiredOwners"].as_u64().unwrap() as usize, exact, before, released, terminal));
+    }
+    for (id, retired, expected, exact, allocated, released, terminal) in observations {
+        assert!(terminal, "{id} terminal");
+        assert_eq!(retired, expected, "{id} one backing per granted opportunity");
+        assert!(exact, "{id} reports only actually retired backing");
+        assert_eq!(allocated, released, "{id} conservation");
+    }
+}
 
 #[test]
 fn numerical_page_restore_rejects_hostile_coordinates_without_changing_target_backing() {
@@ -15,7 +138,7 @@ fn numerical_page_restore_rejects_hostile_coordinates_without_changing_target_ba
             let page = parse_numerical_page(&bytes, b"FEMLCP1\0").unwrap();
             let mut entry = 0;
             for _ in 0..4096 {
-                if restore_paged_f64_entry(&mut owner, &page, 8192, &mut entry, &mut cursor).unwrap() { break; }
+                if test_funded_restore(|context| restore_paged_f64_entry(&mut owner, &page, 8192, &mut entry, &mut cursor, context)).unwrap() { break; }
             }
             assert_eq!(owner.len(), 2043);
         }
@@ -25,7 +148,7 @@ fn numerical_page_restore_rejects_hostile_coordinates_without_changing_target_ba
         bytes.resize(NUMERICAL_CHECKPOINT_HEADER_BYTES + body_bytes, 0);
         if row["owner"] == 0 && body_bytes >= 8 { bytes[32..40].copy_from_slice(&row["length"].as_u64().unwrap().to_le_bytes()); }
         let page = parse_numerical_page(&bytes, b"FEMLCP1\0").unwrap();
-        let result = restore_paged_f64_entry(&mut owner, &page, 8192, &mut 0, &mut cursor);
+        let result = test_funded_restore(|context| restore_paged_f64_entry(&mut owner, &page, 8192, &mut 0, &mut cursor, context));
         let held = before == (owner.len(), owner.allocated_bytes(), owner.get(0).copied(), cursor.next_item);
         let allocated = owner.allocated_bytes();
         let mut released = 0;
@@ -67,7 +190,7 @@ fn numerical_page_restore_accepts_every_declared_paged_scalar_continuation() {
             let view = parse_numerical_page(&bytes, b"FEMLCP1\0").unwrap();
             let mut entry = 0;
             for _ in 0..count + 1024 {
-                match restore_paged_f64_entry(&mut owner, &view, 8192, &mut entry, &mut owner_cursor) {
+                match test_funded_restore(|context| restore_paged_f64_entry(&mut owner, &view, 8192, &mut entry, &mut owner_cursor, context)) {
                     Ok(true) => { complete_pages += 1; break; }
                     Ok(false) => {}
                     Err(error) => { fault = Some(error); break; }
@@ -120,9 +243,9 @@ fn numerical_page_scalar_owner_continues_before_writing_past_exact_backing() {
                 let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
                 writer.begin_staged_page(&mut context).map(|_| false)
             } else {
-                match advance_numerical_page_header(writer, b"FEMPGT1\0", 41, cursor) {
+                match test_funded_restore(|context| advance_numerical_page_header(writer, b"FEMPGT1\0", 41, cursor, context)) {
                     Ok(true) => Ok(false),
-                    Ok(false) => advance_f64_owner(writer, &values, &mut cursor),
+                    Ok(false) => test_funded_restore(|context| advance_f64_owner(writer, &values, &mut cursor, context)),
                     Err(error) => Err(error),
                 }
             };
@@ -179,15 +302,15 @@ fn numerical_page_all_owner_entries_preserve_cursor_until_their_width_fits() {
 
     fn advance(kind: &str, writer: &mut RetainedJobPayloadWriter, cursor: &mut NumericalPageCursor, matrix: &MatD, integers: &PagedList<u32, 1>, scalars: &PagedList<f64, 1>) -> Result<bool, JobPayloadAdmissionFault> {
         match kind {
-            "length" => advance_owner_length(writer, 2, cursor),
-            "u32" => advance_u32_owner(writer, &[7], cursor),
-            "usize" => advance_u64_owner(writer, &[7], cursor),
-            "u64" => advance_u64_values(writer, &[7], cursor),
-            "f64" => advance_f64_owner(writer, &[1.5], cursor),
-            "paged-u32" => advance_paged_u32_owner(writer, integers, cursor),
-            "paged-f64" => advance_paged_f64_owner(writer, scalars, cursor),
-            "pair" => advance_pair_owner(writer, &[(7, 1.5)], cursor),
-            "matrix-shape" | "matrix-scalar" => advance_matrix_owner(writer, matrix, cursor),
+            "length" => test_funded_restore(|context| advance_owner_length(writer, 2, cursor, context)),
+            "u32" => test_funded_restore(|context| advance_u32_owner(writer, &[7], cursor, context)),
+            "usize" => test_funded_restore(|context| advance_u64_owner(writer, &[7], cursor, context)),
+            "u64" => test_funded_restore(|context| advance_u64_values(writer, &[7], cursor, context)),
+            "f64" => test_funded_restore(|context| advance_f64_owner(writer, &[1.5], cursor, context)),
+            "paged-u32" => test_funded_restore(|context| advance_paged_u32_owner(writer, integers, cursor, context)),
+            "paged-f64" => test_funded_restore(|context| advance_paged_f64_owner(writer, scalars, cursor, context)),
+            "pair" => test_funded_restore(|context| advance_pair_owner(writer, &[(7, 1.5)], cursor, context)),
+            "matrix-shape" | "matrix-scalar" => test_funded_restore(|context| advance_matrix_owner(writer, matrix, cursor, context)),
             _ => unreachable!(),
         }
     }
@@ -223,7 +346,7 @@ fn numerical_page_all_owner_entries_preserve_cursor_until_their_width_fits() {
             let mut sequence_receipt = RetainedCloneProgress::default();
             let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence, &mut sequence_receipt);
             writer.begin_staged_page(&mut context).unwrap();
-            advance_numerical_page_header(&mut writer, b"FEMPGT1\0", 42, cursor).unwrap();
+            test_funded_restore(|context| advance_numerical_page_header(&mut writer, b"FEMPGT1\0", 42, cursor, context)).unwrap();
             fault = advance(kind, &mut writer, &mut cursor, &matrix, &integers, &scalars).err();
         }
         writer.commit_staged_page().unwrap();
@@ -294,4 +417,8 @@ fn csc_sym_get_and_to_csr_full_match_dense() {
     for i in 0..3 {
         assert!((actual.get(i) - expected.get(i)).abs() < 1e-9, "mul_vec[{i}] = {} vs {}", actual.get(i), expected.get(i));
     }
+}
+
+fn test_operation(id: u64) -> Operation {
+    Operation::new(semio_framework_job::OperationId(id), semio_framework_job::RevisionId(7), semio_framework_job::Generation(3), 11)
 }

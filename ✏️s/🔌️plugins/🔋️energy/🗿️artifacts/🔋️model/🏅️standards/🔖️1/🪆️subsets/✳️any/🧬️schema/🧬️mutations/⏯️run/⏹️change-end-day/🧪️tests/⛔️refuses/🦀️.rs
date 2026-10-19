@@ -1,4 +1,4 @@
-//! 🧪️ `change-run-end-day` fixture — `⛔️refuses`: refuses an end before the current start.
+//! 🧪️ `change-run-end-day` fixture — `⛔️refuses`: refuses a day February does not have.
 //!
 //! The committed `(before, mutation, after, diff, outcome)` quintet beside this file IS the
 //! specification; `scenario` is the typed source it was generated from
@@ -13,8 +13,8 @@ use crate::snapshot::EnergyModelSnapshot;
 #[allow(unused_variables, unused_mut)]
 fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     let mut model = crate::model::Model { name: "BESTEST 600".into(), version: "1".into(), ..crate::model::Model::default() };
-    model.run_period = crate::calendar::RunPeriod { start_month: 3, start_day: 15, end_month: 3, end_day: 31, year: 2026 };
-    (snapshot(model), super::change_run_end_day(10))
+    model.run_period = crate::calendar::RunPeriod { start_month: 2, start_day: 15, end_month: 2, end_day: 28, year: 2026 };
+    (snapshot(model), super::change_run_end_day(30))
 }
 
 fn case() -> Case {

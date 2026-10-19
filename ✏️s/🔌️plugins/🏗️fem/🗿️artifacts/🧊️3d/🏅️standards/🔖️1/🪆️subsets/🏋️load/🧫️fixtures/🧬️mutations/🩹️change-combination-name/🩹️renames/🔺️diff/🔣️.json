@@ -1,0 +1,23 @@
+{
+  "nodes": null,
+  "elements": null,
+  "solids": null,
+  "materials": null,
+  "sections": null,
+  "supports": null,
+  "loadCases": null,
+  "combinations": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "c1",
+        "patch": {
+          "name": "Structural Combination"
+        }
+      }
+    ]
+  },
+  "analysis": null
+}

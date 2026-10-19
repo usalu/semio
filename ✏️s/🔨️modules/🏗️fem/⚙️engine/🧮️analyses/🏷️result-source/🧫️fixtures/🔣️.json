@@ -1,0 +1,10 @@
+{
+  "sources": [
+    { "kind": "loadCase", "id": "same", "identity": "scope:1:8:loadCase4:same" },
+    { "kind": "combination", "id": "same", "identity": "scope:1:11:combination4:same" },
+    { "kind": "loadCase", "id": "Last:🌍", "identity": "scope:1:8:loadCase9:Last:🌍" }
+  ],
+  "invalid": ["same", "scope:1:4:node4:same", "scope:1:8:loadCase4:same1:x", "scope:1:8:loadCase0:"],
+  "cantilever": { "length": 2.0, "e": 200000000000.0, "area": 0.01, "iy": 0.00001, "force": -1000.0, "factor": 2.0 },
+  "expected": { "count": 2, "loadCaseTy": -0.0013333333333333333, "combinationTy": -0.0026666666666666666 }
+}

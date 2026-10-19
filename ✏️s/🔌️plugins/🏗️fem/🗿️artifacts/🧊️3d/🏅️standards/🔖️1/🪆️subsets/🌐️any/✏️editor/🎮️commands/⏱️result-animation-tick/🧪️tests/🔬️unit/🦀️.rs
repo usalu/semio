@@ -1,13 +1,26 @@
 use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::result_animation_tick::*;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation, ViewModel};
-use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::set_result_animation::{SetResultAnimation, TICK_ACTION};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::ViewModel;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::set_result_animation::SetResultAnimation;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::set_result_animation::TICK_ACTION;
 use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results;
-use semio_s_fem_app_surface::{FemResultsAnimation, ANIMATION_TICK_SECONDS};
+use semio_s_fem_app_surface::FemResultsAnimation;
+use semio_s_fem_app_surface::ANIMATION_TICK_SECONDS;
 use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results::transient::FemPlaybackClock;
-use crate::context::{close, dispatch, fem3d_app, Fem3dApp};
+use crate::context::close;
+use crate::context::dispatch;
+use crate::context::fem3d_app;
+use crate::context::Fem3dApp;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, InvocationResult, NoConfig, ViewModel, ViewWindowInstance};
+use semio_framework_plugin::Effect;
+use semio_framework_plugin::InvocationResult;
+use semio_framework_plugin::ViewWindowInstance;
 
 const WINDOW: &str = "results-left";
 
@@ -39,7 +52,7 @@ fn clock(app: &mut Fem3dApp) -> Option<FemPlaybackClock> {
 /// 🔁️ Drives the publication the dispatch opened all the way into the stores, the way the plugin
 /// host's own continuation does — a read before the settle would see the PREVIOUS frame.
 async fn settle(app: &mut Fem3dApp) -> Vec<Effect> {
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation").effects
+    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation").effects
 }
 
 /// 🔁️ How many playback re-arms one gesture asked the host for. Counted off BOTH the dispatch's own

@@ -1,7 +1,7 @@
 //! 🧪️ Shared declaration-channel laws run by each genuine leaf owner.
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::{FromValue, ToValue};
-use protocol::{Mutation, MutationDiff, MutationLeaf, OpBinary, OpText, SemanticMutation};
+use protocol::{Mutation, ColdMutationDiff,MutationDiff, MutationLeaf, OpBinary, OpText, SemanticMutation};
 use semio_framework_ui_locale::LocalizedLabel;
 use std::fmt::Debug;
 
@@ -62,13 +62,13 @@ where
         for value in row["values"].as_array().expect("values") {
             let mutation = operation(i32_value(value));
             stored.extend(mutation.inverse(&current).expect("valid retained mutation inverse fixture"));
-            current = protocol::apply_diff(mutation.diff(&current).diff(), &current).expect("assignment");
+            current = protocol::apply_diff_cold(mutation.diff(&current).diff(), &current).expect("assignment");
         }
         assert_eq!(current, snapshot(i32_value(&row["result"])), "{row}");
         let expected: Vec<M> = row["inverse"].as_array().expect("inverse").iter().map(|value| operation(i32_value(value))).collect();
         assert_eq!(stored, expected, "{row}");
         for mutation in stored.iter().rev() {
-            current = protocol::apply_diff(mutation.diff(&current).diff(), &current).expect("Store reverse undo");
+            current = protocol::apply_diff_cold(mutation.diff(&current).diff(), &current).expect("Store reverse undo");
         }
         assert_eq!(current, base, "{row}");
     }
@@ -78,11 +78,11 @@ where
         let mut combined = M::Diff::default();
         for value in row["steps"].as_array().expect("steps") {
             let diff = M::Diff::from_value(serde_json::json!({"value": value}).into()).expect("replacement diff");
-            current = protocol::apply_diff(&diff, &current).expect("sequential diff");
+            current = protocol::apply_diff_cold(&diff, &current).expect("sequential diff");
             combined.absorb(diff);
         }
         assert_eq!(current, snapshot(i32_value(&row["result"])), "{row}");
-        assert_eq!(protocol::apply_diff(&combined, &base).expect("composed diff"), current, "{row}");
+        assert_eq!(protocol::apply_diff_cold(&combined, &base).expect("composed diff"), current, "{row}");
         assert_eq!(serde_json::Value::from(combined.to_value()), serde_json::json!({"value":row["combined"]}));
     }
     for a in [None, Some(i32::MIN), Some(0), Some(i32::MAX)] {
@@ -182,7 +182,7 @@ fn strict_profile_is_an_io_rule_not_a_mutation_constraint() {
         let snapshot = Std1StrictSnapshot { value: i32_value(&row["value"]) };
         assert_eq!(check(&snapshot).is_empty(), row["accept"].as_bool().expect("accept"));
         let mutation = crate::declaration_fixture_mutations::std1_strict::Std1StrictMutation::SetValue(crate::declaration_fixture_mutations::std1_strict::set_value::SetValue { value: snapshot.value });
-        assert_eq!(protocol::apply_diff(mutation.diff(&snapshot).diff(), &snapshot).expect("negative mutation stays valid"), snapshot);
+        assert_eq!(protocol::apply_diff_cold(mutation.diff(&snapshot).diff(), &snapshot).expect("negative mutation stays valid"), snapshot);
     }
 }
 

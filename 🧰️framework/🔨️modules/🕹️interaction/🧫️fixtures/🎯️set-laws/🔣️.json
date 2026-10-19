@@ -1,0 +1,24 @@
+{
+  "topology": [
+    { "id": "root", "granularity": "node" },
+    { "id": "a", "granularity": "node", "parent": "root" },
+    { "id": "a1", "granularity": "node", "parent": "a" },
+    { "id": "a2", "granularity": "node", "parent": "a" },
+    { "id": "b", "granularity": "node", "parent": "root" }
+  ],
+  "cases": [
+    { "id": "duplicate-pick-toggles-once", "seed": ["a"], "targets": ["a", "a"], "merge": "invertive", "transitive": false, "expected": [] },
+    { "id": "overlapping-transitive-picks-toggle-once", "seed": ["a1"], "targets": ["a", "a1"], "merge": "invertive", "transitive": true, "expected": ["a", "a2"] },
+    { "id": "replace-is-an-ordered-union", "seed": ["b"], "targets": ["a1", "a", "a"], "merge": "replace", "transitive": true, "expected": ["a1", "a", "a2"] },
+    { "id": "additive-retains-existing-order", "seed": ["b", "a2"], "targets": ["a", "a1"], "merge": "additive", "transitive": true, "expected": ["b", "a2", "a", "a1"] },
+    { "id": "subtractive-removes-the-union", "seed": ["b", "a", "a1", "a2"], "targets": ["a", "a1"], "merge": "subtractive", "transitive": true, "expected": ["b"] },
+    { "id": "unknown-targets-still-toggle-once", "seed": [], "targets": ["outside", "outside"], "merge": "invertive", "transitive": true, "expected": ["outside"] }
+  ],
+  "traversals": [
+    { "id": "cycle-is-visited-once", "topology": [{ "id": "a", "granularity": "node", "parent": "b" }, { "id": "b", "granularity": "node", "parent": "a" }], "root": "a", "descendants": ["a", "b"], "ancestors": ["b"] },
+    { "id": "self-parent-is-visited-once", "topology": [{ "id": "a", "granularity": "node", "parent": "a" }], "root": "a", "descendants": ["a"], "ancestors": [] },
+    { "id": "missing-root-has-no-closure", "topology": [], "root": "missing", "descendants": [], "ancestors": [] }
+  ],
+  "scale": 12000,
+  "domains": ["__proto__", "constructor", "toString"]
+}

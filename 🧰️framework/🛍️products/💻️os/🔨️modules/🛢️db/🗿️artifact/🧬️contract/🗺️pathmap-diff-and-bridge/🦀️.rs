@@ -26,7 +26,7 @@ async fn decode_pathmap(bytes: &[u8]) -> Result<DslValue, DbError> {
 
 /// 🧰️ Public convenience for every crate above this one that hand-builds a `DB_PATHMAP_SCHEMA`
 /// `MutationEnvelope` (test fixtures, `db_cli`'s `profile`/`migrate` commands, `db_fault_testing`'s
-/// workload generators) rather than going through `envelope_from_operation`: encodes a
+/// workload generators) rather than going through `envelope_from_operation_cold`: encodes a
 /// `serde_json::Value::Object` the same way `decode_pathmap`/`apply_one` decode it. Centralizing
 /// this is the single source of truth for `DB_PATHMAP_SCHEMA`'s actual wire bytes — a caller that
 /// instead hand-rolls `serde_json::to_vec` produces bytes `decode_pathmap` cannot read (it expects
@@ -93,15 +93,15 @@ pub fn entries_touched(entries: &[(String, Option<DslValue>)]) -> db_state::Touc
 //#endregion 🔖️Diff
 
 //#region 🔖️Bridge
-/// 🌉️ The generic ingestion boundary: builds an `MutationEnvelope` (in this crate's own
-/// path-value diff convention) from a typed `protocol::Mutation<P>` against a serializable
-/// projection `P`. The operation's diff is applied once through [`protocol::apply_diff`]; the envelope then persists only what
+/// ❄️ Builds a cold reference `MutationEnvelope` in this crate's path-value diff convention
+/// from explicit `protocol::ColdMutation<P>` arithmetic and `protocol::Mutation<P>` metadata against a serializable
+/// projection `P`. The operation's diff is applied once through [`protocol::apply_diff_cold`]; the envelope then persists only what
 /// that diff changed — one `path/field` entry per top-level field of `P` whose value differs (a removed field is a tombstone),
 /// the inverse carrying the base value of exactly those fields — never the whole post- or base projection. A projection that is
-/// not a record is one entity: its single entry sits at `path`. Genuinely exercises `Mutation`/`MutationDiff`'s trait methods
-/// (`diff`/`mutation_id`/`dependencies`/`author_id`/`timestamp`) — see the module doc's design-choice note on why this crate is
+/// not a record is one entity: its single entry sits at `path`. Uses `ColdMutation::diff` and strict `Mutation`
+/// metadata (`mutation_id`/`dependencies`/`author_id`/`timestamp`) — see the module doc's design-choice note on why this crate is
 /// allowed to.
-pub async fn envelope_from_operation<P, Op>(
+pub async fn envelope_from_operation_cold<P, Op>(
     document: protocol::ArtifactId,
     path: &str,
     op: &Op,
@@ -111,11 +111,11 @@ pub async fn envelope_from_operation<P, Op>(
     default_timestamp: protocol::HybridLogicalTimestamp,
 ) -> Result<protocol::MutationEnvelope, DbError>
 where
-    P: semio_framework_value::ToValue,
-    Op: protocol::Mutation<P>,
+    P: semio_framework_value::ToValue + Clone,
+    Op: protocol::Mutation<P> + protocol::ColdMutation<P>,
 {
-    let diff = op.diff(base);
-    let post = protocol::apply_diff(diff.diff(), base).map_err(|error| DbError::InvalidArgument(error.to_string()))?;
+    let diff = <Op as protocol::ColdMutation<P>>::diff(op, base);
+    let post = protocol::apply_diff_cold(diff.diff(), base).map_err(|error| DbError::InvalidArgument(error.to_string()))?;
     let (forward, backward) = changed_entries(path, &semio_framework_value::ToValue::to_value(base), &semio_framework_value::ToValue::to_value(&post));
     let schema = protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string());
     Ok(protocol::MutationEnvelope {

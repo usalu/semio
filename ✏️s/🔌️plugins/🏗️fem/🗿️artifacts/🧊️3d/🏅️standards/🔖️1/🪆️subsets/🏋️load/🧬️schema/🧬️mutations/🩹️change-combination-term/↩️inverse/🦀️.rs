@@ -1,0 +1,4 @@
+//! ↩️ Exact keyed term inverse preserves every sibling term and the combination name.
+use super::ChangeCombinationTerm;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
+pub fn inverse<Op: From<ChangeCombinationTerm>>(payload:&ChangeCombinationTerm,base:&Fem3dSnapshotValue)->Result<Vec<Op>,semio_framework_value::ValueError>{Ok(base.combinations.iter().find(|row|row.id==payload.id).filter(|row|row.terms.get(&payload.case_id).copied()!=payload.factor).map(|row|vec![Op::from(ChangeCombinationTerm{id:payload.id.clone(),case_id:payload.case_id.clone(),factor:row.terms.get(&payload.case_id).copied()})]).unwrap_or_default())}

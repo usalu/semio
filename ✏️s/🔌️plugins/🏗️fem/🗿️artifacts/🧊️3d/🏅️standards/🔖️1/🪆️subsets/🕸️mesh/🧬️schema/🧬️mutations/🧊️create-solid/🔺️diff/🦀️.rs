@@ -6,10 +6,10 @@ use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fe
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::invariant;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::solid_breach;
 
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &CreateSolid, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {
+pub fn diff(payload: &CreateSolid, base: &Fem3dSnapshotValue) -> protocol::MutationOutcome<Fem3dDiff> {
     if base.solids.iter().any(|solid| solid.id == payload.solid.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A solid with id \"{}\" already exists.", payload.solid.id), [payload.solid.id.clone()]);
     }

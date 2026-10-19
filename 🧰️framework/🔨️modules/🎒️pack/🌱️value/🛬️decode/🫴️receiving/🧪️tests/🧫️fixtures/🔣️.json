@@ -1,1 +1,54 @@
-{"text":"original 漢 🌱️","items":["α","β retained","最後"],"turn":{"items":1,"copyBytes":4096,"capacityBytes":65536,"releaseBytes":65536,"depth":128},"laws":["sameOriginalSource","oneItemContinuation","sameOriginalNative","independentSerdeOutput","paidPartialRetirement"]}
+{
+  "text": "original 漢 🌱️",
+  "items": [
+    "α",
+    "β retained",
+    "最後"
+  ],
+  "turn": {
+    "items": 1,
+    "copyBytes": 4096,
+    "capacityBytes": 65536,
+    "releaseBytes": 65536,
+    "depth": 128
+  },
+  "laws": [
+    "sameOriginalSource",
+    "oneItemContinuation",
+    "sameOriginalNative",
+    "independentSerdeOutput",
+    "paidPartialRetirement"
+  ],
+  "documentReceiving": {
+    "sourceFormat": "Document",
+    "guessBody": false,
+    "copySource": false,
+    "codecs": [
+      0,
+      1
+    ],
+    "stages": [
+      "envelope",
+      "anchor",
+      "catalog",
+      "body",
+      "typed",
+      "ready",
+      "close"
+    ],
+    "deniedAxes": [
+      "items",
+      "copy",
+      "capacity",
+      "release",
+      "depth"
+    ],
+    "checks": [
+      "footer",
+      "segmentCrc32c",
+      "chunkBlake3",
+      "declaredFields"
+    ],
+    "firstCloseHeapBytes": 0
+  }
+}

@@ -63,6 +63,7 @@ pub struct SetGraphParameterRetirement {
 }
 
 impl crate::os_store::ErasedSnapshotRetirement for SetGraphParameterRetirement {
+    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand {release_bytes:self.bytes.get(self.index).and_then(Option::as_ref).map_or(0,Vec::capacity),depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
     fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
         let empty = RetainedCloneProgress::default();

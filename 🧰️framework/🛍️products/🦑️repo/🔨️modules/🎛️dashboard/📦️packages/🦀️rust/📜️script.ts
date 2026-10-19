@@ -8,8 +8,7 @@ import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️proces
 import { runOwnedBuildChildInvocationV1 } from "../../../📚️library/📦️packages/🟦️typescript/🏗️build/🟦️.ts";
 /** ⚙️ Builds, installs and tests the `semio-framework-repo-dashboard` crate and execs its `semio` binary (owned build route for `repo/dashboard/rs`). */
 import {join,relative} from "node:path";
-import { mkdir, readFile } from "node:fs/promises";
-import { projectDashboardLaunch, ticketLaunchCommands, launchParameterArguments, type LaunchDocument } from "../../🌳️command-tree/🚀️launch/🟦️.ts";
+import { mkdir } from "node:fs/promises";
 import { captureDashboardSources, installedDashboard, installDashboard, staleDashboard, launchDashboard, withInstalledDashboardV1, type DashboardExecutionOptions } from "../../📦️installation/🟦️.ts";
 import { devToolingEnv, repoTestArtifactEnvironment, runCmd } from "../../../📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
 import { BundleScript, ScriptRouter, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -19,38 +18,6 @@ const crate = "semio-framework-repo-dashboard";
 /** 🦀️ The dashboard crates, bottom up: the producers carved along the layers of the dashboard, then the facade that owns the `semio` binary. */
 const crates = ["semio-framework-repo-dashboard-core", "semio-framework-repo-dashboard-launch", "semio-framework-repo-dashboard-repo-domain", "semio-framework-repo-dashboard-registry", "semio-framework-repo-dashboard-inventory", "semio-framework-repo-dashboard-wire", "semio-framework-repo-dashboard-preferences", "semio-framework-repo-dashboard-labels", "semio-framework-repo-dashboard-daemon", "semio-framework-repo-dashboard-terminal", "semio-framework-repo-dashboard-cli", crate];
 const dashboardOptions=(invocation:ScriptInvocation,workspace:string):DashboardExecutionOptions=>({invocation,workspace,network:repositoryCargoNetworkV1(invocation,workspace),mode:readBuildMode(process.env.SEMIO_BUILD_MODE),control:scriptCompilerAdmissionControlV1(invocation,"dashboard:execution",0)});
-
-/** 🧭️ Publishes scoped owner controls and runs their native registry identities. */
-class LaunchScript extends BundleScript {
-  async run(segments:string[]):Promise<void>{
-    const [action,selection,...rest]=segments;
-    if(action==="test"){runCmd("bun",["test",join(this.root,"../../🧪️tests/🚀️launch/🟦️.ts")],{cwd:this.repoRoot,env:devToolingEnv()});return;}
-    const ticket=action==="run"?selection?.slice(7).split("/").slice(0,4).join("/"):selection;
-    if(!ticket||!/^\d{2}\/\d{2}\/\d{2}\/[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(ticket)||rest.length)throw new Error("launch generate|check <YY/MM/DD/TICKET> or launch run <ticket-command-id>");
-    const [year,month,day,name]=ticket.split("/");
-    const file=join(this.repoRoot,`.🧬semio/🦑️repo/🎫️tickets/🎆️${year}/🌙️${month}/☀️${day}/${name}/🎮️commands.json`);
-    const declaration=JSON.parse(await readFile(file,"utf8"));
-    const commands=ticketLaunchCommands(ticket,declaration);
-    if(action==="run"){
-      const command=commands.find(command=>command.id===selection);
-      if(!command)throw new Error(`Dashboard command is not declared: ${selection}`);
-      process.exitCode=await launchDashboard(this.repoRoot,["run",command.id,...launchParameterArguments(command,process.env)],dashboardOptions(this.invocation,this.repoRoot));return;
-    }
-    if(action!=="generate"&&action!=="check")throw new Error(`Unknown dashboard launch action ${action}`);
-    const {readLaunchSeed,writeLaunchSeed,writeLaunchCatalog,checkLaunchCatalog}=await import("../../../📚️library/📦️packages/🟦️typescript/🏗️authoring/🟦️.ts");
-    const current=readLaunchSeed(this.repoRoot) as unknown as LaunchDocument;
-    const projected=projectDashboardLaunch(current,commands,ticket);
-    if(action==="check"){
-      if(JSON.stringify(current)!==JSON.stringify(projected))throw new Error("Dashboard launch projection is stale");
-      const problems=checkLaunchCatalog(this.repoRoot);
-      if(problems.length)throw new Error(`Launch catalog is stale: ${problems.slice(0,5).join("; ")}`);
-      return;
-    }
-    writeLaunchSeed(this.repoRoot,projected as unknown as Parameters<typeof writeLaunchSeed>[1]);
-    const {problems}=writeLaunchCatalog(this.repoRoot);
-    if(problems.length)throw new Error(`Launch catalog is invalid: ${problems.slice(0,5).join("; ")}`);
-  }
-}
 
 class BuildScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
@@ -72,23 +39,38 @@ class PreferencesScript extends BundleScript {
 }
 
 class TestScript extends BundleScript {
+  private async native(selection: { manifestPath: string; packages: string[]; extraArgs: string[] }, rest: string[]): Promise<void> {
+    await runRepositoryCargoTests(selection.packages, this.repoRoot, this.invocation, [...selection.extraArgs, "--test-threads", "1", "--success-output", "immediate", ...rest]);
+  }
+
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "unit") {
       const { rest } = resolveTestLevel(segments.slice(1));
       await runRepositoryCargoTests(crates, this.repoRoot, this.invocation, rest); return;
     }
-    runCmd("bun", ["test", join(this.root, "../../🧪️tests/🧭️authority/🟦️.ts")], { cwd: this.repoRoot, env: devToolingEnv(repoTestArtifactEnvironment(this.repoRoot,"dashboard-authority")) });
+    if (segments[0] === "windows") {
+      const { rest } = resolveTestLevel(segments.slice(1), "quick");
+      runCmd("bun", ["test", join(this.root, "../../🧪️tests/🪟️windows/🟦️.ts"), join(this.root, "../../🧪️tests/⌨️controls/🟦️.ts"), join(this.repoRoot, "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🖱️pointer-routing/🟦️.ts")], { cwd: this.repoRoot, env: devToolingEnv(repoTestArtifactEnvironment(this.repoRoot,"dashboard-windows")) });
+      const selections = [
+        { manifestPath: join(this.root, "Cargo.toml"), packages: [crate], extraArgs: ["--lib", "-E", "test(docking_) | test(real_pointer_drags_) | test(escape_focus_loss_) | test(keyboard_docking_) | test(every_window_docking_) | test(splitter_drag_) | test(nested_splits_)"] },
+        { manifestPath: join(this.repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml"), packages: ["semio-framework-ui"], extraArgs: ["--lib", "--features", "tui-terminal", "-E", "test(tui::)"] },
+      ];
+      for (const selection of selections) await this.native(selection, rest);
+      return;
+    }
+    const options=dashboardOptions(this.invocation,this.repoRoot);
+    runCmd("bun", ["test", join(this.root, "../../🧪️tests/🧭️authority/🟦️.ts")], { cwd: this.repoRoot, env: devToolingEnv({ ...repoTestArtifactEnvironment(this.repoRoot,"dashboard-authority"), SEMIO_DASHBOARD_BIN: await dashboardExecutable(this.root, this.repoRoot,options) }) });
     if (segments[0] === "authority") return;
     if (segments[0] === "execution") {
       const artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(this.repoRoot, ".🧬semio/🦑️repo/⚡️cache/tests/dashboard-execution");
       await mkdir(artifacts, { recursive: true });
-      await runOwnedCommand(process.execPath,["test",join(this.root,"../../🧪️tests/🧊️execution/🟦️.ts")],this.repoRoot,"dashboard:execution-test",compilerAdmissionBudgetV1(dashboardOptions(this.invocation,this.repoRoot).control),{env:devToolingEnv({SEMIO_TEST_ARTIFACT_DIR:artifacts}),signal:this.invocation.control.signal});return;
+      await runOwnedCommand(process.execPath,["test",join(this.root,"../../🧪️tests/🧊️execution/🟦️.ts")],this.repoRoot,"dashboard:execution-test",compilerAdmissionBudgetV1(options.control),{env:devToolingEnv({SEMIO_TEST_ARTIFACT_DIR:artifacts}),signal:options.control.signal});return;
     }
-    if (BATTLE_SUITES.includes(segments[0] ?? "")) { await battle(this.root, this.repoRoot, segments[0]!,dashboardOptions(this.invocation,this.repoRoot)); return; }
+    if (BATTLE_SUITES.includes(segments[0] ?? "")) { await battle(this.root, this.repoRoot, segments[0]!,options); return; }
     const { rest } = resolveTestLevel(segments);
     process.env.SEMIO_TEST_PATH ??= process.env.PATH;
     runCmd("bun", ["test", join(this.root, "../../🧪️tests/🌀️control-plane/🟦️.ts")], { cwd: this.repoRoot, env: devToolingEnv() });
-    const options=dashboardOptions(this.invocation,this.repoRoot);await dashboardExecutable(this.root,this.repoRoot,options);
+    await dashboardExecutable(this.root,this.repoRoot,options);
     await withInstalledDashboardV1(this.repoRoot,options,async executable=>{
       const native = devToolingEnv({ SEMIO_DASHBOARD_BIN: executable });
       runCmd("bun", ["test", join(this.root, "../../🧪️tests/🎮️registry/🟦️.ts")], { cwd: this.repoRoot, env: native });
@@ -151,6 +133,6 @@ export async function dashboardExecutable(packageRoot: string, workspace: string
 }
 
 if (import.meta.main) {
-  const router = new ScriptRouter(import.meta.dir).register("launch", LaunchScript).register("build", BuildScript).register("compile",CompileScript).register("install", InstallScript).register("preferences", PreferencesScript).register("test", TestScript).register("run", RunScript).register("daemon", DaemonScript);
+  const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("compile",CompileScript).register("install", InstallScript).register("preferences", PreferencesScript).register("test", TestScript).register("run", RunScript).register("daemon", DaemonScript);
   await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));
 }

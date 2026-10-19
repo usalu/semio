@@ -47,8 +47,8 @@ pub(super) struct AssemblyTriplet {
 
 #[derive(Clone, Default)]
 pub(super) struct AssemblyPartitionBuffer {
-    pub(super) full: PagedList<AssemblyTriplet, ASSEMBLY_TRIPLET_INDEX_SPACE>,
-    pub(super) free: PagedList<AssemblyTriplet, ASSEMBLY_TRIPLET_INDEX_SPACE>,
+    pub(super) full: PagedList<SparseTriplet, ASSEMBLY_TRIPLET_INDEX_SPACE>,
+    pub(super) free: PagedList<SparseTriplet, ASSEMBLY_TRIPLET_INDEX_SPACE>,
 }
 
 #[derive(Clone)]
@@ -142,14 +142,14 @@ pub(super) struct AssemblyCheckpoint {
     pub(super) partitions: Vec<AssemblyPartitionBuffer>,
     pub(super) full_merge_cursors: Vec<usize>,
     pub(super) free_merge_cursors: Vec<usize>,
-    pub(super) merged_full: PagedList<AssemblyTriplet, ASSEMBLY_TRIPLET_INDEX_SPACE>,
-    pub(super) merged_free: PagedList<AssemblyTriplet, ASSEMBLY_TRIPLET_INDEX_SPACE>,
+    pub(super) merged_full: PagedList<SparseTriplet, ASSEMBLY_TRIPLET_INDEX_SPACE>,
+    pub(super) merged_free: PagedList<SparseTriplet, ASSEMBLY_TRIPLET_INDEX_SPACE>,
     pub(super) checkpoint_due: bool,
     pub(super) preview_due: bool,
     pub(super) preview_cursor: usize,
     pub(super) resume_target: usize,
     pub(super) merge_scan_partition: usize,
-    pub(super) merge_candidate: Option<(usize, AssemblyTriplet)>,
+    pub(super) merge_candidate: Option<(usize, SparseTriplet)>,
 }
 
 #[derive(ToValue, FromValue, semio_framework_value::RetireOwned)]
@@ -163,10 +163,10 @@ pub(super) struct AssemblyResumeCheckpoint {
 
 pub(super) struct AssemblyPlan {
     pub(super) dof_map: DofMap,
-    pub(super) inv_perm: Vec<usize>,
+    pub(super) inv_perm: AssemblyOrder<usize>,
     pub(super) ndof: usize,
-    pub(super) free_new: Vec<usize>,
-    pub(super) compact_of_new: Vec<Option<usize>>,
+    pub(super) free_new: AssemblyOrder<usize>,
+    pub(super) compact_of_new: AssemblyOrder<Option<usize>>,
     pub(super) node_slot: HashMap<String, usize>,
 }
 
@@ -225,7 +225,7 @@ impl AssemblyPlan {
         for (compact, &new_index) in free_new.iter().enumerate() {
             compact_of_new[new_index] = Some(compact);
         }
-        Ok(Self { dof_map, inv_perm: permutation.inv_perm, ndof, free_new, compact_of_new, node_slot: node_index_of(&model.nodes) })
+        Ok(Self { dof_map, inv_perm: permutation.inv_perm.into_iter().collect(), ndof, free_new: free_new.into_iter().collect(), compact_of_new: compact_of_new.into_iter().collect(), node_slot: node_index_of(&model.nodes) })
     }
 }
 
@@ -234,6 +234,8 @@ enum AssemblyConstructionStage {
     ReservePartitionTripletCounts,
     InitializePartitionTripletCounts,
     ReserveDofs,
+    ReserveDofIndex,
+    InitializeDofIndex,
     ValidateNodePairs,
     ValidateElementReferences,
     ValidateSupportReferences,
@@ -353,10 +355,10 @@ pub struct AssemblyJobConstruction {
     partition_reserve_cursor: usize,
     partition_reserve_lane: u8,
     pub(super) plan: AssemblyPlan,
-    constrained_old: Vec<bool>,
+    constrained_old: AssemblyOrder<bool>,
     pub(super) partitions: Vec<AssemblyPartitionBuffer>,
-    pub(super) merged_full: PagedList<AssemblyTriplet, ASSEMBLY_TRIPLET_INDEX_SPACE>,
-    pub(super) merged_free: PagedList<AssemblyTriplet, ASSEMBLY_TRIPLET_INDEX_SPACE>,
+    pub(super) merged_full: PagedList<SparseTriplet, ASSEMBLY_TRIPLET_INDEX_SPACE>,
+    pub(super) merged_free: PagedList<SparseTriplet, ASSEMBLY_TRIPLET_INDEX_SPACE>,
     pub(super) full_merge_cursors: Vec<usize>,
     pub(super) free_merge_cursors: Vec<usize>,
     pub(super) job: Option<AssemblyJob<'static>>,
@@ -395,8 +397,8 @@ impl AssemblyJobConstruction {
             partition_triplet_counts: Vec::new(),
             partition_reserve_cursor: 0,
             partition_reserve_lane: 0,
-            plan: AssemblyPlan { dof_map: DofMap::from_order(Vec::new()), inv_perm: Vec::new(), ndof: 0, free_new: Vec::new(), compact_of_new: Vec::new(), node_slot: HashMap::new() },
-            constrained_old: Vec::new(),
+            plan: AssemblyPlan { dof_map: DofMap::from_order(Vec::new()), inv_perm: AssemblyOrder::default(), ndof: 0, free_new: AssemblyOrder::default(), compact_of_new: AssemblyOrder::default(), node_slot: HashMap::new() },
+            constrained_old: AssemblyOrder::default(),
             partitions: Vec::new(),
             merged_full: PagedList::default(),
             merged_free: PagedList::default(),
@@ -411,6 +413,60 @@ impl AssemblyJobConstruction {
         Self::from_model(AssemblyConstructionModel::Mounted(model), operation, partition_count)
     }
 
+    /// 🎟️ Funds one original order page before changing its assembly cursor.
+    pub fn step_one_funded(&mut self, grant: RetainedCloneGrant) -> Result<(bool, RetainedCloneProgress), FemError> {
+        fn reserve<T>(owner: &mut AssemblyOrder<T>, target: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, FemError> {
+            owner.reserve_capacity_one_funded(target, RetainedCloneGrant { maximum_capacity_bytes: grant.maximum_capacity_bytes.min(MOUNTED_OWNER_PAGE_BYTES), ..grant }).map_err(|_| FemError::ResourceAdmission)
+        }
+        let maximum_dofs = self.model.as_ref().map_or(Some(0), |model| model.nodes_len().checked_mul(6)).ok_or(FemError::Singular)?;
+        let (target, capacity, receipt) = match self.stage {
+            AssemblyConstructionStage::ReserveDofs => {
+                let receipt = reserve(&mut self.plan.dof_map.order, maximum_dofs, grant)?;
+                (maximum_dofs, self.plan.dof_map.order.capacity(), receipt)
+            }
+            AssemblyConstructionStage::ReserveDofIndex => {
+                let target = DofMap::slot_count(maximum_dofs).ok_or(FemError::Singular)?;
+                let receipt = reserve(&mut self.plan.dof_map.slots, target, grant)?;
+                (target, self.plan.dof_map.slots.capacity(), receipt)
+            }
+            AssemblyConstructionStage::ReservePermutation => {
+                let target = self.plan.dof_map.len();
+                let receipt = reserve(&mut self.plan.inv_perm, target, grant)?;
+                (target, self.plan.inv_perm.capacity(), receipt)
+            }
+            AssemblyConstructionStage::ReserveConstraints => {
+                let receipt = reserve(&mut self.constrained_old, self.plan.ndof, grant)?;
+                (self.plan.ndof, self.constrained_old.capacity(), receipt)
+            }
+            AssemblyConstructionStage::ReserveFree => {
+                let receipt = reserve(&mut self.plan.free_new, self.plan.ndof, grant)?;
+                (self.plan.ndof, self.plan.free_new.capacity(), receipt)
+            }
+            AssemblyConstructionStage::ReserveCompact => {
+                let receipt = reserve(&mut self.plan.compact_of_new, self.plan.ndof, grant)?;
+                (self.plan.ndof, self.plan.compact_of_new.capacity(), receipt)
+            }
+            AssemblyConstructionStage::BuildPartitions if self.partitions.len() == self.partition_count && self.partition_reserve_cursor < self.partitions.len() => {
+                let target = self.partition_triplet_counts[self.partition_reserve_cursor];
+                let partition = &mut self.partitions[self.partition_reserve_cursor];
+                let owner = if self.partition_reserve_lane == 0 { &mut partition.full } else { &mut partition.free };
+                let receipt = reserve(owner, target, grant)?;
+                (target, owner.capacity(), receipt)
+            }
+            AssemblyConstructionStage::ReserveMergedFull => {
+                let receipt = reserve(&mut self.merged_full, self.maximum_triplets, grant)?;
+                (self.maximum_triplets, self.merged_full.capacity(), receipt)
+            }
+            AssemblyConstructionStage::ReserveMergedFree => {
+                let receipt = reserve(&mut self.merged_free, self.maximum_triplets, grant)?;
+                (self.maximum_triplets, self.merged_free.capacity(), receipt)
+            }
+            _ => return self.step_one().map(|complete| (complete, RetainedCloneProgress::default())),
+        };
+        if receipt != RetainedCloneProgress::default() || capacity < target { return Ok((false, receipt)); }
+        self.step_one().map(|complete| (complete, receipt))
+    }
+
     pub fn step_one(&mut self) -> Result<bool, FemError> {
         match self.stage {
             AssemblyConstructionStage::ReservePartitionTripletCounts => {
@@ -418,7 +474,7 @@ impl AssemblyJobConstruction {
                     return Err(FemError::EmptyModel);
                 }
                 if !reserve_exact_owner_page(&mut self.partition_triplet_counts, self.partition_count) {
-                    return Err(FemError::Singular);
+                    return Err(FemError::ResourceAdmission);
                 }
                 self.stage = AssemblyConstructionStage::InitializePartitionTripletCounts;
             }
@@ -434,8 +490,22 @@ impl AssemblyJobConstruction {
                     return Err(FemError::EmptyModel);
                 }
                 let maximum_dofs = self.model.as_ref().ok_or(FemError::EmptyModel)?.nodes_len().checked_mul(6).ok_or(FemError::Singular)?;
-                if !reserve_exact_owner_page(&mut self.plan.dof_map.order, maximum_dofs) {
-                    return Err(FemError::Singular);
+                self.plan.dof_map.order.reserve_capacity_one(maximum_dofs, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::ResourceAdmission)?;
+                if self.plan.dof_map.order.capacity() < maximum_dofs { return Ok(false); }
+                self.stage = AssemblyConstructionStage::ReserveDofIndex;
+            }
+            AssemblyConstructionStage::ReserveDofIndex => {
+                let maximum_dofs = self.model.as_ref().ok_or(FemError::EmptyModel)?.nodes_len().checked_mul(6).ok_or(FemError::Singular)?;
+                let slot_count = DofMap::slot_count(maximum_dofs).ok_or(FemError::Singular)?;
+                self.plan.dof_map.slots.reserve_capacity_one(slot_count, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::ResourceAdmission)?;
+                if self.plan.dof_map.slots.capacity() < slot_count { return Ok(false); }
+                self.stage = AssemblyConstructionStage::InitializeDofIndex;
+            }
+            AssemblyConstructionStage::InitializeDofIndex => {
+                let maximum_dofs = self.model.as_ref().ok_or(FemError::EmptyModel)?.nodes_len().checked_mul(6).ok_or(FemError::Singular)?;
+                if self.plan.dof_map.slots.len() < DofMap::slot_count(maximum_dofs).ok_or(FemError::Singular)? {
+                    self.plan.dof_map.slots.push_reserved(None).map_err(|_| FemError::Singular)?;
+                    return Ok(false);
                 }
                 self.stage = AssemblyConstructionStage::ValidateNodePairs;
             }
@@ -540,9 +610,8 @@ impl AssemblyJobConstruction {
             }
             AssemblyConstructionStage::ReservePermutation => {
                 self.plan.ndof = self.plan.dof_map.len();
-                if !reserve_exact_owner_page(&mut self.plan.inv_perm, self.plan.ndof) {
-                    return Err(FemError::Singular);
-                }
+                self.plan.inv_perm.reserve_capacity_one(self.plan.ndof, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::ResourceAdmission)?;
+                if self.plan.inv_perm.capacity() < self.plan.ndof { return Ok(false); }
                 self.stage = AssemblyConstructionStage::BuildPermutation;
             }
             AssemblyConstructionStage::BuildPermutation => {
@@ -553,9 +622,8 @@ impl AssemblyJobConstruction {
                 }
             }
             AssemblyConstructionStage::ReserveConstraints => {
-                if !reserve_exact_owner_page(&mut self.constrained_old, self.plan.ndof) {
-                    return Err(FemError::Singular);
-                }
+                self.constrained_old.reserve_capacity_one(self.plan.ndof, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::ResourceAdmission)?;
+                if self.constrained_old.capacity() < self.plan.ndof { return Ok(false); }
                 self.stage = AssemblyConstructionStage::InitializeConstraints;
             }
             AssemblyConstructionStage::InitializeConstraints => {
@@ -589,9 +657,8 @@ impl AssemblyJobConstruction {
                 }
             }
             AssemblyConstructionStage::ReserveFree => {
-                if !reserve_exact_owner_page(&mut self.plan.free_new, self.plan.ndof) {
-                    return Err(FemError::Singular);
-                }
+                self.plan.free_new.reserve_capacity_one(self.plan.ndof, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::ResourceAdmission)?;
+                if self.plan.free_new.capacity() < self.plan.ndof { return Ok(false); }
                 self.scalar_cursor = 0;
                 self.stage = AssemblyConstructionStage::BuildFree;
             }
@@ -606,9 +673,8 @@ impl AssemblyJobConstruction {
                 }
             }
             AssemblyConstructionStage::ReserveCompact => {
-                if !reserve_exact_owner_page(&mut self.plan.compact_of_new, self.plan.ndof) {
-                    return Err(FemError::Singular);
-                }
+                self.plan.compact_of_new.reserve_capacity_one(self.plan.ndof, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::ResourceAdmission)?;
+                if self.plan.compact_of_new.capacity() < self.plan.ndof { return Ok(false); }
                 self.stage = AssemblyConstructionStage::InitializeCompact;
             }
             AssemblyConstructionStage::InitializeCompact => {
@@ -629,7 +695,7 @@ impl AssemblyJobConstruction {
             }
             AssemblyConstructionStage::ReservePartitions => {
                 if !reserve_exact_owner_page(&mut self.partitions, self.partition_count) {
-                    return Err(FemError::Singular);
+                    return Err(FemError::ResourceAdmission);
                 }
                 self.stage = AssemblyConstructionStage::BuildPartitions;
             }
@@ -640,13 +706,13 @@ impl AssemblyJobConstruction {
                     let partition = &mut self.partitions[self.partition_reserve_cursor];
                     let per_partition = self.partition_triplet_counts[self.partition_reserve_cursor];
                     if self.partition_reserve_lane == 0 {
-                        partition.full.reserve_capacity_one(per_partition, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::Singular)?;
+                        partition.full.reserve_capacity_one(per_partition, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::ResourceAdmission)?;
                         if partition.full.capacity() < per_partition {
                             return Ok(false);
                         }
                         self.partition_reserve_lane = 1;
                     } else {
-                        partition.free.reserve_capacity_one(per_partition, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::Singular)?;
+                        partition.free.reserve_capacity_one(per_partition, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::ResourceAdmission)?;
                         if partition.free.capacity() < per_partition {
                             return Ok(false);
                         }
@@ -658,13 +724,13 @@ impl AssemblyJobConstruction {
                 }
             }
             AssemblyConstructionStage::ReserveMergedFull => {
-                self.merged_full.reserve_capacity_one(self.maximum_triplets, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::Singular)?;
+                self.merged_full.reserve_capacity_one(self.maximum_triplets, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::ResourceAdmission)?;
                 if self.merged_full.capacity() >= self.maximum_triplets {
                     self.stage = AssemblyConstructionStage::ReserveMergedFree;
                 }
             }
             AssemblyConstructionStage::ReserveMergedFree => {
-                self.merged_free.reserve_capacity_one(self.maximum_triplets, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::Singular)?;
+                self.merged_free.reserve_capacity_one(self.maximum_triplets, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::ResourceAdmission)?;
                 if self.merged_free.capacity() >= self.maximum_triplets {
                     self.scalar_cursor = 0;
                     self.stage = AssemblyConstructionStage::ReserveFullMergeCursors;
@@ -683,7 +749,7 @@ impl AssemblyJobConstruction {
             }
             AssemblyConstructionStage::ReserveFreeMergeCursors => {
                 if !reserve_exact_owner_page(&mut self.free_merge_cursors, self.partition_count) {
-                    return Err(FemError::Singular);
+                    return Err(FemError::ResourceAdmission);
                 }
                 self.stage = AssemblyConstructionStage::BuildMergeCursors;
             }
@@ -696,7 +762,7 @@ impl AssemblyJobConstruction {
                     let model = self.model.take().ok_or(FemError::EmptyModel)?;
                     let total_elements = model.elements_len();
                     let model_signature = self.operation.operation.0 ^ self.operation.base_revision.0.rotate_left(17) ^ self.operation.generation.0.rotate_left(33);
-                    let plan = std::mem::replace(&mut self.plan, AssemblyPlan { dof_map: DofMap::from_order(Vec::new()), inv_perm: Vec::new(), ndof: 0, free_new: Vec::new(), compact_of_new: Vec::new(), node_slot: HashMap::new() });
+                    let plan = std::mem::replace(&mut self.plan, AssemblyPlan { dof_map: DofMap::from_order(Vec::new()), inv_perm: AssemblyOrder::default(), ndof: 0, free_new: AssemblyOrder::default(), compact_of_new: AssemblyOrder::default(), node_slot: HashMap::new() });
                     self.job = Some(AssemblyJob {
                         state: AssemblyCheckpoint {
                             stage: AssemblyJobStage::ElementTriplets,
@@ -760,6 +826,11 @@ impl AssemblyJobConstruction {
             self.job = None;
             return (false, 1, 0);
         }
+        match close_paged_owner_step(&mut self.plan.dof_map.slots, maximum_bytes) {
+            Ok(Some((items, bytes))) => return (false, items, bytes),
+            Err(()) => return (false, 0, 0),
+            Ok(None) => {}
+        }
         if let Some(key) = self.plan.dof_map.order.last_mut() {
             if key.0.capacity() != 0 {
                 let bytes = key.0.capacity();
@@ -772,24 +843,24 @@ impl AssemblyJobConstruction {
             self.plan.dof_map.order.pop();
             return (false, 1, 0);
         }
-        match close_vec_owner_step(&mut self.plan.dof_map.order, maximum_bytes) {
+        match close_paged_owner_step(&mut self.plan.dof_map.order, maximum_bytes) {
             Ok(Some((items, bytes))) => return (false, items, bytes),
             Err(()) => return (false, 0, 0),
             Ok(None) => {}
         }
         for owner in [&mut self.plan.inv_perm, &mut self.plan.free_new] {
-            match close_vec_owner_step(owner, maximum_bytes) {
+            match close_paged_owner_step(owner, maximum_bytes) {
                 Ok(Some((items, bytes))) => return (false, items, bytes),
                 Err(()) => return (false, 0, 0),
                 Ok(None) => {}
             }
         }
-        match close_vec_owner_step(&mut self.plan.compact_of_new, maximum_bytes) {
+        match close_paged_owner_step(&mut self.plan.compact_of_new, maximum_bytes) {
             Ok(Some((items, bytes))) => return (false, items, bytes),
             Err(()) => return (false, 0, 0),
             Ok(None) => {}
         }
-        match close_vec_owner_step(&mut self.constrained_old, maximum_bytes) {
+        match close_paged_owner_step(&mut self.constrained_old, maximum_bytes) {
             Ok(Some((items, bytes))) => return (false, items, bytes),
             Err(()) => return (false, 0, 0),
             Ok(None) => {}

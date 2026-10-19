@@ -1,0 +1,32 @@
+[
+ {
+  "id": "missing-nested-target",
+  "level": "error",
+  "code": "mutation.target-missing",
+  "message": "The addressed entity is missing.",
+  "target": [
+   "case-🧱",
+   "load-🧩"
+  ]
+ },
+ {
+  "id": "invalid-field",
+  "level": "fatal",
+  "code": "mutation.invariant",
+  "message": "The authored field is inadmissible.",
+  "target": [
+   "document",
+   "node-🧱"
+  ]
+ },
+ {
+  "id": "declared-literal-targets",
+  "level": "fatal",
+  "code": "mutation.invariant",
+  "message": "The authored field is inadmissible.",
+  "target": [
+   "compression-params",
+   "field-🧱"
+  ]
+ }
+]

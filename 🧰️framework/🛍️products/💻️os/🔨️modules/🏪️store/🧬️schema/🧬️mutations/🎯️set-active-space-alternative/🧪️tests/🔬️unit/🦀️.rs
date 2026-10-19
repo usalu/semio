@@ -15,3 +15,18 @@ fn metadata_and_explicit_nullable_wire_are_canonical() {
     assert_eq!(SpaceHistoryMutation::parse_op(&json).expect("text"), mutation);
     assert_eq!(SpaceHistoryMutation::decode_op(&mutation.encode_op().expect("binary")).expect("binary decode"), mutation);
 }
+
+fn alternative(id: &str) -> super::super::super::SpaceAlternative {
+    super::super::super::SpaceAlternative { id: id.into(), name: id.into(), checkpoint_ids: Vec::new() }
+}
+
+/// ➕️ L3: activating another alternative, clearing the active one and re-activating the active one sum to the negative diff.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    for active in [None, Some("a".to_string())] {
+        let base = SpaceHistorySnapshot { alternatives: vec![alternative("a"), alternative("b")], active_alternative_id: active, ..Default::default() };
+        for target in [Some("a".to_string()), Some("b".to_string()), None] {
+            crate::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SpaceHistoryMutation::SetActiveSpaceAlternative(SetActiveSpaceAlternative { alternative_id: target }), &base).await;
+        }
+    }
+}

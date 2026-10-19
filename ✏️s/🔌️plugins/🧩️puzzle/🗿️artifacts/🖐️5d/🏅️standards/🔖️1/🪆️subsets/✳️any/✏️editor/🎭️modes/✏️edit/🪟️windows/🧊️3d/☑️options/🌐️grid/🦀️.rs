@@ -1,10 +1,13 @@
-//! 🌐️ 3D-window option — the grid group: the visibility and snap toggles plus the spacing slider
 //! (the pitch snapping rounds world placements onto). Per window instance, like every other pane
+//! 🌐️ 3D-window option — the grid group: the visibility and snap toggles plus the spacing slider
 //! chrome measure.
 
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
-use crate::editor::puzzle5d::entities::{puzzle5d_action, PUZZLE5D_GRID_SPACING_MAX, PUZZLE5D_GRID_SPACING_MIN, PUZZLE5D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle5d::entities::puzzle5d_action;
+use crate::editor::puzzle5d::PUZZLE5D_GRID_SPACING_MAX;
+use crate::editor::puzzle5d::PUZZLE5D_GRID_SPACING_MIN;
+use crate::editor::puzzle5d::PUZZLE5D_PLAY_CONTROLLER_ID;
 use semio_framework_plugin::WindowMeasure;
 
 /// 🌐️ `puzzle5d-play-world-grid` — visible / snap / spacing.

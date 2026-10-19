@@ -51,11 +51,11 @@
     {
       "kind": "merge-policy",
       "snapshot": {
-        "policy": "preferLocal"
+        "policy": "Normal"
       },
       "mutation": {
         "mutation": "changeMergePolicy",
-        "policy": "manual"
+        "policy": "Vigilant"
       }
     },
     {

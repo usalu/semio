@@ -28,6 +28,9 @@ pub use semio_framework_actor_job_publication::*;
 pub use retained_turn::{OriginalActorParkRefusal, OriginalActorParkedTurn, OriginalActorParkedOutcome, OriginalActorParkedReturn, IssuedRetainedBatch, IssuedRetainedRecipient, OriginalActorTurnLoan, OriginalActorTurnWork, RetainedTurnInput, RetainedTurnReceipt, OriginalActorInput, ActorGuestPhase, OriginalActorGuestReturn, OriginalActorJobProvider, OriginalJobStep, OriginalJobOutputState, OriginalJobOutcome, OriginalJobOutputChunk, OriginalJobOutputReply, OriginalJobOutputAckReply, OriginalJobSource, OriginalJobSourceCursor, OriginalJobTurnLoan, OriginalJobBudget, OriginalJobStartReply, OriginalJobStepReply, OriginalJobCancelReply, OriginalJobCallFailure};
 pub use retained_turn::{OriginalGuestExecutionBudget, OriginalGuestExecutionReceipt, OriginalJobSourceWireCursor, OriginalJobSourceWireHeader};
 
+#[path = "🖼️wire-turn/📬️typed-operation/🦀️.rs"]
+pub mod typed_operation_page;
+
 #[path = "🎠️activation-reservation/🦀️.rs"]
 pub mod activation;
 

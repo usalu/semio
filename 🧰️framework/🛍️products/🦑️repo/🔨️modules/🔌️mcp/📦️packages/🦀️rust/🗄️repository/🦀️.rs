@@ -191,7 +191,7 @@ pub fn tool_schemas(profile: Profile) -> Vec<Tool> {
     ];
     let mut reopen = vec![
         ("path", Schema::string("YY/MM/DD/SLUG path.")),
-        ("prompt", Schema::string("Additional task description.")),
+        ("prompt", Schema { min_length: 1, pattern: r"\S".to_string(), ..Schema::string("Additional task description.") }),
         ("client", Schema::string("Agent client.")),
         ("llm", Schema::string("Model.")),
         ("effort", Schema::string("Reasoning effort.")),
@@ -228,7 +228,7 @@ pub fn tool_schemas(profile: Profile) -> Vec<Tool> {
                 &["summary"],
             ),
         ),
-        tool("ticket_reopen", Schema::object(reopen, &[])),
+        tool("ticket_reopen", Schema::object(reopen, &["prompt"])),
         tool(
             "goal_open",
             Schema::object(

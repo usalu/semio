@@ -14,9 +14,7 @@ type Asset = { name: string; path: string; required: string[]; forbidden: string
 
 const assets: Asset[] = [
   { name: "codex uses the cross-platform repo bootstrap", path: ".codex/config.toml", required: ['command = "bun"', 'args = ["./📜️script.ts", "dev", "mcp", "stdio", "codex"]'], forbidden: ["repo/client/client"] },
-  { name: "cursor uses the cross-platform repo bootstrap", path: ".cursor/mcp.json", required: ['"command": "bun"', '"args": ["./📜️script.ts", "dev", "mcp", "stdio", "cursor"]'], forbidden: ["repo/client/client"] },
   { name: "generic clients use the cross-platform repo bootstrap", path: ".mcp.json", required: ['"command": "bun"', '"args": ["./📜️script.ts", "dev", "mcp", "stdio", "client"]'], forbidden: ["repo/client/client"] },
-  { name: "copilot uses the cross-platform repo bootstrap", path: ".vscode/mcp.json", required: ['"command": "bun"', '"args": ["./📜️script.ts", "dev", "mcp", "stdio", "copilot"]'], forbidden: ["repo/client/client"] },
   { name: "devcontainer provisions through the cross-platform workspace setup", path: ".devcontainer/devcontainer.json", required: ['"postCreateCommand": ["bun", "repo", "run", "workspace:setup"]'], forbidden: ["repo/client/client", "./repo/client/mcp/go", "post-create.sh"] },
   { name: "native shell bootstrap builds the repo client from its canonical source", path: `${modules}/🔩️native/🥾️bootstrap/🐚️.sh`, required: ["bun repo run workspace:setup", "bun repo run @semio-tech/repo-client:build"], forbidden: ["repo/client/client", "./repo/client/mcp/go", "💻️client"] },
   { name: "native windows bootstrap builds the repo client from its canonical source", path: `${modules}/🔩️native/🥾️bootstrap/🔵️.ps1`, required: ['@("repo", "run", "workspace:setup")', '@("repo", "run", "@semio-tech/repo-client:build")'], forbidden: ["repo/client/client.exe", "./repo/client/mcp/go", "💻️client"] },
@@ -81,7 +79,7 @@ test("the post-commit micro-commit hook source resets the commit templates", () 
 });
 
 test("the dev MCP stdio bootstrap answers the initialize handshake", async () => {
-  const child = Bun.spawn(["bun", "./📜️script.ts", "dev", "mcp", "stdio", "cursor"], { cwd: root, stdin: "pipe", stdout: "pipe", stderr: "inherit" });
+  const child = Bun.spawn(["bun", "./📜️script.ts", "dev", "mcp", "stdio", "codex"], { cwd: root, stdin: "pipe", stdout: "pipe", stderr: "inherit" });
   try {
     child.stdin.write('{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0"}}}\n');
     await child.stdin.flush();

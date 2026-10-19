@@ -1,10 +1,11 @@
-//! ✋️ Puzzle2d mutation — `DragSelection`: a relative, parametric drag of a set of nodes and target
 //! regions by one common offset. The gesture's own inputs (which ids, which offset) are the payload, so
+//! ✋️ Puzzle2d mutation — `DragSelection`: a relative, parametric drag of a set of nodes and target
 //! editing the drag in history re-derives every position from whatever base it replays on.
 
 use crate::standards::v1::subsets::any::schema::mutations::move_node::MoveNode;
 use crate::standards::v1::subsets::any::schema::mutations::move_target_region::MoveTargetRegion;
-use semio_framework_value::{list::PagedList, paged::PagedUtf8};
+use semio_framework_value::list::PagedList;
+use semio_framework_value::paged::PagedUtf8;
 
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use {crate::standards::v1::subsets::any::schema::mutations::selection::puzzle2d_selection_items, crate::standards::v1::subsets::any::schema::mutations::selection::puzzle2d_selection_number};
@@ -35,18 +36,12 @@ pub fn drag_selection<Op: From<DragSelection>>(targets: PagedList<PagedUtf8<{ us
 impl<Op> protocol::MutationKind<Puzzle2dSnapshot, Op> for DragSelection
 where
     Op: protocol::Mutation<Puzzle2dSnapshot, Diff = Puzzle2dDiff> + From<DragSelection> + From<MoveNode> + From<MoveTargetRegion>,
-{
+ {
+
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "drag", entity: "selection", kind: "drag-selection", record: "DraggedSelection" };
 
-    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
     
-    })
-}
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let ((dx_en, dx_de), (dy_en, dy_de)) = (puzzle2d_selection_number(self.dx), puzzle2d_selection_number(self.dy));
         let (en, de) = puzzle2d_selection_items(self.targets.len());
@@ -55,5 +50,20 @@ where
     fn target(&self) -> Vec<String> {
         self.targets.iter().map(PagedUtf8::to_string_owner).collect()
     }
+
+}
+impl<Op> protocol::ColdMutationKind<Puzzle2dSnapshot, Op> for DragSelection
+where
+    Op: protocol::ColdMutation<Puzzle2dSnapshot, ReferenceDiff = Puzzle2dDiff> + From<DragSelection> + From<MoveNode> + From<MoveTargetRegion>,
+ {
+fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+        super::diff::diff(self, base)
+    }
+fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+
+    })
+}
 }
 //#endregion 🔖️Mutation

@@ -259,7 +259,7 @@ impl DbIoTaskExecutor for FsDbIoExecutor {
                     None => EpochFence::INITIAL,
                 };
                 let expires_at_ms = now_ms.checked_add(*ttl_ms).ok_or(DbError::LimitExceeded("filesystem lease expiry"))?;
-                write_lease_file(&path, fence, expires_at_ms, holder.as_str())?;
+                write_lease_file(&path, operation, fence, expires_at_ms, holder.as_str())?;
                 Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Fence(fence))))
             }
             DbIoTask::LeaseRenew { document, holder, fence, now_ms, ttl_ms, .. } => {
@@ -271,7 +271,7 @@ impl DbIoTaskExecutor for FsDbIoExecutor {
                 }
                 fence.check(current)?;
                 let expires_at_ms = now_ms.checked_add(*ttl_ms).ok_or(DbError::LimitExceeded("filesystem lease expiry"))?;
-                write_lease_file(&path, *fence, expires_at_ms, holder.as_str())?;
+                write_lease_file(&path, operation, *fence, expires_at_ms, holder.as_str())?;
                 Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
             }
             DbIoTask::LeaseRelease { document, holder, fence, .. } => {

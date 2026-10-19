@@ -14,6 +14,7 @@ struct HistoryPageRetirement<T: RetireOwned> {
 }
 
 impl<T: RetireOwned> RetirementCursor for HistoryPageRetirement<T> {
+    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if let Some(active)=self.active.as_ref(){let mut demand=active.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"history entry depth overflow"))?;return Ok(demand);}Ok(semio_framework_value::RetirementDemand {release_bytes:if self.original.is_empty(){self.original.next_empty_page_release_byte_demand().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"history backing extent unavailable"))?}else{0},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
         if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
         match self.next_depth_demand() {
@@ -69,6 +70,7 @@ struct GroupVisibilityRetirement {
 }
 
 impl RetirementCursor for GroupVisibilityRetirement {
+    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand {copy_bytes:usize::from(self.remaining!=0),depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
         if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
         if !self.terminal_is_empty() && grant.maximum_depth == 0 { return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::DepthLimit, "group visibility requires its original owner depth")); }

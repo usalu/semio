@@ -1,4 +1,11 @@
 import type {Binary64} from "@semio-tech/framework/value/ieee754";
+import type { Fem2dLoadPatch } from "../🔺️diff/🟦️.ts";
+import type { Fem2dElementPatch } from "../🔺️diff/🟦️.ts";
+import type { Fem2dSupportPatch } from "../🔺️diff/🟦️.ts";
+import type { Fem2dRegionPatch } from "../🔺️diff/🟦️.ts";
+import type { Fem2dSectionPatch } from "../🔺️diff/🟦️.ts";
+import type { Fem2dNodePatch } from "../🔺️diff/🟦️.ts";
+import type { Fem2dMaterialPatch } from "../🔺️diff/🟦️.ts";
 /** ⚡️ Fem2d direct-mutation discriminated union — TS mirror of the Rust `Fem2dMutation` dispatch enum. */
 
 import type {FemNode,FemDof,FemElement,FemMaterial,FemSection,FemSupport,FemLoad,FemLoadCase,FemRegion,FemCombinationTerm,FemCombination,FemAnalysisSettings} from "../📸️snapshot/🟦️.ts";
@@ -194,9 +201,11 @@ export type Fem2dMutation =
   | ({ mutation: "createMaterial" } & CreateMaterial)
   | ({ mutation: "deleteMaterial" } & DeleteMaterial)
   | ({ mutation: "replaceMaterial" } & ReplaceMaterial)
+  | ({ mutation: "changeMaterial" } & ChangeMaterial)
   | ({ mutation: "createSection" } & CreateSection)
   | ({ mutation: "deleteSection" } & DeleteSection)
   | ({ mutation: "replaceSection" } & ReplaceSection)
+  | ({ mutation: "changeSection" } & ChangeSection)
   | ({ mutation: "createSupport" } & CreateSupport)
   | ({ mutation: "deleteSupport" } & DeleteSupport)
   | ({ mutation: "replaceSupport" } & ReplaceSupport)
@@ -212,7 +221,14 @@ export type Fem2dMutation =
   | ({ mutation: "deleteCombination" } & DeleteCombination)
   | ({ mutation: "updateAnalysisSettings" } & UpdateAnalysisSettings)
   | ({ mutation: "replaceNode" } & ReplaceNode)
+  | ({ mutation: "changeNode" } & ChangeNode)
   | ({ mutation: "replaceLoad" } & ReplaceLoad)
   | ({ mutation: "changeLoadCaseName" } & ChangeLoadCaseName)
   | ({ mutation: "replaceCombination" } & ReplaceCombination)
-  | ({ mutation: "moveSelection" } & MoveSelection);
+  | ({ mutation: "moveSelection" } & MoveSelection)
+  | ({ mutation: "changeRegion" } & ChangeRegion)
+  | ({ mutation: "changeSupport" } & ChangeSupport)
+  | ({ mutation: "changeElement" } & ChangeElement)
+  | ({ mutation: "changeLoad" } & ChangeLoad)
+  | ({ mutation: "changeCombinationName" } & ChangeCombinationName)
+  | ({ mutation: "changeCombinationTerm" } & ChangeCombinationTerm);

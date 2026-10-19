@@ -1,9 +1,12 @@
 /// ⏯️ Fill run laws: the language-neutral run fixture, the parry3d oracle, the trace delivery, the interactive ceilings, resume and checkpoint replay, the capacity danger step, revalidation and the own-mesh bodies.
 
 //#region ⏯️FillRunJob
-use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dPlaySnapshot;
+use crate::Puzzle3dPlaySnapshot;
 use semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation;
-use semio_framework_tool_run::{ToolRunId, ToolRunTraceCursor, ToolRunTraceStore, TOOL_RUN_TRACE_PAGE_BYTES_MAX};
+use semio_framework_tool_run::ToolRunId;
+use semio_framework_tool_run::ToolRunTraceCursor;
+use semio_framework_tool_run::ToolRunTraceStore;
+use semio_framework_tool_run::TOOL_RUN_TRACE_PAGE_BYTES_MAX;
 
 const FILL_RUN_FIXTURE: &str = include_str!("../../🧫️fixtures/🎞️fill-run.json");
 const FILL_RUN_BOX_SCALE: f32 = 4.0;
@@ -39,8 +42,12 @@ fn example_fill_roots(document: &str, seed: u32) -> (FillPreparationRoots, Vec<S
     (FillPreparationRoots::new(Arc::new(scene), Arc::new(meshes)), lane, positions)
 }
 
-fn fill_run_job(roots: FillPreparationRoots, lane: Vec<String>, seed: u64, requested: usize) -> FillRunJob {
-    FillRunJob::new(FillBuilder::begin_preparation(roots, Operation::new(OperationId(71), RevisionId(1), Generation(1), seed), requested), fill_run_identity(), lane, [0; 32])
+fn fill_run_job(roots: FillPreparationRoots, lane: Vec<String>, seed: u64, requested: usize) -> FillRunFixture {
+    fill_run_job_on_clock(roots, lane, seed, requested, never)
+}
+
+fn fill_run_job_on_clock(roots: FillPreparationRoots, lane: Vec<String>, seed: u64, requested: usize, clock: fn() -> Option<u64>) -> FillRunFixture {
+    FillRunFixture::new(FillRunJob::new(FillBuilder::begin_preparation(roots, Operation::new(OperationId(71), RevisionId(1), Generation(1), seed), requested), fill_run_identity(), lane, [0; 32]), clock)
 }
 
 /// 🚦️ What one run job turn handed its driver, with every retained page returned to its ledger.
@@ -69,10 +76,59 @@ fn settle_fill_run_outcome(turn: JobTurn) -> FillRunTurn {
     }
 }
 
-fn fill_run_turn(job: &mut FillRunJob, fuel: u64, sequence: &mut u64) -> FillRunTurn {
-    let operation = job.operation();
-    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX, semio_s_plugin_puzzle_jobs::testing::unbounded_grant()), root_cancel_token(), never, sequence, semio_s_plugin_puzzle_jobs::testing::test_progress());
-    settle_fill_run_outcome(job.turn(&mut context))
+struct FillRunFixture {
+    job: Option<FillRunJob>,
+    original: Option<semio_s_plugin_puzzle_jobs::testing::OriginalFixture>,
+}
+
+impl FillRunFixture {
+    fn new(job: FillRunJob, clock: fn() -> Option<u64>) -> Self {
+        let operation = job.operation();
+        Self { job: Some(job), original: Some(semio_s_plugin_puzzle_jobs::testing::OriginalFixture::new(operation.operation, operation.generation, semio_s_plugin_puzzle_jobs::testing::fixture_stock(), clock, u64::MAX, 1 << 48)) }
+    }
+
+    fn advance(&mut self, fuel: u64, deadline: u64) -> JobTurn {
+        let job = self.job.as_mut().expect("original fill run remains live");
+        self.original.as_mut().expect("original fill caller remains live").turn(semio_s_plugin_puzzle_jobs::testing::fixture_stock(), |cx| {
+            let mut output=None;
+            cx.with_original_work_loan(fuel,deadline,|cx|{output=Some(job.turn(cx));Ok(())})?;
+            Ok(output.unwrap())
+        }).expect("original fill run step")
+    }
+
+    fn drive_outcome(&mut self, fuel: u64, deadline: u64, verdict: &mut Option<semio_framework_trace::CallbackVerdict>) -> Option<JobTurn> {
+        let job = self.job.as_mut().expect("original fill run remains live");
+        self.original.as_mut().expect("original fill caller remains live").turn(semio_s_plugin_puzzle_jobs::testing::fixture_stock(), |cx| {
+            let mut output=None;
+            cx.with_original_work_loan(fuel,deadline,|cx|{output=semio_framework_job::drive_step(job,cx,"puzzle3d-fill-run",semio_framework_job::InteractiveStage::InteractiveStep,verdict)?.map(semio_s_plugin_puzzle_jobs::testing::owned_turn);Ok(())})?;
+            Ok(output)
+        }).expect("original fill run callback")
+    }
+}
+
+impl std::ops::Deref for FillRunFixture {
+    type Target = FillRunJob;
+    fn deref(&self) -> &Self::Target { self.job.as_ref().expect("original fill run remains live") }
+}
+
+impl std::ops::DerefMut for FillRunFixture {
+    fn deref_mut(&mut self) -> &mut Self::Target { self.job.as_mut().expect("original fill run remains live") }
+}
+
+impl Drop for FillRunFixture {
+    fn drop(&mut self) {
+        if !std::thread::panicking() {
+            if let Some(mut original) = self.original.take() {
+                if let Some(job) = self.job.as_mut() { original.close_job(job); }
+                self.job.take();
+                original.finish();
+            }
+        }
+    }
+}
+
+fn fill_run_turn(job: &mut FillRunFixture, fuel: u64) -> FillRunTurn {
+    settle_fill_run_outcome(job.advance(fuel, u64::MAX))
 }
 
 /// 🪞️ The ledger side of a run as the contract folds it: provisional ops and entities, the resident
@@ -123,10 +179,10 @@ impl FillRunMirror {
         }
     }
 
-    fn drive(&mut self, job: &mut FillRunJob, fuel: u64, turns: usize) -> usize {
+    fn drive(&mut self, job: &mut FillRunFixture, fuel: u64, turns: usize) -> usize {
         let mut sequence = 0;
         for turn in 0..turns {
-            match fill_run_turn(job, fuel, &mut sequence) {
+            match fill_run_turn(job, fuel) {
                 FillRunTurn::Tick(tick) => self.apply(tick),
                 FillRunTurn::Checkpoint(bytes) => self.checkpoints.push(bytes),
                 FillRunTurn::Complete => return turn + 1,
@@ -141,7 +197,7 @@ impl FillRunMirror {
     }
 }
 
-fn fill_run_summary(job: &FillRunJob, mirror: &FillRunMirror, prefix: usize) -> serde_json::Value {
+fn fill_run_summary(job: &FillRunFixture, mirror: &FillRunMirror, prefix: usize) -> serde_json::Value {
     let [tested, locked, collisions, rejected, marked] = job.counters();
     let stall = mirror.steps.iter().rev().find(|step| step.kind == ToolRunStepKind::Warning).and_then(|step| FillRunReason::from_code(step.reason)).map(FillRunReason::id);
     serde_json::json!({
@@ -234,7 +290,7 @@ fn own_mesh_fill_roots(document: &str, seed: u32, scale: f32) -> (FillPreparatio
     let own: Vec<f32> = positions.iter().map(|value| value * scale).collect();
     let fallback = semio_framework_plugin::mesh_from_kind(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FALLBACK_MESH_KIND);
     let mut meshes = (*roots.meshes).clone();
-    meshes.insert(FILL_RUN_OWN_MESH_URL.into(), collision_body_from_buffers(&own, &fallback.indices).expect("own mesh body"));
+    meshes.cold_insert(FILL_RUN_OWN_MESH_URL.into(), collision_body_from_buffers(&own, &fallback.indices).expect("own mesh body"));
     lane.push(FILL_RUN_OWN_MESH_URL.into());
     lane.sort();
     lane.dedup();
@@ -358,7 +414,7 @@ fn fill_run_job_delivers_every_trace_record_of_a_long_run() {
     let mut sequence = 0;
     let budget = law["deltaBudgetBytes"].as_u64().expect("delta budget") as usize;
     for _ in 0..10_000_000 {
-        match fill_run_turn(&mut job, 64, &mut sequence) {
+        match fill_run_turn(&mut job, 64) {
             FillRunTurn::Tick(tick) => {
                 for op in tick.trace.iter().flat_map(|page| &page.ops) {
                     match op {
@@ -417,7 +473,7 @@ fn fold_overlay_op(overlay: &Puzzle3dPlaySnapshot, bytes: &[u8]) -> Option<Puzzl
     if !outcome.is_applicable(protocol::MergePolicy::default()) {
         return None;
     }
-    protocol::apply_diff(outcome.diff(), overlay).ok()
+    protocol::apply_diff_cold(outcome.diff(), overlay).ok()
 }
 
 /// ⏱️ LAW (red→green row 1, the successor of the deleted `fillBuildTick` law): on the shipped Nakagin document the fill run
@@ -434,14 +490,12 @@ fn fill_run_job_step_and_overlay_append_stay_below_the_interactive_ceiling_for_n
     let (budget, ceiling, append_ceiling, minimum_turns, seed) = (number("budgetWork"), number("stepWorkCeiling"), number("appendOpsCeiling") as usize, number("turns") as usize, number("seed"));
     let (roots, lane, _) = example_fill_roots(law["document"].as_str().expect("document"), seed as u32);
     let mut overlay = Puzzle3dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&semio_s_artifact_puzzle_3d_model::io::text::snapshot::parse_dsl(&std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio")).expect("committed example reads")).expect("example parses"))).expect("typed fixture admits"));
-    let mut job = fill_run_job(roots, lane, seed, number("requested") as usize);
-    let operation = job.operation();
-    let (mut sequence, mut verdict) = (0, None);
+    let mut job = fill_run_job_on_clock(roots, lane, seed, number("requested") as usize,precompute_work_clock);
+    let mut verdict=None;
     let (mut worst, mut worst_turn, mut turns, mut worst_append, mut appends) = (0_u64, 0_usize, 0_usize, 0_usize, 0_usize);
     loop {
         let start = precompute_work_done();
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, start + budget, semio_s_plugin_puzzle_jobs::testing::unbounded_grant()), root_cancel_token(), precompute_work_clock, &mut sequence, semio_s_plugin_puzzle_jobs::testing::test_progress());
-        let outcome = semio_framework_job::drive_step(&mut job, &mut context, "puzzle3d-fill-run", semio_framework_job::InteractiveStage::InteractiveStep, &mut verdict).expect("a fill run step").map(semio_s_plugin_puzzle_jobs::testing::owned_turn);
+        let outcome = job.drive_outcome(semio_framework_job::INTERACTIVE_LANE_FUEL, start + budget, &mut verdict);
         let work = precompute_work_done() - start;
         turns += 1;
         if work > worst {
@@ -473,12 +527,12 @@ fn fill_run_job_step_and_overlay_append_stay_below_the_interactive_ceiling_for_n
 /// `testing` in a tick of its own before the tick that marks it (collision, fit or refusal).
 #[test]
 fn fill_run_job_step_with_one_unit_of_fuel_shows_each_candidate_before_its_verdict() {
-    let mut job = FillRunJob::new(FillBuilder::begin_preparation(nakagin_scale_roots(), Operation::new(OperationId(73), RevisionId(1), Generation(1), 43), 24), fill_run_identity(), vec![NAKAGIN_MESH_URL.to_string()], [0; 32]);
+    let mut job = FillRunFixture::new(FillRunJob::new(FillBuilder::begin_preparation(nakagin_scale_roots(), Operation::new(OperationId(73), RevisionId(1), Generation(1), 43), 24), fill_run_identity(), vec![NAKAGIN_MESH_URL.to_string()], [0; 32]), never);
     let mut sequence = 0;
     let (mut shown, mut verdicts) = (0u64, 0u64);
     let mut under_test: Option<u64> = None;
     for _ in 0..1_000_000 {
-        match fill_run_turn(&mut job, 1, &mut sequence) {
+        match fill_run_turn(&mut job, 1) {
             FillRunTurn::Tick(tick) => {
                 let ops: Vec<&ToolRunTraceOp> = tick.trace.iter().flat_map(|page| &page.ops).collect();
                 let finals: Vec<u64> = ops.iter().filter_map(|op| match op {
@@ -521,7 +575,7 @@ fn fill_run_job_keeps_only_the_current_candidate_on_screen() {
     let mut newest: Option<u64> = None;
     let (mut ticks, mut danger_shown) = (0usize, false);
     for _ in 0..1_000_000 {
-        match fill_run_turn(&mut job, 8, &mut sequence) {
+        match fill_run_turn(&mut job, 8) {
             FillRunTurn::Tick(tick) => {
                 for op in tick.trace.iter().flat_map(|page| &page.ops) {
                     if let ToolRunTraceOp::Upsert { key, reason, .. } = op {
@@ -552,8 +606,8 @@ fn fill_run_job_keeps_only_the_current_candidate_on_screen() {
     assert_eq!(mirror.trace.records().filter(|(_, record)| record.reason == FillRunReason::VortexExhausted.code()).count() as u64, marked, "every marked vortex stays marked");
 }
 
-fn nakagin_scale_run(requested: usize) -> (FillRunJob, FillRunMirror) {
-    let mut job = FillRunJob::new(FillBuilder::begin_preparation(nakagin_scale_roots(), Operation::new(OperationId(79), RevisionId(1), Generation(1), 43), requested), fill_run_identity(), vec![NAKAGIN_MESH_URL.to_string()], [0; 32]);
+fn nakagin_scale_run(requested: usize) -> (FillRunFixture, FillRunMirror) {
+    let mut job = FillRunFixture::new(FillRunJob::new(FillBuilder::begin_preparation(nakagin_scale_roots(), Operation::new(OperationId(79), RevisionId(1), Generation(1), 43), requested), fill_run_identity(), vec![NAKAGIN_MESH_URL.to_string()], [0; 32]), never);
     let mut mirror = FillRunMirror::new();
     mirror.drive(&mut job, u64::MAX, 1_000_000);
     (job, mirror)
@@ -620,7 +674,7 @@ fn fill_run_job_rebuilt_from_a_checkpoint_replays_silently_and_continues_like_th
     let (_, mut raised) = nakagin_scale_run(SHORT);
     let checkpoint = FillRunCheckpoint::decode(raised.checkpoints.last().expect("checkpoint")).expect("checkpoint decodes");
     let provisional = raised.ops.len() as u32;
-    let mut rebuilt = FillRunJob::replaying(nakagin_scale_builder(81, checkpoint.requested as usize), fill_run_identity(), lane(), checkpoint, LONG, provisional);
+    let mut rebuilt = FillRunFixture::new(FillRunJob::replaying(nakagin_scale_builder(81, checkpoint.requested as usize), fill_run_identity(), lane(), checkpoint, LONG, provisional), never);
     raised.last_sequence = None;
     raised.drive(&mut rebuilt, u64::MAX, 1_000_000);
     let (long, long_mirror) = nakagin_scale_run(LONG);
@@ -632,7 +686,7 @@ fn fill_run_job_rebuilt_from_a_checkpoint_replays_silently_and_continues_like_th
 
     let (_, mut lowered) = nakagin_scale_run(SHORT);
     let before = lowered.ops.clone();
-    let mut rebuilt = FillRunJob::replaying(nakagin_scale_builder(82, checkpoint.requested as usize), fill_run_identity(), lane(), checkpoint, LOWERED, provisional);
+    let mut rebuilt = FillRunFixture::new(FillRunJob::replaying(nakagin_scale_builder(82, checkpoint.requested as usize), fill_run_identity(), lane(), checkpoint, LOWERED, provisional), never);
     lowered.last_sequence = None;
     lowered.drive(&mut rebuilt, u64::MAX, 1_000_000);
     assert_eq!(lowered.retractions.iter().min().copied(), Some(LOWERED as u32 * FILL_RUN_OPS_PER_PLACEMENT), "the rebuilt lower retracts to exactly the lowered count");
@@ -645,7 +699,7 @@ fn fill_run_job_rebuilt_from_a_checkpoint_replays_silently_and_continues_like_th
     let (_, mut restarted) = nakagin_scale_run(SHORT);
     let mut foreign = checkpoint;
     foreign.inputs = [9; 32];
-    let mut rebuilt = FillRunJob::restarting(nakagin_scale_builder(83, LOWERED), fill_run_identity(), lane(), foreign.inputs, provisional);
+    let mut rebuilt = FillRunFixture::new(FillRunJob::restarting(nakagin_scale_builder(83, LOWERED), fill_run_identity(), lane(), foreign.inputs, provisional), never);
     restarted.last_sequence = None;
     restarted.drive(&mut rebuilt, u64::MAX, 1_000_000);
     let (_, fresh) = nakagin_scale_run(LOWERED);
@@ -660,15 +714,14 @@ fn fill_run_job_rebuilt_from_a_checkpoint_replays_silently_and_continues_like_th
 fn fill_run_job_capacity_refusal_publishes_a_danger_step_before_faulting() {
     let objects = (0..=DOCUMENT_OBJECT_SLOTS).map(|index| EngineSceneObject { id: format!("rejected-{index:04}"), object_kind: None, anchor: Default::default(), mesh_url: None, origin: [0.0; 3], orientation: None, scale: None, vortices: Vec::new() }).collect();
     let scene = Arc::new(SceneConfig { scene_snapshot: EngineSceneSnapshot { objects, attractions: Vec::new(), target_volumes: Vec::new() }, kind_catalogs: Some(KindCatalogBundle::default()), kind_compatibility: Vec::new(), contact_tolerance: 0.0, seed: 37, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() });
-    let builder = FillBuilder::begin_preparation(FillPreparationRoots::new(scene, Arc::new(HashMap::new())), Operation::new(OperationId(37), RevisionId(9), Generation(11), 37), TEST_REQUESTED_COUNT);
-    let mut job = FillRunJob::new(builder, fill_run_identity(), Vec::new(), [0; 32]);
+    let builder = FillBuilder::begin_preparation(FillPreparationRoots::new(scene, Arc::new(FillMeshMap::new())), Operation::new(OperationId(37), RevisionId(9), Generation(11), 37), TEST_REQUESTED_COUNT);
+    let mut job = FillRunFixture::new(FillRunJob::new(builder, fill_run_identity(), Vec::new(), [0; 32]), never);
     let mut sequence = 0;
-    let FillRunTurn::Tick(tick) = fill_run_turn(&mut job, u64::MAX, &mut sequence) else { panic!("the refusal is published as a tick first") };
+    let FillRunTurn::Tick(tick) = fill_run_turn(&mut job, u64::MAX) else { panic!("the refusal is published as a tick first") };
     assert!(tick.append_ops.is_empty(), "nothing is placed");
     assert_eq!(tick.steps.iter().map(|step| (step.kind, step.reason, step.args.clone())).collect::<Vec<_>>(), vec![(ToolRunStepKind::Danger, FillRunReason::ArtifactCapacity.code(), vec![ToolRunStepArg::Unsigned(DOCUMENT_OBJECT_SLOTS as u64)])]);
     let operation = job.operation();
-    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX, semio_s_plugin_puzzle_jobs::testing::unbounded_grant()), root_cancel_token(), never, &mut sequence, semio_s_plugin_puzzle_jobs::testing::test_progress());
-    let JobTurn::Fault(fault) = job.turn(&mut context) else { panic!("the step after the danger step faults the run") };
+    let JobTurn::Fault(fault) = job.advance(u64::MAX, u64::MAX) else { panic!("the step after the danger step faults the run") };
     assert_eq!(fault.as_slice(), format!("preparation-capacity:scene_snapshot-objects:{DOCUMENT_OBJECT_SLOTS}").as_bytes());
     assert!(faulted(JobTurn::Fault(fault)));
 }
@@ -698,18 +751,19 @@ fn fill_run_placements_rebuild_the_provisional_placements_from_their_ops() {
 /// 🔑️ The first key of the range a revalidation's trace key allocator hands the placement law.
 const REVALIDATE_FIRST_KEY: u64 = 4_096;
 
-fn drive_revalidation(job: &mut FillRevalidateJob, operation: Operation) -> Vec<ToolRunTick> {
-    let mut ticks = Vec::new();
-    let mut sequence = 0;
-    for _ in 0..1_000_000 {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX, semio_s_plugin_puzzle_jobs::testing::unbounded_grant()), root_cancel_token(), never, &mut sequence, semio_s_plugin_puzzle_jobs::testing::test_progress());
-        match settle_fill_run_outcome(job.turn(&mut context)) {
-            FillRunTurn::Tick(tick) => ticks.push(tick),
-            FillRunTurn::Complete => return ticks,
-            FillRunTurn::Checkpoint(_) | FillRunTurn::Yield => {}
-        }
-    }
-    panic!("revalidation did not complete");
+struct FillRevalidateFixture{job:Option<FillRevalidateJob>,original:Option<semio_s_plugin_puzzle_jobs::testing::OriginalFixture>}
+impl FillRevalidateFixture{
+ fn new(job:FillRevalidateJob,operation:Operation)->Self{Self{job:Some(job),original:Some(semio_s_plugin_puzzle_jobs::testing::OriginalFixture::new(operation.operation,operation.generation,semio_s_plugin_puzzle_jobs::testing::fixture_stock(),never,u64::MAX,1<<48))}}
+ fn advance(&mut self)->JobTurn{let job=self.job.as_mut().unwrap();let mut turn=None;self.original.as_mut().unwrap().turn(semio_s_plugin_puzzle_jobs::testing::fixture_stock(),|cx|cx.with_original_work_loan(u64::MAX,u64::MAX,|cx|{turn=Some(job.turn(cx));Ok(())})).expect("same original fill revalidation turn");turn.unwrap()}
+}
+impl std::ops::Deref for FillRevalidateFixture{type Target=FillRevalidateJob;fn deref(&self)->&Self::Target{self.job.as_ref().unwrap()}}
+impl std::ops::DerefMut for FillRevalidateFixture{fn deref_mut(&mut self)->&mut Self::Target{self.job.as_mut().unwrap()}}
+impl Drop for FillRevalidateFixture{fn drop(&mut self){if !std::thread::panicking(){if let Some(mut original)=self.original.take(){original.close_job(self.job.as_mut().unwrap());self.job.take();original.finish();}}}}
+fn drive_revalidation(job:&mut FillRevalidateFixture)->Vec<ToolRunTick>{
+ let mut ticks=Vec::new();for _ in 0..1_000_000{match settle_fill_run_outcome(job.advance()){
+  FillRunTurn::Tick(tick)=>ticks.push(tick),FillRunTurn::Complete=>return ticks,
+  FillRunTurn::Checkpoint(_)|FillRunTurn::Yield=>{},
+ }}panic!("revalidation did not complete");
 }
 
 /// ⚖️ LAW: revalidating provisional placements against an unchanged head keeps every one; against a head
@@ -725,8 +779,8 @@ fn fill_revalidate_job_retracts_conflicting_placements_and_reappends_survivors()
     assert_eq!(placements.len(), PLACED);
     let operation = Operation::new(OperationId(83), RevisionId(2), Generation(1), 43);
     let head = nakagin_scale_roots();
-    let mut clean = FillRevalidateJob::new(operation, fill_run_identity(), FillPreparationRoots::new(head.scene.clone(), head.meshes.clone()), placements.clone(), 1_000);
-    let ticks = drive_revalidation(&mut clean, operation);
+    let mut clean = FillRevalidateFixture::new(FillRevalidateJob::new(operation, fill_run_identity(), FillPreparationRoots::new(head.scene.clone(), head.meshes.clone()), placements.clone(), 1_000),operation);
+    let ticks = drive_revalidation(&mut clean);
     assert!(clean.conflicts().iter().all(|conflict| !conflict) && clean.conflicts().len() == PLACED);
     assert!(ticks.iter().all(|tick| tick.retract_to.is_none() && tick.append_ops.is_empty()));
     // 👁️ One placement on screen at a time, none after the finish: a finalize never leaves a verdict mesh over every
@@ -745,8 +799,8 @@ fn fill_revalidate_job_retracts_conflicting_placements_and_reappends_survivors()
     intruder.id = "intruder".into();
     intruder.vortices.clear();
     scene.scene_snapshot.objects.push(intruder);
-    let mut intruded = FillRevalidateJob::new(operation, fill_run_identity(), FillPreparationRoots::new(Arc::new(scene), head.meshes.clone()), placements.clone(), 1_000);
-    let ticks = drive_revalidation(&mut intruded, operation);
+    let mut intruded = FillRevalidateFixture::new(FillRevalidateJob::new(operation, fill_run_identity(), FillPreparationRoots::new(Arc::new(scene), head.meshes.clone()), placements.clone(), 1_000),operation);
+    let ticks = drive_revalidation(&mut intruded);
     let conflicts = intruded.conflicts().to_vec();
     assert!(conflicts[INTRUDED], "the intruded placement conflicts: {conflicts:?}");
     let first = conflicts.iter().position(|conflict| *conflict).expect("a conflict");
@@ -833,12 +887,12 @@ fn all_objects_roots(case: &serde_json::Value) -> FillPreparationRoots {
     }
     let mut meshes = (*roots.meshes).clone();
     for missing in case["missing"].as_array().expect("missing meshes") {
-        meshes.remove(missing.as_str().expect("mesh url"));
+        meshes.cold_remove(missing.as_str().expect("mesh url"));
     }
     FillPreparationRoots::new(Arc::new(scene), Arc::new(meshes))
 }
 
-fn all_objects_run(roots: FillPreparationRoots, requested: usize) -> FillRunJob {
+fn all_objects_run(roots: FillPreparationRoots, requested: usize) -> FillRunFixture {
     let mut job = fill_run_job(roots, own_mesh_lane(), 1, requested);
     FillRunMirror::new().drive(&mut job, u64::MAX, 1_000_000);
     job
@@ -880,17 +934,17 @@ fn fill_revalidation_checks_all_objects_with_current_meshes() {
         positions.iter_mut().for_each(|value| *value *= case["candidateScale"].as_f64().expect("scale") as f32);
         let mut meshes = (*roots.meshes).clone();
         for url in ["/test/near.glb", "/test/late.glb"] {
-            meshes.insert(url.into(), collision_body_from_buffers(&positions, &indices).expect("current mesh"));
+            meshes.cold_insert(url.into(), collision_body_from_buffers(&positions, &indices).expect("current mesh"));
         }
         for missing in case["missing"].as_array().expect("missing meshes") {
-            meshes.remove(missing.as_str().expect("mesh url"));
+            meshes.cold_remove(missing.as_str().expect("mesh url"));
         }
         let mut oracle = Vec::new();
         let mut survivors = vec![parry_hull(&pose_isometry([12.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], &None), &own_mesh_cube(100.0).0)];
         let identity = parry3d::math::Isometry::identity();
         for placement in &placements {
             let candidate = parry_hull(&pose_isometry(placement.object.origin, placement.object.orientation.unwrap(), &placement.object.scale), &positions);
-            let conflict = !meshes.contains_key("/test/host-kind.glb") || !meshes.contains_key(placement.object.mesh_url.as_ref().unwrap())
+            let conflict = meshes.get("/test/host-kind.glb").is_none() || meshes.get(placement.object.mesh_url.as_ref().unwrap()).is_none()
                 || survivors.iter().any(|peer| parry3d::query::intersection_test(&identity, &candidate, &identity, peer).expect("oracle intersection"));
             oracle.push(conflict);
             if !conflict {
@@ -899,8 +953,8 @@ fn fill_revalidation_checks_all_objects_with_current_meshes() {
         }
         assert_eq!(serde_json::json!(oracle), case["expectedConflicts"], "oracle {}", case["name"]);
         let operation = Operation::new(OperationId(111), RevisionId(2), Generation(1), 1);
-        let mut job = FillRevalidateJob::new(operation, fill_run_identity(), FillPreparationRoots::new(roots.scene.clone(), Arc::new(meshes)), placements.clone(), 1_000);
-        drive_revalidation(&mut job, operation);
+        let mut job = FillRevalidateFixture::new(FillRevalidateJob::new(operation, fill_run_identity(), FillPreparationRoots::new(roots.scene.clone(), Arc::new(meshes)), placements.clone(), 1_000),operation);
+        drive_revalidation(&mut job);
         assert_eq!(job.conflicts(), oracle, "{}", case["name"]);
     }
 }
@@ -916,7 +970,7 @@ fn fill_run_and_revalidation_collide_with_a_placed_body_carrying_its_own_mesh() 
     let law = &scene_snapshot["laws"]["ownMesh"];
     let kind_offset = law["kindMeshOffset"].as_f64().expect("kind mesh offset") as f32;
     let run = |blocker: bool, requested: usize| {
-        let mut job = FillRunJob::new(FillBuilder::begin_preparation(own_mesh_roots(blocker, kind_offset), Operation::new(OperationId(97), RevisionId(1), Generation(1), 1), requested), fill_run_identity(), own_mesh_lane(), [0; 32]);
+        let mut job = FillRunFixture::new(FillRunJob::new(FillBuilder::begin_preparation(own_mesh_roots(blocker, kind_offset), Operation::new(OperationId(97), RevisionId(1), Generation(1), 1), requested), fill_run_identity(), own_mesh_lane(), [0; 32]), never);
         let mut mirror = FillRunMirror::new();
         mirror.drive(&mut job, u64::MAX, 1_000_000);
         (job, mirror)
@@ -932,8 +986,8 @@ fn fill_run_and_revalidation_collide_with_a_placed_body_carrying_its_own_mesh() 
         let stall = mirror.steps.iter().rev().find(|step| step.kind == ToolRunStepKind::Warning).and_then(|step| FillRunReason::from_code(step.reason)).map(FillRunReason::id);
         let mut actual = serde_json::json!({ "verdicts": mirror.verdict_words(), "locked": locked, "collisions": collisions, "stall": stall });
         let operation = Operation::new(OperationId(98), RevisionId(2), Generation(1), 1);
-        let mut revalidation = FillRevalidateJob::new(operation, fill_run_identity(), own_mesh_roots(blocker, kind_offset), placements.clone(), 1_000);
-        drive_revalidation(&mut revalidation, operation);
+        let mut revalidation = FillRevalidateFixture::new(FillRevalidateJob::new(operation, fill_run_identity(), own_mesh_roots(blocker, kind_offset), placements.clone(), 1_000),operation);
+        drive_revalidation(&mut revalidation);
         actual["revalidateConflicts"] = serde_json::json!(revalidation.conflicts());
         assert_eq!(&actual, expected, "{name}");
     }

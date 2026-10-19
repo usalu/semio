@@ -16,5 +16,6 @@ export type ToolRunTick = {
   readonly retractTo?: number;
   /** 📨️ Opaque plugin bytes the run's windows read back — the newest tick carrying one wins. */
   readonly payload?: Uint8Array;
+  readonly payloadUpdate?:PayloadUpdate;
 };
 //#endregion 🔖️Tick

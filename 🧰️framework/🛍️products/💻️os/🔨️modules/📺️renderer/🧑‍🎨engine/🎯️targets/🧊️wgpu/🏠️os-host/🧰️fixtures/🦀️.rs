@@ -70,9 +70,8 @@ pub fn runtime_with_shell(shell: semio_framework_os_renderer_wgpu_shell_state::S
         frame_actions: semio_framework_os_renderer_wgpu_frame_actions::FrameActionOwners::default(),
         pending_frame_maintenance_refusal: None,
         plugin_modules_root: Default::default(),
-        native_plugin_mtimes: Default::default(),
         native_hot_swap_scan: None,
-        native_hot_swap_modified: None,
+        native_hot_swap_program: None,
         native_hot_swap_cursor: 0,
         native_reload_pending: false,
     })
@@ -85,11 +84,12 @@ pub fn finish_world_fixture_component_close(shell: semio_framework_os_renderer_w
     assert!(request.engine_token.is_none(), "this World fixture has no paired GPU engine token");
     let runtime = runtime_with_shell(shell);
     let mut close = ComponentSurfaceCloseOwner::new(request);
+    let mut original = semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(semio_framework_os_renderer_wgpu_frame_job::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT);
     for _ in 0..262_144 {
         if close.terminal_is_empty() {
             break;
         }
-        close.close_asset_world_step(&runtime);
+        original.turn(|cx| close.close_asset_world_step(&runtime, cx)).expect("same original component cleanup");
     }
     assert!(close.terminal_is_empty(), "the production World close lane returns its exact owner");
     assert!(publish_component_surface_close_terminal(close.request.token));

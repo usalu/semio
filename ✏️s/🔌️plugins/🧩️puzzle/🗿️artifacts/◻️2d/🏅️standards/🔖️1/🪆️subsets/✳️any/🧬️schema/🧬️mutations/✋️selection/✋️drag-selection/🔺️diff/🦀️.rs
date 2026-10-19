@@ -1,6 +1,10 @@
-//! 🔺️ Sparse diff builder for `DragSelection` — every unlocked addressed node and target region moves
 //! by the payload offset, read off the BASE position, so the leaf replays on any base.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dNodePatch, Puzzle2dNodeModification, Puzzle2dTargetRegionPatch, Puzzle2dTargetRegionModification};
+//! 🔺️ Sparse diff builder for `DragSelection` — every unlocked addressed node and target region moves
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dNodePatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dNodeModification;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dTargetRegionPatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dTargetRegionModification;
 use protocol::list_delta::RowPatch;
 use {crate::standards::v1::subsets::any::schema::mutations::selection::puzzle2d_selection, crate::standards::v1::subsets::any::schema::mutations::selection::puzzle2d_selection_outcome};
 use crate::Puzzle2dSnapshot;

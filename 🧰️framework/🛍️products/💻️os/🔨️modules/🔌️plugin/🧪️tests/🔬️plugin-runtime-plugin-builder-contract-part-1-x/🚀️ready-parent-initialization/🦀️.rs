@@ -83,13 +83,13 @@ impl store::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Recursi
         Ok(semio_framework_value::RetirementDemand { depth: usize::from(self.envelope.is_some()), ..Default::default() })
     }
 
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure> {
         if self.closing || cx.is_cancelled() {
-            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx);
+            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         if self.retirement.is_some() {
             if cx.should_yield() {
-                return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
+                return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
             }
             let grant=cx.retained_grant();
             let stepped = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| (grant, step));
@@ -98,13 +98,13 @@ impl store::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Recursi
                     let progress = step.progress();
                     cx.consume_retained(progress)?;
                     cx.consume_fuel((progress.copied_items + progress.released_bytes).max(1) as u64);
-                    semio_framework_job::JobOutcomeBorrow::admit_yield(cx)
+                    semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from)
                 }
-                _ => Err(Self::fault(b"recursive-parent-replay-retirement-rejected")),
+                _ => Err((Self::fault(b"recursive-parent-replay-retirement-rejected")).into()),
             };
         }
         if cx.should_yield() {
-            return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
+            return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         if let Some(runtime) = self.runtime.as_mut() {
             let grant=cx.retained_grant();
@@ -113,18 +113,18 @@ impl store::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Recursi
                 Ok((_, store::RetainedCloneStep::Complete(_))) => {}
                 Ok((grant, store::RetainedCloneStep::Progress(progress))) if progress.fits(grant) => {
                     cx.consume_fuel((progress.copied_items + progress.released_bytes).max(1) as u64);
-                    return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
+                    return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
                 }
-                _ => return Err(Self::fault(b"recursive-parent-current-retirement-rejected")),
+                _ => return Err((Self::fault(b"recursive-parent-current-retirement-rejected")).into()),
             }
         }
         cx.consume_fuel(1);
         let envelope = match self.envelope.as_ref() {
             Some(envelope) => envelope,
             None if self.phase == ReadyComposedParentInitializationPhase::Complete => {
-                return semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None);
+                return semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None).map_err(semio_framework_job::OriginalTurnFailure::from);
             }
-            None => return Err(Self::fault(b"recursive-parent-envelope-owner-missing")),
+            None => return Err((Self::fault(b"recursive-parent-envelope-owner-missing")).into()),
         };
         match self.phase {
             ReadyComposedParentInitializationPhase::Begin => {
@@ -135,16 +135,16 @@ impl store::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Recursi
             }
             ReadyComposedParentInitializationPhase::Seed => {
                 if let Some(edit) = envelope.vcs.edits.get(self.edit_index) {
-                    let Some(runtime) = self.runtime.as_mut() else { return Err(Self::fault(b"recursive-parent-runtime-owner-missing")) };
+                    let Some(runtime) = self.runtime.as_mut() else { return Err((Self::fault(b"recursive-parent-runtime-owner-missing")).into()) };
                     if self.operation_index == 0 {
                         if runtime.seed_mutation(protocol::MutationId(edit.id.clone())).is_err() {
-                            return Err(Self::fault(b"recursive-parent-edit-seed-rejected"));
+                            return Err((Self::fault(b"recursive-parent-edit-seed-rejected")).into());
                         }
                         self.operation_index = 1;
                     } else if let Some(meta) = edit.mutation_meta.get(self.operation_index - 1) {
                         if let Some(id) = &meta.mutation_id {
                             if runtime.seed_edit_operation(&edit.id, id.clone()).is_err() {
-                                return Err(Self::fault(b"recursive-parent-mutation-seed-rejected"));
+                                return Err((Self::fault(b"recursive-parent-mutation-seed-rejected")).into());
                             }
                         }
                         runtime.observe_timestamp(meta.timestamp);
@@ -161,20 +161,20 @@ impl store::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Recursi
                 }
             }
             ReadyComposedParentInitializationPhase::Replay => {
-                let Some(cursor) = envelope.cursor.as_ref() else { return Err(Self::fault(b"recursive-parent-cursor-missing")) };
+                let Some(cursor) = envelope.cursor.as_ref() else { return Err((Self::fault(b"recursive-parent-cursor-missing")).into()) };
                 if let Some(edit_id) = cursor.applied_edit_ids.get(self.lane_index) {
-                    let Some(edit) = envelope.vcs.edits.iter().find(|edit| edit.id == *edit_id) else { return Err(Self::fault(b"recursive-parent-applied-edit-missing")) };
+                    let Some(edit) = envelope.vcs.edits.iter().find(|edit| edit.id == *edit_id) else { return Err((Self::fault(b"recursive-parent-applied-edit-missing")).into()) };
                     if let Some(operation) = edit.forwards.get(self.operation_index) {
                         let Some(runtime) = self.runtime.as_mut() else {
-                            return Err(Self::fault(b"recursive-parent-current-owner-missing"));
+                            return Err((Self::fault(b"recursive-parent-current-owner-missing")).into());
                         };
                         let current = runtime.current_ref();
-                        let next = match protocol::apply_diff(operation.diff(current).diff(), current) {
+                        let next = match protocol::apply_diff_cold(operation.diff(current).diff(), current) {
                             Ok(next) => next,
-                            Err(_) => return Err(Self::fault(b"recursive-parent-replay-rejected")),
+                            Err(_) => return Err((Self::fault(b"recursive-parent-replay-rejected")).into()),
                         };
                         if runtime.adopt_current_owned(next, std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<ComposedParentSnapshot>::default())).is_err() {
-                            return Err(Self::fault(b"recursive-parent-current-adoption-rejected"));
+                            return Err((Self::fault(b"recursive-parent-current-adoption-rejected")).into());
                         }
                         self.operation_index += 1;
                     } else {
@@ -187,14 +187,14 @@ impl store::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Recursi
                 }
             }
             ReadyComposedParentInitializationPhase::Applied | ReadyComposedParentInitializationPhase::Redo => {
-                let Some(cursor) = envelope.cursor.as_ref() else { return Err(Self::fault(b"recursive-parent-cursor-missing")) };
+                let Some(cursor) = envelope.cursor.as_ref() else { return Err((Self::fault(b"recursive-parent-cursor-missing")).into()) };
                 let ids = if self.phase == ReadyComposedParentInitializationPhase::Applied { &cursor.applied_edit_ids } else { &cursor.redo_edit_ids };
                 if let Some(id) = ids.get(self.lane_index) {
-                    let Some((ledger_key, edit)) = envelope.vcs.edits.find_near_key(|edit| edit.id == *id) else { return Err(Self::fault(b"recursive-parent-lane-edit-missing")) };
-                    let Some(runtime) = self.runtime.as_mut() else { return Err(Self::fault(b"recursive-parent-runtime-owner-missing")) };
+                    let Some((ledger_key, edit)) = envelope.vcs.edits.find_near_key(|edit| edit.id == *id) else { return Err((Self::fault(b"recursive-parent-lane-edit-missing")).into()) };
+                    let Some(runtime) = self.runtime.as_mut() else { return Err((Self::fault(b"recursive-parent-runtime-owner-missing")).into()) };
                     let result = if self.phase == ReadyComposedParentInitializationPhase::Applied { runtime.push_applied_edit(edit, ledger_key) } else { runtime.push_redo_edit(edit, ledger_key) };
                     if result.is_err() {
-                        return Err(Self::fault(b"recursive-parent-lane-seed-rejected"));
+                        return Err((Self::fault(b"recursive-parent-lane-seed-rejected")).into());
                     }
                     self.lane_index += 1;
                 } else {
@@ -217,10 +217,10 @@ impl store::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Recursi
                 self.phase = ReadyComposedParentInitializationPhase::Complete;
             }
             ReadyComposedParentInitializationPhase::Complete => {
-                return semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None);
+                return semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None).map_err(semio_framework_job::OriginalTurnFailure::from);
             }
         }
-        semio_framework_job::JobOutcomeBorrow::admit_yield(cx)
+        semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
@@ -239,7 +239,11 @@ impl store::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Recursi
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<store::RetainedCloneStep,semio_framework_job::OriginalTurnFailure> {
+        self.begin_close();
+        if self.terminal_is_empty(){return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))}
+        let demand=self.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{
         use semio_framework_value::{ValueError, ValueRefusalKind};
         let empty = store::RetainedCloneProgress::default();
         if self.terminal_is_empty() {
@@ -280,6 +284,9 @@ impl store::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Recursi
             return Ok(store::RetainedCloneStep::Progress(store::RetainedCloneProgress { copied_items: 1, ..empty }));
         }
         Ok(store::RetainedCloneStep::Complete(empty))
+
+        })?;
+        Ok(if self.terminal_is_empty(){semio_framework_value::retained_clone::RetainedCloneStep::Complete(step.progress())}else{semio_framework_value::retained_clone::RetainedCloneStep::Progress(step.progress())})
     }
 
     fn terminal_is_empty(&self) -> bool {

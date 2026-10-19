@@ -1,0 +1,105 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "id": "b",
+      "x": 1.0,
+      "y": 0.0
+    },
+    {
+      "id": "c",
+      "x": 0.0,
+      "y": 1.0
+    }
+  ],
+  "elements": [],
+  "regions": [
+    {
+      "id": "region",
+      "name": "Triangle",
+      "outline": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0
+        ]
+      ],
+      "holes": [],
+      "thickness": 0.1,
+      "materialId": "material",
+      "meshSize": 10.0
+    }
+  ],
+  "materials": [
+    {
+      "id": "material",
+      "name": "Material",
+      "e": 30000000.0,
+      "nu": 0.2,
+      "rho": 2500.0
+    }
+  ],
+  "sections": [],
+  "supports": [
+    {
+      "id": "sa",
+      "nodeId": "a",
+      "fixed": [
+        "Tx",
+        "Ty"
+      ]
+    },
+    {
+      "id": "sb",
+      "nodeId": "b",
+      "fixed": [
+        "Ty"
+      ]
+    },
+    {
+      "id": "sc",
+      "nodeId": "c",
+      "fixed": [
+        "Tx"
+      ]
+    }
+  ],
+  "loadCases": [
+    {
+      "id": "pressure",
+      "name": "Pressure",
+      "selfWeight": false,
+      "loads": [
+        {
+          "id": "area",
+          "kind": "area",
+          "regionId": "region",
+          "pressure": 3000.0
+        }
+      ]
+    },
+    {
+      "id": "weight",
+      "name": "Weight",
+      "selfWeight": true,
+      "loads": []
+    }
+  ],
+  "combinations": [],
+  "analysis": {
+    "deformationScale": 1.0,
+    "modalCount": 2,
+    "bucklingCount": 1
+  }
+}

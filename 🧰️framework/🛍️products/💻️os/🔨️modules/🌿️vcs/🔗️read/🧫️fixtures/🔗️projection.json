@@ -1,0 +1,10 @@
+{
+  "contract": "semio.original.projected-source/v1",
+  "cases": [
+    {"id": "opaque-empty", "bytes": [], "expected": []},
+    {"id": "opaque-bytes", "bytes": [0,1,127,128,255], "expected": [0,1,127,128,255]},
+    {"id": "opaque-order", "bytes": [255,17,0,42,17], "expected": [255,17,0,42,17]}
+  ],
+  "authorityOwnsRetirement": true,
+  "projectionOwnsRetirement": false
+}

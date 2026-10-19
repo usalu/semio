@@ -1,0 +1,103 @@
+{
+  "schema": "semio.plugin.original-producer-source.v1",
+  "binding": [
+    "operation",
+    "generation",
+    "payload",
+    "clock",
+    "clock_source",
+    "deadline"
+  ],
+  "cases": [
+    {
+      "name": "same source retries",
+      "change": null,
+      "phase": "pending",
+      "allowed": true,
+      "owners": [
+        "request"
+      ],
+      "effect": "none"
+    },
+    {
+      "name": "same source cancels",
+      "change": null,
+      "phase": "closing",
+      "allowed": true,
+      "owners": [
+        "requestRetirement"
+      ],
+      "effect": "paidRetirement"
+    },
+    {
+      "name": "foreign operation",
+      "change": "operation",
+      "phase": "pending",
+      "allowed": false,
+      "owners": [
+        "request"
+      ],
+      "effect": "none"
+    },
+    {
+      "name": "foreign generation",
+      "change": "generation",
+      "phase": "pending",
+      "allowed": false,
+      "owners": [
+        "request"
+      ],
+      "effect": "none"
+    },
+    {
+      "name": "foreign payload",
+      "change": "payload",
+      "phase": "pending",
+      "allowed": false,
+      "owners": [
+        "request"
+      ],
+      "effect": "none"
+    },
+    {
+      "name": "foreign clock",
+      "change": "clock",
+      "phase": "pending",
+      "allowed": false,
+      "owners": [
+        "request"
+      ],
+      "effect": "none"
+    },
+    {
+      "name": "foreign clock_source",
+      "change": "clock_source",
+      "phase": "pending",
+      "allowed": false,
+      "owners": [
+        "request"
+      ],
+      "effect": "none"
+    },
+    {
+      "name": "foreign deadline",
+      "change": "deadline",
+      "phase": "pending",
+      "allowed": false,
+      "owners": [
+        "request"
+      ],
+      "effect": "none"
+    },
+    {
+      "name": "born job retained before refused receipt",
+      "change": null,
+      "phase": "refused",
+      "allowed": true,
+      "owners": [
+        "job"
+      ],
+      "effect": "actualReceipt"
+    }
+  ]
+}

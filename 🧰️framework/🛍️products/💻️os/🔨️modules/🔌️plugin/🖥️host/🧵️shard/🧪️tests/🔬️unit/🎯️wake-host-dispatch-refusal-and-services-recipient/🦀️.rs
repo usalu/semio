@@ -20,7 +20,7 @@ async fn original_host_dispatch_refusal_keeps_original_decision_and_typed_cause_
     let mut retained: semio_framework_actor::RetainedTurnInput = serde_json::from_value(law["input"].clone()).unwrap();
     retained.operation = 0;
     let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
-    let decision = semio_framework_actor::Decision { run: vec![semio_framework_actor::TurnGrant { actor: ActorId(71), shard: semio_framework_actor::ShardId(0), budget, retained, envelopes: Vec::new() }], wake_at: Some(19) };
+    let decision = semio_framework_actor::Decision { run: vec![semio_framework_actor::TurnGrant { actor: ActorId(71), shard: semio_framework_actor::ShardId(0), budget, retained, loan: serde_json::from_value(law["loan"].clone()).unwrap(), envelopes: Vec::new() }], wake_at: Some(19) };
     let pointer = decision.run.as_ptr();
     let mut input = Some(decision);
     let mut dispatch = semio_framework_plugin_host_shard::grant::OriginalShardDispatch::default();

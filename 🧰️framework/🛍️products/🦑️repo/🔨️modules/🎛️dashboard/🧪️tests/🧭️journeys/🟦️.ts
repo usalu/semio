@@ -8,6 +8,7 @@ import { afterAll, describe, expect, test } from "bun:test";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { Workspace, get, plain, scenarios, semio, sleep, slug, type Task } from "./🧰️support/🟦️.ts";
+import Ajv from "ajv/dist/2020.js";
 
 const feature = join(import.meta.dir, "🥒️.feature");
 const opened: Workspace[] = [];
@@ -35,6 +36,19 @@ const waitFor = async (what: string, read: () => Promise<string>, needle: string
 };
 
 describe("cli journeys", () => {
+  test("The portable human workflows satisfy their schema", () => {
+    const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧭️journeys/🔣️.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🧭️journeys/🔣️.json"), "utf8"));
+    const validate = new Ajv().compile(schema);
+    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    expect(fixture.localizedForm.tool.parameters.map((parameter: { kind: string }) => parameter.kind)).toEqual(["text", "choice", "flag"]);
+    expect(fixture.localizedForm.expected.args).toEqual(["--label", "wide value"]);
+    for (const locale of ["en", "de"]) {
+      expect(fixture.localizedForm.tool.title[locale]).toBe(fixture.localizedForm.labels[locale].title);
+      expect(fixture.localizedForm.tool.description[locale]).toBe(fixture.localizedForm.labels[locale].description);
+      for (const parameter of fixture.localizedForm.tool.parameters) expect(parameter.title[locale]).toBe(fixture.localizedForm.labels[locale][parameter.id]);
+    }
+  });
   test("A listening server waits for a successful HTTP response", async () => {
     const ws = await workspace("http-readiness");
     const gate = join(ws.root, "http-ready");

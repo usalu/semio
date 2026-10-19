@@ -26,7 +26,7 @@ pub trait OpBinaryReceiving: OpBinary + semio_framework_value::retirement::Retir
 /// 🎞️ Retains original parse, typed binding and output custody across bounded native loans.
 pub trait OpBinaryReceivingCursor<M:semio_framework_value::retirement::RetireOwned>:semio_framework_value::retirement::RetireOwned{
     fn demands(&self,source:&[u8],maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>;
-    fn step(&mut self,source:&[u8],native:&mut semio_framework_value::NativeDecodeControl<'_>,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneProgress,semio_framework_value::ValueError>;
+    fn step(&mut self,source:&[u8],native:&mut semio_framework_value::NativeDecodeControl<'_>,body:usize,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneProgress,semio_framework_value::ValueError>;
     fn is_ready(&self)->bool;
     fn take_into(&mut self,recipient:&mut Option<M>,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneProgress,semio_framework_value::ValueError>;
     fn close_demands(&self,maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>;

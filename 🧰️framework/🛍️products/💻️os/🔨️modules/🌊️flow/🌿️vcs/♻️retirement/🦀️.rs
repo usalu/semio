@@ -1,10 +1,10 @@
 //! 🌿️ Full original VCS custody forwards every actual retained receipt.
 
-use super::{FlowVcsAction,FlowVcsFault,FlowHostSnapshot,WidgetLayout,LayoutUpdate};
+use super::{FlowVcsAction,FlowVcsFault,FlowHostSnapshot};
 use semio_framework_value::{ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,admit_retained_clone_close},retirement::controlled::ControlledRetirement};
 
 #[derive(semio_framework_value::RetireOwned)]
-pub(super) enum FlowVcsClosingOwner{Action(FlowVcsAction),LayoutUpdate(LayoutUpdate<WidgetLayout>),Snapshot(FlowHostSnapshot)}
+pub(super) enum FlowVcsClosingOwner{Action(FlowVcsAction),Snapshot(FlowHostSnapshot)}
 pub(super) type FlowVcsRetirement=Option<ControlledRetirement<FlowVcsClosingOwner>>;
 
 /// 📏️ Four independent authorities for the original next VCS close turn.

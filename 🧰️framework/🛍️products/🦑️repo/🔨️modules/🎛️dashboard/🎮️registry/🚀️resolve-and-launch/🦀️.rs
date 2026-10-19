@@ -196,9 +196,11 @@ impl Registry {
             }
             Action::Repo(action) => {
                 if !extra.is_empty() { return Err(format!("{} takes no extra arguments", entry.id)); }
+                let action = action.selected(&|id| value_of(id).map(str::to_string))?;
+                action.admit_root(&self.root)?;
                 match policy.repo {
                     RepoImplementation::Go => (dashboard_repo_domain::go_binary_path(&self.root).display().to_string(), action.go_argv(), self.root.clone(), false),
-                    RepoImplementation::Rust => (std::env::current_exe().map_err(|error| format!("{}: {error}", entry.id))?.display().to_string(), vec!["repo-view".into(), "--action".into(), serde_json::to_string(action).map_err(|error| error.to_string())?], self.root.clone(), false),
+                    RepoImplementation::Rust => (std::env::current_exe().map_err(|error| format!("{}: {error}", entry.id))?.display().to_string(), vec!["repo-view".into(), "--action".into(), serde_json::to_string(&action).map_err(|error| error.to_string())?], self.root.clone(), false),
                 }
             }
             Action::Compound { .. } => return Err(format!("{}: compounds do not nest", entry.id)),

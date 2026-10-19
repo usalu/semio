@@ -1,14 +1,14 @@
-# 🏛️ Architecture — quizze.architektur-und-technologie.de
+# 🏛️ Architecture — architektur-und-technologie.de
 
-The quiz site for architecture and technology students: it trains the feeling for the numbers behind energy-efficient
-buildings. The site `https://quizze.architektur-und-technologie.de` offers the catalog [`❓️quiz/🔣️.json`](❓️quiz/🔣️.json)
-(id `architecture`, title "Architecture and Technology Quizzes" / "Quizze zu Architektur und Technologie") through the
+The course site for architecture and technology students: it trains the feeling for the numbers behind energy-efficient
+buildings. The site `https://architektur-und-technologie.de` offers the course [`📚️course/🔣️.json`](📚️course/🔣️.json)
+(id `architecture`, title "Architecture and Technology" / "Architektur und Technologie") through the
 [proctor](../🛂️proctor) at `https://semio.iek.uni-hannover.de`, which records runs, scores, badges and the leaderboard.
 
 | Part | Where |
 |---|---|
-| Catalog: introduction, quiz paths, badges | `❓️quiz/🔣️.json` |
-| Web package `@teaching/architecture-quiz`: static build for the CDN with the proctor origin baked in; in development vite on port 6061 proxies the gateway routes to the proctor on 8791 (develop, check, test and publish via the dashboard commands in [its README](❓️quiz/README.md)) | `❓️quiz/📦️packages/🟦️typescript` |
+| Course: introduction, quiz paths, badges | `📚️course/🔣️.json` |
+| Web package `@teaching/architecture-course`: static build for the CDN with the proctor origin baked in; in development vite on port 6061 proxies the gateway routes to the proctor on 8791 (develop, check, test and publish via the dashboard commands in [its README](📚️course/README.md)) | `📚️course/📦️packages/🟦️typescript` |
 | Deployment: the site as a static artifact on a CDN; the proctor as an API-only Docker image with Caddy (TLS with a certificate it obtains itself or one the operator supplies) for `semio.iek.uni-hannover.de` | see the site and [proctor](../🛂️proctor/README.md) READMEs |
 | Quizzes | `⚡️energy/<topic>/❓️quiz/🔣️.json` |
 | Pets: twenty animated companions, each the likeness of a thing the quiz items are about (sunny, cloudy, housy, solary, radiatory, pumpy, windowy, waly, battery, windy, boily, roofy, insuly, shady, venty, chilly, kettly, flamy, thermy, servy), with their bonds and one cast for the home screen and one per quiz; the site loads them lazily and only for a learner who wants pets (roster, casts, bonds and how to add one in [its README](🐾️pets/README.md)) | `🐾️pets/🔣️.json`, `🐾️pets/<species>/🔣️.json`, `🐾️pets/🟦️.ts` |
@@ -18,8 +18,9 @@ buildings. The site `https://quizze.architektur-und-technologie.de` offers the c
 | Quiz | Tasks (kind, items, drawn per run) | What it trains |
 |---|---|---|
 | 🧲 `physics` — Physical Understanding / Physikalisches Verständnis | power or energy? (classification, 16, 12); powers from tea light to Sun (sorting, 14, 10, W); energies from phone charge to world energy use (sorting, 12, 9, Wh) | telling rates from amounts; orders of magnitude over 25 decades |
+| 🌬️ `ventilation` — Ventilation / Lüften | true or false ventilation claims (classification, 30, 6); air change rates by use (sorting, 55, 10, 1/h); ventilation types and spider profiles (classification, 25 examples, 5) | air quality, moisture transport, heating and summer operation; natural and mechanical ventilation |
 | 🔥 `heating` — Heating / Heizen | U-values of building components (matching, 17, 10, W/(m²·K)); heating load and heating demand of buildings (matching with two dimensions, 11, 8, W/m² and kWh/(m²·a)) | envelope quality from single glazing to the passive-house roof; building age and standard |
-| ❄️ `cooling` — Cooling / Kühlen | air change rates by use (matching, 15, 10, 1/h); cooling load and cooling demand (matching with two dimensions, 9, 7, W/m² and kWh/(m²·a)) | ventilation from warehouse to cleanroom; internal and solar loads, full-load hours |
+| ❄️ `cooling` — Cooling / Kühlen | cooling load and cooling demand (matching with two dimensions, 37, 7, W/m² and kWh/(m²·a)) | internal and solar loads, full-load hours |
 | 📊 `demand` — Energy Demand / Energiebedarf | energy standards and their spider-diagram profiles (classification, 6 standards onto 6 profiles); final energy demand of buildings with their supply systems (matching, 9, 7, kWh/(m²·a)) | how envelope, airtightness, heat recovery and supply system add up |
 
 All magnitudes use logarithmic scales, so confusing neighbours costs little and confusing orders of magnitude costs a
@@ -30,11 +31,12 @@ lot (design §6 of the ticket `QUIZ-PRODUCT-AND-TEACHING-PROCTOR`).
 | Badge | Label (en / de) | Rule |
 |---|---|---|
 | 🧲 `physics-expert` | Physics Expert / Physik-Profi | a run of `physics` scored 100 % |
+| 🌬️ `ventilation-expert` | Ventilation Expert / Lüftungs-Profi | a run of `ventilation` scored 100 % on medium or harder |
 | 🔥 `heating-expert` | Heating Expert / Heiz-Profi | a run of `heating` scored 100 % |
 | ❄️ `cooling-expert` | Cooling Expert / Kühl-Profi | a run of `cooling` scored 100 % |
 | 📊 `demand-expert` | Energy Demand Expert / Energiebedarfs-Profi | a run of `demand` scored 100 % |
-| 🧮 `numerical-brain` | Numerical Brain / Zahlenhirn | every sorting task of the catalog scored 100 % in some run |
-| 🔍 `pattern-seer` | Pattern Seer / Musterblick | every classification task of the catalog scored 100 % in some run |
+| 🧮 `numerical-brain` | Numerical Brain / Zahlenhirn | every sorting task of the course scored 100 % in some run |
+| 🔍 `pattern-seer` | Pattern Seer / Musterblick | every classification task of the course scored 100 % in some run |
 | 🏁 `completionist` | Completionist / Rundum dabei | every quiz has a submitted run |
 
 ## Sources
@@ -68,7 +70,18 @@ follow the conventions below the tables.
 | IWU, Deutsche Wohngebäudetypologie (2015), appendix C.3 and Table 26 | heating demand and transmission per m² living area of types EFH_E/F/I/J, MFH_B, NBL_GMH_F; modernisation package 2 of MFH_B; EnEV 2016 / KfW 55 / KfW 40 variants |
 | DIN EN 12831 | design heating load at −12 °C |
 
-### Cooling
+### Ventilation
+
+The true/false statements refer to [Passive House Institute ventilation types](https://passipedia.org/planning/building_services/ventilation/basics/types_of_ventilation),
+[passive-house supply-air heating](https://passipedia.org/basics/building_physics_-_basics/heating_load) and
+[NASA Glenn’s explanation of pressure and velocity](https://www.grc.nasa.gov/www/k-12/airplane/bern.html). The Venturi effect
+concerns pressure and velocity; thermal buoyancy drives the stack effect.
+
+Spider diagrams compare five representative residential systems on relative scales from 1 (low) to 5 (high),
+under a heating-dominated climate, similar hygienic airflow, quiet outdoor surroundings and proper installation.
+The axes show room noise, energy efficiency including heat recovery, maintenance, installed purchase costs and
+operating costs including fan electricity and ventilation heating losses. High efficiency is favourable; high
+noise, effort and costs are unfavourable. These are illustrative teaching profiles, not measured product data.
 
 | Source | Used for |
 |---|---|
@@ -80,7 +93,13 @@ follow the conventions below the tables.
 | DIN 1946-4 | operating rooms 60 m³/(h·m²), ≥ 1,200 m³/h outdoor air |
 | VDI 2052 | commercial kitchens 12–30 1/h |
 | IEST-RP-CC012, ISO 14644-4 | cleanrooms ISO 7/6/5 |
-| Passive House Institute | 30 m³/h per person; overheating ≤ 10 % of hours; non-residential criteria |
+| Passive House Institute | 30 m³/h per person; heat recovery and supply-air heating |
+
+### Cooling
+
+| Source | Used for |
+|---|---|
+| Passive House Institute | overheating ≤ 10 % of hours; non-residential criteria |
 | VDI 2078, DIN 4108-2 | cooling loads, sol-air temperature, summer heat protection |
 
 ### Energy Demand

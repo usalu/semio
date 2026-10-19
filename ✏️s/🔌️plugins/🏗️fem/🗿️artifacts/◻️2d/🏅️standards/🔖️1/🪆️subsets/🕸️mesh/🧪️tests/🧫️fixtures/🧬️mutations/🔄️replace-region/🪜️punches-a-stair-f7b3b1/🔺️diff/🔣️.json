@@ -2,14 +2,13 @@
   "nodes": null,
   "elements": null,
   "regions": {
-    "inserted": [],
     "removed": [],
+    "inserted": [],
     "moved": [],
     "modified": [
       {
         "id": "slab",
         "patch": {
-          "id": "slab",
           "name": "Floor slab with stair opening",
           "outline": [
             [

@@ -78,7 +78,7 @@ impl OwnedDocumentMemberIngress {
     pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if let Some(request) = self.request.as_ref() {
             if request.terminal_is_empty() { return Ok(RetirementDemand { copy_bytes: size_of_val(&*self.request), depth: 1, ..Default::default() }); }
-            return Ok(RetirementDemand { copy_bytes: request.next_copy_byte_demand()?, capacity_bytes: request.next_capacity_byte_demand(body)?, release_bytes: request.next_release_byte_demand()?, depth: request.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original member request parent depth overflow"))? });
+            return Ok({let mut demand=request.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original member request parent depth overflow"))?;demand});
         }
         let Some((_, reference, owner)) = self.identity.as_ref() else { return Ok(RetirementDemand::default()) };
         let fields = [&reference.artifact_id, &reference.dialect.artifact_kind, &reference.dialect.standard, &reference.dialect.subset, &owner.parent.artifact_id, &owner.parent.dialect.artifact_kind, &owner.parent.dialect.standard, &owner.parent.dialect.subset, &owner.slot, &owner.child_id];

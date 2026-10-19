@@ -21,6 +21,19 @@ const OPEN: Situation = Situation { mode: PetMode::Calm, quiet: false, movers: 0
 const EVEN: Temperament = Temperament { energy: 0.5, sociability: 0.5, curiosity: 0.5 };
 const HALF: Needs = Needs { energy: 0.5, sociability: 0.5, curiosity: 0.5 };
 
+#[test]
+fn context_casts_never_fall_back_to_the_general_scene() {
+    let vectors = fixture("context-casts");
+    let mut menagerie: Menagerie = typed(&fixture("schema-conformance")["menagerie"]);
+    menagerie.casts = typed(&vectors["casts"]);
+    for vector in entries(&vectors["cases"]) {
+        let scene: String = typed(&vector["scene"]);
+        let cast = pet_cast(&menagerie, &scene);
+        let actual = cast.map(|cast| cast.core.iter().chain(&cast.rotation).cloned().collect::<Vec<_>>());
+        assert_eq!(json(&actual), vector["expected"], "{scene}");
+    }
+}
+
 fn feeling(needs: Needs) -> Actor {
     Actor {
         species: "blob".to_string(),

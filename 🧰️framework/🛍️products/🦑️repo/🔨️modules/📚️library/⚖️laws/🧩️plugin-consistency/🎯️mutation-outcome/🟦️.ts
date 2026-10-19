@@ -311,3 +311,7 @@ export function policyOutcomeCodeFileBreaches(vocabulary: PolicyOutcomeVocabular
   }
   return breaches;
 }
+
+export function policyMutationLawSourceFiles(repoRoot: string): string[] {
+  return policyMutationLawInventory(repoRoot).files.filter((relPath) => relPath.endsWith(".rs") || relPath.endsWith(".ts") || relPath.endsWith(".tsx"));
+}

@@ -1,5 +1,7 @@
 //! 🔺️ Sparse diff builder for `ResizeTargetRegion` — patches the one addressed target region in place.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dTargetRegionPatch, Puzzle2dTargetRegionsDelta};
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dTargetRegionPatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dTargetRegionsDelta;
 use protocol::list_delta::RowPatch;
 use crate::Puzzle2dSnapshot;
 use crate::standards::v1::subsets::any::schema::records::puzzle2d_finite;

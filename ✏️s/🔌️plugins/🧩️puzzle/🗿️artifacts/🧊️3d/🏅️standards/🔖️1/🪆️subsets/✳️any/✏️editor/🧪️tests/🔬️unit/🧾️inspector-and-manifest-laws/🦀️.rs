@@ -74,7 +74,7 @@ async fn empty_target_interaction_select_clears_selection_while_hover_remains() 
     .expect("empty-target interactionSelect admit");
     let settled = settle_reserved(&mut app, admitted).await.expect("empty-target interactionSelect leftover");
     let view = settled.output.get("interactionView").expect("leftover InteractionView");
-    let ids = view.get("selectedIds").and_then(semio_framework_value::DslValue::as_array).expect("selectedIds");
+    let ids = view.get("selectedIds").and_then(|value| value.as_array()).expect("selectedIds");
     assert!(ids.is_empty(), "empty-target interactionSelect must clear selectedIds, got {ids:?} hover={:?}", view.get("hoverTarget"));
     let hover = view.get("hoverTarget").expect("hoverTarget on leftover");
     assert_eq!(hover.get("id").and_then(semio_framework_value::DslValue::as_str), Some(object_id.as_str()));

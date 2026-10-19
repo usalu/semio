@@ -9,14 +9,14 @@ pub const VERBS: &[&str] = &["setup", "start", "dev", "serve", "watch", "activat
 pub const FALLBACK_VERB: &str = "task";
 
 /// 🦑️ The branches the repo domain contributes, listed after every verb.
-pub const REPO_VERBS: &[&str] = &["tickets", "goals", "analyze", "tree", "statutes"];
+pub const REPO_VERBS: &[&str] = &["tickets", "draft", "goals", "analyze", "tree", "statutes"];
 
 pub(super) const RESERVED_KINDS: &[&str] = &["playground", "tool", "compound", "group", "ticket"];
 
 /// 🪪️ Whether text after `repo:` is a repo-domain action key rather than a target of a project named `repo`.
 fn is_action_key(text: &str) -> bool {
     let scope = |text: &str| !text.is_empty() && text.bytes().all(|byte| byte.is_ascii_lowercase());
-    matches!(text, "goals.list" | "goals.tree" | "tree.monorepo" | "tree.goal" | "tree.statute" | "tree.territory" | "statutes.catalog")
+    matches!(text, "goals.list" | "goals.tree" | "tree.monorepo" | "tree.goal" | "tree.statute" | "tree.territory" | "statutes.catalog" | "draft.start" | "draft.discard")
         || text.strip_prefix("analyze:").is_some_and(scope)
         || ["ticket.show:", "ticket.files:", "ticket.close:", "ticket.reopen:"].iter().any(|head| text.strip_prefix(head).is_some_and(|id| !id.is_empty()))
 }

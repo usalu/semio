@@ -13,7 +13,7 @@ type Fixture = Readonly<{
   schemaVersion: 1;
   owners: readonly Owner[];
   gatePolicy: Readonly<{ cacheRoot: string; coverageDirectory: string; toolPath: string; runtime: string; coverageRuntime: string; budgetMs: number }>;
-  selector: Readonly<{ libraryDeclaration: string; libraryDeclarationFile: string; relativeOwnerSuffix: string; ownerPattern: string; editorSetting: string; editorPattern: string }>;
+  selector: Readonly<{ libraryDeclaration: string; libraryDeclarationFile: string; relativeOwnerSuffix: string; ownerPattern: string }>;
   directoryContexts: readonly Readonly<{ name: string; parentKind: string; kind: string }>[];
   registration: Readonly<{ target: string }>;
 }>;
@@ -264,7 +264,7 @@ describe("Vitest configuration ownership", () => {
     expect(library).toContain(fixture.selector.libraryDeclaration);
   }, 60_000);
 
-  test("registers exact Nx inputs and the real editor selector", () => {
+  test("registers exact Nx inputs for the semantic owners", () => {
     const projectFiles = [resolve(repoRoot, "📋️project.json")];
     walkProductFiles((path) => { if (path.endsWith("/📋️project.json")) projectFiles.push(path); });
     const inputs = projectFiles.flatMap((path) => nxInputPatterns(path));
@@ -272,9 +272,6 @@ describe("Vitest configuration ownership", () => {
       const target = resolve(repoRoot, owner.ownerPath).replaceAll("\\", "/");
       expect(inputs.some((pattern) => pattern === target || new Bun.Glob(pattern).match(target)), owner.ownerPath).toBe(true);
     }
-    const settings = JSON.parse(readFileSync(resolve(repoRoot, ".vscode/settings.json"), "utf8"));
-    expect(settings[fixture.selector.editorSetting]).toBe(fixture.selector.editorPattern);
-    expect(settings["vitest.configSearchPattern"]).toBeUndefined();
   }, 30_000);
 
   test("preserves the deliberate root no-tests configuration", () => {

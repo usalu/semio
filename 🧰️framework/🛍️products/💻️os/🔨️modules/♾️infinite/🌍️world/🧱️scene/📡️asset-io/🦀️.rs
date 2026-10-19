@@ -68,19 +68,26 @@ pub enum WorldAssetFault {
 
 #[derive(Debug)]
 pub struct WorldAssetResponsePage {
-    pub bytes: Box<[u8]>,
+    backing: WorldAssetResponseBacking,
 }
 
+#[derive(Debug)]
+enum WorldAssetResponseBacking{Owned(Box<[u8]>),Original(semio_framework_job::OriginalSuppliedJobPage)}
+
 impl WorldAssetResponsePage {
+    /// 📮️ Native bytes keep their actual supplier return ticket without copying or rebinding authority.
+    pub fn try_from_original(page:semio_framework_job::OriginalSuppliedJobPage)->Result<Self,semio_framework_job::OriginalSuppliedJobPage>{if page.bytes().len()>WORLD_ASSET_RESPONSE_PAGE_BYTES{return Err(page)}Ok(Self{backing:WorldAssetResponseBacking::Original(page)})}
+
+
     pub fn try_from_owned(bytes: Vec<u8>) -> Result<Self, Vec<u8>> {
         if bytes.len() > WORLD_ASSET_RESPONSE_PAGE_BYTES {
             return Err(bytes);
         }
-        Ok(Self { bytes: bytes.into_boxed_slice() })
+        Ok(Self { backing: WorldAssetResponseBacking::Owned(bytes.into_boxed_slice()) })
     }
 
     pub fn bytes(&self) -> &[u8] {
-        &self.bytes
+        match &self.backing{WorldAssetResponseBacking::Owned(bytes)=>bytes,WorldAssetResponseBacking::Original(page)=>page.bytes()}
     }
 }
 
@@ -95,7 +102,8 @@ pub struct WorldAssetFetchOwner {
     received_bytes: usize,
     pub pages: Box<[Option<WorldAssetResponsePage>; WORLD_ASSET_RESPONSE_PAGE_CAPACITY]>,
     pub page_len: u16,
-    page_read: u16,
+        received_pages: u16,
+page_read: u16,
     close_page: u16,
     sealed: bool,
     pub closing: bool,
@@ -123,12 +131,18 @@ impl WorldAssetFetchOwner {
     }
 
     pub fn push_page(&mut self, page: WorldAssetResponsePage) -> Result<(), WorldAssetResponsePage> {
-        let next = self.received_bytes.saturating_add(page.bytes.len());
-        if self.closing || self.sealed || usize::from(self.page_len) == WORLD_ASSET_RESPONSE_PAGE_CAPACITY || next > self.reserved_bytes {
+        self.push_page_at(self.page_len,page)
+    }
+
+    /// 🧮️ An explicit original ordinal preserves wire order without shifting or copying other page owners.
+    pub fn push_page_at(&mut self,index:u16,page:WorldAssetResponsePage)->Result<(),WorldAssetResponsePage>{
+        let next = self.received_bytes.saturating_add(page.bytes().len());
+        if self.closing || self.sealed || usize::from(index) >= WORLD_ASSET_RESPONSE_PAGE_CAPACITY || self.pages[usize::from(index)].is_some() || next > self.reserved_bytes {
             return Err(page);
         }
-        self.pages[usize::from(self.page_len)] = Some(page);
-        self.page_len += 1;
+        self.pages[usize::from(index)] = Some(page);
+        self.page_len = self.page_len.max(index+1);
+        self.received_pages += 1;
         self.received_bytes = next;
         Ok(())
     }
@@ -137,7 +151,8 @@ impl WorldAssetFetchOwner {
         if self.closing {
             return Err(WorldAssetFault::Closing);
         }
-        self.sealed = true;
+                if self.received_pages != self.page_len{return Err(WorldAssetFault::Incomplete)}
+self.sealed = true;
         Ok(())
     }
 
@@ -223,7 +238,8 @@ impl WorldAssetFetchOwner {
             return false;
         }
         self.page_len = 0;
-        self.page_read = 0;
+                self.received_pages = 0;
+self.page_read = 0;
         self.close_page = 0;
         self.received_bytes = 0;
         self.reserved_bytes = 0;
@@ -310,7 +326,8 @@ impl WorldAssetIoAuthority {
             received_bytes: 0,
             pages: semio_framework_async::boxed_fixed_slots(|| None),
             page_len: 0,
-            page_read: 0,
+                        received_pages: 0,
+page_read: 0,
             close_page: 0,
             sealed: false,
             closing: false,

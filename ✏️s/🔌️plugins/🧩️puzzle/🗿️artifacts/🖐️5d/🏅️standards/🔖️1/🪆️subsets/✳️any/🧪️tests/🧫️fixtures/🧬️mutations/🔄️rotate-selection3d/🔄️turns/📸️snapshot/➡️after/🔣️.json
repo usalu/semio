@@ -1,62 +1,51 @@
 {
+  "schema": "puzzle.5d",
   "domain": "architecture",
-  "fasteners": [
-    {
-      "fastenerKind": "fastener-kind-a",
-      "gap": 1.0,
-      "id": "fast-1",
-      "rise": 0.0,
-      "rotation": 0.0,
-      "shift": 0.0,
-      "source": "part-a:grip-1",
-      "target": "part-b:grip-2",
-      "tilt": 0.0,
-      "turn": 0.0,
-      "x": 0.0,
-      "y": 0.0
-    }
-  ],
-  "kindCompatibility": [
-    {
-      "bidirectional": true,
-      "important": false,
-      "source": "grip-kind-a",
-      "specificity": "general",
-      "target": "grip-kind-b"
-    }
-  ],
   "label": "Fixture Base",
   "meta": {
     "description": "Two parts joined by one fastener."
   },
+  "kindCompatibility": [
+    {
+      "source": "grip-kind-a",
+      "target": "grip-kind-b",
+      "bidirectional": true,
+      "important": false,
+      "specificity": "general"
+    }
+  ],
   "parts": [
     {
+      "id": "part-a",
+      "partKind": "part-kind-a",
       "2d": {
-        "iconKind": "icon-alpha",
-        "radius": 10.0,
-        "shape": "circle",
-        "text": "Alpha",
         "x": 0.0,
-        "y": 0.0
+        "y": 0.0,
+        "shape": "circle",
+        "radius": 10.0,
+        "text": "Alpha",
+        "iconKind": "icon-alpha"
       },
       "3d": {
-        "label": "Alpha 3d",
-        "meshUrl": "mesh://alpha",
-        "orientation": [
-          0.0,
-          0.0,
-          0.7071067811865475,
-          0.7071067811865476
-        ],
         "origin": [
           0.0,
           0.0,
           0.0
         ],
-        "scale": 2.0
+        "meshUrl": "mesh://alpha",
+        "orientation": [
+          0.0,
+          0.0,
+          0.7071067811865476,
+          0.7071067811865476
+        ],
+        "scale": 2.0,
+        "label": "Alpha 3d"
       },
       "grips": [
         {
+          "id": "grip-1",
+          "gripKind": "grip-kind-a",
           "2d": {
             "angle": 0.0
           },
@@ -66,11 +55,11 @@
               0.0,
               0.0
             ]
-          },
-          "gripKind": "grip-kind-a",
-          "id": "grip-1"
+          }
         },
         {
+          "id": "grip-spare",
+          "gripKind": "grip-kind-a",
           "2d": {
             "angle": 0.0
           },
@@ -80,35 +69,35 @@
               0.0,
               0.0
             ]
-          },
-          "gripKind": "grip-kind-a",
-          "id": "grip-spare"
+          }
         }
-      ],
-      "id": "part-a",
-      "partKind": "part-kind-a"
+      ]
     },
     {
+      "id": "part-b",
+      "partKind": "part-kind-b",
+      "anchor": "derived",
       "2d": {
         "x": 10.0,
         "y": 20.0
       },
       "3d": {
-        "orientation": [
-          0.0,
-          0.0,
-          0.7071067811865475,
-          0.7071067811865476
-        ],
         "origin": [
           1.0,
           2.0,
           3.0
+        ],
+        "orientation": [
+          0.0,
+          0.0,
+          0.7071067811865476,
+          0.7071067811865476
         ]
       },
-      "anchor": "derived",
       "grips": [
         {
+          "id": "grip-2",
+          "gripKind": "grip-kind-b",
           "2d": {
             "angle": 0.0
           },
@@ -118,19 +107,17 @@
               0.0,
               0.0
             ]
-          },
-          "gripKind": "grip-kind-b",
-          "id": "grip-2"
+          }
         }
-      ],
-      "id": "part-b",
-      "partKind": "part-kind-b"
+      ]
     },
     {
+      "id": "part-c",
+      "partKind": "part-kind-b",
       "2d": {
-        "locked": true,
         "x": 80.0,
-        "y": 0.0
+        "y": 0.0,
+        "locked": true
       },
       "3d": {
         "origin": [
@@ -139,43 +126,56 @@
           0.0
         ]
       },
-      "grips": [],
-      "id": "part-c",
-      "partKind": "part-kind-b"
+      "grips": []
     }
   ],
-  "schema": "puzzle.5d",
+  "fasteners": [
+    {
+      "id": "fast-1",
+      "source": "part-a:grip-1",
+      "target": "part-b:grip-2",
+      "fastenerKind": "fastener-kind-a",
+      "gap": 1.0,
+      "shift": 0.0,
+      "rise": 0.0,
+      "rotation": 0.0,
+      "turn": 0.0,
+      "tilt": 0.0,
+      "x": 0.0,
+      "y": 0.0
+    }
+  ],
   "targetVolumes": [
     {
-      "hidden": false,
       "id": "volume-1",
-      "locked": false,
-      "orientation": [
-        0.0,
-        0.0,
-        0.7071067811865475,
-        0.7071067811865476
-      ],
       "origin": [
         0.0,
         0.0,
         0.0
+      ],
+      "orientation": [
+        0.0,
+        0.0,
+        0.7071067811865476,
+        0.7071067811865476
       ],
       "scale": [
         2.0,
         2.0,
         2.0
-      ]
+      ],
+      "hidden": false,
+      "locked": false
     },
     {
-      "hidden": false,
       "id": "volume-2",
-      "locked": true,
       "origin": [
         6.0,
         0.0,
         0.0
-      ]
+      ],
+      "hidden": false,
+      "locked": true
     }
   ]
 }

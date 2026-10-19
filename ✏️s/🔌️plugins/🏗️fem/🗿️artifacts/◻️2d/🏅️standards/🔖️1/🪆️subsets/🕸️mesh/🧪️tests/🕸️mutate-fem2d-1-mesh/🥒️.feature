@@ -18,13 +18,7 @@ Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in P
   and forces FROM a model; none of them reads `.dsl.semio`, none defines this document. What a
   reference can genuinely adjudicate is the model algebra, and that is what this one does.
 
-  A DEFECT IN THE SPECIFICATION, found while writing the reference and reported rather than worked
-  around. Two of the three schema files here do not say what they claim.
-  `…/🧬️schema/🧬️mutations/🔣️.json` is a verbatim copy of the SNAPSHOT schema with `title`
-  changed to `Fem2dMutation`. And in the snapshot schema itself, every one of the nine record types
-  is an EMPTY `{"title": …, "type": "object"}` with no properties at all. The record shapes the
-  reference implements were read off the committed vectors instead, which agree with one another on
-  every field.
+  Sparse field intents are declared by the owned leaf JSON schemas. The mutation union and wire mirrors preserve their typed payloads; fast-json-patch independently checks their numeric JSON projection in the registered field-intent suite.
 
   The artifact is real. `shared://🕸️mutate-fem2d-1-mesh/🏗️timber-portal-frame.snapshot.json` is the SAME derived timber-portal-frame model every
   fem2d mutation subset case shares — a twelve-node timber-and-steel portal frame with a ridge at
@@ -81,6 +75,13 @@ Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in P
     | replace-node    | {"mutation":"replaceNode","id":"ridge","newNode":{"id":"ridge","x":4.0,"y":8.2}}                                                                                                                                                                                                           |
     | move-selection  | {"mutation":"moveSelection","nodeIds":["rc0","rc1","rc2","rc3"],"regionIds":["r1"],"pivotX":11.0,"pivotY":2.8,"dx":0.5,"dy":0.25,"angle":0.0,"sx":1.0,"sy":1.0} |
 
+    | change-node | {"id":"ridge","patch":{"x":5.0},"mutation":"changeNode"} |
+    | change-section | {"id":"chs76","patch":{"name":"Structural Section"},"mutation":"changeSection"} |
+
+    | change-region | {"patch":{"name":"Structural Region"},"id":"r1","mutation":"changeRegion"} |
+
+    | change-element | {"patch":{"sectionId":"post140"},"id":"e3","mutation":"changeElement"} |
+
   @id-inverse
   @level-exhaustive
   @mode-differential
@@ -109,6 +110,13 @@ Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in P
     | replace-node    | {"mutation":"replaceNode","id":"ridge","newNode":{"id":"ridge","x":4.0,"y":8.2}}                                                                                                                                                                                                           |
     | move-selection  | {"mutation":"moveSelection","nodeIds":["rc0","rc1","rc2","rc3"],"regionIds":["r1"],"pivotX":11.0,"pivotY":2.8,"dx":0.5,"dy":0.25,"angle":0.0,"sx":1.0,"sy":1.0} |
 
+    | change-node | {"id":"ridge","patch":{"x":5.0},"mutation":"changeNode"} |
+    | change-section | {"id":"chs76","patch":{"name":"Structural Section"},"mutation":"changeSection"} |
+
+    | change-region | {"patch":{"name":"Structural Region"},"id":"r1","mutation":"changeRegion"} |
+
+    | change-element | {"patch":{"sectionId":"post140"},"id":"e3","mutation":"changeElement"} |
+
   @id-spec-vector
   @level-exhaustive
   @mode-differential
@@ -134,6 +142,13 @@ Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in P
     | replace-node    | 🔁️replace-node    | 🕹️raises-the-ridge-e53b00        |
     | move-selection  | 🧭️move-selection  | 🧭️shifts-the-slab-3f8df5 |
 
+    | change-node | 🩹️change-node | 🩹️changes |
+    | change-section | 🩹️change-section | 🩹️changes |
+
+    | change-region | 🩹️change-region | 🩹️changes |
+
+    | change-element | 🩹️change-element | 🩹️changes |
+
   @id-frame-vector
   @level-exhaustive
   @mode-differential
@@ -158,6 +173,13 @@ Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in P
     | replace-section | 📏️replace-section | 🛠️thickens   |
     | replace-node    | 🔁️replace-node    | 📍️widens-the-canopy-553d69  |
     | move-selection  | 🧭️move-selection  | 📏️stretches |
+
+    | change-node | 🩹️change-node | 📐️coordinates |
+    | change-section | 🩹️change-section | 📐️coordinates |
+
+    | change-region | 🩹️change-region | 📐️geometry |
+
+    | change-element | 🩹️change-element | 🔀️variant |
 
   @id-reject
   @level-exhaustive
@@ -201,3 +223,18 @@ Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in P
     | move-selection-2   | 🧭️move-selection  | ⏸️moves-nothing-f724d6 |
     | move-selection-3   | 🧭️move-selection  | 🫓️denies |
     | move-selection-4   | 🧭️move-selection  | 🔁️denies |
+    | change-node-1 | 🩹️change-node | ⏸️same |
+    | change-node-2 | 🩹️change-node | ⛔️missing |
+    | change-node-3 | 🩹️change-node | ⚗️empty |
+    | change-section-1 | 🩹️change-section | ⏸️same |
+    | change-section-2 | 🩹️change-section | ⛔️missing |
+    | change-section-3 | 🩹️change-section | ⚗️invalid |
+
+    | change-region-1 | 🩹️change-region | ⏸️same |
+    | change-region-2 | 🩹️change-region | ⛔️missing |
+    | change-region-3 | 🩹️change-region | ⚗️invalid |
+
+    | change-element-1 | 🩹️change-element | ⏸️same |
+    | change-element-2 | 🩹️change-element | ⛔️missing |
+    | change-element-3 | 🩹️change-element | ⚗️invalid |
+

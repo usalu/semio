@@ -1,0 +1,532 @@
+{
+  "registryChanges": [
+    {
+      "id": "reorder-owner-and-parameters",
+      "sameRegistry": false,
+      "before": { "id": "source", "entry": 0, "mutating": false, "focus": 1, "stage": "Configure", "fields": [
+        { "parameter": { "id": "project", "kind": "text", "default": "", "required": true, "values": [] }, "value": "app", "suggested": true },
+        { "parameter": { "id": "script", "kind": "text", "default": null, "required": true, "values": [] }, "value": "app/📜️script.ts", "suggested": true },
+        { "parameter": { "id": "directory", "kind": "text", "default": "", "required": false, "values": [] }, "value": "app", "suggested": true },
+        { "parameter": { "id": "removed", "kind": "text", "default": null, "required": false, "values": [] }, "value": "old", "suggested": false }
+      ] },
+      "after": [
+        { "id": "other", "mutating": false, "parameters": [] },
+        { "id": "source", "mutating": true, "parameters": [
+          { "id": "directory", "kind": "text", "default": "", "required": false, "values": [] },
+          { "id": "project", "kind": "text", "default": "", "required": true, "values": [] },
+          { "id": "script", "kind": "text", "default": null, "required": true, "values": [] },
+          { "id": "new", "kind": "text", "default": "current", "required": false, "values": [] }
+        ] }
+      ],
+      "expected": { "open": true, "entry": 1, "mutating": true, "focus": 2, "stage": "Configure", "released": 1, "fields": [
+        { "id": "directory", "value": null, "suggested": false }, { "id": "project", "value": null, "suggested": false }, { "id": "script", "value": null, "suggested": false }, { "id": "new", "value": null, "suggested": false }
+      ] }
+    },
+    {
+      "id": "manual-values-and-removed-choice",
+      "sameRegistry": false,
+      "before": { "id": "source", "entry": 0, "mutating": true, "focus": 4, "stage": "Confirm", "fields": [
+        { "parameter": { "id": "script", "kind": "text", "default": null, "required": true, "values": [] }, "value": "intentional/📜️script.ts", "suggested": false },
+        { "parameter": { "id": "directory", "kind": "text", "default": "", "required": false, "values": [] }, "value": "", "suggested": false },
+        { "parameter": { "id": "mode", "kind": "choice", "default": "prototype", "required": false, "values": ["prototype", "release"] }, "value": "prototype", "suggested": false },
+        { "parameter": { "id": "kept", "kind": "choice", "default": "prototype", "required": false, "values": ["prototype", "release"] }, "value": "release", "suggested": false }
+      ] },
+      "after": [{ "id": "source", "mutating": true, "parameters": [
+        { "id": "script", "kind": "text", "default": null, "required": true, "values": [] }, { "id": "directory", "kind": "text", "default": "", "required": false, "values": [] }, { "id": "mode", "kind": "choice", "default": "release", "required": false, "values": ["release"] }, { "id": "kept", "kind": "choice", "default": "prototype", "required": false, "values": ["prototype", "release"] }, { "id": "added", "kind": "flag", "default": "false", "required": false, "values": [] }
+      ] }],
+      "expected": { "open": true, "entry": 0, "mutating": true, "focus": 5, "stage": "Configure", "released": 1, "fields": [
+        { "id": "script", "value": "intentional/📜️script.ts", "suggested": false }, { "id": "directory", "value": "", "suggested": false }, { "id": "mode", "value": null, "suggested": false }, { "id": "kept", "value": "release", "suggested": false }, { "id": "added", "value": null, "suggested": false }
+      ] }
+    },
+    {
+      "id": "removed-command-closes-form", "sameRegistry": false,
+      "before": { "id": "removed", "entry": 0, "mutating": true, "focus": 0, "stage": "Confirm", "fields": [] },
+      "after": [{ "id": "other", "mutating": false, "parameters": [] }],
+      "expected": { "open": false, "entry": null, "mutating": null, "focus": null, "stage": "Browse", "released": 1, "fields": [] }
+    },
+    {
+      "id": "same-registry-locale-keeps-form", "sameRegistry": true,
+      "before": { "id": "source", "entry": 0, "mutating": true, "focus": 0, "stage": "Confirm", "fields": [ { "parameter": { "id": "project", "kind": "text", "default": "", "required": true, "values": [] }, "value": "app", "suggested": true } ] },
+      "after": [{ "id": "source", "mutating": true, "parameters": [ { "id": "project", "kind": "text", "default": "", "required": true, "values": [] } ] }],
+      "expected": { "open": true, "entry": 0, "mutating": true, "focus": 0, "stage": "Confirm", "released": 0, "fields": [ { "id": "project", "value": "app", "suggested": true } ] }
+    }
+  ],
+  "projects": [
+    {
+      "id": "workspace",
+      "root": "."
+    },
+    {
+      "id": "app",
+      "root": "app"
+    },
+    {
+      "id": "nested",
+      "root": "app/nested"
+    },
+    {
+      "id": "linked",
+      "root": "app/junction/nested"
+    }
+  ],
+  "files": [
+    {
+      "path": "📜️script.ts",
+      "text": "console.log(\"root\");",
+      "kind": "scripts"
+    },
+    {
+      "path": "app/📜️script.ts",
+      "text": "console.log(\"app\");",
+      "kind": "scripts"
+    },
+    {
+      "path": "app/nested/📜️script.ts",
+      "text": "console.log(\"nested\");",
+      "kind": "scripts"
+    },
+    {
+      "path": "app/🧪️tests/🟦️.ts",
+      "text": "import { test } from \"bun:test\"; test(\"works\",()=>{});",
+      "kind": "tests"
+    },
+    {
+      "path": "app/🧪️tests/helper.ts",
+      "text": "export const helper = 1;",
+      "kind": null
+    },
+    {
+      "path": "app/🧪️tests/fake.ts",
+      "text": "// import { test } from \"bun:test\";\nconst sample = \"bun:test\";",
+      "kind": null
+    },
+    {
+      "path": "app/🧪️tests/multiline.ts",
+      "text": "import {\n test\n} from 'bun:test';\ntest('works',()=>{});",
+      "kind": "tests"
+    },
+    {
+      "path": "app/tsconfig.json",
+      "text": "{}",
+      "kind": "configs"
+    },
+    {
+      "path": "app/nested/tsconfig.native.json",
+      "text": "{}",
+      "kind": "configs"
+    },
+    {
+      "path": "app/build/📜️script.ts",
+      "text": "console.log(\"authored build\");",
+      "kind": "scripts"
+    },
+    {
+      "path": "app/dist/📜️script.ts",
+      "text": "console.log(\"authored dist\");",
+      "kind": "scripts"
+    },
+    {
+      "path": "app/🧫️fixtures/📜️script.ts",
+      "text": "console.log(\"fixture\");",
+      "kind": null
+    },
+    {
+      "path": "node_modules/vendor/📜️script.ts",
+      "text": "",
+      "kind": null
+    },
+    {
+      "path": ".cache/tool/📜️script.ts",
+      "text": "",
+      "kind": null
+    },
+    {
+      "path": "app/🧪️tests/types.ts",
+      "text": "import type { Test } from 'bun:test';\nexport type Kind = Test;",
+      "kind": null
+    },
+    {
+      "path": "app/🧪️tests/pattern.ts",
+      "text": "const sample = /import.*from \"bun:test\"/;",
+      "kind": null
+    },
+    {
+      "path": "app/🧪️tests/expression.ts",
+      "text": "/import {test} from \"bun:test\"/.test(\"sample\");",
+      "kind": null
+    },
+    {
+      "path": ".🧬semio/🦑️repo/⚡️cache/📜️script.ts",
+      "text": "generated",
+      "kind": null
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🧹️tmp/📜️script.ts",
+      "text": "generated",
+      "kind": null
+    },
+    {
+      "path": "app/cache/📜️script.ts",
+      "text": "authored",
+      "kind": "scripts"
+    },
+    {
+      "path": "helpers/📜️script.ts",
+      "text": "workspace owned",
+      "kind": "scripts"
+    },
+    {
+      "path": "app/🧪️tests/mixed.ts",
+      "text": "import { type Foo, test } from \"bun:test\"; test(\"mixed\",()=>{});",
+      "kind": "tests"
+    },
+    {
+      "path": "app/🧪️tests/namedtypes.ts",
+      "text": "import { type Foo } from \"bun:test\"; export type Kind = Foo;",
+      "kind": null
+    },
+    {
+      "path": "app/🧪️tests/sideeffect.ts",
+      "text": "import \"bun:test\";",
+      "kind": null
+    },
+    {
+      "path": "app/🧪️tests/division.ts",
+      "text": "const ratio = 1 / 2; import { test } from \"bun:test\"; test(\"ratio\",()=>{});",
+      "kind": "tests"
+    }
+  ],
+  "cases": [
+    {
+      "source": "projects",
+      "project": null,
+      "query": "app",
+      "values": [
+        "app"
+      ],
+      "projects": [
+        "app"
+      ],
+      "directories": [
+        "app"
+      ]
+    },
+    {
+      "source": "scripts",
+      "project": null,
+      "query": "nested",
+      "values": [
+        "app/nested/📜️script.ts"
+      ],
+      "projects": [
+        "nested"
+      ],
+      "directories": [
+        "app/nested"
+      ]
+    },
+    {
+      "source": "scripts",
+      "project": "app",
+      "query": "",
+      "values": [
+        "app/build/📜️script.ts",
+        "app/cache/📜️script.ts",
+        "app/dist/📜️script.ts",
+        "app/📜️script.ts"
+      ],
+      "projects": [
+        "app",
+        "app",
+        "app",
+        "app"
+      ],
+      "directories": [
+        "app",
+        "app",
+        "app",
+        "app"
+      ]
+    },
+    {
+      "source": "scripts",
+      "project": "unknown",
+      "query": "",
+      "values": [],
+      "projects": [],
+      "directories": []
+    },
+    {
+      "source": "scripts",
+      "project": "linked",
+      "query": "",
+      "values": [],
+      "projects": [],
+      "directories": []
+    },
+    {
+      "source": "tests",
+      "project": "app",
+      "query": "",
+      "values": [
+        "app/🧪️tests/division.ts",
+        "app/🧪️tests/mixed.ts",
+        "app/🧪️tests/multiline.ts",
+        "app/🧪️tests/🟦️.ts"
+      ],
+      "projects": [
+        "app",
+        "app",
+        "app",
+        "app"
+      ],
+      "directories": [
+        "app",
+        "app",
+        "app",
+        "app"
+      ]
+    },
+    {
+      "source": "configs",
+      "project": null,
+      "query": "nested",
+      "values": [
+        "app/nested/tsconfig.native.json"
+      ],
+      "projects": [
+        "nested"
+      ],
+      "directories": [
+        "app/nested"
+      ]
+    },
+    {
+      "source": "scripts",
+      "project": "workspace",
+      "query": "helpers",
+      "values": [
+        "helpers/📜️script.ts"
+      ],
+      "projects": [
+        "workspace"
+      ],
+      "directories": [
+        "."
+      ]
+    }
+  ],
+  "declarations": [
+    {
+      "parameter": {
+        "id": "source",
+        "kind": "text",
+        "suggestions": {
+          "source": "scripts",
+          "projectParameter": "project"
+        }
+      },
+      "accepted": true
+    },
+    {
+      "parameter": {
+        "id": "source",
+        "kind": "text",
+        "suggestions": {
+          "source": "tests",
+          "projectParameter": "project"
+        }
+      },
+      "accepted": true
+    },
+    {
+      "parameter": {
+        "id": "source",
+        "kind": "text",
+        "suggestions": {
+          "source": "configs",
+          "projectParameter": "project"
+        }
+      },
+      "accepted": true
+    },
+    {
+      "parameter": {
+        "id": "project",
+        "kind": "text",
+        "suggestions": {
+          "source": "projects"
+        }
+      },
+      "accepted": true
+    },
+    {
+      "parameter": {
+        "id": "project",
+        "kind": "text",
+        "suggestions": {
+          "source": "projects",
+          "projectParameter": "project"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "parameter": {
+        "id": "source",
+        "kind": "text",
+        "suggestions": {
+          "source": "legacy-catalog"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "parameter": {
+        "id": "source",
+        "kind": "choice",
+        "values": [
+          {
+            "id": "x"
+          }
+        ],
+        "suggestions": {
+          "source": "scripts"
+        }
+      },
+      "accepted": false
+    }
+  ],
+  "selectionCases": [
+    {
+      "first": "app/helpers/📜️script.ts",
+      "second": "app/nested/helpers/📜️script.ts",
+      "manual": "",
+      "directory": "",
+      "firstDirectory": "app",
+      "secondDirectory": "app/nested",
+      "firstProject": "app",
+      "secondProject": "nested"
+    },
+    {
+      "first": "app/helpers/📜️script.ts",
+      "second": "app/nested/helpers/📜️script.ts",
+      "manual": null,
+      "directory": "app/nested",
+      "firstDirectory": "app",
+      "secondDirectory": "app/nested",
+      "firstProject": "app",
+      "secondProject": "nested"
+    },
+    {
+      "first": "app/helpers/📜️script.ts",
+      "second": "app/nested/helpers/📜️script.ts",
+      "manual": "custom cwd",
+      "directory": "custom cwd",
+      "firstDirectory": "app",
+      "secondDirectory": "app/nested",
+      "firstProject": "app",
+      "secondProject": "nested"
+    },
+    {
+      "first": "helpers/📜️script.ts",
+      "second": "helpers/📜️script.ts",
+      "firstDirectory": ".",
+      "secondDirectory": ".",
+      "manual": null,
+      "directory": ".",
+      "firstProject": "workspace",
+      "secondProject": "workspace"
+    }
+  ],
+  "attributes": [
+    {
+      "windows": true,
+      "attributes": 0,
+      "symlink": false,
+      "accepted": true
+    },
+    {
+      "windows": true,
+      "attributes": 1024,
+      "symlink": false,
+      "accepted": false
+    },
+    {
+      "windows": true,
+      "attributes": 1040,
+      "symlink": false,
+      "accepted": false
+    },
+    {
+      "windows": false,
+      "attributes": 0,
+      "symlink": true,
+      "accepted": false
+    },
+    {
+      "windows": false,
+      "attributes": 1024,
+      "symlink": false,
+      "accepted": true
+    }
+  ],
+  "projectChanges": [
+    {
+      "manualScript": null,
+      "manualDirectory": null,
+      "scriptAfterProject": null,
+      "directoryAfterProject": null,
+      "directoryAfterSelection": "app/nested"
+    },
+    {
+      "manualScript": "intentional/source.ts",
+      "manualDirectory": "intentional cwd",
+      "scriptAfterProject": "intentional/source.ts",
+      "directoryAfterProject": "intentional cwd",
+      "directoryAfterSelection": "intentional cwd"
+    }
+  ],
+  "rootPaths": [
+    {
+      "path": "",
+      "accepted": true
+    },
+    {
+      "path": ".",
+      "accepted": true
+    },
+    {
+      "path": "app",
+      "accepted": true
+    },
+    {
+      "path": "app/nested",
+      "accepted": true
+    },
+    {
+      "path": "..",
+      "accepted": false
+    },
+    {
+      "path": "../app",
+      "accepted": false
+    },
+    {
+      "path": "/app",
+      "accepted": false
+    },
+    {
+      "path": "C:/app",
+      "accepted": false
+    },
+    {
+      "path": "app\\nested",
+      "accepted": false
+    },
+    {
+      "path": "app/\nname",
+      "accepted": false
+    }
+  ]
+}

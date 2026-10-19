@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {"name":"Nearest Project Owns Nested Source","source":"app/src/Example.cs","files":["Root.csproj","app/App.csproj","app/src/Example.cs"],"projects":["app/App.csproj"]},
+    {"name":"Multiple Projects Share One Owner","source":"app/Example.cs","files":["app/B.csproj","app/A.csproj","app/Example.cs"],"projects":["app/A.csproj","app/B.csproj"]},
+    {"name":"Root Project Owns Descendant","source":"src/Example.cs","files":["Root.csproj","src/Example.cs"],"projects":["Root.csproj"]},
+    {"name":"Unowned Source Has No Synthetic Workspace","source":"src/Example.cs","files":["other/Other.csproj","src/Example.cs"],"projects":[]},
+    {"name":"Outside Source Is Refused","source":"../Outside.cs","files":["Root.csproj"],"projects":[]}
+  ]
+}

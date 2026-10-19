@@ -1,0 +1,26 @@
+{
+  "name": "@semio-tech/energy-model-state",
+  "targets": {
+    "verify-native": {
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧳️state",
+        "command": "bun ./📜️script.ts verify native"
+      },
+      "executor": "repo:script",
+      "cache": false
+    },
+    "verify-source": {
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧳️state",
+        "command": "bun ./📜️script.ts verify source"
+      },
+      "executor": "repo:script",
+      "cache": false
+    }
+  },
+  "tags": [
+    "energy",
+    "model",
+    "value"
+  ]
+}

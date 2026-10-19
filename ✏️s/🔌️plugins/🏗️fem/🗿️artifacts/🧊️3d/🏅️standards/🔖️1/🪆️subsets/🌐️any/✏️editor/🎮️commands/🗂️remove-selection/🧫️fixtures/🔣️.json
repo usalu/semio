@@ -1,0 +1,21 @@
+{
+  "snapshot": {
+    "nodes": [{ "id": "n1", "x": 0, "y": 0, "z": 0 }, { "id": "n2", "x": 2, "y": 0, "z": 0 }],
+    "elements": [{ "kind": "bar", "id": "member", "start": "n1", "end": "n2", "materialId": "steel", "sectionId": "section" }],
+    "materials": [{ "id": "steel", "name": "Steel", "e": 200000000000, "g": 80000000000, "nu": 0.25, "rho": 7850 }],
+    "sections": [{ "id": "section", "name": "Section", "area": 1, "iy": 1, "iz": 1, "j": 1 }],
+    "solids": [{ "id": "slab", "name": "Slab", "outline": [[0, 0], [2, 0], [2, 2], [0, 2]], "holes": [], "baseZ": 0, "height": 2, "layers": 1, "meshSize": 1, "materialId": "steel", "axis": "z" }],
+    "supports": [{ "id": "support", "nodeId": "n1", "fixed": ["tx", "ty", "tz"] }],
+    "loadCases": [{ "id": "case", "name": "Case", "selfWeight": false, "loads": [
+      { "kind": "nodal", "id": "nodeLoad", "nodeId": "n2", "dof": "tz", "value": -1000 },
+      { "kind": "memberUdl", "id": "memberLoad", "elementId": "member", "wx": 0, "wy": 0, "wz": -100 },
+      { "kind": "area", "id": "areaLoad", "solidId": "slab", "pressure": 100 }
+    ] }],
+    "combinations": [{ "id": "combination", "name": "Combination", "terms": { "case": 1.5 } }],
+    "analysis": { "modalCount": 3, "bucklingCount": 3, "deformationScale": 50 }
+  },
+  "selection": ["scope:1:8:material5:steel", "scope:1:4:node2:n1", "scope:1:8:loadCase4:case", "scope:1:5:solid4:slab", "scope:1:7:element6:member", "scope:1:7:section7:section", "scope:1:4:node2:n2", "scope:1:7:support7:support", "scope:1:11:combination11:combination", "scope:1:4:load4:case8:nodeLoad", "scope:1:4:load4:case10:memberLoad", "scope:1:4:load4:case8:areaLoad", "scope:1:4:node2:n1", "scope:1:4:node7:missing"],
+  "orderedKinds": ["remove-load", "remove-load", "remove-load", "delete-combination", "delete-support", "delete-element", "delete-solid", "delete-load-case", "delete-node", "delete-node", "delete-section", "delete-material"],
+  "loadSelection": ["scope:1:4:load4:case8:nodeLoad", "scope:1:4:load4:case10:memberLoad", "scope:1:4:load4:case8:areaLoad", "scope:1:4:load4:case8:nodeLoad", "scope:1:4:node7:missing"],
+  "invalidSelection": ["n1", "scope:1:7:unknown2:n1", "scope:1:4:node2:n1", "scope:1:4:node2:n1extra"]
+}

@@ -75,12 +75,42 @@ fn fold_frame(hash: u32, menagerie: &Menagerie, frame: &Frame) -> u32 {
     let mut folded = [frame.tick as f64, f64::from(u8::from(frame.rate)), frame.wake.map_or(-1.0, |wake| wake as f64), frame.actors.len() as f64].into_iter().fold(hash, fold);
     for actor in &frame.actors {
         folded = fold(folded, menagerie.species.iter().position(|species| species.id == actor.species).map_or(-1.0, |index| index as f64));
-        folded = [actor.x, actor.y, actor.facing.sign(), actor.activity as usize as f64, actor.opacity].into_iter().fold(folded, fold);
+        folded = [actor.x, actor.y, actor.facing.sign(), ACTIVITIES.iter().position(|activity| *activity == actor.activity).map_or(-1.0, |index| index as f64), actor.opacity].into_iter().fold(folded, fold);
         folded = actor.bones.iter().copied().fold(folded, fold);
         folded = actor.eyes.iter().flat_map(|eye| [eye.x, eye.y, eye.lid]).fold(folded, fold);
         folded = fold(folded, actor.spirits);
+        let kind = menagerie.species.iter().find(|species| species.id == actor.species);
+        folded = [FOOTINGS.iter().position(|footing| *footing == actor.footing).map_or(-1.0, |index| index as f64), kind.and_then(|kind| kind.states.iter().position(|state| state.id == actor.state)).map_or(-1.0, |index| index as f64), MOODS.iter().position(|mood| *mood == actor.mood).map_or(-1.0, |index| index as f64), actor.intensity, actor.tilt, actor.pivot.x, actor.pivot.y, actor.tools.len() as f64].into_iter().fold(folded, fold);
+        for tool in &actor.tools {
+            let numbers = match tool {
+                ToolFrame::Chute(tool) => vec![0.0, tool.open, tool.sway],
+                ToolFrame::Rope(tool) => vec![1.0, tool.x, tool.y, tool.slack],
+                ToolFrame::Hook(tool) => vec![2.0, tool.x, tool.y],
+                ToolFrame::Gun(tool) => vec![3.0, tool.aim],
+                ToolFrame::Ladder(tool) => vec![4.0, tool.lean, tool.length],
+            };
+            folded = numbers.into_iter().fold(folded, fold);
+        }
+        folded = [actor.body.x, actor.body.y, actor.body.width, actor.body.height].into_iter().fold(folded, fold);
     }
-    folded
+    folded = fold(folded, frame.ladders.len() as f64);
+    for ladder in &frame.ladders {
+        folded = [ladder.x0, ladder.y0, ladder.x1, ladder.y1, ladder.rungs as f64, ladder.opacity].into_iter().fold(folded, fold);
+    }
+    folded = fold(folded, frame.particles.len() as f64);
+    for particle in &frame.particles {
+        let kind = menagerie.species.iter().find(|species| species.id == particle.species);
+        folded = [menagerie.species.iter().position(|species| species.id == particle.species).map_or(-1.0, |index| index as f64), kind.and_then(|kind| kind.emitters.iter().position(|emitter| emitter.id == particle.emitter)).map_or(-1.0, |index| index as f64), particle.x, particle.y, particle.scale, particle.rotation, particle.opacity].into_iter().fold(folded, fold);
+    }
+    folded = fold(folded, frame.lifts.len() as f64);
+    for lift in &frame.lifts {
+        folded = [lift.dx, lift.dy, lift.tilt, lift.opacity].into_iter().fold(folded, fold);
+    }
+    folded = fold(folded, frame.puffs.len() as f64);
+    for puff in &frame.puffs {
+        folded = [puff.x, puff.y, puff.width, puff.height, puff.phase].into_iter().fold(folded, fold);
+    }
+    fold(folded, frame.held.as_ref().and_then(|held| menagerie.species.iter().position(|species| species.id == *held)).map_or(-1.0, |index| index as f64))
 }
 
 pub(crate) fn ticked(ticks: u64) -> [StageEvent; 1] {
@@ -94,13 +124,14 @@ fn replayed(menagerie: &Menagerie, script: &Script, seed: u32) -> (Value, Stage)
     for tick in 1..=script.ticks {
         stage = advance(menagerie, stage, script.events.get(&(tick - 1)).map_or(&[], Vec::as_slice));
         stage = advance(menagerie, stage, &ticked(1));
-        hash = fold_frame(hash, menagerie, &frame_of(menagerie, &stage));
+        let frame = frame_of(menagerie, &stage);
+        hash = fold_frame(hash, menagerie, &frame);
         if tick % script.every != 0 && tick != script.ticks {
             continue;
         }
         let actors: Vec<Value> =
-            stage.actors.iter().map(|actor| json!({ "species": actor.species, "perch": actor.perch, "x": actor.x, "y": actor.y, "activity": actor.activity, "partner": actor.partner, "leaving": actor.leaving, "opacity": actor.opacity })).collect();
-        checkpoints.push(json!({ "tick": tick, "digest": hash, "mode": stage.mode, "actors": actors }));
+            stage.actors.iter().map(|actor| json!({ "species": actor.species, "perch": actor.perch, "wall": actor.pitch.as_ref().map(|pitch| &pitch.wall), "footing": actor.footing, "x": actor.x, "y": actor.y, "activity": actor.activity, "partner": actor.partner, "leaving": actor.leaving, "opacity": actor.opacity, "body": extent_of(actor, menagerie.species.iter().find(|kind| kind.id == actor.species).unwrap()) })).collect();
+        checkpoints.push(json!({ "tick": tick, "digest": hash, "mode": stage.mode, "actors": actors, "drawn": { "particles": frame.particles.len(), "ladders": frame.ladders.len(), "lifts": frame.lifts.len(), "puffs": frame.puffs.len(), "held": frame.held } }));
     }
     (json!({ "frames": script.ticks, "digest": hash, "checkpoints": checkpoints }), stage)
 }
@@ -214,7 +245,8 @@ fn a_reclaimed_fixture_changes_nothing_while_none_is_lifted_and_permissions_inpu
     };
     let walled = advance(&menagerie, stage.clone(), &[StageEvent::Surveyed(Surveyed { walls: walls.clone(), fixtures: fixtures.clone(), ..plain.clone() })]);
     assert_eq!((&walled.walls, &walled.fixtures), (&walls, &fixtures));
-    assert_eq!(Stage { walls: Vec::new(), fixtures: Vec::new(), ..walled }, advance(&menagerie, stage, &[StageEvent::Surveyed(plain)]));
+    assert_eq!(walled.pitches, vec![Pitch { wall: "card-left".to_string(), surface: "card".to_string(), side: Facing::Left, x: 200.0, y0: 400.0, y1: 520.0 }]);
+    assert_eq!(Stage { walls: Vec::new(), fixtures: Vec::new(), pitches: Vec::new(), ..walled }, advance(&menagerie, stage, &[StageEvent::Surveyed(plain)]));
 }
 
 #[test]
@@ -263,7 +295,8 @@ fn a_frame_draws_every_actor_upright_about_its_grip_with_its_spirits_and_its_siz
             let feeling = settled(actor.feeling, kind.mood, stage.tick);
             assert_eq!((drawn.footing, drawn.state.as_str(), drawn.mood, drawn.intensity, drawn.spirits), (actor.footing, actor.state.as_str(), feeling.mood, feeling.intensity, spirits_of(feeling)));
             assert_eq!((drawn.tilt, drawn.pivot, drawn.tools.len()), (0.0, Point { x: 0.0, y: -kind.grip }, 0));
-            assert_eq!(drawn.body, Rect { x: actor.x - kind.size.width / 2.0, y: actor.y - kind.size.height, width: kind.size.width, height: kind.size.height });
+            let extent = extent_of(actor, kind);
+            assert_eq!(drawn.body, Rect { x: extent.x0, y: extent.y0, width: extent.x1 - extent.x0, height: extent.y1 - extent.y0 });
         }
     }
 }

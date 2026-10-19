@@ -40,3 +40,7 @@ pub mod parallel_runtime;
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
+
+pub use semio_framework_os_renderer_wgpu_host_plumbing::{native_caller, native_launch};
+pub use semio_framework_os_renderer_wgpu_host_plumbing::native_io::{RendererSourceIoError, find_renderer_wasm_path, read_renderer_source_bytes};
+use semio_framework_os_renderer_wgpu_host_base::{renderer_worker_pool, RENDERER_IO_WAKE};

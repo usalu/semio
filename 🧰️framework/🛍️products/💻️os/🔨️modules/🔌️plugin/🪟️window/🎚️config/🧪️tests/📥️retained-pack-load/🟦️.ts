@@ -35,6 +35,7 @@ export function testWindowConfigRetainedPackLoadFixture(): void {
       "over-bound-pack",
       "turn-bound-exhausted",
       "app-close",
+      "coordinate-valued-state",
     ]),
   );
   assert.equal(fixture.grant.derivation, "exact-next-allocation-or-release-demand");

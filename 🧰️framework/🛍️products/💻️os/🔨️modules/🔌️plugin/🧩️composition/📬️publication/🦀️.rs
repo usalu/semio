@@ -151,7 +151,7 @@ impl<A: ArtifactApp> PendingChildGroupPublication<A> {
 
     pub fn controlled_demands<T:semio_framework_value::retirement::RetireOwned>(owner:&ControlledRetirement<T>,body:usize)->Result<RetirementDemand,ValueError>{
         if owner.terminal_is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()});}
-        Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original pending child depth overflow"))?})
+        Ok({let mut demand=owner.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original pending child depth overflow"))?;demand})
     }
     pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         if let Some(child)=self.child_emits.last(){let mut demand=child.retirement_demands()?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original pending child metadata depth overflow"))?;return Ok(demand);}

@@ -1,4 +1,10 @@
 {
+  "environmentBoundary": {
+    "discarded": ["NX_INVOCATION_ROOT_PID", "SEMIO_SCRIPT_PROCESS_INVOCATION", "SEMIO_SCRIPT_CAPABILITIES", "SEMIO_SCRIPT_POLICY"],
+    "client": [["PATH", "client/bin"], ["TOKEN", "client"], ["NX_INVOCATION_ROOT_PID", "1"], ["SEMIO_SCRIPT_PROCESS_INVOCATION", "view-envelope"], ["SEMIO_SCRIPT_CAPABILITIES", "view-capabilities"], ["SEMIO_SCRIPT_POLICY", "view-policy"]],
+    "declared": [["TOKEN", "declared"], ["SEMIO_SCRIPT_POLICY", "task-policy"]],
+    "expected": [["PATH", "client/bin"], ["TOKEN", "declared"], ["SEMIO_SCRIPT_POLICY", "task-policy"], ["TERM", "xterm-256color"], ["COLORTERM", "truecolor"]]
+  },
   "valid": [
     { "type": "hello", "client_id": "client-1", "protocol": 2, "build_id": "dev-0123456789abcdef", "env": [["PATH", "/usr/bin"], ["TERM", "xterm"]] },
     { "type": "attach", "client_id": "developer" },

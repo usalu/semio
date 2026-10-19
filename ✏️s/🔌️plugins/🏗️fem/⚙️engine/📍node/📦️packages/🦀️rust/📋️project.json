@@ -1,0 +1,1 @@
+{"name":"@semio-tech/fem-node-rs","targets":{"test-source":{"executor":"repo:script","options":{"command":"bun ./📜️script.ts test source","cwd":"✏️s/🔌️plugins/🏗️fem/⚙️engine/📍node/📦️packages/🦀️rust"}},"test-native":{"executor":"repo:script","options":{"command":"bun ./📜️script.ts test native","cwd":"✏️s/🔌️plugins/🏗️fem/⚙️engine/📍node/📦️packages/🦀️rust"}}}}

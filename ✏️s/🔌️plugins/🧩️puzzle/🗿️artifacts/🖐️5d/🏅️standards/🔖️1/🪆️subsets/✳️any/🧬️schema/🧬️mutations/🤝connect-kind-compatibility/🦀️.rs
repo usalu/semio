@@ -1,7 +1,8 @@
 //! 🤝 Puzzle5d mutation — `ConnectKindCompatibility`: allows one grip-kind-id pair to fasten.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::{Puzzle5dSnapshot};
-use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dCompatSpecificity};
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dCompatSpecificity;
+
 
 //#region 🔖️Mutation
 /// 🤝 `connect-kind-compatibility` payload. A duplicate `(source, target)` pair is a no-op.
@@ -35,6 +36,22 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "kind-compatibility", kind: "connect-kind-compatibility", record: "ConnectedKindCompatibility" };
 
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect kind compatibility \"{}\" -> \"{}\"", self.source, self.target), &format!("Artkompatibilität \"{}\" -> \"{}\" herstellen", self.source, self.target))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.source.clone(), self.target.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ConnectKindCompatibility {
+
+
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ConnectKindCompatibility {
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
@@ -44,11 +61,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect kind compatibility \"{}\" -> \"{}\"", self.source, self.target), &format!("Artkompatibilität \"{}\" -> \"{}\" herstellen", self.source, self.target))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.source.clone(), self.target.clone()]
-    }
 }
 //#endregion 🔖️Mutation

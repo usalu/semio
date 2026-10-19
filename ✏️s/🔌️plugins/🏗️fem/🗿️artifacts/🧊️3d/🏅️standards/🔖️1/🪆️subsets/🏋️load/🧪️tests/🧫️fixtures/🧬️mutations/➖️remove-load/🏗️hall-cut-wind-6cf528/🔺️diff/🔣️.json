@@ -6,8 +6,8 @@
   "solids": null,
   "supports": null,
   "loadCases": {
-    "inserted": [],
     "removed": [],
+    "inserted": [],
     "moved": [],
     "modified": [
       {
@@ -16,13 +16,13 @@
           "name": null,
           "selfWeight": null,
           "loads": {
-            "inserted": [],
             "removed": [
               {
                 "id": "ld_wx_spare",
                 "index": 2
               }
             ],
+            "inserted": [],
             "moved": [],
             "modified": []
           }

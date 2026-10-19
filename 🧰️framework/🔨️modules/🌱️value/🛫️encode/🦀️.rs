@@ -24,6 +24,7 @@ pub struct NativeEncodeProgress { pub completed:usize, pub total:usize, pub owne
 pub struct NativeEncodeContinuation { receiving:bool, maximum_bytes:usize, owned_bytes:usize, completed:usize, total:usize, stage:u64 }
 struct EncodeContinuationRetirement(Option<NativeEncodeContinuation>);
 impl crate::retirement::RetirementCursor for EncodeContinuationRetirement{
+ fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{depth:usize::from(self.0.is_some()),..Default::default()})}
  fn close_step(&mut self,grant:crate::RetainedCloneGrant)->crate::retirement::RetirementStep{if self.0.is_none(){return crate::retirement::RetirementStep::Complete}if grant.maximum_items==0{return crate::retirement::RetirementStep::BudgetExhausted}if grant.maximum_depth==0{return crate::retirement::RetirementStep::Failure(ValueError::literal(ValueRefusalKind::DepthLimit,"encoding continuation requires original source depth"))}self.0.take();crate::retirement::RetirementStep::Progress(crate::RetainedCloneProgress{copied_items:1,..Default::default()})}
  fn terminal_is_empty(&self)->bool{self.0.is_none()}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(usize::from(self.0.is_some()))}

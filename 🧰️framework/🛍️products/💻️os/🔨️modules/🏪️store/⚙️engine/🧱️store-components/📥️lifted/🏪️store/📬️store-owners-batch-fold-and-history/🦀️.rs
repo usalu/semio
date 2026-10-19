@@ -32,7 +32,11 @@ where
     /// local gesture folds into one edit; rewriting the stamped item to it produced a committed
     /// decision whose `mutation_id` no longer matched the approval target the WAL verifies.
     pub fn fold_batch_item(&mut self, store_log: &mut StoreLog<P, Mutation>, publication: &mut ArtifactStoreBatchPublication<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemAdvance, VcsError> {
-        let authority=publication.authority.as_ref().ok_or_else(||VcsError::ValidationFailed("batched fold lost its original authority".into()))?;
+        
+        let amend_identity=self.batch_amend_target_ref(publication.transaction.as_ref());
+        let diagnostic_source=amend_identity.and_then(|id|self.envelope.edit_messages.get_by_id(id)).map(|entry|entry.messages.as_slice());
+        let diagnostic_offset:usize = amend_identity.and_then(|id|self.envelope.vcs.edits.iter().find(|edit|edit.id==id)).map_or(0, |edit| edit.forwards.len());
+let authority=publication.authority.as_ref().ok_or_else(||VcsError::ValidationFailed("batched fold lost its original authority".into()))?;
         let control=size_of::<usize>();
         if grant.maximum_depth==0||grant.maximum_copy_bytes<control{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
         if publication.stage.is_none(){
@@ -45,7 +49,12 @@ where
         let stage=publication.stage.as_mut().unwrap();
         if stage.edit.is_none(){let capacity=size_of::<Edit<Mutation>>();if grant.maximum_capacity_bytes<capacity{return Ok(ArtifactStoreOneItemAdvance::Blocked);}stage.edit=Some(Box::new(Self::empty_batch_edit(authority)));return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:control,retained_capacity_bytes:capacity,..Default::default()}));}
         macro_rules! reserve_original {($owner:expr,$count:expr,$ty:ty)=>{{let owner=$owner;if owner.capacity()<$count{let capacity=$count.checked_mul(std::mem::size_of::<$ty>()).ok_or_else(||VcsError::ValidationFailed("batch original capacity overflow".into()))?;if grant.maximum_capacity_bytes<capacity||grant.maximum_release_bytes<owner.capacity()*std::mem::size_of::<$ty>(){return Ok(ArtifactStoreOneItemAdvance::Blocked);}let released=owner.capacity()*std::mem::size_of::<$ty>();owner.try_reserve_exact($count-owner.len()).map_err(|_|VcsError::ValidationFailed("batch original reservation failed".into()))?;let actual=owner.capacity()*std::mem::size_of::<$ty>();return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:control,retained_capacity_bytes:actual,released_bytes:released,..Default::default()}));}}};}
-        reserve_original!(&mut stage.unit_flags,publication.admitted_items,(usize,bool));
+                if stage.diagnostics.batch.is_none() { let copy=size_of::<semio_framework_os_spr::command::MutationMessagePublicationBatch>();if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}stage.diagnostics.batch=Some(Default::default());return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})); }
+        let receipt=stage.diagnostics.batch.as_mut().unwrap().reserve(publication.admitted_items + usize::from(diagnostic_source.is_some()),grant.retained_grant()).map_err(|error|VcsError::ValidationFailed(error.into_message()))?;
+        if receipt!=RetainedCloneProgress::default(){return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),receipt));}
+        let prefix=stage.diagnostics.prepare_prefix(diagnostic_source,grant.retained_grant()).map_err(|error|VcsError::ValidationFailed(error.into_message()))?;
+        if !matches!(prefix,RetainedCloneStep::Complete(_))||prefix.progress()!=RetainedCloneProgress::default(){return Ok(if prefix.progress()==RetainedCloneProgress::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),prefix.progress())});}
+reserve_original!(&mut stage.unit_flags,publication.admitted_items,(usize,bool));
         reserve_original!(&mut stage.edit.as_mut().unwrap().forwards,publication.admitted_items,Mutation);
         reserve_original!(&mut stage.edit.as_mut().unwrap().mutation_meta,publication.admitted_items,MutationMeta);
         let inverse=&mut stage.edit.as_mut().unwrap().inverse;
@@ -77,7 +86,10 @@ where
             11=>{if let Some(transaction)=publication.transaction.as_ref(){let copy=transaction.id.len()+transaction.tool.len();if grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}target.mutation_meta.last_mut().unwrap().transaction=Some(transaction.clone());ownership.copied_bytes=copy;ownership.retained_capacity_bytes=copy;}stage.fold_phase=12;},
             12=>{if target.forwards.last().unwrap().may_emit_foreign_steps(){let Some(presence)=cursor.foreign_step_presence else{return Ok(ArtifactStoreOneItemAdvance::Blocked);};let copy=size_of::<(usize,bool)>();if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}stage.unit_flags.push((target.forwards.len()-1,presence));ownership.copied_bytes=copy;}stage.fold_phase=13;},
             13=>{let copy=size_of::<Arc<P>>();if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}let incoming=cursor.post.take().expect("original prepared post root");*cursor.post=stage.post.replace(incoming);ownership.copied_bytes=copy;stage.fold_phase=14;},
-            _=>{let copy=size_of::<ArtifactStoreOneItemCheckpoint>()+size_of::<Box<ArtifactStorePreparedRetirement<P,Mutation>>>();if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}let item=publication.preparation.as_ref().unwrap().checkpoint();stage.folded+=1;stage.completed_items=stage.completed_items.saturating_add(item.completed_items);stage.completed_bytes=stage.completed_bytes.saturating_add(item.completed_bytes);stage.digest=cursor.fold_digest;stage.retiring=stage.folding.take().map(|owner|owner as Box<dyn ErasedSnapshotRetirement>);publication.item_closing=true;publication.preparation.as_mut().unwrap().begin_close();ownership.copied_bytes=copy;},
+            
+            14=>{if let Some(messages)=cursor.outcome_messages.as_mut(){if stage.diagnostic_row<messages.original_messages().len(){let offset=diagnostic_offset.checked_add(target.forwards.len()-1).ok_or_else(||VcsError::ValidationFailed("diagnostic operation offset overflow".into()))?;let receipt=messages.stamp_row(stage.diagnostic_row,offset,grant.retained_grant()).map_err(|error|VcsError::ValidationFailed(error.into_message()))?;if receipt.copied_items==0{return Ok(ArtifactStoreOneItemAdvance::Blocked);}stage.diagnostic_row+=1;return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),receipt));}}stage.fold_phase=15;},
+            15=>{if let Some(messages)=cursor.outcome_messages.as_ref(){let count=messages.original_messages().len();let total=stage.diagnostics.rows.checked_add(count).ok_or_else(||VcsError::ValidationFailed("diagnostic row count overflow".into()))?;let copy=size_of::<semio_framework_os_spr::command::MutationMessagePublication>();if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}let owner=cursor.outcome_messages.take().unwrap();match stage.diagnostics.batch.as_mut().unwrap().append(owner,grant.retained_grant()){Ok(receipt)=>{stage.diagnostics.rows=total;ownership=receipt;},Err(owner)=>{*cursor.outcome_messages=Some(owner);return Ok(ArtifactStoreOneItemAdvance::Blocked);}}}stage.diagnostic_row=0;stage.fold_phase=16;},
+_=>{let copy=size_of::<ArtifactStoreOneItemCheckpoint>()+size_of::<Box<ArtifactStorePreparedRetirement<P,Mutation>>>();if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}let item=publication.preparation.as_ref().unwrap().checkpoint();stage.folded+=1;stage.completed_items=stage.completed_items.saturating_add(item.completed_items);stage.completed_bytes=stage.completed_bytes.saturating_add(item.completed_bytes);stage.digest=cursor.fold_digest;stage.retiring=stage.folding.take().map(|owner|owner as Box<dyn ErasedSnapshotRetirement>);publication.item_closing=true;publication.preparation.as_mut().unwrap().begin_close();ownership.copied_bytes=copy;},
         }
         Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership))
     }
@@ -86,7 +98,10 @@ where
     /// first fold reserves the gesture's exact admitted capacity.
     pub fn empty_batch_stage(authority: &Arc<ArtifactStoreOneItemLiveAuthority>) -> ArtifactStoreBatchStage<P, Mutation> {
         ArtifactStoreBatchStage {
-            unit_flags: Vec::new(),
+            
+            diagnostics: ArtifactStoreDiagnosticStage::default(),
+            diagnostic_row: 0,
+unit_flags: Vec::new(),
             folding: None,
             fold_phase: 0,
             digest_owner: None,
@@ -374,7 +389,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         committed.map_err(VcsError::from)
     }
 
-    pub async fn replay_mutations(&mut self, store_log: &mut StoreLog<P, Mutation>, pre_snapshot: &P, mutations: Vec<Mutation>, transaction: Option<&protocol::TransactionRef>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(ScratchOwner<Vec<Mutation>>, ScratchOwner<Vec<Mutation>>, Vec<MutationMeta>, ScratchOwner<P>, Vec<semio_framework_os_spr::MutationMessage>, Vec<(usize, bool)>), VcsError> {
+    pub async fn replay_mutations(&mut self, store_log: &mut StoreLog<P, Mutation>, pre_snapshot: &P, mutations: Vec<Mutation>, transaction: Option<&protocol::TransactionRef>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(ScratchOwner<Vec<Mutation>>, ScratchOwner<Vec<Mutation>>, Vec<MutationMeta>, ScratchOwner<P>, Vec<semio_framework_os_spr::MutationMessage>, Vec<(usize, bool)>), VcsError>  where Mutation: ColdMutation<P>, P: Clone, {
         let mut snapshot = ScratchOwner::new(pre_snapshot.clone(), retire_replayed_projection::<P, Mutation>);
         let forwards = ScratchOwner::new(mutations, retire_scratch_operations::<P, Mutation>);
         let mut inverse = ScratchOwner::new(Vec::new(), retire_scratch_operations::<P, Mutation>);
@@ -383,7 +398,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut messages = Vec::new();
         let mut unit_flags = Vec::new();
         for op_index in 0..forwards.len() {
-            if forwards[op_index].may_emit_foreign_steps() { unit_flags.push((op_index, forwards[op_index].foreign_step_source(&snapshot, 0).map_err(VcsError::from)?.is_some())); }
+            if forwards[op_index].may_emit_foreign_steps() { unit_flags.push((op_index,  <Mutation as ColdMutation<P>>::foreign_step_source(&forwards[op_index],&snapshot, 0).map_err(VcsError::from)?.is_some())); }
             let mut back = forwards[op_index].inverse(&*snapshot).map_err(VcsError::InverseRefused)?;
             back.reverse();
             inverse.extend(back);
@@ -419,10 +434,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 origin: Default::default(),
                 transaction: transaction.cloned(),
             });
-            let (applied, op_messages) = apply_operation::<P, Mutation>(&*snapshot, mutation, op_index as u32);
+            let (applied, op_messages) = replay::apply_operation_into::<P, Mutation>(&mut *snapshot, mutation, op_index as u32);
             messages.extend(op_messages);
-            let next = applied?;
-            retire_replayed_projection::<P, Mutation>(std::mem::replace(&mut *snapshot, next));
+             applied?;
         }
         if let Some(level) = semio_framework_os_spr::worst_level(&messages) {
             if store_log.merge_policy.rejects(level) {

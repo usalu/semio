@@ -60,10 +60,11 @@ pub trait Patchable<TPatch>: Sized {
 /// shape).
 pub fn apply_mutation<P, Mutation>(snapshot: &P, operation: &Mutation) -> Result<(P, Vec<protocol::MutationMessage>), MutationApplyError>
 where
-    Mutation: self::Mutation<P>,
+    P: Clone,
+    Mutation: self::Mutation<P> + ColdMutation<P>,
 {
     let (diff, messages) = operation.diff(snapshot).into_parts();
-    let applied = protocol::apply_diff(&diff, snapshot);
+    let applied = protocol::apply_diff_cold(&diff, snapshot);
     MutationDiff::retire_cold(diff);
     Ok((applied?, messages))
 }

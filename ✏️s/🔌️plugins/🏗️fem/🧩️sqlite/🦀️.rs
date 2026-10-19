@@ -4,7 +4,8 @@ use std::collections::BTreeMap;
 mod projection;
 pub use projection::RowWriter;
 use semio_framework_io_sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{Cell,FloatColumn,FloatRow,Reconstruction}};
-use semio_framework_value::{ValueError,ValueRefusalKind};
+use semio_framework_value::ValueError;
+use semio_framework_value::ValueRefusalKind;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 fn positioned(error:ValueError)->semio_framework_diagnostic::TextError{semio_framework_diagnostic::TextError::from_value_error(error,semio_framework_diagnostic::TextSpan::at(1,1))}
 pub type Entities<'a>=BTreeMap<i64,FloatRow<'a>>;

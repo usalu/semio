@@ -1,5 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangePartAnchor` — patches the one addressed part in place.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dPartPatch, Puzzle5dPartsDelta};
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dPartPatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dPartsDelta;
 use protocol::list_delta::RowPatch;
 use crate::Puzzle5dSnapshot;
 

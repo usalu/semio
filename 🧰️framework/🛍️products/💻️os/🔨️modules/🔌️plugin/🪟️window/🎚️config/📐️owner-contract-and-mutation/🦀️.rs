@@ -16,15 +16,19 @@ pub trait WindowConfigOwner: Send + Sync + 'static {
 
     fn build_mutation_retirement_factory()->Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::Mutation>>{Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<Self::Mutation>::default())}
     fn build_snapshot_retirement_factory()->Arc<dyn store::SnapshotRetirementFactory<Self::State>>{Arc::new(semio_framework_value::factory::SharedValueRetirementFactory::<Self::State>::default())}
-    fn build_store_owners() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, ValueError>;
+    fn preparation_source_birth()->semio_framework_value::retained_clone::RetainedCloneBirthDemand;
+    fn build_store_owners(grant:RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>,RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State,Self::Mutation>>;
     fn build_one_item_preparation_factory() -> Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>>;
     fn build_store_disposer() -> Box<dyn ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>>;
 }
 
-pub fn bounded_window_config_store_owners<O: WindowConfigOwner>() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<O::State, O::Mutation>, ValueError> {
-    store::os_store::document_store_owners::funded_bounded_artifact_store_owners_with_one_item_preparation::<O::State, O::Mutation>(O::build_one_item_preparation_factory())
+/// 📏️ Quotes the concrete zero-payload issuer tree before any original Window factory allocates.
+pub fn bounded_window_config_preparation_source_birth<O:WindowConfigOwner>()->semio_framework_value::retained_clone::RetainedCloneBirthDemand{semio_framework_value::retained_clone::RetainedCloneBirthDemand{capacity_bytes:semio_framework_value::factory_arc_birth_bytes::<O::Edit>()+semio_framework_value::factory_arc_birth_bytes::<semio_framework_value::factory::OwnedValueRetirementFactory<O::Mutation>>()+semio_framework_value::factory_arc_birth_bytes::<semio_framework_value::factory::SharedValueRetirementFactory<O::State>>(),depth:1}}
+/// 🎟️ Constructs the exact paired native Window factory only after the caller funds its declared original sources.
+pub fn bounded_window_config_store_owners<O:WindowConfigOwner>(grant:RetainedCloneGrant)->Result<(store::os_store::document_store_owners::DocumentStoreOwners<O::State,O::Mutation>,RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<O::State,O::Mutation>>{
+ let copy=2*std::mem::size_of::<store::os_store::document_store_owners::DocumentStoreOwners<O::State,O::Mutation>>();if grant.maximum_copy_bytes<copy{return Err(store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError{error:ValueError::literal(ValueRefusalKind::WorkLimit,"original Window catalog header transfer not funded"),owners:None,progress:Default::default()})}
+ store::os_store::document_store_owners::bounded_artifact_store_owners_with_shared_semantic_preparation(grant,O::preparation_source_birth(),copy,||store::snapshot_clone_preparation::RetainedClonePreparationFactory::new(O::build_retained_edit(),O::build_mutation_retirement_factory(),O::build_snapshot_retirement_factory(),O::MAXIMUM_PREPARATION_DEPTH).expect("original Window native depth declared before admission"))
 }
-
 /// 🧬️ Uses the original domain edit issuer and Store's admitted clone, metadata and canonical-seal owners.
 pub fn bounded_window_config_preparation_factory<O: WindowConfigOwner>() -> Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<O::State, O::Mutation>> {
     assert!(O::MAXIMUM_PUBLICATION_BYTES>0&&O::MAXIMUM_PUBLICATION_BYTES<=store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES,"original window owner declares its admissible publication bound");
@@ -94,7 +98,7 @@ impl WindowConfigMutation {
 
 impl crate::window_mutation::refresh::WindowRefreshSnapshot for WindowConfigSnapshot{fn swap_address(&mut self,other:&mut Self){std::mem::swap(&mut self.window_id,&mut other.window_id);}}
 
-impl WindowConfigSnapshot{pub fn try_duplicate(&self)->Result<Self,ValueError>{Ok(Self{window_id:self.window_id.clone(),window_kind_id:self.window_kind_id,generation:self.generation,revision:self.revision,snapshot:self.snapshot.try_duplicate()?})}}
+impl WindowConfigSnapshot{pub fn try_duplicate(&self)->Result<Self,ValueError>{Ok(Self{authority:self.authority,window_id:self.window_id.clone(),window_kind_id:self.window_kind_id,generation:self.generation,revision:self.revision,snapshot:self.snapshot.try_duplicate()?})}}
 
 /// 📖️ Immutable snapshot of one exact window-owned config partition.
 #[derive(semio_framework_value::RetireOwned)]
@@ -111,7 +115,37 @@ pub struct WindowConfigSnapshot {
     pub snapshot: store::os_store::snapshot_read::ErasedSnapshotRead,
 }
 
+/// 🪪️ Checked process-unique identity issued to one original window partition.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, semio_framework_value::RetireOwned)]
+pub struct WindowConfigAuthorityIdentity(u64);
+
+impl WindowConfigAuthorityIdentity {
+    fn issue() -> Option<Self> {
+        static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+        NEXT.fetch_update(std::sync::atomic::Ordering::Relaxed, std::sync::atomic::Ordering::Relaxed, |next| next.checked_add(1)).ok().map(Self)
+    }
+}
+
+/// 👁️ Borrows one original committed window partition without issuing or copying an owner.
+pub struct WindowConfigBorrow<'a> {
+    pub authority: WindowConfigAuthorityIdentity,
+    pub window_id: &'a str,
+    pub window_kind_id: &'static str,
+    pub generation: u64,
+    pub revision: [u8; 32],
+    state: &'a dyn std::any::Any,
+}
+
+impl WindowConfigBorrow<'_> {
+    /// 🧬️ Lends only the state of the exact declared window owner.
+    pub fn get<O: WindowConfigOwner>(&self) -> Option<&O::State> {
+        (self.window_kind_id == O::WINDOW_KIND_ID).then(|| self.state.downcast_ref::<O::State>()).flatten()
+    }
+}
+
 impl WindowConfigSnapshot {
+    /// 🪪️ Returns the exact original partition authority captured with this snapshot.
+    pub fn authority(&self) -> WindowConfigAuthorityIdentity { self.authority }
     pub fn generation(&self) -> u64 {
         self.generation
     }

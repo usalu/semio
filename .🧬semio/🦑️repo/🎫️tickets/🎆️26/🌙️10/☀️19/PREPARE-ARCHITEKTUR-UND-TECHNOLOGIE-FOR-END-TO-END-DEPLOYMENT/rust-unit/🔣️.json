@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "modules", "schemaCrate", "supportCrate", "factory", "forbidden", "literalCases"],
+  "properties": {
+    "version": { "const": 1 },
+    "modules": { "type": "array", "minItems": 7, "maxItems": 7, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "schemaCrate": { "const": "course_schema" },
+    "supportCrate": { "const": "semio_framework_course_tests_support" },
+    "factory": { "const": "course" },
+    "forbidden": { "type": "array", "minItems": 5, "maxItems": 5, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "literalCases": { "type": "array", "minItems": 4, "items": { "type": "object", "additionalProperties": false, "required": ["id", "fields", "missing", "extra"], "properties": { "id": { "type": "string" }, "fields": { "type": "array", "items": { "type": "string" } }, "missing": { "type": "array", "items": { "type": "string" } }, "extra": { "type": "array", "items": { "type": "string" } } } } }
+  }
+}

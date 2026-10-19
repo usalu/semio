@@ -7,6 +7,9 @@ pub use retained_fold::RetainedHistoryFold;
 #[path="../🛬️decode/📋️records/📦️paged/👁️source/🦀️.rs"]
 mod original_history_edits;
 pub use original_history_edits::OriginalHistoryEdits;
+#[path="../👁️source/🦀️.rs"]
+mod original_history_source;
+pub use original_history_source::OriginalHistorySource;
 
 //#region 🔖️Model
 // Persisted history is the semantic event log plus this replica's head. Edits (with the alternative

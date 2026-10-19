@@ -54,6 +54,7 @@ fn expanded_aggregate_matches_neutral_contract_and_syn_ast() {
             assert!(mutation.generics.where_clause.is_some());
         }
         let expanded = tokens.to_string();
+        assert_eq!(expanded.matches("admit_inverse").count(), fixture["inverseAdmissionCalls"].as_u64().unwrap() as usize, "aggregate inverse must gate leaf candidates on the original outcome");
         assert_eq!(expanded.matches("validate_leaf").count(), conversions);
         assert_eq!(expanded.matches("validate_mutation_leaf_descriptor_roster_uniqueness").count(), 1);
         assert_eq!(expanded.matches("include_str !").count(), 1);

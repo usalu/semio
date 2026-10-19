@@ -22,20 +22,19 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
             Err(vcs::VcsError::ValidationFailed(_) | vcs::VcsError::Rejected { .. }) => return Ok(SupersedeAuthored::Refused),
             Err(error) => return Err(error.into_fault()),
         }
-        self.step_supersede_authoring(self.shared().time_travel_turn_deadline(), identity).await
+        Ok(SupersedeAuthored::Pending)
     }
 
     /// ⏭️ One turn of the undo or redo of a finalize being authored: steps its replay until the turn deadline, then commits
     /// the finished replay in its scope; a store that moved meanwhile replays the same inputs again from the new base.
-    pub(super) async fn step_supersede_authoring(&mut self, deadline_us: u64, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<SupersedeAuthored, Fault> {
+    pub(super)  async fn step_supersede_authoring(&mut self,grant:RetainedCloneGrant, deadline_us: u64, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<SupersedeAuthored, Fault> {
         let stepped = {
             let TimeTravelCtx { stores, time_travel, .. } = self;
             let store = &mut stores.store;
             let clock = time_travel.turn_clock;
             let Some(authoring) = time_travel.authoring.as_mut() else { return Ok(SupersedeAuthored::Refused) };
             let mut deadline = || clock().is_none_or(|now| now >= deadline_us);
-            let grant=history_planning_retirement_grant(authoring.replay.planning_retirement_demands(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).map_err(ValueError::into_fault)?);
-            store.step_derived_report_replay(&mut authoring.replay, grant, &mut deadline)
+            store.step_derived_report_replay(&mut authoring.replay, grant,receiving, &mut deadline)
         };
         match stepped {
             Ok(store::os_store::replay::ReplayStep::Pending(_)) => return Ok(SupersedeAuthored::Pending),

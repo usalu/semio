@@ -8,7 +8,7 @@ fn sample_envelope(actor: &str) -> MutationEnvelope {
     MutationEnvelope {
         mutation_id: protocol::MutationId(format!("op-{actor}")),
         document_id: protocol::ArtifactId("doc-1".to_string()),
-        actor: protocol::ActorId(actor.to_string()),
+        actor: protocol::ActorId(actor.to_string().into()),
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),

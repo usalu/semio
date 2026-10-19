@@ -1,5 +1,5 @@
-//! 🫧️ The running playback CLOCK of one concrete FEM results window — the per-frame phase the tick chain
 //! advances at ~30 fps. ONE clock for every FEM editor: fem 2d and fem 3d register this transient for their own
+//! 🫧️ The running playback CLOCK of one concrete FEM results window — the per-frame phase the tick chain
 //! results-window kind ([`Fem2dResultsWindowTransientOwner`] here, fem 3d's owner beside its window).
 //!
 //! 🕰️ Why a transient and not the window config: a window-config partition is a history-ledgered
@@ -13,8 +13,18 @@
 //! only while the window plays, and the tick that finds the transport stopped parks the clock's phase back
 //! into the config and clears it.
 
-use semio_s_fem_app_surface::{FemLoopMode, FemResultsAnimation, ANIMATION_SPEED_MAXIMUM, ANIMATION_SPEED_MINIMUM};
-use semio_framework_plugin::{Fault, WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientSnapshot};
+use semio_s_fem_app_surface::FemLoopMode;
+
+use semio_s_fem_app_surface::FemResultsAnimation;
+
+use semio_s_fem_app_surface::ANIMATION_SPEED_MAXIMUM;
+
+use semio_s_fem_app_surface::ANIMATION_SPEED_MINIMUM;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::WindowTransientMutation;
+use semio_framework_plugin::WindowTransientOwner;
+use semio_framework_plugin::WindowTransientOwnerBundle;
+use semio_framework_plugin::WindowTransientSnapshot;
 
 #[path = "🧬️schema/🦀️.rs"]
 mod schema;
@@ -102,20 +112,27 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 }
 
 impl protocol::MutationDiff<FemResultsWindowTransient> for FemResultsWindowTransientDiff {
-    fn apply(&self, base: &FemResultsWindowTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<FemResultsWindowTransient> {
-        Ok(FemResultsWindowTransient { clock: self.clock.map_or(base.clock, |change| change.clock) })
-    }
+
+}
+impl protocol::ColdMutationDiff<FemResultsWindowTransient> for FemResultsWindowTransientDiff {
     fn absorb(&mut self, other: Self) {
         self.clock = other.clock.or(self.clock);
+    }
+
+    fn apply(&self, base: &mut FemResultsWindowTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        if let Some(change) = self.clock { base.clock = change.clock; }
+        Ok(())
     }
 }
 
 impl protocol::DiffAlgebra<FemResultsWindowTransient> for FemResultsWindowTransientDiff {
-    fn inverse(&self, base: &FemResultsWindowTransient) -> Self {
-        Self { clock: self.clock.map(|_| FemPlaybackClockChange { clock: base.clock }) }
-    }
     fn is_empty(&self) -> bool {
         self.clock.is_none()
+    }
+}
+impl protocol::ColdDiffAlgebra<FemResultsWindowTransient> for FemResultsWindowTransientDiff {
+    fn inverse(&self, base: &FemResultsWindowTransient) -> Self {
+        Self { clock: self.clock.map(|_| FemPlaybackClockChange { clock: base.clock }) }
     }
 }
 

@@ -85,6 +85,8 @@ test("Ajv accepts every declaration of the fixture workspace and refuses the for
   for (const path of ticketDocuments()) expect(tickets(json(path)), `${path}: ${JSON.stringify(tickets.errors)}`).toBe(true);
   const project = (dashboardBlock: Json) => ({ metadata: { semio: { dashboard: dashboardBlock } } });
   const refused: Json[] = [
+    project({ tools: [{ id: "server", command: ["bun", "--version"], mcp: { server: "server", clients: { vscode: {} } } }] }),
+    project({ tools: [{ id: "server", command: ["bun", "--version"], mcp: { server: "server", clients: { cursor: {} } } }] }),
     project({ groups: [{ id: "g", target: "build", projects: ["p"] }] }),
     project({ groups: [{ id: "g", targets: [], projects: ["p"] }] }),
     project({ tools: [{ id: "t", command: ["x"], ready: { port: 1, printed: true, path: "/x" } }] }),
@@ -116,7 +118,7 @@ test("the registry check reports no problem for the fixture workspace and names 
 // #endregion 🔖️Declarations
 
 // #region 🔖️Listing
-const FIXED_REPO = ["goals.list", "goals.tree", "tree.monorepo", "tree.goal", "tree.statute", "tree.territory", "statutes.catalog", ...["all", "rust", "typescript", "go", "python", "markdown"].map((scope) => `analyze:${scope}`)];
+const FIXED_REPO = ["goals.list", "goals.tree", "tree.monorepo", "tree.goal", "tree.statute", "tree.territory", "statutes.catalog", "draft.start", "draft.discard", ...["all", "rust", "typescript", "go", "python", "markdown"].map((scope) => `analyze:${scope}`)];
 
 /** 🧭️ The command ids the fixture workspace must offer, derived without the registry. */
 function expectedIds(): string[] {
@@ -165,10 +167,10 @@ test("`semio commands --json --all` lists exactly the commands an independent wa
   expect(byId.get("playground:shell")?.parameters.map((parameter: Json) => parameter.id)).toEqual(expect.arrayContaining(["renderer", "example", "user-slot", "hub", "data", "local-only"]));
 });
 
-test("a search narrows by every word and the default listing leaves closed tickets out", () => {
+test("a search narrows by every word and the default listing offers closed tickets for reopening", () => {
   const search = (...words: string[]) => (JSON.parse(semio(["commands", "--json", ...words, "--root", root]).out) as Json[]).map((row) => row.id as string);
   expect(search("dev", "shell")).toContain("playground:shell");
-  expect(search("closed-probe")).toEqual([]);
+  expect(search("closed-probe")).toEqual(["repo:ticket.reopen:26/08/01/CLOSED-PROBE"]);
   expect(search("closed-probe", "--all")).toContain("repo:ticket.reopen:26/08/01/CLOSED-PROBE");
   expect(search("--all", "nonsense-word-xyz")).toEqual([]);
 });
@@ -368,7 +370,7 @@ const shapeOfLaunch = (launch: Json): Json => ({ processes: launch.processes.map
 type Case = { id: string; parameters?: Pins; args?: string[]; env?: Record<string, string> };
 const CASES: Case[] = [
   { id: "workspace:test", parameters: { cache: "skip-local", "test-level": "quick", dependencies: true, "cargo-jobs": "2" }, args: ["--filter", "x"], env: { EXTRA: "1" } },
-  { id: "workspace:build", parameters: { "build-mode": "ship" } },
+  { id: "workspace:build", parameters: { "build-mode": "release" } },
   { id: "workspace:dev" },
   { id: "workspace:verify", parameters: { rule: "literal-external" } },
   { id: "hub:dev" },
@@ -381,7 +383,7 @@ const CASES: Case[] = [
   { id: "@fixture/quiz:dev", parameters: { listen: "6070" } },
   { id: "@fixture/quiz:test-e2e", parameters: { "test-level": "long" } },
   { id: "tool:workspace/inspector" },
-  { id: "tool:workspace/bun-test", parameters: { file: "a.test.ts", bail: true, "build-mode": "ship", "test-level": "quick" } },
+  { id: "tool:workspace/bun-test", parameters: { file: "a.test.ts", bail: true, "build-mode": "release", "test-level": "quick" } },
   { id: "tool:workspace/printer" },
   { id: "tool:workspace/viewer" },
   { id: "group:workspace/artifact-tests", parameters: { "test-level": "long", cache: "skip-all" } },

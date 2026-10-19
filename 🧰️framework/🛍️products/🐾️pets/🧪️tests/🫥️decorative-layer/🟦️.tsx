@@ -20,7 +20,7 @@ import { fileURLToPath } from "node:url";
 import { StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 import { menagerieIssues, type Channel, type Clip, type Menagerie, type Species, type Track } from "@semio-tech/pets";
-import { PET_EDGE_INSET, PET_HOME_SCENE, PET_LAYER_Z_INDEX, PetLayer, petCapacity, petCast, petScale } from "@semio-tech/pets-react";
+import { PET_EDGE_INSET, PET_LAYER_Z_INDEX, PetLayer, petCapacity, petCast, petScale } from "@semio-tech/pets-react";
 
 const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../🎯️targets/⚛️react/🎨️.css"), "utf8");
 
@@ -237,6 +237,26 @@ afterEach(() => {
 });
 
 describe("🫥️ decorative layer", () => {
+  it("updates shiny species on existing motionless actors without changing their positions", () => {
+    page();
+    const { container, rerender } = render(<PetLayer menagerie={MENAGERIE} scene="home" mode="still" seed={7} shiny={["alba"]} />);
+    vi.advanceTimersByTime(1000);
+    const layer = layerOf(container);
+    const alba = layer.querySelector('[data-pet="alba"]')!;
+    expect(alba.hasAttribute("data-pet-shiny")).toBe(true);
+    expect(layer.querySelector('[data-pet="bruno"]')?.hasAttribute("data-pet-shiny")).toBe(false);
+    const position = alba.getAttribute("style");
+    rerender(<PetLayer menagerie={MENAGERIE} scene="home" mode="still" seed={7} shiny={["bruno"]} />);
+    vi.advanceTimersByTime(100);
+    expect(layer.querySelector('[data-pet="alba"]')).toBe(alba);
+    expect(alba.hasAttribute("data-pet-shiny")).toBe(false);
+    expect(alba.getAttribute("style")).toBe(position);
+    expect(layer.querySelector('[data-pet="bruno"]')?.hasAttribute("data-pet-shiny")).toBe(true);
+    rerender(<PetLayer menagerie={MENAGERIE} scene="home" mode="still" seed={7} />);
+    vi.advanceTimersByTime(100);
+    expect(layer.querySelectorAll("[data-pet-shiny]")).toHaveLength(0);
+  });
+
   it("is built on a menagerie the core accepts", () => {
     expect(menagerieIssues(MENAGERIE)).toEqual([]);
     expect(menagerieIssues(HOMELESS)).toEqual([]);
@@ -248,7 +268,7 @@ describe("🫥️ decorative layer", () => {
     const layer = layerOf(container);
     expect(layer.tagName).toBe("DIV");
     expect(layer.getAttribute("aria-hidden")).toBe("true");
-    expect(layer.getAttributeNames().sort()).toEqual(["aria-hidden", "class", "style"]);
+    expect(layer.getAttributeNames().sort()).toEqual(["aria-hidden", "class", "data-pet-scene", "style"]);
     expect(layer.className).toBe("pet-layer");
     expect(layer.style.zIndex).toBe(String(PET_LAYER_Z_INDEX));
     expect(layer.childElementCount).toBe(0);
@@ -307,7 +327,7 @@ describe("🫥️ decorative layer", () => {
     vi.advanceTimersByTime(5000);
     const layer = layerOf(container);
     expect(layer.childElementCount).toBe(0);
-    expect(layer.getAttributeNames().sort()).toEqual(["aria-hidden", "class"]);
+    expect(layer.getAttributeNames().sort()).toEqual(["aria-hidden", "class", "data-pet-scene"]);
     expect(vi.getTimerCount()).toBe(0);
   });
 
@@ -561,14 +581,17 @@ describe("🫥️ decorative layer", () => {
     expect(standing(layer).map((pet) => pet.species)).toEqual(["dora"]);
     rerender(<PetLayer menagerie={MENAGERIE} scene="somewhere-else" mode="calm" seed={7} />);
     vi.advanceTimersByTime(20_000);
+    expect(standing(layer)).toEqual([]);
+    rerender(<PetLayer menagerie={MENAGERIE} scene="home" mode="calm" seed={7} />);
+    vi.advanceTimersByTime(3000);
     expect(standing(layer).map((pet) => pet.species).sort()).toEqual(["alba", "bruno", "carla"]);
-    rerender(<PetLayer menagerie={MENAGERIE} scene="somewhere-else" mode="still" seed={7} />);
+    rerender(<PetLayer menagerie={MENAGERIE} scene="home" mode="still" seed={7} />);
     vi.advanceTimersByTime(1000);
     const frozen = layer.innerHTML;
     expect(vi.getTimerCount()).toBe(0);
     vi.advanceTimersByTime(60_000);
     expect(layer.innerHTML).toBe(frozen);
-    rerender(<PetLayer menagerie={MENAGERIE} scene="somewhere-else" mode="lively" seed={7} />);
+    rerender(<PetLayer menagerie={MENAGERIE} scene="home" mode="lively" seed={7} />);
     expect(vi.getTimerCount()).toBe(1);
   });
 
@@ -656,12 +679,13 @@ describe("🫥️ decorative layer", () => {
     }
   });
 
-  it("shows nobody for a scene without a cast and without a home", () => {
+  it("shows nobody for an unknown scoped scene even when a home cast exists", () => {
     page();
     expect(petCast(MENAGERIE, "garden")?.core).toEqual(["dora"]);
-    expect(petCast(MENAGERIE, "nowhere")?.scene).toBe(PET_HOME_SCENE);
+    expect(petCast(MENAGERIE, "nowhere")).toBeNull();
     expect(petCast(HOMELESS, "nowhere")).toBeNull();
-    const { container } = render(<PetLayer menagerie={HOMELESS} scene="nowhere" mode="calm" seed={7} />);
+    const { container } = render(<PetLayer menagerie={MENAGERIE} scene="nowhere" mode="calm" seed={7} />);
+    expect(layerOf(container).getAttribute("data-pet-scene")).toBe("nowhere");
     vi.advanceTimersByTime(5000);
     expect(layerOf(container).childElementCount).toBe(0);
     expect(vi.getTimerCount()).toBe(0);

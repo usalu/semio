@@ -9,7 +9,23 @@
       "dashboard": {
         "parameters": [
           {
+            "id": "build-tool",
+            "title": { "en": "Build tool", "de": "Build-Werkzeug" },
+            "description": { "en": "Select the same build backend for this task and its nested commands.", "de": "Dasselbe Build-Werkzeug für diese Aufgabe und ihre verschachtelten Befehle auswählen." },
+            "kind": "choice",
+            "appliesTo": { "verbs": ["test", "check", "build", "verify", "lint", "serve", "activate", "task", "run", "dev", "clean", "generate", "reset", "inspect", "watch", "setup"], "playground": true },
+            "values": [{ "id": "nx", "env": { "SEMIO_BUILD_TOOL": "nx" } }, { "id": "bazel", "env": { "SEMIO_BUILD_TOOL": "bazel" } }]
+          },
+          {
             "id": "cache",
+            "title": {
+              "en": "Task cache",
+              "de": "Aufgaben-Cache"
+            },
+            "description": {
+              "en": "Reuse cached results, skip the local cache, or skip all caches.",
+              "de": "Ergebnisse wiederverwenden, lokalen Cache oder alle Caches überspringen."
+            },
             "kind": "choice",
             "appliesTo": {
               "verbs": [
@@ -46,6 +62,14 @@
           },
           {
             "id": "test-level",
+            "title": {
+              "en": "Test depth",
+              "de": "Testumfang"
+            },
+            "description": {
+              "en": "Choose quick, long or exhaustive verification.",
+              "de": "Kurze, lange oder vollständige Prüfung auswählen."
+            },
             "kind": "choice",
             "appliesTo": {
               "verbs": [
@@ -78,6 +102,14 @@
           },
           {
             "id": "dependencies",
+            "title": {
+              "en": "Skip prerequisite tasks",
+              "de": "Vorausgehende Aufgaben überspringen"
+            },
+            "description": {
+              "en": "Run the selected task without rebuilding its task dependencies.",
+              "de": "Ausgewählte Aufgabe ohne erneuten Aufbau ihrer Aufgabenabhängigkeiten ausführen."
+            },
             "kind": "flag",
             "appliesTo": {
               "verbs": [
@@ -94,6 +126,14 @@
           },
           {
             "id": "build-mode",
+            "title": {
+              "en": "Build mode",
+              "de": "Build-Modus"
+            },
+            "description": {
+              "en": "Ship uses release builds and skips cached results.",
+              "de": "Ship verwendet Release-Builds und überspringt gespeicherte Ergebnisse."
+            },
             "kind": "choice",
             "appliesTo": {
               "verbs": [
@@ -119,6 +159,14 @@
           },
           {
             "id": "nextest-output",
+            "title": {
+              "en": "Successful test output",
+              "de": "Ausgabe erfolgreicher Tests"
+            },
+            "description": {
+              "en": "Show successful output immediately, at completion, both, or never.",
+              "de": "Erfolgreiche Ausgabe sofort, am Ende, beides oder nie anzeigen."
+            },
             "kind": "choice",
             "appliesTo": {
               "verbs": [
@@ -155,6 +203,14 @@
           },
           {
             "id": "cargo-jobs",
+            "title": {
+              "en": "Compiler jobs",
+              "de": "Compiler-Aufträge"
+            },
+            "description": {
+              "en": "Limit the number of simultaneous Cargo compilation jobs.",
+              "de": "Anzahl gleichzeitiger Cargo-Compiler-Aufträge begrenzen."
+            },
             "kind": "text",
             "appliesTo": {
               "verbs": [
@@ -168,6 +224,14 @@
           },
           {
             "id": "build-budget",
+            "title": {
+              "en": "Build time limit",
+              "de": "Zeitlimit für Builds"
+            },
+            "description": {
+              "en": "Set the build time limit in milliseconds.",
+              "de": "Zeitlimit für Builds in Millisekunden festlegen."
+            },
             "kind": "text",
             "appliesTo": {
               "verbs": [
@@ -182,6 +246,95 @@
           }
         ],
         "tools": [
+          {
+            "id": "build-task",
+            "title": { "en": "Run or preview a build task", "de": "Build-Aufgabe starten oder vorprüfen" },
+            "description": { "en": "Select an owner target, backend and optional dry run; the dashboard retains its progress and output.", "de": "Eigentümerziel, Werkzeug und optionalen Probelauf auswählen; das Dashboard hält Fortschritt und Ausgabe fest." },
+            "verb": "run",
+            "command": ["bun", "repo", "run", "{task}", "--output=stream"],
+            "parameters": [
+              { "id": "task", "title": { "en": "Project and target", "de": "Projekt und Ziel" }, "kind": "text", "required": true },
+              { "id": "mode", "title": { "en": "Build mode", "de": "Build-Modus" }, "kind": "choice", "values": [{ "id": "prototype", "args": ["--configuration=prototype"] }, { "id": "release", "args": ["--configuration=release"] }] },
+              { "id": "dry-run", "title": { "en": "Preview execution plan", "de": "Ausführungsplan anzeigen" }, "kind": "flag", "args": ["--dry-run"] }
+            ]
+          },
+          {
+            "id": "build-help",
+            "title": { "en": "Build command help", "de": "Hilfe zu Build-Befehlen" },
+            "verb": "inspect",
+            "command": ["bun", "repo", "--help"]
+          },
+          {
+            "id": "build-affected",
+            "title": { "en": "Run affected project targets", "de": "Ziele betroffener Projekte ausführen" },
+            "description": { "en": "Run selected targets only for projects affected by current changes, using the chosen backend and build mode.", "de": "Ausgewählte Ziele nur für von aktuellen Änderungen betroffene Projekte mit gewähltem Werkzeug und Build-Modus ausführen." },
+            "verb": "test",
+            "command": ["bun", "repo", "affected", "--targets={targets}", "--output=stream"],
+            "parameters": [
+              { "id": "targets", "title": { "en": "Targets", "de": "Ziele" }, "description": { "en": "Comma-separated target names, such as test or check,typecheck.", "de": "Kommagetrennte Zielnamen, etwa test oder check,typecheck." }, "kind": "text", "required": true, "default": "test" },
+              { "id": "mode", "title": { "en": "Build mode", "de": "Build-Modus" }, "kind": "choice", "values": [{ "id": "prototype", "args": ["--configuration=prototype"] }, { "id": "release", "args": ["--configuration=release"] }] }
+            ]
+          },
+          {
+            "id": "build-graph",
+            "title": { "en": "Inspect the build graph", "de": "Build-Graph prüfen" },
+            "verb": "inspect",
+            "command": ["bun", "repo", "graph"]
+          },
+          {
+            "id": "build-projects",
+            "title": { "en": "List build projects", "de": "Build-Projekte auflisten" },
+            "verb": "inspect",
+            "command": ["bun", "repo", "show", "projects"]
+          },
+          {
+            "id": "build-targets",
+            "title": { "en": "List build targets", "de": "Build-Ziele auflisten" },
+            "verb": "inspect",
+            "command": ["bun", "repo", "show", "targets"]
+          },
+          {
+            "id": "build-project",
+            "title": { "en": "Inspect one build project", "de": "Ein Build-Projekt prüfen" },
+            "verb": "inspect",
+            "command": ["bun", "repo", "show", "project", "{project}"],
+            "parameters": [{ "id": "project", "title": { "en": "Project", "de": "Projekt" }, "kind": "text", "required": true }]
+          },
+          {
+            "id": "build-watch",
+            "title": { "en": "Watch sources and run a task", "de": "Quellen beobachten und Aufgabe starten" },
+            "verb": "watch",
+            "command": ["bun", "repo", "watch", "--projects={projects}", "--", "bun", "repo", "run", "{task}", "--output=stream"],
+            "continuous": true,
+            "parameters": [
+              { "id": "projects", "title": { "en": "Projects", "de": "Projekte" }, "kind": "text", "required": true },
+              { "id": "task", "title": { "en": "Project and target", "de": "Projekt und Ziel" }, "kind": "text", "required": true }
+            ]
+          },
+          {
+            "id": "build-reset",
+            "title": { "en": "Reset the selected build cache", "de": "Ausgewählten Build-Cache zurücksetzen" },
+            "verb": "reset",
+            "command": ["bun", "repo", "reset"]
+          },
+          {
+            "id": "build-tools",
+            "title": { "en": "Set up pinned build tools", "de": "Festgelegte Build-Werkzeuge einrichten" },
+            "verb": "setup",
+            "command": ["bun", "repo", "tools", "setup", "{tool}"],
+            "parameters": [{ "id": "tool", "title": { "en": "Tool selection", "de": "Werkzeugauswahl" }, "kind": "choice", "default": "all", "values": [{ "id": "all" }, { "id": "nx" }, { "id": "bazel" }] }]
+          },
+          {
+            "id": "cargo",
+            "title": { "en": "Run an issued Cargo operation", "de": "Ausgestellten Cargo-Vorgang starten" },
+            "description": { "en": "Choose store and build mode, then enter the Cargo subcommand and its words in Arguments.", "de": "Speicher und Build-Modus auswählen, dann Cargo-Unterbefehl und seine Wörter unter Argumente eingeben." },
+            "verb": "run",
+            "command": ["bun", "repo", "cargo", "--store={store}", "--configuration={mode}", "--"],
+            "parameters": [
+              { "id": "store", "title": { "en": "Target store", "de": "Zielspeicher" }, "kind": "choice", "default": "shared", "values": [{ "id": "shared" }, { "id": "isolated" }] },
+              { "id": "mode", "title": { "en": "Build mode", "de": "Build-Modus" }, "kind": "choice", "default": "prototype", "values": [{ "id": "prototype" }, { "id": "release" }] }
+            ]
+          },
           {
             "id": "repo-mcp",
             "verb": "dev",
@@ -207,16 +360,6 @@
                 "claude-code": {
                   "parameters": {
                     "client": "client"
-                  }
-                },
-                "vscode": {
-                  "parameters": {
-                    "client": "copilot"
-                  }
-                },
-                "cursor": {
-                  "parameters": {
-                    "client": "cursor"
                   }
                 },
                 "codex": {
@@ -247,8 +390,6 @@
               "server": "semio",
               "clients": {
                 "claude-code": {},
-                "vscode": {},
-                "cursor": {},
                 "codex": {}
               }
             }
@@ -308,6 +449,14 @@
           },
           {
             "id": "bun-test",
+            "title": {
+              "en": "Run a Bun test file",
+              "de": "Bun-Testdatei ausführen"
+            },
+            "description": {
+              "en": "Choose a test file and its build owner project; results appear in the dashboard task.",
+              "de": "Testdatei und Build-Projekt auswählen; Ergebnisse erscheinen in der Dashboard-Aufgabe."
+            },
             "verb": "test",
             "command": [
               "bun",
@@ -321,17 +470,44 @@
             "parameters": [
               {
                 "id": "project",
+                "title": {
+                  "en": "Build owner project",
+                  "de": "Build-Projekt"
+                },
+                "description": {
+                  "en": "The project that owns the selected test file.",
+                  "de": "Projekt, dem die ausgewählte Testdatei gehört."
+                },
                 "kind": "text",
-                "default": "workspace"
+                "default": "",
+                "required": true,
+                "suggestions": { "source": "projects" }
               },
               {
                 "id": "file",
+                "title": {
+                  "en": "Test file",
+                  "de": "Testdatei"
+                },
+                "description": {
+                  "en": "Choose a discovered test file or enter its workspace-relative path.",
+                  "de": "Entdeckte Testdatei auswählen oder ihren Pfad relativ zum Arbeitsbereich eingeben."
+                },
                 "kind": "text",
                 "required": true,
-                "valuePositional": true
+                "valuePositional": true,
+                "suggestions": { "source": "tests", "projectParameter": "project" }
               },
               {
                 "id": "build-mode",
+                "title": {
+                  "en": "Build mode",
+                  "de": "Build-Modus"
+                },
+                "description": {
+                  "en": "Ship selects release mode for this test.",
+                  "de": "Ship wählt den Release-Modus für diesen Test."
+                },
                 "kind": "choice",
                 "values": [
                   {
@@ -346,6 +522,14 @@
           },
           {
             "id": "run-script",
+            "title": {
+              "en": "Run an authored script",
+              "de": "Verfasstes Skript ausführen"
+            },
+            "description": {
+              "en": "Run a repository script through its build owner; add command words in Arguments.",
+              "de": "Repository-Skript über sein Build-Projekt ausführen; Befehlswörter unter Argumente ergänzen."
+            },
             "verb": "run",
             "command": [
               "bun",
@@ -359,19 +543,160 @@
             "cwd": "{directory}",
             "parameters": [
               {
+                "id": "project",
+                "title": { "en": "Build owner project", "de": "Build-Projekt" },
+                "description": { "en": "Select an owner or choose a discovered script to fill it automatically.", "de": "Eigentümer auswählen oder durch Auswahl eines entdeckten Skripts automatisch ausfüllen." },
+                "kind": "text",
+                "default": "",
+                "required": true,
+                "suggestions": { "source": "projects" }
+              },
+              {
                 "id": "script",
+                "title": {
+                  "en": "Script path",
+                  "de": "Skriptpfad"
+                },
+                "description": {
+                  "en": "Choose an authored script or enter its workspace-relative path.",
+                  "de": "Verfasstes Skript auswählen oder seinen Pfad relativ zum Arbeitsbereich eingeben."
+                },
+                "kind": "text",
+                "required": true,
+                "suggestions": { "source": "scripts", "projectParameter": "project", "directoryParameter": "directory" }
+              },
+              {
+                "id": "directory",
+                "title": {
+                  "en": "Working directory",
+                  "de": "Arbeitsverzeichnis"
+                },
+                "description": {
+                  "en": "Selecting a script fills its registered project directory until you edit this value; an empty value uses the workspace root.",
+                  "de": "Die Skriptauswahl ergänzt das registrierte Projektverzeichnis, bis Sie diesen Wert bearbeiten; ein leerer Wert verwendet den Stamm des Arbeitsbereichs."
+                },
+                "kind": "text",
+                "default": ""
+              }
+            ]
+          },
+          {
+            "id": "run-targets",
+            "title": {
+              "en": "Run targets across projects",
+              "de": "Aufgaben über mehrere Projekte ausführen"
+            },
+            "description": {
+              "en": "Select target names, project names or patterns, and scheduling options.",
+              "de": "Aufgabennamen, Projektnamen oder Muster und Ausführungsoptionen auswählen."
+            },
+            "verb": "run",
+            "command": [
+              "bun",
+              "repo",
+              "run-many",
+              "--targets={targets}",
+              "--projects={projects}"
+            ],
+            "parameters": [
+              {
+                "id": "targets",
+                "title": {
+                  "en": "Targets",
+                  "de": "Aufgaben"
+                },
+                "description": {
+                  "en": "Comma-separated target names, such as build,test.",
+                  "de": "Kommagetrennte Aufgabennamen, zum Beispiel build,test."
+                },
                 "kind": "text",
                 "required": true
               },
               {
-                "id": "project",
+                "id": "projects",
+                "title": {
+                  "en": "Projects",
+                  "de": "Projekte"
+                },
+                "description": {
+                  "en": "Comma-separated project names or Nx patterns.",
+                  "de": "Kommagetrennte Projektnamen oder Nx-Muster."
+                },
                 "kind": "text",
-                "default": "workspace"
+                "required": true
               },
               {
-                "id": "directory",
+                "id": "parallel",
+                "title": {
+                  "en": "Parallel tasks",
+                  "de": "Gleichzeitige Aufgaben"
+                },
+                "description": {
+                  "en": "Maximum simultaneous tasks.",
+                  "de": "Höchstzahl gleichzeitiger Aufgaben."
+                },
                 "kind": "text",
-                "default": ""
+                "default": "1",
+                "valueFlag": "--parallel="
+              },
+              {
+                "id": "cache",
+                "title": {
+                  "en": "Task cache",
+                  "de": "Aufgaben-Cache"
+                },
+                "description": {
+                  "en": "Reuse cached results or skip local or all caches.",
+                  "de": "Ergebnisse wiederverwenden oder lokalen beziehungsweise alle Caches überspringen."
+                },
+                "kind": "choice",
+                "default": "use",
+                "values": [
+                  {
+                    "id": "use"
+                  },
+                  {
+                    "id": "skip-local",
+                    "args": [
+                      "--skip-cache"
+                    ]
+                  },
+                  {
+                    "id": "skip-all",
+                    "args": [
+                      "--skip-cache",
+                      "--skip-remote-cache"
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "exclude",
+                "title": {
+                  "en": "Excluded projects",
+                  "de": "Ausgeschlossene Projekte"
+                },
+                "description": {
+                  "en": "Comma-separated projects to leave out.",
+                  "de": "Kommagetrennte Projekte, die ausgelassen werden."
+                },
+                "kind": "text",
+                "valueFlag": "--exclude="
+              },
+              {
+                "id": "dependencies",
+                "title": {
+                  "en": "Skip prerequisite tasks",
+                  "de": "Vorausgehende Aufgaben überspringen"
+                },
+                "description": {
+                  "en": "Run targets without their task dependencies.",
+                  "de": "Aufgaben ohne ihre Aufgabenabhängigkeiten ausführen."
+                },
+                "kind": "flag",
+                "args": [
+                  "--exclude-dependencies"
+                ]
               }
             ]
           },
@@ -1606,22 +1931,6 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts generate config --check"
-      },
-      "outputs": []
-    },
-    "generate-launch": {
-      "executor": "repo:script",
-      "cache": false,
-      "options": {
-        "command": "bun ./📜️script.ts generate launch"
-      },
-      "outputs": []
-    },
-    "generate-launch-check": {
-      "executor": "repo:script",
-      "cache": false,
-      "options": {
-        "command": "bun ./📜️script.ts generate launch --check"
       },
       "outputs": []
     },
@@ -3621,10 +3930,44 @@
         "command": "bun ./📜️script.ts repo tools setup all"
       }
     },
+    "test-command-entrypoint": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test entrypoint",
+        "forwardAllArgs": false
+      }
+    },
     "test-build-tool-bazel": {
       "executor": "repo:script",
       "cache": false,
       "outputs": [],
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "title": { "en": "Bazel build contracts", "de": "Bazel-Build-Verträge" },
+            "description": { "en": "Run every contract or choose one bounded runtime phase through its issued build owner.", "de": "Alle Verträge oder eine begrenzte Laufzeitphase über ihren ausgestellten Build-Eigentümer prüfen." },
+            "parameters": [{
+              "id": "phase",
+              "title": { "en": "Runtime phase", "de": "Laufzeitphase" },
+              "description": { "en": "Leave unselected for the complete suite; select one phase for focused verification.", "de": "Für die vollständige Prüfung leer lassen; für eine gezielte Prüfung eine Phase auswählen." },
+              "kind": "choice",
+              "values": [
+                { "id": "cache", "args": ["cache"] },
+                { "id": "nested", "args": ["nested"] },
+                { "id": "uncached", "args": ["uncached"] },
+                { "id": "birth", "args": ["birth"] },
+                { "id": "services", "args": ["services"] },
+                { "id": "refusals", "args": ["refusals"] },
+                { "id": "cancellation", "args": ["cancellation"] },
+                { "id": "configuration", "args": ["configuration"] },
+                { "id": "offline", "args": ["offline"] }
+              ]
+            }]
+          }
+        }
+      },
       "options": {
         "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts test bazel",
         "forwardAllArgs": true
@@ -3646,6 +3989,35 @@
         "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts test runtime-build-producer",
         "cwd": ".",
         "forwardAllArgs": false
+      }
+    },
+    "cpp-test-toolchain": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp test-toolchain"
+      },
+      "outputs": []
+    },
+    "setup-devcontainer-start": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts setup devcontainer start"
+      }
+    },
+    "setup-devcontainer-attach": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts setup devcontainer attach"
+      }
+    },
+    "fem3d-numerical-child-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify fem3d-numerical-child-source"
       }
     }
   }

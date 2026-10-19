@@ -1,5 +1,5 @@
-//! 🧊 Puzzle2d mutation — `ReplaceNodeGeometry`: whole-value swap of a node's shape/extent —
 //! `shape`+`radius`+`width`+`height` together are the node's one geometric representation, the
+//! 🧊 Puzzle2d mutation — `ReplaceNodeGeometry`: whole-value swap of a node's shape/extent —
 //! same grouping cad's `replace-object-geometry` uses for `mesh_url`+`extent`+`solid_handle`.
 
 use semio_framework_value::paged::PagedUtf8;
@@ -32,23 +32,32 @@ pub fn replace_node_geometry<Op: From<ReplaceNodeGeometry>>(id: PagedUtf8<{ usiz
 impl<Op> protocol::MutationKind<Puzzle2dSnapshot, Op> for ReplaceNodeGeometry
 where
     Op: protocol::Mutation<Puzzle2dSnapshot, Diff = Puzzle2dDiff> + From<ReplaceNodeGeometry>,
-{
+ {
+
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "node", kind: "replace-node-geometry", record: "ReplacedNodeGeometry" };
 
-    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace node \"{}\" geometry", self.id), &format!("Geometrie von Knoten \"{}\" ersetzen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.to_string_owner()]
     }
+
+}
+impl<Op> protocol::ColdMutationKind<Puzzle2dSnapshot, Op> for ReplaceNodeGeometry
+where
+    Op: protocol::ColdMutation<Puzzle2dSnapshot, ReferenceDiff = Puzzle2dDiff> + From<ReplaceNodeGeometry>,
+ {
+fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+        super::diff::diff(self, base)
+    }
+fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Mutation

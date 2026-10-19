@@ -19,7 +19,6 @@ enum Puzzle3dKindWeightStage {
 #[derive(semio_framework_value::RetireOwned)]
 pub(super) struct Puzzle3dKindWeightWorkOwners {
     pub(super) ids: Vec<String>,
-    result: HashMap<String, f64>,
     changed_id: Option<String>,
 }
 
@@ -28,7 +27,6 @@ pub struct Puzzle3dKindWeightWork {
     pub(super) stage: Puzzle3dKindWeightStage,
     pub(super) cursor: usize,
     pub(super) ids: Vec<String>,
-    result: HashMap<String, f64>,
     missing: bool,
     base_sum: f64,
     other_sum: f64,
@@ -40,13 +38,31 @@ pub struct Puzzle3dKindWeightWork {
 }
 
 impl Puzzle3dKindWeightWork {
+    /// 🪙️ Exact typed backing storage belongs to the initiating original construction scope.
+    pub fn original_birth_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let mut capacity = 0_usize;
+        capacity = (semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_DECODED_ITEMS as usize).checked_mul(size_of::<String>()).and_then(|bytes| capacity.checked_add(bytes))
+            .ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Puzzle3D Puzzle3dKindWeightWork backing extent overflow"))?;
+        Ok(semio_framework_value::RetirementDemand { capacity_bytes: capacity, depth: 1, ..Default::default() })
+    }
+
+    /// 🏭️ The scope authorizes every typed buffer before its owner is born and receives actual capacities.
+    pub fn from_original_construction(tool_id: &'static str, scope: &mut semio_framework::action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+        scope.admit_owner(Self::original_birth_demands()?)?;
+        let work = Self {
+            ids: Vec::with_capacity(semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_DECODED_ITEMS),
+            ..Self::new(tool_id)
+        };
+        let capacity = work.ids.capacity() * size_of::<String>();
+        Ok((work, semio_framework_value::RetainedCloneProgress { retained_capacity_bytes: capacity, ..Default::default() }))
+    }
+
     pub fn new(tool_id: &'static str) -> Self {
         Self { close_owners: Default::default(),
             tool_id,
             stage: Puzzle3dKindWeightStage::Catalog,
             cursor: 0,
-            ids: Vec::with_capacity(semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_DECODED_ITEMS),
-            result: HashMap::with_capacity(semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_DECODED_ITEMS),
+            ids: Vec::new(),
             missing: false,
             base_sum: 0.0,
             other_sum: 0.0,
@@ -65,20 +81,7 @@ impl Puzzle3dKindWeightWork {
         }
     }
 
-    fn base_weight(&self, config: &Puzzle3dConfig, id: &str) -> f64 {
-        if self.ids.is_empty() {
-            return 0.0;
-        }
-        if self.missing || self.weights(config).is_empty() {
-            return 1.0 / self.ids.len() as f64;
-        }
-        let value = self.weights(config).get(id).copied().unwrap_or(0.0);
-        if (self.base_sum - 1.0).abs() > 0.001 && self.base_sum.abs() > f64::EPSILON {
-            value / self.base_sum
-        } else {
-            value
-        }
-    }
+
 
 }
 
@@ -99,6 +102,8 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         match self.stage {
@@ -162,31 +167,20 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
             }
             Puzzle3dKindWeightStage::Changed => {
                 if self.ids.len() >= 2 {
-                    let changed_id = self.changed_id.clone().ok_or_else(|| Fault::from("puzzle3d-kind-weight-changed-owner"))?;
-                    self.result.insert(changed_id, self.requested);
+                    self.changed_id.as_ref().ok_or_else(|| Fault::from("puzzle3d-kind-weight-changed-owner"))?;
                 }
                 self.stage = Puzzle3dKindWeightStage::Build;
                 Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle3d-kind-weight-build", "Building normalized weights", "Normalisierte Gewichte werden aufgebaut"))
             }
             Puzzle3dKindWeightStage::Build => {
-                let Some(id) = self.ids.get(self.cursor).cloned() else {
+                let Some(id) = self.ids.get(self.cursor) else {
                     self.stage = Puzzle3dKindWeightStage::Publish;
                     return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle3d-kind-weight-publish", "Preparing weight publication", "Gewichtsveröffentlichung wird vorbereitet"));
                 };
                 self.cursor += 1;
-                let value = if self.ids.len() == 1 {
-                    1.0
-                } else if self.changed_id.as_deref() == Some(id.as_str()) {
+                if self.ids.len() >= 2 && self.changed_id.as_deref() == Some(id.as_str()) {
                     return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle3d-kind-weight-build", "Keeping changed weight", "Geändertes Gewicht wird beibehalten"));
-                } else {
-                    let remainder = (1.0 - self.requested).max(0.0);
-                    if self.other_sum <= f64::EPSILON {
-                        remainder / self.other_count.max(1) as f64
-                    } else {
-                        self.base_weight(config, &id) / self.other_sum * remainder
-                    }
-                };
-                self.result.insert(id, value);
+                }
                 Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle3d-kind-weight-build", "Building kind weight", "Artgewicht wird aufgebaut"))
             }
             Puzzle3dKindWeightStage::Publish => {
@@ -214,6 +208,8 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle3dKindWeightStage::Complete => Err(Fault::from("puzzle3d-kind-weight-complete-repolled")),
             Puzzle3dKindWeightStage::Closing => Err(Fault::from("puzzle3d-kind-weight-closing")),
         }
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
@@ -221,14 +217,12 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
 
     fn begin_close(&mut self) {
         self.stage = Puzzle3dKindWeightStage::Closing;
-        self.close_owners.stage(Puzzle3dKindWeightWorkOwners { ids: std::mem::take(&mut self.ids), result: std::mem::take(&mut self.result), changed_id: std::mem::take(&mut self.changed_id) });
+        self.close_owners.stage(Puzzle3dKindWeightWorkOwners { ids: std::mem::take(&mut self.ids), changed_id: std::mem::take(&mut self.changed_id) });
     }
 
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            self.close_owners.close_step(grant)
-        })
-    }
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> { semio_framework_job::close_original_nested_step(cx, |cx, _grant| {
+        self.close_owners.close_step(cx)
+    }) }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
         Ok(self.close_owners.demands(0)?.copy_bytes)

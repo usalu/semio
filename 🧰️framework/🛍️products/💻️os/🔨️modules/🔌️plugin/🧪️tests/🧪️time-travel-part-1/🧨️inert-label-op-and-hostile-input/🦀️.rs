@@ -59,19 +59,9 @@ impl store::Mutation<TestSnapshot> for InertLabelOp {
         store::Mutation::<TestSnapshot>::descriptor(&self.0)
     }
 
-    fn diff(&self, base: &TestSnapshot) -> ::protocol::MutationOutcome<Self::Diff> {
-        match &self.0 {
-            TestMutation::SetLabel(_) if base.count < 0 => ::protocol::MutationOutcome::error("mutation.target-mismatch", "a label needs a count that is not negative", ["count"]),
-            operation => store::Mutation::<TestSnapshot>::diff(operation, base),
-        }
-    }
 
-    fn inverse(&self, base: &TestSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-        if matches!(self.0, TestMutation::SetSlotChildren(_)) && base.count < -1 {
-            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "children have no inverse under a count below -1"));
-        }
-        Ok(store::Mutation::<TestSnapshot>::inverse(&self.0, base)?.into_iter().map(Self).collect())
-    }
+
+
 
     fn conflict_target(&self) -> Vec<String> {
         store::Mutation::<TestSnapshot>::conflict_target(&self.0)
@@ -98,12 +88,29 @@ impl store::Mutation<TestSnapshot> for InertLabelOp {
     }
 }
 
+impl store::ColdMutation<TestSnapshot> for InertLabelOp {
+    type ReferenceDiff = <TestMutation as store::Mutation<TestSnapshot>>::Diff;
+    fn diff(&self, base: &TestSnapshot) -> ::protocol::MutationOutcome<Self::ReferenceDiff> {
+        match &self.0 {
+            TestMutation::SetLabel(_) if base.count < 0 => ::protocol::MutationOutcome::error("mutation.target-mismatch", "a label needs a count that is not negative", ["count"]),
+            operation => store::Mutation::<TestSnapshot>::diff(operation, base),
+        }
+    }
+    fn inverse(&self, base: &TestSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+        if matches!(self.0, TestMutation::SetSlotChildren(_)) && base.count < -1 {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "children have no inverse under a count below -1"));
+        }
+        Ok(store::Mutation::<TestSnapshot>::inverse(&self.0, base)?.into_iter().map(Self).collect())
+    }
+}
+
 /// ⏭️ Replays `drafts` from `from` on `document` to completion through its history-edit owners and answers the report.
 async fn replayed_report(owners: &mut time_travel::TimeTravelStoreState<TestSnapshot, InertLabelOp>, document: &mut ArtifactStore<TestSnapshot, InertLabelOp>, drafts: &protocol::HistoryInputDrafts, from: &MutationId) -> protocol::ReplayReport {
-    let started = owners.run(document, time_travel::TimeTravelStoreCommand::StartReplay { drafts: drafts.clone(), from: from.clone() }).await.expect("the replay starts");
+    let (policy,_)=original_time_travel_fixture_caller();let grant=policy.preparation;let mut receiving_job=crate::app_testing::artifact_app_laws::FixtureOriginalJob::new(semio_framework::kernel::RetainedTurnInput{operation:71,generation:3,epoch:1,grant:policy.close});
+    let started = owners.run(document, time_travel::TimeTravelStoreCommand::StartReplay { drafts: drafts.clone(), from: from.clone() },None).await.expect("the replay starts");
     assert!(matches!(started, time_travel::TimeTravelStoreOutput::ReplayStarted(true)), "the store starts the Report replay");
     for _ in 0..65_536 {
-        match owners.run(document, time_travel::TimeTravelStoreCommand::StepReplay { deadline_us: u64::MAX, clock: semio_framework_job::default_now_us }).await.expect("a replay slice") {
+        match receiving_job.receive(grant,|receiving|semio_framework_async::poll::resolve_ready(owners.run(document, time_travel::TimeTravelStoreCommand::StepReplay { deadline_us: u64::MAX, clock: semio_framework_job::default_now_us,grant },Some(receiving)))).expect("a replay slice") {
             time_travel::TimeTravelStoreOutput::Stepped(time_travel::TimeTravelReplayStep::Completed(report)) => return report,
             time_travel::TimeTravelStoreOutput::Stepped(time_travel::TimeTravelReplayStep::Pending { .. }) => {}
             _ => panic!("the replay faulted"),
@@ -164,7 +171,7 @@ fn close_inert(mut owners: time_travel::TimeTravelStoreState<TestSnapshot, Inert
 /// overwrite whose head holds the edit and skips the withdrawn operation.
 #[semio_framework_async_macros::async_test]
 async fn a_blocking_mutation_without_editable_inputs_is_withdrawn_and_the_review_becomes_ready() {
-    let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
+    let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();let mut receiving_job=crate::app_testing::artifact_app_laws::FixtureOriginalJob::new(semio_framework::kernel::RetainedTurnInput{operation:71,generation:3,epoch:1,grant:mounted_policy.close});
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     use time_travel::{TimeTravelActionRefusal, TimeTravelCommit, TimeTravelStoreCommand, TimeTravelStoreOutput, TimeTravelStoreState};
@@ -191,15 +198,15 @@ async fn a_blocking_mutation_without_editable_inputs_is_withdrawn_and_the_review
     assert_eq!((blocked.blocks_finalize(), problem), (true, Some(label.clone())), "the edited count breaks the label operation downstream: {blocked:?}");
 
     for (target, why) in [(&label, "an editor with zero rows never opens"), (&children, "an operation without an input schema has no editor")] {
-        let refused = owners.run(&mut document, TimeTravelStoreCommand::Open { target: target.clone(), current: None, withdraw: false }).await.expect("the open runs");
+        let refused = owners.run(&mut document, TimeTravelStoreCommand::Open { target: target.clone(), current: None, withdraw: false },None).await.expect("the open runs");
         assert!(matches!(refused, TimeTravelStoreOutput::Opened(Err(TimeTravelActionRefusal::NotEditable))), "{why}");
     }
-    let TimeTravelStoreOutput::Opened(Ok((editor, original))) = owners.run(&mut document, TimeTravelStoreCommand::Open { target: label.clone(), current: Some(protocol::InputReplacement::Withdrawn), withdraw: true }).await.expect("the open runs") else {
+    let TimeTravelStoreOutput::Opened(Ok((editor, original))) = owners.run(&mut document, TimeTravelStoreCommand::Open { target: label.clone(), current: Some(protocol::InputReplacement::Withdrawn), withdraw: true },None).await.expect("the open runs") else {
         panic!("the store's supersede law admits withdrawing an operation without editable inputs");
     };
     assert!(editor.inputs.is_empty() && editor.inputs_refused.is_none() && editor.target == label, "its editor holds no inputs and names no schema fault");
     assert!(matches!(original, protocol::InputReplacement::Input { .. }), "its original input is its recorded operation");
-    owners.run(&mut document, TimeTravelStoreCommand::Adopt(true)).await.expect("the session adopts the kind");
+    owners.run(&mut document, TimeTravelStoreCommand::Adopt(true),None).await.expect("the session adopts the kind");
 
     drafts.insert(label.clone(), protocol::InputReplacement::Withdrawn);
     let ready = replayed_report(&mut owners, &mut document, &drafts, &count).await;
@@ -220,7 +227,7 @@ async fn a_blocking_mutation_without_editable_inputs_is_withdrawn_and_the_review
 /// overwrite.
 #[semio_framework_async_macros::async_test]
 async fn an_inverse_refusal_is_one_mutations_fatal_that_its_row_names_and_resolves() {
-    let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
+    let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();let mut receiving_job=crate::app_testing::artifact_app_laws::FixtureOriginalJob::new(semio_framework::kernel::RetainedTurnInput{operation:71,generation:3,epoch:1,grant:mounted_policy.close});
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     use time_travel::{TimeTravelCommit, TimeTravelStoreCommand, TimeTravelStoreOutput, TimeTravelStoreState};
@@ -243,10 +250,10 @@ async fn an_inverse_refusal_is_one_mutations_fatal_that_its_row_names_and_resolv
         assert!(view.withdrawable && !view.editable, "the row offers the way out");
     }
 
-    let TimeTravelStoreOutput::Opened(Ok(_)) = owners.run(&mut document, TimeTravelStoreCommand::Open { target: children.clone(), current: Some(protocol::InputReplacement::Withdrawn), withdraw: true }).await.expect("the open runs") else {
+    let TimeTravelStoreOutput::Opened(Ok(_)) = owners.run(&mut document, TimeTravelStoreCommand::Open { target: children.clone(), current: Some(protocol::InputReplacement::Withdrawn), withdraw: true },None).await.expect("the open runs") else {
         panic!("the store's supersede law admits withdrawing the operation without an inverse");
     };
-    owners.run(&mut document, TimeTravelStoreCommand::Adopt(true)).await.expect("the session adopts the kind");
+    owners.run(&mut document, TimeTravelStoreCommand::Adopt(true),None).await.expect("the session adopts the kind");
     drafts.insert(children.clone(), protocol::InputReplacement::Withdrawn);
     let half = replayed_report(&mut owners, &mut document, &drafts, &count).await;
     assert!(half.blocks_finalize() && outcome_of(&half, &children).withdrawn && outcome_of(&half, &children).worst.is_none(), "withdrawn, the refusal is gone and the other broken operation still blocks: {half:?}");

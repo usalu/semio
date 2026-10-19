@@ -73,7 +73,7 @@
         drain_and_close_composed_fixture(&mut halved, mounted_policy,cx);
         drain_and_close_composed_fixture(&mut reloaded, mounted_policy,cx);
         drain_and_close_composed_fixture(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -100,7 +100,7 @@
         assert_eq!(reads_child_count(&app).await, 0, "the view must reflect the child's undone state");
         app.dispatch_action("redo", None, &meta(), &mut identity,cx).await.expect("redo");
         assert_eq!(reads_child_count(&app).await, 7, "the view must reflect the child's redone state");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -144,7 +144,7 @@
         assert!(!result.diagnostics.is_empty(), "child-b's foreign tail must surface a diagnostic, not vanish silently");
         assert!(result.diagnostics.iter().any(|diagnostic| diagnostic.message.contains("child-b")), "the skip diagnostic must name the actual skipped member");
 
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -180,7 +180,7 @@
         let after = app.render_ctx().test_history().await;
         assert_eq!(after.commands.len(), 3, "the revert appends one History-kind row");
         assert_eq!(after.commands.first().map(|entry| entry.action_id.as_str()), Some(REVERT_TO_COMMAND_ACTION_ID));
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result

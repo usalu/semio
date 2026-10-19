@@ -1,5 +1,5 @@
-//! ↩️ Inverse for `DisconnectGrips` — reconstructs a `connect-grips` of the captured BASE fastener.
 //! Missing target ⇒ `Vec::new()`.
+//! ↩️ Inverse for `DisconnectGrips` — reconstructs a `connect-grips` of the captured BASE fastener.
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Inverse

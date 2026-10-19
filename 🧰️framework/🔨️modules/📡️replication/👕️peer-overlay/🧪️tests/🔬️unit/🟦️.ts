@@ -18,6 +18,7 @@ const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../🧪
 const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as { readonly cases: readonly any[] };
 
 describe("👕️peer-overlay-v1", () => {
+  for (const row of fixture.projectionCases) it(row.id, () => expect(orbitPointToScreen(row, row.size, row.world)).toEqual(row.expected));
   for (const row of fixture.cases) {
     it(row.id, () => {
       const spec = peersForWindow(row.roster as PresencePeerInput[], row.windowId, row.space, row.mySurface, row.myActor, row.localColor);

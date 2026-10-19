@@ -116,6 +116,9 @@ pub struct JobPayloadOperationLedger {
 }
 
 impl JobPayloadOperationLedger {
+    fn reservation_copy_bytes()->usize{5*2*size_of::<usize>()+size_of::<JobPayloadStream>()}
+
+
     pub(super) fn new(operation: OperationId, generation: Generation) -> Self {
         Self { operation, generation, pages: AtomicUsize::new(0), bytes: AtomicUsize::new(0), stream_pages: std::array::from_fn(|_| AtomicUsize::new(0)), stream_bytes: std::array::from_fn(|_| AtomicUsize::new(0)) }
     }
@@ -210,7 +213,7 @@ impl RetainedJobPayload {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.page_count == 0 && self.length == 0 && self.pages.iter().all(Option::is_none) && self.ledger.is_none()
+        self.page_count == 0 && self.length == 0 && self.ledger.is_none()
     }
 }
 
@@ -254,7 +257,7 @@ impl Eq for RetainedJobPayload {}
 impl Drop for RetainedJobPayload {
     fn drop(&mut self) {
         assert!(std::thread::panicking()||self.terminal_is_empty(),"retained job payload abandoned original pages or operation ledger");
-        if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.pages);ManuallyDrop::drop(&mut self.ledger);}}
+        
     }
 }
 //#endregion 📄️RetainedPayload

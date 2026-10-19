@@ -21,6 +21,19 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
+[[test]]
+name = "snapshot_builder_ownership"
+path = "../../📜️declaration/🪟️surface/🏗️snapshot-builder/🧪️tests/🚪️public/🦀️.rs"
+
+[[test]]
+name = "mounted_snapshot_preparation"
+path = "../../📜️declaration/👁️view/📸️preparation/🧪️tests/🚪️public/🦀️.rs"
+required-features = ["artifact-app-testing"]
+
+[[test]]
+name = "original_tick_payload_sources"
+path = "../../⏯️tool-run/🎞️tick/📦️payload/🧪️tests/🚪️public/🦀️.rs"
+
 [features]
 artifact-app-testing = ["dep:semio-framework-plugin-testing-laws", "dep:semio-framework-plugin-testing-acceptance", "semio-framework-plugin-child/artifact-app-testing", "semio-framework-plugin-job/artifact-app-testing", "semio-framework-plugin-retained-command/artifact-app-testing", "semio-framework-plugin-decl-surface/artifact-app-testing", "semio-framework-plugin-instance-typed-ops/artifact-app-testing", "semio-framework-plugin-instance-commands/artifact-app-testing", "semio-framework-plugin-instance-app/artifact-app-testing", "semio-framework-plugin-app-builder/artifact-app-testing", "semio-framework-plugin-tool-run/artifact-app-testing", "semio-framework-plugin-window-kits/artifact-app-testing", "semio-framework-plugin-peer/artifact-app-testing", "semio-framework-plugin-document-media/artifact-app-testing", "semio-framework-plugin-reactor-core/artifact-app-testing", "semio-framework-plugin-time-travel-turns/artifact-app-testing", "semio-framework-plugin-window-kits-rich/artifact-app-testing", "semio-framework-plugin-composition-emission/artifact-app-testing", "semio-framework-plugin-composition-publication/artifact-app-testing", "semio-framework-plugin-publication-mounted/artifact-app-testing", "semio-framework-plugin-command/artifact-app-testing", "semio-framework-plugin-reactor-lifecycle/artifact-app-testing", "semio-framework-plugin-reactor-patches/artifact-app-testing", "semio-framework-plugin-reactor-tasks/artifact-app-testing", "semio-framework-plugin-runtime-instances/artifact-app-testing", "semio-framework-plugin-runtime-ops/artifact-app-testing", "semio-framework-plugin-time-travel-panel/artifact-app-testing", "semio-framework-plugin-time-travel/artifact-app-testing", "semio-framework-plugin-instance-stores/artifact-app-testing", "semio-framework-plugin-instance-history/artifact-app-testing", "semio-framework-plugin-instance-children/artifact-app-testing", "semio-framework-plugin-instance-jobs/artifact-app-testing", "semio-framework-plugin-instance-docs/artifact-app-testing", "semio-framework-plugin-instance-render/artifact-app-testing", "semio-framework-plugin-instance-dispatch/artifact-app-testing", "semio-framework-plugin-tool-run-turns/artifact-app-testing", "semio-framework-plugin-testing-laws/artifact-app-testing", "semio-framework-plugin-testing-acceptance/artifact-app-testing", "semio-framework-plugin-reactor-app/artifact-app-testing"]
 media-turn-testing = ["semio-framework-plugin-decl-views/media-turn-testing", "semio-framework-plugin-operation/media-turn-testing", "semio-framework-plugin-document-media/media-turn-testing"]
@@ -117,7 +130,9 @@ wit-bindgen = { version = "0.57.1", default-features = false, features = ["macro
 # 🌱️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01): `ArtifactApp::Snapshot`/
 # `Config`/`Draft`/`Presence`/`Transient` now bound on `ToValue`/`FromValue` instead of
 # `Serialize`/`DeserializeOwned` (`../../📦️packages/🦀️rust/🦀️.rs`'s trait definitions). Promoted from
-# `[dev-dependencies]` because the crate's own production defaults (`NoConfig`/`NoPresence`/
+# `semio-framework-value-snapshot-read = { path = "../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
+
+[dev-dependencies]` because the crate's own production defaults (`NoConfig`/`NoPresence`/
 # `NoTransient`, `crate::local_interaction`'s `InteractionConfigMutation`) derive `ToValue`/
 # `FromValue` directly now, not only the test fixtures.
 semio-framework-value-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
@@ -193,7 +208,7 @@ semio-framework-plugin-surface-fixture = { path = "../../🧪️tests/🪟️sur
 semio-framework-job-worker = { path = "../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
 
 semio-framework-job = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job", features = ["testkit"] }
-semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
+semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing", "protocol-laws"] }
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🚪️ Test-only `entrypoint`: `one_framework_reserved_route_fits_a_bounded_thread_stack` drives one
 # `interactionSelect` on a deliberately small OS thread, and only `block_on` can pump a future from

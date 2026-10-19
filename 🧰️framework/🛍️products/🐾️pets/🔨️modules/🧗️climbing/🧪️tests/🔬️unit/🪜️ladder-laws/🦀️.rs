@@ -170,8 +170,8 @@ fn a_standing_ladder_follows_its_wall_and_its_perch_within_the_tolerances_and_to
     assert_eq!(ladder_holds(&ladder, &[floor(), shelf.clone()], &[], &[boxed], PET), None);
     assert_eq!(ladder_holds(&ladder, &[floor(), shelf.clone()], &[pitch("shelf-left", "shelf", Facing::Right, 300.0, 380.0, 480.0)], &[boxed], PET), None);
     assert_eq!(ladder_holds(&ladder, &[floor(), shelf.clone()], &[pitch("other", "shelf", Facing::Left, 300.0, 380.0, 480.0)], &[boxed], PET), None);
-    assert_eq!(ladder_holds(&ladder, &[floor()], std::slice::from_ref(&wall), &[boxed], PET), None);
-    assert_eq!(ladder_holds(&ladder, &[floor(), perch("shelf", 400.0, 494.0, 380.0)], std::slice::from_ref(&wall), &[boxed], PET), None);
+    assert_eq!(ladder_holds(&ladder, &[floor()], std::slice::from_ref(&wall), &[boxed], PET).as_ref(), Some(&ladder));
+    assert_eq!(ladder_holds(&ladder, &[floor(), perch("shelf", 400.0, 494.0, 380.0)], std::slice::from_ref(&wall), &[boxed], PET).as_ref(), Some(&ladder));
     let steep = LadderStand { foot: point(300.0 - LADDER_STEEP * 93.0 - 0.5, 480.0), ..ladder.clone() };
     assert_eq!(ladder_holds(&steep, &[floor(), shelf.clone()], std::slice::from_ref(&wall), &[boxed], PET).as_ref(), Some(&steep));
     assert_eq!(ladder_holds(&steep, &[floor(), perch("shelf", 305.0, 493.0, 380.0)], &[pitch("shelf-left", "shelf", Facing::Left, 299.0, 380.0, 480.0)], &[solid(299.0, 499.0, 380.0, 480.0)], PET), None);

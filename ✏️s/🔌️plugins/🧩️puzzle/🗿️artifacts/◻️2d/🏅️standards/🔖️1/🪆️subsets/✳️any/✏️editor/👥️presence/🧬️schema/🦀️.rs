@@ -1,14 +1,6 @@
-//! 🧬️ schema leaf
+//! 🧬️ Empty app-presence schema; canonical window views and interaction own live state.
 use ::semio_framework_schema::ArtifactSchema;
-
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase", default)]
+#[value(deny_unknown_fields)]
 #[artifact_schema(id = "s.puzzle.puzzle2d.presence")]
-pub struct Puzzle2dPresence {
-    #[state(presence)]
-    pub camera_x: f64,
-    #[state(presence)]
-    pub camera_y: f64,
-    #[state(presence)]
-    pub camera_zoom: f64,
-}
+pub struct Puzzle2dPresence {}

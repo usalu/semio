@@ -20,6 +20,50 @@ pub mod standards {
                     #[path = "."]
                     pub mod mutations {
                         #[path = "."]
+                        pub mod change_solid {
+                            #[path = "../../🩹️change-solid/🦀️.rs"]
+                            mod component;
+                            #[path = "../../🩹️change-solid/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "../../🩹️change-solid/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+
+                        #[path = "."]
+                        pub mod change_section {
+                            #[path = "../../🩹️change-section/🦀️.rs"]
+                            mod component;
+                            #[path = "../../🩹️change-section/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "../../🩹️change-section/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+
+                        #[path = "."]
+                        pub mod change_node {
+                            #[path = "../../🩹️change-node/🦀️.rs"]
+                            mod component;
+                            #[path = "../../🩹️change-node/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "../../🩹️change-node/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+
+                        #[path = "."]
+                        pub mod change_element {
+                            #[path = "../../🩹️change-element/🦀️.rs"]
+                            mod component;
+                            #[path = "../../🩹️change-element/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "../../🩹️change-element/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+
+                        #[path = "."]
                         pub mod create_section {
                             #[path = "../../📐️create-section/🦀️.rs"]
                             mod component;

@@ -4,8 +4,11 @@ use crate::editor::puzzle2d::testkit::*;
 use {crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_NODE, crate::editor::puzzle2d::snapshot::PUZZLE2D_INTERACTION_DOMAIN, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID};
 use semio_framework_plugin::InteractionTarget;
 use semio_framework_plugin::kernel::Effect;
-use semio_framework_plugin::{PluginApp, ViewModel, WindowMeasure};
-use semio_framework_pack_json::{json, Value};
+use semio_framework_plugin::PluginApp;
+use semio_framework_plugin::ViewModel;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_pack_json::json;
+use semio_framework_pack_json::Value;
 
 fn node_of(app: &Puzzle2dApp, id: &str) -> Value {
     board_snapshot_nodes(&fixture_of(app)).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(id)).cloned().expect("node")

@@ -1,0 +1,7 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/extensions/epw/wire-hour.json",
+  "type": "integer",
+  "minimum": 1,
+  "maximum": 24
+}

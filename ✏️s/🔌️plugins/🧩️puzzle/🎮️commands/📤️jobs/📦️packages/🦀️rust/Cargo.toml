@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework = { workspace = true, optional = true }
 semio-framework-job-publication = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
@@ -24,8 +25,11 @@ semio-framework-value-derive = { workspace = true }
 semio-framework-plugin = { workspace = true, optional = true }
 
 [features]
-testing = ["dep:semio-framework-plugin"]
+testing = ["semio-framework-job/testkit", "dep:semio-framework", "dep:semio-framework-plugin"]
 
 [dev-dependencies]
+serde_json = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

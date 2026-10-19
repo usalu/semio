@@ -24,7 +24,7 @@ async fn empty_diff_is_a_no_operation() {
     let base = crate::snapshot::EnergyModelSnapshot::default();
     let diff = EnergyModelDiff::default();
     assert!(DiffAlgebra::is_empty(&diff));
-    assert_eq!(protocol::apply_diff(&diff, &base).expect("valid mutation diff"), base);
+    assert_eq!(protocol::apply_diff_cold(&diff, &base).expect("valid mutation diff"), base);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -32,10 +32,11 @@ async fn keyed_rows_apply_in_place_and_invert_exactly() {
     let base = snapshot(vec![zone(1, "A"), zone(2, "B"), zone(3, "C")]);
     let mut diff = rename(2, "Bee");
     diff.absorb(zones_of(Rows::inserting(1, zone(9, "Nine"))));
-    diff.absorb(zones_of(Rows::removing(&base.model.zones, &EntityId(3))));
-    let after = protocol::apply_diff(&diff, &base).expect("the diff applies");
+    let intermediate = [zone(1, "A"), zone(9, "Nine"), zone(2, "Bee"), zone(3, "C")];
+    diff.absorb(zones_of(Rows::removing(&intermediate, &EntityId(3))));
+    let after = protocol::apply_diff_cold(&diff, &base).expect("the diff applies");
     assert_eq!(after.model.zones.iter().map(|zone| (zone.id.0, zone.name.as_str())).collect::<Vec<_>>(), [(1, "A"), (9, "Nine"), (2, "Bee")].to_vec());
-    assert_eq!(protocol::apply_diff(&diff.inverse(&base), &after).expect("the inverse applies"), base);
+    assert_eq!(protocol::apply_diff_cold(&diff.inverse(&base), &after).expect("the inverse applies"), base);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -56,7 +57,7 @@ async fn an_inserted_row_removed_again_cancels_and_a_later_patch_folds_into_an_e
     let mut folded = zones_of(Rows::inserting(1, zone(5, "Five")));
     folded.absorb(rename(5, "Cinq"));
     assert_eq!(folded, zones_of(Rows::inserting(1, zone(5, "Cinq"))));
-    assert_eq!(protocol::apply_diff(&folded, &base).expect("applies").model.zones[1].name, "Cinq");
+    assert_eq!(protocol::apply_diff_cold(&folded, &base).expect("applies").model.zones[1].name, "Cinq");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -73,9 +74,9 @@ async fn patches_of_one_row_coalesce_and_a_removed_row_drops_its_patches() {
 #[semio_framework_async_macros::async_test]
 async fn a_patch_naming_a_missing_row_or_a_wrong_removal_is_refused() {
     let base = snapshot(vec![zone(1, "A")]);
-    assert!(protocol::apply_diff(&rename(7, "Ghost"), &base).is_err());
+    assert!(protocol::apply_diff_cold(&rename(7, "Ghost"), &base).is_err());
     let wrong = zones_of(Rows::<ZonePatch>::removing_where(&[zone(2, "B")], |_| true));
-    assert!(protocol::apply_diff(&wrong, &base).is_err());
+    assert!(protocol::apply_diff_cold(&wrong, &base).is_err());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -110,4 +111,31 @@ async fn the_wire_form_round_trips_and_omits_what_did_not_change() {
     assert_eq!(EnergyModelDiff::from_value(value.clone()).expect("decodes"), diff);
     assert!(value["model"]["spaces"].is_null() && value["model"]["name"].is_null(), "only the touched collections appear: {value:?}");
     assert_eq!(EnergyModelDiff::default().to_value(), semio_framework_value::DslValue::Object(Vec::new()));
+}
+
+#[test]
+fn link_and_scalar_edits_preserve_untouched_projection_storage() {
+    let mut base = snapshot(vec![zone(1, "A"), zone(2, "B")]);
+    let zones = base.model.zones.as_ptr();
+    let schema = base.schema.as_ptr();
+    protocol::apply_diff_cold_into(&EnergyModelDiff::weather(EnergyLinkSlotDelta::Detached), &mut base).expect("link change");
+    assert_eq!(base.model.zones.as_ptr(), zones);
+    assert_eq!(base.schema.as_ptr(), schema);
+    protocol::apply_diff_cold_into(&EnergyModelDiff::of(ModelPatch { name: Some("Changed".into()), ..Default::default() }), &mut base).expect("name change");
+    assert_eq!(base.model.name, "Changed");
+    assert_eq!(base.model.zones.as_ptr(), zones);
+    assert_eq!(base.schema.as_ptr(), schema);
+    eprintln!("[DEBUG] Energy link/scalar edits preserve unrelated model and snapshot storage");
+}
+
+#[test]
+fn a_late_model_field_refusal_preserves_every_original_field_and_link() {
+    let mut base = snapshot(vec![zone(1, "A")]);
+    let original = base.clone();
+    let zones = base.model.zones.as_ptr();
+    let diff = EnergyModelDiff { model: ModelPatch { name: Some("Rejected".into()), ground_temperature: GroundTemperatureConfigPatch { building_surface_c: Slots::assigning(12, 7.0), ..Default::default() }, ..Default::default() }, weather_link: Some(EnergyLinkSlotDelta::Detached), ..Default::default() };
+    assert!(protocol::apply_diff_cold_into(&diff, &mut base).is_err());
+    assert_eq!(base, original);
+    assert_eq!(base.model.zones.as_ptr(), zones);
+    eprintln!("[DEBUG] Energy late field refusal leaves the original projection and links unchanged");
 }

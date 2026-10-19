@@ -29,7 +29,6 @@ pub(super) mod native {
             runtime: AppMailbox,
             presenter: semio_framework_os_renderer_wgpu_frame_presentation::AppPresenter,
         },
-        FrameReady,
         /// 🔔️ Payload-free worker-completion signal. Receiving it invalidates the retained snapshot;
         /// no future is polled by the event loop.
         Wake,
@@ -419,21 +418,8 @@ pub(super) mod native {
                     host.runtime.set_waker(std::rc::Rc::new(move || {
                         let _ = proxy.send_event(HostUserEvent::Wake);
                     }));
-                    #[cfg(not(target_arch = "wasm32"))]
-                    {
-                        let proxy = self.proxy.clone();
-                        host.frame_build.set_completion_waker(Arc::new(move || {
-                            let _ = proxy.send_event(HostUserEvent::FrameReady);
-                        }));
-                    }
                     host.scheduler.invalidate(InvalidationReason::STRUCTURE);
                     self.host = Some(host);
-                }
-                HostUserEvent::FrameReady => {
-                    if let Some(host) = self.host.as_mut() {
-                        host.frame_ready = true;
-                        host.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
-                    }
                 }
                 HostUserEvent::Wake => {
                     if let Some(host) = self.host.as_mut() {

@@ -21,3 +21,6 @@ semio-s-plugin-energy-engine-bestest = { workspace = true }
 semio-s-plugin-energy-engine-error = { workspace = true }
 semio-s-plugin-energy-engine-results = { workspace = true }
 semio-s-plugin-energy-engine-site = { workspace = true }
+
+[dev-dependencies]
+csv = { version = "1" }

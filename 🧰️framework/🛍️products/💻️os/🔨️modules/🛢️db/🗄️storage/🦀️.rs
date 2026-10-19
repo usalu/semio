@@ -51,6 +51,13 @@
 #![allow(async_fn_in_trait)]
 extern crate semio_framework_os_kernel as pack;
 
+#[cfg(test)]
+#[path = "../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
+pub(crate) mod test_allocation;
+#[cfg(test)]
+#[global_allocator]
+static REQUESTED_ALLOCATOR: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;
+
 use db_durability::{DurabilityClass, EpochFence};
 use db_ids::{ArtifactId, DbError};
 use db_io_core::{CatalogStorage, DbIoPages, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalSegmentState, WalStorage, WalWriterPermit};

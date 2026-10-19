@@ -8,10 +8,10 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fe
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dRegionsDelta;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dRegionsModification;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ReplaceRegion, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
+pub fn diff(payload: &ReplaceRegion, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<Fem2dDiff> {
     let Some(existing) = base.regions.iter().find(|region| region.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Region \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
@@ -27,6 +27,6 @@ pub fn diff(payload: &ReplaceRegion, base: &Fem2dSnapshot) -> protocol::Mutation
     if *existing == payload.new_region {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Region \"{}\" is already equal to the replacement value.", payload.id));
     }
-    protocol::MutationOutcome::new(Fem2dDiff { regions: Some(Fem2dRegionsDelta { modified: vec![Fem2dRegionsModification { id: payload.id.clone(), patch: payload.new_region.clone() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem2dDiff { regions: Some(Fem2dRegionsDelta { modified: vec![Fem2dRegionsModification { id: payload.id.clone(), patch: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dRegionPatch::replacement(&payload.new_region) }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

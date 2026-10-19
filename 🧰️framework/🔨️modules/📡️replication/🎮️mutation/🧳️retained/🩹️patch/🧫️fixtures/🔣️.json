@@ -1,0 +1,68 @@
+[
+  {
+    "id": "name-only",
+    "before": {
+      "name": "Original🧱",
+      "value": 1
+    },
+    "patch": {
+      "name": "Authored🧩"
+    },
+    "inverse": {
+      "name": "Original🧱"
+    },
+    "after": {
+      "name": "Authored🧩",
+      "value": 1
+    }
+  },
+  {
+    "id": "value-only",
+    "before": {
+      "name": "Sibling",
+      "value": 1
+    },
+    "patch": {
+      "value": 2
+    },
+    "inverse": {
+      "value": 1
+    },
+    "after": {
+      "name": "Sibling",
+      "value": 2
+    }
+  },
+  {
+    "id": "empty",
+    "before": {
+      "name": "Same",
+      "value": 3
+    },
+    "patch": {},
+    "inverse": {},
+    "after": {
+      "name": "Same",
+      "value": 3
+    }
+  },
+  {
+    "id": "both-fields",
+    "before": {
+      "name": "Original🧱",
+      "value": 1
+    },
+    "patch": {
+      "name": "Authored🧩",
+      "value": -7.5
+    },
+    "inverse": {
+      "name": "Original🧱",
+      "value": 1
+    },
+    "after": {
+      "name": "Authored🧩",
+      "value": -7.5
+    }
+  }
+]

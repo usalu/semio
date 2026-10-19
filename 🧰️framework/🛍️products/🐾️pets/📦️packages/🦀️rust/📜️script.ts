@@ -26,6 +26,7 @@ class BuildScript extends BundleScript {
   }
 }
 
+
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("build", BuildScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

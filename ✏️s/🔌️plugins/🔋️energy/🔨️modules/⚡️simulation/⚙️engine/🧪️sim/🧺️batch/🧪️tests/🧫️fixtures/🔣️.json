@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "pristine": true,
+      "matchingIds": true,
+      "cancelled": false,
+      "work": true,
+      "grant": "exact",
+      "expected": "admitted",
+      "id": "exact-original"
+    },
+    {
+      "pristine": true,
+      "matchingIds": true,
+      "cancelled": false,
+      "work": true,
+      "grant": "no-items",
+      "expected": "pending",
+      "id": "empty-item-loan"
+    },
+    {
+      "pristine": true,
+      "matchingIds": true,
+      "cancelled": false,
+      "work": true,
+      "grant": "short-copy",
+      "expected": "pending",
+      "id": "short-copy-loan"
+    },
+    {
+      "pristine": true,
+      "matchingIds": true,
+      "cancelled": false,
+      "work": true,
+      "grant": "no-depth",
+      "expected": "pending",
+      "id": "empty-depth-loan"
+    },
+    {
+      "pristine": true,
+      "matchingIds": true,
+      "cancelled": true,
+      "work": true,
+      "grant": "exact",
+      "expected": "pending",
+      "id": "cancelled-original"
+    },
+    {
+      "pristine": true,
+      "matchingIds": true,
+      "cancelled": false,
+      "work": false,
+      "grant": "exact",
+      "expected": "pending",
+      "id": "no-work"
+    },
+    {
+      "pristine": true,
+      "matchingIds": false,
+      "cancelled": false,
+      "work": true,
+      "grant": "exact",
+      "expected": "refused",
+      "id": "foreign-operation-generation"
+    },
+    {
+      "pristine": false,
+      "matchingIds": true,
+      "cancelled": false,
+      "work": true,
+      "grant": "exact",
+      "expected": "refused",
+      "id": "already-used-canonical-receiver"
+    }
+  ]
+}

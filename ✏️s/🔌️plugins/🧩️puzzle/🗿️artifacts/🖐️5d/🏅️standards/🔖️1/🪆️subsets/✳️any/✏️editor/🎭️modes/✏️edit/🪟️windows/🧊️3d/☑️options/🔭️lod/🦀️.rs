@@ -1,11 +1,14 @@
-//! 🔭️ 3D-window option — the level-of-detail group: the automatic-zoom and depth-variable toggles
 //! plus the manual LOD slider whose range `setLodManual` clamps against. The board pane's LOD is a
+//! 🔭️ 3D-window option — the level-of-detail group: the automatic-zoom and depth-variable toggles
 //! tier SELECT over the board engine's own scale table (`◻️2d/☑️options/🔭️lod`), a different control
 //! over different state, so neither file is a copy of the other.
 
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
-use crate::editor::puzzle5d::entities::{puzzle5d_action, PUZZLE5D_LOD_SLIDER_MAX, PUZZLE5D_LOD_SLIDER_MIN, PUZZLE5D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle5d::entities::puzzle5d_action;
+use crate::editor::puzzle5d::PUZZLE5D_LOD_SLIDER_MAX;
+use crate::editor::puzzle5d::PUZZLE5D_LOD_SLIDER_MIN;
+use crate::editor::puzzle5d::PUZZLE5D_PLAY_CONTROLLER_ID;
 use semio_framework_plugin::WindowMeasure;
 
 /// 🔭️ `puzzle5d-play-world-lod` — auto / depth-variable / manual value.

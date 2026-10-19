@@ -14,7 +14,9 @@
 //! **Why this file decodes the snapshot itself.** Same reason as its siblings
 //! `../🧮️solves-fem3d-1-benchmarks` and `../🎵️solves-fem3d-1-eigen`, and with their reader, verbatim.
 
-use semio_repo_test_host::{Adapter, Json};
+use semio_repo_test_host::Adapter;
+
+use semio_repo_test_host::Json;
 
 //#region 🔖️Cases
 /// 🌍️ Standard gravity, in m/s². `semio_s_artifact_fem_3d_engine::fem3d_engine::fem3d_solve_all` fixes gravity at
@@ -81,11 +83,22 @@ fn significant(value: f64) -> Json {
 //#region 🔖️Decode
 #[cfg(feature = "sut")]
 mod decode {
-    use super::{flag, number, numbers};
+    use super::flag;
+    use super::number;
+    use super::numbers;
     use semio_repo_test_host::Json;
-    use crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::{FemAnalysisSettings, FemDof};
-    use crate::standards::v1::subsets::any::schema::structure::{FemCombination, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemCombination;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemDof;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
+    use semio_s_fem_material::volumetric::FemMaterialValue;
+    use semio_s_fem_node::volumetric::FemNodeValue;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSection;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport;
     use std::collections::BTreeMap;
 
     /// 🔒️ One degree-of-freedom tag, as this artifact spells it on the wire.
@@ -178,9 +191,9 @@ mod decode {
         }
         let analysis = value.get("analysis").cloned().unwrap_or(Json::Null);
         Ok(Fem3dSnapshot {
-            nodes: value.array("nodes").iter().map(|node| FemNode { id: node.str("id"), x: number(node, "x"), y: number(node, "y"), z: number(node, "z") }).collect(),
+            nodes: value.array("nodes").iter().map(|node| FemNodeValue { id: node.str("id"), x: number(node, "x"), y: number(node, "y"), z: number(node, "z") }).collect(),
             elements,
-            materials: value.array("materials").iter().map(|material| FemMaterial { id: material.str("id"), name: material.str("name"), e: number(material, "e"), g: number(material, "g"), nu: number(material, "nu"), rho: number(material, "rho") }).collect(),
+            materials: value.array("materials").iter().map(|material| FemMaterialValue { id: material.str("id"), name: material.str("name"), e: number(material, "e"), g: number(material, "g"), nu: number(material, "nu"), rho: number(material, "rho") }).collect(),
             sections: value.array("sections").iter().map(|section| FemSection { id: section.str("id"), name: section.str("name"), area: number(section, "area"), iy: number(section, "iy"), iz: number(section, "iz"), j: number(section, "j") }).collect(),
             solids: value
                 .array("solids")
@@ -195,7 +208,7 @@ mod decode {
                     layers: number(solid, "layers").max(1.0) as usize,
                     mesh_size: number(solid, "meshSize"),
                     material_id: solid.str("materialId"),
-                    axis: crate::standards::v1::subsets::any::schema::structure::FemAxis::from_key(&solid.str("axis")).expect("solid axis"),
+                    axis: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis::from_key(&solid.str("axis")).expect("solid axis"),
                 })
                 .collect(),
             supports,
@@ -210,8 +223,14 @@ mod decode {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{decode, significant, GRAVITY, PRESSURE_TOLERANCE, SELF_WEIGHT_TOLERANCE};
-    use semio_repo_test_host::{Context, Json, Outcome};
+    use super::decode;
+    use super::significant;
+    use super::GRAVITY;
+    use super::PRESSURE_TOLERANCE;
+    use super::SELF_WEIGHT_TOLERANCE;
+    use semio_repo_test_host::Context;
+    use semio_repo_test_host::Json;
+    use semio_repo_test_host::Outcome;
     use semio_s_fem_model::Dof;
 
     /// 🧫️ The one declared fixture URI of this scenario's steps containing `needle`.
@@ -283,7 +302,7 @@ mod subject {
                 .iter()
                 .flat_map(|case| case.loads.iter())
                 .filter_map(|load| match load {
-                    crate::standards::v1::subsets::any::schema::structure::FemLoad::Area { pressure, .. } => Some(*pressure),
+                    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad::Area { pressure, .. } => Some(*pressure),
                     _ => None,
                 })
                 .sum();

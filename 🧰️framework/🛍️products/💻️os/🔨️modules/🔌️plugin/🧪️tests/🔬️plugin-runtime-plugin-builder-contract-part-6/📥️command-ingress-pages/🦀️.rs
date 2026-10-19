@@ -6,12 +6,12 @@
     /// fixed 64-page ceiling refused outright (`command ingress exceeds 64 pages`), and 80 is past it
     /// by a margin no constant explains.
     const INGRESS_PAGE_SETS: [usize; 6] = [1, 2, 4, 8, 67, 80];
-    
+
     /// ⏱️ Turns a page set may spend beyond one per page. The reactor wire admits exactly ONE page per
     /// turn, so `pages` is the protocol's own floor; the slack covers a single instance-authority
     /// contention retry (`plugin_exchange` hands the owner back when `try_lock` would block).
     const INGRESS_TURN_SLACK: usize = 1;
-    
+
     /// 📤️ The production host owner for one multi-page command — the `CommandBatchDriver` a shard keeps
     /// per command, which hands out its next page only once the guest's status has been observed.
     async fn command_page_authority_driver(instance: u32, seq: u64, command: &protocol::AppCommand) -> semio_framework::kernel::CommandBatchDriver {
@@ -21,7 +21,7 @@
         let batch = semio_framework::kernel::CommandBatch::try_new(seq, envelopes).unwrap_or_else(|(fault, _)| panic!("admit fixture batch: {fault:?}"));
         semio_framework::kernel::CommandBatchDriver::new(seq, batch)
     }
-    
+
     /// 🚚️ Drives a whole page set to its terminal ingress status exactly as a shard does: hand the owner's
     /// next page (the wire carries at most one per turn), observe the status it produced, repeat. Returns
     /// whether it completed, the turns it spent and the pages the owner declared.
@@ -45,7 +45,7 @@
             }
         }
     }
-    
+
     /// ⚖️ LAW: a command's page set reaches its terminal ingress status in ONE TURN PER PAGE — the cost is
     /// the wire's own page count, never the number of internal moves the ingress owner makes.
     ///
@@ -93,7 +93,7 @@
     struct CommandIngressDisorderFixture {
         disorder: Vec<CommandIngressDisorderRow>,
     }
-    
+
     #[derive(serde::Deserialize)]
     struct CommandIngressDisorderRow {
         pub name: String,
@@ -102,7 +102,7 @@
         #[serde(rename = "rejectedDelivery")]
         rejected_delivery: usize,
     }
-    
+
     /// 📤️ Every page of one command with the cursor the host stamps on it — the bytes come from the real
     /// `encode_app_command`, cut at the page extent exactly as `CommandBatchDriver` cuts them, so a law
     /// may deliver them in an order no production owner would.
@@ -135,7 +135,7 @@
             })
             .collect()
     }
-    
+
     /// ⚖️ LAW: the guest reassembles a multi-page command in ARRIVAL ORDER and refuses every page that is
     /// not the next one — a duplicate, a skip and a swap all answer `plugin.command-page-order`.
     ///

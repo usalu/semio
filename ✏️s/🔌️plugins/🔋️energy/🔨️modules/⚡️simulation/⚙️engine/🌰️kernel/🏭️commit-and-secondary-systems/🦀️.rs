@@ -85,9 +85,15 @@ impl TimestepWork {
         };
         self.secondary_cursor += 1;
         let system =
-            PvSystem { dc_capacity_w: pv.dc_capacity_w, module_efficiency: pv.module_efficiency, area_m2: pv.area_m2, inverter_efficiency: pv.inverter_efficiency, temperature_coefficient: -0.004, tilt_deg: pv.tilt_deg, azimuth_deg: pv.azimuth_deg };
-        let plane_irradiance = (self.weather.current.direct_normal_irradiance_w_m2 + self.weather.current.diffuse_horizontal_irradiance_w_m2) * system.orientation_factor(self.sun_alt, self.sun_az);
-        self.pv_generation_w += system.simulate(plane_irradiance, self.weather.current.dry_bulb_c + 10.0);
+            PvSystem { dc_capacity_w: pv.dc_capacity_w, module_efficiency: pv.module_efficiency, area_m2: pv.area_m2, inverter_efficiency: pv.inverter_efficiency, temperature_coefficient: pv.temperature_coefficient,
+            faiman_heat_loss_constant_w_m2k: pv.faiman_heat_loss_constant_w_m2k,
+            faiman_heat_loss_wind_w_s_m3k: pv.faiman_heat_loss_wind_w_s_m3k,
+            mounting: pv.mounting, tilt_deg: pv.tilt_deg, azimuth_deg: pv.azimuth_deg };
+        let(altitude,azimuth)=(self.sun_alt.to_radians(),self.sun_az.to_radians());
+        let weather=&self.weather.current;
+        let sky=SkyState::new([altitude.cos()*azimuth.sin(),altitude.cos()*azimuth.cos(),altitude.sin()],weather.direct_normal_irradiance_w_m2,weather.diffuse_horizontal_irradiance_w_m2,model.site.elevation_m,GROUND_REFLECTANCE);
+        let plane_irradiance=system.incident_irradiance(&sky).total_w_m2();
+        self.pv_generation_w+=system.simulate(plane_irradiance,system.cell_temperature_c(plane_irradiance,weather.dry_bulb_c,weather.wind_speed_m_s));
     }
 
     pub(super) fn step_battery_bounded(&mut self, model: &Model, pre: &PrecomputedModel, state: &mut SimulationModel) {

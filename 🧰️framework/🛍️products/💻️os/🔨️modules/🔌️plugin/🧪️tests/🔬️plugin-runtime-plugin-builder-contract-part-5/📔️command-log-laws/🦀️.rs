@@ -28,7 +28,7 @@
         assert!(entry.edit_id.is_some());
         assert!(!entry.op_lines.is_empty(), "operation entry must carry printed op-text");
         assert!(entry.applied && entry.revertible);
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -53,7 +53,7 @@
         let history = app.render_ctx().test_history().await;
         let stream_entries: Vec<&CommandView> = history.commands.iter().filter(|entry| entry.action_id == "streamLabel").collect();
         assert_eq!(stream_entries.len(), 1, "a streamed gesture must grow one entry's op_lines, not append new entries");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -89,7 +89,7 @@
         let exported = app.history_snapshot().await.expect("history snapshot");
         let exported = exported.upserts.iter().find(|entry| entry.action_id == "streamLabel").expect("the gesture's exported row");
         assert_eq!((exported.op_count, exported.op_lines.len()), (64, HISTORY_ROW_OPERATION_PREVIEW), "the exported row carries the bounded preview and its edit's operation count");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -118,7 +118,7 @@
         let after_redo = app.render_ctx().test_history().await;
         assert_eq!(after_redo.commands.len(), 3, "redo appends a third entry");
         assert!(after_redo.commands.iter().any(|entry| entry.action_id == "undo"));
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -156,9 +156,9 @@
         assert_eq!(history.commands.len(), 1);
         assert!(history.commands[0].edit_id.is_some());
         assert!(!history.commands[0].op_lines.is_empty());
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut receiver.0,receiver.1,cx).expect("original contract fixture paid terminal close");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut sender.0,sender.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -181,7 +181,7 @@
         assert!(result.mutations.is_empty());
         assert_eq!(app.render_ctx().test_history().await.command_filter, HistoryCommandFilter::OnlyMutations);
         artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -204,7 +204,7 @@
         app.dispatch_typed(TestCommand::Select { id: Some("c".into()) }, &meta(), &mut identity,cx).await.expect("select c");
         let history = app.render_ctx().test_history().await;
         assert_eq!(history.commands.iter().map(|entry| (entry.action_id.as_str(), entry.count)).collect::<Vec<_>>(), vec![("increment", 1)]);
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -236,7 +236,7 @@
             }
         }
         artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -260,7 +260,7 @@
         let history = app.render_ctx().test_history().await;
         let rows: Vec<&str> = history.commands.iter().map(|entry| entry.action_id.as_str()).collect();
         assert_eq!(rows, vec!["increment"], "pure view verbs never become rows");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -283,7 +283,7 @@
         assert_eq!(result.ui_scope, UiDirtyScope::None, "nothing was logged, so the scope must not be upgraded either");
         assert_eq!(app.render_ctx().test_history().await.commands.len(), before_len);
         close_reserved_app(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -304,7 +304,7 @@
         reserved_action(&mut app, SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&dv(json!({ "value": "onlyMutations" }))), &mut identity).await;
         assert_eq!(app.render_ctx().test_history().await.commands.len(), before_len, "the filter's own chrome must not fill the list it filters");
         artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -326,7 +326,7 @@
         let rendered = app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render after");
         assert_eq!(rendered.root.children.len(), 2, "Actions + Commands");
         assert_eq!(rendered.root.children[1].children.len(), 1, "a log-only cache key change (no store generation bump) must still refresh the rendered panel");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -353,9 +353,9 @@
         assert_eq!(entry.kind, ActionKind::Mutation);
         assert!(entry.edit_id.is_none(), "no operations means no VCS edit, even though the action is Mutation-kind");
         assert_eq!(entry.count, 1);
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
     //#endregion 🔖️CommandLogTests

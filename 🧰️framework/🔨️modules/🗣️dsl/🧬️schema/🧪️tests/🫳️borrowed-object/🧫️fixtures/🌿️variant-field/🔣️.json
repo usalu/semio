@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "valid": [
+    { "keyword": "flag", "value": true, "named": [["flag", {"0": true}]] },
+    { "keyword": "text", "value": "共:1", "named": [["text", {"0": "共:1"}]] },
+    { "keyword": "text", "value": null, "named": [["text", {"0": null}]] }
+  ],
+  "refusedStatementCounts": [0, 2],
+  "variantCount": 2,
+  "canceledOwnedBytes": 0
+}

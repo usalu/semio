@@ -585,9 +585,6 @@ FodyWeavers.xsd
 #--------------------------------------AGENTS--------------------------------------
 nul
 #--------------------------------------EXCEPTIONS--------------------------------------
-!.vscode/settings.json
-!.vscode/extensions.json
-!.vscode/*.code-workspace
 !js/**/public
 !js/compose/lib
 !.axoCover/settings.json

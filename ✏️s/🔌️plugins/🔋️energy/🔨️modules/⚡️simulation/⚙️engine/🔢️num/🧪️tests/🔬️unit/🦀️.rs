@@ -18,11 +18,12 @@ fn simpson_integrates_x_squared() {
 }
 
 #[test]
-fn dense_solve_and_inverse_agree() {
+fn shared_dense_solution_and_inverse_agree() {
     let matrix = [4.0, 1.0, 0.5, 1.0, 3.0, -1.0, 0.5, -1.0, 5.0];
     let mut system = matrix;
     let mut rhs = [1.0, 2.0, 3.0];
-    assert!(solve_dense_in_place(&mut system, &mut rhs, 3));
+    let mut cursor=semio_framework_math_dense::DenseSolveCursor::new(3,9,3);
+    loop {let turn=cursor.step(&mut system,&mut rhs,semio_framework_math_dense::DenseSolveBudget {items:1,copy_bytes:64,depth:1,capacity_bytes:0});match turn.status {semio_framework_math_dense::DenseSolveStatus::Complete=>break,semio_framework_math_dense::DenseSolveStatus::Pending=>{},status=>panic!("{status:?}")}}
     let (mut inverse, mut work) = ([0.0; 9], [0.0; 9]);
     assert!(invert_dense(&matrix, &mut inverse, &mut work, 3));
     for row in 0..3 {

@@ -52,3 +52,13 @@ pub fn snapshot_registry_alias_close_step(slot:&mut Option<SnapshotReadRegistryA
  let Some(owner)=slot.as_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()));};
  let step=owner.step(grant)?;if owner.closed(){slot.take();}Ok(step)
 }
+
+impl semio_framework_value::ErasedSnapshotRetirement for SnapshotReadRegistryAliasRetirement {
+ fn next_demand(&self,_body:usize)->Result<RetirementDemand,ValueError>{self.demands()}
+ fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands()?.copy_bytes)}
+ fn next_capacity_byte_demand(&self,_body:usize)->Result<usize,ValueError>{Ok(self.demands()?.capacity_bytes)}
+ fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands()?.release_bytes)}
+ fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands()?.depth)}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.step(grant)}
+ fn terminal_is_empty(&self)->bool{self.closed()}
+}

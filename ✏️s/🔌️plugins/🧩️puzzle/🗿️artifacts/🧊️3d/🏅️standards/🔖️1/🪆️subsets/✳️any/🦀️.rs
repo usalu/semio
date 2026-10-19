@@ -1,11 +1,11 @@
-//! 🪆️ Subset root for `s.puzzle.puzzle3d@1/*` (ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-
 //! RUNTIME`, `terra-descriptors` packet, following the `terra-fleet-trinity-recipe` recipe —
+//! 🪆️ Subset root for `s.puzzle.puzzle3d@1/*` (ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-
 //! `📓️terra-fleet-trinity-recipe-report.md`). Exports `subset() -> SubsetDeclaration`, assembling the
 //! `🧬️schema`/`🚪️io`/`👁️viewer`/`✏️editor`/`📚️examples` children — `crate::editor::puzzle3d`/
 //! `crate::viewer::puzzle3d` stay mounted at the plugin's top-level `editor`/`viewer` modules
 //! (`🗒️note`/`🖍️draw` recipe §5 gotcha 1), not here. `examples` is TWO real fixtures
-//! (`crate::examples::puzzle3d::{nakagin_capsule_tower, concrete_forest}::SOURCE`, each a
-//! `LazyLock<ExampleSource>` cloned here) — mounted at the CRATE ROOT (`crate::examples::puzzle3d`),
+//! (`semio_s_artifact_puzzle_3d_editor::examples::puzzle3d::{nakagin_capsule_tower, concrete_forest}::SOURCE`, each a
+//! `LazyLock<ExampleSource>` cloned here) — mounted at the CRATE ROOT (`semio_s_artifact_puzzle_3d_editor::examples::puzzle3d`),
 //! not under `artifacts::puzzle3d` (same shape puzzle2d's own subset root hit).
 //!
 //! ⚠️ DEVIATION from the `🗒️note`/`🖍️draw` template (documented, not an oversight — same shape
@@ -28,7 +28,13 @@ use semio_s_artifact_puzzle_3d_model as schema;
 use {semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation, semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot, semio_s_artifact_puzzle_3d_model::PUZZLE3D_DIALECT, semio_s_artifact_puzzle_3d_model::PUZZLE_3D_SCHEMA};
 use semio_s_artifact_puzzle_3d_editor as editor;
 use semio_s_artifact_puzzle_3d_viewer as viewer;
-use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, IoDeclaration, LanguagePair, NativeCodecs, SchemaDeclaration, SubsetDeclaration};
+use semio_framework_plugin::app::declarations::editor_surface;
+use semio_framework_plugin::app::declarations::viewer_surface;
+use semio_framework_plugin::app::declarations::IoDeclaration;
+use semio_framework_plugin::app::declarations::LanguagePair;
+use semio_framework_plugin::app::declarations::NativeCodecs;
+use semio_framework_plugin::app::declarations::SchemaDeclaration;
+use semio_framework_plugin::app::declarations::SubsetDeclaration;
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 

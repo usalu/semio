@@ -240,7 +240,8 @@
       "outputs": [],
       "inputs": [
         "sharedGlobals",
-        "{workspaceRoot}/.vscode/launch.json",
+        "{workspaceRoot}/📋️build-owners.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json",
         "{projectRoot}/📜️script.ts",
         "{projectRoot}/Cargo.toml",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/📜️declaration/**/*",
@@ -264,6 +265,15 @@
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test crate-boundaries"
       }
+    },
+    "test-tui": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test tui"
+      },
+      "inputs": ["default", "^production", "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/⌨️tui/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧱️elements/**/*"]
     }
   }
 }

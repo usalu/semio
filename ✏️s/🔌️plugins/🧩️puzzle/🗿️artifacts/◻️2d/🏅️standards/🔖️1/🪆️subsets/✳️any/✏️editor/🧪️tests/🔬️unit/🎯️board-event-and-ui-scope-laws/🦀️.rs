@@ -157,7 +157,7 @@ async fn select_action_declares_partial_ui_scope() {
             // 🐢️ Regression: `window_bodies` must list the window *body keys* (matched against
             // `AppDefinition.windowKinds[].bodyKey` by the shell's `buildUiRefreshRequest`), not
             // the pane/kind-id constants (`PUZZLE2D_PANES`) — those are a different id space.
-            assert_eq!(window_bodies, vec![overview::BODY_KEY, detail::BODY_KEY, selection::BODY_KEY], "window_bodies must be body keys, not pane ids");
+            assert_eq!(window_bodies, vec![overview::BODY_KEY, detail::BODY_KEY, crate::standards::v1::subsets::any::schema::mutations::selection::BODY_KEY], "window_bodies must be body keys, not pane ids");
             assert!(panel_bodies.contains(&crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_LAYERS.to_string()));
             assert!(panel_bodies.contains(&crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_PROPERTIES.to_string()));
             assert!(engagements, "select must refresh the engagement bar");

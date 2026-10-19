@@ -137,6 +137,112 @@
       "deformationScale": 50
     }
   },
+  "nativeWords": [
+    {
+      "pointer": "/nodes/0/x",
+      "word": "0000000000000000"
+    },
+    {
+      "pointer": "/nodes/0/y",
+      "word": "0000000000000000"
+    },
+    {
+      "pointer": "/nodes/1/x",
+      "word": "3ff0000000000000"
+    },
+    {
+      "pointer": "/nodes/1/y",
+      "word": "0000000000000000"
+    },
+    {
+      "pointer": "/materials/0/e",
+      "word": "41086a0000000000"
+    },
+    {
+      "pointer": "/materials/0/nu",
+      "word": "3fd3333333333333"
+    },
+    {
+      "pointer": "/materials/0/rho",
+      "word": "40beaa0000000000"
+    },
+    {
+      "pointer": "/sections/0/area",
+      "word": "3ff0000000000000"
+    },
+    {
+      "pointer": "/sections/0/iy",
+      "word": "3ff0000000000000"
+    },
+    {
+      "pointer": "/loadCases/0/loads/0/value",
+      "word": "c024000000000000"
+    },
+    {
+      "pointer": "/loadCases/0/loads/1/wx",
+      "word": "0000000000000000"
+    },
+    {
+      "pointer": "/loadCases/0/loads/1/wy",
+      "word": "c000000000000000"
+    },
+    {
+      "pointer": "/loadCases/0/loads/2/pressure",
+      "word": "c008000000000000"
+    },
+    {
+      "pointer": "/combinations/0/terms/0/factor",
+      "word": "3ff8000000000000"
+    },
+    {
+      "pointer": "/regions/0/outline/0/0",
+      "word": "0000000000000000"
+    },
+    {
+      "pointer": "/regions/0/outline/0/1",
+      "word": "0000000000000000"
+    },
+    {
+      "pointer": "/regions/0/outline/1/0",
+      "word": "3ff0000000000000"
+    },
+    {
+      "pointer": "/regions/0/outline/1/1",
+      "word": "0000000000000000"
+    },
+    {
+      "pointer": "/regions/0/outline/2/0",
+      "word": "3ff0000000000000"
+    },
+    {
+      "pointer": "/regions/0/outline/2/1",
+      "word": "3ff0000000000000"
+    },
+    {
+      "pointer": "/regions/0/outline/3/0",
+      "word": "0000000000000000"
+    },
+    {
+      "pointer": "/regions/0/outline/3/1",
+      "word": "3ff0000000000000"
+    },
+    {
+      "pointer": "/regions/0/meshSize",
+      "word": "3ff0000000000000"
+    },
+    {
+      "pointer": "/regions/0/thickness",
+      "word": "3ff0000000000000"
+    },
+    {
+      "pointer": "/analysis/deformationScale",
+      "word": "4049000000000000"
+    }
+  ],
+  "nativeCounts": [
+    { "pointer": "/analysis/modalCount", "value": "3" },
+    { "pointer": "/analysis/bucklingCount", "value": "3" }
+  ],
   "foreignFields": [
     {
       "key": "camera",

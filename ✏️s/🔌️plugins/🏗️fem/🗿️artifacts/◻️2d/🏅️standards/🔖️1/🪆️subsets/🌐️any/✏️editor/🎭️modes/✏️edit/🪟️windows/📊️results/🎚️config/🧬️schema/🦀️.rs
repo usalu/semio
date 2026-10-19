@@ -62,15 +62,9 @@ impl Fem2dResultsWindowConfigPatch {
 }
 
 impl protocol::MutationDiff<Fem2dResultsWindowConfig> for Fem2dResultsWindowConfigPatch {
-    fn apply(&self, base: &Fem2dResultsWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Fem2dResultsWindowConfig> {
-        Ok(Fem2dResultsWindowConfig {
-            camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()),
-            result_source_id: self.result_source_id.clone().map_or_else(|| base.result_source_id.clone(), |change| change.id),
-            result_mode: self.result_mode.clone().unwrap_or_else(|| base.result_mode.clone()),
-            result_mode_index: self.result_mode_index.clone().unwrap_or_else(|| base.result_mode_index.clone()),
-            animation: self.animation.clone().unwrap_or_else(|| base.animation.clone()),
-        })
-    }
+
+}
+impl protocol::ColdMutationDiff<Fem2dResultsWindowConfig> for Fem2dResultsWindowConfigPatch {
     fn absorb(&mut self, other: Self) {
         self.camera = other.camera.or_else(|| self.camera.take());
         self.result_source_id = other.result_source_id.or_else(|| self.result_source_id.take());
@@ -78,9 +72,23 @@ impl protocol::MutationDiff<Fem2dResultsWindowConfig> for Fem2dResultsWindowConf
         self.result_mode_index = other.result_mode_index.or_else(|| self.result_mode_index.take());
         self.animation = other.animation.or_else(|| self.animation.take());
     }
+
+    fn apply(&self, base: &mut Fem2dResultsWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        if let Some(value) = &self.camera { base.camera = value.clone(); }
+        if let Some(change) = &self.result_source_id { base.result_source_id = change.id.clone(); }
+        if let Some(value) = &self.result_mode { base.result_mode = value.clone(); }
+        if let Some(value) = &self.result_mode_index { base.result_mode_index = value.clone(); }
+        if let Some(value) = &self.animation { base.animation = value.clone(); }
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<Fem2dResultsWindowConfig> for Fem2dResultsWindowConfigPatch {
+    fn is_empty(&self) -> bool {
+        self.camera.is_none() && self.result_source_id.is_none() && self.result_mode.is_none() && self.result_mode_index.is_none() && self.animation.is_none()
+    }
+}
+impl protocol::ColdDiffAlgebra<Fem2dResultsWindowConfig> for Fem2dResultsWindowConfigPatch {
     fn inverse(&self, base: &Fem2dResultsWindowConfig) -> Self {
         Self {
             camera: self.camera.as_ref().map(|_| base.camera.clone()),
@@ -89,8 +97,5 @@ impl protocol::DiffAlgebra<Fem2dResultsWindowConfig> for Fem2dResultsWindowConfi
             result_mode_index: self.result_mode_index.as_ref().map(|_| base.result_mode_index.clone()),
             animation: self.animation.as_ref().map(|_| base.animation.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.camera.is_none() && self.result_source_id.is_none() && self.result_mode.is_none() && self.result_mode_index.is_none() && self.animation.is_none()
     }
 }

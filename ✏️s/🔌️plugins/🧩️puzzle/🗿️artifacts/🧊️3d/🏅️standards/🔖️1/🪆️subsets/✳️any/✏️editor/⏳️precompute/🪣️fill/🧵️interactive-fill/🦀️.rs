@@ -776,33 +776,72 @@ impl FillBuilder {
 }
 
 impl FillBuilder {
-    pub fn begin_close(&mut self) {
-        self.closing = true;
+    pub fn begin_close(&mut self) { self.closing = true; }
+
+    fn take_closing_owners(&mut self) -> FillClosingOwners {
+        FillClosingOwners {
+            base: std::mem::replace(&mut self.base, FixedSceneOwner { objects: FixedOwnerVec::refused(), attractions: FixedOwnerVec::refused(), target_volumes: FixedOwnerVec::refused() }),
+            catalogs: std::mem::replace(&mut self.catalogs, FixedCatalogOwner { objects: FixedOwnerVec::refused(), vortices: FixedOwnerVec::refused(), cables: FixedOwnerVec::refused() }),
+            weights: std::mem::replace(&mut self.weights, RetainedBrushKindWeights { object_weights: FixedOwnerMap::refused(), vortex_weights: FixedOwnerMap::refused() }),
+            spatial_index: std::mem::replace(&mut self.spatial_index, CollisionSpatialIndex::original_empty(1.0)),
+            preparation_roots: self.preparation_roots.take(),
+            preparation_spatial: self.preparation_spatial.take(),
+            tail_removal: self.tail_removal.take(),
+            sequence: std::mem::replace(&mut self.sequence, Vec::new()),
+            appended_objects: std::mem::replace(&mut self.appended_objects, Vec::new()),
+            appended_attractions: std::mem::replace(&mut self.appended_attractions, Vec::new()),
+            placed: std::mem::replace(&mut self.placed, Vec::new()),
+            placed_lookup: std::mem::replace(&mut self.placed_lookup, FixedOwnerMap::refused()),
+            candidate_cache: std::mem::replace(&mut self.candidate_cache, FixedOwnerMap::refused()),
+            kind_compatibility: std::mem::replace(&mut self.kind_compatibility, FixedOwnerVec::refused()),
+            meshes: std::mem::replace(&mut self.meshes, FixedOwnerMap::refused()),
+            targets: std::mem::replace(&mut self.targets, Vec::new()),
+            target_weights: std::mem::replace(&mut self.target_weights, Vec::new()),
+            target_tree: std::mem::replace(&mut self.target_tree, Vec::new()),
+            blocked_vortex_ids: std::mem::replace(&mut self.blocked_vortex_ids, FixedOwnerSet::original_empty()),
+            current_target: self.current_target.take(),
+            candidates: std::mem::replace(&mut self.candidates, Vec::new()),
+            candidate_seen: std::mem::replace(&mut self.candidate_seen, FixedOwnerSet::original_empty()),
+            candidate_raw: std::mem::replace(&mut self.candidate_raw, Vec::new()),
+            candidate_weights: std::mem::replace(&mut self.candidate_weights, Vec::new()),
+            candidate_tree: std::mem::replace(&mut self.candidate_tree, Vec::new()),
+            current_preview: self.current_preview.take(),
+            broad_phase_query: self.broad_phase_query.take(),
+            collision: self.collision.take(),
+            pending_payload: self.pending_payload.take(),
+            pending_object: self.pending_object.take(),
+            pending_attraction: self.pending_attraction.take(),
+            pending_spatial: self.pending_spatial.take(),
+            last_rejection: self.last_rejection.take(),
+            fixed_rejection: self.fixed_rejection.take(),
+            run_events: self.run_events.take(),
+        }
     }
 
-    /// ♻️ Retires one planner owner per granted turn; a turn needs one owner page of release credit.
-    pub fn close_turn(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        self.closing = true;
-        if grant.maximum_items == 0 || grant.maximum_release_bytes < FILL_BUILDER_OWNER_PAGE_BYTES {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() };
+    /// ♻️ Transfers the original owners on one admitted metadata event, then pays each concrete retirement action.
+    pub fn close_turn(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+        if !self.close_started {
+            let demand = self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
+            let step = semio_framework_job::close_original_retained_step(cx, demand, |_| {
+                self.closing = true;
+                let owners = self.take_closing_owners();
+                self.close_owners.stage(owners);
+                self.close_started = true;
+                self.collection_over_capacity = false;
+                self.preparation_capacity_refusal = None;
+                Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
+            })?;
+            return Ok(step);
         }
-        if self.retire_one_close_owner() {
-            semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() }
-        } else {
-            semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, released_bytes: FILL_BUILDER_OWNER_PAGE_BYTES, ..Default::default() } }
-        }
+        self.close_owners.close_step(cx)
     }
 
-    /// 📏️ Quotes the next close turn: one owner page of release credit until the planner holds nothing.
-    pub fn close_demands(&self) -> semio_framework_value::RetirementDemand {
-        if self.terminal_is_empty() {
-            return Default::default();
-        }
-        semio_framework_value::RetirementDemand { release_bytes: FILL_BUILDER_OWNER_PAGE_BYTES, depth: 1, ..Default::default() }
+    /// 📏️ Quotes the exact next inline transfer, cursor birth, child work or physical backing release.
+    pub fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if !self.close_started { return Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<FillClosingOwners>(), depth: 1, ..Default::default() }); }
+        self.close_owners.demands(body)
     }
 
-    pub fn terminal_is_empty(&self) -> bool {
-        self.closing && self.close_current.is_none() && self.terminal_owners_empty()
-    }
+    pub fn terminal_is_empty(&self) -> bool { self.closing && self.close_started && self.close_owners.is_empty() && self.terminal_owners_empty() }
 }
 //#endregion 🧵️InteractiveFillJob

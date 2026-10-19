@@ -1,23 +1,24 @@
-//! 🛡️ The payload validations a noun's `create-`/`replace-` twins share, the foreign-key
-//! resolutions `create-load-case` and `add-load` share, and the referential-integrity lookups every
-//! guarded `delete-` runs — written ONCE, here, below every kind that runs them.
-//!
-//! Why here and not in each leaf: the twins are only meaningful if they agree, and a transcription
-//! per leaf is exactly how they drifted apart (a `create-element` that resolved four references
-//! next to a `replace-element` that resolved none). Each leaf now spends one line per rule.
-//!
-//! 🚦️ Level discipline. `mutation.duplicate-id` and `mutation.invariant` are `Fatal`: they say the PAYLOAD is
-//! wrong, so no merge policy may absorb them and no later base can make them right. `mutation.target-missing`,
-//! `mutation.target-referenced` and `mutation.target-mismatch` (a `replace-` whose record renames the target it
-//! selects) are `Error`: they say this BASE cannot host the payload as it stands.
-//!
-//! @see 📓️w13-fem2d-semantics.md — the per-kind rule table these guards implement.
+//! 🛡️ Shared cold semantic mutation validations.
 
 use crate::standards::v1::subsets::any::schema::diff::Fem2dDiff;
-use crate::standards::v1::subsets::any::schema::structure::{element_id, load_id, FemAnalysisSettings, FemCombination, FemElement, FemLoad, FemMaterial, FemNode, FemRegion, FemSection};
-use crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use crate::standards::v1::subsets::any::schema::structure::element_id;
+use crate::standards::v1::subsets::any::schema::structure::load_id;
+use crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
+use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
+use crate::standards::v1::subsets::any::schema::structure::FemCombination;
+use crate::standards::v1::subsets::any::schema::structure::FemElement;
+use crate::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_fem_material::planar::FemMaterialValue;
+use semio_s_fem_node::planar::FemNodeValue;
+use crate::standards::v1::subsets::any::schema::structure::FemRegion;
+use crate::standards::v1::subsets::any::schema::structure::FemSection;
 
 type Rejection = protocol::MutationOutcome<Fem2dDiff>;
+
+/// 🪪️ Admits the canonical interaction identity before creating an owned semantic entity.
+pub fn scoped_identity(segments: &[&str]) -> Option<Rejection> {
+    protocol::wire::validate_scoped_identity_segments(segments).err().map(|error| invariant(segments.iter().skip(1).map(|id| (*id).to_string()), format!("Interaction identity refused: {error}")))
+}
 
 /// 🚫️ `Fatal` — the payload itself is inadmissible, on this base or any other.
 fn invariant(target: impl IntoIterator<Item = String>, message: String) -> Rejection {
@@ -56,14 +57,14 @@ pub fn referenced(noun: &str, blocker: &str, target: &str, referrers: Vec<String
 
 /// 📍️ A node's coordinates are real numbers — a non-finite ordinate cannot be meshed, drawn or
 /// solved, and would silently poison every stiffness matrix it enters.
-pub fn node_geometry(node: &FemNode) -> Option<Rejection> {
+pub fn node_geometry(node: &FemNodeValue) -> Option<Rejection> {
     (!node.x.is_finite() || !node.y.is_finite()).then(|| invariant([node.id.clone()], format!("Node \"{}\" carries a non-finite coordinate ({}, {}).", node.id, node.x, node.y)))
 }
 
 /// 🧱️ Isotropic-elasticity bounds: a positive Young's modulus and density, and a Poisson ratio
 /// inside the thermodynamically admissible open interval (-1, 0.5) — at 0.5 the material is
 /// incompressible and the plane-stress/plane-strain constitutive matrix is singular.
-pub fn material_plausibility(material: &FemMaterial) -> Option<Rejection> {
+pub fn material_plausibility(material: &FemMaterialValue) -> Option<Rejection> {
     let id = &material.id;
     if !material.e.is_finite() || !material.nu.is_finite() || !material.rho.is_finite() {
         return Some(invariant([id.clone()], format!("Material \"{id}\" carries a non-finite property.")));
@@ -185,17 +186,17 @@ pub fn analysis_bounds(settings: &FemAnalysisSettings) -> Option<Rejection> {
 }
 
 /// 🔗️ The one node a support names.
-pub fn node_reference(base: &Fem2dSnapshot, node_id: &str) -> Option<Rejection> {
+pub fn node_reference(base: &Fem2dSnapshotValue, node_id: &str) -> Option<Rejection> {
     (!base.nodes.iter().any(|node| node.id == node_id)).then(|| missing(node_id.to_string(), format!("Node \"{node_id}\" does not exist.")))
 }
 
 /// 🔗️ The one material a region names.
-pub fn material_reference(base: &Fem2dSnapshot, material_id: &str) -> Option<Rejection> {
+pub fn material_reference(base: &Fem2dSnapshotValue, material_id: &str) -> Option<Rejection> {
     (!base.materials.iter().any(|material| material.id == material_id)).then(|| missing(material_id.to_string(), format!("Material \"{material_id}\" does not exist.")))
 }
 
 /// 🔗️ The four foreign keys every element carries, resolved in declaration order.
-pub fn element_references(base: &Fem2dSnapshot, element: &FemElement) -> Option<Rejection> {
+pub fn element_references(base: &Fem2dSnapshotValue, element: &FemElement) -> Option<Rejection> {
     let (start, end, material_id, section_id) = match element {
         FemElement::Bar { start, end, material_id, section_id, .. } | FemElement::Beam { start, end, material_id, section_id, .. } => (start, end, material_id, section_id),
     };
@@ -216,7 +217,7 @@ pub fn element_references(base: &Fem2dSnapshot, element: &FemElement) -> Option<
 
 /// 🔗️ The one target a load variant carries — the same resolution whether the load arrives
 /// inside a new case (`create-load-case`) or is attached to an existing one (`add-load`).
-pub fn load_reference(base: &Fem2dSnapshot, load: &FemLoad) -> Option<Rejection> {
+pub fn load_reference(base: &Fem2dSnapshotValue, load: &FemLoad) -> Option<Rejection> {
     match load {
         FemLoad::Nodal { node_id, .. } => node_reference(base, node_id),
         FemLoad::MemberUdl { element_id: referenced, .. } => (!base.elements.iter().any(|element| element_id(element) == referenced)).then(|| missing(referenced.clone(), format!("Element \"{referenced}\" does not exist."))),
@@ -225,12 +226,12 @@ pub fn load_reference(base: &Fem2dSnapshot, load: &FemLoad) -> Option<Rejection>
 }
 
 /// 🔎️ Every member UDL naming this element, as `"<case>/<load>"`.
-pub fn element_referrers(base: &Fem2dSnapshot, target: &str) -> Vec<String> {
+pub fn element_referrers(base: &Fem2dSnapshotValue, target: &str) -> Vec<String> {
     base.load_cases.iter().flat_map(|case| case.loads.iter().filter(move |load| matches!(load, FemLoad::MemberUdl { element_id: referenced, .. } if referenced == target)).map(move |load| format!("{}/{}", case.id, load_id(load)))).collect()
 }
 
 /// 🔎️ Every element and region naming this material.
-pub fn material_referrers(base: &Fem2dSnapshot, target: &str) -> Vec<String> {
+pub fn material_referrers(base: &Fem2dSnapshotValue, target: &str) -> Vec<String> {
     let elements = base.elements.iter().filter(|element| match element {
         FemElement::Bar { material_id, .. } | FemElement::Beam { material_id, .. } => material_id == target,
     });
@@ -238,7 +239,7 @@ pub fn material_referrers(base: &Fem2dSnapshot, target: &str) -> Vec<String> {
 }
 
 /// 🔎️ Every element naming this cross-section.
-pub fn section_referrers(base: &Fem2dSnapshot, target: &str) -> Vec<String> {
+pub fn section_referrers(base: &Fem2dSnapshotValue, target: &str) -> Vec<String> {
     base.elements
         .iter()
         .filter(|element| match element {
@@ -249,12 +250,12 @@ pub fn section_referrers(base: &Fem2dSnapshot, target: &str) -> Vec<String> {
 }
 
 /// 🔎️ Every area load naming this region, as `"<case>/<load>"`.
-pub fn region_referrers(base: &Fem2dSnapshot, target: &str) -> Vec<String> {
+pub fn region_referrers(base: &Fem2dSnapshotValue, target: &str) -> Vec<String> {
     base.load_cases.iter().flat_map(|case| case.loads.iter().filter(move |load| matches!(load, FemLoad::Area { region_id, .. } if region_id == target)).map(move |load| format!("{}/{}", case.id, load_id(load)))).collect()
 }
 
 /// 🔎️ Every combination weighting this load case.
-pub fn load_case_referrers(base: &Fem2dSnapshot, target: &str) -> Vec<String> {
+pub fn load_case_referrers(base: &Fem2dSnapshotValue, target: &str) -> Vec<String> {
     base.combinations.iter().filter(|combination| combination.terms.iter().any(|term| term.case_id == target)).map(|combination| combination.id.clone()).collect()
 }
 
@@ -270,7 +271,7 @@ pub fn load_case_referrers(base: &Fem2dSnapshot, target: &str) -> Vec<String> {
 /// target DOES exist in `base.combinations`, so the resolution below would have accepted it,
 /// and `create-` only refused it by accident, as an id its own base did not carry yet. It is
 /// the same self-exclusion `combination_referrers` applies when it asks who blocks a delete.
-pub fn combination_term_references(base: &Fem2dSnapshot, id: &str, combination: &FemCombination) -> Option<Rejection> {
+pub fn combination_term_references(base: &Fem2dSnapshotValue, id: &str, combination: &FemCombination) -> Option<Rejection> {
     combination.terms.iter().find_map(|term| {
         if term.case_id == id {
             return Some(invariant([id.to_string()], format!("Combination \"{id}\" may not weight itself.")));
@@ -297,6 +298,6 @@ pub fn load_magnitudes(load: &FemLoad) -> Option<Rejection> {
 }
 
 /// 🔎️ Every OTHER combination nesting this one (a self-term cannot block its own deletion).
-pub fn combination_referrers(base: &Fem2dSnapshot, target: &str) -> Vec<String> {
+pub fn combination_referrers(base: &Fem2dSnapshotValue, target: &str) -> Vec<String> {
     base.combinations.iter().filter(|combination| combination.id != target && combination.terms.iter().any(|term| term.case_id == target)).map(|combination| combination.id.clone()).collect()
 }

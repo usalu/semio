@@ -13,6 +13,7 @@ impl crate::retirement::RetireOwned for MixedReceiptPayload {
     fn controlled_retirement_supported()->bool{true}
 }
 impl crate::retirement::RetirementCursor for MixedReceiptPayload {
+ fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{copy_bytes:usize::from(self.source.is_some()),capacity_bytes:if self.source.is_some(){self.replacement_capacity}else{0},release_bytes:self.source.as_ref().or(self.replacement.as_ref()).map_or(0,Vec::capacity),depth:usize::from(!self.terminal_is_empty())})}
     fn close_step(&mut self,grant:RetainedCloneGrant)->crate::retirement::RetirementStep {
         use crate::{retirement::RetirementStep as Step,retained_clone::RetainedCloneProgress};
         if self.complete{return Step::Complete;}
@@ -444,6 +445,25 @@ fn removed_payload_handoff_preserves_exact_last_owner() {
     assert_eq!(drops.load(AtomicOrdering::SeqCst), 0);
     let mut removed=removed;let payload=removed.release_step(RetainedCloneGrant::one_release_turn(removed.next_release_byte_demand(),1)).unwrap().value.expect("removed payload must have one transferred owner");
     assert_eq!(drops.load(AtomicOrdering::SeqCst), 0); drop(payload); assert_eq!(drops.load(AtomicOrdering::SeqCst), 1);
+}
+
+/// 🗑️ A removal reports that the key was present whether or not another clone of the map still shares its payload.
+#[test]
+fn remove_reports_presence_while_a_clone_shares_the_payload_and_hands_over_the_last_owner() {
+    let drops = Arc::new(AtomicUsize::new(0)); let mut map = OrderedMap::new();
+    map.insert("key".into(), Payload(Arc::clone(&drops)));
+    let mut clone = map.clone();
+    assert!(matches!(map.remove("key"), Some(Removal::Shared)), "a payload shared with a clone is present, not absent");
+    assert!(map.remove("key").is_none(), "a key already removed is absent");
+    assert!(clone.contains_key("key") && map.is_empty());
+    assert_eq!(drops.load(AtomicOrdering::SeqCst), 0);
+    let Some(Removal::Owned(payload)) = clone.remove("key") else { panic!("the last owner hands its payload over") };
+    assert_eq!(drops.load(AtomicOrdering::SeqCst), 0); drop(payload); assert_eq!(drops.load(AtomicOrdering::SeqCst), 1);
+    assert!(clone.remove("key").is_none());
+    let mut set = OrderedSet::new(); set.insert("member".into()); let shared = set.clone();
+    assert!(!set.insert("member".into()), "re-inserting a member shared with a clone is not fresh");
+    assert!(set.remove("member") && !set.remove("member"));
+    shared.retire_cold();
 }
 
 /// 🔒️ Deliberate contract violations retain their tiny test allocations instead of invoking recursive payload destruction.

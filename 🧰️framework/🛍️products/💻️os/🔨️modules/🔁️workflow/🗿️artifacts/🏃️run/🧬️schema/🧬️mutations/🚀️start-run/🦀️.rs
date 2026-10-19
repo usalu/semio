@@ -23,6 +23,17 @@ pub struct StartRun {
 //#region ⚙️Semantics
 impl protocol::MutationKind<RunArtifact, RunMutation> for StartRun {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "start", entity: "run", kind: "start-run", record: "StartedRun" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Start run for {}", self.workflow_ref), &format!("Lauf für {} starten", self.workflow_ref))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["run".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<RunArtifact, RunMutation> for StartRun {
     fn diff(&self, _base: &RunArtifact) -> protocol::MutationOutcome<RunDiff> {
         protocol::MutationOutcome::new(RunDiff::step(RunStep::Header(RunHeaderEdit {
             workflow_ref: self.workflow_ref.clone(),
@@ -48,12 +59,6 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for StartRun {
             status: base.status,
             started_at: base.started_at.clone(),
         })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Start run for {}", self.workflow_ref), &format!("Lauf für {} starten", self.workflow_ref))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["run".into()]
     }
 }
 //#endregion ⚙️Semantics

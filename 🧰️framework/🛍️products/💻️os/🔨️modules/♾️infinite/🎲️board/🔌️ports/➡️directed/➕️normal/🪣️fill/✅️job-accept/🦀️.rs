@@ -193,7 +193,7 @@ impl BoardFillJob {
         }
         state.stage = BoardFillStage::ResetSources;
         let state = self.state.take().ok_or("missing-fill-state")?;
-        self.checkpoint = Some(BoardFillCheckpoint { operation: self.operation, naming: self.naming, state: Some(state) });
+        self.checkpoint = Some(BoardFillCheckpoint { original_source: self.original_source, operation: self.operation, naming: self.naming, state: Some(state) });
         Ok(BoardFillOffer::Checkpoint(self.checkpoint.as_ref().map_or(0, |checkpoint| u64::from(checkpoint.accepted_count()))))
     }
 }

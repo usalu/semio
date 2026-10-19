@@ -148,7 +148,7 @@ fn native_recursive_intrinsic_retirement_admits_each_constructor_and_physical_re
             if matches!(step, RetainedCloneStep::Complete(_)) { break; }
         }
         assert!(owner.terminal_is_empty(), "intrinsic exact retirement must finish: {}", row["kind"]);
-        assert_eq!(copied, row["payloadBytes"].as_u64().unwrap() as usize, "{}", row["kind"]);
+        assert_eq!(copied,row["retirementCopyBytes"].as_u64().unwrap()as usize);
         assert!(released >= born);
         assert_eq!(observe_retirement_allocations(|| drop(owner)).1, (0, 0));
     }
@@ -185,7 +185,7 @@ fn native_recursive_intrinsic_retirement_admits_each_constructor_and_physical_re
                 if matches!(step, RetainedCloneStep::Complete(_)) { break; }
             }
             let mut remaining = row.clone();
-            remaining["payloadBytes"] = (row["payloadBytes"].as_u64().unwrap() - copied as u64).into();
+            remaining["retirementCopyBytes"] = (row["retirementCopyBytes"].as_u64().unwrap() - copied as u64).into();
             run(inner, &remaining, &law);
         }
         run(Box::new(value), row, &law);
@@ -262,9 +262,10 @@ fn paged_native_retained_clone_close_admits_exact_leaf_and_composite_demand() {
     fn run<T:RetainedClone>(source:crate::retained_clone::FixtureSource<T>,label:&str) {
         let (mut cursor,allocation)=observe_retirement_allocations(T::retained_clone_cursor);assert_eq!(allocation,(0,0));
         let mut ready=false;
-        for turn in 0..10000 {
-            let grant=match turn%3 {0=>RetainedCloneGrant::one_capacity_turn(4096,64),1=>RetainedCloneGrant::one_payload_turn(4096,64),_=>RetainedCloneGrant::one_release_turn(4096,64)};
-            let (step,allocation)=observe_retirement_allocations(||cursor.advance(source.borrow(),grant).unwrap());
+        for _turn in 0..10000 {
+            let (demand,allocation)=observe_retirement_allocations(||cursor.advance_demands(source.borrow(),4096).unwrap());assert_eq!(allocation,(0,0));
+            let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
+            let (step,allocation)=observe_retirement_allocations(||cursor.advance(source.borrow(), 4096, grant).unwrap());
             assert!(step.progress().fits(grant));assert!(allocation.0<=step.progress().retained_capacity_bytes&&allocation.1<=step.progress().released_bytes);
             if matches!(step,RetainedCloneStep::Complete(_)){ready=true;break;}
         }
@@ -522,7 +523,7 @@ fn paged_native_clone_close_admits_actual_birth_release_and_zero_grants() {
         let oracle = serde_json::to_value(source.borrow().get()).unwrap();
         let (mut cursor, birth) = observe_retirement_allocations(ControlledCloneRecord::retained_clone_cursor);
         assert_eq!(birth, (0, 0));
-        let (zero, allocation) = observe_retirement_allocations(|| cursor.advance(source.borrow(), RetainedCloneGrant::default()).unwrap());
+        let (zero, allocation) = observe_retirement_allocations(|| cursor.advance(source.borrow(), budget, RetainedCloneGrant::default()).unwrap());
         assert_eq!(zero.progress(), Default::default());
         assert_eq!(allocation, (0, 0));
         let mut output = None;
@@ -530,7 +531,7 @@ fn paged_native_clone_close_admits_actual_birth_release_and_zero_grants() {
         for turn in 0..100000 {
             if turn == pause { break; }
             let grant = match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(budget, usize::MAX), 1 => RetainedCloneGrant::one_payload_turn(budget, usize::MAX), _ => RetainedCloneGrant::one_release_turn(budget, usize::MAX) };
-            let (step, allocation) = observe_retirement_allocations(|| cursor.advance(source.borrow(), grant).unwrap());
+            let (step, allocation) = observe_retirement_allocations(|| cursor.advance(source.borrow(), budget, grant).unwrap());
             let progress = step.progress();
             assert!(progress.fits(grant));
             assert!(allocation.0 <= progress.retained_capacity_bytes && allocation.1 <= progress.released_bytes, "clone: {allocation:?} {progress:?}");
@@ -662,6 +663,7 @@ fn owned_retirement_rejects_false_terminal_and_preserves_shared_roots() {
     assert!(!value.terminal_is_empty());assert_eq!(drain(value,1,2),4+owned_retirement_birth_bytes::<String>());
     struct Hostile {mode:Option<Arc<std::sync::atomic::AtomicU8>>}
     impl RetirementCursor for Hostile {
+ fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{depth:usize::from(self.mode.is_some()),..Default::default()})}
         fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {
             match self.mode.as_ref().unwrap().load(std::sync::atomic::Ordering::Relaxed) {1=>RetirementStep::Bytes(grant.maximum_release_bytes+1),2=>{drop(self.mode.take());RetirementStep::Advanced},_=>RetirementStep::Complete}
         }

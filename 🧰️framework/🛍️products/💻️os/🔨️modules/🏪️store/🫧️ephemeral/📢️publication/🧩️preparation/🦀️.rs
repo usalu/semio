@@ -14,7 +14,7 @@ pub enum ArtifactEphemeralPreparationTaskStep<P> {
 
 /// 🛠️ Constructs one root within each grant; consumed mutations remain in the task or result.
 pub trait ArtifactEphemeralPreparationTask<P, M>: ErasedSnapshotRetirement {
-    fn advance(&mut self, base: &P, mutation: &mut Option<M>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactEphemeralPreparationTaskStep<P>, semio_framework_value::ValueError>;
+    fn advance(&mut self, base: &P, mutation: &mut Option<M>, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactEphemeralPreparationTaskStep<P>, semio_framework_value::ValueError>;
     fn begin_close(&mut self);
 }
 
@@ -115,7 +115,7 @@ impl<P, M> ArtifactEphemeralTaskPreparation<P, M> {
 }
 
 impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactEphemeralOneItemPreparation<P, M> for ArtifactEphemeralTaskPreparation<P, M> {
-    fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+    fn advance(&mut self, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         if self.cancelled || self.closing || !grant.permits_one() {
             return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -129,7 +129,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactEphemeralOneItemPrepar
         let task = self.task.as_mut().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"ephemeral preparation lost its construction task"))?;
         let base = self.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"ephemeral preparation lost its base read"))?;
         let child=ArtifactStoreOneItemGrant { maximum_items: 1, maximum_depth:grant.maximum_depth-1, ..grant };
-        let step = match task.advance(base.as_ref(), &mut self.mutation, child){Ok(step)=>step,Err(error)=>{self.cancelled=true;return Err(error);}};
+        let step = match task.advance(base.as_ref(), &mut self.mutation, child,receiving){Ok(step)=>step,Err(error)=>{self.cancelled=true;return Err(error);}};
         let ownership=match &step {ArtifactEphemeralPreparationTaskStep::Progress(_,ownership)|ArtifactEphemeralPreparationTaskStep::Prepared{ownership,..}=>*ownership,ArtifactEphemeralPreparationTaskStep::Blocked=>Default::default()};
         let checkpoint = match &step {
             ArtifactEphemeralPreparationTaskStep::Progress(checkpoint, _) | ArtifactEphemeralPreparationTaskStep::Prepared { checkpoint, .. } => Some(*checkpoint),

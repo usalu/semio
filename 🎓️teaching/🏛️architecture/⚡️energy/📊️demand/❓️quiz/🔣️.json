@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../🧰️framework/🛍️products/❓️quiz/🧬️schema/🔣️.json#/$defs/Quiz",
+  "$schema": "../../../../../🧰️framework/🛍️products/📚️course/🧬️schema/🔣️.json#/$defs/Quiz",
   "schema": "semio.quiz/v1",
   "id": "demand",
   "emoji": "📊",
@@ -24,8 +24,8 @@
         "motion": "sway"
       },
       "prompt": {
-        "en": "Each spider diagram shows the typical profile of one residential energy standard per m² of floor area and year: heating demand, cooling demand, ventilation heat loss and net energy costs. Assign each standard to its profile.",
-        "de": "Jedes Netzdiagramm zeigt das typische Profil eines Wohngebäude-Energiestandards je m² Fläche und Jahr: Heizwärmebedarf, Kühlbedarf, Lüftungswärmeverlust und Netto-Energiekosten. Ordne jedem Standard sein Profil zu."
+        "en": "Each spider diagram shows the typical profile of one residential energy standard per m² of floor area and year: heating demand, cooling demand, ventilation heat loss and net energy costs. Assign each standard to its profile. Allow about five minutes: compare every item, check units, and review your answer. New design examples use representative teaching estimates rather than universal limits.",
+        "de": "Jedes Netzdiagramm zeigt das typische Profil eines Wohngebäude-Energiestandards je m² Fläche und Jahr: Heizwärmebedarf, Kühlbedarf, Lüftungswärmeverlust und Netto-Energiekosten. Ordne jedem Standard sein Profil zu. Plane etwa fünf Minuten ein: Vergleiche alle Beispiele, prüfe die Einheiten und kontrolliere deine Antwort. Neue Auslegungsbeispiele verwenden typische Lehrannahmen statt allgemeingültiger Grenzwerte."
       },
       "axes": [
         {
@@ -289,8 +289,536 @@
             "en": "Profile C: a passive-house-like envelope with heat pump and a large PV roof that exports more electricity than the building buys, so the net costs are negative (about −2 €/(m²·a) at 30 ct purchase and 8 ct feed-in); larger glazing raises the cooling demand.",
             "de": "Profil C: eine passivhausähnliche Hülle mit Wärmepumpe und einem großen PV-Dach, das mehr Strom einspeist, als das Gebäude bezieht, daher sind die Nettokosten negativ (rund −2 €/(m²·a) bei 30 ct Bezug und 8 ct Einspeisung); größere Verglasung erhöht den Kühlbedarf."
           }
+        },
+        {
+          "id": "old-bungalow-profile",
+          "label": {
+            "en": "Uninsulated 1960s bungalow with old heating",
+            "de": "Ungedämmter Bungalow der 1960er mit alter Heizung"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "bounce"
+          },
+          "category": "profile-b",
+          "explanation": {
+            "en": "Profile B: about 300 kWh/(m²·a) heating (type EFH_E of the IWU, the Institute for Housing and Environment), a leaky envelope (n50 ≈ 8 1/h) losing about 60 kWh/(m²·a) through air exchange, an uninsulated roof that heats up in summer, and about 50 €/(m²·a) for gas at 12 ct/kWh. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil B: rund 300 kWh/(m²·a) Heizwärme (IWU-Typ EFH_E), eine undichte Hülle (n50 ≈ 8 1/h) mit rund 60 kWh/(m²·a) Lüftungswärmeverlust, ein ungedämmtes Dach, das sich im Sommer aufheizt, und rund 50 €/(m²·a) für Gas zu 12 ct/kWh. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+          },
+          "short": {
+            "en": "Bare sixties bungalow with old heating",
+            "de": "Unsanierter Sechzigerjahre-Bungalow"
+          }
+        },
+        {
+          "id": "old-duplex-profile",
+          "label": {
+            "en": "Unrenovated 1960s duplex without heat recovery",
+            "de": "Unsaniertes Doppelhaus der 1960er ohne Wärmerückgewinnung"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "spin"
+          },
+          "category": "profile-b",
+          "explanation": {
+            "en": "Profile B: about 300 kWh/(m²·a) heating (type EFH_E of the IWU, the Institute for Housing and Environment), a leaky envelope (n50 ≈ 8 1/h) losing about 60 kWh/(m²·a) through air exchange, an uninsulated roof that heats up in summer, and about 50 €/(m²·a) for gas at 12 ct/kWh. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil B: rund 300 kWh/(m²·a) Heizwärme (IWU-Typ EFH_E), eine undichte Hülle (n50 ≈ 8 1/h) mit rund 60 kWh/(m²·a) Lüftungswärmeverlust, ein ungedämmtes Dach, das sich im Sommer aufheizt, und rund 50 €/(m²·a) für Gas zu 12 ct/kWh. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+          },
+          "short": {
+            "en": "Bare sixties duplex",
+            "de": "Unsaniertes Sechzigerjahre-Doppelhaus"
+          }
+        },
+        {
+          "id": "old-masonry-profile",
+          "label": {
+            "en": "Unrenovated masonry home with draughty windows",
+            "de": "Unsaniertes Massivhaus mit undichten Fenstern"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "sway"
+          },
+          "category": "profile-b",
+          "explanation": {
+            "en": "Profile B: about 300 kWh/(m²·a) heating (type EFH_E of the IWU, the Institute for Housing and Environment), a leaky envelope (n50 ≈ 8 1/h) losing about 60 kWh/(m²·a) through air exchange, an uninsulated roof that heats up in summer, and about 50 €/(m²·a) for gas at 12 ct/kWh. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil B: rund 300 kWh/(m²·a) Heizwärme (IWU-Typ EFH_E), eine undichte Hülle (n50 ≈ 8 1/h) mit rund 60 kWh/(m²·a) Lüftungswärmeverlust, ein ungedämmtes Dach, das sich im Sommer aufheizt, und rund 50 €/(m²·a) für Gas zu 12 ct/kWh. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+          },
+          "short": {
+            "en": "Draughty old masonry home",
+            "de": "Zugiges altes Massivhaus"
+          }
+        },
+        {
+          "id": "old-detached-profile",
+          "label": {
+            "en": "Uninsulated detached home with old boiler",
+            "de": "Ungedämmtes freistehendes Haus mit altem Kessel"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "float"
+          },
+          "category": "profile-b",
+          "explanation": {
+            "en": "Profile B: about 300 kWh/(m²·a) heating (type EFH_E of the IWU, the Institute for Housing and Environment), a leaky envelope (n50 ≈ 8 1/h) losing about 60 kWh/(m²·a) through air exchange, an uninsulated roof that heats up in summer, and about 50 €/(m²·a) for gas at 12 ct/kWh. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil B: rund 300 kWh/(m²·a) Heizwärme (IWU-Typ EFH_E), eine undichte Hülle (n50 ≈ 8 1/h) mit rund 60 kWh/(m²·a) Lüftungswärmeverlust, ein ungedämmtes Dach, das sich im Sommer aufheizt, und rund 50 €/(m²·a) für Gas zu 12 ct/kWh. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+          },
+          "short": {
+            "en": "Bare detached home with old boiler",
+            "de": "Unsaniertes Haus mit altem Kessel"
+          }
+        },
+        {
+          "id": "nineties-terrace-profile",
+          "label": {
+            "en": "1995-era insulated terrace with conventional ventilation",
+            "de": "Gedämmtes Reihenhaus um 1995 mit konventioneller Lüftung"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "flip"
+          },
+          "category": "profile-d",
+          "explanation": {
+            "en": "Profile D: about 135 kWh/(m²·a) heating (IWU type EFH_I), n50 ≈ 4 1/h with about 43 kWh/(m²·a) ventilation loss, and about 23 €/(m²·a) with a low-temperature gas boiler. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil D: rund 135 kWh/(m²·a) Heizwärme (IWU-Typ EFH_I), n50 ≈ 4 1/h mit rund 43 kWh/(m²·a) Lüftungswärmeverlust und rund 23 €/(m²·a) mit einem Niedertemperatur-Gaskessel. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+          },
+          "short": {
+            "en": "Nineties insulated terrace",
+            "de": "Gedämmtes Neunzigerjahre-Reihenhaus"
+          }
+        },
+        {
+          "id": "nineties-duplex-profile",
+          "label": {
+            "en": "1990s duplex built to WSchVO 1995 envelope level",
+            "de": "Doppelhaus der 1990er mit Hülle auf WSchVO-1995-Niveau"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "bounce"
+          },
+          "category": "profile-d",
+          "explanation": {
+            "en": "Profile D: about 135 kWh/(m²·a) heating (IWU type EFH_I), n50 ≈ 4 1/h with about 43 kWh/(m²·a) ventilation loss, and about 23 €/(m²·a) with a low-temperature gas boiler. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil D: rund 135 kWh/(m²·a) Heizwärme (IWU-Typ EFH_I), n50 ≈ 4 1/h mit rund 43 kWh/(m²·a) Lüftungswärmeverlust und rund 23 €/(m²·a) mit einem Niedertemperatur-Gaskessel. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+          },
+          "short": {
+            "en": "Nineties WSchVO duplex",
+            "de": "Neunzigerjahre-Doppelhaus nach WSchVO"
+          }
+        },
+        {
+          "id": "nineties-flat-profile",
+          "label": {
+            "en": "1990s flat with double glazing and moderate insulation",
+            "de": "Wohnung der 1990er mit Doppelglas und mäßiger Dämmung"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "pulse"
+          },
+          "category": "profile-d",
+          "explanation": {
+            "en": "Profile D: about 135 kWh/(m²·a) heating (IWU type EFH_I), n50 ≈ 4 1/h with about 43 kWh/(m²·a) ventilation loss, and about 23 €/(m²·a) with a low-temperature gas boiler. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil D: rund 135 kWh/(m²·a) Heizwärme (IWU-Typ EFH_I), n50 ≈ 4 1/h mit rund 43 kWh/(m²·a) Lüftungswärmeverlust und rund 23 €/(m²·a) mit einem Niedertemperatur-Gaskessel. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+          },
+          "short": {
+            "en": "Nineties double-glazed flat",
+            "de": "Doppelglaswohnung der Neunziger"
+          }
+        },
+        {
+          "id": "nineties-bungalow-profile",
+          "label": {
+            "en": "1995-era bungalow with moderate insulation",
+            "de": "Bungalow um 1995 mit mäßiger Dämmung"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "spin"
+          },
+          "category": "profile-d",
+          "explanation": {
+            "en": "Profile D: about 135 kWh/(m²·a) heating (IWU type EFH_I), n50 ≈ 4 1/h with about 43 kWh/(m²·a) ventilation loss, and about 23 €/(m²·a) with a low-temperature gas boiler. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil D: rund 135 kWh/(m²·a) Heizwärme (IWU-Typ EFH_I), n50 ≈ 4 1/h mit rund 43 kWh/(m²·a) Lüftungswärmeverlust und rund 23 €/(m²·a) mit einem Niedertemperatur-Gaskessel. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+          },
+          "short": {
+            "en": "Nineties insulated bungalow",
+            "de": "Bungalow um 1995 + mäßiger Dämmung"
+          }
+        },
+        {
+          "id": "modern-terrace-profile",
+          "label": {
+            "en": "Terrace with envelope at EnEV 2014 teaching level",
+            "de": "Reihenhaus mit Hülle auf EnEV-2014-Lehrniveau"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "sway"
+          },
+          "category": "profile-f",
+          "explanation": {
+            "en": "Profile F: about 55 kWh/(m²·a) heating (slightly above today's minimum envelope, which the Energy Saving Ordinance (EnEV) 2016 tightened by about 20%), airtight to n50 ≈ 1.5 1/h but ventilated by windows or exhaust fans without heat recovery (about 32 kWh/(m²·a)), and about 10 €/(m²·a) with a gas condensing boiler. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil F: rund 55 kWh/(m²·a) Heizwärme (etwas über der heutigen Mindest-Hülle, die die EnEV 2016 um rund 20 % verschärfte), luftdicht bis n50 ≈ 1,5 1/h, aber über Fenster oder Abluftventilatoren ohne Wärmerückgewinnung gelüftet (rund 32 kWh/(m²·a)), und rund 10 €/(m²·a) mit einem Gas-Brennwertkessel. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+          },
+          "short": {
+            "en": "EnEV-era insulated terrace",
+            "de": "Gedämmtes Reihenhaus der EnEV-Zeit"
+          }
+        },
+        {
+          "id": "modern-flat-profile",
+          "label": {
+            "en": "Modern flat with standard insulation and no heat recovery",
+            "de": "Moderne Wohnung mit Standarddämmung ohne Wärmerückgewinnung"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "flip"
+          },
+          "category": "profile-f",
+          "explanation": {
+            "en": "Profile F: about 55 kWh/(m²·a) heating (slightly above today's minimum envelope, which the Energy Saving Ordinance (EnEV) 2016 tightened by about 20%), airtight to n50 ≈ 1.5 1/h but ventilated by windows or exhaust fans without heat recovery (about 32 kWh/(m²·a)), and about 10 €/(m²·a) with a gas condensing boiler. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil F: rund 55 kWh/(m²·a) Heizwärme (etwas über der heutigen Mindest-Hülle, die die EnEV 2016 um rund 20 % verschärfte), luftdicht bis n50 ≈ 1,5 1/h, aber über Fenster oder Abluftventilatoren ohne Wärmerückgewinnung gelüftet (rund 32 kWh/(m²·a)), und rund 10 €/(m²·a) mit einem Gas-Brennwertkessel. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+          },
+          "short": {
+            "en": "Modern conventionally ventilated flat",
+            "de": "Modern natürlich gelüftete Wohnung"
+          }
+        },
+        {
+          "id": "modern-duplex-profile",
+          "label": {
+            "en": "2014-era insulated duplex with conventional supply",
+            "de": "Gedämmtes Doppelhaus um 2014 mit konventioneller Versorgung"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "bounce"
+          },
+          "category": "profile-f",
+          "explanation": {
+            "en": "Profile F: about 55 kWh/(m²·a) heating (slightly above today's minimum envelope, which the Energy Saving Ordinance (EnEV) 2016 tightened by about 20%), airtight to n50 ≈ 1.5 1/h but ventilated by windows or exhaust fans without heat recovery (about 32 kWh/(m²·a)), and about 10 €/(m²·a) with a gas condensing boiler. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil F: rund 55 kWh/(m²·a) Heizwärme (etwas über der heutigen Mindest-Hülle, die die EnEV 2016 um rund 20 % verschärfte), luftdicht bis n50 ≈ 1,5 1/h, aber über Fenster oder Abluftventilatoren ohne Wärmerückgewinnung gelüftet (rund 32 kWh/(m²·a)), und rund 10 €/(m²·a) mit einem Gas-Brennwertkessel. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+          },
+          "short": {
+            "en": "Modern conventionally heated duplex",
+            "de": "Modern beheiztes gedämmtes Doppelhaus"
+          }
+        },
+        {
+          "id": "modern-bungalow-profile",
+          "label": {
+            "en": "Bungalow with EnEV 2014 envelope-level assumptions",
+            "de": "Bungalow mit Hüllannahmen auf EnEV-2014-Niveau"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "pulse"
+          },
+          "category": "profile-f",
+          "explanation": {
+            "en": "Profile F: about 55 kWh/(m²·a) heating (slightly above today's minimum envelope, which the Energy Saving Ordinance (EnEV) 2016 tightened by about 20%), airtight to n50 ≈ 1.5 1/h but ventilated by windows or exhaust fans without heat recovery (about 32 kWh/(m²·a)), and about 10 €/(m²·a) with a gas condensing boiler. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil F: rund 55 kWh/(m²·a) Heizwärme (etwas über der heutigen Mindest-Hülle, die die EnEV 2016 um rund 20 % verschärfte), luftdicht bis n50 ≈ 1,5 1/h, aber über Fenster oder Abluftventilatoren ohne Wärmerückgewinnung gelüftet (rund 32 kWh/(m²·a)), und rund 10 €/(m²·a) mit einem Gas-Brennwertkessel. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+          },
+          "short": {
+            "en": "EnEV-era insulated bungalow",
+            "de": "Gedämmter Bungalow der EnEV-Zeit"
+          }
+        },
+        {
+          "id": "efficient-terrace-profile",
+          "label": {
+            "en": "Very efficient terrace with heat pump and heat recovery",
+            "de": "Sehr effizientes Reihenhaus mit Wärmepumpe und Wärmerückgewinnung"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "spin"
+          },
+          "category": "profile-a",
+          "explanation": {
+            "en": "Profile A, a funding standard of KfW (German state development bank): about 26 kWh/(m²·a) heating (IWU 2015, Table 26), heat-recovery ventilation cuts the ventilation loss to about 9 kWh/(m²·a), and a heat pump brings the costs down to about 4 €/(m²·a). New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil A: rund 26 kWh/(m²·a) Heizwärme (IWU 2015, Tabelle 26), die Lüftung mit Wärmerückgewinnung senkt den Lüftungswärmeverlust auf rund 9 kWh/(m²·a), und eine Wärmepumpe drückt die Kosten auf rund 4 €/(m²·a). Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+          },
+          "short": {
+            "en": "Heat-pump terrace with heat recovery",
+            "de": "Wärmepumpen-Reihenhaus mit WRG"
+          }
+        },
+        {
+          "id": "efficient-flat-profile",
+          "label": {
+            "en": "Very efficient compact flat with recovered ventilation heat",
+            "de": "Sehr effiziente kompakte Wohnung mit Lüftungswärmerückgewinnung"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "sway"
+          },
+          "category": "profile-a",
+          "explanation": {
+            "en": "Profile A, a funding standard of KfW (German state development bank): about 26 kWh/(m²·a) heating (IWU 2015, Table 26), heat-recovery ventilation cuts the ventilation loss to about 9 kWh/(m²·a), and a heat pump brings the costs down to about 4 €/(m²·a). New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil A: rund 26 kWh/(m²·a) Heizwärme (IWU 2015, Tabelle 26), die Lüftung mit Wärmerückgewinnung senkt den Lüftungswärmeverlust auf rund 9 kWh/(m²·a), und eine Wärmepumpe drückt die Kosten auf rund 4 €/(m²·a). Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+          },
+          "short": {
+            "en": "Efficient heat-recovery flat",
+            "de": "Effizienzwohnung mit Wärmerückgewinnung"
+          }
+        },
+        {
+          "id": "efficient-duplex-profile",
+          "label": {
+            "en": "Very efficient duplex at Efficiency House 40 teaching level",
+            "de": "Sehr effizientes Doppelhaus auf Effizienzhaus-40-Lehrniveau"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "float"
+          },
+          "category": "profile-a",
+          "explanation": {
+            "en": "Profile A, a funding standard of KfW (German state development bank): about 26 kWh/(m²·a) heating (IWU 2015, Table 26), heat-recovery ventilation cuts the ventilation loss to about 9 kWh/(m²·a), and a heat pump brings the costs down to about 4 €/(m²·a). New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil A: rund 26 kWh/(m²·a) Heizwärme (IWU 2015, Tabelle 26), die Lüftung mit Wärmerückgewinnung senkt den Lüftungswärmeverlust auf rund 9 kWh/(m²·a), und eine Wärmepumpe drückt die Kosten auf rund 4 €/(m²·a). Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+          },
+          "short": {
+            "en": "Efficiency House forty duplex",
+            "de": "Effizienzhaus-40-Doppelhaus"
+          }
+        },
+        {
+          "id": "efficient-timber-profile",
+          "label": {
+            "en": "Very efficient timber house with heat pump",
+            "de": "Sehr effizientes Holzhaus mit Wärmepumpe"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "flip"
+          },
+          "category": "profile-a",
+          "explanation": {
+            "en": "Profile A, a funding standard of KfW (German state development bank): about 26 kWh/(m²·a) heating (IWU 2015, Table 26), heat-recovery ventilation cuts the ventilation loss to about 9 kWh/(m²·a), and a heat pump brings the costs down to about 4 €/(m²·a). New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil A: rund 26 kWh/(m²·a) Heizwärme (IWU 2015, Tabelle 26), die Lüftung mit Wärmerückgewinnung senkt den Lüftungswärmeverlust auf rund 9 kWh/(m²·a), und eine Wärmepumpe drückt die Kosten auf rund 4 €/(m²·a). Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+          },
+          "short": {
+            "en": "Efficient timber heat-pump house",
+            "de": "Effizientes Holzhaus mit Wärmepumpe"
+          }
+        },
+        {
+          "id": "passive-terrace-profile",
+          "label": {
+            "en": "Passive terrace house with heat-recovery ventilation",
+            "de": "Passivreihenhaus mit Wärmerückgewinnungslüftung"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "bounce"
+          },
+          "category": "profile-e",
+          "explanation": {
+            "en": "Profile E: at most 15 kWh/(m²·a) heating and n50 ≤ 0.6 1/h with at least 75% heat recovery (Passive House Institute), about 6.5 kWh/(m²·a) ventilation loss, the lowest cooling demand thanks to planned shading, and about 4 €/(m²·a) with a compact heat pump. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil E: höchstens 15 kWh/(m²·a) Heizwärme und n50 ≤ 0,6 1/h mit mindestens 75 % Wärmerückgewinnung (Passivhaus Institut), rund 6,5 kWh/(m²·a) Lüftungswärmeverlust, der kleinste Kühlbedarf dank geplanter Verschattung und rund 4 €/(m²·a) mit einem Kompaktgerät mit Wärmepumpe. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+          },
+          "short": {
+            "en": "Heat-recovery passive terrace",
+            "de": "Passivreihenhaus mit Wärmerückgewinnung"
+          }
+        },
+        {
+          "id": "passive-flat-profile",
+          "label": {
+            "en": "Passive apartment with very low useful heating demand",
+            "de": "Passivwohnung mit sehr geringem Nutzwärmebedarf"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "pulse"
+          },
+          "category": "profile-e",
+          "explanation": {
+            "en": "Profile E: at most 15 kWh/(m²·a) heating and n50 ≤ 0.6 1/h with at least 75% heat recovery (Passive House Institute), about 6.5 kWh/(m²·a) ventilation loss, the lowest cooling demand thanks to planned shading, and about 4 €/(m²·a) with a compact heat pump. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil E: höchstens 15 kWh/(m²·a) Heizwärme und n50 ≤ 0,6 1/h mit mindestens 75 % Wärmerückgewinnung (Passivhaus Institut), rund 6,5 kWh/(m²·a) Lüftungswärmeverlust, der kleinste Kühlbedarf dank geplanter Verschattung und rund 4 €/(m²·a) mit einem Kompaktgerät mit Wärmepumpe. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+          },
+          "short": {
+            "en": "Low-demand passive flat",
+            "de": "Passivwohnung mit geringem Wärmebedarf"
+          }
+        },
+        {
+          "id": "passive-timber-profile",
+          "label": {
+            "en": "Passive timber house with airtight envelope",
+            "de": "Passivholzhaus mit luftdichter Hülle"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "spin"
+          },
+          "category": "profile-e",
+          "explanation": {
+            "en": "Profile E: at most 15 kWh/(m²·a) heating and n50 ≤ 0.6 1/h with at least 75% heat recovery (Passive House Institute), about 6.5 kWh/(m²·a) ventilation loss, the lowest cooling demand thanks to planned shading, and about 4 €/(m²·a) with a compact heat pump. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil E: höchstens 15 kWh/(m²·a) Heizwärme und n50 ≤ 0,6 1/h mit mindestens 75 % Wärmerückgewinnung (Passivhaus Institut), rund 6,5 kWh/(m²·a) Lüftungswärmeverlust, der kleinste Kühlbedarf dank geplanter Verschattung und rund 4 €/(m²·a) mit einem Kompaktgerät mit Wärmepumpe. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+          },
+          "short": {
+            "en": "Airtight passive timber house",
+            "de": "Luftdichtes Passivholzhaus"
+          }
+        },
+        {
+          "id": "passive-retrofit-profile",
+          "label": {
+            "en": "Deep retrofit reaching the passive teaching profile",
+            "de": "Umfassende Sanierung mit passivem Lehrprofil"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "sway"
+          },
+          "category": "profile-e",
+          "explanation": {
+            "en": "Profile E: at most 15 kWh/(m²·a) heating and n50 ≤ 0.6 1/h with at least 75% heat recovery (Passive House Institute), about 6.5 kWh/(m²·a) ventilation loss, the lowest cooling demand thanks to planned shading, and about 4 €/(m²·a) with a compact heat pump. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil E: höchstens 15 kWh/(m²·a) Heizwärme und n50 ≤ 0,6 1/h mit mindestens 75 % Wärmerückgewinnung (Passivhaus Institut), rund 6,5 kWh/(m²·a) Lüftungswärmeverlust, der kleinste Kühlbedarf dank geplanter Verschattung und rund 4 €/(m²·a) mit einem Kompaktgerät mit Wärmepumpe. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+          },
+          "short": {
+            "en": "Deep passive-envelope retrofit",
+            "de": "Umfassende Sanierung auf Passivniveau"
+          }
+        },
+        {
+          "id": "surplus-solar-terrace",
+          "label": {
+            "en": "Efficient terrace with annual solar energy surplus",
+            "de": "Effizientes Reihenhaus mit jährlichem Solarenergieüberschuss"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "float"
+          },
+          "category": "profile-c",
+          "explanation": {
+            "en": "Profile C: a passive-house-like envelope with heat pump and a large PV roof that exports more electricity than the building buys, so the net costs are negative (about −2 €/(m²·a) at 30 ct purchase and 8 ct feed-in); larger glazing raises the cooling demand. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil C: eine passivhausähnliche Hülle mit Wärmepumpe und einem großen PV-Dach, das mehr Strom einspeist, als das Gebäude bezieht, daher sind die Nettokosten negativ (rund −2 €/(m²·a) bei 30 ct Bezug und 8 ct Einspeisung); größere Verglasung erhöht den Kühlbedarf. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+          },
+          "short": {
+            "en": "Solar-surplus efficient terrace",
+            "de": "Effizientes Solarüberschuss-Reihenhaus"
+          }
+        },
+        {
+          "id": "surplus-solar-flat",
+          "label": {
+            "en": "Efficient flat allocated surplus rooftop solar generation",
+            "de": "Effiziente Wohnung mit zugeordnetem Dachsolarüberschuss"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "flip"
+          },
+          "category": "profile-c",
+          "explanation": {
+            "en": "Profile C: a passive-house-like envelope with heat pump and a large PV roof that exports more electricity than the building buys, so the net costs are negative (about −2 €/(m²·a) at 30 ct purchase and 8 ct feed-in); larger glazing raises the cooling demand. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil C: eine passivhausähnliche Hülle mit Wärmepumpe und einem großen PV-Dach, das mehr Strom einspeist, als das Gebäude bezieht, daher sind die Nettokosten negativ (rund −2 €/(m²·a) bei 30 ct Bezug und 8 ct Einspeisung); größere Verglasung erhöht den Kühlbedarf. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+          },
+          "short": {
+            "en": "Solar-surplus efficient flat",
+            "de": "Effiziente Wohnung mit Solarüberschuss"
+          }
+        },
+        {
+          "id": "surplus-solar-timber",
+          "label": {
+            "en": "Efficient timber home with surplus solar electricity",
+            "de": "Effizientes Holzhaus mit Solarstromüberschuss"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "bounce"
+          },
+          "category": "profile-c",
+          "explanation": {
+            "en": "Profile C: a passive-house-like envelope with heat pump and a large PV roof that exports more electricity than the building buys, so the net costs are negative (about −2 €/(m²·a) at 30 ct purchase and 8 ct feed-in); larger glazing raises the cooling demand. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil C: eine passivhausähnliche Hülle mit Wärmepumpe und einem großen PV-Dach, das mehr Strom einspeist, als das Gebäude bezieht, daher sind die Nettokosten negativ (rund −2 €/(m²·a) bei 30 ct Bezug und 8 ct Einspeisung); größere Verglasung erhöht den Kühlbedarf. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+          },
+          "short": {
+            "en": "Solar-surplus efficient timber home",
+            "de": "Effizientes Solarüberschuss-Holzhaus"
+          }
+        },
+        {
+          "id": "surplus-solar-duplex",
+          "label": {
+            "en": "Efficient duplex with annual net energy export",
+            "de": "Effizientes Doppelhaus mit jährlichem Nettoenergieexport"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "pulse"
+          },
+          "category": "profile-c",
+          "explanation": {
+            "en": "Profile C: a passive-house-like envelope with heat pump and a large PV roof that exports more electricity than the building buys, so the net costs are negative (about −2 €/(m²·a) at 30 ct purchase and 8 ct feed-in); larger glazing raises the cooling demand. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil C: eine passivhausähnliche Hülle mit Wärmepumpe und einem großen PV-Dach, das mehr Strom einspeist, als das Gebäude bezieht, daher sind die Nettokosten negativ (rund −2 €/(m²·a) bei 30 ct Bezug und 8 ct Einspeisung); größere Verglasung erhöht den Kühlbedarf. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+          },
+          "short": {
+            "en": "Net-surplus efficient duplex",
+            "de": "Doppelhaus mit Nettoenergieüberschuss"
+          }
         }
-      ]
+      ],
+      "draw": 6,
+      "pool": {
+        "seconds": 300,
+        "slots": [
+          [
+            "unrenovated-old-building",
+            "old-bungalow-profile",
+            "old-duplex-profile",
+            "old-masonry-profile",
+            "old-detached-profile"
+          ],
+          [
+            "wschvo-1995",
+            "nineties-terrace-profile",
+            "nineties-duplex-profile",
+            "nineties-flat-profile",
+            "nineties-bungalow-profile"
+          ],
+          [
+            "enev-2014",
+            "modern-terrace-profile",
+            "modern-flat-profile",
+            "modern-duplex-profile",
+            "modern-bungalow-profile"
+          ],
+          [
+            "kfw-40",
+            "efficient-terrace-profile",
+            "efficient-flat-profile",
+            "efficient-duplex-profile",
+            "efficient-timber-profile"
+          ],
+          [
+            "passive-house",
+            "passive-terrace-profile",
+            "passive-flat-profile",
+            "passive-timber-profile",
+            "passive-retrofit-profile"
+          ],
+          [
+            "plus-energy-house",
+            "surplus-solar-terrace",
+            "surplus-solar-flat",
+            "surplus-solar-timber",
+            "surplus-solar-duplex"
+          ]
+        ]
+      }
     },
     {
       "kind": "matching",
@@ -304,8 +832,8 @@
         "motion": "bounce"
       },
       "prompt": {
-        "en": "Assign each building with its supply system its total specific final energy demand for heating, hot water and auxiliary energy in kWh/(m²·a): the energy bought at the building boundary (gas, electricity), before primary energy factors and PV credits.",
-        "de": "Ordne jedem Gebäude mit seiner Anlagentechnik seinen gesamten spezifischen Endenergiebedarf für Heizung, Warmwasser und Hilfsenergie in kWh/(m²·a) zu: die an der Gebäudegrenze bezogene Energie (Gas, Strom), vor Primärenergiefaktoren und PV-Gutschriften."
+        "en": "Assign each building with its supply system its total specific final energy demand for heating, hot water and auxiliary energy in kWh/(m²·a): the energy bought at the building boundary (gas, electricity), before primary energy factors and PV credits. Allow about five minutes: compare every item, check units, and review your answer. New design examples use representative teaching estimates rather than universal limits.",
+        "de": "Ordne jedem Gebäude mit seiner Anlagentechnik seinen gesamten spezifischen Endenergiebedarf für Heizung, Warmwasser und Hilfsenergie in kWh/(m²·a) zu: die an der Gebäudegrenze bezogene Energie (Gas, Strom), vor Primärenergiefaktoren und PV-Gutschriften. Plane etwa fünf Minuten ein: Vergleiche alle Beispiele, prüfe die Einheiten und kontrolliere deine Antwort. Neue Auslegungsbeispiele verwenden typische Lehrannahmen statt allgemeingültiger Grenzwerte."
       },
       "dimensions": [
         {
@@ -526,9 +1054,681 @@
             "en": "About 409 kWh/(m²·a): 303 heating (IWU type EFH_E) ÷ 0.8 + 12.5 hot water ÷ 0.5 + 5 auxiliary energy, far beyond the 250 kWh/(m²·a) that marks efficiency class H in the energy certificate (German Buildings Energy Act, GEG, Annex 10).",
             "de": "Rund 409 kWh/(m²·a): 303 Heizwärme (IWU-Typ EFH_E) ÷ 0,8 + 12,5 Warmwasser ÷ 0,5 + 5 Hilfsenergie, weit jenseits der 250 kWh/(m²·a), ab denen der Energieausweis Effizienzklasse H zeigt (GEG Anlage 10)."
           }
+        },
+        {
+          "id": "efficient-flat-heat-pump",
+          "label": {
+            "en": "Very efficient flat with heat pump and heat recovery",
+            "de": "Sehr effiziente Wohnung mit Wärmepumpe und Wärmerückgewinnung"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "bounce"
+          },
+          "values": {
+            "final-energy": 12
+          },
+          "explanation": {
+            "en": "12 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "12 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Efficient heat-pump flat",
+            "de": "Effiziente Wärmepumpenwohnung"
+          }
+        },
+        {
+          "id": "passive-air-pump",
+          "label": {
+            "en": "Passive home with efficient air-source heat pump",
+            "de": "Passivhaus mit effizienter Luftwärmepumpe"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "spin"
+          },
+          "values": {
+            "final-energy": 16
+          },
+          "explanation": {
+            "en": "16 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "16 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Passive home with air-source heat pump",
+            "de": "Passivhaus mit Luftwärmepumpe"
+          }
+        },
+        {
+          "id": "efficient-ground-pump",
+          "label": {
+            "en": "Efficient terrace house with ground-source heat pump",
+            "de": "Effizientes Reihenhaus mit Erdwärmepumpe"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "sway"
+          },
+          "values": {
+            "final-energy": 13
+          },
+          "explanation": {
+            "en": "13 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "13 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Efficient ground-source heat-pump home",
+            "de": "Effizientes Haus mit Erdwärmepumpe"
+          }
+        },
+        {
+          "id": "passive-block-pump",
+          "label": {
+            "en": "Passive apartment block with central heat pump",
+            "de": "Passivwohnblock mit zentraler Wärmepumpe"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "float"
+          },
+          "values": {
+            "final-energy": 15
+          },
+          "explanation": {
+            "en": "15 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "15 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Passive block with central heat pump",
+            "de": "Passivblock mit zentraler Wärmepumpe"
+          }
+        },
+        {
+          "id": "retrofit-duplex-pump",
+          "label": {
+            "en": "Deeply retrofitted duplex with heat pump",
+            "de": "Umfassend saniertes Doppelhaus mit Wärmepumpe"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "flip"
+          },
+          "values": {
+            "final-energy": 24
+          },
+          "explanation": {
+            "en": "24 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "24 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Heat-pump retrofit duplex",
+            "de": "Saniertes Wärmepumpen-Doppelhaus"
+          }
+        },
+        {
+          "id": "retrofit-flat-pump",
+          "label": {
+            "en": "Deeply retrofitted flat with heat pump",
+            "de": "Umfassend sanierte Wohnung mit Wärmepumpe"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "bounce"
+          },
+          "values": {
+            "final-energy": 21
+          },
+          "explanation": {
+            "en": "21 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "21 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Heat-pump retrofit flat",
+            "de": "Sanierte Wärmepumpenwohnung"
+          }
+        },
+        {
+          "id": "efficient-bungalow-pump",
+          "label": {
+            "en": "Efficient bungalow with heat pump",
+            "de": "Effizienter Bungalow mit Wärmepumpe"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "pulse"
+          },
+          "values": {
+            "final-energy": 26
+          },
+          "explanation": {
+            "en": "26 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "26 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Efficient bungalow + heat pump",
+            "de": "Effizienter Bungalow + Wärmepumpe"
+          }
+        },
+        {
+          "id": "retrofit-terrace-pump",
+          "label": {
+            "en": "Deeply retrofitted terrace house with heat pump",
+            "de": "Umfassend saniertes Reihenhaus mit Wärmepumpe"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "spin"
+          },
+          "values": {
+            "final-energy": 22
+          },
+          "explanation": {
+            "en": "22 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "22 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Heat-pump retrofit terrace",
+            "de": "Saniertes Wärmepumpen-Reihenhaus"
+          }
+        },
+        {
+          "id": "passive-flat-electric",
+          "label": {
+            "en": "Passive flat with direct-electric heat and hot water",
+            "de": "Passivwohnung mit direkter Elektroheizung und Warmwasser"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "sway"
+          },
+          "values": {
+            "final-energy": 28
+          },
+          "explanation": {
+            "en": "28 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "28 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Passive flat with electric heating",
+            "de": "Passivwohnung mit Elektroheizung"
+          }
+        },
+        {
+          "id": "passive-terrace-electric",
+          "label": {
+            "en": "Passive terrace with direct-electric services",
+            "de": "Passivreihenhaus mit direkter Elektroversorgung"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "flip"
+          },
+          "values": {
+            "final-energy": 32
+          },
+          "explanation": {
+            "en": "32 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "32 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Electrically heated passive terrace",
+            "de": "Elektrisch beheiztes Passivreihenhaus"
+          }
+        },
+        {
+          "id": "efficient-retrofit-pump",
+          "label": {
+            "en": "Efficient retrofit with moderate heat-pump performance",
+            "de": "Effiziente Sanierung mit mäßiger Wärmepumpenleistung"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "bounce"
+          },
+          "values": {
+            "final-energy": 34
+          },
+          "explanation": {
+            "en": "34 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "34 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Efficient retrofit with heat pump",
+            "de": "Effiziente Sanierung mit Wärmepumpe"
+          }
+        },
+        {
+          "id": "compact-passive-electric",
+          "label": {
+            "en": "Compact passive home with resistance heating",
+            "de": "Kompaktes Passivhaus mit Widerstandsheizung"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "pulse"
+          },
+          "values": {
+            "final-energy": 29
+          },
+          "explanation": {
+            "en": "29 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "29 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Compact electrically heated passive home",
+            "de": "Kompaktes elektrisches Passivhaus"
+          }
+        },
+        {
+          "id": "efficient-flat-gas-solar",
+          "label": {
+            "en": "Efficient flat with gas boiler and solar hot water",
+            "de": "Effiziente Wohnung mit Gaskessel und Solarwarmwasser"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "spin"
+          },
+          "values": {
+            "final-energy": 45
+          },
+          "explanation": {
+            "en": "45 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "45 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Efficient gas-and-solar flat",
+            "de": "Effiziente Gas-Solar-Wohnung"
+          }
+        },
+        {
+          "id": "efficient-terrace-gas",
+          "label": {
+            "en": "Well-insulated terrace with condensing gas boiler",
+            "de": "Gut gedämmtes Reihenhaus mit Gasbrennwertkessel"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "sway"
+          },
+          "values": {
+            "final-energy": 52
+          },
+          "explanation": {
+            "en": "52 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "52 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Efficient gas-condensing terrace",
+            "de": "Effizientes Gas-Brennwert-Reihenhaus"
+          }
+        },
+        {
+          "id": "retrofit-condensing",
+          "label": {
+            "en": "Insulated retrofit with gas boiler and solar support",
+            "de": "Gedämmte Sanierung mit Gaskessel und Solarunterstützung"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "float"
+          },
+          "values": {
+            "final-energy": 55
+          },
+          "explanation": {
+            "en": "55 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "55 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Retrofit with condensing gas heating",
+            "de": "Sanierung mit Gas-Brennwertheizung"
+          }
+        },
+        {
+          "id": "modern-duplex-solar",
+          "label": {
+            "en": "Efficient duplex with gas and solar hot water",
+            "de": "Effizientes Doppelhaus mit Gas und Solarwarmwasser"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "flip"
+          },
+          "values": {
+            "final-energy": 49
+          },
+          "explanation": {
+            "en": "49 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "49 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Efficient gas-and-solar duplex",
+            "de": "Effizientes Gas-Solar-Doppelhaus"
+          }
+        },
+        {
+          "id": "modern-bungalow-gas",
+          "label": {
+            "en": "Modern insulated bungalow with gas heating",
+            "de": "Modern gedämmter Bungalow mit Gasheizung"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "bounce"
+          },
+          "values": {
+            "final-energy": 85
+          },
+          "explanation": {
+            "en": "85 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "85 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Modern insulated bungalow + gas heating",
+            "de": "Modern gedämmter Bungalow + Gasheizung"
+          }
+        },
+        {
+          "id": "modern-terrace-gas",
+          "label": {
+            "en": "Modern terrace house with gas heating and hot water",
+            "de": "Modernes Reihenhaus mit Gasheizung und Warmwasser"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "pulse"
+          },
+          "values": {
+            "final-energy": 75
+          },
+          "explanation": {
+            "en": "75 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "75 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Modern gas-heated terrace",
+            "de": "Modernes Gas-Reihenhaus"
+          }
+        },
+        {
+          "id": "modern-flat-gas",
+          "label": {
+            "en": "Modern apartment with condensing gas boiler",
+            "de": "Moderne Wohnung mit Gasbrennwertkessel"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "spin"
+          },
+          "values": {
+            "final-energy": 70
+          },
+          "explanation": {
+            "en": "70 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "70 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Modern apartment + condensing gas boiler",
+            "de": "Moderne Wohnung + Gasbrennwertkessel"
+          }
+        },
+        {
+          "id": "moderate-retrofit-gas",
+          "label": {
+            "en": "Moderately retrofitted detached house with gas boiler",
+            "de": "Mäßig saniertes freistehendes Haus mit Gaskessel"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "sway"
+          },
+          "values": {
+            "final-energy": 90
+          },
+          "explanation": {
+            "en": "90 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "90 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Moderate retrofit with gas heating",
+            "de": "Mäßige Sanierung mit Gasheizung"
+          }
+        },
+        {
+          "id": "older-flat-pump",
+          "label": {
+            "en": "Older flat with air-source heat pump and original walls",
+            "de": "Ältere Wohnung mit Luftwärmepumpe und alten Wänden"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "float"
+          },
+          "values": {
+            "final-energy": 110
+          },
+          "explanation": {
+            "en": "110 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "110 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Older air-source heat-pump flat",
+            "de": "Altwohnung mit Luftwärmepumpe"
+          }
+        },
+        {
+          "id": "older-duplex-gas",
+          "label": {
+            "en": "1990s duplex with older gas boiler",
+            "de": "Doppelhaus der 1990er mit älterem Gaskessel"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "flip"
+          },
+          "values": {
+            "final-energy": 165
+          },
+          "explanation": {
+            "en": "165 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "165 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Nineties duplex with gas boiler",
+            "de": "Neunzigerjahre-Doppelhaus mit Gaskessel"
+          }
+        },
+        {
+          "id": "partial-retrofit-gas",
+          "label": {
+            "en": "Partly retrofitted 1970s house with gas heating",
+            "de": "Teilweise saniertes Haus der 1970er mit Gasheizung"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "bounce"
+          },
+          "values": {
+            "final-energy": 150
+          },
+          "explanation": {
+            "en": "150 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "150 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Partly retrofitted gas-heated house",
+            "de": "Teilsaniertes Haus mit Gasheizung"
+          }
+        },
+        {
+          "id": "older-bungalow-pump",
+          "label": {
+            "en": "Older bungalow with high-temperature heat pump",
+            "de": "Älterer Bungalow mit Hochtemperaturwärmepumpe"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "pulse"
+          },
+          "values": {
+            "final-energy": 135
+          },
+          "explanation": {
+            "en": "135 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "135 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Older high-temperature heat-pump home",
+            "de": "Alter Hochtemperatur-Wärmepumpenbungalow"
+          }
+        },
+        {
+          "id": "old-villa-gas",
+          "label": {
+            "en": "Unrenovated villa with old gas heating",
+            "de": "Unsanierte Villa mit alter Gasheizung"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "spin"
+          },
+          "values": {
+            "final-energy": 360
+          },
+          "explanation": {
+            "en": "360 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "360 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Old villa + old gas heating",
+            "de": "Alte Villa + alter Gasheizung"
+          }
+        },
+        {
+          "id": "old-farmhouse-oil",
+          "label": {
+            "en": "Uninsulated farmhouse with old oil boiler",
+            "de": "Ungedämmtes Bauernhaus mit altem Ölkessel"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "sway"
+          },
+          "values": {
+            "final-energy": 390
+          },
+          "explanation": {
+            "en": "390 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "390 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Bare oil-heated farmhouse",
+            "de": "Unsaniertes Ölheizungs-Bauernhaus"
+          }
+        },
+        {
+          "id": "old-apartment-oil",
+          "label": {
+            "en": "Unrenovated masonry apartment block with oil heating",
+            "de": "Unsanierter Mauerwerkswohnblock mit Ölheizung"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "float"
+          },
+          "values": {
+            "final-energy": 290
+          },
+          "explanation": {
+            "en": "290 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "290 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Old oil-heated masonry block",
+            "de": "Alter ölbeheizter Mauerwerkswohnblock"
+          }
+        },
+        {
+          "id": "old-bungalow-gas",
+          "label": {
+            "en": "Uninsulated bungalow with old gas boiler",
+            "de": "Ungedämmter Bungalow mit altem Gaskessel"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "flip"
+          },
+          "values": {
+            "final-energy": 420
+          },
+          "explanation": {
+            "en": "420 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "420 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+          },
+          "short": {
+            "en": "Bare bungalow + old gas boiler",
+            "de": "Alte Bungalow + altem Gaskessel"
+          }
         }
       ],
-      "draw": 7
+      "draw": 7,
+      "pool": {
+        "seconds": 300,
+        "slots": [
+          [
+            "kfw-40-heat-pump",
+            "efficient-flat-heat-pump",
+            "passive-air-pump",
+            "efficient-ground-pump",
+            "passive-block-pump"
+          ],
+          [
+            "deep-retrofit-heat-pump",
+            "retrofit-duplex-pump",
+            "retrofit-flat-pump",
+            "efficient-bungalow-pump",
+            "retrofit-terrace-pump"
+          ],
+          [
+            "passive-house-direct-electric",
+            "passive-flat-electric",
+            "passive-terrace-electric",
+            "efficient-retrofit-pump",
+            "compact-passive-electric"
+          ],
+          [
+            "kfw-55-gas-solar",
+            "efficient-flat-gas-solar",
+            "efficient-terrace-gas",
+            "retrofit-condensing",
+            "modern-duplex-solar"
+          ],
+          [
+            "enev-2014-gas",
+            "modern-bungalow-gas",
+            "modern-terrace-gas",
+            "modern-flat-gas",
+            "moderate-retrofit-gas"
+          ],
+          [
+            "old-house-heat-pump",
+            "wschvo-1995-gas",
+            "older-flat-pump",
+            "older-duplex-gas",
+            "partial-retrofit-gas",
+            "older-bungalow-pump"
+          ],
+          [
+            "gruenderzeit-gas",
+            "old-house-gas",
+            "old-villa-gas",
+            "old-farmhouse-oil",
+            "old-apartment-oil",
+            "old-bungalow-gas"
+          ]
+        ]
+      }
     }
   ],
   "short": {

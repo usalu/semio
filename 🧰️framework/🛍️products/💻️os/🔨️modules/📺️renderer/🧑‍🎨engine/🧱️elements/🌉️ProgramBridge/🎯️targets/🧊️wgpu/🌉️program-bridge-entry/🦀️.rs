@@ -55,6 +55,8 @@ pub struct ProgramBridgeEntry {
     pub component_sha256: Option<String>,
     pub manifest: PluginManifest,
     backend: ProgramBridgeBackend,
+    #[cfg(not(target_arch="wasm32"))]
+    native_observed_mtime:Option<std::time::SystemTime>,
     #[cfg(test)]
     fixture_render: Option<fn(u32, &str, &str, &ViewModel, Option<&str>, Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String>>,
     #[cfg(test)]
@@ -115,6 +117,7 @@ impl ProgramBridgeEntry {
             component_sha256,
             manifest,
             backend: ProgramBridgeBackend::Wasm { client: KernelClient::get(), wasm_path },
+            native_observed_mtime:None,
             #[cfg(test)]
             fixture_render: None,
             #[cfg(test)]
@@ -130,6 +133,10 @@ impl ProgramBridgeEntry {
     pub fn install_fixture_render(&mut self, render: fn(u32, &str, &str, &ViewModel, Option<&str>, Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String>) {
         self.fixture_render = Some(render);
     }
+
+    /// 🕰️ The observation belongs to this exact program path and uses only inline scalar state.
+    #[cfg(not(target_arch="wasm32"))]
+    pub(crate) fn observe_native_modification(&mut self,path:&std::path::Path,time:std::time::SystemTime)->bool{let ProgramBridgeBackend::Wasm{wasm_path,..}=&self.backend;if wasm_path.as_path()!=path{return false}let changed=self.native_observed_mtime.is_some_and(|previous|previous!=time);self.native_observed_mtime=Some(time);changed}
 
     #[cfg(test)]
     pub fn install_fixture_action(&mut self, action: fn(u32, &str, &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String>) {
@@ -166,12 +173,12 @@ impl ProgramBridgeEntry {
     /// 🧬️ The document schema `app_id` opens: its own declared schema, or — for a viewer, which declares
     /// none — the schema its package declares for the same dialect, so a spectator's mount makes the
     /// component the kind's codec exactly as an author's does. Empty for an app that opens no document.
-    fn app_document_schema(&self, app_id: &str) -> String {
-        let Some(app) = self.manifest.apps.iter().find(|app| app.id == app_id) else { return String::new() };
+    fn app_document_schema(&self, app_id: &str) -> &str {
+        let Some(app) = self.manifest.apps.iter().find(|app| app.id == app_id) else { return "" };
         if !app.io.artifact_schema.is_empty() {
-            return app.io.artifact_schema.clone();
+            return &app.io.artifact_schema;
         }
-        self.manifest.apps.iter().find(|other| other.dialect == app.dialect && !other.io.artifact_schema.is_empty()).map(|other| other.io.artifact_schema.clone()).unwrap_or_default()
+        self.manifest.apps.iter().find(|other| other.dialect == app.dialect && !other.io.artifact_schema.is_empty()).map(|other| other.io.artifact_schema.as_str()).unwrap_or("")
     }
 
     /// 🐣️ Opens one instance of `app_id`. A refusal keeps the structured fault behind it when the host or the browser bridge
@@ -183,12 +190,12 @@ impl ProgramBridgeEntry {
                 let instance_id = create_app_js(handle, app_id).await?;
                 let schema = self.app_document_schema(app_id);
                 if !schema.is_empty() {
-                    browser_component_codec::register(handle.clone(), schema)?;
+                    browser_component_codec::register(handle.clone(), schema.to_owned())?;
                 }
                 Ok(instance_id)
             }
             #[cfg(not(target_arch = "wasm32"))]
-            ProgramBridgeBackend::Wasm { client, wasm_path } => client.create_app(wasm_path.clone(), self.plugin_id.clone(), app_id.to_string(), self.app_document_schema(app_id)).await.map_err(ProgramFault::from),
+            ProgramBridgeBackend::Wasm { client, wasm_path } => client.create_app(wasm_path, &self.plugin_id, app_id, self.app_document_schema(app_id)).await.map_err(ProgramFault::from),
         }
     }
 

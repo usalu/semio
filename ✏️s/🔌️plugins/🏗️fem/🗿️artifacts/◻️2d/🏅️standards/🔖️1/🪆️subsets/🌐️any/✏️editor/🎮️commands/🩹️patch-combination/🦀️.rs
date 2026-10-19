@@ -1,10 +1,22 @@
-//! 🩹️ Fem2d play app command — `patch-combination`: renames a combination (`name`), re-weights one term (`term:<caseId>`) or appends one (`addTerm`) → `ReplaceCombination`.
+//! 🩹️ Fem2d play app command — `patch-combination`: renames a combination (`name`), re-weights one term (`term:<caseId>`) or appends one (`addTerm`) → keyed name/term events.
 
-use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::replace_combination;
+use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::change_combination_name::ChangeCombinationName;
+use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::change_combination_term::ChangeCombinationTerm;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
-use semio_framework_value_derive::{FromValue, ToValue};
+
+use semio_framework_plugin::ArtifactView;
+
+use semio_framework_plugin::ConfigView;
+
+use semio_framework_plugin::Emit;
+
+use semio_framework_plugin::Fault;
+
+use semio_framework_plugin::NoConfig;
+
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 
 type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
@@ -34,39 +46,22 @@ pub struct PatchCombination {
 /// a zero-weighted term still pins the referenced case against deletion, which is not what the
 /// person dialing the factor to zero asked for.
 pub fn handle(payload: &PatchCombination, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
-    let combination = doc.snapshot.combinations.iter().find(|combination| combination.id == payload.id).ok_or_else(|| Fault::from("fem2d.patch.combination-missing"))?;
-    let mut new_combination = combination.clone();
-    if let Some(case_id) = payload.field.strip_prefix(TERM_FIELD_PREFIX) {
-        if case_id.is_empty() {
-            return Err(Fault::from("fem2d.patch.combination-field"));
-        }
-        let factor: f64 = payload.value.trim().parse().map_err(|_| Fault::from("fem2d.patch.combination-value"))?;
-        if factor == 0.0 {
-            new_combination.terms.retain(|term| term.case_id != case_id);
-        } else if let Some(term) = new_combination.terms.iter_mut().find(|term| term.case_id == case_id) {
-            term.factor = factor;
-        } else {
-            new_combination.terms.push(FemCombinationTerm { case_id: case_id.to_string(), factor });
-        }
-    } else {
-        match payload.field.as_str() {
-            "name" => new_combination.name = payload.value.clone(),
-            ADD_TERM_FIELD => {
-                let case_id = payload.value.trim();
-                if case_id.is_empty() {
-                    return Err(Fault::from("fem2d.patch.combination-value"));
-                }
-                if !new_combination.terms.iter().any(|term| term.case_id == case_id) {
-                    new_combination.terms.push(FemCombinationTerm { case_id: case_id.to_string(), factor: APPENDED_TERM_FACTOR });
-                }
-            }
-            _ => return Err(Fault::from("fem2d.patch.combination-field")),
-        }
+    let combination=doc.snapshot.combinations.iter().find(|row|row.id==payload.id).ok_or_else(||Fault::from("fem2d.patch.combination-missing"))?;
+    if payload.field=="name" {
+        if combination.name==payload.value{return Ok(Emit::default());}
+        return Ok(Emit::mutations(vec![Fem2dMutation::ChangeCombinationName(ChangeCombinationName{id:payload.id.clone(),name:payload.value.clone()})]));
     }
-    if &new_combination == combination {
-        return Ok(Emit::default());
-    }
-    Ok(Emit::mutations(vec![Fem2dMutation::ReplaceCombination(replace_combination::ReplaceCombination { id: payload.id.clone(), new_combination })]))
+    let value=payload.value.trim();
+    let (case_id,factor)=if let Some(case_id)=payload.field.strip_prefix(TERM_FIELD_PREFIX){
+        let factor:f64=value.parse().map_err(|_|Fault::from("fem2d.patch.combination-value"))?;
+        (case_id,if factor==0.0{None}else{Some(factor)})
+    }else if payload.field==ADD_TERM_FIELD{
+        if combination.terms.iter().any(|term|term.case_id==value){return Ok(Emit::default());}
+        (value,Some(APPENDED_TERM_FACTOR))
+    }else if payload.field=="removeTerm"{(value,None)}else{return Err(Fault::from("fem2d.patch.combination-field"));};
+    if case_id.is_empty(){return Err(Fault::from("fem2d.patch.combination-value"));}
+    if combination.terms.iter().find(|term|term.case_id==case_id).map(|term|term.factor)==factor{return Ok(Emit::default());}
+    Ok(Emit::mutations(vec![Fem2dMutation::ChangeCombinationTerm(ChangeCombinationTerm{id:payload.id.clone(),case_id:case_id.into(),factor, index: None})]))
 }
 //#endregion 🔖️PatchCombination
 

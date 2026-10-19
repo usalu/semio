@@ -7,13 +7,13 @@
   "supports": null,
   "loadCases": null,
   "combinations": {
-    "inserted": [],
     "removed": [
       {
         "id": "sls",
         "index": 0
       }
     ],
+    "inserted": [],
     "moved": [],
     "modified": []
   },

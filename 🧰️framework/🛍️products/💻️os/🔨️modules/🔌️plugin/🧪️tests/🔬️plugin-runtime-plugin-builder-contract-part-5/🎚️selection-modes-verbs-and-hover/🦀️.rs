@@ -25,7 +25,7 @@
         let admitted = app.handle_action(SET_INTERACTION_GRANULARITY_ACTION_ID, Some(dv(json!({ "domainId": "items", "granularityId": "bogus" }))), &meta(), &mut identity).await.expect("undeclared granularity admission");
         let error = semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut *app, admitted).await.expect_err("undeclared granularity must be rejected");
         assert!(error.message.contains("bogus"), "unexpected error: {}", error.message);
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -51,7 +51,7 @@
 
         reserved_action(&mut app, CLEAR_SELECTION_ACTION_ID, None, &mut identity).await;
         assert!(app.interaction_state().await.selection.get("items").is_none_or(|selection| selection.ids.is_empty()), "clearSelection must empty every declared domain's selection");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -79,7 +79,7 @@
         app.dispatch_typed(TestCommand::SetLabel { value: "".into() }, &meta(), &mut identity,cx).await.expect("delete item-1 (empty label)");
 
         assert!(app.interaction_state().await.selection.get("items").is_none_or(|selection| selection.ids.is_empty()), "the deleted id must be pruned from selection automatically");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -107,9 +107,9 @@
         let history = app.render_ctx().test_history().await;
         let kinds: Vec<(&str, ActionKind)> = history.commands.iter().map(|entry| (entry.action_id.as_str(), entry.kind)).collect();
         assert_eq!(kinds, vec![("setLabel", ActionKind::Mutation)], "only the seeding edit is a row");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -136,7 +136,7 @@
         let ids = view.get("selectedIds").and_then(semio_framework_value::DslValue::as_array).expect("selectedIds");
         assert!(ids.iter().any(|id| id.as_str() == Some("seed-left-001")), "leftover selected ids {ids:?}");
         close_reserved_app(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -159,7 +159,7 @@
         assert_eq!(hover.get("id").and_then(semio_framework_value::DslValue::as_str), Some("item-1"));
         assert_eq!(hover.get("domain").and_then(semio_framework_value::DslValue::as_str), Some("items"));
         close_reserved_app(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -189,7 +189,7 @@
         assert!(panel_bodies.is_empty(), "a hover cannot dirty a panel: {panel_bodies:?}");
         assert!(!utilities && !tools && !engagements && !measures && !labels, "a hover cannot dirty the shell chrome");
         close_reserved_app(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -222,7 +222,7 @@
             "a pick publishes the app's declared selection scope verbatim"
         );
         close_reserved_app(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -251,7 +251,7 @@
             "an app that declares the domain on a window narrows to that window without declaring a scope hook"
         );
         close_reserved_app(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -282,7 +282,7 @@
         let snapshot = app.interaction.test_interaction_selection_snapshot(&app.stores);
         assert!(snapshot.selection.values().all(|selection| selection.ids.is_empty()), "a refused verb moves nothing: {:?}", snapshot.selection);
         close_reserved_app(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -306,7 +306,7 @@
         assert_eq!(result.ui_scope, UiDirtyScope::None, "no verb was folded, so no scope was widened");
         assert!(result.diagnostics.is_empty());
         close_reserved_app(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -334,6 +334,6 @@
         let snapshot = app.interaction.test_interaction_selection_snapshot(&app.stores);
         assert!(snapshot.selection.values().all(|selection| selection.ids.is_empty()), "a non-interaction DispatchAction moves no selection: {:?}", snapshot.selection);
         close_reserved_app(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }

@@ -218,7 +218,7 @@ pub(super) fn destroy_app_js(handle: &Rc<JsValue>, instance_id: u32) {
 /// the dirty scope and the history patch it carried. `fault` is the standing drain's own failure; `resync` says entries
 /// were lost before this one, so the whole history projection has to be read again. What each one owes the shell is the
 /// shared corpus `🛠️ShellHelpers/🧫️fixtures/🧫️operation-publication/🔣️.json`.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug)]
 pub struct OperationPublication {
     pub completed: bool,
     pub ui_scope: semio_framework::kernel::UiDirtyScope,

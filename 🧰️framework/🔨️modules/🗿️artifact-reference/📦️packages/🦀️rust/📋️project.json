@@ -31,6 +31,38 @@
         "cwd": "🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-binding"
       }
+    },
+    "test-retained-equality-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust -- bun ./📜️script.ts test-retained-equality source"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-retained-equality",
+            "source"
+          ]
+        }
+      }
+    },
+    "test-retained-equality-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust -- bun ./📜️script.ts test-retained-equality native"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-retained-equality",
+            "native"
+          ]
+        }
+      }
     }
   }
 }

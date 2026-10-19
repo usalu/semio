@@ -5,6 +5,7 @@
 //! 🎚️ `UiPreferencesDiff` is a sparse diff: the committed `🔺️diff` names only the preference this leaf touches. Source of truth is the committed JSON quintet in
 //! `../../🧫️fixtures/✏️sets-locale/`.
 
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use crate::opening_config::mutations::UiPreferencesConfigMutation;
 use crate::opening_config::{UiPreferences, UiPreferencesDiff};
 use semio_framework_test_fixtures::fixture_path;
@@ -33,7 +34,7 @@ fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value
 fn applies_to_committed_after() {
     let base = before();
     let outcome = <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::diff(&mutation(), &base);
-    let applied = protocol::apply_diff(outcome.diff(), &base).expect("set-locale applies to its committed before-preferences");
+    let applied = protocol::apply_diff_cold(outcome.diff(), &base).expect("set-locale applies to its committed before-preferences");
     assert_eq!(applied, expected_after(), "set-locale/sets-locale: the applied preferences differ from the committed after-snapshot");
 }
 
@@ -53,7 +54,7 @@ fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF.as_str()).expect("committed diff decodes");
     assert_eq!(json_value(outcome.diff()), committed, "set-locale/sets-locale: produced diff differs from the committed 🔺️diff");
     let decoded: UiPreferencesDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes as UiPreferencesDiff");
-    assert_eq!(protocol::apply_diff(&decoded, &before()).expect("committed diff applies"), expected_after(), "set-locale/sets-locale: the committed diff does not carry before to after");
+    assert_eq!(protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies"), expected_after(), "set-locale/sets-locale: the committed diff does not carry before to after");
 }
 
 /// ↩️ The inverse restores the committed before-preferences.
@@ -61,10 +62,10 @@ fn produces_committed_diff() {
 fn inverse_restores_before() {
     let base = before();
     let forward = <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::diff(&mutation(), &base);
-    let mut snapshot = protocol::apply_diff(forward.diff(), &base).expect("forward set-locale applies");
+    let mut snapshot = protocol::apply_diff_cold(forward.diff(), &base).expect("forward set-locale applies");
     for step in <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture") {
         let undo = <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::diff(&step, &snapshot);
-        snapshot = protocol::apply_diff(undo.diff(), &snapshot).expect("set-locale inverse step applies");
+        snapshot = protocol::apply_diff_cold(undo.diff(), &snapshot).expect("set-locale inverse step applies");
     }
     assert_eq!(snapshot, base, "set-locale/sets-locale: the inverse did not restore the before-preferences");
 }

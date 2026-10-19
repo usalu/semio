@@ -16,22 +16,10 @@ summary: Monorepo tools that are ai-ready.
   - 📅️ Possible
     - 🦾️ Droid
     - …
-- 🧑️‍💻️ IDE integrations
-  - ✅️ Currently
-    - 💻️ VSCode
-    - 🌊️ Windsurf
-    - 🖱️ Cursor
-    - Antigravity
-    - ⚙️ Codex
-    - ❄️ Claude Code
-    - 🦾️ Droid
-  - 📅️ Possible
-    - InteliJ
-    - PyCharm
-    - WebStorm
-    - Rider
-    - Android Studio
-    - …
+- 🎛️ Dashboard developer operations
+  - Setup, build, test, check, serve and debugging through registered commands
+  - Shared task overview, output, progress, restart and cancellation
+  - Passive source navigation and editing through an installed editor
 - 🗣️ Language integrations
   - ✅️ Currently
     - 🟦️ Typescript
@@ -111,6 +99,19 @@ No problem, let them write what they know, until the tests are extended and let 
 
 ### 📊️ Meaningful stats
 
+## Developer Operations
+
+Start `bun run dashboard` at the monorepo root. Choose **New Task** (`Ctrl+B n`),
+search by action and owner, complete the command form and choose **Start**. The
+[dashboard guide](🔨️modules/🎛️dashboard/README.md#-daily-work) gives concrete
+setup, testing, debugging, source navigation and repository workflows. Every
+command uses the workspace daemon, so its status, output and cancellation remain
+available after closing a view or restarting an editor.
+
+Editor integrations provide source navigation and language editing. Executable
+commands are maintained in owner dashboard metadata or Nx targets and selected
+in the dashboard.
+
 ## Configuration
 
 Repo-wide settings live in [`.🧬semio/🦑️repo/config.toml`](../.🧬semio/🦑️repo/config.toml) at the monorepo root.
@@ -180,16 +181,11 @@ Check these before touching code when every `bun repo` call refuses at startup. 
 
 Recreating `d` costs one full `dependencies sync --all` (about 16 minutes with a warm package cache), recreating `g` one cold graph inference (7 to 9 minutes).
 
-## 🚀️ Launch catalog
+## 🎛️ Developer Dashboard
 
-`.vscode/🧩️launch.seed.jsonc` is the only authored launch file. `.vscode/launch.json` is its deterministic expansion and is never edited by hand.
+The [dashboard daily workflow](🔨️modules/🎛️dashboard/README.md#-daily-work) is the developer entry point. Choose **New Task**, search for the operation and its owner, then complete the typed form. The preview shows its arguments and environment before **Start**. Output, progress, readiness, source navigation, interactive debugging, cancellation and restart remain attached to that task.
 
-```bash
-bun repo run workspace:generate-launch          # rewrite launch.json from the seed
-bun repo run workspace:generate-launch-check    # fail on any problem or drift
-```
-
-Add a developer-facing command by adding it to the seed in the existing order, grouping and naming, then regenerate. Playground launchers come from the playground registry (`[[package.metadata.semio.playground]]` in the crate manifests), crate routes from `crateRoutes.subjects`; the placeholders `@generated:…` expand to them.
+Declare executable operations beside their source: build targets in `📋️project.json`, typed controls in `metadata.semio.dashboard`, and authored ticket tools in the ticket's `🎮️commands.json`. Playground controls come from `[[package.metadata.semio.playground]]` in crate manifests; native crate targets come from `📋️build-owners.json` and the neutral build graph. Parameter choices, environments, readiness and compound membership belong to these owner declarations. Editors provide source navigation and editing; the dashboard owns execution.
 
 ## 🐹️ Go layout
 
@@ -203,7 +199,7 @@ Go code follows the canonical taxonomy layout instead of package-root files:
 
 - [`💻️client/⌨️cli`](🔨️modules/💻️client/⌨️cli) – Command line tool for monorepo interactions
 - [`💻️client/🔌️mcp`](🔨️modules/💻️client/🔌️mcp) – MCP server the agent clients speak to
-- [`💻️client/🧩️vscode`](🔨️modules/💻️client/🧩️vscode/README.md) – Visual Studio Code extension, owner of the technology catalog
+- [`💻️client/🧩️vscode`](🔨️modules/💻️client/🧩️vscode) – Passive source navigation and language editing; the dashboard exclusively controls developer operations
 - [`💻️client/🪶️sqlite`](🔨️modules/💻️client/🪶️sqlite/README.md) – SQLite schema of the client's local-only entity store
 - [`🖥️server/🎛️coordinator`](🔨️modules/🖥️server/🎛️coordinator/README.md) – Coordinator REST API and event log
 - [`🖥️server/🧬️schema`](🔨️modules/🖥️server/🧬️schema) – PostgreSQL schema of the shared server state

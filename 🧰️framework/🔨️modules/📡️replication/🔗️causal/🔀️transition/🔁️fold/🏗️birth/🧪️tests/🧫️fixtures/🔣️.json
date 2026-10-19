@@ -1,0 +1,13 @@
+{
+  "schema": "semio.history.fold-backing-birth/v1",
+  "lengths": [0, 1, 4096, 65537],
+  "elementBytes": [0, 1, 8, 24],
+  "axes": ["items", "copy", "capacity", "depth"],
+  "expected": {
+    "deniedHeapBytes": 0,
+    "backingBeforeGrant": false,
+    "cancelWaitingBackingBytes": 0,
+    "retirementFrame": "separate-actual-frame",
+    "receipt": "frame-plus-actual-backing"
+  }
+}

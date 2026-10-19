@@ -1,0 +1,9 @@
+{
+  "cases": [
+    { "id": "static-displacements", "mode": "static", "index": 0, "eigenvalue": 39.47841760435743, "modeShape": false, "displayValue": null },
+    { "id": "modal-one-hertz", "mode": "modal", "index": 0, "eigenvalue": 39.47841760435743, "modeShape": true, "displayValue": 1 },
+    { "id": "modal-two-hertz", "mode": "modal", "index": 1, "eigenvalue": 157.91367041742973, "modeShape": true, "displayValue": 2 },
+    { "id": "buckling-load-multiplier", "mode": "buckling", "index": 0, "eigenvalue": 2.5, "modeShape": true, "displayValue": 2.5 },
+    { "id": "buckling-below-unit-load", "mode": "buckling", "index": 2, "eigenvalue": 0.25, "modeShape": true, "displayValue": 0.25 }
+  ]
+}

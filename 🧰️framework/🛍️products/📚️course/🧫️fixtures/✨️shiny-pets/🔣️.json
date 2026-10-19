@@ -1,0 +1,23 @@
+{
+  "casts": [
+    { "scene": "home", "core": ["sunny"], "rotation": ["windy"] },
+    { "scene": "heat", "core": ["flamy"], "rotation": ["housy", "ghost"] },
+    { "scene": "question-heat-task", "core": ["sunny"], "rotation": ["flamy"] },
+    { "scene": "heating", "core": ["windy"], "rotation": [] },
+    { "scene": "question-heat-pump-task", "core": ["windy"], "rotation": [] },
+    { "scene": "cooling", "core": ["chilly"], "rotation": ["housy"] }
+  ],
+  "quizzes": [{ "id": "heat", "tasks": [{ "id": "task" }] }, { "id": "heating", "tasks": [] }, { "id": "heat-pump", "tasks": [{ "id": "task" }] }, { "id": "cooling", "tasks": [] }],
+  "runs": [{ "run": "r1", "quiz": "heat", "learner": "a" }, { "run": "r2", "quiz": "cooling", "learner": "a" }, { "run": "r3", "quiz": "heating", "learner": "a" }],
+  "cases": [
+    { "name": "no badges", "badges": [], "shiny": [] },
+    { "name": "new badge before learner view refresh", "badges": [], "awards": { "r1": ["warm"] }, "shiny": ["sunny", "housy", "flamy"] },
+    { "name": "another learner's local award", "badges": [], "awards": { "r1": ["warm"] }, "localLearner": "other", "shiny": [] },
+    { "name": "core, rotation and question pets", "badges": [{ "badge": "warm", "run": "r1", "at": 1 }], "shiny": ["sunny", "housy", "flamy"] },
+    { "name": "shared pet", "badges": [{ "badge": "cold", "run": "r2", "at": 1 }], "shiny": ["housy", "chilly"] },
+    { "name": "multiple quizzes", "badges": [{ "badge": "warm", "run": "r1", "at": 1 }, { "badge": "cold", "run": "r2", "at": 2 }], "shiny": ["sunny", "housy", "flamy", "chilly"] },
+    { "name": "unknown run", "badges": [{ "badge": "lost", "run": "absent", "at": 1 }], "shiny": [] },
+    { "name": "similar quiz identifiers", "badges": [{ "badge": "warm", "run": "r3", "at": 1 }], "shiny": ["windy"] },
+    { "name": "duplicate awards", "badges": [{ "badge": "warm", "run": "r1", "at": 1 }, { "badge": "hot", "run": "r1", "at": 2 }], "shiny": ["sunny", "housy", "flamy"] }
+  ]
+}

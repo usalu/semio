@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "oracle": "unicode-width 0.2.2",
+  "cases": [
+    { "id": "ascii", "text": "check", "scalarText": "check", "scalarCells": 5, "clusterCells": 5, "stringWidthCells": 5, "windowsScalarCells": 5, "windowsClusterCells": 5 },
+    { "id": "emoji-path", "text": "🧰framework/🛍products/🦑repo", "scalarText": "🧰framework/🛍products/🦑repo", "scalarCells": 28, "clusterCells": 28, "stringWidthCells": 29, "windowsScalarCells": 29, "windowsClusterCells": 29 },
+    { "id": "variation-path", "text": "🧰️framework/🛍️products/🦑️repo", "scalarText": "🧰framework/🛍products/🦑repo", "scalarCells": 28, "clusterCells": 29, "stringWidthCells": 29, "windowsScalarCells": 29, "windowsClusterCells": 32 },
+    { "id": "combining", "text": "é", "scalarText": "é", "scalarCells": 1, "clusterCells": 1, "stringWidthCells": 1, "windowsScalarCells": 2, "windowsClusterCells": 2 },
+    { "id": "euro", "text": "€x", "scalarText": "€x", "scalarCells": 2, "clusterCells": 2, "stringWidthCells": 2, "windowsScalarCells": 2, "windowsClusterCells": 2 },
+    { "id": "ellipsis", "text": "…", "scalarText": "…", "scalarCells": 1, "clusterCells": 1, "stringWidthCells": 1, "windowsScalarCells": 1, "windowsClusterCells": 1 },
+    { "id": "joined-emoji", "text": "👩‍💻", "scalarText": "👩💻", "scalarCells": 4, "clusterCells": 2, "stringWidthCells": 2, "windowsScalarCells": 4, "windowsClusterCells": 5 },
+    { "id": "path-symbol-0", "text": "🧰", "scalarText": "🧰", "scalarCells": 2, "clusterCells": 2, "stringWidthCells": 2, "windowsScalarCells": 2, "windowsClusterCells": 2 },
+    { "id": "path-symbol-1", "text": "🛍", "scalarText": "🛍", "scalarCells": 1, "clusterCells": 1, "stringWidthCells": 2, "windowsScalarCells": 2, "windowsClusterCells": 2 },
+    { "id": "path-symbol-2", "text": "🦑", "scalarText": "🦑", "scalarCells": 2, "clusterCells": 2, "stringWidthCells": 2, "windowsScalarCells": 2, "windowsClusterCells": 2 },
+    { "id": "path-symbol-3", "text": "🔨", "scalarText": "🔨", "scalarCells": 2, "clusterCells": 2, "stringWidthCells": 2, "windowsScalarCells": 2, "windowsClusterCells": 2 },
+    { "id": "path-symbol-4", "text": "🎛", "scalarText": "🎛", "scalarCells": 1, "clusterCells": 1, "stringWidthCells": 2, "windowsScalarCells": 2, "windowsClusterCells": 2 },
+    { "id": "path-symbol-5", "text": "🧫", "scalarText": "🧫", "scalarCells": 2, "clusterCells": 2, "stringWidthCells": 2, "windowsScalarCells": 2, "windowsClusterCells": 2 },
+    { "id": "path-symbol-6", "text": "🧭", "scalarText": "🧭", "scalarCells": 2, "clusterCells": 2, "stringWidthCells": 2, "windowsScalarCells": 2, "windowsClusterCells": 2 },
+    { "id": "path-symbol-7", "text": "🏗", "scalarText": "🏗", "scalarCells": 1, "clusterCells": 1, "stringWidthCells": 2, "windowsScalarCells": 2, "windowsClusterCells": 2 },
+    { "id": "path-symbol-8", "text": "📜", "scalarText": "📜", "scalarCells": 2, "clusterCells": 2, "stringWidthCells": 2, "windowsScalarCells": 2, "windowsClusterCells": 2 },
+    { "id": "path-symbol-9", "text": "🖥", "scalarText": "🖥", "scalarCells": 1, "clusterCells": 1, "stringWidthCells": 2, "windowsScalarCells": 2, "windowsClusterCells": 2 },
+    { "id": "path-symbol-10", "text": "⌨", "scalarText": "⌨", "scalarCells": 1, "clusterCells": 1, "stringWidthCells": 2, "windowsScalarCells": 1, "windowsClusterCells": 1 },
+    { "id": "path-symbol-11", "text": "🖱", "scalarText": "🖱", "scalarCells": 1, "clusterCells": 1, "stringWidthCells": 2, "windowsScalarCells": 2, "windowsClusterCells": 2 },
+    { "id": "path-symbol-12", "text": "┃", "scalarText": "┃", "scalarCells": 1, "clusterCells": 1, "stringWidthCells": 1, "windowsScalarCells": 1, "windowsClusterCells": 1 },
+    { "id": "umlaut-composed", "text": "ä", "scalarText": "ä", "scalarCells": 1, "clusterCells": 1, "stringWidthCells": 1, "windowsScalarCells": 1, "windowsClusterCells": 1 },
+    { "id": "umlaut-decomposed", "text": "ä", "scalarText": "ä", "scalarCells": 1, "clusterCells": 1, "stringWidthCells": 1, "windowsScalarCells": 2, "windowsClusterCells": 2 },
+    { "id": "acute-composed", "text": "é", "scalarText": "é", "scalarCells": 1, "clusterCells": 1, "stringWidthCells": 1, "windowsScalarCells": 1, "windowsClusterCells": 1 },
+    { "id": "cjk", "text": "界", "scalarText": "界", "scalarCells": 2, "clusterCells": 2, "stringWidthCells": 2, "windowsScalarCells": 2, "windowsClusterCells": 2 },
+    { "id": "canonical-argument", "text": "C:\\git\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\🎛️dashboard\\🧫️fixtures\\🧭️journeys\\🏗️workspace\\📜️script.ts", "scalarText": "C:\\git\\semio\\🧰framework\\🛍products\\🦑repo\\🔨modules\\🎛dashboard\\🧫fixtures\\🧭journeys\\🏗workspace\\📜script.ts", "scalarCells": 107, "clusterCells": 110, "stringWidthCells": 110, "windowsScalarCells": 110, "windowsClusterCells": 119 }
+  ]
+}

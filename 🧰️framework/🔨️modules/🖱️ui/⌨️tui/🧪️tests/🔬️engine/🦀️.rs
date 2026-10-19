@@ -5,7 +5,7 @@ use semio_framework_ui_tui_frame::chrome::{shell, window_chip_layout, ChromeLabe
 use semio_framework_ui_tui_engine::Tui;
 use semio_framework_ui_tui_core::event::{Event, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
 use semio_framework_ui_tui_core::geometry::{Pos, Size};
-use semio_framework_ui_tui_frame::layout::{create_default_layout, push_window_to_stack, reorder_stack_tab, resize_split, solve_window_layout, zoom_window, Constraint, Dimension, Direction, WindowLayout, WindowLayoutWindowNode};
+use semio_framework_ui_tui_frame::layout::{create_default_layout, push_window_to_stack, resize_split, solve_window_layout, zoom_window, Constraint, Dimension, Direction, WindowLayout, WindowLayoutWindowNode};
 use semio_framework_ui_tui_frame::scene::{Node, NodeContent, NodeId};
 use semio_framework_ui_tui_core::theme::Theme;
 use semio_framework_ui_tui_widgets::widget::{Align, InputState, LabelState, ListState, TabsState, WidgetState, WizardState};
@@ -245,7 +245,7 @@ fn two_stacks(labels: bool) -> (Tui, Shell, WindowLayout, Vec<NodeId>) {
     for (_, window) in built.windows.clone() {
         if let Some(ChromeState::Window(state)) = tui.scene.node_mut(window).chrome() {
             if labels {
-                state.labels = ChromeLabels { close: "Close tab".into(), maximize: "Maximize".into(), restore: "Restore".into(), new_tab: "New tab".into(), previous_tabs: "Earlier tabs".into(), next_tabs: "Later tabs".into() };
+                state.labels = ChromeLabels { drag: "Drag window".into(), close: "Close tab".into(), maximize: "Maximize".into(), restore: "Restore".into(), new_tab: "New tab".into(), previous_tabs: "Earlier tabs".into(), next_tabs: "Later tabs".into() };
             }
         }
     }
@@ -294,18 +294,108 @@ fn dragging_a_tab_onto_another_reports_a_move_on_release() {
     let (mut tui, _built, mut layout, windows) = two_stacks(false);
     let w1 = windows[0];
     let (from_left, _, _, y) = chip_geometry(&tui, w1, 0);
-    let (to_left, _, _, _) = chip_geometry(&tui, w1, 2);
+    let (_, to_right, _, _) = chip_geometry(&tui, w1, 2);
     assert_eq!(tui.dispatch(&down(from_left + 2, y)), vec![(w1, WidgetSignal::WindowTabActivated(0))]);
-    assert_eq!(tui.dispatch(&mouse(MouseKind::Drag(MouseButton::Left), to_left + 2, y)), vec![]);
+    let dragging = tui.dispatch(&mouse(MouseKind::Drag(MouseButton::Left), to_right - 1, y));
+    assert!(dragging.iter().any(|(_, signal)| matches!(signal, WidgetSignal::WindowDockPreview { source, target, placement: crate::tui::layout::DockPlacement::Corner(crate::tui::layout::WindowStackCorner::TopLeft), tab_index: Some(2) } if source == "w1" && target == "w3")));
     let NodeContent::Chrome(ChromeState::Window(state)) = &tui.scene.node(w1).content else { panic!("window") };
-    assert_eq!(state.drop_target, Some(2), "the drop target is marked while dragging");
-    let signals = tui.dispatch(&mouse(MouseKind::Up(MouseButton::Left), to_left + 2, y));
-    assert_eq!(signals, vec![(w1, WidgetSignal::TabMoved { from: 0, to: 2 })]);
+    assert_eq!(state.drop_target, None, "the actual insertion chip is previewed independently");
+    assert!(tui.docking_preview().is_some());
+    let signals = tui.dispatch(&mouse(MouseKind::Up(MouseButton::Left), to_right - 1, y));
+    assert!(signals.iter().any(|(_, signal)| matches!(signal, WidgetSignal::WindowDocked { source, target, placement: crate::tui::layout::DockPlacement::Corner(crate::tui::layout::WindowStackCorner::TopLeft), tab_index: Some(2) } if source == "w1" && target == "w3")));
     let NodeContent::Chrome(ChromeState::Window(state)) = &tui.scene.node(w1).content else { panic!("window") };
     assert_eq!(state.drop_target, None);
-    assert!(reorder_stack_tab(&mut layout, "w1", 0, 2));
+    assert!(crate::tui::layout::dock_window(&mut layout, "w1", "w3", crate::tui::layout::DockPlacement::Corner(crate::tui::layout::WindowStackCorner::TopLeft), Some(2)));
     let stack = semio_framework_ui_tui_frame::layout::stack_hosting(&layout, "w1").unwrap();
     assert_eq!(stack.children.iter().map(|c| c.window_kind_id.as_str()).collect::<Vec<_>>(), vec!["w3", "w4", "w1"]);
+}
+
+#[test]
+fn dragging_a_tab_between_groups_previews_and_commits_a_docking_signal() {
+    use crate::tui::layout::DockPlacement;
+    let (mut tui, mut built, mut layout, windows) = two_stacks(false);
+    let source = windows[0];
+    let (left, _, _, y) = chip_geometry(&tui, source, 0);
+    tui.dispatch(&down(left + 2, y));
+    let area = tui.scene.rect(windows[1]);
+    let pos = Pos { x: area.x + area.width - 2, y: area.y + area.height / 2 };
+    let signals = tui.dispatch(&mouse(MouseKind::Drag(MouseButton::Left), pos.x, pos.y));
+    assert!(signals.iter().any(|(_, signal)| matches!(signal, WidgetSignal::WindowDockPreview { source, target, placement: DockPlacement::Right, .. } if source == "w1" && target == "w2")));
+    let (placement, preview) = tui.docking_preview().unwrap();
+    assert_eq!(placement, DockPlacement::Right);
+    tui.render();
+    let ghost = tui.frame().clone();
+    let signals = tui.dispatch(&mouse(MouseKind::Up(MouseButton::Left), pos.x, pos.y));
+    assert!(signals.iter().any(|(_, signal)| matches!(signal, WidgetSignal::WindowDocked { source, target, placement: DockPlacement::Right, .. } if source == "w1" && target == "w2")));
+    assert!(tui.docking_preview().is_none());
+    assert!(crate::tui::layout::dock_window(&mut layout, "w1", "w2", DockPlacement::Right, None));
+    built.remount(&mut tui.scene, &layout);
+    tui.render();
+    let NodeContent::Chrome(ChromeState::Window(state)) = &tui.scene.node(source).content else { panic!("window") };
+    assert_eq!(crate::tui::chrome::window_tab_rect(state, tui.scene.rect(source), state.active_stack_tab), Some(preview));
+    for yy in preview.y..preview.y + preview.height {
+        for xx in preview.x..preview.x + preview.width {
+            assert_eq!(ghost.get(xx, yy).unwrap().ch, tui.frame().get(xx, yy).unwrap().ch);
+        }
+    }
+}
+
+#[test]
+fn docking_preview_geometry_matches_the_independent_taffy_solver() {
+    use crate::tui::geometry::Rect;
+    use crate::tui::layout::{dock_window, DockPlacement};
+    use taffy::prelude::{AvailableSpace, FlexDirection, Style, TaffyTree};
+    for (width, height) in [(80, 40), (81, 41), (82, 42), (23, 17)] {
+        for placement in [DockPlacement::Left, DockPlacement::Right, DockPlacement::Top, DockPlacement::Bottom] {
+            let row = matches!(placement, DockPlacement::Left | DockPlacement::Right);
+            let first = matches!(placement, DockPlacement::Left | DockPlacement::Top);
+            let mut oracle = TaffyTree::<()>::new();
+            let children: Vec<_> = (0..2).map(|_| oracle.new_leaf(Style { flex_grow: 1.0, flex_basis: taffy::style::Dimension::length(0.0), ..Default::default() }).unwrap()).collect();
+            let root = oracle.new_with_children(Style {
+                flex_direction: if row { FlexDirection::Row } else { FlexDirection::Column },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::length(f32::from(width)), height: taffy::style::Dimension::length(f32::from(height)) },
+                gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::length(1.0), height: taffy::style::LengthPercentage::length(1.0) },
+                ..Default::default()
+            }, &children).unwrap();
+            oracle.compute_layout(root, taffy::geometry::Size { width: AvailableSpace::Definite(f32::from(width)), height: AvailableSpace::Definite(f32::from(height)) }).unwrap();
+            let expected = oracle.layout(children[usize::from(!first)]).unwrap();
+            let area = Rect::new(10, 4, width, height);
+            let rect = Rect::new(10 + expected.location.x.round() as u16, 4 + expected.location.y.round() as u16, expected.size.width.round() as u16, expected.size.height.round() as u16);
+            let mut layout = create_default_layout(&["a".into()], "row", None, None);
+            push_window_to_stack(&mut layout, "a", WindowLayoutWindowNode { window_kind_id: "b".into(), title: None, corner: None });
+            assert!(dock_window(&mut layout, "a", "b", placement, None));
+            assert_eq!(placement.preview(area), rect);
+            assert_eq!(solve_window_layout(&layout, area).into_iter().find(|window| window.window_kind_id == "a").unwrap().rect, rect);
+        }
+    }
+}
+
+#[test]
+fn corner_tab_preview_geometry_matches_the_independent_taffy_solver() {
+    use crate::tui::geometry::Rect;
+    use crate::tui::layout::{DockPlacement, WindowStackCorner::*};
+    use taffy::prelude::{AvailableSpace, Style, TaffyTree};
+    use taffy::style::{Dimension, LengthPercentageAuto, Position};
+    for (width, height) in [(80, 40), (81, 41), (23, 17), (3, 3)] {
+        for corner in [TopLeft, TopRight, BottomLeft, BottomRight] {
+            let mut oracle = TaffyTree::<()>::new();
+            let edge = |at: bool| if at { LengthPercentageAuto::length(0.0) } else { LengthPercentageAuto::auto() };
+            let child = oracle.new_leaf(Style {
+                position: Position::Absolute,
+                size: taffy::geometry::Size { width: Dimension::percent(0.5), height: Dimension::length(2.0) },
+                max_size: taffy::geometry::Size { width: Dimension::length(24.0), height: Dimension::auto() },
+                inset: taffy::geometry::Rect { left: edge(corner.is_left()), right: edge(!corner.is_left()), top: edge(corner.is_top()), bottom: edge(!corner.is_top()) },
+                ..Default::default()
+            }).unwrap();
+            let root = oracle.new_with_children(Style { size: taffy::geometry::Size { width: Dimension::length(f32::from(width)), height: Dimension::length(f32::from(height)) }, ..Default::default() }, &[child]).unwrap();
+            oracle.compute_layout(root, taffy::geometry::Size { width: AvailableSpace::Definite(f32::from(width)), height: AvailableSpace::Definite(f32::from(height)) }).unwrap();
+            let expected = oracle.layout(child).unwrap();
+            let area = Rect::new(10, 4, width, height);
+            let rect = Rect::new(10 + expected.location.x as u16, 4 + expected.location.y as u16, expected.size.width as u16, expected.size.height as u16);
+            assert_eq!(DockPlacement::Corner(corner).preview(area), rect, "{corner:?} in {area:?}");
+            println!("[DEBUG] Taffy independently matched corner={corner:?} area={area:?} preview={rect:?}");
+        }
+    }
 }
 
 #[test]

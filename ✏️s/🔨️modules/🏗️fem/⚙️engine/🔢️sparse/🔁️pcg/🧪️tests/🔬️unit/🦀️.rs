@@ -1,7 +1,68 @@
+use semio_s_fem_sparse::{Coo, Csr, MountedScalarSlots, NUMERICAL_OWNER_PAGE_BYTES, NumericalCheckpointFault, parse_numerical_page, read_checkpoint_u64};
 use super::*;
 use semio_framework_job::StepBudget;
-use semio_s_fem_sparse::*;
-use semio_s_fem_test_support::{close_turn, accounted_close, checkpoint_payload, close_job, close_payload, close_writer, grant_of, pages_bytes, payload_from_pages, seen_of, test_operation, tuple_of, Seen, TEST_GRANT};
+use super::*;
+use semio_s_fem_test_support::close_turn;
+use semio_s_fem_test_support::accounted_close;
+use semio_s_fem_test_support::checkpoint_payload;
+use semio_s_fem_test_support::close_job;
+use semio_s_fem_test_support::close_payload;
+use semio_s_fem_test_support::close_writer;
+use semio_s_fem_test_support::grant_of;
+use semio_s_fem_test_support::pages_bytes;
+use semio_s_fem_test_support::payload_from_pages;
+use semio_s_fem_test_support::seen_of;
+use semio_s_fem_test_support::test_operation;
+use semio_s_fem_test_support::tuple_of;
+use semio_s_fem_test_support::Seen;
+use semio_s_fem_test_support::TEST_GRANT;
+
+#[test]
+fn mathematical_pcg_and_original_native_job_share_neutral_outcomes() {
+    use semio_s_fem_test_support::OriginalNumericalFixture;
+    use semio_framework_job::{admit_original_construction, OriginalConstructionDemand};
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/❄️cold/🔣️.json")).unwrap();
+    for (index, sample) in corpus["cases"].as_array().unwrap().iter().enumerate() {
+        let values = |key: &str| VecD::from_vec(sample[key].as_array().unwrap().iter().map(|value| value.as_f64().unwrap()).collect());
+        let n = sample["matrix"].as_array().unwrap().len();
+        let mut coo = Coo::new(n);
+        for (row, cells) in sample["matrix"].as_array().unwrap().iter().enumerate() {
+            for (column, value) in cells.as_array().unwrap().iter().enumerate() { if value.as_f64().unwrap() != 0.0 { coo.add(row, column, value.as_f64().unwrap()); } }
+        }
+        let a = coo.to_csr();
+        let rhs = values("rhs");
+        let mut mathematical = values("initial");
+        let tolerance = sample["tolerance"].as_f64().unwrap();
+        let maximum = sample["maximumIterations"].as_u64().unwrap() as usize;
+        let expected = pcg(&a, &rhs, &mut mathematical, tolerance, maximum);
+        assert_eq!(expected.iterations, sample["iterations"].as_u64().unwrap() as usize);
+        assert_eq!(expected.converged, sample["converged"].as_bool().unwrap());
+        for (i, value) in sample["solution"].as_array().unwrap().iter().enumerate() { assert!((mathematical.get(i) - value.as_f64().unwrap()).abs() < 1e-10); }
+        let operation = test_operation(180_000 + index as u64);
+        let mut original = OriginalNumericalFixture::new(operation);
+        let mut inputs = Some((a, rhs, values("initial")));
+        let mut candidate = None;
+        let capacity = 5 * n * size_of::<f64>();
+        let demand = OriginalConstructionDemand { items: 1, copy_bytes: size_of::<PcgJob>(), capacity_bytes: capacity, release_bytes: 0, depth: 1 };
+        assert!(original.turn(TEST_GRANT, 1, u64::MAX, |cx| admit_original_construction(cx, &mut candidate, demand, |_| {
+            let (a, b, x) = inputs.take().unwrap();
+            let job = PcgJob::new(operation, a, b, x, tolerance, maximum, 4);
+            Ok((job, RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<PcgJob>(), retained_capacity_bytes: capacity, ..Default::default() }))
+        })).expect("actual original PCG construction"));
+        let mut job = candidate.unwrap();
+        let mut complete = false;
+        for _ in 0..200_000 {
+            let end = original.turn(TEST_GRANT, 4, u64::MAX, |cx| semio_s_fem_sparse::numerical_batch_step(&mut job, cx)).expect("same original PCG turn");
+            match end { semio_s_fem_sparse::NumericalBatchEnd::Complete => { complete = true; break; }, semio_s_fem_sparse::NumericalBatchEnd::Continue => {}, other => panic!("unexpected PCG outcome: {other:?}") }
+        }
+        assert!(complete);
+        let (solution, actual) = job.solution();
+        assert_eq!(actual, expected);
+        for i in 0..n { assert_eq!(solution.get(i), mathematical.get(i)); }
+        original.close(&mut job);
+        original.finish();
+    }
+}
 
 #[test]
 fn pcg_matches_ldlt_and_dense_lu() {
@@ -624,7 +685,7 @@ fn pcg_checkpoint_payload(job: &PcgJob) -> RetainedJobPayload {
         let mut context = StepContext::new(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
         if publication.writer.staged_page_len().is_none() {
             publication.writer.begin_staged_page(&mut context).unwrap();
-        } else if publication.advance(job.operation, &job.state).unwrap() {
+        } else if test_funded_restore(|context| publication.advance(job.operation, &job.state, context)).unwrap() {
             return publication.writer.finish().unwrap();
         }
     }
@@ -644,10 +705,13 @@ fn restore_pcg(operation: Operation, payload: RetainedJobPayload) -> Result<PcgJ
     let mut sequence = 0;
     let mut fault = NumericalCheckpointFault::Truncated;
     for _ in 0..2_000_000 {
+        let handoff_due = restore.payload.is_none();
         let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        match restore.step(&mut context) {
-            Ok(Some(job)) => { assert!(restore.terminal_is_empty()); return Ok(job); }
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, RetainedCloneGrant { maximum_items: 1, ..TEST_GRANT }), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+        let step = restore.step(&mut context);
+        assert!(context.retained_progress().copied_items <= 1);
+        match step {
+            Ok(Some(job)) => { assert!(handoff_due); assert_eq!(context.retained_progress().copied_items, 1); assert_eq!(context.retained_progress().released_bytes, 0); assert!(restore.terminal_is_empty()); return Ok(job); }
             Ok(None) => {}
             Err(error) => { fault = error; break; }
         }
@@ -827,4 +891,12 @@ fn pcg_construction_initializes_one_scalar_per_opportunity_and_closes_interrupti
         if tuple_of(interrupted.close_step(grant_of(1, PCG_SCALAR_BACKING_BYTES)).expect("REASON")).0 { closed = true; break; }
     }
     assert!(closed);
+}
+
+fn test_funded_restore<T>(step: impl FnOnce(&mut StepContext<'_>) -> T) -> T {
+    let operation = test_operation(9998);
+    let mut sequence = 0;
+    let mut receipt = RetainedCloneProgress::default();
+    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
+    step(&mut context)
 }

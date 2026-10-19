@@ -1,3 +1,4 @@
+import {advanceScriptInvocation,checkScriptInvocation,type ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -38,12 +39,27 @@ interface PlaygroundRow {
   readonly userPorts?: Readonly<Record<"react" | "wgpu", readonly number[]>>;
 }
 
+/** 🧾️ Cargo declarations retain their authored TOML field names until listener projection. */
+interface PlaygroundSourceRow {
+ readonly variant:string;
+ readonly ports:Readonly<Record<"react"|"wgpu",number>>;
+ readonly user_ports?:Readonly<Record<"react"|"wgpu",readonly number[]>>;
+}
+
+/** 🎮️ Reads declared listener ports before any compiled catalog publication under the same original invocation. */
+export async function containerPlaygroundDeclarationsV1(workspace:string,invocation:ScriptInvocation):Promise<readonly PlaygroundRow[]>{
+ checkScriptInvocation(invocation);const {cacheInternals,libraryBootstrap}=await import("../../../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");await libraryBootstrap;checkScriptInvocation(invocation);
+ const control={check:()=>checkScriptInvocation(invocation),advance:(stage:string)=>advanceScriptInvocation(invocation,"container-bootstrap:"+stage,"running")},contributions=await cacheInternals.workspaceCatalogBuildContributionsV1(workspace),manifests=await cacheInternals.walkCargoTomlControlledV1(workspace,control),declared:readonly PlaygroundSourceRow[]=cacheInternals.collectPlaygroundCatalog(manifests,workspace,contributions),independent:PlaygroundSourceRow[]=[],require=createRequire(import.meta.url);
+ let visited=0;for(const manifest of manifests){if(!contributions.some(contribution=>contribution.publication.contributions.some(owner=>owner.packageRoots.some(root=>manifest.startsWith(root+"/")))))continue;if(++visited%16===0)await control.advance("manifest-oracle");control.check();const parsed=require("@iarna/toml").parse(readFileSync(join(workspace,manifest),"utf8")),metadata=parsed.package?.metadata;if(metadata?.component?.package&&["plugin","extension"].includes(metadata.semio?.["component-kind"]))independent.push(...(metadata.semio.playground??[]));}
+ const ports=(rows:readonly PlaygroundSourceRow[]):PlaygroundRow[]=>rows.map(row=>({variant:row.variant,ports:row.ports,...(row.user_ports===undefined?{}:{userPorts:row.user_ports})})),catalog=ports(declared);assert.deepEqual(catalog,ports(independent),"Declared container listeners must agree with the independent TOML reader");assert.equal(new Set(catalog.map(row=>row.variant)).size,catalog.length,"Declared playground variants must be unique");await control.advance("listeners-received");return catalog;
+}
+
 /** 🚀️ Verifies the image's pinned runtime acquisition before application dependency synchronization, and that every named
  * volume nested in the checkout is private to that checkout (`${devcontainerId}`: two clones with the same folder name must
  * not share `node_modules` or build caches) and, created root-owned by Docker, is handed to the remote user before
  * `postCreateCommand` installs into it. https://containers.dev/implementors/json_reference/#variables-in-devcontainerjson
  * https://code.visualstudio.com/remote/advancedcontainers/improve-performance#_use-a-targeted-named-volume */
-export function testContainerRuntimeBootstrap(workspace: string,catalogRoot:string): void {
+export async function testContainerRuntimeBootstrap(workspace: string,invocation:ScriptInvocation): Promise<void> {
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🚀️runtime-bootstrap/🔣️.json"), "utf8"));
   const dockerfile = readFileSync(join(workspace, ".devcontainer/Dockerfile"), "utf8"), configSource = readFileSync(join(workspace, ".devcontainer/devcontainer.json"), "utf8");
   const config = Bun.JSONC.parse(configSource) as DevcontainerConfig;
@@ -70,9 +86,7 @@ export function testContainerRuntimeBootstrap(workspace: string,catalogRoot:stri
   assert.ok(!Object.keys(config.features).some((key) => /\/nx:/.test(key)), "Nx must come from the repository's locked bootstrap");
   assert.deepEqual(config.features[fixture.dockerDaemonFeature.id], fixture.dockerDaemonFeature.options, "Hub backends publish on 127.0.0.1, so the devcontainer needs its own Docker daemon (docker-in-docker, Docker CE on Ubuntu noble), not the host's socket");
   const lodash = require("lodash"), readManifest = (path: string): ProjectManifest => JSON.parse(readFileSync(join(workspace, path), "utf8"));
-  const catalogPath = join(catalogRoot,"🚀️playgrounds.json");
-  const catalog: readonly PlaygroundRow[] = JSON.parse(readFileSync(catalogPath, "utf8"));
-  assert.deepEqual(catalog, require("jsonc-parser").parse(readFileSync(catalogPath, "utf8")));
+  const catalog = await containerPlaygroundDeclarationsV1(workspace,invocation);
   const declaredPort = (command: ForwardedCommand): number => {
     if (command.playground !== undefined) {
       const row = catalog.find((candidate) => candidate.variant === command.playground);
@@ -125,5 +139,5 @@ export function testContainerRuntimeBootstrap(workspace: string,catalogRoot:stri
     }
     for (const architecture of fixture.rejectedArchitectures) assert.notEqual(spawnSync("sh", ["-ec", command], { env: { ...process.env, runtime_arch: architecture }, encoding: "utf8", timeout: 5000 }).status, 0);
   }
-  console.log("✅️ Container runtime pins, checksum-before-extraction, repository Nx ownership, forwarded dashboard-command ports, volume ownership before creation and JSONC/lodash/native shell oracles PASS");
+  console.log("[DEBUG] Container runtime pins, checksums, original build-tool setup, source listener ports, volume ownership and JSONC/TOML/lodash oracles completed"+(process.platform==="win32"?"; native shell selector not executed on Windows":" with native shell selector"));
 }

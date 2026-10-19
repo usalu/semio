@@ -1,5 +1,5 @@
-//! ↩️ Inverse for `DragSelection` — the absolute setters restoring every BASE position the drag moves
 //! (exact, never a negated offset that would accumulate float error). Nothing moved ⇒ `Vec::new()`.
+//! ↩️ Inverse for `DragSelection` — the absolute setters restoring every BASE position the drag moves
 use crate::standards::v1::subsets::any::schema::mutations::move_node::MoveNode;
 use crate::standards::v1::subsets::any::schema::mutations::move_target_region::MoveTargetRegion;
 use {crate::standards::v1::subsets::any::schema::mutations::move_node, crate::standards::v1::subsets::any::schema::mutations::move_target_region, crate::standards::v1::subsets::any::schema::mutations::selection::puzzle2d_selection};

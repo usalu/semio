@@ -1,12 +1,128 @@
 {
- "$schema":"https://json-schema.org/draft/2020-12/schema",
- "$id":"semio:framework:pack:original-record-receiving",
- "title":"Original Record Receiving",
- "type":"object","additionalProperties":false,
- "required":["text","items","turn","laws"],
- "properties":{
-  "text":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},
-  "turn":{"type":"object","additionalProperties":false,"required":["items","copyBytes","capacityBytes","releaseBytes","depth"],"properties":{"items":{"const":1},"copyBytes":{"type":"integer","minimum":1},"capacityBytes":{"type":"integer","minimum":1},"releaseBytes":{"type":"integer","minimum":1},"depth":{"type":"integer","minimum":1}}},
-  "laws":{"const":["sameOriginalSource","oneItemContinuation","sameOriginalNative","independentSerdeOutput","paidPartialRetirement"]}
- }
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:framework:pack:original-record-receiving",
+  "title": "Original Record Receiving",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "text",
+    "items",
+    "turn",
+    "laws",
+    "documentReceiving"
+  ],
+  "properties": {
+    "text": {
+      "type": "string"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "turn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ],
+      "properties": {
+        "items": {
+          "const": 1
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "laws": {
+      "const": [
+        "sameOriginalSource",
+        "oneItemContinuation",
+        "sameOriginalNative",
+        "independentSerdeOutput",
+        "paidPartialRetirement"
+      ]
+    },
+    "documentReceiving": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceFormat",
+        "guessBody",
+        "copySource",
+        "codecs",
+        "stages",
+        "deniedAxes",
+        "checks",
+        "firstCloseHeapBytes"
+      ],
+      "properties": {
+        "sourceFormat": {
+          "const": "Document"
+        },
+        "guessBody": {
+          "const": false
+        },
+        "copySource": {
+          "const": false
+        },
+        "codecs": {
+          "const": [
+            0,
+            1
+          ]
+        },
+        "stages": {
+          "const": [
+            "envelope",
+            "anchor",
+            "catalog",
+            "body",
+            "typed",
+            "ready",
+            "close"
+          ]
+        },
+        "deniedAxes": {
+          "const": [
+            "items",
+            "copy",
+            "capacity",
+            "release",
+            "depth"
+          ]
+        },
+        "checks": {
+          "const": [
+            "footer",
+            "segmentCrc32c",
+            "chunkBlake3",
+            "declaredFields"
+          ]
+        },
+        "firstCloseHeapBytes": {
+          "const": 0
+        }
+      }
+    }
+  }
 }

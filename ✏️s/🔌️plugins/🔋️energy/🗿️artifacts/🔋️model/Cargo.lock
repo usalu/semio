@@ -535,6 +535,7 @@ dependencies = [
  "semio-framework-value-derive",
  "serde",
  "wasm-bindgen",
+ "semio-framework-diagnostic",
 ]
 
 [[package]]
@@ -1103,6 +1104,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-math"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dispatch-macros",
+ "semio-framework-geometry",
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-framework-mesh-component-references"
 version = "0.1.0"
 dependencies = [
@@ -1333,6 +1343,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
+ "semio-framework-value-snapshot-read",
 ]
 
 [[package]]
@@ -3788,6 +3799,7 @@ dependencies = [
  "semio-framework-replication-presence",
  "semio-framework-replication-wire-core",
  "semio-framework-value",
+ "semio-framework-dsl-record",
 ]
 
 [[package]]
@@ -4610,6 +4622,7 @@ dependencies = [
  "semio-framework-value-shared-issuance",
  "serde",
  "serde_json",
+ "semio-framework-hash",
 ]
 
 [[package]]
@@ -4811,6 +4824,7 @@ dependencies = [
  "semio-s-plugin-energy-engine-model",
  "semio-s-plugin-energy-engine-schedule",
  "serde_json",
+ "semio-s-plugin-energy-engine-sim",
 ]
 
 [[package]]
@@ -4898,6 +4912,7 @@ dependencies = [
  "semio-s-plugin-energy-engine-model",
  "semio-s-plugin-energy-engine-schedule",
  "serde_json",
+ "semio-framework-math",
 ]
 
 [[package]]

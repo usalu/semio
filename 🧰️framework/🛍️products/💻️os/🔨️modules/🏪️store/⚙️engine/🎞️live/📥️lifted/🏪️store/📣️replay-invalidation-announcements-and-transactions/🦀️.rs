@@ -90,7 +90,9 @@ where
     /// `BackboneMessage::Mutations` batch. `false` when the publication is not an outbound one awaiting
     /// its announcement; the ACK becomes admissible only after this returns `true`.
     pub async fn flush_published_apply_batch(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, publication: &mut ArtifactStoreBatchPublication<P, Mutation>) -> Result<bool, VcsError> {
-        if publication.phase != ArtifactStoreOneItemPublicationPhase::AwaitingAck || !publication.outbound {
+        
+        if !publication.original_registry.as_ref().is_some_and(|registry|registry.ptr_eq(&self.snapshot_read_leases)){return Err(VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"batched announcement requires its original Store issuer")));}
+if publication.phase != ArtifactStoreOneItemPublicationPhase::AwaitingAck || !publication.outbound {
             return Ok(false);
         }
         publication.outbound = false;
@@ -161,7 +163,7 @@ where
     /// folds the projection again — transactional: a log that would not fold keeps every transition. A name this log does
     /// not hold, or one another replica authored, retracts nothing: only this replica's own speculative head can be
     /// refused to it. Answers the retracted ids.
-    pub async fn retract_transitions(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, refused: &[String]) -> Result<Vec<String>, VcsError> {
+    pub async fn retract_transitions(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, refused: &[String]) -> Result<Vec<String>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let actor = store_log.transition_actor();
         let own: Vec<&semio_framework_os_spr::MutationEnvelope> = store_log.envelope.transitions.iter().filter(|transition| transition.actor == actor).collect();
         let retracted = transition_retraction_closure(&own, |transition| transition.mutation_id.0.as_str(), |transition| transition.dependencies.iter().map(|dependency| dependency.0.as_str()).collect(), refused);
@@ -219,7 +221,7 @@ where
     /// every later one folds its operations onto the projection and appends them to that edit, every operation stamped with
     /// the ref. The open edit is always the applied tail ([`Self::ingest_remote`] lifts it over remote edits), and neither
     /// the shared log nor a persisted form holds it before its commit, so an abort leaves no trace anywhere.
-    pub async fn append_transaction(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, mutations: Vec<Mutation>, transaction: protocol::TransactionRef, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+    pub async fn append_transaction(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, mutations: Vec<Mutation>, transaction: protocol::TransactionRef, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> where P: Clone, Mutation: ColdMutation<P> {
         if mutations.is_empty() {
             return Err(VcsError::EmptyApply);
         }
@@ -264,7 +266,7 @@ where
 
     /// 🪁️ The first append of a tool transaction: one fresh edit at the applied tail holding its operations, open and
     /// unannounced.
-    async fn open_transaction_edit(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, mutations: Vec<Mutation>, transaction: protocol::TransactionRef, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+    async fn open_transaction_edit(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, mutations: Vec<Mutation>, transaction: protocol::TransactionRef, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let started_at = now_iso();
         let pre_snapshot = Arc::clone(&*store_live.current);
         let (forwards, inverse, mutation_meta, post, messages, unit_flags) = store_owners.replay_mutations(store_log, &pre_snapshot, mutations, Some(&transaction), identity).await?;
@@ -321,7 +323,7 @@ where
     /// 🪃️ `AbortTransaction`: the open edit leaves the ledger, its messages and its operations retire, the edit sequence it
     /// took is returned, and the projection folds back to the history without it — the projection and revision of before
     /// its first append. Never suspends.
-    pub fn abort_open_transaction(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, transaction_id: &str) -> Result<(), VcsError> {
+    pub fn abort_open_transaction(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, transaction_id: &str) -> Result<(), VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let open = store_log.open_transaction_named(transaction_id)?;
         let removed = store_log.envelope.vcs.edits.extract_if(|edit| edit.id == open.edit_id).map_err(|fault| VcsError::ValidationFailed(format!("the open transaction edit cannot leave its ledger: {fault:?}")))?;
         if removed.iter().any(|edit| edit.sequence_number == store_log.edit_sequence) {
@@ -344,7 +346,7 @@ where
     /// clock stamps after everything this replica has seen and its next edit sequence, and the Report replay recomputes
     /// their inverses and messages against the merged head (keep-and-record: nothing is quarantined or refused). When the
     /// ledger can no longer hold it the transaction is aborted — zero trace — and the refusal is answered.
-    pub async fn restore_open_transaction(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, open: OpenToolTransaction, mut edit: Edit<Mutation>) -> Result<(), VcsError> {
+    pub async fn restore_open_transaction(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, open: OpenToolTransaction, mut edit: Edit<Mutation>) -> Result<(), VcsError> where P: Clone, Mutation: ColdMutation<P> {
         for meta in edit.mutation_meta.iter_mut() {
             store_log.clock.tick(now_ms());
             meta.timestamp = store_log.clock;

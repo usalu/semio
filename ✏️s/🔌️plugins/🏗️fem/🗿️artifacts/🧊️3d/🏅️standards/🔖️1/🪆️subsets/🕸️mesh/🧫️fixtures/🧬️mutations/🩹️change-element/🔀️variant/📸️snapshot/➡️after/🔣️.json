@@ -1,0 +1,62 @@
+{
+  "nodes": [
+    {
+      "y": 0,
+      "z": 0,
+      "x": 0,
+      "id": "n1"
+    },
+    {
+      "y": 0,
+      "z": 0,
+      "x": 1,
+      "id": "n2"
+    },
+    {
+      "y": 0,
+      "z": 0,
+      "x": 2,
+      "id": "n3"
+    }
+  ],
+  "elements": [
+    {
+      "start": "n1",
+      "id": "e1",
+      "materialId": "steel",
+      "sectionId": "sec1",
+      "end": "n2",
+      "kind": "frame",
+      "roll": 0
+    }
+  ],
+  "solids": [],
+  "materials": [
+    {
+      "id": "steel",
+      "name": "Steel",
+      "e": 210000000000.0,
+      "nu": 0.3,
+      "rho": 7850.0,
+      "g": 80000000000.0
+    }
+  ],
+  "sections": [
+    {
+      "name": "Section",
+      "iz": 2E-05,
+      "iy": 1E-05,
+      "area": 0.02,
+      "id": "sec1",
+      "j": 3E-05
+    }
+  ],
+  "supports": [],
+  "loadCases": [],
+  "combinations": [],
+  "analysis": {
+    "modalCount": 6,
+    "bucklingCount": 6,
+    "deformationScale": 1.0
+  }
+}

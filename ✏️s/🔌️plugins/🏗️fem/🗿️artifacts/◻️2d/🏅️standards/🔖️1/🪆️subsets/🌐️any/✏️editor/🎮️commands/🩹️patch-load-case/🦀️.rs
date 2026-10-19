@@ -4,8 +4,19 @@ use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::muta
 use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::change_load_case_name;
 use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::change_load_case_self_weight;
 
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_plugin::ArtifactView;
+
+use semio_framework_plugin::ConfigView;
+
+use semio_framework_plugin::Emit;
+
+use semio_framework_plugin::Fault;
+
+use semio_framework_plugin::NoConfig;
+
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 
 type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
@@ -29,14 +40,14 @@ pub fn handle(payload: &PatchLoadCase, doc: &ArtifactView<'_, Fem2dSnapshot>, _c
             if case.name == payload.value {
                 return Ok(Emit::default());
             }
-            Ok(Emit::mutations(vec![Fem2dMutation::ChangeLoadCaseName(change_load_case_name::ChangeLoadCaseName { case_id: payload.id.clone(), new_name: payload.value.clone() })]))
+            Ok(Emit::mutations(vec![Fem2dMutation::ChangeLoadCaseName(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::change_load_case_name::ChangeLoadCaseName { case_id: payload.id.clone(), new_name: payload.value.clone() })]))
         }
         "selfWeight" => {
             let new_self_weight: bool = payload.value.trim().parse().map_err(|_| Fault::from("fem2d.patch.load-case-value"))?;
             if case.self_weight == new_self_weight {
                 return Ok(Emit::default());
             }
-            Ok(Emit::mutations(vec![Fem2dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::ChangeLoadCaseSelfWeight { case_id: payload.id.clone(), new_self_weight })]))
+            Ok(Emit::mutations(vec![Fem2dMutation::ChangeLoadCaseSelfWeight(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::change_load_case_self_weight::ChangeLoadCaseSelfWeight { case_id: payload.id.clone(), new_self_weight })]))
         }
         _ => Err(Fault::from("fem2d.patch.load-case-field")),
     }

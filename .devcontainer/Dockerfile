@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG BUN_VERSION=1.3.14
+ARG BUN_VERSION=1.4.2
 ARG NODE_VERSION=24.15.0
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -71,8 +71,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN set -eu; \
     runtime_arch="$(dpkg --print-architecture)"; \
     case "$runtime_arch" in \
-      amd64) bun_archive="x64-baseline"; bun_sha="a063908ae08b7852ca10939bbdc6ceed3ddabce8fb9402dce83d65d73b36e6c7"; node_archive="x64"; node_sha="472655581fb851559730c48763e0c9d3bc25975c59d518003fc0849d3e4ba0f6";; \
-      arm64) bun_archive="aarch64"; bun_sha="a27ffb63a8310375836e0d6f668ae17fa8d8d18b88c37c821c65331973a19a3b"; node_archive="arm64"; node_sha="f3d5a797b5d210ce8e2cb265544c8e482eaedcb8aa409a8b46da7e8595d0dda0";; \
+      amd64) bun_archive="x64-baseline"; bun_sha="c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f"; node_archive="x64"; node_sha="472655581fb851559730c48763e0c9d3bc25975c59d518003fc0849d3e4ba0f6";; \
+      arm64) bun_archive="aarch64"; bun_sha="54328bbc2d9c8e0c9f892c544d66c57a83b84139e34909e5ee81758f1ac8fda7"; node_archive="arm64"; node_sha="f3d5a797b5d210ce8e2cb265544c8e482eaedcb8aa409a8b46da7e8595d0dda0";; \
       *) echo "Unsupported runtime architecture: $runtime_arch" >&2; exit 1;; \
     esac; \
     mkdir -p /tmp/semio-runtime; \
@@ -106,13 +106,6 @@ RUN mkdir -p /home/vscode/.local/bin \
     /home/vscode/.claude \
     /home/vscode/.codex \
     /home/vscode/.config/gh \
-    /home/vscode/.config/cursor \
-    /home/vscode/.config/antigravity \
-    /home/vscode/.config/openai \
-    /home/vscode/.codeium \
-    /home/vscode/.cursor-server \
-    /home/vscode/.antigravity-server \
-    /home/vscode/.vscode-server \
-    /home/vscode/.windsurf-server
+    /home/vscode/.config/openai
 
 WORKDIR /workspaces/semio

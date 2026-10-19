@@ -1,0 +1,26 @@
+{
+  "indexBits":32,
+  "scalarBytes":8,
+  "cases":[
+    {"order":0,"modes":1,"admitted32":false,"admitted64":false},
+    {"order":1,"modes":0,"admitted32":false,"admitted64":false},
+    {"order":1,"modes":1,"admitted32":true,"admitted64":true},
+    {"order":40,"modes":1,"admitted32":true,"admitted64":true},
+    {"order":41,"modes":1,"admitted32":true,"admitted64":true},
+    {"order":132,"modes":1,"admitted32":true,"admitted64":true},
+    {"order":132,"modes":7,"admitted32":true,"admitted64":true},
+    {"order":132,"modes":8,"admitted32":true,"admitted64":true},
+    {"order":227,"modes":1,"admitted32":true,"admitted64":true},
+    {"order":228,"modes":1,"admitted32":true,"admitted64":true},
+    {"order":40,"modes":40,"admitted32":true,"admitted64":true},
+    {"order":41,"modes":21,"admitted32":true,"admitted64":true},
+    {"order":64,"modes":20,"admitted32":true,"admitted64":true},
+    {"order":10,"modes":11,"admitted32":false,"admitted64":false},
+    {"order":23170,"modes":1,"admitted32":true,"admitted64":true},
+    {"order":23171,"modes":1,"admitted32":false,"admitted64":true},
+    {"order":1518500249,"modes":1,"admitted32":false,"admitted64":true},
+    {"order":1518500250,"modes":1,"admitted32":false,"admitted64":false},
+    {"order":4294967295,"modes":1,"admitted32":false,"admitted64":false},
+    {"order":4294967296,"modes":1,"admitted32":false,"admitted64":false}
+  ]
+}

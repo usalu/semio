@@ -1,5 +1,5 @@
-//! 👁️ Puzzle 5D viewer — the read-only counterpart of the sibling editor module for this subset
 //! (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.2). `Puzzle5dViewer`
+//! 👁️ Puzzle 5D viewer — the read-only counterpart of the sibling editor module for this subset
 //! implements `ArtifactViewer`, never `ArtifactEditor`/`ArtifactApp` — `ViewerApp<Puzzle5dViewer>`
 //! (framework SDK) is the sole runtime adapter, so this file can never structurally emit an artifact
 //! or draft mutation. MUST NOT import anything from the sibling editor module
@@ -10,9 +10,16 @@
 //! `Puzzle5dPlaySnapshot` newtype (a `semio_framework_pack_json::Value` wrapper the play app's command layer
 //! mutates); that distinction is this artifact's own pre-existing quirk, not introduced here.
 
-use crate::{Puzzle5dMutation, Puzzle5dSnapshot, PUZZLE5D_DIALECT, PUZZLE_5D_SCHEMA};
+use crate::Puzzle5dMutation;
+
+use crate::Puzzle5dSnapshot;
+
+use crate::PUZZLE5D_DIALECT;
+
+use crate::PUZZLE_5D_SCHEMA;
 use crate::viewer::puzzle5d::modes::view;
-use crate::viewer::puzzle5d::modes::view::windows::{board2d, world3d};
+use crate::viewer::puzzle5d::modes::view::windows::board2d;
+use crate::viewer::puzzle5d::modes::view::windows::world3d;
 use semio_framework_plugin::app::Dialect;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;

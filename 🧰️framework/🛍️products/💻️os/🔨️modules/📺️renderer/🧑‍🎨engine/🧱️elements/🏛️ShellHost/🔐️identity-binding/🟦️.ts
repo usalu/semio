@@ -20,7 +20,7 @@ import { type DocumentScope } from "@semio-tech/framework/document/scope";
 import { STREAM_MUX_ANNOUNCEMENT, documentRuntimeKeyV1 } from "@semio-tech/framework/backbone";
 import { type MutationEnvelope } from "@semio-tech/framework/replication";
 import { IDENTITY_CONFIG_SCHEMA } from "@semio-tech/framework/backbone/config-lane";
-import { type Identity, type IdentityConfigMutation, applyIdentityConfigMutation } from "@semio-tech/framework/config/mutations";
+import { type Identity, type IdentityConfigMutation, identityMutationDiffPair } from "@semio-tech/framework/config/mutations";
 import { type UiLocale } from "@semio-tech/ui-react";
 import { type FrameworkOsDefaults, type ResolvedShellLocks } from "../../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
 import { SILENT_STREAM_MUX_ENDPOINT_V1, StreamMuxChannelV1, pageStreamMuxChannelV1, type StreamMuxEndpointV1 } from "@semio-tech/framework/io/stream-mux";
@@ -134,33 +134,20 @@ export function hubBootstrapOriginV1(): string {
   return typeof globalThis.location === "undefined" ? "http://127.0.0.1:7777" : globalThis.location.origin;
 }
 
-/** 🪪️ One `MutationEnvelope` wrapping an {@link IdentityConfigMutation} — mirrors the exact shape the
- * in-source `foldIdentityEvent` tests build (`🏪️store/👷️worker/🟦️.ts`'s `🔖️DirectoryLaneTests`/identity
- * fold vectors), since this facet's diff is whole-record (never merged) and has no history/undo chrome
- * wired to it this wave (no real inverse chain needed beyond a structurally valid envelope). */
+/** 🪪️ One `MutationEnvelope` wrapping an {@link IdentityConfigMutation}: `diff.payload` is the sparse identity diff the mutation
+ * names and `inverse.inverseDiff` the sum of its concrete inverse mutations' diffs (`🎚️config/🧬️schema/🧬️mutations/🟦️.ts`). The store
+ * worker folds the diff through the twin of the central applier and persists the result; no record travels. */
 export function identityMutationEnvelope(actor: string, mutation: IdentityConfigMutation, base: Identity | null): MutationEnvelope {
-  const nextPayload = applyIdentityConfigMutation(base, mutation);
+  const { diff, inverse } = identityMutationDiffPair(mutation, base);
   return {
     id: `identity-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
     actor,
     document: IDENTITY_CONFIG_SCHEMA,
     schemaVersion: IDENTITY_CONFIG_SCHEMA,
     payloadHash: "",
-    diff: { schemaId: IDENTITY_CONFIG_SCHEMA, payload: nextPayload },
-    inverse: { targetOperation: "sign-in", inverseDiff: { schemaId: IDENTITY_CONFIG_SCHEMA, payload: base }, baseVersion: 0, undoPolicy: "exactBaseOnly" },
+    diff: { schemaId: IDENTITY_CONFIG_SCHEMA, payload: diff },
+    inverse: { targetOperation: mutation.mutation, inverseDiff: { schemaId: IDENTITY_CONFIG_SCHEMA, payload: inverse }, baseVersion: 0, undoPolicy: "exactBaseOnly" },
   };
-}
-
-/** 🪪️ `decodePayload` for {@link foldIdentityEvent} — a remote/cross-tab envelope's `diff.payload` is
- * either a full `Identity` record or `null` (signed out); anything else (a different facet's envelope
- * riding the same `BroadcastChannel`, contract §C6 has no such case today but this stays defensive)
- * returns `undefined` so the fold leaves `base` untouched. */
-export function decodeIdentityPayload(payload: unknown): Identity | null | undefined {
-  if (payload === null) return null;
-  if (typeof payload !== "object") return undefined;
-  const candidate = payload as Partial<Identity>;
-  if (typeof candidate.userId === "string" && typeof candidate.email === "string" && typeof candidate.hubBaseUrl === "string") return candidate as Identity;
-  return undefined;
 }
 
 /** 🪪️ Mints the shell actor id (contract §C0: `user:{userId}#{shellSessionId}`) once identity

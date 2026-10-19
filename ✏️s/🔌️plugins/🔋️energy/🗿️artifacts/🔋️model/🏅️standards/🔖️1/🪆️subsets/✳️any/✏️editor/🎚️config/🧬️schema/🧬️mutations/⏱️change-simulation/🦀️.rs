@@ -31,6 +31,17 @@ impl ChangeSimulationSettings {
 
 impl protocol::MutationKind<EnergyModelConfig, EnergyModelConfigMutation> for ChangeSimulationSettings {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "simulation-settings", kind: "change-simulation-settings", record: "ChangedSimulationSettings" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change simulation settings to {} / {} min, {} warmup days", self.zone_timestep_minutes, self.system_timestep_minutes, self.warmup_days), &format!("Simulationseinstellungen auf {} / {} min, {} Einschwingtage ändern", self.zone_timestep_minutes, self.system_timestep_minutes, self.warmup_days))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["simulation-settings".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<EnergyModelConfig, EnergyModelConfigMutation> for ChangeSimulationSettings {
     fn diff(&self, base: &EnergyModelConfig) -> protocol::MutationOutcome<EnergyModelConfigDiff> {
         protocol::MutationOutcome::new(EnergyModelConfigDiff {
             zone_timestep_minutes: (base.zone_timestep_minutes != self.zone_timestep_minutes).then_some(self.zone_timestep_minutes),
@@ -45,23 +56,8 @@ impl protocol::MutationKind<EnergyModelConfig, EnergyModelConfigMutation> for Ch
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change simulation settings to {} / {} min, {} warmup days", self.zone_timestep_minutes, self.system_timestep_minutes, self.warmup_days), &format!("Simulationseinstellungen auf {} / {} min, {} Einschwingtage ändern", self.zone_timestep_minutes, self.system_timestep_minutes, self.warmup_days))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["simulation-settings".into()]
-    }
 }
 
 #[cfg(test)]
-mod law_tests {
-    use super::*;
-
-    /// ⚖️ The inverse diffs sum to the negative of the forward diff (L3).
-    #[semio_framework_async_macros::async_test]
-    async fn inverse_diffs_sum_to_the_negative_diff() {
-        let base = EnergyModelConfig::default();
-        let change = EnergyModelConfigMutation::ChangeSimulationSettings(ChangeSimulationSettings { zone_timestep_minutes: 15, system_timestep_minutes: 60, warmup_days: 1 });
-        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&change, &base).await;
-    }
-}
+#[path = "🧪️tests/⚖️law/🦀️.rs"]
+mod law_tests;

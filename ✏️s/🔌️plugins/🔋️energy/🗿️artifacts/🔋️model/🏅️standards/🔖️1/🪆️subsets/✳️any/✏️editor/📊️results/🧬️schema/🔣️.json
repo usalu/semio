@@ -1,0 +1,15 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"semio.energy.results-index.v2",
+  "title":"Energy Indexed Results",
+  "type":"object","additionalProperties":false,
+  "required":["schemaVersion","magic","headerBytes","rowBytes","opaqueRows","windowRows","chunkBytes","fields","locales","queryIds","policy","generationFence","paintWork"],
+  "properties":{
+    "schemaVersion":{"const":2},"magic":{"const":"ESF2"},"headerBytes":{"const":76},"rowBytes":{"const":24},
+    "opaqueRows":{"type":"integer","minimum":0},"windowRows":{"type":"integer","minimum":0},"chunkBytes":{"const":65536},
+    "fields":{"type":"array","minItems":4,"maxItems":4,"items":{"type":"string"}},
+    "locales":{"const":["en","de"]},"queryIds":{"type":"array","items":{"type":"integer","minimum":0}},
+    "policy":{"type":"object","additionalProperties":false,"required":["maximumItems","maximumCopyBytes"],"properties":{"maximumItems":{"const":1},"maximumCopyBytes":{"const":4096}}},
+    "generationFence":{"const":true},"paintWork":{"const":{"aggregateDecodes":0,"sorts":0,"rowCopies":0,"indexedReadsPerFace":true}}
+  }
+}

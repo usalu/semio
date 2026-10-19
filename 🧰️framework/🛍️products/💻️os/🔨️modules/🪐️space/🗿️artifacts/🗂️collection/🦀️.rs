@@ -1,5 +1,6 @@
 //! 🗂️ Composable persisted collection artifact.
 
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 #[cfg(test)]
 #[global_allocator]
 static TEST_ALLOCATION_OBSERVER:semio_framework_trace_memory_testing::RequestedAllocator=semio_framework_trace_memory_testing::RequestedAllocator;
@@ -446,20 +447,12 @@ impl protocol::list_delta::RowPatch<CollectionEntry> for CollectionEntryPatch {
 }
 
 impl protocol::MutationDiff<CollectionSnapshot> for CollectionDiff {
-    fn apply(&self, base: &CollectionSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<CollectionSnapshot> {
-        let mut next = base.clone();
-        if let Some(name) = &self.renamed_collection {
-            next.name = name.clone();
-        }
-        if let Some(delta) = &self.folders {
-            next.folders = delta.commit_onto(&next.folders, capability).map_err(|error| error.under(["folders"]))?;
-        }
-        if let Some(delta) = &self.entries {
-            next.entries = delta.commit_onto(&next.entries, capability).map_err(|error| error.under(["entries"]))?;
-        }
-        Ok(next)
-    }
 
+
+
+}
+
+impl protocol::ColdMutationDiff<CollectionSnapshot> for CollectionDiff {
     fn absorb(&mut self, other: Self) {
         if other.renamed_collection.is_some() {
             self.renamed_collection = other.renamed_collection;
@@ -479,19 +472,46 @@ impl protocol::MutationDiff<CollectionSnapshot> for CollectionDiff {
             (first, later) => later.or(first),
         };
     }
+
+    fn apply(&self, next: &mut CollectionSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let prepared_folders = if let Some(delta) = &self.folders {
+            Some(protocol::PreparedField::new(delta.commit_onto(&next.folders, capability).map_err(|error| error.under(["folders"]))?, drop, capability))
+        } else {
+            None
+        };
+        let prepared_entries = if let Some(delta) = &self.entries {
+            Some(protocol::PreparedField::new(delta.commit_onto(&next.entries, capability).map_err(|error| error.under(["entries"]))?, drop, capability))
+        } else {
+            None
+        };
+        if let Some(name) = &self.renamed_collection {
+            next.name = name.clone();
+        }
+        if let Some(prepared) = prepared_folders {
+            prepared.install(&mut next.folders);
+        }
+        if let Some(prepared) = prepared_entries {
+            prepared.install(&mut next.entries);
+        }
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<CollectionSnapshot> for CollectionDiff {
+
+
+    fn is_empty(&self) -> bool {
+        self.renamed_collection.is_none() && self.folders.as_ref().is_none_or(CollectionFoldersDelta::is_empty) && self.entries.as_ref().is_none_or(CollectionEntriesDelta::is_empty)
+    }
+}
+
+impl protocol::ColdDiffAlgebra<CollectionSnapshot> for CollectionDiff {
     fn inverse(&self, base: &CollectionSnapshot) -> Self {
         Self {
             renamed_collection: self.renamed_collection.as_ref().map(|_| base.name.clone()),
             folders: self.folders.as_ref().map(|delta| delta.inverse(&base.folders)),
             entries: self.entries.as_ref().map(|delta| delta.inverse(&base.entries)),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.renamed_collection.is_none() && self.folders.as_ref().is_none_or(CollectionFoldersDelta::is_empty) && self.entries.as_ref().is_none_or(CollectionEntriesDelta::is_empty)
     }
 }
 
@@ -681,6 +701,13 @@ impl protocol::Mutation<CollectionSnapshot> for CollectionMutation {
         &Self::DESCRIPTORS[index]
     }
 
+
+
+
+}
+
+impl protocol::ColdMutation<CollectionSnapshot> for CollectionMutation {
+    type ReferenceDiff = CollectionDiff;
     /// 🧮️ Mechanical wrap only (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
     /// CONFLICTS W0): no `Error`/`Warning`/`Fatal` messages added here yet — that is the W3
     /// fan-out's job per verb family.
@@ -732,7 +759,6 @@ impl protocol::Mutation<CollectionSnapshot> for CollectionMutation {
             CollectionMutation::ReplaceEntryBody { entry_id, .. } => missing("Entry", entry_id),
         }
     }
-
     fn inverse(&self, base: &CollectionSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
     Ok((|| {
         match self {

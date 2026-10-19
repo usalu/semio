@@ -64,13 +64,35 @@ impl Default for Puzzle3dAddBrushObjectWork {
             payload: None,
             object_id: None,
             mesh_url: None,
-            vortices: Vec::with_capacity(PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT),
-            mutations: Vec::with_capacity(2),
+            vortices: Vec::new(),
+            mutations: Vec::new(),
         }
     }
 }
 
 impl Puzzle3dAddBrushObjectWork {
+    /// 🪙️ Exact typed backing storage belongs to the initiating original construction scope.
+    pub fn original_birth_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let mut capacity = 0_usize;
+        capacity = (PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT as usize).checked_mul(size_of::<semio_s_artifact_puzzle_3d_model::Puzzle3dVortex>()).and_then(|bytes| capacity.checked_add(bytes))
+            .ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Puzzle3D Puzzle3dAddBrushObjectWork backing extent overflow"))?;
+        capacity = (2 as usize).checked_mul(size_of::<Puzzle3dMutation>()).and_then(|bytes| capacity.checked_add(bytes))
+            .ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Puzzle3D Puzzle3dAddBrushObjectWork backing extent overflow"))?;
+        Ok(semio_framework_value::RetirementDemand { capacity_bytes: capacity, depth: 1, ..Default::default() })
+    }
+
+    /// 🏭️ The scope authorizes every typed buffer before its owner is born and receives actual capacities.
+    pub fn from_original_construction(scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+        scope.admit_owner(Self::original_birth_demands()?)?;
+        let work = Self {
+            vortices: Vec::with_capacity(PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT),
+            mutations: Vec::with_capacity(2),
+            ..Self::default()
+        };
+        let capacity = work.vortices.capacity() * size_of::<semio_s_artifact_puzzle_3d_model::Puzzle3dVortex>() + work.mutations.capacity() * size_of::<Puzzle3dMutation>();
+        Ok((work, semio_framework_value::RetainedCloneProgress { retained_capacity_bytes: capacity, ..Default::default() }))
+    }
+
     fn vector3(value: Option<&Value>) -> Option<[f64; 3]> {
         let values = value.and_then(Value::as_array)?;
         Some([values.first().and_then(Value::as_f64)?, values.get(1).and_then(Value::as_f64)?, values.get(2).and_then(Value::as_f64)?])
@@ -98,7 +120,8 @@ impl Puzzle3dAddBrushObjectWork {
     }
 
     pub(super) fn object_id(snapshot: &Puzzle3dPlaySnapshot, payload: &Puzzle3dBrushPayloadOwner) -> String {
-        use std::hash::{Hash, Hasher};
+        use std::hash::Hash;
+        use std::hash::Hasher;
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
         snapshot.typed().objects.len().hash(&mut hasher);
         payload.target_vortex_id.hash(&mut hasher);
@@ -128,6 +151,8 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
@@ -251,6 +276,8 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle3dAddBrushObjectStage::Complete => Err(Fault::from("puzzle3d-brush-complete-repolled")),
             Puzzle3dAddBrushObjectStage::Closing => Err(Fault::from("puzzle3d-brush-closing")),
         }
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
@@ -261,11 +288,9 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
         self.close_owners.stage(Puzzle3dAddBrushObjectWorkOwners { payload: std::mem::take(&mut self.payload), object_id: std::mem::take(&mut self.object_id), mesh_url: std::mem::take(&mut self.mesh_url), vortices: std::mem::take(&mut self.vortices), mutations: std::mem::take(&mut self.mutations) });
     }
 
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            self.close_owners.close_step(grant)
-        })
-    }
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> { semio_framework_job::close_original_nested_step(cx, |cx, _grant| {
+        self.close_owners.close_step(cx)
+    }) }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
         Ok(self.close_owners.demands(0)?.copy_bytes)

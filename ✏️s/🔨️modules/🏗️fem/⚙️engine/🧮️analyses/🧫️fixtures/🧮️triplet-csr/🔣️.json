@@ -1,0 +1,93 @@
+{
+  "cases": [
+    {
+      "id": "empty",
+      "order": 0,
+      "entries": [],
+      "matrix": []
+    },
+    {
+      "id": "unsorted-duplicate-coordinates",
+      "order": 3,
+      "entries": [
+        {
+          "sequence": 0,
+          "row": 2,
+          "column": 1,
+          "value": -2
+        },
+        {
+          "sequence": 1,
+          "row": 1,
+          "column": 1,
+          "value": 4
+        },
+        {
+          "sequence": 2,
+          "row": 0,
+          "column": 0,
+          "value": 2
+        },
+        {
+          "sequence": 3,
+          "row": 0,
+          "column": 0,
+          "value": 3
+        }
+      ],
+      "matrix": [
+        5,
+        0,
+        0,
+        0,
+        4,
+        0,
+        0,
+        -2,
+        0
+      ]
+    },
+    {
+      "id": "sequence-preserves-signed-accumulation",
+      "order": 2,
+      "entries": [
+        {
+          "sequence": 2,
+          "row": 0,
+          "column": 1,
+          "value": 1
+        },
+        {
+          "sequence": 0,
+          "row": 0,
+          "column": 1,
+          "value": 10000000000000000
+        },
+        {
+          "sequence": 1,
+          "row": 0,
+          "column": 1,
+          "value": -10000000000000000
+        },
+        {
+          "sequence": 3,
+          "row": 1,
+          "column": 0,
+          "value": -7
+        }
+      ],
+      "matrix": [
+        0,
+        1,
+        -7,
+        0
+      ]
+    }
+  ],
+  "deniedAxes": [
+    "items",
+    "copyBytes",
+    "capacityBytes",
+    "depth"
+  ]
+}

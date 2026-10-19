@@ -1,0 +1,12 @@
+{
+ "schema":"value.named.admitted-index/v1",
+ "cases":[
+  {"id":"empty","keys":[],"queries":[""],"expected":[null]},
+  {"id":"opaque-unicode","keys":["ö","","é","é","X","x"],"queries":["é","é","x","X","","O","ö"],"expected":[3,2,5,4,1,null,0]},
+  {"id":"original-ranks","keys":["Z","A","B"],"queries":["B","Z","A","missing"],"expected":[2,0,1,null]},
+  {"id":"duplicate-refuses","keys":["A","A"],"queries":["A"],"expected":null}
+ ],
+ "lengths":[1,17,65537],"prefixLength":65537,"bodyBytes":[1,4096],"cancelCuts":[0,1,7,19,71],
+ "deniedCurrencies":["items","copy","capacity","release","depth"],
+ "laws":{"opaqueUtf8":true,"foreignSourceRefused":true,"captureRows":false,"reuseBaseSort":false,"fundedRankPath":true,"exactHeapReceipts":true,"terminalDropBytes":0}
+}

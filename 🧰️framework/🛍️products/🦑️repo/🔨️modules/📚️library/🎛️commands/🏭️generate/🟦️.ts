@@ -1,16 +1,9 @@
 /** 🏭️ `generate` command family: derived config, taxonomy census and plugin-glue inventory.
  * @see 📜️script.ts
  */
-import { runNestedCargoPackageAdapter } from "../../📽️projection/🧩️package-adapter/📦️publication/🟦️.ts";
-import { runCmd } from "../../🏃️process/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { checkDerivedConfig, writeDerivedConfig } from "../../⚡️caching/📦️artifacts/📝️derived-config/🟦️.ts";
-import { buildSemanticCensus, renderSemanticCensusJson, renderSemanticCensusMarkdown, renderSemanticDuplicatesJson, renderSemanticDuplicatesMarkdown } from "../../🔍️discovery/🧩️semantic-census/🟦️.ts";
-import { taxonomyTicketDirectory } from "../../🧹️normalization/🎮️command-contract/🟦️.ts";
 import { existsSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { policyListTopLevelSubsetDirs } from "../../⚖️laws/🧩️plugin-consistency/🪆️subset-conformance/🟦️.ts";
-import { taxonomyOption } from "../../🧹️normalization/🔣️taxonomy/🏷️filenames/🟦️.ts";
 
 //#region 🔖️GenerateScript
 
@@ -23,40 +16,27 @@ export class GenerateScript extends Script {
       return;
     }
     if (segments[0] === "taxonomy") {
-      this.generateTaxonomy(segments.slice(1));
+      await this.generateTaxonomy(segments.slice(1));
       return;
     }
     if (segments[0] === "plugin-glue") {
-      this.generatePluginGlue(segments.slice(1));
-      return;
-    }
-    if (segments[0] === "launch") {
-      await this.generateLaunch(segments.slice(1));
+      await this.generatePluginGlue(segments.slice(1));
       return;
     }
     if (segments[0] === "scale-fixture") {
+      const { runCmd } = await import("../../🏃️process/🟦️.ts");
       runCmd("bun", ["repo", "run", "@semio-tech/framework-os-dev:generate-scale-fixture", ...segments.slice(1)], { cwd: this.root });
       return;
     }
-    console.error("[generate] usage: bun ./📜️script.ts generate <config [--check]|launch [--check]|taxonomy|plugin-glue|scale-fixture>");
+    console.error("[generate] usage: bun ./📜️script.ts generate <config [--check]|taxonomy|plugin-glue|scale-fixture>");
     process.exit(1);
   }
 
-  /** 🚀️ Writes `.vscode/launch.json` as the expansion of `.vscode/🧩️launch.seed.jsonc`, or with `--check` only verifies that it is.
-   * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🚀️launch-catalog/🟦️.ts */
-  private async generateLaunch(args: string[]): Promise<void> {
-    const { checkLaunchCatalog, writeLaunchCatalog } = await import("../../🏗️authoring/🚀️launch-catalog/🟦️.ts");
-    const check = args.includes("--check");
-    const problems = check ? checkLaunchCatalog(this.root) : writeLaunchCatalog(this.root).problems;
-    for (const problem of problems) console.error(`[generate launch] ${problem}`);
-    if (problems.length) process.exit(1);
-    console.log(check ? "[generate launch] launch.json is the expansion of the seed" : "[generate launch] launch.json written from the seed");
-  }
-
-  /** 📝️ Writes (or with `--check` only verifies) every checked-in file that derives from one canonical source: the devcontainer
-   * editor block, the nextest scopes and the dependabot manifests.
+  /** 📝️ Writes (or with `--check` only verifies) every checked-in file that derives from one canonical source: the nextest
+   * scope configurations and dependency update manifests.
    * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📝️derived-config/🟦️.ts */
   private async generateConfig(args: string[]): Promise<void> {
+    const { checkDerivedConfig, writeDerivedConfig } = await import("../../⚡️caching/📦️artifacts/📝️derived-config/🟦️.ts");
     const changed = args.includes("--check") ? [] : await writeDerivedConfig(this.root);
     for (const path of changed) console.log(`[generate config] wrote ${path}`);
     const problems = checkDerivedConfig(this.root);
@@ -66,7 +46,11 @@ export class GenerateScript extends Script {
   }
 
   /** 🧩️ Writes deterministic census or duplicate evidence with its Markdown companion. */
-  private generateTaxonomy(args: string[]): void {
+  private async generateTaxonomy(args: string[]): Promise<void> {
+    const { runNestedCargoPackageAdapter } = await import("../../📽️projection/🧩️package-adapter/📦️publication/🟦️.ts");
+    const { buildSemanticCensus, renderSemanticCensusJson, renderSemanticCensusMarkdown, renderSemanticDuplicatesJson, renderSemanticDuplicatesMarkdown } = await import("../../🔍️discovery/🧩️semantic-census/🟦️.ts");
+    const { taxonomyTicketDirectory } = await import("../../🧹️normalization/🎮️command-contract/🟦️.ts");
+    const { taxonomyOption } = await import("../../🧹️normalization/🔣️taxonomy/🏷️filenames/🟦️.ts");
     const operation = args[0];
     if (operation === "package-adapter") {
       runNestedCargoPackageAdapter(this.root, args[1] ?? "preview");
@@ -88,7 +72,8 @@ export class GenerateScript extends Script {
   }
 
   /** 🧬️ Emit deterministic #[path] wiring comments for subset/example modules (dry by default). */
-  private generatePluginGlue(args: string[]): void {
+  private async generatePluginGlue(args: string[]): Promise<void> {
+    const { policyListTopLevelSubsetDirs } = await import("../../⚖️laws/🧩️plugin-consistency/🪆️subset-conformance/🟦️.ts");
     const dry = args.includes("--dry") || args.includes("--dry-run") || args.length === 0;
     const pluginFilter = args.find((a) => !a.startsWith("--"));
     const pluginsRoot = join(this.root, "✏️s/🔌️plugins");

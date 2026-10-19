@@ -5,8 +5,8 @@
 #[path = "../🗄️storage/🦀️.rs"]
 pub mod storage;
 
-#[path = "../📚️catalog/🦀️.rs"]
-pub mod catalog;
+#[path = "../📚️course/🦀️.rs"]
+pub mod course;
 
 #[path = "../🎚️config/🦀️.rs"]
 pub mod config;

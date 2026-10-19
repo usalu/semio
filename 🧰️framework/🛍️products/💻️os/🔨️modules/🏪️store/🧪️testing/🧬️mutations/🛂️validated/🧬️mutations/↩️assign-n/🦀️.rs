@@ -19,6 +19,17 @@ pub struct AssignN {
 //#region ⚙️Behavior
 impl semio_framework_os_spr::MutationKind<DemoSnapshot, ValidatedMutation> for AssignN {
     const SEMANTICS: semio_framework_os_spr::SemanticDescriptor = semio_framework_os_spr::SemanticDescriptor { verb: "set", entity: "n", kind: "assign-n", record: "AssignedN" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Assign N", "N zuweisen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["n".into()]
+    }
+}
+
+impl semio_framework_os_spr::ColdMutationKind<DemoSnapshot, ValidatedMutation> for AssignN {
     fn diff(&self, _base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<DemoDiff> {
         semio_framework_os_spr::MutationOutcome::new(DemoDiff::value(self.n))
     }
@@ -28,11 +39,5 @@ impl semio_framework_os_spr::MutationKind<DemoSnapshot, ValidatedMutation> for A
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Assign N", "N zuweisen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["n".into()]
-    }
 }
 //#endregion ⚙️Behavior

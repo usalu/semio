@@ -68,7 +68,7 @@
         assert!(open.is_empty(), "accepted conflict leaves the open projection");
         assert!(app.open_conflicts().await.is_empty());
         drain_and_close_fixture(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -88,9 +88,9 @@
         app.dispatch_typed(TestCommand::SetLabel { value: "x".into() }, &meta(), &mut identity,cx).await.expect("set label");
         assert_eq!(app.stores.presence_store.generation().await, 0);
         assert_eq!(app.stores.transient_store.generation().await, 0);
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 

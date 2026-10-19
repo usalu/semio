@@ -47,11 +47,30 @@ pub struct Puzzle3dSetActiveExampleWork {
 
 impl Default for Puzzle3dSetActiveExampleWork {
     fn default() -> Self {
-        Self { close_owners: Default::default(), stage: Puzzle3dSetActiveExampleStage::DeleteAttractions, cursor: 0, mutations: Vec::with_capacity(semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS) }
+        Self { close_owners: Default::default(), stage: Puzzle3dSetActiveExampleStage::DeleteAttractions, cursor: 0, mutations: Vec::new() }
     }
 }
 
 impl Puzzle3dSetActiveExampleWork {
+    /// 🪙️ Exact typed backing storage belongs to the initiating original construction scope.
+    pub fn original_birth_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let mut capacity = 0_usize;
+        capacity = (semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS as usize).checked_mul(size_of::<Puzzle3dMutation>()).and_then(|bytes| capacity.checked_add(bytes))
+            .ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Puzzle3D Puzzle3dSetActiveExampleWork backing extent overflow"))?;
+        Ok(semio_framework_value::RetirementDemand { capacity_bytes: capacity, depth: 1, ..Default::default() })
+    }
+
+    /// 🏭️ The scope authorizes every typed buffer before its owner is born and receives actual capacities.
+    pub fn from_original_construction(scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+        scope.admit_owner(Self::original_birth_demands()?)?;
+        let work = Self {
+            mutations: Vec::with_capacity(semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS),
+            ..Self::default()
+        };
+        let capacity = work.mutations.capacity() * size_of::<Puzzle3dMutation>();
+        Ok((work, semio_framework_value::RetainedCloneProgress { retained_capacity_bytes: capacity, ..Default::default() }))
+    }
+
     pub(super) fn target(command: &Puzzle3dCommand) -> Option<&'static Puzzle3dSceneSnapshot> {
         match command.args().and_then(|args| args.get("exampleId")).and_then(Value::as_str).unwrap_or("") {
             "" => Some(&EMPTY_EXAMPLE_SNAPSHOT),
@@ -130,6 +149,8 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let Some(target) = Self::target(command) else { return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit::default())) };
@@ -302,6 +323,8 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle3dSetActiveExampleStage::Complete => Err(Fault::from("puzzle3d-set-active-example-complete-repolled")),
             Puzzle3dSetActiveExampleStage::Closing => Err(Fault::from("puzzle3d-set-active-example-closing")),
         }
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
@@ -312,11 +335,9 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
         self.close_owners.stage(Puzzle3dSetActiveExampleWorkOwners { mutations: std::mem::take(&mut self.mutations) });
     }
 
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            self.close_owners.close_step(grant)
-        })
-    }
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> { semio_framework_job::close_original_nested_step(cx, |cx, _grant| {
+        self.close_owners.close_step(cx)
+    }) }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
         Ok(self.close_owners.demands(0)?.copy_bytes)

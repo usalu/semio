@@ -217,7 +217,7 @@ fn document_archive_member_identity_mut(entry: &mut protocol::OwnedDocumentMembe
 #[doc(hidden)]
 pub struct ActiveDocumentArchiveLoad<P, Mutation>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    P: semio_framework_value::ToValue,
     Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P>,
 {
     pub operation: u64,
@@ -398,7 +398,7 @@ where
 
 impl<P, Mutation> Drop for ActiveDocumentArchiveLoad<P, Mutation>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    P: semio_framework_value::ToValue,
     Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P>,
 {
     fn drop(&mut self) {

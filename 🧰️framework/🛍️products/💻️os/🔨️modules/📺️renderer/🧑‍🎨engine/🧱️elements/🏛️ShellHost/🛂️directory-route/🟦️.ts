@@ -28,7 +28,7 @@ import { IDENTITY_CONFIG_SCHEMA, identityActorConfig, localCatalogActorConfig } 
 import {
   LOCAL_CATALOG_READ_DEADLINE_MS_V1,
   LOCAL_CATALOG_WRITE_DEADLINE_MS_V1,
-  localCatalogArchiveV1,
+  foldLocalCatalogEnvelopesV1,
   localCatalogBindingV1,
   localCatalogMutationEnvelopeV1,
   sameLocalDocumentArchiveV1,
@@ -37,7 +37,6 @@ import {
 import {
   type Identity,
   signIn,
-  applyLocalCatalogConfigMutation,
   LOCAL_CATALOG_CONFIG_SCHEMA,
   type LocalCatalog,
   type LocalCatalogConfigMutation,
@@ -136,17 +135,19 @@ export function useDirectoryAndRoute(core: ShellCoreAfterBackboneWorker) {
     return archive;
   };
 
-  /** 🧾️ Records one catalog mutation: the whole-record envelope for cross-tab listeners, then the new catalog archive for the
-   * folder lane — the facet's own event-sourced record. Without an open facet nothing is recorded. */
+  /** 🧾️ Records one catalog mutation as ONE envelope to the store worker, which folds its sparse diff through the twin of the
+   * central applier, persists the catalog to the folder lane and answers with the resulting archive — that archive is the
+   * projection the shell renders. Until it arrives the shell shows the optimistic projection: the same diff through the same
+   * twin applier ({@link foldLocalCatalogEnvelopesV1}), replaced by the store's result. Without an open facet nothing is recorded. */
   const recordLocalCatalogRef = useRef((_mutation: LocalCatalogConfigMutation): LocalCatalog | null => null);
   recordLocalCatalogRef.current = (mutation: LocalCatalogConfigMutation): LocalCatalog | null => {
     const clientInstanceId = localCatalogClientInstanceIdRef.current;
     if (clientInstanceId === null) return null;
     const base = localCatalogRef.current;
-    const next = applyLocalCatalogConfigMutation(base, mutation);
+    const envelope = localCatalogMutationEnvelopeV1(shellActorIdRef.current, mutation, base);
+    const next = foldLocalCatalogEnvelopesV1(base, [envelope]);
     const worker = ensureBackboneWorker();
-    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: LOCAL_CATALOG_CONFIG_SCHEMA, clientInstanceId, message: { kind: "localMutations", envelopes: [localCatalogMutationEnvelopeV1(shellActorIdRef.current, mutation, base)] } }) });
-    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: LOCAL_CATALOG_CONFIG_SCHEMA, clientInstanceId, message: { kind: "localDocumentArchive", archive: Array.from(localCatalogArchiveV1(next)) } }) });
+    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: LOCAL_CATALOG_CONFIG_SCHEMA, clientInstanceId, message: { kind: "localMutations", envelopes: [envelope] } }) });
     localCatalogRef.current = next;
     setLocalCatalog(next);
     return next;
@@ -360,8 +361,6 @@ export function useDirectoryAndRoute(core: ShellCoreAfterBackboneWorker) {
             const envelope = identityMutationEnvelope(shellActorIdRef.current, signIn(record), previous);
             writtenIdentity = record;
             worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: IDENTITY_CONFIG_SCHEMA, clientInstanceId, message: { kind: "localMutations", envelopes: [envelope] } }) });
-            const archive = encodeDocumentArchiveBytes({ parent_pack: Array.from(encodePackValue(record)), parent_spr: [], members: [] });
-            worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: IDENTITY_CONFIG_SCHEMA, clientInstanceId, message: { kind: "localDocumentArchive", archive: Array.from(archive) } }) });
           });
         },
         onUnavailable: () => {

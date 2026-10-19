@@ -14,10 +14,11 @@ package client
 import (
 	"errors"
 	"fmt"
-	command "github.com/usalu/semio/repo/client/internal/command"
-	graphql "github.com/usalu/semio/repo/graphql"
+	"github.com/usalu/semio/repo/client/internal/command"
+	"github.com/usalu/semio/repo/graphql"
 	"os"
 	"time"
+
 )
 
 // ⚙️Config holds the data fields for a config record.

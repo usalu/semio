@@ -1,0 +1,9 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#","title":"Original Snapshot Source Laws","type":"object","additionalProperties":false,
+ "required":["contract","cases","refusedCurrencies","maximumTurns"],
+ "properties":{
+  "contract":{"const":"semio.original.snapshot-source/v1"},"maximumTurns":{"type":"integer","minimum":1},
+  "refusedCurrencies":{"const":["items","copy","capacity","release","depth"]},
+  "cases":{"type":"array","minItems":4,"items":{"type":"object","additionalProperties":false,"required":["id","bytes","expected","registryHeld","projectionHeld"],"properties":{"id":{"type":"string"},"bytes":{"type":"array","items":{"type":"integer","minimum":0,"maximum":255}},"expected":{"type":"array","items":{"type":"integer","minimum":0,"maximum":255}},"registryHeld":{"type":"boolean"},"projectionHeld":{"type":"boolean"}}}}
+ }
+}

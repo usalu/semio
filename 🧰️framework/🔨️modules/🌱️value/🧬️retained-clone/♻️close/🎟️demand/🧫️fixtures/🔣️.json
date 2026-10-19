@@ -1,0 +1,71 @@
+{
+  "cases": [
+    {
+      "depth": 0,
+      "body": 0,
+      "expectedVisits": 1,
+      "expectedDepth": 1
+    },
+    {
+      "depth": 1,
+      "body": 1,
+      "expectedVisits": 2,
+      "expectedDepth": 2
+    },
+    {
+      "depth": 2,
+      "body": 17,
+      "expectedVisits": 3,
+      "expectedDepth": 3
+    },
+    {
+      "depth": 4,
+      "body": 4096,
+      "expectedVisits": 5,
+      "expectedDepth": 5
+    },
+    {
+      "depth": 8,
+      "body": 32768,
+      "expectedVisits": 9,
+      "expectedDepth": 9
+    },
+    {
+      "depth": 12,
+      "body": 65536,
+      "expectedVisits": 13,
+      "expectedDepth": 13
+    }
+  ],
+  "native": {
+    "originalBytes": 65537,
+    "closeBody": 4096,
+    "cuts": [
+      0,
+      8,
+      24,
+      48,
+      96,
+      512
+    ]
+  },
+  "derive": {
+    "denials": [
+      "items",
+      "copy",
+      "capacity",
+      "release",
+      "depth"
+    ],
+    "cuts": [
+      0,
+      1,
+      2,
+      4,
+      8,
+      16,
+      32,
+      64
+    ]
+  }
+}

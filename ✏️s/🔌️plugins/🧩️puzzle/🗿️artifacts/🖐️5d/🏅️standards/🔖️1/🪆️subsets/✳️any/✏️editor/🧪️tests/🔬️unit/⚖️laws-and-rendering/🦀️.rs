@@ -62,7 +62,7 @@ fn retained_import_media_has_no_live_synchronous_fallback() {
 }
 
 fn complex_retained_route_is_cursorized(source: &str) -> bool {
-    source.contains("\"applyBoardEvents\" => Box::new(Puzzle5dBoardEventsWork::new(request.authoring_seed.clone()))")
+    source.contains(r#""applyBoardEvents" => owned!(Puzzle5dBoardEventsWork, |request, scope| Puzzle5dBoardEventsWork::from_original_construction(scope).map(|(work, progress)| (work.bound(nonce), progress)))"#)
         && source.contains("struct Puzzle5dBoardEventsWork")
         && source.contains("self.scan_one(source)?")
         && source.contains("puzzle5d_transform_tool_commit(\"applyBoardEvents\"")
@@ -79,7 +79,7 @@ fn apply_board_events_hostile_static_law_rejects_the_old_one_grant_reducer() {
     let source = source.as_str();
     assert!(complex_retained_route_is_cursorized(source));
     let direct = source
-        .replace("\"applyBoardEvents\" => Box::new(Puzzle5dBoardEventsWork::new(request.authoring_seed.clone()))", "\"applyBoardEvents\" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))");
+        .replace(r#""applyBoardEvents" => owned!(Puzzle5dBoardEventsWork, |request, scope| Puzzle5dBoardEventsWork::from_original_construction(scope).map(|(work, progress)| (work.bound(nonce), progress)))"#, "\"applyBoardEvents\" => work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))");
     assert!(!complex_retained_route_is_cursorized(&direct), "hostile old-reducer replacement must fail closed");
     for marker in ["self.scan_one(source)?", "puzzle5d_transform_tool_commit(\"applyBoardEvents\"", "Puzzle5dBoardEventsStage::ScanEdge", "Puzzle5dBoardEventsStage::ScanDeleteEdges", "Puzzle5dBoardEventsStage::CloseBrush"] {
         assert!(!complex_retained_route_is_cursorized(&source.replace(marker, "cursor-removed")), "missing cursor marker was falsely accepted: {marker}");
@@ -87,7 +87,7 @@ fn apply_board_events_hostile_static_law_rejects_the_old_one_grant_reducer() {
 }
 
 fn focus_selection_route_is_cursorized(source: &str) -> bool {
-    source.contains(r#""focusSelection" => Box::new(Puzzle5dFocusSelectionWork::default())"#)
+    source.contains(r#""focusSelection" => work!(|request| Puzzle5dFocusSelectionWork::default())"#)
         && source.contains("Puzzle5dFocusSelectionStage::Selection")
         && source.contains("Puzzle5dFocusSelectionStage::Parts")
         && source.contains("Puzzle5dFocusSelectionStage::Publish")
@@ -101,7 +101,7 @@ fn focus_selection_hostile_static_law_rejects_whole_selection_reducers() {
     let source = source.as_str();
     assert!(focus_selection_route_is_cursorized(source));
     let direct = source
-        .replace(r#""focusSelection" => Box::new(Puzzle5dFocusSelectionWork::default())"#, r#""focusSelection" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#);
+        .replace(r#""focusSelection" => work!(|request| Puzzle5dFocusSelectionWork::default())"#, r#""focusSelection" => work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#);
     assert!(!focus_selection_route_is_cursorized(&direct));
     for marker in ["Puzzle5dFocusSelectionStage::Selection", "Puzzle5dFocusSelectionStage::Parts", "Puzzle5dFocusSelectionStage::Publish", "self.part_cursor += 1"] {
         assert!(!focus_selection_route_is_cursorized(&source.replace(marker, "cursor-removed")), "missing focus cursor marker was falsely accepted: {marker}");
@@ -111,7 +111,7 @@ fn focus_selection_hostile_static_law_rejects_whole_selection_reducers() {
 fn window_owner_routes_are_exact(source: &str) -> bool {
     [
         "struct Puzzle5dWindowCommandWork",
-        "window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => Box::new(Puzzle5dWindowCommandWork::new(window, request.authoring_seed.clone()).bound(request.instance_operation_owner.clone()))",
+        "window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => seed!(|request, seed| Puzzle5dWindowCommandWork::new(window, seed).bound(request.instance_operation_owner.clone()))",
         "context.and_then(|context| context.window_config.as_ref())",
         "config_from_snapshot(window_config_snapshot)",
         "transient_from_snapshot(window_transient_snapshot)",
@@ -158,7 +158,7 @@ fn window_owner_hostile_static_law_rejects_missing_owner_boundaries_and_app_conf
 }
 
 fn add_part_kind_route_is_cursorized(source: &str) -> bool {
-    source.contains(r#""addBrushPart" | "addPartKind" => Box::new(Puzzle5dAddBrushPartWork::new(tool_id))"#)
+    source.contains(r#""addBrushPart" | "addPartKind" => owned!(Puzzle5dAddBrushPartWork, |request, scope| Puzzle5dAddBrushPartWork::from_original_construction(tool_id, scope).map(|(work, progress)| (work.bound(nonce), progress)))"#)
         && source.contains("Puzzle5dAddBrushPartStage::Catalog")
         && source.contains("Puzzle5dAddBrushPartStage::Grips")
         && source.contains("Puzzle5dAddBrushPartStage::Target")
@@ -173,15 +173,15 @@ fn add_part_kind_hostile_static_law_rejects_old_brush_reducer_and_missing_cursor
     let source = source.as_str();
     assert!(add_part_kind_route_is_cursorized(source));
     let direct = source.replace(
-        r#""addBrushPart" | "addPartKind" => Box::new(Puzzle5dAddBrushPartWork::new(tool_id))"#,
+        r#""addBrushPart" | "addPartKind" => owned!(Puzzle5dAddBrushPartWork, |request, scope| Puzzle5dAddBrushPartWork::from_original_construction(tool_id, scope).map(|(work, progress)| (work.bound(nonce), progress)))"#,
         r#""addBrushPart" => Box::new(Puzzle5dAddBrushPartWork::new(tool_id)),
-            "addPartKind" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
+            "addPartKind" => work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
     );
     assert!(!add_part_kind_route_is_cursorized(&direct));
 }
 
 fn kind_weight_route_is_cursorized(source: &str) -> bool {
-    source.contains(r#""setPartKindWeight" | "setGripKindWeight" => Box::new(Puzzle5dKindWeightWork::new(tool_id))"#)
+    source.contains(r#""setPartKindWeight" | "setGripKindWeight" => work!(|request| Puzzle5dKindWeightWork::new(tool_id))"#)
         && source.contains("Puzzle5dKindWeightStage::Catalog")
         && source.contains("Puzzle5dKindWeightStage::InferParts")
         && source.contains("Puzzle5dKindWeightStage::InferGrips")
@@ -199,8 +199,8 @@ fn kind_weight_hostile_static_law_rejects_whole_normalizer_and_missing_cursors()
     let source = source.as_str();
     assert!(kind_weight_route_is_cursorized(source));
     let direct = source.replace(
-        r#""setPartKindWeight" | "setGripKindWeight" => Box::new(Puzzle5dKindWeightWork::new(tool_id))"#,
-        r#""setPartKindWeight" | "setGripKindWeight" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
+        r#""setPartKindWeight" | "setGripKindWeight" => work!(|request| Puzzle5dKindWeightWork::new(tool_id))"#,
+        r#""setPartKindWeight" | "setGripKindWeight" => work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
     );
     assert!(!kind_weight_route_is_cursorized(&direct));
     assert!(!source.contains("puzzle5d_normalize_kind_weight_group(self.weights"));
@@ -208,7 +208,7 @@ fn kind_weight_hostile_static_law_rejects_whole_normalizer_and_missing_cursors()
 
 fn engagement_submit_route_is_cursorized(source: &str) -> bool {
     source.contains(r#"const PUZZLE5D_WINDOW_TOOL_IDS: &[&str] = &["#) && PUZZLE5D_WINDOW_TOOL_IDS.iter().all(|tool| source.contains(&format!("    \"{tool}\",\n")) || source.contains(&format!("    \"{tool}\",\r\n")))
-        && source.contains("window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => Box::new(Puzzle5dWindowCommandWork::new(window, request.authoring_seed.clone()).bound(request.instance_operation_owner.clone()))")
+        && source.contains("window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => seed!(|request, seed| Puzzle5dWindowCommandWork::new(window, seed).bound(request.instance_operation_owner.clone()))")
         && source.contains("transient_from_snapshot(window_transient_snapshot)")
         && source.contains("addressed_transient(view, transient_after)")
         && source.contains("EphemeralEmit { window_transient, ..Default::default() }")
@@ -235,8 +235,8 @@ fn engagement_submit_hostile_static_law_rejects_old_reducer_and_missing_transfer
 }
 
 fn selection_transforms_run_the_transform_tool(source: &str) -> bool {
-    source.contains(r#""translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => Box::new(Puzzle5dTransformWork::new(tool_id, request.authoring_seed.clone()))"#)
-        && source.contains(r#""patchPart" if puzzle5d_inspector_nudge(request.command.args()).is_some() => Box::new(Puzzle5dTransformWork::new(tool_id, request.authoring_seed.clone()))"#)
+    source.contains(r#""translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => seed!(|request, seed| Puzzle5dTransformWork::new(tool_id, seed))"#)
+        && source.contains(r#""patchPart" if puzzle5d_inspector_nudge(original.command.args()).is_some() => seed!(|request, seed| Puzzle5dTransformWork::new(tool_id, seed))"#)
         && source.contains("Puzzle5dTransformStage::Read")
         && source.contains("Puzzle5dTransformStage::Scan")
         && source.contains("Puzzle5dRelocateScan::begin(document")
@@ -255,8 +255,8 @@ fn selection_transform_hostile_static_law_rejects_one_grant_reducers_and_bypasse
     let source = source.as_str();
     assert!(selection_transforms_run_the_transform_tool(source));
     let direct = source.replace(
-        r#""translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => Box::new(Puzzle5dTransformWork::new(tool_id, request.authoring_seed.clone()))"#,
-        r#""translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
+        r#""translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => seed!(|request, seed| Puzzle5dTransformWork::new(tool_id, seed))"#,
+        r#""translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
     );
     assert!(!selection_transforms_run_the_transform_tool(&direct), "hostile old-reducer replacement must fail closed");
     for marker in ["Puzzle5dTransformStage::Read", "Puzzle5dTransformStage::Scan", "Puzzle5dRelocateScan::begin(document", "Puzzle5dTransformStage::Commit", "puzzle5d_transform_tool_commit(self.tool_id", "if puzzle5d_inspector_nudge(request.command.args()).is_some()"] {

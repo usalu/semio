@@ -510,6 +510,27 @@
         "cwd": "🧰️framework/🔨️modules/🏃️process",
         "command": "bun ./📜️script.ts test exact-cargo-storage"
       }
+    },
+    "test-resource-lease-waits": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test resource-lease-waits"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
     }
   },
   "tags": [

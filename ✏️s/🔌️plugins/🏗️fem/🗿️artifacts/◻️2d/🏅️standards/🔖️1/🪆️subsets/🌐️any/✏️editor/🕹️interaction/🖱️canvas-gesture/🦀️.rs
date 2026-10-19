@@ -1,15 +1,37 @@
 //! 🖱️ Ephemeral viewport marquee state and hit-testing for the Canvas2d model/results windows.
 
-use super::{fem2d_hit_test, interaction_select_effect, Fem2dPick, FEM2D_GRANULARITY_ELEMENT, FEM2D_GRANULARITY_LOAD, FEM2D_GRANULARITY_NODE, FEM2D_GRANULARITY_REGION, FEM2D_GRANULARITY_SUPPORT};
-use super::{fem2d_element_endpoints, find_node_2d, screen_2d};
+use super::fem2d_hit_test;
+
+use super::interaction_select_effect;
+
+use super::Fem2dPick;
+
+use super::FEM2D_GRANULARITY_ELEMENT;
+
+use super::FEM2D_GRANULARITY_LOAD;
+
+use super::FEM2D_GRANULARITY_NODE;
+
+use super::FEM2D_GRANULARITY_REGION;
+
+use super::FEM2D_GRANULARITY_SUPPORT;
+use super::fem2d_element_endpoints;
+use super::find_node_2d;
+use super::screen_2d;
 use super::fem2d_load_glyph;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_framework_os_kernel::Viewport2d;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::{Emit, Fault, NoConfigMutation, ViewModel};
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::ViewModel;
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::collections::HashSet;
+use semio_framework_geometry::geom_sel;
+use semio_framework_geometry::Point;
 
 type Fem2dMutation = semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 
@@ -48,6 +70,20 @@ fn set_gesture(window_id: &str, gesture: Fem2dCanvasGesture) {
     });
 }
 
+fn take_gesture(window_id: &str) -> Fem2dCanvasGesture {
+    GESTURES.with(|store| store.borrow_mut().remove(window_id).unwrap_or_default())
+}
+
+fn append_gesture_samples(gesture: &mut Fem2dCanvasGesture, samples: &[(f64, f64)], camera: &Viewport2d, width: f64, height: f64) {
+    let lasso = gesture.method == "lasso";
+    let retained = gesture.canvas_points.len();
+    semio_framework::interaction::gesture::append_selection_drag_points(&mut gesture.canvas_points, &mut gesture.active, lasso, samples, FEM2D_MARQUEE_THRESHOLD_PX);
+    let begin = if lasso { retained } else { gesture.layer_points.clear(); 0 };
+    for &(x, y) in gesture.canvas_points.iter().skip(begin) {
+        gesture.layer_points.push(canvas_to_layer(camera, x, y, width, height));
+    }
+}
+
 pub fn clear_gesture(window_id: &str) {
     GESTURES.with(|store| {
         store.borrow_mut().remove(window_id);
@@ -55,10 +91,7 @@ pub fn clear_gesture(window_id: &str) {
 }
 
 pub fn fem2d_active_utility(view: &ViewModel) -> &str {
-    view.active_utility_id
-        .as_deref()
-        .or_else(|| view.window_id.as_ref().and_then(|id| view.active_utility_by_window_id.get(id).map(String::as_str)))
-        .unwrap_or(FEM2D_UTILITY_SELECT_DIRECT)
+    view.window_utility(None).unwrap_or(FEM2D_UTILITY_SELECT_DIRECT)
 }
 
 pub fn fem2d_addressed_window_id(view: &ViewModel, fault: &str) -> Result<String, Fault> {
@@ -140,155 +173,48 @@ fn selection_drag_enclosing(method: &str, start: (f64, f64), points: &[(f64, f64
     points.last().copied().unwrap_or(start).0 >= start.0
 }
 
-fn rect_from_points(points: &[(f64, f64)]) -> Option<(f64, f64, f64, f64)> {
-    if points.len() < 2 {
-        return None;
-    }
-    let mut min_x = f64::INFINITY;
-    let mut min_y = f64::INFINITY;
-    let mut max_x = f64::NEG_INFINITY;
-    let mut max_y = f64::NEG_INFINITY;
-    for (x, y) in points {
-        min_x = min_x.min(*x);
-        min_y = min_y.min(*y);
-        max_x = max_x.max(*x);
-        max_y = max_y.max(*y);
-    }
-    Some((min_x, min_y, max_x, max_y))
-}
-
-fn point_in_rect(p: (f64, f64), min_x: f64, min_y: f64, max_x: f64, max_y: f64) -> bool {
-    p.0 >= min_x && p.0 <= max_x && p.1 >= min_y && p.1 <= max_y
-}
-
-fn rect_contains_point(min_x: f64, min_y: f64, max_x: f64, max_y: f64, p: (f64, f64)) -> bool {
-    point_in_rect(p, min_x, min_y, max_x, max_y)
-}
-
-fn segment_intersects_rect(a: (f64, f64), b: (f64, f64), rect: (f64, f64, f64, f64)) -> bool {
-    if point_in_rect(a, rect.0, rect.1, rect.2, rect.3) || point_in_rect(b, rect.0, rect.1, rect.2, rect.3) {
-        return true;
-    }
-    let (min_x, min_y, max_x, max_y) = rect;
-    let edges = [((min_x, min_y), (max_x, min_y)), ((max_x, min_y), (max_x, max_y)), ((max_x, max_y), (min_x, max_y)), ((min_x, max_y), (min_x, min_y))];
-    edges.iter().any(|&(c, d)| segments_intersect(a, b, c, d))
-}
-
-fn segments_intersect(a: (f64, f64), b: (f64, f64), c: (f64, f64), d: (f64, f64)) -> bool {
-    fn orient(a: (f64, f64), b: (f64, f64), c: (f64, f64)) -> f64 {
-        (b.0 - a.0) * (c.1 - a.1) - (b.1 - a.1) * (c.0 - a.0)
-    }
-    fn on_segment(a: (f64, f64), b: (f64, f64), c: (f64, f64)) -> bool {
-        c.0 <= a.0.max(b.0) && c.0 >= a.0.min(b.0) && c.1 <= a.1.max(b.1) && c.1 >= a.1.min(b.1)
-    }
-    let o1 = orient(a, b, c);
-    let o2 = orient(a, b, d);
-    let o3 = orient(c, d, a);
-    let o4 = orient(c, d, b);
-    if o1 == 0.0 && on_segment(a, b, c) {
-        return true;
-    }
-    if o2 == 0.0 && on_segment(a, b, d) {
-        return true;
-    }
-    if o3 == 0.0 && on_segment(c, d, a) {
-        return true;
-    }
-    if o4 == 0.0 && on_segment(c, d, b) {
-        return true;
-    }
-    o1.signum() != o2.signum() && o3.signum() != o4.signum()
-}
-
-fn even_odd_in_polygon(point: (f64, f64), polygon: &[(f64, f64)]) -> bool {
-    if polygon.len() < 3 {
-        return false;
-    }
-    let mut inside = false;
-    let mut j = polygon.len() - 1;
-    for i in 0..polygon.len() {
-        let (xi, yi) = polygon[i];
-        let (xj, yj) = polygon[j];
-        let intersects = (yi > point.1) != (yj > point.1) && point.0 < (xj - xi) * (point.1 - yi) / (yj - yi + 1e-12) + xi;
-        if intersects {
-            inside = !inside;
-        }
-        j = i;
-    }
-    inside
-}
-
-fn entity_in_marquee(method: &str, canvas_points: &[(f64, f64)], enclosing: bool, probe: (f64, f64), segment: Option<((f64, f64), (f64, f64))>) -> bool {
+fn selection_polygon(method: &str, points: &[(f64, f64)]) -> Vec<Point> {
     if method == "lasso" {
-        if canvas_points.len() < 3 {
-            return false;
-        }
-        if enclosing {
-            return even_odd_in_polygon(probe, canvas_points);
-        }
-        if even_odd_in_polygon(probe, canvas_points) {
-            return true;
-        }
-        return segment.is_some_and(|(a, b)| polygon_intersects_segment(canvas_points, a, b));
+        return points.iter().map(|&(x, y)| Point::new(x, y)).collect();
     }
-    let Some(rect) = rect_from_points(canvas_points) else { return false };
-    let rect_tuple = (rect.0, rect.1, rect.2, rect.3);
-    if enclosing {
-        if let Some((a, b)) = segment {
-            return rect_contains_point(rect.0, rect.1, rect.2, rect.3, a) && rect_contains_point(rect.0, rect.1, rect.2, rect.3, b);
-        }
-        return rect_contains_point(rect.0, rect.1, rect.2, rect.3, probe);
-    }
+    let (Some(&start), Some(&end)) = (points.first(), points.last()) else { return Vec::new() };
+    vec![Point::new(start.0, start.1), Point::new(end.0, start.1), Point::new(end.0, end.1), Point::new(start.0, end.1)]
+}
+
+fn entity_in_marquee(polygon: &[Point], enclosing: bool, probe: (f64, f64), segment: Option<((f64, f64), (f64, f64))>) -> bool {
     if let Some((a, b)) = segment {
-        return segment_intersects_rect(a, b, rect_tuple);
+        let (a, b) = (Point::new(a.0, a.1), Point::new(b.0, b.1));
+        return if enclosing { geom_sel::polygon_contains_segment(polygon, a, b) } else { geom_sel::segment_intersects_polygon(a, b, polygon) };
     }
-    point_in_rect(probe, rect.0, rect.1, rect.2, rect.3)
+    geom_sel::polygon_covers_point(polygon, Point::new(probe.0, probe.1))
 }
-
-fn polygon_intersects_segment(polygon: &[(f64, f64)], a: (f64, f64), b: (f64, f64)) -> bool {
-    if polygon.len() < 2 {
-        return false;
-    }
-    for window in polygon.windows(2) {
-        if segments_intersect(a, b, window[0], window[1]) {
-            return true;
-        }
-    }
-    if polygon.len() >= 3 {
-        let first = polygon[0];
-        let last = *polygon.last().unwrap_or(&first);
-        if segments_intersect(a, b, last, first) {
-            return true;
-        }
-    }
-    false
-}
-
-pub fn fem2d_marquee_hits(doc: &Fem2dSnapshot, camera: &Viewport2d, method: &str, canvas_points: &[(f64, f64)], width: f64, height: f64) -> Vec<Fem2dPick> {
+pub fn fem2d_marquee_hits(doc: &Fem2dSnapshot, camera: &Viewport2d, method: &str, canvas_points: &[(f64, f64)], width: f64, height: f64) -> Result<Vec<Fem2dPick>, protocol::wire::ScopedIdentityError> {
     if canvas_points.len() < 2 {
-        return Vec::new();
+        return Ok(Vec::new());
     }
+    let polygon = selection_polygon(method, canvas_points);
     let start = canvas_points[0];
     let enclosing = selection_drag_enclosing(method, start, canvas_points);
     let layer_at = |model: (f64, f64)| super::fem2d_layer_to_canvas(camera, screen_2d(model.0, model.1), width, height);
     let mut hits: Vec<Fem2dPick> = Vec::new();
+    let mut seen = HashSet::new();
     let mut push = |pick: Fem2dPick| {
-        if !hits.iter().any(|(_, id)| id == &pick.1) {
+        if seen.insert(pick.clone()) {
             hits.push(pick);
         }
     };
 
     for node in &doc.nodes {
         let probe = layer_at((node.x, node.y));
-        if entity_in_marquee(method, canvas_points, enclosing, probe, None) {
-            push((FEM2D_GRANULARITY_NODE, node.id.clone()));
+        if entity_in_marquee(&polygon, enclosing, probe, None) {
+            push((FEM2D_GRANULARITY_NODE, super::fem2d_entity_target_id(FEM2D_GRANULARITY_NODE, &node.id)?));
         }
     }
     for support in &doc.supports {
         let Some(node) = find_node_2d(&doc.nodes, &support.node_id) else { continue };
         let probe = layer_at((node.x, node.y));
-        if entity_in_marquee(method, canvas_points, enclosing, probe, None) {
-            push((FEM2D_GRANULARITY_SUPPORT, support.id.clone()));
+        if entity_in_marquee(&polygon, enclosing, probe, None) {
+            push((FEM2D_GRANULARITY_SUPPORT, super::fem2d_entity_target_id(FEM2D_GRANULARITY_SUPPORT, &support.id)?));
         }
     }
     for case in &doc.load_cases {
@@ -296,8 +222,8 @@ pub fn fem2d_marquee_hits(doc: &Fem2dSnapshot, camera: &Viewport2d, method: &str
             let Some((start_layer, end_layer)) = fem2d_load_glyph(doc, load) else { continue };
             let start_px = super::fem2d_layer_to_canvas(camera, start_layer, width, height);
             let end_px = super::fem2d_layer_to_canvas(camera, end_layer, width, height);
-            if entity_in_marquee(method, canvas_points, enclosing, start_px, Some((start_px, end_px))) {
-                push((FEM2D_GRANULARITY_LOAD, semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id(load).to_string()));
+            if entity_in_marquee(&polygon, enclosing, start_px, Some((start_px, end_px))) {
+                push((FEM2D_GRANULARITY_LOAD, super::fem2d_load_target_id(&case.id, semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id(load))?));
             }
         }
     }
@@ -306,37 +232,25 @@ pub fn fem2d_marquee_hits(doc: &Fem2dSnapshot, camera: &Viewport2d, method: &str
         let (Some(a), Some(b)) = (find_node_2d(&doc.nodes, start), find_node_2d(&doc.nodes, end)) else { continue };
         let start_px = layer_at((a.x, a.y));
         let end_px = layer_at((b.x, b.y));
-        if entity_in_marquee(method, canvas_points, enclosing, start_px, Some((start_px, end_px))) {
-            push((FEM2D_GRANULARITY_ELEMENT, element_id(element).to_string()));
+        if entity_in_marquee(&polygon, enclosing, start_px, Some((start_px, end_px))) {
+            push((FEM2D_GRANULARITY_ELEMENT, super::fem2d_entity_target_id(FEM2D_GRANULARITY_ELEMENT, element_id(element))?));
         }
     }
     for region in &doc.regions {
-        let mut min_x = f64::INFINITY;
-        let mut min_y = f64::INFINITY;
-        let mut max_x = f64::NEG_INFINITY;
-        let mut max_y = f64::NEG_INFINITY;
-        for [x, y] in &region.outline {
-            let px = layer_at((*x, *y));
-            min_x = min_x.min(px.0);
-            min_y = min_y.min(px.1);
-            max_x = max_x.max(px.0);
-            max_y = max_y.max(px.1);
-        }
-        if min_x.is_finite() {
-            let corners = [(min_x, min_y), (max_x, min_y), (max_x, max_y), (min_x, max_y)];
-            let selected = if method == "lasso" {
-                corners.iter().all(|corner| entity_in_marquee(method, canvas_points, enclosing, *corner, None))
-                    || corners.iter().any(|corner| entity_in_marquee(method, canvas_points, false, *corner, None))
-            } else {
-                entity_in_marquee(method, canvas_points, enclosing, ((min_x + max_x) * 0.5, (min_y + max_y) * 0.5), Some(((min_x, min_y), (max_x, max_y))))
-            };
-            if selected {
-                push((FEM2D_GRANULARITY_REGION, region.id.clone()));
-            }
+        let project = |points: &[[f64; 2]]| points.iter().map(|&[x, y]| { let p = layer_at((x, y)); Point::new(p.0, p.1) }).collect::<Vec<_>>();
+        let outline = project(&region.outline);
+        let selected = if enclosing {
+            geom_sel::polygon_contains_polygon(&polygon, &outline)
+        } else {
+            let holes = region.holes.iter().map(|hole| project(hole)).collect::<Vec<_>>();
+            geom_sel::polygon_region_intersects_polygon(&outline, &holes, &polygon)
+        };
+        if selected {
+            push((FEM2D_GRANULARITY_REGION, super::fem2d_entity_target_id(FEM2D_GRANULARITY_REGION, &region.id)?));
         }
     }
     hits.sort_by(|left, right| left.1.cmp(&right.1));
-    hits
+    Ok(hits)
 }
 
 fn marquee_overlay_layer(id: &str, segments: Vec<semio_framework_pack_json::Value>) -> semio_framework_pack_json::Value {
@@ -415,38 +329,29 @@ pub fn pointer_down(
         );
                 return Ok(Emit { ui_scope: partial_window_refresh(body), ..Default::default() });
     }
-    let hit = fem2d_hit_test(doc, camera, x, y, width, height);
-    let merge = if hit.is_some() { merge } else { "replace" };
+    let hit = fem2d_hit_test(doc, camera, x, y, width, height).map_err(|_| Fault::from("fem2d.interaction.identity"))?;
     let targets: Vec<Fem2dPick> = hit.into_iter().collect();
     Ok(Emit { effects: vec![interaction_select_effect(&targets, merge, "pick")], ..Default::default() })
 }
 
 /// 🧵️ One batched move (design L4): `samples` are canvas pixels, oldest first, never empty.
-/// While a marquee/lasso is tracking EVERY sample joins the polyline (the lasso needs the path;
-/// the rectangle only reads its last point) and the activation threshold is judged against the
-/// LAST sample; the partial window refresh is emitted once per batch, not once per sample. When
+/// Lasso retains distinct samples; rectangle retains only the start and latest endpoint.
+/// Activation latches when any sample crosses the threshold. The partial refresh is emitted once per batch. When
 /// nothing is tracking only the last sample is hover hit-tested — intermediate hovers are moot.
 pub fn pointer_move(doc: &Fem2dSnapshot, camera: &Viewport2d, view: &ViewModel, body: &str, samples: &[(f64, f64)], width: f64, height: f64) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
     let window_id = fem2d_addressed_window_id(view, "fem2d.canvas-pointer-move")?;
     let Some(&(x, y)) = samples.last() else { return Ok(Emit::default()) };
-    let mut gesture = gesture_for_window(&window_id);
-    if gesture.tracking {
-        for &(sx, sy) in samples {
-            let layer = canvas_to_layer(camera, sx, sy, width, height);
-            gesture.canvas_points.push((sx, sy));
-            gesture.layer_points.push(layer);
-        }
-        if !gesture.active {
-            let start = gesture.canvas_points[0];
-            let distance = ((x - start.0).powi(2) + (y - start.1).powi(2)).sqrt();
-            if distance >= FEM2D_MARQUEE_THRESHOLD_PX {
-                gesture.active = true;
-            }
-        }
-        set_gesture(&window_id, gesture.clone());
-                return Ok(Emit { ui_scope: partial_window_refresh(body), ..Default::default() });
+    let tracking = GESTURES.with(|store| {
+        let mut store = store.borrow_mut();
+        let Some(gesture) = store.get_mut(&window_id).filter(|gesture| gesture.tracking) else { return false };
+        append_gesture_samples(gesture, samples, camera, width, height);
+        true
+    });
+    if tracking {
+        let body = fem2d_addressed_body_key(view, "fem2d.canvas-pointer-move")?;
+        return Ok(Emit { ui_scope: partial_window_refresh(body), ..Default::default() });
     }
-    let targets: Vec<Fem2dPick> = fem2d_hit_test(doc, camera, x, y, width, height).into_iter().collect();
+    let targets: Vec<Fem2dPick> = fem2d_hit_test(doc, camera, x, y, width, height).map_err(|_| Fault::from("fem2d.interaction.identity"))?.into_iter().collect();
     Ok(Emit { effects: vec![super::interaction_hover_effect(&targets)], ..Default::default() })
 }
 
@@ -465,22 +370,21 @@ pub fn pointer_up(
     cancelled: bool,
 ) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
     let window_id = fem2d_addressed_window_id(view, "fem2d.canvas-pointer-up")?;
-    let gesture = gesture_for_window(&window_id);
-    clear_gesture(&window_id);
-        if cancelled || !gesture.tracking {
+    let mut gesture = take_gesture(&window_id);
+    let body = fem2d_addressed_body_key(view, "fem2d.canvas-pointer-up")?;
+    if cancelled || !gesture.tracking {
         return Ok(Emit { ui_scope: partial_window_refresh(body), ..Default::default() });
     }
+    append_gesture_samples(&mut gesture, &[(x, y)], camera, width, height);
     if gesture.active {
-        let targets = fem2d_marquee_hits(doc, camera, &gesture.method, &gesture.canvas_points, width, height);
-        let merge = if targets.is_empty() { "replace" } else { merge };
+        let targets = fem2d_marquee_hits(doc, camera, &gesture.method, &gesture.canvas_points, width, height).map_err(|_| Fault::from("fem2d.interaction.identity"))?;
         return Ok(Emit {
             effects: vec![interaction_select_effect(&targets, merge, &gesture.method)],
             ui_scope: partial_window_refresh(body),
             ..Default::default()
         });
     }
-    let hit = fem2d_hit_test(doc, camera, x, y, width, height);
-    let merge = if hit.is_some() { merge } else { "replace" };
+    let hit = fem2d_hit_test(doc, camera, x, y, width, height).map_err(|_| Fault::from("fem2d.interaction.identity"))?;
     let targets: Vec<Fem2dPick> = hit.into_iter().collect();
     Ok(Emit {
         effects: vec![interaction_select_effect(&targets, merge, "pick")],

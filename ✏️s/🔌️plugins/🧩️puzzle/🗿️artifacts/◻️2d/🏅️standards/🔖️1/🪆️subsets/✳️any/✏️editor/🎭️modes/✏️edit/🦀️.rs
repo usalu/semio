@@ -1,3 +1,4 @@
+//! the pane-camera framing, board-scene and engagement-HUD builders its three windows share. Each
 //! ✏️ Puzzle 2d play app — the `edit` mode: its definition and the triptych layout (overview | detail
 //! | selection); the pane builders the three windows share live in the `canvas` child.
 
@@ -7,6 +8,7 @@ use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
 use semio_framework_plugin::ToolRef;
 use semio_framework_plugin::WindowLayout;
+use semio_framework_pack_json::Value;
 
 pub const PUZZLE2D_PLAY_MODE_EDIT: &str = "edit";
 

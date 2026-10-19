@@ -1,0 +1,32 @@
+[
+  {
+    "op": "replace",
+    "path": "/regions/0",
+    "value": {
+      "holes": [],
+      "id": "r1",
+      "materialId": "m1",
+      "meshSize": 0.5,
+      "name": "Expanded Slab",
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "thickness": 0.25
+    }
+  }
+]

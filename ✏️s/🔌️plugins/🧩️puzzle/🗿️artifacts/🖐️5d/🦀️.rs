@@ -61,7 +61,7 @@ pub use semio_s_artifact_puzzle_5d_puzzle5d::{artifact_kind};
 
 pub use semio_s_artifact_puzzle_5d_v1::{ArtifactApps, artifact, definition, pilot_languages};
 
-pub use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
+pub use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -88,6 +88,8 @@ mod tests;
 
                         #[path = "."]
                         pub mod schema {
+pub use semio_s_artifact_puzzle_5d_mut_any_5::standards::v1::subsets::any::schema::play_snapshot;
+
                             pub use semio_s_artifact_puzzle_5d_schema::standards::v1::subsets::any::schema::*;
 
                             pub use semio_s_artifact_puzzle_5d_snapshot::standards::v1::subsets::any::schema::snapshot;

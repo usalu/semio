@@ -1,0 +1,7 @@
+{
+  "mutation": "changeSupport",
+  "patch": {
+    "nodeId": "n1"
+  },
+  "id": "s1"
+}

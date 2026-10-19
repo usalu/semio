@@ -68,6 +68,7 @@ Feature: Apply every typed fem2d material mutation twice — once in Rust, once 
     | create-material  | {"mutation":"createMaterial","material":{"id":"s355","name":"Steel S355","e":210000000000.0,"nu":0.3,"rho":7850.0}}                   |
     | delete-material  | {"mutation":"deleteMaterial","id":"c30"}                                                                                              |
     | replace-material | {"mutation":"replaceMaterial","id":"steel","newMaterial":{"id":"steel","name":"Steel S355","e":210000000000.0,"nu":0.3,"rho":7900.0}} |
+    | change-material | {"mutation":"changeMaterial","id":"steel","patch":{"name":"Structural Steel"}} |
 
   @id-inverse
   @level-exhaustive
@@ -84,6 +85,7 @@ Feature: Apply every typed fem2d material mutation twice — once in Rust, once 
     | create-material  | {"mutation":"createMaterial","material":{"id":"s355","name":"Steel S355","e":210000000000.0,"nu":0.3,"rho":7850.0}}                   |
     | delete-material  | {"mutation":"deleteMaterial","id":"c30"}                                                                                              |
     | replace-material | {"mutation":"replaceMaterial","id":"steel","newMaterial":{"id":"steel","name":"Steel S355","e":210000000000.0,"nu":0.3,"rho":7900.0}} |
+    | change-material | {"mutation":"changeMaterial","id":"steel","patch":{"name":"Structural Steel"}} |
 
   @id-spec-vector
   @level-exhaustive
@@ -99,6 +101,7 @@ Feature: Apply every typed fem2d material mutation twice — once in Rust, once 
     | create-material  | 🌱️create-material  | 🧱️appends  |
     | delete-material  | 🗑️delete-material  | 🚫️removes-the-30f7a2    |
     | replace-material | 🔁️replace-material | 🏗️restates |
+    | change-material | 🩹️change-material | 🩹️renames |
 
   @id-frame-vector
   @level-exhaustive
@@ -114,6 +117,7 @@ Feature: Apply every typed fem2d material mutation twice — once in Rust, once 
     | create-material  | 🌱️create-material  | 🏗️adds |
     | delete-material  | 🗑️delete-material  | 🗑️drops   |
     | replace-material | 🔁️replace-material | 📉️cracks    |
+    | change-material | 🩹️change-material | 📉️softens |
 
   @id-reject
   @level-exhaustive
@@ -134,3 +138,7 @@ Feature: Apply every typed fem2d material mutation twice — once in Rust, once 
     | replace-material-1 | 🔁️replace-material | ⛔️rejects   |
     | replace-material-2 | 🔁️replace-material | 🪪️denies       |
     | replace-material-3 | 🔁️replace-material | ⚗️denies |
+    | change-material-1 | 🩹️change-material | ⏸️same |
+    | change-material-2 | 🩹️change-material | ⛔️missing |
+    | change-material-3 | 🩹️change-material | ⚗️invalid |
+

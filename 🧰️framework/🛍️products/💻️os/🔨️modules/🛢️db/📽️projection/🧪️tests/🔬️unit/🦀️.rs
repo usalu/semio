@@ -163,7 +163,7 @@ async fn envelope(document: &str, operation: &str, seq: u64) -> MutationEnvelope
     MutationEnvelope {
         mutation_id: protocol::MutationId(operation.to_string()),
         document_id: protocol::ArtifactId(document.to_string()),
-        actor: protocol::ActorId("actor-1".to_string()),
+        actor: protocol::ActorId("actor-1".to_string().into()),
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),

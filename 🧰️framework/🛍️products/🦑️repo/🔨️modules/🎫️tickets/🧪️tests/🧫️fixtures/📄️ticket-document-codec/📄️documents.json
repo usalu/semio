@@ -1,6 +1,10 @@
 {
   "documents": [
     {
+      "source": "26/09/23/HUMAN-REOPEN",
+      "text": "{\"title\":\"Human Reopen\",\"status\":\"open\",\"goal\":\"TEST\",\"interactions\":[{\"kind\":\"ticket.reopen\",\"date\":\"2026-09-23 12:00:00\",\"author\":\"Human\",\"system\":\"\",\"client\":\"claude-code\",\"checkpoint\":\"\",\"prompt\":\"Continue the exact human request 🦑 <keep> & verify\",\"llm\":\"Opus 4.5\",\"effort\":\"high\",\"files\":[{\"path\":\"README.md\",\"id\":\"README\",\"uri\":\"repo://file/README\"}]}]}"
+    },
+    {
       "source": "🎆️25/🌙️11/☀️24/LOG-SYSTEM",
       "text": "{\n  \"title\": \"\\u003ee-\",\n  \"emoji\": \"📋️\",\n  \"status\": \"closed\",\n  \"description\": \"\\u003ee-\",\n  \"goal\": \"🎯️aioptimizedrepo\"\n}\n"
     },

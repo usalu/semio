@@ -62,3 +62,12 @@ fn find_plugin_entry_reports_a_typed_not_found_for_an_unknown_plugin() {
     let error = find_plugin_entry(&[], "does-not-exist").expect_err("must not fabricate an entry");
     assert_eq!(error.code, GatewayErrorCode::NotFound);
 }
+
+#[tokio::test]
+async fn probe_set_value_inverse_diffs_sum_to_the_negative_diff() {
+    let base = |json: serde_json::Value| ProbeSnapshot(json.into());
+    let set = |json: serde_json::Value| ProbeMutation::SetValue(json.into());
+    store::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&set(serde_json::json!({ "n": 2, "tags": ["a", "b"] })), &base(serde_json::json!({ "n": 1 }))).await;
+    store::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&set(serde_json::json!([1, { "leaf": "x" }, 3])), &base(serde_json::json!("scalar"))).await;
+    store::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&set(serde_json::json!({ "n": 1 })), &base(serde_json::json!(null))).await;
+}

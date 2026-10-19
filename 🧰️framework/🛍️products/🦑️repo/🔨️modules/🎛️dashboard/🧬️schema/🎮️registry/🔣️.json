@@ -5,6 +5,33 @@
   "description": "🎛️ Everything the dashboard can start is a registry command. Commands are discovered from build targets, the playground catalog, the repo domain and from the declarations this schema describes: `metadata.semio.dashboard` of a `📋️project.json` (`#/$defs/ProjectDeclaration`), `targets.<name>.metadata.semio.dashboard` (`#/$defs/TargetDeclaration`) and the `🎮️commands.json` of an open ticket (`#/$defs/TicketCommands`, the document this schema validates at its root). `#/$defs/ProjectManifest` validates the dashboard parts of a whole `📋️project.json`. The resolved outputs (`CommandId`, `RegistryEntry`, `TaskLabel`, `Ready`, `Launch`) are what `semio commands --json` and the daemon exchange.",
   "$ref": "#/$defs/TicketCommands",
   "$defs": {
+    "LocalizedText": {
+      "type": "object",
+      "description": "🌐️ Optional human text supplied together in English and German; stable command and parameter identities stay language-neutral.",
+      "required": [
+        "en",
+        "de"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "en": {
+          "$ref": "#/$defs/DisplayText"
+        },
+        "de": {
+          "$ref": "#/$defs/DisplayText"
+        }
+      }
+    },
+    "DisplayText": {
+      "type": "string",
+      "description": "🏷️ Visible title or help text containing a non-whitespace character and no terminal control characters.",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "\\S",
+      "not": {
+        "pattern": "[\\u0000-\\u001f\\u007f]"
+      }
+    },
     "Slug": {
       "type": "string",
       "description": "🔑️ A declared identifier: lowercase words joined by `-`, `.` or `_`. It never contains `/`, `:`, `=` or whitespace, so it stays unambiguous inside a command id and a `key=value` pair.",
@@ -21,13 +48,28 @@
       "type": "string",
       "description": "🌱️ An environment variable name. The runner variables the dashboard owns are never declared.",
       "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
-      "not": { "enum": ["SEMIO_BUILD_TERMINAL", "SEMIO_BUILD_REUSE_GRAPH", "NX_DAEMON", "NX_ISOLATE_PLUGINS", "NX_CACHE_PROJECT_GRAPH", "NX_TUI", "NX_NATIVE_COMMAND_RUNNER", "NX_PLUGIN_NO_TIMEOUTS", "NX_FORCE_REUSE_CACHED_GRAPH", "FORCE_COLOR"] }
+      "not": {
+        "enum": [
+          "SEMIO_BUILD_TERMINAL",
+          "SEMIO_BUILD_REUSE_GRAPH",
+          "NX_DAEMON",
+          "NX_ISOLATE_PLUGINS",
+          "NX_CACHE_PROJECT_GRAPH",
+          "NX_TUI",
+          "NX_NATIVE_COMMAND_RUNNER",
+          "NX_PLUGIN_NO_TIMEOUTS",
+          "NX_FORCE_REUSE_CACHED_GRAPH",
+          "FORCE_COLOR"
+        ]
+      }
     },
     "Text": {
       "type": "string",
       "description": "🔤️ One process word or environment value. Tokens: `{workspace}` is the workspace root, `{port}` the resolved ready port, `{<parameter id>}` the chosen value of a parameter. A literal absolute path is never stored; write `{workspace}/…`.",
       "pattern": "^[^\\u0000]*$",
-      "not": { "pattern": "^(~[/\\\\]|/(Users|home|root|private|tmp|var|opt|usr|etc|mnt|workspaces|Volumes)/|[A-Za-z]:[/\\\\])" }
+      "not": {
+        "pattern": "^(~[/\\\\]|/(Users|home|root|private|tmp|var|opt|usr|etc|mnt|workspaces|Volumes)/|[A-Za-z]:[/\\\\])"
+      }
     },
     "RelativePath": {
       "type": "string",
@@ -37,31 +79,51 @@
     "EnvMap": {
       "type": "object",
       "description": "🌱️ Variables added to the process environment.",
-      "propertyNames": { "$ref": "#/$defs/EnvName" },
-      "additionalProperties": { "$ref": "#/$defs/Text" }
+      "propertyNames": {
+        "$ref": "#/$defs/EnvName"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/Text"
+      }
     },
     "BuildFlags": {
       "type": "array",
       "description": "🚩️ Words placed before `--` of the build runner invocation (`--skip-cache`, `--exclude-dependencies`, …). Commands that do not use the build runner ignore them.",
-      "items": { "type": "string", "pattern": "^--?[A-Za-z][^\\s\\u0000]*$" }
+      "items": {
+        "type": "string",
+        "pattern": "^--?[A-Za-z][^\\s\\u0000]*$"
+      }
     },
     "Args": {
       "type": "array",
       "description": "➡️ Words placed after `--` of the build runner invocation, or appended to a tool's command.",
-      "items": { "$ref": "#/$defs/Text" }
+      "items": {
+        "$ref": "#/$defs/Text"
+      }
     },
     "Reference": {
       "type": "string",
       "description": "🔗️ Another command: `<project>:<target>[:configuration]`, `playground:<variant>`, `tool:<project>/<id>` or `ticket:<ticket id>/<id>`.",
       "pattern": "^[^\\s:]+:\\S+$",
-      "not": { "pattern": "^((compound|group):|repo:(ticket\\.(show|files|close|reopen):.|(goals\\.(list|tree)|analyze:[a-z]+|tree\\.(monorepo|goal|statute|territory)|statutes\\.catalog)$))" }
+      "not": {
+        "pattern": "^((compound|group):|repo:(ticket\\.(show|files|close|reopen):.|(draft\\.(start|discard)|goals\\.(list|tree)|analyze:[a-z]+|tree\\.(monorepo|goal|statute|territory)|statutes\\.catalog)$))"
+      }
     },
     "AppliesTo": {
       "type": "object",
       "description": "🎯️ Where a global axis is offered: on every command with a listed verb (tools included: their `buildFlags` are ignored, and an axis with nothing else to say is not offered on them), and on playgrounds when `playground` is true. Without `appliesTo` the axis is offered on every command the build runner runs.",
       "properties": {
-        "verbs": { "type": "array", "items": { "$ref": "#/$defs/Verb" }, "minItems": 1, "uniqueItems": true },
-        "playground": { "type": "boolean" }
+        "verbs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Verb"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "playground": {
+          "type": "boolean"
+        }
       },
       "minProperties": 1,
       "additionalProperties": false
@@ -70,53 +132,218 @@
       "type": "object",
       "description": "🎚️ One value of a choice together with its effect.",
       "properties": {
-        "id": { "type": "string", "pattern": "^[^\\s=\\u0000]+$", "maxLength": 128, "description": "🔑️ The value as chosen and as substituted for `{<parameter id>}`." },
-        "env": { "$ref": "#/$defs/EnvMap" },
-        "buildFlags": { "$ref": "#/$defs/BuildFlags" },
-        "args": { "$ref": "#/$defs/Args" }
+        "id": {
+          "type": "string",
+          "pattern": "^[^\\s=\\u0000]+$",
+          "maxLength": 128,
+          "description": "🔑️ The value as chosen and as substituted for `{<parameter id>}`."
+        },
+        "env": {
+          "$ref": "#/$defs/EnvMap"
+        },
+        "buildFlags": {
+          "$ref": "#/$defs/BuildFlags"
+        },
+        "args": {
+          "$ref": "#/$defs/Args"
+        }
       },
-      "required": ["id"],
+      "required": [
+        "id"
+      ],
       "additionalProperties": false
     },
     "Parameter": {
       "type": "object",
       "description": "🎛️ Something chosen at launch. A `choice` carries one effect per value, a `flag` one effect when switched on, a `text` states where the typed value goes. Effect semantics: `env` is added to the process environment, `buildFlags` go before `--`, `args` after `--`.",
       "properties": {
-        "id": { "$ref": "#/$defs/Slug" },
-        "kind": { "enum": ["choice", "text", "flag"] },
-        "appliesTo": { "$ref": "#/$defs/AppliesTo", "description": "🎯️ Global axes only (parameters of the workspace root project)." },
-        "default": { "anyOf": [{ "type": "string" }, { "type": "boolean" }], "description": "🧷️ The value applied when nothing is chosen; absent: not applied unless chosen. A choice names one of its values, a flag states `true` or `false`." },
-        "required": { "type": "boolean", "description": "❗️ The command does not start without a value." },
-        "values": { "type": "array", "items": { "$ref": "#/$defs/ParameterValue" }, "minItems": 1 },
-        "env": { "$ref": "#/$defs/EnvMap" },
-        "buildFlags": { "$ref": "#/$defs/BuildFlags" },
-        "args": { "$ref": "#/$defs/Args" },
-        "valueEnv": { "$ref": "#/$defs/EnvName", "description": "🌱️ The typed text becomes this environment variable." },
-        "valueFlag": { "type": "string", "pattern": "^--?[A-Za-z][A-Za-z0-9_.-]*=?$", "description": "🚩️ The typed text follows this flag after `--`: two words, or one word when the flag ends with `=`." },
-        "valuePositional": { "const": true, "description": "➡️ The typed text is one word after `--`." }
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "title": {
+          "$ref": "#/$defs/LocalizedText"
+        },
+        "description": {
+          "$ref": "#/$defs/LocalizedText"
+        },
+        "kind": {
+          "enum": [
+            "choice",
+            "text",
+            "flag"
+          ]
+        },
+        "appliesTo": {
+          "$ref": "#/$defs/AppliesTo",
+          "description": "🎯️ Global axes only (parameters of the workspace root project)."
+        },
+        "default": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            }
+          ],
+          "description": "🧷️ The value applied when nothing is chosen; absent: not applied unless chosen. A choice names one of its values, a flag states `true` or `false`."
+        },
+        "required": {
+          "type": "boolean",
+          "description": "❗️ The command does not start without a value."
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ParameterValue"
+          },
+          "minItems": 1
+        },
+        "env": {
+          "$ref": "#/$defs/EnvMap"
+        },
+        "buildFlags": {
+          "$ref": "#/$defs/BuildFlags"
+        },
+        "args": {
+          "$ref": "#/$defs/Args"
+        },
+        "valueEnv": {
+          "$ref": "#/$defs/EnvName",
+          "description": "🌱️ The typed text becomes this environment variable."
+        },
+        "valueFlag": {
+          "type": "string",
+          "pattern": "^--?[A-Za-z][A-Za-z0-9_.-]*=?$",
+          "description": "🚩️ The typed text follows this flag after `--`: two words, or one word when the flag ends with `=`."
+        },
+        "valuePositional": {
+          "const": true,
+          "description": "➡️ The typed text is one word after `--`."
+        },
+        "suggestions": {
+          "$ref": "#/$defs/Suggestions"
+        }
       },
-      "required": ["id", "kind"],
+      "required": [
+        "id",
+        "kind"
+      ],
       "additionalProperties": false,
       "allOf": [
         {
-          "if": { "properties": { "kind": { "const": "choice" } }, "required": ["kind"] },
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "choice"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
           "then": {
-            "required": ["values"],
-            "properties": { "default": { "type": "string" }, "env": false, "buildFlags": false, "args": false, "valueEnv": false, "valueFlag": false, "valuePositional": false }
+            "required": [
+              "values"
+            ],
+            "properties": {
+              "default": {
+                "type": "string"
+              },
+              "env": false,
+              "buildFlags": false,
+              "args": false,
+              "valueEnv": false,
+              "valueFlag": false,
+              "valuePositional": false,
+              "suggestions": false
+            }
           }
         },
         {
-          "if": { "properties": { "kind": { "const": "flag" } }, "required": ["kind"] },
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "flag"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
           "then": {
-            "properties": { "default": { "type": "boolean" }, "values": false, "valueEnv": false, "valueFlag": false, "valuePositional": false },
-            "anyOf": [{ "required": ["env"] }, { "required": ["buildFlags"] }, { "required": ["args"] }]
+            "properties": {
+              "default": {
+                "type": "boolean"
+              },
+              "values": false,
+              "valueEnv": false,
+              "valueFlag": false,
+              "valuePositional": false,
+              "suggestions": false
+            },
+            "anyOf": [
+              {
+                "required": [
+                  "env"
+                ]
+              },
+              {
+                "required": [
+                  "buildFlags"
+                ]
+              },
+              {
+                "required": [
+                  "args"
+                ]
+              }
+            ]
           }
         },
         {
-          "if": { "properties": { "kind": { "const": "text" } }, "required": ["kind"] },
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "text"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
           "then": {
-            "properties": { "default": { "type": "string" }, "values": false, "env": false, "buildFlags": false, "args": false },
-            "not": { "anyOf": [{ "required": ["valueEnv", "valueFlag"] }, { "required": ["valueEnv", "valuePositional"] }, { "required": ["valueFlag", "valuePositional"] }] }
+            "properties": {
+              "default": {
+                "type": "string"
+              },
+              "values": false,
+              "env": false,
+              "buildFlags": false,
+              "args": false
+            },
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "valueEnv",
+                    "valueFlag"
+                  ]
+                },
+                {
+                  "required": [
+                    "valueEnv",
+                    "valuePositional"
+                  ]
+                },
+                {
+                  "required": [
+                    "valueFlag",
+                    "valuePositional"
+                  ]
+                }
+              ]
+            }
           }
         }
       ]
@@ -125,73 +352,190 @@
       "type": "object",
       "description": "🟢️ The task is ready after its output shows `http://(127.0.0.1|localhost|0.0.0.0):<port>` and the exact ready URL answers HTTP with a 2xx or 3xx status; the ready URL is that match plus `path`. With `portEnv` and `port` the port is also exported under that variable; without `port`, `portEnv` names the parameter or environment value that carries it.",
       "properties": {
-        "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
-        "portEnv": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*$" },
-        "path": { "type": "string", "pattern": "^[/?#][^\\s\\u0000]*$" },
-        "printed": { "type": "boolean", "description": "🖨️ The ready address is the whole printed address (up to whitespace) instead of the match plus `path`; it leaves no room for `path`." }
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "portEnv": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*$"
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^[/?#][^\\s\\u0000]*$"
+        },
+        "printed": {
+          "type": "boolean",
+          "description": "🖨️ The ready address is the whole printed address (up to whitespace) instead of the match plus `path`; it leaves no room for `path`."
+        }
       },
-      "anyOf": [{ "required": ["port"] }, { "required": ["portEnv"] }],
-      "if": { "properties": { "printed": { "const": true } }, "required": ["printed"] },
-      "then": { "properties": { "path": false } },
+      "anyOf": [
+        {
+          "required": [
+            "port"
+          ]
+        },
+        {
+          "required": [
+            "portEnv"
+          ]
+        }
+      ],
+      "if": {
+        "properties": {
+          "printed": {
+            "const": true
+          }
+        },
+        "required": [
+          "printed"
+        ]
+      },
+      "then": {
+        "properties": {
+          "path": false
+        }
+      },
       "additionalProperties": false
     },
     "AgentClientId": {
-      "enum": ["claude-code", "vscode", "cursor", "codex"],
-      "description": "🤖️ An agent or editor client whose MCP configuration file `bun ./📜️script.ts agents write` derives: `.mcp.json`, `.vscode/mcp.json`, `.cursor/mcp.json`, `.codex/config.toml`."
+      "enum": [
+        "claude-code",
+        "codex"
+      ],
+      "description": "🤖️ An agent client whose MCP configuration file `bun ./📜️script.ts agents write` derives: `.mcp.json` or `.codex/config.toml`."
     },
     "McpExposure": {
       "type": "object",
       "description": "🔌️ The tool is an MCP stdio server the listed clients start. `server` is its name in the client files; `command` of the tool is the process and each client states the value of every `text` parameter that is positional or a flag (a parameter without a value falls back to its `default`).",
       "properties": {
-        "server": { "$ref": "#/$defs/Slug" },
+        "server": {
+          "$ref": "#/$defs/Slug"
+        },
         "clients": {
           "type": "object",
-          "propertyNames": { "$ref": "#/$defs/AgentClientId" },
+          "propertyNames": {
+            "$ref": "#/$defs/AgentClientId"
+          },
           "additionalProperties": {
             "type": "object",
-            "properties": { "parameters": { "type": "object", "propertyNames": { "$ref": "#/$defs/Slug" }, "additionalProperties": { "type": "string" } } },
+            "properties": {
+              "parameters": {
+                "type": "object",
+                "propertyNames": {
+                  "$ref": "#/$defs/Slug"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            },
             "additionalProperties": false
           },
           "minProperties": 1
         }
       },
-      "required": ["server", "clients"],
+      "required": [
+        "server",
+        "clients"
+      ],
       "additionalProperties": false
     },
     "Tool": {
       "type": "object",
       "description": "🧰️ A command that is not an build target: `command` is the argument list, started in `cwd`.",
       "properties": {
-        "id": { "$ref": "#/$defs/Slug" },
-        "verb": { "$ref": "#/$defs/Verb", "description": "🗂️ Default: the leading word of `id` when it is a known verb, else `task`." },
-        "command": { "type": "array", "items": { "$ref": "#/$defs/Text" }, "minItems": 1 },
-        "cwd": { "$ref": "#/$defs/RelativePath" },
-        "env": { "$ref": "#/$defs/EnvMap" },
-        "continuous": { "type": "boolean", "description": "♾️ The tool keeps running until it is stopped." },
-        "ready": { "$ref": "#/$defs/ReadyDeclaration" },
-        "requires": { "$ref": "#/$defs/Requires" },
-        "parameters": { "type": "array", "items": { "$ref": "#/$defs/Parameter" } },
-        "mcp": { "$ref": "#/$defs/McpExposure" }
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "title": {
+          "$ref": "#/$defs/LocalizedText"
+        },
+        "description": {
+          "$ref": "#/$defs/LocalizedText"
+        },
+        "verb": {
+          "$ref": "#/$defs/Verb",
+          "description": "🗂️ Default: the leading word of `id` when it is a known verb, else `task`."
+        },
+        "command": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Text"
+          },
+          "minItems": 1
+        },
+        "cwd": {
+          "$ref": "#/$defs/RelativePath"
+        },
+        "env": {
+          "$ref": "#/$defs/EnvMap"
+        },
+        "continuous": {
+          "type": "boolean",
+          "description": "♾️ The tool keeps running until it is stopped."
+        },
+        "ready": {
+          "$ref": "#/$defs/ReadyDeclaration"
+        },
+        "requires": {
+          "$ref": "#/$defs/Requires"
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Parameter"
+          }
+        },
+        "mcp": {
+          "$ref": "#/$defs/McpExposure"
+        }
       },
-      "required": ["id", "command"],
+      "required": [
+        "id",
+        "command"
+      ],
       "additionalProperties": false
     },
     "Member": {
       "description": "🧩️ A reference to another command, plain or with the parameter values and environment it is pinned to. `env` is how a compound or a requirement states a relationship between commands (the hub address a shell joins); values may use `{workspace}`.",
       "oneOf": [
-        { "$ref": "#/$defs/Reference" },
+        {
+          "$ref": "#/$defs/Reference"
+        },
         {
           "type": "object",
           "properties": {
-            "run": { "$ref": "#/$defs/Reference" },
+            "run": {
+              "$ref": "#/$defs/Reference"
+            },
             "parameters": {
               "type": "object",
-              "propertyNames": { "$ref": "#/$defs/Slug" },
-              "additionalProperties": { "anyOf": [{ "type": "string" }, { "type": "boolean" }, { "type": "integer" }] }
+              "propertyNames": {
+                "$ref": "#/$defs/Slug"
+              },
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              }
             },
-            "env": { "$ref": "#/$defs/EnvMap" }
+            "env": {
+              "$ref": "#/$defs/EnvMap"
+            }
           },
-          "required": ["run"],
+          "required": [
+            "run"
+          ],
           "additionalProperties": false
         }
       ]
@@ -199,39 +543,116 @@
     "Requires": {
       "type": "array",
       "description": "🔗️ Services started (or reused) and awaited before the command starts.",
-      "items": { "$ref": "#/$defs/Member" }
+      "items": {
+        "$ref": "#/$defs/Member"
+      }
     },
     "Compound": {
       "type": "object",
       "description": "🧭️ Several commands started in order, each after the previous member is ready when that member declares `ready`.",
       "properties": {
-        "id": { "$ref": "#/$defs/Slug" },
-        "verb": { "$ref": "#/$defs/Verb", "description": "🗂️ Default: the leading word of `id` when it is a known verb, else the verb of the first member." },
-        "stop": { "enum": ["together", "independent"], "description": "🛑️ `together` stops all members when one stops; default `independent`." },
-        "members": { "type": "array", "items": { "$ref": "#/$defs/Member" }, "minItems": 1 }
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "title": {
+          "$ref": "#/$defs/LocalizedText"
+        },
+        "description": {
+          "$ref": "#/$defs/LocalizedText"
+        },
+        "verb": {
+          "$ref": "#/$defs/Verb",
+          "description": "🗂️ Default: the leading word of `id` when it is a known verb, else the verb of the first member."
+        },
+        "stop": {
+          "enum": [
+            "together",
+            "independent"
+          ],
+          "description": "🛑️ `together` stops all members when one stops; default `independent`."
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Member"
+          },
+          "minItems": 1
+        }
       },
-      "required": ["id", "members"],
+      "required": [
+        "id",
+        "members"
+      ],
       "additionalProperties": false
     },
     "Group": {
       "type": "object",
       "description": "👥️ One or more targets over a named project set (`repo run-many`).",
       "properties": {
-        "id": { "$ref": "#/$defs/Slug" },
-        "targets": { "type": "array", "items": { "type": "string", "pattern": "^[^\\s,]+$" }, "minItems": 1, "uniqueItems": true, "description": "🎯️ The targets `repo run-many` runs over the projects." },
-        "projects": { "type": "array", "items": { "type": "string", "pattern": "^[^\\s,]+$" }, "minItems": 1, "uniqueItems": true, "description": "📋️ Project names or build project patterns: `*` matches any run of characters, a leading `!` excludes." }
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "title": {
+          "$ref": "#/$defs/LocalizedText"
+        },
+        "description": {
+          "$ref": "#/$defs/LocalizedText"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[^\\s,]+$"
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "🎯️ The targets `repo run-many` runs over the projects."
+        },
+        "projects": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[^\\s,]+$"
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "📋️ Project names or build project patterns: `*` matches any run of characters, a leading `!` excludes."
+        }
       },
-      "required": ["id", "targets", "projects"],
+      "required": [
+        "id",
+        "targets",
+        "projects"
+      ],
       "additionalProperties": false
     },
     "TargetDeclaration": {
       "type": "object",
       "description": "🎯️ `targets.<name>.metadata.semio.dashboard`: what the dashboard knows about one build target beyond the build runner.",
       "properties": {
-        "verb": { "$ref": "#/$defs/Verb", "description": "🗂️ Default: the leading word of the target name when it is a known verb, else `task`." },
-        "ready": { "$ref": "#/$defs/ReadyDeclaration" },
-        "requires": { "$ref": "#/$defs/Requires" },
-        "parameters": { "type": "array", "items": { "$ref": "#/$defs/Parameter" }, "description": "🎛️ Target-owned parameters; one with the id of a global axis replaces that axis on this target." }
+        "title": {
+          "$ref": "#/$defs/LocalizedText"
+        },
+        "description": {
+          "$ref": "#/$defs/LocalizedText"
+        },
+        "verb": {
+          "$ref": "#/$defs/Verb",
+          "description": "🗂️ Default: the leading word of the target name when it is a known verb, else `task`."
+        },
+        "ready": {
+          "$ref": "#/$defs/ReadyDeclaration"
+        },
+        "requires": {
+          "$ref": "#/$defs/Requires"
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Parameter"
+          },
+          "description": "🎛️ Target-owned parameters; one with the id of a global axis replaces that axis on this target."
+        }
       },
       "additionalProperties": false
     },
@@ -239,10 +660,30 @@
       "type": "object",
       "description": "📋️ `metadata.semio.dashboard` of a project: tools, compounds and groups it owns. `parameters` are the global axes and belong to the workspace root project only.",
       "properties": {
-        "parameters": { "type": "array", "items": { "$ref": "#/$defs/Parameter" } },
-        "tools": { "type": "array", "items": { "$ref": "#/$defs/Tool" } },
-        "compounds": { "type": "array", "items": { "$ref": "#/$defs/Compound" } },
-        "groups": { "type": "array", "items": { "$ref": "#/$defs/Group" } }
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Parameter"
+          }
+        },
+        "tools": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Tool"
+          }
+        },
+        "compounds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Compound"
+          }
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Group"
+          }
+        }
       },
       "additionalProperties": false
     },
@@ -250,9 +691,21 @@
       "type": "object",
       "description": "🎫️ `<ticket folder>/🎮️commands.json`: the tools and compounds of one ticket, offered while the ticket is open.",
       "properties": {
-        "$schema": { "type": "string" },
-        "tools": { "type": "array", "items": { "$ref": "#/$defs/Tool" } },
-        "compounds": { "type": "array", "items": { "$ref": "#/$defs/Compound" } }
+        "$schema": {
+          "type": "string"
+        },
+        "tools": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Tool"
+          }
+        },
+        "compounds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Compound"
+          }
+        }
       },
       "additionalProperties": false
     },
@@ -262,7 +715,16 @@
       "properties": {
         "metadata": {
           "type": "object",
-          "properties": { "semio": { "type": "object", "properties": { "dashboard": { "$ref": "#/$defs/ProjectDeclaration" } } } }
+          "properties": {
+            "semio": {
+              "type": "object",
+              "properties": {
+                "dashboard": {
+                  "$ref": "#/$defs/ProjectDeclaration"
+                }
+              }
+            }
+          }
         },
         "targets": {
           "type": "object",
@@ -271,7 +733,16 @@
             "properties": {
               "metadata": {
                 "type": "object",
-                "properties": { "semio": { "type": "object", "properties": { "dashboard": { "$ref": "#/$defs/TargetDeclaration" } } } }
+                "properties": {
+                  "semio": {
+                    "type": "object",
+                    "properties": {
+                      "dashboard": {
+                        "$ref": "#/$defs/TargetDeclaration"
+                      }
+                    }
+                  }
+                }
               }
             }
           }
@@ -282,18 +753,46 @@
       "type": "string",
       "description": "🪪️ The identity of a command. Chosen parameters follow an id as `key=value` pairs.",
       "oneOf": [
-        { "pattern": "^playground:[^\\s:/]+$", "description": "🛝️ A playground variant of the generated catalog." },
-        { "pattern": "^tool:\\S+/[a-z0-9]+([._-][a-z0-9]+)*$", "description": "🧰️ `tool:<project>/<id>`." },
-        { "pattern": "^compound:\\S+/[a-z0-9]+([._-][a-z0-9]+)*$", "description": "🧭️ `compound:<project>/<id>`." },
-        { "pattern": "^group:\\S+/[a-z0-9]+([._-][a-z0-9]+)*$", "description": "👥️ `group:<project>/<id>`." },
-        { "pattern": "^ticket:\\d{2}/\\d{2}/\\d{2}/[^\\s/]+/[a-z0-9]+([._-][a-z0-9]+)*$", "description": "🎫️ `ticket:<ticket id>/<id>`." },
-        { "pattern": "^repo:(ticket\\.(show|files|close|reopen):\\S+|goals\\.(list|tree)|analyze:[a-z]+|tree\\.(monorepo|goal|statute|territory)|statutes\\.catalog)$", "description": "🦑️ A repo-domain action answered in process." },
-        { "pattern": "^(?!(playground|tool|compound|group|ticket):)(?!repo:(ticket\\.(show|files|close|reopen):.|(goals\\.(list|tree)|analyze:[a-z]+|tree\\.(monorepo|goal|statute|territory)|statutes\\.catalog)$))[^\\s:]+:\\S+$", "description": "🎯️ `<project>:<target>[:configuration]`." }
+        {
+          "pattern": "^playground:[^\\s:/]+$",
+          "description": "🛝️ A playground variant of the generated catalog."
+        },
+        {
+          "pattern": "^tool:\\S+/[a-z0-9]+([._-][a-z0-9]+)*$",
+          "description": "🧰️ `tool:<project>/<id>`."
+        },
+        {
+          "pattern": "^compound:\\S+/[a-z0-9]+([._-][a-z0-9]+)*$",
+          "description": "🧭️ `compound:<project>/<id>`."
+        },
+        {
+          "pattern": "^group:\\S+/[a-z0-9]+([._-][a-z0-9]+)*$",
+          "description": "👥️ `group:<project>/<id>`."
+        },
+        {
+          "pattern": "^ticket:\\d{2}/\\d{2}/\\d{2}/[^\\s/]+/[a-z0-9]+([._-][a-z0-9]+)*$",
+          "description": "🎫️ `ticket:<ticket id>/<id>`."
+        },
+        {
+          "pattern": "^repo:(ticket\\.(show|files|close|reopen):\\S+|draft\\.(start|discard)|goals\\.(list|tree)|analyze:[a-z]+|tree\\.(monorepo|goal|statute|territory)|statutes\\.catalog)$",
+          "description": "🦑️ A repo-domain action answered in process."
+        },
+        {
+          "pattern": "^(?!(playground|tool|compound|group|ticket):)(?!repo:(ticket\\.(show|files|close|reopen):.|(draft\\.(start|discard)|goals\\.(list|tree)|analyze:[a-z]+|tree\\.(monorepo|goal|statute|territory)|statutes\\.catalog)$))[^\\s:]+:\\S+$",
+          "description": "🎯️ `<project>:<target>[:configuration]`."
+        }
       ]
     },
     "Pair": {
       "type": "array",
-      "prefixItems": [{ "type": "string" }, { "type": "string" }],
+      "prefixItems": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "string"
+        }
+      ],
       "items": false,
       "minItems": 2
     },
@@ -301,89 +800,294 @@
       "type": "object",
       "description": "🏷️ What a running task is called. Tab text and window title are pure functions of it: `verb subject [qualifier]`.",
       "properties": {
-        "verb": { "$ref": "#/$defs/Verb" },
-        "owner": { "type": "array", "items": { "type": "string" }, "description": "🧭️ The taxonomy path of the owner, outermost first." },
-        "subject": { "type": "string" },
-        "qualifier": { "type": "string", "description": "🔖️ What tells this task from its siblings (target, configuration, renderer); may be empty." },
-        "parameters": { "type": "array", "items": { "$ref": "#/$defs/Pair" } },
-        "members": { "type": "integer", "minimum": 0, "maximum": 65535, "description": "🧩️ The number of processes of a compound; 0 for a single process." }
+        "verb": {
+          "$ref": "#/$defs/Verb"
+        },
+        "owner": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "🧭️ The taxonomy path of the owner, outermost first."
+        },
+        "subject": {
+          "type": "string"
+        },
+        "qualifier": {
+          "type": "string",
+          "description": "🔖️ What tells this task from its siblings (target, configuration, renderer); may be empty."
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Pair"
+          }
+        },
+        "members": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "description": "🧩️ The number of processes of a compound; 0 for a single process."
+        }
       },
-      "required": ["verb", "owner", "subject", "qualifier", "parameters", "members"],
+      "required": [
+        "verb",
+        "owner",
+        "subject",
+        "qualifier",
+        "parameters",
+        "members"
+      ],
       "additionalProperties": false
     },
     "Ready": {
       "type": "object",
       "description": "🟢️ The resolved readiness of a process: ready after its output shows `http://(127.0.0.1|localhost|0.0.0.0):<port>` and the exact ready URL answers HTTP with a 2xx or 3xx status; the ready URL is that match plus `path`.",
       "properties": {
-        "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
-        "path": { "type": "string" },
-        "printed": { "const": true, "description": "🖨️ The ready address is the whole printed address, not the match plus `path`." }
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "path": {
+          "type": "string"
+        },
+        "printed": {
+          "const": true,
+          "description": "🖨️ The ready address is the whole printed address, not the match plus `path`."
+        }
       },
-      "required": ["port", "path"],
+      "required": [
+        "port",
+        "path"
+      ],
       "additionalProperties": false
     },
     "ParameterInfo": {
       "type": "object",
       "description": "🎛️ One parameter a command accepts, as listed.",
       "properties": {
-        "id": { "$ref": "#/$defs/Slug" },
-        "kind": { "enum": ["choice", "text", "flag"] },
-        "values": { "type": "array", "items": { "type": "string" } },
-        "default": { "type": "string" },
-        "required": { "type": "boolean" },
-        "origin": { "enum": ["axis", "target", "tool", "playground", "configuration", "member"] }
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "title": {
+          "$ref": "#/$defs/LocalizedText"
+        },
+        "description": {
+          "$ref": "#/$defs/LocalizedText"
+        },
+        "kind": {
+          "enum": [
+            "choice",
+            "text",
+            "flag"
+          ]
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "default": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "origin": {
+          "enum": [
+            "axis",
+            "target",
+            "tool",
+            "playground",
+            "configuration",
+            "member",
+            "repo"
+          ]
+        },
+        "suggestions": {
+          "$ref": "#/$defs/Suggestions"
+        }
       },
-      "required": ["id", "kind", "values", "required", "origin"],
+      "required": [
+        "id",
+        "kind",
+        "values",
+        "required",
+        "origin"
+      ],
       "additionalProperties": false
     },
     "RegistryEntry": {
       "type": "object",
       "description": "📇️ One command as `semio commands --json` lists it.",
       "properties": {
-        "id": { "$ref": "#/$defs/CommandId" },
-        "kind": { "enum": ["target", "playground", "tool", "compound", "group", "ticket", "repo"] },
-        "verb": { "$ref": "#/$defs/Verb" },
-        "label": { "type": "string" },
-        "owner": { "type": "array", "items": { "type": "string" } },
-        "longRunning": { "type": "boolean" },
-        "listed": { "type": "boolean", "description": "👁️ Whether the command belongs to the default searchable set; the commands of a closed ticket do not." },
-        "mutating": { "type": "boolean", "description": "⚠️ Whether running the command changes repository state and deserves a confirmation." },
-        "ready": { "$ref": "#/$defs/Ready" },
-        "mcp": { "$ref": "#/$defs/McpExposure", "description": "🔌️ Present when the command is an MCP stdio server the agent clients start." },
-        "parameters": { "type": "array", "items": { "$ref": "#/$defs/ParameterInfo" } },
-        "source": { "type": "string", "description": "📄️ The workspace-relative file that declares the command; empty for commands built into the dashboard." }
+        "id": {
+          "$ref": "#/$defs/CommandId"
+        },
+        "title": {
+          "$ref": "#/$defs/LocalizedText"
+        },
+        "description": {
+          "$ref": "#/$defs/LocalizedText"
+        },
+        "kind": {
+          "enum": [
+            "target",
+            "playground",
+            "tool",
+            "compound",
+            "group",
+            "ticket",
+            "repo"
+          ]
+        },
+        "verb": {
+          "$ref": "#/$defs/Verb"
+        },
+        "label": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "longRunning": {
+          "type": "boolean"
+        },
+        "listed": {
+          "type": "boolean",
+          "description": "👁️ Whether the command belongs to the default searchable set; the commands of a closed ticket do not."
+        },
+        "mutating": {
+          "type": "boolean",
+          "description": "⚠️ Whether running the command changes repository state and deserves a confirmation."
+        },
+        "ready": {
+          "$ref": "#/$defs/Ready"
+        },
+        "mcp": {
+          "$ref": "#/$defs/McpExposure",
+          "description": "🔌️ Present when the command is an MCP stdio server the agent clients start."
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ParameterInfo"
+          }
+        },
+        "source": {
+          "type": "string",
+          "description": "📄️ The workspace-relative file that declares the command; empty for commands built into the dashboard."
+        }
       },
-      "required": ["id", "kind", "verb", "label", "owner", "longRunning", "listed", "mutating", "parameters", "source"],
+      "required": [
+        "id",
+        "kind",
+        "verb",
+        "label",
+        "owner",
+        "longRunning",
+        "listed",
+        "mutating",
+        "parameters",
+        "source"
+      ],
       "additionalProperties": false
     },
     "LaunchProcess": {
       "type": "object",
       "description": "▶️ One process of a resolved launch.",
       "properties": {
-        "commandId": { "$ref": "#/$defs/CommandId" },
-        "cmd": { "type": "string", "minLength": 1 },
-        "args": { "type": "array", "items": { "type": "string" } },
-        "cwd": { "type": "string", "description": "📁️ Workspace-relative working directory, forward-slashed; empty for the workspace root." },
-        "env": { "type": "array", "items": { "$ref": "#/$defs/Pair" } },
-        "label": { "$ref": "#/$defs/TaskLabel" },
-        "ready": { "$ref": "#/$defs/Ready" },
-        "longRunning": { "type": "boolean" }
+        "commandId": {
+          "$ref": "#/$defs/CommandId"
+        },
+        "cmd": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cwd": {
+          "type": "string",
+          "description": "📁️ Workspace-relative working directory, forward-slashed; empty for the workspace root."
+        },
+        "env": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Pair"
+          }
+        },
+        "label": {
+          "$ref": "#/$defs/TaskLabel"
+        },
+        "ready": {
+          "$ref": "#/$defs/Ready"
+        },
+        "longRunning": {
+          "type": "boolean"
+        }
       },
-      "required": ["commandId", "cmd", "args", "cwd", "env", "label", "longRunning"],
+      "required": [
+        "commandId",
+        "cmd",
+        "args",
+        "cwd",
+        "env",
+        "label",
+        "longRunning"
+      ],
       "additionalProperties": false
     },
     "Launch": {
       "type": "object",
       "description": "🚀️ `(id, chosen parameters, extra arguments)` resolved: the processes in start order, what must be ready first and how the group stops.",
       "properties": {
-        "commandId": { "$ref": "#/$defs/CommandId" },
-        "label": { "$ref": "#/$defs/TaskLabel" },
-        "processes": { "type": "array", "items": { "$ref": "#/$defs/LaunchProcess" }, "minItems": 1 },
-        "requires": { "type": "array", "items": { "$ref": "#/$defs/Launch" }, "description": "🔗️ Services started (or reused) and awaited before the first process starts." },
-        "group": { "type": "string", "description": "🧭️ The compound the processes belong to; absent for a single process." },
-        "stop": { "enum": ["together", "independent"] }
+        "commandId": {
+          "$ref": "#/$defs/CommandId"
+        },
+        "label": {
+          "$ref": "#/$defs/TaskLabel"
+        },
+        "processes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LaunchProcess"
+          },
+          "minItems": 1
+        },
+        "requires": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Launch"
+          },
+          "description": "🔗️ Services started (or reused) and awaited before the first process starts."
+        },
+        "group": {
+          "type": "string",
+          "description": "🧭️ The compound the processes belong to; absent for a single process."
+        },
+        "stop": {
+          "enum": [
+            "together",
+            "independent"
+          ]
+        }
       },
-      "required": ["commandId", "label", "processes", "requires", "stop"],
+      "required": [
+        "commandId",
+        "label",
+        "processes",
+        "requires",
+        "stop"
+      ],
       "additionalProperties": false
     },
     "BuildGraph": {
@@ -445,6 +1149,47 @@
           }
         }
       }
+    },
+    "Suggestions": {
+      "type": "object",
+      "required": [
+        "source"
+      ],
+      "additionalProperties": false,
+      "description": "🔎️ Editable suggestions discovered from current registered owners and authored source; never an execution grant.",
+      "properties": {
+        "source": {
+          "enum": [
+            "projects",
+            "scripts",
+            "tests",
+            "configs"
+          ]
+        },
+        "projectParameter": {
+          "$ref": "#/$defs/Slug"
+        },
+        "directoryParameter": {
+          "$ref": "#/$defs/Slug"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "const": "projects"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "projectParameter": false,
+              "directoryParameter": false
+            }
+          }
+        }
+      ]
     }
   }
 }

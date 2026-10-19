@@ -1,0 +1,7 @@
+{
+  "cases": [
+    { "ticket": null, "suffix": ".🧬semio/🎓️teaching/architecture-course-e2e" },
+    { "ticket": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️10/RELEASE", "suffix": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️10/RELEASE/🗑️generated/nx/e2e" },
+    { "ticket": "outside", "error": "Diagnostic output requires an existing repository ticket" }
+  ]
+}

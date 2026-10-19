@@ -3,9 +3,16 @@ use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::muta
 use semio_s_artifact_fem_3d_analysis::standards::v1::subsets::any::schema::mutations::update_analysis_settings;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
-use semio_framework_value_derive::{FromValue, ToValue};
-use crate::context::{dispatch, fem3d_empty_app};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
+use crate::context::dispatch;
+use crate::context::fem3d_empty_app;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
 
 #[semio_framework_async_macros::async_test]

@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "cases": [
+    { "name": "optional absent", "metadata": {}, "accepted": true },
+    { "name": "two complete titles", "metadata": { "title": { "en": "Open source", "de": "Quelldatei öffnen" } }, "accepted": true },
+    { "name": "complete descriptions", "metadata": { "description": { "en": "Choose a file and editor.", "de": "Datei und Editor auswählen." } }, "accepted": true },
+    { "name": "both complete", "metadata": { "title": { "en": "Open source", "de": "Quelldatei öffnen" }, "description": { "en": "Choose a file.", "de": "Datei auswählen." } }, "accepted": true },
+    { "name": "missing german", "metadata": { "title": { "en": "Open source" } }, "accepted": false },
+    { "name": "missing english", "metadata": { "description": { "de": "Datei auswählen." } }, "accepted": false },
+    { "name": "unknown locale", "metadata": { "title": { "en": "Open source", "de": "Quelldatei öffnen", "fr": "Ouvrir" } }, "accepted": false },
+    { "name": "empty translation", "metadata": { "title": { "en": "Open source", "de": "" } }, "accepted": false },
+    { "name": "whitespace translation", "metadata": { "description": { "en": " ", "de": "Datei auswählen." } }, "accepted": false },
+    { "name": "wrong title type", "metadata": { "title": "Open source" }, "accepted": false },
+    { "name": "wrong translation type", "metadata": { "title": { "en": 42, "de": "Quelldatei öffnen" } }, "accepted": false },
+    { "name": "null metadata", "metadata": { "title": null }, "accepted": false },
+    { "name": "terminal escape", "metadata": { "title": { "en": "\u001b[31mOpen source", "de": "Quelldatei öffnen" } }, "accepted": false },
+    { "name": "multiline description", "metadata": { "description": { "en": "Choose\na file.", "de": "Datei auswählen." } }, "accepted": false }
+  ],
+  "display": [
+    { "locale": "en", "title": "Open source", "description": "Choose a source file and editor.", "parameterTitle": "Source path", "parameterDescription": "A file relative to the workspace." },
+    { "locale": "de", "title": "Quelldatei öffnen", "description": "Quelldatei und Editor auswählen.", "parameterTitle": "Quellpfad", "parameterDescription": "Eine Datei relativ zum Arbeitsbereich." }
+  ],
+  "workspace": {
+    "projects": [
+      {
+        "name": "workspace", "root": ".", "manifest": "📋️project.json",
+        "dashboard": {
+          "tools": [
+            {
+              "id": "source-open", "verb": "task", "command": ["bun", "--version", "{path}"],
+              "title": { "en": "Open source", "de": "Quelldatei öffnen" },
+              "description": { "en": "Choose a source file and editor.", "de": "Quelldatei und Editor auswählen." },
+              "parameters": [
+                {
+                  "id": "path", "kind": "text", "required": true,
+                  "title": { "en": "Source path", "de": "Quellpfad" },
+                  "description": { "en": "A file relative to the workspace.", "de": "Eine Datei relativ zum Arbeitsbereich." }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "tickets": [], "problems": [], "playgrounds": []
+  }
+}

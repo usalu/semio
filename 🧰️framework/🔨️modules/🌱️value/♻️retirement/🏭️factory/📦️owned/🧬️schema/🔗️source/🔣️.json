@@ -1,0 +1,119 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "sourceRefusals",
+    "projectionRefusals",
+    "transferRefusals"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "text",
+          "capacity",
+          "route",
+          "refuseOnce",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "capacity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65536
+          },
+          "route": {
+            "enum": [
+              "transfer",
+              "cancel"
+            ]
+          },
+          "refuseOnce": {
+            "type": "boolean"
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "payloadRetireCalls",
+              "refusals"
+            ],
+            "properties": {
+              "payloadRetireCalls": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 2
+              },
+              "refusals": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "sourceRefusals": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "items",
+          "copy",
+          "capacity",
+          "depth"
+        ]
+      }
+    },
+    "projectionRefusals": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "items",
+          "copy",
+          "depth"
+        ]
+      }
+    },
+    "transferRefusals": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "items",
+          "copy",
+          "depth"
+        ]
+      }
+    }
+  }
+}

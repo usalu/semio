@@ -1,23 +1,15 @@
-//! 🏗️ FEM 3D structural model entities: nodes, members, solids, materials, sections, supports, loads, load cases
 //! and combinations — the records every fem3d facet (snapshot, diff, mutations, io, editor) names.
+//! 🏗️ FEM 3D structural model entities: nodes, members, solids, materials, sections, supports, loads, load cases
 
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
-use semio_framework_value_derive::{FromValue, ToValue};
+pub use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::{decode_fixed_dofs,decode_fixed_dofs_controlled,retire_fixed_dofs};
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 use std::collections::BTreeMap;
 
 pub const FEM_3D_SCHEMA: &str = "fem.3d";
 
-/// 📍️ A structural node: a stable id and a global position, plain SI meters.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[value(rename_all = "camelCase")]
-#[dsl(keyword = "node")]
-pub struct FemNode {
-    pub id: String,
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
-}
+
 
 /// 🔩️ A two-node member: an axial `Bar` or a full 6-DOF `Frame` with a local-axis `roll` angle (radians).
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -37,21 +29,7 @@ pub fn element_id(element: &FemElement) -> &str {
     }
 }
 
-/// 🧱️ Linear-elastic isotropic material: Young's modulus `e`, shear modulus `g` (Pa), Poisson's ratio
-/// `nu` (dimensionless, drives `Tet4` solid elements), and density `rho` (kg/m³, drives self-weight via
-/// `Bar3`/`Frame3`/`Tet4`'s `mass()`).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[value(rename_all = "camelCase")]
-#[dsl(keyword = "material")]
-pub struct FemMaterial {
-    pub id: String,
-    pub name: String,
-    pub e: f64,
-    pub g: f64,
-    pub nu: f64,
-    pub rho: f64,
-}
+
 
 /// 📐️ Cross-section properties: area (m²), second moments of area about local y/z (m⁴), torsion constant (m⁴).
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -75,12 +53,13 @@ pub struct FemSection {
 pub struct FemSupport {
     pub id: String,
     pub node_id: String,
+    #[value(deserialize_with="self::decode_fixed_dofs",deserialize_controlled_with="self::decode_fixed_dofs_controlled",retire_with="self::retire_fixed_dofs")]
     pub fixed: Vec<FemDof>,
 }
 
 /// 🏋️ A load — a concentrated nodal force/moment, a member UDL on a `Bar`/`Frame` element, or a normal
 /// pressure (Pa) over a meshed `FemSolid`'s top face, simplified as a uniform global `-Z` nodal load
-/// (see `crate::fem3d_engine::meshing::area_load_nodal_loads_3d`) — mirrors `fem_2d::FemLoad`.
+/// (see `semio_s_artifact_fem_3d_engine::fem3d_engine::meshing::area_load_nodal_loads_3d`) — mirrors `fem_2d::FemLoad`.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
@@ -133,7 +112,7 @@ pub struct FemCombination {
 /// with window holes, extruded through its thickness) and a gable roof (`Y`, a chevron section
 /// extruded along the ridge) are the same record a floor slab is (`Z`, footprint `(x, y)` extruded
 /// upward). `base_z` is the offset along this axis, `height` the extrusion length.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum FemAxis {
     #[dsl(key = "x")]
@@ -152,9 +131,13 @@ impl semio_framework_value::ToValue for FemAxis {
     }
 }
 impl semio_framework_value::FromValue for FemAxis {
+    fn from_value_controlled(value:&semio_framework_value::DslValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{
+        control.checkpoint()?;
+        match value.as_str(){Some("x")=>Ok(Self::X),Some("y")=>Ok(Self::Y),Some("z")=>Ok(Self::Z),_=>Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"expected a canonical extrusion axis key"))}
+    }
     fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         match value {
-            semio_framework_value::DslValue::String(text) => FemAxis::from_key(&text).ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown FemAxis variant `{text}`"))),
+            semio_framework_value::DslValue::String(text) => match text.as_str(){"x"=>Ok(Self::X),"y"=>Ok(Self::Y),"z"=>Ok(Self::Z),_=>Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"expected a canonical extrusion axis key"))},
             other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
         }
     }
@@ -208,7 +191,7 @@ impl FemAxis {
 
 /// 🧱️ A meshed continuum solid — a polygon footprint (with optional holes) extruded along `axis` from
 /// offset `base_z` by `height` across `layers` equal-height layers, filled with `Tet4` elements at
-/// solve time (see `crate::fem3d_engine::meshing::resolve_geometry`) — mirrors `fem_2d::FemRegion`,
+/// solve time (see `semio_s_artifact_fem_3d_engine::fem3d_engine::meshing::resolve_geometry`) — mirrors `fem_2d::FemRegion`,
 /// extended into 3D via `semio_s_fem_mesh_derived`'s extrusion + tet-splitting. Footprint coordinates are
 /// the world axes `FemAxis` names for the extrusion axis.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -227,3 +210,15 @@ pub struct FemSolid {
     pub material_id: String,
     pub axis: FemAxis,
 }
+
+pub use semio_s_fem_node::volumetric::FemNode;
+
+pub use semio_s_fem_node::volumetric::FemNodeValue;
+
+pub use semio_s_fem_material::volumetric::FemMaterial;
+
+pub use semio_s_fem_material::volumetric::FemMaterialValue;
+
+#[cfg(test)]
+#[path="../../../../../../../◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🏗️structure/🎟️fixed-dofs/🧪️tests/🦀️.rs"]
+mod fixed_dof_tests;

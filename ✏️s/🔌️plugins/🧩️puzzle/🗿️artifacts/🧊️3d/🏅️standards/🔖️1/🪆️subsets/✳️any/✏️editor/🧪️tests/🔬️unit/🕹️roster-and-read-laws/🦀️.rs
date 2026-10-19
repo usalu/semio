@@ -151,8 +151,7 @@ async fn local_interaction_query_return_does_not_fault_the_next_maintenance_step
     use semio_framework_plugin::PluginApp;
     let mut app = app().await;
     read_local_interaction(&mut app, 1).await;
-    let (raw, cx) = app.parts();
-    semio_s_plugin_puzzle_jobs::testing::maintain(raw, 4096, cx).expect("maintenance step after a returned snapshot read lease must not fault");
+    app.measure_maintenance_step(1, 4096).expect("maintenance step after a returned snapshot read lease must not fault");
 }
 //#endregion 🕹️LocalInteractionRead
 

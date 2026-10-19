@@ -38,7 +38,7 @@ const EXIT_QUIET: Duration = Duration::from_millis(250);
 const FINISH_WAIT: Duration = if cfg!(windows) { Duration::from_secs(3) } else { Duration::ZERO };
 const EXIT_LIMIT: Duration = Duration::from_secs(8);
 const SIGKILL_EXIT: i32 = 137;
-const DROPPED_ENVIRONMENT: [&str; 1] = ["SEMIO_BUILD_INVOCATION_PID"];
+const DROPPED_ENVIRONMENT: [&str; 5] = ["SEMIO_BUILD_INVOCATION_PID", "NX_INVOCATION_ROOT_PID", "SEMIO_SCRIPT_PROCESS_INVOCATION", "SEMIO_SCRIPT_CAPABILITIES", "SEMIO_SCRIPT_POLICY"];
 
 /// 🚨 A request the daemon refuses, with the kind of failure a view can act on.
 #[derive(Debug, Clone)]
@@ -126,7 +126,7 @@ fn set_environment(env: &mut Vec<(String, String)>, key: &str, value: &str) {
 /// the daemon provides unless the command states another.
 pub fn child_environment(client: &[(String, String)], declared: &[(String, String)]) -> Vec<(String, String)> {
     let mut env = Vec::new();
-    for (key, value) in client.iter().filter(|(key, _)| !DROPPED_ENVIRONMENT.contains(&key.as_str())) { set_environment(&mut env, key, value); }
+    for (key, value) in client.iter().filter(|(key, _)| !DROPPED_ENVIRONMENT.iter().any(|name| if cfg!(windows) { key.eq_ignore_ascii_case(name) } else { key.as_str() == *name })) { set_environment(&mut env, key, value); }
     for (key, value) in declared { set_environment(&mut env, key, value); }
     for (key, value) in [("TERM", "xterm-256color"), ("COLORTERM", "truecolor")] {
         if !declared.iter().any(|(name, _)| name == key) { set_environment(&mut env, key, value); }

@@ -61,7 +61,7 @@ pub struct TypedWindowConfigPublication<O: WindowConfigOwner> {
 impl<O: WindowConfigOwner> TypedWindowConfigPublication<O> {
     fn pending_bytes(&self)->usize{self.pending.capacity().checked_mul(size_of::<O::Mutation>()).expect("admitted original window backing remains bounded")}
     fn controlled_demand<T:semio_framework_value::retirement::RetireOwned>(owner:&ControlledRetirement<T>,body:usize)->Result<RetirementDemand,ValueError>{
-        Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})
+        Ok(owner.next_demand(body)?)
     }
     fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
         if !self.pending.is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<O::Mutation>()+size_of::<FactoryBoxedValue<O::Mutation>>()+size_of::<Option<ControlledRetirement<Box<FactoryBoxedValue<O::Mutation>>>>>(),depth:1,..Default::default()});}
@@ -129,7 +129,7 @@ impl<O: WindowConfigOwner> ErasedWindowConfigPublication for TypedWindowConfigPu
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))
     }
 
-    fn ingress_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:self.ingress.next_copy_byte_demand()?,capacity_bytes:self.ingress.next_capacity_byte_demand(body)?,release_bytes:self.ingress.next_release_byte_demand()?,depth:self.ingress.next_depth_demand()?})}
+    fn ingress_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{Ok(self.ingress.next_demand(body)?)}
     fn close_ingress(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.ingress.step(grant)}
     fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demand(body)}
     fn terminal_is_empty(&self) -> bool {

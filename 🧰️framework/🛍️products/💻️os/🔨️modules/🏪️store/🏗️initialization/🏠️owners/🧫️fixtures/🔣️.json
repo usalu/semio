@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "lanes": [
+    "document",
+    "config",
+    "draft"
+  ],
+  "source": {
+    "allocations": 1,
+    "aliases": [
+      "publication",
+      "replay"
+    ],
+    "sameIdentity": true,
+    "constructorBeforeGrant": false
+  },
+  "phases": [
+    "quote",
+    "source",
+    "factory-tickets",
+    "install",
+    "publication-or-replay",
+    "acknowledge",
+    "original-close"
+  ],
+  "grant": {
+    "items": 1,
+    "copy": 4096,
+    "capacity": 65536,
+    "release": 262144,
+    "depth": 64
+  },
+  "denied": [
+    "items",
+    "copy",
+    "capacity",
+    "depth"
+  ],
+  "zeroReleaseBirth": true,
+  "cancelCuts": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "maximumTurns": 4096,
+  "terminalDropBytes": 0
+}

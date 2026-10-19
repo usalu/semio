@@ -78,8 +78,8 @@ pub trait ArtifactEditor: Default + Send + 'static {
         true
     }
 
-    fn mounted_job_prepare_snapshot_read(_operation: AppRenderOperationContext, _snapshot: &Self::Snapshot) -> bool {
-        false
+    fn mounted_job_prepare_snapshot_read(_operation: AppRenderOperationContext, _snapshot: &Self::Snapshot, _windows: &WindowConfigOwnerRegistry, _view: Option<&ViewModel>, _grant: RetainedCloneGrant) -> crate::MountedSnapshotReadPreparation {
+        crate::MountedSnapshotReadPreparation::default()
     }
 
     /// 🧩️ Author-owned forwarding seam for factories whose concrete runtime owner is the
@@ -154,8 +154,8 @@ pub trait ArtifactEditor: Default + Send + 'static {
     }
 
     /// 🏗️ Author-owned payload builder paired with `register_tool_job_factories`.
-    fn build_tool_job(_request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        Ok(None)
+    fn build_tool_job(_request:&mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>,_output:&mut Option<semio_framework::ErasedToolJob>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered surface tool lacks its original source-preserving producer").into())
     }
 
     /// 🧭️ Supplies the framework-owned bounded natural-file importer while leaving every other
@@ -360,7 +360,7 @@ pub trait ArtifactEditor: Default + Send + 'static {
     fn paste_operations(_doc: &ArtifactView<'_, Self::Snapshot>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Mutation>, ClipboardError> {
         Ok(Vec::new())
     }
-    fn pending_effects(_owner: &ArtifactInstanceOperationOwnerHandle, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&ViewModel>) -> Vec<Effect> {
+    fn pending_effects(_owner: &ArtifactInstanceOperationOwnerHandle, _doc: &crate::ArtifactPendingView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&ViewModel>) -> Vec<Effect> {
         Vec::new()
     }
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> UiAssemblyResult<ComponentTree>;

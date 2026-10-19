@@ -86,7 +86,7 @@ pub(super) struct ContextMenu { pub node: NodeId, pub window: usize, pub actions
 
 /// 🌬️ Something the view asks of the terminal it runs in, collected so tests need no terminal.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) enum Effect { Copy(String) }
+pub(super) enum Effect { Copy(String), OpenReady(String) }
 // #endregion 🔖️Window
 
 // #region 🔖️Dashboard
@@ -101,6 +101,7 @@ pub(super) struct Dashboard {
     pub preference_path: PathBuf,
     pub shared_preferences: bool,
     pub saving_preferences: Option<std::sync::mpsc::Receiver<(Change, std::io::Result<u64>)>>,
+    pub opening_url: Option<dashboard_cli::browser::Job>,
     pub keymap: Keymap,
     pub locale: Locale,
     pub light: bool,
@@ -140,7 +141,7 @@ impl Dashboard {
         let (keymap, _) = preferences.keymap();
         let light = preferences.appearance == "light";
         let mut dashboard = Self {
-            root, registry: None, inventory: None, phase: None, last_progress: 0, preferences, preference_path, shared_preferences, saving_preferences: None, keymap, locale, light, layout, shell, windows: Vec::new(), next_serial: 2, armed: false, armed_at: None, input_mode: false, restore_focus: false,
+            root, registry: None, inventory: None, phase: None, last_progress: 0, preferences, preference_path, shared_preferences, saving_preferences: None, opening_url: None, keymap, locale, light, layout, shell, windows: Vec::new(), next_serial: 2, armed: false, armed_at: None, input_mode: false, restore_focus: false,
             link: Link::default(), state: LinkState::Connecting, notice: None, sessions: BTreeMap::new(), hidden: HashSet::new(), shutdown_since: None, effects: Vec::new(), quit_requested: false, last_focus: std::cell::Cell::new(0), menu: None, glyphs: GlyphSet::Unicode, waker: None,
         };
         let (id, chrome) = dashboard.shell.windows[0].clone();
@@ -276,13 +277,15 @@ impl Dashboard {
     /// 🗑️ Removes a window; true when it was the last one.
     pub fn close_window(&mut self, tui: &mut Tui, index: usize) -> bool {
         if index >= self.windows.len() { return false; }
+        let focused = self.windows.get(self.focused_index(tui)).map(|window| window.id.clone());
+        tui.cancel_pointer();
         let window = self.windows.remove(index);
         if let Some(session) = window.session() { self.hidden.insert(session.session_id.clone()); }
         tui.scene.remove(window.chrome);
         remove_window(&mut self.layout, &window.id);
-        if self.layout.zoomed.as_deref() == Some(window.id.as_str()) { self.layout.zoomed = None; }
+        if self.windows.len() < 2 || self.layout.zoomed.as_deref() == Some(window.id.as_str()) { self.layout.zoomed = None; }
         if self.windows.is_empty() { return true; }
-        let next = index.saturating_sub(1).min(self.windows.len() - 1);
+        let next = focused.filter(|id| id != &window.id).and_then(|id| self.windows.iter().position(|window| window.id == id)).unwrap_or_else(|| index.saturating_sub(1).min(self.windows.len() - 1));
         self.focus_window(tui, next);
         false
     }
@@ -301,10 +304,15 @@ impl Dashboard {
     /// 🔀️ Moves the keyboard to the next or previous window in layout order.
     pub fn cycle_window(&mut self, tui: &mut Tui, delta: isize) {
         if self.windows.len() < 2 { return; }
-        let count = self.windows.len() as isize;
-        let next = (self.focused_index(tui) as isize + delta).rem_euclid(count) as usize;
-        self.focus_window(tui, next);
+        let current = self.windows[self.focused_index(tui)].id.clone();
+        let order = self.window_order();
+        let Some(from) = order.iter().position(|id| id == &current) else { return };
+        let next = (from as isize + delta).rem_euclid(order.len() as isize) as usize;
+        if let Some(index) = self.window_index(&order[next]) { self.focus_window(tui, index); }
     }
+
+    /// 🧭️ The current visual order of groups and their tabs, independent of creation order.
+    pub fn window_order(&mut self) -> Vec<String> { layout_windows(&mut self.layout).into_iter().map(|node| node.window_kind_id.clone()).collect() }
 }
 // #endregion 🔖️Bodies
 
@@ -435,7 +443,7 @@ impl Dashboard {
     /// engine itself marks the focused window, and nothing is written when nothing differs.
     pub fn sync_chrome(&mut self, tui: &mut Tui) {
         let text = self.text();
-        let labels = ChromeLabels { close: text.chrome_close.as_str().into(), maximize: text.chrome_maximize.as_str().into(), restore: text.chrome_restore.as_str().into(), new_tab: text.chrome_new_tab.as_str().into(), previous_tabs: text.chrome_previous_tabs.as_str().into(), next_tabs: text.chrome_next_tabs.as_str().into() };
+        let labels = ChromeLabels { drag: text.chrome_drag.as_str().into(), close: text.chrome_close.as_str().into(), maximize: text.chrome_maximize.as_str().into(), restore: text.chrome_restore.as_str().into(), new_tab: text.chrome_new_tab.as_str().into(), previous_tabs: text.chrome_previous_tabs.as_str().into(), next_tabs: text.chrome_next_tabs.as_str().into() };
         for window in &self.windows {
             let current = match &tui.scene.node(window.chrome).content { NodeContent::Chrome(ChromeState::Window(chrome)) => Some(chrome.labels == labels && chrome.new_tab), _ => None };
             if current == Some(false) { Self::with_window(tui, window.chrome, |chrome| { chrome.labels = labels.clone(); chrome.new_tab = true; }); }

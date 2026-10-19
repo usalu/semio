@@ -158,6 +158,8 @@ impl HeapAllocationObservation{
 }
 thread_local!{static THREAD_ALLOCATION_EVENTS:std::cell::Cell<Option<HeapAllocationObservation>>=const{std::cell::Cell::new(None)};}
 fn record_allocation_event(requested:usize,released:usize){let _=THREAD_ALLOCATION_EVENTS.try_with(|slot|{if let Some(value)=slot.get(){slot.set(Some(value.add(requested,released)));}});}
+/// 👀️ Copies the current original allocator observation without allocating or resetting its scope.
+pub fn heap_allocation_observation_on_this_thread()->Option<HeapAllocationObservation>{THREAD_ALLOCATION_EVENTS.with(std::cell::Cell::get)}
 /// 🧪️ Captures successful system allocation events on the caller thread without allocating a recorder.
 pub fn observe_heap_allocations_on_this_thread<T>(operation:impl FnOnce()->T)->(T,HeapAllocationObservation){
     struct Restore(Option<HeapAllocationObservation>);

@@ -1,0 +1,9 @@
+{
+  "schema": "semio.fem.numerical-owner-admission/v1",
+  "pageBytes": 4096,
+  "itemBytes": 8,
+  "cases": [
+    { "requested": 512, "accepted": true },
+    { "requested": 513, "accepted": false }
+  ]
+}

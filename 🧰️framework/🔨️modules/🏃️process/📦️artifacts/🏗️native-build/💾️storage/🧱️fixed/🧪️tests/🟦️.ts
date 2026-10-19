@@ -1,4 +1,6 @@
 import "../📥️allocation/🧪️tests/🟦️.ts";
+import "./🌱️birth/🟦️.ts";
+import "./🌱️birth/🛂️host.ts";
 import {expect,test} from "bun:test";
 import "../📦️vhd/🧪️tests/🟦️.ts";
 import "../🗂️system/🧪️tests/🟦️.ts";

@@ -1,11 +1,13 @@
-//! 🎥️ `set-projection` command — `setProjection`/`setProjectionParam` share one arm: a projection
 //! change that also moves the camera pose re-derives position/up from the new orientation around the
+//! 🎥️ `set-projection` command — `setProjection`/`setProjectionParam` share one arm: a projection
 //! unchanged target, a pure parameter tweak leaves the pose alone.
 use crate::editor::puzzle5d::config::puzzle5d_camera3d_distance;
 
 use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_pack_json::Value;
-use semio_framework_plugin::{apply_world3d_projection_action, world3d_projection_action_moves_pose, world3d_projection_pose};
+use semio_framework_plugin::apply_world3d_projection_action;
+use semio_framework_plugin::world3d_projection_action_moves_pose;
+use semio_framework_plugin::world3d_projection_pose;
 
 pub fn set_projection(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args: Option<&Value>) {
     let moves_pose = world3d_projection_action_moves_pose(action, args);

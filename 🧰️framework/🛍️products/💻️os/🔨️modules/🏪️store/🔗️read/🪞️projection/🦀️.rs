@@ -31,6 +31,7 @@ impl<T:Send+Sync+'static> Cursor<T>{
 }
 impl<T:Send+Sync+'static> RetireOwned for SnapshotReadProjection<T>{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(Cursor{root:self,active:ManuallyDrop::new(None)})}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Cursor<T>>())}fn controlled_retirement_supported()->bool{true}}
 impl<T:Send+Sync+'static> RetirementCursor for Cursor<T>{
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands(body) }
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete;}match self.step(grant){Ok(progress)=>RetirementStep::Progress(progress),Err(error)=>RetirementStep::Failure(error)}}
  fn terminal_is_empty(&self)->bool{self.root.projection.is_none()&&self.root.read.is_none()&&self.active.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}

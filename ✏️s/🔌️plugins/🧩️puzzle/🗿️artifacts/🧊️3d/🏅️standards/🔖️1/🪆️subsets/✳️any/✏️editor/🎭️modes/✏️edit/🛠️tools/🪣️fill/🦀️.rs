@@ -1,21 +1,42 @@
-//! 🪣️ Edit-mode tool — Fill: a whole-document generator declared as a framework tool run
 //! (`📋️tool-run-contract.md` §2.4, §3.7). The manifest carries its [`ToolRunDefinition`]; the framework
+//! 🪣️ Edit-mode tool — Fill: a whole-document generator declared as a framework tool run
 //! injects start/pause/resume/step/abort/finalize/dismiss, owns the provisional placements in its ledger and
 //! publishes them as one edit on finalize. This module declares the definition, the count measure (shared
 //! configuration the driver watches) and builds the run and revalidate jobs.
 
 use semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID;
-use semio_s_artifact_puzzle_3d_editor_config::{Puzzle3dConfig, Puzzle3dRuntime};
-use semio_s_artifact_puzzle_3d_precompute_fill::{fill_run_placements, FillPreparationRoots, FillRevalidateJob, FillRunJob, FillRunPlacement, FILL_RUN_OPS_PER_PLACEMENT};
-use semio_s_artifact_puzzle_3d_precompute_geometry::{collision_body_from_buffers, CollisionBody};
-use semio_s_artifact_puzzle_3d_precompute::{brush_mesh_digest, shared_brush_mesh};
-use semio_s_artifact_puzzle_3d_editor_terminology::{puzzle3d_fill_run_counters, puzzle3d_fill_run_reasons, puzzle3d_fill_run_stages, puzzle3d_fill_run_unit, Puzzle3dLabels};
+use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dConfig;
+use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dRuntime;
+use semio_s_artifact_puzzle_3d_precompute_fill::fill_run_placements;
+use semio_s_artifact_puzzle_3d_precompute_fill::FillPreparationRoots;
+use semio_s_artifact_puzzle_3d_precompute_fill::FillRevalidateJob;
+use semio_s_artifact_puzzle_3d_precompute_fill::FillRunJob;
+use semio_s_artifact_puzzle_3d_precompute_fill::FillRunPlacement;
+use semio_s_artifact_puzzle_3d_precompute_fill::FILL_RUN_OPS_PER_PLACEMENT;
+use semio_s_artifact_puzzle_3d_precompute_geometry::collision_body_from_buffers;
+use semio_s_artifact_puzzle_3d_precompute_geometry::CollisionBody;
+use semio_s_artifact_puzzle_3d_precompute::brush_mesh_digest;
+use semio_s_artifact_puzzle_3d_precompute::shared_brush_mesh;
+use semio_s_artifact_puzzle_3d_editor_terminology::puzzle3d_fill_run_counters;
+use semio_s_artifact_puzzle_3d_editor_terminology::puzzle3d_fill_run_reasons;
+use semio_s_artifact_puzzle_3d_editor_terminology::puzzle3d_fill_run_stages;
+use semio_s_artifact_puzzle_3d_editor_terminology::puzzle3d_fill_run_unit;
+use semio_s_artifact_puzzle_3d_editor_terminology::Puzzle3dLabels;
 use {semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_action, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_distribution_group, semio_s_artifact_puzzle_3d_editor_session::puzzle3d_fallback_mesh_buffers, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_scene_snapshot_from_document, semio_s_artifact_puzzle_3d_editor_session::scene_config, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dEditor, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FALLBACK_MESH_KIND};
-use semio_s_artifact_puzzle_3d_model::{FillRunCheckpoint, SceneConfig};
-use semio_framework_job::{allocate_operation_id, Generation, InteractiveJob, InteractiveJobCloseStep, Operation, RevisionId, StepContext};
+use semio_s_artifact_puzzle_3d_model::FillRunCheckpoint;
+use semio_s_artifact_puzzle_3d_model::SceneConfig;
+use semio_framework_job::allocate_operation_id;
+use semio_framework_job::Generation;
+use semio_framework_job::InteractiveJob;
+use semio_framework_job::InteractiveJobCloseStep;
+use semio_framework_job::Operation;
+use semio_framework_job::RevisionId;
+use semio_framework_job::StepContext;
 use semio_framework_plugin::ActionDescriptor;
 use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::{Fault, FaultCode, FaultOrigin};
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::FaultCode;
+use semio_framework_plugin::FaultOrigin;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ToolDefinition;
 use semio_framework_plugin::ToolRunJobPurpose;
@@ -23,7 +44,16 @@ use semio_framework_plugin::ToolRunJobRequest;
 use semio_framework_plugin::ToolRunRetargetableJob;
 use semio_framework_plugin::ToolRunView;
 use semio_framework_plugin::WindowMeasure;
-use semio_framework_tool_run::{JobKindId, ToolRunDefinition, ToolRunIdentity, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunTraceKind, TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_ARG_GENERATION, TOOL_RUN_ARG_RUN_ID};
+use semio_framework_tool_run::JobKindId;
+use semio_framework_tool_run::ToolRunDefinition;
+use semio_framework_tool_run::ToolRunIdentity;
+use semio_framework_tool_run::ToolRunRebasePolicy;
+use semio_framework_tool_run::ToolRunReconfigurePolicy;
+use semio_framework_tool_run::ToolRunSettingsReads;
+use semio_framework_tool_run::ToolRunTraceKind;
+use semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID;
+use semio_framework_tool_run::TOOL_RUN_ARG_GENERATION;
+use semio_framework_tool_run::TOOL_RUN_ARG_RUN_ID;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -160,7 +190,7 @@ struct FillToolRunPreparation {
     scene: SceneConfig,
     lane: Vec<String>,
     cursor: usize,
-    meshes: HashMap<String, CollisionBody>,
+    meshes: semio_s_artifact_puzzle_3d_precompute::fill::FillMeshMap,
     fallback: Option<CollisionBody>,
     digest: Vec<u8>,
     target: FillToolRunTarget,
@@ -187,11 +217,11 @@ impl Puzzle3dFillToolRunJob {
         digest.extend_from_slice(&identity.base_revision);
         digest.extend_from_slice(&scene.contact_tolerance.to_bits().to_le_bytes());
         digest.extend_from_slice(&scene.seed.to_le_bytes());
-        for (kind, weight) in scene.weights.object_weights.iter().chain(&scene.weights.vortex_weights) {
+        for (kind, weight) in scene.weights.object_weights.iter().chain(scene.weights.vortex_weights.iter()) {
             digest.extend_from_slice(kind.as_bytes());
             digest.extend_from_slice(&weight.to_bits().to_le_bytes());
         }
-        Self { phase: FillToolRunPhase::Preparing(Box::new(FillToolRunPreparation { identity, scene, lane, cursor: 0, meshes: HashMap::new(), fallback: None, digest, target })), inputs }
+        Self { phase: FillToolRunPhase::Preparing(Box::new(FillToolRunPreparation { identity, scene, lane, cursor: 0, meshes: semio_s_artifact_puzzle_3d_precompute::fill::FillMeshMap::new(), fallback: None, digest, target })), inputs }
     }
 
     /// 🥽️ One preparation unit; `true` once every mesh identity is installed.
@@ -212,7 +242,7 @@ impl Puzzle3dFillToolRunJob {
             };
             preparation.digest.extend_from_slice(url.as_bytes());
             preparation.digest.extend_from_slice(source.as_bytes());
-            preparation.meshes.insert(url, body);
+            preparation.meshes.cold_insert(url, body);
         }
         false
     }
@@ -268,13 +298,13 @@ impl ToolRunRetargetableJob<Puzzle3dConfig> for Puzzle3dFillToolRunJob {
 
 impl Puzzle3dFillToolRunJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step_value<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         while let FillToolRunPhase::Preparing(preparation) = &mut self.phase {
             if context.is_cancelled() {
-                return semio_framework_job::JobOutcomeBorrow::admit_cancelled(context);
+                return semio_framework_job::JobOutcomeBorrow::admit_cancelled(context).map_err(semio_framework_job::OriginalTurnFailure::from);
             }
             if context.deadline_exceeded() {
-                return semio_framework_job::JobOutcomeBorrow::admit_yield(context);
+                return semio_framework_job::JobOutcomeBorrow::admit_yield(context).map_err(semio_framework_job::OriginalTurnFailure::from);
             }
             if !Self::prepare_one(preparation) {
                 continue;
@@ -285,7 +315,7 @@ impl Puzzle3dFillToolRunJob {
         match &mut self.phase {
             FillToolRunPhase::Run(job) => job.step(context),
             FillToolRunPhase::Revalidate(job) => job.step(context),
-            FillToolRunPhase::Preparing(_) | FillToolRunPhase::Closed => semio_framework_job::JobOutcomeBorrow::admit_cancelled(context),
+            FillToolRunPhase::Preparing(_) | FillToolRunPhase::Closed => semio_framework_job::JobOutcomeBorrow::admit_cancelled(context).map_err(semio_framework_job::OriginalTurnFailure::from),
         }
     }
 }

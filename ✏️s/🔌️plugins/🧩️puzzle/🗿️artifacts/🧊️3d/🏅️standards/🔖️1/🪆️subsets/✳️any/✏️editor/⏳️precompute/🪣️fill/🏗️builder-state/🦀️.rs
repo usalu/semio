@@ -50,18 +50,22 @@ pub(super) enum AcceptPhase {
     Commit,
 }
 
+pub type FillMeshMap = semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, CollisionBody>;
+
+#[derive(semio_framework_value::RetireOwned)]
 pub struct FillPreparationRoots {
     pub scene: Arc<SceneConfig>,
-    pub meshes: Arc<HashMap<String, CollisionBody>>,
+    pub meshes: Arc<FillMeshMap>,
 }
 
 impl FillPreparationRoots {
-    pub fn new(scene: Arc<SceneConfig>, meshes: Arc<HashMap<String, CollisionBody>>) -> Self {
+    pub fn new(scene: Arc<SceneConfig>, meshes: Arc<FillMeshMap>) -> Self {
         Self { scene, meshes }
     }
 }
 
 #[derive(Debug)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct FixedSceneOwner {
     pub objects: FixedOwnerVec<EngineSceneObject, DOCUMENT_OBJECT_SLOTS>,
     pub attractions: FixedOwnerVec<AttractionProps, DOCUMENT_ATTRACTION_SLOTS>,
@@ -76,6 +80,7 @@ impl FixedSceneOwner {
 }
 
 #[derive(Debug)]
+#[derive(semio_framework_value::RetireOwned)]
 pub(super) struct FixedCatalogOwner {
     pub objects: FixedOwnerVec<ObjectKind, DOCUMENT_KIND_SLOTS>,
     pub vortices: FixedOwnerVec<VortexKindCatalog, DOCUMENT_KIND_SLOTS>,
@@ -265,8 +270,8 @@ pub struct FillBuilder {
     pub collection_over_capacity: bool,
     pub transition_count: u64,
     pub(super) rejected_count: u64,
-    pub(super) close_field: u8,
-    pub(super) close_current: Option<FillRetiredOwner>,
+    close_started: bool,
+    close_owners: semio_s_plugin_puzzle_jobs::WorkClosing<FillClosingOwners>,
     pub(super) closing: bool,
     /// 🛰️ Observations for a fill run job; `None` for the retained session lane, which never reads them.
     pub(super) run_events: Option<Vec<FillRunEvent>>,
@@ -274,8 +279,46 @@ pub struct FillBuilder {
     pub(super) run_candidate_live: bool,
 }
 
-pub const FILL_BUILDER_OWNER_PAGE_BYTES: usize = 16 * 1024;
+#[derive(semio_framework_value::RetireOwned)]
+struct FillClosingOwners {
+    base: FixedSceneOwner,
+    preparation_roots: Option<FillPreparationRoots>,
+    preparation_spatial: Option<CollisionIndexMutation>,
+    tail_removal: Option<CollisionIndexRemoval>,
+    sequence: Vec<BrushPlacePayload>,
+    appended_objects: Vec<EngineSceneObject>,
+    appended_attractions: Vec<AttractionProps>,
+    placed: Vec<PlacedCollisionEntry>,
+    placed_lookup: FixedOwnerMap<String, usize, DOCUMENT_OBJECT_SLOTS>,
+    candidate_cache: FixedOwnerMap<String, Vec<BrushCompatibleCandidate>>,
+    catalogs: FixedCatalogOwner,
+    weights: RetainedBrushKindWeights,
+    kind_compatibility: FixedOwnerVec<KindCompatEntry, DOCUMENT_KIND_SLOTS>,
+    meshes: FixedOwnerMap<String, CollisionBody, DOCUMENT_KIND_SLOTS>,
+    spatial_index: CollisionSpatialIndex,
+    targets: Vec<BrushFillVortexTarget>,
+    target_weights: Vec<f64>,
+    target_tree: Vec<f64>,
+    blocked_vortex_ids: FixedOwnerSet<String, DOCUMENT_VORTEX_SLOTS>,
+    current_target: Option<BrushFillVortexTarget>,
+    candidates: Vec<BrushCompatibleCandidate>,
+    candidate_seen: FixedOwnerSet<String, DOCUMENT_CANDIDATE_SLOTS>,
+    candidate_raw: Vec<BrushCompatibleCandidate>,
+    candidate_weights: Vec<f64>,
+    candidate_tree: Vec<f64>,
+    current_preview: Option<BrushPreviewState>,
+    broad_phase_query: Option<CollisionQueryCursor>,
+    collision: Option<CollisionPenetrationState>,
+    pending_payload: Option<BrushPlacePayload>,
+    pending_object: Option<EngineSceneObject>,
+    pending_attraction: Option<AttractionProps>,
+    pending_spatial: Option<CollisionIndexMutation>,
+    last_rejection: Option<String>,
+    fixed_rejection: Option<FillRetiredOwner>,
+    run_events: Option<Vec<FillRunEvent>>,
+}
 
+#[derive(semio_framework_value::RetireOwned)]
 pub(super) struct RetainedBrushKindWeights {
     pub object_weights: FixedOwnerMap<String, f64, DOCUMENT_KIND_SLOTS>,
     pub vortex_weights: FixedOwnerMap<String, f64, DOCUMENT_KIND_SLOTS>,

@@ -27,23 +27,32 @@ pub fn create_target_volume<Op: From<CreateTargetVolume>>(target_volume: Puzzle3
 impl<Op> protocol::MutationKind<Puzzle3dSnapshot, Op> for CreateTargetVolume
 where
     Op: protocol::Mutation<Puzzle3dSnapshot, Diff = Puzzle3dDiff> + From<CreateTargetVolume> + From<DeleteTargetVolume>,
-{
+ {
+
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "target volume", kind: "create-target-volume", record: "CreatedTargetVolume" };
 
-    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Puzzle3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create target volume \"{}\"", self.target_volume.id), &format!("Zielvolumen \"{}\" erstellen", self.target_volume.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.target_volume.id.clone()]
     }
+
+}
+impl<Op> protocol::ColdMutationKind<Puzzle3dSnapshot, Op> for CreateTargetVolume
+where
+    Op: protocol::ColdMutation<Puzzle3dSnapshot, ReferenceDiff = Puzzle3dDiff> + From<CreateTargetVolume> + From<DeleteTargetVolume>,
+ {
+fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+        super::diff::diff(self, base)
+    }
+fn inverse(&self, base: &Puzzle3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Mutation

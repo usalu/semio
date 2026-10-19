@@ -1,13 +1,13 @@
 {
   "nodes": null,
   "elements": {
-    "inserted": [],
     "removed": [
       {
         "id": "tie_spare",
         "index": 20
       }
     ],
+    "inserted": [],
     "moved": [],
     "modified": []
   },

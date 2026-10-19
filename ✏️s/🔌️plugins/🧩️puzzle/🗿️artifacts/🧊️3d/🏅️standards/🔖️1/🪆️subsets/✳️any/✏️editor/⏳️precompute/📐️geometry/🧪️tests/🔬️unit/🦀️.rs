@@ -1,6 +1,6 @@
 use super::*;
 
-use semio_s_artifact_puzzle_3d_model::precompute_model_tests::context::*;
+use super::*;
 
 /// 🧮️ Primitive work one penetration probe step may cost ([`precompute_work_done`]): a vertex or inset probe is two
 /// queries; a face probe clips every near face and probes the clipped polygon's edges and centroid. The measured maximum
@@ -588,7 +588,13 @@ fn an_owner_whose_page_was_refused_refuses_every_insert_instead_of_trapping() {
 /// keeps a later widening from re-crossing the ceiling.
 #[test]
 fn every_fixed_owner_sub_page_request_stays_under_the_guest_contiguous_ceiling() {
-    use semio_s_artifact_puzzle_3d_model::{AttractionProps, BrushCompatibleCandidate, CableKindCatalog, EngineSceneObject, KindCompatEntry, ObjectKind, VortexKindCatalog};
+    use semio_s_artifact_puzzle_3d_model::AttractionProps;
+    use semio_s_artifact_puzzle_3d_model::BrushCompatibleCandidate;
+    use semio_s_artifact_puzzle_3d_model::CableKindCatalog;
+    use semio_s_artifact_puzzle_3d_model::EngineSceneObject;
+    use semio_s_artifact_puzzle_3d_model::KindCompatEntry;
+    use semio_s_artifact_puzzle_3d_model::ObjectKind;
+    use semio_s_artifact_puzzle_3d_model::VortexKindCatalog;
     for (owner, bytes) in [
         ("scene_snapshot objects", FixedOwnerVec::<EngineSceneObject, DOCUMENT_OBJECT_SLOTS>::sub_page_bytes()),
         ("scene_snapshot attractions", FixedOwnerVec::<AttractionProps, DOCUMENT_ATTRACTION_SLOTS>::sub_page_bytes()),

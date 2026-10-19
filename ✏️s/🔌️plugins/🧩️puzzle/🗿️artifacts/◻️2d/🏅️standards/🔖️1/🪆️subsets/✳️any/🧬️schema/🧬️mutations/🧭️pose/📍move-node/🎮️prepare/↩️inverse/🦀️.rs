@@ -2,8 +2,12 @@
 
 use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dCloseAxis;
 use super::{Puzzle2dMoveNodePlan, Puzzle2dMoveNodePreparationCursor, Puzzle2dMoveNodePreparationStep};
-use crate::standards::v1::subsets::any::schema::mutations::{MoveNode};
+use crate::standards::v1::subsets::any::schema::mutations::MoveNode;
 use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
+
+
+
+
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use semio_framework_value::{ValueError, ValueRefusalKind, list::PagedList, paged::PagedUtf8, retirement::controlled::ControlledRetirement, retained_clone::{RetainedClone, RetainedCloneBinding, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep}};
 use std::{mem::{ManuallyDrop, size_of}, ops::{Deref, DerefMut}};
@@ -35,7 +39,7 @@ impl Default for Puzzle2dMoveNodeInverseCursor {
 }
 
 impl Puzzle2dMoveNodeInverseCursor {
-    pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, mutation: RetainedCloneRef<'_, MoveNode>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, mutation: RetainedCloneRef<'_, MoveNode>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.closing || self.phase == 8 { return Err(refusal("owned move inverse is closing or spent")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(RetainedCloneStep::Progress(progress))}
@@ -55,7 +59,7 @@ impl Puzzle2dMoveNodeInverseCursor {
                 Ok(close_progress(step))
             }
             2 => {
-                let step = self.identifier.advance(mutation.project(1, |payload| &payload.id), grant)?;
+                let step = self.identifier.advance(mutation.project(1, |payload| &payload.id),body, grant)?;
                 if matches!(step, RetainedCloneStep::Complete(_)) { self.phase = 3; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }

@@ -1,5 +1,6 @@
 //! 🔺️ Sparse diff builder for `DisconnectGrips` — a real removal, never a whole-snapshot capture.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dFastenersDelta};
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dFastenersDelta;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff

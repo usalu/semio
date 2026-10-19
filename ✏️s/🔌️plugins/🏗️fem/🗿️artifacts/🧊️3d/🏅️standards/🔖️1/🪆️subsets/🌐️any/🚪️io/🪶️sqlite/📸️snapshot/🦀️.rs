@@ -1,12 +1,23 @@
 //! 🏗️ Complete dimensional finite-element entities and exact binary64 words.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::{FemAnalysisSettings, FemDof};
-use crate::standards::v1::subsets::any::schema::structure::{FemAxis, FemCombination, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
+use crate::standards::v1::subsets::any::schema::structure::FemAxis;
+use crate::standards::v1::subsets::any::schema::structure::FemCombination;
+use crate::standards::v1::subsets::any::schema::structure::FemDof;
+use crate::standards::v1::subsets::any::schema::structure::FemElement;
+use crate::standards::v1::subsets::any::schema::structure::FemLoad;
+use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use semio_s_fem_material::volumetric::FemMaterialValue;
+use semio_s_fem_node::volumetric::FemNodeValue;
+use crate::standards::v1::subsets::any::schema::structure::FemSection;
+use crate::standards::v1::subsets::any::schema::structure::FemSolid;
+use crate::standards::v1::subsets::any::schema::structure::FemSupport;
 use std::collections::BTreeMap;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,artifact::{Cell,FloatColumn}}};
 use semio_s_fem_sqlite::*;
-use semio_framework_value::{ValueError,ValueRefusalKind};
+use semio_framework_value::ValueError;
+use semio_framework_value::ValueRefusalKind;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 
 const DOCUMENT:&[FloatColumn]=&[FloatColumn::Binary64(3)];
@@ -52,9 +63,9 @@ fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Res
   let mut outlines=groups(entities(d,"fem3d_outline_vertex",5,POINT,c)?,&solid_rows,c)?;let hole_rows=entities(d,"fem3d_hole",3,&[],c)?;let mut vertices=groups(entities(d,"fem3d_hole_vertex",5,POINT,c)?,&hole_rows,c)?;let mut holes=groups(hole_rows,&solid_rows,c)?;let mut fixed=groups(entities(d,"fem3d_support_dof",4,&[],c)?,&support_rows,c)?;let load_rows=entities(d,"fem3d_load",5,&[],c)?;
   let mut nodal=variants(entities(d,"fem3d_nodal_load",4,NODAL,c)?,&load_rows,"nodal",4,c)?;let mut udl=variants(entities(d,"fem3d_member_udl",5,UDL,c)?,&load_rows,"memberUdl",4,c)?;let mut area=variants(entities(d,"fem3d_area_load",3,AREA,c)?,&load_rows,"area",4,c)?;let mut loads=groups(load_rows,&case_rows,c)?;let mut terms=groups(entities(d,"fem3d_combination_term",5,TERM,c)?,&combination_rows,c)?;
   let(mut nodes,mut elements,mut materials,mut sections,mut solids,mut supports,mut load_cases,mut combinations)=(Vec::new(),Vec::new(),Vec::new(),Vec::new(),Vec::new(),Vec::new(),Vec::new(),Vec::new());
-  for r in ordered(entities(d,"fem3d_node",7,NODE,c)?.into_values(),1,c)?{nodes.push(FemNode{id:text(r,3,c)?,x:real(r,4,c)?,y:real(r,5,c)?,z:real(r,6,c)?});}
+  for r in ordered(entities(d,"fem3d_node",7,NODE,c)?.into_values(),1,c)?{nodes.push(FemNodeValue{id:text(r,3,c)?,x:real(r,4,c)?,y:real(r,5,c)?,z:real(r,6,c)?});}
   for r in ordered(element_rows.into_values(),1,c)?{let(id,start,end,material_id,section_id)=(text(r,4,c)?,text(r,5,c)?,text(r,6,c)?,text(r,7,c)?,text(r,8,c)?);elements.push(match r.text(3)?{"bar"=>FemElement::Bar{id,start,end,material_id,section_id},"frame"=>{let frame=frames.remove(&r.rowid).ok_or_else(||invalid("FEM3d missing frame roll"))?;FemElement::Frame{id,start,end,material_id,section_id,roll:real(frame,1,c)?}},_=>return Err(invalid("FEM3d member variant differs"))});}
-  for r in ordered(entities(d,"fem3d_material",9,MATERIAL,c)?.into_values(),1,c)?{materials.push(FemMaterial{id:text(r,3,c)?,name:text(r,4,c)?,e:real(r,5,c)?,nu:real(r,6,c)?,rho:real(r,7,c)?,g:real(r,8,c)?});}
+  for r in ordered(entities(d,"fem3d_material",9,MATERIAL,c)?.into_values(),1,c)?{materials.push(FemMaterialValue{id:text(r,3,c)?,name:text(r,4,c)?,e:real(r,5,c)?,nu:real(r,6,c)?,rho:real(r,7,c)?,g:real(r,8,c)?});}
   for r in ordered(entities(d,"fem3d_section",9,SECTION,c)?.into_values(),1,c)?{sections.push(FemSection{id:text(r,3,c)?,name:text(r,4,c)?,area:real(r,5,c)?,iy:real(r,6,c)?,iz:real(r,7,c)?,j:real(r,8,c)?});}
   for r in ordered(solid_rows.into_values(),1,c)?{let outline=points(outlines.remove(&r.rowid).unwrap_or_default(),r.rowid,c)?;let mut owned_holes=Vec::new();for hole in ordered(holes.remove(&r.rowid).unwrap_or_default(),r.rowid,c)?{owned_holes.push(points(vertices.remove(&hole.rowid).unwrap_or_default(),hole.rowid,c)?);}solids.push(FemSolid{id:text(r,3,c)?,name:text(r,4,c)?,outline,holes:owned_holes,base_z:real(r,5,c)?,height:real(r,6,c)?,layers:count(r,7,c)?,mesh_size:real(r,8,c)?,material_id:text(r,9,c)?,axis:read_axis(r.text(10)?)?});}
   for r in ordered(support_rows.into_values(),1,c)?{let mut owned_fixed=Vec::new();for f in ordered(fixed.remove(&r.rowid).unwrap_or_default(),r.rowid,c)?{owned_fixed.push(read_dof(f.text(3)?)?);}supports.push(FemSupport{id:text(r,3,c)?,node_id:text(r,4,c)?,fixed:owned_fixed});}
@@ -62,6 +73,7 @@ fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Res
   for r in ordered(combination_rows.into_values(),1,c)?{let mut owned_terms=BTreeMap::new();let mut previous=None;for t in ordered(terms.remove(&r.rowid).unwrap_or_default(),r.rowid,c)?{let key=t.text(3)?;if previous.is_some_and(|p:&str|p>=key){return Err(invalid("FEM3d map keys are not uniquely UTF-8 ordered"));}owned_terms.insert(text(t,3,c)?,real(t,4,c)?);previous=Some(key);}combinations.push(FemCombination{id:text(r,3,c)?,name:text(r,4,c)?,terms:owned_terms});}
   let analysis=FemAnalysisSettings{modal_count:count(document,1,c)?,buckling_count:count(document,2,c)?,deformation_scale:real(document,3,c)?};c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;Ok(Self{nodes,elements,materials,sections,solids,supports,load_cases,combinations,analysis})
  }
+ fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(store::io_schema::IoError::from_value_error)?;if dialect.artifact_kind!="s.fem.fem3d"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(invalid("FEM3d owned dialect differs")));}self.validate_interaction_identities().map_err(store::io_schema::IoError::from_value_error)?;c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(store::io_schema::IoError::from_value_error)?;Ok(store::io_schema::IoOutcome::clean(()))}
 }
 
 impl Fem3dSnapshot{

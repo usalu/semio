@@ -5,7 +5,7 @@ use super::*;
 /// 🛬️ Generates explicit controlled bindings from the same authored field plans.
 pub(super) fn controlled_record_codegen(fields:&Fields)->Vec<proc_macro2::TokenStream>{
     plan_fields(fields).iter().map(|plan|{
-        let FieldPlan{ident,id,key,kind,elem_ty,field_ty,block,..}=plan;
+        let FieldPlan{ident,id,key,optional,kind,elem_ty,field_ty,block,..}=plan;
         if plan.skip {let local=field_local(ident);let retire=retire_field_codegen(plan,quote!{value});return quote!{let #local=::semio_framework_dsl_record::__rt::DecodedFieldOwner::new(None::<#elem_ty>,|value|{#retire});}}
         let expression=match kind {
             FieldKind::Scalar=>quote!{control.scoped_stage(|control|<#elem_ty as ::semio_framework_dsl_record::DslField>::from_value_controlled(value,control))?},
@@ -23,7 +23,8 @@ pub(super) fn controlled_record_codegen(fields:&Fields)->Vec<proc_macro2::TokenS
         let expression=if *block {quote!{match value{::semio_framework_dsl_record::FieldValue::Block(inner)=>{let value=inner.as_ref();#expression},::semio_framework_dsl_record::FieldValue::Absent=>{let value=&::semio_framework_dsl_record::FieldValue::Absent;#expression},_=>return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,"expected Block"))}}}else{expression};
         let retire=retire_field_codegen(plan,quote!{value});
         let ident=field_local(ident);
-        quote!{let #ident=::semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.scoped_stage(|control|{let value=record.get(#id).ok_or_else(||::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("missing field '{}'",#key)))?;Ok::<_,::semio_framework_value::ValueError>(#expression)}).map_err(|error|error.under(#key))?,|value|{#retire});}
+        let presence=if *optional{quote!{}}else{quote!{if matches!(value,::semio_framework_dsl_record::FieldValue::Absent){return Err(::semio_framework_value::ValueError::literal(::semio_framework_value::ValueRefusalKind::InvalidValue,concat!("missing required field '",#key,"'")));}}};
+        quote!{let #ident=::semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.scoped_stage(|control|{let value=record.get(#id).ok_or_else(||::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("missing field '{}'",#key)))?;#presence Ok::<_,::semio_framework_value::ValueError>(#expression)}).map_err(|error|error.under(#key))?,|value|{#retire});}
     }).collect()
 }
 

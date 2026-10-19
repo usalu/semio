@@ -45,7 +45,7 @@ pub fn receive_member_close(cx:&mut StepContext<'_>,result:Result<RetainedCloneS
     let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};
     cx.consume_fuel(progress.copied_items.saturating_add(progress.copied_bytes)as u64);
     let receipt_refusal=cx.consume_retained(progress).err();
-    match result{Err(primary)=>Err(OriginalTurnFailure{primary:primary.into(),receipt_refusal,context_refusal:None}),Ok(step)=>match receipt_refusal{None=>Ok(step),Some(refusal)=>Err(OriginalTurnFailure{primary:semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original member close receipt was refused").with_retained_progress(progress).into(),receipt_refusal:Some(refusal),context_refusal:None})}}
+    match result{Err(primary)=>Err({let original=OriginalTurnFailure::from(primary);OriginalTurnFailure{receipt_refusal,context_refusal:None,..original}}),Ok(step)=>match receipt_refusal{None=>Ok(step),Some(refusal)=>Err({let original=OriginalTurnFailure::from(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original member close receipt was refused").with_retained_progress(progress));OriginalTurnFailure{receipt_refusal:Some(refusal),context_refusal:None,..original}})}}
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -425,6 +425,7 @@ impl MemberOpenRequest {
 }
 
 impl ErasedSnapshotRetirement for MemberOpenRequest {
+    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:MemberOpenRequest::next_copy_byte_demand(self)?,capacity_bytes:MemberOpenRequest::next_capacity_byte_demand(self,body)?,release_bytes:MemberOpenRequest::next_release_byte_demand(self)?,depth:MemberOpenRequest::next_depth_demand(self)?})}
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> { MemberOpenRequest::close_step(self, grant) }
     fn terminal_is_empty(&self) -> bool { MemberOpenRequest::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { MemberOpenRequest::next_copy_byte_demand(self) }

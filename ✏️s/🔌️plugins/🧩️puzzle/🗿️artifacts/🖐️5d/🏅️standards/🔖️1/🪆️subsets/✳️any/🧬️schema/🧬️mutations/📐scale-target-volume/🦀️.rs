@@ -30,6 +30,17 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "target-volume", kind: "scale-target-volume", record: "ScaledTargetVolume" };
 
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale target volume \"{}\"", self.id), &format!("Zielvolumen \"{}\" skalieren", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ScaleTargetVolume {
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
@@ -39,11 +50,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale target volume \"{}\"", self.id), &format!("Zielvolumen \"{}\" skalieren", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation

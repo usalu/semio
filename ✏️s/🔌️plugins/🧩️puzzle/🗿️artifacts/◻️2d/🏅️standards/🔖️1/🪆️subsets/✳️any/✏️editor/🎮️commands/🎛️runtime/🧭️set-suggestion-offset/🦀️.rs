@@ -1,6 +1,8 @@
 //! 🖌️ `set-suggestion-offset` command.
 
-use crate::editor::puzzle2d::modes::edit::options::brush::{PUZZLE2D_SUGGESTION_OFFSET_MAX, PUZZLE2D_SUGGESTION_OFFSET_MIN};
+use crate::editor::puzzle2d::modes::edit::options::brush::PUZZLE2D_SUGGESTION_OFFSET_MAX;
+
+use crate::editor::puzzle2d::modes::edit::options::brush::PUZZLE2D_SUGGESTION_OFFSET_MIN;
 use {crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx};
 use semio_framework_pack_json::Value;
 

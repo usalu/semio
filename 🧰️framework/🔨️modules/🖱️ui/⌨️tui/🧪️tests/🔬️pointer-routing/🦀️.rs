@@ -6,7 +6,7 @@ use semio_framework_ui_tui_frame::chrome::{shell, window_chip_layout, ChromeStat
 use semio_framework_ui_tui_engine::Tui;
 use semio_framework_ui_tui_core::event::{Event, MouseButton, MouseEvent, MouseKind};
 use semio_framework_ui_tui_core::geometry::{Pos, Size};
-use semio_framework_ui_tui_frame::layout::{Constraint, Dimension, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use semio_framework_ui_tui_frame::layout::{Constraint, Dimension, DockPlacement, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowStackCorner};
 use semio_framework_ui_tui_frame::scene::{Node, NodeContent, NodeId};
 use semio_framework_ui_tui_core::theme::Theme;
 use semio_framework_ui_tui_widgets::widget::{TabsState, WidgetState, WizardState};
@@ -97,6 +97,14 @@ fn build(scene: &Value) -> Fixture {
     Fixture { tui, names }
 }
 
+fn placement_name(placement: DockPlacement) -> &'static str {
+    match placement {
+        DockPlacement::Tabs => "tabs", DockPlacement::Left => "left", DockPlacement::Right => "right", DockPlacement::Top => "top", DockPlacement::Bottom => "bottom",
+        DockPlacement::Corner(WindowStackCorner::TopLeft) => "top-left", DockPlacement::Corner(WindowStackCorner::TopRight) => "top-right",
+        DockPlacement::Corner(WindowStackCorner::BottomLeft) => "bottom-left", DockPlacement::Corner(WindowStackCorner::BottomRight) => "bottom-right",
+    }
+}
+
 fn signal_name(signal: &WidgetSignal) -> String {
     match signal {
         WidgetSignal::WindowClose(i) => format!("WindowClose({i})"),
@@ -104,6 +112,8 @@ fn signal_name(signal: &WidgetSignal) -> String {
         WidgetSignal::WindowNewTab(i) => format!("WindowNewTab({i})"),
         WidgetSignal::WindowTabActivated(i) => format!("WindowTabActivated({i})"),
         WidgetSignal::WindowFocus => "WindowFocus".into(),
+        WidgetSignal::WindowDockPreview { source, target, placement, tab_index } => format!("WindowDockPreview({source}->{target},{},{})", placement_name(*placement), tab_index.map_or("-".into(), |index| index.to_string())),
+        WidgetSignal::WindowDocked { source, target, placement, tab_index } => format!("WindowDocked({source}->{target},{},{})", placement_name(*placement), tab_index.map_or("-".into(), |index| index.to_string())),
         WidgetSignal::TabMoved { from, to } => format!("TabMoved({from}->{to})"),
         WidgetSignal::SplitterDragged { path, delta } => format!("SplitterDragged({},{delta})", path.iter().map(usize::to_string).collect::<Vec<_>>().join("/")),
         WidgetSignal::ContextMenu { pos, item } => format!("ContextMenu({},{},{})", pos.x, pos.y, item.map_or("-".into(), |i| i.to_string())),
@@ -158,20 +168,14 @@ fn the_golden_chrome_rows_and_declared_chips_match_what_the_engine_paints() {
         let rect = fixture.tui.scene.rect(window);
         let NodeContent::Chrome(ChromeState::Window(state)) = &fixture.tui.scene.node(window).content else { panic!("window chrome") };
         let layout = window_chip_layout(state, rect);
-        let found = layout.groups.iter().flat_map(|group| group.tabs.iter()).find(|tab| tab.kind == TabKind::Tab && tab.index == number(chip, "index") as usize).expect("declared chip exists");
+        let group = layout.groups.iter().find(|group| group.tabs.iter().any(|tab| tab.kind == TabKind::Tab && tab.index == number(chip, "index") as usize)).expect("declared corner exists");
+        let found = group.tabs.iter().find(|tab| tab.kind == TabKind::Tab && tab.index == number(chip, "index") as usize).expect("declared chip exists");
+        assert_eq!(placement_name(DockPlacement::Corner(group.corner)), text(chip, "corner"), "declared corner of {chip:?}");
         assert_eq!(u64::from(found.x), number(chip, "x"), "chip x of {chip:?}");
         assert_eq!(u64::from(found.x + found.interior_width + 1), number(chip, "right"), "chip right wall of {chip:?}");
+        assert_eq!(found.maximize_x.map(u64::from), field(chip, "maximize").as_u64(), "fullscreen column of {chip:?}");
         assert_eq!(found.close_x.map(u64::from), field(chip, "close").as_u64(), "close column of {chip:?}");
-    }
-    for control in field(&fixture_value, "controls").as_array().unwrap() {
-        let window = fixture.names[text(control, "window")];
-        let rect = fixture.tui.scene.rect(window);
-        let NodeContent::Chrome(ChromeState::Window(state)) = &fixture.tui.scene.node(window).content else { panic!("window chrome") };
-        let layout = window_chip_layout(state, rect);
-        let found = layout.groups.iter().flat_map(|group| group.tabs.iter()).find(|tab| tab.kind == TabKind::Controls).expect("declared controls chip exists");
-        assert_eq!(u64::from(found.x), number(control, "x"), "controls x of {control:?}");
-        assert_eq!(u64::from(found.x + found.interior_width + 1), number(control, "right"), "controls right wall of {control:?}");
-        assert_eq!(found.maximize_x.map(u64::from), field(control, "maximize").as_u64(), "maximize column of {control:?}");
+        assert_eq!(found.drag_x.map(u64::from), field(chip, "drag").as_u64(), "stable grip column of {chip:?}");
     }
     for window in field(&fixture_value, "windows").as_array().unwrap() {
         let rect = fixture.tui.scene.rect(fixture.names[text(window, "window")]);

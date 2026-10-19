@@ -2,7 +2,7 @@
 
 use super::*;
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_dsl::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_dsl::DslArtifact, semio_framework_value_derive::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact(id = "store.unbound-one-item-outcome")]
 pub struct DurableUnboundOneItemOutcomeV1 {
@@ -46,11 +46,21 @@ pub struct DurableBoundOneItemOutcomeV1 {
     pub post_revision: [u8; 32],
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value_derive::RetireOwned)]
 pub struct DurableStorePreparedOutcomeV1 {
     pub recovery_schema: String,
     pub pack: Vec<u8>,
     pub sha256: String,
+}
+
+#[derive(semio_framework_value_derive::RetireOwned)]
+pub enum DurablePlanningOutputV1 {
+    Pack(Vec<u8>),
+    Unbound(DurableStorePreparedOutcomeV1),
+    Binding { group: Option<String>, pack: Vec<u8>, sha256: String },
+    Bound { unbound_sha256: String, recovery_schema: String, recovery_pack: Vec<u8>, recovery_pack_sha256: String },
+    BoundPlanning {group:Option<String>,edit:Option<Vec<u8>>,wire_edit:Option<Vec<u8>>,pack:Option<Vec<u8>>},
+    Commit {pack:Option<Vec<u8>>,sha256:String,receipt:Option<DurableOwnedGroupJournalReceiptV1>},
 }
 
 pub struct DurableStoreVerifiedOutcomeV1<P, Mutation> {
@@ -60,7 +70,7 @@ pub struct DurableStoreVerifiedOutcomeV1<P, Mutation> {
 }
 
 /// 🧾️ Trusted durable-boundary witness returned only after the decision transaction is synced.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq,semio_framework_value_derive::RetireOwned)]
 pub struct DurableOwnedGroupJournalReceiptV1 {
     pub anchor_sha256: String,
     pub decision_sha256: String,
@@ -140,7 +150,8 @@ pub trait DurableOwnedGroupJournalSinkV1: Send {
 }
 
 pub struct ArtifactStoreDurableGroupRootV1<P, Mutation> {
-    pub visibility: Arc<semio_framework_os_vcs::ArtifactGroupVisibility>,
+        pub diagnostics: semio_framework_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage,
+pub visibility: Arc<semio_framework_os_vcs::ArtifactGroupVisibility>,
     pub current: Option<Arc<P>>,
     pub generation: u64,
     pub content_revision: [u8; 32],
@@ -152,7 +163,8 @@ pub struct ArtifactStoreDurableGroupRootV1<P, Mutation> {
     pub revision_accumulator: Option<CursorRevisionAccumulator>,
     pub tail_undo_cache: Option<(String, Arc<P>)>,
     pub authority: Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
-    pub displaced_reservation: Option<semio_framework_os_store_read::ArtifactStoreDisplacedOwnerReservation>,
+        pub mutation_retirement: Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mutation>>,
+pub displaced_reservation: Option<semio_framework_os_store_read::ArtifactStoreDisplacedOwnerReservation>,
     pub retirement: Option<Box<StagedRootRetirement<P, Mutation>>>,
     pub adopted: bool,
 }

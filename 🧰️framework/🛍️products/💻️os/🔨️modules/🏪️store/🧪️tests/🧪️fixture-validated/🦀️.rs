@@ -9,6 +9,11 @@ mod assign_n {
     fn direct_fixture_leaf_contract() {
         assert_fixture_descriptor::<AssignN>(include_str!("../../🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/↩️assign-n/🔣️.json"));
     }
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    crate::os_store::component::tests::assert_fixture_sum_law(&ValidatedMutation::AssignN(AssignN { n: Some(5) }), &[Some(3), None]).await;
+}
 }
 
 mod set_n {
@@ -18,4 +23,9 @@ mod set_n {
     fn direct_fixture_leaf_contract() {
         assert_fixture_descriptor::<SetN>(include_str!("../../🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/🔢️set-n/🔣️.json"));
     }
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    crate::os_store::component::tests::assert_fixture_sum_law(&ValidatedMutation::SetN(SetN { n: 9 }), &[Some(3)]).await;
+}
 }

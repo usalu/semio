@@ -174,7 +174,7 @@ fn a_window_row_carries_transmitted_solar_on_a_sunny_design_day() {
     assert!(!windows.is_empty(), "case 600 is the glazed case");
     let config = SimulationConfig { warmup_days: 1, run_period_end_month: 1, run_period_end_day: 1, environment: SimulationEnvironment::CoolingDesignDay, ..Default::default() };
     let config = SimulationConfig { schedules: simulation_config(&model, None, 1).schedules, ..config };
-    let results = Engine::run(model, config).expect("cooling design day runs");
+    let results = crate::sim::testing::run_preborn(model, config).expect("cooling design day runs");
 
     let window_rows: Vec<_> = results.per_surface.iter().filter(|row| windows.contains(&row.id)).collect();
     assert_eq!(window_rows.len(), windows.len(), "every fenestration gets its own row");

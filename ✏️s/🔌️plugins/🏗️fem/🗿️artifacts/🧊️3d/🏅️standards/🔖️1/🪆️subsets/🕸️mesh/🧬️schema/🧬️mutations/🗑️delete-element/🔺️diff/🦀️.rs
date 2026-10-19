@@ -7,10 +7,10 @@ use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::target_referenced;
 
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &DeleteElement, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {
+pub fn diff(payload: &DeleteElement, base: &Fem3dSnapshotValue) -> protocol::MutationOutcome<Fem3dDiff> {
     let Some(at) = base.elements.iter().position(|element| element_id(element) == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Element \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

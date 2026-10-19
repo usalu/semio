@@ -1,4 +1,5 @@
 import "./🎟️phase/🟦️.ts";
+import "../🧭️invocation/🧪️tests/🟦️.ts";
 import "../📥️caller/🧪️tests/📥️birth/🟦️.ts";
 import "../🧭️selection/👁️watch/🧪️tests/🟦️.ts";
 import "../🕸️graph/📥️inference/🧪️tests/🟦️.ts";

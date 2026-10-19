@@ -50,7 +50,7 @@ async fn test_envelope(id: &str, document: &protocol::ArtifactId) -> protocol::M
     protocol::MutationEnvelope {
         mutation_id: protocol::MutationId(id.to_string()),
         document_id: document.clone(),
-        actor: protocol::ActorId("tester".to_string()),
+        actor: protocol::ActorId("tester".to_string().into()),
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),

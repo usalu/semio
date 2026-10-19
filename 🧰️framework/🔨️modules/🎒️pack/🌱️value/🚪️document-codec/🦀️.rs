@@ -33,7 +33,7 @@ pub fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &Encode
         symbol_index.insert(s.clone(), i as u64);
     }
 
-    let write_options = semio_framework_pack_format::WriteOptions { required_flags: 0, optional_flags: if options.canonical { semio_framework_pack_format::OPTIONAL_CANONICAL } else { 0 }, codec: options.codec };
+    let write_options = semio_framework_pack_format::WriteOptions { required_flags:if semio_framework_pack_record_encode::record_required_chunked(record,options)?{semio_framework_pack_format::REQUIRED_CHUNKED}else{0}, optional_flags: if options.canonical { semio_framework_pack_format::OPTIONAL_CANONICAL } else { 0 }, codec: options.codec };
     let mut writer = ::semio_framework_async::poll::resolve_ready(semio_framework_pack_format::PackWriter::begin(Vec::new(), &write_options))?;
 
     let symbols_payload = ::semio_framework_async::poll::resolve_ready(semio_framework_pack_format::encode_symbols(&symbols));

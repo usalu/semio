@@ -1,10 +1,22 @@
-//! 🩹️ Fem2d play app command — `patch-support`: re-targets a support (`nodeId`) or toggles one restrained DOF (`tx`, `ty`, `rz`) → `ReplaceSupport`.
+//! 🩹️ Fem2d play app command — `patch-support`: re-targets a support (`nodeId`) or toggles one restrained DOF (`tx`, `ty`, `rz`) → `ChangeSupport`.
 
-use semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::replace_support;
+use semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::change_support::ChangeSupport;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dSupportPatch;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
-use semio_framework_value_derive::{FromValue, ToValue};
+
+use semio_framework_plugin::ArtifactView;
+
+use semio_framework_plugin::ConfigView;
+
+use semio_framework_plugin::Emit;
+
+use semio_framework_plugin::Fault;
+
+use semio_framework_plugin::NoConfig;
+
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 
 type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
@@ -17,35 +29,19 @@ pub struct PatchSupport {
     pub value: String,
 }
 
-/// 🩹️ A support has no scalar "fixity" field — `fixed` is a DOF set, so the inspector shows one
-/// toggle per planar DOF and each toggle is a membership edit rewritten here into the whole record.
-/// The rebuilt set is always emitted in `FemDof::ALL` order, so two hosts toggling different DOFs
-/// converge on the same spelling instead of on two permutations of the same set.
+/// 🩹️ Each inspector control emits only its owned node reference or DOF membership.
 pub fn handle(payload: &PatchSupport, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
-    let support = doc.snapshot.supports.iter().find(|support| support.id == payload.id).ok_or_else(|| Fault::from("fem2d.patch.support-missing"))?;
-    let mut new_support = support.clone();
+    let row = doc.snapshot.supports.iter().find(|row| row.id == payload.id).ok_or_else(|| Fault::from("fem2d.patch.support-missing"))?;
+    let mut patch = Fem2dSupportPatch::default();
     match payload.field.as_str() {
-        "nodeId" => new_support.node_id = payload.value.clone(),
-        "tx" | "ty" | "rz" => {
-            let dof = match payload.field.as_str() {
-                "tx" => FemDof::Tx,
-                "ty" => FemDof::Ty,
-                _ => FemDof::Rz,
-            };
-            let restrained: bool = payload.value.trim().parse().map_err(|_| Fault::from("fem2d.patch.support-value"))?;
-            let mut fixed = support.fixed.clone();
-            fixed.retain(|entry| *entry != dof);
-            if restrained {
-                fixed.push(dof);
-            }
-            new_support.fixed = FemDof::ALL.into_iter().filter(|candidate| fixed.contains(candidate)).collect();
-        }
+        "nodeId" => patch.node_id = Some(payload.value.clone()),
+        "tx" => patch.tx = Some(payload.value.trim().parse().map_err(|_| Fault::from("fem2d.patch.support-value"))?),
+        "ty" => patch.ty = Some(payload.value.trim().parse().map_err(|_| Fault::from("fem2d.patch.support-value"))?),
+        "rz" => patch.rz = Some(payload.value.trim().parse().map_err(|_| Fault::from("fem2d.patch.support-value"))?),
         _ => return Err(Fault::from("fem2d.patch.support-field")),
     }
-    if &new_support == support {
-        return Ok(Emit::default());
-    }
-    Ok(Emit::mutations(vec![Fem2dMutation::ReplaceSupport(replace_support::ReplaceSupport { id: payload.id.clone(), new_support })]))
+    if patch.candidate(row) == *row { return Ok(Emit::default()); }
+    Ok(Emit::mutations(vec![Fem2dMutation::ChangeSupport(ChangeSupport { id: payload.id.clone(), patch })]))
 }
 //#endregion 🔖️PatchSupport
 

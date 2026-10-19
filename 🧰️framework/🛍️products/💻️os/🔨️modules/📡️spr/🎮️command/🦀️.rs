@@ -236,17 +236,12 @@ pub use protocol::mutation::{
 /// 🌱️ Bound on [`protocol::value::ToValue`]/[`protocol::value::FromValue`], not serde's — the same
 /// move [`Inference`] above, [`CompositeMutationKind`] below and `protocol::Mutation` itself already
 /// made. Every mutation-leaf payload derives `ToValue`/`FromValue` and no longer derives serde's.
-pub trait MutationKind<P, Op>: MutationLeaf + Clone + protocol::value::ToValue + protocol::value::FromValue
+pub trait MutationKind<P, Op>: MutationLeaf + protocol::value::ToValue + protocol::value::FromValue
 where
     Op: Mutation<P>,
 {
     const SEMANTICS: SemanticDescriptor;
 
-    fn diff(&self, base: &P) -> MutationOutcome<<Op as Mutation<P>>::Diff>;
-    /// Missing/already-absent target ⇒ `Vec::new()` (the semantic replacement for the old
-    /// `NoMutation` sentinel variant — there is no "no-op mutation", only an inverse with nothing
-    /// to undo).
-    fn inverse(&self, base: &P) -> Result<Vec<Op>, semio_framework_value::ValueError> ;
     /// 🏷️ Human undo/history label in every shell locale, e.g. `Rename piece "a" to "b"` /
     /// `Piece "a" in "b" umbenennen`. [`crate::LocalizedLabel::native`] matches on `Locale`
     /// exhaustively with no catch-all arm, so a locale added to `🖱️ui/🎚️axes/🔣️.json` fails every
@@ -271,6 +266,12 @@ where
     }
 }
 
+/// ❄️ A leaf's borrowed wire reference behavior cannot be used as native retained preparation.
+pub trait ColdMutationKind<P,Op>:MutationLeaf+protocol::value::ToValue+protocol::value::FromValue where Op:protocol::ColdMutation<P>{
+    fn diff(&self,base:&P)->MutationOutcome<<Op as protocol::ColdMutation<P>>::ReferenceDiff>;
+    fn inverse(&self,base:&P)->Result<Vec<Op>,semio_framework_value::ValueError>;
+    fn foreign_step_source<'a>(&'a self,_base:&'a P,_index:usize)->Result<Option<ForeignStepSource<'a>>,semio_framework_value::ValueError>{Ok(None)}
+}
 /// 🗣️ Refinement of [`Mutation`] for an enum whose every variant is a [`MutationKind`].
 /// Implemented only by `#[derive(Mutations)]`, never by hand. End-state (final ratchet, once every
 /// artifact's dispatch enum implements it): `ArtifactApp`/`ArtifactStore` bounds tighten from
@@ -650,7 +651,7 @@ pub enum PlanStep<Op> {
 pub const MAX_PLAN_DEPTH: u8 = 8;
 
 /// 🚧️ Typed failure of composite-mutation planning — never a panic, per the purity law on
-/// [`CompositeMutationKind::plan`].
+/// [`ColdCompositeMutationKind::plan`].
 #[derive(Clone, Debug, PartialEq)]
 pub enum PlanError {
     DepthExceeded(u8),
@@ -697,13 +698,13 @@ impl From<MutationApplyError> for PlanError {
     }
 }
 
-/// 🧮️ Accumulates a [`CompositeMutationKind::plan`]'s steps against a snapshot that starts
+/// 🧮️ Accumulates a [`ColdCompositeMutationKind::plan`]'s steps against a wire snapshot that starts
 /// at `base` and advances by every `call`ed local op — so a later step's `validate`/`diff` sees the
 /// snapshot as it would exist after every step planned before it, exactly like sequential apply.
 /// Foreign-hop depth/cycle bookkeeping lives here (`call_foreign`), keyed on `(mutation_id,
 /// blake3(payload))` — the same pair a replayed `TransactionPrepare` (§5 of the contract freeze)
 /// would use to detect a step it has already prepared.
-pub struct Planner<P, Op: Mutation<P>> {
+pub struct Planner<P, Op: ColdMutation<P>> {
     base: P,
     steps: Vec<PlanStep<Op>>,
     pre_states: Vec<Option<P>>,
@@ -721,7 +722,7 @@ fn prefix_message(mut message: MutationMessage, prefix: &str) -> MutationMessage
     message
 }
 
-impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
+impl<P: Clone, Op: ColdMutation<P>> Planner<P, Op> {
     pub fn new(base: &P) -> Self {
         Self { base: base.clone(), steps: Vec::new(), pre_states: Vec::new(), depth: 0, seen: Vec::new(), messages: Vec::new() }
     }
@@ -756,7 +757,7 @@ impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
             return Err(PlanError::StepRejected(reason));
         }
         let pre_state = self.base.clone();
-        self.base = apply_diff(&diff, &self.base)?;
+        self.base = apply_diff_cold(&diff, &self.base)?;
         self.steps.push(PlanStep::Local(op));
         self.pre_states.push(Some(pre_state));
         Ok(())
@@ -797,26 +798,9 @@ impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
     }
 }
 
-/// 🕸️ A mutation kind whose effect is a PLAN over one-or-more concrete `Op`s (this
-/// artifact's own) and/or [`ForeignStep`]s (other artifacts') rather than a single direct diff.
-/// Implemented once per composite kind, exactly like [`MutationKind`] is implemented once per
-/// handcrafted kind — `#[derive(CompositeMutation)]` (`🗣️dsl/✨️derive/🦀️.rs`
-/// `🔖️CompositeMutation`) wires the delegating `MutationKind` impl from it via the free helpers
-/// below.
-///
-/// LAW (purity): `plan` reads only `base` (never mutates outside state) and drives `planner`
-/// exclusively through `call`/`call_foreign` — the free helpers below are the ONLY supported way to
-/// fold a plan into a diff/inverse/foreign-step list, so every composite kind observes identical
-/// semantics regardless of who calls it.
-///
-/// Bound on [`protocol::value::ToValue`]/[`protocol::value::FromValue`], not `serde::Serialize`/
-/// `serde::de::DeserializeOwned` — mirrors `MutationDiff`'s own supertrait migration (see
-/// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/
-/// 🔍️research/`), so a plugin/extension implementing this trait never needs `serde` just to
-/// satisfy it.
-pub trait CompositeMutationKind<P, Op: Mutation<P>>: MutationLeaf + Clone + protocol::value::ToValue + protocol::value::FromValue {
+/// 🕸️ Native composite vocabulary and authored metadata; retained producers own native planning.
+pub trait CompositeMutationKind<P, Op: Mutation<P>>: MutationLeaf + protocol::value::ToValue + protocol::value::FromValue {
     const SEMANTICS: SemanticDescriptor;
-    fn plan(&self, base: &P, planner: &mut Planner<P, Op>) -> Result<(), PlanError>;
     /// 🌐️ Declares foreign capability without executing the local plan.
     fn may_emit_foreign_steps(&self) -> bool { false }
     /// 🌐️ Borrows an original declared hop; domain refusal remains explicit.
@@ -831,11 +815,14 @@ pub trait CompositeMutationKind<P, Op: Mutation<P>>: MutationLeaf + Clone + prot
     }
 }
 
-/// 🏗️ Runs `kind.plan` against a fresh [`Planner`] seeded at `base`. NOT a blanket
-/// `impl<T: CompositeMutationKind> MutationKind for T` — coherence rejects that against the ~200
-/// concrete `impl MutationKind` in the tree — so every other free helper here, and the
-/// `#[derive(CompositeMutation)]` delegation, is built on top of this one instead.
-pub fn plan_of<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind: &K, base: &P) -> Result<Vec<PlanStep<Op>>, PlanError> {
+/// 🧊️ Produces a synchronous plan exclusively over the declared wire reference state.
+pub trait ColdCompositeMutationKind<P,Op:ColdMutation<P>>:MutationLeaf+protocol::value::ToValue+protocol::value::FromValue{
+    fn plan(&self,base:&P,planner:&mut Planner<P,Op>)->Result<(),PlanError>;
+    fn foreign_step_source<'a>(&'a self,_base:&'a P,_index:usize)->Result<Option<ForeignStepSource<'a>>,semio_framework_value::ValueError>{Ok(None)}
+}
+
+/// 🏗️ Runs an explicit cold composite plan against its wire reference snapshot.
+pub fn plan_of<P: Clone, Op: ColdMutation<P>, K: ColdCompositeMutationKind<P, Op>>(kind: &K, base: &P) -> Result<Vec<PlanStep<Op>>, PlanError> {
     let mut planner = Planner::new(base);
     kind.plan(base, &mut planner)?;
     Ok(planner.into_steps())

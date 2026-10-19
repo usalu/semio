@@ -402,16 +402,12 @@ test("portable relative GUI declarations survive Windows and POSIX JSON path ser
  }
 });
 
-test("the three registered GUI rows match the portable initial authority corpus",()=>{
- const validate=new(require("ajv").default)({strict:true}).compile(initialAuthoringSchema),parser=require("typescript");
- for(const file of [".vscode/launch.json",".vscode/🧩️launch.seed.jsonc"]){
-  const result=parser.parseConfigFileTextToJson(file,readFileSync(resolve(process.cwd(),file),"utf8"));expect(result.error).toBeUndefined();
-  for(const row of fixture.initialAuthoring.cases){
-   const actual=result.config.configurations.find((entry:any)=>entry.name===row.launchName),request=["repo",...row.arguments];expect(actual).toBeDefined();
-   const declared=JSON.parse(actual.env.SEMIO_SCRIPT_CAPABILITIES);
-   expect(validate(declared),row.name).toBe(true);expect(declared).toEqual({workspaceRoot:row.workspaceRoot,tool:row.tool,arguments:request,selection:request,launches:[request],buildMode:row.buildMode,native:row.native});expect(actual.env.CARGO_TARGET_DIR).toBe("${workspaceFolder}/"+row.native.artifactDirectory);expect(actual.env.SEMIO_SCRIPT_CAPABILITIES).not.toContain("${workspaceFolder}");
-  }
- }
+
+
+test("dashboard target selection preserves the portable initial authority corpus",()=>{
+ const validate=new(require("ajv").default)({strict:true}).compile(initialAuthoringSchema),root=process.cwd(),registry=JSON.parse(readFileSync(resolve(root,"📋️build-owners.json"),"utf8")),dashboard=JSON.parse(readFileSync(resolve(root,"📋️project.json"),"utf8")).metadata.semio.dashboard;
+ expect(dashboard.tools.find((tool:any)=>tool.id==="run-targets").command.slice(0,3)).toEqual(["bun","repo","run-many"]);
+ for(const row of fixture.initialAuthoring.cases){const request=["repo",...row.arguments],declared={workspaceRoot:row.workspaceRoot,tool:row.tool,arguments:request,selection:request,launches:[request],buildMode:row.buildMode,native:row.native};expect(validate(declared),row.name).toBe(true);const [project,target]=row.arguments[1]!.split(":");const owner=registry.owners.find((owner:any)=>owner.name===project);expect(owner,row.name).toBeDefined();expect(JSON.parse(readFileSync(resolve(root,owner.manifest),"utf8")).targets[target],row.name).toBeDefined();}
 });
 
 test("the defining graph fact module exposes its declared writer port under original custody",async()=>{
@@ -668,7 +664,10 @@ test("original direct dependency CLI admits explicit whole or scoped selections 
 
 test("registered JavaScript dependency initial callers enter direct finite online preparation before graph bootstrap",async()=>{
   const parser=require("typescript"),workspace=process.cwd(),source=readFileSync(resolve(import.meta.dir,"../../📜️script.ts"),"utf8"),syntax=parser.createSourceFile("build.ts",source,parser.ScriptTarget.Latest,true),definition=syntax.statements.find((node:any)=>parser.isFunctionDeclaration(node)&&node.name?.text==="runOwnedBuildInLeasesV1"),body=definition.getText(syntax);expect(body.indexOf('command==="dependencies"')).toBeLessThan(body.indexOf("await ensureBuildEnvironmentV1"));expect(body).toContain("readBuildDependencyInvocationV1(resolved.args)");
-  for(const path of [".vscode/launch.json",".vscode/🧩️launch.seed.jsonc"]){const launch=parser.parseConfigFileTextToJson(path,readFileSync(join(workspace,path),"utf8"));expect(launch.error).toBeUndefined();for(const expected of fixture.dependencyInvocations.launches){const rows=launch.config.configurations.filter((row:any)=>row.name===expected.name);expect(rows).toHaveLength(1);const row=rows[0];expect(row.command).toBe(expected.command);expect(JSON.parse(row.env.SEMIO_SCRIPT_POLICY)).toEqual(expected.policy);expect(row.env.SEMIO_SCRIPT_CAPABILITIES).toBeUndefined();expect(row.env.CARGO_NET_OFFLINE).toBeUndefined();const args=expected.command.split(" ").slice(2),capabilities=createNativeBuildCallerCapabilitiesV1(workspace,args,"nx",{});expect(capabilities.native.network.offline).toBe(false);expect(capabilities.arguments).toEqual(["repo",...args]);const envelope=createScriptProcessEnvelope({version:1,owner:expected.policy.owner,maximumElapsedMilliseconds:expected.policy.maximumElapsedMilliseconds},capabilities,Date.now());expect(envelope.deadlineEpochMilliseconds).not.toBeNull();expect(envelope.capabilities).toEqual(capabilities);}}
+  
+  const dashboard=JSON.parse(readFileSync(join(workspace,"📋️project.json"),"utf8")).metadata.semio.dashboard;expect(dashboard.tools.find((tool:any)=>tool.id==="run-script").command.slice(0,3)).toEqual(["bun","repo","exec"]);
+  for(const expected of fixture.dependencyInvocations.launches){const args=expected.command.split(" ").slice(2),capabilities=createNativeBuildCallerCapabilitiesV1(workspace,args,"nx",{});expect(capabilities.native.network.offline).toBe(false);expect(capabilities.arguments).toEqual(["repo",...args]);const envelope=createScriptProcessEnvelope(expected.policy,capabilities,Date.now());expect(envelope.deadlineEpochMilliseconds).not.toBeNull();expect(envelope.capabilities).toEqual(capabilities);}
+  console.log("[DEBUG] Both authored JavaScript dashboard source rows select direct dependency commands; original finite600000 initial factory remains online before first process envelope");
 });
 
 

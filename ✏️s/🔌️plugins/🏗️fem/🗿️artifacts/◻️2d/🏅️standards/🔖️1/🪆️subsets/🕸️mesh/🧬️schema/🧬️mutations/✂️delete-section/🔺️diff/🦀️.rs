@@ -7,10 +7,10 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fe
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dSectionRemoval;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dSectionsDelta;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &DeleteSection, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
+pub fn diff(payload: &DeleteSection, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<Fem2dDiff> {
     let Some(at) = base.sections.iter().position(|section| section.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Section \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

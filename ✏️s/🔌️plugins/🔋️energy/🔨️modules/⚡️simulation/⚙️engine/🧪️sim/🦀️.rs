@@ -29,7 +29,7 @@ use crate::site::WeatherRecord;
 use crate::sizing::{SizingBuilder, SizingConfig};
 use crate::units::Unit;
 use semio_framework_job::{
-    allocate_operation_id, default_now_us, CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPayloadStream, Operation, RetainedCloneGrant, RetainedCloneProgress, RetainedJobPayload, RevisionId,
+    allocate_operation_id, default_now_us, CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPayloadStream, RetainedCloneGrant, RetainedCloneProgress, RetainedJobPayload, RevisionId,
     OriginalTurnFailure, StepBudget, StepContext,
 };
 use semio_framework_value::{RetirementDemand, ValueError};
@@ -38,6 +38,21 @@ use serde::{Deserialize, Serialize};
 use std::ops::{Deref, DerefMut};
 use std::sync::Mutex;
 use std::time::Instant;
+
+#[path = "🪪️input-identity/🦀️.rs"]
+pub mod input_identity;
+use input_identity::EnergyInputIdentity;
+#[path="♻️close/🦀️.rs"]
+mod original_terminal_retirement;
+use original_terminal_retirement::EnergyAuthorityRetirement;
+
+#[path="🧺️batch/🦀️.rs"]
+pub mod batch;
+pub use batch::EnergyBatchRun;
+pub use semio_framework_job::Operation;
+#[cfg(any(test,feature="testing"))]
+#[path="🧪️testing/🦀️.rs"]
+pub mod testing;
 
 #[path = "🧱️state/🦀️.rs"]
 mod state;
@@ -58,3 +73,7 @@ pub use self::engine::*;
 pub mod testkit {
     pub use super::{close::*, engine::*, packets::*, pipeline::*, run::*, state::*};
 }
+
+#[cfg(test)]
+#[global_allocator]
+static ENERGY_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;

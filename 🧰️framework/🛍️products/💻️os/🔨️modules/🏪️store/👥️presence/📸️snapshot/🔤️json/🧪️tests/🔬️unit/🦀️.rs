@@ -6,22 +6,22 @@ use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use semio_framework_value::{native_decoding::NativeDecodeRetirementRecipient, native_encoding::NativeEncodeRetirementRecipient, NativeDecodeControl, NativeEncodeControl};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, semio_framework_value_derive::NativeReceive, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 struct Camera { eye_height: f64, zoom: f64, target: Option<String> }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, semio_framework_value_derive::NativeReceive, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 enum ShowMode { #[default] Shaded, Wire }
 
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, semio_framework_value_derive::NativeReceive, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 struct FixturePresence { camera: Camera, show_mode: ShowMode, selected_generation_id: Option<String>, label: String, revision: u64 }
 
-impl ArtifactPresenceSnapshot for FixturePresence {}
+impl ArtifactPresenceSnapshot for FixturePresence { fn decode_presence_native(bytes:&[u8],owner:&mut NativeSnapshotDecodeOwner<'_ ,'_>)->Result<Self,ValueError>{decode_presence_json(bytes,owner)} }
 
 fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap() }
 fn grant(fixture: &serde_json::Value) -> semio_framework_value::RetainedCloneGrant {

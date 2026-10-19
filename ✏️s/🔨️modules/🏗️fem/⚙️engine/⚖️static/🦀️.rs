@@ -1,14 +1,40 @@
-//! ⚖️ Linear static analysis: the closed first-party element set, the assembled structural `Model` and its dense
 //! linear-static solve `Ku = F` with reactions and per-element recovery. `semio-s-fem-analyses` is the sparse
+//! ⚖️ Linear static analysis: the closed first-party element set, the assembled structural `Model` and its dense
 //! multi-case pipeline for larger models.
 
 use semio_framework_dispatch_macros::dyn_enum_close;
-use semio_s_fem_algebra::{MatD, VecD};
-use semio_s_fem_elements2d::{Bar2, BeamEb2, PlateDkt, Quad4, Quad8, Tri3Cst, Tri6Lst};
-use semio_s_fem_elements3d::{Bar3, Frame3, Hex8, ShellFacet3, Tet4};
+use semio_s_fem_algebra::MatD;
+use semio_s_fem_algebra::VecD;
+use semio_s_fem_elements2d::Bar2;
+use semio_s_fem_elements2d::BeamEb2;
+use semio_s_fem_elements2d::PlateDkt;
+use semio_s_fem_elements2d::Quad4;
+use semio_s_fem_elements2d::Quad8;
+use semio_s_fem_elements2d::Tri3Cst;
+use semio_s_fem_elements2d::Tri6Lst;
+use semio_s_fem_elements3d::Bar3;
+use semio_s_fem_elements3d::Frame3;
+use semio_s_fem_elements3d::Hex8;
+use semio_s_fem_elements3d::ShellFacet3;
+use semio_s_fem_elements3d::Tet4;
 use semio_s_fem_model::__semio_dispatch_Element;
-use semio_s_fem_model::{AxialSpring, Dof, Element, ElementContext, ElementResult, FemError, MemberUdl, NodalLoad, Node, NodeDisplacement, NodeReaction, SolutionChecks, StaticResult, Support};
-use std::collections::{BTreeSet, HashMap, HashSet};
+use semio_s_fem_model::AxialSpring;
+use semio_s_fem_model::Dof;
+use semio_s_fem_model::Element;
+use semio_s_fem_model::ElementContext;
+use semio_s_fem_model::ElementResult;
+use semio_s_fem_model::FemError;
+use semio_s_fem_model::MemberUdl;
+use semio_s_fem_model::NodalLoad;
+use semio_s_fem_model::Node;
+use semio_s_fem_model::NodeDisplacement;
+use semio_s_fem_model::NodeReaction;
+use semio_s_fem_model::SolutionChecks;
+use semio_s_fem_model::StaticResult;
+use semio_s_fem_model::Support;
+use std::collections::BTreeSet;
+use std::collections::HashMap;
+use std::collections::HashSet;
 use std::fmt;
 
 // #region 🔖️Model

@@ -123,6 +123,7 @@ impl Drop for RegistryRetirement {fn drop(&mut self){assert!(std::thread::panick
 #[must_use="registry lease must reach terminal-empty"]
 pub struct RegistryLeaseRetirement {source:Option<SharedRegistry>}
 impl RegistryLeaseRetirement {
+    fn demands(&self,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{depth:usize::from(self.source.is_some()),..Default::default()})}
     pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {Ok(0)}
     pub fn next_capacity_byte_demand(&self,_copy:usize)->Result<usize,ValueError> {Ok(0)}
     pub fn next_release_byte_demand(&self)->Result<usize,ValueError> {Ok(0)}

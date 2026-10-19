@@ -157,9 +157,9 @@ struct RecursiveBranchSnapshot {
 
 
 impl store::os_store::serialization::ArtifactSqliteSnapshotHost for RecursiveBranchSnapshot {
-    
-    
-    
+
+
+
 }
 impl pack::snapshot::ArtifactSqliteSnapshot for RecursiveBranchSnapshot {
 const SQLITE_SCHEMA: &'static str = include_str!("../../🧩️composition/🌿️branch.sql");
@@ -201,27 +201,34 @@ struct RecursiveBranchDiff {
 }
 
 impl protocol::DiffAlgebra<RecursiveBranchSnapshot> for RecursiveBranchDiff {
-    fn inverse(&self, base: &RecursiveBranchSnapshot) -> Self {
-        Self { count: self.count.map(|_| base.count) }
-    }
+
     fn is_empty(&self) -> bool {
         self.count.is_none()
     }
 }
 
-impl protocol::MutationDiff<RecursiveBranchSnapshot> for RecursiveBranchDiff {
-    fn apply(&self, base: &RecursiveBranchSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<RecursiveBranchSnapshot> {
-        Ok(RecursiveBranchSnapshot {
-            count: self.count.unwrap_or(base.count),
-            label: base.label.clone(),
-            nested: base.nested.clone(),
-        })
+impl protocol::ColdDiffAlgebra<RecursiveBranchSnapshot> for RecursiveBranchDiff {
+    fn inverse(&self, base: &RecursiveBranchSnapshot) -> Self {
+        Self { count: self.count.map(|_| base.count) }
     }
+}
 
+impl protocol::MutationDiff<RecursiveBranchSnapshot> for RecursiveBranchDiff {
+
+
+
+}
+
+impl protocol::ColdMutationDiff<RecursiveBranchSnapshot> for RecursiveBranchDiff {
     fn absorb(&mut self, other: Self) {
         if other.count.is_some() {
             self.count = other.count;
         }
+    }
+
+    fn apply(&self, base: &mut RecursiveBranchSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+                if let Some(value) = self.count { base.count = value; }
+        Ok(())
     }
 }
 
@@ -229,9 +236,15 @@ impl Mutation<RecursiveBranchSnapshot> for RecursiveFixtureMutation {
     type Diff = RecursiveBranchDiff;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[RECURSIVE_FIXTURE_MUTATION_DESCRIPTOR];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &RECURSIVE_FIXTURE_MUTATION_DESCRIPTOR }
-    fn diff(&self, _base: &RecursiveBranchSnapshot) -> protocol::MutationOutcome<Self::Diff> { protocol::MutationOutcome::new(RecursiveBranchDiff { count: Some(self.value) }) }
+
+
+}
+
+impl crate::os_spr::ColdMutation<RecursiveBranchSnapshot> for RecursiveFixtureMutation {
+    type ReferenceDiff = RecursiveBranchDiff;
+    fn diff(&self, _base: &RecursiveBranchSnapshot) -> protocol::MutationOutcome<Self::ReferenceDiff> { protocol::MutationOutcome::new(RecursiveBranchDiff { count: Some(self.value) }) }
     fn inverse(&self, base: &RecursiveBranchSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| { vec![Self { value: base.count }] 
+    Ok((|| { vec![Self { value: base.count }]
     })())
 }
 }

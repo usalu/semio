@@ -7,6 +7,9 @@ use std::{mem::ManuallyDrop,sync::{Arc,atomic::{AtomicPtr,AtomicU8,AtomicU64,Ord
 
 static NEXT_ISSUANCE:AtomicU64=AtomicU64::new(1);
 
+#[cfg(test)]
+#[path="🚚️frontier/🧪️tests/🦀️.rs"]
+mod frontier_tests;
 /// 🎟️ The original producer supplies admission and demand functions without an erased allocation.
 pub struct SharedIssuer<T>{pub transfer_copy_bytes:fn(&T)->usize,pub demand:fn(&T)->Result<RetirementDemand,ValueError>,pub admit:fn(&mut Option<T>,RetainedCloneGrant)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>}
 impl<T> Copy for SharedIssuer<T>{}
@@ -17,6 +20,10 @@ impl<T:RetireOwned> SharedIssuer<T>{
 
 /// 🔐️ The private Arc has no raw, Weak, mutable or consuming escape hatch.
 pub struct SealedShared<T:Send+Sync+'static>{source:ManuallyDrop<Option<Arc<T>>>,issuer:SharedIssuer<T>,issuance:u64}
+impl<T:std::fmt::Debug+Send+Sync+'static> std::fmt::Debug for SealedShared<T>{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{self.get().fmt(f)}}
+impl<T:PartialEq+Send+Sync+'static> PartialEq for SealedShared<T>{fn eq(&self,other:&Self)->bool{self.get()==other.get()}}
+impl<T:Eq+Send+Sync+'static> Eq for SealedShared<T>{}
+
 /// 🎟️ Reserves a genuine original issuance before any dependent candidate allocation.
 pub struct SealedSharedBirth<T:Send+Sync+'static>{issuance:u64,marker:std::marker::PhantomData<T>}
 impl<T:Send+Sync+'static> SealedSharedBirth<T>{pub fn materialize(self,value:T,issuer:SharedIssuer<T>)->(SealedShared<T>,RetainedCloneProgress){(SealedShared{source:ManuallyDrop::new(Some(Arc::new(value))),issuer,issuance:self.issuance},RetainedCloneProgress{copied_items:1,retained_capacity_bytes:SealedShared::<T>::birth_bytes(),..Default::default()})}}
@@ -85,6 +92,8 @@ impl<T:Send+Sync+'static> SealedShared<T>{
  }
  pub fn identity(&self)->usize{self.source.as_ref().map_or(0,|source|Arc::as_ptr(source)as usize)}
  pub fn get(&self)->&T{self.source.as_deref().expect("sealed shared source has transferred")}
+ #[cfg(test)]
+ pub(crate) fn alias_count(&self)->usize{self.source.as_ref().map_or(0,Arc::strong_count)}
 }
 impl<T:Send+Sync+'static> std::ops::Deref for SealedShared<T>{type Target=T;fn deref(&self)->&T{self.get()}}
 impl<T:Send+Sync+'static> Drop for SealedShared<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.source.is_none(),"sealed source requires original granted handback");if self.source.is_none(){unsafe{ManuallyDrop::drop(&mut self.source);}}}}
@@ -92,24 +101,28 @@ impl<T:Send+Sync+'static> Drop for SealedShared<T>{fn drop(&mut self){assert!(st
 struct Cursor<T:Send+Sync+'static>{handle:SealedShared<T>,pending:ManuallyDrop<Option<T>>,active:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>}
 impl<T:Send+Sync+'static> Cursor<T>{
  fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
-  if self.handle.source.is_some(){return Ok(RetirementDemand{release_bytes:SealedShared::<T>::birth_bytes(),depth:1,..Default::default()});}
-  if let Some(value)=self.pending.as_ref(){return (self.handle.issuer.demand)(value);}
+  if self.handle.source.is_some(){let copy_bytes=size_of::<Option<Arc<T>>>().checked_add(size_of::<Option<T>>().checked_mul(2).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original shared payload transfer footprint overflow"))?).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original shared payload transfer footprint overflow"))?;return Ok(RetirementDemand{copy_bytes,release_bytes:SealedShared::<T>::birth_bytes(),depth:1,..Default::default()});}
+  if let Some(value)=self.pending.as_ref(){return match self.handle.issuer{SharedIssuer::Native{demand,..}|SharedIssuer::Factory{demand,..}=>demand(value)};}
   self.active.as_ref().map_or(Ok(Default::default()),|owner|crate::factory_ticket_demands(owner,body))
  }
- fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+ fn step(&mut self,grant:RetainedCloneGrant)->Result<RetirementStep,ValueError>{
   let demand=self.demands(grant.maximum_copy_bytes)?;
-  if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Default::default());}
+  if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetirementStep::BudgetExhausted);}
   if let Some(source)=self.handle.source.take(){
    let value=Arc::into_inner(source);let last=value.is_some();*self.pending=value;
-   return Ok(RetainedCloneProgress{copied_items:1,released_bytes:if last{demand.release_bytes}else{0},..Default::default()});
+   return Ok(RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:if last{demand.release_bytes}else{0},..Default::default()}));
   }
-  if self.pending.is_some(){return match (self.handle.issuer.admit)(&mut self.pending,grant)?{Some((owner,progress))=>{*self.active=Some(owner);if !progress.fits(grant)||progress.retained_capacity_bytes!=demand.capacity_bytes{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"sealed original issuer changed its admitted receipt"));}Ok(progress)},None=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"sealed original issuer omitted its payload"))};}
-  crate::close_factory_ticket(&mut self.active,grant).map(|step|step.progress())
+  if self.pending.is_some(){return match self.handle.issuer{
+   SharedIssuer::Native{retire,..}=>{let owner=retire(self.pending.take().expect("funded original typed payload"));Ok(RetirementStep::ChildProgress(owner,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}))},
+   SharedIssuer::Factory{admit,..}=>match admit(&mut self.pending,grant)?{Some((owner,progress))=>{*self.active=Some(owner);if !progress.fits(grant)||progress.retained_capacity_bytes!=demand.capacity_bytes{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"sealed original issuer changed its admitted receipt"));}Ok(RetirementStep::Progress(progress))},None=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"sealed original issuer omitted its payload"))},
+  };}
+  crate::close_factory_ticket(&mut self.active,grant).map(|step|RetirementStep::Progress(step.progress()))
  }
 }
 impl<T:Send+Sync+'static> RetireOwned for SealedShared<T>{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(Cursor{handle:self,pending:ManuallyDrop::new(None),active:ManuallyDrop::new(None)})}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Cursor<T>>())}fn controlled_retirement_supported()->bool{true}}
 impl<T:Send+Sync+'static> RetirementCursor for Cursor<T>{
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete;}match self.step(grant){Ok(progress)=>RetirementStep::Progress(progress),Err(error)=>RetirementStep::Failure(error)}}
+ fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.demands(body)}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete;}self.step(grant).unwrap_or_else(RetirementStep::Failure)}
  fn terminal_is_empty(&self)->bool{self.handle.source.is_none()&&self.pending.is_none()&&self.active.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{if self.handle.source.is_some(){Ok(0)}else if let Some(value)=self.pending.as_ref(){Ok((self.handle.issuer.demand)(value)?.copy_bytes)}else{self.active.as_ref().map_or(Ok(0),|owner|owner.next_copy_byte_demand())}}
  fn next_selected_work_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.demands(body)?.copy_bytes)}

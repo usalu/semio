@@ -8,7 +8,8 @@ use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2
 use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::fem2d_measure_action;
 use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::FEM2D_PLAY_CONTROLLER_ID;
 use semio_framework_pack_json::json;
-use semio_framework_plugin::{ViewModel, WindowMeasure};
+use semio_framework_plugin::ViewModel;
+use semio_framework_plugin::WindowMeasure;
 
 pub const UTILITY_ID: &str = FEM2D_UTILITY_TRANSFORM;
 

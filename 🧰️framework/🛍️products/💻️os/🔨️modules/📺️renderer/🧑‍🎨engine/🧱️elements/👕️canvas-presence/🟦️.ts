@@ -12,6 +12,7 @@ export type LocalPresenceWindowPublicationV1 = {
 
 const localViews = new Map<string, LocalPresenceWindowPublicationV1>();
 const localListeners = new Set<() => void>();
+const windowKey = (runtimeKey: string, windowId: string): string => `${runtimeKey.length}:${runtimeKey}${windowId}`;
 
 const artifactRosters = new Map<string, readonly ArtifactPresencePeer[]>();
 const rosterListeners = new Set<() => void>();
@@ -22,19 +23,19 @@ function notify(listeners: Set<() => void>): void {
 
 /** 📡️ Publish (or replace) one window's live camera + pointer for the next presence heartbeat. */
 export function publishLocalPresenceWindowViewV1(runtimeKey: string, windowId: string, view: ArtifactPresenceWindowView): void {
-  localViews.set(windowId, { runtimeKey, view: { ...view, windowId }, updatedAtMs: Date.now() });
+  localViews.set(windowKey(runtimeKey, windowId), { runtimeKey, view: { ...view, windowId }, updatedAtMs: Date.now() });
   notify(localListeners);
 }
 
-export function clearLocalPresenceWindowViewV1(windowId: string): void {
-  if (!localViews.delete(windowId)) return;
+export function clearLocalPresenceWindowViewV1(windowId: string, runtimeKey: string): void {
+  if (!localViews.delete(windowKey(runtimeKey, windowId))) return;
   notify(localListeners);
 }
 
 /** 🧺 Every live local window view for `runtimeKey`, ready to stamp onto an outbound PresenceHeartbeat. */
 export function collectLocalPresenceWindowViewsV1(runtimeKey?: string): ArtifactPresenceWindowView[] {
   const views: ArtifactPresenceWindowView[] = [...localViews.values()]
-    .filter((entry) => runtimeKey === undefined || entry.runtimeKey === runtimeKey || entry.runtimeKey === "local")
+    .filter((entry) => runtimeKey === undefined || entry.runtimeKey === runtimeKey)
     .map((entry) => entry.view);
   views.sort((a, b) => (a.windowId < b.windowId ? -1 : a.windowId > b.windowId ? 1 : 0));
   return views;
@@ -46,13 +47,14 @@ const localTyping = new Map<string, { readonly runtimeKey: string; readonly typi
  * ephemeral shared preview peers render at this author's caret (design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-
  * EDITING); the run itself lands as ONE edit when it commits. Excerpts are cut to the wire bound. */
 export function publishLocalPresenceTypingV1(runtimeKey: string, windowId: string, preview: { readonly deleted: string; readonly insert: string } | null): void {
-  const previous = localTyping.get(windowId)?.typing;
+  const key = windowKey(runtimeKey, windowId);
+  const previous = localTyping.get(key)?.typing;
   if (preview === null) {
-    if (!localTyping.delete(windowId)) return;
+    if (!localTyping.delete(key)) return;
   } else {
     const typing = { windowId, deleted: presenceTypingExcerpt(preview.deleted), insert: presenceTypingExcerpt(preview.insert) };
     if (previous !== undefined && previous.deleted === typing.deleted && previous.insert === typing.insert) return;
-    localTyping.set(windowId, { runtimeKey, typing });
+    localTyping.set(key, { runtimeKey, typing });
   }
   notify(localListeners);
 }
@@ -61,7 +63,7 @@ export function publishLocalPresenceTypingV1(runtimeKey: string, windowId: strin
  * outbound PresenceHeartbeat. */
 export function collectLocalPresenceTypingV1(runtimeKey?: string): ArtifactPresenceTyping[] {
   return [...localTyping.values()]
-    .filter((entry) => runtimeKey === undefined || entry.runtimeKey === runtimeKey || entry.runtimeKey === "local")
+    .filter((entry) => runtimeKey === undefined || entry.runtimeKey === runtimeKey)
     .map((entry) => entry.typing)
     .sort((a, b) => (a.windowId < b.windowId ? -1 : a.windowId > b.windowId ? 1 : 0))
     .slice(0, PRESENCE_PEER_WIRE_LIMITS_V1.maximumTypingRuns);
@@ -81,9 +83,6 @@ export function subscribeLocalPresenceWindowViewsV1(listener: () => void): () =>
 /** 👥️ Store the verified artifact roster (full wire peers, including views + interaction). */
 export function publishArtifactPresenceRosterV1(runtimeKey: string, peers: readonly ArtifactPresencePeer[]): void {
   artifactRosters.set(runtimeKey, peers);
-  // 👕️ Surface hosts mount with runtimeKey "local" until they thread the document key; mirror the
-  // latest verified roster there so CanvasPresenceOverlayV1 paints without a second wiring path.
-  artifactRosters.set("local", peers);
   notify(rosterListeners);
 }
 
@@ -116,7 +115,7 @@ export function publishLocalActiveToolV1(runtimeKey: string, toolId: string | nu
 }
 
 export function collectLocalActiveToolV1(runtimeKey: string): string | undefined {
-  return localActiveTools.get(runtimeKey) ?? localActiveTools.get("local");
+  return localActiveTools.get(runtimeKey);
 }
 
 const localActors = new Map<string, string>();
@@ -126,24 +125,19 @@ const actorListeners = new Set<() => void>();
 export function publishLocalPresenceActorV1(runtimeKey: string, actorId: string | null | undefined): void {
   if (!actorId || actorId === "__local__") {
     localActors.delete(runtimeKey);
-    if (runtimeKey !== "local") localActors.delete("local");
   } else {
     localActors.set(runtimeKey, actorId);
-    localActors.set("local", actorId);
   }
   notify(actorListeners);
 }
 
 export function clearLocalPresenceActorV1(runtimeKey: string): void {
-  const prior = localActors.get(runtimeKey);
   if (!localActors.delete(runtimeKey)) return;
-  if (runtimeKey !== "local" && localActors.get("local") === prior) localActors.delete("local");
   notify(actorListeners);
 }
 
 export function localPresenceActorV1(runtimeKey: string | null | undefined): string | null {
-  if (!runtimeKey) return localActors.get("local") ?? null;
-  return localActors.get(runtimeKey) ?? localActors.get("local") ?? null;
+  return runtimeKey ? localActors.get(runtimeKey) ?? null : null;
 }
 
 export function subscribeLocalPresenceActorV1(listener: () => void): () => void {

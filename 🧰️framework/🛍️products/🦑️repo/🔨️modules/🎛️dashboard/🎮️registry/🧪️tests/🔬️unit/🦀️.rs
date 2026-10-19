@@ -19,6 +19,57 @@ fn neutral_graph_publication_uses_declared_partition_and_preserves_charge_identi
     std::fs::remove_dir_all(root).unwrap();
 }
 
+#[test]
+fn friendly_repo_actions_bind_required_values_for_both_implementations() {
+    let (_, registry) = fixture("repo-selected");
+    for (id, name, value) in [("repo:draft.start", "title", "Human Draft 🦑"), ("repo:draft.discard", "slug", "HUMAN-DRAFT"), ("repo:ticket.reopen:26/08/01/CLOSED-PROBE", "prompt", "Continue the human request 🦑")] {
+        let entry = registry.find(id).unwrap();
+        assert!(entry.listed && entry.mutating);
+        let parameter = registry.parameters(entry).remove(0);
+        assert_eq!(parameter.id, name);
+        assert!(parameter.required && parameter.title.is_some() && parameter.description.is_some());
+        assert!(entry.title.is_some() && entry.description.is_some());
+        assert_eq!(parameter.origin, Origin::Repo);
+        assert!(registry.resolve_with(id, &Request::default(), RunPolicy::default()).is_err());
+        let request = Request::with_parameters(vec![(name.into(), value.into())]);
+        let rust = registry.resolve_with(id, &request, RunPolicy::default()).unwrap();
+        let go = registry.resolve_with(id, &request, RunPolicy { repo: RepoImplementation::Go, ..RunPolicy::default() }).unwrap();
+        let action: RepoAction = serde_json::from_str(&rust.processes[0].args[2]).unwrap();
+        assert_eq!(action.go_argv(), go.processes[0].args);
+        assert!(go.processes[0].args.contains(&value.to_string()));
+    }
+    let id = "repo:analyze:rust";
+    let request = Request::with_parameters(vec![("policy".into(), "code".into())]);
+    assert_eq!(registry.resolve_with(id, &request, RunPolicy { repo: RepoImplementation::Go, ..RunPolicy::default() }).unwrap().processes[0].args, vec!["analyze", "rust", "--policy", "code"]);
+    assert!(registry.resolve_with(id, &Request::with_parameters(vec![("policy".into(), "absent".into())]), RunPolicy::default()).is_err());
+}
+
+#[test]
+fn friendly_repo_actions_reopen_existing_nested_tickets() {
+    let id = "26/09/23/PARENT/CHILD";
+    let facts = Facts { tickets: vec![TicketFacts { id: id.into(), title: "Child Ticket".into(), ..Default::default() }], ..Default::default() };
+    let registry = Registry::build(Path::new("/workspace"), &facts);
+    let key = format!("repo:ticket.reopen:{id}");
+    let entry = registry.find(&key).unwrap();
+    assert!(entry.listed && entry.mutating);
+    let request = Request::with_parameters(vec![("prompt".into(), "Continue the child ticket".into())]);
+    let launch = registry.resolve_with(&key, &request, RunPolicy::default()).unwrap();
+    let action: RepoAction = serde_json::from_str(&launch.processes[0].args[2]).unwrap();
+    assert_eq!(action, RepoAction::TicketReopen { id: id.into(), prompt: "Continue the child ticket".into() });
+}
+
+#[test]
+fn exclusive_agent_clients_match_the_language_agnostic_authority_vectors() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧭️authority/🔣️.json")).unwrap();
+    for row in fixture["agentCases"].as_array().unwrap() {
+        let client = row["client"].as_str().unwrap();
+        let declaration = serde_json::json!({ "tools": [{ "id": "server", "command": ["bun", "--version"], "mcp": { "server": "server", "clients": { (client): {} } } }] });
+        let facts = Facts { projects: vec![ProjectFacts { name: "workspace".into(), root: ".".into(), manifest: "📋️project.json".into(), dashboard: Some(declaration), targets: Vec::new() }], ..Default::default() };
+        let registry = Registry::build(Path::new("/workspace"), &facts);
+        assert_eq!(registry.problems().is_empty(), row["accepted"].as_bool().unwrap(), "{client}: {:?}", registry.problems());
+    }
+}
+
 fn materialise(name: &str) -> PathBuf { materialise_text(name, FIXTURE) }
 
 fn materialise_text(name: &str, fixture: &str) -> PathBuf {
@@ -177,7 +228,7 @@ fn global_axes_select_tools_by_verb_and_build_flags_do_not_reach_them() {
     let tool = registry.find("tool:workspace/bun-test").unwrap();
     let ids: Vec<String> = registry.parameters(tool).iter().map(|parameter| parameter.id.clone()).collect();
     assert_eq!(ids, ["test-level", "build-mode", "cargo-jobs", "project", "file", "bail"]);
-    let launch = resolve(&registry, "tool:workspace/bun-test", &request(&[("file", "a.test.ts"), ("build-mode", "ship"), ("test-level", "quick"), ("bail", "true")], &[], &[]));
+    let launch = resolve(&registry, "tool:workspace/bun-test", &request(&[("file", "a.test.ts"), ("build-mode", "release"), ("test-level", "quick"), ("bail", "true")], &[], &[]));
     let process = &launch.processes[0];
     assert_eq!(process.args, ["repo", "exec", "--projects=workspace", "--", "bun", "test", "a.test.ts", "--bail"]);
     assert_eq!((env_of(process, "SEMIO_BUILD_MODE"), env_of(process, "SEMIO_TEST_LEVEL"), env_of(process, "BUN_TEST_BAIL")), (Some("release"), Some("quick"), Some("workspace")));
@@ -361,12 +412,12 @@ fn a_compound_that_requires_itself_is_refused() {
 }
 
 #[test]
-fn entries_are_searched_by_label_and_identity_and_closed_tickets_stay_unlisted() {
+fn entries_are_searched_by_label_and_identity_and_closed_tickets_offer_reopen() {
     let (_, registry) = fixture("search");
     let ids = |words: &[&str], unlisted: bool| registry.search(words, unlisted).into_iter().map(|position| registry.entries()[position].id.clone()).collect::<Vec<_>>();
     assert!(ids(&["dev", "shell"], false).contains(&"playground:shell".to_string()));
     assert!(ids(&["design", "3d"], false).contains(&"playground:cad".to_string()), "a playground is found by its aliases");
-    assert!(ids(&["CLOSED-PROBE"], false).is_empty());
+    assert_eq!(ids(&["CLOSED-PROBE"], false), vec!["repo:ticket.reopen:26/08/01/CLOSED-PROBE"]);
     assert!(ids(&["closed-probe"], true).iter().any(|id| id == "repo:ticket.reopen:26/08/01/CLOSED-PROBE"));
 }
 
@@ -409,7 +460,7 @@ fn every_scenario_of_the_registry_feature_is_proved_by_a_test_of_this_file() {
         ("A compound starts its members in order", &["a_compound_starts_its_members_in_order_with_pins_and_member_environment"]),
         ("A command with a required parameter is not started without it", &["a_required_parameter_must_be_chosen_and_a_choice_must_be_one_of_its_values"]),
         ("A declaration that breaks the schema is reported", &["references_that_name_nothing_are_problems_not_panics"]),
-        ("Build, test and publish commands are found by their verb and owner", &["verbs_come_from_the_leading_word_with_a_fallback", "entries_are_searched_by_label_and_identity_and_closed_tickets_stay_unlisted"]),
+        ("Build, test and publish commands are found by their verb and owner", &["verbs_come_from_the_leading_word_with_a_fallback", "entries_are_searched_by_label_and_identity_and_closed_tickets_offer_reopen"]),
         ("A build starts from the published project graph", &["a_build_reuses_the_neutral_graph_only_while_its_manifest_inputs_are_unchanged"]),
         ("A changed project manifest rebuilds the project graph", &["a_build_reuses_the_neutral_graph_only_while_its_manifest_inputs_are_unchanged"]),
     ];
@@ -439,8 +490,39 @@ fn a_tool_that_is_an_mcp_server_lists_the_clients_that_start_it_and_a_wrong_expo
 
 #[test]
 fn every_action_has_a_distinct_key_the_registry_grammar_accepts() {
-    let actions = [RepoAction::GoalsList, RepoAction::GoalsTree, RepoAction::TreeMonorepo, RepoAction::TreeGoal, RepoAction::TreeStatute, RepoAction::TreeTerritory, RepoAction::StatutesCatalog, RepoAction::Analyze { scope: "rust".into() }, RepoAction::TicketShow { id: "26/09/06/X".into() }, RepoAction::TicketFiles { id: "26/09/06/X".into() }, RepoAction::TicketClose { id: "26/09/06/X".into() }, RepoAction::TicketReopen { id: "26/09/06/X".into() }];
+    let actions = [RepoAction::GoalsList, RepoAction::GoalsTree, RepoAction::TreeMonorepo, RepoAction::TreeGoal, RepoAction::TreeStatute, RepoAction::TreeTerritory, RepoAction::StatutesCatalog, RepoAction::Analyze { scope: "rust".into(), policy: None }, RepoAction::TicketShow { id: "26/09/06/X".into() }, RepoAction::TicketFiles { id: "26/09/06/X".into() }, RepoAction::TicketClose { id: "26/09/06/X".into() }, RepoAction::TicketReopen { id: "26/09/06/X".into(), prompt: "Continue".into() }, RepoAction::DraftStart { title: "Example".into() }, RepoAction::DraftDiscard { slug: "EXAMPLE".into() }];
     let keys: std::collections::BTreeSet<String> = actions.iter().map(dashboard_repo_domain::action_key).collect();
     assert_eq!(keys.len(), actions.len());
     for key in keys { assert!(CommandId::parse(&format!("repo:{key}")).is_ok_and(|id| matches!(id, CommandId::Repo { .. })), "{key}"); }
+}
+
+#[test]
+fn localized_metadata_matches_the_shared_vectors_and_preserves_launch_identity() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🌐️metadata/🔣️.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap() {
+        let mut tool = serde_json::json!({ "id": "source-open", "command": ["bun", "--version"] });
+        for (key, value) in row["metadata"].as_object().unwrap() { tool[key] = value.clone(); }
+        let facts = Facts { projects: vec![ProjectFacts { name: "workspace".into(), root: ".".into(), manifest: "📋️project.json".into(), dashboard: Some(serde_json::json!({ "tools": [tool] })), targets: Vec::new() }], ..Default::default() };
+        let registry = Registry::build(Path::new("/workspace"), &facts);
+        assert_eq!(registry.problems().is_empty(), row["accepted"].as_bool().unwrap(), "{}: {:?}", row["name"], registry.problems());
+    }
+    let facts: Facts = serde_json::from_value(fixture["workspace"].clone()).unwrap();
+    let registry = Registry::build(Path::new("/workspace"), &facts);
+    assert!(registry.problems().is_empty(), "{:?}", registry.problems());
+    let entry = registry.find("tool:workspace/source-open").unwrap();
+    let parameter = registry.parameters(entry).into_iter().find(|parameter| parameter.id == "path").unwrap();
+    for row in fixture["display"].as_array().unwrap() {
+        let locale = if row["locale"] == "en" { Locale::En } else { Locale::De };
+        assert_eq!(entry.display_title(locale), row["title"].as_str().unwrap());
+        assert_eq!(entry.description.as_ref().unwrap().get(locale), row["description"].as_str().unwrap());
+        assert_eq!(parameter.display_title(locale), row["parameterTitle"].as_str().unwrap());
+        assert_eq!(parameter.description.as_ref().unwrap().get(locale), row["parameterDescription"].as_str().unwrap());
+        assert!(registry.search(&[row["title"].as_str().unwrap()], false).iter().any(|index| registry.entries()[*index].id == entry.id));
+    }
+    let listed = registry.entry_json(entry);
+    assert_eq!(listed["title"], fixture["workspace"]["projects"][0]["dashboard"]["tools"][0]["title"]);
+    assert_eq!(listed["parameters"][0]["title"], fixture["workspace"]["projects"][0]["dashboard"]["tools"][0]["parameters"][0]["title"]);
+    let launch = registry.resolve(&entry.id, &request(&[("path", "a b.rs")], &[], &[])).unwrap();
+    assert_eq!(launch.command_id, entry.id);
+    assert!(launch.processes[0].args.iter().any(|argument| argument == "a b.rs"));
 }

@@ -1,0 +1,81 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximumPages",
+    "receiverGrant",
+    "pageLengths",
+    "cancellationPrefixes",
+    "requiredOrder"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumPages": {
+      "const": 8
+    },
+    "receiverGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "const": 64
+        },
+        "maximumCopyBytes": {
+          "const": 4096
+        },
+        "maximumCapacityBytes": {
+          "const": 65536
+        },
+        "maximumReleaseBytes": {
+          "const": 262144
+        },
+        "maximumDepth": {
+          "const": 64
+        }
+      }
+    },
+    "pageLengths": {
+      "const": [
+        0,
+        1,
+        4091,
+        4096
+      ]
+    },
+    "cancellationPrefixes": {
+      "const": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    "requiredOrder": {
+      "const": [
+        "presentation",
+        "descriptor",
+        "receive",
+        "source-close",
+        "publish",
+        "ack",
+        "original-close"
+      ]
+    }
+  }
+}

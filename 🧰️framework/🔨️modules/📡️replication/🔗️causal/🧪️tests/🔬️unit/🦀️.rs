@@ -21,19 +21,30 @@ impl semio_framework_value::FromValue for CausalAddDiff {
     }
 }
 impl semio_framework_mutation_diff::DiffAlgebra<i64> for CausalAddDiff {
-    fn inverse(&self, _base: &i64) -> Self {
-        Self { delta: -self.delta }
-    }
+
     fn is_empty(&self) -> bool {
         self.delta == 0
     }
 }
-impl semio_framework_mutation_diff::MutationDiff<i64> for CausalAddDiff {
-    fn apply(&self, base: &i64, _capability: semio_framework_mutation_diff::ApplyCapability) -> semio_framework_mutation_diff::MutationApplyResult<i64> {
-        Ok(base + self.delta)
+
+impl semio_framework_mutation_diff::ColdDiffAlgebra<i64> for CausalAddDiff {
+    fn inverse(&self, _base: &i64) -> Self {
+        Self { delta: -self.delta }
     }
+}
+impl semio_framework_mutation_diff::MutationDiff<i64> for CausalAddDiff {
+
+
+}
+
+impl semio_framework_mutation_diff::ColdMutationDiff<i64> for CausalAddDiff {
     fn absorb(&mut self, other: Self) {
         self.delta += other.delta;
+    }
+
+    fn apply(&self, base: &mut i64, _capability: semio_framework_mutation_diff::ApplyCapability) -> semio_framework_mutation_diff::MutationApplyResult<()> {
+        *base += self.delta;
+        Ok(())
     }
 }
 
@@ -75,6 +86,12 @@ impl semio_framework_replication_mutation::Mutation<i64> for CausalAddOp {
     fn descriptor(&self) -> &'static semio_framework_replication_mutation::MutationLeafDescriptor {
         &CAUSAL_ADD_DESCRIPTOR
     }
+
+
+}
+
+impl semio_framework_replication_mutation::ColdMutation<i64> for CausalAddOp {
+    type ReferenceDiff = CausalAddDiff;
     fn diff(&self, _base: &i64) -> semio_framework_replication_mutation::MutationOutcome<CausalAddDiff> {
         semio_framework_replication_mutation::MutationOutcome::new(CausalAddDiff { delta: self.delta })
     }

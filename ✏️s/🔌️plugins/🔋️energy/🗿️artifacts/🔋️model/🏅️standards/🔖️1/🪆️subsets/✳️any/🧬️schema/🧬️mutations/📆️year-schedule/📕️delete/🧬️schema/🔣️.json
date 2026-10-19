@@ -35,5 +35,8 @@
         "order": 10
       }
     }
+  },
+  "x-semio-inverse-rows": {
+    "bounded": 1025
   }
 }

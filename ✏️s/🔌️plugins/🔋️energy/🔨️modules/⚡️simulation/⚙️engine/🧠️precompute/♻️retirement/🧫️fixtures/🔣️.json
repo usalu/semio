@@ -1,0 +1,34 @@
+{
+  "contract": "semio.energy.precompute.retirement/v1",
+  "bodyBytes": 4096,
+  "cutoffs": [
+    0,
+    1,
+    16,
+    64,
+    256,
+    1024
+  ],
+  "cases": [
+    {
+      "name": "empty-builder",
+      "model": "empty",
+      "complete": false
+    },
+    {
+      "name": "partial-single-zone-builder",
+      "model": "single",
+      "complete": false
+    },
+    {
+      "name": "complete-single-zone-builder",
+      "model": "single",
+      "complete": true
+    },
+    {
+      "name": "complete-bestest600",
+      "model": "600",
+      "complete": true
+    }
+  ]
+}

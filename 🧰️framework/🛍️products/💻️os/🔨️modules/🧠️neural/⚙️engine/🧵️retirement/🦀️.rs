@@ -93,6 +93,7 @@ impl RetireOwned for ValueRetirement {
     fn controlled_retirement_supported()->bool {true}
 }
 impl RetirementCursor for ValueRetirement {
+    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.root.as_ref().map_or_else(||self.owners.next_demand(body),|owner|owner.next_demand(body))}
     fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep {
         use semio_framework_value::retirement::RetirementStep as Step;
         match Self::close_step(self,grant) {Err(error)=>Step::Failure(error),Ok(RetainedCloneStep::Complete(progress)) if progress==RetainedCloneProgress::default()=>Step::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>Step::Progress(progress)}
@@ -373,6 +374,8 @@ mod tests;
 #[macro_export]
 macro_rules! original_retirement_cursor {
     ($type:ty) => {impl ::semio_framework_value::retirement::RetirementCursor for $type {
+        fn next_demand(&self,body:usize)->Result<::semio_framework_value::RetirementDemand,::semio_framework_value::ValueError>{Self::demands(self,body)}
+
         fn close_step(&mut self,grant: ::semio_framework_value::retained_clone::RetainedCloneGrant)->::semio_framework_value::retirement::RetirementStep {match Self::close_step(self,grant){Err(error)=>::semio_framework_value::retirement::RetirementStep::Failure(error),Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)) if progress==::semio_framework_value::retained_clone::RetainedCloneProgress::default()=>::semio_framework_value::retirement::RetirementStep::Complete,Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)|::semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress))=>::semio_framework_value::retirement::RetirementStep::Progress(progress)}}
         fn terminal_is_empty(&self)->bool {Self::terminal_is_empty(self)}
         fn next_work_byte_demand(&self)->Result<usize,::semio_framework_value::ValueError> {self.next_copy_byte_demand()}
@@ -385,6 +388,8 @@ macro_rules! original_retirement_cursor {
 /// 🪪️ Closes one boxed operator's retained fields through admitted retirement grants.
 pub struct OperatorRetirement {pub operator:Option<Box<dyn Operator>>,pub values:ValueRetirement}
 impl OperatorRetirement {
+    pub fn demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{if !self.values.terminal_is_empty(){return RetirementCursor::next_demand(&self.values,body);}let Some(value)=self.operator.as_ref()else{return Ok(Default::default())};if value.retirement_is_empty(){return Ok(semio_framework_value::RetirementDemand{release_bytes:size_of_val(value.as_ref()),depth:1,..Default::default()});}Ok(semio_framework_value::RetirementDemand{copy_bytes:value.next_retire_copy_byte_demand()?,capacity_bytes:value.next_retire_capacity_byte_demand(body)?,release_bytes:value.next_retire_release_byte_demand()?,depth:value.next_retire_depth_demand()?})}
+
     pub fn terminal_is_empty(&self)->bool {self.operator.is_none()&&self.values.terminal_is_empty()}
     pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {if !self.values.terminal_is_empty(){self.values.next_copy_byte_demand()}else{self.operator.as_ref().map_or(Ok(0),|value|value.next_retire_copy_byte_demand())}}
     pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {if !self.values.terminal_is_empty(){self.values.next_capacity_byte_demand(copy)}else{self.operator.as_ref().map_or(Ok(0),|value|value.next_retire_capacity_byte_demand(copy))}}

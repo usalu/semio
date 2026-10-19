@@ -8,21 +8,25 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "add-counter-sequence")]
-#[composite(snapshot = Counter, op = CounterMutation)]
+#[composite(snapshot = Counter, op = CounterMutation, reference = Counter)]
 pub struct AddCounterSequence {
     pub deltas: Vec<i64>,
 }
 
 impl CompositeMutationKind<Counter, CounterMutation> for AddCounterSequence {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "counter", kind: "add-counter-sequence", record: "AddedCounterSequence" };
+
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native("Add counter sequence", "Zählersequenz hinzufügen")
+    }
+}
+
+impl crate::os_spr::ColdCompositeMutationKind<Counter, CounterMutation> for AddCounterSequence {
     fn plan(&self, _base: &Counter, planner: &mut Planner<Counter, CounterMutation>) -> Result<(), PlanError> {
         for delta in &self.deltas {
             planner.call(CounterMutation::AddCounter(AddCounter { delta: *delta }))?;
         }
         Ok(())
-    }
-    fn label(&self) -> crate::LocalizedLabel {
-        crate::LocalizedLabel::native("Add counter sequence", "Zählersequenz hinzufügen")
     }
 }
 

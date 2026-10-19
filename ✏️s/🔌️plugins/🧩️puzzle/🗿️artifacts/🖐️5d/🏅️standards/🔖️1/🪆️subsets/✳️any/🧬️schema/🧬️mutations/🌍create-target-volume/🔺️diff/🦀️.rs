@@ -1,6 +1,7 @@
-//! 🔺️ Sparse diff builder for `CreateTargetVolume` — a real append-only insert. Fatal when the id
 //! already exists in `base`.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dTargetVolumesDelta};
+//! 🔺️ Sparse diff builder for `CreateTargetVolume` — a real append-only insert. Fatal when the id
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dTargetVolumesDelta;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff

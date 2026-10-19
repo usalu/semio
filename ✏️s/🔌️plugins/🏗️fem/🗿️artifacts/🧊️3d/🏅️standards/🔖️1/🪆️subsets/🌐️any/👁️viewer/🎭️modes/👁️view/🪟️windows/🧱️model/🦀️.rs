@@ -1,5 +1,5 @@
-//! 🧱️ FEM 3D viewer — the `view` mode's Model window: a read-only World3d render of the undeformed
 //! structure (nodes, bar/frame members, meshed solids, supports, loads) — the exact scene the
+//! 🧱️ FEM 3D viewer — the `view` mode's Model window: a read-only World3d render of the undeformed
 //! editor's own Model window renders (the shared `🎬️scene` node's `fem3d_scene_parts(doc, None,
 //! deformation_scale, None)` call: no displacement offset, no stress coloring), never imported
 //! through the sibling editor module, which `policyViewerPurityBreaches` forbids outright. Camera is a hardcoded default
@@ -9,7 +9,11 @@
 //! no `WindowKindDefinition` object is built anywhere, so this node exports just its id/body-key
 //! constants and `render()`.
 
-use semio_framework_plugin::{world3d_scene, world3d_selection_json, WorldSunConfig};
+use semio_framework_plugin::world3d_scene;
+
+use semio_framework_plugin::world3d_selection_json;
+
+use semio_framework_plugin::WorldSunConfig;
 
 //#region 🔖️Constants
 /// 🪟️ The manifest's viewer Model window kind id.
@@ -22,11 +26,11 @@ pub const BODY_KEY: &str = "fem3d.view.model";
 /// 🧱️ Renders the undeformed structure with a hardcoded default camera — no persisted per-session
 /// camera (`Config = NoConfig`), no displacement offset, no stress coloring: the exact same scene the
 /// editor's own Model window renders for the same document.
-pub fn render(doc: &semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot, visual: Option<&semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::Fem3dPageVisualLease>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(doc: &semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot, visual: Option<&crate::live_visual::Fem3dPageVisualLease>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let camera = semio_s_artifact_fem_3d_scene::viewport::INITIAL;
-    let (meshes_json, instances_json) = semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_scene_parts(doc, None, doc.analysis.deformation_scale, None);
+    let (meshes_json, instances_json) = semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_scene_parts(doc, None, doc.analysis.deformation_scale, None).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("fem3d.scene-identity", "FEM3d scene target identity refused"))?;
     let mut scene = world3d_scene(semio_s_artifact_fem_3d_scene::viewport::scene_camera_json(&camera), meshes_json, instances_json, world3d_selection_json("rectangle", &[], None), &WorldSunConfig::default());
-    scene.snapshot = visual.map(semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::Fem3dPageVisualLease::snapshot);
+    scene.snapshot = visual.map(crate::live_visual::Fem3dPageVisualLease::snapshot);
     semio_s_fem_app_surface::world_3d_surface(BODY_KEY, &scene)
 }
 //#endregion 🔖️Render

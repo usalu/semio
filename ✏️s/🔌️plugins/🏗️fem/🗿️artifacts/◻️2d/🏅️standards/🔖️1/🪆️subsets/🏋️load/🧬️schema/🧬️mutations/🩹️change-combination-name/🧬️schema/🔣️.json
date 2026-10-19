@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/load/mutation/change-combination-name/schema.json",
+  "title": "ChangeCombinationName",
+  "description": "Changes only the authored combination name.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "name"
+  ],
+  "x-semio-invariant": [
+    {
+      "id": "combination-not-self-weighted",
+      "description": {
+        "en": "No term weights the combination itself.",
+        "de": "Kein Summand gewichtet die Kombination selbst."
+      }
+    }
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeCombinationName",
+      "description": "The internally tagged discriminator `#[value(tag = \"mutation\")]` puts on the wire.",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Load combination",
+          "de": "Lastfallkombination"
+        },
+        "ref": {
+          "kind": "combination",
+          "domain": "fem2d",
+          "granularity": "combination"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Bezeichnung"
+        },
+        "group": "identity",
+        "order": 20
+      }
+    }
+  }
+}

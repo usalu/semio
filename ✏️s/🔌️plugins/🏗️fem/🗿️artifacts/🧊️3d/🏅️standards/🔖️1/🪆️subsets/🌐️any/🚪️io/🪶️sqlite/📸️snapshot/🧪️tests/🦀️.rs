@@ -5,20 +5,21 @@ fn sqlite_snapshot_fem3d_declared_capability_is_owned() {
  assert!(codec.snapshot_sqlite.is_some(), "actual FEM3d declaration lacks its semantic SQLite provider");
 }
 
-use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::{FemAnalysisSettings, FemDof};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemCombination;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_fem_material::volumetric::FemMaterialValue;
+use semio_s_fem_node::volumetric::FemNodeValue;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSection;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport;
-use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::*};
+use store::os_store::serialization::ArtifactSqliteSnapshot;
+use store::sqlite_snapshot::*;
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn text(v:&serde_json::Value,key:&str)->String{v[key].as_str().unwrap().into()}
 fn real(v:&serde_json::Value,key:&str)->f64{f64::from_bits(u64::from_str_radix(v[key].as_str().unwrap(),16).unwrap())}
@@ -27,9 +28,9 @@ fn dof(v:&str)->FemDof{match v{"Tx"=>FemDof::Tx,"Ty"=>FemDof::Ty,"Tz"=>FemDof::T
 fn state()->Fem3dSnapshot{
  let f=fixture();let s=&f["document"];
  Fem3dSnapshot{
-  nodes:s["nodes"].as_array().unwrap().iter().map(|v|FemNode{id:text(v,"id"),x:real(v,"xBits"),y:real(v,"yBits"),z:real(v,"zBits")}).collect(),
+  nodes:s["nodes"].as_array().unwrap().iter().map(|v|FemNodeValue{id:text(v,"id"),x:real(v,"xBits"),y:real(v,"yBits"),z:real(v,"zBits")}).collect(),
   elements:s["elements"].as_array().unwrap().iter().map(|v|{let(id,start,end,material_id,section_id)=(text(v,"id"),text(v,"start"),text(v,"end"),text(v,"materialId"),text(v,"sectionId"));match v["kind"].as_str().unwrap(){"bar"=>FemElement::Bar{id,start,end,material_id,section_id},"frame"=>FemElement::Frame{id,start,end,material_id,section_id,roll:real(v,"rollBits")},_=>panic!("fixture member")}}).collect(),
-  materials:s["materials"].as_array().unwrap().iter().map(|v|FemMaterial{id:text(v,"id"),name:text(v,"name"),e:real(v,"eBits"),g:real(v,"gBits"),nu:real(v,"nuBits"),rho:real(v,"rhoBits")}).collect(),
+  materials:s["materials"].as_array().unwrap().iter().map(|v|FemMaterialValue{id:text(v,"id"),name:text(v,"name"),e:real(v,"eBits"),g:real(v,"gBits"),nu:real(v,"nuBits"),rho:real(v,"rhoBits")}).collect(),
   sections:s["sections"].as_array().unwrap().iter().map(|v|FemSection{id:text(v,"id"),name:text(v,"name"),area:real(v,"areaBits"),iy:real(v,"iyBits"),iz:real(v,"izBits"),j:real(v,"jBits")}).collect(),
   solids:s["solids"].as_array().unwrap().iter().map(|v|FemSolid{id:text(v,"id"),name:text(v,"name"),outline:v["outlineBits"].as_array().unwrap().iter().map(point).collect(),holes:v["holesBits"].as_array().unwrap().iter().map(|h|h.as_array().unwrap().iter().map(point).collect()).collect(),base_z:real(v,"baseZBits"),height:real(v,"heightBits"),layers:v["layers"].as_str().unwrap().parse().unwrap(),mesh_size:real(v,"meshSizeBits"),material_id:text(v,"materialId"),axis:match v["axis"].as_str().unwrap(){"x"=>FemAxis::X,"y"=>FemAxis::Y,"z"=>FemAxis::Z,_=>panic!("fixture axis")}}).collect(),
   supports:s["supports"].as_array().unwrap().iter().map(|v|FemSupport{id:text(v,"id"),node_id:text(v,"nodeId"),fixed:v["fixed"].as_array().unwrap().iter().map(|x|dof(x.as_str().unwrap())).collect()}).collect(),
@@ -47,7 +48,7 @@ fn every_word(s:&mut Fem3dSnapshot,word:u64){let v=f64::from_bits(word);s.analys
 #[test]fn sqlite_snapshot_fem3d_invalid_graph_and_storage(){let source=project(&state());for n in 0..12{let mut d=source.clone();match n{0=>d.table_mut("fem3d_node").unwrap().rows[1].values[2]=SqliteValue::Integer(5),1=>d.table_mut("fem3d_hole_vertex").unwrap().rows[0].values[1]=SqliteValue::Integer(999),2=>d.table_mut("fem3d_frame").unwrap().rows.clear(),3=>{let r=&mut d.table_mut("fem3d_frame").unwrap().rows[0];r.rowid=1;r.values[0]=SqliteValue::Integer(1);},4=>d.table_mut("fem3d_nodal_load").unwrap().rows.clear(),5=>d.table_mut("fem3d_support_dof").unwrap().rows[0].values[3]=SqliteValue::Text("bad".into()),6=>d.table_mut("fem3d_solid").unwrap().rows[0].values[7]=SqliteValue::Text("18446744073709551616".into()),7=>d.table_mut("fem3d_solid").unwrap().rows[0].values[10]=SqliteValue::Text("bad".into()),8=>d.table_mut("fem3d_combination_term").unwrap().rows[1].values[3]=SqliteValue::Text("\u{e000}".into()),9=>d.table_mut("fem3d_node").unwrap().rows[0].values[7]=SqliteValue::Integer(0x3ff0000000000000),10=>d.table_mut("fem3d_document").unwrap().rows[0].values[1]=SqliteValue::Text("01".into()),_=>{let t=d.table_mut("fem3d_element").unwrap();t.sql=t.sql.replacen("TEXT NOT NULL","TEXT \"NOT\" \"NULL\"",1);}}assert!(restore(&d).is_err(),"case{n}");}}
 #[test]fn sqlite_snapshot_fem3d_actual_declaration_erased_words_both_encodings(){let codec=semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::io().native.codec;let schema=codec.schema.clone();let provider=codec.snapshot_sqlite.unwrap();let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.fem.fem3d".into(),standard:"1".into(),subset:"*".into()};for word in fixture()["ieee754Words"].as_array().unwrap(){let mut s=state();every_word(&mut s,u64::from_str_radix(word.as_str().unwrap(),16).unwrap());for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&s)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(&s))};let d=original_owners::with_decoding(|native_owner|(provider.export)(&schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;assert_eq!(project(&restore(&d).unwrap()),project(&s));let actual=original_owners::with_encoding(|native_owner|(provider.import)(&schema,&dialect, &mut Some(d),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;assert_eq!(actual,payload);}}}
 #[test]fn sqlite_snapshot_fem3d_real_interior_copy_controls_and_budgets(){let mut s=state();s.materials[0].name="日本🧬".repeat(32768);let d=project(&s);for phase in[SqliteSnapshotPhase::ProjectSnapshot,SqliteSnapshotPhase::ReconstructSnapshot,SqliteSnapshotPhase::EncodeNative]{let mut interior=false;let mut cb=|p:SqliteSnapshotProgress|{if p.phase==phase&&p.completed>=65536&&p.completed<p.total{interior=true;false}else{true}};let mut c=SqliteSnapshotControl::new(&mut cb,SqliteDatabaseLimits::default());let result=match phase{SqliteSnapshotPhase::ProjectSnapshot=>s.to_sqlite_database(&mut c).map(|_|()),SqliteSnapshotPhase::ReconstructSnapshot=>Fem3dSnapshot::from_sqlite_database(&d,&mut c).map(|_|()),_=>original_owners::with_encoding(|native_owner|s.encode_sqlite_snapshot_native(SnapshotEncoding::Text,&mut c, native_owner)).map(|_|())};assert!(result.is_err());assert!(interior);}let mut accept=|_|true;assert!(original_owners::with_sqlite_recipient(SqliteDatabaseLimits{max_rows:2,..SqliteDatabaseLimits::default()},&mut accept,|sqlite_control|s.to_sqlite_database(sqlite_control)).is_err());assert!(original_owners::with_encoding(|native_owner|s.encode_sqlite_snapshot_native(SnapshotEncoding::Binary,&mut SqliteSnapshotControl::new(&mut accept,SqliteDatabaseLimits{max_rows:2,..SqliteDatabaseLimits::default()}), native_owner)).is_err());assert!(original_owners::with_encoding(|native_owner|s.encode_sqlite_snapshot_native(SnapshotEncoding::Text,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_value_bytes:1024,..SqliteDatabaseLimits::default()}), native_owner)).is_err());}
-#[test]fn sqlite_snapshot_fem3d_native_decode_actual_interior_owned_work(){let mut s=state();s.nodes=(0..2048).map(|n|FemNode{id:n.to_string(),x:0.,y:0.,z:0.}).collect();for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&s)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(&s))};let mut interior=false;let mut cb=|p:SqliteSnapshotProgress|{if p.phase==SqliteSnapshotPhase::DecodeNative&&p.completed>=256&&p.completed<p.total{interior=true;false}else{true}};assert!(original_owners::with_decoding(|native_owner|Fem3dSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut cb,SqliteDatabaseLimits::default()), native_owner)).is_err());assert!(interior);assert!(original_owners::with_decoding(|native_owner|Fem3dSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_value_bytes:1024,..SqliteDatabaseLimits::default()}), native_owner)).is_err());}}
+#[test]fn sqlite_snapshot_fem3d_native_decode_actual_interior_owned_work(){let mut s=state();s.nodes=(0..2048).map(|n|FemNodeValue{id:n.to_string(),x:0.,y:0.,z:0.}).collect();for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::os_store::serialization::ArtifactPack::encode_pack(&s)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::os_store::serialization::ArtifactDsl::print_dsl(&s))};let mut interior=false;let mut cb=|p:SqliteSnapshotProgress|{if p.phase==SqliteSnapshotPhase::DecodeNative&&p.completed>=256&&p.completed<p.total{interior=true;false}else{true}};assert!(original_owners::with_decoding(|native_owner|Fem3dSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut cb,SqliteDatabaseLimits::default()), native_owner)).is_err());assert!(interior);assert!(original_owners::with_decoding(|native_owner|Fem3dSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_value_bytes:1024,..SqliteDatabaseLimits::default()}), native_owner)).is_err());}}
 
 mod public_populated_owner {
     use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::sqlite::snapshot::tests::*;
@@ -64,7 +65,9 @@ mod public_populated_owner {
     impl Owned { fn new(value:Fem3dSnapshot)->Self{Self(Some(value))} fn get(&self)->&Fem3dSnapshot{self.0.as_ref().unwrap()} }
     impl Drop for Owned { fn drop(&mut self){if let Some(value)=self.0.take(){<Fem3dSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::retire_sqlite_snapshot(value);}} }
     fn exact(a:&Fem3dSnapshot,b:&Fem3dSnapshot){
-        use semio_framework_value::{DslValue,Number,ToValue};
+        use semio_framework_value::DslValue;
+        use semio_framework_value::Number;
+        use semio_framework_value::ToValue;
         fn same(a:&DslValue,b:&DslValue){match(a,b){
             (DslValue::Number(Number::Float(a)),DslValue::Number(Number::Float(b)))=>assert_eq!(a.to_bits(),b.to_bits()),
             (DslValue::Array(a),DslValue::Array(b))=>{assert_eq!(a.len(),b.len());for(a,b)in a.iter().zip(b){same(a,b);}},
@@ -77,7 +80,8 @@ mod public_populated_owner {
     #[semio_framework_async_macros::async_test]
     async fn sqlite_snapshot_fem3d_populated_actual_app_public_binary_text_exact_owner(){
         use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route};
-        use store::io_schema::{IoFidelity,SQLITE_SNAPSHOT};
+        use store::io_schema::IoFidelity;
+        use store::io_schema::SQLITE_SNAPSHOT;
         register();let dialect=ArtifactDialect{artifact_kind:"s.fem.fem3d".into(),standard:"1".into(),subset:"*".into()};let sqlite=ArtifactDialect::from(SQLITE_SNAPSHOT);
         for route in[io_route(&dialect,&sqlite,1).await.unwrap().value,io_route(&sqlite,&dialect,1).await.unwrap().value]{assert_eq!(route.hops.len(),1);assert_eq!(route.fidelity,IoFidelity::Exact);}
         for word in fixture()["ieee754Words"].as_array().unwrap(){let mut value=state();every_word(&mut value,u64::from_str_radix(word.as_str().unwrap(),16).unwrap());let expected=Owned::new(value);
@@ -94,3 +98,9 @@ mod public_populated_owner {
         }
     }
 }
+
+#[path="../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🧪️tests/🪶️sqlite/🫴️native-caller/🦀️.rs"]
+mod native_caller;
+use native_caller::native_caller_policy;
+use native_caller::with_original_decode;
+use native_caller::with_original_encode;

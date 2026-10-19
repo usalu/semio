@@ -1,0 +1,22 @@
+{
+  "before": {
+    "nodes":[{"id":"n1","x":0.0,"y":0.0},{"id":"n2","x":4.0,"y":0.0}],
+    "elements":[{"kind":"beam","id":"e1","start":"n1","end":"n2","materialId":"steel","sectionId":"section"}],
+    "regions":[],
+    "materials":[{"id":"steel","name":"Steel","e":210000000000.0,"nu":0.3,"rho":7850.0}],
+    "sections":[{"id":"section","name":"Section","area":0.01,"iy":0.0001}],
+    "supports":[{"id":"s1","nodeId":"n1","fixed":["Tx","Ty"]}],
+    "loadCases":[{"id":"dead","name":"Dead","loads":[{"kind":"memberUdl","id":"l1","elementId":"e1","wx":0.0,"wy":-1000.0}],"selfWeight":false}],
+    "combinations":[{"id":"inner","name":"Inner","terms":[{"caseId":"dead","factor":1.0}]},{"id":"outer","name":"Outer","terms":[{"caseId":"inner","factor":1.0}]}],
+    "analysis":{"modalCount":3,"bucklingCount":3,"deformationScale":50.0}
+  },
+  "completeSelection":["scope:1:4:node2:n1","scope:1:4:node2:n2","scope:1:7:element2:e1","scope:1:8:material5:steel","scope:1:7:section7:section","scope:1:7:support2:s1","scope:1:8:loadCase4:dead","scope:1:11:combination5:inner","scope:1:11:combination5:outer","scope:1:4:load4:dead2:l1","scope:1:4:node2:n1","scope:1:4:node7:missing"],
+  "loadSelection":["scope:1:4:load4:dead2:l1","scope:1:4:load4:dead2:l1","scope:1:4:node7:missing"],
+  "protectedSelection":["scope:1:4:node2:n1"],
+  "completeKinds":["delete-combination","delete-combination","delete-load-case","delete-support","delete-element","delete-node","delete-node","delete-section","delete-material"],
+  "loadKinds":["remove-load"],
+  "completeOraclePointers":["/nodes","/elements","/regions","/materials","/sections","/supports","/loadCases","/combinations"],
+  "collision":{"selectionLabels":{"en":["Node: n1","Material: n1","Load: dead / l1","Load: live / l1"],"de":["Knoten: n1","Material: n1","Last: dead / l1","Last: live / l1"]},"materialId":"n1","liveCaseId":"live","loadId":"l1","targets":{"node":"scope:1:4:node2:n1","material":"scope:1:8:material2:n1","deadLoad":"scope:1:4:load4:dead2:l1","liveLoad":"scope:1:4:load4:live2:l1"}},
+  "publicAdmission": {"refused":["empty","oversized","duplicateNode","duplicateLoad"],"accepted":"crossNamespaces"},
+  "identityAdmission":{"emptyIdentityCode":"mutation.invariant","duplicateLoadCode":"mutation.duplicate-id","inverse":[]}
+}

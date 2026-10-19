@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "modes", "maximumCopyBytes", "cases"],
+  "properties": {
+    "schema": {"const": "semio.plugin.retained-completion-close/v1"},
+    "modes": {"const": ["refused", "cancelled"]},
+    "maximumCopyBytes": {"type": "integer", "minimum": 1},
+    "cases": {"type": "array", "minItems": 1, "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "artifactMutations", "presenceMutations", "transientMutations", "returnedMutations", "zeroGrantPreservesOwner", "terminal"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "artifactMutations": {"type": "integer", "minimum": 0},
+        "presenceMutations": {"type": "integer", "minimum": 0},
+        "transientMutations": {"type": "integer", "minimum": 0},
+        "returnedMutations": {"type": "integer", "minimum": 0},
+        "zeroGrantPreservesOwner": {"const": true}, "terminal": {"const": true}
+      }
+    }}
+  }
+}

@@ -6,24 +6,24 @@ use super::PluginLifecycleStep;
 
 /// 🧳️ The original diagnostic or value refusal moves without cloning or prose conversion.
 #[derive(Debug,semio_framework_value::RetireOwned)]
-pub enum PluginLifecyclePrimary{Fault(Fault),Value(ValueError),Domain(semio_framework_job::OriginalDomainPrimary)}
+pub enum PluginLifecyclePrimary{Fault(Fault),Value(ValueError),Domain(semio_framework_job::OriginalDomainPrimary),Receiving(semio_framework_job::OriginalReceivingPrimary)}
 
 /// 🧯️ The complete original cause and an independent refusal to debit its physical effects.
 #[derive(Debug,semio_framework_value::RetireOwned)]
-pub struct PluginLifecycleFailure{pub primary:PluginLifecyclePrimary,pub receipt_refusal:Option<ValueError>,pub context_refusal:Option<ValueError>}
+pub struct PluginLifecycleFailure{pub effects:RetainedCloneProgress,pub primary:PluginLifecyclePrimary,pub receipt_refusal:Option<ValueError>,pub context_refusal:Option<ValueError>}
 impl PluginLifecycleFailure{
  /// 🧾️ Borrows the actual failed producer effects carried by its complete original cause.
- pub fn retained_progress(&self)->RetainedCloneProgress{match &self.primary{PluginLifecyclePrimary::Fault(fault)=>fault.retained_progress(),PluginLifecyclePrimary::Value(error)=>error.retained_progress(),PluginLifecyclePrimary::Domain(original)=>original.retained_progress()}}
+ pub fn retained_progress(&self)->RetainedCloneProgress{self.effects}
  /// 🪙️ Debits one raw producer refusal through the same initiating context before publication.
  pub fn debit_original(mut self,cx:&mut StepContext<'_>)->Self{if self.receipt_refusal.is_none(){self.receipt_refusal=cx.consume_retained(self.retained_progress()).err()}self}
 }
-impl From<Fault> for PluginLifecycleFailure{fn from(primary:Fault)->Self{Self{primary:PluginLifecyclePrimary::Fault(primary),receipt_refusal:None,context_refusal:None}}}
-impl From<ValueError> for PluginLifecycleFailure{fn from(primary:ValueError)->Self{Self{primary:PluginLifecyclePrimary::Value(primary),receipt_refusal:None,context_refusal:None}}}
+impl From<Fault> for PluginLifecycleFailure{fn from(primary:Fault)->Self{Self{effects:primary.retained_progress(),primary:PluginLifecyclePrimary::Fault(primary),receipt_refusal:None,context_refusal:None}}}
+impl From<ValueError> for PluginLifecycleFailure{fn from(primary:ValueError)->Self{Self{effects:primary.retained_progress(),primary:PluginLifecyclePrimary::Value(primary),receipt_refusal:None,context_refusal:None}}}
 impl From<semio_framework_job::OriginalTurnFailure> for PluginLifecycleFailure{
- fn from(failure:semio_framework_job::OriginalTurnFailure)->Self{Self{primary:match failure.primary{semio_framework_job::OriginalTurnPrimary::Value(error)=>PluginLifecyclePrimary::Value(error),semio_framework_job::OriginalTurnPrimary::Fault(fault)=>PluginLifecyclePrimary::Fault(fault),semio_framework_job::OriginalTurnPrimary::Domain(original)=>PluginLifecyclePrimary::Domain(original)},receipt_refusal:failure.receipt_refusal,context_refusal:failure.context_refusal}}
+ fn from(failure:semio_framework_job::OriginalTurnFailure)->Self{Self{effects:failure.effects,primary:match failure.primary{semio_framework_job::OriginalTurnPrimary::Value(error)=>PluginLifecyclePrimary::Value(error),semio_framework_job::OriginalTurnPrimary::Fault(fault)=>PluginLifecyclePrimary::Fault(fault),semio_framework_job::OriginalTurnPrimary::Domain(original)=>PluginLifecyclePrimary::Domain(original),semio_framework_job::OriginalTurnPrimary::Receiving(original)=>PluginLifecyclePrimary::Receiving(original)},receipt_refusal:failure.receipt_refusal,context_refusal:failure.context_refusal}}
 }
 impl From<PluginLifecycleFailure> for semio_framework_job::OriginalTurnFailure{
- fn from(failure:PluginLifecycleFailure)->Self{Self{primary:match failure.primary{PluginLifecyclePrimary::Value(error)=>semio_framework_job::OriginalTurnPrimary::Value(error),PluginLifecyclePrimary::Fault(fault)=>semio_framework_job::OriginalTurnPrimary::Fault(fault),PluginLifecyclePrimary::Domain(original)=>semio_framework_job::OriginalTurnPrimary::Domain(original)},receipt_refusal:failure.receipt_refusal,context_refusal:failure.context_refusal}}
+ fn from(failure:PluginLifecycleFailure)->Self{Self{effects:failure.effects,primary:match failure.primary{PluginLifecyclePrimary::Value(error)=>semio_framework_job::OriginalTurnPrimary::Value(error),PluginLifecyclePrimary::Fault(fault)=>semio_framework_job::OriginalTurnPrimary::Fault(fault),PluginLifecyclePrimary::Domain(original)=>semio_framework_job::OriginalTurnPrimary::Domain(original),PluginLifecyclePrimary::Receiving(original)=>semio_framework_job::OriginalTurnPrimary::Receiving(original)},receipt_refusal:failure.receipt_refusal,context_refusal:failure.context_refusal}}
 }
 
 /// 🎟️ A phase loan narrows the independently remaining grant of its actual initiating context.
@@ -55,3 +55,5 @@ pub fn original_lifecycle_step(cx:&mut StepContext<'_>,loan:RetainedCloneGrant,d
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
+
+impl From<PluginLifecyclePrimary> for PluginLifecycleFailure{fn from(primary:PluginLifecyclePrimary)->Self{let effects=match &primary{PluginLifecyclePrimary::Fault(original)=>original.retained_progress(),PluginLifecyclePrimary::Value(original)=>original.retained_progress(),PluginLifecyclePrimary::Domain(original)=>original.retained_progress(),PluginLifecyclePrimary::Receiving(original)=>original.retained_progress()};Self{effects,primary,receipt_refusal:None,context_refusal:None}}}

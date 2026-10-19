@@ -14,6 +14,17 @@ pub struct AddCounter {
 
 impl MutationKind<Counter, CounterMutation> for AddCounter {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "counter", kind: "add-counter", record: "AddedCounter" };
+
+
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native(&format!("Add {}", self.delta), &format!("{} hinzufügen", self.delta))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["value".into()]
+    }
+}
+
+impl crate::os_spr::ColdMutationKind<Counter, CounterMutation> for AddCounter {
     fn diff(&self, _base: &Counter) -> MutationOutcome<CounterDiff> {
         MutationOutcome::new(CounterDiff { deltas: vec![self.delta] })
     }
@@ -27,14 +38,8 @@ impl MutationKind<Counter, CounterMutation> for AddCounter {
     
     })())
 }
-    fn label(&self) -> crate::LocalizedLabel {
-        crate::LocalizedLabel::native(&format!("Add {}", self.delta), &format!("{} hinzufügen", self.delta))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["value".into()]
-    }
 }
 
 #[cfg(test)]
-#[path = "../../../../🧪️tests/🧬️mutation-laws-mutations-add-counter/🦀️.rs"]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

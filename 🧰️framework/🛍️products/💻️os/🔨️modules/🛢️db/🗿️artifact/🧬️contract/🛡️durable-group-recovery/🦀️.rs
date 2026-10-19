@@ -46,7 +46,11 @@ where
                 store::durable_group::DurableOwnedMapRecoveryAdvanceV1::Progress(phase) => {
                     *self.state = Some(ArtifactCommittedDurableGroupRecoveryStateV1::Recovering { document, receipt, host });
                     ArtifactCommittedDurableGroupRecoveryAdvanceV1::Progress(phase)
-                }
+                                }
+                store::durable_group::DurableOwnedMapRecoveryAdvanceV1::DiagnosticProgress(phase, progress) => {
+                    *self.state = Some(ArtifactCommittedDurableGroupRecoveryStateV1::Recovering { document, receipt, host });
+                    ArtifactCommittedDurableGroupRecoveryAdvanceV1::DiagnosticProgress(phase, progress)
+}
                 store::durable_group::DurableOwnedMapRecoveryAdvanceV1::Blocked => {
                     *self.state = Some(ArtifactCommittedDurableGroupRecoveryStateV1::Recovering { document, receipt, host });
                     ArtifactCommittedDurableGroupRecoveryAdvanceV1::Blocked
@@ -118,11 +122,11 @@ where
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for ArtifactCommittedDurableGroupRecoveryV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    ParentMutation: store::Mutation<ParentP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ParentMutation: store::Mutation<ParentP> + store::os_store::serialization::ArtifactCanonicalJsonTree + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
     DrawingP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    DrawingMutation: store::Mutation<DrawingP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    DrawingMutation: store::Mutation<DrawingP> + store::os_store::serialization::ArtifactCanonicalJsonTree + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
     ValueP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    ValueMutation: store::Mutation<ValueP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ValueMutation: store::Mutation<ValueP> + store::os_store::serialization::ArtifactCanonicalJsonTree + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
 {
     fn drop(&mut self) {
         assert!(self.state.is_none(), "committed WAL recovery reached Drop before exact three-Store terminal handoff");
@@ -176,11 +180,11 @@ pub async fn committed_durable_group_decision_from_transaction<S: WalStorage>(do
 enum ArtifactDurableGroupRecoveryTargetStateV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    ParentMutation: store::Mutation<ParentP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ParentMutation: store::Mutation<ParentP> + store::os_store::serialization::ArtifactCanonicalJsonTree + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
     DrawingP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    DrawingMutation: store::Mutation<DrawingP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    DrawingMutation: store::Mutation<DrawingP> + store::os_store::serialization::ArtifactCanonicalJsonTree + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
     ValueP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    ValueMutation: store::Mutation<ValueP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ValueMutation: store::Mutation<ValueP> + store::os_store::serialization::ArtifactCanonicalJsonTree + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
 {
     Admitting(store::durable_group::DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>),
     Recovering { owner: ArtifactCommittedDurableGroupRecoveryV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>, checkpoint: ArtifactDurableGroupRecoveredCheckpointV1 },
@@ -191,11 +195,11 @@ where
 struct ArtifactDurableGroupRecoveryTargetSharedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    ParentMutation: store::Mutation<ParentP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ParentMutation: store::Mutation<ParentP> + store::os_store::serialization::ArtifactCanonicalJsonTree + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
     DrawingP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    DrawingMutation: store::Mutation<DrawingP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    DrawingMutation: store::Mutation<DrawingP> + store::os_store::serialization::ArtifactCanonicalJsonTree + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
     ValueP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    ValueMutation: store::Mutation<ValueP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ValueMutation: store::Mutation<ValueP> + store::os_store::serialization::ArtifactCanonicalJsonTree + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
 {
     pub document: ArtifactId,
     pub state: std::sync::Mutex<ArtifactDurableGroupRecoveryTargetStateV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>,
@@ -218,11 +222,11 @@ pub struct ArtifactDurableGroupRecoveryDriverV1 {
 struct ArtifactDurableGroupRecoveryTargetDriverV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    ParentMutation: store::Mutation<ParentP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ParentMutation: store::Mutation<ParentP> + store::os_store::serialization::ArtifactCanonicalJsonTree + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
     DrawingP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    DrawingMutation: store::Mutation<DrawingP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    DrawingMutation: store::Mutation<DrawingP> + store::os_store::serialization::ArtifactCanonicalJsonTree + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
     ValueP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    ValueMutation: store::Mutation<ValueP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ValueMutation: store::Mutation<ValueP> + store::os_store::serialization::ArtifactCanonicalJsonTree + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
 {
     pub shared: Arc<ArtifactDurableGroupRecoveryTargetSharedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>,
 }
@@ -247,8 +251,8 @@ where
             *state = current;
             return Ok(true);
         };
-        match recovery.advance(store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: store::durable_group::DURABLE_OWNED_GROUP_EVENT_MAX_BYTES }) {
-            ArtifactCommittedDurableGroupRecoveryAdvanceV1::Progress(_) | ArtifactCommittedDurableGroupRecoveryAdvanceV1::Blocked => {
+        match recovery.advance(store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: store::durable_group::DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_capacity_bytes: store::durable_group::DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_release_bytes: store::durable_group::DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_depth: 64 }) {
+            ArtifactCommittedDurableGroupRecoveryAdvanceV1::Progress(_) | ArtifactCommittedDurableGroupRecoveryAdvanceV1::DiagnosticProgress(_, _) | ArtifactCommittedDurableGroupRecoveryAdvanceV1::Blocked => {
                 *state = ArtifactDurableGroupRecoveryTargetStateV1::Recovering { owner: recovery, checkpoint };
                 Ok(false)
             }
@@ -320,11 +324,11 @@ where
 pub struct ArtifactDurableGroupRecoveryOwnerV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    ParentMutation: store::Mutation<ParentP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ParentMutation: store::Mutation<ParentP> + store::os_store::serialization::ArtifactCanonicalJsonTree + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
     DrawingP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    DrawingMutation: store::Mutation<DrawingP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    DrawingMutation: store::Mutation<DrawingP> + store::os_store::serialization::ArtifactCanonicalJsonTree + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
     ValueP: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    ValueMutation: store::Mutation<ValueP> + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    ValueMutation: store::Mutation<ValueP> + store::os_store::serialization::ArtifactCanonicalJsonTree + Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
 {
     pub shared: Arc<ArtifactDurableGroupRecoveryTargetSharedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>,
     pub request: Option<Pin<Box<db_actor::AskFuture<ArtifactMessage, Result<(), DbError>>>>>,

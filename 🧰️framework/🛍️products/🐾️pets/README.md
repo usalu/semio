@@ -9,6 +9,10 @@ and Rust (`semio-framework-pets`, a façade over the producer crates `semio-fram
 own menagerie (the architecture quizzes: `🎓️teaching/🏛️architecture/🐾️pets`) and a render target draws the
 frames (`🎯️targets/⚛️react`, `@semio-tech/pets-react`).
 
+The React layer accepts a `shiny` list of species identifiers. Those pets have a static golden glow, including
+while motionless. Updating the list preserves the existing stage and actor positions. Hosts can customize the
+effect with `--pet-shiny-filter`; the quiz host derives the list from badge awards and their runs' quiz casts.
+
 ## Layout
 
 | Path | What lives there |
@@ -52,27 +56,25 @@ frames (`🎯️targets/⚛️react`, `@semio-tech/pets-react`).
 
 ## Commands
 
-Everything runs through each package's `📜️script.ts`; `📋️project.json` registers the same entry points as build
-targets.
+Start `bun run dashboard`, choose **New Task** (`Ctrl+B n`) and search `pets`
+plus the action. Each owner target routes to its `📜️script.ts` through Nx.
+Choose a test level in the command form or pass it after `--` below.
 
 ```bash
-cd "🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript"
-bun ./📜️script.ts test                        # the unit suites of the TypeScript core: every assertion, a few samples per sweep
-bun ./📜️script.ts test quick                  # every sweep and statistical session in full (`long` runs the same amount)
-bun ./📜️script.ts test exhaustive             # more seeds, finer grids, longer sessions, and coverage
-
-bun repo run @semio-tech/pets:test              # the same through the build CLI
-bun repo run @semio-tech/pets:typecheck         # the core, its suites, adapters
-bun repo run @semio-tech/pets-rs:test           # the Rust core: the unit suites of all seven producer crates
-bun repo run @semio-tech/pets-react:test        # the React target
-bun repo run @semio-tech/pets-react:typecheck   # its types
-bun run dashboard run @semio-tech/pets-react:dev --detach --wait-ready   # the stories gallery (prints its URL)
-
-cd "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"
-bun ./📜️script.ts contract --owner "🧰️framework/🛍️products/🐾️pets"
-bun ./📜️script.ts parity exhaustive --owner "🧰️framework/🛍️products/🐾️pets"                                 # every case
-bun ./📜️script.ts parity exhaustive --owner "🧰️framework/🛍️products/🐾️pets" --case "🧬️schema-conformance"    # one case, by its directory name
+bun run dashboard run @semio-tech/pets:test -- quick
+bun run dashboard run @semio-tech/pets:test -- exhaustive
+bun run dashboard run @semio-tech/pets:typecheck
+bun run dashboard run @semio-tech/pets-rs:test
+bun run dashboard run @semio-tech/pets-react:test
+bun run dashboard run @semio-tech/pets-react:typecheck
+bun run dashboard run @semio-tech/pets-react:dev --detach --wait-ready
+bun run dashboard run @semio-tech/repo-test-domain:test-contract -- --owner "🧰️framework/🛍️products/🐾️pets"
+bun run dashboard run @semio-tech/repo-test-domain:test-parity -- exhaustive --owner "🧰️framework/🛍️products/🐾️pets"
+bun run dashboard run @semio-tech/repo-test-domain:test-parity -- exhaustive --owner "🧰️framework/🛍️products/🐾️pets" --case "🧬️schema-conformance"
 ```
+
+The gallery's task offers **Open ready address** (`Ctrl+B u`). Its task menu and
+Task overview retain output and provide restart, stop and cancellation.
 
 ## Domain model
 
@@ -288,7 +290,7 @@ never looks into the layer itself.
 | Prop | Default | What |
 |---|---|---|
 | `menagerie` | — | the species, bonds and casts; one with validation issues is never shown |
-| `scene` | — | the scene whose cast is on stage; an unknown scene falls back to `home`, then to nobody |
+| `scene` | — | the scene whose explicitly authored cast is on stage; an unknown scene shows nobody |
 | `mode` | — | `still`, `calm` or `lively` (`off` is not rendering the layer) |
 | `quiet` | `false` | a time of concentration: no rotation, no turn, lean or greeting towards the pointer; clicks and picking up still work |
 | `play` | `true` | the learner lets the pets be played with: they answer clicks and can be picked up (handed to the stage as `permitted`) |

@@ -4,7 +4,7 @@
  */
 
 import { shellDialogOriginIsCurrentV1 } from "../🗨️dialog-origin/🟦️.ts";
-import { OwnedTutorialRunV1, runPausedTutorialSeekV1 } from "../🗨️dialog-origin/🎥️tutorial/🟦️.ts";
+import { OwnedTutorialRunV1, runPausedTutorialSeekV1, tutorialHistoryStepInverseV1, type TutorialInverseV1 } from "../🗨️dialog-origin/🎥️tutorial/🟦️.ts";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { TUTORIAL_CONVERGE_MS, type TutorialCameraState, type TutorialDocumentEventKind } from "@semio-tech/framework";
 import { encodeMutationEnvelopesPack } from "@semio-tech/framework/packs";
@@ -30,6 +30,7 @@ import { type ActiveSession } from "../../🐚️Shell/📦️program-sessions/�
 import {
   applyTutorialUiChangeToShell,
   applyTutorialUiSnapshotToShell,
+  EMPTY_SHELL_HISTORY_PROJECTION_V1,
   captureTutorialUiSnapshot,
   type TutorialUiBridgeContext
 } from "../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
@@ -38,6 +39,7 @@ import { resolveManifestLabel } from "../../🛠️ShellHelpers/🏷️labels/�
 import { sessionWindowInstances } from "../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
 // #endregion 🔌️Adapters
 import { tutorialInteractionSelectionActions, TutorialRecorder } from "../🎬️tutorial-recorder/🟦️.tsx";
+import { programHistoryKeyV1, programHistoryProjectionV1 } from "../🪟️spawned-program/🟦️.ts";
 import type { ShellCoreAfterShellActions } from "../🖱️shell-actions/🟦️.ts";
 
 export type ShellCoreAfterTutorialOrchestration = ShellCoreAfterShellActions & ReturnType<typeof useTutorialOrchestration>;
@@ -46,7 +48,7 @@ export function useTutorialOrchestration(core: ShellCoreAfterShellActions) {
   const {
     scope, shellState, dispatch, localInteraction, loadedPlugins, session, uiLocale, uiTerminology, appLabelsOverlay,
     activeTutorialId, tutorialPlaying, tutorialRate, tutorialRecording, tutorialDeviated, extraWindowInstancesRef,
-    sessionRef, captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, restoreDocumentArchive, makeOwnedDialog,
+    sessionRef, captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, documentArchivePorts, historyStore, makeOwnedDialog,
     activeTutorials, startTutorialRef, stopTutorialRef, toggleTutorialRecordingRef, tutorialDrivenRef,
     tutorialPlayingRef, tutorialRecorderRef, tutorialRecorderStartingRef, shellStateRef, publishLocalInteraction,
     refreshUi, onActionRef
@@ -87,11 +89,11 @@ export function useTutorialOrchestration(core: ShellCoreAfterShellActions) {
     if (!active || !tutorialRunRef.current?.ready) return;
     for (const action of tutorialInteractionSelectionActions(active.app.controllerId, selection)) onActionRef.current(action);
   }, []);
-  const tutorialRunRef = useRef<OwnedTutorialRunV1<DocumentArchivePack> | null>(null);
+  const tutorialRunRef = useRef<OwnedTutorialRunV1<TutorialInverseV1> | null>(null);
   core.tutorialRunRef = tutorialRunRef;
   const tutorialTransitionEpochRef = useRef(0);
   core.tutorialTransitionEpochRef = tutorialTransitionEpochRef;
-  const tutorialInitializingRunRef = useRef<OwnedTutorialRunV1<DocumentArchivePack> | null>(null);
+  const tutorialInitializingRunRef = useRef<OwnedTutorialRunV1<TutorialInverseV1> | null>(null);
   const uiBridgeCtxRef = useRef<TutorialUiBridgeContext>({
     session,
     restoreDialog: (dialogId, seedArgs) => {
@@ -169,7 +171,7 @@ export function useTutorialOrchestration(core: ShellCoreAfterShellActions) {
    * `onAction` funnel the app's own undo/redo buttons dispatch through (never a bespoke channel) — then
    * pulses any annotational event's target element via the existing `celebrateElements` vocabulary. */
   const applyTutorialSliceToShell = useCallback(
-    async (slice: TutorialSlice, activeSession: ActiveSession, run: OwnedTutorialRunV1<DocumentArchivePack>, driveToken: number) => {
+    async (slice: TutorialSlice, activeSession: ActiveSession, run: OwnedTutorialRunV1<TutorialInverseV1>, driveToken: number) => {
       if (tutorialRunRef.current !== run || !run.ready || !tutorialDrivenRef.current.accepts(driveToken) || !shellDialogOriginIsCurrentV1(run.origin, captureDialogOrigin(activeSession))) return;
       for (const change of slice.uiChanges) applyTutorialUiChangeToShell(dispatch, change, uiBridgeCtxRef.current);
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === activeSession.pluginId)?.handle;
@@ -180,7 +182,10 @@ export function useTutorialOrchestration(core: ShellCoreAfterShellActions) {
         if (kind.kind === "edit") {
           documentTouched = true;
           const mutations = (slice.forward ? kind.forwards : kind.backwards) as readonly MutationEnvelope[];
-          if (plugin?.applyMutations) await plugin.applyMutations(activeSession.instanceId, encodeMutationEnvelopesPack(mutations));
+          if (plugin?.applyMutations) {
+            await plugin.applyMutations(activeSession.instanceId, encodeMutationEnvelopesPack(mutations));
+            run.record(documentEvent, slice.forward, { kind: "mutations", envelopes: (slice.forward ? kind.backwards : kind.forwards) as readonly MutationEnvelope[] });
+          }
         } else if (kind.kind === "load") {
           // 🚧️ `kind.documentDsl`/`kind.previousDsl` is authored DSL/JSON document TEXT — the channel
           // only carries binary pack/spr containers (`AppCommand::LoadDocumentArchive`), and no TS-side
@@ -189,14 +194,25 @@ export function useTutorialOrchestration(core: ShellCoreAfterShellActions) {
           documentTouched = true;
         } else if (kind.kind === "undo") {
           await onActionRef.current({ controllerId: activeSession.app.controllerId, action: slice.forward ? "undo" : "redo" }, run.origin, true);
+          run.record(documentEvent, slice.forward, { kind: "history", action: slice.forward ? "redo" : "undo" });
         } else if (kind.kind === "redo") {
           await onActionRef.current({ controllerId: activeSession.app.controllerId, action: slice.forward ? "redo" : "undo" }, run.origin, true);
-        } else if (kind.kind === "checkpoint") {
-          if (slice.forward) await onActionRef.current({ controllerId: activeSession.app.controllerId, action: "commitCheckpoint" }, run.origin, true);
-        } else if (kind.kind === "checkoutCheckpoint") {
-          await onActionRef.current({ controllerId: activeSession.app.controllerId, action: "checkoutCheckpoint", args: { checkpointId: kind.checkpointId } }, run.origin, true);
-        } else if (kind.kind === "switchAlternative") {
-          await onActionRef.current({ controllerId: activeSession.app.controllerId, action: "switchAlternative", args: { alternativeId: kind.alternativeId } }, run.origin, true);
+          run.record(documentEvent, slice.forward, { kind: "history", action: slice.forward ? "undo" : "redo" });
+        } else if (kind.kind === "checkpoint" || kind.kind === "checkoutCheckpoint" || kind.kind === "switchAlternative") {
+          if (kind.kind === "checkpoint" && !slice.forward) continue;
+          const stand = programHistoryProjectionV1(historyStore.get(), programHistoryKeyV1(activeSession), EMPTY_SHELL_HISTORY_PROJECTION_V1);
+          const outcome = tutorialHistoryStepInverseV1(kind, { checkpointId: stand.currentCheckpointId, alternativeId: stand.activeAlternativeId });
+          await onActionRef.current(
+            kind.kind === "checkpoint"
+              ? { controllerId: activeSession.app.controllerId, action: "commitCheckpoint" }
+              : kind.kind === "checkoutCheckpoint"
+                ? { controllerId: activeSession.app.controllerId, action: "checkoutCheckpoint", args: { checkpointId: kind.checkpointId } }
+                : { controllerId: activeSession.app.controllerId, action: "switchAlternative", args: { alternativeId: kind.alternativeId } },
+            run.origin,
+            true,
+          );
+          if ("inverse" in outcome) run.record(documentEvent, true, outcome.inverse);
+          else if ("unrevertable" in outcome) run.recordUnrevertable(outcome.unrevertable);
         }
       }
       for (const event of slice.events) {
@@ -207,7 +223,7 @@ export function useTutorialOrchestration(core: ShellCoreAfterShellActions) {
       }
       if (documentTouched && tutorialRunRef.current === run && run.ready && tutorialDrivenRef.current.accepts(driveToken)) await refreshUi(activeSession, { kind: "full" });
     },
-    [loadedPlugins, refreshUi],
+    [historyStore, loadedPlugins, refreshUi],
   );
 
   // 🎬️ Director: one subscription to the clock's rAF-driven ticks. Camera interpolation applies every
@@ -265,7 +281,10 @@ export function useTutorialOrchestration(core: ShellCoreAfterShellActions) {
           if (kind.kind === "edit") {
             documentTouched = true;
             const mutations = (slice.forward ? kind.forwards : kind.backwards) as readonly MutationEnvelope[];
-            if (plugin?.applyMutations) await plugin.applyMutations(session.instanceId, encodeMutationEnvelopesPack(mutations));
+            if (plugin?.applyMutations) {
+              await plugin.applyMutations(session.instanceId, encodeMutationEnvelopesPack(mutations));
+              run.record(documentEvent, slice.forward, { kind: "mutations", envelopes: (slice.forward ? kind.backwards : kind.forwards) as readonly MutationEnvelope[] });
+            }
           } else if (kind.kind === "load") {
             // 🚧️ `kind.documentDsl`/`kind.previousDsl` is authored DSL/JSON document TEXT — the channel
             // only carries binary pack/spr containers (`AppCommand::LoadDocumentArchive`), and no TS-side
@@ -367,12 +386,20 @@ export function useTutorialOrchestration(core: ShellCoreAfterShellActions) {
         await previous?.stop().catch((error) => undefined);
         if (tutorialRunRef.current === previous) tutorialRunRef.current = null;
         if (epoch !== tutorialTransitionEpochRef.current || !isCurrentEffectOwner(owner)) return;
-        const run: OwnedTutorialRunV1<DocumentArchivePack> = new OwnedTutorialRunV1(tutorialId, origin, (): boolean => tutorialRunRef.current === run && isCurrentEffectOwner(owner), {
-          read: async () => plugin.readAppDocumentArchive ? plugin.readAppDocumentArchive(session.instanceId) : null,
+        const run: OwnedTutorialRunV1<TutorialInverseV1> = new OwnedTutorialRunV1(tutorialId, origin, (): boolean => tutorialRunRef.current === run && isCurrentEffectOwner(owner), {
           drain: () => tutorialDrivenRef.current.drain(),
-          restore: async (snapshot) => {
+          revert: async (inverse) => {
             if (!isCurrentEffectOwner(owner)) return;
-            await restoreDocumentArchive(plugin, session, snapshot, () => isCurrentEffectOwner(owner));
+            if (inverse.kind === "mutations") {
+              if (plugin.applyMutations) await plugin.applyMutations(session.instanceId, encodeMutationEnvelopesPack(inverse.envelopes));
+            } else if (inverse.kind === "history") await onActionRef.current({ controllerId: session.app.controllerId, action: inverse.action, ...(inverse.args === undefined ? {} : { args: inverse.args }) }, run.origin, true);
+          },
+          settle: async (unreverted) => {
+            if (!isCurrentEffectOwner(owner)) return;
+            for (const reason of unreverted) console.warn(`[tutorial] left in place: ${reason}`);
+            const ports = documentArchivePorts(plugin, session, () => isCurrentEffectOwner(owner));
+            await ports.history();
+            await ports.refresh();
           },
         });
         tutorialRunRef.current = run;
@@ -380,7 +407,7 @@ export function useTutorialOrchestration(core: ShellCoreAfterShellActions) {
         dispatch({ type: "SET_TUTORIAL", value: tutorialId });
       })().catch((error) => undefined);
     },
-    [activeTutorials, session, captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, restoreDocumentArchive, tutorialClock],
+    [activeTutorials, session, captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, documentArchivePorts, tutorialClock],
   );
   const stopTutorial = useCallback(() => {
     tutorialTransitionEpochRef.current += 1;

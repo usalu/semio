@@ -10,6 +10,10 @@ export interface CreatePvSystem {
   readonly azimuthDeg: number;
   readonly moduleEfficiency: number;
   readonly inverterEfficiency: number;
+  readonly temperatureCoefficient: number;
+  readonly faimanHeatLossConstantWM2k: number;
+  readonly faimanHeatLossWindWSM3k: number;
+  readonly mounting: "OpenRack"|"CloseRoof"|"InsulatedBack";
 }
 
 /** 🌒️ `delete-pv-system` payload. */

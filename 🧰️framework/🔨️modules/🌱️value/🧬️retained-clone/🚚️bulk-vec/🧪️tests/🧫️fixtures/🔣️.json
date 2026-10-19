@@ -15,8 +15,7 @@
     32769,
     2097152
   ],
-  "overheadTurns": 2,
-  "emptyCompletionTurns": 1,
+  "overheadTurns": 3,
   "copyGrants": [
     2,
     1000,
@@ -24,5 +23,103 @@
     1048576
   ],
   "elementwiseTurnsPerElement": 13,
-  "maximumTurnsForFourMebibytes": 66
+  "maximumTurnsForFourMebibytes": 67,
+  "ownerHeaderBytes": 24,
+  "maximumZeroSizedElementsPerTurn": 1024,
+  "zeroSizedSampleCount": 5000,
+  "largeZeroSizedArrayCount": 8193,
+  "grantCases": [
+    {
+      "items": 1,
+      "copyBytes": 0,
+      "width": 0,
+      "elements": 1024
+    },
+    {
+      "items": 0,
+      "copyBytes": 65536,
+      "width": 0,
+      "elements": 0
+    },
+    {
+      "items": 1,
+      "copyBytes": 1048576,
+      "width": 2,
+      "elements": 32768
+    },
+    {
+      "items": 1,
+      "copyBytes": 1001,
+      "width": 2,
+      "elements": 500
+    },
+    {
+      "items": 1,
+      "copyBytes": 1,
+      "width": 2,
+      "elements": 0
+    },
+    {
+      "items": 1,
+      "copyBytes": 65536,
+      "width": 65537,
+      "elements": 0
+    },
+    {
+      "items": 1,
+      "copyBytes": 65536,
+      "width": 65536,
+      "elements": 1
+    },
+    {
+      "items": 2,
+      "copyBytes": 17,
+      "width": 1,
+      "elements": 17
+    }
+  ],
+  "logicalCases": [
+    {
+      "body": 1,
+      "physical": 8192,
+      "width": 1,
+      "remaining": 257,
+      "elements": 1
+    },
+    {
+      "body": 1,
+      "physical": 8192,
+      "width": 2,
+      "remaining": 257,
+      "elements": 1
+    },
+    {
+      "body": 7,
+      "physical": 8192,
+      "width": 1,
+      "remaining": 257,
+      "elements": 7
+    },
+    {
+      "body": 7,
+      "physical": 8192,
+      "width": 2,
+      "remaining": 257,
+      "elements": 3
+    },
+    {
+      "body": 4096,
+      "physical": 8192,
+      "width": 1,
+      "remaining": 257,
+      "elements": 257
+    },
+    {
+      "body": 4096,
+      "physical": 8192,
+      "width": 2,
+      "remaining": 257,
+      "elements": 257
+    }
+  ]
 }

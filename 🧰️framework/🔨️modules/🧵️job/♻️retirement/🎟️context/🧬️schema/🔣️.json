@@ -16,7 +16,8 @@
     "receipt",
     "granted",
     "nested",
-    "selfFunded"
+    "selfFunded",
+    "cases"
   ],
   "properties": {
     "schema": {
@@ -87,6 +88,46 @@
         "fuel": "unbounded",
         "deadline": "unbounded",
         "failure": "returned-whole"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "quote",
+          "grant",
+          "admitted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "quote": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "minItems": 5,
+            "maxItems": 5
+          },
+          "grant": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "minItems": 5,
+            "maxItems": 5
+          },
+          "admitted": {
+            "type": "boolean"
+          }
+        }
       }
     }
   }

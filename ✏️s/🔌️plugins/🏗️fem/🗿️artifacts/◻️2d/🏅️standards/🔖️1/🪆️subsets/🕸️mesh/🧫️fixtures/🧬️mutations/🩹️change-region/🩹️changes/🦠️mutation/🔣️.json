@@ -1,0 +1,7 @@
+{
+  "mutation": "changeRegion",
+  "id": "r1",
+  "patch": {
+    "name": "Structural Region"
+  }
+}

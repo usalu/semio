@@ -8,10 +8,10 @@
 //! `delete-node` is deliberately cascade-free: support `s3` survives still pointing at the removed node.
 
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::inverse_fem2d_mutation;
 use semio_s_artifact_fem_2d_mutations::central_apply::apply_fem2d_mutation;
 
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
 static BEFORE: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🕳️delete-node/🚫️removes/📸️snapshot/⬅️before/🔣️.json");
 static AFTER: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🕳️delete-node/🚫️removes/📸️snapshot/➡️after/🔣️.json");
@@ -19,11 +19,11 @@ static MUTATION: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture
 static DIFF: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🕳️delete-node/🚫️removes/🔺️diff/🔣️.json");
 static OUTCOME: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🕳️delete-node/🚫️removes/🎯️outcome/🔣️.json");
 
-fn before() -> Fem2dSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+fn before() -> Fem2dSnapshotValue {
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
-fn expected_after() -> Fem2dSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+fn expected_after() -> Fem2dSnapshotValue {
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Fem2dMutation {
     semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
@@ -57,8 +57,8 @@ fn inverse_restores_before() {
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE.as_str()), ("after", AFTER.as_str())] {
-        let decoded: Fem2dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+        let decoded: Fem2dSnapshotValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = semio_framework_value::ToValue::to_value(&decoded);
         let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-node/removes-node-n3-without-6eab3f: committed {label} JSON is not canonical");
@@ -90,8 +90,8 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
-    assert_eq!(outcome.diff().nodes.as_ref().expect("nodes delta").removed, vec!["n3".to_string()], "delete-node/removes-node-n3-without-6eab3f: exactly n3 may be removed");
+    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
+    assert_eq!(outcome.diff().nodes.as_ref().expect("nodes delta").removed.iter().map(|entry| entry.id.clone()).collect::<Vec<_>>(), vec!["n3".to_string()], "delete-node/removes-node-n3-without-6eab3f: exactly n3 may be removed");
     assert!(outcome.diff().supports.is_none(), "delete-node/removes-node-n3-without-6eab3f: no supports delta may be opened by a node deletion");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());
     let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
@@ -110,8 +110,8 @@ fn committed_diff_is_canonical() {
 /// 🩹 Replaying the committed `nodes.removed` id on `before` must reproduce the two-node grid with `s3` intact.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-node/removes-node-n3-without-6eab3f: committed diff did not carry before to after");
 }
 

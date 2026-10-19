@@ -3,14 +3,15 @@
 use super::*;
 
 //#region 🔖️Limits
-pub fn db_io_task_fault(kind: DbIoFaultKind, error: &DbError) -> DbIoFault {
+pub fn db_io_task_fault(custody: DbIoFaultCustody, kind: DbIoFaultKind, error: DbError) -> DbIoFault {
     let cause = match kind {
         DbIoFaultKind::Cancelled => DbIoFaultCause::Closed,
         DbIoFaultKind::Panic => DbIoFaultCause::Internal,
         DbIoFaultKind::Saturated => DbIoFaultCause::Unavailable,
-        DbIoFaultKind::Backend | DbIoFaultKind::Stale => DbIoFaultCause::from_db_error(error),
+        DbIoFaultKind::Backend | DbIoFaultKind::Stale => DbIoFaultCause::from_db_error(&error),
     };
-    let detail = match error {
+    let detail = match &error {
+        DbError::Pack(_) | DbError::Protocol(_) => DbIoText::new(),
         DbError::Io(detail)
         | DbError::NotFound(detail)
         | DbError::AlreadyExists(detail)
@@ -23,27 +24,31 @@ pub fn db_io_task_fault(kind: DbIoFaultKind, error: &DbError) -> DbIoFault {
         | DbError::Internal(detail) => DbIoText::try_from_str(detail).unwrap_or_else(|_| db_io_text_literal("DB I/O fault detail exceeded fixed authority")),
         DbError::LimitExceeded(detail) | DbError::Unimplemented(detail) => db_io_text_literal(detail),
         DbError::Rejected { .. } => db_io_text_literal("DB I/O backend returned an artifact-layer rejection"),
-        DbError::Fenced { .. } | DbError::StaleGeneration { .. } | DbError::Closed => db_io_error_text(error),
+        DbError::Fenced { .. } | DbError::StaleGeneration { .. } | DbError::Closed => db_io_error_text(&error),
     };
-    DbIoFault { kind, cause, detail, result_handback: None }
+    let structured = match error { error @ (DbError::Pack(_) | DbError::Protocol(_)) => Some(error), _ => None };
+    DbIoFault { kind, cause, detail, structured, result_handback: None, custody: Some(custody) }
 }
 
-pub fn db_io_literal_fault(kind: DbIoFaultKind, cause: DbIoFaultCause, detail: &'static str) -> DbIoFault {
-    DbIoFault { kind, cause, detail: db_io_text_literal(detail), result_handback: None }
+pub fn db_io_literal_fault(custody: DbIoFaultCustody, kind: DbIoFaultKind, cause: DbIoFaultCause, detail: &'static str) -> DbIoFault {
+    DbIoFault { kind, cause, detail: db_io_text_literal(detail), structured: None, result_handback: None, custody: Some(custody) }
 }
 
 /// 🧯 Records one operation-cleanup fault on the backend it belongs to — never on the caller that happened to drive the close
 /// ring — so only that backend's own task waiters and its close report it; the task stays in the ring and is retried. A
 /// successful cleanup of the backend (`None`) clears it.
-fn db_io_note_backend_cleanup(control: DbIoBackendControl, outcome: Option<&DbError>) {
+fn db_io_note_backend_cleanup(control: DbIoBackendControl, outcome: Option<(DbError, DbIoFaultCustody)>) {
     let (slot, generation) = db_io_backend_parts(control);
-    let stale = {
+        let fault = outcome.map(|(error, custody)| db_io_task_fault(custody, DbIoFaultKind::Backend, error));
+let stale = {
         let mut registry = db_io_backend_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let owner = &mut registry.slots[slot as usize];
         if owner.generation != generation || db_io_backend_control(owner.kind, slot, generation) != control {
-            return;
+                        drop(registry);
+            drop(fault);
+return;
         }
-        std::mem::replace(&mut owner.cleanup_fault, outcome.map(|error| db_io_task_fault(DbIoFaultKind::Backend, error)))
+        std::mem::replace(&mut owner.cleanup_fault, fault)
     };
     if let Some(mut stale) = stale {
         while stale.close_step() {}
@@ -100,44 +105,51 @@ pub(crate) fn db_io_lost_owner_maintenance_batch() -> Result<bool, DbError> {
     Ok(true)
 }
 
+static DB_IO_LOST_OWNER_CURSOR: std::sync::Mutex<usize> = std::sync::Mutex::new(0);
+
 pub fn db_io_lost_owner_close_step() -> Result<bool, DbError> {
-    let mut owners = DB_IO_LOST_OWNERS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    let Some(index) = owners.iter().position(Option::is_some) else {
-        drop(owners);
-        let mut overflow = DB_IO_LOST_OWNER_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let Some(index) = overflow.iter().position(Option::is_some) else {
-            drop(overflow);
-            let mut quarantine = DB_IO_LOST_OWNER_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            let Some(index) = quarantine.iter().position(Option::is_some) else { return Ok(false) };
-            let mut owners = DB_IO_LOST_OWNERS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            let Some(slot) = owners.iter_mut().find(|slot| slot.is_none()) else {
-                drop(owners);
-                let terminal = db_io_lost_owner_close_opportunity(quarantine[index].as_mut().ok_or_else(|| DbError::Internal("DB I/O quarantine retirement changed exact owner".to_string()))?)?;
-                if terminal {
-                    quarantine[index] = None;
+    let custody_base = DB_IO_LOST_OWNER_SLOTS + 2 * DB_IO_LOST_OWNER_OVERFLOW_SLOTS;
+    let total = custody_base + DB_IO_FAULT_CUSTODY_SLOTS;
+    let mut cursor = DB_IO_LOST_OWNER_CURSOR.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let mut remaining = total;
+    while remaining != 0 {
+        if *cursor >= custody_base {
+            let start = *cursor - custody_base;
+            let count = (DB_IO_FAULT_CUSTODY_SLOTS - start).min(remaining);
+            let selected = {
+                let mut arena = DB_IO_FAULT_CUSTODY.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                arena.cells[start..start + count].iter().position(|cell| cell.owner.is_some()).map(|offset| { let index = start + offset; let generation = arena.cells[index].generation; (index, db_io_fault_custody_take(&mut arena, index, generation).expect("original fault generation").expect("original reserved fault")) })
+            };
+            if let Some((index, mut fault)) = selected {
+                *cursor = (custody_base + index + 1) % total;
+                drop(cursor);
+                let _ = fault.close_step();
+                if fault.custody.is_some() {
+                    let mut arena = DB_IO_FAULT_CUSTODY.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                    let custody = fault.custody.as_ref().expect("retained original fault reservation");
+                    let cell = &mut arena.cells[index];
+                    assert!(custody.slot == index && cell.reserved && cell.generation == custody.generation && cell.owner.is_none(), "original fault custody after funded opportunity");
+                    cell.owner = Some(fault);
                 }
                 return Ok(true);
-            };
-            *slot = quarantine[index].take();
-            return Ok(true);
-        };
-        let mut owners = DB_IO_LOST_OWNERS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let Some(slot) = owners.iter_mut().find(|slot| slot.is_none()) else {
-            drop(owners);
-            let terminal = db_io_lost_owner_close_opportunity(overflow[index].as_mut().ok_or_else(|| DbError::Internal("DB I/O overflow retirement changed exact owner".to_string()))?)?;
-            if terminal {
-                overflow[index] = None;
             }
+            *cursor = (*cursor + count) % total;
+            remaining -= count;
+            continue;
+        }
+        let (base, length) = if *cursor < DB_IO_LOST_OWNER_SLOTS { (0, DB_IO_LOST_OWNER_SLOTS) } else if *cursor < DB_IO_LOST_OWNER_SLOTS + DB_IO_LOST_OWNER_OVERFLOW_SLOTS { (DB_IO_LOST_OWNER_SLOTS, DB_IO_LOST_OWNER_OVERFLOW_SLOTS) } else { (DB_IO_LOST_OWNER_SLOTS + DB_IO_LOST_OWNER_OVERFLOW_SLOTS, DB_IO_LOST_OWNER_OVERFLOW_SLOTS) };
+        let start = *cursor - base;
+        let count = (length - start).min(remaining);
+        let selected = if base == 0 { db_io_lost_owner_tier_close_step(&DB_IO_LOST_OWNERS, start, count) } else if base == DB_IO_LOST_OWNER_SLOTS { db_io_lost_owner_tier_close_step(&DB_IO_LOST_OWNER_OVERFLOW, start, count) } else { db_io_lost_owner_tier_close_step(&DB_IO_LOST_OWNER_QUARANTINE, start, count) };
+        if let Some((index, outcome)) = selected {
+            *cursor = (base + index + 1) % total;
+            outcome?;
             return Ok(true);
-        };
-        *slot = overflow[index].take();
-        return Ok(true);
-    };
-    let terminal = db_io_lost_owner_close_opportunity(owners[index].as_mut().ok_or_else(|| DbError::Internal("DB I/O lost-owner cursor changed owner".to_string()))?)?;
-    if terminal {
-        owners[index] = None;
+        }
+        *cursor = (*cursor + count) % total;
+        remaining -= count;
     }
-    Ok(true)
+    Ok(false)
 }
 
 pub fn db_io_lost_owner_close_opportunity(owner: &mut DbIoLostOwner) -> Result<bool, DbError> {
@@ -154,7 +166,7 @@ pub fn db_io_lost_owner_close_opportunity(owner: &mut DbIoLostOwner) -> Result<b
         }
         DbIoLostOwner::Fault(owner) => {
             let _ = owner.close_step();
-            owner.detail.terminal_is_empty() && owner.result_handback.is_none()
+            owner.detail.terminal_is_empty() && owner.result_handback.is_none() && owner.structured.is_none() && owner.custody.is_none()
         }
         DbIoLostOwner::DriverReservation(owner) => {
             owner.close_step()?;
@@ -262,20 +274,22 @@ pub fn db_io_task_close_step() -> Result<Option<usize>, DbError> {
         return Ok(Some(0));
     }
     if !owner.backend_cleanup_done {
-        let task = owner.task.as_ref().ok_or_else(|| DbError::Internal("DB I/O cleanup lost typed task owner".to_string()))?;
+                let cleanup_custody = match owner.cleanup_custody.take() { Some(custody) => custody, None => db_io_fault_custody_reserve()? };
+let task = owner.task.as_ref().ok_or_else(|| DbError::Internal("DB I/O cleanup lost typed task owner".to_string()))?;
         let backend = task.backend();
         let result = db_io_executor_close_operation(backend, handle.operation, task);
-        if matches!(result, Ok(true)) {
+                let refused_custody = if result.is_ok() { owner.cleanup_custody = Some(cleanup_custody); None } else { Some(cleanup_custody) };
+if matches!(result, Ok(true)) {
             owner.backend_cleanup_done = true;
         }
         drop(owner);
         let rotated = if matches!(result, Ok(true)) { Ok(()) } else { db_io_rotate_close_head(handle) };
         drop(_turn);
         crate::defer_fault_notifications(backend);
-        match &result {
+        match result {
             Ok(true) => db_io_note_backend_cleanup(backend, None),
             Ok(false) => {}
-            Err(error) => db_io_note_backend_cleanup(backend, Some(error)),
+            Err(error) => db_io_note_backend_cleanup(backend, Some((error, refused_custody.expect("original preborn cleanup custody")))),
         }
         rotated?;
         return Ok(Some(0));
@@ -331,15 +345,17 @@ pub fn db_io_task_close_step() -> Result<Option<usize>, DbError> {
     }
     if owner.backend_admitted {
         let backend = owner.backend.ok_or_else(|| DbError::Internal("DB I/O backend admission lost control".to_string()))?;
-        let result = db_io_backend_return_operation(backend, handle.operation);
-        if result.is_ok() {
+                let cleanup_custody = match owner.cleanup_custody.take() { Some(custody) => custody, None => db_io_fault_custody_reserve()? };
+let result = db_io_backend_return_operation(backend, handle.operation);
+                let refused_custody = if result.is_ok() { owner.cleanup_custody = Some(cleanup_custody); None } else { Some(cleanup_custody) };
+if result.is_ok() {
             owner.backend_admitted = false;
         }
         drop(owner);
         let rotated = if result.is_ok() { Ok(()) } else { db_io_rotate_close_head(handle) };
         drop(_turn);
         crate::defer_fault_notifications(backend);
-        db_io_note_backend_cleanup(backend, result.as_ref().err());
+        db_io_note_backend_cleanup(backend, result.err().map(|error| (error, refused_custody.expect("original preborn cleanup custody"))));
         rotated?;
         return Ok(Some(0));
     }
@@ -361,7 +377,7 @@ pub fn db_io_task_close_step() -> Result<Option<usize>, DbError> {
         owner.aggregate_returned = true;
         return Ok(Some(0));
     }
-    *owner = DbIoTaskSlot::empty();
+    let retired_slot = std::mem::replace(&mut *owner, DbIoTaskSlot::empty());
     drop(owner);
     let mut arena = db_io_task_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let closing_read = arena.closing_read;
@@ -375,7 +391,9 @@ pub fn db_io_task_close_step() -> Result<Option<usize>, DbError> {
     arena.free[write] = handle.slot;
     arena.free_len += 1;
     drop(arena);
-    db_io_admission_released();
+        drop(_turn);
+    drop(retired_slot);
+db_io_admission_released();
     Ok(Some(0))
 }
 
@@ -404,3 +422,10 @@ fn db_io_remove_close_head(handle: DbIoTaskHandle) -> Result<(), DbError> {
     Ok(())
 }
 //#endregion 🔖️Limits
+
+fn db_io_lost_owner_tier_close_step<const N: usize>(tier: &std::sync::Mutex<[Option<DbIoLostOwner>; N]>, start: usize, count: usize) -> Option<(usize, Result<(), DbError>)> {
+    let mut owners = tier.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let index = start + owners[start..start + count].iter().position(Option::is_some)?;
+    let outcome = db_io_lost_owner_close_opportunity(owners[index].as_mut().expect("selected original lost owner"));
+    Some((index, outcome.map(|terminal| { if terminal { owners[index] = None; } })))
+}

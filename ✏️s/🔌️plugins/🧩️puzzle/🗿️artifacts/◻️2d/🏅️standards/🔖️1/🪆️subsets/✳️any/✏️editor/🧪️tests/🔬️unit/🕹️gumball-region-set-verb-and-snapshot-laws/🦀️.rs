@@ -75,8 +75,8 @@ fn a_rotate_record_orbits_a_two_node_selection_about_its_recorded_pivot() {
     let yields = select_utility::puzzle2d_selection_yields(&base, std::slice::from_ref(&record), 0.0);
     assert_eq!(yields.len(), 1, "a rotate yields its one leaf and no connection");
     let mut after = base.clone();
-    crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation(&mut after, &yields[0].1).expect("the leaf applies");
-    let snapshot = semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(semio_framework_value::ToValue::to_value(&after))));
+    crate::apply_puzzle2d_mutation(&mut after, &yields[0].1).expect("the leaf applies");
+    let snapshot = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&(semio_framework_value::ToValue::to_value(&after))));
     let a = transform_law_node(&snapshot, "node-a");
     assert!(a.get("x").and_then(Value::as_f64).expect("x").abs() < 1e-6 && (a.get("y").and_then(Value::as_f64).expect("y") + 40.0).abs() < 1e-6, "node-a orbits to (0,-40): {a}");
     let b = transform_law_node(&snapshot, "node-b");
@@ -162,8 +162,8 @@ fn outliner_set_verbs_are_idempotent_by_value_and_refuse_a_missing_value() {
         ("setTargetRegionHidden", "hidden", json!({ "id": region.clone() })),
         ("setTargetRegionLocked", "locked", json!({ "id": region.clone() })),
     ] {
-        assert!(<Puzzle2dPlayApp as ArtifactEditor>::command_from_action(verb, Some((semio_framework_value::ToValue::to_value(&(&args))).clone()), None).is_err(), "{verb} without its {flag} value must be refused");
-        args[flag] = json!(true);
+        assert!(<Puzzle2dPlayApp as ArtifactEditor>::command_from_action(verb, Some(&semio_framework_value::ToValue::to_value(&args))).is_err(), "{verb} without its {flag} value must be refused");
+        set_at(&mut args, flag, json!(true));
         let first = dispatch(&mut app, verb, Some(&args), None).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
         assert_eq!(committed_edits(&first), 1, "{verb} commits exactly one document edit");
         let set = fixture_of(&app);
@@ -220,7 +220,7 @@ fn the_initial_snapshot_costs_only_its_document() {
         work();
         semio_framework_trace::peak_heap_bytes_on_this_thread() - before
     };
-    let document = peak_of(&|| drop(Puzzle2dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&(semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(empty_board_snapshot())))))).expect("typed fixture admits"))));
+    let document = peak_of(&|| drop(Puzzle2dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&(semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&(empty_board_snapshot())))))).expect("typed fixture admits"))));
     let snapshot = peak_of(&|| drop(<Puzzle2dPlayApp as ArtifactEditor>::initial_snapshot()));
     assert!(document > 0, "the witness weighs the document conversion: {document}");
     assert!(snapshot <= document + 4096, "the initial snapshot peaked at {snapshot} B, its document at {document} B: it does work the document never reads");

@@ -42,7 +42,7 @@ export interface LayeredNeighbour extends LayeredLanding {
  * the other way brings in — at the top and bottom edges across, at the sides along them. Each hint is a button that goes there. While the strip
  * moves the hints fade out (and leave the focus order), so they always name the neighbours of the page at rest.
  * @see https://www.w3.org/WAI/WCAG22/Understanding/pointer-gestures.html — every swipe also has a single-pointer way */
-export const LayeredNeighbourHints = React.memo(function LayeredNeighbourHints(props: {
+export const LayeredNeighbourHints = /* @__PURE__ */ React.memo(function LayeredNeighbourHints(props: {
   readonly neighbours: readonly LayeredNeighbour[];
   readonly moving: boolean;
   readonly insets: Required<LayeredInsets>;

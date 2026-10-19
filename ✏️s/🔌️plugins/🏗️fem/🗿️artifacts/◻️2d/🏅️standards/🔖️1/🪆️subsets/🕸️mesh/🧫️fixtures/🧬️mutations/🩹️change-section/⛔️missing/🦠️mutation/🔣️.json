@@ -1,0 +1,7 @@
+{
+  "mutation": "changeSection",
+  "id": "missing",
+  "patch": {
+    "name": "Structural Section"
+  }
+}

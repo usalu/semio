@@ -1,5 +1,5 @@
-//! ↩️ Inverse for `ReplaceEdgeGeometry` — restores the BASE connection pose. Missing target ⇒
 //! `Vec::new()`.
+//! ↩️ Inverse for `ReplaceEdgeGeometry` — restores the BASE connection pose. Missing target ⇒
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Inverse

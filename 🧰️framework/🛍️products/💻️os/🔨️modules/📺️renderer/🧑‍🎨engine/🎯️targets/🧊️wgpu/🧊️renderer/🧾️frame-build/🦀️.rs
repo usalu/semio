@@ -30,11 +30,9 @@ pub struct AppRuntime {
     #[cfg(not(target_arch = "wasm32"))]
     pub plugin_modules_root: std::path::PathBuf,
     #[cfg(not(target_arch = "wasm32"))]
-    pub native_plugin_mtimes: std::collections::HashMap<std::path::PathBuf, std::time::SystemTime>,
+    pub native_hot_swap_scan: Option<RendererSourceIoHandle>,
     #[cfg(not(target_arch = "wasm32"))]
-    pub native_hot_swap_scan: Option<RendererIoHandle>,
-    #[cfg(not(target_arch = "wasm32"))]
-    pub native_hot_swap_modified: Option<semio_framework_os_services::NativeModifiedSet>,
+    pub native_hot_swap_program: Option<usize>,
     #[cfg(not(target_arch = "wasm32"))]
     pub native_hot_swap_cursor: usize,
     #[cfg(not(target_arch = "wasm32"))]
@@ -460,6 +458,7 @@ pub fn frame_prepared_abandonment_complete(grant:RetainedCloneGrant,step:Result<
 }
 
 pub enum FrameFinishBoundaryStep {
+    CloseFailure(semio_framework_job::OriginalTurnFailure),
     Pending,
     Complete(AppFrameBuild),
     Fault(&'static str),

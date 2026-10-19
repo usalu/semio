@@ -115,8 +115,8 @@ impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
     fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
         V::mounted_jobs_terminal_is_empty(instance_id)
     }
-    fn mounted_job_prepare_snapshot_read(operation: AppRenderOperationContext, snapshot: &Self::Snapshot) -> bool {
-        V::mounted_job_prepare_snapshot_read(operation, snapshot)
+    fn mounted_job_prepare_snapshot_read(operation: AppRenderOperationContext, snapshot: &Self::Snapshot, windows: &WindowConfigOwnerRegistry, view: Option<&ViewModel>, grant: RetainedCloneGrant) -> crate::MountedSnapshotReadPreparation {
+        V::mounted_job_prepare_snapshot_read(operation, snapshot, windows, view, grant)
     }
     fn register_window_transient_owners(registry: &mut WindowTransientOwnerRegistry) -> Result<(), Fault> {
         V::register_window_transient_owners(registry)
@@ -151,8 +151,8 @@ impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
     fn build_instance_operation_owner() -> Box<dyn ArtifactInstanceOperationOwner> {
         V::build_instance_operation_owner()
     }
-    async fn build_tool_job(request: ArtifactOwnedToolJobRequest<Self>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        V::build_tool_job(request)
+    fn build_tool_job(request:&mut Option<ArtifactOwnedToolJobRequest<Self>>,output:&mut Option<semio_framework::ErasedToolJob>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        V::build_tool_job(request,output,cx)
     }
     fn build_reserved_tool_job(request: ArtifactReservedToolJobRequest<Self>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
         V::build_reserved_tool_job(request)
@@ -243,7 +243,7 @@ impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
     ) -> semio_framework_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
         V::render_with_request_context(owner, body_key, doc, cfg, view_state, transient, interaction,cx)
     }
-    async fn pending_effects(owner: &ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view: Option<&ViewModel>) -> Vec<Effect> {
+    async fn pending_effects(owner: &ArtifactInstanceOperationOwnerHandle, doc: &crate::ArtifactPendingView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view: Option<&ViewModel>) -> Vec<Effect> {
         V::pending_effects(owner, doc, cfg, view)
     }
     async fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> HashMap<String, WindowEngagement> {

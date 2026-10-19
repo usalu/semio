@@ -1,12 +1,13 @@
-//! 🌀️ Edit-mode window options — how vortex markers are surfaced in the viewport: WHEN they are
 //! emitted (always, or only for hovered/selected objects) and HOW their direction arrows point
+//! 🌀️ Edit-mode window options — how vortex markers are surfaced in the viewport: WHEN they are
 //! (outwards from the vortex point, or inwards onto it). Both are per-window-instance chrome.
 
 use semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_PLAY_CONTROLLER_ID;
 use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dRuntime;
 use semio_s_artifact_puzzle_3d_editor_terminology::Puzzle3dLabels;
 use {semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_action, semio_s_artifact_puzzle_3d_editor_config::PUZZLE3D_VORTEX_DIRECTION_INWARDS, semio_s_artifact_puzzle_3d_editor_config::PUZZLE3D_VORTEX_DIRECTION_OUTWARDS, semio_s_artifact_puzzle_3d_editor_config::PUZZLE3D_VORTEX_SHOW_ALWAYS, semio_s_artifact_puzzle_3d_editor_config::PUZZLE3D_VORTEX_SHOW_SELECTED};
-use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
+use semio_framework_plugin::MeasureSelectItem;
+use semio_framework_plugin::WindowMeasure;
 
 /// 🌀️ Window option for when vortex markers are emitted — Always (every object) or Selected (hovered/selected only).
 pub fn show_measure(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {

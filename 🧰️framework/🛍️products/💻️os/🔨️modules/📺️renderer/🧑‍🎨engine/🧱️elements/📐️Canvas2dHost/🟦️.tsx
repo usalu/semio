@@ -16,7 +16,7 @@ import { type ComponentSceneHostProps } from "@semio-tech/framework";
 import { WindowInstanceIdContext } from "../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 import { useMapContextMenuSpecs, useShellContextMenuFallback, openSurfaceContextMenu, type SurfaceContextMenuResult } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
 import { Canvas2dGumballOverlay } from "./🧭️gumball/🟦️.tsx";
-import { CanvasPresenceOverlayV1, useLocalPresenceActorIdV1 } from "../👕️canvas-presence/🟦️.tsx";
+import { CanvasPresenceOverlayV1, useLocalPresenceActorIdV1, usePresenceRuntimeKeyV1 } from "../👕️canvas-presence/🟦️.tsx";
 import { PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS, clearLocalPresenceWindowViewV1, publishLocalPresenceWindowViewV1 } from "../👕️canvas-presence/🟦️.ts";
 import { type CanvasCamera, screenToWorldLogical, worldToScreenLogical } from "./📷️camera-math/🟦️.ts";
 import type { CanvasLayerRecord } from "./🖍️layer-paint/🟦️.ts";
@@ -50,8 +50,9 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
   const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const [presenceCamera, setPresenceCamera] = useState<CanvasCamera>(initialCamera);
+  const presenceRuntimeKey = usePresenceRuntimeKeyV1();
   const presenceWindowId = windowInstanceId ?? node.surfaceId ?? "canvas";
-  const localPresenceActor = useLocalPresenceActorIdV1("local");
+  const localPresenceActor = useLocalPresenceActorIdV1(presenceRuntimeKey);
   const presencePointerRef = useRef<readonly [number, number] | null>(null);
   const presencePublishAtRef = useRef(0);
   /** 👕️ Publishes this window's camera and the pointer in WORLD coordinates for the next presence beat (throttled), so a
@@ -63,15 +64,20 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
     const rect = containerRef.current?.getBoundingClientRect();
     const camera = cameraRef.current;
     const pointer = presencePointerRef.current;
-    publishLocalPresenceWindowViewV1("local", presenceWindowId, {
+    if (!presenceRuntimeKey) return;
+    publishLocalPresenceWindowViewV1(presenceRuntimeKey, presenceWindowId, {
       windowId: presenceWindowId,
       space: "canvas",
       kind: { kind: "canvas", x: camera.x, y: camera.y, zoom: camera.zoom },
       size: [rect?.width ?? 0, rect?.height ?? 0],
       ...(pointer ? { pointer: [pointer[0], pointer[1], 0] as const } : {}),
     });
-  }, [presenceWindowId]);
-  useEffect(() => () => clearLocalPresenceWindowViewV1(presenceWindowId), [presenceWindowId]);
+  }, [presenceWindowId, presenceRuntimeKey]);
+  useEffect(() => {
+    const timer = setTimeout(() => publishCanvasPresenceView(true), PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS);
+    return () => clearTimeout(timer);
+  }, [publishCanvasPresenceView, presenceCamera]);
+  useEffect(() => presenceRuntimeKey ? () => clearLocalPresenceWindowViewV1(presenceWindowId, presenceRuntimeKey) : undefined, [presenceWindowId, presenceRuntimeKey]);
   const onPresencePointerMove = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -373,7 +379,7 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
         onDispatch={(action, args) => dispatch(action, args)}
       />
       <CanvasPresenceOverlayV1
-        runtimeKey="local"
+        runtimeKey={presenceRuntimeKey}
         windowId={presenceWindowId}
         space="canvas"
         myActor={localPresenceActor ?? ""}

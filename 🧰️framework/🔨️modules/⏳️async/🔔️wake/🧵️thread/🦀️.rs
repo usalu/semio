@@ -12,6 +12,8 @@ impl RetireOwned for OriginalThreadWake{
  fn retirement_element_copy_bytes()->usize{size_of::<Self>()}
 }
 impl RetirementCursor for ThreadWakeRetirement{
+    fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:if self.terminal_is_empty(){0}else{size_of::<Option<std::thread::Thread>>()+size_of::<std::thread::Thread>()+size_of::<Option<std::thread::ThreadId>>()},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
+
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
   if self.terminal_is_empty(){return RetirementStep::Complete}
   let copy=self.next_work_byte_demand().unwrap();

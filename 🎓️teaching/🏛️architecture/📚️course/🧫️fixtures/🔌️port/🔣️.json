@@ -1,0 +1,8 @@
+{
+  "environments": [{ "FORCE_COLOR": "0" }, { "FORCE_COLOR": "1", "NO_COLOR": "1" }],
+  "isolation": { "stacks": 2, "endpoints": ["site", "proctor"], "minimum": 1, "maximum": 65535, "excluded": [6061, 6161, 6162, 8891, 8892] },
+  "cases": [
+    { "state": "available", "expected": true },
+    { "state": "occupied", "expected": false }
+  ]
+}

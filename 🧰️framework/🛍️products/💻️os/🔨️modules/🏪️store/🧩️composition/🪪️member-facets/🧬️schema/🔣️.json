@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "facets",
+    "nativeMethods",
+    "referenceMethods",
+    "cases"
+  ],
+  "properties": {
+    "facets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "native",
+        "reference"
+      ],
+      "properties": {
+        "native": {
+          "const": {
+            "ordinarySnapshotClone": false,
+            "coldMutation": false,
+            "originalReceiving": true,
+            "paidRetirement": true,
+            "ordinaryMutationClone": false
+          }
+        },
+        "reference": {
+          "const": {
+            "ordinarySnapshotClone": true,
+            "coldMutation": true,
+            "explicitSelection": true,
+            "ordinaryMutationClone": true
+          }
+        }
+      }
+    },
+    "nativeMethods": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "referenceMethods": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "snapshotClone",
+          "coldMutation",
+          "referenceSelected",
+          "native",
+          "reference",
+          "mutationClone"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "snapshotClone": {
+            "type": "boolean"
+          },
+          "coldMutation": {
+            "type": "boolean"
+          },
+          "referenceSelected": {
+            "type": "boolean"
+          },
+          "native": {
+            "const": true
+          },
+          "reference": {
+            "type": "boolean"
+          },
+          "mutationClone": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

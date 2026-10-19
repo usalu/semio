@@ -9,7 +9,7 @@
         h.set_suggestion_offset(80.0);
         h.set_brush_node_size(40.0);
 
-        let snapshot: semio_framework_pack_json::Value = semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(<crate::Puzzle2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap())));
+        let snapshot: semio_framework_pack_json::Value = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&(<crate::Puzzle2dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap())));
         let compat_str = snapshot.get("meta").and_then(|m| m.get("kindCompatibility")).map_or_else(|| "[]".to_string(), |v| v.to_string());
         h.style.set_handle_link_compat_from_json(&compat_str).unwrap();
         h.style.set_board_kind_catalogs_from_json(&catalogs_json_from_manifest_id("nakagin")).unwrap();
@@ -91,15 +91,15 @@
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
 
-        let snapshot: semio_framework_pack_json::Value = semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(<crate::Puzzle2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap())));
+        let snapshot: semio_framework_pack_json::Value = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&(<crate::Puzzle2dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap())));
         let compat_str = snapshot.get("meta").and_then(|m| m.get("kindCompatibility")).map_or_else(|| "[]".to_string(), |v| v.to_string());
         h.style.set_handle_link_compat_from_json(&compat_str).unwrap();
         let catalogs_str = snapshot.get("meta").and_then(|m| m.get("kindCatalogs")).map_or_else(
             || "{}".to_string(),
             |kc| {
                 semio_framework_pack_json::json!({
-                    "handleKinds": kc.get("handles"),
-                    "nodeKinds": kc.get("nodes"),
+                    "handleKinds": kc.get("handles").cloned(),
+                    "nodeKinds": kc.get("nodes").cloned(),
                 })
                 .to_string()
             },

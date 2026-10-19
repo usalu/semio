@@ -92,7 +92,18 @@ impl<S, M: ConfigApplyMutation<S>> ConfigApplyCursor<S, M> {
 
 impl<S, M> RetainedCloneEditCursor<S, M> for ConfigApplyCursor<S, M>
 where S: RetainedClone, M: ConfigApplyMutation<S> {
-    fn advance(&mut self, _base: RetainedCloneRef<'_, S>, post: &mut S, mutation: RetainedCloneRef<'_, M>, grant: RetainedCloneGrant) -> Result<RetainedCloneEditStep, ValueError> {
+    fn advance_demands(&self, _base: RetainedCloneRef<'_, S>, _post: &S, mutation: RetainedCloneRef<'_, M>, body: usize) -> Result<RetirementDemand, ValueError> {
+        if self.cancelled || self.custody.is_closing() { return Ok(Default::default()); }
+        Ok(match self.stage {
+            ApplyStage::Clone => { let cursor = self.clone.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "config apply mutation clone absent"))?; let mut demand = cursor.advance_demands(mutation, body)?; demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "config apply clone depth overflow"))?; demand },
+            ApplyStage::Take => RetirementDemand { copy_bytes: size_of::<M>() * 2, depth: 2, ..Default::default() },
+            ApplyStage::CloseClone => Self::clone_close_demand(self.clone.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "config apply mutation clone absent"))?, body)?,
+            ApplyStage::Reserve => RetirementDemand { copy_bytes: size_of::<Vec<M>>(), capacity_bytes: size_of::<M>(), depth: 2, ..Default::default() },
+            ApplyStage::Exchange => RetirementDemand { copy_bytes: size_of::<M>() * 2 + size_of::<S>(), depth: 2, ..Default::default() },
+            ApplyStage::Done => Default::default(),
+        })
+    }
+    fn advance(&mut self, _base: RetainedCloneRef<'_, S>, post: &mut S, mutation: RetainedCloneRef<'_, M>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneEditStep, ValueError> {
         if self.cancelled || self.custody.is_closing() || grant.maximum_items == 0 || grant.maximum_depth < 2 { return Ok(RetainedCloneEditStep::Progress(Default::default())); }
         let refusal = |message: &'static str| ValueError::literal(ValueRefusalKind::InvariantViolated, message);
         let receipt = match self.stage {
@@ -100,7 +111,7 @@ where S: RetainedClone, M: ConfigApplyMutation<S> {
             ApplyStage::Clone => {
                 let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
                 let cursor = self.clone.as_mut().ok_or_else(|| refusal("config apply lost its mutation clone cursor"))?;
-                let step = cursor.advance(mutation, child)?;
+                let step = cursor.advance(mutation, body, child)?;
                 let progress = admit_retained_clone_progress(child, step.progress(), "config apply mutation clone")?;
                 if matches!(step, RetainedCloneStep::Complete(_)) { self.stage = ApplyStage::Take; }
                 progress

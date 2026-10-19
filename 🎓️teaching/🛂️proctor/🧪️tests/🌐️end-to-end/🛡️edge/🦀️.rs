@@ -1,7 +1,7 @@
 //! 🛡️ The proctor end to end, the edge: the gate of a proctor behind its terminating proxy — enrollment keys, refused ids, body limits, per-address allowances, sign-up counting, its own routes only, socket limits and trickling bodies.
 //!
 //! @see ../🦀️.rs — the end to end suite that mounts this module
-//! @see ../../../🧫️fixtures/📚️catalog/🔣️.json — the catalog played
+//! @see ../../../🧫️fixtures/📚️course/🔣️.json — the course played
 
 use super::*;
 use semio_framework_test_fixtures::fixture_path;
@@ -23,19 +23,26 @@ pub(super) fn sign_up(seed: u32, learner: &str) -> Value {
     json!({ "type": "identify-learner", "id": id(seed), "learner": learner, "identity": { "kind": "anonymous" } })
 }
 
-/// 📏️ The size of the largest `record-answer` body a catalog can produce: every item of every task
-/// answered — with a guess of the longest a number can be written where the keys are hidden —,
+/// 📏️ The size of the largest `record-answer` body a course can produce: every presented item
+/// answered, using the longest ids allowed by each pool slot or draw and the longest numeric guesses,
 /// encoded as the client sends it.
-fn largest_answer(catalog: &Path) -> usize {
+fn largest_answer(course: &Path) -> usize {
     let read = |path: &Path| -> Value { serde_json::from_str(&std::fs::read_to_string(path).unwrap_or_else(|error| panic!("{}: {error}", path.display()))).expect("json") };
     let ids = |values: &Value| -> Vec<String> { values.as_array().map(|values| values.iter().map(|value| value["id"].as_str().expect("id").to_string()).collect()).unwrap_or_default() };
     let (learner, run) = (id(0xffff_ffff), id(0xffff_fffe));
     let longest = json!(-1.234_567_890_123_456_7e-300);
     let mut largest = 0;
-    for quiz in read(catalog)["quizzes"].as_array().expect("quizzes") {
-        let document = read(&catalog.parent().expect("a directory").join(quiz.as_str().expect("a quiz path")));
+    for quiz in read(course)["quizzes"].as_array().expect("quizzes") {
+        let document = read(&course.parent().expect("a directory").join(quiz.as_str().expect("a quiz path")));
         for task in document["tasks"].as_array().expect("tasks") {
-            let items = ids(&task["items"]);
+            let items = if let Some(slots) = task["pool"]["slots"].as_array() {
+                slots.iter().map(|slot| slot.as_array().expect("slot").iter().map(|item| item.as_str().expect("item id")).max_by_key(|item| item.len()).expect("nonempty slot").to_string()).collect::<Vec<_>>()
+            } else {
+                let mut items = ids(&task["items"]);
+                items.sort_by_key(|item| std::cmp::Reverse(item.len()));
+                items.truncate(task["draw"].as_u64().map_or(items.len(), |draw| draw as usize));
+                items
+            };
             let guessed = || Value::Object(items.iter().map(|item| (item.clone(), longest.clone())).collect());
             let answers = match task["kind"].as_str().expect("kind") {
                 "sorting" => vec![json!({ "kind": "sorting", "order": items }), json!({ "kind": "sorting", "order": items, "guesses": guessed() })],
@@ -87,7 +94,7 @@ fn an_anonymous_caller_can_neither_read_nor_occupy_an_enrollment_key() {
         let occupying = envelope(&json!({ "type": "identify-learner", "id": key, "learner": intruder, "identity": { "kind": "anonymous" } }));
         let elsewhere = envelope(&json!({ "type": "start-run", "id": key, "learner": intruder, "run": id(0x666), "quiz": "power", "challenge": "medium", "at": now() }));
         let mut relayed = elsewhere.clone();
-        relayed["kind"] = json!("quiz.enroll-learner");
+        relayed["kind"] = json!("course.enroll-learner");
         relayed["principal"] = json!({ "kind": "serviceAccount", "id": "proctor" });
         [occupying, elsewhere, relayed]
     };
@@ -146,9 +153,9 @@ fn a_command_for_an_id_no_actor_can_have_is_refused_before_it_costs_anything() {
 #[test]
 fn a_body_past_the_limit_is_refused_and_the_largest_real_command_is_far_below_it() {
     let limit = Limits::default().body_bytes.expect("the production limits cap the body");
-    for catalog in [fixtures().join("📚️catalog/🔣️.json"), fixture_path!("../../../🏛️architecture/❓️quiz/🔣️.json")] {
-        let largest = largest_answer(&catalog);
-        assert!(largest > 1000 && largest * 3 <= limit, "{}: the largest answer is {largest} bytes, the limit {limit}", catalog.display());
+    for course in [fixtures().join("📚️course/🔣️.json"), fixture_path!("../../../🏛️architecture/📚️course/🔣️.json")] {
+        let largest = largest_answer(&course);
+        assert!(largest > 1000 && largest * 3 <= limit, "{}: the largest answer is {largest} bytes, the limit {limit}", course.display());
     }
     let data = scratch("edge-body");
     let running = boot(&data.0, development());
@@ -282,7 +289,7 @@ fn sockets_are_counted_per_address_and_an_oversized_message_ends_the_socket() {
     let mut second = presence(address, &format!("{TENANT}/home"), "home", &local).expect("the second socket");
     welcome(&mut second);
     let learner = id(7);
-    let mut stream = socket(address, &format!("/actors/{TENANT}/quiz-learner/{learner}/events/ws"), &[]);
+    let mut stream = socket(address, &format!("/actors/{TENANT}/course-learner/{learner}/events/ws"), &[]);
     assert_eq!(presence(address, TENANT, "home", &local).err(), Some((429, None)), "one address holds no more sockets than its cap");
 
     stream.send(Message::text("x".repeat(2048))).expect("sent");

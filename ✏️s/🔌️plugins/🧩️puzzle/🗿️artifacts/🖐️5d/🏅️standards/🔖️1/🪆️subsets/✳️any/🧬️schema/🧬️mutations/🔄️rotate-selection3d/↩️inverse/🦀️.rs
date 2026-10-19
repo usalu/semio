@@ -1,7 +1,8 @@
-//! ↩️ Inverse for `RotateSelection3d` — the absolute setters restoring every BASE pose field the transform changes (exact,
 //! never a negated parameter that would accumulate float error). Nothing moved ⇒ `Vec::new()`.
+//! ↩️ Inverse for `RotateSelection3d` — the absolute setters restoring every BASE pose field the transform changes (exact,
+use crate::standards::v1::subsets::any::schema::diff::puzzle5d_selection;
 use crate::standards::v1::subsets::any::schema::mutations::{quat_from_axis_angle, quat_mul, rotate_part_3d, rotate_target_volume};
-use crate::standards::v1::subsets::any::schema::diff::{puzzle5d_selection};
+
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Inverse
@@ -20,6 +21,8 @@ where
     let turned = |orientation: Option<[f64; 4]>| Some(quat_mul(turn, orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])));
     let parts = selection.parts.iter().filter(|part| turned(part.part_3d.orientation) != part.part_3d.orientation).map(|part| rotate_part_3d(part.id.clone(), part.part_3d.orientation));
     let volumes = selection.volumes.iter().filter(|volume| turned(volume.orientation) != volume.orientation).map(|volume| rotate_target_volume(volume.id.clone(), volume.orientation));
-    Ok(parts.chain(volumes).collect())
+    let mut inverse = parts.chain(volumes).collect::<Vec<_>>();
+    inverse.reverse();
+    Ok(inverse)
 }
 //#endregion 🔖️Inverse

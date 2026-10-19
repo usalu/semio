@@ -1,6 +1,8 @@
 use super::*;
 use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results;
-use semio_framework_plugin::{HistoryView, ViewModel, ViewWindowInstance};
+use semio_framework_plugin::HistoryView;
+use semio_framework_plugin::ViewModel;
+use semio_framework_plugin::ViewWindowInstance;
 
 fn results_view() -> ViewModel {
     ViewModel {
@@ -19,7 +21,7 @@ async fn set_result_display_is_config_only() {
     let doc = ArtifactView::new(&snapshot, &history);
     let config = NoConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
-    let emit = handle_window(&SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 1, field: None, value: None, window_id: None }, &cfg, &results_view()).expect("the addressed results window accepts a display change");
+    let emit = handle_window(&SetResultDisplay { source_id: Some(semio_s_fem_analyses_model::encode_result_source_parts("loadCase", "dead").unwrap()), mode: "modal".into(), mode_index: 1, field: None, value: None, window_id: None }, &cfg, &results_view()).expect("the addressed results window accepts a display change");
     assert!(emit.artifact_mutations.is_empty(), "setResultDisplay must not emit a document VCS operation");
     assert_eq!(emit.window_config_mutations.iter().map(semio_framework_plugin::WindowConfigMutation::window_id).collect::<Vec<_>>(), ["results-left"]);
     assert!(handle(&SetResultDisplay { source_id: None, mode: "static".into(), mode_index: 0, field: None, value: None, window_id: None }, &doc, &cfg).is_err(), "without a window there is nothing to address");
@@ -35,7 +37,9 @@ async fn set_result_display_applies_one_named_field() {
         let mut next = results::config::current(&cfg);
         apply_field(&mut next, field, value).map(|()| next)
     };
-    assert_eq!(apply("sourceId", "dead").expect("source").result_source_id.as_deref(), Some("dead"));
+    let source = semio_s_fem_analyses_model::encode_result_source_parts("loadCase", "dead").unwrap();
+    assert_eq!(apply("sourceId", &source).expect("source").result_source_id.as_deref(), Some(source.as_str()));
+    assert!(apply("sourceId", "dead").is_err(), "untyped source names cannot collapse physical namespaces");
     assert_eq!(apply("sourceId", "").expect("cleared source").result_source_id, None);
     assert_eq!(apply("mode", "buckling").expect("mode").result_mode, semio_s_fem_app_surface::ResultMode::Buckling);
     assert_eq!(apply("modeIndex", "2").expect("index").result_mode_index, 2);

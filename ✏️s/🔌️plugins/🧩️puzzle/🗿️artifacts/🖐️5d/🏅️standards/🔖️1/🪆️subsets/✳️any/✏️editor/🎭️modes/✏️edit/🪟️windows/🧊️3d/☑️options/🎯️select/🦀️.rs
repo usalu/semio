@@ -1,5 +1,5 @@
-//! 🎯️ 3D-window option — the selection group: which entity kinds (parts/grips/fasteners) a pick in
 //! the world pane may even reach. The marquee method and merge mode live in the framework's own
+//! 🎯️ 3D-window option — the selection group: which entity kinds (parts/grips/fasteners) a pick in
 //! `vortex` interaction domain (`interactionSelect`'s `method`/`merge`), never here.
 //!
 //! 🔁️ Both panes render the identical three toggles over their own per-window `selectable_kinds`
@@ -8,7 +8,8 @@
 
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
-use crate::editor::puzzle5d::entities::{puzzle5d_action, PUZZLE5D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle5d::entities::puzzle5d_action;
+use crate::editor::puzzle5d::PUZZLE5D_PLAY_CONTROLLER_ID;
 
 use semio_framework_plugin::WindowMeasure;
 

@@ -4,7 +4,7 @@
  */
 
 // #region 🔌️Adapters
-import type { AnalyzeQuery, AnalyzeQueryVariables, BundlesQuery, BundlesQueryVariables, ContributorsQuery, ContributorsQueryVariables, FileContentQuery, FileContentQueryVariables, FolderContentQuery, FolderContentQueryVariables, GoalsQuery, GoalsQueryVariables, PoliciesQuery, PoliciesQueryVariables, RepoCheckpointsQuery, RepoCheckpointsQueryVariables, RepoStructureQuery, RepoStructureQueryVariables, TicketsQuery, TicketsQueryVariables } from "../🤖️generated/🔗️graphql-types/🟦️.ts";
+import type { BundlesQuery, BundlesQueryVariables, ContributorsQuery, ContributorsQueryVariables, FileContentQuery, FileContentQueryVariables, FolderContentQuery, FolderContentQueryVariables, GoalsQuery, GoalsQueryVariables, PoliciesQuery, PoliciesQueryVariables, RepoCheckpointsQuery, RepoCheckpointsQueryVariables, RepoStructureQuery, RepoStructureQueryVariables, TicketsQuery, TicketsQueryVariables } from "../🤖️generated/🔗️graphql-types/🟦️.ts";
 // #endregion 🔌️Adapters
 
 /** 🕸️ One GraphQL operation source typed by the result and variables the generated types describe for it. */
@@ -210,41 +210,6 @@ export const ContributorsDocument = graphql<ContributorsQuery, ContributorsQuery
             }
           }
         }
-      }
-    }
-  }
-`);
-
-export const AnalyzeDocument = graphql<AnalyzeQuery, AnalyzeQueryVariables>(`
-  query Analyze($scope: String) {
-    analyze(scope: $scope) {
-      breachs {
-        id
-        summary
-        priority
-        autofixable
-        scope
-        line
-        column
-        excerpt
-        kind {
-          id
-          policy {
-            id
-            name
-          }
-          reason
-          solution
-        }
-      }
-      metrics {
-        total
-        byPriority {
-          high
-          medium
-          low
-        }
-        autofixable
       }
     }
   }

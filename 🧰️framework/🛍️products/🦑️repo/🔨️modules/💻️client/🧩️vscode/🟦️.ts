@@ -4,17 +4,16 @@
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// VS Code extension providing monorepo navigation, analysis and commands.
+// VS Code extension providing read-only monorepo source navigation and language editing.
 
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
 import * as vscode from "vscode";
 import { isKitDocument, validateKitDocument } from "./🧾️kit-validation/🟦️.ts";
-import { kitDiagnosticCollection, outputChannel, repoDiagnosticCollection } from "./🎩️globals/🟦️.ts";
+import { kitDiagnosticCollection, outputChannel } from "./🎩️globals/🟦️.ts";
 import { log, logError } from "./🎼️utilities/🟦️.ts";
 import { invalidateTreeNodeCache } from "./🏬️uri-resolution/🟦️.ts";
-import { analyzeFile, shouldAnalyzeFile } from "./🗺️file-analysis/🟦️.ts";
 import { filterProvider, FilterTreeDataProvider, monorepoProvider, MonorepoTreeDataProvider, SectionsTreeDataProvider } from "./🌳️tree-providers/🟦️.ts";
 import { ComposeCodeLensProvider, composeGutterIcon, updateComposeDecorations } from "./🔎️code-lens/🟦️.ts";
 import { registerCommands } from "./⌨️commands/🟦️.ts";
@@ -50,9 +49,8 @@ export function activate(context: vscode.ExtensionContext) {
     registerSidebarViews(context);
     registerCommands(context);
 
-    repoDiagnosticCollection.current = vscode.languages.createDiagnosticCollection("compose");
     kitDiagnosticCollection.current = vscode.languages.createDiagnosticCollection("compose-kit");
-    context.subscriptions.push(repoDiagnosticCollection.current, kitDiagnosticCollection.current);
+    context.subscriptions.push(kitDiagnosticCollection.current);
 
     composeGutterIcon.current = vscode.window.createTextEditorDecorationType({
       gutterIconPath: vscode.Uri.file(context.asAbsolutePath("🔣️compose_codeicon.svg")),
@@ -75,34 +73,31 @@ export function activate(context: vscode.ExtensionContext) {
       vscode.workspace.onDidSaveTextDocument((document) => {
         invalidateTreeNodeCache();
         monorepoProvider.current?.refresh();
-        if (shouldAnalyzeFile(document)) analyzeFile(document);
         if (isKitDocument(document)) validateKitDocument(document);
       }),
     );
 
     context.subscriptions.push(
       vscode.workspace.onDidOpenTextDocument((document) => {
-        if (shouldAnalyzeFile(document)) analyzeFile(document);
         if (isKitDocument(document)) validateKitDocument(document);
       }),
     );
 
-    const analyzeDebounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
+    const kitDebounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
     context.subscriptions.push(
       vscode.workspace.onDidChangeTextDocument((event) => {
         if (vscode.window.activeTextEditor && event.document === vscode.window.activeTextEditor.document) {
           updateComposeDecorations(vscode.window.activeTextEditor);
         }
         const document = event.document;
-        if (!shouldAnalyzeFile(document) && !isKitDocument(document)) return;
+        if (!isKitDocument(document)) return;
         const key = document.uri.toString();
-        const existing = analyzeDebounceTimers.get(key);
+        const existing = kitDebounceTimers.get(key);
         if (existing) clearTimeout(existing);
-        analyzeDebounceTimers.set(
+        kitDebounceTimers.set(
           key,
           setTimeout(() => {
-            analyzeDebounceTimers.delete(key);
-            if (shouldAnalyzeFile(document)) analyzeFile(document);
+            kitDebounceTimers.delete(key);
             if (isKitDocument(document)) validateKitDocument(document);
           }, 1500),
         );
@@ -130,9 +125,6 @@ export function activate(context: vscode.ExtensionContext) {
 
     setTimeout(() => {
       vscode.workspace.textDocuments.forEach((document) => {
-        if (shouldAnalyzeFile(document)) {
-          analyzeFile(document);
-        }
         if (isKitDocument(document)) {
           validateKitDocument(document);
         }

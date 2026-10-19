@@ -1,0 +1,30 @@
+{
+  "valid": [
+    {"action":{"DraftStart":{"title":"A Human Draft 🦑"}},"argv":["draft","create","A Human Draft 🦑"],"key":"draft.start","mutating":true},
+    {"action":{"DraftDiscard":{"slug":"A-HUMAN-DRAFT"}},"argv":["draft","delete","A-HUMAN-DRAFT"],"key":"draft.discard","mutating":true},
+    {"action":{"TicketReopen":{"id":"26/09/23/EXAMPLE","prompt":"Continue the requested work 🦑"}},"argv":["ticket","reopen","26/09/23/EXAMPLE","--prompt","Continue the requested work 🦑","--client","claude-code","--no-management"],"key":"ticket.reopen:26/09/23/EXAMPLE","mutating":true},
+    {"action":{"TicketReopen":{"id":"26/09/23/PARENT/CHILD","prompt":"Continue the child ticket"}},"argv":["ticket","reopen","26/09/23/PARENT/CHILD","--prompt","Continue the child ticket","--client","claude-code","--no-management"],"key":"ticket.reopen:26/09/23/PARENT/CHILD","mutating":true},
+    {"action":{"Analyze":{"scope":"rust","policy":null}},"argv":["analyze","rust"],"key":"analyze:rust","mutating":false},
+    {"action":{"Analyze":{"scope":"typescript","policy":"code"}},"argv":["analyze","typescript","--policy","code"],"key":"analyze:typescript","mutating":false}
+  ],
+  "invalid": [
+    {"DraftStart":{"title":""}},
+    {"DraftStart":{"title":"   "}},
+    {"DraftStart":{"title":"bad\nline"}},
+    {"DraftStart":{"title":"bad\u007ftext"}},
+    {"DraftStart":{"title":"Good","unexpected":true}},
+    {"DraftDiscard":{"slug":"../../escape"}},
+    {"DraftDiscard":{"slug":"lowercase"}},
+    {"DraftDiscard":{"slug":"BAD--SLUG"}},
+    {"DraftDiscard":{"slug":"-BAD"}},
+    {"TicketReopen":{"id":"26/09/23/EXAMPLE"}},
+    {"TicketReopen":{"id":"26/09/23/EXAMPLE","prompt":""}},
+    {"TicketReopen":{"id":"invalid","prompt":"Continue"}},
+    {"TicketReopen":{"id":"26/09/23/PARENT/../CHILD","prompt":"Continue"}},
+    {"TicketReopen":{"id":"26/09/23/PARENT//CHILD","prompt":"Continue"}},
+    {"Analyze":{"scope":"unknown","policy":null}},
+    {"Analyze":{"scope":"rust","policy":"unknown"}},
+    {"Analyze":{"scope":"rust"}},
+    {"Analyze":{"scope":"rust","policy":null,"extra":true}}
+  ]
+}

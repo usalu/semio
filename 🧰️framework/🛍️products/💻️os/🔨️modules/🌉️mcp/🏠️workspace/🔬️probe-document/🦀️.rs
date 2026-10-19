@@ -104,18 +104,22 @@ impl Default for ProbeDiff {
 }
 
 impl store::DiffAlgebra<ProbeSnapshot> for ProbeDiff {
-    fn inverse(&self, base: &ProbeSnapshot) -> Self {
-        ProbeDiff(base.0.clone())
-    }
+
 
     fn is_empty(&self) -> bool {
         false
     }
 }
+impl store::ColdDiffAlgebra<ProbeSnapshot> for ProbeDiff {
+fn inverse(&self, base: &ProbeSnapshot) -> Self {
+        ProbeDiff(base.0.clone())
+    }
+}
 
-impl store::MutationDiff<ProbeSnapshot> for ProbeDiff {
-    fn apply(&self, _base: &ProbeSnapshot, _capability: store::ApplyCapability) -> store::MutationApplyResult<ProbeSnapshot> {
-        Ok(ProbeSnapshot(self.0.clone()))
+impl store::MutationDiff<ProbeSnapshot> for ProbeDiff {}
+impl store::ColdMutationDiff<ProbeSnapshot> for ProbeDiff {
+    fn apply(&self, base: &mut ProbeSnapshot, capability: store::ApplyCapability) -> store::MutationApplyResult<()> {
+        store::PreparedField::new(ProbeSnapshot(self.0.clone()),drop,capability).install(base);Ok(())
     }
 
     fn absorb(&mut self, other: Self) {
@@ -172,12 +176,17 @@ impl store::Mutation<ProbeSnapshot> for ProbeMutation {
         &Self::DESCRIPTORS[0]
     }
 
-    fn diff(&self, _base: &ProbeSnapshot) -> store::MutationOutcome<ProbeDiff> {
+
+
+
+}
+impl store::ColdMutation<ProbeSnapshot> for ProbeMutation {
+type ReferenceDiff= ProbeDiff;
+fn diff(&self, _base: &ProbeSnapshot) -> store::MutationOutcome<ProbeDiff> {
         let ProbeMutation::SetValue(value) = self;
         store::MutationOutcome::new(ProbeDiff(value.clone()))
     }
-
-    fn inverse(&self, base: &ProbeSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+fn inverse(&self, base: &ProbeSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
     Ok((|| {
         vec![ProbeMutation::SetValue(base.0.clone())]
     

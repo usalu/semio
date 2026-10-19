@@ -1,0 +1,212 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/mesh/mutation/change-region/schema.json",
+  "title": "ChangeRegion",
+  "description": "Changes only supplied region fields while preserving stable identity.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "patch"
+  ],
+  "x-semio-invariant": [
+    {
+      "id": "region-outline-encloses-area",
+      "description": {
+        "en": "The outline polygon encloses a non-zero area.",
+        "de": "Das Umrisspolygon umschließt eine Fläche ungleich null."
+      }
+    },
+    {
+      "id": "region-hole-encloses-area",
+      "description": {
+        "en": "Every opening polygon encloses a non-zero area.",
+        "de": "Jedes Aussparungspolygon umschließt eine Fläche ungleich null."
+      }
+    },
+    {
+      "id": "region-holes-inside-outline",
+      "description": {
+        "en": "Every opening vertex lies inside the outline or on its boundary.",
+        "de": "Jeder Eckpunkt einer Aussparung liegt innerhalb des Umrisses oder auf dessen Rand."
+      }
+    }
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeRegion",
+      "description": "The internally tagged discriminator `#[value(tag = \"mutation\")]` puts on the wire.",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Plate region",
+          "de": "Scheibenbereich"
+        },
+        "ref": {
+          "kind": "region",
+          "domain": "fem2d",
+          "granularity": "region"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "patch": {
+      "title": "FemRegion",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Bezeichnung"
+            },
+            "group": "identity",
+            "order": 20
+          }
+        },
+        "outline": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "minItems": 3,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Outline",
+              "de": "Umriss"
+            },
+            "description": {
+              "en": "Closed polygon of x, y vertices in m.",
+              "de": "Geschlossenes Polygon aus x-, y-Eckpunkten in m."
+            },
+            "group": "record",
+            "order": 30
+          }
+        },
+        "holes": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "format": "double"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "minItems": 3
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Openings",
+              "de": "Aussparungen"
+            },
+            "description": {
+              "en": "Polygons cut out of the outline.",
+              "de": "Aus dem Umriss ausgeschnittene Polygone."
+            },
+            "group": "record",
+            "order": 40
+          }
+        },
+        "thickness": {
+          "type": "number",
+          "format": "double",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Thickness",
+              "de": "Dicke"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.001,
+            "precision": 1,
+            "group": "geometry",
+            "order": 50
+          }
+        },
+        "materialId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Material",
+              "de": "Material"
+            },
+            "ref": {
+              "kind": "material",
+              "domain": "fem2d",
+              "granularity": "material"
+            },
+            "group": "target",
+            "order": 60
+          }
+        },
+        "meshSize": {
+          "type": "number",
+          "format": "double",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Mesh size",
+              "de": "Netzweite"
+            },
+            "description": {
+              "en": "Target edge length of the finite elements.",
+              "de": "Angestrebte Kantenlänge der finiten Elemente."
+            },
+            "unit": "m",
+            "step": 0.01,
+            "precision": 3,
+            "group": "mesh",
+            "order": 70
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "New plate region",
+          "de": "Neuer Scheibenbereich"
+        },
+        "group": "record",
+        "order": 30
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "pages": ["learner", "physics", "intro", "heating", "board", "cooling", "badges", "demand", "prefs"],
+  "columns": 3,
+  "steps": [
+    { "page": "intro", "offset": { "x": 2, "y": 0 } },
+    { "page": "learner", "offset": { "x": 0, "y": 0 } },
+    { "page": "board", "offset": { "x": 1, "y": 1 } },
+    { "page": "prefs", "offset": { "x": 2, "y": 2 } }
+  ],
+  "gestures": [
+    { "from": [300, 450], "to": [600, 450], "page": "intro" },
+    { "from": [600, 450], "to": [300, 450], "page": "learner" },
+    { "from": [450, 600], "to": [450, 300], "page": "heating" }
+  ]
+}

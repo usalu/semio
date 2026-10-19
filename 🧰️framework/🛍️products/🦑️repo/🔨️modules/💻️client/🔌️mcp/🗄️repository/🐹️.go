@@ -14,7 +14,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/usalu/semio/repo/client"
+	client "github.com/usalu/semio/repo/cli"
+	"github.com/usalu/semio/repo/providers"
+	"github.com/usalu/semio/repo/tickets"
+	"github.com/usalu/semio/repo/workspace"
 )
 
 // #region 🔗️DomainBoundary
@@ -32,12 +35,12 @@ type RepositoryHandlers interface {
 }
 
 type ClientRepository struct {
-	profile client.McpClientKind
+	profile providers.McpClientKind
 }
 
-func NewClientRepository(profile client.McpClientKind) ClientRepository {
+func NewClientRepository(profile providers.McpClientKind) ClientRepository {
 	if profile == "" {
-		profile = client.McpClientGeneric
+		profile = providers.McpClientGeneric
 	}
 	return ClientRepository{profile: profile}
 }
@@ -46,7 +49,7 @@ func (repository ClientRepository) Call(ctx context.Context, name string, raw js
 	if err := ctx.Err(); err != nil {
 		return RepositoryResult{}, err
 	}
-	var result client.ToolResult
+	var result workspace.ToolResult
 	switch name {
 	case "ticket_open":
 		var params struct {
@@ -100,7 +103,7 @@ func (repository ClientRepository) Call(ctx context.Context, name string, raw js
 			SpecID       string `json:"spec_id"`
 			NoManagement bool   `json:"no_management"`
 		}
-		if err := DecodeParams(raw, &params); err != nil {
+		if err := DecodeParams(raw, &params); err != nil || strings.TrimSpace(params.Prompt) == "" {
 			return RepositoryResult{}, &HandlerError{Code: -32010, Message: "invalid ticket_reopen arguments"}
 		}
 		year, month, day, slug, err := resolveTicketPath(params.Path)
@@ -162,7 +165,7 @@ func (ClientRepository) Read(ctx context.Context, uri string) (ResourceContent, 
 	if err := ctx.Err(); err != nil {
 		return ResourceContent{}, err
 	}
-	var result client.ToolResult
+	var result workspace.ToolResult
 	switch uri {
 	case "repo://":
 		result = client.ToolCodebase()
@@ -214,7 +217,7 @@ func (ClientRepository) Prompt(ctx context.Context, name string, arguments map[s
 	return GetPromptResult{Description: instruction, Messages: []PromptMessage{{Role: "user", Content: Content{Type: "text", Text: instruction + "\n\n" + prompt}}}}, nil
 }
 
-func repositoryResult(result client.ToolResult) (RepositoryResult, error) {
+func repositoryResult(result workspace.ToolResult) (RepositoryResult, error) {
 	structured, err := json.Marshal(result.Data)
 	if err != nil {
 		return RepositoryResult{}, errors.New("mcp: repository result encoding failed")
@@ -237,7 +240,7 @@ func repositoryResult(result client.ToolResult) (RepositoryResult, error) {
 
 func resolveTicketPath(path string) (int, int, int, string, error) {
 	if path == "" {
-		ticket, err := client.LatestTicket()
+		ticket, err := tickets.LatestTicket()
 		if err != nil || ticket == nil {
 			return 0, 0, 0, "", errors.New("mcp: ticket not found")
 		}
@@ -261,26 +264,26 @@ func resolveTicketPath(path string) (int, int, int, string, error) {
 // #region 🏭️ProductionServer
 
 func NewRepositoryServer(repository RepositoryHandlers) (*Server, error) {
-	return NewRepositoryServerFor(repository, client.McpClientGeneric)
+	return NewRepositoryServerFor(repository, providers.McpClientGeneric)
 }
 
-func NewRepositoryServerFor(repository RepositoryHandlers, profile client.McpClientKind) (*Server, error) {
+func NewRepositoryServerFor(repository RepositoryHandlers, profile providers.McpClientKind) (*Server, error) {
 	return NewRepositoryServerWithLimitsFor(repository, profile, DefaultLimits())
 }
 
 func NewRepositoryServerWithLimits(repository RepositoryHandlers, limits Limits) (*Server, error) {
-	return NewRepositoryServerWithLimitsFor(repository, client.McpClientGeneric, limits)
+	return NewRepositoryServerWithLimitsFor(repository, providers.McpClientGeneric, limits)
 }
 
-func NewRepositoryServerWithLimitsFor(repository RepositoryHandlers, profile client.McpClientKind, limits Limits) (*Server, error) {
+func NewRepositoryServerWithLimitsFor(repository RepositoryHandlers, profile providers.McpClientKind, limits Limits) (*Server, error) {
 	if repository == nil {
 		return nil, errors.New("mcp: repository handlers are required")
 	}
-	resolvedProfile, err := client.ParseMcpClientKind(string(profile))
+	resolvedProfile, err := providers.ParseMcpClientKind(string(profile))
 	if err != nil {
 		return nil, err
 	}
-	server, err := NewServer(Config{ServerInfo: Implementation{Name: client.McpServerName(resolvedProfile), Version: "1.0.0"}, Instructions: "Use repository tools and resources through their owned schemas. Run build tasks with bun repo run <project>:<target> and provision tools with bun repo tools setup all. Nx remains the default; select Bazel with --tool=bazel. Nested tasks inherit SEMIO_BUILD_TOOL.", Limits: limits})
+	server, err := NewServer(Config{ServerInfo: Implementation{Name: providers.McpServerName(resolvedProfile), Version: "1.0.0"}, Instructions: "Use repository tools and resources through their owned schemas. Run build tasks with bun repo run <project>:<target> and provision tools with bun repo tools setup all. Nx remains the default; select Bazel with --tool=bazel. Nested tasks inherit SEMIO_BUILD_TOOL.", Limits: limits})
 	if err != nil {
 		return nil, err
 	}
@@ -295,18 +298,19 @@ func NewRepositoryServerWithLimitsFor(repository RepositoryHandlers, profile cli
 	}
 	openProperties := map[string]Schema{"emoji": stringField("Ticket emoji."), "title": stringField("Ticket title."), "prompt": stringField("Task description."), "goal": stringField("Goal id."), "client": stringField("Agent client."), "llm": stringField("Model."), "effort": stringField("Reasoning effort."), "draft": stringField("Draft id."), "parent": stringField("Parent ticket."), "issue": stringField("Existing issue URL."), "no_issue": booleanField("Skip issue creation."), "no_management": booleanField("Skip management integration.")}
 	reopenProperties := map[string]Schema{"path": stringField("YY/MM/DD/SLUG path."), "prompt": stringField("Additional task description."), "client": stringField("Agent client."), "llm": stringField("Model."), "effort": stringField("Reasoning effort."), "draft": stringField("Draft id."), "title": stringField("Updated title."), "goal": stringField("Goal id."), "parent": stringField("Parent ticket."), "no_management": booleanField("Skip management integration.")}
+	reopenProperties["prompt"] = Schema{Type: "string", Description: "Additional task description.", MinLength: 1, Pattern: `\S`}
 	switch resolvedProfile {
-	case client.McpClientCursor, client.McpClientCopilot, client.McpClientClaude, client.McpClientCodex:
+	case providers.McpClientCursor, providers.McpClientCopilot, providers.McpClientClaude, providers.McpClientCodex:
 		openProperties["plan_id"] = stringField("Client plan id.")
 		reopenProperties["plan_id"] = stringField("Client plan id.")
-	case client.McpClientKiro:
+	case providers.McpClientKiro:
 		openProperties["spec_id"] = stringField("Kiro spec id.")
 		reopenProperties["spec_id"] = stringField("Kiro spec id.")
 	}
 	tools := []Tool{
 		{Name: "ticket_open", Description: "Open a repository ticket.", InputSchema: object(openProperties, "emoji", "title", "prompt", "goal")},
 		{Name: "ticket_close", Description: "Close a repository ticket.", InputSchema: object(map[string]Schema{"path": stringField("YY/MM/DD/SLUG path."), "summary": stringField("Completion summary."), "files": arrayField("Changed files."), "title": stringField("Updated title."), "no_management": booleanField("Skip management integration.")}, "summary")},
-		{Name: "ticket_reopen", Description: "Reopen a repository ticket.", InputSchema: object(reopenProperties)},
+		{Name: "ticket_reopen", Description: "Reopen a repository ticket.", InputSchema: object(reopenProperties, "prompt")},
 		{Name: "goal_open", Description: "Open a repository goal.", InputSchema: object(map[string]Schema{"title": stringField("Goal title."), "description": stringField("Goal description."), "prompt": stringField("Goal prompt."), "due_date": stringField("YYYY-MM-DD due date."), "llm": stringField("Model."), "client": stringField("Agent client."), "parent": stringField("Parent goal id."), "milestone": stringField("Management milestone."), "no_management": booleanField("Skip management integration.")}, "title", "prompt")},
 		{Name: "goal_close", Description: "Close a repository goal.", InputSchema: object(map[string]Schema{"id": stringField("Goal id."), "summary": stringField("Completion summary."), "no_management": booleanField("Skip management integration.")}, "id", "summary")},
 		{Name: "goal_reopen", Description: "Reopen a repository goal.", InputSchema: object(map[string]Schema{"id": stringField("Goal id."), "prompt": stringField("Additional goal prompt."), "llm": stringField("Model."), "client": stringField("Agent client."), "title": stringField("Updated title."), "description": stringField("Updated description."), "due_date": stringField("YYYY-MM-DD due date."), "no_management": booleanField("Skip management integration.")}, "id", "prompt", "llm", "client")},

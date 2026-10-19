@@ -1,3 +1,4 @@
+import { openSurfaceContextMenu, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/InkCanvasHost/component.tsx
 /** 🖊️ `InkCanvasHost` — the freeform ink/note canvas scene host: block document model (text,
@@ -30,7 +31,7 @@ export function InkCanvasHost(props: ComponentSceneHostProps) {
   Object.assign(core, useInkGestures(core));
   Object.assign(core, useInkPointer(core));
   Object.assign(core, useInkEditAndClipboard(core));
-  const { atomicGesture, commitTableEdit, commitTextEdit, contextMenu, contextMenuTitleLabel, doc, emptySceneLabel, handleBlockPointerDown, handleContextMenu, handleCopy, handleDoubleClick, handlePaste, handlePointerCancel, handlePointerDown, handlePointerDownCapture, handlePointerMove, handlePointerUp, handleResizePointerDown, handleWheel, hoveredId, isNavigator, localPresenceActor, marqueePoints, node, presencePointerRef, presenceWindowId, publishInkPresenceView, releaseContact, rootRef, scene, selectedIds, selectionBounds, setContextMenu, setTableEdit, setTextEdit, showResizeHandles, tableEdit, textEdit } = core;
+  const { atomicGesture, commitTableEdit, commitTextEdit, contextMenu, contextMenuTitleLabel, doc, emptySceneLabel, handleBlockPointerDown, handleContextMenu, handleCopy, handleDoubleClick, handlePaste, handlePointerCancel, handlePointerDown, handlePointerDownCapture, handlePointerMove, handlePointerUp, handleResizePointerDown, handleWheel, hoveredId, isNavigator, localPresenceActor, marqueePoints, node, presencePointerRef, presenceWindowId, publishInkPresenceView, releaseContact, rootRef, scene, selectedIds, selectionBounds, setContextMenu, setTableEdit, setTextEdit, showResizeHandles, tableEdit, textEdit , presenceRuntimeKey } = core;
 
   if (!scene || !doc) return <div className="text-muted-foreground p-2 text-xs">{emptySceneLabel}</div>;
 
@@ -115,7 +116,7 @@ export function InkCanvasHost(props: ComponentSceneHostProps) {
         : null}
       {isNavigator ? null : (
         <CanvasPresenceOverlayV1
-          runtimeKey="local"
+          runtimeKey={presenceRuntimeKey}
           windowId={presenceWindowId}
           space="canvas"
           myActor={localPresenceActor ?? ""}

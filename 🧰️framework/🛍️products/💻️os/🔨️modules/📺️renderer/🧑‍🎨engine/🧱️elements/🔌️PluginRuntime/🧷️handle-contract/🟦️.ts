@@ -1,3 +1,4 @@
+import type { PluginOperationDiagnostic } from "../📬️typed-result/🟦️.ts";
 /** 🧷️ The public type contract of the plugin handle: `PluginWasmHandle`, the extension-completion and document-binding shapes, the operation-completion publication and the transaction proposal/outcome types.
  *
  * 🧱️ Child module of {@link ../🟦️.tsx | PluginRuntime}, which re-exports every public name below so import specifiers stay unchanged.
@@ -206,7 +207,7 @@ export type PluginWasmHandle = {
   readonly transactionRollback: (instanceId: number, txnId: string) => Promise<void>;
   readonly transactionUndo: (instanceId: number, groupId: string) => Promise<void>;
   readonly transactionRedo: (instanceId: number, groupId: string) => Promise<void>;
-
+  //#region 🔖️Merge
   /** ⚖️ Sets this instance's local merge-policy authority (`os.set-merge-policy`, contract freeze
    * `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6/§C8/§C9) — mirrors
    * `AppChannelClient.setMergePolicy` (`💻️os/🟦️.ts`); throws on an `AppFrame::Error` reply
@@ -224,13 +225,14 @@ export type PluginWasmHandle = {
   /** 📖️ Reads the open-conflict projection (`os.read-conflicts`) — mirrors
    * `AppChannelClient.readConflicts`. */
   readonly readConflicts: (instanceId: number) => Promise<readonly Conflict[]>;
-
+  //#endregion 🔖️Merge
   /** 🏠️ Reads one exact retained local-interaction capture and ACKs every native-owned page. */
   readonly readLocalInteraction: (instanceId: number, signal?: AbortSignal) => Promise<LocalInteractionCapture>;
   /** 🏁️ Subscribes to this instance's typed-operation completions (`AppFrame::OperationCompleted`).
    * A retained operation reaches its terminal result on a continuation turn no host call is awaiting,
    * so its final UI scope, history delta and host effects reach the shell HERE and nowhere else.
    * Returns the unsubscribe. */
+  readonly subscribeOperationDiagnostics: (instanceId: number, listener: (receipt: PluginOperationDiagnostic) => void) => () => void;
   readonly subscribeOperationCompletions: (instanceId: number, listener: (completion: PluginOperationCompletion) => void) => () => void;
   /** 🎞️ Subscribes to what a running operation hands the shell mid-operation: the `UiDirtyScope` to refresh (a tool run's
    * live process) and the `HistoryPatch` a running history replay publishes (its stage and `done/total`), each absent

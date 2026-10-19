@@ -47,8 +47,8 @@ impl FlowHost {
     /// that would set the operator catalogue immediately afterwards: the bare constructor builds its
     /// dag against an empty catalogue, and the setter's own `rebuild_dag` then throws that work away
     /// — twice per evaluation tick (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub fn from_host_snapshot_with_cache_and_infos(mut host_snapshot: FlowHostSnapshot, neural_cache: Arc<NeuralCache>, kind_infos: Arc<HistoryFoldIndex<String, OperatorInfo>>) -> Self {
-        dedupe_host_snapshot_widgets(&mut host_snapshot);
+    pub fn from_host_snapshot_with_cache_and_infos(host_snapshot: FlowHostSnapshot, neural_cache: Arc<NeuralCache>, kind_infos: Arc<HistoryFoldIndex<String, OperatorInfo>>) -> Self {
+        let host_snapshot = deduplicated_loaded_widgets(host_snapshot);
         let mut host = Self {
             geometry_port: None,
             operator_registry: None,

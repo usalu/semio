@@ -1,6 +1,6 @@
 use super::*;
-use crate::catalog::fixtures::fixture;
-use quiz::{Challenge, ClassificationItemResult, DimensionResult, MatchingItemResult, SortingItemResult, CHALLENGES, CROWD_SCORE_BINS};
+use crate::course::fixtures::fixture;
+use course::{Challenge, ClassificationItemResult, DimensionResult, MatchingItemResult, SortingItemResult, CHALLENGES, CROWD_SCORE_BINS};
 
 /// 🎲️ A small deterministic generator (SplitMix64), so every run folds the same results.
 struct Dice(u64);
@@ -120,13 +120,13 @@ fn result(quiz: &Quiz, dice: &mut Dice) -> RunResult {
         tasks
     });
     let (challenge, score) = (CHALLENGES[dice.below(CHALLENGES.len())], score(dice));
-    RunResult { quiz: quiz.id.clone(), challenge, score, points: quiz::points(score, challenge), tasks: shuffled }
+    RunResult { quiz: quiz.id.clone(), challenge, score, points: course::points(score, challenge), tasks: shuffled }
 }
 
 #[test]
 fn a_tally_folded_one_result_at_a_time_is_the_cores_crowd_view_bit_for_bit() {
-    let catalog = fixture();
-    let quizzes: Vec<&Quiz> = catalog.entries.iter().map(|entry| &entry.quiz).collect();
+    let course = fixture();
+    let quizzes: Vec<&Quiz> = course.entries.iter().map(|entry| &entry.quiz).collect();
     let mut dice = Dice(0x5eed);
     let mut results: Vec<RunResult> = Vec::new();
     let mut tallies: BTreeMap<String, CrowdTally> = BTreeMap::new();
@@ -135,13 +135,13 @@ fn a_tally_folded_one_result_at_a_time_is_the_cores_crowd_view_bit_for_bit() {
         let submitted = result(quiz, &mut dice);
         let stored = serde_json::to_vec(&tallies.get(&quiz.id).cloned().unwrap_or_default()).expect("a tally encodes");
         let mut tally: CrowdTally = serde_json::from_slice(&stored).expect("a stored tally decodes");
-        tally.fold(quiz, &submitted);
+        tally.fold(&submitted);
         tallies.insert(quiz.id.clone(), tally);
         results.push(submitted);
         for quiz in &quizzes {
             let tally = tallies.get(&quiz.id).cloned().unwrap_or_default();
             for quiz in [(*quiz).clone(), drawing(quiz, Some(2)), drawing(quiz, Some(3))] {
-                let oracle = quiz::crowd_view(&quiz, &results);
+                let oracle = course::crowd_view(&quiz, &results);
                 assert_eq!(tally.view(&quiz), oracle, "round {round}, quiz {}", quiz.id);
                 assert_eq!(serde_json::to_vec(&tally.view(&quiz)).unwrap(), serde_json::to_vec(&oracle).unwrap(), "round {round}");
             }
@@ -159,14 +159,14 @@ fn a_tally_folded_one_result_at_a_time_is_the_cores_crowd_view_bit_for_bit() {
 
 #[test]
 fn a_tally_keeps_the_orders_and_the_view_bins_them_against_the_places_the_quiz_presents_now() {
-    let catalog = fixture();
-    let power = &catalog.entry("power").expect("power").quiz;
+    let course = fixture();
+    let power = &course.entry("power").expect("power").quiz;
     let Some(Task::Sorting(appliances)) = power.tasks.iter().find(|task| task.id() == "appliances") else { panic!("appliances is a sorting") };
     let ids: Vec<String> = appliances.items.iter().map(|item| item.id.clone()).collect();
     let ordered = |order: &[&String], score: f64| RunResult { quiz: "power".to_string(), challenge: Challenge::Medium, score, points: score * 200.0, tasks: vec![TaskResult::Sorting { task: "appliances".to_string(), score, items: order.iter().enumerate().map(|(position, item)| SortingItemResult { item: (*item).clone(), value: 1.0, position, rank: position, guess: None, miss: None, explanation: None }).collect() }] };
     let mut tally = CrowdTally::default();
     for (order, score) in [(vec![&ids[0]], 0.095), (vec![&ids[1], &ids[0]], 0.1), (vec![&ids[1], &ids[0], &ids[2]], 0.895), (ids.iter().rev().collect(), 1.0)] {
-        tally.fold(power, &ordered(&order, score));
+        tally.fold(&ordered(&order, score));
     }
     let first = &tally.sorting["appliances"].items[&ids[0]];
     assert_eq!((first.answers, &first.orders), (4, &BTreeMap::from([(1, BTreeMap::from([(0, 1)])), (2, BTreeMap::from([(1, 1)])), (3, BTreeMap::from([(1, 1)])), (ids.len(), BTreeMap::from([(ids.len() - 1, 1)]))])));
@@ -177,9 +177,9 @@ fn a_tally_keeps_the_orders_and_the_view_bins_them_against_the_places_the_quiz_p
 }
 
 #[test]
-fn a_guess_counts_under_the_nearest_authored_value_and_what_is_unanswered_counts_nowhere() {
-    let catalog = fixture();
-    let (power, homes) = (&catalog.entry("power").expect("power").quiz, &catalog.entry("homes").expect("homes").quiz);
+fn every_guess_keeps_its_exact_value_and_what_is_unanswered_counts_nowhere() {
+    let course = fixture();
+    let (power, homes) = (&course.entry("power").expect("power").quiz, &course.entry("homes").expect("homes").quiz);
     let matched = |item: &str, assigned: Option<f64>, miss: Option<bool>| MatchingItemResult { item: item.into(), assigned, correct: 1.0, miss, explanation: None };
     let sorted = |item: &str, position: usize| SortingItemResult { item: item.into(), value: 1.0, position, rank: position, guess: None, miss: Some(true), explanation: None };
     let guessed = RunResult {
@@ -200,12 +200,12 @@ fn a_guess_counts_under_the_nearest_authored_value_and_what_is_unanswered_counts
         ],
     };
     let mut tally = CrowdTally::default();
-    tally.fold(power, &guessed);
+    tally.fold(&guessed);
     let counts = |dimension: &str| tally.matching["sources"][dimension].items.iter().map(|(item, counts)| (item.as_str(), counts.keys().map(String::as_str).collect::<Vec<_>>())).collect::<Vec<_>>();
-    assert_eq!(counts("capacity"), [("rooftop-pv", vec!["10000"]), ("wind-turbine", vec!["1400000000"])], "a guess counts under the authored value nearest on the logarithmic scale");
-    assert_eq!(counts("hours"), [("rooftop-pv", vec!["950"]), ("wind-turbine", vec!["2000"])], "halfway between two values counts under the smaller; the unanswered plant counts nowhere");
+    assert_eq!(counts("capacity"), [("rooftop-pv", vec!["20000"]), ("wind-turbine", vec!["1e+21"])], "every numeric guess stays distinct");
+    assert_eq!(counts("hours"), [("rooftop-pv", vec!["1475"]), ("wind-turbine", vec!["2100"])], "exact guesses count once per item; the unanswered plant counts nowhere");
     assert_eq!((tally.sorting["appliances"].items.len(), tally.sorting["appliances"].scores[0]), (0, 1), "a sorting nobody guessed in adds its score only");
-    assert_eq!(tally.view(power), quiz::crowd_view(power, &[&guessed]));
+    assert_eq!(tally.view(power), course::crowd_view(power, &[&guessed]));
     let unanswered = RunResult {
         quiz: "homes".into(),
         challenge: Challenge::Expert,
@@ -214,17 +214,41 @@ fn a_guess_counts_under_the_nearest_authored_value_and_what_is_unanswered_counts
         tasks: vec![TaskResult::Classification { task: "systems".into(), score: 0.5, items: vec![ClassificationItemResult { item: "air-to-water".into(), assigned: None, correct: "heat-pump".into(), credit: 0.0, explanation: None }, ClassificationItemResult { item: "pellets".into(), assigned: Some("wood-stove".into()), correct: "wood-stove".into(), credit: 1.0, explanation: None }] }],
     };
     let mut timed = CrowdTally::default();
-    timed.fold(homes, &unanswered);
+    timed.fold(&unanswered);
     assert_eq!(timed.classification["systems"].items.keys().collect::<Vec<_>>(), ["pellets"]);
-    assert_eq!(timed.view(homes), quiz::crowd_view(homes, &[&unanswered]));
+    assert_eq!(timed.view(homes), course::crowd_view(homes, &[&unanswered]));
 }
 
 #[test]
 fn an_empty_tally_views_every_task_with_nobody_answering() {
-    let catalog = fixture();
-    let power = &catalog.entry("power").expect("power").quiz;
+    let course = fixture();
+    let power = &course.entry("power").expect("power").quiz;
     let view = CrowdTally::default().view(power);
-    assert_eq!(view, quiz::crowd_view::<RunResult>(power, &[]));
+    assert_eq!(view, course::crowd_view::<RunResult>(power, &[]));
     assert_eq!((view.runs, view.scores), (0, [0; CROWD_SCORE_BINS]));
     assert_eq!(view.tasks.iter().map(|task| (task.task.as_str(), task.dimension.as_deref(), task.items.len(), task.scores)).collect::<Vec<_>>(), [("appliances", None, 0, [0; CROWD_SCORE_BINS]), ("sources", Some("capacity"), 0, [0; CROWD_SCORE_BINS]), ("sources", Some("hours"), 0, [0; CROWD_SCORE_BINS])]);
+}
+
+#[test]
+fn incremental_crowds_match_the_numpy_reference_for_every_shared_vector() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧰️framework/🛍️products/📚️course/🧫️fixtures/📊️crowd-view/🔣️.json")).unwrap();
+    for vector in fixture["vectors"].as_array().unwrap() {
+        let quiz: Quiz = serde_json::from_value(fixture["quizzes"].as_array().unwrap().iter().find(|quiz| quiz["id"] == vector["quiz"]).unwrap().clone()).unwrap();
+        let results: Vec<RunResult> = serde_json::from_value(vector["results"].clone()).unwrap();
+        let expected: CrowdView = serde_json::from_value(vector["expected"].clone()).unwrap();
+        let mut tally = CrowdTally::default();
+        for result in results.iter().filter(|result| result.quiz == quiz.id) {
+            tally.fold(result);
+        }
+        let mut actual = tally.view(&quiz);
+        for (actual, expected) in actual.tasks.iter_mut().zip(&expected.tasks) {
+            for (actual, expected) in actual.items.iter_mut().zip(&expected.items) {
+                if let (Some(actual_mean), Some(expected_mean)) = (actual.mean_position, expected.mean_position) {
+                    assert!((actual_mean - expected_mean).abs() <= 1e-12, "{}", vector["id"]);
+                    actual.mean_position = Some(expected_mean);
+                }
+            }
+        }
+        assert_eq!(actual, expected, "{}", vector["id"]);
+    }
 }

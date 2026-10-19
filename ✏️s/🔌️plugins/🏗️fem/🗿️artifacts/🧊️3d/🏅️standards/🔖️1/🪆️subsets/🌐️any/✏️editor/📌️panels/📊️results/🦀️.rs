@@ -1,19 +1,27 @@
-//! 📊️ Fem3d play app panel — `results`: the results source/mode controls and the deformation
 //! playback transport for the addressed results window.
+//! 📊️ Fem3d play app panel — `results`: the results source/mode controls and the deformation
 //!
 //! Every control is tagged with the `windowId` it speaks for (the puzzle3d Settings panel's rule), so
 //! a split layout showing two results panes cannot retune the one the user is not looking at. Every
 //! control also names the FIELD it changes (`{field, value}`), because the host merges a control's own
 //! scalar under the single key `value` — a slider has one binding and no other way to say what moved.
 
-use semio_s_fem_app_surface::{ANIMATION_PHASE_STEP, ANIMATION_SPEED_MAXIMUM, ANIMATION_SPEED_MINIMUM};
+use semio_s_fem_app_surface::ANIMATION_PHASE_STEP;
+
+use semio_s_fem_app_surface::ANIMATION_SPEED_MAXIMUM;
+
+use semio_s_fem_app_surface::ANIMATION_SPEED_MINIMUM;
 use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results::config::Fem3dResultsWindowConfig;
 use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results::transient::FemPlaybackClock;
 use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::Fem3dLabels;
 use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::fem3d_action;
 use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::ui_label;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
+use semio_framework_plugin::plugin_app_close_prelude::Buildable;
+use semio_framework_plugin::plugin_app_close_prelude::HasBase;
+use semio_framework_plugin::plugin_app_close_prelude::HasChildren;
+use semio_framework_plugin::plugin_app_close_prelude::InputKind;
+use semio_framework_plugin::plugin_app_close_prelude::Trigger;
 use semio_framework_plugin::ui_node_list;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;

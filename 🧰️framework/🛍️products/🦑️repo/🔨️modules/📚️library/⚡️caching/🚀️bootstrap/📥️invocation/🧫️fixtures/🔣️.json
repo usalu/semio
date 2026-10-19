@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "wire": {
+    "version": 1,
+    "policy": {
+      "version": 1,
+      "owner": "repository:nx",
+      "maximumElapsedMilliseconds": 200
+    },
+    "deadlineEpochMilliseconds": 1200,
+    "capabilities": {
+      "original": "same-parent",
+      "selection": [
+        "nx",
+        "run",
+        "owner:target"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "inherited",
+      "now": 1050,
+      "policy": null,
+      "capabilities": null,
+      "expected": "accept"
+    },
+    {
+      "id": "same-policy",
+      "now": 1050,
+      "policy": {
+        "version": 1,
+        "owner": "repository:nx",
+        "maximumElapsedMilliseconds": 200
+      },
+      "capabilities": null,
+      "expected": "accept"
+    },
+    {
+      "id": "same-capabilities",
+      "now": 1050,
+      "policy": null,
+      "capabilities": {
+        "original": "same-parent",
+        "selection": [
+          "nx",
+          "run",
+          "owner:target"
+        ]
+      },
+      "expected": "accept"
+    },
+    {
+      "id": "changed-policy",
+      "now": 1050,
+      "policy": {
+        "version": 1,
+        "owner": "other-owner",
+        "maximumElapsedMilliseconds": 200
+      },
+      "capabilities": null,
+      "expected": "policy"
+    },
+    {
+      "id": "renewed-budget",
+      "now": 1050,
+      "policy": {
+        "version": 1,
+        "owner": "repository:nx",
+        "maximumElapsedMilliseconds": 300
+      },
+      "capabilities": null,
+      "expected": "policy"
+    },
+    {
+      "id": "changed-capabilities",
+      "now": 1050,
+      "policy": null,
+      "capabilities": {
+        "original": "other-parent",
+        "selection": [
+          "nx",
+          "run",
+          "owner:target"
+        ]
+      },
+      "expected": "capabilities"
+    },
+    {
+      "id": "expired",
+      "now": 1200,
+      "policy": null,
+      "capabilities": null,
+      "expected": "deadline"
+    },
+    {
+      "id": "future-deadline",
+      "now": 999,
+      "policy": null,
+      "capabilities": null,
+      "expected": "deadline"
+    }
+  ],
+  "walk": {
+    "concurrency": 3,
+    "counts": [
+      0,
+      1,
+      2,
+      3,
+      5,
+      9
+    ]
+  }
+}

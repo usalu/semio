@@ -1,10 +1,10 @@
-//! 👁️ Unit tests of attention: turning round (and turning back in the middle of a turn), the see-through presence under the pointer, a walker that turns before it sets out, an idle pet that turns to a pointer clearly behind it — once a second at most, and never while it concentrates, stands still, walks or sleeps —, the head that leans after the gaze, and the greeting of a pointer that has come to rest.
+//! 👁️ Unit tests of attention: turning round (and turning back in the middle of a turn), whole grounded presence and airborne opacity behind page keep-outs, a walker that turns before it sets out, an idle pet that turns to a pointer clearly behind it — once a second at most, and never while it concentrates, stands still, walks or sleeps —, the head that leans after the gaze, and the greeting of a pointer that has come to rest.
 //!
 //! @see ../../🦀️.rs — the implementation under test
 //! @see ../../../🎪️stage/🧪️tests/🔬️unit/🦀️.rs — the kit: the troupe, a meadow to stand on, the events and a pet at rest
 
 use super::*;
-use crate::clock::SHY_STEP;
+use crate::feeling::face_of;
 use crate::draft::{draft_of, sealed};
 use crate::locomotion::stroll;
 use crate::population::CENTRED;
@@ -40,25 +40,31 @@ fn an_actor_that_is_asked_to_turn_again_in_the_middle_of_a_turn_turns_back_from_
 }
 
 #[test]
-fn an_actor_turns_see_through_while_the_pointer_rests_on_it() {
+fn only_airborne_and_climbing_actors_yield_to_page_keepouts() {
     let menagerie = troupe();
     let kind = &menagerie.species[0];
     let stage = advance(&menagerie, meadow(&menagerie, 6, &["mossy"]), &ticked(32));
     let mossy = stage.actors[0].clone();
-    let over = |dx: f64, dy: f64| Some(Point { x: mossy.x + dx, y: mossy.y + dy });
-    assert!(presence_of(None, &mossy, kind) == 1.0 && presence_of(over(24.5, -10.0), &mossy, kind) == 1.0 && presence_of(over(0.0, -34.5), &mossy, kind) == 1.0 && presence_of(over(-24.5, 0.0), &mossy, kind) == 1.0);
-    assert!(presence_of(over(24.0, -10.0), &mossy, kind) == SHY_OPACITY && presence_of(over(0.0, 4.0), &mossy, kind) == SHY_OPACITY && presence_of(over(-24.0, -34.0), &mossy, kind) == SHY_OPACITY);
+    let keepout = Rect { x: mossy.x - 10.0, y: mossy.y - 20.0, width: 20.0, height: 20.0 };
+    assert_eq!(presence_of(&[keepout], &mossy, kind), 1.0);
+    for footing in [Footing::Air, Footing::Chute, Footing::Wall, Footing::Ladder, Footing::Rope] {
+        let mut flying = mossy.clone();
+        flying.footing = footing;
+        assert_eq!(presence_of(&[keepout], &flying, kind), SHY_OPACITY);
+        assert_eq!(presence_of(&[], &flying, kind), 1.0);
+        assert_eq!(presence_of(&[Rect { x: mossy.x + 100.0, ..keepout }], &flying, kind), 1.0);
+    }
     let pointed = StageEvent::Pointed(Pointed { x: mossy.x, y: mossy.y - 10.0, over: Over::Free });
     let shy = advance(&menagerie, stage.clone(), &[pointed.clone(), StageEvent::Ticked(Ticked { ticks: 1 })]);
-    assert!(shy.actors[0].opacity == 1.0 - SHY_STEP);
-    assert_eq!(frame_of(&menagerie, &shy).rate, Rate::Full);
+    assert!(shy.actors[0].opacity == 1.0);
+    assert_eq!(frame_of(&menagerie, &shy).rate, Rate::Half);
     let seen = advance(&menagerie, shy, &ticked(40));
-    assert!(seen.actors[0].opacity == SHY_OPACITY);
+    assert!(seen.actors[0].opacity == 1.0);
     let back = advance(&menagerie, seen, &[StageEvent::Unpointed(Unpointed {}), StageEvent::Ticked(Ticked { ticks: 11 })]);
     assert!(back.actors[0].opacity == 1.0);
     let still = advance(&menagerie, stage, &[StageEvent::Tuned(Tuned { mode: PetMode::Still }), pointed]);
     let frame = frame_of(&menagerie, &still);
-    assert!(still.actors[0].opacity == 1.0 && frame.actors[0].opacity == SHY_OPACITY);
+    assert!(still.actors[0].opacity == 1.0 && frame.actors[0].opacity == 1.0);
     assert_eq!((frame.rate, frame.wake), (Rate::Rest, None));
 }
 
@@ -163,7 +169,9 @@ fn the_bone_that_carries_the_first_eye_leans_after_the_gaze() {
     assert_ne!(bones(&menagerie, &stage), upright(&stage));
     let bare = plain(&menagerie);
     let mut pose = rest_pose(kind);
-    pose[bone] = BonePose { x: pose[bone].x + 1.5 * gaze.x, y: pose[bone].y + gaze.y, rotation: pose[bone].rotation + 5.0 * gaze.x, scale_x: 1.0, scale_y: 1.0 };
+    let actor = &stage.actors[0];
+    let face = face_of(settled(actor.feeling, kind.mood, stage.tick));
+    pose[bone] = BonePose { x: pose[bone].x + 1.5 * gaze.x, y: pose[bone].y + face.drop + gaze.y, rotation: pose[bone].rotation + 5.0 * gaze.x, scale_x: 1.0, scale_y: 1.0 };
     let mut clipless = stage.clone();
     clipless.actors[0].clip = None;
     assert_eq!(bones(&bare, &clipless), solve_rig(kind, &pose));
@@ -191,7 +199,7 @@ fn an_idle_actor_greets_a_pointer_that_has_come_to_rest_beside_it_and_pays_with_
     assert_eq!(advance(&menagerie, stage, &ticked(32)), greeting);
     let rests = |x: f64, y: f64, quiet: bool| advance(&menagerie, rested(&menagerie, 1.0), &[StageEvent::Hushed(Hushed { quiet }), StageEvent::Pointed(Pointed { x, y, over: Over::Free }), StageEvent::Ticked(Ticked { ticks: 40 })]).actors[0].activity;
     assert_eq!(rests(beside, LEVEL, false), Activity::Greet);
-    assert_eq!(rests(550.0, LEVEL, false), Activity::Idle);
+    assert_eq!(rests(550.0, LEVEL, false), Activity::Greet);
     assert_eq!(rests(550.0 + 4.0 * 30.0, LEVEL, false), Activity::Idle);
     assert_eq!(rests(beside, LEVEL, true), Activity::Idle);
     let dull = advance(&menagerie, rested(&menagerie, 0.45), &[pointed(beside), StageEvent::Ticked(Ticked { ticks: 40 })]);

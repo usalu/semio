@@ -10,6 +10,12 @@
     "test",
     "arguments"
   ],
+  "definitions": {
+    "RuntimeKeys": { "const": ["SEMIO_TEST_CLI", "SEMIO_TEST_ARTIFACT_DIR", "SEMIO_KEEP_WORKSPACES", "SEMIO_TYPE_BUDGET_MS"] },
+    "RuntimeEnvironment": { "type": "object", "additionalProperties": false, "properties": { "SEMIO_TEST_CLI": { "$ref": "#/definitions/RuntimeValue" }, "SEMIO_TEST_ARTIFACT_DIR": { "$ref": "#/definitions/RuntimeValue" }, "SEMIO_KEEP_WORKSPACES": { "$ref": "#/definitions/RuntimeValue" }, "SEMIO_TYPE_BUDGET_MS": { "$ref": "#/definitions/RuntimeValue" } } },
+    "RuntimeValue": { "type": "string", "maxLength": 4096, "pattern": "^[^\\u0000]*$" },
+    "EnvironmentCase": { "type": "object", "additionalProperties": false, "required": ["name", "windows", "compiler", "consumer", "accepted", "expected"], "properties": { "name": { "type": "string" }, "windows": { "type": "boolean" }, "compiler": { "type": "object", "additionalProperties": { "type": "string" } }, "consumer": { "type": "object", "additionalProperties": { "type": ["string", "number", "boolean", "null"] } }, "accepted": { "type": "boolean" }, "expected": { "type": ["object", "null"], "additionalProperties": { "type": "string" } } } }
+  },
   "properties": {
     "version": {
       "const": 1

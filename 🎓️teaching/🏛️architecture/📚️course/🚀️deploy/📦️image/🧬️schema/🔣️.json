@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["path", "bytes", "mode", "kind"],
+  "properties": {
+    "path": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[^\\\\\u0000]+$" },
+    "bytes": { "type": "integer", "minimum": 0, "maximum": 134217728 },
+    "mode": { "enum": [292, 365, 448, 493] },
+    "kind": { "enum": ["file", "directory"] }
+  }
+}

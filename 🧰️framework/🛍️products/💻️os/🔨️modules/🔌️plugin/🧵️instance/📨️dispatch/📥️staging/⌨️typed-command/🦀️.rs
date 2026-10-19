@@ -81,7 +81,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                         admission: Some(admission),
                         meta: meta.clone(),
                         operation,
-                        source_identity:(cx.operation(),cx.generation()),
+                        source_identity:semio_framework_job::OriginalSourceBinding::borrow(cx),
                         revision,
                         lease: None,
                         key_copy: None,
@@ -175,6 +175,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
      cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
         assert!(self.tools.tool_operations.can_insert(operation_id.0), "typed worker handoff retains its exact empty operation slot");
         assert_eq!(self.tools.typed_operation_reservations[operation_id.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS], Some(operation_id.0), "worker handoff owns its exact pending reservation");
+        if !matches!(&admission.proof,QualifiedToolProof::AppOwned(_)){return Err(plugin_sdk_fault("typed worker handoff requires its exact registered application producer"));}
         let verb = admission.verb.clone();
         let TypedCommandRoots {
             snapshot,
@@ -210,10 +211,8 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         let identity = semio_framework_value::NativeEncodeControl::new(admission.proof.contract().max_output_bytes, &mut identity_observer).pause().map_err(|error| plugin_sdk_fault(error.to_string()))?;
         drop(identity_observer);
         completion.install_authoring_identity(identity, &cancellation_lease)?;
-        let retained_wire_admission = admission.wire_admission.clone();
         let app_owned_retained_route = matches!(&admission.proof, QualifiedToolProof::AppOwned(_));
         let mut retained_wire = Some(admission.raw_wire);
-        let raw_input = if app_owned_retained_route { ArtifactToolRawInput::transferred_to_factory() } else { ArtifactToolRawInput::new(retained_wire.take().expect("generic retained wire owner remains mounted")) };
         let output_chunks = ArtifactOutputChunks::new(admission.proof.contract().max_output_bytes);
         let mut request_snapshot_read = if app_owned_retained_route { Some(self.stores.store.snapshot_read().map_err(FaultFrom::into_fault)?) } else { None };
         let mut request_window_config = if app_owned_retained_route { window_config_authority.as_ref().map(|authority| authority.snapshot.try_duplicate()).transpose().map_err(|error| error.into_fault())? } else { None };
@@ -242,41 +241,12 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
             .with_gesture(gesture),
             artifact_owned_tool_birth_grant(),
         ).0) } else { None };
-        let operation_spec = match admission.proof.clone() {
-            QualifiedToolProof::Bounded(_) => {
-                let job = TypedCommandFullOperationJob::<A> {
-                    operation: None,
-                    parent_document_id: Some(parent_document_id.clone()),
-                    command: Some(std::sync::Arc::from(command)),
-                    snapshot: Some(snapshot),
-                    config: Some(config),
-                    history: Some(history),
-                    children: Some(std::sync::Arc::clone(&children)),
-                    draft: Some(draft_snapshot),
-                    interaction_state: Some(interaction_state),
-                    interaction_hover: Some(std::sync::Arc::new(interaction_hover)),
-                    peer_presence: Some(peer_presence),
-                    presence_local: Some(self.stores.presence_store.local_read().map_err(Fault::from)?),
-                    presence_peers: Some(presence_peers),
-                    transient: Some(transient),
-                    contract: admission.proof.contract(),
-                    decoded_items: admission.decoded_items,
-                    phase: TypedCommandFullOperationPhase::Prepare,
-                    prepare_cursor: 0,
-                    reducer_cursor: 0,
-                    output: Some(completion.clone()),
-                    state: [0; 3],
-                    fault_message: b"",
-                    pending: None,
-                    outcomes: semio_framework_plugin_decl_app::tool_contract::ReservedJobOutcomes::new(),
-                    closing: false,
-                };
-                semio_framework::ToolOperationSpec::new(self.tools.tool_job_controller_id.clone(), verb.clone(), payload_schema_id, job, operation)
-            }
-            QualifiedToolProof::AppOwned(_) => A::build_tool_job(ArtifactOwnedToolJobRequest {
+        let producer_request = Some(ArtifactOwnedToolJobRequest {
+            source_binding: semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx),
                 retained:self.mounted_policy.maintenance,
-                command,
-                raw_wire: raw_input.clone(),
+                command: crate::tool_contract::ArtifactOriginalToolCommand::from_admitted_op_binary(command,retained_wire.as_ref().expect("original typed wire remains retained"),semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx)),
+                input: retained_wire.take(),
+                checkpoint: None,
                 operation,
                 controller_id: qualified_key.controller_id,
                 tool_id: qualified_key.tool_id,
@@ -298,28 +268,15 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                 instance_operation_owner: self.tools.instance_operation_owner.clone(),
                 output_chunks: output_chunks.clone(),
                 completion: completion.clone(),
-            })
-            .await?
-            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.missing-owned-builder"), format!("app-owned tool '{verb}' registered a factory but supplied no exact payload builder")))?,
-            QualifiedToolProof::FrameworkOwned(_) => {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.framework-route"), format!("framework-owned tool '{verb}' cannot enter the application typed-command reducer")));
-            }
-        };
-        let dispatch = if app_owned_retained_route {
-            self.tools.tool_jobs
-                .dispatch_wire_retained_with_spec(&retained_wire_admission, retained_wire.take().expect("app-owned retained wire owner transfers once"), None, operation_spec)
-                .map_err(|rejected| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.dispatch"), rejected.error.to_string()))?
-        } else {
-            self.tools.tool_jobs.dispatch(operation_spec).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.dispatch"), error.to_string()))?
-        };
-        let session=None;let session_rejected=Some(semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(dispatch.job,(cx.operation(),cx.generation())));
+            });
+        let session=None;let session_rejected=None;
         self.tools.tool_operations.insert_admitted(
             operation_id.0,
             MountedTypedCommandFullOperation {
                 verb: verb.clone(),
                 meta: meta.clone(),
                 operation,
-                source_identity:(cx.operation(),cx.generation()),
+                source_identity:semio_framework_job::OriginalSourceBinding::borrow(cx),
                 canonical_revision: canonical_base_revision,
                 artifact_generation: generation.0,
                 config_generation,
@@ -332,11 +289,14 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                 contract: Some(admission.proof.contract()),
                 session,
                 session_rejected,
+                producer_source: producer_request.as_ref().map(|request|request.source_binding),
+                producer_request,
+                producer_request_retirement: None,
                 reserved_producer: None,
                 completion: Some(completion),
                 completion_retirement:None,
                 publication_retirement:None,
-                output_retirement:None,raw_input: (!app_owned_retained_route).then_some(raw_input),
+                output_retirement:None,raw_input: None,
                 output_chunks: Some(output_chunks),
                 cancellation_lease: Some(cancellation_lease),
                 identity: None,
@@ -423,24 +383,37 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// the config store — real work for `AppCommand::ConfigCommand` (replaces the deleted
     /// `apply_config_bytes` whole-record-replace legacy path).
     pub async fn dispatch_config_command_inner(&mut self,command_bytes:&mut Vec<u8>,meta:&ActionMeta,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
+        if self.pending.pending_configuration_source.is_some_and(|source|!source.matches(cx)){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"configuration source refused different original roots or clock").into())}
+        if self.pending.pending_configuration_rejected{self.tools.close_configuration_failure(&mut self.pending,cx,self.mounted_policy.close).map_err(semio_framework_job::OriginalTurnFailure::from)?;return Ok(None)}
+        if cx.is_cancelled(){if self.pending.pending_configuration_source.is_some(){self.pending.pending_configuration_rejected=true;self.tools.close_configuration_failure(&mut self.pending,cx,self.mounted_policy.close).map_err(semio_framework_job::OriginalTurnFailure::from)?;return Ok(None)}return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"configuration caller cancelled before any source was admitted").into())}
+        if self.pending.pending_configuration_worker.is_some(){
+            let permit=self.pending.pending_configuration_permit.as_ref().expect("configuration source retains its original permit");
+            let done=self.pending.pending_configuration_worker.as_mut().unwrap().advance(cx,permit.lease.cancel_token())?;
+            if !done{return Ok(None)}
+            let mut worker=self.pending.pending_configuration_worker.take().unwrap();let operation=worker.semantic_operation();let failure=worker.take_failure();assert!(worker.terminal_is_empty());drop(worker);
+            if let Some(failure)=failure{self.pending.pending_configuration_rejected=true;*self.pending.pending_configuration_failure=Some(crate::reserved_jobs::OriginalConfigurationFailure::Original(failure));let _=self.pending.receive_configuration_failure(cx)?;return Ok(None)}
+            let live=self.stores.store.content_revision();let revision=semio_framework_job::RevisionId(u64::from_be_bytes(live[..8].try_into().expect("revision lane width")));
+            if !matches!(semio_framework_job::validate_commit(&operation,revision,semio_framework_job::Generation(self.stores.store.generation())),semio_framework_job::CommitValidation::Accepted){self.pending.pending_configuration_rejected=true;*self.pending.pending_configuration_failure=Some(crate::reserved_jobs::OriginalConfigurationFailure::Original(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"configuration worker completed against a stale revision or generation").into()));let _=self.pending.receive_configuration_failure(cx)?;return Ok(None)}
+            let command=self.pending.pending_configuration_completion.as_ref().unwrap().original.as_ref().unwrap().lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"configuration binary job completed without a decoded command"))?;
+            match command{Ok(command)=>*self.pending.pending_configuration_command=Some(command),Err(source)=>{self.pending.pending_configuration_rejected=true;self.pending.pending_configuration_source=Some(semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx));*self.pending.pending_configuration_failure=Some(crate::reserved_jobs::OriginalConfigurationFailure::Original(source));let _=self.pending.receive_configuration_failure(cx)?;return Ok(None)}}
+            return self.finish_configuration_command(meta,identity,cx).await
+        }
         if self.pending.receive_configuration_failure(cx)?{return Ok(None)}
-        if self.pending.pending_configuration_permit.is_some()&&self.pending.pending_configuration_completion.is_some(){return self.finish_configuration_command(meta,identity,cx).await}
-        let proof=self.tools.qualified_tool_proof(&*self.stores, "configuration-binary")?;let key=proof.key();
+        if self.pending.pending_configuration_permit.is_some()&&self.pending.pending_configuration_command.is_some(){return self.finish_configuration_command(meta,identity,cx).await}
+        let proof=self.tools.qualified_tool_proof(&*self.stores,"configuration-binary")?;let key=proof.key();
         let admission=match self.tools.tool_jobs.admit_exact_wire(key.controller_id,key.tool_id,proof.schema_id(),command_bytes){Ok(admission)=>admission,Err(source)=>{*self.pending.pending_configuration_failure=Some(semio_framework_plugin_job::reserved_jobs::OriginalConfigurationFailure::Admission(source));self.pending.pending_configuration_identity=Some((cx.operation(),cx.generation()));let _=self.pending.receive_configuration_failure(cx)?;return Ok(None)}};
-        if self.pending.pending_configuration_permit.is_none(){let Some(authority)=self.admit_reserved_emit_producer("configuration-binary",meta,cx)?else{return Ok(None)};self.pending.pending_configuration_permit=Some(authority);self.pending.pending_configuration_identity=Some((cx.operation(),cx.generation()));return Ok(None)}
+        if !matches!(proof,QualifiedToolProof::FrameworkOwned(_)|QualifiedToolProof::AppOwned(_))||proof.contract().max_decoded_items<1||!proof.admits::<A>(&admission){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"configuration producer failed its exact owner/factory/schema/contract admission").into())}
+        if self.pending.pending_configuration_permit.is_none(){let Some(authority)=self.admit_reserved_emit_producer("configuration-binary",meta,cx)?else{return Ok(None)};self.pending.pending_configuration_permit=Some(authority);self.pending.pending_configuration_source=Some(semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx));self.pending.pending_configuration_identity=Some((cx.operation(),cx.generation()));return Ok(None)}
         if self.pending.pending_configuration_identity!=Some((cx.operation(),cx.generation())){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"configuration admission requires its unchanged original receiving caller").into())}
         type Completion<M>=std::sync::Mutex<Option<Result<ArtifactCommand<M>,semio_framework_job::OriginalTurnFailure>>>;
         let bytes=semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<Completion<A::ConfigMutation>>();let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<bytes{return Ok(None)}
         let decoded=std::sync::Arc::new(std::sync::Mutex::new(None));cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()}).expect("exact original configuration completion preflight remains exclusive");cx.consume_fuel(1);
         self.pending.pending_configuration_identity=Some((cx.operation(),cx.generation()));
         self.pending.pending_configuration_completion=Some(semio_framework_plugin_job::reserved_jobs::ConfigurationDecodeRetirement{original:ManuallyDrop::new(Some(decoded.clone())),payload:None});
-        let job=FrameworkConfigurationBinaryJob::<A>{raw:std::mem::take(command_bytes),cursor:0,stage:FrameworkConfigurationBinaryStage::Envelope,operation:None,decoded:ManuallyDrop::new(Some(decoded)),decoded_close:None,receiving:ManuallyDrop::new(None),native:semio_framework_job_native_decode::OriginalNativeDecodeSource::empty(semio_framework_job_native_decode::OriginalNativeDecodePolicy{maximum_owned_bytes:semio_framework_plugin_job::reserved_jobs::FRAMEWORK_CONFIGURATION_NATIVE_OWNED_BYTES}),failure:ManuallyDrop::new(None),state:[0;8],pending:None,outcomes:semio_framework_plugin_decl_app::tool_contract::ReservedJobOutcomes::new(),closing:false};
-        let authority=self.pending.pending_configuration_permit.take().unwrap();
-        let permit=match self.tools.run_framework_reserved_job(&self.mounted_policy, &mut *self.stores, "configuration-binary", &[], 1, job, meta, Some(admission), authority, cx).await{Ok(permit)=>permit,Err((source,permit))=>{self.pending.pending_configuration_permit=Some(permit);*self.pending.pending_configuration_failure=Some(semio_framework_plugin_job::reserved_jobs::OriginalConfigurationFailure::Original(source));let _=self.pending.receive_configuration_failure(cx)?;return Ok(None)}};
-        self.pending.pending_configuration_permit=Some(permit);
-        let command=self.pending.pending_configuration_completion.as_ref().unwrap().original.as_ref().unwrap().lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().ok_or_else(||Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.missing-output"),"configuration binary job completed without a decoded command"))?;
-        match command{Ok(command)=>*self.pending.pending_configuration_command=Some(command),Err(source)=>{*self.pending.pending_configuration_failure=Some(semio_framework_plugin_job::reserved_jobs::OriginalConfigurationFailure::Original(source));let _=self.pending.receive_configuration_failure(cx)?;return Ok(None)}}
-        self.finish_configuration_command(meta,identity,cx).await
+        let job=FrameworkConfigurationBinaryJob::<A>{raw:std::mem::take(command_bytes),cursor:0,stage:FrameworkConfigurationBinaryStage::Envelope,operation:Some(self.pending.pending_configuration_permit.as_ref().unwrap().operation),decoded:ManuallyDrop::new(Some(decoded)),decoded_close:None,receiving:ManuallyDrop::new(None),native:semio_framework_job_native_decode::OriginalNativeDecodeSource::empty(semio_framework_job_native_decode::OriginalNativeDecodePolicy{maximum_owned_bytes:semio_framework_plugin_job::reserved_jobs::FRAMEWORK_CONFIGURATION_NATIVE_OWNED_BYTES}),failure:ManuallyDrop::new(None),state:[0;8],pending:None,outcomes:crate::tool_contract::ReservedJobOutcomes::new(),closing:false};
+        let operation=self.pending.pending_configuration_permit.as_ref().unwrap().operation;
+        self.pending.pending_configuration_worker=Some(crate::reserved_jobs::configuration_worker::ConfigurationWorker::new(job,operation,proof.contract().max_output_bytes,proof.contract().max_work_units_per_step,self.mounted_policy.preparation,self.mounted_policy.close,cx));
+        Ok(None)
     }
 
     async fn finish_configuration_command(&mut self,meta:&ActionMeta,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
@@ -455,6 +428,6 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         if permit.is_cancelled().await{return Err(Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.cancelled"),"configuration binary was cancelled before config-store commit").into())}
         let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
         let command=self.pending.pending_configuration_command.take().expect("configuration commit retains its original typed command");cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);
-        let dispatched=self.stores.config_store.dispatch(command,identity).await;let permit=self.pending.pending_configuration_permit.take().unwrap();self.tools.finish_reserved_emit_producer(permit);if let Err(source)=dispatched{*self.pending.pending_configuration_failure=Some(semio_framework_plugin_job::reserved_jobs::OriginalConfigurationFailure::Store(source));let _=self.pending.receive_configuration_failure(cx)?;return Ok(None)}self.pending.pending_configuration_identity=None;self.history.cache=None;Ok(Some(ToolOperations::<A>::empty_result("configCommand", meta, Vec::new(), Vec::new(), UiDirtyScope::Full).await))
+        let dispatched=self.stores.config_store.dispatch(command,identity).await;let permit=self.pending.pending_configuration_permit.take().unwrap();self.tools.finish_reserved_emit_producer(permit);if let Err(source)=dispatched{*self.pending.pending_configuration_failure=Some(semio_framework_plugin_job::reserved_jobs::OriginalConfigurationFailure::Store(source));let _=self.pending.receive_configuration_failure(cx)?;return Ok(None)}self.pending.pending_configuration_identity=None;self.pending.pending_configuration_source=None;self.pending.pending_configuration_rejected=false;self.history.cache=None;Ok(Some(ToolOperations::<A>::empty_result("configCommand", meta, Vec::new(), Vec::new(), UiDirtyScope::Full).await))
     }
 }

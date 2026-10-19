@@ -88,20 +88,17 @@
       {
         "family": "puzzle",
         "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs",
+        "retainedOwner": "self.rejected_completion = Some(ArtifactToolCompletionValue::Emit(rejected.emit.map_err(ArtifactCompletionFault::new),rejected.ephemeral))",
         "terminalGuard": "ArtifactRetainedCommandPhase::Fault =>",
         "legacyLossToken": "completion.complete(Ok(emit), EphemeralEmit::default()).is_err()",
-        "incrementalClose": "self.close_one_original(same,loan)?",
+        "incrementalClose": "A::admit_completion_retirement(&mut self.rejected_completion,grant)",
         "retainedPhysicalOwners": [
-          "self.ephemeral = Some(rejected.ephemeral)",
-          "self.reducer_fault(rejected.fault)",
-          "&& self.emit.is_none()",
-          "&& self.ephemeral.is_none()",
-          "&& self.fault_retirement.is_none()"
+          "&& self.rejected_completion.is_none()",
+          "&& self.rejected_retirement.is_none()"
         ],
         "sourceStart": "impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {",
         "sourceEnd": "//#endregion 🧵️Job",
         "completion": "completion.complete(Ok(emit), ephemeral)",
-        "retainedOwner": "self.emit = rejected.emit.ok();",
         "bindings": [
           {
             "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️retained-commands/🦀️.rs",
@@ -122,56 +119,23 @@
       },
       {
         "family": "draw",
-        "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️gesture-jobs/🦀️.rs",
+        "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        "retainedOwner": "self.pending_completion_rejection = Some(rejected)",
         "terminalGuard": "if self.pending_completion_rejection.is_some()",
         "legacyLossToken": "payload.completion.complete(emit, semio_framework_plugin::EphemeralEmit::default()).is_err()",
         "incrementalClose": "emit.close_child_one(grant)",
-        "retainedPhysicalOwners": [
-          "self.pending_completion_rejection.is_none()",
-          "self.payload.is_none()",
-          "self.raw_input.is_none()",
-          "self.decoder.is_none()",
-          "self.outcomes.terminal_is_empty()"
-        ],
-        "sourceStart": "struct DrawingGestureOperationJob {",
-        "sourceEnd": "struct DrawingGestureOperationJobFactory {",
-        "completion": "payload.completion.complete(Ok(emit), ephemeral)",
-        "retainedOwner": "self.pending_completion_rejection = Some(rejected)",
-        "bindings": []
+        "retainedPhysicalOwners": []
       },
       {
         "family": "writer",
+        "retainedOwner": "self.rejected_completion = Some(ArtifactToolCompletionValue::Emit(rejected.emit.map_err(ArtifactCompletionFault::new),rejected.ephemeral))",
         "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs",
         "terminalGuard": "ArtifactRetainedCommandPhase::Fault =>",
         "legacyLossToken": "completion.complete(Ok(emit), EphemeralEmit::default()).is_err()",
-        "incrementalClose": "self.close_one_original(same,loan)?",
+        "incrementalClose": "A::admit_completion_retirement(&mut self.rejected_completion,grant)",
         "retainedPhysicalOwners": [
-          "self.ephemeral = Some(rejected.ephemeral)",
-          "self.reducer_fault(rejected.fault)",
-          "&& self.emit.is_none()",
-          "&& self.ephemeral.is_none()",
-          "&& self.fault_retirement.is_none()"
-        ],
-        "sourceStart": "impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {",
-        "sourceEnd": "//#endregion 🧵️Job",
-        "completion": "completion.complete(Ok(emit), ephemeral)",
-        "retainedOwner": "self.emit = rejected.emit.ok();",
-        "bindings": [
-          {
-            "source": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-            "tokens": [
-              "type Job = ArtifactRetainedCommandJob<EditorApp<WriterPlayApp>>;",
-              "ArtifactRetainedCommandJob::from_wire(payload, input)"
-            ]
-          },
-          {
-            "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs",
-            "tokens": [
-              "self.advance_original(cx)",
-              "emit.close_child_one(child)",
-              "fn close_one_original(&mut self,cx:&mut StepContext"
-            ]
-          }
+          "&& self.rejected_completion.is_none()",
+          "&& self.rejected_retirement.is_none()"
         ]
       }
     ],
@@ -179,36 +143,24 @@
       {
         "family": "puzzle5d-copy",
         "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/📋️clipboard/🦀️.rs",
-        "sourceStart": "struct Puzzle5dClipboardJob {",
+        "sourceStart": "\nstruct Puzzle5dClipboardJob {",
         "sourceEnd": "\n//#endregion 🧵️ReservedJobs",
         "terminalGuard": "if self.rejection.is_some()",
         "retainedOwner": "self.rejection = Some(rejected)",
+        "handoff": "completion.complete(",
         "incrementalClose": "crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.owners, grant)",
-        "legacyLossToken": "if let Err(error) = completion.complete",
-        "bindings": [],
-        "completion": "completion.complete(",
-        "retainedPhysicalOwners": [
-          "self.outbox.terminal_is_empty()",
-          "self.owners.is_empty()",
-          "rejection: self.rejection.take()"
-        ]
+        "legacyLossToken": "completion.complete(Ok(emit), EphemeralEmit::default()).is_err()"
       },
       {
         "family": "puzzle5d-cut",
         "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/📋️clipboard/🦀️.rs",
-        "sourceStart": "struct Puzzle5dClipboardJob {",
+        "sourceStart": "\nstruct Puzzle5dClipboardJob {",
         "sourceEnd": "\n//#endregion 🧵️ReservedJobs",
         "terminalGuard": "if self.rejection.is_some()",
         "retainedOwner": "self.rejection = Some(rejected)",
+        "handoff": "completion.complete(",
         "incrementalClose": "crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.owners, grant)",
-        "legacyLossToken": "if let Err(error) = completion.complete",
-        "bindings": [],
-        "completion": "completion.complete(",
-        "retainedPhysicalOwners": [
-          "self.outbox.terminal_is_empty()",
-          "self.owners.is_empty()",
-          "rejection: self.rejection.take()"
-        ]
+        "legacyLossToken": "completion.complete(Ok(emit), EphemeralEmit::default()).is_err()"
       },
       {
         "family": "puzzle5d-paste",
@@ -217,15 +169,9 @@
         "sourceEnd": "\n//#endregion 🧵️ReservedJobs",
         "terminalGuard": "puzzle5d paste completion remains rejected",
         "retainedOwner": "self.pending_completion_rejection = Some(rejected)",
+        "handoff": "completion.complete(",
         "incrementalClose": "crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.owners, grant)",
-        "legacyLossToken": "if let Err(error) = completion.complete",
-        "bindings": [],
-        "completion": "completion.complete(",
-        "retainedPhysicalOwners": [
-          "self.outbox.terminal_is_empty()",
-          "self.owners.is_empty()",
-          "pending_completion_rejection: self.pending_completion_rejection.take()"
-        ]
+        "legacyLossToken": "completion.complete(Ok(emit), EphemeralEmit::default()).is_err()"
       },
       {
         "family": "puzzle5d-import",
@@ -234,15 +180,9 @@
         "sourceEnd": "\n//#endregion 🧵️ReservedJobs",
         "terminalGuard": "puzzle5d import completion remains rejected",
         "retainedOwner": "self.pending_completion_rejection = Some(rejected)",
+        "handoff": "completion.complete(",
         "incrementalClose": "crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.owners, grant)",
-        "legacyLossToken": "if let Err(error) = completion.complete",
-        "bindings": [],
-        "completion": "completion.complete(",
-        "retainedPhysicalOwners": [
-          "self.outbox.terminal_is_empty()",
-          "self.owners.is_empty()",
-          "pending_completion_rejection: self.pending_completion_rejection.take()"
-        ]
+        "legacyLossToken": "completion.complete(Ok(emit), EphemeralEmit::default()).is_err()"
       }
     ]
   },

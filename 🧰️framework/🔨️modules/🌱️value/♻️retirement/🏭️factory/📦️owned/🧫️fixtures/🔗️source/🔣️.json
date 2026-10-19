@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "transfer-actual-original-and-issuer",
+      "text": "A ä 👷",
+      "capacity": 8192,
+      "route": "transfer",
+      "refuseOnce": false,
+      "expected": {
+        "payloadRetireCalls": 1,
+        "refusals": 0
+      }
+    },
+    {
+      "name": "cancel-keeps-original-custom-issuer",
+      "text": "source cancel",
+      "capacity": 4096,
+      "route": "cancel",
+      "refuseOnce": false,
+      "expected": {
+        "payloadRetireCalls": 1,
+        "refusals": 0
+      }
+    },
+    {
+      "name": "provider-refusal-restores-live-source",
+      "text": "exact issuer refuses once",
+      "capacity": 2048,
+      "route": "cancel",
+      "refuseOnce": true,
+      "expected": {
+        "payloadRetireCalls": 2,
+        "refusals": 1
+      }
+    }
+  ],
+  "sourceRefusals": [
+    "items",
+    "copy",
+    "capacity",
+    "depth"
+  ],
+  "projectionRefusals": [
+    "items",
+    "copy",
+    "depth"
+  ],
+  "transferRefusals": [
+    "items",
+    "copy",
+    "depth"
+  ]
+}

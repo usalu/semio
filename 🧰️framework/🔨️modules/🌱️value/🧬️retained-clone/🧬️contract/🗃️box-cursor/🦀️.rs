@@ -22,7 +22,7 @@ impl<T: RetainedClone> RetainedCloneCursor<Box<T>> for BoxCursor<T> {
     fn output_ready(&self)->bool{self.output.is_some()}
     fn advance_demands(&self,source:RetainedCloneRef<'_,Box<T>>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(demand)=source.binding_demand(&self.source)?{return Ok(demand)}if self.closing||self.spent{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"boxed original clone is closing or spent"))}if self.output.is_some(){return Ok(Default::default())}if self.value.is_some(){if let Some(child)=self.child.as_ref(){if !child.terminal_is_empty(){return clone_cursor_close_demand::<T>(&**child,body)}return Ok(crate::RetirementDemand{release_bytes:size_of::<T::Cursor>(),depth:1,..Default::default()})}return Ok(crate::RetirementDemand{capacity_bytes:size_of::<T>(),depth:1,..Default::default()})}if let Some(child)=self.child.as_ref(){let mut demand=child.advance_demands(source.project(1,|boxed|boxed.as_ref()),body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::DepthLimit,"boxed original clone quote depth overflow"))?;Ok(demand)}else{Ok(crate::RetirementDemand{capacity_bytes:size_of::<T::Cursor>(),depth:1,..Default::default()})}}
 
-    fn advance(&mut self, source: RetainedCloneRef<'_, Box<T>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+    fn advance(&mut self, source: RetainedCloneRef<'_, Box<T>>, body: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if self.closing {
             return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained box clone cursor is closing"));
         }
@@ -74,7 +74,7 @@ impl<T: RetainedClone> RetainedCloneCursor<Box<T>> for BoxCursor<T> {
         }
         let child = self.child.as_mut().expect("initialized retained box child");
         let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-        match child.advance(source.project(1, |boxed| boxed.as_ref()), child_grant)? {
+        match child.advance(source.project(1, |boxed| boxed.as_ref()),body, child_grant)? {
             RetainedCloneStep::Progress(progress) => Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(child_grant, progress, "retained box child")?)),
             RetainedCloneStep::Complete(progress) => {
                 let progress = admit_retained_clone_progress(child_grant, progress, "retained box child")?;

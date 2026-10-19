@@ -108,7 +108,7 @@ pub struct Ticket {
     pub plan: Option<TicketPlan>,
     #[serde(rename = "sessions", default, skip_serializing_if = "Vec::is_empty")]
     pub sessions: Vec<String>,
-    #[serde(skip)]
+    #[serde(rename = "interactions", default, skip_serializing_if = "Vec::is_empty")]
     pub interactions: Vec<Interaction>,
     #[serde(skip)]
     pub agents: Vec<TicketAgent>,

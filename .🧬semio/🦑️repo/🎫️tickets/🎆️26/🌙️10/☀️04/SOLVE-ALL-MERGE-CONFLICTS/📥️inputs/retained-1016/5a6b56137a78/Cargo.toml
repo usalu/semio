@@ -1,0 +1,9 @@
+[package]
+workspace=".."
+name="specific-model"
+version="0.1.0"
+edition.workspace=true
+[lib]
+path="🦀️.rs"
+[dependencies]
+shared-key={workspace=true}

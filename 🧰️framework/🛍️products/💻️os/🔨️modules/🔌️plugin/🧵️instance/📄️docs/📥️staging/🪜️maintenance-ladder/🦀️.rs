@@ -69,7 +69,7 @@ pub fn removed(progress: RetainedCloneProgress) -> PluginLifecycleStep {
 /// 🧯️ Turns a refused owner-catalog admission into its fault, keeping the receipt the refused build actually spent.
 fn owners_admission_fault<P, Mutation>(refusal: store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<P, Mutation>) -> Fault
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    P: semio_framework_value::ToValue,
     Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P>,
 {
     let store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError { error, owners, progress } = refusal;

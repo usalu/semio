@@ -24,6 +24,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "unbind", entity: "weather-file", kind: "unbind-weather-file", record: "UnboundWeatherFile" };
 
+
+
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Unbind the weather file", "Bindung der Wetterdatei aufheben")
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for UnbindWeatherFile
+where
+    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<UnbindWeatherFile> + From<crate::BindWeatherFile>,
+{
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
@@ -34,9 +47,5 @@ where
     
     })
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Unbind the weather file", "Bindung der Wetterdatei aufheben")
-    }
 }
 //#endregion 🔖️Mutation

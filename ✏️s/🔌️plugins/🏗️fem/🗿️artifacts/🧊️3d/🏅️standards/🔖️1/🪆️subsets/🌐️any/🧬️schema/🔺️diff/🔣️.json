@@ -116,7 +116,7 @@
           "type": "string"
         },
         "patch": {
-          "type": "object"
+          "$ref": "#/$defs/Fem3dNodePatch"
         }
       }
     },
@@ -229,7 +229,7 @@
           "type": "string"
         },
         "patch": {
-          "type": "object"
+          "$ref": "#/$defs/Fem3dElementPatch"
         }
       }
     },
@@ -342,7 +342,7 @@
           "type": "string"
         },
         "patch": {
-          "type": "object"
+          "$ref": "#/$defs/Fem3dMaterialPatch"
         }
       }
     },
@@ -455,7 +455,7 @@
           "type": "string"
         },
         "patch": {
-          "type": "object"
+          "$ref": "#/$defs/Fem3dSectionPatch"
         }
       }
     },
@@ -568,7 +568,7 @@
           "type": "string"
         },
         "patch": {
-          "type": "object"
+          "$ref": "#/$defs/Fem3dSolidPatch"
         }
       }
     },
@@ -681,7 +681,7 @@
           "type": "string"
         },
         "patch": {
-          "type": "object"
+          "$ref": "#/$defs/Fem3dSupportPatch"
         }
       }
     },
@@ -907,7 +907,7 @@
           "type": "string"
         },
         "patch": {
-          "type": "object"
+          "$ref": "#/$defs/Fem3dCombinationPatch"
         }
       }
     },
@@ -1036,7 +1036,7 @@
           "type": "string"
         },
         "patch": {
-          "type": "object"
+          "$ref": "#/$defs/Fem3dLoadPatch"
         }
       }
     },
@@ -1095,6 +1095,3852 @@
           "exclusiveMinimum": 0
         }
       }
+    },
+    "Fem3dMaterialPatch": {
+      "title": "Fem3dMaterialPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Bezeichnung"
+            },
+            "group": "identity",
+            "order": 20
+          }
+        },
+        "e": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Young's modulus",
+              "de": "Elastizitätsmodul"
+            },
+            "unit": "Pa",
+            "displayUnit": "GPa",
+            "displayFactor": 1e-09,
+            "step": 1000000000.0,
+            "precision": 1,
+            "group": "material",
+            "order": 30
+          }
+        },
+        "g": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Shear modulus",
+              "de": "Schubmodul"
+            },
+            "unit": "Pa",
+            "displayUnit": "GPa",
+            "displayFactor": 1e-09,
+            "step": 1000000000.0,
+            "precision": 1,
+            "group": "material",
+            "order": 40
+          }
+        },
+        "nu": {
+          "type": "number",
+          "exclusiveMinimum": -1,
+          "exclusiveMaximum": 0.5,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Poisson's ratio",
+              "de": "Querdehnzahl"
+            },
+            "step": 0.01,
+            "precision": 3,
+            "softMin": 0,
+            "softMax": 0.49,
+            "group": "material",
+            "order": 50
+          }
+        },
+        "rho": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Density",
+              "de": "Dichte"
+            },
+            "unit": "kg/m³",
+            "step": 10,
+            "precision": 0,
+            "group": "material",
+            "order": 60
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "de": "Materialänderungen",
+          "en": "Material changes"
+        },
+        "group": "record",
+        "order": 20
+      }
+    },
+    "Fem3dNodePatch": {
+      "title": "Fem3dNodePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "X",
+              "de": "X"
+            },
+            "unit": "m",
+            "step": 0.1,
+            "precision": 3,
+            "group": "position",
+            "order": 20
+          }
+        },
+        "y": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Y",
+              "de": "Y"
+            },
+            "unit": "m",
+            "step": 0.1,
+            "precision": 3,
+            "group": "position",
+            "order": 30
+          }
+        },
+        "z": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Z",
+              "de": "Z"
+            },
+            "unit": "m",
+            "step": 0.1,
+            "precision": 3,
+            "group": "position",
+            "order": 40
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "New node",
+          "de": "Neuer Knoten"
+        },
+        "group": "record",
+        "order": 20
+      }
+    },
+    "Fem3dSectionPatch": {
+      "title": "Fem3dSectionPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Bezeichnung"
+            },
+            "group": "identity",
+            "order": 20
+          }
+        },
+        "area": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Cross-sectional area",
+              "de": "Querschnittsfläche"
+            },
+            "unit": "m²",
+            "displayUnit": "cm²",
+            "displayFactor": 10000.0,
+            "step": 0.0001,
+            "precision": 2,
+            "group": "section",
+            "order": 30
+          }
+        },
+        "iy": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Second moment of area Iy",
+              "de": "Flächenträgheitsmoment Iy"
+            },
+            "unit": "m⁴",
+            "displayUnit": "cm⁴",
+            "displayFactor": 100000000.0,
+            "step": 1e-08,
+            "precision": 1,
+            "group": "section",
+            "order": 40
+          }
+        },
+        "iz": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Second moment of area Iz",
+              "de": "Flächenträgheitsmoment Iz"
+            },
+            "unit": "m⁴",
+            "displayUnit": "cm⁴",
+            "displayFactor": 100000000.0,
+            "step": 1e-08,
+            "precision": 1,
+            "group": "section",
+            "order": 50
+          }
+        },
+        "j": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Torsion constant",
+              "de": "Torsionsflächenmoment"
+            },
+            "description": {
+              "en": "Saint-Venant torsion constant I_T.",
+              "de": "Torsionsflächenmoment 2. Grades I_T nach Saint-Venant."
+            },
+            "unit": "m⁴",
+            "displayUnit": "cm⁴",
+            "displayFactor": 100000000.0,
+            "step": 1e-08,
+            "precision": 1,
+            "group": "section",
+            "order": 60
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "New cross-section",
+          "de": "Neuer Querschnitt"
+        },
+        "group": "record",
+        "order": 20
+      }
+    },
+    "Fem3dSolidPatch": {
+      "title": "FemSolid",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Bezeichnung"
+            },
+            "group": "identity",
+            "order": 20
+          }
+        },
+        "outline": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "minItems": 3,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Outline",
+              "de": "Umriss"
+            },
+            "description": {
+              "en": "Closed polygon of x, y vertices in m.",
+              "de": "Geschlossenes Polygon aus x-, y-Eckpunkten in m."
+            },
+            "group": "record",
+            "order": 30
+          }
+        },
+        "holes": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "minItems": 3
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Openings",
+              "de": "Aussparungen"
+            },
+            "description": {
+              "en": "Polygons cut out of the outline.",
+              "de": "Aus dem Umriss ausgeschnittene Polygone."
+            },
+            "group": "record",
+            "order": 40
+          }
+        },
+        "axis": {
+          "type": "string",
+          "enum": [
+            "x",
+            "y",
+            "z"
+          ],
+          "x-semio-ui": {
+            "widget": "segmented",
+            "role": "value",
+            "label": {
+              "en": "Extrusion axis",
+              "de": "Extrusionsachse"
+            },
+            "options": {
+              "x": {
+                "en": "X axis",
+                "de": "x-Achse"
+              },
+              "y": {
+                "en": "Y axis",
+                "de": "y-Achse"
+              },
+              "z": {
+                "en": "Z axis",
+                "de": "z-Achse"
+              }
+            },
+            "group": "geometry",
+            "order": 50
+          }
+        },
+        "baseZ": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Base elevation",
+              "de": "Basishöhe"
+            },
+            "description": {
+              "en": "Coordinate along the extrusion axis where the solid starts.",
+              "de": "Koordinate entlang der Extrusionsachse, an der der Körper beginnt."
+            },
+            "unit": "m",
+            "step": 0.1,
+            "precision": 3,
+            "group": "geometry",
+            "order": 60
+          }
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Extrusion height",
+              "de": "Extrusionshöhe"
+            },
+            "unit": "m",
+            "step": 0.1,
+            "precision": 3,
+            "group": "geometry",
+            "order": 70
+          }
+        },
+        "layers": {
+          "type": "integer",
+          "minimum": 1,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Element layers",
+              "de": "Elementlagen"
+            },
+            "description": {
+              "en": "Number of element layers through the extrusion height.",
+              "de": "Anzahl der Elementlagen über die Extrusionshöhe."
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "mesh",
+            "order": 80
+          }
+        },
+        "meshSize": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Mesh size",
+              "de": "Netzweite"
+            },
+            "description": {
+              "en": "Target edge length of the finite elements.",
+              "de": "Angestrebte Kantenlänge der finiten Elemente."
+            },
+            "unit": "m",
+            "step": 0.01,
+            "precision": 3,
+            "group": "mesh",
+            "order": 90
+          }
+        },
+        "materialId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Material",
+              "de": "Material"
+            },
+            "ref": {
+              "kind": "material",
+              "domain": "fem3d",
+              "granularity": "material"
+            },
+            "group": "target",
+            "order": 100
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "New solid",
+          "de": "Neuer Volumenkörper"
+        },
+        "group": "record",
+        "order": 20
+      }
+    },
+    "Fem3dSupportPatch": {
+      "title": "FemSupport",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nodeId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Node",
+              "de": "Knoten"
+            },
+            "ref": {
+              "kind": "node",
+              "domain": "fem3d",
+              "granularity": "node"
+            },
+            "group": "target",
+            "order": 20
+          }
+        },
+        "fixed": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Rx",
+              "Ry",
+              "Rz"
+            ],
+            "x-semio-ui": {
+              "options": {
+                "Tx": {
+                  "en": "Translation X",
+                  "de": "Verschiebung x"
+                },
+                "Ty": {
+                  "en": "Translation Y",
+                  "de": "Verschiebung y"
+                },
+                "Tz": {
+                  "en": "Translation Z",
+                  "de": "Verschiebung z"
+                },
+                "Rx": {
+                  "en": "Rotation about X",
+                  "de": "Verdrehung um x"
+                },
+                "Ry": {
+                  "en": "Rotation about Y",
+                  "de": "Verdrehung um y"
+                },
+                "Rz": {
+                  "en": "Rotation about Z",
+                  "de": "Verdrehung um z"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Fixed degrees of freedom",
+              "de": "Gesperrte Freiheitsgrade"
+            },
+            "group": "record",
+            "order": 30
+          },
+          "uniqueItems": true,
+          "enum": [
+            [],
+            [
+              "Tx"
+            ],
+            [
+              "Ty"
+            ],
+            [
+              "Tx",
+              "Ty"
+            ],
+            [
+              "Tz"
+            ],
+            [
+              "Tx",
+              "Tz"
+            ],
+            [
+              "Ty",
+              "Tz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Tz"
+            ],
+            [
+              "Rx"
+            ],
+            [
+              "Tx",
+              "Rx"
+            ],
+            [
+              "Ty",
+              "Rx"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Rx"
+            ],
+            [
+              "Tz",
+              "Rx"
+            ],
+            [
+              "Tx",
+              "Tz",
+              "Rx"
+            ],
+            [
+              "Ty",
+              "Tz",
+              "Rx"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Rx"
+            ],
+            [
+              "Ry"
+            ],
+            [
+              "Tx",
+              "Ry"
+            ],
+            [
+              "Ty",
+              "Ry"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Ry"
+            ],
+            [
+              "Tz",
+              "Ry"
+            ],
+            [
+              "Tx",
+              "Tz",
+              "Ry"
+            ],
+            [
+              "Ty",
+              "Tz",
+              "Ry"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Ry"
+            ],
+            [
+              "Rx",
+              "Ry"
+            ],
+            [
+              "Tx",
+              "Rx",
+              "Ry"
+            ],
+            [
+              "Ty",
+              "Rx",
+              "Ry"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Rx",
+              "Ry"
+            ],
+            [
+              "Tz",
+              "Rx",
+              "Ry"
+            ],
+            [
+              "Tx",
+              "Tz",
+              "Rx",
+              "Ry"
+            ],
+            [
+              "Ty",
+              "Tz",
+              "Rx",
+              "Ry"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Rx",
+              "Ry"
+            ],
+            [
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Rz"
+            ],
+            [
+              "Ty",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Rz"
+            ],
+            [
+              "Tz",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Tz",
+              "Rz"
+            ],
+            [
+              "Ty",
+              "Tz",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Rz"
+            ],
+            [
+              "Rx",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Rx",
+              "Rz"
+            ],
+            [
+              "Ty",
+              "Rx",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Rx",
+              "Rz"
+            ],
+            [
+              "Tz",
+              "Rx",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Tz",
+              "Rx",
+              "Rz"
+            ],
+            [
+              "Ty",
+              "Tz",
+              "Rx",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Rx",
+              "Rz"
+            ],
+            [
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Ty",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tz",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Tz",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Ty",
+              "Tz",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Rx",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Rx",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Ty",
+              "Rx",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Rx",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tz",
+              "Rx",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Tz",
+              "Rx",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Ty",
+              "Tz",
+              "Rx",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Rx",
+              "Ry",
+              "Rz"
+            ]
+          ],
+          "description": "A unique subsequence of FemDof::ALL: Tx, Ty, Tz, Rx, Ry, Rz. Empty explicitly releases all fixed DOFs."
+        },
+        "tx": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "de": "Fest TX",
+              "en": "Fixed TX"
+            },
+            "widget": "toggle"
+          }
+        },
+        "ty": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "de": "Fest TY",
+              "en": "Fixed TY"
+            },
+            "widget": "toggle"
+          }
+        },
+        "tz": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "de": "Fest TZ",
+              "en": "Fixed TZ"
+            },
+            "widget": "toggle"
+          }
+        },
+        "rx": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "de": "Fest RX",
+              "en": "Fixed RX"
+            },
+            "widget": "toggle"
+          }
+        },
+        "ry": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "de": "Fest RY",
+              "en": "Fixed RY"
+            },
+            "widget": "toggle"
+          }
+        },
+        "rz": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "de": "Fest RZ",
+              "en": "Fixed RZ"
+            },
+            "widget": "toggle"
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "New support",
+          "de": "Neues Lager"
+        },
+        "group": "record",
+        "order": 20
+      },
+      "allOf": [
+        {
+          "not": {
+            "required": [
+              "fixed",
+              "tx"
+            ]
+          }
+        },
+        {
+          "not": {
+            "required": [
+              "fixed",
+              "ty"
+            ]
+          }
+        },
+        {
+          "not": {
+            "required": [
+              "fixed",
+              "tz"
+            ]
+          }
+        },
+        {
+          "not": {
+            "required": [
+              "fixed",
+              "rx"
+            ]
+          }
+        },
+        {
+          "not": {
+            "required": [
+              "fixed",
+              "ry"
+            ]
+          }
+        },
+        {
+          "not": {
+            "required": [
+              "fixed",
+              "rz"
+            ]
+          }
+        }
+      ]
+    },
+    "Fem3dElementPatch": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "kind": {
+          "x-semio-ui": {
+            "widget": "hidden",
+            "role": "discriminator",
+            "label": {
+              "en": "Element type",
+              "de": "Elementtyp"
+            }
+          },
+          "type": "string",
+          "enum": [
+            "bar",
+            "frame"
+          ]
+        },
+        "start": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Start node",
+              "de": "Anfangsknoten"
+            },
+            "ref": {
+              "kind": "node",
+              "domain": "fem3d",
+              "granularity": "node"
+            },
+            "group": "target",
+            "order": 30
+          }
+        },
+        "end": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "End node",
+              "de": "Endknoten"
+            },
+            "ref": {
+              "kind": "node",
+              "domain": "fem3d",
+              "granularity": "node"
+            },
+            "group": "target",
+            "order": 40
+          }
+        },
+        "materialId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Material",
+              "de": "Material"
+            },
+            "ref": {
+              "kind": "material",
+              "domain": "fem3d",
+              "granularity": "material"
+            },
+            "group": "target",
+            "order": 50
+          }
+        },
+        "sectionId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Cross-section",
+              "de": "Querschnitt"
+            },
+            "ref": {
+              "kind": "section",
+              "domain": "fem3d",
+              "granularity": "section"
+            },
+            "group": "target",
+            "order": 60
+          }
+        },
+        "roll": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "dial",
+            "role": "value",
+            "label": {
+              "en": "Roll angle",
+              "de": "Verdrehwinkel"
+            },
+            "description": {
+              "en": "Rotation of the section axes about the member axis.",
+              "de": "Drehung der Querschnittshauptachsen um die Stabachse."
+            },
+            "unit": "rad",
+            "displayUnit": "deg",
+            "displayFactor": 57.29577951308232,
+            "step": 0.017453292519943295,
+            "softMin": -3.141592653589793,
+            "softMax": 3.141592653589793,
+            "snaps": [
+              -3.141592653589793,
+              -1.5707963267948966,
+              0,
+              1.5707963267948966,
+              3.141592653589793
+            ],
+            "group": "geometry",
+            "order": 70
+          }
+        }
+      },
+      "allOf": [
+        {
+          "then": {
+            "not": {
+              "required": [
+                "roll"
+              ]
+            }
+          },
+          "if": {
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "bar"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "FemAnalysisSettings": {
+      "title": "FemAnalysisSettings",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bucklingCount",
+        "deformationScale",
+        "modalCount"
+      ],
+      "properties": {
+        "modalCount": {
+          "type": "integer",
+          "minimum": 1,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Number of vibration modes",
+              "de": "Anzahl Eigenformen"
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "analysis",
+            "order": 10
+          }
+        },
+        "bucklingCount": {
+          "type": "integer",
+          "minimum": 1,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Number of buckling modes",
+              "de": "Anzahl Knickformen"
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "analysis",
+            "order": 20
+          }
+        },
+        "deformationScale": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Deformation scale",
+              "de": "Verformungsmaßstab"
+            },
+            "description": {
+              "en": "Magnification the deformed shape is drawn with.",
+              "de": "Überhöhung, mit der die Verformungsfigur gezeichnet wird."
+            },
+            "step": 1,
+            "precision": 1,
+            "group": "analysis",
+            "order": 30
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Analysis settings",
+          "de": "Analyseeinstellungen"
+        },
+        "group": "record",
+        "order": 10
+      }
+    },
+    "FemSupport": {
+      "title": "FemSupport",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fixed",
+        "id",
+        "nodeId"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
+        },
+        "nodeId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Node",
+              "de": "Knoten"
+            },
+            "ref": {
+              "kind": "node",
+              "domain": "fem3d",
+              "granularity": "node"
+            },
+            "group": "target",
+            "order": 20
+          }
+        },
+        "fixed": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Rx",
+              "Ry",
+              "Rz"
+            ],
+            "x-semio-ui": {
+              "options": {
+                "Tx": {
+                  "en": "Translation X",
+                  "de": "Verschiebung x"
+                },
+                "Ty": {
+                  "en": "Translation Y",
+                  "de": "Verschiebung y"
+                },
+                "Tz": {
+                  "en": "Translation Z",
+                  "de": "Verschiebung z"
+                },
+                "Rx": {
+                  "en": "Rotation about X",
+                  "de": "Verdrehung um x"
+                },
+                "Ry": {
+                  "en": "Rotation about Y",
+                  "de": "Verdrehung um y"
+                },
+                "Rz": {
+                  "en": "Rotation about Z",
+                  "de": "Verdrehung um z"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Fixed degrees of freedom",
+              "de": "Gesperrte Freiheitsgrade"
+            },
+            "group": "record",
+            "order": 30
+          },
+          "uniqueItems": true,
+          "enum": [
+            [],
+            [
+              "Tx"
+            ],
+            [
+              "Ty"
+            ],
+            [
+              "Tx",
+              "Ty"
+            ],
+            [
+              "Tz"
+            ],
+            [
+              "Tx",
+              "Tz"
+            ],
+            [
+              "Ty",
+              "Tz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Tz"
+            ],
+            [
+              "Rx"
+            ],
+            [
+              "Tx",
+              "Rx"
+            ],
+            [
+              "Ty",
+              "Rx"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Rx"
+            ],
+            [
+              "Tz",
+              "Rx"
+            ],
+            [
+              "Tx",
+              "Tz",
+              "Rx"
+            ],
+            [
+              "Ty",
+              "Tz",
+              "Rx"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Rx"
+            ],
+            [
+              "Ry"
+            ],
+            [
+              "Tx",
+              "Ry"
+            ],
+            [
+              "Ty",
+              "Ry"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Ry"
+            ],
+            [
+              "Tz",
+              "Ry"
+            ],
+            [
+              "Tx",
+              "Tz",
+              "Ry"
+            ],
+            [
+              "Ty",
+              "Tz",
+              "Ry"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Ry"
+            ],
+            [
+              "Rx",
+              "Ry"
+            ],
+            [
+              "Tx",
+              "Rx",
+              "Ry"
+            ],
+            [
+              "Ty",
+              "Rx",
+              "Ry"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Rx",
+              "Ry"
+            ],
+            [
+              "Tz",
+              "Rx",
+              "Ry"
+            ],
+            [
+              "Tx",
+              "Tz",
+              "Rx",
+              "Ry"
+            ],
+            [
+              "Ty",
+              "Tz",
+              "Rx",
+              "Ry"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Rx",
+              "Ry"
+            ],
+            [
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Rz"
+            ],
+            [
+              "Ty",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Rz"
+            ],
+            [
+              "Tz",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Tz",
+              "Rz"
+            ],
+            [
+              "Ty",
+              "Tz",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Rz"
+            ],
+            [
+              "Rx",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Rx",
+              "Rz"
+            ],
+            [
+              "Ty",
+              "Rx",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Rx",
+              "Rz"
+            ],
+            [
+              "Tz",
+              "Rx",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Tz",
+              "Rx",
+              "Rz"
+            ],
+            [
+              "Ty",
+              "Tz",
+              "Rx",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Rx",
+              "Rz"
+            ],
+            [
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Ty",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tz",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Tz",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Ty",
+              "Tz",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Rx",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Rx",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Ty",
+              "Rx",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Rx",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tz",
+              "Rx",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Tz",
+              "Rx",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Ty",
+              "Tz",
+              "Rx",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Rx",
+              "Ry",
+              "Rz"
+            ]
+          ],
+          "description": "Canonical unique DOF set in Tx, Ty, Tz, Rx, Ry, Rz order."
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Support",
+          "de": "Lager"
+        },
+        "group": "record",
+        "order": 10
+      }
+    },
+    "FemDof": {
+      "type": "string",
+      "enum": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ]
+    },
+    "FemAxis": {
+      "type": "string",
+      "enum": [
+        "x",
+        "y",
+        "z"
+      ]
+    },
+    "FemLoad": {
+      "title": "FemLoad",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dof",
+            "id",
+            "kind",
+            "nodeId",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "nodal",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Load type",
+                  "de": "Lastart"
+                }
+              }
+            },
+            "id": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "description": {
+                  "en": "Unique id of the record.",
+                  "de": "Eindeutige ID des Eintrags."
+                },
+                "group": "identity",
+                "order": 20
+              }
+            },
+            "nodeId": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Node",
+                  "de": "Knoten"
+                },
+                "ref": {
+                  "kind": "node",
+                  "domain": "fem3d",
+                  "granularity": "node"
+                },
+                "group": "target",
+                "order": 30
+              }
+            },
+            "dof": {
+              "type": "string",
+              "enum": [
+                "Tx",
+                "Ty",
+                "Tz",
+                "Rx",
+                "Ry",
+                "Rz"
+              ],
+              "x-semio-ui": {
+                "widget": "select",
+                "role": "value",
+                "label": {
+                  "en": "Degree of freedom",
+                  "de": "Freiheitsgrad"
+                },
+                "options": {
+                  "Tx": {
+                    "en": "Translation X",
+                    "de": "Verschiebung x"
+                  },
+                  "Ty": {
+                    "en": "Translation Y",
+                    "de": "Verschiebung y"
+                  },
+                  "Tz": {
+                    "en": "Translation Z",
+                    "de": "Verschiebung z"
+                  },
+                  "Rx": {
+                    "en": "Rotation about X",
+                    "de": "Verdrehung um x"
+                  },
+                  "Ry": {
+                    "en": "Rotation about Y",
+                    "de": "Verdrehung um y"
+                  },
+                  "Rz": {
+                    "en": "Rotation about Z",
+                    "de": "Verdrehung um z"
+                  }
+                },
+                "group": "load",
+                "order": 40
+              }
+            },
+            "value": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Load value",
+                  "de": "Lastwert"
+                },
+                "description": {
+                  "en": "Force in N on a translation, moment in N·m on a rotation.",
+                  "de": "Kraft in N bei einer Verschiebung, Moment in N·m bei einer Verdrehung."
+                },
+                "step": 100,
+                "precision": 2,
+                "group": "load",
+                "order": 50
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Nodal load",
+              "de": "Knotenlast"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "elementId",
+            "id",
+            "kind",
+            "wx",
+            "wy",
+            "wz"
+          ],
+          "properties": {
+            "kind": {
+              "const": "memberUdl",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Load type",
+                  "de": "Lastart"
+                }
+              }
+            },
+            "id": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "description": {
+                  "en": "Unique id of the record.",
+                  "de": "Eindeutige ID des Eintrags."
+                },
+                "group": "identity",
+                "order": 20
+              }
+            },
+            "elementId": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Element",
+                  "de": "Element"
+                },
+                "ref": {
+                  "kind": "element",
+                  "domain": "fem3d",
+                  "granularity": "element"
+                },
+                "group": "target",
+                "order": 30
+              }
+            },
+            "wx": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Load wx",
+                  "de": "Streckenlast wx"
+                },
+                "description": {
+                  "en": "Uniform member load component in global X.",
+                  "de": "Komponente der Gleichstreckenlast in globaler x-Richtung."
+                },
+                "unit": "N/m",
+                "displayUnit": "kN/m",
+                "displayFactor": 0.001,
+                "step": 100,
+                "precision": 2,
+                "group": "load",
+                "order": 40
+              }
+            },
+            "wy": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Load wy",
+                  "de": "Streckenlast wy"
+                },
+                "description": {
+                  "en": "Uniform member load component in global Y.",
+                  "de": "Komponente der Gleichstreckenlast in globaler y-Richtung."
+                },
+                "unit": "N/m",
+                "displayUnit": "kN/m",
+                "displayFactor": 0.001,
+                "step": 100,
+                "precision": 2,
+                "group": "load",
+                "order": 50
+              }
+            },
+            "wz": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Load wz",
+                  "de": "Streckenlast wz"
+                },
+                "description": {
+                  "en": "Uniform member load component in global Z.",
+                  "de": "Komponente der Gleichstreckenlast in globaler z-Richtung."
+                },
+                "unit": "N/m",
+                "displayUnit": "kN/m",
+                "displayFactor": 0.001,
+                "step": 100,
+                "precision": 2,
+                "group": "load",
+                "order": 60
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Uniform member load",
+              "de": "Gleichstreckenlast"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "kind",
+            "pressure",
+            "solidId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "area",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Load type",
+                  "de": "Lastart"
+                }
+              }
+            },
+            "id": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "description": {
+                  "en": "Unique id of the record.",
+                  "de": "Eindeutige ID des Eintrags."
+                },
+                "group": "identity",
+                "order": 20
+              }
+            },
+            "solidId": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Solid",
+                  "de": "Volumenkörper"
+                },
+                "ref": {
+                  "kind": "solid",
+                  "domain": "fem3d",
+                  "granularity": "solid"
+                },
+                "group": "target",
+                "order": 30
+              }
+            },
+            "pressure": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Area load",
+                  "de": "Flächenlast"
+                },
+                "description": {
+                  "en": "Uniform pressure on the top face of the solid.",
+                  "de": "Gleichmäßige Flächenlast auf die Oberseite des Volumenkörpers."
+                },
+                "unit": "Pa",
+                "displayUnit": "kN/m²",
+                "displayFactor": 0.001,
+                "step": 100,
+                "precision": 2,
+                "group": "load",
+                "order": 40
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Area load",
+              "de": "Flächenlast"
+            }
+          }
+        }
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Load",
+          "de": "Last"
+        },
+        "group": "record",
+        "order": 20
+      }
+    },
+    "FemLoadCase": {
+      "title": "FemLoadCase",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "loads",
+        "name",
+        "selfWeight"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
+        },
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Bezeichnung"
+            },
+            "group": "identity",
+            "order": 20
+          }
+        },
+        "loads": {
+          "type": "array",
+          "items": {
+            "title": "FemLoad",
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "dof",
+                  "id",
+                  "kind",
+                  "nodeId",
+                  "value"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "nodal",
+                    "x-semio-ui": {
+                      "widget": "hidden",
+                      "role": "discriminator",
+                      "label": {
+                        "en": "Load type",
+                        "de": "Lastart"
+                      }
+                    }
+                  },
+                  "id": {
+                    "type": "string",
+                    "x-semio-ui": {
+                      "widget": "text",
+                      "role": "value",
+                      "label": {
+                        "en": "ID",
+                        "de": "ID"
+                      },
+                      "description": {
+                        "en": "Unique id of the record.",
+                        "de": "Eindeutige ID des Eintrags."
+                      },
+                      "group": "identity",
+                      "order": 20
+                    }
+                  },
+                  "nodeId": {
+                    "type": "string",
+                    "x-semio-ui": {
+                      "widget": "reference",
+                      "role": "target",
+                      "label": {
+                        "en": "Node",
+                        "de": "Knoten"
+                      },
+                      "ref": {
+                        "kind": "node",
+                        "domain": "fem3d",
+                        "granularity": "node"
+                      },
+                      "group": "target",
+                      "order": 30
+                    }
+                  },
+                  "dof": {
+                    "type": "string",
+                    "enum": [
+                      "Tx",
+                      "Ty",
+                      "Tz",
+                      "Rx",
+                      "Ry",
+                      "Rz"
+                    ],
+                    "x-semio-ui": {
+                      "widget": "select",
+                      "role": "value",
+                      "label": {
+                        "en": "Degree of freedom",
+                        "de": "Freiheitsgrad"
+                      },
+                      "options": {
+                        "Tx": {
+                          "en": "Translation X",
+                          "de": "Verschiebung x"
+                        },
+                        "Ty": {
+                          "en": "Translation Y",
+                          "de": "Verschiebung y"
+                        },
+                        "Tz": {
+                          "en": "Translation Z",
+                          "de": "Verschiebung z"
+                        },
+                        "Rx": {
+                          "en": "Rotation about X",
+                          "de": "Verdrehung um x"
+                        },
+                        "Ry": {
+                          "en": "Rotation about Y",
+                          "de": "Verdrehung um y"
+                        },
+                        "Rz": {
+                          "en": "Rotation about Z",
+                          "de": "Verdrehung um z"
+                        }
+                      },
+                      "group": "load",
+                      "order": 40
+                    }
+                  },
+                  "value": {
+                    "type": "number",
+                    "x-semio-ui": {
+                      "widget": "stepper",
+                      "role": "value",
+                      "label": {
+                        "en": "Load value",
+                        "de": "Lastwert"
+                      },
+                      "description": {
+                        "en": "Force in N on a translation, moment in N·m on a rotation.",
+                        "de": "Kraft in N bei einer Verschiebung, Moment in N·m bei einer Verdrehung."
+                      },
+                      "step": 100,
+                      "precision": 2,
+                      "group": "load",
+                      "order": 50
+                    }
+                  }
+                },
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Nodal load",
+                    "de": "Knotenlast"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "elementId",
+                  "id",
+                  "kind",
+                  "wx",
+                  "wy",
+                  "wz"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "memberUdl",
+                    "x-semio-ui": {
+                      "widget": "hidden",
+                      "role": "discriminator",
+                      "label": {
+                        "en": "Load type",
+                        "de": "Lastart"
+                      }
+                    }
+                  },
+                  "id": {
+                    "type": "string",
+                    "x-semio-ui": {
+                      "widget": "text",
+                      "role": "value",
+                      "label": {
+                        "en": "ID",
+                        "de": "ID"
+                      },
+                      "description": {
+                        "en": "Unique id of the record.",
+                        "de": "Eindeutige ID des Eintrags."
+                      },
+                      "group": "identity",
+                      "order": 20
+                    }
+                  },
+                  "elementId": {
+                    "type": "string",
+                    "x-semio-ui": {
+                      "widget": "reference",
+                      "role": "target",
+                      "label": {
+                        "en": "Element",
+                        "de": "Element"
+                      },
+                      "ref": {
+                        "kind": "element",
+                        "domain": "fem3d",
+                        "granularity": "element"
+                      },
+                      "group": "target",
+                      "order": 30
+                    }
+                  },
+                  "wx": {
+                    "type": "number",
+                    "x-semio-ui": {
+                      "widget": "stepper",
+                      "role": "value",
+                      "label": {
+                        "en": "Load wx",
+                        "de": "Streckenlast wx"
+                      },
+                      "description": {
+                        "en": "Uniform member load component in global X.",
+                        "de": "Komponente der Gleichstreckenlast in globaler x-Richtung."
+                      },
+                      "unit": "N/m",
+                      "displayUnit": "kN/m",
+                      "displayFactor": 0.001,
+                      "step": 100,
+                      "precision": 2,
+                      "group": "load",
+                      "order": 40
+                    }
+                  },
+                  "wy": {
+                    "type": "number",
+                    "x-semio-ui": {
+                      "widget": "stepper",
+                      "role": "value",
+                      "label": {
+                        "en": "Load wy",
+                        "de": "Streckenlast wy"
+                      },
+                      "description": {
+                        "en": "Uniform member load component in global Y.",
+                        "de": "Komponente der Gleichstreckenlast in globaler y-Richtung."
+                      },
+                      "unit": "N/m",
+                      "displayUnit": "kN/m",
+                      "displayFactor": 0.001,
+                      "step": 100,
+                      "precision": 2,
+                      "group": "load",
+                      "order": 50
+                    }
+                  },
+                  "wz": {
+                    "type": "number",
+                    "x-semio-ui": {
+                      "widget": "stepper",
+                      "role": "value",
+                      "label": {
+                        "en": "Load wz",
+                        "de": "Streckenlast wz"
+                      },
+                      "description": {
+                        "en": "Uniform member load component in global Z.",
+                        "de": "Komponente der Gleichstreckenlast in globaler z-Richtung."
+                      },
+                      "unit": "N/m",
+                      "displayUnit": "kN/m",
+                      "displayFactor": 0.001,
+                      "step": 100,
+                      "precision": 2,
+                      "group": "load",
+                      "order": 60
+                    }
+                  }
+                },
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Uniform member load",
+                    "de": "Gleichstreckenlast"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "kind",
+                  "pressure",
+                  "solidId"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "area",
+                    "x-semio-ui": {
+                      "widget": "hidden",
+                      "role": "discriminator",
+                      "label": {
+                        "en": "Load type",
+                        "de": "Lastart"
+                      }
+                    }
+                  },
+                  "id": {
+                    "type": "string",
+                    "x-semio-ui": {
+                      "widget": "text",
+                      "role": "value",
+                      "label": {
+                        "en": "ID",
+                        "de": "ID"
+                      },
+                      "description": {
+                        "en": "Unique id of the record.",
+                        "de": "Eindeutige ID des Eintrags."
+                      },
+                      "group": "identity",
+                      "order": 20
+                    }
+                  },
+                  "solidId": {
+                    "type": "string",
+                    "x-semio-ui": {
+                      "widget": "reference",
+                      "role": "target",
+                      "label": {
+                        "en": "Solid",
+                        "de": "Volumenkörper"
+                      },
+                      "ref": {
+                        "kind": "solid",
+                        "domain": "fem3d",
+                        "granularity": "solid"
+                      },
+                      "group": "target",
+                      "order": 30
+                    }
+                  },
+                  "pressure": {
+                    "type": "number",
+                    "x-semio-ui": {
+                      "widget": "stepper",
+                      "role": "value",
+                      "label": {
+                        "en": "Area load",
+                        "de": "Flächenlast"
+                      },
+                      "description": {
+                        "en": "Uniform pressure on the top face of the solid.",
+                        "de": "Gleichmäßige Flächenlast auf die Oberseite des Volumenkörpers."
+                      },
+                      "unit": "Pa",
+                      "displayUnit": "kN/m²",
+                      "displayFactor": 0.001,
+                      "step": 100,
+                      "precision": 2,
+                      "group": "load",
+                      "order": 40
+                    }
+                  }
+                },
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Area load",
+                    "de": "Flächenlast"
+                  }
+                }
+              }
+            ]
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Loads",
+              "de": "Lasten"
+            },
+            "group": "record",
+            "order": 30
+          }
+        },
+        "selfWeight": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Self weight",
+              "de": "Eigengewicht"
+            },
+            "description": {
+              "en": "Includes the structure's self weight in this load case.",
+              "de": "Berücksichtigt das Eigengewicht des Tragwerks in diesem Lastfall."
+            },
+            "group": "value",
+            "order": 40
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Load case",
+          "de": "Lastfall"
+        },
+        "group": "record",
+        "order": 10
+      }
+    },
+    "FemNode": {
+      "title": "FemNode",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
+        },
+        "x": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "X",
+              "de": "X"
+            },
+            "unit": "m",
+            "step": 0.1,
+            "precision": 3,
+            "group": "position",
+            "order": 20
+          }
+        },
+        "y": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Y",
+              "de": "Y"
+            },
+            "unit": "m",
+            "step": 0.1,
+            "precision": 3,
+            "group": "position",
+            "order": 30
+          }
+        },
+        "z": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Z",
+              "de": "Z"
+            },
+            "unit": "m",
+            "step": 0.1,
+            "precision": 3,
+            "group": "position",
+            "order": 40
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "group": "record",
+        "order": 10
+      }
+    },
+    "FemMaterial": {
+      "title": "FemMaterial",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "e",
+        "g",
+        "id",
+        "name",
+        "nu",
+        "rho"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
+        },
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Bezeichnung"
+            },
+            "group": "identity",
+            "order": 20
+          }
+        },
+        "e": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Young's modulus",
+              "de": "Elastizitätsmodul"
+            },
+            "unit": "Pa",
+            "displayUnit": "GPa",
+            "displayFactor": 1e-09,
+            "step": 1000000000.0,
+            "precision": 1,
+            "group": "material",
+            "order": 30
+          }
+        },
+        "g": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Shear modulus",
+              "de": "Schubmodul"
+            },
+            "unit": "Pa",
+            "displayUnit": "GPa",
+            "displayFactor": 1e-09,
+            "step": 1000000000.0,
+            "precision": 1,
+            "group": "material",
+            "order": 40
+          }
+        },
+        "nu": {
+          "type": "number",
+          "exclusiveMinimum": -1,
+          "exclusiveMaximum": 0.5,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Poisson's ratio",
+              "de": "Querdehnzahl"
+            },
+            "step": 0.01,
+            "precision": 3,
+            "softMin": 0,
+            "softMax": 0.49,
+            "group": "material",
+            "order": 50
+          }
+        },
+        "rho": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Density",
+              "de": "Dichte"
+            },
+            "unit": "kg/m³",
+            "step": 10,
+            "precision": 0,
+            "group": "material",
+            "order": 60
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Material",
+          "de": "Material"
+        },
+        "group": "record",
+        "order": 10
+      }
+    },
+    "FemElement": {
+      "title": "FemElement",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "end",
+            "id",
+            "kind",
+            "materialId",
+            "sectionId",
+            "start"
+          ],
+          "properties": {
+            "kind": {
+              "const": "bar",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Element type",
+                  "de": "Elementtyp"
+                }
+              }
+            },
+            "id": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "description": {
+                  "en": "Unique id of the record.",
+                  "de": "Eindeutige ID des Eintrags."
+                },
+                "group": "identity",
+                "order": 20
+              }
+            },
+            "start": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Start node",
+                  "de": "Anfangsknoten"
+                },
+                "ref": {
+                  "kind": "node",
+                  "domain": "fem3d",
+                  "granularity": "node"
+                },
+                "group": "target",
+                "order": 30
+              }
+            },
+            "end": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "End node",
+                  "de": "Endknoten"
+                },
+                "ref": {
+                  "kind": "node",
+                  "domain": "fem3d",
+                  "granularity": "node"
+                },
+                "group": "target",
+                "order": 40
+              }
+            },
+            "materialId": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Material",
+                  "de": "Material"
+                },
+                "ref": {
+                  "kind": "material",
+                  "domain": "fem3d",
+                  "granularity": "material"
+                },
+                "group": "target",
+                "order": 50
+              }
+            },
+            "sectionId": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Cross-section",
+                  "de": "Querschnitt"
+                },
+                "ref": {
+                  "kind": "section",
+                  "domain": "fem3d",
+                  "granularity": "section"
+                },
+                "group": "target",
+                "order": 60
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Bar (axial only)",
+              "de": "Fachwerkstab"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "end",
+            "id",
+            "kind",
+            "materialId",
+            "roll",
+            "sectionId",
+            "start"
+          ],
+          "properties": {
+            "kind": {
+              "const": "frame",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Element type",
+                  "de": "Elementtyp"
+                }
+              }
+            },
+            "id": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "description": {
+                  "en": "Unique id of the record.",
+                  "de": "Eindeutige ID des Eintrags."
+                },
+                "group": "identity",
+                "order": 20
+              }
+            },
+            "start": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Start node",
+                  "de": "Anfangsknoten"
+                },
+                "ref": {
+                  "kind": "node",
+                  "domain": "fem3d",
+                  "granularity": "node"
+                },
+                "group": "target",
+                "order": 30
+              }
+            },
+            "end": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "End node",
+                  "de": "Endknoten"
+                },
+                "ref": {
+                  "kind": "node",
+                  "domain": "fem3d",
+                  "granularity": "node"
+                },
+                "group": "target",
+                "order": 40
+              }
+            },
+            "materialId": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Material",
+                  "de": "Material"
+                },
+                "ref": {
+                  "kind": "material",
+                  "domain": "fem3d",
+                  "granularity": "material"
+                },
+                "group": "target",
+                "order": 50
+              }
+            },
+            "sectionId": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Cross-section",
+                  "de": "Querschnitt"
+                },
+                "ref": {
+                  "kind": "section",
+                  "domain": "fem3d",
+                  "granularity": "section"
+                },
+                "group": "target",
+                "order": 60
+              }
+            },
+            "roll": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "dial",
+                "role": "value",
+                "label": {
+                  "en": "Roll angle",
+                  "de": "Verdrehwinkel"
+                },
+                "description": {
+                  "en": "Rotation of the section axes about the member axis.",
+                  "de": "Drehung der Querschnittshauptachsen um die Stabachse."
+                },
+                "unit": "rad",
+                "displayUnit": "deg",
+                "displayFactor": 57.29577951308232,
+                "step": 0.017453292519943295,
+                "softMin": -3.141592653589793,
+                "softMax": 3.141592653589793,
+                "snaps": [
+                  -3.141592653589793,
+                  -1.5707963267948966,
+                  0,
+                  1.5707963267948966,
+                  3.141592653589793
+                ],
+                "group": "geometry",
+                "order": 70
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Frame member",
+              "de": "Rahmenstab"
+            }
+          }
+        }
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Element",
+          "de": "Element"
+        },
+        "group": "record",
+        "order": 10
+      }
+    },
+    "FemSolid": {
+      "title": "FemSolid",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "axis",
+        "baseZ",
+        "height",
+        "holes",
+        "id",
+        "layers",
+        "materialId",
+        "meshSize",
+        "name",
+        "outline"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
+        },
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Bezeichnung"
+            },
+            "group": "identity",
+            "order": 20
+          }
+        },
+        "outline": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "minItems": 3,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Outline",
+              "de": "Umriss"
+            },
+            "description": {
+              "en": "Closed polygon of x, y vertices in m.",
+              "de": "Geschlossenes Polygon aus x-, y-Eckpunkten in m."
+            },
+            "group": "record",
+            "order": 30
+          }
+        },
+        "holes": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "minItems": 3
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Openings",
+              "de": "Aussparungen"
+            },
+            "description": {
+              "en": "Polygons cut out of the outline.",
+              "de": "Aus dem Umriss ausgeschnittene Polygone."
+            },
+            "group": "record",
+            "order": 40
+          }
+        },
+        "axis": {
+          "type": "string",
+          "enum": [
+            "x",
+            "y",
+            "z"
+          ],
+          "x-semio-ui": {
+            "widget": "segmented",
+            "role": "value",
+            "label": {
+              "en": "Extrusion axis",
+              "de": "Extrusionsachse"
+            },
+            "options": {
+              "x": {
+                "en": "X axis",
+                "de": "x-Achse"
+              },
+              "y": {
+                "en": "Y axis",
+                "de": "y-Achse"
+              },
+              "z": {
+                "en": "Z axis",
+                "de": "z-Achse"
+              }
+            },
+            "group": "geometry",
+            "order": 50
+          }
+        },
+        "baseZ": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Base elevation",
+              "de": "Basishöhe"
+            },
+            "description": {
+              "en": "Coordinate along the extrusion axis where the solid starts.",
+              "de": "Koordinate entlang der Extrusionsachse, an der der Körper beginnt."
+            },
+            "unit": "m",
+            "step": 0.1,
+            "precision": 3,
+            "group": "geometry",
+            "order": 60
+          }
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Extrusion height",
+              "de": "Extrusionshöhe"
+            },
+            "unit": "m",
+            "step": 0.1,
+            "precision": 3,
+            "group": "geometry",
+            "order": 70
+          }
+        },
+        "layers": {
+          "type": "integer",
+          "minimum": 1,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Element layers",
+              "de": "Elementlagen"
+            },
+            "description": {
+              "en": "Number of element layers through the extrusion height.",
+              "de": "Anzahl der Elementlagen über die Extrusionshöhe."
+            },
+            "step": 1,
+            "precision": 0,
+            "group": "mesh",
+            "order": 80
+          }
+        },
+        "meshSize": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Mesh size",
+              "de": "Netzweite"
+            },
+            "description": {
+              "en": "Target edge length of the finite elements.",
+              "de": "Angestrebte Kantenlänge der finiten Elemente."
+            },
+            "unit": "m",
+            "step": 0.01,
+            "precision": 3,
+            "group": "mesh",
+            "order": 90
+          }
+        },
+        "materialId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Material",
+              "de": "Material"
+            },
+            "ref": {
+              "kind": "material",
+              "domain": "fem3d",
+              "granularity": "material"
+            },
+            "group": "target",
+            "order": 100
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Solid",
+          "de": "Volumenkörper"
+        },
+        "group": "record",
+        "order": 10
+      }
+    },
+    "FemCombination": {
+      "title": "FemCombination",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "terms"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
+        },
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Bezeichnung"
+            },
+            "group": "identity",
+            "order": 20
+          }
+        },
+        "terms": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Load case factors",
+              "de": "Lastfallfaktoren"
+            },
+            "description": {
+              "en": "Each load case of the combination with its factor.",
+              "de": "Jeder Lastfall der Kombination mit seinem Faktor."
+            },
+            "group": "record",
+            "order": 30
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Load combination",
+          "de": "Lastfallkombination"
+        },
+        "group": "record",
+        "order": 10
+      }
+    },
+    "FemSection": {
+      "title": "FemSection",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "area",
+        "id",
+        "iy",
+        "iz",
+        "j",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "ID",
+              "de": "ID"
+            },
+            "description": {
+              "en": "Unique id of the record.",
+              "de": "Eindeutige ID des Eintrags."
+            },
+            "group": "identity",
+            "order": 10
+          }
+        },
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Bezeichnung"
+            },
+            "group": "identity",
+            "order": 20
+          }
+        },
+        "area": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Cross-sectional area",
+              "de": "Querschnittsfläche"
+            },
+            "unit": "m²",
+            "displayUnit": "cm²",
+            "displayFactor": 10000.0,
+            "step": 0.0001,
+            "precision": 2,
+            "group": "section",
+            "order": 30
+          }
+        },
+        "iy": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Second moment of area Iy",
+              "de": "Flächenträgheitsmoment Iy"
+            },
+            "unit": "m⁴",
+            "displayUnit": "cm⁴",
+            "displayFactor": 100000000.0,
+            "step": 1e-08,
+            "precision": 1,
+            "group": "section",
+            "order": 40
+          }
+        },
+        "iz": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Second moment of area Iz",
+              "de": "Flächenträgheitsmoment Iz"
+            },
+            "unit": "m⁴",
+            "displayUnit": "cm⁴",
+            "displayFactor": 100000000.0,
+            "step": 1e-08,
+            "precision": 1,
+            "group": "section",
+            "order": 50
+          }
+        },
+        "j": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Torsion constant",
+              "de": "Torsionsflächenmoment"
+            },
+            "description": {
+              "en": "Saint-Venant torsion constant I_T.",
+              "de": "Torsionsflächenmoment 2. Grades I_T nach Saint-Venant."
+            },
+            "unit": "m⁴",
+            "displayUnit": "cm⁴",
+            "displayFactor": 100000000.0,
+            "step": 1e-08,
+            "precision": 1,
+            "group": "section",
+            "order": 60
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Cross-section",
+          "de": "Querschnitt"
+        },
+        "group": "record",
+        "order": 10
+      }
+    },
+    "Fem3dLoadPatch": {
+      "title": "FemLoad",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "nodal",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Load type",
+                  "de": "Lastart"
+                }
+              }
+            },
+            "nodeId": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Node",
+                  "de": "Knoten"
+                },
+                "ref": {
+                  "kind": "node",
+                  "domain": "fem3d",
+                  "granularity": "node"
+                },
+                "group": "target",
+                "order": 30
+              }
+            },
+            "dof": {
+              "type": "string",
+              "enum": [
+                "Tx",
+                "Ty",
+                "Tz",
+                "Rx",
+                "Ry",
+                "Rz"
+              ],
+              "x-semio-ui": {
+                "widget": "select",
+                "role": "value",
+                "label": {
+                  "en": "Degree of freedom",
+                  "de": "Freiheitsgrad"
+                },
+                "options": {
+                  "Tx": {
+                    "en": "Translation X",
+                    "de": "Verschiebung x"
+                  },
+                  "Ty": {
+                    "en": "Translation Y",
+                    "de": "Verschiebung y"
+                  },
+                  "Tz": {
+                    "en": "Translation Z",
+                    "de": "Verschiebung z"
+                  },
+                  "Rx": {
+                    "en": "Rotation about X",
+                    "de": "Verdrehung um x"
+                  },
+                  "Ry": {
+                    "en": "Rotation about Y",
+                    "de": "Verdrehung um y"
+                  },
+                  "Rz": {
+                    "en": "Rotation about Z",
+                    "de": "Verdrehung um z"
+                  }
+                },
+                "group": "load",
+                "order": 40
+              }
+            },
+            "value": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Load value",
+                  "de": "Lastwert"
+                },
+                "description": {
+                  "en": "Force in N on a translation, moment in N·m on a rotation.",
+                  "de": "Kraft in N bei einer Verschiebung, Moment in N·m bei einer Verdrehung."
+                },
+                "step": 100,
+                "precision": 2,
+                "group": "load",
+                "order": 50
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Nodal load",
+              "de": "Knotenlast"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "memberUdl",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Load type",
+                  "de": "Lastart"
+                }
+              }
+            },
+            "elementId": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Element",
+                  "de": "Element"
+                },
+                "ref": {
+                  "kind": "element",
+                  "domain": "fem3d",
+                  "granularity": "element"
+                },
+                "group": "target",
+                "order": 30
+              }
+            },
+            "wx": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Load wx",
+                  "de": "Streckenlast wx"
+                },
+                "description": {
+                  "en": "Uniform member load component in global X.",
+                  "de": "Komponente der Gleichstreckenlast in globaler x-Richtung."
+                },
+                "unit": "N/m",
+                "displayUnit": "kN/m",
+                "displayFactor": 0.001,
+                "step": 100,
+                "precision": 2,
+                "group": "load",
+                "order": 40
+              }
+            },
+            "wy": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Load wy",
+                  "de": "Streckenlast wy"
+                },
+                "description": {
+                  "en": "Uniform member load component in global Y.",
+                  "de": "Komponente der Gleichstreckenlast in globaler y-Richtung."
+                },
+                "unit": "N/m",
+                "displayUnit": "kN/m",
+                "displayFactor": 0.001,
+                "step": 100,
+                "precision": 2,
+                "group": "load",
+                "order": 50
+              }
+            },
+            "wz": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Load wz",
+                  "de": "Streckenlast wz"
+                },
+                "description": {
+                  "en": "Uniform member load component in global Z.",
+                  "de": "Komponente der Gleichstreckenlast in globaler z-Richtung."
+                },
+                "unit": "N/m",
+                "displayUnit": "kN/m",
+                "displayFactor": 0.001,
+                "step": 100,
+                "precision": 2,
+                "group": "load",
+                "order": 60
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Uniform member load",
+              "de": "Gleichstreckenlast"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "area",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Load type",
+                  "de": "Lastart"
+                }
+              }
+            },
+            "solidId": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "label": {
+                  "en": "Solid",
+                  "de": "Volumenkörper"
+                },
+                "ref": {
+                  "kind": "solid",
+                  "domain": "fem3d",
+                  "granularity": "solid"
+                },
+                "group": "target",
+                "order": 30
+              }
+            },
+            "pressure": {
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Area load",
+                  "de": "Flächenlast"
+                },
+                "description": {
+                  "en": "Uniform pressure on the top face of the solid.",
+                  "de": "Gleichmäßige Flächenlast auf die Oberseite des Volumenkörpers."
+                },
+                "unit": "Pa",
+                "displayUnit": "kN/m²",
+                "displayFactor": 0.001,
+                "step": 100,
+                "precision": 2,
+                "group": "load",
+                "order": 40
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Area load",
+              "de": "Flächenlast"
+            }
+          }
+        }
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "New load",
+          "de": "Neue Last"
+        },
+        "group": "record",
+        "order": 30
+      }
+    },
+    "Fem3dCombinationTermsDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "entries": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "precondition": {
+                "enum": [
+                  "any",
+                  "present",
+                  "absent",
+                  "never"
+                ]
+              },
+              "operation": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "kind": {
+                        "const": "set"
+                      },
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "value"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "kind": {
+                        "const": "remove"
+                      }
+                    },
+                    "required": [
+                      "kind"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "kind": {
+                        "const": "reject"
+                      }
+                    },
+                    "required": [
+                      "kind"
+                    ]
+                  }
+                ]
+              }
+            },
+            "required": [
+              "precondition",
+              "operation"
+            ],
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "precondition": {
+                      "const": "never"
+                    }
+                  },
+                  "required": [
+                    "precondition"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "operation": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "kind": {
+                          "const": "reject"
+                        }
+                      },
+                      "required": [
+                        "kind"
+                      ]
+                    }
+                  }
+                },
+                "else": {
+                  "properties": {
+                    "operation": {
+                      "not": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "kind": {
+                            "const": "reject"
+                          }
+                        },
+                        "required": [
+                          "kind"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "entries"
+      ]
+    },
+    "Fem3dCombinationPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "terms": {
+          "$ref": "#/$defs/Fem3dCombinationTermsDelta"
+        }
+      },
+      "required": []
     }
   }
 }

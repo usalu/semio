@@ -36,7 +36,7 @@ export interface EnergySpaceListPatch { readonly id:number; name?:string; space_
 export interface EnergyThermalEnclosurePatch { readonly id:number; name?:string; zone_ids?:EnergyListEdit<number> }
 export interface EnergyAdjacencyPairPatch { readonly surface_a_id:number; readonly surface_b_id:number }
 export interface EnergyElectricalLoadCenterPatch { readonly id:number; name?:string; generator_ids?:EnergyListEdit<number>; pv_ids?:EnergyListEdit<number>; battery_ids?:EnergyListEdit<number> }
-export interface EnergyPvSystemPatch { readonly id:number; dc_capacity_w?:EnergyFloat; area_m2?:EnergyFloat; tilt_deg?:EnergyFloat; azimuth_deg?:EnergyFloat; module_efficiency?:EnergyFloat; inverter_efficiency?:EnergyFloat }
+export interface EnergyPvSystemPatch { temperature_coefficient?:EnergyFloat; faiman_heat_loss_constant_w_m2k?:EnergyFloat; faiman_heat_loss_wind_w_s_m3k?:EnergyFloat; mounting?:import("../📸️snapshot/⚡️model/🟦️.ts").EnergyPhotovoltaicMounting; readonly id:number; dc_capacity_w?:EnergyFloat; area_m2?:EnergyFloat; tilt_deg?:EnergyFloat; azimuth_deg?:EnergyFloat; module_efficiency?:EnergyFloat; inverter_efficiency?:EnergyFloat }
 export interface EnergyBatteryPatch { readonly id:number; capacity_kwh?:EnergyFloat; max_charge_w?:EnergyFloat; max_discharge_w?:EnergyFloat; round_trip_efficiency?:EnergyFloat }
 export interface EnergyShwSystemPatch { readonly id:number; heater_capacity_w?:EnergyFloat; storage_volume_m3?:EnergyFloat; setpoint_c?:EnergyFloat; schedule_id?:number }
 export interface EnergySolarThermalPatch { readonly id:number; collector_area_m2?:EnergyFloat; efficiency?:EnergyFloat; storage_volume_m3?:EnergyFloat; tilt_deg?:EnergyFloat; azimuth_deg?:EnergyFloat }

@@ -14,7 +14,8 @@
 //! uses.
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::write_json_pretty;
-use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_json::JsonSnapshot;
+use semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA;
 
 pub fn register() {}
 

@@ -3,6 +3,14 @@
 use super::*;
 
 impl AssemblyJob<'static> {
+    /// 🏗️ Borrows the original admitted node without materializing a model copy.
+    pub fn model_node(&self, index: usize) -> Option<&Node> { self.model.node(index) }
+
+    /// 🧱️ Borrows the original admitted element for source-load integration.
+    pub fn model_element(&self, index: usize) -> Option<&Elements> { self.model.element(index) }
+
+    /// 🔢️ Includes constrained equations retained for reaction recovery.
+    pub fn visual_full_order(&self) -> usize { self.plan.ndof }
     /// 🧭 Resolves one old node/DOF identity to its retained full and free equation indices.
     pub fn visual_equation_indices(&self, node_id: &str, dof: Dof) -> Option<(usize, Option<usize>)> {
         let old = self.plan.dof_map.get(node_id, dof)?;
@@ -266,10 +274,11 @@ impl<'model> AssemblyJob<'model> {
                         continue;
                     }
                 },
-                6 => {
-                    self.close_lane += 1;
-                    continue;
-                }
+                6 => match close_paged_owner_step(&mut self.plan.dof_map.slots, maximum_bytes) {
+                    Ok(Some(step)) => step,
+                    Err(()) => return (false, 0, 0),
+                    Ok(None) => { self.close_lane += 1; continue; }
+                },
                 7 => match self.plan.dof_map.order.last_mut() {
                     Some((id, _)) if id.capacity() != 0 => {
                         let bytes = id.capacity();
@@ -283,7 +292,7 @@ impl<'model> AssemblyJob<'model> {
                         self.plan.dof_map.order.pop();
                         (1, 0)
                     }
-                    None => match close_vec_owner_step(&mut self.plan.dof_map.order, maximum_bytes) {
+                    None => match close_paged_owner_step(&mut self.plan.dof_map.order, maximum_bytes) {
                         Ok(Some(step)) => step,
                         Err(()) => return (false, 0, 0),
                         Ok(None) => {
@@ -292,7 +301,7 @@ impl<'model> AssemblyJob<'model> {
                         }
                     },
                 },
-                8 => match close_vec_owner_step(&mut self.plan.inv_perm, maximum_bytes) {
+                8 => match close_paged_owner_step(&mut self.plan.inv_perm, maximum_bytes) {
                     Ok(Some(step)) => step,
                     Err(()) => return (false, 0, 0),
                     Ok(None) => {
@@ -300,7 +309,7 @@ impl<'model> AssemblyJob<'model> {
                         continue;
                     }
                 },
-                9 => match close_vec_owner_step(&mut self.plan.free_new, maximum_bytes) {
+                9 => match close_paged_owner_step(&mut self.plan.free_new, maximum_bytes) {
                     Ok(Some(step)) => step,
                     Err(()) => return (false, 0, 0),
                     Ok(None) => {
@@ -308,7 +317,7 @@ impl<'model> AssemblyJob<'model> {
                         continue;
                     }
                 },
-                10 => match close_vec_owner_step(&mut self.plan.compact_of_new, maximum_bytes) {
+                10 => match close_paged_owner_step(&mut self.plan.compact_of_new, maximum_bytes) {
                     Ok(Some(step)) => step,
                     Err(()) => return (false, 0, 0),
                     Ok(None) => {
@@ -375,7 +384,7 @@ impl<'model> AssemblyJob<'model> {
             PendingElementBuildStage::ReserveIndices => {
                 let side = build.node_count.checked_mul(build.dof_count).ok_or(FemError::Singular)?;
                 if !reserve_exact_owner_page(&mut build.indices_new, side) {
-                    return Err(FemError::Singular);
+                    return Err(FemError::ResourceAdmission);
                 }
                 build.stage = PendingElementBuildStage::Indices;
             }
@@ -407,7 +416,7 @@ impl<'model> AssemblyJob<'model> {
             }
             PendingElementBuildStage::ReservePositions => {
                 if !reserve_exact_owner_page(&mut build.positions, build.node_count) {
-                    return Err(FemError::Singular);
+                    return Err(FemError::ResourceAdmission);
                 }
                 build.stage = PendingElementBuildStage::Positions;
             }
@@ -444,7 +453,7 @@ impl<'model> AssemblyJob<'model> {
             PendingElementBuildStage::AllocateStiffness => {
                 let side = build.indices_new.len();
                 if !reserve_exact_owner_page(&mut build.stiffness, side.saturating_mul(side)) {
-                    return Err(FemError::Singular);
+                    return Err(FemError::ResourceAdmission);
                 }
                 build.stiffness_dimensions = [side, side];
                 build.scalar_cursor = 0;
@@ -519,17 +528,8 @@ impl<'model> AssemblyJob<'model> {
     }
 
     pub(super) fn begin_borrowed_element(&mut self) -> Result<(), FemError> {
-        let element_index = self.state.element_cursor;
         let dynamic = self.model.dynamic().ok_or(FemError::Singular)?;
-        let element = dynamic.elements.get(element_index).ok_or(FemError::Singular)?;
-        let node_ids = element.node_ids();
-        let dofs = element.dofs_per_node();
-        let indices_old = element_global_indices(&self.plan.dof_map, &node_ids, dofs).ok_or(FemError::Singular)?;
-        let indices_new = indices_old.iter().map(|&old| self.plan.inv_perm[old]).collect::<Vec<_>>();
-        let context = ElementContext { positions: positions_of(&self.plan.node_slot, &dynamic.nodes, &node_ids) };
-        let stiffness = element.stiffness_global(&context);
-        let side = indices_new.len();
-        self.state.pending = Some(PendingElementAssembly { element_index, side, cell_cursor: 0, reclaim_lane: 0, complete: false, indices_new, positions: context.positions, stiffness: stiffness.data });
+        self.state.pending = Some(element_contribution(&self.plan, dynamic, self.state.element_cursor)?);
         Ok(())
     }
 
@@ -548,9 +548,9 @@ impl<'model> AssemblyJob<'model> {
             let new_col = pending.indices_new[local_col];
             let sequence = ((pending.element_index as u64) << 32) | pending.cell_cursor as u64;
             let partition = pending.element_index % self.state.partitions.len();
-            let full = AssemblyTriplet { sequence, row: new_row as u32, col: new_col as u32, value };
+            let full = SparseTriplet { sequence, row: new_row as u32, col: new_col as u32, value };
             let free =
-                if let (Some(compact_row), Some(compact_col)) = (self.plan.compact_of_new[new_row], self.plan.compact_of_new[new_col]) { Some(AssemblyTriplet { sequence, row: compact_row as u32, col: compact_col as u32, value }) } else { None };
+                if let (Some(compact_row), Some(compact_col)) = (self.plan.compact_of_new[new_row], self.plan.compact_of_new[new_col]) { Some(SparseTriplet { sequence, row: compact_row as u32, col: compact_col as u32, value }) } else { None };
             let owner = &mut self.state.partitions[partition];
             if !owner.full.has_reserved_slot() || free.is_some() && !owner.free.has_reserved_slot() {
                 return Err(FemError::Singular);

@@ -60,7 +60,7 @@ impl RuntimeDispatchCursor {
     pub fn events_terminal_is_empty(&self)->bool{self.inflight.is_none()&&self.events.pointer_move.is_none()&&self.events.metrics.is_none()&&self.events.discrete.iter().all(Option::is_none)}
 
     pub fn close_inflight_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        let Some(event)=self.inflight.as_ref()else{return Ok(true)};self.validate_original(cx)?;let remaining=cx.retained_grant();let released_bytes=dispatch_event_retained_capacity(event);let depth=match event{ui_render::DispatchEvent::Accessibility{..}=>4,_=>2};if cx.should_yield()||remaining.maximum_items==0||remaining.maximum_release_bytes<released_bytes||remaining.maximum_depth<depth{return Ok(false)}
+        let Some(event)=self.inflight.as_ref()else{return Ok(true)};self.validate_original(cx)?;let remaining=cx.retained_grant();let released_bytes=dispatch_event_retained_capacity(event);let depth=match event{ui_render::DispatchEvent::Accessibility{..}=>4,_=>2};if cx.retirement_should_yield()||remaining.maximum_items==0||remaining.maximum_release_bytes<released_bytes||remaining.maximum_depth<depth{return Ok(false)}
         cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()})?;cx.consume_fuel(1);drop(self.inflight.take());Ok(false)
     }
 
@@ -68,7 +68,7 @@ impl RuntimeDispatchCursor {
         if !self.close_inflight_step(cx)?{return Ok(false)}
         if self.terminal_is_empty(){return Ok(true)}
         if !self.events_terminal_is_empty(){
-            self.validate_original(cx)?;let remaining=cx.retained_grant();if cx.should_yield()||remaining.maximum_items==0||remaining.maximum_depth==0{return Ok(false)}
+            self.validate_original(cx)?;let remaining=cx.retained_grant();if cx.retirement_should_yield()||remaining.maximum_items==0||remaining.maximum_depth==0{return Ok(false)}
             if self.events.pointer_move.is_some()||self.events.metrics.is_some(){cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.events.pointer_move=None;self.events.metrics=None;return Ok(false)}
             let Some(index)=self.events.discrete.iter().position(Option::is_some)else{return Ok(false)};let event=&self.events.discrete[index].as_ref().unwrap().event;let released_bytes=dispatch_event_retained_capacity(event);let depth=match event{ui_render::DispatchEvent::Accessibility{..}=>4,_=>2};if remaining.maximum_release_bytes<released_bytes||remaining.maximum_depth<depth{return Ok(false)}
             drop(self.events.discrete[index].take());cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(false)
@@ -164,11 +164,13 @@ pub struct FrameActionOwners {
     head: usize,
     pub len: usize,
     pub batch: Option<FrameActionBatchOwner>,
+    closing: Option<semio_framework_value::ControlledRetirement<(String, String, Option<semio_framework_value::DslValue>)>>,
+    closing_receipt: Option<ui_wgpu::wgpu::ActionQueueReceipt>,
 }
 
 impl Default for FrameActionOwners {
     fn default() -> Self {
-        Self { slots: std::array::from_fn(|_| None), head: 0, len: 0, batch: None }
+        Self { slots: std::array::from_fn(|_| None), head: 0, len: 0, batch: None, closing: None, closing_receipt: None }
     }
 }
 
@@ -331,23 +333,47 @@ impl FrameActionOwners {
         Some(action)
     }
 
-    pub fn close_step(&mut self) -> bool {
-        if let Some(batch) = self.batch.as_mut() {
-            if batch.len > 0 {
-                batch.len -= 1;
-                if let Some(action) = batch.slots[usize::from(batch.len)].take() {
-                    action.cancel();
-                }
-                return false;
+    fn retain_cancelled_action(&mut self, action: FrameActionEnvelope) -> Result<(), FrameActionEnvelope> {
+        if self.closing.is_some() || self.closing_receipt.is_some() { return Err(action); }
+        self.closing_receipt = action.receipt;
+        let ActionDescriptor { controller_id, action, args } = action.descriptor;
+        self.closing = Some(semio_framework_value::ControlledRetirement::retain((controller_id, action, args)));
+        Ok(())
+    }
+
+    fn close_retained_action_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        if self.closing_receipt.is_some() {
+            if !frame_action_metadata(cx)? { return Ok(false); }
+            settle_renderer_action_receipt(self.closing_receipt.take().unwrap(), semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Cancelled);
+            return Ok(false);
+        }
+        if let Some(owner) = self.closing.as_mut() {
+            if !owner.terminal_is_empty() {
+                let demand = owner.next_demand(cx.retained_grant().maximum_copy_bytes)?;
+                semio_framework_job::close_original_retained_step(cx, demand, |grant| owner.step(grant))?;
+                return Ok(false);
             }
+            if !frame_action_metadata(cx)? { return Ok(false); }
+            self.closing = None;
+            return Ok(false);
+        }
+        Ok(true)
+    }
+
+    pub fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        if !self.close_retained_action_step(cx)? { return Ok(false); }
+        if self.batch.as_ref().is_some_and(|batch| batch.len == 0) {
+            if !frame_action_metadata(cx)? { return Ok(false); }
             self.batch = None;
-            return false;
+            return Ok(false);
         }
-        if let Some(action) = self.pop_front() {
-            action.cancel();
-            return false;
+        if self.batch.is_none() && self.len == 0 { return Ok(true); }
+        if !frame_action_metadata(cx)? { return Ok(false); }
+        let action = if let Some(batch) = self.batch.as_mut() { batch.len -= 1; batch.slots[usize::from(batch.len)].take() } else { self.pop_front() };
+        if let Some(action) = action {
+            assert!(self.retain_cancelled_action(action).is_ok(), "empty original action retirement slot");
         }
-        true
+        Ok(false)
     }
 
     pub fn cancel_correlation(&mut self, token: std::num::NonZeroU64) {
@@ -359,8 +385,15 @@ impl FrameActionOwners {
     }
 
     pub fn is_empty(&self) -> bool {
-        self.len == 0 && self.batch.is_none()
+        self.len == 0 && self.batch.is_none() && self.closing.is_none() && self.closing_receipt.is_none()
     }
+}
+
+pub fn frame_action_metadata(cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    if cx.retirement_should_yield() || cx.retained_grant().maximum_items == 0 || cx.retained_grant().maximum_depth == 0 { return Ok(false); }
+    cx.consume_retained(semio_framework_value::RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
+    cx.consume_fuel(1);
+    Ok(true)
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -433,7 +466,8 @@ pub struct FrameDeferredCursor {
     pub settle: bool,
     pub phase: u8,
     pub generation: u64,
-    pub cancel: semio_framework_async::CancelToken,
+    pub cancel: Option<semio_framework_async::CancelToken>,
+    cancel_close: Option<semio_framework_async::CancelTokenRetirement>,
     pub closing: bool,
 }
 
@@ -456,7 +490,7 @@ pub enum FrameDeferredWork {
 
 impl FrameDeferredCursor {
     pub fn new(actions: FrameActionOwners, pump_sync: bool, flush_tutorial: bool, shell_maintenance: bool, settle: bool, generation: u64, cancel: semio_framework_async::CancelToken) -> Self {
-        Self { actions, pump_sync, flush_tutorial, shell_maintenance, settle, phase: 0, generation, cancel, closing: false }
+        Self { actions, pump_sync, flush_tutorial, shell_maintenance, settle, phase: 0, generation, cancel: Some(cancel), cancel_close: None, closing: false }
     }
 
     pub fn checkout_site(&self) -> &'static str {
@@ -506,37 +540,59 @@ impl FrameDeferredCursor {
         None
     }
 
-    pub fn terminal_is_empty(&self) -> bool {
-        !self.closing && self.actions.is_empty() && (self.phase > 0 || !self.shell_maintenance) && (self.phase > 1 || !self.pump_sync) && (self.phase > 2 || !self.flush_tutorial) && (self.phase > 3 || !self.settle)
+    pub fn work_is_empty(&self) -> bool {
+        self.actions.is_empty() && (self.phase > 0 || !self.shell_maintenance) && (self.phase > 1 || !self.pump_sync) && (self.phase > 2 || !self.flush_tutorial) && (self.phase > 3 || !self.settle)
     }
 
-    pub fn close_step(&mut self) -> bool {
-        if !self.actions.close_step() {
-            return false;
+    pub fn terminal_is_empty(&self) -> bool {
+        !self.closing && self.work_is_empty() && self.cancel.is_none() && self.cancel_close.is_none()
+    }
+
+    pub fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        if !self.actions.close_step(cx)? { return Ok(false); }
+        if self.shell_maintenance || self.pump_sync || self.flush_tutorial || self.settle {
+            if !frame_action_metadata(cx)? { return Ok(false); }
+            if self.shell_maintenance { self.shell_maintenance = false; }
+            else if self.pump_sync { self.pump_sync = false; }
+            else if self.flush_tutorial { self.flush_tutorial = false; }
+            else { self.settle = false; }
+            return Ok(false);
         }
-        if self.shell_maintenance {
-            self.shell_maintenance = false;
-            return false;
+        if self.cancel.is_some() {
+            if !frame_action_metadata(cx)? { return Ok(false); }
+            self.cancel_close = self.cancel.take().map(semio_framework_async::CancelTokenRetirement::from_token);
+            return Ok(false);
         }
-        if self.pump_sync {
-            self.pump_sync = false;
-            return false;
+        if let Some(owner) = self.cancel_close.as_mut() {
+            if !owner.terminal_is_empty() {
+                if cx.retirement_should_yield() { return Ok(false); }
+                let grant = cx.retained_grant();
+                let step = if owner.is_original_alias_witness(cx.original_cancel_token()) {
+                    owner.return_alias_step(cx.original_cancel_token(), grant)
+                } else { owner.close_step(grant) };
+                let step = step.map_err(|error| match error {
+                    semio_framework_async::CancelTokenRetirementError::Refused(error) => semio_framework_job::OriginalTurnFailure::debit_original(error, cx),
+                    semio_framework_async::CancelTokenRetirementError::Blocked(_) => semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "frame deferred cancellation retains an unwitnessed supplier").into(),
+                })?;
+                cx.consume_retained(step.progress())?;
+                cx.consume_fuel(u64::from(step.progress().copied_items != 0));
+                return Ok(false);
+            }
+            if !frame_action_metadata(cx)? { return Ok(false); }
+            self.cancel_close = None;
+            return Ok(false);
         }
-        if self.flush_tutorial {
-            self.flush_tutorial = false;
-            return false;
+        if self.phase != 4 || self.closing {
+            if !frame_action_metadata(cx)? { return Ok(false); }
+            self.phase = 4;
+            self.closing = false;
+            return Ok(false);
         }
-        if self.settle {
-            self.settle = false;
-            return false;
-        }
-        self.phase = 4;
-        self.closing = false;
-        true
+        Ok(true)
     }
 
     pub fn begin_close(&mut self) {
-        self.closing = true;
+        if !self.terminal_is_empty() { self.closing = true; }
     }
 
     #[cfg(any(not(target_arch = "wasm32"), any(test, feature = "testkit")))]
@@ -563,6 +619,15 @@ unsafe impl<T: Send> Sync for FrameExecutionOwnerCell<T> {}
 impl<T> FrameExecutionOwnerCell<T> {
     pub fn new(owner: T) -> Self {
         Self { state: std::sync::atomic::AtomicU8::new(0), owner: std::cell::UnsafeCell::new(Some(owner)) }
+    }
+
+    /// 🔒️ Temporarily borrows the persistent cell without creating or discarding another owner.
+    pub fn try_borrow_mut<R>(&self, visit: impl FnOnce(&mut T) -> R) -> Option<R> {
+        self.state.compare_exchange(0, 1, Ordering::AcqRel, Ordering::Acquire).ok()?;
+        struct Return<'a>(&'a std::sync::atomic::AtomicU8);
+        impl Drop for Return<'_> { fn drop(&mut self) { self.0.store(0, Ordering::Release); } }
+        let _return = Return(&self.state);
+        unsafe { (&mut *self.owner.get()).as_mut().map(visit) }
     }
 
     pub fn try_take(&self) -> Option<T> {
@@ -611,6 +676,7 @@ impl<T> FrameExecutionRegistry<T> {
     const RUNNING: u8 = 3;
     const ABANDONED: u8 = 4;
     const RECOVERING: u8 = 5;
+    const RETURNED: u8 = 6;
 
     pub fn new() -> Self {
         Self { state: std::sync::atomic::AtomicU8::new(0), generation: AtomicU64::new(0), owner: std::cell::UnsafeCell::new(None) }
@@ -647,15 +713,8 @@ impl<T> FrameExecutionRegistry<T> {
         self.state.compare_exchange(state, Self::ABANDONED, Ordering::AcqRel, Ordering::Acquire).is_ok()
     }
 
-    pub fn complete(&self, generation: u64) -> bool {
-        if self.generation.load(Ordering::Acquire) != generation || self.state.compare_exchange(Self::RUNNING, Self::WRITING, Ordering::AcqRel, Ordering::Acquire).is_err() {
-            return false;
-        }
-        let owner = unsafe { (&mut *self.owner.get()).take() };
-        drop(owner);
-        self.generation.store(0, Ordering::Release);
-        self.state.store(0, Ordering::Release);
-        true
+    pub fn return_to_caller(&self, generation: u64) -> bool {
+        self.generation.load(Ordering::Acquire) == generation && self.state.compare_exchange(Self::RUNNING, Self::RETURNED, Ordering::AcqRel, Ordering::Acquire).is_ok()
     }
 
     pub fn reclaim_rejected(&self, generation: u64, fallback: Arc<FrameExecutionOwnerCell<T>>) -> Arc<FrameExecutionOwnerCell<T>> {
@@ -674,8 +733,12 @@ impl<T> FrameExecutionRegistry<T> {
         }
     }
 
-    pub fn try_take_abandoned(&self) -> Option<(u64, Arc<FrameExecutionOwnerCell<T>>)> {
-        self.state.compare_exchange(Self::ABANDONED, Self::RECOVERING, Ordering::AcqRel, Ordering::Acquire).ok()?;
+    pub fn has_returned_owner(&self) -> bool { matches!(self.state.load(Ordering::Acquire), Self::ABANDONED | Self::RETURNED) }
+
+    pub fn try_take_returned(&self) -> Option<(u64, Arc<FrameExecutionOwnerCell<T>>)> {
+        let state = self.state.load(Ordering::Acquire);
+        if !matches!(state, Self::ABANDONED | Self::RETURNED) { return None; }
+        self.state.compare_exchange(state, Self::RECOVERING, Ordering::AcqRel, Ordering::Acquire).ok()?;
         let generation = self.generation.load(Ordering::Acquire);
         let owner = unsafe { (&mut *self.owner.get()).take() }?;
         self.generation.store(0, Ordering::Release);

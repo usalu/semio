@@ -16,25 +16,56 @@ use {semio_s_artifact_puzzle_3d_mutations_volume::change_target_volume_hidden::m
 use crate::editor::puzzle5d::Puzzle5dPlayApp;
 use crate::editor::puzzle5d::precompute::fill::*;
 use crate::editor::puzzle5d::config::Puzzle5dConfig;
-use crate::editor::puzzle5d::precompute::{puzzle3d_snapshot, puzzle5d_placement_entity, Puzzle5dPlannerToolRunJob, PUZZLE5D_PLACEMENT_OPS, PUZZLE5D_PLANNER_TRACE_SHAPE_CIRCLE, PUZZLE5D_PLANNER_TRACE_TWIN_BIT};
+use crate::editor::puzzle5d::precompute::puzzle3d_snapshot;
+use crate::editor::puzzle5d::precompute::puzzle5d_placement_entity;
+use crate::editor::puzzle5d::precompute::Puzzle5dPlannerToolRunJob;
+use crate::editor::puzzle5d::precompute::PUZZLE5D_PLACEMENT_OPS;
+use crate::editor::puzzle5d::precompute::PUZZLE5D_PLANNER_TRACE_SHAPE_CIRCLE;
+use crate::editor::puzzle5d::precompute::PUZZLE5D_PLANNER_TRACE_TWIN_BIT;
 use crate::editor::puzzle5d::entities::puzzle5d_grip_full_id;
 use crate::puzzle_job::JobTurn;
 use semio_framework_job::InteractiveJob;
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_tool_run::{ToolRunTick, ToolRunTraceOp, ToolRunTraceSubject, ToolRunVerdict};
+use semio_framework_tool_run::ToolRunTick;
+use semio_framework_tool_run::ToolRunTraceOp;
+use semio_framework_tool_run::ToolRunTraceSubject;
+use semio_framework_tool_run::ToolRunVerdict;
 use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dConfig;
 use std::collections::HashMap;
 use crate::editor::puzzle5d::modes::edit::tools::fill::run_definition;
-use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d as world3d_window};
+use crate::editor::puzzle5d::modes::edit::windows::board2d;
+use crate::editor::puzzle5d::modes::edit::windows::world3d as world3d_window;
 use crate::editor::puzzle5d::testkit::{app_with_registry, close_app, dispatch, meta, projection_of, render_body, window_view, Puzzle5dTestApp};
-use crate::editor::puzzle5d::entities::{capsule_dream_example_document, concrete_forest_example_document, nakagin_example_document};
-use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
+
+
+
+
+
+
+use crate::editor::puzzle5d::unit_tests::context::Puzzle5dApp;
+use crate::editor::puzzle5d::entities::capsule_dream_example_document;
+use crate::editor::puzzle5d::entities::concrete_forest_example_document;
+use crate::editor::puzzle5d::entities::nakagin_example_document;
+use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 use semio_framework_job::StepBudget;
-use semio_framework_plugin::{ActionMeta, ArtifactApp, ArtifactInstanceOperationOwnerHandle, PluginApp, ToolRunJobPort, ToolRunJobPurpose, ToolRunTraceKeys};
-use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunStep, TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_FINALIZE_ACTION_ID, TOOL_RUN_START_ACTION_ID};
+use semio_framework_plugin::ActionMeta;
+use semio_framework_plugin::ArtifactApp;
+use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
+use semio_framework_plugin::PluginApp;
+use semio_framework_plugin::ToolRunJobPort;
+use semio_framework_plugin::ToolRunJobPurpose;
+use semio_framework_plugin::ToolRunTraceKeys;
+use semio_framework_tool_run::ToolRunId;
+use semio_framework_tool_run::ToolRunIdentity;
+use semio_framework_tool_run::ToolRunStep;
+use semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID;
+use semio_framework_tool_run::TOOL_RUN_ARG_TOOL_ID;
+use semio_framework_tool_run::TOOL_RUN_FINALIZE_ACTION_ID;
+use semio_framework_tool_run::TOOL_RUN_START_ACTION_ID;
 use semio_s_artifact_puzzle_3d_editor::Puzzle3dPlayApp;
 use semio_s_artifact_puzzle_3d_model::FillRunReason;
-use std::time::{Duration, Instant};
+use std::time::Duration;
+use std::time::Instant;
 
 static FILL_RUN_FIXTURE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧠️precompute/🪣️fill/🧪️tests/🧫️fixtures/🎞️fill-run.json"));
 pub(crate) const FILL_RUN_TURNS: usize = 262_144;
@@ -147,8 +178,8 @@ impl Mirror {
     }
 
     /// 🎬️ One turn: `true` once the job completed.
-    fn turn(&mut self, job: &mut dyn InteractiveJob, budget: StepBudget, clock: fn() -> Option<u64>, sequence: &mut u64) -> bool {
-        match crate::puzzle_job::testing::drive(job, budget, clock, sequence) {
+    fn turn(&mut self, job: &mut dyn InteractiveJob, budget: StepBudget, original: &mut crate::puzzle_job::testing::OriginalFixture) -> bool {
+        match crate::puzzle_job::testing::drive(job, budget, original) {
             JobTurn::Preview(bytes) => {
                 self.apply(ToolRunTick::decode(&bytes).expect("a translated tick decodes"));
                 false
@@ -179,10 +210,12 @@ impl Mirror {
 
 fn run_to_completion(mut job: Puzzle5dPlannerToolRunJob) -> Mirror {
     let mut mirror = Mirror::default();
-    let mut sequence = 0;
+    let mut original = crate::puzzle_job::testing::OriginalFixture::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), crate::puzzle_job::testing::fixture_stock(), never, u64::MAX, 1 << 32);
     for _ in 0..FILL_RUN_TURNS {
-        if mirror.turn(&mut job, StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, u64::MAX, crate::puzzle_job::testing::unbounded_grant()), never, &mut sequence) {
+        if mirror.turn(&mut job, StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, u64::MAX, crate::puzzle_job::testing::fixture_stock()), &mut original) {
             assert!(mirror.fault.is_none(), "the fill run job faulted: {:?}", mirror.fault);
+            original.close_job(&mut job);
+            original.finish();
             return mirror;
         }
     }
@@ -323,13 +356,13 @@ fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
         })
         .expect("the planner job builds")
         .expect("the planner has a run job");
-        let mut sequence = 0;
+        let mut original = crate::puzzle_job::testing::OriginalFixture::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), crate::puzzle_job::testing::fixture_stock(), never, u64::MAX, 1 << 32);
         let mut planner = planner;
         let mut oracle_trace = Vec::new();
         let mut oracle_ops = 0;
         let mut oracle_complete = false;
         for _ in 0..FILL_RUN_TURNS {
-            match crate::puzzle_job::testing::drive(planner.as_mut(), StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, u64::MAX, crate::puzzle_job::testing::unbounded_grant()), never, &mut sequence) {
+            match crate::puzzle_job::testing::drive(planner.as_mut(), StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, u64::MAX, crate::puzzle_job::testing::fixture_stock()), &mut original) {
                 JobTurn::Preview(bytes) => {
                     let tick = ToolRunTick::decode(&bytes).expect("a planner tick decodes");
                     oracle_ops = tick.retract_to.map_or(oracle_ops, |length| length as usize) + tick.append_ops.len();
@@ -343,6 +376,8 @@ fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
                 other => panic!("the planner ended unexpectedly: {other:?}"),
             }
         }
+        original.close_job(planner.as_mut());
+        original.finish();
         assert!(oracle_complete, "{id}: the planner completes");
         let primary_trace: Vec<ToolRunTraceOp> = run.trace.iter().filter(|op| !matches!(op, ToolRunTraceOp::Upsert { subject: ToolRunTraceSubject::Placement2d { .. }, .. }) && !matches!(op, ToolRunTraceOp::Retire { key } if key & twin_bit != 0)).copied().collect();
         assert_eq!(primary_trace, oracle_trace, "{id}: the 5d run reports exactly the planner's verdicts");
@@ -421,21 +456,21 @@ fn fill_run_job_step_stays_below_the_interactive_ceiling_on_the_largest_examples
         for run in 0..runs {
             let mut job = job(&document, requested, ToolRunJobPurpose::Run, &[]);
             let mut mirror = Mirror::default();
-            let mut sequence = 0;
+            let source_clock: fn() -> Option<u64> = if run == 0 { recording_clock } else { replaying_clock };
+            let mut original = crate::puzzle_job::testing::OriginalFixture::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), crate::puzzle_job::testing::fixture_stock(), source_clock, u64::MAX, 1 << 32);
             for turn in 0..FILL_RUN_TURNS {
                 let recording = run == 0;
                 assert!(recording || turn < expiries.len(), "{name}: cold run {run} took more turns than the recorded run");
-                let (step_budget, clock): (StepBudget, fn() -> Option<u64>) = if recording {
+                let (step_budget, _clock): (StepBudget, fn() -> Option<u64>) = if recording {
                     let start = semio_framework_job::default_now_us().expect("clock");
                     TURN_CLOCK.with(|clock| *clock.borrow_mut() = TurnClock { deadline: start + slice, ..TurnClock::default() });
-                    (StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, start + slice, crate::puzzle_job::testing::unbounded_grant()), recording_clock)
+                    (StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, start + slice, crate::puzzle_job::testing::fixture_stock()), recording_clock)
                 } else {
                     TURN_CLOCK.with(|clock| *clock.borrow_mut() = TurnClock { replay_expiry: expiries[turn], ..TurnClock::default() });
-                    (StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, 1, crate::puzzle_job::testing::unbounded_grant()), replaying_clock)
+                    (StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, 1, crate::puzzle_job::testing::fixture_stock()), replaying_clock)
                 };
-                job.clock = clock;
                 let started = Instant::now();
-                let complete = mirror.turn(&mut job, step_budget, clock, &mut sequence);
+                let complete = mirror.turn(&mut job, step_budget, &mut original);
                 let elapsed = started.elapsed();
                 if recording {
                     expiries.push(TURN_CLOCK.with(|clock| clock.borrow().first_expired));
@@ -447,6 +482,8 @@ fn fill_run_job_step_stays_below_the_interactive_ceiling_on_the_largest_examples
                     break;
                 }
             }
+            original.close_job(&mut job);
+            original.finish();
             placed = mirror.ops.len() / PUZZLE5D_PLACEMENT_OPS;
             match law["capacityRefusals"][name].as_str() {
                 Some(refusal) => {
@@ -464,7 +501,7 @@ fn fill_run_job_step_stays_below_the_interactive_ceiling_on_the_largest_examples
 
 //#region ⏯️App
 pub(crate) fn host_turn(app: &mut Puzzle5dTestApp) {
-    crate::puzzle_job::testing::maintain(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance.maximum_copy_bytes, app.1.cx()).expect("maintenance step");
+    app.maintain(&mut app.0, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().maintenance.maximum_copy_bytes, app.1.cx()).expect("maintenance step");
     semio_framework_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut identity, app.1.cx()))).expect("advance one typed operation publication unit");
     crate::puzzle_job::testing::drain_outboxes(&mut app.0);
     if let Some(page) = app.take_typed_operation_result_page(1) {
@@ -483,7 +520,7 @@ pub(crate) fn world_meta() -> ActionMeta {
 
 pub(crate) fn tool_run_action(app: &mut Puzzle5dTestApp, action: &str, args: serde_json::Value) -> serde_json::Value {
     let args = semio_framework_value::DslValue::from(&args);
-    let result = semio_framework_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(args.clone()), &world_meta(), &mut identity, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close))).unwrap_or_else(|fault| panic!("{action} faulted: {fault:?}"));
+    let result = semio_framework_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(args.clone()), &world_meta(), &mut identity, app.1.cx(), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().close))).unwrap_or_else(|fault| panic!("{action} faulted: {fault:?}"));
     serde_json::Value::from(&result.output)
 }
 
@@ -645,12 +682,14 @@ fn a_document_past_the_planner_capacity_refuses_with_a_visible_danger_step() {
     let refusal = law["capacityRefusals"]["capsule-dream"].as_str().expect("the capsule dream refusal");
     let mut mirror = Mirror::default();
     let mut job = job(&example("capsule-dream"), law["requested"].as_u64().expect("requested") as u32, ToolRunJobPurpose::Run, &[]);
-    let mut sequence = 0;
+    let mut original = crate::puzzle_job::testing::OriginalFixture::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), crate::puzzle_job::testing::fixture_stock(), never, u64::MAX, 1 << 32);
     for _ in 0..FILL_RUN_TURNS {
-        if mirror.turn(&mut job, StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, u64::MAX, crate::puzzle_job::testing::unbounded_grant()), never, &mut sequence) {
+        if mirror.turn(&mut job, StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, u64::MAX, crate::puzzle_job::testing::fixture_stock()), &mut original) {
             break;
         }
     }
+    original.close_job(&mut job);
+    original.finish();
     assert_eq!(mirror.fault.as_deref(), Some(refusal), "the run refuses the oversized document by its declared capacity code");
     assert!(
         mirror.steps.iter().any(|step| step.kind == semio_framework_tool_run::ToolRunStepKind::Danger && step.reason == FillRunReason::ArtifactCapacity.code()),

@@ -2,13 +2,14 @@
 @oracle-ajv-ticket-schema
 @comparison-ordered-json-v1
 Feature: The 🎫️ticket.json document reads and writes exactly the way it is committed
-  The vectors are REAL documents copied byte for byte out of `.🧬semio/🦑️repo/🎫️tickets`, so the case
+  The vectors contain committed documents and an authored human interaction record, so the case
   cannot pass against a shape only this repository's own implementations believe in. `ajv` — a real
   draft 2020-12 validator — decides whether each one satisfies `🧬️schema/🔣️.json`, so a drifted schema
   fails here instead of agreeing with itself, and its `JSON.parse` is a second, independently written
   reader of the same bytes. Three behaviours are pinned that a naive port would get wrong: the status
   member is mandatory and closed, the encoder HTML-escapes `<`, `>` and `&` because Go's does, and
-  every member the shape does not declare is read and then dropped.
+  every member the shape does not declare is read and then dropped. Human interaction records,
+  including exact reopen prompts, remain durable across encoding and subsequent decoding.
 
   @id-real-documents-decode-to-the-same-ticket
   @level-fundamental

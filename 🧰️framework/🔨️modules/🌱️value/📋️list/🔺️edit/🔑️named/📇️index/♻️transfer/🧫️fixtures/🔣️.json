@@ -1,0 +1,13 @@
+{
+ "schema":"value.named.key-preserving-transfer/v1",
+ "cases":[
+  {"id":"original-rank","keys":["Z","A","B"],"rank":1,"replacement":"A","admitted":true},
+  {"id":"opaque-empty","keys":["Z","","B"],"rank":1,"replacement":"","admitted":true},
+  {"id":"opaque-unicode","keys":["é","é","ö"],"rank":1,"replacement":"é","admitted":true},
+  {"id":"normalization-refused","keys":["Z","é","B"],"rank":1,"replacement":"é","admitted":false},
+  {"id":"case-refused","keys":["Z","A","B"],"rank":1,"replacement":"a","admitted":false},
+  {"id":"new-key-refused","keys":["Z","A","B"],"rank":1,"replacement":"Q","admitted":false}
+ ],
+ "prefixLength":65537,"bodyBytes":[1,4096],"cancelCuts":[0,1,2,7,19,71],
+ "laws":{"originalProducer":true,"fullPagedKeyEquality":true,"foreignRootRefused":true,"sameDirectory":true,"unaddressedRowsShared":true,"baseAdmissionActions":0,"exactHeapReceipts":true,"terminalDropBytes":0}
+}

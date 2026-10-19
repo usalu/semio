@@ -1,5 +1,5 @@
-//! 🦀️ Puzzle 5d 1 exhaustive mutation case — Rust adapter. Ticket
 //! `26/08/23/END-TO-END-TESTING-REFACTOR`.
+//! 🦀️ Puzzle 5d 1 exhaustive mutation case — Rust adapter. Ticket
 //!
 //! Recorded no-oracle decision `puzzle-5d-mutation-semantics`
 //! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`): this is a semio-NATIVE
@@ -27,7 +27,13 @@
 //!
 //! @see semio_repo_test_host::law — the shared law helpers.
 
-use semio_repo_test_host::{Adapter, Context, Json, Outcome};
+use semio_repo_test_host::Adapter;
+
+use semio_repo_test_host::Context;
+
+use semio_repo_test_host::Json;
+
+use semio_repo_test_host::Outcome;
 
 /// ⚖️ Uses the canonical repository-owned format-neutral law helpers.
 use semio_repo_test_host::law;

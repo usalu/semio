@@ -1,5 +1,5 @@
-//! 🌐️ Edit-mode window option — the grid group: the snap toggle and the grid factor slider the board
 //! engine snaps node drags and brush placements onto. Per window instance (`Puzzle2dWindowConfig`).
+//! 🌐️ Edit-mode window option — the grid group: the snap toggle and the grid factor slider the board
 
 use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;

@@ -98,7 +98,7 @@ impl CommandGen {
     }
 
     pub fn random_actor(&mut self) -> protocol::ActorId {
-        protocol::ActorId(format!("actor-{}", self.rng.next_range(8)))
+        protocol::ActorId(format!("actor-{}", self.rng.next_range(8)).into())
     }
 
     pub fn random_json(&mut self) -> serde_json::Value {
@@ -600,7 +600,7 @@ async fn schema_erased_envelope(document: &protocol::ArtifactId, mutation_id: &s
     protocol::MutationEnvelope {
         mutation_id: protocol::MutationId(mutation_id.to_string()),
         document_id: document.clone(),
-        actor: protocol::ActorId(actor.to_string()),
+        actor: protocol::ActorId(actor.to_string().into()),
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
@@ -631,10 +631,10 @@ pub async fn assert_inverse_undo_roundtrip(seed: u64) {
     let after_forward: serde_json::Value = db_artifact_contract::decode_pathmap_json(&query_bytes_into_vec(after_forward_bytes).await).await.expect("json");
     assert_eq!(after_forward, forward_value);
 
-    engine.undo(&target, protocol::MutationId("op-undo".to_string()), protocol::ActorId("actor-1".to_string()), 2).await.expect("undo");
+    engine.undo(&target, protocol::MutationId("op-undo".to_string()), protocol::ActorId("actor-1".to_string().into()), 2).await.expect("undo");
     assert!(!query_result_is_present(engine.get(&path).await).await, "undo must apply the recorded inverse — path deleted");
 
-    engine.undo(&protocol::MutationId("op-undo".to_string()), protocol::MutationId("op-redo".to_string()), protocol::ActorId("actor-1".to_string()), 3).await.expect("redo (undo of undo)");
+    engine.undo(&protocol::MutationId("op-undo".to_string()), protocol::MutationId("op-redo".to_string()), protocol::ActorId("actor-1".to_string().into()), 3).await.expect("redo (undo of undo)");
     let after_redo_bytes = engine.get(&path).await.expect("redo value query").expect("redo value present");
     let after_redo: serde_json::Value = db_artifact_contract::decode_pathmap_json(&query_bytes_into_vec(after_redo_bytes).await).await.expect("json");
     assert_eq!(after_redo, forward_value, "undoing the undo (redo) must restore the exact original value — inverse-of-inverse roundtrip");

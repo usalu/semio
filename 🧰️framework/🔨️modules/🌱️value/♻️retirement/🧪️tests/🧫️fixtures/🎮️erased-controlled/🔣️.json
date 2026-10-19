@@ -9,5 +9,6 @@
   "unsupportedEffects": {
     "bornBytes": 0,
     "releasedBytes": 0
-  }
+  },
+  "metadataCopyBytes": 0
 }

@@ -36,7 +36,10 @@ fn db_io_page_writer_seal_memory_sqlite_neo_state_wal_index_max_cancel_fault_dro
     let mut seal = Box::pin(writer.seal_retained());
     assert!(matches!(Future::poll(seal.as_mut(), context), std::task::Poll::Pending));
     drop(seal);
-    while db_io_lost_owner_close_step().unwrap() {}
+    for _ in 0..3 * (DB_IO_LOST_OWNER_SLOTS + 2 * DB_IO_LOST_OWNER_OVERFLOW_SLOTS) {
+        if !db_io_lost_owner_close_step().unwrap() { break; }
+    }
+    assert!(!db_io_lost_owner_close_step().unwrap());
     assert_eq!(ledger_witness(), before);
 
     let mut writer = DbIoPageWriter::try_reserve(DB_IO_OPERATION_PAGES).unwrap();

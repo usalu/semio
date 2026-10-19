@@ -5,7 +5,7 @@ fn demo() -> Fem3dSnapshot {
 }
 
 fn instances(doc: &Fem3dSnapshot) -> Vec<Value> {
-    let (_, instances_json) = fem3d_scene_parts(doc, None, doc.analysis.deformation_scale, None);
+    let (_, instances_json) = fem3d_scene_parts(doc, None, doc.analysis.deformation_scale, None).unwrap();
     semio_framework_pack_json::parse(&instances_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("instances json").as_array().cloned().expect("array")
 }
 
@@ -20,20 +20,20 @@ fn every_entity_is_an_instance_keyed_by_its_own_id_and_granularity() {
     let doc = demo();
     let all = instances(&doc);
     for node in &doc.nodes {
-        assert_eq!(find(&all, &node.id).get("interactionGranularityId").and_then(Value::as_str), Some(FEM3D_GRANULARITY_NODE));
+        assert_eq!(find(&all, &fem3d_entity_target("node", &node.id).unwrap()).get("interactionGranularityId").and_then(Value::as_str), Some(FEM3D_GRANULARITY_NODE));
     }
     for element in &doc.elements {
-        let instance = find(&all, element_id(element));
+        let instance = find(&all, &fem3d_entity_target("element", element_id(element)).unwrap());
         assert_eq!(instance.get("interactionGranularityId").and_then(Value::as_str), Some(FEM3D_GRANULARITY_ELEMENT));
         assert_eq!(instance.get("meshId").and_then(Value::as_str), Some("box"));
     }
     for solid in &doc.solids {
-        let instance = find(&all, &solid.id);
+        let instance = find(&all, &fem3d_entity_target("solid", &solid.id).unwrap());
         assert_eq!(instance.get("interactionGranularityId").and_then(Value::as_str), Some(FEM3D_GRANULARITY_SOLID));
         assert_eq!(instance.get("meshId").and_then(Value::as_str), Some(format!("solid-{}", solid.id).as_str()));
     }
     for support in &doc.supports {
-        let instance = find(&all, &support.id);
+        let instance = find(&all, &fem3d_entity_target("support", &support.id).unwrap());
         assert_eq!(instance.get("interactionGranularityId").and_then(Value::as_str), Some(FEM3D_GRANULARITY_SUPPORT));
         assert_eq!(instance.get("meshId").and_then(Value::as_str), Some("cone"));
     }
@@ -51,19 +51,19 @@ fn every_entity_is_an_instance_keyed_by_its_own_id_and_granularity() {
 fn load_glyphs_redirect_their_hit_onto_the_load() {
     let doc = demo();
     let all = instances(&doc);
-    let glyphs: Vec<&Value> = all.iter().filter(|instance| instance.get("interactionId").and_then(Value::as_str) == Some("l2")).collect();
+    let glyphs: Vec<&Value> = all.iter().filter(|instance| instance.get("interactionId").and_then(Value::as_str) == Some(fem3d_load_target("live", "l2").unwrap().as_str())).collect();
     assert_eq!(glyphs.len(), 2, "one head and one shaft: {glyphs:?}");
-    let head = find(&all, "l2:head");
+    let head = find(&all, &fem3d_entity_target("load", &format!("{}:head", fem3d_load_target("live", "l2").unwrap())).unwrap());
     let position: Vec<f64> = head.get("position").and_then(Value::as_array).expect("position").iter().filter_map(Value::as_f64).collect();
     assert!((position[2] - (2.8 + LOAD_ARROW_HEAD_3D)).abs() < 1e-9, "a downward Tz load's head base sits above the node by the head length: {position:?}");
-    let area: Vec<&Value> = all.iter().filter(|instance| instance.get("interactionId").and_then(Value::as_str) == Some("l1")).collect();
+    let area: Vec<&Value> = all.iter().filter(|instance| instance.get("interactionId").and_then(Value::as_str) == Some(fem3d_load_target("dead", "l1").unwrap().as_str())).collect();
     assert_eq!(area.len(), 2);
     let udl_doc = {
         let mut doc = demo();
         doc.load_cases[0].loads.push(FemLoad::MemberUdl { id: "udl".into(), element_id: "fb1_0".into(), wx: 0.0, wy: 0.0, wz: -1000.0 });
         doc
     };
-    let udl = instances(&udl_doc).into_iter().filter(|instance| instance.get("interactionId").and_then(Value::as_str) == Some("udl")).count();
+    let udl = instances(&udl_doc).into_iter().filter(|instance| instance.get("interactionId").and_then(Value::as_str) == Some(fem3d_load_target("dead", "udl").unwrap().as_str())).count();
     assert_eq!(udl, MEMBER_LOAD_ARROWS_3D * 2);
 }
 
@@ -74,11 +74,11 @@ fn displacements_move_nodes_members_supports_and_load_glyphs_together() {
     let doc = demo();
     let mut displacements = HashMap::new();
     displacements.insert("n20_l1".to_string(), [0.0, 0.0, -0.01, 0.0, 0.0, 0.0]);
-    let (_, json) = fem3d_scene_parts(&doc, Some(&displacements), 100.0, None);
+    let (_, json) = fem3d_scene_parts(&doc, Some(&displacements), 100.0, None).unwrap();
     let all: Vec<Value> = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("json").as_array().cloned().expect("array");
     let z = |id: &str| find(&all, id).get("position").and_then(Value::as_array).expect("position")[2].as_f64().expect("z");
-    assert!((z("n20_l1") - 1.8).abs() < 1e-9, "the node dropped by one metre at scale 100");
-    assert!((z("l2:head") - (1.8 + LOAD_ARROW_HEAD_3D)).abs() < 1e-9, "the load arrow rides its node");
+    assert!((z(&fem3d_entity_target("node", "n20_l1").unwrap()) - 1.8).abs() < 1e-9, "the node dropped by one metre at scale 100");
+    assert!((z(&fem3d_entity_target("load", &format!("{}:head", fem3d_load_target("live", "l2").unwrap())).unwrap()) - (1.8 + LOAD_ARROW_HEAD_3D)).abs() < 1e-9, "the load arrow rides its node");
 }
 
 /// 🧭️ LAW: the cone quaternion takes the mesh's +Y axis onto the requested direction.

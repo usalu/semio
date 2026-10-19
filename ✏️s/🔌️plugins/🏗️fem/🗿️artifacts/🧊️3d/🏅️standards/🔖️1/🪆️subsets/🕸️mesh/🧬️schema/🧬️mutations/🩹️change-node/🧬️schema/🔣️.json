@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/fem/3d/1/mesh/mutation/change-node/schema.json",
+  "title": "ChangeNode",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "patch"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeNode"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "ref": {
+          "kind": "node",
+          "domain": "fem3d",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "patch": {
+      "title": "Fem3dNodePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "X",
+              "de": "X"
+            },
+            "unit": "m",
+            "step": 0.1,
+            "precision": 3,
+            "group": "position",
+            "order": 20
+          }
+        },
+        "y": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Y",
+              "de": "Y"
+            },
+            "unit": "m",
+            "step": 0.1,
+            "precision": 3,
+            "group": "position",
+            "order": 30
+          }
+        },
+        "z": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Z",
+              "de": "Z"
+            },
+            "unit": "m",
+            "step": 0.1,
+            "precision": 3,
+            "group": "position",
+            "order": 40
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "New node",
+          "de": "Neuer Knoten"
+        },
+        "group": "record",
+        "order": 20
+      }
+    }
+  },
+  "description": "Changes only supplied node fields while preserving stable identity and independent concurrent edits. Omitted fields remain untouched; null values are refused."
+}

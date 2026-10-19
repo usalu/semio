@@ -229,8 +229,12 @@ pub enum ArtifactStoreOneItemAdvance {
     Progress(ArtifactStoreOneItemCheckpoint),
     PreparationProgress(ArtifactStoreOneItemCheckpoint, RetainedCloneProgress),
     PreparationRefused,
-    Published(LaneItemReceipt),
+    Published(LaneItemReceipt, RetainedCloneProgress),
     AwaitingAck(LaneItemReceipt),
     Complete,
     Blocked,
 }
+
+#[path="🧬️semantic/🦀️.rs"]
+pub mod semantic;
+pub use semantic::{PagedOneItemEdit,PagedOneItemEditStep};

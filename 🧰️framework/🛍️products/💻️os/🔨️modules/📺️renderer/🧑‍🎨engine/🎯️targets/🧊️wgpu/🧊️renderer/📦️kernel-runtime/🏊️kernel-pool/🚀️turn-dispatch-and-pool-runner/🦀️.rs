@@ -517,8 +517,7 @@ impl KernelPoolState {
     async fn serve_request(&mut self, request: KernelRequest) -> Option<KernelOutcome> {
         Some(match request {
             KernelRequest::CreateApp { owner } => {
-                let (wasm_path, plugin_id, app_id, artifact_schema) = owner.into_parts();
-                KernelOutcome::Created(self.create_app(wasm_path, plugin_id, app_id, artifact_schema).await)
+                KernelOutcome::Created(self.create_app(owner).await)
             }
             KernelRequest::DestroyApp { owner } => {
                 if self.destroy_app_step(owner.instance).await {

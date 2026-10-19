@@ -1,0 +1,6 @@
+{
+  "factor": 2,
+  "mutation": "changeCombinationTerm",
+  "id": "missing",
+  "caseId": "lc1"
+}

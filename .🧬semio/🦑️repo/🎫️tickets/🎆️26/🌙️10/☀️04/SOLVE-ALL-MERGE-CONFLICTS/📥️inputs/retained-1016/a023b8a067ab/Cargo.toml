@@ -1,0 +1,9 @@
+[package]
+name="model-b"
+version="0.1.0"
+edition.workspace=true
+[lib]
+path="🦀️.rs"
+[package.metadata.semio.preparation]
+script="../../📜️script.ts"
+command=["specific"]

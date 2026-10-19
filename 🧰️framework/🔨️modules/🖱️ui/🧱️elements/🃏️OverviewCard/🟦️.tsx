@@ -7,7 +7,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { Icon } from "../🔣️Icons/🟦️.tsx";
+import { CatalogIcon as Icon } from "../🔣️Icons/🟦️.tsx";
 import { WindowChrome, windowChromeTitleChipClass } from "../🗂️WindowChrome/🟦️.tsx";
 // #endregion 🔌️Adapters
 

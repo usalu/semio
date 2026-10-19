@@ -1,0 +1,199 @@
+{
+  "axes": [
+    "items",
+    "copyBytes",
+    "capacityBytes",
+    "releaseBytes",
+    "depth"
+  ],
+  "cases": [
+    {
+      "name": "exact",
+      "quote": [
+        1,
+        7,
+        17,
+        3,
+        2
+      ],
+      "grant": [
+        1,
+        7,
+        17,
+        3,
+        2
+      ],
+      "accepted": true
+    },
+    {
+      "name": "extra-original-stock",
+      "quote": [
+        1,
+        7,
+        17,
+        3,
+        2
+      ],
+      "grant": [
+        2,
+        8,
+        18,
+        4,
+        3
+      ],
+      "accepted": true
+    },
+    {
+      "name": "deny-0",
+      "quote": [
+        1,
+        7,
+        17,
+        3,
+        2
+      ],
+      "grant": [
+        0,
+        7,
+        17,
+        3,
+        2
+      ],
+      "accepted": false
+    },
+    {
+      "name": "deny-1",
+      "quote": [
+        1,
+        7,
+        17,
+        3,
+        2
+      ],
+      "grant": [
+        1,
+        6,
+        17,
+        3,
+        2
+      ],
+      "accepted": false
+    },
+    {
+      "name": "deny-2",
+      "quote": [
+        1,
+        7,
+        17,
+        3,
+        2
+      ],
+      "grant": [
+        1,
+        7,
+        16,
+        3,
+        2
+      ],
+      "accepted": false
+    },
+    {
+      "name": "deny-3",
+      "quote": [
+        1,
+        7,
+        17,
+        3,
+        2
+      ],
+      "grant": [
+        1,
+        7,
+        17,
+        2,
+        2
+      ],
+      "accepted": false
+    },
+    {
+      "name": "deny-4",
+      "quote": [
+        1,
+        7,
+        17,
+        3,
+        2
+      ],
+      "grant": [
+        1,
+        7,
+        17,
+        3,
+        1
+      ],
+      "accepted": false
+    }
+  ],
+  "bindings": [
+    {
+      "name": "same-original",
+      "origin": [
+        11,
+        3,
+        29,
+        31,
+        37,
+        41
+      ],
+      "current": [
+        11,
+        3,
+        29,
+        31,
+        37,
+        41
+      ],
+      "matches": true
+    },
+    {
+      "name": "same-semantic-foreign-root",
+      "origin": [
+        11,
+        3,
+        29,
+        31,
+        37,
+        41
+      ],
+      "current": [
+        11,
+        3,
+        30,
+        31,
+        37,
+        41
+      ],
+      "matches": false
+    },
+    {
+      "name": "same-root-foreign-clock",
+      "origin": [
+        11,
+        3,
+        29,
+        31,
+        37,
+        41
+      ],
+      "current": [
+        11,
+        3,
+        29,
+        32,
+        37,
+        41
+      ],
+      "matches": false
+    }
+  ]
+}

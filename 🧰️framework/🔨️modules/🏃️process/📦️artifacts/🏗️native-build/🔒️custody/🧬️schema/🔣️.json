@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.process.compiler-custody/v1",
+  "type": "array",
+  "minItems": 2,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "operation"],
+    "properties": {
+      "id": { "type": "string", "minLength": 1 },
+      "operation": { "enum": ["refuse", "cancel"] }
+    }
+  }
+}

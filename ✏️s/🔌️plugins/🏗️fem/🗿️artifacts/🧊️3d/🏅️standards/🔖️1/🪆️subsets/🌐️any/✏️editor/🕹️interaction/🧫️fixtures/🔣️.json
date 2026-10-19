@@ -1,0 +1,18 @@
+{
+  "targets": [
+    { "segments": ["node", "same"], "identity": "scope:1:4:node4:same", "kind": "node" },
+    { "segments": ["element", "same"], "identity": "scope:1:7:element4:same", "kind": "element" },
+    { "segments": ["material", "same"], "identity": "scope:1:8:material4:same", "kind": "material" },
+    { "segments": ["section", "same"], "identity": "scope:1:7:section4:same", "kind": "section" },
+    { "segments": ["solid", "same"], "identity": "scope:1:5:solid4:same", "kind": "solid" },
+    { "segments": ["support", "same"], "identity": "scope:1:7:support4:same", "kind": "support" },
+    { "segments": ["loadCase", "same"], "identity": "scope:1:8:loadCase4:same", "kind": "loadCase" },
+    { "segments": ["combination", "same"], "identity": "scope:1:11:combination4:same", "kind": "combination" },
+    { "segments": ["load", "same", "共:1"], "identity": "scope:1:4:load4:same5:共:1", "kind": "load" },
+    { "segments": ["load", "other:case", "共:1"], "identity": "scope:1:4:load10:other:case5:共:1", "kind": "load" }
+  ],
+  "peerCatchUp": { "id": "n20_l1", "before": { "x": 8, "y": 0 }, "after": { "x": 11, "y": 4 } },
+  "selectionLabels": [{ "identity": "scope:1:4:node4:same", "locale": "en", "expected": "Node same" }, { "identity": "scope:1:4:node4:same", "locale": "de", "expected": "Knoten same" }, { "identity": "scope:1:4:load10:other:case5:共:1", "locale": "en", "expected": "Load other:case / 共:1" }],
+  "invalidOwnerCases": [{ "kind": "emptyNode" }, { "kind": "duplicateNode" }, { "kind": "duplicateLoad" }, { "kind": "oversizedNode", "bytes": 65536 }],
+  "invalid": ["same", "scope:1:4:load4:same", "scope:1:4:node4:same1:x", "scope:1:7:unknown4:same"]
+}

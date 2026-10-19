@@ -3,9 +3,11 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::Puzzle5dSnapshot;
 use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dAttribute, Puzzle5dAuthor, Puzzle5dCompatSpecificity, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dGripTemplate, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor, Puzzle5dRepresentation, Puzzle5dScale, Puzzle5dTargetVolume};
 use crate::standards::v1::subsets::any::schema::kind_catalogs::{Puzzle5dCatalogFastenerKindExtra, Puzzle5dCatalogGripKindExtra, Puzzle5dCatalogPartKindExtra, Puzzle5dCatalogRopeKindExtra, Puzzle5dKindCatalogsExtra};
-use std::collections::{BTreeMap,BTreeSet};
+use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,artifact::{Cell,Projection,Reconstruction}}};
-use semio_framework_value::{ValueError,ValueRefusalKind};
+use semio_framework_value::ValueError;
+use semio_framework_value::ValueRefusalKind;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 
 const TABLES:[(&str,usize);25]=[("puzzle5_document",5),("puzzle5_catalog_child",7),("puzzle5_catalog_extra",2),("puzzle5_part_kind",11),("puzzle5_part_kind_base",4),("puzzle5_representation",9),("puzzle5_representation_tag",4),("puzzle5_grip_template",34),("puzzle5_attribute",7),("puzzle5_author",8),("puzzle5_grip_kind",11),("puzzle5_grip_kind_compatible",4),("puzzle5_fastener_kind",6),("puzzle5_rope_kind",7),("puzzle5_compatibility",8),("puzzle5_part",6),("puzzle5_part_board",22),("puzzle5_part_world",25),("puzzle5_part_scale",15),("puzzle5_grip",5),("puzzle5_grip_board",9),("puzzle5_grip_world",24),("puzzle5_fastener",31),("puzzle5_target_volume",27),("puzzle5_target_scale",15)];

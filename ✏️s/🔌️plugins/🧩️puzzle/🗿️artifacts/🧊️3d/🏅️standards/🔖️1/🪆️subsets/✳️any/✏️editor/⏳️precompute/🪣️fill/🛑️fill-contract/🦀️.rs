@@ -65,6 +65,7 @@ impl FillStepContext for StepContext<'_> {
 
 /// 🛰️ One observation the planner reports to a fill run job, in the order it happened.
 #[derive(Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum FillRunEvent {
     Constructed { mesh_url: String, origin: [f64; 3], orientation: [f64; 4], scale: f32 },
     Refused(FillRunReason),

@@ -1,5 +1,5 @@
-//! 🚪️ fem3d → json — foreign `Serializer<Fem3dSnapshot>` on the framework's `io_mechanism` channel.
 //! `Fem3dSnapshot` is a pure `semio_framework_value::ToValue` record tree (nodes/elements/materials/sections/solids/
+//! 🚪️ fem3d → json — foreign `Serializer<Fem3dSnapshot>` on the framework's `io_mechanism` channel.
 //! supports/load-cases/combinations/analysis, no external child references), so its rfc8259
 //! rendition carries every field and the sibling `📥️import` leaf reconstructs the snapshot exactly:
 //! `IoFidelity::Exact`. The text is written by stdio's own real RFC 8259 codec (`write_json_text`),
@@ -7,7 +7,8 @@
 //! instead of widening them to `f64`.
 
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+use semio_framework_os_kernel::io::io_mechanism::ArchiveChildren;
+use semio_framework_os_kernel::io::io_mechanism::Serializer;
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::write_json_text;

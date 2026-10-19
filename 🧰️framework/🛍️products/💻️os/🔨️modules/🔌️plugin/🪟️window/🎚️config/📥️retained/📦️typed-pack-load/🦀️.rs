@@ -31,6 +31,7 @@ fn window_config_history_limits(spr_bytes: u32) -> store::os_store::HistoryReadL
 const WINDOW_CONFIG_HISTORY_ALLOCATION_BYTES: usize = 8_388_608;
 
 pub(super) struct TypedWindowConfigPackLoad<O: WindowConfigOwner> {
+    pub(super) candidate_authority: Option<WindowConfigAuthorityIdentity>,
     completed_states:ManuallyDrop<[Option<RetainedWindowConfigStateDecode<O>>;3]>,
     pending_files:ManuallyDrop<Option<store::os_store::serialization::ArtifactPackFiles>>,
     pending_address:ManuallyDrop<Option<String>>,
@@ -47,7 +48,7 @@ pub(super) struct TypedWindowConfigPackLoad<O: WindowConfigOwner> {
     initial_digest: Option<[u8; 32]>,
     history_decode: ManuallyDrop<Option<store::RetainedHistoryDecode>>,
     history: ManuallyDrop<Option<store::HistoryLog>>,
-    hydration: ManuallyDrop<Option<store::RetainedConfigStoreHydration<O::State, O::Mutation>>>,
+    hydration: ManuallyDrop<Option<store::ReferenceConfigStoreHydration<O::State, O::Mutation>>>,
     pub(super) owners: ManuallyDrop<Option<store::os_store::document_store_owners::DocumentStoreOwners<O::State, O::Mutation>>>,
     pub(super) candidate: ManuallyDrop<Option<WindowConfigPartition<O>>>,
     displaced: ManuallyDrop<Option<WindowConfigPartition<O>>>,
@@ -69,11 +70,11 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
         let WindowConfigPack { window_id, window_kind_id, files } = pack;
         let total_bytes = files.pack.len().saturating_mul(3).saturating_add(files.spr.len()).saturating_add(files.ops.len()) as u64;
         let expected_id = format!("window-config:{}:{window_id}", O::WINDOW_KIND_ID);
-        let (owners, diagnostic) = match O::build_store_owners() {
-            Ok(owners) => (Some(owners), None),
-            Err(_) => (None, Some(WindowConfigPackLoadDiagnostic::Capacity)),
-        };
+        let candidate_authority = super::WindowConfigAuthorityIdentity::issue();
+        let owners=None;let mut diagnostic=None;
+        if candidate_authority.is_none() { diagnostic = Some(WindowConfigPackLoadDiagnostic::Capacity); }
         Self {
+            candidate_authority,
             completed_states:ManuallyDrop::new(std::array::from_fn(|_|None)),
             pending_files:ManuallyDrop::new(None),
             pending_address:ManuallyDrop::new(None),
@@ -260,7 +261,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
             let history = self.history.take().expect("decoded window config history remains");
             let expected_id = self.expected_id.take().expect("exact window config partition id remains");
             let owners = self.owners.take().expect("window config store owners remain");
-            *self.hydration = Some(store::RetainedConfigStoreHydration::from_snapshots(
+            *self.hydration = Some(store::ReferenceConfigStoreHydration::from_snapshots(
                 genesis,
                 validation,
                 current,
@@ -286,11 +287,15 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
             store::ConfigStoreHydrationStep::Rejected(diagnostic) => self.reject(Self::map_hydration_diagnostic(diagnostic)),
             store::ConfigStoreHydrationStep::Ready(store) => {
 
-                *self.candidate = Some(WindowConfigPartition { store: *store, disposer: Some(O::build_store_disposer()), pending_preview:None,pending_preview_reads:None,pending_preview_projection:None,pending_preview_projection_read:None,preview_retirement:None,returned_read_retirement:None });
-                self.phase = WindowConfigPackLoadPhase::Ready;
-                WindowConfigPackLoadStep::Ready
+                *self.candidate = Some(WindowConfigPartition { catalog:None,address:None,semantic_preview:None,semantic_epoch:0,published_preview:None,finish_preview_base:None,finish_preview_read:None, authority: self.candidate_authority.expect("admitted original candidate authority"), store: *store, disposer: Some(O::build_store_disposer()), pending_preview:None,pending_preview_reads:None,pending_preview_projection:None,pending_preview_projection_read:None,preview_retirement:None,returned_read_retirement:None });
+                self.phase = WindowConfigPackLoadPhase::StoreAddress;
+                self.pending()
             }
         }
+    }
+
+    fn advance_address(&mut self,grant:RetainedCloneGrant)->WindowConfigPackLoadStep{
+        let demand=semio_framework_value::SharedUtf8::admission_demand();if !super::registry::fits(grant,demand){return self.pending();}let original=self.window_id.take().expect("original hydrated Window keeps its exact address");match semio_framework_value::SharedUtf8::admit(original,grant){Ok((address,p))=>{self.candidate.as_mut().expect("original hydrated Window candidate remains").address=Some(ControlledRetirement::new(address).expect("original Window address supports controlled closure"));self.phase=WindowConfigPackLoadPhase::Ready;WindowConfigPackLoadStep::OwnershipProgress(self.progress_now(),p)},Err((_,original))=>{*self.window_id=Some(original);self.reject(WindowConfigPackLoadDiagnostic::Capacity)}}
     }
 
     fn advance_inner(&mut self, grant: RetainedCloneGrant) -> WindowConfigPackLoadStep {
@@ -300,12 +305,15 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
         if grant.maximum_items == 0 || grant.maximum_depth == 0 {
             return self.pending();
         }
+        if self.owners.is_none()&&self.hydration.is_none()&&self.candidate.is_none()&&matches!(self.phase,WindowConfigPackLoadPhase::EnvelopeIdentity){return match O::build_store_owners(grant){Ok((owners,p))=>{*self.owners=Some(owners);WindowConfigPackLoadStep::OwnershipProgress(self.progress_now(),p)},Err(error)=>{*self.owners=error.owners;if self.owners.is_none()&&error.progress==Default::default(){self.pending()}else{self.diagnostic=Some(WindowConfigPackLoadDiagnostic::Capacity);WindowConfigPackLoadStep::OwnershipProgress(self.progress_now(),error.progress)}}}}
+        if let Some(owners)=self.owners.as_mut(){if !owners.constructor_is_complete(){return match owners.admit_constructor(grant){Ok(p)=>WindowConfigPackLoadStep::OwnershipProgress(self.progress_now(),p),Err((_,p))=>{self.diagnostic=Some(WindowConfigPackLoadDiagnostic::Capacity);WindowConfigPackLoadStep::OwnershipProgress(self.progress_now(),p)}}}}
         match self.phase {
             WindowConfigPackLoadPhase::EnvelopeIdentity | WindowConfigPackLoadPhase::PackIngress | WindowConfigPackLoadPhase::PackReplay => self.advance_decode(grant),
             WindowConfigPackLoadPhase::PackRetirement => self.advance_pack_retirement(grant),
             WindowConfigPackLoadPhase::HistoryReplay => self.advance_history(grant),
             WindowConfigPackLoadPhase::InputRetirement => self.advance_input_retirement(grant),
             WindowConfigPackLoadPhase::StoreHydration => self.advance_hydration(grant),
+            WindowConfigPackLoadPhase::StoreAddress => self.advance_address(grant),
             WindowConfigPackLoadPhase::Ready => WindowConfigPackLoadStep::Ready,
             WindowConfigPackLoadPhase::RetiringRejectedCandidate => WindowConfigPackLoadStep::Rejected(self.diagnostic.unwrap_or(WindowConfigPackLoadDiagnostic::Cancelled)),
             WindowConfigPackLoadPhase::RetiringDisplacedStore => self.pending(),
@@ -321,21 +329,23 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
         if self.phase != WindowConfigPackLoadPhase::Ready || self.registry_lifetime != registry_lifetime {
             return self.reject_stale();
         }
-        let window_id = self.window_id.as_ref().expect("ready window config load retains its address");
+        let window_id = self.candidate.as_ref().and_then(|candidate|candidate.address.as_ref()).and_then(ControlledRetirement::original).expect("ready window config load retains its original shared address").as_str();
         let live_generation = partitions.get(window_id).map(|partition| partition.store.generation());
         if live_generation != self.partition_generation {
             return self.reject_stale();
         }
+        let address=window_id.to_string();
         let candidate = self.candidate.take().expect("ready window config candidate remains");
-        *self.displaced = partitions.insert(window_id.clone(), candidate);
+        *self.displaced = partitions.insert(address, candidate);
         self.committed = true;
         self.phase = WindowConfigPackLoadPhase::RetiringDisplacedStore;
         self.pending()
     }
 
     fn partition_demands(partition: &WindowConfigPartition<O>, body: usize) -> Result<RetirementDemand, ValueError> {
-        if partition.preview_retirement_pending() { return partition.preview_retirement_demand(); }
+        if partition.preview_close_pending() { return partition.preview_close_demand(body); }
         if partition.returned_read_pending() { return partition.returned_read_demands(body); }
+        if let Some(address)=partition.address.as_ref(){return if address.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<semio_framework_value::SharedUtf8>>>(),depth:1,..Default::default()})}else{address.next_demand(body)};}
         partition.disposer.as_ref().map_or(Ok(RetirementDemand { copy_bytes: size_of::<WindowConfigPartition<O>>(), depth: 1, ..Default::default() }), |owner| {
             if owner.terminal_is_empty(&partition.store) { Ok(RetirementDemand { release_bytes: size_of_val(owner.as_ref()), depth: 1, ..Default::default() }) }
             else { owner.retirement_demands(&partition.store, body) }
@@ -344,8 +354,9 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
 
     fn close_partition(slot: &mut Option<WindowConfigPartition<O>>, grant: RetainedCloneGrant, demand: RetirementDemand) -> Result<PluginLifecycleStep, String> {
         let partition = slot.as_mut().expect("granted original partition remains");
-        if partition.preview_retirement_pending() { return partition.preview_retirement_step(grant).map(|step| PluginLifecycleStep::retained(step, false)).map_err(ValueError::into_message); }
+        if partition.preview_close_pending() { return partition.preview_close_step(grant).map(|step| PluginLifecycleStep::retained(step, false)).map_err(ValueError::into_message); }
         if partition.returned_read_pending() { return partition.returned_read_step(grant).map(|step| PluginLifecycleStep::retained(step, false)).map_err(ValueError::into_message); }
+        if let Some(address)=partition.address.as_mut(){if address.terminal_is_empty(){partition.address=None;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}return address.step(grant).map(|step|PluginLifecycleStep::retained(step,false)).map_err(ValueError::into_message);}
         if let Some(owner) = partition.disposer.as_mut() {
             if !owner.terminal_is_empty(&partition.store) { return owner.close_step(&mut partition.store, grant).map(|step| match step { PluginLifecycleStep::Complete(progress) => PluginLifecycleStep::Progress(progress), other => other }).map_err(|fault| fault.message); }
             drop(partition.disposer.take());
@@ -364,7 +375,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
         if let Some(owner) = self.state_decode.as_ref() { return if owner.terminal_is_empty() { frame(size_of::<RetainedWindowConfigStateDecode<O>>()) } else { owner.retirement_demands(body) }; }
         if let Some(owner) = self.history_decode.as_ref() { return owner.demands(body); }
         if let Some(owner) = self.hydration.as_ref() {
-            return if store::ErasedSnapshotRetirement::terminal_is_empty(owner) { frame(size_of::<store::RetainedConfigStoreHydration<O::State, O::Mutation>>()) }
+            return if store::ErasedSnapshotRetirement::terminal_is_empty(owner) { frame(size_of::<store::ReferenceConfigStoreHydration<O::State, O::Mutation>>()) }
             else { Ok(RetirementDemand { copy_bytes: store::ErasedSnapshotRetirement::next_copy_byte_demand(owner)?, capacity_bytes: store::ErasedSnapshotRetirement::next_capacity_byte_demand(owner, body)?, release_bytes: store::ErasedSnapshotRetirement::next_release_byte_demand(owner)?, depth: store::ErasedSnapshotRetirement::next_depth_demand(owner)? }) };
         }
         if let Some(partition) = self.displaced.as_ref().or(self.candidate.as_ref()) { return Self::partition_demands(partition, body); }

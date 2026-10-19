@@ -56,7 +56,7 @@ pub struct TransferTask<P, M> {
 }
 
 impl<P, M> crate::ephemeral_preparation::ArtifactEphemeralPreparationTask<P, M> for TransferTask<P, M> {
-    fn advance(&mut self, _: &P, mutation: &mut Option<M>, grant: ArtifactStoreOneItemGrant) -> Result<crate::ephemeral_preparation::ArtifactEphemeralPreparationTaskStep<P>, semio_framework_value::ValueError> {
+    fn advance(&mut self, _: &P, mutation: &mut Option<M>, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<crate::ephemeral_preparation::ArtifactEphemeralPreparationTaskStep<P>, semio_framework_value::ValueError> {
         let capacity=semio_framework_value::shared_retirement_allocation_bytes::<P>();
         let copy=size_of::<P>()+size_of::<M>();
         if !grant.permits_one() || grant.maximum_capacity_bytes < capacity || grant.maximum_copy_bytes < copy {
@@ -70,6 +70,7 @@ impl<P, M> crate::ephemeral_preparation::ArtifactEphemeralPreparationTask<P, M> 
     fn begin_close(&mut self) {}
  }
 impl<P, M> semio_framework_value::ErasedSnapshotRetirement for TransferTask<P, M> {
+    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}
     fn close_step(&mut self, _: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default())) }
     fn terminal_is_empty(&self) -> bool { true }
     fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }

@@ -1,13 +1,29 @@
-//! 🏭️ Writes the `fem2d@1/any` JSON-carrier fixture corpus. Every pair is checked for OBSERVABILITY
 //! before it is written — a mutation whose projection does not move is refused, not committed.
+//! 🏭️ Writes the `fem2d@1/any` JSON-carrier fixture corpus. Every pair is checked for OBSERVABILITY
 use std::fs;
 use std::path::PathBuf;
 use std::process::exit;
 
-use fem2d_json::{apply, arrange, build_seed, project, render, KINDS};
+use fem2d_json::apply;
+
+use fem2d_json::arrange;
+
+use fem2d_json::build_seed;
+
+use fem2d_json::project;
+
+use fem2d_json::render;
+
+use fem2d_json::KINDS;
 
 fn fixture_directory(kind: &str) -> Option<&'static str> {
     match kind {
+        "create-region" => Some("🕸️mesh/🧫️fixtures/🗺️create-region"),
+        "delete-region" => Some("🕸️mesh/🧫️fixtures/🚫️delete-region"),
+        "replace-region" => Some("🕸️mesh/🧫️fixtures/🔄️replace-region"),
+        "move-selection" => Some("🕸️mesh/🧫️fixtures/🧭️move-selection"),
+        "change-combination-name" => Some("🏋️load/🧫️fixtures/🩹️change-combination-name"),
+        "change-combination-term" => Some("🏋️load/🧫️fixtures/🩹️change-combination-term"),
         "create-node" => Some("🕸️mesh/🧫️fixtures/⚪️create-node"),
         "delete-node" => Some("🕸️mesh/🧫️fixtures/🕳️delete-node"),
         "create-element" => Some("🕸️mesh/🧫️fixtures/🧩️create-element"),
@@ -16,6 +32,13 @@ fn fixture_directory(kind: &str) -> Option<&'static str> {
         "create-material" => Some("🧱️material/🧫️fixtures/🌱️create-material"),
         "delete-material" => Some("🧱️material/🧫️fixtures/🗑️delete-material"),
         "replace-material" => Some("🧱️material/🧫️fixtures/🔁️replace-material"),
+        "change-support" => Some("🛡️boundary/🧫️fixtures/🩹️change-support"),
+        "change-element" => Some("🕸️mesh/🧫️fixtures/🩹️change-element"),
+        "change-load" => Some("🏋️load/🧫️fixtures/🩹️change-load"),
+        "change-region" => Some("🕸️mesh/🧫️fixtures/🩹️change-region"),
+        "change-node" => Some("🕸️mesh/🧫️fixtures/🩹️change-node"),
+        "change-section" => Some("🕸️mesh/🧫️fixtures/🩹️change-section"),
+        "change-material" => Some("🧱️material/🧫️fixtures/🩹️change-material"),
         "create-section" => Some("🕸️mesh/🧫️fixtures/📐️create-section"),
         "delete-section" => Some("🕸️mesh/🧫️fixtures/✂️delete-section"),
         "replace-section" => Some("🕸️mesh/🧫️fixtures/📏️replace-section"),
@@ -85,3 +108,7 @@ fn main() {
         exit(1);
     }
 }
+
+/// 🧪️ Every declared semantic event has one registered carrier destination.
+#[test]
+fn every_semantic_kind_has_a_unique_fixture_destination(){let routes:std::collections::BTreeSet<_>=KINDS.iter().map(|kind|fixture_directory(kind).expect("declared semantic event requires a carrier destination")).collect();assert_eq!(routes.len(),KINDS.len());assert_eq!(KINDS.len(),39);}

@@ -1,0 +1,4 @@
+//! ↩️ The original base supplies one explicit inverse; refused and unchanged intents own no inverse.
+use crate::{mutations::{self,EnergyModelMutation},EnergyModelSnapshot};
+/// 🧷️ Retains independent peer fields by naming only the original optical scalar.
+pub fn inverse<Op: From<super::ChangeGlazingMaterialVisibleReflectanceFront>>(payload:&super::ChangeGlazingMaterialVisibleReflectanceFront,base:&EnergyModelSnapshot)->Result<Vec<Op>,semio_framework_value::ValueError>{Ok(match base.model.glazing_materials.iter().find(|row|row.id==payload.id){Some(original)if payload.new_visible_reflectance_front.is_finite()&&(0.0..=1.0).contains(&payload.new_visible_reflectance_front)&&original.visible_reflectance_front!=payload.new_visible_reflectance_front=>vec![mutations::change_glazing_material_visible_reflectance_front(payload.id,original.visible_reflectance_front)],_=>Vec::new()})}

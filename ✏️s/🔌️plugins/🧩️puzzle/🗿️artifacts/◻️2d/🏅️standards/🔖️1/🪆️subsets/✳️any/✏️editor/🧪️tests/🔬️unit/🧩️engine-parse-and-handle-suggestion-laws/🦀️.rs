@@ -172,7 +172,7 @@ fn suggestion_popup_publishes_the_shared_candidate_page_and_the_previewed_index(
         suggestion_menu: Some(crate::editor::puzzle2d::config::Puzzle2dSuggestionMenu { x: 12.0, y: 34.0, window_id: crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID.into(), handle_id: handle_id.clone() }),
         brush_candidate_source_handle_id: handle_id.clone(),
         brush_candidate_index: 1,
-        brush_candidates: vec![semio_framework_value::ToValue::to_value(&(&json!({ "nodeKind": "alpha", "targetHandleIndex": 0 }))), semio_framework_value::ToValue::to_value(&(&json!({ "nodeKind": "beta", "targetHandleIndex": 2 })))],
+        brush_candidates: vec![semio_framework_value::ToValue::to_value(&json!({ "nodeKind": "alpha", "targetHandleIndex": 0 })), semio_framework_value::ToValue::to_value(&json!({ "nodeKind": "beta", "targetHandleIndex": 2 }))],
         ..Default::default()
     };
     let envelope = Puzzle2dScene { board_snapshot: snapshot, runtime, active_utility: "select".into(), interaction: Puzzle2dInteractionSnapshot::default() };
@@ -210,7 +210,10 @@ fn board_scene_publishes_the_plugin_placement_naming() {
 /// point the brush slot never had (it was reachable only with the brush armed).
 #[semio_framework_async_macros::async_test]
 async fn context_menu_offers_suggest_nodes_on_one_selected_handle_only() {
-    use semio_framework_plugin::{ContextMenuRequest, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, UiMenuRef};
+    use semio_framework_plugin::ContextMenuRequest;
+    use semio_framework_plugin::ContextMenuSelectionGroup;
+    use semio_framework_plugin::ContextMenuSurfaceTarget;
+    use semio_framework_plugin::UiMenuRef;
     let mut app = app_with_registry();
     load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
     let snapshot = fixture_of(&app);

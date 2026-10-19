@@ -125,6 +125,8 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         self.window_index(window_id).or_else(|| self.primary_index()).map(|index| self.entries[index].view())
     }
 
+    pub(crate) fn poll_view_for(&self,window_id:Option<&str>)->Option<crate::ToolRunPollView<'_>>{self.window_index(window_id).or_else(||self.primary_index()).map(|index|{let entry=&self.entries[index];crate::ToolRunPollView{tool_id:&entry.tool_id,identity:entry.identity,state:entry.slot.state}})}
+
     fn window_index(&self, window_id: Option<&str>) -> Option<usize> {
         let window_id = window_id?;
         self.entries.iter().enumerate().filter(|(_, entry)| !entry.definition.mutating && entry.window.as_ref().is_some_and(|(id, _)| id == window_id)).max_by_key(|(_, entry)| entry.slot.run).map(|(index, _)| index)

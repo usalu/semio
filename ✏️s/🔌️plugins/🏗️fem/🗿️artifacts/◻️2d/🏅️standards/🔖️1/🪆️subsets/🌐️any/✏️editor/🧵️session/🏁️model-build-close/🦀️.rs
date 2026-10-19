@@ -4,8 +4,18 @@ use super::*;
 
 //#region 🔖️Contract
 impl MountedModelBuild {
-    pub(super) fn take_complete(&mut self) -> Option<AnalysisModel> {
-        (self.stage == ModelBuildStage::Complete).then(|| std::mem::replace(&mut self.model, AnalysisModel { nodes: Vec::new(), elements: Vec::new(), supports: Vec::new() }))
+    pub(super) fn take_complete(&mut self) -> Option<MountedAnalysisModel> {
+        (self.stage == ModelBuildStage::Complete).then(|| std::mem::take(&mut self.model))
+    }
+
+    pub(super) fn attach_region(&mut self, region_cursor: usize, mesh: TriMesh2) {
+        self.region_cursor = region_cursor;
+        self.region_point_cursor = 0;
+        self.region_triangle_cursor = 0;
+        self.lookup_cursor = 0;
+        self.mesh = Some(mesh);
+        self.stage = ModelBuildStage::ReserveNodes;
+        self.close_lane = 0;
     }
 
     pub(super) fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
@@ -32,120 +42,17 @@ impl MountedModelBuild {
             }
         }
         if let Some(support) = self.pending_support.as_mut() {
-            if support.node_id.capacity() != 0 {
-                let bytes = support.node_id.capacity();
-                if bytes > maximum_bytes {
-                    return (false, 0, 0);
-                }
-                support.node_id = String::new();
-                return (false, 1, bytes);
-            }
-            if support.fixed.pop().is_some() {
-                return (false, 1, 0);
-            }
-            let bytes = support.fixed.capacity() * size_of::<semio_s_fem_model::Dof>();
-            if bytes != 0 {
-                if bytes > maximum_bytes {
-                    return (false, 0, 0);
-                }
-                support.fixed = Vec::new();
-                return (false, 1, bytes);
-            }
+            let progress = support.close_step(maximum_bytes);
+            if !progress.0 { return progress; }
             self.pending_support = None;
             return (false, 1, 0);
         }
         loop {
             let released_bytes = match self.close_lane {
-                0 => {
-                    let Some(node) = self.model.nodes.last_mut() else {
-                        self.close_lane += 1;
-                        continue;
-                    };
-                    if node.id.capacity() != 0 {
-                        let bytes = node.id.capacity();
-                        if bytes > maximum_bytes {
-                            return (false, 0, 0);
-                        }
-                        node.id = String::new();
-                        return (false, 1, bytes);
-                    }
-                    self.model.nodes.pop();
-                    return (false, 1, 0);
-                }
-                1 => {
-                    let bytes = self.model.nodes.capacity() * size_of::<semio_s_fem_model::Node>();
-                    if bytes > maximum_bytes {
-                        return (false, 0, 0);
-                    }
-                    self.model.nodes = Vec::new();
-                    self.close_lane += 1;
-                    bytes
-                }
-                2 => {
-                    let Some(element) = self.model.elements.last_mut() else {
-                        self.close_lane += 1;
-                        continue;
-                    };
-                    if let Some(next_bytes) = element.mounted_next_string_bytes() {
-                        if next_bytes > maximum_bytes {
-                            return (false, 0, 0);
-                        }
-                        let bytes = element.close_mounted_string_step().expect("mounted element next-owner witness changed without mutation");
-                        return (false, 1, bytes);
-                    }
-                    if !element.mounted_strings_terminal_is_empty() {
-                        return (false, 0, 0);
-                    }
-                    self.model.elements.pop();
-                    return (false, 1, 0);
-                }
-                3 => {
-                    let bytes = self.model.elements.capacity() * size_of::<semio_s_fem_static::Elements>();
-                    if bytes > maximum_bytes {
-                        return (false, 0, 0);
-                    }
-                    self.model.elements = Vec::new();
-                    self.close_lane += 1;
-                    bytes
-                }
-                4 => {
-                    let Some(support) = self.model.supports.last_mut() else {
-                        self.close_lane += 1;
-                        continue;
-                    };
-                    if support.node_id.capacity() != 0 {
-                        let bytes = support.node_id.capacity();
-                        if bytes > maximum_bytes {
-                            return (false, 0, 0);
-                        }
-                        support.node_id = String::new();
-                        return (false, 1, bytes);
-                    }
-                    if support.fixed.pop().is_some() {
-                        return (false, 1, 0);
-                    }
-                    let bytes = support.fixed.capacity() * size_of::<semio_s_fem_model::Dof>();
-                    if bytes != 0 {
-                        if bytes > maximum_bytes {
-                            return (false, 0, 0);
-                        }
-                        support.fixed = Vec::new();
-                        return (false, 1, bytes);
-                    }
-                    self.model.supports.pop();
-                    return (false, 1, 0);
-                }
-                5 => {
-                    let bytes = self.model.supports.capacity() * size_of::<semio_s_fem_model::Support>();
-                    if bytes > maximum_bytes {
-                        return (false, 0, 0);
-                    }
-                    self.model.supports = Vec::new();
-                    self.close_lane += 1;
-                    bytes
-                }
-                6 => {
-                    self.close_lane += 1;
+                0..=6 => {
+                    let progress = self.model.close_step(maximum_bytes);
+                    if !progress.0 { return progress; }
+                    self.close_lane = 7;
                     continue;
                 }
                 7 => {

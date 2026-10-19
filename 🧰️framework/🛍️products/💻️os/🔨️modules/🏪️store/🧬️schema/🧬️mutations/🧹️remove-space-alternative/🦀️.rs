@@ -41,6 +41,9 @@ impl semio_framework_os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMuta
     
     })())
 }
+}
+
+impl crate::os_spr::ColdMutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for RemoveSpaceAlternative {
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove space alternative {}", self.alternative_id), &format!("Space-Alternative {} entfernen", self.alternative_id))
     }

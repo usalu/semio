@@ -1,0 +1,4 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#","title":"Independent Named Persistent Root Ownership","type":"object","additionalProperties":false,"required":["schema","laws"],
+ "properties":{"schema":{"const":"value.named.independent-root/v1"},"laws":{"const":{"indexOutsideSourcePayload":true,"actualOriginalIssuance":true,"projectionSharesSealedOwner":true,"changedPathProducerRequired":true,"foreignSourceRefused":true,"emptyTerminalDropBytes":0}}}
+}

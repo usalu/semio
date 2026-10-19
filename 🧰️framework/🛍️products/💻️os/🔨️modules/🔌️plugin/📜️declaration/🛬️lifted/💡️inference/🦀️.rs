@@ -93,7 +93,7 @@ impl ArtifactInferenceExecutionError {
 
 impl ArtifactInferenceExecutionError {
     /// 🪢️ Moves the complete original envelope after producer admission, preserving every receipt and context cause.
-    pub fn original(failure:semio_framework_job::OriginalTurnFailure,terminal:bool)->Self{let retained_progress=failure.primary.retained_progress();Self{code:"artifact-inference.original",message:String::new(),retained_progress,cause:Some(failure),terminal}}
+    pub fn original(failure:semio_framework_job::OriginalTurnFailure,terminal:bool)->Self{let retained_progress=failure.retained_progress();Self{code:"artifact-inference.original",message:String::new(),retained_progress,cause:Some(failure),terminal}}
     pub fn native(error:ValueError,terminal:bool)->Self{let retained_progress=error.retained_progress();Self{code:"artifact-inference.native",message:String::new(),retained_progress,cause:Some(error.into()),terminal}}
 }
 

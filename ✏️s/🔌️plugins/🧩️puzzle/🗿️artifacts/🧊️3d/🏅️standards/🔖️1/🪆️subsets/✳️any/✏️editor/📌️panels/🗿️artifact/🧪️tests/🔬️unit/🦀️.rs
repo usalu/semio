@@ -2,7 +2,8 @@ use super::*;
 use semio_s_artifact_puzzle_3d_mutations::apply_puzzle3d_mutation;
 use semio_s_artifact_puzzle_3d_editor_terminology::puzzle3d_labels;
 use {semio_s_artifact_puzzle_3d_editor_snapshot::empty_scene_snapshot, semio_s_artifact_puzzle_3d_editor_snapshot::nakagin_scene_snapshot};
-use semio_framework_plugin::{TreeWindowRequest, ViewModel};
+use semio_framework_plugin::TreeWindowRequest;
+use semio_framework_plugin::ViewModel;
 
 const RETIREMENT_DRAIN_STEPS: usize = 4096;
 

@@ -1,10 +1,9 @@
-//! ✋️ Puzzle2d selection mutations — dragging, rotating and scaling a selection of nodes and target regions, and the
 //! selection transform they share: the resolved targets, the per-target outcome and the localized amounts.
+//! ✋️ Puzzle2d selection mutations — dragging, rotating and scaling a selection of nodes and target regions, and the
 
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::Puzzle2dSnapshot;
 use {semio_framework_value::list::PagedList, semio_framework_value::paged::PagedUtf8};
-use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
 use crate::standards::v1::subsets::any::schema::records::puzzle2d_targets_invariant;
 
 /// 🧭️ The members of a parametric selection leaf's target set the transform acts on, in document order, with the
@@ -63,7 +62,8 @@ pub fn puzzle2d_selection_outcome(
     nodes: Vec<crate::standards::v1::subsets::any::schema::diff::Puzzle2dNodeModification>,
     regions: Vec<crate::standards::v1::subsets::any::schema::diff::Puzzle2dTargetRegionModification>,
 ) -> protocol::MutationOutcome<Puzzle2dDiff> {
-    use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dNodesDelta, Puzzle2dTargetRegionsDelta};
+    use crate::standards::v1::subsets::any::schema::diff::Puzzle2dNodesDelta;
+    use crate::standards::v1::subsets::any::schema::diff::Puzzle2dTargetRegionsDelta;
     if nodes.is_empty() && regions.is_empty() {
         return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages(selection.warnings.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(targets.iter().map(PagedUtf8::to_string_owner).collect::<Vec<_>>())]));
     }
@@ -75,8 +75,12 @@ pub fn puzzle2d_selection_outcome(
     .absorb_messages(selection.warnings)
 }
 
-/// 🔄️ A point turned by an angle (`sin`, `cos`) about a pivot.
+/// 🔄️ A point turned by an angle (`sin`, `cos`) about a pivot. The zero turn is the identity exactly (the rotation formula alone
+/// lands a ulp off for an awkward pivot), so an identity rotation states no row.
 pub fn puzzle2d_rotated(point: (f64, f64), pivot: (f64, f64), sin: f64, cos: f64) -> (f64, f64) {
+    if sin == 0.0 && cos == 1.0 {
+        return point;
+    }
     (pivot.0 + (point.0 - pivot.0) * cos - (point.1 - pivot.1) * sin, pivot.1 + (point.0 - pivot.0) * sin + (point.1 - pivot.1) * cos)
 }
 

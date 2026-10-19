@@ -1,0 +1,16 @@
+{
+  "schema": "semio.fem3d.mounted-result-sources/v1",
+  "maximumSources": 64,
+  "oracle": "PyNiteFEA cantilever-tip-load-local-y reference and linear superposition",
+  "benchmark": { "elasticModulus": 210000000000.0, "inertia": 0.00001336, "length": 4.0, "tipLoad": -8000.0 },
+  "cases": [
+    { "kind": "loadCase", "id": "tip", "factor": 1.0 },
+    { "kind": "loadCase", "id": "second", "factor": 2.0 },
+    { "kind": "loadCase", "id": "zero", "factor": 0.0 },
+    { "kind": "combination", "id": "tip", "factor": 3.0 }
+  ],
+  "combinationTerms": { "tip": 0.5, "second": 1.25 },
+  "orders": [["tip", "second", "zero"], ["zero", "second", "tip"]],
+  "refusals": ["duplicate-case", "duplicate-combination", "missing-case", "nonfinite-factor", "case-maximum-plus-one", "combination-maximum-plus-one", "term-maximum-plus-one"],
+  "expected": { "tipTy": -0.060830719513354246, "tipRz": -0.022811519817507846, "rootTyReaction": 8000.0, "rootRzReaction": 32000.0 }
+}

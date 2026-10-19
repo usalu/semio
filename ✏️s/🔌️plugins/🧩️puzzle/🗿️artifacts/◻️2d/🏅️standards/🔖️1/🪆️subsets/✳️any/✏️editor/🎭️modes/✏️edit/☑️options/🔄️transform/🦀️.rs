@@ -1,5 +1,5 @@
-//! 🔄️ Edit-mode window option — the Select utility's transform gumball flags: Move (the board's
 //! native node drag) and Rotate (the ring around the selection centroid). A scale handle is
+//! 🔄️ Edit-mode window option — the Select utility's transform gumball flags: Move (the board's
 //! deliberately absent, the same product decision puzzle3d's gumball states: a node's size comes
 //! from its kind catalog, never from a free drag.
 

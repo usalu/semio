@@ -11,7 +11,7 @@ impl FillBuilder {
             PreparationCapacityBranch::EngineSceneObjects => (roots.scene.scene_snapshot.objects.get(refusal.omitted_index)?.id.clone(), None),
             PreparationCapacityBranch::SceneAttractions => (roots.scene.scene_snapshot.attractions.get(refusal.omitted_index)?.id.clone(), None),
             PreparationCapacityBranch::SceneTargetVolumes => (roots.scene.scene_snapshot.target_volumes.get(refusal.omitted_index)?.id.clone(), None),
-            PreparationCapacityBranch::Meshes => (roots.meshes.keys().nth(refusal.omitted_index)?.clone(), None),
+            PreparationCapacityBranch::Meshes => (roots.meshes.iter().nth(refusal.omitted_index)?.0.clone(), None),
             PreparationCapacityBranch::CatalogObjects => (roots.scene.kind_catalogs.as_ref()?.objects.get(refusal.omitted_index)?.id.clone(), None),
             PreparationCapacityBranch::CatalogVortices => (roots.scene.kind_catalogs.as_ref()?.vortices.get(refusal.omitted_index)?.id.clone(), None),
             PreparationCapacityBranch::CatalogCables => (roots.scene.kind_catalogs.as_ref()?.cables.get(refusal.omitted_index)?.id.clone(), None),
@@ -173,123 +173,12 @@ impl FillBuilder {
             collection_over_capacity: false,
             transition_count: 0,
             rejected_count: 0,
-            close_field: 0,
-            close_current: None,
+            close_started: false,
+            close_owners: Default::default(),
             closing: false,
             run_events: None,
             run_candidate_live: false,
         }
-    }
-
-    pub(super) fn retire_one_close_owner(&mut self) -> bool {
-        if let Some(current) = self.close_current.as_mut() {
-            if retire_retained_owner(current) {
-                self.close_current = None;
-            }
-            return false;
-        }
-        let mut current = None;
-        let retired = match self.close_field {
-            0 => take_scene_owner(&mut self.base, &mut current),
-            1 => false,
-            2 => take_sequence_owner(self, &mut current),
-            3 => take_lookup_owner(self, &mut current),
-            4 => take_catalog_owner(self, &mut current),
-            5 => take_weight_mesh_owner(self, &mut current),
-            6 => take_target_owner(self, &mut current),
-            7 => take_target_weight_owner(self),
-            8 => take_candidate_owner(self, &mut current),
-            9 => take_candidate_order_owner(self),
-            10 => match self.broad_phase_query.as_mut() {
-                Some(query) => {
-                    if query.retire_one_owner() {
-                        self.broad_phase_query.take();
-                    }
-                    true
-                }
-                None => false,
-            },
-            11 => self.pending_payload.take().is_some_and(|value| {
-                current = Some(FillRetiredOwner::Payload(value));
-                true
-            }),
-            12 => self.pending_object.take().is_some_and(|value| {
-                current = Some(FillRetiredOwner::EngineSceneObject(value));
-                true
-            }),
-            13 => self.pending_attraction.take().is_some_and(|value| {
-                current = Some(FillRetiredOwner::Attraction(value));
-                true
-            }),
-            14 => self.current_target.take().is_some_and(|value| {
-                current = Some(FillRetiredOwner::Target(value));
-                true
-            }),
-            15 => self.current_preview.take().is_some_and(|value| {
-                current = Some(FillRetiredOwner::PreviewState(value));
-                true
-            }),
-            16 => self.last_rejection.take().is_some_and(|value| {
-                current = Some(FillRetiredOwner::String(value));
-                true
-            }),
-            17 => self.collision.take().is_some(),
-            18 => match self.fixed_rejection.as_mut() {
-                Some(rejected) => {
-                    if retire_retained_owner(rejected) {
-                        self.fixed_rejection.take();
-                    }
-                    true
-                }
-                None => false,
-            },
-            19 => retire_fixed_collection_backing(self),
-            20 => !self.spatial_index.retire_one_owner(),
-            21 if self.collection_over_capacity => {
-                self.collection_over_capacity = false;
-                true
-            }
-            21 => false,
-            22 => match self.preparation_spatial.as_mut() {
-                Some(mutation) => {
-                    if mutation.retire_one_owner() {
-                        self.preparation_spatial.take();
-                    }
-                    true
-                }
-                None => false,
-            },
-            23 => match self.pending_spatial.as_mut() {
-                Some(mutation) => {
-                    if mutation.retire_one_owner() {
-                        self.pending_spatial.take();
-                    }
-                    true
-                }
-                None => false,
-            },
-            24 => match self.tail_removal.as_mut() {
-                Some(removal) => {
-                    if removal.retire_one_owner() {
-                        self.tail_removal.take();
-                    }
-                    true
-                }
-                None => false,
-            },
-            25 if self.preparation_roots.take().is_some() => true,
-            25 => false,
-            26 if self.preparation_capacity_refusal.take().is_some() => true,
-            26 => false,
-            27 if self.run_events.take().is_some() => true,
-            27 => false,
-            _ => return self.terminal_owners_empty() && self.close_current.is_none(),
-        };
-        self.close_current = current;
-        if !retired {
-            self.close_field = self.close_field.saturating_add(1);
-        }
-        false
     }
 
     pub(super) fn collision_owner(&self) -> CollisionIndexOwner {
@@ -613,7 +502,7 @@ impl FillBuilder {
         if self.preparation_inner_cursor == 3 {
             self.host_rules = roots.scene.host_rules.clone();
             self.contact_tolerance = roots.scene.contact_tolerance;
-            self.preparation_roots = None;
+
             self.preparation_inner_cursor = 0;
             self.stage = FillJobStage::PrepareTargets;
         }

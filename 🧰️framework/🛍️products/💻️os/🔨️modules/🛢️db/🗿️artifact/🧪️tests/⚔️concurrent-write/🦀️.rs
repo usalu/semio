@@ -72,7 +72,7 @@ fn fixture() -> Fixture {
 /// observation and declared target.
 async fn fixture_envelope(write: &Write, scoped: &impl Fn(&str) -> String) -> protocol::MutationEnvelope {
     let document = protocol::ArtifactId("doc-1".to_string());
-    let actor = protocol::ActorId(write.actor.clone());
+    let actor = protocol::ActorId(write.actor.clone().into());
     let transition = |transition: &protocol::HistoryTransition, dependencies: Vec<protocol::MutationId>| protocol::history_transition_envelope(transition, &document, &actor, dependencies, protocol::HybridLogicalTimestamp::new(0, 0));
     let (mut envelope, target) = match (&write.writes.target, &write.writes.paths, write.writes.transition, &write.writes.supersede) {
         (Some(target), None, None, None) => {

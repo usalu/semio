@@ -1,0 +1,21 @@
+# Existing Native Runner Admission Audit
+
+Read-only assessment on 2026-10-19. No admitted alternative compiler runner or physical backing path was established. No allocation, setup, privileged command, installation, Git mutation, workflow dispatch, deployment, or network write was performed.
+
+## Observed Existing Paths
+
+- The canonical course workflow (`.github/workflows/architecture-course.yml`) requires repository Actions variable `ARCHITECTURE_COURSE_RUNNER`; its configuration job rejects an empty value and all compiler jobs use the selected label. The standard Ubuntu runner only performs configuration and Pages deployment.
+- A current read-only `gh api repos/usalu/semio/actions/runners` query returned `total_count: 0` with an empty runners array. The specific Actions variable endpoint for `ARCHITECTURE_COURSE_RUNNER` returned HTTP 404. The latter alone is not universal proof of absence because API visibility may matter; paired with the successfully readable runner listing, it provides no evidence of a configured repository runner. Organization-level infrastructure beyond these observable repository endpoints was not independently inspected.
+- The existing devcontainer Dockerfile selects `mcr.microsoft.com/devcontainers/base:ubuntu-24.04`. Its configuration declares only 32gb host storage, and its Compose service mounts the checkout into `/workspaces/semio`; these authored files do not establish the required Debian 12 compiler process, capability/device admission, or an alternate physical store. No devcontainer was created or started.
+- `wsl --list --verbose` listed only Ubuntu-24.04 and docker-desktop, both stopped at this observation. No installed Debian 12 distribution appeared. The coordinator's prior registry-base-path observations place their backing on C:; this audit did not restart them or treat virtual nominal capacity as physical capacity.
+- `docker context ls` showed only local named-pipe contexts (`default`, `desktop-linux`), with desktop-linux current. There is no configured remote Docker context in that output. A Docker daemon is not the canonical original Linux compiler invocation by itself.
+- File-system drive observations showed C: 71,298,244,608 bytes free, E: 439,039,275,008, G: 152,224,444,416 and J: 375,783,837,696. C: remained below 77,309,411,328 bytes (72 GiB). Free space on the other drives is not evidence of an already admitted Linux backing path. No relocation or allocation was attempted.
+- No environment variable names matching `SEMIO_.*(RUNNER|STORAGE|NATIVE|BUILD)` were present in this audit process. Variable values and credentials were not printed.
+
+## Exact Remaining Prerequisite
+
+The course compiler contract requires an actual dedicated Debian 12 x64 compiler runner with effective CAP_SYS_ADMIN on the invoking process, writable loop-control, at least seven visible writable unused loop devices, ext4 loop mounts, at least 72 GiB free at the checkout with sufficient actual physical backing, the declared tools and working Docker/Compose. These must belong to the original canonical release invocation and preserve its source, release mode, cancellation, network and storage policies. The final runbook review removed unsupported historical aggregate ledger precision; the authored admission threshold and actual per-store admission remain authoritative. See runbook-final.md and the subsequently executed final-native-admission.md.
+
+For the existing GitHub workflow, that runner must additionally be registered and its actual label assigned to `ARCHITECTURE_COURSE_RUNNER`. A local alternative would need to exist and pass the same canonical admission, including physical backing; none was demonstrated by the bounded existing-configuration checks above. A prior binary, raw Cargo build, Docker-only smoke test, Ubuntu process, or thin virtual free-space figure does not satisfy this boundary.
+
+This audit did not execute the canonical preflight again, compile native code, or prove runtime release behavior. The actual previously recorded preflight refusal remains in runner-prerequisite.md. No undocumented runner or external capacity is claimed absent globally; only the inspected existing paths failed to establish one.

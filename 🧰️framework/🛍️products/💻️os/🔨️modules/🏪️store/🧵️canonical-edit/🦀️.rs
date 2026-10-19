@@ -6,10 +6,14 @@ use semio_framework_value::{DslValue, ErasedSnapshotRetirement, SnapshotRetireme
 use semio_framework_os_spr::{Edit, HybridLogicalTimestamp, Mutation, MutationId, MutationMeta, UndoPolicy};
 use serde::Serialize;
 use semio_framework_value_snapshot_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands};
-use semio_framework_value::{RetirementDemand, FactoryAuthority, retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress}};
+use semio_framework_value::{RetirementDemand, FactoryAuthority, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress}};
 
 
 
+
+#[path="🪪️source-identity/🦀️.rs"]
+mod source_identity;
+pub use source_identity::{ArtifactCanonicalSourceIdentityCursor,ArtifactCanonicalSourceIdentityBirth,ArtifactCanonicalSourceIdentityStep};
 
 #[path = "🌱️value/🦀️.rs"]
 pub mod value;
@@ -287,9 +291,7 @@ impl Default for ArtifactCanonicalJsonCursor {
 
 impl ArtifactCanonicalJsonCursor {
     /// 📏️ Starts a fresh encoder whose depth grant is `maximum_depth` frames instead of the full inline capacity.
-    pub fn with_maximum_depth(maximum_depth: usize) -> Self {
-        Self { maximum_depth, ..Self::default() }
-    }
+    pub fn with_maximum_depth(maximum_depth:usize)->Result<Self,ValueError>{if maximum_depth==0||maximum_depth>ARTIFACT_CANONICAL_JSON_DEPTH{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"canonical source depth policy exceeds its retained frame capacity"));}Ok(Self{maximum_depth,..Default::default()})}
 
     pub fn next_encode_demand(&self) -> RetirementDemand {
         if self.is_complete() { return RetirementDemand::default(); }
@@ -298,6 +300,7 @@ impl ArtifactCanonicalJsonCursor {
         let copy_bytes = match (frame.kind, frame.phase) {
             (0, _) => 64,
             (1, 1) | (3, 2) => 7,
+            (3, 1) if frame.index != frame.length => 2 + 2 * size_of::<usize>(),
             _ => 1,
         };
         RetirementDemand { copy_bytes, depth: self.depth + usize::from(pushing), ..Default::default() }

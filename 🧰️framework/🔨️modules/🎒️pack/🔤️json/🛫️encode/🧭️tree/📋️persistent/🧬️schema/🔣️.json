@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "lengths",
+    "prefix",
+    "stride",
+    "cuts"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "lengths": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 1
+    },
+    "prefix": {
+      "type": "string"
+    },
+    "stride": {
+      "type": "integer"
+    },
+    "cuts": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  }
+}

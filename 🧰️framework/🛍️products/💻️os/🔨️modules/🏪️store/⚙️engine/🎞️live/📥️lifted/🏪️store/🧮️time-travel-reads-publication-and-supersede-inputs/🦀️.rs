@@ -126,7 +126,7 @@ where
     /// 🕰️ The projection right before operation `mutation_id` with `drafts` laid over the effective inputs — nothing
     /// downstream applied: the time-travel preview base. Folds at most one prefix-ring stride (plus the operation's own
     /// edit) and retains the live prefix projections it folds through.
-    pub fn state_before(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, mutation_id: &MutationId, drafts: &protocol::HistoryInputDrafts) -> Result<Arc<P>, VcsError> {
+    pub fn state_before(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, mutation_id: &MutationId, drafts: &protocol::HistoryInputDrafts) -> Result<Arc<P>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let (position, op_index) = store_cursor.locate_mutation(store_log, store_wire, mutation_id)?;
         let mut live_until = position;
         for target in drafts.keys() {
@@ -214,7 +214,9 @@ where
     /// 🫳️ Keeps the genuine prepared forward and original staged/current prebase borrowed together.
     fn original_proposal_forward<'a>(&'a self, store_cursor: &StoreCursor<P, Mutation>,publication:&'a ArtifactStoreBatchPublication<P,Mutation>)->Result<(&'a Mutation,&'a P),ValueError>{
         use semio_framework_value::ValueRefusalKind;
-        if publication.phase!=ArtifactStoreOneItemPublicationPhase::Preparing||publication.item_closing||publication.cancel_requested||publication.close_started||store_cursor.generation!=publication.expected_generation||store_cursor.content_revision!=publication.expected_revision||publication.stage.as_ref().is_some_and(|stage|stage.folding.is_some()){
+        
+        if !publication.original_registry.as_ref().is_some_and(|registry|registry.ptr_eq(&self.snapshot_read_leases)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"prepared proposal requires its original Store issuer"));}
+if publication.phase!=ArtifactStoreOneItemPublicationPhase::Preparing||publication.item_closing||publication.cancel_requested||publication.close_started||store_cursor.generation!=publication.expected_generation||store_cursor.content_revision!=publication.expected_revision||publication.stage.as_ref().is_some_and(|stage|stage.folding.is_some()){
             return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"foreign proposal requires the original unfurled prepared candidate and live prebase"));
         }
         let candidate=publication.preparation.as_ref().and_then(|owner|owner.prepared()).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"foreign proposal original domain candidate is not prepared"))?;
@@ -257,7 +259,7 @@ where
     //#region 🔖️ToolTransactions
     /// 🪂️ Takes the open tool transaction's edit off the applied tail before a remote merge: the ledger, the message ledger
     /// and the projection return to the history without it.
-    pub async fn lift_open_transaction(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>) -> Result<Option<(OpenToolTransaction, Edit<Mutation>)>, VcsError> {
+    pub async fn lift_open_transaction(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>) -> Result<Option<(OpenToolTransaction, Edit<Mutation>)>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let Some(open) = store_log.envelope.open_transaction.take() else {
             return Ok(None);
         };
@@ -368,7 +370,7 @@ where
     }
 
     //#endregion 🔖️Supersede
-    pub fn snapshot_json(&self, store_wire: &StoreWire<P, Mutation>) -> Result<String, VcsError> {
+    pub fn snapshot_json(&self, store_wire: &StoreWire<P, Mutation>) -> Result<String, VcsError>  where P: Clone {
         let snapshot = self.snapshot(store_wire)?;
         Ok(semio_framework_pack_json::to_json_string(&snapshot))
     }

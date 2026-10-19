@@ -6,10 +6,10 @@ use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fe
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::load_case_referrers;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::target_referenced;
 
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &DeleteLoadCase, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {
+pub fn diff(payload: &DeleteLoadCase, base: &Fem3dSnapshotValue) -> protocol::MutationOutcome<Fem3dDiff> {
     let Some(at) = base.load_cases.iter().position(|case| case.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Load case \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

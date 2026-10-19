@@ -21,7 +21,7 @@
     "MoveSynapse",
     "PatchSynapse",
     "SetLayout",
-    "LayoutRoot",
+    "LayoutEntry",
     "ReplaceDocument",
     "Undo",
     "Redo",

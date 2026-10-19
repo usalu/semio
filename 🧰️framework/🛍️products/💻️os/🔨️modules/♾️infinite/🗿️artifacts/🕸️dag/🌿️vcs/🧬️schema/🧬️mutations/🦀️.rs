@@ -40,7 +40,7 @@ pub use delete_node::DeleteNode;
 pub use disconnect_nodes::DisconnectNodes;
 pub use move_node::MoveNode;
 pub use rename_node::RenameNode;
-pub use reorder_nodes::ReorderNodes;
+pub use reorder_nodes::{NodeMove, ReorderNodes};
 pub use replace_node_kind::ReplaceNodeKind;
 pub use replace_node_properties::ReplaceNodeProperties;
 pub use resize_node::ResizeNode;
@@ -48,7 +48,7 @@ pub use resize_node::ResizeNode;
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
-#[mutations(snapshot = DagSnapshot, diff = DagDiff, schema = "dag.dag")]
+#[mutations(snapshot = DagSnapshot, diff = DagDiff, schema = "dag.dag", reference = DagSnapshot, reference_diff = DagDiff)]
 pub enum DagMutation {
     CreateNode(CreateNode),
     DeleteNode(DeleteNode),

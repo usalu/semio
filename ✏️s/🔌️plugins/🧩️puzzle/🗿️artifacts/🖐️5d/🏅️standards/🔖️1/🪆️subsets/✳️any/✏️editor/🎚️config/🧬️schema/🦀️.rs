@@ -1,6 +1,6 @@
 //! 🧬️ Shared Puzzle 5D generator-preference schema leaf.
 use ::semio_framework_schema::ArtifactSchema;
-use std::collections::HashMap;
+use super::Puzzle5dKindWeights;
 
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
@@ -15,9 +15,9 @@ pub struct Puzzle5dConfig {
     #[state(config)]
     pub chunk_size: f64,
     #[state(config)]
-    pub object_kind_weights: HashMap<String, f64>,
+    pub object_kind_weights: Puzzle5dKindWeights,
     #[state(config)]
-    pub vortex_kind_weights: HashMap<String, f64>,
+    pub vortex_kind_weights: Puzzle5dKindWeights,
 }
 
 pub fn app_schema_descriptor() -> ::semio_framework_schema_registry::AppSchemaDescriptor {

@@ -20,12 +20,7 @@ Feature: Apply every typed fem3d load mutation twice — once in Rust, once in P
   and forces FROM a model; none reads `.dsl.semio`, none defines this document. What a reference can
   genuinely adjudicate is the model algebra, and that is what this one does.
 
-  A DEFECT IN THE SPECIFICATION, found while writing the reference and reported rather than worked
-  around, identical to the one its `◻️2d` sibling carries. `…/🧬️schema/🧬️mutations/🔣️.json` is a
-  verbatim copy of the SNAPSHOT schema with `title` changed to `Fem3dMutation`, and in the snapshot
-  schema itself every record `$def` is an EMPTY `{"title": …, "type": "object"}`. The record
-  shapes were read off the committed vectors instead — including the one that only they state: an
-  `element` is a `frame` carrying a `roll` about its own axis OR a `bar` carrying none.
+  Semantic mutations use strict tagged variants and concrete snapshot records.
 
   The artifact is real. `shared://🏋️mutate-fem3d-1-any-load/🧊️steel-frame.snapshot.json` is the SAME derived steel frame model every fem3d
   mutation subset case shares — a sixteen-node, two-storey steel frame on an 8 × 10 m grid, derived
@@ -68,6 +63,9 @@ Feature: Apply every typed fem3d load mutation twice — once in Rust, once in P
     | replace-load                 | {"mutation":"replaceLoad","caseId":"live","loadId":"l2","newLoad":{"kind":"nodal","id":"l2","nodeId":"n20_l1","dof":"Tz","value":-7500.0}}                     |
     | change-load-case-name        | {"mutation":"changeLoadCaseName","caseId":"wind","newName":"Wind +X"}                                                                                          |
     | replace-combination          | {"mutation":"replaceCombination","id":"uls","newCombination":{"id":"uls","name":"ULS","terms":{"dead":1.35,"live":1.5,"wind":0.9}}}                            |
+    | change-load | {"mutation":"changeLoad","caseId":"dead","id":"l1","patch":{"kind":"area","pressure":801.0}} |
+    | change-combination-name | {"mutation":"changeCombinationName","id":"uls","name":"ULS Changed"} |
+    | change-combination-term | {"mutation":"changeCombinationTerm","id":"uls","caseId":"dead","factor":2} |
 
   @id-inverse
   @level-exhaustive
@@ -91,3 +89,8 @@ Feature: Apply every typed fem3d load mutation twice — once in Rust, once in P
     | replace-load                 | {"mutation":"replaceLoad","caseId":"live","loadId":"l2","newLoad":{"kind":"nodal","id":"l2","nodeId":"n20_l1","dof":"Tz","value":-7500.0}}                     |
     | change-load-case-name        | {"mutation":"changeLoadCaseName","caseId":"wind","newName":"Wind +X"}                                                                                          |
     | replace-combination          | {"mutation":"replaceCombination","id":"uls","newCombination":{"id":"uls","name":"ULS","terms":{"dead":1.35,"live":1.5,"wind":0.9}}}                            |
+    | change-load | {"mutation":"changeLoad","caseId":"dead","id":"l1","patch":{"kind":"area","pressure":801.0}} |
+    | change-combination-name | {"mutation":"changeCombinationName","id":"uls","name":"ULS Changed"} |
+    | change-combination-term | {"mutation":"changeCombinationTerm","id":"uls","caseId":"dead","factor":2} |
+
+

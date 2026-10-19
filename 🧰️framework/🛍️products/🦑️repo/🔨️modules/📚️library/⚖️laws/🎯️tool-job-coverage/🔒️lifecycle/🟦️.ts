@@ -291,7 +291,7 @@ export function toolJobRuntimeProofQualified(source: string): boolean {
     source.includes("QualifiedToolProof::AppOwned(registration.clone()).admits::<A>(&admission)") &&
     source.includes("proof.with_factory_type::<$owner, $factory_type>()") &&
     source.includes("seen != expected") &&
-    /reserved_jobs::tool_job_registration\s*::<A>\s*\(\s*&registry,\s*&app_id,\s*A::DOCUMENT_SCHEMA,/.test(source) &&
+    /tool_job_registration\s*::<A>\s*\(\s*&registry,\s*&app_id,\s*A::DOCUMENT_SCHEMA,/.test(activation) &&
     source.includes("pub fn qualified_tool_proof(&self, stores: &InstanceStores<A>, verb: &str)") &&
     source.includes("owner: ToolOwnerWitness") &&
     source.includes("runtime_controller_id: &str") &&

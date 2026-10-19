@@ -43,12 +43,9 @@ export class NativeOsScript extends Script {
 //#endregion 🔖️NativeOsScript
 
 //#region 🔖️SetupScript
-/** 🔗️ Repo-relative instruction files `setup git` recreates as links to `AGENTS.md`, one per
- * client that cannot read `AGENTS.md` itself. `codex`, `cursor-chat`, `windsurf-chat`, `droid` and
- * `kiro-cli` read the canonical file directly and need no alias; `claude-code` reads `CLAUDE.md`,
- * `antigravity-chat` reads `GEMINI.md`, and `copilot-chat` reads only `.github/copilot-instructions.md`.
+/** 🔗️ The retained Claude headless client reads `CLAUDE.md`; Codex reads the canonical `AGENTS.md` directly.
  * @see AGENTS.md */
-export const AGENT_INSTRUCTION_ALIASES = ["CLAUDE.md", "GEMINI.md", ".github/copilot-instructions.md"] as const;
+export const AGENT_INSTRUCTION_ALIASES = ["CLAUDE.md"] as const;
 
 /** 🧷️ The repo-local git settings `setup git` writes into `.git/config`; the user's global git config is never
  * touched. `core.longpaths` lets Git for Windows check out, track and clean paths past `MAX_PATH` (tracked fixture paths

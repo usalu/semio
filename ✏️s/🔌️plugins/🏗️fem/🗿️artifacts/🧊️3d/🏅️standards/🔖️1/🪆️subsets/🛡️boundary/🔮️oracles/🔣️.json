@@ -73,12 +73,40 @@
               "directoryName": "🔄️frees"
             }
           ]
+        },
+        {
+          "sourceMutationDirectoryName": "🩹️change-support",
+          "mutationId": "change-support",
+          "scenarios": [
+            {
+              "id": "changes",
+              "directoryName": "🩹️changes"
+            },
+            {
+              "id": "toggles",
+              "directoryName": "📌️toggles"
+            },
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "invalid",
+              "directoryName": "⚗️invalid"
+            }
+          ],
+          "mutationDirectoryName": "🩹️change-support"
         }
       ],
       "kinds": [
         "create-support",
         "delete-support",
-        "replace-support"
+        "replace-support",
+        "change-support"
       ]
     }
   ],

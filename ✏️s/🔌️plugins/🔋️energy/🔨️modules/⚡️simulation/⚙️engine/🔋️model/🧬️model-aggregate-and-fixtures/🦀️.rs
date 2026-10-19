@@ -7,7 +7,8 @@ use super::*;
 /// selection plus every parameter each method needs, so the kernel maps this entity onto
 /// [`crate::air_exchange::InfiltrationSpec`] one-to-one instead of pinning one method and
 /// smuggling the flow through a coefficient field.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Infiltration {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -30,7 +31,8 @@ pub struct Infiltration {
 /// are persisted model data, not per-run session state: every `ScheduleId` reference in this
 /// document resolves inside `schedules`, and [`crate::kernel::SimulationConfig`] reads both out of
 /// the model at run time (ticket 26/09/06/ENERGY-PLUGIN-END-TO-END).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Model {
     pub name: String,
     pub version: String,
@@ -81,7 +83,7 @@ pub struct Model {
 impl Model {
     /// ✅️ Validate model topology, references, and SI ranges — a pure, allocation-only pre-flight
     /// check every caller (not only this crate's own tests) can run before handing a model to
-    /// [`crate::sim::Engine::run`], which performs its own incremental, cursor-owned validation
+    /// the caller-driven EnergyJob, which performs its own incremental, cursor-owned validation
     /// pass but only reports it as a job fault rather than as addressable diagnostics.
     pub fn validate(&self) -> Result<(), Diagnostics> {
         let mut diag = Diagnostics::default();
@@ -294,6 +296,12 @@ impl Model {
             }
         }
 
+        for pv in &self.pv_systems {
+            if !pv.thermal_parameters_valid() {
+                diag.push(Error::severe(format!("PV system {} has invalid authored thermal parameters", pv.id.0)));
+            }
+        }
+
         if diag.has_fatal() || diag.messages.iter().any(|m| m.severity == Severity::Severe) {
             Err(diag)
         } else {
@@ -375,7 +383,7 @@ pub fn test_model_full_topology() -> Model {
     model.name = "Full Topology".into();
     model.thermostats.push(Thermostat { id: EntityId(50), zone_id: EntityId(1), heating_setpoint_schedule_id: ScheduleId(1), cooling_setpoint_schedule_id: ScheduleId(1), heating_throttle_range_k: 2.0, cooling_throttle_range_k: 2.0 });
     model.plant_loops.push(PlantLoopConfig { id: EntityId(60), name: "Hot Water".into(), loop_type: PlantLoopType::Heating, supply_temperature_c: 55.0, return_temperature_c: 45.0, design_flow_kg_s: 2.0, equipment_ids: vec![EntityId(61)] });
-    model.pv_systems.push(PvSystemAssignment { id: EntityId(70), dc_capacity_w: 5000.0, area_m2: 25.0, tilt_deg: 30.0, azimuth_deg: 180.0, module_efficiency: 0.2, inverter_efficiency: 0.96 });
+    model.pv_systems.push(PvSystemAssignment { id: EntityId(70), dc_capacity_w: 5000.0, area_m2: 25.0, tilt_deg: 30.0, azimuth_deg: 180.0, module_efficiency: 0.2, inverter_efficiency: 0.96, temperature_coefficient: -0.004, faiman_heat_loss_constant_w_m2k: 25.0, faiman_heat_loss_wind_w_s_m3k: 6.84, mounting: crate::model::PhotovoltaicMounting::OpenRack});
     model.daylight_zones.push(DaylightZoneConfig { id: EntityId(80), zone_id: EntityId(1), illuminance_target_lux: 500.0, glare_limit: 0.4, window_transmittance: 0.6 });
     model
 }

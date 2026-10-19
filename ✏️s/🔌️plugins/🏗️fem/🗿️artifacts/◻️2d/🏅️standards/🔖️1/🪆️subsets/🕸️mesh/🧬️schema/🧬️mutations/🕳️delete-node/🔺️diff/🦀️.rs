@@ -9,10 +9,10 @@ use super::DeleteNode;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dNodesDelta;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dNodeRemoval;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &DeleteNode, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
+pub fn diff(payload: &DeleteNode, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<Fem2dDiff> {
     let Some(at) = base.nodes.iter().position(|node| node.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

@@ -8,7 +8,7 @@ pub use crate::publication_fixture::presence::mutations::change_publication_pres
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
-#[mutations(snapshot = crate::publication_fixture::presence::PublicationPresence, diff = crate::publication_fixture::presence::PublicationPresenceDiff, schema = "plugin.test.publication-presence")]
+#[mutations(snapshot = crate::publication_fixture::presence::PublicationPresence, diff = crate::publication_fixture::presence::PublicationPresenceDiff, schema = "plugin.test.publication-presence", reference = super::PublicationPresence, reference_diff = super::PublicationPresenceDiff)]
 pub enum PublicationPresenceMutation {
     ChangePublicationPresence(ChangePublicationPresence),
 }

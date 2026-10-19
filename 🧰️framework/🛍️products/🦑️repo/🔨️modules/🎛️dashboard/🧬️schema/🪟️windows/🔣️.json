@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/repo/dashboard/windows",
+  "title": "Window Docking Command",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["source", "target", "placement"],
+  "properties": {
+    "source": { "type": "string", "minLength": 1 },
+    "target": { "type": "string", "minLength": 1 },
+    "placement": { "enum": ["tabs", "left", "right", "top", "bottom", "tabs-top-left", "tabs-top-right", "tabs-bottom-left", "tabs-bottom-right"] },
+    "tabIndex": { "type": "integer", "minimum": 0 }
+  }
+}

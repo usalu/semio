@@ -1,7 +1,14 @@
 //! 🪟️ Exact-instance Puzzle 5D window configuration and transient interaction owners.
 
-use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dCamera3d, Puzzle5dRuntime, Puzzle5dSelectableKinds};
+use crate::editor::puzzle5d::config::Puzzle5dCamera2d;
+
+use crate::editor::puzzle5d::config::Puzzle5dCamera3d;
+
+use crate::editor::puzzle5d::config::Puzzle5dRuntime;
+
+use crate::editor::puzzle5d::config::Puzzle5dSelectableKinds;
 use crate::editor::puzzle5d::entities::{PUZZLE5D_BOARD_WINDOW_KIND_ID, PUZZLE5D_WORLD_WINDOW_KIND_ID};
+use crate::editor::puzzle5d::modes::edit::windows::world3d;
 use semio_framework_plugin::WorldSunConfig;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -173,6 +180,12 @@ macro_rules! config_mutation {
             fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
                 &Self::DESCRIPTORS[0]
             }
+
+
+        }
+
+impl protocol::ColdMutation<$state> for $mutation {
+    type ReferenceDiff = $diff;
             fn diff(&self, base: &$state) -> protocol::MutationOutcome<$diff> {
                 let Self::Set($set { patch }) = self;
                 let diff = patch.changed(base);
@@ -185,7 +198,7 @@ macro_rules! config_mutation {
                 let Self::Set($set { patch }) = self;
                 Ok(vec![Self::Set($set { patch: patch.restoring(base) })])
             }
-        }
+}
     };
 }
 
@@ -301,7 +314,13 @@ impl protocol::Mutation<Puzzle5dWindowTransient> for Puzzle5dWindowTransientMuta
     type Diff = Puzzle5dWindowTransientDiff;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window", semantic_kind: "set-window-transient", display_name: "Set Puzzle 5D Window Transient", emoji: "🫧️", aggregate_variant: "Snapshot", payload_schema: "puzzle.5dwindowtransient", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] }];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
-    fn diff(&self, base: &Puzzle5dWindowTransient) -> protocol::MutationOutcome<Self::Diff> {
+
+
+}
+
+impl protocol::ColdMutation<Puzzle5dWindowTransient> for Puzzle5dWindowTransientMutation {
+    type ReferenceDiff = Puzzle5dWindowTransientDiff;
+    fn diff(&self, base: &Puzzle5dWindowTransient) -> protocol::MutationOutcome<Self::ReferenceDiff> {
         let Self::Snapshot { transient } = self;
         let diff = Puzzle5dWindowTransientDiff::of(transient).changed(base);
         if protocol::DiffAlgebra::<Puzzle5dWindowTransient>::is_empty(&diff) {
@@ -310,7 +329,7 @@ impl protocol::Mutation<Puzzle5dWindowTransient> for Puzzle5dWindowTransientMuta
         protocol::MutationOutcome::new(diff)
     }
     fn inverse(&self, base: &Puzzle5dWindowTransient) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| { vec![Self::Snapshot { transient: base.clone() }] 
+    Ok((|| { vec![Self::Snapshot { transient: base.clone() }]
     })())
 }
 }
@@ -417,31 +436,11 @@ impl Puzzle5dBoardWindowConfigDiff {
 }
 
 impl protocol::MutationDiff<Puzzle5dBoardWindowConfig> for Puzzle5dBoardWindowConfigDiff {
-    fn apply(&self, base: &Puzzle5dBoardWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Puzzle5dBoardWindowConfig> {
-        let mut next = base.clone();
-        if let Some(value) = &self.camera2d {
-            next.camera2d = value.clone();
-        }
-        if let Some(value) = &self.lod_mode {
-            next.lod_mode = value.clone();
-        }
-        if let Some(value) = &self.suggestion_offset {
-            next.suggestion_offset = *value;
-        }
-        if let Some(value) = &self.grid_snap_enabled {
-            next.grid_snap_enabled = *value;
-        }
-        if let Some(value) = &self.grid_factor {
-            next.grid_factor = *value;
-        }
-        if let Some(value) = &self.grid_visible {
-            next.grid_visible = *value;
-        }
-        if let Some(value) = &self.selectable_kinds {
-            next.selectable_kinds = value.clone();
-        }
-        Ok(next)
-    }
+
+
+}
+
+impl protocol::ColdMutationDiff<Puzzle5dBoardWindowConfig> for Puzzle5dBoardWindowConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.camera2d.is_some() {
             self.camera2d = other.camera2d;
@@ -465,14 +464,43 @@ impl protocol::MutationDiff<Puzzle5dBoardWindowConfig> for Puzzle5dBoardWindowCo
             self.selectable_kinds = other.selectable_kinds;
         }
     }
+
+    fn apply(&self, next: &mut Puzzle5dBoardWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        if let Some(value) = &self.camera2d {
+            next.camera2d = value.clone();
+        }
+        if let Some(value) = &self.lod_mode {
+            next.lod_mode = value.clone();
+        }
+        if let Some(value) = &self.suggestion_offset {
+            next.suggestion_offset = *value;
+        }
+        if let Some(value) = &self.grid_snap_enabled {
+            next.grid_snap_enabled = *value;
+        }
+        if let Some(value) = &self.grid_factor {
+            next.grid_factor = *value;
+        }
+        if let Some(value) = &self.grid_visible {
+            next.grid_visible = *value;
+        }
+        if let Some(value) = &self.selectable_kinds {
+            next.selectable_kinds = value.clone();
+        }
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<Puzzle5dBoardWindowConfig> for Puzzle5dBoardWindowConfigDiff {
-    fn inverse(&self, base: &Puzzle5dBoardWindowConfig) -> Self {
-        self.restoring(base)
-    }
+
     fn is_empty(&self) -> bool {
         self.camera2d.is_none() && self.lod_mode.is_none() && self.suggestion_offset.is_none() && self.grid_snap_enabled.is_none() && self.grid_factor.is_none() && self.grid_visible.is_none() && self.selectable_kinds.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Puzzle5dBoardWindowConfig> for Puzzle5dBoardWindowConfigDiff {
+    fn inverse(&self, base: &Puzzle5dBoardWindowConfig) -> Self {
+        self.restoring(base)
     }
 }
 
@@ -530,52 +558,11 @@ impl Puzzle5dWorldWindowConfigDiff {
 }
 
 impl protocol::MutationDiff<Puzzle5dWorldWindowConfig> for Puzzle5dWorldWindowConfigDiff {
-    fn apply(&self, base: &Puzzle5dWorldWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Puzzle5dWorldWindowConfig> {
-        let mut next = base.clone();
-        if let Some(value) = &self.camera3d {
-            next.camera3d = value.clone();
-        }
-        if let Some(value) = &self.sun {
-            next.sun = value.clone();
-        }
-        if let Some(value) = &self.grid_visible {
-            next.grid_visible = *value;
-        }
-        if let Some(value) = &self.grid_snap_enabled {
-            next.grid_snap_enabled = *value;
-        }
-        if let Some(value) = &self.grid_spacing {
-            next.grid_spacing = *value;
-        }
-        if let Some(value) = &self.lod_automatic {
-            next.lod_automatic = *value;
-        }
-        if let Some(value) = &self.lod_depth_variable {
-            next.lod_depth_variable = *value;
-        }
-        if let Some(value) = &self.lod_manual {
-            next.lod_manual = *value;
-        }
-        if let Some(value) = &self.selectable_kinds {
-            next.selectable_kinds = value.clone();
-        }
-        if let Some(value) = &self.grip_show {
-            next.grip_show = value.clone();
-        }
-        if let Some(value) = &self.grip_direction {
-            next.grip_direction = value.clone();
-        }
-        if let Some(value) = &self.transform_move {
-            next.transform_move = *value;
-        }
-        if let Some(value) = &self.transform_rotate {
-            next.transform_rotate = *value;
-        }
-        if let Some(value) = &self.voxel_dims {
-            next.voxel_dims = *value;
-        }
-        Ok(next)
-    }
+
+
+}
+
+impl protocol::ColdMutationDiff<Puzzle5dWorldWindowConfig> for Puzzle5dWorldWindowConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.camera3d.is_some() {
             self.camera3d = other.camera3d;
@@ -620,14 +607,64 @@ impl protocol::MutationDiff<Puzzle5dWorldWindowConfig> for Puzzle5dWorldWindowCo
             self.voxel_dims = other.voxel_dims;
         }
     }
+
+    fn apply(&self, next: &mut Puzzle5dWorldWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        if let Some(value) = &self.camera3d {
+            next.camera3d = value.clone();
+        }
+        if let Some(value) = &self.sun {
+            next.sun = value.clone();
+        }
+        if let Some(value) = &self.grid_visible {
+            next.grid_visible = *value;
+        }
+        if let Some(value) = &self.grid_snap_enabled {
+            next.grid_snap_enabled = *value;
+        }
+        if let Some(value) = &self.grid_spacing {
+            next.grid_spacing = *value;
+        }
+        if let Some(value) = &self.lod_automatic {
+            next.lod_automatic = *value;
+        }
+        if let Some(value) = &self.lod_depth_variable {
+            next.lod_depth_variable = *value;
+        }
+        if let Some(value) = &self.lod_manual {
+            next.lod_manual = *value;
+        }
+        if let Some(value) = &self.selectable_kinds {
+            next.selectable_kinds = value.clone();
+        }
+        if let Some(value) = &self.grip_show {
+            next.grip_show = value.clone();
+        }
+        if let Some(value) = &self.grip_direction {
+            next.grip_direction = value.clone();
+        }
+        if let Some(value) = &self.transform_move {
+            next.transform_move = *value;
+        }
+        if let Some(value) = &self.transform_rotate {
+            next.transform_rotate = *value;
+        }
+        if let Some(value) = &self.voxel_dims {
+            next.voxel_dims = *value;
+        }
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<Puzzle5dWorldWindowConfig> for Puzzle5dWorldWindowConfigDiff {
-    fn inverse(&self, base: &Puzzle5dWorldWindowConfig) -> Self {
-        self.restoring(base)
-    }
+
     fn is_empty(&self) -> bool {
         self.camera3d.is_none() && self.sun.is_none() && self.grid_visible.is_none() && self.grid_snap_enabled.is_none() && self.grid_spacing.is_none() && self.lod_automatic.is_none() && self.lod_depth_variable.is_none() && self.lod_manual.is_none() && self.selectable_kinds.is_none() && self.grip_show.is_none() && self.grip_direction.is_none() && self.transform_move.is_none() && self.transform_rotate.is_none() && self.voxel_dims.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Puzzle5dWorldWindowConfig> for Puzzle5dWorldWindowConfigDiff {
+    fn inverse(&self, base: &Puzzle5dWorldWindowConfig) -> Self {
+        self.restoring(base)
     }
 }
 
@@ -687,19 +724,11 @@ impl Puzzle5dWindowTransientDiff {
 }
 
 impl protocol::MutationDiff<Puzzle5dWindowTransient> for Puzzle5dWindowTransientDiff {
-    fn apply(&self, base: &Puzzle5dWindowTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Puzzle5dWindowTransient> {
-        let mut next = base.clone();
-        if let Some(value) = &self.suggestion_menu {
-            next.suggestion_menu = value.clone();
-        }
-        if let Some(value) = &self.engagement_input {
-            next.engagement_input = value.clone();
-        }
-        if let Some(value) = &self.brush_candidate_index {
-            next.brush_candidate_index = *value;
-        }
-        Ok(next)
-    }
+
+
+}
+
+impl protocol::ColdMutationDiff<Puzzle5dWindowTransient> for Puzzle5dWindowTransientDiff {
     fn absorb(&mut self, other: Self) {
         if other.suggestion_menu.is_some() {
             self.suggestion_menu = other.suggestion_menu;
@@ -711,14 +740,38 @@ impl protocol::MutationDiff<Puzzle5dWindowTransient> for Puzzle5dWindowTransient
             self.brush_candidate_index = other.brush_candidate_index;
         }
     }
+
+    fn apply(&self, next: &mut Puzzle5dWindowTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        if let Some(value) = &self.suggestion_menu {
+            next.suggestion_menu = value.clone();
+        }
+        if let Some(value) = &self.engagement_input {
+            next.engagement_input = value.clone();
+        }
+        if let Some(value) = &self.brush_candidate_index {
+            next.brush_candidate_index = *value;
+        }
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<Puzzle5dWindowTransient> for Puzzle5dWindowTransientDiff {
-    fn inverse(&self, base: &Puzzle5dWindowTransient) -> Self {
-        self.restoring(base)
-    }
+
     fn is_empty(&self) -> bool {
         self.suggestion_menu.is_none() && self.engagement_input.is_none() && self.brush_candidate_index.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Puzzle5dWindowTransient> for Puzzle5dWindowTransientDiff {
+
+    fn is_empty(&self) -> bool {
+        self.suggestion_menu.is_none() && self.engagement_input.is_none() && self.brush_candidate_index.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Puzzle5dWindowTransient> for Puzzle5dWindowTransientDiff {
+    fn inverse(&self, base: &Puzzle5dWindowTransient) -> Self {
+        self.restoring(base)
     }
 }
 
@@ -751,7 +804,8 @@ macro_rules! owners {
             type Edit = semio_framework_plugin::WindowConfigApplyEdit<$state, $mutation>;
             const MAXIMUM_PREPARATION_DEPTH: usize = 64;
             fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_framework_plugin::WindowConfigApplyEdit::new()) }
-            fn build_store_owners() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_owners::<Self>() }
+            fn preparation_source_birth()->semio_framework_value::retained_clone::RetainedCloneBirthDemand{semio_framework_plugin::bounded_window_config_preparation_source_birth::<Self>()}
+            fn build_store_owners(grant:semio_framework_value::RetainedCloneGrant)->Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State,Self::Mutation>,semio_framework_value::RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State,Self::Mutation>>{semio_framework_plugin::bounded_window_config_store_owners::<Self>(grant)}
             fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
             fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }
         }

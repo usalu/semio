@@ -20,13 +20,7 @@ Feature: Apply every typed fem2d boundary mutation twice — once in Rust, once 
   and forces FROM a model; none of them reads `.dsl.semio`, none defines this document. What a
   reference can genuinely adjudicate is the model algebra, and that is what this one does.
 
-  A DEFECT IN THE SPECIFICATION, found while writing the reference and reported rather than worked
-  around. Two of the three schema files here do not say what they claim.
-  `…/🧬️schema/🧬️mutations/🔣️.json` is a verbatim copy of the SNAPSHOT schema with `title`
-  changed to `Fem2dMutation`. And in the snapshot schema itself, every one of the nine record types
-  is an EMPTY `{"title": …, "type": "object"}` with no properties at all. The record shapes the
-  reference implements were read off the committed vectors instead, which agree with one another on
-  every field.
+  Sparse intents and concrete snapshot record schemas are owned by their domain leaves. Canonical DOF sets preserve exact sparse inverses; the registered field-intent suite uses an independent JSON Patch oracle.
 
   The artifact is real. `shared://🛡️mutate-fem2d-1-any-boundary/🏗️timber-portal-frame.snapshot.json` is the SAME derived timber-portal-frame model every
   fem2d mutation subset case shares — a twelve-node timber-and-steel portal frame with a ridge at
@@ -64,6 +58,8 @@ Feature: Apply every typed fem2d boundary mutation twice — once in Rust, once 
     | delete-support  | {"mutation":"deleteSupport","id":"s2"}                                                             |
     | replace-support | {"mutation":"replaceSupport","id":"s1","newSupport":{"id":"s1","nodeId":"n1","fixed":["Tx","Ty","Rz"]}} |
 
+    | change-support | {"patch":{"ty":false},"id":"s1","mutation":"changeSupport"} |
+
   @id-inverse
   @level-exhaustive
   @mode-differential
@@ -80,3 +76,5 @@ Feature: Apply every typed fem2d boundary mutation twice — once in Rust, once 
     | delete-support  | {"mutation":"deleteSupport","id":"s_spare"}                                                             |
     | delete-support  | {"mutation":"deleteSupport","id":"s2"}                                                             |
     | replace-support | {"mutation":"replaceSupport","id":"s1","newSupport":{"id":"s1","nodeId":"n1","fixed":["Tx","Ty","Rz"]}} |
+    | change-support | {"patch":{"ty":false},"id":"s1","mutation":"changeSupport"} |
+

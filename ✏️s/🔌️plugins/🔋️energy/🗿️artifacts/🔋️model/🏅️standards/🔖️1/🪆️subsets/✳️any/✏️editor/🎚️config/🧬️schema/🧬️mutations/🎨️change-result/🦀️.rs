@@ -25,6 +25,17 @@ impl ChangeResultField {
 
 impl protocol::MutationKind<EnergyModelConfig, EnergyModelConfigMutation> for ChangeResultField {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "result-field", kind: "change-result-field", record: "ChangedResultField" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Colour surfaces by {}", self.field), &format!("Oberflächen nach {} einfärben", self.field))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["result-field".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<EnergyModelConfig, EnergyModelConfigMutation> for ChangeResultField {
     fn diff(&self, base: &EnergyModelConfig) -> protocol::MutationOutcome<EnergyModelConfigDiff> {
         protocol::MutationOutcome::new(EnergyModelConfigDiff { result_field: (base.result_field != self.field).then(|| self.field.clone()), ..EnergyModelConfigDiff::default() })
     }
@@ -34,23 +45,8 @@ impl protocol::MutationKind<EnergyModelConfig, EnergyModelConfigMutation> for Ch
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Colour surfaces by {}", self.field), &format!("Oberflächen nach {} einfärben", self.field))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["result-field".into()]
-    }
 }
 
 #[cfg(test)]
-mod law_tests {
-    use super::*;
-
-    /// ⚖️ The inverse diffs sum to the negative of the forward diff (L3).
-    #[semio_framework_async_macros::async_test]
-    async fn inverse_diffs_sum_to_the_negative_diff() {
-        let base = EnergyModelConfig::default();
-        let change = EnergyModelConfigMutation::ChangeResultField(ChangeResultField { field: "solarTransmitted".into() });
-        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&change, &base).await;
-    }
-}
+#[path = "🧪️tests/⚖️law/🦀️.rs"]
+mod law_tests;

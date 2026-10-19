@@ -1,15 +1,14 @@
 {
   "nodes": null,
   "elements": {
-    "inserted": [],
     "removed": [],
+    "inserted": [],
     "moved": [],
     "modified": [
       {
         "id": "e1",
         "patch": {
           "kind": "bar",
-          "id": "e1",
           "start": "n1",
           "end": "n2",
           "materialId": "steel",

@@ -21,7 +21,8 @@
         };
         let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(42), semio_framework_job::RevisionId(2), semio_framework_job::Generation(3), 5);
         let policy=semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy();
-        let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(operation.operation,operation.generation,policy.preparation,||Some(0),u64::MAX,1);
+        let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(operation.operation,operation.generation,crate::app_testing::mutation_fixture::job_close::original_fixture_stock(),||Some(0),u64::MAX,1<<24);
+        let mut decoder=semio_framework_job::OriginalJobDecodeOwner::empty();
         let drive_to_publish = |job:&mut semio_framework_plugin_retained_command::ArtifactRetainedCommandJob<TestApp>,caller:&mut semio_framework_job::OriginalJobFixtureCaller| {
             for expected_stage in ["preflight", "work"] {
                 match caller.turn(policy.maintenance,|cx|Ok(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step(job,cx))).unwrap() {
@@ -78,14 +79,18 @@
 
         let direct_completion = ArtifactToolCompletion::<TestApp>::new();
         let _direct_consumer = direct_completion.clone();
-        let mut direct = semio_framework_plugin_retained_command::ArtifactRetainedCommandJob::new(test_retained_child_command_payload(direct_completion, build_emit()).await);
+        let (direct_payload,direct_issuer)=test_retained_child_command_payload(direct_completion,build_emit()).await;
+        let mut direct=crate::retained_command::ArtifactRetainedCommandJob::new(direct_payload);
+        assert!(caller.turn_with_decoder(policy.preparation,&mut decoder,|cx|direct.test_admit_original_source(cx)).unwrap());
         drive_to_publish(&mut direct,&mut caller);
-        close_and_observe(&mut direct,&mut caller);
+        close_and_observe(&mut direct,&mut caller);direct_issuer.close(&mut caller);crate::app_testing::mutation_fixture::job_close::retire_fixture_owned(_direct_consumer,&mut caller);
 
         let duplicate_completion = ArtifactToolCompletion::<TestApp>::new();
         let duplicate_consumer = duplicate_completion.clone();
         duplicate_completion.complete(Ok(Emit::default()), EphemeralEmit::default()).expect("prefill completion once");
-        let mut duplicate = semio_framework_plugin_retained_command::ArtifactRetainedCommandJob::new(test_retained_child_command_payload(duplicate_completion, build_emit()).await);
+        let (duplicate_payload,duplicate_issuer)=test_retained_child_command_payload(duplicate_completion,build_emit()).await;
+        let mut duplicate=crate::retained_command::ArtifactRetainedCommandJob::new(duplicate_payload);
+        assert!(caller.turn_with_decoder(policy.preparation,&mut decoder,|cx|duplicate.test_admit_original_source(cx)).unwrap());
         drive_to_publish(&mut duplicate,&mut caller);
         
         match caller.turn(policy.maintenance,|cx|Ok(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step(&mut duplicate,cx))).unwrap() {
@@ -93,13 +98,15 @@
             _ => panic!("duplicate completion must reject the handoff"),
         }
         assert!(duplicate.test_pending_emit_shape().is_some(), "duplicate rejection returns the exact emit owner");
-        close_and_observe(&mut duplicate,&mut caller);
+        close_and_observe(&mut duplicate,&mut caller);duplicate_issuer.close(&mut caller);
         let (existing, _) = duplicate_consumer.take_emit().expect("prefilled completion remains readable").expect("prefilled completion remains assigned");
-        assert!(existing.expect("prefilled completion remains successful").child_emits.is_empty());
+        let existing=existing.expect("prefilled completion remains successful");assert!(existing.child_emits.is_empty());crate::app_testing::mutation_fixture::job_close::retire_fixture_owned(existing,&mut caller);crate::app_testing::mutation_fixture::job_close::retire_fixture_owned(duplicate_consumer,&mut caller);
 
         let busy_completion = ArtifactToolCompletion::<TestApp>::new();
         let busy_consumer = busy_completion.clone();
-        let mut busy = semio_framework_plugin_retained_command::ArtifactRetainedCommandJob::new(test_retained_child_command_payload(busy_completion.clone(), build_emit()).await);
+        let (busy_payload,busy_issuer)=test_retained_child_command_payload(busy_completion.clone(),build_emit()).await;
+        let mut busy=crate::retained_command::ArtifactRetainedCommandJob::new(busy_payload);
+        assert!(caller.turn_with_decoder(policy.preparation,&mut decoder,|cx|busy.test_admit_original_source(cx)).unwrap());
         drive_to_publish(&mut busy,&mut caller);
         busy_completion.with_busy_test_lock(|| {
             
@@ -109,9 +116,9 @@
             }
         });
         assert!(busy.test_pending_emit_shape().is_some(), "busy rejection returns the exact emit owner");
-        close_and_observe(&mut busy,&mut caller);
+        close_and_observe(&mut busy,&mut caller);busy_issuer.close(&mut caller);
         assert!(busy_consumer.take_emit().expect("busy completion remains readable").is_none(), "busy completion remains untouched");
-        caller.retire(policy.close);
+        crate::app_testing::mutation_fixture::job_close::retire_fixture_owned(busy_consumer,&mut caller);crate::app_testing::mutation_fixture::job_close::retire_fixture_owned(busy_completion,&mut caller);crate::app_testing::mutation_fixture::job_close::close_fixture_decoder(&mut caller,&mut decoder);caller.retire(crate::app_testing::mutation_fixture::job_close::original_fixture_stock());
     }
 
     fn interaction_empty_target_args(extra: Value) -> DslValue {
@@ -182,7 +189,7 @@
         assert_eq!(app.stores.presence_store.generation().await, 1, "undo must not rewind presence");
         assert_eq!(app.stores.transient_store.generation().await, 1, "undo must not rewind transient");
         assert_eq!(json!({ "presenceGeneration": app.stores.presence_store.generation().await, "transientGeneration": app.stores.transient_store.generation().await, "documentCount": app.stores.test_snapshot().await.count }), vectors["undone"]);
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result

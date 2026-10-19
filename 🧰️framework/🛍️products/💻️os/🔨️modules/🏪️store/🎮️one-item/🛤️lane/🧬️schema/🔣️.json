@@ -1,0 +1,153 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "ordering",
+    "interaction",
+    "grantCopy",
+    "commandAuthority",
+    "envelope"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "ordering": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "left",
+          "right",
+          "order"
+        ],
+        "properties": {
+          "left": {
+            "type": "string"
+          },
+          "right": {
+            "type": "string"
+          },
+          "order": {
+            "enum": [
+              -1,
+              0,
+              1
+            ]
+          }
+        }
+      }
+    },
+    "interaction": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "initial",
+          "values",
+          "expected",
+          "generation",
+          "edits"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "initial": {
+            "type": "integer"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "expected": {
+            "type": "integer"
+          },
+          "generation": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "edits": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "grantCopy": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "commandAuthority": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "job",
+          "generation",
+          "issuer",
+          "ready"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "job": {
+            "type": "boolean"
+          },
+          "generation": {
+            "type": "boolean"
+          },
+          "issuer": {
+            "type": "boolean"
+          },
+          "ready": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "envelope": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "initial",
+          "expected",
+          "discardedProjectionClones"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "initial": {
+            "type": "integer"
+          },
+          "expected": {
+            "type": "integer"
+          },
+          "discardedProjectionClones": {
+            "const": 0
+          }
+        }
+      }
+    }
+  }
+}

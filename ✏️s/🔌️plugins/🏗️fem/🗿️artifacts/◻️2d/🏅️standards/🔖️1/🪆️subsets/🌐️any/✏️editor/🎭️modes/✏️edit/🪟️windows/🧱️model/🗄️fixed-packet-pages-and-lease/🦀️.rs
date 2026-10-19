@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 👁️LiveVisualLanguage
-pub(super) const FEM2D_MOUNTED_VISUAL_OUTPUT_BYTES: usize = 16 * 1_024;
+pub(super) const FEM2D_MOUNTED_VISUAL_OUTPUT_BYTES: usize = semio_framework_ui_scene::CANVAS2D_SNAPSHOT_PAGE_CAPACITY * CANVAS2D_SNAPSHOT_PAGE_BYTE_CAPACITY;
 
 const FEM2D_MOUNTED_VISUAL_PAGE_BYTES: usize = 4_096;
 
@@ -152,6 +152,7 @@ impl Fem2dMountedVisualLease {
     }
 
     pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        if maximum_bytes < size_of::<usize>() { return (false, 0, 0); }
         if self.region_order.pop().is_some() || self.assembly_order.pop().is_some() || self.field_order.pop().is_some() {
             return (false, 1, size_of::<usize>());
         }

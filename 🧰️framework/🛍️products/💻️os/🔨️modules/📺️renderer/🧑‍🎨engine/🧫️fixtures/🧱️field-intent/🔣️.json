@@ -1,0 +1,7 @@
+{
+  "cases": [
+    { "scope": "fem2d-play", "action": "patchNode", "id": "n1", "field": "x", "kind": "number", "before": "1", "after": "4", "siblings": { "y": 5 }, "label": { "en": "X coordinate", "de": "X-Koordinate" } },
+    { "scope": "fem3d-play", "action": "patchNode", "id": "n1", "field": "z", "kind": "number", "before": "3", "after": "6", "siblings": { "x": 4, "y": 5 }, "label": { "en": "Z coordinate", "de": "Z-Koordinate" } },
+    { "scope": "fem2d-play", "action": "patchMaterial", "id": "steel", "field": "name", "kind": "text", "before": "Steel", "after": "Structural Steel", "siblings": { "e": 200000000000 }, "label": { "en": "Material name", "de": "Materialname" } }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "maximumItems": 1,
+  "maximumBodyBytes": 65536,
+  "histories": [
+    { "edits": 0 },
+    { "edits": 64 },
+    { "edits": 65 },
+    { "edits": 400 }
+  ],
+  "deniedItems": 0,
+  "terminal": { "history": [], "current": null }
+}

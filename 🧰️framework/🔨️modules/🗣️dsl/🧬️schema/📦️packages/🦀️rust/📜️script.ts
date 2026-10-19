@@ -18,6 +18,14 @@ class OwnershipScript extends BundleScript {
   }
 }
 
+/** 📨️ Compares the neutral presence corpus against independent JSON Schema validation. */
+class PresenceScript extends BundleScript {
+  async run(segments:string[]):Promise<void>{
+    if(segments.length)throw Error("test-presence accepts no arguments");
+    await runBudgetedTestCommand(process.execPath,["test",resolve(this.root,"../../🧪️tests/📨️presence/🟦️.ts")],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
+  }
+}
+
 /** 🪆️ Runs every canonical generic record, notation and native construction law. */
 class NativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -39,5 +47,6 @@ class OriginalReceivingScript extends BundleScript{
   }if(mode==="native")await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-dsl-record"],cwd:this.root,extraArgs:["--offline","--lib","original_typed_receiving_","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:this.invocation.control.remainingMilliseconds},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
  }
 }
-const router = new ScriptRouter(import.meta.dir).register("test-original-receiving",OriginalReceivingScript).register("test-ownership", OwnershipScript).register("test-native", NativeScript);
+
+const router = new ScriptRouter(import.meta.dir).register("test-original-receiving",OriginalReceivingScript).register("test-ownership", OwnershipScript).register("test-native", NativeScript).register("test-presence",PresenceScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({defaultCommand: "test-ownership"}) }));

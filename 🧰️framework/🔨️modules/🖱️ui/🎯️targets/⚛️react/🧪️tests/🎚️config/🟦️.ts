@@ -14,13 +14,18 @@ export default defineConfig({
   root: testRoot,
   cacheDir: testCacheDirectoryV1(process.env, "ui-react"),
   resolve: {
-    alias: [{ find: /^@semio-tech\/ui-react$/u, replacement: resolve(root, "🟦️.tsx") }],
+    alias: [
+      { find: /^@semio-tech\/ui-react\/introduction$/u, replacement: resolve(root, "👋️introduction.ts") },
+      { find: /^@semio-tech\/ui-react$/, replacement: resolve(root, "🟦️.tsx") },
+    ],
   },
   test: {
     root: testRoot,
     name: "@semio-tech/ui-react",
     environment: "jsdom",
     include: [
+      "../../../../🧪️tests/👋️introduction/🟦️.tsx",
+      "../../../../🧪️tests/📐️overlay-flow/🟦️.ts",
       "../../../../🧪️tests/🖼️icon-render-camera/🟦️.tsx",
       "../../../../🧪️tests/🧪️owned-locale-detector-retirement/🟦️.tsx",
       "../../../../🧪️tests/🛟️chrome-panel-safe-area/🟦️.ts",
@@ -28,6 +33,7 @@ export default defineConfig({
       "../../../../🧪️tests/📣️engagement-status/🟦️.tsx",
       "../../../../🧱️elements/📚️I18n/🧪️tests/🔬️translation-totality/🟦️.ts",
       "../../../../🧱️elements/🎨️Canvas/🧪️tests/🎯️stack-drop-destination/🟦️.tsx",
+      "../../../../🧱️elements/🎨️Canvas/🧪️tests/🎭️storybook-interaction/🧪️tests/🟦️.tsx",
       "../../../../🧱️elements/☑️Checkbox/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/✏️Input/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/💡️ChromeControlHint/🧪️tests/🧩️component/🟦️.tsx",
@@ -54,6 +60,7 @@ export default defineConfig({
       "../../../../🧱️elements/🦴️Skeletons/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/🪟️Window/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/🃏️OverviewCard/🧪️tests/🧩️component/🟦️.tsx",
+      "../../../../🧱️elements/🔣️Icons/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/🥞️LayeredOverview/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/📑️Tabs/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../📱️device/🧪️tests/🔬️unit/🟦️.ts",

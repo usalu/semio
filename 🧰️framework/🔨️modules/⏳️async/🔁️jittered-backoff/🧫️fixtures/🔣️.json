@@ -1,0 +1,5 @@
+{
+  "timeoutMs": 25,
+  "abortReason": "pending attempt canceled",
+  "cases": ["fulfill", "reject"]
+}

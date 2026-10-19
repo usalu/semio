@@ -62,7 +62,7 @@ describe("Tool configuration ownership", () => {
     expect(new Set(fixture.owners.map(({ id }) => id)).size).toBe(12);
     expect(new Set(fixture.owners.map(({ ownerPath }) => ownerPath)).size).toBe(12);
     expect(fixture.removedShims).toHaveLength(2);
-    expect(fixture.consumers).toHaveLength(23);
+    expect(fixture.consumers).toHaveLength(22);
     expect(fixture.projectInputs).toHaveLength(8);
   });
 
@@ -76,14 +76,11 @@ describe("Tool configuration ownership", () => {
     for (const path of fixture.removedShims) expect(existsSync(resolve(repoRoot, path)), path).toBe(false);
   });
 
-  test("binds every selector, import, source-data record and editor setting to the semantic owners", () => {
+  test("binds every selector, import, source-data record to the semantic owners", () => {
     for (const consumer of fixture.consumers) {
       const source = read(consumer.path);
       for (const token of consumer.tokens) expect(source, `${consumer.path}: ${token}`).toContain(token);
     }
-    const settings = JSON.parse(read(".vscode/settings.json"));
-    expect(settings["eslint.options"].overrideConfigFile).toBe(ownerById.get("root-eslint")!.ownerPath);
-    expect(settings["tailwindCSS.experimental.configFile"]).toBe(ownerById.get("styling-tailwind")!.ownerPath);
   });
 
   test("binds each cacheable project graph to its exact external configuration owners", () => {

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
-import { EMOJI_FONTCONFIG, PERSISTED_HOME_DIRECTORIES, WORKSPACE_EXTENSION, configureGitKrakenWorkspace, configureRepoHooks, devcontainerStart, editorCliOrder, gitKrakenWorkspaceState, installWorkspaceExtension, missingSafeDirectories, normalizeClaudeAuth, releaseAssetUrl, toolArchitectures, withSshAgentShellBlock, type LifecycleAnswer, type LifecycleContext, type LifecycleHost } from "../../🔁️lifecycle/🟦️.ts";
+import { EMOJI_FONTCONFIG, PERSISTED_HOME_DIRECTORIES, configureGitKrakenWorkspace, configureRepoHooks, devcontainerAttach, devcontainerStart, gitKrakenWorkspaceState, missingSafeDirectories, normalizeClaudeAuth, releaseAssetUrl, toolArchitectures, withSshAgentShellBlock, type LifecycleAnswer, type LifecycleContext, type LifecycleHost } from "../../🔁️lifecycle/🟦️.ts";
 
 /** 🎙️ A host that records every program call and answers from `answer`, never running anything. */
 function recordingHost(answer: (command: string, args: readonly string[]) => Partial<LifecycleAnswer> = () => ({})): LifecycleHost & { calls: string[][]; inputs: Map<string, string>; lines: string[] } {
@@ -24,26 +24,26 @@ function recordingHost(answer: (command: string, args: readonly string[]) => Par
   };
 }
 
-/** 🔁️ The devcontainer start/attach lifecycle against its language-agnostic fixture: the fontconfig document (fast-xml-parser
- * oracle), architecture and release-asset selection (lodash oracle), editor CLI order, GitKraken workspace states and the
+/** 🔁️ The devcontainer start/attach lifecycle against its language-agnostic fixture: the fontconfig document (jsdom XML
+ * oracle), architecture and release-asset selection (lodash oracle), dashboard attach, GitKraken workspace states and the
  * create / complete / set calls on a checkout with a submodule, duplicate-free `safe.directory`, Claude auth storage on a real temporary home, the idempotent shell hook, a start run
- * that never issues a destructive command, and every extension-install outcome through a recording host. */
+ * that never issues a destructive command, and dashboard-only attach through a recording host. */
 export async function testDevcontainerLifecycle(workspace: string, generated: string): Promise<void> {
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔁️lifecycle/🔣️.json"), "utf8"));
-  const { XMLParser } = require("fast-xml-parser"), lodash = require("lodash");
-  const document = new XMLParser({ ignoreAttributes: false }).parse(EMOJI_FONTCONFIG).fontconfig;
-  const aliases = Object.fromEntries(document.alias.map((alias: { family: string; prefer: { family: string[] } }) => [alias.family, alias.prefer.family]));
+  await testDevcontainerDashboardOwnership(workspace);
+  const { JSDOM } = require("jsdom"), lodash = require("lodash");
+  const document = new JSDOM(EMOJI_FONTCONFIG, { contentType: "application/xml" }).window.document as Document;
+  const aliases = Object.fromEntries([...document.querySelectorAll("fontconfig > alias")].map(alias => [alias.querySelector("family")!.textContent, [...alias.querySelectorAll("prefer > family")].map(family => family.textContent)]));
   assert.deepEqual(aliases, fixture.fontconfig.aliases);
-  assert.ok(document.match.every((match: { edit: unknown }) => JSON.stringify(match.edit).includes(fixture.fontconfig.emojiFamily) || JSON.stringify(match).includes(fixture.fontconfig.emojiFamily)));
+  assert.ok([...document.querySelectorAll("fontconfig > match")].every(match => match.textContent?.includes(fixture.fontconfig.emojiFamily)));
   for (const row of fixture.architectures) assert.deepEqual(toolArchitectures(row.arch), { debian: row.debian, f3d: row.f3d, gk: row.gk }, row.arch);
   for (const row of fixture.releaseCases) {
     assert.equal(releaseAssetUrl(fixture.release, row.suffix), row.url, row.suffix);
     assert.equal(lodash.find(fixture.release.assets, (asset: { name: string }) => lodash.endsWith(asset.name, row.suffix))?.browser_download_url ?? null, row.url);
   }
-  for (const row of fixture.editorOrder) assert.deepEqual(editorCliOrder(row.env), row.order, JSON.stringify(row.env));
   for (const row of fixture.gitKrakenInfo) assert.equal(gitKrakenWorkspaceState(row.info), row.state, row.info);
   for (const row of fixture.gitKrakenWorkspace.cases) {
-    const checkout = mkdtempSync(join(generated, `lifecycle-gitkraken-${row.id}-`)), fill = (text: string) => text.replaceAll("{workspace}", checkout);
+    const checkout = mkdtempSync(join(generated, "gk-")), fill = (text: string) => text.replaceAll(`{workspace}/${fixture.gitKrakenWorkspace.submodule}`, join(checkout, fixture.gitKrakenWorkspace.submodule)).replaceAll("{workspace}", checkout);
     writeFileSync(join(checkout, ".gitmodules"), `[submodule "${fixture.gitKrakenWorkspace.submodule}"]\n\tpath = ${fixture.gitKrakenWorkspace.submodule}\n`);
     const host = recordingHost((command, args) => (command === "gk" && args[0] === "auth" ? { status: row.authenticated ? 0 : 1 } : command === "gk" && args[1] === "info" ? { stdout: fill(row.info) } : command === "git" && args.includes("--get-regexp") ? { stdout: `submodule.${fixture.gitKrakenWorkspace.submodule}.path ${fixture.gitKrakenWorkspace.submodule}\n` } : {}));
     configureGitKrakenWorkspace(host, { workspace: checkout, home: checkout, user: "vscode", env: { SEMIO_GITKRAKEN_WORKSPACE_NAME: row.name }, arch: "x64" });
@@ -54,7 +54,7 @@ export async function testDevcontainerLifecycle(workspace: string, generated: st
   assert.equal(withSshAgentShellBlock(once), once, "the signing-agent shell hook is appended once");
 
   for (const row of fixture.claudeAuth) {
-    const home = mkdtempSync(join(generated, `lifecycle-claude-${row.id}-`)), volume = join(home, ".claude");
+    const home = mkdtempSync(join(generated, "auth-")), volume = join(home, ".claude");
     mkdirSync(volume, { recursive: true });
     for (const [name, content] of Object.entries(row.home)) writeFileSync(join(home, name), String(content));
     for (const [name, content] of Object.entries(row.volume)) writeFileSync(join(volume, name), String(content));
@@ -67,7 +67,7 @@ export async function testDevcontainerLifecycle(workspace: string, generated: st
     if (!Object.keys(row.expected).length) assert.equal(existsSync(join(home, ".claude.json")), false, row.id);
   }
 
-  const home = mkdtempSync(join(generated, "lifecycle-start-home-")), checkout = mkdtempSync(join(generated, "lifecycle-start-workspace-"));
+  const home = mkdtempSync(join(generated, "home-")), checkout = mkdtempSync(join(generated, "ws-"));
   writeFileSync(join(checkout, ".gitmodules"), "");
   const start = recordingHost((command, args) => (command === "git" && args.includes("--get-regexp") ? { stdout: "submodule.recherche.path ♻️mit-bestand/🔎️recherche\n" } : command === "git" && args.includes("--get-all") ? { stdout: `${checkout}\n` } : {}));
   const context: LifecycleContext = { workspace: checkout, home, user: "vscode", env: {}, arch: "x64" };
@@ -89,27 +89,29 @@ export async function testDevcontainerLifecycle(workspace: string, generated: st
     assert.deepEqual(hooks.lines, [message]);
   }
 
-  for (const row of fixture.extension.cases) {
-    const root = mkdtempSync(join(generated, `lifecycle-extension-${row.id}-`)), packageRoot = join(root, WORKSPACE_EXTENSION.packageRoot);
-    mkdirSync(packageRoot, { recursive: true });
-    writeFileSync(join(packageRoot, "package.json"), JSON.stringify({ publisher: fixture.extension.publisher, name: fixture.extension.name }));
-    if (row.vsix) writeFileSync(join(packageRoot, WORKSPACE_EXTENSION.vsix), "vsix");
-    const host = recordingHost((command, args) => {
-      if (command === "bun") return { status: row.build };
-      if (row.unreachable.includes(command)) return { stderr: "Command is only available in WSL or inside a Visual Studio Code terminal." };
-      if (args[0] === "--list-extensions") return { stdout: row.listed[command] ?? "" };
-      return {};
-    });
-    const installed = await installWorkspaceExtension(host, { ...context, workspace: root }, row.clis, join(root, "install.lock"));
-    assert.equal(installed, row.installedVia, row.id);
-    assert.equal(host.calls.filter((call) => call[1] === "--install-extension").length, row.installCalls, row.id);
-    assert.equal(host.calls.filter((call) => call[1] === "--list-extensions").length, row.listCalls, `${row.id}: an unreachable editor is not asked for its extensions`);
-    assert.deepEqual(host.calls.filter((call) => call[0] === "bun"), [["bun", "repo", "run", WORKSPACE_EXTENSION.target]], `${row.id}: packaging goes through Nx exactly once`);
-    assert.equal(existsSync(join(root, "install.lock")), false, `${row.id}: the install lock is released`);
+  console.log("✅️ Devcontainer lifecycle: fontconfig (jsdom XML), tool selection (lodash), dashboard-only attach, GitKraken states + workspace calls, safe.directory, Claude auth storage, start without destructive commands, IDE controls retired PASS");
+}
+
+/** 🎛️ Checks the language-neutral retirement fixture and records attach behavior with independent lodash predicates. */
+export async function testDevcontainerDashboardOwnership(workspace: string): Promise<void> {
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔁️lifecycle/🔣️.json"), "utf8")), lodash = createRequire(import.meta.url)("lodash");
+  for (const path of fixture.dashboardOnly.removedPaths) assert.equal(existsSync(join(workspace, path)), false, path);
+  const container = Bun.JSONC.parse(readFileSync(join(workspace, ".devcontainer/devcontainer.json"), "utf8"));
+  assert.ok(container!==null&&typeof container==="object"&&!Array.isArray(container));
+  assert.ok("containerEnv"in container&&container.containerEnv!==null&&typeof container.containerEnv==="object"&&!Array.isArray(container.containerEnv));
+  assert.ok("mounts"in container&&Array.isArray(container.mounts)&&container.mounts.every((mount:unknown)=>typeof mount==="string"));
+  assert.equal("customizations" in container, false);
+  assert.equal("EDITOR" in container.containerEnv, false);
+  const native = readFileSync(join(workspace, fixture.dashboardOnly.nativeBootstrap.path), "utf8");
+  for (const token of fixture.dashboardOnly.nativeBootstrap.forbiddenTokens) assert.equal(native.includes(token), false, token);
+  assert.equal(container.mounts.some((mount: string) => /(?:cursor|antigravity|vscode|windsurf)-server/u.test(mount)), false);
+  for (const cli of fixture.dashboardOnly.forbiddenPrograms) {
+    const attach = recordingHost((command) => command === "which" ? { stdout: `/usr/bin/${cli}\n` } : {});
+    await devcontainerAttach(attach, { workspace, home: workspace, user: "vscode", env: { SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL: "1", TERM_PROGRAM: cli, VSCODE_IPC_HOOK_CLI: "/tmp/editor.sock" }, arch: "x64" });
+    const forbidden = (call: string[]) => fixture.dashboardOnly.forbiddenPrograms.includes(call[0]) || call.some((argument) => fixture.dashboardOnly.forbiddenArgs.includes(argument));
+    assert.deepEqual(attach.calls.filter(forbidden), []);
+    assert.deepEqual(lodash.filter(attach.calls, (call: string[]) => lodash.includes(fixture.dashboardOnly.forbiddenPrograms, call[0]) || lodash.some(call, (argument: string) => lodash.includes(fixture.dashboardOnly.forbiddenArgs, argument))), []);
+    assert.ok(attach.lines.includes("✅️ Post-attach setup complete."));
   }
-  assert.ok(existsSync(join(workspace, WORKSPACE_EXTENSION.packageRoot, "package.json")), "the workspace extension package exists where the lifecycle packages it");
-  const vsixTarget = JSON.parse(readFileSync(join(workspace, WORKSPACE_EXTENSION.packageRoot, "📋️project.json"), "utf8")).targets[WORKSPACE_EXTENSION.target.split(":")[1]!];
-  assert.deepEqual(vsixTarget.dependsOn, ["build"], "the VSIX target builds the extension first");
-  assert.deepEqual(vsixTarget.outputs, [`{projectRoot}/${WORKSPACE_EXTENSION.vsix}`], "the lifecycle installs exactly the VSIX the Nx target outputs");
-  console.log("✅️ Devcontainer lifecycle: fontconfig (fast-xml-parser), tool selection (lodash), editor order, GitKraken states + workspace calls, safe.directory, Claude auth storage, start without destructive commands, extension install outcomes PASS");
+  console.log("✅️ Devcontainer dashboard ownership: retired controls absent; attach runs repository hooks without editor commands (lodash oracle) PASS");
 }

@@ -3,6 +3,7 @@
   "elements": null,
   "materials": null,
   "sections": {
+    "removed": [],
     "inserted": [
       {
         "index": 1,
@@ -16,7 +17,6 @@
         }
       }
     ],
-    "removed": [],
     "moved": [],
     "modified": []
   },

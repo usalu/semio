@@ -1,5 +1,5 @@
-//! 🕹️ Fem2d play app — the framework-owned interaction domain: its definition, the selection/hover
 //! snapshot every render reads, screen-space hit-testing of document entities and the
+//! 🕹️ Fem2d play app — the framework-owned interaction domain: its definition, the selection/hover
 //! `interactionSelect`/`interactionHover` request effects a pick emits. Slice A fills this in.
 
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
@@ -37,7 +37,7 @@ pub const FEM2D_POINTER_CHANNEL: &str = "pointer";
 
 //#region 🔖️Definition
 /// 🕹️ The one fem2d interaction domain: every document entity kind is a granularity and a target id
-/// is the raw entity id, so a tree row, a viewport pick and the inspector all agree on one vocabulary.
+/// uses the shared typed scoped identity, so tree rows, viewport picks and inspection agree.
 pub fn fem2d_interaction_definition() -> InteractionDefinition {
     let granularity = |id: &str, en: &str, de: &str, icon: &str| GranularityDefinition { id: id.into(), label: LocalizedLabel::native(en, de), icon_id: icon.into() };
     InteractionDefinition {
@@ -55,7 +55,7 @@ pub fn fem2d_interaction_definition() -> InteractionDefinition {
             granularity(FEM2D_GRANULARITY_COMBINATION, "Combination", "Kombination", "link"),
         ],
         hierarchy: HierarchyProvider::Flat,
-        hover: HoverSpec::default(),
+        hover: HoverSpec { enabled: true, transitive: false, channels: vec![FEM2D_POINTER_CHANNEL.into()], broadcast: true },
         selection: SelectionSpec {
             modes: vec![SelectionMode::Multiple, SelectionMode::Single],
             methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle, SelectionMethod::Lasso],
@@ -93,7 +93,7 @@ pub const FEM2D_LOAD_PICK_RADIUS_PX: f64 = 6.0;
 /// 🎯️ Canvas-pixel pick tolerance against a member's axis.
 pub const FEM2D_ELEMENT_PICK_RADIUS_PX: f64 = 6.0;
 
-/// 🎯️ One pick: the granularity the hit entity belongs to plus its raw document id.
+/// 🎯️ One pick: the entity granularity and its canonical scoped identity.
 pub type Fem2dPick = (&'static str, String);
 
 fn effective_zoom(camera: &Viewport2d) -> f64 {
@@ -196,65 +196,73 @@ pub(crate) fn fem2d_region_centroid(region: &semio_s_artifact_fem_2d_model::stan
 
 /// 🪪️ The granularity one raw document id belongs to, searched in the same precedence the viewport
 /// picks with — the artifact tree and the inspector resolve a selected id through this one lookup.
-pub fn fem2d_entity_kind(doc: &Fem2dSnapshot, id: &str) -> Option<&'static str> {
-    if doc.nodes.iter().any(|node| node.id == id) {
-        return Some(FEM2D_GRANULARITY_NODE);
+pub fn fem2d_entity_kind(doc: &Fem2dSnapshot, target: &str) -> Option<&'static str> {
+    let segments = protocol::wire::decode_scoped_identity(target).ok()?;
+    match segments.as_slice() {
+        [FEM2D_GRANULARITY_NODE, id] if doc.nodes.iter().any(|row| row.id == *id) => Some(FEM2D_GRANULARITY_NODE),
+        [FEM2D_GRANULARITY_ELEMENT, id] if doc.elements.iter().any(|row| element_id(row) == *id) => Some(FEM2D_GRANULARITY_ELEMENT),
+        [FEM2D_GRANULARITY_REGION, id] if doc.regions.iter().any(|row| row.id == *id) => Some(FEM2D_GRANULARITY_REGION),
+        [FEM2D_GRANULARITY_SUPPORT, id] if doc.supports.iter().any(|row| row.id == *id) => Some(FEM2D_GRANULARITY_SUPPORT),
+        [FEM2D_GRANULARITY_MATERIAL, id] if doc.materials.iter().any(|row| row.id == *id) => Some(FEM2D_GRANULARITY_MATERIAL),
+        [FEM2D_GRANULARITY_SECTION, id] if doc.sections.iter().any(|row| row.id == *id) => Some(FEM2D_GRANULARITY_SECTION),
+        [FEM2D_GRANULARITY_LOAD_CASE, id] if doc.load_cases.iter().any(|row| row.id == *id) => Some(FEM2D_GRANULARITY_LOAD_CASE),
+        [FEM2D_GRANULARITY_COMBINATION, id] if doc.combinations.iter().any(|row| row.id == *id) => Some(FEM2D_GRANULARITY_COMBINATION),
+        [FEM2D_GRANULARITY_LOAD, _, _] if fem2d_load_owner(doc, target).is_some() => Some(FEM2D_GRANULARITY_LOAD),
+        _ => None,
     }
-    if doc.elements.iter().any(|element| element_id(element) == id) {
-        return Some(FEM2D_GRANULARITY_ELEMENT);
-    }
-    if doc.supports.iter().any(|support| support.id == id) {
-        return Some(FEM2D_GRANULARITY_SUPPORT);
-    }
-    if fem2d_load_owner(doc, id).is_some() {
-        return Some(FEM2D_GRANULARITY_LOAD);
-    }
-    if doc.regions.iter().any(|region| region.id == id) {
-        return Some(FEM2D_GRANULARITY_REGION);
-    }
-    if doc.materials.iter().any(|material| material.id == id) {
-        return Some(FEM2D_GRANULARITY_MATERIAL);
-    }
-    if doc.sections.iter().any(|section| section.id == id) {
-        return Some(FEM2D_GRANULARITY_SECTION);
-    }
-    if doc.load_cases.iter().any(|case| case.id == id) {
-        return Some(FEM2D_GRANULARITY_LOAD_CASE);
-    }
-    if doc.combinations.iter().any(|combination| combination.id == id) {
-        return Some(FEM2D_GRANULARITY_COMBINATION);
-    }
-    None
 }
 
-/// 🏋️ The load case owning one load id, plus the load itself — a load target carries only the raw
-/// load id, so every consumer (inspector patch, focus, highlight) resolves its case through here.
-pub fn fem2d_load_owner<'a>(doc: &'a Fem2dSnapshot, load: &str) -> Option<(&'a str, &'a FemLoad)> {
-    doc.load_cases.iter().find_map(|case| case.loads.iter().find(|candidate| semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id(candidate) == load).map(|found| (case.id.as_str(), found)))
+/// 🪪️ Canonical interaction identity for one typed top-level entity.
+pub fn fem2d_entity_target_id(kind: &str, id: &str) -> Result<String, protocol::wire::ScopedIdentityError> {
+    protocol::wire::encode_scoped_identity(&[kind, id])
+}
+
+/// 🧾️ Semantic id at the boundary of a canonical interaction address.
+pub fn fem2d_entity_raw_id(target: &str) -> Option<&str> {
+    let segments = protocol::wire::decode_scoped_identity(target).ok()?;
+    match segments.as_slice() { [_, id] | [FEM2D_GRANULARITY_LOAD, _, id] => Some(*id), _ => None }
+}
+
+/// 🪪️ A load's interaction identity includes its owning case; byte lengths preserve arbitrary Unicode and delimiters.
+pub fn fem2d_load_target_id(case: &str, load: &str) -> Result<String, protocol::wire::ScopedIdentityError> {
+    protocol::wire::encode_scoped_identity(&[FEM2D_GRANULARITY_LOAD, case, load])
+}
+
+/// 🏋️ Resolves only an exact case-owned load interaction identity.
+pub fn fem2d_load_owner<'a>(doc: &'a Fem2dSnapshot, target: &str) -> Option<(&'a str, &'a FemLoad)> {
+    let segments = protocol::wire::decode_scoped_identity(target).ok()?;
+    let ["load", case_id, load_id] = segments.as_slice() else { return None };
+    let case = doc.load_cases.iter().find(|case| case.id == *case_id)?;
+    case.loads.iter().find(|load| semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id(load) == *load_id).map(|load| (case.id.as_str(), load))
 }
 
 /// 🎯️ The model-space point one entity is framed on — a node's position, a member's midpoint, a
 /// region's centroid, a support's node, a load's anchor.
-pub fn fem2d_entity_model_point(doc: &Fem2dSnapshot, id: &str) -> Option<(f64, f64)> {
-    if let Some(node) = find_node_2d(&doc.nodes, id) {
-        return Some((node.x, node.y));
+pub fn fem2d_entity_model_point(doc: &Fem2dSnapshot, target: &str) -> Option<(f64, f64)> {
+    let kind = fem2d_entity_kind(doc, target)?;
+    let id = fem2d_entity_raw_id(target)?;
+    if kind == FEM2D_GRANULARITY_NODE {
+        return find_node_2d(&doc.nodes, id).map(|node| (node.x, node.y));
     }
-    if let Some(element) = doc.elements.iter().find(|element| element_id(element) == id) {
+    if kind == FEM2D_GRANULARITY_ELEMENT {
+        let element = doc.elements.iter().find(|element| element_id(element) == id)?;
         let (start, end) = fem2d_element_endpoints(element);
         let (a, b) = (find_node_2d(&doc.nodes, start)?, find_node_2d(&doc.nodes, end)?);
         return Some(((a.x + b.x) * 0.5, (a.y + b.y) * 0.5));
     }
-    if let Some(support) = doc.supports.iter().find(|support| support.id == id) {
+    if kind == FEM2D_GRANULARITY_SUPPORT {
+        let support = doc.supports.iter().find(|support| support.id == id)?;
         let node = find_node_2d(&doc.nodes, &support.node_id)?;
         return Some((node.x, node.y));
     }
-    if let Some(region) = doc.regions.iter().find(|region| region.id == id) {
+    if kind == FEM2D_GRANULARITY_REGION {
+        let region = doc.regions.iter().find(|region| region.id == id)?;
         return fem2d_region_centroid(region);
     }
-    if let Some((_, load)) = fem2d_load_owner(doc, id) {
+    if let Some((_, load)) = fem2d_load_owner(doc, target) {
         return match load {
             FemLoad::Nodal { node_id, .. } => find_node_2d(&doc.nodes, node_id).map(|node| (node.x, node.y)),
-            FemLoad::MemberUdl { element_id: target, .. } => fem2d_entity_model_point(doc, target),
+            FemLoad::MemberUdl { element_id: target, .. } => fem2d_entity_model_point(doc, &fem2d_entity_target_id(FEM2D_GRANULARITY_ELEMENT, target).ok()?),
             FemLoad::Area { region_id, .. } => doc.regions.iter().find(|region| region.id == *region_id).and_then(fem2d_region_centroid),
         };
     }
@@ -269,7 +277,7 @@ pub fn fem2d_entity_model_point(doc: &Fem2dSnapshot, id: &str) -> Option<(f64, f
 /// Precedence — nodes, supports, loads, members, regions: the small point-like glyphs win over the
 /// large area-like ones, and a node beats the support drawn on top of it so a click exactly on a
 /// joint always selects the joint.
-pub fn fem2d_hit_test(doc: &Fem2dSnapshot, camera: &Viewport2d, x: f64, y: f64, width: f64, height: f64) -> Option<Fem2dPick> {
+pub fn fem2d_hit_test(doc: &Fem2dSnapshot, camera: &Viewport2d, x: f64, y: f64, width: f64, height: f64) -> Result<Option<Fem2dPick>, protocol::wire::ScopedIdentityError> {
     let pointer = (x, y);
     let at = |model: (f64, f64)| fem2d_layer_to_canvas(camera, screen_2d(model.0, model.1), width, height);
     let layer_at = |layer: (f64, f64)| fem2d_layer_to_canvas(camera, layer, width, height);
@@ -283,22 +291,22 @@ pub fn fem2d_hit_test(doc: &Fem2dSnapshot, camera: &Viewport2d, x: f64, y: f64, 
     for node in &doc.nodes {
         let score = distance(pointer, at((node.x, node.y)));
         if score <= FEM2D_NODE_PICK_RADIUS_PX {
-            keep(score, (FEM2D_GRANULARITY_NODE, node.id.clone()), &mut best);
+            keep(score, (FEM2D_GRANULARITY_NODE, fem2d_entity_target_id(FEM2D_GRANULARITY_NODE, &node.id)?), &mut best);
         }
     }
     if let Some((_, pick)) = best.take() {
-        return Some(pick);
+        return Ok(Some(pick));
     }
 
     for support in &doc.supports {
         let Some(node) = find_node_2d(&doc.nodes, &support.node_id) else { continue };
         let score = distance(pointer, at((node.x, node.y)));
         if score <= FEM2D_SUPPORT_PICK_RADIUS_PX {
-            keep(score, (FEM2D_GRANULARITY_SUPPORT, support.id.clone()), &mut best);
+            keep(score, (FEM2D_GRANULARITY_SUPPORT, fem2d_entity_target_id(FEM2D_GRANULARITY_SUPPORT, &support.id)?), &mut best);
         }
     }
     if let Some((_, pick)) = best.take() {
-        return Some(pick);
+        return Ok(Some(pick));
     }
 
     for case in &doc.load_cases {
@@ -306,12 +314,12 @@ pub fn fem2d_hit_test(doc: &Fem2dSnapshot, camera: &Viewport2d, x: f64, y: f64, 
             let Some((start, end)) = fem2d_load_glyph(doc, load) else { continue };
             let score = distance_to_segment(pointer, layer_at(start), layer_at(end));
             if score <= FEM2D_LOAD_PICK_RADIUS_PX {
-                keep(score, (FEM2D_GRANULARITY_LOAD, semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id(load).to_string()), &mut best);
+                keep(score, (FEM2D_GRANULARITY_LOAD, fem2d_load_target_id(&case.id, semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id(load))?), &mut best);
             }
         }
     }
     if let Some((_, pick)) = best.take() {
-        return Some(pick);
+        return Ok(Some(pick));
     }
 
     for element in &doc.elements {
@@ -319,18 +327,18 @@ pub fn fem2d_hit_test(doc: &Fem2dSnapshot, camera: &Viewport2d, x: f64, y: f64, 
         let (Some(a), Some(b)) = (find_node_2d(&doc.nodes, start), find_node_2d(&doc.nodes, end)) else { continue };
         let score = distance_to_segment(pointer, at((a.x, a.y)), at((b.x, b.y)));
         if score <= FEM2D_ELEMENT_PICK_RADIUS_PX {
-            keep(score, (FEM2D_GRANULARITY_ELEMENT, element_id(element).to_string()), &mut best);
+            keep(score, (FEM2D_GRANULARITY_ELEMENT, fem2d_entity_target_id(FEM2D_GRANULARITY_ELEMENT, element_id(element))?), &mut best);
         }
     }
     if let Some((_, pick)) = best.take() {
-        return Some(pick);
+        return Ok(Some(pick));
     }
 
     let model = fem2d_canvas_to_model(camera, x, y, width, height);
     doc.regions
         .iter()
         .find(|region| point_in_polygon(model, &region.outline) && !region.holes.iter().any(|hole| point_in_polygon(model, hole)))
-        .map(|region| (FEM2D_GRANULARITY_REGION, region.id.clone()))
+        .map(|region| fem2d_entity_target_id(FEM2D_GRANULARITY_REGION, &region.id).map(|id| (FEM2D_GRANULARITY_REGION, id))).transpose()
 }
 //#endregion 🔖️HitTest
 

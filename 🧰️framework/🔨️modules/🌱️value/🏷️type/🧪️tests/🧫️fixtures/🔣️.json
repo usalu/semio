@@ -535,5 +535,6 @@
     "longSchema": "引用😀",
     "repeat": 20000,
     "cancelAt": 256
-  }
+  },
+  "metadataCloseCopyBytes": 0
 }

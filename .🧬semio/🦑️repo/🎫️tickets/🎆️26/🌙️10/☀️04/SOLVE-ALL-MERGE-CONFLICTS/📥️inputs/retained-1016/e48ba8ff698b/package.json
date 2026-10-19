@@ -1,0 +1,19 @@
+{
+  "name": "neutral-child",
+  "private": true,
+  "workspaces": [
+    "members/one"
+  ],
+  "semio": {
+    "workspace": {
+      "schemaVersion": 1,
+      "members": [
+        "members/**"
+      ],
+      "owners": []
+    }
+  },
+  "dependencies": {
+    "neutral-boundary-member": "workspace:*"
+  }
+}

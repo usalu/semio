@@ -1,7 +1,9 @@
-use crate::{solve_linear_static, Elements, Model};
+use crate::solve_linear_static;
+use crate::Elements;
+use crate::Model;
 use semio_s_fem_algebra::*;
-use semio_s_fem_model::*;
-use semio_s_fem_elements2d::*;
+use semio_s_fem_algebra::*;
+use semio_s_fem_algebra::*;
 
 fn assert_mounted_stiffness_cells_match_batch(element: &dyn Element, context: &ElementContext, tolerance: f64) {
     let batch = element.stiffness_global(context);
@@ -307,4 +309,38 @@ fn bar2_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric(
             assert!(kg.get(i, j).abs() < 1e-6, "Kg({i},{j}) should be zero along the bar's own axis");
         }
     }
+}
+
+#[test]
+fn mounted_load_rows_match_independent_quadrature_and_consistent_mass() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📏️elements2d/🧫️fixtures/🌬️mounted-loads/🔣️.json")).expect("fixture");
+    let expected = fixture.get("line").unwrap().get("expected").unwrap().as_array().unwrap();
+    let positions = [[0.0, 0.0, 0.0], [2.0, 1.0, 0.0]];
+    let context = ElementContext { positions: positions.to_vec() };
+    let udl = MemberUdl { wx: 120.0, wy: -80.0, wz: 0.0 };
+    let gravity = [0.0, -9.81];
+    let bar = Bar2 { id: "bar".into(), start: "a".into(), end: "b".into(), e: 210e9, area: 0.01, density: 7850.0 };
+    let beam = BeamEb2 { id: "beam".into(), start: "a".into(), end: "b".into(), e: 210e9, area: 0.01, iy: 8e-6, density: 7850.0 };
+    let mass = beam.mass(&context).unwrap();
+    let loads = beam.equivalent_nodal_loads(&context, &udl).unwrap();
+    for row in 0..6 {
+        let value = beam.mounted_load_row(&positions, row, &udl, gravity).unwrap();
+        assert!((value - expected[row].as_f64().unwrap()).abs() < 1e-9);
+        let batch = loads.get(row) + (0..6).filter(|column| column % 3 == 1).map(|column| mass.get(row, column) * gravity[1]).sum::<f64>();
+        assert!((value - batch).abs() < 1e-9);
+    }
+    for row in 0..4 {
+        let expected = expected[[0, 1, 3, 4][row]].as_f64().unwrap();
+        assert!((bar.mounted_load_row(&positions, row, &udl, gravity).unwrap() - expected).abs() < 1e-9);
+    }
+    assert_eq!(beam.mounted_load_row(&positions, 6, &udl, gravity), None);
+    assert_eq!(bar.mounted_load_row(&positions, 4, &udl, gravity), None);
+    let triangle = Tri3Cst { id: "triangle".into(), nodes: ["a".into(), "b".into(), "c".into()], e: 30e9, nu: 0.2, thickness: 0.3, kind: PlaneKind::Stress, density: 2400.0 };
+    let positions = [[0.0, 0.0, 0.0], [2.0, 0.0, 0.0], [0.25, 1.5, 0.0]];
+    for row in 0..6 {
+        let expected = fixture.get("triangle").unwrap().get("expected").unwrap().as_array().unwrap()[row].as_f64().unwrap();
+        assert!((triangle.mounted_load_row(&positions, row, 100.0, gravity).unwrap() - expected).abs() < 1e-9);
+    }
+    assert_eq!(triangle.mounted_load_row(&positions, 6, 100.0, gravity), None);
+    println!("[DEBUG] Fixed mounted 2D load rows match independent NumPy integration and consistent batch mass");
 }

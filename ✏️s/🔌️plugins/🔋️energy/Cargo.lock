@@ -1230,6 +1230,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
+ "semio-framework-value-snapshot-read",
 ]
 
 [[package]]
@@ -5122,6 +5123,7 @@ dependencies = [
  "semio-s-plugin-energy-engine-sizing",
  "semio-s-plugin-energy-engine-units",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -5135,6 +5137,8 @@ dependencies = [
  "semio-s-plugin-energy-engine-sim",
  "semio-s-plugin-energy-engine-sim-retirement",
  "semio-s-plugin-energy-engine-sim-wire",
+ "semio-s-plugin-energy-engine-site",
+ "serde_json",
 ]
 
 [[package]]

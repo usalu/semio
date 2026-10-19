@@ -59,6 +59,7 @@ Feature: Apply every typed fem3d material mutation twice — once in Rust, once 
     | create-material  | {"mutation":"createMaterial","material":{"id":"s355","name":"Steel S355","e":210000000000.0,"g":80770000000.0,"nu":0.3,"rho":7850.0}}                   |
     | delete-material  | {"mutation":"deleteMaterial","id":"alu"}                                                                                                                |
     | replace-material | {"mutation":"replaceMaterial","id":"steel","newMaterial":{"id":"steel","name":"Steel S355","e":210000000000.0,"g":78000000000.0,"nu":0.3,"rho":7850.0}} |
+    | change-material | {"mutation":"changeMaterial","id":"steel","patch":{"name":"Structural Steel"}} |
 
   @id-inverse
   @level-exhaustive
@@ -75,6 +76,7 @@ Feature: Apply every typed fem3d material mutation twice — once in Rust, once 
     | create-material  | {"mutation":"createMaterial","material":{"id":"s355","name":"Steel S355","e":210000000000.0,"g":80770000000.0,"nu":0.3,"rho":7850.0}}                   |
     | delete-material  | {"mutation":"deleteMaterial","id":"alu"}                                                                                                                |
     | replace-material | {"mutation":"replaceMaterial","id":"steel","newMaterial":{"id":"steel","name":"Steel S355","e":210000000000.0,"g":78000000000.0,"nu":0.3,"rho":7850.0}} |
+    | change-material | {"mutation":"changeMaterial","id":"steel","patch":{"name":"Structural Steel"}} |
 
   @id-spec-vector
   @level-exhaustive
@@ -90,6 +92,7 @@ Feature: Apply every typed fem3d material mutation twice — once in Rust, once 
     | create-material  | 🌱️create-material  | 🪙️appends-an-9fdced  |
     | delete-material  | 🗑️delete-material  | 🚫️removes |
     | replace-material | 🔁️replace-material | 📉️softens |
+    | change-material | 🩹️change-material | 🩹️renames |
 
   @id-hall-vector
   @level-exhaustive
@@ -104,6 +107,7 @@ Feature: Apply every typed fem3d material mutation twice — once in Rust, once 
     | id               | dir                | fixture                 |
     | create-material  | 🌱️create-material  | 🏗️hall |
     | replace-material | 🔁️replace-material | 🏗️hall  |
+    | change-material | 🩹️change-material | 📉️softens |
     | delete-material  | 🗑️delete-material  | 🏗️hall |
 
   @id-reject
@@ -124,3 +128,7 @@ Feature: Apply every typed fem3d material mutation twice — once in Rust, once 
     | renames-c24-b60696      | 🔁️replace-material | 🪪️renames      |
     | glulam-in-use-1208e1    | 🗑️delete-material  | ⛓️glulam    |
     | no-such-material-494b10 | 🗑️delete-material  | 🚨️no |
+
+    | change-material-same | 🩹️change-material | ⏸️same |
+    | change-material-missing | 🩹️change-material | ⛔️missing |
+    | change-material-invalid | 🩹️change-material | ⚗️invalid |

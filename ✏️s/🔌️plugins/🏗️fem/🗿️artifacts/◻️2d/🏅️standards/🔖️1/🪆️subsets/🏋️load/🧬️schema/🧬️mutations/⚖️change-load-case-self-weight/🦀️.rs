@@ -1,8 +1,12 @@
 //! ⚖️ Fem2d mutation — `ChangeLoadCaseSelfWeight` payload + `MutationKind` impl.
 
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
-use protocol::{MutationKind, SemanticDescriptor};
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
+use protocol::MutationKind;
+use protocol::SemanticDescriptor;
+use protocol::ColdMutationKind;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 
 //#region 🔖️Mutation
 /// ⚖️ Sets an existing load case's `self_weight` flag.
@@ -18,24 +22,32 @@ pub struct ChangeLoadCaseSelfWeight {
 
 impl<Op> MutationKind<Fem2dSnapshot, Op> for ChangeLoadCaseSelfWeight
 where
-    Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<change_load_case_self_weight::ChangeLoadCaseSelfWeight>,
-{
-    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "load-case", kind: "change-load-case-self-weight", record: "ChangedLoadCaseSelfWeight" };
+    Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::change_load_case_self_weight::ChangeLoadCaseSelfWeight>, {
 
-    fn diff(&self, base: &Fem2dSnapshot) -> protocol::MutationOutcome<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Fem2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "load-case", kind: "change-load-case-self-weight", record: "ChangedLoadCaseSelfWeight" };
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set case \"{}\" self-weight to {}", self.case_id, self.new_self_weight), &format!("Eigengewicht von Lastfall \"{}\" auf {} setzen", self.case_id, self.new_self_weight))
     }
     fn target(&self) -> Vec<String> {
         vec![self.case_id.clone()]
     }
+
+}
+impl<Op> protocol::ColdMutationKind<Fem2dSnapshotValue, Op> for ChangeLoadCaseSelfWeight
+where
+    Op: protocol::ColdMutation<Fem2dSnapshotValue, ReferenceDiff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::change_load_case_self_weight::ChangeLoadCaseSelfWeight>, {
+
+
+    fn diff(&self, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> {
+        super::diff::diff(self, base)
+    }
+
+    fn inverse(&self, base: &Fem2dSnapshotValue) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
+
 }
 //#endregion 🔖️Mutation

@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "bodyBytes",
+    "cancelCuts",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "bodyBytes": {
+      "const": 4096
+    },
+    "cancelCuts": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "original",
+          "authored",
+          "expected"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "original": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "authored": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "expected": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "removed",
+                  "added"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "removed": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "added": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "index",
+                        "value"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "index": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "value": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

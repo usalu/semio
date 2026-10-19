@@ -1,5 +1,5 @@
-//! 🗣️ Puzzle 2d play app — the complete UI label set: one field per label, so every
 //! terminology×locale combination is compile-checked by `semio_framework_plugin::app_labels!`
+//! 🗣️ Puzzle 2d play app — the complete UI label set: one field per label, so every
 //! (see ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND).
 
 use semio_framework_ui_locale::LabelText;

@@ -1,0 +1,653 @@
+{
+  "version": 1,
+  "order": [
+    "Tx",
+    "Ty",
+    "Tz",
+    "Rx",
+    "Ry",
+    "Rz"
+  ],
+  "cases": [
+    {
+      "id": "subset-0",
+      "input": [],
+      "canonical": true
+    },
+    {
+      "id": "subset-1",
+      "input": [
+        "Tx"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-2",
+      "input": [
+        "Ty"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-3",
+      "input": [
+        "Tx",
+        "Ty"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-4",
+      "input": [
+        "Tz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-5",
+      "input": [
+        "Tx",
+        "Tz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-6",
+      "input": [
+        "Ty",
+        "Tz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-7",
+      "input": [
+        "Tx",
+        "Ty",
+        "Tz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-8",
+      "input": [
+        "Rx"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-9",
+      "input": [
+        "Tx",
+        "Rx"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-10",
+      "input": [
+        "Ty",
+        "Rx"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-11",
+      "input": [
+        "Tx",
+        "Ty",
+        "Rx"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-12",
+      "input": [
+        "Tz",
+        "Rx"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-13",
+      "input": [
+        "Tx",
+        "Tz",
+        "Rx"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-14",
+      "input": [
+        "Ty",
+        "Tz",
+        "Rx"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-15",
+      "input": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-16",
+      "input": [
+        "Ry"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-17",
+      "input": [
+        "Tx",
+        "Ry"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-18",
+      "input": [
+        "Ty",
+        "Ry"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-19",
+      "input": [
+        "Tx",
+        "Ty",
+        "Ry"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-20",
+      "input": [
+        "Tz",
+        "Ry"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-21",
+      "input": [
+        "Tx",
+        "Tz",
+        "Ry"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-22",
+      "input": [
+        "Ty",
+        "Tz",
+        "Ry"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-23",
+      "input": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Ry"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-24",
+      "input": [
+        "Rx",
+        "Ry"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-25",
+      "input": [
+        "Tx",
+        "Rx",
+        "Ry"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-26",
+      "input": [
+        "Ty",
+        "Rx",
+        "Ry"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-27",
+      "input": [
+        "Tx",
+        "Ty",
+        "Rx",
+        "Ry"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-28",
+      "input": [
+        "Tz",
+        "Rx",
+        "Ry"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-29",
+      "input": [
+        "Tx",
+        "Tz",
+        "Rx",
+        "Ry"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-30",
+      "input": [
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-31",
+      "input": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-32",
+      "input": [
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-33",
+      "input": [
+        "Tx",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-34",
+      "input": [
+        "Ty",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-35",
+      "input": [
+        "Tx",
+        "Ty",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-36",
+      "input": [
+        "Tz",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-37",
+      "input": [
+        "Tx",
+        "Tz",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-38",
+      "input": [
+        "Ty",
+        "Tz",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-39",
+      "input": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-40",
+      "input": [
+        "Rx",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-41",
+      "input": [
+        "Tx",
+        "Rx",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-42",
+      "input": [
+        "Ty",
+        "Rx",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-43",
+      "input": [
+        "Tx",
+        "Ty",
+        "Rx",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-44",
+      "input": [
+        "Tz",
+        "Rx",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-45",
+      "input": [
+        "Tx",
+        "Tz",
+        "Rx",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-46",
+      "input": [
+        "Ty",
+        "Tz",
+        "Rx",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-47",
+      "input": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-48",
+      "input": [
+        "Ry",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-49",
+      "input": [
+        "Tx",
+        "Ry",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-50",
+      "input": [
+        "Ty",
+        "Ry",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-51",
+      "input": [
+        "Tx",
+        "Ty",
+        "Ry",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-52",
+      "input": [
+        "Tz",
+        "Ry",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-53",
+      "input": [
+        "Tx",
+        "Tz",
+        "Ry",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-54",
+      "input": [
+        "Ty",
+        "Tz",
+        "Ry",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-55",
+      "input": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Ry",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-56",
+      "input": [
+        "Rx",
+        "Ry",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-57",
+      "input": [
+        "Tx",
+        "Rx",
+        "Ry",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-58",
+      "input": [
+        "Ty",
+        "Rx",
+        "Ry",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-59",
+      "input": [
+        "Tx",
+        "Ty",
+        "Rx",
+        "Ry",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-60",
+      "input": [
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-61",
+      "input": [
+        "Tx",
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-62",
+      "input": [
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "subset-63",
+      "input": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ],
+      "canonical": true
+    },
+    {
+      "id": "duplicate",
+      "input": [
+        "Tx",
+        "Tx"
+      ],
+      "canonical": false
+    },
+    {
+      "id": "descending",
+      "input": [
+        "Ty",
+        "Tx"
+      ],
+      "canonical": false
+    },
+    {
+      "id": "unknown",
+      "input": [
+        "Px"
+      ],
+      "canonical": false
+    },
+    {
+      "id": "case",
+      "input": [
+        "tx"
+      ],
+      "canonical": false
+    },
+    {
+      "id": "oversize",
+      "input": [
+        "Tx",
+        "Tx",
+        "Tx",
+        "Tx",
+        "Tx",
+        "Tx",
+        "Tx"
+      ],
+      "canonical": false
+    },
+    {
+      "id": "scalar",
+      "input": "Tx",
+      "canonical": false
+    },
+    {
+      "id": "null",
+      "input": null,
+      "canonical": false
+    },
+    {
+      "id": "number",
+      "input": [
+        1
+      ],
+      "canonical": false
+    },
+    {
+      "id": "object",
+      "input": {},
+      "canonical": false
+    }
+  ]
+}

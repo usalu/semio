@@ -30,10 +30,10 @@ fn ops() -> Vec<Puzzle3dMutation> {
 }
 
 fn engine_commands() -> Vec<Puzzle3dEngineCommand> {
-    let mut object_weights = std::collections::BTreeMap::new();
-    object_weights.insert("Host".to_string(), 0.5);
+    let mut object_weights = semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap::new();
+    object_weights.cold_insert("Host".to_string(), 0.5);
     vec![
-        Puzzle3dEngineCommand::UpdateKindWeights { object_weights, vortex_weights: std::collections::BTreeMap::new() },
+        Puzzle3dEngineCommand::UpdateKindWeights { object_weights, vortex_weights: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap::new() },
         Puzzle3dEngineCommand::BrushPreview { vortex_full_id: "host:v0".to_string(), candidate_index: 2 },
     ]
 }
@@ -47,9 +47,13 @@ fn engine_commands() -> Vec<Puzzle3dEngineCommand> {
 /// `BrushPreview` 5 → 3. Nothing else about either row moved (same body bytes, same lengths), and
 /// neither deleted command exists anywhere in the crate any more, so the old capture pinned a wire
 /// that can no longer be produced. The law is unchanged: these bytes must not drift again.
+///
+/// 🔁️ Re-frozen 2026-10-12. The whole-scene report `ApplyBrushPlacement` (ordinal 1) was deleted with the host-scene reconciliation
+/// translator (design wave 4: hosts report gestures as concrete kinds), so `UpdateKindWeights` moved 2 → 1 and `BrushPreview` 3 → 2.
+/// Body bytes and lengths are unchanged.
 const FROZEN_ENGINE_COMMAND_WIRE: &[&str] = &[
-    "update-kind-weights object-weights={ Host=0.5 } vortex-weights={ } | 26 | 01020104486f737402001001060005000000000000e03f011000",
-    "brush-preview vortex-full-id=\"host:v0\" candidate-index=2 | 18 | 01030107686f73743a763002000600010402",
+    "update-kind-weights object-weights={ Host=0.5 } vortex-weights={ } | 26 | 01010104486f737402001001060005000000000000e03f011000",
+    "brush-preview vortex-full-id=\"host:v0\" candidate-index=2 | 18 | 01020107686f73743a763002000600010402",
 ];
 
 /// ⚖️ Every document-mutation operation prints, parses, encodes, and decodes back to an equal

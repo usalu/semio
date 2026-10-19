@@ -1,0 +1,358 @@
+{
+  "nodes": [
+    {
+      "id": "n0",
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "id": "n1",
+      "x": 2000.0,
+      "y": 0.0
+    },
+    {
+      "id": "n2",
+      "x": 2000.0,
+      "y": 2000.0
+    },
+    {
+      "id": "n3",
+      "x": 0.0,
+      "y": 2000.0
+    },
+    {
+      "id": "n4",
+      "x": 750.0,
+      "y": 750.0
+    },
+    {
+      "id": "n5",
+      "x": 750.0,
+      "y": 1250.0
+    },
+    {
+      "id": "n6",
+      "x": 1250.0,
+      "y": 1250.0
+    },
+    {
+      "id": "n7",
+      "x": 1250.0,
+      "y": 750.0
+    }
+  ],
+  "elements": [],
+  "regions": [
+    {
+      "id": "region",
+      "name": "Triangle",
+      "outline": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          2000.0,
+          0.0
+        ],
+        [
+          2000.0,
+          2000.0
+        ],
+        [
+          0.0,
+          2000.0
+        ]
+      ],
+      "holes": [
+        [
+          [
+            750.0,
+            750.0
+          ],
+          [
+            750.0,
+            1250.0
+          ],
+          [
+            1250.0,
+            1250.0
+          ],
+          [
+            1250.0,
+            750.0
+          ]
+        ]
+      ],
+      "thickness": 0.1,
+      "materialId": "material",
+      "meshSize": 10000.0
+    }
+  ],
+  "materials": [
+    {
+      "id": "material",
+      "name": "Material",
+      "e": 30000000.0,
+      "nu": 0.2,
+      "rho": 2500.0
+    }
+  ],
+  "sections": [],
+  "supports": [
+    {
+      "id": "sa",
+      "nodeId": "n0",
+      "fixed": [
+        "Tx",
+        "Ty"
+      ]
+    },
+    {
+      "id": "sb",
+      "nodeId": "n1",
+      "fixed": [
+        "Ty"
+      ]
+    }
+  ],
+  "loadCases": [
+    {
+      "id": "patch",
+      "name": "Constant Stress",
+      "selfWeight": false,
+      "loads": [
+        {
+          "id": "edge0-0-0-Tx",
+          "kind": "nodal",
+          "nodeId": "n0",
+          "dof": "Tx",
+          "value": -0.0
+        },
+        {
+          "id": "edge0-0-0-Ty",
+          "kind": "nodal",
+          "nodeId": "n0",
+          "dof": "Ty",
+          "value": 2000000.0
+        },
+        {
+          "id": "edge0-0-1-Tx",
+          "kind": "nodal",
+          "nodeId": "n1",
+          "dof": "Tx",
+          "value": -0.0
+        },
+        {
+          "id": "edge0-0-1-Ty",
+          "kind": "nodal",
+          "nodeId": "n1",
+          "dof": "Ty",
+          "value": 2000000.0
+        },
+        {
+          "id": "edge0-1-1-Tx",
+          "kind": "nodal",
+          "nodeId": "n1",
+          "dof": "Tx",
+          "value": -1000000.0
+        },
+        {
+          "id": "edge0-1-1-Ty",
+          "kind": "nodal",
+          "nodeId": "n1",
+          "dof": "Ty",
+          "value": 0.0
+        },
+        {
+          "id": "edge0-1-2-Tx",
+          "kind": "nodal",
+          "nodeId": "n2",
+          "dof": "Tx",
+          "value": -1000000.0
+        },
+        {
+          "id": "edge0-1-2-Ty",
+          "kind": "nodal",
+          "nodeId": "n2",
+          "dof": "Ty",
+          "value": 0.0
+        },
+        {
+          "id": "edge0-2-2-Tx",
+          "kind": "nodal",
+          "nodeId": "n2",
+          "dof": "Tx",
+          "value": -0.0
+        },
+        {
+          "id": "edge0-2-2-Ty",
+          "kind": "nodal",
+          "nodeId": "n2",
+          "dof": "Ty",
+          "value": -2000000.0
+        },
+        {
+          "id": "edge0-2-3-Tx",
+          "kind": "nodal",
+          "nodeId": "n3",
+          "dof": "Tx",
+          "value": -0.0
+        },
+        {
+          "id": "edge0-2-3-Ty",
+          "kind": "nodal",
+          "nodeId": "n3",
+          "dof": "Ty",
+          "value": -2000000.0
+        },
+        {
+          "id": "edge0-3-3-Tx",
+          "kind": "nodal",
+          "nodeId": "n3",
+          "dof": "Tx",
+          "value": 1000000.0
+        },
+        {
+          "id": "edge0-3-3-Ty",
+          "kind": "nodal",
+          "nodeId": "n3",
+          "dof": "Ty",
+          "value": 0.0
+        },
+        {
+          "id": "edge0-3-0-Tx",
+          "kind": "nodal",
+          "nodeId": "n0",
+          "dof": "Tx",
+          "value": 1000000.0
+        },
+        {
+          "id": "edge0-3-0-Ty",
+          "kind": "nodal",
+          "nodeId": "n0",
+          "dof": "Ty",
+          "value": 0.0
+        },
+        {
+          "id": "edge4-0-0-Tx",
+          "kind": "nodal",
+          "nodeId": "n4",
+          "dof": "Tx",
+          "value": -250000.0
+        },
+        {
+          "id": "edge4-0-0-Ty",
+          "kind": "nodal",
+          "nodeId": "n4",
+          "dof": "Ty",
+          "value": 0.0
+        },
+        {
+          "id": "edge4-0-1-Tx",
+          "kind": "nodal",
+          "nodeId": "n5",
+          "dof": "Tx",
+          "value": -250000.0
+        },
+        {
+          "id": "edge4-0-1-Ty",
+          "kind": "nodal",
+          "nodeId": "n5",
+          "dof": "Ty",
+          "value": 0.0
+        },
+        {
+          "id": "edge4-1-1-Tx",
+          "kind": "nodal",
+          "nodeId": "n5",
+          "dof": "Tx",
+          "value": -0.0
+        },
+        {
+          "id": "edge4-1-1-Ty",
+          "kind": "nodal",
+          "nodeId": "n5",
+          "dof": "Ty",
+          "value": 500000.0
+        },
+        {
+          "id": "edge4-1-2-Tx",
+          "kind": "nodal",
+          "nodeId": "n6",
+          "dof": "Tx",
+          "value": -0.0
+        },
+        {
+          "id": "edge4-1-2-Ty",
+          "kind": "nodal",
+          "nodeId": "n6",
+          "dof": "Ty",
+          "value": 500000.0
+        },
+        {
+          "id": "edge4-2-2-Tx",
+          "kind": "nodal",
+          "nodeId": "n6",
+          "dof": "Tx",
+          "value": 250000.0
+        },
+        {
+          "id": "edge4-2-2-Ty",
+          "kind": "nodal",
+          "nodeId": "n6",
+          "dof": "Ty",
+          "value": 0.0
+        },
+        {
+          "id": "edge4-2-3-Tx",
+          "kind": "nodal",
+          "nodeId": "n7",
+          "dof": "Tx",
+          "value": 250000.0
+        },
+        {
+          "id": "edge4-2-3-Ty",
+          "kind": "nodal",
+          "nodeId": "n7",
+          "dof": "Ty",
+          "value": 0.0
+        },
+        {
+          "id": "edge4-3-3-Tx",
+          "kind": "nodal",
+          "nodeId": "n7",
+          "dof": "Tx",
+          "value": -0.0
+        },
+        {
+          "id": "edge4-3-3-Ty",
+          "kind": "nodal",
+          "nodeId": "n7",
+          "dof": "Ty",
+          "value": -500000.0
+        },
+        {
+          "id": "edge4-3-0-Tx",
+          "kind": "nodal",
+          "nodeId": "n4",
+          "dof": "Tx",
+          "value": -0.0
+        },
+        {
+          "id": "edge4-3-0-Ty",
+          "kind": "nodal",
+          "nodeId": "n4",
+          "dof": "Ty",
+          "value": -500000.0
+        }
+      ]
+    }
+  ],
+  "combinations": [],
+  "analysis": {
+    "deformationScale": 1.0,
+    "modalCount": 1,
+    "bucklingCount": 1
+  }
+}

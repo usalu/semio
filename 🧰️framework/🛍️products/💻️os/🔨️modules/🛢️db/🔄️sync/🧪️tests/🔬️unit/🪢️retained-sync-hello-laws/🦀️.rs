@@ -57,7 +57,7 @@ async fn retained_sync_hello_handoff_first_poll_cancel_preserves_exact_owner_and
     let storage_identity = std::sync::Arc::as_ptr(&storage);
     let document = ArtifactId(String::from("p1z-handoff-cancel"));
     let document_identity = document.0.as_ptr();
-    let future = DatabaseSyncHelloFuture::try_submit(pool, storage, document, None, String::from("p1z-session"), protocol::ActorId(String::from("p1z-origin")), 4096).unwrap();
+    let future = DatabaseSyncHelloFuture::try_submit(pool, storage, document, None, String::from("p1z-session"), protocol::ActorId(String::from("p1z-origin").into()), 4096).unwrap();
     let state = future.state.as_ref().unwrap().clone();
     assert_eq!(state.driver.load(std::sync::atomic::Ordering::Acquire), DatabaseSyncHelloDriverAuthority::Queued as u8);
     future.cancel();
@@ -79,15 +79,15 @@ async fn retained_sync_hello_max_plus_one_refusal_keeps_storage_document_frontie
     let storage = retained_sync_hello_storage().await;
     let mut futures = Vec::new();
     for index in 0..DATABASE_SYNC_HELLO_SLOTS {
-        futures.push(DatabaseSyncHelloFuture::try_submit(pool.clone(), storage.clone(), ArtifactId(format!("p1z-max-{index}")), None, format!("session-{index}"), protocol::ActorId(format!("origin-{index}")), 4096).unwrap());
+        futures.push(DatabaseSyncHelloFuture::try_submit(pool.clone(), storage.clone(), ArtifactId(format!("p1z-max-{index}")), None, format!("session-{index}"), protocol::ActorId(format!("origin-{index}").into()), 4096).unwrap());
     }
     let document = ArtifactId(String::from("p1z-max-plus-one"));
     let identity = document.0.as_ptr();
-    let rejected = DatabaseSyncHelloFuture::try_submit(pool, storage, document, None, String::from("retained-session"), protocol::ActorId(String::from("retained-origin")), 4096).unwrap_err();
+    let rejected = DatabaseSyncHelloFuture::try_submit(pool, storage, document, None, String::from("retained-session"), protocol::ActorId(String::from("retained-origin").into()), 4096).unwrap_err();
     let owners = rejected.close.owners.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     assert_eq!(owners.as_ref().unwrap().document.0.as_ptr(), identity);
     assert_eq!(owners.as_ref().unwrap().session_id, "retained-session");
-    assert_eq!(owners.as_ref().unwrap().origin.0, "retained-origin");
+    assert_eq!(owners.as_ref().unwrap().origin.0.as_str(), "retained-origin");
     drop(owners);
     held.store(false, std::sync::atomic::Ordering::Release);
     for future in futures {
@@ -102,7 +102,7 @@ async fn retained_sync_hello_tail_stream_publishes_welcome_then_one_backpressure
     let document = ArtifactId(String::from("p1z-tail-stream"));
     seed_wal(&memory, &document, 3).await;
     let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(memory));
-    let result = DatabaseSyncHelloFuture::try_submit(pool, storage, document, None, String::from("p1z-tail"), protocol::ActorId(String::from("p1z-origin")), 4096).unwrap().await.unwrap();
+    let result = DatabaseSyncHelloFuture::try_submit(pool, storage, document, None, String::from("p1z-tail"), protocol::ActorId(String::from("p1z-origin").into()), 4096).unwrap().await.unwrap();
     let mut session = result.close_and_take_session().unwrap();
     let welcome = session.take_welcome().unwrap();
     assert!(matches!(welcome.frame().unwrap(), protocol::ServerFrame::Welcome { bootstrap: protocol::Bootstrap::Tail, .. }));
@@ -125,7 +125,7 @@ async fn retained_sync_hello_snapshot_cursor_copies_at_most_one_page_fragment_pe
     SnapshotStorage::write_generation(&memory, &document, 9, pages).await.unwrap();
     let stale = protocol::RuntimeFrontierSummary { document_id: protocol::ArtifactId(document.0.clone()), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: [0; 32] };
     let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(memory));
-    let result = DatabaseSyncHelloFuture::try_submit(pool, storage, document, Some(stale), String::from("p1z-snapshot"), protocol::ActorId(String::from("p1z-origin")), 4).unwrap().await.unwrap();
+    let result = DatabaseSyncHelloFuture::try_submit(pool, storage, document, Some(stale), String::from("p1z-snapshot"), protocol::ActorId(String::from("p1z-origin").into()), 4).unwrap().await.unwrap();
     let mut session = result.close_and_take_session().unwrap();
     let welcome = session.take_welcome().unwrap();
     assert!(matches!(welcome.frame().unwrap(), protocol::ServerFrame::Welcome { bootstrap: protocol::Bootstrap::Snapshot { inline: None, .. }, .. }));
@@ -153,7 +153,7 @@ async fn retained_sync_hello_returned_snapshot_credit_waits_for_exact_generation
     SnapshotStorage::write_generation(&memory, &document, 7, pages).await.unwrap();
     let stale = protocol::RuntimeFrontierSummary { document_id: protocol::ArtifactId(document.0.clone()), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: [0; 32] };
     let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(memory));
-    let result = DatabaseSyncHelloFuture::try_submit(pool, storage, document, Some(stale), String::from("p1z-returned-credit-session"), protocol::ActorId(String::from("p1z-returned-credit-origin")), 4).unwrap().await.unwrap();
+    let result = DatabaseSyncHelloFuture::try_submit(pool, storage, document, Some(stale), String::from("p1z-returned-credit-session"), protocol::ActorId(String::from("p1z-returned-credit-origin").into()), 4).unwrap().await.unwrap();
     let mut session = result.close_and_take_session().unwrap();
     session.take_welcome().unwrap().acknowledge().unwrap();
     let first = session.next_frame().await.unwrap().unwrap();
@@ -223,7 +223,7 @@ async fn retained_sync_hello_maximum_snapshot_request_stays_page_unit_bounded() 
     SnapshotStorage::write_generation(&memory, &document, 11, pages).await.unwrap();
     let stale = protocol::RuntimeFrontierSummary { document_id: protocol::ArtifactId(document.0.clone()), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: [0; 32] };
     let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(memory));
-    let result = DatabaseSyncHelloFuture::try_submit(pool, storage, document, Some(stale), String::from("p1z-maximum-frame-session"), protocol::ActorId(String::from("p1z-maximum-frame-origin")), DATABASE_SYNC_HELLO_MAX_BYTES).unwrap().await.unwrap();
+    let result = DatabaseSyncHelloFuture::try_submit(pool, storage, document, Some(stale), String::from("p1z-maximum-frame-session"), protocol::ActorId(String::from("p1z-maximum-frame-origin").into()), DATABASE_SYNC_HELLO_MAX_BYTES).unwrap().await.unwrap();
     let mut session = result.close_and_take_session().unwrap();
     session.take_welcome().unwrap().acknowledge().unwrap();
     for (seq, expected) in [(0, DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES), (1, DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES), (2, 1)] {
@@ -279,7 +279,7 @@ async fn retained_sync_hello_cancel_before_stream_demand_publishes_no_new_frame(
     let document = ArtifactId(String::from("p1z-cancel-before-stream"));
     seed_wal(&memory, &document, 2).await;
     let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(memory));
-    let result = DatabaseSyncHelloFuture::try_submit(pool, storage, document, None, String::from("p1z-cancel-stream-session"), protocol::ActorId(String::from("p1z-cancel-stream-origin")), 4_096).unwrap().await.unwrap();
+    let result = DatabaseSyncHelloFuture::try_submit(pool, storage, document, None, String::from("p1z-cancel-stream-session"), protocol::ActorId(String::from("p1z-cancel-stream-origin").into()), 4_096).unwrap().await.unwrap();
     let mut session = result.close_and_take_session().unwrap();
     session.take_welcome().unwrap().acknowledge().unwrap();
     let state = session.state.as_ref().unwrap().clone();
@@ -371,7 +371,7 @@ fn retained_sync_hello_refusal_retry_saturation_is_bounded_and_retains_terminal_
             document: ArtifactId(String::from("p1z-refusal-bounded")),
             hello_frontier: None,
             session_id: String::from("p1z-refusal-session"),
-            origin: protocol::ActorId(String::from("p1z-refusal-origin")),
+            origin: protocol::ActorId(String::from("p1z-refusal-origin").into()),
             snapshot_chunk_bytes: 4_096,
         },
     );
@@ -403,7 +403,7 @@ fn retained_sync_hello_forever_stuck_sole_worker_guarantees_discoverable_ownersh
             document: ArtifactId(String::from("p1z-discoverable-only")),
             hello_frontier: None,
             session_id: String::from("p1z-discoverable-session"),
-            origin: protocol::ActorId(String::from("p1z-discoverable-origin")),
+            origin: protocol::ActorId(String::from("p1z-discoverable-origin").into()),
             snapshot_chunk_bytes: 4_096,
         },
     );
@@ -419,7 +419,7 @@ fn retained_sync_hello_forever_stuck_sole_worker_guarantees_discoverable_ownersh
 async fn retained_sync_hello_deadline_retry_drop_close_retains_registry_until_worker_service() {
     let (pool, held) = held_sync_hello_pool();
     let storage = retained_sync_hello_storage().await;
-    let future = DatabaseSyncHelloFuture::try_submit(pool, storage, ArtifactId(String::from("p1z-deadline")), None, String::from("deadline-session"), protocol::ActorId(String::from("deadline-origin")), 4096).unwrap();
+    let future = DatabaseSyncHelloFuture::try_submit(pool, storage, ArtifactId(String::from("p1z-deadline")), None, String::from("deadline-session"), protocol::ActorId(String::from("deadline-origin").into()), 4096).unwrap();
     let state = future.state.as_ref().unwrap().clone();
     state.deadline_callback();
     drop(future);
@@ -448,3 +448,34 @@ fn retained_sync_hello_production_census_has_zero_blocking_waits_and_no_eager_fo
     assert!(source.contains("DatabaseSyncHelloNextFuture"));
 }
 //#endregion 🔖️Hello
+
+#[semio_framework_async_macros::async_test]
+async fn hello_shared_actor_retirement_releases_actual_final_allocation() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📝️actor-retirement/🔣️.json")).unwrap();
+    for row in fixture["actors"].as_array().unwrap() {
+        let text = row.as_str().unwrap();
+        let mut original = String::with_capacity(fixture["reservedTextBytes"].as_u64().unwrap() as usize);
+        original.push_str(text);
+        let mut actor = semio_framework_value::SharedUtf8::from(original);
+        let pointer = actor.as_ptr();
+        let allocation_bytes = actor.original_allocation_bytes();
+        let mut last = actor.clone();
+        assert_eq!(serde_json::to_value(protocol::ActorId(actor.clone())).unwrap(), *row);
+        let (closed, born, released) = crate::test_allocation::observe_backing(|| database_sync_hello_retire_shared_text(&mut actor));
+        assert!(closed);
+        assert!(!actor.has_owner());
+        assert_eq!(born, fixture["newAllocationsOnClose"].as_u64().unwrap() as usize);
+        assert_eq!(released, fixture["firstLeaseReleasedBytes"].as_u64().unwrap() as usize);
+        assert_eq!(last.as_ptr(), pointer);
+        assert_eq!(last.as_str(), text);
+        let (closed, born, released) = crate::test_allocation::observe_backing(|| database_sync_hello_retire_shared_text(&mut last));
+        assert!(closed);
+        assert!(!last.has_owner());
+        assert_eq!(born, 0);
+        assert_eq!(released, allocation_bytes);
+        let (closed, born, released) = crate::test_allocation::observe_backing(|| database_sync_hello_retire_shared_text(&mut last));
+        assert!(!closed);
+        assert_eq!((born, released), (0, 0));
+    }
+    eprintln!("[DEBUG] Sync hello actor retirement preserves sibling pointers and physically releases original text and lease backing once");
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "order",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "order": {
+      "const": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 73,
+      "maxItems": 73,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "input",
+          "canonical"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "input": {},
+          "canonical": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

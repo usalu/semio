@@ -27,8 +27,9 @@ semio-framework-pack-json = { workspace = true, optional = true }
 semio-s-plugin-puzzle-jobs = { workspace = true, optional = true }
 
 [features]
-testing = ["dep:semio-framework-pack-json", "dep:semio-s-plugin-puzzle-jobs"]
+testing = ["semio-framework-job/testkit", "dep:semio-framework-pack-json", "dep:semio-s-plugin-puzzle-jobs", "semio-s-plugin-puzzle-jobs/testing"]
 
 [dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-pack-json = { workspace = true }
 semio-s-plugin-puzzle-jobs = { workspace = true, features = ["testing"] }

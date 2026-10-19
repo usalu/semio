@@ -55,7 +55,7 @@ const WIDTHS:&[(&str,usize)]=&[
 ("energy_electrical_generator",4),
 ("energy_electrical_pv",4),
 ("energy_electrical_battery",4),
-("energy_pv_system",22),
+("energy_pv_system",32),
 ("energy_battery",16),
 ("energy_shw_system",14),
 ("energy_solar_thermal",19),
@@ -154,7 +154,7 @@ fn systems(m:&D,c:&mut Census,n:&mut N<'_>)->Result<()>{
  collection(m,"mechanical_ventilations","energy_mechanical_ventilation",&[("id",U32),("zone_id",U32),("schedule_id",U32),("design_flow_m3_s",Float),("fan_total_efficiency",Float),("fan_delta_pressure_pa",Float)],c,n)?;
  let network=member(m,"airflow_network",n)?;if !matches!(network,D::Null){c.row("energy_airflow_network",add(8,fields(network,&[("outdoor_node_id",U32)],n)?)?,n)?;for v in items(member(network,"zone_node_ids",n)?)?{let v=fixed(v,2)?;c.row("energy_airflow_zone_node",add(24,add(cost(&v[0],U32,n)?,cost(&v[1],U32,n)?)?)?,n)?;}ids(member(network,"link_ids",n)?,"energy_airflow_link",c,n)?;}
  for v in items(member(m,"electrical_load_centers",n)?)?{entity("energy_electrical_load_center",v,&[("id",U32),("name",Text)],c,n)?;for(key,table)in[("generator_ids","energy_electrical_generator"),("pv_ids","energy_electrical_pv"),("battery_ids","energy_electrical_battery")]{ids(member(v,key,n)?,table,c,n)?;}}
- collection(m,"pv_systems","energy_pv_system",&[("id",U32),("dc_capacity_w",Float),("area_m2",Float),("tilt_deg",Float),("azimuth_deg",Float),("module_efficiency",Float),("inverter_efficiency",Float)],c,n)?;
+ collection(m,"pv_systems","energy_pv_system",&[("id",U32),("dc_capacity_w",Float),("area_m2",Float),("tilt_deg",Float),("azimuth_deg",Float),("module_efficiency",Float),("inverter_efficiency",Float),("temperature_coefficient",Float),("faiman_heat_loss_constant_w_m2k",Float),("faiman_heat_loss_wind_w_s_m3k",Float),("mounting",Enum(&["OpenRack","CloseRoof","InsulatedBack"]))],c,n)?;
  collection(m,"battery_storage","energy_battery",&[("id",U32),("capacity_kwh",Float),("max_charge_w",Float),("max_discharge_w",Float),("round_trip_efficiency",Float)],c,n)?;
  collection(m,"shw_systems","energy_shw_system",&[("id",U32),("heater_capacity_w",Float),("storage_volume_m3",Float),("setpoint_c",Float),("schedule_id",U32)],c,n)?;
  collection(m,"solar_thermal_systems","energy_solar_thermal",&[("id",U32),("collector_area_m2",Float),("efficiency",Float),("storage_volume_m3",Float),("tilt_deg",Float),("azimuth_deg",Float)],c,n)?;

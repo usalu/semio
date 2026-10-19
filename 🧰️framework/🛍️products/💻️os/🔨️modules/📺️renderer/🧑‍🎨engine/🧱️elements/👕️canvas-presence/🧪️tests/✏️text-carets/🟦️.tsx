@@ -8,6 +8,9 @@ import { cleanup, render } from "@semio-tech/ui-react/test";
 import { TextPeerCaretsOverlayV1 } from "../../🟦️.tsx";
 import { clearArtifactPresenceRosterV1, publishArtifactPresenceRosterV1, publishLocalPresenceActorV1 } from "../../🟦️.ts";
 import fixture from "../🧫️fixtures/✏️text-carets/🔣️.json" with { type: "json" };
+import { LocalDocumentOwnerContext, LocalDocumentOwnerRegistryV1 } from "../../../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
+const owners = new LocalDocumentOwnerRegistryV1();
+const owner = owners.acquire({ pluginId: "writer", appId: "writer", sessionInstanceId: 1, runtimeKey: "local", clientInstanceId: "text-presence" });
 
 afterEach(() => {
   clearArtifactPresenceRosterV1("local");
@@ -19,7 +22,7 @@ describe("TextPeerCaretsOverlayV1", () => {
     it(`paints every other actor's caret at its projected text position (${locale})`, () => {
       publishLocalPresenceActorV1("local", fixture.myActor);
       publishArtifactPresenceRosterV1("local", fixture.roster as never);
-      const view = render(createElement(TextPeerCaretsOverlayV1, { windowId: fixture.windowId, project: ([x, y]: readonly [number, number]) => ({ x, y: y - fixture.cameraY }), frame: 0, lineHeightPx: fixture.lineHeightPx, locale }));
+      const view = render(createElement(LocalDocumentOwnerContext.Provider, { value: owner }, createElement(TextPeerCaretsOverlayV1, { windowId: fixture.windowId, project: ([x, y]: readonly [number, number]) => ({ x, y: y - fixture.cameraY }), frame: 0, lineHeightPx: fixture.lineHeightPx, locale })));
       const carets = [...view.container.querySelectorAll<HTMLElement>("[data-peer-caret]")].map((element) => ({
         actor: element.getAttribute("data-peer-actor"),
         x: Number.parseFloat(element.style.left),
@@ -36,7 +39,7 @@ describe("TextPeerCaretsOverlayV1", () => {
     it(`shows every other actor's pending typing run on this window beside its caret (${locale})`, () => {
       publishLocalPresenceActorV1("local", fixture.myActor);
       publishArtifactPresenceRosterV1("local", fixture.roster as never);
-      const view = render(createElement(TextPeerCaretsOverlayV1, { windowId: fixture.windowId, project: ([x, y]: readonly [number, number]) => ({ x, y: y - fixture.cameraY }), frame: 0, lineHeightPx: fixture.lineHeightPx, locale }));
+      const view = render(createElement(LocalDocumentOwnerContext.Provider, { value: owner }, createElement(TextPeerCaretsOverlayV1, { windowId: fixture.windowId, project: ([x, y]: readonly [number, number]) => ({ x, y: y - fixture.cameraY }), frame: 0, lineHeightPx: fixture.lineHeightPx, locale })));
       const typing = [...view.container.querySelectorAll<HTMLElement>("[data-peer-caret]")].flatMap((caret) => {
         const preview = caret.querySelector<HTMLElement>("[data-peer-typing]");
         return preview === null ? [] : [{ actor: caret.getAttribute("data-peer-actor"), text: preview.textContent, deleted: preview.querySelector("s")?.textContent ?? "", label: preview.getAttribute("aria-label") }];
@@ -48,7 +51,7 @@ describe("TextPeerCaretsOverlayV1", () => {
   it("paints nothing without a caret projection", () => {
     publishLocalPresenceActorV1("local", fixture.myActor);
     publishArtifactPresenceRosterV1("local", fixture.roster as never);
-    const view = render(createElement(TextPeerCaretsOverlayV1, { windowId: fixture.windowId, project: () => null, frame: 0, lineHeightPx: fixture.lineHeightPx }));
+    const view = render(createElement(LocalDocumentOwnerContext.Provider, { value: owner }, createElement(TextPeerCaretsOverlayV1, { windowId: fixture.windowId, project: () => null, frame: 0, lineHeightPx: fixture.lineHeightPx })));
     expect(view.container.querySelector("[data-peer-caret]")).toBeNull();
   });
 });

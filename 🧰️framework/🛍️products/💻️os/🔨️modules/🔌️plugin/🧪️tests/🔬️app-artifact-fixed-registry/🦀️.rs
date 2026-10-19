@@ -38,8 +38,8 @@ mod artifact_fixed_registry_tests {
     }
 
     fn reject_duplicate<T: std::fmt::Debug>(first: T, duplicate: T, drops: &std::sync::Arc<std::sync::atomic::AtomicUsize>) {
-        let mut registry = ArtifactFixedRegistry::new();
-        let mut close_registry = ArtifactFixedRegistry::new();
+        let mut registry = ArtifactFixedRegistry::<_, ARTIFACT_LIVE_OUTPUT_SLOTS>::new();
+        let mut close_registry = ArtifactFixedRegistry::<_, ARTIFACT_LIVE_OUTPUT_SLOTS>::new();
         registry.insert(17, first).expect("first exact owner");
         let duplicate = registry.insert(17, duplicate).expect_err("an occupied same-id slot must reject replacement ownership");
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
@@ -76,7 +76,7 @@ mod artifact_fixed_registry_tests {
             }
         }
         let drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
-        let mut closures = ArtifactFixedRegistry::new();
+        let mut closures = ArtifactFixedRegistry::<_, ARTIFACT_LIVE_OUTPUT_SLOTS>::new();
         for (operation_id, _) in ["builder", "dispatch", "session", "worker-submit"].into_iter().enumerate() {
             closures.insert_admitted(operation_id as u64, ConstructionOwner { remaining_steps: operation_id as u8 + 1, drops: drops.clone() });
         }
@@ -106,8 +106,8 @@ mod artifact_fixed_registry_tests {
         let drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let first_identity = std::sync::Arc::new(());
         let second_identity = std::sync::Arc::new(());
-        let mut live = ArtifactFixedRegistry::new();
-        let mut closing = ArtifactFixedRegistry::new();
+        let mut live = ArtifactFixedRegistry::<_, ARTIFACT_LIVE_OUTPUT_SLOTS>::new();
+        let mut closing = ArtifactFixedRegistry::<_, ARTIFACT_LIVE_OUTPUT_SLOTS>::new();
         live.insert_admitted(41, MediaOwner { identity: first_identity.clone(), drops: drops.clone() });
         live.insert_admitted(42, MediaOwner { identity: second_identity.clone(), drops: drops.clone() });
         let first = live.remove(41).expect("exact media owner detaches once");
@@ -149,7 +149,7 @@ pub fn close_ingress(mut ingress: ActiveArtifactEnvelopeIngress) {
 
     #[test]
     fn artifact_envelope_ingress_saturation_returns_exact_plus_one_owner_and_closes_fifo_slots() {
-        let mut live = ArtifactFixedRegistry::new();
+        let mut live = ArtifactFixedRegistry::<_, ARTIFACT_LIVE_OUTPUT_SLOTS>::new();
         for operation in 0..ARTIFACT_LIVE_OUTPUT_SLOTS as u64 {
             live.insert(operation, ingress_with_page(operation as u8)).unwrap_or_else(|_| panic!("fixed ingress slot"));
         }

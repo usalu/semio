@@ -1,5 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeObjectLocked` — patches the one addressed object in place.
-use semio_s_artifact_puzzle_3d_diff::{Puzzle3dDiff, Puzzle3dObjectPatch, Puzzle3dObjectsDelta};
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dObjectPatch;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dObjectsDelta;
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Diff

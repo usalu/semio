@@ -5,6 +5,18 @@ use semio_framework_value_derive::{FromValue, ToValue};
 fn required_nullable<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<Option<String>, D::Error> {
     <Option<String> as serde::Deserialize>::deserialize(deserializer)
 }
+impl crate::os_spr::ColdMutationKind<TestConfig, TestConfigMutation> for ChangeTestConfigSelection {
+    fn diff(&self, _: &TestConfig) -> MutationOutcome<TestConfigDiff> {
+        MutationOutcome::new(match &self.selected {
+            None => TestConfigDiff::Clear,
+            Some(value) => TestConfigDiff::Set(value.clone()),
+        })
+    }
+    fn inverse(&self, base: &TestConfig) -> Result<Vec<TestConfigMutation>, semio_framework_value::ValueError> {
+        Ok((|| vec![Self { selected: base.selected.clone() }.into()])())
+    }
+}
+
 #[doc(hidden)]
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, dsl::MutationLeaf, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = store)]
@@ -34,15 +46,8 @@ impl OpText for ChangeTestConfigSelection {
 }
 impl MutationKind<TestConfig, TestConfigMutation> for ChangeTestConfigSelection {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "test-config-selection", kind: "change-test-config-selection", record: "ChangedTestConfigSelection" };
-    fn diff(&self, _: &TestConfig) -> MutationOutcome<TestConfigDiff> {
-        MutationOutcome::new(match &self.selected {
-            None => TestConfigDiff::Clear,
-            Some(value) => TestConfigDiff::Set(value.clone()),
-        })
-    }
-    fn inverse(&self, base: &TestConfig) -> Result<Vec<TestConfigMutation>, semio_framework_value::ValueError> {
-        Ok((|| vec![Self { selected: base.selected.clone() }.into()])())
-    }
+
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(
             &{
@@ -65,3 +70,7 @@ impl MutationKind<TestConfig, TestConfigMutation> for ChangeTestConfigSelection 
 #[cfg(test)]
 #[path = "../../../../../🧪️tests/🎚️test-app-config-selection-unit/🦀️.rs"]
 pub mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️sum-law/🦀️.rs"]
+mod sum_law_tests;

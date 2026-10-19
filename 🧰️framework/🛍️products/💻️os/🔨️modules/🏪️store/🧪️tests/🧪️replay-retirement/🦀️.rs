@@ -5,6 +5,7 @@
 //! produces — from killing an editor. Artifact-agnostic: the fixture is a demo operation and a demo diff with a fail-closed
 //! owner's discipline whose technology counts every projection it produces and every scratch projection retired through it;
 //! the cases are the language-agnostic corpus `🧫️fixtures/🧫️replay-retirement`.
+use semio_framework_os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::*;
 use super::supersede_replay_tests::fixture_author;
 
@@ -76,6 +77,7 @@ impl Drop for FailClosedOp {
 /// 🧹️ Preserves the original fixture operation until its complete inline turn is admitted.
 struct FailClosedOpRetirement(Option<FailClosedOp>);
 impl semio_framework_value::retirement::RetirementCursor for FailClosedOpRetirement {
+    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand {copy_bytes:self.next_work_byte_demand()?,depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
     fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep {
         use semio_framework_value::retirement::RetirementStep;
         if self.0.is_none(){return RetirementStep::Complete;}
@@ -157,31 +159,41 @@ impl FromValue for FailClosedDiff {
 }
 
 impl semio_framework_os_spr::DiffAlgebra<DemoSnapshot> for FailClosedDiff {
-    fn inverse(&self, base: &DemoSnapshot) -> Self {
-        Self { inner: semio_framework_os_spr::DiffAlgebra::inverse(&self.inner, base), refuse: false }
-    }
+
     fn is_empty(&self) -> bool {
         !self.refuse && semio_framework_os_spr::DiffAlgebra::<DemoSnapshot>::is_empty(&self.inner)
     }
 }
 
-impl MutationDiff<DemoSnapshot> for FailClosedDiff {
-    fn apply(&self, base: &DemoSnapshot, capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<DemoSnapshot> {
-        if self.refuse {
-            return Err(semio_framework_os_spr::MutationApplyError { code: "mutation.apply.fixture-refused".into(), message: "the fixture refuses to apply this diff".into(), target: Vec::new() });
-        }
-        count(&PROJECTIONS_APPLIED);
-        self.inner.apply(base, capability)
+impl semio_framework_os_spr::ColdDiffAlgebra<DemoSnapshot> for FailClosedDiff {
+    fn inverse(&self, base: &DemoSnapshot) -> Self {
+        Self { inner: semio_framework_os_spr::ColdDiffAlgebra::inverse(&self.inner, base), refuse: false }
     }
+}
 
+impl MutationDiff<DemoSnapshot> for FailClosedDiff {
+
+
+
+
+    fn retire_projection(projection: DemoSnapshot) {
+        count(&PROJECTIONS_RETIRED);
+        drop(projection);
+    }
+}
+
+impl ColdMutationDiff<DemoSnapshot> for FailClosedDiff {
     fn absorb(&mut self, other: Self) {
         self.refuse |= other.refuse;
         self.inner.absorb(other.inner);
     }
 
-    fn retire_projection(projection: DemoSnapshot) {
-        count(&PROJECTIONS_RETIRED);
-        drop(projection);
+    fn apply(&self, base: &mut DemoSnapshot, capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<()> {
+        if self.refuse {
+            return Err(semio_framework_os_spr::MutationApplyError { code: "mutation.apply.fixture-refused".into(), message: "the fixture refuses to apply this diff".into(), target: Vec::new() });
+        }
+        count(&PROJECTIONS_APPLIED);
+        self.inner.apply(base, capability)
     }
 }
 
@@ -193,13 +205,24 @@ impl Mutation<DemoSnapshot> for FailClosedOp {
         self.operation.descriptor()
     }
 
-    fn diff(&self, base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<Self::Diff> {
+
+
+
+
+    fn retire_cold(mut self) {
+        self.live = false;
+        count(&OPERATIONS_RETIRED);
+    }
+}
+
+impl semio_framework_os_spr::ColdMutation<DemoSnapshot> for FailClosedOp {
+    type ReferenceDiff = FailClosedDiff;
+    fn diff(&self, base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<Self::ReferenceDiff> {
         if self.fault == Fault::Message {
             return semio_framework_os_spr::MutationOutcome::error("mutation.target-missing", "the fixture reports an error for this operation", ["n"]);
         }
         semio_framework_os_spr::MutationOutcome::new(FailClosedDiff { inner: self.operation.diff(base).into_parts().0, refuse: self.fault == Fault::Apply })
     }
-
     fn inverse(&self, base: &DemoSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         if self.fault == Fault::Inverse {
             return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "the fixture has no inverse for this operation".to_string()));
@@ -212,11 +235,6 @@ impl Mutation<DemoSnapshot> for FailClosedOp {
                 Self::of(operation, Fault::None)
             })
             .collect())
-    }
-
-    fn retire_cold(mut self) {
-        self.live = false;
-        count(&OPERATIONS_RETIRED);
     }
 }
 
@@ -292,10 +310,42 @@ async fn a_refused_apply_retires_everything_its_replay_built() {
         assert_eq!(applied as u64, case["applied"].as_u64().expect("applied operations"), "{name}: operations applied before the refusal");
         assert_eq!(dropped, 0, "{name}: no operation reached a bare Drop");
         assert_eq!(retired, operations + derived, "{name}: every operation of the command and every inverse derived from it retired cold");
-        assert_eq!(projections, applied + 1, "{name}: the working projection and every projection an operation produced retired through the technology");
+        assert_eq!(projections, 1, "{name}: the exclusive working projection retires once without per-operation successor owners");
         assert_eq!((store.snapshot_ref().n, store.applied_edit_ids().len(), store.content_revision_now()), shown, "{name}: the store shows what it showed");
     }
     fixture_author(&mut store, ArtifactCommand::Apply { mutations: vec![FailClosedOp::of(DemoMutation::SetN(SetN { n: 2 }), Fault::None)], transaction: None }).await.expect("the store still applies an edit");
     assert_eq!((store.snapshot_ref().n, store.applied_edit_ids().len()), (Some(2), 2));
 }
 //#endregion 🧪️Laws
+
+/// 🧊️ Exclusive folds borrow their owned projection while immutable readers keep cold bases intact.
+#[test]
+fn exclusive_owned_replay_preserves_refusal_and_immutable_readers_without_step_clones() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️replay-retirement/🔣️.json")).unwrap();
+    for row in corpus["ownedReplay"].as_array().unwrap() {
+        let base = row["base"].as_i64().unwrap() as i32;
+        let mut owned = ColdReplayProjection::<DemoSnapshot, FailClosedOp>::new(DemoSnapshot { n: Some(base) });
+        let mut shared = Arc::new(DemoSnapshot { n: Some(base) });
+        let reader = Arc::clone(&shared);
+        let forwards = row["operations"].as_array().unwrap().iter().map(|operation| FailClosedOp::of(DemoMutation::SetN(SetN { n: operation["value"].as_i64().unwrap() as i32 }), match operation["fault"].as_str().unwrap() { "none" => Fault::None, "apply" => Fault::Apply, "message" => Fault::Message, _ => unreachable!() })).collect();
+        let edit = Edit { id: row["name"].as_str().unwrap().into(), actor: None, line: None, forwards, inverse: Default::default(), mutation_meta: Vec::new(), verb: None, sequence_number: 0, started_at: String::new(), finished_at: None };
+        let before = DEMO_PROJECTION_CLONES.with(std::cell::Cell::get);
+        fold_effective_edit::<DemoSnapshot, FailClosedOp>(&mut owned, &edit, "demo/v1", &Default::default(), usize::MAX);
+        let owned_clones = DEMO_PROJECTION_CLONES.with(std::cell::Cell::get) - before;
+        assert_eq!(owned_clones as u64, row["ownedClones"].as_u64().unwrap(), "{}", row["name"]);
+        let before = DEMO_PROJECTION_CLONES.with(std::cell::Cell::get);
+        fold_effective_edit::<DemoSnapshot, FailClosedOp>(&mut shared, &edit, "demo/v1", &Default::default(), usize::MAX);
+        let cold_clones = DEMO_PROJECTION_CLONES.with(std::cell::Cell::get) - before;
+        assert_eq!(cold_clones as u64, row["coldClones"].as_u64().unwrap(), "{}", row["name"]);
+        assert_eq!(owned.n, shared.n);
+        assert_eq!(owned.n, Some(row["expected"].as_i64().unwrap() as i32));
+        assert_eq!(reader.n, Some(base));
+        let before = tally()[4];
+        drop(owned);
+        retire_shared_projection::<DemoSnapshot, FailClosedOp>(shared);
+        retire_shared_projection::<DemoSnapshot, FailClosedOp>(reader);
+        assert_eq!((tally()[4] - before) as u64, row["terminalOwners"].as_u64().unwrap());
+        retire_scratch_edits::<DemoSnapshot, FailClosedOp>([edit]);
+        eprintln!("[DEBUG] owned replay case={} owned_clones={owned_clones} immutable_cold_clones={cold_clones} terminal owners retired", row["name"]);
+    }
+}

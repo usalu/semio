@@ -71,8 +71,8 @@ fn test_config_original_record_receiving_preserves_nullable_selection() {
         let mut turns = 0;
         while !receiver.is_ready() {
             let denied = RetainedCloneGrant { maximum_items: 0, ..grant };
-            assert_eq!(receiver.step(&source, &mut native, denied).unwrap(), Default::default());
-            let progress = receiver.step(&source, &mut native, grant).unwrap();
+            assert_eq!(receiver.step(&source, &mut native, grant.maximum_copy_bytes, denied).unwrap(), Default::default());
+            let progress = receiver.step(&source, &mut native, grant.maximum_copy_bytes, grant).unwrap();
             assert!(progress.fits(grant));
             assert_eq!(progress.copied_items, 1);
             turns += 1;

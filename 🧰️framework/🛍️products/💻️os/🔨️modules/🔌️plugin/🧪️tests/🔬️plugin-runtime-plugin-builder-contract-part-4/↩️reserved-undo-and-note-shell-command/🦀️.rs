@@ -104,7 +104,7 @@
         reserved_action(&mut app, "redo", None, &mut identity).await;
         assert_eq!(app.stores.test_snapshot().await.count, 1, "redo must restore the document example before the shell");
         close_reserved_app(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -149,7 +149,7 @@
         let after = app.render_ctx().test_history().await;
         assert!(after.commands.iter().any(|entry| entry.action_id == "shell.windowActivate"), "the chrome row stays in the append-only log");
         close_reserved_app(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -181,9 +181,9 @@
         let history = app.render_ctx().test_history().await;
         assert_eq!(history.commands.len(), before_len + 1, "exactly one entry appended for the revert itself");
         assert_eq!(history.commands.first().map(|entry| entry.action_id.as_str()), Some(REVERT_TO_COMMAND_ACTION_ID));
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -205,9 +205,9 @@
         }
         assert!(app.render_ctx().test_history().await.commands.is_empty(), "three config-only Views add no row");
         assert_eq!(app.stores.test_config().await.selected, Some("node-3".to_string()));
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -240,6 +240,6 @@
         assert_eq!(history.commands.len(), 2);
         assert!(history.commands.iter().all(|entry| entry.count == 1));
         artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }

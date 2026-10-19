@@ -1,6 +1,8 @@
 syntax = "proto3";
 package semio.s.fem.fem2d.diff;
 
+import "../📸️snapshot/🛰️.proto";
+
 // 🧬️ Fem2d diff schema
 message Fem2dDiff {
   // @state artifact
@@ -31,7 +33,7 @@ message Fem2dNodeRemoval {
 
 message Fem2dNodeInsertion {
   uint64 index = 1;
-  FemNode row = 2;
+  semio.s.fem.fem2d.snapshot.FemNode row = 2;
 }
 
 message Fem2dNodeRelocation {
@@ -42,7 +44,7 @@ message Fem2dNodeRelocation {
 
 message Fem2dNodesModification {
   string id = 1;
-  FemNode patch = 2;
+  Fem2dNodePatch patch = 2;
 }
 
 message Fem2dNodesDelta {
@@ -59,7 +61,7 @@ message Fem2dElementRemoval {
 
 message Fem2dElementInsertion {
   uint64 index = 1;
-  FemElement row = 2;
+  semio.s.fem.fem2d.snapshot.FemElement row = 2;
 }
 
 message Fem2dElementRelocation {
@@ -70,7 +72,7 @@ message Fem2dElementRelocation {
 
 message Fem2dElementsModification {
   string id = 1;
-  FemElement patch = 2;
+  Fem2dElementPatch patch = 2;
 }
 
 message Fem2dElementsDelta {
@@ -87,7 +89,7 @@ message Fem2dRegionRemoval {
 
 message Fem2dRegionInsertion {
   uint64 index = 1;
-  FemRegion row = 2;
+  semio.s.fem.fem2d.snapshot.FemRegion row = 2;
 }
 
 message Fem2dRegionRelocation {
@@ -98,7 +100,7 @@ message Fem2dRegionRelocation {
 
 message Fem2dRegionsModification {
   string id = 1;
-  FemRegion patch = 2;
+  Fem2dRegionPatch patch = 2;
 }
 
 message Fem2dRegionsDelta {
@@ -115,7 +117,7 @@ message Fem2dMaterialRemoval {
 
 message Fem2dMaterialInsertion {
   uint64 index = 1;
-  FemMaterial row = 2;
+  semio.s.fem.fem2d.snapshot.FemMaterial row = 2;
 }
 
 message Fem2dMaterialRelocation {
@@ -126,7 +128,7 @@ message Fem2dMaterialRelocation {
 
 message Fem2dMaterialsModification {
   string id = 1;
-  FemMaterial patch = 2;
+  Fem2dMaterialPatch patch = 2;
 }
 
 message Fem2dMaterialsDelta {
@@ -143,7 +145,7 @@ message Fem2dSectionRemoval {
 
 message Fem2dSectionInsertion {
   uint64 index = 1;
-  FemSection row = 2;
+  semio.s.fem.fem2d.snapshot.FemSection row = 2;
 }
 
 message Fem2dSectionRelocation {
@@ -154,7 +156,7 @@ message Fem2dSectionRelocation {
 
 message Fem2dSectionsModification {
   string id = 1;
-  FemSection patch = 2;
+  Fem2dSectionPatch patch = 2;
 }
 
 message Fem2dSectionsDelta {
@@ -171,7 +173,7 @@ message Fem2dSupportRemoval {
 
 message Fem2dSupportInsertion {
   uint64 index = 1;
-  FemSupport row = 2;
+  semio.s.fem.fem2d.snapshot.FemSupport row = 2;
 }
 
 message Fem2dSupportRelocation {
@@ -182,7 +184,7 @@ message Fem2dSupportRelocation {
 
 message Fem2dSupportsModification {
   string id = 1;
-  FemSupport patch = 2;
+  Fem2dSupportPatch patch = 2;
 }
 
 message Fem2dSupportsDelta {
@@ -199,7 +201,7 @@ message Fem2dLoadCaseRemoval {
 
 message Fem2dLoadCaseInsertion {
   uint64 index = 1;
-  FemLoadCase row = 2;
+  semio.s.fem.fem2d.snapshot.FemLoadCase row = 2;
 }
 
 message Fem2dLoadCaseRelocation {
@@ -233,7 +235,7 @@ message Fem2dLoadRemoval {
 
 message Fem2dLoadInsertion {
   uint64 index = 1;
-  FemLoad row = 2;
+  semio.s.fem.fem2d.snapshot.FemLoad row = 2;
 }
 
 message Fem2dLoadRelocation {
@@ -244,7 +246,7 @@ message Fem2dLoadRelocation {
 
 message Fem2dLoadsModification {
   string id = 1;
-  FemLoad patch = 2;
+  Fem2dLoadPatch patch = 2;
 }
 
 message Fem2dLoadsDelta {
@@ -261,7 +263,7 @@ message Fem2dCombinationRemoval {
 
 message Fem2dCombinationInsertion {
   uint64 index = 1;
-  FemCombination row = 2;
+  semio.s.fem.fem2d.snapshot.FemCombination row = 2;
 }
 
 message Fem2dCombinationRelocation {
@@ -272,7 +274,7 @@ message Fem2dCombinationRelocation {
 
 message Fem2dCombinationsModification {
   string id = 1;
-  FemCombination patch = 2;
+  Fem2dCombinationPatch patch = 2;
 }
 
 message Fem2dCombinationsDelta {
@@ -287,3 +289,61 @@ message Fem2dAnalysisPatch {
   optional uint32 buckling_count = 2;
   optional double deformation_scale = 3;
 }
+
+// 🧱️ Sparse material changes preserve field presence.
+message Fem2dMaterialPatch {
+  optional string name = 1;
+  optional double e = 2;
+  optional double nu = 3;
+  optional double rho = 4;
+}
+
+message Fem2dNodePatch {
+  optional double x = 1;
+  optional double y = 2;
+}
+
+message Fem2dSectionPatch {
+  optional string name = 1;
+  optional double area = 2;
+  optional double iy = 3;
+}
+
+message Fem2dGeometryHoles { repeated semio.s.fem.fem2d.snapshot.FemRing rings = 1; }
+message Fem2dRegionPatch {
+  optional string name = 1;
+  semio.s.fem.fem2d.snapshot.FemRing outline = 2;
+  Fem2dGeometryHoles holes = 3;
+  optional double thickness = 4;
+  optional string material_id = 5;
+  optional double mesh_size = 6;
+}
+
+message Fem2dFixedDofs { repeated semio.s.fem.fem2d.snapshot.FemDof values = 1; }
+message Fem2dSupportPatch {
+  optional string node_id = 1;
+  Fem2dFixedDofs fixed = 2;
+  optional bool tx = 3;
+  optional bool ty = 4;
+  optional bool rz = 5;
+}
+
+message Fem2dElementPatch {
+  optional string kind = 1;
+  optional string start = 2;
+  optional string end = 3;
+  optional string material_id = 4;
+  optional string section_id = 5;
+}
+
+message Fem2dNodalLoadPatch { optional string node_id = 1; optional semio.s.fem.fem2d.snapshot.FemDof dof = 2; optional double value = 3; }
+message Fem2dMemberUdlLoadPatch { optional string element_id = 1; optional double wx = 2; optional double wy = 3; }
+message Fem2dAreaLoadPatch { optional string region_id = 1; optional double pressure = 2; }
+message Fem2dLoadPatch { oneof kind { Fem2dNodalLoadPatch nodal = 1; Fem2dMemberUdlLoadPatch member_udl = 2; Fem2dAreaLoadPatch area = 3; } }
+message Fem2dCombinationTermPatch { optional double factor = 1; }
+message Fem2dCombinationTermRemoval { string id = 1; uint64 index = 2; }
+message Fem2dCombinationTermInsertion { uint64 index = 1; semio.s.fem.fem2d.snapshot.FemCombinationTerm row = 2; }
+message Fem2dCombinationTermRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
+message Fem2dCombinationTermModification { string id = 1; Fem2dCombinationTermPatch patch = 2; }
+message Fem2dCombinationTermsDelta { repeated Fem2dCombinationTermRemoval removed = 1; repeated Fem2dCombinationTermInsertion inserted = 2; repeated Fem2dCombinationTermRelocation moved = 3; repeated Fem2dCombinationTermModification modified = 4; }
+message Fem2dCombinationPatch { optional string name = 1; Fem2dCombinationTermsDelta terms = 2; }

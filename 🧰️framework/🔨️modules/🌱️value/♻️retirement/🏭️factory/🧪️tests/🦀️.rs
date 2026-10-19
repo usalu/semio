@@ -96,6 +96,7 @@ trait OriginalProtocolTicket: ErasedSnapshotRetirement { fn role(&self) -> &'sta
 struct OriginalProtocolOwner { original: ControlledRetirement<String> }
 impl OriginalProtocolTicket for OriginalProtocolOwner { fn role(&self) -> &'static str { "original-protocol" } }
 impl ErasedSnapshotRetirement for OriginalProtocolOwner {
+ fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.original.next_demand(body)}
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { self.original.step(grant) }
     fn terminal_is_empty(&self) -> bool { self.original.terminal_is_empty() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.original.next_copy_byte_demand() }

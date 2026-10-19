@@ -23,6 +23,7 @@ wasm-opt = false
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 machine_derive = { path = "../../✨️derive/📦️packages/🦀️rust", package = "semio-framework-machine-derive" }
 semio-framework-dispatch-macros = { path = "../../../🔀️dispatch/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }

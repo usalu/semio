@@ -22,6 +22,17 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "part", kind: "edit-part2d-text", record: "EditedPart2dText" };
 
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Edit part \"{}\" 2d text", self.id), &format!("2D-Text von Bauteil \"{}\" bearbeiten", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for EditPart2dText {
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
@@ -31,12 +42,6 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Edit part \"{}\" 2d text", self.id), &format!("2D-Text von Bauteil \"{}\" bearbeiten", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation
 

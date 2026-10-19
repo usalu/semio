@@ -46,6 +46,7 @@ impl<P,Mu> PreparedHistoryReadRetirement<P,Mu> where P:Send+Sync+'static,Mu:semi
     }
 }
 impl<P,Mu> ErasedSnapshotRetirement for PreparedHistoryReadRetirement<P,Mu> where P:Send+Sync+'static,Mu:semio_framework_os_spr::Mutation<P>+Send+'static {
+    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let Some(owner)=self.owner.as_ref()else{return Ok(Default::default())};if owner.terminal_is_empty(){return Ok(semio_framework_value::RetirementDemand{release_bytes:size_of::<ArtifactHistoryReadRetirement<P,Mu>>(),depth:1,..Default::default()})}let mut demand=owner.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||refusal("prepared history depth overflow"))?;Ok(demand)}
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         if self.owner.is_none(){return Ok(RetainedCloneStep::Complete(Default::default()))}
         if grant.maximum_items==0||grant.maximum_copy_bytes<self.next_copy_byte_demand()?||grant.maximum_capacity_bytes<self.next_capacity_byte_demand(grant.maximum_copy_bytes)?||grant.maximum_release_bytes<self.next_release_byte_demand()?||grant.maximum_depth<self.next_depth_demand()?{return Ok(RetainedCloneStep::Progress(Default::default()))}

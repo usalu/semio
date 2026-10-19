@@ -1,0 +1,35 @@
+{
+  "area": [10, 4, 80, 40],
+  "previews": [
+    { "placement": "left", "point": [11, 24], "rect": [10, 4, 40, 40] },
+    { "placement": "right", "point": [88, 24], "rect": [51, 4, 39, 40] },
+    { "placement": "top", "point": [50, 5], "rect": [10, 4, 80, 20] },
+    { "placement": "bottom", "point": [50, 42], "rect": [10, 25, 80, 19] },
+    { "placement": "tabs", "rect": [10, 4, 80, 40] }
+  ],
+  "bodyZones": [
+    { "point": [35, 24], "placement": "left" },
+    { "point": [65, 24], "placement": "right" },
+    { "point": [50, 14], "placement": "top" },
+    { "point": [50, 34], "placement": "bottom" },
+    { "point": [50, 24], "placement": "right" }
+  ],
+  "corners": [
+    { "placement": "tabs-top-left", "corner": "topLeft", "point": [11, 5], "rect": [10, 4, 24, 2] },
+    { "placement": "tabs-top-right", "corner": "topRight", "point": [88, 5], "rect": [66, 4, 24, 2] },
+    { "placement": "tabs-bottom-left", "corner": "bottomLeft", "point": [11, 42], "rect": [10, 42, 24, 2] },
+    { "placement": "tabs-bottom-right", "corner": "bottomRight", "point": [88, 42], "rect": [66, 42, 24, 2] }
+  ],
+  "commands": [
+    { "source": "a", "target": "b", "placement": "left" },
+    { "source": "c", "target": "b", "placement": "bottom" },
+    { "source": "a", "target": "b", "placement": "tabs", "tabIndex": 0 },
+    { "source": "c", "target": "b", "placement": "tabs", "tabIndex": 1 }
+  ],
+  "finalTabs": ["a", "c", "b"],
+  "invalid": [
+    { "source": "a", "target": "missing", "placement": "left" },
+    { "source": "missing", "target": "b", "placement": "tabs" },
+    { "source": "b", "target": "b", "placement": "right" }
+  ]
+}

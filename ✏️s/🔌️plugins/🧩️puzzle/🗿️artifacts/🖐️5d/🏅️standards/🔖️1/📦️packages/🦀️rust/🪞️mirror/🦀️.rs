@@ -16,6 +16,8 @@ pub mod standards {
                 pub use component::*;
                 #[path = "."]
                 pub mod schema {
+pub use semio_s_artifact_puzzle_5d_mut_any_5::standards::v1::subsets::any::schema::play_snapshot;
+
                     pub use semio_s_artifact_puzzle_5d_schema::standards::v1::subsets::any::schema::*;
                     pub use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records;
                     pub use semio_s_artifact_puzzle_5d_kind_catalogs::standards::v1::subsets::any::schema::kind_catalogs;
@@ -67,7 +69,7 @@ pub mod editor {
     #[path = "."]
     pub mod puzzle5d {
         pub use semio_s_artifact_puzzle_5d_puzzle5d::editor::puzzle5d::*;
-        pub use semio_s_artifact_puzzle_5d_mut_any_5::editor::puzzle5d::snapshot;
+
         pub use semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities;
         pub use semio_s_artifact_puzzle_5d_catalog::editor::puzzle5d::catalog;
         pub use semio_s_artifact_puzzle_5d_puzzle5d::editor::puzzle5d::session;

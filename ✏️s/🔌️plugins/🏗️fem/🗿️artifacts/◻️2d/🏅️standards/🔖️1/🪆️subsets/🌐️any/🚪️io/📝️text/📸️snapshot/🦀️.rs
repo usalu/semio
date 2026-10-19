@@ -45,13 +45,14 @@ use crate::standards::v1::subsets::any::schema::snapshot::*;
 use crate::standards::v1::subsets::any::schema::structure::FemCombination;
 use crate::standards::v1::subsets::any::schema::structure::FemElement;
 use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use crate::standards::v1::subsets::any::schema::structure::FemMaterial;
-use crate::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_fem_material::planar::FemMaterialValue;
+use semio_s_fem_node::planar::FemNodeValue;
 use crate::standards::v1::subsets::any::schema::structure::FemRegion;
 use crate::standards::v1::subsets::any::schema::structure::FemSection;
 use crate::standards::v1::subsets::any::schema::structure::FemSupport;
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 
@@ -67,7 +68,12 @@ impl pack::snapshot::ArtifactDsl for Fem2dSnapshot {
             Err(_) => text,
         };
         let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
-        Self::__dsl_from_record(&record)
+        let snapshot = Self::__dsl_from_record(&record)?;
+        if let Err(error) = snapshot.validate_interaction_identities() {
+            <Self as semio_framework_value::FromValue>::retire_decoded(snapshot);
+            return Err(semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::default()));
+        }
+        Ok(snapshot)
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
@@ -85,13 +91,14 @@ use crate::standards::v1::subsets::any::schema::snapshot::*;
 use crate::standards::v1::subsets::any::schema::structure::FemCombination;
 use crate::standards::v1::subsets::any::schema::structure::FemElement;
 use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use crate::standards::v1::subsets::any::schema::structure::FemMaterial;
-use crate::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_fem_material::planar::FemMaterialValue;
+use semio_s_fem_node::planar::FemNodeValue;
 use crate::standards::v1::subsets::any::schema::structure::FemRegion;
 use crate::standards::v1::subsets::any::schema::structure::FemSection;
 use crate::standards::v1::subsets::any::schema::structure::FemSupport;
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 
@@ -130,14 +137,15 @@ mod snapshot_wire2_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::*;
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 use crate::standards::v1::subsets::any::schema::structure::FemCombination;
 use crate::standards::v1::subsets::any::schema::structure::FemElement;
 use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use crate::standards::v1::subsets::any::schema::structure::FemMaterial;
-use crate::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_fem_material::planar::FemMaterialValue;
+use semio_s_fem_node::planar::FemNodeValue;
 use crate::standards::v1::subsets::any::schema::structure::FemRegion;
 use crate::standards::v1::subsets::any::schema::structure::FemSection;
 use crate::standards::v1::subsets::any::schema::structure::FemSupport;

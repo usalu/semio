@@ -1,5 +1,5 @@
-//! ⏪️ Runtime acceptance laws of non-destructive history editing, with puzzle 2d as the witness of the generic runtime
 //! (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING design §4, §7, §16). They are driven by the language-agnostic corpus
+//! ⏪️ Runtime acceptance laws of non-destructive history editing, with puzzle 2d as the witness of the generic runtime
 //! `🧫️fixtures/🧫️history-edit-runtime/🔣️.json`; the Python oracle beside this file re-folds every named head of it.
 //!
 //! What the laws prove, all through the reserved `historyEdit*` verbs:
@@ -151,10 +151,17 @@ use crate::editor::puzzle2d::*;
 use crate::editor::puzzle2d::testkit::*;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use protocol::OpText;
-use semio_framework::kernel::{HistoryEntry, HistoryTimeTravel, HistoryTimeTravelStage};
-use semio_framework_plugin::{ActionMeta, PluginApp, ViewModel, FRAMEWORK_HISTORY_BODY_KEY};
+use semio_framework::kernel::HistoryEntry;
+use semio_framework::kernel::HistoryTimeTravel;
+use semio_framework::kernel::HistoryTimeTravelStage;
+use semio_framework_plugin::ActionMeta;
+use semio_framework_plugin::PluginApp;
+use semio_framework_plugin::ViewModel;
+use semio_framework_plugin::FRAMEWORK_HISTORY_BODY_KEY;
 use semio_framework_test_fixtures::fixture_text;
-use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, os_store::backbone::MemoryBackbone};
+use store::os_store::backbone::Backbone;
+use store::os_store::backbone::BackboneMessage;
+use store::os_store::backbone::MemoryBackbone;
 
 static HISTORY_EDIT_RUNTIME_CORPUS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧫️history-edit-runtime/🔣️.json"));
 
@@ -189,7 +196,7 @@ fn focused_view() -> ViewModel {
 /// ⏪️ One reserved verb from the focused overview; a refusal fails the law with its reason.
 fn history_edit(app: &mut Puzzle2dApp, verb: &str, args: Value, what: &str) {
     let meta = ActionMeta { view_state: Some(focused_view()), ..meta("local") };
-    let result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(semio_framework_value::ToValue::to_value(&(&args))), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).unwrap_or_else(|fault| panic!("{what}: {verb}: {fault:?}"));
+    let result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(semio_framework_value::ToValue::to_value(&args)), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().close)).unwrap_or_else(|fault| panic!("{what}: {verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{what}: {verb} was refused: {:?}", result.output);
 }
 
@@ -256,8 +263,8 @@ fn history_lane(app: &mut Puzzle2dApp, verb: &str, what: &str) {
 fn reload(app: &mut Puzzle2dApp, form: &str, what: &str) {
     let mut reloaded = app_with_registry();
     match form {
-        "text" => block_on(semio_framework_plugin::app::artifact_app_laws::load_document_text(&mut reloaded.0, &block_on(app.document_text()).expect("document text"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), reloaded.1.cx())).unwrap_or_else(|fault| panic!("{what}: text reload: {fault:?}")),
-        _ => block_on(semio_framework_plugin::app::artifact_app_laws::load_document(&mut reloaded.0, &block_on(app.document_pack()).expect("document pack"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), reloaded.1.cx())).unwrap_or_else(|fault| panic!("{what}: pack reload: {fault:?}")),
+        "text" => block_on(semio_framework_plugin::app::artifact_app_laws::load_document_text(&mut *reloaded.0, &block_on(app.document_text()).expect("document text"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), reloaded.1.cx())).unwrap_or_else(|fault| panic!("{what}: text reload: {fault:?}")),
+        _ => block_on(semio_framework_plugin::app::artifact_app_laws::load_document(&mut *reloaded.0, &block_on(app.document_pack()).expect("document pack"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), reloaded.1.cx())).unwrap_or_else(|fault| panic!("{what}: pack reload: {fault:?}")),
     }
     let mut previous = std::mem::replace(app, reloaded);
     close_app(&mut previous);
@@ -283,7 +290,7 @@ fn edited_log(scenario: &Value, head: &Value) -> Vec<(usize, Value)> {
 fn check_placement(document: &Value, head: &Value, name: &str, what: &str) {
     let nodes = board_snapshot_nodes(document);
     for (id, expected) in head["nodes"].as_object().expect("head nodes") {
-        let node = nodes.iter().find(|node| node["id"] == id.as_str()).unwrap_or_else(|| panic!("{what}: {id} is in the {name} head"));
+        let node = nodes.iter().find(|node| node["id"] == id).unwrap_or_else(|| panic!("{what}: {id} is in the {name} head"));
         assert_eq!((node["x"].as_f64(), node["y"].as_f64(), node["locked"].as_bool().unwrap_or(false)), (expected["x"].as_f64(), expected["y"].as_f64(), expected["locked"].as_bool().unwrap_or(false)), "{what}: {id} in the {name} head");
     }
     for id in head["absent"].as_array().into_iter().flatten() {
@@ -340,8 +347,8 @@ fn check_preview(app: &mut Puzzle2dApp, corpus: &Value, scenario: &Value, name: 
 //#region 🎬️Steps
 /// ▶️ Runs one corpus step through the real verbs.
 fn run(app: &mut Puzzle2dApp, seed: usize, step: &Value, what: &str) {
-    let (action, spec) = step.as_object().expect("step").iter().find(|(key, _)| key.as_str() != "expect").expect("one action per step");
-    match action.as_str() {
+    let (action, spec) = step.as_object().expect("step").iter().find(|(key, _)| *key != "expect").expect("one action per step");
+    match action {
         "translate" => {
             select(app, ids(&spec["select"]));
             let result = dispatch(app, "translateSelection", Some(&json!({ "dx": spec["dx"], "dy": spec["dy"], "step": spec["step"] })), None).unwrap_or_else(|fault| panic!("{what}: translate: {fault:?}"));
@@ -394,7 +401,7 @@ fn check(app: &mut Puzzle2dApp, corpus: &Value, scenario: &Value, seed: usize, e
     if let Some(count) = expect["rows"].as_u64() {
         assert_eq!(rows.len() as u64, count, "{what}: rows {:?}", rows.iter().map(|row| &row.op_lines).collect::<Vec<_>>());
     }
-    let status = session(app).map(|status| semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(status))));
+    let status = session(app).map(|status| semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&(status))));
     if let Some(stage) = expect.get("stage") {
         assert_eq!(status.as_ref().map_or(&Value::Null, |status| &status["stage"]), stage, "{what}: stage of {status:?}");
     }
@@ -405,7 +412,7 @@ fn check(app: &mut Puzzle2dApp, corpus: &Value, scenario: &Value, seed: usize, e
     }
     for outcome in expect["outcomes"].as_array().into_iter().flatten() {
         let row = &rows[outcome["row"].as_u64().expect("outcome row") as usize];
-        let mutation = semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(row.mutations.get(outcome["mutation"].as_u64().unwrap_or(0) as usize).expect("the row's mutation"))));
+        let mutation = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(row.mutations.get(outcome["mutation"].as_u64().unwrap_or(0) as usize).expect("the row's mutation")));
         assert_eq!(mutation["worst"], outcome["worst"], "{what}: worst of {mutation}");
         if let Some(introduced) = outcome.get("introduced") {
             assert_eq!(&mutation["introduced"], introduced, "{what}: whether the edit made the outcome new: {mutation}");
@@ -422,7 +429,7 @@ fn check(app: &mut Puzzle2dApp, corpus: &Value, scenario: &Value, seed: usize, e
         assert_eq!(next.as_deref(), Some(rows[problem["row"].as_u64().expect("problem row") as usize].mutations[0].mutation_id.as_str()), "{what}: the next problem");
     }
     if let Some(draft) = expect["draft"].as_object() {
-        let value = semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(&app.time_travel_ledger().editor().expect("the draft editor").value)));
+        let value = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&app.time_travel_ledger().editor().expect("the draft editor").value));
         for (pointer, wanted) in draft {
             assert_eq!(value.pointer(pointer), Some(wanted), "{what}: the draft holds {wanted} at {pointer}: {value}");
         }
@@ -569,7 +576,7 @@ fn a_long_remote_history_change_replays_over_turns_pauses_and_resumes_on_the_boa
     assert!(waiting.total > 0 && waiting.done < waiting.total && !waiting.paused && waiting.kind == semio_framework::kernel::HistoryReprojectionKind::Remote && waiting.fault.is_none(), "{waiting:?}");
     assert_eq!(fixture_of(&remote), before, "the replica shows the history before the change");
     let meta = ActionMeta { view_state: Some(focused_view()), ..semio_framework_plugin::artifact_app_laws::meta("remote") };
-    let cancelled = block_on(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut remote.0, "historyEditCancelReplay", Some(semio_framework_value::ToValue::to_value(&(&json!({})))), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), remote.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).expect("cancel");
+    let cancelled = block_on(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut remote.0, "historyEditCancelReplay", Some(semio_framework_value::ToValue::to_value(&json!({}))), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), remote.1.cx(), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().close)).expect("cancel");
     assert!(cancelled.output.get("rejected").is_none(), "{:?}", cancelled.output);
     assert!(remote.time_travel_ledger().reprojection_paused(), "cancel pauses the remote replay");
     for _ in 0..4 {
@@ -577,7 +584,7 @@ fn a_long_remote_history_change_replays_over_turns_pauses_and_resumes_on_the_boa
     }
     assert_eq!(fixture_of(&remote), before, "paused, the change is not adopted");
     assert_eq!(block_on(remote.history_snapshot()).expect("history").reprojection.map(|replay| replay.paused), Some(true), "the wire says paused");
-    let resumed = block_on(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut remote.0, "historyEditRerun", Some(semio_framework_value::ToValue::to_value(&(&json!({})))), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), remote.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).expect("rerun");
+    let resumed = block_on(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut remote.0, "historyEditRerun", Some(semio_framework_value::ToValue::to_value(&json!({}))), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), remote.1.cx(), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().close)).expect("rerun");
     assert!(resumed.output.get("rejected").is_none(), "{:?}", resumed.output);
     pump(&mut remote, "the remote change is adopted", |app| block_on(app.history_snapshot()).expect("history").reprojection.is_none());
     assert_eq!(board_snapshot_nodes(&fixture_of(&remote)), board_snapshot_nodes(&fixture_of(&local)), "the adoption equals the author's head");
@@ -595,7 +602,7 @@ fn board_trace(app: &mut Puzzle2dApp) -> (Vec<Value>, Option<String>, usize) {
 
 /// 🌳️ Borrows the projected current line, including the implicit trunk represented by an absent branch id.
 fn current_line(app: &mut Puzzle2dApp) -> Option<String> {
-    block_on(semio_framework_plugin::app::artifact_app_laws::with_document_view(app, |view| view.history.active_alternative_id.clone())).expect("current line projection")
+    block_on(semio_framework_plugin::app::artifact_app_laws::with_document_view(&**app, |view| view.history.active_alternative_id.clone())).expect("current line projection")
 }
 
 /// ⚖️ LAW (gap N17): switching to an alternative whose 360 drags are not applied is a local history step, which the
@@ -633,7 +640,7 @@ fn switching_to_a_long_alternative_replays_over_turns_and_cancel_leaves_zero_tra
         assert_eq!(dispatch(&mut app, "undo", None, None).err().map(|fault| fault.code.0), Some("history.replaying".to_string()), "a further history step waits");
         let first = edits(&mut app)[seed].mutations[0].mutation_id.clone();
         let meta = ActionMeta { view_state: Some(focused_view()), ..meta("local") };
-        let busy = block_on(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "historyEditBegin", Some(semio_framework_value::ToValue::to_value(&(&json!({ "mutationId": first })))), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).expect("begin answers");
+        let busy = block_on(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "historyEditBegin", Some(semio_framework_value::ToValue::to_value(&json!({ "mutationId": first }))), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().close)).expect("begin answers");
         assert_eq!(busy.output.get("rejected").and_then(semio_framework_value::DslValue::as_str), Some("timeTravel.busy"), "history editing waits for the step");
         if cancel {
             history_edit(&mut app, "historyEditCancelReplay", json!({}), "cancel the switch");

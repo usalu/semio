@@ -1,5 +1,5 @@
-//! 🧭️ Fem3d transform gumball — what the live selection resolves to geometrically (the nodes and solids a gesture
 //! may move), the pivot the host anchors its gumball at, the `World3d` selection record that arms the host gumball
+//! 🧭️ Fem3d transform gumball — what the live selection resolves to geometrically (the nodes and solids a gesture
 //! with live dispatch, and the gumball TOOL: a `🔄️machine` statechart whose effects are `ToolYield`s, driven by the
 //! `🛠️tool-machine` runner. Every translate/rotate/scale dispatch builds one relative `move-selection` tick leaf; a
 //! one-shot dispatch commits it as ONE `ToolTransaction`, a streamed gesture accumulates its ticks into the window's
@@ -8,16 +8,33 @@
 //! (design `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5).
 #![allow(unexpected_cfgs)]
 
-use crate::editor::fem3d::interaction::{
-    fem3d_element_endpoints, fem3d_entity_kind, fem3d_load_owner, Fem3dInteractionSnapshot, FEM3D_GRANULARITY_ELEMENT, FEM3D_GRANULARITY_LOAD, FEM3D_GRANULARITY_NODE, FEM3D_GRANULARITY_SOLID, FEM3D_GRANULARITY_SUPPORT,
-};
+use crate::editor::fem3d::interaction::fem3d_element_endpoints;
+
+use crate::editor::fem3d::interaction::Fem3dInteractionSnapshot;
+
+use crate::editor::fem3d::interaction::FEM3D_GRANULARITY_ELEMENT;
+
+use crate::editor::fem3d::interaction::FEM3D_GRANULARITY_LOAD;
+
+use crate::editor::fem3d::interaction::FEM3D_GRANULARITY_NODE;
+
+use crate::editor::fem3d::interaction::FEM3D_GRANULARITY_SOLID;
+
+use crate::editor::fem3d::interaction::FEM3D_GRANULARITY_SUPPORT;
 use semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::move_selection::MoveSelection;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use machine::Command;
-use semio_framework_tool_machine::{GesturePhase, GestureTool, ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolYield};
+use semio_framework_tool_machine::GesturePhase;
+use semio_framework_tool_machine::GestureTool;
+use semio_framework_tool_machine::ToolAbortReason;
+use semio_framework_tool_machine::ToolMachineRunner;
+use semio_framework_tool_machine::ToolRefusal;
+use semio_framework_tool_machine::ToolStep;
+use semio_framework_tool_machine::ToolTransaction;
+use semio_framework_tool_machine::ToolYield;
 use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballGesture;
 use std::collections::HashSet;
 
@@ -40,68 +57,58 @@ impl Fem3dTransformTargets {
 pub fn fem3d_transform_targets(doc: &Fem3dSnapshot, selection_ids: &[String]) -> Fem3dTransformTargets {
     let mut nodes = HashSet::new();
     let mut solids = HashSet::new();
-    let member_nodes = |target: &str, nodes: &mut HashSet<String>| {
-        if let Some(element) = doc.elements.iter().find(|element| element_id(element) == target) {
-            let (start, end) = fem3d_element_endpoints(element);
-            nodes.insert(start.to_string());
-            nodes.insert(end.to_string());
+    let mut members = HashSet::new();
+    let mut supports = HashSet::new();
+    let mut loads = HashSet::new();
+    for identity in selection_ids {
+        let Ok(segments) = protocol::wire::decode_scoped_identity(identity) else { continue };
+        match segments.as_slice() {
+            [FEM3D_GRANULARITY_NODE, id] => { nodes.insert(*id); }
+            [FEM3D_GRANULARITY_SOLID, id] => { solids.insert(*id); }
+            [FEM3D_GRANULARITY_ELEMENT, id] => { members.insert(*id); }
+            [FEM3D_GRANULARITY_SUPPORT, id] => { supports.insert(*id); }
+            [FEM3D_GRANULARITY_LOAD, owner, id] => { loads.insert((*owner, *id)); }
+            _ => {},
         }
-    };
-    for id in selection_ids {
-        match fem3d_entity_kind(doc, id) {
-            Some(FEM3D_GRANULARITY_NODE) => {
-                nodes.insert(id.clone());
-            }
-            Some(FEM3D_GRANULARITY_SOLID) => {
-                solids.insert(id.clone());
-            }
-            Some(FEM3D_GRANULARITY_ELEMENT) => member_nodes(id, &mut nodes),
-            Some(FEM3D_GRANULARITY_SUPPORT) => {
-                if let Some(support) = doc.supports.iter().find(|support| support.id == *id) {
-                    nodes.insert(support.node_id.clone());
+    }
+    if !supports.is_empty() {
+        for support in &doc.supports {
+            if supports.contains(support.id.as_str()) { nodes.insert(support.node_id.as_str()); }
+        }
+    }
+    if !loads.is_empty() {
+        for case in &doc.load_cases {
+            for load in &case.loads {
+                if !loads.contains(&(case.id.as_str(), semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id(load))) { continue }
+                match load {
+                    FemLoad::Nodal { node_id, .. } => { nodes.insert(node_id.as_str()); }
+                    FemLoad::MemberUdl { element_id, .. } => { members.insert(element_id.as_str()); }
+                    FemLoad::Area { solid_id, .. } => { solids.insert(solid_id.as_str()); }
                 }
             }
-            Some(FEM3D_GRANULARITY_LOAD) => {
-                if let Some((_, load)) = fem3d_load_owner(doc, id) {
-                    match load {
-                        FemLoad::Nodal { node_id, .. } => {
-                            nodes.insert(node_id.clone());
-                        }
-                        FemLoad::MemberUdl { element_id: target, .. } => member_nodes(target, &mut nodes),
-                        FemLoad::Area { solid_id, .. } => {
-                            solids.insert(solid_id.clone());
-                        }
-                    }
-                }
+        }
+    }
+    if !members.is_empty() {
+        for element in &doc.elements {
+            if members.contains(element_id(element)) {
+                let (start, end) = fem3d_element_endpoints(element);
+                nodes.extend([start, end]);
             }
-            _ => {}
         }
     }
     Fem3dTransformTargets {
-        node_ids: doc.nodes.iter().filter(|node| nodes.contains(&node.id)).map(|node| node.id.clone()).collect(),
-        solid_ids: doc.solids.iter().filter(|solid| solids.contains(&solid.id)).map(|solid| solid.id.clone()).collect(),
+        node_ids: doc.nodes.iter().filter(|node| nodes.contains(node.id.as_str())).map(|node| node.id.clone()).collect(),
+        solid_ids: doc.solids.iter().filter(|solid| solids.contains(solid.id.as_str())).map(|solid| solid.id.clone()).collect(),
     }
 }
 
 /// 🎯️ The gumball pivot: the centroid of every moved node and every moved solid's own centroid.
 pub fn fem3d_transform_pivot(doc: &Fem3dSnapshot, targets: &Fem3dTransformTargets) -> Option<[f64; 3]> {
-    let mut points = Vec::new();
-    for id in &targets.node_ids {
-        if let Some(node) = doc.nodes.iter().find(|node| &node.id == id) {
-            points.push([node.x, node.y, node.z]);
-        }
-    }
-    for id in &targets.solid_ids {
-        if let Some(point) = doc.solids.iter().find(|solid| &solid.id == id).and_then(semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_solid_centroid) {
-            points.push(point);
-        }
-    }
-    if points.is_empty() {
-        return None;
-    }
-    let count = points.len() as f64;
-    let sum = points.iter().fold([0.0; 3], |sum, point| [sum[0] + point[0], sum[1] + point[1], sum[2] + point[2]]);
-    Some([sum[0] / count, sum[1] / count, sum[2] / count])
+    let nodes: HashSet<&str> = targets.node_ids.iter().map(String::as_str).collect();
+    let solids: HashSet<&str> = targets.solid_ids.iter().map(String::as_str).collect();
+    let points = doc.nodes.iter().filter(|node| nodes.contains(node.id.as_str())).map(|node| [node.x, node.y, node.z]).chain(doc.solids.iter().filter(|solid| solids.contains(solid.id.as_str())).filter_map(semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_solid_centroid));
+    let (sum, count) = points.fold(([0.0; 3], 0usize), |(sum, count), point| ([sum[0] + point[0], sum[1] + point[1], sum[2] + point[2]], count + 1));
+    (count != 0).then(|| sum.map(|coordinate| coordinate / count as f64))
 }
 //#endregion 🔖️Targets
 
@@ -343,7 +350,8 @@ pub fn fem3d_selection_json(doc: &Fem3dSnapshot, interaction: &Fem3dInteractionS
         if let Some(id) = interaction.selected_ids.first() {
             object.insert("activeObjectId", semio_framework_pack_json::json!(id));
         }
-        let active = fem3d_gumball_active(doc, interaction, transform_armed, config);
+        let targets = (transform_armed && config.any()).then(|| fem3d_transform_targets(doc, &interaction.selected_ids));
+        let active = targets.as_ref().is_some_and(|targets| !targets.is_empty());
         object.insert("gumballActive", semio_framework_pack_json::json!(active));
         if transform_armed {
             object.insert("transformMode", semio_framework_pack_json::json!("transform"));
@@ -360,7 +368,7 @@ pub fn fem3d_selection_json(doc: &Fem3dSnapshot, interaction: &Fem3dInteractionS
             );
             object.insert("gumballLiveDispatch", semio_framework_pack_json::json!(true));
             if active {
-                if let Some(pivot) = fem3d_transform_pivot(doc, &fem3d_transform_targets(doc, &interaction.selected_ids)) {
+                if let Some(pivot) = targets.as_ref().and_then(|targets| fem3d_transform_pivot(doc, targets)) {
                     object.insert("gumballTarget", semio_framework_pack_json::json!(pivot));
                 }
             }

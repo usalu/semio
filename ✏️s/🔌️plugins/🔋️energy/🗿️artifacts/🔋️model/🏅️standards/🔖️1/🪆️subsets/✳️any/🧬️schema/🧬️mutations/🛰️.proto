@@ -1181,6 +1181,10 @@ message CreatePvSystem {
   double azimuth_deg = 6;
   double module_efficiency = 7;
   double inverter_efficiency = 8;
+  double temperature_coefficient = 9;
+  double faiman_heat_loss_constant_w_m2k = 10;
+  double faiman_heat_loss_wind_w_s_m3k = 11;
+  string mounting = 12;
 }
 
 message DeletePvSystem {
@@ -1657,6 +1661,31 @@ message ChangeMaterialRoughness {
   string new_roughness = 2;
 }
 
+message ChangeGlazingMaterialSolarReflectanceFront {
+  uint32 id = 1;
+  double new_solar_reflectance_front = 2;
+}
+
+message ChangeGlazingMaterialSolarReflectanceBack {
+  uint32 id = 1;
+  double new_solar_reflectance_back = 2;
+}
+
+message ChangeGlazingMaterialVisibleReflectanceFront {
+  uint32 id = 1;
+  double new_visible_reflectance_front = 2;
+}
+
+message ChangeGlazingMaterialVisibleReflectanceBack {
+  uint32 id = 1;
+  double new_visible_reflectance_back = 2;
+}
+
+message ChangeGlazingMaterialInfraredTransmittance {
+  uint32 id = 1;
+  double new_infrared_transmittance = 2;
+}
+
 message EnergyModelMutation {
   oneof kind {
     RenameModel rename_model = 1;
@@ -1956,5 +1985,19 @@ message EnergyModelMutation {
     ChangeGasMaterialGas change_gas_material_gas = 323;
     RenameGasMaterial rename_gas_material = 324;
     ChangeMaterialRoughness change_material_roughness = 325;
+    ChangeGlazingMaterialSolarReflectanceFront change_glazing_material_solar_reflectance_front = 924;
+    ChangeGlazingMaterialSolarReflectanceBack change_glazing_material_solar_reflectance_back = 925;
+    ChangeGlazingMaterialVisibleReflectanceFront change_glazing_material_visible_reflectance_front = 926;
+    ChangeGlazingMaterialVisibleReflectanceBack change_glazing_material_visible_reflectance_back = 927;
+    ChangeGlazingMaterialInfraredTransmittance change_glazing_material_infrared_transmittance = 928;
+    ChangePvSystemTemperatureCoefficient change_pv_system_temperature_coefficient = 929;
+    ChangePvSystemFaimanHeatLossConstant change_pv_system_faiman_heat_loss_constant = 930;
+    ChangePvSystemFaimanHeatLossWind change_pv_system_faiman_heat_loss_wind = 931;
+    ChangePvSystemMounting change_pv_system_mounting = 932;
   }
 }
+
+message ChangePvSystemTemperatureCoefficient { uint32 id = 1; double new_temperature_coefficient = 2; }
+message ChangePvSystemFaimanHeatLossConstant { uint32 id = 1; double new_faiman_heat_loss_constant_w_m2k = 2; }
+message ChangePvSystemFaimanHeatLossWind { uint32 id = 1; double new_faiman_heat_loss_wind_w_s_m3k = 2; }
+message ChangePvSystemMounting { uint32 id = 1; string new_mounting = 2; }

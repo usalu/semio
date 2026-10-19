@@ -6,7 +6,15 @@ use ::semio_framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
 use crate::standards::v1::subsets::any::schema::inferences::*;
-use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor};
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dFastener;
+use crate::Puzzle5dGrip;
+use crate::Puzzle5dGrip2d;
+use crate::Puzzle5dGrip3d;
+use crate::Puzzle5dMeta;
+use crate::Puzzle5dPart;
+use crate::Puzzle5dPart2d;
+use crate::Puzzle5dPart3d;
+use crate::Puzzle5dPartAnchor;
 use protocol::Inference;
 
 //#region 🧸️Fixtures

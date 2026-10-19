@@ -1,7 +1,7 @@
-//! 🖥️ FEM 3D play app — the `ArtifactEditor` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch. Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: `Fem3dPlayApp` now
+//! 🖥️ FEM 3D play app — the `ArtifactEditor` impl (dispatch-only), the aggregated command enum and the
 //! authors the `✏️editor` surface only — the read-only `👁️viewer` surface is a genuinely independent
-//! sibling (`crate::viewer::fem3d::Fem3dViewer`), never constructed from this file.
+//! sibling (`semio_s_artifact_fem_3d_viewer::viewer::fem3d::Fem3dViewer`), never constructed from this file.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
 //! `🎭️modes/✏️edit/🪟️windows/*`, view state in concrete window config, shared compute in the artifact's
@@ -12,7 +12,10 @@
 
 use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results::results_window_instance_id;
 use semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::reset_document_effect;
-use crate::editor::fem3d::commands::gumball::{rotate_selection, scale_selection, set_transform_gumball_flag, translate_selection};
+use crate::editor::fem3d::commands::gumball::rotate_selection;
+use crate::editor::fem3d::commands::gumball::scale_selection;
+use crate::editor::fem3d::commands::gumball::set_transform_gumball_flag;
+use crate::editor::fem3d::commands::gumball::translate_selection;
 use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_area_load;
 use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_bar;
 use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_combination;
@@ -56,11 +59,16 @@ use semio_s_artifact_fem_3d_editor_panels::editor::fem3d::panels::artifact as ar
 use semio_s_artifact_fem_3d_editor_panels::editor::fem3d::panels::inspection as inspection_panel;
 use semio_s_artifact_fem_3d_editor_panels::editor::fem3d::panels::results as results_panel;
 use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::fem3d_labels;
-use semio_s_fem_model::{Dof, ElementResult};
+use semio_s_fem_model::Dof;
+use semio_s_fem_model::ElementResult;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_framework_pack_json::Value;
-use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
+use semio_framework::InteractiveJobClassification;
+use semio_framework::ToolExecutionContract;
+use semio_framework::ToolFactoryKey;
+use semio_framework::ToolJobFactory;
+use semio_framework::ToolJobFactoryError;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::built_text_node;
 use semio_framework_plugin::create_default_layout;
@@ -104,7 +112,9 @@ use semio_framework_plugin::UtilityCategory;
 use semio_framework_plugin::UtilityDefinition;
 use semio_framework_plugin::ViewModel;
 use semio_framework_plugin::WindowMeasure;
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+use semio_framework_plugin::retained_command::ArtifactCommandInputs;
+use semio_framework_plugin::retained_command::ArtifactCommandWork;
+use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
 use semio_framework_plugin::EphemeralEmit;
 use std::collections::HashMap;
 use semio_framework_2d_compute::EngineHandles;

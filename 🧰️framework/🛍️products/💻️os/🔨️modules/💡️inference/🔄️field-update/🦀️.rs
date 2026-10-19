@@ -128,7 +128,7 @@ fn sub(digest: &mut [u64; 4], entry: &[u64; 4]) {
     }
 }
 
-/// 🔄 A resumable update of one field after a diff: the plan walk of [`step_field_update`] with the field's previous values and links in hand. It can be [`cancel`](Self::cancel)led; what it finished stays valid.
+/// 🔄 A resumable update of one field after a diff: the plan walk of [`update_field_cold`] with the field's previous values and links in hand. It can be [`cancel`](Self::cancel)led; what it finished stays valid.
 pub struct FieldUpdate<K, V> {
     pub(super) field: &'static str,
     pub(super) values: BTreeMap<K, V>,

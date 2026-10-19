@@ -32,12 +32,14 @@ impl Default for ConvergenceTolerances {
 /// position, shading and exterior film coefficients are refreshed; `system_timestep_minutes` the
 /// implicit step of the coupled surface/air balance and its HVAC control (never longer than the
 /// zone timestep). Both divide the hour.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct SimulationConfig {
     pub environment: SimulationEnvironment,
     pub zone_timestep_minutes: u32,
     pub system_timestep_minutes: u32,
     pub warmup_days: u32,
+    pub run_period_year: u16,
     pub run_period_start_month: u8,
     pub run_period_start_day: u8,
     pub run_period_end_month: u8,
@@ -54,6 +56,7 @@ impl Default for SimulationConfig {
             zone_timestep_minutes: 60,
             system_timestep_minutes: 60,
             warmup_days: 7,
+            run_period_year: 2026,
             run_period_start_month: 1,
             run_period_start_day: 1,
             run_period_end_month: 12,

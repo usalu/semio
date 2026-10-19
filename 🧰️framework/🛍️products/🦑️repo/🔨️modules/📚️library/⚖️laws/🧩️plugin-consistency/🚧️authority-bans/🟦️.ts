@@ -509,7 +509,7 @@ export function policyMcpConfigBreaches(repoRoot: string): BreachRecord[] {
     kind: "runtime/mcp-config-derived",
     scope: drift.path,
     priority: "high",
-    reason: "Every agent and editor client file is derived from `metadata.semio.dashboard.tools[].mcp` of the root 📋️project.json; a hand edit or a stale copy makes the clients disagree.",
+    reason: "Every headless agent client file is derived from `metadata.semio.dashboard.tools[].mcp` of the root 📋️project.json; a hand edit or a stale copy makes the clients disagree.",
     solution: "Run `bun ./📜️script.ts agents write`.",
   }));
   for (const [client, servers] of Object.entries(mcpServersOf(readDeclaredTools(repoRoot)))) {

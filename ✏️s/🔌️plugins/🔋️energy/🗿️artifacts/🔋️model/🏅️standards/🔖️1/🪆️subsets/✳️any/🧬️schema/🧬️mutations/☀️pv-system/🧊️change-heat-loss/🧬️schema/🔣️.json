@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-pv-system-faiman-heat-loss-constant/schema.json",
+  "title": "ChangePvSystemFaimanHeatLossConstant",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newFaimanHeatLossConstantWM2k"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changePvSystemFaimanHeatLossConstant"
+    },
+    "id": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "PV system",
+          "de": "PV-Anlage"
+        },
+        "ref": {
+          "kind": "pvSystem"
+        }
+      }
+    },
+    "newFaimanHeatLossConstantWM2k": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Constant heat loss",
+          "de": "Konstanter Wärmeverlust"
+        },
+        "group": "thermal",
+        "order": 20,
+        "displayUnit": "W/(m²·K)",
+        "precision": 2
+      }
+    }
+  }
+}

@@ -178,34 +178,36 @@ fn emphasis_path_layer(id: &str, points: &[(f64, f64)], close: bool, color: &str
 
 fn emphasis_layers_for(doc: &Fem2dSnapshot, ids: &[String], prefix: &str, color: &str, width: f64, selected: bool) -> Vec<semio_framework_pack_json::Value> {
     let mut layers = Vec::new();
-    for id in ids {
-        if let Some(node) = find_node_2d(&doc.nodes, id) {
+    for target in ids {
+        let Some(id) = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_entity_raw_id(target) else { continue };
+        let kind = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_entity_kind(doc, target);
+        if let Some(node) = find_node_2d(&doc.nodes, id).filter(|_| kind == Some("node")) {
             layers.push(emphasis_ring_layer(&format!("{prefix}-node-{id}"), screen_2d(node.x, node.y), width + 5.0, color, selected));
             continue;
         }
-        if let Some(element) = doc.elements.iter().find(|element| element_id(element) == id) {
+        if let Some(element) = doc.elements.iter().find(|element| element_id(element) == id && kind == Some("element")) {
             let (start, end) = fem2d_element_endpoints(element);
             if let (Some(a), Some(b)) = (find_node_2d(&doc.nodes, start), find_node_2d(&doc.nodes, end)) {
                 layers.push(emphasis_path_layer(&format!("{prefix}-el-{id}"), &[screen_2d(a.x, a.y), screen_2d(b.x, b.y)], false, color, width));
             }
             continue;
         }
-        if let Some(support) = doc.supports.iter().find(|support| support.id == *id) {
+        if let Some(support) = doc.supports.iter().find(|support| support.id == id && kind == Some("support")) {
             if let Some(node) = find_node_2d(&doc.nodes, &support.node_id) {
                 layers.push(emphasis_ring_layer(&format!("{prefix}-support-{id}"), screen_2d(node.x, node.y), width + 7.0, color, selected));
             }
             continue;
         }
-        if let Some(region) = doc.regions.iter().find(|region| region.id == *id) {
+        if let Some(region) = doc.regions.iter().find(|region| region.id == id && kind == Some("region")) {
             let points: Vec<(f64, f64)> = region.outline.iter().map(|point| screen_2d(point[0], point[1])).collect();
             if points.len() >= 3 {
                 layers.push(emphasis_path_layer(&format!("{prefix}-region-{id}"), &points, true, color, width));
             }
             continue;
         }
-        if let Some((_, load)) = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_load_owner(doc, id) {
+        if let Some((_, load)) = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_load_owner(doc, target) {
             if let Some((from, to)) = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_load_glyph(doc, load) {
-                layers.push(emphasis_path_layer(&format!("{prefix}-load-{id}"), &[from, to], false, color, width));
+                layers.push(emphasis_path_layer(&format!("{prefix}-load-{target}"), &[from, to], false, color, width));
             }
         }
     }

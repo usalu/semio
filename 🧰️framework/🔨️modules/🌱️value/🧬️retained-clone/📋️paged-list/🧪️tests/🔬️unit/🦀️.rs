@@ -10,7 +10,8 @@ use std::{
 };
 
 fn close_fixture<T: RetainedClone>(cursor: &mut impl RetainedCloneCursor<T>, items: usize, work: usize) -> Result<RetainedCloneStep, crate::ValueError> {
-    let grant = RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: work, maximum_capacity_bytes: cursor.next_close_capacity_byte_demand(work)?, maximum_release_bytes: cursor.next_close_release_byte_demand()?, maximum_depth: 64 };
+    let copy=work.max(cursor.next_close_copy_byte_demand()?);
+    let grant = RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: copy, maximum_capacity_bytes: cursor.next_close_capacity_byte_demand(copy)?, maximum_release_bytes: cursor.next_close_release_byte_demand()?, maximum_depth: cursor.next_close_depth_demand()? };
     let step = cursor.close_step(grant)?;
     assert!(step.progress().fits(grant));
     Ok(step)
@@ -39,6 +40,7 @@ struct DropProbeRetirement {
 }
 
 impl RetirementCursor for DropProbeRetirement {
+ fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
         if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
         if self.released {
@@ -80,7 +82,12 @@ struct DropProbeCursor {
 }
 
 impl RetainedCloneCursor<DropProbe> for DropProbeCursor {
-    fn advance(&mut self, source: RetainedCloneRef<'_, DropProbe>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+    fn output_ready(&self) -> bool { !self.closing && self.output.is_some() }
+    fn close_started(&self) -> bool { self.closing }
+
+    fn advance_demands(&self,source:RetainedCloneRef<'_,DropProbe>,_body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand {copy_bytes:if !source.check_binding(&self.source)? {source.binding_copy_bytes()}else{size_of::<DropProbe>()},depth:1,..Default::default()})}
+
+    fn advance(&mut self, source: RetainedCloneRef<'_, DropProbe>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if let Some(progress)=source.bind(&mut self.source,grant)? { return Ok(RetainedCloneStep::Progress(progress)); }
         if self.output.is_some() {
             return Ok(RetainedCloneStep::Complete(Default::default()));
@@ -144,7 +151,12 @@ struct NonconformingChildCursor {
 }
 
 impl RetainedCloneCursor<NonconformingChild> for NonconformingChildCursor {
-    fn advance(&mut self, source: RetainedCloneRef<'_, NonconformingChild>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+    fn output_ready(&self) -> bool { false }
+    fn close_started(&self) -> bool { self.closing }
+
+    fn advance_demands(&self,source:RetainedCloneRef<'_,NonconformingChild>,_body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand {copy_bytes:if !source.check_binding(&self.source)? {source.binding_copy_bytes()}else{size_of::<NonconformingChild>()},depth:1,..Default::default()})}
+
+    fn advance(&mut self, source: RetainedCloneRef<'_, NonconformingChild>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if let Some(progress)=source.bind(&mut self.source,grant)? { return Ok(RetainedCloneStep::Progress(progress)); }
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: grant.maximum_items.saturating_add(1), copied_bytes: grant.maximum_copy_bytes.saturating_add(1), retained_capacity_bytes: 0, released_bytes: 0 }))
     }
@@ -196,7 +208,12 @@ struct NonconformingRetirementChildCursor {
 }
 
 impl RetainedCloneCursor<NonconformingRetirementChild> for NonconformingRetirementChildCursor {
-    fn advance(&mut self, source: RetainedCloneRef<'_, NonconformingRetirementChild>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+    fn output_ready(&self) -> bool { !self.closing && self.output.is_some() }
+    fn close_started(&self) -> bool { self.closing }
+
+    fn advance_demands(&self,source:RetainedCloneRef<'_,NonconformingRetirementChild>,_body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand {copy_bytes:if !source.check_binding(&self.source)? {source.binding_copy_bytes()}else{size_of::<NonconformingRetirementChild>()},depth:1,..Default::default()})}
+
+    fn advance(&mut self, source: RetainedCloneRef<'_, NonconformingRetirementChild>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if let Some(progress)=source.bind(&mut self.source,grant)? { return Ok(RetainedCloneStep::Progress(progress)); }
         self.output = Some(NonconformingRetirementChild);
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
@@ -265,7 +282,12 @@ impl RetainedClone for ReleaseProbe {
 }
 
 impl RetainedCloneCursor<ReleaseProbe> for ReleaseProbeCursor {
-    fn advance(&mut self, source: RetainedCloneRef<'_, ReleaseProbe>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+    fn output_ready(&self) -> bool { self.0[1] == 0 && self.0[0] != 0 }
+    fn close_started(&self) -> bool { self.0[1] != 0 }
+
+    fn advance_demands(&self,_source:RetainedCloneRef<'_,ReleaseProbe>,_body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand {copy_bytes:usize::from(!self.output_ready()),depth:1,..Default::default()})}
+
+    fn advance(&mut self, source: RetainedCloneRef<'_, ReleaseProbe>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if grant.maximum_items == 0 || grant.maximum_copy_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         self.0[0] = 1;
         self.0[2] = source.get().0;
@@ -293,11 +315,11 @@ fn paged_native_typed_field_close_exposes_exact_scaffold_demand() {
     let source=super::super::RetainedCloneSource::from_owner(ReleaseProbe(fixture["inputByte"].as_u64().unwrap() as u8));
     let (mut cursor,allocation)=observe_retirement_allocations(super::super::RetainedFieldCursor::<ReleaseProbe>::default);
     assert_eq!(allocation,(0,0));
-    let grant=RetainedCloneGrant { maximum_items:2, maximum_copy_bytes:64, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:64 };
-    cursor.advance(source.borrow(),grant).unwrap();
-    let (birth,allocation)=observe_retirement_allocations(||cursor.advance(source.borrow(),grant).unwrap());
+    let grant=RetainedCloneGrant { maximum_items:2, maximum_copy_bytes:128, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:64 };
+    cursor.advance(source.borrow(), 128, grant).unwrap();
+    let (birth,allocation)=observe_retirement_allocations(||cursor.advance(source.borrow(), 128, grant).unwrap());
     assert_eq!(allocation,(128,0));assert_eq!(birth.progress().retained_capacity_bytes,128);
-    cursor.advance(source.borrow(),grant).unwrap();assert_eq!(cursor.take().unwrap().0,17);
+    cursor.advance(source.borrow(), 128, grant).unwrap();assert_eq!(cursor.take().unwrap().0,17);
     let (before,allocation)=observe_retirement_allocations(||(cursor.next_close_capacity_byte_demand(0).unwrap(),cursor.next_close_release_byte_demand().unwrap()));
     assert_eq!(allocation,(0,0));assert_eq!(before,(0,0));
     cursor.begin_close();
@@ -309,7 +331,7 @@ fn paged_native_typed_field_close_exposes_exact_scaffold_demand() {
     assert_eq!(below.progress(),Default::default());assert_eq!(allocation,(0,0));
     let depth=cursor.next_close_depth_demand().unwrap();assert_eq!(depth,fixture["physicalScaffoldDepth"].as_u64().unwrap()as usize);
     let (denied_depth,allocation)=observe_retirement_allocations(||cursor.close_step(RetainedCloneGrant {maximum_items:1,maximum_release_bytes:128,..Default::default()}));
-    assert_eq!(allocation,(0,0));assert_eq!(denied_depth.unwrap_err().kind,crate::ValueRefusalKind::DepthLimit);assert_eq!(cursor.next_close_release_byte_demand().unwrap(),128);
+    assert_eq!(allocation,(0,0));assert_eq!(denied_depth.unwrap().progress(),Default::default());assert_eq!(cursor.next_close_release_byte_demand().unwrap(),128);
     let (exact,allocation)=observe_retirement_allocations(||cursor.close_step(RetainedCloneGrant {maximum_items:1,maximum_release_bytes:128,maximum_depth:depth,..Default::default()}).unwrap());
     assert_eq!(allocation,(0,128));assert_eq!(exact.progress().released_bytes,128);assert_eq!(exact.progress().copied_bytes,0);
     for _ in 0..16 { if cursor.terminal_is_empty() { break; } close_fixture(&mut cursor, 1, 4096).unwrap(); }assert!(cursor.terminal_is_empty());
@@ -322,13 +344,13 @@ fn retained_paged_list_release_authority_is_distinct_from_copy_and_admits_exact_
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📏️release-authority/🔣️.json")).unwrap();
     let source=super::super::RetainedCloneSource::from_owner(ReleaseProbe(fixture["inputByte"].as_u64().unwrap() as u8));
     let mut cursor=super::super::RetainedFieldCursor::<ReleaseProbe>::default();
-    let grant=RetainedCloneGrant { maximum_items:2, maximum_copy_bytes:64, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:64 };
+    let grant=RetainedCloneGrant { maximum_items:2, maximum_copy_bytes:128, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:64 };
     assert_eq!(size_of::<ReleaseProbeCursor>(),fixture["physicalCursorBytes"].as_u64().unwrap() as usize);
     RELEASE_PROBE_DROPS.store(0,Ordering::SeqCst);
-    cursor.advance(source.borrow(),grant).unwrap();
-    let birth=cursor.advance(source.borrow(),grant).unwrap().progress();
+    cursor.advance(source.borrow(), 128, grant).unwrap();
+    let birth=cursor.advance(source.borrow(), 128, grant).unwrap().progress();
     assert_eq!(birth.retained_capacity_bytes,128);
-    let copy=cursor.advance(source.borrow(),grant).unwrap().progress();
+    let copy=cursor.advance(source.borrow(), 128, grant).unwrap().progress();
     assert_eq!(copy.copied_bytes,1);
     assert_eq!(cursor.take().unwrap().0,17);
     cursor.begin_close();
@@ -362,7 +384,12 @@ struct InsufficientScaffoldChildCursor {
 }
 
 impl RetainedCloneCursor<InsufficientScaffoldChild> for InsufficientScaffoldChildCursor {
-    fn advance(&mut self, source: RetainedCloneRef<'_, InsufficientScaffoldChild>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+    fn output_ready(&self) -> bool { !self.closing && self.output.is_some() }
+    fn close_started(&self) -> bool { self.closing }
+
+    fn advance_demands(&self,source:RetainedCloneRef<'_,InsufficientScaffoldChild>,_body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand {copy_bytes:if !source.check_binding(&self.source)? {source.binding_copy_bytes()}else{size_of::<InsufficientScaffoldChild>()},depth:1,..Default::default()})}
+
+    fn advance(&mut self, source: RetainedCloneRef<'_, InsufficientScaffoldChild>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if let Some(progress)=source.bind(&mut self.source,grant)? { return Ok(RetainedCloneStep::Progress(progress)); }
         if self.output.is_some() {
             return Ok(RetainedCloneStep::Complete(Default::default()));
@@ -399,6 +426,7 @@ impl RetainedCloneCursor<InsufficientScaffoldChild> for InsufficientScaffoldChil
         if grant.maximum_release_bytes < 128 {
             return Err(crate::ValueError::new(crate::ValueRefusalKind::WorkLimit, "fixture scaffold cannot progress under its declared 128-byte release grant"));
         }
+        if self.output.take().is_some(){return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
         super::super::close_retained_binding(&mut self.source, grant)
     }
 }
@@ -470,7 +498,9 @@ fn retained_paged_list_copy_matches_vec_serde_and_closes_page_by_page() {
     let mut turns = 0usize;
     let copied = loop {
         turns += 1;
-        let step = cursor.advance(retained.borrow(), grant).expect("paged retained copy");
+        let demand=cursor.advance_demands(retained.borrow(),grant.maximum_copy_bytes).unwrap();
+        let grant=RetainedCloneGrant {maximum_copy_bytes:grant.maximum_copy_bytes.max(demand.copy_bytes),..grant};
+        let step = cursor.advance(retained.borrow(), fixture.grant.maximum_copy_bytes, grant).expect("paged retained copy");
         assert!(step.progress().fits(grant));
         if matches!(step, RetainedCloneStep::Complete(_)) {
             break cursor.take().expect("paged retained output");
@@ -481,7 +511,9 @@ fn retained_paged_list_copy_matches_vec_serde_and_closes_page_by_page() {
     assert_eq!(serde_json::to_vec(&copied.iter().cloned().collect::<Vec<_>>()).expect("copied serde"), oracle);
     assert!(cursor.begin_close());
     let mut close_turns = 0usize;
+    let mut bounded_close_turns=0;
     while !cursor.terminal_is_empty() {
+        bounded_close_turns+=1;assert!(bounded_close_turns<100000,"retained fixture closure must terminate");
         close_turns += 1;
         let step = close_fixture(&mut cursor, 1, fixture.grant.maximum_capacity_bytes).expect("spent cursor close");
         if let RetainedCloneStep::Progress(crate::retained_clone::RetainedCloneProgress {copied_items:released_items,released_bytes,..}) = step {
@@ -490,7 +522,7 @@ fn retained_paged_list_copy_matches_vec_serde_and_closes_page_by_page() {
         }
         assert!(close_turns < 100_000, "spent cursor close terminates");
     }
-    assert!((1..=8).contains(&close_turns), "a spent cursor whose output was taken holds only its source binding and closes in bounded alias-retirement steps, got {close_turns}");
+    assert_eq!(close_turns,9,"a spent cursor separately retires its original alias, typed lease frame, and source binding before terminal closure");
     let mut retirement = crate::retirement::controlled::ControlledRetirement::new(copied).map_err(|(error,_)|error).unwrap();
     let mut retirement_turns = 0usize;
     while !retirement.terminal_is_empty() {
@@ -508,7 +540,7 @@ fn retained_paged_list_copy_matches_vec_serde_and_closes_page_by_page() {
 }
 
 #[test]
-fn retained_paged_list_adopts_completed_owner_larger_than_copy_budget() {
+fn retained_paged_list_funds_completed_owner_and_cursor_movement_before_adoption() {
     let expected = OversizedOwner { first: "alpha".into(), second: "beta".into(), third: "gamma".into() };
     assert!(size_of::<OversizedOwner>() > 64);
     let mut values = PagedList::<OversizedOwner, 1>::default();
@@ -521,14 +553,24 @@ fn retained_paged_list_adopts_completed_owner_larger_than_copy_budget() {
     let mut cursor = PagedList::<OversizedOwner, 1>::retained_clone_cursor();
     let grant = RetainedCloneGrant { maximum_items: 8, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_depth: 64, maximum_release_bytes: 4096 };
     let copied = loop {
-        match cursor.advance(source.borrow(), grant).expect("oversized owner retained copy") {
+        let demand=cursor.advance_demands(source.borrow(),grant.maximum_copy_bytes).unwrap();
+        let funded=RetainedCloneGrant {maximum_copy_bytes:grant.maximum_copy_bytes.max(demand.copy_bytes),maximum_capacity_bytes:grant.maximum_capacity_bytes.max(demand.capacity_bytes),maximum_release_bytes:grant.maximum_release_bytes.max(demand.release_bytes),maximum_depth:grant.maximum_depth.max(demand.depth),..grant};
+        if demand.copy_bytes>0 {
+            let denied=RetainedCloneGrant {maximum_copy_bytes:demand.copy_bytes-1,..funded};
+            let quote=cursor.advance_demands(source.borrow(),grant.maximum_copy_bytes).unwrap();
+            assert_eq!(cursor.advance(source.borrow(), 64, denied).unwrap().progress(),Default::default());
+            assert_eq!(cursor.advance_demands(source.borrow(),grant.maximum_copy_bytes).unwrap(),quote);
+        }
+        match cursor.advance(source.borrow(), 64, funded).expect("oversized owner retained copy") {
             RetainedCloneStep::Progress(progress) => assert_ne!(progress, RetainedCloneProgress::default()),
             RetainedCloneStep::Complete(_) => break cursor.take().expect("oversized owner retained output"),
         }
     };
     assert_eq!(copied.get(0), Some(&OversizedOwner { first: "alpha".into(), second: "beta".into(), third: "gamma".into() }));
     assert!(cursor.begin_close());
+    let mut bounded_close_turns=0;
     while !cursor.terminal_is_empty() {
+        bounded_close_turns+=1;assert!(bounded_close_turns<100000,"retained fixture closure must terminate");
         close_fixture(&mut cursor, 8, 4096).expect("oversized owner cursor close");
     }
     let mut retirement = crate::retirement::controlled::ControlledRetirement::new(copied).map_err(|(error,_)|error).unwrap();
@@ -549,17 +591,24 @@ fn retained_paged_list_refuses_scaffold_grant_that_cannot_release_owner() {
     let source = super::super::RetainedCloneSource::from_owner(values);
     let mut cursor = PagedList::<InsufficientScaffoldChild, 1>::retained_clone_cursor();
     let grant = RetainedCloneGrant { maximum_items: 8, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_depth: 64, maximum_release_bytes: 64 };
-    let error = loop {
-        match cursor.advance(source.borrow(), grant) {
-            Ok(RetainedCloneStep::Progress(progress)) => assert_ne!(progress, RetainedCloneProgress::default()),
+    let mut error_turns=0;
+    let withheld = loop {
+        error_turns+=1;assert!(error_turns<100000,"adversarial retained fixture must terminate");
+        let demand=cursor.advance_demands(source.borrow(),grant.maximum_copy_bytes).unwrap();
+        let grant=RetainedCloneGrant {maximum_copy_bytes:grant.maximum_copy_bytes.max(demand.copy_bytes),..grant};
+        match cursor.advance(source.borrow(), 64, grant) {
+            Ok(RetainedCloneStep::Progress(progress)) if progress == Default::default() => break cursor.advance_demands(source.borrow(),grant.maximum_copy_bytes).unwrap(),
+            Ok(RetainedCloneStep::Progress(_)) => {},
             Ok(RetainedCloneStep::Complete(_)) => panic!("insufficient scaffold release must not complete"),
-            Err(error) => break error,
+            Err(error) => panic!("{error:?}"),
         }
     };
-    assert_eq!(error.kind, crate::ValueRefusalKind::WorkLimit);
-    assert!(error.message.contains("cannot progress"));
+    assert_eq!(withheld.release_bytes,128);
+    assert_eq!(cursor.advance(source.borrow(), 64, grant).unwrap().progress(),Default::default());
     assert!(cursor.begin_close());
+    let mut bounded_close_turns=0;
     while !cursor.terminal_is_empty() {
+        bounded_close_turns+=1;assert!(bounded_close_turns<100000,"retained fixture closure must terminate");
         close_fixture(&mut cursor, 8, 4096).expect("insufficient scaffold cursor close");
     }
     drop(source);
@@ -570,17 +619,24 @@ fn retained_derive_refuses_scaffold_grant_that_cannot_release_field() {
     let source = super::super::RetainedCloneSource::from_owner(DerivedScaffoldOwner { child: InsufficientScaffoldChild });
     let mut cursor = DerivedScaffoldOwner::retained_clone_cursor();
     let grant = RetainedCloneGrant { maximum_items: 8, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_depth: 64, maximum_release_bytes: 64 };
-    let error = loop {
-        match cursor.advance(source.borrow(), grant) {
-            Ok(RetainedCloneStep::Progress(progress)) => assert_ne!(progress, RetainedCloneProgress::default()),
+    let mut error_turns=0;
+    let withheld = loop {
+        error_turns+=1;assert!(error_turns<100000,"adversarial retained fixture must terminate");
+        let demand=cursor.advance_demands(source.borrow(),grant.maximum_copy_bytes).unwrap();
+        let grant=RetainedCloneGrant {maximum_copy_bytes:grant.maximum_copy_bytes.max(demand.copy_bytes),..grant};
+        match cursor.advance(source.borrow(), 64, grant) {
+            Ok(RetainedCloneStep::Progress(progress)) if progress == Default::default() => break cursor.advance_demands(source.borrow(),grant.maximum_copy_bytes).unwrap(),
+            Ok(RetainedCloneStep::Progress(_)) => {},
             Ok(RetainedCloneStep::Complete(_)) => panic!("derived insufficient scaffold release must not complete"),
-            Err(error) => break error,
+            Err(error) => panic!("{error:?}"),
         }
     };
-    assert_eq!(error.kind, crate::ValueRefusalKind::WorkLimit);
-    assert!(error.message.contains("cannot progress"));
+    assert_eq!(withheld.release_bytes,128);
+    assert_eq!(cursor.advance(source.borrow(), 64, grant).unwrap().progress(),Default::default());
     assert!(cursor.begin_close());
+    let mut bounded_close_turns=0;
     while !cursor.terminal_is_empty() {
+        bounded_close_turns+=1;assert!(bounded_close_turns<100000,"retained fixture closure must terminate");
         close_fixture(&mut cursor, 8, 4096).expect("derived insufficient scaffold cursor close");
     }
     drop(source);
@@ -597,14 +653,18 @@ fn retained_paged_list_cancellation_preserves_source_and_retires_partial_pages()
     let mut turns = 0usize;
     while turns < fixture.cancellation_after_entries {
         turns += 1;
-        if matches!(cursor.advance(retained.borrow(), grant).expect("paged retained prefix"), RetainedCloneStep::Complete(_)) {
+        let demand=cursor.advance_demands(retained.borrow(),grant.maximum_copy_bytes).unwrap();
+        let grant=RetainedCloneGrant {maximum_copy_bytes:grant.maximum_copy_bytes.max(demand.copy_bytes),..grant};
+        if matches!(cursor.advance(retained.borrow(), fixture.grant.maximum_copy_bytes, grant).expect("paged retained prefix"), RetainedCloneStep::Complete(_)) {
             panic!("fixture must cancel a partial paged copy");
         }
     }
     assert!(cursor.begin_close());
     drop(retained);
     let mut close_turns = 0usize;
+    let mut bounded_close_turns=0;
     while !cursor.terminal_is_empty() {
+        bounded_close_turns+=1;assert!(bounded_close_turns<100000,"retained fixture closure must terminate");
         close_turns += 1;
         let step = close_fixture(&mut cursor, 1, fixture.grant.maximum_capacity_bytes).expect("partial paged close");
         if let RetainedCloneStep::Progress(crate::retained_clone::RetainedCloneProgress {copied_items:released_items,released_bytes,..}) = step {
@@ -627,9 +687,11 @@ fn retained_paged_list_refuses_over_budget_child_before_owner_placement() {
     assert!(source.push_reserved(NonconformingChild).is_ok());
     let retained = super::super::RetainedCloneSource::from_owner(source);
     let mut cursor = PagedList::<NonconformingChild, 1>::retained_clone_cursor();
-    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: RetainedCloneBinding::alias_copy_bytes().max(size_of::<NonconformingChild>()), maximum_capacity_bytes: 4096, maximum_depth: 64, maximum_release_bytes: 4096 };
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: RetainedCloneBinding::alias_copy_bytes().max(size_of::<NonconformingChildCursor>()), maximum_capacity_bytes: 4096, maximum_depth: 64, maximum_release_bytes: 4096 };
+    let mut error_turns=0;
     let error = loop {
-        match cursor.advance(retained.borrow(), grant) {
+        error_turns+=1;assert!(error_turns<100000,"adversarial retained fixture must terminate");
+        match cursor.advance(retained.borrow(), RetainedCloneBinding::alias_copy_bytes().max(size_of::<NonconformingChildCursor>()), grant) {
             Ok(RetainedCloneStep::Progress(_)) => {}
             Ok(RetainedCloneStep::Complete(_)) => panic!("over-budget child must not complete"),
             Err(error) => break error,
@@ -642,7 +704,9 @@ fn retained_paged_list_refuses_over_budget_child_before_owner_placement() {
     assert_eq!(cursor.values.len(), 0);
     assert!(cursor.child_value.is_none());
     assert!(cursor.begin_close());
+    let mut bounded_close_turns=0;
     while !cursor.terminal_is_empty() {
+        bounded_close_turns+=1;assert!(bounded_close_turns<100000,"retained fixture closure must terminate");
         let step = close_fixture(&mut cursor, 1, 4096).expect("nonconforming child close");
         if let RetainedCloneStep::Progress(crate::retained_clone::RetainedCloneProgress {copied_items:released_items,released_bytes,..}) = step {
             assert!(released_items <= 1);
@@ -661,9 +725,11 @@ fn retained_paged_list_refuses_over_budget_child_retirement_before_owner_placeme
     assert!(source.push_reserved(NonconformingRetirementChild).is_ok());
     let retained = super::super::RetainedCloneSource::from_owner(source);
     let mut cursor = PagedList::<NonconformingRetirementChild, 1>::retained_clone_cursor();
-    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: RetainedCloneBinding::alias_copy_bytes(), maximum_capacity_bytes: 4096, maximum_depth: 64, maximum_release_bytes: 4096 };
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: RetainedCloneBinding::alias_copy_bytes().max(size_of::<NonconformingRetirementChildCursor>()), maximum_capacity_bytes: 4096, maximum_depth: 64, maximum_release_bytes: 4096 };
+    let mut error_turns=0;
     loop {
-        match cursor.advance(retained.borrow(), grant) {
+        error_turns+=1;assert!(error_turns<100000,"adversarial retained fixture must terminate");
+        match cursor.advance(retained.borrow(), RetainedCloneBinding::alias_copy_bytes().max(size_of::<NonconformingRetirementChildCursor>()), grant) {
             Ok(RetainedCloneStep::Progress(_)) => {}
             Ok(RetainedCloneStep::Complete(_)) => panic!("over-budget child retirement must be refused before completion"),
             Err(error) => {
@@ -678,7 +744,9 @@ fn retained_paged_list_refuses_over_budget_child_retirement_before_owner_placeme
     assert_eq!(cursor.values.len(), 0);
     assert!(cursor.child_value.is_some());
     assert!(cursor.begin_close());
+    let mut bounded_close_turns=0;
     while !cursor.terminal_is_empty() {
+        bounded_close_turns+=1;assert!(bounded_close_turns<100000,"retained fixture closure must terminate");
         let step = close_fixture(&mut cursor, 1, 4096).expect("nonconforming retirement child closes after its refused report");
         if let RetainedCloneStep::Progress(crate::retained_clone::RetainedCloneProgress {copied_items:released_items,released_bytes,..}) = step {
             assert!(released_items <= 1);
@@ -702,11 +770,10 @@ fn retained_paged_list_abandonment_panics_without_running_payload_destructors() 
     let mut cursor = PagedList::<DropProbe, 64>::retained_clone_cursor();
     let grant = RetainedCloneGrant { maximum_items: 5, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_depth: 64, maximum_release_bytes: 4096 };
     while cursor.values.len() < 8 {
-        assert!(matches!(cursor.advance(retained.borrow(), grant).expect("drop probe prefix"), RetainedCloneStep::Progress(_)));
+        assert!(matches!(cursor.advance(retained.borrow(), 4096, grant).expect("drop probe prefix"), RetainedCloneStep::Progress(_)));
     }
     let abandoned = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| drop(cursor)));
     assert!(abandoned.is_err(), "active cursor abandonment fails fast");
     assert_eq!(drops.load(Ordering::SeqCst), 0, "abandonment retains every partial page and payload owner");
     drop(retained);
 }
- 

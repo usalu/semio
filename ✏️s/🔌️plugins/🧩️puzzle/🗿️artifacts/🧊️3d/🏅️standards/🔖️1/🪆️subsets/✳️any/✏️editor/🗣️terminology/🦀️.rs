@@ -1,5 +1,5 @@
-//! 🗣️ Puzzle 3d play app — the complete UI label set: one field per label, so every
 //! terminology×locale combination is compile-checked by `semio_framework_plugin::app_labels!`
+//! 🗣️ Puzzle 3d play app — the complete UI label set: one field per label, so every
 //! (see ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND).
 
 #![allow(clippy::result_large_err)]
@@ -10,13 +10,26 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
-use semio_s_artifact_puzzle_3d_model::{BrushSuggestionsRunCounter, BrushSuggestionsRunReason, BrushSuggestionsRunStage, FillRunCounter, FillRunReason, FillRunStage};
+use semio_s_artifact_puzzle_3d_model::BrushSuggestionsRunCounter;
+
+use semio_s_artifact_puzzle_3d_model::BrushSuggestionsRunReason;
+
+use semio_s_artifact_puzzle_3d_model::BrushSuggestionsRunStage;
+
+use semio_s_artifact_puzzle_3d_model::FillRunCounter;
+
+use semio_s_artifact_puzzle_3d_model::FillRunReason;
+
+use semio_s_artifact_puzzle_3d_model::FillRunStage;
 use semio_framework_ui_locale::AppLabels;
 use semio_framework_ui_locale::LabelText;
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_ui_locale::Terminology;
-use semio_framework_tool_run::{ToolRunCounterDefinition, ToolRunReasonDefinition, ToolRunStageDefinition, ToolRunVerdict};
+use semio_framework_tool_run::ToolRunCounterDefinition;
+use semio_framework_tool_run::ToolRunReasonDefinition;
+use semio_framework_tool_run::ToolRunStageDefinition;
+use semio_framework_tool_run::ToolRunVerdict;
 
 //#region 🔖️Labels
 semio_framework_ui_locale::app_labels! {

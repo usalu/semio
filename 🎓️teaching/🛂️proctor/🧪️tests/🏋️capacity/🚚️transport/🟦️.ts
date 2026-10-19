@@ -1,5 +1,5 @@
 /** 🚚️ The transport of the capacity gate: the HTTP and WebSocket client on Bun's own `fetch`, `WebSocket` and sockets, the quiz client's real envelopes and the raw wire of the abusive script. */
-import { ProctorUnavailable, RETRY_TIMING, retryTransient } from "../../../../../🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/🛂️proctor/🟦️.ts";
+import { ProctorUnavailable, RETRY_TIMING, retryTransient } from "../../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🛂️proctor/🟦️.ts";
 import { PRESENCE_PROTOCOL } from "../../../../../🧰️framework/🛍️products/🖥️server/🧬️wire-types/🟦️.ts";
 import { type HttpRequest, type HttpResponse, type HttpTransport } from "../../../../../🧰️framework/🛍️products/🖥️server/🚚️transport/🟦️.ts";
 import { presenceSocketUrl } from "../../../../../🧰️framework/🛍️products/🖥️server/🛣️routes-and-sockets/🟦️.ts";
@@ -23,7 +23,7 @@ export function transport(base: string, address: string, seen?: (status: number)
       let status: number;
       let text: string;
       try {
-        const response = await fetch(`${base}${request.path}${query === "" ? "" : `?${query}`}`, { method: request.method, headers: { ...request.headers, ...forwarded(address) }, body: request.body === undefined ? undefined : typeof request.body === "string" ? request.body : new Uint8Array(request.body) });
+        const response = await fetch(`${base}${request.path}${query === "" ? "" : `?${query}`}`, { method: request.method, headers: { ...request.headers, ...forwarded(address) }, body: request.body === undefined ? undefined : typeof request.body === "string" ? request.body : new Uint8Array(request.body), signal: AbortSignal.timeout(GIVE_UP_MS) });
         status = response.status;
         text = await response.text();
       } catch (error) {
@@ -82,6 +82,9 @@ export class Room {
     const into = this.into();
     return new Promise<void>((welcomed, unanswered) => {
       let greeted = false;
+      const timer = setTimeout(() => { if (this.socket === socket) this.socket = undefined; socket.close(); unanswered(new ProctorUnavailable(`no welcome from ${this.scope} within ${GIVE_UP_MS} ms`)); }, GIVE_UP_MS);
+      const accept = (): void => { clearTimeout(timer); welcomed(); };
+      const refuse = (error: Error): void => { clearTimeout(timer); unanswered(error); };
       socket.addEventListener("message", (event) => {
         const text = typeof event.data === "string" ? event.data : "";
         const now = this.into();
@@ -91,7 +94,7 @@ export class Room {
           greeted = true;
           record(into, "socket join", performance.now() - started);
           into.sockets.opened += 1;
-          welcomed();
+          accept();
         } else if (text.startsWith('{"type":"refused"')) {
           now.sockets.refused += 1;
           fail(now, `presence ${this.scope} refused a frame: ${text.slice(0, 160)}`);
@@ -101,14 +104,14 @@ export class Room {
         if (this.socket === socket) {
           this.socket = undefined;
           if (!greeted && event.code === NO_ANSWER) {
-            unanswered(new ProctorUnavailable(`no welcome from ${this.scope} (${event.reason || event.code})`));
+            refuse(new ProctorUnavailable(`no welcome from ${this.scope} (${event.reason || event.code})`));
             return;
           }
           const now = this.into();
           now.sockets.dropped += 1;
           fail(now, `presence ${this.scope} closed (${event.code}${greeted ? "" : ", before its welcome"})`);
         }
-        welcomed();
+        accept();
       });
       socket.addEventListener("error", () => undefined);
     });

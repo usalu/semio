@@ -18,13 +18,36 @@ use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_plugin_instance_app::VcsArtifactApp;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use store::os_store::backbone::{Backbone, BackboneMessage, MemoryBackbone};
-pub use super::{OriginalFixtureCaller, OriginalFixtureScope};
+pub use super::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture};
+    use semio_framework_value::ErasedSnapshotRetirement;
+
+    /// 🧪️ Observes each production page presentation with the exact original fixture grant.
+
+    pub fn take_fixture_result_page<P:PluginApp>(app:&mut P,receiver:u32,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<semio_framework_plugin_decl_app::tool_contract::TypedOperationResultPage>,semio_framework::Fault>{
+
+        for _ in 0..2{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||app.take_typed_operation_result_page(receiver,grant));let(page,p)=result?;assert!(p.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));if page.is_some()||p==Default::default(){return Ok(page);}}
+
+        Err(semio_framework::Fault::from("original fixture page sealing omitted its next projection"))
+
+    }
+
+    /// ♻️ Returns a projected page's token only after its exact physical alias closure.
+
+    pub fn close_fixture_result_page(page:&mut semio_framework_plugin_decl_app::tool_contract::TypedOperationResultPage,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_plugin_decl_app::tool_contract::TypedOperationResultToken{
+
+        let token=page.token;for _ in 0..100000{if page.terminal_is_empty(){return token;}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||page.close_step(grant).expect("original fixture receiver page closure"));assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert_ne!(step.progress(),Default::default(),"original fixture close grant must fund its unchanged page authority");}panic!("original fixture receiver page did not close");
+
+    }
+
+
+
+
 
 #[path = "🎟️fixture-dispatch-steps-and-document-loading/🦀️.rs"]
 mod fixture_dispatch_steps_and_document_loading;
 pub use fixture_dispatch_steps_and_document_loading::{
     assert_editor_genesis_children_declared, assert_viewer_genesis_children_declared,
-    dispatch_fixture_action, dispatch_fixture_command, dispatch_fixture_response_action, poll_fixture_media_export, produce_fixture_media, retain_fixture_media_export_result, submit_fixture_media_export, take_fixture_media_export_chunk, drain_maintenance_pressure, export_fixture_media,
+    dispatch_fixture_action, dispatch_original_fixture_command, FixtureOriginalJob, dispatch_fixture_command, dispatch_fixture_response_action, poll_fixture_media_export, produce_fixture_media, retain_fixture_media_export_result, submit_fixture_media_export, take_fixture_media_export_chunk, drain_maintenance_pressure, export_fixture_media,
     fixture_identity, fixture_job_outcome, fixture_mounted_policy, fixture_payload_bytes,
     fixture_progress, fixture_retained_turn, fixture_step, fixture_step_context,
     fixture_step_context_for, load_document, load_document_text, plugin_load_document,

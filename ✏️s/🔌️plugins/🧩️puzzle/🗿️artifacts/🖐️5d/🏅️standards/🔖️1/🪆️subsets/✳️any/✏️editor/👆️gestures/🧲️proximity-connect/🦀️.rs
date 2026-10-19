@@ -1,6 +1,6 @@
 //! 🧲️ Proximity connect gesture of the puzzle 5d editor: the retained proximity-connect work. See [`super`].
 
-use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use semio_framework_plugin::kernel::UiDirtyScope;
 use semio_framework_plugin::EditorApp;
@@ -68,7 +68,7 @@ impl Default for Puzzle5dProximityConnectWork {
             moved_position: None,
             candidate_id: None,
             candidate_kind: None,
-            mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
+            mutations: Vec::new(),
             operation_nonce: 0,
             fresh_cursor: 0,
         }
@@ -133,6 +133,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let projection = puzzle5d_editor_projection(snapshot);
@@ -249,6 +251,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle5dProximityConnectStage::Complete => Err(Fault::from("puzzle5d-proximity-connect-complete-repolled")),
             Puzzle5dProximityConnectStage::Closing => Err(Fault::from("puzzle5d-proximity-connect-closing")),
         }
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
@@ -260,8 +264,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            self.close_owners.close_step(grant)
+        semio_framework_job::close_original_nested_step(cx,|cx,_grant|{
+            self.close_owners.close_step(cx)
         })
     }
 
@@ -291,3 +295,18 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
 }
 //#endregion 🧵️RetainedCommands
 //#endregion 🔖️PlayApp
+
+impl Puzzle5dProximityConnectWork {
+    pub fn original_birth_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let capacity = (crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS as usize).checked_mul(std::mem::size_of::<Puzzle5dMutation>())
+            .ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Puzzle5D Puzzle5dProximityConnectWork backing extent overflow"))?;
+        Ok(semio_framework_value::RetirementDemand { capacity_bytes: capacity, depth: 1, ..Default::default() })
+    }
+
+    pub fn from_original_construction(scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+        scope.admit_owner(Self::original_birth_demands()?)?;
+        let work = Self { mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS), ..Self::default() };
+        let capacity = work.mutations.capacity() * std::mem::size_of::<Puzzle5dMutation>();
+        Ok((work, semio_framework_value::RetainedCloneProgress { retained_capacity_bytes: capacity, ..Default::default() }))
+    }
+}

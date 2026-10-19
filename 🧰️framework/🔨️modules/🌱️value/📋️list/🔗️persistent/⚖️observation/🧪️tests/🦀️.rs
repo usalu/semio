@@ -1,0 +1,20 @@
+use super::super::{PersistentList,PERSISTENT_PAGE_FANOUT,RetirementDemand,RetainedCloneGrant,SealedShared,SharedIssuer};
+use crate::{retirement::RetireOwned,retained_clone::RetainedCloneSource};
+use std::fmt::Write;
+fn observe<T>(operation:impl FnOnce()->T)->(T,(usize,usize)){crate::value::observe_retirement_allocations(operation)}
+#[derive(crate::RetireOwned,PartialEq,Eq)]struct Row(i64);
+impl std::fmt::Debug for Row{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{self.0.fmt(f)}}
+struct Sink{bytes:[u8;1024],len:usize}
+impl Write for Sink{fn write_str(&mut self,value:&str)->std::fmt::Result{let end=self.len.checked_add(value.len()).ok_or(std::fmt::Error)?;let target=self.bytes.get_mut(self.len..end).ok_or(std::fmt::Error)?;target.copy_from_slice(value.as_bytes());self.len=end;Ok(())}}
+fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
+fn generous()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:4096}}
+fn make(rows:&[i64])->PersistentList<Row>{let mut pages=Vec::new();for chunk in rows.chunks(PERSISTENT_PAGE_FANOUT){let issued=std::array::from_fn(|i|chunk.get(i).map(|value|SealedShared::admit(Row(*value),SharedIssuer::owned(),generous()).unwrap_or_else(|_|panic!("row issuance")).0));pages.push(PersistentList::admit_leaf(issued,chunk.len(),grant(PersistentList::<Row>::page_birth_demand())).unwrap_or_else(|_|panic!("leaf issuance")).0);}while pages.len()>1{let mut nodes=pages.into_iter();let mut parents=Vec::new();loop{let children=std::array::from_fn(|_|nodes.next());if children[0].is_none(){break;}parents.push(PersistentList::admit_branch(children,grant(PersistentList::<Row>::page_birth_demand())).unwrap_or_else(|_|panic!("branch issuance")).0);}pages=parents;}pages.pop().unwrap_or_default()}
+fn original<T:RetireOwned+Send+Sync+'static>(value:T)->RetainedCloneSource<T>{RetainedCloneSource::admit_owned(value,(),generous()).unwrap_or_else(|_|panic!("original source")).0}
+fn close<T:RetireOwned+Send+Sync+'static>(s:&mut RetainedCloneSource<T>){for _ in 0..10000{if s.terminal_is_empty(){return;}let mut d=s.next_close_demand(4096).unwrap();if d.copy_bytes>4096{d=s.next_close_demand(d.copy_bytes).unwrap();}s.close_step(grant(d)).unwrap();}panic!("original source closure");}
+#[test]fn borrowed_immutable_observations_preserve_original_rows_without_clone_or_heap(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ for c in law["cases"].as_array().unwrap(){let values=|key:&str|c[key].as_array().unwrap().iter().map(|v|v.as_i64().unwrap()).collect::<Vec<_>>();let mut a=original(make(&values("left")));let mut b=original(make(&values("right")));let pointers:Vec<_>=a.borrow().get().iter().map(std::ptr::from_ref).collect();let mut sink=Sink{bytes:[0;1024],len:0};
+  let((equal,()),heap)=observe(||{let equal=a.borrow().get()==b.borrow().get();write!(&mut sink,"{:?}",a.borrow().get()).unwrap();(equal,())});assert_eq!(heap,(0,0));assert_eq!(equal,c["equal"].as_bool().unwrap());assert_eq!(std::str::from_utf8(&sink.bytes[..sink.len]).unwrap(),c["debug"].as_str().unwrap());for(i,row)in a.borrow().get().iter().enumerate(){assert_eq!(std::ptr::from_ref(row),pointers[i]);}
+  let mut x=original(SealedShared::admit(Row(7),SharedIssuer::owned(),generous()).unwrap_or_else(|_|panic!("sealed row")).0);let mut y=original(SealedShared::admit(Row(7),SharedIssuer::owned(),generous()).unwrap_or_else(|_|panic!("sealed row")).0);let p=std::ptr::from_ref(x.borrow().get().get());let mut scalar=Sink{bytes:[0;1024],len:0};let(_,heap)=observe(||{assert_eq!(x.borrow().get(),y.borrow().get());write!(&mut scalar,"{:?}",x.borrow().get()).unwrap();});assert_eq!(heap,(0,0));assert_eq!(&scalar.bytes[..scalar.len],b"7");assert_eq!(std::ptr::from_ref(x.borrow().get().get()),p);close(&mut x);close(&mut y);close(&mut a);close(&mut b);assert_eq!(observe(||drop((x,y,a,b))).1,(0,0));
+ }
+}

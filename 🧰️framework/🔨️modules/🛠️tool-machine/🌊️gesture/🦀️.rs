@@ -338,9 +338,9 @@ pub fn drive_press<T: GestureTool<Gesture = GestureState<M>, Mutation = M>, M: P
 /// [`GestureTool`] (design §22.10, law `slots`). Pure: the runtime keeps one per app instance, overlays
 /// [`Self::provisional`] on the committed document for every render, and ends a window's gesture on its host facts
 /// ([`Self::host_event`]) — no editor maps a host fact to an abort of its own. A persisted gesture holds no host timer.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct GestureLedger<M> {
-    pub(crate) windows: std::collections::BTreeMap<String, GestureState<M>>,
+    windows: std::collections::BTreeMap<String, RetainedOriginalSlot<GestureState<M>>>,
     pub(crate) closed: std::collections::BTreeMap<String, String>,
 }
 
@@ -358,7 +358,7 @@ impl<M> GestureLedger<M> {
 
     /// 🔦️ The open gesture of `window`.
     pub fn open(&self, window: &str) -> Option<&GestureState<M>> {
-        self.windows.get(window)
+        self.windows.get(window).map(RetainedOriginalSlot::get)
     }
 
     /// 🏘️ The windows holding an open gesture, in window id order.
@@ -369,7 +369,7 @@ impl<M> GestureLedger<M> {
     /// 🪞️ Every open gesture's provisional mutations, window by window in window id order — the overlay a render applies
     /// on the committed document; never history.
     pub fn provisional(&self) -> impl Iterator<Item = &M> {
-        self.windows.values().flat_map(|gesture| gesture.entries.iter().map(|(_, mutation)| mutation))
+        self.windows.values().flat_map(|gesture| gesture.get().entries.iter().map(|(_, mutation)| mutation))
     }
 
     /// 🚪️ The press `window` last closed: its late dispatches leave zero trace.
@@ -388,15 +388,17 @@ impl<M> GestureLedger<M> {
     }
 
     /// 🖋️ Keeps the gesture a dispatch decided for `window` (`None` clears the slot).
-    pub fn settle(&mut self, window: &str, next: Option<GestureState<M>>) {
+    pub fn settle(&mut self, window: &str, next: Option<GestureState<M>>) -> Result<(), Option<GestureState<M>>> {
+        if self.windows.get(window).is_some_and(RetainedOriginalSlot::has_read){return Err(next);}
         match next {
             Some(gesture) => {
-                self.windows.insert(window.to_string(), gesture);
+                self.windows.insert(window.to_string(), RetainedOriginalSlot::new(gesture));
             }
             None => {
                 self.windows.remove(window);
             }
         }
+        Ok(())
     }
 
     /// 🚃️ Drives `window`'s tool through ONE dispatch of `press` (`None`: the host named none) against its slot
@@ -416,9 +418,10 @@ impl<M> GestureLedger<M> {
     where
         M: PartialEq,
     {
-        let drive = drive_press::<T, M>(self.windows.get(window), self.closed.get(window).map(String::as_str), press, verb, phase, tick, authoring_seed, base_revision)?;
+        if self.windows.get(window).is_some_and(RetainedOriginalSlot::has_read){return Err(ToolRefusal::Unclosed);}
+        let drive = drive_press::<T, M>(self.windows.get(window).map(RetainedOriginalSlot::get), self.closed.get(window).map(String::as_str), press, verb, phase, tick, authoring_seed, base_revision)?;
         if let Some(next) = drive.next {
-            self.settle(window, next);
+            self.settle(window, next).unwrap_or_else(|_|unreachable!("exclusive original gesture decision remains write-admitted"));
         }
         if let Some(press) = drive.closed {
             self.close(window, press);
@@ -429,7 +432,9 @@ impl<M> GestureLedger<M> {
     /// 🧹️ Host cancel of `window`'s open gesture: zero trace, and its press is closed. `Aborted(ref, reason)`, or `Idle`
     /// when none was open.
     pub fn abort(&mut self, window: &str, reason: ToolAbortReason) -> ToolStep<M> {
-        let Some(gesture) = self.windows.remove(window) else { return ToolStep::Idle };
+        if self.windows.get(window).is_some_and(RetainedOriginalSlot::has_read){return ToolStep::Idle;}
+        let Some(slot) = self.windows.remove(window) else { return ToolStep::Idle };
+        let gesture=slot.try_into_original().unwrap_or_else(|_|unreachable!("original gesture write fence"));
         if !gesture.press.is_empty() {
             self.closed.insert(window.to_string(), gesture.press);
         }
@@ -439,7 +444,7 @@ impl<M> GestureLedger<M> {
     /// 🛎️ A host fact of `window`: its open gesture ends with the fact's reason ([`GestureHostEvent::abort_reason`]; a
     /// gesture pinned to no revision survives a moved base), `Idle` when it stays or none was open.
     pub fn host_event(&mut self, window: &str, event: GestureHostEvent) -> ToolStep<M> {
-        match self.windows.get(window).and_then(|gesture| event.abort_reason(!gesture.base_revision.is_empty())) {
+        match self.windows.get(window).map(RetainedOriginalSlot::get).and_then(|gesture| event.abort_reason(!gesture.base_revision.is_empty())) {
             Some(reason) => self.abort(window, reason),
             None => ToolStep::Idle,
         }
@@ -461,3 +466,15 @@ impl<M> GestureLedger<M> {
     }
 }
 //#endregion 🌊️Gesture
+
+
+impl<M:Send+Sync+'static> GestureLedger<M>{
+ /// 🔗️ Captures the exact original authored state slot without cloning its entries.
+ pub fn retained_read_key(&self,window:&str)->Option<RetainedOriginalSlotKey>{self.windows.get(window).map(RetainedOriginalSlot::key)}
+ pub fn retained_read_pending(&self,window:&str)->bool{self.windows.get(window).is_some_and(RetainedOriginalSlot::has_read)}
+ pub fn retained_read_demands(&self,window:&str,key:RetainedOriginalSlotKey)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.windows.get(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original gesture source window absent"))?.demands(key)}
+ pub fn advance_retained_read(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<GestureState<M>>>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{self.windows.get_mut(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original gesture source window absent"))?.advance_read(key,factory,grant)}
+ pub fn retained_read(&self,window:&str,key:RetainedOriginalSlotKey)->Result<semio_framework_value::retained_clone::RetainedCloneRef<'_,GestureState<M>>,semio_framework_value::ValueError>{self.windows.get(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original gesture source window absent"))?.borrow(key)}
+ pub fn retained_read_return_demands(&self,window:&str,key:RetainedOriginalSlotKey,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.windows.get(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original gesture source window absent"))?.return_demands(key,body)}
+ pub fn return_retained_read(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&mut Option<std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<GestureState<M>>>>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{self.windows.get_mut(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original gesture source window absent"))?.return_read(key,factory,grant)}
+}

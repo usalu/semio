@@ -74,12 +74,6 @@ pub fn euler_step(y: f64, dydt: f64, dt: f64) -> f64 {
     y + dydt * dt
 }
 
-/// Third-order backward difference coefficient for zone temperature.
-pub fn third_order_backward_diff(history: [f64; 3], dt: f64, dtdt: f64) -> f64 {
-    let (y0, y1, y2) = (history[0], history[1], history[2]);
-    let coeff = 11.0 / 6.0;
-    (coeff * y0 - 3.0 * y1 + 1.5 * y2 - 0.5 * history[2]) / dt + dtdt
-}
 // #endregion 🔖️Integration
 
 // #region 🔖️Solvers
@@ -101,39 +95,6 @@ pub fn newton_raphson(mut x: f64, f: impl Fn(f64) -> f64, df: impl Fn(f64) -> f6
     } else {
         None
     }
-}
-
-/// 🧮️ Solves the dense row-major system `matrix · x = rhs` of order `n` in place by Gaussian
-/// elimination with partial pivoting; `rhs` holds `x` on success, `false` for a singular matrix.
-pub fn solve_dense_in_place(matrix: &mut [f64], rhs: &mut [f64], n: usize) -> bool {
-    for pivot in 0..n {
-        let best = (pivot..n).max_by(|&a, &b| matrix[a * n + pivot].abs().total_cmp(&matrix[b * n + pivot].abs())).unwrap_or(pivot);
-        if matrix[best * n + pivot].abs() < 1e-300 {
-            return false;
-        }
-        if best != pivot {
-            for column in 0..n {
-                matrix.swap(best * n + column, pivot * n + column);
-            }
-            rhs.swap(best, pivot);
-        }
-        let diagonal = matrix[pivot * n + pivot];
-        for row in pivot + 1..n {
-            let factor = matrix[row * n + pivot] / diagonal;
-            if factor == 0.0 {
-                continue;
-            }
-            for column in pivot..n {
-                matrix[row * n + column] -= factor * matrix[pivot * n + column];
-            }
-            rhs[row] -= factor * rhs[pivot];
-        }
-    }
-    for row in (0..n).rev() {
-        let tail: f64 = (row + 1..n).map(|column| matrix[row * n + column] * rhs[column]).sum();
-        rhs[row] = (rhs[row] - tail) / matrix[row * n + row];
-    }
-    true
 }
 
 /// 🧮️ Inverts the dense row-major matrix of order `n` into `inverse` by Gauss–Jordan elimination

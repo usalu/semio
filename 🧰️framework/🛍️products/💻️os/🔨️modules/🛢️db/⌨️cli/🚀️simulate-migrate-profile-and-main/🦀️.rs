@@ -12,7 +12,7 @@ fn describe_conflict_kind(kind: &db_conflict::ConflictKind) -> String {
 
 fn touched_command(command_id: &str, actor: &str, kind: &str, hlc_actor: u64, paths: &str) -> db_conflict::CommandTouch {
     let timestamp = db_actor::block_on(async { protocol::HybridLogicalTimestamp::new(hlc_actor, now_ms().await) });
-    let touch = db_conflict::CommandTouch::new(protocol::MutationId(command_id.to_string()), protocol::ActorId(actor.to_string()), db_conflict::CommandKind::from(kind), timestamp);
+    let touch = db_conflict::CommandTouch::new(protocol::MutationId(command_id.to_string()), protocol::ActorId(actor.into()), db_conflict::CommandKind::from(kind), timestamp);
     paths.split(',').map(str::trim).filter(|path| !path.is_empty()).fold(touch, |touch, path| touch.touch(db_state::TouchedRegion::write(path)))
 }
 
@@ -249,7 +249,7 @@ async fn cmd_profile(rest: &[String]) -> i32 {
         let envelope = protocol::MutationEnvelope {
             mutation_id: protocol::MutationId(format!("profile-{}-{counter}", now_ms().await)),
             document_id: document_id.clone(),
-            actor: protocol::ActorId("profiler".to_string()),
+            actor: protocol::ActorId("profiler".into()),
             dependencies: Vec::new(),
             observed: None,
             target: Vec::new(),

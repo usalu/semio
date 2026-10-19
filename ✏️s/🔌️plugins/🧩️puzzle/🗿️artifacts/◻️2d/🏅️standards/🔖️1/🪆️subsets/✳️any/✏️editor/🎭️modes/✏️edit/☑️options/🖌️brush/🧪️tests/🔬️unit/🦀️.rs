@@ -31,7 +31,7 @@ fn brush_params_are_tagged_utility_options_not_engagement_controls() {
     // has candidates to place (empty ⇒ absent, matching the old gated-control behaviour).
     let empty_brush = scene(empty_board_snapshot(), Puzzle2dPlayRuntime::default(), overview::utilities::brush::UTILITY_ID);
     assert_eq!(group_tag(&overview::window_measures(&empty_brush, labels), "puzzle2d-utility-options-brush"), Some(Some(overview::utilities::brush::UTILITY_ID.into())));
-    let brush_runtime = Puzzle2dPlayRuntime { brush_candidates: vec![json!({ "nodeKind": "node" }).into()], ..Puzzle2dPlayRuntime::default() };
+    let brush_runtime = Puzzle2dPlayRuntime { brush_candidates: vec![semio_framework_value::ToValue::to_value(&json!({ "nodeKind": "node" }))], ..Puzzle2dPlayRuntime::default() };
     let brush_scene = scene(empty_board_snapshot(), brush_runtime, overview::utilities::brush::UTILITY_ID);
     let brush_measures = overview::window_measures(&brush_scene, labels);
     assert_eq!(group_tag(&brush_measures, "puzzle2d-utility-options-brush"), Some(Some(overview::utilities::brush::UTILITY_ID.into())));

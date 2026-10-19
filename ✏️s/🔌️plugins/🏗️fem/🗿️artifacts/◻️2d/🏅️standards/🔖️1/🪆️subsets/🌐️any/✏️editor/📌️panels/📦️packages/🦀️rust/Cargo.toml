@@ -16,6 +16,10 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-s-artifact-fem-2d-results-state = { path = "../../../🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config/📦️packages/🦀️rust" }
+semio-s-fem-analyses-model = { path = "../../../../../../../../../../../../🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🗂️model/📦️packages/🦀️rust" }
+semio-s-fem-material = { path = "../../../../../../../../../../⚙️engine/🧱️material/📦️packages/🦀️rust" }
+semio-s-fem-node = { path = "../../../../../../../../../../⚙️engine/📍node/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-plugin = { workspace = true }

@@ -9,9 +9,11 @@
 package workspace
 
 import (
-	exec "os/exec"
-	filepath "path/filepath"
-	strings "strings"
+	"io/fs"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
 )
 
 // #region 🎨️Formatter
@@ -38,6 +40,116 @@ func runFormatterCommand(binary string, args []string, workDir string) error {
 	return cmd.Run()
 }
 
+// 🛡️ IsIdeConfigurationPath identifies editor-owned configuration from dashboard authority.
+func IsIdeConfigurationPath(path string) bool {
+	parts := strings.Split(strings.ToLower(NormalizePath(path)), "/")
+	for index, part := range parts {
+		if part == ".cursor" && index+1 < len(parts) && parts[index+1] != "plans" {
+			return true
+		}
+		switch part {
+		case ".vscode", ".vscode-insiders", ".idea", ".fleet", ".zed", ".vs", ".run", ".nova", ".settings", ".metadata", ".windsurf", ".kiro", ".atom", ".brackets":
+			return true
+		}
+	}
+	name := parts[len(parts)-1]
+	for _, file := range []string{".project", ".classpath", ".vsconfig", ".cursorrules", ".windsurfrules", "cmakesettings.json"} {
+		if name == file {
+			return true
+		}
+	}
+	for _, suffix := range []string{".sln", ".slnx", ".code-workspace", ".iml", ".ipr", ".iws", ".suo", ".user", ".userosscache", ".sln.docstates", ".sublime-project", ".sublime-workspace", ".sublime-build"} {
+		if strings.HasSuffix(name, suffix) {
+			return true
+		}
+	}
+	if len(parts) > 1 && parts[len(parts)-2] == ".devcontainer" && name == "editor-overlay.json" {
+		return true
+	}
+	return false
+}
+
+var ideInventoryBoundaryDirectories = []string{".git", "node_modules", ".venv"}
+
+var ideInventoryExcludedRoots = []string{".cache", ".nx", ".pytest_cache", ".ruff_cache", "storybook-static", "test-results", ".🧬semio/🦑️repo/🎫️tickets", ".🧬semio/🦑️repo/⚡️cache", ".🧬semio/🦑️repo/🧹️tmp", ".repo/cache", "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/dist", "✏️s/🔌️plugins/🏭️process/dist", "✏️s/🔌️plugins/🪵️sourcing/dist"}
+
+// 🧹️ IdeConfigurationPaths visits active physical owners without entering generated or historical files.
+func IdeConfigurationPaths(root string, scope string) ([]string, error) {
+	paths := []string{}
+	base := filepath.Join(root, filepath.FromSlash(scope))
+	err := filepath.WalkDir(base, func(path string, entry fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if entry.Type()&os.ModeSymlink != 0 {
+			return nil
+		}
+		relative, err := filepath.Rel(root, path)
+		if err != nil {
+			return err
+		}
+		relative = filepath.ToSlash(relative)
+		if entry.IsDir() {
+			for _, name := range ideInventoryBoundaryDirectories {
+				if entry.Name() == name {
+					return filepath.SkipDir
+				}
+			}
+			for _, path := range ideInventoryExcludedRoots {
+				if relative == path {
+					return filepath.SkipDir
+				}
+			}
+		}
+		if IsIdeConfigurationPath(relative) {
+			paths = append(paths, relative)
+			if entry.IsDir() {
+				return filepath.SkipDir
+			}
+		}
+		return nil
+	})
+	return paths, err
+}
+
+// 🏗️ DotnetFormatterProjects finds the nearest project owner within the repository.
+func DotnetFormatterProjects(root string, relPath string) []string {
+	projects := []string{}
+	absolute, err := filepath.Abs(root)
+	if err != nil {
+		return projects
+	}
+	source := filepath.Join(absolute, filepath.FromSlash(relPath))
+	if filepath.IsAbs(relPath) {
+		source = filepath.Clean(relPath)
+	}
+	relative, err := filepath.Rel(absolute, source)
+	if err != nil || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
+		return projects
+	}
+	for directory := filepath.Dir(source); ; directory = filepath.Dir(directory) {
+		identity, err := os.Lstat(directory)
+		if err != nil || !identity.IsDir() || identity.Mode()&os.ModeSymlink != 0 {
+			return projects
+		}
+		entries, err := os.ReadDir(directory)
+		if err != nil {
+			return projects
+		}
+		for _, entry := range entries {
+			if entry.Type().IsRegular() && strings.EqualFold(filepath.Ext(entry.Name()), ".csproj") {
+				project, err := filepath.Rel(absolute, filepath.Join(directory, entry.Name()))
+				if err == nil {
+					projects = append(projects, filepath.ToSlash(project))
+				}
+			}
+		}
+		if len(projects) > 0 || directory == absolute {
+			return projects
+		}
+	}
+}
+
 // 🗣️formatterPlansForLanguage holds the data fields for a formatterPlansForLanguage record.
 func FormatterPlansForLanguage(languageName string, relPath string) []formatterPlan {
 	prettierBinary := filepath.Join("node_modules", ".bin", "prettier")
@@ -60,10 +172,11 @@ func FormatterPlansForLanguage(languageName string, relPath string) []formatterP
 			prettierPlan,
 		}
 	case "csharp":
-		return []formatterPlan{
-			{Binary: "dotnet", Args: []string{"format", "Monorepo.sln", "--include", relPath, "--verbosity", "minimal"}, requirement: []string{"Monorepo.sln"}},
-			prettierPlan,
+		plans := []formatterPlan{}
+		for _, project := range DotnetFormatterProjects(GetRootDir(), relPath) {
+			plans = append(plans, formatterPlan{Binary: "dotnet", Args: []string{"format", project, "--include", relPath, "--verbosity", "minimal"}, requirement: []string{project}})
 		}
+		return append(plans, prettierPlan)
 	case "rust":
 		return []formatterPlan{
 			{Binary: "rustfmt", Args: []string{relPath}, requirement: []string{"Cargo.toml"}},

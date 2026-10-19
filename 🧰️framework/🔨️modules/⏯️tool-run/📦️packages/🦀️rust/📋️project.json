@@ -30,11 +30,32 @@
         "command": "bun ./📜️script.ts test-original-entities"
       }
     },
+    "test-original-payload": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-payload"
+      }
+    },
     "test-original-progress": {
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-original-progress"
+      }
+    },
+    "check": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check"
+      }
+    },
+    "test-original-progress-receiving": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-progress-receiving"
       }
     },
     "test-original-receiving-limits": {
@@ -70,20 +91,6 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-original-entity-column"
-      }
-    },
-    "check": {
-      "executor": "repo:script",
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check"
-      }
-    },
-    "test-original-progress-receiving": {
-      "executor": "repo:script",
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-progress-receiving"
       }
     }
   }

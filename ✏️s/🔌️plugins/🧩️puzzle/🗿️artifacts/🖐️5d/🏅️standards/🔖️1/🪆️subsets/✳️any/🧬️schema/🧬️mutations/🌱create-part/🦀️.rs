@@ -1,7 +1,8 @@
 //! 🌱 Puzzle5d mutation — `CreatePart`: brings a new id-keyed part into existence.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::{Puzzle5dSnapshot};
-use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dPart};
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart;
+
 
 //#region 🔖️Mutation
 /// 🌱 `create-part` payload — full initial payload at an optional FINAL-state `index` (`None`
@@ -33,6 +34,22 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "part", kind: "create-part", record: "CreatedPart" };
 
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create part \"{}\"", self.part.id), &format!("Bauteil \"{}\" erstellen", self.part.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.part.id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for CreatePart {
+
+
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for CreatePart {
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
@@ -42,11 +59,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create part \"{}\"", self.part.id), &format!("Bauteil \"{}\" erstellen", self.part.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.part.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation

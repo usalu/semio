@@ -1,0 +1,38 @@
+{
+  "input": {
+    "camera": {
+      "zoom": 1.5,
+      "target": "n1"
+    },
+    "mode": "wire",
+    "selected": null,
+    "label": "Original 🧷",
+    "revision": 7
+  },
+  "expected": {
+    "camera": {
+      "zoom": 1.5,
+      "target": "n1"
+    },
+    "mode": "wire",
+    "selected": null,
+    "label": "Original 🧷",
+    "revision": 7
+  },
+  "refused": [
+    "{\"camera\":{\"zoom\":1.5,\"target\":null},\"mode\":\"bad\",\"selected\":null,\"label\":\"x\",\"revision\":1}",
+    "{\"camera\":{\"zoom\":true,\"target\":null},\"mode\":\"wire\",\"selected\":null,\"label\":\"x\",\"revision\":1}",
+    "{\"camera\":{\"zoom\":1.5,\"target\":null},\"mode\":\"wire\",\"selected\":null,\"label\":\"x\",\"revision\":-1}",
+    "{\"camera\":{\"zoom\":1.5,\"target\":null},\"mode\":\"wire\",\"selected\":null,\"label\":\"x\",\"revision\":1,\"extra\":1}",
+    "{\"camera\":{\"zoom\":1.5,\"target\":null},\"mode\":\"wire\",\"selected\":null,\"label\":\"x\",\"label\":\"y\",\"revision\":1}"
+  ],
+  "originalChildProjection": true,
+  "coldConstructionRequired": false,
+  "denialAxes": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ]
+}

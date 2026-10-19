@@ -7,9 +7,26 @@
   "payloadBytes": 8192,
   "grant": {
     "maximumItems": 1,
-    "maximumCopyBytes": 17,
+    "maximumCopyBytes": 4096,
     "maximumCapacityBytes": 4096,
     "maximumReleaseBytes": 262144,
     "maximumDepth": 64
+  },
+  "outputQuantum": 64,
+  "metadataFunding": [
+    "cursorBirth",
+    "nativeSource",
+    "frameIndex",
+    "canonicalBytes",
+    "chunkAcknowledgement",
+    "cursorClose"
+  ],
+  "streamingCase": {
+    "maximumCopyBytes": 17,
+    "nativeColumnBytes": 32,
+    "expectedChunks": [
+      17,
+      15
+    ]
   }
 }

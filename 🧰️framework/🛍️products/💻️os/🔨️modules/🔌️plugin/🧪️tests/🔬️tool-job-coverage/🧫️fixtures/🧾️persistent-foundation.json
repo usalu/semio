@@ -1,0 +1,83 @@
+{
+  "schema": "tool-job-persistent-foundation/v1",
+  "cases": [
+    {
+      "id": "none",
+      "before": "",
+      "after": "",
+      "accepted": true
+    },
+    {
+      "id": "lost-caller-grant",
+      "before": "session.pump_one_for_interactive_turn(grant)",
+      "after": "session.pump_one_for_interactive_turn(Default::default())",
+      "accepted": false
+    },
+    {
+      "id": "one-slot-scan",
+      "before": "for offset in 0..ARTIFACT_LIVE_OUTPUT_SLOTS",
+      "after": "for offset in 0..1",
+      "accepted": false
+    },
+    {
+      "id": "lost-recipient",
+      "before": "session.take_checked_out_retained_step_receipt()",
+      "after": "session.take_fabricated_step_receipt()",
+      "accepted": false
+    },
+    {
+      "id": "lost-capacity-bound",
+      "before": "issued.maximum_capacity_bytes>grant.maximum_capacity_bytes",
+      "after": "false",
+      "accepted": false
+    },
+    {
+      "id": "lost-release-bound",
+      "before": "issued.maximum_release_bytes>grant.maximum_release_bytes",
+      "after": "false",
+      "accepted": false
+    },
+    {
+      "id": "lost-depth-bound",
+      "before": "issued.maximum_depth>grant.maximum_depth",
+      "after": "false",
+      "accepted": false
+    },
+    {
+      "id": "lost-quote-admission",
+      "before": "plugin_turn_admitted(demand, grant)?",
+      "after": "true",
+      "accepted": false
+    },
+    {
+      "id": "lost-remaining-grant",
+      "before": "remaining_plugin_turn_grant(grant, spent)",
+      "after": "remaining_plugin_turn_grant(grant, Default::default())",
+      "accepted": false
+    },
+    {
+      "id": "lost-worker-wait",
+      "before": "typed operation mounted worker awaits its next outcome",
+      "after": "typed operation incorrectly blocked",
+      "accepted": false
+    },
+    {
+      "id": "lost-retirement-grant",
+      "before": "operation.retirement_step(grant)?",
+      "after": "operation.retirement_step(Default::default())?",
+      "accepted": false
+    },
+    {
+      "id": "lost-terminal-witness",
+      "before": "MountedTypedCommandFullOperation::terminal_is_empty",
+      "after": "MountedTypedCommandFullOperation::not_empty",
+      "accepted": false
+    },
+    {
+      "id": "terminal-loop",
+      "before": "let _ = active.drive_worker_step(self.mounted_policy.maintenance)?;",
+      "after": "let outcome = loop { let _ = active.drive_worker_step(self.mounted_policy.maintenance)?; };",
+      "accepted": false
+    }
+  ]
+}

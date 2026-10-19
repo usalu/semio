@@ -1,5 +1,5 @@
-//! 🔌 Puzzle3d mutation — `ReplaceObjectVortex`: whole-value swap of one vortex's presentation
 //! fields (kind/label/position/direction/radius/hidden/locked together, one property-panel gesture).
+//! 🔌 Puzzle3d mutation — `ReplaceObjectVortex`: whole-value swap of one vortex's presentation
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
 use {semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot, semio_s_artifact_puzzle_3d_model::Puzzle3dVortex};
 
@@ -27,23 +27,32 @@ pub fn replace_object_vortex<Op: From<ReplaceObjectVortex>>(object_id: String, v
 impl<Op> protocol::MutationKind<Puzzle3dSnapshot, Op> for ReplaceObjectVortex
 where
     Op: protocol::Mutation<Puzzle3dSnapshot, Diff = Puzzle3dDiff> + From<ReplaceObjectVortex>,
-{
+ {
+
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "object-vortex", kind: "replace-object-vortex", record: "ReplacedObjectVortex" };
 
-    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Puzzle3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace vortex \"{}\" on object \"{}\"", self.vortex_id, self.object_id), &format!("Wirbel \"{}\" an Objekt \"{}\" ersetzen", self.vortex_id, self.object_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.object_id.clone(), self.vortex_id.clone()]
     }
+
+}
+impl<Op> protocol::ColdMutationKind<Puzzle3dSnapshot, Op> for ReplaceObjectVortex
+where
+    Op: protocol::ColdMutation<Puzzle3dSnapshot, ReferenceDiff = Puzzle3dDiff> + From<ReplaceObjectVortex>,
+ {
+fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+        super::diff::diff(self, base)
+    }
+fn inverse(&self, base: &Puzzle3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Mutation

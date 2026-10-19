@@ -1,5 +1,5 @@
-//! 🔍️ Puzzle 2d play app panel — the field inspector for whatever is selected. The live `vortex`
 //! selection reaches the render as [`Puzzle2dInteractionSnapshot`] (resolved once per render by
+//! 🔍️ Puzzle 2d play app panel — the field inspector for whatever is selected. The live `vortex`
 //! `Puzzle2dPlayApp::render_with_request_context`), so this panel shows the first selected node,
 //! edge or handle's real fields; an empty selection falls back to the document summary.
 //!
@@ -10,6 +10,12 @@ use crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_PROPERTIES;
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use {crate::editor::puzzle2d::snapshot::board_snapshot_edges, crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::snapshot_target_regions, crate::editor::puzzle2d::snapshot::puzzle_extension_id, crate::editor::puzzle2d::interaction::ui_label, crate::editor::puzzle2d::snapshot::Puzzle2dInteractionSnapshot, crate::editor::puzzle2d::snapshot::Puzzle2dScene, crate::editor::puzzle2d::snapshot::PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Component, NumberStepperProps, Trigger};
+use semio_framework_plugin::plugin_app_close_prelude::Buildable;
+
+use semio_framework_plugin::plugin_app_close_prelude::HasBase;
+use semio_framework_plugin::plugin_app_close_prelude::HasChildren;
+
+
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::tree_item_with_action;
 use semio_framework_plugin::ui_node_list;

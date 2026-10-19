@@ -1,15 +1,27 @@
 use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_nodal_load::*;
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::add_load;
 use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::create_load_case;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::{add_area_load, add_combination, add_load_case, add_member_udl, add_node, set_self_weight};
-use crate::context::{dispatch, fem2d_app, fem2d_empty_app};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_area_load;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_combination;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_load_case;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_member_udl;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_node;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_self_weight;
+use crate::context::dispatch;
+use crate::context::fem2d_app;
+use crate::context::fem2d_empty_app;
 use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand;
 
 async fn with_dead_case(app: &mut crate::context::Fem2dApp) {
@@ -36,7 +48,8 @@ async fn add_nodal_load_with_no_existing_case_creates_one_2d() {
     dispatch(&mut app, Fem2dCommand::AddNodalLoad(AddNodalLoad { node_id, dof: FemDof::Ty, value: -5000.0, case_id: None })).await;
     let snapshot = app.snapshot().expect("snapshot");
     assert_eq!(snapshot.load_cases.len(), 1);
-    assert_eq!(snapshot.load_cases[0].id, "case-1");
+    assert!(snapshot.load_cases[0].id.starts_with("case-"));
+    assert_eq!(snapshot.load_cases[0].id.len(), 21);
     assert!(matches!(snapshot.load_cases[0].loads[0], FemLoad::Nodal { .. }));
 }
 
@@ -88,4 +101,16 @@ async fn add_member_udl_action_emits_op_2d() {
     let after: usize = snapshot.load_cases.iter().map(|case| case.loads.len()).sum();
     assert_eq!(after, before + 1, "one member load lands in one case");
     assert!(snapshot.load_cases.iter().flat_map(|case| case.loads.iter()).any(|load| matches!(load, FemLoad::MemberUdl { element_id, wy, .. } if element_id == "e3" && *wy == -500.0)));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_named_missing_case_is_not_redirected_to_another_case() {
+    let app = fem2d_app();
+    let history = semio_framework_plugin::HistoryView::empty();
+    let snapshot = app.snapshot().expect("snapshot");
+    let view = ArtifactView::new(&snapshot, &history);
+    let load = FemLoad::Nodal { id: "new-load".into(), node_id: "node".into(), dof: crate::FemDof::Tx, value: 1.0 };
+    let mutation = add_load_mutation(&view, Some("missing-case"), load).expect("lowered load");
+    let Fem2dMutation::AddLoad(operation) = mutation else { panic!("named target must stay explicit") };
+    assert_eq!(operation.case_id, "missing-case");
 }

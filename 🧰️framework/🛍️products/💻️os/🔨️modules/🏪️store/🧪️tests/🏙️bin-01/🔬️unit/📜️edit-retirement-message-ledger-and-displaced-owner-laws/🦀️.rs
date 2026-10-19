@@ -198,7 +198,8 @@ struct UnitOwnedRetirement {
 }
 
 impl ErasedSnapshotRetirement for UnitOwnedRetirement {
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand { depth: usize::from(self.value.is_some()), ..Default::default() })}
+fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items==0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if grant.maximum_depth==0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original unit payload requires supplied depth")); }

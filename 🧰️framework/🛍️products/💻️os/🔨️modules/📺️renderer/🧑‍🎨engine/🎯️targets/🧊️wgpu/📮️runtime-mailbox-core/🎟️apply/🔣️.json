@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "capacity": 4,
+  "ready": [
+    {
+      "revision": 1,
+      "restoresInteraction": false
+    },
+    {
+      "revision": 2,
+      "restoresInteraction": true
+    }
+  ],
+  "steps": [
+    {
+      "op": "checkout",
+      "index": 1,
+      "ready": [
+        1
+      ],
+      "held": 2,
+      "length": 2,
+      "ownerOutstanding": true
+    },
+    {
+      "op": "enqueue",
+      "revision": 3,
+      "admitted": true,
+      "ready": [
+        1,
+        3
+      ],
+      "held": 2,
+      "length": 3,
+      "ownerOutstanding": true
+    },
+    {
+      "op": "enqueue",
+      "revision": 4,
+      "admitted": false,
+      "ready": [
+        1,
+        3
+      ],
+      "held": 2,
+      "length": 3,
+      "ownerOutstanding": true
+    },
+    {
+      "op": "refuse",
+      "ready": [
+        1,
+        2,
+        3
+      ],
+      "held": null,
+      "length": 3,
+      "ownerOutstanding": true
+    },
+    {
+      "op": "checkout",
+      "index": 1,
+      "ready": [
+        1,
+        3
+      ],
+      "held": 2,
+      "length": 3,
+      "ownerOutstanding": true
+    },
+    {
+      "op": "pending",
+      "ready": [
+        1,
+        2,
+        3
+      ],
+      "held": null,
+      "length": 3,
+      "ownerOutstanding": true
+    },
+    {
+      "op": "checkout",
+      "index": 1,
+      "ready": [
+        1,
+        3
+      ],
+      "held": 2,
+      "length": 3,
+      "ownerOutstanding": true
+    },
+    {
+      "op": "complete",
+      "ready": [
+        1,
+        3
+      ],
+      "held": null,
+      "length": 2,
+      "ownerOutstanding": false
+    }
+  ],
+  "application": {
+    "fuelPerTurn": 1,
+    "phases": [
+      "apply",
+      "remove"
+    ],
+    "metadataItems": 2
+  },
+  "recovery": {
+    "stages": [
+      "capture",
+      "return-interaction",
+      "return-cursor",
+      "release-unique-cell"
+    ],
+    "metadataItems": 4,
+    "releaseWhileShared": 0,
+    "replacementAllocations": 0
+  }
+}

@@ -54,5 +54,34 @@
     "bun repo tools setup",
     "--tool=bazel",
     "Nx remains the default"
-  ]
+  ],
+  "resourceContents": [
+    {
+      "uri": "repo://goals",
+      "mimeType": "text/plain",
+      "text": ""
+    },
+    {
+      "uri": "repo://goals",
+      "mimeType": "text/plain",
+      "text": "Goals"
+    },
+    {
+      "uri": "repo://binary",
+      "mimeType": "application/octet-stream",
+      "blob": "AQI="
+    }
+  ],
+  "reopenPrompt": {
+    "invalid": [
+      null,
+      "",
+      " ",
+      "\t\n"
+    ],
+    "valid": [
+      "Continue the ticket",
+      " Weiterarbeiten "
+    ]
+  }
 }

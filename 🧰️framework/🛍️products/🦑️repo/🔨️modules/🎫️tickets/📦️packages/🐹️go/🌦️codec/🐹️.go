@@ -1,10 +1,10 @@
 package tickets
 
 import (
-	json "encoding/json"
-	strings "strings"
+	"encoding/json"
+	"strings"
+	"github.com/usalu/semio/repo/model"
 
-	model "github.com/usalu/semio/repo/model"
 )
 
 // #region 📄️Codec
@@ -15,6 +15,7 @@ type goMember struct {
 	text    string
 	nested  []goMember
 	strings []string
+	objects [][]goMember
 	kind    int
 }
 
@@ -32,6 +33,12 @@ func renderGoMembers(members []goMember, depth int) string {
 			lines = append(lines, indent+GoJSONString(member.name)+": "+GoJSONString(member.text))
 		case 1:
 			lines = append(lines, indent+GoJSONString(member.name)+": "+renderGoMembers(member.nested, depth+1))
+		case 3:
+			if len(member.objects) == 0 { lines = append(lines, indent+GoJSONString(member.name)+": []"); continue }
+			elementIndent := strings.Repeat("  ", depth+2)
+			elements := make([]string, 0, len(member.objects))
+			for _, object := range member.objects { elements = append(elements, elementIndent+renderGoMembers(object, depth+2)) }
+			lines = append(lines, indent+GoJSONString(member.name)+": [\n"+strings.Join(elements, ",\n")+"\n"+indent+"]")
 		default:
 			if len(member.strings) == 0 {
 				lines = append(lines, indent+GoJSONString(member.name)+": []")
@@ -252,7 +259,29 @@ func EncodeTicketDocument(ticket *model.Ticket) string {
 	if len(ticket.Sessions) > 0 {
 		members = append(members, goMember{name: "sessions", strings: ticket.Sessions, kind: 2})
 	}
+	if len(ticket.Interactions) > 0 {
+		objects := make([][]goMember, 0, len(ticket.Interactions))
+		for _, interaction := range ticket.Interactions { objects = append(objects, interactionMembers(interaction)) }
+		members = append(members, goMember{name: "interactions", objects: objects, kind: 3})
+	}
 	return renderGoMembers(members, 0)
+}
+
+// 🧾️ Encodes durable interaction records in the canonical model field order.
+func interactionMembers(interaction model.Interaction) []goMember {
+	members := []goMember{{name: "kind", text: interaction.Kind}, {name: "date", text: interaction.Date}, {name: "author", text: interaction.Author}, {name: "system", text: interaction.System}, {name: "client", text: interaction.Client}, {name: "checkpoint", text: interaction.Checkpoint}}
+	for _, field := range []goMember{{name: "prompt", text: interaction.Prompt}, {name: "summary", text: interaction.Summary}, {name: "llm", text: interaction.LLM}, {name: "effort", text: interaction.Effort}} { if field.text != "" { members = append(members, field) } }
+	if len(interaction.Files) > 0 {
+		objects := make([][]goMember, 0, len(interaction.Files))
+		for _, file := range interaction.Files {
+			fields := []goMember{{name: "path", text: file.Path}}
+			if file.ID != "" { fields = append(fields, goMember{name: "id", text: file.ID}) }
+			if file.URI != "" { fields = append(fields, goMember{name: "uri", text: file.URI}) }
+			objects = append(objects, fields)
+		}
+		members = append(members, goMember{name: "files", objects: objects, kind: 3})
+	}
+	return members
 }
 
 // ➕️AppendSessionID appends a session id once, ignoring blanks and duplicates.

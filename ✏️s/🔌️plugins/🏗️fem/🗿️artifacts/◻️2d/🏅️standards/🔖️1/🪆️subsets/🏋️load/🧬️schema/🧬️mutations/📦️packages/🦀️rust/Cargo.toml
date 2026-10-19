@@ -24,3 +24,7 @@ semio-framework-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-fem-2d-model = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+semio-s-artifact-fem-2d-mutations = { workspace = true }

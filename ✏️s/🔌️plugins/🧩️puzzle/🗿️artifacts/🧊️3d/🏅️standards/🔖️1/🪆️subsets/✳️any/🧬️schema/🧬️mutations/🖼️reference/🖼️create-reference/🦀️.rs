@@ -27,23 +27,32 @@ pub fn create_reference<Op: From<CreateReference>>(reference: Puzzle3dReference,
 impl<Op> protocol::MutationKind<Puzzle3dSnapshot, Op> for CreateReference
 where
     Op: protocol::Mutation<Puzzle3dSnapshot, Diff = Puzzle3dDiff> + From<CreateReference> + From<DeleteReference>,
-{
+ {
+
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "reference", kind: "create-reference", record: "CreatedReference" };
 
-    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Puzzle3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create reference \"{}\"", self.reference.id), &format!("Referenz \"{}\" erstellen", self.reference.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.reference.id.clone()]
     }
+
+}
+impl<Op> protocol::ColdMutationKind<Puzzle3dSnapshot, Op> for CreateReference
+where
+    Op: protocol::ColdMutation<Puzzle3dSnapshot, ReferenceDiff = Puzzle3dDiff> + From<CreateReference> + From<DeleteReference>,
+ {
+fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+        super::diff::diff(self, base)
+    }
+fn inverse(&self, base: &Puzzle3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Mutation

@@ -38,24 +38,33 @@ async fn framework_reserved_emit_admission_preserves_saturated_foreign_slots_and
  for row in law["cases"].as_array().unwrap(){
   let occupied=row["occupied"].as_u64().unwrap()as usize;
   let mut app=contract_composed_app_raw(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
-  let admitted=app.dispatch_ctx().test_reserved_emit_admission_case(occupied,&meta());
-  drain_and_close_composed_fixture(&mut app, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy());
+  let mut caller=crate::app_testing::OriginalFixtureCaller::admit().unwrap();let mut decoder=semio_framework_job::OriginalJobDecodeOwner::empty();let mut cx=caller.context().with_original_decoder(&mut decoder);
+  let admitted=app.dispatch_ctx().test_reserved_emit_admission_case(occupied,&meta(),&mut cx);
+  drain_and_close_composed_fixture(&mut app, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),&mut cx);let fuel=cx.fuel_remaining();drop(cx);let fuel=caller.retire_decoder(&mut decoder,fuel).unwrap();caller.retire(fuel).unwrap();
   assert_eq!(admitted,row["admitted"].as_bool().unwrap());
  }
 }
 
 #[semio_framework_async_macros::async_test]
-async fn framework_reserved_emit_cancelled_worker_keeps_original_permit_until_completion_handoff(){
+async fn framework_reserved_emit_cancelled_original_permit_keeps_its_exact_reservation_until_finish(){
  let mut app=contract_composed_app_raw(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
+ let mut caller=crate::app_testing::OriginalFixtureCaller::admit().unwrap();let mut cx=caller.context();
  let retained=app.dispatch_ctx().test_reserved_emit_cancelled_worker_handoff(&meta()).await;
- drain_and_close_composed_fixture(&mut app, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy());
- assert!(retained,"cancelled producer must return its original permit so completed original output can enter bounded mounted cancellation");
+ drain_and_close_composed_fixture(&mut app, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),&mut cx);let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).unwrap();
+ assert!(retained,"cancelled producer retains its original admitted permit and keyed reservation until explicit finish");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn framework_reserved_emit_busy_completion_keeps_original_fixed_owner(){
  let mut app=contract_composed_app_raw(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
- let retained=app.test_reserved_emit_busy_completion_owner(&meta()).await;
- drain_and_close_composed_fixture(&mut app, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy());
+ let mut caller=crate::app_testing::OriginalFixtureCaller::admit().unwrap();let mut cx=caller.context();
+ let retained=app.test_reserved_emit_busy_completion_owner(&meta(),&mut cx).await;
+ drain_and_close_composed_fixture(&mut app, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),&mut cx);let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).unwrap();
  assert!(retained,"busy original completion remains in the same pre-admitted operation until bounded close");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn reserved_mounted_source_survives_denied_first_birth_and_reaches_the_actual_worker_candidate(){
+ let policy=crate::app_testing::artifact_app_laws::fixture_mounted_policy();let mut app=contract_composed_app_raw(policy,&mut crate::app_testing::artifact_app_laws::fixture_identity()).await;let mut caller=crate::app_testing::OriginalFixtureCaller::admit().unwrap();let mut decoder=semio_framework_job::OriginalJobDecodeOwner::empty();let mut cx=caller.context().with_original_decoder(&mut decoder);
+ assert!(app.test_reserved_original_before_birth(&meta(),&mut cx).await.unwrap());drain_and_close_composed_fixture(&mut app,policy,&mut cx);let fuel=cx.fuel_remaining();drop(cx);let fuel=caller.retire_decoder(&mut decoder,fuel).unwrap();caller.retire(fuel).unwrap();println!("[DEBUG] actual reserved mounted guard preserves original source with zero denied effects, queues same semantic-bound paid candidate, then closes under the same source");
 }

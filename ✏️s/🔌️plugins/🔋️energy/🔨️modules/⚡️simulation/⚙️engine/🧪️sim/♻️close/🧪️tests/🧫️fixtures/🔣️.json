@@ -1,0 +1,33 @@
+{
+  "schema": "semio.energy.original-terminal-owners.v1",
+  "owned": [
+    "model",
+    "config",
+    "weather",
+    "validation",
+    "previous_temperatures",
+    "previous_loads",
+    "warmup_convergence",
+    "time_series",
+    "meters",
+    "time_series_order",
+    "meter_order",
+    "zone_temperature_history",
+    "final_summaries",
+    "finalization",
+    "result_build",
+    "close_string_owner"
+  ],
+  "name": "Original größe 🧩️",
+  "temperatures": [
+    23,
+    19.5,
+    -2
+  ],
+  "order": [
+    "retain",
+    "retireBackings",
+    "releaseAuthorityBox"
+  ],
+  "terminalDropBytes": 0
+}

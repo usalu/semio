@@ -42,13 +42,22 @@ impl OpBinary for SetTransactionCount {
 }
 impl MutationKind<TxnSnapshot, TxnMutation> for SetTransactionCount {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "transaction-count", kind: "set-transaction-count", record: "SetTransactionCount" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set transaction count to {}", self.value), &format!("Transaktionsanzahl auf {} setzen", self.value))
+    }
+}
+
+impl crate::os_spr::ColdMutationKind<TxnSnapshot, TxnMutation> for SetTransactionCount {
     fn diff(&self, _: &TxnSnapshot) -> MutationOutcome<TxnDiff> {
         MutationOutcome::new(TxnDiff { count: Some(self.value) })
     }
     fn inverse(&self, base: &TxnSnapshot) -> Result<Vec<TxnMutation>, semio_framework_value::ValueError> {
         Ok((|| vec![Self { value: base.count }.into()])())
     }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set transaction count to {}", self.value), &format!("Transaktionsanzahl auf {} setzen", self.value))
-    }
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️sum-law/🦀️.rs"]
+mod sum_law_tests;

@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {"childId":"original-image","target":{"artifactId":"original-document","dialect":{"artifactKind":"s.stdio.semio","standard":"1","subset":"image"}}},
+    {"childId":"Bild β 🪆️","target":{"artifactId":"document-two","dialect":{"artifactKind":"s.stdio.semio","standard":"1","subset":"image"}}}
+  ],
+  "sameOriginalSource":true,
+  "localMaterialization":false,
+  "cancelEveryPrefix":true
+}

@@ -156,26 +156,38 @@ fn window_hairline_opens_only_under_the_active_tab() {
         let group = layout.groups.iter().find(|g| g.corner == semio_framework_ui_tui_frame::layout::WindowStackCorner::TopLeft).expect("top-left tabs");
         for tab in &group.tabs {
             let open = tab.index == active;
-            for x in (tab.x + 1)..(tab.x + tab.interior_width + 1) {
+                        let role = if open { Role::ActiveBase } else { Role::BorderNormal };
+            for y in [0, 1] {
+                for x in [tab.x, tab.x + tab.interior_width + 1] {
+                    assert_eq!(buf.get(x, y).unwrap().fg, theme.role(role), "tab {} perimeter at {x},{y}", tab.index);
+                }
+            }
+            for x in [tab.x, tab.x + tab.interior_width + 1] {
+                assert_eq!(buf.get(x, layout.top_body_y).unwrap().fg, theme.role(Role::ActiveBase), "focused body junction at {x}");
+            }
+for x in (tab.x + 1)..(tab.x + tab.interior_width + 1) {
                 let ch = buf.get(x, layout.top_body_y).unwrap().ch;
                 if open {
                     assert_eq!(ch, ' ', "active tab {active} must stay open at {x}: {}", row_text(&buf, layout.top_body_y));
                 } else {
                     assert_eq!(ch, '\u{2501}', "inactive tab must stay closed at {x} (heavy line set while focused): {}", row_text(&buf, layout.top_body_y));
-                }
+                                    assert_eq!(buf.get(x, layout.top_body_y).unwrap().fg, theme.role(Role::ActiveBase), "closed seam belongs to the focused body");
+}
             }
         }
         let hair = row_text(&buf, layout.top_body_y);
         let bend = hair.rfind('\u{2517}').unwrap_or_else(|| panic!("missing active bend {hair:?}"));
         assert!(hair[bend..].chars().all(|ch| ch != ' '), "silhouette breaks after the active tab: {hair:?}");
         assert!(hair.ends_with('\u{2513}'), "body cap does not close: {hair:?}");
-        assert_eq!(buf.get(0, 0).unwrap().fg, theme.role(Role::ActiveBase), "focused silhouette uses the active color");
+        
         assert_eq!(buf.get(rect.width - 1, layout.top_body_y).unwrap().fg, theme.role(Role::ActiveBase));
-    }
+            assert_eq!(buf.get(0, rect.height - 1).unwrap().fg, theme.role(Role::ActiveBase), "focused body border remains independent of tab selection");
+}
     let plain = WindowState::new("Main").with_stack_tabs(vec!["alpha".into(), "beta".into()], 0);
     let mut buf = CellBuffer::new(Size { width: 60, height: 8 }, Cell::blank([0, 0, 0], [0, 0, 0]));
     ChromeState::Window(Box::new(plain)).paint(&theme, rect, &mut buf);
-    assert_eq!(buf.get(0, 0).unwrap().fg, theme.role(Role::BorderNormal), "an unfocused silhouette uses the normal border");
+    assert_eq!(buf.get(0, 0).unwrap().fg, theme.role(Role::ActiveBase), "selected tab keeps its active outline in an unfocused window");
+    assert_eq!(buf.get(rect.width - 1, 2).unwrap().fg, theme.role(Role::BorderNormal), "unfocused body retains its normal border");
 }
 
 #[test]
@@ -197,16 +209,27 @@ fn window_bottom_hairline_opens_only_under_the_active_tab() {
     assert!(group.tabs.len() >= 2, "two bottom tabs");
     for tab in &group.tabs {
         let open = tab.index == 1;
-        for x in (tab.x + 1)..(tab.x + tab.interior_width + 1) {
+                let role = if open { Role::ActiveBase } else { Role::BorderNormal };
+        for yy in [y + 1, rect.height - 1] {
+            for x in [tab.x, tab.x + tab.interior_width + 1] {
+                assert_eq!(buf.get(x, yy).unwrap().fg, theme.role(role), "bottom tab {} perimeter at {x},{yy}", tab.index);
+            }
+        }
+        for x in [tab.x, tab.x + tab.interior_width + 1] {
+            assert_eq!(buf.get(x, y).unwrap().fg, theme.role(Role::ActiveBase), "focused bottom body junction at {x}");
+        }
+for x in (tab.x + 1)..(tab.x + tab.interior_width + 1) {
             let ch = buf.get(x, y).unwrap().ch;
             if open {
                 assert_eq!(ch, ' ', "active bottom tab must stay open at {x}: {}", row_text(&buf, y));
             } else {
                 assert_eq!(ch, '\u{2501}', "inactive bottom tab must stay closed at {x} (heavy line set while focused): {}", row_text(&buf, y));
-            }
+                            assert_eq!(buf.get(x, y).unwrap().fg, theme.role(Role::ActiveBase), "closed bottom seam belongs to the focused body");
+}
         }
     }
-    assert_eq!(buf.get(0, rect.height - 1).unwrap().fg, theme.role(Role::ActiveBase));
+    assert_eq!(buf.get(0, rect.height - 1).unwrap().fg, theme.role(Role::BorderNormal), "the first bottom tab is inactive despite body focus");
+    assert_eq!(buf.get(0, 0).unwrap().fg, theme.role(Role::ActiveBase), "focused body retains its own border role");
 }
 
 #[test]

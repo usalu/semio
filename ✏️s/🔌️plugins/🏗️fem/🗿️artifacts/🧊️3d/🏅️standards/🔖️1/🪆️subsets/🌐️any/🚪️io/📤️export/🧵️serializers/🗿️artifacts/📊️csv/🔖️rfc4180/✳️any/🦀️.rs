@@ -1,16 +1,19 @@
-//! 🚪️ fem3d → csv — the node coordinate table: header `id, x, y, z`, then one row per node in
 //! document order, written as real RFC 4180 text by stdio's own `encode_csv`. Coordinates use Rust's
+//! 🚪️ fem3d → csv — the node coordinate table: header `id, x, y, z`, then one row per node in
 //! shortest round-trip float spelling, so a reader recovers every coordinate bit for bit.
 //!
 //! 🔖 `IoFidelity::Lossy`: elements, regions, materials, sections, supports, loads and analysis
 //! settings have no column in one flat table, so there is no csv import.
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+use semio_framework_os_kernel::io::io_mechanism::ArchiveChildren;
+use semio_framework_os_kernel::io::io_mechanism::Serializer;
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_csv::schema::snapshot::{CsvField, CsvRecord};
-use semio_s_artifact_stdio_csv::standards::v_rfc4180::subsets::any::io::text::snapshot::{encode_csv};
-use semio_s_artifact_stdio_csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_csv::schema::snapshot::CsvField;
+use semio_s_artifact_stdio_csv::schema::snapshot::CsvRecord;
+use semio_s_artifact_stdio_csv::standards::v_rfc4180::subsets::any::io::text::snapshot::encode_csv;
+use semio_s_artifact_stdio_csv::CsvSnapshot;
+use semio_s_artifact_stdio_csv::STDIO_CSV_DOCUMENT_SCHEMA;
 
 /// 🎯️ The foreign dialect this leaf writes.
 pub const CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId::ANY };

@@ -1,13 +1,10 @@
 {
   "artifact": null,
-  "domain": null,
-  "fasteners": null,
-  "kindCatalogs": null,
-  "kindCatalogsExtra": null,
-  "kindCompatibility": null,
-  "label": null,
-  "meta": null,
-  "parts": null,
   "schema": null,
+  "domain": null,
+  "meta": null,
+  "kindCompatibility": null,
+  "parts": null,
+  "fasteners": null,
   "targetVolumes": null
 }

@@ -13,10 +13,19 @@ impl EnergyJobAuthority {
     }
 
     /// 📏️ Quotes the next close frontier: a payload owner, a staged page source, or one popped ladder rung.
+    fn precompute_close_demands(&self, body: usize) -> Option<Result<RetirementDemand, ValueError>> {
+        if !self.precompute_close.is_empty() || self.precompute.is_some() {
+            return Some(self.precompute_close.next_owner_demands::<PrecomputeBuilder>(self.precompute.is_some(), &None, body));
+        }
+        self.pre.as_ref().map(|_| self.precompute_close.next_owner_demands::<PrecomputedModel>(true, &None, body))
+    }
+
     pub fn close_demands(&self) -> Result<RetirementDemand, ValueError> {
+        if authority_inputs_are_retired(self){return self.retained_tail_demands(usize::MAX)}
         if authority_is_terminal_empty(self) {
             return Ok(RetirementDemand::default());
         }
+        if !self.input_identity.terminal_is_empty() { return Ok(self.input_identity.close_demand()); }
         if let Some(build) = self.wire_build.as_ref() {
             return build.writer.retirement_demands();
         }
@@ -39,13 +48,18 @@ impl EnergyJobAuthority {
                 return Ok(demand);
             }
         }
+        if let Some(demand) = self.precompute_close_demands(0) { return demand; }
         Ok(ENERGY_RUNG_DEMAND)
     }
 
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
         self.closing = true;
+        if authority_inputs_are_retired(self){return self.retire_retained_tail(grant)}
         if authority_is_terminal_empty(self) {
             return Ok(energy_done());
+        }
+        if !self.input_identity.terminal_is_empty() {
+            return self.input_identity.close_step(grant).map(|progress|InteractiveJobCloseStep::Pending{progress});
         }
         if let Some(build) = self.wire_build.as_mut() {
             build.writer.begin_close();
@@ -198,20 +212,7 @@ impl EnergyJobAuthority {
             self.timestep_work = None;
             return Ok(energy_one());
         }
-        if let Some(builder) = self.precompute.as_mut() {
-            if !builder.close_step(maximum_items) {
-                return Ok(energy_one());
-            }
-            self.precompute = None;
-            return Ok(energy_one());
-        }
-        if let Some(pre) = self.pre.as_mut() {
-            if !pre.close_step(maximum_items) {
-                return Ok(energy_one());
-            }
-            self.pre = None;
-            return Ok(energy_one());
-        }
+
         if let Some(state) = self.state.as_mut() {
             if state.zones.pop().is_some() {
                 return Ok(energy_one());
@@ -310,31 +311,50 @@ impl InteractiveJob for EnergyJob {
     }
 
     fn begin_close(&mut self) {
-        EnergyJobAuthority::begin_close(self);
+        if let Some(authority)=self.authority.as_deref_mut(){authority.begin_close();}
     }
 
     fn close_step(&mut self, context: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
-        Ok(EnergyJobAuthority::close_step(self, context.retained_grant())?)
+        self.begin_close();
+        if self.authority.is_none(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}
+        let demand=self.original_close_demands()?;
+        let step=semio_framework_job::close_original_retained_step(context,demand,|grant|{
+            if self.authority.as_deref().is_some_and(authority_is_terminal_empty){
+                drop(self.authority.take());
+                release_energy_abandonment_slot(self.abandonment_slot);
+                return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}));
+            }
+            let step=self.authority.as_deref_mut().expect("original Energy authority remains retained").close_step(grant)?;
+            Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(step.progress()))
+        })?;
+        Ok(match step{InteractiveJobCloseStep::Pending{progress}if self.authority.is_none()=>InteractiveJobCloseStep::Complete{progress},step=>step})
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
-        Ok(self.close_demands()?.copy_bytes)
+        Ok(self.original_close_demands()?.copy_bytes)
     }
 
     fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, ValueError> {
-        Ok(self.close_demands()?.capacity_bytes)
+        Ok(self.original_close_demands()?.capacity_bytes)
     }
 
     fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
-        Ok(self.close_demands()?.release_bytes)
+        Ok(self.original_close_demands()?.release_bytes)
     }
 
     fn next_close_depth_demand(&self) -> Result<usize, ValueError> {
-        Ok(self.close_demands()?.depth)
+        Ok(self.original_close_demands()?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        EnergyJobAuthority::terminal_is_empty(self)
+        self.authority.is_none()
+    }
+}
+impl EnergyJob{
+    fn original_close_demands(&self)->Result<RetirementDemand,ValueError>{
+        let Some(authority)=self.authority.as_deref()else{return Ok(Default::default())};
+        if authority.closing&&authority_is_terminal_empty(authority){return Ok(RetirementDemand{release_bytes:std::mem::size_of::<EnergyJobAuthority>(),depth:1,..Default::default()})}
+        authority.close_demands()
     }
 }
 
@@ -455,8 +475,11 @@ fn close_aggregate_work_step(work: &mut AggregateZoneWork, maximum_bytes: usize)
     None
 }
 
-pub(super) fn authority_is_terminal_empty(authority: &EnergyJobAuthority) -> bool {
+pub(super) fn authority_is_terminal_empty(authority:&EnergyJobAuthority)->bool{authority_inputs_are_retired(authority)&&authority.tail_moved&&authority.closing_tail.is_none()}
+
+fn authority_inputs_are_retired(authority: &EnergyJobAuthority) -> bool {
     authority.closing
+        && authority.input_identity.terminal_is_empty()
         && authority.output_writer.is_none()
         && authority.output_payload.is_none()
         && authority.commit_census.is_none()
@@ -496,6 +519,7 @@ pub(super) fn authority_is_terminal_empty(authority: &EnergyJobAuthority) -> boo
         && authority.result_build.model_version.is_empty()
         && authority.result_build.weather_location.is_empty()
         && authority.precompute.is_none()
+        && authority.precompute_close.is_empty()
         && authority.pre.is_none()
         && authority.state.is_none()
         && authority.timestep_builder.is_none()

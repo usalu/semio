@@ -27,9 +27,9 @@ fn local_interaction_mutation_leaf_descriptor_and_exact_codecs_are_owned() {
     let binary = mutation.encode_op().unwrap();
     assert_eq!(serde_json::from_slice::<serde_json::Value>(&binary).unwrap(), source);
     assert_eq!(InteractionConfigMutation::decode_op(&binary).unwrap(), mutation);
-    assert_eq!(protocol::apply_diff(mutation.diff(&InteractionState::default()).diff(), &InteractionState::default()).unwrap(), state);
+    assert_eq!(protocol::apply_diff_cold(mutation.diff(&InteractionState::default()).diff(), &InteractionState::default()).unwrap(), state);
     let inverse = mutation.inverse(&InteractionState::default()).expect("valid retained mutation inverse fixture");
-    assert_eq!(protocol::apply_diff(inverse[0].diff(&state).diff(), &state).unwrap(), InteractionState::default());
+    assert_eq!(protocol::apply_diff_cold(inverse[0].diff(&state).diff(), &state).unwrap(), InteractionState::default());
 }
 
 #[test]
@@ -46,5 +46,15 @@ fn the_interaction_mutation_round_trips_its_serde_json_document_through_the_plai
         let decoded = InteractionConfigMutation::from_value_controlled(&parsed, &mut control).expect("controlled decode");
         assert_eq!(decoded, mutation);
         decoded.retire_decoded();
+    }
+}
+
+/// ➕️ L3: the replacement state's inverse diffs sum to the negative diff, from the default and from a populated state.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    let source: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let populated: InteractionState = serde_json::from_value(source).unwrap();
+    for (base, next) in [(InteractionState::default(), populated.clone()), (populated, InteractionState::default())] {
+        semio_framework_os_kernel::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&InteractionConfigMutation::set_state(next), &base).await;
     }
 }

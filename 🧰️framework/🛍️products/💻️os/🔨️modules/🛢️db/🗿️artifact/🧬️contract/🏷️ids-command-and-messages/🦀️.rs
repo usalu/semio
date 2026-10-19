@@ -13,7 +13,7 @@ pub async fn to_core_document_id(id: &protocol::ArtifactId) -> ArtifactId {
 
 /// 🌉️ `protocol::ActorId` → `ActorId`, same bridge as `to_core_document_id`.
 pub async fn to_core_actor_id(id: &protocol::ActorId) -> ActorId {
-    ActorId(id.0.clone())
+    ActorId::from(id.0.as_str())
 }
 
 // 🔒️ Used as a bare fn-pointer error mapper (`.map_err(json_err)`) throughout this file —
@@ -21,8 +21,8 @@ pub async fn to_core_actor_id(id: &protocol::ActorId) -> ActorId {
 // by-reference signature would not type-check at any of those call sites despite the function
 // body itself only borrowing `err` to format it.
 // 🚫️async: E4 fn-pointer slot
-pub(super) fn wire_err(err: store::PackError) -> DbError {
-    DbError::InvalidArgument(format!("db_artifact wire error: {err}"))
+pub(super) fn wire_err(err: store::PackRefusal) -> DbError {
+    DbError::from(err)
 }
 
 // 🚫️async: E4 fn-pointer slot

@@ -1,13 +1,22 @@
-//! 🫧️ The FEM editors' local-only transient: the gumball gesture each window has in flight, persisted between the
 //! dispatches of one streamed gesture — its tool statechart configuration by stable ids, the admission and base
+//! 🫧️ The FEM editors' local-only transient: the gumball gesture each window has in flight, persisted between the
 //! revision it opened on, and its open `ToolTransaction`'s provisional entries in value form. Artifact-level rather
 //! than window-level so the SIBLING windows paint the gesture's preview too (the results window re-solves the moved
 //! structure while the drag goes on), and keyed by the owning window id so two windows never clobber each other's
 //! gesture. Never history, never shared; fem 2d and fem 3d both keep their gestures here.
 //! Schema of record: `🧬️schema/🔣️.json`; design `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5.
 
-use semio_framework_tool_machine::{GesturePhase, GestureTool, ToolRefusal, ToolTransaction, ToolTransactionState};
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_tool_machine::GesturePhase;
+
+use semio_framework_tool_machine::GestureTool;
+
+use semio_framework_tool_machine::ToolRefusal;
+
+use semio_framework_tool_machine::ToolTransaction;
+
+use semio_framework_tool_machine::ToolTransactionState;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 use std::collections::BTreeMap;
 
 //#region 🔖️State
@@ -80,7 +89,7 @@ impl FemGumballTransient {
     /// instance paints, never history. An entry that does not decode or apply is skipped.
     pub fn preview<S: Clone, M: semio_framework_value::FromValue + protocol::Mutation<S>>(&self, document: &S) -> Option<S> {
         let entries: Vec<M> = self.gestures.values().flat_map(|gesture| &gesture.entries).filter_map(|entry| semio_framework_value::FromValue::from_value(entry.mutation.clone()).ok()).collect();
-        (!entries.is_empty()).then(|| entries.iter().fold(document.clone(), |state, mutation| protocol::apply_diff(protocol::Mutation::diff(mutation, &state).diff(), &state).unwrap_or(state)))
+        (!entries.is_empty()).then(|| entries.iter().fold(document.clone(), |state, mutation| protocol::apply_diff_cold(protocol::Mutation::diff(mutation, &state).diff(), &state).unwrap_or(state)))
     }
 }
 //#endregion 🔖️State

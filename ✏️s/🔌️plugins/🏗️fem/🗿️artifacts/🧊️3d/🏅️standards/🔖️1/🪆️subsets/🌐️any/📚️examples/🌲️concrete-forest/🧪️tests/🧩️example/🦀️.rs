@@ -1,9 +1,10 @@
-//! 🧪️ Tests for example `🌲️concrete-forest`: the asset parses and round-trips, its topology is the
 //! stacked CAD structure-classic member set on the puzzle3d vortex coordinates, and the engine solves
+//! 🧪️ Tests for example `🌲️concrete-forest`: the asset parses and round-trips, its topology is the
 //! its deformation (self weight + slab dead + live, ULS/SLS) to a balanced, physically ordered result.
 
 use semio_s_artifact_fem_3d_engine::fem3d_engine::fem3d_solve_all;
-use semio_s_fem_model::{Dof, StaticResult};
+use semio_s_fem_model::Dof;
+use semio_s_fem_model::StaticResult;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::print_dsl;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;

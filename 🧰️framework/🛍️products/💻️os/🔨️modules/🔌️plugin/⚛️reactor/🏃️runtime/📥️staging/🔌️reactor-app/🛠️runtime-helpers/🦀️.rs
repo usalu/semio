@@ -75,9 +75,7 @@ pub fn original_render_section<PA: PluginApp>(app: &mut PA, section: semio_frame
     };
     semio_framework_plugin_window_transient::section_component_tree(section, &payload).map_err(|error| plugin_internal_fault(error.to_string()))
 }
-/// 🧮️ Intersects two original authorities independently without creating new currency.
-#[doc(hidden)]
-pub fn original_plugin_turn_grant(policy:RetainedCloneGrant,remaining:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:policy.maximum_items.min(remaining.maximum_items),maximum_copy_bytes:policy.maximum_copy_bytes.min(remaining.maximum_copy_bytes),maximum_capacity_bytes:policy.maximum_capacity_bytes.min(remaining.maximum_capacity_bytes),maximum_release_bytes:policy.maximum_release_bytes.min(remaining.maximum_release_bytes),maximum_depth:policy.maximum_depth.min(remaining.maximum_depth)}}
+
 /// 🧾️ What one host turn still owns after its units spent `spent`: every consumed axis shrinks, nesting depth is not consumed.
 #[doc(hidden)]
 pub fn remaining_plugin_turn_grant(turn:RetainedCloneGrant,spent:RetainedCloneProgress)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:turn.maximum_items.saturating_sub(spent.copied_items),maximum_copy_bytes:turn.maximum_copy_bytes.saturating_sub(spent.copied_bytes),maximum_capacity_bytes:turn.maximum_capacity_bytes.saturating_sub(spent.retained_capacity_bytes),maximum_release_bytes:turn.maximum_release_bytes.saturating_sub(spent.released_bytes),maximum_depth:turn.maximum_depth}}

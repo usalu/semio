@@ -104,6 +104,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
 #[semio_framework_async_macros::async_test]
 async fn retained_member_publication_preserves_order_group_identity_and_exact_maximum_grant_progress() {
+    let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
     let fixture = member_publication_fixture();
     let grant = ArtifactStoreOneItemGrant { maximum_items: fixture["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: fixture["maximumBytes"].as_u64().unwrap() as usize, ..one_item_test_policy() };
     let mut first = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "first", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
@@ -132,15 +133,15 @@ async fn retained_member_publication_preserves_order_group_identity_and_exact_ma
         };
         let mut publication = member.begin_one_item_wire_publication(request).unwrap_or_else(|_| panic!("exact member factory admits owned wire"));
         assert_eq!(publication.progress().completed_bytes, 0);
-        assert!(matches!(member.advance_one_item_publication(&mut *publication, ArtifactStoreOneItemGrant { maximum_items: 0, maximum_copy_bytes: 4096, ..one_item_test_policy() }), Ok(ArtifactStoreOneItemAdvance::Blocked)));
+        assert!(matches!(receiving_fixture.receive(|receiving|member.advance_one_item_publication(&mut *publication, fixture["maximumBytes"].as_u64().unwrap()as usize, ArtifactStoreOneItemGrant { maximum_items: 0, maximum_copy_bytes: 4096, ..one_item_test_policy() },receiving)), Ok(ArtifactStoreOneItemAdvance::Blocked)));
         let mut published = false;
         let wire_passes = fixture["wirePasses"].as_u64().unwrap() as usize;
         assert_eq!(wire_passes, 2, "one borrowed decode pass and one retained release pass");
         let maximum_turns = byte_count.checked_mul(wire_passes).and_then(|bytes| bytes.checked_add(fixture["wireSchema"].as_str().unwrap().len())).and_then(|bytes| bytes.checked_add(fixture["fixedPublicationTurns"].as_u64().unwrap() as usize)).unwrap();
         for _ in 0..maximum_turns.max(262_144) {
             let before = publication.progress();
-            match member.advance_one_item_publication(&mut *publication, grant).expect("bounded retained member unit") {
-                ArtifactStoreOneItemAdvance::Published(receipt) => {
+            match receiving_fixture.receive(|receiving|member.advance_one_item_publication(&mut *publication, fixture["maximumBytes"].as_u64().unwrap()as usize, grant,receiving)).expect("bounded retained member unit") {
+                ArtifactStoreOneItemAdvance::Published(receipt, _) => {
                     assert_eq!(receipt.generation_after, generation + 1);
                     published = true;
                     break;
@@ -151,7 +152,7 @@ async fn retained_member_publication_preserves_order_group_identity_and_exact_ma
         }
         assert!(published, "member publication stalled at {:?}, progress {:?}", publication.phase(), publication.progress());
         assert!(publication.retry());
-        assert!(matches!(member.advance_one_item_publication(&mut *publication, grant), Ok(ArtifactStoreOneItemAdvance::AwaitingAck(_))));
+        assert!(matches!(receiving_fixture.receive(|receiving|member.advance_one_item_publication(&mut *publication, fixture["maximumBytes"].as_u64().unwrap()as usize, grant,receiving)), Ok(ArtifactStoreOneItemAdvance::AwaitingAck(_))));
         assert_eq!(member.one_item_publication_identity().0, generation + 1);
         assert!(publication.acknowledge());
         assert!(!publication.acknowledge());

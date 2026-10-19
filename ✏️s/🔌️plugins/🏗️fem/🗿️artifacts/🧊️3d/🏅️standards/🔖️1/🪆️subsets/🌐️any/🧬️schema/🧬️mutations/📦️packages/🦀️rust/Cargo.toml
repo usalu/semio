@@ -60,6 +60,9 @@ name = "material_kinds"
 path = "../../../../../🧱️material/🧪️tests/🔬️material-kinds/🦀️.rs"
 
 [dependencies]
+semio-framework-dsl = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
+semio-s-fem-material = { path = "../../../../../../../../../../⚙️engine/🧱️material/📦️packages/🦀️rust" }
+semio-s-fem-node = { path = "../../../../../../../../../../⚙️engine/📍node/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }

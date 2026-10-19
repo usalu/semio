@@ -82,8 +82,8 @@ test("root orchestration, editor settings and CI use neutral build commands", ()
   expect(/\["nx",\s*"run(?:-many)?"/u.test(source)).toBe(false);
   expect(source.includes("NX_TASK_TARGET_PROJECT")).toBe(false);
   expect(source).toContain('.registerLazy("repo"');
-  for (const path of [".vscode/settings.json", ".devcontainer/devcontainer.json", ".devcontainer/Dockerfile"]) expect(read(path), path).not.toMatch(/\bNX_[A-Z_]+/u);
-  expect(read(".github/workflows/architecture-quiz.yml").includes(["bun", "nx"].join(" "))).toBe(false);
+  for (const path of [".devcontainer/devcontainer.json", ".devcontainer/Dockerfile"]) expect(read(path), path).not.toMatch(/\bNX_[A-Z_]+/u);
+  expect(read(".github/workflows/architecture-course.yml").includes(["bun", "nx"].join(" "))).toBe(false);
 });
 
 test("project declarations expose neutral executors through the owned schema", () => {
@@ -105,37 +105,13 @@ test("all authored executor omissions preserve neutral execution through the act
  const db=new Database(":memory:"),admit=new Ajv2020({strict:false}).compile(graphSchema),check=(raw:Record<string,any>,identity:string)=>{const target=neutralBuildTargetV1(raw,identity),graph={version:1 as const,projects:{audit:{name:"audit",root:".",targets:{task:{...target,dependsOn:[]}}}},dependencies:[]};expect(admit(graph),identity+":"+JSON.stringify(admit.errors)).toBe(true);const oracle=db.query("select json_patch(json_object('kind',case when json_extract(?1,'$.executor')='repo:noop' then 'noop' else 'command' end),coalesce(json_extract(?1,'$.options'),'{}')) value").get(JSON.stringify(raw))as{value:string},expected=JSON.parse(oracle.value);if(raw.command!==undefined)expected.command=raw.command;expect(target.execution,identity).toEqual(expected);const plan=planBazelTasksV1(graph,{tasks:["audit:task"],args:[]}),actual=plan.tasks[plan.selected[0]!]!;expect(plan.selected).toHaveLength(1);expect(actual.definition.execution,identity).toEqual(resolveBuildTargetV1(target,actual.configuration).execution);expect("executor"in actual.definition,identity).toBe(false);return target;};let projects=0,tasks=0,implicit=0;try{for(const row of fixture.implicitExecutors){if(row.accepted)check(row.target,row.name);else expect(()=>check(row.target,row.name)).toThrow();}const inventory=spawnSync("rg",["--files","--hidden","--null","-g","📋️project.json","-g","!node_modules","-g","!.git","-g","!.cache","-g","!🗑️generated"],{cwd:root,encoding:"utf8",timeout:10000,maxBuffer:16*1024*1024});expect(inventory.status,inventory.stderr).toBe(0);for(const path of new Set(inventory.stdout.split("\0").filter(path=>path&&!path.includes("/🎫️tickets/")))){const value=JSON.parse(read(path));projects++;for(const[name,raw]of Object.entries(value.targets??{})){const target=raw as Record<string,any>;check(target,path+":"+name);if(target.executor===undefined)implicit++;tasks++;}}expect(implicit).toBeGreaterThan(0);console.log("[DEBUG] Complete authored target neutral normalization "+JSON.stringify({projects,tasks,implicit,actualBazelPlanner:true,dependencyRelationPort:"isolated empty relation; full inferred dependency graph not claimed",NativeOperations:0}));}finally{db.close();}
 });
 
-test("editor entry points expose every build infrastructure command in both languages", () => {
-  for (const file of [".vscode/launch.json", ".vscode/🧩️launch.seed.jsonc"]) {
-    const document = JSON.parse(read(file));
-    for (const input of fixture.editorInputs) expect(document.inputs.find((row: { id?: string }) => row.id === input.id)).toEqual(input);
-    for (const row of fixture.editorCommands) for (const language of ["en", "de"] as const) {
-      const expected = `${row.labels[language]} [${language.toUpperCase()}]`;
-      const launch = document.configurations.find((value: unknown) => typeof value === "object" && value !== null && (value as { name?: string }).name === expected);
-      expect(launch, expected).toMatchObject({ type: "node-terminal", request: "launch", command: `bun repo ${row.args}`, cwd: "${workspaceFolder}", presentation: { group: row.group } });
-    }
-  }
-});
+test("dashboard entry points retain localized build and source controls",()=>{const dashboard=JSON.parse(read("📋️project.json")).metadata.semio.dashboard;for(const id of ["run-targets","run-script"]){const tool=dashboard.tools.find((tool:any)=>tool.id===id);expect(tool,id).toBeDefined();for(const language of ["en","de"]){expect(tool.title[language].trim().length).toBeGreaterThan(0);expect(tool.description[language].trim().length).toBeGreaterThan(0);}expect(tool.command.slice(0,2)).toEqual(["bun","repo"]);}});
 
 test("application task environments use neutral execution controls", () => {
   for (const path of fixture.environmentSources) expect(read(path), path).not.toMatch(/\bNX_[A-Z_]+/u);
 });
 
-test("editor task arguments cross the neutral argument boundary", () => {
-  const commands = (value: unknown): Record<string, unknown>[] => Array.isArray(value) ? value.flatMap(commands) : value && typeof value === "object" ? [...(typeof (value as Record<string, unknown>).command === "string" ? [value as Record<string, unknown>] : []), ...Object.values(value).flatMap(commands)] : [];
-  for (const file of [".vscode/launch.json", ".vscode/🧩️launch.seed.jsonc"]) for (const row of commands(JSON.parse(read(file)))) {
-    if (typeof row !== "object" || row === null || typeof row.command !== "string") continue;
-    expect(row.command, String(row.name)).not.toMatch(/(?:^|\s)nx\s+(?:run|run-many|exec|show|graph|watch|affected)\b/u);
-    if (!row.command.startsWith("bun repo ")) continue;
-    for(const answers of fixture.editorAnswers){
-      const template=createRequire(import.meta.url)("lodash/template"),command=row.command.replace(/\$\{input:(repoBuild[^}]+)\}/gu,(_,id:string)=>{expect(Object.hasOwn(answers,id),id).toBe(true);return answers[id as keyof typeof answers];});
-      expect(command).toBe(template(row.command,{interpolate:/\$\{input:(repoBuild[^}]+)\}/g})(answers));
-      const parsed = parseBuildInvocationV1(parseArgsStringToArgv(command).slice(2), {}).args, boundary = parsed.findIndex(value => /^(?:\d*[<>]|&&|\|\||;)$/u.test(value));
-      const args = boundary < 0 ? parsed : parsed.slice(0, boundary);
-      if (["run", "run-many", "affected", "exec", "watch"].includes(args[0]!)) expect(() => validateBuildTaskArgumentsV1(args), String(row.name)).not.toThrow();
-    }
-  }
-}, { timeout: 120_000 });
+test("dashboard task arguments cross the neutral argument boundary",()=>{const dashboard=JSON.parse(read("📋️project.json")).metadata.semio.dashboard;expect(dashboard.tools.find((tool:any)=>tool.id==="run-targets").command.slice(0,3)).toEqual(["bun","repo","run-many"]);for(const row of fixture.editorCommands)for(const answers of fixture.editorAnswers){const template=createRequire(import.meta.url)("lodash/template"),command=("bun repo "+row.args).replace(/\$\{input:(repoBuild[^}]+)\}/gu,(_,id:string)=>{expect(Object.hasOwn(answers,id),id).toBe(true);return answers[id as keyof typeof answers];});expect(command).toBe(template("bun repo "+row.args,{interpolate:/\$\{input:(repoBuild[^}]+)\}/g})(answers));const parsed=parseBuildInvocationV1(parseArgsStringToArgv(command).slice(2),{}).args;if(["run","run-many","affected","exec","watch"].includes(parsed[0]!))expect(()=>validateBuildTaskArgumentsV1(parsed),row.args).not.toThrow();}}, { timeout: 120_000 });
 
 test("native orchestration and rebuild declarations use neutral build commands", () => {
   const manifest = JSON.parse(read("package.json"));

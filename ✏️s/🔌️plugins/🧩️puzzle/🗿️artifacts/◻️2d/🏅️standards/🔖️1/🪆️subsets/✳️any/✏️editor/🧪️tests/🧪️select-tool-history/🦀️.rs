@@ -1,5 +1,5 @@
-//! ⏪️ Laws for the select tool's leaves under time travel (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, design §8 and
 //! §16), driven by the language-agnostic corpus `🧫️fixtures/🧫️select-tool-history/🔣️.json` that the Python oracle beside
+//! ⏪️ Laws for the select tool's leaves under time travel (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, design §8 and
 //! this file re-folds with shapely. Every scenario authors its log through the real tool entry points — a board drag
 //! through the engine, a board pick, a nudge, the rotate and scale verbs, ingested leaves — edits it in a history session
 //! through the reserved `historyEdit*` verbs and finalizes it as an overwrite. Each step's expectation is checked on the
@@ -139,21 +139,45 @@ use crate::editor::puzzle2d::kit::*;
 use crate::editor::puzzle2d::retained::*;
 #[allow(unused_imports)]
 use crate::editor::puzzle2d::session::*;
-use crate::editor::puzzle2d::select_tool_transaction_tests::{dispatched_rows, english, flush, german, move_to, painted_host_of, press, release};
+use crate::editor::puzzle2d::select_tool_transaction_tests::dispatched_rows;
+
+use super::select_tool_transaction_tests::english;
+
+use super::select_tool_transaction_tests::flush;
+
+use super::select_tool_transaction_tests::german;
+
+use super::select_tool_transaction_tests::move_to;
+
+use super::select_tool_transaction_tests::painted_host_of;
+
+use super::select_tool_transaction_tests::press;
+
+use super::select_tool_transaction_tests::release;
 use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
 use crate::editor::puzzle2d::*;
 use crate::editor::puzzle2d::engine::board_host::testkit::close_board_host;
 use crate::editor::puzzle2d::testkit::*;
-use crate::host::owned::{close_puzzle2d_store,puzzle2d_store};
+use crate::host::owned::close_puzzle2d_store;
+use crate::host::owned::puzzle2d_store;
 use semio_framework_test_fixtures::fixture_text;
 
-use crate::standards::v1::subsets::any::schema::mutations::{Puzzle2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 
 use crate::Puzzle2dSnapshot;
-use protocol::{OpBinary, OpText};
-use semio_framework::kernel::{HistoryEntry, HistoryTimeTravel, HistoryTimeTravelStage};
-use semio_framework::{ActionArgControl, ArgSchema, NumberScale, SnapSource};
-use semio_framework_plugin::{ActionMeta, PluginApp, ViewModel, FRAMEWORK_HISTORY_BODY_KEY};
+use protocol::OpBinary;
+use protocol::OpText;
+use semio_framework::kernel::HistoryEntry;
+use semio_framework::kernel::HistoryTimeTravel;
+use semio_framework::kernel::HistoryTimeTravelStage;
+use semio_framework::ActionArgControl;
+use semio_framework::ArgSchema;
+use semio_framework::NumberScale;
+use semio_framework::SnapSource;
+use semio_framework_plugin::ActionMeta;
+use semio_framework_plugin::PluginApp;
+use semio_framework_plugin::ViewModel;
+use semio_framework_plugin::FRAMEWORK_HISTORY_BODY_KEY;
 
 static SELECT_TOOL_HISTORY_CORPUS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧫️fixtures/🧫️select-tool-history/🔣️.json"));
 
@@ -189,7 +213,7 @@ fn focused_view() -> ViewModel {
 /// ⏪️ One reserved `historyEdit*` verb from the focused overview; a refusal fails the law with its reason.
 fn history_edit(app: &mut Puzzle2dApp, verb: &str, args: Value) {
     let meta = ActionMeta { view_state: Some(focused_view()), ..meta("local") };
-    let result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(semio_framework_value::ToValue::to_value(&(&args))), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+    let result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(semio_framework_value::ToValue::to_value(&args)), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().close)).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
 }
 
@@ -253,7 +277,7 @@ fn texts(node: &Value) -> Vec<&str> {
     match node {
         Value::String(text) => vec![text.as_str()],
         Value::Array(items) => items.iter().flat_map(texts).collect(),
-        Value::Object(entries) => entries.values().flat_map(texts).collect(),
+        Value::Object(entries) => entries.iter().flat_map(|(_, value)| texts(value)).collect(),
         _ => Vec::new(),
     }
 }
@@ -261,14 +285,14 @@ fn texts(node: &Value) -> Vec<&str> {
 /// ⚖️ `actual` holds `expected`: every expected key, numbers within 1e-12, id lists in any order.
 fn same(actual: &Value, expected: &Value) -> bool {
     match (actual, expected) {
-        (Value::Number(a), Value::Number(b)) => (a.as_f64().unwrap_or(f64::NAN) - b.as_f64().unwrap_or(f64::NAN)).abs() <= 1e-12,
+        (Value::Number(a), Value::Number(b)) => (a.as_f64() - b.as_f64()).abs() <= 1e-12,
         (Value::Array(a), Value::Array(b)) => {
             let sorted = |items: &[Value]| {
                 let mut items = items.to_vec();
                 items.sort_by_key(Value::to_string);
                 items
             };
-            let (a, b) = if a.iter().all(Value::is_string) { (sorted(a), sorted(b)) } else { (a.clone(), b.clone()) };
+            let (a, b) = if a.iter().all(|value| value.as_str().is_some()) { (sorted(a), sorted(b)) } else { (a.clone(), b.clone()) };
             a.len() == b.len() && a.iter().zip(&b).all(|(a, b)| same(a, b))
         }
         (Value::Object(a), Value::Object(b)) => b.iter().all(|(key, value)| a.get(key).is_some_and(|held| same(held, value))),
@@ -285,7 +309,7 @@ fn row_leaf(row: &HistoryEntry) -> Value {
 
 /// 🧾️ The row's first mutation as the history wire carries it.
 fn row_mutation(row: &HistoryEntry) -> Value {
-    semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(row.mutations.first().expect("the row's mutation"))))
+    semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(row.mutations.first().expect("the row's mutation")))
 }
 //#endregion 🧰️Harness
 
@@ -298,9 +322,9 @@ fn select(app: &mut Puzzle2dApp, ids: Vec<String>) {
 
 /// ▶️ Runs one corpus step on the app; a drag grabs a selection the app holds, painted into the engine as hosts paint it.
 fn run(app: &mut Puzzle2dApp, seed: usize, step: &Value, what: &str) {
-    let (action, spec) = step.as_object().expect("step").iter().find(|(key, _)| key.as_str() != "expect").expect("one action per step");
+    let (action, spec) = step.as_object().expect("step").iter().find(|(key, _)| *key != "expect").expect("one action per step");
     let point = |value: &Value| (value[0].as_f64().expect("x"), value[1].as_f64().expect("y"));
-    match action.as_str() {
+    match action {
         "drag" => {
             select(app, ids(&spec["selection"]));
             let mut host = painted_host_of(&painted(app));
@@ -332,7 +356,7 @@ fn run(app: &mut Puzzle2dApp, seed: usize, step: &Value, what: &str) {
         }
         "select" => select(app, ids(spec)),
         "translate" | "rotate" | "scale" => {
-            let verb = match action.as_str() {
+            let verb = match action {
                 "translate" => "translateSelection",
                 "rotate" => "rotateSelection",
                 _ => "scaleSelection",
@@ -393,7 +417,7 @@ fn check(app: &mut Puzzle2dApp, seed: usize, expect: &Value, what: &str) {
             assert_eq!((english(entry), german(entry)), (label["en"].as_str().expect("en").to_string(), label["de"].as_str().expect("de").to_string()), "{what}: the row is labelled from its leaf");
         }
     }
-    let status = session(app).map(|status| semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(status))));
+    let status = session(app).map(|status| semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&(status))));
     if let Some(stage) = expect.get("stage") {
         assert_eq!(status.as_ref().map_or(&Value::Null, |status| &status["stage"]), stage, "{what}: stage of {status:?}");
     }
@@ -481,7 +505,7 @@ fn check(app: &mut Puzzle2dApp, seed: usize, expect: &Value, what: &str) {
         }
     }
     if let Some(draft) = expect["draft"].as_object() {
-        let value = semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(&app.time_travel_ledger().editor().expect("the draft editor").value)));
+        let value = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&app.time_travel_ledger().editor().expect("the draft editor").value));
         for (pointer, wanted) in draft {
             assert!(value.pointer(pointer).is_some_and(|held| same(held, wanted)), "{what}: the draft holds {wanted} at {pointer}: {value}");
         }
@@ -512,7 +536,7 @@ fn every_corpus_scenario_edits_its_leaves_in_history_and_overwrites_to_a_fresh_f
         }
         let head = fixture_of(&app);
         for (node, expected) in scenario["head"].as_object().expect("head") {
-            let record = board_snapshot_nodes(&head).iter().find(|record| record["id"] == node.as_str()).unwrap_or_else(|| panic!("{id}: {node} is in the head"));
+            let record = board_snapshot_nodes(&head).iter().find(|record| record["id"] == node).unwrap_or_else(|| panic!("{id}: {node} is in the head"));
             assert_eq!((record["x"].as_f64(), record["y"].as_f64(), record["locked"].as_bool().unwrap_or(false)), (expected["x"].as_f64(), expected["y"].as_f64(), expected["locked"].as_bool().unwrap_or(false)), "{id}: {node} in the overwritten head");
         }
         let mut fresh = seeded_app(&corpus["board"]);
@@ -578,7 +602,7 @@ async fn every_corpus_edit_previews_and_replays_through_the_store() {
             store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![leaf(logged)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a logged leaf applies");
         }
         let mutation_ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
-        let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = scenario["drafts"]
+        let drafts: protocol::HistoryInputDrafts = scenario["drafts"]
             .as_array()
             .expect("drafts")
             .iter()

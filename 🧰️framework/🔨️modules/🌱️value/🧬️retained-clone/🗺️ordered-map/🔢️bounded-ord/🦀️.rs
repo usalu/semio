@@ -33,7 +33,8 @@ pub trait BoundedOrd: Ord + Send + Sync + Sized + 'static {
 }
 
 pub trait BoundedOrdCursor<T: BoundedOrd>: Send {
-    fn advance_retirement_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>;
+        fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>;
+fn advance_retirement_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>;
     fn begin_close(&mut self)->bool;
     fn next_close_copy_byte_demand(&self)->Result<usize,crate::ValueError>;
     fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueError>;
@@ -59,14 +60,15 @@ impl<T> Default for ScalarBoundedOrdCursor<T> {
 }
 
 impl<T: BoundedOrd + Copy> BoundedOrdCursor<T> for ScalarBoundedOrdCursor<T> {
-fn advance_retirement_demands(&self,_body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(if self.left.is_none()||self.right.is_none(){crate::RetirementDemand{copy_bytes:super::super::RetainedCloneSource::<u64>::constructor_copy_bytes(),depth:1,..Default::default()}}else{Default::default()})}
+ fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{RetainedCloneBinding::close_demand(if self.left.is_some(){&self.left}else{&self.right},body)}
+fn advance_retirement_demands(&self,_body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(if self.left.is_none()||self.right.is_none(){crate::RetirementDemand{copy_bytes:RetainedCloneBinding::alias_copy_bytes(),depth:1,..Default::default()}}else{Default::default()})}
 fn begin_close(&mut self)->bool {let started=!self.closing;self.closing=true;started}
 fn next_close_copy_byte_demand(&self)->Result<usize,crate::ValueError>{RetainedCloneBinding::copy_demand(if self.left.is_some(){&self.left}else{&self.right})}
 fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueError>{RetainedCloneBinding::capacity_demand(if self.left.is_some(){&self.left}else{&self.right},body)}
 fn next_close_release_byte_demand(&self)->Result<usize,crate::ValueError>{RetainedCloneBinding::release_demand(if self.left.is_some(){&self.left}else{&self.right})}
 fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{RetainedCloneBinding::depth_demand(if self.left.is_some(){&self.left}else{&self.right})}
 fn terminal_is_empty(&self)->bool{self.left.is_none()&&self.right.is_none()}
-fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError>{if !self.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"comparator must begin close"));}close_retained_binding(if self.left.is_some(){&mut self.left}else{&mut self.right},grant)}
+fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError>{if !self.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"comparator must begin close"));}let step=close_retained_binding(if self.left.is_some(){&mut self.left}else{&mut self.right},grant)?;Ok(if self.left.is_none()&&self.right.is_none(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
     fn compare(&mut self, left: RetainedCloneRef<'_, T>, right: RetainedCloneRef<'_, T>, grant: BoundedOrdGrant, retirement:RetainedCloneGrant) -> Result<BoundedOrdStep, crate::ValueError> {
         if self.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"comparator is closing"));}
         if self.left.is_none()&&grant.maximum_items==0{return Ok(BoundedOrdStep::Progress(Default::default()));}
@@ -106,14 +108,15 @@ pub struct StringBoundedOrdCursor {
 }
 
 impl BoundedOrdCursor<String> for StringBoundedOrdCursor {
-fn advance_retirement_demands(&self,_body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(if self.left.is_none()||self.right.is_none(){crate::RetirementDemand{copy_bytes:super::super::RetainedCloneSource::<u64>::constructor_copy_bytes(),depth:1,..Default::default()}}else{Default::default()})}
+ fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{RetainedCloneBinding::close_demand(if self.left.is_some(){&self.left}else{&self.right},body)}
+fn advance_retirement_demands(&self,_body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(if self.left.is_none()||self.right.is_none(){crate::RetirementDemand{copy_bytes:RetainedCloneBinding::alias_copy_bytes(),depth:1,..Default::default()}}else{Default::default()})}
 fn begin_close(&mut self)->bool {let started=!self.closing;self.closing=true;started}
 fn next_close_copy_byte_demand(&self)->Result<usize,crate::ValueError>{RetainedCloneBinding::copy_demand(if self.left.is_some(){&self.left}else{&self.right})}
 fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueError>{RetainedCloneBinding::capacity_demand(if self.left.is_some(){&self.left}else{&self.right},body)}
 fn next_close_release_byte_demand(&self)->Result<usize,crate::ValueError>{RetainedCloneBinding::release_demand(if self.left.is_some(){&self.left}else{&self.right})}
 fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{RetainedCloneBinding::depth_demand(if self.left.is_some(){&self.left}else{&self.right})}
 fn terminal_is_empty(&self)->bool{self.left.is_none()&&self.right.is_none()}
-fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError>{if !self.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"comparator must begin close"));}close_retained_binding(if self.left.is_some(){&mut self.left}else{&mut self.right},grant)}
+fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError>{if !self.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"comparator must begin close"));}let step=close_retained_binding(if self.left.is_some(){&mut self.left}else{&mut self.right},grant)?;Ok(if self.left.is_none()&&self.right.is_none(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
     fn compare(&mut self, left: RetainedCloneRef<'_, String>, right: RetainedCloneRef<'_, String>, grant: BoundedOrdGrant, retirement:RetainedCloneGrant) -> Result<BoundedOrdStep, crate::ValueError> {
         if self.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"comparator is closing"));}
         if self.left.is_none()&&grant.maximum_items==0{return Ok(BoundedOrdStep::Progress(Default::default()));}

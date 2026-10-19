@@ -375,7 +375,7 @@ async fn begin_rejects_unknown_required_flags() {
     let result = SprWriter::begin(Vec::new(), &options).await;
     match result {
         Ok(_) => panic!("expected UnknownRequiredFlags error, got Ok"),
-        Err(err) => assert!(matches!(err, ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(semio_framework_pack_error::PackRefusal::UnknownRequiredFlags(bits))) if bits == 1 << 10)),
+        Err(err) => assert!(matches!(err, SprWriteError::Protocol(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(semio_framework_pack_error::PackRefusal::UnknownRequiredFlags(bits)))) if bits == 1 << 10)),
     }
 }
 
@@ -387,3 +387,57 @@ async fn position_tracks_sink_length_across_writes() {
     assert_eq!(writer.position().await, writer.into_sink().await.len() as u64);
 }
 //#endregion 🔖️Writer
+
+/// 🧪️ Neutral refusal vectors preserve producer identity and independent BLAKE3 wire evidence.
+#[semio_framework_async_macros::async_test]
+async fn writer_preserves_original_sink_refusal_and_wire_chain() {
+    use std::sync::Arc;
+    #[derive(Debug)]
+    enum OwnedRefusal { Original(Arc<u64>, usize), Pack(semio_framework_pack_error::PackRefusal) }
+    impl From<semio_framework_pack_error::PackRefusal> for OwnedRefusal {
+        fn from(error: semio_framework_pack_error::PackRefusal) -> Self { Self::Pack(error) }
+    }
+    struct OwnedSink { bytes: Vec<u8>, original: Arc<u64>, fail: usize, writes: usize }
+    impl crate::source::PackSink for OwnedSink {
+        type Error = OwnedRefusal;
+        async fn write_all(&mut self, bytes: &[u8]) -> Result<(), Self::Error> {
+            let write = self.writes;
+            self.writes += 1;
+            if write == self.fail { return Err(OwnedRefusal::Original(self.original.clone(), write)); }
+            self.bytes.extend_from_slice(bytes);
+            Ok(())
+        }
+        async fn position(&self) -> u64 { self.bytes.len() as u64 }
+    }
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let payload: Vec<u8> = fixture["payload"].as_array().unwrap().iter().map(|byte| byte.as_u64().unwrap() as u8).collect();
+    let options = WriteOptions { required_flags: crate::REQUIRED_HASH_CHAIN, optional_flags: 0 };
+    for failed in fixture["failedWrites"].as_array().unwrap() {
+        let failed = failed.as_u64().unwrap() as usize;
+        let original = Arc::new(fixture["originalToken"].as_u64().unwrap());
+        let sink = OwnedSink { bytes: Vec::new(), original: original.clone(), fail: failed, writes: 0 };
+        let outcome = async {
+            let mut writer = SprWriter::begin(sink, &options).await?;
+            writer.write_record(crate::REC_EDIT, true, &payload, crate::codec::ids::CodecId(0)).await?;
+            writer.commit().await?;
+            Ok::<_, SprWriteError<OwnedRefusal>>(writer.into_sink().await)
+        }.await;
+        match outcome {
+            Err(SprWriteError::Sink(OwnedRefusal::Original(actual, write))) => { assert!(Arc::ptr_eq(&actual, &original)); assert_eq!(write, failed); }
+            Err(SprWriteError::Sink(OwnedRefusal::Pack(error))) => panic!("unexpected Pack refusal: {error:?}"),
+            other => panic!("original sink refusal was lost: {}", other.is_ok()),
+        }
+    }
+    let mut writer = SprWriter::begin(Vec::new(), &options).await.unwrap();
+    writer.write_record(crate::REC_EDIT, true, &payload, crate::codec::ids::CodecId(0)).await.unwrap();
+    let commit_offset = writer.commit().await.unwrap() as usize;
+    let chain = writer.committed_chain_hash();
+    let bytes = writer.into_sink().await;
+    let mut oracle = blake3::Hasher::new();
+    oracle.update(blake3::hash(&bytes[..HEADER_SIZE]).as_bytes());
+    oracle.update(blake3::hash(&bytes[HEADER_SIZE..commit_offset]).as_bytes());
+    assert_eq!(chain, *oracle.finalize().as_bytes());
+    let recovered = recover(&bytes, &ProtocolLimits::default(), RecoveryMode::LastCommit).await.unwrap();
+    assert_eq!(recovered.bytes_recovered as usize, bytes.len());
+    eprintln!("[DEBUG] neutral writer refusals preserve original producer identity and canonical BLAKE3 chain");
+}

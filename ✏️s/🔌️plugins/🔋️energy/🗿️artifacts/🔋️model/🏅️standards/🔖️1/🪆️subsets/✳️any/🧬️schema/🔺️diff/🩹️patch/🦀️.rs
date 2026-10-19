@@ -591,6 +591,14 @@ macro_rules! patch {
             }
         }
 
+        impl $patch {
+            /// 🗃️ Stages changed fields with shared owners before installing any record field.
+            pub fn prepare_fields(&self, target: &$row, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<impl FnOnce(&mut $row)> {
+                $(let $field = if self.$field.unchanged() { None } else { Some(protocol::PreparedField::prepare(&target.$field, semio_framework_value::FromValue::retire_decoded, capability, |candidate| self.$field.commit_onto(candidate))?) };)*
+                Ok(move |target| { $(if let Some(prepared) = $field { prepared.install(&mut target.$field); })* })
+            }
+        }
+
         impl Unchanged for $patch {
             fn unchanged(&self) -> bool {
                 true $(&& self.$field.unchanged())*

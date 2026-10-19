@@ -21,10 +21,10 @@
         "responsibility": "Provides the render-independent declarative presentation model and its React + reveal.js renderer for slide decks."
       },
       {
-        "directory": "❓️quiz",
-        "id": "framework.product.quiz",
+        "directory": "📚️course",
+        "id": "framework.product.course",
         "kind": "product",
-        "responsibility": "Provides the render-independent declarative quiz model — catalogs, tasks, seeded sheets, partial-credit scoring, badges, the learner run lifecycle and leaderboard — and its React renderer."
+        "responsibility": "Provides the render-independent course model with introductions, topics, quizzes, tasks, seeded sheets, partial-credit scoring, badges, the learner lifecycle and leaderboard, and its React renderer."
       },
       {
         "directory": "🐾️pets",

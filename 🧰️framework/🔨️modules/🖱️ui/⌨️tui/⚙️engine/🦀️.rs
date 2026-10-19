@@ -1,9 +1,14 @@
 use semio_framework_ui_tui_terminal::ansi::{emit_runs, AnsiPatch};
 use semio_framework_ui_tui_core::cell::{diff, Cell, CellBuffer, DiffRun};
-use semio_framework_ui_tui_frame::chrome::{ChromeState, WindowHit};
+use semio_framework_ui_tui_frame::chrome::{window_tab_rect, ChromeState, WindowHit, WindowStackTabState, WindowState};
 use semio_framework_ui_tui_widgets::dialog::DialogState;
 use semio_framework_ui_tui_core::event::{Event, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
 use semio_framework_ui_tui_core::geometry::{Pos, Rect, Size};
+use crate::tui::layout::DockPlacement;
+
+#[cfg(test)]
+#[path = "../🧪️tests/🪟️drag-preview/🦀️.rs"]
+mod drag_preview_tests;
 use semio_framework_ui_tui_widgets::menu::{MenuItem, MenuState};
 use semio_framework_ui_tui_widgets::palette::PaletteState;
 use semio_framework_ui_tui_frame::scene::{AxisState, Node, NodeContent, NodeId, Scene, LAYOUT_DIRTY, PAINT_DIRTY};
@@ -28,9 +33,12 @@ type Signals = Vec<(NodeId, WidgetSignal)>;
 /// 🖱️ What the pointer is holding between a button press and its release.
 enum Press {
     Widget { node: NodeId, button: MouseButton, clicks: u8 },
-    Splitter { axis: NodeId, index: usize, last: u16 },
-    Tab { chrome: NodeId, from: usize, over: usize, start: Pos, moved: bool },
+    Splitter { root: NodeId, path: Vec<usize>, index: usize, last: u16 },
+    Tab { chrome: NodeId, source: String, start: Pos, pos: Pos, moved: bool },
 }
+
+/// 🔲️ An ephemeral proposal; the layout changes only after a valid release.
+struct DockPreview { target: String, placement: DockPlacement, tab_index: Option<usize>, rect: Rect, window_rect: Rect, window: WindowState }
 
 struct Click {
     button: MouseButton,
@@ -65,8 +73,10 @@ pub struct Tui {
     back: CellBuffer,
     focus: Option<NodeId>,
     hovered: Option<NodeId>,
+    hovered_chrome: Vec<NodeId>,
     capture: Option<NodeId>,
     press: Option<Press>,
+    dock_preview: Option<DockPreview>,
     last_click: Option<Click>,
     overlays: Vec<Overlay>,
     now_ms: u64,
@@ -130,6 +140,13 @@ fn clamp_to(rect: Rect, viewport: Size) -> Rect {
     Rect::new(rect.x.min(viewport.width - width), rect.y.min(viewport.height - height), width, height)
 }
 
+fn axis_at(scene: &Scene, root: NodeId, path: &[usize]) -> Option<NodeId> {
+    let node = scene.try_node(root)?;
+    if matches!(&node.content, NodeContent::Axis(axis) if axis.path == path) { return Some(root); }
+    if matches!(&node.content, NodeContent::Chrome(ChromeState::Window(_))) { return None; }
+    node.children().iter().find_map(|child| axis_at(scene, *child, path))
+}
+
 #[path = "🎯️construction-and-focus/🦀️.rs"]
 mod construction_and_focus;
 
@@ -138,6 +155,32 @@ mod frame_layout_and_overlays;
 
 #[path = "⌨️input-dispatch/🦀️.rs"]
 mod input_dispatch;
+
+    /// 🛑️ Cancels a held pointer operation without emitting a layout command.
+    pub fn cancel_pointer(&mut self) -> bool {
+        let held = self.press.take();
+        let preview = self.dock_preview.take();
+        let changed = held.is_some() || preview.is_some();
+        if matches!(held, Some(Press::Tab { .. })) { self.clear_tab_drops(); }
+        if changed { self.scene.mark_dirty(self.scene.root(), PAINT_DIRTY); }
+        changed
+    }
+
+    /// 🔎️ The ephemeral docking proposal, available to accessible host announcements and tests.
+    pub fn docking_preview(&self) -> Option<(DockPlacement, Rect)> {
+        self.dock_preview.as_ref().map(|preview| (preview.placement, preview.rect))
+    }
+
+    /// 🖐️ Whether window chrome currently owns the held pointer.
+    pub fn dragging_window(&self) -> bool { matches!(&self.press, Some(Press::Tab { .. })) }
+
+    fn clear_tab_drops(&mut self) {
+        let mut windows = Vec::new();
+        collect_windows(&self.scene, self.scene.root(), &mut windows);
+        for node in windows {
+            if let NodeContent::Chrome(state) = &mut self.scene.node_raw_mut(node).content { state.set_drop_target(None); }
+        }
+    }
 
 #[path = "🖱️mouse-and-hover/🦀️.rs"]
 mod mouse_and_hover;

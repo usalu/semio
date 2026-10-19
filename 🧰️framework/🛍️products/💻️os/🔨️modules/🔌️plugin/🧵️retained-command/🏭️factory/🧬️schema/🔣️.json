@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "payloadBytes",
+    "jobBytes",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.plugin.retained-factory-admission.v1"
+    },
+    "payloadBytes": {
+      "const": 13
+    },
+    "jobBytes": {
+      "const": 29
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 11,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "inputBytes",
+          "checkpoint",
+          "resume",
+          "ownerMaximum",
+          "payloadMaximum",
+          "payloadAdmitted",
+          "capacityBytes",
+          "refusal"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "inputBytes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "checkpoint": {
+            "type": "boolean"
+          },
+          "resume": {
+            "type": "boolean"
+          },
+          "ownerMaximum": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "payloadMaximum": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "payloadAdmitted": {
+            "type": "boolean"
+          },
+          "capacityBytes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "refusal": {
+            "enum": [
+              null,
+              "invalid-value"
+            ]
+          },
+          "checkpointBytes": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

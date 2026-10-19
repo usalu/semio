@@ -11,6 +11,7 @@ export async function createBuildBootstrapCapabilitiesV1(root:string,arguments_:
   const {parseBuildInvocationV1,resolveBuildInvocationV1,nxBuildArgumentsV1,readBuildDependencyInvocationV1}=await import("../../🧭️invocation/🟦️.ts");
   const args=arguments_[0]==="repo"?arguments_.slice(1):arguments_,authored=environment.SEMIO_SCRIPT_CAPABILITIES===undefined?undefined:JSON.parse(environment.SEMIO_SCRIPT_CAPABILITIES),effective={...environment,...(environment.SEMIO_BUILD_MODE===undefined&&authored?.buildMode?{SEMIO_BUILD_MODE:authored.buildMode}:{})},selected=parseBuildInvocationV1(args,effective),resolved=resolveBuildInvocationV1(root,selected.args,effective);
   const {createNativeBuildCallerCapabilitiesV1,readBuildAuthoringCapabilitiesV1}=await import("../🟦️.ts");
+  if(resolved.args[0]==="preflight"){const {readBuildPreflightScopeV1,readBuildPreflightRequirementsV1}=await import("../../🩺️preflight/🟦️.ts");readBuildPreflightRequirementsV1(root,readBuildPreflightScopeV1(resolved.args));}
   const grant=authored===undefined?createNativeBuildCallerCapabilitiesV1(root,selected.args,selected.tool,{...effective,...resolved.env}):readBuildAuthoringCapabilitiesV1(root,selected.args,selected.tool,authored);
   if(effective.SEMIO_BUILD_MODE!==undefined&&effective.SEMIO_BUILD_MODE!==grant.buildMode)throw Error("Original authored build mode changed");
   return expandBuildBootstrapCapabilitiesV1(root,selected.args,effective,grant);
@@ -23,7 +24,7 @@ async function expandBuildBootstrapCapabilitiesV1(root:string,args:readonly stri
   while(pending.length){
    const args=pending.shift()!,key=JSON.stringify(args);if(seen.has(key))continue;if(seen.size>=maximumWatchBuildDescendantsV1)throw Error("Bounded watch descendant declarations required");seen.add(key);
    const parsed=parseBuildInvocationV1(args,{...effective,SEMIO_BUILD_TOOL:selected.tool});if(parsed.tool!==selected.tool)throw Error("Watch callback cannot change the original build implementation");
-   const invocation=resolveBuildInvocationV1(root,parsed.args,{...effective,SEMIO_BUILD_MODE:grant.buildMode}),command=invocation.args[0],tools=invocation.args[2]??selected.tool,main=command==="tools"?(tools!=="bazel"?["--version"]:undefined):command==="reset"?(selected.tool==="nx"?["reset"]:undefined):selected.tool==="nx"&&!["dependencies","cargo","watch"].includes(command??"")?nxBuildArgumentsV1(invocation.args):undefined;
+   const invocation=resolveBuildInvocationV1(root,parsed.args,{...effective,SEMIO_BUILD_MODE:grant.buildMode}),command=invocation.args[0],tools=invocation.args[2]??selected.tool,main=command==="tools"?(tools!=="bazel"?["--version"]:undefined):command==="reset"?(selected.tool==="nx"?["reset"]:undefined):selected.tool==="nx"&&!["dependencies","cargo","watch","preflight"].includes(command??"")?nxBuildArgumentsV1(invocation.args):undefined;
    add(["repo",...parsed.args]);
    if(main){const{resolveNxBootstrapLaunchesV1}=await import("../../../⚡️caching/🚀️bootstrap/📥️caller/🟦️.ts"),nx=resolveNxBootstrapLaunchesV1(root,["nx",...main],{...effective,...invocation.env,SEMIO_BUILD_MODE:grant.buildMode});for(const launch of nx.launches)add(["nx",...launch]);}
    const boundary=invocation.args.indexOf("--"),callback=command==="watch"?watchBuildChildArgumentsV1(root,boundary<0?[]:invocation.args.slice(boundary+1)):undefined;

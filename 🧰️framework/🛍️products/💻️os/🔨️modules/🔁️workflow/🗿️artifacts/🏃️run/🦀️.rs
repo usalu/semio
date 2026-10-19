@@ -1,4 +1,5 @@
 //! 🏃️ Composable persisted workflow run artifact.
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
@@ -24,7 +25,7 @@ pub use apply::admit_run_operation;
 /// `mutation.apply.*` message the store persists.
 pub async fn apply_run_operation_checked(document: &RunArtifact, operation: RunMutation) -> Result<RunArtifact, Vec<protocol::MutationMessage>> {
     let (diff, messages) = admit_run_operation(document, &operation)?;
-    protocol::apply_diff(&diff, document).map_err(|error| messages.into_iter().chain([protocol::MutationMessage::fatal(error.code, error.message).at(error.target)]).collect())
+    protocol::apply_diff_cold(&diff, document).map_err(|error| messages.into_iter().chain([protocol::MutationMessage::fatal(error.code, error.message).at(error.target)]).collect())
 }
 
 

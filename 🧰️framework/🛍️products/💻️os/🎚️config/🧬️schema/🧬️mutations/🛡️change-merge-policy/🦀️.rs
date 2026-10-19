@@ -1,7 +1,8 @@
 //! 🛡️ `ChangeMergePolicy` is the authoritative direct leaf for the OS-wide conflict policy.
 
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::MergePolicyConfigMutation;
-use protocol::{Mutation, MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
+use protocol::{Mutation, MutationDiff, ColdMutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Schema
@@ -24,24 +25,35 @@ pub struct MergePolicyDiff {
 }
 
 impl MutationDiff<MergePolicySetting> for MergePolicyDiff {
-    fn apply(&self, base: &MergePolicySetting, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<MergePolicySetting> {
-        Ok(MergePolicySetting { policy: self.policy.unwrap_or(base.policy) })
-    }
 
+
+
+}
+
+impl ColdMutationDiff<MergePolicySetting> for MergePolicyDiff {
     fn absorb(&mut self, other: Self) {
         if other.policy.is_some() {
             self.policy = other.policy;
         }
     }
+
+    fn apply(&self, base: &mut MergePolicySetting, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+                if let Some(value) = self.policy { base.policy = value; }
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<MergePolicySetting> for MergePolicyDiff {
-    fn inverse(&self, base: &MergePolicySetting) -> Self {
-        Self { policy: self.policy.map(|_| base.policy) }
-    }
+
 
     fn is_empty(&self) -> bool {
         self.policy.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<MergePolicySetting> for MergePolicyDiff {
+    fn inverse(&self, base: &MergePolicySetting) -> Self {
+        Self { policy: self.policy.map(|_| base.policy) }
     }
 }
 //#endregion 🔖️Schema
@@ -63,19 +75,9 @@ pub fn change_merge_policy(policy: protocol::MergePolicy) -> MergePolicyConfigMu
 impl MutationKind<MergePolicySetting, MergePolicyConfigMutation> for ChangeMergePolicy {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "merge-policy", kind: "change-merge-policy", record: "Change" };
 
-    fn diff(&self, base: &MergePolicySetting) -> MutationOutcome<MergePolicyDiff> {
-        if base.policy == self.policy {
-            return MutationOutcome::new(MergePolicyDiff::default()).warning("mutation.no-op", format!("Merge policy is already \"{:?}\".", self.policy));
-        }
-        MutationOutcome::new(MergePolicyDiff { policy: Some(self.policy) })
-    }
 
-    fn inverse(&self, base: &MergePolicySetting) -> Result<Vec<MergePolicyConfigMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![MergePolicyConfigMutation::ChangeMergePolicy(ChangeMergePolicy { policy: base.policy })]
-    
-    })())
-}
+
+
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change merge policy to \"{:?}\"", self.policy), &format!("Zusammenführungsrichtlinie auf \"{:?}\" ändern", self.policy))
@@ -84,6 +86,21 @@ impl MutationKind<MergePolicySetting, MergePolicyConfigMutation> for ChangeMerge
     fn target(&self) -> Vec<String> {
         vec!["merge-policy".to_string()]
     }
+}
+
+impl crate::os_spr::ColdMutationKind<MergePolicySetting, MergePolicyConfigMutation> for ChangeMergePolicy {
+    fn diff(&self, base: &MergePolicySetting) -> MutationOutcome<MergePolicyDiff> {
+        if base.policy == self.policy {
+            return MutationOutcome::new(MergePolicyDiff::default()).warning("mutation.no-op", format!("Merge policy is already \"{:?}\".", self.policy));
+        }
+        MutationOutcome::new(MergePolicyDiff { policy: Some(self.policy) })
+    }
+    fn inverse(&self, base: &MergePolicySetting) -> Result<Vec<MergePolicyConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+        vec![MergePolicyConfigMutation::ChangeMergePolicy(ChangeMergePolicy { policy: base.policy })]
+    
+    })())
+}
 }
 
 /// ↩️ Computes the mutation's inverse steps from the pre-mutation setting.

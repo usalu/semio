@@ -1,6 +1,8 @@
-//! 🔺️ Sparse diff builder for `ReplaceEdgeGeometry` — patches the one addressed edge's connection
 //! pose.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dEdgePatch, Puzzle2dEdgesDelta};
+//! 🔺️ Sparse diff builder for `ReplaceEdgeGeometry` — patches the one addressed edge's connection
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dEdgePatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dEdgesDelta;
 use protocol::list_delta::RowPatch;
 use crate::Puzzle2dSnapshot;
 use crate::standards::v1::subsets::any::schema::records::puzzle2d_finite;

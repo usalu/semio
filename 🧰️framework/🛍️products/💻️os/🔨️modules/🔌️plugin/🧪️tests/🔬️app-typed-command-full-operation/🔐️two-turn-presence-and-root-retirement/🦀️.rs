@@ -36,7 +36,7 @@
             }
             if self.prepared.is_none() {
                 let request = self.request.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "two-turn publication-presence preparation lost its owner bundle"))?;
-                let next_root = protocol::apply_diff(request.mutation.diff(request.base.as_ref()).diff(), request.base.as_ref()).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))?;
+                let next_root = protocol::apply_diff_cold(request.mutation.diff(request.base.as_ref()).diff(), request.base.as_ref()).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))?;
                 self.prepared = Some(store::ArtifactEphemeralOneItemPrepared { next_root: std::sync::Arc::new(next_root) });
                 self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: 2, digest: [2; 32] };
             }
@@ -98,6 +98,8 @@
     }
 
     impl store::ErasedSnapshotRetirement for PublicationPresenceLocalRootRetirement {
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Ok(semio_framework_value::RetirementDemand{depth:usize::from(self.root.is_some()),..Default::default()})}
+
         fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
             use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
             if self.root.is_none() {

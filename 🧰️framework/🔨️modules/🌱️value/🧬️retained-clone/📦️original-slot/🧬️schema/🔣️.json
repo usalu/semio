@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://value/original-slot/laws",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "policy",
+    "cases"
+  ],
+  "properties": {
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "combinedBodyCapacity",
+        "separateRelease",
+        "originalIssuer",
+        "foreignKeyRefused",
+        "returnBeforeMutation",
+        "readBirthPrefixes",
+        "capturedIssuerRetiresPayload"
+      ],
+      "properties": {
+        "maximumItems": {
+          "const": 1
+        },
+        "combinedBodyCapacity": {
+          "const": 4096
+        },
+        "separateRelease": {
+          "const": true
+        },
+        "originalIssuer": {
+          "const": true
+        },
+        "foreignKeyRefused": {
+          "const": true
+        },
+        "returnBeforeMutation": {
+          "const": true
+        },
+        "readBirthPrefixes": {
+          "const": [
+            0,
+            1,
+            2
+          ]
+        },
+        "capturedIssuerRetiresPayload": {
+          "const": true
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "original",
+          "replacement",
+          "patch",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "original": {
+            "type": "object"
+          },
+          "replacement": {
+            "type": "object"
+          },
+          "patch": {
+            "type": "array"
+          },
+          "expected": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}

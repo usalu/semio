@@ -19,7 +19,6 @@ enum Puzzle3dPatchInspectorStage {
 /// ♻️ The owners one `Puzzle3dPatchInspectorWork` still holds when its job closes, retired as one controlled bundle.
 #[derive(semio_framework_value::RetireOwned)]
 pub(super) struct Puzzle3dPatchInspectorWorkOwners {
-    selected: HashSet<String>,
     pub(super) mutations: Vec<Puzzle3dMutation>,
     pending_attraction: Option<semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction>,
 }
@@ -29,7 +28,6 @@ pub struct Puzzle3dPatchInspectorWork {
     selection_cursor: usize,
     pub(super) item_cursor: usize,
     pub(super) child_cursor: usize,
-    selected: HashSet<String>,
     pending_attraction: Option<semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction>,
     pub(super) mutations: Vec<Puzzle3dMutation>,
     pub(super) close_owners: semio_s_plugin_puzzle_jobs::WorkClosing<Puzzle3dPatchInspectorWorkOwners>,
@@ -42,14 +40,32 @@ impl Default for Puzzle3dPatchInspectorWork {
             selection_cursor: 0,
             item_cursor: 0,
             child_cursor: 0,
-            selected: HashSet::with_capacity(semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_DECODED_ITEMS),
             pending_attraction: None,
-            mutations: Vec::with_capacity(semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS),
+            mutations: Vec::new(),
         }
     }
 }
 
 impl Puzzle3dPatchInspectorWork {
+    /// 🪙️ Exact typed backing storage belongs to the initiating original construction scope.
+    pub fn original_birth_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let mut capacity = 0_usize;
+        capacity = (semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS as usize).checked_mul(size_of::<Puzzle3dMutation>()).and_then(|bytes| capacity.checked_add(bytes))
+            .ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Puzzle3D Puzzle3dPatchInspectorWork backing extent overflow"))?;
+        Ok(semio_framework_value::RetirementDemand { capacity_bytes: capacity, depth: 1, ..Default::default() })
+    }
+
+    /// 🏭️ The scope authorizes every typed buffer before its owner is born and receives actual capacities.
+    pub fn from_original_construction(scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+        scope.admit_owner(Self::original_birth_demands()?)?;
+        let work = Self {
+            mutations: Vec::with_capacity(semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS),
+            ..Self::default()
+        };
+        let capacity = work.mutations.capacity() * size_of::<Puzzle3dMutation>();
+        Ok((work, semio_framework_value::RetainedCloneProgress { retained_capacity_bytes: capacity, ..Default::default() }))
+    }
+
     fn entity(command: &Puzzle3dCommand) -> &str {
         command.args().and_then(|args| args.get("entity")).and_then(Value::as_str).unwrap_or("")
     }
@@ -85,6 +101,16 @@ impl Puzzle3dPatchInspectorWork {
             },
             Vec::len,
         )
+    }
+
+    fn targets(&self, command: &Puzzle3dCommand, interaction: &protocol::InteractionState, id: &str) -> bool {
+        (0..self.selection_cursor).any(|index| Self::source_id(command, interaction, index) == Some(id))
+    }
+
+    fn targets_vortex(&self, command: &Puzzle3dCommand, interaction: &protocol::InteractionState, object: &str, vortex: &str) -> bool {
+        if vortex.contains(':') { return self.targets(command, interaction, vortex); }
+        (0..self.selection_cursor).any(|index| Self::source_id(command, interaction, index)
+            .and_then(|id| id.strip_prefix(object)).and_then(|id| id.strip_prefix(':')) == Some(vortex))
     }
 
     fn first_stage(entity: &str) -> Puzzle3dPatchInspectorStage {
@@ -294,15 +320,16 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction, hover: _hover, context: _context, .. } = *input;
         match self.stage {
             Puzzle3dPatchInspectorStage::Selection => {
-                if let Some(id) = Self::source_id(command, interaction, self.selection_cursor) {
-                    if self.selected.len() >= semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_DECODED_ITEMS {
+                if Self::source_id(command, interaction, self.selection_cursor).is_some() {
+                    if self.selection_cursor >= semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_DECODED_ITEMS {
                         return Err(Fault::from("puzzle3d-patch-inspector-selection-capacity"));
                     }
-                    self.selected.insert(id.to_string());
                     self.selection_cursor += 1;
                     return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle3d-patch-inspector-selection", "Reading inspector target", "Inspektionsziel wird gelesen"));
                 }
@@ -312,7 +339,7 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle3dPatchInspectorStage::Objects => {
                 let Some(object) = snapshot.typed().objects.get(self.item_cursor) else { return Ok(self.complete()) };
                 self.item_cursor += 1;
-                if self.selected.contains(&object.id) {
+                if self.targets(command, interaction, &object.id) {
                     if let Some(mutation) = Self::object_mutation(command, object) {
                         self.push(mutation)?;
                     }
@@ -327,7 +354,7 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle3d-patch-inspector-vortex-owner", "Advancing vortex owner", "Vortex-Eigentümer wird gewechselt"));
                 };
                 self.child_cursor += 1;
-                if self.selected.contains(&puzzle3d_vortex_full_id(&object.id, &vortex.id)) {
+                if self.targets_vortex(command, interaction, &object.id, &vortex.id) {
                     if let Some(mutation) = Self::vortex_mutation(command, &object.id, vortex) {
                         self.push(mutation)?;
                     }
@@ -337,7 +364,7 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle3dPatchInspectorStage::Attractions => {
                 let Some(attraction) = snapshot.typed().attractions.get(self.item_cursor) else { return Ok(self.complete()) };
                 self.item_cursor += 1;
-                if !self.selected.contains(&attraction.id) {
+                if !self.targets(command, interaction, &attraction.id) {
                     return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle3d-patch-inspector-attraction", "Scanning attraction", "Anziehung wird geprüft"));
                 }
                 let field = Self::field(command);
@@ -380,7 +407,7 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle3dPatchInspectorStage::References => {
                 let Some(reference) = snapshot.typed().references.get(self.item_cursor) else { return Ok(self.complete()) };
                 self.item_cursor += 1;
-                if self.selected.contains(&reference.id) {
+                if self.targets(command, interaction, &reference.id) {
                     if let Some(mutation) = Self::reference_mutation(command, reference) {
                         self.push(mutation)?;
                     }
@@ -390,7 +417,7 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle3dPatchInspectorStage::Volumes => {
                 let Some(volume) = snapshot.typed().target_volumes.get(self.item_cursor) else { return Ok(self.complete()) };
                 self.item_cursor += 1;
-                if self.selected.contains(&volume.id) {
+                if self.targets(command, interaction, &volume.id) {
                     if let Some(mutation) = Self::volume_mutation(command, volume) {
                         self.push(mutation)?;
                     }
@@ -400,6 +427,8 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle3dPatchInspectorStage::Complete => Err(Fault::from("puzzle3d-patch-inspector-complete-repolled")),
             Puzzle3dPatchInspectorStage::Closing => Err(Fault::from("puzzle3d-patch-inspector-closing")),
         }
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
@@ -407,14 +436,12 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
 
     fn begin_close(&mut self) {
         self.stage = Puzzle3dPatchInspectorStage::Closing;
-        self.close_owners.stage(Puzzle3dPatchInspectorWorkOwners { selected: std::mem::take(&mut self.selected), mutations: std::mem::take(&mut self.mutations), pending_attraction: std::mem::take(&mut self.pending_attraction) });
+        self.close_owners.stage(Puzzle3dPatchInspectorWorkOwners { mutations: std::mem::take(&mut self.mutations), pending_attraction: std::mem::take(&mut self.pending_attraction) });
     }
 
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            self.close_owners.close_step(grant)
-        })
-    }
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> { semio_framework_job::close_original_nested_step(cx, |cx, _grant| {
+        self.close_owners.close_step(cx)
+    }) }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
         Ok(self.close_owners.demands(0)?.copy_bytes)

@@ -63,12 +63,14 @@ impl semio_framework_value::ToValue for Puzzle2dPlaySnapshot {
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::ToValue::to_value(self.typed())
     }
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_value::DslValue, semio_framework_value::ValueError> { <Puzzle2dSnapshot as semio_framework_value::ToValue>::to_value_controlled(self.typed(), control) }
 }
 
 impl semio_framework_value::FromValue for Puzzle2dPlaySnapshot {
     fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         <Puzzle2dSnapshot as semio_framework_value::FromValue>::from_value(value).map(Self::from_typed)
     }
+    fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> { <Puzzle2dSnapshot as semio_framework_value::FromValue>::from_value_controlled(value, control).map(Self::from_typed) }
 }
 
 /// 🧒️ Composition view of the play snapshot: a puzzle 2d document owns no child artifacts.
@@ -79,18 +81,12 @@ impl semio_framework_schema_composition::ArtifactCompositionFields for Puzzle2dP
 }
 
 impl MutationDiff<Puzzle2dPlaySnapshot> for Puzzle2dDiff {
-    fn apply(&self, projection: &Puzzle2dPlaySnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Puzzle2dPlaySnapshot> {
-        MutationDiff::<Puzzle2dSnapshot>::apply(self, projection.typed(), capability).map(Puzzle2dPlaySnapshot::from_typed).map_err(|error| error.under(["document"]))
-    }
-    fn absorb(&mut self, other: Self) {
-        MutationDiff::<Puzzle2dSnapshot>::absorb(self, other);
-    }
+
+
 }
 
 impl DiffAlgebra<Puzzle2dPlaySnapshot> for Puzzle2dDiff {
-    fn inverse(&self, base: &Puzzle2dPlaySnapshot) -> Self {
-        DiffAlgebra::<Puzzle2dSnapshot>::inverse(self, base.typed())
-    }
+
     fn is_empty(&self) -> bool {
         DiffAlgebra::<Puzzle2dSnapshot>::is_empty(self)
     }
@@ -126,16 +122,9 @@ impl Mutation<Puzzle2dPlaySnapshot> for Puzzle2dMutation {
         Mutation::<Puzzle2dSnapshot>::inverse_rows(self)
     }
 
-    fn diff(&self, projection: &Puzzle2dPlaySnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
-        Mutation::<Puzzle2dSnapshot>::diff(self, projection.typed())
-    }
 
-    fn inverse(&self, projection: &Puzzle2dPlaySnapshot) -> Result<Vec<Puzzle2dMutation>, semio_framework_value::ValueError> {
-    Ok({
-        Mutation::<Puzzle2dSnapshot>::inverse(self, projection.typed())?
-    
-    })
-}
+
+
     fn may_emit_foreign_steps(&self) -> bool {
         Mutation::<Puzzle2dSnapshot>::may_emit_foreign_steps(self)
     }
@@ -245,7 +234,7 @@ impl ArtifactSqliteSnapshotHost for crate::Puzzle2dPlaySnapshot{
 }
 
 impl pack::snapshot::ArtifactSqliteSnapshot for crate::Puzzle2dPlaySnapshot {
-const SQLITE_SCHEMA:&'static str=<Puzzle2dSnapshot as ArtifactSqliteSnapshotHost>::SQLITE_SCHEMA;
+const SQLITE_SCHEMA:&'static str=<Puzzle2dSnapshot as pack::snapshot::ArtifactSqliteSnapshot>::SQLITE_SCHEMA;
 fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{self.typed().to_sqlite_database(control)}
 fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
   let bytes=size_of::<Puzzle2dSnapshot>().checked_add(2*size_of::<usize>()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Play authority allocation overflow"))?;

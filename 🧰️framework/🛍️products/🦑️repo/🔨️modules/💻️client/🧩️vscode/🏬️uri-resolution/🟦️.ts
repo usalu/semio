@@ -9,7 +9,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 import { acquireCliSlot, releaseCliSlot } from "../🎩️globals/🟦️.ts";
-import { execAsync, execFileAsync, extractRepoResult, getGitHubRepoBaseUrl, getRepoCommand, getWorkspaceRoot, logError, parseRepoEvents } from "../🎼️utilities/🟦️.ts";
+import { execFileAsync, extractRepoResult, getGitHubRepoBaseUrl, getRepoCommand, getWorkspaceRoot, logError, parseRepoEvents } from "../🎼️utilities/🟦️.ts";
 import { openFileAtLine } from "../🎵️path-navigation/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -142,7 +142,7 @@ export async function getTreeNodeCache(): Promise<Map<string, TreeNodeData>> {
   if (!root || !command) return new Map();
   await acquireCliSlot();
   try {
-    const { stdout } = await execAsync(`"${command}" --json search`, { cwd: root, timeout: 60000, maxBuffer: 50 * 1024 * 1024 });
+    const { stdout } = await execFileAsync(command, ["--json", "search"], { cwd: root, timeout: 60000, maxBuffer: 50 * 1024 * 1024 });
     if (!stdout.trim()) return treeNodeCache.current ?? new Map();
     const events = parseRepoEvents(stdout);
     const result = extractRepoResult(events);

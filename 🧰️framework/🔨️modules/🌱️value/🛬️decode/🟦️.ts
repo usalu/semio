@@ -1,27 +1,44 @@
 import { hostContinuations } from "@semio-tech/framework-async/continuation";
 import { ValueError } from "../⚠️refusal/🟦️.ts";
+import type {RetainedCloneGrant} from "../🧬️retained-clone/🧬️contract/🟦️.ts";
+import type {NativeDecodeCloseControl} from "./♻️retirement/🔒️close/🟦️.ts";
+import type {NativeRetirementDecodeControl} from "./♻️retirement/🟦️.ts";
+export type {NativeDecodeCloseControl} from "./♻️retirement/🔒️close/🟦️.ts";
+export type {NativeRetirementDecodeControl} from "./♻️retirement/🟦️.ts";
 /** 🛬️ Cumulative ownership admission spanning native parsing and typed construction. */
 export interface NativeDecodeProgress { readonly completed:number;readonly total:number;readonly ownedBytes:number }
 /** 🧮️ One explicit native allocation budget and cancellable decoder work cursor. */
-export class NativeDecodeControl {
+export class NativeDecodeControl implements NativeDecodeCloseControl {
   private owned=0;
   private completed=0;
   private total=0;
   private started=false;
   private stage=0;
   private maximum:number;
+  private retiring=false;
   constructor(maximumBytes:number,private progress:(event:NativeDecodeProgress)=>boolean,private readonly signal?:AbortSignal) {
     if(!Number.isSafeInteger(maximumBytes)||maximumBytes<0)throw new ValueError("ownershipLimit", "Invalid native decoding allocation ceiling");
     this.maximum=maximumBytes;
   }
   /** 🔭️ Composes the original and nested observers on the same cumulative caller owner. */
-  async scopedObserver<T>(observer:(event:NativeDecodeProgress)=>boolean,operation:(control:NativeDecodeControl)=>Promise<T>):Promise<T>{const parent=this.progress;this.progress=event=>parent(event)&&observer(event);try{return await operation(this);}finally{this.progress=parent;}}
+  async scopedObserver<T>(observer:(event:NativeDecodeProgress)=>boolean,operation:(control:NativeDecodeControl)=>Promise<T>):Promise<T>{this.semantic();const parent=this.progress;this.progress=event=>parent(event)&&observer(event);try{return await operation(this);}finally{this.progress=parent;}}
   /** 📏️ Current domain allocation ceiling within the caller allowance. */
   get maximumBytes():number{return this.maximum;}
   /** 📊️ Ownership admitted throughout the complete decoding operation. */
   get ownedBytes():number{return this.owned;}
+  /** 🪪️ Cleanup and receiving observe the same original decoder owner. */
+  get ledgerIdentity():object{return this;}
+  private semantic():void{if(this.retiring)throw new ValueError("invariantViolated","original retirement loan cannot construct semantic output");}
+  /** ♻️ Lend the existing ledger for one funded cleanup hop after new semantic work is cancelled. */
+  async withRetirement<T>(grant:Readonly<RetainedCloneGrant>,operation:(control:NativeRetirementDecodeControl)=>Promise<T>):Promise<T>{
+    this.semantic();if([grant.maximumItems,grant.maximumCopyBytes,grant.maximumCapacityBytes,grant.maximumReleaseBytes,grant.maximumDepth].some(n=>!Number.isSafeInteger(n)||n<0)||grant.maximumItems===0||grant.maximumDepth===0)throw new ValueError("workLimit","original retirement requires its paid caller turn");
+    const original=this,capacity=grant.maximumCapacityBytes;let active=true,spent=0;this.retiring=true;
+    const loan:NativeRetirementDecodeControl={get ledgerIdentity(){return original;},get ownedBytes(){return original.owned;},async charge(bytes){if(!active)throw new ValueError("invariantViolated","original retirement loan has ended");const next=spent+bytes,owned=original.owned+bytes;if(!Number.isSafeInteger(bytes)||bytes<0||!Number.isSafeInteger(next)||next>capacity||!Number.isSafeInteger(owned)||owned>original.maximum)throw new ValueError("ownershipLimit","original retirement exceeds its paid capacity");original.progress({completed:original.completed,total:original.total,ownedBytes:original.owned});spent=next;original.owned=owned;await hostContinuations.yieldContinuation();}};
+    try{return await operation(loan);}finally{active=false;this.retiring=false;}
+  }
   /** 🛑️ Yield before expensive ownership and receive caller cancellation. */
   async checkpoint():Promise<void>{
+    this.semantic();
     if(this.signal?.aborted||!this.progress({completed:this.completed,total:this.total,ownedBytes:this.owned}))throw new ValueError("canceled", "native decoding canceled");
     this.started=true;
     await hostContinuations.yieldContinuation();
@@ -30,15 +47,16 @@ export class NativeDecodeControl {
   /** 🔢️ Advance decoder work and publish every256units. */
   async step():Promise<void>{await this.advance(1);}
   /** 🧭️ Begin a known stage while retaining the complete ownership budget. */
-  async beginStage(total:number):Promise<void>{if(!Number.isSafeInteger(total)||total<0||!Number.isSafeInteger(this.stage+1))throw new ValueError("workLimit", "Invalid native decoding workload");this.stage++;this.completed=0;this.total=total;this.started=false;await this.checkpoint();}
+  async beginStage(total:number):Promise<void>{this.semantic();if(!Number.isSafeInteger(total)||total<0||!Number.isSafeInteger(this.stage+1))throw new ValueError("workLimit", "Invalid native decoding workload");this.stage++;this.completed=0;this.total=total;this.started=false;await this.checkpoint();}
   /** 🪆️ Preserve parent work after a child begins a stage while retaining cumulative ownership. */
-  async scopedStage<T>(operation:(control:NativeDecodeControl)=>Promise<T>):Promise<T>{const parent={completed:this.completed,total:this.total,started:this.started,stage:this.stage};try{return await operation(this);}finally{if(this.stage!==parent.stage){this.completed=parent.completed;this.total=parent.total;this.started=parent.started;this.stage=parent.stage;}}}
+  async scopedStage<T>(operation:(control:NativeDecodeControl)=>Promise<T>):Promise<T>{this.semantic();const parent={completed:this.completed,total:this.total,started:this.started,stage:this.stage};try{return await operation(this);}finally{if(this.stage!==parent.stage){this.completed=parent.completed;this.total=parent.total;this.started=parent.started;this.stage=parent.stage;}}}
   /** 📐️ Restrict one stage's owned allocation without resetting cumulative charges. */
-  async scopedMaximum<T>(maximum:number,operation:(control:NativeDecodeControl)=>Promise<T>):Promise<T>{if(!Number.isSafeInteger(maximum)||maximum<0)throw new ValueError("ownershipLimit", "Invalid native stage allowance");const parent=this.maximum;this.maximum=Math.min(parent,maximum);try{if(this.owned>this.maximum)throw new ValueError("ownershipLimit", "native decoding ownership exceeds stage limit");return await operation(this);}finally{this.maximum=parent;}}
+  async scopedMaximum<T>(maximum:number,operation:(control:NativeDecodeControl)=>Promise<T>):Promise<T>{this.semantic();if(!Number.isSafeInteger(maximum)||maximum<0)throw new ValueError("ownershipLimit", "Invalid native stage allowance");const parent=this.maximum;this.maximum=Math.min(parent,maximum);try{if(this.owned>this.maximum)throw new ValueError("ownershipLimit", "native decoding ownership exceeds stage limit");return await operation(this);}finally{this.maximum=parent;}}
   /** 📍️ Advance consumed units across bounded cancellation frontiers. */
-  async advance(units:number):Promise<void>{if(!Number.isSafeInteger(units)||units<0)throw new ValueError("workLimit", "Invalid native decoding work");if(!this.started)await this.checkpoint();const previous=this.completed,next=previous+units;if(!Number.isSafeInteger(next)||this.total!==0&&next>this.total)throw new ValueError("workLimit", "native decoding exceeded declared stage workload");this.completed=next;if(Math.floor(previous/256)!==Math.floor(this.completed/256)||this.total!==0&&this.completed===this.total)await this.checkpoint();}
+  async advance(units:number):Promise<void>{this.semantic();if(!Number.isSafeInteger(units)||units<0)throw new ValueError("workLimit", "Invalid native decoding work");if(!this.started)await this.checkpoint();const previous=this.completed,next=previous+units;if(!Number.isSafeInteger(next)||this.total!==0&&next>this.total)throw new ValueError("workLimit", "native decoding exceeded declared stage workload");this.completed=next;if(Math.floor(previous/256)!==Math.floor(this.completed/256)||this.total!==0&&this.completed===this.total)await this.checkpoint();}
   /** 📦️ Admit cumulative bytes before a copy or reservation. */
   async charge(bytes:number):Promise<void>{
+    this.semantic();
     const next=this.owned+bytes;
     if(!Number.isSafeInteger(bytes)||bytes<0||!Number.isSafeInteger(next)||next>this.maximumBytes)throw new ValueError("ownershipLimit", "native decoding ownership exceeds caller limit");
     if(!this.started||bytes>65536)await this.checkpoint();
@@ -48,7 +66,7 @@ export class NativeDecodeControl {
   }
   /** 🗂️ Admit explicitly declared typed collection slot width before allocation. */
   async admitSlots(count:number,width:number):Promise<void>{if(!Number.isSafeInteger(count)||count<0||!Number.isSafeInteger(width)||width<0)throw new ValueError("ownershipLimit", "native decoding collection size overflow");await this.charge(count*width);}
-  private async copyCheckpoint(completed:number,total:number):Promise<void>{if(this.signal?.aborted||!this.progress({completed,total,ownedBytes:this.owned}))throw new ValueError("canceled", "native decoding canceled");await hostContinuations.yieldContinuation();if(this.signal?.aborted)throw new ValueError("canceled", "native decoding canceled");}
+  private async copyCheckpoint(completed:number,total:number):Promise<void>{this.semantic();if(this.signal?.aborted||!this.progress({completed,total,ownedBytes:this.owned}))throw new ValueError("canceled", "native decoding canceled");await hostContinuations.yieldContinuation();if(this.signal?.aborted)throw new ValueError("canceled", "native decoding canceled");}
   /** 🔎️ Validate borrowed UTF-8 without constructing a second owned text buffer. */
   async validateUtf8(bytes:Uint8Array):Promise<void>{
     await this.copyCheckpoint(0,bytes.byteLength);let position=0,last=0;

@@ -321,55 +321,19 @@ impl KernelPoolState {
     /// 🧩️ Compiles `bytes` on the worker pool while this loop keeps serving the other instances' requests — a
     /// large component parses for minutes in a debug host, and the synchronous parse used to hold the whole
     /// loop — reusing the handle already compiled for the same content hash. The open's owner may cancel it
-    /// while it parses ([`Self::turn_cancelled`]); the parse then finishes unobserved on its worker.
-    pub(super) async fn compile_serving_others(&mut self, package: PackageRef, bytes: Vec<u8>) -> Result<semio_framework_plugin_host::CompiledHandle, String> {
-        if let Some((_, compiled)) = self.compiled_components.iter().find(|(hash, _)| *hash == package.hash) {
-            return Ok(compiled.clone());
-        }
-        let handoff: Arc<Mutex<(Option<Result<semio_framework_plugin_host::CompiledHandle, String>>, Option<Waker>)>> = Arc::default();
-        let worker = handoff.clone();
-        let runtime = self.guest_runtime.clone();
-        let key = package.clone();
-        let _ = KernelPoolFuture::spawn(crate::renderer_worker_pool(), semio_framework_async::Lane::Background, async move {
-            let result = runtime.compile(&key, &bytes).await.map_err(|error| error.to_string());
-            let waker = {
-                let mut slot = worker.lock().expect("compile handoff lock");
-                slot.0 = Some(result);
-                slot.1.take()
-            };
-            if let Some(waker) = waker {
-                waker.wake();
-            }
-        });
-        loop {
-            let gap = std::future::poll_fn(|cx| {
-                let mut slot = handoff.lock().expect("compile handoff lock");
-                if let Some(result) = slot.0.take() {
-                    return Poll::Ready(Some(result));
-                }
-                slot.1 = Some(cx.waker().clone());
-                drop(slot);
-                if self.turn_cancelled() {
-                    return Poll::Ready(Some(Err("kernel: the open was cancelled while its component compiled".to_string())));
-                }
-                if !self.interleaving && self.request_queue.head_is(|request| kernel_request_interleavable(request, u32::MAX)) {
-                    return Poll::Ready(None);
-                }
-                self.request_queue.watch(cx.waker());
-                Poll::Pending
-            })
-            .await;
-            match gap {
-                Some(result) => {
-                    let compiled = result?;
-                    if self.compiled_components.len() == COMPILED_COMPONENT_CAPACITY {
-                        self.compiled_components.pop();
-                    }
-                    self.compiled_components.insert(0, (package.hash, compiled.clone()));
-                    return Ok(compiled);
-                }
-                None => self.serve_head_between(u32::MAX).await,
-            }
+    /// while the initiating original compiler caller retains the sealed future, source loan and complete result through publication.
+    pub(super) async fn compile_serving_others(&mut self,owner:&CreateAppRequestOwner,hash:PackageHash,bytes:semio_framework_job::OriginalSuppliedJobBytes)->Result<semio_framework_plugin_host::CompiledHandle,CreateAppSourceFailureKind>{
+        if let Some((_,compiled))=self.compiled_components.iter().find(|(key,_)|*key==hash){return Ok(compiled.clone())}
+        let mut original=Some(bytes);let mut compiled=None;
+        loop{
+            let gap=std::future::poll_fn(|cx|{
+                if self.turn_cancelled(){owner.cancel_compiler();return Poll::Ready(Some(Err(CreateAppSourceFailureKind::Cancelled)))}
+                match owner.start_compiler(&self.guest_runtime,hash,&mut original){Ok(true)=>{},Ok(false)=>{cx.waker().wake_by_ref();return Poll::Pending},Err(kind)=>return Poll::Ready(Some(Err(kind)))}
+                match owner.poll_compiler(cx.waker(),&self.guest_runtime,&mut compiled){Ok(true)=>return Poll::Ready(Some(Ok(compiled.take().expect("original compiler result transferred once after paid frame close")))),Ok(false)=>{},Err(kind)=>return Poll::Ready(Some(Err(kind)))}
+                if !self.interleaving&&self.request_queue.head_is(|request|kernel_request_interleavable(request,u32::MAX)){return Poll::Ready(None)}
+                self.request_queue.watch(cx.waker());Poll::Pending
+            }).await;
+            match gap{Some(result)=>{let compiled=result?;if self.compiled_components.len()==COMPILED_COMPONENT_CAPACITY{self.compiled_components.pop();}self.compiled_components.insert(0,(hash,compiled.clone()));return Ok(compiled)},None=>self.serve_head_between(u32::MAX).await}
         }
     }
 

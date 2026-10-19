@@ -82,7 +82,11 @@
         "tilt_deg": 30.0,
         "azimuth_deg": 180.0,
         "module_efficiency": 0.18,
-        "inverter_efficiency": 0.96
+        "inverter_efficiency": 0.96,
+        "temperature_coefficient": -0.004,
+        "faiman_heat_loss_constant_w_m2k": 25.0,
+        "faiman_heat_loss_wind_w_s_m3k": 6.84,
+        "mounting": "OpenRack"
       },
       {
         "id": 301,
@@ -91,7 +95,11 @@
         "tilt_deg": 20.0,
         "azimuth_deg": 135.0,
         "module_efficiency": 0.17,
-        "inverter_efficiency": 0.95
+        "inverter_efficiency": 0.95,
+        "temperature_coefficient": -0.004,
+        "faiman_heat_loss_constant_w_m2k": 25.0,
+        "faiman_heat_loss_wind_w_s_m3k": 6.84,
+        "mounting": "OpenRack"
       }
     ],
     "battery_storage": [

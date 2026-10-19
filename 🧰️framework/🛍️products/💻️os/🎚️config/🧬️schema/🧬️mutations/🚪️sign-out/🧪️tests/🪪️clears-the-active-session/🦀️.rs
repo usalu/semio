@@ -12,6 +12,7 @@
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1).
 
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::super::sign_in::{Identity, IdentityDiff, IdentitySetting};
 use super::super::IdentityConfigMutation;
 use semio_framework_test_fixtures::fixture_path;
@@ -45,7 +46,7 @@ fn clears_the_whole_active_session() {
     let base = before();
     assert!(base.0.is_some(), "sign-out/clears-the-active-session: the before-setting must carry a session or the clear measures nothing");
     let outcome = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::diff(&mutation(), &base);
-    let applied = protocol::apply_diff(outcome.diff(), &base).expect("sign-out applies to its committed before-setting");
+    let applied = protocol::apply_diff_cold(outcome.diff(), &base).expect("sign-out applies to its committed before-setting");
     assert_eq!(applied, expected_after(), "sign-out/clears-the-active-session: the cleared setting differs from the committed after-snapshot");
     assert!(applied.0.is_none(), "sign-out/clears-the-active-session: a signed-out record must hold no session");
     assert_eq!(applied, IdentitySetting::default(), "sign-out/clears-the-active-session: the signed-out record is the facet's own default");
@@ -63,10 +64,10 @@ fn restoring_the_prior_session_restores_before() {
     };
     assert_eq!(Identity::from(undo), session(&base), "sign-out/clears-the-active-session: the undo must carry BASE's non-secret identity");
     let forward = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::diff(&mutation(), &base);
-    let mut snapshot = protocol::apply_diff(forward.diff(), &base).expect("forward sign-out applies");
+    let mut snapshot = protocol::apply_diff_cold(forward.diff(), &base).expect("forward sign-out applies");
     for step in &inverse {
         let redo = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::diff(step, &snapshot);
-        snapshot = protocol::apply_diff(redo.diff(), &snapshot).expect("the sign-out inverse step applies");
+        snapshot = protocol::apply_diff_cold(redo.diff(), &snapshot).expect("the sign-out inverse step applies");
     }
     assert_eq!(snapshot, base, "sign-out/clears-the-active-session: restoring the prior session did not restore the before-setting");
 }
@@ -122,7 +123,7 @@ fn committed_diff_is_canonical() {
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: IdentityDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed sign-out diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-setting");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-setting");
     assert_eq!(produced, expected_after(), "sign-out/clears-the-active-session: committed diff did not carry before to after");
 }
 

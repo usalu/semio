@@ -5,6 +5,7 @@
   "propertyNames": {
     "enum": [
       "operation",
+      "index",
       "nodeRecord"
     ]
   },
@@ -175,6 +176,26 @@
         },
         "group": "record",
         "order": 10
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Position a new node record is inserted at; absent appends it.",
+          "de": "Position, an der ein neues Knotenprotokoll eingefügt wird; fehlt sie, wird es angehängt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "record",
+        "order": 20
       }
     }
   },

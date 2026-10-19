@@ -1,0 +1,7 @@
+{
+  "mutation": "changeNode",
+  "id": "missing",
+  "patch": {
+    "x": 4
+  }
+}

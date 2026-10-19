@@ -15,29 +15,33 @@ pub struct ProgramFault {
     pub kernel:Option<semio_framework_actor::KernelError>,
     #[cfg(not(target_arch = "wasm32"))]
     pub actor_call:Option<semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall>,
+    #[cfg(not(target_arch = "wasm32"))]
+    pub(crate) create_app_source:Option<crate::kernel_runtime::CreateAppSourceFailure>,
 }
 
 impl From<String> for ProgramFault {
     fn from(text: String) -> Self {
-        Self { fault: None, text, #[cfg(not(target_arch = "wasm32"))] frame: None,#[cfg(not(target_arch = "wasm32"))] kernel:None,#[cfg(not(target_arch = "wasm32"))] actor_call:None }
+        Self { fault: None, text, #[cfg(not(target_arch = "wasm32"))] frame: None,#[cfg(not(target_arch = "wasm32"))] kernel:None,#[cfg(not(target_arch = "wasm32"))] actor_call:None,#[cfg(not(target_arch = "wasm32"))] create_app_source:None }
     }
 }
 
 impl From<&str> for ProgramFault {
     fn from(text: &str) -> Self {
-        Self { fault: None, text: text.to_string(), #[cfg(not(target_arch = "wasm32"))] frame: None,#[cfg(not(target_arch = "wasm32"))] kernel:None,#[cfg(not(target_arch = "wasm32"))] actor_call:None }
+        Self { fault: None, text: text.to_string(), #[cfg(not(target_arch = "wasm32"))] frame: None,#[cfg(not(target_arch = "wasm32"))] kernel:None,#[cfg(not(target_arch = "wasm32"))] actor_call:None,#[cfg(not(target_arch = "wasm32"))] create_app_source:None }
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl From<semio_framework_actor::pack::PackError> for ProgramFault {
-    fn from(error: semio_framework_actor::pack::PackError) -> Self { Self { fault: None, text: String::new(), frame: Some(error),kernel:None,actor_call:None } }
+    fn from(error: semio_framework_actor::pack::PackError) -> Self { Self { fault: None, text: String::new(), frame: Some(error),kernel:None,actor_call:None,#[cfg(not(target_arch = "wasm32"))] create_app_source:None } }
 }
 
 #[cfg(not(target_arch="wasm32"))]
-impl From<semio_framework_actor::KernelError> for ProgramFault{fn from(error:semio_framework_actor::KernelError)->Self{Self{fault:None,text:String::new(),frame:None,kernel:Some(error),actor_call:None}}}
+impl From<semio_framework_actor::KernelError> for ProgramFault{fn from(error:semio_framework_actor::KernelError)->Self{Self{fault:None,text:String::new(),frame:None,kernel:Some(error),actor_call:None,#[cfg(not(target_arch = "wasm32"))] create_app_source:None}}}
 #[cfg(not(target_arch="wasm32"))]
-impl From<semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall> for ProgramFault{fn from(call:semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall)->Self{Self{fault:None,text:String::new(),frame:None,kernel:None,actor_call:Some(call)}}}
+impl From<semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall> for ProgramFault{fn from(call:semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall)->Self{Self{fault:None,text:String::new(),frame:None,kernel:None,actor_call:Some(call),create_app_source:None}}}
+#[cfg(not(target_arch="wasm32"))]
+impl From<crate::kernel_runtime::CreateAppSourceFailure> for ProgramFault{fn from(error:crate::kernel_runtime::CreateAppSourceFailure)->Self{Self{fault:None,text:String::new(),frame:None,kernel:None,actor_call:None,create_app_source:Some(error)}}}
 impl std::fmt::Display for ProgramFault {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         #[cfg(not(target_arch = "wasm32"))]
@@ -46,6 +50,8 @@ impl std::fmt::Display for ProgramFault {
         if let Some(error)=&self.kernel{return std::fmt::Display::fmt(error,formatter)}
         #[cfg(not(target_arch="wasm32"))]
         if let Some(call)=&self.actor_call{return write!(formatter,"original actor call {}/{}/{} {:?} after {:?}",call.input.operation,call.input.generation,call.input.epoch,call.kind,call.spent)}
+        #[cfg(not(target_arch="wasm32"))]
+        if let Some(error)=&self.create_app_source{return std::fmt::Display::fmt(error,formatter)}
         formatter.write_str(&self.text)
     }
 }

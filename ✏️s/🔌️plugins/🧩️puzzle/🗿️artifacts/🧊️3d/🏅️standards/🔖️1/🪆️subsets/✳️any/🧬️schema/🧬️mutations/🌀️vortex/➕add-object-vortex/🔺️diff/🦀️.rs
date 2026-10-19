@@ -1,6 +1,9 @@
-//! 🔺️ Sparse diff builder for `AddObjectVortex` — adds one vortex to the owner object's `vortices`.
 //! No-op when the vortex id already exists on that object.
-use semio_s_artifact_puzzle_3d_diff::{Puzzle3dDiff, Puzzle3dObjectPatch, Puzzle3dObjectsDelta, Puzzle3dVorticesDelta};
+//! 🔺️ Sparse diff builder for `AddObjectVortex` — adds one vortex to the owner object's `vortices`.
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dObjectPatch;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dObjectsDelta;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dVorticesDelta;
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Diff

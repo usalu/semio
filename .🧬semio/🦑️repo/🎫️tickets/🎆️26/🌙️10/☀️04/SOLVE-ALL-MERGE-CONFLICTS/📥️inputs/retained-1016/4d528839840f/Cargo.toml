@@ -1,0 +1,9 @@
+[workspace]
+members = ["base","left","right","top"]
+resolver = "2"
+
+[profile.wasm-release]
+inherits = "release"
+
+[profile.wasm-prototype]
+inherits = "dev"

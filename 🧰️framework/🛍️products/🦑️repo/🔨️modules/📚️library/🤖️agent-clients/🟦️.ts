@@ -1,9 +1,9 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
-/** 🤖️ The agent and editor clients whose MCP configuration file is derived from the root dashboard declaration.
+/** 🤖️ The headless agent clients whose MCP configuration file is derived from the root dashboard declaration.
  * @see ../../🎛️dashboard/🧬️schema/🎮️registry/🔣️.json `#/$defs/AgentClientId` */
-export const AGENT_CLIENTS = ["claude-code", "vscode", "cursor", "codex"] as const;
+export const AGENT_CLIENTS = ["claude-code", "codex"] as const;
 export type AgentClient = (typeof AGENT_CLIENTS)[number];
 
 /** 📋️ The workspace-relative manifest whose `metadata.semio.dashboard.tools[].mcp` is the only declaration of every client file. */
@@ -32,8 +32,6 @@ const stdioEntries = (servers: readonly McpServer[]) => Object.fromEntries(serve
 
 const CLIENT_FILES: Readonly<Record<AgentClient, Readonly<{ path: string; render: (servers: readonly McpServer[]) => string }>>> = {
   "claude-code": { path: ".mcp.json", render: (servers) => jsonText({ mcpServers: stdioEntries(servers) }) },
-  vscode: { path: ".vscode/mcp.json", render: (servers) => jsonText({ inputs: [], servers: stdioEntries(servers) }) },
-  cursor: { path: ".cursor/mcp.json", render: (servers) => jsonText({ mcpServers: stdioEntries(servers) }) },
   codex: {
     path: ".codex/config.toml",
     render: (servers) =>
@@ -63,7 +61,7 @@ function toolWords(tool: DeclaredTool, values: Readonly<Record<string, string>>)
 
 /** 🔌️ The MCP servers every client starts, in declaration order. */
 export function mcpServersOf(tools: readonly DeclaredTool[]): Readonly<Record<AgentClient, readonly McpServer[]>> {
-  const servers: Record<AgentClient, McpServer[]> = { "claude-code": [], vscode: [], cursor: [], codex: [] };
+  const servers: Record<AgentClient, McpServer[]> = { "claude-code": [], codex: [] };
   const names = new Set<string>();
   for (const tool of tools) {
     if (!tool.mcp) continue;

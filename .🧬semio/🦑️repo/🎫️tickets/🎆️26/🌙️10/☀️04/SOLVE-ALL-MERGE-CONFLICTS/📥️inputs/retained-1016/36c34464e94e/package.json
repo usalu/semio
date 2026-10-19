@@ -1,0 +1,19 @@
+{
+  "name": "neutral-product",
+  "private": true,
+  "workspaces": [
+    "../source/one",
+    "../source/two",
+    "local/one"
+  ],
+  "semio": {
+    "workspace": {
+      "schemaVersion": 1,
+      "members": [
+        "../source/**",
+        "local/**"
+      ],
+      "owners": []
+    }
+  }
+}

@@ -1,5 +1,5 @@
-//! 💔 Puzzle5d mutation — `DisconnectKindCompatibility`: revokes one grip-kind-id pair's fasten
 //! allowance.
+//! 💔 Puzzle5d mutation — `DisconnectKindCompatibility`: revokes one grip-kind-id pair's fasten
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::Puzzle5dSnapshot;
 
@@ -31,6 +31,17 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "disconnect", entity: "kind-compatibility", kind: "disconnect-kind-compatibility", record: "DisconnectedKindCompatibility" };
 
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Disconnect kind compatibility \"{}\" -> \"{}\"", self.source, self.target), &format!("Artkompatibilität \"{}\" -> \"{}\" aufheben", self.source, self.target))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.source.clone(), self.target.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for DisconnectKindCompatibility {
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
@@ -40,11 +51,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Disconnect kind compatibility \"{}\" -> \"{}\"", self.source, self.target), &format!("Artkompatibilität \"{}\" -> \"{}\" aufheben", self.source, self.target))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.source.clone(), self.target.clone()]
-    }
 }
 //#endregion 🔖️Mutation

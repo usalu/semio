@@ -1,0 +1,9 @@
+{
+ "version": 1,
+ "entries": [
+  {"name":"first.txt","text":"first"},
+  {"name":"🌍️.txt","text":"Grüße 世界"}
+ ],
+ "preservations": ["file", "directory"],
+ "refusals": ["copied", "cancelled", "undefined", "after-capsule", "late-payload"]
+}

@@ -1,6 +1,6 @@
-//! ⚖️ FEM 3D artifact — binary operation protocol surface + laws (constitutional: spr, renamed from the
 //! old `📡️protocol` crate — the old crate's hand-rolled `Fem3dCommand` enum moved to `app_commands!` in
-//! `crate::editor::fem3d`; only the `Fem3dMutation` codec pair survives here).
+//! ⚖️ FEM 3D artifact — binary operation protocol surface + laws (constitutional: spr, renamed from the
+//! `semio_s_artifact_fem_3d_editor_model_window::editor::fem3d`; only the `Fem3dMutation` codec pair survives here).
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use protocol::OpBinary;
@@ -33,7 +33,7 @@ mod semio_protocol_conformance;
 
 mod native_codec {
 #[cfg(test)] use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::{Fem3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 #[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem3d_mutation};
 #[cfg(test)] use crate::central_apply::apply_fem3d_mutation;
 

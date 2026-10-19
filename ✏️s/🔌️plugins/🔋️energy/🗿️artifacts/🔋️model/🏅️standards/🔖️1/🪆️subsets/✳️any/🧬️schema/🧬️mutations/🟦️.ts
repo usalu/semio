@@ -54,6 +54,36 @@ import type { ChangeBatteryCapacity, ChangeBatteryMaxCharge, ChangeBatteryMaxDis
  *  `#[dsl(keyword)]` slug used for the directory names and for `SemanticDescriptor.kind`.
  */
 
+/** 🔅️ An explicit solar front reflectance field intent. */
+export interface ChangeGlazingMaterialSolarReflectanceFront{readonly mutation:"changeGlazingMaterialSolarReflectanceFront";readonly id:number;readonly newSolarReflectanceFront:number}
+
+/** 🔆️ An explicit solar back reflectance field intent. */
+export interface ChangeGlazingMaterialSolarReflectanceBack{readonly mutation:"changeGlazingMaterialSolarReflectanceBack";readonly id:number;readonly newSolarReflectanceBack:number}
+
+/** 🔎️ An explicit visible front reflectance field intent. */
+export interface ChangeGlazingMaterialVisibleReflectanceFront{readonly mutation:"changeGlazingMaterialVisibleReflectanceFront";readonly id:number;readonly newVisibleReflectanceFront:number}
+
+/** 🪞️ An explicit visible back reflectance field intent. */
+export interface ChangeGlazingMaterialVisibleReflectanceBack{readonly mutation:"changeGlazingMaterialVisibleReflectanceBack";readonly id:number;readonly newVisibleReflectanceBack:number}
+
+/** 🌡️ An explicit infrared transmittance field intent. */
+export interface ChangeGlazingMaterialInfraredTransmittance{readonly mutation:"changeGlazingMaterialInfraredTransmittance";readonly id:number;readonly newInfraredTransmittance:number}
+
+/** 🔅️ An explicit solar front reflectance field intent. */
+export interface ChangeGlazingMaterialSolarReflectanceFront{readonly mutation:"changeGlazingMaterialSolarReflectanceFront";readonly id:number;readonly newSolarReflectanceFront:number}
+
+/** 🔆️ An explicit solar back reflectance field intent. */
+export interface ChangeGlazingMaterialSolarReflectanceBack{readonly mutation:"changeGlazingMaterialSolarReflectanceBack";readonly id:number;readonly newSolarReflectanceBack:number}
+
+/** 🔎️ An explicit visible front reflectance field intent. */
+export interface ChangeGlazingMaterialVisibleReflectanceFront{readonly mutation:"changeGlazingMaterialVisibleReflectanceFront";readonly id:number;readonly newVisibleReflectanceFront:number}
+
+/** 🪞️ An explicit visible back reflectance field intent. */
+export interface ChangeGlazingMaterialVisibleReflectanceBack{readonly mutation:"changeGlazingMaterialVisibleReflectanceBack";readonly id:number;readonly newVisibleReflectanceBack:number}
+
+/** 🌡️ An explicit infrared transmittance field intent. */
+export interface ChangeGlazingMaterialInfraredTransmittance{readonly mutation:"changeGlazingMaterialInfraredTransmittance";readonly id:number;readonly newInfraredTransmittance:number}
+
 export type EnergyModelMutation =
   | RenameModel
   | ChangeModelVersion
@@ -351,7 +381,21 @@ export type EnergyModelMutation =
   | ChangeGasMaterialThickness
   | ChangeGasMaterialGas
   | RenameGasMaterial
-  | ChangeMaterialRoughness;
+  | ChangeMaterialRoughness
+  | ChangeGlazingMaterialSolarReflectanceFront
+  | ChangeGlazingMaterialSolarReflectanceBack
+  | ChangeGlazingMaterialVisibleReflectanceFront
+  | ChangeGlazingMaterialVisibleReflectanceBack
+  | ChangeGlazingMaterialInfraredTransmittance
+  | ChangePvSystemTemperatureCoefficient
+  | ChangePvSystemFaimanHeatLossConstant
+  | ChangePvSystemFaimanHeatLossWind
+  | ChangePvSystemMounting;
 
 /** 🪪️ Admits the owned link target without native URI interpretation. */
 export function parseEnergyReferenceTarget(value:unknown):ArtifactRef{const target=parseArtifactRef(value);if(target.artifactId===""||Object.values(target.dialect).some(value=>value===""))throw new TypeError("Energy link identity components must be nonempty");return target;}
+
+export interface ChangePvSystemTemperatureCoefficient { readonly mutation:"changePvSystemTemperatureCoefficient"; readonly id:number; readonly newTemperatureCoefficient:number }
+export interface ChangePvSystemFaimanHeatLossConstant { readonly mutation:"changePvSystemFaimanHeatLossConstant"; readonly id:number; readonly newFaimanHeatLossConstantWM2k:number }
+export interface ChangePvSystemFaimanHeatLossWind { readonly mutation:"changePvSystemFaimanHeatLossWind"; readonly id:number; readonly newFaimanHeatLossWindWSM3k:number }
+export interface ChangePvSystemMounting { readonly mutation:"changePvSystemMounting"; readonly id:number; readonly newMounting:"OpenRack"|"CloseRoof"|"InsulatedBack" }

@@ -7,7 +7,7 @@
 // #region 🔌️Adapters
 import { ephemeralBox, ephemeralSet } from "../../../🫧️transient/🟦️.ts";
 import * as React from "react";
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { glassClass, surfaceClass, veilClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 // #endregion 🔌️Adapters

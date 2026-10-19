@@ -1,0 +1,74 @@
+/* 🤏 The pointer drag states and the spider diagram's paint. */
+
+/* 🤏️ Pointer drag: the ghost follows the pointer, the source dims, the zone under the pointer is highlighted. The ghost
+   is an empty copy of the source's list holding the copy of the source, so the copy is laid out as its source is. A grip refuses panning, so a finger that starts on it does not scroll the page under the drag. */
+[data-course-grip] {
+  touch-action: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.course-drag-ghost {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  display: block;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+  opacity: 0.92;
+  list-style: none;
+}
+
+.course-dragging {
+  opacity: 0.4;
+}
+
+.course-drop-active {
+  outline: var(--stroke-default) dashed var(--active-base);
+  outline-offset: 2px;
+  background: color-mix(in srgb, var(--active-base) 14%, transparent);
+}
+
+/* 🕸️ Spider diagram paint. A diagram is laid out for the width it gets, up to the size it reads best at: in a bin
+   wider than that it keeps this size instead of growing with the bin. */
+.course-radar {
+  position: relative;
+  inline-size: 100%;
+  max-inline-size: 28rem;
+}
+
+.course-radar-ruler {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.course-radar-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.course-radar-ring,
+.course-radar-spoke {
+  fill: none;
+  stroke: var(--border-normal-color);
+  stroke-width: 0.75;
+}
+
+.course-radar-area {
+  fill: color-mix(in srgb, var(--active-base) 35%, transparent);
+  stroke: var(--active-base);
+  stroke-width: 2;
+}
+
+.course-radar-label,
+.course-radar-key {
+  fill: var(--foreground);
+}

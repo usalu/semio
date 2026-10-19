@@ -1,5 +1,5 @@
-//! ↩️ Inverse for `ReplaceNodeHandle` — restores the BASE handle payload. Missing target ⇒
 //! `Vec::new()`.
+//! ↩️ Inverse for `ReplaceNodeHandle` — restores the BASE handle payload. Missing target ⇒
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Inverse

@@ -6,7 +6,7 @@
 //! semantic change of a document; a replica materializes the document by folding that stream over
 //! its genesis snapshot — never by merging another replica's snapshot.
 //!
-//! Identity across replicas is the per-operation [`crate::ids::MutationId`]: a receiver
+//! Identity across replicas is the per-operation [`semio_framework_replication_ids::MutationId`]: a receiver
 //! materializes one local edit per wire operation, so transitions reference operations, never a
 //! replica-local edit id. Checkpoint, change and alternative ids are minted once by the author
 //! and carried verbatim.
@@ -582,7 +582,11 @@ pub fn fold_history(document_id: &ArtifactId, edits: &[FoldEdit], transitions: &
 /// edit is visible only at the tip of the line it is tagged to (`FoldEdit::line` absent or the trunk id
 /// means the trunk).
 pub fn fold_history_for(document_id: &ArtifactId, edits: &[FoldEdit], transitions: &[semio_framework_replication_causal::MutationEnvelope], excluded: &std::collections::HashSet<String>, head: &ViewerHead) -> Result<HistoryFold, semio_framework_replication_error::ProtocolError> {
-    HistoryFoldJob::new(|control| async move { fold_history_for_controlled(document_id, edits, transitions, &|id| excluded.contains(id), head, &control).await }).finish_cold()
+    HistoryFoldJob::new(|control| async move {
+        let mut ignored=control.track(HistoryFoldIndex::<String,()>::new()).unwrap_or_else(|_|unreachable!("cold fold exclusions declare controlled ownership")).await;
+        for id in excluded {control.insert_text(&mut ignored,copy_history_text(id,&control).await?,()).await?;}
+        fold_history_for_controlled(document_id,edits,transitions,&ignored,head,&control).await
+    }).finish_cold()
 }
 
 //#endregion 🔖️Fold

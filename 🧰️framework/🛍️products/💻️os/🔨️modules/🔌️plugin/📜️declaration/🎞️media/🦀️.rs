@@ -101,12 +101,10 @@ impl ArtifactOutputChunks {
 
     pub fn original_birth_admit(maximum:usize,receiving:&mut Option<Self>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let _=cx.original_source_parent()?;if let Some(owner)=receiving.as_ref(){if owner.inner.maximum!=maximum{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original output birth receiver changed its byte bound").into())}return Ok(true)}
-        if maximum==0||maximum>ARTIFACT_SEGMENTED_DOWNLOAD_TOTAL_BYTES{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original segmented output requires its declared nonzero byte bound").into())}
-        let slots=maximum.div_ceil(ARTIFACT_OUTPUT_CHUNK_BYTES);let capacity_bytes=slots.checked_mul(size_of::<Vec<u8>>()).and_then(|bytes|bytes.checked_add(semio_framework_value::shared_retirement_allocation_bytes::<ArtifactOutputChunksInner>())).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original output slot birth footprint overflowed"))?;
-        let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<size_of::<Self>()||grant.maximum_capacity_bytes<capacity_bytes{return Ok(false)}
-        let mut chunks=std::collections::VecDeque::new();chunks.try_reserve_exact(slots).map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original output slots could not retain their declared capacity"))?;
-        let owner=Self{inner:std::sync::Arc::new(ArtifactOutputChunksInner{state:semio_framework_value::retirement::controlled::RetainedOwnerGate::new(ArtifactOutputChunksState{chunks:ArtifactFixedQueue{items:chunks,capacity:slots,allocation_admitted:true}}),bytes:std::sync::atomic::AtomicUsize::new(0),bytes_remaining:std::sync::atomic::AtomicUsize::new(0),remaining:std::sync::atomic::AtomicUsize::new(0),slots,maximum,sealed:std::sync::atomic::AtomicBool::new(false)})};
-        *receiving=Some(owner);cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Self>(),retained_capacity_bytes:capacity_bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)
+        let demand=Self::original_birth_demands(maximum)?;
+        let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes{return Ok(false)}
+        let(owner,progress)=Self::construct_original(maximum)?;
+        *receiving=Some(owner);cx.consume_retained(progress)?;cx.consume_fuel(1);Ok(true)
     }
 
     pub fn new(maximum: usize) -> Self {
@@ -470,3 +468,6 @@ pub fn validate_media_export_structure(result: &ArtifactMediaExportResult, opera
 }
 
 
+
+#[path="🏭️construction/🦀️.rs"]
+mod original_output_construction;

@@ -7,10 +7,11 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fe
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dMaterialInsertion;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dMaterialsDelta;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &CreateMaterial, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
+pub fn diff(payload: &CreateMaterial, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<Fem2dDiff> {
+    if let Some(rejection) = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards::scoped_identity(&["material", &payload.material.id]) { return rejection; }
     if base.materials.iter().any(|material| material.id == payload.material.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A material with id \"{}\" already exists.", payload.material.id), [payload.material.id.clone()]);
     }

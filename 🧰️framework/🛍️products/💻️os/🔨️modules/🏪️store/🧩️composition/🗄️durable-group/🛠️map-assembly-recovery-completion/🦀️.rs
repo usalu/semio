@@ -96,12 +96,12 @@ where
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedMapRecoveryOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: Clone + ValueToValue + ValueFromValue,
-    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
-    DrawingP: Clone + ValueToValue + ValueFromValue,
-    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
-    ValueP: Clone + ValueToValue + ValueFromValue,
-    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+    ParentP: ValueToValue,
+    ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    DrawingP: ValueToValue,
+    DrawingMutation: StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    ValueP: ValueToValue,
+    ValueMutation: StoreMutation<ValueP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
 {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || (self.parent.is_none() && self.drawing.is_none() && self.value.is_none() && self.coordinator.is_none()), "retained committed Map recovery reached Drop before exact terminal owner handoff");
@@ -139,7 +139,8 @@ where
         let Some(operation) = self.operation.as_mut() else { return DurableOwnedMapRecoveryAdvanceV1::Fault(DurableOwnedGroupDecisionError::InvalidOutcome) };
         match operation.advance(grant) {
             Ok(DurableOwnedThreeStoreCommitAdvanceV1::Progress(phase)) => DurableOwnedMapRecoveryAdvanceV1::Progress(phase),
-            Ok(DurableOwnedThreeStoreCommitAdvanceV1::Blocked) => DurableOwnedMapRecoveryAdvanceV1::Blocked,
+                        Ok(DurableOwnedThreeStoreCommitAdvanceV1::DiagnosticProgress(phase, progress)) => DurableOwnedMapRecoveryAdvanceV1::DiagnosticProgress(phase, progress),
+Ok(DurableOwnedThreeStoreCommitAdvanceV1::Blocked) => DurableOwnedMapRecoveryAdvanceV1::Blocked,
             Ok(DurableOwnedThreeStoreCommitAdvanceV1::AwaitingAck(_)) => DurableOwnedMapRecoveryAdvanceV1::AwaitingAcknowledgement,
             Ok(DurableOwnedThreeStoreCommitAdvanceV1::Complete) => DurableOwnedMapRecoveryAdvanceV1::Complete,
             Err(error) => DurableOwnedMapRecoveryAdvanceV1::Fault(error),
@@ -159,12 +160,12 @@ where
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedMapRecoveryHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: Clone + ValueToValue + ValueFromValue,
-    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
-    DrawingP: Clone + ValueToValue + ValueFromValue,
-    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
-    ValueP: Clone + ValueToValue + ValueFromValue,
-    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+    ParentP: ValueToValue,
+    ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    DrawingP: ValueToValue,
+    DrawingMutation: StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    ValueP: ValueToValue,
+    ValueMutation: StoreMutation<ValueP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
 {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || (self.operation.is_none()), "committed Map recovery host reached Drop before terminal owner handoff");
@@ -173,12 +174,12 @@ where
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedMapCommitHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: Clone + ValueToValue + ValueFromValue,
-    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
-    DrawingP: Clone + ValueToValue + ValueFromValue,
-    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
-    ValueP: Clone + ValueToValue + ValueFromValue,
-    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+    ParentP: ValueToValue,
+    ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    DrawingP: ValueToValue,
+    DrawingMutation: StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    ValueP: ValueToValue,
+    ValueMutation: StoreMutation<ValueP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
 {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || (self.operation.is_none()), "retained Map host reached Drop before exact terminal owner handoff");
@@ -199,7 +200,7 @@ where
         drawing: ArtifactStoreOneItemPrepared<DrawingP, DrawingMutation>,
         value: ArtifactStoreOneItemPrepared<ValueP, ValueMutation>,
     ) -> Result<Self, DurableOwnedGroupDecisionError> {
-        Ok(Self { parent: DurableStorePreparedOwnerV1::unbound(parent, PARENT_RECOVERY_SCHEMA)?, drawing: DurableStorePreparedOwnerV1::unbound(drawing, DRAWING_RECOVERY_SCHEMA)?, value: DurableStorePreparedOwnerV1::unbound(value, VALUE_RECOVERY_SCHEMA)? })
+        Ok(Self { parent: DurableStorePreparedOwnerV1::original(parent), drawing: DurableStorePreparedOwnerV1::original(drawing), value: DurableStorePreparedOwnerV1::original(value), decision: None, decision_pack: None, binding_step: 0, decision_plan_phase: 0, decision_packet_hash: None, decision_identity: Default::default(), issuers_captured:false, decision_retirement:None,decision_pack_retirement:None, retirement_progress:Default::default(), #[cfg(feature = "deflate")] decision_encoding: Default::default() })
     }
 }
 
@@ -236,7 +237,8 @@ impl DurableOwnedThreeMemberDecisionV1 {
             parent: DurableStoreBoundOutcomeV1::recover(&parent_store.parts_ref(), &self.parent, &self.decision_sha256)?,
             drawing: DurableStoreBoundOutcomeV1::recover(&drawing_store.parts_ref(), &self.drawing, &self.decision_sha256)?,
             value: DurableStoreBoundOutcomeV1::recover(&value_store.parts_ref(), &self.value, &self.decision_sha256)?,
-            decision: self.clone(),
+            decision: Box::new(self.clone()),
+            decision_pack: None,
         }))
     }
 }

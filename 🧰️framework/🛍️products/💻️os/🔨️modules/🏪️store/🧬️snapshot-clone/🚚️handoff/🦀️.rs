@@ -37,6 +37,7 @@ impl<T: RetainedClone> RetainedCloneCursorHandoff<T> {
 }
 
 impl<T: RetainedClone> ErasedSnapshotRetirement for RetainedCloneCursorHandoff<T> {
+    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if self.terminal {Ok(Default::default())}else{self.cursor()?.close_demands(body)}}
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.terminal {
             return Ok(RetainedCloneStep::Complete(Default::default()));

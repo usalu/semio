@@ -180,9 +180,9 @@ impl Puzzle2dFillRevalidateJob {
 
 impl Puzzle2dFillRevalidateJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         match self.outbox.phase(cx)? {
-            crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx),
+            crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
             crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {
                 self.outbox.retire_step(cx)?;
                 return Ok(None);
@@ -190,7 +190,7 @@ impl Puzzle2dFillRevalidateJob {
             crate::puzzle_job::OutboxPhase::Idle => {}
         }
         let turn = self.turn(cx);
-        self.outbox.settle(turn, cx)
+        self.outbox.settle(turn, cx).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
@@ -218,10 +218,12 @@ impl InteractiveJob for Puzzle2dFillRevalidateJob {
         });
     }
 
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            self.begin_close();
-            crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.close_owners, grant)
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+        semio_framework_job::close_original_nested_step(cx, |cx, _grant| {
+
+        self.begin_close();
+        crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.close_owners, cx)
+    
         })
     }
 

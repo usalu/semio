@@ -1,16 +1,34 @@
 use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation::*;
-use semio_s_fem_app_surface::{FemLoopMode, FemResultsAnimation, FemWaveform, ANIMATION_SPEED_MAXIMUM, ANIMATION_SPEED_MINIMUM, ANIMATION_TICK_MS};
+use semio_s_fem_app_surface::FemLoopMode;
+use semio_s_fem_app_surface::FemResultsAnimation;
+use semio_s_fem_app_surface::FemWaveform;
+use semio_s_fem_app_surface::ANIMATION_SPEED_MAXIMUM;
+use semio_s_fem_app_surface::ANIMATION_SPEED_MINIMUM;
+use semio_s_fem_app_surface::ANIMATION_TICK_MS;
 use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results;
-use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::transient::addressed_to;
-use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::transient::FemPlaybackClock;
-use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::transient::FemResultsWindowTransientOwner;
+use semio_s_artifact_fem_2d_results_state::transient::addressed_to;
+use semio_s_artifact_fem_2d_results_state::transient::FemPlaybackClock;
+use semio_s_artifact_fem_2d_results_state::transient::FemResultsWindowTransientOwner;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, NoConfig, NoConfigMutation, ViewModel, WindowConfigMutation, WindowTransientMutation};
-use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results;
-use crate::context::{close, dispatch, fem2d_mounted_app, Fem2dApp};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Effect;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::ViewModel;
+use semio_framework_plugin::WindowConfigMutation;
+use semio_framework_plugin::WindowTransientMutation;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
+use crate::context::close;
+use crate::context::dispatch;
+use crate::context::fem2d_mounted_app;
+use crate::context::Fem2dApp;
 use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand;
-use semio_framework_plugin::{Effect, InvocationResult, ViewModel, ViewWindowInstance};
+use semio_framework_plugin::InvocationResult;
+use semio_framework_plugin::ViewWindowInstance;
 
 fn animation(command: SetResultAnimation) -> Fem2dCommand {
     Fem2dCommand::SetResultAnimation(command)
@@ -19,7 +37,7 @@ fn animation(command: SetResultAnimation) -> Fem2dCommand {
 /// 🔁️ Drives the publication the dispatch opened all the way into the window-config store, the way
 /// the plugin host's own continuation does — a read before the settle would see the PREVIOUS frame.
 async fn settle(app: &mut Fem2dApp) -> Vec<Effect> {
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation").effects
+    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation").effects
 }
 
 /// 🔁️ How many playback re-arms one gesture asked the host for. Counted off BOTH the dispatch's own

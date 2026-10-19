@@ -21,12 +21,13 @@ fn parse_epw_field<T: std::str::FromStr>(value: &str, field: &str) -> Result<T, 
 /// EPW's `hour` column is 1..24 (hour-ending); converted here to a 0..23 index.
 pub fn weather_record(r: &EpwRecord) -> Result<WeatherRecord, Error> {
     let hour_1_24: u8 = parse_epw_field(&r.hour, "hour")?;
+    if !(1..=24).contains(&hour_1_24) { return Err(Error::fatal("EPW: hour-ending source hour must be in1..24.")); }
     let relative_humidity: f64 = parse_epw_field::<f64>(&r.relative_humidity, "relativeHumidity")? / 100.0;
     Ok(WeatherRecord {
         year: parse_epw_field(&r.year, "year")?,
         month: parse_epw_field(&r.month, "month")?,
         day: parse_epw_field(&r.day, "day")?,
-        hour: hour_1_24.saturating_sub(1),
+        hour: hour_1_24 - 1,
         minute: parse_epw_field(&r.minute, "minute")?,
         dry_bulb_c: parse_epw_field(&r.dry_bulb_temp, "dryBulbTemp")?,
         dew_point_c: parse_epw_field(&r.dew_point_temp, "dewPointTemp")?,
@@ -38,7 +39,7 @@ pub fn weather_record(r: &EpwRecord) -> Result<WeatherRecord, Error> {
         diffuse_horizontal_irradiance_w_m2: parse_epw_field(&r.diffuse_horizontal_radiation, "diffuseHorizontalRadiation")?,
         horizontal_infrared_w_m2: parse_epw_field(&r.horizontal_infrared_radiation, "horizontalInfraredRadiation")?,
         precipitation_mm: parse_epw_field(&r.liquid_precip_depth, "liquidPrecipDepth")?,
-        snow_depth_mm: parse_epw_field(&r.snow_depth, "snowDepth")?,
+        snow_depth_mm: parse_epw_field::<f64>(&r.snow_depth, "snowDepth")? * 10.0,
     })
 }
 
@@ -65,24 +66,33 @@ pub fn from_snapshot(snapshot: &EpwSnapshot) -> Result<WeatherData, Error> {
         return Err(Error::fatal("EPW: no data records"));
     }
 
-    Ok(WeatherData { location, latitude_deg, longitude_deg, elevation_m, time_zone_hours, records })
+    if snapshot.data_periods.records_per_hour != 1 { return Err(Error::fatal("EPW: simulation weather requires one hourly source record.")); }
+    let mut dated = None;
+    for period in &snapshot.data_periods.periods {
+        let start=period.start_date.split('/').count()==3;let end=period.end_date.split('/').count()==3;
+        if start!=end||dated.is_some_and(|dated|dated!=start){return Err(Error::fatal("EPW: DATA PERIODS mixes actual-date and typical-year bounds."));}
+        dated=Some(start);
+    }
+    let calendar=match dated{Some(true)=>crate::site::WeatherCalendar::ActualDates,Some(false)=>crate::site::WeatherCalendar::TypicalYear,None=>return Err(Error::fatal("EPW: DATA PERIODS has no authored calendar bounds."))};
+    Ok(WeatherData { calendar, location, latitude_deg, longitude_deg, elevation_m, time_zone_hours, records })
 }
 
-/// 🏛️ Runs a BESTEST case after decoding its authored EPW input.
-pub fn run_bestest(case: &str, epw_text: &str, warmup_days: u32) -> Result<crate::results::Results, Diagnostics> {
+/// 🫴️ Parsing faults retain their diagnostic while admitted weather failures retain the complete original owner.
+#[derive(Debug)]
+pub enum BestestJobFailure{Parse(Diagnostics),Admission(crate::bestest::BestestJobFailure)}
+
+/// 🏛️ Prepares a caller-owned BESTEST job from its authored EPW input.
+pub fn bestest_job(operation:crate::bestest::Operation,case: &str, epw_text: &str, warmup_days: u32) -> Result<crate::bestest::EnergyJob, BestestJobFailure> {
     let weather = parse(epw_text).map_err(|error| {
         let mut diagnostics = Diagnostics::default();
         diagnostics.push(error);
-        diagnostics
+        BestestJobFailure::Parse(diagnostics)
     })?;
-    crate::bestest::run(case, weather, warmup_days)
+    crate::bestest::simulation_job(operation,case,weather,warmup_days).map_err(BestestJobFailure::Admission)
 }
 
-/// 📊 Runs an authored EPW input and projects the resulting BESTEST report.
-pub fn results_report_json(case: &str, epw_text: &str, epw_file: &str, epw_sha256: &str, warmup_days: u32) -> Result<String, String> {
-    let weather = parse(epw_text).map_err(|error| error.message)?;
-    crate::bestest::results_report_json(case, weather, epw_file, epw_sha256, warmup_days)
-}
+/// 📊 Projects already completed results; simulation remains with its original caller.
+pub fn results_report_json(case:&str,results:&crate::results::Results,epw_file:&str,epw_sha256:&str)->String{crate::bestest::results_report_json(case,results,epw_file,epw_sha256)}
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

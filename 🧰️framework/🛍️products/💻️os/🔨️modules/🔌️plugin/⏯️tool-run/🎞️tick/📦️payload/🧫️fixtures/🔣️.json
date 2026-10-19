@@ -1,0 +1,1 @@
+{"schema":"semio.plugin.tick-payload-sources/v1","sources":["writer","native"],"payloadBytes":32769,"byte":120,"cancelCuts":[0,1,8,64,256,"complete"],"grant":[1,4096,65536,262144,4096]}

@@ -4,8 +4,12 @@
 //! camera and display setting belongs to that exact window instance, while engagement and candidate
 //! scratch belongs to its transient owner.
 
-use semio_framework_plugin::{WorldProjectionConfig, WorldSunConfig};
-use std::collections::{BTreeMap, HashMap};
+use semio_framework_plugin::WorldProjectionConfig;
+
+use semio_framework_plugin::WorldSunConfig;
+use std::collections::BTreeMap;
+/// ⚖️ Published kind-weight dictionaries own first-party fixed pages across native admission and retirement.
+pub type Puzzle5dKindWeights = semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, f64>;
 
 //#region 🔖️Defaults
 fn one_f64() -> f64 {
@@ -212,9 +216,9 @@ pub struct Puzzle5dRuntime {
     #[value(default)]
     pub engagement_input_by_window: BTreeMap<String, String>,
     #[value(default)]
-    pub object_kind_weights: HashMap<String, f64>,
+    pub object_kind_weights: Puzzle5dKindWeights,
     #[value(default)]
-    pub vortex_kind_weights: HashMap<String, f64>,
+    pub vortex_kind_weights: Puzzle5dKindWeights,
     #[value(default)]
     pub sun: WorldSunConfig,
     /// 🧊️ Volume-Brush voxel extent in grid-spacing units, `[w, d, h]`, each clamped to `[1, 64]` —
@@ -250,8 +254,8 @@ impl Default for Puzzle5dRuntime {
             transform_move: true,
             transform_rotate: true,
             engagement_input_by_window: BTreeMap::new(),
-            object_kind_weights: HashMap::new(),
-            vortex_kind_weights: HashMap::new(),
+            object_kind_weights: Puzzle5dKindWeights::new(),
+            vortex_kind_weights: Puzzle5dKindWeights::new(),
             sun: WorldSunConfig::default(),
             voxel_dims: default_voxel_dims(),
         }
@@ -272,9 +276,9 @@ pub struct Puzzle5dConfig {
     #[value(default = "default_chunk_size")]
     pub chunk_size: f64,
     #[value(default)]
-    pub object_kind_weights: HashMap<String, f64>,
+    pub object_kind_weights: Puzzle5dKindWeights,
     #[value(default)]
-    pub vortex_kind_weights: HashMap<String, f64>,
+    pub vortex_kind_weights: Puzzle5dKindWeights,
 }
 
 impl Default for Puzzle5dConfig {
@@ -284,8 +288,8 @@ impl Default for Puzzle5dConfig {
             contact_tolerance: default_contact_tolerance(),
             proximity_radius: default_proximity_radius(),
             chunk_size: default_chunk_size(),
-            object_kind_weights: HashMap::new(),
-            vortex_kind_weights: HashMap::new(),
+            object_kind_weights: Puzzle5dKindWeights::new(),
+            vortex_kind_weights: Puzzle5dKindWeights::new(),
         }
     }
 }
@@ -331,9 +335,9 @@ pub struct Puzzle5dConfigDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub chunk_size: Option<f64>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub object_kind_weights: Option<HashMap<String, f64>>,
+    pub object_kind_weights: Option<Puzzle5dKindWeights>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub vortex_kind_weights: Option<HashMap<String, f64>>,
+    pub vortex_kind_weights: Option<Puzzle5dKindWeights>,
 }
 
 impl Puzzle5dConfigDiff {
@@ -352,28 +356,11 @@ impl Puzzle5dConfigDiff {
 }
 
 impl protocol::MutationDiff<Puzzle5dConfig> for Puzzle5dConfigDiff {
-    fn apply(&self, base: &Puzzle5dConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Puzzle5dConfig> {
-        let mut next = base.clone();
-        if let Some(value) = &self.fill_count {
-            next.fill_count = *value;
-        }
-        if let Some(value) = &self.contact_tolerance {
-            next.contact_tolerance = *value;
-        }
-        if let Some(value) = &self.proximity_radius {
-            next.proximity_radius = *value;
-        }
-        if let Some(value) = &self.chunk_size {
-            next.chunk_size = *value;
-        }
-        if let Some(value) = &self.object_kind_weights {
-            next.object_kind_weights = value.clone();
-        }
-        if let Some(value) = &self.vortex_kind_weights {
-            next.vortex_kind_weights = value.clone();
-        }
-        Ok(next)
-    }
+
+
+}
+
+impl protocol::ColdMutationDiff<Puzzle5dConfig> for Puzzle5dConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.fill_count.is_some() {
             self.fill_count = other.fill_count;
@@ -394,14 +381,40 @@ impl protocol::MutationDiff<Puzzle5dConfig> for Puzzle5dConfigDiff {
             self.vortex_kind_weights = other.vortex_kind_weights;
         }
     }
+
+    fn apply(&self, next: &mut Puzzle5dConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        if let Some(value) = &self.fill_count {
+            next.fill_count = *value;
+        }
+        if let Some(value) = &self.contact_tolerance {
+            next.contact_tolerance = *value;
+        }
+        if let Some(value) = &self.proximity_radius {
+            next.proximity_radius = *value;
+        }
+        if let Some(value) = &self.chunk_size {
+            next.chunk_size = *value;
+        }
+        if let Some(value) = &self.object_kind_weights {
+            next.object_kind_weights = value.clone();
+        }
+        if let Some(value) = &self.vortex_kind_weights {
+            next.vortex_kind_weights = value.clone();
+        }
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<Puzzle5dConfig> for Puzzle5dConfigDiff {
-    fn inverse(&self, base: &Puzzle5dConfig) -> Self {
-        self.restoring(base)
-    }
+
     fn is_empty(&self) -> bool {
         self.fill_count.is_none() && self.contact_tolerance.is_none() && self.proximity_radius.is_none() && self.chunk_size.is_none() && self.object_kind_weights.is_none() && self.vortex_kind_weights.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Puzzle5dConfig> for Puzzle5dConfigDiff {
+    fn inverse(&self, base: &Puzzle5dConfig) -> Self {
+        self.restoring(base)
     }
 }
 
@@ -468,14 +481,14 @@ pub struct Puzzle5dConfigSetChunkSize {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct Puzzle5dConfigSetObjectKindWeights {
-    pub value: HashMap<String, f64>,
+    pub value: Puzzle5dKindWeights,
 }
 
 /// 🎚️ Payload of [`Puzzle5dConfigMutation::SetVortexKindWeights`]; the record keeps the variant's wire fields byte-identical.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct Puzzle5dConfigSetVortexKindWeights {
-    pub value: HashMap<String, f64>,
+    pub value: Puzzle5dKindWeights,
 }
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -512,6 +525,13 @@ impl protocol::Mutation<Puzzle5dConfig> for Puzzle5dConfigMutation {
         }
     }
 
+
+
+
+}
+
+impl protocol::ColdMutation<Puzzle5dConfig> for Puzzle5dConfigMutation {
+    type ReferenceDiff = Puzzle5dConfigDiff;
     fn diff(&self, base: &Puzzle5dConfig) -> protocol::MutationOutcome<Puzzle5dConfigDiff> {
         let diff = match self {
             Self::SetFillCount(Puzzle5dConfigSetFillCount{ value }) => Puzzle5dConfigDiff { fill_count: (value != &base.fill_count).then_some(*value), ..Default::default() },
@@ -526,7 +546,6 @@ impl protocol::Mutation<Puzzle5dConfig> for Puzzle5dConfigMutation {
         }
         protocol::MutationOutcome::new(diff)
     }
-
     fn inverse(&self, base: &Puzzle5dConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
             Self::SetFillCount(Puzzle5dConfigSetFillCount{ .. }) => Self::SetFillCount(Puzzle5dConfigSetFillCount{ value: base.fill_count }),

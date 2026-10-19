@@ -1,0 +1,218 @@
+{
+  "version": 1,
+  "lane": 15,
+  "fragmentHeaderBytes": 5,
+  "maximumPageBytes": 4096,
+  "tokenFields": [
+    "receiver",
+    "operation",
+    "generation",
+    "sequence",
+    "attempt"
+  ],
+  "retention": "original-until-exact-ack-and-funded-close",
+  "terminalAfterDiagnostics": true,
+  "cases": [
+    {
+      "name": "plain-warning",
+      "code": "interaction.target-missing",
+      "severity": "warning",
+      "pattern": "Target is unavailable.",
+      "repeat": 1,
+      "span": {
+        "line": 1,
+        "column": 3,
+        "length": 5
+      },
+      "scope": {},
+      "expected": null
+    },
+    {
+      "name": "escaped-expected",
+      "code": "interaction.unknown-verb",
+      "severity": "error",
+      "pattern": "\"pick\"\n🧩\\",
+      "repeat": 1,
+      "span": {
+        "line": 2,
+        "column": 7,
+        "length": 1
+      },
+      "scope": {
+        "pluginId": "fem",
+        "appId": "fem2d",
+        "instanceId": "18446744073709551615",
+        "module": "model",
+        "bodyKey": "entity/🧩"
+      },
+      "expected": {
+        "tokens": [
+          "node",
+          "element"
+        ],
+        "keywords": [
+          "select"
+        ],
+        "keys": [
+          "id"
+        ]
+      }
+    },
+    {
+      "name": "multiple-original-windows",
+      "code": "interaction.invalid-selection",
+      "severity": "error",
+      "pattern": "🧩\"\n",
+      "repeat": 2048,
+      "span": {
+        "line": 1,
+        "column": 1,
+        "length": 0
+      },
+      "scope": {
+        "pluginId": "fem"
+      },
+      "expected": {
+        "tokens": [],
+        "keywords": [],
+        "keys": []
+      }
+    }
+  ],
+  "cancelFrontiers": [
+    0,
+    1,
+    3,
+    17,
+    79
+  ],
+  "rejectedAckFields": [
+    "receiver",
+    "operation",
+    "generation",
+    "sequence",
+    "attempt"
+  ],
+  "host": {
+    "cuts": [
+      1,
+      3,
+      127,
+      4091
+    ],
+    "maximumBytes": 65536,
+    "maximumNodes": 4096,
+    "maximumDepth": 8,
+    "chunk": 256,
+    "rejectedBindings": [
+      "receiver",
+      "operation",
+      "generation",
+      "row",
+      "sequence"
+    ],
+    "replay": "exact-page-is-idempotent",
+    "admissionFrontiers": [
+      "concurrent-birth",
+      "terminal-during-birth",
+      "cancel-during-birth",
+      "close-during-birth"
+    ],
+    "observers": {
+      "maximumListeners": 64,
+      "receiver": 1,
+      "capacity": 3,
+      "steps": [
+        {
+          "action": "subscribe",
+          "observer": "broken"
+        },
+        {
+          "action": "subscribe",
+          "observer": "survivor"
+        },
+        {
+          "action": "subscribe",
+          "observer": "self-removing"
+        },
+        {
+          "action": "publish",
+          "receipt": 1,
+          "delivered": [
+            "survivor",
+            "self-removing"
+          ],
+          "refused": [
+            "broken"
+          ]
+        },
+        {
+          "action": "subscribe",
+          "observer": "late"
+        },
+        {
+          "action": "publish",
+          "receipt": 2,
+          "delivered": [
+            "survivor",
+            "late"
+          ],
+          "refused": [
+            "broken"
+          ]
+        },
+        {
+          "action": "unsubscribe",
+          "observer": "broken"
+        },
+        {
+          "action": "publish",
+          "receipt": 3,
+          "delivered": [
+            "survivor",
+            "late"
+          ],
+          "refused": []
+        }
+      ]
+    }
+  },
+  "originalDriver": {
+    "maximumCopyBytes": 4096,
+    "maximumDepth": 4096,
+    "maximumReleaseBytes": 262144,
+    "maximumItems": 1,
+    "maximumCapacityBytes": 4096
+  },
+  "retainedPage": {
+    "capacity": 4096,
+    "initializeBytes": 2048,
+    "steps": [
+      "allocate-original",
+      "initialize-original",
+      "encode-original",
+      "move-original-page",
+      "seal-original",
+      "project-original",
+      "close-receiver",
+      "exact-ack",
+      "close-original"
+    ],
+    "ordinaryClone": false
+  },
+  "delivery": {
+    "wire": "immutable-header-and-original-body",
+    "actorMaximumCapacityBytes": 4096,
+    "copyBytes": 4096,
+    "steps": [
+      "capture-original-projection",
+      "frame-original-header",
+      "transfer-original-descriptor",
+      "copy-header-under-receiver-grant",
+      "copy-original-body-under-receiver-grant",
+      "close-projection-before-output"
+    ],
+    "physicalBodyCopy": false,
+    "laneTag": 15
+  }
+}

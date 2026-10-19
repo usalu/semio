@@ -9,6 +9,8 @@ impl JsonInputWriter<'_,'_,'_>{
 }
 pub(super) struct JsonBackingOwner{pub(super) bytes:std::mem::ManuallyDrop<Option<Vec<u8>>>}
 impl semio_framework_value::ErasedSnapshotRetirement for JsonBackingOwner{
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Ok(semio_framework_value::RetirementDemand{copy_bytes:if self.bytes.is_some(){size_of::<Option<Vec<u8>>>()}else{0},release_bytes:self.bytes.as_ref().map_or(0,Vec::capacity),depth:usize::from(self.bytes.is_some()),..Default::default()})}
+
     fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError>{use semio_framework_value::retained_clone::{RetainedCloneStep,RetainedCloneProgress};let empty=RetainedCloneProgress::default();if self.bytes.is_none(){return Ok(RetainedCloneStep::Complete(empty));}let release=self.bytes.as_ref().unwrap().capacity();let copy=size_of::<Option<Vec<u8>>>();if grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_release_bytes<release{return Ok(RetainedCloneStep::Progress(empty));}if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"host JSON release requires original depth"));}drop(self.bytes.take());Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:copy,released_bytes:release,..empty}))}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(if self.bytes.is_some(){size_of::<Option<Vec<u8>>>()}else{0})}
     fn next_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}

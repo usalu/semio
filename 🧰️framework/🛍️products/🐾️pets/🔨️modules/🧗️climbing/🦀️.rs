@@ -126,7 +126,7 @@ pub const LADDER_FLAT: f64 = 0.4;
 pub const LADDER_SHORT: f64 = 0.8;
 
 /// 🦒️ The greatest rise of a ladder as a fraction of the height.
-pub const LADDER_TALL: f64 = 3.6;
+pub const LADDER_TALL: f64 = 8.0;
 
 /// 👇️ How far under the rim a ladder touches its wall, in pixels (0.15 heights of a 48 px pet): a measure of the ladder, the same for whoever climbs it.
 pub const LADDER_TUCK: f64 = 7.0;
@@ -198,7 +198,7 @@ pub const HOOK_RETURN: f64 = 1280.0;
 pub const ROPE_SHORT: f64 = 0.8;
 
 /// 🧶️ The longest rope as a fraction of the height.
-pub const ROPE_LONG: f64 = 3.2;
+pub const ROPE_LONG: f64 = 8.0;
 
 /// 🌄️ The least rise of a rope per pixel of its length (about 25°): a flatter rope would scrape the face of a card.
 pub const ROPE_ELEVATION: f64 = 0.42;
@@ -638,13 +638,14 @@ fn span(from: Point, to: Point) -> f64 {
 }
 
 /// 🧍️ The ladder with its foot at `x` on `low` and its top `LADDER_TUCK` under the top of `pitch`, or `None` when it cannot stand so: the rise within `LADDER_SHORT`…`LADDER_TALL` heights, the contact on the pitch, the footprint on the perch, the lean within `LADDER_STEEP`…`LADDER_FLAT` on the air side, and its line clear of every keep-out grown by `LADDER_GIRTH`.
-fn stood(low: &Perch, pitch: &Pitch, x: f64, keepouts: &[Rect], size: Size) -> Option<LadderStand> {
-    let top = Point { x: pitch.x, y: pitch.y0 + LADDER_TUCK };
+fn stood(low: &Perch, pitch: &Pitch, x: f64, y: f64, keepouts: &[Rect], size: Size) -> Option<LadderStand> {
+    let top = Point { x: pitch.x, y };
     let foot = Point { x, y: low.y };
     let rise = foot.y - top.y;
     let lean = (x - pitch.x) * pitch.side.sign();
-    let fits = LADDER_SHORT * size.height <= rise && rise <= LADDER_TALL * size.height && top.y <= pitch.y1 && low.x0 + LADDER_FOOTING <= x && x <= low.x1 - LADDER_FOOTING && LADDER_STEEP * rise <= lean && lean <= LADDER_FLAT * rise;
-    (fits && sighted(foot, top, keepouts, LADDER_GIRTH, foot, top)).then(|| LadderStand { wall: pitch.wall.clone(), surface: low.surface.clone(), side: pitch.side, foot, top })
+    let fits = LADDER_SHORT * size.height <= rise && rise <= LADDER_TALL * size.height && pitch.y0 + LADDER_TUCK <= top.y && top.y <= pitch.y1 && low.x0 + LADDER_FOOTING <= x && x <= low.x1 - LADDER_FOOTING && LADDER_STEEP * rise <= lean && lean <= LADDER_FLAT * rise;
+    let kept: Vec<Rect> = keepouts.iter().copied().filter(|keepout| if pitch.side.sign() < 0.0 { keepout.x < pitch.x - WALL_LIP } else { keepout.x + keepout.width > pitch.x + WALL_LIP }).collect();
+    (fits && sighted(foot, top, &kept, LADDER_GIRTH, foot, top)).then(|| LadderStand { wall: pitch.wall.clone(), surface: low.surface.clone(), side: pitch.side, foot, top })
 }
 
 /// 🔨️ The ladder an actor of `size` raises on `low` against `pitch` to reach `high`, or `None`: `high` must crown the pitch, and the foot stands where the lean is `LADDER_LEAN`, or as near to that as the perch lets it.
@@ -653,22 +654,31 @@ pub fn ladder_for(low: &Perch, high: &Perch, pitch: &Pitch, keepouts: &[Rect], s
         return None;
     }
     let wanted = pitch.x + pitch.side.sign() * LADDER_LEAN * (low.y - (pitch.y0 + LADDER_TUCK));
-    stood(low, pitch, clamp(wanted, low.x0 + LADDER_FOOTING, low.x1 - LADDER_FOOTING), keepouts, size)
+    stood(low, pitch, clamp(wanted, low.x0 + LADDER_FOOTING, low.x1 - LADDER_FOOTING), pitch.y0 + LADDER_TUCK, keepouts, size)
 }
 
-/// 🩺️ The ladder as it stands after a survey, or `None` when it topples: its foot keeps its x on a perch of its surface that moved no more than `LADDER_SHIFT` up or down, its top follows a pitch of its wall that still has a perch on top, no farther than `LADDER_FOLLOW`, and it still stands by the rules of [`ladder_for`] for its owner's `size`.
+/// 🪵️ The shortest ladder raised from `low` to take hold of `pitch` at its lower end; its exit must put the climber's hands on the wall.
+pub fn ladder_to(low: &Perch, pitch: &Pitch, keepouts: &[Rect], size: Size) -> Option<LadderStand> {
+    let wanted = pitch.x + pitch.side.sign() * LADDER_LEAN * (low.y - pitch.y1);
+    let stand = stood(low, pitch, clamp(wanted, low.x0 + LADDER_FOOTING, low.x1 - LADDER_FOOTING), pitch.y1, keepouts, size)?;
+    clings(pitch, ladder_at(&stand, ladder_exit(&stand, size)).y, size).then_some(stand)
+}
+
+/// 🩺️ The ladder as it stands after a survey, or `None` when it topples: its foot keeps its x on a perch of its surface that moved no more than `LADDER_SHIFT` up or down, its top follows the corresponding pitch within `LADDER_FOLLOW`, and it still stands by the clearance rules of [`stood`] for its owner's `size`.
 pub fn ladder_holds(ladder: &LadderStand, perches: &[Perch], pitches: &[Pitch], keepouts: &[Rect], size: Size) -> Option<LadderStand> {
     for low in perches {
         if low.surface != ladder.surface || (low.y - ladder.foot.y).abs() > LADDER_SHIFT {
             continue;
         }
         for pitch in pitches {
-            if pitch.wall != ladder.wall || pitch.side != ladder.side || rim_for(pitch, perches, size).is_none() {
+            if pitch.wall != ladder.wall || pitch.side != ladder.side {
                 continue;
             }
-            if let Some(next) = stood(low, pitch, ladder.foot.x, keepouts, size) {
-                if span(ladder.top, next.top) <= LADDER_FOLLOW {
-                    return Some(next);
+            for top in [pitch.y0 + LADDER_TUCK, pitch.y1] {
+                if let Some(next) = stood(low, pitch, ladder.foot.x, top, keepouts, size) {
+                    if span(ladder.top, next.top) <= LADDER_FOLLOW {
+                        return Some(next);
+                    }
                 }
             }
         }
@@ -736,7 +746,7 @@ pub fn spill_of(ladder: &LadderStand, y: f64, size: Size) -> Option<Toss> {
 //#endregion 🔖️Ladders
 
 //#region 🔖️Rope
-/// 🔦️ The shot from `feet` at the point `x` of the edge of `perch`, or `None`: the actor faces the point, the muzzle is `MUZZLE_FORWARD` widths in front of the feet and `MUZZLE_HEIGHT` heights above them, the hook bites `HOOK_LIFT` above the edge; the rope must be `ROPE_SHORT`…`ROPE_LONG` heights long, rise at least `ROPE_ELEVATION` per pixel of its length and miss every keep-out grown by `ROPE_MARGIN`, except what lies under the hook. A rope no more slanted than `ZIP_SLANT` is reeled in straight, any other swings.
+/// 🔦️ The shot from `feet` at the point `x` of the edge of `perch`, or `None`: the actor faces the point, the muzzle is `MUZZLE_FORWARD` widths in front of the feet and `MUZZLE_HEIGHT` heights above them, the hook bites `HOOK_LIFT` above the edge; the rope must be `ROPE_SHORT`…`ROPE_LONG` heights long, rise at least `ROPE_ELEVATION` per pixel of its length and miss every keep-out grown by `ROPE_MARGIN`, except what lies under the hook. A rope no more slanted than `ZIP_SLANT` is reeled in straight; a wider one swings only when the vertical line beneath its hook clears the keep-outs.
 fn aimed(feet: Point, perch: &Perch, x: f64, keepouts: &[Rect], size: Size) -> Option<Shot> {
     let facing = if x < feet.x { Facing::Left } else { Facing::Right };
     let muzzle = Point { x: feet.x + facing.sign() * MUZZLE_FORWARD * size.width, y: feet.y - MUZZLE_HEIGHT * size.height };
@@ -746,12 +756,14 @@ fn aimed(feet: Point, perch: &Perch, x: f64, keepouts: &[Rect], size: Size) -> O
     let length = span(muzzle, hook);
     let under = Point { x, y: perch.y };
     let reaches = ROPE_SHORT * size.height <= length && length <= ROPE_LONG * size.height && rise >= ROPE_ELEVATION * length;
-    (reaches && sighted(muzzle, hook, keepouts, ROPE_MARGIN, under, under)).then(|| Shot { surface: perch.surface.clone(), facing, muzzle, hook, length, reel: if across <= ZIP_SLANT * rise { Reeling::Zip } else { Reeling::Swing } })
+    if !reaches || !sighted(muzzle, hook, keepouts, ROPE_MARGIN, under, under) { return None; }
+    let swings = across > ZIP_SLANT * rise && sighted(hook, Point { x, y: hook.y + length }, keepouts, ROPE_MARGIN, under, under);
+    Some(Shot { surface: perch.surface.clone(), facing, muzzle, hook, length, reel: if swings { Reeling::Swing } else { Reeling::Zip } })
 }
 
-/// 🎇️ The best shot of the grappling gun from `feet`, or `None` when no edge is in reach: of every perch at least `ROPE_RISE` heights above the feet the two ends, each half a width and `HOOK_INSET` inside, and the point between them nearest to the feet (the middle of a perch too narrow for that) are tried, and the shot with the least `length + ROPE_DETOUR × sideways distance` wins, the first one among equals.
+/// 🎇️ The best shot of the grappling gun from `feet`, or `None` when no edge is in reach: of every perch at least `ROPE_RISE` heights above the feet the two ends, each `HOOK_INSET` inside, and the point between them nearest to the feet (the middle of a perch too narrow for that) are tried, and the shot with the least `length + ROPE_DETOUR × sideways distance` wins, the first one among equals.
 pub fn shot_for(feet: Point, perches: &[Perch], keepouts: &[Rect], size: Size) -> Option<Shot> {
-    let inset = size.width / 2.0 + HOOK_INSET;
+    let inset = HOOK_INSET;
     let mut best = None;
     let mut least = f64::INFINITY;
     for perch in perches {
@@ -920,7 +932,7 @@ fn scaled<'a>(pitch: &'a Pitch, from: &Perch, to: &Perch, size: Size, grip: f64,
     None
 }
 
-/// 🗾️ The ways an actor of `size` that stands at `x` on `from` can take to `to` with its `gear` and its `grip`, most preferred first, or `None` when there is none: a ladder that stands between the two (for whoever owns any gear but a parachute), a wall line (gear `climb`; one leg per pitch it takes hold of), a ladder of its own raised against a wall `to` crowns (gear `ladder`, and only where none stands), a shot of its grappling gun at the edge of `to` (gear `grapple`) from where it stands or from the point of its perch nearest to an end or to the middle of `to`. Every leg is clear of the keep-outs; whether it is clear of the other actors is the stage's to judge.
+/// 🗾️ The ways an actor of `size` that stands at `x` on `from` can take to `to` with its `gear` and its `grip`, most preferred first, or `None` when there is none: a ladder that stands between the two (for whoever owns any gear but a parachute), a wall line (gear `climb`; one leg per pitch it takes hold of), a ladder of its own raised against a wall `to` crowns (gear `ladder`, and only where none stands), a shot of its grappling gun at the edge of `to` (gear `grapple`) from where it stands, the nearest target corners or middle, then progressively farther back by one body width while the rope can reach. Every leg is clear of the keep-outs; whether it is clear of the other actors is the stage's to judge.
 #[allow(clippy::too_many_arguments)]
 pub fn route_of<'a>(x: f64, from: &Perch, to: &Perch, gear: &[Gear], size: Size, grip: f64, pitches: &'a [Pitch], ladders: &'a [LadderStand], keepouts: &[Rect]) -> Option<Vec<Leg<'a>>> {
     let mut legs = Vec::new();
@@ -935,7 +947,12 @@ pub fn route_of<'a>(x: f64, from: &Perch, to: &Perch, gear: &[Gear], size: Size,
         legs.extend(pitches.iter().filter_map(|pitch| ladder_for(from, to, pitch, keepouts, size)).map(|ladder| Leg::Raise { at: ladder.foot.x, ladder }));
     }
     if gear.contains(&Gear::Grapple) {
-        let stands = [x, clamp(to.x0, from.x0, from.x1), clamp(to.x1, from.x0, from.x1), clamp((to.x0 + to.x1) / 2.0, from.x0, from.x1)];
+        let mut stands = vec![x, clamp(to.x0, from.x0, from.x1), clamp(to.x1, from.x0, from.x1), clamp((to.x0 + to.x1) / 2.0, from.x0, from.x1)];
+        let mut back = size.width;
+        while back <= ROPE_LONG * size.height {
+            stands.extend([clamp(to.x0 - back, from.x0, from.x1), clamp(to.x1 + back, from.x0, from.x1)]);
+            back += size.width;
+        }
         if let Some(leg) = stands.into_iter().find_map(|stand| shot_for(Point { x: stand, y: from.y }, std::slice::from_ref(to), keepouts, size).map(|shot| Leg::Grapple { at: stand, shot })) {
             legs.push(leg);
         }

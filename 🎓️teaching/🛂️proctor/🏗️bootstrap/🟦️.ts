@@ -1,28 +1,36 @@
-/** 🏗️ The development launcher of the proctor: build the `proctor` binary, run a private copy of it and remove the copy
- * once it exits.
- *
- * Cargo uplifts `proctor` as a hard link into the shared build directory, and Windows refuses to replace an executable
- * image while any link of it runs. A dev proctor started from Cargo's own file therefore made every later build of the
- * crate — `check`, `rebuild`, `test`, another agent's build — fail with `Access is denied`. The running process now only
- * ever holds its own copy under the git-ignored `.🧬semio/🎓️teaching/proctor-bin/`, one per run; the same code path runs
- * on Windows, macOS and Linux. The child shares the console, so Ctrl+C / Ctrl+Break / console close reach it directly
- * and it stops gracefully; the launcher outlives those signals, forwards them where POSIX signals exist, waits for the
- * child and deletes the copy (a copy left behind by a killed launcher is removed by the next run).
- *
- * {@link runProctor} is the whole launcher of one command; {@link buildProctor}, {@link launchProctor} and
- * {@link proctorReady} are its parts for a caller that runs the proctor beside something else (the site's local stack).
+/** 🏗️ Builds the proctor under original compiler authority and retains immutable executable custody through every child.
+ * The digest copy stays inside the bounded compiler image, so Windows never locks Cargo's mutable executable.
+ * {@link buildProctor} returns an owner that callers close after all consumers, including restarts, have drained.
+ * {@link launchProctor} stages an explicitly supplied external executable for diagnostic runs.
  *
  * @see ./🦀️.rs — the process entry of the binary
- * @see ../../🏛️architecture/❓️quiz/🧱️stack/🟦️.ts — the local stack of proctor and site
+ * @see ../../🏛️architecture/📚️course/🧱️stack/🟦️.ts — the local stack of proctor and site
  * @see ../README.md — the environment and the commands
  * @see https://doc.rust-lang.org/cargo/reference/external-tools.html#json-messages */
 import { spawn } from "node:child_process";
-import { randomUUID } from "node:crypto";
-import { chmodSync, closeSync, copyFileSync, existsSync, mkdirSync, openSync, readdirSync, renameSync, rmSync } from "node:fs";
+import { createHash, randomUUID } from "node:crypto";
+import { open } from "node:fs/promises";
+import { chmodSync, closeSync, copyFileSync, existsSync, lstatSync, mkdirSync, openSync, readdirSync, renameSync, rmSync } from "node:fs";
 import { constants } from "node:os";
 import { basename, dirname, join, resolve, sep } from "node:path";
 import { terminateOwnedChildTree } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { startNativeProgress } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { scriptInvocationEnvironment, requireIssuedScriptInvocationV1, type ScriptInvocation } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import { buildModeEnvironment, type BuildMode } from "../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import { buildCargoArtifacts, withCapturedCargoArtifactsTaskV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+import { CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
+import { requireNativeStoragePathV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import { pinExecutableArtifact } from "../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts";
+import { withResourceLeases, checkResourceLeaseControl } from "../../../🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import { captureOwnedCommandV1 } from "../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import { withRepositoryCompilerStoreV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+import { repositoryCargoArtifactBuildPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import { repositoryCargoPreparationStorageV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
+import { readNativeCallerAuthorityV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import { cargoWorkspacePreparationInvocationV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
+import { repositoryCargoNetworkV1, repositoryCargoCompilerInputsV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import buildSchema from "./🧬️schema/🔣️.json" with { type: "json" };
 import { cargoPackageClosure, type ManifestClosureOptions } from "./🕸️manifest-closure/🟦️.ts";
 
 /** 📦️ The crate that holds the binary. */
@@ -39,21 +47,21 @@ export const PROCTOR_DEV_PORT = "8791";
 /** 🗃️ Where a launcher keeps the private copies it runs, relative to the repository root. */
 export const PROCTOR_COPY_DIRECTORY = [".🧬semio", "🎓️teaching", "proctor-bin"] as const;
 
-/** 📚️ The catalog the dev site serves, relative to the repository root. */
-export const PROCTOR_DEV_CATALOG = ["🎓️teaching", "🏛️architecture", "❓️quiz", "🔣️.json"] as const;
+/** 📚️ The course the dev site serves, relative to the repository root. */
+export const PROCTOR_DEV_COURSE = ["🎓️teaching", "🏛️architecture", "📚️course", "🔣️.json"] as const;
 
 /** 🧺️ The data directory a dev proctor keeps unless `PROCTOR_DATA` names another, relative to the repository root
  * (git-ignored): the launcher's own, disposable development data. */
 export const PROCTOR_DEV_DATA_DIRECTORY = [".🧬semio", "🎓️teaching", "proctor-dev"] as const;
 
 /** 🗺️ The environment of a dev proctor: every `PROCTOR_*` the launcher set wins, the rest defaults to the dev port, the
- * git-ignored `.🧬semio/🎓️teaching/proctor-dev/` data directory and the architecture catalog. */
+ * git-ignored `.🧬semio/🎓️teaching/proctor-dev/` data directory and the architecture course. */
 export function proctorDevelopmentEnvironment(repoRoot: string, env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
   return {
     ...env,
     PROCTOR_PORT: env.PROCTOR_PORT ?? PROCTOR_DEV_PORT,
     PROCTOR_DATA: resolve(env.PROCTOR_DATA ?? join(repoRoot, ...PROCTOR_DEV_DATA_DIRECTORY)),
-    PROCTOR_CATALOG: resolve(env.PROCTOR_CATALOG ?? join(repoRoot, ...PROCTOR_DEV_CATALOG)),
+    PROCTOR_COURSE: resolve(env.PROCTOR_COURSE ?? join(repoRoot, ...PROCTOR_DEV_COURSE)),
   };
 }
 
@@ -203,19 +211,41 @@ export function proctorSelection(forwarded: readonly string[]): string[] {
   return selection;
 }
 
-/** 📚️ The catalog a `check` validates: the named one, else `PROCTOR_CATALOG`, else the dev catalog. */
-export function proctorCatalog(repoRoot: string, named?: string, env: NodeJS.ProcessEnv = process.env): string {
-  return resolve(named ?? env.PROCTOR_CATALOG ?? join(repoRoot, ...PROCTOR_DEV_CATALOG));
+/** 📚️ The course a `check` validates: the named one, else `PROCTOR_COURSE`, else the dev course. */
+export function proctorCourse(repoRoot: string, named?: string, env: NodeJS.ProcessEnv = process.env): string {
+  return resolve(named ?? env.PROCTOR_COURSE ?? join(repoRoot, ...PROCTOR_DEV_COURSE));
 }
 
-/** 🔎️ The executable of the `proctor` binary target among Cargo's JSON messages. */
-export function proctorExecutable(messages: string): string | undefined {
-  for (const line of messages.split(/\r?\n/u)) {
-    if (!line.startsWith("{")) continue;
-    const message = JSON.parse(line) as { reason?: string; target?: { name?: string; kind?: string[] }; executable?: string | null };
-    if (message.reason === "compiler-artifact" && message.target?.name === "proctor" && message.target.kind?.includes("bin") && message.executable) return message.executable;
-  }
-  return undefined;
+/** 🎼️ Admits the closed portable selection of the proctor's native compiler target. */
+export function proctorBuildPlan(value: unknown): { readonly mode: BuildMode; readonly arguments: readonly string[] } {
+  if (validateJsonSchemaSubset(buildSchema, value).length) throw Error("Closed proctor build intent required");
+  const { mode } = value as { mode: BuildMode };
+  return Object.freeze({ mode, arguments: Object.freeze(["--package", PROCTOR_PACKAGE, "--bin", "proctor", "--profile", mode]) });
+}
+
+/** 🎚️ Preserves the original caller's mode and refuses an attempted cross-mode build. */
+export function proctorBuildMode(value: unknown): BuildMode {
+  if (validateJsonSchemaSubset(buildSchema.definitions.ModeSelection, value).length) throw Error("Original proctor build mode required");
+  return (value as { readonly originalMode: BuildMode }).originalMode;
+}
+
+/** 📤️ A bounded executable byte reader whose lifetime belongs to its retained artifact callback. */
+export interface ProctorExecutable {
+  readonly platform: NodeJS.Platform;
+  readonly architecture: string;
+  readonly mode: BuildMode;
+  readonly bytes: number;
+  readonly signal: AbortSignal;
+  recheck(): Promise<void>;
+  chunks(): AsyncGenerator<Uint8Array>;
+}
+
+/** 🧊️ An immutable executable owner retained through every child and bounded export callback. */
+export interface ProctorArtifact {
+  readonly sources: readonly string[];
+  launch(args: readonly string[], env?: NodeJS.ProcessEnv, log?: string): ProctorProcess;
+  withExecutable<T>(consume: (executable: ProctorExecutable) => Promise<T>): Promise<T>;
+  close(): Promise<void>;
 }
 
 /** 🏗️ The repository's build entry, relative to the repository root: `bun <entry> repo cargo …` is `bun repo cargo …`. */
@@ -236,34 +266,106 @@ export function proctorBuildLaunch(repoRoot: string, env: NodeJS.ProcessEnv = pr
   };
 }
 
-/** 🏗️ Build the binary through {@link proctorBuildLaunch} and return the path Cargo uplifted it to: diagnostics go to the terminal, a progress line follows
- * every ten seconds (a first build takes minutes), and an aborted `signal` ends the whole cargo tree. `profile` is
- * Cargo's `dev` build (what the dev launcher runs) or its `release` build (what is deployed and what capacity is
- * measured on). */
-export async function buildProctor(repoRoot: string, env: NodeJS.ProcessEnv = process.env, signal?: AbortSignal, profile: "dev" | "release" = "dev"): Promise<string> {
-  if (signal?.aborted) throw new Error(`cargo build of ${PROCTOR_PACKAGE} cancelled`);
-  const launch = proctorBuildLaunch(repoRoot, env, profile);
-  const child = spawn(launch.command, launch.args, { cwd: launch.cwd, env: launch.env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32", windowsHide: true });
-  let messages = "";
-  child.stdout!.setEncoding("utf8").on("data", (chunk: string) => (messages += chunk));
-  child.stderr!.pipe(process.stderr, { end: false });
-  const cancel = (): void => terminateOwnedChildTree(child);
-  signal?.addEventListener("abort", cancel, { once: true });
-  const stopProgress = startNativeProgress("proctor build");
-  try {
-    const status = await new Promise<number | string>((accept) => {
-      child.once("error", (error) => accept(error.message));
-      child.once("close", (code, ended) => accept(code ?? ended ?? 1));
-    });
-    if (signal?.aborted) throw new Error(`cargo build of ${PROCTOR_PACKAGE} cancelled`);
-    if (status !== 0) throw new Error(`cargo build of ${PROCTOR_PACKAGE} failed (${status})`);
-  } finally {
-    stopProgress();
-    signal?.removeEventListener("abort", cancel);
-  }
-  const executable = proctorExecutable(messages);
-  if (!executable) throw new Error(`cargo build of ${PROCTOR_PACKAGE} reported no proctor executable`);
-  return executable;
+/** 🏗️ Builds with the original caller, then retains the charged compiler image through {@link proctorBuildLaunch} and immutable reader for all consumers. */
+export async function buildProctor(repoRoot: string, invocation: ScriptInvocation, env: NodeJS.ProcessEnv = process.env, signal?: AbortSignal, requestedMode?: BuildMode): Promise<ProctorArtifact> {
+  requireIssuedScriptInvocationV1(invocation);
+  const authority = readNativeCallerAuthorityV1(invocation.capabilities), mode = proctorBuildMode({ version: 1, originalMode: authority.original.buildMode, ...(requestedMode === undefined ? {} : { requestedMode }) });
+  const plan = proctorBuildPlan({ version: 1, mode }), root = resolve(repoRoot), manifest = join(root, TEACHING_WORKSPACE, "🛂️proctor", "📦️packages", "🦀️rust", "Cargo.toml");
+  const control = scriptCompilerAdmissionControlV1(invocation, "proctor:build", 0, signal), environment = scriptInvocationEnvironment(invocation, buildModeEnvironment(mode, env));
+  const network = repositoryCargoNetworkV1(invocation, root), policy = repositoryCargoArtifactBuildPolicyV1(root, root, environment), leaseDirectory = policy.leaseDirectory;
+  let publish!: (artifact: ProctorArtifact) => void, fail!: (error: unknown) => void, release!: () => void;
+  const ready = new Promise<ProctorArtifact>((resolve, reject) => { publish = resolve; fail = reject; });
+  const released = new Promise<void>(resolve => { release = resolve; });
+  const lifetime = withRepositoryCompilerStoreV1(root, mode, control, environment, async (store, control) => {
+    const output = requireNativeStoragePathV1(store.root, join(store.root, "proctor-build", randomUUID())), args = [...plan.arguments];
+    const pinned = requireNativeStoragePathV1(store.root, join(store.root, "proctor-cli", mode, basename(output)));
+    try {
+      const preparedEnvironment = { ...store.environment, CARGO_NET_OFFLINE: String(network.offline) }, preparation = cargoWorkspacePreparationInvocationV1({ ...repositoryCargoPreparationStorageV1(root), directory: requireNativeStoragePathV1(store.root, join(store.buildDirectory, "preparation")) }, root, ["build", "--manifest-path", manifest, ...args], root, preparedEnvironment);
+      if (preparation) {
+        await store.storage.recheck();
+        const diagnostics = await captureOwnedCommandV1(preparation.command, [...preparation.args], preparation.cwd, { control, env: preparation.environment, output: { maximumBytes: 16777216, maximumLines: 65536 } });
+        if (diagnostics) process.stderr.write(diagnostics);
+        await store.storage.recheck();
+      }
+      const sources = await proctorSourceDirectories(root, { signal: control.signal });
+      let executable: string | undefined;
+      try {
+        await buildCargoArtifacts(manifest, args, { ...policy, buildDirectory: store.buildDirectory, captureDirectory: store.captureDirectory }, {
+          control, storage: store.storage, sourceBoundary: store.sourceBoundary, environment: preparedEnvironment, output,
+          maximumObservationBytes: Math.min(CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1, authority.transport.maximumBytes),
+          withCargoInputs: repositoryCargoCompilerInputsV1({ invocation, consumption: { kind: "compiler", producer: "artifact", operation: "build" }, workspace: root, network, control, storage: store.storage }),
+          consume: capture => withCapturedCargoArtifactsTaskV1(capture, async view => {
+            const source = view.files.get(process.platform === "win32" ? "proctor.exe" : "proctor");
+            if (!source) throw Error("Completed proctor executable required");
+            await view.recheck();
+            executable = await pinExecutableArtifact(source, pinned, "teaching:proctor:" + mode, { control: view.control, signal: view.control.signal, leaseDirectory });
+          }),
+        });
+      } finally {
+        rmSync(output, { recursive: true, force: true });
+      }
+      if (!executable) throw Error("Retained proctor executable required");
+      const built = { executable, sources };
+      await withResourceLeases({ directory: leaseDirectory, control, signal: control.signal, resources: [{ resource: "artifact:" + dirname(built.executable), mode: "shared" }] }, async () => {
+        await store.storage.recheck();
+        const children = new Set<ProctorProcess>();
+        const consumers = new Set<Promise<unknown>>();
+        let closing: Promise<void> | undefined;
+        const artifact: ProctorArtifact = Object.freeze({ sources: Object.freeze(built.sources), launch: (args: readonly string[], childEnvironment = env, log?: string) => {
+          if (closing) throw Error("Proctor artifact is closing");
+          checkResourceLeaseControl(control);
+          const child = launchProctorProcess(built.executable, root, args, scriptInvocationEnvironment(invocation, childEnvironment), log);
+          children.add(child);
+          void child.exited.then(() => children.delete(child), () => children.delete(child));
+          return child;
+        }, withExecutable: <T>(consume: (executable: ProctorExecutable) => Promise<T>): Promise<T> => {
+          if (closing) return Promise.reject(Error("Proctor artifact is closing"));
+          const operation = (async () => {
+            checkResourceLeaseControl(control); await store.storage.recheck();
+            const facts = lstatSync(built.executable), readers = new Set<AsyncGenerator<Uint8Array>>();
+            let active = true;
+            const recheck = async (): Promise<void> => { if (!active) throw Error("Proctor executable export retired"); checkResourceLeaseControl(control); await store.storage.recheck(); };
+            const executable: ProctorExecutable = Object.freeze({ platform: process.platform, architecture: process.arch, mode, bytes: facts.size, signal: control.signal, recheck, chunks: () => {
+              const reader = (async function* (): AsyncGenerator<Uint8Array> {
+                await recheck();
+                const file = await open(built.executable, "r");
+                try {
+                  const digest = createHash("sha256"), before = await file.stat();
+                  if (before.dev !== facts.dev || before.ino !== facts.ino || before.size !== facts.size) throw Error("Proctor executable changed before export");
+                  let bytes = 0, chunks = 0;
+                  for (;;) { if (!active) throw Error("Proctor executable export retired"); checkResourceLeaseControl(control); const chunk = Buffer.allocUnsafe(65536), row = await file.read(chunk, 0, chunk.length, null); if (!row.bytesRead) break; bytes += row.bytesRead; if (bytes > facts.size) throw Error("Proctor executable exceeded its retained size"); const output = chunk.subarray(0, row.bytesRead); digest.update(output); yield output; if (++chunks % 64 === 0) { await control.publish({ resource: "proctor:executable-export", mode: "shared", elapsedMs: 0 }); await control.yieldContinuation(); } }
+                  if (bytes !== facts.size || digest.digest("hex") !== basename(dirname(built.executable))) throw Error("Proctor executable bytes changed during export");
+                  await recheck();
+                } finally { await file.close(); }
+              })();
+              readers.add(reader); return reader;
+            } });
+            try { const result = await consume(executable); await recheck(); return result; }
+            finally { active = false; const closed = await Promise.allSettled([...readers].map(reader => reader.return(undefined))); const failures = closed.filter(row => row.status === "rejected").map(row => row.reason); if (failures.length) throw new AggregateError(failures, "Proctor executable exports did not close cleanly"); }
+          })();
+          consumers.add(operation); void operation.then(() => consumers.delete(operation), () => consumers.delete(operation));
+          return operation;
+        }, close: () => closing ??= (async () => {
+          const outcomes = await Promise.allSettled([...[...children].map(child => child.stop()), ...consumers]);
+          release();
+          await lifetime;
+          const failures = outcomes.filter(row => row.status === "rejected").map(row => row.reason);
+          if (failures.length) throw new AggregateError(failures, "Proctor processes did not settle cleanly");
+        })() });
+        const cancel = (): void => { void artifact.close().catch(() => undefined); };
+        const remaining = checkResourceLeaseControl(control), deadline = remaining === null ? undefined : setTimeout(cancel, Math.min(remaining, 2147483647));
+        control.signal.addEventListener("abort", cancel, { once: true });
+        try {
+          publish(artifact);
+          if (control.signal.aborted) cancel();
+          await released;
+          await store.storage.recheck();
+        } finally { clearTimeout(deadline); control.signal.removeEventListener("abort", cancel); }
+      });
+    } finally { rmSync(requireNativeStoragePathV1(store.root, pinned), { recursive: true, force: true }); }
+  });
+  void lifetime.catch(fail);
+  return ready;
 }
 
 /** 🗂️ The directory a package's sources live in: the owner whose `📦️packages/<language>` folder holds the manifest
@@ -273,10 +375,36 @@ function packageRoot(manifest: string): string {
   return basename(dirname(directory)) === "📦️packages" ? dirname(dirname(directory)) : directory;
 }
 
-/** 🗂️ The directories the `proctor` binary is built from: the root of every package of this repository it depends on
- * to build (as the teaching workspace's manifests resolve, read with the repository's Cargo TOML parser), a directory
- * inside another left out. A `signal` stops the reading; `onManifest` follows it.
- * @see ./🕸️manifest-closure/🟦️.ts — the resolution */
+/** 🧾️ The Cargo metadata fields needed to project the local normal and build dependency owners. */
+interface CargoPackage {
+  readonly id: string;
+  readonly name: string;
+  readonly source: string | null;
+  readonly manifest_path: string;
+}
+
+export interface CargoMetadata {
+  readonly packages: readonly CargoPackage[];
+  readonly resolve: { readonly nodes: readonly { readonly id: string; readonly deps: readonly { readonly pkg: string; readonly dep_kinds: readonly { readonly kind: string | null }[] }[] }[] };
+}
+
+/** 🗂️ Projects local normal and build owners from an already prepared Cargo dependency graph. */
+export function proctorSourceRoots(metadata: CargoMetadata): string[] {
+  const packages = new Map(metadata.packages.map((cargoPackage) => [cargoPackage.id, cargoPackage]));
+  const nodes = new Map(metadata.resolve.nodes.map((node) => [node.id, node]));
+  const pending = metadata.packages.filter((cargoPackage) => cargoPackage.name === PROCTOR_PACKAGE).map((cargoPackage) => cargoPackage.id);
+  const reached = new Set<string>();
+  for (let id = pending.pop(); id !== undefined; id = pending.pop()) {
+    if (reached.has(id)) continue;
+    reached.add(id);
+    for (const dep of nodes.get(id)?.deps ?? []) if (dep.dep_kinds.some((kind) => kind.kind !== "dev")) pending.push(dep.pkg);
+  }
+  const roots = [...reached].flatMap((id) => (packages.get(id)?.source === null ? [packageRoot(packages.get(id)!.manifest_path)] : [])).sort();
+  return roots.filter((root, index) => !roots.slice(0, index).some((outer) => root.startsWith(`${outer}${sep}`) || root === outer));
+}
+
+/** 🗂️ Reads the proctor's local dependency owners from the prepared manifests with cancellation and progress.
+ * @see ./🕸️manifest-closure/🟦️.ts */
 export async function proctorSourceDirectories(repoRoot: string, options: ManifestClosureOptions = {}): Promise<string[]> {
   const crates = await cargoPackageClosure(join(repoRoot, TEACHING_WORKSPACE, "Cargo.toml"), PROCTOR_PACKAGE, options);
   const roots = crates.map((crate) => packageRoot(crate.manifest)).sort();
@@ -344,17 +472,28 @@ export interface ProctorProcess {
  * appended to the file `log`. */
 export function launchProctor(executable: string, repoRoot: string, args: readonly string[], env: NodeJS.ProcessEnv = process.env, log?: string): ProctorProcess {
   const copy = stagePrivateCopy(executable, join(repoRoot, ...PROCTOR_COPY_DIRECTORY), `${process.pid}-${randomUUID()}`);
+  return launchProctorProcess(copy, repoRoot, args, env, log, () => rmSync(copy, { force: true, maxRetries: 20, retryDelay: 100 }));
+}
+
+/** 🧵️ Drains a runtime process before releasing its executable or log descriptor. */
+function launchProctorProcess(executable: string, repoRoot: string, args: readonly string[], env: NodeJS.ProcessEnv, log?: string, cleanup?: () => void): ProctorProcess {
   const sink = log === undefined ? undefined : openSync(log, "a");
-  const child = spawn(copy, [...args], { cwd: repoRoot, env, stdio: sink === undefined ? "inherit" : ["ignore", sink, sink], windowsHide: true });
+  let child: ReturnType<typeof spawn>;
+  try {
+    child = spawn(executable, [...args], { cwd: repoRoot, env, stdio: sink === undefined ? "inherit" : ["ignore", sink, sink], windowsHide: true });
+  } catch (error) {
+    if (sink !== undefined) closeSync(sink);
+    cleanup?.();
+    throw error;
+  }
   const exited = new Promise<number>((accept) => {
     child.once("error", (error) => {
       console.error(`[ERROR] proctor ${args.join(" ")}: ${error.message}`);
-      accept(1);
     });
     child.once("close", (code, signal) => accept(code ?? (signal ? 128 : 1)));
   }).finally(() => {
     if (sink !== undefined) closeSync(sink);
-    rmSync(copy, { force: true, maxRetries: 20, retryDelay: 100 });
+    cleanup?.();
   });
   const interrupt = (signal: NodeJS.Signals): void => {
     if (process.platform !== "win32") child.kill(signal === "SIGINT" ? "SIGINT" : "SIGTERM");
@@ -376,8 +515,9 @@ export function launchProctor(executable: string, repoRoot: string, args: readon
 
 /** ▶️ Build the binary, run `proctor <args…>` from a private copy with `env`, wait for it and delete the copy; a
  * non-zero exit is an error naming the command. An interrupt during the build cancels it. */
-export async function runProctor(repoRoot: string, args: readonly string[], env: NodeJS.ProcessEnv = process.env): Promise<void> {
+export async function runProctor(repoRoot: string, invocation: ScriptInvocation, args: readonly string[], env: NodeJS.ProcessEnv = process.env): Promise<void> {
   const interruption = new AbortController();
+  let artifact: ProctorArtifact | undefined;
   let proctor: ProctorProcess | undefined;
   const forward = (signal: NodeJS.Signals): void => {
     interruption.abort();
@@ -385,16 +525,17 @@ export async function runProctor(repoRoot: string, args: readonly string[], env:
   };
   for (const signal of LAUNCHER_SIGNALS) process.on(signal, forward);
   try {
-    proctor = launchProctor(await buildProctor(repoRoot, env, interruption.signal), repoRoot, args, env);
+    artifact = await buildProctor(repoRoot, invocation, env, interruption.signal);
+    proctor = artifact.launch(args, env);
     const status = await proctor.exited;
     if (status !== 0) throw new Error(`proctor ${args.join(" ")} exited with status ${status}`);
   } finally {
-    for (const signal of LAUNCHER_SIGNALS) process.off(signal, forward);
+    try { await artifact?.close(); } finally { for (const signal of LAUNCHER_SIGNALS) process.off(signal, forward); }
   }
 }
 
 /** 🛠️ `dev` of the proctor alone: settle the development data ({@link developmentDataSettled}), saying what was set
  * aside or why it ends here, then build, serve with the dev defaults and wait like {@link runProctor}. */
-export async function runDevelopmentProctor(repoRoot: string, env: NodeJS.ProcessEnv = proctorDevelopmentEnvironment(repoRoot)): Promise<void> {
-  if (await developmentDataSettled(repoRoot, env, (line) => console.warn(`[proctor] ${line}`))) await runProctor(repoRoot, ["serve"], env);
+export async function runDevelopmentProctor(repoRoot: string, invocation: ScriptInvocation, env: NodeJS.ProcessEnv = proctorDevelopmentEnvironment(repoRoot)): Promise<void> {
+  if (await developmentDataSettled(repoRoot, env, (line) => console.warn(`[proctor] ${line}`))) await runProctor(repoRoot, invocation, ["serve"], env);
 }

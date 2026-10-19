@@ -1,9 +1,12 @@
 //! 🗑️ Fem2d mutation — `DeleteSupport` payload + `MutationKind` impl.
 
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::create_support;
-use protocol::{MutationKind, SemanticDescriptor};
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
+use protocol::MutationKind;
+use protocol::SemanticDescriptor;
+use protocol::ColdMutationKind;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 
 //#region 🔖️Mutation
 /// 🗑️ Removes an existing support by id, capturing nothing itself (the removed payload is recovered
@@ -19,24 +22,32 @@ pub struct DeleteSupport {
 
 impl<Op> MutationKind<Fem2dSnapshot, Op> for DeleteSupport
 where
-    Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<create_support::CreateSupport>,
-{
-    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "support", kind: "delete-support", record: "DeletedSupport" };
+    Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::create_support::CreateSupport>, {
 
-    fn diff(&self, base: &Fem2dSnapshot) -> protocol::MutationOutcome<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Fem2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "support", kind: "delete-support", record: "DeletedSupport" };
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete support \"{}\"", self.id), &format!("Auflager \"{}\" löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
+
+}
+impl<Op> protocol::ColdMutationKind<Fem2dSnapshotValue, Op> for DeleteSupport
+where
+    Op: protocol::ColdMutation<Fem2dSnapshotValue, ReferenceDiff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::create_support::CreateSupport>, {
+
+
+    fn diff(&self, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> {
+        super::diff::diff(self, base)
+    }
+
+    fn inverse(&self, base: &Fem2dSnapshotValue) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
+
 }
 //#endregion 🔖️Mutation

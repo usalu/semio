@@ -1,5 +1,5 @@
-//! 🔍️ Puzzle 5d play app panel — the field inspector for whatever is selected. 🕹️ ticket
 //! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the live `vortex` domain is read once per
+//! 🔍️ Puzzle 5d play app panel — the field inspector for whatever is selected. 🕹️ ticket
 //! render into a [`Puzzle5dInteractionSnapshot`] and carried on the scene, so this panel switches on
 //! the granularity the user actually picked at (grip wins over part wins over fastener) and renders
 //! THAT entity's real fields. An empty or unresolvable selection falls back to the document summary.
@@ -17,6 +17,24 @@ use crate::editor::puzzle5d::catalog::puzzle5d_part_display_label;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::view::{engine_grip_kind, Puzzle5dInteractionSnapshot, Puzzle5dScene};
 use crate::editor::puzzle5d::entities::{part_scale_json, puzzle5d_grip_full_id, target_volume_flat_rect, target_volume_scale_json, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dPart, Puzzle5dTargetVolume, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, PUZZLE5D_GRANULARITY_TARGET_VOLUME, PUZZLE5D_PLAY_CONTROLLER_ID};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::tree_item_with_action;
 use semio_framework_plugin::ui_node_list;

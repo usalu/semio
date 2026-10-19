@@ -1,9 +1,11 @@
 //! 🔮️ Complete portable binary64 corpus runs through the original neutral geometry algorithms.
 
 use super::*;
-use semio_s_fem_mesh::*;
-use serde_json::{json, Value};
-use std::time::{Duration, Instant};
+use super::*;
+use serde_json::json;
+use serde_json::Value;
+use std::time::Duration;
+use std::time::Instant;
 
 #[test]
 fn complete_portable_region_surface_corpus() {

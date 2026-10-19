@@ -1,19 +1,20 @@
-//! 🚪️ fem3d → obj — foreign `Serializer<Fem3dSnapshot>` on the framework's `io_mechanism` channel,
 //! and REAL geometry: every `FemSolid` outline is triangulated, extruded by its own real
+//! 🚪️ fem3d → obj — foreign `Serializer<Fem3dSnapshot>` on the framework's `io_mechanism` channel,
 //! `height` (offset by `base_z`), split into tets and reduced to its outward boundary faces — a
-//! `SemioMeshSnapshot` (`crate::fem3d_engine::meshing::build_semio_mesh_snapshot`, the same kernel the
+//! `SemioMeshSnapshot` (`semio_s_artifact_fem_3d_engine::fem3d_engine::meshing::build_semio_mesh_snapshot`, the same kernel the
 //! `🕸️mesh/🧫️fixtures/**/🗿️expected.obj` fixtures pin), then handed to stdio's own tested
 //! `SemioMeshToObj` bridge and `encode_obj` grammar — never hand-rolled bytes.
 //!
 //! `IoFidelity::Lossy`, and that is the honest level: an `.obj` carries vertices and faces. It
-//! carries no `FemMaterial`, `FemSection`, `FemSupport`, `FemLoadCase` or analysis settings, and
+//! carries no `FemMaterialValue`, `FemSection`, `FemSupport`, `FemLoadCase` or analysis settings, and
 //! `FemElement::Bar`/`Frame` line members carry no cross-section PROFILE (see the meshing bridge's
 //! own doc) so they contribute no geometry — a bar/frame-only model exports a structurally valid,
 //! EMPTY `.obj`. There is therefore no inverse: `s.stdio.obj@3.0/*` → `s.fem.fem3d@1/*` is a
 //! registered refusal in this subset's `🚪️io/🦀️.rs` `geometry_import` module.
 
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+use semio_framework_os_kernel::io::io_mechanism::ArchiveChildren;
+use semio_framework_os_kernel::io::io_mechanism::Serializer;
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_obj::standards::v3_0::engine::encode_obj;

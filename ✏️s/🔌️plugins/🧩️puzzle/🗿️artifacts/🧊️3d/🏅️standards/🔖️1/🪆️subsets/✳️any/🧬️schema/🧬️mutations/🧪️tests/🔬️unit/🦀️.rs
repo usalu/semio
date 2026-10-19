@@ -71,26 +71,27 @@ fn puzzle3d_delta_ops_round_trip_and_stay_granular() {
     let mut inverses = Vec::new();
     for operation in &operations {
         inverses.extend(Mutation::<Puzzle3dSnapshot>::inverse(operation, &forward).expect("valid retained mutation inverse scene_snapshot"));
-        forward = protocol::apply_diff(Mutation::<Puzzle3dSnapshot>::diff(operation, &forward).diff(), &forward).expect("valid mutation diff");
+        forward = protocol::apply_diff_cold(Mutation::<Puzzle3dSnapshot>::diff(operation, &forward).diff(), &forward).expect("valid mutation diff");
     }
     assert_eq!(serde_json::to_value(&forward).unwrap(),canonical(&after));
     for inverse in inverses.iter().rev() {
-        forward = protocol::apply_diff(Mutation::<Puzzle3dSnapshot>::diff(inverse, &forward).diff(), &forward).expect("valid mutation diff");
+        forward = protocol::apply_diff_cold(Mutation::<Puzzle3dSnapshot>::diff(inverse, &forward).diff(), &forward).expect("valid mutation diff");
     }
     assert_eq!(serde_json::to_value(&forward).unwrap(),canonical(&before), "backwards operations must restore the pre-edit document");
 }
 
 //#region 🔖️MutationLaws
-use protocol::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+use protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law;
+use protocol::os_spr::protocol_laws::assert_mutation_inverse_law;
 
 #[semio_framework_async_macros::async_test]
 async fn move_object_diff_absorb_law() {
     use semio_s_artifact_puzzle_3d_model::Puzzle3dObject;
     let base = empty();
     let object = Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
-    let with_object = protocol::apply_diff(create_object(object, None).diff(&base).diff(), &base).expect("valid mutation diff");
+    let with_object = protocol::apply_diff_cold(create_object(object, None).diff(&base).diff(), &base).expect("valid mutation diff");
     let d1 = move_object("o1".into(), [10.0, 10.0, 10.0]).diff(&with_object).into_parts().0;
-    let mid = protocol::apply_diff(&d1, &with_object).expect("valid mutation diff");
+    let mid = protocol::apply_diff_cold(&d1, &with_object).expect("valid mutation diff");
     let d2 = move_object("o1".into(), [20.0, 30.0, 40.0]).diff(&mid).into_parts().0;
     (assert_mutation_diff_absorb_law(&with_object, d1, d2)).await;
 }
@@ -105,7 +106,7 @@ async fn create_delete_object_inverse_law() {
     let base = empty();
     let object = Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
     (assert_mutation_inverse_law(&base, &create_object(object.clone(), None))).await;
-    let with_object = protocol::apply_diff(create_object(object, None).diff(&base).diff(), &base).expect("valid mutation diff");
+    let with_object = protocol::apply_diff_cold(create_object(object, None).diff(&base).diff(), &base).expect("valid mutation diff");
     (assert_mutation_inverse_law(&with_object, &delete_object("o1".into()))).await;
 }
 
@@ -126,7 +127,7 @@ async fn object_field_mutations_inverse_law() {
         hidden: false,
         locked: false,
     };
-    let with_object = protocol::apply_diff(create_object(object, None).diff(&base).diff(), &base).expect("valid mutation diff");
+    let with_object = protocol::apply_diff_cold(create_object(object, None).diff(&base).diff(), &base).expect("valid mutation diff");
     (assert_mutation_inverse_law(&with_object, &move_object("o1".into(), [1.0, 2.0, 3.0]))).await;
     (assert_mutation_inverse_law(&with_object, &rotate_object("o1".into(), Some([0.0, 0.0, 0.0, 1.0])))).await;
     (assert_mutation_inverse_law(&with_object, &scale_object("o1".into(), Some(Puzzle3dScale::Uniform(2.0))))).await;
@@ -178,17 +179,17 @@ async fn connect_disconnect_vortices_inverse_law_and_cascade() {
         locked: false,
     };
     let mut projection = base;
-    projection = protocol::apply_diff(create_object(object_a, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
-    projection = protocol::apply_diff(create_object(object_b, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
+    projection = protocol::apply_diff_cold(create_object(object_a, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
+    projection = protocol::apply_diff_cold(create_object(object_b, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
     (assert_mutation_inverse_law(&projection, &connect_vortices("t1".into(), "a:va".into(), "b:vb".into(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None))).await;
-    let connected = protocol::apply_diff(connect_vortices("t1".into(), "a:va".into(), "b:vb".into(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
+    let connected = protocol::apply_diff_cold(connect_vortices("t1".into(), "a:va".into(), "b:vb".into(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
     (assert_mutation_inverse_law(&connected, &disconnect_vortices("t1".into()))).await;
     (assert_mutation_inverse_law(
         &connected,
         &replace_attraction_geometry(ReplaceAttractionGeometry { id: "t1".into(), new_gap: 1.0, new_shift: 2.0, new_rise: 3.0, new_rotation: 4.0, new_turn: 5.0, new_tilt: 6.0, new_x: 7.0, new_y: 8.0 }),
     )).await;
     let deleted = delete_object("a".into());
-    let after_delete = protocol::apply_diff(deleted.diff(&connected).diff(), &connected).expect("valid mutation diff");
+    let after_delete = protocol::apply_diff_cold(deleted.diff(&connected).diff(), &connected).expect("valid mutation diff");
     assert!(!after_delete.attractions.iter().any(|attraction| attraction.id == "t1"), "delete-object must sever attractions touching its vortices");
     (assert_mutation_inverse_law(&connected, &deleted)).await;
 }
@@ -199,7 +200,7 @@ async fn target_volume_and_reference_inverse_law() {
     let base = empty();
     let volume = Puzzle3dTargetVolume { id: "tv1".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, hidden: false, locked: false };
     (assert_mutation_inverse_law(&base, &create_target_volume(volume.clone(), None))).await;
-    let with_volume = protocol::apply_diff(create_target_volume(volume, None).diff(&base).diff(), &base).expect("valid mutation diff");
+    let with_volume = protocol::apply_diff_cold(create_target_volume(volume, None).diff(&base).diff(), &base).expect("valid mutation diff");
     (assert_mutation_inverse_law(&with_volume, &move_target_volume("tv1".into(), [1.0, 2.0, 3.0]))).await;
     (assert_mutation_inverse_law(&with_volume, &rotate_target_volume("tv1".into(), Some([0.0, 0.0, 0.0, 1.0])))).await;
     (assert_mutation_inverse_law(&with_volume, &scale_target_volume("tv1".into(), None))).await;
@@ -209,7 +210,7 @@ async fn target_volume_and_reference_inverse_law() {
 
     let reference = Puzzle3dReference { id: "r1".into(), source: Puzzle3dReferenceSource::default(), origin: [0.0, 0.0, 0.0], width_world: 1.0, locked: false, hidden: false };
     (assert_mutation_inverse_law(&base, &create_reference(reference.clone(), None))).await;
-    let with_reference = protocol::apply_diff(create_reference(reference, None).diff(&base).diff(), &base).expect("valid mutation diff");
+    let with_reference = protocol::apply_diff_cold(create_reference(reference, None).diff(&base).diff(), &base).expect("valid mutation diff");
     (assert_mutation_inverse_law(&with_reference, &move_reference("r1".into(), [1.0, 2.0, 3.0]))).await;
     (assert_mutation_inverse_law(&with_reference, &resize_reference("r1".into(), 4.0))).await;
     (assert_mutation_inverse_law(&with_reference, &replace_reference_source("r1".into(), Puzzle3dReferenceSource { url: "/x.png".into(), media_kind: Some("image".into()) }))).await;
@@ -224,7 +225,7 @@ async fn document_scalar_mutations_inverse_law() {
     let base = empty();
     (assert_mutation_inverse_law(&base, &change_domain("mechanical".into()))).await;
     (assert_mutation_inverse_law(&base, &connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle3dCompatSpecificity::Vortex, None))).await;
-    let connected = protocol::apply_diff(connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle3dCompatSpecificity::Vortex, None).diff(&base).diff(), &base).expect("valid mutation diff");
+    let connected = protocol::apply_diff_cold(connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle3dCompatSpecificity::Vortex, None).diff(&base).diff(), &base).expect("valid mutation diff");
     (assert_mutation_inverse_law(&connected, &disconnect_kind_compatibility("a".into(), "b".into()))).await;
     (assert_mutation_inverse_law(&base, &replace_kind_catalogs(Some(Puzzle3dKindCatalogs::default())))).await;
 }
@@ -242,7 +243,8 @@ fn dispatch_registers_semantic_descriptors() {
 //#region 🔖️OutcomeLaws
 // 🎫️ 26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS — see
 // `📓️w3-f-block-puzzle-report.md` for the `assert_outcome_policy_matrix` pending-helper note.
-use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error};
+use protocol::os_spr::protocol_laws::assert_fatal_never_applies;
+use protocol::os_spr::protocol_laws::assert_missing_target_is_error;
 
 #[semio_framework_async_macros::async_test]
 async fn missing_target_is_error_per_verb_family() {
@@ -357,7 +359,7 @@ fn kinds_match_the_enum_and_the_catalog() {
 async fn middle_row_removals_restore_their_position() {
     use {semio_s_artifact_puzzle_3d_model::Puzzle3dCompatSpecificity, semio_s_artifact_puzzle_3d_model::Puzzle3dObject, semio_s_artifact_puzzle_3d_model::Puzzle3dReference, semio_s_artifact_puzzle_3d_model::Puzzle3dReferenceSource, semio_s_artifact_puzzle_3d_model::Puzzle3dTargetVolume, semio_s_artifact_puzzle_3d_model::Puzzle3dVortex};
     use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
-    let step = |base: Puzzle3dSnapshot, mutation: Puzzle3dMutation| protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("valid mutation diff");
+    let step = |base: Puzzle3dSnapshot, mutation: Puzzle3dMutation| protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("valid mutation diff");
     let vortex = |id: &str| Puzzle3dVortex { id: id.into(), vortex_kind: None, label: None, position: [0.0, 0.0, 0.0], direction: None, radius: None, hidden: false, locked: false };
     let object = |id: &str| Puzzle3dObject { id: id.into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: vec![vortex("v1"), vortex("v2"), vortex("v3")], hidden: false, locked: false };
     let mut base = empty();
@@ -394,11 +396,11 @@ fn puzzle3d_typed_mutation_fixture_and_refusal_law() {
         let mut inverse=Vec::new();
         for operation in &operations {
             inverse.extend(Mutation::<Puzzle3dSnapshot>::inverse(operation,&current).expect("inverse"));
-            current=protocol::apply_diff(Mutation::<Puzzle3dSnapshot>::diff(operation,&current).diff(),&current).expect("typed apply");
+            current=protocol::apply_diff_cold(Mutation::<Puzzle3dSnapshot>::diff(operation,&current).diff(),&current).expect("typed apply");
         }
         assert_eq!(current,oracle_after);
         for operation in inverse.iter().rev() {
-            current=protocol::apply_diff(Mutation::<Puzzle3dSnapshot>::diff(operation,&current).diff(),&current).expect("typed inverse apply");
+            current=protocol::apply_diff_cold(Mutation::<Puzzle3dSnapshot>::diff(operation,&current).diff(),&current).expect("typed inverse apply");
         }
         assert_eq!(current,oracle_before);
     }

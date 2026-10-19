@@ -9,7 +9,9 @@
     "copyGrants",
     "wire",
     "faultWire",
-    "contextWire"
+    "contextWire",
+    "receivingWire",
+    "effectSpan"
   ],
   "properties": {
     "cases": {
@@ -158,6 +160,64 @@
             "releasedBytes": 0
           }
         }
+      }
+    },
+    "receivingWire": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "primary",
+        "receiptRefusal",
+        "contextRefusal"
+      ],
+      "properties": {
+        "primary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "original"
+          ],
+          "properties": {
+            "kind": {
+              "const": "receiving"
+            },
+            "original": {
+              "$ref": "#/$defs/ReceivingPrimary"
+            }
+          }
+        },
+        "receiptRefusal": {
+          "$ref": "#/$defs/ValueError"
+        },
+        "contextRefusal": {
+          "$ref": "#/$defs/ValueError"
+        }
+      }
+    },
+    "effectSpan": {
+      "const": {
+        "prior": {
+          "copiedItems": 2,
+          "copiedBytes": 17,
+          "retainedCapacityBytes": 128,
+          "releasedBytes": 5
+        },
+        "last": {
+          "copiedItems": 1,
+          "copiedBytes": 7,
+          "retainedCapacityBytes": 64,
+          "releasedBytes": 3
+        },
+        "whole": {
+          "copiedItems": 3,
+          "copiedBytes": 24,
+          "retainedCapacityBytes": 192,
+          "releasedBytes": 8
+        },
+        "primary": "Last original semantic 源",
+        "receipt": "Distinct original receipt refusal",
+        "context": "Distinct original context refusal"
       }
     }
   },
@@ -586,6 +646,27 @@
         }
       },
       "required": []
+    },
+    "ReceivingPrimary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "retainedProgress"
+      ],
+      "properties": {
+        "primary": {
+          "$ref": "#/$defs/ValueError"
+        },
+        "quoteRefusal": {
+          "$ref": "#/$defs/ValueError"
+        },
+        "allocationRefusal": {
+          "$ref": "#/$defs/ValueError"
+        },
+        "retainedProgress": {
+          "$ref": "#/$defs/RetainedProgress"
+        }
+      }
     }
   }
 }

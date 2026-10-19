@@ -14,6 +14,17 @@ pub struct MoveNode {
 
 impl protocol::MutationKind<DagSnapshot, DagMutation> for MoveNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "node", kind: "move-node", record: "MovedNode" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move node {}", self.id), &format!("Knoten {} verschieben", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["nodes".into(), self.id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<DagSnapshot, DagMutation> for MoveNode {
     fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         if !base.nodes.iter().any(|node| node.id == self.id) {
             return protocol::MutationOutcome::new(DagDiff::default());
@@ -26,10 +37,4 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for MoveNode {
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move node {}", self.id), &format!("Knoten {} verschieben", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["nodes".into(), self.id.clone()]
-    }
 }

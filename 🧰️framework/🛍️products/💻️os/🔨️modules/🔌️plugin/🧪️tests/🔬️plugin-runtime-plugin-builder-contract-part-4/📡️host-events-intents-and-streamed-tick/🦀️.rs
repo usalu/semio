@@ -24,7 +24,7 @@
         assert_eq!(take_test_host_events(), vec![HostEvent::UtilityChanged { window_id: "main-1".into(), from: Some("select".into()), to: Some("brush".into()) }]);
         app.dispatch_typed(TestCommand::Increment, &under(host_event_view("main-2", None)), &mut identity,cx).await.expect("another window");
         assert_eq!(take_test_host_events(), Vec::new(), "main-2 is seen first, and this view names no utility for main-1");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -59,7 +59,7 @@
         assert!(history.commands.is_empty(), "the answer to a blur is never a history row: {:?}", history.commands.iter().map(|entry| &entry.action_id).collect::<Vec<_>>());
         let refused = app.handle_action(semio_framework::HOST_EVENT_ACTION_ID, Some(dv(json!({ "windowId": "main-1", "kind": "wobble" }))), &under, &mut identity).await;
         assert_eq!(refused.err().map(|fault| fault.code), Some(FaultCode::new("hostEvent.invalid")));
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -99,7 +99,7 @@
         assert_eq!(result.mutations.len(), 1, "the returned invocation carries the one mutation the intent caused");
         let history = app.render_ctx().test_history().await;
         assert!(history.commands.iter().any(|entry| entry.action_id == "incrementViaCommand"), "a command-log entry must have been recorded for the intent");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -136,7 +136,7 @@
         let error = handle_intent_settled(&mut app, &intent, &meta(), &mut identity,cx).await.expect_err("a View-kind intent emitting operations must be rejected");
         assert!(matches!(&error.primary,semio_framework_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Fault(fault) if fault.message.contains("must not emit operations")), "unexpected complete original error: {error:?}");
         assert_eq!(app.stores.test_snapshot().await, TestSnapshot::default(), "kind discipline must block the mutation");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -177,8 +177,8 @@
         app.dispatch_typed(TestCommand::StreamLabel { value: "abcd".into(), commit: true }, &meta(), &mut identity,cx).await.expect("streamLabel commit");
         reserved_action(&mut app, "undo", None, &mut identity).await;
         assert_eq!(app.stores.test_snapshot().await.label, "");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }

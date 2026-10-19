@@ -22,6 +22,7 @@ fn seed() -> Model {
     model.surfaces = vec![surface(1)];
     model.air_loops = vec![air_loop(1)];
     model.schedules.constants = vec![constant(1)];
+    model.schedules.daily = vec![daily(7)];
     model
 }
 
@@ -337,7 +338,8 @@ fn pv(id: u32) -> crate::model::PvSystemAssignment {
         azimuth_deg: 1.0,
         module_efficiency: 0.5,
         inverter_efficiency: 0.5,
-    }
+            temperature_coefficient: -0.004, faiman_heat_loss_constant_w_m2k: 25.0, faiman_heat_loss_wind_w_s_m3k: 6.84, mounting: crate::model::PhotovoltaicMounting::OpenRack,
+        }
 }
 
 fn battery(id: u32) -> crate::model::BatteryAssignment {
@@ -456,7 +458,7 @@ fn weekly(id: u32) -> crate::schedule::WeeklySchedule {
     const LABEL: &str = "WEEKLY";
     crate::schedule::WeeklySchedule {
         id: crate::schedule::ScheduleId(id),
-        daily_schedule_ids: [crate::schedule::ScheduleId(1); 7],
+        daily_schedule_ids: [crate::schedule::ScheduleId(7); 7],
     }
 }
 
@@ -465,7 +467,7 @@ fn annual(id: u32) -> crate::schedule::AnnualSchedule {
     crate::schedule::AnnualSchedule {
         id: crate::schedule::ScheduleId(id),
         rules: Vec::new(),
-        default_daily_schedule_id: crate::schedule::ScheduleId(1),
+        default_daily_schedule_id: crate::schedule::ScheduleId(7),
         holiday_daily_schedule_id: None,
         holiday_dates: Vec::new(),
     }
@@ -481,7 +483,7 @@ fn time_series(id: u32) -> crate::schedule::TimeSeriesSchedule {
 }
 
 fn rule(first: u8, last: u8) -> crate::schedule::CompactScheduleRule {
-    crate::schedule::CompactScheduleRule { start_month: first, start_day: 1, end_month: last, end_day: 28, daily_schedule_id: schedule(1) }
+    crate::schedule::CompactScheduleRule { start_month: first, start_day: 1, end_month: last, end_day: 28, daily_schedule_id: schedule(7) }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -637,7 +639,7 @@ async fn deleting_the_middle_water_system() {
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_fault() {
-    holds(seed(), |m| m.faults = three(fault), crate::fault_mutations::delete_fault(id(2))).await;
+    holds(seed(), |m| { m.ideal_loads = vec![ideal_loads(1)]; m.faults = three(fault) }, crate::fault_mutations::delete_fault(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]

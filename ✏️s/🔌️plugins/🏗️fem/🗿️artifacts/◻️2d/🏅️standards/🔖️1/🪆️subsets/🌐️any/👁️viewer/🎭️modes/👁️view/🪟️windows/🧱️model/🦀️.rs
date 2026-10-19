@@ -1,5 +1,5 @@
-//! 🧱️ Fem2d viewer — the model window: a read-only render of the undeformed 2D structural canvas
 //! (nodes/members/supports, mesh-edge preview overlay) — the read-only counterpart of the sibling
+//! 🧱️ Fem2d viewer — the model window: a read-only render of the undeformed 2D structural canvas
 //! editor's model window. This file itself imports nothing from the sibling editor module
 //! (`policyViewerPurityBreaches` forbids it outright): the pure geometry draw helpers it needs are
 //! duplicated here rather than imported, per contract §2.2/§2.9. No selection, no camera persistence
@@ -10,7 +10,8 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structur
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_framework_os_kernel::Viewport2d;
-use semio_framework_plugin::{BuiltNode, Canvas2dScene};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::Canvas2dScene;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "fem2d-view-model";
@@ -33,7 +34,7 @@ fn screen_2d(x: f64, y: f64) -> (f64, f64) {
     (x * SCALE_2D + ORIGIN_2D, -y * SCALE_2D + ORIGIN_2D)
 }
 
-fn find_node_2d<'a>(nodes: &'a [semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode], id: &str) -> Option<&'a semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode> {
+fn find_node_2d<'a>(nodes: &'a [semio_s_fem_node::planar::FemNodeValue], id: &str) -> Option<&'a semio_s_fem_node::planar::FemNodeValue> {
     nodes.iter().find(|n| n.id == id)
 }
 
@@ -70,7 +71,7 @@ fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line_color: &st
 
 /// 🗺️ Every meshed region's triangles as `(element_id, [screen_p0, screen_p1, screen_p2])` — read-only
 /// duplicate of the sibling editor's `fem2d_region_triangles`. Calls
-/// `crate::fem2d_engine::mesh_preview::fem2d_mesh_preview` directly (crate-root, shared compute — safe
+/// `semio_s_artifact_fem_2d_engine::fem2d_engine::mesh_preview::fem2d_mesh_preview` directly (crate-root, shared compute — safe
 /// to call from either surface, not a duplication concern for THAT call).
 fn fem2d_region_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64, f64); 3])> {
     let mut out = Vec::new();

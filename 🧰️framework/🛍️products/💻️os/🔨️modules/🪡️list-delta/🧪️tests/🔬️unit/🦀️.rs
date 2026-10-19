@@ -3,6 +3,7 @@
 //! step's `inverse` restores its pre-state, and the reversed step inverses sum to the negative; a second randomized law runs the same
 //! sequences over fail-closed rows and proves every displaced or abandoned row went through the cold-disposal hook.
 
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use crate::__value_derive::{FromValue, ToValue};
 use crate::{ItemList, KeyOf, Parts, RowPatch};
 use crate::{list_delta, row_patch};
@@ -35,32 +36,47 @@ thread_local! {
 
 fn capability() -> ApplyCapability {
     if CAPABILITY.with(|cell| cell.get()).is_none() {
-        semio_framework_mutation_diff::apply_diff(&ItemDelta::default(), &Vec::new()).expect("the empty delta applies");
+        semio_framework_mutation_diff::apply_diff_cold(&ItemDelta::default(), &Vec::new()).expect("the empty delta applies");
     }
     CAPABILITY.with(|cell| cell.get()).expect("the central applier handed the delta its capability")
 }
 
 impl semio_framework_mutation_diff::DiffAlgebra<Vec<Item>> for ItemDelta {
-    fn inverse(&self, base: &Vec<Item>) -> Self {
-        ItemDelta::inverse(self, base)
-    }
+
     fn is_empty(&self) -> bool {
         ItemDelta::is_empty(self)
     }
 }
 
+impl crate::ColdDiffAlgebra<Vec<Item>> for ItemDelta {
+    fn inverse(&self, base: &Vec<Item>) -> Self {
+        ItemDelta::inverse(self, base)
+    }
+}
+
 impl semio_framework_mutation_diff::MutationDiff<Vec<Item>> for ItemDelta {
-    fn apply(&self, base: &Vec<Item>, capability: ApplyCapability) -> semio_framework_mutation_diff::MutationApplyResult<Vec<Item>> {
+    fn apply(&self, base: &mut Vec<Item>, capability: ApplyCapability) -> semio_framework_mutation_diff::MutationApplyResult<()> {
         CAPABILITY.with(|cell| cell.set(Some(capability)));
-        self.commit_onto(base, capability)
+
+        let next = self.commit_onto(base, capability)
+    ?;
+        ItemDelta::retire_list(std::mem::replace(base, next));
+        Ok(())
     }
     fn absorb(&mut self, other: Self) {
         ItemDelta::absorb(self, other)
     }
+
+    fn apply(&self, base: &mut Vec<Item>, capability: ApplyCapability) -> crate::MutationApplyResult<()> {
+        CAPABILITY.with(|cell| cell.set(Some(capability)));
+        let next = self.commit_onto(base, capability)?;
+        ItemDelta::retire_list(std::mem::replace(base, next));
+        Ok(())
+    }
 }
 
 fn commit(delta: &ItemDelta, base: &[Item]) -> semio_framework_mutation_diff::MutationApplyResult<Vec<Item>> {
-    semio_framework_mutation_diff::apply_diff(delta, &base.to_vec())
+    semio_framework_mutation_diff::apply_diff_cold(delta, &base.to_vec())
 }
 
 struct Rng(u64);
@@ -189,6 +205,38 @@ fn absorb_coalesces_per_id() {
 }
 
 #[test]
+fn commuting_rows_absorb_to_one_structurally_equal_delta() {
+    let base = vec![item("a", 1), item("b", 2), item("c", 3), item("d", 4)];
+    let (a_then_c, c_then_a) = {
+        let mut first = ItemDelta::removal(&base, 0);
+        first.absorb(ItemDelta::removal(&base[1..], 1));
+        let mut second = ItemDelta::removal(&base, 2);
+        second.absorb(ItemDelta::removal(&vec![base[0].clone(), base[1].clone(), base[3].clone()], 0));
+        (first, second)
+    };
+    assert_eq!(a_then_c, c_then_a, "two removals commute: one canonical ascending-coordinate delta");
+    assert_eq!(a_then_c.removed, vec![ItemRemoval { id: "a".into(), index: 0 }, ItemRemoval { id: "c".into(), index: 2 }]);
+    let mut inserts = ItemDelta::insertion(0, item("x", 1));
+    inserts.absorb(ItemDelta::insertion(3, item("y", 2)));
+    let mut reversed = ItemDelta::insertion(2, item("y", 2));
+    reversed.absorb(ItemDelta::insertion(0, item("x", 1)));
+    assert_eq!(inserts, reversed, "two insertions at distinct final slots commute");
+    assert_eq!(inserts.inserted.iter().map(|row| row.index).collect::<Vec<_>>(), vec![0, 3]);
+    let mut first_oracle=base.clone();first_oracle.insert(0,item("x",1));first_oracle.insert(3,item("y",2));
+    let mut reverse_oracle=base.clone();reverse_oracle.insert(2,item("y",2));reverse_oracle.insert(0,item("x",1));
+    assert_eq!(first_oracle,reverse_oracle,"independent Vec insertion routes reach identical final rows");
+    assert_eq!(commit(&inserts,&base).expect("composed inserts apply"),first_oracle);
+    assert_eq!(commit(&reversed,&base).expect("reverse composed inserts apply"),reverse_oracle);
+    let swap = ItemDelta::relocation(&base, 0, 1);
+    let mut both = swap.clone();
+    both.absorb(ItemDelta::relocation(&commit(&swap, &base).expect("move applies"), 0, 1));
+    let inverse = both.inverse(&base);
+    let mut summed = ItemDelta::default();
+    summed.absorb(inverse.clone());
+    assert_eq!(summed, inverse, "absorbing into the empty delta keeps the canonical form");
+}
+
+#[test]
 fn deltas_refuse_what_they_cannot_apply() {
     let base = vec![item("a", 1)];
     assert!(commit(&ItemDelta::removal_by_id("zz", 0), &base).is_err());
@@ -198,6 +246,76 @@ fn deltas_refuse_what_they_cannot_apply() {
     assert_eq!(ItemDelta::removal(&base, 3), ItemDelta::default(), "a removal past the end is empty");
     let _ = Parts::<Item, ItemPatch>::default().is_empty();
     assert_eq!(ItemList::<Item>::count(&base), 1);
+}
+
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+struct IdentityRow {
+    id: String,
+    value: i64,
+}
+
+impl crate::list_delta::Keyed for IdentityRow {
+    type Key = String;
+    fn key(&self) -> String { self.id.clone() }
+}
+
+impl RowPatch<IdentityRow> for IdentityRow {
+    fn commit_into(&self, row: &mut IdentityRow, _: ApplyCapability) -> crate::MutationApplyResult<()> { *row = self.clone(); Ok(()) }
+    fn absorb(&mut self, later: Self) { *self = later; }
+    fn inverse(&self, row: &IdentityRow) -> Self { row.clone() }
+    fn is_empty(&self) -> bool { false }
+}
+
+#[derive(FromValue)]
+struct IdentityPatch { target: String, row: IdentityRow }
+
+#[derive(FromValue)]
+struct IdentityVector { id: String, base: Vec<IdentityRow>, patches: Vec<IdentityPatch>, accepted: bool, expected: Vec<IdentityRow> }
+
+#[derive(FromValue)]
+struct IdentityVectors { vectors: Vec<IdentityVector> }
+
+/// 🪪️ Whole-row replay uses immutable identities and refuses the entire diff before publishing a partial projection.
+#[test]
+fn stable_identity_replay_matches_portable_vectors() {
+    let fixtures: IdentityVectors = semio_framework_pack_json::from_json_str(include_str!("../../🧫️fixtures/🪪️stable-identity/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("portable identity vectors");
+    for vector in fixtures.vectors {
+        let original = vector.base.clone();
+        let delta = Parts::<IdentityRow, IdentityRow> { modified: vector.patches.into_iter().map(|patch| (patch.target, patch.row)).collect(), ..Default::default() };
+        let result = delta.commit_onto(&vector.base, capability());
+        assert_eq!(result.is_ok(), vector.accepted, "{}", vector.id);
+        let actual = result.as_ref().unwrap_or(&vector.base);
+        assert_eq!(actual, &vector.expected, "{}", vector.id);
+        assert_eq!(vector.base, original, "{} preserves its input", vector.id);
+        if let Ok(next) = result {
+            let restored = delta.inverse(&vector.base).commit_onto(&next, capability()).expect("inverse replay");
+            assert_eq!(restored, vector.base, "{} exact inverse", vector.id);
+        }
+    }
+}
+
+#[derive(FromValue)]
+struct NestedInverseVector { id: String, base: Vec<Item>, patches: Vec<ItemModification>, expected: Vec<Item> }
+
+#[derive(FromValue)]
+struct NestedInverseVectors { vectors: Vec<NestedInverseVector> }
+
+/// 🪆️ Ordered patches of one nested row are composed before their inverse reads original positions.
+#[test]
+fn nested_inverse_replay_matches_portable_vectors() {
+    let fixtures: NestedInverseVectors = semio_framework_pack_json::from_json_str(include_str!("../../🧫️fixtures/🪆️nested-inverse/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("portable nested inverse vectors");
+    for vector in fixtures.vectors {
+        let delta = ItemDelta { modified: vector.patches, ..Default::default() };
+        let next = commit(&delta, &vector.base).expect("ordered nested patches apply");
+        assert_eq!(next, vector.expected, "{} forward projection", vector.id);
+        assert_eq!(commit(&delta.inverse(&vector.base), &next).as_ref(), Ok(&vector.base), "{} exact inverse", vector.id);
+        let mut sum = ItemDelta::default();
+        for patch in &delta.modified {
+            sum.absorb(ItemDelta::modification(patch.id.clone(), patch.patch.clone()));
+        }
+        assert_eq!(commit(&sum, &vector.base).as_ref(), Ok(&next), "{} composition", vector.id);
+        assert_eq!(commit(&sum.inverse(&vector.base), &next).as_ref(), Ok(&vector.base), "{} composed inverse", vector.id);
+    }
 }
 
 // 🧊️ Fail-closed rows: a row that aborts on a bare drop. The algebra must hand every row it displaces or abandons to the cold-disposal
@@ -272,6 +390,29 @@ impl RowPatch<Fragile> for FragilePatch {
 }
 
 type FragileParts = Parts<Fragile, FragilePatch, FragileKeys>;
+
+#[derive(Clone, Debug, PartialEq)]
+struct FragileIdentityPatch(String);
+
+impl RowPatch<Fragile> for FragileIdentityPatch {
+    fn commit_into(&self, row: &mut Fragile, _: ApplyCapability) -> crate::MutationApplyResult<()> { row.id.clone_from(&self.0); Ok(()) }
+    fn absorb(&mut self, later: Self) { *self = later; }
+    fn inverse(&self, row: &Fragile) -> Self { Self(row.id.clone()) }
+    fn is_empty(&self) -> bool { false }
+}
+
+/// 🧊️ An identity-changing row patch retires every cloned row when the central applier refuses it.
+#[test]
+fn stable_identity_refusal_retires_abandoned_rows() {
+    BARE_DROPS.with(|cell| cell.set(0));
+    RETIRED.with(|cell| cell.set(0));
+    let base = vec![fragile("a", 1), fragile("b", 2)];
+    let delta = Parts::<Fragile, FragileIdentityPatch, FragileKeys>::modification("a".into(), FragileIdentityPatch("b".into()));
+    let error = delta.commit_onto(&base, capability()).expect_err("identity change refuses");
+    assert_eq!(error.code, "mutation.apply.identity-change");
+    assert_eq!(BARE_DROPS.with(|cell| cell.get()), 0);
+    assert_eq!(RETIRED.with(|cell| cell.get()), 2);
+}
 
 fn fragile(id: &str, value: i64) -> Fragile {
     Fragile { id: id.into(), value, blessed: true }

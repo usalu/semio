@@ -5,26 +5,42 @@
 //! (Error) when none of the named nodes and regions exist; `mutation.no-op` (Warning) when the transform moves none
 //! of them; and `mutation.partial` (Warning), addressed at the absent ones, when some are missing.
 use super::MoveSelection;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dRegionPatch;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dNodePatch;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dNodesDelta;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dNodesModification;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dRegionsDelta;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dRegionsModification;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
+use std::collections::HashSet;
 
 //#region 🔖️Diff
-pub fn diff(payload: &MoveSelection, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
+pub fn diff(payload: &MoveSelection, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<Fem2dDiff> {
     let targets: Vec<String> = payload.node_ids.iter().chain(&payload.region_ids).cloned().collect();
     if let Some((message, address)) = payload.breach() {
         return protocol::MutationOutcome::fatal("mutation.invariant", message, address);
     }
-    let nodes: Vec<_> = base.nodes.iter().filter(|node| payload.node_ids.contains(&node.id)).collect();
-    let regions: Vec<_> = base.regions.iter().filter(|region| payload.region_ids.contains(&region.id)).collect();
+    let node_ids: HashSet<_> = payload.node_ids.iter().map(String::as_str).collect();
+    let region_ids: HashSet<_> = payload.region_ids.iter().map(String::as_str).collect();
+    let nodes: Vec<_> = base.nodes.iter().filter(|node| node_ids.contains(node.id.as_str())).collect();
+    let regions: Vec<_> = base.regions.iter().filter(|region| region_ids.contains(region.id.as_str())).collect();
     if nodes.is_empty() && regions.is_empty() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("None of the {} named node(s) and region(s) exist.", targets.len()), targets);
     }
-    let patched_nodes: Vec<Fem2dNodesModification> = nodes.iter().filter_map(|node| payload.moved_node(node)).map(|item| Fem2dNodesModification { id: item.id.clone(), patch: item }).collect();
-    let patched_regions: Vec<Fem2dRegionsModification> = regions.iter().filter_map(|region| payload.moved_region(region)).map(|item| Fem2dRegionsModification { id: item.id.clone(), patch: item }).collect();
+    let mut patched_nodes = Vec::new();
+    for node in &nodes {
+        let Some(item) = payload.moved_node(node) else { continue };
+        if let Some(refusal) = guards::node_geometry(&item) { return refusal; }
+        patched_nodes.push(Fem2dNodesModification { id: item.id, patch: Fem2dNodePatch { x: (item.x != node.x).then_some(item.x), y: (item.y != node.y).then_some(item.y) } });
+    }
+    let mut patched_regions = Vec::new();
+    for region in &regions {
+        let Some(item) = payload.moved_region(region) else { continue };
+        if let Some(refusal) = guards::region_geometry(&item) { return refusal; }
+        patched_regions.push(Fem2dRegionsModification { id: item.id, patch: Fem2dRegionPatch { outline: (item.outline != region.outline).then_some(item.outline), holes: (item.holes != region.holes).then_some(item.holes), ..Default::default() } });
+    }
     if patched_nodes.is_empty() && patched_regions.is_empty() {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The transform moves none of the {} named node(s) and region(s).", targets.len()));
     }
@@ -33,7 +49,9 @@ pub fn diff(payload: &MoveSelection, base: &Fem2dSnapshot) -> protocol::Mutation
         regions: (!patched_regions.is_empty()).then(|| Fem2dRegionsDelta { modified: patched_regions, ..Default::default() }),
         ..Default::default()
     });
-    let missing: Vec<String> = payload.node_ids.iter().filter(|id| !nodes.iter().any(|node| &node.id == *id)).chain(payload.region_ids.iter().filter(|id| !regions.iter().any(|region| &region.id == *id))).cloned().collect();
+    let found_nodes: HashSet<_> = nodes.iter().map(|node| node.id.as_str()).collect();
+    let found_regions: HashSet<_> = regions.iter().map(|region| region.id.as_str()).collect();
+    let missing: Vec<String> = payload.node_ids.iter().filter(|id| !found_nodes.contains(id.as_str())).chain(payload.region_ids.iter().filter(|id| !found_regions.contains(id.as_str()))).cloned().collect();
     if missing.is_empty() {
         outcome
     } else {

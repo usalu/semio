@@ -116,7 +116,11 @@ export function toolRunProgressToJson(progress: ToolRunProgress): ToolRunJson {
 }
 
 export function toolRunTickFromJson(json: JsonObject): ToolRunTick {
-  return {
+    const payload=json.payload===undefined?undefined:toolRunHexToBytes(json.payload);
+  const payloadUpdate=json.payloadUpdate===undefined?undefined:json.payloadUpdate.kind==="replace"?{kind:"replace"as const}:json.payloadUpdate.kind==="range"?{kind:"range"as const,publication:BigInt(json.payloadUpdate.publication),totalBytes:BigInt(json.payloadUpdate.totalBytes),offset:BigInt(json.payloadUpdate.offset),chunkBytes:json.payloadUpdate.chunkBytes,final:json.payloadUpdate.final}:undefined;
+  if(json.payloadUpdate!==undefined&&payloadUpdate===undefined)throw new ToolRunCodecError("malformed","payloadUpdate");
+  validateTickPayload(payload,payloadUpdate);
+return {
     identity: toolRunIdentityFromJson(json.identity),
     sequence: BigInt(json.sequence),
     ...(json.progress === undefined ? {} : { progress: toolRunProgressFromJson(json.progress) }),
@@ -125,7 +129,8 @@ export function toolRunTickFromJson(json: JsonObject): ToolRunTick {
     appendOps: json.appendOps.map(toolRunHexToBytes),
     appendEntities: json.appendEntities.map((entity: number) => BigInt(entity)),
     ...(json.retractTo === undefined ? {} : { retractTo: json.retractTo }),
-    ...(json.payload === undefined ? {} : { payload: toolRunHexToBytes(json.payload) }),
+    ...(payload===undefined?{}:{payload}),
+    ...(payloadUpdate===undefined?{}:{payloadUpdate}),
   };
 }
 
@@ -140,6 +145,7 @@ export function toolRunTickToJson(tick: ToolRunTick): ToolRunJson {
     appendEntities: tick.appendEntities.map(u64Json),
     ...(tick.retractTo === undefined ? {} : { retractTo: tick.retractTo }),
     ...(tick.payload === undefined ? {} : { payload: toolRunBytesToHex(tick.payload) }),
-  };
+      ...(tick.payloadUpdate===undefined?{}:{payloadUpdate:tick.payloadUpdate.kind==="replace"?{kind:"replace"}:{kind:"range",publication:u64Json(tick.payloadUpdate.publication),totalBytes:u64Json(tick.payloadUpdate.totalBytes),offset:u64Json(tick.payloadUpdate.offset),chunkBytes:tick.payloadUpdate.chunkBytes,final:tick.payloadUpdate.final}}),
+};
 }
 //#endregion 🔖️Json

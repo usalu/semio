@@ -172,7 +172,7 @@ async fn two_instances_converge_disjoint_object_edits_via_backbone() {
 /// shutdown and the framework-installed `ArtifactStoreCursorDisposer` members then panic in `Drop`.
 #[semio_framework_async_macros::async_test]
 async fn fixture_app_reaches_its_terminal_empty_close_witness() {
-    match close_witness(app().await) {
+    match close_witness(&mut app().await) {
         Ok(true) => {}
         Ok(false) => panic!("close_step reported Complete without reaching terminal-empty ownership"),
         Err(fault) => panic!("every owned close lane must supply its bounded disposer, got {fault:?}"),

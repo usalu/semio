@@ -22,6 +22,7 @@ semio-s-artifact-energy-model-editor-config = { workspace = true }
 semio-s-artifact-energy-model-session = { workspace = true }
 
 [dev-dependencies]
+semio-framework-trace = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-tool-run = { workspace = true }
 semio-s-plugin-energy-engine-model = { workspace = true }

@@ -1,0 +1,9 @@
+{
+  "schema": "semio.course/v1",
+  "id": "architecture",
+  "title": { "en": "Architecture and Technology", "de": "Architektur und Technologie" },
+  "short": { "en": "A&T", "de": "A&T" },
+  "host": "architektur-und-technologie.de",
+  "pages": "pages/course",
+  "quizzes": ["physics", "ventilation", "heating", "cooling", "demand"]
+}

@@ -1,9 +1,13 @@
 //! 🎥️ `set-camera` command.
 
-use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dCamera3d};
-use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
+use crate::editor::puzzle5d::config::Puzzle5dCamera2d;
+
+use crate::editor::puzzle5d::config::Puzzle5dCamera3d;
+use crate::editor::puzzle5d::modes::edit::windows::board2d;
+use crate::editor::puzzle5d::modes::edit::windows::world3d;
 use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
-use semio_framework_pack_json::{to_dsl_value, Value};
+use semio_framework_pack_json::to_dsl_value;
+use semio_framework_pack_json::Value;
 use semio_framework_value::FromValue;
 
 /// 📷️ The surface-agnostic setter. An explicit `surfaceId` wins; otherwise the ADDRESSED WINDOW

@@ -9,6 +9,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// session change prepares the history patch that rides the next unsolicited UI progress frame.
     pub(crate) async fn drive_time_travel_turn(&mut self, grant: RetainedCloneGrant, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), Fault> {
         if grant.maximum_items==0{return Ok(());}
+        if let TimeTravelStoreOutput::OriginalProgress(progress)=self.time_travel_run(TimeTravelStoreCommand::CloseOriginalSources{grant},None).await?{if progress!=RetainedCloneProgress::default(){assert!(self.time_travel.command_receipt.is_none());self.time_travel.command_receipt=Some((grant,progress));return Ok(())}}
         if self.drive_original_discard_command(grant)?{return Ok(())}
         if self.drive_original_review_children(grant)?{return Ok(())}
         let deadline_us = self.shared().time_travel_turn_deadline();
@@ -22,14 +23,14 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         }
         let moved = self.watch_time_travel_base(identity).await?;
         if !moved && self.time_travel.session.stage == TimeTravelStage::Editing && self.time_travel.preview_progress().is_some() {
-            if let TimeTravelStoreOutput::Previewed(step) = self.time_travel_run(TimeTravelStoreCommand::StepPreview { deadline_us, clock: self.time_travel.turn_clock }).await? {
-                self.adopt_time_travel_preview_step(step).await?;
+            if let TimeTravelStoreOutput::Previewed(step) = self.time_travel_run(TimeTravelStoreCommand::StepPreview { deadline_us, clock: self.time_travel.turn_clock,grant },Some(receiving)).await? {
+                self.adopt_time_travel_preview_step(step,Some(grant)).await?;
             }
         }
         if !moved && self.time_travel.session.stage == TimeTravelStage::Replaying && self.time_travel.replaying() {
-            self.step_time_travel_replay(deadline_us, identity).await?;
+            self.step_time_travel_replay(grant,deadline_us, identity,receiving).await?;
         }
-        if self.time_travel.authoring.is_some() && self.step_supersede_authoring(deadline_us, identity).await? != SupersedeAuthored::Pending {
+        if self.time_travel.authoring.is_some() && self.step_supersede_authoring(grant,deadline_us, identity,receiving).await? != SupersedeAuthored::Pending {
             self.note_time_travel_changed(true, true);
         }
         if self.shared().reprojection_drives() {
@@ -103,14 +104,15 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// ⏭️ Steps the replay of the store the session edits until the turn deadline: progress ticks refresh the history body
     /// at most every [`TIME_TRAVEL_PROGRESS_REFRESH_MS`]; completion hands the report to the session and swaps the
     /// preview to the replayed head; a store refusal faults the replay.
-    async fn step_time_travel_replay(&mut self, deadline_us: u64, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
+    async fn step_time_travel_replay(&mut self,grant:RetainedCloneGrant, deadline_us: u64, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(), Fault> {
         let generation = self.time_travel.session.generation;
-        let stepped = match self.time_travel_run(TimeTravelStoreCommand::StepReplay { deadline_us, clock: self.time_travel.turn_clock }).await? {
+        let stepped = match self.time_travel_run(TimeTravelStoreCommand::StepReplay { deadline_us, clock: self.time_travel.turn_clock,grant },Some(receiving)).await? {
             TimeTravelStoreOutput::Stepped(stepped) => stepped,
             _ => TimeTravelReplayStep::Faulted,
         };
         let event = match stepped {
-            TimeTravelReplayStep::Pending { done, total } => {
+            TimeTravelReplayStep::Pending { done, total,ownership } => {
+                if ownership!=RetainedCloneProgress::default(){assert!(self.time_travel.command_receipt.is_none());self.time_travel.command_receipt=Some((grant,ownership));}
                 let _ = self.time_travel.session.apply(TimeTravelEvent::ReplayProgressed { generation, done, total });
                 let now_ms = semio_framework_job::default_now_ms().unwrap_or(0);
                 let advanced = u64::from(done.saturating_sub(self.time_travel.refreshed_done)) * 1_000 >= u64::from(total) * TIME_TRAVEL_PROGRESS_REFRESH_PERMILLE;
@@ -122,6 +124,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                 return Ok(());
             }
             TimeTravelReplayStep::Completed(report) => TimeTravelEvent::ReplayCompleted { generation, report },
+            TimeTravelReplayStep::Refused(error)=>{let progress=error.retained_progress();if progress!=RetainedCloneProgress::default(){assert!(self.time_travel.command_receipt.is_none());self.time_travel.command_receipt=Some((grant,progress));}return Err(error.into_fault())},
             TimeTravelReplayStep::Faulted => TimeTravelEvent::ReplayFaulted { generation, code: TIME_TRAVEL_REPLAY_FAULTED_CODE.to_string() },
         };
         let mut dialogs = Vec::new();

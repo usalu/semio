@@ -10,6 +10,53 @@ static TABLE_ROW_FIELDS: [F;4]=[F::new(3,"visible",B::Bool),F::new(1,"text",B::T
 fn table_row_spec()->BorrowedRecordSpec{BorrowedRecordSpec{keyword:None,layout:RecordLayout::Inline,fields:&TABLE_ROW_FIELDS}}
 static TABLE_FIELDS:[F;1]=[F::new(1,"rows",B::Table(table_row_spec))];
 static LONG_FIELDS: [F; 6] = [F::new(1,"first",B::Text),F::new(2,"again",B::Text),F::new(3,"inline",B::Text),F::new(4,"index",B::UInt),F::new(5,"signed",B::Int),F::new(6,"absent",B::UInt)];
+fn text_shape()->B{B::Text}
+static MAP_FIELDS:[F;1]=[F::new(1,"map",B::Map(text_shape))];
+static STMT_ROW:[F;1]=[F::new(0,"value",B::Text)];
+fn stmt_row()->BorrowedRecordSpec{BorrowedRecordSpec{keyword:Some("put"),layout:RecordLayout::Inline,fields:&STMT_ROW}}
+static VARIANTS:[(&str,fn()->BorrowedRecordSpec);1]=[("put",stmt_row)];
+static STMT_FIELDS:[F;1]=[F::new(1,"statements",B::Statements(&VARIANTS))];
+static WIRE_FIELDS:[F;1]=[F::new(1,"wire",B::Wire)];
+
+#[test]
+fn borrowed_projected_pack_original_expression_ast_matches_independent_corpus_and_cancellation(){
+ use semio_framework_dsl_record::{ExprValue as E,ExprOp};
+ fn expression(node:&serde_json::Value)->E{match node[0].as_str().unwrap(){"num"=>E::Num(node[1].as_f64().unwrap()),"var"=>E::Var(node[1].as_str().unwrap().into()),"neg"=>E::Neg(Box::new(expression(&node[1]))),"binary"=>E::Binary(match node[1].as_str().unwrap(){"add"=>ExprOp::Add,"sub"=>ExprOp::Sub,"mul"=>ExprOp::Mul,_=>ExprOp::Div},Box::new(expression(&node[2])),Box::new(expression(&node[3]))),"call"=>E::Call(node[1].as_str().unwrap().into(),node[2].as_array().unwrap().iter().map(expression).collect()),_=>panic!("expression fixture")}}
+ struct Source(E);
+ impl FieldProjectionSource for Source{fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{match path{[]=>Ok(V::Record(&[1])),[0]=>Ok(V::Expr(&self.0)),_=>Err(invalid("original expression field path"))}}}
+ static FIELDS:[F;1]=[F::new(1,"formula",B::Expr)];let spec=BorrowedRecordSpec{keyword:None,layout:RecordLayout::Inline,fields:&FIELDS};let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧮️expression/🔣️.json")).unwrap();
+ for row in fixture["cases"].as_array().unwrap(){let source=Source(expression(&row["ast"]));let expected:Vec<u8>=row["bodyHex"].as_str().unwrap().as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect();let mut cursor=BorrowedProjectedPackCursor::default();let mut output=[0;1];let mut actual=Vec::new();for _ in 0..1000000{let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:cursor.next_minimum_copy_bytes(),maximum_capacity_bytes:cursor.next_capacity_byte_demand().unwrap(),maximum_release_bytes:0,maximum_depth:cursor.next_advance_depth_demand().unwrap()};let(step,birth,free)=crate::test_allocation::observe_backing(||cursor.advance(&source,spec,&mut output,grant).unwrap());assert_eq!((birth,free),(step.progress.retained_capacity_bytes,0));assert!(step.progress.fits(grant));actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}}let complete=cursor.is_complete();close(&mut cursor);assert!(complete);assert_eq!(actual,expected,"{}",row["text"]);assert_eq!(semio_framework_dsl_record::print_expr(&source.0),row["text"].as_str().unwrap());for stop in fixture["cancelNodes"].as_array().unwrap(){let mut cursor=BorrowedProjectedPackCursor::default();for _ in 0..stop.as_u64().unwrap(){let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:0,maximum_depth:128};if cursor.advance(&source,spec,&mut output,grant).unwrap().complete{break;}}close(&mut cursor);}eprintln!("[DEBUG] retained original expression{} emits literal independent corpus bytes and cancels without AST/text shadow",row["text"]);}
+}
+
+#[test]
+fn borrowed_projected_pack_standard_map_statements_wire_match_portable_oracle(){
+ struct Source<'a>(&'a serde_json::Value);
+ impl FieldProjectionSource for Source<'_>{
+  fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{if path.is_empty(){return Ok(V::Record(&[1]));}if path[0]!=0{return Err(invalid("branch ordinal"));}let row=self.0;let tail=&path[1..];Ok(match row["kind"].as_str().unwrap(){
+   "map"=>if tail.is_empty(){V::Map(row["pairs"].as_array().unwrap().len())}else{row["pairs"][tail[0]][1].as_str().map_or(V::Absent,V::Text)},
+   "statements"=>if tail.is_empty(){V::Statements(row["values"].as_array().unwrap().len())}else if tail.len()==1{V::Record(&[0])}else{V::Text(row["values"][tail[0]].as_str().unwrap())},
+   "wire"=>if tail.is_empty(){V::Wire(Some(row["directed"].as_bool().unwrap()))}else if tail[0]==8{V::IntrinsicNull}else{row["slots"][tail[0]].as_str().map_or(V::Absent,V::Text)},_=>return Err(invalid("branch kind"))})}
+  fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{if path!=[0]{return Err(invalid("branch key path"));}Ok(if self.0["kind"]=="map"{self.0["pairs"][index][0].as_str().unwrap()}else{self.0["keyword"].as_str().unwrap()})}
+ }
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧩️branches/🔣️.json")).unwrap();
+ for row in fixture["cases"].as_array().unwrap(){let source=Source(row);let fields=match row["kind"].as_str().unwrap(){"map"=>&MAP_FIELDS,"statements"=>&STMT_FIELDS,_=>&WIRE_FIELDS};let spec=BorrowedRecordSpec{keyword:None,layout:RecordLayout::Inline,fields};let mut cursor=BorrowedProjectedPackCursor::default();let mut output=[0;1];let mut actual=Vec::new();
+  for _ in 0..20000{let capacity=cursor.next_capacity_byte_demand().unwrap();let(step,birth,free)=crate::test_allocation::observe_backing(||cursor.advance(&source,spec,&mut output,grant(capacity,0)).unwrap());assert_eq!((birth,free),(step.progress.retained_capacity_bytes,0));actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}}
+  let complete=cursor.is_complete();close(&mut cursor);assert!(complete);assert_eq!(actual,expected(row["expectedHex"].as_str().unwrap()));eprintln!("[DEBUG] original borrowed Pack {} exact portable canonical bytes and every backing receipt",row["kind"]);
+ }
+}
+
+#[test]
+fn borrowed_projected_pack_native_paged_key_and_text_cross_unicode_pages(){
+ use semio_framework_value::{NativeEncodeControl,ErasedSnapshotRetirement,RetainedCloneStep,paged_text::{PagedText,TextReadSource}};
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🌿️native-text/🔣️.json")).unwrap();let marker=fixture["scalar"].as_str().unwrap().as_bytes();let split=fixture["split"].as_u64().unwrap()as usize;let length=fixture["bytes"].as_u64().unwrap()as usize;
+ struct Bytes<'a>{marker:&'a[u8],split:usize,length:usize}impl TextReadSource for Bytes<'_>{fn byte_len(&self)->usize{self.length}fn byte_at(&self,index:usize)->Option<u8>{if index>=self.length{None}else if index>=self.split&&index<self.split+self.marker.len(){Some(self.marker[index-self.split])}else{Some(b'x')}}}
+ struct Source{value:PagedText<8194>}impl FieldProjectionSource for Source{fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{Ok(match path{[]=>V::Record(&[1]),[0]=>V::Map(1),[0,0]=>V::TextSource(self.value.read_view()?),_=>return Err(invalid("native text path"))})}fn projection_key_view(&self,path:&[usize],index:usize)->Result<TextReadView<'_>,ValueError>{if path!=[0]||index!=0{return Err(invalid("native key path"));}self.value.read_view()}}
+ let mut source=Source{value:PagedText::empty()};let mut allow=|_|true;let mut control=NativeEncodeControl::new(65536,&mut allow);source.value.read_from_encoding_source(&Bytes{marker,split,length},&mut control).unwrap();assert!(source.value.read_view().unwrap().contiguous().is_none());let backing=source.value.allocated_bytes();
+ let spec=BorrowedRecordSpec{keyword:None,layout:RecordLayout::Inline,fields:&MAP_FIELDS};let mut cursor=BorrowedProjectedPackCursor::default();let mut output=[0;1];let mut actual=Vec::new();
+ for _ in 0..100000{let capacity=cursor.next_capacity_byte_demand().unwrap();let(step,birth,free)=crate::test_allocation::observe_backing(||cursor.advance(&source,spec,&mut output,grant(capacity,0)).unwrap());assert_eq!((birth,free),(step.progress.retained_capacity_bytes,0));actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}}
+ let complete=cursor.is_complete();close(&mut cursor);assert!(complete);let mut expected=vec![1,130,64];expected.extend((0..length).map(|index|Bytes{marker,split,length}.byte_at(index).unwrap()));expected.extend(self::expected(fixture["bodyHex"].as_str().unwrap()));assert_eq!(actual,expected);assert_eq!(source.value.allocated_bytes(),backing);
+ for _ in 0..20000{match source.value.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:0,maximum_release_bytes:4096,maximum_depth:64}).unwrap(){RetainedCloneStep::Progress(_)=>{},RetainedCloneStep::Complete(_)=>break,}}assert!(source.value.terminal_is_empty());eprintln!("[DEBUG] retained original native8194byte map key/text crosses Unicode page boundary with no contiguous key port or flattened text");
+}
 
 struct Node { value: Kind, ids: &'static [u16] }
 enum Kind { Block(Box<Node>), Record(Vec<Node>), List(Vec<Node>,bool), Text(String), Bool(bool), Float(f64), Int(i64), UInt(u64), Absent }
@@ -43,7 +90,7 @@ impl FieldProjectionSource for Node {
 
 fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
 fn expected(value:&str) -> Vec<u8> { value.as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect() }
-fn grant(capacity:usize,release:usize) -> RetainedCloneGrant { RetainedCloneGrant { maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:64 } }
+fn grant(capacity:usize,release:usize) -> RetainedCloneGrant { RetainedCloneGrant { maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:64 } }
 fn close(cursor:&mut BorrowedProjectedPackCursor) {
     for _ in 0..20000 {
         let required=cursor.next_close_byte_demand().unwrap();
@@ -117,7 +164,7 @@ fn borrowed_projected_pack_cursor_intrinsic_order_duplicates_and_exact_grants() 
                 let(mut cursor,birth,free)=semio_framework_trace_memory_testing::observe_backing(BorrowedProjectedPackCursor::default);assert_eq!((birth,free),(0,0));
                 let mut output=[0;256];let mut actual=Vec::new();let mut complete=false;
                 for _ in 0..20000 {
-                    let demand=cursor.next_capacity_byte_demand().unwrap();let minimum=cursor.next_minimum_copy_bytes();let admitted=RetainedCloneGrant{maximum_copy_bytes:copy,..grant(demand,0)};
+                    let demand=cursor.next_capacity_byte_demand().unwrap();let minimum=cursor.next_minimum_copy_bytes();let admitted=RetainedCloneGrant{maximum_copy_bytes:copy.max(minimum),..grant(demand,0)};
                     let(zero,birth,free)=semio_framework_trace_memory_testing::observe_backing(||cursor.advance_intrinsic(&source,field,&mut output[..width],RetainedCloneGrant{maximum_items:0,..admitted}).unwrap());assert_eq!(zero.progress,Default::default());assert_eq!((birth,free),(0,0));
                     if minimum!=0 {let(denied,birth,free)=semio_framework_trace_memory_testing::observe_backing(||cursor.advance_intrinsic(&source,field,&mut output[..width],RetainedCloneGrant{maximum_copy_bytes:minimum-1,..admitted}).unwrap());assert_eq!(denied.progress,Default::default());assert_eq!((birth,free),(0,0));}
                     if demand!=0 {let(denied,birth,free)=semio_framework_trace_memory_testing::observe_backing(||cursor.advance_intrinsic(&source,field,&mut output[..width],RetainedCloneGrant{maximum_capacity_bytes:demand-1,..admitted}).unwrap());assert_eq!(denied.progress,Default::default());assert_eq!((birth,free),(0,0));assert_eq!(cursor.next_capacity_byte_demand().unwrap(),demand);}
@@ -145,8 +192,8 @@ fn borrowed_pack_failure_preserves_real_comparison_and_original_symbol_backing()
         let(step,birth,free)=semio_framework_trace_memory_testing::observe_backing(||cursor.symbols.reserve_one(policy.maximum_capacity_bytes).unwrap());
         assert_eq!(birth,step.allocated_bytes);assert_eq!(free,0);assert!(birth<=policy.maximum_capacity_bytes);retained+=birth;
     }
-    cursor.symbols.push_reserved(Symbol { path:[0;64], depth:0, occurrences:usize::MAX, selected:false, forced:false }).unwrap();
-    cursor.note=Some(Symbol { path:[0;64], depth:0, occurrences:1, selected:false, forced:false });
+    cursor.symbols.push_reserved(Symbol { path:[0;64], depth:0, occurrences:usize::MAX, selected:false, forced:false,key:None }).unwrap();
+    cursor.note=Some(Symbol { path:[0;64], depth:0, occurrences:1, selected:false, forced:false,key:None });
     cursor.phase=Phase::Find;
     let mut output=[0xa5;64];
     let(failure,birth,free)=semio_framework_trace_memory_testing::observe_backing(||cursor.advance_intrinsic(&source,1,&mut output,policy).unwrap_err());
@@ -169,9 +216,9 @@ fn borrowed_pack_failure_preserves_real_comparison_and_original_symbol_backing()
 fn borrowed_pack_flat_intrinsic_uses_only_original_actual_depth_and_receipts(){
     let rows:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/⚠️failure/🔣️.json")).unwrap();
     let row=&rows["depthProbe"];let source=DslValue::Bool(row["source"].as_bool().unwrap());let field=row["fieldId"].as_u64().unwrap()as u16;
-    let p=&rows["policy"];let policy=RetainedCloneGrant{maximum_items:p["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:p["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:p["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:p["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:row["maximumDepth"].as_u64().unwrap()as usize};
+    let p=&rows["policy"];let policy=RetainedCloneGrant{maximum_items:p["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:4096,maximum_capacity_bytes:p["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:p["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:row["maximumDepth"].as_u64().unwrap()as usize};
     let mut cursor=BorrowedProjectedPackCursor::default();let mut output=[0;64];let mut actual=Vec::new();
-    for _ in 0..64{
+    for _ in 0..256{
         let(denied,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance_intrinsic(&source,field,&mut output,RetainedCloneGrant{maximum_depth:0,..policy}).unwrap());
         assert_eq!(denied.progress,Default::default());assert_eq!((event.requested_bytes,event.released_bytes),(0,0));
         assert!(cursor.next_advance_depth_demand().unwrap()<=policy.maximum_depth);
@@ -179,6 +226,7 @@ fn borrowed_pack_flat_intrinsic_uses_only_original_actual_depth_and_receipts(){
         assert!(step.progress.fits(policy));assert_eq!(event.requested_bytes,step.progress.retained_capacity_bytes);assert_eq!(event.released_bytes,step.progress.released_bytes);actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}
     }
     assert!(cursor.is_complete());assert_eq!(actual,expected(row["expectedHex"].as_str().unwrap()));
-    let(step,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close(policy).unwrap());
-    assert!(step.complete);assert!(step.progress.fits(policy));assert_eq!((event.requested_bytes,event.released_bytes),(step.progress.retained_capacity_bytes,step.progress.released_bytes));
+    let mut step=BorrowedProjectedPackProgress::default();for _ in 0..256{let(next,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close(policy).unwrap());assert_eq!((event.requested_bytes,event.released_bytes),(next.progress.retained_capacity_bytes,next.progress.released_bytes));step=next;if step.complete{break;}}
+    assert!(step.complete);assert!(step.progress.fits(policy));
+    eprintln!("[DEBUG] original flat intrinsic Pack byte oracle and System receipts use source8/backing bound and unchanged64 logical bound and fixed currencies");
 }

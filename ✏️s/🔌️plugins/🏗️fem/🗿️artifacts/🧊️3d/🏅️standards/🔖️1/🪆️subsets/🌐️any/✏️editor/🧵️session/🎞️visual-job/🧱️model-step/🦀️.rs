@@ -13,10 +13,10 @@ pub(super) struct Fem3dMeshedSolid {
 
 pub struct Fem3dNumericalChild {
     pub stage: Fem3dNumericalStage,
-    pub model: Option<MountedAnalysisModel>,
-    pub analysis_node_ids: FixedSlots<String, MAXIMUM_FIELDS>,
+    model: Option<MountedAnalysisModel>,
+    analysis_node_ids: FixedSlots<String, MAXIMUM_FIELDS>,
     pub(super) meshed_solids: FixedSlots<Fem3dMeshedSolid, MAXIMUM_REGIONS>,
-    pub node_cursor: usize,
+    node_cursor: usize,
     element_cursor: usize,
     support_cursor: usize,
     pub(super) dof_cursor: usize,
@@ -40,17 +40,23 @@ pub struct Fem3dNumericalChild {
     pub(super) rejected_pcg_matrix: Option<Csr>,
     pub(super) rejected_pcg_rhs: Option<MountedScalarSlots>,
     pub pcg: Option<PcgJob>,
-    pub(super) modal_build: Option<ModalInputConstruction>,
+    pub(super) modal_build: Option<SymmetricPencilConstruction>,
     pub(super) ldlt: Option<LdltJob>,
-    pub subspace: Option<SubspaceIterationJob>,
+    subspace: Option<SubspaceIterationJob>,
     pub(super) modal_mass: Option<Csr>,
-    pub scalar_axis: usize,
-    pub scalar: Fem3dSolverScalar,
+    scalar_axis: usize,
+    scalar: Fem3dSolverScalar,
     pub(super) equations: [[Option<usize>; 6]; MAXIMUM_FIELDS],
     pub(super) full_equations: [[Option<usize>; 6]; MAXIMUM_FIELDS],
     pub(super) full_rhs: [f64; MAXIMUM_FIELDS * 6],
+    pub(super) full_reactions: [[f64; 6]; MAXIMUM_FIELDS],
+    pub(super) stress_sums: [f64; MAXIMUM_FIELDS],
+    pub(super) stress_counts: [usize; MAXIMUM_FIELDS],
     pub(super) free_order: usize,
     pub(super) rhs: MountedScalarSlots,
+    pub(super) request: Fem3dResultRequest,
+    pub(super) source_case: usize,
+    pub(super) source_factor: f64,
     pub(super) load_cursor: usize,
     pub(super) load_node_cursor: usize,
     pub(super) load_solid_cursor: usize,
@@ -59,7 +65,7 @@ pub struct Fem3dNumericalChild {
     pub(super) load_element_cursor: usize,
     pub(super) load_node_indices: [usize; 2],
     pub(super) load_positions: [[f64; 3]; 2],
-    pub reaction_entry: usize,
+    reaction_entry: usize,
     pub(super) reaction_accumulator: f64,
     pub(super) solid_cursor: usize,
     hole_cursor: usize,
@@ -82,9 +88,9 @@ pub struct Fem3dNumericalChild {
     solid_material_cursor: usize,
     resolved_solid_material: usize,
     pub(super) solid_materials: [usize; MAXIMUM_REGIONS],
-    pub close_lane: u8,
-    pub close_started_jobs: u8,
-    pub operation: Option<semio_framework_job::Operation>,
+    close_lane: u8,
+    close_started_jobs: u8,
+    operation: Option<semio_framework_job::Operation>,
     pub(super) solver_page_cursor: usize,
     pub(super) solver_page_lane: bool,
     pub(super) modal_lumped_mass: [f64; MAXIMUM_FIELDS * 6],
@@ -93,6 +99,22 @@ pub struct Fem3dNumericalChild {
 
 
 impl Fem3dNumericalChild {
+    pub fn close_demands(&self) -> Result<RetirementDemand, ValueError> {
+        let mut demand = RetirementDemand { release_bytes: SESSION_CLOSE_RELEASE_BYTES, depth: SESSION_CLOSE_DEPTH, ..Default::default() };
+        let mut merge = |child: RetirementDemand| {
+            demand.copy_bytes = demand.copy_bytes.max(child.copy_bytes);
+            demand.capacity_bytes = demand.capacity_bytes.max(child.capacity_bytes);
+            demand.release_bytes = demand.release_bytes.max(child.release_bytes);
+            demand.depth = demand.depth.max(child.depth);
+        };
+        if let Some(child) = self.mesh.as_ref() { merge(semio_s_fem_sparse::numerical_close_demand(child)?); }
+        if let Some(child) = self.pcg.as_ref() { merge(semio_s_fem_sparse::numerical_close_demand(child)?); }
+        if let Some(child) = self.ldlt.as_ref() { merge(semio_s_fem_sparse::numerical_close_demand(child)?); }
+        if let Some(child) = self.subspace.as_ref() { merge(semio_s_fem_sparse::numerical_close_demand(child)?); }
+        if let Some(child) = self.pcg_build.as_ref() { merge(child.close_demand()?); }
+        Ok(demand)
+    }
+
     pub fn new() -> Self {
         Self {
             stage: Fem3dNumericalStage::ReserveSolverPages,
@@ -132,8 +154,14 @@ impl Fem3dNumericalChild {
             equations: [[None; 6]; MAXIMUM_FIELDS],
             full_equations: [[None; 6]; MAXIMUM_FIELDS],
             full_rhs: [0.0; MAXIMUM_FIELDS * 6],
+            full_reactions: [[0.0; 6]; MAXIMUM_FIELDS],
+            stress_sums: [0.0; MAXIMUM_FIELDS],
+            stress_counts: [0; MAXIMUM_FIELDS],
             free_order: 0,
             rhs: MountedScalarSlots::new(),
+            request: Fem3dResultRequest::default(),
+            source_case: 0,
+            source_factor: 1.0,
             load_cursor: 0,
             load_node_cursor: 0,
             load_solid_cursor: 0,
@@ -211,6 +239,7 @@ impl Fem3dNumericalChild {
     }
 
     pub(super) fn apply_rhs_value(&mut self, node: usize, axis: usize, value: f64) -> Result<(), Vec<u8>> {
+        let value = value * self.source_factor;
         if !value.is_finite() {
             return Err(b"fem3d.numerical-load-value".to_vec());
         }
@@ -223,7 +252,7 @@ impl Fem3dNumericalChild {
         Ok(())
     }
 
-    pub fn observe_child_end(&mut self, end: ChildEnd) -> Result<bool, Vec<u8>> {
+    fn observe_child_end(&mut self, end: ChildEnd) -> Result<bool, Vec<u8>> {
         match end {
             ChildEnd::Cancelled => Err(b"fem3d.numerical-cancelled".to_vec()),
             ChildEnd::Fault => Err(b"fem3d.numerical-child-fault".to_vec()),

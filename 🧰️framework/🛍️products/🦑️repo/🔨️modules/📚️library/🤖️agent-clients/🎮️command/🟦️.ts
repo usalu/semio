@@ -1,7 +1,7 @@
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { checkAgentClients, writeAgentClients } from "../🟦️.ts";
 
-/** 🤖️ `agents write|check`: derives the MCP configuration of every agent and editor client from the root dashboard declaration, or fails on drift.
+/** 🤖️ `agents write|check`: derives the MCP configuration of each headless agent client from the root dashboard declaration, or fails on drift.
  * @see ../🟦️.ts */
 export class AgentsScript extends Script {
   run(segments: string[]): void {

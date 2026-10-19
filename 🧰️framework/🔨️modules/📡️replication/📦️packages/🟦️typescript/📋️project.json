@@ -55,6 +55,29 @@
         "command": "bun ./📜️script.ts test-index-insertion",
         "forwardAllArgs": true
       }
+    },
+    "test-map-delta": {
+      "executor": "repo:script",
+      "options": {
+        "command": "bun 📜️script.ts test-map-delta",
+        "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript"
+      }
+    },
+    "test-retained-mutation": {
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript",
+        "command": "bun 📜️script.ts test-retained-mutation"
+      },
+      "executor": "repo:script"
+    },
+    "test-diagnostic-transfer": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-diagnostic-transfer",
+        "forwardAllArgs": true
+      }
     }
   }
 }

@@ -1,6 +1,6 @@
 //! 🔗️ Fastener edit gestures of the puzzle 5d editor: the retained edit, retarget and delete fastener work. See [`super`].
 
-use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use semio_framework_plugin::kernel::UiDirtyScope;
 use semio_framework_plugin::EditorApp;
@@ -41,7 +41,7 @@ pub struct Puzzle5dEditFastenerWork {
 
 impl Default for Puzzle5dEditFastenerWork {
     fn default() -> Self {
-        Self { close_owners: Default::default(), stage: Puzzle5dEditFastenerStage::Scan, cursor: 0, fastener: None, mutations: Vec::with_capacity(2) }
+        Self { close_owners: Default::default(), stage: Puzzle5dEditFastenerStage::Scan, cursor: 0, fastener: None, mutations: Vec::new() }
     }
 }
 
@@ -97,6 +97,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let projection = puzzle5d_editor_projection(snapshot);
@@ -137,6 +139,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle5dEditFastenerStage::Complete => Err(Fault::from("puzzle5d-edit-fastener-complete-repolled")),
             Puzzle5dEditFastenerStage::Closing => Err(Fault::from("puzzle5d-edit-fastener-closing")),
         }
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
@@ -148,8 +152,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            self.close_owners.close_step(grant)
+        semio_framework_job::close_original_nested_step(cx,|cx,_grant|{
+            self.close_owners.close_step(cx)
         })
     }
 
@@ -232,7 +236,7 @@ impl Default for Puzzle5dRetargetFastenerWork {
             target: None,
             source_kind: None,
             target_kind: None,
-            mutations: Vec::with_capacity(2),
+            mutations: Vec::new(),
         }
     }
 }
@@ -287,6 +291,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let projection = puzzle5d_editor_projection(snapshot);
@@ -405,6 +411,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle5dRetargetFastenerStage::Complete => Err(Fault::from("puzzle5d-retarget-fastener-complete-repolled")),
             Puzzle5dRetargetFastenerStage::Closing => Err(Fault::from("puzzle5d-retarget-fastener-closing")),
         }
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
@@ -416,8 +424,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            self.close_owners.close_step(grant)
+        semio_framework_job::close_original_nested_step(cx,|cx,_grant|{
+            self.close_owners.close_step(cx)
         })
     }
 
@@ -461,7 +469,7 @@ pub struct Puzzle5dDeleteFastenerWork {
 
 impl Default for Puzzle5dDeleteFastenerWork {
     fn default() -> Self {
-        Self { close_owners: Default::default(), cursor: 0, closing: false, mutations: Vec::with_capacity(1) }
+        Self { close_owners: Default::default(), cursor: 0, closing: false, mutations: Vec::new() }
     }
 }
 
@@ -480,6 +488,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let projection = puzzle5d_editor_projection(snapshot);
@@ -494,6 +504,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             }
         }
         Ok(crate::puzzle_progress_step!("puzzle5d-delete-fastener", "Scanning fastener", "Verbindung wird geprüft"))
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
@@ -505,8 +517,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            self.close_owners.close_step(grant)
+        semio_framework_job::close_original_nested_step(cx,|cx,_grant|{
+            self.close_owners.close_step(cx)
         })
     }
 
@@ -536,3 +548,48 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
 }
 //#endregion 🧵️RetainedCommands
 //#endregion 🔖️PlayApp
+
+impl Puzzle5dDeleteFastenerWork {
+    pub fn original_birth_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let capacity = (1 as usize).checked_mul(std::mem::size_of::<Puzzle5dMutation>())
+            .ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Puzzle5D Puzzle5dDeleteFastenerWork backing extent overflow"))?;
+        Ok(semio_framework_value::RetirementDemand { capacity_bytes: capacity, depth: 1, ..Default::default() })
+    }
+
+    pub fn from_original_construction(scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+        scope.admit_owner(Self::original_birth_demands()?)?;
+        let work = Self { mutations: Vec::with_capacity(1), ..Self::default() };
+        let capacity = work.mutations.capacity() * std::mem::size_of::<Puzzle5dMutation>();
+        Ok((work, semio_framework_value::RetainedCloneProgress { retained_capacity_bytes: capacity, ..Default::default() }))
+    }
+}
+
+impl Puzzle5dEditFastenerWork {
+    pub fn original_birth_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let capacity = (2 as usize).checked_mul(std::mem::size_of::<Puzzle5dMutation>())
+            .ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Puzzle5D Puzzle5dEditFastenerWork backing extent overflow"))?;
+        Ok(semio_framework_value::RetirementDemand { capacity_bytes: capacity, depth: 1, ..Default::default() })
+    }
+
+    pub fn from_original_construction(scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+        scope.admit_owner(Self::original_birth_demands()?)?;
+        let work = Self { mutations: Vec::with_capacity(2), ..Self::default() };
+        let capacity = work.mutations.capacity() * std::mem::size_of::<Puzzle5dMutation>();
+        Ok((work, semio_framework_value::RetainedCloneProgress { retained_capacity_bytes: capacity, ..Default::default() }))
+    }
+}
+
+impl Puzzle5dRetargetFastenerWork {
+    pub fn original_birth_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let capacity = (2 as usize).checked_mul(std::mem::size_of::<Puzzle5dMutation>())
+            .ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Puzzle5D Puzzle5dRetargetFastenerWork backing extent overflow"))?;
+        Ok(semio_framework_value::RetirementDemand { capacity_bytes: capacity, depth: 1, ..Default::default() })
+    }
+
+    pub fn from_original_construction(scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+        scope.admit_owner(Self::original_birth_demands()?)?;
+        let work = Self { mutations: Vec::with_capacity(2), ..Self::default() };
+        let capacity = work.mutations.capacity() * std::mem::size_of::<Puzzle5dMutation>();
+        Ok((work, semio_framework_value::RetainedCloneProgress { retained_capacity_bytes: capacity, ..Default::default() }))
+    }
+}

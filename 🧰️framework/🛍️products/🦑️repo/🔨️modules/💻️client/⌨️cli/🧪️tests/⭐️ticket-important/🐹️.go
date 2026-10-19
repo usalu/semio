@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+
 )
 
 func setupTicketDir(t *testing.T) (string, string) {
@@ -373,15 +374,22 @@ func TestTicketGeneratedOutputRetention(t *testing.T) {
 	if err := json.Unmarshal(data, &fixture); err != nil { t.Fatal(err) }
 	if len(fixture.Purge.Retention) != 16 { t.Fatalf("retention vectors = %d", len(fixture.Purge.Retention)) }
 	root := t.TempDir()
-	for _, row := range fixture.Purge.Retention { writeSparseTicketArtifact(t, filepath.Join(root, filepath.FromSlash(row.Path)), row.Bytes) }
-	if err := purgeOversizedTicketArtifacts(root); err != nil { t.Fatal(err) }
+	for _, row := range fixture.Purge.Retention {
+		writeSparseTicketArtifact(t, filepath.Join(root, filepath.FromSlash(row.Path)), row.Bytes)
+	}
+	if err := purgeOversizedTicketArtifacts(root); err != nil {
+		t.Fatal(err)
+	}
 	for _, row := range fixture.Purge.Retention {
 		info, err := os.Stat(filepath.Join(root, filepath.FromSlash(row.Path)))
-		if row.Retained && (err != nil || info.Size() != row.Bytes) { t.Errorf("required retained artifact %s: %v", row.Path, err) }
-		if !row.Retained && !os.IsNotExist(err) { t.Errorf("generated artifact still exists: %s", row.Path) }
+		if row.Retained && (err != nil || info.Size() != row.Bytes) {
+			t.Errorf("required retained artifact %s: %v", row.Path, err)
+		}
+		if !row.Retained && !os.IsNotExist(err) {
+			t.Errorf("generated artifact still exists: %s", row.Path)
+		}
 	}
 }
-
 // 🧭️ TestTicketGeneratedOutputRoots preserves authored data with missing, non-directory and symbolic generated roots.
 func TestTicketGeneratedOutputRoots(t *testing.T) {
 	for _, mode := range []string{"absent", "file", "symlink"} {
@@ -392,11 +400,24 @@ func TestTicketGeneratedOutputRoots(t *testing.T) {
 			writeSparseTicketArtifact(t, authored, 11<<20)
 			writeSparseTicketArtifact(t, outside, 11<<20)
 			output := filepath.Join(root, "🗑️generated")
-			if mode == "file" { writeSparseTicketArtifact(t, output, 11<<20) }
-			if mode == "symlink" { if err := os.Symlink(external, output); err != nil { t.Skipf("platform does not permit symbolic directory: %v", err) } }
+			if mode == "file" {
+				writeSparseTicketArtifact(t, output, 11<<20)
+			}
+			if mode == "symlink" {
+				if err := os.Symlink(external, output); err != nil {
+					t.Skipf("platform does not permit symbolic directory: %v", err)
+				}
+			}
 			err := purgeOversizedTicketArtifacts(root)
-			if (mode == "file") != (err != nil) { t.Fatalf("generated root %s: %v", mode, err) }
-			for _, path := range []string{authored, outside} { info, err := os.Stat(path); if err != nil || info.Size() != 11<<20 { t.Fatalf("retained source %s: %v", path, err) } }
+			if (mode == "file") != (err != nil) {
+				t.Fatalf("generated root %s: %v", mode, err)
+			}
+			for _, path := range []string{authored, outside} {
+				info, err := os.Stat(path)
+				if err != nil || info.Size() != 11<<20 {
+					t.Fatalf("retained source %s: %v", path, err)
+				}
+			}
 		})
 	}
 }

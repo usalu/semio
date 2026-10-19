@@ -26,6 +26,20 @@ pub fn set_default_app(dialect: ArtifactDialect, role: AppRole, app: AppRef) -> 
 impl MutationKind<OpeningPreferences, OpeningConfigMutation> for SetDefaultApp {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "default-app", kind: "set-default-app", record: "Set" };
 
+
+
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set default {} for \"{}\"", role_name(self.role), format!("{} ({}, {})",self.dialect.artifact_kind,self.dialect.standard,self.dialect.subset)), &format!("Standard-{} für \"{}\" festlegen", role_name_de(self.role), format!("{} ({}, {})",self.dialect.artifact_kind,self.dialect.standard,self.dialect.subset)))
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec![self.dialect.artifact_kind.clone(),self.dialect.standard.clone(),self.dialect.subset.clone(),role_name(self.role).to_string()]
+    }
+}
+
+impl crate::os_spr::ColdMutationKind<OpeningPreferences, OpeningConfigMutation> for SetDefaultApp {
     fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningDiff> {
         if base.defaults.iter().any(|entry| entry.dialect == self.dialect && entry.role == self.role && entry.app == self.app) {
             let role = role_name(self.role);
@@ -33,7 +47,6 @@ impl MutationKind<OpeningPreferences, OpeningConfigMutation> for SetDefaultApp {
         }
         MutationOutcome::new(OpeningDiff { pins: vec![DefaultAppPin { dialect: self.dialect.clone(), role: self.role, app: Some(self.app.clone()) }] })
     }
-
     fn inverse(&self, base: &OpeningPreferences) -> Result<Vec<OpeningConfigMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         match base.defaults.iter().find(|entry| entry.dialect == self.dialect && entry.role == self.role) {
@@ -43,14 +56,6 @@ impl MutationKind<OpeningPreferences, OpeningConfigMutation> for SetDefaultApp {
     
     })())
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set default {} for \"{}\"", role_name(self.role), format!("{} ({}, {})",self.dialect.artifact_kind,self.dialect.standard,self.dialect.subset)), &format!("Standard-{} für \"{}\" festlegen", role_name_de(self.role), format!("{} ({}, {})",self.dialect.artifact_kind,self.dialect.standard,self.dialect.subset)))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.dialect.artifact_kind.clone(),self.dialect.standard.clone(),self.dialect.subset.clone(),role_name(self.role).to_string()]
-    }
 }
 
 fn role_name(role: AppRole) -> &'static str {

@@ -90,27 +90,35 @@ pub(crate) struct DemoDiff {
 }
 
 impl semio_framework_os_spr::DiffAlgebra<DemoSnapshot> for DemoDiff {
-    fn inverse(&self, base: &DemoSnapshot) -> Self {
-        Self { n: self.n.map(|_| base.n) }
-    }
+    
     fn is_empty(&self) -> bool {
         self.n.is_none()
     }
 }
 
-impl MutationDiff<DemoSnapshot> for DemoDiff {
-    fn apply(&self, snapshot: &DemoSnapshot, _capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<DemoSnapshot> {
-        Ok(DemoSnapshot { n: self.n.unwrap_or(snapshot.n) })
+impl crate::os_spr::ColdDiffAlgebra<DemoSnapshot> for DemoDiff {
+    fn inverse(&self, base: &DemoSnapshot) -> Self {
+        Self { n: self.n.map(|_| base.n) }
     }
+}
+
+impl MutationDiff<DemoSnapshot> for DemoDiff {
+    
 
     fn absorb(&mut self, other: Self) {
         if other.n.is_some() {
             self.n = other.n;
         }
     }
+
+    fn apply(&self, snapshot: &mut DemoSnapshot, _capability: crate::os_spr::ApplyCapability) -> crate::os_spr::MutationApplyResult<()> {
+                if let Some(value) = self.n { snapshot.n = value; }
+        Ok(())
+    }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(tag = "operation")]
 #[value(tag = "operation")]
 pub(super) enum DemoMutation {
@@ -192,7 +200,18 @@ impl Mutation<DemoSnapshot> for DemoMutation {
         }
     }
 
-    fn diff(&self, _snapshot: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<DemoDiff> {
+    
+
+
+
+    fn may_emit_foreign_steps(&self) -> bool {
+        false
+    }
+}
+
+impl semio_framework_os_spr::ColdMutation<DemoSnapshot> for DemoMutation {
+    type ReferenceDiff = DemoDiff;
+fn diff(&self, _snapshot: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<DemoDiff> {
         semio_framework_os_spr::MutationOutcome::new(match self {
             DemoMutation::SetN { n } => DemoDiff { n: Some(*n) },
         })
@@ -205,9 +224,7 @@ impl Mutation<DemoSnapshot> for DemoMutation {
     })())
 }
 
-    fn may_emit_foreign_steps(&self) -> bool {
-        false
-    }
+    
 }
 
 /// 🎯️ Idempotently registers the `demo/v1` codec (process-global `OnceLock` registry,

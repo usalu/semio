@@ -1,0 +1,1 @@
+{"rows":[{"id":1,"text":"first 🧱️"},{"id":2,"text":"second"}],"refuseFirst":true,"expectedOrder":[1,2],"expectedAttempts":3,"issuerAlias":{"dataEqual":true,"methodTableEqual":false,"admitted":false,"providerCalls":0,"pendingId":1}}

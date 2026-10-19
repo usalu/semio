@@ -1,5 +1,5 @@
-//! ↩️ Inverse for `DeleteObject` — reconstructs a `create-object` of the captured BASE object,
 //! then re-`connect-vortices`es every attraction BASE shows touching one of its vortices (severed
+//! ↩️ Inverse for `DeleteObject` — reconstructs a `create-object` of the captured BASE object,
 //! cascade). Missing target ⇒ `Vec::new()`.
 use super::mutation::DeleteObject;
 use {semio_s_artifact_puzzle_3d_mutations_vortex::connect_vortices::mutation::ConnectVortices, crate::create_object::mutation::CreateObject};

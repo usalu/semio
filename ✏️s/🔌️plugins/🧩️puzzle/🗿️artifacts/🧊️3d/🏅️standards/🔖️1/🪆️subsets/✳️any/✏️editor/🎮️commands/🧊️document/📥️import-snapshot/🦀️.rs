@@ -1,5 +1,5 @@
-//! 📥 Loads an imported scene_snapshot JSON file as the whole document (`Effect::LoadDocument`, outside history). The host's chunked inbound lane
 //! (`Effect::RequestFileOpen` → one `importSnapshot {payload, name, chunk, chunkCount}` per `IMPORT_CHUNK_BYTES` page)
+//! 📥 Loads an imported scene_snapshot JSON file as the whole document (`Effect::LoadDocument`, outside history). The host's chunked inbound lane
 //! is reassembled by the framework before this action runs (`semio_framework::kernel::ImportStaging`, admitted in the
 //! SDK's `dispatch_action`), so the action reads ONE whole `payload`; an agent may hand the scene_snapshot inline as a
 //! inline `payload` object instead.
@@ -11,7 +11,9 @@
 use {semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dSceneSnapshot, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_SCENE_SNAPSHOT_SCHEMA};
 use semio_s_plugin_puzzle_retained::PUZZLE_IMPORT_TOTAL_BYTES;
 
-use semio_framework_pack_json::{parse, Value};
+use semio_framework_pack_json::parse;
+
+use semio_framework_pack_json::Value;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_value::FromValue;
 use semio_framework::kernel::IMPORT_ARGUMENT_PAYLOAD;

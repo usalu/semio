@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {"id":"rectangle-latest-endpoint","method":"rectangle","start":[0,0],"samples":[[100,100],[10,10]],"release":[20,20],"retained":[[0,0],[20,20]],"active":true},
+    {"id":"rectangle-release-without-move","method":"rectangle","start":[0,0],"samples":[],"release":[20,20],"retained":[[0,0],[20,20]],"active":true},
+    {"id":"rectangle-threshold-latches","method":"rectangle","start":[0,0],"samples":[[10,10],[1,1]],"release":[1,1],"retained":[[0,0],[1,1]],"active":true},
+    {"id":"lasso-distinct-polyline","method":"lasso","start":[0,0],"samples":[[10,0],[10,0],[10,10],[0,10]],"release":[0,10],"retained":[[0,0],[10,0],[10,10],[0,10]],"active":true},
+    {"id":"click-below-threshold","method":"rectangle","start":[0,0],"samples":[[1,1]],"release":[2,1],"retained":[[0,0],[2,1]],"active":false}
+  ]
+}

@@ -34,9 +34,10 @@ export function wireLaneDataClass(lane: "command" | "preview" | "presence"): Per
 }
 
 export function bindingsDataClass(bindings: readonly PersistenceBinding[]): PersistenceDataClass {
-  const first = bindings[0];
-  if (!first) return "ephemeralLocalOnly";
-  return first.dataClass;
+  for (const dataClass of ["persistedShared", "persistedLocalOnly", "ephemeralShared"] as const) {
+    if (bindings.some(binding => binding.dataClass === dataClass)) return dataClass;
+  }
+  return "ephemeralLocalOnly";
 }
 
 export function folderPersistenceBinding(path: string): Extract<PersistenceBinding, { kind: "folder", dataClass: "persistedLocalOnly" }> {

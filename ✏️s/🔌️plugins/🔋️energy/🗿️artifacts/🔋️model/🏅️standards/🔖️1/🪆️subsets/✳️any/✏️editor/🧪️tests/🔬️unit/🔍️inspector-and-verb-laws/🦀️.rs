@@ -175,9 +175,9 @@ async fn the_action_bridge_accepts_the_inspector_field_id_value_payload() {
 #[semio_framework_async_macros::async_test]
 async fn the_material_and_thermostat_verbs_emit_only_their_own_kinds() {
     let snapshot = snapshot_of(&inspector_model());
-    assert_eq!(emitted_kinds(&snapshot, &material_property(1, "name", "Cedar Siding")), vec!["rename-material".to_string()]);
+    assert_eq!(emitted_kinds(&snapshot, &material_property(10, "name", "Cedar Siding")), vec!["rename-material".to_string()]);
     let stored = snapshot.model.materials[0].name.clone();
-    assert!(emitted_kinds(&snapshot, &material_property(1, "name", &stored)).is_empty(), "restating the stored name is not an edit");
+    assert!(emitted_kinds(&snapshot, &material_property(10, "name", &stored)).is_empty(), "restating the stored name is not an edit");
 }
 
 fn glazing_property(material: u32, property: &str, value: &str) -> EnergyModelEditorCommand {
@@ -198,6 +198,11 @@ async fn every_glazing_and_gas_material_property_round_trips_through_the_granula
         ("conductivityWMK", "1.1", "change-glazing-material-conductivity"),
         ("solarTransmittance", "0.6", "change-glazing-material-solar-transmittance"),
         ("visibleTransmittance", "0.7", "change-glazing-material-visible-transmittance"),
+        ("solarReflectanceFront", "0.18", "change-glazing-material-solar-reflectance-front"),
+        ("solarReflectanceBack", "0.18", "change-glazing-material-solar-reflectance-back"),
+        ("visibleReflectanceFront", "0.18", "change-glazing-material-visible-reflectance-front"),
+        ("visibleReflectanceBack", "0.18", "change-glazing-material-visible-reflectance-back"),
+        ("infraredTransmittance", "0.18", "change-glazing-material-infrared-transmittance"),
         ("infraredEmissivityFront", "0.1", "change-glazing-material-infrared-emissivity"),
         ("infraredEmissivityBack", "0.2", "change-glazing-material-infrared-emissivity"),
     ];
@@ -214,7 +219,8 @@ async fn every_glazing_and_gas_material_property_round_trips_through_the_granula
 #[semio_framework_async_macros::async_test]
 async fn the_glazing_and_gas_property_verbs_refuse_the_three_bad_payloads() {
     let snapshot = snapshot_of(&inspector_model());
-    assert_eq!(refusal(&snapshot, &glazing_property(22, "solarReflectanceFront", "0.1")), "app.command.invalid-payload", "a field with no mutation kind is refused, never silently written");
+    assert_eq!(refusal(&snapshot, &glazing_property(22, "solarReflectanceFront", "1.1")), "app.command.invalid-payload");
+    assert_eq!(refusal(&snapshot, &glazing_property(22, "unknownOpticalField", "0.1")), "app.command.invalid-payload");
     assert_eq!(refusal(&snapshot, &glazing_property(22, "thicknessM", "clear")), "app.command.invalid-payload");
     assert_eq!(refusal(&snapshot, &glazing_property(9_999, "thicknessM", "0.006")), "mutation.target-missing");
     assert_eq!(refusal(&snapshot, &gas_property(23, "gas", "helium")), "app.command.invalid-payload");

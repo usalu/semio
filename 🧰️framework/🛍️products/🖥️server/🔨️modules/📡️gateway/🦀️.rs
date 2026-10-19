@@ -144,3 +144,4 @@ pub use server::*;
 #[doc(hidden)]
 #[path = "🪝️testkit/🦀️.rs"]
 pub mod testkit;
+mod tests;

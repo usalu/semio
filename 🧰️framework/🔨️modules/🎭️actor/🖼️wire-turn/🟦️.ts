@@ -230,13 +230,15 @@ export const TYPED_OPERATION_TOKEN_BYTES = 25;
 export const TYPED_OPERATION_RESULT_PAGE_BYTES = 4_096;
 /** 🛤️ Highest `TypedOperationResultLane` discriminant the guest emits (`🔌️plugin/🦀️.rs`: Artifact 0 …
  * Fault 11, Interaction 12, WindowTransient 13, WindowConfig 14). */
-export const TYPED_OPERATION_RESULT_LANE_MAX = 14;
+export const TYPED_OPERATION_RESULT_LANE_MAX = 15;
 /** 🛤️ The lane a typed operation's document edit page rides (`{generationBefore, generationAfter}`). */
 export const TYPED_OPERATION_LANE_ARTIFACT = 0;
 /** 🛤️ The lane a terminal result page rides. */
 export const TYPED_OPERATION_LANE_TERMINAL = 10;
 /** 🛤️ The lane a fault result page rides. */
 export const TYPED_OPERATION_LANE_FAULT = 11;
+/** ⚠️ Original operation diagnostic JSON fragments remain nonterminal and require exact ACK. */
+export const TYPED_OPERATION_LANE_DIAGNOSTIC = 15;
 
 /** 🪪️ One result page's exact identity — the tuple `renderer_ack_token` reads back out of an ACK. */
 export type TypedOperationToken = {
@@ -262,6 +264,22 @@ export type TypedOperationPage = {
   readonly payload: Uint8Array;
   readonly acknowledgement: TypedOperationAckEvent;
 };
+
+/** ⚠️ A borrowed original diagnostic JSON window keeps exact operation and row provenance. */
+export type TypedOperationDiagnosticFragment = {
+  readonly token: TypedOperationToken;
+  readonly row: number;
+  readonly complete: boolean;
+  readonly bytes: Uint8Array;
+};
+
+/** 📤️ Diagnostic windows preserve arbitrary UTF8 boundaries for the shared asynchronous JSON reader. */
+export function typedOperationDiagnosticFragment(page: TypedOperationPage): TypedOperationDiagnosticFragment | null {
+  if (page.lane !== TYPED_OPERATION_LANE_DIAGNOSTIC) return null;
+  if (page.payload.byteLength < 5 || page.payload[4]! > 1) throw new Error("typed-operation diagnostic fragment violates its row or completion authority");
+  const header = new DataView(page.payload.buffer, page.payload.byteOffset, 5);
+  return { token: page.token, row: header.getUint32(0, true), complete: page.payload[4] === 1, bytes: page.payload.subarray(5) };
+}
 
 /** 📬️ Decodes one `Shell{instance}`-addressed typed-operation result page, or `null` when the effect
  * carries an `AppFrame` (or is not a shell message at all). The TS twin of the native host's
@@ -312,12 +330,14 @@ export type TypedOperationPageScan = {
   readonly acknowledgements: readonly TypedOperationAckEvent[];
   readonly terminal: boolean;
   readonly faults: readonly string[];
+  readonly diagnosticFragments: readonly TypedOperationDiagnosticFragment[];
 };
 
 export function scanTypedOperationPages(effects: readonly WireVariant[]): TypedOperationPageScan {
   const kept: WireVariant[] = [];
   const pages: TypedOperationPage[] = [];
   const faults: string[] = [];
+  const diagnosticFragments: TypedOperationDiagnosticFragment[] = [];
   let terminal = false;
   for (const effect of effects) {
     const page = typedOperationResult(effect);
@@ -326,10 +346,12 @@ export function scanTypedOperationPages(effects: readonly WireVariant[]): TypedO
       continue;
     }
     pages.push(page);
+    const diagnostic = typedOperationDiagnosticFragment(page);
+    if (diagnostic !== null) diagnosticFragments.push(diagnostic);
     if (page.lane === TYPED_OPERATION_LANE_FAULT) faults.push(new TextDecoder().decode(page.payload));
     if (page.lane === TYPED_OPERATION_LANE_TERMINAL) terminal = true;
   }
-  return { kept, pages, acknowledgements: pages.map((page) => page.acknowledgement), terminal, faults };
+  return { kept, pages, acknowledgements: pages.map((page) => page.acknowledgement), terminal, faults, diagnosticFragments };
 }
 
 /** 📬️ What ONE typed-operation result page asks of the host driving an action turn: its acknowledgement — a fault

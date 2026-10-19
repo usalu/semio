@@ -1,5 +1,6 @@
 //! 🔺️ Sparse diff builder for `ConnectKindCompatibility` — appends one row to `kindCompatibility`.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dKindCompatibilityDelta};
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dKindCompatibilityDelta;
 use crate::{Puzzle5dSnapshot};
 use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dKindCompatibility};
 

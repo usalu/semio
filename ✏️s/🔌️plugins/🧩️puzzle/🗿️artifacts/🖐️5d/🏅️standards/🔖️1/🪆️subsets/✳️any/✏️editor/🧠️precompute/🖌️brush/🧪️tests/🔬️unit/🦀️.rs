@@ -1,12 +1,25 @@
 use crate::editor::puzzle5d::modes::edit::windows::board2d::utilities::brush::UTILITY_ID;
 use crate::editor::puzzle5d::modes::edit::windows::world3d;
-use crate::editor::puzzle5d::precompute::fill::tests::{committed, host_turn, tool_run_action, FILL_RUN_TURNS};
+use crate::editor::puzzle5d::precompute::fill::tests::committed;
+use crate::editor::puzzle5d::precompute::fill::tests::host_turn;
+use crate::editor::puzzle5d::precompute::fill::tests::tool_run_action;
+use crate::editor::puzzle5d::precompute::fill::tests::FILL_RUN_TURNS;
 use crate::editor::puzzle5d::precompute::PUZZLE5D_PLANNER_TRACE_TWIN_BIT;
 use crate::editor::puzzle5d::entities::puzzle5d_grip_full_id;
 use crate::editor::puzzle5d::testkit::{app_with_registry, close_app, dispatch, dispatch_armed, projection_of, window_view, Puzzle5dTestApp};
+
+
+
+
+
+use crate::editor::puzzle5d::unit_tests::context::Puzzle5dApp;
 use semio_framework_plugin::kernel::Effect;
-use semio_framework_plugin::{ArtifactApp, PluginApp};
-use semio_framework_tool_run::{ToolRunTraceDelta, ToolRunTraceStore, ToolRunTraceSubject, ToolRunVerdict};
+use semio_framework_plugin::ArtifactApp;
+use semio_framework_plugin::PluginApp;
+use semio_framework_tool_run::ToolRunTraceDelta;
+use semio_framework_tool_run::ToolRunTraceStore;
+use semio_framework_tool_run::ToolRunTraceSubject;
+use semio_framework_tool_run::ToolRunVerdict;
 use std::collections::HashMap;
 
 fn armed_view() -> semio_framework_plugin::ViewModel {

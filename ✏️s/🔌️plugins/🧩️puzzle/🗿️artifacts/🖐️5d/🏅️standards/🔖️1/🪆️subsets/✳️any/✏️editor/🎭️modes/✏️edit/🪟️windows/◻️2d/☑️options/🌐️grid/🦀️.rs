@@ -1,11 +1,14 @@
-//! 🌐️ 2D-window option — the board pane's grid group: the visibility and snap toggles plus the snap
 //! FACTOR slider the board engine multiplies its LOD-derived snap step by. The world pane's grid
+//! 🌐️ 2D-window option — the board pane's grid group: the visibility and snap toggles plus the snap
 //! slider is an absolute spacing in metres instead (`🧊️3d/☑️options/🌐️grid`) — different state,
 //! different verb, so neither file is a copy of the other.
 
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
-use crate::editor::puzzle5d::entities::{puzzle5d_action, PUZZLE5D_GRID_FACTOR_MAX, PUZZLE5D_GRID_FACTOR_MIN, PUZZLE5D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle5d::entities::puzzle5d_action;
+use crate::editor::puzzle5d::PUZZLE5D_GRID_FACTOR_MAX;
+use crate::editor::puzzle5d::PUZZLE5D_GRID_FACTOR_MIN;
+use crate::editor::puzzle5d::PUZZLE5D_PLAY_CONTROLLER_ID;
 use semio_framework_plugin::WindowMeasure;
 
 /// 🌐️ `puzzle5d-play-board-grid` — visible / snap / factor.

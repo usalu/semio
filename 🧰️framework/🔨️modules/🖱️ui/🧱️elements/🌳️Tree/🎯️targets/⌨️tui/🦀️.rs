@@ -1,5 +1,5 @@
 //! 🌳️ tui state, key, pointer, cursor and paint functions for the Tree element: a flat pre-order forest with
-//! expand and collapse, a type-to-filter row and a filter that keeps the ancestors of every match. The filter
+//! expand and collapse, branch guides, a hovered ancestor path and a filter that keeps the ancestors of every match. The filter
 //! matches the whole path of a node, so a leaf is found by the names of its folders. Signals carry item indices.
 //! Wired as a crate-root sibling module of `crate::tui::widget` (see that mod's `pub use crate::tui::tree::{TreeItem, TreeState};`).
 
@@ -179,6 +179,7 @@ impl TreeState {
     }
 
     fn rebuild(&mut self, keep: Option<usize>) {
+        self.view.set_hover(None);
         self.rows.clear();
         if self.filtering() {
             let hits = self.index.matches(&self.query).to_vec();
@@ -312,8 +313,9 @@ pub fn tree_on_mouse(t: &mut TreeState, rect: Rect, event: &MouseEvent) -> Optio
     let count = t.count();
     let on_marker = |t: &TreeState, position: usize| -> bool {
         t.row_item(position).is_some_and(|item| {
-            let marker = area.x + t.marker_cells(item);
-            t.is_folder(item) && event.pos.x >= marker && event.pos.x < marker + 2
+            let indent = t.marker_cells(item);
+            let marker = area.x.saturating_add(indent);
+            indent < area.width && t.is_folder(item) && event.pos.x >= marker && event.pos.x < marker.saturating_add(2)
         })
     };
     match t.view.pointer(area, event, count) {
@@ -370,12 +372,35 @@ pub fn paint_tree(t: &TreeState, theme: &Theme, rect: Rect, buf: &mut CellBuffer
     let count = t.count();
     let rows = usize::from(area.height);
     let window = t.view.window(rows, count);
+    let hovered = t.view.hover().filter(|position| window.contains(position)).and_then(|position| t.row_item(position));
+    let on_path = |item: usize| hovered.is_some_and(|hover| item <= hover && hover < t.end[item] as usize);
+    let mut ancestors = Vec::new();
+    let mut parent = t.row_item(window.start).and_then(|item| t.parent_of(item));
+    while let Some(item) = parent {
+        ancestors.push(item);
+        parent = t.parent_of(item);
+    }
+    ancestors.reverse();
     for (index, position) in window.clone().enumerate() {
         let Some(item) = t.row_item(position) else { continue };
         let y = area.y + index as u16;
-        let (fg, row_bg, attrs) = row_style(theme, bg, position == t.view.selected(), focused, t.view.hover() == Some(position));
+        let selected = position == t.view.selected();
+        let path = on_path(item);
+        let (fg, row_bg, mut attrs) = row_style(theme, bg, selected, focused, hovered == Some(item));
+        let fg = if path && !selected { theme.role(Role::BorderEmphasized) } else { fg };
+        if path && !selected {
+            attrs |= crate::tui::cell::attr::BOLD;
+        }
         let line = Rect::new(area.x, y, area.width, 1);
         buf.fill_rect(line, Cell::blank(fg, row_bg));
+        ancestors.truncate(usize::from(t.items[item].depth));
+        for (depth, &ancestor) in ancestors.iter().enumerate().take(usize::from(area.width).div_ceil(2)) {
+            let emphasized = on_path(ancestor) && hovered != Some(ancestor);
+            let guide_fg = theme.role(if emphasized { Role::BorderEmphasized } else { Role::BorderNormal });
+            let guide_attrs = if emphasized { crate::tui::cell::attr::BOLD } else { 0 };
+            buf.put_str(Pos { x: area.x + depth as u16 * 2, y }, theme.glyphs.glyph(Glyph::ScrollTrack), guide_fg, row_bg, guide_attrs, line);
+        }
+        ancestors.push(item);
         let indent = t.marker_cells(item);
         let marker = if !t.is_folder(item) {
             " "
@@ -384,10 +409,15 @@ pub fn paint_tree(t: &TreeState, theme: &Theme, rect: Rect, buf: &mut CellBuffer
         } else {
             theme.glyphs.glyph(Glyph::Collapsed)
         };
-        let label_fg = if t.filtering() && !t.matched[item] { muted } else { fg };
-        buf.put_str(Pos { x: area.x + indent, y }, marker, fg, row_bg, attrs, line);
-        let room = area.width.saturating_sub(indent + 2);
-        buf.put_str(Pos { x: area.x + indent + 2, y }, &elide(&t.items[item].label, room, Elision::End, ellipsis), label_fg, row_bg, attrs, line);
+        let label_fg = if t.filtering() && !t.matched[item] && !selected && !path { muted } else { fg };
+        if indent < area.width {
+            buf.put_str(Pos { x: area.x + indent, y }, marker, fg, row_bg, attrs, line);
+        }
+        let label_offset = indent.saturating_add(2);
+        let room = area.width.saturating_sub(label_offset);
+        if room > 0 {
+            buf.put_str(Pos { x: area.x + label_offset, y }, &elide(&t.items[item].label, room, Elision::End, ellipsis), label_fg, row_bg, attrs, line);
+        }
     }
     if count == 0 && area.height > 0 && !t.empty.is_empty() {
         buf.put_str(Pos { x: area.x, y: area.y }, &elide(&t.empty, area.width, Elision::End, ellipsis), muted, bg, 0, Rect::new(area.x, area.y, area.width, 1));

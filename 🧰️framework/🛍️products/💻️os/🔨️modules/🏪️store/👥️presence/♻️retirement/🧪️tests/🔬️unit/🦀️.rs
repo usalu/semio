@@ -1,4 +1,5 @@
 
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 fn adopt_fixture(publication: &mut PresencePeersPublication<Value>, actor: String, presence: Value, received: i64, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
     let mut observer = |_: semio_framework_value::native_decoding::NativeDecodeProgress| true;
     let mut native = semio_framework_value::NativeDecodeControl::new(1048576, &mut observer);
@@ -41,9 +42,9 @@ fn direct_presence_fixture_value_inverse() {
     let mut wire = row["payload"].clone();
     wire["operation"] = row["operation"].clone();
     let op = serde_json::from_value::<ValueMutation>(wire).unwrap();
-    let after = protocol::apply_diff(op.diff(&before).diff(), &before).unwrap();
+    let after = protocol::apply_diff_cold(op.diff(&before).diff(), &before).unwrap();
     assert_eq!(after.0, serde_json::from_value::<i32>(row["after"].clone()).unwrap());
-    assert_eq!(protocol::apply_diff(op.inverse(&before).expect("valid retained mutation inverse fixture")[0].diff(&after).diff(), &after).unwrap().0, before.0);
+    assert_eq!(protocol::apply_diff_cold(op.inverse(&before).expect("valid retained mutation inverse fixture")[0].diff(&after).diff(), &after).unwrap().0, before.0);
     assert_eq!(serde_json::from_value::<ValueMutation>(serde_json::to_value(&op).unwrap()).unwrap(), op);
     for json in ["{\"operation\":\"setValue\"}", "{\"operation\":\"setValue\",\"n\":null}", "{\"operation\":\"setValue\",\"n\":2147483648}", "{\"operation\":\"setValue\",\"n\":0.5}", "{\"operation\":\"setValue\",\"n\":7,\"unknown\":true}"] {
         assert!(serde_json::from_str::<ValueMutation>(json).is_err());
@@ -67,20 +68,35 @@ impl semio_framework_value::FromValue for Value {
 }
 
 impl protocol::DiffAlgebra<Value> for Value {
-    fn inverse(&self, base: &Value) -> Self {
-        base.clone()
-    }
+
     fn is_empty(&self) -> bool {
         false
     }
 }
+impl protocol::ColdDiffAlgebra<Value> for Value {
+fn inverse(&self, base: &Value) -> Self {
+        base.clone()
+    }
+}
+
+impl crate::os_spr::ColdDiffAlgebra<Value> for Value {
+    fn inverse(&self, base: &Value) -> Self {
+        base.clone()
+    }
+}
 
 impl MutationDiff<Value> for Value {
-    fn apply(&self, _base: &Value, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Value> {
-        Ok(self.clone())
-    }
+
+
+}
+
+impl ColdMutationDiff<Value> for Value {
     fn absorb(&mut self, other: Self) {
         *self = other;
+    }
+
+    fn apply(&self, _unpublished: &mut Value, _capability: crate::os_spr::ApplyCapability) -> crate::os_spr::MutationApplyResult<()> {
+        Ok(())
     }
 }
 
@@ -235,6 +251,30 @@ fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_rema
     assert_eq!(serde_json::json!(count.load(std::sync::atomic::Ordering::Relaxed)), law["expectedFinalSnapshots"]);
 }
 
+fn publish_original_presence(owner: &mut PresenceStore<Value, ValueMutation>, expected: u64, mutation: ValueMutation, snapshots: Arc<dyn SnapshotRetirementFactory<Value>>) {
+    let factory = crate::os_store::ArtifactEphemeralTransferPreparationFactory::new(
+        |_| Ok(crate::os_store::one_item::ArtifactStoreOneItemFootprint::for_ephemeral_item(size_of::<ValueMutation>())),
+        |mutation| match mutation { ValueMutation::SetValue(value) => Value(value.n) },
+        Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Value>::default()),
+        Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<ValueMutation>::default()),
+    );
+    let grant = crate::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: CLOSE_GRANT.maximum_items, maximum_copy_bytes: CLOSE_GRANT.maximum_copy_bytes, maximum_capacity_bytes: CLOSE_GRANT.maximum_capacity_bytes, maximum_release_bytes: CLOSE_GRANT.maximum_release_bytes, maximum_depth: CLOSE_GRANT.maximum_depth };
+    let mut publication = owner.begin_publish_one(semio_framework_job::OperationId(100 + expected), expected, mutation, Some(&factory), Some(snapshots)).unwrap_or_else(|_| panic!("original typed presence publication is admitted"));
+    let mut published = false;
+    for _ in 0..4096 {
+        assert!(matches!(owner.advance_publish_one(&mut publication, crate::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 0, ..grant }).unwrap(), crate::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked));
+        match owner.advance_publish_one(&mut publication, grant).unwrap() {
+            crate::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(receipt, progress) => { assert!(progress.fits(CLOSE_GRANT)); assert_eq!((receipt.generation_before, receipt.generation_after), (expected, expected + 1)); published = true; break; },
+            crate::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(_, progress) => assert!(progress.fits(CLOSE_GRANT)),
+            _ => {}
+        }
+    }
+    assert!(published);
+    assert!(publication.acknowledge());
+    for _ in 0..4096 { if publication.terminal_is_empty() { break; } assert!(publication.close_step(grant).unwrap().progress().fits(CLOSE_GRANT)); }
+    assert!(publication.terminal_is_empty());
+}
+
 #[test]
 fn retained_presence_local_replacements_release_shared_aliases_and_retire_exact_final_owners() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧹️retirement.json")).unwrap();
@@ -242,11 +282,11 @@ fn retained_presence_local_replacements_release_shared_aliases_and_retire_exact_
     let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let factory = Arc::new(Factory(count.clone()));
     let mut owner = PresenceStore::<Value, ValueMutation>::new(Value(23));
-    owner.install_local_retirement_factory(factory).unwrap();
+    owner.install_local_retirement_factory(factory.clone()).unwrap();
     let first = owner.local_read().unwrap();
-    owner.apply_one(0, ValueMutation::SetValue(SetValue { n: 31 })).ok().unwrap();
+    publish_original_presence(&mut owner, 0, ValueMutation::SetValue(SetValue { n: 31 }), factory.clone());
     let second = owner.local_read().unwrap();
-    owner.apply_one(1, ValueMutation::SetValue(SetValue { n: 47 })).ok().unwrap();
+    publish_original_presence(&mut owner, 1, ValueMutation::SetValue(SetValue { n: 47 }), factory.clone());
     assert_eq!(serde_json::json!([first.get().0, second.get().0]), law["capturedValues"]);
     let barrier = Arc::new(std::sync::Barrier::new(2));
     let other = barrier.clone();
@@ -580,7 +620,7 @@ fn retained_presence_store_close_keeps_captured_readers_and_retires_nonempty_pee
         assert!(owner.local.is_none() && owner.peers.is_none());
         assert_eq!(Arc::as_ptr(close.local.as_ref().unwrap()), local_pointer);
         assert_eq!(Arc::as_ptr(close.peers.as_ref().unwrap()), peers_pointer);
-        assert!(owner.apply_one(0, ValueMutation::SetValue(SetValue { n: 1 })).is_err());
+        assert!(owner.begin_publish_one(semio_framework_job::OperationId(0),0,ValueMutation::SetValue(SetValue { n: 1 }),None,None).is_err());
         assert!(owner.begin_peer_publication(CLOSE_GRANT).is_err());
         assert_eq!(observed_close(&mut close, RetainedCloneGrant { maximum_items: 0, ..CLOSE_GRANT }), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         let mut released = 0;

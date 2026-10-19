@@ -1,0 +1,37 @@
+{
+  "schema": "energy-document-history/v1",
+  "documents": {
+    "archive": {
+      "history": "preserve-events",
+      "modelName": "Energy authored archive"
+    },
+    "example": {
+      "history": "fresh-genesis",
+      "semanticMutationRows": 0
+    },
+    "import": {
+      "history": "fresh-genesis",
+      "semanticMutationRows": 0
+    }
+  },
+  "peer": {
+    "actors": [
+      "energy-a",
+      "energy-b"
+    ],
+    "localName": "Energy local edit",
+    "remoteLongitude": 52,
+    "revisedLatitude": 15,
+    "localLatitude": 30,
+    "expected": {
+      "name": "Energy local edit",
+      "longitude": 52,
+      "latitude": 15
+    },
+    "outage": "short-gap",
+    "transport": "shared-memory-backbone",
+    "undo": "local-author-only",
+    "timeTravel": "shared-history-supersede",
+    "reconnect": "retained-event-log"
+  }
+}

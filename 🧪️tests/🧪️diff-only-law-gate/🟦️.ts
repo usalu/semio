@@ -1,15 +1,15 @@
-/** 📐️ Diff-only mutation law gate: rules R8–R16 of `verify mutation-outcome-law` report exactly the planted violations of `🧪️tests/🧫️fixtures/🧫️diff-only-law-gate` (file, line, rule, design code) and stay silent on its compliant controls — per file, through the real git-inventory rule entry points, and for R15 over planted leaf trees. The TypeScript scanner re-derives the token-level rules (R8, R9, R10, R16) independently of the gate's patterns. */
+/** 📐️ Diff-only mutation law gate: rules R8–R18 of `verify mutation-outcome-law` report exactly the planted violations of `🧪️tests/🧫️fixtures/🧫️diff-only-law-gate` (file, line, rule, design code) and stay silent on its compliant controls — per file, through the real git-inventory rule entry points, and for R15 over planted leaf trees. The TypeScript scanner re-derives the token-level rules (R8, R9, R10, R16, R17 `snapshot_mut`) independently of the gate's patterns. */
 import { expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, rmSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import ts from "typescript";
-import { policyBaseCloneDiffBreaches, policyDiffDerivedInverseBreaches, policyDiffOnlyFileBreaches, policyInverseSumLawUntestedBreaches, policyInverseSumLawUntestedLeafBreaches, policyLeafBetweenBreaches, policyLeafCentralApplyBreaches, policyLeafMutableBaseBreaches, policyOutcomeApplyToBreaches, policyRestoreInverseBreaches, policyWholeStateDiffBreaches } from "@semio-tech/repo-lib/laws";
+import { policyBaseCloneDiffBreaches, policyDiffDerivedInverseBreaches, policyDiffOnlyFileBreaches, policyHostApplyBreaches, policyInverseSumLawUntestedBreaches, policyInverseSumLawUntestedLeafBreaches, policyLeafBetweenBreaches, policyLeafCentralApplyBreaches, policyLeafMutableBaseBreaches, policyOutcomeApplyToBreaches, policyRestoreInverseBreaches, policyRowEmitterBreaches, policyWholeStateDiffBreaches } from "@semio-tech/repo-lib/laws";
 
-type Rule = "R8" | "R9" | "R10" | "R11" | "R12" | "R13" | "R14" | "R15" | "R16";
+type Rule = "R8" | "R9" | "R10" | "R11" | "R12" | "R13" | "R14" | "R15" | "R16" | "R17" | "R18";
 type Case = { id: string; description: string; segments: string[]; lines: string[]; breaches: { line: number; rule: Rule }[]; oracle: Rule[] };
 type Tree = { id: string; description: string; files: Record<string, string[]>; breaches: string[] };
-type Vectors = { contract: string; codes: Record<Rule, string>; cases: Case[]; leafTrees: Tree[] };
+type Vectors = { contract: string; codes: Record<Rule, string>; cases: Case[]; leafTrees: Tree[]; hostApplyGroups: { id: string; description: string; files: Record<string, string[]>; breaches: string[] }[] };
 
 const root = resolve(import.meta.dir, "../..");
 const vectors = JSON.parse(readFileSync(join(root, "🧪️tests/🧫️fixtures/🧫️diff-only-law-gate/🔣️.json"), "utf8")) as Vectors;
@@ -23,6 +23,8 @@ const FILE_RULES = [
   [policyWholeStateDiffBreaches, "R13"],
   [policyRestoreInverseBreaches, "R14"],
   [policyOutcomeApplyToBreaches, "R16"],
+  [policyHostApplyBreaches, "R17"],
+  [policyRowEmitterBreaches, "R18"],
 ] as const;
 
 const pathOf = (row: Case): string => row.segments.join("/");
@@ -67,6 +69,7 @@ function oracleKeys(row: Case, rule: Rule): string[] {
     if (rule === "R9" && !inUse && ((token.text === "apply" && path && next === "(") || (token.text === "apply_diff" && previous !== "fn" && next === "(") || token.text === "ApplyCapability")) keys.push(keyOf(token.line, rule));
     if (rule === "R10" && token.text === "between" && previous !== "fn" && next === "(") keys.push(keyOf(token.line, rule));
     if (rule === "R16" && token.text === "apply_to" && path && next === "(") keys.push(keyOf(token.line, rule));
+    if (rule === "R17" && token.text === "snapshot_mut") keys.push(keyOf(token.line, rule));
   });
   return [...new Set(keys)].sort();
 }
@@ -89,7 +92,7 @@ test("the planted violations have unique authored source identities", () => {
   expect(new Set(vectors.leafTrees.map((tree) => tree.id)).size).toBe(vectors.leafTrees.length);
 });
 
-test("every rule R8–R16 has a negative sample and the compliant controls expect no breach", () => {
+test("every rule R8–R18 has a negative sample and the compliant controls expect no breach", () => {
   const planted = new Set<string>([...vectors.cases.flatMap((row) => row.breaches.map((breach) => breach.rule)), ...vectors.leafTrees.filter((tree) => tree.breaches.length > 0).map(() => "R15")]);
   expect(planted).toEqual(new Set(Object.keys(vectors.codes)));
   const controls = vectors.cases.filter((row) => row.id.startsWith("compliant-"));
@@ -140,6 +143,28 @@ for (const tree of vectors.leafTrees) {
           .map((record) => record.scope)
           .sort(),
       ).toEqual([...tree.breaches].sort());
+    } finally {
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  });
+}
+
+for (const group of vectors.hostApplyGroups) {
+  const contents = new Map(Object.entries(group.files).map(([path, lines]) => [path, `${lines.join("\n")}\n`] as const));
+
+  test(`R17 resolves helper call sites across the group's files: ${group.id}`, () => {
+    const reports = [...contents].flatMap(([path, content]) => policyHostApplyFileBreaches(path, content, () => contents).map((record) => `${record.scope}:${record.line}`));
+    expect(reports.sort()).toEqual([...group.breaches].sort());
+  });
+
+  test(`R17 resolves helper call sites through the inventory entry point: ${group.id}`, () => {
+    const scratch = scratchRepository(Object.fromEntries(contents));
+    try {
+      expect(
+        policyHostApplyBreaches(scratch)
+          .map((record) => `${record.scope}:${record.line}`)
+          .sort(),
+      ).toEqual([...group.breaches].sort());
     } finally {
       rmSync(scratch, { recursive: true, force: true });
     }

@@ -139,7 +139,8 @@ class PackReader {
   }
 
   raw(length: number): Uint8Array {
-    const slice = this.bytes.slice(this.offset, this.offset + length);
+        if(!Number.isSafeInteger(length)||length<0||length>this.bytes.length-this.offset)throw new ToolRunCodecError("pack","truncated native byte span");
+const slice = this.bytes.slice(this.offset, this.offset + length);
     this.offset += length;
     return slice;
   }
@@ -157,8 +158,10 @@ function readPackValue(reader: PackReader, depth: number): PackValue | undefined
       return { t: "bool", v: true };
     case TAG_UINT:
       return { t: "uint", v: reader.varint() };
-    case TAG_F64:
-      return { t: "f64", v: new DataView(reader.raw(8).buffer).getFloat64(0, true) };
+    case TAG_F64: {
+      const bytes=reader.raw(8);
+      return { t: "f64", v: new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength).getFloat64(0, true) };
+    }
     case TAG_BYTES:
       return { t: "bytes", v: reader.raw(reader.length()) };
     case TAG_RECORD:
@@ -209,7 +212,7 @@ const STEP_IDS = [1, 2, 3, 4, 5, 6, 7];
 const PROGRESS_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const PAGE_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 const DELTA_IDS = [1, 2, 3, 4];
-const TICK_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+const TICK_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9,10];
 
 const uintValue = (v: bigint | number): PackValue => ({ t: "uint", v: BigInt(v) });
 const bytesValue = (v: Uint8Array): PackValue => ({ t: "bytes", v });
@@ -487,8 +490,12 @@ export function decodeToolRunTraceDelta(bytes: Uint8Array): ToolRunTraceDelta {
 }
 
 /** 🧳️ Pack record body of a tick; rejects ticks over `TOOL_RUN_TICK_BYTES_MAX`. */
+function payloadUpdateRecord(update:PayloadUpdate):PackValue{const value:PackRecord=new Map([[1,uintValue(update.kind==="replace"?0:1)]]);if(update.kind==="range"){value.set(2,uintValue(update.publication));value.set(3,uintValue(update.totalBytes));value.set(4,uintValue(update.offset));value.set(5,uintValue(update.chunkBytes));value.set(6,uintValue(update.final?1:0));}return{t:"record",v:value};}
+function payloadUpdateFrom(value:PackValue|undefined):PayloadUpdate{const record=getRecord(value,"payloadUpdate",[1,2,3,4,5,6]),kind=getUint(record,1);if(kind===0n&&record.size===1)return{kind:"replace"};if(kind!==1n||record.size!==6)throw new ToolRunCodecError("malformed","payloadUpdate");const final=getUint(record,6);if(final>1n)throw new ToolRunCodecError("malformed","payload finality");return{kind:"range",publication:getUint(record,2),totalBytes:getUint(record,3),offset:getUint(record,4),chunkBytes:narrow(getUint(record,5),65536,"payload chunk bytes"),final:final===1n};}
+function validateTickPayload(payload:Uint8Array|undefined,update:PayloadUpdate|undefined):void{if((payload===undefined)!==(update===undefined))throw new ToolRunCodecError("malformed","payload and update must be paired");if(payload!==undefined&&update!==undefined)validatePayloadUpdate(update,payload.length);}
 export function encodeToolRunTick(tick: ToolRunTick): Uint8Array {
-  const record: PackRecord = new Map([[1, identityRecord(tick.identity)], [2, uintValue(tick.sequence)]]);
+    validateTickPayload(tick.payload,tick.payloadUpdate);
+const record: PackRecord = new Map([[1, identityRecord(tick.identity)], [2, uintValue(tick.sequence)]]);
   if (tick.progress !== undefined) record.set(3, progressRecord(tick.progress));
   if (tick.steps.length > 0) record.set(4, { t: "list", v: tick.steps.map(stepRecord) });
   if (tick.trace.length > 0) record.set(5, { t: "list", v: tick.trace.map((page) => bytesValue(encodeToolRunTracePage(page))) });
@@ -500,7 +507,8 @@ export function encodeToolRunTick(tick: ToolRunTick): Uint8Array {
   }
   if (tick.retractTo !== undefined) record.set(8, uintValue(tick.retractTo));
   if (tick.payload !== undefined) record.set(9, bytesValue(tick.payload));
-  const bytes = encodePackBody(record);
+    if(tick.payloadUpdate!==undefined)record.set(10,payloadUpdateRecord(tick.payloadUpdate));
+const bytes = encodePackBody(record);
   if (bytes.length > TOOL_RUN_TICK_BYTES_MAX) throw new ToolRunCodecError("limit", "tick bytes");
   return bytes;
 }
@@ -515,7 +523,8 @@ export function decodeToolRunTick(bytes: Uint8Array): ToolRunTick {
   const progress = record.get(3);
   const retractTo = getOptionalUint(record, 8);
   const payload = record.has(9) ? getBytes(record, 9) : undefined;
-  return {
+    const payloadUpdate=record.has(10)?payloadUpdateFrom(record.get(10)):undefined;validateTickPayload(payload,payloadUpdate);
+return {
     identity: identityFrom(record.get(1)),
     sequence: getUint(record, 2),
     ...(progress === undefined ? {} : { progress: progressFrom(progress) }),
@@ -525,6 +534,7 @@ export function decodeToolRunTick(bytes: Uint8Array): ToolRunTick {
     appendEntities,
     ...(retractTo === undefined ? {} : { retractTo: narrow(retractTo, 0xffff_ffff, "retractTo") }),
     ...(payload === undefined ? {} : { payload }),
-  };
+      ...(payloadUpdate===undefined?{}:{payloadUpdate}),
+};
 }
 //#endregion 🔖️Codec

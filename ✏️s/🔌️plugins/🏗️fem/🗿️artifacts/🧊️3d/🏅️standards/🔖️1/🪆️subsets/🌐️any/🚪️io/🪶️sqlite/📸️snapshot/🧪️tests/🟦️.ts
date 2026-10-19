@@ -88,6 +88,13 @@ test("fem3d independent SQLite DDL owns the full dimensional scalar and relation
 
 for(const word of fixture.ieee754Words)test(`fem3d canonical snapshot artifact and diff exact word ${word}`,async()=>{
   const source=state();everyWord(source,word);
+  expect(()=>artifact.parseFem3dArtifact(source)).toThrow("canonical unique DOF set required");
+  source.supports=source.supports.map(support=>({...support,fixed:[...new Set(support.fixed)]}));
+  expect(()=>artifact.parseFem3dArtifact(source)).toThrow("scoped identity segment");
+  source.nodes.forEach((row,index)=>{row.id=fixture.canonicalIdentities.nodes[index]!;});
+  expect(()=>artifact.parseFem3dArtifact(source)).toThrow("repeated entity identity");
+  source.elements.forEach((row,index)=>{row.id=fixture.canonicalIdentities.elements[index]!;});
+  source.loadCases.forEach(loadCase=>loadCase.loads.forEach((row,index)=>{row.id=fixture.canonicalIdentities.loads[index]!;}));
   for(const count of fixture.countWords){source.analysis.modalCount=BigInt(count);source.analysis.bucklingCount=BigInt(count);
    expect(snapshot.parseFemAnalysisSettings(source.analysis)).toEqual(source.analysis);
    expect(artifact.parseFemAnalysisSettings(source.analysis)).toEqual(source.analysis);
@@ -95,7 +102,11 @@ for(const word of fixture.ieee754Words)test(`fem3d canonical snapshot artifact a
    const inserted=source.nodes.map((row,index)=>({index,row}));
    const delta=diff.parseFem3dNodesDelta({removed:[],inserted,moved:[],modified:[]});
    expect(delta.inserted).toEqual(inserted);
-   expect(diff.parseFem3dNodesDelta({removed:[],inserted:[],moved:[],modified:source.nodes.map(patch=>({id:patch.id,patch}))}).modified).toEqual(source.nodes.map(patch=>({id:patch.id,patch})));
+   expect(()=>diff.parseFem3dNodesDelta({removed:[],inserted:[],moved:[],modified:source.nodes.map(patch=>({id:patch.id,patch}))})).toThrow("unknown node field");
+   const modified=source.nodes.map(({id,...patch})=>({id,patch}));
+   const finite=(BigInt("0x"+word)&0x7ff0000000000000n)!==0x7ff0000000000000n;
+   for(const {patch} of modified){if(finite)expect(diff.parseFem3dNodePatch(patch)).toEqual(patch);else expect(()=>diff.parseFem3dNodePatch(patch)).toThrow("invalid node value");}
+   expect(diff.parseFem3dNodesDelta({removed:[],inserted:[],moved:[],modified}).modified).toEqual(modified);
    expect(await fem3dSnapshotFromSqliteDatabase(await fem3dSnapshotToSqliteDatabase(artifact.parseFem3dArtifact(source)))).toEqual(source);
   }
 });

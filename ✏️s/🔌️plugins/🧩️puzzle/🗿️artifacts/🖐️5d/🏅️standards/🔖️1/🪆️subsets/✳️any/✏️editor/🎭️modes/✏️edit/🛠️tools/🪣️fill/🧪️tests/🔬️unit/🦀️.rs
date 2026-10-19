@@ -21,7 +21,9 @@ use semio_framework_tool_run::{ToolRunDefinition, ToolRunSettingsReads, TOOL_RUN
 use crate::editor::puzzle5d::modes::edit::tools::fill::*;
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::puzzle5d_labels;
-use crate::editor::puzzle5d::entities::{concrete_forest_example_document, default_document, PUZZLE5D_DEFAULT_FILL_COUNT};
+use crate::editor::puzzle5d::entities::concrete_forest_example_document;
+use crate::editor::puzzle5d::default_document;
+use crate::editor::puzzle5d::PUZZLE5D_DEFAULT_FILL_COUNT;
 use semio_framework_tool_run::ToolRunTraceKind;
 
 fn labels() -> &'static Puzzle5dLabels {

@@ -43,7 +43,9 @@ export function newArtifactState(config: ArtifactActorConfig, runtimeKey: string
     revalidateFolder: async () => {},
     folderArchive: null,
     folderBootstrapped: false,
-    reconnectDelayMs: HUB_RECONNECT_MIN_MS,
+        facetValue: undefined,
+    facetBacklog: [],
+reconnectDelayMs: HUB_RECONNECT_MIN_MS,
     outbox: [],
     pendingMutations: [],
     exactLocalEnvelopes: new WeakMap(),
@@ -99,21 +101,21 @@ function admitLocalMutations(
   channelMessage: unknown,
   exactEnvelopes: readonly ExactWireMutationEnvelope[] | null = null,
   exactMessageBytes = 0,
-): void {
-  if (envelopes.length === 0) return;
+): boolean {
+  if (envelopes.length === 0) return false;
   if (exactEnvelopes !== null && exactEnvelopes.length !== envelopes.length) throw new Error("document backbone: exact batch cardinality mismatch");
   if (state.executionTargetLease !== null && state.executionTargetLease.live && !state.executionTargetLease.fields().grant.write) {
     rejectReadOnlyExecutionTarget(state, envelopes);
-    return;
+    return false;
   }
   if (exactEnvelopes !== null && (!Number.isSafeInteger(exactMessageBytes) || exactMessageBytes < 1 || exactMessageBytes > DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes)) throw new Error("document backbone: invalid retained byte charge");
   if (exactEnvelopes !== null && (state.pendingDocumentBackboneMessages >= DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumMessages || exactMessageBytes > DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes - state.pendingDocumentBackboneBytes)) {
     rejectDocumentBackboneCapacity(state, envelopes, exactMessageBytes);
-    return;
+    return false;
   }
   if (state.pendingMutations.length + envelopes.length > PENDING_MUTATIONS_QUEUE_LIMIT) {
     rejectMutationQueueOverflow(state, envelopes);
-    return;
+    return false;
   }
   if (exactEnvelopes !== null) {
     envelopes.forEach((envelope, index) => state.exactLocalEnvelopes.set(envelope, { envelope: exactEnvelopes[index]!, bytes: index === 0 ? exactMessageBytes : 0, messages: index === 0 ? 1 : 0 }));
@@ -126,6 +128,7 @@ function admitLocalMutations(
   if (exactEnvelopes === null || !hubBinding(state.config)) state.channel.postMessage(channelMessage);
   relayMutationsToHub(state, envelopes);
   if (folderBinding(state.config)) setStatus(state, { persisted: false });
+  return true;
 }
 
 export async function handleLocalMsg(state: ArtifactState, message: ArtifactActorMsg): Promise<void> {
@@ -148,11 +151,15 @@ export async function handleLocalMsg(state: ArtifactState, message: ArtifactActo
         rejectDocumentBackboneBootstrapAdmission(state, 0);
         break;
       }
-      admitLocalMutations(state, message.envelopes, message.envelopes);
+      if (admitLocalMutations(state, message.envelopes, message.envelopes)) foldConfigFacet(state, message.envelopes);
       break;
     }
     case "localDocumentArchive": {
-      const folder = folderBinding(state.config);
+            if (CONFIG_FACETS.has(state.config.schema)) {
+        rejectLocally(state, localCommandRejectionV1("local.backbone-malformed", "a config facet changes by mutation, never by archive put", { bytes: message.archive.length }));
+        break;
+      }
+const folder = folderBinding(state.config);
       if (folder) {
         try {
           await writeFolder(state, folder, message.archive);

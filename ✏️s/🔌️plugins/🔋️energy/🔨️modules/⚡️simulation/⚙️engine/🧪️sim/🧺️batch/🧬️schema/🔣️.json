@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "pristine",
+          "matchingIds",
+          "cancelled",
+          "work",
+          "grant",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "pristine": {
+            "type": "boolean"
+          },
+          "matchingIds": {
+            "type": "boolean"
+          },
+          "cancelled": {
+            "type": "boolean"
+          },
+          "work": {
+            "type": "boolean"
+          },
+          "grant": {
+            "enum": [
+              "exact",
+              "no-items",
+              "short-copy",
+              "no-depth"
+            ]
+          },
+          "expected": {
+            "enum": [
+              "admitted",
+              "pending",
+              "refused"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

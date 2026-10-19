@@ -3,16 +3,10 @@
 use super::*;
 
 //#region 🔖️Recovery
-/// 🚨️ Maps `protocol::ProtocolError` (this crate never leaks it in a public signature, per
-/// the family's `DbError`-only rule) onto the closest `DbError` variant.
+/// 🚨️ Retains the complete protocol reader cause inside the database error boundary.
 // 🚫️async: E4 fn-pointer slot
 pub fn protocol_err(err: protocol::ProtocolError) -> DbError {
-    match err {
-        protocol::ProtocolError::Pack(pack_error) => DbError::from(pack_error),
-        protocol::ProtocolError::Io(message) => DbError::Io(message),
-        protocol::ProtocolError::LimitExceeded(what) => DbError::LimitExceeded(what),
-        other => DbError::Corrupt(other.to_string()),
-    }
+    DbError::Protocol(err)
 }
 
 pub(super) struct WalPageSource<'pages>(pub(super) &'pages db_io_core::DbIoPages);
@@ -22,10 +16,10 @@ impl semio_framework_pack_source::PackSource for WalPageSource<'_> {
         self.0.len() as u64
     }
 
-    async fn read_at(&self, offset: u64, output: &mut [u8]) -> Result<usize, protocol::codec::PackError> {
-        let offset = usize::try_from(offset).map_err(|_| protocol::codec::PackError::Refusal(protocol::codec::PackRefusal::Truncated(offset)))?;
+    async fn read_at(&self, offset: u64, output: &mut [u8]) -> Result<usize, pack::PackRefusal> {
+        let offset = usize::try_from(offset).map_err(|_| pack::PackRefusal::Truncated(offset))?;
         if offset > self.0.len() {
-            return Err(protocol::codec::PackError::Refusal(protocol::codec::PackRefusal::Truncated(offset as u64)));
+            return Err(pack::PackRefusal::Truncated(offset as u64));
         }
         let mut base = 0usize;
         let mut written = 0usize;

@@ -7,7 +7,7 @@ use semio_framework_ui_locale::{Terminology,Locale};
 const CAPACITY:usize=isize::MAX as usize;
 
 /// 🪆️ Quotes the actual child and one enclosing depth without granting its demand.
-pub(super) fn child_demands(owner:&dyn ErasedSnapshotRetirement,copy:usize)->Result<RetirementDemand,ValueError>{if owner.terminal_is_empty(){return Ok(Default::default())}Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original child depth overflow"))?})}
+pub(super) fn child_demands(owner:&dyn ErasedSnapshotRetirement,copy:usize)->Result<RetirementDemand,ValueError>{if owner.terminal_is_empty(){return Ok(Default::default())}Ok({let mut demand=owner.next_demand(copy)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original child depth overflow"))?;demand})}
 /// 🧾️ Preserves the performed child receipt while validating its original independent grant.
 pub(super) fn close_child(owner:&mut dyn ErasedSnapshotRetirement,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child requires enclosing depth"))}let child=RetainedCloneGrant{maximum_items:grant.maximum_items.min(1),maximum_depth:grant.maximum_depth-1,..grant};let step=owner.close_step(child)?;semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original typed child").map_err(|error|error.with_retained_progress(step.progress()))?;Ok(RetainedCloneStep::Progress(step.progress()))}
 
@@ -31,6 +31,8 @@ impl Text{
  fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{if !self.inline.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<usize>()+std::mem::size_of::<bool>(),depth:1,..Default::default()})}if self.long&&!self.paged.terminal_is_empty(){return child_demands(&self.paged,copy)}Ok(Default::default())}
 }
 impl ErasedSnapshotRetirement for Text{
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.demands(maximum_body_bytes)}
+
  fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child retirement exceeds caller depth"))}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}if self.inline.close_one(1){self.complete=false;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}if self.long{return close_child(&mut self.paged,grant)}Ok(RetainedCloneStep::Complete(empty))}
  fn terminal_is_empty(&self)->bool{self.inline.terminal_is_empty()&&self.paged.terminal_is_empty()}
 
@@ -56,6 +58,8 @@ impl ChildLabelOwner{
  fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{match self.cells.iter().flatten().find(|cell|!cell.terminal_is_empty()){Some(cell)=>child_demands(cell,copy),None=>Ok(Default::default())}}
 }
 impl ErasedSnapshotRetirement for ChildLabelOwner{
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.demands(maximum_body_bytes)}
+
  fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child retirement exceeds caller depth"))}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}for row in &mut self.cells{for cell in row{if !cell.terminal_is_empty(){return close_child(cell,grant)}}}Ok(RetainedCloneStep::Complete(empty))}
  fn terminal_is_empty(&self)->bool{self.cells.iter().flatten().all(ErasedSnapshotRetirement::terminal_is_empty)}
 
@@ -84,6 +88,8 @@ impl PagedChildOwner{
  }
 }
 impl ErasedSnapshotRetirement for PagedChildOwner{
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.demands(maximum_body_bytes)}
+
  fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child retirement exceeds caller depth"))}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}
   if let Some(schema)=self.pending_schema.as_mut(){if !schema.terminal_is_empty(){return close_child(schema,grant)}self.pending_schema.take();self.pending_schema_is_retired=false;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}
   let index=self.operations.len().checked_sub(1);let source=match self.partial_source.as_mut(){Some(source)=>Some(source),None=>index.and_then(|index|self.operations.get_mut(index))};
@@ -125,6 +131,8 @@ impl PagedChildDecodeOwner{
  fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{if !self.symbols.terminal_is_empty(){return child_demands(&self.symbols,copy)}if let Some(child)=self.child.as_ref().or_else(||self.groups.len().checked_sub(1).and_then(|index|self.groups.get(index))){return if child.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<PagedChildOwner>(),depth:1,..Default::default()})}else{child_demands(child,copy)}}if !self.groups.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:self.groups.next_release_allocation_bytes().map_err(ValueError::from)?,depth:1,..Default::default()})}Ok(Default::default())}
 }
 impl ErasedSnapshotRetirement for PagedChildDecodeOwner{
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.demands(maximum_body_bytes)}
+
  fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child retirement exceeds caller depth"))}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}if !self.symbols.terminal_is_empty(){return close_child(&mut self.symbols,grant)}let index=self.groups.len().checked_sub(1);let child=match self.child.as_mut(){Some(child)=>Some(child),None=>index.and_then(|index|self.groups.get_mut(index))};if let Some(child)=child{if !child.terminal_is_empty(){return close_child(child,grant)}if self.child.is_some(){self.child.take();}else{self.groups.pop();}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}let step=self.groups.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..empty}))}
  fn terminal_is_empty(&self)->bool{self.child.is_none()&&self.groups.terminal_is_empty()&&self.symbols.terminal_is_empty()}
 

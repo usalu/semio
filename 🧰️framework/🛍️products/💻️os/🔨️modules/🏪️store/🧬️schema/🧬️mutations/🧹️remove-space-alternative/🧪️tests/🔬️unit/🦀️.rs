@@ -1,3 +1,5 @@
+use crate::os_spr::ColdMutationKind;
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::*;
 use semio_framework_os_spr::{Mutation, MutationDiff, MutationKind, MutationLeaf};
 
@@ -17,5 +19,16 @@ fn inverse_restores_inactive_and_active_alternatives() {
         inverse.reverse();
         let restored = inverse.into_iter().fold(post, |current, step| semio_framework_os_spr::apply_diff(step.diff(&current).diff(), &current).expect("inverse applies"));
         assert_eq!(restored, before, "active {active}");
+    }
+}
+
+/// ➕️ L3: removing the first, a middle and the last of three alternatives, active or not, sums to the negative diff.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    for active in [None, Some("a".to_string()), Some("b".to_string()), Some("c".to_string())] {
+        let base = SpaceHistorySnapshot { alternatives: vec![alternative("a"), alternative("b"), alternative("c")], active_alternative_id: active, ..Default::default() };
+        for id in ["a", "b", "c"] {
+            crate::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SpaceHistoryMutation::RemoveSpaceAlternative(RemoveSpaceAlternative { alternative_id: id.into() }), &base).await;
+        }
     }
 }

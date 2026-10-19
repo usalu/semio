@@ -1,5 +1,5 @@
-//! 🤖️ The puzzle 2d editor's own tool-command job (`board.ports.directed.v1.tool-command.v1`) on the agent lane: what the semio MCP gateway's
 //! `action_prepare` previews for the verbs its coverage battery reaches on a puzzle 2d document.
+//! 🤖️ The puzzle 2d editor's own tool-command job (`board.ports.directed.v1.tool-command.v1`) on the agent lane: what the semio MCP gateway's
 
 use crate::editor::puzzle2d::window;
 #[allow(unused_imports)]
@@ -135,7 +135,11 @@ use crate::editor::puzzle2d::retained::*;
 #[allow(unused_imports)]
 use crate::editor::puzzle2d::session::*;
 use crate::editor::puzzle2d::*;
-use semio_framework_plugin::artifact_app_laws::{declared_verb_agent_divergences, declared_verb_probe, declared_verb_wrote_document, probe_agent_lane, DeclaredVerbOutcome};
+use semio_framework_plugin::artifact_app_laws::declared_verb_agent_divergences;
+use semio_framework_plugin::artifact_app_laws::declared_verb_probe;
+use semio_framework_plugin::artifact_app_laws::declared_verb_wrote_document;
+use semio_framework_plugin::artifact_app_laws::probe_agent_lane;
+use semio_framework_plugin::artifact_app_laws::DeclaredVerbOutcome;
 
 /// 🤖️ The verbs the semio MCP coverage battery (`plugin-coverage-check`) tries on a fresh puzzle 2d document, in its order —
 /// every one was refused `interactive-job.preview-unsupported` before the agent lane ran the editor's own job.
@@ -152,7 +156,7 @@ const AGENT_LANE_DIVERGENCES: &[&str] = &["createEdge"];
 /// transaction, never settles without it.
 #[semio_framework_async_macros::async_test]
 async fn the_agent_lane_runs_the_puzzle2d_editors_own_tool_command_job() {
-    let probes = probe_agent_lane::<semio_framework_plugin::EditorApp<Puzzle2dPlayApp>, <Puzzle2dPlayApp as semio_framework_plugin::ArtifactEditor>::Members>(create_puzzle2d_app, None, BATTERY_VERBS, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let probes = probe_agent_lane::<semio_framework_plugin::EditorApp<Puzzle2dPlayApp>, <Puzzle2dPlayApp as semio_framework_plugin::ArtifactEditor>::Members>(create_puzzle2d_app, None, BATTERY_VERBS, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     let outcomes = probes.iter().map(|probe| format!("{}: shell {:?} / agent {:?}", probe.verb, probe.windows.iter().map(|window| &window.staged).collect::<Vec<_>>(), probe.agent)).collect::<Vec<_>>();
     for probe in &probes {
         assert!(!matches!(&probe.agent, Some(DeclaredVerbOutcome::Unreachable { code, .. }) if code != "interactive-job.agent-lane-uncarried"), "{} is refused before its job ran: {outcomes:#?}", probe.verb);

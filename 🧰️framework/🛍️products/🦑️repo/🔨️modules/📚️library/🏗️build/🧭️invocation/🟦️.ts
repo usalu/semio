@@ -13,6 +13,11 @@ import {buildModeEnvironment,readBuildMode} from "../../../../../../🔨️modul
 import {createRequire} from "node:module";
 const {fixedTargetBuildMode}=createRequire(import.meta.url)("../../🏗️build/🎚️mode/🟨️.mjs") as {fixedTargetBuildMode(name:string):"prototype"|"release"|undefined};
 import policy from "../🔣️policy.json";
+
+/** 📖️ Admits public help before storage while preserving an opaque child argument tail. */
+export function buildInvocationRequestsHelpV1(args:readonly string[]):boolean {
+ const boundary=args.indexOf("--"),head=args.slice(0,boundary<0?undefined:boundary);return head.length===0||head.some(argument=>argument==="--help"||argument==="-h");
+}
 /** 🧭️ Resolves public selections before shared task graph admission. */
 export function resolveBuildSelectionV1(root:string,segments: string[]): { args: string[]; env: NodeJS.ProcessEnv; watch?: string } {
   if (segments[0] !== "run") return { args: segments, env: {} };

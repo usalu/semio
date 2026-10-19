@@ -99,7 +99,8 @@ export async function pollFolderOnce(state: ArtifactState, binding: Extract<Pers
         state.folderArchive = null;
         setStatus(state, { persisted: false });
       }
-      return;
+            seedConfigFacet(state, null);
+return;
     }
     if (!response.ok) throw new Error(`folder backbone read failed (${response.status})`);
     const archive = new Uint8Array(await response.arrayBuffer());
@@ -109,7 +110,8 @@ export async function pollFolderOnce(state: ArtifactState, binding: Extract<Pers
     state.folderBootstrapped = true;
     if (!echo) emitEvent(state, { kind: "documentArchiveReplaced", archive: Array.from(archive) });
     setStatus(state, { persisted: true });
-  } catch (error) {
+      if (!echo || state.facetValue === undefined) seedConfigFacet(state, archive);
+} catch (error) {
     if (state.docAbort.signal.aborted) return; // 🛑 closed mid-flight — not a real failure.
     console.error("[backbone-worker] folder poll failed", state.config.documentId, error);
   }

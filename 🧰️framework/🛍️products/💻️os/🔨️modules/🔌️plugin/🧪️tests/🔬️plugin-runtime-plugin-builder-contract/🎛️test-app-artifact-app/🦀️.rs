@@ -12,9 +12,7 @@
             test_restart_register::<RETAINED, TOOLS>(registry)
         }
 
-        async fn build_tool_job(request: ArtifactOwnedToolJobRequest<Self>) -> Result<Option<ToolOperationSpec>, Fault> {
-            test_restart_build::<RETAINED, TOOLS>(request).await
-        }
+        fn build_tool_job(request:&mut Option<ArtifactOwnedToolJobRequest<Self>>,output:&mut Option<semio_framework::ErasedToolJob>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{test_restart_build::<RETAINED,TOOLS>(request,output,cx)}
 
         fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
             if RETAINED {

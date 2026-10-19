@@ -115,6 +115,8 @@ impl<V:RetireOwned> InferenceValues<V> {
         *self.rows.get_mut(source).ok_or_else(changed)?=self.output.take();Ok(true)
     }
 
+    /// 📏️ Quotes the actual payload cursor or the original source-loan return selected by close_step.
+    pub fn retirement_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{if !self.closing{return Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Payload<V>>(),depth:1,..Default::default()})}if let Some(owner)=self.retirement.as_ref(){if !owner.terminal_is_empty(){return owner.selected_demand(body)}}if let Some(source)=self.source.as_ref(){return Ok(source.retirement_demands())}Ok(Default::default())}
     /// ♻️ Closes typed payload before returning its original strong source loan.
     pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,InferenceWorkFailure> {
         self.validate(cx)?;

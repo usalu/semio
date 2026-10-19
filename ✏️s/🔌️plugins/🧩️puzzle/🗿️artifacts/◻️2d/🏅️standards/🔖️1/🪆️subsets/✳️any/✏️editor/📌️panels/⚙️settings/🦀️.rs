@@ -1,5 +1,5 @@
-//! ⚙️ Puzzle 2d play app panel — the app-wide settings: the fill count, the brush suggestion offset,
 //! the grid factor and the grid snap. Unlike the window-instance chrome in `🎭️modes/✏️edit/☑️options/*`,
+//! ⚙️ Puzzle 2d play app panel — the app-wide settings: the fill count, the brush suggestion offset,
 //! these are settings a user tunes once for the session rather than per pane. Every stepper tags the
 //! window instance the panel resolves to (the render's own, else the focused pane, else the first live
 //! pane) — and none when the host has no live pane, since an empty `windowId` is refused as an unknown
@@ -8,6 +8,13 @@
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use {crate::editor::puzzle2d::interaction::ui_label, crate::editor::puzzle2d::snapshot::Puzzle2dScene, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, BuiltNode, Component, NumberStepperProps, Trigger};
+use semio_framework_plugin::plugin_app_close_prelude::Buildable;
+
+
+use semio_framework_plugin::plugin_app_close_prelude::HasBase;
+use semio_framework_plugin::plugin_app_close_prelude::HasChildren;
+
+
 use semio_framework_plugin::ui_node_list;
 use semio_framework_plugin::ActionFactory;
 use semio_framework_ui_locale::LocalizedLabel;

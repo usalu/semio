@@ -1,5 +1,5 @@
 use super::*;
-use teaching_proctor_base::catalog::fixtures::fixture;
+use teaching_proctor_base::course::fixtures::fixture;
 use server::contract::{ActorKey, CommandId, HybridLogicalClock, IdempotencyKey, Principal, Scope, TenantId, TraceContext};
 use server::policy::PolicyRequest;
 use server::throttle::{Allowance, Limits, Rate};
@@ -12,10 +12,10 @@ fn admission(principal: Principal, target: &str, action: &str) -> PolicyRequest 
 #[test]
 fn the_manifest_declares_the_quiz_surface() {
     let manifest = manifest("proctor-fixture");
-    assert_eq!(manifest.commands.iter().map(|command| command.kind.as_str()).collect::<Vec<_>>(), ["quiz.identify-learner", "quiz.start-run", "quiz.open-task", "quiz.record-answer", "quiz.submit-run", ENROLL]);
+    assert_eq!(manifest.commands.iter().map(|command| command.kind.as_str()).collect::<Vec<_>>(), ["course.identify-learner", "course.start-run", "course.open-task", "course.record-answer", "course.submit-run", ENROLL]);
     assert_eq!(manifest.commands.iter().map(|command| command.actor_kind.as_str()).collect::<Vec<_>>(), [HANDLE, LEARNER, LEARNER, LEARNER, LEARNER, LEARNER]);
     assert_eq!(manifest.commands.iter().map(|command| command.offline).collect::<Vec<_>>(), [OfflinePolicy::AuthorityRequired, OfflinePolicy::AuthorityRequired, OfflinePolicy::Optimistic, OfflinePolicy::Optimistic, OfflinePolicy::AuthorityRequired, OfflinePolicy::AuthorityRequired], "a device opens a task and answers while the proctor is away");
-    assert_eq!(manifest.queries.iter().map(|query| (query.kind.as_str(), query.projection.as_str())).collect::<Vec<_>>(), [("quiz.catalog", "quiz.catalog"), ("quiz.learner", LEARNERS), ("quiz.run", RUNS), ("quiz.leaderboard", LEADERBOARD), ("quiz.crowd", CROWDS), ("quiz.handle", HANDLES)]);
+    assert_eq!(manifest.queries.iter().map(|query| (query.kind.as_str(), query.projection.as_str())).collect::<Vec<_>>(), [("course.course", "course.course"), ("course.learner", LEARNERS), ("course.run", RUNS), ("course.leaderboard", LEADERBOARD), ("course.crowd", CROWDS), ("course.handle", HANDLES)]);
     assert_eq!(manifest.projections, [STATES, LEARNERS, RUNS, LEADERBOARD, HANDLES, TALLIES, CROWDS, META]);
     assert_eq!(manifest.actor_kinds, [HANDLE, LEARNER]);
     assert_eq!(manifest.policies.iter().map(|template| template.name.as_str()).collect::<Vec<_>>(), [LEARNER_TEMPLATE, PROCTOR_TEMPLATE, PRESENCE_TEMPLATE]);
@@ -27,18 +27,18 @@ async fn every_caller_may_learn_and_only_the_proctor_may_enroll() {
     assert_eq!(proctor.definition().id, INSTANCE_ID);
     let policy = proctor.state().policy.read().unwrap();
     let service = Principal::ServiceAccount { id: PROCTOR_SERVICE.into() };
-    for (target, action) in [("quiz-handle/616461", "quiz.identify-learner"), ("quiz-learner/l1", "quiz.identify-learner"), ("quiz-learner/l1", "quiz.start-run"), ("quiz-learner/l1", "quiz.open-task"), ("quiz-learner/l1", "quiz.record-answer"), ("quiz-learner/l1", "quiz.submit-run")] {
+    for (target, action) in [("course-handle/616461", "course.identify-learner"), ("course-learner/l1", "course.identify-learner"), ("course-learner/l1", "course.start-run"), ("course-learner/l1", "course.open-task"), ("course-learner/l1", "course.record-answer"), ("course-learner/l1", "course.submit-run")] {
         assert!(policy.evaluate(&admission(Principal::Anonymous, target, action)).is_allowed(), "{action}");
     }
-    assert!(!policy.evaluate(&admission(Principal::Anonymous, "quiz-learner/l1", ENROLL)).is_allowed());
-    assert!(!policy.evaluate(&admission(Principal::Anonymous, "quiz-handle/616461", "quiz.start-run")).is_allowed());
-    assert!(!policy.evaluate(&admission(Principal::Anonymous, "quiz-handle/616461", "quiz.open-task")).is_allowed());
-    assert!(!policy.evaluate(&admission(Principal::Anonymous, "quiz-handle/616461", ENROLL)).is_allowed());
-    assert!(policy.evaluate(&admission(service.clone(), "quiz-learner/l1", ENROLL)).is_allowed());
-    assert!(!policy.evaluate(&admission(service, "quiz-handle/616461", ENROLL)).is_allowed());
+    assert!(!policy.evaluate(&admission(Principal::Anonymous, "course-learner/l1", ENROLL)).is_allowed());
+    assert!(!policy.evaluate(&admission(Principal::Anonymous, "course-handle/616461", "course.start-run")).is_allowed());
+    assert!(!policy.evaluate(&admission(Principal::Anonymous, "course-handle/616461", "course.open-task")).is_allowed());
+    assert!(!policy.evaluate(&admission(Principal::Anonymous, "course-handle/616461", ENROLL)).is_allowed());
+    assert!(policy.evaluate(&admission(service.clone(), "course-learner/l1", ENROLL)).is_allowed());
+    assert!(!policy.evaluate(&admission(service, "course-handle/616461", ENROLL)).is_allowed());
     let read = |resource: &str, point: PolicyPoint, action: &str| policy.evaluate(&PolicyRequest { point, principal: Principal::Anonymous, scope: None, resource: resource.into(), action: action.into() }).is_allowed();
-    assert!(read("stream:proctor-fixture/quiz-learner/l1", PolicyPoint::EventDelivery, "read"));
-    assert!(!read("stream:proctor-fixture/quiz-handle/616461", PolicyPoint::EventDelivery, "read"), "who holds a handle is answered by the handle read only");
+    assert!(read("stream:proctor-fixture/course-learner/l1", PolicyPoint::EventDelivery, "read"));
+    assert!(!read("stream:proctor-fixture/course-handle/616461", PolicyPoint::EventDelivery, "read"), "who holds a handle is answered by the handle read only");
     for query in QueryKind::ALL {
         assert!(policy.evaluate(&PolicyRequest { point: PolicyPoint::QueryAccess, principal: Principal::Anonymous, scope: Some(Scope("proctor-fixture".into())), resource: query.wire().into(), action: "read".into() }).is_allowed(), "{query:?}");
     }
@@ -47,13 +47,13 @@ async fn every_caller_may_learn_and_only_the_proctor_may_enroll() {
 #[tokio::test]
 async fn the_admission_the_bus_asks_is_the_one_the_deciders_hold_and_carries_the_caps() {
     let proctor = Proctor::assemble(StorageProfile::Ephemeral, Arc::new(fixture()), Gate { origins: site(), forwarding: Forwarding::Untrusted, limits: Limits::default() }, PresenceSettings::default()).await.expect("assembled");
-    assert_eq!((proctor.admission().tenant(), proctor.admission().caps(), proctor.admission().learners()), ("proctor-fixture", quiz::DEFAULT_LIMITS, 0));
-    let capped = proctor.capped(quiz::Limits { learners: 1, runs: 2, ..quiz::DEFAULT_LIMITS });
-    assert_eq!(capped.admission().caps(), quiz::Limits { learners: 1, runs: 2, ..quiz::DEFAULT_LIMITS });
+    assert_eq!((proctor.admission().tenant(), proctor.admission().caps(), proctor.admission().learners()), ("proctor-fixture", course::DEFAULT_LIMITS, 0));
+    let capped = proctor.capped(course::Limits { learners: 1, runs: 2, ..course::DEFAULT_LIMITS });
+    assert_eq!(capped.admission().caps(), course::Limits { learners: 1, runs: 2, ..course::DEFAULT_LIMITS });
     let module = ProctorModule::new(Arc::new(fixture()), Arc::clone(capped.admission()));
     let id = "0123456789abcdef0123456789abcdef";
     let start = |learner: &str| {
-        let command = quiz::Command::StartRun { id: id.into(), learner: learner.into(), run: id.into(), quiz: "power".into(), challenge: quiz::Challenge::Medium, at: 0 };
+        let command = course::Command::StartRun { origin: None, id: id.into(), learner: learner.into(), run: id.into(), quiz: "power".into(), challenge: course::Challenge::Medium, at: 0 };
         CommandEnvelope { payload: serde_json::to_vec(&command).expect("encoded"), ..addressed(LEARNER, learner, id, Some(id)) }
     };
     assert_eq!(module.command_admission(&start(id)), Ok(()));
@@ -65,13 +65,13 @@ async fn the_admission_the_bus_asks_is_the_one_the_deciders_hold_and_carries_the
 }
 
 #[tokio::test]
-async fn every_caller_may_share_presence_inside_the_catalog_rooms_only() {
+async fn every_caller_may_share_presence_inside_the_course_rooms_only() {
     let proctor = Proctor::assemble(StorageProfile::Ephemeral, Arc::new(fixture()), Gate { origins: site(), forwarding: Forwarding::Untrusted, limits: Limits::default() }, PresenceSettings::default()).await.expect("assembled");
     let presence = |principal: Principal, scope: &str, action: &str| proctor.state().policy.read().unwrap().evaluate(&PolicyRequest { point: PolicyPoint::Subscription, principal, scope: Some(Scope(scope.into())), resource: PRESENCE_RESOURCE.into(), action: action.into() }).is_allowed();
-    for scope in ["proctor-fixture", "proctor-fixture/introduction", "proctor-fixture/home", "proctor-fixture/leaderboard", "proctor-fixture/badges", "proctor-fixture/quiz/power", "proctor-fixture/quiz/homes", "proctor-fixture/quiz/power/thinking", "proctor-fixture/quiz/homes/thinking"] {
+    for scope in ["proctor-fixture", "proctor-fixture/introduction", "proctor-fixture/home", "proctor-fixture/leaderboard", "proctor-fixture/badges", "proctor-fixture/learner", "proctor-fixture/preferences", "proctor-fixture/quiz/power", "proctor-fixture/quiz/homes", "proctor-fixture/quiz/power/thinking", "proctor-fixture/quiz/homes/thinking"] {
         assert!([PRESENCE_JOIN, PRESENCE_PUBLISH, PRESENCE_WATCH].iter().all(|action| presence(Principal::Anonymous, scope, action)), "{scope}");
     }
-    for scope in ["other-catalog", "proctor-fixture/quiz/cooling", "proctor-fixture/quiz/cooling/thinking", "proctor-fixture/identity", "proctor-fixture/learner", "proctor-fixture/preferences"] {
+    for scope in ["other-course", "proctor-fixture/quiz/cooling", "proctor-fixture/quiz/cooling/thinking", "proctor-fixture/identity"] {
         assert!(!presence(Principal::Anonymous, scope, PRESENCE_JOIN) && !presence(Principal::Anonymous, scope, PRESENCE_WATCH), "{scope}");
     }
     assert!(!presence(Principal::Anonymous, "proctor-fixture", "moderate"));
@@ -80,8 +80,18 @@ async fn every_caller_may_share_presence_inside_the_catalog_rooms_only() {
     let module = ProctorModule::new(Arc::new(fixture()), Arc::clone(proctor.admission()));
     let state = serde_json::json!({ "tag": "0a1b2c3d", "cursor": { "anchor": "card:power", "x": 0.5, "y": 0.5 } });
     assert_eq!(module.presence_admission(&Scope("proctor-fixture/home".into()), &state), Ok(()));
+    for page in ["learner", "preferences"] {
+        let cursor = serde_json::json!({ "tag": "0a1b2c3d", "place": { "screen": page }, "cursor": { "anchor": "viewport", "x": 0.5, "y": 0.5 } });
+        assert_eq!(module.presence_admission(&Scope(format!("proctor-fixture/{page}")), &cursor), Ok(()), "{page}");
+        assert_eq!(module.presence_admission(&Scope("proctor-fixture/home".into()), &cursor), Err(format!("{} /place", crate::presence::SCOPE_UNKNOWN)), "{page} cannot publish in another room");
+    }
+    for page in ["learner", "preferences"] {
+        let cursor = serde_json::json!({ "tag": "0a1b2c3d", "place": { "screen": page }, "cursor": { "anchor": "viewport", "x": 0.5, "y": 0.5 } });
+        assert_eq!(module.presence_admission(&Scope(format!("proctor-fixture/{page}")), &cursor), Ok(()), "{page}");
+        assert_eq!(module.presence_admission(&Scope("proctor-fixture/home".into()), &cursor), Err(format!("{} /place", crate::presence::SCOPE_UNKNOWN)), "{page} cannot publish in another room");
+    }
     assert_eq!(module.presence_admission(&Scope("proctor-fixture".into()), &state), Err(teaching_proctor_base::presence::STATE_INVALID.to_string()));
-    assert_eq!(module.presence_admission(&Scope("other-catalog/home".into()), &state), Err(teaching_proctor_base::presence::SCOPE_UNKNOWN.to_string()));
+    assert_eq!(module.presence_admission(&Scope("other-course/home".into()), &state), Err(teaching_proctor_base::presence::SCOPE_UNKNOWN.to_string()));
 }
 
 fn site() -> CrossOriginPolicy {
@@ -129,11 +139,11 @@ async fn a_registration_is_the_one_command_counted_against_the_sign_up_allowance
     let of = |kind: &str, actor: &str| CommandEnvelope { kind: kind.into(), ..addressed(actor, id, id, Some(id)) };
     assert_eq!(module.command_allowance(&of(IDENTIFY, LEARNER)), Some(SIGN_UP), "an anonymous registration");
     assert_eq!(module.command_allowance(&of(IDENTIFY, HANDLE)), Some(SIGN_UP), "a handle claim");
-    for kind in ["quiz.start-run", "quiz.open-task", "quiz.record-answer", "quiz.submit-run", ENROLL, "quiz.unknown"] {
+    for kind in ["course.start-run", "course.open-task", "course.record-answer", "course.submit-run", ENROLL, "course.unknown"] {
         assert_eq!(module.command_allowance(&of(kind, LEARNER)), None, "{kind}");
     }
-    assert_eq!((IDENTIFY, SIGN_UP), ("quiz.identify-learner", "sign-up"));
-    let mislabelled = CommandEnvelope { payload: serde_json::to_vec(&quiz::Command::IdentifyLearner { id: id.into(), learner: id.into(), identity: quiz::Identity::Anonymous }).expect("encoded"), ..of("quiz.start-run", LEARNER) };
+    assert_eq!((IDENTIFY, SIGN_UP), ("course.identify-learner", "sign-up"));
+    let mislabelled = CommandEnvelope { payload: serde_json::to_vec(&course::Command::IdentifyLearner { id: id.into(), learner: id.into(), identity: course::Identity::Anonymous }).expect("encoded"), ..of("course.start-run", LEARNER) };
     assert_eq!(module.command_allowance(&mislabelled), None);
     assert!(module.command_admission(&mislabelled).is_err(), "a registration under another kind is counted nowhere because it is admitted nowhere");
 }
@@ -141,7 +151,7 @@ async fn a_registration_is_the_one_command_counted_against_the_sign_up_allowance
 fn addressed(kind: &str, id: &str, command: &str, idempotency: Option<&str>) -> CommandEnvelope {
     CommandEnvelope {
         command_id: CommandId(command.into()),
-        kind: "quiz.start-run".into(),
+        kind: "course.start-run".into(),
         version: WIRE_VERSION,
         target: ActorKey { tenant: TenantId("proctor-fixture".into()), kind: kind.into(), id: id.into() },
         scope: Scope("proctor-fixture".into()),
@@ -202,17 +212,17 @@ async fn a_request_waits_only_for_what_was_committed_since_the_last_relay_and_fo
     settler.settle_quietly().await;
     assert!(settler.folding.is_current(0) && settler.relaying.is_current(0));
 
-    let sign_up = |seed: u8, identity: quiz::Identity| {
+    let sign_up = |seed: u8, identity: course::Identity| {
         let (id, learner) = (format!("{:032x}", 0x100 + u32::from(seed)), format!("{:032x}", 0x200 + u32::from(seed)));
         let target = match &identity {
-            quiz::Identity::Anonymous => (LEARNER, learner.clone()),
-            quiz::Identity::Pseudonym { handle } | quiz::Identity::Name { handle } => (HANDLE, quiz::handle_actor_id(&quiz::normalize_handle(handle).expect("a handle").key)),
+            course::Identity::Anonymous => (LEARNER, learner.clone()),
+            course::Identity::Pseudonym { handle } | course::Identity::Name { handle } => (HANDLE, course::handle_actor_id(&course::normalize_handle(handle).expect("a handle").key)),
         };
-        let command = quiz::Command::IdentifyLearner { id: id.clone(), learner: learner.clone(), identity };
-        (learner, CommandEnvelope { kind: "quiz.identify-learner".into(), payload: serde_json::to_vec(&command).expect("encoded"), ..addressed(target.0, &target.1, &id, Some(&id)) })
+        let command = course::Command::IdentifyLearner { id: id.clone(), learner: learner.clone(), identity };
+        (learner, CommandEnvelope { kind: "course.identify-learner".into(), payload: serde_json::to_vec(&command).expect("encoded"), ..addressed(target.0, &target.1, &id, Some(&id)) })
     };
 
-    let (_, anonymous) = sign_up(1, quiz::Identity::Anonymous);
+    let (_, anonymous) = sign_up(1, course::Identity::Anonymous);
     assert!(matches!(state.submit(anonymous.clone()).await, CommandOutcome::Accepted { .. }));
     assert!(!settler.relaying.is_current(owed().outbox), "the saga has not seen the registration yet");
     settler.relay_quietly().await;
@@ -227,7 +237,7 @@ async fn a_request_waits_only_for_what_was_committed_since_the_last_relay_and_fo
     assert_eq!(owed(), settled);
     assert!(settler.relaying.is_current(owed().outbox) && settler.folding.is_current(owed().events), "a command that committed nothing owes no relay and the query after it no fold");
 
-    let (learner, named) = sign_up(2, quiz::Identity::Pseudonym { handle: "Ada Lovelace".into() });
+    let (learner, named) = sign_up(2, course::Identity::Pseudonym { handle: "Ada Lovelace".into() });
     assert!(matches!(state.submit(named).await, CommandOutcome::Accepted { .. }));
     let stream = ActorKey { tenant: TenantId("proctor-fixture".into()), kind: LEARNER.into(), id: learner };
     assert!(state.replay_events(&stream, 0).await.expect("read").is_empty(), "a named sign-up owes its learner the relay");

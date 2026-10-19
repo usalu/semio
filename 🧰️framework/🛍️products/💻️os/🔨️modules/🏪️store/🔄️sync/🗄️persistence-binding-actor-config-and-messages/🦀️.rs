@@ -52,12 +52,14 @@ pub fn wire_lane_data_class(lane: &str) -> PersistenceDataClass {
     }
 }
 
-/// 🗃️ Resolves the data class of an actor's bindings. Empty bindings are ephemeral local-only
-/// (in-memory draft / studio with no backbone).
+/// 🗃️ Resolves every durable peer, independently of order; empty bindings are ephemeral local-only.
 pub fn bindings_data_class(bindings: &[PersistenceBinding]) -> PersistenceDataClass {
-    match bindings.first() {
-        None => PersistenceDataClass::EphemeralLocalOnly,
-        Some(binding) => binding.data_class(),
+    if bindings.iter().any(|binding| binding.data_class().is_shared()) {
+        PersistenceDataClass::PersistedShared
+    } else if bindings.is_empty() {
+        PersistenceDataClass::EphemeralLocalOnly
+    } else {
+        PersistenceDataClass::PersistedLocalOnly
     }
 }
 

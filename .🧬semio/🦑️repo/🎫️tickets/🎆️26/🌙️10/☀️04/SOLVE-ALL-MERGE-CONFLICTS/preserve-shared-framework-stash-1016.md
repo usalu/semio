@@ -1,0 +1,1487 @@
+# Shared Framework Stash Preservation — 2026-10-16
+
+Latest stash `ec7b3361858df86599da79e5b6dde70ccbbc3625`, base `f856dff081373e131ebf72618120cb73e303a912`, current HEAD `1bae6115bc56bf5e1b01212774dd76877a5f64fe`. Source preservation only; no builds, tests, runtime checks, compilation repairs or Git mutations. Root owns workspace/lock/launch changes.
+
+## Owner Inventory
+
+- Value owner: HEAD changes only snapshot/read source and manifest; stash has 355 changed/additional files across owned receiving, paged roots, retirement, equality, projection and original construction. Preserve the coherent parent exports with the child sources.
+- Actor owner: retain HEAD crate routing/script changes; stash extends wire-turn diagnostics, typed operations and retained-turn decoder custody.
+- Replication mutation/causal and pack/value: HEAD extracted child crates. Overlapping parent edits require owner mapping into the extracted sources; absent paths alone are not restoration evidence.
+
+## Initial File Classification
+
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/⚖️result/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/⚖️result/🧪️tests/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️demand/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️demand/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️demand/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🧫️fixtures/📥️root/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧬️schema/📥️root/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📋️vector/🔑️identity/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📋️vector/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📋️vector/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📋️vector/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📋️vector/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️boxed/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🧫️fixtures/🔗️source/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🧬️schema/🔗️source/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️original-vector/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️original-vector/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️queue/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🚚️frontier/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🚚️frontier/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🚚️frontier/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🚚️frontier/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🔬️unit/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧫️fixtures/🌳️intrinsic/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧫️fixtures/🎮️erased-controlled/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧫️fixtures/📏️shared-physical/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧮️plain-elements/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧮️plain-elements/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧫️fixtures/🧮️plain-elements/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️contract/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️schema/🧮️plain-elements/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/⚠️refusal/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/✨️derive/⚙️expansion/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/📋️project.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/📜️script.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/✨️derive/📽️projection/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/✨️derive/🟰️equality/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/✨️derive/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️admission/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️admission/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️admission/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️admission/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️retained-clone/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🎚️record/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/📋️sequence/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🤝️tuple/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🏷️type/🧪️tests/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🌳️roots/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/⚖️observation/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/⚖️observation/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/⚖️observation/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/⚖️observation/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎮️splice/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎮️splice/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎮️splice/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎮️splice/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🔎️traversal/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🔎️traversal/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🔎️traversal/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🔎️traversal/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧳️read/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧳️read/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧳️read/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧳️read/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧳️ranked/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🟰️equal/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🟰️equal/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🟰️equal/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🟰️equal/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🟰️equal/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🟰️equal/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/📋️list/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/🔬️counter/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🪢️concat/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🪢️concat/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🪢️concat/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🪢️concat/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🪢️concat/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️list/🪢️concat/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️requests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️requests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️requests/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️requests/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️requests/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️requests/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️slots/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️slots/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️slots/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️slots/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️slots/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📝️text/🚶️utf8/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📝️text/🚶️utf8/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📝️text/🚶️utf8/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📝️text/🚶️utf8/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📝️text/🚶️utf8/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📝️text/🚶️utf8/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/package.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/📋️project.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/📜️script.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/🔑️hashed/🧮️scratch/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/package.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📜️script.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📶️sort/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📶️sort/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📶️sort/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📶️sort/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📶️sort/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📶️sort/🧬️schema/📸️snapshot.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📶️sort/🧬️schema/🔣️.json`
+- merge-disjoint: `🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📽️projection/📋️field/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📽️projection/📦️owned/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📽️projection/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📽️projection/🧪️tests/📦️owned/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📽️projection/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📽️projection/🧫️fixtures/📦️owned/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📽️projection/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📽️projection/🧬️clone/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📽️projection/🧬️schema/📦️owned.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📽️projection/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/📋️project.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/📜️script.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🔁️codec/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🔑️hashed/🧮️scratch/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🔑️hashed/🧮️scratch/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🔑️hashed/🧮️scratch/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🔑️hashed/🧮️scratch/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🔑️hashed/🧮️scratch/🧪️tests/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🔑️lookup/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🔑️lookup/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🔑️lookup/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🔑️lookup/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🔑️lookup/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🔑️lookup/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🔗️read/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🔗️read/🧬️clone/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🔗️read/🪪️authority/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🔗️read/🪪️lease/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧪️tests/🗂️ordered/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧺️set/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛫️encode/🛂️allocation/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛫️encode/🛂️allocation/🧪️tests/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛫️encode/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛫️encode/🫴️recipient/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🔒️close/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🔒️close/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🛬️receiving/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🛬️receiving/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🔭️observer/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🧪️tests/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧬️child/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/📋️project.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/📜️script.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️shared/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️shared/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️shared/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️shared/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️shared/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧳️receiver/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧳️receiver/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🪡️field/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/♻️retirement/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🔁️continuation/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧪️tests/🧩️neutral-owner/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️field/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🧪️tests/🔬️unit/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/♻️retirement/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📋️project.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📜️script.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🧪️tests/🔬️unit/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🧫️fixtures/🔮️demands/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🧬️schema/🔮️demands/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️projection/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared/📋️list/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared/📋️list/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared/📋️list/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared/📋️list/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🏭️factory/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔐️custody/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔬️unit/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🧫️fixtures/🔐️custody.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔮️demands/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔮️demands/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔮️demands/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔮️demands/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/♻️retirement/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/➖️remove/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/➖️remove/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🧪️tests/🔬️unit/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧪️tests/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧳️owner/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧺️std-collections/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧺️std-collections/🧪️tests/🦀️.rs`
+- overlap: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🧭️symbols/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🧮️expression/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🧱️chunks/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🧫️fixtures/⚠️failure/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧫️fixtures/🌿️native-text/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧫️fixtures/🧩️branches/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧫️fixtures/🧮️expression/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🎒️document/⏳️cursor/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🎒️document/⏳️cursor/🧪️tests/🥒️.feature`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🎒️document/⏳️cursor/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🎒️document/⏳️cursor/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🎒️document/⏳️cursor/🧫️fixtures/🧱️chunks/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🎒️document/⏳️cursor/🧬️schema/🔣️.json`
+- merge-disjoint: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🦀️.rs`
+- merge-disjoint: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🧬️static/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/📦️document/🦀️.rs`
+- overlap: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🧪️tests/🟦️.ts`
+- merge-disjoint: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🧬️schema/🔣️.json`
+- overlap: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🏭️schema/⏳️cursor/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🏭️schema/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🏭️schema/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🏭️schema/🧫️fixtures/⏳️cursor/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🏭️schema/🧫️fixtures/⏳️cursor/🧬️schema.json`
+- merge-disjoint: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧪️tests/🛬️decoder/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧪️tests/🧫️fixtures/🛬️decoder.json`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧬️schema/🛬️decoder.json`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/💼️job/🤝️provider/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml`
+- merge-disjoint: `🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📋️project.json`
+- overlap: `🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📜️script.ts`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🌲️source/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/📣️delivery/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📣️delivery/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📥️receiving/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📥️receiving/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📥️receiving/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📥️receiving/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📥️receiving/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📦️bytes/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📦️bytes/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📦️bytes/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📦️bytes/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🎭️actor/🧪️tests/🔬️unit/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/♻️retirement/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/❄️reference/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/❄️reference/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/❄️reference/🧬️schema/🔣️.json`
+- merge-disjoint: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🦀️.rs`
+- merge-disjoint: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧪️tests/📤️transfer/🟦️.ts`
+- merge-disjoint: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧪️tests/🧫️fixtures/🔣️.json`
+- merge-disjoint: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/✂️clamp/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/✂️clamp/🧪️tests/🧫️fixtures/🔣️.json`
+- merge-disjoint: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📋️copy/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📤️publication/👁️borrow/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📤️publication/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📤️publication/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📤️publication/🪢️join/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🔗️concat/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🔗️concat/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🔗️concat/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🔗️concat/🧬️schema/🔣️.json`
+- merge-disjoint: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📬️preparation/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📬️preparation/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🗣️dsl/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🛬️controlled/🦀️.rs`
+- overlap: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧪️tests/🧪️shared-map-delta-native/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧪️tests/🧪️shared-map-delta-source/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧪️tests/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🔗️.graphql`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🛰️.proto`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧭️canonical/🦀️.rs`
+- overlap: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/↩️inverse-admission/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/↩️inverse-admission/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/📦️unpublished-owner/🥒️.feature`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/📦️unpublished-owner/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧳️native-contract/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧳️native-contract/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧳️native-contract/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧳️native-contract/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/↩️inverse-admission/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/📦️prepared-fields/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/↩️inverse-admission/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/📦️prepared-fields/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/⚠️diagnostic/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/⚠️diagnostic/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/⚠️diagnostic/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/⚠️diagnostic/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/✂️span/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/✂️span/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/📏️body/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/📏️body/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/📏️body/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔎️key/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔎️key/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔎️key/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔎️key/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🫴️receiving/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🫴️receiving/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🫴️receiving/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🫴️receiving/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧱️row/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧱️row/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧱️row/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧱️row/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🚚️apply/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧪️tests/🎟️demand/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧫️fixtures/schema.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧫️fixtures/🎟️close/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧬️schema/🎟️close/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🎚️record/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🎚️record/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🎚️record/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🎚️record/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🎚️record/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🎚️record/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/📋️indexed/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/📋️indexed/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/📋️indexed/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/📋️indexed/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/📋️indexed/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/📋️indexed/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🧫️fixtures/🎟️close-axes/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🧬️schema/🎟️close-axes/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🍂️remove/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🎟️original/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/👁️read/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/📋️vector/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🔏️hash/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🗂️index/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🧪️tests/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🧾️bytes/🦀️.rs`
+- overlap: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/👁️read/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🪴️insert/🦀️.rs`
+- overlap: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🦀️.rs`
+- merge-disjoint: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🦀️.rs`
+- merge-disjoint: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🧪️tests/🔬️unit/🦀️.rs`
+- overlap: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🧪️tests/🔬️unit/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🧪️tests/🪪️history-invariants/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🧫️fixtures/🪪️history-invariants/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🧬️schema/🪪️history-invariants/🔣️.json`
+
+## Preserved Uncontested and Disjoint Files
+
+551 files restored after full owner inventory and HEAD/stash comparison. Atomic replacements used short unique files under ticket generated storage, removed immediately by replacement. Each target was re-read before replacement.
+
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/⚖️result/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/⚖️result/🧪️tests/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️demand/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️demand/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️demand/🧬️schema/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🟦️.ts`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🧫️fixtures/📥️root/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧬️schema/📥️root/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📋️vector/🔑️identity/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📋️vector/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📋️vector/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📋️vector/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📋️vector/🧬️schema/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️boxed/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🧫️fixtures/🔗️source/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🧬️schema/🔗️source/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🧪️tests/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️original-vector/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️original-vector/🧪️tests/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️queue/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🚚️frontier/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🚚️frontier/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🚚️frontier/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🚚️frontier/🧬️schema/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🔬️unit/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧫️fixtures/🌳️intrinsic/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧫️fixtures/🎮️erased-controlled/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧫️fixtures/📏️shared-physical/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧮️plain-elements/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧮️plain-elements/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧫️fixtures/🧮️plain-elements/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️contract/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️schema/🧮️plain-elements/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/⚠️refusal/🧪️tests/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/✨️derive/⚙️expansion/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/📋️project.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/📜️script.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/✨️derive/📽️projection/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/✨️derive/🟰️equality/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/✨️derive/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️admission/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️admission/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️admission/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️admission/🧬️schema/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️retained-clone/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🎚️record/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/📋️sequence/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🤝️tuple/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧬️schema/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🏷️type/🧪️tests/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🌳️roots/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/⚖️observation/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/⚖️observation/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/⚖️observation/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/⚖️observation/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎮️splice/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎮️splice/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎮️splice/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎮️splice/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🔎️traversal/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🔎️traversal/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🔎️traversal/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🔎️traversal/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧳️read/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧳️read/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧳️read/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧳️read/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧳️ranked/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🟰️equal/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🟰️equal/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🟰️equal/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🟰️equal/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🟰️equal/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🟰️equal/🧬️schema/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/📋️list/🟦️.ts`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/🔬️counter/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🪢️concat/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🪢️concat/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🪢️concat/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🪢️concat/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🪢️concat/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️list/🪢️concat/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️requests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️requests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️requests/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️requests/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️requests/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️requests/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️slots/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️slots/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️slots/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️slots/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📋️registry/🎫️slots/🧫️fixtures/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📝️text/🚶️utf8/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📝️text/🚶️utf8/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📝️text/🚶️utf8/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📝️text/🚶️utf8/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📝️text/🚶️utf8/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📝️text/🚶️utf8/🧬️schema/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/package.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/📋️project.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/📜️script.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/🔑️hashed/🧮️scratch/🟦️.ts`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/package.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📜️script.ts`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📶️sort/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📶️sort/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📶️sort/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📶️sort/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📶️sort/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📶️sort/🧬️schema/📸️snapshot.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📶️sort/🧬️schema/🔣️.json`
+- updated (merge-disjoint): `🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📽️projection/📋️field/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📽️projection/📦️owned/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📽️projection/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📽️projection/🧪️tests/📦️owned/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📽️projection/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📽️projection/🧫️fixtures/📦️owned/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📽️projection/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📽️projection/🧬️clone/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📽️projection/🧬️schema/📦️owned.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📽️projection/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/📋️project.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/📜️script.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/🧬️schema/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🔁️codec/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🔑️hashed/🧮️scratch/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🔑️hashed/🧮️scratch/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🔑️hashed/🧮️scratch/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🔑️hashed/🧮️scratch/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🔑️hashed/🧮️scratch/🧪️tests/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🔑️lookup/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🔑️lookup/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🔑️lookup/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🔑️lookup/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🔑️lookup/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🔑️lookup/🧬️schema/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🔗️read/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🔗️read/🧬️clone/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🔗️read/🪪️authority/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🔗️read/🪪️lease/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧪️tests/🗂️ordered/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧺️set/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛫️encode/🛂️allocation/🧪️tests/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛫️encode/🛂️allocation/🧪️tests/🧫️fixtures/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛫️encode/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛫️encode/🫴️recipient/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🔒️close/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🔒️close/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🛬️receiving/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🛬️receiving/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🧬️schema/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🔭️observer/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🧪️tests/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🧪️tests/🧫️fixtures/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧬️child/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/📋️project.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/📜️script.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️shared/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️shared/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️shared/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️shared/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️shared/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧳️receiver/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧳️receiver/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🪡️field/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/♻️retirement/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🔁️continuation/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧪️tests/🧩️neutral-owner/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🧬️schema/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️field/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🧪️tests/🔬️unit/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/♻️retirement/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📋️project.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📜️script.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧬️schema/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🧪️tests/🔬️unit/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🧫️fixtures/🔮️demands/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🧬️schema/🔮️demands/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️projection/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared/📋️list/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared/📋️list/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared/📋️list/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared/📋️list/🧬️schema/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🏭️factory/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔐️custody/🟦️.ts`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔬️unit/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🧫️fixtures/🔐️custody.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧬️schema/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔮️demands/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔮️demands/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔮️demands/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔮️demands/🧬️schema/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/♻️retirement/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/➖️remove/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/➖️remove/🧪️tests/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🧪️tests/🔬️unit/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧪️tests/🟦️.ts`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧪️tests/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧪️tests/🧫️fixtures/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧬️schema/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧪️tests/🟦️.ts`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧪️tests/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧳️owner/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧺️std-collections/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧺️std-collections/🧪️tests/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🧭️symbols/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🧮️expression/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🧱️chunks/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🟦️.ts`
+- updated (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🧫️fixtures/⚠️failure/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧫️fixtures/🌿️native-text/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧫️fixtures/🧩️branches/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧫️fixtures/🧮️expression/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🎒️document/⏳️cursor/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🎒️document/⏳️cursor/🧪️tests/🥒️.feature`
+- created (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🎒️document/⏳️cursor/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🎒️document/⏳️cursor/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🎒️document/⏳️cursor/🧫️fixtures/🧱️chunks/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🎒️document/⏳️cursor/🧬️schema/🔣️.json`
+- updated (merge-disjoint): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🦀️.rs`
+- updated (merge-disjoint): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🧬️static/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/📦️document/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🧪️tests/🟦️.ts`
+- updated (merge-disjoint): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🧪️tests/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🏭️schema/⏳️cursor/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🏭️schema/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🏭️schema/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🏭️schema/🧫️fixtures/⏳️cursor/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🏭️schema/🧫️fixtures/⏳️cursor/🧬️schema.json`
+- updated (merge-disjoint): `🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧪️tests/🛬️decoder/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧪️tests/🟦️.ts`
+- updated (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧪️tests/🧫️fixtures/🛬️decoder.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧬️schema/🛬️decoder.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/💼️job/🤝️provider/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml`
+- updated (merge-disjoint): `🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📋️project.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🌲️source/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/📣️delivery/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📣️delivery/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📥️receiving/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📥️receiving/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📥️receiving/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📥️receiving/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📥️receiving/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📦️bytes/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📦️bytes/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📦️bytes/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/📦️bytes/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📬️typed-operation/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts`
+- updated (stash-exact): `🧰️framework/🔨️modules/🎭️actor/🧪️tests/🔬️unit/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/♻️retirement/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/❄️reference/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/❄️reference/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/❄️reference/🧬️schema/🔣️.json`
+- updated (merge-disjoint): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🦀️.rs`
+- updated (merge-disjoint): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧪️tests/📤️transfer/🟦️.ts`
+- updated (merge-disjoint): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧪️tests/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧪️tests/🧫️fixtures/🔣️.json`
+- updated (merge-disjoint): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/✂️clamp/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/✂️clamp/🧪️tests/🧫️fixtures/🔣️.json`
+- updated (merge-disjoint): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📋️copy/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📤️publication/👁️borrow/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📤️publication/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📤️publication/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📤️publication/🪢️join/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🔗️concat/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🔗️concat/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🔗️concat/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🔗️concat/🧬️schema/🔣️.json`
+- updated (merge-disjoint): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📬️preparation/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📬️preparation/🧬️schema/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🗣️dsl/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🛬️controlled/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧪️tests/🧪️shared-map-delta-native/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧪️tests/🧪️shared-map-delta-source/🟦️.ts`
+- updated (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧪️tests/🧫️fixtures/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🔗️.graphql`
+- updated (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🔣️.json`
+- updated (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🛰️.proto`
+- updated (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧭️canonical/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/↩️inverse-admission/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/↩️inverse-admission/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/📦️unpublished-owner/🥒️.feature`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/📦️unpublished-owner/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧳️native-contract/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧳️native-contract/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧳️native-contract/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧳️native-contract/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/↩️inverse-admission/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/📦️prepared-fields/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/↩️inverse-admission/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/📦️prepared-fields/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/⚠️diagnostic/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/⚠️diagnostic/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/⚠️diagnostic/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/⚠️diagnostic/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/✂️span/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/✂️span/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/📏️body/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/📏️body/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/📏️body/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔎️key/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔎️key/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔎️key/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔎️key/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🫴️receiving/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🫴️receiving/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🫴️receiving/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🫴️receiving/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧱️row/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧱️row/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧱️row/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧱️row/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🚚️apply/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧪️tests/🎟️demand/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧫️fixtures/schema.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧫️fixtures/🎟️close/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧬️schema/🎟️close/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🎚️record/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🎚️record/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🎚️record/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🎚️record/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🎚️record/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🎚️record/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/📋️indexed/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/📋️indexed/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/📋️indexed/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/📋️indexed/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/📋️indexed/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/📋️indexed/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🧫️fixtures/🎟️close-axes/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🧬️schema/🎟️close-axes/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🍂️remove/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🎟️original/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/👁️read/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/📋️vector/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🔏️hash/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🗂️index/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🧪️tests/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🧪️tests/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🧪️tests/🧫️fixtures/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🧬️schema/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🧾️bytes/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/👁️read/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🦀️.rs`
+- updated (stash-exact): `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🪴️insert/🦀️.rs`
+- updated (merge-disjoint): `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🦀️.rs`
+- updated (merge-disjoint): `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🧪️tests/🔬️unit/🦀️.rs`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🔗️causal/🧪️tests/🪪️history-invariants/🟦️.ts`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🔗️causal/🧫️fixtures/🪪️history-invariants/🔣️.json`
+- created (stash-exact): `🧰️framework/🔨️modules/📡️replication/🔗️causal/🧬️schema/🪪️history-invariants/🔣️.json`
+
+## Canonical Child-Owner Conflict Resolution
+
+Seven overlapping files were merged after translating base/stash references to the existing HEAD crate owners. This retains HEAD extraction while preserving original staged chunk declaration, receiving retirement, keyed object maps, cold reference diff laws, cooperative history decode and both actor script import groups.
+
+- merged: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🦀️.rs`
+- merged: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🦀️.rs`
+- merged: `🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📜️script.ts`
+- merged: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🦀️.rs`
+- merged: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧪️tests/🦀️.rs`
+- merged: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🦀️.rs`
+- merged: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🧪️tests/🔬️unit/🦀️.rs`
+
+## Extracted Parent Ownership
+
+Mutation retains its HEAD contract crate and Edit child. New retained preparation depends on message ledgers, so it is wired into the existing messages child (which already depends on mutation), preserving the acyclic extraction. The existing replication facade publishes the new vocabulary through its existing mutation namespace. Original TransactionRef retirement is placed with HEAD Edit.
+
+Pack record parent retains HEAD thin extraction; required-chunk declaration is invoked through record-encode, and newly authored section/document/schema-hash vocabulary is exported from existing encode/preflight children and their facade.
+
+- merged: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs`
+- merged: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📦️packages/🦀️rust/🦀️.rs`
+- merged: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/✏️edit/🦀️.rs`
+- merged: `🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/🦀️.rs`
+- merged: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🦀️.rs`
+- merged: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🦀️.rs`
+- merged: `🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/🦀️.rs`
+
+## Board Fill Original Custody
+
+Mapped stash fill-job source and fixed-page/type deltas into HEAD fill owner. HEAD scene/style/brush inputs, neutral BoardNaming and downward crate boundary remain intact. Restored original snapshot admission, descriptor grants, source binding, cooperative capture, job/checkpoint custody and fallible descriptor allocation. Uses existing action-bus crate directly. OS executor owns BoardHost delegate; Domain executor owns Puzzle consumers.
+
+- merged: `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/🦀️.rs`
+- source dependency updated: `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/📦️packages/🦀️rust/Cargo.toml` → `semio-framework-action-bus`
+
+## Supporting Lower Owner Inventory
+
+- both-changed: `🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/📦️document/🦀️.rs`
+- both-changed: `🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/🦀️.rs`
+- both-changed: `🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/📐️format/🛫️encoding/⏳️retained/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/📐️format/🛫️encoding/⏳️retained/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/📐️format/🛫️encoding/⏳️retained/🧫️fixtures/🧱️flags/🔣️.json`
+- both-changed: `🧰️framework/🔨️modules/🎒️pack/📐️format/🛫️encoding/🦀️.rs`
+- both-changed: `🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs`
+- both-changed: `🧰️framework/🔨️modules/🎒️pack/📐️format/🧪️tests/🔬️unit/🦀️.rs`
+- both-changed: `🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/🦀️.rs`
+- both-changed: `🧰️framework/🔨️modules/🎒️pack/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📋️project.json`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📜️script.ts`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/📋️persistent/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/📋️persistent/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/📋️persistent/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/📋️persistent/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🔒️immutable/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🔒️immutable/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🔒️immutable/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🔒️immutable/🧬️schema/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧪️tests/🧫️fixtures/🗺️retained-map.json`
+- stash-exact: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧬️schema/🗺️retained-map.json`
+- both-changed: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs`
+- both-changed: `🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🦀️.rs`
+- both-changed: `🧰️framework/🔨️modules/📡️replication/⚙️codec/🦀️.rs`
+- both-changed: `🧰️framework/🔨️modules/📡️replication/🆔️ids/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/👕️peer-overlay/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/👕️peer-overlay/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/👕️peer-overlay/🧪️tests/🔬️unit/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/👕️peer-overlay/🧪️tests/🔬️unit/🦀️.rs`
+- both-changed: `🧰️framework/🔨️modules/📡️replication/📐️format/🦀️.rs`
+- both-changed: `🧰️framework/🔨️modules/📡️replication/📐️format/🧪️tests/🔬️unit/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/📐️format/🧪️tests/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/📐️format/🧪️tests/🧫️fixtures/🧬️.json`
+- both-changed: `🧰️framework/🔨️modules/📡️replication/📡️wire/🦀️.rs`
+- both-changed: `🧰️framework/🔨️modules/📡️replication/📡️wire/🧪️tests/🔬️interaction/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/📋️project.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/📜️script.ts`
+- both-changed: `🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/package.json`
+- both-changed: `🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`
+- both-changed: `🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts`
+- both-changed: `🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/🦀️.rs`
+- both-changed: `🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/📦️bytes/🦀️.rs`
+- both-changed: `🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🔏️seal/🦀️.rs`
+- both-changed: `🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🧪️tests/🗄️durable-collaborative-redo/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/👕️peer-overlay-v1/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🧪️tests/🟦️.ts`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🧪️tests/🦀️.rs`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🧫️fixtures/👁️visitor/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🧫️fixtures/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🧬️schema/👁️visitor/🔣️.json`
+- stash-exact: `🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🧬️schema/🔣️.json`
+
+## Supporting Source Preservation
+
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/📦️document/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/📐️format/🛫️encoding/⏳️retained/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/📐️format/🛫️encoding/⏳️retained/🧪️tests/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/📐️format/🛫️encoding/⏳️retained/🧫️fixtures/🧱️flags/🔣️.json`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/📐️format/🛫️encoding/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/📐️format/🧪️tests/🔬️unit/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🟦️.ts`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🔣️.json`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🧪️tests/🟦️.ts`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🧪️tests/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🧬️schema/🔣️.json`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📋️project.json`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📜️script.ts`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/📋️persistent/🧪️tests/🟦️.ts`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/📋️persistent/🧪️tests/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/📋️persistent/🧫️fixtures/🔣️.json`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/📋️persistent/🧬️schema/🔣️.json`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🔒️immutable/🧪️tests/🟦️.ts`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🔒️immutable/🧪️tests/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🔒️immutable/🧫️fixtures/🔣️.json`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🔒️immutable/🧬️schema/🔣️.json`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧪️tests/🟦️.ts`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧪️tests/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧪️tests/🧫️fixtures/🗺️retained-map.json`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧬️schema/🗺️retained-map.json`
+- preserved: `🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/📡️replication/⚙️codec/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/📡️replication/👕️peer-overlay/🟦️.ts`
+- preserved: `🧰️framework/🔨️modules/📡️replication/👕️peer-overlay/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/📡️replication/👕️peer-overlay/🧪️tests/🔬️unit/🟦️.ts`
+- preserved: `🧰️framework/🔨️modules/📡️replication/👕️peer-overlay/🧪️tests/🔬️unit/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/📡️replication/📐️format/🧪️tests/🔬️unit/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/📡️replication/📐️format/🧪️tests/🧫️fixtures/🔣️.json`
+- preserved: `🧰️framework/🔨️modules/📡️replication/📐️format/🧪️tests/🧫️fixtures/🧬️.json`
+- preserved: `🧰️framework/🔨️modules/📡️replication/📡️wire/🧪️tests/🔬️interaction/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/📋️project.json`
+- preserved: `🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/📜️script.ts`
+- preserved: `🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/package.json`
+- preserved: `🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`
+- preserved: `🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🔏️seal/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/📡️replication/🟦️.ts`
+- preserved: `🧰️framework/🔨️modules/📡️replication/🧪️tests/🗄️durable-collaborative-redo/🟦️.ts`
+- preserved: `🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/👕️peer-overlay-v1/🔣️.json`
+- preserved: `🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🟦️.ts`
+- preserved: `🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🧪️tests/🟦️.ts`
+- preserved: `🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🧪️tests/🦀️.rs`
+- preserved: `🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🧫️fixtures/👁️visitor/🔣️.json`
+- preserved: `🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🧫️fixtures/🔣️.json`
+- preserved: `🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🧬️schema/👁️visitor/🔣️.json`
+- preserved: `🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🧬️schema/🔣️.json`
+
+## Lower Canonical Owner Ports
+
+HEAD ActorId retirement already preserves original field ownership and delegates supported retirement to SharedUtf8; duplicate stash implementation was unnecessary. Stash corrupted dependency comment in the broad replication manifest was not copied; its productive DSL map implementation is wired to the extracted mutation crate with its actual DSL-record dependency. Original sink refusal, scoped identities, aggregate byte retirement demand and both script router registrations were retained.
+
+- merged: `🧰️framework/🔨️modules/🎒️pack/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs`
+- merged: `🧰️framework/🔨️modules/📡️replication/📐️format/🦀️.rs`
+- merged: `🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts`
+- merged: `🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml`
+- merged: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📦️packages/🦀️rust/Cargo.toml`
+- merged: `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs`
+- merged: `🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/🦀️.rs`
+- merged: `🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/📦️bytes/🦀️.rs`
+
+## Remaining Lower Owner Relocations
+
+Interaction set traversal/selection/hover functions moved into HEAD interaction child, retaining its type definitions and crate boundary. Pack format keeps its HEAD catalog extraction: original demand/depth methods and required-chunk verification moved into catalog, while the shared chunk-custody predicate and retained encoding grammar stay in format with explicit cross-child visibility. No old aggregate was resurrected.
+
+- merged: `🧰️framework/🔨️modules/📡️replication/📡️wire/🕹️interaction/🦀️.rs`
+- merged: `🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs`
+- merged: `🧰️framework/🔨️modules/🎒️pack/📐️format/🗂️catalog/🦀️.rs`
+- merged: `🧰️framework/🔨️modules/🎒️pack/📐️format/🛫️encoding/🦀️.rs`
+- merged: `🧰️framework/🔨️modules/🎒️pack/📐️format/🛫️encoding/⏳️retained/🦀️.rs`
+- merged: `🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/🦀️.rs`
+
+## Explicit Child Boundary Wiring
+
+Newly introduced source paths were translated from old aggregate-qualified references to the existing HEAD crate owners. Retained preparation macros/types now name their messages crate; the original document cursor borrows the encode/preflight/format owners directly. Cross-child index matching and grammar vocabulary are explicitly exported at their genuine owning child. Required source edges are recorded below. No compilation repair or compiler execution was used.
+
+- updated: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/🦀️.rs`
+- updated: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧭️canonical/🦀️.rs`
+- updated: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧳️native-contract/🧪️tests/🦀️.rs`
+- updated: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🧪️tests/🦀️.rs`
+- updated: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🫴️receiving/🧪️tests/🦀️.rs`
+- updated: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧪️tests/🦀️.rs`
+- updated: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🧱️row/🧪️tests/🦀️.rs`
+- updated: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🦀️.rs`
+- updated: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🧪️tests/🦀️.rs`
+- updated: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🦀️.rs`
+- updated: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🍂️remove/🦀️.rs`
+- updated: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🎟️original/🦀️.rs`
+- updated: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/👁️read/🦀️.rs`
+- updated: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/📋️vector/🦀️.rs`
+- updated: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🗂️index/🦀️.rs`
+- updated: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🦀️.rs`
+- updated: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🧾️bytes/🦀️.rs`
+- updated: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🦀️.rs`
+- updated: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🦀️.rs`
+- updated: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🧪️tests/🔬️unit/🦀️.rs`
+- updated: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🎒️document/⏳️cursor/🦀️.rs`
+- updated: `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/👁️read/🦀️.rs`
+- updated: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/📦️packages/🦀️rust/Cargo.toml`
+- updated: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📦️packages/🦀️rust/🦀️.rs`
+- updated: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📦️packages/🦀️rust/Cargo.toml`
+
+Macro hygiene and document option vocabulary retain the new canonical crate binding:
+
+- updated: `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🩹️patch/🦀️.rs`
+- updated: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🎒️document/⏳️cursor/🦀️.rs`
+
+Cold mutation vocabulary follows its authored API split: the existing facade forwards `apply_diff_cold`/`apply_diff_cold_into`; the replaced aggregate-only `apply_diff` export is removed rather than retained as a legacy alias.
+
+## Finite Final Source Checkpoint
+
+- 638 listed source/metadata paths inspected; 562 equal stash blobs exactly, 76 preserve HEAD/current owner integration or already fulfilled HEAD behavior.
+- Zero strict conflict markers; zero paths longer than 256 Windows UTF-16 code units.
+- 8 listed Cargo manifests parse as TOML. JSON parses except the one authored stash schema below.
+- HEAD Mutation/Edit/messages extraction, thin pack parent, board neutral naming and scene/style/brush separation remain in source.
+- No builds, tests, compilation, runtime execution, dependency regeneration or Git mutations ran. These are source checks, not a runtime claim.
+- Initial content overlaps and lower relocations are resolved. No merge markers or unresolved merge alternatives were left. Compiler-level integration remains deliberately unvalidated under the requested scope.
+
+### Authored Stash Limitation
+
+`🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🎒️document/⏳️cursor/🧬️schema/🔣️.json` is exactly the 630-byte stash blob and lacks its final root-object closing brace. The JSON parser reports Expecting ',' delimiter: line 2 column 1 (char 630). This preexisting authored syntax was preserved because compilation/repair work is explicitly excluded.
+
+### Manifest Edges for Root Lock Ownership
+
+- `semio-framework-value` dependencies → `semio-framework-hash` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml`)
+- `semio-framework-value` dev-dependencies → `blake3` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml`)
+- `semio-framework-pack-record-encode` dependencies → `semio-framework-pack-record-preflight` (`🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/📦️packages/🦀️rust/Cargo.toml`)
+- `semio-framework-pack-record-encode` dependencies → `semio-framework-hash` (`🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/📦️packages/🦀️rust/Cargo.toml`)
+- `semio-framework-replication-mutation` dependencies → `semio-framework-dsl-record` (`🧰️framework/🔨️modules/📡️replication/🎮️mutation/📦️packages/🦀️rust/Cargo.toml`)
+- `semio-framework-replication-mutation-messages` dev-dependencies → `semio-framework-trace-memory-testing` (`🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/📦️packages/🦀️rust/Cargo.toml`)
+- `semio-framework-os-infinite-board-normal-fill` dependencies → `semio-framework-action-bus` (`🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/📦️packages/🦀️rust/Cargo.toml`)
+
+### Added Executable Metadata Targets
+
+- `@semio-tech/value-derive-rs:value-admission-check` (`🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-derive-rs:value-admission-native-check` (`🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-ts:test-scratch-hash` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/📋️project.json`)
+- `@semio-tech/value-rs:test-native-payload-enum-source` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-native-payload-enum-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-immutable-root-clone-source` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-immutable-root-clone-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-close-demand-source` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-close-demand-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-slice-equality-source` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-slice-equality-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-named-edit-source` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-named-edit-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-exact-key-lookup-source` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-exact-key-lookup-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-indexed-edit-source` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-indexed-edit-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-fixed-request-owners-source` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-fixed-request-owners-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-fixed-key-slots-source` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-fixed-key-slots-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-owned-projection-source` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-owned-projection-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-factory-owned-source` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-factory-owned-source-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-compound-demands` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-compound-demands-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-bulk-vec-retained-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-original-retirement-demand` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-original-retirement-demand-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-persistent-traversal` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-persistent-traversal-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-immutable-projection` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-immutable-projection-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-retained-utf8-source` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-retained-utf8-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-sealed-frontier-source` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-sealed-frontier-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-original-vector-concat` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-original-vector-concat-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-borrowed-observations-source` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-borrowed-observations-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-native-receiving-original-source` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-persistent-build-source` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-persistent-build-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-retained-equality-source` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-retained-equality-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-native-persistent-receive-source` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-native-persistent-receive-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-native-shared-receive-source` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-native-shared-receive-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-named-root-receive-source` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-named-root-receive-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-named-key-index-source` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-named-key-index-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-native-retirement-loan-source` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-native-retirement-loan-native` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-plain-element-retirement-source` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/value-rs:test-bulk-vec-retained-source` (`🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-record-projection:verify-source` (`🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/📋️project.json`)
+- `@semio-tech/framework-record-projection:verify-native` (`🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/📋️project.json`)
+- `@semio-tech/framework-native-tuple-receiving:verify-source` (`🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/📋️project.json`)
+- `@semio-tech/framework-native-tuple-receiving:verify-native` (`🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/📋️project.json`)
+- `@semio-tech/framework-original-slot:verify-source` (`🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📋️project.json`)
+- `@semio-tech/framework-original-slot:verify-native` (`🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📋️project.json`)
+- `@semio-tech/framework-pack-json-rs:test-original-receiving-source` (`🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-pack-json-rs:test-original-receiving-native` (`🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-pack-json-rs:test-persistent-canonical-source` (`🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-pack-json-rs:test-persistent-canonical-native` (`🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-pack-json-rs:test-immutable-tree-source` (`🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-pack-json-rs:test-immutable-tree-native` (`🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-actor-rs:test-operation-diagnostics-source` (`🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-actor-rs:test-operation-diagnostics-native` (`🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication:test-map-delta` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/📋️project.json`)
+- `@semio-tech/framework-replication:test-retained-mutation` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/📋️project.json`)
+- `@semio-tech/framework-replication:test-diagnostic-transfer` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/📋️project.json`)
+- `@semio-tech/framework-replication-rs:native-diff-contract-source` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:native-diff-contract-native` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:inverse-admission-check` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:inverse-admission-native-check` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:scoped-identity-check` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:scoped-identity-native-check` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:interaction-set-laws-native-check` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:interaction-set-laws-check` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:history-invariants-check` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:history-invariants-native-check` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:prepared-fields-native-check` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:prepared-fields-check` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:test-retained-diagnostic-source` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:test-retained-diagnostic-native` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:test-retained-patch-apply-source` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:test-retained-patch-apply-native` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:test-retained-field-change-source` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:test-retained-field-change-native` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:test-retained-diff-sequence-source` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:test-retained-diff-sequence-native` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:test-retained-diff-receiving-source` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:test-retained-diff-receiving-native` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:test-retained-record-change-source` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:test-retained-record-change-native` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:test-retained-indexed-replacement-source` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:test-retained-indexed-replacement-native` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:test-history-backing-birth-source` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:test-history-backing-birth-native` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:test-retained-logical-body-source` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)
+- `@semio-tech/framework-replication-rs:test-retained-logical-body-native` (`🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json`)

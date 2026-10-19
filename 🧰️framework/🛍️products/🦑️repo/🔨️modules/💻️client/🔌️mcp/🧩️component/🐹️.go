@@ -18,8 +18,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"github.com/usalu/semio/repo/providers"
 
-	"github.com/usalu/semio/repo/client"
 )
 
 // #endregion 🤸️Preamble
@@ -29,12 +29,12 @@ import (
 
 const MCPProfileEnvironment = "SEMIO_REPO_MCP_CLIENT"
 
-func resolveMCPProfile(arguments []string, lookupEnvironment func(string) (string, bool)) (client.McpClientKind, error) {
+func resolveMCPProfile(arguments []string, lookupEnvironment func(string) (string, bool)) (providers.McpClientKind, error) {
 	if len(arguments) != 0 {
 		return "", errors.New("repo MCP accepts no command arguments")
 	}
 	raw, _ := lookupEnvironment(MCPProfileEnvironment)
-	return client.ParseMcpClientKind(raw)
+	return providers.ParseMcpClientKind(raw)
 }
 
 func main() {
@@ -54,10 +54,10 @@ func main() {
 }
 
 func runMCP(ctx context.Context, transport Transport, repository RepositoryHandlers) (*Server, error) {
-	return runMCPForProfile(ctx, transport, repository, client.McpClientGeneric)
+	return runMCPForProfile(ctx, transport, repository, providers.McpClientGeneric)
 }
 
-func runMCPForProfile(ctx context.Context, transport Transport, repository RepositoryHandlers, profile client.McpClientKind) (*Server, error) {
+func runMCPForProfile(ctx context.Context, transport Transport, repository RepositoryHandlers, profile providers.McpClientKind) (*Server, error) {
 	server, err := NewRepositoryServerFor(repository, profile)
 	if err != nil {
 		return nil, err

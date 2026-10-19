@@ -4,7 +4,7 @@ async fn doc(id: &str) -> protocol::ArtifactId {
     protocol::ArtifactId(id.to_string())
 }
 async fn actor(id: &str) -> protocol::ActorId {
-    protocol::ActorId(id.to_string())
+    protocol::ActorId(id.to_string().into())
 }
 async fn op(id: &str) -> protocol::MutationId {
     protocol::MutationId(id.to_string())

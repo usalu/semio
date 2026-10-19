@@ -123,11 +123,23 @@ function interpolate(value:string,root:string,task:BazelTaskV1,environment?:()=>
  return value.replaceAll("{workspaceRoot}",root).replaceAll("{projectRoot}",resolve(root,task.root)).replaceAll("{projectName}",task.project).replace(/\{options\.([^}]+)\}/gu,(_match,key:string)=>{let option:unknown=task.definition.execution;for(const part of key.split("."))option=option&&typeof option==="object"?(option as Record<string,unknown>)[part]:undefined;if(option===undefined&&environment&&key.startsWith("env."))option=environment()[key.slice(4)];if(typeof option!=="string"&&typeof option!=="number"&&typeof option!=="boolean")throw Error(`Build task requires option ${key}: ${task.id}`);return String(option);});
 }
 
-/** 📚️ Enumerates admitted source names through Git or a portable filesystem walk. */
+/** 🌱️ Selects the smallest directory or literal-file roots needed by declared input patterns. */
+export function bazelInputTraversalRootsV1(patterns:readonly string[]):string[]{
+ const roots=[...new Set(patterns.map(pattern=>{const index=pattern.search(/[?*{[]/u),prefix=index<0?pattern:pattern.slice(0,index),root=slash(index<0?prefix:prefix.endsWith("/")?prefix:dirname(prefix)).replace(/^\.\//u,"").replace(/\/+$/u,"");return root==="."?"":root;}))].sort();
+ if(roots[0]==="")return [""];const selected=new Set(roots);return roots.filter(root=>{for(let index=root.indexOf("/");index>=0;index=root.indexOf("/",index+1))if(selected.has(root.slice(0,index)))return false;return true;});
+}
+
+/** 🌳️ Enumerates selected inputs without opening unrelated directories when Git is unavailable. */
+export async function bazelFilesystemSourceFilesV1(root:string,invocation:ScriptInvocation,patterns:readonly string[]):Promise<string[]>{
+ const excluded=new Set([".git",".🧬semio",".cache",".nx","node_modules","target","dist","build","coverage",".venv","__pycache__"]),pending=bazelInputTraversalRootsV1(patterns),files:string[]=[];
+ while(pending.length){checkScriptInvocation(invocation);const directory=pending.pop()!;if(directory.split("/").some(part=>excluded.has(part)))continue;let info;try{info=await lstat(join(root,directory));}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")continue;throw error;}if(info.isSymbolicLink()||info.isFile()){files.push(directory);continue;}if(!info.isDirectory())continue;for(const entry of await readdir(join(root,directory),{withFileTypes:true})){const path=slash(join(directory,entry.name));if(entry.isDirectory()&&!excluded.has(entry.name))pending.push(path);else if(entry.isFile()||entry.isSymbolicLink())files.push(path);}await invocation.control.yieldContinuation();}return [...new Set(files)].sort();
+}
+
+/** 📚️ Enumerates admitted source names through Git or a selected portable filesystem walk. */
 async function sourceFiles(root:string,invocation:ScriptInvocation,patterns:string[]):Promise<string[]>{
  checkScriptInvocation(invocation);
  if(!patterns.length)return [];
- const prefixes=patterns.map(pattern=>{const index=pattern.search(/[?*{[]/u),prefix=index<0?pattern:pattern.slice(0,index);return index<0?prefix:prefix.endsWith("/")?prefix:slash(dirname(prefix));}),pathspecs=prefixes.some(prefix=>!prefix||prefix===".")?[]:[...new Set(prefixes)];
+ const prefixes=bazelInputTraversalRootsV1(patterns),pathspecs=prefixes.includes("")?[]:prefixes;
  const git=spawn("git",["-c","core.fsmonitor=false","ls-files","-co","--exclude-standard","-z",...(pathspecs.length?["--",...pathspecs]:[])],{cwd:root,stdio:["ignore","pipe","pipe"],windowsHide:true}),chunks:Buffer[]=[];let bytes=0;
  const cancel=()=>git.kill();invocation.control.signal.addEventListener("abort",cancel,{once:true});
  try{
@@ -135,8 +147,7 @@ async function sourceFiles(root:string,invocation:ScriptInvocation,patterns:stri
   checkScriptInvocation(invocation);if(result===0)return [...new Set(Buffer.concat(chunks).toString().split("\0").filter(Boolean))].filter(path=>!path.startsWith(".🧬semio/")&&!path.startsWith(".git/")).sort();
  }catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}
  finally{invocation.control.signal.removeEventListener("abort",cancel);}
- const excluded=new Set([".git",".🧬semio",".cache",".nx","node_modules","target","dist","build","coverage",".venv","__pycache__"]),pending=[""],files:string[]=[];
- while(pending.length){checkScriptInvocation(invocation);const directory=pending.pop()!;for(const entry of await readdir(join(root,directory),{withFileTypes:true})){const path=slash(join(directory,entry.name));if(entry.isDirectory()&&!excluded.has(entry.name))pending.push(path);else if(entry.isFile()||entry.isSymbolicLink())files.push(path);}await invocation.control.yieldContinuation();}return files.sort();
+ return bazelFilesystemSourceFilesV1(root,invocation,patterns);
 }
 
 /** 🧾️ Collects portable input declarations, broadening unsupported patterns conservatively. */
@@ -162,14 +173,19 @@ function matchesInput(pattern:string,path:string,broad=true):boolean{
 /** 🧊️ Identifies the full bounded captured executable closure. */
 export async function bazelImplementationIdentityV1(root:string,entry:string,invocation:ScriptInvocation):Promise<string>{return buildSourceClosureIdentityV1(await captureBuildSourceClosureV1(root,entry,invocation));}
 
+/** 🧰️ Shares task environment overrides between source fingerprints and actual command execution. */
+function bazelTaskBaseEnvironmentV1(workspace:string,task:BazelTaskV1,environment:NodeJS.ProcessEnv):NodeJS.ProcessEnv{
+ return {...environment,...task.definition.execution.env,SEMIO_BUILD_TOOL:"bazel",SEMIO_WORKSPACE_ROOT:workspace,SEMIO_TASK_PROJECT:task.project,SEMIO_TASK_TARGET:task.target,...(task.configuration?{SEMIO_TASK_CONFIGURATION:task.configuration}:{})};
+}
+
 /** 🧮️ Computes source and runtime input identities independently for each task. */
 async function taskFingerprint(root:string,graph:BuildGraphV1,task:BazelTaskV1,files:string[],memo:Map<string,Promise<string>>,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,cached:boolean,implementation:string):Promise<string>{
  const inputs=cached&&task.definition.execution.kind!=="noop"?taskInputs(graph,task):[],patterns=inputs.filter((value):value is string=>typeof value==="string"),included=patterns.filter(pattern=>!pattern.startsWith("!")),excluded=patterns.filter(pattern=>pattern.startsWith("!")).map(pattern=>pattern.slice(1)),digest=createHash("sha256");
- const original=issueBuildTaskEnvironmentV1(root,invocation,{kind:"noop"},[],process.env);digest.update(JSON.stringify({platform:process.platform,arch:process.arch,bun:process.versions.bun,mode:original.SEMIO_BUILD_MODE,task}));digest.update(implementation);
+ const original=issueBuildTaskEnvironmentV1(root,invocation,task.definition.execution,task.args,bazelTaskBaseEnvironmentV1(root,task,process.env));digest.update(JSON.stringify({platform:process.platform,arch:process.arch,bun:process.versions.bun,mode:original.SEMIO_BUILD_MODE,task}));digest.update(implementation);
  if(!cached)digest.update(randomUUID());
  const paths=[...new Set([...files.filter(path=>included.some(pattern=>matchesInput(pattern,path))&&!excluded.some(pattern=>matchesInput(pattern,path,false))),...included.filter(pattern=>!/[?*{[]/u.test(pattern)&&!excluded.some(exclude=>matchesInput(exclude,pattern,false)))])].sort();
  for(const path of paths){checkScriptInvocation(invocation);let identity=memo.get(path);if(!identity){identity=bazelSourceIdentityV1(join(root,path),invocation.control.signal);memo.set(path,identity);}digest.update(path+"\0"+await identity+"\0");}
- for(const input of inputs){if(typeof input!=="object"||!input)continue;const row=input as Record<string,unknown>;if(typeof row.runtime==="string")digest.update(await captureOwnedCommandV1(process.execPath,["exec",row.runtime],root,{signal:phaseControl.signal,control:phaseControl,env:process.env}));else if(typeof row.env==="string")digest.update(row.env+"="+(process.env[row.env]??""));else if(row.externalDependencies)for(const path of ["bun.lock","package.json"]){try{digest.update(await readFile(join(root,path)));}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}}}
+ for(const input of inputs){if(typeof input!=="object"||!input)continue;const row=input as Record<string,unknown>;if(typeof row.runtime==="string")digest.update(JSON.stringify({runtime:row.runtime,stdout:await captureOwnedCommandV1(process.execPath,["exec",row.runtime],root,{signal:phaseControl.signal,control:phaseControl,env:original})}));else if(typeof row.env==="string")digest.update(JSON.stringify({env:row.env,value:original[row.env]??null}));else if(row.externalDependencies)for(const path of ["bun.lock","package.json"]){try{digest.update(await readFile(join(root,path)));}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}}}
  return digest.digest("hex");
 }
 
@@ -239,7 +255,7 @@ async function publishCapturedBazelGraphV1(root:string,graph:BuildGraphV1,reques
 
 /** 📦️ Flattens declared products so cache paths remain short on every host. */
 export async function captureBazelSnapshotV1(manifest:BazelTaskManifestV1,output:string,invocation:ScriptInvocation):Promise<void>{
- const roots=new Set<string>(),entries:SnapshotEntryV1[]=[],environment=()=>issueBuildTaskEnvironmentV1(manifest.workspace,invocation,manifest.task.definition.execution,[],{...process.env,...manifest.task.definition.execution.env});await mkdir(join(output,"files"),{recursive:true});
+ const roots=new Set<string>(),entries:SnapshotEntryV1[]=[],environment=()=>issueBuildTaskEnvironmentV1(manifest.workspace,invocation,manifest.task.definition.execution,manifest.task.args,bazelTaskBaseEnvironmentV1(manifest.workspace,manifest.task,process.env));await mkdir(join(output,"files"),{recursive:true});
  for(const pattern of manifest.task.definition.outputs??[]){const absolute=interpolate(pattern,manifest.workspace,manifest.task,environment),path=slash(relative(manifest.workspace,resolve(manifest.workspace,absolute)));workspacePath(manifest.workspace,path);if(/[?*{[]/u.test(path)){for await(const match of new Bun.Glob(path).scan({cwd:manifest.workspace,onlyFiles:false,dot:true}))roots.add(slash(match));}else try{await lstat(workspacePath(manifest.workspace,path));roots.add(path);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}}
  const visit=async(path:string):Promise<void>=>{checkScriptInvocation(invocation);await outputAncestry(manifest.workspace,path);const source=workspacePath(manifest.workspace,path),facts=await lstat(source),entry:SnapshotEntryV1={path,kind:facts.isSymbolicLink()?"symlink":facts.isDirectory()?"directory":"file",mode:facts.mode&0o777};if(entry.kind==="symlink"){entry.link=await readlink(source);const linked=await stat(source);checkScriptInvocation(invocation);if(!linked.isFile()&&!linked.isDirectory())throw Error("Bazel snapshot link requires an existing file or directory target");entry.linkKind=linked.isDirectory()?"directory":"file";}else if(entry.kind==="directory")for(const child of await readdir(source))await visit(slash(join(path,child)));else{entry.file=hash(path).slice(0,32);await copyFile(source,join(output,"files",entry.file));entry.sha256=await fileHash(join(output,"files",entry.file),invocation.control.signal);}entries.push(entry);};
  for(const path of [...roots].sort().filter((path,_index,all)=>!all.some(parent=>parent!==path&&path.startsWith(parent+"/"))))await visit(path);
@@ -286,7 +302,7 @@ async function executeTask(manifest:BazelTaskManifestV1,invocation:ScriptInvocat
  const controller=new AbortController(),signal=AbortSignal.any([actual.signal,controller.signal]),run=async(operation:string|{command:string;forwardAllArgs?:boolean})=>{const command=typeof operation==="string"?operation:operation.command,forward=typeof operation==="object"?operation.forwardAllArgs??execution.forwardAllArgs:execution.forwardAllArgs;let source=execution.program===undefined?interpolate(command,workspace,task,()=>environment):"'"+command.replaceAll("'","'\\''")+"'";if(!execution.ownerArguments&&forward!==false&&args.length)source+=" "+args.map(value=>"'"+value.replaceAll("'","'\\''")+"'").join(" ");await withIssuedResourceOperationV1(actual,()=>{checkResourceLeaseControl(actual);const remaining=actual.remainingMilliseconds();if(remaining!==null&&remaining<=0)throw Error("Inherited Bazel task phase expired");return runOwnedCommand(process.execPath,["exec",source],cwd,task.id,compilerAdmissionBudgetV1(actual),{env:environment,signal});});};
  if(execution.parallel===false)for(const operation of operations)await run(operation);else{const pending=operations.map(run);try{await Promise.all(pending);}catch(error){controller.abort(error);await Promise.allSettled(pending);throw error;}}
  };
- const base={...process.env,...execution.env,SEMIO_BUILD_TOOL:"bazel",SEMIO_WORKSPACE_ROOT:workspace,SEMIO_TASK_PROJECT:task.project,SEMIO_TASK_TARGET:task.target,...(task.configuration?{SEMIO_TASK_CONFIGURATION:task.configuration}:{})};
+ const base=bazelTaskBaseEnvironmentV1(workspace,task,process.env);
  if(manifest.orchestration)return withBuildOrchestrationTaskEnvironmentV1(workspace,invocation,phaseControl,execution,task.args,base,manifest.orchestration,planBazelTasksV1,runTask);
  return runTask(issueBuildTaskEnvironmentV1(workspace,invocation,execution,task.args,base));
 }

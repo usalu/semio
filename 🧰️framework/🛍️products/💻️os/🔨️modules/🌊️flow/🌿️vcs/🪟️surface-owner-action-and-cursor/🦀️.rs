@@ -83,7 +83,7 @@ pub enum FlowVcsAction {
     MoveSynapse { id: String, index: usize },
     PatchSynapse { id: String, item: SynapseSpec },
     SetLayout(FlowLayoutEntry),
-    LayoutRoot(OrderedMap<WidgetLayout>),
+    LayoutEntry(FlowLayoutEntry),
     ReplaceDocument(FlowHostSnapshot),
     Undo,
     Redo,
@@ -176,7 +176,7 @@ impl FlowVcsCursor {
             FlowVcsAction::MoveSynapse { index, .. } => (FlowVcsCursorPhase::Scan, FlowVcsCursorKind::MoveSynapse, *index),
             FlowVcsAction::PatchSynapse { .. } => (FlowVcsCursorPhase::Scan, FlowVcsCursorKind::PatchSynapse, 0),
             FlowVcsAction::SetLayout(_) => (FlowVcsCursorPhase::Scan, FlowVcsCursorKind::Layout, 0),
-            FlowVcsAction::LayoutRoot(_) => (FlowVcsCursorPhase::Mutate, FlowVcsCursorKind::Layout, 0),
+            FlowVcsAction::LayoutEntry(_) => (FlowVcsCursorPhase::Mutate, FlowVcsCursorKind::Layout, 0),
         };
         let history_mode = match action {
             FlowVcsAction::Undo => 1,

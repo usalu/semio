@@ -1,4 +1,5 @@
 //! 🧪️ DAG document VCS: node operations, diffs, inverses, codecs and store replay through the artifact facade.
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::*;
 use crate::os_spr::{ArtifactId, Edit, Mutation, SchemaId};
 use crate::os_store::store_schema::ArtifactCommand;
@@ -10,10 +11,10 @@ fn sample_node(id: &str) -> DagNodeSpec {
 }
 
 fn round_trip(document: &DagSnapshot, operation: &DagMutation) -> DagSnapshot {
-    let forward = crate::os_spr::apply_diff(operation.diff(document).diff(), document).expect("valid DAG diff");
+    let forward = protocol::apply_diff_cold(operation.diff(document).diff(), document).expect("valid DAG diff");
     let mut restored = forward.clone();
     for back in operation.inverse(document).expect("valid retained mutation inverse fixture").into_iter().rev() {
-        restored = crate::os_spr::apply_diff(back.diff(&restored).diff(), &restored).expect("valid inverse DAG diff");
+        restored = protocol::apply_diff_cold(back.diff(&restored).diff(), &restored).expect("valid inverse DAG diff");
     }
     assert_eq!(&restored, document, "inverse() must exactly restore the pre-operation document");
     forward
@@ -97,7 +98,7 @@ fn delete_node_severs_and_reconnects_edges() {
 fn reorder_nodes_round_trips() {
     let mut document = empty_dag_document();
     document.nodes = vec![sample_node("a"), sample_node("b"), sample_node("c")];
-    let reordered = round_trip(&document, &DagMutation::ReorderNodes(ReorderNodes { order: vec!["c".into(), "a".into(), "b".into()] }));
+    let reordered = round_trip(&document, &DagMutation::ReorderNodes(ReorderNodes { moves: vec![NodeMove { id: "c".into(), to: 0 }] }));
     let ids: Vec<&str> = reordered.nodes.iter().map(|node| node.id.as_str()).collect();
     assert_eq!(ids, vec!["c", "a", "b"]);
     document.nodes = reordered.nodes;
@@ -126,7 +127,7 @@ fn diff_and_inverse_are_deterministic() {
 fn move_node_diff_is_consistent_with_direct_field_mutation() {
     let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 }));
     let mutation = DagMutation::MoveNode(MoveNode { id: "n1".into(), x: 5.0, y: 6.0 });
-    let via_diff = crate::os_spr::apply_diff(Mutation::diff(&mutation, &document).diff(), &document).expect("valid DAG diff");
+    let via_diff = protocol::apply_diff_cold(Mutation::diff(&mutation, &document).diff(), &document).expect("valid DAG diff");
     let mut via_direct = document;
     via_direct.nodes[0].x = 5.0;
     via_direct.nodes[0].y = 6.0;
@@ -137,10 +138,10 @@ fn move_node_diff_is_consistent_with_direct_field_mutation() {
 fn move_node_diff_absorb_law_holds() {
     let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 }));
     let (mut d1, _) = Mutation::diff(&DagMutation::MoveNode(MoveNode { id: "n1".into(), x: 10.0, y: 10.0 }), &document).into_parts();
-    let mid = crate::os_spr::apply_diff(&d1, &document).expect("valid first DAG diff");
+    let mid = protocol::apply_diff_cold(&d1, &document).expect("valid first DAG diff");
     let (d2, _) = Mutation::diff(&DagMutation::MoveNode(MoveNode { id: "n1".into(), x: 20.0, y: 30.0 }), &mid).into_parts();
     d1.absorb(d2);
-    let absorbed = crate::os_spr::apply_diff(&d1, &document).expect("valid absorbed DAG diff");
+    let absorbed = protocol::apply_diff_cold(&d1, &document).expect("valid absorbed DAG diff");
     assert_eq!(absorbed.nodes[0].x, 20.0, "absorb must converge to the LATER move, not the earlier one");
     assert_eq!(absorbed.nodes[0].y, 30.0);
 }
@@ -307,7 +308,7 @@ fn op_text_round_trips_replace_node_properties() {
 
 #[test]
 fn op_text_round_trips_reorder_nodes() {
-    crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ReorderNodes(ReorderNodes { order: vec!["a".into(), "b".into(), "c".into()] }));
+    crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ReorderNodes(ReorderNodes { moves: vec![NodeMove { id: "a".into(), to: 2 }, NodeMove { id: "c".into(), to: 0 }] }));
 }
 
 #[test]

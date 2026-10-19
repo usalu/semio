@@ -40,11 +40,14 @@
         }
     }
 
-    async fn test_retained_child_command_payload(completion: ArtifactToolCompletion<TestApp>, emit: Emit<TestMutation, TestConfigMutation, NoDraftMutation>) -> semio_framework_plugin_retained_command::ArtifactRetainedCommandPayload<TestApp> {
-        semio_framework_plugin_retained_command::ArtifactRetainedCommandPayload::new(
+    async fn test_retained_child_command_payload(completion: ArtifactToolCompletion<TestApp>, emit: Emit<TestMutation, TestConfigMutation, NoDraftMutation>) -> (semio_framework_plugin_retained_command::ArtifactRetainedCommandPayload<TestApp>,crate::app_testing::mutation_fixture::job_close::FixtureSnapshotOwner) {
+        let snapshot=std::sync::Arc::new(TestSnapshot::default());
+        let(snapshot_read,issuer)=crate::app_testing::mutation_fixture::job_close::FixtureSnapshotOwner::new(snapshot.clone(),3,[5;32]);
+        let payload=semio_framework_plugin_retained_command::ArtifactRetainedCommandPayload::new(
             semio_framework_plugin_retained_command::ArtifactRetainedCommandInputs {
                 command: TestCommand::SetLabel { value: "wire".into() },
-                snapshot: std::sync::Arc::new(TestSnapshot::default()),
+                snapshot,
+                snapshot_read,
                 config: std::sync::Arc::new(TestConfig::default()),
                 history: std::sync::Arc::new(HistoryView::empty()),
                 interaction_state: std::sync::Arc::new(InteractionState::default()),
@@ -57,7 +60,7 @@
             TEST_RETAINED_COMMAND_RAW_BYTES,
             1,
             Box::new(TestRetainedChildCommandWork { emit: Some(emit) }),
-        )
+        );(payload,issuer)
     }
 
     /// 🎯️ The intent twin of {@link ContractApp::dispatch_typed}: `handle_intent_frame` answers with the
@@ -130,7 +133,7 @@
         assert_eq!(app_maintenance_turn(&mut *app,cx).expect("terminal cleanup"), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         assert!(!app.media.test_segmented_closure_contains(operation_id.0));
         artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -166,11 +169,12 @@
         }
         let make=||{let length=law["payloadBytes"].as_u64().unwrap()as usize;assert!(length>law["wireBytes"].as_u64().unwrap()as usize);let chunks=ArtifactOutputChunks::new(length);for index in 0..length.div_ceil(ArtifactOutputChunks::CHUNK_BYTES){let start=index*ArtifactOutputChunks::CHUNK_BYTES;let end=(start+ArtifactOutputChunks::CHUNK_BYTES).min(length);chunks.push((start..end).map(|index|(index%251)as u8).collect()).unwrap();}chunks.seal().unwrap();ArtifactDownloadOutput::new("original.txt","text/plain",None,chunks).unwrap()};
         for (busy,cancel) in [(false,false),(true,false),(false,true)]{
-            let completion=ArtifactToolCompletion::<TestApp>::new();let consumer=completion.clone();let mut payload=test_retained_command_payload(completion.clone()).await;payload.work=Box::new(DownloadWork{output:Some(make()),first:true,closing:false,retirement:None});let mut job=ArtifactRetainedCommandJob::new(payload);let mut yielded=false;let policy=semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy();let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(41),semio_framework_job::Generation(3),policy.preparation,||Some(0),u64::MAX,1);
+            let completion=ArtifactToolCompletion::<TestApp>::new();let consumer=completion.clone();let (mut payload,issuer)=test_retained_command_payload(completion.clone()).await;payload.work=Box::new(DownloadWork{output:Some(make()),first:true,closing:false,retirement:None});let mut job=ArtifactRetainedCommandJob::new(payload);let mut yielded=false;let policy=semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy();let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(41),semio_framework_job::Generation(3),crate::app_testing::mutation_fixture::job_close::original_fixture_stock(),||Some(0),u64::MAX,1<<24);
+            let mut decoder=HistoryView::empty();assert!(caller.turn_with_decoder(policy.preparation,&mut decoder,|cx|job.test_admit_original_source(cx)).unwrap());
             for _ in 0..128{let result=caller.turn(policy.maintenance,|cx|Ok(if busy{completion.with_busy_test_lock(||semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step(&mut job,cx))}else{semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step(&mut job,cx)})).unwrap();match result{semio_framework_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Preview(_)=>{yielded=true;if cancel{caller.cancel().cancel_now()}},semio_framework_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Checkpoint{..}=>{},semio_framework_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Complete{..}=>break,semio_framework_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Fault(_)=>break,semio_framework_plugin_testing_laws::artifact_app_laws::FixtureStepOutcome::Cancelled=>{assert!(cancel);break},_=>{}}}
             assert!(yielded);job.begin_close();for _ in 0..100000{if job.terminal_is_empty(){break}let grant=job_close_grant(&job);let before=caller.turn(semio_framework_value::RetainedCloneGrant{maximum_items:0,..grant},|cx|job.close_step(cx)).unwrap();assert!(matches!(before,InteractiveJobCloseStep::Pending{progress}if progress==Default::default())||matches!(before,InteractiveJobCloseStep::Blocked));let step=caller.turn(grant,|cx|job.close_step(cx)).unwrap();assert_eq!(step.progress(),caller.receipt());assert!(step.progress().fits(grant));assert!(!matches!(step,InteractiveJobCloseStep::Blocked))}assert!(job.terminal_is_empty());
-            if busy||cancel{assert!(consumer.test_take_download().unwrap().is_none())}else{let (Ok(output),_)=consumer.test_take_download().unwrap().unwrap()else{panic!("original download completion")};let mut actual=Vec::new();while let Some(chunk)=output.chunks.take_chunk().unwrap(){assert!(chunk.len()<=law["chunkBytes"].as_u64().unwrap()as usize);actual.extend(chunk)}let expected:Vec<u8>=serde_json::from_value(serde_json::json!((0..law["payloadBytes"].as_u64().unwrap()).map(|index|(index%251)as u8).collect::<Vec<_>>())).unwrap();assert_eq!(actual,expected);}
-            caller.retire(policy.close);
+            if busy||cancel{assert!(consumer.test_take_download().unwrap().is_none())}else{let (Ok(output),ephemeral)=consumer.test_take_download().unwrap().unwrap()else{panic!("original download completion")};let mut actual=Vec::new();while let Some(chunk)=output.chunks.take_chunk().unwrap(){assert!(chunk.len()<=law["chunkBytes"].as_u64().unwrap()as usize);actual.extend_from_slice(&chunk);crate::app_testing::mutation_fixture::job_close::retire_fixture_owned(chunk,&mut caller)}let expected:Vec<u8>=serde_json::from_value(serde_json::json!((0..law["payloadBytes"].as_u64().unwrap()).map(|index|(index%251)as u8).collect::<Vec<_>>())).unwrap();assert_eq!(actual,expected);crate::app_testing::mutation_fixture::job_close::retire_fixture_owned(output,&mut caller);crate::app_testing::mutation_fixture::job_close::retire_fixture_owned(ephemeral,&mut caller);}
+            crate::app_testing::mutation_fixture::job_close::retire_fixture_owned(consumer,&mut caller);crate::app_testing::mutation_fixture::job_close::retire_fixture_owned(completion,&mut caller);issuer.close(&mut caller);while !decoder.terminal_is_empty(){caller.turn(policy.close,|cx|{let step=decoder.close_step(cx.retained_grant())?;cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);Ok(())}).unwrap();}caller.retire(crate::app_testing::mutation_fixture::job_close::original_fixture_stock());
         }
         let mut original=std::collections::VecDeque::with_capacity(law["queueSlots"].as_u64().unwrap()as usize);original.push_back("Mesh 😀".to_string());
         let payload_bytes=original[0].len();let backing_bytes=original.capacity()*std::mem::size_of::<String>();assert_eq!(std::mem::size_of::<String>(),law["vectorMetadataWords"].as_u64().unwrap()as usize*std::mem::size_of::<usize>());
@@ -185,4 +189,88 @@
             let progress=retirement.close_step(grant).unwrap().progress();assert!(progress.fits(grant));born+=progress.retained_capacity_bytes;released+=progress.released_bytes;}
         assert!(retirement.terminal_is_empty());assert_eq!(released,payload_bytes+backing_bytes+born,"original queue backing allocation remains owned until its exact byte credits drain");
 
+    }
+
+    /// 📥️ Every accepted remote prefix is observed even when a later wire-valid envelope refuses.
+
+    #[semio_framework_async_macros::async_test]
+
+    async fn accepted_remote_prefix_notifies_before_later_refusal() {
+        let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
+        let law: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧫️fixtures/📥️remote-prefix/🔣️.json"))).unwrap();
+
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+
+        let mounted_policy = semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+
+        let mut identity = crate::app_testing::artifact_app_laws::fixture_identity();
+
+        let mut sender = contract_app(mounted_policy, &mut identity).await;
+
+        let (near, mut far) = MemoryBackbone::pair("mem://remote-prefix", "mem://remote-prefix").await;
+
+        sender.attach_backbone(store::os_store::backbone::Backbones::Memory(near)).await.expect("attach sender");
+
+        sender.dispatch_typed(TestCommand::Increment, &meta(), &mut identity,cx).await.expect("sender edit");
+
+        let mut envelopes = Vec::new();
+
+        for message in far.receive().await.expect("receive sender edit") {
+
+            if let BackboneMessage::Mutations { envelopes: operations } = message {
+
+                envelopes.extend(protocol::decode_envelopes(&operations).expect("sender envelopes"));
+
+            }
+
+        }
+
+        assert_eq!(envelopes.len(), 1, "fixture owns one actual authored operation");
+
+        let valid = envelopes.pop().unwrap();
+
+        for row in law["cases"].as_array().unwrap() {
+
+            let mut receiver = contract_app(mounted_policy, &mut identity).await;
+
+            let under = ActionMeta { view_state: Some(host_event_view("main-1", Some("select"))), ..meta() };
+
+            receiver.dispatch_typed(TestCommand::ViewNoScope, &under, &mut identity,cx).await.expect("admitted window context");
+
+            take_test_host_events();
+
+            let batch: Vec<_> = row["steps"].as_array().unwrap().iter().map(|step| {
+
+                let mut envelope = valid.clone();
+
+                if step == "malformed" { envelope.diff.payload = vec![0xff]; }
+
+                envelope
+
+            }).collect();
+
+            let result = receiver.ingest_operations(&protocol::encode_envelopes(&batch), &mut identity).await;
+
+            assert_eq!(result.is_err(), row["refused"].as_bool().unwrap(), "{}", row["name"]);
+
+            assert_eq!(receiver.test_snapshot().await.count, row["count"].as_i64().unwrap() as i32, "{}", row["name"]);
+
+            let events = take_test_host_events();
+
+            let expected = row["notifications"].as_u64().unwrap() as usize;
+
+            let base_moved: Vec<_> = events.into_iter().filter(|event| matches!(event, HostEvent::BaseMoved { .. })).collect();
+
+            assert_eq!(base_moved.len(), expected * 2, "{}", row["name"]);
+
+            if expected > 0 { assert_eq!(base_moved, vec![HostEvent::BaseMoved { window_id: "main-1".into() }, HostEvent::BaseMoved { window_id: "main-2".into() }]); }
+
+            close_reserved_app(&mut receiver,mounted_policy,cx);
+            eprintln!("[DEBUG] remote prefix case={} committed={} base_notifications={}", row["name"], row["count"], base_moved.len());
+
+        }
+
+        close_reserved_app(&mut sender,mounted_policy,cx);
+        }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }

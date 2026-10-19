@@ -1,5 +1,5 @@
-//! ✏️ Puzzle 5d play app — the `edit` mode: the 2D-first 40/60 split layout over the two window
 //! kinds, plus the engagement HUD builder both windows share (it only differs by which window id it
+//! ✏️ Puzzle 5d play app — the `edit` mode: the 2D-first 40/60 split layout over the two window
 //! binds its input/abort actions to). The Utility Options every window exposes for the shared
 //! brush/fill utilities live in `☑️options/*`; genuinely per-window chrome lives under that window's
 //! own `☑️options/`.
@@ -8,8 +8,10 @@ use crate::editor::puzzle5d::entities::puzzle5d_action;
 use crate::editor::puzzle5d::commands::engagement_submit::PUZZLE5D_ENGAGEMENT_VERBS;
 use crate::editor::puzzle5d::modes::edit::tools::fill;
 use crate::editor::puzzle5d::entities::{PUZZLE5D_BOARD_WINDOW_KIND_ID, PUZZLE5D_WORLD_WINDOW_KIND_ID};
+use crate::editor::puzzle5d::modes::edit::windows::world3d;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::view::Puzzle5dScene;
+
 use semio_framework_plugin::create_default_layout;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;

@@ -1,14 +1,28 @@
-//! 🧭️ Fem2d transform gumball — config, pivot, meta layer, and the gumball TOOL: a `🔄️machine` statechart whose
 //! effects are `ToolYield`s, driven by the `🛠️tool-machine` runner. Every translate/rotate/scale dispatch builds one
+//! 🧭️ Fem2d transform gumball — config, pivot, meta layer, and the gumball TOOL: a `🔄️machine` statechart whose
 //! relative `move-selection` tick leaf; a one-shot dispatch commits it as ONE `ToolTransaction`, a streamed gesture
 //! accumulates its ticks into the window's ONE open transaction (persisted in the FEM gumball transient, previewed by
 //! every window, never history) and commits the NET leaf once; an abort leaves zero trace
 //! (design `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5).
 #![allow(unexpected_cfgs)]
 
-use crate::editor::fem2d::interaction::{fem2d_entity_kind, FEM2D_GRANULARITY_ELEMENT, FEM2D_GRANULARITY_LOAD, FEM2D_GRANULARITY_NODE, FEM2D_GRANULARITY_REGION, FEM2D_GRANULARITY_SUPPORT};
+use crate::editor::fem2d::interaction::fem2d_entity_kind;
+
+use crate::editor::fem2d::interaction::FEM2D_GRANULARITY_ELEMENT;
+
+use crate::editor::fem2d::interaction::FEM2D_GRANULARITY_LOAD;
+
+use crate::editor::fem2d::interaction::FEM2D_GRANULARITY_NODE;
+
+use crate::editor::fem2d::interaction::FEM2D_GRANULARITY_REGION;
+
+use crate::editor::fem2d::interaction::FEM2D_GRANULARITY_SUPPORT;
 use crate::editor::fem2d::interaction::canvas_gesture::FEM2D_UTILITY_TRANSFORM;
-use crate::editor::fem2d::interaction::{fem2d_element_endpoints, find_node_2d, screen_2d, ORIGIN_2D, SCALE_2D};
+use crate::editor::fem2d::interaction::fem2d_element_endpoints;
+use crate::editor::fem2d::interaction::find_node_2d;
+use crate::editor::fem2d::interaction::screen_2d;
+use crate::editor::fem2d::interaction::ORIGIN_2D;
+use crate::editor::fem2d::interaction::SCALE_2D;
 use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballGesture;
 use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::move_selection::MoveSelection;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
@@ -16,9 +30,17 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structur
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use machine::Command;
-use semio_framework_tool_machine::{GesturePhase, GestureTool, ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolYield};
+use semio_framework_tool_machine::GesturePhase;
+use semio_framework_tool_machine::GestureTool;
+use semio_framework_tool_machine::ToolAbortReason;
+use semio_framework_tool_machine::ToolMachineRunner;
+use semio_framework_tool_machine::ToolRefusal;
+use semio_framework_tool_machine::ToolStep;
+use semio_framework_tool_machine::ToolTransaction;
+use semio_framework_tool_machine::ToolYield;
 use std::cell::RefCell;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
+use std::collections::HashSet;
 
 //#region 🔖️Config
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -77,13 +99,14 @@ impl Fem2dTransformTargets {
 pub fn fem2d_transform_targets(doc: &Fem2dSnapshot, selection_ids: &[String]) -> Fem2dTransformTargets {
     let mut nodes = HashSet::new();
     let mut regions = HashSet::new();
-    for id in selection_ids {
-        match fem2d_entity_kind(doc, id) {
+    for target in selection_ids {
+        let Some(id) = super::fem2d_entity_raw_id(target) else { continue };
+        match fem2d_entity_kind(doc, target) {
             Some(FEM2D_GRANULARITY_NODE) => {
-                nodes.insert(id.clone());
+                nodes.insert(id.to_string());
             }
             Some(FEM2D_GRANULARITY_REGION) => {
-                regions.insert(id.clone());
+                regions.insert(id.to_string());
             }
             Some(FEM2D_GRANULARITY_ELEMENT) => {
                 if let Some(element) = doc.elements.iter().find(|element| element_id(element) == id) {
@@ -93,12 +116,12 @@ pub fn fem2d_transform_targets(doc: &Fem2dSnapshot, selection_ids: &[String]) ->
                 }
             }
             Some(FEM2D_GRANULARITY_SUPPORT) => {
-                if let Some(support) = doc.supports.iter().find(|support| support.id == *id) {
+                if let Some(support) = doc.supports.iter().find(|support| support.id == id) {
                     nodes.insert(support.node_id.clone());
                 }
             }
             Some(FEM2D_GRANULARITY_LOAD) => {
-                if let Some((_, load)) = crate::editor::fem2d::interaction::fem2d_load_owner(doc, id) {
+                if let Some((_, load)) = crate::editor::fem2d::interaction::fem2d_load_owner(doc, target) {
                     match load {
                         FemLoad::Nodal { node_id, .. } => {
                             nodes.insert(node_id.clone());

@@ -1,0 +1,5 @@
+[workspace]
+members=["framework/*"]
+[workspace.metadata.semio.repository]
+schema-version=1
+member-manifests=["C:/Cargo.toml"]

@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "maximumCopyBytes": 4096,
+  "maximumTurns": 10000,
+  "cases": [
+    {
+      "name": "scalar-vector",
+      "kind": "vec-scalar",
+      "source": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "name": "text-vector",
+      "kind": "vec-string",
+      "source": [
+        "alpha",
+        "🧬 é"
+      ]
+    },
+    {
+      "name": "text-array",
+      "kind": "array-string",
+      "source": [
+        "first",
+        "second",
+        "👷"
+      ]
+    },
+    {
+      "name": "nested-record",
+      "kind": "record",
+      "source": {
+        "name": "member",
+        "values": [
+          "a",
+          "🚧"
+        ]
+      }
+    },
+    {
+      "name": "record-variant",
+      "kind": "enum",
+      "source": {
+        "kind": "record",
+        "label": "beam",
+        "values": [
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "name": "unit-variant",
+      "kind": "enum",
+      "source": {
+        "kind": "unit"
+      }
+    },
+    {
+      "name": "optional-box",
+      "kind": "option-box",
+      "source": "nested"
+    },
+    {
+      "name": "tuple",
+      "kind": "tuple",
+      "source": [
+        "pair",
+        [
+          1,
+          2
+        ]
+      ]
+    }
+  ]
+}

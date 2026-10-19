@@ -81,7 +81,8 @@
     #[test]
     fn the_suggestion_popup_lists_the_free_candidates_the_brush_run_published_for_its_vortex() {
         use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dSuggestionMenu;
-        use semio_s_artifact_puzzle_3d_precompute_brush::{BrushSuggestionVerdict, BrushSuggestionsFound};
+        use semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionVerdict;
+        use semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsFound;
         use semio_s_artifact_puzzle_3d_model::BrushPreviewState;
         let session = Puzzle3dPrecomputeSession::new();
         let runtime = Puzzle3dRuntime { suggestion_menu: Some(Puzzle3dSuggestionMenu { x: 1.0, y: 2.0, window_id: WINDOW_KIND_ID.into(), vortex_full_id: "seed-left-001:v0".into(), submenu: false }), ..Puzzle3dRuntime::default() };

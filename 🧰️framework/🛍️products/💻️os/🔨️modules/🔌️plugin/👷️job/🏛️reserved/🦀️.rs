@@ -220,10 +220,8 @@ macro_rules! framework_reserved_job {
                 semio_framework::ToolExecutionContract::resumable($raw, $items, $work, $output, 7_500, 1, 1)
             }
 
-            fn create_job(&mut self, operation: semio_framework_job::Operation, mut payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
-                payload.bind_operation(operation)?;
-                Ok(payload)
-            }
+            fn admission_demands(&self,_operation:&semio_framework_job::Operation,_payload:&Self::Payload,input:Option<&semio_framework::RetainedToolWireInput>,checkpoint:Option<&semio_framework::RetainedToolWireInput>)->Result<semio_framework::action_bus::ToolJobAdmissionDemand,semio_framework_value::ValueError>{if input.is_some()||checkpoint.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original typed job does not accept wire or checkpoint replacement"));}Ok(semio_framework::action_bus::ToolJobAdmissionDemand::reused_job())}
+fn admit_job(&mut self,context:&mut semio_framework_job::StepContext<'_>,operation:&semio_framework_job::Operation,payload:&mut Option<Box<Self::Payload>>,input:&mut Option<semio_framework::RetainedToolWireInput>,checkpoint:&mut Option<semio_framework::RetainedToolWireInput>,output:&mut Option<Box<Self::Job>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let demand=self.admission_demands(operation,payload.as_deref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typed job payload is absent"))?,input.as_ref(),checkpoint.as_ref())?;semio_framework::action_bus::admit_original_tool_job_controlled(context,operation,payload,input,checkpoint,output,demand,|_,payload,_,_|{payload.as_mut().expect("retained original job").bind_operation(*operation)?;let job=payload.take().expect("admitted same original job");Ok((job,semio_framework_job::RetainedCloneProgress{copied_items:1,..Default::default()}))})}
         }
 
         impl<A: ArtifactApp> ArtifactOwnedToolJobFactory for $factory<A> {
@@ -369,7 +367,7 @@ impl<M: semio_framework_value::retirement::RetireOwned> ConfigurationDecodeRetir
         }
         if let Some(owner) = self.payload.as_ref() {
             if owner.terminal_is_empty() { return Ok(RetirementDemand { copy_bytes: size_of_val(&self.payload), depth: 1, ..Default::default() }); }
-            return Ok(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(body)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()?.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "configuration completion depth overflow"))? });
+            return Ok({let mut demand=owner.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "configuration completion depth overflow"))?;demand});
         }
         Ok(Default::default())
     }
@@ -456,7 +454,7 @@ impl<A: ArtifactApp> semio_framework_job::InteractiveJob for FrameworkConfigurat
             FrameworkConfigurationBinaryStage::Decode=>{
                 cx.set_stage("framework-configuration-binary-decode");let owner=self.receiving.as_mut().expect("original command receiving frame remains mounted");
                 if owner.is_ready(){let grant=cx.retained_grant();if cx.should_yield(){return Ok(None)}let mut command=None;let progress=owner.take_into(&mut command,grant)?;if let Some(command)=command{let output=self.decoded.as_ref().expect("original configuration completion remains mounted");let mut slot=output.lock().unwrap_or_else(std::sync::PoisonError::into_inner);assert!(slot.is_none(),"original configuration completion cannot overwrite its typed source");*slot=Some(Ok(command));self.stage=FrameworkConfigurationBinaryStage::Complete;}cx.consume_retained(progress)?;cx.consume_fuel(progress.copied_items as u64);return Ok(None)}
-                if let Some(outcome)=owner.receive_step(&self.raw,cx,&mut self.native)?{match(outcome.value,outcome.receiving_refusal){(Err(producer),Some(receiving))=>*self.failure=Some(OriginalConfigurationFailure::Native{producer,receiving}),(Err(producer),None)=>return Err(producer.into()),(Ok(_),Some(receiving))=>return Err(receiving),(Ok(progress),None)=>{self.cursor=self.cursor.saturating_add(progress.copied_items);self.state=(self.cursor as u64).to_le_bytes();self.pending=Some(ReservedOutcomeKind::Checkpoint{applied_progress:self.cursor as u64});}}}
+                if let Some(outcome)=owner.receive_step(&self.raw,cx.retained_grant().maximum_copy_bytes,cx,&mut self.native)?{match(outcome.value,outcome.receiving_refusal){(Err(producer),Some(receiving))=>*self.failure=Some(OriginalConfigurationFailure::Native{producer,receiving}),(Err(producer),None)=>return Err(producer.into()),(Ok(_),Some(receiving))=>return Err(receiving),(Ok(progress),None)=>{self.cursor=self.cursor.saturating_add(progress.copied_items);self.state=(self.cursor as u64).to_le_bytes();self.pending=Some(ReservedOutcomeKind::Checkpoint{applied_progress:self.cursor as u64});}}}
             },
             FrameworkConfigurationBinaryStage::Complete => {
                 self.pending = Some(ReservedOutcomeKind::Commit);
@@ -534,10 +532,8 @@ impl<A: ArtifactApp> semio_framework::ToolJobFactory for FrameworkConfigurationB
         semio_framework::ToolExecutionContract::resumable(65_536, 1_024, 4_096, 65_536, 7_500, 1, 1)
     }
 
-    fn create_job(&mut self, operation: semio_framework_job::Operation, mut payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
-        payload.operation = Some(operation);
-        Ok(payload)
-    }
+    fn admission_demands(&self,_operation:&semio_framework_job::Operation,_payload:&Self::Payload,input:Option<&semio_framework::RetainedToolWireInput>,checkpoint:Option<&semio_framework::RetainedToolWireInput>)->Result<semio_framework::action_bus::ToolJobAdmissionDemand,semio_framework_value::ValueError>{if input.is_some()||checkpoint.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original typed job does not accept wire or checkpoint replacement"));}Ok(semio_framework::action_bus::ToolJobAdmissionDemand::reused_job())}
+fn admit_job(&mut self,context:&mut semio_framework_job::StepContext<'_>,operation:&semio_framework_job::Operation,payload:&mut Option<Box<Self::Payload>>,input:&mut Option<semio_framework::RetainedToolWireInput>,checkpoint:&mut Option<semio_framework::RetainedToolWireInput>,output:&mut Option<Box<Self::Job>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let demand=self.admission_demands(operation,payload.as_deref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typed job payload is absent"))?,input.as_ref(),checkpoint.as_ref())?;semio_framework::action_bus::admit_original_tool_job_controlled(context,operation,payload,input,checkpoint,output,demand,|_,payload,_,_|{payload.as_mut().expect("retained original job").operation=Some(*operation);let job=payload.take().expect("admitted same original job");Ok((job,semio_framework_job::RetainedCloneProgress{copied_items:1,..Default::default()}))})}
 }
 
 impl<A: ArtifactApp> ArtifactOwnedToolJobFactory for FrameworkConfigurationBinaryJobFactory<A> {
@@ -915,3 +911,5 @@ pub(crate) fn validate_tool_job_rows<A: ArtifactApp>(
     Ok((controller_id, proofs))
 }
 
+#[path="⚙️worker/🦀️.rs"]
+pub mod configuration_worker;

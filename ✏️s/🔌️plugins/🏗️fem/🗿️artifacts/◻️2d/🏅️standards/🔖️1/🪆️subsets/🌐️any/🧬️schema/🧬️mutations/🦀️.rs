@@ -1,5 +1,5 @@
-//! ⚡️ FEM 2D artifact — semantic mutation dispatch enum + laws (constitutional: op). Every variant
 //! wraps exactly one `🧬️mutations/<kind>/🦠️mutation` payload struct implementing
+//! ⚡️ FEM 2D artifact — semantic mutation dispatch enum + laws (constitutional: op). Every variant
 //! `protocol::MutationKind<Fem2dSnapshot, Fem2dMutation>`; `#[derive(dsl::Mutations)]` below
 //! generates `impl protocol::Mutation`/`impl protocol::SemanticMutation` by delegating to each
 //! payload's own `diff`/`inverse` — see `🧪️MutationsDeriveLaws` in
@@ -7,9 +7,13 @@
 
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 use protocol::Mutation;
-use semio_framework_value_derive::{FromValue, ToValue};
-use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
+use protocol::ColdMutation;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
+use store::os_store::store_schema::ArtifactEnvelope;
+use store::ArtifactStore;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -25,38 +29,47 @@ use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = Fem2dSnapshot, diff = Fem2dDiff, schema = "fem.fem2d")]
+#[mutations(snapshot = Fem2dSnapshot, diff = Fem2dDiff, reference = Fem2dSnapshotValue, reference_diff = Fem2dDiff, schema = "fem.fem2d")]
 pub enum Fem2dMutation {
-    CreateNode(create_node::CreateNode),
-    DeleteNode(delete_node::DeleteNode),
-    CreateElement(create_element::CreateElement),
-    DeleteElement(delete_element::DeleteElement),
-    ReplaceElement(replace_element::ReplaceElement),
-    CreateMaterial(create_material::CreateMaterial),
-    DeleteMaterial(delete_material::DeleteMaterial),
-    ReplaceMaterial(replace_material::ReplaceMaterial),
-    CreateSection(create_section::CreateSection),
-    DeleteSection(delete_section::DeleteSection),
-    ReplaceSection(replace_section::ReplaceSection),
-    CreateSupport(create_support::CreateSupport),
-    DeleteSupport(delete_support::DeleteSupport),
-    ReplaceSupport(replace_support::ReplaceSupport),
-    CreateRegion(create_region::CreateRegion),
-    DeleteRegion(delete_region::DeleteRegion),
-    ReplaceRegion(replace_region::ReplaceRegion),
-    CreateLoadCase(create_load_case::CreateLoadCase),
-    DeleteLoadCase(delete_load_case::DeleteLoadCase),
-    AddLoad(add_load::AddLoad),
-    RemoveLoad(remove_load::RemoveLoad),
-    ChangeLoadCaseSelfWeight(change_load_case_self_weight::ChangeLoadCaseSelfWeight),
-    CreateCombination(create_combination::CreateCombination),
-    DeleteCombination(delete_combination::DeleteCombination),
-    UpdateAnalysisSettings(update_analysis_settings::UpdateAnalysisSettings),
-    ReplaceNode(replace_node::ReplaceNode),
-    ReplaceLoad(replace_load::ReplaceLoad),
-    ChangeLoadCaseName(change_load_case_name::ChangeLoadCaseName),
-    ReplaceCombination(replace_combination::ReplaceCombination),
-    MoveSelection(move_selection::MoveSelection),
+    CreateNode(semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node::CreateNode),
+    DeleteNode(semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_node::DeleteNode),
+    CreateElement(semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_element::CreateElement),
+    DeleteElement(semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_element::DeleteElement),
+    ReplaceElement(semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_element::ReplaceElement),
+    CreateMaterial(semio_s_artifact_fem_2d_material::standards::v1::subsets::any::schema::mutations::create_material::CreateMaterial),
+    DeleteMaterial(semio_s_artifact_fem_2d_material::standards::v1::subsets::any::schema::mutations::delete_material::DeleteMaterial),
+    ReplaceMaterial(semio_s_artifact_fem_2d_material::standards::v1::subsets::any::schema::mutations::replace_material::ReplaceMaterial),
+    ChangeMaterial(semio_s_artifact_fem_2d_material::standards::v1::subsets::any::schema::mutations::change_material::ChangeMaterial),
+    CreateSection(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::create_section::CreateSection),
+    DeleteSection(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::delete_section::DeleteSection),
+    ReplaceSection(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::replace_section::ReplaceSection),
+    ChangeSection(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::change_section::ChangeSection),
+    CreateSupport(semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::create_support::CreateSupport),
+    DeleteSupport(semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::delete_support::DeleteSupport),
+    ReplaceSupport(semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::replace_support::ReplaceSupport),
+    CreateRegion(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion),
+    DeleteRegion(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::delete_region::DeleteRegion),
+    ReplaceRegion(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::replace_region::ReplaceRegion),
+    CreateLoadCase(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::create_load_case::CreateLoadCase),
+    DeleteLoadCase(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::delete_load_case::DeleteLoadCase),
+    AddLoad(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::add_load::AddLoad),
+    RemoveLoad(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::remove_load::RemoveLoad),
+    ChangeLoadCaseSelfWeight(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::change_load_case_self_weight::ChangeLoadCaseSelfWeight),
+    CreateCombination(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::create_combination::CreateCombination),
+    DeleteCombination(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::delete_combination::DeleteCombination),
+    UpdateAnalysisSettings(semio_s_artifact_fem_2d_analysis::standards::v1::subsets::any::schema::mutations::update_analysis_settings::UpdateAnalysisSettings),
+    ReplaceNode(semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_node::ReplaceNode),
+    ChangeNode(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::change_node::ChangeNode),
+    ChangeCombinationTerm(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::change_combination_term::ChangeCombinationTerm),
+    ChangeCombinationName(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::change_combination_name::ChangeCombinationName),
+    ChangeLoad(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::change_load::ChangeLoad),
+    ChangeElement(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::change_element::ChangeElement),
+    ChangeSupport(semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::change_support::ChangeSupport),
+    ChangeRegion(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::change_region::ChangeRegion),
+    ReplaceLoad(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::replace_load::ReplaceLoad),
+    ChangeLoadCaseName(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::change_load_case_name::ChangeLoadCaseName),
+    ReplaceCombination(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::replace_combination::ReplaceCombination),
+    MoveSelection(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::move_selection::MoveSelection),
 }
 //#endregion 🔖️Mutations
 
@@ -88,10 +101,19 @@ use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations
 use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_element;
 use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::replace_load;
 use semio_s_artifact_fem_2d_material::standards::v1::subsets::any::schema::mutations::replace_material;
+use semio_s_artifact_fem_2d_material::standards::v1::subsets::any::schema::mutations::change_material;
 use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_node;
+use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::change_node;
+use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::change_combination_term;
+use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::change_combination_name;
+use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::change_load;
+use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::change_element;
+use semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::change_support;
+use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::change_region;
 use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::move_selection;
 use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::replace_region;
 use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::replace_section;
+use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::change_section;
 use semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::replace_support;
 use semio_s_artifact_fem_2d_analysis::standards::v1::subsets::any::schema::mutations::update_analysis_settings;
 //#endregion 🔖️LeafImports
@@ -100,14 +122,14 @@ pub type Fem2dEnvelope = ArtifactEnvelope<Fem2dSnapshot, Fem2dMutation>;
 pub type Fem2dStore = ArtifactStore<Fem2dSnapshot, Fem2dMutation>;
 
 //#region 🔖️GenericDelegates
-pub fn inverse_fem2d_mutation(snapshot: &Fem2dSnapshot, mutation: &Fem2dMutation) -> Result<Vec<Fem2dMutation>, semio_framework_value::ValueError> {
-    Ok({
-    mutation.inverse(snapshot)?
-
-    })
+pub fn inverse_fem2d_mutation_cold(snapshot: &Fem2dSnapshotValue, mutation: &Fem2dMutation) -> Result<Vec<Fem2dMutation>, semio_framework_value::ValueError> {
+    mutation.inverse(snapshot)
 }
 //#endregion 🔖️GenericDelegates
 
+//#region 🛡️Guards
+
+//#endregion 🛡️Guards
 
 // #region 🧪️Tests
 #[cfg(test)]
@@ -130,9 +152,11 @@ pub const KINDS: &[&str] = &[
     "create-material",
     "delete-material",
     "replace-material",
+    "change-material",
     "create-section",
     "delete-section",
     "replace-section",
+    "change-section",
     "create-support",
     "delete-support",
     "replace-support",
@@ -148,6 +172,13 @@ pub const KINDS: &[&str] = &[
     "delete-combination",
     "update-analysis-settings",
     "replace-node",
+    "change-node",
+    "change-combination-term",
+    "change-combination-name",
+    "change-load",
+    "change-element",
+    "change-support",
+    "change-region",
     "replace-load",
     "change-load-case-name",
     "replace-combination",

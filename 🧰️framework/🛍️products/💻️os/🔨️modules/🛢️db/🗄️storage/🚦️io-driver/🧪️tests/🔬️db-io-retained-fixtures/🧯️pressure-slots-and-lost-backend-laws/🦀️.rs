@@ -41,13 +41,13 @@ impl LostOwnerPressureLawSlots {
     fn reserve() -> Self {
         while db_io_lost_owner_close_step().unwrap() {}
         for slot in DB_IO_LOST_OWNERS.lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter_mut() {
-            *slot = Some(DbIoLostOwner::Fault(db_io_literal_fault(DbIoFaultKind::Backend, DbIoFaultCause::Internal, "registration-primary-sentinel")));
+            *slot = Some(DbIoLostOwner::Fault(db_io_literal_fault(db_io_fault_custody_reserve().expect("fixture prebirth custody"), DbIoFaultKind::Backend, DbIoFaultCause::Internal, "registration-primary-sentinel")));
         }
         for slot in DB_IO_LOST_OWNER_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter_mut() {
-            *slot = Some(DbIoLostOwner::Fault(db_io_literal_fault(DbIoFaultKind::Backend, DbIoFaultCause::Internal, "registration-overflow-sentinel")));
+            *slot = Some(DbIoLostOwner::Fault(db_io_literal_fault(db_io_fault_custody_reserve().expect("fixture prebirth custody"), DbIoFaultKind::Backend, DbIoFaultCause::Internal, "registration-overflow-sentinel")));
         }
         for slot in DB_IO_LOST_OWNER_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter_mut() {
-            *slot = Some(DbIoLostOwner::Fault(db_io_literal_fault(DbIoFaultKind::Backend, DbIoFaultCause::Internal, "registration-quarantine-sentinel")));
+            *slot = Some(DbIoLostOwner::Fault(db_io_literal_fault(db_io_fault_custody_reserve().expect("fixture prebirth custody"), DbIoFaultKind::Backend, DbIoFaultCause::Internal, "registration-quarantine-sentinel")));
         }
         Self
     }

@@ -35,5 +35,62 @@
   "value": {
     "message": "original whole ValueError 源"
   },
-  "normalContextRequired": true
+  "normalContextRequired": true,
+  "publicationReceiving": {
+    "bodyPolicy": [
+      1,
+      7,
+      4096
+    ],
+    "physicalCopy": 8192,
+    "metadataCopy": 17,
+    "child": {
+      "items": 1,
+      "copy": 7,
+      "capacity": 64,
+      "release": 0
+    },
+    "whole": {
+      "items": 1,
+      "copy": 24,
+      "capacity": 64,
+      "release": 0
+    },
+    "unposted": {
+      "items": 0,
+      "copy": 17,
+      "capacity": 0,
+      "release": 0
+    },
+    "outerUnposted": {
+      "items": 0,
+      "copy": 0,
+      "capacity": 0,
+      "release": 0
+    },
+    "sameOperationGenerationDoesNotAuthenticateSource": true,
+    "loanEndsBeforeAwait": true,
+    "cases": [
+      {
+        "id": "complete",
+        "semantic": null,
+        "receipt": null
+      },
+      {
+        "id": "semantic",
+        "semantic": "original semantic 源",
+        "receipt": null
+      },
+      {
+        "id": "receipt",
+        "semantic": null,
+        "receipt": "original recipient refusal"
+      },
+      {
+        "id": "both",
+        "semantic": "original semantic 源",
+        "receipt": "original recipient refusal"
+      }
+    ]
+  }
 }

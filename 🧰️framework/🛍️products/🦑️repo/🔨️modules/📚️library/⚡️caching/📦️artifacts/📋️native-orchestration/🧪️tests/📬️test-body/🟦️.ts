@@ -94,12 +94,7 @@ test("canonical selected native callers preserve compiler argv and keep full set
  expect(workspace.targets["deps-cargo"].cache).toBe(false);
  const target=JSON.parse(readFileSync(resolve(library,"⚡️caching/📋️project.json"),"utf8")).targets["cargo-synchronize"];
  expect(target.options.command).toBe("bun ./📜️script.ts synchronize");expect(target.options.forwardAllArgs).toBe(true);expect(target.cache).toBe(false);
- for(const path of [".vscode/launch.json",".vscode/🧩️launch.seed.jsonc"]){
-  const errors:any[]=[],launch=parseJsonc(readFileSync(resolve(repository,path),"utf8"),errors,{allowTrailingComma:path.endsWith("jsonc")});expect(errors).toEqual([]);
-  const selected=launch.configurations.filter((row:any)=>row.command?.includes("repo:cargo-synchronize"));
-  expect(selected.length,path).toBe(1);expect(selected[0].command).toContain('-- --manifest "${input:cargoSynchronizationManifest}"');
-  expect(launch.inputs.filter((row:any)=>row.id==="cargoSynchronizationManifest").length,path).toBe(1);
- }
+ {const dashboard=JSON.parse(readFileSync(process.cwd()+"/📋️project.json","utf8")).metadata.semio.dashboard,tool=dashboard.tools.find((row:any)=>row.id==="run-script");expect(tool.command).toEqual(["bun","repo","exec","--projects={project}","--","bun","{workspace}/{script}"]);expect(tool.parameters.find((row:any)=>row.id==="script").required).toBe(true);}
  const router=readFileSync(resolve(library,"⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/📜️script.ts"),"utf8");expect(router).toContain('.register("synchronize",SynchronizeScript)');
 });
 
@@ -163,5 +158,5 @@ test("current Cargo relay physical authority retains cancellation through public
    if(row.published){const receipt=decodeCargoProvenanceV1(fs.readFileSync(join(receiptRoot,receipts[0]),"utf8")),unit=receipt.units[0],input=unit.inputs.find((entry:any)=>entry.path===original),bytes=fs.readFileSync(original),digest=createHash("sha256").update(bytes).digest("hex");expect(input.sha256).toBe(digest);expect(input.sha256).toBe(Buffer.from(await crypto.subtle.digest("SHA-256",bytes)).toString("hex"));expect(unit.artifacts[0].sha256).toBe(createHash("sha256").update(fs.readFileSync(artifact)).digest("hex"));expect(receipt.status).toBe(row.status);expect(receipt.args).toEqual(compilerArgs);expect(receipt.cancelled).toBe(false);}
   }finally{fs.rmSync(root,{recursive:true,force:true});}
  }
- for(const path of [".vscode/launch.json",".vscode/🧩️launch.seed.jsonc"]){const errors:any[]=[],launch=parseJsonc(readFileSync(join(repository,path),"utf8"),errors,{allowTrailingComma:path.endsWith("jsonc")});expect(errors).toEqual([]);const entries=launch.configurations.filter((entry:any)=>entry.name==="🧫️fixtures-testing-only-provenance-physical🧪️");expect(entries.length).toBe(1);expect(entries[0].command).toContain("ticket-fixture-verification:publication-provenance-physical-source");expect(entries[0].presentation).toEqual({group:"4_gate",order:900.29872});expect(entries[0].env.SEMIO_TEST_ARTIFACT_DIR.endsWith("/🗑️generated/p")).toBe(true);}
+ {const dashboard=JSON.parse(readFileSync(process.cwd()+"/📋️project.json","utf8")).metadata.semio.dashboard,tool=dashboard.tools.find((row:any)=>row.id==="run-script");expect(tool.command).toEqual(["bun","repo","exec","--projects={project}","--","bun","{workspace}/{script}"]);expect(tool.parameters.find((row:any)=>row.id==="script").required).toBe(true);}
 });

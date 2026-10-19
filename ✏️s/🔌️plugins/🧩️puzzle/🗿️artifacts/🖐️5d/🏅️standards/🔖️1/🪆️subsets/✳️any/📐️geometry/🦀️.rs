@@ -1,5 +1,5 @@
-//! 📐️ The 5D flatten solver — the Rust twin of the React target
 //! `✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/🟦️.tsx`'s `🔖️Flatten` region, ported rule for rule.
+//! 📐️ The 5D flatten solver — the Rust twin of the React target
 //!
 //! That 638-line file is the whole 5D visualisation layer React has: a pure geometry module (no JSX,
 //! no canvas) that walks the fastener graph, poses every part from its parent's grip frame, and lays
@@ -14,8 +14,16 @@
 //! BFS root order, the degenerate-direction branches, the matrix order — is React's.
 
 use crate::{Puzzle5dSnapshot};
-use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dPart, Puzzle5dPartAnchor};
-use std::collections::{HashMap, HashSet, VecDeque};
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dFastener;
+
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip;
+
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart;
+
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPartAnchor;
+use std::collections::HashMap;
+use std::collections::HashSet;
+use std::collections::VecDeque;
 
 //#region 📐️Constants
 

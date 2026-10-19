@@ -9,6 +9,7 @@
 
 use semio_framework::manifest::kernel;
 use semio_framework::manifest;
+use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::Terminology;
 use semio_framework_value::DslValue;

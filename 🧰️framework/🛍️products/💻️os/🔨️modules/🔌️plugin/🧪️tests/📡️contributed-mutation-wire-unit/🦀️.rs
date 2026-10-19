@@ -6,7 +6,7 @@ use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::contributed_mutation_wire::{WireTestDiff, WireTestSnapshot};
 use crate::contributed_mutation_wire::mutations::WireTestMutation;
-use protocol::{CompositeMutationKind, Mutation, MutationDiff, MutationLeaf, OpBinary};
+use protocol::{CompositeMutationKind, Mutation, ColdMutationDiff,MutationDiff, MutationLeaf, OpBinary};
 
 #[doc(hidden)]
 pub fn cases() -> serde_json::Value {
@@ -53,7 +53,7 @@ fn ordered_checked_diff_and_minimum_inverse_are_lawful() {
         for delta in row["deltas"].as_array().expect("deltas") {
             let mutation = operation(delta.as_i64().expect("delta").try_into().expect("i32 delta"));
             stored_inverse.extend(mutation.inverse(&current).expect("valid retained mutation inverse fixture"));
-            match protocol::apply_diff(mutation.diff(&current).diff(), &current) {
+            match protocol::apply_diff_cold(mutation.diff(&current).diff(), &current) {
                 Ok(next) => current = next,
                 Err(error) => {
                     assert_eq!(error.code, "mutation.apply.overflow");
@@ -76,14 +76,14 @@ fn ordered_checked_diff_and_minimum_inverse_are_lawful() {
             .collect();
         assert_eq!(serde_json::to_value(inverse).expect("inverse JSON"), row["inverse"]);
         for mutation in stored_inverse.iter().rev() {
-            current = protocol::apply_diff(mutation.diff(&current).diff(), &current).expect("Store reverse inverse");
+            current = protocol::apply_diff_cold(mutation.diff(&current).diff(), &current).expect("Store reverse inverse");
         }
         assert_eq!(current, base);
     }
     let mut diff = WireTestDiff { deltas: vec![i32::MAX] };
     diff.absorb(WireTestDiff { deltas: vec![-i32::MAX] });
-    assert!(protocol::apply_diff(&diff, &WireTestSnapshot { value: 1 }).is_err());
-    assert_eq!(protocol::apply_diff(&diff, &WireTestSnapshot { value: 0 }).expect("ordered cancellation").value, 0);
+    assert!(protocol::apply_diff_cold(&diff, &WireTestSnapshot { value: 1 }).is_err());
+    assert_eq!(protocol::apply_diff_cold(&diff, &WireTestSnapshot { value: 0 }).expect("ordered cancellation").value, 0);
 }
 
 #[test]
@@ -96,7 +96,7 @@ fn serde_binary_and_composite_plan_match_the_leaf() {
     let plan = protocol::plan_of::<WireTestSnapshot, WireTestMutation, AddValue>(&AddValue { delta: 5 }, &base).expect("plan");
     assert_eq!(plan.len(), 1);
     assert!(matches!(&plan[0], protocol::PlanStep::Local(WireTestMutation::AddValue(AddValue { delta: 5 }))));
-    assert_eq!(protocol::apply_diff(protocol::os_spr::fold::fold_plan_diff(&AddValue { delta: 5 }, &base).diff(), &base).expect("planned diff"), protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("direct diff"));
+    assert_eq!(protocol::apply_diff_cold(protocol::os_spr::fold::fold_plan_diff(&AddValue { delta: 5 }, &base).diff(), &base).expect("planned diff"), protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("direct diff"));
     assert_eq!(<AddValue as CompositeMutationKind<WireTestSnapshot, WireTestMutation>>::SEMANTICS.kind, "add-value");
     assert_eq!(<AddValue as CompositeMutationKind<WireTestSnapshot, WireTestMutation>>::label(&AddValue { delta: 5 }), semio_framework_ui_locale::LocalizedLabel::native("Add 5 to value", "5 zu Wert hinzufügen"));
 }

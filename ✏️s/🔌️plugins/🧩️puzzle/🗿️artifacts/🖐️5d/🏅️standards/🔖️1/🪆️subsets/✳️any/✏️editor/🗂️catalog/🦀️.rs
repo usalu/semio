@@ -237,66 +237,66 @@ pub fn puzzle5d_kind_ids(document: &Puzzle5dDocument, slice: &str) -> Vec<String
     ids
 }
 
-pub fn puzzle5d_uniform_kind_weights(ids: &[String]) -> HashMap<String, f64> {
+pub fn puzzle5d_uniform_kind_weights(ids: &[String]) -> Puzzle5dKindWeights {
     if ids.is_empty() {
-        return HashMap::new();
+        return Puzzle5dKindWeights::new();
     }
     let weight = 1.0 / ids.len() as f64;
     ids.iter().map(|id| (id.clone(), weight)).collect()
 }
 
-pub fn puzzle5d_normalize_kind_weight_group(weights: &HashMap<String, f64>, kind_ids: &[String], changed_id: &str, new_value: f64) -> HashMap<String, f64> {
+pub fn puzzle5d_normalize_kind_weight_group(weights: &Puzzle5dKindWeights, kind_ids: &[String], changed_id: &str, new_value: f64) -> Puzzle5dKindWeights {
     if kind_ids.is_empty() {
-        return HashMap::new();
+        return Puzzle5dKindWeights::new();
     }
     if kind_ids.len() == 1 {
-        return HashMap::from([(kind_ids[0].clone(), 1.0)]);
+        return Puzzle5dKindWeights::from([(kind_ids[0].clone(), 1.0)]);
     }
     let new_value = new_value.clamp(0.0, 1.0);
     let others: Vec<&String> = kind_ids.iter().filter(|id| id.as_str() != changed_id).collect();
     let remainder = (1.0 - new_value).max(0.0);
     let other_sum: f64 = others.iter().map(|id| weights.get(*id).copied().unwrap_or(0.0)).sum();
-    let mut next = HashMap::new();
-    next.insert(changed_id.to_string(), new_value);
+    let mut next = Puzzle5dKindWeights::new();
+    next.cold_insert(changed_id.to_string(), new_value);
     if remainder <= f64::EPSILON {
         for id in others {
-            next.insert((*id).clone(), 0.0);
+            next.cold_insert((*id).clone(), 0.0);
         }
         return next;
     }
     if other_sum <= f64::EPSILON {
         let each = remainder / others.len() as f64;
         for id in others {
-            next.insert((*id).clone(), each);
+            next.cold_insert((*id).clone(), each);
         }
     } else {
         for id in others {
             let old = weights.get(id).copied().unwrap_or(0.0);
-            next.insert((*id).clone(), old / other_sum * remainder);
+            next.cold_insert((*id).clone(), old / other_sum * remainder);
         }
     }
     next
 }
 
-pub fn puzzle5d_ensure_catalog_kind_weights(weights: &mut HashMap<String, f64>, kind_ids: &[String]) {
+pub fn puzzle5d_ensure_catalog_kind_weights(weights: &mut Puzzle5dKindWeights, kind_ids: &[String]) {
     if kind_ids.is_empty() {
         return;
     }
-    if weights.is_empty() || kind_ids.iter().any(|id| !weights.contains_key(id)) {
+    if weights.is_empty() || kind_ids.iter().any(|id| weights.get(id).is_none()) {
         *weights = puzzle5d_uniform_kind_weights(kind_ids);
         return;
     }
     let sum: f64 = kind_ids.iter().map(|id| weights.get(id).copied().unwrap_or(0.0)).sum();
     if (sum - 1.0).abs() > 0.001 {
         for id in kind_ids {
-            if let Some(weight) = weights.get_mut(id) {
-                *weight /= sum;
+            if let Some(weight) = weights.get(id).copied() {
+                weights.cold_insert(id.clone(), weight / sum);
             }
         }
     }
 }
 
-pub fn puzzle5d_kind_weight_sum(weights: &HashMap<String, f64>, kind_ids: &[String]) -> f64 {
+pub fn puzzle5d_kind_weight_sum(weights: &Puzzle5dKindWeights, kind_ids: &[String]) -> f64 {
     kind_ids.iter().map(|id| weights.get(id).copied().unwrap_or(0.0)).sum()
 }
 //#endregion 🔖️Distribution
@@ -404,3 +404,7 @@ pub fn puzzle5d_part_kind_options() -> Vec<ActionArgOption> {
 pub fn puzzle5d_default_part_kind(options: &[ActionArgOption]) -> String {
     options.first().map(|option| option.value.clone()).unwrap_or_default()
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod weight_dictionary_tests;

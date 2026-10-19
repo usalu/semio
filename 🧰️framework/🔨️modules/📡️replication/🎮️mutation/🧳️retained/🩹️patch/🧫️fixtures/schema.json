@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "before",
+      "patch",
+      "inverse",
+      "after"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "before": {
+        "$ref": "#/definitions/row"
+      },
+      "after": {
+        "$ref": "#/definitions/row"
+      },
+      "patch": {
+        "$ref": "#/definitions/patch"
+      },
+      "inverse": {
+        "$ref": "#/definitions/patch"
+      }
+    }
+  },
+  "definitions": {
+    "row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        }
+      }
+    },
+    "patch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

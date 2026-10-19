@@ -22,7 +22,11 @@ export function wire(registry) {
   ({ revisionIdentity } = registry);
 }
 
-/** 🎮️ Flattens every plugin playground row from Cargo manifests (with authored `distDir`). */
+/** 🎮️ Flattens every plugin playground row from Cargo manifests (with authored `distDir`).
+ * @param {readonly string[]} configFiles
+ * @param {string} workspaceRoot
+ * @param {readonly import("../../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts").CatalogBuildContributionV1[]} [catalogContributions]
+ */
 export function collectPlaygroundCatalog(configFiles, workspaceRoot,catalogContributions=[]) {
   if(!catalogContributions.length)return [];
   const components = new Map(), playgrounds = [], nativeFiles = new Map(), nativeClosures = new Map();
@@ -121,7 +125,7 @@ export function playgroundSessionTargets(configFiles, workspaceRoot,catalogContr
  * @param {readonly string[]} configFiles
  * @param {string} workspaceRoot
  * @param {string} projectRoot
- * @returns {Record<string, { cache: boolean, continuous?: boolean, dependsOn: string[], outputs: string[], inputs?: unknown[], options: { command: string, forwardAllArgs?: boolean } }>}
+ * @returns {Record<string, { cache: boolean, continuous?: boolean, dependsOn: string[], outputs: string[], inputs?: unknown[], metadata?: { semio?: { orchestrator?: boolean, execution?: object, runtimeInputAdmission?: object } }, options: { command: string, forwardAllArgs?: boolean } }>}
  */
 export async function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot, contracts = {},catalogContributions=[],context) {
   if(!catalogContributions.length)return {};

@@ -60,6 +60,8 @@ impl<T:Copy+Send+'static> RecordPlanningRetirement<T> {
     pub const fn birth_bytes()->usize{size_of::<Self>()}
 }
 impl<T:Copy+Send+'static> RetirementCursor for RecordPlanningRetirement<T> {
+    fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{release_bytes:if self.0.is_empty(){self.0.capacity().checked_mul(size_of::<T>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"record planning backing extent overflow"))?}else{0},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
+
     fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{
         use semio_framework_value::retirement::RetirementStep;
         if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}

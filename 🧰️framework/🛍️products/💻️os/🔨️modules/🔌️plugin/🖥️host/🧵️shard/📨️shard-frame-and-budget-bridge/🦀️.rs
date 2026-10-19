@@ -62,7 +62,11 @@ impl ShardFrame {
     }
 
     pub async fn pack_encode(&self, out: &mut Vec<u8>) -> Result<(), semio_framework_actor::pack::PackError> {
-        if let ShardFrame::Grant { retained, .. } = self { retained.validate().map_err(|_| semio_framework_actor::pack::PackError::InvalidRetainedTurn("operation identity is absent"))?; }
+        if let ShardFrame::Grant { retained,retained_policy,work_fuel,deadline_us,.. } = self {
+            retained.validate().map_err(|_|semio_framework_actor::pack::PackError::InvalidRetainedTurn("operation identity is absent"))?;
+            let loan=semio_framework_actor::OriginalActorTurnLoan{retained_policy:*retained_policy,work_fuel:*work_fuel,deadline_us:*deadline_us};
+            loan.validate_for(*retained).map_err(|_|semio_framework_actor::pack::PackError::InvalidRetainedTurn("original grant semantic loan exceeds its source"))?;
+        }
         semio_framework_actor::pack::write_u8(out, self.tag().await).await;
         match self {
             ShardFrame::Register { actor } => actor.pack_encode(out).await,
@@ -84,15 +88,14 @@ impl ShardFrame {
         match tag {
             0 => Ok(ShardFrame::Register { actor: ActorId::pack_decode(bytes, pos).await? }),
             1 => Ok(ShardFrame::Unregister { actor: ActorId::pack_decode(bytes, pos).await? }),
-            2 => Ok(ShardFrame::Grant {
-                actor: ActorId::pack_decode(bytes, pos).await?,
-                budget: semio_framework_actor::Budget::pack_decode(bytes, pos).await?,
-                retained: semio_framework_actor::RetainedTurnInput::pack_decode(bytes, pos).await?,
-                retained_policy:semio_framework_actor::retained_turn::pack_decode_grant(bytes,pos).await?,
-                work_fuel:semio_framework_actor::pack::read_u64(bytes,pos,"Grant::work-fuel").await?,
-                deadline_us:semio_framework_actor::pack::read_u64(bytes,pos,"Grant::deadline-us").await?,
-                envelopes: semio_framework_actor::pack::read_vec(bytes, pos, "ShardFrame::Grant::envelopes", Envelope::pack_decode).await?,
-            }),
+            2 => {
+                let actor=ActorId::pack_decode(bytes,pos).await?;
+                let budget=semio_framework_actor::Budget::pack_decode(bytes,pos).await?;
+                let retained=semio_framework_actor::RetainedTurnInput::pack_decode(bytes,pos).await?;
+                let loan=semio_framework_actor::OriginalActorTurnLoan::pack_decode(bytes,pos).await?;
+                loan.validate_for(retained).map_err(|_|semio_framework_actor::pack::PackError::InvalidRetainedTurn("original grant semantic loan exceeds its source"))?;
+                Ok(ShardFrame::Grant{actor,budget,retained,retained_policy:loan.retained_policy,work_fuel:loan.work_fuel,deadline_us:loan.deadline_us,envelopes:semio_framework_actor::pack::read_vec(bytes, pos, "ShardFrame::Grant::envelopes", Envelope::pack_decode).await?})
+            },
             3 => Ok(ShardFrame::Envelope(Envelope::pack_decode(bytes, pos).await?)),
             4=>{let actor=ActorId::pack_decode(bytes,pos).await?;let raw=semio_framework_actor::OriginalActorGuestReturn::pack_decode(bytes,pos).await?;let receiving_sequence=semio_framework_actor::pack::read_u64(bytes,pos,"MeshReceived::sequence").await?;let accepted=semio_framework_actor::pack::read_bool(bytes,pos,"MeshReceived::accepted").await?;Ok(Self::MeshReceived{actor,input:raw.input,receiving_sequence,spent:raw.spent,work_units_spent:raw.work_units_spent,accepted})},
             other => Err(semio_framework_actor::pack::PackError::InvalidTag { what: "ShardFrame", tag: other, offset: *pos }),

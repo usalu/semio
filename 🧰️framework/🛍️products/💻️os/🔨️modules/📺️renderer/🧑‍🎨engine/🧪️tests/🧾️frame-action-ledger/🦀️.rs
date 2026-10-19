@@ -25,8 +25,15 @@ fn FRAME_JOB_SOURCE() -> &'static str {
     semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs")
 }
 
+fn close_original_deferred(cursor: &mut FrameDeferredCursor, caller: &mut crate::fixture_original_turn::FixtureTurnV1) {
+    cursor.begin_close();
+    for _ in 0..32768 { if cursor.terminal_is_empty() { return; } caller.turn(|cx| cursor.close_step(cx)).unwrap(); }
+    assert!(cursor.terminal_is_empty(), "original deferred fixture closes every retained field and alias");
+}
+
 #[test]
 fn frame_action_refusal_cancels_only_the_correlated_successor_with_identical_payloads() {
+    let mut caller = crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧾️correlated-action-receipts/🔣️.json")).unwrap();
     let rows = fixture["receipts"].as_array().unwrap();
     let mut input = InputState::<ActionDescriptor>::default();
@@ -51,7 +58,7 @@ fn frame_action_refusal_cancels_only_the_correlated_successor_with_identical_pay
     for _ in rows {
         assert!(matches!(transfer_frame_input_action(&mut input, &mut actions), Ok(FrameInputActionStep::Pending | FrameInputActionStep::Transferred)));
     }
-    let mut cursor = FrameDeferredCursor::new(actions, false, false, false, false, 1, semio_framework_job::root_cancel_token());
+    let mut cursor = FrameDeferredCursor::new(actions, false, false, false, false, 1, caller.alias());
     let mut dispatched = Vec::new();
     let mut cancelled = Vec::new();
     while let Some(FrameDeferredWork::Action(action)) = cursor.take_next() {
@@ -68,12 +75,15 @@ fn frame_action_refusal_cancels_only_the_correlated_successor_with_identical_pay
     }
     assert_eq!(serde_json::json!(dispatched), fixture["dispatch"]);
     assert_eq!(serde_json::json!(cancelled), fixture["cancelled"]);
-    assert!(cursor.terminal_is_empty());
+    assert!(cursor.work_is_empty());
+    close_original_deferred(&mut cursor, &mut caller);
+    caller.finish();
 }
 
 /// 🧾️ One fixture row's frame runtime: the ledger its `owner` declares, the deferred owner a
 /// completion mints from it, and the two answers the row is scored on.
 struct Replay {
+    caller: crate::fixture_original_turn::FixtureTurnV1,
     runtime_owned: bool,
     ledger: FrameActionOwners,
     candidate: FrameActionOwners,
@@ -89,7 +99,7 @@ impl Replay {
             "candidate" => false,
             other => panic!("the fixture names owner {other}, which the renderer never had"),
         };
-        Self { runtime_owned, ledger: FrameActionOwners::default(), candidate: FrameActionOwners::default(), deferred: None, dispatched: Vec::new(), lost: Vec::new() }
+        Self { caller: crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY), runtime_owned, ledger: FrameActionOwners::default(), candidate: FrameActionOwners::default(), deferred: None, dispatched: Vec::new(), lost: Vec::new() }
     }
 
     fn queue(&mut self) -> &mut FrameActionOwners {
@@ -127,7 +137,7 @@ impl Replay {
                     return;
                 }
                 let actions = std::mem::take(self.queue());
-                self.deferred = Some(FrameDeferredCursor::new(actions, false, false, false, false, 1, semio_framework_job::root_cancel_token()));
+                self.deferred = Some(FrameDeferredCursor::new(actions, false, false, false, false, 1, self.caller.alias()));
             }
             "dispatch" => {
                 let expected = step["action"].as_str();
@@ -142,7 +152,8 @@ impl Replay {
                     }
                     None => {
                         assert!(expected.is_none(), "{row} step {index}: the owner still owes {expected:?}");
-                        assert!(self.deferred.as_ref().is_some_and(FrameDeferredCursor::terminal_is_empty), "{row} step {index}: a drained owner is terminal-empty");
+                        assert!(self.deferred.as_ref().is_some_and(FrameDeferredCursor::work_is_empty), "{row} step {index}: semantic dispatch has drained before physical source return");
+                        close_original_deferred(self.deferred.as_mut().unwrap(), &mut self.caller);
                         self.deferred = None;
                     }
                     Some(_) => panic!("{row} step {index}: this replay mints no maintenance work"),
@@ -150,6 +161,16 @@ impl Replay {
             }
             other => panic!("the fixture names operation {other}, which the renderer never performs"),
         }
+    }
+}
+
+impl Drop for Replay {
+    fn drop(&mut self) {
+        if std::thread::panicking() { return; }
+        if let Some(cursor) = self.deferred.as_mut() { close_original_deferred(cursor, &mut self.caller); }
+        for _ in 0..32768 { if self.ledger.is_empty() { break; } self.caller.turn(|cx| self.ledger.close_step(cx)).unwrap(); }
+        for _ in 0..32768 { if self.candidate.is_empty() { break; } self.caller.turn(|cx| self.candidate.close_step(cx)).unwrap(); }
+        assert!(self.ledger.is_empty() && self.candidate.is_empty());
     }
 }
 
@@ -179,9 +200,10 @@ fn a_commit_outlives_every_frame_candidate_that_was_discarded_before_it_dispatch
 
 #[test]
 fn a_live_deferred_owner_drains_before_a_new_complete_source_batch_installs() {
+    let mut caller = crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let mut earlier = FrameActionOwners::default();
     earlier.try_push(ActionDescriptor { controller_id: "fixture".into(), action: "earlier".into(), args: None }).unwrap();
-    let mut live = FrameDeferredCursor::new(earlier, false, false, false, false, 1, semio_framework_job::root_cancel_token());
+    let mut live = FrameDeferredCursor::new(earlier, false, false, false, false, 1, caller.alias());
     let mut later = FrameActionOwners::default();
     let mut input = InputState::<ActionDescriptor>::default();
     let mut batch = input.reserve_actions(2, 64).unwrap();
@@ -194,18 +216,22 @@ fn a_live_deferred_owner_drains_before_a_new_complete_source_batch_installs() {
     assert_eq!(transfer_frame_input_action(&mut input, &mut later), Ok(FrameInputActionStep::Transferred));
     assert!(matches!(live.take_next(), Some(FrameDeferredWork::Action(action)) if action.descriptor.action == "earlier"));
     assert!(live.take_next().is_none());
-    assert!(live.terminal_is_empty());
-    let mut next = FrameDeferredCursor::new(later, false, false, false, false, 2, semio_framework_job::root_cancel_token());
+    assert!(live.work_is_empty());
+    close_original_deferred(&mut live, &mut caller);
+    let mut next = FrameDeferredCursor::new(later, false, false, false, false, 2, caller.alias());
     assert!(matches!(next.take_next(), Some(FrameDeferredWork::Action(action)) if action.descriptor.action == "canvasDragLeave"));
     assert!(matches!(next.take_next(), Some(FrameDeferredWork::Action(action)) if action.descriptor.action == "canvasDrop"));
     assert!(matches!(next.take_next(), Some(FrameDeferredWork::Action(action)) if action.descriptor.action == "later"));
     assert!(next.take_next().is_none());
-    assert!(next.terminal_is_empty());
+    assert!(next.work_is_empty());
+    close_original_deferred(&mut next, &mut caller);
+    caller.finish();
     assert!(!RENDERER_SOURCE().contains("frame completion found an unclosed deferred owner"));
 }
 
 #[test]
 fn closing_a_partially_staged_batch_retires_one_descriptor_then_its_reservation() {
+    let mut caller = crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let mut actions = FrameActionOwners::default();
     let mut input = InputState::<ActionDescriptor>::default();
     let mut batch = input.reserve_actions(2, 64).unwrap();
@@ -213,12 +239,14 @@ fn closing_a_partially_staged_batch_retires_one_descriptor_then_its_reservation(
     batch.action("fixture", "second", 32, |_| Ok(())).unwrap();
     batch.publish().unwrap();
     assert_eq!(transfer_frame_input_action(&mut input, &mut actions), Ok(FrameInputActionStep::Pending));
-    let mut cursor = FrameDeferredCursor::new(actions, false, false, false, false, 1, semio_framework_job::root_cancel_token());
+    let mut cursor = FrameDeferredCursor::new(actions, false, false, false, false, 1, caller.alias());
     cursor.closing = true;
-    assert!(!cursor.close_step(), "one grant retires the staged descriptor");
-    assert!(!cursor.close_step(), "one later grant retires the empty batch reservation");
-    assert!(cursor.close_step());
+    assert!(!caller.turn(|cx| cursor.close_step(cx)).unwrap(), "one original turn transfers the exact staged descriptor into retirement custody");
+    assert!(!cursor.actions.is_empty());
+    assert!(cursor.actions.batch.is_some(), "the reservation remains while its descriptor fields close");
+    close_original_deferred(&mut cursor, &mut caller);
     assert!(cursor.terminal_is_empty());
+    caller.finish();
 }
 
 #[test]

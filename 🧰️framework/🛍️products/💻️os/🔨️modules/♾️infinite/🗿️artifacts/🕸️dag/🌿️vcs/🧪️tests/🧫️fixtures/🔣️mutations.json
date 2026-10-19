@@ -226,21 +226,23 @@
       "valid": false
     },
     {
-      "name": "wrong order item",
+      "name": "wrong move item",
       "operation": "reorderNodes",
       "payload": {
-        "order": [
-          "a",
-          1
+        "moves": [
+          {
+            "id": 1,
+            "to": 0
+          }
         ]
       },
       "valid": false
     },
     {
-      "name": "wrong order container",
+      "name": "wrong moves container",
       "operation": "reorderNodes",
       "payload": {
-        "order": "a"
+        "moves": "a"
       },
       "valid": false
     },
@@ -1211,10 +1213,11 @@
         },
         {
           "operation": "reorderNodes",
-          "order": [
-            "c",
-            "z",
-            "b"
+          "moves": [
+            {
+              "id": "c",
+              "to": 0
+            }
           ]
         }
       ],
@@ -1266,21 +1269,27 @@
       "valid": true
     },
     {
-      "name": "duplicate order serde valid",
+      "name": "duplicate move steps serde valid",
       "operation": "reorderNodes",
       "payload": {
-        "order": [
-          "a",
-          "a"
+        "moves": [
+          {
+            "id": "a",
+            "to": 0
+          },
+          {
+            "id": "a",
+            "to": 1
+          }
         ]
       },
       "valid": true
     },
     {
-      "name": "empty order serde valid",
+      "name": "empty moves serde valid",
       "operation": "reorderNodes",
       "payload": {
-        "order": []
+        "moves": []
       },
       "valid": true
     },

@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "maximumDecodedBytes",
+    "valid",
+    "invalid",
+    "deniedAxes"
+  ],
+  "properties": {
+    "maximumDecodedBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "valid": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "pack",
+          "spr",
+          "packBytes",
+          "sprBytes"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "pack": {
+            "type": "string"
+          },
+          "spr": {
+            "type": "string"
+          },
+          "packBytes": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "sprBytes": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          }
+        }
+      }
+    },
+    "invalid": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "deniedAxes": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "items",
+          "copy",
+          "capacity",
+          "depth"
+        ]
+      },
+      "minItems": 4,
+      "maxItems": 4
+    }
+  }
+}

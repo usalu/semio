@@ -1,0 +1,10 @@
+[
+  {"ambient":{"CUSTOM":"host","CARGO_NET_OFFLINE":"false","SEMIO_BUILD_MODE":"release"},"grant":{"mode":"prototype","offline":true},"taskEnvironment":{"CUSTOM":"authored"},"expected":{"CUSTOM":"authored","CARGO_NET_OFFLINE":"true","SEMIO_BUILD_MODE":"prototype"},"cacheGroup":"authored-offline"},
+  {"ambient":{"CUSTOM":"changed-host","CARGO_NET_OFFLINE":"false","SEMIO_BUILD_MODE":"release"},"grant":{"mode":"prototype","offline":true},"taskEnvironment":{"CUSTOM":"authored"},"expected":{"CUSTOM":"authored","CARGO_NET_OFFLINE":"true","SEMIO_BUILD_MODE":"prototype"},"cacheGroup":"authored-offline"},
+  {"ambient":{"CUSTOM":"host","CARGO_NET_OFFLINE":"false","SEMIO_BUILD_MODE":"release"},"grant":{"mode":"prototype","offline":false},"taskEnvironment":{"CUSTOM":"authored"},"expected":{"CUSTOM":"authored","CARGO_NET_OFFLINE":"false","SEMIO_BUILD_MODE":"prototype"},"cacheGroup":"authored-online"},
+  {"ambient":{"CUSTOM":"host","CARGO_NET_OFFLINE":"false","SEMIO_BUILD_MODE":"release"},"grant":{"mode":"prototype","offline":true},"taskEnvironment":{"CUSTOM":"other"},"expected":{"CUSTOM":"other","CARGO_NET_OFFLINE":"true","SEMIO_BUILD_MODE":"prototype"},"cacheGroup":"other-offline"},
+  {"ambient":{"CUSTOM":"host","CARGO_NET_OFFLINE":"false","SEMIO_BUILD_MODE":"prototype"},"grant":{"mode":"release","offline":true},"taskEnvironment":{"CUSTOM":"authored"},"expected":{"CUSTOM":"authored","CARGO_NET_OFFLINE":"true","SEMIO_BUILD_MODE":"release"},"cacheGroup":"authored-release"}
+,
+  {"ambient":{"CUSTOM":null},"grant":{"mode":"prototype","offline":true},"taskEnvironment":{},"expected":{"CUSTOM":null,"CARGO_NET_OFFLINE":"true","SEMIO_BUILD_MODE":"prototype"},"cacheGroup":"absent"},
+  {"ambient":{"CUSTOM":""},"grant":{"mode":"prototype","offline":true},"taskEnvironment":{},"expected":{"CUSTOM":"","CARGO_NET_OFFLINE":"true","SEMIO_BUILD_MODE":"prototype"},"cacheGroup":"empty"}
+]

@@ -1,19 +1,20 @@
-//! 🚪️ fem2d → stl — foreign `Serializer<Fem2dSnapshot>` on the framework's `io_mechanism` channel,
 //! and REAL geometry: every `FemRegion` footprint is triangulated and extruded by its own real
+//! 🚪️ fem2d → stl — foreign `Serializer<Fem2dSnapshot>` on the framework's `io_mechanism` channel,
 //! `thickness` into a `SemioMeshSnapshot`
 //! (`crate::standards::v1::subsets::any::io::export::geometry::build_semio_mesh_snapshot`, the same kernel the
 //! `🕸️mesh/🧫️fixtures/**/🧊️expected.stl` fixtures pin), then handed to stdio's own tested
 //! `SemioMeshToStl` bridge and `encode_stl_ascii` grammar — never hand-rolled bytes.
 //!
 //! `IoFidelity::Lossy`, and that is the honest level: an STL solid is a triangle soup. It carries no
-//! `FemMaterial`, `FemSection`, `FemSupport`, `FemLoadCase` or analysis settings, and
+//! `FemMaterialValue`, `FemSection`, `FemSupport`, `FemLoadCase` or analysis settings, and
 //! `FemElement::Bar`/`Beam` line members have no honest 3D solid at all (see the meshing bridge's
 //! own doc) so they contribute no geometry — a bar/beam-only model exports a structurally valid,
 //! EMPTY `.stl`. There is therefore no inverse: `s.stdio.stl@ascii/*` → `s.fem.fem2d@1/*` is a
 //! registered refusal in this subset's `🚪️io/🦀️.rs` `geometry_import` module.
 
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
-use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+use semio_framework_os_kernel::io::io_mechanism::ArchiveChildren;
+use semio_framework_os_kernel::io::io_mechanism::Serializer;
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;

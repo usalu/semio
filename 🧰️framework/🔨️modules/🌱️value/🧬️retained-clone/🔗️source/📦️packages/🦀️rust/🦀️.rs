@@ -25,8 +25,12 @@ impl<'a,T:?Sized> Copy for RetainedCloneRef<'a,T>{}
 impl<'a,T:?Sized> Clone for RetainedCloneRef<'a,T>{fn clone(&self)->Self{*self}}
 impl<'a,T:?Sized> RetainedCloneRef<'a,T>{
  pub fn get(self)->&'a T{self.value}
+ /// 🪪️ Observes the already issued sealed source without duplicating a lease or granting authority.
+ pub fn source_identity(self)->u64{self.lease.get().id}
  pub fn project<U:?Sized,F>(self,discriminator:usize,project:F)->RetainedCloneRef<'a,U>where F:for<'source>FnOnce(&'source T)->&'source U{let value=project(self.value);RetainedCloneRef{value,lease:self.lease,projection:RetainedCloneProjection{parent:self.projection.address,address:value as*const U as*const()as usize,discriminator}}}
  pub fn binding_copy_bytes(self)->usize{0}
+ /// 🪪️ Checks the original issued source and exact projected path without granting a new alias.
+ pub fn check_binding(self,binding:&Option<RetainedCloneBinding>)->Result<bool,crate::ValueError>{self.binding_demand(binding).map(|demand|demand.is_none())}
  /// 🪪️ Validates one original lease and projected path without exposing private custody.
  pub fn matches_binding(self,binding:&RetainedCloneBinding)->bool{binding.lease.as_ref().is_some_and(|lease|lease.get().id==self.lease.get().id)&&binding.projection==self.projection}
  pub fn binding_demand(self,binding:&Option<RetainedCloneBinding>)->Result<Option<crate::RetirementDemand>,crate::ValueError>{if let Some(expected)=binding{if expected.lease.as_ref().ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"projected source binding already closing"))?.get().id!=self.lease.get().id||expected.projection!=self.projection{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"original clone source or projected path changed"));}Ok(None)}else{Ok(Some(crate::RetirementDemand{copy_bytes:self.binding_copy_bytes(),depth:1,..Default::default()}))}}
@@ -60,6 +64,8 @@ impl<A:RetireOwned+Sync> RetainedCloneBorrowAuthority<A>{
  pub fn constructor_copy_bytes()->usize{RetainedCloneSource::<A>::constructor_copy_bytes()}
  pub fn admit(authority:A,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(crate::ValueError,A)>{RetainedCloneSource::admit_owned(authority,(),grant).map(|(source,progress)|(Self{source},progress)).map_err(|(error,authority,())|(error,authority))}
  pub fn borrow<T:?Sized,F>(&self,discriminator:usize,project:F)->RetainedCloneRef<'_,T>where F:for<'source>FnOnce(&'source A)->&'source T{self.source.borrow().project(discriminator,project)}
+ /// 🧾️ Borrows the one actual source close quote with every independent physical currency.
+ pub fn next_close_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.source.next_close_demand(body)}
  pub fn next_close_copy_byte_demand(&self)->Result<usize,crate::ValueError>{self.source.next_close_copy_byte_demand()}
  pub fn next_close_capacity_byte_demand(&self,work:usize)->Result<usize,crate::ValueError>{self.source.next_close_capacity_byte_demand(work)}
  pub fn next_close_release_byte_demand(&self)->Result<usize,crate::ValueError>{self.source.next_close_release_byte_demand()}

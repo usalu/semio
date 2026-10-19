@@ -1171,6 +1171,10 @@ type CreatePvSystem {
   azimuthDeg: Float!
   moduleEfficiency: Float!
   inverterEfficiency: Float!
+  temperatureCoefficient:Float!
+  faimanHeatLossConstantWM2k:Float!
+  faimanHeatLossWindWSM3k:Float!
+  mounting:String!
 }
 
 type DeletePvSystem {
@@ -1647,6 +1651,31 @@ type ChangeMaterialRoughness {
   newRoughness: String!
 }
 
+type ChangeGlazingMaterialSolarReflectanceFront {
+  id: Int!
+  newSolarReflectanceFront: Float!
+}
+
+type ChangeGlazingMaterialSolarReflectanceBack {
+  id: Int!
+  newSolarReflectanceBack: Float!
+}
+
+type ChangeGlazingMaterialVisibleReflectanceFront {
+  id: Int!
+  newVisibleReflectanceFront: Float!
+}
+
+type ChangeGlazingMaterialVisibleReflectanceBack {
+  id: Int!
+  newVisibleReflectanceBack: Float!
+}
+
+type ChangeGlazingMaterialInfraredTransmittance {
+  id: Int!
+  newInfraredTransmittance: Float!
+}
+
 union EnergyModelMutation =
   RenameModel
   | ChangeModelVersion
@@ -1945,3 +1974,17 @@ union EnergyModelMutation =
   | ChangeGasMaterialGas
   | RenameGasMaterial
   | ChangeMaterialRoughness
+  | ChangeGlazingMaterialSolarReflectanceFront
+  | ChangeGlazingMaterialSolarReflectanceBack
+  | ChangeGlazingMaterialVisibleReflectanceFront
+  | ChangeGlazingMaterialVisibleReflectanceBack
+  | ChangeGlazingMaterialInfraredTransmittance
+  | ChangePvSystemTemperatureCoefficient
+  | ChangePvSystemFaimanHeatLossConstant
+  | ChangePvSystemFaimanHeatLossWind
+  | ChangePvSystemMounting
+
+type ChangePvSystemTemperatureCoefficient { id:Int! newTemperatureCoefficient:Float! }
+type ChangePvSystemFaimanHeatLossConstant { id:Int! newFaimanHeatLossConstantWM2k:Float! }
+type ChangePvSystemFaimanHeatLossWind { id:Int! newFaimanHeatLossWindWSM3k:Float! }
+type ChangePvSystemMounting { id:Int! newMounting:String! }

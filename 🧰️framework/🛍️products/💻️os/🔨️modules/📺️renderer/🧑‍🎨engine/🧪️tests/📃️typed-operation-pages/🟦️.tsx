@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 /** 📃 submitPluginTurn: typed-operation result pages, parked faults and draining settles. */
 import type { AppChannelClient } from "@semio-tech/framework-os";
 import { encodeAppFrame } from "@semio-tech/framework-os";
@@ -6,7 +7,7 @@ import { createPluginRuntimeSupport, type PluginRuntimeVitest, type PluginRuntim
 
 export async function registerTypedOperationPagesTests(vitest: PluginRuntimeVitest, dependencies: PluginRuntimeDependencies): Promise<void> {
   const { describe, expect, it } = vitest;
-  const { consumeTypedOperationEffects, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, encodePackValue, invocationFromFrames, performInvocation, settlePluginTurn, teardownPluginActor, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationRouter, typedOperationResult, wireEffectToFriendly, withTypedOperationCall } = dependencies;
+  const { TYPED_OPERATION_PAGE_MAGIC, consumeTypedOperationEffects, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, encodePackValue, invocationFromFrames, performInvocation, settlePluginTurn, teardownPluginActor, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationRouter, typedOperationResult, wireEffectToFriendly, withTypedOperationCall } = dependencies;
   const { withFakeShardClient } = createPluginRuntimeSupport(dependencies);
     //#region 🧪️terra-web-plugin-runtime
     describe("submitPluginTurn (TurnScheduler-backed turn dispatch replacing the old unbounded actorTurnQueue)", () => {
@@ -103,19 +104,98 @@ export async function registerTypedOperationPagesTests(vitest: PluginRuntimeVite
         const total = routing.capacity + routing.overflow;
         for (let index = 0; index < total; index += 1) {
           const operation = BigInt(routing.ownedOperation) + BigInt(index);
-          expect(router.observe(owner, operation, routing.firstSequence)).toBe(true);
-          expect(router.fault(observer, operation, routing.faultSequence, `${routing.fault} ${index}`)).toBe(false);
+          expect(router.observe(owner, {receiver:routing.receiver,operation,generation:1n,sequence:routing.firstSequence,attempt:1})).toBe(true);
+          expect(router.fault(observer, {receiver:routing.receiver,operation,generation:1n,sequence:routing.faultSequence,attempt:1}, `${routing.fault} ${index}`)).toBe(false);
         }
         expect(reported.map((entry) => entry.code)).toEqual(Array.from({ length: routing.overflow }, () => routing.evictionCode));
         const drained: string[] = [];
         for (let fault = owner.takeFault(); fault !== null; fault = owner.takeFault()) drained.push(fault);
         expect([drained.length, drained[0], drained.at(-1)]).toEqual([routing.capacity, `${routing.fault} ${routing.overflow}`, `${routing.fault} ${total - 1}`]);
         const unowned = BigInt(routing.foreignOperation);
-        expect(router.fault(observer, unowned, routing.faultSequence, routing.fault)).toBe(false);
+        expect(router.fault(observer, {receiver:routing.receiver,operation:unowned,generation:1n,sequence:routing.faultSequence,attempt:1}, routing.fault)).toBe(false);
         expect(reported.at(-1)).toEqual({ code: routing.unattributedCode, message: `${routing.fault} (operation ${unowned} sequence ${routing.faultSequence} observed by observer)` });
         owner.close();
         observer.close();
         expect(reported.length).toBe(routing.overflow + 1);
+      });
+
+
+      it("typed-operation diagnostic reception preserves the original command across generations before ACK", async () => {
+        const reported: string[] = [];
+        const router = new TypedOperationRouter((code: string, message: string) => reported.push(code + ": " + message));
+        const owner = router.open("original"), observer = router.open("other-generation");
+        const token = { receiver: 1, operation: 7n, generation: 2n, sequence: 0, attempt: 0 };
+        expect(owner.observe(token)).toBe(true);
+        expect(observer.observe({ ...token, generation: 3n })).toBe(true);
+        const expected = { code: "interaction.target-missing", severity: "warning", span: { line: 1, column: 3, length: 5 }, message: "Target 🧩 is unavailable.", scope: { pluginId: "fem", bodyKey: "nodes" }, expected: { tokens: ["node"], keywords: [], keys: ["id"] } };
+        const encoded = Buffer.from(JSON.stringify(expected));
+        const page = (sequence: number, payload: Uint8Array, complete: boolean) => {
+          const body = Buffer.alloc(35 + payload.length);
+          body.writeUInt32LE(token.receiver, 0); body.writeBigUInt64LE(token.operation, 4); body.writeBigUInt64LE(token.generation, 12); body.writeUInt32LE(sequence, 20); body[24] = 0; body[25] = 15; body.writeUInt32LE(payload.length + 5, 26); body.writeUInt32LE(0, 30); body[34] = Number(complete); body.set(payload, 35);
+          return { tag: "send-message", val: { target: { tag: "shell", val: "1" }, payload: Buffer.concat([Buffer.from(TYPED_OPERATION_PAGE_MAGIC), body]) } };
+        };
+        const initial = page(1, encoded.subarray(0, 3), false), final = page(2, encoded.subarray(3), true);
+        await observer.accept([initial]);
+        expect(owner.takeDiagnosticEffects()).toEqual([]);
+        await observer.accept([final]);
+        await observer.accept([final]);
+        expect(observer.takeDiagnosticEffects()).toEqual([]);
+        const response = invocationFromFrames([], owner.takeDiagnosticEffects(), "command");
+        expect(response.diagnostics).toEqual([expected]);
+        expect(response.requestedEffects).toEqual([]);
+        expect(owner.diagnosticProgress).toEqual({ bytes: encoded.length, nodes: expect.any(Number) });
+        expect(owner.diagnosticOwnedBytes).toBeGreaterThan(0);
+        owner.close(); observer.close(); expect(reported).toEqual([]);
+        console.log("[DEBUG] mounted host diagnostic owner: same operation/different generation isolated, original command receives warning/expected/span/scope once before ACK, actual decode progress retained");
+      });
+
+
+      it("typed-operation diagnostic delivery isolates observers before the original guest ACK", async () => {
+        const { default: fixture } = await import("../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🧫️fixtures/🔣️.json");
+        const { operationDiagnosticFanouts, OperationDiagnosticObservers } = dependencies;
+        const token = { receiver: fixture.host.observers.receiver, operation: 19n, generation: 4n, sequence: 1, attempt: 0 };
+        const actorId = "diagnostic-observer#" + token.receiver;
+        const diagnostic = { code: "interaction.target-missing", severity: "warning", span: { line: 0, column: 0, length: 0 }, message: "Original target is unavailable.", scope: {} };
+        const received: unknown[] = [], failures: unknown[] = [];
+        const listeners = new OperationDiagnosticObservers<import("../../🧱️elements/🔌️PluginRuntime/🟦️.tsx").PluginOperationDiagnostic>(fixture.host.observers.maximumListeners, error => failures.push(error));
+        listeners.subscribe(() => { throw new Error("observer refused"); });
+        listeners.subscribe(receipt => received.push(receipt));
+        operationDiagnosticFanouts.set(token.receiver, listeners);
+        const payload = Buffer.from(JSON.stringify(diagnostic)), body = Buffer.alloc(35 + payload.length);
+        body.writeUInt32LE(token.receiver, 0); body.writeBigUInt64LE(token.operation, 4); body.writeBigUInt64LE(token.generation, 12); body.writeUInt32LE(token.sequence, 20); body[25] = 15; body.writeUInt32LE(payload.length + 5, 26); body[34] = 1; body.set(payload, 35);
+        const page = { tag: "send-message", val: { target: { tag: "shell", val: String(token.receiver) }, payload: Buffer.concat([Buffer.from(TYPED_OPERATION_PAGE_MAGIC), body]) } };
+        let crossings = 0;
+        try {
+          await withTypedOperationCall(actorId, "original", async (owner: any) => {
+            expect(owner.observe({ ...token, sequence: 0 })).toBe(true);
+            const settled = await withFakeShardClient(async (_actor, events) => { crossings++; expect(events).toEqual(typedOperationAcknowledgements({ effects: [page] })); return { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } }; }, async () => {
+              return settlePluginTurn(actorId, { uiPatches: [], effects: [page], nextWake: null, status: { tag: "idle" } }, "Interactive", new Set(), undefined, true, undefined, owner);
+            });
+            expect(invocationFromFrames([], settled.effects, "command").diagnostics).toEqual([diagnostic]);
+            expect(owner.takeDiagnosticEffects()).toEqual([]);
+          });
+          expect(crossings).toBe(1); expect(failures).toHaveLength(1); expect(received).toEqual([{ token, diagnostic }]);
+          console.log("[DEBUG] actual mounted diagnostic delivery: refused UI listener isolated, later original listener retained, exact command row and guest acknowledgement delivered once");
+        } finally { operationDiagnosticFanouts.delete(token.receiver); teardownPluginActor(actorId); }
+      });
+
+      it("typed-operation diagnostic reception refuses a truncated terminal before guest ACK", async () => {
+        const actorId = "diagnostic-truncated#1";
+        let crossings = 0;
+        const token = { receiver: 1, operation: 9n, generation: 4n, sequence: 0, attempt: 0 };
+        const page = (sequence: number, lane: number, payload: Uint8Array) => {
+          const body = Buffer.alloc(30 + payload.length); body.writeUInt32LE(token.receiver, 0); body.writeBigUInt64LE(token.operation, 4); body.writeBigUInt64LE(token.generation, 12); body.writeUInt32LE(sequence, 20); body[25] = lane; body.writeUInt32LE(payload.length, 26); body.set(payload, 30);
+          return { tag: "send-message", val: { target: { tag: "shell", val: "1" }, payload: Buffer.concat([Buffer.from(TYPED_OPERATION_PAGE_MAGIC), body]) } };
+        };
+        await withTypedOperationCall(actorId, "owner", async (owner: any) => {
+          await owner.accept([page(0, 15, new Uint8Array([0, 0, 0, 0, 0, 123]))]);
+          await withFakeShardClient(async () => { crossings++; return { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } }; }, async () => {
+            await expect(settlePluginTurn(actorId, { uiPatches: [], effects: [page(1, 10, new Uint8Array())], nextWake: null, status: { tag: "idle" } }, "Interactive", new Set(), undefined, true, undefined, owner)).rejects.toThrow("terminal precedes complete diagnostic custody");
+          });
+          expect(crossings).toBe(0);
+        });
+        teardownPluginActor(actorId);
+        console.log("[DEBUG] mounted host diagnostic terminal: partial original row refuses before any acknowledgement crossing");
       });
 
       it("keeps the command reply when publication supplies only an unsolicited UI scope", async () => {

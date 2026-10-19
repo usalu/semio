@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 hot-path-census = ["semio-framework-os-store-ledger/hot-path-census"]
 
 [dependencies]
+semio-framework-os-store-snapshot-clone = { path = "../../../🧬️snapshot-clone/📦️packages/🦀️rust" }
 semio-framework-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
 semio-framework-os-store-ledger = { path = "../../../📒️ledger/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }

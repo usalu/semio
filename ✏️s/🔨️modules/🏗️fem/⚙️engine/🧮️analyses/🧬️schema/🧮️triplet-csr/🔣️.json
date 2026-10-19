@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:fem:triplet-csr-corpus",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "deniedAxes"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "order",
+          "entries",
+          "matrix"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "sequence",
+                "row",
+                "column",
+                "value"
+              ],
+              "properties": {
+                "sequence": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "row": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "column": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "value": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "matrix": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "deniedAxes": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "items",
+          "copyBytes",
+          "capacityBytes",
+          "depth"
+        ]
+      }
+    }
+  }
+}

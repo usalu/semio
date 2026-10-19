@@ -54,6 +54,7 @@ impl ExactDemoSnapshotRetirement {
 }
 
 impl ErasedSnapshotRetirement for ExactDemoSnapshotRetirement {
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands(body) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let empty=RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -150,7 +151,7 @@ pub fn drive_retirement_terminal(retirement: Box<dyn ErasedSnapshotRetirement>) 
     for _ in 0..10_000 {
         let Some(owner) = original.as_ref() else { return; };
         let demand = artifact_retirement_box_demands(owner, grant.maximum_copy_bytes).expect("current original boxed owner frontier");
-        let turn = RetainedCloneGrant { maximum_depth: demand.depth.max(grant.maximum_depth), ..grant };
+        let turn = RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes.max(grant.maximum_copy_bytes), maximum_capacity_bytes: demand.capacity_bytes.max(grant.maximum_capacity_bytes), maximum_release_bytes: demand.release_bytes.max(grant.maximum_release_bytes), maximum_depth: demand.depth.max(grant.maximum_depth), ..grant };
         let step = artifact_retirement_box_close_step(&mut original, turn).expect("original owner and Box close in distinct granted turns");
         assert!(step.progress().fits(turn));
     }

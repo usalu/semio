@@ -47,7 +47,7 @@
         assert_eq!(error.code.0, "interactive-job.unknown-key");
         assert_eq!(app.stores.test_snapshot().await, TestSnapshot::default());
         artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 

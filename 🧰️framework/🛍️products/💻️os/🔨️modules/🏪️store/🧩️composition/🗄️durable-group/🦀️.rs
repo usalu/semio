@@ -4,6 +4,8 @@ use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparedP
 use semio_framework_os_store_ledger::CursorRevisionAccumulator;
 use pack::snapshot::{ArtifactDsl,ArtifactPack};
 use semio_framework_dsl_record::DslField;
+use semio_framework_dsl_record::{BorrowedDslRecord,native_encoding::FieldProjectionSource};
+use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 use semio_framework_value::DslValue;
 use semio_framework_dsl_record::FieldValue;
 use semio_framework_value::FromValue as ValueFromValue;
@@ -27,6 +29,7 @@ use semio_framework_os_store_durable_group_wire::lifted_durable_group::{durable_
 use semio_framework_os_store_durable_group_wire::lifted_durable_group::{DRAWING_RECOVERY_SCHEMA, DRAWING_ROLE, DURABLE_OWNED_GROUP_BOUND_OUTCOME_SCHEMA_V1, DurableBoundOneItemOutcomeV1, DurableMemberRecoveryFrontier, DurableOwnedThreeMemberUnsignedV1, DurableUnboundOneItemOutcomeV1, PARENT_RECOVERY_SCHEMA, PARENT_ROLE, VALUE_RECOVERY_SCHEMA, VALUE_ROLE, close_assembly_publication, close_journal_owner, member_identity_matches, member_matches, parse_canonical_json_value, take_assembly_prepared, valid_hash, valid_reference};
 use semio_framework_os_store_engine_stage::lifted_durable_group::{DurableStorePreparedOwnerV1, bound_member, clear_adopted_store_member, prepared_base_matches_store, prepared_member, recovery_frontier, retire_unstaged_store_member, stage_store_member, store_member_identity, validate_adopted_store_member, verify_bound_member_edit};
 pub use semio_framework_os_store_engine_stage::lifted_durable_group::{DurableStoreBoundOutcomeV1, abort_staged_store_member, adopt_staged_store_member, stage_prebuilt_batch_root};
+use semio_framework_os_store_engine_stage::lifted_durable_group::planning;
 
 #[path = "📒️group-decision-journal-record-and-snapshot-capture/🦀️.rs"]
 mod group_decision_journal_record_and_snapshot_capture;
@@ -64,3 +67,13 @@ mod three_member_decision_operations_codecs_and_testing;
 pub use three_member_decision_operations_codecs_and_testing::{
     durable_owned_group_journal_test_record, durable_owned_group_journal_test_record_from_edits,
 };
+
+
+impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> std::fmt::Debug for DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { formatter.debug_struct("DurableOwnedThreeStorePreparedV1").field("binding_step", &self.binding_step).finish_non_exhaustive() }
+}
+
+
+impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> std::fmt::Debug for DurableOwnedThreeStoreBoundV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { formatter.debug_struct("DurableOwnedThreeStoreBoundV1").field("decision_sha256", &self.decision.decision_sha256).finish_non_exhaustive() }
+}

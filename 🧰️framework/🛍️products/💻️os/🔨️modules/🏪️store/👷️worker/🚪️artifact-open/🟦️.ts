@@ -26,10 +26,14 @@ export function openArtifact(request: ArtifactActorConfig & { readonly clientIns
       return;
     }
     const envelopes = value as MutationEnvelope[];
-    if (Array.isArray(envelopes) && envelopes.length > 0) emitEvent(state, { kind: "remoteMutations", envelopes });
+    if (Array.isArray(envelopes) && envelopes.length > 0) {
+      foldRemoteConfigFacet(state, envelopes);
+      emitEvent(state, { kind: "remoteMutations", envelopes });
+    }
   };
   const folder = folderBinding(config);
-  if (folder) {
+    if (!folder) seedConfigFacet(state, null);
+if (folder) {
     // 🥇️ One single-flight guard per document (finding 1), shared by every trigger source.
     state.revalidateFolder = latestWins(() => pollFolderOnce(state, folder));
     if (config.watchExternal !== false) watchFolder(state, folder);

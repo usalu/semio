@@ -26,6 +26,17 @@ pub struct SetRunHeader {
 //#region ⚙️Semantics
 impl protocol::MutationKind<RunArtifact, RunMutation> for SetRunHeader {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "run-header", kind: "set-run-header", record: "SetRunHeader" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set run header for {}", self.workflow_ref), &format!("Laufkopf für {} setzen", self.workflow_ref))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["run".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<RunArtifact, RunMutation> for SetRunHeader {
     fn diff(&self, base: &RunArtifact) -> protocol::MutationOutcome<RunDiff> {
         let header = RunHeaderEdit {
             workflow_ref: self.workflow_ref.clone(),
@@ -55,12 +66,6 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for SetRunHeader {
             status: base.status,
             started_at: base.started_at.clone(),
         })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set run header for {}", self.workflow_ref), &format!("Laufkopf für {} setzen", self.workflow_ref))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["run".into()]
     }
 }
 //#endregion ⚙️Semantics

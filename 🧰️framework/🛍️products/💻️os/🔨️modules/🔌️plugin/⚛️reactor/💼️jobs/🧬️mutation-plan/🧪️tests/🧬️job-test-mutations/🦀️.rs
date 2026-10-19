@@ -30,21 +30,32 @@ pub(crate) struct JobTestDiff {
 }
 
 impl protocol::DiffAlgebra<JobTestSnapshot> for JobTestDiff {
-    fn inverse(&self, _base: &JobTestSnapshot) -> Self {
-        Self { deltas: self.deltas.iter().rev().map(|delta| delta.saturating_neg()).collect() }
-    }
+
     fn is_empty(&self) -> bool {
         self.deltas.iter().all(|delta| *delta == 0)
     }
 }
 
-impl protocol::MutationDiff<JobTestSnapshot> for JobTestDiff {
-    fn apply(&self, base: &JobTestSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<JobTestSnapshot> {
-        let value = self.deltas.iter().try_fold(base.value, |value, delta| value.checked_add(*delta).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.value-overflow", "job fixture value addition exceeds i32").at(["value"])))?;
-        Ok(JobTestSnapshot { value })
+impl protocol::ColdDiffAlgebra<JobTestSnapshot> for JobTestDiff {
+    fn inverse(&self, _base: &JobTestSnapshot) -> Self {
+        Self { deltas: self.deltas.iter().rev().flat_map(|delta| if *delta == i32::MIN { vec![i32::MAX, 1] } else { vec![-delta] }).collect() }
     }
+}
+
+impl protocol::MutationDiff<JobTestSnapshot> for JobTestDiff {
+
+
+}
+
+impl protocol::ColdMutationDiff<JobTestSnapshot> for JobTestDiff {
     fn absorb(&mut self, other: Self) {
         self.deltas.extend(other.deltas);
+    }
+
+    fn apply(&self, base: &mut JobTestSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let value = self.deltas.iter().try_fold(base.value, |value, delta| value.checked_add(*delta).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.value-overflow", "job fixture value addition exceeds i32").at(["value"])))?;
+                base.value = value;
+        Ok(())
     }
 }
 

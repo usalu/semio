@@ -1,5 +1,7 @@
 //! 🔺️ Sparse diff builder for `RotateTargetVolume` — patches the one addressed target-volume in place.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dTargetVolumePatch, Puzzle5dTargetVolumesDelta};
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dTargetVolumePatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dTargetVolumesDelta;
 use protocol::list_delta::RowPatch;
 use crate::Puzzle5dSnapshot;
 

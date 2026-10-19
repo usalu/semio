@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "forbiddenCommands": [
+    "compose.analyze",
+    "compose.analyzeFile",
+    "compose.autofix",
+    "compose.autofixBreach",
+    "compose.autofixFile",
+    "compose.checkPolicy",
+    "compose.contributorAdd",
+    "compose.contributorRemove",
+    "compose.createContributor",
+    "compose.createPolicy",
+    "compose.createTicket",
+    "compose.draftCreate",
+    "compose.draftDelete",
+    "compose.fileCreate",
+    "compose.fileDelete",
+    "compose.fileMove",
+    "compose.folderCreate",
+    "compose.folderDelete",
+    "compose.folderMove",
+    "compose.policyCheck",
+    "compose.refreshDiagnostics",
+    "compose.runCommand",
+    "compose.sectionCreate",
+    "compose.sectionCreateChild",
+    "compose.sectionDelete",
+    "compose.sectionIntegrate",
+    "compose.sectionMove",
+    "compose.sectionRemove",
+    "compose.sectionRename",
+    "compose.ticketClose",
+    "compose.ticketReopen"
+  ],
+  "forbiddenSymbols": [
+    "analyzeFile",
+    "shouldAnalyzeFile",
+    "autofixBreach",
+    "runRepoCommandJson",
+    "execSync",
+    "execShell",
+    "execAsync",
+    "AnalyzeDocument"
+  ],
+  "retainedCommands": [
+    "compose.navigate",
+    "compose.navigateTo",
+    "compose.navigateToFile",
+    "compose.filter.search",
+    "compose.copyId",
+    "compose.openLink",
+    "compose.ticketOpen"
+  ],
+  "cases": [
+    {
+      "id": "operation-registration",
+      "source": "register(\"compose.ticketClose\", () => undefined);",
+      "forbiddenCommands": [
+        "compose.ticketClose"
+      ],
+      "forbiddenSymbols": []
+    },
+    {
+      "id": "hidden-operation-lens",
+      "source": "const lens = { command: \"compose.analyze\" };",
+      "forbiddenCommands": [
+        "compose.analyze"
+      ],
+      "forbiddenSymbols": []
+    },
+    {
+      "id": "navigation",
+      "source": "register(\"compose.navigate\", () => undefined);",
+      "forbiddenCommands": [],
+      "forbiddenSymbols": []
+    },
+    {
+      "id": "automatic-operation",
+      "source": "analyzeFile(document);",
+      "forbiddenCommands": [],
+      "forbiddenSymbols": [
+        "analyzeFile"
+      ]
+    }
+  ]
+}

@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
 )
 
 const (
@@ -46,11 +47,17 @@ func purgeOversizedTicketArtifacts(ticketDir string) error {
 	absDir = filepath.Join(absDir, "🗑️generated")
 	info, err = os.Lstat(absDir)
 	if err != nil {
-		if os.IsNotExist(err) { return nil }
+		if os.IsNotExist(err) {
+			return nil
+		}
 		return err
 	}
-	if info.Mode()&fs.ModeSymlink != 0 { return nil }
-	if !info.IsDir() { return fmt.Errorf("generated ticket output is not a directory: %s", absDir) }
+	if info.Mode()&fs.ModeSymlink != 0 {
+		return nil
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("generated ticket output is not a directory: %s", absDir)
+	}
 
 	type fileEntry struct {
 		path string

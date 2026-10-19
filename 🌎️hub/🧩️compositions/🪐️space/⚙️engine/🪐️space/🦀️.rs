@@ -38,7 +38,7 @@ use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation, Clipb
 use semio_hub_space_foundation::presence::{SpacePresence, SpacePresenceMutation};
 use semio_hub_space_foundation::terminology::SStudioLabels;
 use crate::parse_demo_space_document;
-use semio_framework::{DslValue, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
+use semio_framework::{DslValue, ToolExecutionContract, ToolFactoryKey};
 use semio_framework_os::workflow::ConnectPorts;
 use semio_framework_os::{create_os_id, empty_workflow_snapshot, MediaContract, WorkflowEdge, WorkflowMutation, WorkflowSnapshot, S_WORKFLOW_SCHEMA};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};

@@ -98,7 +98,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
             .map_err(|error| error.to_string())
             .and_then(|instance| editor.validator.as_ref().map_err(String::clone).and_then(|validator| validator.validate_json(&time_travel_json(&instance)).map(|_| ()).map_err(|error| error.to_string())));
         let rebuilt = match verdict {
-            Ok(()) => match self.time_travel_run(TimeTravelStoreCommand::Rebuild(candidate.clone())).await? {
+            Ok(()) => match self.time_travel_run(TimeTravelStoreCommand::Rebuild(candidate.clone()),None).await? {
                 TimeTravelStoreOutput::Rebuilt(rebuilt) => rebuilt,
                 _ => Err("a history-edit rebuild answered another command".to_string()),
             },

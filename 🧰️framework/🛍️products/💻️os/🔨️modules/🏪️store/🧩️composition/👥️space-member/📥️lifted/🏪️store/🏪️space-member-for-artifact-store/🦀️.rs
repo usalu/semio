@@ -19,8 +19,8 @@ use super::*;
 //#region 🔖️BlobStore
 impl<P, Mutation> SpaceMember for ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn local_actor_id(&self) -> &ActorId {
         ArtifactStore::local_actor_id(self)
@@ -357,12 +357,30 @@ where
         None
     }
 
-    async fn undo(&mut self, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
-        self.dispatch(ArtifactCommand::Undo, identity).await.map(|_| ())
+    async fn undo(&mut self, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError>  where M:ReferenceSpaceMember {
+
+        let mut candidates = Vec::new();
+        for (document_id, member) in self.members.iter() {
+            if let Some(timestamp) = member.last_local_edit_timestamp().await {
+                candidates.push((timestamp.cmp_key(), document_id.clone()));
+            }
+        }
+        let target = candidates.into_iter().max_by_key(|(cmp_key, _)| *cmp_key).map(|(_, document_id)| document_id);
+        let document_id = target.ok_or(VcsError::NothingToUndo)?;
+        self.members.get_mut(&document_id).ok_or(VcsError::NothingToUndo)?.undo( identity).await
     }
 
-    async fn redo(&mut self, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
-        self.dispatch(ArtifactCommand::Redo, identity).await.map(|_| ())
+    async fn redo(&mut self, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError>  where M:ReferenceSpaceMember {
+
+        let mut candidates = Vec::new();
+        for (document_id, member) in self.members.iter() {
+            if let Some(timestamp) = member.last_undone_local_edit_timestamp().await {
+                candidates.push((timestamp.cmp_key(), document_id.clone()));
+            }
+        }
+        let target = candidates.into_iter().max_by_key(|(cmp_key, _)| *cmp_key).map(|(_, document_id)| document_id);
+        let document_id = target.ok_or(VcsError::NothingToRedo)?;
+        self.members.get_mut(&document_id).ok_or(VcsError::NothingToRedo)?.redo( identity).await
     }
 
     async fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
@@ -416,15 +434,32 @@ where
     }
 
     async fn event_log_payload(&self) -> Result<Vec<u8>, VcsError> {
-        ArtifactStore::event_log_payload(self)
+        Ok(semio_framework_os_spr::encode_envelopes(&self.event_log()?))
     }
 
     async fn announce_tail_edit_payload(&mut self) -> Result<Vec<u8>, VcsError> {
-        ArtifactStore::announce_tail_edit_payload(self)
+        let Some(edit) = self.envelope.vcs.edits.last().filter(|edit| self.envelope.holds_committed_edit(&edit.id)) else { return Ok(Vec::new()) };
+        let document_id = ArtifactId(self.envelope.id.clone());
+        let schema = SchemaId(self.envelope.schema.clone());
+        let op_envelopes = semio_framework_os_spr::mutation_envelope_from_edit::<P, Mutation>(edit, &document_id, &schema).map_err(|error| VcsError::Serialize(error.to_string()))?;
+        for op_envelope in &op_envelopes {
+            match self.dag.seed_applied(op_envelope.mutation_id.clone()) {
+                Ok(()) => {}
+                Err(rejected) if rejected.error == semio_framework_os_spr::MutationDagError::Duplicate => {}
+                Err(rejected) => return Err(VcsError::ValidationFailed(rejected.error.to_string())),
+            }
+        }
+        Ok(semio_framework_os_spr::encode_envelopes(&op_envelopes))
     }
 
-    async fn ingest_remote_payload(&mut self, envelopes: &[u8]) -> Result<(), VcsError> {
-        ArtifactStore::ingest_remote_payload(self, envelopes).await.map(|_| ())
+    async fn ingest_remote_payload(&mut self, envelopes: &[u8]) -> Result<Vec<semio_framework_os_spr::MergeReport>, VcsError>  where P: Clone, Mutation: ColdMutation<P> {
+        let envelopes = semio_framework_os_spr::decode_envelopes( envelopes).map_err(|error|  VcsError::Deserialize(error.to_string())
+    )?;
+        let mut reports = Vec::with_capacity(envelopes.len());
+        for envelope in envelopes {
+            reports.push(self.ingest_remote(envelope).await?);
+        }
+        Ok(reports)
     }
 
     async fn tail_group_id(&self) -> Option<String> {

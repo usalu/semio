@@ -66,6 +66,21 @@ export const elementsSurfaceDeviceIsMobile = (device: ElementsSurfaceDevice): bo
 /** 📱️ Whether a device may drag tabs between dock anchors — false on a phone, where there is nothing to
  * drop into (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`'s `startTabDrag: mobile ? noopDrag : startTabDrag`). */
 export const elementsSurfaceDeviceSupportsTabDrag = (device: ElementsSurfaceDevice): boolean => device !== "mobile";
+
+/** 📱️ A layout a person can pin wherever the window is not a phone. */
+export type ElementsSurfaceLayout = "desktop" | "tablet";
+
+/**
+ * 📱️ The device painted once desktop and tablet are a choice.
+ *
+ * A phone stays a phone: the choice is not offered there. On a wider window an explicit choice wins,
+ * so a desktop-width window can be pinned to tablet (touch targets) and a tablet-width window can be
+ * pinned to desktop. With no choice yet, the measured device stands.
+ */
+export const elementsSurfaceDeviceForLayout = (measured: ElementsSurfaceDevice, layout: ElementsSurfaceLayout | undefined): ElementsSurfaceDevice => {
+  if (measured === "mobile") return "mobile";
+  return layout ?? measured;
+};
 // #endregion 📱️Device
 
 // #region 📐 Available viewport

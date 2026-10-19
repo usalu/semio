@@ -4,12 +4,25 @@ use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, list
 use std::mem::size_of;
 
 fn refusal(reason: &'static str) -> ValueError { ValueError::literal(ValueRefusalKind::InvariantViolated, reason) }
+#[cfg(test)]
+#[path="📋️persistent/🧪️tests/🦀️.rs"]
+mod persistent_tests;
 
 /// 🌲️ Direct native child ordinals preserve original record fields and collection order.
 pub trait ArtifactCanonicalJsonTree: Sync + 'static {
     fn canonical_tree_node(&self) -> Result<Node<'_>, ValueError>;
     fn canonical_tree_child(&self, _ordinal: usize) -> Result<&dyn ArtifactCanonicalJsonTree, ValueError> { Err(refusal("canonical tree scalar has no child")) }
     fn canonical_tree_key(&self, _ordinal: usize) -> Result<ArtifactCanonicalJsonText<'_>, ValueError> { Err(refusal("canonical tree node has no key")) }
+}
+
+impl<T: ArtifactCanonicalJsonTree + Send> ArtifactCanonicalJsonTree for semio_framework_value::retirement::shared::sealed::SealedShared<T> {
+ fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{self.get().canonical_tree_node()}
+ fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{self.get().canonical_tree_child(ordinal)}
+ fn canonical_tree_key(&self,ordinal:usize)->Result<ArtifactCanonicalJsonText<'_>,ValueError>{self.get().canonical_tree_key(ordinal)}
+}
+impl<T: ArtifactCanonicalJsonTree + Send> ArtifactCanonicalJsonTree for semio_framework_value::list::persistent::PersistentList<T> {
+ fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::Array(self.len()))}
+ fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{self.get(ordinal).map(|row|row as&dyn ArtifactCanonicalJsonTree).ok_or_else(||refusal("canonical immutable row ordinal is absent"))}
 }
 
 impl<const N: usize> ArtifactCanonicalJsonTree for PagedUtf8<N> {
@@ -192,6 +205,12 @@ impl<K:AsRef<str>+Ord+Sync+'static,V:ArtifactCanonicalJsonTree> ArtifactCanonica
  fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::Object(self.len()))}
  fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{self.values().nth(ordinal).map(|value|value as&dyn ArtifactCanonicalJsonTree).ok_or_else(||refusal("canonical ordered map ordinal is absent"))}
  fn canonical_tree_key(&self,ordinal:usize)->Result<ArtifactCanonicalJsonText<'_>,ValueError>{self.keys().nth(ordinal).map(|key|ArtifactCanonicalJsonText::from(key.as_ref())).ok_or_else(||refusal("canonical ordered map key is absent"))}
+}
+/// 🗝️ First-party retained dictionaries lend their original ranked key and value without allocating a projection.
+impl<K:AsRef<str>+Ord+Sync+'static,V:ArtifactCanonicalJsonTree> ArtifactCanonicalJsonTree for semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<K,V>{
+ fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::Object(self.len()))}
+ fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{self.get_index(ordinal).map(|(_,value)|value as&dyn ArtifactCanonicalJsonTree).ok_or_else(||refusal("canonical retained map ordinal is absent"))}
+ fn canonical_tree_key(&self,ordinal:usize)->Result<ArtifactCanonicalJsonText<'_>,ValueError>{self.get_index(ordinal).map(|(key,_)|ArtifactCanonicalJsonText::from(key.as_ref())).ok_or_else(||refusal("canonical retained map key is absent"))}
 }
 /// 🗝️ Ordered immutable maps render as JSON objects in their own rank order, matching their `ToValue` wire; ordinal access is one bounded ranked visit.
 impl<V:ArtifactCanonicalJsonTree+Send> ArtifactCanonicalJsonTree for semio_framework_value::ordered::OrderedMap<V> {

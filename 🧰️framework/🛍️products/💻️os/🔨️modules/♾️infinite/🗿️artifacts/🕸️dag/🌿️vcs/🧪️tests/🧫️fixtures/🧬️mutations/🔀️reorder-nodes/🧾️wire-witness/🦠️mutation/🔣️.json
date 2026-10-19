@@ -1,8 +1,13 @@
 {
   "operation": "reorderNodes",
-  "order": [
-    "c",
-    "a",
-    "b"
+  "moves": [
+    {
+      "id": "c",
+      "to": 0
+    },
+    {
+      "id": "a",
+      "to": 2
+    }
   ]
 }

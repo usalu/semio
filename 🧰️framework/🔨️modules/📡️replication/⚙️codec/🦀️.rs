@@ -412,6 +412,9 @@ pub struct DeflateCodec;
 /// 📏️ Exact inline streaming measurement of the first-party fixed-Huffman producer.
 #[cfg(feature="deflate")]
 pub use semio_framework_deflate::DeflateMeasure;
+/// 🧵️ Retains original compressed output and matching-window page ownership across funded turns.
+#[cfg(feature="deflate")]
+pub use semio_framework_deflate::{RetainedDeflateEncoder, RetainedDeflatePhase, RetainedDeflateProgress};
 
 pub fn deflate_compress(raw: &[u8]) -> Result<Vec<u8>, PackRefusal> {
     #[cfg(feature = "deflate")]

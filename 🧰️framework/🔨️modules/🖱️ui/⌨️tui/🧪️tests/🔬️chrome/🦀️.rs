@@ -7,6 +7,282 @@ use semio_framework_ui_tui_core::theme::{Role, Theme};
 use semio_framework_ui_tui_core::signal::WidgetSignal;
 use ui_styling::appearance::AppearanceName;
 
+#[test]
+fn chrome_emphasis_fixture_matches_independent_raster_outline_oracle() {
+    use crate::tui::chrome::{WindowHit, WindowStackTabState};
+    use crate::tui::layout::WindowStackCorner;
+    use crate::tui::theme::Surface;
+    use semio_framework_pack_json::{parse, JsonMemberPolicy};
+    use tiny_skia::{Paint, Pixmap, Transform};
+    let fixture = parse(include_str!("../../🧫️fixtures/🖼️chrome-emphasis/🔣️.json"), JsonMemberPolicy::Reject).unwrap();
+    let feature = include_str!("../🖼️chrome-emphasis/🥒️.feature");
+    assert!(feature.starts_with("@capability-tui-chrome-emphasis"));
+    let size = fixture.get("size").unwrap().as_array().unwrap();
+    let (width, height) = (size[0].as_u64().unwrap() as u16, size[1].as_u64().unwrap() as u16);
+    let theme = Theme::new(AppearanceName::Dark);
+    for corner in [WindowStackCorner::TopLeft, WindowStackCorner::TopRight, WindowStackCorner::BottomLeft, WindowStackCorner::BottomRight] {
+        for focused in [false, true] {
+            for case in fixture.get("cases").unwrap().as_array().unwrap() {
+                let active = case.get("active").unwrap().as_u64().unwrap() as usize;
+                let labels = fixture.get("labels").unwrap().as_array().unwrap();
+                let mut state = WindowState::new("host").with_stack_tab_states(labels.iter().map(|label| WindowStackTabState::new(label.as_str().unwrap(), corner)).collect(), active);
+                state.focused = focused;
+                state.hover = case.get("hover").unwrap().as_u64().map(|index| WindowHit::Tab(index as usize));
+                let rect = Rect::new(0, 0, width, height);
+                let layout = window_chip_layout(&state, rect);
+                let mut buf = CellBuffer::new(Size { width, height }, Cell::blank([0, 0, 0], theme.surface(Surface::Base)));
+                ChromeState::Window(Box::new(state)).paint(&theme, rect, &mut buf);
+                let mut oracle = Pixmap::new(width as u32, height as u32).unwrap();
+                for tab in layout.groups.iter().flat_map(|group| &group.tabs).filter(|tab| tab.kind == TabKind::Tab) {
+                    let role = match case.get("roles").unwrap().as_array().unwrap()[tab.index].as_str().unwrap() {
+                        "active" => Role::ActiveBase,
+                        "emphasized" => Role::BorderEmphasized,
+                        "normal" => Role::BorderNormal,
+                        _ => unreachable!(),
+                    };
+                    let rgb = theme.role(role);
+                    let mut ink = Paint::default();
+                    ink.set_color_rgba8(rgb[0], rgb[1], rgb[2], 255);
+                    ink.anti_alias = false;
+                    let outer_y = if corner.is_top() { 0 } else { height - 1 };
+                    let text_y = if corner.is_top() { 1 } else { height - 2 };
+                    let seam_y = if corner.is_top() { 2 } else { height - 3 };
+                    for (x, y, w, h) in [(tab.x, outer_y, tab.interior_width + 2, 1), (tab.x, text_y, 1, 1), (tab.x + tab.interior_width + 1, text_y, 1, 1)] {
+                        oracle.fill_rect(tiny_skia::Rect::from_xywh(x as f32, y as f32, w as f32, h as f32).unwrap(), &ink, Transform::identity(), None);
+                    }
+                    let body_rgb = theme.role(if focused { Role::ActiveBase } else { Role::BorderNormal });
+                    let seam_rgb = if tab.index == active { rgb } else { body_rgb };
+                    ink.set_color_rgba8(seam_rgb[0], seam_rgb[1], seam_rgb[2], 255);
+                    for x in [tab.x, tab.x + tab.interior_width + 1] {
+                        oracle.fill_rect(tiny_skia::Rect::from_xywh(x as f32, seam_y as f32, 1.0, 1.0).unwrap(), &ink, Transform::identity(), None);
+                    }
+                    for x in tab.x + 1..tab.x + tab.interior_width + 1 {
+                        let hovered = case.get("hover").unwrap().as_u64() == Some(tab.index as u64);
+                        let bg = if hovered && tab.index != active { theme.role(Role::HoverInteractive) } else { theme.surface(Surface::Window) };
+                        let fg = if hovered || tab.index == active { Role::Foreground } else { Role::MutedForeground };
+                        assert_eq!(buf.get(x, text_y).unwrap().bg, bg);
+                        assert_eq!(buf.get(x, text_y).unwrap().fg, theme.role(fg));
+                        assert_eq!(buf.get(x, seam_y).unwrap().ch, if tab.index == active { ' ' } else if focused { '━' } else { '─' });
+                        if tab.index != active { assert_eq!(buf.get(x, seam_y).unwrap().fg, body_rgb); }
+                    }
+                }
+                for (index, pixel) in oracle.pixels().iter().enumerate().filter(|(_, pixel)| pixel.alpha() > 0) {
+                    assert_eq!(buf.get((index % width as usize) as u16, (index / width as usize) as u16).unwrap().fg, [pixel.red(), pixel.green(), pixel.blue()], "corner {corner:?}, focused {focused}, case {case:?}, pixel {index}");
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn chrome_ancestor_emphasis_follows_descendants_and_clears_stale_lineages() {
+    use crate::tui::chrome::shell;
+    use crate::tui::engine::Tui;
+    use crate::tui::event::{Event, MouseEvent, MouseKind};
+    use crate::tui::layout::{create_default_layout, Constraint, Dimension};
+    use crate::tui::scene::{Node, NodeContent};
+    use crate::tui::widget::{TabsState, WidgetState};
+    let theme = Theme::new(AppearanceName::Dark);
+    let mut tui = Tui::new(Size { width: 80, height: 24 }, theme);
+    let layout = create_default_layout(&["window".into()], "row", None, None);
+    let mut built = shell(&mut tui.scene, NavbarState { left: vec![], center: vec![], right: vec![] }, FooterState { hints: vec![], status: String::new() }, &layout);
+    let window = built.windows[0].1;
+    let mut children = Vec::new();
+    for parent in [window, window, built.navbar, built.footer] {
+        let child = tui.scene.add(parent, Node::new(NodeContent::Widget(WidgetState::Tabs(TabsState::new(vec!["a".into(), "b".into()], 0)))));
+        tui.scene.node_mut(child).set_constraint(Constraint { width: Dimension::Cells(8), height: Dimension::Cells(1), ..Default::default() });
+        children.push(child);
+    }
+    built.remount(&mut tui.scene, &layout);
+    tui.render_full();
+    let move_to = |pos| Event::Mouse(MouseEvent { kind: MouseKind::Move, pos, mods: 0, clicks: 1 });
+    let border = |tui: &Tui, parent| {
+        let rect = tui.scene.rect(parent);
+        if parent == window { Pos { x: rect.x, y: rect.y + rect.height - 2 } }
+        else if parent == built.navbar { Pos { x: rect.x + rect.width - 1, y: rect.y + rect.height - 1 } }
+        else { Pos { x: rect.x + rect.width - 1, y: rect.y } }
+    };
+    tui.capture(Some(children[3]));
+    let child_rect = tui.scene.rect(children[0]);
+    tui.dispatch(&move_to(Pos { x: child_rect.x + 1, y: child_rect.y }));
+    assert_eq!(tui.hovered(), Some(children[0]));
+    tui.capture(None);
+    for (index, parent) in [window, window, built.navbar, built.footer].into_iter().enumerate() {
+        let child_rect = tui.scene.rect(children[index]);
+        tui.dispatch(&move_to(Pos { x: child_rect.x + 1, y: child_rect.y }));
+        assert_eq!(tui.hovered(), Some(children[index]));
+        tui.render();
+        for chrome in [window, built.navbar, built.footer] {
+            let at = border(&tui, chrome);
+            let role = if chrome == parent { Role::BorderEmphasized } else { Role::BorderNormal };
+            assert_eq!(tui.frame().get(at.x, at.y).unwrap().fg, tui.theme.role(role));
+        }
+        assert!(tui.render().0.is_empty());
+    }
+    let rect = tui.scene.rect(window);
+    tui.dispatch(&move_to(Pos { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 }));
+    tui.render();
+    let at = border(&tui, window);
+    assert_eq!(tui.frame().get(at.x, at.y).unwrap().fg, tui.theme.role(Role::BorderEmphasized));
+    tui.dispatch(&Event::FocusLost);
+    tui.render();
+    assert_eq!(tui.frame().get(at.x, at.y).unwrap().fg, tui.theme.role(Role::BorderNormal));
+    tui.dispatch(&Event::FocusGained);
+    let child_rect = tui.scene.rect(children[0]);
+    tui.dispatch(&move_to(Pos { x: child_rect.x + 1, y: child_rect.y }));
+    tui.render();
+    tui.scene.reparent(children[0], built.navbar);
+    tui.render();
+    assert_eq!(tui.frame().get(at.x, at.y).unwrap().fg, tui.theme.role(Role::BorderEmphasized));
+    assert_ne!(tui.hovered(), Some(children[0]));
+    let child_rect = tui.scene.rect(children[1]);
+    tui.dispatch(&move_to(Pos { x: child_rect.x + 1, y: child_rect.y }));
+    tui.render();
+    tui.scene.remove(children[1]);
+    tui.render();
+    assert_eq!(tui.frame().get(at.x, at.y).unwrap().fg, tui.theme.role(Role::BorderEmphasized));
+    assert_ne!(tui.hovered(), Some(children[1]));
+    tui.dispatch(&move_to(Pos { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 }));
+    tui.render();
+    let overlay = tui.open_menu(Pos { x: rect.x + 4, y: rect.y + 4 }, vec![]);
+    tui.render();
+    assert_eq!(tui.frame().get(at.x, at.y).unwrap().fg, tui.theme.role(Role::BorderNormal));
+    tui.close_overlay(overlay);
+    tui.render();
+    assert_eq!(tui.frame().get(at.x, at.y).unwrap().fg, tui.theme.role(Role::BorderNormal));
+    tui.dispatch(&move_to(Pos { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 }));
+    tui.render();
+    tui.scene.node_mut(window).set_visible(false);
+    tui.render();
+    assert_ne!(tui.hovered(), Some(window));
+}
+
+#[test]
+fn chrome_compact_active_tab_owns_both_shared_border_cells() {
+    for active in [0, 1, 2] {
+        let mut state = WindowState::new("host").with_stack_tabs(vec!["first".into(), "second".into(), "third".into()], active);
+        state.compact = true;
+        let rect = Rect::new(0, 0, 64, 8);
+        let layout = window_chip_layout(&state, rect);
+        let (buf, _) = paint(state, 64, 8);
+        let theme = Theme::new(AppearanceName::Dark);
+        let tab = layout.groups[0].tabs.iter().find(|tab| tab.index == active).unwrap();
+        for x in [tab.x, tab.x + tab.interior_width + 1] {
+            assert_eq!(buf.get(x, 0).unwrap().fg, theme.role(Role::ActiveBase));
+        }
+        let inactive = layout.groups[0].tabs.iter().find(|tab| tab.index != active).unwrap();
+        let inactive_only = if inactive.x == tab.x + tab.interior_width + 1 { inactive.x + inactive.interior_width + 1 } else { inactive.x };
+        assert_eq!(buf.get(inactive_only, 0).unwrap().fg, theme.role(Role::BorderNormal));
+        assert_eq!(buf.get(tab.x + 2, 0).unwrap().bg, theme.surface(crate::tui::theme::Surface::Window));
+    }
+}
+
+#[test]
+fn chrome_compact_hovered_inactive_tab_owns_non_active_shared_border_cells() {
+    use crate::tui::chrome::WindowHit;
+    let theme = Theme::new(AppearanceName::Dark);
+    for active in [0, 1, 2] {
+        for hovered in [0, 1, 2] {
+            if hovered == active { continue; }
+            let mut state = WindowState::new("host").with_stack_tabs(vec!["first".into(), "second".into(), "third".into()], active);
+            state.compact = true;
+            state.hover = Some(WindowHit::Tab(hovered));
+            let rect = Rect::new(0, 0, 64, 8);
+            let layout = window_chip_layout(&state, rect);
+            let (buf, _) = paint(state, 64, 8);
+            let tabs = &layout.groups[0].tabs;
+            let active_tab = tabs.iter().find(|tab| tab.index == active).unwrap();
+            let hovered_tab = tabs.iter().find(|tab| tab.index == hovered).unwrap();
+            let active_ends = [active_tab.x, active_tab.x + active_tab.interior_width + 1];
+            for x in [hovered_tab.x, hovered_tab.x + hovered_tab.interior_width + 1] {
+                let role = if active_ends.contains(&x) { Role::ActiveBase } else { Role::BorderEmphasized };
+                assert_eq!(buf.get(x, 0).unwrap().fg, theme.role(role), "active {active}, hovered {hovered}, column {x}");
+            }
+        }
+    }
+}
+
+#[test]
+fn chrome_narrow_overflow_chips_keep_independent_border_roles() {
+    use crate::tui::chrome::WindowHit;
+    for width in [4, 18, 30, 44] {
+        for active in [0, 5, 11] {
+            let mut state = many(12);
+            state.focused = true;
+            state.active_stack_tab = active;
+            let rect = Rect::new(0, 0, width, 12);
+            let layout = window_chip_layout(&state, rect);
+            let chips: Vec<_> = layout.groups.iter().flat_map(|group| &group.tabs).collect();
+            let hovered = chips.iter().find(|tab| matches!(tab.kind, TabKind::OverflowPrev(_) | TabKind::OverflowNext(_))).map(|tab| tab.x);
+            state.hover = chips.iter().find(|tab| Some(tab.x) == hovered).and_then(|tab| match tab.kind {
+                TabKind::OverflowPrev(index) => Some(WindowHit::OverflowPrev(index)),
+                TabKind::OverflowNext(index) => Some(WindowHit::OverflowNext(index)),
+                _ => None,
+            });
+            let (buf, _) = paint(state, width, 12);
+            let theme = Theme::new(AppearanceName::Dark);
+            if layout.mode == ChromeMode::Flat {
+                assert_eq!(width, 4);
+                assert!(chips.is_empty());
+                assert_eq!(row(&buf, 0), "┏━━┓");
+                for x in 0..width {
+                    assert_eq!(buf.get(x, 0).unwrap().fg, theme.role(Role::ActiveBase));
+                }
+                continue;
+            }
+            assert_eq!(layout.mode, ChromeMode::Full);
+            assert!(!chips.is_empty());
+            let overflow_width: u16 = chips.iter().filter(|tab| matches!(tab.kind, TabKind::OverflowPrev(_) | TabKind::OverflowNext(_))).map(|tab| tab.interior_width + 2).sum();
+            let tab_fits = width.saturating_sub(overflow_width) >= 7;
+            assert_eq!(chips.iter().any(|tab| tab.kind == TabKind::Tab && tab.index == active), tab_fits, "active {active}, width {width}, overflow {overflow_width}");
+            if !tab_fits {
+                assert!(chips.iter().all(|tab| matches!(tab.kind, TabKind::OverflowPrev(_) | TabKind::OverflowNext(_))));
+            }
+            for tab in chips {
+                let role = if tab.kind == TabKind::Tab && tab.index == active { Role::ActiveBase }
+                    else if Some(tab.x) == hovered { Role::BorderEmphasized }
+                    else { Role::BorderNormal };
+                assert_eq!(buf.get(tab.x, 0).unwrap().fg, theme.role(role));
+                assert_eq!(buf.get(tab.x + tab.interior_width + 1, 0).unwrap().fg, theme.role(role));
+            }
+        }
+    }
+}
+
+#[test]
+fn chrome_close_and_maximize_hover_keep_active_perimeter_and_emphasize_inactive_tabs() {
+    use crate::tui::chrome::WindowHit;
+    for focused in [false, true] {
+        for active in [0, 1] {
+            let mut state = WindowState::new("host").with_stack_tabs(vec!["first".into(), "second".into()], active);
+            state.focused = focused;
+            state.peers = 2;
+            let rect = Rect::new(0, 0, 64, 12);
+            let layout = window_chip_layout(&state, rect);
+            let tabs: Vec<_> = layout.groups.iter().flat_map(|group| &group.tabs).filter(|tab| tab.kind == TabKind::Tab).collect();
+            let mut chrome = ChromeState::Window(Box::new(state));
+            let theme = Theme::new(AppearanceName::Dark);
+            for tab in &tabs {
+                for (x, hit) in [(tab.close_x.unwrap(), WindowHit::Close(tab.index)), (tab.maximize_x.unwrap(), WindowHit::Maximize(tab.index))] {
+                    let pos = Pos { x, y: 1 };
+                    assert_eq!(chrome.window_target(rect, pos), Some(hit));
+                    chrome.set_hover(rect, Some(pos));
+                    let mut buf = CellBuffer::new(Size { width: 64, height: 12 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+                    chrome.paint_emphasized(&theme, rect, &mut buf, true);
+                    for candidate in &tabs {
+                        let role = if candidate.index == active { Role::ActiveBase } else { Role::BorderEmphasized };
+                        for (x, y) in [(candidate.x, 0), (candidate.x, 1), (candidate.x, 2), (candidate.x + candidate.interior_width + 1, 2)] {
+                            assert_eq!(buf.get(x, y).unwrap().fg, theme.role(role));
+                        }
+                    }
+                    assert_eq!(buf.get(0, 11).unwrap().fg, theme.role(Role::BorderEmphasized));
+                    assert_eq!(buf.get(0, 11).unwrap().ch, if focused { '┗' } else { '└' });
+                }
+            }
+        }
+    }
+}
+
 fn paint(state: WindowState, width: u16, height: u16) -> (CellBuffer, ChromeState) {
     let theme = Theme::new(AppearanceName::Dark);
     let mut buf = CellBuffer::new(Size { width, height }, Cell::blank([0, 0, 0], [0, 0, 0]));
@@ -85,7 +361,8 @@ fn hit_testing_follows_the_painted_chips_cell_for_cell() {
             assert!(matches!(target, Some(WidgetSignal::WindowClose(_))), "close glyph at {x} must hit a close control");
         }
         if glyph == '\u{2922}' {
-            assert_eq!(target, Some(WidgetSignal::WindowMaximize(2)));
+            let tab = layout.groups.iter().flat_map(|group| &group.tabs).find(|tab| tab.maximize_x == Some(x)).unwrap();
+            assert_eq!(target, Some(WidgetSignal::WindowMaximize(tab.index)));
         }
         if glyph == '+' {
             assert_eq!(target, Some(WidgetSignal::WindowNewTab(2)));
@@ -162,7 +439,7 @@ fn short_terminals_get_one_row_chrome_with_the_tabs_on_the_border() {
     assert_eq!(row(&buf, 5).chars().next(), Some('\u{2514}'), "no bottom chrome");
     let active = top.find("tasks").unwrap();
     let theme = Theme::new(AppearanceName::Dark);
-    assert_eq!(buf.get(top[..active].chars().count() as u16, 0).unwrap().bg, theme.role(Role::ActiveBase));
+    assert_eq!(buf.get(top[..active].chars().count() as u16, 0).unwrap().bg, theme.surface(crate::tui::theme::Surface::Window));
     let dev_x = top.find("dev").unwrap() as u16;
     assert!(matches!(window.window_hit(Rect::new(0, 0, 50, 6), Pos { x: dev_x, y: 0 }), Some(WidgetSignal::WindowTabActivated(0))));
     let close = top.chars().position(|c| c == '\u{2715}').unwrap() as u16;

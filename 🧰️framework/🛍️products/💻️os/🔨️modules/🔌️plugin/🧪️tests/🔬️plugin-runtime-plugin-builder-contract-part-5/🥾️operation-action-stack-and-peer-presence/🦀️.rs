@@ -19,9 +19,9 @@
         assert_eq!(result.mutations[0].inverse.inverse_diff.payload, protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestMutation::SetCount(SetCount { value: 0 })).unwrap()]));
         assert_eq!(result.inverse_group.mutations.len(), 1);
         assert_eq!(app.stores.test_snapshot().await.count, 1);
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -57,9 +57,9 @@
         assert_eq!(decoded.domains.len(), 1);
         assert_eq!(decoded.domains[0].domain, "items");
         assert_eq!(decoded.domains[0].selected, vec!["item-1".to_string()]);
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -100,7 +100,7 @@
                     reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
                     artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy,cx).expect("original contract fixture paid terminal close");
                 });
-            
+
                 let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original worker fixture paid terminal retirement");
             })
             .expect("bounded-stack worker")
@@ -162,7 +162,7 @@
         }
         assert!(app.roster.presence_peer_retirements.is_empty(), "displaced app-typed peer reaches its domain-owned terminal witness");
         drain_and_close_fixture(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -252,6 +252,6 @@
         assert!(stale.peer_presence.is_empty(), "stale roster never changes the live peer root");
         assert_eq!(stale.presence_store.peers_root().len(), 0, "stale roster never changes the typed peer root");
         drain_and_close_fixture(&mut stale, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }

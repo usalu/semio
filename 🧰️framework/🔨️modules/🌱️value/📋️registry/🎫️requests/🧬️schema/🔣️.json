@@ -1,0 +1,159 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/value/request-owners/schema.json",
+  "title": "Fixed Request Owner Admission",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scope",
+    "consumer",
+    "request"
+  ],
+  "properties": {
+    "scope": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "consumer": {
+      "type": "string",
+      "minLength": 1
+    },
+    "request": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "$defs": {
+    "sourceVersion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baseRevision",
+        "generation",
+        "canonicalRevision"
+      ],
+      "properties": {
+        "baseRevision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "canonicalRevision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "terminalReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "job",
+        "kind"
+      ],
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/sourceVersion"
+        },
+        "job": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "kind": {
+          "enum": [
+            "validated",
+            "faulted",
+            "cancelled"
+          ]
+        }
+      }
+    },
+    "textDemand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "candidateVersion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "consumerGeneration",
+        "consumerRevision"
+      ],
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/sourceVersion"
+        },
+        "consumerGeneration": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "consumerRevision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "closeCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "sourceBytes",
+        "copiedBytes"
+      ],
+      "properties": {
+        "name": {
+          "enum": [
+            "empty-partial",
+            "copied-partial",
+            "complete"
+          ]
+        },
+        "sourceBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "copiedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        }
+      }
+    }
+  }
+}

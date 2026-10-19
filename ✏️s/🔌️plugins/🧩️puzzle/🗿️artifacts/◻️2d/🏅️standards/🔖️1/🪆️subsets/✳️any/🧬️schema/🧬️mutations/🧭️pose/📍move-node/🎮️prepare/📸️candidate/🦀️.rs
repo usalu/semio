@@ -2,8 +2,13 @@
 
 use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dCloseAxis;
 use super::{Puzzle2dMoveNodeDisposition, Puzzle2dMoveNodePlan, Puzzle2dMoveNodePreparationCursor, Puzzle2dMoveNodePreparationStep};
-use crate::standards::v1::subsets::any::schema::mutations::{MoveNode};
+use crate::standards::v1::subsets::any::schema::mutations::MoveNode;
 use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
+
+
+
+
+
 use semio_framework_value::{ValueError, ValueRefusalKind, retirement::controlled::ControlledRetirement, retained_clone::{RetainedClone, RetainedCloneBinding, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep}};
 use std::{mem::{ManuallyDrop, size_of}, ops::{Deref, DerefMut}};
 
@@ -32,7 +37,7 @@ impl Default for Puzzle2dMoveNodeCandidateCursor {
 }
 
 impl Puzzle2dMoveNodeCandidateCursor {
-    pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, mutation: RetainedCloneRef<'_, MoveNode>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, mutation: RetainedCloneRef<'_, MoveNode>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.closing || self.phase == 9 { return Err(refusal("move candidate is closing or spent")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(RetainedCloneStep::Progress(progress))}
@@ -49,7 +54,7 @@ impl Puzzle2dMoveNodeCandidateCursor {
                 Ok(close_progress(step))
             }
             2 => {
-                let step = self.snapshot_clone.advance(source, grant)?;
+                let step = self.snapshot_clone.advance(source,body, grant)?;
                 if matches!(step, RetainedCloneStep::Complete(_)) { self.phase = 3; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }

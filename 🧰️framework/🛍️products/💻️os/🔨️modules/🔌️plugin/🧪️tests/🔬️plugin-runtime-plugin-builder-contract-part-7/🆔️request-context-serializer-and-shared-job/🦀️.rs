@@ -163,3 +163,25 @@
     async fn retained_latest_wins_real_document_publication_cancellation_and_delayed_ack_close() {
         test_retained_document_cancellation::<TestApp<false, TEST_APP_TOOLS_FACTORIES>>(store::mutation_apply_preparation_factory::<TestSnapshot, TestMutation>(), || TestMutation::SetCount(SetCount { value: 42 }), |snapshot| snapshot.count).await;
     }
+
+    #[test]
+
+    fn retained_rejected_completion_closes_original_artifact_and_ephemeral_owners(){
+
+        crate::retained_command::test_rejected_completion_close::<TestApp>(|row|{
+
+            let mut emit=Emit::default();
+
+            let mut ephemeral=EphemeralEmit::default();
+
+            for revision in 0..row["artifactMutations"].as_u64().unwrap(){emit.artifact_mutations.push(TestMutation::SetCount(SetCount{value:revision as _}));}
+
+            for revision in 0..row["presenceMutations"].as_u64().unwrap(){ephemeral.presence.push(ChangePublicationPresence{revision}.into());}
+
+            for revision in 0..row["transientMutations"].as_u64().unwrap(){ephemeral.transient.push(ChangePublicationTransient{revision}.into());}
+
+            (emit,ephemeral)
+
+        });
+
+    }

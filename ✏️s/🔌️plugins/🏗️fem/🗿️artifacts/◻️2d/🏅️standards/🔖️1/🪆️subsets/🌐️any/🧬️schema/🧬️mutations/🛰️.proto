@@ -1,25 +1,241 @@
 syntax = "proto3";
 package semio.s.fem.fem2d.mutation;
 
-// 🧬️ Fem2d mutation schema
+import "../📸️snapshot/🛰️.proto";
+import "../🔺️diff/🛰️.proto";
+
+// 🧬️ The oneof preserves the selected semantic mutation.
 message Fem2dMutation {
-  // @state artifact
-  repeated FemNode nodes = 1;
-  // @state artifact
-  repeated FemElement elements = 2;
-  // @state artifact
-  repeated FemRegion regions = 3;
-  // @state artifact
-  repeated FemMaterial materials = 4;
-  // @state artifact
-  repeated FemSection sections = 5;
-  // @state artifact
-  repeated FemSupport supports = 6;
-  // @state artifact
-  repeated FemLoadCase load_cases = 7;
-  // @state artifact
-  repeated FemCombination combinations = 8;
-  // @state artifact
-  FemAnalysisSettings analysis = 9;
+  oneof mutation {
+    Fem2dCreateNode create_node = 1;
+    Fem2dDeleteNode delete_node = 2;
+    Fem2dCreateElement create_element = 3;
+    Fem2dDeleteElement delete_element = 4;
+    Fem2dReplaceElement replace_element = 5;
+    Fem2dCreateMaterial create_material = 6;
+    Fem2dDeleteMaterial delete_material = 7;
+    Fem2dReplaceMaterial replace_material = 8;
+    Fem2dChangeMaterial change_material = 9;
+    Fem2dCreateSection create_section = 10;
+    Fem2dDeleteSection delete_section = 11;
+    Fem2dReplaceSection replace_section = 12;
+    Fem2dCreateSupport create_support = 13;
+    Fem2dDeleteSupport delete_support = 14;
+    Fem2dReplaceSupport replace_support = 15;
+    Fem2dCreateRegion create_region = 16;
+    Fem2dDeleteRegion delete_region = 17;
+    Fem2dReplaceRegion replace_region = 18;
+    Fem2dCreateLoadCase create_load_case = 19;
+    Fem2dDeleteLoadCase delete_load_case = 20;
+    Fem2dAddLoad add_load = 21;
+    Fem2dRemoveLoad remove_load = 22;
+    Fem2dChangeLoadCaseSelfWeight change_load_case_self_weight = 23;
+    Fem2dCreateCombination create_combination = 24;
+    Fem2dDeleteCombination delete_combination = 25;
+    Fem2dUpdateAnalysisSettings update_analysis_settings = 26;
+    Fem2dReplaceNode replace_node = 27;
+    Fem2dReplaceLoad replace_load = 28;
+    Fem2dChangeLoadCaseName change_load_case_name = 29;
+    Fem2dReplaceCombination replace_combination = 30;
+    Fem2dMoveSelection move_selection = 31;
+    Fem2dChangeSection change_section = 33;
+    Fem2dChangeNode change_node = 32;
+    Fem2dChangeElement change_element = 36;
+    Fem2dChangeLoad change_load = 37;
+    Fem2dChangeCombinationName change_combination_name = 38;
+    Fem2dChangeCombinationTerm change_combination_term = 39;
+    Fem2dChangeSupport change_support = 35;
+    Fem2dChangeRegion change_region = 34;
+  }
 }
 
+message Binary64 {
+  fixed64 bits = 1;
+}
+
+message Fem2dCreateNode {
+  semio.s.fem.fem2d.snapshot.FemNode node = 1;
+  optional uint32 index = 2;
+}
+
+message Fem2dDeleteNode {
+  string id = 1;
+}
+
+message Fem2dCreateElement {
+  semio.s.fem.fem2d.snapshot.FemElement element = 1;
+  optional uint32 index = 2;
+}
+
+message Fem2dDeleteElement {
+  string id = 1;
+}
+
+message Fem2dReplaceElement {
+  string id = 1;
+  semio.s.fem.fem2d.snapshot.FemElement new_element = 2;
+}
+
+message Fem2dCreateMaterial {
+  semio.s.fem.fem2d.snapshot.FemMaterial material = 1;
+  optional uint32 index = 2;
+}
+
+message Fem2dDeleteMaterial {
+  string id = 1;
+}
+
+message Fem2dReplaceMaterial {
+  string id = 1;
+  semio.s.fem.fem2d.snapshot.FemMaterial new_material = 2;
+}
+
+message Fem2dChangeMaterial {
+  string id = 1;
+  semio.s.fem.fem2d.diff.Fem2dMaterialPatch patch = 2;
+}
+
+message Fem2dCreateSection {
+  semio.s.fem.fem2d.snapshot.FemSection section = 1;
+  optional uint32 index = 2;
+}
+
+message Fem2dDeleteSection {
+  string id = 1;
+}
+
+message Fem2dReplaceSection {
+  string id = 1;
+  semio.s.fem.fem2d.snapshot.FemSection new_section = 2;
+}
+
+message Fem2dCreateSupport {
+  semio.s.fem.fem2d.snapshot.FemSupport support = 1;
+  optional uint32 index = 2;
+}
+
+message Fem2dDeleteSupport {
+  string id = 1;
+}
+
+message Fem2dReplaceSupport {
+  string id = 1;
+  semio.s.fem.fem2d.snapshot.FemSupport new_support = 2;
+}
+
+message Fem2dCreateRegion {
+  semio.s.fem.fem2d.snapshot.FemRegion region = 1;
+  optional uint32 index = 2;
+}
+
+message Fem2dDeleteRegion {
+  string id = 1;
+}
+
+message Fem2dReplaceRegion {
+  string id = 1;
+  semio.s.fem.fem2d.snapshot.FemRegion new_region = 2;
+}
+
+message Fem2dCreateLoadCase {
+  semio.s.fem.fem2d.snapshot.FemLoadCase load_case = 1;
+  optional uint32 index = 2;
+}
+
+message Fem2dDeleteLoadCase {
+  string id = 1;
+}
+
+message Fem2dAddLoad {
+  string case_id = 1;
+  semio.s.fem.fem2d.snapshot.FemLoad load = 2;
+  optional uint32 index = 3;
+}
+
+message Fem2dRemoveLoad {
+  string case_id = 1;
+  string load_id = 2;
+}
+
+message Fem2dChangeLoadCaseSelfWeight {
+  string case_id = 1;
+  bool new_self_weight = 2;
+}
+
+message Fem2dCreateCombination {
+  semio.s.fem.fem2d.snapshot.FemCombination combination = 1;
+  optional uint32 index = 2;
+}
+
+message Fem2dDeleteCombination {
+  string id = 1;
+}
+
+message Fem2dUpdateAnalysisSettings {
+  semio.s.fem.fem2d.snapshot.FemAnalysisSettings settings = 1;
+}
+
+message Fem2dReplaceNode {
+  string id = 1;
+  semio.s.fem.fem2d.snapshot.FemNode new_node = 2;
+}
+
+message Fem2dReplaceLoad {
+  string case_id = 1;
+  string load_id = 2;
+  semio.s.fem.fem2d.snapshot.FemLoad new_load = 3;
+}
+
+message Fem2dChangeLoadCaseName {
+  string case_id = 1;
+  string new_name = 2;
+}
+
+message Fem2dReplaceCombination {
+  string id = 1;
+  semio.s.fem.fem2d.snapshot.FemCombination new_combination = 2;
+}
+
+message Fem2dMoveSelection {
+  repeated string node_ids = 1;
+  repeated string region_ids = 2;
+  Binary64 pivot_x = 3;
+  Binary64 pivot_y = 4;
+  Binary64 dx = 5;
+  Binary64 dy = 6;
+  Binary64 angle = 7;
+  Binary64 sx = 8;
+  Binary64 sy = 9;
+}
+
+
+message Fem2dChangeNode {
+  string id = 1;
+  semio.s.fem.fem2d.diff.Fem2dNodePatch patch = 2;
+}
+
+message Fem2dChangeSection {
+  string id = 1;
+  semio.s.fem.fem2d.diff.Fem2dSectionPatch patch = 2;
+}
+
+message Fem2dChangeRegion {
+  string id = 1;
+  semio.s.fem.fem2d.diff.Fem2dRegionPatch patch = 2;
+}
+
+message Fem2dChangeSupport {
+  string id = 1;
+  semio.s.fem.fem2d.diff.Fem2dSupportPatch patch = 2;
+}
+
+message Fem2dChangeElement {
+  string id = 1;
+  semio.s.fem.fem2d.diff.Fem2dElementPatch patch = 2;
+}
+
+message Fem2dChangeLoad { string case_id = 1; string id = 2; semio.s.fem.fem2d.diff.Fem2dLoadPatch patch = 3; }
+message Fem2dChangeCombinationName { string id = 1; string name = 2; }
+message Fem2dRemoveCombinationTerm {}
+message Fem2dCombinationFactor { oneof presence { Binary64 value = 1; Fem2dRemoveCombinationTerm null = 2; } }
+message Fem2dChangeCombinationTerm { string id = 1; string case_id = 2; Fem2dCombinationFactor factor = 3; optional uint64 index = 4; }

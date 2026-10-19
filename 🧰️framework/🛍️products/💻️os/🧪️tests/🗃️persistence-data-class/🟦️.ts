@@ -24,6 +24,20 @@ const schema = JSON.parse(
 );
 
 describe("persistence data class routing", () => {
+  it("classifies every durable binding independently of peer order", () => {
+    const ajv = semioSchemaAjvV1({ strict: false });
+    const shared = ajv.compile({ type: "array", contains: { type: "object", required: ["dataClass"], properties: { dataClass: { const: "persistedShared" } } } });
+    const durable = ajv.compile({ type: "array", contains: { type: "object", required: ["dataClass"], properties: { dataClass: { const: "persistedLocalOnly" } } } });
+    const ephemeral = ajv.compile({ type: "array", contains: { type: "object", required: ["dataClass"], properties: { dataClass: { const: "ephemeralShared" } } } });
+    for (const row of [...fixture.bindingSets, ...fixture.ephemeralBindingSets]) {
+      const bindings = row.members.map((id: string) => fixture.cases.find((candidate: { id: string }) => candidate.id === id).binding) as PersistenceBinding[];
+      const oracle = shared(bindings) ? "persistedShared" : durable(bindings) ? "persistedLocalOnly" : ephemeral(bindings) ? "ephemeralShared" : "ephemeralLocalOnly";
+      expect(oracle, row.id).toBe(row.expected);
+      expect(bindingsDataClass(bindings), row.id).toBe(oracle);
+      expect(bindingsDataClass([...bindings].reverse()), row.id).toBe(oracle);
+    }
+  });
+
   it("validates the language-agnostic fixture against schema", () => {
     const ajv = semioSchemaAjvV1({ strict: false, allErrors: true });
     ajv.addSchema(schema);

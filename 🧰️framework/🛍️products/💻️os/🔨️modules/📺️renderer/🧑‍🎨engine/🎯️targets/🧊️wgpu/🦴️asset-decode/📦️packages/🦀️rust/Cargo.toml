@@ -25,8 +25,10 @@ path = "../../🦀️.rs"
 semio-framework-os-renderer-wgpu-asset-authority = { path = "../../../🗂️asset-authority/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-host-plumbing = { path = "../../../🔧️host-plumbing/📦️packages/🦀️rust" }
 infinite_canvas = { path = "../../../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
 semio-framework-job = { workspace = true }
+semio-framework-plugin-ownership = { path = "../../../../../../../🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
 semio-framework-job-worker-authority = { path = "../../../../../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
 semio-framework-pixels = { path = "../../../../../../../../../../🔨️modules/🔲️pixels/📦️packages/🦀️rust" }

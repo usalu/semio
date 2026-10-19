@@ -90,6 +90,18 @@ class TestScript extends BundleScript {
     process.stdout.write(await captureOwnedCommandV1(process.execPath,args,this.repoRoot,{control:createRequestedIssuedResourceControlV1(phaseControl,budgetMs),env:environment,output:{maximumBytes:16777216,maximumLines:65536}}));
   }
   private async runTests(args:string[],environment:NodeJS.ProcessEnv,phaseControl:ResourceLeaseControl):Promise<void>{
+    if(args[0]==="playground-preparation-source"){
+      if(args.length!==1)throw Error("Expected test playground-preparation-source");
+      const source=join(SCRIPT_ROOT,"🧪️tests/🎮️playground-preparation/🧪️tests/🟦️.ts"),budget=scriptInvocationBudget(this.invocation,120000);
+      await this.runBunTests([Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowJs","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun,node",source],budget,environment,phaseControl);
+      await this.runBunTests(["test","--timeout",String(scriptInvocationBudget(this.invocation,budget)),source],scriptInvocationBudget(this.invocation,budget),environment,phaseControl);return;
+    }
+    if(args[0]==="bootstrap-original-invocation"){
+      if(args.length!==1)throw Error("Expected test bootstrap-original-invocation");
+      const source=join(SCRIPT_ROOT,"🚀️bootstrap/📥️invocation/🧪️tests/🟦️.ts"),budget=scriptInvocationBudget(this.invocation,120000);
+      await this.runBunTests([Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],budget,environment,phaseControl);
+      await this.runBunTests(["test","--timeout",String(scriptInvocationBudget(this.invocation,budget)),source],scriptInvocationBudget(this.invocation,budget),environment,phaseControl);return;
+    }
     if(args[0]==="pruning"){
       if(args.length!==1)throw Error("Expected test pruning");
       const owner=join(SCRIPT_ROOT,"🧹️pruning"),artifacts=environment.SEMIO_TEST_ARTIFACT_DIR;
@@ -183,6 +195,12 @@ class TestScript extends BundleScript {
       if (!output) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required");
       mkdirSync(output, { recursive: true });
       await (await import("./🧪️tests/🔁️graph-revision/🟦️.ts")).testGraphRevision(this.repoRoot, output);
+      return;
+    }
+    if(args[0]==="runtime-bootstrap"){
+      if(args.length!==1)throw Error("Expected test runtime-bootstrap");
+      await (await import("./📦️artifacts/🐳️containers/🧪️tests/🚀️runtime-bootstrap/🟦️.ts")).testContainerRuntimeBootstrap(this.repoRoot,this.invocation);
+      console.log("[DEBUG] Current devcontainer runtime pins, official digests, setup prerequisites and framework controls validated");
       return;
     }
     if (args[0] === "native-dependencies") {

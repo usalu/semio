@@ -61,10 +61,10 @@ COLLECTIONS = {
 """🗂️ Per noun: its collection, the argument `create-` carries, and the one `replace-` carries when
 the vocabulary has a `replace-` for it at all."""
 
-KINDS = ("create-element", "create-node", "create-region", "create-section", "delete-element", "delete-node", "delete-region", "delete-section", "replace-element", "replace-node", "replace-region", "replace-section", "move-selection")
+KINDS = ("create-element", "create-node", "create-region", "create-section", "delete-element", "delete-node", "delete-region", "delete-section", "replace-element", "replace-node", "replace-region", "replace-section", "move-selection", "change-node", "change-section", "change-region", "change-element")
 """🏷️ This subset's own kinds, in the catalog's declared order."""
 
-REFUSALS = {"create-element": 1, "create-node": 1, "create-region": 3, "create-section": 2, "delete-element": 2, "delete-node": 1, "delete-region": 2, "delete-section": 2, "replace-element": 3, "replace-node": 2, "replace-region": 4, "replace-section": 3, "move-selection": 4}
+REFUSALS = {"create-element": 1, "create-node": 1, "create-region": 3, "create-section": 2, "delete-element": 2, "delete-node": 1, "delete-region": 2, "delete-section": 2, "replace-element": 3, "replace-node": 2, "replace-region": 4, "replace-section": 3, "move-selection": 4, "change-node": 3, "change-section": 3, "change-region": 3, "change-element": 3}
 """🚫️ How many refusal-or-no-op vectors each kind declares — the `reject-<kind>-<n>` rows the
 feature's `@id-reject` Outline carries, numbered in the catalog's own order."""
 
@@ -419,6 +419,44 @@ def check_record(document, noun, record):
 def apply_mutation(document, mutation):
     """🧬️ Applies one typed mutation, returning the resulting model or raising a [`Refusal`]."""
     kind = kind_of(mutation)
+    if kind == "change-element":
+        result = copy.deepcopy(document)
+        collection = "elements"
+        at = find(result[collection], mutation["id"])
+        if at is None:
+            error(TARGET_MISSING, [mutation["id"]], "Target does not exist.")
+        patch = mutation["patch"]
+        if not isinstance(patch, dict) or set(patch) - {"kind", "start", "end", "materialId", "sectionId"} or any(value is None for value in patch.values()):
+            fatal(INVARIANT, [mutation["id"]], "Invalid sparse field patch.")
+        row = copy.deepcopy(result[collection][at])
+        row.update(copy.deepcopy(patch))
+        if row["kind"] not in ("bar", "beam") or row["kind"] == "bar" and "roll" in patch:
+            fatal(INVARIANT, [mutation["id"]], "Invalid sparse field patch.")
+
+        check_record(result, "element", row)
+        if row == result[collection][at]:
+            warn(NO_OP, "Fields are unchanged.")
+        result[collection][at] = row
+        validate(result)
+        return result
+    if kind in ("change-node", "change-section", "change-region"):
+        noun = kind.split("-", 1)[1]
+        collection = COLLECTIONS[noun][0]
+        result = copy.deepcopy(document)
+        at = find(result[collection], mutation["id"])
+        if at is None:
+            error(TARGET_MISSING, [mutation["id"]], "Target does not exist.")
+        patch = mutation["patch"]
+        allowed = RECORDS[collection] - {"id"}
+        if not isinstance(patch, dict) or set(patch) - allowed or any(value is None for value in patch.values()):
+            fatal(INVARIANT, [mutation["id"]], "Invalid sparse field patch.")
+        row = dict(result[collection][at], **patch)
+        check_record(result, noun, row)
+        if row == result[collection][at]:
+            warn(NO_OP, "Fields are unchanged.")
+        result[collection][at] = row
+        validate(result)
+        return result
     result = copy.deepcopy(document)
     if kind == "move-selection":
         return move_selection(result, mutation)
@@ -531,13 +569,12 @@ def move_selection(result, mutation):
 
 
 def inverse_steps(document, mutation):
-    """↩️ The steps that undo one application: a move-selection restores every BASE node and region it moves with
-    one whole-record replacement each; every other kind undoes with its one computed inverse."""
+    """↩️ A move-selection restores only changed geometry fields; every other kind uses its own inverse."""
     if kind_of(mutation) != "move-selection":
         return [inverse_mutation(document, mutation)]
     moved = apply_mutation(document, mutation)
-    steps = [{"mutation": "replaceNode", "id": node["id"], "newNode": copy.deepcopy(node)} for node, after in zip(document["nodes"], moved["nodes"]) if node != after]
-    steps += [{"mutation": "replaceRegion", "id": region["id"], "newRegion": copy.deepcopy(region)} for region, after in zip(document["regions"], moved["regions"]) if region != after]
+    steps = [{"mutation": "changeNode", "id": node["id"], "patch": {field: node[field] for field in ("x", "y") if node[field] != after[field]}} for node, after in zip(document["nodes"], moved["nodes"]) if node != after]
+    steps += [{"mutation": "changeRegion", "id": region["id"], "patch": {field: copy.deepcopy(region[field]) for field in ("outline", "holes") if region[field] != after[field]}} for region, after in zip(document["regions"], moved["regions"]) if region != after]
     return steps
 
 
@@ -556,6 +593,24 @@ def inverse_mutation(document, mutation):
     accordingly and say so.
     """
     kind = kind_of(mutation)
+    if kind == "change-element":
+        collection = "elements"
+        at = find(document[collection], mutation["id"])
+        if at is None: raise AssertionError("Target does not exist for inverse.")
+        row = document[collection][at]
+        patch = {}
+        for key in mutation["patch"]:
+            if key in ("tx", "ty", "tz", "rx", "ry", "rz"):
+                patch[key] = key[0].upper() + key[1:] in row["fixed"]
+            elif key in row: patch[key] = copy.deepcopy(row[key])
+
+        return {"mutation": TAGS[kind], "id": mutation["id"], "patch": patch}
+    if kind in ("change-node", "change-section", "change-region"):
+        collection = COLLECTIONS[kind.split("-", 1)[1]][0]
+        at = find(document[collection], mutation["id"])
+        if at is None:
+            raise AssertionError("Target does not exist for inverse.")
+        return {"mutation": TAGS[kind], "id": mutation["id"], "patch": {key: document[collection][at][key] for key in mutation["patch"]}}
     if kind == "update-analysis-settings":
         return {"mutation": TAGS[kind], "settings": copy.deepcopy(document["analysis"])}
     if kind == "add-load":

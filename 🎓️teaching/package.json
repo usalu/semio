@@ -85,8 +85,6 @@
     "../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
     "../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust",
     "../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust",
-    "../🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript",
-    "../🧰️framework/🛍️products/❓️quiz/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react",
     "../🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript",
@@ -96,7 +94,6 @@
     "../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust",
-    "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings",
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🏛️ownership/🧮️compute",
     "../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
@@ -112,9 +109,10 @@
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust",
-    "../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/pkg",
     "../🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript",
+    "../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+    "../🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
@@ -123,7 +121,7 @@
     "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript",
-    "🏛️architecture/❓️quiz/📦️packages/🟦️typescript"
+    "🏛️architecture/📚️course/📦️packages/🟦️typescript"
   ],
   "semio": {
     "workspace": {

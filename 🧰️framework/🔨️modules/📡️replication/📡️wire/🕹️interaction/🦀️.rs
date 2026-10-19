@@ -1,6 +1,6 @@
 //! 🕹️ Interaction vocabulary shared by every pointer and selection surface: hover and selection specs, the topology, the selection and hover machines and the state validation.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap,HashMap,HashSet};
 
 //#region 🔖️Interaction
 // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: relocated here (from
@@ -484,8 +484,8 @@ impl DomainTopology {
         self.ordered.iter().map(|node| node.id.as_str()).collect()
     }
 
-    async fn children_by_parent(&self) -> BTreeMap<String, Vec<String>> {
-        let mut children: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    async fn children_by_parent(&self) -> HashMap<String, Vec<String>> {
+        let mut children: HashMap<String, Vec<String>> = HashMap::new();
         for node in &self.ordered {
             if let Some(parent) = &node.parent {
                 children.entry(parent.clone()).or_default().push(node.id.clone());
@@ -499,31 +499,38 @@ impl DomainTopology {
         if !self.contains(root_id).await {
             return Vec::new();
         }
-        let children = self.children_by_parent().await;
-        let mut out = Vec::new();
-        visit_descendants(root_id, &children, &mut out).await;
-        out
+        expand_interaction_ids(self, &[InteractionTarget { granularity: String::new(), id: root_id.to_string() }], true).await
     }
 
     /// 🪜️ `id`'s ancestor chain, nearest parent first, root last.
     pub async fn ancestors(&self, id: &str) -> Vec<String> {
         let mut out = Vec::new();
-        let mut current = self.ordered.iter().find(|node| node.id == id).and_then(|node| node.parent.clone());
+        let parents: HashMap<&str, Option<&str>> = self.ordered.iter().map(|node| (node.id.as_str(), node.parent.as_deref())).collect();
+        let mut seen = HashSet::from([id]);
+        let mut current = parents.get(id).copied().flatten();
         while let Some(parent_id) = current {
-            current = self.ordered.iter().find(|node| node.id == parent_id).and_then(|node| node.parent.clone());
-            out.push(parent_id);
+            if !seen.insert(parent_id) { break; }
+            current = parents.get(parent_id).copied().flatten();
+            out.push(parent_id.to_string());
         }
         out
     }
 }
 
-async fn visit_descendants(id: &str, children: &BTreeMap<String, Vec<String>>, out: &mut Vec<String>) {
-    out.push(id.to_string());
-    if let Some(kids) = children.get(id) {
-        for kid in kids {
-            Box::pin(visit_descendants(kid, children, out)).await;
+async fn expand_interaction_ids(topo: &DomainTopology, targets: &[InteractionTarget], transitive: bool) -> Vec<String> {
+    let children = if transitive { topo.children_by_parent().await } else { HashMap::new() };
+    let members: HashSet<&str> = if transitive { topo.ordered.iter().map(|node| node.id.as_str()).collect() } else { HashSet::new() };
+    let mut seen = HashSet::new();
+    let mut pending: Vec<String> = targets.iter().rev().map(|target| target.id.clone()).collect();
+    let mut out = Vec::new();
+    while let Some(id) = pending.pop() {
+        if !seen.insert(id.clone()) { continue; }
+        if members.contains(id.as_str()) {
+            if let Some(descendants) = children.get(&id) { pending.extend(descendants.iter().rev().cloned()); }
         }
+        out.push(id);
     }
+    out
 }
 
 /// 🗺️ Every domain's topology for one app instance, keyed by domain id — `ArtifactApp::interaction_topology`
@@ -619,7 +626,6 @@ pub async fn next_selection(spec: &SelectionSpec, current: &DomainSelection, top
         return current.clone();
     };
     let granularity = last_target.granularity.clone();
-    let target_ids: Vec<String> = input.targets.iter().map(|target| target.id.clone()).collect();
     let last_target_id = last_target.id.clone();
 
     if input.mode == SelectionMode::Single {
@@ -636,42 +642,21 @@ pub async fn next_selection(spec: &SelectionSpec, current: &DomainSelection, top
         return DomainSelection { granularity, ids: vec![last_target_id.clone()], anchor_id: Some(last_target_id) };
     }
 
-    let mut expanded: Vec<String> = Vec::new();
-    for id in &target_ids {
-        if spec.transitive {
-            let closure = topo.descendant_closure(id).await;
-            if closure.is_empty() {
-                expanded.push(id.clone());
-            } else {
-                expanded.extend(closure);
-            }
-        } else {
-            expanded.push(id.clone());
-        }
-    }
+    let expanded = expand_interaction_ids(topo, &input.targets, spec.transitive).await;
+    let incoming: HashSet<&str> = expanded.iter().map(String::as_str).collect();
+    let existing: HashSet<&str> = current.ids.iter().map(String::as_str).collect();
 
     let mut ids = match input.merge {
         MergeMode::Replace => dedup_preserving_order(expanded).await,
         MergeMode::Additive => {
             let mut ids = current.ids.clone();
-            for id in expanded {
-                if !ids.contains(&id) {
-                    ids.push(id);
-                }
-            }
+            ids.extend(expanded.iter().filter(|id| !existing.contains(id.as_str())).cloned());
             ids
         }
-        MergeMode::Subtractive => current.ids.iter().filter(|id| !expanded.contains(id)).cloned().collect(),
+        MergeMode::Subtractive => current.ids.iter().filter(|id| !incoming.contains(id.as_str())).cloned().collect(),
         MergeMode::Invertive => {
-            let mut ids = current.ids.clone();
-            for id in expanded {
-                match ids.iter().position(|existing| *existing == id) {
-                    Some(index) => {
-                        ids.remove(index);
-                    }
-                    None => ids.push(id),
-                }
-            }
+            let mut ids: Vec<String> = current.ids.iter().filter(|id| !incoming.contains(id.as_str())).cloned().collect();
+            ids.extend(expanded.iter().filter(|id| !existing.contains(id.as_str())).cloned());
             ids
         }
         MergeMode::Range => unreachable!("Range handled above"),
@@ -682,8 +667,9 @@ pub async fn next_selection(spec: &SelectionSpec, current: &DomainSelection, top
 
 async fn dedup_preserving_order(ids: Vec<String>) -> Vec<String> {
     let mut out: Vec<String> = Vec::with_capacity(ids.len());
+    let mut seen = HashSet::new();
     for id in ids {
-        if !out.contains(&id) {
+        if seen.insert(id.clone()) {
             out.push(id);
         }
     }
@@ -734,24 +720,7 @@ pub async fn next_hover(spec: &HoverSpec, topo: &DomainTopology, input: &HoverIn
     if !spec.enabled || input.targets.is_empty() {
         return DomainHover { channel: input.channel.clone(), ids: Vec::new() };
     }
-    let mut ids: Vec<String> = Vec::new();
-    for target in &input.targets {
-        let expanded = if spec.transitive {
-            let closure = topo.descendant_closure(&target.id).await;
-            if closure.is_empty() {
-                vec![target.id.clone()]
-            } else {
-                closure
-            }
-        } else {
-            vec![target.id.clone()]
-        };
-        for id in expanded {
-            if !ids.contains(&id) {
-                ids.push(id);
-            }
-        }
-    }
+    let ids = expand_interaction_ids(topo, &input.targets, spec.transitive).await;
     DomainHover { channel: input.channel.clone(), ids }
 }
 //#endregion 🔖️HoverMachine

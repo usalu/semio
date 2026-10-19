@@ -1,5 +1,5 @@
-//! 🧠️ Puzzle 5d play app — the bridge onto the puzzle 3d planners. The 5d document is the unification of a 2d
 //! board and a 3d world, so its placement and suggestion solvers ARE the puzzle 3d fill and brush run jobs: a 5d
+//! 🧠️ Puzzle 5d play app — the bridge onto the puzzle 3d planners. The 5d document is the unification of a 2d
 //! document is handed to them as the equivalent 3d document (parts as objects, grips as vortices, fasteners as
 //! attractions, and the kind catalogs they place from), and every tick they report is translated back —
 //! `create_object`/`connect_vortices` become `create-part`/`connect-grips` with a board position synthesized next
@@ -10,13 +10,26 @@ use crate::editor::puzzle5d::view::engine_grip_kind;
 use crate::editor::puzzle5d::config::Puzzle5dConfig;
 use crate::editor::puzzle5d::precompute::geometry::Puzzle5dPointGrid;
 use crate::editor::puzzle5d::entities::{collect_mesh_urls, grips_from_templates, puzzle5d_grip_full_id, resolve_part_mesh_url, world_grip_position, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, PUZZLE5D_BOARD_PLACEMENT_GAP, PUZZLE5D_DEFAULT_PART_RADIUS, PUZZLE5D_FALLBACK_MESH_KIND};
-use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::{connect_grips,create_part,Puzzle5dMutation};
 
 use crate::puzzle_job::JobTurn;
-use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, RetainedJobPayload, StepBudget, StepContext, JOB_PAYLOAD_PAGE_BYTES};
-use semio_framework_plugin::{Fault, ToolRunJob};
-use semio_framework_tool_run::{ToolRunIdentity, ToolRunTick, ToolRunTraceOp, ToolRunTracePage, ToolRunTraceSubject, ToolRunVerdict, TOOL_RUN_TRACE_PAGE_OPS_MAX};
+use semio_framework_job::InteractiveJob;
+use semio_framework_job::InteractiveJobCloseStep;
+use semio_framework_job::JobOutcomeBorrow;
+use semio_framework_job::RetainedJobPayload;
+use semio_framework_job::StepBudget;
+use semio_framework_job::StepContext;
+use semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::ToolRunJob;
+use semio_framework_tool_run::ToolRunIdentity;
+use semio_framework_tool_run::ToolRunTick;
+use semio_framework_tool_run::ToolRunTraceOp;
+use semio_framework_tool_run::ToolRunTracePage;
+use semio_framework_tool_run::ToolRunTraceSubject;
+use semio_framework_tool_run::ToolRunVerdict;
+use semio_framework_tool_run::TOOL_RUN_TRACE_PAGE_OPS_MAX;
 use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dConfig;
 use semio_s_artifact_puzzle_3d_editor_modes::windows::main as world3d;
 use semio_s_artifact_puzzle_3d_editor::puzzle3d_scene_snapshot_from_document;
@@ -24,7 +37,8 @@ use {semio_s_artifact_puzzle_3d_mutations_vortex::connect_vortices::mutation::Co
 
 use semio_s_artifact_puzzle_3d_model::BrushPreviewState;
 use {semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction, semio_s_artifact_puzzle_3d_model::Puzzle3dCatalogObjectKind, semio_s_artifact_puzzle_3d_model::Puzzle3dCatalogVortexKind, semio_s_artifact_puzzle_3d_model::Puzzle3dCatalogVortexTemplate, semio_s_artifact_puzzle_3d_model::Puzzle3dKindCatalogs, semio_s_artifact_puzzle_3d_model::Puzzle3dMeta, semio_s_artifact_puzzle_3d_model::Puzzle3dObject, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dPlaySnapshot, semio_s_artifact_puzzle_3d_model::Puzzle3dRepresentation, semio_s_artifact_puzzle_3d_model::Puzzle3dScale, semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot, semio_s_artifact_puzzle_3d_model::Puzzle3dVortex, semio_s_artifact_puzzle_3d_model::PUZZLE_3D_SCHEMA};
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
+use std::collections::VecDeque;
 
 //#region 🔖️Constants
 /// 🪞️ The bit that turns a planner trace key into the key of its board twin. Planner keys never carry it: fill
@@ -63,7 +77,7 @@ pub fn puzzle5d_mesh_lane(snapshot: &Puzzle5dPlaySnapshot, document: &Puzzle5dDo
 
 /// 🎚️ The planner configuration a 5d configuration asks for.
 pub fn puzzle3d_config(config: &Puzzle5dConfig) -> Puzzle3dConfig {
-    Puzzle3dConfig { fill_count: config.fill_count, contact_tolerance: config.contact_tolerance, object_kind_weights: config.object_kind_weights.clone(), vortex_kind_weights: config.vortex_kind_weights.clone(), ..Puzzle3dConfig::default() }
+    Puzzle3dConfig { fill_count: config.fill_count, contact_tolerance: config.contact_tolerance, object_kind_weights: config.object_kind_weights.iter().map(|(key, value)| (key.clone(), *value)).collect(), vortex_kind_weights: config.vortex_kind_weights.iter().map(|(key, value)| (key.clone(), *value)).collect(), ..Puzzle3dConfig::default() }
 }
 
 /// 🌉️ The puzzle 3d document the planner sees for a 5d document: parts as objects with their grips as vortices,
@@ -445,15 +459,13 @@ pub struct Puzzle5dPlannerToolRunJob {
     board: Option<Puzzle5dPlannerBoard>,
     pending: VecDeque<Vec<u8>>,
     close_owners: crate::puzzle_job::WorkClosing<Puzzle5dPlannerOwners>,
-    preview_sequence: u64,
     outbox: crate::puzzle_job::JobOutbox,
     closing: bool,
-    pub clock: fn() -> Option<u64>,
 }
 
 impl Puzzle5dPlannerToolRunJob {
     pub fn new(inner: ToolRunJob, board: Puzzle5dPlannerBoard) -> Self {
-        Self { inner, board: Some(board), close_owners: Default::default(), pending: VecDeque::new(), preview_sequence: 0, outbox: Default::default(), closing: false, clock: semio_framework_job::default_now_us }
+        Self { inner, board: Some(board), close_owners: Default::default(), pending: VecDeque::new(), outbox: Default::default(), closing: false }
     }
 
     fn payload_bytes(payload: &RetainedJobPayload) -> Result<Vec<u8>, Fault> {
@@ -471,16 +483,13 @@ impl Puzzle5dPlannerToolRunJob {
         Ok(())
     }
 
-    fn turn(&mut self, context: &mut StepContext<'_>) -> JobTurn {
+    fn turn(&mut self, context: &mut StepContext<'_>) -> Result<JobTurn, semio_framework_job::OriginalTurnFailure> {
         if self.closing || context.is_cancelled() {
-            return JobTurn::Cancelled;
+            return Ok(JobTurn::Cancelled);
         }
         if let Some(bytes) = self.pending.pop_front() {
-            return JobTurn::Preview(bytes);
+            return Ok(JobTurn::Preview(bytes));
         }
-        let fuel = context.fuel_remaining();
-        let mut progress = semio_framework_value::retained_clone::RetainedCloneProgress::default();
-        let mut planner = StepContext::new(context.operation(), context.generation(), StepBudget::new(fuel, context.deadline_us(), context.retained_grant()), context.cancel_token(), self.clock, &mut self.preview_sequence, &mut progress);
         enum Planned {
             Idle,
             Yield,
@@ -490,29 +499,22 @@ impl Puzzle5dPlannerToolRunJob {
             Checkpoint(u64, Vec<u8>),
             Fault(Vec<u8>),
         }
-        let planned = match self.inner.step(&mut planner) {
-            Err(error) => Planned::Fault(error.message.into_owned().into_bytes()),
-            Ok(None) => Planned::Idle,
-            Ok(Some(JobOutcomeBorrow::Yield { .. })) => Planned::Yield,
-            Ok(Some(JobOutcomeBorrow::Cancelled { .. })) => Planned::Cancelled,
-            Ok(Some(JobOutcomeBorrow::Complete { .. })) => Planned::Complete,
-            Ok(Some(JobOutcomeBorrow::PreviewReady { payload, .. })) => match Self::payload_bytes(payload) {
+        let planned = match self.inner.step(context)? {
+            None => Planned::Idle,
+            Some(JobOutcomeBorrow::Yield { .. }) => Planned::Yield,
+            Some(JobOutcomeBorrow::Cancelled { .. }) => Planned::Cancelled,
+            Some(JobOutcomeBorrow::Complete { .. }) => Planned::Complete,
+            Some(JobOutcomeBorrow::PreviewReady { payload, .. }) => match Self::payload_bytes(payload) {
                 Ok(bytes) => Planned::Preview(bytes),
                 Err(fault) => Planned::Fault(fault.message.into_bytes()),
             },
-            Ok(Some(JobOutcomeBorrow::CheckpointReady { state, applied_progress, .. })) => match Self::payload_bytes(state) {
+            Some(JobOutcomeBorrow::CheckpointReady { state, applied_progress, .. }) => match Self::payload_bytes(state) {
                 Ok(bytes) => Planned::Checkpoint(applied_progress, bytes),
                 Err(fault) => Planned::Fault(fault.message.into_bytes()),
             },
-            Ok(Some(JobOutcomeBorrow::Fault { detail, .. })) => Planned::Fault(Self::payload_bytes(detail).unwrap_or_default()),
+            Some(JobOutcomeBorrow::Fault { detail, .. }) => Planned::Fault(Self::payload_bytes(detail).unwrap_or_default()),
         };
-        let spent = fuel.saturating_sub(planner.fuel_remaining());
-        drop(planner);
-        context.consume_fuel(spent);
-        if let Err(error) = context.consume_retained(progress) {
-            return JobTurn::Fault(error.message.into_owned().into_bytes());
-        }
-        match planned {
+        Ok(match planned {
             Planned::Idle | Planned::Yield => JobTurn::Yield,
             Planned::Cancelled => JobTurn::Cancelled,
             Planned::Complete => JobTurn::Complete,
@@ -522,7 +524,7 @@ impl Puzzle5dPlannerToolRunJob {
                 Ok(()) => self.pending.pop_front().map_or(JobTurn::Yield, JobTurn::Preview),
                 Err(fault) => JobTurn::Fault(fault.message.into_bytes()),
             },
-        }
+        })
     }
 }
 
@@ -558,6 +560,7 @@ pub fn puzzle5d_planner_tick_pages(tick: ToolRunTick) -> Result<Vec<Vec<u8>>, Fa
                     append_entities: if first { tick.append_entities.clone() } else { Vec::new() },
                     retract_to: if first { tick.retract_to } else { None },
                     payload: if last { tick.payload.clone() } else { None },
+                    payload_update:if last{tick.payload_update}else{None},
                 }
             })
             .collect();
@@ -571,17 +574,17 @@ pub fn puzzle5d_planner_tick_pages(tick: ToolRunTick) -> Result<Vec<Vec<u8>>, Fa
 
 impl Puzzle5dPlannerToolRunJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         match self.outbox.phase(cx)? {
-            crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx),
+            crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
             crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {
                 self.outbox.retire_step(cx)?;
                 return Ok(None);
             }
             crate::puzzle_job::OutboxPhase::Idle => {}
         }
-        let turn = self.turn(cx);
-        self.outbox.settle(turn, cx)
+        let turn = self.turn(cx)?;
+        self.outbox.settle(turn, cx).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
@@ -601,10 +604,8 @@ impl InteractiveJob for Puzzle5dPlannerToolRunJob {
         semio_framework_job::close_original_nested_step(cx,|cx,grant|{
             self.begin_close();
             if !self.outbox.terminal_is_empty() {
-                return Ok(match self.outbox.close_step(grant) {
-                    Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) | semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
-                    Err(error) => return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx)),
-                });
+                let demand = self.outbox.retirement_demands()?;
+                return semio_framework_job::close_original_retained_step(cx, demand, |grant| self.outbox.close_step(grant));
             }
             if !self.inner.terminal_is_empty() {
                 let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
@@ -616,7 +617,7 @@ impl InteractiveJob for Puzzle5dPlannerToolRunJob {
             if self.board.is_some() || !self.pending.is_empty() {
                 self.close_owners.stage(Puzzle5dPlannerOwners { board: self.board.take(), pending: std::mem::take(&mut self.pending) });
             }
-            self.close_owners.close_step(grant).map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))
+            self.close_owners.close_step(cx)
         })
     }
 

@@ -226,6 +226,12 @@ pub struct MutationOutcome<D> {
     pub(super) messages: Vec<MutationMessage>,
 }
 
+/// 🛂️ One semantic decision owns the original delta and diagnostics before inverse or application.
+pub enum MutationAdmission<D> {
+    Admitted(MutationOutcome<D>),
+    Refused(MutationOutcome<D>),
+}
+
 /// 🌱️ Hand-written, not derived — same DAG reason `MutationMessage`'s hand-written twin above
 /// documents. Mirrors `#[serde(rename_all = "camelCase", default, skip_serializing_if =
 /// "Vec::is_empty")]` byte-for-byte.
@@ -281,7 +287,31 @@ impl<D: Default> MutationOutcome<D> {
 }
 
 impl<D> MutationOutcome<D> {
-    /// ✅️ A successful diff, no messages.
+        /// ⚖️ Error and Fatal refuse the whole semantic operation before any executable delta is used.
+    pub fn admit(self) -> MutationAdmission<D> {
+        if self.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error) {
+            MutationAdmission::Refused(self)
+        } else {
+            MutationAdmission::Admitted(self)
+        }
+    }
+
+    /// 🛂️ Gates cold inverse candidates on semantic admission and actual participation, retiring the evaluated diff once.
+    pub fn admit_inverse<P>(self, foreign_steps: impl FnOnce() -> Result<bool, semio_framework_value::ValueError>) -> Result<bool, semio_framework_value::ValueError>
+    where
+        D: MutationDiff<P>,
+    {
+        let (outcome, admitted) = match self.admit() {
+            MutationAdmission::Admitted(outcome) => (outcome, true),
+            MutationAdmission::Refused(outcome) => (outcome, false),
+        };
+        let executable = if !admitted { Ok(false) } else if !outcome.diff().is_empty() { Ok(true) } else { foreign_steps() };
+        let (diff, _) = outcome.into_parts();
+        diff.retire_cold();
+        executable
+    }
+
+/// ✅️ A successful diff, no messages.
     pub fn new(diff: D) -> Self {
         Self { diff, messages: Vec::new() }
     }
@@ -346,4 +376,8 @@ impl<D> MutationOutcome<D> {
         MutationOutcome { diff: f(self.diff), messages: self.messages }
     }
 }
+#[cfg(test)]
+#[path = "🧪️tests/↩️inverse-admission/🦀️.rs"]
+mod inverse_admission_tests;
+
 //#endregion 🔖️Message

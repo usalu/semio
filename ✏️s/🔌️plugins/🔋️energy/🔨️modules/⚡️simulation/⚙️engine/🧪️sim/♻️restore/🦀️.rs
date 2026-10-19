@@ -14,7 +14,8 @@ use crate::model::Model;
 use semio_framework_job::{
     InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, Operation, RetainedCloneGrant, RetainedCloneProgress, RetainedJobPayload, RevisionId, StepContext,
 };
-use semio_framework_value::{RetirementDemand, ValueError};
+use semio_framework_value::{RetirementDemand, ValueError,RetainedCloneStep};
+use std::mem::size_of;
 use std::sync::Mutex;
 
 /// ♻️ Exact retained wire and Model+Config owner rejected before restore admission.
@@ -100,6 +101,7 @@ pub struct EnergyRestoreJob {
     meter_count: usize,
     history_count: usize,
     digest: u64,
+    input_digest: [u8;32],
     bounds: EnergyNumericalBounds,
     rebuild: Option<EnergyJob>,
     replay_retiring: Option<EnergyWirePacket>,
@@ -138,6 +140,7 @@ pub struct EnergyRestoreAbandoned {
     meter_count: usize,
     history_count: usize,
     digest: u64,
+    input_digest: [u8;32],
     bounds: EnergyNumericalBounds,
     rebuild: Option<EnergyJob>,
     replay_retiring: Option<EnergyWirePacket>,
@@ -221,6 +224,7 @@ impl EnergyRestoreJob {
             meter_count: 0,
             history_count: 0,
             digest: 0,
+            input_digest: [0;32],
             bounds,
             rebuild: None,
             replay_retiring: None,
@@ -259,6 +263,7 @@ impl EnergyRestoreJob {
             meter_count: authority.meter_count,
             history_count: authority.history_count,
             digest: authority.digest,
+            input_digest: authority.input_digest,
             bounds: authority.bounds,
             rebuild: authority.rebuild,
             replay_retiring: authority.replay_retiring,
@@ -276,7 +281,10 @@ impl EnergyRestoreJob {
         if context.is_cancelled() || context.should_yield() {
             return Ok(false);
         }
-        if self.field < 4 {
+        if self.field < 5 {
+            let receipt = RetainedCloneProgress { copied_items: 1, copied_bytes: [2,12,24,48,32][self.field as usize] + size_of::<u8>(), ..Default::default() };
+            if !receipt.fits(context.retained_grant()) { return Ok(false); }
+            context.consume_retained(receipt).map_err(|_| EnergyWireRejection::Backing)?;
             context.consume_fuel(1);
             let page = self.packet.as_ref().and_then(|packet| packet.payload.single_page()).ok_or(EnergyWireRejection::Header)?;
             match self.field {
@@ -312,6 +320,7 @@ impl EnergyRestoreJob {
                     self.checkpoint_due = page[127] != 0;
                     self.digest = u64::from_le_bytes(page[156..164].try_into().map_err(|_| EnergyWireRejection::Header)?);
                 }
+                4 => self.input_digest.copy_from_slice(&page[164..196]),
                 _ => unreachable!("decode field is bounded"),
             }
             self.field += 1;
@@ -376,6 +385,8 @@ impl EnergyRestoreJob {
             self.digest,
         );
         let rebuild = self.rebuild.as_mut().expect("rebuild mounted");
+        if rebuild.input_identity.digest().is_none() { context.consume_fuel(1); let _ = rebuild.step_input_identity(context)?; return Ok(false); }
+        if rebuild.input_identity.digest() != Some(&self.input_digest) { self.replay_failed = Some(EnergyWireRejection::Identity); return Err(EnergyWireRejection::Identity); }
         let scalar_match = rebuild.stage == expected.0
             && rebuild.tier == expected.1
             && rebuild.warmup_hour == expected.2
@@ -441,6 +452,7 @@ impl EnergyRestoreJob {
             || job.result_backing.meter_slots < self.meter_count
             || job.result_backing.history_slots < self.history_count
             || job.numerical_digest() != self.digest
+            || job.input_identity.digest() != Some(&self.input_digest)
         {
             self.rebuild = Some(job);
             return Err(self);
@@ -463,13 +475,22 @@ impl EnergyRestoreJob {
         if let Some(packet) = self.packet.as_ref() {
             return packet.retirement_demands();
         }
-        if let Some(rebuild) = self.rebuild.as_ref() {
-            return rebuild.close_demands();
-        }
+        if let Some(rebuild)=self.rebuild.as_ref(){if rebuild.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<EnergyJob>>(),depth:1,..Default::default()})}return Ok(RetirementDemand{copy_bytes:rebuild.next_close_copy_byte_demand()?,capacity_bytes:rebuild.next_close_capacity_byte_demand(0)?,release_bytes:rebuild.next_close_release_byte_demand()?,depth:rebuild.next_close_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"Energy restore numerical child depth overflow"))?});}
         Ok(if self.model.is_some() || self.config.is_some() { ENERGY_RUNG_DEMAND } else { RetirementDemand::default() })
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
+    pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        if self.replay_retiring.is_none()&&self.replay_checkpoint_lease.is_none()&&self.packet.is_none(){
+            if let Some(rebuild)=self.rebuild.as_mut(){
+                if !rebuild.terminal_is_empty(){let grant=cx.retained_grant();if grant.maximum_depth<2{return Ok(energy_idle())}return cx.with_retained_loan(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant},|cx|rebuild.close_step(cx));}
+                return semio_framework_job::close_original_retained_step(cx,RetirementDemand{copy_bytes:size_of::<Option<EnergyJob>>(),depth:1,..Default::default()},|_|{drop(self.rebuild.take());Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<EnergyJob>>(),..Default::default()}))});
+            }
+        }
+        let demand=self.close_demands()?;
+        semio_framework_job::close_original_retained_step(cx,demand,|loan|self.close_owned_frontier(loan).map(|step|RetainedCloneStep::Progress(step.progress())))
+    }
+
+    fn close_owned_frontier(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
         if let Some(packet) = self.replay_retiring.as_mut() {
             let (step, _) = energy_turn(packet.close_step(grant))?;
             if packet.terminal_is_empty() {
@@ -477,20 +498,18 @@ impl EnergyRestoreJob {
             }
             return Ok(step);
         }
-        if let Some(mut lease) = self.replay_checkpoint_lease.take() {
+        if let Some(lease) = self.replay_checkpoint_lease.as_mut() {
             if !lease.packet().terminal_is_empty() {
                 let (step, _) = energy_turn(lease.packet_mut().close_step(grant))?;
-                self.replay_checkpoint_lease = Some(lease);
                 return Ok(step);
             }
             if !energy_grant_covers(grant, RetirementDemand { depth: 1, ..Default::default() }) {
-                self.replay_checkpoint_lease = Some(lease);
                 return Ok(energy_idle());
             }
             let Some(rebuild) = self.rebuild.as_mut() else {
-                self.replay_checkpoint_lease = Some(lease);
                 return Ok(InteractiveJobCloseStep::Blocked);
             };
+            let lease=self.replay_checkpoint_lease.take().unwrap();
             if let Err(lease) = rebuild.ack_checkpoint_packet(lease) {
                 self.replay_checkpoint_lease = Some(lease);
                 return Ok(InteractiveJobCloseStep::Blocked);
@@ -503,16 +522,6 @@ impl EnergyRestoreJob {
                 self.packet = None;
             }
             return Ok(step);
-        }
-        if let Some(rebuild) = self.rebuild.as_mut() {
-            rebuild.begin_close();
-            return Ok(match EnergyJobAuthority::close_step(rebuild, grant)? {
-                InteractiveJobCloseStep::Complete { progress } => {
-                    self.rebuild = None;
-                    InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress } }
-                }
-                step => step,
-            });
         }
         if self.model.is_none() && self.config.is_none() {
             return Ok(energy_done());
@@ -568,6 +577,7 @@ impl Drop for EnergyRestoreJob {
             meter_count: self.meter_count,
             history_count: self.history_count,
             digest: self.digest,
+            input_digest: self.input_digest,
             bounds: self.bounds,
             rebuild: self.rebuild.take(),
             replay_retiring: self.replay_retiring.take(),

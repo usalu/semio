@@ -46,7 +46,7 @@ async fn envelope(id: &str, deps: &[&str], actor: &str, document: &protocol::Art
     protocol::MutationEnvelope {
         mutation_id: protocol::MutationId(id.to_string()),
         document_id: document.clone(),
-        actor: protocol::ActorId(actor.to_string()),
+        actor: protocol::ActorId(actor.to_string().into()),
         dependencies: deps.iter().map(|dep| protocol::MutationId((*dep).to_string())).collect(),
         observed: None,
         target: Vec::new(),

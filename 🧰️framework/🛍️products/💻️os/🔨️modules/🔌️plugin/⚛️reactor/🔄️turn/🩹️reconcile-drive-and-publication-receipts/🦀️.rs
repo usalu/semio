@@ -159,7 +159,7 @@ pub fn collect_original_publication_receipts(output:&mut semio_framework_plugin_
   let unposted=if let Some(receiving)=receipts.receiving.filter(|receiving|receiving.family==Some(family)){let subtract=|whole:usize,posted:usize|whole.checked_sub(posted).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original publication full receipt is smaller than its already received effects").with_retained_progress(progress));match (||Ok::<_,semio_framework_value::ValueError>(semio_framework_value::RetainedCloneProgress{copied_items:subtract(progress.copied_items,receiving.posted.copied_items)?,copied_bytes:subtract(progress.copied_bytes,receiving.posted.copied_bytes)?,retained_capacity_bytes:subtract(progress.retained_capacity_bytes,receiving.posted.retained_capacity_bytes)?,released_bytes:subtract(progress.released_bytes,receiving.posted.released_bytes)?}))(){Ok(progress)=>progress,Err(error)=>return Err(OriginalPublicationReceiptRefusal{receipts,error:error.into()})}}else{progress};
   if let Err(error)=cx.consume_retained(unposted){if refusal.is_none(){refusal=Some(error)}else if receipt_refusal.is_none(){receipt_refusal=Some(error)}}
  }
- match refusal{Some(error)=>Err(OriginalPublicationReceiptRefusal{receipts,error:semio_framework_job::OriginalTurnFailure{primary:error.into(),receipt_refusal,context_refusal:None}}),None=>Ok(())}
+ match refusal{Some(error)=>Err(OriginalPublicationReceiptRefusal{receipts,error:{let original=semio_framework_job::OriginalTurnFailure::from(error);semio_framework_job::OriginalTurnFailure{receipt_refusal,context_refusal:None,..original}}}),None=>Ok(())}
 }
 
 pub(super) fn retain_refused_publication(instance:u32,output:semio_framework_plugin_runtime_ops::ops_ingress::PluginExchangeOutput,refusal:OriginalPublicationReceiptRefusal,cx:&semio_framework_job::StepContext<'_>)->semio_framework_job::OriginalTurnFailure{
@@ -172,9 +172,6 @@ pub(super) fn route_exchange_output(instance:u32,mut output:semio_framework_plug
   return Err(retain_refused_publication(instance,output,refusal,cx));
  }
 
-    for page in output.typed_operation_results.iter() {
-        effects.push(Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: page.renderer_exchange_bytes() });
-    }
     for frame_bytes in output.frames {
         route_app_frame(instance, &frame_bytes, effects);
     }

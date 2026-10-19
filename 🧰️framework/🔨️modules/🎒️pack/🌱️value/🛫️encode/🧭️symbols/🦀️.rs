@@ -22,7 +22,7 @@ impl SourceTextLocator{
  /// 🔎️ Resolves text only through its actual original source identity.
  pub fn resolve<'a,T:FieldProjectionSource>(&self,source:&'a T)->Result<TextReadView<'a>,ValueError>{
   let path=&self.path[..usize::from(self.depth)];match self.kind{
-   SourceTextKind::Key(index)=>source.projection_key(path,index).map(TextReadView::from_str),
+   SourceTextKind::Key(index)=>source.projection_key_view(path,index),
    SourceTextKind::Text=>match source.projection_view(path)?{FieldProjectionView::Text(text)=>Ok(TextReadView::from_str(text)),FieldProjectionView::TextSource(text)=>Ok(text),_=>Err(invalid("ordinary symbol source identity changed"))},
    SourceTextKind::IntrinsicText=>match source.projection_view(path)?{FieldProjectionView::IntrinsicText(text)=>Ok(TextReadView::from_str(text)),FieldProjectionView::IntrinsicTextSource(text)=>Ok(text),_=>Err(invalid("intrinsic symbol source identity changed"))},
   }

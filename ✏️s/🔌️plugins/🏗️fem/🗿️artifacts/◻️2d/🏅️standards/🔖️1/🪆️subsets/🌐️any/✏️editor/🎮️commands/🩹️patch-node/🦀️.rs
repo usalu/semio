@@ -1,9 +1,16 @@
-//! 🩹️ Fem2d play app command — `patch-node`: one-field edit of a node (`x`, `y`) → `ReplaceNode`.
+//! 🩹️ Fem2d play app command — `patch-node`: one-field edit of a node (`x`, `y`) → `ChangeNode`.
 
-use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_node;
+use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::change_node::ChangeNode;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dNodePatch;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 
 type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
@@ -17,23 +24,21 @@ pub struct PatchNode {
 }
 
 /// 🩹️ Moves one node ordinate. The inspector's number inputs carry their `Trigger::Change` value as
-/// text, so the coordinate is parsed here and the whole record is re-emitted through the only
-/// in-history spelling of a node move, `ReplaceNode`. A value equal to the current one emits nothing
-/// rather than a no-op revision.
+/// text, so the parsed value authors only that ordinate through `ChangeNode`. An unchanged value
+/// emits no history revision.
 pub fn handle(payload: &PatchNode, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
-    let node = doc.snapshot.nodes.iter().find(|node| node.id == payload.id).ok_or_else(|| Fault::from("fem2d.patch.node-missing"))?;
-    let mut new_node = node.clone();
-    let ordinate = match payload.field.as_str() {
-        "x" => &mut new_node.x,
-        "y" => &mut new_node.y,
+    let row = doc.snapshot.nodes.iter().find(|row| row.id == payload.id).ok_or_else(|| Fault::from("fem2d.patch.node-missing"))?;
+    let mut patch = Fem2dNodePatch::default();
+    let number = || -> Result<f64, Fault> { payload.value.trim().parse().map_err(|_| Fault::from("fem2d.patch.node-value")) };
+    match payload.field.as_str() {
+        "x" => patch.x = Some(number()?),
+        "y" => patch.y = Some(number()?),
         _ => return Err(Fault::from("fem2d.patch.node-field")),
-    };
-    *ordinate = payload.value.trim().parse().map_err(|_| Fault::from("fem2d.patch.node-value"))?;
-    if &new_node == node {
-        return Ok(Emit::default());
     }
-    Ok(Emit::mutations(vec![Fem2dMutation::ReplaceNode(replace_node::ReplaceNode { id: payload.id.clone(), new_node })]))
+    if patch.candidate(row) == *row { return Ok(Emit::default()); }
+    Ok(Emit::mutations(vec![Fem2dMutation::ChangeNode(ChangeNode { id: payload.id.clone(), patch })]))
 }
+
 //#endregion 🔖️PatchNode
 
 //#region 🧪️Tests

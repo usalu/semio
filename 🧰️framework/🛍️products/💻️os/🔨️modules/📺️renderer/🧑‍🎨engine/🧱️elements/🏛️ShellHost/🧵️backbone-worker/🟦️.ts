@@ -33,7 +33,8 @@ import { scopedPresencePeersV1, type ScopedPresencePeerV1 } from "../👥️pres
 import { publishArtifactPresenceRosterV1, publishLocalPresenceActorV1 } from "../../👕️canvas-presence/🟦️.ts";
 import { programHistoryKeyV1, programHistoryProjectionV1 } from "../🪟️spawned-program/🟦️.ts";
 import { IDENTITY_CONFIG_SCHEMA, foldIdentityEvent } from "@semio-tech/framework/backbone/config-lane";
-import { decodeLocalCatalogArchiveV1, decodeLocalCatalogPayloadV1 } from "../🗂️local-catalog/🟦️.ts";
+import { decodeLocalCatalogArchiveV1, foldLocalCatalogEnvelopesV1 } from "../🗂️local-catalog/🟦️.ts";
+import { decodeIdentityValue } from "@semio-tech/framework/config/schema/mutations";
 import { LOCAL_CATALOG_CONFIG_SCHEMA, type LocalCatalog } from "@semio-tech/framework/config/mutations";
 import { type ActiveSession, type LoadedProgramState, type PluginSupervisorState } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import { documentTransferNoticeTextV1, documentLoadCancelledV1 } from "../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
@@ -61,7 +62,7 @@ import {
   type ExecutionTargetUiState
 } from "../🪪️host-bootstrap/🟦️.tsx";
 import { reduceArtifactCreationProgressUiV1 } from "../🌱️artifact-creation/🟦️.tsx";
-import { announcedPageStreams, canonicalSurfaceId, decodeIdentityPayload, scopeRuntimeKey } from "../🔐️identity-binding/🟦️.ts";
+import { announcedPageStreams, canonicalSurfaceId, scopeRuntimeKey } from "../🔐️identity-binding/🟦️.ts";
 import {
   captureSpaceArtifactCreationCatalogAuthorityV1,
   retainDirectoryCommandResult,
@@ -561,8 +562,7 @@ export function useBackboneWorker(core: ShellCoreAfterIdentityAndDocumentPorts) 
           const decoded = decodeLocalCatalogArchiveV1(new Uint8Array(catalogEvent.archive));
           if (decoded !== undefined) setLocalCatalog(decoded);
         } else if (catalogEvent.kind === "remoteMutations") {
-          const latest = catalogEvent.envelopes.map((envelope) => decodeLocalCatalogPayloadV1(envelope.diff.payload)).filter((catalog): catalog is LocalCatalog => catalog !== undefined).at(-1);
-          if (latest !== undefined) setLocalCatalog(latest);
+          setLocalCatalog((current) => foldLocalCatalogEnvelopesV1(current, catalogEvent.envelopes));
         }
         return;
       }
@@ -577,14 +577,14 @@ export function useBackboneWorker(core: ShellCoreAfterIdentityAndDocumentPorts) 
         const identityEvent = message.event;
         if (identityEvent.kind === "documentArchiveReplaced") {
           const archive = decodeDocumentArchiveBytes(new Uint8Array(identityEvent.archive));
-          const decoded = decodeIdentityPayload(decodePackValue(new Uint8Array(archive.parent_pack)));
+          const decoded = decodeIdentityValue(decodePackValue(new Uint8Array(archive.parent_pack)));
           if (decoded !== undefined) {
             if (verifiedSessionAuthorityRef.current === null) setIdentity(decoded);
             identitySnapshotResolverRef.current?.(decoded);
             identitySnapshotResolverRef.current = null;
           }
         } else if (identityEvent.kind === "remoteMutations") {
-          if (verifiedSessionAuthorityRef.current === null) setIdentity((current) => foldIdentityEvent(current, identityEvent, decodeIdentityPayload));
+          if (verifiedSessionAuthorityRef.current === null) setIdentity((current) => foldIdentityEvent(current, identityEvent));
           void sessionRefreshRef.current?.refresh();
         }
         return;

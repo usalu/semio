@@ -6,7 +6,7 @@ Devcontainer configuration: one Compose service, the image, and the lifecycle co
 
 ## devcontainer.json
 
-Devcontainer configuration with VS Code customizations, container/remote env, the create/start/attach lifecycle commands, and persisted volumes for AI auth, editor server state, GitKraken workspace state, and the shared `.🧬semio/🦑️repo/⚡️cache` root (cargo, Nx, Playwright, and every other repo-managed build cache).
+Devcontainer configuration with container/remote env, the create/start/attach lifecycle commands, and persisted volumes for AI auth, GitKraken workspace state, and the shared `.🧬semio/🦑️repo/⚡️cache` root (cargo, Nx, Playwright, and every other repo-managed build cache).
 
 It forwards exactly the ports the dashboard commands start (a law in `⚡️caching/📦️artifacts/🐳️containers/🧪️tests/🚀️runtime-bootstrap` keeps the list equal to those commands): `os-hub` 8787 (`os-hub:dev`), the `s` React serve 6070 and its two-person pair 6072/6073 (`playground:s` with `user-slot=1` and `2`), the `s` wgpu serve 6066 and 6067/6068 (`playground:s renderer=wgpu-wasm`), Storybook 6010 (`workspace:dev-storybook`), and the MCP Inspector 6274/6277 (`tool:workspace/mcp-inspector-os`). Inside the container start them with `bun repo run @semio-tech/repo-dashboard-rs:run --output=stream` or `semio run <command id> --detach --wait-ready`. `hostRequirements` states what a container that builds the hub needs (4 CPUs, 8 GB memory, 32 GB disk: a fresh-clone run measured 7 GB and 25 GB). The hub's Postgres/Neo4j backends (`os-hub-ts:backend-up`) run in the container's own Docker daemon (`docker-in-docker`), whose state persists in that feature's volume.
 
@@ -18,7 +18,7 @@ Compose stack for the devcontainer: one service, **`semio`**. It sets no project
 
 ## Dockerfile
 
-Ubuntu 24.04 devcontainer base with the build toolchain, fonts (`fonts-noto-color-emoji`, CJK, mono), headless-browser libraries, `xvfb`, `ripgrep` and `sqlite3`, plus Bun 1.3.14 and Node 24.15.0 from pinned, checksum-verified Linux x64/arm64 archives. The pinned build tools (Nx by default, Bazel on request) are provisioned by `bun repo tools setup all`, which `bun repo run workspace:setup` runs.
+Ubuntu 24.04 devcontainer base with the build toolchain, fonts (`fonts-noto-color-emoji`, CJK, mono), headless-browser libraries, `xvfb`, `ripgrep` and `sqlite3`, plus Bun 1.4.2 and Node 24.15.0 from pinned, checksum-verified Linux x64/arm64 archives. The pinned build tools (Nx by default, Bazel on request) are provisioned by `bun repo tools setup all`, which `bun repo run workspace:setup` runs.
 
 ## Lifecycle
 
@@ -28,27 +28,47 @@ Every lifecycle step is a program argv — no shell script — implemented once 
 |---|---|---|
 | `onCreateCommand` | `sudo chown vscode:vscode` of the two checkout volumes | Docker creates them root-owned |
 | `postCreateCommand` | `bun repo run workspace:setup` | every language environment, the generated sources, the agent instruction aliases and both MCP binaries |
-| `postStartCommand` | `bun ./📜️script.ts setup devcontainer start` | hands the persisted home volumes and submodules to `vscode`; Noto Color Emoji fontconfig fallback for `sans-serif`/`serif`/`monospace`; keeps `~/.claude.json` inside the Claude volume and links it back; adds only the missing git `safe.directory` entries; with `~/.ssh/id_ed25519_signing.pub`, SSH commit/tag signing through one agent on `~/.ssh/semio-ssh-agent.sock` |
-| `postAttachCommand` | `bun ./📜️script.ts setup devcontainer attach` | installs GitKraken Desktop, the `gk` CLI and F3D when missing; creates or completes the GitKraken workspace from the checkout and its submodules and sets it as default; reinstalls the git hooks (`bun ./📜️script.ts micro-commit install-hooks`); packages the workspace VS Code extension through `@semio-tech/repo-vscode:build-vsix` and installs it into the first editor CLI that confirms it |
-| on demand | `bun ./📜️script.ts setup devcontainer gitkraken` | starts GitKraken Desktop on the checkout, on the virtual display `:99` (Xvfb) when none is set |
+| `postStartCommand` | `bun repo run workspace:setup-devcontainer-start` | hands the persisted home volumes and submodules to `vscode`; Noto Color Emoji fontconfig fallback for `sans-serif`/`serif`/`monospace`; keeps `~/.claude.json` inside the Claude volume and links it back; adds only the missing git `safe.directory` entries; with `~/.ssh/id_ed25519_signing.pub`, SSH commit/tag signing through one agent on `~/.ssh/semio-ssh-agent.sock` |
+| `postAttachCommand` | `bun repo run workspace:setup-devcontainer-attach` | installs GitKraken Desktop, the `gk` CLI and F3D when missing; creates or completes the GitKraken workspace from the checkout and its submodules and sets it as default; reinstalls the git hooks (`bun ./📜️script.ts micro-commit install-hooks`) |
+| on demand | `bun run dashboard run workspace:setup -- devcontainer gitkraken` | starts GitKraken Desktop on the checkout, on the virtual display `:99` (Xvfb) when none is set |
 
-Optional steps report and continue; a start never runs a destructive source-control or database command. Environment: `SEMIO_GITKRAKEN_WORKSPACE_NAME` (workspace name), `SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL` (skip the GUI tool installs), `SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL` (skip the extension).
+Optional steps report and continue; a start never runs a destructive source-control or database command. Environment: `SEMIO_GITKRAKEN_WORKSPACE_NAME` (workspace name), `SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL` (skip the GUI tool installs).
 
-MCP client configurations are repository files (`.mcp.json`, `.cursor/mcp.json`, `.codex/config.toml`, …) kept consistent by the root `📜️script.ts` policy, not by the container lifecycle.
+Headless agent client configurations (`.mcp.json`, `.codex/config.toml`) consume dashboard-owned server declarations. Choose **New Task**, search `agents write` and start `workspace:agents-write` to derive them. The container lifecycle prepares the environment; developer operations remain dashboard tasks.
 
-The editor block of `devcontainer.json` (`customizations.vscode.settings` and `extensions`) is derived, never edited: `.vscode/settings.json` and `.vscode/extensions.json` are canonical for every native host, `editor-overlay.json` declares what the container omits (host-only entries) or sets (the Linux interpreter) and adds, and `bun repo run workspace:generate-config` rewrites the block (`generate-config-check` verifies it; so does the root policy). The same command keeps the cargo-nextest scope files equal to the root `.config/nextest.toml` plus their own overrides and checks that every `.github/dependabot.yml` directory exists and holds its manifest.
+The dashboard is the exclusive developer control plane for development, debugging, tests and builds. `bun run dashboard run workspace:generate-config` keeps cargo-nextest scope files equal to the root `.config/nextest.toml` plus their own overrides and checks that every `.github/dependabot.yml` directory exists and holds its manifest.
+
+## Daily Development
+
+Start `bun run dashboard` inside the container. Choose **New Task** (`Ctrl+B n`),
+search the action and owner, complete the form and choose **Start**. Select
+`workspace:setup` to rerun preparation, `workspace:test`, `workspace:build`,
+`workspace:verify`, `workspace:lint` or `workspace:format` for workspace operations,
+or the matching project target for a scoped operation.
+
+Choose a service such as `playground:s`, `os-hub:dev` or `workspace:dev-storybook`;
+wait for readiness and use **Open ready address** (`Ctrl+B u`). Task overview
+(`Ctrl+B h`) shows status, exit code and output. The task menu offers **Restart**,
+**Stop** and **Kill**. For debugging choose **Workspace Terminal**, set working
+directory and shell, and invoke the installed debugger within that task; toggle
+input with `Ctrl+B t`.
+
+The [dashboard daily guide](../🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/README.md#-daily-work)
+covers file navigation, repository actions, test selection and authored tools.
+The lifecycle argv below are automatic container hooks, not a manual developer
+workflow. Native Windows, macOS and Linux use the same dashboard command forms.
 
 ## Devcontainer Persistence
 
-Named volumes keep CLI auth folders (`~/.claude`, `~/.codex`, `~/.config/openai`, `~/.config/gh`), GitKraken Desktop and CLI state (`~/.gitkraken`, `~/.local/share/GitKrakenCLI`, `~/.local/share/gk`), editor servers (`~/.vscode-server`, `~/.cursor-server`, `~/.windsurf-server`, `~/.antigravity-server`) and `~/.kiro` — shared by every checkout with the same folder name. `node_modules` and the build/tool cache root `.🧬semio/🦑️repo/⚡️cache` (cargo, Nx, Vite, Playwright, Go, …) are volumes private to one checkout (`${devcontainerId}`), so rebuilds never start cold and a second clone never reads the first one's dependencies or build state; `onCreateCommand` hands both (created root-owned by Docker) to `vscode` before `postCreateCommand` installs into them. `PLAYWRIGHT_BROWSERS_PATH` points into the cache volume.
+Named volumes keep CLI auth folders (`~/.claude`, `~/.codex`, `~/.config/openai`, `~/.config/gh`), GitKraken Desktop and CLI state (`~/.gitkraken`, `~/.local/share/GitKrakenCLI`, `~/.local/share/gk`) — shared by every checkout with the same folder name. `node_modules` and the build/tool cache root `.🧬semio/🦑️repo/⚡️cache` (cargo, Nx, Vite, Playwright, Go, …) are volumes private to one checkout (`${devcontainerId}`), so rebuilds never start cold and a second clone never reads the first one's dependencies or build state; `onCreateCommand` hands both (created root-owned by Docker) to `vscode` before `postCreateCommand` installs into them. `PLAYWRIGHT_BROWSERS_PATH` points into the cache volume.
 
 # 💯️Requirements
 
 ## Devcontainer
 
-Devcontainer lifecycle commands MUST be program argv run through `bun ./📜️script.ts setup devcontainer <start|attach|gitkraken>`, never shell scripts.
+Devcontainer lifecycle commands MUST be program argv routed through their registered Nx targets to the root `📜️script.ts`. Developers choose `workspace:setup-devcontainer-start`, `workspace:setup-devcontainer-attach` or `workspace:setup -- devcontainer gitkraken` in the dashboard to rerun those operations.
 
-Devcontainer attach MUST resolve the workspace extension through the repository build packaging task, install only after that task succeeds, and validate the installation through the editor CLI's extension list.
+Devcontainer attach MUST prepare repository tools and hooks without installing editors or extensions.
 
 Devcontainer start MUST NOT run destructive source-control or database commands and MUST NOT append duplicate git `safe.directory` entries.
 

@@ -34,6 +34,13 @@ pub use quality::{analyze_polygon_soup, MeshBounds, MeshMassProperties, MeshQual
 mod surface;
 pub use surface::MeshSurfaceJob;
 
+
+#[path = "📝️journal/🦀️.rs"]
+mod journal;
+pub use journal::{ArenaJournal, MeshJournal, MeshOverlay};
+
+#[path = "🔍️structure/🦀️.rs"]
+mod structure;
 /// 🌉️ Encodes original ordered UV membership as the declared array of vertex ids.
 mod u32_membership_bridge {
     pub fn to_value(set: &super::HistoryFoldSet<u32>) -> semio_framework_value::DslValue {

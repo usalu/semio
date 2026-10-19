@@ -121,7 +121,36 @@ fn the_entrypoint_contract_holds() {
 }
 
 #[test]
+fn reopen_prompt_schema_matches_shared_contract() {
+    let shared: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🔣️.json")).expect("schema");
+    let expected = &shared["$defs"]["TicketReopenArguments"];
+    for profile in [Profile::Generic, Profile::Cursor, Profile::Kiro, Profile::Copilot, Profile::Claude, Profile::Codex] {
+        let tool = tool_schemas(profile).into_iter().find(|tool| tool.name == "ticket_reopen").expect("tool");
+        let advertised: serde_json::Value = serde_json::from_str(&tool.input_schema.json().text()).expect("advertised schema");
+        assert_eq!(advertised["required"], expected["required"]);
+        for key in ["type", "minLength", "pattern"] {
+            assert_eq!(advertised["properties"]["prompt"][key], expected["properties"]["prompt"][key]);
+        }
+    }
+}
+
+#[test]
 fn go_json_escaping_is_reproduced() {
     assert_eq!(J::Str("a<b>c&d".to_string()).text(), r#""a\u003cb\u003ec\u0026d""#);
     assert_eq!(compact(b"{ \"a\" : [ 1 , 2 ] }"), r#"{"a":[1,2]}"#);
+}
+
+#[test]
+fn resource_content_matches_shared_contract() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚪️entrypoint-contract.json")).expect("fixture");
+    for expected in fixture["resourceContents"].as_array().expect("contents") {
+        let content = ResourceContent {
+            uri: expected["uri"].as_str().expect("uri").to_string(),
+            mime_type: expected["mimeType"].as_str().unwrap_or_default().to_string(),
+            text: expected["text"].as_str().unwrap_or_default().to_string(),
+            blob: expected["blob"].as_str().unwrap_or_default().to_string(),
+        };
+        let actual: serde_json::Value = serde_json::from_str(&content.json().text()).expect("serialized content");
+        assert_eq!(&actual, expected);
+    }
 }

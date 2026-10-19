@@ -1,0 +1,141 @@
+{
+  "schema": "semio.tool-job.contract-expression.v1",
+  "cases": [
+    {
+      "id": "literal",
+      "source": "",
+      "expression": "ToolExecutionContract::bounded_first_step(8192, 64, 64, 16384, 7500)",
+      "expected": {
+        "execution": "bounded",
+        "values": [
+          8192,
+          64,
+          64,
+          16384,
+          7500
+        ]
+      }
+    },
+    {
+      "id": "helper-and-local-constants",
+      "source": "const RAW: usize = 8192; const ITEMS: usize = 64; const WORK: u64 = ITEMS as u64; fn contract() -> ToolExecutionContract { ToolExecutionContract::bounded_first_step(RAW, ITEMS, WORK as u64, 16_384, 7_500) }",
+      "expression": "contract()",
+      "expected": {
+        "execution": "bounded",
+        "values": [
+          8192,
+          64,
+          64,
+          16384,
+          7500
+        ]
+      }
+    },
+    {
+      "id": "missing-helper",
+      "source": "",
+      "expression": "absent()",
+      "expected": null
+    },
+    {
+      "id": "cyclic-helper",
+      "source": "fn first() -> ToolExecutionContract { second() } fn second() -> ToolExecutionContract { first() }",
+      "expression": "first()",
+      "expected": null
+    },
+    {
+      "id": "cyclic-constant",
+      "source": "const RAW: usize = NEXT; const NEXT: usize = RAW;",
+      "expression": "ToolExecutionContract::bounded_first_step(RAW, 64, 64, 16384, 7500)",
+      "expected": null
+    },
+    {
+      "id": "dynamic-helper",
+      "source": "fn contract() -> ToolExecutionContract { observe(); ToolExecutionContract::bounded_first_step(8192, 64, 64, 16384, 7500) }",
+      "expression": "contract()",
+      "expected": null
+    },
+    {
+      "id": "missing-constant",
+      "source": "",
+      "expression": "ToolExecutionContract::bounded_first_step(RAW, 64, 64, 16384, 7500)",
+      "expected": null
+    },
+    {
+      "id": "ambiguous-helper",
+      "source": "fn contract() -> ToolExecutionContract { ToolExecutionContract::bounded_first_step(8192, 64, 64, 16384, 7500) } fn contract() -> ToolExecutionContract { ToolExecutionContract::bounded_first_step(8192, 64, 64, 16384, 7500) }",
+      "expression": "contract()",
+      "expected": null
+    },
+    {
+      "id": "ambiguous-constant",
+      "source": "const RAW: usize = 8192; const RAW: usize = 4096;",
+      "expression": "ToolExecutionContract::bounded_first_step(RAW, 64, 64, 16384, 7500)",
+      "expected": null
+    },
+    {
+      "id": "retained-work-capacity",
+      "source": "const CAPACITY: ArtifactRetainedWorkCapacity = ArtifactRetainedWorkCapacity::for_invertible_items(32); const WORK: usize = CAPACITY.work_items();",
+      "expression": "ToolExecutionContract::bounded_first_step(8192, 64, WORK as u64, 16384, 7500)",
+      "expected": {
+        "execution": "bounded",
+        "values": [
+          8192,
+          64,
+          64,
+          16384,
+          7500
+        ]
+      }
+    },
+    {
+      "id": "shared-wire-maximum",
+      "source": "const RAW: usize = semio_framework::kernel::COMMAND_MAXIMUM_BYTES;",
+      "expression": "ToolExecutionContract::bounded_first_step(RAW, 64, 64, 16384, 7500)",
+      "expected": {
+        "execution": "bounded",
+        "values": [
+          8388608,
+          64,
+          64,
+          16384,
+          7500
+        ]
+      }
+    }
+  ],
+  "publicationCases": [
+    {
+      "id": "comment-and-window-lane",
+      "factory": "const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[\n// a comment with ; and ] does not terminate the source array\nArtifactToolPublicationContract { tool_id: \"set\", lanes: &[ArtifactToolPublicationLane::WindowConfig] },\n];",
+      "expected": [
+        [
+          "set",
+          [
+            "WindowConfig"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "unknown-lane",
+      "factory": "const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[\n// a comment with ; and ] does not terminate the source array\nArtifactToolPublicationContract { tool_id: \"set\", lanes: &[ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::Unknown] },\n];",
+      "expected": null
+    },
+    {
+      "id": "empty-lanes",
+      "factory": "const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[\n// a comment with ; and ] does not terminate the source array\nArtifactToolPublicationContract { tool_id: \"set\", lanes: &[] },\n];",
+      "expected": null
+    },
+    {
+      "id": "duplicate-lane",
+      "factory": "const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[\n// a comment with ; and ] does not terminate the source array\nArtifactToolPublicationContract { tool_id: \"set\", lanes: &[ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::WindowConfig] },\n];",
+      "expected": null
+    },
+    {
+      "id": "host-mixed-with-persistence",
+      "factory": "const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[\n// a comment with ; and ] does not terminate the source array\nArtifactToolPublicationContract { tool_id: \"set\", lanes: &[ArtifactToolPublicationLane::HostOnly, ArtifactToolPublicationLane::Artifact] },\n];",
+      "expected": null
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 //! 🎛️ Selection gestures of the puzzle 5d editor: the retained selection-transform, kind-weight and focus-selection work. See [`super`].
 
-use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 use crate::{editor::puzzle5d::config::Puzzle5dConfig, editor::puzzle5d::config::Puzzle5dConfigMutation, editor::puzzle5d::config::Puzzle5dConfigSetObjectKindWeights, editor::puzzle5d::config::Puzzle5dConfigSetVortexKindWeights};
@@ -88,7 +88,8 @@ impl Puzzle5dTransformWork {
     /// 🎬️ The gesture this command states on `document`, `None` when it states none.
     pub fn read(&self, command: &Puzzle5dCommand, document: &Puzzle5dSnapshot, config: &Puzzle5dConfig, interaction: &protocol::InteractionState) -> Option<Puzzle5dTransformGesture> {
         use semio_s_artifact_puzzle_3d_editor_transform::Puzzle3dSelectionRecord;
-        use crate::editor::puzzle5d::modes::edit::windows::world3d::utilities::transform::{Puzzle5dRelocateScan, Puzzle5dSelectionRecord};
+        use crate::editor::puzzle5d::modes::edit::windows::world3d::utilities::transform::Puzzle5dRelocateScan;
+        use crate::editor::puzzle5d::modes::edit::windows::world3d::utilities::transform::Puzzle5dSelectionRecord;
         let args = command.args();
         match self.tool_id {
             "translateSelection" | "rotateSelection" | "scaleSelection" => {
@@ -141,6 +142,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction, hover: _hover, context, .. } = *input;
         match self.stage {
@@ -165,6 +168,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle5dTransformStage::Complete => Err(Fault::from("puzzle5d-transform-complete-repolled")),
             Puzzle5dTransformStage::Closing => Err(Fault::from("puzzle5d-transform-closing")),
         }
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
@@ -176,8 +181,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            self.close_owners.close_step(grant)
+        semio_framework_job::close_original_nested_step(cx,|cx,_grant|{
+            self.close_owners.close_step(cx)
         })
     }
 
@@ -224,8 +229,9 @@ enum Puzzle5dKindWeightStage {
 #[derive(semio_framework_value::RetireOwned)]
 struct Puzzle5dKindWeightWorkOwners {
     pub ids: Vec<String>,
-    pub seen: HashSet<String>,
-    pub result: HashMap<String, f64>,
+    pub result: Puzzle5dKindWeights,
+    pub insert: Option<semio_framework_value::retained_clone::ordered_map::RetainedOrderedMapInsertCursor<String, f64>>,
+    pub refused_key: Option<String>,
     pub changed_id: Option<String>,
 }
 
@@ -236,8 +242,10 @@ pub struct Puzzle5dKindWeightWork {
     pub part_cursor: usize,
     pub grip_cursor: usize,
     pub ids: Vec<String>,
-    pub seen: HashSet<String>,
-    pub result: HashMap<String, f64>,
+    pub result: Puzzle5dKindWeights,
+    insert: Option<semio_framework_value::retained_clone::ordered_map::RetainedOrderedMapInsertCursor<String, f64>>,
+    refused_key: Option<String>,
+    insert_resume: Option<Puzzle5dKindWeightStage>,
     missing: bool,
     base_sum: f64,
     pub other_sum: f64,
@@ -255,9 +263,8 @@ impl Puzzle5dKindWeightWork {
             cursor: 0,
             part_cursor: 0,
             grip_cursor: 0,
-            ids: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
-            seen: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
-            result: HashMap::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
+            ids: Vec::new(),
+            result: Puzzle5dKindWeights::new(), insert: None, refused_key: None, insert_resume: None,
             missing: false,
             base_sum: 0.0,
             other_sum: 0.0,
@@ -275,7 +282,7 @@ impl Puzzle5dKindWeightWork {
         }
     }
 
-    pub fn weights<'a>(&self, config: &'a Puzzle5dConfig) -> &'a HashMap<String, f64> {
+    pub fn weights<'a>(&self, config: &'a Puzzle5dConfig) -> &'a Puzzle5dKindWeights {
         if self.tool_id == "setPartKindWeight" {
             &config.object_kind_weights
         } else {
@@ -292,7 +299,7 @@ impl Puzzle5dKindWeightWork {
         if self.ids.len() >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
             return Err(Fault::from("puzzle5d-kind-weight-catalog-capacity"));
         }
-        if !inferred || self.seen.insert(id.to_string()) {
+        if !inferred || !self.ids.iter().any(|existing| existing == id) {
             self.ids.push(id.to_string());
         }
         Ok(())
@@ -328,7 +335,40 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
         crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+
+        use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
+        if self.insert.is_some() {
+            let completed = self.advance_result_insert(cx)?;
+            return Ok(if completed { crate::puzzle_progress_step!("puzzle5d-kind-weight-build", "Building kind weight", "Artgewicht wird aufgebaut") }
+                else { ArtifactCommandWorkStep::Pending { stage: "puzzle5d-kind-weight-dictionary", preview: br#"{"en":"Preparing weight dictionary","de":"Gewichtsverzeichnis wird vorbereitet"}"# } });
+        }
+        if self.stage == Puzzle5dKindWeightStage::Changed {
+            if self.ids.len() < 2 {
+                self.stage = Puzzle5dKindWeightStage::Build;
+                return Ok(crate::puzzle_progress_step!("puzzle5d-kind-weight-build", "Building normalized weights", "Normalisierte Gewichte werden aufgebaut"));
+            }
+            self.start_result_insert(None, self.requested, Puzzle5dKindWeightStage::Build, cx)?;
+            return Ok(ArtifactCommandWorkStep::Pending { stage: "puzzle5d-kind-weight-dictionary", preview: r#"{"en":"Preparing changed weight","de":"Geändertes Gewicht wird vorbereitet"}"#.as_bytes() });
+        }
+        if self.stage == Puzzle5dKindWeightStage::Build {
+            let Some(id) = self.ids.get(self.cursor) else {
+                self.stage = Puzzle5dKindWeightStage::Publish;
+                return Ok(crate::puzzle_progress_step!("puzzle5d-kind-weight-publish", "Preparing weight publication", "Gewichtsveröffentlichung wird vorbereitet"));
+            };
+            if self.ids.len() >= 2 && self.changed_id.as_deref() == Some(id.as_str()) || self.result.get(id).is_some() {
+                self.cursor += 1;
+                return Ok(crate::puzzle_progress_step!("puzzle5d-kind-weight-build", "Keeping original weight", "Ursprüngliches Gewicht wird beibehalten"));
+            }
+            let value = if self.ids.len() == 1 { 1.0 } else {
+                let remainder = (1.0 - self.requested).max(0.0);
+                if self.other_sum <= f64::EPSILON { remainder / self.other_count.max(1) as f64 }
+                else { self.base_weight(input.config, id) / self.other_sum * remainder }
+            };
+            if self.start_result_insert(Some(self.cursor), value, Puzzle5dKindWeightStage::Build, cx)? { self.cursor += 1; }
+            return Ok(ArtifactCommandWorkStep::Pending { stage: "puzzle5d-kind-weight-dictionary", preview: br#"{"en":"Preparing sibling weight","de":"Geschwistergewicht wird vorbereitet"}"# });
+        }
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let projection = puzzle5d_editor_projection(snapshot);
@@ -392,7 +432,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     return Ok(crate::puzzle_progress_step!("puzzle5d-kind-weight-sum", "Measuring sibling weights", "Geschwistergewichte werden gemessen"));
                 };
                 let weights = self.weights(config);
-                self.missing |= !weights.contains_key(id);
+                self.missing |= weights.get(id).is_none();
                 self.base_sum += weights.get(id).copied().unwrap_or(0.0);
                 self.cursor += 1;
                 Ok(crate::puzzle_progress_step!("puzzle5d-kind-weight-validate", "Validating kind weight", "Artgewicht wird geprüft"))
@@ -410,34 +450,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 self.cursor += 1;
                 Ok(crate::puzzle_progress_step!("puzzle5d-kind-weight-sum", "Measuring sibling weight", "Geschwistergewicht wird gemessen"))
             }
-            Puzzle5dKindWeightStage::Changed => {
-                if self.ids.len() >= 2 {
-                    self.result.insert(self.changed_id.clone().ok_or_else(|| Fault::from("puzzle5d-kind-weight-changed-owner"))?, self.requested);
-                }
-                self.stage = Puzzle5dKindWeightStage::Build;
-                Ok(crate::puzzle_progress_step!("puzzle5d-kind-weight-build", "Building normalized weights", "Normalisierte Gewichte werden aufgebaut"))
-            }
-            Puzzle5dKindWeightStage::Build => {
-                let Some(id) = self.ids.get(self.cursor).cloned() else {
-                    self.stage = Puzzle5dKindWeightStage::Publish;
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-kind-weight-publish", "Preparing weight publication", "Gewichtsveröffentlichung wird vorbereitet"));
-                };
-                self.cursor += 1;
-                let value = if self.ids.len() == 1 {
-                    1.0
-                } else if self.changed_id.as_deref() == Some(id.as_str()) {
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-kind-weight-build", "Keeping changed weight", "Geändertes Gewicht wird beibehalten"));
-                } else {
-                    let remainder = (1.0 - self.requested).max(0.0);
-                    if self.other_sum <= f64::EPSILON {
-                        remainder / self.other_count.max(1) as f64
-                    } else {
-                        self.base_weight(config, &id) / self.other_sum * remainder
-                    }
-                };
-                self.result.insert(id, value);
-                Ok(crate::puzzle_progress_step!("puzzle5d-kind-weight-build", "Building kind weight", "Artgewicht wird aufgebaut"))
-            }
+            Puzzle5dKindWeightStage::Changed | Puzzle5dKindWeightStage::Build => unreachable!("retained dictionary preparation runs before semantic phase dispatch"),
             Puzzle5dKindWeightStage::Publish => {
                 self.stage = Puzzle5dKindWeightStage::Complete;
                 let mutation = if self.tool_id == "setPartKindWeight" {
@@ -450,6 +463,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle5dKindWeightStage::Complete => Err(Fault::from("puzzle5d-kind-weight-complete-repolled")),
             Puzzle5dKindWeightStage::Closing => Err(Fault::from("puzzle5d-kind-weight-closing")),
         }
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
@@ -457,12 +472,12 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
 
     fn begin_close(&mut self) {
         self.stage = Puzzle5dKindWeightStage::Closing;
-        self.close_owners.stage(Puzzle5dKindWeightWorkOwners { ids: std::mem::take(&mut self.ids), seen: std::mem::take(&mut self.seen), result: std::mem::take(&mut self.result), changed_id: std::mem::take(&mut self.changed_id) });
+        self.close_owners.stage(Puzzle5dKindWeightWorkOwners { ids: std::mem::take(&mut self.ids), result: std::mem::take(&mut self.result), insert: self.insert.take(), refused_key: self.refused_key.take(), changed_id: std::mem::take(&mut self.changed_id) });
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            self.close_owners.close_step(grant)
+        semio_framework_job::close_original_nested_step(cx,|cx,_grant|{
+            self.close_owners.close_step(cx)
         })
     }
 
@@ -503,14 +518,12 @@ enum Puzzle5dFocusSelectionStage {
 /// ♻️ The owners one `Puzzle5dFocusSelectionWork` still holds when its job closes, retired as one controlled bundle.
 #[derive(semio_framework_value::RetireOwned)]
 struct Puzzle5dFocusSelectionWorkOwners {
-    pub selected: HashSet<String>,
 }
 
 pub struct Puzzle5dFocusSelectionWork {
     pub stage: Puzzle5dFocusSelectionStage,
     pub selection_cursor: usize,
     pub part_cursor: usize,
-    pub selected: HashSet<String>,
     sum_2d: [f64; 2],
     sum_3d: [f64; 3],
     matched: usize,
@@ -525,7 +538,6 @@ impl Default for Puzzle5dFocusSelectionWork {
             stage: Puzzle5dFocusSelectionStage::Selection,
             selection_cursor: 0,
             part_cursor: 0,
-            selected: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
             sum_2d: [0.0; 2],
             sum_3d: [0.0; 3],
             matched: 0,
@@ -545,8 +557,9 @@ impl Puzzle5dFocusSelectionWork {
     /// (everything), and the silent no-op made the focus keybinding dead on every boot before the user
     /// had picked anything (puzzle 3d's `Puzzle3dFocusSelectionWork::frames`). Costs no extra capacity:
     /// the part scan this work already declares in `extent` runs either way.
-    fn frames(&self, part_id: &str) -> bool {
-        self.selected.is_empty() || self.selected.contains(part_id)
+    fn frames(&self, interaction: &protocol::InteractionState, part_id: &str) -> bool {
+        let selected = Self::source(interaction);
+        selected.is_empty() || selected.iter().any(|id| id == part_id)
     }
 
     pub fn axis(row: &Value, section: &str, field: &str, index: usize) -> f64 {
@@ -577,6 +590,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
@@ -584,11 +599,10 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
         let projection = puzzle5d_editor_projection(snapshot);
         match self.stage {
             Puzzle5dFocusSelectionStage::Selection => {
-                if let Some(id) = Self::source(interaction).get(self.selection_cursor) {
-                    if self.selected.len() >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
+                if Self::source(interaction).get(self.selection_cursor).is_some() {
+                    if self.selection_cursor >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
                         return Err(Fault::from("puzzle5d-focus-selection-capacity"));
                     }
-                    self.selected.insert(id.clone());
                     self.selection_cursor += 1;
                     return Ok(crate::puzzle_progress_step!("puzzle5d-focus-selection-owner", "Reading selected part", "Ausgewähltes Teil wird gelesen"));
                 }
@@ -601,7 +615,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     return Ok(crate::puzzle_progress_step!("puzzle5d-focus-selection-publish", "Preparing camera focus", "Kamerafokus wird vorbereitet"));
                 };
                 self.part_cursor += 1;
-                if row.get("id").and_then(Value::as_str).is_some_and(|id| self.frames(id)) {
+                if row.get("id").and_then(Value::as_str).is_some_and(|id| self.frames(interaction, id)) {
                     self.sum_2d[0] += Self::scalar(row, "2d", "x");
                     self.sum_2d[1] += Self::scalar(row, "2d", "y");
                     self.sum_3d[0] += Self::axis(row, "3d", "origin", 0);
@@ -645,6 +659,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle5dFocusSelectionStage::Complete => Err(Fault::from("puzzle5d-focus-selection-complete-repolled")),
             Puzzle5dFocusSelectionStage::Closing => Err(Fault::from("puzzle5d-focus-selection-closing")),
         }
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
@@ -652,12 +668,12 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
 
     fn begin_close(&mut self) {
         self.stage = Puzzle5dFocusSelectionStage::Closing;
-        self.close_owners.stage(Puzzle5dFocusSelectionWorkOwners { selected: std::mem::take(&mut self.selected) });
+        self.close_owners.stage(Puzzle5dFocusSelectionWorkOwners {});
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            self.close_owners.close_step(grant)
+        semio_framework_job::close_original_nested_step(cx,|cx,_grant|{
+            self.close_owners.close_step(cx)
         })
     }
 

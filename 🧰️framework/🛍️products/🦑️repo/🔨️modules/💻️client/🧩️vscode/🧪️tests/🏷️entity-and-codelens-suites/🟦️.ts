@@ -1,3 +1,4 @@
+import dashboardOnly from "../../🧫️fixtures/🎛️dashboard-only/🔣️.json";
 /** 🏷️ The extension-host suites of the entity emoji registry, the entity ID regex matching and the CodeLens behavior. */
 import * as assert from "assert";
 import * as vscode from "vscode";
@@ -274,68 +275,25 @@ suite("CodeLens Behavior Test Suite", function () {
     assert.ok(commands.includes("compose.navigate"), "navigate command should be registered");
   });
 
-  test("compose.analyze does not throw on unknown ID", async function () {
-    await vscode.commands.executeCommand("compose.analyze", "🧰️unknownentity");
-    assert.ok(true, "should not throw on unknown entity");
-  });
-
-  test("compose.analyze command is registered", async function () {
-    const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("compose.analyze"), "analyze command should be registered");
-  });
-
-  test("Analyze CodeLens covers every definition entity in TypeScript and Go files", async function () {
-    const cases = [
-      {
-        label: "TypeScript",
-        paths: ["repo/vscode/🟦️.ts", "vscode/🟦️.ts", "🟦️.ts"],
-      },
-      {
-        label: "Go",
-        paths: ["repo/go/main.go", "go/main.go", "main.go"],
-      },
-    ];
-
-    for (const testCase of cases) {
-      const document = await openWorkspaceDocument(...testCase.paths);
-      const expectedIds = collectDefinitionEntityIds(document.getText());
-      assert.ok(expectedIds.length > 0, `expected definition IDs in ${testCase.label} source: ${document.uri.fsPath}`);
-
-      const analyzeLensIds = new Set(await getAnalyzeLensIds(document));
-      const missingIds = expectedIds.filter((id) => !analyzeLensIds.has(id));
-
-      assert.deepStrictEqual(missingIds, [], `missing Analyze CodeLens IDs in ${testCase.label} source ${document.uri.fsPath}: ${missingIds.join(", ")}`);
-    }
-  });
-
   test("Entity CodeLenses do not expose summarize commands", async function () {
     const document = await openWorkspaceDocument("repo/vscode/🟦️.ts");
     const summarizeLenses = (await getCodeLenses(document)).filter((lens) => lens.command?.command === "compose.summarize");
-    assert.deepStrictEqual(summarizeLenses, [], "summarize CodeLenses should be fully replaced by analyze");
-  });
-
-  test("Analyze CodeLens covers native definition scopes in TypeScript and Go files", async function () {
-    const cases = [
-      {
-        label: "TypeScript",
-        paths: ["repo/vscode/🟦️.ts", "vscode/🟦️.ts", "🟦️.ts"],
-      },
-      {
-        label: "Go",
-        paths: ["repo/go/main.go", "go/main.go", "main.go"],
-      },
-    ];
-
-    for (const testCase of cases) {
-      const document = await openWorkspaceDocument(...testCase.paths);
-      const expectedScopes = await collectNativeDefinitionScopes(document);
-      assert.ok(expectedScopes.length > 0, `expected native definition scopes in ${testCase.label} source: ${document.uri.fsPath}`);
-
-      const analyzeLensIds = new Set(await getAnalyzeLensIds(document));
-      const missingScopes = expectedScopes.filter((scope) => !analyzeLensIds.has(scope));
-
-      assert.deepStrictEqual(missingScopes, [], `missing native Analyze CodeLens scopes in ${testCase.label} source ${document.uri.fsPath}: ${missingScopes.join(", ")}`);
-    }
+    assert.deepStrictEqual(summarizeLenses, [], "summarize CodeLenses remain retired");
   });
 });
 // #endregion 🔋️CodeLens Behavior Tests
+
+/** 🎛️ Keeps repository operations exclusively in the dashboard while retaining navigation. */
+suite("Exclusive Dashboard Operation Ownership", () => {
+  test("does not register repository operations", async () => {
+    const commands = await vscode.commands.getCommands(true);
+    for (const command of dashboardOnly.forbiddenCommands) assert.ok(!commands.includes(command), command);
+    for (const command of dashboardOnly.retainedCommands) assert.ok(commands.includes(command), command);
+  });
+  test("provides navigation lenses without repository action lenses", async () => {
+    const document = await openWorkspaceDocument("🟦️.ts");
+    const lenses = await getCodeLenses(document);
+    assert.ok(lenses.some(lens => lens.command?.command === "compose.navigate" || lens.command?.command === "compose.navigateToDefinition"));
+    assert.deepStrictEqual(lenses.filter(lens => dashboardOnly.forbiddenCommands.includes(lens.command?.command ?? "")), []);
+  });
+});

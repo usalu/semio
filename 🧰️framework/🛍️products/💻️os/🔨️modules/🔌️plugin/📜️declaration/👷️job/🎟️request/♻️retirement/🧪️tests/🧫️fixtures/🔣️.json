@@ -1,0 +1,38 @@
+{
+  "schema": "semio.plugin.original-tool-request-retirement.v1",
+  "owned": [
+    "command",
+    "input",
+    "checkpoint",
+    "controller_id",
+    "tool_id",
+    "payload_schema_id",
+    "parent_document_id",
+    "authoring_seed",
+    "snapshot",
+    "snapshot_read",
+    "config",
+    "window_config",
+    "history",
+    "interaction_state",
+    "interaction_hover",
+    "context",
+    "instance_operation_owner",
+    "output_chunks",
+    "completion"
+  ],
+  "sharedLeases": [
+    "snapshot",
+    "config",
+    "history",
+    "interaction_state",
+    "interaction_hover"
+  ],
+  "wire": [
+    "input",
+    "checkpoint"
+  ],
+  "cancelled": "sameOriginalSources",
+  "pending": "sameCallerSlot",
+  "terminalDropBytes": 0
+}

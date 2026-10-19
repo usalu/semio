@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 import { resolve, dirname } from "node:path";
 import TOML from "@iarna/toml";
 import Ajv from "ajv";
-import { readRustSourceClosureV1 } from "@semio-tech/process/artifacts/native-build/source";
+import { readRustSourceClosureV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
 
 const db = resolve(import.meta.dir, "../.."), workspace = resolve(db, "../../../../.."), read = (path: string) => readFileSync(resolve(db, path), "utf8");
 type Edge = { package?: string; path?: string };
@@ -15,11 +15,9 @@ const cfgs = {
   test: ["target_arch=aarch64", "target_os=macos", "target_env=", "target_pointer_width=64", "unix", "debug_assertions", "test", "feature=testkit", "feature=claimed-backend-laws"],
 };
 const closure = (entry: string, cfg: string[]) => readRustSourceClosureV1([resolve(db, entry)], workspace, cfg, async path => await readFile(path).catch(error => error.code === "ENOENT" ? null : Promise.reject(error)));
-const launchText = readFileSync(resolve(workspace, ".vscode/launch.json"), "utf8");
-const routeSubjects = (Bun.JSONC.parse(readFileSync(resolve(workspace, ".vscode/🧩️launch.seed.jsonc"), "utf8")) as { crateRoutes: { subjects: { name: string; project?: string }[] } }).crateRoutes.subjects;
 const owners = (JSON.parse(readFileSync(resolve(workspace, "📋️build-owners.json"), "utf8")) as { owners: { name: string; root: string; manifest: string }[] }).owners;
 const members = (Bun.TOML.parse(readFileSync(resolve(workspace, "Cargo.toml"), "utf8")) as unknown as { workspace: { members: string[] } }).workspace.members;
-const dbRel = db.slice(workspace.length + 1), facade = "semio-framework-os-kernel-db";
+const dbRel = db.slice(workspace.length + 1).replaceAll("\\", "/"), facade = "semio-framework-os-kernel-db";
 
 test("language-neutral ownership corpus validates with the independent schema oracle", () => {
   const validate = new Ajv().compile(JSON.parse(read("🧬️schema/📦️crate-boundaries/🔣️.json")));
@@ -41,9 +39,6 @@ for (const row of corpus.crates) test(row.package + " owns an acyclic, registere
     expect(owners.some(owner => owner.name === facade && owner.root === dbRel + "/" + pkgDir)).toBe(true);
   } else {
     const project = JSON.parse(read(pkgDir + "/📋️project.json")) as { name: string };
-    expect(routeSubjects.some(subject => (subject.project ?? subject.name) === project.name), project.name).toBe(true);
-    for (const target of ["build", "check", "test"]) for (const mode of ["prototype", "release"])
-      expect(launchText).toContain(`"command": "bun repo run ${project.name}:${target} --configuration=${mode} --parallel=1 -- --lib --offline"`);
     expect(owners.some(owner => owner.name === project.name && owner.root === dbRel + "/" + pkgDir)).toBe(true);
   }
   expect(members).toContain(dbRel + "/" + pkgDir);

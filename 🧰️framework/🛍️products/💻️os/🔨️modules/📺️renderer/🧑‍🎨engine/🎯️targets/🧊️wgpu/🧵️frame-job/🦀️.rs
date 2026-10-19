@@ -13,7 +13,7 @@
 use semio_framework_job::{CancelToken,InteractiveJob,StepContext};
 use semio_framework_job_worker::BatchJobSession;use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams};
 use semio_framework_trace::{Generation, InteractiveStage, OperationId};
-use std::{mem::size_of, sync::Arc};
+use std::mem::size_of;
 use semio_framework_job::{InteractiveJobCloseStep, OriginalTurnFailure, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_os_renderer_wgpu_frame_actions::{FrameBuildInputs, FrameDirectives};
 
@@ -130,9 +130,6 @@ pub struct FrameBuildHandle {
     original_outcome_kind: Option<JobOutcomeKind>,
     original_refused_receipt: Option<(RetainedCloneGrant,RetainedCloneProgress)>,
     original_presentation_generation: Option<Generation>,
-    #[cfg(not(target_arch = "wasm32"))]
-    completion_waker: Option<Arc<dyn Fn() + Send + Sync>>,
-    latest_requested_generation: Generation,
     closing: bool,
 }
 
@@ -498,7 +495,6 @@ impl InteractiveJob for ActiveFrameBuild {
 
     fn begin_close(&mut self) {
         self.closing = true;
-        self.cancel();
     }
 
     fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
@@ -539,7 +535,6 @@ impl FrameBuildHandle {
     /// 🎟️ Admits and advances the existing frame owner with the initiating business authority.
     pub fn poll_runtime_on_original_caller(&mut self,runtime:semio_framework_os_renderer_wgpu_app_runtime::AppMailbox,inputs:FrameBuildInputs,presentation_generation:Generation,cx:&mut StepContext<'_>)->Result<Option<semio_framework_os_renderer_wgpu_app_runtime::AppFramePresentation>,OriginalTurnFailure>{
         if cx.should_yield(){return Ok(None)}
-        self.latest_requested_generation=presentation_generation;
         if self.original_refused_receipt.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frame receiver retains its refused physical tuple").into())}
         if self.original_presentation_generation.is_some_and(|original|original!=presentation_generation){if let Some(session)=self.session.as_ref(){let _=session.begin_close();}else{return Ok(None)}}
         if let Some(owner)=self.original_outcome.as_mut(){
@@ -581,8 +576,6 @@ impl FrameBuildHandle {
     pub fn close_original_frame_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         self.closing=true;
         if !self.retire_original_frame_step(cx)?{return Ok(false)}
-        #[cfg(not(target_arch = "wasm32"))]
-        if self.completion_waker.take().is_some(){return Ok(false)}
         Ok(true)
     }
 
@@ -618,19 +611,11 @@ impl FrameBuildHandle {
             original_outcome_kind:None,
             original_refused_receipt:None,
             original_presentation_generation:None,
-            #[cfg(not(target_arch = "wasm32"))]
-            completion_waker: None,
-            latest_requested_generation: Generation(0),
             closing: false,
         }
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn set_completion_waker(&mut self, waker: Arc<dyn Fn() + Send + Sync>) {
-        if !self.closing {
-            self.completion_waker = Some(waker);
-        }
-    }
+
 
     /// 🧵️ Whether a frame build is admitted right now — the one owner that must keep its own frames
     /// coming and must not have its inputs renumbered underneath it.
@@ -641,16 +626,7 @@ impl FrameBuildHandle {
     pub fn original_event_terminal_is_empty(&self)->bool{!self.has_live_session()&&self.original_params_cancel_retirement.is_none()&&self.original_outcome_kind.is_none()&&self.original_refused_receipt.is_none()&&self.original_presentation_generation.is_none()}
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.closing && self.session.is_none() && self.original_job.is_none() && self.original_params.is_none() && self.original_params_cancel_retirement.is_none() && self.original_outcome.is_none() && self.original_outcome_kind.is_none() && self.original_refused_receipt.is_none() && self.original_presentation_generation.is_none() && {
-            #[cfg(not(target_arch = "wasm32"))]
-            {
-                self.completion_waker.is_none()
-            }
-            #[cfg(target_arch = "wasm32")]
-            {
-                true
-            }
-        }
+        self.closing && self.original_event_terminal_is_empty()
     }
 }
 

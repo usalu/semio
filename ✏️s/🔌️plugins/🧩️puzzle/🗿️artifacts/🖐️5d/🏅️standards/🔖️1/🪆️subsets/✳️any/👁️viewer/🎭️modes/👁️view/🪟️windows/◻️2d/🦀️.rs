@@ -1,5 +1,5 @@
-//! ◻️ Puzzle 5D viewer — the Board2d window: a read-only render of the unified 5d document's flat
 //! projection (part nodes with their rim grips, fastener edges), built directly on the
+//! ◻️ Puzzle 5D viewer — the Board2d window: a read-only render of the unified 5d document's flat
 //! artifact-level `Puzzle5dSnapshot`. This file imports nothing from the sibling editor module
 //! (`policyViewerPurityBreaches` forbids it outright), so the board fixture is re-derived here rather
 //! than reached for across that boundary.
@@ -12,6 +12,10 @@
 
 use crate::{Puzzle5dSnapshot};
 use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dFastener, Puzzle5dPart};
+
+
+
+
 use semio_framework_plugin::Board2dScene;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::SurfaceKind;
@@ -19,7 +23,8 @@ use semio_framework_plugin::WindowEngagementSlot;
 use semio_framework_plugin::WindowKindDefinition;
 use semio_framework_plugin::WindowOptions;
 use semio_framework_ui_contract::BuiltNode;
-use semio_framework_pack_json::{json, Value};
+use semio_framework_pack_json::json;
+use semio_framework_pack_json::Value;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "puzzle5d-view-2d";

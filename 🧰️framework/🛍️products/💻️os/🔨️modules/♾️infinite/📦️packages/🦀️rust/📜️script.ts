@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { runBudgetedTestCommand } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { lstat, readFile } from "node:fs/promises";
@@ -56,5 +57,11 @@ class TestWgpuWorldTerrainScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(ROOT).register("fonts", FontsScript).register("test-wgpu-world-terrain", TestWgpuWorldTerrainScript);
+class OriginalBoardFillSourceScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if(args.length) throw Error("test-original-board-fill-source accepts no arguments");
+    await runBudgetedTestCommand(process.execPath,["test",join(this.root,"../../🎲️board/🔌️ports/➡️directed/➕️normal/🧪️tests/🎟️admission/🟦️.ts")],{cwd:this.repoRoot,budgetMs:15000,signal:this.invocation.control.signal});
+  }
+}
+const router = new ScriptRouter(ROOT).register("fonts", FontsScript).register("test-wgpu-world-terrain", TestWgpuWorldTerrainScript).register("test-original-board-fill-source",OriginalBoardFillSourceScript);
 if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => (router).run(process.argv.slice(2), original));

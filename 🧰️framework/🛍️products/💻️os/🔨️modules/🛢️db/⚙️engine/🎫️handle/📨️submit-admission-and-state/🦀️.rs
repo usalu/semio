@@ -113,7 +113,7 @@ pub(super) fn artifact_submit_credit(batch: &db_artifact_contract::CommandBatch)
         bytes = bytes
             .checked_add(envelope.mutation_id.0.capacity() as u64)
             .and_then(|value| value.checked_add(envelope.document_id.0.capacity() as u64))
-            .and_then(|value| value.checked_add(envelope.actor.0.capacity() as u64))
+            .and_then(|value| value.checked_add(envelope.actor.0.original_allocation_bytes() as u64))
             .and_then(|value| value.checked_add(dependency_owner_bytes as u64))
             .and_then(|value| value.checked_add(envelope.diff.schema.0.capacity() as u64))
             .and_then(|value| value.checked_add(envelope.diff.payload.capacity() as u64))

@@ -193,7 +193,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     const digest = { sha256: "a".repeat(64), byteLength: 8 };
     const input = {
       schema: "semio.os.browser-codegen-policy.v1", revision: 1,
-      runtime: { kind: "bun", version: "1.3.14", executable: { ...digest } },
+      runtime: { kind: "bun", version: "1.4.2", executable: { ...digest } },
       compiler: { module: { ...digest }, inputs: [{ logicalPath: "compiler/entry.js", ...digest }], cores: ["compiler/core.wasm", "compiler/core2.wasm"].map(logicalPath => ({ logicalPath, ...digest })) },
       packages: fixture.packages.map(([name, version]: string[]) => ({ name, version, lockSha256: digest.sha256, manifestSha256: digest.sha256 })),
       parser: { name: "typescript", version: "5.9.3", manifestSha256: digest.sha256, lockRowSha256: digest.sha256, entry: { logicalPath: "typescript/lib/typescript.js", ...digest } },

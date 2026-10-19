@@ -15,7 +15,9 @@ impl RetainedCloneCursor<String> for StringCursor {
     fn output_ready(&self)->bool{self.output.is_some()}
     fn advance_demands(&self,source:RetainedCloneRef<'_,String>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(demand)=source.binding_demand(&self.source)?{return Ok(demand)}if self.closing||self.phase==3{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"string original clone is closing or spent"))}let original=source.get();let(copy,capacity)=match self.phase{0=>(0,original.len()),1=>{let start=self.output.as_ref().ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"string original output absent"))?.len();if start>original.len()||!original.is_char_boundary(start){return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"string original offset changed"))}let mut end=start+(original.len()-start).min(body.min(RETAINED_CLONE_BULK_PAGE_BYTES));while end>start&&!original.is_char_boundary(end){end-=1;}if end==start&&start<original.len(){end=start+original[start..].chars().next().unwrap().len_utf8();}(end-start,0)},_=>(0,0)};Ok(crate::RetirementDemand{copy_bytes:copy,capacity_bytes:capacity,depth:1,..Default::default()})}
 
-    fn advance(&mut self, source: RetainedCloneRef<'_, String>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+    fn advance(&mut self, source: RetainedCloneRef<'_, String>, body: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+        let demand = self.advance_demands(source,body)?;
+        if !retained_clone_grant_admits(grant,demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if self.closing {
             return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained string clone cursor is closing"));
         }
@@ -53,7 +55,7 @@ impl RetainedCloneCursor<String> for StringCursor {
                     self.phase = 2;
                     return Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
                 }
-                let maximum_end = start + remaining.min(grant.maximum_copy_bytes);
+                let maximum_end = start + remaining.min(demand.copy_bytes);
                 let mut end = maximum_end;
                 while end > start && !source.is_char_boundary(end) {
                     end -= 1;
@@ -62,7 +64,7 @@ impl RetainedCloneCursor<String> for StringCursor {
                     return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
                 }
                 output.push_str(&source[start..end]);
-                let progress = RetainedCloneProgress { copied_items: 0, copied_bytes: end - start, retained_capacity_bytes: 0, released_bytes: 0 };
+                let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: end - start, retained_capacity_bytes: 0, released_bytes: 0 };
                 Ok(RetainedCloneStep::Progress(progress))
             }
             2 => Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())),

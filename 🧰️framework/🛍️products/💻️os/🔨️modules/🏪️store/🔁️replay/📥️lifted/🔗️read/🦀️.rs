@@ -18,6 +18,7 @@ impl ArtifactStoreSupersessionRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreSupersessionRetirement {
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.owner.next_demand(body) }
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.owner.step(grant)}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.owner.next_copy_byte_demand()}
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{self.owner.next_capacity_byte_demand(copy)}
@@ -38,6 +39,7 @@ impl ArtifactStoreStringVectorRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreStringVectorRetirement {
+    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if let Some(active)=self.active.as_ref(){let mut demand=active.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"string history retirement depth overflow"))?;return Ok(demand);}Ok(semio_framework_value::RetirementDemand {release_bytes:self.values.as_ref().filter(|values|values.is_empty()).map_or(Ok(0),|values|values.next_empty_page_release_byte_demand().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"string history backing extent unavailable")))?,depth:usize::from(self.values.is_some()),..Default::default()})}
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> {
         self.active.as_ref().map_or(Ok(0), ErasedSnapshotRetirement::next_copy_byte_demand)
     }

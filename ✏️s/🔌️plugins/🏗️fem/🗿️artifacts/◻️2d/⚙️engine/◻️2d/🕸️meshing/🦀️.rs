@@ -1,11 +1,16 @@
 //! 🌉️ FEM document region, material and load conversion into the neutral engine.
 
 use crate::fem2d_engine::Fem2dError;
-use semio_s_fem_elements2d::{Bar2, BeamEb2};
-use semio_s_fem_model::{Dof, NodalLoad, Node};
+use semio_s_fem_elements2d::Bar2;
+use semio_s_fem_elements2d::BeamEb2;
+use semio_s_fem_model::Dof;
 use semio_s_fem_static::Elements;
+use semio_s_fem_model::MemberUdl;
+use semio_s_fem_model::NodalLoad;
+use semio_s_fem_model::Node;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use std::collections::HashMap;
 
 /// ⚖️ Gravitational acceleration (m/s²) used both by the document-bridge's own lumped self-weight
@@ -151,5 +156,25 @@ pub(crate) fn area_load_nodal_loads(region: &MeshedRegion, pressure: f64) -> Vec
         }
     }
     tributary.into_iter().map(|(node_id, trib)| NodalLoad { node_id, dof: Dof::Ty, value: -pressure * trib }).collect()
+}
+
+/// 🏋️ Resolved loads shared by static, multi-case and prestress analyses.
+pub(crate) type TranslatedLoads = (Vec<NodalLoad>, Vec<(String, MemberUdl)>);
+
+/// 🌉️ Lowers authored loads onto the complete resolved mesh, rejecting dangling area targets.
+pub(crate) fn translate_loads(loads: &[FemLoad], regions: &[MeshedRegion]) -> Result<TranslatedLoads, Fem2dError> {
+    let mut nodal_loads = Vec::new();
+    let mut member_loads = Vec::new();
+    for load in loads {
+        match load {
+            FemLoad::Nodal { node_id, dof, value, .. } => nodal_loads.push(NodalLoad { node_id: node_id.clone(), dof: (*dof).into(), value: *value }),
+            FemLoad::MemberUdl { element_id, wx, wy, .. } => member_loads.push((element_id.clone(), MemberUdl { wx: *wx, wy: *wy, wz: 0.0 })),
+            FemLoad::Area { region_id, pressure, .. } => {
+                let region = regions.iter().find(|region| &region.region_id == region_id).ok_or_else(|| Fem2dError::UnknownRegionId(region_id.clone()))?;
+                nodal_loads.extend(area_load_nodal_loads(region, *pressure));
+            }
+        }
+    }
+    Ok((nodal_loads, member_loads))
 }
 

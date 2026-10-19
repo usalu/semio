@@ -84,33 +84,139 @@ pub use ids::*;
 mod codec;
 pub use codec::*;
 
-#[path = "🗄️store/🦀️.rs"]
-mod store;
-pub use store::*;
+            return false;
+        }
+        let identity = TicketId::new(ticket.year, ticket.month, ticket.day, ticket.slug.clone()).id();
+        if !self.filter.is_empty() && ![identity.as_str(), ticket.slug.as_str(), ticket.title.as_str()].iter().any(|candidate| self.matches_filter(candidate)) {
+            return false;
+        }
+        if !self.query.is_empty() {
+            let haystack = format!("{identity} {} {} {} {}", ticket.slug, ticket.title, ticket.description, ticket.status.as_str());
+            if !haystack.to_lowercase().contains(&self.query.to_lowercase()) {
+                return false;
+            }
+        }
+        true
+    }
 
-#[path = "💾️documents/🦀️.rs"]
-mod documents;
-pub use documents::*;
+    fn matches_filter(&self, name: &str) -> bool {
+        let (target, pattern) = if self.match_case { (name.to_string(), self.filter.clone()) } else { (name.to_lowercase(), self.filter.to_lowercase()) };
+        if self.match_whole_word {
+            return target.split(|character: char| !(character.is_ascii_alphanumeric() || character == '_')).any(|word| word == pattern);
+        }
+        target.contains(&pattern)
+    }
+}
 
-#[path = "📐️file-scope/🦀️.rs"]
-mod file_scope;
-pub use file_scope::*;
+//#endregion 🔎️Search
 
-#[path = "🐙️issue-sync/🦀️.rs"]
-mod issue_sync;
-pub use issue_sync::*;
+//#region 🧹️RealPurge
 
-#[path = "⏰️ports/🦀️.rs"]
-mod ports;
-pub use ports::*;
+/// 🧹️ Every slug directory under a dated `🎫️tickets` tree, in `YY/MM/DD/SLUG` walk order.
+///
+/// Twin of `collectTicketFolderRoots` in `📦️packages/🐹️go/🐹️.go`: four levels deep, directories
+/// only, dot-prefixed slugs skipped, an unreadable level silently contributing nothing.
+pub fn ticket_folder_roots(tickets_dir: &std::path::Path) -> Vec<std::path::PathBuf> {
+    let mut roots = Vec::new();
+    for year in sorted_directories(tickets_dir) {
+        for month in sorted_directories(&year) {
+            for day in sorted_directories(&month) {
+                for slug in sorted_directories(&day) {
+                    if slug.file_name().is_none_or(|name| name.to_string_lossy().starts_with('.')) {
+                        continue;
+                    }
+                    roots.push(slug);
+                }
+            }
+        }
+    }
+    roots
+}
 
-#[path = "🔓️lifecycle/🦀️.rs"]
-mod lifecycle;
-pub use lifecycle::*;
+/// 📁️ The child directories of a path, in name order; an unreadable path contributes none.
+fn sorted_directories(path: &std::path::Path) -> Vec<std::path::PathBuf> {
+    let Ok(entries) = std::fs::read_dir(path) else { return Vec::new() };
+    let mut found: Vec<std::path::PathBuf> = entries.flatten().filter(|entry| entry.path().is_dir()).map(|entry| entry.path()).collect();
+    found.sort();
+    found
+}
 
-#[path = "🔎️search/🦀️.rs"]
-mod search;
-pub use search::*;
+/// 🧹️ Deletes the oversized artifacts of one real ticket folder, deepest subfolder first.
+///
+/// Twin of `PurgeOversizedTicketArtifacts` in `📦️packages/🐹️go/🐹️.go`. A missing folder is a
+/// no-operation, symlinks are never followed, `🎫️ticket.json` is never removed and a file inside
+/// an already-deleted subtree is not visited again.
+pub fn purge_oversized_artifacts(ticket_dir: &std::path::Path) -> Result<PurgeReport, String> {
+    let mut report = PurgeReport::default();
+    let Ok(metadata) = std::fs::symlink_metadata(ticket_dir) else { return Ok(report) };
+    if !metadata.is_dir() {
+        return Err(format!("ticket path is not a directory: {}", ticket_dir.display()));
+    }
+    let mut directories: Vec<std::path::PathBuf> = Vec::new();
+    let mut files: Vec<(std::path::PathBuf, u64)> = Vec::new();
+    collect_real_tree(ticket_dir, &mut directories, &mut files);
+    let mut directory_sizes: BTreeMap<std::path::PathBuf, u64> = BTreeMap::new();
+    for (path, size) in &files {
+        let mut parent = path.parent().map(std::path::Path::to_path_buf);
+        while let Some(current) = parent {
+            if !current.starts_with(ticket_dir) {
+                break;
+            }
+            *directory_sizes.entry(current.clone()).or_default() += size;
+            if current == ticket_dir {
+                break;
+            }
+            parent = current.parent().map(std::path::Path::to_path_buf);
+        }
+    }
+    directories.sort_by_key(|path| std::cmp::Reverse(path.components().count()));
+    let mut deleted: Vec<std::path::PathBuf> = Vec::new();
+    for directory in directories {
+        if deleted.iter().any(|removed| directory.starts_with(removed)) {
+            continue;
+        }
+        if directory_sizes.get(&directory).copied().unwrap_or_default() <= OVERSIZED_FOLDER_BYTES {
+            continue;
+        }
+        std::fs::remove_dir_all(&directory).map_err(|error| format!("delete oversized ticket folder {}: {error}", directory.display()))?;
+        report.removed_directories.push(directory.to_string_lossy().replace('\\', "/"));
+        deleted.push(directory);
+    }
+    for (path, size) in files {
+        if deleted.iter().any(|removed| path.starts_with(removed)) {
+            continue;
+        }
+        if path.file_name().is_some_and(|name| name == std::ffi::OsStr::new(TICKET_DOCUMENT_NAME)) || size <= OVERSIZED_FILE_BYTES {
+            continue;
+        }
+        std::fs::remove_file(&path).map_err(|error| format!("delete oversized ticket file {}: {error}", path.display()))?;
+        report.removed_files.push(path.to_string_lossy().replace('\\', "/"));
+    }
+    report.removed_directories.sort();
+    report.removed_files.sort();
+    Ok(report)
+}
+
+/// 🚶️ Every directory below `root` and every regular file with its size, symlinks skipped.
+fn collect_real_tree(root: &std::path::Path, directories: &mut Vec<std::path::PathBuf>, files: &mut Vec<(std::path::PathBuf, u64)>) {
+    let Ok(entries) = std::fs::read_dir(root) else { return };
+    let mut children: Vec<std::path::PathBuf> = entries.flatten().map(|entry| entry.path()).collect();
+    children.sort();
+    for child in children {
+        let Ok(metadata) = std::fs::symlink_metadata(&child) else { continue };
+        if metadata.file_type().is_symlink() {
+            continue;
+        }
+        if metadata.is_dir() {
+            directories.push(child.clone());
+            collect_real_tree(&child, directories, files);
+        } else {
+            files.push((child, metadata.len()));
+        }
+    }
+}
+
+//#endregion 🧹️RealPurge
 
 //#region 🧪️Tests
 

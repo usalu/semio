@@ -1,3 +1,4 @@
+import { type Binary64, parseBinary64 } from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🧬️ Puzzle3d diff schema — sparse typed delta: per-field entity patches and id-keyed collection deltas. */
 import { parseBinary64, type Binary64 } from "@semio-tech/framework/value/ieee754";
 import {

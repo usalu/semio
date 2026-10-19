@@ -16,12 +16,8 @@ pub(crate) struct SetValue {
 
 impl protocol::MutationKind<Std1StrictSnapshot, Std1StrictMutation> for SetValue {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "value", kind: "set-value", record: "SetValue" };
-    fn diff(&self, _base: &Std1StrictSnapshot) -> protocol::MutationOutcome<Std1StrictDiff> {
-        protocol::MutationOutcome::new(Std1StrictDiff { value: Some(self.value) })
-    }
-    fn inverse(&self, base: &Std1StrictSnapshot) -> Result<Vec<Std1StrictMutation>, semio_framework_value::ValueError> {
-        Ok((|| vec![Std1StrictMutation::SetValue(Self { value: base.value })])())
-    }
+
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set value to {}", self.value), &format!("Wert auf {} setzen", self.value))
     }
@@ -30,8 +26,21 @@ impl protocol::MutationKind<Std1StrictSnapshot, Std1StrictMutation> for SetValue
     }
 }
 
+impl protocol::ColdMutationKind<Std1StrictSnapshot, Std1StrictMutation> for SetValue {
+    fn diff(&self, _base: &Std1StrictSnapshot) -> protocol::MutationOutcome<Std1StrictDiff> {
+        protocol::MutationOutcome::new(Std1StrictDiff { value: Some(self.value) })
+    }
+    fn inverse(&self, base: &Std1StrictSnapshot) -> Result<Vec<Std1StrictMutation>, semio_framework_value::ValueError> {
+        Ok((|| vec![Std1StrictMutation::SetValue(Self { value: base.value })])())
+    }
+}
+
 #[doc(hidden)]
 #[cfg(test)]
 #[path = "../../../../../../🧪️tests/🔒️standard-one-strict-set-value-unit/🦀️.rs"]
 pub mod tests;
 //#endregion 📝️Std1StrictSetValue
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️sum-law/🦀️.rs"]
+mod sum_law_tests;

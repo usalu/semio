@@ -65,6 +65,7 @@ fn persisted_hydration_release_store_entry_refuses_foreign_target_without_consum
 
 struct WholeAllocation { owner: Option<Vec<u8>> }
 impl ErasedSnapshotRetirement for WholeAllocation {
+    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand { release_bytes: self.owner.as_ref().map_or(0,Vec::capacity), ..Default::default() })}
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let Some(owner) = self.owner.as_ref() else { return Ok(RetainedCloneStep::Complete(Default::default())); };
         let extent = owner.capacity();
@@ -182,6 +183,7 @@ fn persisted_hydration_release_refuses_extent_outside_existing_admission() {
 }
 
 impl ErasedSnapshotRetirement for AllocationProbe {
+    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand { release_bytes: self.owner.as_ref().map_or(0,|owner|owner.capacity()), ..Default::default() })}
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         self.observed.lock().unwrap().push((grant.maximum_items, grant.maximum_release_bytes));
         let Some(owner) = &self.owner else { return Ok(RetainedCloneStep::Complete(Default::default())) };

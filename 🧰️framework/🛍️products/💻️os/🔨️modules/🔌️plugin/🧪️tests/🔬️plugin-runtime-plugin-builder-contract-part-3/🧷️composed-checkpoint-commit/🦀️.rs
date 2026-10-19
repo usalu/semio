@@ -68,7 +68,7 @@
         assert_eq!(pins.iter().map(|pin| pin.child_ref.artifact_id.as_str()).collect::<Vec<_>>(), ["child-1", "child-2"]);
         publication_caller.retire(mounted_policy.close);
 
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -108,7 +108,7 @@
         assert!(!PluginApp::has_runnable_typed_operations(&*app));
         publication_caller.retire(mounted_policy.close);
 
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -149,9 +149,9 @@
 
         app.dispatch_action("checkoutCheckpoint", Some(&dv(serde_json::json!({ "checkpointId": pinned_checkpoint }))), &meta(), &mut identity,cx).await.expect("checkout");
         assert_eq!(reads_child_count(&app).await, 7, "checkout did not cascade to the pinned child");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -185,6 +185,6 @@
         drop(admitted);
         drop(admitted_root);
         drain_and_close_composed_fixture(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }

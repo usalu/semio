@@ -1,4 +1,5 @@
 //! 📥️ Items of `store` that belong to `os-store-engine-core` (PLAN-OS-KERNEL-CRATES.md, Appendix C): lifted out of `🏪️store/🦀️.rs`.
+use semio_framework_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage;
 use semio_framework_os_store_text_io::ArtifactStoreSnapshot as _;
 use semio_framework_os_vcs::io::binary::genesis::AdmittedArtifactGenesis;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};

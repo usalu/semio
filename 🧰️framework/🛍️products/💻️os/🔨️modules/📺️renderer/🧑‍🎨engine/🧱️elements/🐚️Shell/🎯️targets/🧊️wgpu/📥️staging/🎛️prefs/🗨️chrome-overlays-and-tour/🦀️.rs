@@ -50,6 +50,8 @@ pub fn classify_dispatch_fault_notice(error: &str, refused: Option<&RefusedGuest
 /// channels), else the call's own text.
 pub fn program_fault_text(refusal: &semio_framework_os_renderer_wgpu_program_bridge::ProgramFault, terminology: Terminology, locale: Locale) -> String {
     #[cfg(not(target_arch = "wasm32"))]
+    if refusal.create_app_source.is_some(){return LocalizedLabel::native("The application could not be opened.","Die Anwendung konnte nicht geöffnet werden.").resolve(terminology,locale).to_string();}
+    #[cfg(not(target_arch = "wasm32"))]
     if refusal.frame.is_some() { return LocalizedLabel::native("The input could not be delivered.", "Die Eingabe konnte nicht zugestellt werden.").resolve(terminology, locale).to_string(); }
     refusal.fault.as_ref().and_then(|fault| semio_framework::kernel::fault_notice(fault, &[], terminology, locale)).map_or_else(|| refusal.text.clone(), |notice| notice.text)
 }
@@ -75,13 +77,14 @@ impl PrefsState {
 
     /// 📣️ Records one refused program call's structured guest fault beside the refusing app's notices for the funnel, and
     /// answers the `code: message` text every `String` dispatch channel carries.
-    pub fn refused_guest_call(&mut self, refusal: semio_framework_os_renderer_wgpu_program_bridge::ProgramFault, app: &AppDefinition, chrome: &mut ChromeState) -> String {
+    pub fn refused_guest_call(&mut self, mut refusal: semio_framework_os_renderer_wgpu_program_bridge::ProgramFault, app: &AppDefinition, chrome: &mut ChromeState) -> String {
+        #[cfg(not(target_arch = "wasm32"))]
+        let detail=if refusal.frame.is_some()||refusal.create_app_source.is_some(){program_fault_text(&refusal,self.active_terminology(),self.active_locale())}else{std::mem::take(&mut refusal.text)};
+        #[cfg(target_arch = "wasm32")]
+        let detail=std::mem::take(&mut refusal.text);
         #[cfg(not(target_arch = "wasm32"))]
         { if chrome.chrome_build.refused_frame_fault.is_none() { chrome.chrome_build.refused_frame_fault = refusal.frame; }if chrome.chrome_build.refused_kernel_fault.is_none(){chrome.chrome_build.refused_kernel_fault=refusal.kernel;}if chrome.chrome_build.refused_actor_call.is_none(){chrome.chrome_build.refused_actor_call=refusal.actor_call;} }
-        #[cfg(not(target_arch = "wasm32"))]
-        let detail = if refusal.frame.is_some() { program_fault_text(&refusal, self.active_terminology(), self.active_locale()) } else { refusal.text };
-        #[cfg(target_arch = "wasm32")]
-        let detail = refusal.text;
+
         chrome.chrome_build.refused_guest_fault = refusal.fault.map(|fault| RefusedGuestFault { fault, notices: app.fault_notices.clone() });
         detail
     }
@@ -90,12 +93,14 @@ impl PrefsState {
     /// other structured refusal — through the dispatch-fault funnel, so it reaches the person as its localized notice and never
     /// as a raw code; answers the text the open's own status keeps ([`program_fault_text`]).
     pub fn note_refused_open(&mut self, refusal: semio_framework_os_renderer_wgpu_program_bridge::ProgramFault, chrome: &mut ChromeState) -> String {
+        let detail=program_fault_text(&refusal,self.active_terminology(),self.active_locale());
+        #[cfg(not(target_arch = "wasm32"))]
+        let source_refusal=refusal.create_app_source.is_some();
         #[cfg(not(target_arch = "wasm32"))]
         { if chrome.chrome_build.refused_frame_fault.is_none() { chrome.chrome_build.refused_frame_fault = refusal.frame; }if chrome.chrome_build.refused_kernel_fault.is_none(){chrome.chrome_build.refused_kernel_fault=refusal.kernel;}if chrome.chrome_build.refused_actor_call.is_none(){chrome.chrome_build.refused_actor_call=refusal.actor_call;} }
-        let detail = program_fault_text(&refusal, self.active_terminology(), self.active_locale());
         chrome.chrome_build.refused_guest_fault = refusal.fault.map(|fault| RefusedGuestFault { fault, notices: Vec::new() });
         #[cfg(not(target_arch = "wasm32"))]
-        if refusal.frame.is_some() { self.note_dispatch_fault(&detail, chrome); return detail; }
+        if refusal.frame.is_some() || source_refusal { self.note_dispatch_fault(&detail, chrome); return detail; }
         self.note_dispatch_fault(&refusal.text, chrome);
         detail
     }

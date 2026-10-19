@@ -1,0 +1,120 @@
+{
+  "closeCuts": [
+    0,
+    1,
+    17,
+    64
+  ],
+  "maximumBodyBytes": 4096,
+  "admissionCases": [
+    {
+      "quote": [
+        1,
+        7,
+        11,
+        13,
+        2
+      ],
+      "grant": [
+        0,
+        7,
+        11,
+        13,
+        2
+      ],
+      "admitted": false
+    },
+    {
+      "quote": [
+        1,
+        7,
+        11,
+        13,
+        2
+      ],
+      "grant": [
+        1,
+        6,
+        11,
+        13,
+        2
+      ],
+      "admitted": false
+    },
+    {
+      "quote": [
+        1,
+        7,
+        11,
+        13,
+        2
+      ],
+      "grant": [
+        1,
+        7,
+        10,
+        13,
+        2
+      ],
+      "admitted": false
+    },
+    {
+      "quote": [
+        1,
+        7,
+        11,
+        13,
+        2
+      ],
+      "grant": [
+        1,
+        7,
+        11,
+        12,
+        2
+      ],
+      "admitted": false
+    },
+    {
+      "quote": [
+        1,
+        7,
+        11,
+        13,
+        2
+      ],
+      "grant": [
+        1,
+        7,
+        11,
+        13,
+        1
+      ],
+      "admitted": false
+    },
+    {
+      "quote": [
+        1,
+        7,
+        11,
+        13,
+        2
+      ],
+      "grant": [
+        1,
+        7,
+        11,
+        13,
+        2
+      ],
+      "admitted": true
+    }
+  ],
+  "closeGrant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 4096,
+    "maximumCapacityBytes": 4096,
+    "maximumReleaseBytes": 67108864,
+    "maximumDepth": 4096
+  }
+}

@@ -171,6 +171,20 @@ async fn a_refused_request_is_still_read_so_its_connection_can_go_on() {
 }
 
 #[tokio::test]
+async fn oversized_bodies_discard_only_a_bounded_transport_tail(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧫️fixtures/📥️body/🔣️.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap(){
+        let read=Arc::new(AtomicU64::new(0));let counter=Arc::clone(&read);
+        let chunks=row["chunks"].as_array().unwrap().iter().map(|value|value.as_str().unwrap().as_bytes().to_vec()).collect::<Vec<_>>();
+        let mut original=request(Method::POST,"/commands",remote(1),&[JSON],Vec::new());
+        original.headers_mut().insert(header::CONTENT_LENGTH,row["declared"].as_u64().unwrap().to_string().parse().unwrap());
+        *original.body_mut()=axum::body::Body::from_stream(futures::stream::iter(chunks).map(move|chunk|{counter.fetch_add(chunk.len()as u64,Ordering::Relaxed);Ok::<_,std::convert::Infallible>(Bytes::from(chunk))}));
+        assert!(matches!(body_taken(original,row["limit"].as_u64().unwrap()as usize,Duration::from_secs(1)).await,Err(ServerError::PayloadTooLarge)));
+        assert_eq!(read.load(Ordering::Relaxed),row["read"].as_u64().unwrap());
+    }
+}
+
+#[tokio::test]
 async fn the_throttle_refuses_before_a_handler_runs_and_keys_on_the_address_the_proxy_names() {
     let rate = Rate::per_second(1, 2);
     let (server, router) = limited(Limits { writes: rate, ..Limits::default() }, ClientAddressing::Forwarded, RouteGroups::ALL, InstanceDisclosure::Whole).await;

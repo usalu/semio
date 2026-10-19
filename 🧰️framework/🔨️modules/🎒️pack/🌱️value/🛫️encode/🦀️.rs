@@ -35,6 +35,11 @@ pub fn encode_value_record_body_into(field_id:u16,value:&DslValue,options:&Encod
 /// 📦️ Emits symbols, literal document frames, chunks and footer under one ownership budget.
 pub fn encode_document_controlled(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptions,control:&mut semio_framework_value::native_encoding::NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{document(spec,record,options,control)}
 
+#[path="🧱️chunks/🦀️.rs"]
+mod chunk_declaration;
+#[path="🧮️expression/🦀️.rs"]
+mod expression;
+pub fn record_required_chunked(record:&RecordValue,options:&EncodeOptions)->Result<bool,ValueError>{chunk_declaration::record(record,options,0,&mut||Ok(()))}
 #[path = "🫳️borrowed/🦀️.rs"]
 mod borrowed;
 use borrowed::projected_record_body_into;
@@ -131,7 +136,7 @@ impl Encoder<'_,'_,'_,'_>{
             FieldValue::Statements(items)=>{output.byte(TAG_STATEMENTS,self.control)?;output.varint(items.len()as u64,self.control)?;for(keyword,record)in items{self.control.checkpoint()?;self.forced(keyword,output)?;let spec=statements_variants(shape).and_then(|variants|variants.iter().find(|(key,_)|key==keyword)).map(|(_,producer)|producer.encode(self.control)).transpose()?;self.fields(spec.as_ref(),record,depth+1,output)?;}Ok(())},
             FieldValue::Map(items)=>{let mut sorted=self.control.allocate_vec(items.len())?;for(index,item)in items.iter().enumerate(){self.control.checkpoint()?;if !matches!(item.1,FieldValue::Absent){sorted.push((index,item));}}controlled_schema::sort(&mut sorted,|a,b,control|{let order=controlled_schema::compare_text(&a.1.0,&b.1.0,control)?;Ok(if order==Ordering::Equal{a.0.cmp(&b.0)}else{order})},self.control)?;output.byte(TAG_MAP,self.control)?;output.varint(sorted.len()as u64,self.control)?;for(_, (key,value))in sorted{self.text(key,false,output)?;self.value(map_inner_shape(shape),value,depth+1,output)?;}Ok(())},
             FieldValue::Value(value)=>{output.byte(TAG_VALUE,self.control)?;self.dynamic(value,depth+1,output)},FieldValue::Wire(value)=>{output.byte(TAG_WIRE,self.control)?;self.wire(value,depth+1,output)},
-            FieldValue::Expr(value)=>{let text=semio_framework_dsl_record::print_expr_controlled(value,self.control).map_err(PackRefusal::from)?;output.byte(TAG_EXPR,self.control)?;self.text(&text,false,output)},
+            FieldValue::Expr(value)=>{let symbols=self.symbols;expression::encode(value,usize::from(self.options.limits.max_depth).saturating_sub(usize::from(depth)),symbols.entries.len(),|index|Ok(semio_framework_value::paged_text::TextReadView::from_str(symbols.entries[index].text)),output,self.control)},
         }
     }
     fn bytes(&mut self,bytes:&[u8],output:&mut Output<'_>)->Result<(),PackRefusal>{
@@ -222,7 +227,8 @@ fn document_source(source:DocumentSource<'_>,options:&EncodeOptions,control:&mut
     control.scoped_maximum(maximum,|control|control.scoped_stage(|control|{
         control.begin_stage(0)?;let mut symbols=Symbols{entries:Vec::new()};source.symbols(&mut symbols,options.limits.max_depth,control)?;symbols.finish(control)?;
         let symbol_bytes=|output:&mut Output<'_>,control:&mut NativeEncodeControl<'_>|->Result<(),PackRefusal>{output.varint(symbols.entries.len()as u64,control)?;for symbol in &symbols.entries{control.checkpoint()?;output.varint(symbol.text.len()as u64,control)?;output.bytes(symbol.text.as_bytes(),control)?;}Ok(())};
-        let write=semio_framework_pack_format::WriteOptions{required_flags:0,optional_flags:if options.canonical{semio_framework_pack_format::OPTIONAL_CANONICAL}else{0},codec:options.codec};let mut writer=semio_framework_pack_format::ControlledPackWriter::begin(&write,&options.limits,control)?;
+        let chunks=match &source{DocumentSource::Record{record,..}=>chunk_declaration::record(record,options,0,&mut||control.step()),DocumentSource::Intrinsic{value,..}=>chunk_declaration::intrinsic(value,options,0,&mut||control.step())}?;
+        let write=semio_framework_pack_format::WriteOptions{required_flags:if chunks{semio_framework_pack_format::REQUIRED_CHUNKED}else{0},optional_flags:if options.canonical{semio_framework_pack_format::OPTIONAL_CANONICAL}else{0},codec:options.codec};let mut writer=semio_framework_pack_format::ControlledPackWriter::begin(&write,&options.limits,control)?;
         let mut measure=Output::measure();symbol_bytes(&mut measure,control)?;let mut payload=Output::allocated(measure.length,control)?;symbol_bytes(&mut payload,control)?;writer.symbols(&payload.bytes.unwrap(),symbols.entries.len()as u64,control)?;
         let mut measure=Output::measure();{let mut encoder=Encoder{symbols:&symbols,options,control,writer:None,chunking:true,next_chunk:0};source.fields(&mut encoder,&mut measure)?;}
         let mut payload=Output::allocated(measure.length,control)?;{let mut encoder=Encoder{symbols:&symbols,options,control,writer:Some(&mut writer),chunking:true,next_chunk:0};source.fields(&mut encoder,&mut payload)?;}
@@ -237,7 +243,12 @@ mod refusal_tests;
 
 #[path="🫳️borrowed/⏳️cursor/🦀️.rs"]
 mod borrowed_cursor;
-pub use borrowed_cursor::{BorrowedProjectedPackCursor,BorrowedProjectedPackProgress,BorrowedProjectedPackFailure};
+pub use borrowed_cursor::{BorrowedProjectedPackCursor,BorrowedProjectedPackProgress,BorrowedProjectedPackFailure,BorrowedPackSection};
+#[cfg(feature="deflate")]
+#[path="🫳️borrowed/🎒️document/⏳️cursor/🦀️.rs"]
+mod borrowed_document;
+#[cfg(feature="deflate")]
+pub use borrowed_document::{BorrowedPackDocumentCursor,BorrowedPackDocumentProgress,BorrowedPackDocumentFailure};
 #[path="🫳️borrowed/📨️wire/🦀️.rs"]
 mod owned_wire;
 pub use owned_wire::{OwnedProjectedPackWireCursor,OwnedProjectedPackWireReady,OwnedProjectedPackWireStep};

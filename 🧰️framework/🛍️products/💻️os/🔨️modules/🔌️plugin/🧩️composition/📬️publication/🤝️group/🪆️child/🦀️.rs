@@ -1,3 +1,4 @@
+use semio_framework_value::ErasedSnapshotRetirement as _;
 use semio_framework_plugin_decl_emission::ChildEmit;
 use semio_framework::kernel::ActorId;
 #[cfg(any(test, feature = "artifact-app-testing"))]
@@ -120,7 +121,7 @@ impl PrivateChildPublicationInput {
     pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
         let mut demand = if let Some(request) = self.request.as_ref() {
-            RetirementDemand { copy_bytes: request.next_copy_byte_demand()?, capacity_bytes: request.next_capacity_byte_demand(body)?, release_bytes: request.next_release_byte_demand()?, depth: request.next_depth_demand()? }
+            request.next_demand(body)?
         } else if !self.genesis.terminal_is_empty() { RetirementDemand { release_bytes: self.genesis.next_close_byte_demand(), depth: 2, ..Default::default() } }
         else if let Some(metadata) = self.metadata.as_ref() { RetirementDemand { release_bytes: metadata.next_close_byte_demand(), depth: 1, ..Default::default() } }
         else if !self.issuer.terminal_is_empty() { RetirementDemand { release_bytes: self.issuer.next_close_byte_demand(), depth: 2, ..Default::default() } }

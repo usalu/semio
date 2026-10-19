@@ -23,7 +23,7 @@ let root = "";
 let port = 0;
 let daemon: ReturnType<typeof Bun.spawn> | undefined;
 const instance = `cli-${process.pid}-${Date.now()}`;
-const environment = { ...process.env, SEMIO_DASHBOARD_INSTANCE: instance } as Record<string, string>;
+const environment = { ...process.env, SEMIO_DASHBOARD_INSTANCE: instance, SEMIO_SCRIPT_PROCESS_INVOCATION:"view-envelope", SEMIO_SCRIPT_CAPABILITIES:"view-capabilities", SEMIO_SCRIPT_POLICY:"view-policy" } as Record<string, string>;
 
 function semio(args: string[]): { code: number; out: string; err: string; lines: string[] } {
   const run = Bun.spawnSync([binary(), ...args, "--root", root], { cwd: root, env: environment, stdout: "pipe", stderr: "pipe" });
@@ -43,6 +43,7 @@ beforeAll(async () => {
   const tools = [
     { id: "serve", verb: "dev", continuous: true, ready: { port, portEnv: "JOURNEY_PORT", path: "/ok" }, command: ["bun", "-e", server] },
     { id: "hello", command: ["bun", "-e", "console.log('hello from the journey')"] },
+    { id: "authority", command: ["bun", "-e", "console.log(JSON.stringify(Object.fromEntries(['SEMIO_SCRIPT_PROCESS_INVOCATION','SEMIO_SCRIPT_CAPABILITIES','SEMIO_SCRIPT_POLICY'].map(key=>[key,process.env[key]??null]))))"] },
   ];
   writeFileSync(join(root, "📋️project.json"), JSON.stringify({ name: "w", targets: {}, metadata: { semio: { dashboard: { tools } } } }));
   daemon = Bun.spawn([binary(), "daemon", "serve", "--root", root], { cwd: root, env: environment, stdout: "ignore", stderr: "ignore" });
@@ -60,6 +61,18 @@ afterAll(async () => {
   await Bun.sleep(300);
   rmSync(root, { recursive: true, force: true, maxRetries: 30, retryDelay: 200 });
 }, 60000);
+
+test("a dashboard task owns process authority independently of the requesting view", () => {
+  const result = semio(["run", "tool:w/authority"]);
+  expect(result.code, result.err).toBe(0);
+  expect(result.out).toContain('"SEMIO_SCRIPT_PROCESS_INVOCATION":null');
+  expect(result.out).toContain('"SEMIO_SCRIPT_CAPABILITIES":null');
+  expect(result.out).toContain('"SEMIO_SCRIPT_POLICY":null');
+  const declared = semio(["run", "tool:w/authority", "--env", "SEMIO_SCRIPT_POLICY=task-policy"]);
+  expect(declared.code, declared.err).toBe(0);
+  expect(declared.out).toContain('"SEMIO_SCRIPT_POLICY":"task-policy"');
+  console.log("[DEBUG] independently launched dashboard tasks discard view process authority and retain explicitly selected task policy");
+});
 
 test("run, tasks, logs, open and stop all use the one handle a task is printed with, or its command or group", () => {
   const url = `http://127.0.0.1:${port}/ok`;

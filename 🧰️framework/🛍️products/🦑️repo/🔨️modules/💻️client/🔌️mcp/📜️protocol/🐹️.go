@@ -280,6 +280,8 @@ type Schema struct {
 	Items                *Schema           `json:"items,omitempty"`
 	AdditionalProperties *bool             `json:"additionalProperties,omitempty"`
 	Enum                 []string          `json:"enum,omitempty"`
+	MinLength            int               `json:"minLength,omitempty"`
+	Pattern              string            `json:"pattern,omitempty"`
 }
 
 type Tool struct {
@@ -350,6 +352,18 @@ type ResourceContent struct {
 	MIMEType string `json:"mimeType,omitempty"`
 	Text     string `json:"text,omitempty"`
 	Blob     string `json:"blob,omitempty"`
+}
+
+// 📤️MarshalJSON emits exactly one resource payload, preserving empty text resources.
+func (content ResourceContent) MarshalJSON() ([]byte, error) {
+	result := struct {
+		URI string `json:"uri"`
+		MIMEType string `json:"mimeType,omitempty"`
+		Text *string `json:"text,omitempty"`
+		Blob *string `json:"blob,omitempty"`
+	}{URI: content.URI, MIMEType: content.MIMEType}
+	if content.Blob != "" { result.Blob = &content.Blob } else { result.Text = &content.Text }
+	return json.Marshal(result)
 }
 
 type ReadResourceResult struct {

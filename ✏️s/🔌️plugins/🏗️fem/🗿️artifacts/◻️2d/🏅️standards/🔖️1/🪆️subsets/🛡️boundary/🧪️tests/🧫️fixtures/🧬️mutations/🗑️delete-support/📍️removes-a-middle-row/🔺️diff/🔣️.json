@@ -5,13 +5,13 @@
   "materials": null,
   "sections": null,
   "supports": {
-    "inserted": [],
     "removed": [
       {
         "id": "s2",
         "index": 2
       }
     ],
+    "inserted": [],
     "moved": [],
     "modified": []
   },

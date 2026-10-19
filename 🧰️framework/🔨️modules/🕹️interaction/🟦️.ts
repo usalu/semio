@@ -4,6 +4,7 @@
  * Tree/React consume in wave 2, replacing Tree's private `getTreeNextSelectionState`. Plain readonly
  * types/functions only, no external runtime libraries; same semantics, same field names (camelCase
  * mirrors Rust's `#[serde(rename_all = "camelCase")]`), same function names in camelCase. */
+export { encodeScopedIdentity, decodeScopedIdentity, SCOPED_IDENTITY_MAX_BYTES, SCOPED_IDENTITY_MAX_SEGMENTS } from "../📡️replication/🧾️wire/🪪️scoped-identity/🟦️.ts";
 import type { IconName } from "@semio-tech/assets";
 import type { LocalizedLabel } from "../🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts";
 export type { IconName, LocalizedLabel };
@@ -133,26 +134,40 @@ const childrenByParent = (topo: DomainTopology): Map<string, string[]> => {
   return children;
 };
 
-const visitDescendants = (id: string, children: Map<string, string[]>, out: string[]): void => {
-  out.push(id);
-  for (const kid of children.get(id) ?? []) visitDescendants(kid, children, out);
+const expandTargets = (topo: DomainTopology, ids: readonly string[], transitive: boolean): string[] => {
+  if (!transitive) return [...new Set(ids)];
+  const children = childrenByParent(topo);
+  const members = new Set(topo.ordered.map(node => node.id));
+  const seen = new Set<string>();
+  const pending = [...ids].reverse();
+  const out: string[] = [];
+  while (pending.length) {
+    const id = pending.pop()!;
+    if (seen.has(id)) continue;
+    seen.add(id);
+    out.push(id);
+    const descendants = members.has(id) ? children.get(id) ?? [] : [];
+    for (let index = descendants.length - 1; index >= 0; index--) pending.push(descendants[index]!);
+  }
+  return out;
 };
 
 /** 🌳️ `rootId` plus every descendant, pre-order (root first) — empty when `rootId` is absent from `topo`. */
 export const domainTopologyDescendantClosure = (topo: DomainTopology, rootId: string): string[] => {
   if (!domainTopologyContains(topo, rootId)) return [];
-  const out: string[] = [];
-  visitDescendants(rootId, childrenByParent(topo), out);
-  return out;
+  return expandTargets(topo, [rootId], true);
 };
 
 /** 🪜️ `id`'s ancestor chain, nearest parent first, root last. */
 export const domainTopologyAncestors = (topo: DomainTopology, id: string): string[] => {
   const out: string[] = [];
-  let current = topo.ordered.find((node) => node.id === id)?.parent;
-  while (current !== undefined) {
+  const parents = new Map(topo.ordered.map(node => [node.id, node.parent]));
+  const seen = new Set([id]);
+  let current = parents.get(id);
+  while (current !== undefined && !seen.has(current)) {
     const parentId: string = current;
-    current = topo.ordered.find((node) => node.id === parentId)?.parent;
+    seen.add(parentId);
+    current = parents.get(parentId);
     out.push(parentId);
   }
   return out;
@@ -172,17 +187,7 @@ export type SelectionInput = {
   readonly mode: SelectionMode;
 };
 
-const dedupPreservingOrder = (ids: readonly string[]): string[] => {
-  const out: string[] = [];
-  for (const id of ids) if (!out.includes(id)) out.push(id);
-  return out;
-};
-
-const expandTarget = (spec: Pick<SelectionSpec, "transitive">, topo: DomainTopology, id: string): string[] => {
-  if (!spec.transitive) return [id];
-  const closure = domainTopologyDescendantClosure(topo, id);
-  return closure.length === 0 ? [id] : closure;
-};
+const dedupPreservingOrder = (ids: readonly string[]): string[] => [...new Set(ids)];
 
 /**
  * 🖱️ Computes the next `DomainSelection` for one domain — the TS twin of Rust's `next_selection`,
@@ -222,7 +227,9 @@ export const nextSelection = (spec: SelectionSpec, current: DomainSelection, top
     return { granularity, ids: [lastTargetId], anchorId: lastTargetId };
   }
 
-  const expanded = targetIds.flatMap((id) => expandTarget(spec, topo, id));
+  const expanded = expandTargets(topo, targetIds, spec.transitive);
+  const incoming = new Set(expanded);
+  const existing = new Set(current.ids);
 
   let ids: string[];
   switch (input.merge) {
@@ -230,20 +237,14 @@ export const nextSelection = (spec: SelectionSpec, current: DomainSelection, top
       ids = dedupPreservingOrder(expanded);
       break;
     case "additive": {
-      ids = [...current.ids];
-      for (const id of expanded) if (!ids.includes(id)) ids.push(id);
+      ids = [...current.ids, ...expanded.filter(id => !existing.has(id))];
       break;
     }
     case "subtractive":
-      ids = current.ids.filter((id) => !expanded.includes(id));
+      ids = current.ids.filter((id) => !incoming.has(id));
       break;
     case "invertive": {
-      ids = [...current.ids];
-      for (const id of expanded) {
-        const index = ids.indexOf(id);
-        if (index === -1) ids.push(id);
-        else ids.splice(index, 1);
-      }
+      ids = [...current.ids.filter(id => !incoming.has(id)), ...expanded.filter(id => !existing.has(id))];
       break;
     }
   }
@@ -268,12 +269,7 @@ export const nextHover = (spec: HoverSpec, topo: DomainTopology, input: HoverInp
   if (!spec.enabled || input.targets.length === 0) {
     return { channel: input.channel, ids: [] };
   }
-  const ids: string[] = [];
-  for (const target of input.targets) {
-    for (const id of expandTarget(spec, topo, target.id)) {
-      if (!ids.includes(id)) ids.push(id);
-    }
-  }
+  const ids = expandTargets(topo, input.targets.map(target => target.id), spec.transitive);
   return { channel: input.channel, ids };
 };
 // #endregion 🔖️HoverMachine
@@ -286,36 +282,38 @@ export const nextHover = (spec: HoverSpec, topo: DomainTopology, input: HoverInp
  * the stored one is no longer declared, and clamps `"single"`-mode selections down to their first id.
  */
 export const validateState = (defs: readonly InteractionDefinition[], topo: InteractionTopology, state: InteractionState): InteractionState => {
-  const selection: Record<string, DomainSelection> = {};
-  const hover: Record<string, DomainHover> = {};
-  const activeMode: Record<string, SelectionMode> = {};
-  const activeGranularity: Record<string, string> = {};
+  const selection: Record<string, DomainSelection> = Object.create(null);
+  const hover: Record<string, DomainHover> = Object.create(null);
+  const activeMode: Record<string, SelectionMode> = Object.create(null);
+  const activeGranularity: Record<string, string> = Object.create(null);
+  const own = <T>(record: Readonly<Record<string, T>>, id: string): T | undefined => Object.hasOwn(record, id) ? record[id] : undefined;
 
   for (const def of defs) {
-    const domainTopo = topo.domains[def.id];
+    const domainTopo = own(topo.domains, def.id);
+    const members = domainTopo ? new Set(domainTopo.ordered.map(node => node.id)) : undefined;
     const declaredGranularities = def.granularities.map((granularity) => granularity.id);
     const defaultGranularity = def.granularities[0]?.id ?? "";
     const defaultMode: SelectionMode = def.selection.modes[0] ?? "single";
 
-    const storedMode = state.activeMode[def.id];
+    const storedMode = own(state.activeMode, def.id);
     const mode = storedMode && def.selection.modes.includes(storedMode) ? storedMode : defaultMode;
     activeMode[def.id] = mode;
 
-    const storedGranularity = state.activeGranularity[def.id];
+    const storedGranularity = own(state.activeGranularity, def.id);
     activeGranularity[def.id] = storedGranularity && declaredGranularities.includes(storedGranularity) ? storedGranularity : defaultGranularity;
 
-    const domainSelection = state.selection[def.id];
+    const domainSelection = own(state.selection, def.id);
     if (domainSelection) {
       const granularity = declaredGranularities.includes(domainSelection.granularity) ? domainSelection.granularity : defaultGranularity;
-      let ids = domainSelection.ids.filter((id) => (domainTopo ? domainTopologyContains(domainTopo, id) : true));
+      let ids = domainSelection.ids.filter((id) => members?.has(id) ?? true);
       if (mode === "single" && ids.length > 1) ids = ids.slice(0, 1);
       const anchorId = domainSelection.anchorId && ids.includes(domainSelection.anchorId) ? domainSelection.anchorId : undefined;
       selection[def.id] = { granularity, ids, anchorId };
     }
 
-    const domainHover = state.hover[def.id];
+    const domainHover = own(state.hover, def.id);
     if (domainHover) {
-      const ids = domainHover.ids.filter((id) => (domainTopo ? domainTopologyContains(domainTopo, id) : true));
+      const ids = domainHover.ids.filter((id) => members?.has(id) ?? true);
       hover[def.id] = { channel: domainHover.channel, ids };
     }
   }

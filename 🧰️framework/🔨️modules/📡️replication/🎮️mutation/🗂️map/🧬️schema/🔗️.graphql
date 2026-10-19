@@ -5,5 +5,6 @@ type MapSet { value: DslValue }
 type MapRemove { kind: String! }
 type MapReject { kind: String! }
 union MapEntryOperation = MapSet | MapRemove | MapReject
-type MapEntryDelta { key: String!, precondition: MapPresence!, operation: MapEntryOperation! }
-type MapDelta { entries: [MapEntryDelta!]! }
+type MapEntryDelta { precondition: MapPresence!, operation: MapEntryOperation! }
+scalar MapDeltaEntries
+type MapDelta { entries: MapDeltaEntries! }

@@ -1,0 +1,14 @@
+{
+  "environments": [
+    { "name": "msvc-paths", "base": {}, "output": "PATH=C:\\Tools;C:\\Windows\r\nINCLUDE=C:\\Include\r\nLIB=C:\\Lib\r\n", "expected": { "PATH": "C:\\Tools;C:\\Windows", "INCLUDE": "C:\\Include", "LIB": "C:\\Lib" }, "oracle": true },
+    { "name": "case-insensitive-overlay", "base": { "Path": "old", "KEEP": "unchanged" }, "output": "PATH=new\r\nVALUE=a=b\r\n", "expected": { "PATH": "new", "KEEP": "unchanged", "VALUE": "a=b" }, "oracle": true },
+    { "name": "empty-and-unicode", "base": {}, "output": "EMPTY=\nLIB=C:\\工具\n", "expected": { "EMPTY": "", "LIB": "C:\\工具" }, "oracle": true },
+    { "name": "windows-special-variables", "base": {}, "output": "=C:=C:\\temp\r\nProgramFiles(x86)=C:\\Program Files (x86)\r\n[vcvarsall.bat] Environment initialized\r\n", "expected": { "ProgramFiles(x86)": "C:\\Program Files (x86)" }, "oracle": false }
+  ],
+  "presets": [
+    { "name": "compiler-only", "preset": { "generator": "Ninja", "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" } }, "accepted": true },
+    { "name": "hidden-base", "preset": { "hidden": true }, "accepted": true },
+    { "name": "ide-solution", "preset": { "generator": "Visual Studio 18 2026", "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" } }, "accepted": false },
+    { "name": "ide-architecture", "preset": { "generator": "Ninja", "architecture": "x64", "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" } }, "accepted": false }
+  ]
+}

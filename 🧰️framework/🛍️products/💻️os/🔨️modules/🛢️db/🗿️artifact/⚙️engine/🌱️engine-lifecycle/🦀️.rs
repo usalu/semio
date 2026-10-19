@@ -161,7 +161,7 @@ impl ArtifactEngine {
                                 batch_ids.insert(envelope.mutation_id.0.clone());
                                 let actor = to_core_actor_id(&envelope.actor).await;
                                 if seen <= applied_head_seq {
-                                    *engine.actor_seq.entry(envelope.actor.0.clone()).or_insert(0) += 1;
+                                    *engine.actor_seq.entry(envelope.actor.0.as_str().to_owned()).or_insert(0) += 1;
                                     engine.applied.insert(envelope.mutation_id.0.clone(), envelope.clone());
                                 } else {
                                     let touched = match engine.plan_one(&envelope, &batch_ids, &mut HashMap::new()).await? {
@@ -176,7 +176,7 @@ impl ArtifactEngine {
                                     remember_recent_touch(&mut engine.recent_touches, touch);
                                     report.commands_replayed += 1;
                                 }
-                                let actor_seq = *engine.actor_seq.get(&envelope.actor.0).unwrap_or(&0);
+                                let actor_seq = *engine.actor_seq.get(envelope.actor.0.as_str()).unwrap_or(&0);
                                 engine.index_backlog.queue_command(&watermarks, seen, db_index::RecordLocation { segment: segment_index, offset: seen, len: 1 }, actor, actor_seq);
                             }
                             db_wal_log::WalRecord::Frontier(frontier) => {

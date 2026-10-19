@@ -37,3 +37,7 @@ pub fn encode_native_snapshot_record(encoding:NativeSnapshotEncoding,envelope_id
  Ok(result)
 }
 
+
+#[path="🫴️receiving/🦀️.rs"]
+mod original_receiving;
+pub use original_receiving::{OriginalArtifactHistoryReadLimits,OriginalArtifactPairReceiving,OriginalArtifactPairFailure,OriginalArtifactPairCause,OriginalSnapshotRecordReceiving,OriginalArtifactPackReceiving,OriginalArtifactSnapshotReceiving};

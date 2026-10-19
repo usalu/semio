@@ -1,12 +1,5 @@
 {
-  "artifact": null,
-  "schema": null,
-  "model": null,
-  "structure": null,
-  "zones": null,
   "referencedModel": {
     "kind": "detached"
-  },
-  "weatherLink": null,
-  "resultsJson": null
+  }
 }

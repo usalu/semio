@@ -1,0 +1,24 @@
+{
+  "name": "neutral-census",
+  "private": true,
+  "workspaces": [
+    "source/__pycache__/leases/late",
+    "source/__pycache__/runtime",
+    "source/member",
+    "source/target-prototype/leases/late",
+    "source/target-prototype/runtime",
+    "source/📤️dist/leases/late",
+    "source/📤️dist/runtime",
+    "source/🤖️generated/leases/late",
+    "source/🤖️generated/runtime"
+  ],
+  "semio": {
+    "workspace": {
+      "schemaVersion": 1,
+      "members": [
+        "source/**"
+      ],
+      "owners": []
+    }
+  }
+}

@@ -149,10 +149,13 @@ impl<V> OrderedMap<V> {
         let removed = cursor.take_removed(); let displaced = std::mem::replace(self, cursor.take_result().unwrap()); retire_cold(displaced.retire()); close_cold(&mut cursor); removed.and_then(release_cold)
     }
     /// ⚡️ Completes a synchronous convenience removal; retained jobs must use begin_remove and advance.
-    pub fn remove(&mut self, key: &str) -> Option<V> {
+    /// `Some` states that the key WAS present, whatever else still shares its payload: a clone of this map keeps the payload
+    /// alive, so only [`Removal::Owned`] hands the value over and [`Removal::Shared`] reports that another owner retains it.
+    pub fn remove(&mut self, key: &str) -> Option<Removal<V>> {
         let mut cursor = self.begin_remove(key.to_owned());
         while !cursor.is_complete() { cursor.advance(cold_update_grant(&cursor)).expect("ordered cold removal admission"); }
-        let removed = cursor.take_removed(); let displaced = std::mem::replace(self, cursor.take_result().unwrap()); retire_cold(displaced.retire()); close_cold(&mut cursor); removed.and_then(release_cold)
+        let removed = cursor.take_removed(); let displaced = std::mem::replace(self, cursor.take_result().unwrap()); retire_cold(displaced.retire()); close_cold(&mut cursor);
+        removed.map(|shared| release_cold(shared).map_or(Removal::Shared, Removal::Owned))
     }
     /// 🧹️ Moves this root into explicit final-owner retirement.
     pub fn retire(mut self) -> Retirement<V> { Retirement::new(self.root.take()) }
@@ -190,6 +193,19 @@ impl<V> FromIterator<(String, V)> for OrderedMap<V> {
 }
 impl<V, const N: usize> From<[(String, V); N]> for OrderedMap<V> { fn from(entries: [(String, V); N]) -> Self { entries.into_iter().collect() } }
 //#endregion 🗂️Map
+
+/// 🗑️ What a completed [`OrderedMap::remove`] took out of the map: the key was present either way.
+#[derive(Debug, PartialEq, Eq)]
+pub enum Removal<V> {
+    /// The payload had no other owner, so its value moves to the caller (who retires it if it owns a fail-closed root).
+    Owned(V),
+    /// Another clone of the map still shares the payload; the caller has nothing to retire.
+    Shared,
+}
+impl<V> Removal<V> {
+    /// 🎁️ The value when this removal held the last owner.
+    pub fn into_owned(self) -> Option<V> { match self { Self::Owned(value) => Some(value), Self::Shared => None } }
+}
 
 //#region 🧵️UpdateCursor
 /// 🎟️ One structural phase or a byte-bounded comparison fragment.

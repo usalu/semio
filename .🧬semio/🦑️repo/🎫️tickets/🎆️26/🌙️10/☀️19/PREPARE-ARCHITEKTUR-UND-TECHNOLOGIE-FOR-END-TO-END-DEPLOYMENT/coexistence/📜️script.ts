@@ -1,0 +1,20 @@
+import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { readFileSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
+import Ajv from "ajv";
+
+const ticket = process.env.SEMIO_TICKET_DIR!;
+const site = resolve(process.cwd(), "🎓️teaching/🏛️architecture/📚️course");
+const contract = JSON.parse(readFileSync(resolve(site, "🧫️fixtures/🎛️dashboard/🔣️.json"), "utf8"));
+const readme = readFileSync(resolve(site, "README.md"), "utf8");
+const validate = new Ajv({ strict: true, allErrors: true }).compile(contract.definitions.Documentation);
+const actual = validate(readme);
+const independent = contract.definitions.Documentation.allOf.every((rule: { pattern?: string; not?: { pattern: string } }) => rule.not ? !new RegExp(rule.not.pattern, "u").test(readme) : new RegExp(rule.pattern!, "u").test(readme));
+assert.equal(actual, independent);
+const metadataDigest = createHash("sha256").update(JSON.stringify(contract.const)).digest("hex");
+if (process.argv[2] === "green") assert.equal(metadataDigest, JSON.parse(readFileSync(resolve(ticket, "🗑️generated/coexistence-red.json"), "utf8")).metadataDigest);
+const result = { valid: actual, independent, metadataDigest, errors: validate.errors };
+writeFileSync(resolve(ticket, `🗑️generated/coexistence-${process.argv[2]}.json`), JSON.stringify(result, null, 2) + "\n");
+console.log(JSON.stringify(result, null, 2));
+process.exitCode = actual ? 0 : 1;

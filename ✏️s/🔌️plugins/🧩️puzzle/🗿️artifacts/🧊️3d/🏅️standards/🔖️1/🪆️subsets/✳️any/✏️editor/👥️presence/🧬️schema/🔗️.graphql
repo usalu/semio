@@ -1,14 +1,1 @@
-type Puzzle3dPresence {
-  selectedObjectIds: [String!]! @state(class: PRESENCE)
-  selectedVortexIds: [String!]! @state(class: PRESENCE)
-  selectedAttractionIds: [String!]! @state(class: PRESENCE)
-  selectedTargetVolumeIds: [String!]! @state(class: PRESENCE)
-  selectedReferenceIds: [String!]! @state(class: PRESENCE)
-  hoveredObjectId: String @state(class: PRESENCE)
-  hoveredVortexFullId: String @state(class: PRESENCE)
-  cameraPosition: [Float!]! @state(class: PRESENCE)
-  cameraTarget: [Float!]! @state(class: PRESENCE)
-  cameraZoom: Float! @state(class: PRESENCE)
-  activeUtilityId: String! @state(class: PRESENCE)
-  activeToolId: String @state(class: PRESENCE)
-}
+type Puzzle3dPresence

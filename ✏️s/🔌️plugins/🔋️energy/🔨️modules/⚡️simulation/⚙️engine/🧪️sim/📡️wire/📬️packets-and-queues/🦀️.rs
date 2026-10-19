@@ -12,7 +12,7 @@ pub const ENERGY_WIRE_LEASE_SLOTS: usize = 64;
 
 pub const ENERGY_WIRE_HEADER_BYTES: usize = 80;
 
-pub const ENERGY_CHECKPOINT_BYTES: usize = 164;
+pub const ENERGY_CHECKPOINT_BYTES: usize = 196;
 
 /// 💸️ Charges one owner close turn to the running step's own wallet and reports whether that owner finished.
 pub fn energy_spend(context: &mut StepContext<'_>, step: Result<RetainedCloneStep, ValueError>) -> Result<bool, EnergyWireRejection> {

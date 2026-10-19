@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "input",
+    "expected",
+    "refused",
+    "originalChildProjection",
+    "coldConstructionRequired",
+    "denialAxes"
+  ],
+  "properties": {
+    "input": {
+      "$ref": "#/$defs/row"
+    },
+    "expected": {
+      "$ref": "#/$defs/row"
+    },
+    "refused": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 5
+    },
+    "originalChildProjection": {
+      "const": true
+    },
+    "coldConstructionRequired": {
+      "const": false
+    },
+    "denialAxes": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ]
+    }
+  },
+  "$defs": {
+    "row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "camera",
+        "mode",
+        "selected",
+        "label",
+        "revision"
+      ],
+      "properties": {
+        "camera": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "zoom",
+            "target"
+          ],
+          "properties": {
+            "zoom": {
+              "type": "number"
+            },
+            "target": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "mode": {
+          "enum": [
+            "shaded",
+            "wire"
+          ]
+        },
+        "selected": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

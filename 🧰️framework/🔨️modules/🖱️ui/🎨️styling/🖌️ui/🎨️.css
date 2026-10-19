@@ -714,6 +714,72 @@
   max-height: none;
 }
 
+/* 👆️ Tablet is touch, including a desktop-width window pinned to tablet: every control of the
+   framework is at least the finger target, not only the slots that already grew under `.touch`.
+   A phone keeps its own sizes — this is the tablet device, not every coarse pointer. */
+[data-ui-device="tablet"] :where(
+  button,
+  [role="button"],
+  [role="tab"],
+  [role="menuitem"],
+  [role="menuitemcheckbox"],
+  [role="menuitemradio"],
+  [role="option"],
+  [role="switch"],
+  [role="checkbox"],
+  [role="radio"],
+  [role="treeitem"],
+  [role="slider"],
+  summary,
+  select,
+  textarea,
+  input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="image"]),
+  [data-slot="checkbox"],
+  [data-slot="input"],
+  [data-slot="textarea"],
+  [data-slot="select-trigger"],
+  [data-slot="select-item"],
+  [data-slot="command-item"],
+  [data-slot="menu-item"],
+  [data-slot="tabs-trigger"],
+  [data-slot="slider-thumb"],
+  [data-slot="stepper-minus"],
+  [data-slot="stepper-plus"],
+  [data-slot="ribbon-item"],
+  [data-slot="tree-item-row"],
+  [data-slot="tree-row"],
+  [data-slot="tree-section-row"],
+  [data-slot="control-tree-row"],
+  [data-slot="popover-trigger"],
+  [data-slot="window-pane-chrome-toggle"],
+  [data-slot="button-group-item"],
+  [data-slot="toggle-group-item"],
+  [data-slot="action-group-item"],
+  [data-slot="mode-dock-tab"],
+  [data-slot="mode-dock-tab-close"],
+  [data-slot="mode-dock-close"],
+  [data-slot="mode-dock-maximize"],
+  [data-slot="mobile-panel-tab-button"],
+  [data-slot="panel-tab-button"],
+  [data-slot="side-panel-tab-button"],
+  [data-slot="drag-handle"]
+) {
+  min-width: var(--layout-touch-min);
+  min-height: var(--layout-touch-min);
+  max-height: none;
+}
+
+[data-ui-device="tablet"] :is(nav, header, footer, [data-slot="navbar"], [data-slot="footer"]) :where(a[href], button) {
+  min-width: var(--layout-touch-min);
+  min-height: var(--layout-touch-min);
+}
+
+[data-ui-device="tablet"] label:has(input[type="checkbox"]),
+[data-ui-device="tablet"] label:has(input[type="radio"]) {
+  min-height: var(--layout-touch-min);
+}
+
+
 @layer base {
   .prose {
     --tw-prose-body: var(--foreground);
@@ -7062,6 +7128,19 @@
   backdrop-filter: blur(var(--veil-blur)) saturate(var(--glass-saturate));
   background-color: color-mix(in srgb, var(--surface-bg) calc(var(--veil-alpha) * 100%), transparent);
 }
+/* 🌫 The card under the pointer wears the veil's tint, so the page behind it is the only crisp surface. */
+[data-layered-card][data-tinted] > * {
+  position: relative;
+}
+[data-layered-card][data-tinted] > *::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+  inset: 0;
+  background-color: color-mix(in srgb, var(--surface-bg) calc(var(--veil-alpha) * 100%), transparent);
+}
+
 
 /* #region 🪟️GlassAccessibilityFallbacks
  * Accessibility and capability fallbacks replace each painted glass region independently. They
@@ -7071,12 +7150,18 @@
   :is(.ui-glass, .ui-veil) {
     background-color: var(--surface-bg);
   }
+  [data-layered-card][data-tinted] > *::after {
+    background-color: var(--surface-bg);
+  }
 }
 
 @media (prefers-reduced-transparency: reduce) {
   :is(.ui-glass, .ui-veil) {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+    background-color: var(--surface-bg);
+  }
+  [data-layered-card][data-tinted] > *::after {
     background-color: var(--surface-bg);
   }
 
@@ -7092,6 +7177,10 @@
     backdrop-filter: none;
     background-color: Canvas;
     color: CanvasText;
+  }
+  [data-layered-card][data-tinted] > *::after {
+    background-color: Canvas;
+    forced-color-adjust: none;
   }
 
   [data-window-silhouette-border] path {

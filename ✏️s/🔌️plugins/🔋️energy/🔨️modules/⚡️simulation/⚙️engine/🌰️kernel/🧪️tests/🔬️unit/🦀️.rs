@@ -1,5 +1,8 @@
 use super::*;
 use crate::precompute::PrecomputedModel;
+
+#[path = "../../../⚡️electrical/🧪️tests/🔆️pv-plane/🦀️.rs"]
+mod solar_pv;
 use crate::schedule::ScheduleId;
 
 #[test]
@@ -137,4 +140,41 @@ fn advance_timestep_applies_fault_severity_to_ideal_loads() {
     let config = SimulationConfig::default();
     let result = SimulationKernel::advance_timestep(&model, &config, &pre, &mut state, &weather, &date, 10.0);
     assert!(result.is_ok());
+}
+
+#[test]
+fn retained_thermal_free_constrained_and_partial_delivery_match_independent_balance() {
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🌡️thermal/🔣️.json")).unwrap();
+ for row in fixture["cases"].as_array().unwrap(){
+  let model=crate::model::test_model_single_zone();let mut pre=PrecomputedModel::build(&model,60,60);let zone_id=pre.zone_order[0];
+  pre.enclosures.get_mut(&zone_id).unwrap().faces.truncate(1);
+  let weather=default_weather(0);let mut state=SimulationKernel::initialize(&model,&pre,&weather);let mut step=TimestepWork::new(&model,&pre,HourWeather {previous:weather,current:weather,next:weather},SimDate::new(2026,1,1),0.0);
+  let air=&state.zones.get(&zone_id).unwrap().air;let (storage,history)=air.storage_terms(air.capacity_rate_w_k(model.zones[0].volume_m3*model.zones[0].multiplier.max(1) as f64,step.step_weather.pressure_pa,step.dt_s));
+  let target=row["target"].as_f64();let loads=ZoneLoads {convective_w:440.0-history,controlled:target.is_some(),heating_setpoint_c:target.filter(|x|*x>22.0).unwrap_or(-100.0),cooling_setpoint_c:target.filter(|x|*x<22.0).unwrap_or(100.0),..Default::default()};step.zone_loads[0]=loads;
+  let mut balance=BalanceWork::new();balance.stage=BalanceStage::Solve;balance.air_diagonal_w_k=23.0-storage;state.solver.matrix[..4].copy_from_slice(&[13.0,-3.0,-3.0,0.0]);state.solver.rhs[0]=180.0;step.balance=Some(balance);step.stage=TimestepStage::Balance;
+  let pointers=(state.solver.matrix.as_ptr(),state.solver.scratch.as_ptr(),state.solver.solution.as_ptr());let mut turns=0;
+  while step.balance.as_ref().unwrap().stage==BalanceStage::Solve {
+   let saved=serde_json::to_string(&step).unwrap();let signature=step.retained_wire_signature();assert_eq!(signature.len(),fixture["checkpoint"]["words"].as_u64().unwrap() as usize);let original=state.solver.scratch.clone();
+   let denied=step.step_funded(&model,&SimulationConfig::default(),&pre,&mut state,semio_framework_value::RetainedCloneGrant {maximum_items:0,maximum_copy_bytes:512,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1});assert_eq!(denied.progress,Default::default());assert!(denied.fault.is_none());assert_eq!(serde_json::to_string(&step).unwrap(),saved);assert_eq!(state.solver.scratch,original);assert_eq!(step.retained_wire_signature(),signature);
+   let turn=step.step_funded(&model,&SimulationConfig::default(),&pre,&mut state,semio_framework_value::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:512,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1});assert!(turn.fault.is_none(),"{:?}",turn.fault);assert_eq!(turn.progress.retained_capacity_bytes,0);assert!(turn.progress.copied_bytes<=512);turns+=1;assert!(turns<1000);assert_ne!(step.retained_wire_signature(),signature,"every funded thermal prefix has distinct continuation authority");
+   let restored:TimestepWork=serde_json::from_str(&serde_json::to_string(&step).unwrap()).unwrap();assert_eq!(restored.retained_wire_signature(),step.retained_wire_signature());step=restored;
+  }
+  let balance=step.balance.as_mut().unwrap();assert!((balance.free_temp_c-row["free"][1].as_f64().unwrap()).abs()<1e-10);assert!((balance.required_w-row["required"].as_f64().unwrap()).abs()<1e-10);balance.delivered_w=row["delivered"].as_f64().unwrap();balance.stage=BalanceStage::Settle;
+  while step.balance.as_ref().unwrap().stage==BalanceStage::Settle {let turn=step.step_funded(&model,&SimulationConfig::default(),&pre,&mut state,semio_framework_value::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:512,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1});assert!(turn.fault.is_none());turns+=1;assert!(turns<2000);}
+  assert!((state.solver.solution[0]-row["settled"][0].as_f64().unwrap()).abs()<1e-10);assert!((state.solver.solution[1]-row["settled"][1].as_f64().unwrap()).abs()<1e-10);assert_eq!(pointers,(state.solver.matrix.as_ptr(),state.solver.scratch.as_ptr(),state.solver.solution.as_ptr()));
+  println!("[DEBUG] original retained Energy thermal {} matched Mathjs free/constrained/delivered solution in {} turns",row["id"],turns);
+ }
+}
+
+#[test]
+fn retained_thermal_fault_refuses_physical_commit_and_restored_foreign_dimensions() {
+ let model=crate::model::test_model_single_zone();let mut pre=PrecomputedModel::build(&model,60,60);let zone_id=pre.zone_order[0];pre.enclosures.get_mut(&zone_id).unwrap().faces.truncate(1);let weather=default_weather(0);
+ for foreign in [false,true] {
+  let mut state=SimulationKernel::initialize(&model,&pre,&weather);let original=state.zones.get(&zone_id).unwrap().air.clone();let mut step=TimestepWork::new(&model,&pre,HourWeather {previous:weather,current:weather,next:weather},SimDate::new(2026,1,1),0.0);
+  let mut balance=BalanceWork::new();balance.stage=BalanceStage::Solve;balance.thermal_phase=2;balance.dense=Some(if foreign {DenseSolveCursor::new(3,9,3)}else{DenseSolveCursor::new(2,4,2)});step.balance=Some(balance);step.stage=TimestepStage::Balance;state.solver.scratch[..4].copy_from_slice(&[1.0,2.0,2.0,4.0]);state.solver.solution[..2].copy_from_slice(&[3.0,6.0]);
+  let mut turns=0;
+  loop {let turn=step.step_funded(&model,&SimulationConfig::default(),&pre,&mut state,semio_framework_value::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:512,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1});if let Some(fault)=turn.fault{assert_eq!(fault,if foreign {DenseSolveFault::Dimensions}else{DenseSolveFault::Singular});assert!(turn.progress.copied_bytes<=512);break;}turns+=1;assert!(turns<100);}
+  assert_eq!(state.zones.get(&zone_id).unwrap().air,original);assert_eq!(step.balance.as_ref().unwrap().stage,BalanceStage::Solve);
+  println!("[DEBUG] retained Energy typed {} fault stopped before original physical commit",if foreign {"foreign dimension"}else{"singular"});
+ }
 }

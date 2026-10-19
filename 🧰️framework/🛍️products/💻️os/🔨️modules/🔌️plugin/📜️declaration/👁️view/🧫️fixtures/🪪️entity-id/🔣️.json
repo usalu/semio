@@ -1,0 +1,70 @@
+{
+  "contract": "semio.app-operation.entity-id.v1",
+  "encoding": "UTF-8 byte-length-prefixed document, authoring seed and local key; content_id prefix",
+  "rows": [
+    {
+      "name": "writer-a",
+      "documentId": "doc",
+      "authoringSeed": "actor-a:100:0",
+      "prefix": "n",
+      "localKey": "node",
+      "expected": "n-d21aa75c793ee2f1"
+    },
+    {
+      "name": "writer-b",
+      "documentId": "doc",
+      "authoringSeed": "actor-b:100:0",
+      "prefix": "n",
+      "localKey": "node",
+      "expected": "n-9765cd2b343ac188"
+    },
+    {
+      "name": "next-command",
+      "documentId": "doc",
+      "authoringSeed": "actor-a:100:1",
+      "prefix": "n",
+      "localKey": "node",
+      "expected": "n-12504a1b69056554"
+    },
+    {
+      "name": "other-document",
+      "documentId": "other",
+      "authoringSeed": "actor-a:100:0",
+      "prefix": "n",
+      "localKey": "node",
+      "expected": "n-9a417de0fd11f633"
+    },
+    {
+      "name": "second-entity",
+      "documentId": "doc",
+      "authoringSeed": "actor-a:100:0",
+      "prefix": "n",
+      "localKey": "node:1",
+      "expected": "n-4e8dad99a3225793"
+    },
+    {
+      "name": "unicode",
+      "documentId": "🏗️",
+      "authoringSeed": "alice",
+      "prefix": "r",
+      "localKey": "outline",
+      "expected": "r-5adebc452bbbff94"
+    },
+    {
+      "name": "ambiguous-a",
+      "documentId": "a:b",
+      "authoringSeed": "c",
+      "prefix": "m",
+      "localKey": "field",
+      "expected": "m-74ed8502a375ca76"
+    },
+    {
+      "name": "ambiguous-b",
+      "documentId": "a",
+      "authoringSeed": "b:c",
+      "prefix": "m",
+      "localKey": "field",
+      "expected": "m-679b34a7fb00c025"
+    }
+  ]
+}

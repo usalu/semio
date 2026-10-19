@@ -8,7 +8,7 @@ pub use crate::publication_fixture::transient::mutations::change_publication_tra
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
-#[mutations(snapshot = crate::publication_fixture::transient::PublicationTransient, diff = crate::publication_fixture::transient::PublicationTransientDiff, schema = "plugin.test.publication-transient")]
+#[mutations(snapshot = crate::publication_fixture::transient::PublicationTransient, diff = crate::publication_fixture::transient::PublicationTransientDiff, schema = "plugin.test.publication-transient", reference = super::PublicationTransient, reference_diff = super::PublicationTransientDiff)]
 pub enum PublicationTransientMutation {
     ChangePublicationTransient(ChangePublicationTransient),
 }

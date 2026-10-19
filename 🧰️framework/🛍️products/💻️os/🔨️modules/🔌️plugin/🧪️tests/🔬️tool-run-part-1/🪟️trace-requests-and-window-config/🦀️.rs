@@ -193,17 +193,18 @@ async fn a_mounted_window_config_publication_resumes_its_refresh_and_queues_the_
         if mounted.pending_window_config_receipt.is_some() {
             yielded_with_retained_receipt += 1;
         }
-        if let Some(found) = mounted.take_result_page() {
+        if let Some(found) = mounted.take_fixture_result_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation) {
             page = Some(found);
             break;
         }
     }
-    let page = page.expect("the retained window config receipt reaches its result page");
+    let mut page = page.expect("the retained window config receipt reaches its result page");
     assert_eq!(page.lane, TypedOperationResultLane::WindowConfig);
     assert!(yielded_with_retained_receipt > 0, "the first refresh unit yields while the displaced snapshot awaits custody");
     assert!(mounted.pending_window_config_receipt.is_none() && mounted.published_window_config);
     assert!(mounted.window_config_authority.as_ref().is_some_and(|authority| authority.snapshot.generation() > generation_before), "the captured authority was refreshed to the published generation");
-    assert!(mounted.acknowledge_result_page(page.token).expect("exact ACK"));
+    assert!(mounted.acknowledge_result_page(crate::app_testing::artifact_app_laws::close_fixture_result_page(&mut page,crate::app_testing::artifact_app_laws::fixture_mounted_policy().close)).expect("exact ACK"));
+mounted.close_fixture_original_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().close);
     let mut terminal = false;
     for _ in 0..4096 {
         app.typed_ctx().publish_mounted_typed_operation_unit(&mut mounted, grant).unwrap_or_else(|fault| panic!("every unit after the window config ACK resumes: {fault:?}"));
@@ -213,9 +214,10 @@ async fn a_mounted_window_config_publication_resumes_its_refresh_and_queues_the_
             let quoted = grant;
             mounted.granted_retirement_step(quoted).expect("granted retirement of the acknowledged publication");
         }
-        if let Some(page) = mounted.take_result_page() {
+        if let Some(mut page) = mounted.take_fixture_result_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation) {
             terminal = page.lane == TypedOperationResultLane::Terminal;
-            assert!(mounted.acknowledge_result_page(page.token).expect("exact ACK"));
+            assert!(mounted.acknowledge_result_page(crate::app_testing::artifact_app_laws::close_fixture_result_page(&mut page,crate::app_testing::artifact_app_laws::fixture_mounted_policy().close)).expect("exact ACK"));
+mounted.close_fixture_original_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().close);
             break;
         }
     }

@@ -6,6 +6,11 @@ use std::mem::ManuallyDrop;
 #[derive(Clone, Copy)]
 pub struct MountedChildGroupIdentitySource<'a> { pub parent: &'a str, pub actor: &'a str, pub revision: [u8; 32], pub instance: u32, pub operation: u64 }
 
+impl<'a> MountedChildGroupIdentitySource<'a> {
+    /// 🫳️ Borrows the mounted parent's original coordinates for the issuer to validate and seal.
+    pub fn borrowed(parent: &'a str, actor: &'a str, revision: [u8; 32], instance: u32, operation: u64) -> Self { Self { parent, actor, revision, instance, operation } }
+}
+
 #[doc(hidden)]
 pub struct MountedChildGroupIdentityIssuer {
     hash: Option<semio_framework_hash::Sha256>,

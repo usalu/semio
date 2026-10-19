@@ -1,5 +1,5 @@
-//! 🏷 Puzzle5d mutation — `RenamePuzzle5d`: changes the document's display label (the closest
 //! thing this fixture has to an identity field).
+//! 🏷 Puzzle5d mutation — `RenamePuzzle5d`: changes the document's display label (the closest
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::Puzzle5dSnapshot;
 
@@ -30,6 +30,14 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "puzzle5d", kind: "rename-puzzle5d", record: "RenamedPuzzle5d" };
 
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Rename puzzle5d", "Puzzle 5D umbenennen")
+    }
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for RenamePuzzle5d {
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
@@ -39,8 +47,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Rename puzzle5d", "Puzzle 5D umbenennen")
-    }
 }
 //#endregion 🔖️Mutation

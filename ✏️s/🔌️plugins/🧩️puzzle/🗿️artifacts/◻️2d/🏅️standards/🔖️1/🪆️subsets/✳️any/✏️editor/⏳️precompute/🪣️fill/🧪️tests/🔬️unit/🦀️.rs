@@ -26,10 +26,17 @@ use crate::editor::puzzle2d::testkit::*;
 use crate::editor::puzzle2d::modes::edit::tools::fill;
 use semio_framework_test_fixtures::fixture_text;
 use {crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID};
-use geo::{coord, Intersects, Rect};
-use semio_framework_job::{INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US};
-use semio_framework_plugin::{DslValue, PluginApp};
-use semio_framework_tool_run::{ToolRunId, ToolRunStep, ToolRunTick, ToolRunTraceOp};
+use geo::coord;
+use geo::Intersects;
+use geo::Rect;
+use semio_framework_job::INTERACTIVE_LANE_FUEL;
+use semio_framework_job::INTERACTIVE_LANE_WALL_US;
+use semio_framework_plugin::DslValue;
+use semio_framework_plugin::PluginApp;
+use semio_framework_tool_run::ToolRunId;
+use semio_framework_tool_run::ToolRunStep;
+use semio_framework_tool_run::ToolRunTick;
+use semio_framework_tool_run::ToolRunTraceOp;
 use semio_framework_pack_json::json;
 use std::collections::BTreeMap;
 
@@ -59,13 +66,13 @@ fn example(spec: &Value) -> Arc<Puzzle2dPlaySnapshot> {
     let mut document = fixture_of(&app);
     close_app(&mut app);
     if let Some(keep) = spec["keepNodes"].as_u64() {
-        let nodes = document["nodes"].as_array_mut().expect("nodes");
+        let nodes = document.get_mut("nodes").and_then(semio_framework_pack_json::Value::as_array_mut).expect("nodes");
         nodes.truncate(keep as usize);
         let handles: HashSet<String> = nodes.iter().flat_map(|node| node["handles"].as_array().cloned().unwrap_or_default()).filter_map(|handle| handle["id"].as_str().map(str::to_string)).collect();
-        document["edges"].as_array_mut().expect("edges").retain(|edge| edge["source"].as_str().is_some_and(|id| handles.contains(id)) && edge["target"].as_str().is_some_and(|id| handles.contains(id)));
+        document.get_mut("edges").and_then(semio_framework_pack_json::Value::as_array_mut).expect("edges").retain(|edge| edge["source"].as_str().is_some_and(|id| handles.contains(id)) && edge["target"].as_str().is_some_and(|id| handles.contains(id)));
     }
     if spec["detachEdges"].as_bool() == Some(true) {
-        document["edges"] = json!([]);
+        document.as_object_mut().expect("document").insert("edges", json!([]));
     }
     Arc::new(Puzzle2dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&(document))).expect("typed fixture admits")))
 }
@@ -142,12 +149,12 @@ impl RunLog {
     }
 }
 
-fn close_job(job: &mut dyn InteractiveJob) {
-    crate::puzzle_job::testing::close_job(job);
+fn close_job(original: &mut crate::puzzle_job::testing::OriginalFixture, job: &mut dyn InteractiveJob) {
+    original.close_job(job);
 }
 
-fn step_job(job: &mut dyn InteractiveJob, budget: StepBudget, now_us: fn() -> Option<u64>, log: &mut RunLog, sequence: &mut u64) {
-    let failure = match crate::puzzle_job::testing::drive(job, budget, now_us, sequence) {
+fn step_job(original: &mut crate::puzzle_job::testing::OriginalFixture, job: &mut dyn InteractiveJob, budget: StepBudget, log: &mut RunLog) {
+    let failure = match crate::puzzle_job::testing::drive(job, budget, original) {
         JobTurn::Preview(bytes) => ToolRunTick::decode(&bytes).map(|tick| log.apply(tick)).err().map(|error| format!("tick decode {error:?}")),
         JobTurn::Checkpoint { state, .. } => {
             log.checkpoints.push(state);
@@ -157,24 +164,25 @@ fn step_job(job: &mut dyn InteractiveJob, budget: StepBudget, now_us: fn() -> Op
             log.complete = true;
             None
         }
-        JobTurn::Yield => None,
+        JobTurn::Yield | JobTurn::Prepare(_) => None,
         JobTurn::Cancelled => Some("cancelled".to_string()),
         JobTurn::Fault(bytes) => Some(String::from_utf8_lossy(&bytes).into_owned()),
     };
     if let Some(failure) = failure {
-        close_job(job);
+        close_job(original, job);
         panic!("fill run failed: {failure}");
     }
 }
 
 fn run_to_complete(job: &mut dyn InteractiveJob, fuel: u64, log: &mut RunLog) {
-    let mut sequence = 0;
+    let mut original = crate::puzzle_job::testing::OriginalFixture::new(OperationId(1), Generation(1), crate::puzzle_job::testing::fixture_stock(), fill_run_monotonic_zero, u64::MAX, 1 << 32);
     for _ in 0..1 << 24 {
         if log.complete {
-            close_job(job);
+            close_job(&mut original, job);
+            original.finish();
             return;
         }
-        step_job(job, StepBudget::new(fuel, u64::MAX, crate::puzzle_job::testing::unbounded_grant()), fill_run_monotonic_zero, log, &mut sequence);
+        step_job(&mut original, job, StepBudget::new(fuel, u64::MAX, crate::puzzle_job::testing::fixture_stock()), log);
     }
     panic!("fill run never completed");
 }
@@ -187,7 +195,7 @@ fn run(document: &Arc<Puzzle2dPlaySnapshot>, run: u64, requested: u64) -> RunLog
 }
 
 fn verdict_id(verdict: ToolRunVerdict) -> String {
-    semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(verdict))).as_str().unwrap_or_default().to_string()
+    semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&(verdict))).as_str().unwrap_or_default().to_string()
 }
 
 fn reason_id(code: u16) -> &'static str {
@@ -268,7 +276,7 @@ fn fill_run_job_places_only_inside_visible_target_regions() {
     let bounds = [cx - half, cy - half, cx + half, cy + half];
     let painted = |hidden: bool| {
         let mut document = base.value().clone();
-        document["targetRegions"] = json!([{ "id": "region-1", "x": bounds[0], "y": bounds[1], "width": half * 2.0, "height": half * 2.0, "hidden": hidden, "locked": false }]);
+        document.as_object_mut().expect("document").insert("targetRegions", json!([{ "id": "region-1", "x": bounds[0], "y": bounds[1], "width": half * 2.0, "height": half * 2.0, "hidden": hidden, "locked": false }]));
         Arc::new(Puzzle2dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&(document))).expect("typed fixture admits")))
     };
     let (run_id, requested) = (number(&vector["run"]), number(&vector["requested"]));
@@ -471,7 +479,7 @@ fn fill_revalidate_job_retracts_conflicting_placements_and_reappends_survivors()
     let conflicted = number(&law["conflicted"]) as usize;
     let Puzzle2dMutation::CreateNode(create) = &provisional[conflicted * FILL_RUN_OPS_PER_PLACEMENT] else { panic!("create_node") };
     let mut head = document.value().clone();
-    head["nodes"].as_array_mut().expect("nodes").push(json!({ "id": "intruder", "shape": "circle", "x": create.node.x, "y": create.node.y, "radius": 1.0, "handles": [] }));
+    head.get_mut("nodes").and_then(semio_framework_pack_json::Value::as_array_mut).expect("nodes").push(json!({ "id": "intruder", "shape": "circle", "x": create.node.x, "y": create.node.y, "radius": 1.0, "handles": [] }));
     let mut conflict_job = Puzzle2dFillRevalidateJob::new(identity(1, 3), Arc::new(Puzzle2dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&(head))).expect("typed fixture admits"))), &provisional, Some(&checkpoint), 0.0);
     let mut conflict = RunLog::continuing(&base.ops);
     run_to_complete(&mut conflict_job, INTERACTIVE_LANE_FUEL, &mut conflict);
@@ -518,12 +526,13 @@ fn fill_run_job_drive_step_stays_below_the_interactive_ceiling_for_nakagin() {
     for cold in 0..number(&law["coldRuns"]) {
         REPLAY_CLOCK.with(|clock| clock.borrow_mut().1 = (cold > 0).then_some(0));
         let mut job = fresh(&document, number(&law["run"]), number(&law["requested"]));
-        let (mut log, mut preview_sequence, mut turn) = (RunLog::default(), 0_u64, 0);
+        let (mut log, mut turn) = (RunLog::default(), 0);
+        let mut original = crate::puzzle_job::testing::OriginalFixture::new(OperationId(1), Generation(1), crate::puzzle_job::testing::fixture_stock(), replay_clock, u64::MAX, 1 << 32);
         while !log.complete {
             let start = replay_clock().expect("clock");
-            let budget = StepBudget::from_duration(INTERACTIVE_LANE_FUEL, start, INTERACTIVE_LANE_WALL_US, crate::puzzle_job::testing::unbounded_grant()).expect("budget");
+            let budget = StepBudget::from_duration(INTERACTIVE_LANE_FUEL, start, INTERACTIVE_LANE_WALL_US, crate::puzzle_job::testing::fixture_stock()).expect("budget");
             let began = std::time::Instant::now();
-            let outcome = crate::puzzle_job::testing::drive(&mut job, budget, replay_clock, &mut preview_sequence);
+            let outcome = crate::puzzle_job::testing::drive(&mut job, budget, &mut original);
             let elapsed = began.elapsed().as_micros();
             let failure = match &outcome {
                 JobTurn::Preview(bytes) => ToolRunTick::decode(bytes).map(|tick| log.apply(tick)).err().map(|error| format!("{error:?}")),
@@ -535,7 +544,7 @@ fn fill_run_job_drive_step_stays_below_the_interactive_ceiling_for_nakagin() {
                 _ => None,
             };
             if let Some(failure) = failure {
-                close_job(&mut job);
+                close_job(&mut original, &mut job);
                 panic!("interactive fill run failed: {failure}");
             }
             if cold == 0 {
@@ -545,7 +554,8 @@ fn fill_run_job_drive_step_stays_below_the_interactive_ceiling_for_nakagin() {
             }
             turn += 1;
         }
-        close_job(&mut job);
+        close_job(&mut original, &mut job);
+        original.finish();
         assert_eq!(turn, best.len(), "cold run {cold} sliced the job differently");
     }
     let worst = best.iter().copied().max().unwrap_or(0);
@@ -558,7 +568,7 @@ fn tool_run_args(entries: &[(&str, DslValue)]) -> DslValue {
 }
 
 fn tool_run_action(app: &mut Puzzle2dApp, action: &str, entries: &[(&str, DslValue)]) -> DslValue {
-    ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(tool_run_args(entries)), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
+    ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(tool_run_args(entries)), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().close)).unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
 }
 
 fn run_state(app: &Puzzle2dApp) -> Option<&'static str> {
@@ -572,7 +582,7 @@ fn pump_until(app: &mut Puzzle2dApp, what: &str, done: impl Fn(&Puzzle2dApp) -> 
         if done(app) {
             return;
         }
-        crate::puzzle_job::testing::maintain(&mut app.0, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, app.1.cx()).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
+        app.maintain(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
         ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
         if let Some(page) = app.take_typed_operation_result_page(1) {
             assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "{what}: typed operation faulted: {}", String::from_utf8_lossy(page.bytes()));

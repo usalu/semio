@@ -314,7 +314,7 @@ pub fn wire_probes() -> Vec<EnergyModelMutation> {
         remove_electrical_load_center_pv(crate::model::EntityId(320), crate::model::EntityId(300)),
         add_electrical_load_center_battery(crate::model::EntityId(320), 0, crate::model::EntityId(310)),
         remove_electrical_load_center_battery(crate::model::EntityId(321), crate::model::EntityId(310)),
-        create_pv_system(2, crate::model::EntityId(302), 8000.0, 44.0, 25.0, 200.0, 0.19, 0.97),
+        create_pv_system(2, crate::model::EntityId(302), 8000.0, 44.0, 25.0, 200.0, 0.19, 0.97, -0.004, 25.0, 6.84, crate::model::PhotovoltaicMounting::OpenRack),
         delete_pv_system(crate::model::EntityId(300)),
         change_pv_system_dc_capacity(crate::model::EntityId(300), 7000.0),
         change_pv_system_area(crate::model::EntityId(300), 42.0),
@@ -402,6 +402,15 @@ pub fn wire_probes() -> Vec<EnergyModelMutation> {
         change_gas_material_gas(crate::model::EntityId(2), crate::model::GasKind::Argon),
         rename_gas_material(crate::model::EntityId(2), "ARGON GAP 16MM".to_string()),
         change_material_roughness(crate::model::EntityId(1), crate::model::SurfaceRoughness::VeryRough),
+        change_glazing_material_solar_reflectance_front(crate::model::EntityId(1), 0.18),
+        change_glazing_material_solar_reflectance_back(crate::model::EntityId(1), 0.18),
+        change_glazing_material_visible_reflectance_front(crate::model::EntityId(1), 0.18),
+        change_glazing_material_visible_reflectance_back(crate::model::EntityId(1), 0.18),
+        change_glazing_material_infrared_transmittance(crate::model::EntityId(1), 0.18),
+        change_pv_system_temperature_coefficient(crate::model::EntityId(302), -0.003),
+        change_pv_system_faiman_heat_loss_constant(crate::model::EntityId(302), 30.0),
+        change_pv_system_faiman_heat_loss_wind(crate::model::EntityId(302), 8.0),
+        change_pv_system_mounting(crate::model::EntityId(302), crate::model::PhotovoltaicMounting::CloseRoof),
     ]
 }
 //#endregion 🧵️WireProbes

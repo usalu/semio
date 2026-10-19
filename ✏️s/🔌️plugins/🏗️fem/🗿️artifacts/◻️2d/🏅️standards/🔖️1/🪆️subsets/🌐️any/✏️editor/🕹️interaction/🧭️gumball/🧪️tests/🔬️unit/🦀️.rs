@@ -12,7 +12,7 @@ fn demo() -> Fem2dSnapshot {
 #[test]
 fn gumball_meta_layer_emitted_when_transform_utility_and_selection() {
     let doc = demo();
-    let meta = fem2d_gumball_meta_layer(&doc, &["n1".into()], FEM2D_UTILITY_TRANSFORM, Some("w")).expect("meta");
+    let meta = fem2d_gumball_meta_layer(&doc, &["scope:1:4:node2:n1".into()], FEM2D_UTILITY_TRANSFORM, Some("w")).expect("meta");
     assert_eq!(meta.get("role").and_then(|value| value.as_str()), Some("meta"));
     assert!(meta.get("gumball").is_some());
     assert_eq!(meta.pointer("/gumball/config/moveAxes").and_then(|value| value.as_bool()), Some(true));
@@ -30,7 +30,7 @@ fn gumball_meta_absent_without_selection() {
 fn a_tick_is_the_relative_leaf_over_the_selected_geometry() {
     let doc = demo();
     let n1 = doc.nodes.iter().find(|node| node.id == "n1").expect("n1").clone();
-    let tick = fem2d_gumball_tick(&doc, &["n1".into()], Fem2dGumballMotion::Translate { dx: 1.0, dy: 2.0 }).expect("a node selection moves geometry");
+    let tick = fem2d_gumball_tick(&doc, &["scope:1:4:node2:n1".into()], Fem2dGumballMotion::Translate { dx: 1.0, dy: 2.0 }).expect("a node selection moves geometry");
     assert_eq!((tick.node_ids.clone(), tick.region_ids.clone(), tick.pivot_x, tick.pivot_y, tick.dx, tick.dy), (vec!["n1".to_string()], Vec::new(), n1.x, n1.y, 1.0, 2.0));
     let mut moved = doc.clone();
     semio_s_artifact_fem_2d_mutations::central_apply::apply_fem2d_mutation(&mut moved, &Fem2dMutation::MoveSelection(tick)).expect("the tick applies");
@@ -44,7 +44,7 @@ fn a_tick_is_the_relative_leaf_over_the_selected_geometry() {
 #[test]
 fn ticks_compose_into_one_net_leaf() {
     let doc = demo();
-    let tick = |motion| fem2d_gumball_tick(&doc, &["n1".into()], motion).expect("tick");
+    let tick = |motion| fem2d_gumball_tick(&doc, &["scope:1:4:node2:n1".into()], motion).expect("tick");
     let moved = fem2d_gumball_then(&tick(Fem2dGumballMotion::Translate { dx: 0.5, dy: 0.0 }), &tick(Fem2dGumballMotion::Translate { dx: 0.25, dy: 1.0 })).expect("translations add");
     assert_eq!((moved.dx, moved.dy), (0.75, 1.0));
     let turned = fem2d_gumball_then(&tick(Fem2dGumballMotion::Rotate { angle: 0.5 }), &tick(Fem2dGumballMotion::Rotate { angle: 0.25 })).expect("rotations add");
@@ -64,7 +64,7 @@ fn drive(transient: &FemGumballTransient, window: &str, phase: GesturePhase, tic
 #[test]
 fn a_one_shot_tick_commits_one_transaction() {
     let doc = demo();
-    let tick = fem2d_gumball_tick(&doc, &["n1".into()], Fem2dGumballMotion::Translate { dx: 1.0, dy: 0.0 });
+    let tick = fem2d_gumball_tick(&doc, &["scope:1:4:node2:n1".into()], Fem2dGumballMotion::Translate { dx: 1.0, dy: 0.0 });
     let done = drive(&FemGumballTransient::default(), "w", GesturePhase::Once, tick.clone(), "base");
     let (reference, mutations) = done.committed.expect("committed");
     assert!(reference.id.starts_with("tx-") && reference.tool == format!("{FEM2D_EDITOR_APP_ID}#translateSelection"));
@@ -77,7 +77,7 @@ fn a_one_shot_tick_commits_one_transaction() {
 #[test]
 fn streamed_ticks_commit_the_net_leaf_once() {
     let doc = demo();
-    let tick = |dx| fem2d_gumball_tick(&doc, &["n1".into()], Fem2dGumballMotion::Translate { dx, dy: 0.0 });
+    let tick = |dx| fem2d_gumball_tick(&doc, &["scope:1:4:node2:n1".into()], Fem2dGumballMotion::Translate { dx, dy: 0.0 });
     let first = drive(&FemGumballTransient::default(), "w", GesturePhase::Stream, tick(0.5), "base");
     assert!(first.committed.is_none(), "a stream tick commits nothing");
     let open = first.transient.expect("the first tick opens the window's gesture");
@@ -101,7 +101,7 @@ fn streamed_ticks_commit_the_net_leaf_once() {
 #[test]
 fn host_aborts_leave_zero_trace_and_keep_sibling_gestures() {
     let doc = demo();
-    let tick = || fem2d_gumball_tick(&doc, &["n1".into()], Fem2dGumballMotion::Translate { dx: 0.5, dy: 0.0 });
+    let tick = || fem2d_gumball_tick(&doc, &["scope:1:4:node2:n1".into()], Fem2dGumballMotion::Translate { dx: 0.5, dy: 0.0 });
     let left = drive(&FemGumballTransient::default(), "left", GesturePhase::Stream, tick(), "base").transient.expect("left opens");
     let both = drive(&left, "right", GesturePhase::Stream, tick(), "base").transient.expect("right opens");
     assert_eq!(both.gestures.len(), 2, "two windows hold two gestures");
@@ -127,7 +127,7 @@ fn host_aborts_leave_zero_trace_and_keep_sibling_gestures() {
 async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
     let base = demo();
-    let tick = |motion| Fem2dMutation::MoveSelection(fem2d_gumball_tick(&base, &["n1".to_string()], motion).expect("the selection moves geometry"));
+    let tick = |motion| Fem2dMutation::MoveSelection(fem2d_gumball_tick(&base, &["scope:1:4:node2:n1".to_string()], motion).expect("the selection moves geometry"));
     let log = [tick(Fem2dGumballMotion::Translate { dx: 1.0, dy: 0.0 }), tick(Fem2dGumballMotion::Scale { sx: 2.0, sy: 1.0 }), tick(Fem2dGumballMotion::Rotate { angle: 0.5 })];
     let mut store = store::ArtifactStore::<Fem2dSnapshot, Fem2dMutation>::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<Fem2dSnapshot, Fem2dMutation>(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA, "gumball-time-travel", base.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Fem2dSnapshot, Fem2dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
@@ -136,7 +136,7 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     let edited = tick(Fem2dGumballMotion::Translate { dx: -0.5, dy: 3.0 });
-    let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[0].clone(), protocol::InputReplacement::Input { schema: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+    let drafts: protocol::HistoryInputDrafts = [(ids[0].clone(), protocol::InputReplacement::Input { schema: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
     assert_eq!(store.state_before(&ids[0], &drafts).expect("the preview base folds").as_ref(), &base, "the preview base is the state right before the edited move");
     let mut replay = store.begin_report_replay(&drafts, Some(&ids[0])).expect("the replay begins at the edited move");
     assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::os_store::replay::ReplayStep::Finished(_)));

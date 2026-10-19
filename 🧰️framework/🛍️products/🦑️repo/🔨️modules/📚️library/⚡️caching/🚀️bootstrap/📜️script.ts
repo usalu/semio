@@ -189,13 +189,14 @@ async function publishNxCollectionBoundaryV1(root: string,directory:string, sign
     for (const name of children) enqueue([...parts, name]);
   });
   const discoveryFinished=performance.now();
+  if(progress)console.log(`[nx] Validating current owner custody (${visited.length} directories, ${admitted.length} manifests)`);
   await verifyNxAdmissionDirectoriesV1(root,visited,admitted,current,signal);
-  for (const file of admitted) {
+  await boundedWalk(admitted, NX_ADMISSION_CONCURRENCY, async file => {
     signal?.throwIfAborted();
     await real(dirname(join(root, file.path)));
     const now = await lstat(join(root, file.path));
     if (!now.isFile() || now.isSymbolicLink() || now.dev !== file.device || now.ino !== file.inode) throw new Error("Nx current admission requires unchanged real manifest custody");
-  }
+  });
   const custodyFinished=performance.now();
   const begin = "# 🧫️ Canonical Example Collection Admission", end = "# 🧫️ End Example Collection Admission";
   const start = before.indexOf(begin), finish = before.indexOf(end);
@@ -599,24 +600,26 @@ export async function runOwnedNxInvocationV1(root:string,args:readonly string[],
  if(status!==undefined&&status!==0)throw new Error(`Owned Nx invocation failed (${status}): nx ${args.join(" ")}`);
 }
 
+/** 📨️ Retains the inherited process deadline, policy and capabilities before dashboard or Nx dispatch. */
+export function nxBootstrapEnvelopeV1(root:string,args:readonly string[],environment:NodeJS.ProcessEnv,now:number):ReturnType<typeof readScriptProcessEnvelope>{
+ const encoded=environment.SEMIO_SCRIPT_POLICY,capabilityWire=environment.SEMIO_SCRIPT_CAPABILITIES,inherited=environment[SCRIPT_PROCESS_INVOCATION_ENV];
+ const incoming=inherited===undefined?undefined:readScriptProcessEnvelope(JSON.parse(inherited),now);
+ const policy=encoded===undefined?incoming?.policy??readScriptPolicy({version:1,owner:"repository:nx",maximumElapsedMilliseconds:orchestratorBudgetMs()??0}):readScriptPolicy(JSON.parse(encoded));
+ const capabilities=incoming?capabilityWire===undefined?incoming.capabilities:JSON.parse(capabilityWire):capabilityWire===undefined?createNxBootstrapCapabilitiesV1(root,args,environment):readNxBootstrapAuthoringCapabilitiesV1(JSON.parse(capabilityWire));
+ const envelope=incoming??createScriptProcessEnvelope(policy,capabilities,now);
+ if(envelope.policy.version!==policy.version||envelope.policy.owner!==policy.owner||envelope.policy.maximumElapsedMilliseconds!==policy.maximumElapsedMilliseconds)throw Error("Original Nx process policy changed across handoff");
+ if(JSON.stringify(envelope.capabilities)!==JSON.stringify(capabilities))throw Error("Original Nx process capabilities changed across handoff");
+ return envelope;
+}
+
 if (import.meta.main) {
-  const args=process.argv.slice(2);
-    const encoded = process.env.SEMIO_SCRIPT_POLICY, capabilityWire = process.env.SEMIO_SCRIPT_CAPABILITIES, inherited = process.env[SCRIPT_PROCESS_INVOCATION_ENV];
-    const incoming = inherited === undefined ? undefined : readScriptProcessEnvelope(JSON.parse(inherited), Date.now());
-    const policy = encoded === undefined ? incoming?.policy ?? readScriptPolicy({ version: 1, owner: "repository:nx", maximumElapsedMilliseconds: orchestratorBudgetMs() ?? 0 }) : readScriptPolicy(JSON.parse(encoded));
-    const capabilities = incoming ? capabilityWire===undefined?incoming.capabilities:JSON.parse(capabilityWire) : capabilityWire===undefined?createNxBootstrapCapabilitiesV1(WORKSPACE_ROOT,args,process.env):readNxBootstrapAuthoringCapabilitiesV1(JSON.parse(capabilityWire));
-    const envelope = incoming ?? createScriptProcessEnvelope(policy, capabilities, Date.now());
-    if (envelope.policy.version !== policy.version || envelope.policy.owner !== policy.owner || envelope.policy.maximumElapsedMilliseconds !== policy.maximumElapsedMilliseconds) throw Error("Original Nx process policy changed across handoff");
-    if (JSON.stringify(envelope.capabilities) !== JSON.stringify(capabilities)) throw Error("Original Nx process capabilities changed across handoff");
-    process.env[SCRIPT_PROCESS_INVOCATION_ENV] = scriptProcessEnvironment(envelope, process.env)[SCRIPT_PROCESS_INVOCATION_ENV];
-  const native=await import("../../../🎛️dashboard/📦️installation/🟦️.ts"),selectedMode=resolveNxInvocation(args.slice(1)).env.SEMIO_BUILD_MODE,mode=readBuildMode((envelope.capabilities as {buildMode?:unknown}).buildMode??selectedMode??"prototype");
+ const args=process.argv.slice(2),inherited=process.env[SCRIPT_PROCESS_INVOCATION_ENV],envelope=nxBootstrapEnvelopeV1(WORKSPACE_ROOT,args,process.env,Date.now());
+ process.env[SCRIPT_PROCESS_INVOCATION_ENV]=scriptProcessEnvironment(envelope,process.env)[SCRIPT_PROCESS_INVOCATION_ENV];
+ try{await withScriptProcessEnvelope(envelope,async original=>{
+  const native=await import("../../../🎛️dashboard/📦️installation/🟦️.ts"),selectedMode=resolveNxInvocation(args.slice(1)).env.SEMIO_BUILD_MODE,mode=readBuildMode((original.capabilities as{buildMode?:unknown}).buildMode??selectedMode??"prototype");
   if(selectedMode!==undefined&&mode!==selectedMode)throw Error("Original dashboard build mode changed across handoff");
   const invocation=args[0]==="nx"&&native.dashboardInstalled(WORKSPACE_ROOT,mode)?native.dashboardInvocation(args.slice(1)):undefined;
-  if(invocation){try{await withScriptProcessEnvelope(envelope,async original=>{process.exitCode=await native.launchDashboard(WORKSPACE_ROOT,invocation,{invocation:original,workspace:WORKSPACE_ROOT,mode,network:readNativeCallerAuthorityV1(original.capabilities).network,control:scriptCompilerAdmissionControlV1(original,"dashboard:launch",0)});});}catch(error){console.error(error instanceof Error?error.message:String(error));process.exitCode=1;}}
-  else{
-    try { await withScriptProcessEnvelope(envelope, async original => {
-      publishBootstrapSources(WORKSPACE_ROOT);
-      await new ScriptRouter(WORKSPACE_ROOT).register("nx", NxScript).run(args, original);
-    }); } finally { if (inherited === undefined) delete process.env[SCRIPT_PROCESS_INVOCATION_ENV]; else process.env[SCRIPT_PROCESS_INVOCATION_ENV] = inherited; }
-  }
+  if(invocation){try{process.exitCode=await native.launchDashboard(WORKSPACE_ROOT,invocation,{invocation:original,workspace:WORKSPACE_ROOT,mode,network:readNativeCallerAuthorityV1(original.capabilities).network,control:scriptCompilerAdmissionControlV1(original,"dashboard:launch",0)});}catch(error){console.error(error instanceof Error?error.message:String(error));process.exitCode=original.control.signal.aborted?130:1;}}
+  else{publishBootstrapSources(WORKSPACE_ROOT);await new ScriptRouter(WORKSPACE_ROOT).register("nx",NxScript).run(args,original);}
+ });}catch(error){if(process.exitCode!==130)throw error;}finally{if(inherited===undefined)delete process.env[SCRIPT_PROCESS_INVOCATION_ENV];else process.env[SCRIPT_PROCESS_INVOCATION_ENV]=inherited;}
 }

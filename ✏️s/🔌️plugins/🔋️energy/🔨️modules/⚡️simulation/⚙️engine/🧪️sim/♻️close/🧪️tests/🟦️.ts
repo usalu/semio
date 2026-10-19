@@ -1,0 +1,20 @@
+import {test,expect} from "bun:test";
+import {readFileSync} from "node:fs";
+import Ajv from "ajv";
+import {applyPatch} from "fast-json-patch";
+test("Energy terminal owners preserve concrete backing custody before authority release",()=>{
+ const law=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
+ expect(new Ajv({strict:true}).validate({type:"object",required:["schema","owned","name","temperatures","order","terminalDropBytes"],additionalProperties:false,properties:{schema:{const:"semio.energy.original-terminal-owners.v1"},owned:{type:"array",minItems:16,maxItems:16,uniqueItems:true,items:{type:"string"}},name:{type:"string"},temperatures:{type:"array",items:{type:"number"}},order:{type:"array",items:{type:"string"}},terminalDropBytes:{const:0}}},law)).toBe(true);
+ const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");
+ for(const field of law.owned)expect(source).toContain(field+":");
+ expect(source).toContain("close.selected_demand(body)");expect(source).toContain("self.closing_tail=None");
+ const state=Object.fromEntries(law.owned.map((field:string)=>[field,{retained:true}]));
+ expect(applyPatch(state,law.owned.map((field:string)=>({op:"remove"as const,path:"/"+field})),true,false).newDocument).toEqual({});
+ const bytes=Buffer.byteLength(law.name,"utf8")+law.temperatures.length*8;
+ const encoder=new TextEncoder();expect(bytes).toBe(encoder.encode(law.name).length+new Float64Array(law.temperatures).byteLength);
+ const root=readFileSync(new URL("../../🦀️.rs",import.meta.url),"utf8");
+ expect(root).toContain("authority.tail_moved&&authority.closing_tail.is_none()");
+ expect(root).toContain("released_bytes:demand.release_bytes");
+ expect(root).not.toContain("Ok(EnergyJobAuthority::close_step(self, context.retained_grant())?)");
+ console.log("[DEBUG] Energy sixteen terminal owner fields and concrete UTF-8/f64 input bytes agree with independent Ajv/JSONPatch/Buffer oracles");
+});

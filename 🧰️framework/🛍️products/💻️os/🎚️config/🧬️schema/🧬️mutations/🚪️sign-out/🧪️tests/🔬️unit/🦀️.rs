@@ -1,3 +1,4 @@
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::*;
 use protocol::Mutation;
 

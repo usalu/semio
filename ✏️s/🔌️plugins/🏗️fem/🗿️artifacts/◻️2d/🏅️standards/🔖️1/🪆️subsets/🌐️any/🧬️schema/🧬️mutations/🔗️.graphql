@@ -1,14 +1,191 @@
-# 🧬️ Fem2d mutation schema — artifact-lane fields only.
+# 🧬️ Typed Fem2d mutation payloads and their discriminated union.
+scalar Binary64
 
-type Fem2dMutation {
-  nodes: [FemNode!]! @state(class: ARTIFACT)
-  elements: [FemElement!]! @state(class: ARTIFACT)
-  regions: [FemRegion!]! @state(class: ARTIFACT)
-  materials: [FemMaterial!]! @state(class: ARTIFACT)
-  sections: [FemSection!]! @state(class: ARTIFACT)
-  supports: [FemSupport!]! @state(class: ARTIFACT)
-  loadCases: [FemLoadCase!]! @state(class: ARTIFACT)
-  combinations: [FemCombination!]! @state(class: ARTIFACT)
-  analysis: FemAnalysisSettings! @state(class: ARTIFACT)
+union Fem2dMutation = Fem2dCreateNode | Fem2dDeleteNode | Fem2dCreateElement | Fem2dDeleteElement | Fem2dReplaceElement | Fem2dCreateMaterial | Fem2dDeleteMaterial | Fem2dReplaceMaterial | Fem2dChangeMaterial | Fem2dCreateSection | Fem2dDeleteSection | Fem2dReplaceSection | Fem2dCreateSupport | Fem2dDeleteSupport | Fem2dReplaceSupport | Fem2dCreateRegion | Fem2dDeleteRegion | Fem2dReplaceRegion | Fem2dCreateLoadCase | Fem2dDeleteLoadCase | Fem2dAddLoad | Fem2dRemoveLoad | Fem2dChangeLoadCaseSelfWeight | Fem2dCreateCombination | Fem2dDeleteCombination | Fem2dUpdateAnalysisSettings | Fem2dReplaceNode | Fem2dReplaceLoad | Fem2dChangeLoadCaseName | Fem2dReplaceCombination | Fem2dMoveSelection | Fem2dChangeNode | Fem2dChangeSection | Fem2dChangeRegion | Fem2dChangeSupport | Fem2dChangeElement | Fem2dChangeLoad | Fem2dChangeCombinationName | Fem2dChangeCombinationTerm
+
+type Fem2dCreateNode {
+  node: FemNode!
+  index: Int
 }
 
+type Fem2dDeleteNode {
+  id: String!
+}
+
+type Fem2dCreateElement {
+  element: FemElement!
+  index: Int
+}
+
+type Fem2dDeleteElement {
+  id: String!
+}
+
+type Fem2dReplaceElement {
+  id: String!
+  newElement: FemElement!
+}
+
+type Fem2dCreateMaterial {
+  material: FemMaterial!
+  index: Int
+}
+
+type Fem2dDeleteMaterial {
+  id: String!
+}
+
+type Fem2dReplaceMaterial {
+  id: String!
+  newMaterial: FemMaterial!
+}
+
+type Fem2dChangeMaterial {
+  id: String!
+  patch: Fem2dMaterialPatch!
+}
+
+type Fem2dCreateSection {
+  section: FemSection!
+  index: Int
+}
+
+type Fem2dDeleteSection {
+  id: String!
+}
+
+type Fem2dReplaceSection {
+  id: String!
+  newSection: FemSection!
+}
+
+type Fem2dCreateSupport {
+  support: FemSupport!
+  index: Int
+}
+
+type Fem2dDeleteSupport {
+  id: String!
+}
+
+type Fem2dReplaceSupport {
+  id: String!
+  newSupport: FemSupport!
+}
+
+type Fem2dCreateRegion {
+  region: FemRegion!
+  index: Int
+}
+
+type Fem2dDeleteRegion {
+  id: String!
+}
+
+type Fem2dReplaceRegion {
+  id: String!
+  newRegion: FemRegion!
+}
+
+type Fem2dCreateLoadCase {
+  loadCase: FemLoadCase!
+  index: Int
+}
+
+type Fem2dDeleteLoadCase {
+  id: String!
+}
+
+type Fem2dAddLoad {
+  caseId: String!
+  load: FemLoad!
+  index: Int
+}
+
+type Fem2dRemoveLoad {
+  caseId: String!
+  loadId: String!
+}
+
+type Fem2dChangeLoadCaseSelfWeight {
+  caseId: String!
+  newSelfWeight: Boolean!
+}
+
+type Fem2dCreateCombination {
+  combination: FemCombination!
+  index: Int
+}
+
+type Fem2dDeleteCombination {
+  id: String!
+}
+
+type Fem2dUpdateAnalysisSettings {
+  settings: FemAnalysisSettings!
+}
+
+type Fem2dReplaceNode {
+  id: String!
+  newNode: FemNode!
+}
+
+type Fem2dReplaceLoad {
+  caseId: String!
+  loadId: String!
+  newLoad: FemLoad!
+}
+
+type Fem2dChangeLoadCaseName {
+  caseId: String!
+  newName: String!
+}
+
+type Fem2dReplaceCombination {
+  id: String!
+  newCombination: FemCombination!
+}
+
+type Fem2dMoveSelection {
+  nodeIds: [String!]!
+  regionIds: [String!]!
+  pivotX: Binary64!
+  pivotY: Binary64!
+  dx: Binary64!
+  dy: Binary64!
+  angle: Binary64!
+  sx: Binary64!
+  sy: Binary64!
+}
+
+
+type Fem2dChangeNode {
+  id: String!
+  patch: Fem2dNodePatch!
+}
+
+type Fem2dChangeSection {
+  id: String!
+  patch: Fem2dSectionPatch!
+}
+
+type Fem2dChangeRegion {
+  id: String!
+  patch: Fem2dRegionPatch!
+}
+
+type Fem2dChangeSupport {
+  id: String!
+  patch: Fem2dSupportPatch!
+}
+
+type Fem2dChangeElement {
+  id: String!
+  patch: Fem2dElementPatch!
+}
+
+type Fem2dChangeLoad { caseId: String! id: String! patch: Fem2dLoadPatch! }
+type Fem2dChangeCombinationName { id: String! name: String! }
+"""⚖️ Required owned numeric factor or explicit removal marker."""
+type Fem2dCombinationFactor { value: Binary64 remove: Boolean }
+type Fem2dChangeCombinationTerm { id: String! caseId: String! factor: Fem2dCombinationFactor! index: Unsigned64 }

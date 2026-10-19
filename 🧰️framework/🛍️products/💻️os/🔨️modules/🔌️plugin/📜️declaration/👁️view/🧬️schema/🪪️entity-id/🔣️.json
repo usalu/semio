@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.plugin.operation-entity-authority.v1",
+  "type": "object",
+  "required": [
+    "parentDocumentId",
+    "authoringSeed"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "parentDocumentId": {
+      "type": "string"
+    },
+    "authoringSeed": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

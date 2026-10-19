@@ -16,8 +16,8 @@ pub enum SparseError {
 #[derive(Clone, Debug, PartialEq)]
 pub struct LdltFactor {
     pub n: usize,
-    pub l_cols: Vec<Vec<(u32, f64)>>,
-    pub d: Vec<f64>,
+    pub columns: SparseColumns,
+    pub d: PagedList<f64, SPARSE_INDEX_SPACE>,
 }
 
 /// 🧭️ The row envelope of a `CscSym`: `first[i]` is the leftmost column holding a stored entry of row
@@ -94,7 +94,7 @@ pub fn ldlt_factor(a: &CscSym) -> Result<LdltFactor, SparseError> {
             }
         }
     }
-    Ok(LdltFactor { n, l_cols, d })
+    Ok(LdltFactor::from_owned_parts(n, l_cols, d))
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -105,12 +105,12 @@ pub struct LdltPreview {
 }
 
 #[derive(Clone, PartialEq)]
-pub struct LdltCheckpoint {
+struct LdltCheckpoint {
     pub(super) identity: NumericalCheckpointIdentity,
     pub(super) a: CscSym,
-    pub(super) l_cols: Vec<Vec<(u32, f64)>>,
-    pub(super) d: Vec<f64>,
-    pub(super) row_lists: Vec<Vec<usize>>,
+    pub(super) columns: SparseColumns,
+    pub(super) d: PagedList<f64, SPARSE_INDEX_SPACE>,
+    pub(super) contributors: RowContributors,
     pub(super) column: usize,
     pub(super) cursor: LdltColumnCursor,
     pub(super) workspace: LdltColumnWorkspace,
@@ -134,13 +134,14 @@ pub(super) enum LdltColumnStage {
     EmitRow,
     PublishColumn,
     CompleteColumn,
+    SortRows,
 }
 
 #[derive(Clone, PartialEq)]
 pub(super) struct LdltColumnCursor {
     pub(super) stage: LdltColumnStage,
     pub(super) source: usize,
-    pub(super) contributor: usize,
+    pub(super) contributor: u64,
     pub(super) entry: usize,
     pub(super) emit_row: usize,
     pub(super) active_column: usize,
@@ -155,13 +156,15 @@ pub(super) struct LdltColumnCursor {
 
 #[derive(Clone, PartialEq)]
 pub(super) struct LdltColumnWorkspace {
-    pub(super) values: Vec<f64>,
-    pub(super) marks: Vec<u32>,
+    pub(super) values: PagedList<f64, SPARSE_INDEX_SPACE>,
+    pub(super) marks: PagedList<u32, SPARSE_INDEX_SPACE>,
     pub(super) generation: u32,
-    pub(super) candidate: Vec<(u32, f64)>,
+    pub(super) touched: PagedList<u32, SPARSE_INDEX_SPACE>,
+    pub(super) candidate: PagedList<(u32, f64), SPARSE_INDEX_SPACE>,
+    pub(super) sort: HeapSortCursor,
 }
 
-pub(super) const LDLT_MAXIMUM_ORDER: usize = 40;
+pub(super) const LDLT_MAXIMUM_ORDER: usize = u32::MAX as usize;
 
 pub struct LdltJob {
     pub(super) operation: Operation,
@@ -171,18 +174,15 @@ pub struct LdltJob {
     pub(super) checkpoint_writer: Option<RetainedJobPayloadWriter>,
     pub(super) checkpoint_cursor: NumericalPageCursor,
     pub(super) desk: NumericalOutcomeDesk,
+    pub(super) terminal_published: bool,
 }
 
 pub(super) fn close_ldlt_checkpoint_step(state: &mut LdltCheckpoint, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
-    if let Some(step) = close_nested_vec_owner_step(&mut state.row_lists, maximum_bytes)? { return Ok(Some(step)); }
-    if let Some(step) = close_nested_vec_owner_step(&mut state.l_cols, maximum_bytes)? { return Ok(Some(step)); }
-    if let Some(step) = close_vec_owner_step(&mut state.workspace.candidate, maximum_bytes)? { return Ok(Some(step)); }
-    for owner in [&mut state.d, &mut state.a.vals, &mut state.workspace.values] {
-        if let Some(step) = close_vec_owner_step(owner, maximum_bytes)? { return Ok(Some(step)); }
-    }
-    for owner in [&mut state.a.rowind, &mut state.a.colptr, &mut state.workspace.marks] {
-        if let Some(step) = close_vec_owner_step(owner, maximum_bytes)? { return Ok(Some(step)); }
-    }
+    if let Some(step) = state.contributors.close_step(maximum_bytes)? { return Ok(Some(step)); }
+    if let Some(step) = state.columns.close_step(maximum_bytes)? { return Ok(Some(step)); }
+    if let Some(step) = close_paged_owner_step(&mut state.workspace.candidate, maximum_bytes)? { return Ok(Some(step)); }
+    for owner in [&mut state.workspace.touched, &mut state.workspace.marks, &mut state.a.rowind, &mut state.a.colptr] { if let Some(step) = close_paged_owner_step(owner, maximum_bytes)? { return Ok(Some(step)); } }
+    for owner in [&mut state.d, &mut state.a.vals, &mut state.workspace.values] { if let Some(step) = close_paged_owner_step(owner, maximum_bytes)? { return Ok(Some(step)); } }
     Ok(None)
 }
 
@@ -190,11 +190,8 @@ impl LdltJob {
     pub fn new(operation: Operation, a: CscSym, columns_per_step: usize) -> Self {
         assert!(columns_per_step > 0, "ldlt batch must contain work");
         let n = a.n;
-        let input_pages_valid = a.colptr.capacity().saturating_mul(size_of::<u32>()) <= NUMERICAL_OWNER_PAGE_BYTES
-            && a.rowind.capacity().saturating_mul(size_of::<u32>()) <= NUMERICAL_OWNER_PAGE_BYTES
-            && a.vals.capacity().saturating_mul(size_of::<f64>()) <= NUMERICAL_OWNER_PAGE_BYTES;
-        let admission_fault = n > LDLT_MAXIMUM_ORDER || a.colptr.len() != n.saturating_add(1) || a.rowind.len() != a.vals.len() || !input_pages_valid;
-        let workspace = LdltColumnWorkspace { values: Vec::new(), marks: Vec::new(), generation: 0, candidate: Vec::new() };
+        let admission_fault = n > LDLT_MAXIMUM_ORDER || a.colptr.len() != n.saturating_add(1) || a.rowind.len() != a.vals.len() || a.colptr.get(0).copied() != Some(0) || a.colptr.get(n).copied().map(|value| value as usize) != Some(a.vals.len());
+        let workspace = LdltColumnWorkspace { values: PagedList::empty(), marks: PagedList::empty(), generation: 0, touched: PagedList::empty(), candidate: PagedList::empty(), sort: HeapSortCursor::new(0) };
         let cursor = LdltColumnCursor {
             stage: LdltColumnStage::ReserveColumn,
             source: 0,
@@ -215,9 +212,9 @@ impl LdltJob {
             state: LdltCheckpoint {
                 identity: NumericalCheckpointIdentity::from_operation(operation),
                 a,
-                l_cols: Vec::new(),
-                d: Vec::new(),
-                row_lists: Vec::new(),
+                columns: SparseColumns::default(),
+                d: PagedList::empty(),
+                contributors: RowContributors::default(),
                 column: 0,
                 cursor,
                 workspace,
@@ -233,135 +230,121 @@ impl LdltJob {
             output_page_cursor: 0,
             checkpoint_writer: None,
             checkpoint_cursor: NumericalPageCursor::new(),
-            desk: NumericalOutcomeDesk::default(),
+            terminal_published: false, desk: NumericalOutcomeDesk::default(),
         }
     }
 
     pub fn preview(&self) -> LdltPreview {
-        LdltPreview { completed_columns: self.state.column, total_columns: self.state.a.n, negative_pivots: self.state.d[..self.state.column].iter().filter(|&&value| value < 0.0).count() }
+        LdltPreview { completed_columns: self.state.column, total_columns: self.state.a.n, negative_pivots: self.state.d.iter().take(self.state.column).filter(|&&value| value < 0.0).count() }
     }
 
-    pub fn factor(&self) -> Option<LdltFactor> {
-        (self.state.column == self.state.a.n).then(|| LdltFactor { n: self.state.a.n, l_cols: self.state.l_cols.clone(), d: self.state.d.clone() })
+    #[cfg(test)]
+    fn factor(&self) -> Option<LdltFactor> {
+        (self.state.column == self.state.a.n).then(|| LdltFactor { n: self.state.a.n, columns: self.state.columns.clone(), d: self.state.d.clone() })
     }
 
     /// 🎼 Transfers the completed factor into the retained subspace child without cloning.
-    pub fn take_factor(&mut self) -> Option<LdltFactor> {
-        (self.state.column == self.state.a.n).then(|| LdltFactor { n: self.state.a.n, l_cols: std::mem::take(&mut self.state.l_cols), d: std::mem::take(&mut self.state.d) })
+    pub fn take_factor(&mut self, grant: RetainedCloneGrant) -> Option<(LdltFactor, RetainedCloneProgress)> {
+        let copied_bytes = size_of::<LdltFactor>() * 2;
+        if self.state.column != self.state.a.n || !numerical_grant_covers(grant, RetirementDemand { copy_bytes: copied_bytes, depth: 1, ..Default::default() }) { return None; }
+        Some((LdltFactor { n: self.state.a.n, columns: std::mem::take(&mut self.state.columns), d: std::mem::take(&mut self.state.d) }, RetainedCloneProgress { copied_items: 1, copied_bytes, ..Default::default() }))
     }
 
-    fn workspace_add(&mut self, row: usize, value: f64) {
-        if self.state.workspace.marks[row] != self.state.workspace.generation {
-            self.state.workspace.marks[row] = self.state.workspace.generation;
-            self.state.workspace.values[row] = 0.0;
-        }
-        self.state.workspace.values[row] += value;
+    fn reserve_owner<T>(owner: &mut PagedList<T, SPARSE_INDEX_SPACE>, target: usize, context: &mut StepContext<'_>) -> Result<bool, SparseError> {
+        if owner.capacity() >= target { return Ok(true); }
+        let progress = owner.reserve_capacity_one_funded(target, context.retained_grant()).map_err(|_| SparseError::DimensionMismatch)?;
+        context.consume_retained(progress).map_err(|_| SparseError::DimensionMismatch)?;
+        Ok(false)
     }
 
-    fn workspace_get(&self, row: usize) -> f64 {
-        if self.state.workspace.marks[row] == self.state.workspace.generation {
-            self.state.workspace.values[row]
-        } else {
-            0.0
-        }
+    fn admit_work(context: &mut StepContext<'_>, depth: usize, bytes: usize) -> Result<bool, SparseError> {
+        let copied_bytes = size_of::<LdltColumnCursor>() * 2 + bytes;
+        if !numerical_grant_covers(context.retained_grant(), RetirementDemand { copy_bytes: copied_bytes, depth: depth.max(1), ..Default::default() }) { return Ok(false); }
+        context.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes, ..Default::default() }).map_err(|_| SparseError::DimensionMismatch)?;
+        Ok(true)
     }
 
-    fn reserve_fixed_owner<T>(owner: &mut Vec<T>, items: usize) -> Result<(), SparseError> {
-        owner.try_reserve_exact(items).map_err(|_| SparseError::DimensionMismatch)?;
-        let bytes = owner.capacity().checked_mul(size_of::<T>()).ok_or(SparseError::DimensionMismatch)?;
-        if bytes > NUMERICAL_OWNER_PAGE_BYTES {
-            return Err(SparseError::DimensionMismatch);
-        }
+    fn owner_depth<T>(owner: &PagedList<T, SPARSE_INDEX_SPACE>, index: usize) -> Result<usize, SparseError> { owner.next_get_depth_demand(index).map_err(|_| SparseError::DimensionMismatch) }
+
+    fn initialize_owner<T: Copy>(owner: &mut PagedList<T, SPARSE_INDEX_SPACE>, target: usize, value: T, context: &mut StepContext<'_>) -> Result<bool, SparseError> {
+        if !Self::reserve_owner(owner, target, context)? { return Ok(false); }
+        if owner.len() == target { return Ok(true); }
+        let depth = owner.next_push_depth_demand().map_err(|_| SparseError::DimensionMismatch)?;
+        if !Self::admit_work(context, depth, size_of::<T>())? { return Ok(false); }
+        owner.push_reserved(value).map_err(|_| SparseError::DimensionMismatch)?;
+        Ok(false)
+    }
+
+    fn advance_reservation(&mut self, context: &mut StepContext<'_>) -> Result<(), SparseError> {
+        let n = self.state.a.n;
+        let complete = match self.state.reserve_lane {
+            0 => Self::initialize_owner(&mut self.state.contributors.heads, n, u64::MAX, context)?,
+            1 => Self::initialize_owner(&mut self.state.contributors.tails, n, u64::MAX, context)?,
+            2 => Self::initialize_owner(&mut self.state.d, n, 0.0, context)?,
+            3 => Self::initialize_owner(&mut self.state.workspace.values, n, 0.0, context)?,
+            4 => Self::initialize_owner(&mut self.state.workspace.marks, n, 0, context)?,
+            5 => Self::initialize_owner(&mut self.state.columns.offsets, 1, 0, context)?,
+            _ => true,
+        };
+        if complete && Self::admit_work(context, 1, 1)? { self.state.reserve_lane = if self.state.reserve_lane < 5 { self.state.reserve_lane + 1 } else { 9 }; }
         Ok(())
     }
 
-    fn advance_reservation(&mut self) -> Result<bool, SparseError> {
-        let n = self.state.a.n;
-        match self.state.reserve_lane {
-            0 => {
-                Self::reserve_fixed_owner(&mut self.state.row_lists, n)?;
-                self.state.reserve_lane = 1;
-            }
-            1 => {
-                if self.state.reserve_cursor < n {
-                    let mut owner = Vec::new();
-                    Self::reserve_fixed_owner(&mut owner, self.state.reserve_cursor)?;
-                    self.state.row_lists.push(owner);
-                    self.state.reserve_cursor += 1;
-                } else {
-                    self.state.reserve_cursor = 0;
-                    self.state.reserve_lane = 2;
-                }
-            }
-            2 => {
-                Self::reserve_fixed_owner(&mut self.state.l_cols, n)?;
-                self.state.reserve_lane = 3;
-            }
-            3 => {
-                if self.state.reserve_cursor < n {
-                    let mut owner = Vec::new();
-                    Self::reserve_fixed_owner(&mut owner, n.saturating_sub(self.state.reserve_cursor + 1))?;
-                    self.state.l_cols.push(owner);
-                    self.state.reserve_cursor += 1;
-                } else {
-                    self.state.reserve_cursor = 0;
-                    self.state.reserve_lane = 4;
-                }
-            }
-            4 => {
-                if self.state.d.capacity() == 0 {
-                    Self::reserve_fixed_owner(&mut self.state.d, n)?;
-                } else if self.state.d.len() < n {
-                    self.state.d.push(0.0);
-                } else {
-                    self.state.reserve_lane = 5;
-                }
-            }
-            5 => {
-                if self.state.workspace.values.capacity() == 0 {
-                    Self::reserve_fixed_owner(&mut self.state.workspace.values, n)?;
-                } else if self.state.workspace.values.len() < n {
-                    self.state.workspace.values.push(0.0);
-                } else {
-                    self.state.reserve_lane = 6;
-                }
-            }
-            6 => {
-                if self.state.workspace.marks.capacity() == 0 {
-                    Self::reserve_fixed_owner(&mut self.state.workspace.marks, n)?;
-                } else if self.state.workspace.marks.len() < n {
-                    self.state.workspace.marks.push(0);
-                } else {
-                    self.state.reserve_lane = 7;
-                }
-            }
-            7 => {
-                Self::reserve_fixed_owner(&mut self.state.workspace.candidate, n)?;
-                self.state.reserve_lane = 8;
-            }
-            8 => {
-                self.state.reserve_lane = 9;
-            }
-            _ => return Ok(true),
-        }
-        Ok(self.state.reserve_lane == 9)
+    fn reserve_workspace_row(&mut self, row: usize, context: &mut StepContext<'_>) -> Result<bool, SparseError> {
+        if row >= self.state.a.n { return Err(SparseError::DimensionMismatch); }
+        if self.state.workspace.marks[row] == self.state.workspace.generation { return Ok(true); }
+        let target = self.state.workspace.touched.len().checked_add(1).ok_or(SparseError::DimensionMismatch)?;
+        Self::reserve_owner(&mut self.state.workspace.touched, target, context)
     }
 
-    pub(super) fn advance_column_microcursor(&mut self) -> Result<(), SparseError> {
-        if self.state.reserve_lane < 9 {
-            self.advance_reservation()?;
-            return Ok(());
+    pub(super) fn workspace_depth(&self, row: usize) -> Result<usize, SparseError> {
+        let mut depth = Self::owner_depth(&self.state.workspace.marks, row)? + Self::owner_depth(&self.state.workspace.values, row)?;
+        if self.state.workspace.marks[row] != self.state.workspace.generation { depth += self.state.workspace.touched.next_push_depth_demand().map_err(|_| SparseError::DimensionMismatch)?; }
+        Ok(depth)
+    }
+
+    fn workspace_add(&mut self, row: usize, value: f64) -> Result<(), SparseError> {
+        if !value.is_finite() { return Err(SparseError::DimensionMismatch); }
+        let fresh = self.state.workspace.marks[row] != self.state.workspace.generation;
+        let result = if fresh { value } else { self.state.workspace.values[row] + value };
+        if !result.is_finite() { return Err(SparseError::DimensionMismatch); }
+        if fresh {
+            self.state.workspace.touched.push_reserved(row as u32).map_err(|_| SparseError::DimensionMismatch)?;
+            self.state.workspace.marks[row] = self.state.workspace.generation;
         }
+        self.state.workspace.values[row] = result;
+        Ok(())
+    }
+
+    fn workspace_get(&self, row: usize) -> f64 { if self.state.workspace.marks[row] == self.state.workspace.generation { self.state.workspace.values[row] } else { 0.0 } }
+
+    fn advance_column_microcursor(&mut self, context: &mut StepContext<'_>) -> Result<(), SparseError> {
+        if self.state.reserve_lane < 9 { return self.advance_reservation(context); }
         let column = self.state.column;
         match self.state.cursor.stage {
             LdltColumnStage::ReserveColumn => {
-                let Some(generation) = self.state.workspace.generation.checked_add(1) else {
-                    return Err(SparseError::DimensionMismatch);
-                };
+                if self.state.workspace.sort.input_len() != 0 || self.state.cursor.emit_row != 0 {
+                    if Self::admit_work(context, 1, size_of::<HeapSortCursor>() * 2 + size_of::<usize>())? { self.state.workspace.sort = HeapSortCursor::new(0); self.state.cursor.emit_row = 0; }
+                    return Ok(());
+                }
+                if !self.state.workspace.candidate.is_empty() {
+                    let depth = self.state.workspace.candidate.next_pop_depth_demand().map_err(|_| SparseError::DimensionMismatch)?;
+                    if Self::admit_work(context, depth, size_of::<(u32, f64)>())? { self.state.workspace.candidate.pop(); }
+                    return Ok(());
+                }
+                if !self.state.workspace.touched.is_empty() {
+                    let depth = self.state.workspace.touched.next_pop_depth_demand().map_err(|_| SparseError::DimensionMismatch)?;
+                    if Self::admit_work(context, depth, size_of::<u32>())? { self.state.workspace.touched.pop(); }
+                    return Ok(());
+                }
+                let generation = self.state.workspace.generation.checked_add(1).ok_or(SparseError::DimensionMismatch)?;
+                let source = *self.state.a.colptr.get(column).ok_or(SparseError::DimensionMismatch)? as usize;
+                let depth = Self::owner_depth(&self.state.a.colptr, column)? + Self::owner_depth(&self.state.contributors.heads, column)?;
+                if !Self::admit_work(context, depth, 24)? { return Ok(()); }
                 self.state.workspace.generation = generation;
-                self.state.workspace.candidate.clear();
-                self.state.cursor.source = self.state.a.colptr[column] as usize;
-                self.state.cursor.contributor = 0;
+                self.state.workspace.sort = HeapSortCursor::new(0);
+                self.state.cursor.source = source;
+                self.state.cursor.contributor = self.state.contributors.heads[column];
                 self.state.cursor.entry = 0;
                 self.state.cursor.active_column = 0;
                 self.state.cursor.lookup_lower = 0;
@@ -369,236 +352,218 @@ impl LdltJob {
                 self.state.cursor.lookup_mid = 0;
                 self.state.cursor.lookup_comparison = 0;
                 self.state.cursor.lookup_initialized = false;
-                self.state.cursor.emit_row = column.saturating_add(1);
+                self.state.cursor.emit_row = 0;
                 self.state.cursor.stage = LdltColumnStage::SourceEntry;
             }
             LdltColumnStage::SourceEntry => {
-                let end = self.state.a.colptr[column + 1] as usize;
+                let end = *self.state.a.colptr.get(column + 1).ok_or(SparseError::DimensionMismatch)? as usize;
+                if end > self.state.a.vals.len() || self.state.cursor.source > end { return Err(SparseError::DimensionMismatch); }
                 if self.state.cursor.source < end {
                     let index = self.state.cursor.source;
-                    let row = self.state.a.rowind[index] as usize;
-                    self.workspace_add(row, self.state.a.vals[index]);
+                    let row = *self.state.a.rowind.get(index).ok_or(SparseError::DimensionMismatch)? as usize;
+                    let value = *self.state.a.vals.get(index).ok_or(SparseError::DimensionMismatch)?;
+                    if row < column || !value.is_finite() { return Err(SparseError::DimensionMismatch); }
+                    if !self.reserve_workspace_row(row, context)? { return Ok(()); }
+                    let depth = Self::owner_depth(&self.state.a.colptr, column + 1)? + Self::owner_depth(&self.state.a.rowind, index)? + Self::owner_depth(&self.state.a.vals, index)? + self.workspace_depth(row)?;
+                    if !Self::admit_work(context, depth, 32)? { return Ok(()); }
+                    self.workspace_add(row, value)?;
                     self.state.cursor.source += 1;
-                } else {
-                    self.state.cursor.stage = LdltColumnStage::ContributorLookup;
-                }
+                } else if Self::admit_work(context, Self::owner_depth(&self.state.a.colptr, column + 1)?, 8)? { self.state.cursor.stage = LdltColumnStage::ContributorLookup; }
             }
             LdltColumnStage::ContributorLookup => {
-                if self.state.cursor.contributor < self.state.row_lists[column].len() {
-                    let active = self.state.row_lists[column][self.state.cursor.contributor];
-                    if !self.state.cursor.lookup_initialized {
-                        self.state.cursor.active_column = active;
-                        self.state.cursor.lookup_upper = self.state.l_cols[active].len();
-                        self.state.cursor.lookup_mid = 0;
-                        self.state.cursor.lookup_comparison = 0;
-                        self.state.cursor.lookup_initialized = true;
-                    } else if self.state.cursor.lookup_lower < self.state.cursor.lookup_upper {
-                        let mid = self.state.cursor.lookup_lower + (self.state.cursor.lookup_upper - self.state.cursor.lookup_lower) / 2;
-                        let comparison = self.state.l_cols[active][mid].0.cmp(&(column as u32));
-                        self.state.cursor.lookup_mid = mid;
-                        self.state.cursor.lookup_comparison = match comparison {
-                            std::cmp::Ordering::Less => -1,
-                            std::cmp::Ordering::Equal => 0,
-                            std::cmp::Ordering::Greater => 1,
-                        };
-                        if comparison == std::cmp::Ordering::Less {
-                            self.state.cursor.lookup_lower = mid + 1;
-                        } else {
-                            self.state.cursor.lookup_upper = mid;
-                        }
-                    } else {
-                        let index = self.state.cursor.lookup_lower;
-                        self.state.cursor.factor = self.state.l_cols[active].get(index).filter(|entry| entry.0 == column as u32).map_or(0.0, |entry| entry.1 * self.state.d[active]);
-                        self.state.cursor.entry = 0;
-                        self.state.cursor.lookup_lower = 0;
-                        self.state.cursor.lookup_upper = 0;
-                        self.state.cursor.lookup_mid = 0;
-                        self.state.cursor.lookup_comparison = 0;
-                        self.state.cursor.lookup_initialized = false;
-                        self.state.cursor.contributor += 1;
-                        self.state.cursor.stage = LdltColumnStage::ContributorEntry;
-                    }
+                if self.state.cursor.contributor == u64::MAX {
+                    if Self::admit_work(context, 1, 1)? { self.state.cursor.stage = LdltColumnStage::PivotRead; }
+                    return Ok(());
+                }
+                let link_index = usize::try_from(self.state.cursor.contributor).map_err(|_| SparseError::DimensionMismatch)?;
+                let link = *self.state.contributors.links.get(link_index).ok_or(SparseError::DimensionMismatch)?;
+                let active = link.column as usize;
+                if active >= column { return Err(SparseError::DimensionMismatch); }
+                let length = self.state.columns.column_len(active).ok_or(SparseError::DimensionMismatch)?;
+                let depth = Self::owner_depth(&self.state.contributors.links, link_index)? + Self::owner_depth(&self.state.columns.offsets, active)? + Self::owner_depth(&self.state.columns.offsets, active + 1)?;
+                if !self.state.cursor.lookup_initialized {
+                    if !Self::admit_work(context, depth, 24)? { return Ok(()); }
+                    self.state.cursor.active_column = active;
+                    self.state.cursor.lookup_lower = 0;
+                    self.state.cursor.lookup_upper = length;
+                    self.state.cursor.lookup_mid = 0;
+                    self.state.cursor.lookup_comparison = 0;
+                    self.state.cursor.lookup_initialized = true;
+                } else if self.state.cursor.lookup_lower < self.state.cursor.lookup_upper {
+                    let mid = self.state.cursor.lookup_lower + (self.state.cursor.lookup_upper - self.state.cursor.lookup_lower) / 2;
+                    let pair = self.state.columns.entry(active, mid).ok_or(SparseError::DimensionMismatch)?;
+                    let entry_depth = self.state.columns.entry_depth_demand(active, mid).map_err(|_| SparseError::DimensionMismatch)?;
+                    if !Self::admit_work(context, depth + entry_depth, size_of::<(u32, f64)>())? { return Ok(()); }
+                    let comparison = pair.0.cmp(&(column as u32));
+                    self.state.cursor.lookup_mid = mid;
+                    self.state.cursor.lookup_comparison = match comparison { std::cmp::Ordering::Less => -1, std::cmp::Ordering::Equal => 0, std::cmp::Ordering::Greater => 1 };
+                    if comparison == std::cmp::Ordering::Less { self.state.cursor.lookup_lower = mid + 1; } else { self.state.cursor.lookup_upper = mid; }
                 } else {
-                    self.state.cursor.stage = LdltColumnStage::PivotRead;
+                    let index = self.state.cursor.lookup_lower;
+                    let entry = self.state.columns.entry(active, index).filter(|entry| entry.0 == column as u32).ok_or(SparseError::DimensionMismatch)?;
+                    let entry_depth = self.state.columns.entry_depth_demand(active, index).map_err(|_| SparseError::DimensionMismatch)?;
+                    if !Self::admit_work(context, depth + entry_depth + Self::owner_depth(&self.state.d, active)?, 32)? { return Ok(()); }
+                    self.state.cursor.factor = entry.1 * self.state.d[active];
+                    self.state.cursor.entry = index;
+                    self.state.cursor.lookup_lower = 0;
+                    self.state.cursor.lookup_upper = 0;
+                    self.state.cursor.lookup_mid = 0;
+                    self.state.cursor.lookup_comparison = 0;
+                    self.state.cursor.lookup_initialized = false;
+                    self.state.cursor.contributor = link.next;
+                    self.state.cursor.stage = LdltColumnStage::ContributorEntry;
                 }
             }
             LdltColumnStage::ContributorEntry => {
                 let active = self.state.cursor.active_column;
-                if self.state.cursor.factor == 0.0 || self.state.cursor.entry >= self.state.l_cols[active].len() {
-                    self.state.cursor.stage = LdltColumnStage::ContributorLookup;
+                let length = self.state.columns.column_len(active).ok_or(SparseError::DimensionMismatch)?;
+                if self.state.cursor.factor == 0.0 || self.state.cursor.entry >= length {
+                    if Self::admit_work(context, Self::owner_depth(&self.state.columns.offsets, active + 1)?, 8)? { self.state.cursor.stage = LdltColumnStage::ContributorLookup; }
                 } else {
-                    let (row, value) = self.state.l_cols[active][self.state.cursor.entry];
-                    if row as usize >= column {
-                        self.workspace_add(row as usize, -self.state.cursor.factor * value);
-                    }
+                    let entry_index = self.state.cursor.entry;
+                    let (row, value) = self.state.columns.entry(active, entry_index).ok_or(SparseError::DimensionMismatch)?;
+                    if (row as usize) < column || !self.state.cursor.factor.is_finite() { return Err(SparseError::DimensionMismatch); }
+                    if !self.reserve_workspace_row(row as usize, context)? { return Ok(()); }
+                    let depth = self.state.columns.entry_depth_demand(active, entry_index).map_err(|_| SparseError::DimensionMismatch)? + self.workspace_depth(row as usize)?;
+                    if !Self::admit_work(context, depth, 40)? { return Ok(()); }
+                    self.workspace_add(row as usize, -self.state.cursor.factor * value)?;
                     self.state.cursor.entry += 1;
                 }
             }
             LdltColumnStage::PivotRead => {
-                self.state.cursor.pivot = self.workspace_get(column);
-                if self.state.cursor.pivot.abs() < 1e-12 {
-                    return Err(SparseError::ZeroPivot { column });
-                }
+                let pivot = self.workspace_get(column);
+                if !Self::admit_work(context, self.workspace_depth(column)?, 16)? { return Ok(()); }
+                if !pivot.is_finite() || pivot.abs() < 1e-12 { return Err(SparseError::ZeroPivot { column }); }
+                self.state.cursor.pivot = pivot;
                 self.state.cursor.stage = LdltColumnStage::DiagonalCommit;
             }
             LdltColumnStage::DiagonalCommit => {
+                if !Self::admit_work(context, Self::owner_depth(&self.state.d, column)?, 8)? { return Ok(()); }
                 self.state.d[column] = self.state.cursor.pivot;
-                self.state.cursor.stage = LdltColumnStage::EmitRow;
+                self.state.workspace.sort = HeapSortCursor::new(self.state.workspace.touched.len());
+                self.state.cursor.stage = LdltColumnStage::SortRows;
+            }
+            LdltColumnStage::SortRows => {
+                let work = self.state.workspace.sort.next();
+                let mut comparison = None;
+                let depth = match work {
+                    HeapSortWork::Compare { left, right } | HeapSortWork::Swap { left, right } => Self::owner_depth(&self.state.workspace.touched, left)? + Self::owner_depth(&self.state.workspace.touched, right)?,
+                    _ => 1,
+                };
+                if !Self::admit_work(context, depth, size_of::<HeapSortCursor>() * 2 + 16)? { return Ok(()); }
+                match work {
+                    HeapSortWork::Compare { left, right } => comparison = Some(self.state.workspace.touched[left].cmp(&self.state.workspace.touched[right])),
+                    HeapSortWork::Swap { left, right } => { let first = self.state.workspace.touched[left]; let second = self.state.workspace.touched[right]; self.state.workspace.touched[left] = second; self.state.workspace.touched[right] = first; },
+                    HeapSortWork::Complete => { self.state.cursor.emit_row = 0; self.state.cursor.stage = LdltColumnStage::EmitRow; return Ok(()); },
+                    HeapSortWork::Advance => {},
+                }
+                self.state.workspace.sort.advance(comparison).map_err(|_| SparseError::DimensionMismatch)?;
             }
             LdltColumnStage::EmitRow => {
-                if self.state.cursor.emit_row < self.state.a.n {
-                    let row = self.state.cursor.emit_row;
+                if self.state.cursor.emit_row < self.state.workspace.touched.len() {
+                    let touched_index = self.state.cursor.emit_row;
+                    let row = self.state.workspace.touched[touched_index] as usize;
                     let value = self.workspace_get(row);
-                    if value != 0.0 {
-                        self.state.workspace.candidate.push((row as u32, value / self.state.cursor.pivot));
+                    let target = self.state.workspace.candidate.len() + 1;
+                    if row > column && value != 0.0 && !Self::reserve_owner(&mut self.state.workspace.candidate, target, context)? { return Ok(()); }
+                    let mut depth = Self::owner_depth(&self.state.workspace.touched, touched_index)? + self.workspace_depth(row)?;
+                    if row > column && value != 0.0 { depth += self.state.workspace.candidate.next_push_depth_demand().map_err(|_| SparseError::DimensionMismatch)?; }
+                    if !Self::admit_work(context, depth, 32)? { return Ok(()); }
+                    if row > column && value != 0.0 {
+                        let entry = value / self.state.cursor.pivot;
+                        if !entry.is_finite() { return Err(SparseError::DimensionMismatch); }
+                        self.state.workspace.candidate.push_reserved((row as u32, entry)).map_err(|_| SparseError::DimensionMismatch)?;
                     }
                     self.state.cursor.emit_row += 1;
-                } else {
-                    self.state.cursor.entry = 0;
-                    self.state.cursor.stage = LdltColumnStage::PublishColumn;
-                }
+                } else if Self::admit_work(context, 1, 8)? { self.state.cursor.entry = 0; self.state.cursor.stage = LdltColumnStage::PublishColumn; }
             }
             LdltColumnStage::PublishColumn => {
                 if self.state.cursor.entry < self.state.workspace.candidate.len() {
-                    let entry = self.state.workspace.candidate[self.state.cursor.entry];
-                    self.state.l_cols[column].push(entry);
-                    self.state.row_lists[entry.0 as usize].push(column);
+                    let pair = self.state.workspace.candidate[self.state.cursor.entry];
+                    let target = self.state.columns.entries.len() + 1;
+                    if !Self::reserve_owner(&mut self.state.columns.entries, target, context)? { return Ok(()); }
+                    let target = self.state.contributors.links.len() + 1;
+                    if !Self::reserve_owner(&mut self.state.contributors.links, target, context)? { return Ok(()); }
+                    let row = pair.0 as usize;
+                    let tail = self.state.contributors.tails[row];
+                    let mut depth = Self::owner_depth(&self.state.workspace.candidate, self.state.cursor.entry)? + Self::owner_depth(&self.state.contributors.tails, row)? + self.state.columns.entries.next_push_depth_demand().map_err(|_| SparseError::DimensionMismatch)? + self.state.contributors.links.next_push_depth_demand().map_err(|_| SparseError::DimensionMismatch)?;
+                    depth += if tail == u64::MAX { Self::owner_depth(&self.state.contributors.heads, row)? } else { Self::owner_depth(&self.state.contributors.links, usize::try_from(tail).map_err(|_| SparseError::DimensionMismatch)?)? };
+                    if !Self::admit_work(context, depth, 64)? { return Ok(()); }
+                    let link = self.state.contributors.links.len() as u64;
+                    self.state.columns.entries.push_reserved(pair).map_err(|_| SparseError::DimensionMismatch)?;
+                    self.state.contributors.links.push_reserved(RowContributor { column: column as u32, next: u64::MAX }).map_err(|_| SparseError::DimensionMismatch)?;
+                    if tail == u64::MAX { self.state.contributors.heads[row] = link; } else { self.state.contributors.links[tail as usize].next = link; }
+                    self.state.contributors.tails[row] = link;
                     self.state.cursor.entry += 1;
-                } else {
-                    self.state.cursor.stage = LdltColumnStage::CompleteColumn;
-                }
+                } else if Self::admit_work(context, 1, 1)? { self.state.cursor.stage = LdltColumnStage::CompleteColumn; }
             }
             LdltColumnStage::CompleteColumn => {
-                self.state.column += 1;
-                self.state.cursor.stage = LdltColumnStage::ReserveColumn;
-                self.state.checkpoint_due = self.state.column < self.state.a.n;
+                if self.state.columns.offsets.len() == column + 1 {
+                    if !Self::reserve_owner(&mut self.state.columns.offsets, column + 2, context)? { return Ok(()); }
+                    let depth = self.state.columns.offsets.next_push_depth_demand().map_err(|_| SparseError::DimensionMismatch)?;
+                    if !Self::admit_work(context, depth, size_of::<usize>())? { return Ok(()); }
+                    self.state.columns.offsets.push_reserved(self.state.columns.entries.len()).map_err(|_| SparseError::DimensionMismatch)?;
+                } else if Self::admit_work(context, 1, 16)? {
+                    self.state.column += 1;
+                    self.state.cursor.stage = LdltColumnStage::ReserveColumn;
+                    self.state.checkpoint_due = self.state.column < self.state.a.n;
+                }
             }
         }
         Ok(())
     }
 
-    pub(super) fn advance_checkpoint_entry(state: &LdltCheckpoint, cursor: &mut NumericalPageCursor, writer: &mut RetainedJobPayloadWriter) -> Result<bool, JobPayloadAdmissionFault> {
-        let n = state.a.n;
-        let row_base = 520u16;
-        if advance_numerical_page_header(writer, b"FEMLCP1\0", 11, *cursor)? {
-            return Ok(false);
-        }
+    pub(super) fn advance_checkpoint_entry(state: &LdltCheckpoint, cursor: &mut NumericalPageCursor, writer: &mut RetainedJobPayloadWriter, context: &mut StepContext<'_>) -> Result<bool, ValueError> {
+        if advance_numerical_page_header(writer, b"FEMLCP1\0", 11, *cursor, context)? { return Ok(false); }
         let complete = match cursor.field {
             0 => {
-                let values = [
-                    state.identity.operation,
-                    state.identity.revision,
-                    state.identity.generation,
-                    state.identity.seed,
-                    n as u64,
-                    state.column as u64,
-                    state.cursor.stage as u64,
-                    state.cursor.source as u64,
-                    state.cursor.contributor as u64,
-                    state.cursor.entry as u64,
-                    state.cursor.emit_row as u64,
-                    state.cursor.active_column as u64,
-                    state.cursor.factor.to_bits(),
-                    state.cursor.pivot.to_bits(),
-                    state.admission_fault as u64,
-                    state.reserve_lane as u64,
-                    state.reserve_cursor as u64,
-                    state.publication_stage as u64,
-                    state.publication_outer as u64,
-                    state.publication_inner as u64,
-                    state.workspace.generation as u64,
-                    state.cursor.lookup_lower as u64,
-                    state.cursor.lookup_upper as u64,
-                    state.cursor.lookup_mid as u64,
-                    state.cursor.lookup_comparison as i64 as u64,
-                    state.cursor.lookup_initialized as u64,
-                ];
-                advance_u64_values(writer, &values, cursor)?
+                let values = [state.identity.operation, state.identity.revision, state.identity.generation, state.identity.seed, state.a.n as u64, state.column as u64, state.cursor.stage as u64, state.cursor.source as u64, state.cursor.contributor, state.cursor.entry as u64, state.cursor.emit_row as u64, state.cursor.active_column as u64, state.cursor.factor.to_bits(), state.cursor.pivot.to_bits(), state.admission_fault as u64, state.reserve_lane as u64, state.reserve_cursor as u64, state.publication_stage as u64, state.publication_outer as u64, state.publication_inner as u64, state.workspace.generation as u64, state.cursor.lookup_lower as u64, state.cursor.lookup_upper as u64, state.cursor.lookup_mid as u64, state.cursor.lookup_comparison as i64 as u64, state.cursor.lookup_initialized as u64];
+                advance_u64_values(writer, &values, cursor, context)?
             }
-            1 => advance_u32_owner(writer, &state.a.colptr, cursor)?,
-            2 => advance_u32_owner(writer, &state.a.rowind, cursor)?,
-            3 => advance_f64_owner(writer, &state.a.vals, cursor)?,
-            4 => advance_owner_length(writer, state.l_cols.len(), cursor)?,
-            field if field >= 5 && field < 5 + state.l_cols.len() as u16 => advance_pair_owner(writer, &state.l_cols[(field - 5) as usize], cursor)?,
-            517 => advance_f64_owner(writer, &state.d, cursor)?,
-            518 => advance_owner_length(writer, state.row_lists.len(), cursor)?,
-            field if field >= row_base && field < row_base + state.row_lists.len() as u16 => advance_u64_owner(writer, &state.row_lists[(field - row_base) as usize], cursor)?,
-            1032 => advance_f64_owner(writer, &state.workspace.values, cursor)?,
-            1033 => advance_u32_owner(writer, &state.workspace.marks, cursor)?,
-            1034 => advance_pair_owner(writer, &state.workspace.candidate, cursor)?,
+            1 => advance_paged_u32_owner(writer, &state.a.colptr, cursor, context)?,
+            2 => advance_paged_u32_owner(writer, &state.a.rowind, cursor, context)?,
+            3 => advance_paged_f64_owner(writer, &state.a.vals, cursor, context)?,
+            4 => advance_u64_owner(writer, &state.columns.offsets, cursor, context)?,
+            5 => advance_paged_pair_owner(writer, &state.columns.entries, cursor, context)?,
+            6 => advance_paged_f64_owner(writer, &state.d, cursor, context)?,
+            7 => advance_paged_u64_owner(writer, &state.contributors.heads, cursor, context)?,
+            8 => advance_paged_u64_owner(writer, &state.contributors.tails, cursor, context)?,
+            9 => advance_contributor_owner(writer, &state.contributors.links, cursor, context)?,
+            10 => advance_paged_f64_owner(writer, &state.workspace.values, cursor, context)?,
+            11 => advance_paged_u32_owner(writer, &state.workspace.marks, cursor, context)?,
+            12 => advance_paged_u32_owner(writer, &state.workspace.touched, cursor, context)?,
+            13 => advance_paged_pair_owner(writer, &state.workspace.candidate, cursor, context)?,
+            14 => advance_u64_values(writer, &state.workspace.sort.snapshot(), cursor, context)?,
             _ => return Ok(true),
         };
-        if complete {
-            writer.commit_staged_page()?;
-            cursor.item = 0;
-            cursor.owner = 0;
-            cursor.field = match cursor.field {
-                4 if state.l_cols.is_empty() => 517,
-                4 => 5,
-                field if field >= 5 && field + 1 < 5 + state.l_cols.len() as u16 => field + 1,
-                field if field >= 5 && field < 5 + state.l_cols.len() as u16 => 517,
-                517 => 518,
-                518 if state.row_lists.is_empty() => 1032,
-                518 => row_base,
-                field if field >= row_base && field + 1 < row_base + state.row_lists.len() as u16 => field + 1,
-                field if field >= row_base && field < row_base + state.row_lists.len() as u16 => 1032,
-                1032 | 1033 => cursor.field + 1,
-                1034 => u16::MAX,
-                field => field + 1,
-            };
-        }
+        if complete { if !writer.commit_staged_page_funded(context, size_of::<NumericalPageCursor>() + 3 * size_of::<usize>())? { return Ok(false); } cursor.item = 0; cursor.owner = 0; cursor.field = if cursor.field == 14 { u16::MAX } else { cursor.field + 1 }; }
         Ok(cursor.field == u16::MAX)
     }
 
-    pub(super) fn advance_output_entry(state: &mut LdltCheckpoint, operation: Operation, writer: &mut RetainedJobPayloadWriter) -> Result<bool, JobPayloadAdmissionFault> {
+    pub(super) fn advance_output_entry(state: &mut LdltCheckpoint, operation: Operation, writer: &mut RetainedJobPayloadWriter, context: &mut StepContext<'_>) -> Result<bool, ValueError> {
         let cursor = NumericalPageCursor { field: state.publication_stage as u16, owner: state.publication_outer, item: state.publication_inner };
-        if advance_numerical_page_header(writer, b"FEMLDL2\0", 1, cursor)? {
-            return Ok(false);
-        }
+        if advance_numerical_page_header(writer, b"FEMLDL2\0", 1, cursor, context)? { return Ok(false); }
         match state.publication_stage {
             0 => {
                 let values = [operation.operation.0, operation.base_revision.0, operation.generation.0, operation.seed, state.a.n as u64];
-                if let Some(value) = values.get(state.publication_outer) {
-                    writer.write_staged(&value.to_le_bytes())?;
-                    state.publication_outer += 1;
-                } else {
-                    writer.commit_staged_page()?;
-                    state.publication_outer = 0;
-                    state.publication_stage = 1;
-                }
+                if let Some(value) = values.get(state.publication_outer) { if write_numerical_entry(writer, &value.to_le_bytes(), context)? { state.publication_outer += 1; } }
+                else { if !writer.commit_staged_page_funded(context, size_of::<NumericalPageCursor>() + 3 * size_of::<usize>())? { return Ok(false); } state.publication_outer = 0; state.publication_stage = 1; }
             }
             1 => {
-                if let Some(value) = state.d.get(state.publication_outer) {
-                    writer.write_staged(&value.to_bits().to_le_bytes())?;
-                    state.publication_outer += 1;
-                } else {
-                    writer.commit_staged_page()?;
-                    state.publication_outer = 0;
-                    state.publication_stage = 2;
-                }
+                if let Some(value) = state.d.get(state.publication_outer) { if write_numerical_entry(writer, &value.to_bits().to_le_bytes(), context)? { state.publication_outer += 1; } }
+                else { if !writer.commit_staged_page_funded(context, size_of::<NumericalPageCursor>() + 3 * size_of::<usize>())? { return Ok(false); } state.publication_outer = 0; state.publication_stage = 2; }
             }
             2 => {
-                if state.publication_outer == state.l_cols.len() {
-                    writer.commit_staged_page()?;
-                    state.publication_stage = 3;
-                } else {
-                    let column = &state.l_cols[state.publication_outer];
-                    if state.publication_inner == 0 {
-                        writer.write_staged(&(column.len() as u64).to_le_bytes())?;
-                        state.publication_inner = 1;
-                    } else if let Some((row, value)) = column.get(state.publication_inner - 1) {
-                        let mut bytes = [0; 12];
-                        bytes[..4].copy_from_slice(&row.to_le_bytes());
-                        bytes[4..].copy_from_slice(&value.to_bits().to_le_bytes());
-                        writer.write_staged(&bytes)?;
-                        state.publication_inner += 1;
-                    } else {
-                        state.publication_inner = 0;
-                        state.publication_outer += 1;
-                    }
-                }
+                if state.publication_outer == state.columns.len() { if !writer.commit_staged_page_funded(context, size_of::<NumericalPageCursor>() + 3 * size_of::<usize>())? { return Ok(false); } state.publication_stage = 3; }
+                else if state.publication_inner == 0 {
+                    let length = state.columns.column_len(state.publication_outer).expect("published factor column");
+                    if write_numerical_entry(writer, &(length as u64).to_le_bytes(), context)? { state.publication_inner = 1; }
+                } else if let Some((row, value)) = state.columns.entry(state.publication_outer, state.publication_inner - 1) {
+                    let mut bytes = [0; 12]; bytes[..4].copy_from_slice(&row.to_le_bytes()); bytes[4..].copy_from_slice(&value.to_bits().to_le_bytes());
+                    if write_numerical_entry(writer, &bytes, context)? { state.publication_inner += 1; }
+                } else { state.publication_inner = 0; state.publication_outer += 1; }
             }
-            _ => {}
+            _ => {},
         }
         Ok(state.publication_stage == 3)
     }
@@ -611,24 +576,30 @@ impl LdltJob {
         }
     }
 
-    pub(super) fn close_terminal_is_empty(&self) -> bool {
-        self.state.row_lists.is_empty()
-            && self.state.row_lists.capacity() == 0
-            && self.state.l_cols.is_empty()
-            && self.state.l_cols.capacity() == 0
-            && self.state.d.capacity() == 0
-            && self.state.a.vals.capacity() == 0
-            && self.state.a.rowind.capacity() == 0
-            && self.state.a.colptr.capacity() == 0
-            && self.state.workspace.values.capacity() == 0
-            && self.state.workspace.marks.capacity() == 0
-            && self.state.workspace.candidate.capacity() == 0
-    }
+    pub(super) fn close_terminal_is_empty(&self) -> bool { self.state.contributors.terminal_is_empty() && self.state.columns.terminal_is_empty() && self.state.d.terminal_is_empty() && self.state.a.terminal_is_empty() && self.state.workspace.values.terminal_is_empty() && self.state.workspace.marks.terminal_is_empty() && self.state.workspace.touched.terminal_is_empty() && self.state.workspace.candidate.terminal_is_empty() }
 }
 
 impl LdltFactor {
-    /// 🧭️ Forward (`Ly=b`) → diagonal (`z=y/D`) → backward (`Lᵀx=z`) substitution, column-oriented
-    /// so no separate row-major structure of `L` is needed.
+    /// 🧊️ Cold factor inputs become one compact first-party paged column stream.
+    pub fn from_owned_parts(n: usize, columns: Vec<Vec<(u32, f64)>>, diagonal: Vec<f64>) -> Self { Self { n, columns: SparseColumns::from_owned(columns), d: paged_from_values(diagonal) } }
+    pub fn order(&self) -> usize { self.n }
+    pub fn diagonal(&self, index: usize) -> Option<f64> { self.d.get(index).copied() }
+    pub fn column_entries_len(&self, column: usize) -> Option<usize> { self.columns.column_len(column) }
+    pub fn column_entry(&self, column: usize, entry: usize) -> Option<(u32, f64)> { self.columns.entry(column, entry) }
+    pub fn diagonal_depth_demand(&self, index: usize) -> Result<usize, ValueError> { self.d.next_get_depth_demand(index).map_err(|error| ValueError::literal(ValueRefusalKind::OwnershipLimit, error.reason)) }
+    pub fn column_entry_depth_demand(&self, column: usize, entry: usize) -> Result<usize, ValueError> { self.columns.entry_depth_demand(column, entry) }
+    pub fn terminal_is_empty(&self) -> bool { self.columns.terminal_is_empty() && self.d.terminal_is_empty() }
+    pub fn allocated_bytes(&self) -> usize { self.columns.offsets.allocated_bytes() + self.columns.entries.allocated_bytes() + self.d.allocated_bytes() }
+    pub fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
+        let mut demand = if !self.columns.terminal_is_empty() { self.columns.next_retirement_demands()? } else { paged_owner_retirement_demand(&self.d)? };
+        if !self.terminal_is_empty() { demand.copy_bytes = size_of::<Self>() * 2 + size_of::<(u32, f64)>(); }
+        Ok(demand)
+    }
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        match self.columns.close_step(maximum_bytes) { Ok(Some((items, bytes))) => return (false, items, bytes), Err(()) => return (false, 0, 0), Ok(None) => {}, }
+        match close_paged_owner_step(&mut self.d, maximum_bytes) { Ok(Some((items, bytes))) => (false, items, bytes), Err(()) => (false, 0, 0), Ok(None) => (true, 0, 0), }
+    }
+    /// 🧮️ Solve through the compact column stream and diagonal.
     pub fn solve(&self, b: &VecD) -> VecD {
         let n = self.n;
         let mut y = b.0.clone();
@@ -637,7 +608,8 @@ impl LdltFactor {
             if yj == 0.0 {
                 continue;
             }
-            for &(row, lij) in self.l_cols[j].iter() {
+            for entry in 0..self.column_entries_len(j).expect("factor column") {
+                let (row, lij) = self.column_entry(j, entry).expect("factor entry");
                 y[row as usize] -= lij * yj;
             }
         }
@@ -646,7 +618,8 @@ impl LdltFactor {
         }
         for j in (0..n).rev() {
             let mut sum = y[j];
-            for &(row, lij) in self.l_cols[j].iter() {
+            for entry in 0..self.column_entries_len(j).expect("factor column") {
+                let (row, lij) = self.column_entry(j, entry).expect("factor entry");
                 sum -= lij * y[row as usize];
             }
             y[j] = sum;

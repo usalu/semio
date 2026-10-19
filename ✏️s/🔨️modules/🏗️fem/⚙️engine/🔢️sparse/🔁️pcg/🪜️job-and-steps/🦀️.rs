@@ -83,42 +83,42 @@ impl PcgPublication {
         Self { kind, cursor: NumericalPageCursor::new(), writer: RetainedJobPayloadWriter::new(stream), complete: false }
     }
 
-    pub(super) fn advance(&mut self, operation: Operation, state: &PcgCheckpoint) -> Result<bool, JobPayloadAdmissionFault> {
+    pub(super) fn advance(&mut self, operation: Operation, state: &PcgCheckpoint, context: &mut StepContext<'_>) -> Result<bool, ValueError> {
         let (magic, kind, fields) = match self.kind {
             PcgPublicationKind::Checkpoint => (b"FEMPCP1\0", 13, 11),
             _ => (b"FEMPCG1\0", 3, 5),
         };
-        if advance_numerical_page_header(&mut self.writer, magic, kind, self.cursor)? { return Ok(false); }
+        if advance_numerical_page_header(&mut self.writer, magic, kind, self.cursor, context)? { return Ok(false); }
         let complete = if self.kind == PcgPublicationKind::Checkpoint {
             match self.cursor.field {
-                0 => advance_u64_values(&mut self.writer, &state.checkpoint_control(operation), &mut self.cursor)?,
-                1 => advance_paged_u32_owner(&mut self.writer, &state.a.indptr, &mut self.cursor)?,
-                2 => advance_paged_u32_owner(&mut self.writer, &state.a.indices, &mut self.cursor)?,
-                3 => advance_paged_f64_owner(&mut self.writer, &state.a.vals, &mut self.cursor)?,
-                4 => advance_f64_owner(&mut self.writer, &state.b.0, &mut self.cursor)?,
-                5 => advance_f64_owner(&mut self.writer, &state.x.0, &mut self.cursor)?,
-                6 => advance_f64_owner(&mut self.writer, &state.diag.0, &mut self.cursor)?,
-                7 => advance_f64_owner(&mut self.writer, &state.r.0, &mut self.cursor)?,
-                8 => advance_f64_owner(&mut self.writer, &state.z.0, &mut self.cursor)?,
-                9 => advance_f64_owner(&mut self.writer, &state.p.0, &mut self.cursor)?,
-                10 => advance_f64_owner(&mut self.writer, &state.ap.0, &mut self.cursor)?,
+                0 => advance_u64_values(&mut self.writer, &state.checkpoint_control(operation), &mut self.cursor, context)?,
+                1 => advance_paged_u32_owner(&mut self.writer, &state.a.indptr, &mut self.cursor, context)?,
+                2 => advance_paged_u32_owner(&mut self.writer, &state.a.indices, &mut self.cursor, context)?,
+                3 => advance_paged_f64_owner(&mut self.writer, &state.a.vals, &mut self.cursor, context)?,
+                4 => advance_f64_owner(&mut self.writer, &state.b.0, &mut self.cursor, context)?,
+                5 => advance_f64_owner(&mut self.writer, &state.x.0, &mut self.cursor, context)?,
+                6 => advance_f64_owner(&mut self.writer, &state.diag.0, &mut self.cursor, context)?,
+                7 => advance_f64_owner(&mut self.writer, &state.r.0, &mut self.cursor, context)?,
+                8 => advance_f64_owner(&mut self.writer, &state.z.0, &mut self.cursor, context)?,
+                9 => advance_f64_owner(&mut self.writer, &state.p.0, &mut self.cursor, context)?,
+                10 => advance_f64_owner(&mut self.writer, &state.ap.0, &mut self.cursor, context)?,
                 _ => true,
             }
         } else if self.cursor.field == 0 {
-            advance_u64_values(&mut self.writer, &state.output_control(operation), &mut self.cursor)?
+            advance_u64_values(&mut self.writer, &state.output_control(operation), &mut self.cursor, context)?
         } else {
             let values = if self.cursor.field == 2 || self.cursor.field == 3 { &state.r.0 } else { &state.x.0 };
-            if !advance_owner_length(&mut self.writer, values.len(), &mut self.cursor)? { return Ok(false); }
+            if !advance_owner_length(&mut self.writer, values.len(), &mut self.cursor, context)? { return Ok(false); }
             if let Some(value) = values.get(self.cursor.item) {
                 let value = match self.cursor.field { 3 => -*value, 4 => value.abs(), _ => *value };
-                if write_numerical_entry(&mut self.writer, &value.to_bits().to_le_bytes())? { self.cursor.item += 1; }
+                if write_numerical_entry(&mut self.writer, &value.to_bits().to_le_bytes(), context)? { self.cursor.item += 1; }
                 false
             } else {
                 true
             }
         };
         if complete {
-            self.writer.commit_staged_page()?;
+            if !self.writer.commit_staged_page_funded(context, size_of::<NumericalPageCursor>() + size_of::<bool>())? { return Ok(false); }
             self.cursor.field += 1;
             self.cursor.owner = 0;
             self.cursor.item = 0;
@@ -175,87 +175,46 @@ impl PcgJob {
         Self { operation, state, close_lane: 0, publication: None, publication_fault: None, terminal_published: false, closing: false, desk: NumericalOutcomeDesk::default() }
     }
 
-    pub(super) fn step_publication(&mut self, context: &mut StepContext<'_>, kind: PcgPublicationKind) -> Result<NumericalRun, NumericalCheckpointFault> {
+    pub(super) fn step_publication(&mut self, context: &mut StepContext<'_>, kind: PcgPublicationKind) -> Result<NumericalRun, ValueError> {
         if context.should_yield() { return Ok(NumericalRun::Yield); }
+        let result = self.advance_publication(context, kind);
         context.consume_fuel(1);
+        result
+    }
+
+    fn advance_publication(&mut self, context: &mut StepContext<'_>, kind: PcgPublicationKind) -> Result<NumericalRun, ValueError> {
         if self.publication.is_none() {
+            let copy_bytes = 2 * size_of::<Option<PcgPublication>>();
+            let demand = RetirementDemand { copy_bytes, depth: 1, ..Default::default() };
+            if !semio_s_fem_sparse::numerical_grant_covers(context.retained_grant(), demand) { return Ok(NumericalRun::Yield); }
             self.publication = Some(PcgPublication::new(kind));
+            context.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: copy_bytes, ..Default::default() })?;
             return Ok(NumericalRun::Yield);
         }
-        let publication = self.publication.as_mut().ok_or(NumericalCheckpointFault::Field)?;
+        let publication = self.publication.as_mut().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "PCG publication lost its original frame"))?;
         if !publication.complete {
             if publication.writer.staged_page_len().is_none() {
-                publication.writer.begin_staged_page(context).map_err(|_| NumericalCheckpointFault::Admission)?;
+                publication.writer.begin_staged_page_funded(context)?;
                 return Ok(NumericalRun::Yield);
             }
-            publication.complete = publication.advance(self.operation, &self.state).map_err(|_| NumericalCheckpointFault::Admission)?;
+            if publication.advance(self.operation, &self.state, context)? { publication.complete = true; }
             return Ok(NumericalRun::Yield);
         }
-        let publication = self.publication.take().ok_or(NumericalCheckpointFault::Field)?;
-        let payload = match publication.writer.finish() {
-            Ok(payload) => payload,
-            Err(writer) => {
-                self.publication = Some(PcgPublication { kind: publication.kind, cursor: publication.cursor, writer, complete: publication.complete });
-                return Err(NumericalCheckpointFault::Admission);
-            }
-        };
-        Ok(match publication.kind {
-            PcgPublicationKind::Checkpoint => {
-                self.state.checkpoint_due = false;
-                self.desk.lend_checkpoint(payload, self.state.iteration as u64)
-            }
-            PcgPublicationKind::Preview => {
-                self.state.preview_due = false;
-                self.desk.lend_preview(payload)
-            }
-            PcgPublicationKind::Complete => {
-                self.terminal_published = true;
-                self.state.preview_due = false;
-                self.state.checkpoint_due = false;
-                self.desk.lend_complete(payload)
-            }
+        if !publication.writer.take_finished_funded(&mut self.desk.lent, context, 2 * size_of::<Option<PcgPublication>>() + 3 * size_of::<bool>())? { return Ok(NumericalRun::Yield); }
+        let kind = publication.kind;
+        self.publication = None;
+        let payload = self.desk.lent.take().expect("finished PCG publication retained its actual payload");
+        Ok(match kind {
+            PcgPublicationKind::Checkpoint => { self.state.checkpoint_due = false; self.desk.lend_checkpoint(payload, self.state.iteration as u64) }
+            PcgPublicationKind::Preview => { self.state.preview_due = false; self.desk.lend_preview(payload) }
+            PcgPublicationKind::Complete => { self.terminal_published = true; self.desk.lend_complete(payload) }
         })
     }
 
     pub fn new(operation: Operation, a: Csr, b: VecD, x: VecD, tol_rel: f64, max_iter: usize, batch_units: usize) -> Self {
-        assert_eq!(a.n, b.len(), "pcg rhs dimension mismatch");
-        assert_eq!(a.n, x.len(), "pcg initial guess dimension mismatch");
-        assert!(batch_units > 0, "pcg batch must contain work");
-        let n = a.n;
-        let b_norm = b.norm2().max(1e-300);
         Self {
             operation,
-            state: PcgCheckpoint {
-                a,
-                b,
-                x,
-                tol_rel,
-                max_iter,
-                batch_units,
-                stage: PcgStage::InitializeDiagonal,
-                diag: VecD::zeros(n),
-                r: VecD::zeros(n),
-                z: VecD::zeros(n),
-                p: VecD::zeros(n),
-                ap: VecD::zeros(n),
-                b_norm,
-                residual_norm: 0.0,
-                residual_sq: 0.0,
-                rz_old: 0.0,
-                rz_new: 0.0,
-                dot_accum: 0.0,
-                alpha: 0.0,
-                beta: 0.0,
-                iteration: 0,
-                cursor: 0,
-                row_cursor: 0,
-                entry_cursor: 0,
-                row_sum: 0.0,
-                converged: false,
-                coarse_published: false,
-                preview_due: false,
-                checkpoint_due: false,
-            },
+            state: PcgCheckpoint::new(a, b, x, tol_rel, max_iter, batch_units),
             close_lane: 0,
             publication: None,
             publication_fault: None,
@@ -316,171 +275,237 @@ impl PcgJob {
         }
     }
 
-    fn reset_spmv(&mut self, stage: PcgStage) {
-        self.state.stage = stage;
-        self.state.row_cursor = 0;
-        self.state.entry_cursor = self.state.a.indptr(0).unwrap_or(0) as usize;
-        self.state.row_sum = 0.0;
-        self.state.dot_accum = 0.0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+// #endregion 🔖️Pcg
+
+impl PcgCheckpoint {
+    pub(super) fn new(a: Csr, b: VecD, x: VecD, tol_rel: f64, max_iter: usize, batch_units: usize) -> Self {
+        assert_eq!(a.n, b.len(), "pcg rhs dimension mismatch");
+        assert_eq!(a.n, x.len(), "pcg initial guess dimension mismatch");
+        assert!(batch_units > 0, "pcg batch must contain work");
+        let n = a.n;
+        let b_norm = b.norm2().max(1e-300);
+        Self {
+                a,
+                b,
+                x,
+                tol_rel,
+                max_iter,
+                batch_units,
+                stage: PcgStage::InitializeDiagonal,
+                diag: VecD::zeros(n),
+                r: VecD::zeros(n),
+                z: VecD::zeros(n),
+                p: VecD::zeros(n),
+                ap: VecD::zeros(n),
+                b_norm,
+                residual_norm: 0.0,
+                residual_sq: 0.0,
+                rz_old: 0.0,
+                rz_new: 0.0,
+                dot_accum: 0.0,
+                alpha: 0.0,
+                beta: 0.0,
+                iteration: 0,
+                cursor: 0,
+                row_cursor: 0,
+                entry_cursor: 0,
+                row_sum: 0.0,
+                converged: false,
+                coarse_published: false,
+                preview_due: false,
+                checkpoint_due: false,
+        }
+    }
+
+    pub(super) fn reset_spmv(&mut self, stage: PcgStage) {
+        self.stage = stage;
+        self.row_cursor = 0;
+        self.entry_cursor = self.a.indptr(0).unwrap_or(0) as usize;
+        self.row_sum = 0.0;
+        self.dot_accum = 0.0;
     }
 
     pub(super) fn finish(&mut self, converged: bool) {
-        self.state.converged = converged;
-        self.state.stage = PcgStage::Complete;
+        self.converged = converged;
+        self.stage = PcgStage::Complete;
     }
 
-    pub(super) fn step_diagonal(&mut self, context: &mut StepContext<'_>, units: &mut usize) {
-        while self.state.row_cursor < self.state.a.n && *units < self.state.batch_units && !context.should_yield() && !context.is_cancelled() {
-            let row = self.state.row_cursor;
-            let end = self.state.a.indptr(row + 1).expect("PCG diagonal row end") as usize;
-            if self.state.entry_cursor < end {
-                let entry = self.state.entry_cursor;
-                if self.state.a.index(entry).expect("PCG diagonal column") as usize == row {
-                    self.state.diag.set(row, self.state.a.value(entry).expect("PCG diagonal value"));
+    pub(super) fn step_diagonal(&mut self, units: &mut usize, maximum_units: usize) {
+        while self.row_cursor < self.a.n && *units < maximum_units {
+            let row = self.row_cursor;
+            let end = self.a.indptr(row + 1).expect("PCG diagonal row end") as usize;
+            if self.entry_cursor < end {
+                let entry = self.entry_cursor;
+                if self.a.index(entry).expect("PCG diagonal column") as usize == row {
+                    self.diag.set(row, self.a.value(entry).expect("PCG diagonal value"));
                 }
-                self.state.entry_cursor += 1;
+                self.entry_cursor += 1;
             } else {
-                self.state.row_cursor += 1;
-                self.state.entry_cursor = self.state.a.indptr(self.state.row_cursor.min(self.state.a.n)).expect("PCG diagonal next row") as usize;
+                self.row_cursor += 1;
+                self.entry_cursor = self.a.indptr(self.row_cursor.min(self.a.n)).expect("PCG diagonal next row") as usize;
             }
             *units += 1;
-            context.consume_fuel(1);
         }
-        if self.state.row_cursor == self.state.a.n {
+        if self.row_cursor == self.a.n {
             self.reset_spmv(PcgStage::InitialSpmv);
         }
     }
 
-    pub(super) fn step_spmv(&mut self, context: &mut StepContext<'_>, units: &mut usize, initial: bool) {
-        while self.state.row_cursor < self.state.a.n && *units < self.state.batch_units && !context.should_yield() && !context.is_cancelled() {
-            let row = self.state.row_cursor;
-            let end = self.state.a.indptr(row + 1).expect("PCG SpMV row end") as usize;
-            if self.state.entry_cursor < end {
-                let entry = self.state.entry_cursor;
-                let col = self.state.a.index(entry).expect("PCG SpMV column") as usize;
-                let value = if initial { self.state.x.get(col) } else { self.state.p.get(col) };
-                self.state.row_sum += self.state.a.value(entry).expect("PCG SpMV value") * value;
-                self.state.entry_cursor += 1;
+    pub(super) fn step_spmv(&mut self, units: &mut usize, maximum_units: usize, initial: bool) {
+        while self.row_cursor < self.a.n && *units < maximum_units {
+            let row = self.row_cursor;
+            let end = self.a.indptr(row + 1).expect("PCG SpMV row end") as usize;
+            if self.entry_cursor < end {
+                let entry = self.entry_cursor;
+                let col = self.a.index(entry).expect("PCG SpMV column") as usize;
+                let value = if initial { self.x.get(col) } else { self.p.get(col) };
+                self.row_sum += self.a.value(entry).expect("PCG SpMV value") * value;
+                self.entry_cursor += 1;
             } else {
-                self.state.ap.set(row, self.state.row_sum);
+                self.ap.set(row, self.row_sum);
                 if !initial {
-                    self.state.dot_accum += self.state.p.get(row) * self.state.row_sum;
+                    self.dot_accum += self.p.get(row) * self.row_sum;
                 }
-                self.state.row_sum = 0.0;
-                self.state.row_cursor += 1;
-                self.state.entry_cursor = self.state.a.indptr(self.state.row_cursor.min(self.state.a.n)).expect("PCG SpMV next row") as usize;
+                self.row_sum = 0.0;
+                self.row_cursor += 1;
+                self.entry_cursor = self.a.indptr(self.row_cursor.min(self.a.n)).expect("PCG SpMV next row") as usize;
             }
             *units += 1;
-            context.consume_fuel(1);
         }
-        if self.state.row_cursor == self.state.a.n {
-            self.state.cursor = 0;
+        if self.row_cursor == self.a.n {
+            self.cursor = 0;
             if initial {
-                self.state.residual_sq = 0.0;
-                self.state.stage = PcgStage::InitialResidual;
-            } else if self.state.dot_accum.abs() < 1e-300 {
+                self.residual_sq = 0.0;
+                self.stage = PcgStage::InitialResidual;
+            } else if self.dot_accum.abs() < 1e-300 {
                 self.finish(false);
             } else {
-                self.state.alpha = self.state.rz_old / self.state.dot_accum;
-                self.state.residual_sq = 0.0;
-                self.state.stage = PcgStage::IterationUpdate;
+                self.alpha = self.rz_old / self.dot_accum;
+                self.residual_sq = 0.0;
+                self.stage = PcgStage::IterationUpdate;
             }
         }
     }
 
-    pub(super) fn step_initial_residual(&mut self, context: &mut StepContext<'_>, units: &mut usize) {
-        while self.state.cursor < self.state.a.n && *units < self.state.batch_units && !context.should_yield() && !context.is_cancelled() {
-            let i = self.state.cursor;
-            let value = self.state.b.get(i) - self.state.ap.get(i);
-            self.state.r.set(i, value);
-            self.state.residual_sq += value * value;
-            self.state.cursor += 1;
+    pub(super) fn step_initial_residual(&mut self, units: &mut usize, maximum_units: usize) {
+        while self.cursor < self.a.n && *units < maximum_units {
+            let i = self.cursor;
+            let value = self.b.get(i) - self.ap.get(i);
+            self.r.set(i, value);
+            self.residual_sq += value * value;
+            self.cursor += 1;
             *units += 1;
-            context.consume_fuel(1);
         }
-        if self.state.cursor == self.state.a.n {
-            self.state.residual_norm = self.state.residual_sq.sqrt() / self.state.b_norm;
-            if self.state.residual_norm < self.state.tol_rel {
+        if self.cursor == self.a.n {
+            self.residual_norm = self.residual_sq.sqrt() / self.b_norm;
+            if self.residual_norm < self.tol_rel {
                 self.finish(true);
-            } else if self.state.max_iter == 0 {
+            } else if self.max_iter == 0 {
                 self.finish(false);
             } else {
-                self.state.cursor = 0;
-                self.state.rz_new = 0.0;
-                self.state.stage = PcgStage::InitialPrecondition;
+                self.cursor = 0;
+                self.rz_new = 0.0;
+                self.stage = PcgStage::InitialPrecondition;
             }
         }
     }
 
-    pub(super) fn step_precondition(&mut self, context: &mut StepContext<'_>, units: &mut usize, initial: bool) {
-        while self.state.cursor < self.state.a.n && *units < self.state.batch_units && !context.should_yield() && !context.is_cancelled() {
-            let i = self.state.cursor;
-            let d = self.state.diag.get(i);
-            let value = if d.abs() > 1e-300 { self.state.r.get(i) / d } else { self.state.r.get(i) };
-            self.state.z.set(i, value);
+    pub(super) fn step_precondition(&mut self, units: &mut usize, maximum_units: usize, initial: bool) {
+        while self.cursor < self.a.n && *units < maximum_units {
+            let i = self.cursor;
+            let d = self.diag.get(i);
+            let value = if d.abs() > 1e-300 { self.r.get(i) / d } else { self.r.get(i) };
+            self.z.set(i, value);
             if initial {
-                self.state.p.set(i, value);
+                self.p.set(i, value);
             }
-            self.state.rz_new += self.state.r.get(i) * value;
-            self.state.cursor += 1;
+            self.rz_new += self.r.get(i) * value;
+            self.cursor += 1;
             *units += 1;
-            context.consume_fuel(1);
         }
-        if self.state.cursor == self.state.a.n {
-            self.state.cursor = 0;
+        if self.cursor == self.a.n {
+            self.cursor = 0;
             if initial {
-                self.state.rz_old = self.state.rz_new;
-                self.state.iteration = 1;
+                self.rz_old = self.rz_new;
+                self.iteration = 1;
                 self.reset_spmv(PcgStage::IterationSpmv);
             } else {
-                self.state.beta = self.state.rz_new / self.state.rz_old;
-                self.state.stage = PcgStage::IterationDirection;
+                self.beta = self.rz_new / self.rz_old;
+                self.stage = PcgStage::IterationDirection;
             }
         }
     }
 
-    pub(super) fn step_update(&mut self, context: &mut StepContext<'_>, units: &mut usize) {
-        while self.state.cursor < self.state.a.n && *units < self.state.batch_units && !context.should_yield() && !context.is_cancelled() {
-            let i = self.state.cursor;
-            self.state.x.set(i, self.state.x.get(i) + self.state.alpha * self.state.p.get(i));
-            self.state.r.set(i, self.state.r.get(i) - self.state.alpha * self.state.ap.get(i));
-            self.state.residual_sq += self.state.r.get(i) * self.state.r.get(i);
-            self.state.cursor += 1;
+    pub(super) fn step_update(&mut self, units: &mut usize, maximum_units: usize) {
+        while self.cursor < self.a.n && *units < maximum_units {
+            let i = self.cursor;
+            self.x.set(i, self.x.get(i) + self.alpha * self.p.get(i));
+            self.r.set(i, self.r.get(i) - self.alpha * self.ap.get(i));
+            self.residual_sq += self.r.get(i) * self.r.get(i);
+            self.cursor += 1;
             *units += 1;
-            context.consume_fuel(1);
         }
-        if self.state.cursor == self.state.a.n {
-            self.state.residual_norm = self.state.residual_sq.sqrt() / self.state.b_norm;
-            if self.state.residual_norm < self.state.tol_rel {
+        if self.cursor == self.a.n {
+            self.residual_norm = self.residual_sq.sqrt() / self.b_norm;
+            if self.residual_norm < self.tol_rel {
                 self.finish(true);
-            } else if self.state.iteration >= self.state.max_iter {
+            } else if self.iteration >= self.max_iter {
                 self.finish(false);
             } else {
-                if !self.state.coarse_published && self.state.residual_norm < self.state.tol_rel.max(1e-3) {
-                    self.state.coarse_published = true;
-                    self.state.preview_due = true;
+                if !self.coarse_published && self.residual_norm < self.tol_rel.max(1e-3) {
+                    self.coarse_published = true;
+                    self.preview_due = true;
                 }
-                self.state.cursor = 0;
-                self.state.rz_new = 0.0;
-                self.state.stage = PcgStage::IterationPrecondition;
+                self.cursor = 0;
+                self.rz_new = 0.0;
+                self.stage = PcgStage::IterationPrecondition;
             }
-            self.state.checkpoint_due = true;
+            self.checkpoint_due = true;
         }
     }
 
-    pub(super) fn step_direction(&mut self, context: &mut StepContext<'_>, units: &mut usize) {
-        while self.state.cursor < self.state.a.n && *units < self.state.batch_units && !context.should_yield() && !context.is_cancelled() {
-            let i = self.state.cursor;
-            self.state.p.set(i, self.state.z.get(i) + self.state.beta * self.state.p.get(i));
-            self.state.cursor += 1;
+    pub(super) fn step_direction(&mut self, units: &mut usize, maximum_units: usize) {
+        while self.cursor < self.a.n && *units < maximum_units {
+            let i = self.cursor;
+            self.p.set(i, self.z.get(i) + self.beta * self.p.get(i));
+            self.cursor += 1;
             *units += 1;
-            context.consume_fuel(1);
         }
-        if self.state.cursor == self.state.a.n {
-            self.state.rz_old = self.state.rz_new;
-            self.state.iteration += 1;
+        if self.cursor == self.a.n {
+            self.rz_old = self.rz_new;
+            self.iteration += 1;
             self.reset_spmv(PcgStage::IterationSpmv);
         }
     }
+
+    pub(super) fn advance_one(&mut self) -> usize {
+        let mut units = 0;
+        match self.stage {
+            PcgStage::InitializeDiagonal => self.step_diagonal(&mut units, 1),
+            PcgStage::InitialSpmv => self.step_spmv(&mut units, 1, true),
+            PcgStage::InitialResidual => self.step_initial_residual(&mut units, 1),
+            PcgStage::InitialPrecondition => self.step_precondition(&mut units, 1, true),
+            PcgStage::IterationSpmv => self.step_spmv(&mut units, 1, false),
+            PcgStage::IterationUpdate => self.step_update(&mut units, 1),
+            PcgStage::IterationPrecondition => self.step_precondition(&mut units, 1, false),
+            PcgStage::IterationDirection => self.step_direction(&mut units, 1),
+            PcgStage::Complete => {}
+        }
+        units
+    }
 }
-// #endregion 🔖️Pcg

@@ -1,5 +1,5 @@
-//! 🧊️ `set-selection-flag` command, and the two set-verbs a document-tree row names (`setSelectionHidden`,
 //! `setSelectionLocked`).
+//! 🧊️ `set-selection-flag` command, and the two set-verbs a document-tree row names (`setSelectionHidden`,
 
 use {semio_s_artifact_puzzle_3d_model::puzzle3d_vortex_full_id, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx};
 use {semio_s_artifact_puzzle_3d_mutations_object::change_object_hidden::mutation::change_object_hidden, semio_s_artifact_puzzle_3d_mutations_object::change_object_locked::mutation::change_object_locked, semio_s_artifact_puzzle_3d_mutations_reference::change_reference_hidden::mutation::change_reference_hidden, semio_s_artifact_puzzle_3d_mutations_reference::change_reference_locked::mutation::change_reference_locked, semio_s_artifact_puzzle_3d_mutations_volume::change_target_volume_hidden::mutation::change_target_volume_hidden, semio_s_artifact_puzzle_3d_mutations_volume::change_target_volume_locked::mutation::change_target_volume_locked, semio_s_artifact_puzzle_3d_mutations_vortex::replace_object_vortex::mutation::replace_object_vortex, semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation};

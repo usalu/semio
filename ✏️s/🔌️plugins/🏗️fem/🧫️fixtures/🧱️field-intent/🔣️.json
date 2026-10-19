@@ -1,0 +1,7 @@
+{
+  "cases": [
+    {"dimension":"2d","before":{"id":"steel","name":"Steel","e":210000000000,"nu":0.3,"rho":7850},"events":[{"mutation":"changeMaterial","id":"steel","patch":{"name":"Structural Steel"}},{"mutation":"changeMaterial","id":"steel","patch":{"e":200000000000}}],"after":{"id":"steel","name":"Structural Steel","e":200000000000,"nu":0.3,"rho":7850}},
+    {"dimension":"3d","before":{"id":"steel","name":"Steel","e":210000000000,"g":80000000000,"nu":0.3,"rho":7850},"events":[{"mutation":"changeMaterial","id":"steel","patch":{"name":"Structural Steel"}},{"mutation":"changeMaterial","id":"steel","patch":{"e":200000000000}}],"after":{"id":"steel","name":"Structural Steel","e":200000000000,"g":80000000000,"nu":0.3,"rho":7850}}
+  ],
+  "refusedPatches": [{"id":"renamed"},{"name":null},{"e":null},{"e":0},{"e":-1},{"nu":-1},{"nu":0.5},{"rho":0},{"unknown":1}]
+}

@@ -1,6 +1,6 @@
 //#region 🧪️EmptyChildrenMutationTests
 use super::*;
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{Mutation, ColdMutationDiff,MutationDiff, OpBinary, OpText};
 
 fn cases() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/🧒️children-fixture/🔣️.json")).expect("children mutation cases") }
 
@@ -35,6 +35,6 @@ fn existing_children_diff_stays_identity() {
     let base = ChildrenTestSnapshot;
     let mut diff = ChildrenTestDiff {};
     diff.absorb(ChildrenTestDiff {});
-    assert_eq!(protocol::apply_diff(&diff, &base).expect("identity"), base);
+    assert_eq!(protocol::apply_diff_cold(&diff, &base).expect("identity"), base);
 }
 //#endregion 🧪️EmptyChildrenMutationTests

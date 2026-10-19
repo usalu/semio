@@ -1,0 +1,73 @@
+{
+  "nodes": [],
+  "elements": [],
+  "solids": [
+    {
+      "id": "sol1",
+      "name": "Solid",
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          10,
+          0
+        ],
+        [
+          10,
+          10
+        ],
+        [
+          0,
+          10
+        ]
+      ],
+      "holes": [
+        [
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            2,
+            3
+          ]
+        ]
+      ],
+      "materialId": "steel",
+      "meshSize": 1,
+      "baseZ": 0,
+      "height": 0.2,
+      "layers": 1,
+      "axis": "z"
+    }
+  ],
+  "materials": [
+    {
+      "id": "steel",
+      "name": "Steel",
+      "e": 210000000000.0,
+      "nu": 0.3,
+      "rho": 7850.0,
+      "g": 80000000000.0
+    }
+  ],
+  "sections": [],
+  "supports": [],
+  "loadCases": [],
+  "combinations": [],
+  "analysis": {
+    "modalCount": 6,
+    "bucklingCount": 6,
+    "deformationScale": 1.0
+  }
+}

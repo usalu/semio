@@ -6,6 +6,12 @@ use std::fs::{File, ReadDir};
 use std::io::{Read, Seek};
 use std::path::PathBuf;
 
+#[path="📮️path-return/🦀️.rs"]
+mod original_path_return;
+pub use original_path_return::{OriginalNativePathReturnRegistry,OriginalNativePathReservation,OriginalSuppliedNativePath};
+
+fn extension_capacity(extension:&std::borrow::Cow<'static,str>)->usize{match extension{std::borrow::Cow::Owned(text)=>text.capacity(),std::borrow::Cow::Borrowed(_)=>0}}
+
 //#region 📂️Schema
 
 pub const NATIVE_IO_PATH_CAPACITY: usize = 256;
@@ -111,7 +117,7 @@ impl Drop for NativeModifiedSet {
 pub enum NativeIoRequest {
     ReadBytes(PathBuf),
     ReadPage { path: PathBuf, offset: u64, max_bytes: usize },
-    ScanDirectory { path: PathBuf, directories_only: bool, extension: Option<String>, first_only: bool },
+    ScanDirectory { path: PathBuf, directories_only: bool, extension: Option<std::borrow::Cow<'static,str>>, first_only: bool },
     Modified(NativePathSet),
     ProcessResidentBytes,
 }
@@ -124,7 +130,16 @@ pub enum NativeIoValue {
     Paths(NativePathSet),
     Modified(NativeModifiedSet),
     ResidentBytes(Option<u64>),
+    StreamRefused(NativeIoStreamRefusal),
 }
+
+/// 📏️ The retained scalar refusal precedes page birth when the original stream cannot finish within its stock.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub struct NativeIoStreamRefusal{pub length:u64,pub maximum_bytes:u64}
+/// 📋️ A result observation borrows only scalar shape while its producer keeps every physical owner.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub enum NativeIoResultStatus{Bytes{length:usize,pages:usize},Page{length:usize,pages:usize,eof:bool},Paths{count:usize},Modified{count:usize},ResidentBytes(Option<u64>),StreamRefused(NativeIoStreamRefusal),Fault}
+fn validate_original_stream_extent(length:u64,cx:&StepContext<'_>)->Result<(),NativeIoStreamRefusal>{let stock=cx.original_total_retained_grant();let page=semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;let capacity=stock.maximum_capacity_bytes.min(stock.maximum_release_bytes).min(semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES);let maximum_bytes=((capacity/page)*page)as u64;if length>maximum_bytes{Err(NativeIoStreamRefusal{length,maximum_bytes})}else{Ok(())}}
 
 impl NativeIoValue {
     pub fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
@@ -144,7 +159,7 @@ impl NativeIoValue {
             Self::Bytes(bytes)|Self::Page{bytes,..}=>{let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let step=bytes.close_step(child)?;semio_framework_value::retained_clone::admit_retained_clone_close(child,step,bytes.terminal_is_empty(),"original native I/O result payload").map_err(|error|error.with_retained_progress(step.progress()))?;step.progress()},
             Self::Paths(paths)=>{drop(paths.pop());RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}},
             Self::Modified(entries)=>{drop(entries.pop());RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}},
-            Self::ResidentBytes(_)=>Default::default(),
+            Self::ResidentBytes(_)|Self::StreamRefused(_)=>Default::default(),
         };
         InteractiveJobCloseStep::Pending{progress}.admit(grant,self.terminal_is_empty())
     }
@@ -154,7 +169,7 @@ impl NativeIoValue {
             Self::Bytes(bytes) | Self::Page { bytes, .. } => bytes.terminal_is_empty(),
             Self::Paths(paths) => paths.is_empty(),
             Self::Modified(entries) => entries.is_empty(),
-            Self::ResidentBytes(_) => true,
+            Self::ResidentBytes(_)|Self::StreamRefused(_) => true,
         }
     }
 }
@@ -179,18 +194,22 @@ fn native_io_child_demands(mut demand: RetirementDemand) -> Result<RetirementDem
     ReadingPage { file: File, cursor: u64, length: u64, remaining: usize, writer: semio_framework_job::RetainedJobPayloadWriter },
     ReadingPageBuffered { file: File, cursor: u64, length: u64, remaining: usize, writer: semio_framework_job::RetainedJobPayloadWriter, bytes: [u8; semio_framework_job::JOB_PAYLOAD_PAGE_BYTES], buffered: usize },
     ClosingWriterFault { writer: semio_framework_job::RetainedJobPayloadWriter, error: String },
-    Scanning { entries: ReadDir, paths: NativePathSet, directories_only: bool, extension: Option<String>, first_only: bool },
-    ClosingScanFault { paths: NativePathSet, rejected: Option<PathBuf>, extension: Option<String>, error: String },
+    Scanning { entries: ReadDir, paths: NativePathSet, directories_only: bool, first_only: bool },
+    ClosingScanFault { paths: NativePathSet, rejected: Option<PathBuf>, error: String },
     ReadingModified { paths: NativePathSet, modified: NativeModifiedSet },
     ClosingModifiedFault { paths: NativePathSet, modified: NativeModifiedSet, rejected: Option<(PathBuf, std::time::SystemTime)>, error: String },
     Finished,
 }
 
 #[derive(Clone, Copy)]
-enum NativeIoCloseTarget { FaultWriter, ClearFaultWriter, FaultDetail, ClearFaultDetail, Writer, Paths, Modified, Path, Extension, RejectedPath, RejectedModified, Error, FinishState, ResultValue, ResultError, ClearResult, Complete }
+enum NativeIoCloseTarget { RequestPath, RequestExtension, RetiredPath, FaultWriter, ClearFaultWriter, FaultDetail, ClearFaultDetail, Writer, Paths, Modified, Path, Extension, RejectedPath, RejectedModified, Error, FinishState, ResultValue, ResultError, ClearResult, Complete }
 
 pub struct NativeIoJob {
     #[doc(hidden)] pub state: NativeIoState,
+    known_file_length: Option<u64>,
+    request_path: Option<PathBuf>,
+    request_extension: Option<std::borrow::Cow<'static,str>>,
+    retired_path: Option<PathBuf>,
     #[doc(hidden)] pub result: Option<Result<NativeIoValue, String>>,
     closing: bool,
     fault_writer: Option<semio_framework_job::RetainedJobPayloadWriter>,
@@ -201,7 +220,7 @@ pub struct NativeIoJob {
 
 impl NativeIoJob {
     pub fn new(request: NativeIoRequest) -> Self {
-        Self { state: NativeIoState::Pending(request), result: None, closing: false, fault_writer: None, fault_cursor: 0, fault_complete: false, fault_detail: None }
+        Self { state: NativeIoState::Pending(request), known_file_length: None, request_path: None, request_extension: None, retired_path: None, result: None, closing: false, fault_writer: None, fault_cursor: 0, fault_complete: false, fault_detail: None }
     }
 
     fn close_target(&self) -> Result<(NativeIoCloseTarget, RetirementDemand), ValueError> {
@@ -209,13 +228,16 @@ impl NativeIoJob {
         if let Some(writer)=self.fault_writer.as_ref(){return Ok(if writer.terminal_is_empty(){(ClearFaultWriter,RetirementDemand{copy_bytes:size_of_val(&self.fault_writer),depth:1,..Default::default()})}else{(FaultWriter,native_io_child_demands(writer.retirement_demands()?)?)});}
         if let Some(detail)=self.fault_detail.as_ref(){return Ok(if detail.terminal_is_empty(){(ClearFaultDetail,RetirementDemand{copy_bytes:size_of_val(&self.fault_detail),depth:1,..Default::default()})}else{(FaultDetail,native_io_child_demands(detail.retirement_demands()?)?)});}
         let release = |target, bytes, depth| Ok((target, RetirementDemand { release_bytes: bytes, depth, ..Default::default() }));
+        if let Some(path) = self.request_path.as_ref() { return release(RequestPath, path.capacity(), 1); }
+        if let Some(extension) = self.request_extension.as_ref() { return release(RequestExtension, extension_capacity(extension), 1); }
+        if let Some(path) = self.retired_path.as_ref() { return release(RetiredPath, path.capacity(), 1); }
         match &self.state {
             NativeIoState::Reading { writer, .. } | NativeIoState::ReadingBuffered { writer, .. } | NativeIoState::ReadingPage { writer, .. } | NativeIoState::ReadingPageBuffered { writer, .. } | NativeIoState::ClosingWriterFault { writer, .. } if !writer.terminal_is_empty() => return Ok((Writer, native_io_child_demands(writer.retirement_demands()?)?)),
             NativeIoState::ClosingScanFault { rejected: Some(path), .. } => return release(RejectedPath,path.capacity(),1),
             NativeIoState::ClosingModifiedFault { rejected: Some((path, _)), .. } => return release(RejectedModified,path.capacity(),1),
             NativeIoState::Pending(NativeIoRequest::Modified(owner)) | NativeIoState::Scanning { paths: owner, .. } | NativeIoState::ClosingScanFault { paths: owner, .. } | NativeIoState::ReadingModified { paths: owner, .. } | NativeIoState::ClosingModifiedFault { paths: owner, .. } if !owner.is_empty() => return release(Paths,owner.entries[owner.length-1].as_ref().expect("original path slot").capacity(),1),
             NativeIoState::ReadingModified { modified: owner, .. } | NativeIoState::ClosingModifiedFault { modified: owner, .. } if !owner.is_empty() => return release(Modified,owner.entries[owner.length-1].as_ref().expect("original modified slot").0.capacity(),1),
-            NativeIoState::Pending(NativeIoRequest::ScanDirectory { extension: Some(extension), .. }) | NativeIoState::Scanning { extension: Some(extension), .. } | NativeIoState::ClosingScanFault { extension: Some(extension), .. } => return release(Extension,extension.capacity(),1),
+            NativeIoState::Pending(NativeIoRequest::ScanDirectory { extension: Some(extension), .. }) => return release(Extension,extension_capacity(extension),1),
             NativeIoState::Pending(NativeIoRequest::ReadBytes(path) | NativeIoRequest::ReadPage { path, .. } | NativeIoRequest::ScanDirectory { path, .. }) if path.capacity() != 0 => return release(Path,path.capacity(),1),
             NativeIoState::ClosingWriterFault { error, .. } | NativeIoState::ClosingScanFault { error, .. } | NativeIoState::ClosingModifiedFault { error, .. } if error.capacity() != 0 => return release(Error,error.capacity(),1),
             NativeIoState::Finished => {},
@@ -230,6 +252,7 @@ impl NativeIoJob {
     }
 
     pub fn retained_request_backing_identity(&self) -> Option<*const u8> {
+        if let Some(path) = self.request_path.as_ref() { return Some(path.as_os_str().as_encoded_bytes().as_ptr()); }
         let path = match &self.state {
             NativeIoState::Pending(NativeIoRequest::ReadBytes(path) | NativeIoRequest::ReadPage { path, .. } | NativeIoRequest::ScanDirectory { path, .. }) => Some(path),
             NativeIoState::Pending(NativeIoRequest::Modified(paths)) => paths.entries[..paths.length].iter().flatten().next(),
@@ -240,6 +263,41 @@ impl NativeIoJob {
 
     pub fn take_result(&mut self) -> Option<Result<NativeIoValue, String>> {
         self.result.take()
+    }
+
+    /// 👁️ Observes retained output without moving paths, payload headers or error text out of their source.
+    pub fn result_status(&self)->Option<NativeIoResultStatus>{self.result.as_ref().map(|result|match result{Ok(NativeIoValue::Bytes(bytes))=>NativeIoResultStatus::Bytes{length:bytes.len(),pages:bytes.page_count()},Ok(NativeIoValue::Page{bytes,eof})=>NativeIoResultStatus::Page{length:bytes.len(),pages:bytes.page_count(),eof:*eof},Ok(NativeIoValue::Paths(paths))=>NativeIoResultStatus::Paths{count:paths.len()},Ok(NativeIoValue::Modified(paths))=>NativeIoResultStatus::Modified{count:paths.len()},Ok(NativeIoValue::ResidentBytes(bytes))=>NativeIoResultStatus::ResidentBytes(*bytes),Ok(NativeIoValue::StreamRefused(refusal))=>NativeIoResultStatus::StreamRefused(*refusal),Err(_)=>NativeIoResultStatus::Fault})}
+
+    /// 📐️ The actual opened file supplies this scalar extent; observing it transfers no payload or path owner.
+    pub fn known_file_length(&self)->Option<u64>{self.known_file_length}
+    /// 📖️ A completed producer keeps its original page backing while a caller borrows bytes for controlled copying.
+    pub fn result_page(&self,index:usize)->Option<&[u8]>{match self.result.as_ref(){Some(Ok(NativeIoValue::Bytes(bytes)|NativeIoValue::Page{bytes,..}))=>bytes.page(index),_=>None}}
+
+    /// 🕰️ The retained result lends one original path and its scalar observation without moving either owner.
+    pub fn result_modified(&self,index:usize)->Option<(&std::path::Path,std::time::SystemTime)>{match self.result.as_ref(){Some(Ok(NativeIoValue::Modified(entries)))if index<entries.length=>entries.entries[index].as_ref().map(|(path,time)|(path.as_path(),*time)),_=>None}}
+    /// 🧭️ Only this actual producer can supply an original selected directory path to its pre-reserved supplier return.
+    pub fn supply_result_last_path<const N:usize>(&mut self,reservation:&mut OriginalNativePathReservation<N>,output:&mut Option<OriginalSuppliedNativePath>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{match self.result.as_mut(){Some(Ok(NativeIoValue::Paths(paths)))=>reservation.publish_last(paths,output,cx),_=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native directory result retains no original selected path").into())}}
+
+    /// 📮️ After semantic acknowledgement, one page moves directly to its pre-reserved original supplier return.
+    pub fn supply_result_last_page<const N:usize>(&mut self,reservation:&mut semio_framework_job::OriginalJobPageReservation<N>,cx:&mut StepContext<'_>)->Result<Option<semio_framework_job::OriginalSuppliedJobPage>,OriginalTurnFailure>{match self.result.as_mut(){Some(Ok(NativeIoValue::Bytes(bytes)|NativeIoValue::Page{bytes,..}))=>reservation.publish_last(bytes,cx),_=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native I/O result has no original payload page to supply").into())}}
+
+    /// ♻️ Output retirement leaves the original request path available for the next bounded page of this invocation.
+    pub fn close_result_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+        let Some(result)=self.result.as_mut()else{return Ok(true)};
+        match result{
+            Ok(value)if !value.terminal_is_empty()=>{let demand=value.retirement_demands()?;semio_framework_job::close_original_retained_step(cx,demand,|grant|value.close_step(grant).map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress())))?;return Ok(false)},
+            Err(error)if error.capacity()!=0=>{let demand=RetirementDemand{release_bytes:error.capacity(),depth:1,..Default::default()};semio_framework_job::close_original_retained_step(cx,demand,|_|{drop(std::mem::take(error));Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))})?;return Ok(false)},
+            _=>{}
+        }
+        let demand=RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()};semio_framework_job::close_original_retained_step(cx,demand,|_|{self.result=None;Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))})?;Ok(self.result.is_none())
+    }
+
+    /// 🔁️ A fully acknowledged and retired page reuses its exact path under the same incoming caller.
+    pub fn restart_read_page(&mut self,offset:u64,max_bytes:usize,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+        if self.closing||!matches!(self.state,NativeIoState::Finished)||self.result.is_some()||self.fault_writer.is_some()||self.fault_detail.is_some()||self.request_path.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native page restart requires its retained path and retired original result").into())}
+        if max_bytes==0||max_bytes>semio_framework_job::JOB_PAYLOAD_PAGE_BYTES{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native page restart exceeds the actual one-page bound").into())}
+        let copy_bytes=size_of::<Option<PathBuf>>()+size_of::<u64>()+size_of::<usize>()+2*size_of::<usize>();let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_copy_bytes<copy_bytes||grant.maximum_depth==0{return Ok(false)}
+        cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:copy_bytes,..Default::default()})?;let path=self.request_path.take().unwrap();self.state=NativeIoState::Pending(NativeIoRequest::ReadPage{path,offset,max_bytes});cx.consume_fuel(1);Ok(true)
     }
 
     fn finish<'a>(&'a mut self, result: Result<NativeIoValue, String>, _cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
@@ -269,23 +327,34 @@ impl NativeIoJob {
 
     fn start<'a>(&'a mut self, request: NativeIoRequest, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
         match request {
-            NativeIoRequest::ReadBytes(path) => match File::open(&path) {
+            NativeIoRequest::ReadBytes(path) => {
+                self.request_path = Some(path);
+                let path = self.request_path.as_ref().expect("retained original native read path");
+                match File::open(path) {
                 Ok(file) => {
+                    let length=match file.metadata(){Ok(metadata)=>metadata.len(),Err(error)=>return self.finish(Err(format!("{}: {error}",path.display())),cx)};
+                    self.known_file_length=Some(length);
+                    if let Err(refusal)=validate_original_stream_extent(length,cx){return self.finish(Ok(NativeIoValue::StreamRefused(refusal)),cx)}
                     self.state = NativeIoState::Reading { file, writer: semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::CommitOutput) };
                     Ok(None)
                 }
                 Err(error) => self.finish(Err(format!("{}: {error}", path.display())), cx),
+                }
             },
             NativeIoRequest::ReadPage { path, offset, max_bytes } => {
+                self.request_path = Some(path);
+                let path = self.request_path.as_ref().expect("retained original native page path");
                 if max_bytes == 0 || max_bytes > semio_framework_job::JOB_PAYLOAD_PAGE_BYTES {
                     return self.finish(Err("native I/O page exceeded the mounted one-page output authority".into()), cx);
                 }
-                match File::open(&path) {
+                match File::open(path) {
                     Ok(mut file) => {
                         let length = match file.metadata() {
                             Ok(metadata) => metadata.len(),
                             Err(error) => return self.finish(Err(format!("{}: {error}", path.display())), cx),
                         };
+                        self.known_file_length=Some(length);
+
                         if offset > length {
                             return self.finish(Err(format!("{}: page offset exceeds file length", path.display())), cx);
                         }
@@ -298,12 +367,17 @@ impl NativeIoJob {
                     Err(error) => self.finish(Err(format!("{}: {error}", path.display())), cx),
                 }
             }
-            NativeIoRequest::ScanDirectory { path, directories_only, extension, first_only } => match std::fs::read_dir(&path) {
+            NativeIoRequest::ScanDirectory { path, directories_only, extension, first_only } => {
+                self.request_path = Some(path);
+                self.request_extension = extension;
+                let path = self.request_path.as_ref().expect("retained original native scan path");
+                match std::fs::read_dir(path) {
                 Ok(entries) => {
-                    self.state = NativeIoState::Scanning { entries, paths: NativePathSet::new(), directories_only, extension, first_only };
+                    self.state = NativeIoState::Scanning { entries, paths: NativePathSet::new(), directories_only, first_only };
                     Ok(None)
                 }
                 Err(error) => self.finish(Err(format!("{}: {error}", path.display())), cx),
+                }
             },
             NativeIoRequest::Modified(paths) => {
                 self.state = NativeIoState::ReadingModified { paths, modified: NativeModifiedSet::new() };
@@ -315,12 +389,13 @@ impl NativeIoJob {
 }
 
 impl NativeIoJob{
-    fn step_owned<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+    fn step_owned_raw<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
         if cx.is_cancelled(){self.closing=true;return JobOutcomeBorrow::admit_cancelled(cx)}
         if cx.should_yield() {
             return Ok(None);
         }
         cx.set_stage("NativePlatformIo");
+        if matches!(&self.state, NativeIoState::Pending(_) | NativeIoState::Reading { .. } | NativeIoState::ReadingPage { .. } | NativeIoState::Scanning { .. } | NativeIoState::ReadingModified { .. }) { cx.consume_fuel(1); }
         match std::mem::replace(&mut self.state, NativeIoState::Finished) {
             NativeIoState::Pending(request) => self.start(request, cx),
             NativeIoState::Reading { mut file, writer } => {
@@ -401,82 +476,78 @@ impl NativeIoJob{
                 }
                 Ok(None)
             }
-            NativeIoState::ClosingWriterFault { mut writer, error } => {
-                let authority = native_io_close_grant();
-                let child = RetainedCloneGrant { maximum_depth: authority.maximum_depth - 1, ..authority };
-                let closed = match writer.close_step(child) {
-                    Ok(step) => semio_framework_value::retained_clone::admit_retained_clone_close(child,step,writer.terminal_is_empty(),"original native I/O failed writer").is_ok() && writer.terminal_is_empty(),
-                    Err(_) => false,
-                };
-                if closed { self.finish(Err(error),cx) }
-                else { self.state = NativeIoState::ClosingWriterFault { writer,error }; Ok(None) }
-            },
-            NativeIoState::Scanning { mut entries, mut paths, directories_only, extension, first_only } => {
+            NativeIoState::Scanning { mut entries, mut paths, directories_only, first_only } => {
                 let Some(entry) = entries.next() else { return self.finish(Ok(NativeIoValue::Paths(paths)), cx) };
                 let Ok(entry) = entry else {
-                    self.state = NativeIoState::Scanning { entries, paths, directories_only, extension, first_only };
+                    self.state = NativeIoState::Scanning { entries, paths, directories_only, first_only };
                     return Ok(None);
                 };
                 let path = entry.path();
-                if (directories_only && !path.is_dir()) || extension.as_ref().is_some_and(|extension| path.extension().and_then(|value| value.to_str()) != Some(extension.as_str())) {
-                    self.state = NativeIoState::Scanning { entries, paths, directories_only, extension, first_only };
+                if (directories_only && !path.is_dir()) || self.request_extension.as_ref().is_some_and(|extension| path.extension().and_then(|value| value.to_str()) != Some(extension.as_ref())) {
+                    self.retired_path = Some(path);
+                    self.state = NativeIoState::Scanning { entries, paths, directories_only, first_only };
                     return Ok(None);
                 }
                 if let Err(rejected) = paths.try_push(path) {
-                    self.state = NativeIoState::ClosingScanFault { paths, rejected: Some(rejected), extension, error: "native I/O directory result exceeded fixed path credits".into() };
+                    self.state = NativeIoState::ClosingScanFault { paths, rejected: Some(rejected), error: "native I/O directory result exceeded fixed path credits".into() };
                     return Ok(None);
                 }
                 if first_only {
                     return self.finish(Ok(NativeIoValue::Paths(paths)), cx);
                 }
-                self.state = NativeIoState::Scanning { entries, paths, directories_only, extension, first_only };
+                self.state = NativeIoState::Scanning { entries, paths, directories_only, first_only };
                 Ok(None)
-            }
-            NativeIoState::ClosingScanFault { mut paths, mut rejected, mut extension, error } => {
-                if rejected.take().is_some() {
-                    self.state = NativeIoState::ClosingScanFault { paths, rejected, extension, error };
-                    return Ok(None);
-                }
-                if paths.pop().is_some() {
-                    self.state = NativeIoState::ClosingScanFault { paths, rejected, extension, error };
-                    return Ok(None);
-                }
-                if extension.take().is_some() {
-                    self.state = NativeIoState::ClosingScanFault { paths, rejected, extension, error };
-                    return Ok(None);
-                }
-                self.finish(Err(error), cx)
             }
             NativeIoState::ReadingModified { mut paths, mut modified } => {
                 let Some(path) = paths.pop() else { return self.finish(Ok(NativeIoValue::Modified(modified)), cx) };
-                if let Some(modified_at) = std::fs::metadata(&path).ok().and_then(|metadata| metadata.modified().ok()) {
+                match std::fs::metadata(&path).and_then(|metadata|metadata.modified()) {
+                Ok(modified_at)=>{
                     if let Err(rejected) = modified.try_push((path, modified_at)) {
                         self.state = NativeIoState::ClosingModifiedFault { paths, modified, rejected: Some(rejected), error: "native I/O modified result exceeded fixed path credits".into() };
                         return Ok(None);
                     }
+                },
+                Err(failure)=>{let error=format!("{}: {failure}",path.display());self.retired_path=Some(path);self.state=NativeIoState::ClosingModifiedFault{paths,modified,rejected:None,error};return Ok(None)},
                 }
                 self.state = NativeIoState::ReadingModified { paths, modified };
                 Ok(None)
             }
-            NativeIoState::ClosingModifiedFault { mut paths, mut modified, mut rejected, error } => {
-                if rejected.take().is_some() {
-                    self.state = NativeIoState::ClosingModifiedFault { paths, modified, rejected, error };
-                    return Ok(None);
-                }
-                if paths.pop().is_some() {
-                    self.state = NativeIoState::ClosingModifiedFault { paths, modified, rejected, error };
-                    return Ok(None);
-                }
-                if modified.pop().is_some() {
-                    self.state = NativeIoState::ClosingModifiedFault { paths, modified, rejected, error };
-                    return Ok(None);
-                }
-                self.finish(Err(error), cx)
-            }
+            NativeIoState::ClosingWriterFault { .. } | NativeIoState::ClosingScanFault { .. } | NativeIoState::ClosingModifiedFault { .. } => unreachable!("original fault residuals are retained by the funded driver"),
             NativeIoState::Finished => self.publish_terminal(cx),
         }
     }
 
+}
+
+impl NativeIoJob {
+    fn step_owned<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
+        if let Some(path) = self.retired_path.as_ref() {
+            let demand = RetirementDemand { release_bytes: path.capacity(), depth: 1, ..Default::default() };
+            semio_framework_job::close_original_retained_step(cx, demand, |_| { drop(self.retired_path.take()); Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() })) })?;
+            return Ok(None);
+        }
+        if matches!(&self.state, NativeIoState::ClosingWriterFault { .. } | NativeIoState::ClosingScanFault { .. } | NativeIoState::ClosingModifiedFault { .. }) {
+            let (target, demand) = self.close_target()?;
+            if matches!(target, NativeIoCloseTarget::RequestPath | NativeIoCloseTarget::RequestExtension | NativeIoCloseTarget::RetiredPath | NativeIoCloseTarget::Writer | NativeIoCloseTarget::Paths | NativeIoCloseTarget::Modified | NativeIoCloseTarget::Extension | NativeIoCloseTarget::RejectedPath | NativeIoCloseTarget::RejectedModified) {
+                let was_closing = self.closing;
+                let result = semio_framework_job::close_original_retained_step(cx, demand, |grant| {
+                    let result = self.close_granted(grant);
+                    self.closing = was_closing;
+                    result.map(|step| match step { InteractiveJobCloseStep::Pending { progress } | InteractiveJobCloseStep::Complete { progress } => semio_framework_value::RetainedCloneStep::Progress(progress), InteractiveJobCloseStep::Blocked => semio_framework_value::RetainedCloneStep::Progress(Default::default()) })
+                });
+                result?;
+                return Ok(None);
+            }
+            if cx.retirement_should_yield() || cx.retained_grant().maximum_items == 0 || cx.retained_grant().maximum_depth == 0 { return Ok(None); }
+            let original = std::mem::replace(&mut self.state, NativeIoState::Finished);
+            let error = match original { NativeIoState::ClosingWriterFault { error, .. } | NativeIoState::ClosingScanFault { error, .. } | NativeIoState::ClosingModifiedFault { error, .. } => error, _ => unreachable!() };
+            self.result = Some(Err(error));
+            cx.consume_retained(RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
+            cx.consume_fuel(1);
+            return Ok(None);
+        }
+        self.step_owned_raw(cx).map_err(|error| OriginalTurnFailure::debit_original(error, cx))
+    }
 }
 
 impl NativeIoJob{
@@ -491,6 +562,9 @@ impl NativeIoJob{
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < release { return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()}); }
         self.closing = true;
         match target {
+            NativeIoCloseTarget::RequestPath => drop(self.request_path.take()),
+            NativeIoCloseTarget::RequestExtension => drop(self.request_extension.take()),
+            NativeIoCloseTarget::RetiredPath => drop(self.retired_path.take()),
             NativeIoCloseTarget::FaultWriter=>{let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let writer=self.fault_writer.as_mut().expect("original fault writer retained");return match writer.close_step(child){Ok(step)=>InteractiveJobCloseStep::Pending{progress:step.progress()}.admit(grant,false),Err(error)=>Err(error)};},
             NativeIoCloseTarget::FaultDetail=>{let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let detail=self.fault_detail.as_mut().expect("original fault detail retained");return match detail.close_step(child){Ok(step)=>InteractiveJobCloseStep::Pending{progress:step.progress()}.admit(grant,false),Err(error)=>Err(error)};},
             NativeIoCloseTarget::ClearFaultWriter=>self.fault_writer=None,
@@ -522,7 +596,7 @@ impl NativeIoJob{
                 _ => return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original native I/O close target changed custody")),
             },
             NativeIoCloseTarget::Extension => match &mut self.state {
-                NativeIoState::Pending(NativeIoRequest::ScanDirectory { extension, .. }) | NativeIoState::Scanning { extension, .. } | NativeIoState::ClosingScanFault { extension, .. } => drop(extension.take()),
+                NativeIoState::Pending(NativeIoRequest::ScanDirectory { extension, .. }) => drop(extension.take()),
                 _ => return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original native I/O close target changed custody")),
             },
             NativeIoCloseTarget::RejectedPath => if let NativeIoState::ClosingScanFault { rejected, .. } = &mut self.state { drop(rejected.take()); },
@@ -549,7 +623,7 @@ impl NativeIoJob{
 }
 
 impl InteractiveJob for NativeIoJob {
-    fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure>{self.step_owned(cx).map_err(|error|OriginalTurnFailure::debit_original(error,cx))}
+    fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure>{self.step_owned(cx)}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
         match descriptor.kind(){
@@ -578,7 +652,7 @@ impl InteractiveJob for NativeIoJob {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && matches!(self.state, NativeIoState::Finished) && self.result.is_none() && self.fault_writer.is_none() && self.fault_detail.is_none()
+        self.closing && self.request_path.is_none() && self.request_extension.is_none() && self.retired_path.is_none() && matches!(self.state, NativeIoState::Finished) && self.result.is_none() && self.fault_writer.is_none() && self.fault_detail.is_none()
     }
 }
 

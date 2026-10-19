@@ -562,15 +562,6 @@ checksum = "77ce24cb58228fbb8aa041425bb1050850ac19177686ea6e0f41a70416f56fdb"
 
 [[package]]
 name = "font-types"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02a596f5713680923a2080d86de50fe472fb290693cf0f701187a1c8b36996b7"
-dependencies = [
- "bytemuck",
-]
-
-[[package]]
-name = "font-types"
 version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b38ad915f6dadd993ced50848a8291a543bd41ca62bc10740d5e64e2ab4cfd7"
@@ -583,6 +574,15 @@ name = "font-types"
 version = "0.12.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "835ae9d781464a79026cde387f9cbc650c9a4909d7cf7e658b127e3c35d2f35d"
+dependencies = [
+ "bytemuck",
+]
+
+[[package]]
+name = "font-types"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "02a596f5713680923a2080d86de50fe472fb290693cf0f701187a1c8b36996b7"
 dependencies = [
  "bytemuck",
 ]
@@ -1275,15 +1275,15 @@ checksum = "d4a5ff6bcca6c4867b1c4fd4ef63e4db7436ef363e0ad7531d1558856bae64f4"
 
 [[package]]
 name = "linux-raw-sys"
-version = "0.4.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d26c52dbd32dccf2d10cac7725f8eae5296885fb5703b261f7d0a0739ec807ab"
-
-[[package]]
-name = "linux-raw-sys"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32a66949e030da00e8c7d4434b251670a91556f4144941d37452769c25d58a53"
+
+[[package]]
+name = "linux-raw-sys"
+version = "0.4.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d26c52dbd32dccf2d10cac7725f8eae5296885fb5703b261f7d0a0739ec807ab"
 
 [[package]]
 name = "litemap"
@@ -3422,6 +3422,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
+ "semio-framework-value-snapshot-read",
 ]
 
 [[package]]
@@ -4189,6 +4190,7 @@ dependencies = [
  "serde",
  "serde_json",
  "wasm-bindgen",
+ "semio-framework-dsl-record",
 ]
 
 [[package]]
@@ -4836,6 +4838,7 @@ dependencies = [
  "semio-framework-value-shared-issuance",
  "serde",
  "serde_json",
+ "semio-framework-hash",
 ]
 
 [[package]]
@@ -7108,6 +7111,7 @@ dependencies = [
  "serde_json",
  "wasm-bindgen",
  "web-sys",
+ "semio-framework-plugin-ownership",
 ]
 
 [[package]]
@@ -7194,7 +7198,6 @@ dependencies = [
 name = "semio-s-artifact-puzzle-3d-editor"
 version = "0.1.0"
 dependencies = [
- "js-sys",
  "semio-framework",
  "semio-framework-2d-compute",
  "semio-framework-action-bus",
@@ -8570,6 +8573,7 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework",
 ]
 
 [[package]]

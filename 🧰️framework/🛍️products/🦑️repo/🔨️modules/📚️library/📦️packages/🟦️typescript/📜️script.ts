@@ -361,6 +361,13 @@ class TestScript extends BundleScript {
       await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 120_000 });
       return;
     }
+    if (segments.length === 1 && (segments[0] === "agent-clients" || segments[0] === "derived-config")) {
+      const source = segments[0] === "agent-clients"
+        ? "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🤖️agent-client-configuration/🟦️.ts"
+        : "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📝️derived-config/🧪️tests/📝️derived-config/🟦️.ts";
+      await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, source)], { cwd: this.repoRoot, budgetMs: 120_000, signal: this.invocation.control.signal });
+      return;
+    }
     if (segments[0] === "windows-command-paths") {
       if (segments.length !== 1) throw new Error("Expected test windows-command-paths");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🪟️windows-command-paths/🟦️.ts");
@@ -421,9 +428,9 @@ class TestScript extends BundleScript {
       await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "cad-presence-retirement"), budgetMs: 180_000 });
       return;
     }
-    if (segments[0] === "launch-catalog") {
-      if (segments.length !== 1) throw new Error("Expected test launch-catalog");
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚀️launch-catalog/🟦️.ts");
+    if (segments[0] === "dashboard-control") {
+      if (segments.length !== 1) throw new Error("Expected test dashboard-control");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎛️dashboard-control/🟦️.ts");
       await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 180_000 });
       return;
     }

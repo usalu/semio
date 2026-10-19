@@ -1,0 +1,8 @@
+{
+  "cases": [
+    { "phase": "before", "initial": true, "during": true, "released": true },
+    { "phase": "during", "initial": false, "during": true, "released": true },
+    { "phase": "release", "initial": false, "during": false, "released": true }
+  ],
+  "cleanupTimeoutMilliseconds": 45000
+}

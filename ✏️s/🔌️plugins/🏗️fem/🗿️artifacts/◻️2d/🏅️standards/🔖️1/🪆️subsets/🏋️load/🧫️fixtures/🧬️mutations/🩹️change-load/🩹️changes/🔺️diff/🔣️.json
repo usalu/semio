@@ -1,0 +1,36 @@
+{
+  "nodes": null,
+  "elements": null,
+  "regions": null,
+  "materials": null,
+  "sections": null,
+  "supports": null,
+  "loadCases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "lc1",
+        "patch": {
+          "loads": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": [
+              {
+                "id": "l1",
+                "patch": {
+                  "value": 20,
+                  "kind": "nodal"
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "combinations": null,
+  "analysis": null
+}

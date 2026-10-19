@@ -1,0 +1,158 @@
+{
+  "declaration": "struct Presence { id: String, #[value(required)] factor: Option<f64>, #[value(default, deserialize_with = \"protocol::list_delta::supplied_value\", skip_serializing_if = \"Option::is_none\")] index: Option<usize> }",
+  "fields": [
+    {
+      "key": "id",
+      "optional": false,
+      "role": "Scalar"
+    },
+    {
+      "key": "factor",
+      "optional": false,
+      "role": "Scalar"
+    },
+    {
+      "key": "index",
+      "optional": true,
+      "role": "OptionScalar"
+    }
+  ],
+  "cases": [
+    {
+      "id": "explicit-clear",
+      "text": "presence id=\"c1\" factor { }",
+      "json": {
+        "id": "c1",
+        "factor": null
+      },
+      "accepted": true
+    },
+    {
+      "id": "explicit-value",
+      "text": "presence id=\"c1\" factor { value=2 }",
+      "json": {
+        "id": "c1",
+        "factor": 2.0
+      },
+      "accepted": true
+    },
+    {
+      "id": "indexed-clear",
+      "text": "presence id=\"c1\" factor { } index=0",
+      "json": {
+        "id": "c1",
+        "factor": null,
+        "index": 0
+      },
+      "accepted": true
+    },
+    {
+      "id": "omitted-required",
+      "text": "presence id=\"c1\"",
+      "json": {
+        "id": "c1"
+      },
+      "accepted": false
+    },
+    {
+      "id": "null-optional-index",
+      "text": "presence id=\"c1\" factor { } index=null",
+      "json": {
+        "id": "c1",
+        "factor": null,
+        "index": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "clear-optional-index",
+      "text": "presence id=\"c1\" factor { } index { }",
+      "json": {
+        "id": "c1",
+        "factor": null,
+        "index": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-identity",
+      "text": "presence factor { }",
+      "json": {
+        "factor": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "null-nested-value",
+      "text": "presence id=\"c1\" factor { value=null }",
+      "json": {
+        "id": "c1",
+        "factor": {
+          "value": null
+        }
+      },
+      "accepted": false
+    }
+  ],
+  "schema": {
+    "type": "object",
+    "required": [
+      "id",
+      "factor"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "factor": {
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "index": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  },
+  "tableCases": [
+    {
+      "id": "table-clear",
+      "text": "batch rows [id factor index] { \"c1\" { } _ }",
+      "json": {
+        "id": "c1",
+        "factor": null
+      },
+      "accepted": true
+    },
+    {
+      "id": "table-value",
+      "text": "batch rows [id factor index] { \"c1\" { value=2 } 0 }",
+      "json": {
+        "id": "c1",
+        "factor": 2.0,
+        "index": 0
+      },
+      "accepted": true
+    },
+    {
+      "id": "table-required-placeholder",
+      "text": "batch rows [id factor index] { \"c1\" _ _ }",
+      "json": {
+        "id": "c1"
+      },
+      "accepted": false
+    },
+    {
+      "id": "table-required-column-omitted",
+      "text": "batch rows [id index] { \"c1\" _ }",
+      "json": {
+        "id": "c1"
+      },
+      "accepted": false
+    }
+  ],
+  "grammar": "dialect grammar\ngrammar presence.op\nstart mutation\nmutation = \"presence\" presence-fields\n"
+}

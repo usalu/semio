@@ -15,7 +15,8 @@
     "constructorCopySemantics",
     "snapshotCustody",
     "codecCustody",
-    "constructorCursorDrop"
+    "constructorCursorDrop",
+    "physicalVectors"
   ],
   "properties": {
     "actorHeaderCustody": {
@@ -46,7 +47,8 @@
                 "sessionCursor",
                 "retiredFlag",
                 "event",
-                "commandSlot"
+                "commandSlot",
+                "sessionOption"
               ]
             }
           }
@@ -574,6 +576,50 @@
             "type": "boolean"
           },
           "mayDrop": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "physicalVectors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "length",
+          "width",
+          "capacity",
+          "virtualCapacity",
+          "allocatedBytes",
+          "terminal"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "length": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "capacity": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "virtualCapacity": {
+            "type": "boolean"
+          },
+          "allocatedBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "terminal": {
             "type": "boolean"
           }
         }

@@ -144,6 +144,154 @@
       "deformationScale": 50
     }
   },
+  "nativeWords": [
+    {
+      "path": "/nodes/0/x",
+      "word": "0000000000000000"
+    },
+    {
+      "path": "/nodes/0/y",
+      "word": "0000000000000000"
+    },
+    {
+      "path": "/nodes/0/z",
+      "word": "0000000000000000"
+    },
+    {
+      "path": "/nodes/1/x",
+      "word": "3ff0000000000000"
+    },
+    {
+      "path": "/nodes/1/y",
+      "word": "0000000000000000"
+    },
+    {
+      "path": "/nodes/1/z",
+      "word": "0000000000000000"
+    },
+    {
+      "path": "/elements/1/roll",
+      "word": "0000000000000000"
+    },
+    {
+      "path": "/materials/0/e",
+      "word": "41086a0000000000"
+    },
+    {
+      "path": "/materials/0/nu",
+      "word": "3fd3333333333333"
+    },
+    {
+      "path": "/materials/0/rho",
+      "word": "40beaa0000000000"
+    },
+    {
+      "path": "/materials/0/g",
+      "word": "40f3880000000000"
+    },
+    {
+      "path": "/sections/0/area",
+      "word": "3ff0000000000000"
+    },
+    {
+      "path": "/sections/0/iy",
+      "word": "3ff0000000000000"
+    },
+    {
+      "path": "/sections/0/iz",
+      "word": "3ff0000000000000"
+    },
+    {
+      "path": "/sections/0/j",
+      "word": "3ff0000000000000"
+    },
+    {
+      "path": "/loadCases/0/loads/0/value",
+      "word": "c024000000000000"
+    },
+    {
+      "path": "/loadCases/0/loads/1/wx",
+      "word": "0000000000000000"
+    },
+    {
+      "path": "/loadCases/0/loads/1/wy",
+      "word": "c000000000000000"
+    },
+    {
+      "path": "/loadCases/0/loads/1/wz",
+      "word": "0000000000000000"
+    },
+    {
+      "path": "/loadCases/0/loads/2/pressure",
+      "word": "c008000000000000"
+    },
+    {
+      "path": "/combinations/0/terms/case1",
+      "word": "3ff8000000000000"
+    },
+    {
+      "path": "/solids/0/outline/0/0",
+      "word": "0000000000000000"
+    },
+    {
+      "path": "/solids/0/outline/0/1",
+      "word": "0000000000000000"
+    },
+    {
+      "path": "/solids/0/outline/1/0",
+      "word": "3ff0000000000000"
+    },
+    {
+      "path": "/solids/0/outline/1/1",
+      "word": "0000000000000000"
+    },
+    {
+      "path": "/solids/0/outline/2/0",
+      "word": "3ff0000000000000"
+    },
+    {
+      "path": "/solids/0/outline/2/1",
+      "word": "3ff0000000000000"
+    },
+    {
+      "path": "/solids/0/outline/3/0",
+      "word": "0000000000000000"
+    },
+    {
+      "path": "/solids/0/outline/3/1",
+      "word": "3ff0000000000000"
+    },
+    {
+      "path": "/solids/0/meshSize",
+      "word": "3ff0000000000000"
+    },
+    {
+      "path": "/solids/0/baseZ",
+      "word": "0000000000000000"
+    },
+    {
+      "path": "/solids/0/height",
+      "word": "3ff0000000000000"
+    },
+    {
+      "path": "/analysis/deformationScale",
+      "word": "4049000000000000"
+    }
+  ],
+  "nativeCounts": [
+    {
+      "path": "/solids/0/layers",
+      "word": "1"
+    },
+    {
+      "path": "/analysis/modalCount",
+      "word": "3"
+    },
+    {
+      "path": "/analysis/bucklingCount",
+      "word": "3"
+    }
+  ],
   "foreignFields": [
     {
       "key": "camera",

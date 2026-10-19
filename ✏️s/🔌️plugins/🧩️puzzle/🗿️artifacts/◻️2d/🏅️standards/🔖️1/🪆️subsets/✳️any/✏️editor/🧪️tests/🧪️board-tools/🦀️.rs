@@ -1,5 +1,5 @@
-//! 🧱️ Laws of the board tools (`🧫️fixtures/🧫️board-tools`): every board gesture that is not a selection transform —
 //! an area painted, a region grip dragged, a brush stamped, a wire dropped, a wire cut, a delete — reaches the app as
+//! 🧱️ Laws of the board tools (`🧫️fixtures/🧫️board-tools`): every board gesture that is not a selection transform —
 //! its release and is ONE tool transaction of `<appId>#<kind>` holding exactly its leaves; a release that changes
 //! nothing and a flush of transient rows alone commit nothing. Driven through the registered app, one
 //! `applyBoardEvents` dispatch per flush; `🐍️.py` beside this file re-derives the corpus independently.
@@ -169,7 +169,7 @@ fn addressed(rows: &Value, snapshot: &Value) -> Value {
     let mut rows = rows.clone();
     for row in rows.as_array_mut().into_iter().flatten() {
         if row["payload"]["id"] == "$region" {
-            row["payload"]["id"] = region.clone();
+            set_at(row, "payload/id", region.clone());
         }
     }
     rows
@@ -240,8 +240,8 @@ fn a_flush_of_transient_rows_commits_nothing() {
 #[test]
 fn the_interaction_topology_names_every_board_entity() {
     let mut board = corpus()["board"].clone();
-    board["targetRegions"] = json!([{ "id": "region-1", "x": 0.5, "y": 0.5, "width": 10.5, "height": 10.5, "hidden": false, "locked": false }]);
-    board["edges"] = json!([{ "id": "edge-left-mid", "source": "left:v0", "target": "mid:v0" }]);
+    set_at(&mut board, "targetRegions", json!([{ "id": "region-1", "x": 0.5, "y": 0.5, "width": 10.5, "height": 10.5, "hidden": false, "locked": false }]));
+    set_at(&mut board, "edges", json!([{ "id": "edge-left-mid", "source": "left:v0", "target": "mid:v0" }]));
     let snapshot = Puzzle2dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&(board))).expect("typed fixture admits"));
     let region = snapshot.typed().target_regions.first().map(|region| region.id.to_string_owner()).expect("the pushed region decodes");
     let history = semio_framework_plugin::HistoryView::empty();

@@ -1,0 +1,87 @@
+{
+  "base": {
+    "activeAlternativeId": null,
+    "currentCheckpointId": null
+  },
+  "cases": [
+    {
+      "name": "named",
+      "patch": {
+        "cursor": 1,
+        "activeAlternativeId": "main",
+        "currentCheckpointId": "cp-1"
+      },
+      "replace": false,
+      "oracle": [
+        {
+          "op": "replace",
+          "path": "/activeAlternativeId",
+          "value": "main"
+        },
+        {
+          "op": "replace",
+          "path": "/currentCheckpointId",
+          "value": "cp-1"
+        }
+      ],
+      "expected": {
+        "activeAlternativeId": "main",
+        "currentCheckpointId": "cp-1"
+      }
+    },
+    {
+      "name": "delta",
+      "patch": {
+        "cursor": 2
+      },
+      "replace": false,
+      "oracle": [],
+      "expected": {
+        "activeAlternativeId": "main",
+        "currentCheckpointId": "cp-1"
+      }
+    },
+    {
+      "name": "switched",
+      "patch": {
+        "cursor": 3,
+        "activeAlternativeId": "alt-b"
+      },
+      "replace": false,
+      "oracle": [
+        {
+          "op": "replace",
+          "path": "/activeAlternativeId",
+          "value": "alt-b"
+        }
+      ],
+      "expected": {
+        "activeAlternativeId": "alt-b",
+        "currentCheckpointId": "cp-1"
+      }
+    },
+    {
+      "name": "snapshot",
+      "patch": {
+        "cursor": 4
+      },
+      "replace": true,
+      "oracle": [
+        {
+          "op": "replace",
+          "path": "/activeAlternativeId",
+          "value": null
+        },
+        {
+          "op": "replace",
+          "path": "/currentCheckpointId",
+          "value": null
+        }
+      ],
+      "expected": {
+        "activeAlternativeId": null,
+        "currentCheckpointId": null
+      }
+    }
+  ]
+}

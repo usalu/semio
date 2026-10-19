@@ -1,5 +1,5 @@
-//! 🎮️ Puzzle 3d action dispatch — the shared action prologue (transient scene, precompute sync, dispatch) every action
 //! runs, the one dispatch table from an action id to its command arm, and the shell-only actions that need no scene.
+//! 🎮️ Puzzle 3d action dispatch — the shared action prologue (transient scene, precompute sync, dispatch) every action
 
 #![allow(clippy::result_large_err)]
 
@@ -63,7 +63,6 @@ pub struct Puzzle3dActionPrologue {
     base: Option<std::sync::Arc<Puzzle3dSnapshot>>,
     sync_stage: Puzzle3dPrologueSyncStage,
     built: Option<semio_s_artifact_puzzle_3d_model::SceneConfig>,
-    pub tool_run: Option<semio_framework_plugin::ToolRunView>,
 }
 
 impl Puzzle3dActionPrologue {
@@ -121,6 +120,7 @@ impl Puzzle3dActionPrologue {
         &mut self,
         session: &Puzzle3dSession,
         instance_owner: Option<&ArtifactInstanceOperationOwnerHandle>,
+        tool_run: Option<&semio_framework_plugin::ToolRunView>,
         authoring_seed: &str,
         command: &Puzzle3dCommand,
         window_id: Option<&str>,
@@ -150,7 +150,7 @@ impl Puzzle3dActionPrologue {
         let mut ctx = Puzzle3dActionCtx {
             session,
             instance_owner,
-            tool_run: self.tool_run.as_ref(),
+            tool_run,
             scene: &mut scene,
             window_id: &wid,
             config,
@@ -367,7 +367,7 @@ pub fn puzzle3d_handle_action<A: Puzzle3dEditor>(
             break;
         }
     }
-    prologue.dispatch_step(session, None, authoring_seed, command, window_id, config, view_state, interaction)
+    prologue.dispatch_step(session, None, None, authoring_seed, command, window_id, config, view_state, interaction)
 }
 
 use semio_framework_plugin::InteractionVerb;

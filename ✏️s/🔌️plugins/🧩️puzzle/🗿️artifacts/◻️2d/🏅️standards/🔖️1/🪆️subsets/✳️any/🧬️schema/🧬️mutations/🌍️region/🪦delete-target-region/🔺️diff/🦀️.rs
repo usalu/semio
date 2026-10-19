@@ -1,6 +1,7 @@
-//! 🔺️ Sparse diff builder for `DeleteTargetRegion` — a real removal, never a whole-snapshot
 //! capture. A region owns no dependents, so nothing cascades.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dTargetRegionsDelta};
+//! 🔺️ Sparse diff builder for `DeleteTargetRegion` — a real removal, never a whole-snapshot
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dTargetRegionsDelta;
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Diff

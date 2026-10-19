@@ -7,7 +7,7 @@ where
     P: Clone + ToValue + FromValue + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
-    pub fn advance(&mut self, grant: RetainedCloneGrant) -> ConfigStoreHydrationStep<P, M> {
+    pub fn advance(&mut self, grant: RetainedCloneGrant) -> ConfigStoreHydrationStep<P, M> where M:crate::os_spr::ColdMutation<P> {
         self.last_retirement_progress = Default::default();
         let maximum_items = grant.maximum_items;
         let maximum_bytes = grant.maximum_copy_bytes;
@@ -94,7 +94,7 @@ where
             }
             Phase::Fold => {
                 let job = self.fold_job.as_mut().expect("config fold job remains retained");
-                let result = job.step(grant, &mut || false);
+                let result = job.step(grant, grant.maximum_copy_bytes, &mut || false);
                 self.fold_completed = job.completed();
                 match result {
                     Ok(semio_framework_os_spr::HistoryFoldJobStep::Pending { progress, .. }) if progress.fits(grant) => { self.last_retirement_progress = progress; }

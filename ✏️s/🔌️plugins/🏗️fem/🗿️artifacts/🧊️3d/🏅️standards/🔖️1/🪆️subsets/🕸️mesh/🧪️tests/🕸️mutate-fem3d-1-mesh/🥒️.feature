@@ -18,12 +18,7 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
   and forces FROM a model; none reads `.dsl.semio`, none defines this document. What a reference can
   genuinely adjudicate is the model algebra, and that is what this one does.
 
-  A DEFECT IN THE SPECIFICATION, found while writing the reference and reported rather than worked
-  around, identical to the one its `◻️2d` sibling carries. `…/🧬️schema/🧬️mutations/🔣️.json` is a
-  verbatim copy of the SNAPSHOT schema with `title` changed to `Fem3dMutation`, and in the snapshot
-  schema itself every record `$def` is an EMPTY `{"title": …, "type": "object"}`. The record
-  shapes were read off the committed vectors instead — including the one that only they state: an
-  `element` is a `frame` carrying a `roll` about its own axis OR a `bar` carrying none.
+  Sparse field intents are declared by the owned leaf JSON schemas. The mutation union and wire mirrors preserve their typed payloads; fast-json-patch independently checks their numeric JSON projection in the registered field-intent suite.
 
   The artifact is real. `shared://🕸️mutate-fem3d-1-mesh/🧊️steel-frame.snapshot.json` is the SAME derived steel frame model every fem3d
   mutation subset case shares — a sixteen-node, two-storey steel frame on an 8 × 10 m grid, derived
@@ -72,6 +67,13 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
     | replace-node    | {"mutation":"replaceNode","id":"n3","newNode":{"id":"n3","x":0.0,"y":0.0,"z":4.0}}                                                                                                                                                                             |
     | move-selection  | {"mutation":"moveSelection","nodeIds":["sc0","sc1","sc2","sc3"],"solidIds":["sol1"],"pivotX":11.0,"pivotY":1.0,"pivotZ":0.0,"dx":0.5,"dy":0.25,"dz":0.0,"axisX":0.0,"axisY":0.0,"axisZ":1.0,"angle":0.0,"sx":1.0,"sy":1.0,"sz":1.0}                            |
 
+    | change-node | {"id":"n3","patch":{"x":1.0},"mutation":"changeNode"} |
+    | change-section | {"id":"hea200","patch":{"name":"Structural Section"},"mutation":"changeSection"} |
+
+    | change-solid | {"patch":{"name":"Structural Solid"},"id":"sol1","mutation":"changeSolid"} |
+
+    | change-element | {"patch":{"sectionId":"shs120"},"id":"e1","mutation":"changeElement"} |
+
   @id-inverse
   @level-exhaustive
   @mode-differential
@@ -100,6 +102,13 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
     | replace-node    | {"mutation":"replaceNode","id":"n3","newNode":{"id":"n3","x":0.0,"y":0.0,"z":4.0}}                                                                                                                                                                             |
     | move-selection  | {"mutation":"moveSelection","nodeIds":["sc0","sc1","sc2","sc3"],"solidIds":["sol1"],"pivotX":11.0,"pivotY":1.0,"pivotZ":0.0,"dx":0.5,"dy":0.25,"dz":0.0,"axisX":0.0,"axisY":0.0,"axisZ":1.0,"angle":0.0,"sx":1.0,"sy":1.0,"sz":1.0}                            |
 
+    | change-node | {"id":"n3","patch":{"x":1.0},"mutation":"changeNode"} |
+    | change-section | {"id":"hea200","patch":{"name":"Structural Section"},"mutation":"changeSection"} |
+
+    | change-solid | {"patch":{"name":"Structural Solid"},"id":"sol1","mutation":"changeSolid"} |
+
+    | change-element | {"patch":{"sectionId":"shs120"},"id":"e1","mutation":"changeElement"} |
+
   @id-spec-vector
   @level-exhaustive
   @mode-differential
@@ -125,6 +134,13 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
     | replace-node    | 🔁️replace-node    | 📍️lifts    |
     | move-selection  | 🧭️move-selection  | 🧭️lifts    |
 
+    | change-node | 🩹️change-node | 🩹️changes |
+    | change-section | 🩹️change-section | 🩹️changes |
+
+    | change-solid | 🩹️change-solid | 🩹️changes |
+
+    | change-element | 🩹️change-element | 🩹️changes |
+
   @id-hall-vector
   @level-exhaustive
   @mode-differential
@@ -149,6 +165,13 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
     | create-element  | 🧩️create-element  | 🏗️hall-new-tie-074a69             |
     | replace-node    | 🔁️replace-node    | 🏗️hall-lifts-ridge-746bae         |
     | move-selection  | 🧭️move-selection  | 🏗️hall |
+
+    | change-node | 🩹️change-node | 📐️coordinates |
+    | change-section | 🩹️change-section | 📐️coordinates |
+
+    | change-solid | 🩹️change-solid | 📐️geometry |
+
+    | change-element | 🩹️change-element | 🔀️variant |
 
   @id-reject
   @level-exhaustive
@@ -192,3 +215,18 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
     | names-a-node-twice-61d178  | 🧭️move-selection  | 🔁️names  |
     | no-such-targets-f9c98d     | 🧭️move-selection  | 🚨️no-such-targets-f9c98d     |
     | flattens-the-raft-775486   | 🧭️move-selection  | 🫓️flattens   |
+    | change-node-same | 🩹️change-node | ⏸️same |
+    | change-node-missing | 🩹️change-node | ⛔️missing |
+    | change-node-empty | 🩹️change-node | ⚗️empty |
+    | change-section-same | 🩹️change-section | ⏸️same |
+    | change-section-missing | 🩹️change-section | ⛔️missing |
+    | change-section-invalid | 🩹️change-section | ⚗️invalid |
+
+    | change-solid-same | 🩹️change-solid | ⏸️same |
+    | change-solid-missing | 🩹️change-solid | ⛔️missing |
+    | change-solid-invalid | 🩹️change-solid | ⚗️invalid |
+
+    | change-element-same | 🩹️change-element | ⏸️same |
+    | change-element-missing | 🩹️change-element | ⛔️missing |
+    | change-element-invalid | 🩹️change-element | ⚗️invalid |
+

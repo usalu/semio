@@ -6,11 +6,46 @@ pub struct HistoryFoldIndexInsert<K,V>{source:Option<(K,V)>,epoch:Option<u64>,ne
 impl<K,V> HistoryFoldIndexInsert<K,V>{
  pub fn new(key:K,value:V)->Self{Self{source:Some((key,value)),epoch:None,next:None,rank:0,position:0,vacant:false,matching:None,slot:None}}
  pub fn original(&self)->Option<(&K,&V)>{self.source.as_ref().map(|(key,value)|(key,value))}
+ pub fn matching_slot(&self)->Option<usize>{self.matching}
  pub fn terminal_is_empty(&self)->bool{self.source.is_none()}
  /// 📤️ Returns the exact uncommitted row headers without a payload copy or heap effect.
  pub fn return_original(&mut self,grant:RetainedCloneGrant)->Option<((K,V),RetainedCloneProgress)>{if grant.maximum_items==0||grant.maximum_depth==0{return None}self.source.take().map(|source|(source,RetainedCloneProgress{copied_items:1,..Default::default()}))}
 }
 impl<K:Ord,V> HistoryFoldIndexInsert<K,V>{
+ /// 🔤️ Compares only a granted original UTF8 byte page and quotes its offset and ordering metadata.
+ pub fn compare_original_text(left:&str,right:&str,position:usize,grant:RetainedCloneGrant)->Result<(Option<Ordering>,usize,RetainedCloneProgress),ValueError>{
+  let metadata=size_of::<usize>()+size_of::<Option<Ordering>>();let empty=RetainedCloneProgress::default();
+  if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<metadata{return Ok((None,position,empty))}
+  let (left,right)=(left.as_bytes(),right.as_bytes());let common=left.len().min(right.len());
+  if position>common{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original text ordering cursor exceeds its complete keys"))}
+  if position<common&&grant.maximum_copy_bytes.saturating_sub(metadata)<2{return Ok((None,position,empty))}
+  let end=common.min(position.saturating_add((grant.maximum_copy_bytes-metadata)/2));let mut cursor=position;let mut order=None;
+  while cursor<end{let next=left[cursor].cmp(&right[cursor]);cursor+=1;if next!=Ordering::Equal{order=Some(next);break}}
+  if order.is_none()&&cursor==common{order=Some(left.len().cmp(&right.len()))}
+  Ok((order,cursor,RetainedCloneProgress{copied_items:1,copied_bytes:metadata+2*(cursor-position),..empty}))
+ }
+ /// 🎟️ Admits original cursor and inspected node headers before a structural or comparison turn.
+ pub fn step_controlled<W>(&mut self,index:&mut HistoryFoldIndex<K,W>,grant:RetainedCloneGrant,compare:impl FnOnce(&K,&K,usize,RetainedCloneGrant)->Result<(Option<Ordering>,usize,RetainedCloneProgress),ValueError>)->Result<(bool,RetainedCloneProgress),ValueError>{
+  let copy=size_of::<Self>()+if self.next.is_some(){size_of::<FoldIndexNode<K,W>>()}else{0};
+  if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copy{return Ok((false,Default::default()))}
+  let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-copy,..grant};
+  match self.step(index,child,compare){Ok((ready,mut progress))=>{if progress!=Default::default(){progress.copied_bytes=progress.copied_bytes.checked_add(copy).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original insertion header receipt overflow"))?;}Ok((ready,progress))},Err(error)=>{let mut progress=error.retained_progress();if progress!=Default::default(){progress.copied_bytes=progress.copied_bytes.checked_add(copy).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original insertion header receipt overflow"))?;}Err(error.with_retained_progress(progress))}}
+ }
+ /// 📏️ Names every original AVL header a vacant commit can move or rebalance.
+ pub fn commit_copy_byte_demand<W>(&self,index:&HistoryFoldIndex<K,W>)->Result<usize,ValueError>{index.height(index.root).checked_add(1).and_then(|nodes|nodes.checked_mul(size_of::<FoldIndexNode<K,W>>())).and_then(|bytes|bytes.checked_add(size_of::<Self>())).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original insertion path receipt overflow"))}
+ /// 🔒️ Borrows the exact vacant epoch and all commit currencies without moving the incoming row.
+ pub fn commit_ready<W>(&self,index:&HistoryFoldIndex<K,W>,grant:RetainedCloneGrant)->Result<bool,ValueError>{Ok(self.source.is_some()&&self.epoch==Some(index.mutation_epoch)&&self.vacant&&self.matching.is_none()&&grant.maximum_items>0&&grant.maximum_depth>=self.depth_demand(index)?&&self.capacity_demand(index)?==0&&grant.maximum_copy_bytes>=self.commit_copy_byte_demand(index)?)}
+ /// 🌲️ Quotes bounded AVL path nodes before the original vacant row becomes visible.
+ pub fn commit_controlled<W>(&mut self,index:&mut HistoryFoldIndex<K,W>,grant:RetainedCloneGrant,create:impl FnOnce(V)->W)->Result<(Option<usize>,RetainedCloneProgress),ValueError>{
+  let copy=self.commit_copy_byte_demand(index)?;
+  if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copy{return Ok((None,Default::default()))}
+  let(slot,mut progress)=self.commit_with(index,RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-copy,..grant},create)?;
+  if progress.copied_items!=0{progress.copied_bytes=copy;}Ok((slot,progress))
+ }
+ /// 📤️ Pays original row headers before relinquishing an uncommitted insertion.
+ pub fn return_original_controlled(&mut self,grant:RetainedCloneGrant)->Option<((K,V),RetainedCloneProgress)>{
+  let copy=size_of::<Self>();if grant.maximum_copy_bytes<copy{return None}let(source,mut progress)=self.return_original(grant)?;progress.copied_bytes=copy;Some((source,progress))
+ }
  /// 🪙️ Quotes the same retained comparison, page admission or vacant-rank commit selected by the incoming body.
  pub fn next_demands<W>(&self,index:&HistoryFoldIndex<K,W>,body:usize,compare:impl FnOnce(&K,&K,usize,usize)->Result<semio_framework_value::RetirementDemand,ValueError>)->Result<semio_framework_value::RetirementDemand,ValueError>{
   use semio_framework_value::RetirementDemand;
@@ -48,6 +83,21 @@ impl<K:Ord,V> HistoryFoldIndexInsert<K,V>{
   let Some(slot)=self.matching else{let(slot,progress)=self.commit_with(index,grant,create)?;return Ok((slot,None,progress))};if grant.maximum_depth<index.next_slot_depth_demand(slot)?{return Ok((None,None,empty))}
   if index.nodes[slot].entry.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original matching insertion lost its paid row"))}
   let(key,value)=self.source.take().unwrap();let original=index.nodes[slot].entry.replace((key,create(value)));index.mark_mutation();self.slot=Some(slot);Ok((Some(slot),original,RetainedCloneProgress{copied_items:1,..empty}))
+ }
+ /// 📏️ Includes the original cursor and inspected node headers in the next actual insertion quote.
+ pub fn next_controlled_demands<W>(&self,index:&HistoryFoldIndex<K,W>,body:usize,compare:impl FnOnce(&K,&K,usize,usize)->Result<semio_framework_value::RetirementDemand,ValueError>)->Result<semio_framework_value::RetirementDemand,ValueError>{
+  let header=size_of::<Self>()+if self.next.is_some(){size_of::<FoldIndexNode<K,W>>()}else{0};
+  let mut demand=self.next_demands(index,body,compare)?;
+  demand.copy_bytes=demand.copy_bytes.checked_add(header).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"controlled insertion quote overflow"))?;
+  Ok(demand)
+ }
+ /// 🔁️ Paid replacement transfers the exact displaced row to the caller rather than dropping its original key.
+ pub fn commit_or_replace_controlled<W>(&mut self,index:&mut HistoryFoldIndex<K,W>,grant:RetainedCloneGrant,create:impl FnOnce(V)->W)->Result<(Option<usize>,Option<(K,W)>,RetainedCloneProgress),ValueError>{
+  let copy=self.commit_copy_byte_demand(index)?;
+  if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copy{return Ok((None,None,Default::default()))}
+  let(slot,original,mut progress)=self.commit_or_replace_with(index,RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-copy,..grant},create)?;
+  if progress.copied_items!=0{progress.copied_bytes=copy;}
+  Ok((slot,original,progress))
  }
 }
 impl<K:Ord,V> HistoryFoldIndex<K,V>{

@@ -124,6 +124,14 @@
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"
       }
+    },
+    "verify-original-work-construction": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify original-work-construction",
+        "forwardAllArgs": true
+      }
     }
   }
 }

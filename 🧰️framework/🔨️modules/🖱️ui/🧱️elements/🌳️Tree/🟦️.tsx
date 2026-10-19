@@ -643,3 +643,5 @@ Tree.Section = Tree.Files;
 /** Alias for Tree.Files rendering a file tree from FileTreeNode data.
  **/
 export const FileTree = TreeFiles;
+export { type TreeDirection, TreeContext, TreeRowAlignmentContext, PropertyValueColumnContext, detailPanelIndentLen, detailPanelIndentPx, treeRowHeightPx, detailPanelHeaderLineCenterPx, detailPanelPropertyInlineGapPx, detailPanelPropertyStackedToInlineHysteresisPx, detailPanelPropertyRowClassName, detailPanelPropertyControlClassName, treeInspectorInnerRowClassName, treeHeaderRowClassName, treeHeaderMainClassName, treeItemLabelStyle, TreeAlignedRow } from "./📏️row-alignment/🟦️.tsx";
+export { treeFoldChevronIcon, treeCompactSiblingGapPx, treeItemSecondaryTextClassName, getTreeSiblingGapPx } from "./🎨️chrome/🟦️.tsx";

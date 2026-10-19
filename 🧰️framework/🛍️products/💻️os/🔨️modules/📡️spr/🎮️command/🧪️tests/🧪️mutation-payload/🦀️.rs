@@ -2,6 +2,7 @@
 //! is its leaf's `MutationLeaf::PAYLOAD_SCHEMA`, `payload_value` is the leaf payload without the aggregate's
 //! `operation` tag, and `with_payload_value` rebuilds the same kind or refuses — never another kind.
 
+use crate::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::mutation_laws_fixture::{AddCounter, AddCounterTwice, Counter, CounterMutation};
 use protocol::{Mutation, MutationLeaf, SemanticMutation};
 use crate::{DslValue, ToValue};
@@ -69,7 +70,13 @@ impl Mutation<Counter> for Unpublished {
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         self.op.descriptor()
     }
-    fn diff(&self, base: &Counter) -> protocol::MutationOutcome<Self::Diff> {
+
+
+}
+
+impl crate::ColdMutation<Counter> for Unpublished {
+    type ReferenceDiff = <CounterMutation as Mutation<Counter>>::Diff;
+    fn diff(&self, base: &Counter) -> crate::MutationOutcome<Self::ReferenceDiff> {
         self.op.diff(base)
     }
     fn inverse(&self, base: &Counter) -> Result<Vec<Self>, semio_framework_value::ValueError> {

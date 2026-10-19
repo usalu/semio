@@ -1,5 +1,5 @@
-//! 📐️ Puzzle 5d spatial index over grip world positions: a uniform hash grid whose cell edge is the query
 //! radius, so a radius query reads the 27 cells around its point and a nearest query grows ring by ring.
+//! 📐️ Puzzle 5d spatial index over grip world positions: a uniform hash grid whose cell edge is the query
 //! Inserting, removing and querying cost O(entries in the touched cells), never O(document).
 
 use std::collections::HashMap;

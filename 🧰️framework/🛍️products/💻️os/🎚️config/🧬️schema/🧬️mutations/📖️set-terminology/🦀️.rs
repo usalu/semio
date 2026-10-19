@@ -14,16 +14,9 @@ pub fn set_terminology(terminology: Option<String>) -> UiPreferencesConfigMutati
 impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetTerminology {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "terminology", kind: "set-terminology", record: "Set" };
 
-    fn diff(&self, base: &UiPreferences) -> protocol::MutationOutcome<UiPreferencesDiff> {
-        if base.terminology == self.terminology {
-            return protocol::MutationOutcome::new(UiPreferencesDiff::default()).warning("mutation.no-op", "terminology is already selected.");
-        }
-        protocol::MutationOutcome::new(UiPreferencesDiff { terminology: Some(SettingEdit::new(self.terminology.clone())), ..UiPreferencesDiff::default() })
-    }
 
-    fn inverse(&self, base: &UiPreferences) -> Result<Vec<UiPreferencesConfigMutation>, semio_framework_value::ValueError> {
-        Ok(vec![UiPreferencesConfigMutation::SetTerminology(Self { terminology: base.terminology.clone() })])
-    }
+
+
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set terminology to {:?}", self.terminology), &format!("Terminologie auf {:?} setzen", self.terminology))
@@ -31,5 +24,17 @@ impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetT
 
     fn target(&self) -> Vec<String> {
         vec!["terminology".to_string()]
+    }
+}
+
+impl protocol::ColdMutationKind<UiPreferences, UiPreferencesConfigMutation> for SetTerminology {
+    fn diff(&self, base: &UiPreferences) -> protocol::MutationOutcome<UiPreferencesDiff> {
+        if base.terminology == self.terminology {
+            return protocol::MutationOutcome::new(UiPreferencesDiff::default()).warning("mutation.no-op", "terminology is already selected.");
+        }
+        protocol::MutationOutcome::new(UiPreferencesDiff { terminology: Some(SettingEdit::new(self.terminology.clone())), ..UiPreferencesDiff::default() })
+    }
+    fn inverse(&self, base: &UiPreferences) -> Result<Vec<UiPreferencesConfigMutation>, semio_framework_value::ValueError> {
+        Ok(vec![UiPreferencesConfigMutation::SetTerminology(Self { terminology: base.terminology.clone() })])
     }
 }

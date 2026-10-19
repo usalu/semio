@@ -15,6 +15,17 @@ pub struct ConnectPorts {
 //#region ⚙️Semantics
 impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for ConnectPorts {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "workflow", kind: "connect-ports", record: "ConnectedWorkflowPorts" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect workflow ports {}", self.edge.id), &format!("Arbeitsablaufanschlüsse {} verbinden", self.edge.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["edges".into(), self.edge.id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<WorkflowSnapshot, WorkflowMutation> for ConnectPorts {
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
         protocol::MutationOutcome::new(WorkflowDiff::ConnectPorts { edge: self.edge.clone() })
     }
@@ -24,11 +35,5 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for ConnectPorts
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect workflow ports {}", self.edge.id), &format!("Arbeitsablaufanschlüsse {} verbinden", self.edge.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["edges".into(), self.edge.id.clone()]
-    }
 }
 //#endregion ⚙️Semantics

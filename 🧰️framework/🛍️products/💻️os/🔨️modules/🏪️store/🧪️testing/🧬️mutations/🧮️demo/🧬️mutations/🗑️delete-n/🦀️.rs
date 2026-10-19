@@ -12,6 +12,17 @@ pub struct DeleteN {}
 
 impl semio_framework_os_spr::MutationKind<DemoSnapshot, DemoMutation> for DeleteN {
     const SEMANTICS: semio_framework_os_spr::SemanticDescriptor = semio_framework_os_spr::SemanticDescriptor { verb: "delete", entity: "n", kind: "delete-n", record: "DeletedN" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Delete N", "N löschen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["n".into()]
+    }
+}
+
+impl semio_framework_os_spr::ColdMutationKind<DemoSnapshot, DemoMutation> for DeleteN {
     fn diff(&self, base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<DemoDiff> {
         semio_framework_os_spr::MutationOutcome::new(base.n.map(|_| DemoDiff::value(None)).unwrap_or_default())
     }
@@ -24,10 +35,4 @@ impl semio_framework_os_spr::MutationKind<DemoSnapshot, DemoMutation> for Delete
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Delete N", "N löschen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["n".into()]
-    }
 }

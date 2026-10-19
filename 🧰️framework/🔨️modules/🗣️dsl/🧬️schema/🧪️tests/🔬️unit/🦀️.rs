@@ -761,8 +761,8 @@ fn retained_record_writer_nested_blocks_and_statements_keep_one_physical_owner()
 #[test]
 fn retained_declared_table_streams_columns_and_rows_under_one_source_owner() {
     use semio_framework_value::{NativeEncodeControl,NativeDecodeControl};
-    fn row()->RecordSpec{RecordSpec::new(Some("ignored-row-keyword"),RecordLayout::Inline,vec![FieldSpec::new(0,"id",Shape::Text),FieldSpec::new(1,"cost",Shape::Float),FieldSpec::new(2,"label",Shape::Text),FieldSpec::new(3,"value",Shape::Value)])}
-    fn encode(control:&mut NativeEncodeControl<'_>)->Result<RecordSpec,ValueError>{let mut fields=control.allocate_vec(4)?;for (id,key,shape) in [(0,"id",Shape::Text),(1,"cost",Shape::Float),(2,"label",Shape::Text),(3,"value",Shape::Value)]{fields.push(crate::producer::field(id,key,shape,control)?);}crate::producer::record(Some("ignored-row-keyword"),RecordLayout::Inline,fields,control)}
+    fn row()->RecordSpec{RecordSpec::new(Some("ignored-row-keyword"),RecordLayout::Inline,vec![FieldSpec::new(0,"id",Shape::Text),FieldSpec::new(1,"cost",Shape::Float),FieldSpec::new(2,"label",Shape::Text).optional(),FieldSpec::new(3,"value",Shape::Value)])}
+    fn encode(control:&mut NativeEncodeControl<'_>)->Result<RecordSpec,ValueError>{let mut fields=control.allocate_vec(4)?;for (id,key,shape) in [(0,"id",Shape::Text),(1,"cost",Shape::Float),(2,"label",Shape::Text),(3,"value",Shape::Value)]{let field=crate::producer::field(id,key,shape,control)?;fields.push(if key=="label"{field.optional()}else{field});}crate::producer::record(Some("ignored-row-keyword"),RecordLayout::Inline,fields,control)}
     fn decode(_: &mut NativeDecodeControl<'_>)->Result<RecordSpec,ValueError>{Err(ValueError::new(ValueRefusalKind::UnsupportedOwner,"encoding fixture"))}
     let producer=RecordSpecProducer{ordinary:row,encoding:encode,decoding:decode};let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🧵️continuation/🔣️.json")).unwrap();let count=fixture["table"]["rows"].as_u64().unwrap()as usize;let prefix=fixture["table"]["labelPrefix"].as_str().unwrap();
     let source=||RecordValue{fields:[(0,FieldValue::List((0..count).map(|index|FieldValue::Record(RecordValue{fields:[(0,FieldValue::Text(format!("r{index}"))),(1,FieldValue::Float(index as f64+0.5)),(2,if index%3==0{FieldValue::Absent}else{FieldValue::Text(format!("{prefix}{index}"))}),(3,FieldValue::Value(DslValue::Array(vec![DslValue::Number(Number::Int(index as i64)),DslValue::Bool(index%2==0)])))].into_iter().collect()})).collect()))].into_iter().collect()};let spec=||RecordSpec::new(Some("document"),RecordLayout::Inline,vec![FieldSpec::new(0,"rows",Shape::Table(producer))]);
@@ -821,4 +821,18 @@ fn controlled_record_dynamic_unicode_matches_serde_json_restoration_contract() {
         }
     }
     assert!(agrees, "original native Record parser semantics differ from serde_json restoration oracle");
+}
+
+/// 🔤️ An op line of a newtype variant over a record that declares no keyword of its own is tagged by the variant keyword: `print_op` writes it and `parse_op` strips it before reading the body.
+#[test]
+fn op_text_of_a_newtype_variant_over_a_keywordless_record_round_trips_with_the_variant_keyword() {
+    use semio_framework_dsl_record_derive::{DslEnum, DslRecord};
+    #[derive(DslRecord, Debug, PartialEq)]
+    struct Body { value: String }
+    #[derive(DslEnum, Debug, PartialEq)]
+    enum Op { SetBody(Body) }
+    let op = Op::SetBody(Body { value: "cut".into() });
+    let line = variants_text::print_op(&op);
+    assert_eq!(line, "set-body value=cut", "the variant keyword leads the body");
+    assert_eq!(variants_text::parse_op::<Op>(&line).expect("the printed line parses"), op);
 }

@@ -1,0 +1,53 @@
+{
+  "name": "@semio-tech/course-react",
+  "$schema": "../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🟦️.tsx",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🎨️.css",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🎨️styles/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/🔨️modules/**/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/🧪️tests/*/🟦️.tsx",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🔨️modules/**/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🟦️.tsx",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🎨️.css",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🔨️modules/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/🧫️fixtures/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/🧪️tests/🧫️fixtures/**/*"
+    ]
+  },
+  "targets": {
+    "test": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "typecheck": {
+      "executor": "repo:script",
+      "dependsOn": [
+        "@semio-tech/framework-rs:generate",
+        "@semio-tech/ui-contract-rs:generate",
+        "@semio-tech/ui-rs:generate",
+        "@semio-tech/framework-actor-rs:typegen",
+        "@semio-tech/ui-styling-tokens:generate",
+        "@semio-tech/assets:build"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts typecheck",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

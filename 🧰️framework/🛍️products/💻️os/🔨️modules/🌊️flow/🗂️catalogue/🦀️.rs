@@ -95,7 +95,10 @@ fn titleize_extension(extension: &str) -> String {
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 pub fn flow_neuron_kind_infos_json() -> String {
     let registry = flow_extension_registry();
-    semio_framework_pack_json::to_json_string(&registry.operator_infos().cloned().collect::<Vec<_>>())
+    let infos = registry.operator_infos().cloned().collect::<Vec<_>>();
+    let json = semio_framework_pack_json::to_json_string(&infos);
+    neural::ColdRetire::retire_cold(infos);
+    json
 }
 
 /// 🧠️ The same operator catalogue as the id-keyed map a `FlowHost` actually indexes, built straight

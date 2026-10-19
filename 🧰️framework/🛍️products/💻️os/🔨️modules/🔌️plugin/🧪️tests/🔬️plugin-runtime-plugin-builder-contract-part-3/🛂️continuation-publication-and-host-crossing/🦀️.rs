@@ -17,6 +17,13 @@
     /// The law is about CARDINALITY, so it admits whatever lane each page carries: four simultaneous
     /// edits of one immutable document root make three of them rebase refusals, and a refusal is
     /// published as its own acknowledgeable `Fault` page on exactly the wire this law measures.
+    struct NativeResultWire{token:semio_framework_actor::typed_operation_page::TypedOperationResultToken,lane:TypedOperationResultLane,target:String,wire:Vec<u8>}
+    impl NativeResultWire{
+        fn close(self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_actor::typed_operation_page::TypedOperationResultToken{let token=self.token;let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::new((self.target,self.wire)).unwrap_or_else(|_|panic!("original renderer destination supports controlled retirement"));for _ in 0..100_000{if owner.terminal_is_empty(){return token;}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(grant).expect("original renderer destination paid closure"));let p=step.progress();assert!(p.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));assert_ne!(p,Default::default(),"original renderer destination closure stalled");}panic!("original renderer destination did not close")}
+        fn bytes(&self)->&[u8]{&self.wire[semio_framework_actor::typed_operation_page::TYPED_OPERATION_RESULT_HEADER_BYTES..]}
+        fn decode(target:String,wire:Vec<u8>)->Self{use semio_framework_actor::typed_operation_page::TypedOperationResultPage as Page;let body=wire.strip_prefix(Page::RENDERER_PAGE_MAGIC).expect("actual original renderer page magic");assert!(body.len()>=30);let token=semio_framework_actor::typed_operation_page::TypedOperationResultToken{receiver:u32::from_le_bytes(body[..4].try_into().unwrap()),operation:u64::from_le_bytes(body[4..12].try_into().unwrap()),generation:u64::from_le_bytes(body[12..20].try_into().unwrap()),sequence:u32::from_le_bytes(body[20..24].try_into().unwrap()),attempt:body[24]};let lane=match body[25]{0=>TypedOperationResultLane::Artifact,1=>TypedOperationResultLane::Config,2=>TypedOperationResultLane::Draft,3=>TypedOperationResultLane::Presence,4=>TypedOperationResultLane::Transient,5=>TypedOperationResultLane::Child,6=>TypedOperationResultLane::Effect,7=>TypedOperationResultLane::Event,8=>TypedOperationResultLane::Ui,9=>TypedOperationResultLane::Download,10=>TypedOperationResultLane::Terminal,11=>TypedOperationResultLane::Fault,12=>TypedOperationResultLane::Interaction,13=>TypedOperationResultLane::WindowTransient,14=>TypedOperationResultLane::WindowConfig,15=>TypedOperationResultLane::Diagnostic,_=>panic!("original renderer lane is outside its closed ABI")};assert_eq!(body.len(),30+u32::from_le_bytes(body[26..30].try_into().unwrap())as usize);Self{token,lane,target,wire}}
+    }
+    fn receive_native_result_pages<PA:crate::plugin_app::PluginApp>(runtime:&super::PluginRuntime<PA>,cx:&mut semio_framework_job::StepContext<'_>)->(Vec<NativeResultWire>,bool){let mut effects=Vec::new();let pending=super::plugin_drive_result_pages(runtime,&mut effects,super::TYPED_OPERATION_PAGES_PER_TURN_MAXIMUM,cx).expect("actual original native renderer receiving");let pages=effects.into_iter().map(|effect|match effect{Effect::SendMessage{target:semio_framework::kernel::MessageEndpoint::Shell{instance},payload}=>NativeResultWire::decode(instance.0,payload),_=>panic!("original native result publisher emitted an unrelated effect")}).collect();(pages,pending)}
     #[semio_framework_async_macros::async_test]
     async fn concurrent_typed_operations_hand_every_presentable_page_to_one_turn() {
         let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("closed finite original reactor builder caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
@@ -35,7 +42,7 @@
         semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(id).await;
         let meta = ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None };
-        for index in 0..OPERATIONS {
+        for index in 0..operations {
             let command = TestCommand::CompositeEdit { slot: String::new(), child_id: format!("batch-{index}").into(), child_value: index as i32 + 1 };
             app.dispatch_typed(command, &meta, &mut identity,cx).await.unwrap();
         }
@@ -49,23 +56,25 @@
             let more = scan.runnable || scan.contended;
             if let Some((receiver, output)) = output {
                 assert_eq!(receiver, id);
-                if !output.typed_operation_results.is_empty() {
+            }
+            {
+                if !native_pages.is_empty() {
                     crossings += 1;
-                    widest = widest.max(output.typed_operation_results.len());
+                    widest = widest.max(native_pages.len());
                 }
-                for page in output.typed_operation_results {
+                for page in native_pages {
                     pages += 1;
-                    semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_acknowledge_typed_operation_result(&runtime, page.token).await.unwrap();
+                    semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_acknowledge_typed_operation_result(&runtime, page.close(mounted_policy.close)).await.unwrap();
                 }
             }
-            if !more {
+            if !more && (issued.is_none()||holding>=256) {
                 break;
             }
             std::thread::yield_now();
         }
-        assert!(pages >= OPERATIONS, "each of the {OPERATIONS} admitted operations owes at least one result page, saw {pages}");
-        assert!(widest >= 2, "{OPERATIONS} concurrently publishing operations must share a crossing; the widest batch was {widest}");
-        assert!(crossings < pages, "{pages} result pages retired in {crossings} crossings — a page per crossing is the cardinality this law removes");
+        assert!(pages >= operations, "each of the {operations} admitted operations owes at least one result page, saw {pages}");
+        if issued.is_some(){assert!(admitted>=8,"separately issued original authority must retain all8 fixed slots before output");assert!(widest>=2,"prepared original slots share the separately issued original crossing; widest={widest}");}else{assert_eq!(widest,1,"the unchanged original item1 fixture funds one output action per crossing");}
+        if issued.is_some(){assert!(crossings<pages,"{pages} actual renderer pages span{crossings} original batch crossings");}else{assert_eq!(crossings,pages);}
         let active = cell.instance.lock().unwrap();
         assert!(!active.app.has_pending_typed_operations());
         drop(active);
@@ -118,17 +127,19 @@
         for _ in 0..(ROWS as u64 * 8) {
             let (output, scan) = semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_continue_typed_operations(&runtime, semio_framework_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant::UNIT, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.unwrap();
             units += 1;
-            if let Some((receiver, output)) = output {
+            if let Some((receiver, _output)) = output {
                 assert_eq!(receiver, id);
-                for page in output.typed_operation_results {
+            }
+            {
+                for page in native_pages {
                     if page.lane == TypedOperationResultLane::Fault {
                         faults.push(String::from_utf8_lossy(page.bytes()).into_owned());
                     }
                     terminal |= page.lane == TypedOperationResultLane::Terminal;
-                    semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_acknowledge_typed_operation_result(&runtime, page.token).await.unwrap();
+                    semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_acknowledge_typed_operation_result(&runtime, page.close(mounted_policy.close)).await.unwrap();
                 }
             }
-            if !(scan.runnable || scan.contended) {
+            if !(scan.runnable || scan.contended || pages_pending) {
                 break;
             }
         }

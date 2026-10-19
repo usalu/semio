@@ -45,12 +45,21 @@ pub fn expand_async_test(attr: TokenStream, item: TokenStream) -> syn::Result<To
     let block = &input.block;
     let block_on_ident = syn::Ident::new("__semio_async_test_block_on", ident.span());
     let test_attribute = syn::Ident::new("test", ident.span());
+    let future_ident = syn::Ident::new("__semio_async_test_future", ident.span());
+    let output_type = match &input.sig.output {
+        syn::ReturnType::Default => quote! { () },
+        syn::ReturnType::Type(_, ty) => quote! { #ty },
+    };
 
     Ok(quote! {
         #[#test_attribute]
         #(#other_attrs)*
         #vis fn #ident() #output {
-            fn #block_on_ident<F: std::future::Future>(fut: F) -> F::Output {
+            #[inline(never)]
+            fn #future_ident() -> std::pin::Pin<std::boxed::Box<dyn std::future::Future<Output = #output_type>>> {
+                std::boxed::Box::pin(async move #block)
+            }
+            fn #block_on_ident<T>(mut fut: std::pin::Pin<std::boxed::Box<dyn std::future::Future<Output = T>>>) -> T {
                 struct ThreadWaker(std::thread::Thread);
                 impl std::task::Wake for ThreadWaker {
                     fn wake(self: std::sync::Arc<Self>) {
@@ -60,7 +69,6 @@ pub fn expand_async_test(attr: TokenStream, item: TokenStream) -> syn::Result<To
                         self.0.unpark();
                     }
                 }
-                let mut fut = std::pin::pin!(fut);
                 let waker = std::task::Waker::from(std::sync::Arc::new(ThreadWaker(std::thread::current())));
                 let mut cx = std::task::Context::from_waker(&waker);
                 loop {
@@ -70,7 +78,7 @@ pub fn expand_async_test(attr: TokenStream, item: TokenStream) -> syn::Result<To
                     }
                 }
             }
-            #block_on_ident(async move #block)
+            #block_on_ident(#future_ident())
         }
     })
 }

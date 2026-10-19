@@ -8,6 +8,25 @@ import { toolJobRustBlock } from "@semio-tech/repo-lib/laws";
  * spelling makes them fail on formatting instead of on lost initialized bytes. */
 const looseStatements = (statements: string): RegExp => new RegExp(statements.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&").replaceAll(/\s+/g, "\\s+"));
 
+/** \u{1f9ed}\uFE0F Locates the method body after balanced generic and parameter declarations. */
+export function canonicalRustMethodBody(text: string, pattern: RegExp): string {
+  const start = text.search(pattern);
+  if (start < 0) return "";
+  const delimiters: string[] = [];
+  for (let index = start; index < text.length; index++) {
+    const character = text[index]!;
+    if (character === "{") {
+      const block = toolJobRustBlock(text, index);
+      if (!block) return "";
+      if (!delimiters.length) return block.body;
+      index = block.end - 1;
+    } else if (character === "(" || character === "[" || character === "<") delimiters.push(character);
+    else if (character === ")" || character === "]" || character === ">" && text[index - 1] !== "-") delimiters.pop();
+    else if (character === ";" && !delimiters.length) return "";
+  }
+  return "";
+}
+
 /** 🧪️ Executes canonical error progress policy assertions. */
 export function canonicalErrorProgressSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit");
@@ -26,7 +45,7 @@ export function canonicalErrorProgressSelfTests(): number {
   const borrowed = readFileSync(join(base, "🧵️borrowed/🦀️.rs"), "utf8");
   const reader = readFileSync(join(base, "📖️reader/🦀️.rs"), "utf8");
   const native = readFileSync(join(base, "🧳️source/🦀️.rs"), "utf8");
-  const method = (text: string, pattern: RegExp) => { const start = text.search(pattern); return start < 0 ? "" : toolJobRustBlock(text, text.indexOf("{", start))?.body ?? ""; };
+  const method = canonicalRustMethodBody;
   const compact = (text: string) => text.replaceAll(/\s+/g, "");
   const exact = (parent: string, borrowed: string, reader: string, native: string) => {
     const indexed = compact(method(parent, /pub fn encode_chunk_admitted\(/));
@@ -44,7 +63,7 @@ export function canonicalErrorProgressSelfTests(): number {
       && sealing.includes("Err(error)=>(error.retained_progress(),Some(error))") && sealing.includes("self.ownership=progress;")
       && sealing.includes("iferror.is_some()||!progress.fits(retained){self.cancelled=true;}")
       && sealing.indexOf("self.completed_bytes=completed;") >= 0 && sealing.indexOf("self.completed_bytes=completed;") < sealing.indexOf("ifletSome(error)=error{returnErr(error);}")
-      && sealing.includes("ifself.cancelled||self.closing{returnOk(ArtifactStoreOneItemPreparationStep::Blocked);}") && sealing.includes("if!grant.permits_one(){returnOk(ArtifactStoreOneItemPreparationStep::Blocked);}")
+      && sealing.includes("ifself.cancelled||self.closing{returnOk(ArtifactStoreOneItemPreparationStep::Blocked);}") && sealing.includes("if!grant.permits_one(){returnOk(ArtifactStoreOneItemPreparationStep::Blocked);}") && sealing.includes("if!grant.permits_one()")
       && compact(native).includes('refusal("canonical original child receipt exceeds caller grant").with_retained_progress(p)'.replaceAll(/\s+/g,""))
       && !/From<ArtifactCanonicalJsonEncodeError> for String/.test(parent + borrowed + reader);
   };

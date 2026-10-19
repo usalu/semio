@@ -1,10 +1,11 @@
-//! 🛠️ Laws of the transform tool machine alone: a gesture record yields its parametric leaf (and a drop's
 //! attractions) as ONE committed `ToolTransaction` under a deterministic ref, a gesture that moves nothing leaves
+//! 🛠️ Laws of the transform tool machine alone: a gesture record yields its parametric leaf (and a drop's
 //! zero trace, and every host payload states the RELATIVE motion from its own start pose.
 
 use super::*;
 use semio_s_artifact_puzzle_3d_mutations::apply_puzzle3d_mutation;
-use semio_framework_tool_machine::{ToolMachineRunner, ToolStep};
+use semio_framework_tool_machine::ToolMachineRunner;
+use semio_framework_tool_machine::ToolStep;
 use {semio_s_artifact_puzzle_3d_model::quat_from_axis_angle, semio_s_artifact_puzzle_3d_model::quat_mul};
 
 use {semio_s_artifact_puzzle_3d_model::Puzzle3dObject, semio_s_artifact_puzzle_3d_model::Puzzle3dTargetVolume, semio_s_artifact_puzzle_3d_model::Puzzle3dVortex};

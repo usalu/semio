@@ -11,6 +11,8 @@ import {compilerAdmissionBudgetV1} from "../../../../../../../../🔨️modules/
 import {runOwnedCommand} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { once } from "node:events";
+import nativeLaunchDeclaration from "./🎟️launch/🔣️.json";
+import { nativeLaunchEnvironmentV1, readNativeLaunchDeclarationV1 } from "./🎟️launch/🟦️.ts";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import type { Server } from "node:http";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
@@ -81,16 +83,15 @@ class RunScript extends BundleScript {
     const catalog=projection.playgrounds;
     const row = catalog.find((entry: { variant: string }) => entry.variant === variant);
     if (!row) throw new Error(`Unknown native playground: ${variant}`);
-    const controller = new AbortController(), cancel = () => controller.abort();
-    process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
-    try {
+    const signal = this.invocation.control.signal;
+    {
       const binary=playgroundNativeHostArtifactV1(repo,row.nativeHost,profile)??nativeRendererBinary(resolve(import.meta.dir,"../📦️packages/🦀️rust"),profile);
       if(!existsSync(binary))throw new Error(`Missing native host artifact: ${binary}`);
       // 🧭️ An explicit `--flag` is spelled FIRST, because the binary's `arg_value` reads the first
       // occurrence; the playground row then supplies the per-server defaults (`app`, `brand`) the wgpu
       // serve injects as `<meta name="semio-*">` for the browser.
-      await runNativeSession(binary, ["--plugin", variant, ...axes, ...(row.app ? ["--app", row.app] : []), ...(row.brand ? ["--brand", row.brand] : []), ...(args.includes("--smoke") ? ["--smoke"] : [])], { ...process.env, SEMIO_PLUGIN: variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: profile === "release" ? "release" : "prototype", SEMIO_PLUGIN_MODULES: runtime, SEMIO_RUNTIME_ASSETS: repo }, repo,this.invocation,createRequestedIssuedResourceControlV1(runtimeControl,0,controller.signal),row.assets?.length ? () => createAssetHttpServerV1(repo, 0, row.assets, PLAYGROUND_ASSET_PROVIDERS_V1) : undefined);
-    } finally { process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
+      await runNativeSession(binary, ["--plugin", variant, ...axes, ...(row.app ? ["--app", row.app] : []), ...(row.brand ? ["--brand", row.brand] : []), ...(args.includes("--smoke") ? ["--smoke"] : [])], nativeLaunchEnvironmentV1(this.invocation, { ...process.env, SEMIO_PLUGIN: variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: profile === "release" ? "release" : "prototype", SEMIO_PLUGIN_MODULES: runtime, SEMIO_RUNTIME_ASSETS: repo }, readNativeLaunchDeclarationV1(nativeLaunchDeclaration), Date.now()), repo,this.invocation,createRequestedIssuedResourceControlV1(runtimeControl,0,signal),row.assets?.length ? () => createAssetHttpServerV1(repo, 0, row.assets, PLAYGROUND_ASSET_PROVIDERS_V1) : undefined);
+    }
     });
     });
   }
@@ -121,10 +122,8 @@ class ScaleScript extends BundleScript {
     if (!args.length || args.length % 2 !== 0 || args.some((value, index) => index % 2 === 0 && !["--scale", "--scale-wasm", "--shards", "--report"].includes(value))) throw new Error("Native scale accepts --scale, --scale-wasm, --shards and --report value pairs");
     for (const flag of ["--scale", "--scale-wasm", "--report"]) if (args.filter(value => value === flag).length !== 1) throw new Error(`Native scale requires exactly one ${flag}`);
     const report=args[args.indexOf("--report")+1];if(!report)throw Error("Finite scale report required");mkdirSync(dirname(resolve(this.repoRoot,report)),{recursive:true});
-    const controller = new AbortController(), cancel = () => controller.abort();
-    process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
-    try { await runNativeBinary(nativeRendererBinary(resolve(import.meta.dir, "../📦️packages/🦀️rust"), profile), args,process.env,this.repoRoot,this.invocation,createRequestedIssuedResourceControlV1(phaseControl,0,controller.signal)); }
-    finally { process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
+    const signal = this.invocation.control.signal;
+    await runNativeBinary(nativeRendererBinary(resolve(import.meta.dir, "../📦️packages/🦀️rust"), profile), args, nativeLaunchEnvironmentV1(this.invocation, process.env, readNativeLaunchDeclarationV1(nativeLaunchDeclaration), Date.now()),this.repoRoot,this.invocation,createRequestedIssuedResourceControlV1(phaseControl,0,signal));
   }
 }
 

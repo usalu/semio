@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "originalHost",
+    "actorCapacity",
+    "token",
+    "lane",
+    "steps",
+    "cancellation",
+    "denialAxes",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "originalHost": {
+      "const": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 4096,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 262144,
+        "maximumDepth": 64
+      }
+    },
+    "actorCapacity": {
+      "const": 4096
+    },
+    "token": {
+      "const": {
+        "receiver": 1,
+        "operation": 7,
+        "generation": 2,
+        "sequence": 3,
+        "attempt": 1
+      }
+    },
+    "lane": {
+      "const": 0
+    },
+    "steps": {
+      "const": [
+        "capture-original-descriptor",
+        "allocate-original-destination",
+        "copy-original-header-and-body",
+        "close-original-alias",
+        "take-original-wire"
+      ]
+    },
+    "cancellation": {
+      "const": "every-actual-action-prefix"
+    },
+    "denialAxes": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ]
+    },
+    "cases": {
+      "const": [
+        {
+          "name": "Body 0",
+          "bodyBytes": 0,
+          "fill": 90,
+          "headerHex": "73656d696f2e74797065642d6f7065726174696f6e2d706167652e763100010000000700000000000000020000000000000003000000010000000000"
+        },
+        {
+          "name": "Body 1",
+          "bodyBytes": 1,
+          "fill": 90,
+          "headerHex": "73656d696f2e74797065642d6f7065726174696f6e2d706167652e763100010000000700000000000000020000000000000003000000010001000000"
+        },
+        {
+          "name": "Body 5",
+          "bodyBytes": 5,
+          "fill": 90,
+          "headerHex": "73656d696f2e74797065642d6f7065726174696f6e2d706167652e763100010000000700000000000000020000000000000003000000010005000000"
+        },
+        {
+          "name": "Body 4096",
+          "bodyBytes": 4096,
+          "fill": 90,
+          "headerHex": "73656d696f2e74797065642d6f7065726174696f6e2d706167652e763100010000000700000000000000020000000000000003000000010000100000"
+        }
+      ]
+    }
+  }
+}

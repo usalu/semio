@@ -20,14 +20,59 @@ pub enum ArtifactStoreInitializationNext<P> {
 }
 
 impl<P> ArtifactStoreInitializationRuntime<P> {
+    /// 👁️ Quotes the original current lease without cloning the snapshot or replacing its registry.
+    pub fn native_snapshot_read_demand() -> RetirementDemand {
+        RetirementDemand { copy_bytes: std::mem::size_of::<super::snapshot_read::SnapshotRead<P>>() + std::mem::size_of::<super::SnapshotReadLeaseSlot>(), depth: 1, ..Default::default() }
+    }
+    /// 🧷️ Admits the current projection through the exact runtime registry later transferred to the Store.
+    pub fn admit_native_snapshot_read(&self, generation: u64, grant: RetainedCloneGrant) -> Result<Option<(super::snapshot_read::SnapshotRead<P>, RetainedCloneProgress)>, ValueError>
+    where P: Send + Sync + 'static,
+    {
+        let demand=Self::native_snapshot_read_demand();if !permits(grant,demand){return Ok(None);}
+        let revision=self.revision.revision(self.current_checkpoint_id.as_deref());
+        if !self.read_registry.publish_authority(generation,revision){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"initialization read registry authority is busy"));}
+        let current=self.current.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"initialization original current absent"))?;
+        let lease=self.read_registry.try_issue(Arc::clone(current)).map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"initialization original read registry is full"))?;
+        Ok(Some((super::snapshot_read::SnapshotRead::new(Arc::clone(current),lease),RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))
+    }
+    /// 📏️ Quotes the actual returned current owner before native replay proceeds to another input.
+    pub fn native_read_retirement_demands(&self, body:usize)->Result<RetirementDemand,ValueError>
+    where P:Send+Sync+'static,
+    {
+        if let Some(active)=self.close_active.as_ref(){return super::artifact_retirement_box_demands(active,body);}
+        if self.read_registry.closed()||!self.read_registry.has_returned(){return Ok(Default::default());}
+        self.read_registry.returned_admission_demands::<P>(|_|RetirementDemand{capacity_bytes:ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(),depth:1,..Default::default()}).map_err(super::SnapshotReadLeaseRefusal::into_value_error)
+    }
+    /// ♻️ Returns one exact original read under the installed genesis issuer.
+    pub fn settle_native_read_step(&mut self,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>
+    where P:Send+Sync+'static,
+    {super::advance_returned_snapshot_read(&self.read_registry,&mut self.close_active,factory,grant)}
+    pub(super) fn read_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>
+    where P:Send+Sync+'static,
+    {
+        if self.read_registry.closed(){return Ok(RetirementDemand{depth:1,..Default::default()});}
+        if self.read_registry.has_returned(){return self.native_read_retirement_demands(body);}
+        let backing=self.read_registry.empty_backing_demands()?;if backing.release_bytes!=0{return Ok(backing);}
+        Ok(RetirementDemand{release_bytes:self.read_registry.custody_byte_demand()?,depth:1,..Default::default()})
+    }
+    pub(super) fn close_reads(&mut self,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>
+    where P:Send+Sync+'static,
+    {
+        if self.read_registry.closed(){self.close_phase=11;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
+        if self.read_registry.has_returned(){return self.settle_native_read_step(factory,grant);}
+        if self.read_registry.occupied_count()!=0{return Ok(RetainedCloneStep::Progress(Default::default()));}
+        if self.read_registry.empty_backing_demands()?.release_bytes!=0{return self.read_registry.close_empty_backing_step(grant);}
+        self.read_registry.close_custody_step(grant)
+    }
     /// ▶️ Folds forward `index` of the applied `edit` onto the shared current projection through its effective input
     /// (supersessions, [`admit_replacement`](super::admit_replacement) and keep-and-record [`fold_operation`](super::fold_operation)),
     /// handing the produced projection to the caller instead of mutating a uniquely owned workspace: the genesis alias is never
     /// cloned, the one `diff` and `apply` of the operation is the whole traversal of the turn. Refuses an operation whose encoding
     /// fails or exceeds `maximum_bytes`; answers [`ArtifactStoreInitializationNext::Unfunded`] when it exceeds `granted_copy_bytes`.
-    pub fn fold_next_forward<M>(&mut self, edit: &Edit<M>, index: usize, schema: &str, maximum_bytes: usize, granted_copy_bytes: usize) -> Result<ArtifactStoreInitializationNext<P>, &'static str>
+    pub fn fold_reference_next_forward<M>(&mut self, edit: &Edit<M>, index: usize, schema: &str, maximum_bytes: usize, granted_copy_bytes: usize) -> Result<ArtifactStoreInitializationNext<P>, &'static str>
     where
-        M: Mutation<P> + OpBinary,
+    P: Clone,
+        M: Mutation<P> + ColdMutation<P> + OpBinary,
     {
         let Some(effective) = self.effective_forward(edit, index, schema) else { return Ok(ArtifactStoreInitializationNext::Exhausted) };
         let operation = effective.operation();
@@ -42,7 +87,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         if let Some(original) = edit.forwards.get(index).filter(|op| op.may_emit_foreign_steps()) {
             let digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[edit.id.as_bytes()]);
             let source = self.current.as_deref().ok_or("artifact store initialization lost its current projection")?;
-            let presence = original.foreign_step_source(source, 0).map_err(|_| "artifact store original foreign source refused")?.is_some();
+            let presence = <M as ColdMutation<P>>::foreign_step_source(original,source,0).map_err(|_| "artifact store original foreign source refused")?.is_some();
             self.revision.unit_flags.insert((digest, index), presence);
         }
         let next = match operation {

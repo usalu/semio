@@ -1,5 +1,5 @@
-//! ↩️ Inverse for `ScaleSelection` — the absolute setters restoring every BASE scale the scaling changes
 //! (exact, never a reciprocal factor that would accumulate float error). Nothing scaled ⇒ `Vec::new()`.
+//! ↩️ Inverse for `ScaleSelection` — the absolute setters restoring every BASE scale the scaling changes
 use super::mutation::ScaleSelection;
 use {semio_s_artifact_puzzle_3d_mutations_pose::scale_object::mutation::ScaleObject, semio_s_artifact_puzzle_3d_mutations_volume::scale_target_volume::mutation::ScaleTargetVolume};
 use {semio_s_artifact_puzzle_3d_model::puzzle3d_scaled, crate::puzzle3d_selection, semio_s_artifact_puzzle_3d_mutations_pose::scale_object::mutation::scale_object, semio_s_artifact_puzzle_3d_mutations_volume::scale_target_volume::mutation::scale_target_volume};

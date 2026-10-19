@@ -1,5 +1,5 @@
-//! 🧩️ Puzzle 2d play app — the plugin's 2d play app: its `ArtifactApp` impl (dispatch-only), the
 //! transient `Puzzle2dScene` bundle its command/panel/window nodes mutate and render, the shared
+//! 🧩️ Puzzle 2d play app — the plugin's 2d play app: its `ArtifactApp` impl (dispatch-only), the
 //! snapshot helpers they build on, and the manifest that stitches those nodes together.
 //!
 //! 🧭️ Every behavioural arm lives in `🎮️commands/<group>/🦀️.rs`; every rendered surface in
@@ -19,7 +19,31 @@ pub mod testkit;
 #[cfg(any(test, feature = "testkit"))]
 pub use testkit::Puzzle2dApp as Puzzle2dTestApp;
 
-use crate::editor::puzzle2d::snapshot::{puzzle2d_scene_for, puzzle2d_scene_with, PUZZLE2D_GENERIC_TOOL_IDS, PUZZLE2D_RETAINED_TOOL_IDS, PUZZLE2D_ADD_NODE_DIALOG_ID, PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, PUZZLE2D_GRANULARITY_EDGE, PUZZLE2D_GRANULARITY_HANDLE, PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_INTERACTION_DOMAIN, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, Puzzle2dInteractionSnapshot, Puzzle2dScene, puzzle2d_active_utility, puzzle2d_addresses_locked_entity, puzzle2d_entity_hidden, puzzle2d_entity_label, puzzle2d_interaction_definition, puzzle2d_node_kind_arg, puzzle2d_select_scope, puzzle2d_selected_node_ids, puzzle2d_selection_is_locked, puzzle2d_window_and_engagements_scope, puzzle2d_window_only_scope};
+use crate::editor::puzzle2d::snapshot::puzzle2d_scene_for;
+use crate::editor::puzzle2d::snapshot::puzzle2d_scene_with;
+use crate::editor::puzzle2d::snapshot::PUZZLE2D_GENERIC_TOOL_IDS;
+use crate::editor::puzzle2d::snapshot::PUZZLE2D_RETAINED_TOOL_IDS;
+use crate::editor::puzzle2d::snapshot::PUZZLE2D_ADD_NODE_DIALOG_ID;
+use crate::editor::puzzle2d::snapshot::PUZZLE2D_BOARD_SNAPSHOT_SCHEMA;
+use crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_EDGE;
+use crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_HANDLE;
+use crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_NODE;
+use crate::editor::puzzle2d::snapshot::PUZZLE2D_INTERACTION_DOMAIN;
+use crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID;
+use crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID;
+use crate::editor::puzzle2d::snapshot::Puzzle2dInteractionSnapshot;
+use crate::editor::puzzle2d::snapshot::Puzzle2dScene;
+use crate::editor::puzzle2d::snapshot::puzzle2d_active_utility;
+use crate::editor::puzzle2d::snapshot::puzzle2d_addresses_locked_entity;
+use crate::editor::puzzle2d::snapshot::puzzle2d_entity_hidden;
+use crate::editor::puzzle2d::snapshot::puzzle2d_entity_label;
+use crate::editor::puzzle2d::snapshot::puzzle2d_interaction_definition;
+use crate::editor::puzzle2d::snapshot::puzzle2d_node_kind_arg;
+use crate::editor::puzzle2d::snapshot::puzzle2d_select_scope;
+use crate::editor::puzzle2d::snapshot::puzzle2d_selected_node_ids;
+use crate::editor::puzzle2d::snapshot::puzzle2d_selection_is_locked;
+use crate::editor::puzzle2d::snapshot::puzzle2d_window_and_engagements_scope;
+use crate::editor::puzzle2d::snapshot::puzzle2d_window_only_scope;
 use crate::editor::puzzle2d::engine::board_host::{drain_board_events_json};
 use crate::editor::puzzle2d::recorder::{puzzle2d_copy_fragment_from, puzzle2d_cut_operations_from, puzzle2d_paste_operations_on};
 use crate::editor::puzzle2d::commands::set_active_example;
@@ -29,18 +53,13 @@ use crate::editor::puzzle2d::modes::edit;
 use crate::editor::puzzle2d::modes::edit::tools::fill;
 use crate::editor::puzzle2d::precompute::fill as fill_run;
 pub use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select::{puzzle2d_gesture_phase, puzzle2d_selection_pivot, Puzzle2dSelectionMotion, Puzzle2dSelectionRecord, SelectToolRequest};
-use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::{area_brush as area_brush_utility, brush as brush_utility, select as select_utility};
-use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
-use crate::editor::puzzle2d::panels::{artifact, catalogue, inspection, settings};
-use crate::editor::puzzle2d::presence::{Puzzle2dPresence, Puzzle2dPresenceMutation};
-pub use crate::editor::puzzle2d::terminology::{puzzle2d_localized, puzzle2d_localized_phrase};
-use crate::editor::puzzle2d::window::{self, Puzzle2dWindowConfig, Puzzle2dWindowTransient};
-use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
 
-use crate::standards::v1::subsets::any::schema::mutations::{Puzzle2dMutation};
 
+
+
+pub use crate::editor::puzzle2d::terminology::puzzle2d_localized;
+pub use crate::editor::puzzle2d::terminology::puzzle2d_localized_phrase;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, Effect, PastePlacement};
 use semio_framework_plugin::ActionArgDef;
 use semio_framework_plugin::ActionArgOption;
 use semio_framework_plugin::ActionDefinition;
@@ -85,8 +104,7 @@ use semio_framework_plugin::WindowMeasure;
 // `semio_framework_plugin`, flagged to the coordinator, not fixed here).
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_pack_json::{json, Value};
-#[cfg(test)] use std::collections::{BTreeSet, HashMap, HashSet};
-use semio_framework_2d_compute::EngineHandles;
+#[cfg(test)] use semio_framework_2d_compute::EngineHandles;
 use semio_s_artifact_puzzle_2d_unit_tests::{editor::puzzle2d::snapshot::Puzzle2dCommand, editor::puzzle2d::engine::board_host::puzzle_board_host};
 //#region 🔖️Constants
 //#endregion 🔖️Constants

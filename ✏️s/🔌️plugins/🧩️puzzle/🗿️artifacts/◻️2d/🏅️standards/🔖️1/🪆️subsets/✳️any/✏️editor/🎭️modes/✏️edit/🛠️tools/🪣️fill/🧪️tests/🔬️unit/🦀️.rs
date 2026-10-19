@@ -65,7 +65,7 @@ fn fill_tool_declares_the_schema_tool_run_definition() {
     let definition = definition(puzzle2d_localized(|labels| labels.fill));
     let run = definition.run.as_ref().expect("the fill tool declares run");
     run.validate().expect("the fill run definition validates");
-    let json = semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(run)));
+    let json = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(run));
     for key in ["mutating", "rebase", "reconfigure", "trace", "runJob", "revalidateJob"] {
         assert_eq!(json[key], table[key], "{key}");
     }
@@ -84,7 +84,7 @@ fn fill_tool_declares_the_schema_tool_run_definition() {
     for (reason, row) in run.reasons.iter().zip(rows("reasons")) {
         assert_eq!(u64::from(reason.code), row["code"].as_u64().unwrap_or(u64::MAX), "{}", reason.id);
         assert_eq!(reason.id, row["id"].as_str().unwrap_or_default());
-        assert_eq!(semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(reason.verdict))), row["verdict"], "{}", reason.id);
+        assert_eq!(semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&(reason.verdict))), row["verdict"], "{}", reason.id);
         assert_eq!((text(&reason.template, Locale::En), text(&reason.template, Locale::De)), (row["en"].as_str().unwrap_or_default().to_string(), row["de"].as_str().unwrap_or_default().to_string()), "{}", reason.id);
     }
 }

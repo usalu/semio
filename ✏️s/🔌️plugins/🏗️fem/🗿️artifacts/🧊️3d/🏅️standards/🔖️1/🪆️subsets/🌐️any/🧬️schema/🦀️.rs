@@ -1,7 +1,8 @@
 //! 🧬️ Fem3d artifact schema — every field of the artifact with its state class.
 
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 //#region 🔖️Artifact
 /// 🧬️ fem3d document artifact state.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema, Default, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -9,12 +10,12 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[artifact_schema(id = "s.fem.fem3d")]
 pub struct Fem3dArtifact {
     #[state(artifact)]
-    pub nodes: Vec<FemNode>,
+    pub nodes: Vec<FemNodeValue>,
     #[state(artifact)]
     #[dsl(statements, block)]
     pub elements: Vec<FemElement>,
     #[state(artifact)]
-    pub materials: Vec<FemMaterial>,
+    pub materials: Vec<FemMaterialValue>,
     #[state(artifact)]
     pub sections: Vec<FemSection>,
     #[state(artifact)]
@@ -103,8 +104,8 @@ pub use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::stru
 pub use crate::standards::v1::subsets::any::schema::structure::FemCombination;
 pub use crate::standards::v1::subsets::any::schema::structure::FemElement;
 pub use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
-pub use crate::standards::v1::subsets::any::schema::structure::FemMaterial;
-pub use crate::standards::v1::subsets::any::schema::structure::FemNode;
+pub use semio_s_fem_material::volumetric::FemMaterialValue;
+pub use semio_s_fem_node::volumetric::FemNodeValue;
 pub use crate::standards::v1::subsets::any::schema::structure::FemSection;
 pub use crate::standards::v1::subsets::any::schema::structure::FemSolid;
 pub use crate::standards::v1::subsets::any::schema::structure::FemSupport;

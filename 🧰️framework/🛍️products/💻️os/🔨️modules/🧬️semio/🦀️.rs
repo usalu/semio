@@ -143,6 +143,21 @@ pub fn declared_envelope_prefix_len(envelope_id:&str,component:Component,version
     token.checked_add(if component.is_text(){7}else{BINARY_HEADER_PREFIX_LEN}).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit, "native envelope prefix length overflow"))
 }
 
+/// 🧵️ Borrows one exact declared binary framing octet without constructing a token owner.
+pub fn declared_binary_prefix_byte(envelope_id:&str,component:Component,version:u16,offset:usize)->Result<Option<u8>,ValueError>{
+    if component.is_text(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"declared binary prefix requires a binary component"));}
+    let length=declared_envelope_prefix_len(envelope_id,component,version)?;
+    if offset>=length{return Ok(None);}
+    if offset<8{return Ok(Some(BINARY_MAGIC[offset]));}
+    let token=u32::try_from(length-BINARY_HEADER_PREFIX_LEN).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"native envelope identity exceeds u32"))?;
+    if offset<12{return Ok(Some(token.to_le_bytes()[offset-8]));}
+    let mut digits=[0u8;5];let mut start=5;let mut remaining=version;
+    loop{start-=1;digits[start]=b'0'+(remaining%10)as u8;remaining/=10;if remaining==0{break;}}
+    let mut position=offset-BINARY_HEADER_PREFIX_LEN;
+    for piece in [envelope_id.as_bytes(),b".".as_slice(),component.as_str().as_bytes(),b" v".as_slice(),&digits[start..]]{if position<piece.len(){return Ok(Some(piece[position]));}position-=piece.len();}
+    Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"declared binary prefix exceeds its counted identity"))
+}
+
 /// 📦️ Wraps a binary payload with the semio binary header.
 pub fn wrap_binary(envelope: &SemioEnvelope, payload: &[u8]) -> Vec<u8> {
     let token = envelope.binary_token();

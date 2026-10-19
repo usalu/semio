@@ -1,0 +1,7 @@
+{
+  "mutation": "changeElement",
+  "patch": {
+    "start": "n1"
+  },
+  "id": "e1"
+}

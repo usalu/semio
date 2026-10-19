@@ -1,0 +1,396 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio-tech.com/repo/developer-tools/request",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "command",
+        "file",
+        "editor"
+      ],
+      "properties": {
+        "command": {
+          "const": "open-source"
+        },
+        "file": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "editor": {
+          "enum": [
+            "system",
+            "vscode",
+            "codium",
+            "sublime"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "command"
+      ],
+      "properties": {
+        "command": {
+          "const": "git-status"
+        },
+        "path": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "untracked": {
+          "enum": [
+            "normal",
+            "all",
+            "no"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "command"
+      ],
+      "properties": {
+        "command": {
+          "const": "git-diff"
+        },
+        "path": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "revision": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "area": {
+          "enum": [
+            "worktree",
+            "staged"
+          ]
+        }
+      },
+      "anyOf": [
+        {
+          "properties": {
+            "area": {
+              "const": "worktree"
+            }
+          }
+        },
+        {
+          "required": [
+            "area"
+          ],
+          "properties": {
+            "area": {
+              "const": "staged"
+            },
+            "revision": {
+              "type": "string",
+              "pattern": "^(?!.*\\.\\.).+$"
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "command"
+      ],
+      "properties": {
+        "command": {
+          "const": "git-history"
+        },
+        "path": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "revision": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "command"
+      ],
+      "properties": {
+        "command": {
+          "const": "git-show"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "view": {
+          "enum": [
+            "summary",
+            "patch"
+          ]
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^(?!.*\\.\\.).+$"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "command",
+        "file"
+      ],
+      "properties": {
+        "command": {
+          "const": "git-blame"
+        },
+        "file": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^(?!.*\\.\\.).+$"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483147
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "required": [
+        "command",
+        "shell"
+      ],
+      "type": "object",
+      "properties": {
+        "directory": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "shell": {
+          "enum": [
+            "system",
+            "powershell",
+            "bash",
+            "zsh",
+            "cmd"
+          ]
+        },
+        "command": {
+          "const": "terminal"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "command",
+        "profile",
+        "program"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "const": "debug"
+        },
+        "profile": {
+          "enum": [
+            "node-inspect",
+            "python-pdb",
+            "gdb",
+            "lldb"
+          ]
+        },
+        "program": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "arguments": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "maxLength": 2048,
+            "pattern": "^[^\\u0000]*$"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "DebuggerProfiles": {
+      "const": [
+        {
+          "id": "node-inspect",
+          "title": {
+            "en": "Node.js Inspector",
+            "de": "Node.js-Inspektor"
+          },
+          "programs": {
+            "win32": "node",
+            "darwin": "node",
+            "linux": "node"
+          },
+          "arguments": [
+            "inspect",
+            "--port=0"
+          ]
+        },
+        {
+          "id": "python-pdb",
+          "title": {
+            "en": "Python Pdb",
+            "de": "Python-Pdb"
+          },
+          "programs": {
+            "win32": "python",
+            "darwin": "python3",
+            "linux": "python3"
+          },
+          "arguments": [
+            "-X",
+            "utf8",
+            "-m",
+            "pdb"
+          ]
+        },
+        {
+          "id": "gdb",
+          "title": {
+            "en": "GNU Debugger",
+            "de": "GNU-Debugger"
+          },
+          "programs": {
+            "win32": "gdb",
+            "darwin": "gdb",
+            "linux": "gdb"
+          },
+          "arguments": [
+            "--nx",
+            "--quiet",
+            "--args"
+          ]
+        },
+        {
+          "id": "lldb",
+          "title": {
+            "en": "LLVM Debugger",
+            "de": "LLVM-Debugger"
+          },
+          "programs": {
+            "win32": "lldb",
+            "darwin": "lldb",
+            "linux": "lldb"
+          },
+          "arguments": [
+            "--no-lldbinit",
+            "--"
+          ]
+        }
+      ]
+    },
+    "DebuggerAvailability": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "profile",
+          "program",
+          "title",
+          "installed"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "profile": {
+            "enum": [
+              "node-inspect",
+              "python-pdb",
+              "gdb",
+              "lldb"
+            ]
+          },
+          "program": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "type": "object",
+            "required": [
+              "en",
+              "de"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "en": {
+                "type": "string"
+              },
+              "de": {
+                "type": "string"
+              }
+            }
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "installed": {
+            "type": "boolean"
+          },
+          "constraint": {
+            "const": "windows-ascii-paths"
+          }
+        }
+      }
+    },
+    "DebuggerLimits": {
+      "const": {
+        "maximumArgumentUnits": 8192
+      }
+    }
+  }
+}

@@ -15,7 +15,7 @@ pub(super) struct FillCapture {
 
 impl FillCapture {
     pub(super) fn new(suggestion_offset: f64) -> Self {
-        Self { capture: ArtifactFillCaptureCursor::new(), ingress: Some(BoardFillSnapshotIngress::new(suggestion_offset, &PUZZLE_2D_BOARD_NAMING)), suggestion_offset, serial: 1, open_handles: 0 }
+        Self { capture: ArtifactFillCaptureCursor::new(), ingress: None, suggestion_offset, serial: 1, open_handles: 0 }
     }
 
     /// 🔬️ Up to `units` capture units; the captured snapshot once the document is fully streamed.
@@ -29,14 +29,17 @@ impl FillCapture {
     }
 
     /// 🚰️ One granted close turn of the ingress.
-    pub(super) fn close_one(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
-        let Some(ingress) = self.ingress.as_mut() else { return InteractiveJobCloseStep::Complete { progress: Default::default() } };
+    pub(super) fn close_one(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+        let Some(ingress) = self.ingress.as_mut() else { return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() }) };
         ingress.begin_close();
-        let step = ingress.close_step(grant);
-        if ingress.terminal_is_empty() {
-            self.ingress = None;
-        }
-        step
+        let demand = self.close_demands()?;
+        let ingress = self.ingress.as_mut().expect("original fill ingress remains staged");
+        let step = semio_framework_job::close_original_retained_step(cx, demand, |grant| Ok(match ingress.close_step(grant) {
+            InteractiveJobCloseStep::Complete { progress } => semio_framework_value::RetainedCloneStep::Complete(progress),
+            step => semio_framework_value::RetainedCloneStep::Progress(step.progress()),
+        }))?;
+        if ingress.terminal_is_empty() { self.ingress = None; }
+        Ok(if self.ingress.is_none() { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { step })
     }
 
     pub(super) fn is_closed(&self) -> bool {

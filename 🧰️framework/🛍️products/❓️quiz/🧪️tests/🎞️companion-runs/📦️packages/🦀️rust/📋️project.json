@@ -1,7 +1,0 @@
-{
-  "name": "@semio-tech/quiz-tests-runs-rs",
-  "tags": [
-    "scope:framework",
-    "language:rust"
-  ]
-}

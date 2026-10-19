@@ -7,7 +7,7 @@ import throttle from "lodash/throttle";
 import pMap from "p-map";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { CurrentPhysicalOwnerV1, mapBoundedV1, type CurrentPhysicalPortV1 } from "@semio-tech/framework/filesystem/observation/current";
 import { CargoProvenanceSessionV1, portProvenanceCustodyV1, sharedProvenanceCustodyV1, writeCompletedCargoInvocationProvenanceV1 } from "../../🟦️.ts";
 import {
@@ -64,8 +64,8 @@ test("dep-info is kept as its parsed sources and rustc checksums, never as text"
   const bytes = Buffer.from("pub fn owned() {}\n");
   const text = `owner.rlib: /w/a.rs\n# checksum:blake3=${Buffer.from(blake3(bytes)).toString("hex")} file_len:${bytes.length} a.rs\n`;
   const parsed = { baseDirectory: "/w", sources: cargoDepInfoSourcesV1(text), checksums: cargoDepInfoChecksumsV1(text) };
-  expect(cargoDepInfoResolvedChecksumsV1(parsed)).toEqual([{ path: "/w/a.rs", blake3: Buffer.from(blake3(bytes)).toString("hex"), length: bytes.length }]);
-  expect(cargoDepInfoResolvedSourcesV1(parsed)).toEqual(["/w/a.rs"]);
+  expect(cargoDepInfoResolvedChecksumsV1(parsed)).toEqual([{ path: resolve("/w/a.rs"), blake3: Buffer.from(blake3(bytes)).toString("hex"), length: bytes.length }]);
+  expect(cargoDepInfoResolvedSourcesV1(parsed)).toEqual([resolve("/w/a.rs")]);
   expect(() => cargoDepInfoResolvedSourcesV1({ ...parsed, baseDirectory: null })).toThrow("no base directory");
 });
 
@@ -223,8 +223,9 @@ test("bounded concurrency keeps item order, never exceeds its limit and starts n
   expect(ours.peak).toBe(vector.limit);
   expect(reference.peak).toBe(vector.limit);
   const events: string[] = [];
-  await expect(
-    mapBoundedV1(vector.items, vector.limit, async (item: number) => {
+  let refusal: unknown;
+  try {
+    await mapBoundedV1(vector.items, vector.limit, async (item: number) => {
       events.push(`start:${item}`);
       await Bun.sleep(vector.delays[item]!);
       if (item === vector.failAt) {
@@ -233,8 +234,10 @@ test("bounded concurrency keeps item order, never exceeds its limit and starts n
       }
       events.push(`done:${item}`);
       return item;
-    }),
-  ).rejects.toThrow(`refused ${vector.failAt}`);
+    });
+  } catch (error) { refusal = error; }
+  expect(refusal).toBeInstanceOf(Error);
+  expect((refusal as Error).message).toBe(`refused ${vector.failAt}`);
   expect(events.slice(events.indexOf(`fail:${vector.failAt}`)).some((event) => event.startsWith("start:"))).toBe(false);
   const starts = events.filter((event) => event.startsWith("start:")).map((event) => Number(event.slice(6)));
   expect(starts).toEqual([...starts].sort((a, b) => a - b));

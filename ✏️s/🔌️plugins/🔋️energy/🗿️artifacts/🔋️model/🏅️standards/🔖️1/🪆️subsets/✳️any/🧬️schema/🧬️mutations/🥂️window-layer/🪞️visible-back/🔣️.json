@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪞️visible-back",
+  "semanticKind": "change-glazing-material-visible-reflectance-back",
+  "displayName": "Change Glazing Material Visible back reflectance",
+  "emoji": "🪞️",
+  "aggregateVariant": "ChangeGlazingMaterialVisibleReflectanceBack",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-glazing-material-visible-reflectance-back",
+  "binaryTag": 303,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

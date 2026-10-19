@@ -63,7 +63,7 @@ async fn flush_dict_delta<S: semio_framework_pack_source::PackSink>(writer: &mut
             payload.write_varint_u64(entry.len() as u64);
             payload.write_bytes(entry.as_bytes());
         }
-        writer.write_record(crate::REC_STR_DICT, true, &payload.into_bytes(), CodecId(0)).await.unwrap();
+        writer.write_record(crate::REC_STR_DICT, true, &payload.into_bytes(), CodecId(0)).await.unwrap_or_else(|_| panic!("fixture dictionary frame"));
         *base = len;
     }
 }

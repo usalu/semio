@@ -228,19 +228,30 @@ impl PcgJobConstruction {
         (self.stage == PcgConstructionStage::Complete).then(|| self.complete.take()).flatten()
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
+    pub fn terminal_is_empty(&self) -> bool {
+        self.complete.is_none() && self.matrix.is_none() && self.mounted_b.is_none()
+            && [&self.b, &self.x, &self.diag, &self.r, &self.z, &self.p, &self.ap].iter().all(|vector| vector.0.is_empty() && vector.0.capacity() == 0)
+    }
+
+    pub fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
+        self.closing = true;
+        if let Some(complete) = self.complete.as_mut() {
+            if !complete.terminal_is_empty() { return InteractiveJob::close_step(complete, cx); }
+        }
+        let demand = self.close_demand()?;
+        numerical_close_original(cx, self, demand, Self::close_granted, Self::terminal_is_empty)
+    }
+
+    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
         self.closing = true;
         if grant.maximum_items == 0 {
             return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
         }
         let maximum_bytes = grant.maximum_release_bytes;
-        if let Some(complete) = self.complete.as_mut() {
-            let step = complete.close_granted(grant)?;
-            let terminal = complete.terminal_is_empty();
-            if terminal {
-                self.complete = None;
-            }
-            return Ok(numerical_child_close(step, terminal));
+        if let Some(complete) = self.complete.as_ref() {
+            if !complete.terminal_is_empty() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "PCG construction child must close under the original context")); }
+            self.complete = None;
+            return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } });
         }
         if let Some(matrix) = self.matrix.as_mut() {
             let (terminal, items, bytes) = matrix.close_step(maximum_bytes);
@@ -342,13 +353,14 @@ impl PcgRestoreCursor {
         Ok(())
     }
 
-    fn decode_page_entry(&mut self, bytes: &[u8]) -> Result<bool, NumericalCheckpointFault> {
+    fn decode_page_entry(&mut self, bytes: &[u8], context: &mut StepContext<'_>) -> Result<bool, NumericalCheckpointFault> {
         let page = parse_numerical_page(bytes, b"FEMPCP1\0")?;
         if bytes[14..16] != [0, 0] || page.kind != 13 || page.field != self.expected_field || (self.owner_cursor.shape.is_none() && (page.owner != 0 || page.item != 0)) {
             return Err(NumericalCheckpointFault::Field);
         }
         if page.field == 0 {
             if declared_owner_length(&page, 26)? != 26 || page.bytes.len() != 216 { return Err(NumericalCheckpointFault::Truncated); }
+            if !numerical_restore_control(context, self.page_entry, 26, size_of::<PcgJob>(), 1)? { return Ok(false); }
             if self.page_entry == 0 { self.page_entry = 1; return Ok(false); }
             let item = self.page_entry - 1;
             if item < 26 {
@@ -371,15 +383,15 @@ impl PcgRestoreCursor {
         if self.owner_cursor.shape.is_none() && declared_owner_length(&page, expected)? != expected { return Err(NumericalCheckpointFault::Envelope); }
         let before = match page.field { 1 => state.a.indptr.len(), 2 => state.a.indices.len(), _ => 0 };
         let complete = match page.field {
-            1 => restore_paged_u32_entry(&mut state.a.indptr, &page, expected, &mut self.page_entry, &mut self.owner_cursor)?,
-            2 => restore_paged_u32_entry(&mut state.a.indices, &page, expected, &mut self.page_entry, &mut self.owner_cursor)?,
-            3 => restore_paged_f64_entry(&mut state.a.vals, &page, expected, &mut self.page_entry, &mut self.owner_cursor)?,
+            1 => restore_paged_u32_entry(&mut state.a.indptr, &page, expected, &mut self.page_entry, &mut self.owner_cursor, context)?,
+            2 => restore_paged_u32_entry(&mut state.a.indices, &page, expected, &mut self.page_entry, &mut self.owner_cursor, context)?,
+            3 => restore_paged_f64_entry(&mut state.a.vals, &page, expected, &mut self.page_entry, &mut self.owner_cursor, context)?,
             field => {
                 let owner = match field {
                     4 => &mut state.b.0, 5 => &mut state.x.0, 6 => &mut state.diag.0, 7 => &mut state.r.0,
                     8 => &mut state.z.0, 9 => &mut state.p.0, 10 => &mut state.ap.0, _ => unreachable!(),
                 };
-                let complete = restore_f64_entry(owner, &page, expected, &mut self.page_entry, &mut self.owner_cursor)?;
+                let complete = restore_f64_entry(owner, &page, expected, &mut self.page_entry, &mut self.owner_cursor, context)?;
                 if owner.capacity().checked_mul(size_of::<f64>()).is_none_or(|bytes| bytes > PCG_SCALAR_BACKING_BYTES) { return Err(NumericalCheckpointFault::Admission); }
                 if owner.last().is_some_and(|value| !value.is_finite()) { return Err(NumericalCheckpointFault::Envelope); }
                 complete
@@ -413,6 +425,10 @@ impl PcgRestoreCursor {
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation { return Err(NumericalCheckpointFault::Stale); }
         if context.should_yield() { return Ok(None); }
         context.consume_fuel(1);
+        if self.payload.is_none() {
+            if !numerical_restore_admit(context, RetirementDemand { copy_bytes: size_of::<PcgJob>(), depth: 1, ..Default::default() })? { return Ok(None); }
+            return Ok(self.job.take());
+        }
         if self.close_due {
             let payload = self.payload.as_mut().ok_or(NumericalCheckpointFault::Truncated)?;
             if numerical_restore_close_due(payload, context, &mut self.page_slot, &mut self.page_entry, &mut self.close_due, self.total_pages)? {
@@ -421,12 +437,12 @@ impl PcgRestoreCursor {
                 let state = &job.state;
                 if state.entry_cursor > state.a.vals.len() || state.a.indices.len() != state.a.vals.len() { return Err(NumericalCheckpointFault::Envelope); }
                 self.payload = None;
-                return Ok(self.job.take());
+                return Ok(None);
             }
             return Ok(None);
         }
         let payload = self.payload.take().ok_or(NumericalCheckpointFault::Truncated)?;
-        let decoded = payload.page(self.page_slot).ok_or(NumericalCheckpointFault::Truncated).and_then(|source| self.decode_page_entry(source));
+        let decoded = payload.page(self.page_slot).ok_or(NumericalCheckpointFault::Truncated).and_then(|source| self.decode_page_entry(source, context));
         self.payload = Some(payload);
         if decoded? { self.close_due = true; }
         Ok(None)
@@ -442,7 +458,18 @@ impl PcgRestoreCursor {
         }
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
+    pub fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
+        self.closing = true;
+        if self.payload.is_none() {
+            if let Some(job) = self.job.as_mut() {
+                if !job.terminal_is_empty() { return InteractiveJob::close_step(job, cx); }
+            }
+        }
+        let demand = self.close_frontier()?.unwrap_or_else(|| numerical_rung_demand(self.terminal_is_empty()));
+        numerical_close_original(cx, self, demand, Self::close_granted, Self::terminal_is_empty)
+    }
+
+    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
         self.closing = true;
         let frontier = self.close_frontier()?;
         if self.terminal_is_empty() {
@@ -455,12 +482,9 @@ impl PcgRestoreCursor {
             return step?.admit(grant, self.terminal_is_empty());
         }
         let Some(job) = self.job.as_mut() else { return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }) };
-        let step = job.close_granted(grant)?;
-        let terminal = job.terminal_is_empty();
-        if terminal {
-            self.job = None;
-        }
-        Ok(numerical_child_close(step, terminal))
+        if !job.terminal_is_empty() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "PCG restore child must close under the original context")); }
+        self.job = None;
+        Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } })
     }
 
     pub fn terminal_is_empty(&self) -> bool { self.payload.is_none() && self.job.is_none() }

@@ -56,7 +56,7 @@ impl DurableStorePreparedOutcomeV1 {
             return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
         }
         authority.validate_prepared(prepared).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
-        let post_snapshot_pack = prepared.post_snapshot().encode_pack();
+        let post_snapshot_pack = prepared.post_snapshot().encode_pack_with(&PackEncodeOptions::default()).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
         if post_snapshot_pack.len() > DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES {
             return Err(DurableOwnedGroupDecisionError::RecoveryPackTooLarge);
         }
@@ -158,64 +158,13 @@ where
     Ok(value)
 }
 
-pub fn validate_json_budget(bytes: &[u8]) -> Result<(), DurableOwnedGroupDecisionError> {
-    if bytes.len() > DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES {
-        return Err(DurableOwnedGroupDecisionError::RecoveryPackTooLarge);
-    }
-    let mut depth = 0usize;
-    let mut items = usize::from(!bytes.is_empty());
-    let mut in_string = false;
-    let mut escaped = false;
-    for byte in bytes.iter().copied() {
-        if in_string {
-            if escaped {
-                escaped = false;
-            } else if byte == b'\\' {
-                escaped = true;
-            } else if byte == b'"' {
-                in_string = false;
-            } else if byte < 0x20 {
-                return Err(DurableOwnedGroupDecisionError::NonCanonical);
-            }
-            continue;
-        }
-        match byte {
-            b'"' => in_string = true,
-            b'{' | b'[' => {
-                depth = depth.checked_add(1).ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                if depth > DURABLE_OWNED_GROUP_JSON_MAX_DEPTH {
-                    return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
-                }
-            }
-            b'}' | b']' => {
-                depth = depth.checked_sub(1).ok_or(DurableOwnedGroupDecisionError::NonCanonical)?;
-            }
-            b',' => {
-                items = items.checked_add(1).ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                if items > DURABLE_OWNED_GROUP_JSON_MAX_ITEMS {
-                    return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
-                }
-            }
-            _ => {}
-        }
-    }
-    if depth != 0 || in_string || escaped {
-        return Err(DurableOwnedGroupDecisionError::NonCanonical);
-    }
-    Ok(())
+pub fn validate_json_budget(bytes:&[u8])->Result<(),DurableOwnedGroupDecisionError>{if bytes.len()>DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES{return Err(DurableOwnedGroupDecisionError::RecoveryPackTooLarge);}let mut budget=planning_budget::DurableJsonBudgetV1::default();for byte in bytes{budget.advance_byte(*byte)?;}budget.finish()}
+fn valid_edit_identities<Mutation>(edit: &Edit<Mutation>) -> bool {
+    valid_edit_identity_header(edit)&&edit.mutation_meta.iter().all(|meta|valid_edit_identity_metadata(meta)&&meta.dependencies.iter().all(|id|valid_identity(&id.0)))
 }
 
-pub fn valid_edit_identities<Mutation>(edit: &Edit<Mutation>) -> bool {
-    valid_identity(&edit.id)
-        && edit.actor.as_deref().is_none_or(valid_identity)
-        && edit.mutation_meta.iter().all(|meta| {
-            meta.mutation_id.as_ref().is_none_or(|id| valid_identity(&id.0))
-                && meta.dependencies.iter().all(|id| valid_identity(&id.0))
-                && meta.author_id.as_ref().is_none_or(|id| valid_identity(&id.0))
-                && meta.semantic_kind.as_ref().is_none_or(|id| valid_identity(&id.0))
-                && meta.group_id.as_deref().is_none_or(valid_identity)
-        })
-}
+pub fn valid_edit_identity_header<Mutation>(edit:&Edit<Mutation>)->bool{valid_identity(&edit.id)&&edit.actor.as_deref().is_none_or(valid_identity)&&edit.line.as_deref().is_none_or(valid_identity)}
+fn valid_edit_identity_metadata(meta:&crate::os_spr::MutationMeta)->bool{meta.mutation_id.as_ref().is_none_or(|id|valid_identity(&id.0))&&meta.author_id.as_ref().is_none_or(|id|valid_identity(&id.0))&&meta.semantic_kind.as_ref().is_none_or(|id|valid_identity(&id.0))&&meta.group_id.as_deref().is_none_or(valid_identity)}
 
 impl DurableBoundOneItemOutcomeV1 {
     pub fn decode_canonical_pack(bytes: &[u8]) -> Result<Self, DurableOwnedGroupDecisionError> {

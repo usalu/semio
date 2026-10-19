@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "capacity", "pageBytes", "operationPages", "pageOrder", "restart", "cases"],
+  "properties": {
+    "version": {"const": 1},
+    "capacity": {"type": "integer", "minimum": 1},
+    "pageBytes": {"type": "integer", "minimum": 1},
+    "operationPages": {"type": "integer", "minimum": 1},
+    "pageOrder": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "integer", "minimum": 0}},
+    "restart": {"type": "object", "additionalProperties": false, "required": ["fileBytes", "offsets", "lengths", "eof"], "properties": {"fileBytes": {"type": "integer", "minimum": 1}, "offsets": {"type": "array", "minItems": 2, "items": {"type": "integer", "minimum": 0}}, "lengths": {"type": "array", "minItems": 2, "items": {"type": "integer", "minimum": 0}}, "eof": {"type": "array", "minItems": 2, "items": {"type": "boolean"}}}},
+    "cases": {"type": "array", "minItems": 1, "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "bytes", "stockBytes", "accepted"],
+      "properties": {"name": {"type": "string", "minLength": 1}, "bytes": {"type": "integer", "minimum": 0}, "stockBytes": {"type": "integer", "minimum": 0}, "accepted": {"type": "boolean"}}
+    }}
+  }
+}

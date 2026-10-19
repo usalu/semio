@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@semio-tech/course-react",
+  "version": "0.1.0",
+  "description": "course · React web renderer and proctor client for @semio-tech/course",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./🟦️.tsx",
+    "./app": "./📚️app/🟦️.tsx",
+    "./🎨️.css": "./🎨️.css",
+    "./stylesheet": "./🎨️stylesheet/🟦️.ts",
+    "./modules/run/.tsx": "./🔨️modules/▶️run/🟦️.tsx",
+    "./modules/results/.tsx": "./🔨️modules/🏁️results/🟦️.tsx"
+  },
+  "license": "LGPL-3.0-or-later",
+  "semio": {
+    "role": "framework",
+    "id": "course-react"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript"
+  },
+  "bundleKind": "ui",
+  "dependencies": {
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/framework-server": "workspace:*",
+    "@semio-tech/pets": "workspace:*",
+    "@semio-tech/pets-react": "workspace:*",
+    "@semio-tech/course": "workspace:*",
+    "@semio-tech/ui-react": "workspace:*",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.3",
+    "@types/aria-query": "5.0.4",
+    "@types/d3-scale": "^4.0.9",
+    "@types/lodash": "4.17.24",
+    "@types/opentype.js": "1.3.9",
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.2",
+    "aria-query": "5.3.0",
+    "colord": "2.10.0",
+    "d3-scale": "4.0.2",
+    "i18next": "25.10.10",
+    "jsdom": "^24.1.3",
+    "lightningcss": "1.32.0",
+    "lodash": "4.18.1",
+    "opentype.js": "1.3.4",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.17",
+    "@semio-tech/process": "workspace:*"
+  },
+  "scripts": {}
+}

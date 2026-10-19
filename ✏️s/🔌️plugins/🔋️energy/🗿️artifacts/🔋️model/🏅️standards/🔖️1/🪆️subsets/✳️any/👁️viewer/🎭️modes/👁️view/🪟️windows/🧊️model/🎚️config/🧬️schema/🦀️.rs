@@ -63,21 +63,32 @@ pub struct EnergyModelViewerWindowConfigDiff {
 }
 
 impl protocol::MutationDiff<EnergyModelViewerWindowConfig> for EnergyModelViewerWindowConfigDiff {
-    fn apply(&self, base: &EnergyModelViewerWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<EnergyModelViewerWindowConfig> {
-        Ok(EnergyModelViewerWindowConfig { camera: self.camera.unwrap_or(base.camera) })
-    }
+
+
+}
+
+impl protocol::ColdMutationDiff<EnergyModelViewerWindowConfig> for EnergyModelViewerWindowConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.camera.is_some() {
             self.camera = other.camera;
         }
     }
+
+    fn apply(&self, base: &mut EnergyModelViewerWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        if let Some(value) = self.camera { base.camera = value; }
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<EnergyModelViewerWindowConfig> for EnergyModelViewerWindowConfigDiff {
-    fn inverse(&self, base: &EnergyModelViewerWindowConfig) -> Self {
-        Self { camera: self.camera.map(|_| base.camera) }
-    }
+
     fn is_empty(&self) -> bool {
         self.camera.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<EnergyModelViewerWindowConfig> for EnergyModelViewerWindowConfigDiff {
+    fn inverse(&self, base: &EnergyModelViewerWindowConfig) -> Self {
+        Self { camera: self.camera.map(|_| base.camera) }
     }
 }

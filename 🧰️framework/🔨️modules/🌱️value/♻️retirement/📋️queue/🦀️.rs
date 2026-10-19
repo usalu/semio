@@ -51,7 +51,15 @@ impl RetirementQueue {
         assert!(self.frames.push_reserved(owner).is_ok(),"retirement queue reserved transfer slot disappeared");
         Ok(RetainedCloneProgress{copied_items:1,..Default::default()})
     }
-    pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {self.frames.get(self.frames.len().saturating_sub(1)).map_or(Ok(0),|owner|owner.next_copy_byte_demand())}
+    /// 🎟️ Quotes only the original active owner or its terminal frame and queue backing.
+    pub fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{
+        if self.terminal_is_empty(){return Ok(Default::default());}
+        match self.frames.get(self.frames.len().saturating_sub(1)){
+            Some(owner)if owner.terminal_is_empty()=>Ok(crate::RetirementDemand{release_bytes:size_of_val(owner.as_ref()),depth:self.frames.len(),..Default::default()}),
+            Some(owner)=>{let mut d=owner.next_demand(body)?;d.depth=d.depth.checked_add(self.frames.len()).ok_or_else(||refusal(ValueRefusalKind::DepthLimit,"retirement queue nested depth overflow"))?;Ok(d)},
+            None=>Ok(crate::RetirementDemand{release_bytes:self.frames.next_release_allocation_bytes().map_err(ValueError::from)?,depth:1,..Default::default()}),
+        }
+    }    pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {self.frames.get(self.frames.len().saturating_sub(1)).map_or(Ok(0),|owner|owner.next_copy_byte_demand())}
     pub fn next_capacity_byte_demand(&self,maximum_body_bytes:usize)->Result<usize,ValueError> {self.frames.get(self.frames.len().saturating_sub(1)).map_or(Ok(0),|owner|if owner.terminal_is_empty(){Ok(0)}else{owner.next_capacity_byte_demand(maximum_body_bytes)})}
     pub fn next_release_byte_demand(&self)->Result<usize,ValueError> {
         match self.frames.get(self.frames.len().saturating_sub(1)) {
@@ -77,8 +85,9 @@ impl RetirementQueue {
         let empty=empty_progress();
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
-        if self.next_depth_demand()?>grant.maximum_depth{return Err(refusal(ValueRefusalKind::DepthLimit,"retirement queue exceeds admitted depth"));}
-        if self.next_copy_byte_demand()?>grant.maximum_copy_bytes||self.next_capacity_byte_demand(grant.maximum_copy_bytes)?>grant.maximum_capacity_bytes||self.next_release_byte_demand()?>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty));}
+        let demand=self.next_demand(grant.maximum_copy_bytes)?;
+        if demand.depth>grant.maximum_depth{return Err(refusal(ValueRefusalKind::DepthLimit,"retirement queue exceeds admitted depth"));}
+        if demand.copy_bytes>grant.maximum_copy_bytes||demand.capacity_bytes>grant.maximum_capacity_bytes||demand.release_bytes>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty));}
         if self.frames.is_empty() {
             let step=self.frames.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..empty}));
@@ -109,6 +118,7 @@ impl RetireOwned for RetirementQueue {
     fn controlled_retirement_supported()->bool {true}
 }
 impl RetirementCursor for RetirementQueue {
+ fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{RetirementQueue::next_demand(self,body)}
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {
         match self.step(grant) {
             Err(error)=>RetirementStep::Failure(error),

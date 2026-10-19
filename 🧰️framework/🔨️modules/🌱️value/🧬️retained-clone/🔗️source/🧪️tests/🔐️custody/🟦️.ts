@@ -34,3 +34,26 @@ test("zero metadata copy admits an exact unsigned budget and rejects unrepresent
  expect(fixture.currency.metadataCopyBytes).toBe(0);expect(fixture.currency.negativeCopyBudgetRepresentable).toBe(false);expect(fixture.currency.bindingDenied).toEqual(["items","depth"]);expect(fixture.currency.transferDenied).toEqual(["items","release","depth"]);
  const validate=new Ajv().compile(schema);expect(validate({...fixture,currency:{...fixture.currency,metadataCopyBytes:1}})).toBe(false);expect(validate({...fixture,currency:{...fixture.currency,minimumCopyBudget:-1}})).toBe(false);
 });
+
+
+test("true source and borrow authority callers select one canonical combined close quote",async()=>{
+ const validate=new Ajv({strict:true}).compile<typeof fixture>(schema);expect(validate(fixture)).toBe(true);
+ const {Database}=await import("bun:sqlite"),db=new Database(":memory:");
+ try{
+  db.run("CREATE TABLE callers(path TEXT PRIMARY KEY, owner TEXT, calls INTEGER)");
+  const defining=await Bun.file(new URL("../../🦀️.rs",import.meta.url)).text(),facade=await Bun.file(new URL("../../📦️packages/🦀️rust/🦀️.rs",import.meta.url)).text();
+  expect(defining).toContain(`pub fn ${fixture.closeQuery.method}(&self,body:usize)`);
+  expect(facade).toContain(`pub fn ${fixture.closeQuery.method}(&self,body:usize)`);
+  expect(facade).toContain("self.source.next_close_demand(body)");
+  expect(facade).not.toContain("pub fn next_close_demands(");
+  for(const row of fixture.closeQuery.callers){
+   const source=await Bun.file(new URL("../../../../"+row.path,import.meta.url)).text();
+   expect(source).not.toContain(".next_close_demands(");
+   expect(source.match(/\.next_close_demand\(/g)?.length??0).toBeGreaterThanOrEqual(row.calls);
+   db.run("INSERT INTO callers VALUES(?,?,?)",[row.path,row.owner,row.calls]);
+  }
+  expect(db.query("SELECT COUNT(*) AS paths,SUM(calls) AS calls FROM callers").get()).toEqual({paths:fixture.closeQuery.callers.length,calls:fixture.closeQuery.callers.reduce((sum,row)=>sum+row.calls,0)});
+  expect(db.query("SELECT COUNT(*) AS paths FROM callers WHERE owner='borrowAuthority'").get()).toEqual({paths:2});
+  console.log(`[DEBUG] Canonical single close query matches the true source and borrow authority across ${fixture.closeQuery.callers.length} declaring consumers; SQLite preserves the full13call inventory, native resolution remains unrun`);
+ }finally{db.close();}
+});

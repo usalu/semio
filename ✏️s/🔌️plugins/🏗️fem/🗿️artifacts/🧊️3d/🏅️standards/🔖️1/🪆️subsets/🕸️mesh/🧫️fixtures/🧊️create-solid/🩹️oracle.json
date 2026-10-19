@@ -1,0 +1,35 @@
+[
+  {
+    "op": "add",
+    "path": "/solids/-",
+    "value": {
+      "axis": "z",
+      "baseZ": 0,
+      "height": 2.5,
+      "holes": [],
+      "id": "sol2",
+      "layers": 3,
+      "materialId": "m1",
+      "meshSize": 0.5,
+      "name": "Annex",
+      "outline": [
+        [
+          5,
+          0
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          5,
+          2
+        ]
+      ]
+    }
+  }
+]

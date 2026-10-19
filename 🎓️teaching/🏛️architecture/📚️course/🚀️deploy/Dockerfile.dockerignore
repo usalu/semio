@@ -1,0 +1,19 @@
+# 🐳️ Only the finite runtime payload supplied by the owned image command enters Docker.
+*
+!Dockerfile
+!proctor
+!content/
+!content/**/
+!content/**/🔣️.json
+!deploy/
+!deploy/compose.yaml
+!deploy/Caddyfile
+!data/
+.cargo
+**/.cargo
+.git
+.🧬semio
+.cache
+**/node_modules
+**/target
+**/🗑️generated

@@ -1,0 +1,70 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "operation",
+    "generation",
+    "fuel",
+    "rows",
+    "workPerPoll",
+    "remainingFuel"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "operation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "fuel": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "workPerPoll": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "remainingFuel": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "rows": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "kind",
+          "pending"
+        ],
+        "properties": {
+          "status": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 12
+          },
+          "kind": {
+            "enum": [
+              "pending",
+              "idle",
+              "published",
+              "cancelled",
+              "fault"
+            ]
+          },
+          "pending": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

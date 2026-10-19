@@ -11,6 +11,7 @@
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`); the derived encodings come from `fixtures generate`.
 
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::super::super::{OpeningDiff, OpeningPreferences};
 use super::super::OpeningConfigMutation;
 use semio_framework_test_fixtures::fixture_path;
@@ -40,7 +41,7 @@ fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value
 fn repins_the_editor_and_keeps_the_viewer_pin() {
     let base = before();
     let outcome = <OpeningConfigMutation as protocol::Mutation<OpeningPreferences>>::diff(&mutation(), &base);
-    let applied = protocol::apply_diff(outcome.diff(), &base).expect("set-default-app applies to its committed before-preferences");
+    let applied = protocol::apply_diff_cold(outcome.diff(), &base).expect("set-default-app applies to its committed before-preferences");
     assert_eq!(applied, expected_after(), "set-default-app/repins-the-cad-editor-to-the-drafting-app: the re-pinned preferences differ from the committed after-snapshot");
     assert_eq!(applied.defaults.len(), base.defaults.len(), "set-default-app/repins-the-cad-editor-to-the-drafting-app: re-pinning an occupied coordinate must replace, never accumulate a second entry");
     assert_eq!(applied.defaults.last().map(|entry| entry.app.plugin_id.as_str()), Some("drafting"), "set-default-app/repins-the-cad-editor-to-the-drafting-app: the pin stays at its canonical (dialect, role) position, the editor after the viewer");
@@ -56,10 +57,10 @@ fn repinning_the_prior_app_restores_before() {
     assert_eq!(inverse.len(), 1, "set-default-app/repins-the-cad-editor-to-the-drafting-app: exactly one undo step");
     assert!(matches!(inverse[0], OpeningConfigMutation::SetDefaultApp(_)), "set-default-app/repins-the-cad-editor-to-the-drafting-app: an occupied coordinate must undo via set-default-app, not clear-default-app");
     let forward = <OpeningConfigMutation as protocol::Mutation<OpeningPreferences>>::diff(&mutation(), &base);
-    let mut snapshot = protocol::apply_diff(forward.diff(), &base).expect("forward set-default-app applies");
+    let mut snapshot = protocol::apply_diff_cold(forward.diff(), &base).expect("forward set-default-app applies");
     for step in &inverse {
         let undo = <OpeningConfigMutation as protocol::Mutation<OpeningPreferences>>::diff(step, &snapshot);
-        snapshot = protocol::apply_diff(undo.diff(), &snapshot).expect("the set-default-app inverse step applies");
+        snapshot = protocol::apply_diff_cold(undo.diff(), &snapshot).expect("the set-default-app inverse step applies");
     }
     assert_eq!(snapshot, base, "set-default-app/repins-the-cad-editor-to-the-drafting-app: re-pinning the cad editor did not restore the before-preferences");
 }
@@ -113,7 +114,7 @@ fn committed_diff_is_canonical() {
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: OpeningDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed set-default-app diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-preferences");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-preferences");
     assert_eq!(produced, expected_after(), "set-default-app/repins-the-cad-editor-to-the-drafting-app: committed diff did not carry before to after");
 }
 

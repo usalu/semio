@@ -1,0 +1,14 @@
+{
+  "requirements": {"version": 1, "platform": "linux", "architecture": "x64", "distribution": "debian", "distributionVersion": "12", "minimumAvailableBytes": 77309411328, "minimumFreeLoops": 7, "tools": ["fallocate", "mkfs.ext4", "mount", "umount", "losetup", "cc", "pkg-config", "docker"]},
+  "facts": {"platform": "linux", "architecture": "x64", "distribution": "debian", "distributionVersion": "12", "capEff": "00000000a82425fb", "availableBytes": 77309411328, "loopControl": true, "freeLoops": 7, "tools": ["fallocate", "mkfs.ext4", "mount", "umount", "losetup", "cc", "pkg-config", "docker"]},
+  "cases": [
+    {"id": "capable-boundary", "patch": {}, "problems": []},
+    {"id": "uid-zero-is-insufficient", "patch": {"capEff": "00000000a80425fb"}, "problems": ["CAP_SYS_ADMIN is absent from the invoking process"]},
+    {"id": "physical-capacity", "patch": {"availableBytes": 20000000000}, "problems": ["available bytes 20000000000 are below required 77309411328"]},
+    {"id": "loop-devices", "patch": {"loopControl": false, "freeLoops": 6}, "problems": ["writable /dev/loop-control is unavailable", "writable unused loop devices 6 are below required 7"]},
+    {"id": "runtime-abi", "patch": {"distribution": "ubuntu", "distributionVersion": "24.04"}, "problems": ["distribution ubuntu 24.04 differs from required debian 12"]},
+    {"id": "missing-tools", "patch": {"tools": ["docker"]}, "problems": ["missing executable: fallocate", "missing executable: mkfs.ext4", "missing executable: mount", "missing executable: umount", "missing executable: losetup", "missing executable: cc", "missing executable: pkg-config"]}
+  ],
+  "accepted": [["preflight", "--scope", "@teaching/architecture-course"]],
+  "rejected": [["preflight"], ["preflight", "--scope=@teaching/architecture-course"], ["preflight", "--scope", "../escape"], ["preflight", "--scope", "@teaching/architecture-course", "--skip-checks"]]
+}

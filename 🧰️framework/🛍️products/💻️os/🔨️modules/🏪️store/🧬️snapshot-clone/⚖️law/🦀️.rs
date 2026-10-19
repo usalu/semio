@@ -10,6 +10,12 @@ use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use semio_framework_value::factory::{OwnedValueRetirementFactory, SharedValueRetirementFactory};
 use semio_framework_value::retirement::RetireOwned;
 use std::sync::Arc;
+use semio_framework_value::{NativeDecodeConstructionRecipient,NativeDecodeProgress,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
+struct LawConstruction { original:RetainedCloneGrant, spent:RetainedCloneProgress }
+impl NativeDecodeConstructionRecipient for LawConstruction {
+ fn grant(&mut self,d:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{if !semio_framework_value::retained_clone::retained_clone_grant_admits(self.original,d){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"law original construction denied"));}Ok(self.original)}
+ fn accept(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->Result<(),ValueError>{if !p.fits(g){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"law original construction receipt changed"));}self.spent=self.spent.checked_add(p)?;if !self.spent.fits(self.original){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"law original construction turn exhausted"));}Ok(())}
+}
 
 /// ⚖️ What a lawful preparation published: the post snapshot, the ordered inverse rows and the cumulative physical cost.
 pub struct OneItemPreparationLaw<P, M> {
@@ -21,11 +27,11 @@ pub struct OneItemPreparationLaw<P, M> {
     pub peak_live_capacity_bytes: usize,
 }
 
-/// ⚖️ Drives `mutation` over `snapshot` to `Prepared`, then closes the preparation with quoted grants only, asserting every receipt fits its grant and equals the observed allocation.
-pub fn drive_one_item_preparation_law<P, M>(factory: &Arc<dyn ArtifactStoreOneItemPreparationFactory<P, M>>, snapshot: P, mutation: M, grant: ArtifactStoreOneItemGrant) -> OneItemPreparationLaw<P, M>
+/// 🪪️ Issues a real preparation request while lending the test an alias of the exact original snapshot for ownership observations.
+pub fn one_item_preparation_law_request<P, M>(snapshot: P, mutation: M) -> (Arc<P>, ArtifactStoreOneItemPreparationRequest<P, M, M>)
 where
     P: RetireOwned + Send + Sync + 'static,
-    M: RetireOwned + ArtifactCanonicalJsonTree + Clone + Send + Sync + 'static,
+    M: RetireOwned + Send + Sync + 'static,
 {
     let registry = SnapshotReadRegistryHandle::new();
     let root = Arc::new(snapshot);
@@ -42,6 +48,16 @@ where
         mutation_retirement: Arc::new(OwnedValueRetirementFactory::<M>::default()),
         snapshot_retirement: Arc::new(SharedValueRetirementFactory::<P>::default()),
     };
+    (root, request)
+}
+
+/// ⚖️ Drives `mutation` over `snapshot` to `Prepared`, then closes the preparation with quoted grants only, asserting every receipt fits its grant and equals the observed allocation.
+pub fn drive_one_item_preparation_law<P, M>(factory: &Arc<dyn ArtifactStoreOneItemPreparationFactory<P, M>>, snapshot: P, mutation: M, body:usize, grant: ArtifactStoreOneItemGrant) -> OneItemPreparationLaw<P, M>
+where
+    P: RetireOwned + Send + Sync + 'static,
+    M: RetireOwned + ArtifactCanonicalJsonTree + Clone + Send + Sync + 'static,
+{
+    let (_root, request) = one_item_preparation_law_request(snapshot, mutation);
     let footprint = factory.preflight(&request.mutation, request.lane).unwrap_or_else(|error| panic!("law preflight refused: {error}"));
     assert!(footprint.is_admissible(), "law footprint {footprint:?} is not admissible");
     let (mut owner, birth) = match factory.begin(request, grant) {
@@ -51,9 +67,16 @@ where
     assert!(birth.fits(grant.retained_grant()));
     let (mut retained, mut idle, mut turns) = (birth.retained_capacity_bytes, 0usize, 0usize);
     let (mut live, mut peak) = (birth.retained_capacity_bytes, birth.retained_capacity_bytes);
+    let mut receiving=semio_framework_job::OriginalJobDecodeOwner::empty();
+    let cancelled=false;
+    let mut observer=|_:NativeDecodeProgress|!cancelled;
     let prepared = loop {
         turns += 1;
-        match owner.advance(grant).unwrap_or_else(|error| panic!("law preparation failed at turn {turns}: {error}")) {
+        let mut construction=LawConstruction{original:grant.retained_grant(),spent:Default::default()};
+        let step=receiving.receive(grant.retained_grant(),&mut observer,&mut construction,|control|owner.advance(body,grant,control)).unwrap_or_else(|error| panic!("law preparation failed at turn {turns}: {error}"));
+        let progress=match &step{ArtifactStoreOneItemPreparationStep::Prepared(_,p)|ArtifactStoreOneItemPreparationStep::Progress(_,p)=>*p,ArtifactStoreOneItemPreparationStep::Blocked=>Default::default()};
+        assert!(progress.copied_bytes>=construction.spent.copied_bytes&&progress.retained_capacity_bytes>=construction.spent.retained_capacity_bytes&&progress.released_bytes>=construction.spent.released_bytes,"law enclosing receipt lost its original construction");
+        match step {
             ArtifactStoreOneItemPreparationStep::Prepared(_, progress) => {
                 assert!(progress.fits(grant.retained_grant()));
                 retained += progress.retained_capacity_bytes;
@@ -82,6 +105,7 @@ where
     for close_turns in 0..100_000 {
         if owner.terminal_is_empty() {
             assert_eq!(observe(|| drop(owner)).1.requested_bytes, 0);
+            while !receiving.terminal_is_empty(){let d=receiving.retirement_demands(grant.maximum_copy_bytes).unwrap();let original=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth.max(1)};let(step,heap)=observe(||receiving.close_step(original).unwrap());assert!(step.progress().fits(original));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}
             report.close_turns = close_turns;
             return report;
         }
@@ -93,3 +117,7 @@ where
     }
     panic!("law preparation did not close under its quoted grants");
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;

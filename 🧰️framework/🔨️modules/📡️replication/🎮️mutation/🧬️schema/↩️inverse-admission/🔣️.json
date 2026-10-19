@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Inverse Admission",
+  "description": "Only admitted local effects or admitted foreign steps may produce executable inverse mutations. Every evaluated cold diff is retired once.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "cases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "cases": { "type": "array", "minItems": 1, "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "level", "empty", "foreignSteps", "inverseAdmitted"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "level": { "enum": [null, "info", "warning", "error", "fatal"] },
+        "empty": { "type": "boolean" },
+        "foreignSteps": { "type": "boolean" },
+        "inverseAdmitted": { "type": "boolean" }
+      }
+    } }
+  }
+}

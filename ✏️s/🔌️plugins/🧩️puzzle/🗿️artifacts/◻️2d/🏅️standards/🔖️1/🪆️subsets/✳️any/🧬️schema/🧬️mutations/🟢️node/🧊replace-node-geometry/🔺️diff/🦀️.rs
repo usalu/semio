@@ -1,5 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceNodeGeometry` — patches the one addressed node's shape/extent.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dNodePatch, Puzzle2dNodesDelta};
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dNodePatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dNodesDelta;
 use protocol::list_delta::RowPatch;
 use crate::Puzzle2dSnapshot;
 use {crate::standards::v1::subsets::any::schema::records::puzzle2d_positive, crate::standards::v1::subsets::any::schema::records::puzzle2d_shape};

@@ -25,18 +25,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeZoneCondition
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeZoneConditioned>,
 {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "zone", kind: "change-zone-conditioned", record: "ChangedZoneConditioned" };
 
-    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-        super::diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change zone {} conditioned to {}", self.id.0, self.new_conditioned), &format!("Konditionierung von Zone {} auf {} ändern", self.id.0, self.new_conditioned))
@@ -45,5 +34,26 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.id.0.to_string()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for ChangeZoneConditioned
+where
+    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<ChangeZoneConditioned>,
+{
+    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
+        super::diff::diff(self, base)
+    }
+
+
+
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "zone", kind: "change-zone-conditioned", record: "ChangedZoneConditioned" };
+
+
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Mutation

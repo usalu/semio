@@ -168,6 +168,7 @@ impl CollisionAabb {
 pub type CollisionCellMembers = FixedOwnerSet<String, DOCUMENT_CELL_MEMBER_SLOTS, FIXED_OWNER_SLOTS>;
 
 #[derive(Debug)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct CollisionSpatialIndex {
     cell_size: f32,
     pub(super) entries: FixedOwnerMap<String, CollisionAabb, DOCUMENT_OBJECT_SLOTS>,
@@ -178,6 +179,7 @@ pub struct CollisionSpatialIndex {
 }
 
 #[derive(Clone, Debug)]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum CollisionIndexRejectedOwner {
     Capacity(String),
 }
@@ -195,12 +197,14 @@ impl CollisionIndexRejectedOwner {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct CollisionIndexOwner {
     pub operation: u64,
     pub generation: u64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 struct CollisionCellSpan {
     pub(super) min: [i32; 3],
     pub(super) max: [i32; 3],
@@ -237,6 +241,7 @@ impl CollisionCellSpan {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 enum CollisionMutationStage {
     PreflightNew,
     PreflightOld,
@@ -247,6 +252,7 @@ enum CollisionMutationStage {
     Rejected,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 pub struct CollisionIndexMutation {
     pub(super) owner: CollisionIndexOwner,
     pub(super) id: String,
@@ -271,6 +277,7 @@ pub enum CollisionMutationStep {
 /// 🗑️ Resumable withdrawal of one indexed owner — the production counterpart of
 /// [`CollisionIndexMutation`], driven one cell per step by the interactive brush lane's incremental
 /// scene sync so a deleted object leaves the broad phase without a whole-index rebuild.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct CollisionIndexRemoval {
     pub(super) owner: CollisionIndexOwner,
     pub(super) id: String,
@@ -280,6 +287,7 @@ pub struct CollisionIndexRemoval {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 enum CollisionQueryStage {
     Cells,
     Oversized,
@@ -287,6 +295,7 @@ enum CollisionQueryStage {
     Complete,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 pub struct CollisionQueryCursor {
     pub(super) owner: CollisionIndexOwner,
     pub(super) bounds: CollisionAabb,
@@ -406,6 +415,10 @@ fn collision_index_backing_credit(credit: Option<(usize, usize)>) -> (usize, usi
 
 impl CollisionSpatialIndex {
     const MAX_CELLS_PER_ENTRY: u64 = 4_096;
+
+    pub fn original_empty(cell_size: f32) -> Self {
+        Self { cell_size, entries: FixedOwnerMap::refused(), cells: FixedOwnerMap::refused(), oversized: FixedOwnerSet { values: FixedOwnerMap::refused() }, retiring_key: None, retiring_bucket: None }
+    }
 
     pub fn new(cell_size: f32) -> Self {
         assert!(cell_size.is_finite() && cell_size > 0.0);

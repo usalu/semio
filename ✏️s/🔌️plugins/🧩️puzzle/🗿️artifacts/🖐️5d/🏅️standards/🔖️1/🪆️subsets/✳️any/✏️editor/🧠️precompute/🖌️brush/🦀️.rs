@@ -1,13 +1,26 @@
-//! 🖌️ Puzzle 5d brush suggestions run job: the puzzle 3d brush suggestions search over the 5d document, behind the
 //! planner bridge's translation (`🧠️precompute`). It follows the instance's brush suggestions link, which 5d's
+//! 🖌️ Puzzle 5d brush suggestions run job: the puzzle 3d brush suggestions search over the 5d document, behind the
 //! instance operation owner carries exactly like puzzle 3d's.
 
 use crate::editor::puzzle5d::modes::edit::windows::board2d::utilities::brush::UTILITY_ID;
-use crate::editor::puzzle5d::precompute::{puzzle3d_config, puzzle3d_kind_catalogs, puzzle3d_snapshot, puzzle5d_authored_kind_catalogs, Puzzle5dPlannerBoard, Puzzle5dPlannerToolRunJob};
+use crate::editor::puzzle5d::precompute::puzzle3d_kind_catalogs;
+use crate::editor::puzzle5d::precompute::puzzle3d_config;
 use crate::editor::puzzle5d::interaction::Puzzle5dEditor;
 use crate::editor::puzzle5d::entities::{Puzzle5dDocument, Puzzle5dFastener, Puzzle5dPart};
-use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
-use semio_framework_plugin::{EditorApp, Fault, ToolRunJob, ToolRunJobPurpose, ToolRunJobRequest};
+use crate::editor::puzzle5d::precompute::puzzle3d_snapshot;
+use crate::editor::puzzle5d::precompute::puzzle5d_authored_kind_catalogs;
+use crate::editor::puzzle5d::precompute::Puzzle5dPlannerBoard;
+use crate::editor::puzzle5d::precompute::Puzzle5dPlannerToolRunJob;
+
+
+
+use crate::editor::puzzle5d::Puzzle5dPlayApp;
+use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::ToolRunJob;
+use semio_framework_plugin::ToolRunJobPurpose;
+use semio_framework_plugin::ToolRunJobRequest;
 use semio_s_artifact_puzzle_3d_editor_modes::windows::main::utilities::brush as brush3d;
 use semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsFound;
 use std::sync::Arc;

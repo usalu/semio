@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "physicalPageBytes": 4096,
+  "oracle": "independently constructed canonical bytes hashed with third-party BLAKE3",
+  "cases": [
+    { "name": "cyclic", "canonicalBytes": [1,2,2,5,118,97,108,117,101,0,2,7,4,110,101,120,116,0,10,0] },
+    { "name": "shared-cyclic", "canonicalBytes": [2,2,1,4,108,101,102,116,0,10,1,2,5,114,105,103,104,116,0,10,1,2,2,5,118,97,108,117,101,0,2,7,4,110,101,120,116,0,10,1] },
+    { "name": "wide-record", "fieldCount": 300, "key": "wide", "shapeTag": 2 }
+  ],
+  "cancelTurns": [0,1,7,19,70,150]
+}

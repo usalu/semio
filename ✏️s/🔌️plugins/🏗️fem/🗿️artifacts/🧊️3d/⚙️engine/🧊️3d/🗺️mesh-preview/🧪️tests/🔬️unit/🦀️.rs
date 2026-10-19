@@ -1,5 +1,6 @@
 use super::*;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::{FemAnalysisSettings, FemDof};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNode;

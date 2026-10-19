@@ -24,6 +24,10 @@ use std::sync::atomic::{AtomicBool, Ordering};
 #[cfg(test)]
 fn terminal_os_host_retirement_state() -> OsHostRetirementState {
     OsHostRetirementState {
+        retained: crate::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT,
+        camera_progress: Default::default(),
+        original_snapshot: None,
+        original_snapshot_close: None,
         runtime: None,
         presenter: None,
         scheduler: None,
@@ -35,8 +39,6 @@ fn terminal_os_host_retirement_state() -> OsHostRetirementState {
         frame_build: None,
         surface_resize: None,
         engine_surfaces: PairedEngineSurfaceClose {
-            operation: semio_framework_trace::allocate_operation_id(),
-            sequence: 0,
             scan: semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::ENGINE_SURFACE_CAPACITY,
             token: None,
             cpu_present: false,
@@ -90,6 +92,7 @@ fn runtime_with_component_world_asset_urls(world_a_url: &str, world_b_url: &str)
         assert!(shell.surfaces.world3d_states.try_insert(host_id.to_string(), state).is_ok(), "the component World host is admitted");
     }
     runtime_with_shell(shell)
+
 }
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
@@ -275,7 +278,8 @@ fn a_component_world_close_begins_with_its_exact_checked_out_asset_before_world_
     target.kind = semio_framework_ui_declaration::ui::SurfaceKind::World3d;
     let request = ComponentSurfaceCloseRequest { token: ComponentSurfaceCloseToken(1), owner: target, engine_token: None };
     let mut close = ComponentSurfaceCloseOwner::new(request);
-    close.close_asset_world_step(&runtime);
+    let mut original = crate::fixture_original_turn::FixtureTurnV1::new(crate::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT);
+    original.turn(|cx| close.close_asset_world_step(&runtime,cx)).expect("same original component cleanup");
     let phase_while_checked_out = format!("{:?}", close.phase);
     let (a_live_while_checked_out, b_unchanged_while_a_closes) = {
         let runtime = runtime.try_lock().expect("the fixture runtime is locally available");
@@ -285,7 +289,7 @@ fn a_component_world_close_begins_with_its_exact_checked_out_asset_before_world_
     assert!(runtime.return_renderer_asset_owner(fetch_a).is_ok(), "World A's exact checked-out owner returns to its still-live closing authority");
     let mut close_turns = 0usize;
     while close.phase != ComponentSurfaceClosePhase::Terminal && close_turns < 262_144 {
-        close.close_asset_world_step(&runtime);
+        original.turn(|cx| close.close_asset_world_step(&runtime,cx)).expect("same original component cleanup");
         close_turns += 1;
     }
     let (a_retired, b_survived) = {
@@ -626,4 +630,5 @@ fn a_cancelled_local_component_page_is_retained_for_bounded_handback_without_res
     assert_eq!(frame_faults, local["frameFaults"].as_u64().expect("frame faults") as usize);
     assert_eq!(terminal_native_owners, local["terminalNativeOwners"].as_u64().expect("terminal native owners") as usize);
 }
+
 

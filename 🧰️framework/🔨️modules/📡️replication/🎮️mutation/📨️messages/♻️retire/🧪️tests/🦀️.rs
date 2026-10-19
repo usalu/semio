@@ -12,6 +12,49 @@ fn owners(row:&serde_json::Value)->(String,Vec<MutationMessage>,usize) {
     let held=context.capacity()+messages.capacity()*size_of::<MutationMessage>()+messages.iter().map(|message|message.code.0.capacity()+message.message.capacity()+message.target.capacity()*size_of::<String>()+message.target.iter().map(String::capacity).sum::<usize>()).sum::<usize>();
     (context,messages,held)
 }
+/// 📤️ Neutral transfer grants move the original payload once and keep denied ownership unchanged.
+#[test]
+fn message_ledger_transfer_is_quoted_terminal_safe_and_keeps_original_allocations() {
+    let law = fixture();
+    for case in law["transferCases"].as_array().unwrap() {
+        let (context, messages, _) = owners(&law["cases"][0]);
+        let pointer = messages.as_ptr();
+        let capacity = messages.capacity();
+        let mut owner = MutationMessageLedgerRetirement::new(context, messages);
+        let exact = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: owner.transfer_copy_byte_demand(), maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 1 };
+        if case["closeFirst"] == true {
+            let grant = RetainedCloneGrant { maximum_release_bytes: owner.next_release_byte_demand().unwrap(), ..exact };
+            assert!(owner.close_step(grant).unwrap().progress().copied_items > 0);
+        }
+        let grant = RetainedCloneGrant {
+            maximum_items: case["items"].as_u64().unwrap() as usize,
+            maximum_copy_bytes: match case["copy"].as_str().unwrap() { "short" => exact.maximum_copy_bytes - 1, "zero" => 0, _ => exact.maximum_copy_bytes },
+            ..exact
+        };
+        let (result, heap) = observe_heap_allocations_on_this_thread(|| owner.take_messages_controlled(grant));
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        match case["expected"].as_str().unwrap() {
+            "transferred" => {
+                let (messages, receipt) = result.unwrap().unwrap();
+                assert_eq!(messages.as_ptr(), pointer);
+                assert_eq!(messages.capacity(), capacity);
+                assert_eq!(receipt.copied_bytes, exact.maximum_copy_bytes);
+                assert!(receipt.fits(grant));
+                assert!(owner.take_messages_controlled(exact).is_err());
+                let mut transferred = MutationMessageLedgerRetirement::new(String::new(), messages);
+                while !transferred.terminal_is_empty() { transferred.close_step(RetainedCloneGrant { maximum_copy_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX, ..exact }).unwrap(); }
+            }
+            "blocked" => {
+                assert!(result.unwrap().is_none());
+                assert_eq!(owner.retained_messages().as_ptr(), pointer);
+                assert_eq!(owner.retained_messages().len(), law["cases"][0]["expectedRows"].as_u64().unwrap() as usize);
+            }
+            "refused" => assert!(result.is_err()),
+            _ => unreachable!(),
+        }
+        while !owner.terminal_is_empty() { owner.close_step(RetainedCloneGrant { maximum_copy_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX, ..exact }).unwrap(); }
+    }
+}
 #[test]
 fn message_ledger_retirement_releases_actual_capacity_under_separate_axes() {
     let law=fixture();

@@ -118,11 +118,12 @@ pub(super) enum ValidationStage {
     CheckSurfaces,
     CheckFenestrations,
     CheckZoneReferences,
+    CheckPvThermal,
     Complete,
 }
 
 #[cfg(any(test, feature = "testkit"))]
-pub const P7C1_VALIDATION_STAGES: [ValidationStage; 16] = [
+pub const P7C1_VALIDATION_STAGES: [ValidationStage; 17] = [
     ValidationStage::ReserveZones,
     ValidationStage::ReserveMaterials,
     ValidationStage::ReserveConstructions,
@@ -138,6 +139,7 @@ pub const P7C1_VALIDATION_STAGES: [ValidationStage; 16] = [
     ValidationStage::CheckSurfaces,
     ValidationStage::CheckFenestrations,
     ValidationStage::CheckZoneReferences,
+    ValidationStage::CheckPvThermal,
     ValidationStage::Complete,
 ];
 
@@ -361,6 +363,8 @@ impl Default for CommitCensusWork {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum WeatherFault {
     SlotRejected,
+    ChronologyRejected,
+    RunHourMissing,
 }
 
 impl Default for ValidationWork {
@@ -383,17 +387,21 @@ impl Default for ValidationWork {
 /// warmup, metering and publication are cursor-owned; the batch API drives this same job.
 #[doc(hidden)]
 pub struct EnergyJobAuthority {
+    pub input_identity: EnergyInputIdentity,
     pub operation: Operation,
     pub model: Model,
     pub(super) config: SimulationConfig,
     pub(super) numerical_census: EnergyNumericalCensus,
+    pub input_identity_bytes: usize,
+    pub input_identity_ready: bool,
     pub stage: EnergyJobStage,
     pub tier: EnergyQualityTier,
     pub weather: FixedTable<usize, WeatherRecord>,
     pub weather_cursor: usize,
     pub weather_target: usize,
     pub precompute: Option<PrecomputeBuilder>,
-    pub validation: ValidationWork,
+    pub precompute_close: semio_framework_value::retained_clone::RetainedCloneClose,
+    pub(super) validation: ValidationWork,
     pub(super) pre: Option<PrecomputedModel>,
     pub(super) state: Option<SimulationModel>,
     pub(super) initialize_cursor: usize,
@@ -453,6 +461,8 @@ pub struct EnergyJobAuthority {
     pub(super) started: Instant,
     pub(super) closing: bool,
     pub(super) close_string_owner: String,
+    closing_tail:Option<semio_framework_value::retirement::controlled::ControlledRetirement<EnergyAuthorityRetirement>>,
+    tail_moved:bool,
 }
 
 pub const ENERGY_ABANDONMENT_SLOTS: usize = 64;
@@ -541,6 +551,7 @@ impl EnergyJob {
         let weather_target = weather_copy_target(&config);
         Ok(Self {
             authority: Some(Box::new(EnergyJobAuthority {
+                input_identity: EnergyInputIdentity::default(),
                 operation,
                 model,
                 config,
@@ -551,6 +562,7 @@ impl EnergyJob {
                 weather_cursor: 0,
                 weather_target,
                 precompute: None,
+                precompute_close: Default::default(),
                 validation: ValidationWork::default(),
                 pre: None,
                 state: None,
@@ -610,6 +622,8 @@ impl EnergyJob {
                 weather_fault: None,
                 started: Instant::now(),
                 closing: false,
+                closing_tail:None,
+                tail_moved:false,
                 close_string_owner: String::new(),
             })),
             abandonment_slot,

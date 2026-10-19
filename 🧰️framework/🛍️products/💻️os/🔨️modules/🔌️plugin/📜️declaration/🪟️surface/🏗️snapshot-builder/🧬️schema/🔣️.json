@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Cold Reference Builder Owned Wire Disposal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "base",
+    "value",
+    "cases",
+    "disposal",
+    "nativeOperation"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "base": {
+      "type": "integer"
+    },
+    "value": {
+      "type": "integer"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "entry",
+          "semanticRefusal",
+          "applyRefusal",
+          "result",
+          "error",
+          "mutationsRetired",
+          "diffsRetired",
+          "projectionsRetired"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "entry": {
+            "enum": [
+              "mutate",
+              "absorb"
+            ]
+          },
+          "semanticRefusal": {
+            "type": "boolean"
+          },
+          "applyRefusal": {
+            "type": "boolean"
+          },
+          "result": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "error": {
+            "type": "boolean"
+          },
+          "mutationsRetired": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "diffsRetired": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "projectionsRetired": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "disposal": {
+      "const": "owned-wire"
+    },
+    "nativeOperation": {
+      "const": false
+    }
+  }
+}

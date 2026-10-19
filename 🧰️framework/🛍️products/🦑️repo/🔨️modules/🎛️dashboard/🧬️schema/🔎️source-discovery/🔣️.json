@@ -1,0 +1,328 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/dashboard/source-discovery.json",
+  "title": "🔎️ Current Authored Source Suggestions",
+  "type": "object",
+  "required": [
+    "projects",
+    "files",
+    "cases",
+    "declarations",
+    "selectionCases",
+    "attributes",
+    "projectChanges",
+    "rootPaths",
+    "registryChanges"
+  ],
+  "properties": {
+    "registryChanges": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/RegistryChange" } },
+    "projects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "root"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "root": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "text",
+          "kind"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "scripts",
+              "tests",
+              "configs",
+              null
+            ]
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "source",
+          "project",
+          "query",
+          "values",
+          "projects",
+          "directories"
+        ],
+        "properties": {
+          "source": {
+            "enum": [
+              "projects",
+              "scripts",
+              "tests",
+              "configs"
+            ]
+          },
+          "project": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "query": {
+            "type": "string"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "projects": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "directories": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "declarations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "parameter",
+          "accepted"
+        ],
+        "properties": {
+          "parameter": {
+            "type": "object"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "selectionCases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "first",
+          "second",
+          "manual",
+          "directory",
+          "firstDirectory",
+          "secondDirectory",
+          "firstProject",
+          "secondProject"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "first": {
+            "type": "string"
+          },
+          "second": {
+            "type": "string"
+          },
+          "manual": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "directory": {
+            "type": "string"
+          },
+          "firstDirectory": {
+            "type": "string"
+          },
+          "secondDirectory": {
+            "type": "string"
+          },
+          "firstProject": {
+            "type": "string"
+          },
+          "secondProject": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "attributes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "windows",
+          "attributes",
+          "symlink",
+          "accepted"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "windows": {
+            "type": "boolean"
+          },
+          "attributes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "symlink": {
+            "type": "boolean"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "projectChanges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "manualScript",
+          "manualDirectory",
+          "scriptAfterProject",
+          "directoryAfterProject",
+          "directoryAfterSelection"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "manualScript": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "manualDirectory": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scriptAfterProject": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "directoryAfterProject": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "directoryAfterSelection": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "rootPaths": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "accepted"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "RefreshParameter": { "type": "object", "additionalProperties": false, "required": ["id", "kind", "default", "required", "values"], "properties": { "id": { "type": "string" }, "kind": { "enum": ["text", "choice", "flag"] }, "default": { "type": ["string", "null"] }, "required": { "type": "boolean" }, "values": { "type": "array", "items": { "type": "string" } } } },
+    "RefreshValue": { "type": "object", "additionalProperties": false, "required": ["id", "value", "suggested"], "properties": { "id": { "type": "string" }, "value": { "type": ["string", "null"] }, "suggested": { "type": "boolean" } } },
+    "RefreshField": { "type": "object", "additionalProperties": false, "required": ["parameter", "value", "suggested"], "properties": { "parameter": { "$ref": "#/$defs/RefreshParameter" }, "value": { "type": ["string", "null"] }, "suggested": { "type": "boolean" } } },
+    "RegistryChange": {
+      "type": "object", "additionalProperties": false, "required": ["id", "sameRegistry", "before", "after", "expected"],
+      "properties": {
+        "id": { "type": "string" }, "sameRegistry": { "type": "boolean" },
+        "before": { "type": "object", "additionalProperties": false, "required": ["id", "entry", "mutating", "focus", "stage", "fields"], "properties": { "id": { "type": "string" }, "entry": { "type": "integer", "minimum": 0 }, "mutating": { "type": "boolean" }, "focus": { "type": "integer", "minimum": 0 }, "stage": { "enum": ["Configure", "Confirm"] }, "fields": { "type": "array", "items": { "$ref": "#/$defs/RefreshField" } } } },
+        "after": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["id", "mutating", "parameters"], "properties": { "id": { "type": "string" }, "mutating": { "type": "boolean" }, "parameters": { "type": "array", "items": { "$ref": "#/$defs/RefreshParameter" } } } } },
+        "expected": { "type": "object", "additionalProperties": false, "required": ["open", "entry", "mutating", "focus", "stage", "fields", "released"], "properties": { "open": { "type": "boolean" }, "entry": { "type": ["integer", "null"] }, "mutating": { "type": ["boolean", "null"] }, "focus": { "type": ["integer", "null"] }, "stage": { "enum": ["Browse", "Configure", "Confirm"] }, "fields": { "type": "array", "items": { "$ref": "#/$defs/RefreshValue" } }, "released": { "type": "integer", "minimum": 0 } } }
+      }
+    },
+    "Policy": {
+      "const": {
+        "maximumEntries": 1000000,
+        "maximumRows": 100000,
+        "maximumSourceBytes": 65536,
+        "maximumReadBytes": 33554432,
+        "maximumResults": 32,
+        "pollMilliseconds": 500,
+        "excludedRoots": [
+          ".cache",
+          ".nx",
+          ".repo/cache",
+          "storybook-static",
+          "test-results",
+          "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/dist",
+          "✏️s/🔌️plugins/🏭️process/dist",
+          "✏️s/🔌️plugins/🪵️sourcing/dist",
+          ".🧬semio/🦑️repo/⚡️cache",
+          ".🧬semio/🦑️repo/🧹️tmp",
+          ".pytest_cache",
+          ".ruff_cache"
+        ],
+        "excludedDirectories": [
+          ".git",
+          "node_modules",
+          ".venv",
+          "🗑️generated",
+          "🤖️generated",
+          "📤️dist",
+          "🎯️target",
+          "🧫️fixtures"
+        ],
+        "maximumWatchChecks": 1024,
+        "maximumScopes": 8,
+        "maximumQueryCharacters": 1024,
+        "maximumQueryWords": 16
+      }
+    }
+  }
+}

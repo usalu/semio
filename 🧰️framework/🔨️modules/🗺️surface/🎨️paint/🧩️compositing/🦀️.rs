@@ -71,11 +71,11 @@ impl RetainedComposite {
                 }
             }
             replace(&mut layers,id,&white_key,buffers);
-            images.insert(white_key,Arc::new(PixelImage {width:1,height:1,pixels:vec![255;4]}));
+            images.insert(white_key,semio_framework_pixels::retirement::RasterLease(Arc::new(PixelImage {width:1,height:1,pixels:vec![255;4]})));
         }
-        fn collect(layers:&mut [RasterStackLayer],buffers:&HashMap<String,Arc<PixelImage>>,images:&mut BTreeMap<String,Arc<PixelImage>>){
+        fn collect(layers:&mut [RasterStackLayer],buffers:&HashMap<String,Arc<PixelImage>>,images:&mut BTreeMap<String,semio_framework_pixels::retirement::RasterLease>){
             for layer in layers{
-                if let Some(mask)=&layer.mask{if mask.enabled{if let Some(key)=&mask.image_key{if let Some(image)=buffers.get(key){images.insert(key.clone(),Arc::clone(image));}}}}
+                if let Some(mask)=&layer.mask{if mask.enabled{if let Some(key)=&mask.image_key{if let Some(image)=buffers.get(key){images.insert(key.clone(),semio_framework_pixels::retirement::RasterLease(Arc::clone(image)));}}}}
                 match &mut layer.content{
                     RasterStackContent::Pixel {image_key,..}=>{
                         if image_key.is_none(){let key=RasterHost::layer_pixel_buffer_key(&layer.id);if buffers.contains_key(&key){*image_key=Some(key);}}

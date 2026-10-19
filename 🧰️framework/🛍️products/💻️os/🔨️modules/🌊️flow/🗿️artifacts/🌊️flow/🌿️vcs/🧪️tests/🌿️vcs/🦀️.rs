@@ -1,4 +1,5 @@
 //! 🧪️ Real Flow payload, codec, structural-diff, and Store inverse laws.
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::*;
 use crate::os_spr::{Mutation, MutationLeaf, OpBinary, OpText};
 use semio_framework_value::DslValue;
@@ -28,8 +29,8 @@ fn positive(index: usize) -> serde_json::Value {
 fn third_party_json<T: ToValue>(value: &T) -> serde_json::Value {
     serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("first-party JSON must remain valid RFC 8259")
 }
-fn base() -> FlowHostSnapshot { FlowHostSnapshot::from_value(semio_framework_value::DslValue::from(&cases()["hostSnapshot"])).expect("Flow host document") }
-fn operation(index: usize) -> FlowMutation {
+pub(crate) fn base() -> FlowHostSnapshot { FlowHostSnapshot::from_value(semio_framework_value::DslValue::from(&cases()["hostSnapshot"])).expect("Flow host document") }
+pub(crate) fn operation(index: usize) -> FlowMutation {
     FlowMutation::from_value(semio_framework_value::DslValue::from(&witness(index))).expect("direct Flow operation")
 }
 fn retire_diff(diff: FlowDiff) {
@@ -45,11 +46,11 @@ fn retire_diff(diff: FlowDiff) {
 }
 fn apply(base: &FlowHostSnapshot, mutation: &FlowMutation) -> FlowHostSnapshot {
     let (diff, _) = mutation.diff(base).into_parts();
-    let next = crate::os_spr::apply_diff(&diff, base).expect("valid Flow delta");
+    let next = protocol::apply_diff_cold(&diff, base).expect("valid Flow delta");
     retire_diff(diff);
     next
 }
-fn retire_mutation(mutation: FlowMutation) {
+pub(crate) fn retire_mutation(mutation: FlowMutation) {
     match mutation {
         FlowMutation::AddWidget(leaf) => leaf.widget.retire_cold(),
         FlowMutation::ChangeWidget(leaf) => leaf.widget.retire_cold(),
@@ -107,6 +108,18 @@ where T: MutationLeaf + ToValue + FromValue {
     before.retire_cold();
     retire_mutation(mutation);
 }
+
+
+/// 🧱️ The base with a third synapse so every synapse kind has a first, a middle and a last row to hit.
+pub(crate) fn base_with_three_synapses() -> FlowHostSnapshot {
+    let mut document = base();
+    document.synapses.push(synapse("s3", "a", "c"));
+    document
+}
+pub(crate) fn synapse(id: &str, from: &str, to: &str) -> SynapseSpec {
+    SynapseSpec { id: id.into(), from: from.into(), to: to.into(), from_port: "out".into(), to_port: "in".into() }
+}
+pub(crate) fn note(id: &str) -> Widget { Widget::InputNote { id: id.into(), text: id.to_uppercase() } }
 
 //#endregion 🧪️FixtureOwnership
 
@@ -195,6 +208,57 @@ fn ordered_collection_and_inverse_laws() {
     }
 }
 
+/// 🔀️ L1/L2: a move is ONE `{id, from, to}` row read from the base position — no widget record travels — and its inverse is the
+/// reverse move; the negative diff is the same reverse row, read without applying anything.
+#[test]
+fn a_move_is_one_positional_row_and_inverts_to_the_reverse_move() {
+    let before = base();
+    let mutation = operation(2);
+    let (diff, _) = mutation.diff(&before).into_parts();
+    assert_eq!(third_party_json(&diff), serde_json::json!({"deltas":[{"delta":"widgets","value":{"removed":[],"inserted":[],"replaced":[],"moved":[{"id":"c","from":2,"to":0}]}}]}));
+    assert_eq!(third_party_json(&mutation.inverse(&before).expect("valid retained mutation inverse fixture")), serde_json::json!([{"operation":"moveWidget","id":"c","toIndex":2}]));
+    let negative = crate::os_spr::DiffAlgebra::<FlowHostSnapshot>::inverse(&diff, &before);
+    assert_eq!(third_party_json(&negative), serde_json::json!({"deltas":[{"delta":"widgets","value":{"removed":[],"inserted":[],"replaced":[],"moved":[{"id":"c","from":0,"to":2}]}}]}));
+    let moved = protocol::apply_diff_cold(&diff, &before).expect("move applies");
+    let restored = protocol::apply_diff_cold(&negative, &moved).expect("negative applies");
+    assert_eq!(restored, before);
+    for snapshot in [moved, restored, before] { snapshot.retire_cold(); }
+    retire_diff(diff);
+    retire_diff(negative);
+    retire_mutation(mutation);
+}
+
+/// 🔀️ A delta that removes AND moves inverts into two ordered deltas (un-move first, then the base rows come back) because the
+/// moves apply last.
+#[test]
+fn a_mixed_remove_and_move_delta_inverts_in_two_ordered_deltas() {
+    let before = base();
+    let diff = FlowDiff::from(FlowDelta::Widgets(FlowCollectionDelta { removed: vec!["b".into()], moved: vec![FlowMove { id: "c".into(), from: 1, to: 0 }], ..FlowCollectionDelta::default() }));
+    let negative = crate::os_spr::DiffAlgebra::<FlowHostSnapshot>::inverse(&diff, &before);
+    assert_eq!(negative.deltas.len(), 2);
+    let after = protocol::apply_diff_cold(&diff, &before).expect("mixed delta applies");
+    assert_eq!(after.widgets.iter().map(|widget| widget.id().as_str()).collect::<Vec<_>>(), ["c", "a"]);
+    let restored = protocol::apply_diff_cold(&negative, &after).expect("two-delta inverse applies");
+    assert_eq!(restored, before);
+    for snapshot in [after, restored, before] { snapshot.retire_cold(); }
+    retire_diff(diff);
+    retire_diff(negative);
+}
+
+/// ➕️ Adjacent layout deltas coalesce on absorb, so the summed single-entry inverses equal the one negative layout delta.
+#[test]
+fn absorbing_layout_deltas_concatenates_their_entries() {
+    use crate::os_spr::MutationDiff;
+    let entry = |id: &str, x: f64| FlowLayoutEntry { id: id.into(), layout: Some(WidgetLayout { x, y: x }) };
+    let mut left = FlowDiff::from(FlowDelta::Layout(vec![entry("a", 1.0)]));
+    left.absorb(FlowDiff::from(FlowDelta::Layout(vec![entry("b", 2.0), entry("a", 3.0)])));
+    left.absorb(FlowDiff::from(FlowDelta::Synapses(FlowCollectionDelta::default())));
+    left.absorb(FlowDiff::from(FlowDelta::Layout(vec![entry("c", 4.0)])));
+    assert_eq!(left.deltas.len(), 3);
+    assert_eq!(left.deltas[0], FlowDelta::Layout(vec![entry("a", 1.0), entry("b", 2.0), entry("a", 3.0)]));
+    retire_diff(left);
+}
+
 #[test]
 fn structural_composition_is_ordered() {
     let before = base();
@@ -204,12 +268,12 @@ fn structural_composition_is_ordered() {
         let mutation = operation(index);
         let (diff, _) = mutation.diff(&current).into_parts();
         retire_mutation(mutation);
-        let next = crate::os_spr::apply_diff(&diff, &current).expect("sequential diff");
+        let next = protocol::apply_diff_cold(&diff, &current).expect("sequential diff");
         combined.absorb(diff);
         current.retire_cold();
         current = next;
     }
-    let result = crate::os_spr::apply_diff(&combined, &before).expect("composed diff");
+    let result = protocol::apply_diff_cold(&combined, &before).expect("composed diff");
     assert_eq!(result, current);
     assert_eq!(combined.deltas.len(), 5);
     assert!(third_party_json(&combined).get("operations").is_none());
@@ -258,7 +322,7 @@ fn typed_rejection_is_atomic() {
     ];
     for mutation in invalid {
         let (diff, _) = mutation.diff(&before).into_parts();
-        assert!(crate::os_spr::apply_diff(&diff, &before).is_err());
+        assert!(protocol::apply_diff_cold(&diff, &before).is_err());
         retire_diff(diff);
         retire_mutation(mutation);
         assert_eq!(third_party_json(&before), original);
@@ -329,15 +393,13 @@ fn flow_opens_as_an_owned_member_through_its_own_pack_codec() {
     let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4_096, maximum_capacity_bytes: 0, maximum_release_bytes: 4_096, maximum_depth: 4_096 };
     assert!(matches!(cursor.close_step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, ..grant }), semio_framework_value::retirement::RetirementStep::BudgetExhausted), "zero items refuse before moving any owner");
     for turn in 0..1_000_000 {
-        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_capacity_bytes: cursor.next_birth_bytes(grant.maximum_copy_bytes).expect("exact Flow frontier capacity demand"), ..grant };
-        match cursor.close_step(grant) {
-            semio_framework_value::retirement::RetirementStep::Complete if cursor.terminal_is_empty() => break,
-            semio_framework_value::retirement::RetirementStep::BudgetExhausted => panic!("the member opener's owner cursor stalled on turn {turn}"),
-            semio_framework_value::retirement::RetirementStep::Failure(error) => panic!("the member opener's owner cursor refused: {error:?}"),
-            _ => {}
-        }
+        if owner.terminal_is_empty() { break; }
+        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4_096, maximum_capacity_bytes: owner.next_capacity_byte_demand(4_096).expect("exact Flow frontier capacity demand"), maximum_release_bytes: owner.next_release_byte_demand().expect("exact Flow frontier release demand"), maximum_depth: owner.next_depth_demand().expect("exact Flow frontier depth demand") };
+        assert_eq!(owner.step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, ..grant }).expect("zero items refuse before moving any owner").progress().copied_items, 0);
+        owner.step(grant).expect("the member opener's owner cursor accepts its exact quote");
         assert!(turn < 999_999, "the member opener's owner cursor never reached terminal-empty");
     }
+    assert!(owner.terminal_is_empty(), "the member opener's owner cursor reached terminal-empty");
     snapshot.retire_cold();
 }
 //#endregion 🧪️Laws
@@ -356,4 +418,146 @@ fn actual_flow_genesis_producer_preserves_original_stored_pack_and_owner_identit
  let alias=reloaded.clone();assert!(Arc::ptr_eq(&reloaded.facts().share_snapshot(),&alias.facts().share_snapshot()));assert!(Arc::ptr_eq(&reloaded.share_pack(),&alias.share_pack()));
  drop(alias);
  for genesis in [born,reloaded]{let(snapshot,pack)=genesis.into_owners();drop(pack);Arc::try_unwrap(snapshot).unwrap_or_else(|_|panic!("original genesis snapshot alias retained")).retire_cold();}
+}
+
+/// ➕️ L3 on the committed wire witness and on first, middle and last row cases: the inverse's diffs sum to the negative diff.
+#[semio_framework_async_macros::async_test]
+async fn move_widget_inverse_diffs_sum_to_the_negative_diff() {
+    let mut cases = vec![(self::operation(2), self::base())];
+    cases.extend([
+        (FlowMutation::MoveWidget(MoveWidget { id: "a".into(), to_index: 2 }), self::base()),
+        (FlowMutation::MoveWidget(MoveWidget { id: "b".into(), to_index: 0 }), self::base()),
+        (FlowMutation::MoveWidget(MoveWidget { id: "b".into(), to_index: 2 }), self::base()),
+        (FlowMutation::MoveWidget(MoveWidget { id: "a".into(), to_index: 1 }), self::base()),
+        (FlowMutation::MoveWidget(MoveWidget { id: "c".into(), to_index: 1 }), self::base()),
+    ]);
+    for (mutation, before) in cases {
+        crate::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
+        self::retire_mutation(mutation);
+        before.retire_cold();
+    }
+}
+
+/// ➕️ L3 on the committed wire witness and on first, middle and last row cases: the inverse's diffs sum to the negative diff.
+#[semio_framework_async_macros::async_test]
+async fn remove_synapse_inverse_diffs_sum_to_the_negative_diff() {
+    let mut cases = vec![(self::operation(5), self::base())];
+    cases.extend([
+        (FlowMutation::RemoveSynapse(RemoveSynapse { id: "s2".into() }), self::base_with_three_synapses()),
+        (FlowMutation::RemoveSynapse(RemoveSynapse { id: "s3".into() }), self::base_with_three_synapses()),
+    ]);
+    for (mutation, before) in cases {
+        crate::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
+        self::retire_mutation(mutation);
+        before.retire_cold();
+    }
+}
+
+/// ➕️ L3 on the committed wire witness and on first, middle and last row cases: the inverse's diffs sum to the negative diff.
+#[semio_framework_async_macros::async_test]
+async fn add_widget_inverse_diffs_sum_to_the_negative_diff() {
+    let mut cases = vec![(self::operation(0), self::base())];
+    cases.extend([
+        (FlowMutation::AddWidget(AddWidget { index: 0, widget: self::note("x") }), self::base()),
+        (FlowMutation::AddWidget(AddWidget { index: 3, widget: self::note("x") }), self::base()),
+    ]);
+    for (mutation, before) in cases {
+        crate::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
+        self::retire_mutation(mutation);
+        before.retire_cold();
+    }
+}
+
+/// ➕️ L3 on the committed wire witness and on first, middle and last row cases: the inverse's diffs sum to the negative diff.
+#[semio_framework_async_macros::async_test]
+async fn change_layout_inverse_diffs_sum_to_the_negative_diff() {
+    let mut cases = vec![(self::operation(8), self::base())];
+    cases.extend([
+        (FlowMutation::ChangeLayout(ChangeLayout { entries: vec![FlowLayoutEntry { id: "b".into(), layout: Some(crate::WidgetLayout { x: 5.0, y: 6.0 }) }, FlowLayoutEntry { id: "a".into(), layout: None }, FlowLayoutEntry { id: "c".into(), layout: Some(crate::WidgetLayout { x: 7.0, y: 8.0 }) }] }), self::base()),
+        (FlowMutation::ChangeLayout(ChangeLayout { entries: vec![FlowLayoutEntry { id: "b".into(), layout: Some(crate::WidgetLayout { x: 1.0, y: 1.0 }) }, FlowLayoutEntry { id: "b".into(), layout: Some(crate::WidgetLayout { x: 2.0, y: 2.0 }) }] }), self::base()),
+    ]);
+    for (mutation, before) in cases {
+        crate::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
+        self::retire_mutation(mutation);
+        before.retire_cold();
+    }
+}
+
+/// ➕️ L3 on the committed wire witness and on first, middle and last row cases: the inverse's diffs sum to the negative diff.
+#[semio_framework_async_macros::async_test]
+async fn move_synapse_inverse_diffs_sum_to_the_negative_diff() {
+    let mut cases = vec![(self::operation(6), self::base())];
+    cases.extend([
+        (FlowMutation::MoveSynapse(MoveSynapse { id: "s2".into(), to_index: 0 }), self::base_with_three_synapses()),
+        (FlowMutation::MoveSynapse(MoveSynapse { id: "s2".into(), to_index: 2 }), self::base_with_three_synapses()),
+        (FlowMutation::MoveSynapse(MoveSynapse { id: "s1".into(), to_index: 1 }), self::base_with_three_synapses()),
+        (FlowMutation::MoveSynapse(MoveSynapse { id: "s3".into(), to_index: 0 }), self::base_with_three_synapses()),
+        (FlowMutation::MoveSynapse(MoveSynapse { id: "s1".into(), to_index: 2 }), self::base_with_three_synapses()),
+    ]);
+    for (mutation, before) in cases {
+        crate::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
+        self::retire_mutation(mutation);
+        before.retire_cold();
+    }
+}
+
+/// ➕️ L3 on the committed wire witness and on first, middle and last row cases: the inverse's diffs sum to the negative diff.
+#[semio_framework_async_macros::async_test]
+async fn change_synapse_inverse_diffs_sum_to_the_negative_diff() {
+    let mut cases = vec![(self::operation(7), self::base())];
+    cases.extend([
+        (FlowMutation::ChangeSynapse(ChangeSynapse { id: "s2".into(), synapse: self::synapse("s2", "c", "a") }), self::base_with_three_synapses()),
+        (FlowMutation::ChangeSynapse(ChangeSynapse { id: "s3".into(), synapse: self::synapse("s3b", "c", "b") }), self::base_with_three_synapses()),
+    ]);
+    for (mutation, before) in cases {
+        crate::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
+        self::retire_mutation(mutation);
+        before.retire_cold();
+    }
+}
+
+/// ➕️ L3 on the committed wire witness and on first, middle and last row cases: the inverse's diffs sum to the negative diff.
+#[semio_framework_async_macros::async_test]
+async fn add_synapse_inverse_diffs_sum_to_the_negative_diff() {
+    let mut cases = vec![(self::operation(4), self::base())];
+    cases.extend([
+        (FlowMutation::AddSynapse(AddSynapse { index: 0, synapse: self::synapse("s9", "b", "a") }), self::base_with_three_synapses()),
+        (FlowMutation::AddSynapse(AddSynapse { index: 2, synapse: self::synapse("s9", "b", "a") }), self::base_with_three_synapses()),
+        (FlowMutation::AddSynapse(AddSynapse { index: 3, synapse: self::synapse("s9", "b", "a") }), self::base_with_three_synapses()),
+    ]);
+    for (mutation, before) in cases {
+        crate::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
+        self::retire_mutation(mutation);
+        before.retire_cold();
+    }
+}
+
+/// ➕️ L3 on the committed wire witness and on first, middle and last row cases: the inverse's diffs sum to the negative diff.
+#[semio_framework_async_macros::async_test]
+async fn remove_widget_inverse_diffs_sum_to_the_negative_diff() {
+    let mut cases = vec![(self::operation(1), self::base())];
+    cases.extend([
+        (FlowMutation::RemoveWidget(RemoveWidget { id: "a".into() }), self::base()),
+        (FlowMutation::RemoveWidget(RemoveWidget { id: "c".into() }), self::base()),
+    ]);
+    for (mutation, before) in cases {
+        crate::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
+        self::retire_mutation(mutation);
+        before.retire_cold();
+    }
+}
+
+/// ➕️ L3 on the committed wire witness and on first, middle and last row cases: the inverse's diffs sum to the negative diff.
+#[semio_framework_async_macros::async_test]
+async fn change_widget_inverse_diffs_sum_to_the_negative_diff() {
+    let mut cases = vec![(self::operation(3), self::base())];
+    cases.extend([
+        (FlowMutation::ChangeWidget(ChangeWidget { id: "b".into(), widget: self::note("b2") }), self::base()),
+        (FlowMutation::ChangeWidget(ChangeWidget { id: "c".into(), widget: self::note("c2") }), self::base()),
+    ]);
+    for (mutation, before) in cases {
+        crate::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
+        self::retire_mutation(mutation);
+        before.retire_cold();
+    }
 }

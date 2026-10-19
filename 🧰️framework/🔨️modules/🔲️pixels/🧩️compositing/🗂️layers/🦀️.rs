@@ -7,17 +7,24 @@ pub fn mask_coverage(pixel:[u8;4])->u8 {
 }
 
 #[derive(Clone,Copy,Debug)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct RasterStackTransform {pub x:f64,pub y:f64,pub a:f64,pub b:f64,pub c:f64,pub d:f64}
 #[derive(Clone,Debug)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct RasterStackMask {pub enabled:bool,pub linked:bool,pub invert:bool,pub transform:RasterStackTransform,pub width:Option<u32>,pub height:Option<u32>,pub image_key:Option<String>}
 #[derive(Clone,Debug)]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum RasterStackContent {Pixel {width:Option<u32>,height:Option<u32>,image_key:Option<String>},Group(Vec<RasterStackLayer>),BrightnessContrast {brightness:f64,contrast:f64}}
 #[derive(Clone,Debug)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct RasterStackLayer {pub id:String,pub visible:bool,pub opacity:f64,pub blend_mode:CompositeBlend,pub transform:RasterStackTransform,pub mask:Option<RasterStackMask>,pub content:RasterStackContent}
-pub struct RasterStackInput {pub layers:Vec<RasterStackLayer>,pub images:BTreeMap<String,Arc<RasterImage>>}
+#[derive(semio_framework_value::RetireOwned)]
+pub struct RasterStackInput {pub layers:Vec<RasterStackLayer>,pub images:BTreeMap<String,RasterLease>}
+#[derive(semio_framework_value::RetireOwned)]
 pub struct RasterStackResult {pub image:RasterImage,pub origin:[f64;2],pub empty:bool}
-struct Preparation {pub image:Arc<RasterImage>,pub coverage:Arc<crate::retirement::MaskBytes>,offset:usize}
-struct Planner<'a> {pub source:&'a BTreeMap<String,Arc<RasterImage>>,pub images:BTreeMap<String,Arc<RasterImage>>,preparations:Vec<Preparation>,mask_indices:BTreeMap<String,usize>,mask_slots:Vec<usize>,ids:std::collections::BTreeSet<String>,bounds:[f64;4],pub commands:usize,coverage_total:usize}
+#[derive(semio_framework_value::RetireOwned)]
+struct Preparation {pub image:RasterLease,pub coverage:MaskLease,offset:usize}
+struct Planner<'a> {pub source:&'a BTreeMap<String,RasterLease>,pub images:BTreeMap<String,RasterLease>,preparations:Vec<Preparation>,mask_indices:BTreeMap<String,usize>,mask_slots:Vec<usize>,ids:std::collections::BTreeSet<String>,bounds:[f64;4],pub commands:usize,coverage_total:usize}
 fn matrix(value:RasterStackTransform)->Result<CompositeAffine,PixelEditError>{
     let result=[value.a,value.b,value.c,value.d,value.x,value.y];inverse(result)?;Ok(result)
 }
@@ -27,7 +34,7 @@ fn centered(value:CompositeAffine,width:u32,height:u32,source_width:u32,source_h
     Ok(multiply(value,[f64::from(width)/f64::from(source_width),0.0,0.0,f64::from(height)/f64::from(source_height),-f64::from(width)/2.0,-f64::from(height)/2.0]))
 }
 impl Planner<'_> {
-    fn image(&self,key:&str)->Result<Arc<RasterImage>,PixelEditError>{
+    fn image(&self,key:&str)->Result<RasterLease,PixelEditError>{
         if key.is_empty(){return Err(PixelEditError::Invalid("Layer image is missing"));}
         self.source.get(key).cloned().ok_or(PixelEditError::Invalid("Layer image is missing"))
     }
@@ -44,7 +51,7 @@ impl Planner<'_> {
             let count=validate_extent(image.width,image.height)?;
             if self.coverage_total+count>67108864{return Err(PixelEditError::Invalid("Mask coverage exceeds 64 MiB preparation budget"));}
             self.coverage_total+=count;let index=self.preparations.len();self.mask_indices.insert(key.to_owned(),index);
-            self.preparations.push(Preparation {image:Arc::clone(&image),coverage:Arc::new(crate::retirement::MaskBytes(vec![0;count])),offset:0});index
+            self.preparations.push(Preparation {image:image.clone(),coverage:vec![0;count].into(),offset:0});index
         };
         self.mask_slots.push(index);
         Ok(Some(CompositeMask {width:image.width,height:image.height,coverage:Vec::new().into(),transform,invert:mask.invert}))
@@ -61,7 +68,7 @@ impl Planner<'_> {
             if let RasterStackContent::Pixel {width,height,image_key}=&layer.content {
                 let source=image_key.as_deref().map(|key|self.image(key)).transpose()?;
                 let width=width.unwrap_or_else(||source.as_ref().map_or(512,|image|image.width));let height=height.unwrap_or_else(||source.as_ref().map_or(512,|image|image.height));
-                let image=source.unwrap_or_else(||Arc::new(RasterImage::new(1,1)));
+                let image=source.unwrap_or_else(||RasterLease(Arc::new(RasterImage::new(1,1))));
                 local=centered(transform,width,height,image.width,image.height)?;
                 let world=multiply(parent,local);
                 if visible {for (x,y) in [(0.0,0.0),(f64::from(image.width),0.0),(0.0,f64::from(image.height)),(f64::from(image.width),f64::from(image.height))]{
@@ -87,6 +94,7 @@ impl Planner<'_> {
     }
 }
 /// 🧵️ Converts unique mask buffers within bounded grants before publishing a composite.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct RasterStackJob {pending:Option<CompositeInput>,#[doc(hidden)] pub composite:Option<CompositeJob>,#[doc(hidden)] pub composite_retirement:Option<CompositeRetirement>,#[doc(hidden)] pub output:Option<RasterImage>,#[doc(hidden)] pub completed:usize,#[doc(hidden)] pub done:bool,preparations:Vec<Preparation>,mask_slots:Vec<usize>,preparation:usize,prepared:usize,#[doc(hidden)] pub total:usize,#[doc(hidden)] pub origin:[f64;2],#[doc(hidden)] pub empty:bool,cancelled:bool}
 impl RasterStackJob {
     pub fn new(input:RasterStackInput)->Result<Self,PixelEditError>{
@@ -106,25 +114,30 @@ impl RasterStackJob {
         if !(1..=1048576).contains(&budget){return Err(PixelEditError::Invalid("Stack grant must be between 1 and 1048576"));}
         while budget>0&&self.preparation<self.preparations.len(){
             let prep=&mut self.preparations[self.preparation];let end=prep.coverage.len().min(prep.offset+budget);budget-=end-prep.offset;self.prepared+=end-prep.offset;
-            let coverage=Arc::get_mut(&mut prep.coverage).unwrap();
+            let coverage=Arc::get_mut(&mut prep.coverage.0).unwrap();
             for (offset,value) in coverage.iter_mut().enumerate().take(end).skip(prep.offset){let at=offset*4;let bytes=&prep.image.pixels;*value=mask_coverage([bytes[at],bytes[at+1],bytes[at+2],bytes[at+3]]);}
             prep.offset=end;if end==coverage.len(){self.preparation+=1;}
         }
         if self.preparation==self.preparations.len()&&self.pending.is_some(){
             fn attach(layers:&mut [CompositeLayer],slots:&mut impl Iterator<Item=usize>,preparations:&[Preparation]){
-                for layer in layers{if let Some(mask)=&mut layer.mask{mask.coverage=MaskLease(Arc::clone(&preparations[slots.next().unwrap()].coverage));}if let CompositeContent::Group(children)=&mut layer.content{attach(children,slots,preparations);}}
+                for layer in layers{if let Some(mask)=&mut layer.mask{mask.coverage=preparations[slots.next().unwrap()].coverage.clone();}if let CompositeContent::Group(children)=&mut layer.content{attach(children,slots,preparations);}}
             }
             let mut input=self.pending.take().unwrap();attach(&mut input.layers,&mut self.mask_slots.iter().copied(),&self.preparations);
-            self.composite=Some(CompositeJob::new(input)?);self.preparations.clear();self.mask_slots.clear();
+            self.composite=Some(CompositeJob::new(input)?);
         }
         if budget>0{if let Some(job)=&mut self.composite{let progress=job.advance(budget)?;budget-=progress.completed-self.completed;self.completed=progress.completed;if progress.done{let(retired,image)=self.composite.take().unwrap().into_retirement();self.composite_retirement=Some(retired);self.output=image;}}}
         while budget>0&&self.composite_retirement.is_some(){budget-=1;if !self.composite_retirement.as_ref().unwrap().terminal_is_empty(){self.composite_retirement.as_mut().unwrap().advance(1)?;}else{self.composite_retirement=None;self.done=true;}}
         Ok(PixelProgress {completed:self.prepared+self.completed,total:self.total,done:self.done})
+    }
+    pub fn take_result(&mut self)->Result<RasterStackResult,PixelEditError>{
+        if self.cancelled{return Err(PixelEditError::Cancelled);}
+        if !self.done{return Err(PixelEditError::Incomplete);}
+        Ok(RasterStackResult{image:self.output.take().ok_or(PixelEditError::Incomplete)?,origin:self.origin,empty:self.empty})
     }
     pub fn into_result(mut self)->Result<RasterStackResult,PixelEditError>{
         if self.cancelled{return Err(PixelEditError::Cancelled);}
         if !self.done{return Err(PixelEditError::Incomplete);}let image=self.output.take().unwrap();
         Ok(RasterStackResult {image,origin:self.origin,empty:self.empty})
     }
-    pub fn cancel(&mut self){self.cancelled=true;self.pending=None;self.composite=None;self.composite_retirement=None;self.output=None;self.preparations.clear();self.mask_slots.clear();}
+    pub fn cancel(&mut self){self.cancelled=true;}
 }

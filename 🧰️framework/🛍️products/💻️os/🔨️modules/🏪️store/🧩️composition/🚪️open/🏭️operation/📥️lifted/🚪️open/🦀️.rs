@@ -7,8 +7,8 @@ use semio_framework_os_store_member_open::MemberOpenDiagnostic;
 use semio_framework_os_store_member_open::MemberOpenRequest;
 pub struct MemberStoreOpenRetained<P, M>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_os_spr::Mutation<P>,
+    P: super::ToValue,
+    M: super::ToValue + super::FromValue + super::Mutation<P>,
 {
     pub request: ManuallyDrop<Option<MemberOpenRequest>>,
     pub owners: ManuallyDrop<Option<semio_framework_os_store_engine_owners::DocumentStoreOwners<P, M>>>,
@@ -24,8 +24,8 @@ where
 
 impl<P, M> MemberStoreOpenRetained<P, M>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
-    M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_os_spr::Mutation<P> + Send + 'static,
+    P: super::ToValue + Send + Sync + 'static,
+    M: super::ToValue + super::FromValue + super::Mutation<P> + Send + 'static,
 {
     pub fn new(request: MemberOpenRequest, owners: semio_framework_os_store_engine_owners::DocumentStoreOwners<P, M>) -> Self {
         Self {
@@ -108,8 +108,8 @@ where
 
 impl<P, M> MemberStoreOpenRetained<P, M>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
-    M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_os_spr::Mutation<P> + Send + 'static,
+    P: super::ToValue + Send + Sync + 'static,
+    M: super::ToValue + super::FromValue + super::Mutation<P> + Send + 'static,
 {
     pub fn retirement_demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
@@ -127,9 +127,11 @@ where
 
 impl<P, M> ErasedSnapshotRetirement for MemberStoreOpenRetained<P, M>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + 'static,
-    M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_os_spr::Mutation<P> + Send + 'static,
+    P: super::ToValue + Send + Sync + 'static,
+    M: super::ToValue + super::FromValue + super::Mutation<P> + Send + 'static,
 {
+    fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.retirement_demands(body)}
+
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
         use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::admit_retained_clone_close};
         let empty = RetainedCloneProgress::default();
@@ -199,8 +201,8 @@ where
 
 impl<P, M> Drop for MemberStoreOpenRetained<P, M>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_os_spr::Mutation<P>,
+    P: super::ToValue,
+    M: super::ToValue + super::FromValue + super::Mutation<P>,
 {
     fn drop(&mut self) {
         assert!(

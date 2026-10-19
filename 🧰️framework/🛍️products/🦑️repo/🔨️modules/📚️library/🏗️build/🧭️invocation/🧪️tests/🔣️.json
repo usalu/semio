@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "help": [
+    {"args": [], "expected": true},
+    {"args": ["--help"], "expected": true},
+    {"args": ["-h"], "expected": true},
+    {"args": ["run", "owner:test", "--help"], "expected": true},
+    {"args": ["run", "owner:test", "--", "--help"], "expected": false},
+    {"args": ["run", "owner:test", "--", "-h"], "expected": false},
+    {"args": ["show", "projects"], "expected": false}
+  ]
+}

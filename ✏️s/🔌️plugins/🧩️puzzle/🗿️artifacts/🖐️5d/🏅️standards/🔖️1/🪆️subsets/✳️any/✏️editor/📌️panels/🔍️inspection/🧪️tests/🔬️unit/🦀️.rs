@@ -44,9 +44,14 @@ use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 use crate::editor::puzzle5d::panels::inspection::*;
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::puzzle5d_labels;
-use crate::editor::puzzle5d::entities::{empty_document, Puzzle5dGrip, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d};
+use crate::editor::puzzle5d::entities::empty_document;
+use crate::editor::puzzle5d::Puzzle5dGrip;
+use crate::editor::puzzle5d::Puzzle5dPart;
+use crate::editor::puzzle5d::Puzzle5dPart2d;
+use crate::editor::puzzle5d::Puzzle5dPart3d;
 use crate::editor::puzzle5d::testkit::*;
-use semio_framework_plugin::{TreeWindowRequest, ViewModel};
+use semio_framework_plugin::TreeWindowRequest;
+use semio_framework_plugin::ViewModel;
 
 fn labels() -> &'static Puzzle5dLabels {
     puzzle5d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("an admitted host label axis")

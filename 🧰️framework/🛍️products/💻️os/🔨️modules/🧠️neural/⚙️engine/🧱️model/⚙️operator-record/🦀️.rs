@@ -46,7 +46,7 @@ impl OperatorWorkFailure{
  /// 🧾️ Posts one genuine failed evaluation event without formatting or replacing its original primary.
  pub fn debit_evaluation(primary:EvalError,retained:RetainedCloneProgress,cx:&mut semio_framework_job::StepContext<'_>)->Self{Self::Evaluation{primary,retained,receipt_refusal:cx.consume_retained(retained).err()}}
  /// 📏️ Borrows the same failed producer's actual physical effects.
- pub fn retained_progress(&self)->RetainedCloneProgress{match self{Self::Evaluation{retained,..}=>*retained,Self::Original(failure)=>failure.primary.retained_progress()}}
+ pub fn retained_progress(&self)->RetainedCloneProgress{match self{Self::Evaluation{retained,..}=>*retained,Self::Original(failure)=>failure.retained_progress()}}
 }
 impl From<EvalError> for OperatorWorkFailure{fn from(primary:EvalError)->Self{let retained=match &primary{EvalError::Retained(primary)=>primary.retained_progress(),_=>Default::default()};Self::Evaluation{primary,retained,receipt_refusal:None}}}
 impl From<semio_framework_job::OriginalTurnFailure> for OperatorWorkFailure{fn from(primary:semio_framework_job::OriginalTurnFailure)->Self{Self::Original(primary)}}

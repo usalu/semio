@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-math-dense = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-plugin-energy-engine-air-exchange = { workspace = true }

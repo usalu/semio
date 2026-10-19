@@ -1,0 +1,8 @@
+{
+  "schemaVersion":2,"magic":"ESF2","headerBytes":76,"rowBytes":24,
+  "opaqueRows":12001,"windowRows":8002,"chunkBytes":65536,
+  "fields":["conductionLoss","conductionGain","solarTransmitted","solarAbsorbed"],
+  "locales":["en","de"],"queryIds":[1,2,8193,16385,24001,16004,40007],
+  "policy":{"maximumItems":1,"maximumCopyBytes":4096},"generationFence":true,
+  "paintWork":{"aggregateDecodes":0,"sorts":0,"rowCopies":0,"indexedReadsPerFace":true}
+}

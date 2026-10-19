@@ -35,6 +35,16 @@
   },
   "description": "Portable authoritative Source membership recipes use literal path components, * and ? within a component, and ** for zero or more components. Brackets and braces are literal Source names. Native Bun workspaces are the complete current byte-sorted native literal directory projection of independently owned packages, excluding the installation scope itself and all testing collections. Native metacharacters are escaped and an empty brace alternative selects that same exact directory through Bun glob interpretation; ordinary directories remain direct literal entries. Leading ! is prefixed with ./ to preserve literal identity. Source discovery does not depend on published native projection. Only the explicitly selected scopes are refreshed through the original caller control before the first installation; current topology, manifest and policy guards refuse concurrent changes.",
   "$defs": {
+    "RecheckFenceCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "action", "outcome"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "action": { "enum": ["cancel", "manifest", "topology", "symlink", "late-manifest", "unrelated", "none"] },
+        "outcome": { "enum": ["canceled", "rejected", "accepted"] }
+      }
+    },
     "OwnershipProgress": {
       "type": "object",
       "additionalProperties": false,
@@ -49,6 +59,7 @@
             "state",
             "list",
             "readText",
+            "membership",
             "selection",
             "publication"
           ]
@@ -205,7 +216,10 @@
       "const": {
         "version": 1,
         "unit": "distinct-physical-path",
-        "facts": ["state", "list"],
+        "facts": [
+          "state",
+          "list"
+        ],
         "maximumFactsPerPath": 2,
         "record": "original-state-and-optional-complete-original-listing",
         "order": "original-global-first-fact-admission",
@@ -217,24 +231,155 @@
     "PhysicalObservationRecord": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["path", "state"],
+      "required": [
+        "path",
+        "state"
+      ],
       "properties": {
-        "path": {"type": "string", "minLength": 1, "maxLength": 256},
-        "state": {"oneOf": [{"type": "array", "minItems": 1, "maxItems": 1, "items": [{"const": "missing"}], "additionalItems": false}, {"type": "array", "minItems": 4, "maxItems": 4, "items": [{"enum": ["file", "directory", "symlink", "other"]}, {"type": "string", "pattern": "^[0-9]+$"}, {"type": "string", "pattern": "^[0-9]+$"}, {"type": "integer", "minimum": 0}], "additionalItems": false}]},
-        "list": {"type": "array", "maxItems": 65536, "items": {"type": "object", "additionalProperties": false, "required": ["name", "kind"], "properties": {"name": {"type": "string", "minLength": 1}, "kind": {"enum": ["file", "directory", "symlink", "other"]}}}}
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "state": {
+          "oneOf": [
+            {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1,
+              "items": [
+                {
+                  "const": "missing"
+                }
+              ],
+              "additionalItems": false
+            },
+            {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": [
+                {
+                  "enum": [
+                    "file",
+                    "directory",
+                    "symlink",
+                    "other"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "pattern": "^[0-9]+$"
+                },
+                {
+                  "type": "string",
+                  "pattern": "^[0-9]+$"
+                },
+                {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              ],
+              "additionalItems": false
+            }
+          ]
+        },
+        "list": {
+          "type": "array",
+          "maxItems": 65536,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "kind"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "enum": [
+                  "file",
+                  "directory",
+                  "symlink",
+                  "other"
+                ]
+              }
+            }
+          }
+        }
       }
     },
     "PhysicalObservationCase": {
-      "type": "object", "additionalProperties": false,
-      "required": ["name", "pathCapacity", "factCapacity", "steps", "accepted", "paths", "facts"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "pathCapacity",
+        "factCapacity",
+        "steps",
+        "accepted",
+        "paths",
+        "facts"
+      ],
       "properties": {
-        "name": {"type": "string", "minLength": 1},
-        "pathCapacity": {"type": "integer", "minimum": 1, "maximum": 4},
-        "factCapacity": {"type": "integer", "minimum": 1, "maximum": 8},
-        "steps": {"type": "array", "maxItems": 9, "items": {"type": "object", "additionalProperties": false, "required": ["operation", "path", "value"], "properties": {"operation": {"enum": ["state", "list"]}, "path": {"type": "string", "minLength": 1}, "value": {"type": "array"}}}},
-        "accepted": {"type": "boolean"},
-        "paths": {"type": "integer", "minimum": 0, "maximum": 4},
-        "facts": {"type": "integer", "minimum": 0, "maximum": 8}
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pathCapacity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "factCapacity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "steps": {
+          "type": "array",
+          "maxItems": 9,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "operation",
+              "path",
+              "value"
+            ],
+            "properties": {
+              "operation": {
+                "enum": [
+                  "state",
+                  "list"
+                ]
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "value": {
+                "type": "array"
+              }
+            }
+          }
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "paths": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "facts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8
+        }
       }
     },
     "ReadonlyCustody": {
@@ -256,6 +401,63 @@
           "items": {
             "type": "string",
             "minLength": 1
+          }
+        }
+      }
+    },
+    "OutputCensus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "members",
+        "outputs",
+        "cases"
+      ],
+      "properties": {
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[^/\\\\]+$"
+          }
+        },
+        "cases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "mutation",
+              "outcome"
+            ],
+            "properties": {
+              "mutation": {
+                "enum": [
+                  "generatedChurn",
+                  "generatedBirth",
+                  "generatedRemoval",
+                  "authoredManifest",
+                  "authoredDirectory",
+                  "authoredRoot",
+                  "cancel"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "admitted",
+                  "rejected",
+                  "canceled"
+                ]
+              }
+            }
           }
         }
       }

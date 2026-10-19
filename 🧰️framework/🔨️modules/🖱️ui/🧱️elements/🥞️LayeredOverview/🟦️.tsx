@@ -7,8 +7,11 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { cellOffset, clampOffset, followStep, glideOffset, inWindow, neighbourWarmBoot, pointerOffset, resolveLifecycle, restingCell, settleOffset, stripGrid, stripTransform, swipeNeighbours, swipeWrapTarget, veilClip, windowAround, type LayeredDirection, type LayeredGrid, type LayeredLanding, type LayeredOffset, type LayeredWindow } from "../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
-import { Icon } from "../🔣️Icons/🟦️.tsx";
+import { cellOffset, clampOffset, followStep, glideOffset, inWindow,
+  layeredCardConcealed,
+  layeredCardTinted, neighbourWarmBoot, pointerOffset, resolveLifecycle, restingCell, settleOffset, stripGrid, stripTransform, swipeNeighbours, swipeWrapTarget, veilClip, windowAround, type LayeredDirection, type LayeredGrid, type LayeredLanding, type LayeredRevealSource,
+  type LayeredOffset, type LayeredWindow } from "../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
+import { CatalogIcon as Icon } from "../🔣️Icons/🟦️.tsx";
 import type { LayeredOverviewProps, LayeredPane } from "./📋️types/🟦️.ts";
 import { FOCUSABLE, FOLLOW, type LayeredDrive, applyVeil, hashPaneId, requireCell, sameWindow, syncHash, useReducedMotion, useStableByKey } from "./🧰️pane-helpers/🟦️.ts";
 import { LayeredCardHost, LayeredPaneView, usePaneLifecycle } from "./🧵️pane/🟦️.tsx";
@@ -22,7 +25,8 @@ export type { LayeredDirection };
  * revealed page, and the cards above the glass — in `strip` mode the app's card grid, fixed; in `swipe` mode a card layer of the strip's own
  * grid that moves with the strip, each card centred on its page and scrolling inside its cell when taller. It fills its positioned parent.
  * Hovering (mouse) or keyboard-focusing a card glides the strip to that page (500 ms, cubic) and shows it clear; leaving or blurring the card
- * restores the glass and the pointer pan (12 % of the gap per 60 Hz frame, by elapsed time). In `swipe` mode a touch carries the strip along
+ * restores the glass and the pointer pan (12 % of the gap per 60 Hz frame, by elapsed time). A pointer hover also fades every other card out
+ * (its slot and hit target kept, so the pointer can move onto another card) and tints the hovered card with the veil, so the page behind it is the only crisp surface, until the pointer leaves; keyboard focus leaves every card fully visible. In `swipe` mode a touch carries the strip along
  * the axis it takes first and settles it on the neighbouring cell (320 ms, cubic ease-out); past an edge the index wraps while the motion goes
  * on — the far page is shifted into the slot beside the view, and once the strip rests there the shift and the offset are undone in the same
  * frame — and the panes one swipe away are warmed. Opening a
@@ -37,7 +41,7 @@ export type { LayeredDirection };
  * @see ../🃏️OverviewCard/🟦️.tsx — the card the apps render
  * @see https://www.w3.org/WAI/ARIA/apg/practices/landmark-regions/ — the opened page is a labelled region */
 export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement {
-  const { panes, cells, renderCard, labels, mode = "strip", pan = "pointer", routing = "hash", reducedMotion = "never" } = props;
+  const { panes, cells, renderCard, labels, mode = "strip", pan = "pointer", routing = "hash", reducedMotion = "never", interactive = true } = props;
   const radius = props.windowing?.radius ?? 1;
   const lifecycle = resolveLifecycle(props.lifecycle);
   const freshIds = panes.map((pane) => pane.id);
@@ -46,13 +50,16 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
   const cellList = useStableByKey(freshCells, freshCells.map((cell) => `${cell.column}:${cell.row}`).join(" "));
   const grid = React.useMemo<LayeredGrid>(() => stripGrid(cellList), [cellList]);
   const reduced = useReducedMotion(reducedMotion);
-  const panning = mode === "strip" && pan === "pointer" && !reduced;
+  const panning = interactive && mode === "strip" && pan === "pointer" && !reduced;
   const controlled = props.openedId !== undefined;
   const [deepLink] = React.useState<string | null>(() => (routing === "hash" ? hashPaneId(ids) : null));
   const [ownOpened, setOwnOpened] = React.useState<string | null>(controlled ? null : deepLink);
   const wanted = controlled ? (props.openedId ?? null) : ownOpened;
   const opened = wanted !== null && ids.includes(wanted) ? wanted : null;
-  const [revealedId, setRevealedId] = React.useState<string | null>(null);
+  const [ownRevealed, setRevealedId] = React.useState<string | null>(null);
+  const wantedReveal = props.revealedId === undefined ? ownRevealed : props.revealedId;
+  const revealedId = opened === null && wantedReveal !== null && ids.includes(wantedReveal) ? wantedReveal : null;
+  const [revealSource, setRevealSource] = React.useState<LayeredRevealSource | null>(null);
   const { booted, live, posters, touch, warm, markDirty, registerContainer, container } = usePaneLifecycle(panes, ids, opened, revealedId, lifecycle, mode === "strip");
 
   const swiping = mode === "swipe";
@@ -70,6 +77,7 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
   const epochRef = React.useRef(0);
   const runningRef = React.useRef(false);
   const revealedRef = React.useRef<string | null>(null);
+  const sourceRef = React.useRef<LayeredRevealSource | null>(null);
   const openedRef = React.useRef(opened);
   const previousOpened = React.useRef(opened);
   const [windowBox, setWindowBox] = React.useState<LayeredWindow>(() => windowAround(initial, radius));
@@ -78,6 +86,10 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
   const restingRef = React.useRef(resting);
   const latest = React.useRef({ props, cells, cellList, grid, reduced, radius, mode, controlled, ids, paneAt });
   latest.current = { props, cells, cellList, grid, reduced, radius, mode, controlled, ids, paneAt };
+
+  React.useEffect(() => {
+    if (mode === "swipe" && interactive && opened === null && resting !== null) props.onSwipeIdChange?.(resting);
+  }, [mode, interactive, opened, resting, props.onSwipeIdChange]);
 
   const paint = React.useCallback((offset: LayeredOffset) => {
     offsetRef.current = offset;
@@ -234,7 +246,7 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
     finish: finishGhost,
     stop,
   });
-  useSwipe(rootRef, swiping && opened === null, swipeDrive);
+  useSwipe(rootRef, interactive && swiping && opened === null, swipeDrive);
 
   React.useEffect(() => stop, [stop]);
 
@@ -280,11 +292,20 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
   }, [aim, cellList, paint, stop]);
 
   const reveal = React.useCallback(
-    (id: string) => {
-      if (openedRef.current !== null || revealedRef.current === id) return;
+    (id: string, source: LayeredRevealSource) => {
+      if (latest.current.props.interactive === false || openedRef.current !== null) return;
+      if (latest.current.props.revealedId !== undefined) {
+        latest.current.props.onRevealedIdChange?.(id, source);
+        return;
+      }
+      if (revealedRef.current === id && (sourceRef.current === source || source === "focus")) return;
+      const same = revealedRef.current === id;
       revealedRef.current = id;
+      sourceRef.current = source;
+      setRevealSource(source);
+      latest.current.props.onRevealedIdChange?.(id, source);
+      if (same) return;
       setRevealedId(id);
-      latest.current.props.onRevealedIdChange?.(id);
       touch(id);
       finishGhost();
       focusView(id);
@@ -295,52 +316,113 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
 
   const conceal = React.useCallback(
     (id: string) => {
+      if (latest.current.props.revealedId !== undefined) {
+        if (latest.current.props.interactive !== false) latest.current.props.onRevealedIdChange?.(null);
+        return;
+      }
       if (revealedRef.current !== id) return;
       revealedRef.current = null;
+      sourceRef.current = null;
       setRevealedId(null);
+      setRevealSource(null);
       latest.current.props.onRevealedIdChange?.(null);
       repaint();
     },
     [repaint],
   );
 
+  React.useLayoutEffect(() => {
+    if (!interactive && props.revealedId === undefined && revealedRef.current !== null) conceal(revealedRef.current);
+  }, [interactive, props.revealedId, conceal]);
+
+  React.useLayoutEffect(() => {
+    for (const [id, element] of cardElements.current) {
+      const source = props.revealedId === undefined ? sourceRef.current : props.revealedBy ?? "pointer";
+      const hidden = layeredCardConcealed(id, revealedId, source);
+      const tinted = layeredCardTinted(id, revealedId, source);
+      if (hidden) element.dataset.concealed = "";
+      else delete element.dataset.concealed;
+      if (tinted) element.dataset.tinted = "";
+      else delete element.dataset.tinted;
+      for (const child of element.children) if (child instanceof HTMLElement) child.style.opacity = hidden ? "0" : "";
+    }
+  });
+
   const requestOpen = React.useCallback((id: string | null) => {
-    if (id === openedRef.current) return;
+    if (latest.current.props.interactive === false || id === openedRef.current) return;
     if (!latest.current.controlled) setOwnOpened(id);
     latest.current.props.onOpenedIdChange?.(id);
   }, []);
   const close = React.useCallback(() => requestOpen(null), [requestOpen]);
 
   React.useEffect(() => {
-    if (deepLink !== null && (!latest.current.controlled || deepLink !== openedRef.current)) latest.current.props.onOpenedIdChange?.(deepLink);
-  }, [deepLink]);
+    if (interactive && deepLink !== null && (!latest.current.controlled || deepLink !== openedRef.current)) latest.current.props.onOpenedIdChange?.(deepLink);
+  }, [deepLink, interactive]);
 
   React.useLayoutEffect(() => {
     const previous = previousOpened.current;
     previousOpened.current = opened;
     openedRef.current = opened;
-    if (routing === "hash" && (previous !== opened || deepLink === null)) syncHash(opened, latest.current.ids);
+    if (interactive && routing === "hash" && (previous !== opened || deepLink === null)) syncHash(opened, latest.current.ids);
     if (previous === opened) return;
     if (revealedRef.current !== null) {
       revealedRef.current = null;
       setRevealedId(null);
-      latest.current.props.onRevealedIdChange?.(null);
+      if (latest.current.props.revealedId === undefined) latest.current.props.onRevealedIdChange?.(null);
+    }
+    if (sourceRef.current !== null) {
+      sourceRef.current = null;
+      setRevealSource(null);
     }
     if (opened !== null) {
       finishGhost();
       focusView(opened);
       const region = container(opened);
-      if (region && !region.contains(document.activeElement)) region.focus({ preventScroll: true });
+      if (interactive && region && !region.contains(document.activeElement)) region.focus({ preventScroll: true });
       return;
     }
-    if (previous === null) return;
+    if (!interactive || previous === null) return;
     const active = document.activeElement;
     if (active && active !== document.body && rootRef.current && !rootRef.current.contains(active)) return;
     cardElements.current.get(previous)?.querySelector<HTMLElement>(FOCUSABLE)?.focus({ preventScroll: true });
-  }, [opened, routing, deepLink, container, finishGhost, focusView]);
+  }, [opened, interactive, routing, deepLink, container, finishGhost, focusView]);
+
+  React.useLayoutEffect(() => {
+    if (props.revealedId === undefined) return;
+    const source = revealedId === null ? null : props.revealedBy ?? "pointer";
+    revealedRef.current = revealedId;
+    sourceRef.current = source;
+    setRevealSource(source);
+    if (revealedId !== null) {
+      touch(revealedId);
+      finishGhost();
+      focusView(revealedId);
+    }
+    repaint();
+  }, [revealedId, props.revealedId, props.revealedBy, opened, finishGhost, focusView, repaint, touch]);
+
+  React.useLayoutEffect(() => {
+    if (props.camera === undefined || mode !== "strip" || pan !== "pointer" || opened !== null || revealedId !== null) return;
+    const { grid: strip, cellList: placed } = latest.current;
+    const target = clampOffset(pointerOffset(props.camera.x, props.camera.y, strip), placed);
+    if (reduced) {
+      stop();
+      targetRef.current = target;
+      paint(target);
+    } else follow(target);
+  }, [props.camera?.x, props.camera?.y, mode, pan, opened, revealedId, reduced, cellList, follow, paint, stop]);
+
+  React.useLayoutEffect(() => {
+    if (props.swipeId === undefined || mode !== "swipe" || opened !== null || revealedId !== null || !ids.includes(props.swipeId)) return;
+    stop();
+    aim(null);
+    driveRef.current = FOLLOW;
+    targetRef.current = cellOffset(requireCell(cells, props.swipeId));
+    paint(targetRef.current);
+  }, [props.swipeId, mode, opened, revealedId, cells, ids, aim, paint, stop]);
 
   React.useEffect(() => {
-    if (routing !== "hash") return;
+    if (!interactive || routing !== "hash") return;
     const onHash = () => {
       const raw = window.location.hash.replace(/^#/, "");
       if (latest.current.ids.includes(raw)) requestOpen(raw);
@@ -348,25 +430,32 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
     };
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
-  }, [routing, requestOpen]);
+  }, [interactive, routing, requestOpen]);
 
   React.useEffect(() => {
-    if (opened === null) return;
+    if (!interactive || opened === null) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !event.defaultPrevented) requestOpen(null);
+      if (event.key === "Escape" && !event.defaultPrevented) {
+        event.preventDefault();
+        requestOpen(null);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [opened, requestOpen]);
+  }, [interactive, opened, requestOpen]);
 
   React.useEffect(() => {
     if (!panning) return;
     const onMove = (event: PointerEvent) => {
-      if (event.pointerType !== "mouse" || openedRef.current !== null || revealedRef.current !== null) return;
+      if (event.pointerType !== "mouse" || openedRef.current !== null) return;
       const box = rootRef.current?.getBoundingClientRect();
       if (!box || box.width <= 0 || box.height <= 0) return;
+      const unit = (value: number): number => Math.min(1, Math.max(0, value));
+      const camera = { x: unit((event.clientX - box.left) / box.width), y: unit((event.clientY - box.top) / box.height) };
+      latest.current.props.onCameraChange?.(camera);
+      if (revealedRef.current !== null || latest.current.props.camera !== undefined) return;
       const { grid: strip, cellList: placed } = latest.current;
-      follow(clampOffset(pointerOffset((event.clientX - box.left) / box.width, (event.clientY - box.top) / box.height, strip), placed));
+      follow(clampOffset(pointerOffset(camera.x, camera.y, strip), placed));
     };
     window.addEventListener("pointermove", onMove, { passive: true });
     return () => window.removeEventListener("pointermove", onMove);
@@ -396,6 +485,7 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
   );
   const goTo = React.useCallback(
     (neighbour: LayeredNeighbour) => {
+      if (latest.current.props.interactive === false) return;
       finishGhost();
       aim(neighbour);
       moveTo(neighbour.slot, "settle");
@@ -422,11 +512,11 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
     />
   );
   const cardHost = (pane: LayeredPane) => (
-    <LayeredCardHost key={pane.id} pane={pane} mode={mode} revealed={revealedId === pane.id} onOpen={requestOpen} onReveal={reveal} onConceal={conceal} onElement={cardCallback} renderCard={renderCard} />
+    <LayeredCardHost key={pane.id} pane={pane} mode={mode} revealed={revealedId === pane.id} source={revealedId === pane.id ? revealSource : null} onOpen={requestOpen} onReveal={reveal} onConceal={conceal} onElement={cardCallback} renderCard={renderCard} />
   );
   const chrome = props.renderChrome?.({ revealed: revealedId !== null, opened: opened !== null });
   const overviewButton =
-    opened === null || labels.overview === undefined ? null : (
+    !interactive || opened === null || labels.overview === undefined ? null : (
       <button
         type="button"
         data-layered-overview-button=""
@@ -444,7 +534,9 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
     <div
       ref={rootRef}
       data-layered-overview=""
+      data-interactive={interactive ? "" : undefined}
       data-mode={mode}
+      data-layered-resting={restedOn.current ?? undefined}
       data-pan={panning ? "pointer" : "none"}
       className="relative h-full w-full overflow-clip bg-background text-foreground"
       style={swiping && opened === null ? { touchAction: "pinch-zoom" } : undefined}
@@ -458,7 +550,7 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
           <div ref={veilCallback} data-layered-veil="" data-level="dialog" className="ui-veil pointer-events-none absolute inset-0 z-30" />
           {swiping ? (
             <>
-              <div ref={cardStripCallback} data-layered-overlay="" role="group" aria-label={labels.grid} className="pointer-events-none absolute left-0 top-0 z-[31] grid will-change-transform" style={stripStyle}>
+              <div ref={cardStripCallback} data-layered-overlay="" role="group" aria-label={labels.grid} tabIndex={interactive ? -1 : undefined} inert={!interactive} className="pointer-events-none absolute left-0 top-0 z-[31] grid outline-none will-change-transform" style={stripStyle}>
                 {panes.map((pane) => (
                   <div key={pane.id} ref={cellRefs.get(pane.id)} data-layered-cell={pane.id} className="pointer-events-none flex min-h-0 min-w-0 items-center-safe justify-center overflow-y-auto px-[36px] [:where(&)_*]:touch-pinch-zoom" style={cellStyles.get(pane.id)}>
                     {cardHost(pane)}
@@ -468,7 +560,7 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
               <LayeredNeighbourHints neighbours={neighbours} moving={resting === null} insets={insets} label={labels.neighbour} onGo={goTo} />
             </>
           ) : (
-            <div data-layered-overlay="" role="group" aria-label={labels.grid} className={cn("pointer-events-none absolute inset-0 z-[31]", props.overlayClassName)} style={props.overlayStyle}>
+            <div data-layered-overlay="" role="group" aria-label={labels.grid} tabIndex={interactive ? -1 : undefined} inert={!interactive} className={cn("pointer-events-none absolute inset-0 z-[31] outline-none", props.overlayClassName)} style={props.overlayStyle}>
               {panes.map(cardHost)}
             </div>
           )}

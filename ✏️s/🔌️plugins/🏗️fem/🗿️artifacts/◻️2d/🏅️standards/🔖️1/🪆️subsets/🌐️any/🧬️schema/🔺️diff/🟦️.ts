@@ -1,7 +1,66 @@
-import {parseFemNode,parseFemElement,parseFemRegion,parseFemMaterial,parseFemSection,parseFemSupport,parseFemLoad,parseFemLoadCase,parseFemCombination} from "../📸️snapshot/🟦️.ts";
+/** 🩹️ Tagged sparse load fields retain the current variant as a precondition. */
+export type Fem2dLoadPatch =
+  | { kind: "nodal"; nodeId?: string; dof?: FemDof; value?: Binary64 }
+  | { kind: "memberUdl"; elementId?: string; wx?: Binary64; wy?: Binary64 }
+  | { kind: "area"; regionId?: string; pressure?: Binary64 };
+/** ⚖️ Keyed term changes retain exact list positions and own only supplied factors. */
+export interface Fem2dCombinationTermPatch { factor?: Binary64; }
+export interface Fem2dCombinationTermsDelta {
+  removed: { id: string; index: number }[];
+  inserted: { index: number; row: { caseId: string; factor: Binary64 } }[];
+  moved: { id: string; from: number; to: number }[];
+  modified: { id: string; patch: Fem2dCombinationTermPatch }[];
+}
+/** 🩹️ Combination edits own a name or explicitly keyed term changes. */
+export interface Fem2dCombinationPatch { name?: string; terms?: Fem2dCombinationTermsDelta; }
+
+/** 🩹️ Sparse element fields preserve independent edits. */
+export interface Fem2dElementPatch {
+  kind?: "bar" | "beam";
+  start?: string;
+  end?: string;
+  materialId?: string;
+  sectionId?: string;
+}
+
+/** 🩹️ Sparse support fields preserve independent edits. */
+export interface Fem2dSupportPatch {
+  nodeId?: string;
+  fixed?: FemDof[];
+  tx?: boolean;
+  ty?: boolean;
+  rz?: boolean;
+}
+
+/** 🩹️ Sparse region fields preserve authored field ownership. */
+export type Fem2dRegionPatch = Partial<Omit<FemRegion, "id">>;
+
+/** 🩹️ Sparse section fields preserve stable identity. */
+export interface Fem2dSectionPatch {
+  name?: string;
+  area?: Binary64;
+  iy?: Binary64;
+}
+
+/** 🩹️ Sparse node fields preserve stable identity. */
+export interface Fem2dNodePatch {
+  x?: Binary64;
+  y?: Binary64;
+}
+
+import { type Binary64, parseBinary64, binary64Value } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+/** 🧱️ Sparse material field changes; stable identity belongs to the modification key. */
+export interface Fem2dMaterialPatch {
+  name?: string;
+  e?: Binary64;
+  nu?: Binary64;
+  rho?: Binary64;
+}
+
+import {parseFemFixedDofs,parseFemNode,parseFemElement,parseFemRegion,parseFemMaterial,parseFemSection,parseFemSupport,parseFemLoad,parseFemLoadCase,parseFemCombination} from "../📸️snapshot/🟦️.ts";
 /** 🧬️ Fem2d diff schema — sparse field delta. */
 
-import type {FemNode,FemElement,FemMaterial,FemSection,FemSupport,FemLoad,FemLoadCase,FemRegion,FemCombination} from "../📸️snapshot/🟦️.ts";
+import type {FemDof,FemNode,FemElement,FemMaterial,FemSection,FemSupport,FemLoad,FemLoadCase,FemRegion,FemCombination} from "../📸️snapshot/🟦️.ts";
 export type {FemNode,FemDof,FemElement,FemMaterial,FemSection,FemSupport,FemLoad,FemLoadCase,FemRegion,FemCombinationTerm,FemCombination,FemAnalysisSettings} from "../📸️snapshot/🟦️.ts";
 
 
@@ -45,7 +104,7 @@ export interface Fem2dNodeRelocation {
 
 export interface Fem2dNodesModification {
   id: string;
-  patch: FemNode;
+  patch: Fem2dNodePatch;
 }
 
 export interface Fem2dNodesDelta {
@@ -73,7 +132,7 @@ export interface Fem2dElementRelocation {
 
 export interface Fem2dElementsModification {
   id: string;
-  patch: FemElement;
+  patch: Fem2dElementPatch;
 }
 
 export interface Fem2dElementsDelta {
@@ -101,7 +160,7 @@ export interface Fem2dRegionRelocation {
 
 export interface Fem2dRegionsModification {
   id: string;
-  patch: FemRegion;
+  patch: Fem2dRegionPatch;
 }
 
 export interface Fem2dRegionsDelta {
@@ -129,7 +188,7 @@ export interface Fem2dMaterialRelocation {
 
 export interface Fem2dMaterialsModification {
   id: string;
-  patch: FemMaterial;
+  patch: Fem2dMaterialPatch;
 }
 
 export interface Fem2dMaterialsDelta {
@@ -157,7 +216,7 @@ export interface Fem2dSectionRelocation {
 
 export interface Fem2dSectionsModification {
   id: string;
-  patch: FemSection;
+  patch: Fem2dSectionPatch;
 }
 
 export interface Fem2dSectionsDelta {
@@ -185,7 +244,7 @@ export interface Fem2dSupportRelocation {
 
 export interface Fem2dSupportsModification {
   id: string;
-  patch: FemSupport;
+  patch: Fem2dSupportPatch;
 }
 
 export interface Fem2dSupportsDelta {
@@ -247,7 +306,7 @@ export interface Fem2dLoadRelocation {
 
 export interface Fem2dLoadsModification {
   id: string;
-  patch: FemLoad;
+  patch: Fem2dLoadPatch;
 }
 
 export interface Fem2dLoadsDelta {
@@ -281,7 +340,7 @@ export interface Fem2dCombinationRelocation {
 
 export interface Fem2dCombinationsModification {
   id: string;
-  patch: FemCombination;
+  patch: Fem2dCombinationPatch;
 }
 
 export interface Fem2dCombinationsDelta {
@@ -486,7 +545,7 @@ export function parseFem2dCombinationsModification(value: unknown, at = "$"): Fe
   const row = femFem2dDiffGuardClosed(femFem2dDiffGuardObject(value, at), at, ["id", "patch"]);
   return {
     id: femFem2dDiffGuardString(row["id"], `${at}.id`),
-    patch: parseFemCombination(row["patch"], `${at}.patch`),
+    patch: parseFem2dCombinationPatch(row["patch"], `${at}.patch`),
   };
 }
 
@@ -519,7 +578,7 @@ export function parseFem2dElementsModification(value: unknown, at = "$"): Fem2dE
   const row = femFem2dDiffGuardClosed(femFem2dDiffGuardObject(value, at), at, ["id", "patch"]);
   return {
     id: femFem2dDiffGuardString(row["id"], `${at}.id`),
-    patch: parseFemElement(row["patch"], `${at}.patch`),
+    patch: parseFem2dElementPatch(row["patch"], `${at}.patch`),
   };
 }
 
@@ -585,7 +644,7 @@ export function parseFem2dLoadsModification(value: unknown, at = "$"): Fem2dLoad
   const row = femFem2dDiffGuardClosed(femFem2dDiffGuardObject(value, at), at, ["id", "patch"]);
   return {
     id: femFem2dDiffGuardString(row["id"], `${at}.id`),
-    patch: parseFemLoad(row["patch"], `${at}.patch`),
+    patch: parseFem2dLoadPatch(row["patch"], `${at}.patch`),
   };
 }
 
@@ -618,7 +677,7 @@ export function parseFem2dMaterialsModification(value: unknown, at = "$"): Fem2d
   const row = femFem2dDiffGuardClosed(femFem2dDiffGuardObject(value, at), at, ["id", "patch"]);
   return {
     id: femFem2dDiffGuardString(row["id"], `${at}.id`),
-    patch: parseFemMaterial(row["patch"], `${at}.patch`),
+    patch: parseFem2dMaterialPatch(row["patch"], `${at}.patch`),
   };
 }
 
@@ -651,7 +710,7 @@ export function parseFem2dNodesModification(value: unknown, at = "$"): Fem2dNode
   const row = femFem2dDiffGuardClosed(femFem2dDiffGuardObject(value, at), at, ["id", "patch"]);
   return {
     id: femFem2dDiffGuardString(row["id"], `${at}.id`),
-    patch: parseFemNode(row["patch"], `${at}.patch`),
+    patch: parseFem2dNodeDeltaPatch(row["patch"], `${at}.patch`),
   };
 }
 
@@ -684,7 +743,7 @@ export function parseFem2dRegionsModification(value: unknown, at = "$"): Fem2dRe
   const row = femFem2dDiffGuardClosed(femFem2dDiffGuardObject(value, at), at, ["id", "patch"]);
   return {
     id: femFem2dDiffGuardString(row["id"], `${at}.id`),
-    patch: parseFemRegion(row["patch"], `${at}.patch`),
+    patch: parseFem2dRegionPatch(row["patch"], `${at}.patch`),
   };
 }
 
@@ -717,7 +776,7 @@ export function parseFem2dSectionsModification(value: unknown, at = "$"): Fem2dS
   const row = femFem2dDiffGuardClosed(femFem2dDiffGuardObject(value, at), at, ["id", "patch"]);
   return {
     id: femFem2dDiffGuardString(row["id"], `${at}.id`),
-    patch: parseFemSection(row["patch"], `${at}.patch`),
+    patch: parseFem2dSectionPatch(row["patch"], `${at}.patch`),
   };
 }
 
@@ -750,6 +809,161 @@ export function parseFem2dSupportsModification(value: unknown, at = "$"): Fem2dS
   const row = femFem2dDiffGuardClosed(femFem2dDiffGuardObject(value, at), at, ["id", "patch"]);
   return {
     id: femFem2dDiffGuardString(row["id"], `${at}.id`),
-    patch: parseFemSupport(row["patch"], `${at}.patch`),
+    patch: parseFem2dSupportPatch(row["patch"], `${at}.patch`),
+  };
+}
+
+/** 🩹️ Admits sparse material changes without accepting a replacement identity. */
+export function parseFem2dMaterialPatch(value: unknown, at = "$"): Fem2dMaterialPatch {
+  const row = femFem2dDiffGuardObject(value, at);
+  const patch: Fem2dMaterialPatch = {};
+  for (const key of Object.keys(row)) {
+    if (!["name", "e", "nu", "rho"].includes(key)) return femFem2dDiffGuardReject(`${at}.${key}`, "unknown material field");
+    if (key === "name") {
+      patch.name = femFem2dDiffGuardString(row[key], `${at}.${key}`);
+    } else {
+      const word = parseBinary64(row[key]);
+      const number = binary64Value(word);
+      if (!Number.isFinite(number) || (key === "nu" ? number <= -1 || number >= 0.5 : number <= 0)) return femFem2dDiffGuardReject(`${at}.${key}`, "invalid material value");
+      patch[key as Exclude<keyof Fem2dMaterialPatch, "name">] = word;
+    }
+  }
+  return patch;
+}
+
+/** 🩹️ Admits only supplied node fields with their native scalar identity. */
+function parseFem2dNodeDeltaPatch(value: unknown, at = "$"): Fem2dNodePatch {
+  const row = femFem2dDiffGuardObject(value, at);
+  const patch: Fem2dNodePatch = {};
+  for (const key of Object.keys(row)) {
+    if (!["x", "y"].includes(key)) return femFem2dDiffGuardReject(`${at}.${key}`, "unknown node field");
+    const word = parseBinary64(row[key]);
+    patch[key as keyof Fem2dNodePatch] = word;
+  }
+  return patch;
+}
+
+/** 🛂️ Validates finite coordinates for a supplied editing intent. */
+export function parseFem2dNodePatch(value: unknown, at = "$"): Fem2dNodePatch {
+  const patch = parseFem2dNodeDeltaPatch(value, at);
+  for (const [key, word] of Object.entries(patch)) {
+    if (!Number.isFinite(binary64Value(word))) return femFem2dDiffGuardReject(`${at}.${key}`, "invalid node value");
+  }
+  return patch;
+}
+/** 🩹️ Admits only supplied section fields with their native scalar identity. */
+export function parseFem2dSectionPatch(value: unknown, at = "$"): Fem2dSectionPatch {
+  const row = femFem2dDiffGuardObject(value, at);
+  const patch: Fem2dSectionPatch = {};
+  for (const key of Object.keys(row)) {
+    if (!["name", "area", "iy"].includes(key)) return femFem2dDiffGuardReject(`${at}.${key}`, "unknown section field");
+    if (key === "name") { patch.name = femFem2dDiffGuardString(row[key], `${at}.${key}`); continue; }
+    const word = parseBinary64(row[key]);
+    const number = binary64Value(word);
+    if (!Number.isFinite(number) || number <= 0) return femFem2dDiffGuardReject(`${at}.${key}`, "invalid section value");
+    patch[key as Exclude<keyof Fem2dSectionPatch, "name">] = word;
+  }
+  return patch;
+}
+/** 🩹️ Admits supplied geometry fields without a replacement identity. */
+export function parseFem2dRegionPatch(value: unknown, at = "$"): Fem2dRegionPatch {
+  const row = femFem2dDiffGuardObject(value, at);
+  const patch: Fem2dRegionPatch = {};
+  const point = (value: unknown, here: string): [Binary64, Binary64] => {
+    const coordinates = femFem2dDiffGuardArray(value, here);
+    if (coordinates.length !== 2) return femFem2dDiffGuardReject(here, "two coordinates required");
+    return coordinates.map((value, index) => {
+      const word = parseBinary64(value, `${here}[${index}]`);
+      if (!Number.isFinite(binary64Value(word))) return femFem2dDiffGuardReject(here, "finite coordinate required");
+      return word;
+    }) as [Binary64, Binary64];
+  };
+  const ring = (value: unknown, here: string) => {
+    const points = femFem2dDiffGuardArray(value, here);
+    if (points.length < 3) return femFem2dDiffGuardReject(here, "at least three points required");
+    return points.map((value, index) => point(value, `${here}[${index}]`));
+  };
+  for (const key of Object.keys(row)) {
+    if (!["name", "outline", "holes", "thickness", "materialId", "meshSize"].includes(key)) return femFem2dDiffGuardReject(`${at}.${key}`, "unknown geometry field");
+    if (key === "name" || key === "materialId") patch[key] = femFem2dDiffGuardString(row[key], `${at}.${key}`);
+    else if (key === "outline") patch.outline = ring(row[key], `${at}.${key}`);
+    else if (key === "holes") patch.holes = femFem2dDiffGuardArray(row[key], `${at}.${key}`).map((value, index) => ring(value, `${at}.${key}[${index}]`));
+
+    else {
+      const word = parseBinary64(row[key], `${at}.${key}`);
+      const number = binary64Value(word);
+      if (!Number.isFinite(number) || (key !== "baseZ" && number <= 0)) return femFem2dDiffGuardReject(`${at}.${key}`, "positive finite geometry property required");
+      patch[key as "thickness" | "meshSize"] = word;
+    }
+  }
+  return patch;
+}
+
+/** 🩹️ Admits supplied support fields without stable identity. */
+export function parseFem2dSupportPatch(value: unknown, at = "$"): Fem2dSupportPatch {
+  const row = femFem2dDiffGuardObject(value, at);
+  const patch: Fem2dSupportPatch = {};
+  if (Object.hasOwn(row, "fixed") && ["tx", "ty", "rz"].some(key => Object.hasOwn(row, key))) return femFem2dDiffGuardReject(at, "whole fixed set and membership setters are exclusive");
+  for (const key of Object.keys(row)) {
+    if (!["nodeId", "fixed", "tx", "ty", "rz"].includes(key)) return femFem2dDiffGuardReject(`${at}.${key}`, "unknown support field");
+    if (key === "nodeId") { patch.nodeId = femFem2dDiffGuardString(row[key], `${at}.${key}`); }
+    if (key === "fixed") { patch.fixed = parseFemFixedDofs(row[key], `${at}.${key}`); }
+    if (key === "tx") { if (typeof row[key] !== "boolean") return femFem2dDiffGuardReject(`${at}.${key}`, "boolean required"); patch.tx = row[key] as boolean; }
+    if (key === "ty") { if (typeof row[key] !== "boolean") return femFem2dDiffGuardReject(`${at}.${key}`, "boolean required"); patch.ty = row[key] as boolean; }
+    if (key === "rz") { if (typeof row[key] !== "boolean") return femFem2dDiffGuardReject(`${at}.${key}`, "boolean required"); patch.rz = row[key] as boolean; }
+  }
+  return patch;
+}
+
+/** 🩹️ Admits supplied element fields without stable identity. */
+export function parseFem2dElementPatch(value: unknown, at = "$"): Fem2dElementPatch {
+  const row = femFem2dDiffGuardObject(value, at);
+  const patch: Fem2dElementPatch = {};
+  for (const key of Object.keys(row)) {
+    if (!["kind", "start", "end", "materialId", "sectionId"].includes(key)) return femFem2dDiffGuardReject(`${at}.${key}`, "unknown element field");
+    if (key === "kind") { patch.kind = femFem2dDiffGuardMember(row[key], `${at}.${key}`, ["bar", "beam"] as const); }
+    if (key === "start") { patch.start = femFem2dDiffGuardString(row[key], `${at}.${key}`); }
+    if (key === "end") { patch.end = femFem2dDiffGuardString(row[key], `${at}.${key}`); }
+    if (key === "materialId") { patch.materialId = femFem2dDiffGuardString(row[key], `${at}.${key}`); }
+    if (key === "sectionId") { patch.sectionId = femFem2dDiffGuardString(row[key], `${at}.${key}`); }
+  }
+  return patch;
+}
+
+/** 🛡️ Admits a tagged field patch without identity, nulls or unknown fields. */
+export function parseFem2dLoadPatch(value: unknown, at = "$"): Fem2dLoadPatch {
+  const row = femFem2dDiffGuardObject(value, at);
+  const kind = femFem2dDiffGuardMember(row.kind, `${at}.kind`, ["nodal", "memberUdl", "area"] as const);
+  const fields: Record<string, readonly string[]> = { nodal: ["nodeId", "dof", "value"], memberUdl: ["elementId", "wx", "wy"], area: ["regionId", "pressure"] };
+  const patch: Record<string, unknown> = { kind };
+  for (const key of Object.keys(row)) {
+    if (key === "kind") continue;
+    if (!fields[kind].includes(key)) return femFem2dDiffGuardReject(`${at}.${key}`, "unknown load field");
+    if (["nodeId", "elementId", "regionId"].includes(key)) patch[key] = femFem2dDiffGuardString(row[key], `${at}.${key}`);
+    else if (key === "dof") patch[key] = femFem2dDiffGuardMember(row[key], `${at}.${key}`, ["Tx", "Ty", "Tz", "Rx", "Ry", "Rz"] as const);
+    else { const word = parseBinary64(row[key], `${at}.${key}`); if (!Number.isFinite(binary64Value(word))) return femFem2dDiffGuardReject(`${at}.${key}`, "finite value required"); patch[key] = word; }
+  }
+  return patch as unknown as Fem2dLoadPatch;
+}
+/** ⚖️ Admits only authored name and keyed term fields. */
+export function parseFem2dCombinationPatch(value: unknown, at = "$"): Fem2dCombinationPatch {
+  const row = femFem2dDiffGuardObject(value, at);
+  const patch: Fem2dCombinationPatch = {};
+  for (const key of Object.keys(row)) {
+    if (key === "name") patch.name = femFem2dDiffGuardString(row[key], `${at}.name`);
+    else if (key === "terms") patch.terms = parseFem2dCombinationTermsDelta(row[key], `${at}.terms`);
+    else return femFem2dDiffGuardReject(`${at}.${key}`, "unknown combination field");
+  }
+  return patch;
+}
+/** ⚖️ Admits list position records and supplied finite term factors. */
+export function parseFem2dCombinationTermsDelta(value: unknown, at = "$"): Fem2dCombinationTermsDelta {
+  const row = femFem2dDiffGuardObject(value, at);
+  if (Object.keys(row).some(key => !["removed", "inserted", "moved", "modified"].includes(key))) return femFem2dDiffGuardReject(at, "unknown term delta field");
+  const finite = (raw: unknown, here: string) => { const word = parseBinary64(raw, here); if (!Number.isFinite(binary64Value(word))) return femFem2dDiffGuardReject(here, "finite factor required"); return word; };
+  return {
+    removed: parseFemRemovals(row.removed, `${at}.removed`), moved: parseFemRelocations(row.moved, `${at}.moved`),
+    inserted: parseFemInsertions(row.inserted, `${at}.inserted`, (raw, here) => { const term = femFem2dDiffGuardObject(raw, here); if (Object.keys(term).length !== 2 || !Object.hasOwn(term, "caseId") || !Object.hasOwn(term, "factor")) return femFem2dDiffGuardReject(here, "caseId and factor required"); return { caseId: femFem2dDiffGuardString(term.caseId, `${here}.caseId`), factor: finite(term.factor, `${here}.factor`) }; }),
+    modified: parseFemModifications(row.modified, `${at}.modified`, (raw, here) => { const term = femFem2dDiffGuardObject(raw, here); if (Object.keys(term).some(key => key !== "factor")) return femFem2dDiffGuardReject(here, "unknown term field"); return Object.hasOwn(term, "factor") ? { factor: finite(term.factor, `${here}.factor`) } : {}; }),
   };
 }

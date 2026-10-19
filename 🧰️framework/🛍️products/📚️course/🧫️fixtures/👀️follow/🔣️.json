@@ -1,0 +1,58 @@
+{
+  "capture": [
+    { "id": "burst", "calls": [[0, 0], [5, 1], [16, 2], [32, 3], [60, 4]], "sent": [[0, 0], [67, 4]] },
+    { "id": "continuous", "calls": [[0, 0], [16, 1], [32, 2], [48, 3], [64, 4], [80, 5], [96, 6], [112, 7], [128, 8]], "sent": [[0, 0], [67, 4], [147, 8]] },
+    { "id": "idle", "calls": [[0, 0], [150, 1], [300, 2]], "sent": [[0, 0], [150, 1], [300, 2]] }
+  ],
+  "events": [
+    { "type": "follow-started", "tag": "alice", "expected": "alice" },
+    { "type": "follow-started", "tag": "bob", "expected": "bob" },
+    { "type": "follow-stopped", "reason": "interaction" },
+    { "type": "follow-started", "tag": "alice", "expected": "alice" },
+    { "type": "follow-stopped", "reason": "departed" }
+  ],
+  "dialogs": [
+    { "phase": "confirming", "confirmDisabled": true },
+    { "phase": "saving", "done": 2, "total": 4 },
+    { "phase": "submitting" },
+    { "phase": "results" }
+  ],
+  "controls": [
+    { "sheet": "icons-1", "task": "sources", "role": "combobox", "disabled": true },
+    { "sheet": "icons-1", "task": "appliances", "role": "combobox", "disabled": true },
+    { "sheet": "icons-1", "task": "masses", "role": "button", "disabled": true },
+    { "sheet": "icons-1-hard", "task": "masses", "role": "textbox", "disabled": true },
+    { "sheet": "icons-1-expert", "task": "sources", "role": "button", "disabled": true }
+  ],
+  "layouts": [
+    { "grid": "desktop", "mode": "swipe", "swipe": "board", "column": 2, "row": 0 },
+    { "grid": "tablet", "mode": "swipe", "swipe": "board", "column": 0, "row": 1 },
+    { "grid": "desktop", "mode": "strip", "swipe": "learner", "column": 0, "row": 0 }
+  ],
+  "scroll": [
+    { "page": "learner", "owner": { "scrollHeight": 1000, "clientHeight": 100, "scrollWidth": 500, "clientWidth": 100, "scrollTop": 450, "scrollLeft": 200 }, "viewport": { "x": 0.5, "y": 0.5 }, "observed": { "scrollHeight": 600, "clientHeight": 200, "scrollWidth": 900, "clientWidth": 100 }, "expected": { "left": 400, "top": 200 } },
+    { "page": "board", "owner": { "scrollHeight": 900, "clientHeight": 100, "scrollWidth": 500, "clientWidth": 100, "scrollTop": 640, "scrollLeft": 100 }, "viewport": { "x": 0.25, "y": 0.8 }, "observed": { "scrollHeight": 1500, "clientHeight": 500, "scrollWidth": 700, "clientWidth": 100 }, "expected": { "left": 150, "top": 800 } }
+  ],
+  "reconnect": [
+    { "status": "waiting", "elapsed": 4000, "following": "alice" },
+    { "status": "connecting", "elapsed": 4000, "following": "alice" },
+    { "status": "waiting", "elapsed": 2000 }
+  ],
+  "preferences": [
+    { "peer": { "theme": "dark" }, "expectedTheme": "dark" },
+    { "peer": { "device": "desktop", "theme": "light" }, "expectedDevice": "desktop", "expectedTheme": "light" },
+    { "peer": { "device": "tablet", "theme": "system" }, "expectedDevice": "tablet", "expectedTheme": "system" }
+  ],
+  "sort": [
+    { "key": "total", "direction": "ascending", "expected": ["bob", "alice"] },
+    { "key": "total", "direction": "descending", "expected": ["alice", "bob"] }
+  ],
+  "labels": { "en": "Follow Alice", "de": "Alice folgen" },
+  "places": [
+    { "place": { "screen": "home" }, "home": "quizzes", "expected": { "screen": "home", "page": "quizzes" } },
+    { "place": { "screen": "quiz", "quiz": "architecture" }, "expected": { "screen": "home", "page": "architecture" } },
+    { "place": { "screen": "preferences" }, "expected": { "screen": "home", "page": "prefs" } },
+    { "place": { "screen": "run", "quiz": "architecture", "task": "order" }, "expected": { "screen": "run", "run": "presence-run" } },
+    { "place": { "screen": "results", "quiz": "architecture" }, "expected": { "screen": "results", "run": "presence-run" } }
+  ]
+}

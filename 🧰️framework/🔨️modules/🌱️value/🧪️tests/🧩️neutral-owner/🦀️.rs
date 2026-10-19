@@ -42,6 +42,11 @@ fn close_turn<T: RetainedCloneTrait>(cursor: &mut impl RetainedCloneCursor<T>, w
     step
 }
 
+fn close_complete<T: RetainedCloneTrait>(cursor: &mut impl RetainedCloneCursor<T>, work: usize) {
+    for _ in 0..100000 { if matches!(close_turn(cursor, work), RetainedCloneStep::Complete(_)) { break; } }
+    assert!(cursor.terminal_is_empty());
+}
+
 fn retire<T: semio_framework_value::retirement::RetireOwned>(value: T, work: usize) {
     let mut owner = semio_framework_value::retirement::controlled::ControlledRetirement::new(value).map_err(|(error, _)| error).unwrap();
     for _ in 0..100000 {
@@ -101,7 +106,7 @@ fn paged_native_recursive_clone_uses_admitted_lazy_cursor_owners() {
     let mut cursor = PagedTree::retained_clone_cursor();
     for turn in 0..100000 {
         let grant = match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, 64), 1 => RetainedCloneGrant::one_payload_turn(4096, 64), _ => RetainedCloneGrant::one_release_turn(4096, 64) };
-        let step = cursor.advance(source.borrow(), grant).unwrap();
+        let step = cursor.advance(source.borrow(), 4096, grant).unwrap();
         let progress = step.progress();
         assert!(progress.copied_items <= 1 && progress.copied_bytes + progress.retained_capacity_bytes + progress.released_bytes <= 4096);
         if matches!(step, RetainedCloneStep::Complete(_)) { break; }
@@ -109,7 +114,7 @@ fn paged_native_recursive_clone_uses_admitted_lazy_cursor_owners() {
     let output = cursor.take().unwrap();
     assert_eq!(serde_json::to_value(&output).unwrap(), oracle);
     cursor.begin_close();
-    while !matches!(close_turn(&mut cursor, 4096), RetainedCloneStep::Complete(_)) {}
+    close_complete(&mut cursor, 4096);
     assert!(cursor.terminal_is_empty());
     retire(output, 4096);
     drain_source(source);
@@ -131,7 +136,7 @@ fn paged_native_record_derives_preserve_neutral_serde_and_dsl_shapes() {
     let mut cursor = PagedDocument::retained_clone_cursor();
     for turn in 0..10000 {
         let grant = match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, 64), 1 => RetainedCloneGrant::one_payload_turn(4096, 64), _ => RetainedCloneGrant::one_release_turn(4096, 64) };
-        let step = cursor.advance(authority.borrow(0, |source| source), grant).unwrap();
+        let step = cursor.advance(authority.borrow(0, |source| source), 4096, grant).unwrap();
         let progress = step.progress();
         assert!(progress.copied_items <= 1 && progress.copied_bytes + progress.retained_capacity_bytes + progress.released_bytes <= 4096);
         if matches!(step, RetainedCloneStep::Complete(_)) { break; }
@@ -139,7 +144,7 @@ fn paged_native_record_derives_preserve_neutral_serde_and_dsl_shapes() {
     let cloned = cursor.take().unwrap();
     assert_eq!(serde_json::to_value(&cloned).unwrap(), input);
     cursor.begin_close();
-    while !matches!(close_turn(&mut cursor, 4096), RetainedCloneStep::Complete(_)) {}
+    close_complete(&mut cursor, 4096);
     assert!(cursor.terminal_is_empty());
     for value in [copied, cloned] {
         retire(value, 4096);
@@ -167,7 +172,8 @@ fn neutral_record_vectors_match_independent_serde() {
             loop {
                 turns += 1;
                 assert!(turns < 10000);
-                if matches!(cursor.advance(source.borrow(), grant).unwrap(), RetainedCloneStep::Complete(_)) { break; }
+                let step = cursor.advance(source.borrow(), turn["maximumCopyBytes"].as_u64().unwrap() as usize, grant).unwrap();
+                if matches!(step, RetainedCloneStep::Complete(_)) { break; }
             }
             assert!(turns > 1);
             let copied = cursor.take().unwrap();
@@ -191,28 +197,28 @@ fn borrowed_record_clone_matches_neutral_serde_and_exact_cancellation() {
     for row in corpus["vectors"].as_array().unwrap().iter().filter(|row| row["accepted"] == true) {
         let authority = admit_authority(serde_json::from_value::<Record>(row["input"].clone()).unwrap());
         let mut cursor = Record::retained_clone_cursor();
-        loop { if matches!(cursor.advance(authority.borrow(0, |source| source), grant).unwrap(), RetainedCloneStep::Complete(_)) { break; } }
+        loop { if matches!(cursor.advance(authority.borrow(0, |source| source), turn["maximumCopyBytes"].as_u64().unwrap() as usize, grant).unwrap(), RetainedCloneStep::Complete(_)) { break; } }
         let copied = cursor.take().unwrap();
         assert_eq!(serde_json::to_value(&copied).unwrap(), row["input"]);
         assert_eq!(serde_json::to_value(authority.borrow(0, |source| source).get()).unwrap() == row["input"], corpus["borrowAuthority"]["sourceUnchanged"].as_bool().unwrap());
         cursor.begin_close();
-        while !matches!(close_turn(&mut cursor, 1024), RetainedCloneStep::Complete(_)) {}
+        close_complete(&mut cursor, 1024);
         assert!(cursor.terminal_is_empty());
         retire(copied, 1024);
         for cancelled_at in corpus["borrowAuthority"]["cancelAt"].as_array().unwrap() {
             let mut cancelled = Record::retained_clone_cursor();
-            for _ in 0..cancelled_at.as_u64().unwrap() { cancelled.advance(authority.borrow(0, |source| source), grant).unwrap(); }
+            for _ in 0..cancelled_at.as_u64().unwrap() { cancelled.advance(authority.borrow(0, |source| source), turn["maximumCopyBytes"].as_u64().unwrap() as usize, grant).unwrap(); }
             cancelled.begin_close();
-            while !matches!(close_turn(&mut cancelled, 1024), RetainedCloneStep::Complete(_)) {}
+            close_complete(&mut cancelled, 1024);
             assert!(cancelled.terminal_is_empty());
             assert_eq!(serde_json::to_value(authority.borrow(0, |source| source).get()).unwrap(), row["input"]);
         }
         let changed = admit_authority(serde_json::from_value::<Record>(row["input"].clone()).unwrap());
         let mut cursor = Record::retained_clone_cursor();
-        cursor.advance(authority.borrow(0, |source| source), grant).unwrap();
-        assert_eq!(cursor.advance(changed.borrow(0, |source| source), grant).is_ok(), corpus["borrowAuthority"]["changedSourceAccepted"].as_bool().unwrap());
+        cursor.advance(authority.borrow(0, |source| source), turn["maximumCopyBytes"].as_u64().unwrap() as usize, grant).unwrap();
+        assert_eq!(cursor.advance(changed.borrow(0, |source| source), turn["maximumCopyBytes"].as_u64().unwrap() as usize, grant).is_ok(), corpus["borrowAuthority"]["changedSourceAccepted"].as_bool().unwrap());
         cursor.begin_close();
-        while !matches!(close_turn(&mut cursor, 1024), RetainedCloneStep::Complete(_)) {}
+        close_complete(&mut cursor, 1024);
         assert!(cursor.terminal_is_empty());
         drain_authority(changed);
         drain_authority(authority);

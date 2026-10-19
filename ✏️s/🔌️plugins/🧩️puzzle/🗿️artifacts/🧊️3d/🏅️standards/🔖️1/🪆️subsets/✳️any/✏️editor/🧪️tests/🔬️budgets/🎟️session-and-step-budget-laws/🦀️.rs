@@ -23,7 +23,8 @@ const PUZZLE3D_MEASURED_STEP_BUDGET: std::time::Duration = std::time::Duration::
 /// itself enforces at runtime; what a test can prove is that the WORK inside a turn fits it.
 const PUZZLE3D_MEASURED_STEP_RUNS: u32 = 5;
 
-fn measured_step_loop(work: &mut dyn semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle3dPlayApp>>, command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dConfig, context: &semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle3dPlayApp>>, guard: usize, label: &str) -> Vec<std::time::Duration> {
+fn measured_step_loop(original: &mut semio_s_plugin_puzzle_retained::testing::OriginalFixture, work: &mut dyn semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle3dPlayApp>>, command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dConfig, context: &semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle3dPlayApp>>, guard: usize, label: &str) -> Vec<std::time::Duration> {
+
     use semio_s_plugin_puzzle_retained::testing::PuzzleCommandWorkStep;
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -31,25 +32,27 @@ fn measured_step_loop(work: &mut dyn semio_framework_plugin::retained_command::A
     loop {
         assert!(turns.len() <= guard, "{label} step() did not reach Complete within {guard} bounded turns");
         let started = std::time::Instant::now();
-        let outcome = semio_s_plugin_puzzle_retained::testing::step(work, command, snapshot, config, &interaction, &hover, Some(context)).expect("bounded step");
+        let outcome = semio_s_plugin_puzzle_retained::testing::step(original, work, command, snapshot, config, &interaction, &hover, Some(context)).expect("bounded step");
         turns.push(started.elapsed());
         if matches!(outcome, PuzzleCommandWorkStep::Complete(_)) {
             break;
         }
     }
+    semio_s_plugin_puzzle_retained::testing::close(original, work);
     turns
 }
 
-fn measured_tool_work(tool_id: &'static str, run: u32) -> (Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle3dPlayApp>>>, semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle3dPlayApp>>) {
+fn measured_tool_work(original: &mut semio_s_plugin_puzzle_retained::testing::OriginalFixture, tool_id: &'static str, run: u32) -> (Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle3dPlayApp>>>, semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle3dPlayApp>>) {
     let instance = Puzzle3dInstanceBinding { app_instance_id: 9_000 + run, parent_document_id: format!("measured-{tool_id}-{run}"), owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::new(Box::new(Puzzle3dInstanceOperationOwner::default())) };
+    let app_instance_id = instance.app_instance_id;
     let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle3dPlayApp>>> = match tool_id {
-        "acceptSuggestion" => Box::new(Puzzle3dAcceptSuggestionWork::default().bound(&instance)),
-        "setActiveExample" => Box::new(Puzzle3dSetActiveExampleWork::default()),
-        "openVortexSuggestions" => Box::new(Puzzle3dWindowCommandWork::new(tool_id).bound(&instance)),
+        "acceptSuggestion" => original.construct_boxed(Puzzle3dAcceptSuggestionWork::original_birth_demands().unwrap(), |scope| Puzzle3dAcceptSuggestionWork::from_original_construction(scope).map(|(work, progress)| (work.bound(instance), progress))),
+        "setActiveExample" => original.construct_boxed(Puzzle3dSetActiveExampleWork::original_birth_demands().unwrap(), |scope| Puzzle3dSetActiveExampleWork::from_original_construction(scope)),
+        "openVortexSuggestions" => Box::new(Puzzle3dWindowCommandWork::new(tool_id).bound(instance.clone())),
         _ => Box::new(semio_s_plugin_puzzle_retained::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent)),
     };
     let context = semio_framework_plugin::app::ArtifactOwnedToolJobContext::new(
-        instance.app_instance_id,
+        app_instance_id,
         Some(measured_view_state()),
         [0; 32],
         0,
@@ -68,8 +71,11 @@ fn measured_tool_work(tool_id: &'static str, run: u32) -> (Box<dyn semio_framewo
 fn measured_cold_runs(tool_id: &'static str, command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dConfig) -> (usize, std::time::Duration) {
     let mut best: Vec<std::time::Duration> = Vec::new();
     for run in 0..PUZZLE3D_MEASURED_STEP_RUNS {
-        let (mut work, context) = measured_tool_work(tool_id, run);
-        let turns = measured_step_loop(work.as_mut(), command, snapshot, config, &context, semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS, tool_id);
+            let mut original = semio_s_plugin_puzzle_retained::testing::OriginalFixture::new(
+        semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_s_plugin_puzzle_retained::testing::fixture_stock(), || Some(0), u64::MAX, 1 << 24);
+        let (mut work, context) = measured_tool_work(&mut original, tool_id, run);
+        let turns = measured_step_loop(&mut original, work.as_mut(), command, snapshot, config, &context, semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS, tool_id);
+        original.finish();
         if best.is_empty() {
             best = turns;
             continue;

@@ -14,6 +14,7 @@ pub struct DbIoPages {
     pub total_len: usize,
     pub(super) shell_returned: bool,
     pub result_handback: Option<DbIoResultHandback>,
+    pub custody: Option<DbIoFaultCustody>,
 }
 
 impl DbIoPages {

@@ -17,6 +17,7 @@ pub(super) enum SnapshotPreflightStage {
     Regions,
     Supports,
     LoadCases,
+    CombinationTerms,
     Loads,
     Complete,
 }
@@ -27,6 +28,8 @@ pub(super) struct SnapshotPreflight {
     pub(super) outer: usize,
     pub(super) inner: usize,
     load_count: usize,
+    source_lookup: usize,
+    source_peer: usize,
     page_items: [u16; FEM3D_VISUAL_PAGES],
     page_bytes: [u32; FEM3D_VISUAL_PAGES],
     pub(super) item_count: u32,
@@ -37,7 +40,7 @@ pub(super) struct SnapshotPreflight {
 
 impl SnapshotPreflight {
     pub(super) fn new() -> Self {
-        let mut preflight = Self { stage: SnapshotPreflightStage::Nodes, outer: 0, inner: 0, load_count: 0, page_items: [0; FEM3D_VISUAL_PAGES], page_bytes: [0; FEM3D_VISUAL_PAGES], item_count: 0, byte_count: 0, draw_count: 0, draw_bytes: 0 };
+        let mut preflight = Self { stage: SnapshotPreflightStage::Nodes, outer: 0, inner: 0, load_count: 0, source_lookup: 0, source_peer: 0, page_items: [0; FEM3D_VISUAL_PAGES], page_bytes: [0; FEM3D_VISUAL_PAGES], item_count: 0, byte_count: 0, draw_count: 0, draw_bytes: 0 };
         let _ = preflight.charge(0, 1, 3, 0, 3);
         let _ = preflight.charge(20, 1, 2 + FEM3D_VISUAL_LABEL_EN.len(), 0, 0);
         let _ = preflight.charge(20, 1, 2 + FEM3D_VISUAL_LABEL_DE.len(), 0, 0);
@@ -85,12 +88,10 @@ impl SnapshotPreflight {
                     return Ok(false);
                 };
                 let page = 2 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY;
-                self.charge(page, 1, node.id.len(), 1, node.id.len())?;
-                self.charge(10 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, 1, node.id.len(), 1, node.id.len())?;
-                self.charge(12 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, 1, node.id.len(), 1, node.id.len())?;
-                self.charge(14 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, 1, node.id.len(), 1, node.id.len())?;
-                self.charge(16 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, 1, node.id.len(), 1, node.id.len())?;
-                self.charge(18 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, 1, node.id.len(), 1, node.id.len())?;
+                let identity_bytes = protocol::wire::validate_scoped_identity_segments(&["node", &node.id]).map_err(|_| ())?;
+                for page in [page, 10 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, 12 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, 14 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, 16 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, 18 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY] {
+                    self.charge(page, 1, identity_bytes, 1, identity_bytes)?;
+                }
                 self.outer += 1;
             }
             SnapshotPreflightStage::Elements => {
@@ -98,9 +99,9 @@ impl SnapshotPreflight {
                     self.next_stage(SnapshotPreflightStage::Regions);
                     return Ok(false);
                 };
-                let id = element_id(element);
-                self.charge(4 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, 1, id.len(), 1, id.len())?;
-                self.charge(6 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, 1, id.len(), 1, id.len())?;
+                let identity_bytes = protocol::wire::validate_scoped_identity_segments(&["element", element_id(element)]).map_err(|_| ())?;
+                self.charge(4 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, 1, identity_bytes, 1, identity_bytes)?;
+                self.charge(6 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, 1, identity_bytes, 1, identity_bytes)?;
                 self.outer += 1;
             }
             SnapshotPreflightStage::Regions => {
@@ -109,7 +110,8 @@ impl SnapshotPreflight {
                     return Ok(false);
                 };
                 let kind_bytes = if solid.layers == 1 { "tetrahedron".len() } else { "hexahedron".len() };
-                self.charge(1, 1, solid.id.len().checked_add(kind_bytes).ok_or(())?, 1, solid.id.len())?;
+                let identity_bytes = protocol::wire::validate_scoped_identity_segments(&["solid", &solid.id]).map_err(|_| ())?;
+                self.charge(1, 1, identity_bytes.checked_add(kind_bytes).ok_or(())?, 1, identity_bytes)?;
                 self.outer += 1;
             }
             SnapshotPreflightStage::Supports => {
@@ -117,20 +119,52 @@ impl SnapshotPreflight {
                     self.next_stage(SnapshotPreflightStage::LoadCases);
                     return Ok(false);
                 };
-                self.charge(9, 1, support.id.len(), 1, support.id.len())?;
+                let identity_bytes = protocol::wire::validate_scoped_identity_segments(&["support", &support.id]).map_err(|_| ())?;
+                self.charge(9, 1, identity_bytes, 1, identity_bytes)?;
                 self.outer += 1;
             }
             SnapshotPreflightStage::LoadCases => {
                 let Some(case) = snapshot.load_cases.get(self.outer) else {
-                    self.next_stage(SnapshotPreflightStage::Loads);
+                    self.next_stage(SnapshotPreflightStage::CombinationTerms);
                     return Ok(false);
                 };
+                if self.outer >= MAXIMUM_LOADS { return Err(()); }
+                semio_s_fem_analyses_model::validate_result_source_parts("loadCase", &case.id).map_err(|_| ())?;
+                if self.inner < self.outer {
+                    if snapshot.load_cases[self.inner].id == case.id { return Err(()); }
+                    self.inner += 1;
+                    return Ok(false);
+                }
                 let next = self.load_count.checked_add(case.loads.len()).ok_or(())?;
                 if next > MAXIMUM_LOADS {
                     return Err(());
                 }
                 self.load_count = next;
                 self.outer += 1;
+                self.inner = 0;
+            }
+            SnapshotPreflightStage::CombinationTerms => {
+                let Some(combination) = snapshot.combinations.get(self.outer) else {
+                    self.next_stage(SnapshotPreflightStage::Loads);
+                    return Ok(false);
+                };
+                if self.outer >= MAXIMUM_LOADS || combination.terms.len() > MAXIMUM_LOADS { return Err(()); }
+                semio_s_fem_analyses_model::validate_result_source_parts("combination", &combination.id).map_err(|_| ())?;
+                if self.source_peer < self.outer {
+                    if snapshot.combinations[self.source_peer].id == combination.id { return Err(()); }
+                    self.source_peer += 1;
+                    return Ok(false);
+                }
+                let Some((case_id, factor)) = combination.terms.iter().nth(self.inner) else {
+                    self.outer += 1;
+                    self.inner = 0;
+                    self.source_lookup = 0;
+                    self.source_peer = 0;
+                    return Ok(false);
+                };
+                if !factor.is_finite() { return Err(()); }
+                let Some(case) = snapshot.load_cases.get(self.source_lookup) else { return Err(()) };
+                if &case.id == case_id { self.inner += 1; self.source_lookup = 0; } else { self.source_lookup += 1; }
             }
             SnapshotPreflightStage::Loads => {
                 let Some(case) = snapshot.load_cases.get(self.outer) else {
@@ -142,8 +176,8 @@ impl SnapshotPreflight {
                     self.inner = 0;
                     return Ok(false);
                 };
-                let id = load_id(load);
-                self.charge(8, 1, id.len(), 1, id.len())?;
+                let identity_bytes = protocol::wire::validate_scoped_identity_segments(&["load", &case.id, load_id(load)]).map_err(|_| ())?;
+                self.charge(8, 1, identity_bytes, 1, identity_bytes)?;
                 self.inner += 1;
             }
             SnapshotPreflightStage::Complete => return Ok(true),

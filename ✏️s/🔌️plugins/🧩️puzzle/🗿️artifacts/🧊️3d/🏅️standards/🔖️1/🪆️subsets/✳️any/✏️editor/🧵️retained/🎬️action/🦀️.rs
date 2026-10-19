@@ -1,5 +1,5 @@
-//! 🎬️ Puzzle 3d retained action works — the one-action-per-window route through the shared action prologue, and the
 //! staged placement works (transform, brush placement, suggestion acceptance, focus, precompute commands) that each spend
+//! 🎬️ Puzzle 3d retained action works — the one-action-per-window route through the shared action prologue, and the
 //! bounded turns. Every work is written against the [`Puzzle3dEditor`] contract, not the concrete editor.
 
 #![allow(clippy::result_large_err)]
@@ -31,7 +31,6 @@ use semio_framework_plugin::Fault;
 use semio_framework_plugin::InteractionWrite;
 use semio_framework_value::FromValue;
 use {semio_framework_pack_json::object, semio_framework_pack_json::to_string, semio_framework_pack_json::Value};
-use std::collections::HashSet;
 use semio_s_artifact_puzzle_3d_model::puzzle3d_vortex_full_id;
 use {semio_s_artifact_puzzle_3d_retained_document::PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT, semio_s_artifact_puzzle_3d_editor_session as session};
 use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand;
@@ -103,6 +102,7 @@ pub use self::window_command_work::*;
 
 #[path = "🔄️transform-work/🦀️.rs"]
 mod transform_work;
+#[derive(Clone)]
 pub use self::transform_work::*;
 
 #[path = "🖌️brush-object-work/🦀️.rs"]
@@ -115,8 +115,16 @@ pub use self::focus_selection_work::*;
 
 #[path = "💡️accept-suggestion-work/🦀️.rs"]
 mod accept_suggestion_work;
-pub use self::accept_suggestion_work::*;
+pub use  pubself::accept_suggestion_work::*;
 
 #[path = "🧠️precompute-command-work/🦀️.rs"]
 mod precompute_command_work;
 pub use self::precompute_command_work::*;
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod original_construction_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod original_construction_tests;

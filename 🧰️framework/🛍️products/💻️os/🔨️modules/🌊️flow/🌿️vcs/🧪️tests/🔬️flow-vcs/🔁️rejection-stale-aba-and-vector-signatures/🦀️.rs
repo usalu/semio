@@ -47,14 +47,14 @@ fn retained_vcs_all_thirteen_fixture_operations_match_independent_third_party_or
     let expected = SerdeJsonFlowOracle.expected_operations(source);
     let independently_evaluated = SerdeJsonFlowOracle.evaluate_operations(source);
     assert_eq!(independently_evaluated, expected);
-    assert_eq!(expected.len(), FLOW_VCS_FEATURES.len());
+    assert_eq!(expected.len(), FLOW_HISTORY_FEATURES.len());
 
     let root: semio_framework_pack_json::Value = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("retained oracle fixture");
     let initial = <FlowHostSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&root.get("initial").expect("oracle initial document").clone())).expect("oracle initial Flow fixture");
     let operations = root.get("operations").and_then(semio_framework_pack_json::Value::as_array).expect("oracle operation ledger");
     let mut session = FlowRetainedVcs::new(initial, 77, 1, 0);
     let mut actual = Vec::new();
-    for (operation, expected_feature) in operations.iter().zip(FLOW_VCS_FEATURES) {
+    for (operation, expected_feature) in operations.iter().zip(FLOW_HISTORY_FEATURES) {
         let feature = operation.get("feature").and_then(semio_framework_pack_json::Value::as_str).expect("oracle feature");
         assert_eq!(feature, expected_feature);
         let handle = flow_oracle_begin_operation(&mut session, operation);
@@ -71,8 +71,8 @@ fn retained_vcs_language_neutral_vector_signatures_detect_every_field_and_value_
     let lifecycle: semio_framework_pack_json::Value = semio_framework_pack_json::parse(read_node("🧪️tests/🧫️fixtures/🔄️lifecycle/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("lifecycle fixture");
     let owners: semio_framework_pack_json::Value = semio_framework_pack_json::parse(read_node("🧪️tests/🧫️fixtures/🫴️owners/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owner fixture");
     let operations = oracle.get("operations").and_then(semio_framework_pack_json::Value::as_array).expect("operation ledger");
-    assert_eq!(operations.len(), FLOW_VCS_FEATURES.len());
-    for (operation, feature) in operations.iter().zip(FLOW_VCS_FEATURES) {
+    assert_eq!(operations.len(), FLOW_HISTORY_FEATURES.len());
+    for (operation, feature) in operations.iter().zip(FLOW_HISTORY_FEATURES) {
         assert_eq!(operation.get("feature").and_then(semio_framework_pack_json::Value::as_str), Some(feature));
         let expected = operation.get("expected").expect("expected operation ledger");
         assert!(operation.get("input").is_some());

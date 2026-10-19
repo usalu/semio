@@ -115,12 +115,11 @@ async function collectNativeDefinitionCodeLenses(document: vscode.TextDocument, 
     const line = range.start.line;
     if (linesSeen.has(line)) return;
     linesSeen.add(line);
-    const scope = buildNativeDefinitionScope(relativePath, name);
     lenses.push(
       new vscode.CodeLens(range, {
-        title: "Analyze",
-        command: "compose.analyze",
-        arguments: [scope],
+        title: "Navigate to",
+        command: "compose.navigateToDefinition",
+        arguments: [{ filePath: relativePath, definition: { range: { start: range.start.line + 1, end: range.end.line + 1 } } }],
       }),
     );
   };
@@ -152,7 +151,7 @@ async function collectNativeDefinitionCodeLenses(document: vscode.TextDocument, 
 }
 
 /**
- * ComposeCodeLensProvider provides Analyze and Navigate to CodeLenses for all entity IDs.
+ * ComposeCodeLensProvider provides navigation CodeLenses for entity IDs.
  * It uses the ENTITY_ID_REGEX built dynamically from the ENTITY_EMOJIS registry.
  **/
 export class ComposeCodeLensProvider implements vscode.CodeLensProvider {
@@ -170,14 +169,6 @@ export class ComposeCodeLensProvider implements vscode.CodeLensProvider {
       const startPos = document.positionAt(match.index);
       const endPos = document.positionAt(match.index + match[0].length);
       const range = new vscode.Range(startPos, endPos);
-
-      lenses.push(
-        new vscode.CodeLens(range, {
-          title: "Analyze",
-          command: "compose.analyze",
-          arguments: [id],
-        }),
-      );
 
       lenses.push(
         new vscode.CodeLens(range, {

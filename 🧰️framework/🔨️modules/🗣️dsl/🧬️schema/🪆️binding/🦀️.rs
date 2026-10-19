@@ -114,6 +114,25 @@ impl<T: DslField> DslField for Box<T> {
     fn from_record_controlled(record:&RecordValue,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{control.charge(size_of::<T>())?;control.scoped_stage(|control|T::from_record_controlled(record,control)).map(Box::new)}
 }
 
+trait ExpressionCloneControl{fn checkpoint(&mut self)->Result<(),ValueError>;fn charge(&mut self,bytes:usize)->Result<(),ValueError>;fn step(&mut self)->Result<(),ValueError>;}
+macro_rules! expression_clone_control{($control:ident)=>{impl ExpressionCloneControl for $control<'_>{fn checkpoint(&mut self)->Result<(),ValueError>{$control::checkpoint(self)}fn charge(&mut self,bytes:usize)->Result<(),ValueError>{$control::charge(self,bytes)}fn step(&mut self)->Result<(),ValueError>{$control::step(self)}}};}
+expression_clone_control!(NativeEncodeControl);
+expression_clone_control!(NativeDecodeControl);
+fn clone_expression_name(name:&str,control:&mut impl ExpressionCloneControl)->Result<String,ValueError>{control.charge(name.len())?;let mut output=String::new();output.try_reserve_exact(name.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"expression name allocation failed"))?;let mut start=0;while start<name.len(){let mut end=(start+256).min(name.len());while !name.is_char_boundary(end){end-=1;}control.checkpoint()?;output.push_str(&name[start..end]);start=end;control.step()?;}Ok(output)}
+fn clone_expression(value:&ExprValue,depth:usize,control:&mut impl ExpressionCloneControl)->Result<ExprValue,ValueError>{
+ control.checkpoint()?;if depth>=64{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"expression construction exceeds native depth"));}
+ let output=match value{ExprValue::Num(value)=>ExprValue::Num(*value),ExprValue::Var(name)=>ExprValue::Var(clone_expression_name(name,control)?),ExprValue::Neg(child)=>{control.charge(size_of::<ExprValue>())?;ExprValue::Neg(Box::new(clone_expression(child,depth+1,control)?))},ExprValue::Binary(op,left,right)=>{control.charge(2*size_of::<ExprValue>())?;ExprValue::Binary(*op,Box::new(clone_expression(left,depth+1,control)?),Box::new(clone_expression(right,depth+1,control)?))},ExprValue::Call(name,children)=>{let name=clone_expression_name(name,control)?;control.charge(children.len().checked_mul(size_of::<ExprValue>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"expression argument capacity overflow"))?)?;let mut arguments=Vec::new();arguments.try_reserve_exact(children.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"expression argument allocation failed"))?;for child in children{arguments.push(clone_expression(child,depth+1,control)?);}ExprValue::Call(name,arguments)}};control.step()?;Ok(output)
+}
+impl DslField for ExprValue{
+ fn projection_view(&self,path:&[usize])->Result<native_encoding::FieldProjectionView<'_>,ValueError>{if path.is_empty(){Ok(native_encoding::FieldProjectionView::Expr(self))}else{Err(native_encoding::projection_path_error())}}
+ fn shape()->Shape{Shape::Expr}
+ fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,ValueError>{control.checkpoint()?;Ok(Shape::Expr)}
+ fn to_value(&self)->FieldValue{FieldValue::Expr(self.clone())}
+ fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{clone_expression(self,0,control).map(FieldValue::Expr)}
+ fn from_value(value:&FieldValue)->Result<Self,String>{match value{FieldValue::Expr(value)=>Ok(value.clone()),_=>Err("expected Expr".into())}}
+ fn from_value_controlled(value:&FieldValue,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{match value{FieldValue::Expr(value)=>clone_expression(value,0,control),_=>Err(ValueError::literal(ValueRefusalKind::InvalidValue,"expected Expr"))}}
+}
+
 macro_rules! impl_dsl_field_int {
     ($ty:ty, $shape:expr, $variant:ident, $as_ty:ty) => {
         impl DslField for $ty {
@@ -609,3 +628,7 @@ mod value_type_binding;
 
 #[path = "🪆️optional/🦀️.rs"]
 mod optional_field;
+
+#[path="📖️grammar/🦀️.rs"]
+mod grammar_fields;
+pub use grammar_fields::record_fields_matcher;

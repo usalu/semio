@@ -1,0 +1,23 @@
+{
+  "nodes": null,
+  "elements": null,
+  "regions": null,
+  "materials": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "steel",
+        "patch": {
+          "name": "Structural Steel"
+        }
+      }
+    ]
+  },
+  "sections": null,
+  "supports": null,
+  "loadCases": null,
+  "combinations": null,
+  "analysis": null
+}

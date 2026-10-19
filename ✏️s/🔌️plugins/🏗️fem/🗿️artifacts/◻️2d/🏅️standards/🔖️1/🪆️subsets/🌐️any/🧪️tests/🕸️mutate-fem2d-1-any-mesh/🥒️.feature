@@ -20,13 +20,7 @@ Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in P
   and forces FROM a model; none of them reads `.dsl.semio`, none defines this document. What a
   reference can genuinely adjudicate is the model algebra, and that is what this one does.
 
-  A DEFECT IN THE SPECIFICATION, found while writing the reference and reported rather than worked
-  around. Two of the three schema files here do not say what they claim.
-  `…/🧬️schema/🧬️mutations/🔣️.json` is a verbatim copy of the SNAPSHOT schema with `title`
-  changed to `Fem2dMutation`. And in the snapshot schema itself, every one of the nine record types
-  is an EMPTY `{"title": …, "type": "object"}` with no properties at all. The record shapes the
-  reference implements were read off the committed vectors instead, which agree with one another on
-  every field.
+  Sparse field intents are declared by the owned leaf JSON schemas. The mutation union and wire mirrors preserve their typed payloads; fast-json-patch independently checks their numeric JSON projection in the registered field-intent suite.
 
   The artifact is real. `shared://🕸️mutate-fem2d-1-any-mesh/🏗️timber-portal-frame.snapshot.json` is the SAME derived timber-portal-frame model every
   fem2d mutation subset case shares — a twelve-node timber-and-steel portal frame with a ridge at
@@ -75,6 +69,13 @@ Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in P
     | replace-node    | {"mutation":"replaceNode","id":"ridge","newNode":{"id":"ridge","x":4.0,"y":8.2}}                                                                                                                                                                                                           |
     | move-selection  | {"mutation":"moveSelection","nodeIds":["rc0","rc1","rc2","rc3"],"regionIds":["r1"],"pivotX":11.0,"pivotY":2.8,"dx":0.5,"dy":0.25,"angle":0.0,"sx":1.0,"sy":1.0} |
 
+    | change-node | {"id":"ridge","patch":{"x":5.0},"mutation":"changeNode"} |
+    | change-section | {"id":"chs76","patch":{"name":"Structural Section"},"mutation":"changeSection"} |
+
+    | change-region | {"patch":{"name":"Structural Region"},"id":"r1","mutation":"changeRegion"} |
+
+    | change-element | {"patch":{"sectionId":"post140"},"id":"e3","mutation":"changeElement"} |
+
   @id-inverse
   @level-exhaustive
   @mode-differential
@@ -102,3 +103,10 @@ Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in P
     | replace-region  | {"mutation":"replaceRegion","id":"r1","newRegion":{"id":"r1","name":"First Floor Slab with stair opening","outline":[[10.0,2.75],[12.0,2.75],[12.0,2.85],[10.0,2.85]],"holes":[[[10.6,2.78],[11.4,2.78],[11.4,2.82],[10.6,2.82]]],"thickness":0.2,"materialId":"concrete","meshSize":1.0}} |
     | replace-node    | {"mutation":"replaceNode","id":"ridge","newNode":{"id":"ridge","x":4.0,"y":8.2}}                                                                                                                                                                                                           |
     | move-selection  | {"mutation":"moveSelection","nodeIds":["rc0","rc1","rc2","rc3"],"regionIds":["r1"],"pivotX":11.0,"pivotY":2.8,"dx":0.5,"dy":0.25,"angle":0.0,"sx":1.0,"sy":1.0} |
+    | change-node | {"id":"ridge","patch":{"x":5.0},"mutation":"changeNode"} |
+    | change-section | {"id":"chs76","patch":{"name":"Structural Section"},"mutation":"changeSection"} |
+
+    | change-region | {"patch":{"name":"Structural Region"},"id":"r1","mutation":"changeRegion"} |
+
+    | change-element | {"patch":{"sectionId":"post140"},"id":"e3","mutation":"changeElement"} |
+

@@ -1,84 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/app/puzzle/puzzle5d/presence/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s.puzzle.puzzle5d.presence/schema.json",
   "title": "Puzzle5dPresence",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "selectedPartIds",
-    "selectedGripIds",
-    "selectedFastenerIds",
-    "camera2dX",
-    "camera2dY",
-    "camera2dZoom",
-    "camera3dPosition",
-    "camera3dTarget",
-    "camera3dZoom",
-    "activeUtilityId"
-  ],
-  "properties": {
-    "selectedPartIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "selectedGripIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "selectedFastenerIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "presence"
-    },
-    "hoveredPartId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "camera2dX": {
-      "type": "number",
-      "x-semio-state": "presence"
-    },
-    "camera2dY": {
-      "type": "number",
-      "x-semio-state": "presence"
-    },
-    "camera2dZoom": {
-      "type": "number",
-      "x-semio-state": "presence"
-    },
-    "camera3dPosition": {
-      "type": "array",
-      "items": {
-        "type": "number"
-      },
-      "minItems": 3,
-      "maxItems": 3,
-      "x-semio-state": "presence"
-    },
-    "camera3dTarget": {
-      "type": "array",
-      "items": {
-        "type": "number"
-      },
-      "minItems": 3,
-      "maxItems": 3,
-      "x-semio-state": "presence"
-    },
-    "camera3dZoom": {
-      "type": "number",
-      "x-semio-state": "presence"
-    },
-    "activeUtilityId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    }
-  }
+  "properties": {}
 }

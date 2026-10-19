@@ -211,15 +211,6 @@ export interface Breach {
 }
 
 /**
- * AnalyzeReport holds the data fields for a AnalyzeReport record.
- **/
-export interface AnalyzeReport {
-  timestamp: string;
-  scope: string;
-  breachs: Breach[];
-}
-
-/**
  * SectionInfo holds the data fields for a SectionInfo record.
  **/
 export interface SectionInfo {

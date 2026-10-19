@@ -41,13 +41,22 @@ impl OpBinary for SetSurfaceCount {
 }
 impl MutationKind<SurfaceSnapshot, SurfaceMutation> for SetSurfaceCount {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "surface-count", kind: "set-surface-count", record: "SetSurfaceCount" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set surface count to {}", self.value), &format!("Oberflächenanzahl auf {} setzen", self.value))
+    }
+}
+
+impl crate::os_spr::ColdMutationKind<SurfaceSnapshot, SurfaceMutation> for SetSurfaceCount {
     fn diff(&self, _: &SurfaceSnapshot) -> MutationOutcome<SurfaceDiff> {
         MutationOutcome::new(SurfaceDiff { count: Some(self.value) })
     }
     fn inverse(&self, base: &SurfaceSnapshot) -> Result<Vec<SurfaceMutation>, semio_framework_value::ValueError> {
         Ok((|| vec![Self { value: base.count }.into()])())
     }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set surface count to {}", self.value), &format!("Oberflächenanzahl auf {} setzen", self.value))
-    }
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️sum-law/🦀️.rs"]
+mod sum_law_tests;

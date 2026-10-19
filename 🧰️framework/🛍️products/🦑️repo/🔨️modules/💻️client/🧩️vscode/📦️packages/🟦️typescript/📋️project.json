@@ -236,6 +236,18 @@
           }
         }
       }
+    },
+    "test-dashboard-only": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-dashboard-only"
+      }
     }
   },
   "implicitDependencies": [

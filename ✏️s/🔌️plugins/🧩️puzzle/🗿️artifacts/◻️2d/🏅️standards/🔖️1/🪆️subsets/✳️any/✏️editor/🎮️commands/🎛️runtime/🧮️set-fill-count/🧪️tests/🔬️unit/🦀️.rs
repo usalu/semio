@@ -1,7 +1,9 @@
 use crate::editor::puzzle2d::config::Puzzle2dConfig;
 use crate::editor::puzzle2d::modes::edit::tools::fill;
 use crate::editor::puzzle2d::testkit::*;
-use semio_framework_plugin::{PluginApp, ViewModel, WindowMeasure};
+use semio_framework_plugin::PluginApp;
+use semio_framework_plugin::ViewModel;
+use semio_framework_plugin::WindowMeasure;
 use semio_framework_pack_json::json;
 
 fn rendered_fill_count(app: &mut Puzzle2dApp) -> f64 {

@@ -6,8 +6,8 @@
   "solids": null,
   "supports": null,
   "loadCases": {
-    "inserted": [],
     "removed": [],
+    "inserted": [],
     "moved": [],
     "modified": [
       {
@@ -16,15 +16,14 @@
           "name": null,
           "selfWeight": null,
           "loads": {
-            "inserted": [],
             "removed": [],
+            "inserted": [],
             "moved": [],
             "modified": [
               {
                 "id": "ld_wx_0",
                 "patch": {
                   "kind": "nodal",
-                  "id": "ld_wx_0",
                   "nodeId": "el_0",
                   "dof": "Tx",
                   "value": 6750.0

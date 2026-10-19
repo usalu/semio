@@ -1,5 +1,5 @@
-//! 🖥️ Fem2d play app — the `ArtifactEditor` impl (dispatch-only), the aggregated command enum and the
 //! manifest stitch.
+//! 🖥️ Fem2d play app — the `ArtifactEditor` impl (dispatch-only), the aggregated command enum and the
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in
 //! `🎭️modes/*/🪟️windows/*`, view state in concrete window config, shared compute in the artifact's `⚙️engine`.
@@ -41,7 +41,10 @@ use crate::editor::fem2d::commands::set_camera;
 use crate::editor::fem2d::commands::set_result_animation;
 use crate::editor::fem2d::commands::set_result_display;
 use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_self_weight;
-use crate::editor::fem2d::commands::gumball::{rotate_selection, scale_selection, set_transform_gumball_flag, translate_selection};
+use crate::editor::fem2d::commands::gumball::rotate_selection;
+use crate::editor::fem2d::commands::gumball::scale_selection;
+use crate::editor::fem2d::commands::gumball::set_transform_gumball_flag;
+use crate::editor::fem2d::commands::gumball::translate_selection;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_interaction_definition;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_INTERACTION_DOMAIN;
@@ -50,17 +53,24 @@ use semio_s_artifact_fem_2d_editor_panels::editor::fem2d::panels::inspection as 
 use semio_s_artifact_fem_2d_editor_panels::editor::fem2d::panels::results as results_panel;
 use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::fem2d_labels;
 use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::results_window_instance_id;
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
 use crate::editor::fem2d::modes::edit;
 use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model as model_window;
 use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results as results_window;
-use semio_s_fem_model::{Dof, ElementResult};
+use semio_s_fem_model::Dof;
+use semio_s_fem_model::ElementResult;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_framework_pack_json::Value;
 use semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::reset_document_effect;
-use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-use semio_framework_plugin::app::{Dialect, InteractionView};
+use semio_framework::InteractiveJobClassification;
+use semio_framework::ToolExecutionContract;
+use semio_framework::ToolFactoryKey;
+use semio_framework::ToolJobFactory;
+use semio_framework::ToolJobFactoryError;
+use semio_framework_plugin::app::Dialect;
+use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::built_text_node;
 use semio_framework_plugin::create_default_layout;
 use semio_framework_plugin::ActionArgDef;

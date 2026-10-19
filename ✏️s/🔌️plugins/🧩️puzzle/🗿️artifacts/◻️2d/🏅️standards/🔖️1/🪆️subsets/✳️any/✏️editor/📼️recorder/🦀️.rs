@@ -1,20 +1,33 @@
-//! 📼️ Puzzle 2d kind-emitting recorder: every editor command that edits the board states its user action as the
 //! concrete `Puzzle2dMutation` kinds it consists of, one entity at a time, and never builds a whole board to
+//! 📼️ Puzzle 2d kind-emitting recorder: every editor command that edits the board states its user action as the
 //! difference it against the document. The recorder keeps the document as it stands after the kinds recorded so far
 //! (applied through the central applier), so a later row of the same gesture — a second clone's label, a second
 //! wire's id — reads what the earlier rows made.
 
-use {crate::editor::puzzle2d::snapshot::board_snapshot_edges, crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::new_edge_id, crate::editor::puzzle2d::snapshot::new_node_id, crate::editor::puzzle2d::snapshot::patched_field_value, crate::editor::puzzle2d::snapshot::puzzle2d_next_node_label, crate::editor::puzzle2d::snapshot::puzzle2d_placed_handles, crate::editor::puzzle2d::snapshot::set_member, crate::editor::puzzle2d::snapshot::unique_edge_id, crate::editor::puzzle2d::snapshot::unique_node_id};
-use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
+use super::board_snapshot_edges;
+use super::board_snapshot_nodes;
+use super::new_edge_id;
+use super::new_node_id;
+use super::patched_field_value;
+use super::puzzle2d_next_node_label;
+use super::puzzle2d_placed_handles;
+use super::set_member;
+use super::unique_edge_id;
+use super::unique_node_id;
+use crate::Puzzle2dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::mutations as kinds;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use {crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::records::Puzzle2dHandle, crate::standards::v1::subsets::any::schema::records::Puzzle2dNode, crate::Puzzle2dSnapshot, crate::standards::v1::subsets::any::schema::records::Puzzle2dTargetRegion};
-use protocol::{DiffAlgebra, Mutation, MutationDiff};
-use semio_framework_pack_json::{json, Value};
+use protocol::DiffAlgebra;
+use protocol::Mutation;
+use protocol::MutationDiff;
+use semio_framework_pack_json::json;
+use semio_framework_pack_json::Value;
 use semio_framework_value::paged::PagedUtf8;
 use std::cell::OnceCell;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
+use std::collections::HashSet;
 use std::sync::Arc;
 use semio_framework_plugin::{kernel::ClipboardError, kernel::ClipboardFragment, kernel::PastePlacement};
 use crate::{editor::puzzle2d::recorder, editor::puzzle2d::snapshot};
@@ -112,7 +125,7 @@ impl Puzzle2dRecorder {
             <Puzzle2dDiff as MutationDiff<Puzzle2dSnapshot>>::retire_cold(diff);
             return false;
         }
-        let applied = protocol::apply_diff(&diff, self.working.as_ref());
+        let applied = protocol::apply_diff_cold(&diff, self.working.as_ref());
         <Puzzle2dDiff as MutationDiff<Puzzle2dSnapshot>>::retire_cold(diff);
         match applied {
             Ok(next) => {

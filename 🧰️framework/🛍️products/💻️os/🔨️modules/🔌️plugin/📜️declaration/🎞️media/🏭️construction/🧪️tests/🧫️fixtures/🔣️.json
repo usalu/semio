@@ -1,0 +1,52 @@
+{
+  "schema": "semio.plugin.original-output-construction.v1",
+  "chunkBytes": 4096,
+  "maximumTotalBytes": 33554432,
+  "cases": [
+    {
+      "maximum": 0,
+      "accepted": false,
+      "slots": null
+    },
+    {
+      "maximum": 1,
+      "accepted": true,
+      "slots": 1
+    },
+    {
+      "maximum": 4095,
+      "accepted": true,
+      "slots": 1
+    },
+    {
+      "maximum": 4096,
+      "accepted": true,
+      "slots": 1
+    },
+    {
+      "maximum": 4097,
+      "accepted": true,
+      "slots": 2
+    },
+    {
+      "maximum": 8192,
+      "accepted": true,
+      "slots": 2
+    },
+    {
+      "maximum": 33554431,
+      "accepted": true,
+      "slots": 8192
+    },
+    {
+      "maximum": 33554432,
+      "accepted": true,
+      "slots": 8192
+    },
+    {
+      "maximum": 33554433,
+      "accepted": false,
+      "slots": null
+    }
+  ]
+}

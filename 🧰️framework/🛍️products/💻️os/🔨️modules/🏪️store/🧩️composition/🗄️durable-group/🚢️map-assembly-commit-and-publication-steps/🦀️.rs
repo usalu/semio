@@ -77,6 +77,7 @@ where
             && self.drawing.is_none()
             && self.value.is_none()
             && self.decision.is_none()
+            && self.decision_retirement.is_none() && self.output_retirement.is_none()
             && self.decision_pack.is_none()
             && self.decision_sha256.is_empty()
             && self.visibility_owner.is_none()
@@ -185,7 +186,9 @@ where
                 }
             }
             DurableOwnedThreeStoreCommitPhaseV1::StartingJournal => {
-                if self.recovery_committed {
+                                for stage in [0,1,2]{let(done,receipt)=match stage{0=>prepare_staged_diagnostics(parent_store,grant.retained_grant())?,1=>prepare_staged_diagnostics(drawing_store,grant.retained_grant())?,_=>prepare_staged_diagnostics(value_store,grant.retained_grant())?};if !done||receipt!=semio_framework_value::RetainedCloneProgress::default(){return Ok(if receipt==semio_framework_value::RetainedCloneProgress::default(){DurableOwnedThreeStoreCommitAdvanceV1::Blocked}else{DurableOwnedThreeStoreCommitAdvanceV1::DiagnosticProgress(self.phase,receipt)});}}
+
+if self.recovery_committed {
                     let receipt = self.receipt.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                     if receipt.decision_sha256 != self.decision_sha256 || self.decision.as_ref().is_none_or(|decision| receipt.anchor_sha256 != decision.anchor_sha256) {
                         return Err(DurableOwnedGroupDecisionError::InvalidHash);
@@ -253,16 +256,22 @@ where
                 self.phase = DurableOwnedThreeStoreCommitPhaseV1::AdoptingParent;
             }
             DurableOwnedThreeStoreCommitPhaseV1::AdoptingParent => {
-                adopt_staged_store_member(&mut parent_store.parts(), &self.visibility()?)?;
-                self.phase = DurableOwnedThreeStoreCommitPhaseV1::AdoptingDrawing;
+                let(done,receipt)=adopt_staged_store_member(&mut parent_store.parts(), &self.visibility()?,grant.retained_grant())?;
+                if !done{return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Blocked);}self.phase = DurableOwnedThreeStoreCommitPhaseV1::AdoptingDrawing;
+
+                if receipt!=semio_framework_value::RetainedCloneProgress::default(){return Ok(DurableOwnedThreeStoreCommitAdvanceV1::DiagnosticProgress(self.phase,receipt));}
             }
             DurableOwnedThreeStoreCommitPhaseV1::AdoptingDrawing => {
-                adopt_staged_store_member(&mut drawing_store.parts(), &self.visibility()?)?;
-                self.phase = DurableOwnedThreeStoreCommitPhaseV1::AdoptingValue;
+                let(done,receipt)=adopt_staged_store_member(&mut drawing_store.parts(), &self.visibility()?,grant.retained_grant())?;
+                if !done{return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Blocked);}self.phase = DurableOwnedThreeStoreCommitPhaseV1::AdoptingValue;
+
+                if receipt!=semio_framework_value::RetainedCloneProgress::default(){return Ok(DurableOwnedThreeStoreCommitAdvanceV1::DiagnosticProgress(self.phase,receipt));}
             }
             DurableOwnedThreeStoreCommitPhaseV1::AdoptingValue => {
-                adopt_staged_store_member(&mut value_store.parts(), &self.visibility()?)?;
-                self.phase = DurableOwnedThreeStoreCommitPhaseV1::ClearingParent;
+                let(done,receipt)=adopt_staged_store_member(&mut value_store.parts(), &self.visibility()?,grant.retained_grant())?;
+                if !done{return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Blocked);}self.phase = DurableOwnedThreeStoreCommitPhaseV1::ClearingParent;
+
+                if receipt!=semio_framework_value::RetainedCloneProgress::default(){return Ok(DurableOwnedThreeStoreCommitAdvanceV1::DiagnosticProgress(self.phase,receipt));}
             }
             DurableOwnedThreeStoreCommitPhaseV1::ClearingParent => {
                 validate_adopted_store_member(&parent_store.parts_ref(), &self.visibility()?)?;
@@ -285,7 +294,7 @@ where
             }
             DurableOwnedThreeStoreCommitPhaseV1::AbortingValue => {
                 if self.value.is_some() {
-                    retire_unstaged_store_member(&mut value_store.parts(), &mut self.value, grant)?;
+                    let Some(receipt)=retire_unstaged_store_member(&mut value_store.parts(), &mut self.value, grant)?else{return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Blocked);};return Ok(DurableOwnedThreeStoreCommitAdvanceV1::DiagnosticProgress(self.phase,receipt));
                 } else {
                     abort_staged_store_member(&mut value_store.parts(), &self.visibility()?)?;
                 }
@@ -293,7 +302,7 @@ where
             }
             DurableOwnedThreeStoreCommitPhaseV1::AbortingDrawing => {
                 if self.drawing.is_some() {
-                    retire_unstaged_store_member(&mut drawing_store.parts(), &mut self.drawing, grant)?;
+                    let Some(receipt)=retire_unstaged_store_member(&mut drawing_store.parts(), &mut self.drawing, grant)?else{return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Blocked);};return Ok(DurableOwnedThreeStoreCommitAdvanceV1::DiagnosticProgress(self.phase,receipt));
                 } else {
                     abort_staged_store_member(&mut drawing_store.parts(), &self.visibility()?)?;
                 }
@@ -301,7 +310,7 @@ where
             }
             DurableOwnedThreeStoreCommitPhaseV1::AbortingParent => {
                 if self.parent.is_some() {
-                    retire_unstaged_store_member(&mut parent_store.parts(), &mut self.parent, grant)?;
+                    let Some(receipt)=retire_unstaged_store_member(&mut parent_store.parts(), &mut self.parent, grant)?else{return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Blocked);};return Ok(DurableOwnedThreeStoreCommitAdvanceV1::DiagnosticProgress(self.phase,receipt));
                 } else {
                     abort_staged_store_member(&mut parent_store.parts(), &self.visibility()?)?;
                 }
@@ -313,14 +322,15 @@ where
                     if grant.maximum_depth == 0 { return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Blocked); }
                     let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant.retained_grant() };
                     match close_journal_owner(&mut self.journal, child).map_err(DurableOwnedGroupDecisionError::Retirement)? {
-                        semio_framework_value::retained_clone::RetainedCloneStep::Complete(_) => {},
+                        semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress) => return Ok(DurableOwnedThreeStoreCommitAdvanceV1::DiagnosticProgress(self.phase,progress)),
                         semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) if progress == Default::default() => return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Blocked),
-                        semio_framework_value::retained_clone::RetainedCloneStep::Progress(_) => return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Progress(self.phase)),
+                        semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => return Ok(DurableOwnedThreeStoreCommitAdvanceV1::DiagnosticProgress(self.phase,progress)),
                     }
                 }
-                self.decision = None;
-                self.decision_pack = None;
-                self.decision_sha256.clear();
+                if let Some(owner)=self.decision_retirement.as_mut(){let receipt=owner.step(grant.retained_grant()).map_err(DurableOwnedGroupDecisionError::Retirement)?.progress();if owner.terminal_is_empty(){self.decision_retirement=None;}return Ok(DurableOwnedThreeStoreCommitAdvanceV1::DiagnosticProgress(self.phase,receipt));}
+                if let Some(owner)=self.output_retirement.as_mut(){let receipt=owner.step(grant.retained_grant()).map_err(DurableOwnedGroupDecisionError::Retirement)?.progress();if owner.terminal_is_empty(){self.output_retirement=None;}return Ok(DurableOwnedThreeStoreCommitAdvanceV1::DiagnosticProgress(self.phase,receipt));}
+                let copy=size_of::<Box<DurableOwnedThreeMemberDecisionV1>>()+size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<Box<DurableOwnedThreeMemberDecisionV1>>>()+size_of::<DurablePlanningOutputV1>()+size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<DurablePlanningOutputV1>>();
+                if self.decision.is_some()||self.decision_pack.is_some()||!self.decision_sha256.is_empty()||self.receipt.is_some(){if grant.maximum_copy_bytes<copy{return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Blocked);}if let Some(decision)=self.decision.take(){self.decision_retirement=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(decision).map_err(|(reason,_)|DurableOwnedGroupDecisionError::Retirement(reason))?);}else{self.output_retirement=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(DurablePlanningOutputV1::Commit{pack:self.decision_pack.take(),sha256:std::mem::take(&mut self.decision_sha256),receipt:self.receipt.take()}).map_err(|(reason,_)|DurableOwnedGroupDecisionError::Retirement(reason))?);}return Ok(DurableOwnedThreeStoreCommitAdvanceV1::DiagnosticProgress(self.phase,semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}));}
                 self.visibility_owner = None;
                 self.visibility = None;
                 self.receipt = None;
@@ -411,12 +421,12 @@ where
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedMapCommitOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: Clone + ValueToValue + ValueFromValue,
-    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
-    DrawingP: Clone + ValueToValue + ValueFromValue,
-    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
-    ValueP: Clone + ValueToValue + ValueFromValue,
-    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+    ParentP: ValueToValue,
+    ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    DrawingP: ValueToValue,
+    DrawingMutation: StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    ValueP: ValueToValue,
+    ValueMutation: StoreMutation<ValueP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
 {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || (self.parent.is_none() && self.drawing.is_none() && self.value.is_none() && self.coordinator.is_none() && self.sink.is_none()), "retained Map commit operation reached Drop before exact terminal owner handoff");

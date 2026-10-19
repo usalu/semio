@@ -23,6 +23,11 @@ pub(super) struct MountedState {
 }
 
 impl MountedState {
+    pub(super) fn child_close_demands(&self, demand: &mut RetirementDemand) -> Result<(), ValueError> {
+        if let Some(child) = self.numerical.as_ref() { merge_close_demand(demand, child.close_demands()?); }
+        Ok(())
+    }
+
     pub(super) fn new(identity: Identity, snapshot: store::os_store::snapshot_read::SnapshotRead<Fem3dSnapshot>, current: Option<Fem3dPageVisualLease>, credit: Fem3dPageCredit, recovery: Rc<MountedRecoverySlot>) -> Self {
         let solver = Fem3dSolverView::new(identity.freshness(0), snapshot.nodes.len());
         Self {
@@ -46,18 +51,20 @@ impl MountedState {
     }
 
     fn fail(&mut self, detail: Vec<u8>) -> JobStep {
+        record_terminal(self.identity, if self.cancel.is_cancelled_now() { semio_framework_value::RequestTerminalKind::Cancelled } else { semio_framework_value::RequestTerminalKind::Faulted });
         JobStep::Failed(if detail.capacity() <= FAULT_BYTES { detail } else { b"fem3d.visual-fault-capacity".to_vec() })
     }
 
-    pub(super) fn step(&mut self, budget: JobBudget, cx: &mut StepContext<'_>) -> JobStep {
+    pub(super) fn step(&mut self, cx: &mut StepContext<'_>) -> Result<JobStep, semio_framework_job::OriginalTurnFailure> {
+        cx.set_stage(if self.cancel.is_cancelled_now() { "fem3d.cancelled" } else if self.done { "fem3d.validated" } else if self.numerical_done { "fem3d.visual" } else { self.numerical.as_ref().map_or("fem3d.preparation", |child| child.stage.progress_stage()) });
         if self.cancel.is_cancelled_now() {
-            return self.fail(b"fem3d.visual-cancelled".to_vec());
-        }
-        if budget.fuel == 0 || budget.deadline_ms == 0 {
-            return JobStep::Running(None);
+            return Ok(self.fail(b"fem3d.visual-cancelled".to_vec()));
         }
         if cx.should_yield() {
-            return JobStep::Running(None);
+            return Ok(JobStep::Running(None));
+        }
+        if cx.should_yield() {
+            return Ok(JobStep::Running(None));
         }
         if let Some(displaced) = self.displaced.as_mut() {
             cx.consume_fuel(1);
@@ -65,53 +72,54 @@ impl MountedState {
             if terminal {
                 self.displaced = None;
             }
-            return JobStep::Running(None);
+            return Ok(JobStep::Running(None));
         }
         if self.done {
-            return JobStep::Done(self.identity.generation.0.to_le_bytes().to_vec());
+            return Ok(JobStep::Done(self.identity.generation.0.to_le_bytes().to_vec()));
         }
         if !self.numerical_done {
             let freshness = self.identity.freshness(0);
             let operation = semio_framework_job::Operation::new(self.identity.operation, self.identity.base_revision, self.identity.generation, self.identity.job);
-            let Some(snapshot) = self.snapshot.as_ref() else { return self.fail(b"fem3d.numerical-snapshot-owner".to_vec()) };
-            let Some(solver) = self.solver.as_mut() else { return self.fail(b"fem3d.numerical-solver-owner".to_vec()) };
+            let Some(snapshot) = self.snapshot.as_ref() else { return Ok(self.fail(b"fem3d.numerical-snapshot-owner".to_vec()))};
+            let Some(solver) = self.solver.as_mut() else { return Ok(self.fail(b"fem3d.numerical-solver-owner".to_vec()))};
             let step = self.numerical.as_mut().map(|numerical| numerical.step(snapshot, solver, &mut self.backing, freshness, operation, cx));
-            return match step {
+            return Ok(match step {
                 Some(Ok(true)) => {
                     self.numerical_done = true;
                     JobStep::Running(None)
                 }
                 Some(Ok(false)) => JobStep::Running(None),
-                Some(Err(detail)) => self.fail(detail),
+                Some(Err(Fem3dNumericalFailure::Diagnostic(detail))) => self.fail(detail),
+                Some(Err(Fem3dNumericalFailure::Original(failure))) => return Err(failure),
                 None => self.fail(b"fem3d.numerical-owner".to_vec()),
-            };
+            });
         }
         if self.candidate.is_none() {
             cx.consume_fuel(1);
             let fields_ready = self.solver.as_ref().is_some_and(Fem3dSolverView::ready);
             if !fields_ready {
-                return JobStep::Running(None);
+                return Ok(JobStep::Running(None));
             }
             self.candidate = Some(Box::new(Fem3dPageVisualJob::new(self.identity.freshness(0), self.credit)));
-            return JobStep::Running(None);
+            return Ok(JobStep::Running(None));
         }
         let freshness = self.identity.freshness(0);
-        let Some(snapshot) = self.snapshot.as_ref() else { return self.fail(b"fem3d.visual-snapshot-owner".to_vec()) };
-        let Some(solver) = self.solver.as_ref() else { return self.fail(b"fem3d.visual-solver-owner".to_vec()) };
+        let Some(snapshot) = self.snapshot.as_ref() else { return Ok(self.fail(b"fem3d.visual-snapshot-owner".to_vec()))};
+        let Some(solver) = self.solver.as_ref() else { return Ok(self.fail(b"fem3d.visual-solver-owner".to_vec()))};
         cx.consume_fuel(1);
         let step = self.candidate.as_mut().map(|candidate| candidate.step_one(snapshot, solver, &mut self.backing, freshness));
-        match step {
+        Ok(match step {
             Some(Ok(false)) => JobStep::Running(None),
             Some(Ok(true)) => {
-                let Some(lease) = self.candidate.as_deref_mut().and_then(Fem3dPageVisualJob::take_complete) else { return self.fail(b"fem3d.visual-complete-owner".to_vec()) };
-                let live = current_identity(self.identity.app_instance_id) == Some(self.identity)
+                let Some(lease) = self.candidate.as_deref_mut().and_then(Fem3dPageVisualJob::take_complete) else { return Ok(self.fail(b"fem3d.visual-complete-owner".to_vec()))};
+                let live = identity_live(self.identity)
                     && snapshot.commit_authority_matches(self.identity.generation.0, self.identity.canonical_base_revision)
                     && !self.cancel.is_cancelled_now()
                     && lease.matches(freshness);
                 self.candidate = None;
                 if !live {
                     self.displaced = Some(lease);
-                    return JobStep::Running(None);
+                    return Ok(JobStep::Running(None));
                 }
                 self.displaced = self.current.replace(lease);
                 self.done = true;
@@ -119,28 +127,28 @@ impl MountedState {
             }
             Some(Err(detail)) => self.fail(detail),
             None => self.fail(b"fem3d.visual-candidate-owner".to_vec()),
-        }
+        })
     }
 
-    pub(super) fn close_step(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PluginLifecycleStep {
+    pub(super) fn close_step(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, PluginLifecycleFailure> {
         let maximum_bytes = grant.maximum_release_bytes;
-        match self.close_lane {
+        Ok(match self.close_lane {
             0 => {
                 if let Some(candidate) = self.candidate.as_mut() {
                     let before = candidate.backing_usage();
                     let (terminal, items, bytes) = candidate.close_step(maximum_bytes);
                     let after = candidate.backing_usage();
                     if !self.backing.release(before.0 - after.0, before.1 - after.1) {
-                        return PluginLifecycleStep::Blocked { reason: "FEM3D visual candidate process credit mismatch" };
+                        return Ok(PluginLifecycleStep::Blocked { reason: "FEM3D visual candidate process credit mismatch" });
                     }
                     if !terminal {
-                        return session_pending(items, bytes);
+                        return Ok(session_pending(items, bytes));
                     }
                     if !candidate.terminal_is_empty() {
-                        return PluginLifecycleStep::Blocked { reason: "FEM3D visual candidate false terminal" };
+                        return Ok(PluginLifecycleStep::Blocked { reason: "FEM3D visual candidate false terminal" });
                     }
                     self.candidate = None;
-                    return session_pending(1, 0);
+                    return Ok(session_pending(1, 0));
                 }
                 self.close_lane = 1;
                 session_pending(1, 0)
@@ -149,13 +157,13 @@ impl MountedState {
                 if let Some(displaced) = self.displaced.as_mut() {
                     let (terminal, items, bytes) = displaced.close_step(maximum_bytes);
                     if !terminal {
-                        return session_pending(items, bytes);
+                        return Ok(session_pending(items, bytes));
                     }
                     if !displaced.terminal_is_empty() {
-                        return PluginLifecycleStep::Blocked { reason: "FEM3D displaced lease false terminal" };
+                        return Ok(PluginLifecycleStep::Blocked { reason: "FEM3D displaced lease false terminal" });
                     }
                     self.displaced = None;
-                    return session_pending(1, 0);
+                    return Ok(session_pending(1, 0));
                 }
                 self.close_lane = 2;
                 session_pending(1, 0)
@@ -164,25 +172,25 @@ impl MountedState {
                 if let Some(current) = self.current.as_mut() {
                     let (terminal, items, bytes) = current.close_step(maximum_bytes);
                     if !terminal {
-                        return session_pending(items, bytes);
+                        return Ok(session_pending(items, bytes));
                     }
                     if !current.terminal_is_empty() {
-                        return PluginLifecycleStep::Blocked { reason: "FEM3D current lease false terminal" };
+                        return Ok(PluginLifecycleStep::Blocked { reason: "FEM3D current lease false terminal" });
                     }
                     self.current = None;
-                    return session_pending(1, 0);
+                    return Ok(session_pending(1, 0));
                 }
                 self.close_lane = 3;
                 session_pending(1, 0)
             }
             3 => {
                 if let Some(numerical) = self.numerical.as_mut() {
-                    let (terminal, items, bytes) = numerical.close_step(cx, grant);
-                    if !terminal {
-                        return session_pending(items, bytes);
+                    if !numerical.terminal_is_empty() {
+                        let (_, progress) = numerical.close_step(cx, grant)?;
+                        return Ok(PluginLifecycleStep::Progress(progress));
                     }
                     self.numerical = None;
-                    return session_pending(1, 0);
+                    return Ok(session_pending(1, 0));
                 }
                 self.close_lane = 4;
                 session_pending(1, 0)
@@ -191,13 +199,13 @@ impl MountedState {
                 if let Some(solver) = self.solver.as_mut() {
                     let (terminal, items, bytes) = solver.close_step(maximum_bytes);
                     if items != 0 && !self.backing.release(items, bytes) {
-                        return PluginLifecycleStep::Blocked { reason: "FEM3D solver process credit mismatch" };
+                        return Ok(PluginLifecycleStep::Blocked { reason: "FEM3D solver process credit mismatch" });
                     }
                     if !terminal {
-                        return session_pending(items, bytes);
+                        return Ok(session_pending(items, bytes));
                     }
                     self.solver = None;
-                    return session_pending(items, bytes);
+                    return Ok(session_pending(items, bytes));
                 }
                 self.close_lane = 5;
                 session_pending(1, 0)
@@ -205,29 +213,29 @@ impl MountedState {
             5 => {
                 if let Some(snapshot) = self.snapshot.take() {
                     let Some(witness) = snapshot.return_to_registry_witness() else {
-                        return PluginLifecycleStep::Blocked { reason: "FEM3D snapshot already returned" };
+                        return Ok(PluginLifecycleStep::Blocked { reason: "FEM3D snapshot already returned" });
                     };
                     self.snapshot_return = Some(witness);
-                    return session_pending(1, size_of::<store::os_store::snapshot_read::SnapshotRead<Fem3dSnapshot>>());
+                    return Ok(session_pending(1, size_of::<store::os_store::snapshot_read::SnapshotRead<Fem3dSnapshot>>()));
                 }
                 if self.snapshot_return.as_ref().is_some_and(|witness| !witness.terminal_is_empty()) {
-                    return session_pending(0, 0);
+                    return Ok(session_pending(0, 0));
                 }
                 if self.snapshot_return.take().is_some() {
-                    return session_pending(1, size_of::<store::os_store::snapshot_read::SnapshotReadReturn>());
+                    return Ok(session_pending(1, size_of::<store::os_store::snapshot_read::SnapshotReadReturn>()));
                 }
                 self.close_lane = 6;
                 session_pending(1, 0)
             }
             6 => {
                 if !self.backing.terminal_is_empty() {
-                    return PluginLifecycleStep::Blocked { reason: "FEM3D process backing credit remains live" };
+                    return Ok(PluginLifecycleStep::Blocked { reason: "FEM3D process backing credit remains live" });
                 }
                 self.close_lane = 7;
                 session_pending(1, 0)
             }
             _ => PluginLifecycleStep::Complete(RetainedCloneProgress::default()),
-        }
+        })
     }
 
     fn terminal_placeholder(&self) -> Self {

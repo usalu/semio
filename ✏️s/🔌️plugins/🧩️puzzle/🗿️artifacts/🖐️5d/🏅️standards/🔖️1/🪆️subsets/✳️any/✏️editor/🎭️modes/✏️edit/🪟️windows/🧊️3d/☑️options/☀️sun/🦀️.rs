@@ -1,11 +1,12 @@
-//! ☀️ 3D-window option — the sun/environment group (enabled, azimuth, elevation, intensity),
 //! delegated wholesale to the framework's shared `world3d_sun_measures` builder. Genuinely
+//! ☀️ 3D-window option — the sun/environment group (enabled, azimuth, elevation, intensity),
 //! window-specific: only the World3d surface has an environment to light, so this stays under the 3D
 //! window rather than at mode level.
 use crate::editor::puzzle5d::entities::puzzle5d_action;
 
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
-use semio_framework_plugin::{world3d_sun_measures, WindowMeasure};
+use semio_framework_plugin::world3d_sun_measures;
+use semio_framework_plugin::WindowMeasure;
 
 /// 🌞️ The sun toggle plus its azimuth/elevation/intensity sliders.
 /// 🔗️ `world3d_sun_measures` is a framework helper still bound to `semio_framework_pack_json::Value` (framework

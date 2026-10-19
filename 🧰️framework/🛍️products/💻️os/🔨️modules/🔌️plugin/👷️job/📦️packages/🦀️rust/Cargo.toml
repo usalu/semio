@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 artifact-app-testing = []
 
 [dependencies]
+semio-framework-actor = { path = "../../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust" }
 semio-framework-plugin-interaction = { path = "../../../🕹️interaction/📦️packages/🦀️rust" }
 semio-framework-plugin-operation = { path = "../../../♻️cancellation/📦️packages/🦀️rust" }
 semio-framework-plugin-window-config = { path = "../../../🪟️window/🎚️config/📦️packages/🦀️rust" }

@@ -25,6 +25,7 @@ pub(crate) struct Draft<'a> {
     pub(crate) stage: Stage,
     pub(crate) kinds: Vec<&'a Species>,
     pub(crate) streams: Vec<u32>,
+    pub(crate) menagerie: &'a Menagerie,
 }
 
 /// 🛖️ A perch (its index among the perches of the stage) with the stretches (pairs of ends) a species can arrive on, their summed length and how many actors stand on it.
@@ -36,9 +37,11 @@ pub(crate) struct Room {
 }
 
 /// 🚀️ A flight an actor could take: the x it ends at, its launch velocity and its ticks in the air.
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub(crate) struct Launch {
     pub(crate) x: f64,
+    pub(crate) y: f64,
+    pub(crate) surface: String,
     pub(crate) vx: f64,
     pub(crate) vy: f64,
     pub(crate) ticks: Ticks,
@@ -57,7 +60,7 @@ pub(crate) fn draft_of(menagerie: &Menagerie, mut stage: Stage) -> Draft<'_> {
         kinds.push(kind);
         streams.push(stream as u32);
     }
-    Draft { stage, kinds, streams }
+    Draft { stage, kinds, streams, menagerie }
 }
 
 /// 📦️ The stage a draft has become.
@@ -167,6 +170,15 @@ pub(crate) fn beat_of(kind: &Species, clip: Option<&Clip>) -> Ticks {
 //#region 🔖️Activities
 /// 🔀️ An actor takes up an activity at tick `now`: its needs are settled over the span of the one it leaves.
 pub(crate) fn shift(draft: &mut Draft<'_>, index: usize, activity: Activity, now: Ticks) {
+    let previous = draft.stage.actors[index].activity;
+    let since = draft.stage.actors[index].since;
+    if previous == Activity::Trick {
+        let emitter = trick_of(draft.kinds[index], draft.stage.actors[index].trick.as_deref()).and_then(|trick| trick.emitter.as_deref());
+        douse(draft, index, emitter, since, now);
+        draft.stage.actors[index].trick = None;
+    } else if previous == Activity::Purr {
+        douse(draft, index, draft.kinds[index].purr.emitter.as_deref(), since, now);
+    }
     let temperament = draft.kinds[index].temperament;
     let body = &mut draft.stage.actors[index];
     body.needs = needs_after(body.needs, body.activity, now - body.since, temperament);
@@ -208,11 +220,132 @@ pub(crate) fn release(draft: &mut Draft<'_>, index: usize, now: Ticks) {
 
 /// 🚪️ An actor leaves the stage for good: it is taken out of the draft.
 pub(crate) fn remove(draft: &mut Draft<'_>, index: usize) {
+    let species = &draft.stage.actors[index].species;
+    draft.stage.claims.retain(|claim| claim.owner != *species);
+    draft.stage.courses.retain(|course| course.owner != *species);
+    draft.stage.trips.retain(|trip| trip.owner != *species);
+    for ladder in &mut draft.stage.ladders {
+        if ladder.rider.as_ref() == Some(species) { ladder.rider = None; }
+    }
+    if draft.stage.touched.as_ref() == Some(species) { draft.stage.touched = None; }
     draft.stage.actors.remove(index);
     draft.kinds.remove(index);
     draft.streams.remove(index);
 }
 //#endregion 🔖️Activities
+
+/// 🙃️ A turn follows the drawing's current position, including a turn already in progress.
+pub(crate) const TURN_TICKS: Ticks = 8;
+
+/// 🔄️ Turn over the shared animation horizon.
+pub(crate) fn turn(body: &mut Actor, way: Facing, now: Ticks) {
+    if way == body.facing { return; }
+    let left = if body.faced > now { body.faced - now } else { 0 };
+    body.facing = way;
+    body.faced = now + TURN_TICKS - left;
+}
+
+/// 🏃️ Whether an actor moves of its own accord, including a trip with gear.
+pub(crate) fn astir(draft: &Draft<'_>, body: &Actor) -> bool {
+    matches!(body.activity, Activity::Walk | Activity::Hop) || draft.stage.trips.iter().any(|trip| trip.owner == body.species)
+}
+
+/// 🃏️ The species' authored trick with an id.
+pub(crate) fn trick_of<'a>(kind: &'a Species, id: Option<&str>) -> Option<&'a Trick> {
+    id.and_then(|id| kind.tricks.iter().find(|trick| trick.id == id))
+}
+
+/// 🫀️ The feeling settled to a tick without changing its event anchor.
+pub(crate) fn present(draft: &Draft<'_>, index: usize, now: Ticks) -> Feeling {
+    settled(draft.stage.actors[index].feeling, draft.kinds[index].mood, now)
+}
+
+/// 🚩️ The actor's state after its authored timed transitions.
+pub(crate) fn standing(draft: &Draft<'_>, index: usize, now: Ticks) -> Standing {
+    let body = &draft.stage.actors[index];
+    state_at(draft.kinds[index], &body.state, body.state_since, now)
+}
+
+/// 🌊️ The event-anchored feeling after an occasion as the species takes it.
+pub(crate) fn feel(draft: &mut Draft<'_>, index: usize, occasion: Occasion, now: Ticks) {
+    draft.stage.actors[index].feeling = appraised(present(draft, index, now), occasion, draft.kinds[index].into(), now);
+}
+
+/// 🌫️ Remove plumes whose particles have all ended, including unknown emitters.
+fn aired(draft: &mut Draft<'_>, index: usize, now: Ticks) {
+    let kind = draft.kinds[index];
+    draft.stage.actors[index].emitters.retain(|plume| kind.emitters.iter().find(|emitter| emitter.id == plume.emitter).is_some_and(|emitter| emitter_ends(emitter.into(), plume.since, plume.until).is_none_or(|end| end > now)));
+}
+
+/// 💨️ Start an authored emitter while its cause lasts.
+pub(crate) fn ignite(draft: &mut Draft<'_>, index: usize, emitter: Option<&str>, now: Ticks) {
+    aired(draft, index, now);
+    let Some(emitter) = emitter.filter(|id| draft.kinds[index].emitters.iter().any(|emitter| emitter.id == *id)) else { return; };
+    draft.stage.actors[index].emitters.push(Plume { emitter: emitter.to_owned(), since: now, until: None });
+}
+
+/// 🧯️ End the latest matching running plume's cause while existing particles live on.
+pub(crate) fn douse(draft: &mut Draft<'_>, index: usize, emitter: Option<&str>, since: Ticks, now: Ticks) {
+    aired(draft, index, now);
+    let Some(emitter) = emitter else { return; };
+    if let Some(plume) = draft.stage.actors[index].emitters.iter_mut().rev().find(|plume| plume.emitter == emitter && plume.since == since && plume.until.is_none()) { plume.until = Some(now); }
+}
+
+/// 🔦️ Enter an authored state, retaining the previous look and moving its emitters.
+pub(crate) fn enter(draft: &mut Draft<'_>, index: usize, state: &str, since: Ticks, now: Ticks) {
+    let kind = draft.kinds[index];
+    let Some(next) = kind.states.iter().find(|entry| entry.id == state) else { return; };
+    let body = &draft.stage.actors[index];
+    let former = if since > body.state_since { state_at(kind, &body.state, body.state_since, since - 1).state } else { body.state.clone() };
+    let emitter = kind.states.iter().find(|entry| entry.id == body.state).and_then(|entry| entry.emitter.as_deref());
+    douse(draft, index, emitter, body.state_since, now);
+    let body = &mut draft.stage.actors[index];
+    body.former = former;
+    body.state = state.to_owned();
+    body.state_since = since;
+    if let Some(emitter) = &next.emitter {
+        aired(draft, index, now);
+        draft.stage.actors[index].emitters.push(Plume { emitter: emitter.clone(), since, until: None });
+    }
+}
+
+/// ⌛️ Catch the stored state and its emitters up with timed transitions.
+pub(crate) fn stand(draft: &mut Draft<'_>, index: usize, now: Ticks) {
+    let current = standing(draft, index, now);
+    let body = &draft.stage.actors[index];
+    if current.state != body.state || current.since != body.state_since { enter(draft, index, &current.state, current.since, now); }
+}
+
+/// 🪄️ Perform a trick for its clip or drawn dwell, with the authored emitter.
+pub(crate) fn perform(draft: &mut Draft<'_>, index: usize, trick: &Trick, now: Ticks) {
+    shift(draft, index, Activity::Trick, now);
+    let clip = clip_of(draft.kinds[index], Some(&trick.clip));
+    let span = clip.filter(|clip| !clip.looping).map_or_else(|| dwell_of(Activity::Trick, draft.stage.mode, 0.0), clip_ticks);
+    let body = &mut draft.stage.actors[index];
+    body.trick = Some(trick.id.clone());
+    body.clip = Some(trick.clip.clone());
+    body.until = now + span;
+    body.goal = body.x;
+    body.vx = 0.0;
+    body.vy = 0.0;
+    ignite(draft, index, trick.emitter.as_deref(), now);
+}
+
+/// 😻️ Begin or extend purring through a whole authored loop and the requested duration.
+pub(crate) fn purr(draft: &mut Draft<'_>, index: usize, ticks: Ticks, now: Ticks) {
+    let kind = draft.kinds[index];
+    let span = clip_of(kind, Some(&kind.purr.clip)).map_or(ticks, |clip| Ticks::max(clip_ticks(clip), ticks));
+    let body = &mut draft.stage.actors[index];
+    if body.activity == Activity::Purr { body.until = Ticks::max(body.until, now + span); return; }
+    shift(draft, index, Activity::Purr, now);
+    let body = &mut draft.stage.actors[index];
+    body.clip = Some(kind.purr.clip.clone());
+    body.until = now + span;
+    body.goal = body.x;
+    body.vx = 0.0;
+    body.vy = 0.0;
+    ignite(draft, index, kind.purr.emitter.as_deref(), now);
+}
 
 //#region 🔖️Stretches
 /// 🔪️ Stretches (pairs of ends) without the interval `(low, high)`.

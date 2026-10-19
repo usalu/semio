@@ -15,6 +15,10 @@ use std::pin::Pin;
 use std::sync::Arc;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 
+#[path="🧬️preview/🦀️.rs"]
+mod semantic_preview;
+use semantic_preview::WindowSemanticPreview;
+
 #[path="🧬️preparation/🔁️replace/🦀️.rs"]
 mod replace_edit;
 pub use replace_edit::{WindowConfigReplaceCursor,WindowConfigReplaceEdit,WindowConfigReplaceMutation};
@@ -51,3 +55,7 @@ use store_owners::{ErasedWindowConfigStoreOwner, WindowConfigPartition};
 mod owner_registry;
 pub use owner_registry::{WINDOW_CONFIG_PACK_LOAD_TURNS, WindowConfigOwnerRegistry};
 use owner_registry::{close_window_actor, controlled_owner_demands, window_actor_demands};
+
+#[cfg(test)]
+#[path="🏠️catalog/🧪️tests/🦀️.rs"]
+mod original_catalog_tests;

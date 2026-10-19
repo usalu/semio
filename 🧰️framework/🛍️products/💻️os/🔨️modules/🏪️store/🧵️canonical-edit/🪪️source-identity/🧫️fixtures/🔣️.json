@@ -1,0 +1,109 @@
+{
+  "schema": "semio.canonical-source-identity/v1",
+  "domain": "semio.canonical-source-identity/v1",
+  "hash": "sha256",
+  "transcript": "UTF8(domain),zero,u64be(rootCount),UTF8(JSON array of original ordered roots)",
+  "maximumRoots": 64,
+  "maximumSourceDepth": 64,
+  "birth": { "frames": 64, "maximumCopyBytes": 4096, "maximumCapacityBytes": 4096, "maximumReleaseBytes": 4096, "cancelAt": [0,1,2,17,64,65,66,67,68], "deepArrayLayers": 63, "assumeAndHandoffSeparate": true },
+  "cases": [
+    {
+      "id": "equal-original-roots",
+      "roots": [
+        {
+          "model": "Energy",
+          "values": [
+            1,
+            2.5,
+            -3
+          ],
+          "label": "München 🪪️"
+        },
+        {
+          "calendar": "ActualDates",
+          "weather": [
+            {
+              "dry_bulb_c": 1.25
+            }
+          ],
+          "run_period_year": 2026
+        }
+      ],
+      "transcriptHex": "73656d696f2e63616e6f6e6963616c2d736f757263652d6964656e746974792f76310000000000000000025b7b226d6f64656c223a22456e65726779222c2276616c756573223a5b312c322e352c2d335d2c226c6162656c223a224dc3bc6e6368656e20f09faaaaefb88f227d2c7b2263616c656e646172223a2241637475616c4461746573222c2277656174686572223a5b7b226472795f62756c625f63223a312e32357d5d2c2272756e5f706572696f645f79656172223a323032367d5d",
+      "sha256": "3e3dae47e7eccbeedb245cc066e3e854abab74e0e989cd75513b32f2100ef11e"
+    },
+    {
+      "id": "foreign-weather",
+      "roots": [
+        {
+          "model": "Energy",
+          "values": [
+            1,
+            2.5,
+            -3
+          ],
+          "label": "München 🪪️"
+        },
+        {
+          "calendar": "ActualDates",
+          "weather": [
+            {
+              "dry_bulb_c": 2.5
+            }
+          ],
+          "run_period_year": 2026
+        }
+      ],
+      "transcriptHex": "73656d696f2e63616e6f6e6963616c2d736f757263652d6964656e746974792f76310000000000000000025b7b226d6f64656c223a22456e65726779222c2276616c756573223a5b312c322e352c2d335d2c226c6162656c223a224dc3bc6e6368656e20f09faaaaefb88f227d2c7b2263616c656e646172223a2241637475616c4461746573222c2277656174686572223a5b7b226472795f62756c625f63223a322e357d5d2c2272756e5f706572696f645f79656172223a323032367d5d",
+      "sha256": "166a81e72e7455148ef33b335187aecc767917b36f76ce81de243e4e6c712c65"
+    },
+    {
+      "id": "foreign-calendar",
+      "roots": [
+        {
+          "model": "Energy",
+          "values": [
+            1,
+            2.5,
+            -3
+          ],
+          "label": "München 🪪️"
+        },
+        {
+          "calendar": "TypicalYear",
+          "weather": [
+            {
+              "dry_bulb_c": 1.25
+            }
+          ],
+          "run_period_year": 2026
+        }
+      ],
+      "transcriptHex": "73656d696f2e63616e6f6e6963616c2d736f757263652d6964656e746974792f76310000000000000000025b7b226d6f64656c223a22456e65726779222c2276616c756573223a5b312c322e352c2d335d2c226c6162656c223a224dc3bc6e6368656e20f09faaaaefb88f227d2c7b2263616c656e646172223a225479706963616c59656172222c2277656174686572223a5b7b226472795f62756c625f63223a312e32357d5d2c2272756e5f706572696f645f79656172223a323032367d5d",
+      "sha256": "a5101873146ecde3870f7779a6722754341a836f0ad0fd414e59e9f964398178"
+    },
+    {
+      "id": "empty-roots",
+      "roots": [],
+      "transcriptHex": "73656d696f2e63616e6f6e6963616c2d736f757263652d6964656e746974792f76310000000000000000005b5d",
+      "sha256": "7f4fcfa931824648b65c0a2ad65d4c63d88402112003fa82f6a92c3c21efd4a4"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    17,
+    53,
+    113
+  ],
+  "requirements": [
+    "genuine-original-root-addresses",
+    "full-canonical-source-fields",
+    "sha256-not-census",
+    "denied-grant-no-read-no-heap",
+    "bounded-byte-or-source-turn",
+    "ordered-roots-unambiguous-transcript",
+    "funded-cancellation",
+    "equal-value-readmission"
+  ]
+}

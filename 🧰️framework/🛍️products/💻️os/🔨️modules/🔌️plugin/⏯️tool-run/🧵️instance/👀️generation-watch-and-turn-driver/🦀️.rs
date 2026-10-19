@@ -139,7 +139,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     }
 
     /// ⏯️ The selected run's share of one driver turn.
-    async fn drive_selected_tool_run(&mut self, deadline: u64,grant:RetainedCloneGrant,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
+    async fn drive_selected_tool_run(&mut self, deadline: u64,grant:RetainedCloneGrant,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(), Fault> {
         let Some(state) = self.tool_runs.state() else { return Ok(()) };
         match state {
             ToolRunState::Aborting => {
@@ -158,7 +158,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
             }
             ToolRunState::Starting => self.admit_tool_run_job().await,
             ToolRunState::Running | ToolRunState::Paused | ToolRunState::Complete => {
-                if self.refold_tool_run(deadline) || self.refresh_tool_run_member(deadline)? {
+                if self.refold_tool_run(deadline) || self.refresh_tool_run_member(deadline,grant,receiving)? {
                     return Ok(());
                 }
                 let entry = selected_entry!(self.tool_runs).expect("live slot");
@@ -176,12 +176,12 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                 Ok(())
             }
             ToolRunState::Finalizing => {
-                if self.refresh_tool_run_member(deadline)? {
+                if self.refresh_tool_run_member(deadline,grant,receiving)? {
                     return Ok(());
                 }
-                self.finalize_tool_run_turn(deadline,grant,identity).await
+                self.finalize_tool_run_turn(deadline,grant,identity,receiving).await
             }
-            ToolRunState::Finalized | ToolRunState::Aborted | ToolRunState::Faulted => self.settle_tool_run_member(deadline),
+            ToolRunState::Finalized | ToolRunState::Aborted | ToolRunState::Faulted => self.settle_tool_run_member(deadline,grant),
         }
     }
 

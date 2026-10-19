@@ -1,5 +1,5 @@
 use super::*;
-use semio_s_fem_mesh::*;
+use super::*;
 use std::collections::HashSet;
 
 fn shoelace_area(points: &[[f64; 2]]) -> f64 {

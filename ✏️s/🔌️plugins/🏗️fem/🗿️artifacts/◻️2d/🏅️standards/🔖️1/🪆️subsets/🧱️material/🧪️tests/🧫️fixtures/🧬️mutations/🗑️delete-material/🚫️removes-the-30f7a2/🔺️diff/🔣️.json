@@ -3,13 +3,13 @@
   "elements": null,
   "regions": null,
   "materials": {
-    "inserted": [],
     "removed": [
       {
         "id": "timber",
         "index": 1
       }
     ],
+    "inserted": [],
     "moved": [],
     "modified": []
   },

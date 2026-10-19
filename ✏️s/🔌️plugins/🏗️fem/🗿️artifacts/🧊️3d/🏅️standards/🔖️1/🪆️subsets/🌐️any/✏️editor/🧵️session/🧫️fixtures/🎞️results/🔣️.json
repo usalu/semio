@@ -1,0 +1,15 @@
+{
+  "terminalKinds": ["faulted", "cancelled"],
+  "wideSourceLength": 6500,
+  "wideWindowLength": 300,
+  "appIds": [1, 33, 65],
+  "requestWindows": [{"window":"case-a","family":0,"namespace":0,"source":"a","index":0},{"window":"case-a-shared","family":0,"namespace":0,"source":"a","index":0},{"window":"case-b","family":0,"namespace":0,"source":"b","index":0},{"window":"combination-a","family":0,"namespace":1,"source":"a","index":0},{"window":"mode-one","family":1,"namespace":0,"source":"","index":0},{"window":"mode-two","family":1,"namespace":0,"source":"","index":1},{"window":"buckling-a","family":2,"namespace":0,"source":"a","index":0}],
+  "closeOrder": [33, 1, 65],
+  "cases": [
+    { "id": "current-complete", "currentReady": true, "currentRevision": true, "currentSource": true, "retainedSource": true, "expected": 2 },
+    { "id": "revision-running", "currentReady": false, "currentRevision": true, "currentSource": true, "retainedSource": true, "expected": 1 },
+    { "id": "revision-before-admission", "currentReady": true, "currentRevision": false, "currentSource": true, "retainedSource": true, "expected": 1 },
+    { "id": "changed-source", "currentReady": false, "currentRevision": true, "currentSource": false, "retainedSource": false, "expected": null },
+    { "id": "completed-old-source", "currentReady": true, "currentRevision": true, "currentSource": false, "retainedSource": true, "expected": 1 }
+  ]
+}

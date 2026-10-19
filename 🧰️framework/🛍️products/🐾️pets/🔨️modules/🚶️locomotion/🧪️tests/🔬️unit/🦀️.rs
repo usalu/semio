@@ -16,9 +16,10 @@ fn a_hopper_that_finds_somebody_in_its_way_in_mid_hop_finishes_the_hop_on_the_sp
     let mut draft = draft_of(&menagerie, advance(&menagerie, open_stage(3), &[floor, summoned(&["mossy", "sparky"]), StageEvent::Ticked(Ticked { ticks: 32 })]));
     assert_eq!(beat_of(draft.kinds[1], clip_of(draft.kinds[1], Some("bounce"))), 32);
     (draft.stage.actors[1].x, draft.stage.actors[1].facing) = (300.0, Facing::Right);
-    draft.stage.actors[0].x = 300.0 + shoulders(draft.kinds[0], draft.kinds[1]) + MEET_GAP + 3.0;
+    draft.stage.actors[0].x = 300.0 + shoulders(draft.kinds[0], draft.kinds[1]) + 2.0 * MARGIN + SEAM + 3.0;
     stroll(&mut draft, 1, 600.0, Some("bounce".to_string()), 32);
-    assert!(!hindered(&draft, 1, 1) && hindered(&draft, 1, 32));
+    assert_eq!(guarded(&draft, 1, 1.0, 32), 1.0);
+    assert_eq!(guarded(&draft, 1, 32.0, 32), 3.0);
     let stopped = advance(&menagerie, sealed(draft), &ticked(5));
     let sparky = actor_of(&stopped, "sparky");
     assert!(sparky.x == 303.0 && sparky.goal == 303.0);

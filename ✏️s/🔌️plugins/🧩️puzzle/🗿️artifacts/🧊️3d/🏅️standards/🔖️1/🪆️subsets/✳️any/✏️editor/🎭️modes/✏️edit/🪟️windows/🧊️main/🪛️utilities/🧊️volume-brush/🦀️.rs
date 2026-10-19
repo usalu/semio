@@ -1,5 +1,5 @@
-//! 🧊️ Main-window utility — Volume Brush: Alt+click paints grid-snapped target volumes that constrain
 //! where the Fill tool may place. Its Utility Options are the voxel width/depth/height steppers that
+//! 🧊️ Main-window utility — Volume Brush: Alt+click paints grid-snapped target volumes that constrain
 //! size each painted volume (in grid-spacing units).
 
 use semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_PLAY_CONTROLLER_ID;

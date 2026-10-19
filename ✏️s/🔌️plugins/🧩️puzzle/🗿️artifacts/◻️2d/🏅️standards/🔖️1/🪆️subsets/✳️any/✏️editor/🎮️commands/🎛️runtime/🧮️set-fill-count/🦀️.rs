@@ -1,10 +1,10 @@
-//! 🧮️ `set-fill-count` command — the fill tool's requested count, a shared `Puzzle2dConfig` preference. A
 //! running fill tool run observes the config change and resumes from its checkpoint with the new count (a raise
+//! 🧮️ `set-fill-count` command — the fill tool's requested count, a shared `Puzzle2dConfig` preference. A
 //! continues, a lower retracts the provisional tail); the command itself never touches the document.
 
 use {crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx};
 use semio_framework_plugin::kernel::Effect;
-use semio_framework_pack_json::{Value};
+use semio_framework_pack_json::Value;
 #[cfg(test)] use semio_framework_pack_json::{json};
 
 /// 📨️ Routes a programmatic count request (the engagement bar's repeat-last) through the declared

@@ -4,7 +4,8 @@ use semio_framework_test_fixtures::fixture_text;
 use {crate::standards::v1::subsets::any::schema::records::Puzzle2dNode, crate::Puzzle2dSnapshot, crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge};
 use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
 use crate::standards::v1::subsets::any::schema::{empty_puzzle2d_snapshot,mutations::{Puzzle2dMutation,delete_node,disconnect_handles,remove_node_handle,inverse_puzzle2d_mutation}};
-use serde_json::{Value,json};
+use serde_json::Value;
+use serde_json::json;
 
 #[test]
 fn history_edit_puzzle2d_edge_restoration_preserves_original_ordinals_and_optional_flags() {

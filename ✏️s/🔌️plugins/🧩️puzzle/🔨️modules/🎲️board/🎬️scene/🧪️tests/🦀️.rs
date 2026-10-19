@@ -1,6 +1,8 @@
 use super::*;
-use semio_framework_pack_json::{self as json, JsonMemberPolicy};
-use semio_framework_value::{native_decoding::NativeDecodeProgress, NativeEncodeControl};
+use semio_framework_pack_json::self as json;
+use semio_framework_pack_json::JsonMemberPolicy;
+use semio_framework_value::native_decoding::NativeDecodeProgress;
+use semio_framework_value::NativeEncodeControl;
 
 fn unbounded_grant() -> semio_framework_value::retained_clone::RetainedCloneGrant {
     semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX }

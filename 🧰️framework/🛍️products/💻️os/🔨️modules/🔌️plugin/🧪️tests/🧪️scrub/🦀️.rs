@@ -55,13 +55,13 @@ pub fn config(mutation: impl Into<TestMutation>) -> Leaf {
 #[doc(hidden)]
 pub fn tick(runtime: &mut Runtime, window: &str, gesture: &str, leaves: Vec<Leaf>, clock: u64) -> ToolStep<Leaf> {
     let clock = HybridLogicalTimestamp { actor: 0, physical_ms: clock, logical: 0 };
-    runtime.presses.send(window, "s.test@1/*#editor#setCount", &ActorId("actor".into()), "r1", ScrubInput::Tick { gesture: gesture.into(), leaves }, clock).expect("a tick is never refused")
+    runtime.presses.send(window, "s.test@1/*#editor#setCount", &ActorId("actor".into()), "r1", &mut Some(ScrubInput::Tick { gesture: gesture.into(), leaves }), clock).expect("a tick is never refused")
 }
 
 #[doc(hidden)]
 pub fn release(runtime: &mut Runtime, window: &str, gesture: &str, leaves: Vec<Leaf>) -> ToolStep<Leaf> {
     let clock = HybridLogicalTimestamp { actor: 0, physical_ms: 9_000, logical: 0 };
-    runtime.presses.send(window, "s.test@1/*#editor#setCount", &ActorId("actor".into()), "r1", ScrubInput::Commit { gesture: gesture.into(), leaves }, clock).expect("a release is never refused")
+    runtime.presses.send(window, "s.test@1/*#editor#setCount", &ActorId("actor".into()), "r1", &mut Some(ScrubInput::Commit { gesture: gesture.into(), leaves }), clock).expect("a release is never refused")
 }
 
 #[doc(hidden)]

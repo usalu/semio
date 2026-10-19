@@ -434,6 +434,30 @@
       ]
     },
     {
+      "name": "@semio-tech/course-primitives-tests-rs",
+      "root": "🧰️framework/🛍️products/📚️course/🧪️tests/🍰️companion-primitives/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/📚️course/🧪️tests/🍰️companion-primitives/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/course-schema-rs",
+      "root": "🧰️framework/🛍️products/📚️course/🧬️schema/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/📚️course/🧬️schema/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/course-tests-rs",
+      "root": "🧰️framework/🛍️products/📚️course/🧪️tests/🥣️companion/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/📚️course/🧪️tests/🥣️companion/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/course-tests-runs-rs",
+      "root": "🧰️framework/🛍️products/📚️course/🧪️tests/🎞️companion-runs/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/📚️course/🧪️tests/🎞️companion-runs/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/dag-dag",
       "root": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🟦️typescript",
       "manifest": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🟦️typescript/📋️project.json",

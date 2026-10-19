@@ -30,7 +30,7 @@ type Fem3dNodeRelocation {
 
 type Fem3dNodesModification {
   id: String!
-  patch: FemNode!
+  patch: Fem3dNodePatch!
 }
 
 type Fem3dNodesDelta {
@@ -58,7 +58,7 @@ type Fem3dElementRelocation {
 
 type Fem3dElementsModification {
   id: String!
-  patch: FemElement!
+  patch: Fem3dElementPatch!
 }
 
 type Fem3dElementsDelta {
@@ -86,7 +86,7 @@ type Fem3dMaterialRelocation {
 
 type Fem3dMaterialsModification {
   id: String!
-  patch: FemMaterial!
+  patch: Fem3dMaterialPatch!
 }
 
 type Fem3dMaterialsDelta {
@@ -114,7 +114,7 @@ type Fem3dSectionRelocation {
 
 type Fem3dSectionsModification {
   id: String!
-  patch: FemSection!
+  patch: Fem3dSectionPatch!
 }
 
 type Fem3dSectionsDelta {
@@ -142,7 +142,7 @@ type Fem3dSolidRelocation {
 
 type Fem3dSolidsModification {
   id: String!
-  patch: FemSolid!
+  patch: Fem3dSolidPatch!
 }
 
 type Fem3dSolidsDelta {
@@ -170,7 +170,7 @@ type Fem3dSupportRelocation {
 
 type Fem3dSupportsModification {
   id: String!
-  patch: FemSupport!
+  patch: Fem3dSupportPatch!
 }
 
 type Fem3dSupportsDelta {
@@ -232,7 +232,7 @@ type Fem3dLoadRelocation {
 
 type Fem3dLoadsModification {
   id: String!
-  patch: FemLoad!
+  patch: Fem3dLoadPatch!
 }
 
 type Fem3dLoadsDelta {
@@ -260,7 +260,7 @@ type Fem3dCombinationRelocation {
 
 type Fem3dCombinationsModification {
   id: String!
-  patch: FemCombination!
+  patch: Fem3dCombinationPatch!
 }
 
 type Fem3dCombinationsDelta {
@@ -275,3 +275,68 @@ type Fem3dAnalysisPatch {
   bucklingCount: Int
   deformationScale: Float
 }
+
+# 🧱️ Sparse material changes preserve independent fields.
+type Fem3dMaterialPatch {
+  name: String
+  e: Float
+  nu: Float
+  rho: Float
+  g: Float
+}
+
+type Fem3dNodePatch {
+  x: Float
+  y: Float
+  z: Float
+}
+
+type Fem3dSectionPatch {
+  name: String
+  area: Float
+  iy: Float
+  iz: Float
+  j: Float
+}
+
+type Fem3dSolidPatch {
+  name: String
+  outline: [[Float!]!]
+  holes: [[[Float!]!]!]
+  materialId: String
+  meshSize: Float
+  baseZ: Float
+  height: Float
+  layers: Unsigned64
+  axis: FemAxis
+}
+
+scalar Unsigned64
+
+type Fem3dSupportPatch {
+  nodeId: String
+  fixed: [FemDof!]
+  tx: Boolean
+  ty: Boolean
+  tz: Boolean
+  rx: Boolean
+  ry: Boolean
+  rz: Boolean
+}
+
+type Fem3dElementPatch {
+  kind: String
+  start: String
+  end: String
+  materialId: String
+  sectionId: String
+  roll: Float
+}
+
+union Fem3dLoadPatch = Fem3dNodalLoadPatch | Fem3dMemberUdlLoadPatch | Fem3dAreaLoadPatch
+type Fem3dNodalLoadPatch { kind: String! nodeId: String dof: FemDof value: Float }
+type Fem3dMemberUdlLoadPatch { kind: String! elementId: String wx: Float wy: Float wz: Float }
+type Fem3dAreaLoadPatch { kind: String! solidId: String pressure: Float }
+"""🗂️ Shared keyed MapDelta wire with finite numeric set payloads."""
+scalar Fem3dCombinationTermsDelta
+type Fem3dCombinationPatch { name: String terms: Fem3dCombinationTermsDelta }

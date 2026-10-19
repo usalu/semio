@@ -4,6 +4,7 @@
 
 use crate::editor::puzzle2d::config::PUZZLE2D_WINDOW_BODY_KEYS;
 use crate::editor::puzzle2d::modes::edit::windows::overview;
+use crate::editor::puzzle2d::panels::inspection;
 use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
 use crate::editor::puzzle2d::recorder::Puzzle2dRecorder;
 use {crate::editor::puzzle2d::snapshot::puzzle2d_selection_write, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx, crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select::Puzzle2dSelectionRecord};
@@ -11,12 +12,16 @@ use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 
 use machine::Command;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_tool_machine::{ChartGesture, GestureChart, GesturePhase, ToolYield};
+use semio_framework_tool_machine::{ChartGesture, GestureChart};
+use semio_framework_tool_machine::GesturePhase;
+use semio_framework_tool_machine::ToolYield;
 use semio_framework_pack_json::Value;
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
+use std::sync::OnceLock;
 use crate::editor::puzzle2d::engine::BoardHost;
 use crate::editor::puzzle2d::recorder;
-use crate::editor::puzzle2d::engine::board_host::{drain_board_events_json};
+use crate::editor::puzzle2d::engine::board_host::drain_board_events_json;
+
 
 /// 🐢️ Classifies a batch of board events into the narrowest `UiDirtyScope` that covers all of them —
 /// `applyBoardEvents` fires on every select and drag (a camera move is the view verb `setCamera`), so getting this right is most of the

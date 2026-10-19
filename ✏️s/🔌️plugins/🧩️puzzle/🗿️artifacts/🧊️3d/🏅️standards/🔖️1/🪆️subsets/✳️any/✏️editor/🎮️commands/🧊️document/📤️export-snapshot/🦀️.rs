@@ -3,7 +3,8 @@
 use {semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_projection_value, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dSceneSnapshot};
 use semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_OUTPUT_BYTES;
 use semio_framework_pack_json::to_json_string;
-use semio_framework_plugin::app::{ArtifactDownloadOutput, ArtifactOutputChunks};
+use semio_framework_plugin::app::ArtifactDownloadOutput;
+use semio_framework_plugin::app::ArtifactOutputChunks;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::Fault;
 use semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES;

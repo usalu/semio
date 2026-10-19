@@ -610,7 +610,11 @@ impl ModelCapture {
                 tilt_deg: item.tilt_deg,
                 azimuth_deg: item.azimuth_deg,
                 module_efficiency: item.module_efficiency,
-                inverter_efficiency: item.inverter_efficiency
+                inverter_efficiency: item.inverter_efficiency,
+                temperature_coefficient: item.temperature_coefficient,
+                faiman_heat_loss_constant_w_m2k: item.faiman_heat_loss_constant_w_m2k,
+                faiman_heat_loss_wind_w_s_m3k: item.faiman_heat_loss_wind_w_s_m3k,
+                mounting: item.mounting
             }),
             29 => plain!(battery_storage, |item: &crate::model::BatteryAssignment| crate::model::BatteryAssignment {
                 id: item.id,

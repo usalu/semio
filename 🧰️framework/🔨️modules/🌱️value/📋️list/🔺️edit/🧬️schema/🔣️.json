@@ -1,0 +1,14 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "title":"Indexed Edit Coordinates",
+ "type":"object",
+ "additionalProperties":false,
+ "required":["base","removed","modified","added"],
+ "properties":{
+  "base":{"type":"integer","minimum":0},
+  "removed":{"$ref":"#/$defs/indices"},
+  "modified":{"$ref":"#/$defs/indices"},
+  "added":{"$ref":"#/$defs/indices"}
+ },
+ "$defs":{"indices":{"type":"array","items":{"type":"integer","minimum":0}}}
+}

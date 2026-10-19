@@ -7,7 +7,9 @@ use crate::editor::puzzle2d::*;
 use crate::Puzzle2dSnapshot;
 use semio_framework::SET_ACTIVE_UTILITY_ACTION_ID;
 use semio_framework_plugin::PluginApp;
-use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, os_store::backbone::MemoryBackbone};
+use store::os_store::backbone::Backbone;
+use store::os_store::backbone::BackboneMessage;
+use store::os_store::backbone::MemoryBackbone;
 
 /// 📚️ The editor module's production source as the unsplit editor file held it: every mounted child and split part first, then the editor file itself, so the `UnitTests` region marker still closes the production prefix.
 pub(crate) fn editor_source() -> String {
@@ -29,8 +31,8 @@ pub(crate) fn editor_source() -> String {
 
 fn cohort_routes_are_cursorized(source: &str) -> bool {
     [
-        r#""forceLayout" => Box::new(Puzzle2dForceLayoutWork::default())"#,
-        r#""setActiveExample" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new("setActiveExample", puzzle2d_active_example_reduce, puzzle2d_active_example_extent))"#,
+        r#""forceLayout" => work!(|request| Puzzle2dForceLayoutWork::default())"#,
+        r#""setActiveExample" => work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new("setActiveExample", puzzle2d_active_example_reduce, puzzle2d_active_example_extent))"#,
         "Effect::LoadDocument",
         "Puzzle2dForceStage::Nodes",
         "Puzzle2dForceStage::Handles",
@@ -53,7 +55,7 @@ fn cohort_hostile_static_law_rejects_one_grant_complex_routes_and_missing_cursor
     let source = source.as_str();
     assert!(cohort_routes_are_cursorized(source));
     for (retained, direct) in [
-        (r#""forceLayout" => Box::new(Puzzle2dForceLayoutWork::default())"#, r#""forceLayout" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle2d_retained_reduce, puzzle2d_retained_extent))"#),
+        (r#""forceLayout" => work!(|request| Puzzle2dForceLayoutWork::default())"#, r#""forceLayout" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle2d_retained_reduce, puzzle2d_retained_extent))"#),
         (r#"Effect::LoadDocument { pack, spr }"#, r#"Effect::LoadDocument { pack, spr }; Puzzle2dActiveExampleWork::default()"#),
     ] {
         assert!(!cohort_routes_are_cursorized(&source.replace(retained, direct)));
@@ -84,7 +86,7 @@ fn rendered_camera(rendered: &str) -> (f64, f64, f64) {
             return Some(json.to_string());
         }
         match value {
-            Value::Object(map) => map.values().find_map(find_camera_json),
+            Value::Object(map) => map.iter().find_map(|(_, value)| find_camera_json(value)),
             Value::Array(items) => items.iter().find_map(find_camera_json),
             _ => None,
         }

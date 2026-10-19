@@ -1,7 +1,7 @@
 //! 🧰️ The harness of the proctor end to end suite: a scratch directory per test, the server booted on an ephemeral port, the wire with the §9a encoding, the websocket client of the presence rooms, and the builders of answers and runs.
 //!
 //! @see ../🦀️.rs — the end to end suite that mounts this module
-//! @see ../../../🧫️fixtures/📚️catalog/🔣️.json — the catalog played
+//! @see ../../../🧫️fixtures/📚️course/🔣️.json — the course played
 
 use super::*;
 use semio_framework_test_fixtures::fixture_path;
@@ -49,8 +49,8 @@ pub(super) fn boot(data: &Path, gate: Gate) -> Running {
     let thread = std::thread::spawn(move || {
         let runtime = tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_all().build().expect("runtime");
         runtime.block_on(async move {
-            let catalog = Arc::new(load_catalog(&fixtures().join("📚️catalog/🔣️.json")).expect("fixture catalog"));
-            let proctor = Proctor::assemble(StorageProfile::Embedded { data_dir: data }, catalog, gate, PresenceSettings::default()).await.expect("assembled");
+            let course = Arc::new(load_course(&fixtures().join("📚️course/🔣️.json")).expect("fixture course"));
+            let proctor = Proctor::assemble(StorageProfile::Embedded { data_dir: data }, course, gate, PresenceSettings::default()).await.expect("assembled");
             proctor.prepare().await.expect("prepared");
             proctor.reconcile().await.expect("reconciled");
             proctor.settle(&CancelToken::root_now(), |_| {}).await.expect("settled");
@@ -87,10 +87,10 @@ pub(super) fn text(bytes: &Value) -> String {
 /// 🎯️ The actor a client addresses a command to: the handle of a pseudonym or name being registered —
 /// the lowercase hex of its normalized key, as the browser client computes it — and the learner otherwise.
 fn target(command: &Value) -> Value {
-    let named = command["identity"]["handle"].as_str().filter(|_| command["type"] == "identify-learner").and_then(quiz::normalize_handle);
+    let named = command["identity"]["handle"].as_str().filter(|_| command["type"] == "identify-learner").and_then(course::normalize_handle);
     match named {
-        Some(handle) => json!({ "tenant": TENANT, "kind": "quiz-handle", "id": quiz::handle_actor_id(&handle.key) }),
-        None => json!({ "tenant": TENANT, "kind": "quiz-learner", "id": command["learner"] }),
+        Some(handle) => json!({ "tenant": TENANT, "kind": "course-handle", "id": course::handle_actor_id(&handle.key) }),
+        None => json!({ "tenant": TENANT, "kind": "course-learner", "id": command["learner"] }),
     }
 }
 
@@ -101,8 +101,8 @@ pub(super) fn envelope(command: &Value) -> Value {
     let principal = if kind == "identify-learner" { json!({ "kind": "anonymous" }) } else { json!({ "kind": "user", "id": learner }) };
     json!({
         "commandId": command["id"],
-        "kind": format!("quiz.{kind}"),
-        "version": quiz::WIRE_VERSION,
+        "kind": format!("course.{kind}"),
+        "version": course::WIRE_VERSION,
         "target": target,
         "scope": TENANT,
         "principal": principal,
@@ -158,7 +158,7 @@ pub(super) fn rejected(base: &str, sent: &Value) -> String {
 
 pub(super) fn query_envelope(query: &Value) -> Value {
     let kind = query["type"].as_str().expect("type");
-    json!({ "queryId": id(0), "kind": format!("quiz.{kind}"), "version": quiz::WIRE_VERSION, "scope": TENANT, "principal": { "kind": "anonymous" }, "arguments": bytes(&query.to_string()), "consistency": { "kind": "authority" }, "cursor": null })
+    json!({ "queryId": id(0), "kind": format!("course.{kind}"), "version": course::WIRE_VERSION, "scope": TENANT, "principal": { "kind": "anonymous" }, "arguments": bytes(&query.to_string()), "consistency": { "kind": "authority" }, "cursor": null })
 }
 
 pub(super) fn query(base: &str, query: &Value) -> (u16, Value) {

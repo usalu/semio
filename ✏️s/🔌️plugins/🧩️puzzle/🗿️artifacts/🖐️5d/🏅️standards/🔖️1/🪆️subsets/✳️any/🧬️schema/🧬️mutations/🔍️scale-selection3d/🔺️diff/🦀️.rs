@@ -1,10 +1,17 @@
-//! 🔺️ Sparse diff builder for `ScaleSelection3d` — every unlocked addressed part and target volume keeps its origin
 //! and multiplies its BASE scale (uniform broadcast, absent reads as one) by the payload's per-axis factors, so the leaf
+//! 🔺️ Sparse diff builder for `ScaleSelection3d` — every unlocked addressed part and target volume keeps its origin
 //! replays on any base.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dPart3dPatch, Puzzle5dPartPatch, Puzzle5dPartModification, Puzzle5dTargetVolumePatch, Puzzle5dTargetVolumeModification};
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dPart3dPatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dPartPatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dPartModification;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dTargetVolumePatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dTargetVolumeModification;
 use protocol::list_delta::RowPatch;
-use crate::standards::v1::subsets::any::schema::mutations::{puzzle5d_scaled};
+use crate::standards::v1::subsets::any::schema::mutations::puzzle5d_scaled;
 use crate::standards::v1::subsets::any::schema::diff::{puzzle5d_selection, puzzle5d_selection_outcome};
+
+
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff

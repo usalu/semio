@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "maximumPages": 8,
+  "receiverGrant": {
+    "maximumItems": 64,
+    "maximumCopyBytes": 4096,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 262144,
+    "maximumDepth": 64
+  },
+  "pageLengths": [
+    0,
+    1,
+    4091,
+    4096
+  ],
+  "cancellationPrefixes": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "requiredOrder": [
+    "presentation",
+    "descriptor",
+    "receive",
+    "source-close",
+    "publish",
+    "ack",
+    "original-close"
+  ]
+}

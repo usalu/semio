@@ -10,6 +10,22 @@
     ]
   },
   "targets": {
+    "test-original-receiving-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-receiving source"
+      }
+    },
+    "test-original-receiving-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-receiving native"
+      }
+    },
     "test-read-policy-source": {
       "executor": "repo:script",
       "cache": false,
@@ -41,6 +57,60 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-native"
+      }
+    },
+    "test-persistent-canonical-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust -- bun ./📜️script.ts test-persistent-canonical source"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-persistent-canonical",
+            "source"
+          ]
+        }
+      }
+    },
+    "test-persistent-canonical-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust --manifest 🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-persistent-canonical native"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-persistent-canonical",
+            "native"
+          ]
+        }
+      }
+    },
+    "test-immutable-tree-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-immutable-tree source"
+      }
+    },
+    "test-immutable-tree-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-immutable-tree native"
       }
     },
     "test-tree-wire-source": {

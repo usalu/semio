@@ -2,7 +2,11 @@
 //!
 //! 🧭️ Moved from the former store unit test module (chunk 5 of the cut by subject).
 
+use protocol::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::*;
+
+#[path = "../../🏗️initialization/🏠️owners/🧪️tests/🦀️.rs"]
+mod shared_semantic_source_tests;
 
 /// 🪪️ Runs one authoring call under a fixture caller-owned identity authority and returns the call's own result after the authority's cumulative receipt is settled.
 macro_rules! with_fixture_identity {

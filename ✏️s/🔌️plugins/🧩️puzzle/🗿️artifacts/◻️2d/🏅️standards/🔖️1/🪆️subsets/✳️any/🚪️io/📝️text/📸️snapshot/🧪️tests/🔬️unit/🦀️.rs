@@ -73,12 +73,16 @@ fn puzzle2d_projection_dsl_round_trips() {
 /// `command_envelope_round_trip_holds_for_an_applied_operation`).
 #[test]
 fn command_envelope_round_trip_holds_for_an_applied_operation() {
-    use crate::host::owned::{close_puzzle2d_store,puzzle2d_store};
+    use crate::host::owned::close_puzzle2d_store;
+    use crate::host::owned::puzzle2d_store;
 
     use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
     use crate::standards::v1::subsets::any::schema::records::PUZZLE_2D_SCHEMA;
-    use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
+    use protocol::ArtifactId;
+    use protocol::Edit;
+    use protocol::SchemaId;
+    use store::os_store::document_materialize::create_document_envelope;
+    use store::os_store::store_schema::ArtifactCommand;
 
     let mut store = ::semio_framework_async::poll::resolve_ready(puzzle2d_store(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("store");
     let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };

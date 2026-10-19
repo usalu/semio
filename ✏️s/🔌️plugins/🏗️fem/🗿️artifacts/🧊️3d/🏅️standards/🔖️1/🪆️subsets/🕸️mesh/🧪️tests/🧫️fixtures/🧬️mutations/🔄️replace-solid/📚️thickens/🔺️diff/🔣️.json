@@ -4,14 +4,13 @@
   "materials": null,
   "sections": null,
   "solids": {
-    "inserted": [],
     "removed": [],
+    "inserted": [],
     "moved": [],
     "modified": [
       {
         "id": "slab",
         "patch": {
-          "id": "slab",
           "name": "Roof slab",
           "outline": [
             [

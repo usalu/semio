@@ -60,7 +60,7 @@ pub(super) fn results_map_json(results: &HashMap<String, semio_s_fem_model::Stat
 /// (`fem.2d` × 2D-Vector) plus `geometry:in` (importing an externally authored 2D outline as a new
 /// `FemRegion` — see `import_media` above) and `results:out` (every load case/combination's solved
 /// `semio_s_fem_model::StaticResult`, pinned to the `computation.fem2d` artifact kind declared in
-/// `crate::standards::v1::subsets::any::io::computation_artifact_kind` — see `export_media` above). Moved out of the
+/// `semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::computation_artifact_kind` — see `export_media` above). Moved out of the
 /// (now deleted) artifact `⚙️engine`: it returns `AppIo`, an app type, so it belongs here.
 pub fn fem2d_io() -> AppIo {
     AppIo {

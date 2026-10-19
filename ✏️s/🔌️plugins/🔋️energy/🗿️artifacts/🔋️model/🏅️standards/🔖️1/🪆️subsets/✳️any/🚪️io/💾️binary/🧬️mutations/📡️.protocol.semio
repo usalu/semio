@@ -605,3 +605,27 @@ record rename-gas-material tag=285
 field payload bytes
 record change-material-roughness tag=286
 field payload bytes
+
+record change-glazing-material-solar-reflectance-front tag=300
+field payload bytes
+
+record change-glazing-material-solar-reflectance-back tag=301
+field payload bytes
+
+record change-glazing-material-visible-reflectance-front tag=302
+field payload bytes
+
+record change-glazing-material-visible-reflectance-back tag=303
+field payload bytes
+
+record change-glazing-material-infrared-transmittance tag=304
+field payload bytes
+
+record change-pv-system-temperature-coefficient tag=305
+field payload bytes
+record change-pv-system-faiman-heat-loss-constant tag=306
+field payload bytes
+record change-pv-system-faiman-heat-loss-wind tag=307
+field payload bytes
+record change-pv-system-mounting tag=308
+field payload bytes

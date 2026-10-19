@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "closeCuts",
+    "maximumBodyBytes",
+    "admissionCases",
+    "closeGrant"
+  ],
+  "properties": {
+    "closeCuts": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 4,
+      "uniqueItems": true
+    },
+    "maximumBodyBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "admissionCases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "grant",
+          "quote",
+          "admitted"
+        ],
+        "properties": {
+          "grant": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "minItems": 5,
+            "maxItems": 5
+          },
+          "quote": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "minItems": 5,
+            "maxItems": 5
+          },
+          "admitted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "closeGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumReleaseBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

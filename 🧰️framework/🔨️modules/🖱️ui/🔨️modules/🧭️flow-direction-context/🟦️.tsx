@@ -6,7 +6,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { reactHostPort } from "../../🧱️elements/🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧭️FlowDirectionContext

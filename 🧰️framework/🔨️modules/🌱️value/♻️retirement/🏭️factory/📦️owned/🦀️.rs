@@ -62,6 +62,48 @@ impl<T:Send+'static> ErasedSnapshotRetirement for FactoryOwnedRetirement<T> {
 impl<T:Send+'static> Drop for FactoryOwnedRetirement<T> {
     fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"owned factory retirement abandoned original payload or issuer custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.original);ManuallyDrop::drop(&mut self.unique);ManuallyDrop::drop(&mut self.factory);ManuallyDrop::drop(&mut self.closing_factory);}}}
 }
+
+/// 🔗️ A live immutable source retains its actual value and captured issuer without a send-only retirement child.
+pub struct FactoryOwnedSourceAuthority<T:Send+'static> {
+    original: ManuallyDrop<Option<T>>,
+    factory: ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>>,
+}
+impl<T:Send+'static> FactoryOwnedSourceAuthority<T> {
+    /// 🌱️ Moves the original pair into the caller-funded inline source authority.
+    pub fn new(original:T,factory:Arc<dyn ArtifactOwnedValueRetirementFactory<T>>)->Self { Self { original:ManuallyDrop::new(Some(original)),factory:ManuallyDrop::new(Some(factory)) } }
+    pub fn get(&self)->&T { self.original.as_ref().expect("live source retains its exact original value") }
+    pub fn factory(&self)->&Arc<dyn ArtifactOwnedValueRetirementFactory<T>> { self.factory.as_ref().expect("live source retains its exact original issuer") }
+    pub const fn transfer_copy_byte_demand()->usize { size_of::<(T,Arc<dyn ArtifactOwnedValueRetirementFactory<T>>)>() }
+    /// 📤️ Refusal preserves the actual original pair until its fixed transfer is funded.
+    pub fn take_original(mut self,grant:RetainedCloneGrant)->Result<(T,Arc<dyn ArtifactOwnedValueRetirementFactory<T>>,RetainedCloneProgress),(ValueError,Self)> {
+        let refusal=if grant.maximum_items==0 { Some((ValueRefusalKind::WorkLimit,"original source transfer requires one item")) } else if grant.maximum_depth==0 { Some((ValueRefusalKind::DepthLimit,"original source transfer requires admitted depth")) } else if grant.maximum_copy_bytes<Self::transfer_copy_byte_demand() { Some((ValueRefusalKind::OwnershipLimit,"original source pair transfer exceeds admitted copy")) } else { None };
+        if let Some((kind,message))=refusal { return Err((ValueError::literal(kind,message),self)); }
+        let original=self.original.take().expect("live source original pair");
+        let factory=self.factory.take().expect("live source original issuer pair");
+        Ok((original,factory,RetainedCloneProgress { copied_items:1,copied_bytes:Self::transfer_copy_byte_demand(),..Default::default() }))
+    }
+}
+struct OwnedSourceRetirement<T:Send+'static>(FactoryOwnedRetirement<T>);
+impl<T:Send+'static> crate::retirement::RetirementCursor for OwnedSourceRetirement<T> {
+ fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.0.demands(body)}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->crate::retirement::RetirementStep { match ErasedSnapshotRetirement::close_step(&mut self.0,grant) { Err(error)=>crate::retirement::RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>crate::retirement::RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>crate::retirement::RetirementStep::Progress(progress) } }
+    fn terminal_is_empty(&self)->bool { self.0.terminal_is_empty() }
+    fn next_work_byte_demand(&self)->Result<usize,ValueError> { self.0.next_copy_byte_demand() }
+    fn allows_admitted_narrow_work(&self)->bool { true }
+    fn next_birth_bytes(&self,body:usize)->Option<usize> { self.0.next_capacity_byte_demand(body).ok() }
+    fn next_close_byte_demand(&self)->Option<usize> { self.0.next_release_byte_demand().ok() }
+    fn next_depth_demand(&self)->Result<usize,ValueError> { self.0.next_depth_demand() }
+    fn terminal_release_bytes(&self)->Option<usize> { self.0.terminal_is_empty().then_some(size_of::<Self>()) }
+}
+impl<T:Send+'static> crate::retirement::RetireOwned for FactoryOwnedSourceAuthority<T> {
+    fn retirement(mut self)->Box<dyn crate::retirement::RetirementCursor> { Box::new(OwnedSourceRetirement(FactoryOwnedRetirement { original:ManuallyDrop::new(self.original.take()),factory:ManuallyDrop::new(self.factory.take()),unique:ManuallyDrop::new(None),closing_factory:ManuallyDrop::new(None) })) }
+    fn retirement_birth_bytes(&self)->Option<usize> { Some(size_of::<OwnedSourceRetirement<T>>()) }
+    fn controlled_retirement_supported()->bool { true }
+}
+impl<T:Send+'static> Drop for FactoryOwnedSourceAuthority<T> {
+    fn drop(&mut self) { assert!(std::thread::panicking() || (self.original.is_none() && self.factory.is_none()),"live source abandoned its original value or issuer");if self.original.is_none() && self.factory.is_none() { unsafe { ManuallyDrop::drop(&mut self.original);ManuallyDrop::drop(&mut self.factory); } } }
+}
+
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;

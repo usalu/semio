@@ -14,6 +14,11 @@ pub struct AddUncheckedCounter {}
 //#region ⚙️Behavior
 impl MutationKind<i64, CounterMutation> for AddUncheckedCounter {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "unchecked-counter", kind: "add-unchecked-counter", record: "AddedUncheckedCounter" };
+
+
+}
+
+impl crate::os_spr::ColdMutationKind<i64, CounterMutation> for AddUncheckedCounter {
     fn diff(&self, _base: &i64) -> MutationOutcome<CounterDiff> {
         MutationOutcome::new(CounterDiff::delta(1))
     }
@@ -46,6 +51,6 @@ impl OpText for AddUncheckedCounter {
 
 //#region 🧪️Contract
 #[cfg(test)]
-#[path = "../../../../🧪️tests/🧬️mutation-laws-mutations-add-unchecked-counter/🦀️.rs"]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Contract

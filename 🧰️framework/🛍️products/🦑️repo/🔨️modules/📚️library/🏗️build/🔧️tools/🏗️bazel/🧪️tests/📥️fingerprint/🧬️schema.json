@@ -1,0 +1,11 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "type":"array",
+  "items":{"type":"object","additionalProperties":false,"required":["ambient","grant","taskEnvironment","expected","cacheGroup"],"properties":{
+    "ambient":{"type":"object","additionalProperties":{"type":["string","null"]}},
+    "grant":{"type":"object","additionalProperties":false,"required":["mode","offline"],"properties":{"mode":{"enum":["prototype","release"]},"offline":{"type":"boolean"}}},
+    "taskEnvironment":{"type":"object","additionalProperties":{"type":"string"}},
+    "expected":{"type":"object","additionalProperties":{"type":["string","null"]}},
+    "cacheGroup":{"type":"string"}
+  }}
+}

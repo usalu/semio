@@ -28,7 +28,7 @@ struct FillRunLive {
 /// ♻️ The owners one `Puzzle2dFillRunJob` still holds once its search and capture are closed, retired as one controlled bundle.
 #[derive(semio_framework_value::RetireOwned)]
 pub(super) struct Puzzle2dFillRunOwners {
-    pub(super) document: Arc<Puzzle2dPlaySnapshot>,
+    pub(super) document: Option<Arc<Puzzle2dPlaySnapshot>>,
     pub(super) kinds: Vec<Value>,
     pub(super) writer: ToolRunTickWriter,
     pub(super) replay: Option<FillRunReplay>,
@@ -55,7 +55,7 @@ pub struct Puzzle2dFillRunJob {
     pub(super) owners_staged: bool,
     pub(super) retiring_placement: Option<BoardFillPlacement>,
     pub(super) outbox: crate::puzzle_job::JobOutbox,
-    pub(super) document: Arc<Puzzle2dPlaySnapshot>,
+    pub(super) document: Option<Arc<Puzzle2dPlaySnapshot>>,
     pub(super) kinds: Vec<Value>,
     pub(super) open_handles: u64,
     pub(super) writer: ToolRunTickWriter,
@@ -64,7 +64,8 @@ pub struct Puzzle2dFillRunJob {
     pub(super) capture: Option<FillCapture>,
     pub(super) search: Option<BoardFillJob>,
     pub(super) closing_search: Option<BoardFillJob>,
-    pub(super) search_sequence: u64,
+    pub(super) pending_snapshot: Option<BoardFillSnapshot>,
+    pending_search_serial: u64,
     pub(super) replay: Option<FillRunReplay>,
     live: Option<FillRunLive>,
     pub(super) next_key: u64,
@@ -105,14 +106,15 @@ impl Puzzle2dFillRunJob {
             outbox: Default::default(),
             kinds,
             open_handles: 0,
-            document,
+            document: Some(document),
             writer: ToolRunTickWriter::with_provisional_base(identity, expected.len() as u32),
             requested: u64::from(requested),
             seed: identity.id.run.max(1),
             capture: Some(FillCapture::new(suggestion_offset)),
             search: None,
             closing_search: None,
-            search_sequence: 0,
+            pending_snapshot: None,
+            pending_search_serial: 0,
             replay: None,
             live: None,
             next_key: 0,
@@ -362,34 +364,21 @@ impl Puzzle2dFillRunJob {
     }
 
     /// 🔎️ Engine transitions until a candidate event, a non-preview outcome, a stall or the wall deadline.
-    pub(super) fn search_batch(search: &mut BoardFillJob, sequence: &mut u64, context: &StepContext<'_>) -> (Option<FillSearch>, Option<BoardFillCandidateEvent>) {
-        let operation = search.operation();
-        let mut progress = semio_framework_value::retained_clone::RetainedCloneProgress::default();
-        let unbounded = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
-        let mut inner = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX, unbounded), context.cancel_token(), fill_run_monotonic_zero, sequence, &mut progress);
-        for transition in 0..FILL_RUN_SEARCH_BATCH {
-            if search.stage() == BoardFillStage::Complete {
-                return (None, None);
-            }
-            let settled = match InteractiveJob::step(search, &mut inner) {
-                Ok(None | Some(JobOutcomeBorrow::Yield { .. } | JobOutcomeBorrow::PreviewReady { .. })) => None,
-                Ok(Some(JobOutcomeBorrow::Cancelled { .. })) => Some(FillSearch::Cancelled),
-                Ok(Some(JobOutcomeBorrow::CheckpointReady { .. })) => Some(FillSearch::Checkpoint),
-                Ok(Some(JobOutcomeBorrow::Fault { .. })) | Err(_) => Some(FillSearch::Fault),
-                Ok(Some(JobOutcomeBorrow::Complete { .. })) => Some(FillSearch::Complete),
+    pub(super) fn search_batch(search: &mut BoardFillJob, context: &mut StepContext<'_>) -> Result<(Option<FillSearch>, Option<BoardFillCandidateEvent>), semio_framework_job::OriginalTurnFailure> {
+        for _ in 0..FILL_RUN_SEARCH_BATCH {
+            if search.stage() == BoardFillStage::Complete || context.should_yield() { return Ok((None, None)); }
+            let settled = match InteractiveJob::step(search, context)? {
+                None | Some(JobOutcomeBorrow::Yield { .. } | JobOutcomeBorrow::PreviewReady { .. }) => None,
+                Some(JobOutcomeBorrow::Cancelled { .. }) => Some(FillSearch::Cancelled),
+                Some(JobOutcomeBorrow::CheckpointReady { .. }) => Some(FillSearch::Checkpoint),
+                Some(JobOutcomeBorrow::Fault { .. }) => Some(FillSearch::Fault),
+                Some(JobOutcomeBorrow::Complete { .. }) => Some(FillSearch::Complete),
             };
             let _ = search.take_preview();
             let event = search.take_candidate_event();
-            match settled {
-                None if event.is_some() => return (None, event),
-                None => {}
-                settled => return (settled, event),
-            }
-            if transition % FILL_RUN_DEADLINE_CHECK == FILL_RUN_DEADLINE_CHECK - 1 && context.deadline_exceeded() {
-                return (None, None);
-            }
+            match settled { None if event.is_some() => return Ok((None, event)), None => {}, settled => return Ok((settled, event)) }
         }
-        (None, None)
+        Ok((None, None))
     }
 }
 //#endregion ⏯️RunJob

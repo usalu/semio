@@ -172,7 +172,8 @@ pub trait ErasedWindowTransientPublication: Send {
 
 struct TypedWindowTransientPublication<O: WindowTransientOwner> {
     address_retirement:Option<ControlledRetirement<String>>,
-    window_id: String,
+    authority: WindowConfigAuthorityIdentity,
+    window_id: semio_framework_value::SharedUtf8,
     pub(crate) document_generation: u64,
     publication: store::ArtifactEphemeralOneItemPublication<O::State, O::Mutation>,
     ingress:ControlledRetirement<FactoryBoxedPublication<O::Mutation>>,
@@ -213,7 +214,7 @@ impl<O: WindowTransientOwner> ErasedWindowTransientPublication for TypedWindowTr
         self.publication.close_step(store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items, maximum_copy_bytes: grant.maximum_copy_bytes, maximum_capacity_bytes: grant.maximum_capacity_bytes, maximum_release_bytes: grant.maximum_release_bytes, maximum_depth: grant.maximum_depth })
     }
 
-    fn ingress_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:self.ingress.next_copy_byte_demand()?,capacity_bytes:self.ingress.next_capacity_byte_demand(body)?,release_bytes:self.ingress.next_release_byte_demand()?,depth:self.ingress.next_depth_demand()?})}
+    fn ingress_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{Ok(self.ingress.next_demand(body)?)}
     fn close_ingress(&mut self,grant:RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError>{self.ingress.step(grant)}
     fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.ingress.terminal_is_empty(){self.ingress_demands(body)}else if !self.publication.terminal_is_empty(){self.publication.retirement_demands(body)}else{crate::window_mutation::address_demands(&self.window_id,&self.address_retirement,body)}}
     fn terminal_is_empty(&self) -> bool {
@@ -240,7 +241,7 @@ trait ErasedWindowTransientStoreOwner: Send {
     fn refresh_demands(&self,authority:&WindowTransientAuthority,body:usize)->Result<RetirementDemand,ValueError>;
     fn refresh(&mut self,authority:&mut WindowTransientAuthority,grant:RetainedCloneGrant)->Result<semio_framework_plugin_window_config::window_mutation::WindowAuthorityRefreshStep,Fault>;
     fn begin(&mut self, operation: semio_framework_job::OperationId, expected_generation: u64, document_generation: u64, mutation: WindowTransientMutation) -> Result<Box<dyn ErasedWindowTransientPublication>, RejectedWindowTransientEmission>;
-    fn advance(&mut self, publication: &mut dyn ErasedWindowTransientPublication, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item_publication::ArtifactStoreOneItemAdvance, Fault>;
+    fn advance(&mut self, publication: &mut dyn ErasedWindowTransientPublication, grant: store::os_store::one_item::ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<store::os_store::one_item_publication::ArtifactStoreOneItemAdvance, Fault>;
     fn maintenance_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
     fn maintenance_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault>;
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
@@ -315,12 +316,12 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
         }
     }
 
-    fn advance(&mut self, publication: &mut dyn ErasedWindowTransientPublication, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item_publication::ArtifactStoreOneItemAdvance, Fault> {
+    fn advance(&mut self, publication: &mut dyn ErasedWindowTransientPublication, grant: store::os_store::one_item::ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<store::os_store::one_item_publication::ArtifactStoreOneItemAdvance, Fault> {
         let publication = publication
             .as_any_mut()
             .downcast_mut::<TypedWindowTransientPublication<O>>()
             .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.publication-type"), "window transient publication did not match its registered window owner"))?;
-        self.partition(&publication.window_id).store.advance_publish_one(&mut publication.publication, grant).map_err(|reason| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.publication"), reason))
+        self.partition(&publication.window_id).store.advance_publish_one(&mut publication.publication, grant,receiving).map_err(|reason| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.publication"), reason))
     }
 
     fn maintenance_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
@@ -348,7 +349,7 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if self.terminal_is_empty() { return Ok(Default::default()); }
         if let Some(owner) = self.partition_address.as_ref() {
-            return Ok(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(body)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()? });
+            return Ok(owner.next_demand(body)?);
         }
         if let Some(partition) = (self.partition_open != 0).then(|| self.partitions.get_index(self.partition_close_cursor)).flatten() {
             if let Some(owner) = partition.disposer.as_ref() {
@@ -507,7 +508,7 @@ impl WindowTransientOwnerRegistry {
             .get_mut(publication.window_kind_id())
             .and_then(Option::as_mut)
             .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient publication lost its registered concrete window owner"))?
-            .advance(publication, grant)
+            .advance(publication, grant,receiving)
     }
 
     #[doc(hidden)]

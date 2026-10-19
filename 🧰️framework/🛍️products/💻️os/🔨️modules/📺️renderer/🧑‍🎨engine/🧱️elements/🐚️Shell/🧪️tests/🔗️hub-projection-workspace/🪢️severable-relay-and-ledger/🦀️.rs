@@ -79,7 +79,7 @@ impl CollaborationLedger {
 
 /// 🔂️ Polls one shell future to completion while pumping what the GPU present loop pumps in the
 /// real binary (`present_step_inner`): retained renderer I/O sessions and worker-job retirements.
-/// Without it a headless caller parks forever on the first `run_renderer_io` (the native runtime
+/// Without it a headless caller parks forever on the first `read_renderer_source_bytes` (the native runtime
 /// manifest read inside `load_wasm_plugins`), because nothing else drives those slots.
 #[cfg(not(target_arch = "wasm32"))]
 fn drive<F: std::future::Future>(future: F) -> F::Output {

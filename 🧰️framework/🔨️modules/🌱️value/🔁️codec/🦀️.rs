@@ -325,6 +325,7 @@ fn default_value_controlled(c:&mut NativeDecodeControl<'_>)->Result<Self,ValueEr
 }
 
 impl ToValue for String {
+fn value_shape_at_path(&self,path:&[&str])->Result<ValueShape,ValueError>{if path.is_empty(){Ok(ValueShape::String)}else{Err(ValueError::literal(crate::ValueRefusalKind::InvalidValue,"string has no child path"))}}
 fn to_value_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{c.copy_text(self).map(DslValue::String)}
 fn to_object_key_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<String,ValueError>{c.copy_text(self)}
     fn to_value(&self) -> DslValue {

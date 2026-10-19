@@ -23,11 +23,11 @@ enum FillRevalidatePhase {
 #[derive(semio_framework_value::RetireOwned)]
 pub(super) struct FillRevalidateOwners {
     pub scene: Arc<SceneConfig>,
-    pub meshes: Arc<HashMap<String, CollisionBody>>,
+    pub meshes: Arc<FillMeshMap>,
     pub(super) placements: Vec<FillRunPlacement>,
     head: Vec<PlacedCollisionEntry>,
-    head_ids: std::collections::HashSet<String>,
-    vortex_owners: HashMap<String, String>,
+    head_ids: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, ()>,
+    vortex_owners: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, String>,
     pub(super) collision: Option<CollisionPenetrationState>,
     pub(super) conflicts: Vec<bool>,
     pub ops: Vec<ToolRunTraceOp>,
@@ -39,12 +39,12 @@ pub struct FillRevalidateJob {
     pub(super) outbox: semio_s_plugin_puzzle_jobs::JobOutbox,
     pub operation: Operation,
     pub identity: ToolRunIdentity,
-    pub scene: Arc<SceneConfig>,
-    pub meshes: Arc<HashMap<String, CollisionBody>>,
+    pub scene: std::mem::ManuallyDrop<Arc<SceneConfig>>,
+    pub meshes: std::mem::ManuallyDrop<Arc<FillMeshMap>>,
     pub(super) placements: Vec<FillRunPlacement>,
     head: Vec<PlacedCollisionEntry>,
-    head_ids: std::collections::HashSet<String>,
-    vortex_owners: HashMap<String, String>,
+    head_ids: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, ()>,
+    vortex_owners: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, String>,
     head_cursor: usize,
     pair_cursor: usize,
     pub(super) collision: Option<CollisionPenetrationState>,
@@ -60,6 +60,7 @@ pub struct FillRevalidateJob {
     pub sequence: u64,
     page: u32,
     closed: bool,
+    close_started: bool,
 }
 
 impl FillRevalidateJob {
@@ -69,13 +70,13 @@ impl FillRevalidateJob {
             outbox: Default::default(),
             operation,
             identity,
-            scene: head.scene,
-            meshes: head.meshes,
+            scene: std::mem::ManuallyDrop::new(head.scene),
+            meshes: std::mem::ManuallyDrop::new(head.meshes),
             conflicts: Vec::with_capacity(placements.len()),
             placements,
             head: Vec::new(),
-            head_ids: std::collections::HashSet::new(),
-            vortex_owners: HashMap::new(),
+            head_ids: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap::new(),
+            vortex_owners: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap::new(),
             head_cursor: 0,
             pair_cursor: 0,
             collision: None,
@@ -87,6 +88,7 @@ impl FillRevalidateJob {
             sequence: first_sequence,
             page: 0,
             closed: false,
+            close_started: false,
         }
     }
 
@@ -107,13 +109,13 @@ impl FillRevalidateJob {
             return;
         };
         self.head_cursor += 1;
-        self.head_ids.insert(object.id.clone());
+        self.head_ids.cold_insert(object.id.clone(), ());
         for vortex in &object.vortices {
-            self.vortex_owners.insert(puzzle3d_vortex_full_id(&object.id, &vortex.id), object.id.clone());
+            self.vortex_owners.cold_insert(puzzle3d_vortex_full_id(&object.id, &vortex.id), object.id.clone());
         }
         let empty = KindCatalogBundle::default();
         let mesh_url = resolve_placed_object_mesh_url(object, self.scene.kind_catalogs.as_ref().unwrap_or(&empty), &self.scene.scene_snapshot);
-        if let Some(mesh_url) = mesh_url.filter(|url| self.meshes.contains_key(url)) {
+        if let Some(mesh_url) = mesh_url.filter(|url| self.meshes.get(url).is_some()) {
             self.head.push(PlacedCollisionEntry { object_id: object.id.clone(), mesh_url, world: pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale) });
         }
     }
@@ -133,7 +135,7 @@ impl FillRevalidateJob {
             if self.head.len() < self.scene.scene_snapshot.objects.len() {
                 return Some(true);
             }
-            if self.head_ids.contains(&placement.object.id) {
+            if self.head_ids.get(&placement.object.id).is_some() {
                 return Some(true);
             }
             if self.host_of(index).is_none() {
@@ -190,7 +192,7 @@ impl FillRevalidateJob {
             conflicts: conflicts as u32,
             steps: ToolRunStepRing::default(),
         };
-        let tick = ToolRunTick { identity: self.identity, sequence: self.sequence, progress: Some(progress), steps: std::mem::take(&mut self.steps), trace, append_ops, append_entities, retract_to, payload: None };
+        let tick = ToolRunTick { identity: self.identity, sequence: self.sequence, progress: Some(progress), steps: std::mem::take(&mut self.steps), trace, append_ops, append_entities, retract_to, payload: None,payload_update:None };
         self.sequence += 1;
         match tick.encode().ok() {
             Some(bytes) if bytes.len() <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES => JobTurn::Preview(bytes.to_vec()),
@@ -240,6 +242,7 @@ impl FillRevalidateJob {
 
 impl FillRevalidateJob {
     pub fn turn(&mut self, context: &mut StepContext<'_>) -> JobTurn {
+        if self.closed { return JobTurn::Complete; }
         if context.is_cancelled() {
             return JobTurn::Cancelled;
         }
@@ -269,7 +272,7 @@ impl FillRevalidateJob {
                     if let Some(conflict) = self.test_placement_unit(context) {
                         if !conflict {
                             let object = &self.placements[self.cursor].object;
-                            self.head_ids.insert(object.id.clone());
+                            self.head_ids.cold_insert(object.id.clone(), ());
                             self.head.push(PlacedCollisionEntry {
                                 object_id: object.id.clone(),
                                 mesh_url: object.mesh_url.clone().expect("validated placement mesh"),
@@ -293,9 +296,9 @@ impl FillRevalidateJob {
 
 impl FillRevalidateJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         match self.outbox.phase(cx)? {
-            semio_s_plugin_puzzle_jobs::OutboxPhase::Building => return self.outbox.advance(cx),
+            semio_s_plugin_puzzle_jobs::OutboxPhase::Building => return self.outbox.advance(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
             semio_s_plugin_puzzle_jobs::OutboxPhase::Delivered | semio_s_plugin_puzzle_jobs::OutboxPhase::Retiring => {
                 self.outbox.retire_step(cx)?;
                 return Ok(None);
@@ -303,7 +306,7 @@ impl FillRevalidateJob {
             semio_s_plugin_puzzle_jobs::OutboxPhase::Idle => {}
         }
         let turn = self.turn(cx);
-        self.outbox.settle(turn, cx)
+        self.outbox.settle(turn, cx).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
@@ -314,49 +317,62 @@ impl InteractiveJob for FillRevalidateJob {
         self.outbox.borrow_outcome(descriptor)
     }
 
-    fn begin_close(&mut self) {
-        if std::mem::replace(&mut self.closed, true) {
-            return;
-        }
-        self.close_owners.stage(FillRevalidateOwners {
-            scene: Arc::clone(&self.scene),
-            meshes: Arc::clone(&self.meshes),
-            placements: std::mem::take(&mut self.placements),
-            head: std::mem::take(&mut self.head),
-            head_ids: std::mem::take(&mut self.head_ids),
-            vortex_owners: std::mem::take(&mut self.vortex_owners),
-            collision: self.collision.take(),
-            conflicts: std::mem::take(&mut self.conflicts),
-            ops: std::mem::take(&mut self.ops),
-            steps: std::mem::take(&mut self.steps),
-        });
-    }
+    fn begin_close(&mut self) { self.closed = true; }
 
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            self.begin_close();
-            semio_s_plugin_puzzle_jobs::job_close_step(&mut self.outbox, &mut self.close_owners, grant)
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+        semio_framework_job::close_original_nested_step(cx, |cx, _grant| {
+
+        self.begin_close();
+        if !self.outbox.terminal_is_empty() {
+            let demand = self.outbox.retirement_demands()?;
+            return semio_framework_job::close_original_retained_step(cx, demand, |grant| self.outbox.close_step(grant));
+        }
+        if !self.close_started {
+            let demand = self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
+            return semio_framework_job::close_original_retained_step(cx, demand, |_| {
+                self.close_owners.stage(FillRevalidateOwners {
+                    scene: unsafe { std::mem::ManuallyDrop::take(&mut self.scene) },
+                    meshes: unsafe { std::mem::ManuallyDrop::take(&mut self.meshes) },
+                    placements: std::mem::take(&mut self.placements),
+                    head: std::mem::take(&mut self.head),
+                    head_ids: std::mem::take(&mut self.head_ids),
+                    vortex_owners: std::mem::take(&mut self.vortex_owners),
+                    collision: self.collision.take(),
+                    conflicts: std::mem::take(&mut self.conflicts),
+                    ops: std::mem::take(&mut self.ops),
+                    steps: std::mem::take(&mut self.steps),
+                });
+                self.close_started = true;
+                Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
+            });
+        }
+        self.close_owners.close_step(cx)
+    
         })
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(semio_s_plugin_puzzle_jobs::job_close_demands(&self.outbox, &self.close_owners, 0)?.copy_bytes)
-    }
+    
 
-    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(semio_s_plugin_puzzle_jobs::job_close_demands(&self.outbox, &self.close_owners, maximum_copy_bytes)?.capacity_bytes)
-    }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.copy_bytes) }
 
-    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(semio_s_plugin_puzzle_jobs::job_close_demands(&self.outbox, &self.close_owners, 0)?.release_bytes)
-    }
+    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(body)?.capacity_bytes) }
 
-    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(semio_s_plugin_puzzle_jobs::job_close_demands(&self.outbox, &self.close_owners, 0)?.depth)
-    }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.release_bytes) }
 
-    fn terminal_is_empty(&self) -> bool {
-        self.closed && self.outbox.terminal_is_empty() && self.close_owners.is_empty()
-    }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.depth) }
+
+    fn terminal_is_empty(&self) -> bool { self.closed && self.close_started && self.outbox.terminal_is_empty() && self.close_owners.is_empty() }
 }
 //#endregion ⏯️FillRunJob
+
+impl FillRevalidateJob {
+    pub fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if !self.outbox.terminal_is_empty() { return self.outbox.retirement_demands(); }
+        if !self.close_started { return Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<FillRevalidateOwners>(), depth: 1, ..Default::default() }); }
+        self.close_owners.demands(body)
+    }
+}
+
+impl Drop for FillRevalidateJob {
+    fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "fill revalidation retains original roots until paid terminal close"); }
+}

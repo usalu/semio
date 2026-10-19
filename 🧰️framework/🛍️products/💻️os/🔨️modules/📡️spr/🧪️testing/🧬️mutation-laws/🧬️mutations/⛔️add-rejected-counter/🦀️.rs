@@ -14,6 +14,11 @@ pub struct AddRejectedCounter {}
 //#region ⚙️Behavior
 impl MutationKind<i64, CounterMutation> for AddRejectedCounter {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "rejected-counter", kind: "add-rejected-counter", record: "AddedRejectedCounter" };
+
+
+}
+
+impl crate::os_spr::ColdMutationKind<i64, CounterMutation> for AddRejectedCounter {
     fn diff(&self, _base: &i64) -> MutationOutcome<CounterDiff> {
         MutationOutcome::fatal("mutation.invariant", "boom", ["x"])
     }
@@ -46,6 +51,6 @@ impl OpText for AddRejectedCounter {
 
 //#region 🧪️Contract
 #[cfg(test)]
-#[path = "../../../../🧪️tests/🧬️mutation-laws-mutations-add-rejected-counter/🦀️.rs"]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Contract

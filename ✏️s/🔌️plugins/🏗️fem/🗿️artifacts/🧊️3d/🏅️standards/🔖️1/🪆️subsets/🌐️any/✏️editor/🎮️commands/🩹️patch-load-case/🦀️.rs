@@ -1,12 +1,23 @@
-//! 🩹️ Fem3d play app command — `patch-load-case`: one-field edit of a load case (`name` →
 //! `ChangeLoadCaseName`, `selfWeight` → `ChangeLoadCaseSelfWeight`).
+//! 🩹️ Fem3d play app command — `patch-load-case`: one-field edit of a load case (`name` →
 
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_load_case_name;
 use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_load_case_self_weight;
 
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_plugin::ArtifactView;
+
+use semio_framework_plugin::ConfigView;
+
+use semio_framework_plugin::Emit;
+
+use semio_framework_plugin::Fault;
+
+use semio_framework_plugin::NoConfig;
+
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 
 type Fem3dSnapshot = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
@@ -26,7 +37,7 @@ pub fn handle(payload: &PatchLoadCase, doc: &ArtifactView<'_, Fem3dSnapshot>, _c
             if case.name == payload.value {
                 return Ok(Emit::default());
             }
-            Fem3dMutation::ChangeLoadCaseName(change_load_case_name::ChangeLoadCaseName { case_id: payload.id.clone(), new_name: payload.value.clone() })
+            Fem3dMutation::ChangeLoadCaseName(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_load_case_name::ChangeLoadCaseName { case_id: payload.id.clone(), new_name: payload.value.clone() })
         }
         "selfWeight" => {
             let enabled = match payload.value.trim() {
@@ -37,7 +48,7 @@ pub fn handle(payload: &PatchLoadCase, doc: &ArtifactView<'_, Fem3dSnapshot>, _c
             if case.self_weight == enabled {
                 return Ok(Emit::default());
             }
-            Fem3dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::ChangeLoadCaseSelfWeight { case_id: payload.id.clone(), new_self_weight: enabled })
+            Fem3dMutation::ChangeLoadCaseSelfWeight(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_load_case_self_weight::ChangeLoadCaseSelfWeight { case_id: payload.id.clone(), new_self_weight: enabled })
         }
         _ => return Err(Fault::from("fem3d.patch.load-case-field")),
     };

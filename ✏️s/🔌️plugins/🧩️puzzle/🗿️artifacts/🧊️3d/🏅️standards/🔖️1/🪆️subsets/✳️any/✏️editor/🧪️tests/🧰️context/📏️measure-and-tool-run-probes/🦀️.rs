@@ -170,7 +170,10 @@ pub async fn rendered_object_count(app: &mut Puzzle3dApp) -> usize {
 /// field to derive it from) — the test-side replacement for the deleted `contextMenuAt` command's
 /// "select then open the menu" round trip.
 pub async fn context_menu_for_selection(app: &mut Puzzle3dApp, granularity: &str, id: &str) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-    use semio_framework_plugin::{ContextMenuRequest, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, UiMenuRef};
+    use semio_framework_plugin::ContextMenuRequest;
+    use semio_framework_plugin::ContextMenuSelectionGroup;
+    use semio_framework_plugin::ContextMenuSurfaceTarget;
+    use semio_framework_plugin::UiMenuRef;
     let request = ContextMenuRequest {
         menu: UiMenuRef { id: "world3d".into(), args: None },
         surface: Some(ContextMenuSurfaceTarget { surface_id: "world3d".into(), kind: "world3d".into(), hits: Vec::new(), selection: vec![ContextMenuSelectionGroup { domain: granularity.into(), ids: vec![id.to_string()] }], text: None }),
@@ -185,7 +188,10 @@ pub async fn context_menu_for_selection(app: &mut Puzzle3dApp, granularity: &str
 /// empty `selection`, exactly what `World3dHost` sends when `resolveWorldContextMenuTarget` resolves a
 /// pointer target the document has not selected.
 pub async fn context_menu_for_hit(app: &mut Puzzle3dApp, domain: &str, id: &str) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-    use semio_framework_plugin::{ContextMenuHit, ContextMenuRequest, ContextMenuSurfaceTarget, UiMenuRef};
+    use semio_framework_plugin::ContextMenuHit;
+    use semio_framework_plugin::ContextMenuRequest;
+    use semio_framework_plugin::ContextMenuSurfaceTarget;
+    use semio_framework_plugin::UiMenuRef;
     let request = ContextMenuRequest {
         menu: UiMenuRef { id: "world3d".into(), args: None },
         surface: Some(ContextMenuSurfaceTarget {

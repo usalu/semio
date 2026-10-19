@@ -17,7 +17,6 @@ import {
   FolderReadBackRouteV1,
   LatestDocumentReplacementV1,
   replaceAttachedDocumentV1,
-  restoreDocumentArchiveV1,
   type DocumentOpeningReceiptV1
 } from "../🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 import { type ArtifactCreationCatalogMountV1 } from "../🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
@@ -681,7 +680,7 @@ export function useIdentityAndDocumentPorts(core: ShellCoreAfterShellCoreState) 
   /** 🎭️ The owner of a pass a PROGRAM runs on its own — its operation progress and completions, its deferred effects:
    * the primary session presents it, the program is its source ({@link shellEffectOwnerIsCurrentV1}). */
   const captureProgramEffectOwner = useCallback((program: ActiveSession) => captureEffectOwner(program, captureDialogOrigin(core.shellStateRef.current.pluginRuntime.session)), [captureDialogOrigin, captureEffectOwner]);
-  /** 🚪️ What restoring an archive into a program drives ({@link restoreDocumentArchiveV1}, {@link FolderReadBackRouteV1}): the
+  /** 🚪️ What restoring an archive into a program drives ({@link FolderReadBackRouteV1}): the
    * stepped load through the document's attachment lane — every polled status is the program's `load` status outside the
    * History panel until the load ends, as for a file-open load — the program's history re-read and a full refresh of
    * every surface it renders, through the live session when the program is the primary one. */
@@ -697,11 +696,6 @@ export function useIdentityAndDocumentPorts(core: ShellCoreAfterShellCoreState) 
       refresh: () => core.applyHostEffectsRef.current([], live(), { kind: "full" }, captureProgramEffectOwner(live())),
     };
   }, [captureProgramEffectOwner, historyStore, loadDocumentArchive, refreshHistorySnapshot]);
-  /** 🗃️ Restores one archive into a program and hydrates it like a fresh load ({@link restoreDocumentArchiveV1}): a tutorial's
-   * restore replaces the program's document, re-reads its history and refreshes every surface it renders. A folder
-   * read-back goes through the document's own {@link FolderReadBackRouteV1} instead. */
-  const restoreDocumentArchive = useCallback((plugin: PluginWasmHandle, program: ActiveSession, archive: DocumentArchivePack, current: () => boolean): Promise<boolean> =>
-    restoreDocumentArchiveV1(archive, current, documentArchivePorts(plugin, program, current)), [documentArchivePorts]);
   const closeOwnedDialog = useCallback((openingId: number): boolean => {
     if (liveDialogRef.current?.openingId !== openingId) return false;
     liveDialogRef.current = null;
@@ -803,7 +797,7 @@ export function useIdentityAndDocumentPorts(core: ShellCoreAfterShellCoreState) 
     presenceBeatTriggersRef, extensionFetchAbortRef, segmentedDownloadAbortRef, openDocumentSessionsRef,
     failDocumentBackbone, receiveDocumentBackbone, bindDocumentBackbone, loadDocumentPair, captureDialogOrigin,
     isCurrentDialogOrigin, captureEffectOwner, isCurrentEffectOwner, captureProgramEffectOwner, documentArchivePorts,
-    restoreDocumentArchive, closeOwnedDialog, makeOwnedDialog, browserActorUiByRuntimeKeyRef, browserActorUiVersion,
+    closeOwnedDialog, makeOwnedDialog, browserActorUiByRuntimeKeyRef, browserActorUiVersion,
     setBrowserActorUiVersion, browserActorForSessionV1, publishUiRefreshSectionsV1, retireBrowserActorUi,
     directoryScopedOwnersRef, spaceDirectoryHistoriesRef, foldSpaceDirectoryRef, sharedSpaceAccessRef,
     sharedSpaceAccessVersion, adoptSharedSpaceAccess, collectSpaceDirectoryEvents

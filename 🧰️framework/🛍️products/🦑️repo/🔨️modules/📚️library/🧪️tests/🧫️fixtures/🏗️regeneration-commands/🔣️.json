@@ -86,11 +86,6 @@
   ],
   "registration": {
     "target": "test-regeneration-commands",
-    "route": "regeneration-commands",
-    "command": "bun repo run @semio-tech/repo-lib:test-regeneration-commands --skip-cache",
-    "launchNames": [
-      "⚖️Test Neutral Regeneration Commands [EN]",
-      "⚖️Neutrale Generierungsbefehle Prüfen [DE]"
-    ]
+    "route": "regeneration-commands"
   }
 }

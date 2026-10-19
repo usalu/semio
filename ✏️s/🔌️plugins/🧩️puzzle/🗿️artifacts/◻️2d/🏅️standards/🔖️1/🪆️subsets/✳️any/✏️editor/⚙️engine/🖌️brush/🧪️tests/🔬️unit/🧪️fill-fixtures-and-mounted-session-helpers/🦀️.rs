@@ -18,16 +18,46 @@
         y: f64,
     }
 
-    fn capture_fill_snapshot(host: &BoardHost) -> crate::editor::puzzle2d::engine::BoardFillSnapshot {
-        let mut capture = begin_board_fill_snapshot(&host.style, &host.brush);
+    fn capture_fill_snapshot(original: &mut OriginalFixture, host: &BoardHost) -> crate::editor::puzzle2d::engine::BoardFillSnapshot {
+        let mut capture = begin_fill_capture(original, host);
         for _ in 0..FILL_TEST_PUMP_LIMIT {
-            match capture.step(host) {
+            match original.turn(FILL_TEST_GRANT, |cx| capture.step(host, cx)).expect("original captured descriptor turn") {
                 BoardFillCaptureStep::Pending => {}
-                BoardFillCaptureStep::Complete => return capture.take_snapshot().expect("complete fill capture owns snapshot"),
+                BoardFillCaptureStep::Complete => {
+                    let snapshot = capture.take_snapshot().expect("complete fill capture owns snapshot");
+                    retire_fill_capture(original, &mut capture);
+                    return snapshot;
+                }
                 BoardFillCaptureStep::Fault(fault) => panic!("fill capture faulted: {fault:?}"),
             }
         }
         panic!("fill capture exceeded bounded cursor opportunities");
+    }
+
+    fn fixture(clock: fn() -> Option<u64>) -> OriginalFixture {
+        OriginalFixture::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), fixture_stock(), clock, u64::MAX, 1 << 48)
+    }
+
+    fn begin_fill_capture(original: &mut OriginalFixture, host: &BoardHost) -> crate::editor::puzzle2d::engine::BoardFillSnapshotCapture {
+        let mut output = None;
+        for _ in 0..FILL_TEST_PUMP_LIMIT {
+            if original.turn(FILL_TEST_GRANT, |cx| host.begin_board_fill_snapshot(&mut output, cx)).expect("original capture admission") {
+                return output.expect("admitted capture stays in caller custody");
+            }
+        }
+        panic!("original capture admission remains pending");
+    }
+
+    fn new_fill_job(original: &mut OriginalFixture, host: &BoardHost, count: u32, operation: Operation) -> BoardFillJob {
+        let mut snapshot = Some(capture_fill_snapshot(original, host));
+        let mut output = None;
+        for _ in 0..FILL_TEST_PUMP_LIMIT {
+            if original.turn(FILL_TEST_GRANT, |cx| BoardFillJob::admit_original(&mut snapshot, count, operation, &mut output, cx)).expect("original fill job admission") {
+                assert!(snapshot.is_none());
+                return output.expect("admitted fill job stays in caller custody");
+            }
+        }
+        panic!("original fill job admission remains pending");
     }
 
     type FillSession = semio_framework_job_worker::MountedWorkerJobSession<BoardFillJob>;
@@ -44,23 +74,13 @@
         Fault,
     }
 
-    fn self_funded(demand: RetirementDemand) -> RetainedCloneGrant {
-        RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
+    fn fill_config(site: &'static str) -> BatchDriveConfig {
+        BatchDriveConfig { retained: FILL_TEST_GRANT, site, stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 }
     }
 
-    fn fill_params_with(operation: Operation, generation: semio_framework_job::Generation, cancel: semio_framework_job::CancelToken, site: &'static str, now_us: fn() -> Option<u64>) -> BatchJobParams {
-        BatchJobParams {
-            operation: operation.operation,
-            generation,
-            cancel,
-            config: BatchDriveConfig { retained: FILL_TEST_GRANT, site, stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
-            now_us,
-        }
-    }
 
-    fn fill_params(operation: Operation, site: &'static str) -> BatchJobParams {
-        fill_params_with(operation, operation.generation, semio_framework_job::root_cancel_token(), site, semio_framework_job::default_now_us)
-    }
+
+
 
     fn fill_placement_witness(placement: &BoardFillPlacement) -> FillPlacementWitness {
         FillPlacementWitness {
@@ -74,86 +94,73 @@
     }
 
     /// 🚪️ A fill job closes through its own quoted demands; every job must reach terminal-empty before it drops.
-    fn close_fill_job(mut job: BoardFillJob) {
-        InteractiveJob::begin_close(&mut job);
-        for _ in 0..FILL_TEST_PUMP_LIMIT {
-            if InteractiveJob::terminal_is_empty(&job) {
-                return;
-            }
-            let demand = RetirementDemand {
-                copy_bytes: InteractiveJob::next_close_copy_byte_demand(&job).expect("a locally owned fill job quotes its copy demand"),
-                capacity_bytes: InteractiveJob::next_close_capacity_byte_demand(&job, FILL_TEST_GRANT.maximum_copy_bytes).expect("a locally owned fill job quotes its capacity demand"),
-                release_bytes: InteractiveJob::next_close_release_byte_demand(&job).expect("a locally owned fill job quotes its release demand"),
-                depth: InteractiveJob::next_close_depth_demand(&job).expect("a locally owned fill job quotes its depth demand"),
-            };
-            let grant = self_funded(demand);
-            let step = semio_framework_job::close_with_self_funded_context(grant, |cx| InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn");
-            assert!(step.progress().fits(grant), "a fill job close receipt must fit its own quoted grant");
-            assert!(!matches!(step, InteractiveJobCloseStep::Blocked), "a locally owned fill job close has no external owner and no refusal");
-        }
-        panic!("detached fill close exceeded bounded opportunities");
+    fn close_fill_job(original: &mut OriginalFixture, mut job: BoardFillJob) {
+        original.close_job(&mut job);
     }
 
     /// 🧹 A placement retires through its own quoted release demand; it asserts terminal-empty when dropped.
-    fn retire_fill_placement(mut placement: BoardFillPlacement) {
+    fn retire_fill_placement(original: &mut OriginalFixture, mut placement: BoardFillPlacement) {
         for _ in 0..FILL_TEST_PUMP_LIMIT {
-            if placement.terminal_is_empty() {
-                return;
-            }
-            let grant = self_funded(RetirementDemand { release_bytes: placement.next_close_release_byte_demand(), ..Default::default() });
-            let step = placement.close_step(grant);
-            assert!(step.progress().fits(grant), "a fill placement close receipt must fit its own quoted grant");
+            if placement.terminal_is_empty() { return; }
+            original.turn(FILL_TEST_GRANT, |cx| {
+                let demand = RetirementDemand { release_bytes: placement.next_close_release_byte_demand(), depth: 1, ..Default::default() };
+                semio_framework_job::close_original_retained_step(cx, demand, |grant| Ok(match placement.close_step(grant) {
+                    InteractiveJobCloseStep::Complete { progress } => RetainedCloneStep::Complete(progress),
+                    InteractiveJobCloseStep::Pending { progress } => RetainedCloneStep::Progress(progress),
+                    InteractiveJobCloseStep::Blocked => RetainedCloneStep::Progress(Default::default()),
+                }))?;
+                Ok(())
+            }).expect("original fill placement retirement");
         }
         panic!("fill placement close exceeded bounded opportunities");
     }
 
     /// 🧹 A capture retires through its own quoted release demand.
-    fn retire_fill_capture(capture: &mut crate::editor::puzzle2d::engine::BoardFillSnapshotCapture) {
+    fn retire_fill_capture(original: &mut OriginalFixture, capture: &mut crate::editor::puzzle2d::engine::BoardFillSnapshotCapture) {
         capture.begin_close();
         for _ in 0..FILL_TEST_PUMP_LIMIT {
-            if capture.terminal_is_empty() {
-                return;
-            }
-            let grant = self_funded(RetirementDemand { release_bytes: capture.next_close_release_byte_demand(), ..Default::default() });
-            let step = capture.close_step(grant);
-            assert!(step.progress().fits(grant), "a fill capture close receipt must fit its own quoted grant");
+            if capture.terminal_is_empty() { return; }
+            original.turn(FILL_TEST_GRANT, |cx| {
+                let demand = RetirementDemand { release_bytes: capture.next_close_release_byte_demand(), depth: 1, ..Default::default() };
+                semio_framework_job::close_original_retained_step(cx, demand, |grant| Ok(match capture.close_step(grant) {
+                    InteractiveJobCloseStep::Complete { progress } => RetainedCloneStep::Complete(progress),
+                    InteractiveJobCloseStep::Pending { progress } => RetainedCloneStep::Progress(progress),
+                    InteractiveJobCloseStep::Blocked => RetainedCloneStep::Progress(Default::default()),
+                }))?;
+                Ok(())
+            }).expect("original fill capture retirement");
         }
         panic!("fill capture close exceeded bounded opportunities");
     }
 
-    fn mount_fill_session(job: BoardFillJob, params: BatchJobParams) -> FillSession {
-        let (operation, generation) = (params.operation, params.generation);
-        let mut job_slot = Some(job);
-        let mut params_slot = Some(params);
-        let mut recipient = RetainedCloneProgress::default();
-        let admitted = match WorkerJobAdmissionContext::new(operation, generation, StepBudget::new(1, u64::MAX, FILL_TEST_GRANT), semio_framework_job::default_now_us, &mut recipient) {
-            Ok(mut control) => FillSession::try_admit_owned(&mut job_slot, &mut params_slot, &mut control),
-            Err(error) => Err(error),
-        };
-        match admitted {
-            Ok(Some((session, _admission))) => session,
-            Ok(None) | Err(_) => {
-                if let Some(rejected) = job_slot.take() {
-                    close_fill_job(rejected);
-                }
-                panic!("mounted fill session admission rejected");
+    fn mount_fill_session(original: &mut OriginalFixture, job: BoardFillJob, config: BatchDriveConfig) -> FillSession {
+        let mut pending = original.turn(FILL_TEST_GRANT, |cx| Ok(semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(job, (cx.operation(), cx.generation())))).expect("same original pending source");
+        for _ in 0..FILL_TEST_PUMP_LIMIT {
+            if let Some(session) = original.turn(FILL_TEST_GRANT, |cx| pending.admit_pending(config, cx)).expect("same original mounted admission") {
+                assert!(pending.terminal_is_empty());
+                return session;
             }
         }
+        panic!("original mounted fill admission remains pending");
     }
 
-    fn close_fill_session(session: &mut FillSession) {
+    fn close_fill_session(original: &mut OriginalFixture, session: &mut FillSession) {
         session.begin_close();
         for _ in 0..FILL_TEST_PUMP_LIMIT {
-            if session.terminal_is_empty() {
-                return;
-            }
-            let demand = session.retirement_demands(FILL_TEST_GRANT.maximum_copy_bytes).expect("a mounted fill session quotes its close demand");
-            let grant = self_funded(demand);
-            match session.close_step(grant) {
-                WorkerJobCloseStep::Pending { progress } | WorkerJobCloseStep::Complete { progress } => assert!(progress.fits(grant), "a mounted fill session close receipt must fit its own quoted grant"),
-                WorkerJobCloseStep::Blocked => std::thread::yield_now(),
-                WorkerJobCloseStep::Refused { kind, .. } => panic!("mounted fill close was refused: {kind:?}"),
-            }
+            if session.terminal_is_empty() { return; }
+            original.turn(FILL_TEST_GRANT, |cx| {
+                if let Some(step) = session.return_original_cancel_alias_step(cx.original_cancel_token(), cx.retained_grant()).map_err(|error| match error {
+                    semio_framework_job_worker::WorkerJobDemandError::Refused(error) => semio_framework_job::OriginalTurnFailure::from(error),
+                    semio_framework_job_worker::WorkerJobDemandError::Contention(_) => semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "original fill session remains contended").into(),
+                })? {
+                    cx.consume_retained(step.progress())?;
+                    cx.consume_fuel(step.progress().copied_items as u64);
+                    return Ok(());
+                }
+                session.close_step(cx)?;
+                Ok(())
+            }).expect("same original mounted fill close");
+            std::thread::yield_now();
         }
         panic!("mounted fill close exceeded bounded opportunities");
     }
@@ -181,9 +188,10 @@
     }
 
     /// 🔎️ Settles the checked-out step receipt and classifies the retained outcome without taking it.
-    fn seen_fill_outcome(session: &mut FillSession) -> FillSeen {
+    fn seen_fill_outcome(original: &mut OriginalFixture, session: &mut FillSession) -> FillSeen {
         if let Some((issued, progress)) = session.take_checked_out_retained_step_receipt() {
-            assert!(progress.fits(issued), "a fill step receipt must fit the grant it was issued under");
+            assert!(progress.fits(issued), "a fill step receipt must fit its original issued grant");
+            original.turn(issued, |cx| { cx.consume_retained(progress)?; cx.consume_fuel(progress.copied_items as u64); Ok(()) }).expect("original fill callback receipt acceptance");
         }
         match session.checked_out_outcome().expect("checked-out fill outcome view") {
             Some(JobOutcomeView::Yield { .. }) => FillSeen::Yield,
@@ -196,44 +204,51 @@
         }
     }
 
-    fn acknowledge_fill_outcome(session: &mut FillSession) {
+    fn acknowledge_fill_outcome(original: &mut OriginalFixture, session: &mut FillSession) {
         let acknowledgement = RetainedCloneGrant { maximum_items: 1, maximum_depth: 1, ..Default::default() };
         for _ in 0..FILL_TEST_PUMP_LIMIT {
-            if matches!(session.acknowledge_checked_out_outcome(acknowledgement), RetainedCloneStep::Complete(_)) {
-                return;
-            }
+            let step = original.turn(acknowledgement, |cx| {
+                let step = session.acknowledge_checked_out_outcome(cx.retained_grant());
+                cx.consume_retained(step.progress())?;
+                cx.consume_fuel(step.progress().copied_items as u64);
+                Ok(step)
+            }).expect("original fill outcome acknowledgement");
+            if matches!(step, RetainedCloneStep::Complete(_)) { return; }
         }
         panic!("fill outcome acknowledgement exceeded bounded opportunities");
     }
 
-    fn adopt_fill_checkpoint(session: &mut FillSession, checkpoint: BoardFillCheckpoint) {
+    fn adopt_fill_checkpoint(original: &mut OriginalFixture, session: &mut FillSession, checkpoint: BoardFillCheckpoint) {
         let Some(job) = session.checked_out_job_mut() else {
-            close_fill_job(checkpoint.into_closing_job());
+            close_fill_job(original, checkpoint.into_closing_job());
             panic!("checkpoint job owner missing");
         };
         if let Err(checkpoint) = job.adopt_checkpoint(checkpoint) {
-            close_fill_job(checkpoint.into_closing_job());
+            close_fill_job(original, checkpoint.into_closing_job());
             panic!("checkpoint handback rejected");
         }
     }
 
     /// 🧹 Retires the large fixed-page checkpoint in a frame disjoint from mounted session admission.
-    fn retire_checked_out_fill_checkpoint(session: &mut FillSession) {
+    fn retire_checked_out_fill_checkpoint(original: &mut OriginalFixture, session: &mut FillSession) {
         let mut checkpoint = session.checked_out_job_mut().and_then(BoardFillJob::take_checkpoint).expect("field cursor checkpoint");
         if let Some(placement) = checkpoint.take_pending_placement() {
-            retire_fill_placement(placement);
+            retire_fill_placement(original, placement);
         }
-        close_fill_job(checkpoint.into_closing_job());
+        close_fill_job(original, checkpoint.into_closing_job());
     }
 
     fn run_fill_job(host: &BoardHost, count: u32, operation: Operation, worker_count: usize) -> (Vec<FillPlacementWitness>, Vec<u64>, crate::editor::puzzle2d::engine::BoardFillResult) {
-        let job = BoardFillJob::with_operation(capture_fill_snapshot(host), count, operation);
-        run_mounted_fill_job(job, worker_count)
+        let mut original = fixture(semio_framework_job::default_now_us);
+        let job = new_fill_job(&mut original, host, count, operation);
+        let result = run_mounted_fill_job(&mut original, job, worker_count);
+        original.finish();
+        result
     }
 
-    fn run_mounted_fill_job(job: BoardFillJob, worker_count: usize) -> (Vec<FillPlacementWitness>, Vec<u64>, crate::editor::puzzle2d::engine::BoardFillResult) {
+    fn run_mounted_fill_job(original: &mut OriginalFixture, job: BoardFillJob, worker_count: usize) -> (Vec<FillPlacementWitness>, Vec<u64>, crate::editor::puzzle2d::engine::BoardFillResult) {
         let operation = job.operation();
-        let mut session = mount_fill_session(job, fill_params(operation, "puzzle2d.fill.test"));
+        let mut session = mount_fill_session(original, job, fill_config("puzzle2d.fill.test"));
         let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, worker_count));
         let mut placements = Vec::new();
         let mut previews = Vec::new();
@@ -245,20 +260,20 @@
                 }
                 WorkerJobPoll::Outcome | WorkerJobPoll::Terminal => {
                     assert!(!session.callback_verdict().is_some_and(|verdict| verdict.is_fault()), "exact fill session callback exceeded its clock authority");
-                    match seen_fill_outcome(&mut session) {
+                    match seen_fill_outcome(original, &mut session) {
                         FillSeen::Preview => {
                             let preview = session.checked_out_job_mut().and_then(BoardFillJob::take_preview).expect("typed fill preview");
                             previews.push(preview.sequence);
-                            acknowledge_fill_outcome(&mut session);
+                            acknowledge_fill_outcome(original, &mut session);
                             session.resume().expect("preview handback");
                         }
                         FillSeen::Checkpoint => {
                             let mut checkpoint = session.checked_out_job_mut().and_then(BoardFillJob::take_checkpoint).expect("typed fill checkpoint");
                             let placement = checkpoint.take_pending_placement().expect("checkpoint placement");
                             placements.push(fill_placement_witness(&placement));
-                            retire_fill_placement(placement);
-                            adopt_fill_checkpoint(&mut session, checkpoint);
-                            acknowledge_fill_outcome(&mut session);
+                            retire_fill_placement(original, placement);
+                            adopt_fill_checkpoint(original, &mut session, checkpoint);
+                            acknowledge_fill_outcome(original, &mut session);
                             session.resume().expect("checkpoint resume");
                         }
                         FillSeen::Complete(candidate) => {
@@ -274,20 +289,20 @@
                                 });
                             }
                             result = Some(candidate.result);
-                            acknowledge_fill_outcome(&mut session);
+                            acknowledge_fill_outcome(original, &mut session);
                             break;
                         }
                         FillSeen::Yield => {
-                            acknowledge_fill_outcome(&mut session);
+                            acknowledge_fill_outcome(original, &mut session);
                             session.resume().expect("yield resume");
                         }
                         FillSeen::Cancelled => {
-                            acknowledge_fill_outcome(&mut session);
+                            acknowledge_fill_outcome(original, &mut session);
                             panic!("fill job unexpectedly cancelled");
                         }
                         FillSeen::Fault => {
                             let code = session.checked_out_job_mut().map(|job| (job.stage(), job.take_fault()));
-                            acknowledge_fill_outcome(&mut session);
+                            acknowledge_fill_outcome(original, &mut session);
                             panic!("fill job faulted: (stage, code)={code:?} previews={} placements={}", previews.len(), placements.len());
                         }
                     }
@@ -297,37 +312,37 @@
             }
         }
         let result = result.expect("fill completion within bounded opportunities");
-        close_fill_session(&mut session);
+        close_fill_session(original, &mut session);
         pool.shutdown().expect("bounded snapshot operation succeeds");
         (placements, previews, result)
     }
 
     /// 💾️ Runs `job` to its first checkpoint and claims the placement that checkpoint published — the owner's
     /// hand-off every resume requires — answering the resumable checkpoint and the claimed placement's witness.
-    fn take_first_fill_checkpoint(job: BoardFillJob) -> (BoardFillCheckpoint, FillPlacementWitness) {
-        let mut checkpoint = first_fill_checkpoint(job);
+    fn take_first_fill_checkpoint(original: &mut OriginalFixture, job: BoardFillJob) -> (BoardFillCheckpoint, FillPlacementWitness) {
+        let mut checkpoint = first_fill_checkpoint(original, job);
         let placement = checkpoint.take_pending_placement().expect("a checkpoint publishes its placement");
         let witness = fill_placement_witness(&placement);
-        retire_fill_placement(placement);
+        retire_fill_placement(original, placement);
         (checkpoint, witness)
     }
 
     /// 💾️ Runs `job` to its first checkpoint, the placement it published still inside.
-    fn first_fill_checkpoint(job: BoardFillJob) -> BoardFillCheckpoint {
+    fn first_fill_checkpoint(original: &mut OriginalFixture, job: BoardFillJob) -> BoardFillCheckpoint {
         let operation = job.operation();
-        let mut session = mount_fill_session(job, fill_params(operation, "puzzle2d.fill.checkpoint"));
+        let mut session = mount_fill_session(original, job, fill_config("puzzle2d.fill.checkpoint"));
         let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
         let mut checkpoint = None;
         for _ in 0..FILL_TEST_PUMP_LIMIT {
             match pump_fill_session(&mut session, &pool) {
                 WorkerJobPoll::Submitted | WorkerJobPoll::Rejected | WorkerJobPoll::Idle => std::thread::yield_now(),
                 WorkerJobPoll::Outcome | WorkerJobPoll::Terminal => {
-                    if seen_fill_outcome(&mut session) == FillSeen::Checkpoint {
+                    if seen_fill_outcome(original, &mut session) == FillSeen::Checkpoint {
                         checkpoint = session.checked_out_job_mut().and_then(BoardFillJob::take_checkpoint);
-                        acknowledge_fill_outcome(&mut session);
+                        acknowledge_fill_outcome(original, &mut session);
                         break;
                     }
-                    acknowledge_fill_outcome(&mut session);
+                    acknowledge_fill_outcome(original, &mut session);
                     session.resume().expect("checkpoint search resume");
                 }
                 WorkerJobPoll::Closing | WorkerJobPoll::TerminalEmpty => panic!("fill closed before first checkpoint"),
@@ -335,7 +350,7 @@
             }
         }
         let checkpoint = checkpoint.expect("checkpoint within bounded opportunities");
-        close_fill_session(&mut session);
+        close_fill_session(original, &mut session);
         pool.shutdown().expect("bounded snapshot operation succeeds");
         checkpoint
     }

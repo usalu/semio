@@ -24,7 +24,7 @@ async fn database_worker_pool_use_blocks_early_shutdown_and_releases_at_terminal
     assert_eq!(rejected_document_open_error(rejected).await, DbError::Closed);
     assert!(matches!(database.create_document_catalog_retained(protocol::ArtifactId(String::from("post-terminal-catalog"))), Err(DatabaseRetainedActivityRejected::Closed(DbError::Closed))));
     assert!(matches!(
-        database.hello_retained(to_core_document_id(&document).await, None, String::from("post-terminal-session"), protocol::ActorId(String::from("post-terminal-actor")), 4096,),
+        database.hello_retained(to_core_document_id(&document).await, None, String::from("post-terminal-session"), protocol::ActorId(String::from("post-terminal-actor").into()), 4096,),
         Err(DatabaseRetainedActivityRejected::Closed(DbError::Closed))
     ));
     let (ran_tx, ran_rx) = std::sync::mpsc::sync_channel(1);

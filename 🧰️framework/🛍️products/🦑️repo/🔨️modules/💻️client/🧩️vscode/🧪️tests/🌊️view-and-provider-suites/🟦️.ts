@@ -85,11 +85,6 @@ suite("Sidebar View Test Suite", function () {
     assert.ok(commands.includes("compose.openCheckpointInGitHub"), "openCheckpointInGitHub command should be registered");
   });
 
-  test("Ticket reopen command is available", async function () {
-    const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("compose.ticketReopen"), "ticketReopen command should be registered");
-  });
-
   test("Refresh item command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
     assert.ok(commands.includes("compose.refreshItem"), "refreshItem command should be registered");
@@ -142,46 +137,6 @@ suite("Sections View Test Suite", function () {
 
   test("Sections view can be focused", async function () {
     await vscode.commands.executeCommand("compose.sections.focus");
-  });
-
-  test("sectionTree command is available", async function () {
-    const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("compose.sectionTree"), "sectionTree command should be registered");
-  });
-
-  test("sectionList command is available", async function () {
-    const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("compose.sectionList"), "sectionList command should be registered");
-  });
-
-  test("sectionCreate command is available", async function () {
-    const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("compose.sectionCreate"), "sectionCreate command should be registered");
-  });
-
-  test("sectionMove command is available", async function () {
-    const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("compose.sectionMove"), "sectionMove command should be registered");
-  });
-
-  test("sectionDelete command is available", async function () {
-    const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("compose.sectionDelete"), "sectionDelete command should be registered");
-  });
-
-  test("sectionOpen command is available", async function () {
-    const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("compose.sectionOpen"), "sectionOpen command should be registered");
-  });
-
-  test("sectionRename command is available", async function () {
-    const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("compose.sectionRename"), "sectionRename command should be registered");
-  });
-
-  test("sectionIntegrate command is available", async function () {
-    const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("compose.sectionIntegrate"), "sectionIntegrate command should be registered");
   });
 
   test("Sections tree view refreshes on file change", async function () {

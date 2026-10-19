@@ -13,6 +13,17 @@ unsafe impl std::alloc::GlobalAlloc for ObservedSystem {
 #[global_allocator]
 static OBSERVED_SYSTEM:ObservedSystem=ObservedSystem;
 
+/// ⚖️ Structural JSON equality that ignores object key order and the integer/float spelling of equal numbers: `to_value` writes every `f64` field as a float literal while the committed wire spells `0` and `1` as integers.
+fn same_json(left:&semio_framework_pack_json::Value,right:&semio_framework_pack_json::Value)->bool {
+    use semio_framework_pack_json::Value;
+    match (left,right) {
+        (Value::Object(x),Value::Object(y))=>x.len()==y.len()&&x.iter().all(|(key,value)|y.get(key).is_some_and(|other|same_json(value,other))),
+        (Value::Array(x),Value::Array(y))=>x.len()==y.len()&&x.iter().zip(y.iter()).all(|(l,r)|same_json(l,r)),
+        (Value::Number(x),Value::Number(y))=>x.as_f64()==y.as_f64(),
+        _=>left==right,
+    }
+}
+
 #[test]
 fn flow_all_widget_fields_close_under_independent_work_birth_release_and_depth() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧬️fields/🔣️.json")).unwrap();
@@ -24,7 +35,7 @@ fn flow_all_widget_fields_close_under_independent_work_birth_release_and_depth()
         let (source,born,freed)=observe(||semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&wire)).unwrap());
         let source:FlowHostSnapshot=source;
         let serialized=semio_framework_value::ToValue::to_value(&source);
-        assert_eq!(semio_framework_pack_json::from_dsl_value(&serialized),wire);
+        assert!(same_json(&semio_framework_pack_json::from_dsl_value(&serialized),&wire),"the retained snapshot serializes back to its wire fixture");
         let original=born-freed;
         let mut owner=ControlledRetirement::new(source).map_err(|(error,_)|error).unwrap();
         let (mut allocated,mut released,mut copied)=(0,0,0);

@@ -19,7 +19,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
-import { applyLocalCatalogConfigMutation, inverseLocalCatalogConfigMutation, type LocalCatalog, type LocalCatalogConfigMutation } from "@semio-tech/framework/config/mutations";
+import { applyLocalCatalogConfigMutation, diffLocalCatalogConfigMutation, inverseLocalCatalogConfigMutation, type LocalCatalog, type LocalCatalogConfigMutation } from "@semio-tech/framework/config/mutations";
 // #endregion 🔌️Adapters
 
 // #region 🔖️Fixtures
@@ -31,7 +31,7 @@ const FIXTURE_DIR: Record<string, string> = {
   "retire-local-document": join(CONFIG_MUTATIONS, "📤️retire-local-document/🧫️fixtures/📤️unlists-the-studio-and-keeps-its-sibling"),
 };
 
-type Vectors = { before: LocalCatalog; mutation: LocalCatalogConfigMutation; after: LocalCatalog; outcome: { status: string } };
+type Vectors = { before: LocalCatalog; mutation: LocalCatalogConfigMutation; diff: unknown; after: LocalCatalog; outcome: { status: string } };
 
 /** 🧫️ The committed specification vector for one kind, read literally. Mirrors `../🦀️.rs::fixture_text`. */
 function fixtures(kind: string): Vectors {
@@ -40,6 +40,7 @@ function fixtures(kind: string): Vectors {
   return {
     before: JSON.parse(readFileSync(join(dir, "📸️snapshot/⬅️before/🔣️.json"), "utf8")) as LocalCatalog,
     mutation: JSON.parse(readFileSync(join(dir, "🦠️mutation/🔣️.json"), "utf8")) as LocalCatalogConfigMutation,
+    diff: JSON.parse(readFileSync(join(dir, "🔺️diff/🔣️.json"), "utf8")) as unknown,
     after: JSON.parse(readFileSync(join(dir, "📸️snapshot/➡️after/🔣️.json"), "utf8")) as LocalCatalog,
     outcome: JSON.parse(readFileSync(join(dir, "🎯️outcome/🔣️.json"), "utf8")) as { status: string },
   };
@@ -63,7 +64,9 @@ function whenPayload(ctx: AdapterContext): { kind: string; document: string; lis
  * untouched sibling. Mirrors `../🦀️.rs::subject::mutate`. */
 function mutate(ctx: AdapterContext): AdapterOutcome {
   const row = whenPayload(ctx);
-  const { before, mutation, after, outcome } = fixtures(row.kind);
+  const { before, mutation, diff, after, outcome } = fixtures(row.kind);
+  const named = diffLocalCatalogConfigMutation(mutation, before);
+  if (JSON.stringify(named) !== JSON.stringify(diff)) throw new Error(`mutate-${row.kind}: the TypeScript leaf names a sparse diff other than the committed one\n     got: ${JSON.stringify(named)}\nexpected: ${JSON.stringify(diff)}`);
   const applied = applyLocalCatalogConfigMutation(before, mutation);
   if (JSON.stringify(applied) !== JSON.stringify(after)) throw new Error(`mutate-${row.kind}: the TypeScript-applied catalog does not match the committed after-catalog\n     got: ${JSON.stringify(applied)}\nexpected: ${JSON.stringify(after)}`);
   if (JSON.stringify(applied) === JSON.stringify(before)) throw new Error(`mutate-${row.kind}: the mutation left the catalog unchanged`);

@@ -9,14 +9,17 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     pub(super) async fn show_time_travel_preview(&mut self, target: &MutationId, replacement: &protocol::InputReplacement) -> Result<(), Fault> {
         let drafts = self.time_travel.accepted_drafts();
         let deadline_us = self.shared().time_travel_turn_deadline();
-        let TimeTravelStoreOutput::Previewed(step) = self.time_travel_run(TimeTravelStoreCommand::Preview { target: target.clone(), replacement: replacement.clone(), drafts, deadline_us, clock: self.time_travel.turn_clock }).await? else {
+        let TimeTravelStoreOutput::Previewed(step) = self.time_travel_run(TimeTravelStoreCommand::Preview { target: target.clone(), replacement: replacement.clone(), drafts, deadline_us, clock: self.time_travel.turn_clock },None).await? else {
             return Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("timeTravel.preview-mismatch"), "a history-edit preview answered another command"));
         };
-        self.adopt_time_travel_preview_step(step).await
+        self.adopt_time_travel_preview_step(step,None).await
     }
 
-    pub(super) async fn adopt_time_travel_preview_step(&mut self, step: TimeTravelPreviewStep) -> Result<(), Fault> {
-        if let TimeTravelPreviewStep::Completed(outcome) = step {
+    pub(super)  async fn adopt_time_travel_preview_step(&mut self, step: TimeTravelPreviewStep,grant:Option<RetainedCloneGrant>) -> Result<(), Fault> {
+        let progress=match &step{TimeTravelPreviewStep::Progress(p)|TimeTravelPreviewStep::Completed(_,p)=>*p,TimeTravelPreviewStep::Pending=>Default::default(),TimeTravelPreviewStep::Refused(error)=>error.retained_progress()};
+        if let Some(grant)=grant{if !progress.fits(grant){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"preview producer exceeds its original turn grant").into_fault());}if progress!=RetainedCloneProgress::default(){if self.time_travel.command_receipt.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original preview receipt awaits its mounted parent").into_fault());}self.time_travel.command_receipt=Some((grant,progress));}}
+        if let TimeTravelPreviewStep::Refused(error)=step{return Err(error.into_fault())}
+        if let TimeTravelPreviewStep::Completed(outcome,_) = step {
             if let Some(editor) = self.time_travel.editor.as_mut() { editor.outcome = outcome; }
             self.time_travel.document_dirty = true;
             self.refresh_time_travel_children().await?;
@@ -31,7 +34,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         self.time_travel.refreshed_done = 0;
         let drafts: protocol::HistoryInputDrafts = drafts.into_iter().map(|draft| (draft.target, draft.replacement)).collect();
         let generation = self.time_travel.session.generation;
-        Ok(match self.time_travel_run(TimeTravelStoreCommand::StartReplay { drafts, from: from.clone() }).await? {
+        Ok(match self.time_travel_run(TimeTravelStoreCommand::StartReplay { drafts, from: from.clone() },None).await? {
             TimeTravelStoreOutput::ReplayStarted(true) => Vec::new(),
             _ => self.time_travel.session.apply(TimeTravelEvent::ReplayFaulted { generation, code: TIME_TRAVEL_REPLAY_FAULTED_CODE.to_string() }).unwrap_or_default(),
         })
@@ -124,7 +127,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         }
         let target = MutationId(mutation.to_string());
         let current = if withdraw { Some(protocol::InputReplacement::Withdrawn) } else { self.time_travel.session.accepted_draft(&target).map(|draft| draft.replacement.clone()) };
-        let opened = match self.time_travel_run(TimeTravelStoreCommand::Open { target: target.clone(), current, withdraw }).await? {
+        let opened = match self.time_travel_run(TimeTravelStoreCommand::Open { target: target.clone(), current, withdraw },None).await? {
             TimeTravelStoreOutput::Opened(opened) => opened,
             _ => Err(TimeTravelActionRefusal::UnknownMutation),
         };
@@ -141,7 +144,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         let event = if withdraw { TimeTravelEvent::BeginWithdrawn { target, original } } else { TimeTravelEvent::Begin { target, original } };
         match self.time_travel.session.apply(event) {
             Ok(session_effects) => {
-                self.time_travel_run(TimeTravelStoreCommand::Adopt(true)).await?;
+                self.time_travel_run(TimeTravelStoreCommand::Adopt(true),None).await?;
                 self.time_travel.replace_editor(Some(editor));
                 self.note_time_travel_changed(true, true);
                 self.perform_time_travel_effects(session_effects, Some(meta), effects, identity).await?;
@@ -151,7 +154,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                 Ok(TimeTravelActionOutcome::Applied(self.time_travel.session.stage))
             }
             Err(refusal) => {
-                self.time_travel_run(TimeTravelStoreCommand::Adopt(false)).await?;
+                self.time_travel_run(TimeTravelStoreCommand::Adopt(false),None).await?;
                 if opening {
                     self.settle_time_travel_owners()?;
                 }

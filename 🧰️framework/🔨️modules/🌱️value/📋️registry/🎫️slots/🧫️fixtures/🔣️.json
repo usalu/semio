@@ -1,0 +1,22 @@
+{
+  "capacity": 3,
+  "actions": [
+    {"kind":"claim","key":1,"index":0,"generation":"1"},
+    {"kind":"claim","key":33,"index":1,"generation":"1"},
+    {"kind":"claim","key":65,"index":2,"generation":"1"},
+    {"kind":"claim","key":33,"index":1,"generation":"1"},
+    {"kind":"claim","key":97,"index":null},
+    {"kind":"release","key":33,"index":1,"generation":"1","accepted":true},
+    {"kind":"claim","key":97,"index":1,"generation":"2"},
+    {"kind":"release","key":33,"index":1,"generation":"1","accepted":false},
+    {"kind":"release","key":97,"index":1,"generation":"1","accepted":false},
+    {"kind":"lookup","key":65,"index":2,"generation":"1"},
+    {"kind":"lookup","key":33,"index":null},
+    {"kind":"release","key":97,"index":1,"generation":"2","accepted":true},
+    {"kind":"claim","key":33,"index":1,"generation":"3"},
+    {"kind":"release","key":33,"index":1,"generation":"1","accepted":false},
+    {"kind":"release","key":33,"index":1,"generation":"3","accepted":true},
+    {"kind":"release","key":1,"index":0,"generation":"1","accepted":true},
+    {"kind":"release","key":65,"index":2,"generation":"1","accepted":true}
+  ]
+}

@@ -2,11 +2,17 @@
 
 use super::*;
 
+#[path="🎟️request/🔒️command/🦀️.rs"]
+mod original_command;
+pub use original_command::ArtifactOriginalToolCommand;
+
 /// 🎒️ Fully owned input handed to an app-defined factory builder after exact raw admission.
 pub struct ArtifactOwnedToolJobRequest<A: ArtifactApp> {
+    pub source_binding: semio_framework::action_bus::OriginalToolSourceBinding,
     pub retained:RetainedCloneGrant,
-    pub command: Box<A::Command>,
-    pub raw_wire: ArtifactToolRawInput,
+    pub command: ArtifactOriginalToolCommand<A::Command>,
+    pub input: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    pub checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
     pub operation: semio_framework_job::Operation,
     pub controller_id: String,
     pub tool_id: String,
@@ -30,6 +36,9 @@ pub struct ArtifactOwnedToolJobRequest<A: ArtifactApp> {
     pub output_chunks: ArtifactOutputChunks,
     pub completion: ArtifactToolCompletion<A>,
 }
+#[path="🎟️request/♻️retirement/🦀️.rs"]
+mod original_request_retirement;
+
 
 /// 🧭️ Owned input for an app-defined implementation of a framework-reserved route. The runtime
 /// selects the exact owner/factory/tool/schema proof before constructing this value.
@@ -94,10 +103,14 @@ impl ArtifactReservedToolJob {
         Self{state:ManuallyDrop::new(Some(std::sync::Arc::new(semio_framework_value::retirement::controlled::RetainedOwnerGate::new(ArtifactReservedToolJobState{inner:ManuallyDrop::new(Some(Box::new(job))),operation:None}))))}
     }
 
-    pub fn bind_operation(&mut self,operation:semio_framework_job::Operation)->Result<(),semio_framework::ToolJobFactoryError>{
-        let source=self.state.as_ref().ok_or_else(||semio_framework::ToolJobFactoryError::new("reserved job state already returned"))?;
-        let mut state=source.try_lock().map_err(|_|semio_framework::ToolJobFactoryError::new("reserved job operation authority is busy"))?;
-        if state.operation.is_some(){return Err(semio_framework::ToolJobFactoryError::new("reserved job operation authority was already bound"))}
+    #[cfg(test)]
+    pub(crate) fn test_source_identity(&self)->Option<usize>{self.state.as_ref().map(|state|std::sync::Arc::as_ptr(state)as usize)}
+    #[cfg(test)]
+    pub(crate) fn test_bound_operation(&self)->Option<semio_framework_job::Operation>{self.state.as_ref()?.try_lock().ok()?.operation}
+    pub fn bind_operation(&mut self,operation:semio_framework_job::Operation)->Result<(),ValueError>{
+        let source=self.state.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"reserved job state already returned"))?;
+        let mut state=source.try_lock().map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"reserved job operation authority is busy"))?;
+        if state.operation.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"reserved job operation authority was already bound"))}
         state.operation=Some(operation);Ok(())
     }
 
@@ -134,7 +147,7 @@ impl semio_framework_job::InteractiveJob for ArtifactReservedToolJob {
     fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_job::InteractiveJobCloseStep as Step;
         let Some(source)=self.state.as_ref()else{return Ok(Step::Complete{progress:Default::default()})};
-        if cx.should_yield(){return Ok(Step::Pending{progress:Default::default()})}let grant=cx.retained_grant();
+        if cx.retirement_should_yield(){return Ok(Step::Pending{progress:Default::default()})}let grant=cx.retained_grant();
         let mut state=match source.try_lock(){Ok(state)=>state,Err(_)=>return Ok(Step::Blocked)};
         if let Some(inner)=state.inner.as_mut(){
             if semio_framework_job::InteractiveJob::terminal_is_empty(&**inner){let demand=RetirementDemand{release_bytes:size_of_val(&**inner),depth:1,..Default::default()};return semio_framework_job::close_original_retained_step(cx,demand,|_|{drop(state.inner.take());Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))})}

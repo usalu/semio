@@ -130,6 +130,6 @@ impl<A: ArtifactApp> InstanceStores<A> {
     pub fn queue_window_config_receipt(mounted: &mut MountedTypedCommandFullOperation<A>) -> Result<(), Fault> {
         let receipt = mounted.pending_window_config_receipt.take().ok_or_else(|| plugin_sdk_fault("window config refresh lost its retained publication receipt"))?;
         let token = mounted.next_token();
-        mounted.queue_page(TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::WindowConfig, &receipt)?)
+        mounted.queue_page(TypedOperationResultPage::try_serialize_cold(token, TypedOperationResultLane::WindowConfig, &receipt)?)
     }
 }

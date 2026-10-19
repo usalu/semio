@@ -1,0 +1,5 @@
+[
+ {"id":"forward","before":1,"diff":{"set":2,"refused":false},"expected":2,"admitted":true},
+ {"id":"same","before":1,"diff":{"set":1,"refused":false},"expected":1,"admitted":true},
+ {"id":"late-preflight-refusal","before":1,"diff":{"set":9,"refused":true},"expected":1,"admitted":false}
+]

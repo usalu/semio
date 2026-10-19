@@ -54,7 +54,9 @@ where
     P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
-    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demands(0)?.copy_bytes) }
+        fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.close_demands(body)}
+
+fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demands(0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.close_demands(body)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demands(0)?.depth) }
@@ -166,8 +168,8 @@ where
 
 impl<P, M> Drop for RetainedPersistedDocumentHydration<P, M>
 where
-    P: Clone + ToValue + FromValue,
-    M: Clone + ToValue + FromValue + Mutation<P>,
+    P: ToValue,
+    M: ToValue + FromValue + Mutation<P>,
 {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || self.terminal_is_empty_unbounded(), "persisted document hydration reached Drop before exact handoff or bounded retirement");
@@ -176,8 +178,8 @@ where
 
 impl<P, M> RetainedPersistedDocumentHydration<P, M>
 where
-    P: Clone + ToValue + FromValue,
-    M: Clone + ToValue + FromValue + Mutation<P>,
+    P: ToValue,
+    M: ToValue + FromValue + Mutation<P>,
 {
     /// 🔎️ Names the first original owner this hydration still retains, or `None` once every currency is terminal.
     pub fn remaining_owner(&self) -> Option<&'static str> {

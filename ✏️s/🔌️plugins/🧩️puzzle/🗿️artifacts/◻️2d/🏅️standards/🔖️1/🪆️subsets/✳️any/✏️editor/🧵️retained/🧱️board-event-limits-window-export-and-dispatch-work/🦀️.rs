@@ -33,20 +33,19 @@ pub fn puzzle2d_board_events_extent(command: &Puzzle2dCommand, _snapshot: &Puzzl
 pub struct Puzzle2dWindowCommandWork<A: Puzzle2dEditor> {
     pub tool_id: &'static str,
     pub extent: crate::retained_command::PuzzleCommandExtent<EditorApp<A>>,
-    pub authoring_seed: String,
-    pub base_revision: String,
     consumed: bool,
 }
 
 impl<A: Puzzle2dEditor> Puzzle2dWindowCommandWork<A> {
-    pub fn new(tool_id: &'static str, extent: crate::retained_command::PuzzleCommandExtent<EditorApp<A>>, authoring_seed: String, base_revision: String) -> Self {
-        Self { tool_id, extent, authoring_seed, base_revision, consumed: false }
+    pub fn new(tool_id: &'static str, extent: crate::retained_command::PuzzleCommandExtent<EditorApp<A>>) -> Self {
+        Self { tool_id, extent, consumed: false }
     }
 }
 
 /// 📐️ A canonical document revision as lowercase hex — the identity a persisted select-tool gesture pins its base by.
-pub fn puzzle2d_revision_hex(revision: &[u8; 32]) -> String {
-    revision.iter().map(|byte| format!("{byte:02x}")).collect()
+pub fn puzzle2d_revision_hex(revision: &[u8; 32]) -> [u8;64] {
+    let mut output=[0;64];let digits=b"0123456789abcdef";
+    for (index,byte) in revision.iter().copied().enumerate(){output[index*2]=digits[(byte>>4)as usize];output[index*2+1]=digits[(byte&15)as usize];}output
 }
 
 impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle2dWindowCommandWork<A> {
@@ -76,7 +75,9 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
         let selection = interaction.selection.get(PUZZLE2D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
         let detached = semio_framework_plugin::app::GestureSlot::detached();
         let gesture = context.map_or(&detached, |context| context.gesture());
-        let (emit, ephemeral) = puzzle2d_dispatch_emit::<A>(command, snapshot, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), &selection, &self.authoring_seed, &self.base_revision, gesture, None)?;
+        let revision=puzzle2d_revision_hex(&input.operation.canonical_base_revision);
+        let base_revision=std::str::from_utf8(&revision).expect("lowercase hexadecimal is ASCII");
+        let (emit, ephemeral) = puzzle2d_dispatch_emit::<A>(command, snapshot, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), &selection, &input.operation.authoring_seed, base_revision, gesture, None)?;
         self.consumed = true;
         Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral })
     
@@ -108,6 +109,8 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         if self.consumed {
@@ -119,6 +122,8 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
             export_snapshot::Puzzle2dExportPublication::Segmented(download) => semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteDownload { download: download, ephemeral: Default::default() },
             export_snapshot::Puzzle2dExportPublication::Refused(message) => semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit { effects: vec![Effect::Notify { message }], ui_scope: UiDirtyScope::None, ..Default::default() }),
         })
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)

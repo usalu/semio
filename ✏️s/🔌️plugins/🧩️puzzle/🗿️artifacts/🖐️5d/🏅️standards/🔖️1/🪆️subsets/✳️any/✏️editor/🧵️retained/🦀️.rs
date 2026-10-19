@@ -1,6 +1,6 @@
 //! 🧵️ Retained work of the puzzle 5d editor: the window tool ids, the retained payload schema, extent and reduce helpers, the window command work and the export work. See [`super`].
 
-use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::editor::puzzle5d::commands::export_snapshot;
 use crate::{editor::puzzle5d::config::Puzzle5dConfig, editor::puzzle5d::config::Puzzle5dConfigMutation};
@@ -104,7 +104,6 @@ pub fn puzzle5d_operation_nonce(operation: &Operation) -> u64 {
 #[derive(semio_framework_value::RetireOwned)]
 struct Puzzle5dWindowWorkOwners {
     pub instance_owner: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
-    pub tool_run: Option<semio_framework_plugin::ToolRunView>,
     pub authoring_seed: String,
 }
 
@@ -114,14 +113,13 @@ pub struct Puzzle5dWindowCommandWork {
     pub closing: bool,
     pub close_owners: crate::puzzle_job::WorkClosing<Puzzle5dWindowWorkOwners>,
     pub instance_owner: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
-    pub tool_run: Option<semio_framework_plugin::ToolRunView>,
     /// 🌱️ The admission's authoring seed a typed `move`/`rotate`/`scale` submit mints its tool transaction from.
     pub authoring_seed: String,
 }
 
 impl Puzzle5dWindowCommandWork {
     pub fn new(tool_id: &'static str, authoring_seed: String) -> Self {
-        Self { tool_id, consumed: false, closing: false, close_owners: Default::default(), instance_owner: None, tool_run: None, authoring_seed }
+        Self { tool_id, consumed: false, closing: false, close_owners: Default::default(), instance_owner: None, authoring_seed }
     }
 
     /// 🪪️ Binds the admission's retained operation owner.
@@ -131,10 +129,7 @@ impl Puzzle5dWindowCommandWork {
     }
 
     /// ⏯️ Binds the instance's tool run as of admission — the identity Escape's `toolRunAbort` needs.
-    pub fn with_tool_run(mut self, tool_run: Option<semio_framework_plugin::ToolRunView>) -> Self {
-        self.tool_run = tool_run;
-        self
-    }
+
 }
 
 impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle5dWindowCommandWork {
@@ -158,7 +153,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
         let runtime = window_ownership::runtime(config, &window_config, &window_transient, window_id);
         let empty_selection = protocol::DomainSelection::default();
         let selection = interaction.selection.get(PUZZLE5D_INTERACTION_DOMAIN).unwrap_or(&empty_selection);
-        let (emit, ephemeral) = puzzle5d_handle_action::<A>(&self.authoring_seed, command.action_id(), command.args(), Some(window_id), snapshot, &runtime, Some(view), selection, self.instance_owner.as_ref(), self.tool_run.as_ref());
+        let (emit, ephemeral) = puzzle5d_handle_action::<A>(&self.authoring_seed, command.action_id(), command.args(), Some(window_id), snapshot, &runtime, Some(view), selection, self.instance_owner.as_ref(), if matches!(self.tool_id, "engagementAbort" | "openVortexSuggestions" | "closeVortexSuggestions") { context.and_then(|context| context.tool_run()) } else { None });
         self.consumed = true;
         Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral })
     
@@ -168,14 +163,12 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
 
     fn begin_close(&mut self) {
         self.closing = true;
-        self.close_owners.stage(Puzzle5dWindowWorkOwners { instance_owner: self.instance_owner.take(), tool_run: self.tool_run.take(), authoring_seed: std::mem::take(&mut self.authoring_seed) });
+        self.close_owners.stage(Puzzle5dWindowWorkOwners { instance_owner: self.instance_owner.take(), authoring_seed: std::mem::take(&mut self.authoring_seed) });
     }
 
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            self.close_owners.close_step(grant)
-        })
-    }
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> { semio_framework_job::close_original_nested_step(cx, |cx, _grant| {
+        self.close_owners.close_step(cx)
+    }) }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
         Ok(self.close_owners.demands(0)?.copy_bytes)
@@ -227,6 +220,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction: _interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
@@ -242,6 +237,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             export_snapshot::Puzzle5dExportPublication::Segmented(download) => semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteDownload { download: download, ephemeral: Default::default() },
             export_snapshot::Puzzle5dExportPublication::Refused(_) => semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(puzzle5d_notice_emit(view_state, |labels| labels.export_too_large.as_str())),
         })
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)

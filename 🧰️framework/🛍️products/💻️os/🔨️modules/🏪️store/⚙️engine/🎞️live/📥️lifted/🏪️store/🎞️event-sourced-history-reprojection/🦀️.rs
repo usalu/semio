@@ -22,7 +22,7 @@ where
     //#region 🔖️EventSourcedHistory
     /// 📥️ Records admitted remote transitions in the log and materializes the projection they fold to — adopting `replayed`
     /// when it is their finished Report replay — or records none of them.
-    pub(super) async fn adopt_remote_transitions(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, transitions: Vec<semio_framework_os_spr::MutationEnvelope>, replayed: Option<EditReplayResult<P, Mutation>>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> {
+    pub(super) async fn adopt_remote_transitions(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, transitions: Vec<semio_framework_os_spr::MutationEnvelope>, replayed: Option<EditReplayResult<P, Mutation>>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let admitted: Vec<MutationId> = transitions.iter().map(|envelope| envelope.mutation_id.clone()).collect();
         for envelope in transitions {
             self.insert_transition(store_log, envelope);
@@ -52,7 +52,7 @@ where
     }
 
     /// ♻️ [`Self::reproject`]'s body, which never suspends: for the history steps that must not.
-    pub(super) fn reproject_now(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> {
+    pub(super) fn reproject_now(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         self.fold_frontier = None;
         let fold = store_log.fold_live_log()?;
         let replay = self.reprojection_replay(store_log, store_cursor, &fold)?;
@@ -75,7 +75,7 @@ where
     /// the genesis, folded forward over the live order (one stride at most once the ring holds the prefix). Answers the
     /// prefixes it folded through on the ring's stride with their forwards-only digests, chained from the base's digest
     /// instead of hashing the whole history.
-    pub fn live_prefix_state(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, length: usize) -> Result<(Arc<P>, Vec<(usize, Option<[u8; 32]>, Arc<P>)>), VcsError> {
+    pub fn live_prefix_state(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, length: usize) -> Result<(Arc<P>, Vec<(usize, Option<[u8; 32]>, Arc<P>)>), VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let applied = store_log.applied_edit_ids.len();
         if !self.current_detached && length == applied {
             return Ok((Arc::clone(&*self.current), Vec::new()));
@@ -152,7 +152,7 @@ where
     /// Synchronous: one command or ingest replays the applied history in place. A remote change under
     /// [`Self::defer_remote_replays`] and a local step under [`Self::defer_local_replays`] replay resumably instead
     /// ([`Self::step_reprojection`]).
-    fn reprojection_replay(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, fold: &semio_framework_os_spr::HistoryFold) -> Result<Option<EditReplayResult<P, Mutation>>, VcsError> {
+    fn reprojection_replay(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, fold: &semio_framework_os_spr::HistoryFold) -> Result<Option<EditReplayResult<P, Mutation>>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         if fold.supersessions == *self.supersessions && store_log.applied_edit_ids.starts_with(&fold.applied) {
             return Ok(None);
         }
@@ -163,7 +163,7 @@ where
     /// 🚀️ Adopts an already finished Report replay of exactly the folded event log instead of replaying again — the fast path
     /// of a supersession whose replay was computed before it was authored (a dry run, or a time-travel session). A replay of
     /// another order or other effective inputs is dropped and the log is replayed as usual.
-    pub fn reproject_replayed(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, result: EditReplayResult<P, Mutation>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> {
+    pub fn reproject_replayed(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, result: EditReplayResult<P, Mutation>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         self.fold_frontier = None;
         let fold = match store_log.fold_live_log() {
             Ok(fold) => fold,
@@ -183,7 +183,7 @@ where
     /// 🧷️ Adopts `fold` and the replay it needed ([`Self::reprojection_replay`]): a tail-only removal re-projects through
     /// the tail snapshot or the nearest retained prefix, a replay publishes its projection, inverses and messages. Nothing
     /// is adopted unless [`Self::preflight_reprojection`] admits all of it.
-    fn adopt_reprojection(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, fold: semio_framework_os_spr::HistoryFold, replay: Option<EditReplayResult<P, Mutation>>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> {
+    fn adopt_reprojection(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, fold: semio_framework_os_spr::HistoryFold, replay: Option<EditReplayResult<P, Mutation>>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let prefix = match &replay {
             None if fold.applied != *store_log.applied_edit_ids => Some(self.live_prefix_state(store_log, store_cursor, fold.applied.len())?),
             _ => None,
@@ -317,14 +317,14 @@ where
     }
 
     /// 🔭️ The projection after `applied[..from]` under `supersessions` ([`Self::prefix_state_recorded`]).
-    fn prefix_state(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, applied: &[String], from: usize, supersessions: &EffectiveSupersessions) -> Result<Arc<P>, VcsError> {
+    fn prefix_state(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, applied: &[String], from: usize, supersessions: &EffectiveSupersessions) -> Result<Arc<P>, VcsError>  where P: Clone, Mutation: ColdMutation<P> {
         Ok(self.prefix_state_recorded(store_log, store_cursor, applied, from, supersessions, usize::MAX)?.0)
     }
 
     /// 🔬️ The projection after `applied[..from]` under `supersessions`: the live head, the tail snapshot or the nearest
     /// retained prefix whose digest names the same prefix, folded forward — the genesis when none lies before `from` —
     /// with the projections it folded through at every multiple of `stride`.
-    pub(super) fn prefix_state_recorded(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, applied: &[String], from: usize, supersessions: &EffectiveSupersessions, stride: usize) -> Result<(Arc<P>, Vec<(usize, Arc<P>)>), VcsError> {
+    pub(super) fn prefix_state_recorded(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, applied: &[String], from: usize, supersessions: &EffectiveSupersessions, stride: usize) -> Result<(Arc<P>, Vec<(usize, Arc<P>)>), VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let identity = store_cursor.revision_accumulator.identity_digest;
         let digests = forward_prefix_digests::<P, Mutation, _, _>(identity, &applied[..from], &store_log.envelope.vcs.edits, supersessions)?;
         let live = forward_prefix_digests::<P, Mutation, _, _>(identity, &*store_log.applied_edit_ids, &store_log.envelope.vcs.edits, &self.supersessions)?;

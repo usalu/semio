@@ -1,0 +1,9 @@
+{
+  "cases": [
+    { "serial": true, "failure": null, "trace": ["open rehearsal", "start rehearsal", "end rehearsal", "close rehearsal", "open dev", "start dev", "end dev", "close dev"] },
+    { "serial": false, "failure": null, "trace": ["open rehearsal", "open dev", "start rehearsal", "start dev", "end rehearsal", "end dev", "close dev", "close rehearsal"] },
+    { "serial": true, "failure": "rehearsal", "trace": ["open rehearsal", "start rehearsal", "fail rehearsal", "close rehearsal"] },
+    { "serial": false, "failure": "rehearsal", "trace": ["open rehearsal", "open dev", "start rehearsal", "start dev", "fail rehearsal", "end dev", "close dev", "close rehearsal"] },
+    { "serial": false, "failure": "open dev", "trace": ["open rehearsal", "open dev", "close dev", "close rehearsal"] }
+  ]
+}

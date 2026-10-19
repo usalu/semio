@@ -69,7 +69,7 @@ impl<T: semio_framework_value::retirement::RetireOwned> SourceIterator<T> {
         use semio_framework_value::RetirementDemand;
         if self.terminal { return Ok(Default::default()); }
         if let Some(owner) = self.active.as_ref() {
-            return Ok(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(copy)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()?.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "source iterator child depth overflow"))? });
+            let mut demand=owner.next_demand(copy)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"source iterator child depth overflow"))?;return Ok(demand);
         }
         if self.pending.is_some() || self.source.len() != 0 {
             if !T::controlled_retirement_supported() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "original source iterator element has no controlled retirement declaration")); }
@@ -91,6 +91,7 @@ impl<T: semio_framework_value::retirement::RetireOwned> Iterator for SourceItera
 impl<T: semio_framework_value::retirement::RetireOwned> ExactSizeIterator for SourceIterator<T> {}
 
 impl<T: semio_framework_value::retirement::RetireOwned> ErasedSnapshotRetirement for SourceIterator<T> {
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands(body) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.demands(0).map(|demand| demand.copy_bytes) }
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { self.demands(copy).map(|demand| demand.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { self.demands(0).map(|demand| demand.release_bytes) }

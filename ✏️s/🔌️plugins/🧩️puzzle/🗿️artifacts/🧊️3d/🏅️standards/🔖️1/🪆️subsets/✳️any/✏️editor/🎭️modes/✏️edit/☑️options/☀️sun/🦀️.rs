@@ -1,10 +1,11 @@
-//! ☀️ Edit-mode window option — the sun/environment group (enabled, azimuth, elevation, intensity),
 //! delegated wholesale to the framework's shared `world3d_sun_measures` builder. Per window
+//! ☀️ Edit-mode window option — the sun/environment group (enabled, azimuth, elevation, intensity),
 //! instance: each keeps its own `WorldSunConfig` (see `🦀️config.rs`).
 
 use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dRuntime;
 use semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_action;
-use semio_framework_plugin::{world3d_sun_measures, WindowMeasure};
+use semio_framework_plugin::world3d_sun_measures;
+use semio_framework_plugin::WindowMeasure;
 
 /// 🌞️ The sun toggle plus its azimuth/elevation/intensity sliders.
 /// 🔗️ `world3d_sun_measures` is a framework helper still bound to `serde_json::Value` (framework

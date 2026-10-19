@@ -6,10 +6,11 @@ import { testFemPagedCsrOracle } from "@semio-tech/s-fem-engine-ts/sparse/testin
 import { testFemPcgPublicationGrantOracle } from "@semio-tech/s-fem-engine-ts/sparse/testing/publication-grant";
 import { testFemScalarOwnerOracle } from "@semio-tech/s-fem-engine-ts/sparse/testing/scalar-owners";
 import Ajv from "ajv";
-import { applyPatch, type Operation } from "fast-json-patch";
 import commandLimits from "../🧫️fixtures/🚧️retained-command-limits/🔣️.json" with { type: "json" };
 
 import documentAdmission from "../../../🧪️tests/🧫️fixtures/🧬️document-admission/🔣️.json" with { type: "json" };
+import { applyPatch, getValueByPointer, type Operation } from "fast-json-patch";
+import identityAdmission from "../../🕹️interaction/🧫️fixtures/🔣️.json" with { type: "json" };
 import fem3dDocumentSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
 import { parseFem3dArtifact } from "../../../🧬️schema/🟦️.ts";
 import { mountedCloseFixture as mountedClose } from "@semio-tech/fem-js/testing/fixtures/mounted-close";
@@ -54,7 +55,7 @@ export function testFem3dWindowConfigContract(): void {
 
 function testFemDocumentAdmission(): void {
   const ajv = new Ajv({ strict: true, allErrors: true });
-  ajv.addKeyword("x-semio-state").addKeyword("x-semio-invariant");
+  ajv.addKeyword("x-semio-state").addKeyword("x-semio-invariant").addKeyword("x-semio-ui");
   ajv.addFormat("double", { type: "number", validate: Number.isFinite });
   ajv.addFormat("uint32", { type: "number", validate: (value: number) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff });
   const schema = fem3dDocumentSchema;
@@ -62,12 +63,40 @@ function testFemDocumentAdmission(): void {
   const validate = ajv.compile(schema);
   const row = documentAdmission;
   assert(validate(row.document), JSON.stringify(validate.errors));
-  assert.deepEqual(parse(row.document), row.document);
+  const nativePatch: Operation[] = row.nativeWords.map(({ path, word }) => {
+    assert.equal(Buffer.from(word, "hex").readDoubleBE(), getValueByPointer(row.document, path), path);
+    return { op: "replace", path, value: { bits: BigInt(`0x${word}`) } };
+  });
+  for (const { path, word } of row.nativeCounts) {
+    assert.equal(BigInt(word), BigInt(getValueByPointer(row.document, path)), path);
+    nativePatch.push({ op: "replace", path, value: BigInt(word) });
+  }
+  const native = applyPatch(structuredClone(row.document), nativePatch, true).newDocument;
+  for (let index = 0; index < native.combinations.length; index++) {
+    applyPatch(native, [{ op: "replace", path: `/combinations/${index}/terms`, value: new Map(Object.entries(native.combinations[index]!.terms)) }], true);
+  }
+  assert.deepEqual(parse(native), native);
+  for (const row of identityAdmission.invalidOwnerCases) {
+    const invalid = structuredClone(native);
+    if (row.kind === "emptyNode") invalid.nodes[0]!.id = "";
+    else if (row.kind === "duplicateNode") invalid.nodes.push(structuredClone(invalid.nodes[0]!));
+    else if (row.kind === "duplicateLoad") invalid.loadCases[0]!.loads.push(structuredClone(invalid.loadCases[0]!.loads[0]!));
+    else if (row.kind === "oversizedNode") invalid.nodes[0]!.id = "x".repeat(row.bytes!);
+    else throw Error("unknown owner admission vector");
+    assert.throws(() => parse(invalid), row.kind);
+  }
+  const scopedCollision = structuredClone(native);
+  scopedCollision.nodes[0]!.id = scopedCollision.materials[0]!.id;
+  scopedCollision.loadCases.push({ ...structuredClone(scopedCollision.loadCases[0]!), id: "another-case" });
+  assert.deepEqual(parse(scopedCollision), scopedCollision);
+  console.log("[DEBUG] FEM3d native TypeScript root refused four invalid owners and admitted cross-kind/cross-case collisions");
+  assert.throws(() => parse(row.document));
   for (const field of row.foreignFields) {
     const candidate = { ...structuredClone(row.document), [field.key]: field.value };
     assert(!validate(candidate), field.key);
-    assert.throws(() => parse(candidate), field.key);
+    assert.throws(() => parse({ ...structuredClone(native), [field.key]: field.value }), field.key);
   }
+  console.log(`[DEBUG] FEM3d document admission verified ${row.nativeWords.length} native words and ${row.nativeCounts.length} native counts`);
 }
 
 if (import.meta.main) testFem3dWindowConfigContract();

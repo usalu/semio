@@ -93,6 +93,33 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/3d/1/mesh/mutation/move-selection/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/3d/1/material/mutation/change-material/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/3d/1/mesh/mutation/change-node/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/3d/1/mesh/mutation/change-section/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/3d/1/mesh/mutation/change-solid/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/3d/1/boundary/mutation/change-support/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/3d/1/mesh/mutation/change-element/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/3d/1/load/mutation/change-load/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/3d/1/load/mutation/change-combination-name/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/3d/1/load/mutation/change-combination-term/schema.json"
     }
   ]
 }

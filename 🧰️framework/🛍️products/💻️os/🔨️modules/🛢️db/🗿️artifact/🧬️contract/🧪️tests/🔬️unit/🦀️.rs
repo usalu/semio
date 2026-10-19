@@ -9,7 +9,7 @@ async fn envelope(id: &str, deps: &[&str], actor: &str, entries: &[(&str, serde_
     protocol::MutationEnvelope {
         mutation_id: protocol::MutationId(id.to_string()),
         document_id: document_id().await,
-        actor: protocol::ActorId(actor.to_string()),
+        actor: protocol::ActorId(actor.to_string().into()),
         dependencies: deps.iter().map(|dep| protocol::MutationId((*dep).to_string())).collect(),
         observed: None,
         target: Vec::new(),
@@ -44,21 +44,29 @@ mod bridge {
     }
 
     impl protocol::DiffAlgebra<Counter> for AddDiff {
-        fn inverse(&self, _base: &Counter) -> Self {
-            Self { amount: -self.amount }
-        }
         fn is_empty(&self) -> bool {
             self.amount == 0
         }
     }
 
-    impl protocol::MutationDiff<Counter> for AddDiff {
-        fn apply(&self, base: &Counter, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Counter> {
-            Ok(Counter { value: base.value + self.amount })
+    impl protocol::ColdDiffAlgebra<Counter> for AddDiff {
+        fn inverse(&self, _base: &Counter) -> Self {
+            Self { amount: -self.amount }
         }
         fn absorb(&mut self, other: Self) {
             self.amount += other.amount;
         }
+    }
+
+    impl protocol::ColdMutationDiff<Counter> for AddDiff {
+        fn apply(&self, base: &mut Counter, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+            base.value = base.value + self.amount;
+            Ok(())
+        }
+    }
+
+    impl protocol::MutationDiff<Counter> for AddDiff {
+
     }
 
     #[derive(Clone, serde::Serialize, serde::Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
@@ -89,22 +97,23 @@ mod bridge {
         fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
             &ADD_DESCRIPTOR
         }
+    }
+
+    impl protocol::ColdMutation<Counter> for Add {
+        type ReferenceDiff = AddDiff;
         fn diff(&self, _base: &Counter) -> protocol::MutationOutcome<AddDiff> {
             protocol::MutationOutcome::new(AddDiff { amount: self.amount })
         }
         fn inverse(&self, _base: &Counter) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-            vec![Add { amount: -self.amount }]
-        
-    })())
-}
+            Ok(vec![Add { amount: -self.amount }])
+        }
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn envelope_from_operation_uses_operation_and_diff_traits() {
+    async fn envelope_from_operation_cold_uses_operation_and_diff_traits() {
         let base = Counter { value: 10 };
         let op = Add { amount: 5 };
-        let envelope = envelope_from_operation(document_id().await, "counter", &op, &base, protocol::ActorId("alice".to_string()), protocol::MutationId("op-add-1".to_string()), protocol::HybridLogicalTimestamp::new(1, 0)).await.unwrap();
+        let envelope = envelope_from_operation_cold(document_id().await, "counter", &op, &base, protocol::ActorId("alice".to_string().into()), protocol::MutationId("op-add-1".to_string()), protocol::HybridLogicalTimestamp::new(1, 0)).await.unwrap();
         let entries = diff_entries(&envelope.diff).await.unwrap();
         assert_eq!(entries.len(), 1, "only the changed field is persisted");
         let (path, value) = &entries[0];

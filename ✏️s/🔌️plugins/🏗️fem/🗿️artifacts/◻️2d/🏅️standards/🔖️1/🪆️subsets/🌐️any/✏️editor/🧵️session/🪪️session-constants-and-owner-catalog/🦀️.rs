@@ -6,6 +6,10 @@ use super::*;
 pub const FEM2D_MOUNTED_JOB_KIND: &str = "semio.fem2d.mounted-analysis";
 
 pub(super) const SESSION_ACTIVE_CAPACITY: usize = 32;
+pub(super) const SESSION_CONSUMER_CAPACITY: usize = 128;
+pub(super) type RequestKey = semio_framework_value::ContentRequestKey;
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ConsumerKey { Model, Window(semio_framework_plugin::WindowConfigAuthorityIdentity) }
 
 pub(super) const SESSION_SHELL_CAPACITY: usize = 64;
 
@@ -13,12 +17,10 @@ pub(super) const SESSION_MAXIMUM_INPUT_ITEMS: usize = 4_096;
 
 pub(super) const SESSION_MAXIMUM_INPUT_BYTES: usize = 4 * 1_024 * 1_024;
 
-/// 📏️ Fixed model extents: document nodes/elements plus the region mesh's points/triangles share one
-/// `SESSION_OWNER_PAGE_BYTES` owner each (`model.nodes` at 48 B a node → 128 fit; `model.elements` at
-/// 256 B an element → 64 fit), and the bundled demo alone is 12 nodes + 9 elements + one meshed slab.
-pub(super) const SESSION_MAXIMUM_NODES: usize = 48;
+/// 📏️ Shared paged model admission covers the complete accumulated document and region geometry.
+pub(super) const SESSION_MAXIMUM_NODES: usize = semio_s_fem_analyses_model::MOUNTED_ANALYSIS_NODE_SLOTS;
 
-pub(super) const SESSION_MAXIMUM_ELEMENTS: usize = 24;
+pub(super) const SESSION_MAXIMUM_ELEMENTS: usize = semio_s_fem_analyses_model::MOUNTED_ANALYSIS_ELEMENT_SLOTS;
 
 pub(super) const SESSION_MAXIMUM_SUPPORTS: usize = 64;
 
@@ -112,9 +114,9 @@ impl MountedProcessOwnerCatalog {
                 MountedOwnerClaim { class: MountedOwnerClass::DomainOuter, roots: 1, items: SESSION_MAXIMUM_BOUNDARY_POINTS },
                 MountedOwnerClaim { class: MountedOwnerClass::DomainHoleList, roots: 1, items: SESSION_MAXIMUM_REGION_HOLES },
                 MountedOwnerClaim { class: MountedOwnerClass::DomainHoleVectors, roots: SESSION_MAXIMUM_REGION_HOLES, items: SESSION_MAXIMUM_REGION_HOLES * SESSION_MAXIMUM_BOUNDARY_POINTS },
-                MountedOwnerClaim { class: MountedOwnerClass::ModelNodes, roots: 1, items: SESSION_MAXIMUM_NODES + SESSION_MAXIMUM_MESH_POINTS },
-                MountedOwnerClaim { class: MountedOwnerClass::ModelElements, roots: 1, items: SESSION_MAXIMUM_ELEMENTS + SESSION_MAXIMUM_MESH_TRIANGLES },
-                MountedOwnerClaim { class: MountedOwnerClass::ModelSupports, roots: 1, items: SESSION_MAXIMUM_SUPPORTS },
+                MountedOwnerClaim { class: MountedOwnerClass::ModelNodes, roots: (SESSION_MAXIMUM_NODES * size_of::<semio_s_fem_model::Node>() + 4095) / 4096, items: SESSION_MAXIMUM_NODES },
+                MountedOwnerClaim { class: MountedOwnerClass::ModelElements, roots: (SESSION_MAXIMUM_ELEMENTS * size_of::<semio_s_fem_static::Elements>() + 4095) / 4096, items: SESSION_MAXIMUM_ELEMENTS },
+                MountedOwnerClaim { class: MountedOwnerClass::ModelSupports, roots: (SESSION_MAXIMUM_SUPPORTS * size_of::<MountedAnalysisSupport>() + 4095) / 4096, items: SESSION_MAXIMUM_SUPPORTS },
                 MountedOwnerClaim { class: MountedOwnerClass::ModelRegionNodeIds, roots: 1, items: SESSION_MAXIMUM_MESH_POINTS },
                 MountedOwnerClaim {
                     class: MountedOwnerClass::ModelStrings,
@@ -149,7 +151,7 @@ impl MountedProcessOwnerCatalog {
                         + SESSION_MAXIMUM_MESH_POINTS,
                 },
                 MountedOwnerClaim { class: MountedOwnerClass::VisualStrings, roots: 64 + SESSION_MAXIMUM_NODES + SESSION_MAXIMUM_MESH_POINTS + SESSION_MAXIMUM_ELEMENTS + SESSION_MAXIMUM_MESH_TRIANGLES + 1, items: 0 },
-                MountedOwnerClaim { class: MountedOwnerClass::OutputPages, roots: 3 * (SESSION_MAXIMUM_OUTPUT_BYTES / SESSION_OWNER_PAGE_BYTES), items: 6 },
+                MountedOwnerClaim { class: MountedOwnerClass::OutputPages, roots: 3 * semio_framework_ui_scene::CANVAS2D_SNAPSHOT_PAGE_CAPACITY + 3 * (SESSION_MAXIMUM_OUTPUT_BYTES / SESSION_OWNER_PAGE_BYTES), items: 6 },
                 MountedOwnerClaim { class: MountedOwnerClass::FaultPages, roots: 2, items: 0 },
             ],
         }

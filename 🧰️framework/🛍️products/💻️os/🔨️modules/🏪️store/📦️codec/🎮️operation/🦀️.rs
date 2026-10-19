@@ -9,7 +9,7 @@ pub enum ArtifactCodecCatalogStep { Blocked, Progress, Ready, Closed }
 
 /// 🏪️ Holds original borrowed codec bytes beside their genuine typed constructor and receipt recipient.
 pub struct RetainedArtifactCodecCatalog<'a, P, M>
-where P: Clone + ToValue + FromValue, M: Clone + ToValue + FromValue + Mutation<P> {
+where P: ToValue, M: ToValue + Mutation<P> {
     sources: [&'a [u8]; 3],
     original: ManuallyDrop<Option<DocumentStoreOwners<P, M>>>,
     failure: ManuallyDrop<Option<ValueError>>,
@@ -20,7 +20,7 @@ where P: Clone + ToValue + FromValue, M: Clone + ToValue + FromValue + Mutation<
 }
 
 impl<'a, P, M> RetainedArtifactCodecCatalog<'a, P, M>
-where P: Clone + ToValue + FromValue, M: Clone + ToValue + FromValue + Mutation<P> {
+where P: ToValue, M: ToValue + Mutation<P> {
     /// 🪶️ Borrows all three original inputs without constructing any native owner or backing.
     pub fn new(pack: &'a [u8], spr: &'a [u8], commands: &'a [u8]) -> Self {
         Self { sources: [pack, spr, commands], original: ManuallyDrop::new(None), failure: ManuallyDrop::new(None), failure_close: ManuallyDrop::new(None), receipt: None, closing: false, done: false }
@@ -105,11 +105,11 @@ where P: Clone + ToValue + FromValue, M: Clone + ToValue + FromValue + Mutation<
     pub fn terminal_is_empty(&self) -> bool { self.done && self.original.is_none() && self.failure.is_none() && self.failure_close.is_none() && self.receipt.is_none() }
 }
 impl<P, M> Drop for RetainedArtifactCodecCatalog<'_, P, M>
-where P: Clone + ToValue + FromValue, M: Clone + ToValue + FromValue + Mutation<P> {
+where P: ToValue, M: ToValue + Mutation<P> {
     fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "original codec catalog requires controlled custody and receipt closure"); if self.terminal_is_empty() { unsafe { ManuallyDrop::drop(&mut self.original); ManuallyDrop::drop(&mut self.failure); ManuallyDrop::drop(&mut self.failure_close); } } }
 }
 fn close_catalog<P, M>(owners: &mut DocumentStoreOwners<P, M>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>
-where P: Clone + ToValue + FromValue, M: Clone + ToValue + FromValue + Mutation<P> {
+where P: ToValue, M: ToValue + Mutation<P> {
     let step = owners.close_uninstalled_owners_step(grant)?;
     semio_framework_value::retained_clone::admit_retained_clone_close(grant, step, owners.uninstalled_owners_terminal_is_empty(), "original codec catalog sources")
 }

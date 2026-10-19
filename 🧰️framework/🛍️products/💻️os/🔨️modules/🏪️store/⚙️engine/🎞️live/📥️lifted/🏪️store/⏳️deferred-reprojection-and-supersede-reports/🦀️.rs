@@ -199,7 +199,7 @@ where
     /// head, the projection follows and the step's transitions are announced. A finalizing step whose report blocks is
     /// refused (`Rejected { policy: Normal }`, every replay message) with nothing of it recorded while its remote transitions
     /// wait again. Atomic: a refused adoption keeps the log and the head.
-    async fn adopt_pending(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, pending: PendingReprojection<P, Mutation>, replayed: Option<EditReplayResult<P, Mutation>>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> {
+    async fn adopt_pending(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, pending: PendingReprojection<P, Mutation>, replayed: Option<EditReplayResult<P, Mutation>>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let PendingReprojection { transitions, local, replay } = pending;
         store_owners.retire_pending_replay(replay)?;
         let Some(local) = local else {

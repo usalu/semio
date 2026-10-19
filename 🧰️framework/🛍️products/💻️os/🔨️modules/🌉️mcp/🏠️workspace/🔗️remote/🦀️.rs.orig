@@ -4,7 +4,8 @@ use crate::{GatewayError, GatewayErrorCode};
 use semio_framework_async::{HostAsyncRuntime, OperationContext};
 use semio_framework_os_kernel::os_directory::{
     client::{DirectoryClient, DirectoryClientError, DirectoryTransport, HubSocketGrantSource, LocalHubCredential},
-    descriptor_digest_v1, hex_lower, DirectoryAccessChange, DirectoryEventBody, DirectorySessionKindV1, DirectorySpaceAdministrationPageV1, DirectorySpaceRole, DirectoryStreamMessage, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenIntentV1, DocumentScope, DocumentView, MemberSpaceViewV1, MemberView,
+    io::binary::{artifact_hash::hex_lower, descriptor_digest::descriptor_digest_v1},
+    DirectoryAccessChange, DirectoryEventBody, DirectorySessionKindV1, DirectorySpaceAdministrationPageV1, DirectorySpaceRole, DirectoryStreamMessage, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenIntentV1, DocumentScope, DocumentView, MemberSpaceViewV1, MemberView,
 };
 use semio_framework_os_kernel::{FromValue, ToValue};
 use std::collections::{BTreeMap, HashMap, HashSet};

@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "declaration": {
+    "version": 1,
+    "owner": "fixture:native-launch",
+    "startup": {
+      "fuel": 100,
+      "maximumElapsedMicroseconds": 500000,
+      "grant": {
+        "maximumItems": 64,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 1048576,
+        "maximumReleaseBytes": 1048576,
+        "maximumDepth": 64
+      },
+      "retirementReserve": {
+        "fuel": 20,
+        "grant": {
+          "maximumItems": 8,
+          "maximumCopyBytes": 4096,
+          "maximumCapacityBytes": 65536,
+          "maximumReleaseBytes": 65536,
+          "maximumDepth": 64
+        }
+      }
+    },
+    "hostIo": {
+      "fuel": 40,
+      "maximumElapsedMicroseconds": 300000,
+      "grant": {
+        "maximumItems": 32,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 1048576,
+        "maximumReleaseBytes": 1048576,
+        "maximumDepth": 64
+      },
+      "retirementReserve": {
+        "fuel": 8,
+        "grant": {
+          "maximumItems": 8,
+          "maximumCopyBytes": 4096,
+          "maximumCapacityBytes": 65536,
+          "maximumReleaseBytes": 65536,
+          "maximumDepth": 64
+        }
+      }
+    },
+    "compilerTask": {
+      "fuel": 120,
+      "retirementReserve": {
+        "fuel": 24,
+        "grant": {
+          "maximumItems": 8,
+          "maximumReleaseBytes": 131072,
+          "maximumCopyBytes": 8192,
+          "maximumCapacityBytes": 131072,
+          "maximumDepth": 64
+        }
+      },
+      "grant": {
+        "maximumItems": 64,
+        "maximumReleaseBytes": 2097152,
+        "maximumCopyBytes": 131072,
+        "maximumCapacityBytes": 2097152,
+        "maximumDepth": 64
+      },
+      "maximumElapsedMicroseconds": 900000
+    }
+  },
+  "durations": [
+    {
+      "deadline": null,
+      "now": 1000,
+      "expected": 500000
+    },
+    {
+      "deadline": 1100,
+      "now": 1000,
+      "expected": 100000
+    },
+    {
+      "deadline": 2000,
+      "now": 1000,
+      "expected": 500000
+    }
+  ],
+  "spent": [
+    {
+      "copiedItems": 2,
+      "copiedBytes": 3,
+      "retainedCapacityBytes": 128,
+      "releasedBytes": 64,
+      "workUnitsSpent": 5
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 4,
+      "retainedCapacityBytes": 16,
+      "releasedBytes": 32,
+      "workUnitsSpent": 7
+    }
+  ],
+  "remainingFuel": 88,
+  "invalid": [
+    "missing-owner",
+    "unknown-axis",
+    "fractional-fuel",
+    "reserve-fuel-overflow",
+    "reserve-capacity-overflow",
+    "expired-deadline"
+  ]
+}

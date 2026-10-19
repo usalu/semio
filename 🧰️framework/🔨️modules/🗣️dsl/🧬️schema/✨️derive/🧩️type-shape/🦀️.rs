@@ -99,7 +99,8 @@ pub(super) fn classify_field(ty: &Type, attrs: &FieldAttrs) -> (FieldKind, Type)
         if attrs.statements {
             return (FieldKind::OptionStatements(Box::new(inner.clone())), inner);
         }
-        return (FieldKind::OptionScalar(Box::new(inner.clone())), inner);
+                if attrs.required { return (FieldKind::Scalar,ty.clone()); }
+return (FieldKind::OptionScalar(Box::new(inner.clone())), inner);
     }
     if attrs.base64 && is_vec_u8(ty) {
         return (FieldKind::Bytes64, ty.clone());

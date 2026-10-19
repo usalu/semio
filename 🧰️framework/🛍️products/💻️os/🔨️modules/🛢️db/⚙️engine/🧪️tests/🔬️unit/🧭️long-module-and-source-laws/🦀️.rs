@@ -32,7 +32,7 @@ mod long {
                         envelopes.push(protocol::MutationEnvelope {
                             mutation_id: mutation_id.clone(),
                             document_id: document.clone(),
-                            actor: protocol::ActorId("storm-author".to_string()),
+                            actor: protocol::ActorId("storm-author".to_string().into()),
                             dependencies: previous.iter().cloned().collect(),
                             observed: None,
                             target: Vec::new(),
@@ -60,7 +60,7 @@ mod long {
                     scope.spawn(move || {
                         db_actor::block_on(async move {
                             let asked_at = std::time::Instant::now();
-                            let mut session = database.hello(protocol::ArtifactId(format!("storm-{document_index}")), None, format!("storm-session-{document_index}"), protocol::ActorId("semio_hub".to_string()), 64 * 1024).await.unwrap();
+                            let mut session = database.hello(protocol::ArtifactId(format!("storm-{document_index}")), None, format!("storm-session-{document_index}"), protocol::ActorId("semio_hub".to_string().into()), 64 * 1024).await.unwrap();
                             session.take_welcome().unwrap().acknowledge().unwrap();
                             let welcomed = asked_at.elapsed();
                             while let Some(frame) = session.next_frame().await.unwrap() {

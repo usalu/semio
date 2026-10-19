@@ -773,6 +773,7 @@ where
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     type Member = Box<ArtifactStore<P, M>>;
+    fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.retirement_demands(body)}
 
     fn step(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<MemberOpenStep<Self::Member>,OriginalTurnFailure> {
         self.step_store(cx, grant)

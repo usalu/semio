@@ -19,6 +19,17 @@ pub struct SetErrorN {
 //#region ⚙️Behavior
 impl semio_framework_os_spr::MutationKind<DemoSnapshot, SeverityMutation> for SetErrorN {
     const SEMANTICS: semio_framework_os_spr::SemanticDescriptor = semio_framework_os_spr::SemanticDescriptor { verb: "set", entity: "error-n", kind: "set-error-n", record: "SetErrorN" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Error N", "Fehler N setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["n".into()]
+    }
+}
+
+impl semio_framework_os_spr::ColdMutationKind<DemoSnapshot, SeverityMutation> for SetErrorN {
     fn diff(&self, _base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<DemoDiff> {
         semio_framework_os_spr::MutationOutcome::error("mutation.target-missing", "target n is missing", ["n"])
     }
@@ -28,11 +39,5 @@ impl semio_framework_os_spr::MutationKind<DemoSnapshot, SeverityMutation> for Se
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Error N", "Fehler N setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["n".into()]
-    }
 }
 //#endregion ⚙️Behavior

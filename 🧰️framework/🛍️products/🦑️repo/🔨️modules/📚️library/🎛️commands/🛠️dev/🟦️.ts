@@ -2,7 +2,6 @@
  * @see 📜️script.ts
  */
 import { readBuildMode } from "@semio-tech/process/build-mode";
-import { ensureMcpBinary } from "@semio-tech/framework-os-mcp";
 import { daemonBudgetOpts, runCmd } from "../../🏃️process/🟦️.ts";
 import { resolveMcpBin } from "../../🚨️policy/🖥️cli/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -31,7 +30,7 @@ export class DevScript extends Script {
       return;
     }
     if (segments[0] === "mcp") {
-      this.runMcp(segments.slice(1));
+      await this.runMcp(segments.slice(1));
       return;
     }
     console.error(`[dev] unknown route ${JSON.stringify(segments.join(" "))}: expected storybook, storybook-static or mcp. Playgrounds are dashboard commands: \`bun run dashboard run playground:<variant> --param renderer=react\` (list them with \`bun run dashboard commands playground\`).`);
@@ -85,12 +84,12 @@ export class DevScript extends Script {
     const {serveRepositoryStorybookArtifactV1}=await import("../../🏗️build/📖️storybook/🏃️execution/🟦️.ts");await serveRepositoryStorybookArtifactV1(this.root,readBuildMode(process.env.SEMIO_BUILD_MODE),process.env.STORYBOOK_SCOPE??"",this.invocation);
   }
 
-  private runMcp(segments: string[]): void {
+  private async runMcp(segments: string[]): Promise<void> {
     const a = segments[0];
     if (a === "stdio") {
       const rest = segments.slice(1);
       if ((rest[0] ?? "").trim().toLowerCase() === "os") {
-        this.runMcpOs(rest.slice(1));
+        await this.runMcpOs(rest.slice(1));
         return;
       }
       this.runMcpStdioRepo(rest);
@@ -102,7 +101,7 @@ export class DevScript extends Script {
     }
     const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
     if (a === "repo") {
-      runCmd(process.execPath, ["x", "@modelcontextprotocol/inspector", "--config", ".cursor/mcp.json", "--server", "repo"], {
+      runCmd(process.execPath, ["x", "@modelcontextprotocol/inspector", "--config", ".mcp.json", "--server", "repo"], {
         cwd: this.root,
         env: { ...process.env, HOST: host },
         ...daemonBudgetOpts(),
@@ -115,7 +114,8 @@ export class DevScript extends Script {
   /** 🌉️ Runs the `semio-os` MCP gateway (`semio-framework-os-mcp`) over stdio, which is what `.mcp.json` launches.
    * Streamable HTTP is the dashboard tool `tool:workspace/os-mcp-http` (build task `@semio-tech/framework-os-mcp-rs:dev`).
    * Extra argv passes straight through to the binary (`--folder`, `--hub`, `--principal`, `--scopes`, `--auto-approve`, …). */
-  private runMcpOs(extra: string[]): void {
+  private async runMcpOs(extra: string[]): Promise<void> {
+    const { ensureMcpBinary } = await import("@semio-tech/framework-os-mcp");
     runCmd(ensureMcpBinary(this.root), ["stdio", ...extra], { cwd: this.root, ...daemonBudgetOpts() });
   }
 

@@ -1,7 +1,7 @@
 /** 🎒️ One simulated learner of the lecture hall: enrolment, rooms, polling, two quizzes at two challenges with revisions, submission and results, and the Wi-Fi drop. */
-import { CHALLENGES, challengeRules, learnerTag, rosterScope, thinkingAnswer, thinkingScope, type Answer, type Command, type IdentityClaim, type PresenceState, type RunView, type SheetTask, type ThinkingAnswer } from "../../../../../🧰️framework/🛍️products/❓️quiz/🟦️.ts";
-import { ProctorClient, RETRY_TIMING, newId, retryTransient, type CommandVerdict } from "../../../../../🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/🛂️proctor/🟦️.ts";
-import { CLOCK_MARGIN_MS, CURSOR, fail, GIVE_UP_MS, HALL, LAG_PROBE_MS, measurements, type Measurements, REAL, record } from "../📊️settings-and-measurements/🟦️.ts";
+import { CHALLENGES, challengeRules, learnerTag, rosterScope, thinkingAnswer, thinkingScope, type Answer, type Command, type IdentityClaim, type PresenceState, type RunView, type SheetTask, type ThinkingAnswer } from "../../../../../🧰️framework/🛍️products/📚️course/🟦️.ts";
+import { ProctorClient, RETRY_TIMING, newId, retryTransient, type CommandVerdict } from "../../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🛂️proctor/🟦️.ts";
+import { CLOCK_MARGIN_MS, CURSOR, capacityProgress, fail, GIVE_UP_MS, HALL, LAG_PROBE_MS, measurements, type Measurements, REAL, record } from "../📊️settings-and-measurements/🟦️.ts";
 import { between, pause, Room, transport } from "../🚚️transport/🟦️.ts";
 
 //#region 🧑‍🎓️Learner
@@ -111,7 +111,7 @@ async function attend(hall: Hall, index: number, plays: number): Promise<void> {
   await Promise.all([roster.join(), page.join()]);
   roster.share(here({ screen: "home" }));
   page.watch([`${hall.tenant}/introduction`, `${hall.tenant}/leaderboard`, `${hall.tenant}/badges`, ...hall.quizzes.flatMap((quiz) => [`${hall.tenant}/quiz/${quiz}`, thinkingScope(hall.tenant, quiz)])].slice(0, 16));
-  await Promise.all([timed("query catalog", () => client.catalog(learner)), timed("query learner", () => client.learner(learner)), timed("query leaderboard", () => client.leaderboard({ period: "all-time" }, learner))]);
+  await Promise.all([timed("query course", () => client.course(learner)), timed("query learner", () => client.learner(learner)), timed("query leaderboard", () => client.leaderboard({ period: "all-time" }, learner))]);
 
   let attending = true;
   const polling = (async () => {
@@ -173,6 +173,7 @@ async function storm(hall: Hall): Promise<number> {
 
 /** 🏫️ What one thread of the hall is told: the learners of one lecture it plays. */
 export interface HallOrders {
+  readonly progressFile?: string;
   readonly role: "hall";
   readonly base: string;
   readonly tenant: string;
@@ -209,11 +210,14 @@ export async function lecture(orders: HallOrders, dropped: Promise<void>): Promi
   let reconnected = 0;
   let storming: Promise<void> = Promise.resolve();
   void dropped.then(() => {
+    capacityProgress(orders.progressFile, `hall worker ${orders.learners[0]} received drop`);
     if (attending) storming = storm(hall).then((count) => void (reconnected = count));
   });
   await Promise.all(orders.learners.map((index) => attend(hall, index, 2)));
+  capacityProgress(orders.progressFile, `hall worker ${orders.learners[0]} learner work complete`);
   attending = false;
   await storming;
+  capacityProgress(orders.progressFile, `hall worker ${orders.learners[0]} storm complete: ${reconnected}`);
   clearInterval(probe);
   return { latencies: Object.fromEntries(measured.latencies), errors: measured.errors, throttled: measured.throttled, requests: measured.requests, resent: measured.resent, sockets: measured.sockets, reconnected, lag };
 }

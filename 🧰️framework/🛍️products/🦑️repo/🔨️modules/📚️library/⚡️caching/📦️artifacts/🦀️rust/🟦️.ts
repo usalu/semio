@@ -28,7 +28,7 @@ export async function runArtifactRustPackagesTests(cargoNames: readonly string[]
 }
 
 
-/** 📦️ Runs an independently owned Rust artifact package through the shared Nx-native contract. */
+/** 📦️ Runs an independently owned Rust artifact package through the shared native compiler contract. */
 export async function runArtifactRustPackageMain(packageRoot: string, cargoName: string, options: ArtifactRustPackageOptions = {}): Promise<void> {
   return receiveScriptProcessInvocation(process.env, async original => {
   if (options.snapshotSqliteTestBudgetMs !== undefined && (!Number.isSafeInteger(options.snapshotSqliteTestBudgetMs) || options.snapshotSqliteTestBudgetMs <= 0)) throw new Error("Owned SQLite snapshot test budget must be a positive safe integer");
@@ -73,8 +73,8 @@ export async function runArtifactRustPackageMain(packageRoot: string, cargoName:
       if (segments.length > 1 || (mode !== undefined && mode !== "source" && mode !== "native")) throw new Error("Unknown owned SQLite snapshot command");
       if (mode !== "source") for (const testPackage of options.testPackages ?? [cargoName]) await runArtifactRustTests(testPackage, this.repoRoot, ["--lib", "sqlite_snapshot_", "--no-fail-fast"], this.invocation);
       if (mode !== "native") {
-        const { runRepositoryTestCommand } = await import("../../../🧪️testing/🎛️repository-command/🟦️.ts");
-        for (const group of snapshotGroups) await runRepositoryTestCommand(process.execPath, ["test", ...group], { cwd: this.repoRoot, budgetMs: scriptInvocationBudget(this.invocation, options.snapshotSqliteTestBudgetMs ?? 0), signal: this.invocation.control.signal });
+        const { runBudgetedTestCommand } = await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts");
+        for (const group of snapshotGroups) await runBudgetedTestCommand(process.execPath, ["test", ...group], { cwd: this.repoRoot, budgetMs: scriptInvocationBudget(this.invocation, options.snapshotSqliteTestBudgetMs ?? 0), signal: this.invocation.control.signal });
       }
     }
   }

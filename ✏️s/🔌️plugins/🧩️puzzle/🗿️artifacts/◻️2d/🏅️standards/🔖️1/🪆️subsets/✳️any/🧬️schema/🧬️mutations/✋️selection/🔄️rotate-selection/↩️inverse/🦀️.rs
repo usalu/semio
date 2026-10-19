@@ -1,5 +1,5 @@
-//! ↩️ Inverse for `RotateSelection` — the absolute setters restoring every BASE position and handle the
 //! rotation turns (exact, never a negated angle that would accumulate float error). Nothing moved ⇒
+//! ↩️ Inverse for `RotateSelection` — the absolute setters restoring every BASE position and handle the
 //! `Vec::new()`.
 use crate::standards::v1::subsets::any::schema::mutations::move_node::MoveNode;
 use crate::standards::v1::subsets::any::schema::mutations::replace_node_handle::ReplaceNodeHandle;

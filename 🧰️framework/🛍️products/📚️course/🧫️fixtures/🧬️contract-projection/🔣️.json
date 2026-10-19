@@ -1,0 +1,26 @@
+{
+  "cases": [
+    {
+      "id": "reachable-assertions-preserve-data-and-property-names",
+      "root": "Root",
+      "schema": { "$defs": { "Root": { "type": "object", "description": "Authoring prose", "required": ["description", "payload"], "properties": { "description": { "$ref": "#/$defs/Label" }, "payload": { "const": { "description": "Data", "$ref": "Data" } } }, "additionalProperties": false }, "Label": { "type": "string", "minLength": 1, "title": "Authoring label" }, "Unused": { "type": "number" } } },
+      "definitions": ["Label", "Root"],
+      "valid": [{ "description": "Label", "payload": { "description": "Data", "$ref": "Data" } }],
+      "invalid": [{ "description": "", "payload": { "description": "Data", "$ref": "Data" } }, { "description": "Label", "payload": { "description": "Changed", "$ref": "Data" } }]
+    },
+    {
+      "id": "escaped-definition-and-recursive-reference",
+      "root": "Branch",
+      "schema": { "$defs": { "Branch": { "type": "object", "properties": { "label": { "$ref": "#/$defs/word~1value" }, "next": { "$ref": "#/$defs/Branch" } }, "required": ["label"], "additionalProperties": false }, "word/value": { "type": "string", "enum": ["leaf"] } } },
+      "definitions": ["Branch", "word/value"],
+      "valid": [{ "label": "leaf", "next": { "label": "leaf" } }],
+      "invalid": [{ "label": "other" }]
+    },
+    {
+      "id": "missing-definition-is-refused",
+      "root": "Root",
+      "schema": { "$defs": { "Root": { "$ref": "#/$defs/Missing" } } },
+      "error": "Missing schema definition: Missing"
+    }
+  ]
+}

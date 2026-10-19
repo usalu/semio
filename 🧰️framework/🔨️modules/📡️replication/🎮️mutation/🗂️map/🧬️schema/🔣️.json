@@ -9,8 +9,8 @@
   ],
   "properties": {
     "entries": {
-      "type": "array",
-      "items": {
+      "type": "object",
+      "additionalProperties": {
         "$ref": "#/$defs/MapEntryDelta"
       }
     }
@@ -20,14 +20,10 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "key",
         "precondition",
         "operation"
       ],
       "properties": {
-        "key": {
-          "type": "string"
-        },
         "precondition": {
           "enum": [
             "any",

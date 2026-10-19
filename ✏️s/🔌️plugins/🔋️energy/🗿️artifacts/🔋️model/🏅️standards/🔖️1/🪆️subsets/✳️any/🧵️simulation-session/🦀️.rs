@@ -1,7 +1,7 @@
 //! ⚡️ Energy simulation tool run (`📋️tool-run-contract.md` §2.4, §3.7): the `ToolRunDefinition` vocabulary
 //! (stages of the tier/timestep pipeline, counters, reasons) and the run job that captures the base model
 //! in bounded grants, drives the numerical `EnergyJob` inline and publishes progress ticks. One unit of
-//! fuel is one computed timestep (warmup or run), so a single step of a paused run advances exactly one.
+//! semantic progress is one computed timestep (warmup or run); physical work remains charged to the original caller.
 //! The run is read-only: it holds no provisional document ops, so finalize publishes nothing.
 //! Source of record: `✏️editor/🧵️simulation-session/🔣️.json`.
 
@@ -21,21 +21,34 @@ extern crate semio_s_artifact_energy_model_examples as examples;
 
 use crate::kernel::{SimulationConfig};
 use crate::model::{Model};
-#[cfg(test)]
-use crate::sim_retirement::EnergyModelCloseCursor;
-use crate::sim_wire::{EnergyJobStage, EnergyQualityTier};
-#[cfg(test)]
-use crate::snapshot::EnergyModelSnapshot;
-#[cfg(test)]
-use semio_framework_job::{Generation, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, OperationId, RetainedCloneGrant, RetainedCloneProgress, StepBudget, StepContext};
-#[cfg(test)]
-use semio_framework_value::RetirementDemand;
+use crate::sim::{EnergyAdmissionRejected, EnergyJob};
+use crate::sim_retirement::{EnergyModelCloseCursor};
+use crate::sim_wire::{EnergyJobCursor, EnergyJobStage, EnergyNumericalBounds, EnergyQualityTier};
+use crate::snapshot::{EnergyModelSnapshot};
+use semio_framework_job::RetainedPayloadBuilder;
+use semio_framework_job::JobPayloadStagedSource;
+use semio_framework_job::JobPayloadAdmissionFault;
+use semio_framework_job::InteractiveJob;
+use semio_framework_job::InteractiveJobCloseStep;
+use semio_framework_job::JobOutcomeBorrow;
+use semio_framework_job::JobOutcomeDescriptor;
+use semio_framework_job::JobOutcomeKind;
+use semio_framework_job::JobOutcomeView;
+use semio_framework_job::JobPayloadStream;
+use semio_framework_job::RetainedCloneGrant;
+use semio_framework_job::RetainedCloneProgress;
+use semio_framework_job::RetainedCloneStep;
+use semio_framework_job::RetainedJobPayload;
+use semio_framework_job::StepContext;
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_tool_run::{JobKindId, ToolRunCounterDefinition, ToolRunDefinition, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunStageDefinition, ToolRunSettingsReads, ToolRunTraceKind, ToolRunVerdict};
-#[cfg(test)]
-use semio_framework_tool_run::{ToolRunIdentity, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunTickWriter};
-#[cfg(test)]
+use semio_framework_tool_run::{
+    JobKindId, ToolRunCounter, ToolRunCounterDefinition, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunStageDefinition, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunSettingsReads, ToolRunStepRing,
+    ToolRunTickWriter, ToolRunTickWireCursor, ToolRunTickPayloadSource, ToolRunTraceKind, ToolRunVerdict,
+};
 use std::sync::Arc;
+use std::mem::{size_of,MaybeUninit};
+use semio_framework_value::retirement::controlled::ControlledRetirement;
 
 //#region 🔖️Contract
 pub const ENERGY_SIMULATION_RUN_JOB_KIND: &str = "energy.simulation.run";
@@ -115,10 +128,11 @@ pub enum EnergySimulationRunCounter {
     RunTimesteps,
     TiersPublished,
     FacilityElectricityWh,
+    InputIdentityBytes,
 }
 
 impl EnergySimulationRunCounter {
-    pub const ALL: [Self; 4] = [Self::WarmupTimesteps, Self::RunTimesteps, Self::TiersPublished, Self::FacilityElectricityWh];
+    pub const ALL: [Self; 5] = [Self::WarmupTimesteps, Self::RunTimesteps, Self::TiersPublished, Self::FacilityElectricityWh, Self::InputIdentityBytes];
 
     pub fn index(self) -> u16 {
         self as u16
@@ -130,6 +144,7 @@ impl EnergySimulationRunCounter {
             Self::RunTimesteps => "runTimesteps",
             Self::TiersPublished => "tiersPublished",
             Self::FacilityElectricityWh => "facilityElectricityWh",
+            Self::InputIdentityBytes => "energy.input-identity-bytes",
         }
     }
 
@@ -139,6 +154,7 @@ impl EnergySimulationRunCounter {
             Self::RunTimesteps => LocalizedLabel::native("Run timesteps", "Lauf-Zeitschritte"),
             Self::TiersPublished => LocalizedLabel::native("Quality tiers published", "Veröffentlichte Qualitätsstufen"),
             Self::FacilityElectricityWh => LocalizedLabel::native("Facility electricity (Wh)", "Anlagenelektrizität (Wh)"),
+            Self::InputIdentityBytes => LocalizedLabel::native("Input bytes verified", "Geprüfte Eingabebytes"),
         }
     }
 }
@@ -291,6 +307,7 @@ pub fn encode_surface_energy_payload(rows: impl Iterator<Item = crate::results::
 /// ⚙️ Folds the captured model's persisted run period and schedule tables into the settings template.
 pub fn simulation_config_for(template: &SimulationConfig, model: &Model) -> SimulationConfig {
     SimulationConfig {
+        run_period_year: model.run_period.year,
         run_period_start_month: model.run_period.start_month,
         run_period_start_day: model.run_period.start_day,
         run_period_end_month: model.run_period.end_month,
@@ -305,9 +322,12 @@ pub fn simulation_config_for(template: &SimulationConfig, model: &Model) -> Simu
 mod retained_input;
 use retained_input::{CaptureCensus, ModelCapture};
 
+#[path="📮️publication/🦀️.rs"]
+mod publication;
+use publication::EnergyTickPublication;
+
 #[path = "🧵️run-job/🦀️.rs"]
 mod run_job;
-#[cfg(test)]
 use run_job::EnergyRunCursor;
 pub use run_job::EnergySimulationRunJob;
 
@@ -316,3 +336,7 @@ pub use run_job::EnergySimulationRunJob;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Laws
+
+#[cfg(test)]
+#[global_allocator]
+static ENERGY_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;

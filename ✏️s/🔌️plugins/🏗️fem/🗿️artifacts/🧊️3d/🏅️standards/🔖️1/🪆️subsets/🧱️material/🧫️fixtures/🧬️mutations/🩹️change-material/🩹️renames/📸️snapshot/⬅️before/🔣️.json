@@ -1,0 +1,24 @@
+{
+  "nodes": [],
+  "elements": [],
+  "solids": [],
+  "materials": [
+    {
+      "id": "steel",
+      "name": "Steel",
+      "e": 210000000000.0,
+      "nu": 0.3,
+      "rho": 7850.0,
+      "g": 80000000000.0
+    }
+  ],
+  "sections": [],
+  "supports": [],
+  "loadCases": [],
+  "combinations": [],
+  "analysis": {
+    "modalCount": 6,
+    "bucklingCount": 6,
+    "deformationScale": 1.0
+  }
+}

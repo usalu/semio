@@ -234,7 +234,7 @@
         "runtime": {
           "type": "string",
           "pattern": "^[a-z][a-z0-9-]*@[0-9]+\\.[0-9]+\\.[0-9]+$",
-          "const": "bun@1.3.14"
+          "const": "bun@1.4.2"
         },
         "importInterfaces": {
           "type": "array",
@@ -308,7 +308,7 @@
             "version": {
               "type": "string",
               "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
-              "const": "1.3.14"
+              "const": "1.4.2"
             },
             "executable": {
               "$ref": "#/$defs/CodegenDigest"

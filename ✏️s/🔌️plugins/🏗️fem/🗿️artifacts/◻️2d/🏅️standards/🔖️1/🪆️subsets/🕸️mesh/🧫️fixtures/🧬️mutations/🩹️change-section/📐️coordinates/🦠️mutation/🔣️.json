@@ -1,0 +1,7 @@
+{
+  "mutation": "changeSection",
+  "id": "s1",
+  "patch": {
+    "area": 0.03
+  }
+}

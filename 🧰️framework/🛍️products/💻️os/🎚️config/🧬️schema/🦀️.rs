@@ -7,6 +7,7 @@
 //! crate root) — imported here, never redefined. The plugin host mounts this schema together with
 //! every direct mutation leaf in its Rust glue.
 
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use {semio_framework::AppRef,semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
@@ -141,18 +142,12 @@ fn same_pin(entry: &DefaultApp, pin: &DefaultAppPin) -> bool {
 }
 
 impl protocol::MutationDiff<OpeningPreferences> for OpeningDiff {
-    fn apply(&self, base: &OpeningPreferences, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<OpeningPreferences> {
-        let mut defaults = base.defaults.clone();
-        for pin in &self.pins {
-            defaults.retain(|entry| !same_pin(entry, pin));
-            if let Some(app) = &pin.app {
-                defaults.push(DefaultApp { dialect: pin.dialect.clone(), role: pin.role, app: app.clone() });
-            }
-        }
-        defaults.sort_by(|left, right| pin_key(left).cmp(&pin_key(right)));
-        Ok(OpeningPreferences { defaults })
-    }
 
+
+
+}
+
+impl protocol::ColdMutationDiff<OpeningPreferences> for OpeningDiff {
     fn absorb(&mut self, other: Self) {
         for pin in other.pins {
             match self.pins.iter_mut().find(|held| held.dialect == pin.dialect && held.role == pin.role) {
@@ -161,9 +156,28 @@ impl protocol::MutationDiff<OpeningPreferences> for OpeningDiff {
             }
         }
     }
+
+    fn apply(&self, base: &mut OpeningPreferences, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        for pin in &self.pins {
+            base.defaults.retain(|entry| !same_pin(entry, pin));
+            if let Some(app) = &pin.app {
+                base.defaults.push(DefaultApp { dialect: pin.dialect.clone(), role: pin.role, app: app.clone() });
+            }
+        }
+        base.defaults.sort_by(|left, right| pin_key(left).cmp(&pin_key(right)));
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<OpeningPreferences> for OpeningDiff {
+
+
+    fn is_empty(&self) -> bool {
+        self.pins.is_empty()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<OpeningPreferences> for OpeningDiff {
     fn inverse(&self, base: &OpeningPreferences) -> Self {
         Self {
             pins: self
@@ -172,10 +186,6 @@ impl protocol::DiffAlgebra<OpeningPreferences> for OpeningDiff {
                 .map(|pin| DefaultAppPin { dialect: pin.dialect.clone(), role: pin.role, app: base.defaults.iter().find(|entry| same_pin(entry, pin)).map(|entry| entry.app.clone()) })
                 .collect(),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.pins.is_empty()
     }
 }
 
@@ -275,8 +285,43 @@ pub struct UiPreferencesDiff {
 }
 
 impl protocol::MutationDiff<UiPreferences> for UiPreferencesDiff {
-    fn apply(&self, base: &UiPreferences, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<UiPreferences> {
-        let mut next = base.clone();
+
+
+
+}
+
+impl protocol::ColdMutationDiff<UiPreferences> for UiPreferencesDiff {
+    fn absorb(&mut self, other: Self) {
+        if other.appearance.is_some() {
+            self.appearance = other.appearance;
+        }
+        if other.layout.is_some() {
+            self.layout = other.layout;
+        }
+        if other.driver_id.is_some() {
+            self.driver_id = other.driver_id;
+        }
+        if other.locale.is_some() {
+            self.locale = other.locale;
+        }
+        if other.terminology.is_some() {
+            self.terminology = other.terminology;
+        }
+        if other.theme_id.is_some() {
+            self.theme_id = other.theme_id;
+        }
+        absorb_keyed_rows(&mut self.custom_drivers, other.custom_drivers);
+        absorb_keyed_rows(&mut self.custom_themes, other.custom_themes);
+        absorb_keyed_rows(&mut self.keybinding_overrides, other.keybinding_overrides);
+        for row in other.named_layouts {
+            match self.named_layouts.iter_mut().find(|candidate| candidate.app_id == row.app_id && candidate.layout_id == row.layout_id) {
+                Some(candidate) => candidate.value = row.value,
+                None => self.named_layouts.push(row),
+            }
+        }
+    }
+
+    fn apply(&self, next: &mut UiPreferences, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         if let Some(edit) = &self.appearance {
             next.appearance = edit.value;
         }
@@ -312,41 +357,19 @@ impl protocol::MutationDiff<UiPreferences> for UiPreferencesDiff {
                 next.named_layouts.remove(&row.app_id);
             }
         }
-        Ok(next)
-    }
-
-    fn absorb(&mut self, other: Self) {
-        if other.appearance.is_some() {
-            self.appearance = other.appearance;
-        }
-        if other.layout.is_some() {
-            self.layout = other.layout;
-        }
-        if other.driver_id.is_some() {
-            self.driver_id = other.driver_id;
-        }
-        if other.locale.is_some() {
-            self.locale = other.locale;
-        }
-        if other.terminology.is_some() {
-            self.terminology = other.terminology;
-        }
-        if other.theme_id.is_some() {
-            self.theme_id = other.theme_id;
-        }
-        absorb_keyed_rows(&mut self.custom_drivers, other.custom_drivers);
-        absorb_keyed_rows(&mut self.custom_themes, other.custom_themes);
-        absorb_keyed_rows(&mut self.keybinding_overrides, other.keybinding_overrides);
-        for row in other.named_layouts {
-            match self.named_layouts.iter_mut().find(|candidate| candidate.app_id == row.app_id && candidate.layout_id == row.layout_id) {
-                Some(candidate) => candidate.value = row.value,
-                None => self.named_layouts.push(row),
-            }
-        }
+        Ok(())
     }
 }
 
 impl protocol::DiffAlgebra<UiPreferences> for UiPreferencesDiff {
+
+
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<UiPreferences> for UiPreferencesDiff {
     fn inverse(&self, base: &UiPreferences) -> Self {
         Self {
             appearance: self.appearance.as_ref().map(|_| SettingEdit::new(base.appearance)),
@@ -365,10 +388,6 @@ impl protocol::DiffAlgebra<UiPreferences> for UiPreferencesDiff {
                 .collect(),
         }
     }
-
-    fn is_empty(&self) -> bool {
-        self == &Self::default()
-    }
 }
 //#endregion 🔖️Schema
 
@@ -376,7 +395,7 @@ impl protocol::DiffAlgebra<UiPreferences> for UiPreferencesDiff {
 /// 🧬️ Applies one opening-preferences mutation through the central applier.
 pub fn apply_opening_config_mutation(snapshot: &mut OpeningPreferences, mutation: &super::mutations::OpeningConfigMutation) -> protocol::MutationApplyResult<()> {
     use protocol::Mutation as _;
-    *snapshot = protocol::apply_diff(mutation.diff(snapshot).diff(), snapshot)?;
+    *snapshot = protocol::apply_diff_cold(mutation.diff(snapshot).diff(), snapshot)?;
     Ok(())
 }
 
@@ -399,7 +418,7 @@ pub fn inverse_opening_config_mutation(snapshot: &OpeningPreferences, mutation: 
 pub fn apply_opening_config_mutation_reporting(snapshot: &mut OpeningPreferences, mutation: &super::mutations::OpeningConfigMutation) -> Vec<(String, String)> {
     use protocol::Mutation as _;
     let outcome = mutation.diff(snapshot);
-    if let Ok(next) = protocol::apply_diff(outcome.diff(), snapshot) {
+    if let Ok(next) = protocol::apply_diff_cold(outcome.diff(), snapshot) {
         *snapshot = next;
     }
     outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
@@ -417,7 +436,7 @@ pub fn inverse_opening_config_mutation_steps(mutation: &super::mutations::Openin
 /// 🧬️ Applies one OS UI-preferences mutation through the central applier.
 pub fn apply_ui_preferences_config_mutation(snapshot: &mut UiPreferences, mutation: &super::mutations::UiPreferencesConfigMutation) -> protocol::MutationApplyResult<()> {
     use protocol::Mutation as _;
-    *snapshot = protocol::apply_diff(mutation.diff(snapshot).diff(), snapshot)?;
+    *snapshot = protocol::apply_diff_cold(mutation.diff(snapshot).diff(), snapshot)?;
     Ok(())
 }
 
@@ -440,7 +459,7 @@ pub fn inverse_ui_preferences_config_mutation(snapshot: &UiPreferences, mutation
 pub fn apply_ui_preferences_config_mutation_reporting(snapshot: &mut UiPreferences, mutation: &super::mutations::UiPreferencesConfigMutation) -> Vec<(String, String)> {
     use protocol::Mutation as _;
     let outcome = mutation.diff(snapshot);
-    if let Ok(next) = protocol::apply_diff(outcome.diff(), snapshot) {
+    if let Ok(next) = protocol::apply_diff_cold(outcome.diff(), snapshot) {
         *snapshot = next;
     }
     outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
@@ -458,7 +477,7 @@ pub fn inverse_ui_preferences_config_mutation_steps(mutation: &super::mutations:
 /// 🧬️ Applies one identity mutation through the central applier.
 pub fn apply_identity_config_mutation(snapshot: &mut super::mutations::IdentitySetting, mutation: &super::mutations::IdentityConfigMutation) -> protocol::MutationApplyResult<()> {
     use protocol::Mutation as _;
-    *snapshot = protocol::apply_diff(mutation.diff(snapshot).diff(), snapshot)?;
+    *snapshot = protocol::apply_diff_cold(mutation.diff(snapshot).diff(), snapshot)?;
     Ok(())
 }
 
@@ -466,7 +485,7 @@ pub fn apply_identity_config_mutation(snapshot: &mut super::mutations::IdentityS
 pub fn apply_identity_config_mutation_reporting(snapshot: &mut super::mutations::IdentitySetting, mutation: &super::mutations::IdentityConfigMutation) -> Vec<(String, String)> {
     use protocol::Mutation as _;
     let outcome = mutation.diff(snapshot);
-    if let Ok(next) = protocol::apply_diff(outcome.diff(), snapshot) {
+    if let Ok(next) = protocol::apply_diff_cold(outcome.diff(), snapshot) {
         *snapshot = next;
     }
     outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
@@ -475,7 +494,7 @@ pub fn apply_identity_config_mutation_reporting(snapshot: &mut super::mutations:
 /// 🧬️ Applies one merge-policy mutation through the central applier.
 pub fn apply_merge_policy_config_mutation(snapshot: &mut super::mutations::MergePolicySetting, mutation: &super::mutations::MergePolicyConfigMutation) -> protocol::MutationApplyResult<()> {
     use protocol::Mutation as _;
-    *snapshot = protocol::apply_diff(mutation.diff(snapshot).diff(), snapshot)?;
+    *snapshot = protocol::apply_diff_cold(mutation.diff(snapshot).diff(), snapshot)?;
     Ok(())
 }
 
@@ -483,7 +502,7 @@ pub fn apply_merge_policy_config_mutation(snapshot: &mut super::mutations::Merge
 pub fn apply_merge_policy_config_mutation_reporting(snapshot: &mut super::mutations::MergePolicySetting, mutation: &super::mutations::MergePolicyConfigMutation) -> Vec<(String, String)> {
     use protocol::Mutation as _;
     let outcome = mutation.diff(snapshot);
-    if let Ok(next) = protocol::apply_diff(outcome.diff(), snapshot) {
+    if let Ok(next) = protocol::apply_diff_cold(outcome.diff(), snapshot) {
         *snapshot = next;
     }
     outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
@@ -492,7 +511,7 @@ pub fn apply_merge_policy_config_mutation_reporting(snapshot: &mut super::mutati
 /// 🧬️ Applies one local-catalog mutation through the central applier.
 pub fn apply_local_catalog_config_mutation(snapshot: &mut super::mutations::LocalCatalog, mutation: &super::mutations::LocalCatalogConfigMutation) -> protocol::MutationApplyResult<()> {
     use protocol::Mutation as _;
-    *snapshot = protocol::apply_diff(mutation.diff(snapshot).diff(), snapshot)?;
+    *snapshot = protocol::apply_diff_cold(mutation.diff(snapshot).diff(), snapshot)?;
     Ok(())
 }
 
@@ -500,7 +519,7 @@ pub fn apply_local_catalog_config_mutation(snapshot: &mut super::mutations::Loca
 pub fn apply_local_catalog_config_mutation_reporting(snapshot: &mut super::mutations::LocalCatalog, mutation: &super::mutations::LocalCatalogConfigMutation) -> Vec<(String, String)> {
     use protocol::Mutation as _;
     let outcome = mutation.diff(snapshot);
-    if let Ok(next) = protocol::apply_diff(outcome.diff(), snapshot) {
+    if let Ok(next) = protocol::apply_diff_cold(outcome.diff(), snapshot) {
         *snapshot = next;
     }
     outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
@@ -509,7 +528,7 @@ pub fn apply_local_catalog_config_mutation_reporting(snapshot: &mut super::mutat
 /// 🧬️ Applies one local-folders mutation through the central applier.
 pub fn apply_local_folders_config_mutation(snapshot: &mut super::mutations::LocalFolderBindings, mutation: &super::mutations::LocalFoldersConfigMutation) -> protocol::MutationApplyResult<()> {
     use protocol::Mutation as _;
-    *snapshot = protocol::apply_diff(mutation.diff(snapshot).diff(), snapshot)?;
+    *snapshot = protocol::apply_diff_cold(mutation.diff(snapshot).diff(), snapshot)?;
     Ok(())
 }
 
@@ -517,7 +536,7 @@ pub fn apply_local_folders_config_mutation(snapshot: &mut super::mutations::Loca
 pub fn apply_local_folders_config_mutation_reporting(snapshot: &mut super::mutations::LocalFolderBindings, mutation: &super::mutations::LocalFoldersConfigMutation) -> Vec<(String, String)> {
     use protocol::Mutation as _;
     let outcome = mutation.diff(snapshot);
-    if let Ok(next) = protocol::apply_diff(outcome.diff(), snapshot) {
+    if let Ok(next) = protocol::apply_diff_cold(outcome.diff(), snapshot) {
         *snapshot = next;
     }
     outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()

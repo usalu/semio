@@ -36,7 +36,7 @@ pub const DRAWING_RECOVERY_SCHEMA: &str = "semio.store.one-item-outcome.stdio-dr
 
 pub const VALUE_RECOVERY_SCHEMA: &str = "semio.store.one-item-outcome.stdio-value-v1";
 
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue,semio_framework_value_derive::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DurableOwnedGroupAnchorV1 {
     pub schema: String,
@@ -44,7 +44,7 @@ pub struct DurableOwnedGroupAnchorV1 {
     pub shape: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue,semio_framework_value_derive::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DurableOwnedGroupMemberV1 {
     pub role: String,
@@ -53,7 +53,8 @@ pub struct DurableOwnedGroupMemberV1 {
     pub expected_generation: u64,
     pub expected_revision: [u8; 32],
     pub recovery_schema: String,
-    pub recovery_pack: Vec<u8>,
+        #[value(with = "semio_framework_value::bytes")]
+pub recovery_pack: Vec<u8>,
     pub recovery_pack_sha256: String,
     pub unbound_outcome_sha256: String,
     pub post_generation: u64,
@@ -132,24 +133,28 @@ impl std::fmt::Display for DurableOwnedGroupDecisionError {
             Self::EventTooLarge => formatter.write_str("durable owned group decision exceeds its event bound"),
             Self::Codec(message) => formatter.write_str(message),
             Self::Retirement(error) => std::fmt::Display::fmt(error, formatter),
-        }
+                    #[cfg(feature = "durable-group-testing")]
+            Self::Preparation(error) => std::fmt::Display::fmt(error, formatter),
+}
     }
 }
 
 impl std::error::Error for DurableOwnedGroupDecisionError {}
 
 macro_rules! value_field {
-    ($kind:ty) => {
-        impl semio_framework_dsl_record::DslField for $kind {
-            fn shape() -> semio_framework_dsl_record::Shape {
-                semio_framework_dsl_record::Shape::Value
+    ($kind:ty, $variant:ident) => {
+        impl DslField for $kind {
+            fn projection_view(&self, path: &[usize]) -> Result<semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>, semio_framework_value::ValueError> { planning::DurableBorrowedValue::$variant(self).native_view(path) }
+            fn projection_key(&self, path: &[usize], index: usize) -> Result<&str, semio_framework_value::ValueError> { planning::DurableBorrowedValue::$variant(self).native_key(path, index) }
+            fn shape() -> Shape {
+                Shape::Value
             }
-            fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
-                semio_framework_dsl_record::FieldValue::Value(semio_framework_value::ToValue::to_value(self))
+            fn to_value(&self) -> FieldValue {
+                FieldValue::Value(semio_framework_value::ToValue::to_value(self))
             }
-            fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+            fn from_value(value: &FieldValue) -> Result<Self, String> {
                 match value {
-                    semio_framework_dsl_record::FieldValue::Value(value) => semio_framework_value::FromValue::from_value(value.clone()).map_err(|error| error.to_string()),
+                    FieldValue::Value(value) => semio_framework_value::FromValue::from_value(value.clone()).map_err(|error| error.to_string()),
                     other => Err(format!("expected Value, found {other:?}")),
                 }
             }
@@ -157,5 +162,5 @@ macro_rules! value_field {
     };
 }
 
-value_field!(DurableOwnedGroupAnchorV1);
-value_field!(DurableOwnedGroupMemberV1);
+value_field!(DurableOwnedGroupAnchorV1, Anchor);
+value_field!(DurableOwnedGroupMemberV1, Member);

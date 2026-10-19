@@ -604,3 +604,6 @@ pub mod binary;
 #[path = "../../🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"]
 pub mod sqlite;
 //#endregion 🚪️Representations
+
+#[path="🧳️state/🦀️.rs"]
+pub mod state;

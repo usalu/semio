@@ -1,0 +1,6 @@
+{
+  "a": { "x": 7, "y": 8 },
+  "b": { "x": 9, "y": 10 },
+  "expectedAddedNodes": 2,
+  "expectedPoints": [[7, 8], [9, 10]]
+}

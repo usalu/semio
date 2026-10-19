@@ -71,9 +71,7 @@ impl semio_framework_plugin::ToolJobFactory for EnergyModelCommandJobFactory {
         energy_model_contract()
     }
 
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
+    semio_framework_plugin::retained_command_factory_admission!(maximum_raw_bytes: ENERGY_MODEL_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
     fn create_job_from_wire_pages_with_payload(
         &mut self,

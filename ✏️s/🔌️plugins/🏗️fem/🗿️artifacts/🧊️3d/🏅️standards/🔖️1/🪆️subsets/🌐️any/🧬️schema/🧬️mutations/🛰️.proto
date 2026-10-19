@@ -1,25 +1,247 @@
 syntax = "proto3";
 package semio.s.fem.fem3d.mutation;
 
-// 🧬️ Fem3d mutation schema
+import "../📸️snapshot/🛰️.proto";
+import "../🔺️diff/🛰️.proto";
+
+// 🧬️ The oneof preserves the selected semantic mutation.
 message Fem3dMutation {
-  // @state artifact
-  repeated FemNode nodes = 1;
-  // @state artifact
-  repeated FemElement elements = 2;
-  // @state artifact
-  repeated FemMaterial materials = 3;
-  // @state artifact
-  repeated FemSection sections = 4;
-  // @state artifact
-  repeated FemSolid solids = 5;
-  // @state artifact
-  repeated FemSupport supports = 6;
-  // @state artifact
-  repeated FemLoadCase load_cases = 7;
-  // @state artifact
-  repeated FemCombination combinations = 8;
-  // @state artifact
-  FemAnalysisSettings analysis = 9;
+  oneof mutation {
+    Fem3dCreateNode create_node = 1;
+    Fem3dDeleteNode delete_node = 2;
+    Fem3dCreateElement create_element = 3;
+    Fem3dDeleteElement delete_element = 4;
+    Fem3dReplaceElement replace_element = 5;
+    Fem3dCreateMaterial create_material = 6;
+    Fem3dDeleteMaterial delete_material = 7;
+    Fem3dReplaceMaterial replace_material = 8;
+    Fem3dChangeMaterial change_material = 9;
+    Fem3dCreateSection create_section = 10;
+    Fem3dDeleteSection delete_section = 11;
+    Fem3dReplaceSection replace_section = 12;
+    Fem3dCreateSupport create_support = 13;
+    Fem3dDeleteSupport delete_support = 14;
+    Fem3dReplaceSupport replace_support = 15;
+    Fem3dCreateSolid create_solid = 16;
+    Fem3dDeleteSolid delete_solid = 17;
+    Fem3dReplaceSolid replace_solid = 18;
+    Fem3dCreateLoadCase create_load_case = 19;
+    Fem3dDeleteLoadCase delete_load_case = 20;
+    Fem3dAddLoad add_load = 21;
+    Fem3dRemoveLoad remove_load = 22;
+    Fem3dChangeLoadCaseSelfWeight change_load_case_self_weight = 23;
+    Fem3dCreateCombination create_combination = 24;
+    Fem3dDeleteCombination delete_combination = 25;
+    Fem3dUpdateAnalysisSettings update_analysis_settings = 26;
+    Fem3dReplaceNode replace_node = 27;
+    Fem3dReplaceLoad replace_load = 28;
+    Fem3dChangeLoadCaseName change_load_case_name = 29;
+    Fem3dReplaceCombination replace_combination = 30;
+    Fem3dMoveSelection move_selection = 31;
+    Fem3dChangeSection change_section = 33;
+    Fem3dChangeNode change_node = 32;
+    Fem3dChangeElement change_element = 36;
+    Fem3dChangeLoad change_load = 37;
+    Fem3dChangeCombinationName change_combination_name = 38;
+    Fem3dChangeCombinationTerm change_combination_term = 39;
+    Fem3dChangeSupport change_support = 35;
+    Fem3dChangeSolid change_solid = 34;
+  }
 }
 
+message Binary64 {
+  fixed64 bits = 1;
+}
+
+message Fem3dCreateNode {
+  semio.s.fem.fem3d.snapshot.FemNode node = 1;
+  optional uint32 index = 2;
+}
+
+message Fem3dDeleteNode {
+  string id = 1;
+}
+
+message Fem3dCreateElement {
+  semio.s.fem.fem3d.snapshot.FemElement element = 1;
+  optional uint32 index = 2;
+}
+
+message Fem3dDeleteElement {
+  string id = 1;
+}
+
+message Fem3dReplaceElement {
+  string id = 1;
+  semio.s.fem.fem3d.snapshot.FemElement new_element = 2;
+}
+
+message Fem3dCreateMaterial {
+  semio.s.fem.fem3d.snapshot.FemMaterial material = 1;
+  optional uint32 index = 2;
+}
+
+message Fem3dDeleteMaterial {
+  string id = 1;
+}
+
+message Fem3dReplaceMaterial {
+  string id = 1;
+  semio.s.fem.fem3d.snapshot.FemMaterial new_material = 2;
+}
+
+message Fem3dChangeMaterial {
+  string id = 1;
+  semio.s.fem.fem3d.diff.Fem3dMaterialPatch patch = 2;
+}
+
+message Fem3dCreateSection {
+  semio.s.fem.fem3d.snapshot.FemSection section = 1;
+  optional uint32 index = 2;
+}
+
+message Fem3dDeleteSection {
+  string id = 1;
+}
+
+message Fem3dReplaceSection {
+  string id = 1;
+  semio.s.fem.fem3d.snapshot.FemSection new_section = 2;
+}
+
+message Fem3dCreateSupport {
+  semio.s.fem.fem3d.snapshot.FemSupport support = 1;
+  optional uint32 index = 2;
+}
+
+message Fem3dDeleteSupport {
+  string id = 1;
+}
+
+message Fem3dReplaceSupport {
+  string id = 1;
+  semio.s.fem.fem3d.snapshot.FemSupport new_support = 2;
+}
+
+message Fem3dCreateSolid {
+  semio.s.fem.fem3d.snapshot.FemSolid solid = 1;
+  optional uint32 index = 2;
+}
+
+message Fem3dDeleteSolid {
+  string id = 1;
+}
+
+message Fem3dReplaceSolid {
+  string id = 1;
+  semio.s.fem.fem3d.snapshot.FemSolid new_solid = 2;
+}
+
+message Fem3dCreateLoadCase {
+  semio.s.fem.fem3d.snapshot.FemLoadCase load_case = 1;
+  optional uint32 index = 2;
+}
+
+message Fem3dDeleteLoadCase {
+  string id = 1;
+}
+
+message Fem3dAddLoad {
+  string case_id = 1;
+  semio.s.fem.fem3d.snapshot.FemLoad load = 2;
+  optional uint32 index = 3;
+}
+
+message Fem3dRemoveLoad {
+  string case_id = 1;
+  string load_id = 2;
+}
+
+message Fem3dChangeLoadCaseSelfWeight {
+  string case_id = 1;
+  bool new_self_weight = 2;
+}
+
+message Fem3dCreateCombination {
+  semio.s.fem.fem3d.snapshot.FemCombination combination = 1;
+  optional uint32 index = 2;
+}
+
+message Fem3dDeleteCombination {
+  string id = 1;
+}
+
+message Fem3dUpdateAnalysisSettings {
+  semio.s.fem.fem3d.snapshot.FemAnalysisSettings settings = 1;
+}
+
+message Fem3dReplaceNode {
+  string id = 1;
+  semio.s.fem.fem3d.snapshot.FemNode new_node = 2;
+}
+
+message Fem3dReplaceLoad {
+  string case_id = 1;
+  string load_id = 2;
+  semio.s.fem.fem3d.snapshot.FemLoad new_load = 3;
+}
+
+message Fem3dChangeLoadCaseName {
+  string case_id = 1;
+  string new_name = 2;
+}
+
+message Fem3dReplaceCombination {
+  string id = 1;
+  semio.s.fem.fem3d.snapshot.FemCombination new_combination = 2;
+}
+
+message Fem3dMoveSelection {
+  repeated string node_ids = 1;
+  repeated string solid_ids = 2;
+  Binary64 pivot_x = 3;
+  Binary64 pivot_y = 4;
+  Binary64 pivot_z = 5;
+  Binary64 dx = 6;
+  Binary64 dy = 7;
+  Binary64 dz = 8;
+  Binary64 axis_x = 9;
+  Binary64 axis_y = 10;
+  Binary64 axis_z = 11;
+  Binary64 angle = 12;
+  Binary64 sx = 13;
+  Binary64 sy = 14;
+  Binary64 sz = 15;
+}
+
+
+message Fem3dChangeNode {
+  string id = 1;
+  semio.s.fem.fem3d.diff.Fem3dNodePatch patch = 2;
+}
+
+message Fem3dChangeSection {
+  string id = 1;
+  semio.s.fem.fem3d.diff.Fem3dSectionPatch patch = 2;
+}
+
+message Fem3dChangeSolid {
+  string id = 1;
+  semio.s.fem.fem3d.diff.Fem3dSolidPatch patch = 2;
+}
+
+message Fem3dChangeSupport {
+  string id = 1;
+  semio.s.fem.fem3d.diff.Fem3dSupportPatch patch = 2;
+}
+
+message Fem3dChangeElement {
+  string id = 1;
+  semio.s.fem.fem3d.diff.Fem3dElementPatch patch = 2;
+}
+
+message Fem3dChangeLoad { string case_id = 1; string id = 2; semio.s.fem.fem3d.diff.Fem3dLoadPatch patch = 3; }
+message Fem3dChangeCombinationName { string id = 1; string name = 2; }
+message Fem3dRemoveCombinationTerm {}
+message Fem3dCombinationFactor { oneof presence { Binary64 value = 1; Fem3dRemoveCombinationTerm null = 2; } }
+message Fem3dChangeCombinationTerm { string id = 1; string case_id = 2; Fem3dCombinationFactor factor = 3; }

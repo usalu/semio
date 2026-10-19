@@ -3867,8 +3867,8 @@
     },
     {
       "id": "actual-quiz-react-.-🎨️.css",
-      "owner": "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript",
-      "name": "@semio-tech/quiz-react",
+      "owner": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "name": "@semio-tech/course-react",
       "subpath": "./🎨️.css",
       "target": "./🎨️.css",
       "accept": true

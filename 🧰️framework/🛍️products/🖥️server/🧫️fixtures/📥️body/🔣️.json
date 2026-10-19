@@ -1,0 +1,1 @@
+{"cases":[{"limit":10,"declared":11,"chunks":["12345","678901"],"read":11},{"limit":10,"declared":21,"chunks":["12345"],"read":0}],"maximumDiscardFactor":2}

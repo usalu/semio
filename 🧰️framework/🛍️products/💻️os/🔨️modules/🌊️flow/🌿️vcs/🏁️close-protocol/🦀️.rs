@@ -9,7 +9,7 @@ impl FlowRetainedVcs {
         let slot=self.slot(handle)?;let operation=self.operations[slot].as_ref().unwrap();
         if operation.retirement.is_some(){return owner_demands(&operation.retirement,copy)}
         let mut demands=FlowVcsCloseDemands{depth:1,..Default::default()};
-        if operation.layout_update.is_none()&&operation.cursor.phase==FlowVcsCursorPhase::Rollback&&operation.cursor.mutated&&!operation.cursor.visibility_published&&!operation.cursor.surface_transferred&&!operation.cursor.history_transferred&&operation.cursor.redo_retired==0{
+        if operation.cursor.phase==FlowVcsCursorPhase::Rollback&&operation.cursor.mutated&&!operation.cursor.visibility_published&&!operation.cursor.surface_transferred&&!operation.cursor.history_transferred&&operation.cursor.redo_retired==0{
             demands.copy_bytes=match operation.cursor.kind{
                 FlowVcsCursorKind::MoveWidget|FlowVcsCursorKind::RemoveWidget if operation.cursor.current!=operation.cursor.origin=>2*size_of::<Widget>(),
                 FlowVcsCursorKind::MoveSynapse|FlowVcsCursorKind::RemoveSynapse if operation.cursor.current!=operation.cursor.origin=>2*size_of::<SynapseSpec>(),
@@ -31,7 +31,7 @@ impl FlowRetainedVcs {
         if !admit_turn(grant.retained,demands)?{return Ok(RetainedCloneStep::Progress(Default::default()))}
         let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demands.copy_bytes,..Default::default()};
         let operation=self.operations[slot].as_mut().unwrap();
-        if let Some(update)=operation.layout_update.take(){retain_owner(&mut operation.retirement,FlowVcsClosingOwner::LayoutUpdate(update));return Ok(RetainedCloneStep::Progress(progress))}
+        
         if operation.cursor.phase == FlowVcsCursorPhase::Rollback {
             if operation.cursor.visibility_published {
                 let document = self.document.as_mut().ok_or(FlowVcsFault::Closed)?;
@@ -168,7 +168,7 @@ impl FlowRetainedVcs {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.closing && self.document.is_none() && self.credits.operations == 0 && self.credits == FlowVcsCredits::default() && self.undo.is_empty() && self.redo.is_empty() && self.retired_actions.is_empty() && self.retired_surfaces.is_empty() && self.retirement.is_none() && self.operations.iter().all(Option::is_none)
+        self.closing && self.document.is_none() && self.credits.operations == 0 && self.credits == FlowVcsCredits::default() && self.undo.is_empty() && self.redo.is_empty() && self.retired_actions.is_empty() && self.retired_surfaces.is_empty() && self.retirement.is_none() && self.operations[0].is_none() && self.operations[1].is_none() && self.operations[2].is_none() && self.operations[3].is_none()
     }
 }
 //#endregion 🌊️RetainedVcs

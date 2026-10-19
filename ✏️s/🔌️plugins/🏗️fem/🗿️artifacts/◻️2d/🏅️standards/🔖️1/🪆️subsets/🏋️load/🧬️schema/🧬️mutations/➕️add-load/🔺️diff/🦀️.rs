@@ -14,10 +14,11 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fe
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dLoadsDelta;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &AddLoad, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
+pub fn diff(payload: &AddLoad, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<Fem2dDiff> {
+    if let Some(rejection) = guards::scoped_identity(&["load", &payload.case_id, load_id(&payload.load)]).or_else(|| guards::load_magnitudes(&payload.load)) { return rejection; }
     let Some(existing) = base.load_cases.iter().find(|case| case.id == payload.case_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Load case \"{}\" does not exist.", payload.case_id), [payload.case_id.clone()]);
     };

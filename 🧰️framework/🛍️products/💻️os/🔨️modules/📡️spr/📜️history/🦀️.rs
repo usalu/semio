@@ -650,14 +650,14 @@ impl<S: PackSink> HistoryAppender<S> where ProtocolError: From<S::Error> {
     pub async fn append_transition(&mut self, transition: &HistoryTransitionRecord) -> Result<u64, ProtocolError> {
         let payload = encode_transition(transition, &mut self.dict).await?;
         flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base).await?;
-        self.writer.write_record(REC_TRANSITION, true, &payload, CodecId(0)).await
+        Ok(self.writer.write_record(REC_TRANSITION, true, &payload, CodecId(0)).await?)
     }
 
     /// 🧩️ Appends the composition overlay record (skippable extension); returns its offset.
     pub async fn append_composition(&mut self, composition: &HistoryComposition) -> Result<u64, ProtocolError> {
         let payload = encode_composition(composition, &mut self.dict).await?;
         flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base).await?;
-        self.writer.write_record(REC_COMPOSITION, false, &payload, CodecId(0)).await
+        Ok(self.writer.write_record(REC_COMPOSITION, false, &payload, CodecId(0)).await?)
     }
 
     /// ⚔️ Appends the log's one conflict record, resolving `Degraded` edit references against
@@ -666,18 +666,18 @@ impl<S: PackSink> HistoryAppender<S> where ProtocolError: From<S::Error> {
         let ordinals = &self.edit_ordinals;
         let payload = encode_conflicts(conflicts, &mut self.dict, |id| ordinals.get(id).copied()).await?;
         flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base).await?;
-        self.writer.write_record(REC_CONFLICT, false, &payload, CodecId(0)).await
+        Ok(self.writer.write_record(REC_CONFLICT, false, &payload, CodecId(0)).await?)
     }
 
     /// 👁 Appends this replica's head. Both fields absent means the canonical trunk tip, and the record is omitted.
     pub async fn append_viewer(&mut self, line: Option<&str>, checkpoint: Option<&str>) -> Result<u64, ProtocolError> {
         let payload = encode_viewer(line, checkpoint, &mut self.dict).await?;
         flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base).await?;
-        self.writer.write_record(REC_VIEWER, false, &payload, CodecId(0)).await
+        Ok(self.writer.write_record(REC_VIEWER, false, &payload, CodecId(0)).await?)
     }
 
     pub async fn commit(&mut self) -> Result<u64, ProtocolError> {
-        self.writer.commit().await
+        Ok(self.writer.commit().await?)
     }
 
     pub async fn into_sink(self) -> S {

@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "Empty Shared Root",
+      "items": 0
+    },
+    {
+      "name": "One Shared Row",
+      "items": 1
+    },
+    {
+      "name": "Large Shared Root",
+      "items": 4096
+    },
+    {
+      "name": "Large Immutable Payload",
+      "items": 65536
+    }
+  ],
+  "expected": {
+    "normalTurns": 2,
+    "rootBirths": 0,
+    "payloadClones": 0,
+    "sourceIdentityPreserved": true,
+    "transferRequiresGrant": true
+  },
+  "deniedAxes": [
+    "items",
+    "copy",
+    "depth"
+  ],
+  "cancelCuts": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "refusalCases": [
+    {
+      "name": "Invalid Original Receipt",
+      "excessCopyBytes": 1,
+      "ready": false,
+      "aliasesAfterCapture": 2,
+      "aliasesAfterClose": 1
+    }
+  ],
+  "composition": {
+    "fields": [
+      "epoch",
+      "primary",
+      "secondary"
+    ],
+    "epoch": 7,
+    "maximumTurns": 128,
+    "payloadClones": 0,
+    "sourceRootIdentityPreserved": true
+  }
+}

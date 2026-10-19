@@ -1,0 +1,76 @@
+# Bun Platform Asset Disposition
+
+The current bootstrap `🛠️tools/🟦️bun/📜️script.ts` imports `manifestSchema` from `./🧬️schema/🔣️.json` and reads `manifestSchema.definitions.Release.const`. The H deletion moved the obsolete loose manifest into this schema-owned constant. The incoming release and every distribution tuple now replace that constant; the loose manifest remains deleted.
+
+```json
+{
+  "version": "1.4.2",
+  "release": "https://github.com/oven-sh/bun/releases/download/bun-v1.4.2",
+  "distributions": [
+    {
+      "platform": "win32",
+      "arch": "x64",
+      "musl": false,
+      "archive": "bun-windows-x64-baseline.zip",
+      "bytes": 39807490,
+      "sha256": "78c221c2376f79731ccf4e4af0b3bb46d81fefa3296c5abee09ad8a1b21e68c6"
+    },
+    {
+      "platform": "win32",
+      "arch": "arm64",
+      "musl": false,
+      "archive": "bun-windows-aarch64.zip",
+      "bytes": 36330062,
+      "sha256": "a7a16b876a305fd1029c66dbd27007b4f6112ae896532f675878731a21e50cfd"
+    },
+    {
+      "platform": "darwin",
+      "arch": "x64",
+      "musl": false,
+      "archive": "bun-darwin-x64-baseline.zip",
+      "bytes": 28440543,
+      "sha256": "bad5bbd6cf14d0980d115f5954c9ff904df619d5e994d2da1ffccd3f316300b0"
+    },
+    {
+      "platform": "darwin",
+      "arch": "arm64",
+      "musl": false,
+      "archive": "bun-darwin-aarch64.zip",
+      "bytes": 25377591,
+      "sha256": "90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f"
+    },
+    {
+      "platform": "linux",
+      "arch": "x64",
+      "musl": false,
+      "archive": "bun-linux-x64-baseline.zip",
+      "bytes": 36646949,
+      "sha256": "c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f"
+    },
+    {
+      "platform": "linux",
+      "arch": "arm64",
+      "musl": false,
+      "archive": "bun-linux-aarch64.zip",
+      "bytes": 36602920,
+      "sha256": "54328bbc2d9c8e0c9f892c544d66c57a83b84139e34909e5ee81758f1ac8fda7"
+    },
+    {
+      "platform": "linux",
+      "arch": "x64",
+      "musl": true,
+      "archive": "bun-linux-x64-musl-baseline.zip",
+      "bytes": 34100976,
+      "sha256": "76e1db84e98f22f78de0a87e309bfbbf297732847f9720db36750646c85c8c18"
+    },
+    {
+      "platform": "linux",
+      "arch": "arm64",
+      "musl": true,
+      "archive": "bun-linux-aarch64-musl.zip",
+      "bytes": 33975245,
+      "sha256": "71760b6c8ea30623b81a4907cb815d48e2ea266f2e73e751534a44a0607950df"
+    }
+  ]
+}
+```

@@ -1,0 +1,117 @@
+{
+  "schema": "tool-job-funded-batch/v1",
+  "cases": [
+    {
+      "id": "none",
+      "owner": "store",
+      "before": "",
+      "after": "",
+      "accepted": true
+    },
+    {
+      "id": "missing-factory",
+      "owner": "store",
+      "before": "pub trait ArtifactStoreOneItemPreparationFactory",
+      "after": "pub trait ForeignFactory",
+      "accepted": false
+    },
+    {
+      "id": "unbounded-replay",
+      "owner": "store",
+      "before": "let item_grant = ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), ..grant };",
+      "after": "replay_mutations(); let item_grant = ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), ..grant };",
+      "accepted": false
+    },
+    {
+      "id": "unquoted-capacity",
+      "owner": "store",
+      "before": "grant.maximum_capacity_bytes<retained_capacity_bytes",
+      "after": "false",
+      "accepted": false
+    },
+    {
+      "id": "copied-original",
+      "owner": "store",
+      "before": "std::mem::take(mutations)",
+      "after": "mutations.clone()",
+      "accepted": false
+    },
+    {
+      "id": "missing-terminal",
+      "owner": "store",
+      "before": "fn terminal_is_empty(",
+      "after": "fn unchecked_terminal(",
+      "accepted": false
+    },
+    {
+      "id": "missing-drop",
+      "owner": "store",
+      "before": "impl<P, Mutation> Drop for ArtifactStoreBatchPublication",
+      "after": "impl<P, Mutation> Other for ArtifactStoreBatchPublication",
+      "accepted": false
+    },
+    {
+      "id": "bulk-close",
+      "owner": "store",
+      "before": "let demand = self.retirement_demands(grant.maximum_copy_bytes)?;",
+      "after": "self.inputs.clear(); let demand = self.retirement_demands(grant.maximum_copy_bytes)?;",
+      "accepted": false
+    },
+    {
+      "id": "missing-advance",
+      "owner": "plugin",
+      "before": "advance_apply_batch",
+      "after": "apply_one",
+      "accepted": false
+    },
+    {
+      "id": "invented-factory",
+      "owner": "plugin",
+      "before": "self.artifact_one_item_factory.as_ref()",
+      "after": "A::build_artifact_store_one_item_preparation_factory()",
+      "accepted": false
+    },
+    {
+      "id": "copied-emit",
+      "owner": "plugin",
+      "before": "&mut emit.artifact_mutations,HistoryLane::Document",
+      "after": "&mut emit.artifact_mutations.clone(),HistoryLane::Document",
+      "accepted": false
+    },
+    {
+      "id": "lost-inverse-order",
+      "owner": "store",
+      "before": "original.inverse.pop().unwrap()",
+      "after": "original.inverse.first().cloned().unwrap()",
+      "accepted": false
+    },
+    {
+      "id": "lost-post-owner",
+      "owner": "store",
+      "before": "stage.post.replace(incoming)",
+      "after": "stage.post.replace(incoming.clone())",
+      "accepted": false
+    },
+    {
+      "id": "unbounded-reserve",
+      "owner": "store",
+      "before": "let item_grant = ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), ..grant };",
+      "after": "cursor.try_reserve_exact(total); let item_grant = ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), ..grant };",
+      "accepted": false
+    },
+    {
+      "id": "unfunded-fold-capacity",
+      "owner": "store",
+      "before": "grant.maximum_capacity_bytes<capacity",
+      "after": "false",
+      "accepted": false
+    },
+    {
+      "id": "lost-actual-receipt",
+      "owner": "plugin",
+      "before": "mounted.publication_ownership_progress=Some((retained,ownership))",
+      "after": "mounted.publication_ownership_progress=None",
+      "accepted": false
+    }
+  ]
+}

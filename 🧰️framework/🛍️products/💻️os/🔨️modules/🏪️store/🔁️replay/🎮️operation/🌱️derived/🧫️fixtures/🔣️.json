@@ -1,0 +1,87 @@
+{
+  "contracts": [
+    "original-issuer",
+    "original-operation-address",
+    "generation-fence",
+    "revision-fence",
+    "one-paid-item",
+    "independent-copy-capacity",
+    "independent-release",
+    "cancel-closes-before-handoff",
+    "original-installed-factory",
+    "no-cold-semantic-fallback",
+    "original-cumulative-receiving-ledger",
+    "original-retirement-only-loan",
+    "external-births-charged-once"
+  ],
+  "cases": [
+    {
+      "name": "provisional-replacement",
+      "base": {
+        "n": 1
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/n",
+          "value": 9
+        }
+      ],
+      "after": {
+        "n": 9
+      },
+      "mode": "provisional",
+      "accepted": true
+    },
+    {
+      "name": "history-replacement",
+      "base": {
+        "n": 1
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/n",
+          "value": 9
+        }
+      ],
+      "after": {
+        "n": 9
+      },
+      "mode": "history",
+      "accepted": true
+    },
+    {
+      "name": "provisional-noop",
+      "base": {
+        "n": 9
+      },
+      "patch": [],
+      "after": {
+        "n": 9
+      },
+      "mode": "provisional",
+      "accepted": true
+    },
+    {
+      "name": "provisional-rejected-original-preserved",
+      "base": {
+        "n": 1
+      },
+      "patch": [],
+      "after": {
+        "n": 1
+      },
+      "mode": "provisional",
+      "accepted": false
+    }
+  ],
+  "independentAxes": {
+    "capacityGrant": 65536,
+    "copyGrant": 4096,
+    "capacityBytes": 8192,
+    "copyBytes": 64,
+    "ownershipCeiling": 65536,
+    "admitted": true
+  }
+}

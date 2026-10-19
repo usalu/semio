@@ -15,16 +15,9 @@ pub fn set_custom_driver(driver_id: impl Into<String>, driver: Option<UiDriver>)
 impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetCustomDriver {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "custom-driver", kind: "set-custom-driver", record: "Set" };
 
-    fn diff(&self, base: &UiPreferences) -> protocol::MutationOutcome<UiPreferencesDiff> {
-        if base.custom_drivers.get(&self.driver_id) == self.driver.as_ref() {
-            return protocol::MutationOutcome::new(UiPreferencesDiff::default()).warning("mutation.no-op", "custom driver already has the requested value.");
-        }
-        protocol::MutationOutcome::new(UiPreferencesDiff { custom_drivers: vec![KeyedEdit::new(self.driver_id.clone(), self.driver.clone())], ..UiPreferencesDiff::default() })
-    }
 
-    fn inverse(&self, base: &UiPreferences) -> Result<Vec<UiPreferencesConfigMutation>, semio_framework_value::ValueError> {
-        Ok(vec![UiPreferencesConfigMutation::SetCustomDriver(Self { driver_id: self.driver_id.clone(), driver: base.custom_drivers.get(&self.driver_id).cloned() })])
-    }
+
+
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set custom driver {:?}", self.driver_id), &format!("Eigener Treiber {:?} setzen", self.driver_id))
@@ -32,5 +25,17 @@ impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetC
 
     fn target(&self) -> Vec<String> {
         vec!["custom-drivers".to_string(), self.driver_id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<UiPreferences, UiPreferencesConfigMutation> for SetCustomDriver {
+    fn diff(&self, base: &UiPreferences) -> protocol::MutationOutcome<UiPreferencesDiff> {
+        if base.custom_drivers.get(&self.driver_id) == self.driver.as_ref() {
+            return protocol::MutationOutcome::new(UiPreferencesDiff::default()).warning("mutation.no-op", "custom driver already has the requested value.");
+        }
+        protocol::MutationOutcome::new(UiPreferencesDiff { custom_drivers: vec![KeyedEdit::new(self.driver_id.clone(), self.driver.clone())], ..UiPreferencesDiff::default() })
+    }
+    fn inverse(&self, base: &UiPreferences) -> Result<Vec<UiPreferencesConfigMutation>, semio_framework_value::ValueError> {
+        Ok(vec![UiPreferencesConfigMutation::SetCustomDriver(Self { driver_id: self.driver_id.clone(), driver: base.custom_drivers.get(&self.driver_id).cloned() })])
     }
 }

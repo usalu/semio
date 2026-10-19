@@ -1,0 +1,135 @@
+{
+  "bodyBytes": 257,
+  "cancelCuts": [
+    0,
+    1,
+    2,
+    4,
+    8,
+    16,
+    32,
+    64
+  ],
+  "cases": [
+    {
+      "id": "same",
+      "left": {
+        "artifactId": "🧱shape",
+        "dialect": {
+          "artifactKind": "s.stdio.svg",
+          "standard": "1.1",
+          "subset": "*"
+        }
+      },
+      "right": {
+        "artifactId": "🧱shape",
+        "dialect": {
+          "artifactKind": "s.stdio.svg",
+          "standard": "1.1",
+          "subset": "*"
+        }
+      },
+      "equal": true
+    },
+    {
+      "id": "artifactId",
+      "left": {
+        "artifactId": "🧱shape",
+        "dialect": {
+          "artifactKind": "s.stdio.svg",
+          "standard": "1.1",
+          "subset": "*"
+        }
+      },
+      "right": {
+        "artifactId": "🧱shape2",
+        "dialect": {
+          "artifactKind": "s.stdio.svg",
+          "standard": "1.1",
+          "subset": "*"
+        }
+      },
+      "equal": false
+    },
+    {
+      "id": "artifactKind",
+      "left": {
+        "artifactId": "🧱shape",
+        "dialect": {
+          "artifactKind": "s.stdio.svg",
+          "standard": "1.1",
+          "subset": "*"
+        }
+      },
+      "right": {
+        "artifactId": "🧱shape",
+        "dialect": {
+          "artifactKind": "s.stdio.svg2",
+          "standard": "1.1",
+          "subset": "*"
+        }
+      },
+      "equal": false
+    },
+    {
+      "id": "standard",
+      "left": {
+        "artifactId": "🧱shape",
+        "dialect": {
+          "artifactKind": "s.stdio.svg",
+          "standard": "1.1",
+          "subset": "*"
+        }
+      },
+      "right": {
+        "artifactId": "🧱shape",
+        "dialect": {
+          "artifactKind": "s.stdio.svg",
+          "standard": "1.12",
+          "subset": "*"
+        }
+      },
+      "equal": false
+    },
+    {
+      "id": "subset",
+      "left": {
+        "artifactId": "🧱shape",
+        "dialect": {
+          "artifactKind": "s.stdio.svg",
+          "standard": "1.1",
+          "subset": "*"
+        }
+      },
+      "right": {
+        "artifactId": "🧱shape",
+        "dialect": {
+          "artifactKind": "s.stdio.svg",
+          "standard": "1.1",
+          "subset": "*2"
+        }
+      },
+      "equal": false
+    },
+    {
+      "id": "wide",
+      "left": {
+        "artifactId": "🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a",
+        "dialect": {
+          "artifactKind": "s.stdio.svg",
+          "standard": "1.1",
+          "subset": "*"
+        }
+      },
+      "right": {
+        "artifactId": "🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a🧱a",
+        "dialect": {
+          "artifactKind": "s.stdio.svg",
+          "standard": "1.1",
+          "subset": "*"
+        }
+      },
+      "equal": true
+    }
+  ]
+}

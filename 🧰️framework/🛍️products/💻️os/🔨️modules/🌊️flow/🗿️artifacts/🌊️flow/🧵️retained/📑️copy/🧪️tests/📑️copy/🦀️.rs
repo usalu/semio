@@ -134,6 +134,7 @@ fn flow_selected_copy_nonterminal_drop_is_guarded_without_destroying_root() {
 fn flow_selected_copy_rejects_actual_root_overgrant_and_keeps_owner_for_recovery() {
     struct Adversary {inner:Box<dyn ErasedSnapshotRetirement>,fault:bool}
     impl ErasedSnapshotRetirement for Adversary {
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.inner.next_demand(body) }
         fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {if self.fault{self.fault=false;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:grant.maximum_items+1,copied_bytes:grant.maximum_copy_bytes+1,..Default::default()}));}self.inner.close_step(grant)}
         fn terminal_is_empty(&self)->bool {self.inner.terminal_is_empty()}
         fn next_copy_byte_demand(&self)->Result<usize,ValueError> {self.inner.next_copy_byte_demand()}
@@ -242,6 +243,7 @@ impl semio_framework_value::FactoryRetirementTicket for RefusedTicket{
  fn preparation_is_complete(&self)->bool{self.prepared}
 }
 impl ErasedSnapshotRetirement for RefusedTicket{
+    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand {release_bytes:if self.prepared&&self.original.as_ref().is_some_and(|original|Arc::strong_count(original)==1){refused_factory_extent()}else{0},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
  fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original partial ticket close needs depth"))}
   if !self.prepared{let step=semio_framework_value::FactoryRetirementTicket::prepare_step(self,grant)?;return Ok(RetainedCloneStep::Progress(step.progress()))}

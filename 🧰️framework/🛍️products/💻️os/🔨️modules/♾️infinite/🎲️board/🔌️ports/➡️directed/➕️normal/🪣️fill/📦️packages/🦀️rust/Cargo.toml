@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 testkit = ["semio-framework-os-infinite-board-schema/testkit", "semio-framework-os-infinite-board-engine/testkit", "semio-framework-os-infinite-board-normal-model/testkit", "semio-framework-os-infinite-board-normal-scene/testkit", "semio-framework-os-infinite-board-normal-gestures/testkit"]
 
 [dependencies]
+semio-framework-action-bus = { path = "../../../../../../../../../../../🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-canvas = { path = "../../../../../../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }

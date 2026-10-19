@@ -1,5 +1,5 @@
-//! 📄️ Puzzle 5d play app panel — the document tree: parts (with their grips nested), target volumes and
 //! fasteners,
+//! 📄️ Puzzle 5d play app panel — the document tree: parts (with their grips nested), target volumes and
 //! each row a pick target of the `vortex` interaction domain (ticket
 //! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), so the framework paints selected/hovered
 //! presence after render.

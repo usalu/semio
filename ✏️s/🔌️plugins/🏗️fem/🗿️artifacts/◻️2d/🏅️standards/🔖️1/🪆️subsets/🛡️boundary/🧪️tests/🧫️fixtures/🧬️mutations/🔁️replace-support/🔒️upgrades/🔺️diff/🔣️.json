@@ -5,14 +5,13 @@
   "materials": null,
   "sections": null,
   "supports": {
-    "inserted": [],
     "removed": [],
+    "inserted": [],
     "moved": [],
     "modified": [
       {
         "id": "s2",
         "patch": {
-          "id": "s2",
           "nodeId": "n2",
           "fixed": [
             "Tx",

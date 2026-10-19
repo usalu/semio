@@ -1,0 +1,45 @@
+{
+  "before": {
+    "nodes": [{"id":"n1","x":0.0,"y":0.0}],
+    "elements": [],
+    "regions": [{"id":"r1","name":"Slab","outline":[[0.0,0.0],[4.0,0.0],[4.0,2.0],[0.0,2.0]],"holes":[],"thickness":0.02,"materialId":"steel","meshSize":1.0}],
+    "materials": [{"id":"steel","name":"Steel","e":210000000000.0,"nu":0.3,"rho":7850.0}],
+    "sections": [],
+    "supports": [],
+    "loadCases": [],
+    "combinations": [],
+    "analysis": {"modalCount":3,"bucklingCount":3,"deformationScale":50.0}
+  },
+  "mine": {"mutation":"moveSelection","nodeIds":["n1"],"regionIds":["r1"],"pivotX":0.0,"pivotY":0.0,"dx":2.0,"dy":0.0,"angle":0.0,"sx":1.0,"sy":1.0},
+  "collaborator": [
+    {"mutation":"changeNode","id":"n1","patch":{"y":3.0}},
+    {"mutation":"changeRegion","id":"r1","patch":{"name":"Collaborative slab","thickness":0.04,"meshSize":0.5,"holes":[[[3.0,0.5],[4.0,0.5],[4.0,1.5],[3.0,1.5]]]}}
+  ],
+  "inverse": [
+    {"mutation":"changeRegion","id":"r1","patch":{"outline":[[0.0,0.0],[4.0,0.0],[4.0,2.0],[0.0,2.0]]}},
+    {"mutation":"changeNode","id":"n1","patch":{"x":0.0}}
+  ],
+  "expected": {
+    "nodes": [{"id":"n1","x":0.0,"y":3.0}],
+    "elements": [],
+    "regions": [{"id":"r1","name":"Collaborative slab","outline":[[0.0,0.0],[4.0,0.0],[4.0,2.0],[0.0,2.0]],"holes":[[[3.0,0.5],[4.0,0.5],[4.0,1.5],[3.0,1.5]]],"thickness":0.04,"materialId":"steel","meshSize":0.5}],
+    "materials": [{"id":"steel","name":"Steel","e":210000000000.0,"nu":0.3,"rho":7850.0}],
+    "sections": [],
+    "supports": [],
+    "loadCases": [],
+    "combinations": [],
+    "analysis": {"modalCount":3,"bucklingCount":3,"deformationScale":50.0}
+  },
+  "overflow": {
+    "nodeX":1.7976931348623157e308,
+    "mutation":{"mutation":"moveSelection","nodeIds":["n1"],"regionIds":["r1"],"pivotX":0.0,"pivotY":0.0,"dx":0.0,"dy":0.0,"angle":0.0,"sx":2.0,"sy":1.0},
+    "expectedCode":"mutation.invariant"
+  },
+  "oracle": [
+    {"pointer":"/nodes/0/y","value":3.0},
+    {"pointer":"/regions/0/name","value":"Collaborative slab"},
+    {"pointer":"/regions/0/thickness","value":0.04},
+    {"pointer":"/regions/0/meshSize","value":0.5},
+    {"pointer":"/regions/0/holes","value":[[[3.0,0.5],[4.0,0.5],[4.0,1.5],[3.0,1.5]]]}
+  ]
+}

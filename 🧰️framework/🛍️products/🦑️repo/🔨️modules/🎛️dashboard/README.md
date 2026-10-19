@@ -2,17 +2,24 @@
 
 The native Rust developer control plane discovers workspace commands and manages their terminal
 sessions through one workspace daemon. It owns startup, preferences, command selection, output,
-process lifecycle and reconnect. It works without an editor.
+process lifecycle and reconnect. It works without an editor. A ready task offers **Open ready address**
+in its overview row and output context menu; `Ctrl+B u` opens the verified URL and `Ctrl+B U` cancels
+opening while the task keeps running. Both bindings are customizable. The opener runs outside the
+view loop with a bounded, cancellable helper. `SEMIO_DASHBOARD_URL_OPENER` optionally selects a JSON
+argument vector to which the exact ready URL is appended.
 
 ## 🎛️ Developer Control Plane
 
 The dashboard is the only control plane for developers, editors and agents. Everything runnable is a
 registry command (below); the interactive view and the command line start commands the same way,
-through the same workspace daemon, so a task started in one is the task the other shows. Editor launch
-configurations select the same declared commands.
+through the same workspace daemon, so a task started in one is the task the other shows. Choose **New Task**
+to select a declared command, fill its typed form and inspect the preview before starting.
 
 Start with `bun repo run @semio-tech/repo-dashboard-rs:run --output=stream` (the root script is the build runner bootstrap; it runs the installed native
-executable `semio`). The first start builds and installs the executable once. Installation builds and
+executable `semio`). Commands, typed parameters, arguments, environment, output, progress and
+cancellation are controlled through the dashboard. No IDE workspace, solution, task, launch or IDE MCP configuration is generated or required.
+Headless agent client files are derived from registered dashboard declarations by
+`workspace:agents-write`. The first start builds and installs the executable once. Installation builds and
 publishes an immutable executable with visible progress and cancellation (`Ctrl+C`), and records beside it
 a digest of the sources it was built from: the names, sizes and modification times of the files below the
 dashboard module and the modules of every path dependency of its crate (tests, fixtures, build output and
@@ -33,6 +40,63 @@ and daemon connection run in the background. Choose New Task and type search ter
 dev server, build, test, renderer or example directly. Settings are optional and persistent.
 A selection made while the workspace daemon connects remains pending and can be cancelled with
 `Ctrl+B c`; at most 128 starts can wait. The known catalog and full discovery run after the first frame.
+
+### 🧑‍💻 Daily Work
+
+Choose **New Task** (`Ctrl+B n`), search the words below, select the command and
+complete its form. Choose **Start** after checking the preview. The same form
+accepts extra arguments and environment values; recurring operations belong in
+an owner target or typed dashboard declaration.
+
+| Work | Search or command | Next action |
+| --- | --- | --- |
+| Prepare the checkout | `workspace:setup` | Start the setup task; read progress in its output. For native toolchain repair choose `workspace:setup-native`. |
+| Inspect build commands | `tool:workspace/build-help` | Read the current runner's help in retained task output. |
+| Test affected projects | `tool:workspace/build-affected` | Choose target names, backend and optional prototype/release configuration. |
+| Test a project | `test` plus the owner name | Select `<project>:test`; choose the test level in the form. `workspace:test` runs the workspace suite. |
+| Test one Bun file | `tool:workspace/bun-test` | Choose an owner or search source suggestions; selecting a file fills its current owner. |
+| Check one TypeScript project | `@semio-tech/repo-lib:typecheck-project` | Select an authored configuration and diagnostic detail. The current compiler owner manages state, progress and cancellation. |
+| Check, lint and format | `workspace:verify`, `workspace:lint`, `workspace:format` | Choose the check when offered, then inspect the exit code and output. Search `check` or `typecheck` plus the owner for scoped checks. |
+| Build and publish | `workspace:build`, `workspace:publish` or `build` plus the owner | Choose the build mode and scope offered by the form; output identifies the artifacts. |
+| Serve and preview | `playground:s`, `os-hub:dev`, `workspace:dev-storybook` or `dev` plus the owner | Choose renderer/example/user slot when offered; wait for readiness, then choose **Open ready address** (`Ctrl+B u`). |
+| Inspect a failure | **Task overview** (`Ctrl+B h`) | Select the task to see its status, exit code and retained output. Restore a hidden output view with `Ctrl+B s`. |
+| Retry or cancel | Selected task menu | **Restart** (`Ctrl+B r`), **Stop** (`Ctrl+B c`) or **Kill** (`Ctrl+B k`) controls the task and descendants. Closing its view keeps it running. |
+| Debug interactively | `@semio-tech/repo-developer-tools:debug` | Check `debuggers` for installed tools, then select Node.js Inspector, Python Pdb, GDB or LLDB, a workspace program, working directory and literal program argument list. Toggle task input with `Ctrl+B t` to set breakpoints and step; stop or restart with the task menu. Node uses a fresh local inspector port. Windows GDB currently accepts ASCII target and working-directory paths; check LLDB installation for Unicode native targets. |
+| Open code at a line | `@semio-tech/repo-developer-tools:open-source` | Fill in file, optional line and installed editor; edit the source, then return to the task controls. |
+| Inspect repository changes | `@semio-tech/repo-developer-tools:git-status`, `git-diff`, `git-history` | Choose path, change area or revision in the form; staged diffs take one base revision. |
+| Inspect a revision or line history | `@semio-tech/repo-developer-tools:git-show`, `@semio-tech/repo-developer-tools:git-blame` | For Show choose one revision, path and summary/patch view. For Blame choose file, optional revision, starting line and up to 500 lines. |
+| Manage tickets and goals | `repo` plus `ticket`, `goal`, `analyze`, `tree` or `statute` | Select the domain action, fill in its typed parameters and confirm any state-changing action. |
+| Start developer tools | `tool` plus `mcp`, `storybook`, or the tool name | Select the registered tool; readiness and process controls appear in its task. |
+| Run several targets | `tool:workspace/run-targets` | Select target names, project names or patterns, concurrency and cache. |
+| Run a scoped authored operation | `tool:workspace/run-script` | Search canonical script suggestions and inspect the selected owner and working directory; override the directory when the operation requires it. Put command words in **Arguments**. |
+
+The task overview and context menus offer these controls without memorizing keys.
+Settings (`Ctrl+B p`) changes language, appearance and bindings. English and
+German labels are available throughout. A detached view reconnects to the same
+running tasks on the next dashboard start. For automation, `semio tasks`,
+`semio logs <task> --follow`, `semio restart <task>` and `semio stop <task>` use
+the same handles and output as those controls.
+
+### 🪟️ Window System
+
+Drag a tab to the left or right edge for side-by-side windows, or to the top or bottom edge for stacked
+windows. Drop in the center or on another group's tab strip to join its tabs. A tinted outline previews
+the final rectangle, including space reclaimed from the old group; release commits the arrangement.
+Drag tabs along their strip to reorder them and drag dividers to resize adjacent windows. Splits can nest
+in either direction, and each split retains its own tab group. Escape, focus loss, terminal resize and
+release outside a window cancel a pending docking gesture. Rearranging and closing views preserve running
+tasks and terminal output; layouts belong to each local view.
+
+The prefix defaults to `Ctrl+B`. After it, `Ctrl+Left/Right/Up/Down` moves the current tab beside the next
+window, `m` joins that window's tabs, and `Shift+Left/Right` changes tab order. Existing `|` / `v` and `-`
+create splits, `+` / `_` resize, `z` zooms or restores, `Tab` / `Shift+Tab` cycles focus and `Ctrl+W` closes a
+view. Every action is customizable and listed in English and German keyboard help.
+
+The docking command is schema-defined in `🧬️schema/🪟️windows/🔣️.json`. The shared TUI layout owns atomic
+docking, topology normalization, weights and geometry; its engine owns pointer capture, hit testing and
+preview painting. The dashboard routes the same commands for pointer and keyboard input. Run the
+**test windows** registry target for contract and native interaction tests, and **test journeys** for the
+independent pseudo-terminal screen checks.
 
 ### 🎮️ The Command Registry
 
@@ -134,21 +198,19 @@ names the problem on stderr.
 `semio --help` prints the usage with every flag (`semio dashboard --help` the keyboard help). Semio has no other
 verbs and forwards nothing to another script: every task of the monorepo is a registry command. The routes of
 the root script are targets of the root project, so `semio run workspace:test`, `semio run workspace:verify
---param check=taxonomy`, `semio run workspace:dev -- storybook`, `semio run workspace:os -- run <bundle>.studio`,
+--param check=taxonomy`, `semio run workspace:dev-storybook`, `semio run workspace:os -- run <bundle>.studio`,
 `semio run workspace:semio -- inspect <path>` and `semio run workspace:examples -- list` start them as daemon
-tasks (`semio commands workspace` lists them). Git workflow routes (`commit`, `micro-commit`) are the
-implementation layer of the agent skills and are run by them as `bun ./📜️script.ts …`. Any other verb is an
+tasks (`semio commands workspace` lists them). Agent skills use registered dashboard commands for authored operations. Any other verb is an
 error that prints the usage and exits with status 2.
 
 Agents and editors start servers with `bun repo run @semio-tech/repo-dashboard-rs:run --output=stream -- run <id> --detach --wait-ready`, read the printed
 address and attach browser previews to it; find ids with `bun repo run @semio-tech/repo-dashboard-rs:run --output=stream -- commands <words> --json`.
 
-### 🧩 VSCode Launch Projection
-
-Dashboard ticket declarations also own their VSCode controls. Run the normal build target
-`bun repo run @semio-tech/repo-dashboard-rs:launch -- generate YY/MM/DD/TICKET`, or use `check` to refuse a stale projection and `test` to run the independent projection oracle. Generation reads the ticket's current `🎮️commands.json`, emits English and German controls grouped by verb, and replaces only that ticket's projected entries. Other debug configurations and inputs stay in place.
-
-Each control runs its safe registry identity through the same dashboard run route. Text and choice inputs enter dedicated environment variables and then native argument arrays; their contents never enter a shell command. Native registry admission still controls parameter choices, readiness, dependencies and cancellation. The projection does not read the retired launch seed and has no artifact-codec receipt dependency.
+The bootstrap preserves the original process envelope through native preparation and cancels its build
+subprocess tree on interruption or deadline expiry. Cancelling a view ends that view and retains the
+workspace daemon and its tasks. A separately supervised task gets a new invocation
+for its actual command: the view's script envelope, capabilities and policy are discarded from inherited
+environment, while explicit task environment remains authoritative.
 
 ### 🚀 The Launcher
 
@@ -305,17 +367,17 @@ workspace `./🧪️tests/🧫️fixtures/🎮️registry/🏗️workspace.json`
 written from the declaration rules, validates declarations and outputs with Ajv against the registry schema,
 and checks the XXH3 vectors of the graph-reuse decision against Bun's own hash:
 `bun repo run @semio-tech/repo-dashboard-rs:test` builds the debug binary and runs it. The scenarios of
-`./🧪️tests/🧫️fixtures/🎮️registry/🥒️.feature` are mapped to Rust tests of `🎮️registry`.
+`🧫️fixtures/🎮️registry/🥒️.feature` are mapped to Rust tests of `🎮️registry`.
 
 `🌀️control-plane` defines language-neutral lifecycle scenarios and protocol vectors. The owned
 Rust codec and the existing Ajv library validate the same vectors. The quick suite runs actual
-Bun PTYs, build-runner server/build/test targets, output replay, cancellation, restart, process-tree
+Bun PTYs, Nx server/build/test targets, output replay, cancellation, restart, process-tree
 termination, singleton enforcement and reattachment: `bun repo run @semio-tech/repo-dashboard-rs:test -- quick`.
 
 `🧊️execution` pins the native launch vectors of `./🧪️tests/🧫️fixtures/🧊️execution`, the build-runner scheduling of
 `run` and `install`, the immutable installation that keeps a running executable's bytes while
 a new build is published, and the source digest that decides whether an installation is stale (the fixture names the
-files that must and must not change it): `bun ./📜️script.ts test execution` in `📦️packages/🦀️rust`.
+files that must and must not change it): choose `@semio-tech/repo-dashboard-rs:test-execution` in New Task.
 
 After installing, set `SEMIO_TEST_CLI` to the printed native executable and run the dashboard
 test target with `--args='-- --include-ignored --nocapture'` to include native startup,

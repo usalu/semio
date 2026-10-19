@@ -21,6 +21,8 @@ import {
   followStep,
   glideOffset,
   inWindow,
+  layeredCardConcealed,
+  layeredCardTinted,
   nearSquareGrid,
   nearestCell,
   neighbourWarmBoot,
@@ -48,6 +50,7 @@ import {
   warmDelay,
   windowAround,
   type LayeredLifecycle,
+  type LayeredRevealSource,
 } from "../../🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -389,6 +392,21 @@ describe("🥞️ layered overview geometry", () => {
     let calls = 0;
     scheduleIdle(() => (calls += 1), 10, { setTimeout: (callback) => (callback(), 1), clearTimeout: () => undefined });
     expect(calls).toBe(1);
+  });
+
+  it("conceals every other card on a pointer hover and none on keyboard focus", () => {
+    const ids = ["learner", "physics", "intro"];
+    const sources: readonly (LayeredRevealSource | null)[] = ["pointer", "focus", null];
+    for (const revealedId of [null, ...ids]) {
+      for (const source of sources) {
+        const concealed = ids.filter((id) => layeredCardConcealed(id, revealedId, source));
+        const wanted = source === "pointer" && revealedId !== null ? ids.filter((id) => id !== revealedId) : [];
+        expect(concealed).toEqual(wanted);
+        const tinted = ids.filter((id) => layeredCardTinted(id, revealedId, source));
+        const tint = source === "pointer" && revealedId !== null ? [revealedId] : [];
+        expect(tinted).toEqual(tint);
+      }
+    }
   });
 });
 // #endregion 🥞️LayeredOverviewGeometry

@@ -5,7 +5,7 @@ use super::*;
 impl<P, M> RetainedConfigStoreHydration<P, M>
 where
     P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
+    M: ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     pub fn retirement_demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
@@ -20,7 +20,7 @@ where
             Ok(demand)
         }
         if let Some(owner) = self.active.as_ref() { return semio_framework_os_store_read::artifact_retirement_box_demands(owner, copy); }
-        if let Some(owner) = self.fold_job.as_ref() { return child(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(copy)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()? }); }
+        if let Some(owner) = self.fold_job.as_ref() { return child(owner.next_demand(copy)?); }
         if let Some(value) = self.normalized_transitions.as_ref() { return controlled(value); }
         if let Some(value) = self.fold.as_ref() { return controlled(value); }
         if let Some(value) = self.fold_auxiliary.as_ref() { return controlled(value); }
@@ -62,10 +62,10 @@ where
     }
 }
 
-impl<P, M> ErasedSnapshotRetirement for RetainedConfigStoreHydration<P, M>
+impl<P, M> ErasedSnapshotRetirement for ReferenceConfigStoreHydration<P, M>
 where
     P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
+    M: ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.retirement_demands(0).map(|demand| demand.copy_bytes) }
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { self.retirement_demands(copy).map(|demand| demand.capacity_bytes) }
@@ -285,7 +285,7 @@ where
     }
 }
 
-impl<P, M> Drop for RetainedConfigStoreHydration<P, M>
+impl<P, M> Drop for ReferenceConfigStoreHydration<P, M>
 where
     P: Clone + ToValue + FromValue,
     M: Clone + ToValue + FromValue + Mutation<P>,
@@ -295,10 +295,10 @@ where
     }
 }
 
-impl<P, M> RetainedConfigStoreHydration<P, M>
+impl<P, M> ReferenceConfigStoreHydration<P, M>
 where
     P: Clone + ToValue + FromValue,
-    M: Clone + ToValue + FromValue + Mutation<P>,
+    M: ToValue + FromValue + Mutation<P>,
 {
     pub fn terminal_is_empty_unbounded(&self) -> bool {
         self.terminal

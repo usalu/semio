@@ -298,7 +298,7 @@ async fn a_history_transition_naming_another_actors_operation_is_refused_before_
     let transition = |revert: bool, names: &[&str], actor: &str, at: u64| {
         let mutation_ids = names.iter().map(|name| protocol::MutationId((*name).to_string())).collect();
         let transition = if revert { protocol::HistoryTransition::Revert { mutation_ids } } else { protocol::HistoryTransition::Reinstate { mutation_ids } };
-        protocol::history_transition_envelope(&transition, &document, &protocol::ActorId(actor.to_string()), Vec::new(), protocol::HybridLogicalTimestamp::new(at, 0))
+        protocol::history_transition_envelope(&transition, &document, &protocol::ActorId(actor.to_string().into()), Vec::new(), protocol::HybridLogicalTimestamp::new(at, 0))
     };
     let cases: Vec<(&str, Vec<protocol::MutationEnvelope>, bool)> = vec![
         ("A writes", vec![write("a1", "actor-a", 1)], true),

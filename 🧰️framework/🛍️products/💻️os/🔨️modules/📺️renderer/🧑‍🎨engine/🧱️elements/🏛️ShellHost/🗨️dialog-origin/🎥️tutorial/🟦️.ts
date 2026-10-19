@@ -1,3 +1,4 @@
+import type { MutationEnvelope } from "@semio-tech/framework-replication";
 import type { ShellDialogOriginV1 } from "../🟦️.ts";
 
 type TutorialDriveJobV1 = Readonly<{ owns: () => boolean; apply: (token: number) => Promise<void>; resolve: () => void; reject: (error: unknown) => void }>;
@@ -88,18 +89,60 @@ export async function runPausedTutorialSeekV1(
   });
 }
 
-export type TutorialSnapshotV1 = Readonly<{ pack: Uint8Array; spr: Uint8Array }>;
-export type TutorialDocumentPortV1<S = TutorialSnapshotV1> = Readonly<{
-  read: () => Promise<S | null>;
+/** ↩️ The concrete inverse of one document step a shell tutorial applied: the recorded inverse mutation envelopes of an edit, the
+ * history action (undo, redo, checkout of the previous checkpoint, switch back to the previous alternative) that undoes a history
+ * step, or `retained` for a step the append-only history keeps by design: a committed checkpoint changes no document content and
+ * the history has no command that withdraws it, so its replay is the empty inverse. */
+export type TutorialInverseV1 =
+  | Readonly<{ kind: "mutations"; envelopes: readonly MutationEnvelope[] }>
+  | Readonly<{ kind: "history"; action: "undo" | "redo" | "checkoutCheckpoint" | "switchAlternative"; args?: Readonly<Record<string, unknown>> }>
+  | Readonly<{ kind: "retained"; step: "checkpoint" }>;
+
+/** 🧭️ What the history already named before a history step ran: the checkpoint the document stood on and the alternative it followed. */
+export type TutorialHistoryStandV1 = Readonly<{ checkpointId?: string; alternativeId?: string }>;
+
+/** ↩️ The journal outcome of one forward history step: its concrete inverse, or the reason the history names no state to return to. A
+ * checkpoint commit is retained by design; a checkout returns to the checkpoint the document stood on; an alternative switch returns to
+ * the alternative it followed, and switching to the alternative the document already follows changes nothing. */
+export function tutorialHistoryStepInverseV1(
+  step: Readonly<{ kind: "checkpoint" } | { kind: "checkoutCheckpoint"; checkpointId: string } | { kind: "switchAlternative"; alternativeId: string }>,
+  before: TutorialHistoryStandV1,
+): Readonly<{ inverse: TutorialInverseV1 } | { unrevertable: string } | { unchanged: true }> {
+  if (step.kind === "checkpoint") return { inverse: { kind: "retained", step: "checkpoint" } };
+  if (step.kind === "checkoutCheckpoint") {
+    return before.checkpointId === undefined
+      ? { unrevertable: `checkoutCheckpoint ${step.checkpointId}: no checkpoint to return to` }
+      : { inverse: { kind: "history", action: "checkoutCheckpoint", args: { checkpointId: before.checkpointId } } };
+  }
+  if (before.alternativeId === undefined) return { unrevertable: `switchAlternative ${step.alternativeId}: no alternative to return to` };
+  if (before.alternativeId === step.alternativeId) return { unchanged: true };
+  return { inverse: { kind: "history", action: "switchAlternative", args: { alternativeId: before.alternativeId } } };
+}
+
+/** 🧾️ One document step a run applied and the concrete inverse that undoes it: `step` is the step's own identity (the tutorial's
+ * document event), `forward` the direction it was applied in, `inverse` what undoes it. Applying the opposite direction of the same
+ * step cancels the entry instead of stacking a second one. */
+export type TutorialJournalEntryV1<I> = Readonly<{ step: object; forward: boolean; inverse: I }>;
+
+/** 🔌️ What a run needs from its document: to wait for admitted writes, to replay one recorded inverse, and to hydrate the
+ * surfaces once the replay ended. `settle` also receives the reasons of the steps the run applied but could not journal an inverse
+ * for (see {@link OwnedTutorialRunV1.recordUnrevertable}), so the shell can say what a stop left behind. */
+export type TutorialDocumentPortV1<I> = Readonly<{
   drain: () => Promise<void>;
-  restore: (snapshot: S) => Promise<void>;
+  revert: (inverse: I) => Promise<void>;
+  settle: (unreverted: readonly string[]) => Promise<void>;
 }>;
 
-/** 🎬️ Ephemeral run ownership keeps delayed snapshots and restores on their original document port. */
-export class OwnedTutorialRunV1<S = TutorialSnapshotV1> {
+/** 🎬️ Ephemeral run ownership. A run never captures the document: it journals the concrete inverse of every document step it
+ * applies, and stopping replays those inverses last to first through the document's own mutation path — a restore of a captured
+ * archive is a load, never a revert. A step undone by its own opposite direction (a scrub forward and back) leaves no entry. A
+ * step still in flight when the run stops journals itself before the replay starts: stopping first waits for admitted writes. */
+export class OwnedTutorialRunV1<I> {
   #closed = false;
   #ready = false;
-  #snapshot: S | null = null;
+  #draining = false;
+  #journal: TutorialJournalEntryV1<I>[] = [];
+  #unreverted: string[] = [];
   #starting: Promise<boolean> | null = null;
   #stopping: Promise<void> | null = null;
 
@@ -107,35 +150,58 @@ export class OwnedTutorialRunV1<S = TutorialSnapshotV1> {
     readonly tutorialId: string,
     readonly origin: ShellDialogOriginV1,
     private readonly owns: () => boolean,
-    private readonly port: TutorialDocumentPortV1<S>,
+    private readonly port: TutorialDocumentPortV1<I>,
   ) {}
 
   get ready(): boolean { return this.#ready && this.isCurrent(); }
+
+  get pending(): number { return this.#journal.length; }
+
+  get unreverted(): readonly string[] { return this.#unreverted; }
 
   isCurrent(): boolean { return !this.#closed && this.owns(); }
 
   start(): Promise<boolean> {
     if (this.#starting !== null) return this.#starting;
-    this.#starting = this.readSnapshot();
+    const current = this.isCurrent();
+    this.#ready = current;
+    this.#starting = Promise.resolve(current);
     return this.#starting;
   }
 
-  private async readSnapshot(): Promise<boolean> {
-    if (!this.isCurrent()) return false;
-    const snapshot = await this.port.read();
-    if (!this.isCurrent()) return false;
-    this.#snapshot = snapshot;
-    this.#ready = true;
-    return true;
+  record(step: object, forward: boolean, inverse: I): void {
+    if (!(this.#draining ? this.owns() : this.#ready && this.isCurrent())) return;
+    const last = this.#journal.at(-1);
+    if (last !== undefined && last.step === step && last.forward !== forward) {
+      this.#journal.pop();
+      return;
+    }
+    this.#journal.push({ step, forward, inverse });
+  }
+
+  /** 🚫️ Notes a document step the run applied whose concrete inverse is unknown (e.g. a checkout from a state that names no
+   * checkpoint to return to): stopping cannot replay it, so it is reported to `settle` instead of being silently dropped. */
+  recordUnrevertable(reason: string): void {
+    if (!(this.#draining ? this.owns() : this.#ready && this.isCurrent())) return;
+    this.#unreverted.push(reason);
   }
 
   stop(): Promise<void> {
     if (this.#stopping !== null) return this.#stopping;
-    const snapshot = this.owns() ? this.#snapshot : null;
+    const owned = this.owns();
     this.#closed = true;
     this.#ready = false;
-    this.#snapshot = null;
-    this.#stopping = this.port.drain().then(async () => { if (snapshot !== null && this.owns()) await this.port.restore(snapshot); });
+    this.#draining = owned;
+    this.#stopping = this.port.drain().then(async () => {
+      this.#draining = false;
+      const journal = this.#journal;
+      const unreverted = this.#unreverted;
+      this.#journal = [];
+      this.#unreverted = [];
+      if (!owned || (journal.length === 0 && unreverted.length === 0) || !this.owns()) return;
+      for (let index = journal.length - 1; index >= 0; index -= 1) await this.port.revert(journal[index]!.inverse);
+      await this.port.settle(unreverted);
+    });
     return this.#stopping;
   }
 }

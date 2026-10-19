@@ -1,58 +1,268 @@
 {
-  "schema": "semio.shell.tutorial-run-fixture.v1",
+  "schema": "semio.shell.tutorial-run-fixture.v2",
   "drives": [
-    { "id": "closed-paused-seek", "events": ["claimA", "retire", "releaseA"], "active": [true, false, false] },
-    { "id": "closed-tween", "events": ["claimA", "retire", "claimB", "releaseA", "releaseB"], "active": [true, false, true, true, false] },
-    { "id": "superseded-director", "events": ["claimA", "claimB", "releaseA", "releaseB"], "active": [true, true, true, false] }
+    {
+      "id": "closed-paused-seek",
+      "events": [
+        "claimA",
+        "retire",
+        "releaseA"
+      ],
+      "active": [
+        true,
+        false,
+        false
+      ]
+    },
+    {
+      "id": "closed-tween",
+      "events": [
+        "claimA",
+        "retire",
+        "claimB",
+        "releaseA",
+        "releaseB"
+      ],
+      "active": [
+        true,
+        false,
+        true,
+        true,
+        false
+      ]
+    },
+    {
+      "id": "superseded-director",
+      "events": [
+        "claimA",
+        "claimB",
+        "releaseA",
+        "releaseB"
+      ],
+      "active": [
+        true,
+        true,
+        true,
+        false
+      ]
+    }
   ],
   "cases": [
     {
-      "id": "owned-stop",
+      "id": "owned-stop-replays-inverses-last-to-first",
       "events": [
-        "resolve",
+        "record:a:f",
+        "record:b:f",
         "stop"
       ],
-      "started": true,
-      "restores": 1
+      "reverted": [
+        "inv-b-f",
+        "inv-a-f"
+      ],
+      "unreverted": []
     },
     {
-      "id": "switch-before-snapshot",
+      "id": "scrub-forward-and-back-leaves-nothing-to-revert",
       "events": [
+        "record:a:f",
+        "record:a:b",
+        "stop"
+      ],
+      "reverted": [],
+      "unreverted": []
+    },
+    {
+      "id": "only-the-newest-entry-cancels",
+      "events": [
+        "record:a:f",
+        "record:b:f",
+        "record:a:b",
+        "stop"
+      ],
+      "reverted": [
+        "inv-a-b",
+        "inv-b-f",
+        "inv-a-f"
+      ],
+      "unreverted": []
+    },
+    {
+      "id": "switch-before-stop-reverts-nothing",
+      "events": [
+        "record:a:f",
         "switch",
-        "resolve",
         "stop"
       ],
-      "started": false,
-      "restores": 0
+      "reverted": [],
+      "unreverted": []
     },
     {
-      "id": "switch-before-stop",
-      "events": [
-        "resolve",
-        "switch",
-        "stop"
-      ],
-      "started": true,
-      "restores": 0
-    },
-    {
-      "id": "stop-before-snapshot",
-      "events": [
-        "stop",
-        "resolve"
-      ],
-      "started": false,
-      "restores": 0
-    },
-    {
-      "id": "replace-run-before-snapshot",
+      "id": "replace-run-before-record-journals-nothing",
       "events": [
         "replace",
-        "resolve",
+        "record:a:f",
         "stop"
       ],
-      "started": false,
-      "restores": 0
+      "reverted": [],
+      "unreverted": []
+    },
+    {
+      "id": "switch-before-record-journals-nothing",
+      "events": [
+        "switch",
+        "record:a:f",
+        "stop"
+      ],
+      "reverted": [],
+      "unreverted": []
+    },
+    {
+      "id": "record-after-stop-journals-nothing",
+      "events": [
+        "stop",
+        "record:a:f"
+      ],
+      "reverted": [],
+      "unreverted": []
+    },
+    {
+      "id": "unrevertable-step-reaches-settle-beside-the-journal",
+      "events": [
+        "record:a:f",
+        "unrevertable:x",
+        "stop"
+      ],
+      "reverted": [
+        "inv-a-f"
+      ],
+      "unreverted": [
+        "x"
+      ]
+    },
+    {
+      "id": "unrevertable-alone-still-settles",
+      "events": [
+        "unrevertable:x",
+        "unrevertable:y",
+        "stop"
+      ],
+      "reverted": [],
+      "unreverted": [
+        "x",
+        "y"
+      ]
+    },
+    {
+      "id": "unrevertable-after-stop-is-dropped",
+      "events": [
+        "stop",
+        "unrevertable:x"
+      ],
+      "reverted": [],
+      "unreverted": []
+    },
+    {
+      "id": "unrevertable-after-switch-is-dropped",
+      "events": [
+        "switch",
+        "unrevertable:x",
+        "stop"
+      ],
+      "reverted": [],
+      "unreverted": []
+    }
+  ],
+  "historySteps": [
+    {
+      "id": "checkpoint-is-retained",
+      "step": {
+        "kind": "checkpoint"
+      },
+      "before": {},
+      "outcome": {
+        "inverse": {
+          "kind": "retained",
+          "step": "checkpoint"
+        }
+      }
+    },
+    {
+      "id": "checkout-returns-to-the-checkpoint-it-stood-on",
+      "step": {
+        "kind": "checkoutCheckpoint",
+        "checkpointId": "cp-2"
+      },
+      "before": {
+        "checkpointId": "cp-1"
+      },
+      "outcome": {
+        "inverse": {
+          "kind": "history",
+          "action": "checkoutCheckpoint",
+          "args": {
+            "checkpointId": "cp-1"
+          }
+        }
+      }
+    },
+    {
+      "id": "checkout-without-a-checkpoint-names-nothing-to-return-to",
+      "step": {
+        "kind": "checkoutCheckpoint",
+        "checkpointId": "cp-2"
+      },
+      "before": {
+        "alternativeId": "main"
+      },
+      "outcome": {
+        "unrevertable": "checkoutCheckpoint cp-2: no checkpoint to return to"
+      }
+    },
+    {
+      "id": "switch-returns-to-the-alternative-it-followed",
+      "step": {
+        "kind": "switchAlternative",
+        "alternativeId": "alt-b"
+      },
+      "before": {
+        "alternativeId": "main",
+        "checkpointId": "cp-1"
+      },
+      "outcome": {
+        "inverse": {
+          "kind": "history",
+          "action": "switchAlternative",
+          "args": {
+            "alternativeId": "main"
+          }
+        }
+      }
+    },
+    {
+      "id": "switch-to-the-followed-alternative-changes-nothing",
+      "step": {
+        "kind": "switchAlternative",
+        "alternativeId": "alt-b"
+      },
+      "before": {
+        "alternativeId": "alt-b"
+      },
+      "outcome": {
+        "unchanged": true
+      }
+    },
+    {
+      "id": "switch-without-an-alternative-names-nothing-to-return-to",
+      "step": {
+        "kind": "switchAlternative",
+        "alternativeId": "alt-b"
+      },
+      "before": {
+        "checkpointId": "cp-1"
+      },
+      "outcome": {
+        "unrevertable": "switchAlternative alt-b: no alternative to return to"
+      }
     }
   ]
 }

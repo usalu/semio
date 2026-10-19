@@ -139,37 +139,59 @@ where
 
 /// 🔂️ Folds the first `take` effective forwards of `edit` into `projection` with keep-and-record semantics
 /// ([`fold_operation`]) — the one loop every messageless fold site shares.
-pub fn fold_effective_edit<P, Mutation>(projection: &mut impl FoldProjection<P, Mutation>, edit: &Edit<Mutation>, schema: &str, supersessions: &EffectiveSupersessions, take: usize)
+pub fn fold_effective_edit<NativeP, P, Mutation>(projection: &mut impl ColdFoldProjection<P, Mutation>, edit: &Edit<Mutation>, schema: &str, supersessions: &EffectiveSupersessions, take: usize)
 where
-    Mutation: super::Mutation<P> + OpBinary,
+    Mutation: super::Mutation<NativeP> + OpBinary,
 {
     if supersessions.is_empty() {
         for (index, operation) in edit.forwards.iter().enumerate().take(take) {
-            if let (Some(next), _) = fold_operation::<P, Mutation>(projection.projection(), operation, index as u32) {
-                projection.advance(next);
-            }
+            projection.fold_operation(operation, index as u32);
         }
         return;
     }
-    for effective in effective_forwards::<P, Mutation>(edit, schema, supersessions).take(take) {
+    for effective in effective_forwards::<NativeP, Mutation>(edit, schema, supersessions).take(take) {
         if let Some(operation) = effective.operation() {
-            if let (Some(next), _) = fold_operation::<P, Mutation>(projection.projection(), operation, effective.op_index) {
-                projection.advance(next);
-            }
+            projection.fold_operation(operation, effective.op_index);
         }
     }
 }
 
-/// 🛡️ Applies an already computed outcome through [`protocol::apply_diff`]: the next projection with the outcome intact, or —
+/// 🧭️ Decides once and retires the original diff after its single permitted application.
+fn apply_operation_decision<P, D, T>(outcome: crate::os_spr::MutationOutcome<D>, apply: impl FnOnce(&D) -> crate::os_spr::MutationApplyResult<T>) -> (Option<crate::os_spr::MutationApplyResult<T>>, Vec<crate::os_spr::MutationMessage>)
+where D: ColdMutationDiff<P>,
+{
+    let outcome = match outcome.admit() {
+        protocol::MutationAdmission::Admitted(outcome) => outcome,
+        protocol::MutationAdmission::Refused(outcome) => {
+            let (diff, messages) = outcome.into_parts();
+            <D as MutationDiff<P>>::retire_cold(diff);
+            return (None, messages);
+        }
+    };
+    let (diff, messages) = outcome.into_parts();
+    let applied = apply(&diff);
+    <D as MutationDiff<P>>::retire_cold(diff);
+    (Some(applied), messages)
+}
+
+/// 🛡️ Applies an already computed outcome through [`protocol::apply_diff_cold`]: the next projection with the outcome intact, or —
 /// on an apply refusal — the unchanged `base`, an empty diff and one `Fatal` message. The builder-side twin of the fatal
 /// message production dispatch records.
 pub fn apply_outcome<P, D>(base: &P, outcome: semio_framework_os_spr::MutationOutcome<D>) -> (P, semio_framework_os_spr::MutationOutcome<D>)
 where
     P: Clone,
-    D: MutationDiff<P>,
+    D: ColdMutationDiff<P>,
 {
+    let outcome = match outcome.admit() {
+        protocol::MutationAdmission::Admitted(outcome) => outcome,
+        protocol::MutationAdmission::Refused(outcome) => {
+            let (diff, messages) = outcome.into_parts();
+            <D as MutationDiff<P>>::retire_cold(diff);
+            return (base.clone(), crate::os_spr::MutationOutcome::new(D::default()).absorb_messages(messages));
+        }
+    };
     let (diff, mut messages) = outcome.into_parts();
-    match semio_framework_os_spr::apply_diff(&diff, base) {
+    match semio_framework_os_spr::apply_diff_cold(&diff, base) {
         Ok(next) => (next, semio_framework_os_spr::MutationOutcome::new(diff).absorb_messages(messages)),
         Err(error) => {
             messages.push(semio_framework_os_spr::MutationMessage::fatal(error.code, error.message).at(error.target));
@@ -184,17 +206,37 @@ where
 /// site, the retained initializers included, takes.
 pub fn fold_operation<P, Mutation>(state: &P, operation: &Mutation, op_index: u32) -> (Option<P>, Vec<semio_framework_os_spr::MutationMessage>)
 where
-    Mutation: super::Mutation<P>,
+    P: Clone,
+    Mutation: ColdMutation<P>,
 {
-    let (applied, mut messages) = apply_operation::<P, Mutation>(state, operation, op_index);
+    let (applied, mut messages) = apply_operation_decision::<P, Mutation::ReferenceDiff, P>(operation.diff(state).stamp_op_index(op_index), |diff| crate::os_spr::apply_diff_cold(diff, state));
     match applied {
-        Ok(next) => (Some(next), messages),
-        Err(error) => {
+        Some(Ok(next)) => (Some(next), messages),
+        None => (None, messages),
+        Some(Err(error)) => {
             let mut fatal = semio_framework_os_spr::MutationMessage::fatal(error.code, error.message).at(error.target);
             fatal.op_index = Some(op_index);
             messages.push(fatal);
             (None, messages)
-        }
+                }
+    }
+}
+
+/// 🪜️ Keeps a refused step unchanged while continuing the same exclusive projection owner.
+pub fn fold_operation_into<P, Mutation>(state: &mut P, operation: &Mutation, op_index: u32) -> (bool, Vec<crate::os_spr::MutationMessage>)
+where Mutation: ColdMutation<P>,
+{
+    let outcome = operation.diff(state).stamp_op_index(op_index);
+    let (applied, mut messages) = apply_operation_decision::<P, Mutation::ReferenceDiff, ()>(outcome, |diff| crate::os_spr::apply_diff_cold_into(diff, state));
+    match applied {
+        Some(Ok(())) => (true, messages),
+        None => (false, messages),
+        Some(Err(error)) => {
+            let mut fatal = crate::os_spr::MutationMessage::fatal(error.code, error.message).at(error.target);
+            fatal.op_index = Some(op_index);
+            messages.push(fatal);
+            (false, messages)
+}
     }
 }
 
@@ -212,7 +254,8 @@ pub fn fold_recorded<P, Mutation>(
     stride: usize,
 ) -> Result<(Arc<P>, Vec<(usize, Arc<P>)>), VcsError>
 where
-    Mutation: super::Mutation<P> + OpBinary,
+    P: Clone,
+    Mutation: super::Mutation<P> + ColdMutation<P> + OpBinary,
 {
     let mut running = base;
     let mut recorded: Vec<(usize, Arc<P>)> = Vec::new();

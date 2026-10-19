@@ -1,0 +1,16 @@
+{
+  "cases": [
+    { "id": "plane-orthogonal", "kind": "plane", "loads": [[1,0,0],[0,1,0]], "factors": [1,1], "expectedStress": [10,10,0], "expectedVonMises": 10 },
+    { "id": "plane-reversed", "kind": "plane", "loads": [[1,0,0],[0,1,0]], "factors": [1,-1], "expectedStress": [10,-10,0], "expectedVonMises": 17.320508075688775 },
+    { "id": "plane-cancelled", "kind": "plane", "loads": [[1,0,0],[1,0,0]], "factors": [1,-1], "expectedStress": [0,0,0], "expectedVonMises": 0 },
+    { "id": "plane-negative", "kind": "plane", "loads": [[1,0,0],[0,1,0]], "factors": [-2,0], "expectedStress": [-20,0,0], "expectedVonMises": 20 },
+    { "id": "solid-orthogonal", "kind": "solid", "loads": [[1,0,0],[0,1,0]], "factors": [1,1], "expectedStress": [6,6,0], "expectedVonMises": 6 },
+    { "id": "solid-hydrostatic", "kind": "solid", "loads": [[1,0,0],[0,1,1]], "factors": [1,1], "expectedStress": [6,6,6], "expectedVonMises": 0 },
+    { "id": "solid-reversed", "kind": "solid", "loads": [[1,0,0],[0,1,0]], "factors": [1,-1], "expectedStress": [6,-6,0], "expectedVonMises": 10.392304845413264 },
+    { "id": "solid-negative", "kind": "solid", "loads": [[1,0,0],[0,1,0]], "factors": [-2,0], "expectedStress": [-12,0,0], "expectedVonMises": 12 },
+    { "id": "shell-orthogonal", "kind": "shell", "loads": [[1,0,0],[0,1,0]], "factors": [1,1], "expectedStress": [10,10,0], "expectedVonMises": 10 },
+    { "id": "shell-reversed", "kind": "shell", "loads": [[1,0,0],[0,1,0]], "factors": [1,-1], "expectedStress": [10,-10,0], "expectedVonMises": 17.320508075688775 },
+    { "id": "shell-cancelled", "kind": "shell", "loads": [[1,0,0],[1,0,0]], "factors": [1,-1], "expectedStress": [0,0,0], "expectedVonMises": 0 },
+    { "id": "shell-negative", "kind": "shell", "loads": [[1,0,0],[0,1,0]], "factors": [-2,0], "expectedStress": [-20,0,0], "expectedVonMises": 20 }
+  ]
+}

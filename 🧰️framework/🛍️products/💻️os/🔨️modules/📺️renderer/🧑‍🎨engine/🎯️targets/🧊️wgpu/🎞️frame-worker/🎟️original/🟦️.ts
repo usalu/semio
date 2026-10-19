@@ -9,6 +9,7 @@ export interface OriginalBrowserFrameNative {
  originalFrameOutputByte(index:number):number;
  acknowledgeOriginalFrameOutput(operation:bigint,generation:bigint,epoch:bigint,items:number,copy:number,capacity:number,release:number,depth:number,fuel:bigint,deadline:bigint):boolean;
  tick(timestamp:number,sequence:bigint,presentation:bigint,operation:bigint,generation:bigint,epoch:bigint,items:number,copy:number,capacity:number,release:number,depth:number,fuel:bigint,deadline:bigint,cancelled:boolean):number;
+ assetDecodeStep(operation:bigint,generation:bigint,epoch:bigint,items:number,copy:number,capacity:number,release:number,depth:number,fuel:bigint,deadline:bigint):number;
  closeOriginalFrame(operation:bigint,generation:bigint,epoch:bigint,items:number,copy:number,capacity:number,release:number,depth:number,fuel:bigint,deadline:bigint):boolean;
  closeOriginalFrameContext(operation:bigint,generation:bigint,epoch:bigint,items:number,copy:number,capacity:number,release:number,depth:number):boolean;
 }
@@ -34,6 +35,16 @@ export class OriginalBrowserFrameSource {
   const status=this.#call(turn=>this.native.tick(timestamp,sequence,presentation,...this.#input(turn),BigInt(turn.fuel),turn.deadlineUs,turn.cancelled));if(status===0)return undefined;if(status!==1&&status!==2)throw Error("original-frame.output-state-refused");
   const length=this.native.originalFrameOutputLength();if(!Number.isSafeInteger(length)||length<0)throw Error("original-frame.output-length-refused");const bytes=new Uint8Array(length);for(let index=0;index<length;index++){const byte=this.native.originalFrameOutputByte(index);if(!Number.isInteger(byte)||byte<0||byte>255)throw Error("original-frame.output-byte-refused");bytes[index]=byte;}
   this.#outputAcknowledgement=true;if(status===2)return{kind:"failure",format:"pack",bytes};return new TextDecoder("utf-8",{fatal:true}).decode(bytes);
+ }
+
+ /** 📡️ Decoder polls spend the same admitted source and return fixed semantic scalar status. */
+ assetDecode():{kind:"pending"|"idle"|"published"|"cancelled"|"fault";pending:boolean}|undefined{
+  if(this.#closed||this.#nativeFailure!==undefined||this.#receiptFailure!==undefined)throw Error("original-frame.source-held");
+  if(this.#outputAcknowledgement)return undefined;
+  const raw=this.#call(turn=>this.native.assetDecodeStep(...this.#input(turn),BigInt(turn.fuel),turn.deadlineUs));
+  if(!Number.isSafeInteger(raw)||raw<0||raw>12||(raw&7)>4)throw Error("original-frame.decoder-status-refused");
+  const kinds=["pending","idle","published","cancelled","fault"] as const;
+  return{kind:kinds[raw&7]!,pending:(raw&8)!==0};
  }
 
  /** ♻️ Original child aliases, failure publication and native authorities finish before this exact parent admission returns. */

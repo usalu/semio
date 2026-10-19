@@ -1,0 +1,29 @@
+{
+  "physicalOperation": 11,
+  "physicalGeneration": 3,
+  "semanticSerial": 73,
+  "semanticGeneration": 0,
+  "seed": 29,
+  "pageItems": 4,
+  "scratchDescriptorPages": [
+    4256,
+    256,
+    250,
+    4000
+  ],
+  "snapshotDescriptorPages": [
+    256,
+    256,
+    16,
+    256
+  ],
+  "descriptorPointerWords": 3,
+  "originalReceiptCount": 1,
+  "deniedAxes": [
+    "items",
+    "copy",
+    "capacity",
+    "depth"
+  ],
+  "candidateRetainedAfterReceiptRefusal": true
+}

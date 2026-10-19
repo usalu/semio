@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-job-publication = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-document-records = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧱️document-records/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-kind-catalogs = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗂️kind-catalogs/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-snapshot = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
@@ -103,9 +104,6 @@ semio-s-plugin-puzzle-board-scene = { workspace = true }
 semio-s-plugin-puzzle-jobs = { workspace = true }
 semio-s-plugin-puzzle-retained = { workspace = true }
 
-[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
-js-sys = { workspace = true }
-
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-plugin-puzzle-jobs = { workspace = true, features = ["testing"] }
@@ -113,6 +111,7 @@ semio-s-plugin-puzzle-retained = { workspace = true, features = ["testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-async-macros = { workspace = true }
+semio-framework-async = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-io-base64 = { path = "../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }

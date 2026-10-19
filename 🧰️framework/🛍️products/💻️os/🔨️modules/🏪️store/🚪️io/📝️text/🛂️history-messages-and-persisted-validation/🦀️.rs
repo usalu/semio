@@ -111,7 +111,7 @@ pub async fn stable_mutation_ids_for_edit<Mutation>(edit: &Edit<Mutation>) -> Re
     edit.mutation_meta.iter().map(|meta| meta.mutation_id.clone().filter(|id| !id.0.trim().is_empty()).ok_or_else(|| VcsError::ValidationFailed(format!("edit {} has an operation without a stable identity", edit.id)))).collect()
 }
 
-pub async fn conflict_messages_for_edits<Mutation>(edits: &[Edit<Mutation>], replayed: &[semio_framework_os_spr::EditMessages]) -> Result<Vec<semio_framework_os_spr::MutationMessage>, VcsError> {
+pub async fn conflict_messages_for_edits<Mutation>(edits: &[&Edit<Mutation>], replayed: &[semio_framework_os_spr::EditMessages]) -> Result<Vec<semio_framework_os_spr::MutationMessage>, VcsError> {
     let replayed_by_edit: HashMap<&str, &semio_framework_os_spr::EditMessages> = replayed.iter().map(|entry| (entry.edit_id.as_str(), entry)).collect();
     if replayed_by_edit.len() != replayed.len() {
         return Err(VcsError::ValidationFailed("conflict messages repeat an edit owner".to_string()));

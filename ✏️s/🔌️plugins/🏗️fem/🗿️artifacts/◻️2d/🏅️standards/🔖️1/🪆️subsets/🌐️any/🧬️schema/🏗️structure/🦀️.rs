@@ -1,22 +1,18 @@
-//! 🏗️ FEM 2D structural model entities: nodes, members, materials, sections, supports, loads, load cases, regions,
 //! combinations and analysis settings — the records every fem2d facet (snapshot, diff, mutations, io, editor) names.
+//! 🏗️ FEM 2D structural model entities: nodes, members, materials, sections, supports, loads, load cases, regions,
 
-use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value::DslValue;
+
+use semio_framework_value::FromValue;
+
+use semio_framework_value::ToValue;
+
+use semio_framework_value::ValueError;
 use semio_s_fem_model::Dof;
 
 pub const FEM_2D_SCHEMA: &str = "fem.2d";
 
-/// 📍️ A structural node in plan (x, y in meters).
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[value(rename_all = "camelCase")]
-pub struct FemNode {
-    pub id: String,
-    #[dsl(unit = "m")]
-    pub x: f64,
-    #[dsl(unit = "m")]
-    pub y: f64,
-}
+
 
 /// 🔒️ A DOF tag mirroring `semio_s_fem_model::Dof`'s 6 variants, kept locally: the DSL engine's `DslField`
 /// binding can only be derived for a type/trait pair with a local half (orphan rule), and both
@@ -61,6 +57,10 @@ impl ToValue for FemDof {
     }
 }
 impl FromValue for FemDof {
+    fn from_value_controlled(value:&DslValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{
+        control.checkpoint()?;
+        match value.as_str(){Some("Tx")=>Ok(Self::Tx),Some("Ty")=>Ok(Self::Ty),Some("Tz")=>Ok(Self::Tz),Some("Rx")=>Ok(Self::Rx),Some("Ry")=>Ok(Self::Ry),Some("Rz")=>Ok(Self::Rz),_=>Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"expected a canonical DOF key"))}
+    }
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
             DslValue::String(s) => match s.as_str() {
@@ -79,7 +79,40 @@ impl FromValue for FemDof {
 
 impl FemDof {
     pub const ALL: [FemDof; 6] = [FemDof::Tx, FemDof::Ty, FemDof::Tz, FemDof::Rx, FemDof::Ry, FemDof::Rz];
+    /// 📏️ Owned restraint sets use the unique canonical DOF order.
+    pub fn canonical(values: &[Self]) -> bool { Self::ALL.into_iter().filter(|dof| values.contains(dof)).eq(values.iter().copied()) }
 }
+
+/// 🛂️ Checks at most six borrowed restraint keys before any decoded output exists.
+fn validate_fixed_dofs(value:&DslValue,mut control:Option<&mut semio_framework_value::NativeDecodeControl<'_>>)->Result<(),ValueError>{
+    if let Some(control)=control.as_deref_mut(){control.checkpoint()?;}
+    let values=value.as_array().ok_or_else(fixed_dof_refusal)?;
+    if values.len()>FemDof::ALL.len(){return Err(fixed_dof_refusal());}
+    let mut previous=0;
+    for value in values{
+        if let Some(control)=control.as_deref_mut(){control.checkpoint()?;}
+        let rank=match value.as_str(){Some("Tx")=>1,Some("Ty")=>2,Some("Tz")=>3,Some("Rx")=>4,Some("Ry")=>5,Some("Rz")=>6,_=>return Err(fixed_dof_refusal())};
+        if rank<=previous{return Err(fixed_dof_refusal());}previous=rank;
+    }
+    Ok(())
+}
+
+fn fixed_dof_refusal()->ValueError{ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"support restraints must be a unique canonical DOF set")}
+
+/// 🔒️ Decodes a finite canonical restraint set at the cold document boundary.
+pub fn decode_fixed_dofs(value:DslValue)->Result<Vec<FemDof>,ValueError>{
+    validate_fixed_dofs(&value,None)?;
+    Vec::<FemDof>::from_value(value)
+}
+
+/// 🎟️ Validates borrowed keys through the supplied control before funded vector decoding.
+pub fn decode_fixed_dofs_controlled(value:&DslValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Vec<FemDof>,ValueError>{
+    validate_fixed_dofs(value,Some(&mut *control))?;
+    Vec::<FemDof>::from_value_controlled(value,control)
+}
+
+/// ♻️ Returns the finite decoded restraint scaffold through its typed codec owner.
+pub fn retire_fixed_dofs(fixed:Vec<FemDof>){Vec::<FemDof>::retire_decoded(fixed);}
 
 impl From<FemDof> for Dof {
     fn from(value: FemDof) -> Self {
@@ -125,20 +158,7 @@ pub fn element_id(element: &FemElement) -> &str {
     }
 }
 
-/// 🧱️ An isotropic material — Young's modulus `e` in Pascals, Poisson's ratio `nu`, density `rho`
-/// in kg/m³ (the latter two required for continuum `FemRegion` elements and self-weight).
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[value(rename_all = "camelCase")]
-pub struct FemMaterial {
-    pub id: String,
-    pub name: String,
-    #[dsl(unit = "Pa")]
-    pub e: f64,
-    pub nu: f64,
-    #[dsl(unit = "kg/m3")]
-    pub rho: f64,
-}
+
 
 /// 📏️ A cross-section — area in m², strong-axis moment of inertia `iy` in m⁴.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -160,6 +180,7 @@ pub struct FemSection {
 pub struct FemSupport {
     pub id: String,
     pub node_id: String,
+    #[value(deserialize_with="self::decode_fixed_dofs",deserialize_controlled_with="self::decode_fixed_dofs_controlled",retire_with="self::retire_fixed_dofs")]
     pub fixed: Vec<FemDof>,
 }
 
@@ -197,7 +218,7 @@ pub struct FemLoadCase {
 }
 
 /// 🟩️ A meshed continuum region — a polygon (with optional holes) filled with `Tri3Cst` elements at
-/// solve time (see `crate::fem2d_engine::meshing::build_nodes_and_elements`).
+/// solve time (see `semio_s_artifact_fem_2d_engine::fem2d_engine::meshing::build_nodes_and_elements`).
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
@@ -259,3 +280,15 @@ impl Default for FemAnalysisSettings {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+pub use semio_s_fem_node::planar::FemNode;
+
+pub use semio_s_fem_node::planar::FemNodeValue;
+
+pub use semio_s_fem_material::planar::FemMaterial;
+
+pub use semio_s_fem_material::planar::FemMaterialValue;
+
+#[cfg(test)]
+#[path="🎟️fixed-dofs/🧪️tests/🦀️.rs"]
+mod fixed_dof_tests;

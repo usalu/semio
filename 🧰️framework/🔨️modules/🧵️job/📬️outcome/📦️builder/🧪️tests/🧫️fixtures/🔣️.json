@@ -32,12 +32,25 @@
   "metadataCopyBytes": 0,
   "initialization": {
     "bindingCount": 256,
-    "bindingsPerTurn": 16,
-    "turns": 16,
-    "copiedBytes": 0,
+    "bindingsPerTurn": 1,
+    "bindingTurns": 256,
+    "headerTurns": 1,
+    "turns": 257,
+    "slotFields": [
+      "binding",
+      "initialized"
+    ],
+    "headerFields": [
+      "stream",
+      "pageCount",
+      "length",
+      "ledger",
+      "ready",
+      "sealed"
+    ],
     "policy": {
       "items": 1,
-      "copy": 0,
+      "copy": 4096,
       "capacity": 0,
       "release": 0,
       "depth": 64

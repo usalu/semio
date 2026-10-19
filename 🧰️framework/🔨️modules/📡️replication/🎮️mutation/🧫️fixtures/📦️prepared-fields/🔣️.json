@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "base": { "first": 1, "second": 2 },
+  "cases": [
+    { "id": "changed-fields", "diff": { "first": 7, "second": 8 }, "expected": { "first": 7, "second": 8 }, "refused": false },
+    { "id": "late-refusal", "diff": { "first": 7, "second": 8, "refuse": true }, "expected": { "first": 1, "second": 2 }, "refused": true },
+    { "id": "untouched-field", "diff": { "first": 7 }, "expected": { "first": 7, "second": 2 }, "refused": false }
+  ]
+}

@@ -1,5 +1,5 @@
 use crate::editor::puzzle5d::entities::puzzle5d_grip_full_id;
-use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 use crate::editor::puzzle5d::commands::{engagement_input, engagement_submit};
@@ -151,6 +151,7 @@ use semio_framework_2d_compute::EngineHandles;
 use crate::editor::puzzle5d::session::*;
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::retained::*;
+
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::gestures::*;
 #[allow(unused_imports)]
@@ -165,7 +166,15 @@ use crate::editor::puzzle5d::testkit::*;
 use semio_framework::SET_ACTIVE_UTILITY_ACTION_ID;
 use crate::editor::puzzle5d::*;
 
-use semio_framework_plugin::{ContextMenuRequest, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, PluginApp, UiMenuRef};
+use semio_framework_plugin::ContextMenuRequest;
+
+use semio_framework_plugin::ContextMenuSelectionGroup;
+
+use semio_framework_plugin::ContextMenuSurfaceTarget;
+
+use semio_framework_plugin::PluginApp;
+
+use semio_framework_plugin::UiMenuRef;
 
 #[path = "⚖️laws-and-rendering/🦀️.rs"]
 mod laws_and_rendering;

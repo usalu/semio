@@ -6,10 +6,10 @@ use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fe
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::invariant;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::section_breach;
 
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &CreateSection, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {
+pub fn diff(payload: &CreateSection, base: &Fem3dSnapshotValue) -> protocol::MutationOutcome<Fem3dDiff> {
     if base.sections.iter().any(|section| section.id == payload.section.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A section with id \"{}\" already exists.", payload.section.id), [payload.section.id.clone()]);
     }

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "oracle", "residualTolerance", "cases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "oracle": { "type": "string" },
+    "residualTolerance": { "type": "number", "exclusiveMinimum": 0 },
+    "cases": { "type": "array", "minItems": 6, "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "requested", "positiveCount", "values"],
+      "properties": {
+        "name": { "type": "string" }, "requested": { "type": "integer", "minimum": 1 },
+        "positiveCount": { "type": "integer", "minimum": 0 },
+        "values": { "type": "array", "items": { "type": "number", "exclusiveMinimum": 0 } },
+        "stiffnessDiagonal": { "$ref": "#/$defs/vector" }, "rightDiagonal": { "$ref": "#/$defs/vector" },
+        "stiffness": { "$ref": "#/$defs/matrix" }, "right": { "$ref": "#/$defs/matrix" }
+      }
+    } }
+  },
+  "$defs": {
+    "vector": { "type": "array", "minItems": 1, "items": { "type": "number" } },
+    "matrix": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/vector" } }
+  }
+}

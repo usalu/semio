@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["fairness", "reservation", "task"],
+  "properties": {
+    "task": { "const": { "document": "custody-task", "generation": 42, "payload": [0, 1, 255, 42], "newBytesOnRefusal": 0, "releasedBytesOnRefusal": 0, "backendEffectsOnRefusal": 0 } },
+    "fairness": {
+      "type": "object", "additionalProperties": false,
+      "required": ["releaseCapacity", "owners", "firstCycleReleasedBytes", "secondCycleReleasedBytes", "retainedOriginal", "newBytes"],
+      "properties": {
+        "releaseCapacity": {"const": 256},
+        "owners": {"const": ["primary-refused", "primary-progress", "overflow-progress", "quarantine-progress"]},
+        "firstCycleReleasedBytes": {"const": [0, 256, 256, 256]},
+        "secondCycleReleasedBytes": {"const": [0, 0, 0, 0]},
+        "retainedOriginal": {"const": true}, "newBytes": {"const": 0}
+      }
+    },
+    "reservation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["capacity", "admitted", "refusedBeforeProducer", "producerCallsAtRefusal", "handoffReleasesReservation", "reuseIncrementsGeneration", "parkedUnsupportedKeepsReservation", "fullOtherTiersCannotStealReservation", "deniedNewBytes", "deniedReleasedBytes", "sourceDropsBeforeHandoff", "sourceDropsAfterExplicitDrop", "staleTakePreservesOriginal", "staleReleasePreservesOriginal", "secondTakeOwners", "secondReleaseRefused", "cancelBeforeProducerCalls", "cancelAfterBirthParksSameGeneration", "failedTaskHandbackRetainsCustody", "explicitCauseHandbackRetainsRefusedTaskCustody", "terminalSemanticClosureReleasesReservation", "closeRunsOutsideParkingGuard"],
+      "properties": {
+        "capacity": {"const": 2}, "admitted": {"const": ["first", "second"]},
+        "refusedBeforeProducer": {"const": "third"}, "producerCallsAtRefusal": {"const": 0},
+        "handoffReleasesReservation": {"const": true}, "reuseIncrementsGeneration": {"const": true},
+        "parkedUnsupportedKeepsReservation": {"const": true}, "fullOtherTiersCannotStealReservation": {"const": true},
+        "deniedNewBytes": {"const": 0}, "deniedReleasedBytes": {"const": 0},
+        "sourceDropsBeforeHandoff": {"const": 0}, "sourceDropsAfterExplicitDrop": {"const": 1},
+        "staleTakePreservesOriginal": {"const": true}, "staleReleasePreservesOriginal": {"const": true},
+        "secondTakeOwners": {"const": 0}, "secondReleaseRefused": {"const": true},
+        "cancelBeforeProducerCalls": {"const": 0}, "cancelAfterBirthParksSameGeneration": {"const": true},
+        "failedTaskHandbackRetainsCustody": {"const": true}, "explicitCauseHandbackRetainsRefusedTaskCustody": {"const": true},
+        "terminalSemanticClosureReleasesReservation": {"const": true}, "closeRunsOutsideParkingGuard": {"const": true}
+      }
+    }
+  }
+}

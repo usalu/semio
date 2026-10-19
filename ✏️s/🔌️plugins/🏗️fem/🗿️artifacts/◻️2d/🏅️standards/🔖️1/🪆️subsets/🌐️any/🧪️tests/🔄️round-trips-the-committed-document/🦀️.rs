@@ -1,5 +1,5 @@
-//! 🏗️ `s.fem.fem2d` whole-document identity round trip — Rust SUBJECT adapter. Relocated out of
 //! the artifact-level `mutate-fem2d-1` case in ticket
+//! 🏗️ `s.fem.fem2d` whole-document identity round trip — Rust SUBJECT adapter. Relocated out of
 //! `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION`.
 //! This scenario carries no mutation kind and no vector, so it stays with `✳️any`, the owner of the
 //! committed example document, rather than joining any of the five mutation subsets.
@@ -20,8 +20,12 @@ const DERIVED_ASSET: &str = "shared://🔄️round-trips-the-committed-document/
 
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{DERIVED_ASSET, DSL_ASSET};
-    use semio_repo_test_host::{parse_json, Context, Json, Outcome};
+    use super::DERIVED_ASSET;
+    use super::DSL_ASSET;
+    use semio_repo_test_host::parse_json;
+    use semio_repo_test_host::Context;
+    use semio_repo_test_host::Json;
+    use semio_repo_test_host::Outcome;
     use semio_repo_test_host::law;
     use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::io::text::mutations::fem2d_mutation_report_json;
     use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::fem2d_identity_report_json;

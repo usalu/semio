@@ -6,13 +6,13 @@
   "solids": null,
   "supports": null,
   "loadCases": {
-    "inserted": [],
     "removed": [
       {
         "id": "wind",
         "index": 1
       }
     ],
+    "inserted": [],
     "moved": [],
     "modified": []
   },

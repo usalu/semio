@@ -57,7 +57,8 @@ impl Drop for BoardFillPlacement {
 
 /// 💾 Exact typed checkpoint root moved out of the job until the mounted caller adopts it.
 pub struct BoardFillCheckpoint {
-    pub operation: semio_framework_job::Operation,
+        original_source: Option<semio_framework_action_bus::OriginalToolSourceBinding>,
+pub operation: semio_framework_job::Operation,
     pub naming: &'static BoardNaming,
     pub state: Option<BoardFillJobState>,
 }
@@ -90,7 +91,7 @@ impl BoardFillCheckpoint {
     }
 
     pub fn into_closing_job(mut self) -> BoardFillJob {
-        BoardFillJob { operation: self.operation, naming: self.naming, state: self.state.take(), checkpoint: None, preview: None, commit_encoder: None, commit_writer: None, lent: None, commit_output: None, offer: Cell::new(None), admitted: Cell::new(false), fault: None, closing: true }
+        BoardFillJob {  original_source: self.original_source, operation: self.operation, naming: self.naming, state: self.state.take(), checkpoint: None, preview: None, commit_encoder: None, commit_writer: None, lent: None, commit_output: None, offer: Cell::new(None), admitted: Cell::new(false), fault: None, closing: true }
     }
 }
 

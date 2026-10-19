@@ -61,10 +61,10 @@ COLLECTIONS = {
 """🗂️ Per noun: its collection, the argument `create-` carries, and the one `replace-` carries when
 the vocabulary has a `replace-` for it at all."""
 
-KINDS = ("add-load", "change-load-case-name", "change-load-case-self-weight", "create-combination", "create-load-case", "delete-combination", "delete-load-case", "remove-load", "replace-combination", "replace-load")
+KINDS = ("add-load", "change-load-case-name", "change-load-case-self-weight", "create-combination", "create-load-case", "delete-combination", "delete-load-case", "remove-load", "replace-combination", "replace-load", "change-load", "change-combination-name", "change-combination-term")
 """🏷️ This subset's own kinds, in the catalog's declared order."""
 
-REFUSALS = {"add-load": 2, "change-load-case-name": 2, "change-load-case-self-weight": 1, "create-combination": 1, "create-load-case": 1, "delete-combination": 2, "delete-load-case": 2, "remove-load": 1, "replace-combination": 4, "replace-load": 3}
+REFUSALS = {"change-load": 3, "change-combination-name": 2, "change-combination-term": 3, "add-load": 2, "change-load-case-name": 2, "change-load-case-self-weight": 1, "create-combination": 1, "create-load-case": 1, "delete-combination": 2, "delete-load-case": 2, "remove-load": 1, "replace-combination": 4, "replace-load": 3}
 """🚫️ How many refusal-or-no-op vectors each kind declares — the `reject-<kind>-<n>` rows the
 feature's `@id-reject` Outline carries, numbered in the catalog's own order."""
 
@@ -416,16 +416,94 @@ def check_record(document, noun, record):
         check_combination(record)
 
 
+
+FIELD_KINDS = ("change-load", "change-combination-name", "change-combination-term")
+
+def field_refusal(code, target):
+    """🚫️ Raises the same addressed refusal class as the authored neutral contract."""
+    error(code, [target], code)
+
+def field_target(document, collection, identifier):
+    """🎯️ Resolves the addressed row before any authored field is applied."""
+    at = find(document[collection], identifier)
+    if at is None:
+        field_refusal("mutation.target-missing", identifier)
+    return document[collection][at]
+
+def apply_field_mutation(document, mutation):
+    """🩹️ Applies only authored load, combination-name or keyed-term intent."""
+    kind = kind_of(mutation)
+    result = copy.deepcopy(document)
+    if kind == "change-load":
+        case = field_target(result, "loadCases", mutation["caseId"])
+        at = find(case["loads"], mutation["id"])
+        if at is None:
+            field_refusal("mutation.target-missing", mutation["id"])
+        load = case["loads"][at]
+        patch = mutation["patch"]
+        if patch.get("kind") != load["kind"]:
+            field_refusal("mutation.target-mismatch", mutation["id"])
+        fields = {"nodal": ("nodeId", "dof", "value"), "memberUdl": ("elementId", "wx", "wy"), "area": ("regionId", "pressure")}[load["kind"]]
+        if any(key != "kind" and key not in fields for key in patch) or any(value is None for value in patch.values()):
+            field_refusal("mutation.invariant", mutation["id"])
+        load.update(copy.deepcopy(patch))
+        resolve_load(result, load)
+        check_load(load)
+    else:
+        combination = field_target(result, "combinations", mutation["id"])
+        if kind == "change-combination-name":
+            if not isinstance(mutation["name"], str):
+                field_refusal("mutation.invariant", mutation["id"])
+            combination["name"] = mutation["name"]
+        else:
+            case_id = mutation["caseId"]
+            if case_id == mutation["id"] or not any(find(result[name], case_id) is not None for name in ("loadCases", "combinations")):
+                field_refusal("mutation.target-missing", case_id)
+            if "factor" not in mutation or mutation["factor"] is not None and (isinstance(mutation["factor"], bool) or not isinstance(mutation["factor"], (float, int)) or not math.isfinite(mutation["factor"])):
+                field_refusal("mutation.invariant", mutation["id"])
+            factor = mutation["factor"]
+            terms = combination["terms"]
+            at = next((at for at, term in enumerate(terms) if term["caseId"] == case_id), None)
+            if factor is None:
+                if at is not None:
+                    terms.pop(at)
+            elif at is None:
+                terms.insert(mutation.get("index", len(terms)), {"caseId": case_id, "factor": factor})
+            else:
+                terms[at]["factor"] = factor
+    validate(result)
+    if result == document:
+        warn(NO_OP, "Authored fields are unchanged.")
+    return result
+
+def inverse_field_mutation(document, mutation):
+    """↩️ Captures only authored sibling fields or one keyed term with its list position."""
+    kind = kind_of(mutation)
+    if kind == "change-load":
+        case = field_target(document, "loadCases", mutation["caseId"])
+        load = case["loads"][find(case["loads"], mutation["id"])]
+        return {"mutation": mutation["mutation"], "caseId": mutation["caseId"], "id": mutation["id"], "patch": {key: copy.deepcopy(load[key]) for key in mutation["patch"]}}
+    combination = field_target(document, "combinations", mutation["id"])
+    if kind == "change-combination-name":
+        return {"mutation": mutation["mutation"], "id": mutation["id"], "name": combination["name"]}
+    inverse = {"mutation": mutation["mutation"], "id": mutation["id"], "caseId": mutation["caseId"], "factor": None}
+    at = next((at for at, term in enumerate(combination["terms"]) if term["caseId"] == mutation["caseId"]), None)
+    if at is not None:
+        inverse.update(factor=combination["terms"][at]["factor"], index=at)
+    return inverse
+
 def apply_mutation(document, mutation):
     """🧬️ Applies one typed mutation, returning the resulting model or raising a [`Refusal`]."""
     kind = kind_of(mutation)
+    if kind in FIELD_KINDS:
+        return apply_field_mutation(document, mutation)
     result = copy.deepcopy(document)
     if kind == "update-analysis-settings":
         check_analysis(mutation["settings"])
         if mutation["settings"] == result["analysis"]:
             warn(NO_OP, "Analysis settings are unchanged.")
         result["analysis"] = copy.deepcopy(mutation["settings"])
-    elif kind in ("add-load", "remove-load", "replace-load", "change-load-case-self-weight", "change-load-case-name"):
+    elif kind in ("add-load", "remove-load", "replace-load", "change-load", "change-load-case-self-weight", "change-load-case-name"):
         case = case_of(result, mutation["caseId"])
         if kind == "add-load":
             load = copy.deepcopy(mutation["load"])
@@ -496,6 +574,8 @@ def inverse_mutation(document, mutation):
     record at its original position, whatever that is.
     """
     kind = kind_of(mutation)
+    if kind in FIELD_KINDS:
+        return inverse_field_mutation(document, mutation)
     if kind == "update-analysis-settings":
         return {"mutation": TAGS[kind], "settings": copy.deepcopy(document["analysis"])}
     if kind == "add-load":
@@ -572,10 +652,10 @@ def touches_one(scenario, kind, before, after):
     member it meant to write."""
     if kind == "update-analysis-settings":
         written = "analysis"
-    elif kind in ("add-load", "remove-load", "replace-load", "change-load-case-self-weight", "change-load-case-name"):
+    elif kind in ("add-load", "remove-load", "replace-load", "change-load", "change-load-case-self-weight", "change-load-case-name"):
         written = "loadCases"
     else:
-        written = COLLECTIONS[noun_of(kind)][0]
+        written = "combinations" if kind.startswith("change-combination-") else COLLECTIONS[noun_of(kind)][0]
     moved = [name for name in MEMBERS if before[name] != after[name]]
     if moved != [written]:
         raise AssertionError("%s: this verb writes %s and nothing else, but %r moved" % (scenario, written, moved))
@@ -749,7 +829,7 @@ def adapter():
         for index in range(1, REFUSALS[kind] + 1):
             scenario = "reject-%s-%d" % (kind, index)
             built = built.oracle(scenario, reject_handler(kind, scenario))
-    return built
+    return built.oracle("empty-vector-change-combination-name", spec_vector_handler("change-combination-name", "empty-vector-change-combination-name"))
 
 
 # endregion 🔖️Registration

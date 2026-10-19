@@ -411,19 +411,11 @@
       "autofixable": false
     },
     {
-      "kind": "system/devcontainer/vscode/settings-drift",
+      "kind": "system/ide-configuration",
       "policyId": "system",
       "priority": "high",
-      "reason": "The devcontainer editor settings are derived from .vscode/settings.json and .devcontainer/editor-overlay.json; a hand-edited copy drifts from the host editor",
-      "solution": "Run `bun repo run workspace:generate-config` to rewrite the devcontainer editor block; edit .vscode/settings.json, .vscode/extensions.json or the overlay instead of the copy",
-      "autofixable": false
-    },
-    {
-      "kind": "system/devcontainer/vscode/extensions-drift",
-      "policyId": "system",
-      "priority": "high",
-      "reason": "The devcontainer extensions are derived from .vscode/extensions.json and .devcontainer/editor-overlay.json; a hand-edited copy drifts from the host editor",
-      "solution": "Run `bun repo run workspace:generate-config` to rewrite the devcontainer editor block; edit .vscode/settings.json, .vscode/extensions.json or the overlay instead of the copy",
+      "reason": "Developer commands and configuration belong to the repository dashboard",
+      "solution": "Remove editor-owned configuration and register the command in the repository dashboard",
       "autofixable": false
     },
     {
@@ -862,31 +854,10 @@
     {
       "id": "system",
       "name": "System",
-      "description": "Validates system configuration files like devcontainer and editor settings",
-      "scopes": [
-        ".vscode/settings.json",
-        ".vscode/extensions.json",
-        ".devcontainer/devcontainer.json",
-        ".devcontainer/editor-overlay.json"
-      ],
+      "description": "Enforces repository dashboard authority over developer configuration",
+      "scopes": ["**/*"],
       "priority": "high",
-      "groups": [
-        {
-          "name": "Devcontainer",
-          "description": "Devcontainer configuration breachs",
-          "groups": [
-            {
-              "name": "VSCode",
-              "description": "The devcontainer editor block must equal its derivation from the host editor files",
-              "kinds": [
-                "system/devcontainer/vscode/settings-drift",
-                "system/devcontainer/vscode/extensions-drift"
-              ]
-            }
-          ]
-        }
-      ],
-      "statutes": null
+      "groups": [{"name": "Developer Configuration", "description": "Editor-owned configuration is forbidden", "kinds": ["system/ide-configuration"]}]
     },
     {
       "id": "folder",

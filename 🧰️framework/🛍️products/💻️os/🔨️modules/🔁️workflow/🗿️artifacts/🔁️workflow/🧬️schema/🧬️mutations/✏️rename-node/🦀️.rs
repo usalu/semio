@@ -17,6 +17,17 @@ pub struct RenameNode {
 //#region ⚙️Semantics
 impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for RenameNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "workflow", kind: "rename-node", record: "RenamedWorkflowNode" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename workflow node {}", self.node_id), &format!("Arbeitsablaufknoten {} umbenennen", self.node_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["nodes".into(), self.node_id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<WorkflowSnapshot, WorkflowMutation> for RenameNode {
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
         protocol::MutationOutcome::new(WorkflowDiff::PatchNode { node_id: self.node_id.clone(), label: self.label.clone() })
     }
@@ -26,11 +37,5 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for RenameNode {
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename workflow node {}", self.node_id), &format!("Arbeitsablaufknoten {} umbenennen", self.node_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["nodes".into(), self.node_id.clone()]
-    }
 }
 //#endregion ⚙️Semantics

@@ -1,15 +1,15 @@
 //! 🧫️ Neutral host component package glue.
 extern crate semio_framework_os_kernel as dsl;
-#[path="../../🧬️schema/📸️snapshot/🦀️.rs"]
+#[path = "../../🧬️schema/📸️snapshot/🦀️.rs"]
 mod snapshot;
 pub use snapshot::Snapshot;
-#[path="../../🧬️schema/🔺️diff/🦀️.rs"]
+#[path = "../../🧬️schema/🔺️diff/🦀️.rs"]
 mod diff;
 pub use diff::Diff;
-#[path="../../🧬️schema/🧬️mutations/🦀️.rs"]
+#[path = "../../🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
 pub use mutations::Mutation;
-#[path="../../🦀️.rs"]
+#[path = "../../🦀️.rs"]
 mod assembly;
 semio_framework_plugin::plugin_exports!(
     semio_framework_plugin::MountedOwnerPolicyV1 {
@@ -22,7 +22,7 @@ semio_framework_plugin::plugin_exports!(
 );
 
 #[cfg(test)]
-#[path="../../🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"]
+#[path ="../../🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"]
 mod sqlite_snapshot_tests;
 #[cfg(test)]
 use semio_framework_trace_memory_testing as test_allocation;

@@ -13,7 +13,11 @@ impl<T:RetireOwned+Sync> SharedControlledRetirement<T> {
     pub fn lease(source:Arc<T>)->Self {Self::with_custody(source,true)}
     fn with_custody(source:Arc<T>,lease_only:bool)->Self {Self {source:ManuallyDrop::new(Some(source)),owned:ManuallyDrop::new(None),lease_only}}
     pub fn terminal_is_empty(&self)->bool {self.source.is_none()&&self.owned.is_none()}
-    pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {self.owned.as_ref().map_or(Ok(0),ControlledRetirement::next_copy_byte_demand)}
+    /// 🎟️ One original shared lease or one original controlled payload supplies the complete action quote.
+    pub fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{
+        if let Some(source)=self.source.as_ref(){return Ok(crate::RetirementDemand{release_bytes:if (self.lease_only||Arc::strong_count(source)==1)&&Arc::weak_count(source)==0{arc_bytes::<T>()}else{0},depth:1,..Default::default()});}
+        self.owned.as_ref().map_or(Ok(Default::default()),|owner|owner.next_demand(body))
+    }    pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {self.owned.as_ref().map_or(Ok(0),ControlledRetirement::next_copy_byte_demand)}
     pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {self.owned.as_ref().map_or(Ok(0),|owner|owner.next_capacity_byte_demand(copy))}
     pub fn next_release_byte_demand(&self)->Result<usize,ValueError> {if let Some(source)=self.source.as_ref(){return Ok(if (self.lease_only||Arc::strong_count(source)==1)&&Arc::weak_count(source)==0{arc_bytes::<T>()}else{0});}self.owned.as_ref().map_or(Ok(0),ControlledRetirement::next_release_byte_demand)}
     pub fn next_depth_demand(&self)->Result<usize,ValueError> {self.owned.as_ref().map_or(Ok(usize::from(self.source.is_some())),ControlledRetirement::next_depth_demand)}
@@ -42,7 +46,8 @@ impl<T:RetireOwned+Sync> SharedControlledRetirement<T> {
 }
 
 impl<T:RetireOwned+Sync> crate::ErasedSnapshotRetirement for SharedControlledRetirement<T> {
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {self.step(grant)}
+        fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{SharedControlledRetirement::next_demand(self,body)}
+fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {self.step(grant)}
     fn terminal_is_empty(&self)->bool {Self::terminal_is_empty(self)}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError> {Self::next_copy_byte_demand(self)}
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {Self::next_capacity_byte_demand(self,copy)}
@@ -66,7 +71,8 @@ pub fn admit_shared_retirement<T:RetireOwned+Sync>(source:Arc<T>,grant:RetainedC
 }
 impl<T:RetireOwned+Sync> Drop for SharedControlledRetirement<T> {fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"shared retirement abandoned actual Arc allocation ownership");if self.terminal_is_empty(){unsafe {ManuallyDrop::drop(&mut self.source);ManuallyDrop::drop(&mut self.owned);}}}}
 impl<T:RetireOwned+Sync> RetirementCursor for SharedControlledRetirement<T> {
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {match self.step(grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress)}}
+        fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{SharedControlledRetirement::next_demand(self,body)}
+fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {match self.step(grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress)}}
     fn terminal_is_empty(&self)->bool {Self::terminal_is_empty(self)}
     fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.next_copy_byte_demand()}
     fn allows_admitted_narrow_work(&self)->bool{true}

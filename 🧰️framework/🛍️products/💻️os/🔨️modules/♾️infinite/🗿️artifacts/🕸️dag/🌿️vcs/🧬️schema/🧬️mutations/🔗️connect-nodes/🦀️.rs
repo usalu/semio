@@ -17,6 +17,17 @@ pub struct ConnectNodes {
 
 impl protocol::MutationKind<DagSnapshot, DagMutation> for ConnectNodes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "nodes", kind: "connect-nodes", record: "ConnectedNodes" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect {}", self.id), &format!("{} verbinden", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["edges".into(), self.id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<DagSnapshot, DagMutation> for ConnectNodes {
     fn diff(&self, _base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         protocol::MutationOutcome::new(DagDiff::from(DagDelta {
             connected_edge: Some(DagHostSnapshotEdge { id: self.id.clone(), source: self.source.clone(), target: self.target.clone(), route_style: self.route_style, properties: self.properties.clone() }),
@@ -30,10 +41,4 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for ConnectNodes {
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect {}", self.id), &format!("{} verbinden", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["edges".into(), self.id.clone()]
-    }
 }

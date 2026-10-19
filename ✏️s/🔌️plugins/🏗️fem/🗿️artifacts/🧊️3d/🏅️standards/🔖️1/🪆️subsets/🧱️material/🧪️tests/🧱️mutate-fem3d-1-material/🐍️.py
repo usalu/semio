@@ -54,7 +54,7 @@ COLLECTIONS = {
 """🗂️ Per noun: its collection, the argument `create-` carries, and the one `replace-` carries when
 the vocabulary has a `replace-` for it at all."""
 
-KINDS = ("create-material", "delete-material", "replace-material")
+KINDS = ("create-material", "delete-material", "replace-material", "change-material")
 """🏷️ This subset's own kinds, in the catalog's declared order."""
 
 
@@ -265,6 +265,17 @@ def refuse(document, kind, mutation):
         if kind == "replace-load" and not finite(*(load[name] for name in CARRIERS[load["kind"]][2])):
             raise AssertionError("%s: load %r carries a magnitude that is not finite" % (kind, load["id"]))
         return
+    if kind == "change-material":
+        at = find(document["materials"], mutation["id"])
+        if at is None:
+            raise AssertionError("Material does not exist.")
+        patch = mutation["patch"]
+        if not isinstance(patch, dict) or not set(patch) <= RECORDS["materials"] - {"id"}:
+            raise AssertionError("Invalid material patch fields.")
+        material = dict(document["materials"][at], **patch)
+        if not isinstance(material["name"], str) or not holds("material", material):
+            raise AssertionError("Invalid material properties.")
+        return
     verb, noun = kind.split("-", 1)
     if verb not in ("create", "delete", "replace") or noun not in COLLECTIONS:
         return
@@ -300,6 +311,9 @@ def apply_mutation(document, mutation):
     result = copy.deepcopy(document)
     if kind == "update-analysis-settings":
         result["analysis"] = copy.deepcopy(mutation["settings"])
+    elif kind == "change-material":
+        at = find(result["materials"], mutation["id"])
+        result["materials"][at] = dict(result["materials"][at], **mutation["patch"])
     elif kind == "add-load":
         case = case_of(result, mutation["caseId"], kind)
         load = copy.deepcopy(mutation["load"])
@@ -356,6 +370,11 @@ def inverse_mutation(document, mutation):
         return {"mutation": TAGS["add-load"], "caseId": mutation["caseId"], "load": copy.deepcopy(case["loads"][at]), "index": at}
     if kind == "change-load-case-self-weight":
         return {"mutation": TAGS[kind], "caseId": mutation["caseId"], "newSelfWeight": case_of(document, mutation["caseId"], "inverse of %s" % kind)["selfWeight"]}
+    if kind == "change-material":
+        at = find(document["materials"], mutation["id"])
+        if at is None:
+            raise AssertionError("Material does not exist for inverse.")
+        return {"mutation": TAGS[kind], "id": mutation["id"], "patch": {key: document["materials"][at][key] for key in mutation["patch"]}}
     noun = noun_of(kind)
     collection, create_argument, replace_argument = COLLECTIONS[noun]
     if kind.startswith("create-"):

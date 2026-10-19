@@ -10,6 +10,15 @@ use crate::standards::v1::subsets::any::schema::inferences::flat_position::*;
 use crate::{Puzzle5dSnapshot};
 use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor};
 
+
+
+
+
+
+
+
+
+
 #[test]
 fn flatten_writes_diagram_offsets_onto_part_2d() {
     let mut snapshot = Puzzle5dSnapshot {

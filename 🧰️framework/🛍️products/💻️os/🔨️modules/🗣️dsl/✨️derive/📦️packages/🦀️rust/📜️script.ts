@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** ✨️ `@semio-tech/dsl-derive-rs` router: `bun ./📜️script.ts test`. */
@@ -90,6 +91,14 @@ class ExportTestScript extends BundleScript {
   }
 }
 
+/** 🧊️ Checks explicit native/reference derive boundaries under the original selected owner policy. */
+class ColdReferenceTestScript extends BundleScript {
+  async run(segments:string[]):Promise<void>{
+    const {rest}=resolveTestLevel(segments);
+    await runCargoTestsV1({manifestPath:join(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel-dsl-derive"],cwd:this.root,extraArgs:["--lib","cold_reference_",...rest]},readCargoTestPolicyV1(process.env));
+  }
+}
+
 class ExportSourceTestScript extends BundleScript {
   async run(): Promise<void> { await import("../../🧪️tests/📤️macro-exports/🟦️.ts"); }
 }
@@ -132,6 +141,8 @@ class SchemaIndexSourceTestScript extends BundleScript {
   async run(): Promise<void> { await import("../../🧪️tests/🗂️schema-document-index/🟦️.ts"); }
 }
 
+
 const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check-generated", CheckGeneratedScript).register("generate-schema-index", GenerateSchemaIndexScript).register("schema-index", PreviewSchemaIndexScript).register("check-schema-index", CheckSchemaIndexScript).register("test-schema-index-source", SchemaIndexSourceTestScript).register("test", TestScript).register("test-exports", ExportTestScript).register("test-exports-source", ExportSourceTestScript).register("test-source-authority-source", SourceAuthorityTestScript);
 
+router.register("test-cold-reference",ColdReferenceTestScript);
 if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

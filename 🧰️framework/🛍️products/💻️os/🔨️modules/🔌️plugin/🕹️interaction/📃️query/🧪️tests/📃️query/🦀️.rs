@@ -278,6 +278,8 @@ impl HostileRetirement {
 }
 
 impl ErasedSnapshotRetirement for HostileRetirement {
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Ok(self.demands())}
+
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
         let idle = RetainedCloneProgress::default();
         if self.terminal_is_empty() {

@@ -4,17 +4,17 @@ use super::*;
 
 // #region 🔖️Pcg
 impl PcgJob {
-    fn run(&mut self, context: &mut StepContext<'_>) -> NumericalRun {
+    fn run(&mut self, context: &mut StepContext<'_>) -> Result<NumericalRun, OriginalTurnFailure> {
         if context.is_cancelled() {
-            return NumericalRun::Cancelled;
+            return Ok(NumericalRun::Cancelled);
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return NumericalRun::Fault;
+            return Ok(NumericalRun::Fault);
         }
         if self.closing || self.publication_fault.is_some() {
-            return NumericalRun::Fault;
+            return Ok(NumericalRun::Fault);
         }
-        if self.terminal_published { return NumericalRun::Yield; }
+        if self.terminal_published { return Ok(NumericalRun::Yield); }
         let publication_kind = self.publication.as_ref().map(|publication| publication.kind).or_else(|| {
             if self.state.stage == PcgStage::Complete { Some(PcgPublicationKind::Complete) }
             else if self.state.preview_due { Some(PcgPublicationKind::Preview) }
@@ -27,33 +27,19 @@ impl PcgJob {
                 PcgPublicationKind::Preview => "fem.pcg.preview-page",
                 PcgPublicationKind::Complete => "fem.pcg.complete-page",
             });
-            return match self.step_publication(context, kind) {
-                Ok(outcome) => outcome,
-                Err(fault) => {
-                    self.publication_fault = Some(fault);
-                    NumericalRun::Fault
-                }
-            };
+            return self.step_publication(context, kind).map_err(|error| { self.publication_fault = Some(NumericalCheckpointFault::Admission); error.into() });
         }
         context.set_stage("fem.pcg");
         let mut units = 0;
         while units < self.state.batch_units && !context.should_yield() && self.state.stage != PcgStage::Complete && !self.state.preview_due && !self.state.checkpoint_due {
-            match self.state.stage {
-                PcgStage::InitializeDiagonal => self.step_diagonal(context, &mut units),
-                PcgStage::InitialSpmv => self.step_spmv(context, &mut units, true),
-                PcgStage::InitialResidual => self.step_initial_residual(context, &mut units),
-                PcgStage::InitialPrecondition => self.step_precondition(context, &mut units, true),
-                PcgStage::IterationSpmv => self.step_spmv(context, &mut units, false),
-                PcgStage::IterationUpdate => self.step_update(context, &mut units),
-                PcgStage::IterationPrecondition => self.step_precondition(context, &mut units, false),
-                PcgStage::IterationDirection => self.step_direction(context, &mut units),
-                PcgStage::Complete => {}
-            }
+            let advanced = self.state.advance_one();
+            units += advanced;
+            context.consume_fuel(advanced as u64);
             if context.is_cancelled() {
-                return NumericalRun::Cancelled;
+                return Ok(NumericalRun::Cancelled);
             }
         }
-        NumericalRun::Yield
+        Ok(NumericalRun::Yield)
     }
 
     pub(super) fn close_frontier(&self) -> Result<Option<RetirementDemand>, ValueError> {
@@ -87,7 +73,7 @@ impl PcgJob {
 
     /// 🎟️ One close turn under an explicit grant; the parents that own a job (construction, restore) and the
     /// original-context `close_step` both admit it through the job's own quote.
-    pub fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
+    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
         let frontier = self.close_frontier()?;
         if self.terminal_is_empty() {
             return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });
@@ -107,7 +93,7 @@ impl InteractiveJob for PcgJob {
         }
         let run = match self.desk.take_pending() {
             Some(run) => run,
-            None => self.run(cx),
+            None => self.run(cx)?,
         };
         Ok(self.desk.admit(cx, run)?)
     }
@@ -142,27 +128,13 @@ impl InteractiveJob for PcgJob {
 /// ➰️ Jacobi-preconditioned conjugate gradient — mutates `x0` in place, converges when
 /// `‖r‖ / ‖b‖ < tol_rel` or `max_iter` is reached.
 pub fn pcg(a: &Csr, b: &VecD, x0: &mut VecD, tol_rel: f64, max_iter: usize) -> PcgStats {
-    let operation = Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), 0);
-    let mut job = PcgJob::new(operation, a.clone(), b.clone(), x0.clone(), tol_rel, max_iter, 1_024);
-    let mut preview_sequence = 0;
-    loop {
-        match numerical_batch_step(&mut job, operation, &mut preview_sequence) {
-            NumericalBatchEnd::Complete => {
-                let (solution, stats) = job.solution();
-                *x0 = solution.clone();
-                numerical_batch_close(&mut job);
-                return stats;
-            }
-            NumericalBatchEnd::Fault => {
-                numerical_batch_close(&mut job);
-                panic!("PCG batch execution faulted");
-            }
-            NumericalBatchEnd::Cancelled => {
-                numerical_batch_close(&mut job);
-                panic!("PCG batch execution cancelled");
-            }
-            NumericalBatchEnd::Continue => {}
-        }
+    let mut state = PcgCheckpoint::new(a.clone(), b.clone(), x0.clone(), tol_rel, max_iter, 1);
+    while state.stage != PcgStage::Complete {
+        state.advance_one();
     }
+    let stats = PcgStats { iterations: state.iteration, residual_norm: state.residual_norm, converged: state.converged };
+    *x0 = state.x;
+    stats
 }
+
 // #endregion 🔖️Pcg

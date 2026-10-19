@@ -125,7 +125,7 @@ where
     for _ in 0..1 << 24 {
         if store.close_owned_terminal_is_empty() { return; }
         let demand = store.close_owned_demands(grant.maximum_copy_bytes).expect("current independent Store close frontier");
-        let turn = RetainedCloneGrant { maximum_depth: demand.depth.max(grant.maximum_depth), ..grant };
+        let turn = RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes.max(grant.maximum_copy_bytes), maximum_capacity_bytes: demand.capacity_bytes.max(grant.maximum_capacity_bytes), maximum_release_bytes: demand.release_bytes.max(grant.maximum_release_bytes), maximum_depth: demand.depth.max(grant.maximum_depth), ..grant };
         last = store.close_owned_step(turn).expect("test store closes under its exact owner grant");
         assert!(last.progress().fits(turn));
         stalled = if last.progress() == RetainedCloneProgress::default() { stalled + 1 } else { 0 };
@@ -177,18 +177,16 @@ where
     fn one_item_wire_publication_supported(&self) -> bool {
         SpaceMember::one_item_wire_publication_supported(&self.0)
     }
-    fn begin_one_item_wire_publication(&self, request: MemberStoreOneItemWireRequest) -> Result<Box<dyn ErasedMemberStoreOneItemPublication>, ArtifactStoreBatchAdmissionRejected<MemberStoreOneItemWire>> {
-        SpaceMember::begin_one_item_wire_publication(&self.0, request)
-    }
+
     fn owned_publication_birth_bytes(&self, request: &MemberStoreOwnedBatchRequest) -> Result<usize, String> { SpaceMember::owned_publication_birth_bytes(&self.0, request) }
     fn begin_one_item_owned_publication(&self, request: &mut MemberStoreOwnedBatchRequest, grant: ArtifactStoreOneItemGrant) -> Result<Option<Box<dyn ErasedMemberStoreOneItemPublication>>, String> {
         SpaceMember::begin_one_item_owned_publication(&self.0, request, grant)
     }
-    fn advance_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemAdvance, String> {
-        SpaceMember::advance_one_item_publication(&mut self.0, publication, grant)
+    fn advance_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, body:usize, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, String> {
+        SpaceMember::advance_one_item_publication(&mut self.0, publication, body, grant,receiving)
     }
-    fn prepare_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
-        SpaceMember::prepare_one_item_publication(&mut self.0, publication, grant)
+    fn prepare_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, body:usize, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, String> {
+        SpaceMember::prepare_one_item_publication(&mut self.0, publication, body, grant,receiving)
     }
     fn stage_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
         SpaceMember::stage_one_item_publication(&mut self.0, publication, visibility, grant)
@@ -253,54 +251,32 @@ where
     async fn merge_policy(&self) -> semio_framework_os_spr::MergePolicy {
         SpaceMember::merge_policy(&self.0).await
     }
-    async fn commit_checkpoint(&mut self, message: String, authors: Vec<Author>, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
-        SpaceMember::commit_checkpoint(&mut self.0, message, authors, identity).await
-    }
+
     async fn current_checkpoint_id(&self) -> Option<String> {
         SpaceMember::current_checkpoint_id(&self.0).await
     }
     async fn current_alternative_id(&self) -> Option<String> {
         SpaceMember::current_alternative_id(&self.0).await
     }
-    async fn checkout(&mut self, checkpoint_id: &str, alternative_id: &str, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
-        SpaceMember::checkout(&mut self.0, checkpoint_id, alternative_id, identity).await
-    }
-    async fn create_alternative(&mut self, name: String, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
-        SpaceMember::create_alternative(&mut self.0, name, identity).await
-    }
+
+
     async fn last_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp> {
         SpaceMember::last_local_edit_timestamp(&self.0).await
     }
     async fn last_undone_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp> {
         SpaceMember::last_undone_local_edit_timestamp(&self.0).await
     }
-    async fn undo(&mut self, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
-        SpaceMember::undo(&mut self.0, identity).await
-    }
-    async fn redo(&mut self, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
-        SpaceMember::redo(&mut self.0, identity).await
-    }
+
+
     async fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
     }
-    async fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<semio_framework_os_spr::MutationMessage> {
-        SpaceMember::preview_wire(&self.0, ops).await
-    }
-    async fn dispatch_wire(&mut self, command: &[u8], identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError> {
-        SpaceMember::dispatch_wire(&mut self.0, command, identity).await
-    }
-    async fn dispatch_wire_with_policy(&mut self, command: &[u8], policy: semio_framework_os_spr::MergePolicy, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError> {
-        SpaceMember::dispatch_wire_with_policy(&mut self.0, command, policy, identity).await
-    }
-    async fn event_log_payload(&self) -> Result<Vec<u8>, VcsError> {
-        SpaceMember::event_log_payload(&self.0).await
-    }
-    async fn announce_tail_edit_payload(&mut self) -> Result<Vec<u8>, VcsError> {
-        SpaceMember::announce_tail_edit_payload(&mut self.0).await
-    }
-    async fn ingest_remote_payload(&mut self, envelopes: &[u8]) -> Result<(), VcsError> {
-        SpaceMember::ingest_remote_payload(&mut self.0, envelopes).await
-    }
+
+
+
+
+
+
     async fn tail_group_id(&self) -> Option<String> {
         SpaceMember::tail_group_id(&self.0).await
     }
@@ -310,23 +286,70 @@ where
     async fn redo_tail(&self) -> Option<(String, Option<String>)> {
         SpaceMember::redo_tail(&self.0).await
     }
+
+
+
+
+
+
+}
+
+impl<P,Mutation> ReferenceSpaceMember for ArtifactStore<P,Mutation>
+where P:Clone+ToValue+FromValue+ArtifactPack+semio_framework_schema_composition::ArtifactCompositionFields+Send+Sync+'static,Mutation:Clone+ToValue+FromValue+semio_framework_os_spr::Mutation<P>+semio_framework_os_spr::ColdMutation<P>+OpBinary+OpText+Send+'static,
+{
+    fn begin_one_item_wire_publication(&self, request: MemberStoreOneItemWireRequest) -> Result<Box<dyn ErasedMemberStoreOneItemPublication>, ArtifactStoreBatchAdmissionRejected<MemberStoreOneItemWire>> {
+        ReferenceSpaceMember::begin_one_item_wire_publication(&self.0, request)
+    }
+    async fn commit_checkpoint(&mut self, message: String, authors: Vec<Author>, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
+        ReferenceSpaceMember::commit_checkpoint(&mut self.0, message, authors, identity).await
+    }
+    async fn checkout(&mut self, checkpoint_id: &str, alternative_id: &str, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+        ReferenceSpaceMember::checkout(&mut self.0, checkpoint_id, alternative_id, identity).await
+    }
+    async fn create_alternative(&mut self, name: String, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
+        ReferenceSpaceMember::create_alternative(&mut self.0, name, identity).await
+    }
+    async fn undo(&mut self, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+        ReferenceSpaceMember::undo(&mut self.0, identity).await
+    }
+    async fn redo(&mut self, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+        ReferenceSpaceMember::redo(&mut self.0, identity).await
+    }
+    async fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<semio_framework_os_spr::MutationMessage> {
+        ReferenceSpaceMember::preview_wire(&self.0, ops).await
+    }
+    async fn dispatch_wire(&mut self, command: &[u8], identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError> {
+        ReferenceSpaceMember::dispatch_wire(&mut self.0, command, identity).await
+    }
+    async fn dispatch_wire_with_policy(&mut self, command: &[u8], policy: semio_framework_os_spr::MergePolicy, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError> {
+        ReferenceSpaceMember::dispatch_wire_with_policy(&mut self.0, command, policy, identity).await
+    }
+    async fn event_log_payload(&self) -> Result<Vec<u8>, VcsError> {
+        ReferenceSpaceMember::event_log_payload(&self.0).await
+    }
+    async fn announce_tail_edit_payload(&mut self) -> Result<Vec<u8>, VcsError> {
+        ReferenceSpaceMember::announce_tail_edit_payload(&mut self.0).await
+    }
+    async fn ingest_remote_payload(&mut self, envelopes: &[u8]) -> Result<(), VcsError> {
+        ReferenceSpaceMember::ingest_remote_payload(&mut self.0, envelopes).await
+    }
     async fn stamp_tail_group_id(&mut self, group_id: &str) -> Result<(), VcsError> {
-        SpaceMember::stamp_tail_group_id(&mut self.0, group_id).await
+        ReferenceSpaceMember::stamp_tail_group_id(&mut self.0, group_id).await
     }
     async fn stamp_tail_origin(&mut self, origin: semio_framework_os_spr::MutationOrigin) -> Result<(), VcsError> {
-        SpaceMember::stamp_tail_origin(&mut self.0, origin).await
+        ReferenceSpaceMember::stamp_tail_origin(&mut self.0, origin).await
     }
     async fn set_owner(&mut self, owner: Option<OwnerRef>) {
-        SpaceMember::set_owner(&mut self.0, owner).await;
+        ReferenceSpaceMember::set_owner(&mut self.0, owner).await;
     }
     async fn document_pack_bytes(&self) -> Result<Vec<u8>, VcsError> {
-        SpaceMember::document_pack_bytes(&self.0).await
+        ReferenceSpaceMember::document_pack_bytes(&self.0).await
     }
     async fn envelope_pack_bytes(&self) -> Result<Vec<u8>, VcsError> {
-        SpaceMember::envelope_pack_bytes(&self.0).await
+        ReferenceSpaceMember::envelope_pack_bytes(&self.0).await
     }
     async fn pack_at_checkpoint(&self, checkpoint_id: &str) -> Result<Vec<u8>, VcsError> {
-        SpaceMember::pack_at_checkpoint(&self.0, checkpoint_id).await
+        ReferenceSpaceMember::pack_at_checkpoint(&self.0, checkpoint_id).await
     }
 }
 
@@ -399,8 +422,38 @@ impl<M: ArtifactCanonicalJson + ArtifactCanonicalJsonTree + semio_framework_valu
     fn begin_demand(&self, _mutation: &M, _lane: HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError> {
         Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "fixture authoring catalog prepares no retained gesture"))
     }
+    fn begin_copy_byte_demand(&self,input:&M,lane:HistoryLane)->Result<usize,semio_framework_value::ValueError>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "fixture authoring catalog prepares no retained gesture"))}
+
 
     fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<DemoSnapshot, M, M>, _grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<DemoSnapshot, M>>, RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<DemoSnapshot, M, M>)> {
+        Err((ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "fixture authoring catalog prepares no retained gesture"), request))
+    }
+}
+
+/// 🏭️ The authoring catalog of the demo document: it names each original mutation's canonical wire and originates the batch digest the store's batched publication seals, and prepares no retained gesture of its own (the publication's explicit domain factory does).
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
+struct DemoAuthoringFactory;
+
+impl ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation> for DemoAuthoringFactory {
+    fn operation_wire_source<'a>(&self, mutation: &'a DemoMutation) -> Option<ArtifactPreparedOperationSource<'a>> {
+        fixture_wire_source(mutation)
+    }
+
+    fn preflight(&self, _mutation: &DemoMutation, _lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String> {
+        Err("fixture authoring catalog prepares no retained gesture".into())
+    }
+
+    fn begin_batch_digest(&self, edit: &mut Option<Box<Edit<DemoMutation>>>, grant: RetainedCloneGrant) -> Result<Option<(Box<dyn ArtifactStoreBatchDigest<DemoMutation>>, RetainedCloneProgress)>, ValueError> {
+        admit_artifact_batch_digest(edit, grant)
+    }
+
+    fn begin_demand(&self, _mutation: &DemoMutation, _lane: HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError> {
+        Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "fixture authoring catalog prepares no retained gesture"))
+    }
+    fn begin_copy_byte_demand(&self,input:&DemoMutation,lane:HistoryLane)->Result<usize,semio_framework_value::ValueError>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "fixture authoring catalog prepares no retained gesture"))}
+
+
+    fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<DemoSnapshot, DemoMutation, DemoMutation>, _grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation>>, RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<DemoSnapshot, DemoMutation, DemoMutation>)> {
         Err((ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "fixture authoring catalog prepares no retained gesture"), request))
     }
 }
@@ -427,8 +480,8 @@ where
     F2: ArtifactOwnedValueRetirementFactory<DemoSnapshot> + semio_framework_value::FactoryPayloadRetirement,
     F3: ArtifactOwnedValueRetirementFactory<DemoMutation> + semio_framework_value::FactoryPayloadRetirement,
 {
-    let preparation = semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: semio_framework_value::factory_arc_birth_bytes::<FixtureAuthoringFactory<DemoMutation>>(), depth: 1 };
-    complete_test_catalog(DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, preparation, || (snapshots, initial, mutations, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new(), Arc::new(FixtureAuthoringFactory::<DemoMutation>(std::marker::PhantomData)) as Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>>)))
+    let preparation = semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: semio_framework_value::factory_arc_birth_bytes::<DemoAuthoringFactory>(), depth: 1 };
+    complete_test_catalog(DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, preparation, || (snapshots, initial, mutations, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new(), Arc::new(DemoAuthoringFactory) as Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>>)))
 }
 
 
@@ -512,6 +565,8 @@ impl MemberStoreOneItemWirePreparationFactory<DemoSnapshot, DemoMutation> for De
     fn begin_demand(&self, _: &MemberStoreOneItemWire, _: HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError> {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<DemoMemberWirePreparation>(), depth: 1 })
     }
+    fn begin_copy_byte_demand(&self,input:&MemberStoreOneItemWire,lane:HistoryLane)->Result<usize,semio_framework_value::ValueError>{self.begin_demand(input,lane)?; std::mem::size_of::<ArtifactStoreOneItemPreparationRequest<DemoSnapshot, MemberStoreOneItemWire, DemoMutation>>().checked_add(std::mem::size_of::<DemoMemberWirePreparation>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original preparation header quote overflow"))}
+
 
     fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<DemoSnapshot, MemberStoreOneItemWire, DemoMutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation>>, RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<DemoSnapshot, MemberStoreOneItemWire, DemoMutation>)> {
         let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
@@ -597,11 +652,11 @@ impl DemoMemberWirePreparation {
 }
 
 impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoMemberWirePreparation {
-    fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
+    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
         if !grant.permits_one() || self.closing { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
         if let Some(inner) = self.inner.as_mut() {
             if grant.maximum_depth < 2 { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
-            return match inner.advance(ArtifactStoreOneItemGrant { maximum_depth: grant.maximum_depth - 1, ..grant })? {
+            return match inner.advance(body,ArtifactStoreOneItemGrant { maximum_depth: grant.maximum_depth - 1, ..grant },receiving)? {
                 ArtifactStoreOneItemPreparationStep::Prepared(_, progress) => Ok(ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint(), progress)),
                 ArtifactStoreOneItemPreparationStep::Progress(_, progress) => Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint(), progress)),
                 ArtifactStoreOneItemPreparationStep::Blocked => Ok(ArtifactStoreOneItemPreparationStep::Blocked),
@@ -717,7 +772,7 @@ pub fn close_demo_artifact_store(store: &mut ArtifactStore<DemoSnapshot, DemoMut
 
 /// 🔁️ Settles every physical replay owner before exposing a report to the fixture.
 pub fn drive_test_report_replay<P, M>(replay: &mut EditReplay<P, M>, edits: &impl ReplayEdits<M>)
-where M: semio_framework_os_spr::Mutation<P> + OpBinary,
+where P: Clone, M: semio_framework_os_spr::Mutation<P> + OpBinary,
 {
     for _ in 0..10_000 {
         if matches!(replay.step(edits, &mut || false).expect("bounded report replay advances"), ReplayStep::Finished(_)) {

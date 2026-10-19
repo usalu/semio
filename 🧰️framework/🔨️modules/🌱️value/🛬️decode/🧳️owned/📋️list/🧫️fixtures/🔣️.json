@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "prefix": "α🙂",
+  "stride": 2,
+  "firstRepeat": 10923,
+  "cases": [
+    0,
+    1,
+    16,
+    17,
+    257
+  ],
+  "cuts": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    6,
+    8,
+    16,
+    31,
+    64,
+    256,
+    1024
+  ],
+  "invalidRows": [
+    0,
+    16,
+    256
+  ],
+  "interactionQuantum": {
+    "copyBytes": 4096,
+    "workItems": 257,
+    "maximumTurns": 2048
+  },
+  "ownedWrapperCuts": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    8,
+    16,
+    64,
+    256,
+    1024
+  ]
+}

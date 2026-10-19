@@ -1,0 +1,68 @@
+{
+  "selectionCases": [
+    {
+      "selected": [],
+      "target": "any",
+      "frames": true
+    },
+    {
+      "selected": [
+        "α",
+        "b",
+        "α"
+      ],
+      "target": "α",
+      "frames": true
+    },
+    {
+      "selected": [
+        "a\u0000b"
+      ],
+      "target": "a",
+      "frames": false
+    },
+    {
+      "selected": [
+        "left:grip",
+        "x"
+      ],
+      "target": "left:grip",
+      "frames": true
+    },
+    {
+      "selected": [
+        "x"
+      ],
+      "target": "y",
+      "frames": false
+    }
+  ],
+  "buffers": [
+    {
+      "owner": "AddBrushObject",
+      "vortices": 64,
+      "mutations": 2
+    },
+    {
+      "owner": "AcceptSuggestion",
+      "vortices": 64,
+      "mutations": 2
+    },
+    {
+      "owner": "KindWeight",
+      "strings": 512
+    },
+    {
+      "owner": "AddObjectKind",
+      "vortices": 64
+    },
+    {
+      "owner": "PatchInspector",
+      "mutations": 4096
+    },
+    {
+      "owner": "SetActiveExample",
+      "mutations": 4096
+    }
+  ]
+}

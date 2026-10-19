@@ -15,8 +15,8 @@
  * @see https://doc.rust-lang.org/cargo/reference/workspaces.html#the-dependencies-table */
 import { readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import type { CargoControl } from "@semio-tech/repo-lib/cargo";
-import { CargoTomlWorkspace, parseCargoToml, type CargoTomlTable, type CargoTomlValue } from "@semio-tech/repo-lib/cargo";
+import type { CargoControl } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🟦️.ts";
+import { CargoTomlWorkspace, parseCargoToml, type CargoTomlTable, type CargoTomlValue } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📖️toml/🟦️.ts";
 
 /** 📦️ One crate of this repository the closure reached. */
 export interface CargoCrate {

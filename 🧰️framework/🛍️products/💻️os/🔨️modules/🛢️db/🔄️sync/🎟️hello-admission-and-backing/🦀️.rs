@@ -368,6 +368,17 @@ pub(super) fn database_sync_hello_retire_string(owner: &mut String) -> bool {
     true
 }
 
+const DATABASE_SYNC_HELLO_SHARED_TEXT_CLOSE_GRANT: semio_framework_value::retained_clone::RetainedCloneGrant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: DATABASE_SYNC_HELLO_MAX_BYTES, maximum_depth: 1 };
+
+fn database_sync_hello_retire_shared_text(owner: &mut semio_framework_value::SharedUtf8) -> bool {
+    if !owner.has_owner() { return false; }
+    let grant = DATABASE_SYNC_HELLO_SHARED_TEXT_CLOSE_GRANT;
+    if owner.original_allocation_bytes() > grant.maximum_release_bytes { return true; }
+    let (original, _) = std::mem::take(owner).close_original_lease(grant).unwrap_or_else(|_| panic!("database sync actor lease exceeded its original allocation credit"));
+    drop(original);
+    true
+}
+
 fn database_sync_hello_retire_bytes(owner: &mut Vec<u8>) -> bool {
     if owner.capacity() == 0 {
         return false;
@@ -393,7 +404,7 @@ impl DatabaseSyncHelloEnvelopeClose {
         }
         if database_sync_hello_retire_string(&mut owner.mutation_id.0)
             || database_sync_hello_retire_string(&mut owner.document_id.0)
-            || database_sync_hello_retire_string(&mut owner.actor.0)
+            || database_sync_hello_retire_shared_text(&mut owner.actor.0)
             || database_sync_hello_retire_string(&mut owner.diff.schema.0)
             || database_sync_hello_retire_bytes(&mut owner.diff.payload)
             || database_sync_hello_retire_string(&mut owner.inverse.schema.0)
@@ -453,7 +464,7 @@ impl DatabaseSyncHelloFrameClose {
                     drop(std::mem::take(envelopes));
                     return true;
                 }
-                if database_sync_hello_retire_string(&mut origin.0) || database_sync_hello_retire_string(&mut frontier.document_id.0) || database_sync_hello_retire_string(&mut frontier.head_edit_id) {
+                if database_sync_hello_retire_shared_text(&mut origin.0) || database_sync_hello_retire_string(&mut frontier.document_id.0) || database_sync_hello_retire_string(&mut frontier.head_edit_id) {
                     return true;
                 }
             }
@@ -486,14 +497,14 @@ impl DatabaseSyncHelloOwners {
             self.hello_frontier = None;
             return true;
         }
-        if database_sync_hello_retire_string(&mut self.session_id) || database_sync_hello_retire_string(&mut self.origin.0) || database_sync_hello_retire_string(&mut self.document.0) {
+        if database_sync_hello_retire_string(&mut self.session_id) || database_sync_hello_retire_shared_text(&mut self.origin.0) || database_sync_hello_retire_string(&mut self.document.0) {
             return true;
         }
         self.storage.take().is_some()
     }
 
     pub(super) fn terminal_is_empty(&self) -> bool {
-        self.storage.is_none() && self.hello_frontier.is_none() && self.session_id.capacity() == 0 && self.origin.0.capacity() == 0 && self.document.0.capacity() == 0
+        self.storage.is_none() && self.hello_frontier.is_none() && self.session_id.capacity() == 0 && !self.origin.0.has_owner() && self.document.0.capacity() == 0
     }
 }
 
@@ -506,7 +517,7 @@ pub(super) fn database_sync_hello_input_credit(owners: &DatabaseSyncHelloOwners)
         .0
         .capacity()
         .checked_add(owners.session_id.capacity())
-        .and_then(|value| value.checked_add(owners.origin.0.capacity()))
+        .and_then(|value| value.checked_add(owners.origin.0.original_allocation_bytes()))
         .and_then(|value| value.checked_add(frontier_bytes))
         .ok_or(DbError::LimitExceeded("database sync hello input bytes"))?;
     Ok((items, bytes))
@@ -539,7 +550,7 @@ pub(super) fn database_sync_hello_envelope_credit(envelope: &protocol::MutationE
     let mut items = 0usize;
     let mut bytes = 0usize;
     let dependencies = envelope.dependencies.capacity().checked_mul(size_of::<protocol::MutationId>()).ok_or(DbError::LimitExceeded(label))?;
-    let owners = [envelope.mutation_id.0.capacity(), envelope.document_id.0.capacity(), envelope.actor.0.capacity(), dependencies, envelope.diff.schema.0.capacity(), envelope.diff.payload.capacity(), envelope.inverse.schema.0.capacity(), envelope.inverse.payload.capacity()];
+    let owners = [envelope.mutation_id.0.capacity(), envelope.document_id.0.capacity(), envelope.actor.0.original_allocation_bytes(), dependencies, envelope.diff.schema.0.capacity(), envelope.diff.payload.capacity(), envelope.inverse.schema.0.capacity(), envelope.inverse.payload.capacity()];
     for capacity in owners.into_iter().chain(envelope.dependencies.iter().map(|dependency| dependency.0.capacity())) {
         if capacity != 0 {
             items = items.checked_add(1).ok_or(DbError::LimitExceeded(label))?;

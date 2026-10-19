@@ -1,6 +1,6 @@
 //! 🤝️ FEM plugin — helpers shared by the 2D and 3D apps' `ui` crates (non-constitutional; see the
 //! constitutional-split recipe's "shared code used by ≥2 apps" rule). Everything here is used by BOTH
-//! `fem2d_ui` and `fem3d_ui` — `next_id`/id-collision retry, hex/von-Mises color helpers, mode-shape
+//! `fem2d_ui` and `fem3d_ui` — hex/von-Mises color helpers, mode-shape
 //! normalization, and the result-window display projection.
 
 #[path = "🧬️schema/👁️result-mode/🦀️.rs"]
@@ -8,7 +8,9 @@ mod result_mode;
 pub use result_mode::ResultMode;
 #[path = "🧬️schema/🔣️results-animation/🦀️.rs"]
 mod results_animation;
-pub use results_animation::{FemLoopMode, FemResultsAnimation, FemWaveform};
+pub use results_animation::FemLoopMode;
+pub use results_animation::FemResultsAnimation;
+pub use results_animation::FemWaveform;
 
 use semio_s_fem_model::Dof;
 use semio_framework_plugin::ActionArgDef;
@@ -41,24 +43,10 @@ pub fn world_3d_surface(id: impl Into<String>, scene: &semio_framework_ui_scene:
     semio_framework_plugin::scene_surface(&id.into(), semio_framework_ui_contract::SurfaceKind::World3d, scene)
 }
 
-/// 🪪️ Finds the smallest `"{prefix}{n}"` id not already present in `existing`.
-pub fn next_id(existing: impl Iterator<Item = String>, prefix: &str) -> String {
-    let ids: std::collections::HashSet<String> = existing.collect();
-    let mut i = ids.len();
-    loop {
-        let candidate = format!("{prefix}{i}");
-        if !ids.contains(&candidate) {
-            return candidate;
-        }
-        i += 1;
-    }
-}
-
-/// 🎨️ Parses a `"#rrggbb"` hex color into 0..1 float components for a Canvas2d `fill.color` array.
+/// 🎨️ Projects the shared color-input parser into Canvas2d RGB, using black for refused input.
 pub fn hex_to_rgb01(hex: &str) -> (f64, f64, f64) {
-    let h = hex.trim_start_matches('#');
-    let component = |slice: &str| u8::from_str_radix(slice, 16).unwrap_or(0) as f64 / 255.0;
-    (component(&h[0..2]), component(&h[2..4]), component(&h[4..6]))
+    let rgba = semio_framework_ui_contract::parse_ui_color_hex(hex).unwrap_or([0.0; 4]);
+    (rgba[0], rgba[1], rgba[2])
 }
 
 /// 📐️ Rescales a node-id-keyed displacement map in place so its largest translational magnitude
@@ -174,6 +162,22 @@ pub enum DisplayMode {
     Buckling(usize),
 }
 
+impl DisplayMode {
+    /// 🎵️ Both eigenvalue analyses display normalized mode shapes.
+    pub fn uses_mode_shape(self) -> bool {
+        matches!(self, Self::Modal(_) | Self::Buckling(_))
+    }
+
+    /// 📏️ Modal eigenvalues become hertz; buckling eigenvalues remain load multipliers.
+    pub fn display_eigenvalue(self, eigenvalue: f64) -> Option<f64> {
+        match self {
+            Self::Static => None,
+            Self::Modal(_) => Some(eigenvalue.max(0.0).sqrt() / std::f64::consts::TAU),
+            Self::Buckling(_) => Some(eigenvalue),
+        }
+    }
+}
+
 impl ResultMode {
     pub fn display(self, index: u32) -> DisplayMode {
         match self {
@@ -204,4 +208,8 @@ pub fn result_display_action_args() -> Vec<ActionArgDef> {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/👁️result-projection/🦀️.rs"]
+mod result_projection_tests;
 //#endregion 🧪️Tests

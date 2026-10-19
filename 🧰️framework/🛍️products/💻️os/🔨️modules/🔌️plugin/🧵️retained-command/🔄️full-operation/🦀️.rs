@@ -1,6 +1,8 @@
 //! 🔄️ Mounted typed command full operations and their job.
 use semio_framework_plugin_operation::{ToolCancellationLeaseRetirement, original_lease_cursor_admit, original_lease_cursor_release};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
+pub(crate) use semio_framework_actor::typed_operation_diagnostics as diagnostic_publication;
+
 use semio_framework_value::DslValue;
 use semio_framework::{Fault, FaultCode, FaultOrigin};
 #[cfg(any(test, feature = "artifact-app-testing"))]
@@ -13,7 +15,7 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 use semio_framework_plugin_composition_publication::ChildPublicationResultV1;
 #[cfg(test)]
 use semio_framework_plugin_decl_emission::ChildEmit;
-use semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds;
+use semio_framework_plugin_ownership::bounded_ownership::{plugin_grant_funds, plugin_retirement_fault, plugin_turn_admitted};
 use semio_framework_plugin_decl_app::ArtifactApp;
 use semio_framework_plugin_decl_emission::ActionMeta;
 use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
@@ -50,7 +52,7 @@ pub struct MountedTypedCommandFullOperation<A: ArtifactApp> {
     pub verb: String,
     pub meta: ActionMeta,
     pub operation: semio_framework_job::Operation,
-    pub source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation),
+    pub source_identity:semio_framework_job::OriginalSourceBinding,
     pub canonical_revision: [u8; 32],
     pub artifact_generation: u64,
     pub config_generation: u64,
@@ -64,6 +66,9 @@ pub struct MountedTypedCommandFullOperation<A: ArtifactApp> {
     pub contract: Option<semio_framework::ToolExecutionContract>,
     pub session: Option<semio_framework_job_worker::MountedWorkerJobSession<semio_framework::ErasedToolJob>>,
     pub session_rejected: Option<semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource<semio_framework::ErasedToolJob>>,
+    pub(crate) producer_source: Option<semio_framework::action_bus::OriginalToolSourceBinding>,
+    pub(crate) producer_request: Option<semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobRequest<A>>,
+    pub(crate) producer_request_retirement: Option<ControlledRetirement<semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobRequest<A>>>,
     pub reserved_producer: Option<ArtifactReservedToolJob>,
     pub completion: Option<ArtifactToolCompletion<A>>,
     pub completion_retirement:Option<ControlledRetirement<ArtifactToolCompletion<A>>>,
@@ -91,6 +96,7 @@ pub struct MountedTypedCommandFullOperation<A: ArtifactApp> {
     pub captured_child_content: Option<std::sync::Arc<ChildContentView>>,
     pub captured_child_content_generation: u64,
     pub result_page: Option<TypedOperationResultPage>,
+    pub diagnostics: Option<diagnostic_publication::OperationDiagnosticPublication>,
     pub result_page_presented: bool,
     pub result_sequence: u32,
     /// 🧮️ The publication ladder's OWN monotone progress: how many publication units actually
@@ -126,7 +132,7 @@ pub struct MountedTypedCommandFullOperation<A: ArtifactApp> {
 }
 
 impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
- pub fn lease_retirement_ready(&self)->bool{self.stage==MountedTypedCommandFullOperationStage::Retiring&&self.session.is_none()&&self.session_rejected.is_none()&&!self.worker_semantic_pending&&!self.worker_outcome_pending&&self.worker_fault_capture.is_none()&&self.publication.is_none()&&self.publication_retirement.is_none()&&self.pending_artifact_publication.is_none()&&!self.pending_publication_outcome.pending()&&self.pending_child_publication.is_none()&&self.owned_child_group.is_none()&&self.captured_child_content.is_none()&&self.result_page.is_none()&&self.pending_window_config_receipt.is_none()&&self.raw_input.is_none()&&self.output_chunks.is_none()&&self.output_retirement.is_none()&&self.reserved_producer.is_none()&&self.completion.is_none()&&self.completion_retirement.is_none()&&self.meta.view_state.is_none()&&self.window_config_authority.is_none()&&self.window_transient_authority.is_none()&&self.actor_capture.is_none()&&self.verb.capacity()==0&&!self.meta.actor.has_owner()&&self.retained_close_fault.is_none()&&(self.cancellation_lease.is_some()||self.cancellation_retirement.is_some())}
+ pub fn lease_retirement_ready(&self)->bool{self.stage==MountedTypedCommandFullOperationStage::Retiring&&self.session.is_none()&&self.producer_request.is_none()&&self.producer_request_retirement.is_none()&&self.session_rejected.is_none()&&!self.worker_semantic_pending&&!self.worker_outcome_pending&&self.worker_fault_capture.is_none()&&self.publication.is_none()&&self.publication_retirement.is_none()&&self.pending_artifact_publication.is_none()&&!self.pending_publication_outcome.pending()&&self.pending_child_publication.is_none()&&self.owned_child_group.is_none()&&self.captured_child_content.is_none()&&self.result_page.is_none()&&self.pending_window_config_receipt.is_none()&&self.raw_input.is_none()&&self.output_chunks.is_none()&&self.output_retirement.is_none()&&self.reserved_producer.is_none()&&self.completion.is_none()&&self.completion_retirement.is_none()&&self.meta.view_state.is_none()&&self.window_config_authority.is_none()&&self.window_transient_authority.is_none()&&self.actor_capture.is_none()&&self.verb.capacity()==0&&!self.meta.actor.has_owner()&&self.retained_close_fault.is_none()&&(self.cancellation_lease.is_some()||self.cancellation_retirement.is_some())}
  pub fn lease_retirement_demands(&self,canonical:&ToolCancellationHandle,body:usize)->Result<RetirementDemand,ValueError>{if let Some(owner)=self.cancellation_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of::<ToolCancellationLeaseRetirement>(),depth:1,..Default::default()})}else{owner.retirement_demands(canonical,body)};}Ok(RetirementDemand{copy_bytes:size_of::<ToolCancellationLease>(),capacity_bytes:size_of::<ToolCancellationLeaseRetirement>(),depth:1,..Default::default()})}
  pub fn lease_retirement_step(&mut self,canonical:&ToolCancellationHandle,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   let demand=self.lease_retirement_demands(canonical,grant.maximum_copy_bytes)?;if !plugin_grant_funds(demand,grant)||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
@@ -186,15 +192,19 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     /// keeps advancing it. The operation is terminal the moment its session is refused —
     /// cancel the lease so the next publication unit mints the exact fault page.
     pub fn drive_worker_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
-        if self.source_identity!=(cx.operation(),cx.generation()){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"mounted worker requires its original source identity independently of its registry record").into())}
-        let grant=cx.retained_grant();let demand=if cx.is_cancelled()&&self.session_rejected.as_ref().is_some_and(|source|source.admission_pending()){self.worker_retirement_demands(grant.maximum_copy_bytes)?}else{self.worker_step_demands(grant.maximum_copy_bytes)?};
+        self.validate_original_producer_source(cx)?;
+        if self.stage != MountedTypedCommandFullOperationStage::Worker {return Ok(PluginLifecycleStep::Blocked{reason:"typed command awaits its bounded revision-validated publication or ACK turn"});}
+        if !self.source_identity.matches(cx){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"mounted worker requires its original source identity independently of its registry record").into())}
+        if (self.producer_request.is_some()||self.original_reserved_producer_pending())&&!self.user_cancel_requested&&!self.terminal_seen&&!cx.is_cancelled(){return self.drive_original_producer(cx);}
+        let grant=cx.retained_grant();let demand=if cx.is_cancelled()&&(self.original_producer_pending()||self.session_rejected.as_ref().is_some_and(|source|source.admission_pending())){self.worker_retirement_demands(grant.maximum_copy_bytes)?}else{self.worker_step_demands(grant.maximum_copy_bytes)?};
         semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
             let step=(||->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
         if self.stage != MountedTypedCommandFullOperationStage::Worker {return Ok(PluginLifecycleStep::Blocked{reason:"typed command awaits its bounded revision-validated publication or ACK turn"});}
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PluginLifecycleStep::Progress(Default::default()));}
         let contract=self.contract.ok_or_else(||plugin_sdk_fault("typed operation worker requires its admitted execution contract"))?;
+        if self.original_producer_pending(){return self.retire_original_producer(grant);}
         if let Some(rejected)=self.session_rejected.as_mut(){
-            if rejected.admission_pending()&&!cx.is_cancelled(){
+            if rejected.admission_pending()&&!cx.is_cancelled()&&!self.user_cancel_requested&&!self.terminal_seen{
                 let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:grant,site:"plugin_framework_reserved_route",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:contract.max_work_units_per_step,step_budget_us:u64::from(contract.max_step_micros)};
                 let before=cx.retained_progress();
                 if let Some(session)=rejected.admit_pending(config,cx)?{self.session=Some(session);drop(self.session_rejected.take());}
@@ -353,12 +363,35 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         Ok(true)
     }
 
-    pub fn take_result_page(&mut self) -> Option<TypedOperationResultPage> {
-        if self.result_page_presented {
-            return None;
-        }
-        self.result_page_presented = true;
-        self.result_page.clone()
+    pub(crate) fn result_page_presentation_demands(&self)->Result<RetirementDemand,ValueError>{self.result_page.as_ref().map_or(Ok(Default::default()),|page|{let mut d=page.presentation_demand()?;d.copy_bytes+=size_of::<bool>();Ok(d)})}
+    pub fn take_result_page(&mut self,grant:RetainedCloneGrant) -> Result<(Option<TypedOperationResultPage>,RetainedCloneProgress),Fault> {
+        if self.result_page_presented { return Ok((None,Default::default())); }
+        let demand=self.result_page_presentation_demands().map_err(plugin_retirement_fault)?;
+        if !plugin_turn_admitted(demand,grant)?{return Ok((None,Default::default()));}
+        let Some(page)=self.result_page.as_mut()else{return Ok((None,Default::default()))};
+        let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-size_of::<bool>(),..grant};
+        let(result,mut progress)=page.present(child).map_err(plugin_retirement_fault)?;
+        if result.is_some(){self.result_page_presented=true;progress.copied_bytes+=size_of::<bool>();}
+        Ok((result,progress))
+    }
+
+    /// 🧪️ Supplies each production presentation turn with the fixture issuer's unchanged grant.
+    #[cfg(test)]
+    pub(crate) fn take_fixture_result_page(&mut self,grant:RetainedCloneGrant)->Option<TypedOperationResultPage>{
+        for _ in 0..2{let((page,progress),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self.take_result_page(grant).expect("original fixture page presentation"));assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));if page.is_some()||progress==RetainedCloneProgress::default(){return page;}}
+        panic!("original fixture page sealing omitted its next projection");
+    }
+    /// 🧪️ Pays the original page retirement through the production close port after exact ACK.
+    #[cfg(test)]
+    pub(crate) fn close_fixture_original_page(&mut self,grant:RetainedCloneGrant){for _ in 0..100000{if !self.result_page_retirement_pending(){return;}let(p,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self.result_page_retirement_step(grant).expect("original fixture producer page close"));assert!(p.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));assert_ne!(p,Default::default(),"original fixture close grant funds the exact producer page");}panic!("original fixture producer page did not close");}
+    /// ♻️ Exact ACK retains the original page until its funded physical closure.
+    pub(crate) fn result_page_retirement_pending(&self)->bool{self.result_page.is_some()&&self.stage!=MountedTypedCommandFullOperationStage::AwaitingAck}
+    pub(crate) fn result_page_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.result_page.as_ref().map_or(Ok(Default::default()),|page|{let mut d=page.next_close_demand(body.saturating_sub(size_of::<Option<TypedOperationResultPage>>()+size_of::<bool>()))?;d.copy_bytes+=size_of::<Option<TypedOperationResultPage>>()+size_of::<bool>();Ok(d)})}
+    pub(crate) fn result_page_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,Fault>{
+        if !self.result_page_retirement_pending(){return Ok(Default::default());}
+        let demand=self.result_page_retirement_demands(grant.maximum_copy_bytes).map_err(plugin_retirement_fault)?;if !plugin_turn_admitted(demand,grant)?{return Ok(Default::default());}let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-size_of::<Option<TypedOperationResultPage>>()-size_of::<bool>(),..grant};let page=self.result_page.as_mut().unwrap();let mut progress=page.close_step(child).map_err(plugin_retirement_fault)?.progress();
+        if page.terminal_is_empty(){self.result_page=None;self.result_page_presented=false;progress.copied_bytes+=size_of::<Option<TypedOperationResultPage>>()+size_of::<bool>();}
+        Ok(progress)
     }
 
     pub fn acknowledge_result_page(&mut self, token: TypedOperationResultToken) -> Result<bool, Fault> {
@@ -383,15 +416,17 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         if lane == TypedOperationResultLane::Child && !self.owned_child_committed && !self.pending_child_publication.as_mut().is_some_and(PendingChildGroupPublication::acknowledge) {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-publication-ack"), "child-group result ACK lost its exact committed publication authority"));
         }
-        self.result_page = None;
+        if lane == TypedOperationResultLane::Diagnostic && !self.diagnostics.as_mut().is_some_and(|owner|owner.acknowledge(token)) {
+            return Err(plugin_sdk_fault("diagnostic result ACK lost its exact original source authority"));
+        }
         if lane == TypedOperationResultLane::Child && self.owned_child_committed { self.owned_child_result_pending = false; }
-        self.result_page_presented = false;
         self.result_sequence = self.result_sequence.checked_add(1).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.result-sequence"), "typed-operation result sequence exhausted"))?;
         self.stage = if matches!(lane, TypedOperationResultLane::Terminal | TypedOperationResultLane::Fault | TypedOperationResultLane::Download) {
             MountedTypedCommandFullOperationStage::Retiring
         } else {
             MountedTypedCommandFullOperationStage::Publishing
         };
+        if self.stage==MountedTypedCommandFullOperationStage::Retiring{if let Some(owner)=self.diagnostics.as_mut(){owner.begin_close();}}
         Ok(true)
     }
 
@@ -399,6 +434,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     pub fn worker_step_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         let item = RetirementDemand { depth: 1, ..Default::default() };
         if self.stage != MountedTypedCommandFullOperationStage::Worker { return Ok(Default::default()); }
+        if self.original_producer_pending(){return if self.user_cancel_requested||self.terminal_seen{self.original_producer_retirement_demands(body)}else{Ok(item)};}
         if let Some(source)=self.session_rejected.as_ref(){return if source.admission_pending(){source.admission_demands()}else{self.worker_retirement_demands(body)};}
         let Some(session) = self.session.as_ref() else { return Ok(item) };
         if self.worker_fault_capture.is_some() {
@@ -412,12 +448,13 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     }
 
     fn worker_retirement_pending(&self) -> bool {
-        self.session.is_some() || self.session_rejected.is_some() || self.worker_semantic_pending || self.worker_outcome_pending || self.worker_fault_capture.is_some()
+        self.original_producer_pending() || self.session.is_some() || self.session_rejected.is_some() || self.worker_semantic_pending || self.worker_outcome_pending || self.worker_fault_capture.is_some()
     }
 
     /// 📏️ Quotes the exact next [`Self::retire_worker_step`] turn.
     fn worker_retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         let item = RetirementDemand { depth: 1, ..Default::default() };
+        if self.original_producer_pending(){return self.original_producer_retirement_demands(body);}
         if let Some(rejected) = self.session_rejected.as_ref() {
             if rejected.terminal_is_empty() { return Ok(RetirementDemand { copy_bytes: size_of_val(rejected), ..item }); }
             return rejected.retirement_demands(body);
@@ -435,10 +472,12 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
 
     /// ♻️ Closes the original mounted worker session, its refused admission and its inline capture markers under the unchanged grant.
     fn retire_worker_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
+        self.validate_original_producer_source(cx)?;
         let grant=cx.retained_grant();let demand=self.worker_retirement_demands(grant.maximum_copy_bytes)?;
         semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
             let step=(||->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
         let item = RetainedCloneProgress { copied_items: 1, ..Default::default() };
+        if self.original_producer_pending(){return self.retire_original_producer(grant);}
         if let Some(rejected) = self.session_rejected.as_mut() {
             if rejected.terminal_is_empty() {
                 let bytes = size_of_val(rejected);
@@ -491,8 +530,10 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     /// 📏️ Quotes the exact next [`Self::retirement_step`] turn, one original owner at a time in the same order.
     pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         let item = RetirementDemand { depth: 1, ..Default::default() };
+        if self.result_page_retirement_pending(){return self.result_page_retirement_demands(body);}
         if self.close_fault_pending() { return self.close_fault_demands(body); }
         if self.worker_retirement_pending() { return self.worker_retirement_demands(body); }
+        if let Some(owner)=self.diagnostics.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<diagnostic_publication::OperationDiagnosticPublication>>(),..item})}else{owner.next_demand(body)}}
         if self.pending_window_config_receipt.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<store::os_store::presence::LaneItemReceipt>(), ..item }); }
         if self.granted_retirement_ready() && self.granted_retirement_pending() { return self.granted_retirement_demands(body); }
         if self.publication_retirement.is_none() {
@@ -509,12 +550,14 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
 
     /// 🎟️ Returns each original mounted owner under the caller's unchanged grant.
     pub fn retirement_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
+        self.validate_original_producer_source(cx)?;
         let grant=cx.retained_grant();let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
         semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
             let step=(||->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
         let empty = RetainedCloneProgress::default();
         let item = RetainedCloneProgress { copied_items: 1, ..empty };
         if self.stage != MountedTypedCommandFullOperationStage::Retiring { return Ok(PluginLifecycleStep::Blocked { reason: "typed operation is not admitted for retirement" }); }
+        if self.result_page_retirement_pending(){return self.result_page_retirement_step(grant).map(PluginLifecycleStep::Progress);}
         if self.result_page.is_some() { return Ok(PluginLifecycleStep::Blocked { reason: "typed operation retains an unacknowledged result page" }); }
         if self.terminal_is_empty() { return Ok(PluginLifecycleStep::Complete(empty)); }
         let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
@@ -568,6 +611,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         if !plugin_grant_funds(demand, grant) { return Ok(PluginLifecycleStep::Progress(Default::default())); }
         if self.stage == MountedTypedCommandFullOperationStage::Retiring { return self.retirement_step(cx); }
         self.user_cancel_requested = true;
+        if let Some(owner)=self.diagnostics.as_mut(){owner.begin_close();}
         self.result_page = None;
         self.result_page_presented = false;
         self.ui_pending = false;
@@ -582,6 +626,8 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     pub fn terminal_is_empty(&self) -> bool {
         self.stage == MountedTypedCommandFullOperationStage::Retiring
             && self.session.is_none()
+            && self.producer_request.is_none()
+            && self.producer_request_retirement.is_none()
             && self.session_rejected.is_none()
             && !self.worker_semantic_pending
             && !self.worker_outcome_pending
@@ -593,6 +639,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
             && self.owned_child_group.is_none()
             && self.captured_child_content.is_none()
             && self.result_page.is_none()
+            && self.diagnostics.is_none()
             && self.raw_input.is_none()
             && self.output_chunks.is_none()
             && self.reserved_producer.is_none()
@@ -658,4 +705,12 @@ pub fn bounded_json_items(value: Option<&DslValue>, maximum: usize) -> Result<us
 
 
 
+
+
+
+
 pub use semio_framework_plugin_job::lifted_full_operation_job::*;
+
+include!("🏭️producer/🦀️.rs");
+
+include!("🏭️producer/🦀️.rs");

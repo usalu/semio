@@ -71,7 +71,12 @@ export type ArtifactState = {
   /** 🪹️ Whether this open's first folder read was answered, or an archive was read or written: no later read announces
    * an absent archive (`documentArchiveAbsent`). */
   folderBootstrapped: boolean;
-  reconnectDelayMs: number;
+    /** 🎚️ The value a {@link CONFIG_FACETS} document holds: the fold of its persisted archive and every diff the store admitted since.
+   * `undefined` until the first folder read answered (or at once when the facet has no folder). */
+  facetValue: unknown;
+  /** ⏳️ Facet envelopes admitted before the first folder read answered; they fold onto the persisted value, never onto an empty one. */
+  facetBacklog: MutationEnvelope[];
+reconnectDelayMs: number;
   /** 🗃️ Outbound mutations not yet sent on a LIVE hub socket (finding 5) — distinct from
    * `pendingBatches`, which holds the one batch already sent and awaiting its `Ack`. Every relay
    * ({@link relayMutationsToHub}) queues here; a dead socket's `onclose` and a transient refusal put

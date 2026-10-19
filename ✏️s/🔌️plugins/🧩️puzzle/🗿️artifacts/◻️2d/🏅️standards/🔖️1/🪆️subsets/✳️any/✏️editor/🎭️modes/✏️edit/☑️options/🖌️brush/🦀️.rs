@@ -1,11 +1,12 @@
-//! 🖌️ Edit-mode window option — the Brush utility's options group: the suggestion-offset slider, the
 //! per-kind placement distribution trees, and (once the host has candidates) the placement picker.
+//! 🖌️ Edit-mode window option — the Brush utility's options group: the suggestion-offset slider, the
 //! Tagged `active_utility_id: Some("brush")`, so the chrome only shows it while Brush is active.
 //! Shared by all three canvas windows.
 
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::snapshot::{puzzle2d_action, puzzle2d_kind_ids, Puzzle2dScene};
-use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
+use semio_framework_plugin::MeasureSelectItem;
+use semio_framework_plugin::WindowMeasure;
 #[cfg(test)] use semio_framework_pack_json::json;
 use std::collections::BTreeMap;
 use semio_s_artifact_puzzle_2d_unit_tests::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID;

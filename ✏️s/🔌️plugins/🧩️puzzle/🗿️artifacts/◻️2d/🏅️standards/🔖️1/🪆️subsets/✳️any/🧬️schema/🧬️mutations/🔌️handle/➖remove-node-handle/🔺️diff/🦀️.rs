@@ -1,6 +1,10 @@
-//! 🔺️ Sparse diff builder for `RemoveNodeHandle` — removes one handle from the owner node's `🐙️handles` and
 //! severs any edge referencing the removed handle.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dEdgesDelta, Puzzle2dHandlesDelta, Puzzle2dNodePatch, Puzzle2dNodesDelta};
+//! 🔺️ Sparse diff builder for `RemoveNodeHandle` — removes one handle from the owner node's `🐙️handles` and
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dEdgesDelta;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dHandlesDelta;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dNodePatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dNodesDelta;
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Diff

@@ -67,7 +67,7 @@
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-snapshot-sqlite ",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite",
         "forwardAllArgs": true
       },
       "metadata": {

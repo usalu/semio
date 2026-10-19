@@ -1,6 +1,6 @@
 import {buildModePolicy,type BuildMode} from "../../🏗️build/🎚️mode/🟦️.ts";
 import policySchema from "./🧬️schema/🔣️.json" with {type:"json"};
-import { mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { statSync, readFileSync, mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { join, isAbsolute } from "node:path";
 import { StringDecoder } from "node:string_decoder";
 import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -36,10 +36,22 @@ export function readCargoTestPolicyV1(environment:Readonly<Record<string,string|
 }
 function admitPolicy(value:unknown):CargoTestPolicyV1 { const errors=validateJsonSchemaSubset(policySchema,value);if(errors.length)throw Error(`Invalid Cargo test policy: ${errors.join("; ")}`);return value as CargoTestPolicyV1; }
 
+/** 🪟️ Resolves Windows' system-owned short name without relocating the caller's profile directory. */
+async function nativeCoverageDirectoryV1(directory:string):Promise<string>{
+ const {dlopen,ptr,FFIType}=await import("bun:ffi"),library=dlopen("kernel32.dll",{GetShortPathNameW:{args:[FFIType.ptr,FFIType.ptr,FFIType.u32],returns:FFIType.u32}}),input=Buffer.from(directory+"\0","utf16le");
+ try{const required=library.symbols.GetShortPathNameW(ptr(input),null,0);if(required===0)throw Error("Windows coverage directory has no native identity");const output=Buffer.alloc((required+1)*2),length=library.symbols.GetShortPathNameW(ptr(input),ptr(output),required+1);if(length===0||length>required)throw Error("Windows coverage directory identity changed");const native=output.subarray(0,length*2).toString("utf16le");const original=statSync(directory,{bigint:true}),aliased=statSync(native,{bigint:true});if(original.ino===0n||original.ino!==aliased.ino||original.dev!==aliased.dev)throw Error("Windows coverage directory custody changed");return native;}finally{library.close();}
+}
+
+/** 📊️ Keeps Unicode paths on UTF-8 hosts and admits an exact ASCII identity for Windows' profiling C runtime. */
+export async function cargoCoverageRuntimeDirectoryV1(directory:string,platform:string=process.platform,native:(directory:string)=>Promise<string>=nativeCoverageDirectoryV1):Promise<string>{
+ if(platform!=="win32"||/^[\x20-\x7e]+$/.test(directory))return directory;
+ const identity=await native(directory);if(!/^[\x20-\x7e]+$/.test(identity))throw Error("Windows LLVM coverage requires an ASCII native directory identity");return identity;
+}
+
 /** 🧪️ Preserves build selection on compilation and runtime filters on metadata execution. */
 export function partitionNextestExecutionFilters(args: readonly string[]): { buildArgs: string[]; executionArgs: string[]; libtestArgs: string[] } {
   const reporterOptions = new Set(["--status-level", "--final-status-level"]), seenReporters = new Set<string>();
-  const valuedFilters = new Set(["-E", "--filter-expr", "--partition", "--run-ignored", "--success-output", "--failure-output", ...reporterOptions]);
+  const valuedFilters = new Set(["-E", "--filter-expr", "--partition", "--run-ignored", "--test-threads", "--success-output", "--failure-output", ...reporterOptions]);
   const requiredBuildOptions = new Set([
     "-p",
     "--package",
@@ -139,6 +151,7 @@ export function cargoTestPlanV1(request:CargoTestRequestV1, input:CargoTestPolic
   requireOriginalCompilerArguments(request.extraArgs??[]);
   const compilerProfile=buildModePolicy(policy.mode).cargoProfile,compiler=[policy.nextest?"--cargo-profile":"--profile",compilerProfile];
   const packages=["--manifest-path",request.manifestPath,...request.packages.flatMap(name=>["-p",name])], split=partitionNextestExecutionFilters(request.extraArgs??[]), skip=TEST_LEVELS.slice(TEST_LEVELS.indexOf(policy.level)+1).flatMap(level=>["--skip",`${level}::`]), profile=["--config-file",policy.configPath,"--profile",policy.level];
+  const threads=split.executionArgs.some(arg=>arg.split("=",1)[0]==="--test-threads")?[]:policy.level==="fundamental"?["--test-threads",String(policy.assertionThreads)]:[];
   const step=(phase:CargoTestStepV1["phase"],args:string[],capture=false):CargoTestStepV1=>({phase,args,budgetMs:phase==="assert"?policy.assertionBudgets[policy.level]:policy.buildBudgetMs,capture});
   if(policy.coverageEnabled){
     if(!policy.coveragePath)throw Error("Coverage requires an explicit owner report path");

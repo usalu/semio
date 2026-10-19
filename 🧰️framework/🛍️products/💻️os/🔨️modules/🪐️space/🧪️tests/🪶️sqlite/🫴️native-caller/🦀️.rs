@@ -53,3 +53,29 @@ pub fn retire_original_output<T: semio_framework_value::retirement::RetireOwned>
 }
 
 pub fn diagnostic_capacity(error: &semio_framework_value::ValueError) -> usize { match &error.message { std::borrow::Cow::Owned(text) => text.capacity(), std::borrow::Cow::Borrowed(_) => 0 } }
+
+/// 🌐️ Runs one erased `io_run_with_snapshot_control` route under explicit original native decode and encode authority, then closes both retirement recipients.
+/// [`store::io::io_mechanism::io_run_with_snapshot_control`] returns an already-completed future, so `with_native_control(|native| io_run_with_snapshot_control(..)).await` is the whole call.
+pub fn with_native_control<T>(operation: impl FnOnce(&mut store::io::io_mechanism::IoRunControl<'_, '_>) -> T) -> T {
+    let maximum = 16usize << 20;
+    let mut receive = |_| true;
+    let mut publish = |_| true;
+    let mut decode = NativeDecodeControl::new(maximum, &mut receive);
+    let mut encode = NativeEncodeControl::new(maximum, &mut publish);
+    let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: maximum, maximum_capacity_bytes: maximum, maximum_release_bytes: maximum, maximum_depth: 512 };
+    let mut decode_recipient = semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();
+    let mut encode_recipient = semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
+    decode.install_retirement_recipient(&mut decode_recipient).expect("the run owns an explicit decode retirement slot");
+    encode.install_retirement_recipient(&mut encode_recipient).expect("the run owns an explicit encode retirement slot");
+    let result = {
+        let mut control = store::io::io_mechanism::IoRunControl::new(&mut decode, &mut encode, grant);
+        operation(&mut control)
+    };
+    while decode.has_retirement_owner() {
+        decode.close_retirement_recipient(grant).expect("the decode recipient closes under the run grant");
+    }
+    while encode.has_retirement_owner() {
+        encode.close_retirement_recipient(grant).expect("the encode recipient closes under the run grant");
+    }
+    result
+}

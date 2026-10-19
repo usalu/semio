@@ -202,25 +202,7 @@ pub struct TestRetainedCommandFactory {
             ToolExecutionContract::resumable(TEST_RETAINED_COMMAND_RAW_BYTES, 4, 1, TEST_RETAINED_COMMAND_RAW_BYTES, 7_500, 1, 1)
         }
 
-        fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-            Ok(semio_framework_plugin_retained_command::ArtifactRetainedCommandJob::new(payload))
-        }
-
-        fn create_job_from_wire_pages_with_payload(
-            &mut self,
-            _operation: semio_framework_job::Operation,
-            payload: Self::Payload,
-            input: action_bus::RetainedToolWireInput,
-            checkpoint: Option<action_bus::RetainedToolWireInput>,
-        ) -> Result<Self::Job, (ToolJobFactoryError, action_bus::RetainedToolWireInput, Option<action_bus::RetainedToolWireInput>)> {
-            if input.declared_bytes() > TEST_RETAINED_COMMAND_RAW_BYTES || checkpoint.as_ref().is_some_and(|checkpoint| checkpoint.declared_bytes() > semio_framework_plugin_retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
-                return Err((ToolJobFactoryError::new("test retained command extent"), input, checkpoint));
-            }
-            Ok(match checkpoint {
-                Some(checkpoint) => semio_framework_plugin_retained_command::ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint),
-                None => semio_framework_plugin_retained_command::ArtifactRetainedCommandJob::from_wire(payload, input),
-            })
-        }
+        crate::retained_command_factory_admission!(maximum_raw_bytes:TEST_RETAINED_COMMAND_RAW_BYTES,checkpoint_resume:true);
     }
 
     #[doc(hidden)]
@@ -235,11 +217,14 @@ pub fn test_retained_command_id(command: &TestCommand) -> &'static str {
 pub const TEST_COMMAND_RETAINED_GRANT: semio_framework_value::RetainedCloneGrant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
 
     #[doc(hidden)]
-pub async fn test_retained_command_payload(completion: ArtifactToolCompletion<TestApp>) -> semio_framework_plugin_retained_command::ArtifactRetainedCommandPayload<TestApp> {
-        semio_framework_plugin_retained_command::ArtifactRetainedCommandPayload::new(
+pub  async fn test_retained_command_payload(completion: ArtifactToolCompletion<TestApp>) -> (semio_framework_plugin_retained_command::ArtifactRetainedCommandPayload<TestApp>,crate::app_testing::mutation_fixture::job_close::FixtureSnapshotOwner) {
+        let snapshot=std::sync::Arc::new(TestSnapshot::default());
+        let(snapshot_read,issuer)=crate::app_testing::mutation_fixture::job_close::FixtureSnapshotOwner::new(snapshot.clone(),3,[5;32]);
+        let payload=crate::retained_command::ArtifactRetainedCommandPayload::new(
             semio_framework_plugin_retained_command::ArtifactRetainedCommandInputs {
                 command: TestCommand::SetLabel { value: "wire".into() },
-                snapshot: std::sync::Arc::new(TestSnapshot::default()),
+                snapshot,
+                snapshot_read,
                 config: std::sync::Arc::new(TestConfig::default()),
                 history: std::sync::Arc::new(HistoryView::empty()),
                 interaction_state: std::sync::Arc::new(InteractionState::default()),
@@ -252,7 +237,7 @@ pub async fn test_retained_command_payload(completion: ArtifactToolCompletion<Te
             TEST_RETAINED_COMMAND_RAW_BYTES,
             3,
             Box::new(TestRetainedCommandWork { cursor: 0 }),
-        )
+        );(payload,issuer)
     }
 
 

@@ -410,6 +410,8 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
 }
 
 impl<O:WindowConfigOwner> store::ErasedSnapshotRetirement for RetainedWindowConfigStateDecode<O>{
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.retirement_demands(maximum_body_bytes)}
+
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.retirement_demands(0).map(|demand|demand.copy_bytes)}
  fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{self.retirement_demands(body).map(|demand|demand.capacity_bytes)}
  fn next_release_byte_demand(&self)->Result<usize,ValueError>{self.retirement_demands(0).map(|demand|demand.release_bytes)}

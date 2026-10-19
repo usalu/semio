@@ -1,5 +1,5 @@
-//! ↩️ Inverse for `ConnectKindCompatibility` — always a `disconnect-kind-compatibility` of the
 //! pair it created.
+//! ↩️ Inverse for `ConnectKindCompatibility` — always a `disconnect-kind-compatibility` of the
 use super::mutation::ConnectKindCompatibility;
 use crate::disconnect_kind_compatibility::mutation::DisconnectKindCompatibility;
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;

@@ -3,8 +3,8 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::fem2d::modes::edit::windows::results::transient::mutations::*;
-use crate::editor::fem2d::modes::edit::windows::results::transient::FemResultsWindowTransient;
+use crate::transient::mutations::*;
+use crate::transient::FemResultsWindowTransient;
 
 impl protocol::OpText for FemResultsWindowTransientMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -19,8 +19,8 @@ impl protocol::OpText for FemResultsWindowTransientMutation {
 #[allow(unused_imports)]
 mod mutations_wire_codec {
 use super::*;
-use crate::editor::fem2d::modes::edit::windows::results::transient::mutations::*;
-use crate::editor::fem2d::modes::edit::windows::results::transient::FemResultsWindowTransient;
+use crate::transient::mutations::*;
+use crate::transient::FemResultsWindowTransient;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `FemResultsWindowTransient`.

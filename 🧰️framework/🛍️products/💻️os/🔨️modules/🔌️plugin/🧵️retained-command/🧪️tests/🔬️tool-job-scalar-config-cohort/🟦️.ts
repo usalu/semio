@@ -33,7 +33,34 @@ export function toolJobScalarConfigCohortSelfTests(): { routes: number; migrated
         if (route.disposition === "ForbiddenFromUi") forbidden++; else batchOnly++;
       }
     }
+    for (const lane of ["WindowConfig", "WindowTransient"] as const) {
+      const routed = evidence.appOwned.filter((row) => row.ownerFile === owner.file && row.publicationLanes.includes(lane));
+      if (!routed.length) continue;
+      const name = lane === "WindowConfig" ? "register_window_config_owners" : "register_window_transient_owners";
+      const missing = new Map(files);
+      missing.set(owner.file, files.get(owner.file)!.replaceAll(name, "missing_window_registry_authority"));
+      const rejected = toolJobOwnerSourceEvidence(missing);
+      if (routed.some((row) => rejected.appOwned.find((candidate) => candidate.ownerFile === row.ownerFile && candidate.toolId === row.toolId)?.publicationReady)) throw new Error(`window registry authority omission ${owner.id}/${lane}`);
+      hostileCases++;
+    }
+
     const source = files.get(owner.file)!;
+    const ownerPreparationWitnesses = owner.preparationLane === "WindowConfig" ? ["fn register_window_config_owners(", "fn register_window_transient_owners(", ...owner.registrationWitnesses] : [
+      `const ${owner.prefix}_CONFIG_TEXT_MAXIMUM_BYTES: usize = 128;`,
+      `const ${owner.prefix}_CONFIG_PUBLICATION_MAXIMUM_BYTES: usize = 4_096;`,
+      "request.operation != request.authority.operation()", "request.generation != request.authority.generation()", "request.base_revision != request.authority.base_revision()",
+      "request.authority.actor().len() > 64", "self.preflight(&request.mutation, request.lane).is_err()",
+      `_config_text_bytes(request.base.get()) > ${owner.prefix}_CONFIG_TEXT_MAXIMUM_BYTES`,
+      `!grant.permits_one() || grant.maximum_copy_bytes < ${owner.prefix}_CONFIG_PUBLICATION_MAXIMUM_BYTES || self.cancelled || self.owners.is_closing()`,
+      "if self.checkpoint.cursor != 0", "authority.next_edit(mutation.clone(), vec![inverse])", "match authority.prepare_one_item(edit, std::sync::Arc::new(next))",
+      "*self.owners.refused = Some((edit, post))", "self.owners.begin_close()", "self.owners.close_step(grant.retained_grant())", "self.owners.terminal_is_empty()",
+    ];
+    const ownerPreparationExact = (candidate: string) => ownerPreparationWitnesses.every((witness) => candidate.includes(witness));
+    if (!ownerPreparationExact(source)) throw new Error(`scalar Config owner preparation contract ${owner.id}`);
+    for (const witness of ownerPreparationWitnesses) {
+      if (ownerPreparationExact(source.replaceAll(witness, "REMOVED_BY_HOSTILE_FIXTURE"))) throw new Error(`scalar Config hostile preparation witness ${owner.id}/${witness}`);
+      hostileCases++;
+    }
     const ownerWitnesses: readonly [RegExp, string][] = [
       [/type Edit = (?:[A-Za-z_][A-Za-z0-9_]*::)*(?:Window)?ConfigApplyEdit</u, "type Edit = REMOVED_BY_HOSTILE_FIXTURE<"],
       [/fn register_window_config_owners\(/u, "fn REMOVED_BY_HOSTILE_FIXTURE("],

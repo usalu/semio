@@ -9,6 +9,12 @@ impl protocol::Mutation<ChildrenTestSnapshot> for ChildrenTestMutation {
     type Diff = ChildrenTestDiff;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { match *self {} }
+
+
+}
+
+impl protocol::ColdMutation<ChildrenTestSnapshot> for ChildrenTestMutation {
+    type ReferenceDiff = ChildrenTestDiff;
     fn diff(&self, _snapshot: &ChildrenTestSnapshot) -> protocol::MutationOutcome<ChildrenTestDiff> {
         match *self {}
     }

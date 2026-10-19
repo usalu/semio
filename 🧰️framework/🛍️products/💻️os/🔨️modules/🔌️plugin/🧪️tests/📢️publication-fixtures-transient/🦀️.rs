@@ -44,23 +44,34 @@ pub struct PublicationTransientDiff {
 }
 
 impl protocol::DiffAlgebra<PublicationTransient> for PublicationTransientDiff {
-    fn inverse(&self, base: &PublicationTransient) -> Self {
-        Self { revision: self.revision.map(|_| base.revision) }
-    }
+
     fn is_empty(&self) -> bool {
         self.revision.is_none()
     }
 }
 
-impl protocol::MutationDiff<PublicationTransient> for PublicationTransientDiff {
-    fn apply(&self, base: &PublicationTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<PublicationTransient> {
-        Ok(PublicationTransient { revision: self.revision.unwrap_or(base.revision) })
+impl protocol::ColdDiffAlgebra<PublicationTransient> for PublicationTransientDiff {
+    fn inverse(&self, base: &PublicationTransient) -> Self {
+        Self { revision: self.revision.map(|_| base.revision) }
     }
+}
 
+impl protocol::MutationDiff<PublicationTransient> for PublicationTransientDiff {
+
+
+
+}
+
+impl protocol::ColdMutationDiff<PublicationTransient> for PublicationTransientDiff {
     fn absorb(&mut self, other: Self) {
         if other.revision.is_some() {
             self.revision = other.revision;
         }
+    }
+
+    fn apply(&self, base: &mut PublicationTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+                if let Some(value) = self.revision { base.revision = value; }
+        Ok(())
     }
 }
 

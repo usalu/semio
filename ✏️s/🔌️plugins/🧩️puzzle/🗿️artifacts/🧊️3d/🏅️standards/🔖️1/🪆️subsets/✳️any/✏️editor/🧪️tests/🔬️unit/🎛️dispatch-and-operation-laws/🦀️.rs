@@ -35,8 +35,7 @@ async fn set_active_example_dispatches_through_the_tool_job_path_and_swaps_the_d
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("dispatch setActiveExample through the migrated tool-job path");
     let mut ticks = 0usize;
     while ticks < 5_000 && (object_count(&app) == 0 || first_object_id(&app) == before_first_id) {
-        let (raw, cx) = app.parts();
-        semio_s_plugin_puzzle_jobs::testing::maintain_items(raw, 1_048_576, 1_048_576, cx).expect("maintenance step drives the pending typed operation forward");
+        app.measure_maintenance_step(1_048_576, 1_048_576).expect("maintenance step drives the pending typed operation forward");
         ticks += 1;
     }
     assert!(object_count(&app) > 0, "nakagin document did not land after {ticks} maintenance turns");
@@ -68,7 +67,7 @@ async fn reserved_refresh_section_payloads_admit_into_the_retained_section_carri
 }
 
 fn add_brush_object_is_cursorized(source: &str) -> bool {
-    source.contains(r#""addBrushObject" => Box::new(Puzzle3dAddBrushObjectWork::default())"#)
+    source.contains(r#""addBrushObject" => owned!(Puzzle3dAddBrushObjectWork, |request, scope| Puzzle3dAddBrushObjectWork::from_original_construction(scope))"#)
         && source.contains("Puzzle3dAddBrushObjectStage::Decode")
         && source.contains("Puzzle3dAddBrushObjectStage::Kind")
         && source.contains("Puzzle3dAddBrushObjectStage::Representation")
@@ -84,7 +83,7 @@ fn add_brush_object_hostile_static_law_rejects_engine_run_to_completion() {
     let source: &str = &editor_source();
     assert!(add_brush_object_is_cursorized(source));
     let direct = source
-        .replace(r#""addBrushObject" => Box::new(Puzzle3dAddBrushObjectWork::default())"#, r#""addBrushObject" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#);
+        .replace(r#""addBrushObject" => owned!(Puzzle3dAddBrushObjectWork, |request, scope| Puzzle3dAddBrushObjectWork::from_original_construction(scope))"#, r#""addBrushObject" => work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#);
     assert!(!add_brush_object_is_cursorized(&direct));
     for marker in [
         "Puzzle3dAddBrushObjectStage::Decode",
@@ -100,7 +99,7 @@ fn add_brush_object_hostile_static_law_rejects_engine_run_to_completion() {
 }
 
 fn add_object_kind_is_cursorized(source: &str) -> bool {
-    source.contains(r#""addObjectKind" => Box::new(Puzzle3dAddObjectKindWork::default())"#)
+    source.contains(r#""addObjectKind" => owned!(Puzzle3dAddObjectKindWork, |request, scope| Puzzle3dAddObjectKindWork::from_original_construction(scope))"#)
         && source.contains("Puzzle3dAddObjectKindStage::Decode")
         && source.contains("Puzzle3dAddObjectKindStage::Kind")
         && source.contains("Puzzle3dAddObjectKindStage::Representation")
@@ -115,7 +114,7 @@ fn add_object_kind_hostile_static_law_rejects_whole_catalog_conversion() {
     let source: &str = &editor_source();
     assert!(add_object_kind_is_cursorized(source));
     let direct =
-        source.replace(r#""addObjectKind" => Box::new(Puzzle3dAddObjectKindWork::default())"#, r#""addObjectKind" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#);
+        source.replace(r#""addObjectKind" => owned!(Puzzle3dAddObjectKindWork, |request, scope| Puzzle3dAddObjectKindWork::from_original_construction(scope))"#, r#""addObjectKind" => work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#);
     assert!(!add_object_kind_is_cursorized(&direct));
     for marker in ["Puzzle3dAddObjectKindStage::Kind", "Puzzle3dAddObjectKindStage::Representation", "Puzzle3dAddObjectKindStage::Vortex", "Puzzle3dAddObjectKindStage::Publish", "PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT"] {
         assert!(!add_object_kind_is_cursorized(&source.replace(marker, "cursor-removed")), "missing add-object-kind cursor was falsely accepted: {marker}");
@@ -127,7 +126,7 @@ fn exact_window_routes_capture_instance_owners(source: &str) -> bool {
         && source.contains("ArtifactCommandWorkStep::CompleteWithEphemeral")
         && source.contains("config_from_snapshot(window_config_snapshot)")
         && source.contains("transient_from_snapshot(window_transient_snapshot)")
-        && source.contains("=> Box::new(Puzzle3dWindowCommandWork::new(tool_id).bound(&instance))")
+        && source.contains("=> bound!(|request, instance| Puzzle3dWindowCommandWork::new(tool_id).bound(instance))")
 }
 
 #[test]
@@ -157,7 +156,7 @@ fn window_config_publish_hostile_static_law_rejects_silent_ok_into_iter_drop() {
 }
 
 fn kind_weight_route_is_cursorized(source: &str) -> bool {
-    source.contains(r#""setObjectKindWeight" | "setVortexKindWeight" => Box::new(Puzzle3dKindWeightWork::new(tool_id))"#)
+    source.contains(r#""setObjectKindWeight" | "setVortexKindWeight" => owned!(Puzzle3dKindWeightWork, |request, scope| Puzzle3dKindWeightWork::from_original_construction(tool_id, scope))"#)
         && source.contains("Puzzle3dKindWeightStage::Catalog")
         && source.contains("Puzzle3dKindWeightStage::Validate")
         && source.contains("Puzzle3dKindWeightStage::SumOthers")
@@ -172,8 +171,8 @@ fn kind_weight_hostile_static_law_rejects_whole_normalizer_and_missing_cursors()
     let source: &str = &editor_source();
     assert!(kind_weight_route_is_cursorized(source));
     let direct = source.replace(
-        r#""setObjectKindWeight" | "setVortexKindWeight" => Box::new(Puzzle3dKindWeightWork::new(tool_id))"#,
-        r#""setObjectKindWeight" | "setVortexKindWeight" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#,
+        r#""setObjectKindWeight" | "setVortexKindWeight" => owned!(Puzzle3dKindWeightWork, |request, scope| Puzzle3dKindWeightWork::from_original_construction(tool_id, scope))"#,
+        r#""setObjectKindWeight" | "setVortexKindWeight" => work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#,
     );
     assert!(!kind_weight_route_is_cursorized(&direct));
     assert!(!source.contains("puzzle3d_normalize_kind_weight_group(self.weights"));
@@ -226,10 +225,11 @@ async fn puzzle3d_play_projection_pack_round_trips() {
 /// as equal and cannot state this; the object count on BOTH halves can.
 #[semio_framework_async_macros::async_test]
 async fn play_snapshot_typed_authority_survives_every_store_round_trip() {
-    use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+    use store::pack::snapshot::ArtifactDsl;
+    use store::pack::snapshot::ArtifactPack;
     let app = app().await;
     let snapshot = app.snapshot().expect("projection");
-    let objects = snapshot.value().get("objects").and_then(semio_framework_value::DslValue::as_array).map(<[_]>::len).unwrap_or(0);
+    let objects = snapshot.value().get("objects").and_then(|value| value.as_array()).map(|items| items.len()).unwrap_or(0);
     assert!(objects > 0, "the boot scene_snapshot ships objects");
     assert_eq!(snapshot.typed().objects.len(), objects, "the live snapshot's typed authority must carry the projection's objects");
     let via_pack = Puzzle3dPlaySnapshot::decode_pack(&snapshot.encode_pack()).expect("pack decode");
@@ -395,10 +395,14 @@ async fn document_and_inspector_panels_render() {
 /// `Mutation<Value>` bridge impl) is what the CW7 law is about.
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-    use semio_s_artifact_puzzle_3d_host::{close_puzzle3d_store, puzzle3d_store};
+    use semio_s_artifact_puzzle_3d_host::close_puzzle3d_store;
+    use semio_s_artifact_puzzle_3d_host::puzzle3d_store;
     use {semio_s_artifact_puzzle_3d_model::Puzzle3dObject as TypedObject, semio_s_artifact_puzzle_3d_model::PUZZLE_3D_SCHEMA};
-    use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
+    use protocol::ArtifactId;
+    use protocol::Edit;
+    use protocol::SchemaId;
+    use store::os_store::document_materialize::create_document_envelope;
+    use store::os_store::store_schema::ArtifactCommand;
 
     let mut store = puzzle3d_store(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("store");
     let object = TypedObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };

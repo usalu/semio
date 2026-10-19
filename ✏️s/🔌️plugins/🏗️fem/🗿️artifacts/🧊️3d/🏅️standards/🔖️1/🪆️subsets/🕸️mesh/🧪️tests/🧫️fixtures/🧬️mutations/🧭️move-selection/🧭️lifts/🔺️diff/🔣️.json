@@ -1,15 +1,12 @@
 {
   "nodes": {
-    "inserted": [],
     "removed": [],
+    "inserted": [],
     "moved": [],
     "modified": [
       {
         "id": "n3",
         "patch": {
-          "id": "n3",
-          "x": 0.0,
-          "y": 0.0,
           "z": 4.0
         }
       }

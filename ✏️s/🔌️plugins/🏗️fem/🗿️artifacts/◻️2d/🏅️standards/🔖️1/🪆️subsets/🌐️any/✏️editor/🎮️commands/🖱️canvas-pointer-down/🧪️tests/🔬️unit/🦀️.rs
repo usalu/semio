@@ -1,5 +1,6 @@
 use super::*;
-use crate::editor::fem2d::commands::{canvas_pointer_move, canvas_pointer_up};
+use crate::editor::fem2d::commands::canvas_pointer_move;
+use crate::editor::fem2d::commands::canvas_pointer_up;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canvas_gesture;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_layer_to_canvas;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_INTERACTION_DOMAIN;
@@ -9,8 +10,11 @@ use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::w
 use semio_framework_os_kernel::Viewport2d;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::find_node_2d;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::screen_2d;
-use semio_framework::kernel::{Effect, UiDirtyScope};
-use semio_framework_plugin::{HistoryView, ViewModel, ViewWindowInstance};
+use semio_framework::kernel::Effect;
+use semio_framework::kernel::UiDirtyScope;
+use semio_framework_plugin::HistoryView;
+use semio_framework_plugin::ViewModel;
+use semio_framework_plugin::ViewWindowInstance;
 use pack::snapshot::ArtifactDsl;
 
 const CANVAS_WIDTH: f64 = 800.0;
@@ -75,10 +79,12 @@ async fn canvas_pointer_down_modifiers_choose_the_merge_mode() {
 #[semio_framework_async_macros::async_test]
 async fn canvas_pointer_down_on_empty_space_clears_the_selection() {
     let doc = demo();
-    let emit = press(&doc, model_window::WINDOW_KIND_ID, CANVAS_WIDTH - 4.0, 4.0, 0, true, false, false);
-    let (_, args) = replay(&emit);
-    assert_eq!(args.get("targets").and_then(semio_framework_value::DslValue::as_str), Some("[]"));
-    assert_eq!(args.get("merge").and_then(semio_framework_value::DslValue::as_str), Some("replace"), "a background click always replaces, whatever the modifiers");
+    for (shift, ctrl, merge) in [(false, false, "replace"), (true, false, "additive"), (false, true, "subtractive"), (true, true, "invertive")] {
+        let emit = press(&doc, model_window::WINDOW_KIND_ID, CANVAS_WIDTH - 4.0, 4.0, 0, shift, ctrl, false);
+        let (_, args) = replay(&emit);
+        assert_eq!(args.get("targets").and_then(semio_framework_value::DslValue::as_str), Some("[]"));
+        assert_eq!(args.get("merge").and_then(semio_framework_value::DslValue::as_str), Some(merge));
+    }
 }
 
 #[semio_framework_async_macros::async_test]

@@ -50,7 +50,7 @@ async fn stateful_current_matches_full_replay_across_interleaved_commands() {
 
 
 /// 🪄️ Downcasts a registered `dyn SpaceMember` back to its concrete demo store.
-async fn demo_member<'a, Mutation: self::Mutation<DemoSnapshot> + 'static, M: SpaceMember + 'static>(host: &'a mut SpaceHost<M>, document_id: &str) -> &'a mut ArtifactStore<DemoSnapshot, Mutation> {
+async fn demo_member<'a, Mutation: self::Mutation<DemoSnapshot> + Clone + ColdMutation<DemoSnapshot> + 'static, M: SpaceMember + 'static>(host: &'a mut SpaceHost<M>, document_id: &str) -> &'a mut ArtifactStore<DemoSnapshot, Mutation> {
     host.member_mut(document_id).await.expect("member registered").as_any_mut().await.downcast_mut::<ArtifactStore<DemoSnapshot, Mutation>>().expect("concrete member type matches")
 }
 
@@ -255,7 +255,7 @@ async fn space_history_op_round_trips() {
         timestamp: HybridLogicalTimestamp::new(0, 1),
         members: vec![SpaceMemberPin { document_id: "member-a".into(), checkpoint_id: "cp-1".into(), alternative_id: String::new() }],
     };
-    test_support::assert_operation_round_trip(&SpaceHistorySnapshot::default(), SpaceHistoryMutation::CommitSpaceCheckpoint(CommitSpaceCheckpoint { checkpoint: checkpoint.clone() })).await;
+    test_support::assert_operation_round_trip(&SpaceHistorySnapshot::default(), SpaceHistoryMutation::CommitSpaceCheckpoint(CommitSpaceCheckpoint { checkpoint: checkpoint.clone(), index: None })).await;
 
     let with_checkpoint = SpaceHistorySnapshot { checkpoints: vec![checkpoint], alternatives: Vec::new(), active_alternative_id: None };
     let alternative = SpaceAlternative { id: "sa-1".into(), name: "branch".into(), checkpoint_ids: vec!["sc-1".into()] };
@@ -295,7 +295,7 @@ async fn space_history_inverse_diffs_sum_to_the_negative_diff() {
         timestamp: HybridLogicalTimestamp::new(0, 1),
         members: vec![SpaceMemberPin { document_id: "member-a".into(), checkpoint_id: "cp-1".into(), alternative_id: String::new() }],
     };
-    law(&SpaceHistoryMutation::CommitSpaceCheckpoint(CommitSpaceCheckpoint { checkpoint: checkpoint.clone() }), &SpaceHistorySnapshot::default()).await;
+    law(&SpaceHistoryMutation::CommitSpaceCheckpoint(CommitSpaceCheckpoint { checkpoint: checkpoint.clone(), index: None }), &SpaceHistorySnapshot::default()).await;
     let with_checkpoint = SpaceHistorySnapshot { checkpoints: vec![checkpoint], alternatives: Vec::new(), active_alternative_id: None };
     let alternative = SpaceAlternative { id: "sa-1".into(), name: "branch".into(), checkpoint_ids: vec!["sc-1".into()] };
     law(&SpaceHistoryMutation::CreateSpaceAlternative(CreateSpaceAlternative { alternative }), &with_checkpoint).await;

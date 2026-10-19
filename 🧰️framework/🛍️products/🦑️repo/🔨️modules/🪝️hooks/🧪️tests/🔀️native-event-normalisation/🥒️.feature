@@ -12,8 +12,7 @@ Feature: A native IDE hook payload becomes one neutral hook event and one set of
   Nothing outside this repository produces or consumes that mapping, so there is no reference to
   compare against; the recorded decision is `repo-hooks-native-normalisation`. What stands in for an
   oracle is the fixture itself: `shared://🔀️native-event-normalisation/🔀️native-events.json` pins the expected neutral event
-  beside every native one, written from the hook configurations this repository actually commits
-  (`.claude/settings.json`, `.cursor/hooks.json`, `.windsurf/hooks.json`, `.kiro/agents/repo.json`),
+  beside every native one, captured from the clients' hook payload contracts,
   so an implementation cannot agree with itself — it has to agree with the specification.
 
   @id-every-native-event-resolves-to-its-pinned-neutral-event

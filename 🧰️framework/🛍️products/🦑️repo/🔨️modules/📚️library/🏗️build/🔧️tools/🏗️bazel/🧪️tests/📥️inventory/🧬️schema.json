@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["cases", "files", "selected", "expected", "visited"],
+  "properties": {
+    "cases": {"type":"array","items":{"type":"object","additionalProperties":false,"required":["patterns","roots"],"properties":{"patterns":{"type":"array","items":{"type":"string"}},"roots":{"type":"array","items":{"type":"string"}}}}},
+    "files": {"type":"array","items":{"type":"string"}},
+    "selected": {"type":"array","items":{"type":"string"}},
+    "expected": {"type":"array","items":{"type":"string"}},
+    "visited": {"type":"array","items":{"type":"string"}}
+  }
+}

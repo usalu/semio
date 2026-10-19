@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "framework.os.paged-original-source-custody.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "base", "mutation", "copyBytes", "capacityBytes", "releaseBytes", "depth", "maximumTurns", "cancelAt", "cases", "expected"],
+  "properties": {
+    "schema": {"const": "framework.os.paged-original-source-custody.v1"},
+    "base": {"type": "object", "additionalProperties": false, "required": ["title", "nodes"], "properties": {"title": {"type": "string"}, "nodes": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["id", "text"], "properties": {"id": {"type": "string"}, "text": {"type": "string"}}}}}},
+    "mutation": {"type": "object", "additionalProperties": false, "required": ["kind", "index", "text"], "properties": {"kind": {"const": "set-text"}, "index": {"type": "integer", "minimum": 0}, "text": {"type": "string"}}},
+    "copyBytes": {"type": "integer", "minimum": 1},
+    "capacityBytes": {"type": "integer", "minimum": 1},
+    "releaseBytes": {"type": "integer", "minimum": 1},
+    "depth": {"type": "integer", "minimum": 1},
+    "maximumTurns": {"type": "integer", "minimum": 1},
+    "cancelAt": {"type": "array", "items": {"type": "integer", "minimum": 0}},
+    "cases": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["name", "refuseEdit", "refuseIssuerOnce", "expectedMutationCalls", "expectedSnapshotCalls"], "properties": {"name": {"type": "string", "minLength": 1}, "refuseEdit": {"type": "boolean"}, "refuseIssuerOnce": {"type": "boolean"}, "expectedMutationCalls": {"type": "integer", "minimum": 1}, "expectedSnapshotCalls": {"type": "integer", "minimum": 0}}}},
+    "expected": {"const": {"genuineBeforeIdentity": true, "genuineMutationPayloadIdentity": true, "exactIssuerIdentity": true, "deniedGrantCallbacks": 0, "cancelledMutationCalls": 1, "failedSealMutationCalls": 1, "failedSealSnapshotCalls": 1, "returnedOwnersPreserved": true, "terminalDropBytes": 0}}
+  }
+}

@@ -79,6 +79,9 @@ pub use controlled_and_borrowed_bridge::*;
 #[path = "📥️decode/🫳️borrowed/🦀️.rs"]
 mod borrowed_read_source;
 pub use borrowed_read_source::{JsonReadSource,JsonBorrowedParseCursor,JsonBorrowedDslCursor,JsonParsedValue,JsonReadLimits,JsonSourceCursor};
+#[path="📥️decode/🧳️receiving/🦀️.rs"]
+pub mod original_receiving;
+pub use original_receiving::OriginalJsonReceiving;
 #[path="📥️decode/🧵️operation/🦀️.rs"]
 mod original_read_operation;
 pub use original_read_operation::{JsonReadOperation,JsonReadPolicy};

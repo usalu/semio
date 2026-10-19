@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://window/retained-semantic-preview/laws",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "policy",
+    "cases",
+    "cancelPrefixes"
+  ],
+  "properties": {
+    "policy": {
+      "const": {
+        "maximumItems": 1,
+        "combinedBodyCapacity": 4096,
+        "separateRelease": true,
+        "originalBoxIdentity": true,
+        "lastCompleteUntilHandoff": true,
+        "maximumTurns": 65536
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "before",
+          "leaves",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "before": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "expected": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "leaves": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    },
+    "cancelPrefixes": {
+      "const": [
+        0,
+        1,
+        2,
+        8,
+        16
+      ]
+    }
+  }
+}

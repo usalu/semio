@@ -1,0 +1,20 @@
+{
+  "name": "product-workspace",
+  "private": true,
+  "workspaces": [
+    "../framework/kernel",
+    "../specific/models/domain",
+    "apps/app"
+  ],
+  "semio": {
+    "workspace": {
+      "schemaVersion": 1,
+      "members": [
+        "../framework/**",
+        "../specific/models/**",
+        "apps/**"
+      ],
+      "owners": []
+    }
+  }
+}

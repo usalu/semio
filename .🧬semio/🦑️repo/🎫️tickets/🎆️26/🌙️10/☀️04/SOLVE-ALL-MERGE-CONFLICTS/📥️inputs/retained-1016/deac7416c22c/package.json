@@ -1,0 +1,16 @@
+{
+  "name": "neutral-owner-5",
+  "private": true,
+  "workspaces": [
+    "modules/domain"
+  ],
+  "semio": {
+    "workspace": {
+      "schemaVersion": 1,
+      "members": [
+        "modules/**"
+      ],
+      "owners": []
+    }
+  }
+}

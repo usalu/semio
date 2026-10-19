@@ -1,5 +1,5 @@
-//! 🔒️ Laws for the ONE lock promise: a locked node, handle, edge or target region refuses delete, the
 //! board drag, the rotate ring, the three transform verbs and an inspector patch — each with exactly
+//! 🔒️ Laws for the ONE lock promise: a locked node, handle, edge or target region refuses delete, the
 //! one visible sentence, no document edit and no fault. A selection transform refuses at the select tool
 //! only when EVERY target is locked; a mixed one commits and its leaf reports the locked rest. The 2026-09-17 ◻️2d battery measured
 //! `deleteSelection` erasing 12 entities whose inspector flag read `locked true` while the very same

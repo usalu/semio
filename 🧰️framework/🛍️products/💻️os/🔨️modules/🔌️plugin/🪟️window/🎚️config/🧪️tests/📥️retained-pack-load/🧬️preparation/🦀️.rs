@@ -19,7 +19,8 @@ impl RetainedCloneEdit<State,Mutation> for CameraRetainedEdit{
 }
 impl CameraRetainedEditCursor{pub fn normal_demand(&self)->semio_framework_value::RetirementDemand{let(copy_bytes,capacity_bytes)=match self.stage{0=>(size_of::<State>()*2,0),1=>(size_of::<State>()+size_of::<Box<State>>(),size_of::<State>()),2=>(size_of::<Vec<Mutation>>(),size_of::<Mutation>()),3=>(size_of::<Mutation>()*2+size_of::<Box<State>>(),0),_=>(0,0)};semio_framework_value::RetirementDemand{copy_bytes,capacity_bytes,depth:2,..Default::default()}}}
 impl RetainedCloneEditCursor<State,Mutation> for CameraRetainedEditCursor{
- fn advance(&mut self,base:RetainedCloneRef<'_,State>,post:&mut State,mutation:RetainedCloneRef<'_,Mutation>,grant:RetainedCloneGrant)->Result<RetainedCloneEditStep,ValueError>{
+ fn advance_demands(&self,_:RetainedCloneRef<'_,State>,_:&State,_:RetainedCloneRef<'_,Mutation>,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(if self.cancelled||self.custody.is_closing()||self.stage==4{Default::default()}else{self.normal_demand()})}
+ fn advance(&mut self,base:RetainedCloneRef<'_,State>,post:&mut State,mutation:RetainedCloneRef<'_,Mutation>,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneEditStep,ValueError>{
   if self.cancelled||self.custody.is_closing()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneEditStep::Progress(Default::default()));}
   if self.stage==4{return Ok(RetainedCloneEditStep::Complete(Default::default()));}let demand=self.normal_demand();let(copy,capacity)=(demand.copy_bytes,demand.capacity_bytes);
   if copy>grant.maximum_copy_bytes||capacity>grant.maximum_capacity_bytes||demand.depth>grant.maximum_depth{return Ok(RetainedCloneEditStep::Progress(Default::default()));}

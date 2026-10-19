@@ -47,18 +47,62 @@ enum Stepped {
     Cancelled,
 }
 
-fn step_once(job: &mut EnergySimulationRunJob, fuel: u64, deadline_us: u64, cancel: &semio_framework_job::CancelToken, operation: OperationId, generation: Generation, sequence: &mut u64) -> Stepped {
-    let mut receipt = RetainedCloneProgress::default();
-    let mut cx = StepContext::new(operation, generation, StepBudget::new(fuel, deadline_us, TEST_GRANT), cancel.clone(), semio_framework_job::default_now_us, sequence, &mut receipt);
-    let mut verdict = None;
-    match semio_framework_job::drive_step(job, &mut cx, "energy.simulation.run.test", semio_framework_job::InteractiveStage::InteractiveStep, &mut verdict).expect("run step admission") {
-        None | Some(JobOutcomeBorrow::Yield { .. }) => Stepped::Yield,
-        Some(JobOutcomeBorrow::PreviewReady { payload, .. }) => Stepped::Tick((0..payload.page_count()).flat_map(|index| payload.page(index).expect("tick page").to_vec()).collect()),
-        Some(JobOutcomeBorrow::CheckpointReady { .. }) => Stepped::Checkpoint,
-        Some(JobOutcomeBorrow::Complete { .. }) => Stepped::Complete,
-        Some(JobOutcomeBorrow::Fault { .. }) => Stepped::Fault,
-        Some(JobOutcomeBorrow::Cancelled { .. }) => Stepped::Cancelled,
+/// 🎟️ A declared preborn run retains its one original caller and decoder through every refused turn and close.
+struct RunFixture {
+    job: Option<EnergySimulationRunJob>,
+    caller: Option<semio_framework_job::OriginalJobFixtureCaller>,
+    decoder: semio_framework_job::OriginalJobDecodeOwner,
+}
+
+impl RunFixture {
+    fn new(identity: ToolRunIdentity, snapshot: Arc<EnergyModelSnapshot>, template: SimulationConfig) -> Self {
+        let policy = source_policy();
+        let source = &policy["source"];
+        Self { job: Some(EnergySimulationRunJob::new(identity, snapshot, template)), caller: Some(semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(number(&source["operation"])), semio_framework_job::Generation(number(&source["generation"])), source_stock(), semio_framework_job::default_now_us, u64::MAX, number(&source["fuel"]))), decoder: semio_framework_job::OriginalJobDecodeOwner::empty() }
     }
+
+    fn cancel(&self) { self.caller.as_ref().expect("original Energy caller").cancel().cancel_now(); }
+}
+
+impl std::ops::Deref for RunFixture {
+    type Target = EnergySimulationRunJob;
+    fn deref(&self) -> &Self::Target { self.job.as_ref().expect("original Energy run remains retained") }
+}
+
+impl std::ops::DerefMut for RunFixture {
+    fn deref_mut(&mut self) -> &mut Self::Target { self.job.as_mut().expect("original Energy run remains retained") }
+}
+
+impl Drop for RunFixture {
+    fn drop(&mut self) { if !std::thread::panicking() { close(self); } }
+}
+
+fn source_stock() -> RetainedCloneGrant {
+    let law = source_policy();
+    let row = &law["stock"];
+    RetainedCloneGrant { maximum_items: number(&row["items"]) as usize, maximum_copy_bytes: number(&row["copyBytes"]) as usize, maximum_capacity_bytes: number(&row["capacityBytes"]) as usize, maximum_release_bytes: number(&row["releaseBytes"]) as usize, maximum_depth: number(&row["depth"]) as usize }
+}
+
+fn source_policy() -> serde_json::Value { serde_json::from_str(include_str!("../🎟️source/🔣️.json")).expect("original source policy") }
+
+fn step_once(fixture: &mut RunFixture, fuel: u64, deadline_us: u64) -> Stepped {
+    let mut outcome = None;
+    let job = fixture.job.as_mut().expect("original Energy run");
+    fixture.caller.as_mut().expect("original Energy caller").turn_with_decoder(TEST_GRANT, &mut fixture.decoder, |cx| {
+        cx.with_original_work_loan(fuel, deadline_us, |cx| {
+            let mut verdict = None;
+            outcome = Some(match semio_framework_job::drive_step(job, cx, "energy.simulation.run.test", semio_framework_job::InteractiveStage::InteractiveStep, &mut verdict)? {
+                None | Some(JobOutcomeBorrow::Yield { .. }) => Stepped::Yield,
+                Some(JobOutcomeBorrow::PreviewReady { payload, .. }) => Stepped::Tick((0..payload.page_count()).flat_map(|index| payload.page(index).expect("tick page").to_vec()).collect()),
+                Some(JobOutcomeBorrow::CheckpointReady { .. }) => Stepped::Checkpoint,
+                Some(JobOutcomeBorrow::Complete { .. }) => Stepped::Complete,
+                Some(JobOutcomeBorrow::Fault { .. }) => Stepped::Fault,
+                Some(JobOutcomeBorrow::Cancelled { .. }) => Stepped::Cancelled,
+            });
+            Ok(())
+        })
+    }).expect("same original Energy run turn");
+    outcome.expect("original run outcome")
 }
 
 /// 🦶️ Every observable outcome of driving a run job to settlement with a fixed fuel budget per call.
@@ -68,13 +112,11 @@ struct Drive {
     calls: usize,
 }
 
-fn drive(job: &mut EnergySimulationRunJob, fuel: u64) -> Drive {
-    let (operation, generation, cancel) = (semio_framework_job::allocate_operation_id(), Generation(1), semio_framework_job::root_cancel_token());
-    let mut sequence = 0;
+fn drive(job: &mut RunFixture, fuel: u64) -> Drive {
     let mut ticks = Vec::new();
     for calls in 1..=50_000_000 {
         let now = semio_framework_job::default_now_us().expect("clock");
-        match step_once(job, fuel, now + semio_framework_job::INTERACTIVE_LANE_WALL_US * 4, &cancel, operation, generation, &mut sequence) {
+        match step_once(job, fuel, now + semio_framework_job::INTERACTIVE_LANE_WALL_US * 4) {
             Stepped::Yield => {}
             Stepped::Tick(bytes) => ticks.push(ToolRunTick::decode(&bytes).expect("tick decodes")),
             Stepped::Checkpoint => panic!("a restart-policy run never reports a checkpoint"),
@@ -84,7 +126,8 @@ fn drive(job: &mut EnergySimulationRunJob, fuel: u64) -> Drive {
     panic!("the run never settled");
 }
 
-fn close(job: &mut EnergySimulationRunJob) {
+fn close(fixture: &mut RunFixture) {
+    let Some(job) = fixture.job.as_mut() else { return };
     job.begin_close();
     for _ in 0..10_000_000 {
         let demand = RetirementDemand {
@@ -94,16 +137,20 @@ fn close(job: &mut EnergySimulationRunJob) {
             depth: job.next_close_depth_demand().expect("a locally owned run quotes its depth demand"),
         };
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        match semio_framework_job::close_with_self_funded_context(grant, |cx| job.close_step(cx)).expect("original fixture close turn") {
+        match fixture.caller.as_mut().expect("original Energy caller remains live").turn_with_decoder(grant, &mut fixture.decoder, |cx| job.close_step(cx)).expect("same original Energy run close") {
             InteractiveJobCloseStep::Complete { .. } => {
                 assert!(job.terminal_is_empty(), "a closed run job holds no owner");
-                return;
+                break;
             }
             InteractiveJobCloseStep::Pending { progress } => assert!(progress.fits(grant), "a close receipt fits its own quoted grant"),
-            InteractiveJobCloseStep::Blocked => panic!("the run job close blocked or was refused"),
+            InteractiveJobCloseStep::Blocked => panic!("the run job close blocked"),
         }
     }
-    panic!("the run job close never completed");
+    assert!(job.terminal_is_empty(), "the run job close never completed");
+    fixture.job.take();
+    let caller = fixture.caller.as_mut().expect("original Energy source closes after run");
+    while !fixture.decoder.terminal_is_empty() { caller.turn(source_stock(), |cx| { let demand = fixture.decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?; semio_framework_job::close_original_retained_step(cx, demand, |grant| fixture.decoder.close_step(grant))?; Ok(()) }).expect("same original Energy decoder close"); }
+    fixture.caller.take().expect("original Energy caller closes once").retire(source_stock());
 }
 
 fn reason_ids(ticks: &[ToolRunTick]) -> Vec<&'static str> {
@@ -187,10 +234,19 @@ fn every_numerical_stage_maps_into_the_declared_run_pipeline_in_order() {
 fn the_pause_step_fuel_unit_is_one_computed_timestep() {
     let fixture = fixture();
     let (snapshot, template) = scenario();
-    let mut job = EnergySimulationRunJob::new(identity(), snapshot, template);
+    let mut job = RunFixture::new(identity(), snapshot, template);
     let run = drive(&mut job, number(&fixture["fuel"]["fuelPerStep"]));
     assert_eq!(run.settled, Stepped::Complete, "the run completes");
     let (before, last) = run.ticks.split_at(run.ticks.len() - 1);
+    let preparing: Vec<_> = before.iter().filter(|tick| tick.progress.as_ref().expect("preparing progress").completed == 0).collect();
+    assert!(!preparing.is_empty(), "original input identity publishes progress before numerical timesteps");
+    for tick in preparing {
+        let progress = tick.progress.as_ref().unwrap();
+        assert_eq!(progress.stage, EnergySimulationRunStage::Prepare.index());
+        assert!(progress.total.is_none());
+        assert!(progress.counters.iter().any(|entry| entry.counter == EnergySimulationRunCounter::InputIdentityBytes.index() && entry.value > 0));
+    }
+    let before: Vec<_> = before.iter().filter(|tick| tick.progress.as_ref().unwrap().completed > 0).collect();
     assert_eq!(before.len() as u64, number(&fixture["fuel"]["ticksBeforeSettle"]));
     let mut completed = 0;
     for tick in before {
@@ -217,14 +273,14 @@ fn the_pause_step_fuel_unit_is_one_computed_timestep() {
     close(&mut job);
 }
 
-/// 🔮️ The streamed run must agree with the batch adapter `Engine::run` — the exact engine path the
+/// 🔮️ The streamed run must agree with the caller-driven `EnergyBatchRun` — the exact engine path the
 /// ANSI/ASHRAE 140 EnergyPlus comparison (`🧪️tests/🏛️simulate-bestest-energyplus`) validates.
 #[test]
 fn run_job_results_and_final_readout_agree_with_the_batch_engine_oracle() {
     let (snapshot, template) = scenario();
     let config = simulation_config_for(&template, &snapshot.model);
-    let oracle = crate::sim::Engine::run(snapshot.model.clone(), config).expect("batch engine run");
-    let mut job = EnergySimulationRunJob::new(identity(), snapshot, template);
+    let oracle = crate::sim::testing::run_preborn(snapshot.model.clone(), config).expect("batch engine run");
+    let mut job = RunFixture::new(identity(), snapshot, template);
     let run = drive(&mut job, semio_framework_job::INTERACTIVE_LANE_FUEL);
     assert_eq!(run.settled, Stepped::Complete, "the streamed run completes");
     let results = job.numerical.as_mut().expect("numerical owner").take_results().expect("streamed results");
@@ -243,21 +299,19 @@ fn run_job_results_and_final_readout_agree_with_the_batch_engine_oracle() {
 #[test]
 fn cancellation_mid_run_settles_cancelled_and_close_retires_every_owner() {
     let (snapshot, template) = scenario();
-    let mut job = EnergySimulationRunJob::new(identity(), snapshot, template);
-    let cancel = semio_framework_job::root_cancel_token();
-    let (operation, generation) = (semio_framework_job::allocate_operation_id(), Generation(1));
-    let mut sequence = 0;
+    let mut job = RunFixture::new(identity(), snapshot, template);
     let mut ticks = 0;
+    let deadline = |now: u64| now + semio_framework_job::INTERACTIVE_LANE_WALL_US * 4;
     while ticks < 3 {
-        match step_once(&mut job, 1, u64::MAX, &cancel, operation, generation, &mut sequence) {
+        match step_once(&mut job, 1, deadline(semio_framework_job::default_now_us().expect("clock"))) {
             Stepped::Tick(_) => ticks += 1,
             Stepped::Yield => {}
             _ => panic!("the run settled before it could be cancelled"),
         }
     }
     assert!(job.numerical.is_some(), "the run is simulating");
-    cancel.cancel_now();
-    assert_eq!(step_once(&mut job, 1, u64::MAX, &cancel, operation, generation, &mut sequence), Stepped::Cancelled);
+    job.cancel();
+    assert_eq!(step_once(&mut job, 1, deadline(semio_framework_job::default_now_us().expect("clock"))), Stepped::Cancelled);
     close(&mut job);
 }
 
@@ -267,7 +321,7 @@ fn a_model_beyond_numerical_admission_publishes_a_danger_step_before_the_fault()
     let mut model = crate::examples::bestest_600::model();
     model.zones.clear();
     let snapshot = Arc::new(crate::snapshot::energy_snapshot_with_state(crate::snapshot::ENERGY_MODEL_DOCUMENT_SCHEMA, &model, None));
-    let mut job = EnergySimulationRunJob::new(identity(), snapshot, SimulationConfig { warmup_days: 0, ..template });
+    let mut job = RunFixture::new(identity(), snapshot, SimulationConfig { warmup_days: 0, ..template });
     let run = drive(&mut job, 1);
     assert_eq!(run.settled, Stepped::Fault, "an unsimulatable model faults the run");
     let last = run.ticks.last().expect("the refusal travels in a tick before the fault");
@@ -386,7 +440,7 @@ fn the_run_refreshes_exactly_the_three_d_model_and_simulation_window_bodies() {
 fn a_tier_boundary_and_the_completing_tick_carry_the_per_surface_map() {
     let (snapshot, template) = scenario();
     let surfaces = snapshot.model.surfaces.len() + snapshot.model.fenestrations.len();
-    let mut job = EnergySimulationRunJob::new(identity(), snapshot, template);
+    let mut job = RunFixture::new(identity(), snapshot, template);
     let run = drive(&mut job, semio_framework_job::INTERACTIVE_LANE_FUEL);
     assert_eq!(run.settled, Stepped::Complete, "the streamed run completes");
 
@@ -437,3 +491,39 @@ fn a_tick_carrying_two_thousand_surfaces_stays_far_inside_the_tick_byte_ceiling(
     assert_eq!(decoded.payload.as_deref(), Some(payload.as_slice()), "the payload survives the tick codec byte for byte");
 }
 //#endregion 🧱️SurfacePayload
+
+/// 🪪️ Original paid canonical bytes publish monotone activity with unknown total and untouched timestep units.
+#[test]
+fn input_identity_progress_matches_neutral_bytes_unknown_total_and_original_counter(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🪪️input-identity/🧫️fixtures/🔣️.json")).unwrap();let mut cursor=EnergyRunCursor::new();let mut writer=ToolRunTickWriter::new(identity());
+ for row in fixture["progress"]["samples"].as_array().unwrap(){let live=EnergyJobCursor{input_identity_bytes:row[0].as_u64().unwrap()as usize,input_identity_ready:row[1].as_bool().unwrap(),stage:EnergyJobStage::Validate,tier:EnergyQualityTier::SteadyStateEstimate,warmup_hour:0,warmup_hours:0,timestep:0,total_timesteps:0,facility_electricity_kwh:0.0};let(activity,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.observe(live,&mut writer));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(activity,row[2].as_bool().unwrap());let progress=cursor.progress(identity(),ToolRunState::Running,EnergySimulationRunStage::Prepare);assert_eq!(progress.completed,0);assert!(progress.total.is_none());assert_eq!(progress.counters.len(),5);assert_eq!(progress.counters[4].counter,EnergySimulationRunCounter::InputIdentityBytes.index());assert_eq!(progress.counters[4].value,row[0].as_u64().unwrap());}
+ let mut owner=ControlledRetirement::new(writer).unwrap_or_else(|_|panic!("original progress writer close"));while !owner.terminal_is_empty(){let demand=RetirementDemand{copy_bytes:owner.next_copy_byte_demand().unwrap(),capacity_bytes:owner.next_capacity_byte_demand(4096).unwrap(),release_bytes:owner.next_release_byte_demand().unwrap(),depth:owner.next_depth_demand().unwrap()};owner.step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}).unwrap();}
+ eprintln!("[DEBUG] Energy input bytes8 neutral monotone progress events unknown total original fifth counter heap0");
+}
+
+/// 🎟️ Authored nested work loans debit the same original source once and restore only the unused parent ceiling.
+#[test]
+fn original_session_child_loans_match_neutral_source_without_duplicate_receipts() {
+    let policy = source_policy();
+    let source = &policy["source"];
+    let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(number(&source["operation"])), semio_framework_job::Generation(number(&source["generation"])), source_stock(), semio_framework_job::default_now_us, u64::MAX, number(&source["fuel"]));
+    for row in policy["loans"].as_array().unwrap() {
+        let before = caller.fuel_remaining();
+        let receipt = caller.cumulative_receipt();
+        caller.turn(TEST_GRANT, |cx| {
+            cx.with_original_work_loan(number(&row["parentFuel"]), cx.deadline_us(), |cx| {
+                cx.with_original_work_loan(number(&row["requestedFuel"]), cx.deadline_us(), |cx| {
+                    assert_eq!(cx.fuel_remaining(), number(&row["requestedFuel"]).min(number(&row["parentFuel"])));
+                    cx.consume_fuel(number(&row["spentFuel"]));
+                    Ok(())
+                })?;
+                assert_eq!(cx.fuel_remaining(), number(&row["remainingFuel"]));
+                Ok(())
+            })
+        }).unwrap();
+        assert_eq!(before - caller.fuel_remaining(), number(&row["spentFuel"]));
+        assert_eq!(caller.cumulative_receipt(), receipt);
+    }
+    caller.retire(source_stock());
+    eprintln!("[DEBUG] actual Energy nested original source loans3 preserve same source, finite fuel and zero duplicated retained receipts");
+}

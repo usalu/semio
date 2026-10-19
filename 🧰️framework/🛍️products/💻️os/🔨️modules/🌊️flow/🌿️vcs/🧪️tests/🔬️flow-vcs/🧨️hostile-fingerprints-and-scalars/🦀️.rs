@@ -131,6 +131,9 @@ enum FlowHostilePath {
     Index(usize),
 }
 
+/// 🧾️ The retained features that write a history version row: a document load (`replaceDocument`) is a genesis lane and has no semantic-history oracle row.
+const FLOW_HISTORY_FEATURES: [&str; 12] = ["addWidget", "removeWidget", "moveWidget", "patchWidget", "addSynapse", "removeSynapse", "moveSynapse", "patchSynapse", "setLayout", "undo", "redo", "checkpoint"];
+
 fn flow_hostile_fixture_digest(value: &semio_framework_pack_json::Value) -> u64 {
     let mut digest = 14_695_981_039_346_656_037u64;
     for byte in flow_oracle_canonical_json(value).as_bytes() {

@@ -9,7 +9,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
-use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::inverse_puzzle2d_mutation;
 use semio_framework_test_fixtures::fixture_text;
 
 use crate::Puzzle2dSnapshot;
@@ -45,7 +45,7 @@ fn rejection_leaves_the_document_at_the_committed_after() {
 #[test]
 fn the_refusal_is_the_declared_one() {
     assert!((*DIFF_ABSENT).is_empty(), "edit-target-region-label/rejects-renaming-a-region-the-board-never-held: the D6 sentinel 🔺️diff/🚫️.absent must stay empty");
-    let produced = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Puzzle2dMutation as protocol::ColdMutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff::default(), "edit-target-region-label/rejects-renaming-a-region-the-board-never-held: a refusing diff builder answers the default diff, never a half-built delta");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "edit-target-region-label/rejects-renaming-a-region-the-board-never-held: exactly one diagnostic is expected, got {messages:?}");
@@ -80,7 +80,7 @@ fn committed_json_is_canonical() {
 fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("rejected"), "edit-target-region-label/rejects-renaming-a-region-the-board-never-held declares a rejected outcome");
-    let produced = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Puzzle2dMutation as protocol::ColdMutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
     assert_eq!(outcome.get("code").and_then(serde_json::Value::as_str), Some(message.code.0.as_str()), "edit-target-region-label/rejects-renaming-a-region-the-board-never-held: the declared code must match the emitted one");
     let declared_path: Vec<String> = outcome.get("path").and_then(serde_json::Value::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();

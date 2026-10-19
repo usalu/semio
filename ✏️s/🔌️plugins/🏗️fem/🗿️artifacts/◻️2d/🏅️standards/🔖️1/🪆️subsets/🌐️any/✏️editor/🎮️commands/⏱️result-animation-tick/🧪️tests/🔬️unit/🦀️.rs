@@ -1,16 +1,33 @@
 use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::result_animation_tick::*;
-use semio_s_fem_app_surface::{FemResultsAnimation, ANIMATION_TICK_SECONDS};
-use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation::{rearm_effect, resting_step, FemPlaybackStep, FemPlaybackTransport};
-use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::transient::addressed_to;
-use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::transient::FemPlaybackClock;
+use semio_s_fem_app_surface::FemResultsAnimation;
+use semio_s_fem_app_surface::ANIMATION_TICK_SECONDS;
+use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation::rearm_effect;
+use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation::resting_step;
+use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation::FemPlaybackStep;
+use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation::FemPlaybackTransport;
+use semio_s_artifact_fem_2d_results_state::transient::addressed_to;
+use semio_s_artifact_fem_2d_results_state::transient::FemPlaybackClock;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation, ViewModel};
-use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation::{SetResultAnimation, TICK_ACTION};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::ViewModel;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
+use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation::SetResultAnimation;
+use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation::TICK_ACTION;
 use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results;
-use crate::context::{close, dispatch, fem2d_mounted_app, Fem2dApp};
+use crate::context::close;
+use crate::context::dispatch;
+use crate::context::fem2d_mounted_app;
+use crate::context::Fem2dApp;
 use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, InvocationResult, NoConfig, ViewModel, ViewWindowInstance};
+use semio_framework_plugin::Effect;
+use semio_framework_plugin::InvocationResult;
+use semio_framework_plugin::ViewWindowInstance;
 
 const WINDOW: &str = "results-left";
 
@@ -42,7 +59,7 @@ fn clock(app: &mut Fem2dApp) -> Option<FemPlaybackClock> {
 /// 🔁️ Drives the publication the dispatch opened all the way into the stores, the way the plugin
 /// host's own continuation does — a read before the settle would see the PREVIOUS frame.
 async fn settle(app: &mut Fem2dApp) -> Vec<Effect> {
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation").effects
+    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation").effects
 }
 
 /// 🔁️ How many playback re-arms one gesture asked the host for. Counted off BOTH the dispatch's own
@@ -163,7 +180,7 @@ async fn transport_wire(app: &mut Fem2dApp, args: serde_json::Value) {
     let mut meta = semio_framework_plugin::artifact_app_laws::meta("local");
     meta.view_state = Some(results_view());
     let args = semio_framework_plugin::DslValue::from(&args);
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setResultAnimation", Some(args.clone()), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("setResultAnimation: {fault:?}"));
+    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setResultAnimation", Some(args.clone()), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().close).await.unwrap_or_else(|fault| panic!("setResultAnimation: {fault:?}"));
     if !aborting {
         settle(app).await;
     }
@@ -259,7 +276,7 @@ mod long {
             } else if frame >= frames - fifth {
                 last += elapsed;
             }
-            semio_framework_plugin::PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one fair maintenance step per frame");
+            semio_framework_plugin::PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().maintenance).expect("one fair maintenance step per frame");
             assert!(!semio_framework_plugin::PluginApp::maintenance_under_pressure(&*app), "frame {frame}: a frame never displaces a store owner");
         }
         assert_eq!(app.window_config_generation(&results_view()).await.expect("config generation"), config_generation, "no frame amended the window config");

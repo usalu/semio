@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.coms/repo/cli/build.json",
+  "title": "🏗️ Go Repository CLI Build",
+  "type": "object",
+  "required": ["project", "command", "entryPoint", "artifacts", "declaration"],
+  "additionalProperties": false,
+  "properties": {
+    "project": { "const": "@semio-tech/repo-cli-go" },
+    "command": { "const": "bun ./📜️script.ts build" },
+    "entryPoint": { "const": "./🚀️bin" },
+    "artifacts": { "type": "object", "required": ["windows", "unix"], "additionalProperties": false, "properties": { "windows": { "const": ".🧬semio/🦑️repo/⚡️cache/🗃️bin/semio-repo.exe" }, "unix": { "const": ".🧬semio/🦑️repo/⚡️cache/🗃️bin/semio-repo" } } },
+    "declaration": { "$ref": "https://json.schemas.assets.semio-tech.coms/repo/dashboard/registry.json#/$defs/TargetDeclaration" }
+  }
+}

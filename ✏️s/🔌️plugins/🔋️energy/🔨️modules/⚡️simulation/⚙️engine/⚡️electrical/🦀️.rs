@@ -39,23 +39,45 @@ pub struct PvSystem {
     pub area_m2: f64,
     pub inverter_efficiency: f64,
     pub temperature_coefficient: f64,
+    pub faiman_heat_loss_constant_w_m2k: f64,
+    pub faiman_heat_loss_wind_w_s_m3k: f64,
+    pub mounting: crate::model::PhotovoltaicMounting,
     pub tilt_deg: f64,
     pub azimuth_deg: f64,
 }
 
 impl PvSystem {
+    /// 🧊️ Faiman module temperature using the authored heat-loss coefficients.
+    /// [Faiman model](https://pvlib-python.readthedocs.io/en/stable/reference/generated/pvlib.temperature.faiman.html).
+    pub fn module_temperature_c(&self, irradiance_w_m2: f64, air_temperature_c: f64, wind_speed_m_s: f64) -> f64 {
+        air_temperature_c + irradiance_w_m2.max(0.0) / (self.faiman_heat_loss_constant_w_m2k + self.faiman_heat_loss_wind_w_s_m3k * wind_speed_m_s.max(0.0))
+    }
+
+    /// 🌡️ Sandia cell temperature from module temperature and the authored mounting.
+    /// [Sandia cell gradient](https://pvlib-python.readthedocs.io/en/stable/reference/generated/pvlib.temperature.sapm_cell.html).
+    pub fn cell_temperature_c(&self, irradiance_w_m2: f64, air_temperature_c: f64, wind_speed_m_s: f64) -> f64 {
+        let gradient = match self.mounting { crate::model::PhotovoltaicMounting::OpenRack => 3.0, crate::model::PhotovoltaicMounting::CloseRoof => 1.0, crate::model::PhotovoltaicMounting::InsulatedBack => 0.0 };
+        self.module_temperature_c(irradiance_w_m2, air_temperature_c, wind_speed_m_s) + irradiance_w_m2.max(0.0) * gradient / 1000.0
+    }
+
     /// ☀️ AC power output from plane-of-array irradiance.
     pub fn simulate(&self, poa_irradiance_w_m2: f64, cell_temperature_c: f64) -> f64 {
         if poa_irradiance_w_m2 <= 0.0 {
             return 0.0;
         }
         let temp_factor = 1.0 + self.temperature_coefficient * (cell_temperature_c - 25.0);
-        let dc_w = self.area_m2 * poa_irradiance_w_m2 * self.module_efficiency * temp_factor;
+        let dc_w = (self.area_m2 * poa_irradiance_w_m2 * self.module_efficiency * temp_factor).max(0.0);
         let clipped = dc_w.min(self.dc_capacity_w);
-        clipped * self.inverter_efficiency.clamp(0.85, 0.99)
+        clipped * self.inverter_efficiency.clamp(0.0, 1.0)
     }
 
-    /// 📐️ Tilt/azimuth factor relative to horizontal south-facing surface.
+    /// 🌤️ Preserves the shared sky's beam, diffuse and ground split on the authored collector plane.
+    pub fn incident_irradiance(&self,sky:&crate::solar::SkyState)->crate::solar::IncidentSolar {
+        let(tilt,azimuth)=(deg_to_rad(self.tilt_deg),deg_to_rad(self.azimuth_deg));
+        sky.incident([tilt.sin()*azimuth.sin(),tilt.sin()*azimuth.cos(),tilt.cos()],1.0,1.0,1.0)
+    }
+
+    /// 📐️ Direct-beam incidence cosine on the authored collector plane.
     pub fn orientation_factor(&self, solar_altitude_deg: f64, solar_azimuth_deg: f64) -> f64 {
         let tilt = deg_to_rad(self.tilt_deg);
         let surf_az = deg_to_rad(self.azimuth_deg);

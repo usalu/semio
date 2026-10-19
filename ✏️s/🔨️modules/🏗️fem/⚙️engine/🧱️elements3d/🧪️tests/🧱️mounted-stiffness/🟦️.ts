@@ -4,10 +4,11 @@ import { applyPatch, type Operation } from "fast-json-patch";
 import fixture from "../🧫️fixtures/🧱️mounted-stiffness/🔣️.json" with { type: "json" };
 
 
+import { multiply } from "mathjs";
+import ownerAdmission from "../../../🧮️analyses/🧫️fixtures/📦️owner-admission/🔣️.json" with { type: "json" };
 export function testFem3dMountedStiffnessOracle(): void {
-  
-  
-  
+  const admission = new Ajv2020().compile({ type: "integer", minimum: 0, maximum: ownerAdmission.pageBytes / ownerAdmission.itemBytes });
+  for (const row of ownerAdmission.cases) assert.equal(admission(row.requested), row.accepted);
   assert.equal(fixture.oracle.package, "numpy");
   for (const row of fixture.cases) {
     let owners = [row.kind, ...row.nodeIds];
@@ -18,6 +19,12 @@ export function testFem3dMountedStiffnessOracle(): void {
     }
     assert.equal(closed, fixture.closeStringCounts[row.kind as keyof typeof fixture.closeStringCounts]);
     const side = Math.sqrt(row.matrix.length);
+    if ("displacement" in row && row.displacement && "strainEnergy" in row) {
+      const matrix = Array.from({ length: side }, (_, index) => row.matrix.slice(index * side, (index + 1) * side));
+      const force = multiply(matrix, row.displacement) as number[];
+      const energy = force.reduce((sum, value, index) => sum + value * row.displacement![index]!, 0);
+      assert(Math.abs(energy - row.strainEnergy!) <= fixture.tolerance * Math.abs(row.strainEnergy!));
+    }
     assert(Number.isInteger(side), `${row.kind} square matrix`);
     const patch = row.matrix.map((value, index) => ({ op: "replace", path: `/${index}`, value })) as Operation[];
     const reconstructed = applyPatch(new Array<number>(row.matrix.length).fill(0), patch, true, false).newDocument;

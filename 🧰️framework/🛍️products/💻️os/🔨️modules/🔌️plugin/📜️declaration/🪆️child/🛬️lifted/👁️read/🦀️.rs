@@ -25,7 +25,7 @@ impl ChildContentRetainers for ChildContentReadAliases {
 
 impl ChildContentReadRetirement {
  pub fn new(view:ChildContentView)->Self{Self{view:ManuallyDrop::new(view),pending:ManuallyDrop::new(None),returned:ManuallyDrop::new(None),metadata:ManuallyDrop::new(None)}}
- fn child_demands<T:semio_framework_value::retirement::RetireOwned>(owner:&ControlledRetirement<T>,copy:usize)->Result<RetirementDemand,ValueError>{if owner.terminal_is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()})}Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original child read depth overflow"))?})}
+ fn child_demands<T:semio_framework_value::retirement::RetireOwned>(owner:&ControlledRetirement<T>,copy:usize)->Result<RetirementDemand,ValueError>{if owner.terminal_is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()})}let mut demand=owner.next_demand(copy)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original child read depth overflow"))?;Ok(demand)}
  pub fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
   if let Some(owner)=self.returned.as_ref(){return Self::child_demands(owner,copy)}
   if let Some(owner)=self.metadata.as_ref(){return Self::child_demands(owner,copy)}
@@ -42,6 +42,8 @@ impl ChildContentReadRetirement {
  pub fn terminal_is_empty(&self)->bool{self.view.root.is_none()&&self.pending.is_none()&&self.returned.is_none()&&self.metadata.is_none()}
 }
 impl semio_framework_value::retirement::RetirementCursor for ChildContentReadRetirement {
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.demands(maximum_body_bytes)}
+
  fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;match self.step(grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Progress(p)|RetainedCloneStep::Complete(p))if p!=Default::default()=>RetirementStep::Progress(p),Ok(RetainedCloneStep::Complete(_))=>RetirementStep::Complete,Ok(_)=>RetirementStep::BudgetExhausted}}
  fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}

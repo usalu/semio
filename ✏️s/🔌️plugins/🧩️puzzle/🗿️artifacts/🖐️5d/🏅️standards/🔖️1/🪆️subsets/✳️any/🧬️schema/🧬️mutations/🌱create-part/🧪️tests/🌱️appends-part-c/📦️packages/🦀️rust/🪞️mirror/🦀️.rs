@@ -10,6 +10,9 @@ pub mod standards {
             pub mod any {
                 #[path = "."]
                 pub mod schema {
+#[path = "../../../../../../../../🧬️schema/🎞️play-snapshot/🦀️.rs"]
+pub mod play_snapshot;
+
                     pub use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records;
                     pub use semio_s_artifact_puzzle_5d_snapshot::standards::v1::subsets::any::schema::snapshot;
                     pub use semio_s_artifact_puzzle_5d_diff::standards::v1::subsets::any::schema::diff;
@@ -305,7 +308,6 @@ pub mod standards {
 pub mod editor {
     #[path = "."]
     pub mod puzzle5d {
-        #[path="../../../../../../../../✏️editor/📸️snapshot/🦀️.rs"]
-        pub mod snapshot;
+
     }
 }

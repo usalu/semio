@@ -2,7 +2,8 @@
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 use semio_s_artifact_puzzle_3d_model::*;
-use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use store::pack::snapshot::ArtifactDsl;
+use store::pack::snapshot::ArtifactPack;
 use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dPlaySnapshot;
 
 fn words() -> Vec<u64> {

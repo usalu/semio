@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.coms/ui/tui/text-width/console.json",
+  "title": "📏️ Terminal Text Width Profiles",
+  "description": "🪟️ Formal Unicode widths, independent string-width results and separately measured native Windows console cursor advances for exact terminal glyphs.",
+  "type": "object",
+  "required": ["schemaVersion", "oracle", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "oracle": { "const": "unicode-width 0.2.2" },
+    "cases": { "type": "array", "minItems": 7, "items": { "$ref": "#/$defs/Case" } }
+  },
+  "$defs": {
+    "Case": {
+      "type": "object",
+      "required": ["id", "text", "scalarText", "scalarCells", "clusterCells", "stringWidthCells"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+        "text": { "type": "string", "minLength": 1, "maxLength": 16384, "not": { "pattern": "[\\u0000-\\u001f\\u007f]" } },
+        "scalarText": { "type": "string", "maxLength": 16384, "not": { "pattern": "[\\u0000-\\u001f\\u007f]" } },
+        "scalarCells": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "clusterCells": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "stringWidthCells": { "description": "Independent string-width 7.2.0 result; its emoji presentation policy differs from unicode-width 0.2.2.", "type": "integer", "minimum": 0, "maximum": 65535 },
+        "windowsScalarCells": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "windowsClusterCells": { "type": "integer", "minimum": 0, "maximum": 65535 }
+      }
+    }
+  }
+}

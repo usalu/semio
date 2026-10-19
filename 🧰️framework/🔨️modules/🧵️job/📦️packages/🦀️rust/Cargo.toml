@@ -133,3 +133,8 @@ path = "../../📬️outcome/📦️builder/🧪️tests/🎟️authority/🦀�
 name = "original-page-limit"
 required-features = ["testkit"]
 path = "../../📬️outcome/📦️builder/📏️limit/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-page-return"
+required-features = ["testkit"]
+path = "../../📬️outcome/📮️return/🧪️tests/🦀️.rs"

@@ -4,6 +4,16 @@
 /// 🏷️ Direct semantic roster exported for the language-neutral test adapter, in aggregate
 /// declaration order — which is also the binary ordinal order `dsl::variants_binary` writes.
 pub const KINDS: &[&str] = &[
+    "change-glazing-material-solar-reflectance-front",
+    "change-glazing-material-solar-reflectance-back",
+    "change-glazing-material-visible-reflectance-front",
+    "change-glazing-material-visible-reflectance-back",
+    "change-glazing-material-infrared-transmittance",
+    "change-pv-system-temperature-coefficient",
+    "change-pv-system-faiman-heat-loss-constant",
+    "change-pv-system-faiman-heat-loss-wind",
+    "change-pv-system-mounting",
+
     "rename-model",
     "change-model-version",
     "change-site-latitude",

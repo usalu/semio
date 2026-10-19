@@ -10,8 +10,12 @@
  * the same pane fraction reads `candidates=180 containing=14 hit=e80dc9d0-… boxes=["97x88@392,349", …]`.
  */
 import { describe, expect, it } from "vitest";
+import Ajv from "ajv";
+import { applyPatch } from "fast-json-patch";
+import interactionSchema from "../../../../../../../🔨️modules/🕹️interaction/🧬️schema/🔣️.json";
+import hoverTargets from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🎯️hover-targets.json";
 import fixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🎯️pick-bounds.json" with { type: "json" };
-import { world3dInstanceLocalCorners } from "../../🧱️elements/🌐️World3dHost/🎨️mesh-render/🪟️glb-bounds-and-styling/🟦️.ts";
+import { world3dInstanceLocalCorners, world3dInstanceInteractionTarget } from "../../🧱️elements/🌐️World3dHost/🎨️mesh-render/🪟️glb-bounds-and-styling/🟦️.ts";
 import { resolveClickInstanceIdFromProjected } from "../../🧱️elements/🌐️World3dHost/🎯️marquee-and-bridges/🟦️.tsx";
 import { hoveredInteractionTargetV1, mergeWorldSelectionWithLeftoverV1 } from "../../🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts";
 
@@ -80,19 +84,22 @@ describe("🎯️ world-3d pick bounds", () => {
  * not be selected by a background click — and genuinely empty canvas still clears. */
 describe("🎯️ a background click never clears at a point the pane is hovering", () => {
   it("picks the object the pane published as its hover target", () => {
-    expect(hoveredInteractionTargetV1("extrude@solid")).toEqual({ granularity: "object", id: "extrude@solid" });
-    expect(hoveredInteractionTargetV1("profile@wire")).toEqual({ granularity: "object", id: "profile@wire" });
+    const validate = new Ajv({ strict: false }).compile({ ...interactionSchema, $ref: "#/$defs/InteractionTarget" });
+    for (const row of hoverTargets.cases) {
+      const target = world3dInstanceInteractionTarget([row.instance], row.instance.id, row.defaultGranularity);
+      const independent = applyPatch({ granularity: row.defaultGranularity, id: row.instance.id }, [
+        { op: "replace", path: "/granularity", value: row.instance.interactionGranularityId ?? row.defaultGranularity },
+        { op: "replace", path: "/id", value: row.instance.interactionId ?? row.instance.id },
+      ], true).newDocument;
+      expect(target).toEqual(independent);
+      expect(validate(target)).toBe(true);
+      expect(hoveredInteractionTargetV1(target)).toEqual(row.expected);
+    }
   });
 
   it("still clears on genuinely empty canvas", () => {
     expect(hoveredInteractionTargetV1(null)).toBeNull();
     expect(hoveredInteractionTargetV1(undefined)).toBeNull();
-    expect(hoveredInteractionTargetV1("")).toBeNull();
-  });
-
-  it("leaves every MARKER layer to its own pick handler", () => {
-    expect(hoveredInteractionTargetV1("reference:datum-a")).toBeNull();
-    expect(hoveredInteractionTargetV1("vortex:node-1:out")).toBeNull();
-    expect(hoveredInteractionTargetV1("targetVolume:zone-3")).toBeNull();
+    expect(hoveredInteractionTargetV1({ granularity: "node", id: "" })).toBeNull();
   });
 });

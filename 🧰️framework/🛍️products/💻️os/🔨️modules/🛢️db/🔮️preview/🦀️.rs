@@ -256,11 +256,11 @@ const ORACLE_LANDED_TAG: &str = "db-preview::oracle::landed";
 impl ConflictOracle for DbConflictOracle {
     fn conflicts(&self, preview_touched: &TouchedSet, landed_touched: &TouchedSet) -> bool {
         let mut preview_command =
-            db_conflict::CommandTouch::new(protocol::MutationId(ORACLE_PREVIEW_TAG.to_string()), protocol::ActorId(ORACLE_PREVIEW_TAG.to_string()), db_conflict::CommandKind::from(ORACLE_PREVIEW_TAG), protocol::HybridLogicalTimestamp::new(0, 0));
+            db_conflict::CommandTouch::new(protocol::MutationId(ORACLE_PREVIEW_TAG.to_string()), protocol::ActorId(ORACLE_PREVIEW_TAG.into()), db_conflict::CommandKind::from(ORACLE_PREVIEW_TAG), protocol::HybridLogicalTimestamp::new(0, 0));
         preview_command.touched = preview_touched.clone();
 
         let mut landed_command =
-            db_conflict::CommandTouch::new(protocol::MutationId(ORACLE_LANDED_TAG.to_string()), protocol::ActorId(ORACLE_LANDED_TAG.to_string()), db_conflict::CommandKind::from(ORACLE_LANDED_TAG), protocol::HybridLogicalTimestamp::new(1, 0));
+            db_conflict::CommandTouch::new(protocol::MutationId(ORACLE_LANDED_TAG.to_string()), protocol::ActorId(ORACLE_LANDED_TAG.into()), db_conflict::CommandKind::from(ORACLE_LANDED_TAG), protocol::HybridLogicalTimestamp::new(1, 0));
         landed_command.touched = landed_touched.clone();
 
         !self.detector.detect(&[preview_command, landed_command]).is_empty()

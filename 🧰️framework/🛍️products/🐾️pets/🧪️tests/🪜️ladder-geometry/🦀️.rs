@@ -15,7 +15,7 @@ mod subject {
     use pets::{
         ladder_at, ladder_exit, ladder_for, ladder_holds, ladder_landing, ladder_lean, ladder_length, ladder_phase, ladder_rungs, ladder_step, spill_of, LadderStand, Perch, Pitch, Rect, Size, Ticks, LADDER_DESCENT, LADDER_DISMOUNT_TICKS,
         LADDER_EXIT, LADDER_FLAT, LADDER_FOLLOW, LADDER_FOOTING, LADDER_GIRTH, LADDER_HORNS, LADDER_IDLE, LADDER_LEAN, LADDER_LIFE, LADDER_MOUNT_TICKS, LADDER_RAISE_TICKS, LADDER_RAMP, LADDER_RISE, LADDER_SHIFT, LADDER_SHORT, LADDER_STEEP,
-        LADDER_TALL, LADDER_TUCK, RUNG_SPACING, TOPPLE_DAMPING, TOPPLE_PUSH, TOPPLE_STEP, TOPPLE_STIFFNESS,
+        ladder_to, LADDER_TALL, LADDER_TUCK, RUNG_SPACING, TOPPLE_DAMPING, TOPPLE_PUSH, TOPPLE_STEP, TOPPLE_STIFFNESS,
     };
     use semio_repo_test_host::{parse_json, Context, Outcome};
 
@@ -102,6 +102,14 @@ mod subject {
         })?)
     }
 
+    /// 🪤️ A ladder leaned against a wall, with the feet at its exit, or null when the placement cannot stand.
+    pub fn leans(ctx: &Context<'_>) -> Result<Outcome, String> {
+        projected(&keyed(list(&vectors(ctx)?, "leans")?, |vector| {
+            let size = size(vector)?;
+            Ok(ladder_to(&perch(vector, "low")?, &pitch(vector)?, &keepouts(vector)?, size).map_or(Value::Null, |ladder| json!({ "exit": ladder_at(&ladder, ladder_exit(&ladder, size)), "ladder": ladder })))
+        })?)
+    }
+
     /// 🐛️ The distance, the feet and the phase of the clip after every tick of every committed climb between the foot of a ladder and its exit.
     pub fn climbs(ctx: &Context<'_>) -> Result<Outcome, String> {
         projected(&keyed(list(&vectors(ctx)?, "climbs")?, |vector| {
@@ -140,6 +148,6 @@ mod subject {
 pub fn adapter() -> Adapter {
     let built = Adapter::new("rust");
     #[cfg(feature = "sut")]
-    let built = built.subject("constants", subject::constants).subject("placements", subject::placements).subject("climbs", subject::climbs).subject("surveys", subject::surveys).subject("spills", subject::spills);
+    let built = built.subject("constants", subject::constants).subject("placements", subject::placements).subject("leans", subject::leans).subject("climbs", subject::climbs).subject("surveys", subject::surveys).subject("spills", subject::spills);
     built
 }

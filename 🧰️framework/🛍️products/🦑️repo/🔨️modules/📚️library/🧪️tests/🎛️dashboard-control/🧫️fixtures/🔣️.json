@@ -1,0 +1,140 @@
+{
+  "absentFiles": [
+    ".vscode",
+    "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🚀️launch/🟦️.ts",
+    "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🚀️launch/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🚀️launch-catalog/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🚀️launch-routes/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🌳️command-tree/🚀️launch/🟦️.ts"
+  ],
+  "targets": [
+    {
+      "file": "📋️project.json",
+      "absent": [
+        "generate-launch",
+        "generate-launch-check"
+      ],
+      "present": [
+        "generate-config",
+        "setup"
+      ]
+    },
+    {
+      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json",
+      "absent": [
+        "launch"
+      ],
+      "present": [
+        "run",
+        "build",
+        "daemon"
+      ]
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json",
+      "absent": [],
+      "present": [
+        "test-crate-boundaries"
+      ],
+      "inputTarget": "test-crate-boundaries",
+      "absentInputs": [
+        "{workspaceRoot}/.vscode/launch.json"
+      ],
+      "presentInputs": [
+        "{workspaceRoot}/📋️build-owners.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json"
+      ]
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
+      "absent": [],
+      "present": [
+        "test-crate-boundaries"
+      ],
+      "inputTarget": "test-crate-boundaries",
+      "absentInputs": [
+        "{workspaceRoot}/.vscode/launch.json"
+      ],
+      "presentInputs": [
+        "{workspaceRoot}/📋️build-owners.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🏭️generate/🟦️.ts",
+      "absent": [
+        "generateLaunch",
+        "writeLaunchCatalog",
+        "checkLaunchCatalog",
+        "launch [--check]"
+      ]
+    },
+    {
+      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🎮️command/🟦️.ts",
+      "absent": [
+        "registerCrateLaunchRoutes",
+        "launch routes:"
+      ]
+    },
+    {
+      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️authoring/🟦️.ts",
+      "absent": [
+        "writeLaunchSeed",
+        "readLaunchSeed",
+        "checkLaunchCatalog",
+        "writeLaunchCatalog"
+      ]
+    },
+    {
+      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📜️script.ts",
+      "absent": [
+        "LaunchScript",
+        "projectDashboardLaunch",
+        "launchParameterArguments",
+        "register(\"launch\""
+      ]
+    },
+    {
+      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🔧️setup/🟦️.ts",
+      "absent": [
+        "GEMINI.md",
+        ".github/copilot-instructions.md"
+      ]
+    }
+  ],
+  "readerFiles": [
+    "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🎛️dashboard/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🧪️tests/🧼️workspace-cleanup-stray-processes/🟦️.ts",
+    "✏️s/🧑‍💻dev/🔁️rebuild/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧾️artifact-root-source/🟦️.ts",
+    "✏️s/🧑‍💻dev/🧩️catalog/📣️publication/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🧪️tests/📦️crate-boundaries/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️tests/📦️crate-boundaries/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🏗️regeneration-commands/🟦️.ts",
+    "🧰️framework/🔨️modules/🧬️schema/✅️validator/🏗️compilation/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🔁️replan/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🧪️tests/🔌️exports/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/⚙️arguments/📐️context/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/📉️pressure/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎚️build-mode/📥️contracts/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/👓️reading/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📬️test-body/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/📋️registration/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/💼️job/📤️output/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📦️crate-boundaries/🟦️.ts",
+    "🧰️framework/🔨️modules/📡️replication/⚠️error/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎯️recipe/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🏗️build/🧪️tests/🏗️native/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+    "🧪️tests/🧱️checked-in-asset-contracts/🟦️.ts"
+  ],
+  "instructionAliases": [
+    "CLAUDE.md"
+  ]
+}

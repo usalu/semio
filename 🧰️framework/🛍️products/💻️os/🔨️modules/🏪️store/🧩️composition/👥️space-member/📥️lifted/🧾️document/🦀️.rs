@@ -28,12 +28,12 @@ where
 pub async fn materialize_document_snapshot<P, Mutation, I, S>(envelope: &ArtifactEnvelopeOwners<P, Mutation>, applied_edit_ids: I) -> Result<P, VcsError>
 where
     P: Clone,
-    Mutation: self::Mutation<P> + OpBinary,
+    Mutation: self::Mutation<P> + crate::os_spr::ColdMutation<P> + OpBinary,
     I: IntoIterator<Item = S>,
     S: AsRef<str>,
 {
     let supersessions = fold_envelope_history(envelope)?.supersessions;
-    let mut snapshot = ReplayProjection::<P, Mutation>::new(envelope.vcs.genesis.facts().snapshot().clone());
+    let mut snapshot = ColdReplayProjection::<P, Mutation>::new(envelope.vcs.genesis.facts().snapshot().clone());
     for edit_id in applied_edit_ids {
         let edit_id = edit_id.as_ref();
         let edit = envelope.vcs.edits.find_near(|entry| entry.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.to_string()))?;

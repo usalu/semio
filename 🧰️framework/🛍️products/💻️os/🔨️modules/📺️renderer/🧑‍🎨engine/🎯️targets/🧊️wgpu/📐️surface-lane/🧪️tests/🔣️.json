@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "stock": {
+    "maximumItems": 16,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 1048576,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 128
+  },
+  "rows": [
+    {
+      "width": 1920,
+      "height": 1080,
+      "scale": 2,
+      "logicalWidth": 960,
+      "logicalHeight": 540
+    },
+    {
+      "width": 0,
+      "height": 0,
+      "scale": 1,
+      "logicalWidth": 0,
+      "logicalHeight": 0
+    },
+    {
+      "width": 300,
+      "height": 150,
+      "scale": 1.5,
+      "logicalWidth": 200,
+      "logicalHeight": 100
+    }
+  ],
+  "close": {
+    "itemsPerOwner": 1,
+    "capacityBytes": 0,
+    "releaseBytes": 0
+  },
+  "parentFuel": 17,
+  "workUnits": 3
+}

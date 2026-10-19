@@ -1,13 +1,13 @@
 {
   "nodes": null,
   "elements": {
-    "inserted": [],
     "removed": [
       {
         "id": "br1",
         "index": 7
       }
     ],
+    "inserted": [],
     "moved": [],
     "modified": []
   },

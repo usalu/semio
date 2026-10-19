@@ -4450,6 +4450,7 @@ dependencies = [
  "semio-framework-actor-vocabulary",
  "semio-framework-async",
  "semio-framework-job",
+ "semio-framework-pack-json",
  "semio-framework-value",
  "semio-framework-value-derive",
  "serde",
@@ -5454,6 +5455,7 @@ dependencies = [
  "js-sys",
  "semio-framework-dispatch-macros",
  "semio-framework-machine-derive",
+ "semio-framework-value",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -6601,6 +6603,7 @@ dependencies = [
  "semio-framework-trace",
  "semio-framework-trace-memory-testing",
  "semio-framework-value",
+ "semio-framework-value-snapshot-read",
  "serde",
  "serde_json",
 ]
@@ -6755,6 +6758,7 @@ dependencies = [
 name = "semio-framework-os-infinite-board-normal-fill"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-action-bus",
  "semio-framework-canvas",
  "semio-framework-geometry",
  "semio-framework-graph-drawing",
@@ -8800,6 +8804,7 @@ dependencies = [
  "semio-framework-plugin-guest-contract",
  "semio-framework-plugin-host",
  "semio-framework-plugin-interpreter-runtime",
+ "semio-framework-plugin-ownership",
  "semio-framework-replication",
  "semio-framework-schema",
  "semio-framework-surface",
@@ -8944,7 +8949,9 @@ dependencies = [
  "semio-framework-os-renderer-wgpu-asset-authority",
  "semio-framework-os-renderer-wgpu-contracts",
  "semio-framework-os-renderer-wgpu-host-base",
+ "semio-framework-os-renderer-wgpu-host-plumbing",
  "semio-framework-pixels",
+ "semio-framework-plugin-ownership",
  "semio-framework-ui-raster-owner",
  "semio-framework-ui-scene",
  "semio-framework-value",
@@ -9592,6 +9599,7 @@ dependencies = [
  "semio-framework-os-renderer-wgpu-contracts",
  "semio-framework-os-renderer-wgpu-host-base",
  "semio-framework-os-renderer-wgpu-media-slots",
+ "semio-framework-os-services",
  "semio-framework-pack-json",
  "semio-framework-plugin-guest-contract",
  "semio-framework-trace",
@@ -9634,6 +9642,7 @@ dependencies = [
  "semio-framework-os-renderer-wgpu-shell-input",
  "semio-framework-os-renderer-wgpu-shell-state",
  "semio-framework-os-renderer-wgpu-shell-window-actions",
+ "semio-framework-os-renderer-wgpu-ui-engine-tests",
  "semio-framework-trace",
  "semio-framework-ui-declaration",
  "semio-framework-ui-draw-contract",
@@ -9753,9 +9762,11 @@ dependencies = [
  "semio-framework-actor",
  "semio-framework-async",
  "semio-framework-job",
+ "semio-framework-job-worker",
  "semio-framework-os-kernel",
  "semio-framework-os-renderer-wgpu-contracts",
  "semio-framework-os-renderer-wgpu-host-base",
+ "semio-framework-os-renderer-wgpu-host-plumbing",
  "semio-framework-os-services",
  "semio-framework-plugin",
  "semio-framework-plugin-guest-contract",
@@ -13492,6 +13503,7 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-replication",
  "semio-framework-value",
+ "semio-framework-value-snapshot-read",
  "serde",
 ]
 
@@ -13611,10 +13623,12 @@ name = "semio-framework-os-store-engine-stage"
 version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
+ "semio-framework-dsl-record",
  "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-pack",
  "semio-framework-os-spr",
+ "semio-framework-os-store-canonical-json",
  "semio-framework-os-store-durable-group-wire",
  "semio-framework-os-store-engine-live",
  "semio-framework-os-store-envelope",
@@ -13997,6 +14011,7 @@ dependencies = [
  "semio-framework-os-store-message-ledger",
  "semio-framework-os-store-one-item",
  "semio-framework-os-store-projection",
+ "semio-framework-os-store-snapshot-clone",
  "semio-framework-os-vcs",
  "semio-framework-pack-json",
  "semio-framework-replication",
@@ -14971,8 +14986,10 @@ name = "semio-framework-pack-record-encode"
 version = "0.1.0"
 dependencies = [
  "semio-framework-dsl-record",
+ "semio-framework-hash",
  "semio-framework-pack-error",
  "semio-framework-pack-format",
+ "semio-framework-pack-record-preflight",
  "semio-framework-pack-record-schema",
  "semio-framework-replication-codec",
  "semio-framework-value",
@@ -15238,6 +15255,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-retirement-owner",
+ "semio-framework-value-snapshot-read",
  "serde",
  "serde_json",
  "wasmtime",
@@ -15456,6 +15474,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d-compute",
+ "semio-framework-actor",
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-composition-admission",
@@ -16627,6 +16646,7 @@ name = "semio-framework-plugin-job"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-actor",
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-job",
@@ -19187,25 +19207,26 @@ name = "semio-framework-process-routing-workspace"
 version = "0.1.0"
 
 [[package]]
-name = "semio-framework-quiz"
+name = "semio-framework-course"
 version = "0.1.0"
 dependencies = [
- "semio-framework-quiz-schema",
+ "semio-framework-course-schema",
+ "semio-framework-pack-json",
  "serde",
  "serde_json",
 ]
 
 [[package]]
-name = "semio-framework-quiz-primitives-tests"
+name = "semio-framework-course-primitives-tests"
 version = "0.1.0"
 dependencies = [
- "semio-framework-quiz",
- "semio-framework-quiz-schema",
+ "semio-framework-course",
+ "semio-framework-course-schema",
  "serde_json",
 ]
 
 [[package]]
-name = "semio-framework-quiz-schema"
+name = "semio-framework-course-schema"
 version = "0.1.0"
 dependencies = [
  "semio-framework-test-fixtures",
@@ -19214,32 +19235,32 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-framework-quiz-tests"
+name = "semio-framework-course-tests"
 version = "0.1.0"
 dependencies = [
- "semio-framework-quiz",
- "semio-framework-quiz-schema",
- "semio-framework-quiz-tests-support",
+ "semio-framework-course",
+ "semio-framework-course-schema",
+ "semio-framework-course-tests-support",
  "serde_json",
  "unicode-normalization",
 ]
 
 [[package]]
-name = "semio-framework-quiz-tests-runs"
+name = "semio-framework-course-tests-runs"
 version = "0.1.0"
 dependencies = [
- "semio-framework-quiz",
- "semio-framework-quiz-schema",
- "semio-framework-quiz-tests-support",
+ "semio-framework-course",
+ "semio-framework-course-schema",
+ "semio-framework-course-tests-support",
  "serde_json",
 ]
 
 [[package]]
-name = "semio-framework-quiz-tests-support"
+name = "semio-framework-course-tests-support"
 version = "0.1.0"
 dependencies = [
- "semio-framework-quiz",
- "semio-framework-quiz-schema",
+ "semio-framework-course",
+ "semio-framework-course-schema",
  "serde_json",
 ]
 
@@ -19430,6 +19451,7 @@ name = "semio-framework-replication-mutation"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
+ "semio-framework-dsl-record",
  "semio-framework-mutation-diff",
  "semio-framework-pack-json",
  "semio-framework-replication-ids",
@@ -19446,6 +19468,7 @@ dependencies = [
  "semio-framework-mutation-diff",
  "semio-framework-replication-conflict",
  "semio-framework-replication-mutation",
+ "semio-framework-trace-memory-testing",
  "semio-framework-value",
 ]
 
@@ -19642,6 +19665,7 @@ dependencies = [
  "semio-framework-repo-dashboard-registry",
  "semio-framework-repo-dashboard-repo-domain",
  "semio-framework-repo-dashboard-wire",
+ "semio-framework-ui",
  "serde_json",
 ]
 
@@ -19733,10 +19757,12 @@ dependencies = [
  "semio-framework-repo-dashboard-core",
  "semio-framework-repo-events",
  "semio-framework-repo-goals",
+ "semio-framework-repo-identity",
  "semio-framework-repo-model",
  "semio-framework-repo-providers",
  "semio-framework-repo-statutes",
  "semio-framework-repo-tickets",
+ "semio-framework-repo-todos",
  "semio-framework-repo-tree",
  "serde",
  "serde_json",
@@ -19746,6 +19772,7 @@ dependencies = [
 name = "semio-framework-repo-dashboard-terminal"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-repo-dashboard-cli",
  "semio-framework-repo-dashboard-core",
  "semio-framework-repo-dashboard-daemon",
  "semio-framework-repo-dashboard-inventory",
@@ -21392,6 +21419,8 @@ dependencies = [
 name = "semio-framework-value"
 version = "0.1.0"
 dependencies = [
+ "blake3",
+ "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-schema-registry",
  "semio-framework-value-allocation-return",

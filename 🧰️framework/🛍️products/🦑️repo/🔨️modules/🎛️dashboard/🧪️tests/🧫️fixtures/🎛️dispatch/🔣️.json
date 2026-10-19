@@ -1,0 +1,11 @@
+{
+  "cases": [
+    { "segments": ["authority"], "executableCalls": 1, "owned": false, "battle": null, "installed": false, "native": false },
+    { "segments": ["execution"], "executableCalls": 1, "owned": true, "battle": null, "installed": false, "native": false },
+    { "segments": ["coverage"], "executableCalls": 1, "owned": false, "battle": "coverage", "installed": false, "native": false },
+    { "segments": ["journeys"], "executableCalls": 1, "owned": false, "battle": "journeys", "installed": false, "native": false },
+    { "segments": ["load"], "executableCalls": 1, "owned": false, "battle": "load", "installed": false, "native": false },
+    { "segments": ["smoke"], "executableCalls": 1, "owned": false, "battle": "smoke", "installed": false, "native": false },
+    { "segments": ["quick", "--nocapture"], "executableCalls": 2, "owned": false, "battle": null, "installed": true, "native": true }
+  ]
+}

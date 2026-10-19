@@ -1,5 +1,5 @@
-//! 🎛 `flat-position` — one named inference: each node's resolved `(x, y)` position after the
 //! compose-parity fastened layout — `Fixed`-anchor nodes keep their stored coordinates, `Derived`-
+//! 🎛 `flat-position` — one named inference: each node's resolved `(x, y)` position after the
 //! anchor nodes get theirs BFS-walked from their connecting edge's params (gap/shift/rise/rotation/
 //! turn/tilt/x/y), the same graph-position concept `🧊️3d`'s own `🎛flat-position/` and
 //! `🔱️trinity/🔌️jack`'s own `🎛flat-position/` carry for their artifacts. Reuses the inference

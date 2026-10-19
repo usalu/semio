@@ -1,0 +1,1493 @@
+{
+  "schema": "energy-glazing-optical-field-intent/v1",
+  "base": {
+    "id": 1,
+    "name": "CLEAR 3MM",
+    "thickness_m": 0.003,
+    "conductivity_w_m_k": 1.06,
+    "solar_transmittance": 0.837,
+    "solar_reflectance_front": 0.075,
+    "solar_reflectance_back": 0.075,
+    "visible_transmittance": 0.898,
+    "visible_reflectance_front": 0.081,
+    "visible_reflectance_back": 0.081,
+    "infrared_transmittance": 0,
+    "infrared_emissivity_front": 0.84,
+    "infrared_emissivity_back": 0.84
+  },
+  "cases": [
+    {
+      "id": "solar_reflectance_front:changed",
+      "field": "solar_reflectance_front",
+      "property": "solarReflectanceFront",
+      "kind": "change-glazing-material-solar-reflectance-front",
+      "payload": {
+        "mutation": "changeGlazingMaterialSolarReflectanceFront",
+        "id": 1,
+        "newSolarReflectanceFront": 0.18
+      },
+      "outcome": "applied",
+      "diff": {
+        "model": {
+          "glazing_materials": {
+            "modified": [
+              {
+                "id": 1,
+                "solar_reflectance_front": 0.18
+              }
+            ]
+          }
+        }
+      },
+      "inverse": [
+        {
+          "mutation": "changeGlazingMaterialSolarReflectanceFront",
+          "id": 1,
+          "newSolarReflectanceFront": 0.075
+        }
+      ],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.18,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "solar_reflectance_front:minimum",
+      "field": "solar_reflectance_front",
+      "property": "solarReflectanceFront",
+      "kind": "change-glazing-material-solar-reflectance-front",
+      "payload": {
+        "mutation": "changeGlazingMaterialSolarReflectanceFront",
+        "id": 1,
+        "newSolarReflectanceFront": 0
+      },
+      "outcome": "applied",
+      "diff": {
+        "model": {
+          "glazing_materials": {
+            "modified": [
+              {
+                "id": 1,
+                "solar_reflectance_front": 0
+              }
+            ]
+          }
+        }
+      },
+      "inverse": [
+        {
+          "mutation": "changeGlazingMaterialSolarReflectanceFront",
+          "id": 1,
+          "newSolarReflectanceFront": 0.075
+        }
+      ],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "solar_reflectance_front:maximum",
+      "field": "solar_reflectance_front",
+      "property": "solarReflectanceFront",
+      "kind": "change-glazing-material-solar-reflectance-front",
+      "payload": {
+        "mutation": "changeGlazingMaterialSolarReflectanceFront",
+        "id": 1,
+        "newSolarReflectanceFront": 1
+      },
+      "outcome": "applied",
+      "diff": {
+        "model": {
+          "glazing_materials": {
+            "modified": [
+              {
+                "id": 1,
+                "solar_reflectance_front": 1
+              }
+            ]
+          }
+        }
+      },
+      "inverse": [
+        {
+          "mutation": "changeGlazingMaterialSolarReflectanceFront",
+          "id": 1,
+          "newSolarReflectanceFront": 0.075
+        }
+      ],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 1,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "solar_reflectance_front:no-op",
+      "field": "solar_reflectance_front",
+      "property": "solarReflectanceFront",
+      "kind": "change-glazing-material-solar-reflectance-front",
+      "payload": {
+        "mutation": "changeGlazingMaterialSolarReflectanceFront",
+        "id": 1,
+        "newSolarReflectanceFront": 0.075
+      },
+      "outcome": "no-op",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "solar_reflectance_front:below",
+      "field": "solar_reflectance_front",
+      "property": "solarReflectanceFront",
+      "kind": "change-glazing-material-solar-reflectance-front",
+      "payload": {
+        "mutation": "changeGlazingMaterialSolarReflectanceFront",
+        "id": 1,
+        "newSolarReflectanceFront": -0.1
+      },
+      "outcome": "rejected",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "solar_reflectance_front:above",
+      "field": "solar_reflectance_front",
+      "property": "solarReflectanceFront",
+      "kind": "change-glazing-material-solar-reflectance-front",
+      "payload": {
+        "mutation": "changeGlazingMaterialSolarReflectanceFront",
+        "id": 1,
+        "newSolarReflectanceFront": 1.1
+      },
+      "outcome": "rejected",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "solar_reflectance_front:non-finite",
+      "field": "solar_reflectance_front",
+      "property": "solarReflectanceFront",
+      "kind": "change-glazing-material-solar-reflectance-front",
+      "payload": {
+        "mutation": "changeGlazingMaterialSolarReflectanceFront",
+        "id": 1,
+        "newSolarReflectanceFront": "NaN"
+      },
+      "outcome": "rejected",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "solar_reflectance_front:missing",
+      "field": "solar_reflectance_front",
+      "property": "solarReflectanceFront",
+      "kind": "change-glazing-material-solar-reflectance-front",
+      "payload": {
+        "mutation": "changeGlazingMaterialSolarReflectanceFront",
+        "id": 99,
+        "newSolarReflectanceFront": 0.18
+      },
+      "outcome": "rejected",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "solar_reflectance_back:changed",
+      "field": "solar_reflectance_back",
+      "property": "solarReflectanceBack",
+      "kind": "change-glazing-material-solar-reflectance-back",
+      "payload": {
+        "mutation": "changeGlazingMaterialSolarReflectanceBack",
+        "id": 1,
+        "newSolarReflectanceBack": 0.18
+      },
+      "outcome": "applied",
+      "diff": {
+        "model": {
+          "glazing_materials": {
+            "modified": [
+              {
+                "id": 1,
+                "solar_reflectance_back": 0.18
+              }
+            ]
+          }
+        }
+      },
+      "inverse": [
+        {
+          "mutation": "changeGlazingMaterialSolarReflectanceBack",
+          "id": 1,
+          "newSolarReflectanceBack": 0.075
+        }
+      ],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.18,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "solar_reflectance_back:minimum",
+      "field": "solar_reflectance_back",
+      "property": "solarReflectanceBack",
+      "kind": "change-glazing-material-solar-reflectance-back",
+      "payload": {
+        "mutation": "changeGlazingMaterialSolarReflectanceBack",
+        "id": 1,
+        "newSolarReflectanceBack": 0
+      },
+      "outcome": "applied",
+      "diff": {
+        "model": {
+          "glazing_materials": {
+            "modified": [
+              {
+                "id": 1,
+                "solar_reflectance_back": 0
+              }
+            ]
+          }
+        }
+      },
+      "inverse": [
+        {
+          "mutation": "changeGlazingMaterialSolarReflectanceBack",
+          "id": 1,
+          "newSolarReflectanceBack": 0.075
+        }
+      ],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "solar_reflectance_back:maximum",
+      "field": "solar_reflectance_back",
+      "property": "solarReflectanceBack",
+      "kind": "change-glazing-material-solar-reflectance-back",
+      "payload": {
+        "mutation": "changeGlazingMaterialSolarReflectanceBack",
+        "id": 1,
+        "newSolarReflectanceBack": 1
+      },
+      "outcome": "applied",
+      "diff": {
+        "model": {
+          "glazing_materials": {
+            "modified": [
+              {
+                "id": 1,
+                "solar_reflectance_back": 1
+              }
+            ]
+          }
+        }
+      },
+      "inverse": [
+        {
+          "mutation": "changeGlazingMaterialSolarReflectanceBack",
+          "id": 1,
+          "newSolarReflectanceBack": 0.075
+        }
+      ],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 1,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "solar_reflectance_back:no-op",
+      "field": "solar_reflectance_back",
+      "property": "solarReflectanceBack",
+      "kind": "change-glazing-material-solar-reflectance-back",
+      "payload": {
+        "mutation": "changeGlazingMaterialSolarReflectanceBack",
+        "id": 1,
+        "newSolarReflectanceBack": 0.075
+      },
+      "outcome": "no-op",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "solar_reflectance_back:below",
+      "field": "solar_reflectance_back",
+      "property": "solarReflectanceBack",
+      "kind": "change-glazing-material-solar-reflectance-back",
+      "payload": {
+        "mutation": "changeGlazingMaterialSolarReflectanceBack",
+        "id": 1,
+        "newSolarReflectanceBack": -0.1
+      },
+      "outcome": "rejected",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "solar_reflectance_back:above",
+      "field": "solar_reflectance_back",
+      "property": "solarReflectanceBack",
+      "kind": "change-glazing-material-solar-reflectance-back",
+      "payload": {
+        "mutation": "changeGlazingMaterialSolarReflectanceBack",
+        "id": 1,
+        "newSolarReflectanceBack": 1.1
+      },
+      "outcome": "rejected",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "solar_reflectance_back:non-finite",
+      "field": "solar_reflectance_back",
+      "property": "solarReflectanceBack",
+      "kind": "change-glazing-material-solar-reflectance-back",
+      "payload": {
+        "mutation": "changeGlazingMaterialSolarReflectanceBack",
+        "id": 1,
+        "newSolarReflectanceBack": "NaN"
+      },
+      "outcome": "rejected",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "solar_reflectance_back:missing",
+      "field": "solar_reflectance_back",
+      "property": "solarReflectanceBack",
+      "kind": "change-glazing-material-solar-reflectance-back",
+      "payload": {
+        "mutation": "changeGlazingMaterialSolarReflectanceBack",
+        "id": 99,
+        "newSolarReflectanceBack": 0.18
+      },
+      "outcome": "rejected",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "visible_reflectance_front:changed",
+      "field": "visible_reflectance_front",
+      "property": "visibleReflectanceFront",
+      "kind": "change-glazing-material-visible-reflectance-front",
+      "payload": {
+        "mutation": "changeGlazingMaterialVisibleReflectanceFront",
+        "id": 1,
+        "newVisibleReflectanceFront": 0.18
+      },
+      "outcome": "applied",
+      "diff": {
+        "model": {
+          "glazing_materials": {
+            "modified": [
+              {
+                "id": 1,
+                "visible_reflectance_front": 0.18
+              }
+            ]
+          }
+        }
+      },
+      "inverse": [
+        {
+          "mutation": "changeGlazingMaterialVisibleReflectanceFront",
+          "id": 1,
+          "newVisibleReflectanceFront": 0.081
+        }
+      ],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.18,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "visible_reflectance_front:minimum",
+      "field": "visible_reflectance_front",
+      "property": "visibleReflectanceFront",
+      "kind": "change-glazing-material-visible-reflectance-front",
+      "payload": {
+        "mutation": "changeGlazingMaterialVisibleReflectanceFront",
+        "id": 1,
+        "newVisibleReflectanceFront": 0
+      },
+      "outcome": "applied",
+      "diff": {
+        "model": {
+          "glazing_materials": {
+            "modified": [
+              {
+                "id": 1,
+                "visible_reflectance_front": 0
+              }
+            ]
+          }
+        }
+      },
+      "inverse": [
+        {
+          "mutation": "changeGlazingMaterialVisibleReflectanceFront",
+          "id": 1,
+          "newVisibleReflectanceFront": 0.081
+        }
+      ],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "visible_reflectance_front:maximum",
+      "field": "visible_reflectance_front",
+      "property": "visibleReflectanceFront",
+      "kind": "change-glazing-material-visible-reflectance-front",
+      "payload": {
+        "mutation": "changeGlazingMaterialVisibleReflectanceFront",
+        "id": 1,
+        "newVisibleReflectanceFront": 1
+      },
+      "outcome": "applied",
+      "diff": {
+        "model": {
+          "glazing_materials": {
+            "modified": [
+              {
+                "id": 1,
+                "visible_reflectance_front": 1
+              }
+            ]
+          }
+        }
+      },
+      "inverse": [
+        {
+          "mutation": "changeGlazingMaterialVisibleReflectanceFront",
+          "id": 1,
+          "newVisibleReflectanceFront": 0.081
+        }
+      ],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 1,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "visible_reflectance_front:no-op",
+      "field": "visible_reflectance_front",
+      "property": "visibleReflectanceFront",
+      "kind": "change-glazing-material-visible-reflectance-front",
+      "payload": {
+        "mutation": "changeGlazingMaterialVisibleReflectanceFront",
+        "id": 1,
+        "newVisibleReflectanceFront": 0.081
+      },
+      "outcome": "no-op",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "visible_reflectance_front:below",
+      "field": "visible_reflectance_front",
+      "property": "visibleReflectanceFront",
+      "kind": "change-glazing-material-visible-reflectance-front",
+      "payload": {
+        "mutation": "changeGlazingMaterialVisibleReflectanceFront",
+        "id": 1,
+        "newVisibleReflectanceFront": -0.1
+      },
+      "outcome": "rejected",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "visible_reflectance_front:above",
+      "field": "visible_reflectance_front",
+      "property": "visibleReflectanceFront",
+      "kind": "change-glazing-material-visible-reflectance-front",
+      "payload": {
+        "mutation": "changeGlazingMaterialVisibleReflectanceFront",
+        "id": 1,
+        "newVisibleReflectanceFront": 1.1
+      },
+      "outcome": "rejected",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "visible_reflectance_front:non-finite",
+      "field": "visible_reflectance_front",
+      "property": "visibleReflectanceFront",
+      "kind": "change-glazing-material-visible-reflectance-front",
+      "payload": {
+        "mutation": "changeGlazingMaterialVisibleReflectanceFront",
+        "id": 1,
+        "newVisibleReflectanceFront": "NaN"
+      },
+      "outcome": "rejected",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "visible_reflectance_front:missing",
+      "field": "visible_reflectance_front",
+      "property": "visibleReflectanceFront",
+      "kind": "change-glazing-material-visible-reflectance-front",
+      "payload": {
+        "mutation": "changeGlazingMaterialVisibleReflectanceFront",
+        "id": 99,
+        "newVisibleReflectanceFront": 0.18
+      },
+      "outcome": "rejected",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "visible_reflectance_back:changed",
+      "field": "visible_reflectance_back",
+      "property": "visibleReflectanceBack",
+      "kind": "change-glazing-material-visible-reflectance-back",
+      "payload": {
+        "mutation": "changeGlazingMaterialVisibleReflectanceBack",
+        "id": 1,
+        "newVisibleReflectanceBack": 0.18
+      },
+      "outcome": "applied",
+      "diff": {
+        "model": {
+          "glazing_materials": {
+            "modified": [
+              {
+                "id": 1,
+                "visible_reflectance_back": 0.18
+              }
+            ]
+          }
+        }
+      },
+      "inverse": [
+        {
+          "mutation": "changeGlazingMaterialVisibleReflectanceBack",
+          "id": 1,
+          "newVisibleReflectanceBack": 0.081
+        }
+      ],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.18,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "visible_reflectance_back:minimum",
+      "field": "visible_reflectance_back",
+      "property": "visibleReflectanceBack",
+      "kind": "change-glazing-material-visible-reflectance-back",
+      "payload": {
+        "mutation": "changeGlazingMaterialVisibleReflectanceBack",
+        "id": 1,
+        "newVisibleReflectanceBack": 0
+      },
+      "outcome": "applied",
+      "diff": {
+        "model": {
+          "glazing_materials": {
+            "modified": [
+              {
+                "id": 1,
+                "visible_reflectance_back": 0
+              }
+            ]
+          }
+        }
+      },
+      "inverse": [
+        {
+          "mutation": "changeGlazingMaterialVisibleReflectanceBack",
+          "id": 1,
+          "newVisibleReflectanceBack": 0.081
+        }
+      ],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "visible_reflectance_back:maximum",
+      "field": "visible_reflectance_back",
+      "property": "visibleReflectanceBack",
+      "kind": "change-glazing-material-visible-reflectance-back",
+      "payload": {
+        "mutation": "changeGlazingMaterialVisibleReflectanceBack",
+        "id": 1,
+        "newVisibleReflectanceBack": 1
+      },
+      "outcome": "applied",
+      "diff": {
+        "model": {
+          "glazing_materials": {
+            "modified": [
+              {
+                "id": 1,
+                "visible_reflectance_back": 1
+              }
+            ]
+          }
+        }
+      },
+      "inverse": [
+        {
+          "mutation": "changeGlazingMaterialVisibleReflectanceBack",
+          "id": 1,
+          "newVisibleReflectanceBack": 0.081
+        }
+      ],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 1,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "visible_reflectance_back:no-op",
+      "field": "visible_reflectance_back",
+      "property": "visibleReflectanceBack",
+      "kind": "change-glazing-material-visible-reflectance-back",
+      "payload": {
+        "mutation": "changeGlazingMaterialVisibleReflectanceBack",
+        "id": 1,
+        "newVisibleReflectanceBack": 0.081
+      },
+      "outcome": "no-op",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "visible_reflectance_back:below",
+      "field": "visible_reflectance_back",
+      "property": "visibleReflectanceBack",
+      "kind": "change-glazing-material-visible-reflectance-back",
+      "payload": {
+        "mutation": "changeGlazingMaterialVisibleReflectanceBack",
+        "id": 1,
+        "newVisibleReflectanceBack": -0.1
+      },
+      "outcome": "rejected",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "visible_reflectance_back:above",
+      "field": "visible_reflectance_back",
+      "property": "visibleReflectanceBack",
+      "kind": "change-glazing-material-visible-reflectance-back",
+      "payload": {
+        "mutation": "changeGlazingMaterialVisibleReflectanceBack",
+        "id": 1,
+        "newVisibleReflectanceBack": 1.1
+      },
+      "outcome": "rejected",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "visible_reflectance_back:non-finite",
+      "field": "visible_reflectance_back",
+      "property": "visibleReflectanceBack",
+      "kind": "change-glazing-material-visible-reflectance-back",
+      "payload": {
+        "mutation": "changeGlazingMaterialVisibleReflectanceBack",
+        "id": 1,
+        "newVisibleReflectanceBack": "NaN"
+      },
+      "outcome": "rejected",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "visible_reflectance_back:missing",
+      "field": "visible_reflectance_back",
+      "property": "visibleReflectanceBack",
+      "kind": "change-glazing-material-visible-reflectance-back",
+      "payload": {
+        "mutation": "changeGlazingMaterialVisibleReflectanceBack",
+        "id": 99,
+        "newVisibleReflectanceBack": 0.18
+      },
+      "outcome": "rejected",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "infrared_transmittance:changed",
+      "field": "infrared_transmittance",
+      "property": "infraredTransmittance",
+      "kind": "change-glazing-material-infrared-transmittance",
+      "payload": {
+        "mutation": "changeGlazingMaterialInfraredTransmittance",
+        "id": 1,
+        "newInfraredTransmittance": 0.18
+      },
+      "outcome": "applied",
+      "diff": {
+        "model": {
+          "glazing_materials": {
+            "modified": [
+              {
+                "id": 1,
+                "infrared_transmittance": 0.18
+              }
+            ]
+          }
+        }
+      },
+      "inverse": [
+        {
+          "mutation": "changeGlazingMaterialInfraredTransmittance",
+          "id": 1,
+          "newInfraredTransmittance": 0
+        }
+      ],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0.18,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "infrared_transmittance:minimum",
+      "field": "infrared_transmittance",
+      "property": "infraredTransmittance",
+      "kind": "change-glazing-material-infrared-transmittance",
+      "payload": {
+        "mutation": "changeGlazingMaterialInfraredTransmittance",
+        "id": 1,
+        "newInfraredTransmittance": 0
+      },
+      "outcome": "no-op",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "infrared_transmittance:maximum",
+      "field": "infrared_transmittance",
+      "property": "infraredTransmittance",
+      "kind": "change-glazing-material-infrared-transmittance",
+      "payload": {
+        "mutation": "changeGlazingMaterialInfraredTransmittance",
+        "id": 1,
+        "newInfraredTransmittance": 1
+      },
+      "outcome": "applied",
+      "diff": {
+        "model": {
+          "glazing_materials": {
+            "modified": [
+              {
+                "id": 1,
+                "infrared_transmittance": 1
+              }
+            ]
+          }
+        }
+      },
+      "inverse": [
+        {
+          "mutation": "changeGlazingMaterialInfraredTransmittance",
+          "id": 1,
+          "newInfraredTransmittance": 0
+        }
+      ],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 1,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "infrared_transmittance:no-op",
+      "field": "infrared_transmittance",
+      "property": "infraredTransmittance",
+      "kind": "change-glazing-material-infrared-transmittance",
+      "payload": {
+        "mutation": "changeGlazingMaterialInfraredTransmittance",
+        "id": 1,
+        "newInfraredTransmittance": 0
+      },
+      "outcome": "no-op",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "infrared_transmittance:below",
+      "field": "infrared_transmittance",
+      "property": "infraredTransmittance",
+      "kind": "change-glazing-material-infrared-transmittance",
+      "payload": {
+        "mutation": "changeGlazingMaterialInfraredTransmittance",
+        "id": 1,
+        "newInfraredTransmittance": -0.1
+      },
+      "outcome": "rejected",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "infrared_transmittance:above",
+      "field": "infrared_transmittance",
+      "property": "infraredTransmittance",
+      "kind": "change-glazing-material-infrared-transmittance",
+      "payload": {
+        "mutation": "changeGlazingMaterialInfraredTransmittance",
+        "id": 1,
+        "newInfraredTransmittance": 1.1
+      },
+      "outcome": "rejected",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "infrared_transmittance:non-finite",
+      "field": "infrared_transmittance",
+      "property": "infraredTransmittance",
+      "kind": "change-glazing-material-infrared-transmittance",
+      "payload": {
+        "mutation": "changeGlazingMaterialInfraredTransmittance",
+        "id": 1,
+        "newInfraredTransmittance": "NaN"
+      },
+      "outcome": "rejected",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    },
+    {
+      "id": "infrared_transmittance:missing",
+      "field": "infrared_transmittance",
+      "property": "infraredTransmittance",
+      "kind": "change-glazing-material-infrared-transmittance",
+      "payload": {
+        "mutation": "changeGlazingMaterialInfraredTransmittance",
+        "id": 99,
+        "newInfraredTransmittance": 0.18
+      },
+      "outcome": "rejected",
+      "diff": {},
+      "inverse": [],
+      "after": {
+        "id": 1,
+        "name": "CLEAR 3MM",
+        "thickness_m": 0.003,
+        "conductivity_w_m_k": 1.06,
+        "solar_transmittance": 0.837,
+        "solar_reflectance_front": 0.075,
+        "solar_reflectance_back": 0.075,
+        "visible_transmittance": 0.898,
+        "visible_reflectance_front": 0.081,
+        "visible_reflectance_back": 0.081,
+        "infrared_transmittance": 0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      }
+    }
+  ],
+  "peer": {
+    "field": "conductivity_w_m_k",
+    "value": 2.2
+  },
+  "documentIntents": {
+    "switchExample": {
+      "effect": "load-document",
+      "history": "fresh-genesis"
+    },
+    "import": {
+      "effect": "load-document",
+      "history": "fresh-genesis"
+    },
+    "fieldChange": {
+      "effect": "semantic-mutation",
+      "history": "preserved"
+    }
+  },
+  "wireCases": [
+    {
+      "field": "solar_reflectance_front",
+      "kind": "change-glazing-material-solar-reflectance-front",
+      "binaryTag": 300,
+      "binaryPrefix": [
+        1,
+        172,
+        2
+      ],
+      "text": "change-glazing-material-solar-reflectance-front id=1 new-solar-reflectance-front=0.18"
+    },
+    {
+      "field": "solar_reflectance_back",
+      "kind": "change-glazing-material-solar-reflectance-back",
+      "binaryTag": 301,
+      "binaryPrefix": [
+        1,
+        173,
+        2
+      ],
+      "text": "change-glazing-material-solar-reflectance-back id=1 new-solar-reflectance-back=0.18"
+    },
+    {
+      "field": "visible_reflectance_front",
+      "kind": "change-glazing-material-visible-reflectance-front",
+      "binaryTag": 302,
+      "binaryPrefix": [
+        1,
+        174,
+        2
+      ],
+      "text": "change-glazing-material-visible-reflectance-front id=1 new-visible-reflectance-front=0.18"
+    },
+    {
+      "field": "visible_reflectance_back",
+      "kind": "change-glazing-material-visible-reflectance-back",
+      "binaryTag": 303,
+      "binaryPrefix": [
+        1,
+        175,
+        2
+      ],
+      "text": "change-glazing-material-visible-reflectance-back id=1 new-visible-reflectance-back=0.18"
+    },
+    {
+      "field": "infrared_transmittance",
+      "kind": "change-glazing-material-infrared-transmittance",
+      "binaryTag": 304,
+      "binaryPrefix": [
+        1,
+        176,
+        2
+      ],
+      "text": "change-glazing-material-infrared-transmittance id=1 new-infrared-transmittance=0.18"
+    }
+  ]
+}

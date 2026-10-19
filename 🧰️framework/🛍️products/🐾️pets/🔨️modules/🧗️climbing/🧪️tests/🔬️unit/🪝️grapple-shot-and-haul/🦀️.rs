@@ -9,18 +9,18 @@ fn a_shot_aims_from_the_muzzle_in_front_of_the_feet_at_a_point_just_above_the_ed
     let from = |x: f64| shot_for(point(x, 480.0), &[floor(), shelf.clone()], &boxed, PET).unwrap_or_else(|| panic!("no shot from {x}"));
     let shot = from(280.0);
     assert_eq!((shot.surface.as_str(), shot.facing), ("shelf", Facing::Right));
-    assert_eq!((shot.muzzle, shot.hook), (point(280.0 + MUZZLE_FORWARD * 40.0, 480.0 - MUZZLE_HEIGHT * 48.0), point(306.0 + 20.0 + HOOK_INSET, 380.0 - HOOK_LIFT)));
+    assert_eq!((shot.muzzle, shot.hook), (point(280.0 + MUZZLE_FORWARD * 40.0, 480.0 - MUZZLE_HEIGHT * 48.0), point(306.0 + HOOK_INSET, 380.0 - HOOK_LIFT)));
     assert!((shot.length - distance(shot.hook, shot.muzzle)).abs() < 1e-12);
     let mirrored = from(520.0);
-    assert_eq!((mirrored.facing, mirrored.muzzle, mirrored.hook), (Facing::Left, point(520.0 - MUZZLE_FORWARD * 40.0, 480.0 - MUZZLE_HEIGHT * 48.0), point(494.0 - 20.0 - HOOK_INSET, 379.0)));
+    assert_eq!((mirrored.facing, mirrored.muzzle, mirrored.hook), (Facing::Left, point(520.0 - MUZZLE_FORWARD * 40.0, 480.0 - MUZZLE_HEIGHT * 48.0), point(494.0 - HOOK_INSET, 379.0)));
     assert!((mirrored.length - shot.length).abs() < 5e-10);
     assert_eq!((from(400.0).hook, from(400.0).facing, from(400.0).reel), (point(400.0, 379.0), Facing::Right, Reeling::Zip));
-    assert_eq!([from(440.0).hook, from(331.0).hook, from(329.0).hook], [point(440.0, 379.0), point(330.0, 379.0), point(330.0, 379.0)]);
-    assert_eq!(from(331.0).facing, Facing::Left);
+    assert_eq!([from(440.0).hook, from(311.0).hook, from(309.0).hook], [point(440.0, 379.0), point(310.0, 379.0), point(310.0, 379.0)]);
+    assert_eq!(from(311.0).facing, Facing::Left);
     let stub = [perch("stub", 380.0, 420.0, 380.0)];
-    assert_eq!(shot_for(point(400.0, 480.0), &stub, &[], PET).map(|shot| shot.hook), Some(point(400.0, 379.0)));
-    assert_eq!(shot_for(point(300.0, 480.0), &stub, &[], PET).map(|shot| shot.hook), Some(point(400.0, 379.0)));
-    let (steep, slanted) = (from(310.0), from(280.0));
+    assert_eq!(shot_for(point(400.0, 480.0), &stub, &[], PET).map(|shot| shot.hook), Some(point(384.0, 379.0)));
+    assert_eq!(shot_for(point(300.0, 480.0), &stub, &[], PET).map(|shot| shot.hook), Some(point(384.0, 379.0)));
+    let (steep, slanted) = (from(310.0), from(240.0));
     assert!((steep.hook.x - steep.muzzle.x).abs() <= ZIP_SLANT * (steep.muzzle.y - steep.hook.y) && steep.reel == Reeling::Zip);
     assert!((slanted.hook.x - slanted.muzzle.x).abs() > ZIP_SLANT * (slanted.muzzle.y - slanted.hook.y) && slanted.reel == Reeling::Swing);
 }
@@ -32,8 +32,8 @@ fn a_shot_needs_a_perch_high_enough_a_rope_of_the_right_length_and_steep_enough_
     let high = |y: f64, size: Size| shot_for(point(400.0, 480.0), &[perch("stub", 380.0, 420.0, y)], &[], size);
     assert!(high(480.0 - ROPE_RISE * 48.0 + 0.5, PET).is_none());
     assert!(high(413.0, PET).is_some_and(|shot| shot.length >= ROPE_SHORT * 48.0) && high(414.0, PET).is_none());
-    assert!(high(297.0, PET).is_some_and(|shot| shot.length <= ROPE_LONG * 48.0) && high(296.0, PET).is_none());
-    assert!(high(480.0 - MUZZLE_HEIGHT * 56.0 - 170.0, LARGE).is_some() && high(480.0 - MUZZLE_HEIGHT * 56.0 - 170.0, PET).is_none());
+    assert!(high(66.0, PET).is_some_and(|shot| shot.length <= ROPE_LONG * 48.0) && high(65.0, PET).is_none());
+    assert!(high(480.0 - MUZZLE_HEIGHT * 56.0 - 420.0, LARGE).is_some() && high(480.0 - MUZZLE_HEIGHT * 56.0 - 420.0, PET).is_none());
     assert!(high(480.0, PET).is_none() && high(520.0, PET).is_none());
     let from = |x: f64, keepouts: &[Rect]| shot_for(point(x, 480.0), &[floor(), shelf.clone()], keepouts, PET);
     assert!(from(240.0, &[boxed]).is_some() && from(140.0, &[boxed]).is_none());
@@ -48,8 +48,8 @@ fn a_shot_needs_a_perch_high_enough_a_rope_of_the_right_length_and_steep_enough_
     assert_eq!(from(280.0, &[boxed, keepout(310.0, 380.0, 100.0, 30.0)]).as_ref(), Some(&clear));
     assert_eq!(from(280.0, &[boxed, keepout(310.0, 384.0, 100.0, 30.0)]), None);
     assert_eq!(from(280.0, &[boxed, keepout(300.0, 420.0, 16.0, 30.0)]), None);
-    assert_eq!(from(280.0, &[boxed, keepout(332.0, 340.0, 100.0, 80.0)]).as_ref(), Some(&clear));
-    assert_eq!(from(280.0, &[boxed, keepout(331.5, 340.0, 100.0, 80.0)]), None);
+    assert_eq!(from(280.0, &[boxed, keepout(312.0, 340.0, 100.0, 80.0)]).as_ref(), Some(&clear));
+    assert_eq!(from(280.0, &[boxed, keepout(311.5, 340.0, 100.0, 80.0)]), None);
     let reach = along(clear.muzzle, clear.hook, 422.0);
     assert_eq!(from(280.0, &[boxed, keepout(reach - ROPE_MARGIN - 0.5 - 20.0, 400.0, 20.0, 20.0)]).as_ref(), Some(&clear));
     assert_eq!(from(280.0, &[boxed, keepout(reach - ROPE_MARGIN + 0.5 - 20.0, 400.0, 20.0, 20.0)]), None);
@@ -102,7 +102,7 @@ fn a_shot_keeps_every_law_on_generated_stages() {
             swings += 1;
         }
         let target = perches.iter().find(|edge| edge.surface == shot.surface).unwrap_or_else(|| panic!("stage {stage}: no target"));
-        let inset = size.width / 2.0 + HOOK_INSET;
+        let inset = HOOK_INSET;
         assert!(feet.y - target.y >= ROPE_RISE * size.height && shot.hook.y == target.y - HOOK_LIFT, "stage {stage}");
         if target.x1 - target.x0 >= 2.0 * inset {
             assert!(shot.hook.x >= target.x0 + inset && shot.hook.x <= target.x1 - inset, "stage {stage}");
@@ -111,13 +111,15 @@ fn a_shot_keeps_every_law_on_generated_stages() {
         }
         assert_eq!(shot.muzzle, point(feet.x + shot.facing.sign() * MUZZLE_FORWARD * size.width, feet.y - MUZZLE_HEIGHT * size.height), "stage {stage}");
         assert_eq!(shot.facing, if shot.hook.x < feet.x { Facing::Left } else { Facing::Right }, "stage {stage}");
+        assert_eq!(shot.reel, if (shot.hook.x - shot.muzzle.x).abs() <= ZIP_SLANT * (shot.muzzle.y - shot.hook.y) || dropped { Reeling::Zip } else { Reeling::Swing }, "stage {stage}");
         assert!((shot.length - distance(shot.hook, shot.muzzle)).abs() < 1e-9, "stage {stage}");
         assert!(shot.length >= ROPE_SHORT * size.height && shot.length <= ROPE_LONG * size.height && shot.muzzle.y - shot.hook.y >= ROPE_ELEVATION * shot.length, "stage {stage}");
-        assert_eq!(shot.reel, if (shot.hook.x - shot.muzzle.x).abs() <= ZIP_SLANT * (shot.muzzle.y - shot.hook.y) { Reeling::Zip } else { Reeling::Swing }, "stage {stage}");
+        let mut dropped = false;
         for blocker in &keepouts {
             if !holding(blocker, point(shot.hook.x, target.y)) {
                 assert!(!segment_hits(shot.muzzle, shot.hook, blocker, ROPE_MARGIN), "stage {stage}");
-            }
+                            dropped = dropped || segment_hits(shot.hook, point(shot.hook.x, shot.hook.y + shot.length), blocker, ROPE_MARGIN);
+}
         }
         assert_eq!(shot_holds(&shot, &perches, &keepouts).as_ref(), Some(&shot), "stage {stage}");
     }
@@ -232,13 +234,13 @@ fn a_shot_holds_as_it_is_follows_its_edge_up_and_down_and_loses_an_edge_that_mov
     assert_eq!(shot_holds(&shot, &[floor(), shelf.clone()], &[boxed]).as_ref(), Some(&shot));
     for dy in [-ROPE_FOLLOW, -3.0, 5.0, ROPE_FOLLOW] {
         let held = shot_holds(&shot, &[floor(), perch("shelf", 306.0, 494.0, 380.0 + dy)], &[solid(300.0, 500.0, 380.0 + dy, 420.0 + dy)]).unwrap_or_else(|| panic!("{dy}"));
-        assert_eq!(held.hook, point(330.0, 379.0 + dy));
-        assert!((held.length - distance(point(330.0, 379.0 + dy), shot.muzzle)).abs() < 1e-12);
+        assert_eq!(held.hook, point(310.0, 379.0 + dy));
+        assert!((held.length - distance(point(310.0, 379.0 + dy), shot.muzzle)).abs() < 1e-12);
         assert_eq!(Shot { hook: shot.hook, length: shot.length, ..held }, shot);
     }
     let lost = |perches: &[Perch]| shot_holds(&shot, perches, &[]).is_none();
     assert!(lost(&[floor(), perch("shelf", 306.0, 494.0, 380.0 + ROPE_FOLLOW + 0.5)]) && lost(&[floor(), perch("shelf", 306.0, 494.0, 380.0 - ROPE_FOLLOW - 0.5)]));
-    assert!(lost(&[floor(), perch("shelf", 330.5, 494.0, 380.0)]) && !lost(&[floor(), perch("shelf", 330.0, 494.0, 380.0)]));
+    assert!(lost(&[floor(), perch("shelf", 310.5, 494.0, 380.0)]) && !lost(&[floor(), perch("shelf", 310.0, 494.0, 380.0)]));
     assert!(lost(&[floor(), perch("other", 306.0, 494.0, 380.0)]) && lost(&[floor()]));
     assert_eq!(shot_holds(&shot, &[floor(), shelf.clone()], &[boxed, keepout(300.0, 420.0, 16.0, 30.0)]), None);
     assert_eq!(shot_holds(&shot, &[floor(), shelf], &[boxed, keepout(100.0, 420.0, 16.0, 30.0)]).as_ref(), Some(&shot));

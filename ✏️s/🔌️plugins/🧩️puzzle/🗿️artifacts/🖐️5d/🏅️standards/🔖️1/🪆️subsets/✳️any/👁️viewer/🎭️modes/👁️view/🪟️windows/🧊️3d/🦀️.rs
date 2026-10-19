@@ -1,5 +1,5 @@
-//! 🧊️ Puzzle 5D viewer — the World3d window: a read-only render of the unified 5d document's 3D
 //! projection (part origins/orientations/scale, mesh urls), built with the frozen
+//! 🧊️ Puzzle 5D viewer — the World3d window: a read-only render of the unified 5d document's 3D
 //! `MeshWindowKit` (contract §2.6) directly on the artifact-level `Puzzle5dSnapshot` — this file
 //! imports nothing from the sibling editor module (`policyViewerPurityBreaches` forbids it
 //! outright). No selection, no gumball, no engagement overlay, no brush/fill preview: a viewer has
@@ -7,9 +7,16 @@
 //! a follow-up, not a purity or completeness requirement — the contract only asks for one real window.
 
 use crate::{Puzzle5dSnapshot};
-use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dPart, Puzzle5dScale};
-use semio_framework_plugin::app::{MeshView, MeshWindowKit, WindowKit};
-use semio_framework_plugin::{world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_selection_json, WindowKindDefinition};
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart;
+
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale;
+use semio_framework_plugin::app::MeshView;
+use semio_framework_plugin::app::MeshWindowKit;
+use semio_framework_plugin::app::WindowKit;
+use semio_framework_plugin::world3d_mesh_id_from_url;
+use semio_framework_plugin::world3d_meshes_json_from_urls;
+use semio_framework_plugin::world3d_selection_json;
+use semio_framework_plugin::WindowKindDefinition;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::puzzle5d::create_puzzle5d_viewer`. Uses

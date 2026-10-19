@@ -1,9 +1,8 @@
 // #region 🔌️Adapters
-import react from "@vitejs/plugin-react";
 import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineConfig, type Plugin } from "vite";
+import { defineOwnedBuildConfig, uiReactBuildPlugin, type OwnedBuildPlugin, type OwnedBuildServer } from "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 import { semioEmojiIndexHtmlVitePlugin, semioServeCloseVitePlugin } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🟦️.ts";
 import { hostBuildPlugins } from "../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 // #endregion 🔌️Adapters
@@ -17,8 +16,14 @@ const repoRoot = resolve(product, "../../..");
 /** 🏷️ The module the gallery's document imports its menagerie from. */
 export const MENAGERIE_MODULE = "pets-stories:menagerie";
 
+/** 🗂️ The gallery's build-time module graph and file observation boundary. */
+interface GalleryBuildServer extends OwnedBuildServer {
+  readonly moduleGraph: { getModuleById(id: string): object | undefined; invalidateModule(module: object): void };
+  readonly watcher: OwnedBuildServer["watcher"] & { add(path: string): void; on(event: string, listener: (path: string) => void): void };
+}
+
 /** 🎪️ Vite: serves {@link MENAGERIE_MODULE} — `source`, every export of the file at `path` (relative to the repository root; a module or a JSON document), and `origin`, that path. A path that names no file yields `source = null`, so the gallery can say what is missing instead of failing to load. The file is imported statically, so an edit to it or to anything it imports reloads the page, and so does the file appearing or going away. */
-export function menagerieVitePlugin(path?: string): Plugin {
+export function menagerieVitePlugin(path?: string): OwnedBuildPlugin {
   const resolved = `\0${MENAGERIE_MODULE}`;
   const file = path ? resolve(repoRoot, path).replaceAll("\\", "/") : undefined;
   return {
@@ -32,15 +37,16 @@ export function menagerieVitePlugin(path?: string): Plugin {
     },
     configureServer(server) {
       if (!file) return;
+      const gallery = server as GalleryBuildServer;
       const reload = (changed: string): void => {
         if (changed.replaceAll("\\", "/") !== file) return;
-        const served = server.moduleGraph.getModuleById(resolved);
-        if (served) server.moduleGraph.invalidateModule(served);
-        server.ws.send({ type: "full-reload" });
+        const served = gallery.moduleGraph.getModuleById(resolved);
+        if (served) gallery.moduleGraph.invalidateModule(served);
+        gallery.ws.send({ type: "full-reload" });
       };
-      server.watcher.add(file);
-      server.watcher.on("add", reload);
-      server.watcher.on("unlink", reload);
+      gallery.watcher.add(file);
+      gallery.watcher.on("add", reload);
+      gallery.watcher.on("unlink", reload);
     },
   };
 }
@@ -56,7 +62,7 @@ export const DIRECTOR_MODULE = "pets-stories:director";
  * to the core itself. So the gallery can read every frame and stage the layer computes and fold forced changes into the
  * stage between two frames by wrapping the director's two functions, while the layer's code stays exactly what a host
  * runs: the test seam lives behind the stories, never in the product. */
-export function directorVitePlugin(): Plugin {
+export function directorVitePlugin(): OwnedBuildPlugin {
   const resolved = `\0${DIRECTOR_MODULE}`;
   const core = resolve(product, "📦️packages/🟦️typescript/🟦️.ts").replaceAll("\\", "/");
   const layer = resolve(target, "🔨️modules/🫧️layer/🟦️.tsx").replaceAll("\\", "/");
@@ -93,12 +99,12 @@ const port = process.env.PETS_STORIES_PORT || "6069";
  * two galleries side by side never rewrite each other's.
  * @see ../../📖️stories/🟦️.tsx — the gallery
  * @see ../../📦️packages/🟦️typescript/📜️script.ts — `dev`, which starts this server on `PETS_STORIES_PORT` */
-export default defineConfig({
+export default defineOwnedBuildConfig({
   root: storiesRoot,
   base: "/",
   publicDir: false,
   cacheDir: resolve(bundleRoot, `node_modules/.vite/stories-${port}`),
-  plugins: [...hostBuildPlugins([semioServeCloseVitePlugin(), semioEmojiIndexHtmlVitePlugin(storiesRoot)]), menagerieVitePlugin(process.env.PETS_MENAGERIE), directorVitePlugin(), react()],
+  plugins: [...hostBuildPlugins([semioServeCloseVitePlugin(), semioEmojiIndexHtmlVitePlugin(storiesRoot)]), menagerieVitePlugin(process.env.PETS_MENAGERIE), directorVitePlugin(), uiReactBuildPlugin()],
   server: { fs: { allow: [repoRoot] } },
   resolve: {
     alias: [

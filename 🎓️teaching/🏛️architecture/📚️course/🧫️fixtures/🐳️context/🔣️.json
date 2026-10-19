@@ -1,0 +1,34 @@
+{
+  "copies": [
+    "COPY --chmod=0555 proctor /usr/local/bin/proctor",
+    "COPY content /srv/course/content",
+    "COPY deploy /srv/course/deploy",
+    "COPY --chown=65532:65532 --chmod=0700 data /srv/course/data"
+  ],
+  "validation": ["/usr/local/bin/proctor", "check", "/srv/course/content/🏛️architecture/📚️course/🔣️.json"],
+  "files": [
+    { "path": "proctor", "included": true },
+    { "path": "Dockerfile", "included": true },
+    { "path": "data/", "included": true },
+    { "path": "content/🏛️architecture/📚️course/🔣️.json", "included": true },
+    { "path": "content/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json", "included": true },
+    { "path": "content/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json", "included": true },
+    { "path": "content/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json", "included": true },
+    { "path": "content/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json", "included": true },
+    { "path": "content/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json", "included": true },
+    { "path": "deploy/compose.yaml", "included": true },
+    { "path": "deploy/Caddyfile", "included": true },
+    { "path": "content/🏛️architecture/📚️course/🟦️.ts", "included": false },
+    { "path": "content/🏛️architecture/📚️course/node_modules/❓️quiz/🔣️.json", "included": false },
+    { "path": "content/🏛️architecture/📚️course/🗑️generated/❓️quiz/🔣️.json", "included": false },
+    { "path": "Cargo.toml", "included": false },
+    { "path": "🎓️teaching/Cargo.lock", "included": false },
+    { "path": "rust-toolchain.toml", "included": false },
+    { "path": "🎓️teaching/🛂️proctor/🦀️.rs", "included": false },
+    { "path": ".cargo/config.toml", "included": false },
+    { "path": "nested/.cargo/config.toml", "included": false },
+    { "path": "Dockerfile.cargo.toml", "included": false },
+    { "path": ".🧬semio/🗑️generated/example.rs", "included": false },
+    { "path": ".cache/b/r/dependency/src/lib.rs", "included": false }
+  ]
+}

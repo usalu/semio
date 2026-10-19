@@ -14,6 +14,7 @@ static REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAlloc
 use semio_framework_dsl_record::RecordLayout;
 #[path="🏭️schema/🦀️.rs"]
 mod schema;
+pub use schema::retained::{BorrowedSchemaHashCursor,BorrowedSchemaHashStep};
 fn error(kind:K,message:&str)->ValueError{ValueError::new(kind,message)}
 trait Sink{
  fn bytes(&mut self,bytes:&[u8],control:&mut NativeEncodeControl<'_>)->Result<(),ValueError>;

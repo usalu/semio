@@ -1,10 +1,10 @@
 //! ↩️ Inverse for `ReplaceLoad` — recovers the pre-mutation load from `base`.
 use super::ReplaceLoad;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 
 //#region 🔖️Inverse
-pub fn inverse<Op: From<replace_load::ReplaceLoad>>(payload: &ReplaceLoad, base: &Fem3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::standards::v1::subsets::any::schema::mutations::replace_load::ReplaceLoad>>(payload: &ReplaceLoad, base: &Fem3dSnapshotValue) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     base.load_cases
         .iter()

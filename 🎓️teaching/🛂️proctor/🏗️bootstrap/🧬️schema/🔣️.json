@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "mode"],
+  "definitions": {
+    "ModeSelection": {
+      "type": "object", "additionalProperties": false,
+      "required": ["version", "originalMode"],
+      "properties": { "version": { "const": 1 }, "originalMode": { "enum": ["prototype", "release"] }, "requestedMode": { "enum": ["prototype", "release"] } },
+      "anyOf": [
+        { "properties": { "originalMode": { "const": "prototype" }, "requestedMode": { "const": "prototype" } } },
+        { "properties": { "originalMode": { "const": "release" }, "requestedMode": { "const": "release" } } }
+      ]
+    }
+  },
+  "properties": {
+    "version": { "const": 1 },
+    "mode": { "enum": ["prototype", "release"] }
+  }
+}

@@ -103,6 +103,8 @@ impl TimeTravelDiscardCursor {
     }
 }
 impl semio_framework_value::ErasedSnapshotRetirement for TimeTravelDiscardCursor {
+    fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.retirement_demands(body)}
+
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{Self::close_step(self,grant)}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.close_header_copy_bytes().map_or_else(||self.residue().map_or(Ok(0),|owner|owner.next_copy_byte_demand()),Ok)}
     fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{if self.close_header_copy_bytes().is_some(){return Ok(0)}self.residue().map_or(Ok(0),|owner|owner.next_capacity_byte_demand(body))}
@@ -111,7 +113,7 @@ impl semio_framework_value::ErasedSnapshotRetirement for TimeTravelDiscardCursor
     fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}
 }
 impl Drop for TimeTravelDiscardCursor{fn drop(&mut self){assert!(self.terminal_is_empty(),"original Discard custody dropped before admitted terminal closure")}}
-fn demand<T:semio_framework_value::retirement::RetireOwned>(owner:&ControlledRetirement<T>,body:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"Discard child depth overflow"))?})}
+fn demand<T:semio_framework_value::retirement::RetireOwned>(owner:&ControlledRetirement<T>,body:usize)->Result<RetirementDemand,ValueError>{let mut demand=owner.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"Discard child depth overflow"))?;Ok(demand)}
 fn admits(demand:RetirementDemand,grant:RetainedCloneGrant)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
 fn item()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Default::default()}}
 fn copied(copied_bytes:usize)->RetainedCloneProgress{RetainedCloneProgress{copied_bytes,..item()}}

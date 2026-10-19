@@ -8,7 +8,7 @@
 //! already equals its regenerated form.
 
 use protocol::Mutation;
-use crate::standards::v1::subsets::any::schema::mutations::{Puzzle5dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::apply_puzzle5d_mutation;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::Puzzle5dSnapshot;
@@ -40,7 +40,7 @@ fn regenerated(scenario: &std::path::Path) -> Vec<(std::path::PathBuf, String)> 
     assert_eq!(serde_json::to_value(&mutation).expect("mutation encodes"), serde_json::from_str::<serde_json::Value>(&canonical(&mutation)).expect("canonical mutation reparses"), "{}: the owned and the oracle mutation encodings disagree", scenario.display());
     let mut after = before.clone();
     apply_puzzle5d_mutation(&mut after, &mutation).expect("mutation applies to its committed before-snapshot");
-    let diff: Puzzle5dDiff = <Puzzle5dMutation as protocol::Mutation<Puzzle5dSnapshot>>::diff(&mutation, &before).diff().clone();
+    let diff: Puzzle5dDiff = <Puzzle5dMutation as protocol::ColdMutation<Puzzle5dSnapshot>>::diff(&mutation, &before).diff().clone();
     if status.as_deref() == Some("no-op") {
         assert_eq!(after, before, "{}: a NO-OP scenario leaves its own before-snapshot untouched", scenario.display());
     }

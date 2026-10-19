@@ -898,7 +898,7 @@ impl<E: LayoutRunOpEncoder> InteractiveJob for LayoutRunJob<E> {
         let grant = cx.retained_grant();
         if !self.closing { return Ok(InteractiveJobCloseStep::Blocked); }
         if self.terminal_is_empty() { return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }); }
-        if cx.should_yield() || grant.maximum_items == 0 { return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }); }
+        if cx.retirement_should_yield() || grant.maximum_items == 0 { return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }); }
         let demand = self.close_demands()?;
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth {
             return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });

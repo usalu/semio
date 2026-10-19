@@ -1,17 +1,37 @@
 //! 🧵️ The job-side lifecycle every puzzle job shares: a bounded outbox that lends payload outcomes, a staged owner bundle that retires through the controlled owner, and counted ladders for engine-owned scaffolds.
 #![allow(clippy::result_large_err)]
-use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 
+
+use semio_framework_job_publication::RetainedJobPublication;
+use semio_framework_job_publication::JobPublicationKind;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
-use semio_framework_job::{InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPayloadStream, RetainedPayloadBuilder, StepContext};
-use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_value::retirement::{controlled::ControlledRetirement, RetireOwned};
-use semio_framework_value::{RetirementDemand, ValueError};
+use semio_framework_job::InteractiveJobCloseStep;
+
+use semio_framework_job::JobOutcomeBorrow;
+
+use semio_framework_job::JobOutcomeDescriptor;
+
+use semio_framework_job::JobOutcomeKind;
+
+use semio_framework_job::JobOutcomeView;
+
+use semio_framework_job::JobPayloadStream;
+
+use semio_framework_job::RetainedPayloadBuilder;
+
+use semio_framework_job::StepContext;
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+use semio_framework_value::retained_clone::RetainedCloneProgress;
+use semio_framework_value::retained_clone::RetainedCloneStep;
+use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework_value::retirement::RetireOwned;
+use semio_framework_value::RetirementDemand;
+use semio_framework_value::ValueError;
 
 /// ♻️ Moves a work's remaining owners into one derived bundle and retires it through the controlled owner, one granted turn at a time.
 pub struct WorkClosing<T: RetireOwned + 'static> {
@@ -44,35 +64,25 @@ impl<T: RetireOwned + 'static> WorkClosing<T> {
         Ok(RetirementDemand { depth: usize::from(self.staged.is_some()), ..Default::default() })
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, semio_framework_value::ValueError> {
-        let empty = RetainedCloneProgress::default();
-        if self.is_empty() {
-            return Ok(InteractiveJobCloseStep::Complete { progress: empty });
-        }
-        if grant.maximum_items == 0 {
-            return Ok(InteractiveJobCloseStep::Pending { progress: empty });
-        }
-        if let Some(owner) = self.retirement.as_mut() {
-            let step = owner.step(grant);
-            if owner.terminal_is_empty() {
-                self.retirement.take();
+    pub fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+        if self.is_empty() { return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() }); }
+        let demand = self.demands(cx.retained_grant().maximum_copy_bytes)?;
+        let step = semio_framework_job::close_original_retained_step(cx, demand, |grant| {
+            if let Some(owner) = self.retirement.as_mut() {
+                let step = owner.step(grant)?;
+                if owner.terminal_is_empty() { self.retirement.take(); }
+                return Ok(step);
             }
-            return Ok(match step {
-                Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
-                Err(error) => return Err(error),
-            });
-        }
-        let Some(value) = self.staged.take() else { return Ok(InteractiveJobCloseStep::Complete { progress: empty }) };
-        Ok(match ControlledRetirement::new(value) {
-            Ok(owner) => {
-                *self.retirement = Some(owner);
-                InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..empty } }
+            let value = self.staged.take().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "puzzle close lost its staged original owners"))?;
+            match ControlledRetirement::new(value) {
+                Ok(owner) => {
+                    *self.retirement = Some(owner);
+                    Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+                }
+                Err((error, value)) => { *self.staged = Some(value); Err(error) }
             }
-            Err((error, value)) => {
-                *self.staged = Some(value);
-                return Err(error)
-            }
-        })
+        })?;
+        Ok(if self.is_empty() { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { step })
     }
 }
 
@@ -255,14 +265,12 @@ impl JobOutbox {
 }
 
 /// ♻️ Closes a job: the outbox first, then the staged owner bundle.
-pub fn job_close_step<T: RetireOwned + 'static>(outbox: &mut JobOutbox, owners: &mut WorkClosing<T>, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, semio_framework_value::ValueError> {
+pub fn job_close_step<T: RetireOwned + 'static>(outbox: &mut JobOutbox, owners: &mut WorkClosing<T>, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
     if !outbox.terminal_is_empty() {
-        return Ok(match outbox.close_step(grant) {
-            Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
-            Err(error) => return Err(error),
-        });
+        let demand = outbox.retirement_demands()?;
+        return semio_framework_job::close_original_retained_step(cx, demand, |grant| outbox.close_step(grant));
     }
-    owners.close_step(grant)
+    owners.close_step(cx)
 }
 
 /// 📏️ Quotes the next close turn of a job: the outbox first, then the staged owner bundle.
@@ -338,29 +346,76 @@ impl Drop for BrowserCaller {
 #[cfg(any(test, feature = "testing"))]
 pub mod testing {
     use super::*;
+    use std::mem::size_of;
     use semio_framework_job::InteractiveJob;
 
-    /// 🎟️ A grant no test turn can exhaust.
-    pub fn unbounded_grant() -> RetainedCloneGrant {
-        RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX }
+    /// 🧾️ Explicit finite original source stock shared by the authored Puzzle fixture corpus.
+    pub fn fixture_stock() -> RetainedCloneGrant {
+        RetainedCloneGrant { maximum_items: 1 << 24, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 4096 }
     }
 
-    /// 🧾️ A fresh retained-progress wallet for a test step context; the test process owns it until exit.
-    pub fn test_progress() -> &'static mut RetainedCloneProgress {
-        Box::leak(Box::default())
+    /// 🪪️ One fixture keeps the original roots, physical decoder, clock and cumulative source stock through every work and close turn.
+    pub struct OriginalFixture {
+        caller: Option<semio_framework_job::OriginalJobFixtureCaller>,
+        decoder: semio_framework_job::OriginalJobDecodeOwner,
     }
 
-    /// 🧹️ Closes `job` to its terminal-empty shell and answers how many granted turns that took.
-    pub fn close_job<J: InteractiveJob + ?Sized>(job: &mut J) -> usize {
-        job.begin_close();
-        let mut turns = 0;
-        while !matches!(semio_framework_job::close_with_self_funded_context(unbounded_grant(), |cx| job.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Complete { .. }) {
-            turns += 1;
-            assert!(turns < 1_000_000, "a job closes in a bounded number of turns");
+    impl OriginalFixture {
+        pub fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, source: RetainedCloneGrant, clock: fn() -> Option<u64>, deadline: u64, fuel: u64) -> Self {
+            Self { caller: Some(semio_framework_job::OriginalJobFixtureCaller::admit(operation, generation, source, clock, deadline, fuel)), decoder: semio_framework_job::OriginalJobDecodeOwner::empty() }
         }
-        assert!(job.terminal_is_empty(), "a closed job is terminal-empty");
-        turns
+
+        pub fn turn<R>(&mut self, grant: RetainedCloneGrant, advance: impl FnOnce(&mut StepContext<'_>) -> Result<R, semio_framework_job::OriginalTurnFailure>) -> Result<R, semio_framework_job::OriginalTurnFailure> {
+            self.caller.as_mut().expect("original fixture remains live").turn_with_decoder(grant, &mut self.decoder, advance)
+        }
+
+        pub fn construct<T>(&mut self, demand: RetirementDemand, construct: impl FnOnce(&mut semio_framework::action_bus::OriginalToolConstructionScope<'_>) -> Result<(T, RetainedCloneProgress), ValueError>) -> T {
+            let mut output = None;
+            let demand = semio_framework::action_bus::ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: demand.release_bytes, depth: demand.depth.max(1) };
+            assert!(self.turn(fixture_stock(), |cx| semio_framework::action_bus::admit_original_tool_construction_scoped(cx, &mut output, demand, |scope| construct(scope).map(|(candidate, mut progress)| { progress.copied_items = progress.copied_items.max(1); (candidate, progress) }))).expect("original Puzzle fixture construction"));
+            output.expect("original Puzzle candidate remains in fixture custody")
+        }
+
+        pub fn construct_boxed<T>(&mut self, extra: RetirementDemand, construct: impl FnOnce(&mut semio_framework::action_bus::OriginalToolConstructionScope<'_>) -> Result<(T, RetainedCloneProgress), ValueError>) -> Box<T> {
+            let frame = RetirementDemand { capacity_bytes: size_of::<T>(), depth: 1, ..Default::default() };
+            let demand = RetirementDemand { capacity_bytes: extra.capacity_bytes.checked_add(frame.capacity_bytes).expect("original fixture typed frame extent"), depth: extra.depth.max(1), ..extra };
+            self.construct(demand, |scope| {
+                scope.admit_owner(frame)?;
+                let (work, mut progress) = construct(scope)?;
+                let work = Box::new(work);
+                progress.retained_capacity_bytes = progress.retained_capacity_bytes.checked_add(size_of::<T>()).expect("original fixture typed frame receipt");
+                Ok((work, progress))
+            })
+        }
+
+        pub fn cancel(&self) -> &semio_framework_job::CancelToken { self.caller.as_ref().expect("original fixture remains live").cancel() }
+
+        pub fn close_job<J: InteractiveJob + ?Sized>(&mut self, job: &mut J) -> usize {
+            job.begin_close();
+            for turn in 0..1_000_000 {
+                let step = self.turn(fixture_stock(), |cx| job.close_step(cx)).expect("original Puzzle job close");
+                if matches!(step, InteractiveJobCloseStep::Complete { .. }) { assert!(job.terminal_is_empty()); return turn; }
+            }
+            panic!("original Puzzle job close remains pending");
+        }
+
+        pub fn finish(mut self) {
+            let caller = self.caller.as_mut().expect("original fixture remains live");
+            while !self.decoder.terminal_is_empty() {
+                caller.turn(fixture_stock(), |cx| {
+                    let demand = self.decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;
+                    semio_framework_job::close_original_retained_step(cx, demand, |grant| self.decoder.close_step(grant))?;
+                    Ok(())
+                }).expect("original Puzzle decoder close");
+            }
+            self.caller.take().expect("original fixture closes once").retire(fixture_stock());
+        }
     }
+
+    impl Drop for OriginalFixture {
+        fn drop(&mut self) { assert!(self.caller.is_none() || std::thread::panicking(), "original Puzzle fixture must close every source root"); }
+    }
+
     fn payload_bytes(payload: &semio_framework_job::RetainedJobPayload) -> Vec<u8> {
         (0..payload.page_count()).flat_map(|index| payload.page(index).unwrap_or_default().to_vec()).collect()
     }
@@ -378,30 +433,25 @@ pub mod testing {
     }
 
     /// ▶️ Steps `job` through its production `step` — paying turns included — until it lends one outcome, and reads that outcome as owned bytes.
-    pub fn drive<J: InteractiveJob + ?Sized>(job: &mut J, budget: semio_framework_job::StepBudget, clock: fn() -> Option<u64>, sequence: &mut u64) -> JobTurn {
-        for _ in 0..1_000_000 {
-            let mut cx = StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), budget, semio_framework_job::root_cancel_token(), clock, sequence, test_progress());
-            if let Some(outcome) = job.step(&mut cx).expect("a job step") {
-                return owned_turn(outcome);
-            }
-        }
-        panic!("a job lends an outcome within a bounded number of paying turns");
+    pub fn drive<J: InteractiveJob + ?Sized>(job: &mut J, budget: semio_framework_job::StepBudget, original: &mut OriginalFixture) -> JobTurn {
+        drive_output(job, budget, original).0
     }
-    /// ▶️ Like [`drive`], and also answers the commit output the completing turn carried (`None` for every other outcome).
-    pub fn drive_output<J: InteractiveJob + ?Sized>(job: &mut J, budget: semio_framework_job::StepBudget, clock: fn() -> Option<u64>, sequence: &mut u64) -> (JobTurn, Option<Vec<u8>>) {
+
+    /// 📤️ The same original caller funds every paying step and lends the exact completed output.
+    pub fn drive_output<J: InteractiveJob + ?Sized>(job: &mut J, budget: semio_framework_job::StepBudget, original: &mut OriginalFixture) -> (JobTurn, Option<Vec<u8>>) {
         for _ in 0..1_000_000 {
-            let mut cx = StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), budget, semio_framework_job::root_cancel_token(), clock, sequence, test_progress());
-            match job.step(&mut cx).expect("a job step") {
-                None => continue,
-                Some(JobOutcomeBorrow::Complete { output, .. }) => return (JobTurn::Complete, output.map(payload_bytes)),
-                Some(JobOutcomeBorrow::Yield { .. }) => return (JobTurn::Yield, None),
-                Some(JobOutcomeBorrow::Cancelled { .. }) => return (JobTurn::Cancelled, None),
-                Some(JobOutcomeBorrow::PreviewReady { payload, .. }) => return (JobTurn::Preview(payload_bytes(payload)), None),
-                Some(JobOutcomeBorrow::CheckpointReady { state, applied_progress, .. }) => return (JobTurn::Checkpoint { applied_progress, state: payload_bytes(state) }, None),
-                Some(JobOutcomeBorrow::Fault { detail, .. }) => return (JobTurn::Fault(payload_bytes(detail)), None),
-            }
+            let mut output = None;
+            original.turn(budget.retained, |cx| cx.with_original_work_loan(budget.fuel, budget.deadline_us, |cx| {
+                output = match job.step(cx)? {
+                    None => None,
+                    Some(JobOutcomeBorrow::Complete { output, .. }) => Some((JobTurn::Complete, output.map(payload_bytes))),
+                    Some(outcome) => Some((owned_turn(outcome), None)),
+                };
+                Ok(())
+            })).expect("original Puzzle job step");
+            if let Some(output) = output { return output; }
         }
-        panic!("a job lends an outcome within a bounded number of paying turns");
+        panic!("original Puzzle job lends an outcome within its bounded fixture turns");
     }
 
     /// 🎟️ One close or maintenance turn funded exactly by what the owner quoted, capped at `items` items.
@@ -422,23 +472,35 @@ pub mod testing {
         }
     }
 
-    /// 🧹️ One cooperative-maintenance unit of `app` over a `body`-byte body: the mounted policy's maintenance grant, widened to the owner's own quote on every axis the way the plugin runtime funds a lifecycle turn.
-    pub fn maintain_items<A: semio_framework_plugin::PluginApp + ?Sized>(app: &mut A, items: usize, body: usize, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::Fault> {
-        let demand = app.maintenance_retirement_demands(body).map_err(|error| semio_framework_plugin::Fault::from(error.into_message()))?;
-        let policy = semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance;
-        app.maintenance_step(cx, RetainedCloneGrant { maximum_items: policy.maximum_items.max(items), maximum_copy_bytes: policy.maximum_copy_bytes.max(demand.copy_bytes), maximum_capacity_bytes: policy.maximum_capacity_bytes.max(demand.capacity_bytes), maximum_release_bytes: policy.maximum_release_bytes.max(demand.release_bytes), maximum_depth: policy.maximum_depth.max(demand.depth) }).map_err(|failure| semio_framework_plugin::Fault::from(format!("{failure:?}")))
+    /// 🧹️ Maintenance borrows one exact quoted loan from the existing original fixture source.
+    pub fn maintain_items<A: semio_framework_plugin::PluginApp + ?Sized>(original: &mut OriginalFixture, app: &mut A, items: usize, body: usize) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
+        let demand = app.maintenance_retirement_demands(body)?;
+        let grant = funded_turn(demand, items);
+        original.turn(grant, |cx| { let loan = cx.retained_grant(); app.maintenance_step(cx, loan).map_err(semio_framework_job::OriginalTurnFailure::from) }).map_err(semio_framework_plugin::PluginLifecycleFailure::from)
     }
 
-    /// 🧹️ One single-item cooperative-maintenance unit of `app`.
-    pub fn maintain<A: semio_framework_plugin::PluginApp + ?Sized>(app: &mut A, body: usize, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::Fault> {
-        maintain_items(app, 1, body, cx)
+    /// 🧼️ A single maintenance unit consumes the same original source and clock.
+    pub fn maintain<A: semio_framework_plugin::PluginApp + ?Sized>(original: &mut OriginalFixture, app: &mut A, body: usize) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
+        maintain_items(original, app, 1, body)
     }
+
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use semio_framework_job::InteractiveJob;
+
+    #[test]
+    fn original_fixture_policy_matches_the_shared_source_stock() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🎟️source/🔣️.json")).unwrap();
+        let stock = testing::fixture_stock();
+        assert_eq!(stock.maximum_items, fixture["stock"]["items"].as_u64().unwrap() as usize);
+        assert_eq!(stock.maximum_copy_bytes, fixture["stock"]["copyBytes"].as_u64().unwrap() as usize);
+        assert_eq!(stock.maximum_capacity_bytes, fixture["stock"]["capacityBytes"].as_u64().unwrap() as usize);
+        assert_eq!(stock.maximum_release_bytes, fixture["stock"]["releaseBytes"].as_u64().unwrap() as usize);
+        assert_eq!(stock.maximum_depth, fixture["stock"]["depth"].as_u64().unwrap() as usize);
+    }
 
     struct EchoJob {
         raw: Vec<u8>,
@@ -461,10 +523,10 @@ mod tests {
     }
 
     impl EchoJob {
-        /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-        fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+    /// 🪜️ Runs the authored body under the original caller before the trait boundary returns its failure.
+    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
             match self.outbox.phase(cx)? {
-                OutboxPhase::Building => return self.outbox.advance(cx),
+                OutboxPhase::Building => return self.outbox.advance(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
                 OutboxPhase::Delivered | OutboxPhase::Retiring => {
                     self.outbox.retire_step(cx)?;
                     return Ok(None);
@@ -472,7 +534,7 @@ mod tests {
                 OutboxPhase::Idle => {}
             }
             let turn = self.turn();
-            self.outbox.settle(turn, cx)
+            self.outbox.settle(turn, cx).map_err(semio_framework_job::OriginalTurnFailure::from)
         }
 }
 
@@ -489,11 +551,9 @@ impl InteractiveJob for EchoJob {
             }
         }
 
-        fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-            semio_framework_job::close_original_granted_step(cx,|grant|{
-                self.begin_close();
-                job_close_step(&mut self.outbox, &mut self.owners, grant)
-            })
+        fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+            self.begin_close();
+            job_close_step(&mut self.outbox, &mut self.owners, cx)
         }
 
         fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
@@ -517,7 +577,7 @@ impl InteractiveJob for EchoJob {
         }
     }
 
-    /// 🌐️ A browser handle is its own original caller: every exported call is scheduled from a fresh context over the same roots, and the roots retire in quoted turns until nothing remains.
+    /// 🌐️ Each browser call borrows fresh context over the same roots and pays their terminal retirement.
     #[test]
     fn a_browser_caller_lends_fresh_contexts_over_one_root_and_retires_in_quoted_turns() {
         let grant = RetainedCloneGrant { maximum_items: 32, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 16_777_216, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
@@ -540,12 +600,13 @@ impl InteractiveJob for EchoJob {
     fn a_prepared_commit_output_rides_on_the_completion_and_closes_exactly() {
         for raw in [Vec::new(), b"puzzle reserved wire".to_vec(), vec![0xA5; 1_000]] {
             let mut job = EchoJob::new(raw.clone());
-            let mut sequence = 0;
-            let budget = semio_framework_job::StepBudget::new(1, u64::MAX, testing::unbounded_grant());
-            let (turn, output) = testing::drive_output(&mut job, budget, semio_framework_job::default_now_us, &mut sequence);
+            let mut original = testing::OriginalFixture::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), testing::fixture_stock(), semio_framework_job::default_now_us, u64::MAX, 1 << 24);
+            let budget = semio_framework_job::StepBudget::new(1, u64::MAX, testing::fixture_stock());
+            let (turn, output) = testing::drive_output(&mut job, budget, &mut original);
             assert_eq!(turn, JobTurn::Complete);
             assert_eq!(output, (!raw.is_empty()).then_some(raw), "the completion carries exactly the wire the job was admitted with");
-            testing::close_job(&mut job);
+            original.close_job(&mut job);
+            original.finish();
         }
     }
 }

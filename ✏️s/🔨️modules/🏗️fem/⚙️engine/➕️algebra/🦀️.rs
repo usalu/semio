@@ -1,5 +1,5 @@
-//! 🧮️ Dense linear-algebra basics (`Mat2`/`VecD`/`MatD`/`Mat3d`/`vec3d_*`) — FEM's own copy of the
 //! ~300-LOC subset it actually calls out of `🧮️math/➕️algebra`'s 2,875-LOC surface, duplicated rather
+//! 🧮️ Dense linear-algebra basics (`Mat2`/`VecD`/`MatD`/`Mat3d`/`vec3d_*`) — FEM's own copy of the
 //! than shared: FEM never touches the sparse/eigen/SVD/CG machinery `📸️remodel` needs (that bulk
 //! moved wholesale into `📸️remodel`'s own `➕️algebra-internals` instead), measured via
 //! `grep -rohE "math::algebra::[A-Za-z_]+" ✏️s/🔌️plugins/📸️remodel ✏️s/🔨️modules/🏗️fem` before this
@@ -144,6 +144,9 @@ pub struct MatD {
     pub cols: usize,
     pub data: Vec<f64>,
 }
+#[path="🔢️matrix/📄️paged/🦀️.rs"]
+mod paged_matrix;
+pub use paged_matrix::PagedMatD;
 
 impl MatD {
     pub fn zeros(rows: usize, cols: usize) -> Self {

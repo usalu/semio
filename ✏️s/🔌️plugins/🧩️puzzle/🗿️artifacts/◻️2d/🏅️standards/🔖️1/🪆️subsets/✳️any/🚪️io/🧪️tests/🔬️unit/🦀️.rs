@@ -1,4 +1,8 @@
-use crate::standards::v1::subsets::any::io::export::serializers::artifacts::{dxf::v_r12::any as dxf_out, pdf::v1_4::any as pdf_out, png::v1_2::any as png_out, svg::v1_1::any as svg_out, txt::v_utf_8::any as txt_out};
+use crate::standards::v1::subsets::any::io::export::serializers::artifacts::dxf::v_r12::any as dxf_out;
+use crate::standards::v1::subsets::any::io::export::serializers::artifacts::pdf::v1_4::any as pdf_out;
+use crate::standards::v1::subsets::any::io::export::serializers::artifacts::png::v1_2::any as png_out;
+use crate::standards::v1::subsets::any::io::export::serializers::artifacts::svg::v1_1::any as svg_out;
+use crate::standards::v1::subsets::any::io::export::serializers::artifacts::txt::v_utf_8::any as txt_out;
 use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::txt::v_utf_8::any as txt_in;
 use crate::Puzzle2dSnapshot;
 

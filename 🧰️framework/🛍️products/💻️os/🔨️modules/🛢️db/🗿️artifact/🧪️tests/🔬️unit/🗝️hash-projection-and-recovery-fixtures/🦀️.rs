@@ -89,7 +89,7 @@ impl pack::snapshot::ArtifactPack for HashProjection {
         Ok(self.latest_hash.to_vec())
     }
     fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let latest_hash: [u8; 32] = bytes.try_into().map_err(|_| store::PackError::Schema("HashProjection pack must be exactly 32 bytes".to_string()))?;
+        let latest_hash: [u8; 32] = bytes.try_into().map_err(|_| store::PackError::from(store::PackRefusal::RetainedMalformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "HashProjection Pack", offset: bytes.len() as u64, detail: "HashProjection pack must be exactly 32 bytes" }))?;
         Ok(HashProjection { latest_hash })
     }
 }
@@ -104,20 +104,15 @@ pub struct HashDiff {
 }
 
 impl protocol::DiffAlgebra<HashProjection> for HashDiff {
-    fn inverse(&self, base: &HashProjection) -> Self {
-        Self { hash: self.hash.map(|_| base.latest_hash) }
-    }
+    
     fn is_empty(&self) -> bool {
         self.hash.is_none()
     }
 }
 
-impl protocol::MutationDiff<HashProjection> for HashDiff {
-    fn apply(&self, base: &HashProjection, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<HashProjection> {
-        Ok(match self.hash {
-            Some(hash) => HashProjection { latest_hash: hash },
-            None => base.clone(),
-        })
+impl protocol::ColdDiffAlgebra<HashProjection> for HashDiff {
+    fn inverse(&self, base: &HashProjection) -> Self {
+        Self { hash: self.hash.map(|_| base.latest_hash) }
     }
 
     fn absorb(&mut self, other: HashDiff) {
@@ -125,9 +120,16 @@ impl protocol::MutationDiff<HashProjection> for HashDiff {
             self.hash = other.hash;
         }
     }
+
+
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+impl protocol::MutationDiff<HashProjection> for HashDiff {
+
+}
+
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = store::__pack_json)]
 pub struct HashMutation {
     pub hash: [u8; 32],
     pub author: Option<protocol::ActorId>,
@@ -159,18 +161,7 @@ impl protocol::Mutation<HashProjection> for HashMutation {
         &HASH_MUTATION_DESCRIPTOR
     }
 
-    fn diff(&self, _base: &HashProjection) -> protocol::MutationOutcome<HashDiff> {
-        protocol::MutationOutcome::new(HashDiff { hash: Some(self.hash) })
-    }
-
-    /// ↩️ The true inverse: an operation that would restore `base`'s hash — not a
-    /// no-op placeholder.
-    fn inverse(&self, base: &HashProjection) -> Result<Vec<HashMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![HashMutation { hash: base.latest_hash, author: self.author.clone(), timestamp: self.timestamp }]
     
-    })())
-}
 
     fn author_id(&self) -> Option<protocol::ActorId> {
         self.author.clone()
@@ -178,7 +169,20 @@ impl protocol::Mutation<HashProjection> for HashMutation {
 
     fn timestamp(&self) -> Option<protocol::HybridLogicalTimestamp> {
         self.timestamp
+        }
+}
+
+impl protocol::ColdMutation<HashProjection> for HashMutation {
+    type ReferenceDiff = HashDiff;
+
+    fn diff(&self, _base: &HashProjection) -> protocol::MutationOutcome<HashDiff> {
+        protocol::MutationOutcome::new(HashDiff { hash: Some(self.hash) })
     }
+
+    /// ↩️ Restores the original hash with its author and timestamp.
+    fn inverse(&self, base: &HashProjection) -> Result<Vec<HashMutation>, semio_framework_value::ValueError> {
+        Ok(vec![HashMutation { hash: base.latest_hash, author: self.author.clone(), timestamp: self.timestamp }])
+}
 }
 
 // 🚫️async: E1 pure accessor consumed synchronously inside `format!` — see R9
@@ -223,7 +227,7 @@ impl protocol::OpText for HashMutation {
             let (key, value) = token.split_once('=').ok_or_else(|| err(format!("malformed token '{token}'")))?;
             match key {
                 "hash" => hash = Some(hex_decode(value).map_err(err)?),
-                "author" => author = Some(protocol::ActorId(value.to_string())),
+                "author" => author = Some(protocol::ActorId(value.to_string().into())),
                 "ts" => {
                     let parts: Vec<&str> = value.split(',').collect();
                     if parts.len() != 3 {
@@ -272,7 +276,7 @@ impl protocol::OpBinary for HashMutation {
             let end = pos + len;
             let text = std::str::from_utf8(bytes.get(pos..end).ok_or_else(|| malformed("truncated author".to_string()))?).map_err(|error| malformed(error.to_string()))?.to_string();
             pos = end;
-            Some(protocol::ActorId(text))
+            Some(protocol::ActorId(text.into()))
         } else {
             None
         };
@@ -369,8 +373,11 @@ async fn committed_recovery_hash_store(id: &str, dialect: semio_framework_artifa
 }
 
 fn close_committed_recovery_hash_store(store: &mut store::ArtifactStore<HashProjection, HashMutation>) {
-    for _ in 0..4_096 {
-        if store::SpaceMember::close_owned_step(store, 1, 4_096).expect("committed recovery fixture Store closes") == store::SnapshotRetirementStep::Complete {
+        let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4_096, maximum_capacity_bytes: 4_096, maximum_release_bytes: 4_096, maximum_depth: 64 };
+for _ in 0..4_096 {
+        let step = store::SpaceMember::close_owned_step(store, grant).expect("committed recovery fixture Store closes");
+        assert!(step.progress().fits(grant));
+        if matches!(step, semio_framework_value::RetainedCloneStep::Complete(_)) {
             assert!(store::SpaceMember::close_owned_terminal_is_empty(store));
             return;
         }
@@ -428,3 +435,10 @@ async fn durable_group_witness_batch(kinds: &[serde_json::Value], canonical_pack
     records
 }
 //#endregion 🔖️Actor
+
+impl protocol::ColdMutationDiff<HashProjection> for HashDiff {
+    fn apply(&self, base: &mut HashProjection, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        if let Some(hash) = self.hash { base.latest_hash = hash; }
+        Ok(())
+    }
+}

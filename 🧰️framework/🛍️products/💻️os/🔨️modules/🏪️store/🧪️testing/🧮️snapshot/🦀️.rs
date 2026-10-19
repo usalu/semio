@@ -24,10 +24,16 @@ pub fn assert_fixture_descriptor<T: semio_framework_os_spr::MutationLeaf>(descri
 }
 
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_dsl::DslArtifact, semio_framework_value_derive::RetainedClone, semio_framework_value_derive::RetireOwned)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_dsl::DslArtifact, semio_framework_value_derive::RetainedClone, semio_framework_value_derive::RetireOwned)]
 #[artifact(id = "demo.doc", extension = "demo")]
 pub struct DemoSnapshot {
     pub n: Option<i32>,
+}
+
+std::thread_local! { static DEMO_PROJECTION_CLONES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
+
+impl Clone for DemoSnapshot {
+    fn clone(&self) -> Self { DEMO_PROJECTION_CLONES.with(|count| count.set(count.get() + 1)); Self { n: self.n } }
 }
 
 impl semio_framework_schema_composition::ArtifactCompositionFields for DemoSnapshot {
@@ -166,23 +172,34 @@ impl DemoDiff {
 }
 
 impl semio_framework_os_spr::DiffAlgebra<DemoSnapshot> for DemoDiff {
-    fn inverse(&self, base: &DemoSnapshot) -> Self {
-        Self { n: self.n.as_ref().map(|_| DemoFieldChange { value: base.n }) }
-    }
+
     fn is_empty(&self) -> bool {
         self.n.is_none()
     }
 }
 
-impl MutationDiff<DemoSnapshot> for DemoDiff {
-    fn apply(&self, snapshot: &DemoSnapshot, _capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<DemoSnapshot> {
-        Ok(DemoSnapshot { n: self.n.as_ref().map_or(snapshot.n, |change| change.value) })
+impl semio_framework_os_spr::ColdDiffAlgebra<DemoSnapshot> for DemoDiff {
+    fn inverse(&self, base: &DemoSnapshot) -> Self {
+        Self { n: self.n.as_ref().map(|_| DemoFieldChange { value: base.n }) }
     }
+}
 
+impl MutationDiff<DemoSnapshot> for DemoDiff {
+
+
+
+}
+
+impl ColdMutationDiff<DemoSnapshot> for DemoDiff {
     fn absorb(&mut self, other: Self) {
         if other.n.is_some() {
             self.n = other.n;
         }
+    }
+
+    fn apply(&self, snapshot: &mut DemoSnapshot, _capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<()> {
+                if let Some(change) = &self.n { snapshot.n = change.value; }
+        Ok(())
     }
 }
 
@@ -190,19 +207,29 @@ impl MutationDiff<DemoSnapshot> for DemoDiff {
 pub struct LossyDiff {}
 
 impl semio_framework_os_spr::DiffAlgebra<DemoSnapshot> for LossyDiff {
-    fn inverse(&self, _base: &DemoSnapshot) -> Self {
-        Self {}
-    }
+
     fn is_empty(&self) -> bool {
         true
     }
 }
 
-impl MutationDiff<DemoSnapshot> for LossyDiff {
-    fn apply(&self, snapshot: &DemoSnapshot, _capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<DemoSnapshot> {
-        Ok(snapshot.clone())
+impl semio_framework_os_spr::ColdDiffAlgebra<DemoSnapshot> for LossyDiff {
+    fn inverse(&self, _base: &DemoSnapshot) -> Self {
+        Self {}
     }
+}
+
+impl MutationDiff<DemoSnapshot> for LossyDiff {
+
+
+}
+
+impl ColdMutationDiff<DemoSnapshot> for LossyDiff {
     fn absorb(&mut self, _other: Self) {}
+
+    fn apply(&self, _unpublished: &mut DemoSnapshot, _capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<()> {
+        Ok(())
+    }
 }
 
 
@@ -241,23 +268,34 @@ pub struct RetainedTextDiff {
 }
 
 impl semio_framework_os_spr::DiffAlgebra<RetainedTextSnapshot> for RetainedTextDiff {
-    fn inverse(&self, base: &RetainedTextSnapshot) -> Self {
-        Self { text: self.text.as_ref().map(|_| base.text.clone()) }
-    }
+
     fn is_empty(&self) -> bool {
         self.text.is_none()
     }
 }
 
-impl MutationDiff<RetainedTextSnapshot> for RetainedTextDiff {
-    fn apply(&self, base: &RetainedTextSnapshot, _capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<RetainedTextSnapshot> {
-        Ok(RetainedTextSnapshot { text: self.text.clone().unwrap_or_else(|| base.text.clone()) })
+impl semio_framework_os_spr::ColdDiffAlgebra<RetainedTextSnapshot> for RetainedTextDiff {
+    fn inverse(&self, base: &RetainedTextSnapshot) -> Self {
+        Self { text: self.text.as_ref().map(|_| base.text.clone()) }
     }
+}
 
+impl MutationDiff<RetainedTextSnapshot> for RetainedTextDiff {
+
+
+
+}
+
+impl ColdMutationDiff<RetainedTextSnapshot> for RetainedTextDiff {
     fn absorb(&mut self, other: Self) {
         if other.text.is_some() {
             self.text = other.text;
         }
+    }
+
+    fn apply(&self, base: &mut RetainedTextSnapshot, _capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<()> {
+                if let Some(value) = &self.text { base.text = value.clone(); }
+        Ok(())
     }
 }
 
@@ -285,6 +323,17 @@ impl semio_framework_os_spr::Mutation<RetainedTextSnapshot> for RetainedTextMuta
         &<Self as semio_framework_os_spr::Mutation<RetainedTextSnapshot>>::DESCRIPTORS[0]
     }
 
+
+
+
+
+    fn conflict_target(&self) -> Vec<String> {
+        vec!["text".into()]
+    }
+}
+
+impl semio_framework_os_spr::ColdMutation<RetainedTextSnapshot> for RetainedTextMutation {
+    type ReferenceDiff = RetainedTextDiff;
     fn diff(&self, _base: &RetainedTextSnapshot) -> semio_framework_os_spr::MutationOutcome<RetainedTextDiff> {
         let Self::SetRetainedText(value) = self;
         semio_framework_os_spr::MutationOutcome::new(RetainedTextDiff { text: Some(value.text.clone()) })
@@ -296,10 +345,6 @@ impl semio_framework_os_spr::Mutation<RetainedTextSnapshot> for RetainedTextMuta
     
     })())
 }
-
-    fn conflict_target(&self) -> Vec<String> {
-        vec!["text".into()]
-    }
 }
 
 impl OpText for RetainedTextMutation {

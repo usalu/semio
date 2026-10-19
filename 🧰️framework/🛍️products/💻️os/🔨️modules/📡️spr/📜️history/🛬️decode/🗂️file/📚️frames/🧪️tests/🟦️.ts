@@ -3,7 +3,10 @@ import Ajv from"ajv";
 import{Database}from"bun:sqlite";
 import{existsSync,readFileSync}from"node:fs";
 import crc from"crc-32/crc32c.js";
-import*as leb from"@webassemblyjs/leb128";
+import {createRequire} from "node:module";
+/** 🧪️ Only this first-party test port observes the independent LEB128 reference implementation. */
+interface Leb128Oracle {encodeU32(value:number):number[];decodeUInt32(bytes:Uint8Array):{value:number;nextIndex:number}}
+const leb=createRequire(import.meta.url)("@webassemblyjs/leb128") as Leb128Oracle;
 import schema from"../../🧬️schema/🔣️.json";
 import law from"../../🧪️tests/🧫️fixtures/🔣️.json";
 test("original verified source frame ranges preserve exact retained source coordinates",()=>{

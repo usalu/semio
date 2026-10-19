@@ -7,7 +7,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { SurfaceScope, type Level, type SurfaceActiveBindProps } from "../🌈️Surface/🟦️.tsx";
 import {
   WINDOW_SILHOUETTE_CHIP_EPSILON,

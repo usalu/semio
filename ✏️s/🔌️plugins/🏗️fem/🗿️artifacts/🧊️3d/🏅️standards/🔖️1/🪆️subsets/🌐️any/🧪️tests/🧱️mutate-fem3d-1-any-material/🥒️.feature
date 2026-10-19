@@ -61,6 +61,7 @@ Feature: Apply every typed fem3d material mutation twice — once in Rust, once 
     | create-material  | {"mutation":"createMaterial","material":{"id":"s355","name":"Steel S355","e":210000000000.0,"g":80770000000.0,"nu":0.3,"rho":7850.0}}                   |
     | delete-material  | {"mutation":"deleteMaterial","id":"alu"}                                                                                                                |
     | replace-material | {"mutation":"replaceMaterial","id":"steel","newMaterial":{"id":"steel","name":"Steel S355","e":210000000000.0,"g":78000000000.0,"nu":0.3,"rho":7850.0}} |
+    | change-material | {"mutation":"changeMaterial","id":"steel","patch":{"name":"Structural Steel"}} |
 
   @id-inverse
   @level-exhaustive
@@ -77,3 +78,5 @@ Feature: Apply every typed fem3d material mutation twice — once in Rust, once 
     | create-material  | {"mutation":"createMaterial","material":{"id":"s355","name":"Steel S355","e":210000000000.0,"g":80770000000.0,"nu":0.3,"rho":7850.0}}                   |
     | delete-material  | {"mutation":"deleteMaterial","id":"alu"}                                                                                                                |
     | replace-material | {"mutation":"replaceMaterial","id":"steel","newMaterial":{"id":"steel","name":"Steel S355","e":210000000000.0,"g":78000000000.0,"nu":0.3,"rho":7850.0}} |
+    | change-material | {"mutation":"changeMaterial","id":"steel","patch":{"name":"Structural Steel"}} |
+

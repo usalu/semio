@@ -33,6 +33,7 @@ export async function registerTests1(
     | "recognizeGesturePointerUp"
     | "shortestAngleDelta"
     | "zoomAboutPoint"
+    | "appendSelectionDragPoints"
   >,
   source: TestSource,
 ): Promise<void> {
@@ -60,12 +61,25 @@ export async function registerTests1(
     pinchWheelDelta,
     shortestAngleDelta,
     zoomAboutPoint,
+    appendSelectionDragPoints,
   } = dependencies;
 
   const { describe, expect, it } = vitest;
   const { readFileSync } = await import("node:fs");
   const threeOracle = await import("three");
   const { join } = await import("node:path");
+  const selectionFixture = JSON.parse(readFileSync(join(source.directory, "🧫️fixtures", "🔲️selection-drag.json"), "utf8")) as { cases: { id: string; method: string; start: [number, number]; samples: [number, number][]; release: [number, number]; retained: [number, number][]; active: boolean }[] };
+  describe("area-selection drag neutral fixtures", () => {
+    for (const testCase of selectionFixture.cases) it(testCase.id, () => {
+      const points: [number, number][] = [testCase.start];
+      let active = appendSelectionDragPoints(points, false, testCase.method === "lasso", testCase.samples, 4);
+      active = appendSelectionDragPoints(points, active, testCase.method === "lasso", [testCase.release], 4);
+      expect(points).toEqual(testCase.retained);
+      expect(active).toBe(testCase.active);
+      const origin = new threeOracle.Vector2(...testCase.start);
+      expect(active).toBe([...testCase.samples, testCase.release].some(point => origin.distanceTo(new threeOracle.Vector2(...point)) >= 4));
+    });
+  });
   type FixtureEvent = { readonly type: "down" | "move" | "up"; readonly pointerId: number; readonly x?: number; readonly y?: number };
   type FixtureVerdict = { readonly kind: string } & Readonly<Record<string, number | string>>;
   const fixture = JSON.parse(readFileSync(join(source.directory, "🧪️tests/🧫️fixtures", "🤏️recognizer.json"), "utf8")) as {

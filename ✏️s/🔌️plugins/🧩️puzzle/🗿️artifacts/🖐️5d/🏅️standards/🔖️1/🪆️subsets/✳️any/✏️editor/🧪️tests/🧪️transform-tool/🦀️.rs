@@ -1,5 +1,5 @@
-//! 🛠️ Laws of the puzzle 5d transform tool machine alone: a gesture record yields its parametric leaf (and a
 //! drop's fastenings) as ONE committed `ToolTransaction` under a deterministic ref, a board drag stays on the
+//! 🛠️ Laws of the puzzle 5d transform tool machine alone: a gesture record yields its parametric leaf (and a
 //! board, a gesture that moves nothing leaves zero trace.
 use semio_framework_pack_json::json;
 use crate::standards::v1::subsets::any::schema::mutations::{connect_grips, drag_selection_2d, drag_selection_3d, Puzzle5dMutation};
@@ -34,9 +34,15 @@ use semio_framework_test_fixtures::fixture_text;
 
 use crate::editor::puzzle5d::modes::edit::windows::world3d::utilities::transform::*;
 use crate::apply_puzzle5d_mutation;
-use semio_framework_tool_machine::{ToolMachineRunner, ToolStep};
+use semio_framework_tool_machine::ToolMachineRunner;
+use semio_framework_tool_machine::ToolStep;
 use crate::standards::v1::subsets::any::schema::mutations::PUZZLE5D_FLAT_TO_WORLD;
-use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dGrip, Puzzle5dGrip3d, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dTargetVolume};
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip;
+use crate::Puzzle5dGrip3d;
+use crate::Puzzle5dPart;
+use crate::Puzzle5dPart2d;
+use crate::Puzzle5dPart3d;
+use crate::Puzzle5dTargetVolume;
 
 /// 🧱️ Two parts facing each other along x — `a` with grip `a:g` at +x, `b` with grip `b:g` at -x — a part `pin`
 /// whose board pin is locked, and one target volume.

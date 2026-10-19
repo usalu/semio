@@ -444,70 +444,13 @@ pub fn extension_index() -> &'static ExtensionIndex {
 /// 🧩️ Mirrors `program_bridge::load_wasm_plugins`'s own "first `.wasm` file directly inside the
 /// plugin's own directory" convention — kept as a small local helper rather than importing that
 /// module's version, which is embedded inside its own `find`-style closure, not a reusable fn.
-pub async fn find_wasm_artifact(dir: &std::path::Path) -> Option<PathBuf> {
-    let request = semio_framework_os_services::NativeIoRequest::ScanDirectory { path: dir.to_path_buf(), directories_only: false, extension: Some("wasm".into()), first_only: true };
-    match crate::run_renderer_io(request).await.ok()? {
-        semio_framework_os_services::NativeIoValue::Paths(mut paths) => paths.pop(),
-        _ => None,
-    }
-}
+pub async fn find_wasm_artifact(dir:&std::path::Path)->Result<Option<semio_framework_os_services::OriginalSuppliedNativePath>,crate::RendererSourceIoError>{crate::find_renderer_wasm_path(dir).await}
 //#endregion 🔖️ExtensionIndex
 
 //#region 🔖️Requests/Outcomes
-pub struct CreateAppRequestOwner {
-    pub wasm_path: Option<PathBuf>,
-    pub plugin_id: Option<String>,
-    pub app_id: Option<String>,
-    pub artifact_schema: Option<String>,
-}
-
-impl CreateAppRequestOwner {
-    pub fn new(wasm_path: PathBuf, plugin_id: String, app_id: String, artifact_schema: String) -> Self {
-        Self { wasm_path: Some(wasm_path), plugin_id: Some(plugin_id), app_id: Some(app_id), artifact_schema: Some(artifact_schema) }
-    }
-
-    pub fn into_parts(mut self) -> (PathBuf, String, String, String) {
-        (
-            self.wasm_path.take().expect("create request path is present"),
-            self.plugin_id.take().expect("create request plugin is present"),
-            self.app_id.take().expect("create request app is present"),
-            self.artifact_schema.take().expect("create request schema is present"),
-        )
-    }
-
-    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
-        if let Some(length) = self.wasm_path.as_ref().map(|path| path.as_os_str().len()) {
-            if length > maximum_bytes {
-                return (false, 0, 0);
-            }
-            drop(self.wasm_path.take().expect("create request path is present"));
-            return (self.terminal_is_empty(), 1, length);
-        }
-        let mut released = None;
-        for field in [&mut self.plugin_id, &mut self.app_id, &mut self.artifact_schema] {
-            if let Some(length) = field.as_ref().map(String::len) {
-                if length > maximum_bytes {
-                    return (false, 0, 0);
-                }
-                drop(field.take().expect("create request string is present"));
-                released = Some(length);
-                break;
-            }
-        }
-        match released {
-            Some(length) => (self.terminal_is_empty(), 1, length),
-            None => (true, 0, 0),
-        }
-    }
-
-    pub fn terminal_is_empty(&self) -> bool {
-        self.wasm_path.is_none() && self.plugin_id.is_none() && self.app_id.is_none() && self.artifact_schema.is_none()
-    }
-
-    fn remaining_bytes(&self) -> usize {
-        self.wasm_path.as_ref().map_or(0, |path| path.as_os_str().len()) + self.plugin_id.as_ref().map_or(0, String::len) + self.app_id.as_ref().map_or(0, String::len) + self.artifact_schema.as_ref().map_or(0, String::len)
-    }
-}
+#[path="🐣️create-app/🎟️source/🦀️.rs"]
+mod create_app_source;
+pub use create_app_source::{CreateAppBorrowed,CreateAppRequestOwner,CreateAppSourceFailure,CreateAppSourceFailureKind,open_create_app_source};
 
 #[derive(Clone, Copy)]
 pub enum QueuedKernelEventKind {
@@ -700,7 +643,7 @@ impl KernelRequest {
         match self {
             Self::ExchangeCommands { driver, .. } => (driver.remaining_pages(), driver.remaining_bytes()),
             Self::CloseRejectedCommandBuild { owner, .. } => (owner.remaining_pages(), owner.remaining_bytes()),
-            Self::CreateApp { owner } => (0, owner.remaining_bytes()),
+            Self::CreateApp { .. } => (0, 0),
             Self::Exchange { event, .. } => (0, event.remaining_bytes()),
             Self::AdvanceRetained { .. }
             | Self::MountProductReplay { .. }

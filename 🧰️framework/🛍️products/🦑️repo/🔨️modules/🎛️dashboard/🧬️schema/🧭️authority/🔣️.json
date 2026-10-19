@@ -36,10 +36,270 @@
     }
   },
   "$defs": {
-    "LaunchCommand": {
-      "type": "string",
+    "DevcontainerRuntime": {
+      "type": "object",
+      "description": "🐳️ The runtime container provisions toolchains and retained headless agents while lifecycle commands remain owned by the build registry.",
+      "required": [
+        "postCreateCommand",
+        "postStartCommand",
+        "postAttachCommand"
+      ],
       "not": {
-        "pattern": "(?:^|[;&|\\n]\\s*)(?:(?:bun(?:x)?|npx)\\s+)?(?:nx|bazel(?:isk)?(?:\\.exe)?)(?:\\s|$)|node_modules[/\\\\]+nx[/\\\\]"
+        "anyOf": [
+          {
+            "required": [
+              "customizations"
+            ]
+          },
+          {
+            "required": [
+              "extensions"
+            ]
+          },
+          {
+            "required": [
+              "settings"
+            ]
+          }
+        ]
+      },
+      "properties": {
+        "postCreateCommand": {
+          "const": [
+            "bun",
+            "repo",
+            "run",
+            "workspace:setup"
+          ]
+        },
+        "postStartCommand": {
+          "const": [
+            "bun",
+            "repo",
+            "run",
+            "workspace:setup-devcontainer-start"
+          ]
+        },
+        "postAttachCommand": {
+          "const": [
+            "bun",
+            "repo",
+            "run",
+            "workspace:setup-devcontainer-attach"
+          ]
+        },
+        "mounts": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "not": {
+              "pattern": "target=[^,]*/\\.(codeium|kiro|vscode|vscode-insiders|cursor|windsurf|idea|fleet|zed|atom|brackets)(/|,|$)"
+            }
+          }
+        }
+      }
+    },
+    "OwnerCommand": {
+      "type": "string",
+      "description": "📜️ One owner invokes a permanent canonical script through Bun with an explicit command; shell pipelines, substitutions and alternate task executors are forbidden.",
+      "not": {
+        "pattern": "[$`]"
+      },
+      "pattern": "^bun (?:--watch )?(?:\"(?:[^\"\\r\\n]*[/\\\\])?📜️script\\.ts\"|(?:[^\\s\"\\r\\n]*[/\\\\])?📜️script\\.ts) [a-z][a-z0-9-]*(?: (?:[^\\s\"';&|<>\\r\\n]+|\"[^\"\\r\\n]*\"|'[^'\\r\\n]*')+)*$"
+    },
+    "OwnerTarget": {
+      "type": "object",
+      "description": "🎯️ Runnable build targets invoke canonical scripts; dependency-only aggregators use the repository noop contract.",
+      "properties": {
+        "executor": {
+          "enum": [
+            "repo:script",
+            "repo:noop"
+          ]
+        },
+        "command": {
+          "$ref": "#/$defs/OwnerCommand"
+        },
+        "options": {
+          "$ref": "#/$defs/OwnerOptions"
+        },
+        "configurations": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/OwnerOptions"
+          }
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "executor"
+          ],
+          "properties": {
+            "executor": {
+              "const": "repo:noop"
+            }
+          }
+        },
+        {
+          "required": [
+            "command"
+          ]
+        },
+        {
+          "required": [
+            "options"
+          ],
+          "properties": {
+            "options": {
+              "anyOf": [
+                {
+                  "required": [
+                    "command"
+                  ]
+                },
+                {
+                  "required": [
+                    "commands"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "OwnerOptions": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "$ref": "#/$defs/OwnerCommand"
+        },
+        "commands": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OwnerCommand"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "command"
+                ],
+                "properties": {
+                  "command": {
+                    "$ref": "#/$defs/OwnerCommand"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "DeveloperInstructions": {
+      "type": "string",
+      "description": "📖️ Lowercase developer instructions use the dashboard and never prescribe retired IDE configuration or editor startup.",
+      "not": {
+        "anyOf": [
+          {
+            "pattern": "\\.vscode(?:-insiders)?[/\\\\]|\\.(idea|fleet|zed|vs|run|nova|settings|metadata|windsurf|kiro|atom|brackets)(/|\\\\)|launch\\.json|🧩️launch\\.seed\\.jsonc"
+          },
+          {
+            "pattern": "\\.cursor[/\\\\](?:mcp|hooks|settings)\\.json|\\.cursor[/\\\\]rules(?:[/\\\\]|$)|\\.(cursorrules|windsurfrules)\\b|\\.sublime-(project|workspace|build)\\b|cmakesettings\\.json"
+          },
+          {
+            "pattern": "\\.cursor[/\\\\](?!plans(?:[/\\\\]|$))"
+          },
+          {
+            "pattern": "ide startup|reopen in vs code|all required vs code extensions|dev containers: reopen in container|vs code.*with.*dev containers extension"
+          }
+        ]
+      }
+    },
+    "ActiveRepositoryPath": {
+      "type": "string",
+      "description": "🚫️ A normalized lowercase active repository path. IDE directories, workspace/solution files and Cursor MCP/hooks/settings/rules have no authority; compiler project files and historical Cursor plans remain valid.",
+      "not": {
+        "anyOf": [
+          {
+            "pattern": "(^|/)\\.(vscode|vscode-insiders|idea|fleet|zed|vs|run|nova|settings|metadata|windsurf|kiro|atom|brackets)(/|$)"
+          },
+          {
+            "pattern": "\\.(sln|slnx|code-workspace|iml|ipr|iws|suo|user|userosscache|sln.docstates|sublime-project|sublime-workspace|sublime-build)$"
+          },
+          {
+            "pattern": "(^|/)\\.(project|classpath|vsconfig|cursorrules|windsurfrules)$"
+          },
+          {
+            "pattern": "(^|/)cmakesettings\\.json$"
+          },
+          {
+            "pattern": "(^|/)\\.cursor/(mcp|hooks|settings)\\.json$"
+          },
+          {
+            "pattern": "(^|/)\\.cursor/(?!plans(?:/|$))"
+          },
+          {
+            "pattern": "(^|/)\\.devcontainer/editor-overlay\\.json$"
+          },
+          {
+            "pattern": "(^|/)\\.cursor/rules(/|$)"
+          }
+        ]
+      }
+    },
+    "InventoryPolicy": {
+      "type": "object",
+      "required": [
+        "boundaryDirectories",
+        "excludedRoots"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "boundaryDirectories": {
+          "const": [
+            ".git",
+            "node_modules",
+            ".venv"
+          ]
+        },
+        "excludedRoots": {
+          "const": [
+            ".cache",
+            ".nx",
+            ".pytest_cache",
+            ".ruff_cache",
+            "storybook-static",
+            "test-results",
+            ".🧬semio/🦑️repo/🎫️tickets",
+            ".🧬semio/🦑️repo/⚡️cache",
+            ".🧬semio/🦑️repo/🧹️tmp",
+            ".repo/cache",
+            "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/dist",
+            "✏️s/🔌️plugins/🏭️process/dist",
+            "✏️s/🔌️plugins/🪵️sourcing/dist"
+          ]
+        }
+      },
+      "description": "🗂️ Only enumerated physical generated/cache roots, ticket history and dependency boundaries are skipped; directory basenames build, dist, target and nested .cache remain authored source elsewhere."
+    },
+    "ProtectedInstructions": {
+      "type": "object",
+      "required": [
+        "path",
+        "text"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "const": "AGENTS.md"
+        },
+        "text": {
+          "const": "- All devs are using `launch.json` and never use the cli.\n  - You MUST register all executable commands there by following the existing order, grouping and naming."
+        }
       }
     }
   }

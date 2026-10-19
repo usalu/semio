@@ -38,7 +38,8 @@ impl FlowHost {
         let snapshot = TreeSnapshot::capture(&tree, &seeds);
         let dirty = compute_dirty_set(self.current_baseline_snapshot(), &snapshot);
         if self.baseline_answers_everything(&dirty) {
-            tree.retire_cold();
+                        snapshot.retire_cold();
+tree.retire_cold();
             seeds.retire_cold();
             return Ok(Vec::new());
         }
@@ -174,7 +175,10 @@ impl FlowHost {
         before_seeds.retire_cold();
         let tree = self.build_tree();
         let seeds = self.build_seeds();
-        let dirty = compute_dirty_set(Some(&baseline), &TreeSnapshot::capture(&tree, &seeds));
+        let current = TreeSnapshot::capture(&tree, &seeds);
+        let dirty = compute_dirty_set(Some(&baseline), &current);
+        current.retire_cold();
+        baseline.retire_cold();
         tree.retire_cold();
         seeds.retire_cold();
         self.host_snapshot.widgets.iter().map(widget_id_for).filter(|id| dirty.contains(*id)).map(str::to_string).collect()
@@ -193,7 +197,8 @@ impl FlowHost {
         let seeds = self.build_seeds();
         let snapshot = TreeSnapshot::capture(&tree, &seeds);
         let dirty = compute_dirty_set(self.current_baseline_snapshot(), &snapshot);
-        if self.baseline_answers_everything(&dirty) {
+                snapshot.retire_cold();
+if self.baseline_answers_everything(&dirty) {
             tree.retire_cold();
             seeds.retire_cold();
             return Vec::new();

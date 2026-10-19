@@ -1,5 +1,5 @@
-//! ↩️ Inverse for `ScaleNode` — restores the BASE field value on the addressed node. Missing
 //! target ⇒ `Vec::new()`.
+//! ↩️ Inverse for `ScaleNode` — restores the BASE field value on the addressed node. Missing
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Inverse

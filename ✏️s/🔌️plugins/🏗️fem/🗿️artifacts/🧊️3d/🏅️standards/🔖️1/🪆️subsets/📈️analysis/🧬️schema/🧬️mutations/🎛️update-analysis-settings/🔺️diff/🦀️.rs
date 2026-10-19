@@ -5,10 +5,10 @@ use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fe
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::analysis_breach;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::invariant;
 
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &UpdateAnalysisSettings, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {
+pub fn diff(payload: &UpdateAnalysisSettings, base: &Fem3dSnapshotValue) -> protocol::MutationOutcome<Fem3dDiff> {
     if payload.settings == base.analysis {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Analysis settings already have that value.".to_string());
     }

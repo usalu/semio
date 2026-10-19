@@ -14,16 +14,9 @@ pub fn set_theme(theme_id: Option<String>) -> UiPreferencesConfigMutation {
 impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetTheme {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "theme", kind: "set-theme", record: "Set" };
 
-    fn diff(&self, base: &UiPreferences) -> protocol::MutationOutcome<UiPreferencesDiff> {
-        if base.theme_id == self.theme_id {
-            return protocol::MutationOutcome::new(UiPreferencesDiff::default()).warning("mutation.no-op", "theme is already selected.");
-        }
-        protocol::MutationOutcome::new(UiPreferencesDiff { theme_id: Some(SettingEdit::new(self.theme_id.clone())), ..UiPreferencesDiff::default() })
-    }
 
-    fn inverse(&self, base: &UiPreferences) -> Result<Vec<UiPreferencesConfigMutation>, semio_framework_value::ValueError> {
-        Ok(vec![UiPreferencesConfigMutation::SetTheme(Self { theme_id: base.theme_id.clone() })])
-    }
+
+
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set theme to {:?}", self.theme_id), &format!("Design auf {:?} setzen", self.theme_id))
@@ -31,5 +24,17 @@ impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetT
 
     fn target(&self) -> Vec<String> {
         vec!["theme-id".to_string()]
+    }
+}
+
+impl protocol::ColdMutationKind<UiPreferences, UiPreferencesConfigMutation> for SetTheme {
+    fn diff(&self, base: &UiPreferences) -> protocol::MutationOutcome<UiPreferencesDiff> {
+        if base.theme_id == self.theme_id {
+            return protocol::MutationOutcome::new(UiPreferencesDiff::default()).warning("mutation.no-op", "theme is already selected.");
+        }
+        protocol::MutationOutcome::new(UiPreferencesDiff { theme_id: Some(SettingEdit::new(self.theme_id.clone())), ..UiPreferencesDiff::default() })
+    }
+    fn inverse(&self, base: &UiPreferences) -> Result<Vec<UiPreferencesConfigMutation>, semio_framework_value::ValueError> {
+        Ok(vec![UiPreferencesConfigMutation::SetTheme(Self { theme_id: base.theme_id.clone() })])
     }
 }

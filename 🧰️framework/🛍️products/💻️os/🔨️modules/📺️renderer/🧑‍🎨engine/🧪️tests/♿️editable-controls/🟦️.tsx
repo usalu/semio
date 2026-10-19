@@ -624,3 +624,32 @@ for (const locale of ["en", "de"] as const) it(`retains metadata actions and rea
     view.unmount();
   }
 });
+
+import femFieldIntents from "../../🧫️fixtures/🧱️field-intent/🔣️.json";
+
+for (const locale of ["en", "de"] as const) for (const law of femFieldIntents.cases) it(`emits only authored FEM detail field ${law.scope}.${law.field} in ${locale}`, async () => {
+  const args = { field: law.field, id: law.id };
+  const store = new UiDocumentStore("fem-field-intent");
+  const publish = (revision: number) => store.loadSnapshot({ surface: "fem-field-intent", revision, root: 1, layoutEpoch: 0n, nodes: [{ id: 1, key: "field", component: { type: "input", kind: law.kind, value: law.before, step: law.kind === "number" ? 0.1 : undefined }, children: [], layout: { kind: "leaf", width: "hug", height: "hug" }, style: {}, accessibility: { label: law.label[locale] }, bindings: [{ trigger: "change", action: { scope: law.scope, name: law.action, version: 1 }, args }] }] } as any);
+  publish(1);
+  const intents: any[] = [];
+  const context = { store, onAction: () => {}, onIntent: (intent: unknown) => { intents.push(intent); } };
+  const view = render(createElement(UiNodeView, { store, id: 1, context }));
+  const control = view.getByRole(law.kind === "number" ? "spinbutton" : "textbox", { name: law.label[locale] }) as HTMLInputElement;
+  expect(computeAccessibleName(control)).toBe(law.label[locale]);
+  fireEvent.change(control, { target: { value: law.after } });
+  await act(async () => { publish(2); await Promise.resolve(); });
+  fireEvent.blur(control);
+  await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+  expect(intents.length).toBeGreaterThan(0);
+  const expected = law.kind === "number" ? Number(law.after) : law.after;
+  for (const intent of intents) {
+    expect(intent.args).toEqual(args);
+    const input = intent.input && typeof intent.input === "object" ? intent.input.value : intent.input;
+    expect(input).toBe(expected);
+    for (const sibling of Object.keys(law.siblings)) {
+      expect(Object.hasOwn(intent.args, sibling)).toBe(false);
+      if (intent.input && typeof intent.input === "object") expect(Object.hasOwn(intent.input, sibling)).toBe(false);
+    }
+  }
+});

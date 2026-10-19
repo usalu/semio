@@ -1,0 +1,16 @@
+{
+  "name": "@semio-tech/course-schema-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ],
+  "$schema": "../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/🧬️schema/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/🧫️fixtures/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/🧪️tests/🧫️fixtures/**/*"
+    ]
+  }
+}

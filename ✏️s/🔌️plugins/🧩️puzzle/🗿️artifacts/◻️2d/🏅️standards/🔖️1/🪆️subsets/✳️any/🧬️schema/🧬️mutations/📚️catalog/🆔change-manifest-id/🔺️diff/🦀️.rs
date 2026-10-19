@@ -1,5 +1,6 @@
 //! 🔺️ Sparse diff builder for `ChangeManifestId` — patches the document `meta.manifestId`.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dMetaPatch};
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dMetaPatch;
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Diff

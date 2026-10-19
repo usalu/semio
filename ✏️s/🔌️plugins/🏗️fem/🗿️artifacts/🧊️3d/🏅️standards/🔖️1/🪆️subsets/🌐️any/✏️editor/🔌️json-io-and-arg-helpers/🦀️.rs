@@ -54,7 +54,7 @@ pub(super) fn fem3d_results_map_json(results: &HashMap<String, semio_s_fem_model
 /// (`fem.3d` × 3D-Any) plus `geometry:in` (importing an externally authored extruded-footprint outline
 /// as a new `FemSolid` — see `import_media` above) and `results:out` (every load case/combination's
 /// solved `semio_s_fem_model::StaticResult`, pinned to the `computation.fem3d` artifact kind declared in
-/// `crate::standards::v1::subsets::any::io::computation_artifact_kind` — see `export_media` above). Moved out of the
+/// `semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::computation_artifact_kind` — see `export_media` above). Moved out of the
 /// (now deleted) artifact `⚙️engine`: it returns `AppIo`, an app type, so it belongs here.
 pub fn fem3d_io() -> AppIo {
     AppIo {

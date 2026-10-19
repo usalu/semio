@@ -9,20 +9,20 @@
     ]
   },
   "targets": {
-    "test-original-turn-failure-source": {
+    "test-original-receiving-source": {
       "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-turn-failure source"
+        "command": "bun ./📜️script.ts test-original-receiving source"
       }
     },
-    "test-original-turn-failure-native": {
+    "test-original-receiving-native": {
       "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-original-turn-failure native"
+        "command": "bun ./📜️script.ts test-original-receiving native"
       }
     },
     "test-retained-work-source": {
@@ -103,6 +103,38 @@
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-original-retained-loan-native"
       }
+    },
+    "test-original-turn-failure-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-turn-failure source"
+      }
+    },
+    "test-original-turn-failure-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-turn-failure native"
+      }
+    },
+    "test-original-page-return-source": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-page-return source"
+      },
+      "cache": false
+    },
+    "test-original-page-return-native": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-page-return native"
+      },
+      "cache": false
     }
   }
 }

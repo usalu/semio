@@ -1,5 +1,5 @@
-//! 🧊 `s.fem.fem3d` load mutation case — Rust SUBJECT adapter. Relocated out of the
 //! artifact-level `mutate-fem3d-1` case in ticket
+//! 🧊 `s.fem.fem3d` load mutation case — Rust SUBJECT adapter. Relocated out of the
 //! `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION` so
 //! this subset's own kinds have a subset-owned test.
 //!
@@ -15,14 +15,18 @@
 //! report shapes rather than parts of the document, so they stay asserted HERE, in role, in
 //! [`subject::spec_vector`].
 
-use semio_repo_test_host::{parse_json, Adapter, Json};
+use semio_repo_test_host::parse_json;
+
+use semio_repo_test_host::Adapter;
+
+use semio_repo_test_host::Json;
 
 //#region 🔖️Kinds
 /// 🏷️ This subset's own slice of `KINDS` in `../../🧬️schema/🧬️mutations/🦀️.rs` — duplicated, not
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and that file's own
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against both the enum and the manifest.
-const KINDS: &[&str] = &["create-load-case", "delete-load-case", "add-load", "remove-load", "change-load-case-self-weight", "create-combination", "delete-combination", "replace-load", "change-load-case-name", "replace-combination"];
+const KINDS: &[&str] = &["change-load", "change-combination-name", "change-combination-term", "create-load-case", "delete-load-case", "add-load", "remove-load", "change-load-case-self-weight", "create-combination", "delete-combination", "replace-load", "change-load-case-name", "replace-combination"];
 
 /// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
 /// [`law::mutation_is_observable`] must not demand one of them.
@@ -53,6 +57,25 @@ struct Vector {
 
 fn vector(kind: &str) -> Vector {
     match kind {
+        "change-load" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-load/🩹️changes/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-load/🩹️changes/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-load/🩹️changes/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-load/🩹️changes/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-load/🩹️changes/🎯️outcome/🔣️.json"),
+        },        "change-combination-name" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-name/🩹️renames/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-name/🩹️renames/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-name/🩹️renames/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-name/🩹️renames/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-name/🩹️renames/🎯️outcome/🔣️.json"),
+        },        "change-combination-term" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/🎯️outcome/🔣️.json"),
+        },
         "create-load-case" => Vector {
             before: include_str!("../🧫️fixtures/🧬️mutations/📋️create-load-case/🌬️appends/📸️snapshot/⬅️before/🔣️.json"),
             mutation: include_str!("../🧫️fixtures/🧬️mutations/📋️create-load-case/🌬️appends/🦠️mutation/🔣️.json"),
@@ -138,6 +161,31 @@ fn canonical(text: &str) -> Json {
 /// C25/30 raft slab. Same five members as [`vector`], a different structural system.
 fn hall_vector_of(kind: &str) -> Vector {
     match kind {
+        "change-load" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-load/📍️target/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-load/📍️target/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-load/📍️target/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-load/📍️target/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-load/📍️target/🎯️outcome/🔣️.json"),
+        },        "change-combination-name" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-name/✏️labels/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-name/✏️labels/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-name/✏️labels/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-name/✏️labels/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-name/✏️labels/🎯️outcome/🔣️.json"),
+        },        "change-combination-name-empty" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⚗️empty/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⚗️empty/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⚗️empty/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⚗️empty/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⚗️empty/🎯️outcome/🔣️.json"),
+        },        "change-combination-term" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-term/🗑️removes/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-term/🗑️removes/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-term/🗑️removes/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-term/🗑️removes/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-term/🗑️removes/🎯️outcome/🔣️.json"),
+        },
         "change-load-case-self-weight" => Vector {
             before: include_str!("../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/🏗️hall/📸️snapshot/⬅️before/🔣️.json"),
             mutation: include_str!("../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/🏗️hall/🦠️mutation/🔣️.json"),
@@ -216,10 +264,59 @@ fn hall_vector_of(kind: &str) -> Vector {
 /// refusal, or a declared no-op. Keyed by the scenario id, not by the kind, because a kind can
 /// refuse in several different ways. A rejection bundle carries no `🔺️diff/🔣️.json` at all, so the
 /// `diff` member is the empty object and no handler reads it.
-const REJECT_VECTORS: &[&str] = &["sw-no-such-case-bfe5bc", "no-such-combo-f42cd6", "dup-load-id-4f4a0a", "no-such-member-3fe6e9", "no-such-load-5bab2d", "dangling-solid-5e04d9", "dangling-term-b9d144", "dead-in-combos-e73167", "no-such-case-ef1fde", "same-load-65135e", "dangling-node-092d4a", "no-such-case-21f1b7", "no-such-load-cc8aee", "renames-load-a535c9", "same-name-56ab29", "no-such-case-15cca1", "same-combination-4f8781", "dangling-term-17506c", "no-such-combo-0c9c39", "renames-combo-e8f4f2"];
+const REJECT_VECTORS: &[&str] = &["change-load-same", "change-load-missing", "change-load-invalid", "change-combination-name-same", "change-combination-name-missing", "change-combination-term-same", "change-combination-term-missing", "change-combination-term-invalid", "sw-no-such-case-bfe5bc", "no-such-combo-f42cd6", "dup-load-id-4f4a0a", "no-such-member-3fe6e9", "no-such-load-5bab2d", "dangling-solid-5e04d9", "dangling-term-b9d144", "dead-in-combos-e73167", "no-such-case-ef1fde", "same-load-65135e", "dangling-node-092d4a", "no-such-case-21f1b7", "no-such-load-cc8aee", "renames-load-a535c9", "same-name-56ab29", "no-such-case-15cca1", "same-combination-4f8781", "dangling-term-17506c", "no-such-combo-0c9c39", "renames-combo-e8f4f2"];
 
 fn reject_vector_of(identifier: &str) -> Vector {
     match identifier {
+        "change-load-same" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-load/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-load/⏸️same/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-load/⏸️same/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-load/⏸️same/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-load/⏸️same/🎯️outcome/🔣️.json"),
+        },        "change-load-missing" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-load/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-load/⛔️missing/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-load/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
+            diff: "{}",
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-load/⛔️missing/🎯️outcome/🔣️.json"),
+        },        "change-load-invalid" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-load/⚗️invalid/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-load/⚗️invalid/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-load/⚗️invalid/📸️snapshot/➡️after/🔣️.json"),
+            diff: "{}",
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-load/⚗️invalid/🎯️outcome/🔣️.json"),
+        },        "change-combination-name-same" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⏸️same/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⏸️same/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⏸️same/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⏸️same/🎯️outcome/🔣️.json"),
+        },        "change-combination-name-missing" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⛔️missing/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
+            diff: "{}",
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-name/⛔️missing/🎯️outcome/🔣️.json"),
+        },        "change-combination-term-same" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⏸️same/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⏸️same/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⏸️same/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⏸️same/🎯️outcome/🔣️.json"),
+        },        "change-combination-term-missing" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⛔️missing/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
+            diff: "{}",
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⛔️missing/🎯️outcome/🔣️.json"),
+        },        "change-combination-term-invalid" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚗️invalid/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚗️invalid/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚗️invalid/📸️snapshot/➡️after/🔣️.json"),
+            diff: "{}",
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚗️invalid/🎯️outcome/🔣️.json"),
+        },
         "sw-no-such-case-bfe5bc" => Vector {
             before: include_str!("../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/🚨️sw/📸️snapshot/⬅️before/🔣️.json"),
             mutation: include_str!("../🧫️fixtures/🧬️mutations/⚖️change-load-case-self-weight/🚨️sw/🦠️mutation/🔣️.json"),
@@ -368,8 +465,16 @@ fn reject_vector_of(identifier: &str) -> Vector {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{canonical, hall_vector_of, reject_vector_of, vector, DERIVED_ASSET, UNOBSERVABLE};
-    use semio_repo_test_host::{parse_json, Context, Json, Outcome};
+    use super::canonical;
+    use super::hall_vector_of;
+    use super::reject_vector_of;
+    use super::vector;
+    use super::DERIVED_ASSET;
+    use super::UNOBSERVABLE;
+    use semio_repo_test_host::parse_json;
+    use semio_repo_test_host::Context;
+    use semio_repo_test_host::Json;
+    use semio_repo_test_host::Outcome;
     use semio_repo_test_host::law;
     use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::io::text::mutations::fem3d_mutation_report_json;
 
@@ -460,7 +565,8 @@ mod subject {
     fn touches_one(scenario: &str, kind: &str, before: &Json, after: &Json) -> Result<(), String> {
         let written = match kind {
             "update-analysis-settings" => "analysis",
-            "add-load" | "remove-load" | "change-load-case-self-weight" | "create-load-case" | "delete-load-case" => "loadCases",
+            "change-combination-name" | "change-combination-term" | "change-combination-name-empty" => "combinations",
+            "change-load" | "replace-load" | "change-load-case-name" | "add-load" | "remove-load" | "change-load-case-self-weight" | "create-load-case" | "delete-load-case" => "loadCases",
             _ => match kind.split_once('-').map(|(_, noun)| noun).unwrap_or_default() {
                 "node" => "nodes",
                 "element" => "elements",
@@ -610,10 +716,11 @@ pub fn adapter() -> Adapter {
         let mut built = built;
         for kind in KINDS {
             built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind));
-            built = built.subject(&format!("inverse-{kind}"), subject::inverse(kind).expect("valid retained mutation inverse fixture"));
+            built = built.subject(&format!("inverse-{kind}"), subject::inverse(kind));
             built = built.subject(&format!("spec-vector-{kind}"), subject::spec_vector(kind));
             built = built.subject(&format!("hall-vector-{kind}"), subject::hall_vector(kind));
         }
+        built = built.subject("empty-vector-change-combination-name", subject::hall_vector("change-combination-name-empty"));
         for identifier in REJECT_VECTORS {
             built = built.subject(&format!("reject-{identifier}"), subject::reject(identifier));
         }

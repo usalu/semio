@@ -6,13 +6,13 @@
   "sections": null,
   "supports": null,
   "loadCases": {
-    "inserted": [],
     "removed": [
       {
         "id": "live",
         "index": 1
       }
     ],
+    "inserted": [],
     "moved": [],
     "modified": []
   },

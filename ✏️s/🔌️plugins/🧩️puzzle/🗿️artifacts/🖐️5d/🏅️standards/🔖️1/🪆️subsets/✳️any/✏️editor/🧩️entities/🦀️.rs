@@ -1,6 +1,6 @@
 //! 🧩️ Entities of the puzzle 5d editor: the reserved sizes and scoped ids, the structural-twin document model (grips, fasteners, parts, target volumes) and the grip, mesh and geometry helpers that read it. See [`super`].
 
-use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
 use semio_framework_plugin::{kernel::PasteAnchor, kernel::PastePlacement};
@@ -575,7 +575,9 @@ pub fn grips_from_templates(document: &Puzzle5dDocument, part_kind: &str) -> Vec
         .collect()
 }
 
-pub use crate::standards::v1::subsets::any::schema::mutations::{quat_from_axis_angle,quat_mul};
+pub use crate::standards::v1::subsets::any::schema::mutations::quat_from_axis_angle;
+
+pub use crate::standards::v1::subsets::any::schema::mutations::quat_mul;
 
 
 pub fn quat_rotate_vector(quat: [f64; 4], vector: [f64; 3]) -> [f64; 3] {
@@ -654,7 +656,7 @@ pub fn target_volume_scale_json(volume: &Puzzle5dTargetVolume) -> [f64; 3] {
 
 /// 📐️ The flat rectangle a target volume constrains on the board — `[x, y, width, height]` in board
 /// units, centred on the volume's own centre. The projection is the SAME linear board↔world map
-/// `add_palette_part` and `🧬️schema/💡️inferences/🎛️flat-position` place paired parts with
+/// `🧬️schema/💡️inferences/🎛️flat-position` places paired parts with
 /// ([`PUZZLE5D_FLAT_TO_WORLD`], world XY ground plane, board Y pointing the other way), so a part the
 /// planner placed inside the box lands inside the painted rectangle — never a second persisted pose.
 pub fn target_volume_flat_rect(volume: &Puzzle5dTargetVolume) -> [f64; 4] {

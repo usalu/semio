@@ -17,6 +17,7 @@
     {"id":"cancel-after-close","callback":"cancelled","phase":"complete","fault":"cancelled","mutation":null,"expected":"cancelled"},
     {"id":"deadline-after-close","callback":"remainingMs","phase":"complete","fault":"deadline","mutation":null,"expected":"deadline"}
   ],
+  "recheck": {"files":40,"maximumConcurrency":16,"delayMs":5},
   "cases": [
     {"id":"empty","text":"","repeat":1,"chunkBytes":1,"maxBytes":0,"maxWork":5,"cancelAt":null,"expire":false,"mutation":null,"expected":{"byteLength":0,"work":5,"sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}},
     {"id":"one-byte-chunks","text":"abc","repeat":1,"chunkBytes":1,"maxBytes":3,"maxWork":8,"cancelAt":null,"expire":false,"mutation":null,"expected":{"byteLength":3,"work":8,"sha256":"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"}},

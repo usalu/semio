@@ -39,7 +39,7 @@ pub use semio_framework_ui_declaration::IconName;
 pub use semio_framework_io_schema as io_schema;
 pub use semio_framework_io_sqlite_snapshot as sqlite_snapshot;
 pub use action_bus::{
-    ActionBus, ErasedToolJob, ToolCancellationPolicy, ToolDispatchError, ToolExecutionContract, ToolExecutionShape, ToolFactoryKey, ToolFreshnessPolicy, ToolJobDispatch, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec,
+    ActionBus, ErasedToolJob, ToolCancellationPolicy, ToolDispatchError, ToolExecutionContract, ToolExecutionShape, ToolFactoryKey, ToolFreshnessPolicy, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec,
     ToolPayload, ToolRegistrationError, ToolWireAdmission,
 };
 pub use semio_framework_value::{dsl_value,DslValue};

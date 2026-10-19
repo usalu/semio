@@ -43,7 +43,7 @@ impl ErasedReadLease {
     pub fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError> {
         let Some(lease)=self.lease.as_ref()else{return Ok(Default::default());};
         if lease.terminal_is_empty(){return Ok(RetirementDemand {release_bytes:size_of_val(lease.as_ref()),depth:1,..Default::default()});}
-        Ok(RetirementDemand {copy_bytes:lease.next_copy_byte_demand()?,capacity_bytes:lease.next_capacity_byte_demand(copy)?,release_bytes:lease.next_release_byte_demand()?,depth:lease.next_depth_demand()?})
+        lease.next_demand(copy)
     }
 }
 impl ErasedSnapshotRetirement for ErasedReadLease {
@@ -68,6 +68,7 @@ impl ErasedSnapshotRetirement for ErasedReadLease {
     fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError> {self.demands(body)}
 }
 impl RetirementCursor for ErasedReadLease {
+ fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.demands(body)}
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {match ErasedSnapshotRetirement::close_step(self,grant){Ok(RetainedCloneStep::Complete(p))if p==RetainedCloneProgress::default()=>RetirementStep::Complete,Ok(step)=>RetirementStep::Progress(step.progress()),Err(error)=>RetirementStep::Failure(error)}}
     fn terminal_is_empty(&self)->bool {ErasedSnapshotRetirement::terminal_is_empty(self)}
     fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.next_copy_byte_demand()}

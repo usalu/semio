@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "cases": [
+    { "name": "enter immediately accepts first parameter character", "field": "parameter", "events": ["enter", "char:p", "char:a", "char:t", "char:h"], "expected": "path" },
+    { "name": "down immediately preserves two argument hyphens", "field": "args", "events": ["enter", "down", "char:-", "char:-", "char:l", "char:a", "char:b", "char:e", "char:l", "char: ", "char:o", "char:k"], "expected": "--label ok" },
+    { "name": "two downs immediately accept environment text", "field": "env", "events": ["enter", "down", "down", "char:K", "char:E", "char:Y", "char:=", "char:1"], "expected": "KEY=1" },
+    { "name": "unicode parameter paste immediately after enter", "field": "parameter", "events": ["enter", "paste:Grüße 🌍"], "expected": "Grüße 🌍" },
+    { "name": "quoted argument paste immediately after down", "field": "args", "events": ["enter", "down", "paste:--label 'wide value'"], "expected": "--label 'wide value'" },
+    { "name": "quoted environment paste immediately after focus change", "field": "env", "events": ["enter", "down", "down", "paste:JOURNEY_EXTRA='extra value'"], "expected": "JOURNEY_EXTRA='extra value'" },
+    { "name": "repeated parameter characters remain distinct", "field": "parameter", "events": ["enter", "char:b", "char:o", "char:o", "char:k", "char:k", "char:e", "char:e", "char:p", "char:e", "char:r"], "expected": "bookkeeper" },
+    { "name": "focus change after parameter typing preserves argument prefix", "field": "args", "events": ["enter", "char:x", "down", "char:-", "char:-"], "expected": "--" }
+  ],
+  "viewportCases": [
+    { "initialPage": 1, "page": 25, "expectedTop": 0 },
+    { "initialPage": 2, "page": 25, "expectedTop": 0 }
+  ],
+  "defaultTextCases": [
+    { "default": ".", "expected": "." },
+    { "default": "workspace", "expected": "workspace" },
+    { "default": "", "expected": "" },
+    { "default": null, "expected": "" }
+  ],
+  "pointerCases": [
+    { "locale": "en", "field": "parameter", "expectedPlaceholder": "Source path", "initialParameter": "base", "initialArgs": "extra", "typed": "p", "expectedText": "basep" },
+    { "locale": "de", "field": "parameter", "expectedPlaceholder": "Quellpfad", "initialParameter": "base", "initialArgs": "extra", "typed": "p", "expectedText": "basep" }
+  ]
+}

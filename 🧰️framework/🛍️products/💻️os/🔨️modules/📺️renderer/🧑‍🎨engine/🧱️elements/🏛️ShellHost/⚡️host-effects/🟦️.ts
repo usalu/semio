@@ -650,6 +650,23 @@ export function useApplyHostEffects(core: ShellCoreAfterSpawnedSession) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hostMode, session, spawnedRosterKey, applyHistoryPatch, applyHostEffects, captureProgramEffectOwner, settleOperation]);
 
+  /** 📬️ Shows the exact original operation diagnostic for active and spawned program receivers. */
+  useEffect(() => {
+    if (!session) return;
+    const instances = [{ pluginId: session.pluginId, instanceId: session.instanceId }, ...(hostMode ? spawnedAppsRef.current : [])];
+    const disposers: (() => void)[] = [];
+    for (const instance of instances) {
+      const plugin = loadedPluginsRef.current.find(entry => entry.handle.pluginId === instance.pluginId)?.handle;
+      if (!plugin) continue;
+      disposers.push(plugin.subscribeOperationDiagnostics(instance.instanceId, ({ token, diagnostic }) => {
+        if (token.receiver !== instance.instanceId) return;
+        const severity = diagnostic.severity === "fatal" ? "error" : diagnostic.severity;
+        showTransientNoticeRef.current(diagnostic.message, severity, diagnostic.code);
+      }));
+    }
+    return () => { for (const dispose of disposers) dispose(); };
+  }, [hostMode, session, spawnedRosterKey]);
+
   /** 🎞️ Renders a running operation's process while it runs: every mid-operation refresh a tool run asks for (its trace,
    * provisional pieces, progress) goes through the ui-refresh lane, whose coalescer merges what arrives while a pass is in
    * flight — the operation never waits on the renderer, and the renderer shows as much of the process as it keeps up with. */

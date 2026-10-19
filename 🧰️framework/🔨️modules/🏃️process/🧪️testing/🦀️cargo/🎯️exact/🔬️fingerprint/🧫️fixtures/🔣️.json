@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "byteLength": 131073,
+  "byte": 97,
+  "sha256": "7e009ea4ef882e385b3c0bcbbfa8d009bb0a633bdd764415c09182ee0e75da73",
+  "cases": [
+    { "name": "awaited-complete-progress", "interruption": "none", "admitted": true, "progress": [65536, 131073] },
+    { "name": "cancel-before-acquisition", "interruption": "cancel-before", "admitted": false, "progress": [] },
+    { "name": "cancel-in-awaited-publication", "interruption": "cancel-publication", "admitted": false, "progress": [65536] },
+    { "name": "deadline-before-acquisition", "interruption": "deadline-before", "admitted": false, "progress": [] },
+    { "name": "deadline-in-awaited-publication", "interruption": "deadline-publication", "admitted": false, "progress": [65536] },
+    { "name": "replacement-in-awaited-publication", "interruption": "replace-publication", "admitted": false, "progress": [65536, 131073] },
+    { "name": "failed-awaited-publication", "interruption": "reject-publication", "admitted": false, "progress": [65536] }
+  ]
+}

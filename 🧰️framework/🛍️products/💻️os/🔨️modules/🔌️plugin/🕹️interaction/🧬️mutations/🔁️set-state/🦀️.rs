@@ -18,6 +18,14 @@ pub struct SetInteractionState {
 //#region ⚙️ColdSemantics
 impl protocol::MutationKind<InteractionState, InteractionConfigMutation> for SetInteractionState {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "interaction-state", kind: "set-interaction-state", record: "SetInteractionState" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set interaction state", "Interaktionszustand setzen")
+    }
+}
+
+impl protocol::ColdMutationKind<InteractionState, InteractionConfigMutation> for SetInteractionState {
     fn diff(&self, base: &InteractionState) -> protocol::MutationOutcome<InteractionStateDiff> {
         protocol::MutationOutcome::new(InteractionStateDiff {
             selection: DomainEdit::changed(&base.selection, &self.state.selection),
@@ -28,9 +36,6 @@ impl protocol::MutationKind<InteractionState, InteractionConfigMutation> for Set
     }
     fn inverse(&self, base: &InteractionState) -> Result<Vec<InteractionConfigMutation>, semio_framework_value::ValueError> {
         Ok(vec![InteractionConfigMutation::SetInteractionState(Self { state: base.clone() })])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set interaction state", "Interaktionszustand setzen")
     }
 }
 //#endregion ⚙️ColdSemantics

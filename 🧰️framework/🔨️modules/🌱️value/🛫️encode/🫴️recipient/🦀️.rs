@@ -12,9 +12,12 @@ impl NativeEncodeRetirementRecipient{
     pub fn has_owner(&self)->bool{self.owner.is_some()}
 }
 impl ErasedSnapshotRetirement for NativeEncodeRetirementRecipient{
+ fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if self.reserved{Ok(Default::default())}else{self.owner.as_ref().map_or(Ok(Default::default()),|owner|crate::factory_ticket_demands(owner,body))}}
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if !self.terminal_is_empty()&&grant.maximum_depth<self.next_depth_demand()?{return Err(ValueError::literal(crate::ValueRefusalKind::DepthLimit,"encoder return slot close requires admitted depth"));}
+        if grant.maximum_release_bytes<self.next_release_byte_demand()?{return Ok(RetainedCloneStep::Progress(Default::default()));}
+        if grant.maximum_copy_bytes<self.next_copy_byte_demand()?||grant.maximum_capacity_bytes<self.next_capacity_byte_demand(grant.maximum_copy_bytes)?{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if self.reserved{self.reserved=false;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
         crate::close_factory_ticket(&mut self.owner,grant)
     }

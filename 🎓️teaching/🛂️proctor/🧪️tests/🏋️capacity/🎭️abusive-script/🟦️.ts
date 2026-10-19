@@ -1,16 +1,17 @@
 /** 🎭️ The abusive script of the capacity gate: it fills the roster, floods malformed commands and queries, sends oversized bodies and frames and pushes sockets into the hall's room. */
 import { connect, type Socket } from "node:net";
-import { type Command } from "../../../../../🧰️framework/🛍️products/❓️quiz/🟦️.ts";
-import { commandEnvelope, newId } from "../../../../../🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/🛂️proctor/🟦️.ts";
+import { type Command } from "../../../../../🧰️framework/🛍️products/📚️course/🟦️.ts";
+import { commandEnvelope, newId } from "../../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🛂️proctor/🟦️.ts";
 import { PRESENCE_PROTOCOL } from "../../../../../🧰️framework/🛍️products/🖥️server/🧬️wire-types/🟦️.ts";
 import { encodeCommandEnvelope } from "../../../../../🧰️framework/🛍️products/🖥️server/🔤️codec/🟦️.ts";
 import { presenceSocketUrl } from "../../../../../🧰️framework/🛍️products/🖥️server/🛣️routes-and-sockets/🟦️.ts";
-import { SCRIPT, SIGN_UP } from "../📊️settings-and-measurements/🟦️.ts";
+import { GIVE_UP_MS, SCRIPT, SIGN_UP } from "../📊️settings-and-measurements/🟦️.ts";
 import { forwarded, pause } from "../🚚️transport/🟦️.ts";
 
 //#region 😈️Script
 /** 😈️ What the abusive script is told. */
 export interface ScriptOrders {
+  readonly progressFile?: string;
   readonly role: "script";
   readonly base: string;
   readonly tenant: string;
@@ -45,12 +46,13 @@ function tally(into: Record<string, number>, key: string | number): void {
  * of its address sends, and how its requests arrive behind a proxy that keeps its connections to the proctor. A raw
  * socket rather than `fetch`, whose connection pool opens a new connection for every few requests once many run at
  * once: on one machine that empties the pool of client ports the hall connects from. */
-class Wire {
+export class CapacityWire {
   private socket: Socket | undefined;
   private received = Buffer.alloc(0);
   private answered: ((status: number, body: string) => void) | undefined;
+  private timer: ReturnType<typeof setTimeout> | undefined;
 
-  constructor(private readonly base: string) {}
+  constructor(private readonly base: string, private readonly timeoutMs = GIVE_UP_MS) {}
 
   /** 📮️ Post `body` to `path` as the proxy would forward it for the script; the status, or `0` when the connection
    * was cut before the answer was whole. */
@@ -62,6 +64,7 @@ class Wire {
   asked(path: string, body: string): Promise<{ readonly status: number; readonly body: string }> {
     return new Promise((answered) => {
       this.answered = (status, body) => answered({ status, body });
+      this.timer = setTimeout(() => this.close(), this.timeoutMs);
       const { hostname, port, host } = new URL(this.base);
       const head = [`POST ${path} HTTP/1.1`, `Host: ${host}`, "Content-Type: application/json", `Content-Length: ${Buffer.byteLength(body)}`, ...Object.entries(forwarded(SCRIPT)).map(([name, value]) => `${name}: ${value}`), "", ""].join("\r\n");
       if (this.socket === undefined) {
@@ -78,8 +81,13 @@ class Wire {
 
   /** 🚪️ Close the connection. */
   close(): void {
+    clearTimeout(this.timer);
+    this.timer = undefined;
+    const answered = this.answered;
+    this.answered = undefined;
     this.socket?.destroy();
     this.socket = undefined;
+    answered?.(0, "");
   }
 
   private take(socket: Socket, chunk: Buffer): void {
@@ -102,6 +110,8 @@ class Wire {
       socket.destroy();
     }
     const answered = this.answered;
+    clearTimeout(this.timer);
+    this.timer = undefined;
     this.answered = undefined;
     answered?.(status, body);
   }
@@ -124,9 +134,9 @@ export function signUpFate(status: number, body: string): string {
 export async function script(orders: ScriptOrders, stopped: () => boolean): Promise<ScriptReport> {
   const started = performance.now();
   const report: Omit<ScriptReport, "seconds"> = { commands: {}, signUps: {}, malformed: {}, queries: {}, oversizedBody: {}, sockets: { attempted: 0, opened: 0, refused: {} }, oversizedFrame: { sent: 0, closed: 0 } };
-  const wires: Wire[] = [];
-  const wire = (): Wire => {
-    const opened = new Wire(orders.base);
+  const wires: CapacityWire[] = [];
+  const wire = (): CapacityWire => {
+    const opened = new CapacityWire(orders.base);
     wires.push(opened);
     return opened;
   };
@@ -150,7 +160,7 @@ export async function script(orders: ScriptOrders, stopped: () => boolean): Prom
   };
   const queries = async (): Promise<void> => {
     const posting = wire();
-    const query = JSON.stringify({ queryId: newId(), kind: "quiz.leaderboard", version: 1, scope: orders.tenant, principal: { kind: "anonymous" }, arguments: Array.from(new TextEncoder().encode(JSON.stringify({ type: "leaderboard", period: "all-time" }))), consistency: { kind: "authority" }, cursor: null });
+    const query = JSON.stringify({ queryId: newId(), kind: "course.leaderboard", version: 1, scope: orders.tenant, principal: { kind: "anonymous" }, arguments: Array.from(new TextEncoder().encode(JSON.stringify({ type: "leaderboard", period: "all-time" }))), consistency: { kind: "authority" }, cursor: null });
     while (!stopped()) tally(report.queries, await posting.post("/queries", query));
   };
   const oversized = async (): Promise<void> => {
@@ -164,9 +174,10 @@ export async function script(orders: ScriptOrders, stopped: () => boolean): Prom
   const open = (scope: string): Promise<WebSocket | number> =>
     new Promise((settled) => {
       const socket = new WebSocket(presenceSocketUrl(orders.base, scope, "home"), { headers: forwarded(SCRIPT), protocols: [PRESENCE_PROTOCOL] } as unknown as string[]);
-      socket.addEventListener("open", () => settled(socket));
-      socket.addEventListener("close", (event) => settled(event.code));
-      socket.addEventListener("error", () => settled(0));
+      const timer = setTimeout(() => { socket.close(); settled(0); }, GIVE_UP_MS);
+      socket.addEventListener("open", () => { clearTimeout(timer); settled(socket); });
+      socket.addEventListener("close", (event) => { clearTimeout(timer); settled(event.code); });
+      socket.addEventListener("error", () => { clearTimeout(timer); settled(0); });
     });
   const held: WebSocket[] = [];
   const sockets = async (): Promise<void> => {

@@ -31,3 +31,6 @@ pub use asset_decode_jobs::*;
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
+
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_renderer_wgpu_host_plumbing::native_io::{RendererIoPath, RendererSourceIoHandle, RendererSourceIoError, RendererSourceIoFailureKind, open_renderer_source_io};

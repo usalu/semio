@@ -1,4 +1,5 @@
 
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::*;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 use protocol::Mutation as _;
@@ -304,7 +305,7 @@ fn delete_folder_cascade_removes_and_restores_whole_subtree() {
     deleted_entries.sort();
     assert_eq!(deleted_entries, vec!["e-child".to_string(), "e-root".to_string()]);
 
-    let after = protocol::apply_diff(&diff, &collection).expect("valid collection diff");
+    let after = protocol::apply_diff_cold(&diff, &collection).expect("valid collection diff");
     assert!(after.folders.is_empty());
     assert!(after.entries.is_empty());
 }
@@ -335,12 +336,12 @@ async fn nested_folder_cascade_delete_inverse_restores_every_row_in_place() {
     let mut removed_entries = diff.entries.clone().expect("entries delta").removed.into_iter().map(|row| row.id).collect::<Vec<_>>();
     removed_entries.sort();
     assert_eq!(removed_entries, vec!["e-child".to_string(), "e-grandchild".to_string(), "e-root".to_string()]);
-    let after = protocol::apply_diff(&diff, &base).expect("cascade delete applies");
+    let after = protocol::apply_diff_cold(&diff, &base).expect("cascade delete applies");
     assert_eq!(after.folders.iter().map(|folder| folder.id.as_str()).collect::<Vec<_>>(), ["before", "after"]);
-    let inverse = protocol::DiffAlgebra::inverse(&diff, &base);
+    let inverse = protocol::ColdDiffAlgebra::inverse(&diff, &base);
     assert_eq!(inverse.folders.as_ref().expect("restored folders").inserted.len(), 3);
     assert_eq!(inverse.entries.as_ref().expect("restored entries").inserted.len(), 3);
-    assert_eq!(protocol::apply_diff(&inverse, &after).expect("inverse applies"), base);
+    assert_eq!(protocol::apply_diff_cold(&inverse, &after).expect("inverse applies"), base);
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
 }
 

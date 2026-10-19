@@ -6,6 +6,7 @@ use super::*;
 pub struct DbIoTaskOperation {
     pub handle: DbIoTaskHandle,
     pub resolved: bool,
+    pub custody: Option<DbIoFaultCustody>,
 }
 
 /// 🌐️ Exact task/backend lease driven by an async-native platform executor after Lane::Io admission.
@@ -74,7 +75,7 @@ impl DbIoAsyncTaskLease {
         owner.async_detached = false;
         owner.task = Some(task);
         owner.terminal = Some(match transition {
-            Err(error) => DbIoTerminal::Fault(db_io_task_fault(DbIoFaultKind::Backend, &error)),
+            Err(error) => DbIoTerminal::Fault(db_io_task_fault(owner.fault_custody.take().expect("preborn task fault custody"), DbIoFaultKind::Backend, error)),
             Ok(()) if owner.cancelled => DbIoTerminal::Cancelled(terminal.ok()),
             Ok(()) => match terminal {
                 Ok(result) => DbIoTerminal::Result(result),
@@ -317,8 +318,9 @@ pub fn submit_db_io_task(task: DbIoTask) -> Result<DbIoTaskOperation, (DbError, 
     let _ = db_io_maintenance_step();
     let kind = task.kind();
     let handle = db_io_allocate_task(task)?;
-    DB_IO_CENSUS_TASKS[kind as usize].fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let custody = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner).poll_custody.take();
+DB_IO_CENSUS_TASKS[kind as usize].fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     db_io_submit_job(handle, Box::new(move || db_io_drive_one(handle)), 0);
-    Ok(DbIoTaskOperation { handle, resolved: false })
+    Ok(DbIoTaskOperation { handle, resolved: false, custody })
 }
 //#endregion 🔖️Limits

@@ -62,6 +62,16 @@ describe("🎫️ the shell says what it holds", () => {
     expect(hoverOnly.selectedIds, "an unhovered graph publishes an EMPTY lane, never a missing one").toEqual([]);
   });
 
+  it("the shell history projection keeps the active alternative across delta patches and replaces it on a snapshot", async () => {
+    const { shellHistoryProjectionAfterPatchV1, EMPTY_SHELL_HISTORY_PROJECTION_V1 } = await import("../../🧱️elements/🛠️ShellHelpers/🟦️.tsx");
+    const fixture = (await import("../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🧪️tests/🧫️fixtures/🔀️history-alternatives/🔣️.json")).default;
+    let projection = EMPTY_SHELL_HISTORY_PROJECTION_V1;
+    for (const row of fixture.cases) {
+      projection = shellHistoryProjectionAfterPatchV1(projection, row.patch, row.replace);
+      expect({activeAlternativeId: projection.activeAlternativeId ?? null, currentCheckpointId: projection.currentCheckpointId ?? null}, row.name).toEqual(row.expected);
+    }
+  });
+
   it("the shell publishes the framework history cursor undo and redo are decided by, in the locale it is showing", async () => {
     const { shellHistoryCursorDomV1, SHELL_HISTORY_DOM_LABELS } = await import("../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🟦️.ts");
     // 🌐️ A history row carries the whole locale matrix, exactly as Rust `LocalizedLabel` serialises

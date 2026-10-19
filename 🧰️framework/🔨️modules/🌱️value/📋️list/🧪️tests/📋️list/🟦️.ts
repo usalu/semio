@@ -1,9 +1,20 @@
+import reservation from "../🧫️fixtures/🎟️reservation.json" with { type: "json" };
 import assert from "node:assert/strict";
 import { applyPatch, type Operation } from "fast-json-patch";
 import corpus from "../🧫️fixtures/🔣️.json" with { type: "json" };
 import pageCeiling from "../🧫️fixtures/📏️owner-page-ceiling.json" with { type: "json" };
 import releaseAuthority from "../../../🧬️retained-clone/🧪️tests/🧫️fixtures/📏️release-authority/🔣️.json" with { type: "json" };
 import { test } from "bun:test";
+
+test("independently reserved capacity retains the neutral ordered payload",()=>{
+  const values=applyPatch<number[]>([],Array.from({length:reservation.count},(_,value)=>({op:"add" as const,path:"/-",value})),true).newDocument;
+  assert.deepEqual(values,Array.from({length:reservation.count},(_,value)=>value));
+  const slots=reservation.payloadBytes/8;
+  assert.equal(slots,1);
+  assert.deepEqual(reservation.promotionPages,[1,reservation.fanout,reservation.fanout**2]);
+  assert.deepEqual(reservation.deniedAxes,["items","capacityBytes","depth"]);
+  console.log("[DEBUG] neutral capacity fixture independently materialized with JSON Patch: "+values.length+" ordered rows");
+});
 
 test("owner payload page ceiling preserves independently patched order and exact UTF-8 input", () => {
   const patched = applyPatch([...pageCeiling.input], pageCeiling.append.map(value => ({op:"add" as const,path:"/-",value})), true).newDocument;
@@ -70,7 +81,7 @@ test("retained empty tail permits release while the earlier page stays live", ()
   assert.equal(frontier.tailItems,values.length-slots);
   const pages=[values.slice(0,slots),values.slice(slots)];
   const edited=applyPatch(pages,Array.from({length:frontier.tailItems},()=>({op:"remove" as const,path:"/1/0"})),true).newDocument;
-  assert.equal(edited[1].length,0);
-  assert.equal(edited[0].length,frontier.earlierLiveItems);
+  assert(edited[1]);assert.equal(edited[1].length,0);
+  assert(edited[0]);assert.equal(edited[0].length,frontier.earlierLiveItems);
   assert.deepEqual(edited[0],Array.from({length:frontier.earlierLiveItems},(_,value)=>value));
 });

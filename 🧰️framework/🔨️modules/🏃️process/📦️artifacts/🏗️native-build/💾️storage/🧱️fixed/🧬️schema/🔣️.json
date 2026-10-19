@@ -36,6 +36,34 @@
     }
   },
   "definitions": {
+    "UnpublishedBirthRetention": {
+      "const": {
+        "version": 1,
+        "leaseMode": "exclusive",
+        "rootOnly": true,
+        "maximumEntries": 2,
+        "retainedPrefix": "birth-",
+        "identityDigestCharacters": 24,
+        "receipt": "absent",
+        "publication": "settled",
+        "association": "inactive",
+        "mountEntries": 0,
+        "effect": "atomic-same-parent-retention",
+        "payload": "preserve",
+        "collision": "refuse",
+        "authorityFromData": false
+      }
+    },
+    "UnpublishedBirthCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "fault", "retained"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1, "maxLength": 64},
+        "fault": {"enum": ["none", "associated", "mount-payload", "foreign-entry", "collision", "changed-backing", "changed-parent", "writer", "child"]},
+        "retained": {"type": "boolean"}
+      }
+    },
     "ImageReceipt": {
       "type": "object",
       "additionalProperties": false,

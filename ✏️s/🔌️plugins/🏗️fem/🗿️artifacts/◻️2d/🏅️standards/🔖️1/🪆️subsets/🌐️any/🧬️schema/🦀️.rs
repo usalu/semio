@@ -1,7 +1,8 @@
 //! 🧬️ Fem2d artifact schema — every field of the artifact with its state class.
 
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 //#region 🔖️Artifact
 /// 🧬️ fem2d document artifact state.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -10,14 +11,14 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[derive(Default)]
 pub struct Fem2dArtifact {
     #[state(artifact)]
-    pub nodes: Vec<FemNode>,
+    pub nodes: Vec<FemNodeValue>,
     #[state(artifact)]
     #[dsl(statements, block)]
     pub elements: Vec<FemElement>,
     #[state(artifact)]
     pub regions: Vec<FemRegion>,
     #[state(artifact)]
-    pub materials: Vec<FemMaterial>,
+    pub materials: Vec<FemMaterialValue>,
     #[state(artifact)]
     pub sections: Vec<FemSection>,
     #[state(artifact)]
@@ -99,6 +100,15 @@ impl Fem2dArtifact {
 
 //#endregion 🧬️DerivedArtifactFacets
 
-//#region 🏗️Structure
-use super::structure::{FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
-//#endregion 🏗️Structure
+//#region 🔁️Re-exports
+pub use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::standards::v1::subsets::any::schema::structure::FemCombination;
+pub use crate::standards::v1::subsets::any::schema::structure::FemElement;
+pub use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
+pub use semio_s_fem_material::planar::FemMaterialValue;
+pub use semio_s_fem_node::planar::FemNodeValue;
+pub use crate::standards::v1::subsets::any::schema::structure::FemRegion;
+pub use crate::standards::v1::subsets::any::schema::structure::FemSection;
+pub use crate::standards::v1::subsets::any::schema::structure::FemSupport;
+//#endregion 🔁️Re-exports

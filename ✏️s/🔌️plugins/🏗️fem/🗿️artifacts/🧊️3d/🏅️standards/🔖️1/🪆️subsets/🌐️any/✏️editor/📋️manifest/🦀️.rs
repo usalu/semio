@@ -10,7 +10,7 @@ use super::*;
 /// 🚧️ SDK GAP (contract §2.4, `App { definition, examples }` split): `EditorBuilder` has no
 /// `.example(...)`/`.workflow(...)` methods — the pre-migration chain's trailing
 /// `.example(examples::demo::ID, LocalizedLabel::native("Family House", "Einfamilienhaus"),
-/// crate::standards::v1::subsets::any::io::text::snapshot::FEM3D_EXAMPLE_TEXT, "file")` and `.workflow("fem3d", "FEM 3D",
+/// semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::FEM3D_EXAMPLE_TEXT, "file")` and `.workflow("fem3d", "FEM 3D",
 /// "structure")` calls are dropped here, not ported. `setActiveExample`'s handler loads the same
 /// `FEM3D_EXAMPLE_TEXT` fixture directly.
 /// 🩹️ One inspector patch action — internal (not in the palette; its arguments are authored by the

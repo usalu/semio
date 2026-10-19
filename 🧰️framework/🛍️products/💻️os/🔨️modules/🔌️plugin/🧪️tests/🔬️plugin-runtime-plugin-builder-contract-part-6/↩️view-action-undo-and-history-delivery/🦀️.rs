@@ -18,7 +18,7 @@
         assert!(result.mutations.is_empty());
         assert!(result.requested_effects.is_empty());
         assert_eq!(app.stores.test_snapshot().await, TestSnapshot::default());
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -40,7 +40,7 @@
         let result = app.dispatch_typed(TestCommand::Navigate, &meta(), &mut identity,cx).await.expect("navigate");
         assert!(result.mutations.is_empty());
         assert_eq!(result.requested_effects, vec![Effect::Navigate { uri: "semio://home".into() }]);
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -94,7 +94,7 @@
         );
         assert!(settled.history_patch.is_some_and(|patch| patch.can_undo && patch.can_redo && !patch.upserts.is_empty()));
         close_reserved_app(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -174,7 +174,7 @@
         app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta(), &mut identity,cx).await.expect("select");
         assert!(app.render_ctx().test_history().await.commands.is_empty(), "a config-only View is never a row (design §20.13, L4)");
         assert_eq!(app.stores.test_config().await.selected, Some("node-1".to_string()), "while the config lane holds its edit");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -195,7 +195,7 @@
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let result = app.dispatch_typed(TestCommand::ViewNoScope, &meta(), &mut identity,cx).await.expect("viewNoScope");
         assert_eq!(result.ui_scope, UiDirtyScope::None);
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -218,7 +218,7 @@
         let UiDirtyScope::Partial { window_bodies, panel_bodies, .. } = result.ui_scope else { panic!("expected a Partial scope") };
         assert_eq!(window_bodies, vec!["some.window".to_string()]);
         assert!(panel_bodies.is_empty());
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -239,9 +239,9 @@
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let result = app.dispatch_typed(TestCommand::Select { id: Some("x".into()) }, &meta(), &mut identity,cx).await.expect("select");
         assert_eq!(result.ui_scope, UiDirtyScope::Full);
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -261,8 +261,8 @@
         let error = app.dispatch_typed(TestCommand::BadView, &meta(), &mut identity,cx).await.expect_err("a View command emitting operations must be rejected");
         assert!(matches!(&error.primary,semio_framework_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Fault(fault) if fault.message.contains("must not emit operations")), "unexpected complete original error: {error:?}");
         assert_eq!(app.stores.test_snapshot().await, TestSnapshot::default());
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }

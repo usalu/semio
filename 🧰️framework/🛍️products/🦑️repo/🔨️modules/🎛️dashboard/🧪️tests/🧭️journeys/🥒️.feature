@@ -4,6 +4,65 @@ Feature: The dashboard is the only control plane for developer processes
   inside a real pseudo-terminal (Rust adapter with portable-pty as the driver and vt100 as the screen model).
   Every scenario title is the name of one test in its adapter.
 
+  @source
+  Scenario: Actual Rust journey fixture source resolves the shared authored script
+    Given the actual journey crate manifest and shared source contract
+    Then its Rust imports and compile-time fixture include resolve the authored files
+    And its immutable fixture script agrees with the independent filesystem oracle
+  @source
+  Scenario: Actual Rust journey binary selection requires the owner-supplied executable
+    Given the shared executable selection contract
+    Then an absent or empty owner-supplied executable is refused
+    And an explicit owner-supplied executable path is retained without reading an installation record
+
+  @pty
+  Scenario: A draft starts and is discarded after visible confirmation
+    Given an isolated workspace without the requested draft
+    When a developer fills the required draft title in its launcher form
+    Then no draft exists before the visible mutation confirmation
+    When confirmation is cancelled and the developer returns to confirm the same form
+    Then the actual supervised task creates the exact draft directory and shows its result
+    When the required discard identifier is submitted and confirmed
+    Then the actual supervised task removes only that draft and shows its result
+
+  @pty
+  Scenario: A closed ticket reopens with the required durable human prompt
+    Given an isolated closed ticket with its prior interaction history
+    When the developer tries its visible reopen form with an empty prompt
+    Then no task starts and the closed document stays byte-for-byte unchanged
+    When the exact human prompt is entered and the mutation is confirmed
+    Then the supervised task shows the reopened ticket and exits successfully
+    And independent JSON parsing proves open status, retained history and the exact new prompt
+    And the important document is restored as an empty file
+
+  @pty
+  Scenario: The terminal driver reports physical emoji widths
+    Given portable scalar and cluster width samples in an isolated Windows pseudo-terminal
+    When the immutable fixture writes each sample and queries its actual console cursor through the system API
+    Then the third-party VT100 model independently records the same emitted terminal bytes and cursor
+    And both physical and model cursor facts are retained without substituting a terminal query reply
+
+  @pty
+  Scenario: A workspace terminal streams shell input and exits inside the dashboard
+    Given an isolated workspace and the immutable production developer terminal operation
+    When its visible parameter form selects the platform shell and workspace directory
+    And the developer submits echo SEMIO_TERMINAL_PROBE and exit through the task view
+    Then the independent terminal shows the probe and the task ends with exit code 0
+    And its raw process log retains exactly SEMIO_TERMINAL_PROBE before a newline or terminal cursor movement
+    And an independent durable JSON receipt confirms the untouched parameters and isolated root
+
+  @pty
+  Scenario: Tabs occupy every corner and own fullscreen and close controls
+    Given the dashboard with a task overview and an inactive command tab
+    When a tab is dragged to all four corners
+    Then the independent terminal model shows every corner slot preview and committed tab position
+    And each three-row preview chip keeps its controls and matches the committed chip and seam exactly
+    When its own fullscreen and restore controls are clicked
+    Then its body receives focus without creating another window
+    And changing tabs within fullscreen changes the visible body while retaining fullscreen
+    When its close control is clicked
+    Then only that tab disappears and the overview remains
+
   @pty
   Scenario: Launcher text editing follows the visible hardware cursor
     Given a required text parameter containing wide text and a combining cluster
@@ -181,3 +240,57 @@ Feature: The dashboard is the only control plane for developer processes
     When the developer stops the task
     Then the task exits and releases its port
     And a completed or cancelled probe cannot publish a ready address for that ended task
+  @pty
+  Scenario: Tabs dock with a preview and Escape cancels the drag
+    Given the real dashboard with an overview and a launcher tab
+    When a tab is held over the right edge of its group
+    Then the independent VT100 screen shows the exact proposed destination tab and its controls
+    When Escape cancels the gesture
+    Then both tabs remain in their original group
+    When the same gesture is released at the right edge
+    Then two independently tiled windows appear
+    And the committed destination chip and seam match the proposed glyphs at the same coordinates
+    And a held divider follows repeated pointer movements across rendered frames
+    And the incremental frame agrees with a full repaint
+
+  @pty
+  Scenario: A live server moves between split axes and tabs without restarting
+    Given a running server with a terminal window
+    When its tab is dragged beside and above the task overview and back into its tabs
+    Then the independent terminal screen shows each preview and committed arrangement
+    And the daemon retains exactly one task with the same session and process identity
+    And the original server output remains in its logs
+
+  @pty
+  Scenario: A German form submits choices flags quoted arguments and environment
+    Given a real German dashboard and a required text choice and flag form
+    When the developer types Unicode text chooses beta enables the flag and adds quoted arguments and environment
+    Then the independent terminal shows localized required parameters and the start action
+    And exactly one process receives the portable fixture output
+
+  @pty
+  Scenario: Settings changes persist when the view is reopened
+    Given an isolated dashboard with local preference events
+    When the developer changes language and appearance in the visible settings pane
+    Then the independent terminal shows German light preferences and the durable journal records both events
+    When the developer detaches and opens another view without preference overrides
+    Then the visible settings remain German and light
+
+  @pty
+  Scenario: A ready server opens its address restarts and stops from the view
+    Given a running ready server in the real dashboard
+    When the developer activates its ready address
+    Then an independent recording opener receives exactly its declared health address
+    When another view opens with customized address and cancellation keys and starts a slow opener
+    Then cancelling from the visible view ends only that opener and the server remains ready
+    When the developer restarts the task through the visible view control
+    Then the same task has a new process and its declared endpoint answers HTTP 200
+    When the developer stops it through the visible view control
+    Then the screen shows its end and its port refuses connections
+
+  @pty
+  Scenario: A read only repository action runs from the launcher
+    Given one goal document in an isolated repository
+    When the developer selects the repository goal list action and submits its visible form
+    Then the independent terminal shows the exact goal line and successful exit
+    And the goal document bytes are unchanged

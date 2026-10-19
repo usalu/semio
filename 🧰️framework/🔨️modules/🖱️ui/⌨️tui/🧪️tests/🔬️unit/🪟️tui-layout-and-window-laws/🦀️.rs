@@ -95,8 +95,10 @@ fn window_chrome_recesses_tabs_into_the_top_corners_of_a_closed_shape() {
 
     let title_x = (0..40).find(|&x| buf.get(x, 1).unwrap().ch == 'P').expect("title text rendered");
     let title = buf.get(title_x, 1).unwrap();
-    assert_eq!(title.fg, theme.role(Role::ActiveForeground));
-    assert_eq!(title.bg, theme.role(Role::ActiveBase), "the active tab is a solid fill");
+    assert_eq!(title.fg, theme.role(Role::Foreground));
+    assert_eq!(title.bg, theme.surface(Surface::Window), "the active tab retains the window surface");
+    assert_eq!(buf.get(0, 0).unwrap().fg, theme.role(Role::ActiveBase), "active tab cap uses its selected outline");
+    assert_eq!(buf.get(0, 4).unwrap().fg, theme.role(Role::ActiveBase), "focused body retains its separate active border");
 }
 
 #[test]

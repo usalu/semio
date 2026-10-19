@@ -46,7 +46,7 @@ use semio_framework_os_store_command::{parse_command, print_command};
 pub fn mutation_report_json<S, M>(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String>
 where
     S: Clone + ToValue + FromValue,
-    M: Mutation<S>,
+        M: ColdMutation<S> + ToValue + FromValue,
 {
     let decode_snapshot = |text: &str| -> Result<S, String> { semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string()) };
     let base = decode_snapshot(base_json)?;
@@ -154,6 +154,7 @@ pub async fn assert_operation_round_trip<P, Mutation>(pre: &P, operation: Mutati
 where
     P: Clone + PartialEq + std::fmt::Debug,
     Mutation: self::Mutation<P>,
+     Mutation: ColdMutation<P>,
 {
     let post = apply_mutation(pre, &operation).expect("test operation diff applies").0;
     let mut inverse = operation.inverse(pre).expect("valid retained mutation inverse fixture");
@@ -168,8 +169,8 @@ where
 /// 🧪️ Dispatches one command under a fixture caller-owned identity authority and returns its original cumulative receipt to the caller.
 pub async fn dispatch_test_command<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, command: ArtifactCommand<Mutation>) -> Result<CommandReceipt, VcsError>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+        P: ToValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
+        Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     const CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -186,8 +187,8 @@ where
 /// post-apply snapshot, and replay-materialization agrees with the live store snapshot.
 pub async fn assert_store_roundtrip<P, Mutation>(initial: P, operation: Mutation)
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + Sync + ArtifactCanonicalJsonTree + 'static,
+        P: ToValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + Send + Sync + 'static,
+        Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + Sync + ArtifactCanonicalJsonTree + 'static,
 {
     let envelope = create_document_envelope("test/v1", "test", initial.clone(), None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = plain_test_store(envelope).await;
@@ -476,8 +477,8 @@ where
 /// disposer — so a test store records history and closes exactly like a production member.
 pub fn plain_document_store_owners<P, Mutation>() -> DocumentStoreOwners<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + Sync + ArtifactCanonicalJsonTree + 'static,
+        P: ToValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
+        Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + Sync + ArtifactCanonicalJsonTree + 'static,
 {
     let preparation = RetainedCloneBirthDemand { capacity_bytes: semio_framework_value::factory_arc_birth_bytes::<PlainAuthoringFactory<P, Mutation>>(), depth: 1 };
     let birth = DocumentStoreOwners::<P, Mutation>::source_birth_bytes::<RoundTripValueRetirementFactory, RoundTripValueRetirementFactory, RoundTripValueRetirementFactory, ArtifactStoreCursorDisposer<P, Mutation>>().expect("plain test catalog source layout") + preparation.capacity_bytes;
@@ -535,8 +536,8 @@ impl<P: Send + Sync + 'static, M: OpBinary + Sync + 'static> ArtifactStoreOneIte
 /// 🧪️ A store over `envelope` carrying [`plain_document_store_owners`].
 pub async fn plain_test_store<P, Mutation>(envelope: ArtifactEnvelope<P, Mutation>) -> ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + Sync + ArtifactCanonicalJsonTree + 'static,
+        P: ToValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
+        Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + Sync + ArtifactCanonicalJsonTree + 'static,
 {
     let mut store = ArtifactStore::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into())).await.expect("test fixture history is valid");
     install_unscheduled_catalog(&mut store, Ok(plain_document_store_owners())).expect("test store installs its funded plain catalog");
@@ -547,8 +548,8 @@ where
 /// witness its `Drop` requires.
 pub fn close_plain_test_store<P, Mutation>(store: &mut ArtifactStore<P, Mutation>)
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+        P: ToValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
+        Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     drop(store.detach_backbone().expect("a closing test store releases its backbone"));
     store.close_owned_unscheduled().expect("test store reaches its exact terminal-empty witness under its quoted owner demands");
@@ -695,7 +696,7 @@ where
 pub async fn assert_live_equals_replay<P, Mutation>(store: &ArtifactStore<P, Mutation>)
 where
     P: Clone + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+        Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     let live = store.snapshot().expect("store snapshot");
     let replayed = materialize_document_snapshot(store.envelope(), store.applied_edit_ids()).await.expect("replay");

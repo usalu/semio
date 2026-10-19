@@ -215,7 +215,6 @@ where
 /// the fold's effective supersessions. A retained loader steps it under its own deadline.
 pub fn loaded_history_replay<P, Mutation, I, S>(envelope: &ArtifactEnvelope<P, Mutation>, applied: I, supersessions: EffectiveSupersessions) -> Result<EditReplay<P, Mutation>, VcsError>
 where
-    P: Clone,
     Mutation: super::Mutation<P> + OpBinary,
     I: IntoIterator<Item = S>,
     S: AsRef<str>,
@@ -244,7 +243,6 @@ where
 /// 🎴️ Writes a finished load replay into `envelope` and takes its reached projection; every untaken owner stays attached to `result`.
 pub fn take_loaded_replay<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, result: &mut EditReplayResult<P, Mutation>) -> Result<Arc<P>, VcsError>
 where
-    P: Clone,
     Mutation: super::Mutation<P> + OpBinary,
 {
     fill_supersession_targets::<P, Mutation>(envelope)?;

@@ -1,0 +1,7 @@
+{"phases":["lookup","guard","diagnostic","authored","inverse","identity","inverse-record","commit","retire","outcome"],"cases":[
+ {"id":"name","target":"r1","rows":[{"id":"r1","name":"Before","value":1}],"patch":{"name":"After"},"expected":[{"id":"r1","name":"After","value":1}],"admitted":true,"inverseCount":1},
+ {"id":"value","target":"r1","rows":[{"id":"r1","name":"Before","value":1}],"patch":{"value":2},"expected":[{"id":"r1","name":"Before","value":2}],"admitted":true,"inverseCount":1},
+ {"id":"empty","target":"r1","rows":[{"id":"r1","name":"Before","value":1}],"patch":{},"expected":[{"id":"r1","name":"Before","value":1}],"admitted":true,"inverseCount":0},
+ {"id":"missing","target":"r2","rows":[{"id":"r1","name":"Before","value":1}],"patch":{"value":2},"expected":[{"id":"r1","name":"Before","value":1}],"admitted":false,"inverseCount":0},
+ {"id":"invalid","target":"r1","rows":[{"id":"r1","name":"Before","value":1}],"patch":{"value":-1},"expected":[{"id":"r1","name":"Before","value":1}],"admitted":false,"inverseCount":0}
+]}

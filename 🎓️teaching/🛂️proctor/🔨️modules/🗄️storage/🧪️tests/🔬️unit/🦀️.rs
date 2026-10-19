@@ -9,11 +9,11 @@ fn files(directory: &Path) -> Vec<String> {
 }
 
 fn actor(id: &str) -> ActorKey {
-    ActorKey { tenant: TenantId("t1".into()), kind: "quiz-learner".into(), id: id.into() }
+    ActorKey { tenant: TenantId("t1".into()), kind: "course-learner".into(), id: id.into() }
 }
 
 fn event(stream: &ActorKey, seq: u64) -> EventRecord {
-    EventRecord { stream: stream.clone(), seq, hlc: HybridLogicalClock { millis: 1_000 + seq, counter: 2 }, kind: "quiz.answer-recorded".into(), payload: format!("{{\"seq\":{seq}}}").into_bytes() }
+    EventRecord { stream: stream.clone(), seq, hlc: HybridLogicalClock { millis: 1_000 + seq, counter: 2 }, kind: "course.answer-recorded".into(), payload: format!("{{\"seq\":{seq}}}").into_bytes() }
 }
 
 #[tokio::test]
@@ -71,15 +71,15 @@ async fn a_commit_lands_whole_or_not_at_all() {
     let directory = scratch("commit");
     {
         let mut projections = SqliteProjectionStore::new(Database::open(&directory.0).expect("open"));
-        let writes = vec![ProjectionWrite { projection: "quiz.learner".into(), key: "a".into(), value: b"1".to_vec() }, ProjectionWrite { projection: "quiz.run".into(), key: "r".into(), value: b"2".to_vec() }];
-        projections.commit(&writes, ("quiz", 7)).unwrap();
-        assert_eq!(projections.get("quiz.run", "r").await, Some(b"2".to_vec()));
-        assert_eq!(projections.checkpoint("quiz").await, 7);
+        let writes = vec![ProjectionWrite { projection: "course.learner".into(), key: "a".into(), value: b"1".to_vec() }, ProjectionWrite { projection: "course.run".into(), key: "r".into(), value: b"2".to_vec() }];
+        projections.commit(&writes, ("course", 7)).unwrap();
+        assert_eq!(projections.get("course.run", "r").await, Some(b"2".to_vec()));
+        assert_eq!(projections.checkpoint("course").await, 7);
     }
     let mut refusing = SqliteProjectionStore::new(Database::open_read_only(&directory.0).expect("read-only"));
-    assert!(matches!(refusing.commit(&[ProjectionWrite { projection: "quiz.run".into(), key: "r".into(), value: b"3".to_vec() }], ("quiz", 8)), Err(StorageError::Backend(_))));
-    assert_eq!(refusing.get("quiz.run", "r").await, Some(b"2".to_vec()));
-    assert_eq!(refusing.checkpoint("quiz").await, 7);
+    assert!(matches!(refusing.commit(&[ProjectionWrite { projection: "course.run".into(), key: "r".into(), value: b"3".to_vec() }], ("course", 8)), Err(StorageError::Backend(_))));
+    assert_eq!(refusing.get("course.run", "r").await, Some(b"2".to_vec()));
+    assert_eq!(refusing.checkpoint("course").await, 7);
 }
 
 #[tokio::test]
@@ -155,7 +155,7 @@ async fn an_erasure_removes_every_trace_of_its_actors_from_the_file_and_nothing_
     const NAME: &str = "Ada Lovelace of Ockham";
     let directory = scratch("erase");
     let (ada, bob) = (actor("a"), actor("b"));
-    let handle = ActorKey { tenant: TenantId("t1".into()), kind: "quiz-handle".into(), id: "616461".into() };
+    let handle = ActorKey { tenant: TenantId("t1".into()), kind: "course-handle".into(), id: "616461".into() };
     let named = |stream: &ActorKey, seq: u64, name: &str| EventRecord { payload: format!("{{\"handle\":\"{name}\",\"seq\":{seq}}}").into_bytes(), ..event(stream, seq) };
     let receipt = |command: &str, actor: &ActorKey| CommandReceipt { command_id: CommandId(command.into()), actor: actor.clone(), revision: Revision(1), accepted_at: HybridLogicalClock { millis: 5, counter: 1 } };
     {
@@ -176,7 +176,7 @@ async fn an_erasure_removes_every_trace_of_its_actors_from_the_file_and_nothing_
         store.put_snapshot(&bob, Revision(1), b"Bob".to_vec()).await.unwrap();
         store.acquire_lease(&ada, "node").await.unwrap();
         let mut projections = SqliteProjectionStore::new(database);
-        projections.commit(&[ProjectionWrite { projection: "quiz.learner".into(), key: "a".into(), value: NAME.as_bytes().to_vec() }, ProjectionWrite { projection: "quiz.handle".into(), key: NAME.to_lowercase(), value: b"a".to_vec() }], ("quiz", 4)).unwrap();
+        projections.commit(&[ProjectionWrite { projection: "course.learner".into(), key: "a".into(), value: NAME.as_bytes().to_vec() }, ProjectionWrite { projection: "course.handle".into(), key: NAME.to_lowercase(), value: b"a".to_vec() }], ("course", 4)).unwrap();
     }
     let holds = |needle: &str| files(&directory.0).iter().any(|file| std::fs::read(directory.0.join(file)).expect("file").windows(needle.len()).any(|window| window == needle.as_bytes()));
     assert!(holds(NAME) && holds(&NAME.to_lowercase()), "the name is in the file before it is erased");
@@ -196,9 +196,9 @@ async fn an_erasure_removes_every_trace_of_its_actors_from_the_file_and_nothing_
     assert_eq!(store.receipt(&IdempotencyKey("bob".into())).await.unwrap(), Some(receipt("bob", &bob)));
     assert_eq!(store.snapshot(&bob).await.unwrap(), Some((Revision(1), b"Bob".to_vec())));
     assert_eq!(store.pending_outbox(10).await.unwrap().iter().map(|entry| entry.actor.clone()).collect::<Vec<_>>(), vec![bob.clone()]);
-    assert_eq!((store.streams("t1", "quiz-learner").unwrap(), store.streams("t1", "quiz-handle").unwrap(), store.tenants().unwrap()), (vec!["b".to_string()], Vec::new(), vec!["t1".to_string()]));
+    assert_eq!((store.streams("t1", "course-learner").unwrap(), store.streams("t1", "course-handle").unwrap(), store.tenants().unwrap()), (vec!["b".to_string()], Vec::new(), vec!["t1".to_string()]));
     let projections = SqliteProjectionStore::new(database.clone());
-    assert_eq!((projections.get("quiz.learner", "a").await, projections.checkpoint("quiz").await), (None, 0), "every read model is dropped and refolded by the next start");
+    assert_eq!((projections.get("course.learner", "a").await, projections.checkpoint("course").await), (None, 0), "every read model is dropped and refolded by the next start");
     assert!(!holds(NAME) && !holds(&NAME.to_lowercase()) && holds("Bob"), "the bytes of the name are in no file of the directory while the handle is still open");
     drop((store, projections, database));
     assert!(!holds(NAME) && !holds(&NAME.to_lowercase()) && holds("Bob"), "nor after it is closed");
@@ -216,9 +216,9 @@ async fn streams_are_seen_at_a_glance_and_removed_as_one_set() {
     let at = |stream: &ActorKey, seq: u64, millis: u64, kind: &str| EventRecord { hlc: HybridLogicalClock { millis, counter: 0 }, kind: kind.into(), ..event(stream, seq) };
     let learners: Vec<ActorKey> = (0..300).map(|learner| actor(&format!("{learner:032x}"))).collect();
     for (index, learner) in learners.iter().enumerate() {
-        let mut events = vec![at(learner, 1, 500 + index as u64, "quiz.learner-registered"), at(learner, 2, 9_000, "quiz.run-started")];
+        let mut events = vec![at(learner, 1, 500 + index as u64, "course.learner-registered"), at(learner, 2, 9_000, "course.run-started")];
         if index % 3 == 0 {
-            events.extend([at(learner, 3, 9_500, "quiz.run-submitted"), at(learner, 4, 9_600, "quiz.run-submitted")]);
+            events.extend([at(learner, 3, 9_500, "course.run-submitted"), at(learner, 4, 9_600, "course.run-submitted")]);
         }
         let queued: Vec<OutboxEntry> = events.iter().map(|event| OutboxEntry::pending(learner.clone(), event.clone())).collect();
         store.append_events(learner, &events, &queued).await.unwrap();
@@ -229,14 +229,14 @@ async fn streams_are_seen_at_a_glance_and_removed_as_one_set() {
     store.put_snapshot(&learners[1], Revision(2), b"state".to_vec()).await.unwrap();
     store.acquire_lease(&learners[1], "node").await.unwrap();
     store.acquire_lease(&learners[0], "node").await.unwrap();
-    SqliteProjectionStore::new(database.clone()).commit(&[ProjectionWrite { projection: "quiz.learner".into(), key: "a".into(), value: b"view".to_vec() }], ("quiz", 7)).unwrap();
+    SqliteProjectionStore::new(database.clone()).commit(&[ProjectionWrite { projection: "course.learner".into(), key: "a".into(), value: b"view".to_vec() }], ("course", 7)).unwrap();
 
-    let spans = store.stream_spans("t1", "quiz-learner", "quiz.run-submitted").unwrap();
+    let spans = store.stream_spans("t1", "course-learner", "course.run-submitted").unwrap();
     assert_eq!(spans.len(), 300);
     assert_eq!((&spans[0], &spans[1], &spans[299]), (&StreamSpan { id: learners[0].id.clone(), since: 500, events: 4, marked: 2 }, &StreamSpan { id: learners[1].id.clone(), since: 501, events: 2, marked: 0 }, &StreamSpan { id: learners[299].id.clone(), since: 799, events: 2, marked: 0 }));
-    assert!(store.stream_spans("t1", "quiz-handle", "quiz.run-submitted").unwrap().is_empty() && store.stream_spans("t2", "quiz-learner", "x").unwrap().is_empty());
-    let first = store.first_events("t1", "quiz-learner").unwrap();
-    assert_eq!((first.len(), &first[7]), (300, &at(&learners[7], 1, 507, "quiz.learner-registered")), "the first event of every stream, by stream");
+    assert!(store.stream_spans("t1", "course-handle", "course.run-submitted").unwrap().is_empty() && store.stream_spans("t2", "course-learner", "x").unwrap().is_empty());
+    let first = store.first_events("t1", "course-learner").unwrap();
+    assert_eq!((first.len(), &first[7]), (300, &at(&learners[7], 1, 507, "course.learner-registered")), "the first event of every stream, by stream");
 
     let relay = IdempotencyKey("relay-of-a-removed-stream".into());
     store.record_receipt(&relay, &CommandReceipt { command_id: CommandId("relay".into()), actor: learners[0].clone(), revision: Revision(4), accepted_at: HybridLogicalClock { millis: 600, counter: 0 } }).await.unwrap();
@@ -245,7 +245,7 @@ async fn streams_are_seen_at_a_glance_and_removed_as_one_set() {
     assert_eq!(removed, Removed { events: 400, receipts: 201, outbox: 400, snapshots: 1, leases: 1, projections: 1 }, "two hundred streams as one set, and the one receipt a stream that stays held for one of them");
     assert_eq!((store.receipt(&relay).await.unwrap(), store.receipt(&IdempotencyKey("register-0".into())).await.unwrap().map(|receipt| receipt.actor)), (None, Some(learners[0].clone())));
     assert_eq!(database.remove(&idle, std::slice::from_ref(&relay)).expect("again"), Removed::default(), "nothing of them is left to remove");
-    let left = store.stream_spans("t1", "quiz-learner", "quiz.run-submitted").unwrap();
+    let left = store.stream_spans("t1", "course-learner", "course.run-submitted").unwrap();
     assert!(left.len() == 100 && left.iter().all(|span| span.events == 4 && span.marked == 2), "every other stream is whole");
     assert_eq!(store.receipt(&IdempotencyKey("register-1".into())).await.unwrap(), None);
     assert!(store.receipt(&IdempotencyKey("register-3".into())).await.unwrap().is_some());

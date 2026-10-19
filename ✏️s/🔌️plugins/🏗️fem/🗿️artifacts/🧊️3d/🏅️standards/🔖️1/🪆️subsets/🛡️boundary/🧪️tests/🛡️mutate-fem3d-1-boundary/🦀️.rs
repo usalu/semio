@@ -1,5 +1,5 @@
-//! 🧊 `s.fem.fem3d` boundary mutation case — Rust SUBJECT adapter. Relocated out of the
 //! artifact-level `mutate-fem3d-1` case in ticket
+//! 🧊 `s.fem.fem3d` boundary mutation case — Rust SUBJECT adapter. Relocated out of the
 //! `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION` so
 //! this subset's own kinds have a subset-owned test.
 //!
@@ -15,14 +15,18 @@
 //! report shapes rather than parts of the document, so they stay asserted HERE, in role, in
 //! [`subject::spec_vector`].
 
-use semio_repo_test_host::{parse_json, Adapter, Json};
+use semio_repo_test_host::parse_json;
+
+use semio_repo_test_host::Adapter;
+
+use semio_repo_test_host::Json;
 
 //#region 🔖️Kinds
 /// 🏷️ This subset's own slice of `KINDS` in `../../🧬️schema/🧬️mutations/🦀️.rs` — duplicated, not
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and that file's own
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against both the enum and the manifest.
-const KINDS: &[&str] = &["create-support", "delete-support", "replace-support"];
+const KINDS: &[&str] = &["change-support", "create-support", "delete-support", "replace-support"];
 
 /// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
 /// [`law::mutation_is_observable`] must not demand one of them.
@@ -53,6 +57,14 @@ struct Vector {
 
 fn vector(kind: &str) -> Vector {
     match kind {
+        "change-support" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/🎯️outcome/🔣️.json"),
+        },
+
         "create-support" => Vector {
             before: include_str!("../🧫️fixtures/🧬️mutations/🛡️create-support/🔒️clamps/📸️snapshot/⬅️before/🔣️.json"),
             mutation: include_str!("../🧫️fixtures/🧬️mutations/🛡️create-support/🔒️clamps/🦠️mutation/🔣️.json"),
@@ -89,6 +101,14 @@ fn canonical(text: &str) -> Json {
 /// C25/30 raft slab. Same five members as [`vector`], a different structural system.
 fn hall_vector_of(kind: &str) -> Vector {
     match kind {
+        "change-support" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/📌️toggles/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/📌️toggles/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/📌️toggles/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/📌️toggles/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/📌️toggles/🎯️outcome/🔣️.json"),
+        },
+
         "replace-support" => Vector {
             before: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-support/🏗️hall/📸️snapshot/⬅️before/🔣️.json"),
             mutation: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-support/🏗️hall/🦠️mutation/🔣️.json"),
@@ -118,10 +138,34 @@ fn hall_vector_of(kind: &str) -> Vector {
 /// refusal, or a declared no-op. Keyed by the scenario id, not by the kind, because a kind can
 /// refuse in several different ways. A rejection bundle carries no `🔺️diff/🔣️.json` at all, so the
 /// `diff` member is the empty object and no handler reads it.
-const REJECT_VECTORS: &[&str] = &["same-support-bff8b3", "dangling-node-d44469", "renames-pin-29f41a", "no-such-support-edd22a", "dangling-node-af37e2"];
+const REJECT_VECTORS: &[&str] = &["change-support-invalid", "change-support-missing", "change-support-same", "same-support-bff8b3", "dangling-node-d44469", "renames-pin-29f41a", "no-such-support-edd22a", "dangling-node-af37e2"];
 
 fn reject_vector_of(identifier: &str) -> Vector {
     match identifier {
+        "change-support-invalid" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⚗️invalid/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⚗️invalid/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⚗️invalid/📸️snapshot/➡️after/🔣️.json"),
+            diff: "{}",
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⚗️invalid/🎯️outcome/🔣️.json"),
+        },
+
+        "change-support-missing" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⛔️missing/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
+            diff: "{}",
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⛔️missing/🎯️outcome/🔣️.json"),
+        },
+
+        "change-support-same" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⏸️same/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⏸️same/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⏸️same/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⏸️same/🎯️outcome/🔣️.json"),
+        },
+
         "same-support-bff8b3" => Vector {
             before: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-support/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
             mutation: include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-support/⏸️same/🦠️mutation/🔣️.json"),
@@ -165,8 +209,16 @@ fn reject_vector_of(identifier: &str) -> Vector {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{canonical, hall_vector_of, reject_vector_of, vector, DERIVED_ASSET, UNOBSERVABLE};
-    use semio_repo_test_host::{parse_json, Context, Json, Outcome};
+    use super::canonical;
+    use super::hall_vector_of;
+    use super::reject_vector_of;
+    use super::vector;
+    use super::DERIVED_ASSET;
+    use super::UNOBSERVABLE;
+    use semio_repo_test_host::parse_json;
+    use semio_repo_test_host::Context;
+    use semio_repo_test_host::Json;
+    use semio_repo_test_host::Outcome;
     use semio_repo_test_host::law;
     use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::io::text::mutations::fem3d_mutation_report_json;
 

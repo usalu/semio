@@ -1,0 +1,7 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "title":"Retained Owned Field Exchange",
+ "type":"array",
+ "minItems":1,
+ "items":{"type":"object","additionalProperties":false,"required":["id","before","authored","expected"],"properties":{"id":{"type":"string"},"before":{"type":"string"},"authored":{"type":"string"},"expected":{"type":"string"}}}
+}

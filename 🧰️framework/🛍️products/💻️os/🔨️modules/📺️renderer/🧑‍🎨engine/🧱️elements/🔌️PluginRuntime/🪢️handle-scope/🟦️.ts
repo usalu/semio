@@ -1,3 +1,4 @@
+import { operationDiagnosticFanouts } from "../📬️typed-result/🟦️.ts";
 /** 🪢️ Phases 2, 3 and 5 of `loadPluginModule`: the per-handle scope with its instance tables and counters, the instance table and the lazily activated request actor.
  *
  * 🧱️ Child module of {@link ../🟦️.tsx | PluginRuntime}, which re-exports every public name below so import specifiers stay unchanged.
@@ -136,6 +137,7 @@ export function createInstanceTable(scope: PluginHandleScope) {
     pendingTurnEffects.delete(instanceId);
     pendingCompletionEffects.delete(instanceId);
     completionFanouts.delete(instanceId);
+    operationDiagnosticFanouts.delete(instanceId);
     teardownPluginActor(actorId);
     closingInstances.delete(instanceId);
   };

@@ -1,0 +1,209 @@
+{
+  "schema": "prepared-group-binding-custody/v1",
+  "originalPieces": [
+    "edit",
+    "postSnapshot",
+    "authority",
+    "localActor",
+    "appliedEditId",
+    "tailEditId",
+    "outcomeMessages",
+    "foreignStepPresence"
+  ],
+  "fieldTransition": {
+    "path": "mutationMeta[0].groupId",
+    "precondition": "absent",
+    "refusal": "restore-absent-and-return-staged-identity-owner",
+    "success": "rebind-seal-using-the-same-edit-and-post-addresses"
+  },
+  "refusalPhases": [
+    "invalid-group-hash",
+    "source-seal",
+    "source-group",
+    "source-frontier",
+    "metadata",
+    "recovery-pack",
+    "late-member"
+  ],
+  "snapshotClones": 0,
+  "implicitOriginalDrop": false,
+  "temporaryOwner": "caller-retained",
+  "packPlanning": {
+    "codec": 1,
+    "maximumBytes": 491520,
+    "cancelTurn": 100,
+    "maximumTurns": 4000000,
+    "snapshotClones": 0,
+    "prefixHex": "8953454d0d0a1a0a3100000073746f72652e64757261626c652d6f776e65642d74687265652d6d656d6265722d6465636973696f6e2e7061636b207631"
+  },
+  "planningOutput": {
+    "maximumBytes": 162000,
+    "deniedAxes": [
+      "items",
+      "copyBytes",
+      "capacityBytes",
+      "depth"
+    ],
+    "sources": [
+      "{\"text\":\"雪😀\\n\\u0000\",\"value\":-9223372036854775808}",
+      "[null,true,false,0,18446744073709551615,\"quote\\\"slash\\\\\"]"
+    ],
+    "cancelPhases": [
+      "measure",
+      "allocate",
+      "write"
+    ],
+    "refusals": [
+      {
+        "kind": "depth",
+        "count": 33,
+        "maximum": 32
+      },
+      {
+        "kind": "items",
+        "count": 65537,
+        "maximum": 65536
+      }
+    ]
+  },
+  "durableExecution": {
+    "maximumItems": 1,
+    "retirementIssuer": "captured-original",
+    "retirementIssuerOwnership": "moves-with-candidate",
+    "encodedOutputCustody": "retained-through-stage-or-refusal",
+    "currentFactorySlotsDuringRetirement": "empty",
+    "planningSteps": [
+      "parent-unbound",
+      "drawing-unbound",
+      "value-unbound",
+      "decision",
+      "parent-bound",
+      "drawing-bound",
+      "value-bound",
+      "decision-pack"
+    ],
+    "cases": [
+      {
+        "id": "later-member-metadata-refusal",
+        "stopStep": 1,
+        "transferCount": 0,
+        "originalCount": 3,
+        "groupMetadataCount": 0,
+        "validDependencyCount": 129,
+        "invalidDependency": "bad\nidentity"
+      },
+      {
+        "id": "later-member-encoding-refusal",
+        "stopStep": 1,
+        "transferCount": 0,
+        "originalCount": 3,
+        "groupMetadataCount": 0,
+        "oversizedJsonBytes": 162001
+      },
+      {
+        "id": "later-member-refusal",
+        "stopStep": 5,
+        "transferCount": 0,
+        "originalCount": 3,
+        "groupMetadataCount": 0
+      },
+      {
+        "id": "decision-pack-refusal",
+        "stopStep": 7,
+        "transferCount": 0,
+        "originalCount": 3,
+        "groupMetadataCount": 0
+      },
+      {
+        "id": "cancel-before-transfer",
+        "stopStep": 8,
+        "transferCount": 0,
+        "originalCount": 3,
+        "groupMetadataCount": 0
+      },
+      {
+        "id": "output-denied",
+        "stopStep": 8,
+        "transferCount": 0,
+        "originalCount": 3,
+        "groupMetadataCount": 0
+      },
+      {
+        "id": "begin-commit-refusal",
+        "stopStep": 11,
+        "transferCount": 3,
+        "originalCount": 0,
+        "groupMetadataCount": 3
+      },
+      {
+        "id": "success",
+        "stopStep": 11,
+        "transferCount": 3,
+        "originalCount": 0,
+        "groupMetadataCount": 3
+      }
+    ]
+  },
+  "receiptCases": [
+    {
+      "copiedItems": 0,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 128,
+      "releasedBytes": 0,
+      "visible": true
+    },
+    {
+      "copiedItems": 0,
+      "copiedBytes": 64,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0,
+      "visible": true
+    },
+    {
+      "copiedItems": 0,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 128,
+      "visible": true
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0,
+      "visible": true
+    },
+    {
+      "copiedItems": 0,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0,
+      "visible": false
+    }
+  ],
+  "inlineTerminalRetirement": {
+    "frameCopyMultiplier": 2,
+    "cases": [
+      {
+        "funded": false,
+        "retained": true,
+        "visible": false
+      },
+      {
+        "funded": true,
+        "retained": false,
+        "visible": true
+      }
+    ]
+  },
+  "storeClosure": {
+    "maximumTurns": 4000000,
+    "maximumBodyBytes": 512,
+    "requiresVisibleProgress": true
+  },
+  "editProjection": {
+    "sequenceNumber": 3,
+    "semanticIncludesSequence": false,
+    "recoveryIncludesSequence": true
+  }
+}

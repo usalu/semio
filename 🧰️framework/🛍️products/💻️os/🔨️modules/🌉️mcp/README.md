@@ -7,14 +7,16 @@ VCS → backbone path, so a live shell sees an agent's edit exactly as it sees a
 
 ## Run it
 
-MCP clients start the stdio gateway, developers do not: `bun ./📜️script.ts agents write` writes the client
-configurations (`.mcp.json`, `.vscode/mcp.json`, `.cursor/mcp.json`, `.codex/config.toml`) from the declaration
-of the tool `tool:workspace/os-mcp-stdio`, and every client launches the command it names:
+Headless MCP agent clients start the stdio gateway from dashboard-owned declarations.
+Choose **New Task** (`Ctrl+B n`), search `agents write` and start `workspace:agents-write`
+to derive `.mcp.json` and `.codex/config.toml`. The declaration of
+`tool:workspace/os-mcp-stdio` owns the command and its working-space policy.
 
-```bash
-bun ./📜️script.ts dev mcp stdio os          # what the client files launch (never run by hand)
-bun ./📜️script.ts dev mcp stdio os -- --folder <space> --scopes artifact.read,artifact.write
-```
+For development choose **New Task**, search `mcp http` or `mcp inspector`, complete
+its form and choose **Start**. Inspect output and readiness in Task overview;
+**Open ready address** (`Ctrl+B u`) opens a ready service. The task menu provides
+restart, stop and cancellation. Agent client configuration consumes these
+registered declarations; it does not own developer operations.
 
 A developer who wants the Streamable HTTP server starts it as a daemon task, on port 8792 (build target
 `@semio-tech/framework-os-mcp-rs:dev`):
@@ -78,10 +80,10 @@ callable by the agent — a tool like that would let the agent approve itself.
 One binary, `semio-os-mcp`, in two profiles:
 
 ```bash
-bun repo run @semio-tech/framework-os-mcp-rs:build
+bun run dashboard run @semio-tech/framework-os-mcp-rs:build
 # → …/🌉️mcp/📦️packages/🦀️rust/dist/build/semio-os-mcp          (debug — the dev loop)
 
-bun repo run @semio-tech/framework-os-mcp-rs:build-release
+bun run dashboard run @semio-tech/framework-os-mcp-rs:build-release
 # → …/🌉️mcp/📦️packages/🦀️rust/dist/build-release/semio-os-mcp  (release — use this one)
 ```
 
@@ -103,8 +105,7 @@ both. Pick one; they are mutually exclusive.
 **`--folder <dir>` — a local folder as the workspace.** This is the mode that works today. The
 directory you name becomes the space the assistant reads and writes. Every client config this repo
 ships passes `--folder .🧬semio/🔗space/os-mcp`, a git-ignored folder the gateway creates on first
-start; the repo root itself is refused. The client configs are written by `bun ./📜️script.ts agents
-write` from the `os-mcp-stdio` tool in the root `📋️project.json`. Point it at your own work instead.
+start; the repo root itself is refused. The client configs are written by the dashboard command `workspace:agents-write` from the `os-mcp-stdio` tool in the root `📋️project.json`. Point it at your own work instead.
 
 **`--hub <url> --space <id>` — a space on a running hub.** The remote path: your assistant works in
 that shared space alongside the people already in it, instead of in a folder on your disk. It needs a
@@ -278,13 +279,12 @@ also why a plausible-looking typo costs you a whole tool family with no error: w
 `PERMISSION_DENIED` because `jobs.spawn` was never granted, while `tools/list` still shows all 28
 tools. Measured against the release binary, ticket 26/09/18 `📓️rb1-release-builds-and-production-posture.md`.
 
-Run `bun repo run @semio-tech/framework-os-mcp-rs:build-release` first so that path exists, and restart
+Run `bun run dashboard run @semio-tech/framework-os-mcp-rs:build-release` first so that path exists, and restart
 Claude Desktop after editing the file. If your `semio-os-mcp` lives elsewhere, use that path — the emoji
 directory names are literal and must be copied exactly.
 
-Other clients (Cursor, VS Code, Windsurf, Kiro, Codex) take the same two shapes; this repo's own
-`.cursor/mcp.json`, `.vscode/mcp.json`, `.windsurf/mcp.json`, `.kiro/settings/mcp.json` and
-`.codex/config.toml` are working examples of the `bun`-plus-`cwd` form.
+The repository writes headless Claude Code and Codex configurations from dashboard-owned declarations.
+`.mcp.json` and `.codex/config.toml` are working examples of the `bun`-plus-`cwd` form.
 
 ### Checking it works
 
@@ -488,7 +488,7 @@ A gateway launched with neither `--folder <dir>` nor `--hub <url> --space <id>` 
 `UnboundArtifactChannel`: every mutation-protocol call answers a typed, retryable `PLUGIN_UNAVAILABLE`
 naming both flags. The scripted `MockArtifactChannel` is `#[cfg(test)]` and reachable from no
 production path, so a call can never run against a stand-in that looks like a real commit. Every client
-config this repo ships (`.mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json`, `.codex/config.toml`) binds
+config this repo ships (`.mcp.json`, `.codex/config.toml`) binds
 `--folder .🧬semio/🔗space/os-mcp`.
 
 ### Attaching a live shell from stdio
@@ -538,7 +538,7 @@ schema of its own.
 
 `🧬️schema/🔣️.json` (draft-07, `$id: https://json.schemas.assets.semio-tech.com/os/mcp/component.json`) and
 `🧬️schema/🟦️.ts` (types plus a dependency-free `parse<ExportId>` per export) are **generated** from
-that registry by `bun repo run @semio-tech/framework-os-mcp-rs:schema-mirror`, which runs the binary's
+that registry by `bun run dashboard run @semio-tech/framework-os-mcp-rs:schema-mirror`, which runs the binary's
 own `semio-os-mcp schemas` emitter; `schema-mirror-check` fails on drift, and the Rust law
 `the_json_mirror_publishes_exactly_the_registry_exports` asserts the two key sets agree.
 

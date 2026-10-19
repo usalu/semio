@@ -1,5 +1,5 @@
-//! 📐️ Puzzle 3d play app — the precompute geometry layer: the `semio_framework_3d::{rigid,
 //! collision}` adapter (the ONE interface boundary this module depends on), the plain
+//! 📐️ Puzzle 3d play app — the precompute geometry layer: the `semio_framework_3d::{rigid,
 //! `[f64; 3]`/`[f64; 4]` vector and quaternion math the placement solver builds on, the brush
 //! placement pose solver itself, and the collision-body/AABB/overlap primitives the brush and
 //! fill lanes gate placements with. Rehomed from the former `⚙️engine/📐️geometry` (ticket
@@ -18,8 +18,13 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
-use semio_s_artifact_puzzle_3d_model::{Quat, Vec3, WorldVolumeProps};
-use semio_framework_3d::{collision, rigid};
+use semio_s_artifact_puzzle_3d_model::Quat;
+
+use semio_s_artifact_puzzle_3d_model::Vec3;
+
+use semio_s_artifact_puzzle_3d_model::WorldVolumeProps;
+use semio_framework_3d::collision;
+use semio_framework_3d::rigid;
 use semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES;
 use std::borrow::Borrow;
 use std::mem::MaybeUninit;
@@ -103,3 +108,6 @@ pub fn precompute_work_clock() -> Option<u64> {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path = "♻️retirement/🦀️.rs"]
+mod original_fixed_retirement;

@@ -160,6 +160,15 @@ pub enum WidthMode {
     #[default]
     Cluster,
     Scalar,
+    WindowsConsole,
+}
+
+/// 🪟️ Measures the visible scalar cells of the native Windows console after presentation selectors and joiners are removed.
+pub(crate) fn scalar_cells_in(c: char, mode: WidthMode) -> u8 {
+    let width = char_cells(c);
+    if mode != WidthMode::WindowsConsole { return width; }
+    if width == 0 { return u8::from(scalar_mark(c)); }
+    if c as u32 > 0xffff { 2 } else { width }
 }
 
 fn emoji_modifier(c: char) -> bool {
@@ -246,6 +255,7 @@ pub fn cluster_cells_in(cluster: &str, mode: WidthMode) -> u8 {
     match mode {
         WidthMode::Cluster => cluster_cells_unicode(cluster),
         WidthMode::Scalar => scalar_sum(cluster),
+        WidthMode::WindowsConsole => cluster.chars().fold(0u8, |total, c| total.saturating_add(scalar_cells_in(c, mode))),
     }
 }
 
@@ -261,6 +271,7 @@ pub fn display_width_in(s: &str, mode: WidthMode) -> u16 {
     }
     match mode {
         WidthMode::Scalar => s.chars().fold(0u16, |total, c| total.saturating_add(u16::from(char_cells(c)))),
+        WidthMode::WindowsConsole => s.chars().fold(0u16, |total, c| total.saturating_add(u16::from(scalar_cells_in(c, mode)))),
         WidthMode::Cluster => clusters(s).fold(0u16, |total, cluster| total.saturating_add(u16::from(cluster_cells_unicode(cluster)))),
     }
 }
@@ -283,7 +294,7 @@ impl<'a> Iterator for Units<'a> {
     fn next(&mut self) -> Option<&'a str> {
         let len = match self.mode {
             WidthMode::Cluster => cluster_len(self.rest),
-            WidthMode::Scalar => self.rest.chars().next().map_or(0, char::len_utf8),
+            WidthMode::Scalar | WidthMode::WindowsConsole => self.rest.chars().next().map_or(0, char::len_utf8),
         };
         if len == 0 {
             return None;

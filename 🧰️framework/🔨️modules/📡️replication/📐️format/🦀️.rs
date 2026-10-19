@@ -129,7 +129,36 @@ fn fixed_varint(mut value: u64, output: &mut [u8; 10]) -> &[u8] {
     }
 }
 
-async fn write_frame_retained<S: PackSink>(sink: &mut S, kind: u8, flags: u8, raw_len: Option<u64>, stored_payload: &[u8]) -> Result<(u64, [u8; 32]), ProtocolError> where ProtocolError: From<S::Error> {
+/// 🧾️ Preserves a producer's exact sink refusal beside protocol framing failures.
+#[derive(Debug, Clone, PartialEq)]
+pub enum SprWriteError<E> {
+    Protocol(ProtocolError),
+    Sink(E),
+}
+
+impl<E> From<ProtocolError> for SprWriteError<E> {
+    fn from(error: ProtocolError) -> Self { Self::Protocol(error) }
+}
+
+impl<E> From<SprWriteError<E>> for ProtocolError where ProtocolError: From<E> {
+    fn from(error: SprWriteError<E>) -> Self {
+        match error { SprWriteError::Protocol(error) => error, SprWriteError::Sink(error) => error.into() }
+    }
+}
+
+impl<E: std::fmt::Display> std::fmt::Display for SprWriteError<E> {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self { Self::Protocol(error) => error.fmt(formatter), Self::Sink(error) => error.fmt(formatter) }
+    }
+}
+
+impl<E: std::error::Error + 'static> std::error::Error for SprWriteError<E> {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(match self { Self::Protocol(error) => error, Self::Sink(error) => error })
+    }
+}
+
+async fn write_frame_retained<S: PackSink>(sink: &mut S, kind: u8, flags: u8, raw_len: Option<u64>, stored_payload: &[u8]) -> Result<(u64, [u8; 32]), SprWriteError<S::Error>> {
     let mut raw_len_bytes = [0u8; 10];
     let raw_len_count = match raw_len {
         Some(value) => fixed_varint(value, &mut raw_len_bytes).len(),
@@ -151,7 +180,7 @@ async fn write_frame_retained<S: PackSink>(sink: &mut S, kind: u8, flags: u8, ra
     let mut digest = semio_framework_hash::Hasher::new();
     for fragment in [body_len_bytes, fixed.as_slice(), raw_len_bytes, stored_payload, crc.as_slice(), back_len.as_slice()] {
         digest.update(fragment);
-        sink.write_all(fragment).await?;
+        sink.write_all(fragment).await.map_err(SprWriteError::Sink)?;
     }
     Ok((frame_len as u64, *digest.finalize().as_bytes()))
 }
@@ -418,27 +447,27 @@ pub struct SprIdentityRecord<'a, S: PackSink> {
     digest: semio_framework_hash::Hasher,
 }
 
-impl<'a, S: PackSink> SprIdentityRecord<'a, S> where ProtocolError: From<S::Error> {
-    pub async fn write_fragment(&mut self, fragment: &[u8]) -> Result<(), ProtocolError> {
+impl<'a, S: PackSink> SprIdentityRecord<'a, S> {
+    pub async fn write_fragment(&mut self, fragment: &[u8]) -> Result<(), SprWriteError<S::Error>> {
         self.written = self.written.checked_add(fragment.len()).ok_or(ProtocolError::LimitExceeded("record payload length overflow"))?;
         if self.written > self.payload_len {
-            return Err(ProtocolError::LimitExceeded("record payload exceeded retained frame reservation"));
+            return Err(ProtocolError::LimitExceeded("record payload exceeded retained frame reservation").into());
         }
         self.crc.update_page(fragment);
         self.digest.update(fragment);
-        self.owner.sink.write_all(fragment).await?;
+        self.owner.sink.write_all(fragment).await.map_err(SprWriteError::Sink)?;
         Ok(())
     }
 
-    pub async fn finish(mut self) -> Result<u64, ProtocolError> {
+    pub async fn finish(mut self) -> Result<u64, SprWriteError<S::Error>> {
         if self.written != self.payload_len {
-            return Err(ProtocolError::LimitExceeded("record payload ended before retained frame reservation"));
+            return Err(ProtocolError::LimitExceeded("record payload ended before retained frame reservation").into());
         }
         let crc = self.crc.finish().to_le_bytes();
         let back_len = u32::try_from(self.frame_len).map_err(|_| ProtocolError::LimitExceeded("frame exceeds u32 back_len (4 GiB cap)"))?.to_le_bytes();
         for fragment in [crc.as_slice(), back_len.as_slice()] {
             self.digest.update(fragment);
-            self.owner.sink.write_all(fragment).await?;
+            self.owner.sink.write_all(fragment).await.map_err(SprWriteError::Sink)?;
         }
         self.owner.pending_chain_hasher.update(self.digest.finalize().as_bytes());
         self.owner.pending_records_len = self.owner.pending_records_len.checked_add(self.frame_len).ok_or(ProtocolError::LimitExceeded("records length overflow"))?;
@@ -447,15 +476,15 @@ impl<'a, S: PackSink> SprIdentityRecord<'a, S> where ProtocolError: From<S::Erro
     }
 }
 
-impl<S: PackSink> SprWriter<S> where ProtocolError: From<S::Error> {
+impl<S: PackSink> SprWriter<S> {
     /// 🚀️ Writes the 32-byte header and seeds `chain_0 = blake3(header bytes)`.
-    pub async fn begin(mut sink: S, options: &WriteOptions) -> Result<Self, ProtocolError> {
+    pub async fn begin(mut sink: S, options: &WriteOptions) -> Result<Self, SprWriteError<S::Error>> {
         let unknown = options.required_flags & !REQUIRED_KNOWN_MASK;
         if unknown != 0 {
-            return Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(PackRefusal::UnknownRequiredFlags(unknown))));
+            return Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(PackRefusal::UnknownRequiredFlags(unknown))).into());
         }
         let header = build_header_bytes(options.required_flags, options.optional_flags);
-        sink.write_all(&header).await?;
+        sink.write_all(&header).await.map_err(SprWriteError::Sink)?;
         let chain_0 = *semio_framework_hash::hash(&header).as_bytes();
         let mut pending_chain_hasher = semio_framework_hash::Hasher::new();
         pending_chain_hasher.update(&chain_0);
@@ -465,10 +494,10 @@ impl<S: PackSink> SprWriter<S> where ProtocolError: From<S::Error> {
     /// ▶️ Resumes without rewriting a header or committed byte. The sink must be positioned at the
     /// end of the fully verified prefix, and the caller must hold exclusive storage authority over
     /// it; the consumed span is protocol metadata, not permission to append to arbitrary storage.
-    pub async fn resume_verified(sink: S, span: retained::VerifiedSprSpan) -> Result<Self, ProtocolError> {
+    pub async fn resume_verified(sink: S, span: retained::VerifiedSprSpan) -> Result<Self, SprWriteError<S::Error>> {
         let position = sink.position().await;
         if position != span.end() {
-            return Err(malformed("verified append position", position, "sink must end at the verified committed prefix").await);
+            return Err(malformed("verified append position", position, "sink must end at the verified committed prefix").await.into());
         }
         let next_commit_seq = span.sequence().checked_add(1).ok_or(ProtocolError::LimitExceeded("commit sequence exhausted"))?;
         let running_chain_hash = *span.chain();
@@ -497,7 +526,7 @@ impl<S: PackSink> SprWriter<S> where ProtocolError: From<S::Error> {
         self.running_chain_hash
     }
 
-    pub async fn begin_identity_record(&mut self, kind: u8, critical: bool, payload_len: usize) -> Result<SprIdentityRecord<'_, S>, ProtocolError> {
+    pub async fn begin_identity_record(&mut self, kind: u8, critical: bool, payload_len: usize) -> Result<SprIdentityRecord<'_, S>, SprWriteError<S::Error>> {
         let start_offset = self.sink.position().await;
         let flags = frame_flags(false, critical, 0);
         let body_len = 2u64.checked_add(payload_len as u64).ok_or(ProtocolError::LimitExceeded("record body length overflow"))?;
@@ -510,7 +539,7 @@ impl<S: PackSink> SprWriter<S> where ProtocolError: From<S::Error> {
         let mut digest = semio_framework_hash::Hasher::new();
         for fragment in [body_len_bytes, fixed.as_slice()] {
             digest.update(fragment);
-            self.sink.write_all(fragment).await?;
+            self.sink.write_all(fragment).await.map_err(SprWriteError::Sink)?;
         }
         Ok(SprIdentityRecord { owner: self, start_offset, payload_len, written: 0, frame_len, crc, digest })
     }
@@ -519,7 +548,7 @@ impl<S: PackSink> SprWriter<S> where ProtocolError: From<S::Error> {
     /// offset. Folds the frame's `blake3` digest into the pending commit-chain accumulator — the
     /// digest covers the WHOLE on-disk frame (length-prefix through `back_len`), matching the
     /// contract's `digest_i = blake3(full frame bytes of record i)`.
-    pub async fn write_record(&mut self, kind: u8, critical: bool, payload: &[u8], codec: semio_framework_replication_codec::CodecId) -> Result<u64, ProtocolError> {
+    pub async fn write_record(&mut self, kind: u8, critical: bool, payload: &[u8], codec: semio_framework_replication_codec::CodecId) -> Result<u64, SprWriteError<S::Error>> {
         if codec.0 == 0 {
             let mut record = self.begin_identity_record(kind, critical, payload.len()).await?;
             record.write_fragment(payload).await?;
@@ -538,7 +567,7 @@ impl<S: PackSink> SprWriter<S> where ProtocolError: From<S::Error> {
     /// ⛓️ Writes a `REC_COMMIT` frame covering everything since the last commit (or the
     /// header, for the first).await: `chain_n = blake3(chain_{n-1} || digest_1 || .. || digest_k)`.
     /// Returns the commit frame's start offset.
-    pub async fn commit(&mut self) -> Result<u64, ProtocolError> {
+    pub async fn commit(&mut self) -> Result<u64, SprWriteError<S::Error>> {
         let next_commit_seq = self.next_commit_seq.checked_add(1).ok_or(ProtocolError::LimitExceeded("commit sequence exhausted"))?;
         let offset = self.sink.position().await;
         let chain_hash = *self.pending_chain_hasher.finalize().as_bytes();

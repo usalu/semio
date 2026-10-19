@@ -326,7 +326,7 @@ describe("📡️ surface survey", () => {
     const stop = watchSurvey(host, document, stale, { ignore: layer });
     expect(live).toEqual({ resize: 1, mutation: 1 });
     expect(observed).toEqual([document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: [...SURVEY_ATTRIBUTES] }]);
-    expect(SURVEY_ATTRIBUTES).toEqual(["class", "hidden", "inert", "open"]);
+    expect(SURVEY_ATTRIBUTES).toEqual(["class", "hidden", "inert", "open", "data-concealed"]);
     expect(page.open()).toEqual(["focusin", "focusout", "scroll", "transitionend"]);
     expect(view.open()).toEqual(["resize"]);
     for (const options of [...page.options(), ...view.options()]) expect(options).toEqual({ capture: true, passive: true });
@@ -367,7 +367,7 @@ describe("📡️ surface survey", () => {
     await settle();
     expect(stale.mock.calls).toEqual([[false]]);
     stale.mockClear();
-    for (const [name, value] of [["class", "open"], ["hidden", ""], ["inert", ""], ["open", ""]] as const) {
+    for (const [name, value] of [["class", "open"], ["hidden", ""], ["inert", ""], ["open", ""], ["data-concealed", ""]] as const) {
       pane.setAttribute(name, value);
       await settle();
       expect(stale.mock.calls, name).toEqual([[false]]);

@@ -1,5 +1,5 @@
-//! ↩️ Inverse for `DeleteReference` — reconstructs a `create-reference` of the captured
 //! BASE entry. Missing target ⇒ `Vec::new()`.
+//! ↩️ Inverse for `DeleteReference` — reconstructs a `create-reference` of the captured
 use super::mutation::DeleteReference;
 use crate::create_reference::mutation::CreateReference;
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;

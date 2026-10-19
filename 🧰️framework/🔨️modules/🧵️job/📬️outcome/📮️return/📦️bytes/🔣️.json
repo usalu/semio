@@ -1,0 +1,1 @@
+{"version":1,"capacityBytes":16385,"sourceLoans":2,"consumerReleaseBytes":0,"supplierReleaseBytes":16385,"birth":["sourceLoan","exactBacking"],"close":["backing","backingLoan","backingHeader","reservationLoan","vacant"],"denials":["items","copy","release","depth","foreignSource"],"completeMayPrecedeVacancy":false}

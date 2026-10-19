@@ -252,3 +252,61 @@ export const STATIC_DIRECTORY_ASSET_PROVIDER_V1: AssetDeliveryProviderV1 = Objec
   middleware: (context, declaration) => createStaticDirMiddleware(context.root, admitBuildAssetSpecV1(declaration, "StaticDirectoryAssetSpecV1")),
   plugins: (context, declaration) => staticDirVitePlugin(context.root, admitBuildAssetSpecV1(declaration, "StaticDirectoryAssetSpecV1")),
 });
+
+/** @emoji 🧦️ The browser socket of one proxied upgrade. */
+type ProxiedBrowserSocket = {
+  destroyed: boolean;
+  on(event: "close" | "end" | "error", listener: () => void): void;
+  unpipe?(destination?: unknown): void;
+};
+
+/** @emoji 🧦️ The socket the proxy opened to the upstream. */
+type ProxiedUpstreamSocket = {
+  destroyed: boolean;
+  destroy(): void;
+  unpipe?(destination?: unknown): void;
+};
+
+/** @emoji 🔌️ The part of a dev proxy that sees a websocket upgrade start and the upstream it opened. */
+export type ProxiedUpgradeProxy = {
+  on(event: "proxyReqWs", listener: (proxyReq: { destroy(): void }, request: unknown, socket: ProxiedBrowserSocket) => void): void;
+  on(event: "open", listener: (proxySocket: ProxiedUpstreamSocket) => void): void;
+  on(event: "error", listener: (error: unknown, request: unknown, connection: unknown) => void): void;
+};
+
+/** 🕊️ Destroys the upstream of a proxied websocket when the browser socket ends or closes. The pipe keeps the browser
+ * socket's writable open, so a destroyed page emits `end` and not `close` while the upstream still writes, and a presence
+ * room would keep that learner until idle. Upgrades are paired in the order they were asked for. One that fails before
+ * it opens is taken off the queue, and its request is destroyed if the browser is already gone.
+ * @see https://github.com/http-party/node-http-proxy — `proxySocket.pipe(socket).pipe(proxySocket)` */
+export function closeProxiedSocketWithBrowser(proxy: ProxiedUpgradeProxy): void {
+  const pending: ProxiedBrowserSocket[] = [];
+  const upgraded = new WeakSet<ProxiedBrowserSocket>();
+  proxy.on("proxyReqWs", (proxyReq, _request, socket) => {
+    pending.push(socket);
+    const abandon = (): void => {
+      if (!upgraded.has(socket)) proxyReq.destroy();
+    };
+    socket.on("end", abandon);
+    socket.on("close", abandon);
+  });
+  proxy.on("open", (proxySocket) => {
+    const socket = pending.shift();
+    if (socket === undefined) return;
+    upgraded.add(socket);
+    const drop = (): void => {
+      socket.unpipe?.(proxySocket);
+      proxySocket.unpipe?.(socket);
+      if (!proxySocket.destroyed) proxySocket.destroy();
+    };
+    if (socket.destroyed) drop();
+    else {
+      socket.on("end", drop);
+      socket.on("close", drop);
+    }
+  });
+  proxy.on("error", (_error, _request, connection) => {
+    const index = pending.indexOf(connection as ProxiedBrowserSocket);
+    if (index >= 0) pending.splice(index, 1);
+  });
+}

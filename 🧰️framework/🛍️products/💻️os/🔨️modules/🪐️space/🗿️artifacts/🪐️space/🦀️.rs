@@ -1,5 +1,6 @@
 //! 🪐️ Composable persisted space manifest artifact.
 
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 #[cfg(test)]
 #[global_allocator]
 static TEST_ALLOCATION_OBSERVER:semio_framework_trace_memory_testing::RequestedAllocator=semio_framework_trace_memory_testing::RequestedAllocator;
@@ -379,32 +380,12 @@ impl protocol::list_delta::RowPatch<InstalledExtension> for SpaceExtensionPatch 
 }
 
 impl protocol::MutationDiff<SpaceSnapshot> for SpaceDiff {
-    fn apply(&self, base: &SpaceSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SpaceSnapshot> {
-        let mut next = base.clone();
-        if let Some(name) = &self.name {
-            next.name = name.clone();
-        }
-        if let Some(kind) = self.kind {
-            next.kind = kind;
-        }
-        if let Some(visibility) = self.visibility {
-            next.visibility = visibility;
-        }
-        if let Some(delta) = &self.users {
-            next.users = delta.commit_onto(&next.users, capability).map_err(|error| error.under(["users"]))?;
-        }
-        if let Some(delta) = &self.collections {
-            next.collections = delta.commit_onto(&next.collections, capability).map_err(|error| error.under(["collections"]))?;
-        }
-        if let Some(delta) = &self.programs {
-            next.programs = delta.commit_onto(&next.programs, capability).map_err(|error| error.under(["programs"]))?;
-        }
-        if let Some(delta) = &self.extensions {
-            next.extensions = delta.commit_onto(&next.extensions, capability).map_err(|error| error.under(["extensions"]))?;
-        }
-        Ok(next)
-    }
 
+
+
+}
+
+impl protocol::ColdMutationDiff<SpaceSnapshot> for SpaceDiff {
     fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {
@@ -432,9 +413,62 @@ impl protocol::MutationDiff<SpaceSnapshot> for SpaceDiff {
         compose!(programs);
         compose!(extensions);
     }
+
+    fn apply(&self, next: &mut SpaceSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let prepared_users = if let Some(delta) = &self.users {
+            Some(protocol::PreparedField::new(delta.commit_onto(&next.users, capability).map_err(|error| error.under(["users"]))?, drop, capability))
+        } else {
+            None
+        };
+        let prepared_collections = if let Some(delta) = &self.collections {
+            Some(protocol::PreparedField::new(delta.commit_onto(&next.collections, capability).map_err(|error| error.under(["collections"]))?, drop, capability))
+        } else {
+            None
+        };
+        let prepared_programs = if let Some(delta) = &self.programs {
+            Some(protocol::PreparedField::new(delta.commit_onto(&next.programs, capability).map_err(|error| error.under(["programs"]))?, drop, capability))
+        } else {
+            None
+        };
+        let prepared_extensions = if let Some(delta) = &self.extensions {
+            Some(protocol::PreparedField::new(delta.commit_onto(&next.extensions, capability).map_err(|error| error.under(["extensions"]))?, drop, capability))
+        } else {
+            None
+        };
+        if let Some(name) = &self.name {
+            next.name = name.clone();
+        }
+        if let Some(kind) = self.kind {
+            next.kind = kind;
+        }
+        if let Some(visibility) = self.visibility {
+            next.visibility = visibility;
+        }
+        if let Some(prepared) = prepared_users {
+            prepared.install(&mut next.users);
+        }
+        if let Some(prepared) = prepared_collections {
+            prepared.install(&mut next.collections);
+        }
+        if let Some(prepared) = prepared_programs {
+            prepared.install(&mut next.programs);
+        }
+        if let Some(prepared) = prepared_extensions {
+            prepared.install(&mut next.extensions);
+        }
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<SpaceSnapshot> for SpaceDiff {
+
+
+    fn is_empty(&self) -> bool {
+        self.name.is_none() && self.kind.is_none() && self.visibility.is_none() && self.users.as_ref().is_none_or(SpaceUsersDelta::is_empty) && self.collections.as_ref().is_none_or(SpaceCollectionsDelta::is_empty) && self.programs.as_ref().is_none_or(SpaceProgramsDelta::is_empty) && self.extensions.as_ref().is_none_or(SpaceExtensionsDelta::is_empty)
+    }
+}
+
+impl protocol::ColdDiffAlgebra<SpaceSnapshot> for SpaceDiff {
     fn inverse(&self, base: &SpaceSnapshot) -> Self {
         Self {
             name: self.name.as_ref().map(|_| base.name.clone()),
@@ -445,10 +479,6 @@ impl protocol::DiffAlgebra<SpaceSnapshot> for SpaceDiff {
             programs: self.programs.as_ref().map(|delta| delta.inverse(&base.programs)),
             extensions: self.extensions.as_ref().map(|delta| delta.inverse(&base.extensions)),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.name.is_none() && self.kind.is_none() && self.visibility.is_none() && self.users.as_ref().is_none_or(SpaceUsersDelta::is_empty) && self.collections.as_ref().is_none_or(SpaceCollectionsDelta::is_empty) && self.programs.as_ref().is_none_or(SpaceProgramsDelta::is_empty) && self.extensions.as_ref().is_none_or(SpaceExtensionsDelta::is_empty)
     }
 }
 
@@ -690,6 +720,13 @@ impl protocol::Mutation<SpaceSnapshot> for SpaceMutation {
         &Self::DESCRIPTORS[index]
     }
 
+
+
+
+}
+
+impl protocol::ColdMutation<SpaceSnapshot> for SpaceMutation {
+    type ReferenceDiff = SpaceDiff;
     /// 🧮️ Mechanical wrap only (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
     /// CONFLICTS W0): no `Error`/`Warning`/`Fatal` messages added here yet — that is the W3
     /// fan-out's job per verb family.
@@ -756,7 +793,6 @@ impl protocol::Mutation<SpaceSnapshot> for SpaceMutation {
             SpaceMutation::SetExtensionEnabled { extension_id, .. } => missing("Extension", extension_id),
         }
     }
-
     fn inverse(&self, base: &SpaceSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
     Ok((|| {
         match self {

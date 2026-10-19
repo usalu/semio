@@ -14,6 +14,7 @@ import { readdir, stat, open } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { dirname, basename, join, relative, resolve, isAbsolute } from "node:path";
 import { spawn } from "node:child_process";
+import { terminateOwnedChildTree } from "../../../../../🔨️modules/🏃️process/🪓️termination/🟦️.ts";
 
 const cache=(root:string)=>join(root,".🧬semio/🦑️repo/⚡️cache");
 const manifest=(root:string,mode:BuildMode)=>join(cache(root),"🎛️dashboard",readBuildMode(mode),"installed.json");

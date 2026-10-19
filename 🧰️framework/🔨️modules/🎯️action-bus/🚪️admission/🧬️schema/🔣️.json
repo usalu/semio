@@ -20,7 +20,10 @@
     "coldDefault",
     "terminalDropBytes",
     "copies",
-    "cases"
+    "cases",
+    "candidateSource",
+    "receiptSource",
+    "admissionVectors"
   ],
   "properties": {
     "schema": {
@@ -119,6 +122,52 @@
           "generation": {
             "type": "integer",
             "minimum": 0
+          }
+        }
+      }
+    },
+    "candidateSource": {
+      "const": "callerOutputBeforeReceipt"
+    },
+    "receiptSource": {
+      "const": "measuredOriginalPhysicalEffects"
+    },
+    "admissionVectors": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "grant",
+          "demand",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "grant": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 5,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "demand": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 5,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "expected": {
+            "type": "boolean"
           }
         }
       }

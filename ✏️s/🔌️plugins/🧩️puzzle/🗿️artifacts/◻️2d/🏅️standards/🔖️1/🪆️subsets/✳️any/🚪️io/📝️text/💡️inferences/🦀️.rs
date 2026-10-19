@@ -1,5 +1,5 @@
-//! 📖️ Puzzle2d inference — the normative handcrafted text grammar for this facet. Inference
 //! values are never authored via DSL text (they are always computed from a snapshot, never a
+//! 📖️ Puzzle2d inference — the normative handcrafted text grammar for this facet. Inference
 //! source of truth), so — unlike `📸️snapshot/📝️text`'s live `parse_dsl`/`print_dsl` pair — this
 //! leaf declares the wire grammar only, matching the generic header/payload scaffold shape every
 //! other representation leaf in this tree already uses for its own facet.

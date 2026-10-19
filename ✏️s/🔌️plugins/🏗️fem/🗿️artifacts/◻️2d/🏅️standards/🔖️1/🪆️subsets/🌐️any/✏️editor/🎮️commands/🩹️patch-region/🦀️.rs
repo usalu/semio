@@ -1,9 +1,16 @@
-//! 🩹️ Fem2d play app command — `patch-region`: one-field edit of a meshed region (`name`, `thickness`, `meshSize`, `materialId`) → `ReplaceRegion`.
+//! 🩹️ Fem2d play app command — `patch-region`: one-field edit of a meshed region (`name`, `thickness`, `meshSize`, `materialId`) → `ChangeRegion`.
 
-use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::replace_region;
+use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::change_region::ChangeRegion;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dRegionPatch;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 
 type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
@@ -21,18 +28,18 @@ pub struct PatchRegion {
 /// so the inspector shows their vertex counts read-only and every editable field lands here.
 pub fn handle(payload: &PatchRegion, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
     let region = doc.snapshot.regions.iter().find(|region| region.id == payload.id).ok_or_else(|| Fault::from("fem2d.patch.region-missing"))?;
-    let mut new_region = region.clone();
+    let mut patch = Fem2dRegionPatch::default();
     match payload.field.as_str() {
-        "name" => new_region.name = payload.value.clone(),
-        "materialId" => new_region.material_id = payload.value.clone(),
-        "thickness" => new_region.thickness = payload.value.trim().parse().map_err(|_| Fault::from("fem2d.patch.region-value"))?,
-        "meshSize" => new_region.mesh_size = payload.value.trim().parse().map_err(|_| Fault::from("fem2d.patch.region-value"))?,
+        "name" => patch.name = Some(payload.value.clone()),
+        "materialId" => patch.material_id = Some(payload.value.clone()),
+        "thickness" => patch.thickness = Some(payload.value.trim().parse().map_err(|_| Fault::from("fem2d.patch.region-value"))?),
+        "meshSize" => patch.mesh_size = Some(payload.value.trim().parse().map_err(|_| Fault::from("fem2d.patch.region-value"))?),
         _ => return Err(Fault::from("fem2d.patch.region-field")),
     }
-    if &new_region == region {
+    if patch.candidate(region) == *region {
         return Ok(Emit::default());
     }
-    Ok(Emit::mutations(vec![Fem2dMutation::ReplaceRegion(replace_region::ReplaceRegion { id: payload.id.clone(), new_region })]))
+    Ok(Emit::mutations(vec![Fem2dMutation::ChangeRegion(ChangeRegion { id: payload.id.clone(), patch })]))
 }
 //#endregion 🔖️PatchRegion
 

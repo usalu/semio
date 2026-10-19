@@ -1,6 +1,7 @@
 import { appSurfaceResultModeSchema as resultModeSchema } from "@semio-tech/fem-js/engine/app-surface/schema/result-mode";
 import { appSurfaceResultsAnimationSchema as resultsAnimationSchema } from "@semio-tech/fem-js/engine/app-surface/schema/results-animation";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import Ajv from "ajv/dist/2020";
 import draft7 from "ajv/dist/refs/json-schema-draft-07.json";
 import { viewport3dSchema as viewportSchema } from "@semio-tech/framework/ui/viewport/3d/schema";
@@ -12,6 +13,14 @@ import { parseFem3dResultsWindowConfig } from "../../🟦️.ts";
 export function testFem3dResultsWindowConfigContract(): void {
   const validate = new Ajv({ strict: true, allErrors: true }).addMetaSchema(draft7).addSchema(viewportSchema).addSchema(resultModeSchema).addSchema(resultsAnimationSchema).compile(schema);
   const base = fixture.valid[0];
+  const sources = JSON.parse(readFileSync(new URL("../../../../../../../../🕹️interaction/🧫️fixtures/📊️result-source/🔣️.json", import.meta.url), "utf8")) as { cases: Array<{ identity: string; mode: string; admitted: boolean }> };
+  for (const row of sources.cases) {
+    const candidate = { ...structuredClone(base), resultSourceId: row.identity, resultMode: row.mode };
+    if (row.admitted) assert.equal(parseFem3dResultsWindowConfig(candidate).resultSourceId, row.identity);
+    else assert.throws(() => parseFem3dResultsWindowConfig(candidate), row.identity);
+  }
+  console.log("[DEBUG] FEM3d result sources preserve case/combination namespaces, reject raw/malformed IDs and require load cases for buckling");
+
   for (const candidate of fixture.valid) {
     assert(validate(candidate), JSON.stringify(validate.errors));
     assert.deepEqual(parseFem3dResultsWindowConfig(candidate), candidate);
@@ -36,3 +45,4 @@ export function testFem3dResultsWindowConfigContract(): void {
   assert(validate(patched), JSON.stringify(validate.errors));
   assert.deepEqual(parseFem3dResultsWindowConfig(patched), patched);
 }
+      

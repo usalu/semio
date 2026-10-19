@@ -1266,6 +1266,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
+ "semio-framework-value-snapshot-read",
 ]
 
 [[package]]
@@ -8003,6 +8004,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-job",
  "semio-framework-value",
+ "semio-framework-trace",
 ]
 
 [[package]]

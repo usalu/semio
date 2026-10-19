@@ -298,8 +298,8 @@ fn row_actions_of(node: &BuiltNode) -> Vec<(String, bool)> {
 
 fn flagged_scene(hidden: bool, locked: bool) -> Puzzle2dScene {
     let mut scene = scaled_scene(1, 0);
-    scene.board_snapshot["nodes"][0]["visible"] = semio_framework_pack_json::json!(!hidden);
-    scene.board_snapshot["nodes"][0]["locked"] = semio_framework_pack_json::json!(locked);
+    set_at(&mut scene.board_snapshot, "nodes/0/visible", semio_framework_pack_json::json!(!hidden));
+    set_at(&mut scene.board_snapshot, "nodes/0/locked", semio_framework_pack_json::json!(locked));
     scene
 }
 

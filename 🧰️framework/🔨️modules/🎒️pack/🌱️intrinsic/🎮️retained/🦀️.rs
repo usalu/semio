@@ -172,7 +172,7 @@ impl<'a,D:Driver> Materializer<'a,D>{
 }
 impl<D:Driver> Drop for Materializer<'_,D>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"retained intrinsic operation abandoned before terminal close");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owned)}}}}
 
-trait Driver:Sized{
+pub(crate) trait Driver:Sized{
  fn new(limits:PackLimits,length:usize,maximum:usize)->Result<Self,PackRefusal>;
  fn one(&mut self,input:&[u8],maximum:usize)->Result<Option<Token>,PackRefusal>;
  fn allocated_bytes(&self)->usize;
@@ -235,7 +235,7 @@ macro_rules! operation{($name:ident,$driver:ty)=>{
 operation!(RetainedIntrinsicBody,BodyDriver);
 
 #[path="📦️document/🦀️.rs"]
-mod document;
+pub(crate) mod document;
 use document::DocumentDriver;
 operation!(RetainedIntrinsicDocument,DocumentDriver);
 #[cfg(test)]

@@ -33,7 +33,7 @@
                     window_transient_authority: None,
                     publication_lanes: &[ArtifactToolPublicationLane::Artifact], contract: Some(semio_framework::ToolExecutionContract::bounded_first_step(1 << 20, 1 << 20, 1 << 20, 1 << 20, 7_999)),
                     session: None,
-                    session_rejected: None,
+                    session_rejected: None,producer_source:None,producer_request:None,producer_request_retirement:None,
                     reserved_producer: None, completion: None,
                     completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input: None,
                     output_chunks: None,
@@ -50,7 +50,7 @@
                     owned_child_result_pending: false,
                     captured_child_content: Some(std::sync::Arc::new(ChildContentView::EMPTY)),
                     captured_child_content_generation: 0,
-                    result_page: None,
+                    result_page: None, diagnostics:None,
                     result_page_presented: false,
                     result_sequence: 0,
                     publication_progress: 0,
@@ -95,34 +95,36 @@
                 }
                 mounted.cancellation_lease.as_ref().unwrap().cancel();
                 if boundary == "awaitingAck" {
-                    let receipt = mounted.result_page.as_ref().unwrap().clone();
+                    let receipt = {let original=mounted.result_page.as_ref().unwrap();(original.token,original.bytes().to_vec())};
                     assert!(!mounted.reject_cancelled_publication().unwrap());
-                    assert_eq!(mounted.result_page.as_ref().unwrap().bytes(), receipt.bytes());
+                    assert_eq!(mounted.result_page.as_ref().unwrap().bytes(), receipt.1.as_slice());
                     if delayed_ack {
-                        let presented = mounted.take_result_page().unwrap();
+                        let mut presented = mounted.take_fixture_result_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation).unwrap();
                         assert_eq!(presented.token.attempt, fixture["resultAck"]["attempt"].as_u64().unwrap() as u8);
                         assert_eq!(mounted.stage, MountedTypedCommandFullOperationStage::AwaitingAck);
                         for _ in 0..fixture["resultAck"]["preAckPolls"].as_u64().unwrap() {
-                            assert!(mounted.take_result_page().is_none());
+                            assert!(mounted.take_fixture_result_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation).is_none());
                         }
-                        assert!(mounted.acknowledge_result_page(presented.token).unwrap());
+                        assert!(mounted.acknowledge_result_page(crate::app_testing::artifact_app_laws::close_fixture_result_page(&mut presented,crate::app_testing::artifact_app_laws::fixture_mounted_policy().close)).unwrap());
+                mounted.close_fixture_original_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().close);
                     } else {
-                        assert!(mounted.acknowledge_result_page(receipt.token).unwrap());
+                        assert!(mounted.acknowledge_result_page(receipt.0).unwrap());
+                mounted.close_fixture_original_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().close);
                     }
                 }
                 app.typed_ctx().publish_mounted_typed_operation_unit(&mut mounted, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().maintenance).unwrap();
-                let final_page = if delayed_ack {
-                    let presented = mounted.take_result_page().unwrap();
+                let mut final_page = if delayed_ack {
+                    let mut presented = mounted.take_fixture_result_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation).unwrap();
                     let mut deliveries = 1;
                     for _ in 0..fixture["resultAck"]["preAckPolls"].as_u64().unwrap() {
-                        deliveries += usize::from(mounted.take_result_page().is_some());
+                        deliveries += usize::from(mounted.take_fixture_result_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation).is_some());
                     }
                     assert_eq!(deliveries, fixture["resultAck"]["deliveries"].as_u64().unwrap() as usize);
                     assert_eq!(presented.token.attempt, fixture["resultAck"]["attempt"].as_u64().unwrap() as u8);
                     assert_eq!(mounted.stage, MountedTypedCommandFullOperationStage::AwaitingAck);
                     presented
                 } else {
-                    mounted.result_page.as_ref().unwrap().clone()
+                    mounted.take_fixture_result_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation).unwrap()
                 };
                 assert_eq!(final_page.lane, TypedOperationResultLane::Fault);
                 let committed = case["committed"].as_bool().unwrap();

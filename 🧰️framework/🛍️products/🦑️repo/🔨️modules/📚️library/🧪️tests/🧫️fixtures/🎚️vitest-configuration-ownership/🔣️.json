@@ -405,8 +405,6 @@
     "libraryDeclaration": "export async function runVitest(bundleRoot: string, segments: string[], config: string): Promise<void>",
     "libraryDeclarationFile": "🧪️testing/🧪️vitest/🟦️.ts",
     "relativeOwnerSuffix": "🧪️tests/🎚️config/🟦️.ts",
-    "editorSetting": "vitest.configSearchPatternInclude",
-    "editorPattern": "**/🧪️tests/🎚️config/🟦️.ts",
     "ownerPattern": "(?:^|/)🎚️[^/]+(?:/[^/]+)*/🟦️\\.ts$"
   },
   "directoryContexts": [

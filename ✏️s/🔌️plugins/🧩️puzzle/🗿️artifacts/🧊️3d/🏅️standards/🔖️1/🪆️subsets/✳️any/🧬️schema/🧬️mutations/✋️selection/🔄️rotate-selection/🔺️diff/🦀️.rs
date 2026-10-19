@@ -1,8 +1,10 @@
-//! 🔺️ Sparse diff builder for `RotateSelection` — every unlocked addressed object and target volume turns
 //! about its own origin: its BASE orientation (identity when absent) is pre-multiplied by the payload's
+//! 🔺️ Sparse diff builder for `RotateSelection` — every unlocked addressed object and target volume turns
 //! axis-angle quaternion, so the leaf replays on any base. The attraction graph is re-solved: attracted
 //! objects are re-placed from their turned parents, other touched attractions re-derive.
-use semio_s_artifact_puzzle_3d_diff::{Puzzle3dDiff, Puzzle3dTargetVolumePatch, Puzzle3dTargetVolumeModification};
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dTargetVolumePatch;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dTargetVolumeModification;
 use {crate::puzzle3d_selection, crate::puzzle3d_selection_follow, crate::puzzle3d_selection_outcome, semio_s_artifact_puzzle_3d_model::quat_from_axis_angle, semio_s_artifact_puzzle_3d_model::quat_mul, semio_s_artifact_puzzle_3d_model::Puzzle3dPose, crate::Puzzle3dSelectionFollow, semio_s_artifact_puzzle_3d_model::PUZZLE3D_IDENTITY_QUATERNION};
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 

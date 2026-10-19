@@ -114,13 +114,7 @@ where
     }
 
     /// 🕰️ Starts a preview cursor without scanning, copying or hashing the live history.
-    pub fn begin_derived_history_preview(&self, store_log: &StoreLog<P, Mutation>, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>, target: MutationId, drafts: protocol::HistoryInputDrafts) -> Result<ArtifactDerivedHistoryPreview<P, Mutation>, VcsError> {
-        store_wire.ensure_durable_group_idle()?;
-        Ok(ArtifactDerivedHistoryPreview {
-            plan: Some(HistoryReadPlan::new(Some(target), drafts, store_log.applied_edit_ids.len(), false)), plan_retirement:None, drafts: protocol::HistoryInputDrafts::new(), target: None, cursor: 0, operation: 0, state: None,
-            progress: ReplayProgress::default(), registry: store_owners.snapshot_read_leases.clone(), generation: self.generation(store_wire), revision: self.content_revision(store_wire), marker: PhantomData, finished: false,
-        })
-    }
+    
 
     /// 🏁️ Seals a completed prefix against the same store frontier that admitted its cursor.
     pub fn finish_derived_history_preview(&self, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>, owner: &mut Option<ArtifactDerivedHistoryPreview<P, Mutation>>) -> Result<ArtifactDerivedSnapshot<P>, VcsError> {
@@ -130,10 +124,7 @@ where
     }
 
     /// ⏪️ Starts sealed replay planning; every history identity and effective-input copy happens in a later slice.
-    pub fn begin_derived_report_replay(&self, store_log: &StoreLog<P, Mutation>, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>, drafts: protocol::HistoryInputDrafts, from: Option<MutationId>) -> Result<ArtifactDerivedReplay<P, Mutation>, VcsError> {
-        store_wire.ensure_durable_group_idle()?;
-        Ok(ArtifactDerivedReplay { replay: None, plan: Some(HistoryReadPlan::new(from, drafts, store_log.applied_edit_ids.len(), true)), plan_retirement:None, registry: store_owners.snapshot_read_leases.clone(), generation: self.generation(store_wire), revision: self.content_revision(store_wire) })
-    }
+    
 
     /// 🏁️ Returns a finished replay and its genuine complete projection for preview and subsequent publication.
     pub fn finish_derived_report_replay(&self, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>, owner: &mut Option<ArtifactDerivedReplay<P, Mutation>>) -> Result<(EditReplayResult<P, Mutation>, Option<ArtifactDerivedSnapshot<P>>), VcsError> {
@@ -250,7 +241,7 @@ where
         if mutations.is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"batched publication requires original mutation inputs"));}
         if store_wire.durable_group_root.is_some()||store_log.envelope.open_transaction.as_ref().is_some_and(|open|transaction.as_ref().is_none_or(|transaction|transaction.id!=open.transaction.id)){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"batched publication has an unresolved original transaction or group decision"));}
         if self.generation!=expected_generation||self.content_revision!=expected_revision{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"batched publication original generation or revision is stale"));}
-        if lane!=HistoryLane::Document||store_wire.backbone.is_some()&&!outbound{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"batched publication requires its original document/outbound lane"));}
+        if store_wire.backbone.is_some()&&!outbound{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"batched publication requires its original document/outbound lane"));}
         if original_actor.is_empty()||original_actor.len()>ARTIFACT_STORE_ONE_ITEM_ID_BYTES{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"batched publication actor exceeds its original identity bound"));}
         let cursor=store_log.envelope.cursor.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"batched publication requires its original live cursor"))?;
         if cursor.applied_edit_ids.len()!=store_log.applied_edit_ids.len()||cursor.redo_edit_ids.len()!=store_log.redo_edit_ids.len()||cursor.checkpoint_id.as_deref()!=store_log.current_checkpoint_id.as_deref(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"batched publication original cursor is stale"));}
@@ -269,7 +260,7 @@ where
         let original_actor=actor.as_mut().unwrap().take_original().expect("observed untouched original captured actor");drop(actor.take());
         let source=ArtifactStoreBatchSourceOf::new(ArtifactTypedBatchItemAuthority{preparation:Arc::clone(factory),retirement:Arc::clone(retirement)},std::mem::take(mutations),None,store_log.operation_wire);
         let authority=Arc::new(ArtifactStoreOneItemLiveAuthority::mint_for_store(store_log.mint_witness(), operation, semio_framework_job::Generation(expected_generation), expected_revision, store_log.applied_edit_ids.len(), next_sequence_number, next_clock, original_actor, line, None, stamped_edit_id));
-        let publication=ArtifactStoreBatchPublication{operation,expected_generation,expected_revision,lane,footprint:ArtifactStoreOneItemFootprint{work_items:0,retained_bytes:0},source_census_completed:0,source_census_finished:false,admitted_items,authority:Some(authority),authority_retirement:None,source:Some(Box::new(source)),preparation:None,item_closing:false,stage:None,group_preparation:None,retained_checkpoint:Default::default(),receipt:None,attempts:0,published:false,cancel_requested:false,close_started:false,fault:None,refused_base:None,refused_authority:None,refused_issuers:[None,None],phase:ArtifactStoreOneItemPublicationPhase::Preparing,verb,transaction:transaction.take(),outbound,announce_from:0,announce_items:0,transaction_open:false};
+        let publication=ArtifactStoreBatchPublication{original_registry:std::mem::ManuallyDrop::new(Some(self.snapshot_read_leases.clone())),registry_retirement:None,caller_generation:None,operation,expected_generation,expected_revision,lane,footprint:ArtifactStoreOneItemFootprint{work_items:0,retained_bytes:0},source_census_completed:0,source_census_finished:false,admitted_items,authority:Some(authority),authority_retirement:None,source:Some(Box::new(source)),preparation:None,item_closing:false,stage:None,group_preparation:None,retained_checkpoint:Default::default(),receipt:None,attempts:0,published:false,cancel_requested:false,close_started:false,fault:None,refused_base:None,refused_authority:None,refused_issuers:[None,None],phase:ArtifactStoreOneItemPublicationPhase::Preparing,verb,transaction:std::mem::ManuallyDrop::new(transaction.take()),transaction_close:None,outbound,announce_from:0,announce_items:0,transaction_open:false,lane_insert:None,lane_close:None,lane_ready:lane==HistoryLane::Document};
         Ok(Some((publication,RetainedCloneProgress{copied_items:1,copied_bytes,retained_capacity_bytes,released_bytes:0})))
     }
 
@@ -413,9 +404,7 @@ where
         if self.generation != expected_generation || self.content_revision != expected_revision {
             return Err(reject("batched publication base generation or revision is stale".into(), source));
         }
-        if lane != HistoryLane::Document {
-            return Err(reject("batched publication has no retained side-lane map preparation authority".into(), source));
-        }
+        
         if store_wire.backbone.is_some() && !outbound {
             return Err(reject("batched publication has no retained outbound backbone encoder/sender authority".into(), source));
         }
@@ -464,7 +453,9 @@ where
             stamped_edit_id,
         ));
         Ok(ArtifactStoreBatchPublication {
-            operation,
+            
+            original_registry:std::mem::ManuallyDrop::new(Some(self.snapshot_read_leases.clone())),registry_retirement:None,caller_generation:None,
+operation,
             expected_generation,
             expected_revision,
             lane,
@@ -491,12 +482,14 @@ where
             refused_issuers: [None, None],
             phase: ArtifactStoreOneItemPublicationPhase::Preparing,
             verb: None,
-            transaction,
+            transaction:std::mem::ManuallyDrop::new(transaction),transaction_close:None,
             outbound,
             announce_from: 0,
             announce_items: 0,
             transaction_open: false,
-        })
+        
+            lane_insert:None,lane_close:None,lane_ready:lane==HistoryLane::Document,
+})
     }
 
     //#endregion 📬️OneItemPublication

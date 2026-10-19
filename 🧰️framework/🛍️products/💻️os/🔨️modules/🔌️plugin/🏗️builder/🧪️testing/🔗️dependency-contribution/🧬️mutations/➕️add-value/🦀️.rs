@@ -18,6 +18,17 @@ pub struct AddValue {
 
 impl protocol::MutationKind<DependencyTestSnapshot, DependencyTestOp> for AddValue {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "value", kind: "add-value", record: "AddedValue" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add {} to value", self.delta), &format!("{} zu Wert hinzufügen", self.delta))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["value".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<DependencyTestSnapshot, DependencyTestOp> for AddValue {
     fn diff(&self, _base: &DependencyTestSnapshot) -> protocol::MutationOutcome<DependencyTestDiff> {
         protocol::MutationOutcome::new(DependencyTestDiff { deltas: vec![self.delta] })
     }
@@ -30,19 +41,11 @@ impl protocol::MutationKind<DependencyTestSnapshot, DependencyTestOp> for AddVal
             }
         })())
     }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add {} to value", self.delta), &format!("{} zu Wert hinzufügen", self.delta))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["value".into()]
-    }
 }
 
 impl protocol::CompositeMutationKind<DependencyTestSnapshot, DependencyTestOp> for AddValue {
     const SEMANTICS: protocol::SemanticDescriptor = <Self as protocol::MutationKind<DependencyTestSnapshot, DependencyTestOp>>::SEMANTICS;
-    fn plan(&self, _base: &DependencyTestSnapshot, planner: &mut protocol::Planner<DependencyTestSnapshot, DependencyTestOp>) -> Result<(), protocol::PlanError> {
-        planner.call(DependencyTestOp::AddValue(self.clone()))
-    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         <Self as protocol::MutationKind<DependencyTestSnapshot, DependencyTestOp>>::label(self)
     }
@@ -51,8 +54,18 @@ impl protocol::CompositeMutationKind<DependencyTestSnapshot, DependencyTestOp> f
     }
 }
 
+impl protocol::ColdCompositeMutationKind<DependencyTestSnapshot, DependencyTestOp> for AddValue {
+    fn plan(&self, _base: &DependencyTestSnapshot, planner: &mut protocol::Planner<DependencyTestSnapshot, DependencyTestOp>) -> Result<(), protocol::PlanError> {
+        planner.call(DependencyTestOp::AddValue(self.clone()))
+    }
+}
+
 #[doc(hidden)]
 #[cfg(test)]
 #[path = "../../../../🧪️tests/➕️dependency-contribution-add-value-unit/🦀️.rs"]
 pub mod tests;
 //#endregion ➕️AddValue
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️sum-law/🦀️.rs"]
+mod sum_law_tests;

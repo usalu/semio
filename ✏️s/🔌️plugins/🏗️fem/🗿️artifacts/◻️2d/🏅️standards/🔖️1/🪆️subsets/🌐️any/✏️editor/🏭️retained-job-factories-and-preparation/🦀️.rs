@@ -33,22 +33,9 @@ impl ToolJobFactory for Fem2dRetainedCommandJobFactory {
         fem2d_retained_contract()
     }
 
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::new(payload))
-    }
+    semio_framework_plugin::retained_command_factory_admission!(maximum_raw_bytes: FEM2D_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > FEM2D_RETAINED_RAW_BYTES || checkpoint.is_some() {
-            return Err((ToolJobFactoryError::new("FEM2D retained command rejects an oversized wire or checkpoint owner"), input, checkpoint));
-        }
-        Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire(payload, input))
-    }
+    
 }
 
 impl ArtifactOwnedToolJobFactory for Fem2dRetainedCommandJobFactory {
@@ -90,6 +77,8 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
         }
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Fem2dArtifactPreparation>(), depth: 1 })
     }
+    fn begin_copy_byte_demand(&self,input:&Fem2dMutation,lane:store::os_store::store_schema::HistoryLane)->Result<usize,semio_framework_value::ValueError>{self.begin_demand(input,lane)?; std::mem::size_of::<store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Fem2dSnapshot, Fem2dMutation, Fem2dMutation>>().checked_add(std::mem::size_of::<Fem2dArtifactPreparation>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original preparation header quote overflow"))}
+
 
     fn begin(
         &self,
@@ -116,7 +105,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
 }
 
 impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Fem2dSnapshot, Fem2dMutation> for Fem2dArtifactPreparation {
-    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+    fn advance(&mut self, body:usize,grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use protocol::Mutation as _;
         let fault = |message: &'static str| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, message);
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
@@ -138,7 +127,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Fem2
                 return Err(error);
             }
         };
-        let post = match protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()) {
+        let post = match protocol::apply_diff_cold(mutation.diff(base.get()).diff(), base.get()) {
             Ok(post) => post,
             Err(_) => {
                 *self.owners.mutation = Some(mutation);

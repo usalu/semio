@@ -1,3 +1,5 @@
+import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
+import { runExactCargoLaws } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
 /** 🧪️ Source and native test commands: wire, payload, transport, list record, pack schema, retirement, key index, assembly lifetime, jco adapter, artifact kind, returned reads, edit metadata, actor identity, preparation control, config paging, cleanup context, crate boundaries and the DSL architecture proof.
  *
  * @see ../../📜️script.ts — the package script that registers the commands of this module
@@ -41,7 +43,7 @@ export class PackSingleOwnerSourceScript extends BundleScript {
 export class CanonicalArchitectureScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("canonical-architecture accepts no arguments");
-    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{ package: "semio-framework-os-store-snapshot-clone", target: { kind: "lib" }, laws: ["law::tests::request_builder_borrows_the_original_snapshot_and_returns_its_exact_registry_lease"] }, { package: "semio-framework-os-list-delta", target: { kind: "lib" }, laws: ["tests::commuting_rows_absorb_to_one_structurally_equal_delta"] }, {
         package: "semio-framework-os-kernel",
         target: { kind: "lib", name: "semio_framework_os_kernel" },
         laws: [
@@ -278,5 +280,127 @@ export class CrateBoundariesSourceScript extends BundleScript {
   const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🧪️tests/📦️crate-boundaries/🟦️.ts");
   process.stdout.write(await captureOwnedCommandV1(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,{control:cargoPhase,env:scriptInvocationEnvironment(this.invocation,process.env),output:{maximumBytes:1048576,maximumLines:8192}}));
   process.stdout.write(await captureOwnedCommandV1(process.execPath,["test",source],this.repoRoot,{control:cargoPhase,env:scriptInvocationEnvironment(this.invocation,process.env),output:{maximumBytes:1048576,maximumLines:8192}}));
+ }
+}
+
+export class DiagnosticAdmissionCheckScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  if(args.length)throw Error("test-diagnostic-admission accepts no arguments");
+  const {Database}=await import("bun:sqlite");
+  const {replayReportBlocksFinalize,outcomeCodeLevel}=await import("../../../../../../🔨️modules/📡️replication/🟦️.ts");
+  const law=JSON.parse(readFileSync(join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🧫️fixtures/🚦️admission/🔣️.json"),"utf8"));
+  const schema=JSON.parse(readFileSync(join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🧫️fixtures/🚦️admission/🧬️schema/🔣️.json"),"utf8"));
+  const validate=semioSchemaAjvV1({strict:true,allErrors:true}).compile(schema);assert(validate(law),JSON.stringify(validate.errors));
+  const replaySource=readFileSync(join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs"),"utf8");
+  const retainedSource=readFileSync(join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🦀️.rs"),"utf8");
+  assert(replaySource.includes("operation.diff(base).stamp_op_index(index as u32).admit()"));
+  assert(retainedSource.includes("Stage::Decide"));assert(retainedSource.includes("Option<M::Diff>"));assert(!retainedSource.includes("MutationDiff::retire_cold"));
+  assert(!/Mutation::(?:diff|inverse)\(|apply_diff_into\(|encode_op\(/.test(retainedSource));
+  for(const port of ["RetainedMutation<S>","SnapshotProjection","decide_retained_mutation","preflight_retained_diff","inverse_retained_mutation","commit_retained_diff","MutationMessageConcat"]){assert(retainedSource.includes(port),port);}
+  const database=new Database(":memory:");
+  try{
+   database.exec("CREATE TABLE severity(level TEXT PRIMARY KEY, rank INTEGER);INSERT INTO severity VALUES('info',0),('warning',1),('error',2),('fatal',3);CREATE TABLE diagnostics(level TEXT, code TEXT, message TEXT, target TEXT, operation INTEGER);CREATE TABLE projection(value INTEGER, apply_calls INTEGER, inverse_calls INTEGER)");
+   for(const entry of law.cases){
+    const{applied,post,applyCalls,inverseCalls,...message}=entry;
+    database.exec("DELETE FROM diagnostics");
+    database.query("INSERT INTO diagnostics VALUES(?,?,?,?,?)").run(message.level,message.code,message.message,JSON.stringify(message.target),message.opIndex);
+    const reference=database.query("SELECT rank<2 AS applied FROM diagnostics JOIN severity USING(level)").get()as{applied:number};
+    const report={fromPosition:0,worst:message.level,outcomes:[{mutationId:"m",editId:"e",opIndex:0,worst:message.level,messages:[message],superseded:false,withdrawn:false}]};
+    assert.equal(!replayReportBlocksFinalize(report),Boolean(reference.applied));assert.equal(Boolean(reference.applied),applied);assert.equal(outcomeCodeLevel(message.code),message.level);
+    for(const route of ["retained","prefix","history","merge"]){
+     database.exec("DELETE FROM projection");database.query("INSERT INTO projection VALUES(?,0,0)").run(law.base);
+     database.query("UPDATE projection SET value=value+?,apply_calls=1,inverse_calls=1 WHERE EXISTS(SELECT 1 FROM diagnostics JOIN severity USING(level) WHERE rank<2)").run(law.diff);
+     const projected=database.query("SELECT value,apply_calls,inverse_calls FROM projection").get()as{value:number;apply_calls:number;inverse_calls:number};
+     assert.deepEqual(projected,{value:post,apply_calls:applyCalls,inverse_calls:inverseCalls},route);
+    }
+    const row=database.query("SELECT code,message,target,operation FROM diagnostics").get()as{code:string;message:string;target:string;operation:number};
+    assert.deepEqual({code:row.code,message:row.message,target:JSON.parse(row.target),opIndex:row.operation},{code:message.code,message:message.message,target:message.target,opIndex:message.opIndex});
+   }
+   console.log("[DEBUG] diagnostic-admission: Ajv validates four nonempty scalar diff vectors; SQLite verifies retained/prefix/history/merge projection and invocation ordering; original diagnostics agree; Error/Fatal cannot apply or inverse");
+   const cursorRoot=join(this.repoRoot,"🧰️framework/🔨️modules/📡️replication/🎮️mutation/📬️preparation");
+   const cursorLaw=JSON.parse(readFileSync(join(cursorRoot,"🧫️fixtures/🔣️.json"),"utf8"));
+   const cursorSchema=JSON.parse(readFileSync(join(cursorRoot,"🧬️schema/🔣️.json"),"utf8"));
+   const validateCursor=semioSchemaAjvV1({strict:true,allErrors:true}).compile(cursorSchema);assert(validateCursor(cursorLaw),JSON.stringify(validateCursor.errors));
+   assert(cursorLaw.base.rowCount*cursorLaw.base.rowBytes>cursorLaw.grant.maximumCapacityBytes);
+   for(const entry of cursorLaw.cases){
+    assert(entry.targetRow<cursorLaw.base.rowCount);
+    const reference=database.query("SELECT CASE WHEN rank<2 AND ?=0 AND ? IS NULL THEN ?+? ELSE ? END AS publishedScalar, rank<2 AND ?=0 AND ? IS NULL AS published, CASE WHEN ?='decision' THEN 0 ELSE 1 END AS diffDecisions, rank<2 AND COALESCE(?,'') NOT IN('decision','inverse') AS inverseCalls, rank<2 AND COALESCE(?,'') NOT IN('decision','inverse') AS applyCalls FROM severity WHERE level=?").get(Number(entry.lateRefusal),entry.cancelStage,cursorLaw.base.scalar,entry.delta,cursorLaw.base.scalar,Number(entry.lateRefusal),entry.cancelStage,entry.cancelStage,entry.cancelStage,entry.cancelStage,entry.level)as{publishedScalar:number;published:number;diffDecisions:number;inverseCalls:number;applyCalls:number};
+    const expected={...entry.expected};delete expected.wholeSnapshotClones;delete expected.terminalEmpty;
+    assert.deepEqual({...reference,published:Boolean(reference.published)},expected,entry.name);
+   }
+   console.log("[DEBUG] cursor-acceptance: nine large paged/small-grant fixtures validated with Ajv/SQLite; granted production cursor execution pending");
+  }finally{database.close();}
+ }
+}
+
+export class OwnedReplayCheckScript extends BundleScript {
+ async run(args:string[]):Promise<void> {
+  if(args.length)throw Error("test-owned-replay accepts no arguments");
+  const {Database}=await import("bun:sqlite");
+  const root=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store");
+  const law=JSON.parse(readFileSync(join(root,"🧫️fixtures/🧫️replay-retirement/🔣️.json"),"utf8")).ownedReplay as Array<{name:string;base:number;operations:Array<{value:number;fault:string}>;expected:number;coldClones:number;ownedClones:number;terminalOwners:number}>;
+  const schema=JSON.parse(readFileSync(join(root,"🧫️fixtures/🧫️replay-retirement/🧬️schema/📥️owned-replay/🔣️.json"),"utf8"));
+  const validate=semioSchemaAjvV1({strict:true,allErrors:true}).compile(schema);assert(validate(law),JSON.stringify(validate.errors));
+  const database=new Database(":memory:");
+  try {
+   database.exec("CREATE TABLE operations(position INTEGER PRIMARY KEY,value INTEGER,fault TEXT);CREATE TABLE original(value INTEGER);CREATE TABLE projection(value INTEGER)");
+   for(const row of law) {
+    database.exec("DELETE FROM operations;DELETE FROM original;DELETE FROM projection");database.query("INSERT INTO original VALUES(?)").run(row.base);database.query("INSERT INTO projection VALUES(?)").run(row.base);
+    for(const [index,operation]of row.operations.entries()) {
+     this.invocation.control.signal.throwIfAborted();
+     database.query("INSERT INTO operations VALUES(?,?,?)").run(index,operation.value,operation.fault);
+     database.query("UPDATE projection SET value=? WHERE ?='none'").run(operation.value,operation.fault);
+    }
+    const actual=database.query("SELECT (SELECT value FROM projection) AS expected,COUNT(CASE WHEN fault!='message' THEN 1 END) AS coldClones,0 AS ownedClones,2+MAX(CASE WHEN fault='none' THEN 1 ELSE 0 END) AS terminalOwners FROM operations").get();
+    assert.deepEqual(actual,{expected:row.expected,coldClones:row.coldClones,ownedClones:row.ownedClones,terminalOwners:row.terminalOwners},row.name);
+    assert.deepEqual(database.query("SELECT value FROM original").get(),{value:row.base});
+   }
+   const inverseRoot=join(root,"📬️paged-one-item/🧬️mutation-apply/🧫️fixtures/♻️inverse-issuer");
+   const inverse=JSON.parse(readFileSync(join(inverseRoot,"🔣️.json"),"utf8")) as {cases:Array<{name:string;inverseRows:number;expectedIssuerCalls:number}>};
+   const inverseSchema=JSON.parse(readFileSync(join(inverseRoot,"🧬️schema/🔣️.json"),"utf8"));const validateInverse=semioSchemaAjvV1({strict:true,allErrors:true}).compile(inverseSchema);assert(validateInverse(inverse),JSON.stringify(validateInverse.errors));
+   database.exec("CREATE TABLE inverse_custody(kind TEXT,issuer TEXT,retained INTEGER)");
+   for(const row of inverse.cases) {
+    database.exec("DELETE FROM inverse_custody");database.query("INSERT INTO inverse_custody VALUES('original',?,1)").run(row.name);
+    for(let index=0;index<row.inverseRows;index++)database.query("INSERT INTO inverse_custody VALUES('inverse',?,1)").run(row.name);
+    const actual=database.query("SELECT COUNT(*) AS calls FROM inverse_custody WHERE issuer=? AND retained=1").get(row.name) as {calls:number};assert.equal(actual.calls,row.expectedIssuerCalls);
+    database.query("UPDATE inverse_custody SET retained=0 WHERE issuer=?").run(row.name);assert.deepEqual(database.query("SELECT COUNT(*) AS retained FROM inverse_custody WHERE retained=1").get(),{retained:0});
+   }
+   const cancellationRoot=join(root,"📬️paged-one-item/🧬️mutation-apply/🧫️fixtures/♻️inverse-cancellation");
+   const cancellation=JSON.parse(readFileSync(join(cancellationRoot,"🔣️.json"),"utf8")) as {base:{nodes:Array<{text:string}>};cases:Array<{boundary:"decision"|"inverse";inverseRows:number;issuerCalls:number;postText:string}>};
+   const cancellationSchema=JSON.parse(readFileSync(join(cancellationRoot,"🧬️schema/🔣️.json"),"utf8")),validateCancellation=semioSchemaAjvV1({strict:true,allErrors:true}).compile(cancellationSchema);assert(validateCancellation(cancellation),JSON.stringify(validateCancellation.errors));
+   database.exec("CREATE TABLE cancellation(boundary TEXT,post TEXT);CREATE TABLE canceled_inverse(issuer TEXT)");
+   for(const row of cancellation.cases) {
+    this.invocation.control.signal.throwIfAborted();
+    database.exec("DELETE FROM cancellation;DELETE FROM canceled_inverse");
+    database.query("INSERT INTO cancellation VALUES(?,?)").run(row.boundary,cancellation.base.nodes[0]!.text);
+    database.query("INSERT INTO canceled_inverse SELECT 'original' FROM cancellation WHERE boundary='inverse'").run();
+    assert.deepEqual(database.query("SELECT COUNT(*) AS rows FROM canceled_inverse").get(),{rows:row.inverseRows});
+    assert.deepEqual(database.query("SELECT COUNT(*) AS calls FROM canceled_inverse WHERE issuer='original'").get(),{calls:row.issuerCalls});
+    assert.deepEqual(database.query("SELECT post FROM cancellation").get(),{post:row.postText});
+   }
+   console.log("[DEBUG] inverse cancellation: Ajv/SQLite verifies both decision frontiers, exact issuer row counts and unchanged unpublished projection");
+   console.log("[DEBUG] owned-replay: Ajv/SQLite validates3 refusal/continue vectors, immutable original, clone-admission counts and typed terminal owners; inverse receipt refusal retains original+inverse underexactissuer");
+  } finally { database.close(); }
+ }
+}
+
+export class CanonicalSourceIdentityCheckScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length!==1||!["source","native"].includes(segments[0]!))throw Error("Canonical source identity requires source or native");
+  const oracle=await import("../../../../🔨️modules/🏪️store/🧵️canonical-edit/🪪️source-identity/🧪️tests/🟦️.ts");oracle.runCanonicalSourceIdentityChecks();
+  if(segments[0]==="source")return;
+  const receipts=await runRepositoryExactCargoLaws({invocation:this.invocation,policy:configuredExactCargoLawPolicyV1(),cwd:this.repoRoot,...exactCargoStageEnvironments(),artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,groups:[{package:"semio-framework-os-kernel",target:{kind:"lib",name:"semio_framework_os_kernel"},laws:["os_store::canonical_edit::source_identity::tests::canonical_source_identity_streams_original_full_fields_and_closes_every_cancelled_prefix","os_store::canonical_edit::source_identity::tests::canonical_source_identity_refuses_a_foreign_live_root_before_reading_it","os_store::canonical_edit::source_identity::tests::canonical_source_identity_staged64_birth_deep_source_and_cancellation_fit4096","os_store::canonical_edit::source_identity::tests::canonical_source_identity_staged64_refuses_original_source_depth65_and_closes_paid_backing"]}]});
+  console.log("[DEBUG] canonical source identity exact native passed "+receipts[0]!.assertions+" original-root laws");
+ }
+}
+
+export class OriginalVcsCommandScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  if(args.length!==1||!["source","native"].includes(args[0]!))throw Error("test-original-vcs-command source|native");
+  const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/🎮️command/🧪️tests/🟦️.test.ts");
+  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
+  await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot});
+  if(args[0]==="source")return;
+  const native=readCargoTestPolicyV1(process.env);await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:this.invocation.control.remainingMilliseconds()},cwd:this.repoRoot,cargoTargetDir:native.targetDirectory,nativeEnv:{RUST_MIN_STACK:native.rustMinStack},artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,manifestPaths:{"semio-framework-os-kernel":resolve(this.root,"Cargo.toml")},groups:[{package:"semio-framework-os-kernel",target:{kind:"lib",name:"semio_framework_os_kernel"},cargoArgs:["--locked"],laws:["os_store::component::native_vcs_command::tests::original_vcs_request_custody_closes_owned_unicode_and_authors_with_physical_receipts"]}]});
  }
 }

@@ -1,19 +1,27 @@
-//! 📊️ Fem2d play app panel — `results`: the results source/mode controls and the deformation
 //! playback transport for the addressed results window.
+//! 📊️ Fem2d play app panel — `results`: the results source/mode controls and the deformation
 //!
 //! Every control is tagged with the `windowId` it speaks for (the puzzle3d Settings panel's rule), so
 //! a split layout showing two results panes cannot retune the one the user is not looking at. Every
 //! control also names the FIELD it changes (`{field, value}`), because the host merges a control's own
 //! scalar under the single key `value` — a slider has one binding and no other way to say what moved.
 
-use semio_s_fem_app_surface::{ANIMATION_PHASE_STEP, ANIMATION_SPEED_MAXIMUM, ANIMATION_SPEED_MINIMUM};
-use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::config::Fem2dResultsWindowConfig;
-use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::transient::FemPlaybackClock;
+use semio_s_fem_app_surface::ANIMATION_PHASE_STEP;
+
+use semio_s_fem_app_surface::ANIMATION_SPEED_MAXIMUM;
+
+use semio_s_fem_app_surface::ANIMATION_SPEED_MINIMUM;
+use semio_s_artifact_fem_2d_results_state::config::Fem2dResultsWindowConfig;
+use semio_s_artifact_fem_2d_results_state::transient::FemPlaybackClock;
 use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels;
 use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::fem2d_action;
 use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::ui_label;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
+use semio_framework_plugin::plugin_app_close_prelude::Buildable;
+use semio_framework_plugin::plugin_app_close_prelude::HasBase;
+use semio_framework_plugin::plugin_app_close_prelude::HasChildren;
+use semio_framework_plugin::plugin_app_close_prelude::InputKind;
+use semio_framework_plugin::plugin_app_close_prelude::Trigger;
 use semio_framework_plugin::ui_node_list;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -161,7 +169,7 @@ fn result_mode_value(mode: semio_s_fem_app_surface::ResultMode) -> &'static str 
 
 /// 📊️ The result sources one document offers: every load case, then every combination.
 fn result_sources(doc: &Fem2dSnapshot) -> Vec<(String, String)> {
-    doc.load_cases.iter().map(|case| (case.id.clone(), case.name.clone())).chain(doc.combinations.iter().map(|combination| (combination.id.clone(), combination.name.clone()))).take(RESULT_SOURCE_OPTIONS).collect()
+    doc.load_cases.iter().map(|case| ("loadCase", case.id.as_str(), case.name.as_str())).chain(doc.combinations.iter().map(|combination| ("combination", combination.id.as_str(), combination.name.as_str()))).filter_map(|(kind, id, name)| semio_s_fem_analyses_model::encode_result_source_parts(kind, id).ok().map(|identity| (identity, name.to_owned()))).take(RESULT_SOURCE_OPTIONS).collect()
 }
 
 /// 📊️ Renders the panel for ONE results window. `window` is that window's captured partition, or
@@ -172,7 +180,7 @@ fn result_sources(doc: &Fem2dSnapshot) -> Vec<(String, String)> {
 /// slider follows the animation while it plays and rests where it paused.
 pub fn render(doc: &Fem2dSnapshot, window: Option<&Fem2dResultsWindowConfig>, clock: Option<&FemPlaybackClock>, window_id: &str, labels: &Fem2dLabels) -> UiAssemblyResult<BuiltNode> {
     let live = window.is_some();
-    let window = semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::config::effective(window.unwrap_or(&Fem2dResultsWindowConfig::default()), clock);
+    let window = semio_s_artifact_fem_2d_results_state::config::effective(window.unwrap_or(&Fem2dResultsWindowConfig::default()), clock);
     let window = &window;
     let animation = &window.animation;
     let sources = result_sources(doc);

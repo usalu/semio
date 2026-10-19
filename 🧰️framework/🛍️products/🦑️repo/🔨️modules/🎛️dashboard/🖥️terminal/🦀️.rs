@@ -68,6 +68,7 @@ pub fn run_with(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> i32 {
     if term.enter().is_err() { return 1; }
     let size = term.size().unwrap_or(Size { width: 100, height: 32 });
     let mut tui = Tui::new(size, Theme::new(if preferences.appearance == "light" { AppearanceName::Light } else { AppearanceName::Dark }));
+    tui.set_width_mode(term.width_mode());
     let mut dash = Dashboard::new(&mut tui, root.clone(), preferences, dashboard_preferences::local_path(&root, parsed), parsed.has_flag("workspace"));
     dash.waker = Some(term.waker());
     dash.report_keymap_problems();
@@ -82,17 +83,18 @@ pub fn run_with(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> i32 {
     loop {
         let polled = dash.poll_daemon(&mut tui);
         let background = dash.poll_background(&mut tui);
+        let sources = dash.poll_source_suggestions();
         let slice = IDLE_SLICE;
         let wait = tui.deadline_ms().map_or(slice, |ms| slice.min(std::time::Duration::from_millis(ms)));
         let wait = dash.prefix_wait(std::time::Instant::now()).map_or(wait, |left| wait.min(left));
         let events = term.wait(Some(std::time::Instant::now() + wait)).unwrap_or_default();
         let mut quit = polled.quit;
         for event in &events { if dash.handle(&mut tui, event) == Flow::Quit { quit = true; break; } }
-        for effect in std::mem::take(&mut dash.effects) { match effect { Effect::Copy(text) => { let _ = term.copy(&text); } } }
         if quit || dash.quit_requested { break; }
+        for effect in std::mem::take(&mut dash.effects) { match effect { Effect::Copy(text) => { let _ = term.copy(&text); }, Effect::OpenReady(url) => dash.begin_open_ready(&url) } }
         let expired = dash.expire_prefix(std::time::Instant::now());
         let ticked = tui.tick(now());
-        if polled.changed || background || !events.is_empty() || ticked || expired { dash.frame(&mut tui); }
+        if polled.changed || background || sources || !events.is_empty() || ticked || expired { dash.frame(&mut tui); }
         if let Some(patch) = tui.render_due(now()) { present(&mut term, &mut tui, &patch); }
     }
     let _ = dash.send(&dashboard_wire::ipc::ClientMsg::Detach {});

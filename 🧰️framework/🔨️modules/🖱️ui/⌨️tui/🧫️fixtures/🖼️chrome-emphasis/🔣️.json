@@ -1,0 +1,14 @@
+{
+  "size": [64, 12],
+  "labels": ["first", "second", "third"],
+  "cases": [
+    { "active": 0, "hover": null, "roles": ["active", "normal", "normal"] },
+    { "active": 1, "hover": null, "roles": ["normal", "active", "normal"] },
+    { "active": 2, "hover": null, "roles": ["normal", "normal", "active"] },
+    { "active": 0, "hover": 1, "roles": ["active", "emphasized", "normal"] },
+    { "active": 1, "hover": 1, "roles": ["normal", "active", "normal"] },
+    { "active": 2, "hover": 0, "roles": ["emphasized", "normal", "active"] }
+  ],
+  "corners": ["top-left", "top-right", "bottom-left", "bottom-right"],
+  "ancestorTransitions": ["descendant", "sibling", "empty-body", "navbar", "footer", "overlay", "focus-lost", "removed", "reparented"]
+}

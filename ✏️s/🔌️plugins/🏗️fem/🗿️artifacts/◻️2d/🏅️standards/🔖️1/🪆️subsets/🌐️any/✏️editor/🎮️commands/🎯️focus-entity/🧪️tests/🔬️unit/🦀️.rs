@@ -1,7 +1,9 @@
 use super::*;
 use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model as model_window;
 use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results as results_window;
-use semio_framework_plugin::{HistoryView, ViewModel, ViewWindowInstance};
+use semio_framework_plugin::HistoryView;
+use semio_framework_plugin::ViewModel;
+use semio_framework_plugin::ViewWindowInstance;
 use pack::snapshot::ArtifactDsl;
 
 fn demo() -> Fem2dSnapshot {
@@ -23,7 +25,7 @@ fn focus(doc: &Fem2dSnapshot, kind: &str, id: &str) -> Result<Emit<Fem2dMutation
 #[semio_framework_async_macros::async_test]
 async fn focus_entity_writes_one_window_config_row_for_every_addressable_kind() {
     let doc = demo();
-    for id in ["ridge", "e3", "s1", "l6", "r1"] {
+    for id in ["scope:1:4:node5:ridge", "scope:1:7:element2:e3", "scope:1:7:support2:s1", "scope:1:4:load4:live2:l6", "scope:1:6:region2:r1"] {
         let emit = focus(&doc, model_window::WINDOW_KIND_ID, id).expect("focus");
         assert!(emit.artifact_mutations.is_empty(), "framing the camera is never a document mutation ({id})");
         assert_eq!(emit.window_config_mutations.len(), 1, "focusEntity writes exactly one window-config row ({id})");
@@ -35,7 +37,7 @@ async fn focus_entity_writes_one_window_config_row_for_every_addressable_kind() 
 #[semio_framework_async_macros::async_test]
 async fn focus_entity_frames_the_addressed_window_whichever_canvas_it_is() {
     let doc = demo();
-    let emit = focus(&doc, results_window::WINDOW_KIND_ID, "ridge").expect("focus in results");
+    let emit = focus(&doc, results_window::WINDOW_KIND_ID, "scope:1:4:node5:ridge").expect("focus in results");
     assert_eq!(emit.window_config_mutations[0].window_kind_id(), results_window::WINDOW_KIND_ID);
 }
 

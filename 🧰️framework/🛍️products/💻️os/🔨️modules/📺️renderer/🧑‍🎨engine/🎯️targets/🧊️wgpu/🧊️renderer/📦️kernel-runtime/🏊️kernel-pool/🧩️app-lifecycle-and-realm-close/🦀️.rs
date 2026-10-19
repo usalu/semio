@@ -119,18 +119,18 @@ impl KernelPoolState {
     /// extension actors." `wasm_path` is always `<modules_root>/<plugin_id>/<file>.wasm`
     /// (`program_bridge::load_wasm_plugins`'s own layout convention), so the extensions' own
     /// wasm artifacts live as siblings under the same `modules_root`.
-    pub(super) async fn create_app(&mut self, wasm_path: PathBuf, plugin_id: String, app_id: String, artifact_schema: String) -> Result<u32, ProgramFault> {
+    pub(super) async fn create_app(&mut self, owner:CreateAppRequestOwner) -> Result<u32, ProgramFault> {
+        let (wasm_path,plugin_id,app_id,artifact_schema)=(owner.path(),owner.plugin(),owner.app(),owner.schema());
         let replay_route_index = self.replay_routes.iter().position(Option::is_none).ok_or_else(|| "kernel: fixed replay route registry is full".to_string())?;
-        let component = read_native_component(&wasm_path).await?;
-        let bytes = component.as_slice();
+        let component = read_native_component(&wasm_path).await.map_err(|error|error.to_string())?;
+        let bytes = component.bytes();
         let hash = PackageHash(*semio_framework_hash::hash(bytes).as_bytes());
         let plugin_digest = JobReplayRequest::from_spawn(&plugin_id, &[]).tool;
         let artifact_digest = JobReplayRequest::from_spawn(&app_id, &[]).tool;
-        let package_id = PackageId(plugin_id.clone());
-        let package_ref = PackageRef { package: package_id.clone(), hash };
-        let compiled = self.compile_serving_others(package_ref.clone(), bytes.to_vec()).await?;
+        let compiled=match self.compile_serving_others(&owner,hash,component).await{Ok(compiled)=>compiled,Err(kind)=>return Err(owner.into_failure(kind).into())};
+        let package_id=PackageId(plugin_id.to_owned());
         if !artifact_schema.is_empty() {
-            let codec = semio_framework_plugin_host::OwnedComponentDocumentCodec::try_new(self.guest_runtime.clone(), compiled.clone(), artifact_schema).map_err(|error| error.to_string())?;
+            let codec = semio_framework_plugin_host::OwnedComponentDocumentCodec::try_new(self.guest_runtime.clone(), compiled.clone(), artifact_schema.to_owned()).map_err(|error| error.to_string())?;
             semio_framework_os_kernel::os_store::codec_registry::register_component_document_codec(Arc::new(codec)).map_err(|error| error.to_string())?;
         }
         let instance_id = self.next_instance_id;
@@ -141,7 +141,7 @@ impl KernelPoolState {
             .activate(
                 package_id.clone(),
                 plugin_ordinal,
-                ActorKind::PluginApp { plugin: package_id, app_id: app_id.clone(), instance_id },
+                ActorKind::PluginApp { plugin: package_id, app_id: app_id.to_owned(), instance_id },
                 Lane::Interactive,
                 None,
                 ActivationEvent::Manual,
@@ -156,7 +156,7 @@ impl KernelPoolState {
         let assets = semio_framework_plugin_host::package_assets::package_assets_beside_module(&wasm_path).map_err(|message| format!("kernel: package assets of `{plugin_id}`: {message}"))?;
         let open = Event::InstanceOpen {
             request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id, request_sequence: 1 },
-            app_id: semio_framework::kernel::AppInstanceId(app_id.clone()),
+            app_id: semio_framework::kernel::AppInstanceId(app_id.to_owned()),
             actor: "local".to_string(),
             config: Vec::new(),
             assets,
@@ -219,29 +219,16 @@ impl KernelPoolState {
                 break;
             };
             let extension_dir = modules_root.join(&extension.extension_id);
-            let Some(extension_wasm_path) = find_wasm_artifact(&extension_dir).await else {
-                crate::log_debug(&format!("kernel: extension {} of {plugin_id} has no compiled wasm under {}, skipping", extension.extension_id, extension_dir.display()));
-                continue;
+            let extension_wasm_path=match find_wasm_artifact(&extension_dir).await{Ok(Some(path))=>path,Ok(None)=>{crate::log_debug(&format!("kernel: extension {} of {plugin_id} has no compiled wasm under {}, skipping",extension.extension_id,extension_dir.display()));continue},Err(error)=>{crate::log_debug(&format!("kernel: extension directory {} failed: {error}",extension_dir.display()));continue}};
+            let extension_bytes_owner=match read_native_component(extension_wasm_path.path()).await{
+                Ok(bytes)=>bytes,
+                Err(error)=>{crate::log_debug(&format!("kernel: failed reading extension {} wasm ({}): {error}",extension.extension_id,extension_wasm_path.path().display()));continue}
             };
-            let mut extension_bytes_owner = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(extension_wasm_path.clone())).await {
-                Ok(semio_framework_os_services::NativeIoValue::Bytes(bytes)) => bytes,
-                Ok(_) => {
-                    crate::log_debug(&format!("kernel: native I/O returned the wrong value for extension {}", extension.extension_id));
-                    continue;
-                }
-                Err(error) => {
-                    crate::log_debug(&format!("kernel: failed reading extension {} wasm ({}): {error}", extension.extension_id, extension_wasm_path.display()));
-                    continue;
-                }
-            };
-            let Some(extension_bytes) = extension_bytes_owner.single_page() else {
-                crate::log_debug(&format!("kernel: extension {} exceeds the mounted single-page retained compiler authority", extension.extension_id));
-                continue;
-            };
+            let extension_bytes=extension_bytes_owner.bytes();
             let extension_hash = PackageHash(*semio_framework_hash::hash(extension_bytes).as_bytes());
             let extension_package_ref = PackageRef { package: extension.package.clone(), hash: extension_hash };
             let extension_compiled = self.guest_runtime.compile(&extension_package_ref, extension_bytes).await;
-            let _ = semio_framework_os_renderer_wgpu_host_base::close_renderer_io_payload(&mut extension_bytes_owner);
+            drop(extension_bytes_owner);
             let extension_compiled = match extension_compiled {
                 Ok(handle) => handle,
                 Err(error) => {

@@ -1,5 +1,5 @@
-//! 📋️ Laws for the `Puzzle2dClipboardJob` route: the copy→paste round trip on both shipped examples,
 //! cut as one history edit, and the locked refusal.
+//! 📋️ Laws for the `Puzzle2dClipboardJob` route: the copy→paste round trip on both shipped examples,
 
 use crate::editor::puzzle2d::snapshot::{PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_INTERACTION_DOMAIN, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID};
 use crate::editor::puzzle2d::recorder::puzzle2d_paste_operations_on;
@@ -163,7 +163,7 @@ fn clipboard_fragment(result: &InvocationResult) -> semio_framework_plugin::kern
 }
 
 fn paste_args(fragment: &semio_framework_plugin::kernel::ClipboardFragment) -> Value {
-    json!({ "fragment": semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(fragment))) })
+    json!({ "fragment": semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(fragment)) })
 }
 
 fn notices(result: &InvocationResult) -> Vec<String> {

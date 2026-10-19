@@ -24,8 +24,8 @@ test("the wire protocol and observations are schema-first and agree with Ajv", (
 
 test("unit keys, artifact identities and extern edges follow the vectors", () => {
   for (const row of fixture.keys) expect(unitKeyV1(row.request, row.profile)).toBe(row.key);
-  for (const row of fixture.artifacts) expect(unitArtifactV1(row)).toBe(row.artifact);
-  for (const row of fixture.externs) expect(externArtifactsV1(row.path)).toEqual({ candidates: row.candidates, edge: row.edge as "rmeta" | "full" });
+  for (const row of fixture.artifacts) expect(unitArtifactV1(row)).toBe(resolve(row.artifact));
+  for (const row of fixture.externs) expect(externArtifactsV1(row.path)).toEqual({ candidates: row.candidates.map(path => resolve(path)), edge: row.edge as "rmeta" | "full" });
 });
 
 test("p95 is R-7 and agrees with d3-array; predictions follow headroom, floor, window and the cold-start model", () => {

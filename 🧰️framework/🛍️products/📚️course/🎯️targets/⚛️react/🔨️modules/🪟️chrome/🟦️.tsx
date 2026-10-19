@@ -1,0 +1,514 @@
+/** 🪟️ The quiz's pieces of the semio card language: every screen is made of overview cards (the design system's window
+ * chrome at dialog level) with the title in the cap chip and the actions as real buttons in the footer chips, plus the
+ * small parts the cards share — course icons, emoji glyphs in the monochrome emoji face, fact lists, segmented choices,
+ * the quiet button of card bodies, the modal dialog every question and notice opens in, the note of a failure and the
+ * polite live region that announces what an action changed.
+ *
+ * @see ../../../../../../🔨️modules/🖱️ui/🧱️elements/🃏️OverviewCard/🟦️.tsx — the shared card
+ * @see https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html — why actions are at least 24 px tall
+ * @see https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/ — the modal dialog
+ */
+
+import { forwardRef, useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type HTMLAttributes, type ReactElement, type ReactNode, type Ref } from "react";
+import { createPortal } from "react-dom";
+import { Icon, OverviewCard, OverviewCardAction, cn, overviewCardChipClass, type IconName, type OverviewCardActionProps } from "@semio-tech/ui-react/chrome";
+import type { Icon as QuizIcon, Motion, TaskKind } from "@semio-tech/course";
+import type { CourseText } from "../🌐️i18n/🟦️.ts";
+
+export { cn };
+
+/** 🧷️ What lets a chip in a card's footer give way: it may shrink below its text, which then wraps inside it, so two
+ * chips never lie over each other and never make their card wider than the page — whatever the translation, the
+ * learner's text size or the width of the card. */
+export const CARD_CHIP_WRAP = "h-auto max-h-none min-w-0 max-w-full shrink whitespace-normal text-left leading-tight";
+
+/** 🎬️ An action in a card's footer: the design system's card action, as a chip that gives way ({@link CARD_CHIP_WRAP}). */
+export const CardAction = forwardRef<HTMLButtonElement, OverviewCardActionProps>(({ className, ...rest }, ref) => <OverviewCardAction ref={ref} className={cn(CARD_CHIP_WRAP, className)} {...rest} />);
+CardAction.displayName = "CardAction";
+
+/** 🃏️ One quiz card: a `<section>` named by its title chip's heading, `card` naming its place for styles and tests,
+ * `anchor` the presence landmark cursors are relative to. A card of the overview opens its page: its heading is a
+ * link to `href` (the keyboard and assistive-technology way) and a pointer click anywhere but on a control calls
+ * `onOpen`; it takes the pointer although the card layer above the glass lets it pass, and `revealed` lifts it while
+ * its page shows clear behind it. `topic` names what the card is about for the pets (`data-pet-topic`: a key among the
+ * grounds of their menagerie that they may match, never a thing they may lift). */
+export function CourseCard(props: {
+  readonly id: string;
+  readonly card: string;
+  readonly anchor?: string;
+  readonly topic?: string;
+  readonly href?: string;
+  readonly onOpen?: () => void;
+  readonly revealed?: boolean;
+  readonly icon: ReactNode;
+  readonly title: ReactNode;
+  readonly headingLevel?: 1 | 2 | 3;
+  readonly headingRef?: Ref<HTMLHeadingElement>;
+  readonly focusableHeading?: boolean;
+  readonly footerLeft?: ReactNode;
+  readonly footerRight?: ReactNode;
+  readonly className?: string;
+  readonly bodyClassName?: string;
+  readonly children?: ReactNode;
+}): ReactElement {
+  const { onOpen } = props;
+  const card = (
+    <OverviewCard
+      as="section"
+      slot="course-card"
+      headingId={props.id}
+      headingLevel={props.headingLevel ?? 2}
+      headingRef={props.headingRef}
+      focusableHeading={props.focusableHeading}
+      data={{ "data-card": props.card, "data-presence-anchor": props.anchor, "data-pet-topic": props.topic, "data-revealed": props.revealed ? "" : undefined }}
+      icon={props.icon}
+      title={
+        props.href === undefined ? (
+          props.title
+        ) : (
+          <a href={props.href} className="course-card-link text-inherit no-underline hover:underline focus-visible:underline">
+            {props.title}
+          </a>
+        )
+      }
+      footerLeft={props.footerLeft}
+      footerRight={props.footerRight}
+      className={cn("pointer-events-auto", onOpen !== undefined && "cursor-pointer transition-transform duration-200", props.revealed && "-translate-y-0.5", props.className)}
+      bodyClassName={props.bodyClassName}
+      contentClassName="flex h-full min-h-0 flex-col gap-double"
+    >
+      {props.children}
+    </OverviewCard>
+  );
+  if (onOpen === undefined) return card;
+  return (
+    <div
+      className="contents"
+      onClick={(event) => {
+        if (!(event.target instanceof Element) || event.target.closest(CONTROLS) === null) onOpen();
+      }}
+    >
+      {card}
+    </div>
+  );
+}
+
+const CONTROLS = "a, button, summary, input, select, textarea, label";
+
+/** 👁️ How a page behind a card of the overview is shown: opened full size, or revealed clear while its card is
+ * hovered or focused (else blurred behind the glass, inert). */
+export interface PaneView {
+  readonly opened: boolean;
+  readonly revealed: boolean;
+}
+
+/** 📄️ A page behind a card of the overview: it fills its pane, scrolls on its own and lays its cards out in a centred
+ * column laid out for the pane, not the window; `overlay` lies over that column and scrolls with it (the others on
+ * this page). */
+export function PageFrame(props: { readonly page: string; readonly wide?: boolean; readonly overlay?: ReactNode; readonly children: ReactNode }): ReactElement {
+  return (
+    <div data-page={props.page} className="course-page-frame relative h-full min-h-0 w-full overflow-auto bg-background p-double text-foreground">
+      <div className={cn("relative mx-auto flex w-full flex-col gap-double", props.wide ? "max-w-[90rem]" : "max-w-4xl")}>
+        {props.children}
+        {props.overlay}
+      </div>
+    </div>
+  );
+}
+
+/** 🔣️ A course icon in a title chip. */
+export function CardIcon(props: { readonly icon: IconName }): ReactElement {
+  return <Icon icon={props.icon} size="small" className="shrink-0 text-muted-foreground" />;
+}
+
+/** 🔡️ `emoji` asking for text presentation: every emoji variation selector (VS16) becomes the text one (VS15), so a
+ * sequence such as ❄️ renders from the monochrome emoji face like 🔥 and 🧲 instead of falling back to a colour font. */
+export function textPresentation(emoji: string): string {
+  return emoji.replaceAll("️", "︎");
+}
+
+/** 😀️ An emoji shown as a glyph of the monochrome emoji face (text presentation, `font-variant-emoji: text`), playing
+ * `motion` as a microanimation when its host is hovered or tapped and the learner allows it ({@link ICON_HOSTS}). */
+export function Glyph(props: { readonly emoji: string; readonly className?: string; readonly motion?: Motion }): ReactElement {
+  return (
+    <span aria-hidden="true" className={cn("course-glyph shrink-0", props.className)} data-motion={props.motion}>
+      {textPresentation(props.emoji)}
+    </span>
+  );
+}
+
+/** 🎯️ What an icon plays for: its host — the element it stands in (marked `data-icon-host`: a chip, a row, a value
+ * card, a bin's heading, a task button) or the title chip of its card. Hosts never nest. A pointer that hovers a host
+ * (desktop) or a keyboard focus on or inside it loops its icons; a tap on it (tablet, phone) plays them once. */
+export const ICON_HOSTS = '[data-icon-host], [data-slot="course-card-title-chip"]';
+
+/** ⏱️ One loop of an icon's microanimation, the length of a tap's play. */
+export const ICON_LOOP_MS = 3200;
+
+const tapped = new WeakMap<Element, ReturnType<typeof setTimeout>>();
+
+/** 👆️ Plays the icons of the host a touch or pen pointer went down on once, from the start even when they still play;
+ * a mouse plays them by hovering instead. */
+export function playTappedIcons(target: EventTarget | null, pointerType: string): void {
+  if (pointerType === "mouse" || !(target instanceof Element)) return;
+  const host = target.closest(ICON_HOSTS);
+  if (host === null || host.querySelector(".course-glyph[data-motion]") === null) return;
+  clearTimeout(tapped.get(host));
+  host.removeAttribute("data-icon-tapped");
+  void host.getBoundingClientRect();
+  host.setAttribute("data-icon-tapped", "");
+  tapped.set(
+    host,
+    setTimeout(() => host.removeAttribute("data-icon-tapped"), ICON_LOOP_MS),
+  );
+}
+
+/** 🗂️ The icon of each task kind in its card's title chip. */
+export const TASK_KIND_ICONS: { readonly [K in TaskKind]: IconName } = { classification: "layout-grid", sorting: "list", matching: "link" };
+
+/** 🖼️ The icon of a task in its title chip: the task's own emoji playing its microanimation, else the icon of its kind. */
+export function TaskGlyph(props: { readonly task: { readonly kind: TaskKind; readonly icon?: QuizIcon } }): ReactElement {
+  const { kind, icon } = props.task;
+  return icon === undefined ? <CardIcon icon={TASK_KIND_ICONS[kind]} /> : <Glyph emoji={icon.emoji} motion={icon.motion} className="text-sm" />;
+}
+
+/** 🔈️ What a polite live region says: the message and how many were said before it, so a repeated message is a new one. */
+export interface Announcement {
+  readonly message: string;
+  readonly serial: number;
+}
+
+/** 🗨️ The message of a polite live region, and the function that replaces it — after `delayMs` without a newer one, so
+ * a burst of changes is announced once, by its last message. */
+export function useAnnouncement(delayMs = 0): { readonly announcement: Announcement; readonly announce: (message: string) => void } {
+  const [announcement, setAnnouncement] = useState<Announcement>({ message: "", serial: 0 });
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  const announce = useCallback(
+    (message: string) => {
+      const say = (): void => setAnnouncement((said) => ({ message, serial: said.serial + 1 }));
+      clearTimeout(timer.current);
+      if (delayMs <= 0) say();
+      else timer.current = setTimeout(say, delayMs);
+    },
+    [delayMs],
+  );
+  return { announcement, announce };
+}
+
+/** 📢️ The visually hidden polite live region announcing what a keyboard or pointer action changed; every announcement
+ * is a new node, so the same sentence said twice is spoken twice. */
+export function LiveRegion(props: { readonly announcement: Announcement }): ReactElement {
+  const { message, serial } = props.announcement;
+  return (
+    <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+      {message === "" ? null : <span key={serial}>{message}</span>}
+    </p>
+  );
+}
+
+/** 🏷️ A label with the icon of what it names before it: an item, a category, a value card of a dimension or a task.
+ * Without an icon it is the label alone. The element it stands in is its host ({@link ICON_HOSTS}). The glyph is not
+ * spoken; the label keeps naming the element. */
+export function IconLabel(props: { readonly icon: QuizIcon | undefined; readonly children: ReactNode }): ReactElement {
+  const { icon } = props;
+  return (
+    <>
+      {icon === undefined ? null : <Glyph emoji={icon.emoji} motion={icon.motion} className="course-label-icon" />}
+      {props.children}
+    </>
+  );
+}
+
+/** ✳️ A symbol that only repeats the word beside it (✓ before "Correct"): shown, never spoken. */
+export function Mark(props: { readonly symbol: string }): ReactElement {
+  return <span aria-hidden="true">{props.symbol} </span>;
+}
+
+/** 🕳️ A cell without a value: a dash to see and the reason to hear. */
+export function Missing(props: { readonly label: string }): ReactElement {
+  return (
+    <>
+      <span aria-hidden="true">–</span>
+      <span className="sr-only">{props.label}</span>
+    </>
+  );
+}
+
+/** 📋️ A row of short facts in the muted colour. */
+export function Facts(props: { readonly items: readonly ReactNode[] }): ReactElement {
+  return (
+    <ul role="list" className="m-0 flex list-none flex-wrap gap-x-double gap-y-single p-0 text-xs text-muted-foreground">
+      {props.items.map((item, index) => (
+        <li key={index}>{item}</li>
+      ))}
+    </ul>
+  );
+}
+
+/** 🗃️ The table role of every part of a table that folds into records where its card is too narrow for its columns
+ * (`.course-records` around `.course-fold` or `.course-plot`): a folded part is no table box any more, and with its role
+ * spelled out it stays a table, a row, a heading or a cell for assistive technology in every browser.
+ * @see https://www.w3.org/TR/html-aria/#docconformance — the roles the elements have by themselves */
+export const TABLE = {
+  table: { role: "table" },
+  group: { role: "rowgroup" },
+  row: { role: "row" },
+  column: { role: "columnheader", scope: "col" },
+  name: { role: "rowheader", scope: "row" },
+  cell: { role: "cell" },
+} as const;
+
+/** 🗃️ The frame of a table that folds into records in a card narrower than `fold` rem: its container and, should the
+ * unfolded table still be wider than it, its sideways scroll. */
+export function Records(props: { readonly fold: number; readonly children: ReactNode } & Pick<HTMLAttributes<HTMLDivElement>, "className" | "role" | "tabIndex" | "aria-labelledby" | "aria-describedby">): ReactElement {
+  const { fold, children, className, ...rest } = props;
+  return (
+    <div {...rest} className={cn("course-records", className)} style={{ ["--course-fold" as string]: fold } as CSSProperties}>
+      {children}
+    </div>
+  );
+}
+
+/** 🎚️ One choice of {@link Segments}; `short` is what it shows instead of its label below tablet width, where the label
+ * stays its name for assistive technology. */
+export interface Segment<T extends string> {
+  readonly value: T;
+  readonly label: string;
+  readonly short?: string;
+  readonly lang?: string;
+  readonly icon?: IconName;
+  readonly glyph?: string;
+}
+
+/** 🎚️ A segmented choice: one pressed button per option inside a named group. Every option shows an icon and its
+ * label — a course icon, or the emoji a quiz already carries. A short label still gets a target 24 px wide
+ * (WCAG 2.2 SC 2.5.8). */
+export function Segments<T extends string>(props: { readonly label: string; readonly options: readonly Segment<T>[]; readonly value: T | undefined; readonly onChange: (value: T) => void }): ReactElement {
+  const { label, options, value, onChange } = props;
+  return (
+    <div role="group" aria-label={label} className="flex w-fit max-w-full flex-wrap border border-normal">
+      {options.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          lang={option.lang}
+          aria-pressed={option.value === value}
+          onClick={() => onChange(option.value)}
+          className={cn(overviewCardChipClass, "course-target course-segment min-w-[1.5rem] cursor-pointer justify-center transition-colors", option.value === value ? "bg-active-base text-active-foreground" : "text-muted-foreground hover:text-foreground")}
+        >
+          {option.icon !== undefined ? <Icon icon={option.icon} size="small" /> : option.glyph !== undefined ? <Glyph emoji={option.glyph} /> : null}
+          {option.glyph !== undefined ? " " : null}
+          {option.short === undefined ? (
+            option.label
+          ) : (
+            <>
+              <span aria-hidden="true" className="md:hidden">
+                {option.short}
+              </span>
+              <span className="max-md:sr-only">{option.label}</span>
+            </>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** 🔘️ A button inside a card body — the chip shape of the footer actions, framed so it reads as a control; its label
+ * wraps instead of overflowing when a translation or the learner's text size makes it longer than its card. */
+export function BodyButton(props: { readonly onClick: () => void; readonly disabled?: boolean; readonly primary?: boolean; readonly type?: "button" | "submit"; readonly describedBy?: string; readonly children: ReactNode }): ReactElement {
+  return (
+    <button
+      type={props.type ?? "button"}
+      disabled={props.disabled}
+      aria-describedby={props.describedBy}
+      onClick={props.onClick}
+      className={cn(
+        overviewCardChipClass,
+        "course-target h-auto max-h-none w-fit max-w-full cursor-pointer whitespace-normal border border-normal text-left leading-tight transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+        props.primary ? "bg-active-base text-active-foreground" : "text-foreground hover:bg-hover-interactive-fill",
+      )}
+    >
+      {props.children}
+    </button>
+  );
+}
+
+/** 🚫️ What went wrong: the sentence in the learner's language and, apart, the proctor's own words (English, from the
+ * wire) for whoever has to look into it. */
+export interface Problem {
+  readonly message: string;
+  readonly detail?: string;
+}
+
+/** 🚫️ A {@link Problem} as an alert: the sentence, the technical detail collapsed and marked as English, and what the
+ * learner can do about it (`children`). */
+export function ProblemNote(props: { readonly problem: Problem; readonly text: CourseText; readonly id?: string; readonly className?: string; readonly children?: ReactNode }): ReactElement {
+  const { problem, text } = props;
+  return (
+    <div id={props.id} role="alert" className={cn("course-alert flex flex-wrap items-center gap-x-double gap-y-single border border-normal px-double py-single text-sm", props.className)}>
+      <p className="m-0 min-w-0 flex-1 font-semibold">{problem.message}</p>
+      {props.children}
+      {problem.detail === undefined ? null : (
+        <details className="w-full text-xs text-muted-foreground">
+          <summary className="course-target flex cursor-pointer items-center">{text("course.app.details")}</summary>
+          <code lang="en" className="course-name block">
+            {problem.detail}
+          </code>
+        </details>
+      )}
+    </div>
+  );
+}
+
+const FOCUSABLE = "button:not([disabled]), a[href], summary, input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])";
+
+function focusables(dialog: HTMLElement): HTMLElement[] {
+  return [...dialog.querySelectorAll<HTMLElement>(FOCUSABLE)];
+}
+
+/** 🎯 Focus `el` and leave every scroll offset alone. The browser's default scrolls the focused control into view,
+ * which is what slides the page up under a window and leaves it on empty space once the window closes.
+ * @see https://html.spec.whatwg.org/multipage/interaction.html#dom-focusoptions-preventscroll */
+function focusHeld(el: HTMLElement | null | undefined): void {
+  el?.focus({ preventScroll: true });
+}
+
+/** 📌 The scroll offsets of the window and of the page under a dialog, put back after a focus change. The dialog's own
+ * glass is left free to scroll when the window is taller than the screen. */
+function holdPageScroll(host: HTMLElement, backdrop: HTMLElement | null): () => void {
+  const nodes: HTMLElement[] = [];
+  const seen = new Set<HTMLElement>();
+  const add = (el: HTMLElement | null): void => {
+    if (el === null || seen.has(el) || (backdrop !== null && (el === backdrop || backdrop.contains(el)))) return;
+    seen.add(el);
+    nodes.push(el);
+  };
+  add(document.scrollingElement instanceof HTMLElement ? document.scrollingElement : null);
+  add(document.documentElement);
+  let node: HTMLElement | null = host;
+  while (node !== null) {
+    add(node);
+    node = node.parentElement;
+  }
+  for (const el of host.querySelectorAll<HTMLElement>("*")) add(el);
+  const snap = nodes.map((el) => [el, el.scrollTop, el.scrollLeft] as const);
+  return () => {
+    for (const [el, top, left] of snap) {
+      if (el.scrollTop !== top) el.scrollTop = top;
+      if (el.scrollLeft !== left) el.scrollLeft = left;
+    }
+  };
+}
+
+/** 💬️ A modal card over the whole client: a question that needs an answer (`alertdialog`) or a notice to read
+ * (`dialog`). It is rendered as the last child of the client's root, so the root's language and styles apply and
+ * everything else of the client is inert while it shows; focus goes to its `data-autofocus` control (again whenever
+ * `focusKey` changes), Tab stays inside from wherever focus is, Escape calls `onEscape`, and closing returns focus to
+ * the control that opened it. The page keeps its scroll: the glass blurs what is already on screen and the window
+ * stays centred on it. A click inside it never reaches the card it was opened from.
+ * @see https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/ */
+export function Dialog(props: {
+  readonly id: string;
+  readonly role: "dialog" | "alertdialog";
+  readonly icon: ReactNode;
+  readonly title: string;
+  readonly describedBy: string;
+  readonly onEscape: () => void;
+  readonly focusKey?: string;
+  readonly observed?: boolean;
+  readonly locale?: string;
+  readonly wide?: boolean;
+  readonly footerLeft?: ReactNode;
+  readonly footerRight?: ReactNode;
+  readonly children: ReactNode;
+}): ReactElement {
+  const [origin, setOrigin] = useState<HTMLSpanElement | null>(null);
+  const [opener] = useState<Element | null>(() => (typeof document === "undefined" ? null : document.activeElement));
+  const backdrop = useRef<HTMLDivElement>(null);
+  const dialog = useRef<HTMLDivElement>(null);
+  const escape = useRef(props.onEscape);
+  escape.current = props.onEscape;
+  const host = origin === null ? null : (origin.closest<HTMLElement>(".course-app") ?? origin.ownerDocument.body);
+
+  useLayoutEffect(() => {
+    if (host === null || props.observed) return;
+    const restore = holdPageScroll(host, backdrop.current);
+    const silenced = [...host.children].filter((sibling) => sibling !== backdrop.current && !sibling.hasAttribute("inert"));
+    focusHeld(dialog.current?.querySelector<HTMLElement>("[data-autofocus]"));
+    for (const sibling of silenced) sibling.setAttribute("inert", "");
+    restore();
+    let holding = false;
+    const onScroll = (): void => {
+      if (holding) return;
+      holding = true;
+      restore();
+      holding = false;
+    };
+    document.addEventListener("scroll", onScroll, true);
+    return () => {
+      document.removeEventListener("scroll", onScroll, true);
+      const putBack = holdPageScroll(host, backdrop.current);
+      for (const sibling of silenced) sibling.removeAttribute("inert");
+      if (opener instanceof HTMLElement && opener.isConnected) focusHeld(opener);
+      putBack();
+    };
+  }, [host, opener, props.observed]);
+
+  useLayoutEffect(() => {
+    if (host === null || props.observed) return;
+    const restore = holdPageScroll(host, backdrop.current);
+    focusHeld(dialog.current?.querySelector<HTMLElement>("[data-autofocus]"));
+    restore();
+  }, [host, props.focusKey, props.observed]);
+
+  useEffect(() => {
+    if (host === null || props.observed) return;
+    const onKey = (event: KeyboardEvent): void => {
+      const within = dialog.current;
+      if (within === null) return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        escape.current();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const stops = focusables(within);
+      const first = stops[0];
+      const last = stops[stops.length - 1];
+      const active = document.activeElement;
+      const outside = active === null || !within.contains(active);
+      if (event.shiftKey && (outside || active === first)) {
+        event.preventDefault();
+        focusHeld(last);
+      } else if (!event.shiftKey && (outside || active === last)) {
+        event.preventDefault();
+        focusHeld(first);
+      }
+    };
+    document.addEventListener("keydown", onKey, true);
+    return () => document.removeEventListener("keydown", onKey, true);
+  }, [host, props.observed]);
+
+  return (
+    <>
+      <span ref={setOrigin} hidden />
+      {host === null
+        ? null
+        : createPortal(
+            <div ref={backdrop} data-course-dialog="" data-observed-dialog={props.observed ? "" : undefined} className={cn("course-backdrop fixed inset-0 z-50 overflow-y-auto", props.observed && "pointer-events-none")} onClick={(event) => event.stopPropagation()}>
+              <div className="flex min-h-full items-center justify-center p-double">
+                <div ref={dialog} role={props.role} lang={props.locale ?? origin?.closest<HTMLElement>("[lang]")?.lang} aria-modal={props.observed ? undefined : true} aria-labelledby={props.id} aria-describedby={props.describedBy} className={cn("w-full", props.wide ? "max-w-2xl" : "max-w-md", props.observed && "pointer-events-auto")}>
+                  <CourseCard id={props.id} card="dialog" icon={props.icon} title={props.title} footerLeft={props.footerLeft} footerRight={props.footerRight}>
+                    {props.children}
+                  </CourseCard>
+                </div>
+              </div>
+            </div>,
+            host,
+          )}
+    </>
+  );
+}

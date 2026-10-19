@@ -15,7 +15,7 @@ use semio_framework_os_store_space::lifted_store::install_unscheduled_catalog;
 use semio_framework_os_store_engine_owners::member_producer::MemberStoreProducer;
 use semio_framework_os_store_text_io::text_format::{parse_document_pack, print_document_pack};
 use semio_framework_os_store_space_schema::{ArtifactCommand, SupersedeInput};
-use semio_framework_job::StepBudget;
+
 
 const SCHEMA: &str = "demo/v1";
 const ACTOR: &str = "actor:replay";
@@ -114,25 +114,30 @@ fn accounted_turn(init: &Initializer) -> bool {
         || init.runtime.as_ref().is_some_and(|runtime| runtime.close_active.is_some())
 }
 
-fn turn(init: &mut Initializer, grant: RetainedCloneGrant, sequence: &mut u64, cancel: &semio_framework_job::CancelToken, authority: &semio_framework_job::JobPayloadAuthority) -> (Outcome, RetainedCloneProgress, bool) {
+struct ReplayOriginal{caller:Option<semio_framework_job::OriginalJobFixtureCaller>,decoder:semio_framework_job::OriginalJobDecodeOwner}
+impl ReplayOriginal{
+ fn new()->Self{let stock=RetainedCloneGrant{maximum_items:1<<24,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:4096};Self{caller:Some(semio_framework_job::OriginalJobFixtureCaller::admit(OperationId(7),Generation(3),stock,||Some(1),u64::MAX,1<<24)),decoder:semio_framework_job::OriginalJobDecodeOwner::empty()}}
+ fn turn<T>(&mut self,grant:RetainedCloneGrant,advance:impl FnOnce(&mut StepContext<'_>)->Result<T,semio_framework_job::OriginalTurnFailure>)->Result<T,semio_framework_job::OriginalTurnFailure>{self.caller.as_mut().expect("replay retains its initiating source until close").turn_with_decoder(grant,&mut self.decoder,advance)}
+ fn receipt(&self)->RetainedCloneProgress{self.caller.as_ref().unwrap().receipt()}
+ fn finish(&mut self){while !self.decoder.terminal_is_empty(){self.caller.as_mut().unwrap().turn(WIDE,|cx|{let step=self.decoder.close_step(cx.retained_grant())?;cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);Ok(())}).unwrap();}self.caller.take().unwrap().retire(WIDE);}
+}
+
+fn turn(init:&mut Initializer,original:&mut ReplayOriginal,grant:RetainedCloneGrant) -> (Outcome, RetainedCloneProgress, bool) {
     let accounted = accounted_turn(init);
     let quote = init.runtime.as_ref().and_then(|runtime| runtime.close_active.as_ref()).map(|active| (active.next_demand(1 << 20), active.terminal_is_empty()));
     let shape = (init.envelope.is_some(), init.owners.is_some(), init.envelope_retirement.is_some(), init.runtime.is_some(), init.catalog.is_some(), init.actor.is_some(), init.actor_close.is_some(), init.active.is_some(), init.staged.is_some(), init.index_open, init.factory.is_some(), init.candidate.is_some());
     let before = (shape, init.phase, init.runtime.as_ref().is_some_and(|runtime| runtime.close_active.is_some()));
-    let mut ownership = RetainedCloneProgress::default();
-    let mut cx = StepContext::with_payload_authority(OperationId(7), Generation(3), StepBudget::new(u64::MAX, u64::MAX, grant), cancel, semio_framework_job::default_now_us, sequence, &mut ownership, authority).expect("the paid ledger matches the replay operation");
-    let (outcome, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
-        let stepped = ArtifactStoreInitializationAuthority::step(init, &mut cx).expect("a replay turn never errs");
-        match stepped {
-            None => Outcome::Unaffordable,
-            Some(JobOutcomeBorrow::Yield { .. }) => Outcome::Yield,
-            Some(JobOutcomeBorrow::Complete { .. }) => Outcome::Complete,
-            Some(JobOutcomeBorrow::Cancelled { .. }) => Outcome::Cancelled,
-            Some(JobOutcomeBorrow::Fault { .. }) => Outcome::Fault,
-            Some(other) => panic!("the replay initializer lends no {other:?}"),
+    let (outcome,heap)=original.turn(grant,|cx|Ok(semio_framework_trace::observe_heap_allocations_on_this_thread(||{
+        match ArtifactStoreInitializationAuthority::step(init,cx).expect("a replay original turn never errs"){
+            None=>Outcome::Unaffordable,
+            Some(JobOutcomeBorrow::Yield{..})=>Outcome::Yield,
+            Some(JobOutcomeBorrow::Complete{..})=>Outcome::Complete,
+            Some(JobOutcomeBorrow::Cancelled{..})=>Outcome::Cancelled,
+            Some(JobOutcomeBorrow::Fault{..})=>Outcome::Fault,
+            Some(other)=>panic!("the replay initializer lends no {other:?}"),
         }
-    });
-    drop(cx);
+    }))).expect("same original replay admission");
+    let ownership=original.receipt();
     assert!(ownership.fits(grant), "a turn never spends more than its wallet: {ownership:?} of {grant:?}");
     if accounted {
         assert_eq!((heap.requested_bytes, heap.released_bytes), (ownership.retained_capacity_bytes, ownership.released_bytes), "funded turn allocations match the receipt: [DEBUG] {before:?} quote {quote:?} -> {:?} receipt {ownership:?}", init.phase);
@@ -140,10 +145,7 @@ fn turn(init: &mut Initializer, grant: RetainedCloneGrant, sequence: &mut u64, c
     (outcome, ownership, accounted)
 }
 
-fn run_until(init: &mut Initializer, grant: RetainedCloneGrant, limit: usize, stop: impl Fn(&Initializer, usize) -> bool, terminal: Outcome) -> (Drive, Outcome) {
-    let mut sequence = 0u64;
-    let cancel = semio_framework_job::root_cancel_token();
-    let (mut authority, _) = semio_framework_job::JobPayloadAuthority::admit(OperationId(7), Generation(3), WIDE).expect("ledger admission").expect("the wide wallet affords the paid ledger");
+fn run_until(init: &mut Initializer, original:&mut ReplayOriginal, grant: RetainedCloneGrant, limit: usize, stop: impl Fn(&Initializer, usize) -> bool, terminal: Outcome) -> (Drive, Outcome) {
     let mut drive = Drive { turns: 0, accounted: 0, spent: RetainedCloneProgress::default() };
     let mut folded = ArtifactStoreInitializationAuthority::progress(init).0;
     let result = loop {
@@ -151,7 +153,7 @@ fn run_until(init: &mut Initializer, grant: RetainedCloneGrant, limit: usize, st
         if stop(init, drive.turns) {
             break (drive, Outcome::Yield);
         }
-        let (outcome, ownership, accounted) = turn(init, grant, &mut sequence, &cancel, &authority);
+        let (outcome, ownership, accounted) = turn(init, original, grant);
         drive.turns += 1;
         drive.accounted += usize::from(accounted);
         drive.spent = drive.spent.checked_add(ownership).expect("cumulative receipts do not overflow");
@@ -163,9 +165,6 @@ fn run_until(init: &mut Initializer, grant: RetainedCloneGrant, limit: usize, st
         }
         assert!(matches!(outcome, Outcome::Yield | Outcome::Unaffordable), "unexpected {outcome:?} before {terminal:?}");
     };
-    while !authority.terminal_is_empty() {
-        authority.close_step(WIDE).expect("the paid ledger closes");
-    }
     result
 }
 
@@ -179,12 +178,13 @@ fn retire_store(store: &mut Store) {
     panic!("the candidate store did not close");
 }
 
-fn close_initializer(init: &mut Initializer) {
+fn close_initializer(init: &mut Initializer,original:&mut ReplayOriginal) {
     for _ in 0..65_536 {
         if ArtifactStoreInitializationAuthority::terminal_is_empty(init) {
+            original.finish();
             return;
         }
-        let step = ArtifactStoreInitializationAuthority::close_step(init, WIDE).expect("the initializer closes under a wide wallet");
+        let step = original.turn(WIDE,|cx|ArtifactStoreInitializationAuthority::close_step(init,cx)).expect("the initializer closes under its original wide loan");
         assert!(step.progress().fits(WIDE));
     }
     panic!("the initializer did not reach terminal-empty");
@@ -202,7 +202,8 @@ async fn replay_equals_direct_application_under_every_grant() {
     let mut turns_by_grant = Vec::new();
     for items in [1usize, 7, 1 << 20] {
         let mut init = initializer(envelope(&source).await);
-        let (drive, outcome) = run_until(&mut init, grant_with_items(items), 100_000, |_, _| false, Outcome::Complete);
+    let mut original=ReplayOriginal::new();
+        let (drive, outcome) = run_until(&mut init,&mut original, grant_with_items(items), 100_000, |_, _| false, Outcome::Complete);
         assert_eq!(outcome, Outcome::Complete);
         assert_eq!(ArtifactStoreInitializationAuthority::progress(&init), (source.operations as u64, source.operations as u64), "every applied operation folds exactly once");
         assert!(drive.turns >= source.operations * 2, "one operation per turn, never batched: {} turns for {} operations", drive.turns, source.operations);
@@ -219,7 +220,7 @@ async fn replay_equals_direct_application_under_every_grant() {
         assert!(ArtifactStoreInitializationAuthority::take_candidate(&mut init).is_none(), "the store is handed off once");
         retire_store(&mut candidate);
         drop(candidate);
-        close_initializer(&mut init);
+        close_initializer(&mut init,&mut original);
         assert!(ArtifactStoreInitializationAuthority::terminal_is_empty(&init));
         turns_by_grant.push(drive.turns);
     }
@@ -233,14 +234,15 @@ async fn supersession_replacement_and_withdrawal_are_folded_into_the_replay() {
     for (supersede, label) in [(vec![(1usize, Some(100))], "replace"), (vec![(1usize, None)], "withdraw"), (vec![(0, Some(7)), (1, Some(100)), (3, None)], "many")] {
         let source = source(label, 3, &supersede).await;
         let mut init = initializer(envelope(&source).await);
-        let (_, outcome) = run_until(&mut init, WIDE, 100_000, |_, _| false, Outcome::Complete);
+    let mut original=ReplayOriginal::new();
+        let (_, outcome) = run_until(&mut init,&mut original, WIDE, 100_000, |_, _| false, Outcome::Complete);
         assert_eq!(outcome, Outcome::Complete);
         let mut candidate = ArtifactStoreInitializationAuthority::take_candidate(&mut init).expect("store");
         assert_eq!(candidate.snapshot_ref().n, Some(source.expected), "{label}");
         assert_eq!(candidate.supersessions().len(), supersede.len(), "{label}");
         retire_store(&mut candidate);
         drop(candidate);
-        close_initializer(&mut init);
+        close_initializer(&mut init,&mut original);
     }
 }
 
@@ -248,22 +250,25 @@ async fn supersession_replacement_and_withdrawal_are_folded_into_the_replay() {
 async fn cancellation_at_every_turn_boundary_closes_with_exact_retirement() {
     let source = source("replay-cancel", 4, &[(1, Some(9))]).await;
     let mut full = initializer(envelope(&source).await);
-    let (reference, _) = run_until(&mut full, WIDE, 100_000, |_, _| false, Outcome::Complete);
+    let mut original=ReplayOriginal::new();
+    let (reference, _) = run_until(&mut full,&mut original, WIDE, 100_000, |_, _| false, Outcome::Complete);
     let mut candidate = ArtifactStoreInitializationAuthority::take_candidate(&mut full).expect("store");
     retire_store(&mut candidate);
     drop(candidate);
-    close_initializer(&mut full);
+    close_initializer(&mut full,&mut original);
     let mut retired_turns = 0;
     for stop in (0..reference.turns).step_by(1) {
         let mut init = initializer(envelope(&source).await);
-        let (_, reached) = run_until(&mut init, WIDE, 100_000, |_, turns| turns == stop, Outcome::Complete);
+    let mut original=ReplayOriginal::new();
+        let (_, reached) = run_until(&mut init,&mut original, WIDE, 100_000, |_, turns| turns == stop, Outcome::Complete);
         assert_eq!(reached, Outcome::Yield);
         ArtifactStoreInitializationAuthority::request_cancel(&mut init);
-        let (drive, outcome) = run_until(&mut init, WIDE, 100_000, |_, _| false, Outcome::Cancelled);
+        let (drive, outcome) = run_until(&mut init,&mut original, WIDE, 100_000, |_, _| false, Outcome::Cancelled);
         retired_turns += drive.turns;
         assert_eq!(outcome, Outcome::Cancelled, "stop {stop}");
         assert!(ArtifactStoreInitializationAuthority::take_candidate(&mut init).is_none());
         assert!(ArtifactStoreInitializationAuthority::terminal_is_empty(&init), "stop {stop}: a cancelled replay retires every born owner before it reports Cancelled");
+        close_initializer(&mut init,&mut original);
     }
     assert!(retired_turns > reference.turns, "cancellation retired real owners across the sweep");
 }
@@ -272,42 +277,41 @@ async fn cancellation_at_every_turn_boundary_closes_with_exact_retirement() {
 async fn cancellation_under_a_single_item_wallet_makes_progress_and_closes() {
     let source = source("replay-cancel-tight", 3, &[]).await;
     let mut init = initializer(envelope(&source).await);
-    let (_, reached) = run_until(&mut init, grant_with_items(1), 100_000, |init, _| matches!(init.phase, Phase::Fold { mutation: 1, .. }), Outcome::Complete);
+    let mut original=ReplayOriginal::new();
+    let (_, reached) = run_until(&mut init,&mut original, grant_with_items(1), 100_000, |init, _| matches!(init.phase, Phase::Fold { mutation: 1, .. }), Outcome::Complete);
     assert_eq!(reached, Outcome::Yield);
     ArtifactStoreInitializationAuthority::request_cancel(&mut init);
-    let (_, outcome) = run_until(&mut init, grant_with_items(1), 100_000, |_, _| false, Outcome::Cancelled);
+    let (_, outcome) = run_until(&mut init,&mut original, grant_with_items(1), 100_000, |_, _| false, Outcome::Cancelled);
     assert_eq!(outcome, Outcome::Cancelled);
     assert!(ArtifactStoreInitializationAuthority::terminal_is_empty(&init));
+    close_initializer(&mut init,&mut original);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn a_cancelled_step_context_cancels_the_replay() {
     let source = source("replay-token", 2, &[]).await;
     let mut init = initializer(envelope(&source).await);
-    let mut sequence = 0u64;
-    let token = semio_framework_job::root_cancel_token();
-    token.cancel_now();
+    let mut original=ReplayOriginal::new();
+    original.caller.as_ref().unwrap().cancel().cancel_now();
     let mut outcome = Outcome::Yield;
     for _ in 0..100_000 {
-        let mut ownership = RetainedCloneProgress::default();
-        let mut cx = StepContext::new(OperationId(7), Generation(3), StepBudget::new(u64::MAX, u64::MAX, WIDE), token.clone(), semio_framework_job::default_now_us, &mut sequence, &mut ownership);
-        if let Some(JobOutcomeBorrow::Cancelled { .. }) = ArtifactStoreInitializationAuthority::step(&mut init, &mut cx).expect("turn") {
-            outcome = Outcome::Cancelled;
-            break;
-        }
+        let (current,_,_)=turn(&mut init,&mut original,WIDE);
+        if current==Outcome::Cancelled{outcome=current;break}
     }
     assert_eq!(outcome, Outcome::Cancelled);
     assert!(ArtifactStoreInitializationAuthority::terminal_is_empty(&init));
+    close_initializer(&mut init,&mut original);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn a_hostile_envelope_faults_and_closes_exactly() {
     let source = source("replay-fault", 2, &[]).await;
     let mut init = Initializer::new(envelope(&source).await, "demo/other", OperationId(7), Generation(3), ActorId(ACTOR.into()));
-    let (_, outcome) = run_until(&mut init, WIDE, 100_000, |_, _| false, Outcome::Fault);
+    let mut original=ReplayOriginal::new();
+    let (_, outcome) = run_until(&mut init,&mut original, WIDE, 100_000, |_, _| false, Outcome::Fault);
     assert_eq!(outcome, Outcome::Fault);
     assert!(ArtifactStoreInitializationAuthority::take_candidate(&mut init).is_none());
-    close_initializer(&mut init);
+    close_initializer(&mut init,&mut original);
     assert!(ArtifactStoreInitializationAuthority::terminal_is_empty(&init));
 }
 
@@ -315,10 +319,11 @@ async fn a_hostile_envelope_faults_and_closes_exactly() {
 async fn the_initializer_drives_through_the_interactive_job_close_path() {
     let source = source("replay-job", 2, &[]).await;
     let mut init = initializer(envelope(&source).await);
-    let (_, reached) = run_until(&mut init, WIDE, 100_000, |_, turns| turns == 5, Outcome::Complete);
+    let mut original=ReplayOriginal::new();
+    let (_, reached) = run_until(&mut init,&mut original, WIDE, 100_000, |_, turns| turns == 5, Outcome::Complete);
     assert_eq!(reached, Outcome::Yield);
     let demand = ArtifactStoreInitializationAuthority::retirement_demands(&init, WIDE.maximum_copy_bytes).expect("the next close action is quoted");
     assert!(permits(WIDE, demand));
     ArtifactStoreInitializationAuthority::begin_close(&mut init);
-    close_initializer(&mut init);
+    close_initializer(&mut init,&mut original);
 }

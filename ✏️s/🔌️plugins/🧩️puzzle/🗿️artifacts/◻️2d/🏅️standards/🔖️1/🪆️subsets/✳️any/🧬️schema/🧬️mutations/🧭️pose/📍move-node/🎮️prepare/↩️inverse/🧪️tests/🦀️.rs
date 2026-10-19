@@ -105,3 +105,24 @@ fn history_edit_puzzle2d_owned_move_inverse_preserves_literal_ids_and_controlled
         test_source_custody::close(&mut source);test_source_custody::close(&mut mutation);
     }
 }
+
+/// ➕️ The concrete inverse this owner prepares sums to the negative of the forward diff (law L3) on the committed applied vectors of its family.
+#[semio_framework_async_macros::async_test]
+async fn the_prepared_family_inverse_sums_to_the_negative_diff() {
+    macro_rules! vector {
+        ($kind:literal, $case:literal) => {
+            (
+                include_str!(concat!("../../../../../../🧫️fixtures/🧬️mutations/", $kind, "/", $case, "/📸️snapshot/⬅️before/🔣️.json")),
+                include_str!(concat!("../../../../../../🧫️fixtures/🧬️mutations/", $kind, "/", $case, "/🦠️mutation/🔣️.json")),
+            )
+        };
+    }
+    for (before, mutation) in [
+    vector!("📍move-node", "📍️moves-node-a"),
+    vector!("📍move-node", "📍️moves"),
+    ] {
+        let before: crate::Puzzle2dSnapshot = semio_framework_pack_json::from_json_str(before, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes");
+        let mutation: crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation = semio_framework_pack_json::from_json_str(mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes");
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
+    }
+}

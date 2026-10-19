@@ -16,6 +16,14 @@
   "handoff": {
     "sourceEntries": 33,
     "copiedEntriesBeforeLoss": 3,
+    "sourceAuthorityOrder": [
+      { "id": "reserve-before-take", "reservePosition": 0, "takePosition": 16, "expected": true },
+      { "id": "missing-reserve", "reservePosition": -1, "takePosition": 16, "expected": false },
+      { "id": "missing-take", "reservePosition": 0, "takePosition": -1, "expected": false },
+      { "id": "take-before-reserve", "reservePosition": 16, "takePosition": 0, "expected": false },
+      { "id": "same-position", "reservePosition": 16, "takePosition": 16, "expected": false },
+      { "id": "both-missing", "reservePosition": -1, "takePosition": -1, "expected": false }
+    ],
     "closeGrant": {
       "maximumItems": 1,
       "maximumBytes": 65536,

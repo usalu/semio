@@ -86,10 +86,14 @@ impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
     /// 🏃️ Executes the admitted business producer on the same original caller without renewing any budget.
     pub fn pump_one_for_interactive_turn(&mut self,cx:&mut StepContext<'_>)->Result<WorkerJobPoll,OriginalTurnFailure>{
         if self.checked_out.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original worker outcome must be returned before another callback").into())}
+        let before=cx.retained_progress();
+        let granted=cx.retained_grant();
         let Some((ticket,poll))=self.session.try_step_on_original_caller(cx)?else{return Ok(WorkerJobPoll::Idle)};
         if poll==WorkerJobPoll::Idle{return Ok(poll)}
         let owner=if poll==WorkerJobPoll::Terminal{self.session.take_terminal()}else{self.session.take_outcome(ticket)};
         self.checked_out=Some(owner.map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"original callback lost its exact checked-out producer"))?);
+        let (issued,progress)=self.checked_out_retained_step_receipt().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original callback omitted its physical receipt"))?;
+        if *issued!=granted||!progress.fits(granted)||before.checked_add(*progress)?!=cx.retained_progress(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original callback receipt differs from its issued authority or posted effects").into())}
         Ok(poll)
     }
 
@@ -150,7 +154,7 @@ impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
     }
 
     pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{
-        let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
+        let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
         if let Some(mut owner)=self.checked_out.take(){
             if let Some(demand)=owner.authority.as_ref().and_then(OriginalWorkerJobAuthority::outcome_demands){
                 let result=close_original_retained_step(cx,demand,|grant|Ok(owner.acknowledge_outcome(grant)));self.checked_out=Some(owner);return result.map(|step|match step{InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress}=>WorkerJobCloseStep::Pending{progress},InteractiveJobCloseStep::Blocked=>WorkerJobCloseStep::Blocked})

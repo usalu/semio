@@ -4,9 +4,12 @@
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_value_derive as value_derive;
 
 pub use crate::standards::v1::subsets::any::schema::snapshot::Puzzle5dSnapshot;
+pub use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
+pub use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 
 #[path = "."]
 pub mod standards {
@@ -18,6 +21,9 @@ pub mod standards {
             pub mod any {
                 #[path = "."]
                 pub mod schema {
+#[path = "../../../🎞️play-snapshot/🦀️.rs"]
+pub mod play_snapshot;
+
                     pub use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records;
                     pub use semio_s_artifact_puzzle_5d_snapshot::standards::v1::subsets::any::schema::snapshot;
                     pub use semio_s_artifact_puzzle_5d_diff::standards::v1::subsets::any::schema::diff;

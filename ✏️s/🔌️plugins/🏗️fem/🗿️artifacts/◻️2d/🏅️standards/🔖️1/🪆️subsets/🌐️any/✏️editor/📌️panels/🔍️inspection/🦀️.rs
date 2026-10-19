@@ -1,5 +1,5 @@
-//! 🔍️ Fem2d play app panel — the inspection panel: real editable controls for whatever the
 //! framework-owned `"fem2d"` selection resolves to (a node, element, material, section, support,
+//! 🔍️ Fem2d play app panel — the inspection panel: real editable controls for whatever the
 //! region, load, load case or combination), or the document summary when nothing is selected.
 //!
 //! The body is a `Component::Tree` built through [`PanelTreeBuilder`]: each section holds
@@ -47,12 +47,15 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structur
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_fem_material::planar::FemMaterialValue;
+use semio_s_fem_node::planar::FemNodeValue;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind};
+use semio_framework_plugin::plugin_app_close_prelude::Buildable;
+use semio_framework_plugin::plugin_app_close_prelude::HasBase;
+use semio_framework_plugin::plugin_app_close_prelude::HasChildren;
+use semio_framework_plugin::plugin_app_close_prelude::InputKind;
 use semio_framework_plugin::tree_item;
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::tree_item_with_action;
@@ -222,7 +225,7 @@ fn dof_key(dof: FemDof) -> &'static str {
 //#endregion 🔖️Entities
 
 //#region 🔖️Sections
-fn node_rows(node: &FemNode, labels: &Fem2dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn node_rows(node: &FemNodeValue, labels: &Fem2dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut rows = UiFixedList::default();
     push(&mut rows, read_only_row("node.id", labels.id.as_str(), &node.id))?;
     push(&mut rows, number_row("node.x", labels.x.as_str(), node.x, 0.1, "patchNode", "x", &node.id))?;
@@ -246,7 +249,7 @@ fn element_rows(doc: &Fem2dSnapshot, element: &FemElement, labels: &Fem2dLabels)
     Ok(rows)
 }
 
-fn material_rows(material: &FemMaterial, labels: &Fem2dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn material_rows(material: &FemMaterialValue, labels: &Fem2dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut rows = UiFixedList::default();
     push(&mut rows, read_only_row("material.id", labels.id.as_str(), &material.id))?;
     push(&mut rows, text_row("material.name", labels.name.as_str(), &material.name, "patchMaterial", "name", &material.id))?;
@@ -287,11 +290,12 @@ fn region_rows(doc: &Fem2dSnapshot, region: &FemRegion, labels: &Fem2dLabels) ->
     Ok(rows)
 }
 
-fn load_rows(doc: &Fem2dSnapshot, load: &FemLoad, labels: &Fem2dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
-    let id = load_id(load);
+fn load_rows(doc: &Fem2dSnapshot, case_id: &str, load: &FemLoad, labels: &Fem2dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+    let target = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_load_target_id(case_id, load_id(load)).map_err(|_| ui_error("ui.document.identity"))?;
+    let id = target.as_str();
     let mut rows = UiFixedList::default();
-    push(&mut rows, read_only_row("load.id", labels.id.as_str(), id))?;
-    let case = fem2d_load_owner(doc, id).and_then(|(case_id, _)| doc.load_cases.iter().find(|case| case.id == case_id));
+    push(&mut rows, read_only_row("load.id", labels.id.as_str(), load_id(load)))?;
+    let case = doc.load_cases.iter().find(|case| case.id == case_id);
     push(&mut rows, read_only_row("load.case", labels.load_case.as_str(), case.map_or_else(|| labels.none.as_str().to_string(), |case| case.name.clone())))?;
     match load {
         FemLoad::Nodal { node_id, dof, value, .. } => {
@@ -325,14 +329,15 @@ fn load_case_rows(case: &FemLoadCase, labels: &Fem2dLabels) -> UiAssemblyResult<
 /// selection, the same `interactionSelect` a viewport pick or an artifact-tree row dispatches, so
 /// the inspector re-renders on that load instead of inventing a second selection channel. Its node
 /// id is the load's own id, which is what a scripted driver and the DOM address it by.
-fn load_pick_row(load: &FemLoad, labels: &Fem2dLabels) -> UiAssemblyResult<BuiltNode> {
+fn load_pick_row(case_id: &str, load: &FemLoad, labels: &Fem2dLabels) -> UiAssemblyResult<BuiltNode> {
     let id = load_id(load);
     let (kind, detail) = match load {
         FemLoad::Nodal { node_id, dof, value, .. } => (labels.node.as_str(), format!("{node_id} {} {value}", dof_key(*dof))),
         FemLoad::MemberUdl { element_id: member, wx, wy, .. } => (labels.element.as_str(), format!("{member} {wx} / {wy}")),
         FemLoad::Area { region_id, pressure, .. } => (labels.region.as_str(), format!("{region_id} {pressure}")),
     };
-    action_button(id, &format!("{id} · {kind} · {detail}"), select_action(id)?)
+    let target = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_load_target_id(case_id, id).map_err(|_| ui_error("ui.document.identity"))?;
+    action_button(&target, &format!("{id} · {kind} · {detail}"), select_action(&target)?)
 }
 
 fn select_action(id: &str) -> UiAssemblyResult<(ActionId, Option<UiValue>)> {
@@ -426,21 +431,31 @@ fn action_rows(id: &str, kind: &str, labels: &Fem2dLabels) -> UiAssemblyResult<U
 /// 🔢️ One text row per selected id, keyed by the id itself so a window over a wide selection names
 /// the same row at any offset — the fields below belong to the FIRST of them, which is the one every
 /// viewport pick leaves at the head of the selection.
-fn selection_row(id: &str) -> UiAssemblyResult<BuiltNode> {
-    tree_item(format!("{ROOT}.selection.{id}"), ui_label(id)?)
+fn selection_row(id: &str, labels: &Fem2dLabels) -> UiAssemblyResult<BuiltNode> {
+    let segments = protocol::wire::decode_scoped_identity(id).map_err(|_| ui_error("ui.document.identity"))?;
+    let label = match segments.as_slice() {
+        ["load", case, raw] => format!("{}: {case} / {raw}", labels.load.as_str()),
+        [kind, raw] => {
+            let kind = match *kind { FEM2D_GRANULARITY_NODE => &labels.node, FEM2D_GRANULARITY_ELEMENT => &labels.element, FEM2D_GRANULARITY_REGION => &labels.region, FEM2D_GRANULARITY_SUPPORT => &labels.support, FEM2D_GRANULARITY_MATERIAL => &labels.material, FEM2D_GRANULARITY_SECTION => &labels.section, FEM2D_GRANULARITY_LOAD_CASE => &labels.load_case, FEM2D_GRANULARITY_COMBINATION => &labels.combination, _ => return Err(ui_error("ui.document.identity")) };
+            format!("{}: {raw}", kind.as_str())
+        }
+        _ => return Err(ui_error("ui.document.identity")),
+    };
+    tree_item(format!("{ROOT}.selection.{id}"), ui_label(&label)?)
 }
 
 /// 🔍️ The panel body: the first resolvable selected entity's editable fields, or the document
 /// summary. Every group title is the entity's own noun, so the panel reads as "Node" / "Load Case"
 /// rather than as a generic "Properties".
 pub fn render(doc: &Fem2dSnapshot, interaction: &Fem2dInteractionSnapshot, labels: &Fem2dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
-    let Some((id, kind)) = interaction.selected_ids.iter().find_map(|id| fem2d_entity_kind(doc, id).map(|kind| (id.as_str(), kind))) else {
+    let Some((target, kind)) = interaction.selected_ids.iter().find_map(|id| fem2d_entity_kind(doc, id).map(|kind| (id.as_str(), kind))) else {
         return summary(doc, labels);
     };
+    let id = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_entity_raw_id(target).ok_or_else(|| ui_error("ui.document.identity"))?;
     let mut builder = PanelTreeBuilder::new(ROOT)?;
     if interaction.selected_ids.len() > 1 {
         let title = format!("{} {}", interaction.selected_ids.len(), labels.selected.as_str());
-        builder = builder.window_section(windows, &format!("{ROOT}.selection"), Some(ui_label(&title)?), true, &interaction.selected_ids, |id| selection_row(id))?;
+        builder = builder.window_section(windows, &format!("{ROOT}.selection"), Some(ui_label(&title)?), true, &interaction.selected_ids, |id| selection_row(id, labels))?;
     }
     builder = match kind {
         FEM2D_GRANULARITY_NODE => {
@@ -468,14 +483,14 @@ pub fn render(doc: &Fem2dSnapshot, interaction: &Fem2dInteractionSnapshot, label
             builder.section(format!("{ROOT}.region"), Some(ui_label(labels.region.as_str())?), true, region_rows(doc, region, labels)?)?
         }
         FEM2D_GRANULARITY_LOAD => {
-            let load = doc.load_cases.iter().flat_map(|case| case.loads.iter()).find(|load| load_id(load) == id).ok_or_else(|| ui_error("ui.document"))?;
-            builder.section(format!("{ROOT}.load"), Some(ui_label(labels.load.as_str())?), true, load_rows(doc, load, labels)?)?
+            let (case_id, load) = fem2d_load_owner(doc, target).ok_or_else(|| ui_error("ui.document"))?;
+            builder.section(format!("{ROOT}.load"), Some(ui_label(labels.load.as_str())?), true, load_rows(doc, case_id, load, labels)?)?
         }
         FEM2D_GRANULARITY_LOAD_CASE => {
             let case = doc.load_cases.iter().find(|case| case.id == id).ok_or_else(|| ui_error("ui.document"))?;
             builder
                 .section(format!("{ROOT}.load-case"), Some(ui_label(labels.load_case.as_str())?), true, load_case_rows(case, labels)?)?
-                .window_section(windows, &format!("{ROOT}.load-case.loads"), Some(ui_label(labels.loads.as_str())?), true, &case.loads, |load| load_pick_row(load, labels))?
+                .window_section(windows, &format!("{ROOT}.load-case.loads"), Some(ui_label(labels.loads.as_str())?), true, &case.loads, |load| load_pick_row(&case.id, load, labels))?
         }
         FEM2D_GRANULARITY_COMBINATION => {
             let combination = doc.combinations.iter().find(|combination| combination.id == id).ok_or_else(|| ui_error("ui.document"))?;
@@ -485,7 +500,7 @@ pub fn render(doc: &Fem2dSnapshot, interaction: &Fem2dInteractionSnapshot, label
         }
         _ => return summary(doc, labels),
     };
-    builder.section(format!("{ROOT}.actions"), Some(ui_label(labels.actions.as_str())?), true, action_rows(id, kind, labels)?)?.build()
+    builder.section(format!("{ROOT}.actions"), Some(ui_label(labels.actions.as_str())?), true, action_rows(target, kind, labels)?)?.build()
 }
 //#endregion 🔖️Render
 

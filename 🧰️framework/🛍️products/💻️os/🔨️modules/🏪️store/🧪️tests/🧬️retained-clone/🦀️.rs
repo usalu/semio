@@ -213,7 +213,7 @@ fn close_cursor<T: RetainedClone>(cursor: &mut T::Cursor) {
     }
 }
 
-fn retained_copy<T>(source: &T, grant: RetainedCloneGrant) -> T
+fn retained_copy<T>(source: &T, body:usize, grant: RetainedCloneGrant) -> T
 where
     T: RetainedClone + Clone,
 {
@@ -223,14 +223,14 @@ where
     let output = loop {
         turns += 1;
         let turn = if turns == 1 { bound(grant) } else { grant };
-        let step = cursor.advance(source.borrow(), turn).expect("retained copy");
+        let step = cursor.advance(source.borrow(), body, turn).expect("retained copy");
         assert_progress(step.progress(), turn);
         if matches!(step, RetainedCloneStep::Complete(_)) {
             break cursor.take().expect("retained copy output");
         }
         assert!(turns < 100_000, "retained copy stalled under {grant:?}; last turn {step:?}");
     };
-    assert!(cursor.advance(source.borrow(), grant).is_err());
+    assert!(cursor.advance(source.borrow(), body, grant).is_err());
     close_cursor::<T>(&mut cursor);
     close_source(&mut source);
     output
@@ -256,7 +256,7 @@ fn derived_clone_matches_clone_and_serde_oracles_with_distinct_capacity_credits(
     let mut turns = 0usize;
     let output = loop {
         turns += 1;
-        let step = cursor.advance(retained_source.borrow(), grant).expect("retained clone step");
+        let step = cursor.advance(retained_source.borrow(), fixture.grant.maximum_copy_bytes, grant).expect("retained clone step");
         assert_progress(step.progress(), grant);
         if let RetainedCloneStep::Complete(_) = step {
             break cursor.take().expect("completed retained clone");
@@ -280,7 +280,7 @@ fn capacity_refusal_precedes_large_vector_allocation() {
     let refused = RetainedCloneGrant { maximum_capacity_bytes: fixture.insufficient_capacity_bytes, ..admitted };
     let mut reached_refusal = false;
     for _ in 0..32 {
-        let step = cursor.advance(retained_owner.borrow(), refused).expect("capacity probe");
+        let step = cursor.advance(retained_owner.borrow(), fixture.grant.maximum_copy_bytes, refused).expect("capacity probe");
         let progress = step.progress();
         assert_progress(progress, refused);
         if progress == RetainedCloneProgress::default() {
@@ -302,7 +302,7 @@ fn cancellation_retires_every_partial_owner_through_bounded_steps() {
     for stop in &fixture.cancellation_stops {
         let mut cursor = NeutralSnapshot::retained_clone_cursor();
         for _ in 0..*stop {
-            if matches!(cursor.advance(retained_owner.borrow(), grant).expect("retained clone before cancel"), RetainedCloneStep::Complete(_)) {
+            if matches!(cursor.advance(retained_owner.borrow(), fixture.grant.maximum_copy_bytes, grant).expect("retained clone before cancel"), RetainedCloneStep::Complete(_)) {
                 break;
             }
         }
@@ -326,18 +326,18 @@ fn utf8_copy_is_boundary_paged_and_source_lease_captures_one_value() {
     let fixture = fixture();
     let source = "βeta 🧬 Deutsch 🇯🇵".repeat(512);
     let grant = RetainedCloneGrant { maximum_items: 4, maximum_copy_bytes: 7, maximum_capacity_bytes: source.len(), maximum_depth: 512, maximum_release_bytes: source.len() };
-    assert_eq!(retained_copy(&source, grant), source);
+    assert_eq!(retained_copy(&source, 7, grant), source);
 
     let mut external = fixture.immutable_lease.captured.clone();
     let mut retained = retained_source(external.clone());
     let mut cursor = String::retained_clone_cursor();
     let reserve = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 2, maximum_capacity_bytes: external.len(), maximum_depth: 512, maximum_release_bytes: external.len() };
-    cursor.advance(retained.borrow(), bound(reserve)).expect("string alias bind");
-    cursor.advance(retained.borrow(), reserve).expect("string reserve");
-    cursor.advance(retained.borrow(), reserve).expect("first immutable page");
+    cursor.advance(retained.borrow(), 7, bound(reserve)).expect("string alias bind");
+    cursor.advance(retained.borrow(), 7, reserve).expect("string reserve");
+    cursor.advance(retained.borrow(), 7, reserve).expect("first immutable page");
     external = fixture.immutable_lease.external_after_capture.clone();
     let copied = loop {
-        if matches!(cursor.advance(retained.borrow(), reserve).expect("captured string copy"), RetainedCloneStep::Complete(_)) {
+        if matches!(cursor.advance(retained.borrow(), 7, reserve).expect("captured string copy"), RetainedCloneStep::Complete(_)) {
             break cursor.take().expect("captured string output");
         }
     };
@@ -348,8 +348,8 @@ fn utf8_copy_is_boundary_paged_and_source_lease_captures_one_value() {
 
     let mut siblings = retained_source(("same".to_string(), "same".to_string()));
     let mut sibling_cursor = String::retained_clone_cursor();
-    sibling_cursor.advance(siblings.borrow().project(1, |value| &value.0), bound(reserve)).expect("first sibling projection");
-    let error = sibling_cursor.advance(siblings.borrow().project(2, |value| &value.1), reserve).expect_err("crossed sibling projection must fail");
+    sibling_cursor.advance(siblings.borrow().project(1, |value| &value.0), 2, bound(reserve)).expect("first sibling projection");
+    let error = sibling_cursor.advance(siblings.borrow().project(2, |value| &value.1), 2, reserve).expect_err("crossed sibling projection must fail");
     assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::InvariantViolated);
     assert!(error.message.contains("projected path changed"));
     close_cursor::<String>(&mut sibling_cursor);
@@ -365,11 +365,11 @@ fn production_snapshot_read_lease_survives_multiturn_copy_and_bounded_cancellati
     let mut retained_source = snapshot_read::SnapshotRead::new(Arc::clone(&owner), lease).admit_retained_clone_source(physical_grant()).unwrap_or_else(|_| panic!("fixed snapshot source admission policy")).0;
     let copy_grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: captured.len(), maximum_depth: 64, maximum_release_bytes: captured.len() };
     let mut cursor = String::retained_clone_cursor();
-    cursor.advance(retained_source.borrow(), bound(copy_grant)).expect("production snapshot read alias bind");
+    cursor.advance(retained_source.borrow(), 1, bound(copy_grant)).expect("production snapshot read alias bind");
     let mut turns = 0usize;
     let copied = loop {
         turns += 1;
-        if matches!(cursor.advance(retained_source.borrow(), copy_grant).expect("production snapshot read copy"), RetainedCloneStep::Complete(_)) {
+        if matches!(cursor.advance(retained_source.borrow(), 1, copy_grant).expect("production snapshot read copy"), RetainedCloneStep::Complete(_)) {
             break cursor.take().expect("production snapshot read output");
         }
     };
@@ -388,8 +388,8 @@ fn production_snapshot_read_lease_survives_multiturn_copy_and_bounded_cancellati
     let mut retained_source = snapshot_read::SnapshotRead::new(owner, lease).admit_retained_clone_source(physical_grant()).unwrap_or_else(|_| panic!("fixed snapshot source admission policy")).0;
     let grant = grant(&fixture);
     let mut cursor = NeutralSnapshot::retained_clone_cursor();
-    cursor.advance(retained_source.borrow(), grant).expect("production cancellation reserve");
-    cursor.advance(retained_source.borrow(), grant).expect("production cancellation prefix");
+    cursor.advance(retained_source.borrow(), 1, grant).expect("production cancellation reserve");
+    cursor.advance(retained_source.borrow(), 1, grant).expect("production cancellation prefix");
     close_source(&mut retained_source);
     assert!(!registry.terminal_is_empty(), "active cursor binding retains the exact production snapshot read");
     close_cursor::<NeutralSnapshot>(&mut cursor);
@@ -417,11 +417,11 @@ fn retained_vector_and_completed_optional_preserve_their_captured_owner() {
     let mut retained_values = retained_source(values.clone());
     let grant = RetainedCloneGrant { maximum_items: 4, maximum_copy_bytes: 64, maximum_capacity_bytes: 1_024, maximum_depth: 512, maximum_release_bytes: 1_024 };
     let mut vector = Vec::<u64>::retained_clone_cursor();
-    vector.advance(retained_values.borrow(), bound(grant)).expect("vector alias bind");
-    vector.advance(retained_values.borrow(), grant).expect("vector reserve");
+    vector.advance(retained_values.borrow(), 64, bound(grant)).expect("vector alias bind");
+    vector.advance(retained_values.borrow(), 64, grant).expect("vector reserve");
     values.pop();
     let copied = loop {
-        if matches!(vector.advance(retained_values.borrow(), grant).expect("captured vector"), RetainedCloneStep::Complete(_)) {
+        if matches!(vector.advance(retained_values.borrow(), 64, grant).expect("captured vector"), RetainedCloneStep::Complete(_)) {
             break vector.take().expect("captured vector output");
         }
     };
@@ -434,13 +434,13 @@ fn retained_vector_and_completed_optional_preserve_their_captured_owner() {
     let mut optional = Option::<String>::retained_clone_cursor();
     let optional_grant = RetainedCloneGrant { maximum_capacity_bytes: 65_536, maximum_release_bytes: 65_536, maximum_copy_bytes: COMPOSITE_COPY_BYTES, ..grant };
     loop {
-        if matches!(optional.advance(retained_source.borrow(), optional_grant).expect("optional copy"), RetainedCloneStep::Complete(_)) {
+        if matches!(optional.advance(retained_source.borrow(), COMPOSITE_COPY_BYTES, optional_grant).expect("optional copy"), RetainedCloneStep::Complete(_)) {
             break;
         }
     }
-    assert!(matches!(optional.advance(retained_source.borrow(), optional_grant).expect("completed optional"), RetainedCloneStep::Complete(_)));
+    assert!(matches!(optional.advance(retained_source.borrow(), COMPOSITE_COPY_BYTES, optional_grant).expect("completed optional"), RetainedCloneStep::Complete(_)));
     assert_eq!(optional.take(), Some(source.clone()));
-    assert!(optional.advance(retained_source.borrow(), grant).is_err());
+    assert!(optional.advance(retained_source.borrow(), COMPOSITE_COPY_BYTES, grant).is_err());
     close_cursor::<Option<String>>(&mut optional);
     close_source(&mut retained_source);
 }
@@ -454,7 +454,7 @@ fn unit_generic_enum_and_recursive_records_remain_grant_bounded() {
     let mut turns = 0usize;
     let copied = loop {
         turns += 1;
-        let step = cursor.advance(retained_units.borrow(), grant).expect("unit vector clone");
+        let step = cursor.advance(retained_units.borrow(), COMPOSITE_COPY_BYTES, grant).expect("unit vector clone");
         assert!(step.progress().copied_items <= 1);
         if matches!(step, RetainedCloneStep::Complete(_)) {
             break cursor.take().expect("unit vector output");
@@ -467,13 +467,13 @@ fn unit_generic_enum_and_recursive_records_remain_grant_bounded() {
     close_source(&mut retained_units);
 
     let generic = GenericRecord { value: "generic".repeat(128) };
-    assert_eq!(retained_copy(&generic, grant), generic);
+    assert_eq!(retained_copy(&generic, COMPOSITE_COPY_BYTES, grant), generic);
     for choice in [GenericChoice::Unit, GenericChoice::Tuple("tuple".to_string(), "text".to_string()), GenericChoice::Named { value: "named".to_string() }] {
-        assert_eq!(retained_copy(&choice, grant), choice);
+        assert_eq!(retained_copy(&choice, COMPOSITE_COPY_BYTES, grant), choice);
     }
 
     let recursive = recursive_record(fixture().recursive_depth);
-    let copied = retained_copy(&recursive, grant);
+    let copied = retained_copy(&recursive, COMPOSITE_COPY_BYTES, grant);
     assert_eq!(copied, recursive);
     assert_eq!(serde_json::to_value(copied).expect("recursive retained serde"), serde_json::to_value(recursive).expect("recursive clone serde"));
 
@@ -489,7 +489,7 @@ fn clone_under_depth(source: &RecursiveRecord, depth: usize) -> Option<Recursive
     let mut idle = 0usize;
     let mut output = None;
     for turn in 0..400_000usize {
-        let step = cursor.advance(retained.borrow(), if turn == 0 { bound(grant) } else { grant });
+        let step = cursor.advance(retained.borrow(), COMPOSITE_COPY_BYTES, if turn == 0 { bound(grant) } else { grant });
         match step {
             Err(_) => break,
             Ok(RetainedCloneStep::Complete(_)) => {
@@ -545,7 +545,7 @@ fn recursive_partial_copy_cancels_within_the_declared_depth_envelope() {
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: COMPOSITE_COPY_BYTES, maximum_capacity_bytes: 65_536, maximum_depth, maximum_release_bytes: 65_536 };
     let mut cursor = RecursiveRecord::retained_clone_cursor();
     for _ in 0..64 {
-        assert!(matches!(cursor.advance(retained_owner.borrow(), grant).expect("recursive prefix copy"), RetainedCloneStep::Progress(_)));
+        assert!(matches!(cursor.advance(retained_owner.borrow(), COMPOSITE_COPY_BYTES, grant).expect("recursive prefix copy"), RetainedCloneStep::Progress(_)));
     }
     assert!(cursor.begin_close());
     let mut turns = 0usize;
@@ -568,20 +568,20 @@ fn fixed_arrays_standard_tuples_and_tuple_records_preserve_native_shape() {
     let refused = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: std::mem::size_of_val(&array) - 1, maximum_capacity_bytes: 0, maximum_depth: 512, maximum_release_bytes: 0 };
     let mut cursor = <[u32; 128]>::retained_clone_cursor();
     let mut retained_array = retained_source(array);
-    cursor.advance(retained_array.borrow(), bound(refused)).expect("array alias bind");
-    assert_eq!(cursor.advance(retained_array.borrow(), refused).expect("array refusal").progress(), RetainedCloneProgress::default());
+    cursor.advance(retained_array.borrow(), std::mem::size_of_val(&array), bound(refused)).expect("array alias bind");
+    assert_eq!(cursor.advance(retained_array.borrow(), std::mem::size_of_val(&array), refused).expect("array refusal").progress(), RetainedCloneProgress::default());
     close_cursor::<[u32; 128]>(&mut cursor);
     close_source(&mut retained_array);
     let admitted = RetainedCloneGrant { maximum_copy_bytes: std::mem::size_of_val(&array), ..refused };
-    assert_eq!(retained_copy(&array, admitted), array);
+    assert_eq!(retained_copy(&array, std::mem::size_of_val(&array), admitted), array);
 
     let pair = ("βeta".repeat(128), 42u64);
     let triple = ("Deutsch".to_string(), 7u32, "日本語".to_string());
     let record = TupleRecord("tuple record".repeat(64), 9);
     let grant = RetainedCloneGrant { maximum_items: 2, maximum_copy_bytes: COMPOSITE_COPY_BYTES, maximum_capacity_bytes: 65_536, maximum_depth: 512, maximum_release_bytes: 65_536 };
-    assert_eq!(retained_copy(&pair, grant), pair);
-    assert_eq!(retained_copy(&triple, grant), triple);
-    assert_eq!(retained_copy(&record, grant), record);
+    assert_eq!(retained_copy(&pair, COMPOSITE_COPY_BYTES, grant), pair);
+    assert_eq!(retained_copy(&triple, COMPOSITE_COPY_BYTES, grant), triple);
+    assert_eq!(retained_copy(&record, COMPOSITE_COPY_BYTES, grant), record);
 }
 
 #[test]
@@ -589,7 +589,7 @@ fn zero_grants_never_construct_or_complete_an_owner() {
     let zero = RetainedCloneGrant::default();
     let mut scalar = u64::retained_clone_cursor();
     let mut scalar_source = retained_source(7u64);
-    assert_eq!(scalar.advance(scalar_source.borrow(), zero).expect("zero scalar").progress(), RetainedCloneProgress::default());
+    assert_eq!(scalar.advance(scalar_source.borrow(), 0, zero).expect("zero scalar").progress(), RetainedCloneProgress::default());
     assert!(scalar.take().is_none());
     close_cursor::<u64>(&mut scalar);
     close_source(&mut scalar_source);
@@ -597,7 +597,7 @@ fn zero_grants_never_construct_or_complete_an_owner() {
     let text = "β".repeat(64);
     let mut retained_text = retained_source(text);
     let mut string = String::retained_clone_cursor();
-    assert_eq!(string.advance(retained_text.borrow(), zero).expect("zero string").progress(), RetainedCloneProgress::default());
+    assert_eq!(string.advance(retained_text.borrow(), 0, zero).expect("zero string").progress(), RetainedCloneProgress::default());
     assert!(string.take().is_none());
     close_cursor::<String>(&mut string);
     close_source(&mut retained_text);
@@ -605,7 +605,7 @@ fn zero_grants_never_construct_or_complete_an_owner() {
     let values = vec![UnitRecord; 16];
     let mut retained_values = retained_source(values);
     let mut vector = Vec::<UnitRecord>::retained_clone_cursor();
-    assert_eq!(vector.advance(retained_values.borrow(), zero).expect("zero vector").progress(), RetainedCloneProgress::default());
+    assert_eq!(vector.advance(retained_values.borrow(), 0, zero).expect("zero vector").progress(), RetainedCloneProgress::default());
     assert!(vector.take().is_none());
     close_cursor::<Vec<UnitRecord>>(&mut vector);
     close_source(&mut retained_values);
@@ -613,7 +613,7 @@ fn zero_grants_never_construct_or_complete_an_owner() {
     let source = Some("owner".to_string());
     let mut retained_owner = retained_source(source);
     let mut optional = Option::<String>::retained_clone_cursor();
-    assert_eq!(optional.advance(retained_owner.borrow(), zero).expect("zero optional").progress(), RetainedCloneProgress::default());
+    assert_eq!(optional.advance(retained_owner.borrow(), 0, zero).expect("zero optional").progress(), RetainedCloneProgress::default());
     assert!(optional.take().is_none());
     close_cursor::<Option<String>>(&mut optional);
     close_source(&mut retained_owner);
@@ -621,7 +621,7 @@ fn zero_grants_never_construct_or_complete_an_owner() {
     let unit = UnitRecord;
     let mut retained_unit = retained_source(unit);
     let mut derived = UnitRecord::retained_clone_cursor();
-    assert_eq!(derived.advance(retained_unit.borrow(), zero).expect("zero derived").progress(), RetainedCloneProgress::default());
+    assert_eq!(derived.advance(retained_unit.borrow(), 0, zero).expect("zero derived").progress(), RetainedCloneProgress::default());
     assert!(derived.take().is_none());
     close_cursor::<UnitRecord>(&mut derived);
     close_source(&mut retained_unit);
@@ -674,12 +674,12 @@ fn child_fixture() -> (ArtifactChild<()>, Arc<String>) {
 fn artifact_child_retained_clone_matches_clone_and_value_oracles_and_aliases_the_local_owner() {
     let (child, owner) = child_fixture();
     let oracle = child.clone();
-    let copy = retained_copy(&child, physical_grant());
+    let copy = retained_copy(&child, fixture().retirement_grant.maximum_copy_bytes, physical_grant());
     assert_eq!(copy, oracle);
     assert_eq!(semio_framework_value::ToValue::to_value(&copy), semio_framework_value::ToValue::to_value(&oracle));
     assert!(Arc::ptr_eq(&copy.require_local_owner::<String>().expect("cloned child aliases its local owner"), &owner));
     let bare = ArtifactChild::<()>::new("bare".into(), child.target.clone());
-    let bare_copy = retained_copy(&bare, physical_grant());
+    let bare_copy = retained_copy(&bare, fixture().retirement_grant.maximum_copy_bytes, physical_grant());
     assert_eq!(bare_copy, bare);
     assert!(bare_copy.local_owner::<String>().is_none());
     drop(copy);
@@ -698,7 +698,7 @@ fn artifact_child_retained_clone_retires_every_partial_cursor_under_cancellation
         let mut cursor = <ArtifactChild<()> as RetainedClone>::retained_clone_cursor();
         let mut completed = false;
         for _ in 0..stop {
-            if matches!(cursor.advance(source.borrow(), grant).expect("child clone before cancel"), RetainedCloneStep::Complete(_)) {
+            if matches!(cursor.advance(source.borrow(), fixture().retirement_grant.maximum_copy_bytes, grant).expect("child clone before cancel"), RetainedCloneStep::Complete(_)) {
                 completed = true;
                 break;
             }

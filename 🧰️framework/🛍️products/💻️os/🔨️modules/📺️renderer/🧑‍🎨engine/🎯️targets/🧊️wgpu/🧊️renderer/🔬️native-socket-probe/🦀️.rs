@@ -83,19 +83,25 @@ pub struct NativeSocketProbeDiff(pub String);
 
 #[cfg(not(target_arch = "wasm32"))]
 impl store::os_spr::command::DiffAlgebra<NativeSocketProbeSnapshot> for NativeSocketProbeDiff {
-    fn inverse(&self, base: &NativeSocketProbeSnapshot) -> Self {
-        NativeSocketProbeDiff(base.0.clone())
-    }
+
 
     fn is_empty(&self) -> bool {
         false
     }
 }
+#[cfg(not(target_arch = "wasm32"))]
+impl store::os_spr::command::ColdDiffAlgebra<NativeSocketProbeSnapshot> for NativeSocketProbeDiff {
+fn inverse(&self, base: &NativeSocketProbeSnapshot) -> Self {
+        NativeSocketProbeDiff(base.0.clone())
+    }
+}
 
 #[cfg(not(target_arch = "wasm32"))]
-impl store::os_spr::command::MutationDiff<NativeSocketProbeSnapshot> for NativeSocketProbeDiff {
-    fn apply(&self, _base: &NativeSocketProbeSnapshot, _capability: store::os_spr::command::ApplyCapability) -> store::os_spr::command::MutationApplyResult<NativeSocketProbeSnapshot> {
-        Ok(NativeSocketProbeSnapshot(self.0.clone()))
+impl store::os_spr::command::MutationDiff<NativeSocketProbeSnapshot> for NativeSocketProbeDiff {}
+#[cfg(not(target_arch = "wasm32"))]
+impl store::os_spr::command::ColdMutationDiff<NativeSocketProbeSnapshot> for NativeSocketProbeDiff {
+    fn apply(&self, base: &mut NativeSocketProbeSnapshot, capability: store::os_spr::command::ApplyCapability) -> store::os_spr::command::MutationApplyResult<()> {
+        store::os_spr::command::PreparedField::new(NativeSocketProbeSnapshot(self.0.clone()),drop,capability).install(base);Ok(())
     }
 
     fn absorb(&mut self, other: Self) {
@@ -155,12 +161,18 @@ impl store::os_spr::command::Mutation<NativeSocketProbeSnapshot> for NativeSocke
         &Self::DESCRIPTORS[0]
     }
 
-    fn diff(&self, _base: &NativeSocketProbeSnapshot) -> store::os_spr::command::MutationOutcome<NativeSocketProbeDiff> {
+
+
+
+}
+#[cfg(not(target_arch = "wasm32"))]
+impl store::os_spr::command::ColdMutation<NativeSocketProbeSnapshot> for NativeSocketProbeMutation {
+type ReferenceDiff= NativeSocketProbeDiff;
+fn diff(&self, _base: &NativeSocketProbeSnapshot) -> store::os_spr::command::MutationOutcome<NativeSocketProbeDiff> {
         let Self::Set(value) = self;
         store::os_spr::command::MutationOutcome::new(NativeSocketProbeDiff(value.clone()))
     }
-
-    fn inverse(&self, base: &NativeSocketProbeSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+fn inverse(&self, base: &NativeSocketProbeSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
     Ok((|| {
         vec![Self::Set(base.0.clone())]
     

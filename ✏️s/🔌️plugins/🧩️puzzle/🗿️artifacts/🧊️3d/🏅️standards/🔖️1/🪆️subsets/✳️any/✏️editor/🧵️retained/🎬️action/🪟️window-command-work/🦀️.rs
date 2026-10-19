@@ -19,6 +19,7 @@ enum Puzzle3dWindowCommandStage {
 /// framework's interactive step ceiling (ticket 26/09/02/PUZZLE-3D-END-TO-END W-P3); it now spends one
 /// bounded turn on the scene, one per owed mesh fallback, and one on the dispatch.
 /// 🪪️ The admission identity every instance-bound puzzle3d work takes at construction.
+#[derive(Clone)]
 pub struct Puzzle3dInstanceBinding {
     pub app_instance_id: u32,
     pub parent_document_id: String,
@@ -48,16 +49,12 @@ impl Puzzle3dWindowCommandWork {
         Self { tool_id, stage: Puzzle3dWindowCommandStage::Scene, turns: 0, prologue: Puzzle3dActionPrologue::default(), session: None, instance_owner: None, close_owners: Default::default() }
     }
 
-    /// ⏯️ Binds the instance's tool run as of admission, for the arms that dispatch run actions.
-    pub fn with_tool_run(mut self, tool_run: Option<semio_framework_plugin::ToolRunView>) -> Self {
-        self.prologue.tool_run = tool_run;
-        self
-    }
+
 
     /// 🪪️ Binds the admission's instance identity and retained operation owner.
-    pub fn bound(mut self, instance: &Puzzle3dInstanceBinding) -> Self {
-        self.session = Some((instance.app_instance_id, Some(instance.parent_document_id.clone())));
-        self.instance_owner = Some(instance.owner.clone());
+    pub fn bound(mut self, instance: Puzzle3dInstanceBinding) -> Self {
+        self.session = Some((instance.app_instance_id, Some(instance.parent_document_id)));
+        self.instance_owner = Some(instance.owner);
         self
     }
 
@@ -75,6 +72,8 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction, hover: hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
@@ -137,13 +136,15 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle3dWindowCommandStage::Dispatch => {
                 let snapshot_interaction = Puzzle3dInteractionSnapshot::from_state(interaction, hover);
                 let instance_owner = self.instance_owner.as_ref();
-                let (emit, ephemeral) = with_puzzle3d_session_for(self.session.clone(), &runtime, |app| self.prologue.dispatch_step(app, instance_owner, "", command, Some(window_id), &runtime, Some(view), &snapshot_interaction));
+                let (emit, ephemeral) = with_puzzle3d_session_for(self.session.clone(), &runtime, |app| self.prologue.dispatch_step(app, instance_owner, if self.tool_id=="engagementAbort"{context.and_then(|context|context.tool_run())}else{None}, "", command, Some(window_id), &runtime, Some(view), &snapshot_interaction));
                 self.stage = Puzzle3dWindowCommandStage::Complete;
                 Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral })
             }
             Puzzle3dWindowCommandStage::Complete => Err(Fault::from("puzzle3d-window-work-repeated")),
             Puzzle3dWindowCommandStage::Closing => Err(Fault::from("puzzle3d-window-work-closing")),
         }
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
@@ -154,11 +155,9 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
         self.close_owners.stage(Puzzle3dWindowWorkOwners { prologue: std::mem::take(&mut self.prologue), session: self.session.take(), instance_owner: self.instance_owner.take() });
     }
 
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            self.close_owners.close_step(grant)
-        })
-    }
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> { semio_framework_job::close_original_nested_step(cx, |cx, _grant| {
+        self.close_owners.close_step(cx)
+    }) }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
         Ok(self.close_owners.demands(0)?.copy_bytes)

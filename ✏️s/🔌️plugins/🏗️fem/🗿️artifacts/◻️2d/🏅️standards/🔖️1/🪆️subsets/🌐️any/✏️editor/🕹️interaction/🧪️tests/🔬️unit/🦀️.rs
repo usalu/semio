@@ -13,7 +13,7 @@ fn canvas_point(camera: &Viewport2d, model: (f64, f64)) -> (f64, f64) {
 }
 
 fn pick(doc: &Fem2dSnapshot, camera: &Viewport2d, point: (f64, f64)) -> Option<Fem2dPick> {
-    fem2d_hit_test(doc, camera, point.0, point.1, CANVAS_WIDTH, CANVAS_HEIGHT)
+    fem2d_hit_test(doc, camera, point.0, point.1, CANVAS_WIDTH, CANVAS_HEIGHT).expect("scoped pick")
 }
 
 #[test]
@@ -31,7 +31,7 @@ fn hit_test_picks_the_node_under_the_pointer_and_nothing_in_empty_space() {
     let camera = Viewport2d::default();
     let n1 = find_node_2d(&doc.nodes, "n1").expect("demo carries n1");
     assert_eq!(screen_2d(n1.x, n1.y), (40.0, 120.0), "demo n1 sits at model (0,-4)");
-    assert_eq!(pick(&doc, &camera, canvas_point(&camera, (n1.x, n1.y))), Some((FEM2D_GRANULARITY_NODE, "n1".to_string())));
+    assert_eq!(pick(&doc, &camera, canvas_point(&camera, (n1.x, n1.y))), Some((FEM2D_GRANULARITY_NODE, "scope:1:4:node2:n1".to_string())));
     assert_eq!(pick(&doc, &camera, (CANVAS_WIDTH - 4.0, 4.0)), None, "the far corner of the canvas hits nothing");
 }
 
@@ -42,17 +42,17 @@ fn hit_test_resolves_members_regions_supports_and_loads() {
     let n1 = find_node_2d(&doc.nodes, "n1").expect("n1");
     let n2 = find_node_2d(&doc.nodes, "n2").expect("n2");
     let midpoint = ((n1.x + n2.x) * 0.5, (n1.y + n2.y) * 0.5);
-    assert_eq!(pick(&doc, &camera, canvas_point(&camera, midpoint)), Some((FEM2D_GRANULARITY_ELEMENT, "e3".to_string())), "the column e3 spans n1..n2");
+    assert_eq!(pick(&doc, &camera, canvas_point(&camera, midpoint)), Some((FEM2D_GRANULARITY_ELEMENT, "scope:1:7:element2:e3".to_string())), "the column e3 spans n1..n2");
 
     let region = doc.regions.iter().find(|region| region.id == "r1").expect("r1");
     let centroid = fem2d_region_centroid(region).expect("centroid");
-    assert_eq!(pick(&doc, &camera, canvas_point(&camera, centroid)), Some((FEM2D_GRANULARITY_LOAD, "l5".to_string())), "the area-load arrow is anchored at the region centroid and wins over the region");
+    assert_eq!(pick(&doc, &camera, canvas_point(&camera, centroid)), Some((FEM2D_GRANULARITY_LOAD, "scope:1:4:load4:dead2:l5".to_string())), "the area-load arrow is anchored at the region centroid and wins over the region");
     let inside = (region.outline[0][0] + 1.4, (region.outline[0][1] + region.outline[2][1]) * 0.5);
-    assert_eq!(pick(&doc, &camera, canvas_point(&camera, inside)), Some((FEM2D_GRANULARITY_REGION, "r1".to_string())));
+    assert_eq!(pick(&doc, &camera, canvas_point(&camera, inside)), Some((FEM2D_GRANULARITY_REGION, "scope:1:6:region2:r1".to_string())));
 
     let rc0 = find_node_2d(&doc.nodes, "rc0").expect("rc0");
     let ring = canvas_point(&camera, (rc0.x, rc0.y));
-    assert_eq!(pick(&doc, &camera, (ring.0 - 10.0, ring.1)), Some((FEM2D_GRANULARITY_SUPPORT, "s3".to_string())), "just outside the node radius the support glyph wins");
+    assert_eq!(pick(&doc, &camera, (ring.0 - 10.0, ring.1)), Some((FEM2D_GRANULARITY_SUPPORT, "scope:1:7:support2:s3".to_string())), "just outside the node radius the support glyph wins");
 }
 
 #[test]
@@ -60,7 +60,7 @@ fn hit_test_follows_the_camera() {
     let doc = demo();
     let camera = Viewport2d { x: 240.0, y: -80.0, zoom: 3.0 };
     let n2 = find_node_2d(&doc.nodes, "n2").expect("n2");
-    assert_eq!(pick(&doc, &camera, canvas_point(&camera, (n2.x, n2.y))), Some((FEM2D_GRANULARITY_NODE, "n2".to_string())));
+    assert_eq!(pick(&doc, &camera, canvas_point(&camera, (n2.x, n2.y))), Some((FEM2D_GRANULARITY_NODE, "scope:1:4:node2:n2".to_string())));
     assert_eq!(pick(&doc, &Viewport2d::default(), canvas_point(&camera, (n2.x, n2.y))), None, "the same pixel under the default camera is empty space");
 }
 
@@ -78,23 +78,24 @@ fn entity_kind_and_load_owner_resolve_every_granularity() {
         ("dead", FEM2D_GRANULARITY_LOAD_CASE),
         ("uls", FEM2D_GRANULARITY_COMBINATION),
     ] {
-        assert_eq!(fem2d_entity_kind(&doc, id), Some(granularity), "{id}");
+        let target = if granularity == FEM2D_GRANULARITY_LOAD { fem2d_load_target_id("live", id).expect("load target") } else { fem2d_entity_target_id(granularity, id).expect("entity target") };
+        assert_eq!(fem2d_entity_kind(&doc, &target), Some(granularity), "{id}");
     }
     assert_eq!(fem2d_entity_kind(&doc, "nope"), None);
-    let (case_id, load) = fem2d_load_owner(&doc, "l6").expect("l6 belongs to a case");
+    let (case_id, load) = fem2d_load_owner(&doc, "scope:1:4:load4:live2:l6").expect("l6 belongs to a case");
     assert_eq!(case_id, "live");
     assert!(matches!(load, FemLoad::Nodal { node_id, .. } if node_id == "p8_l1"));
-    assert_eq!(fem2d_load_owner(&doc, "l5").map(|(case, _)| case), Some("dead"));
+    assert_eq!(fem2d_load_owner(&doc, "scope:1:4:load4:dead2:l5").map(|(case, _)| case), Some("dead"));
 }
 
 #[test]
 fn entity_model_point_frames_every_kind() {
     let doc = demo();
-    assert_eq!(fem2d_entity_model_point(&doc, "n1"), Some((0.0, -4.0)));
-    assert_eq!(fem2d_entity_model_point(&doc, "e3"), Some((0.0, -2.0)));
-    assert_eq!(fem2d_entity_model_point(&doc, "s1"), Some((0.0, -4.0)));
-    assert_eq!(fem2d_entity_model_point(&doc, "l6"), Some((8.0, 2.8)));
-    assert_eq!(fem2d_entity_model_point(&doc, "r1"), Some((11.0, 2.8)));
+    assert_eq!(fem2d_entity_model_point(&doc, "scope:1:4:node2:n1"), Some((0.0, -4.0)));
+    assert_eq!(fem2d_entity_model_point(&doc, "scope:1:7:element2:e3"), Some((0.0, -2.0)));
+    assert_eq!(fem2d_entity_model_point(&doc, "scope:1:7:support2:s1"), Some((0.0, -4.0)));
+    assert_eq!(fem2d_entity_model_point(&doc, "scope:1:4:load4:live2:l6"), Some((8.0, 2.8)));
+    assert_eq!(fem2d_entity_model_point(&doc, "scope:1:6:region2:r1"), Some((11.0, 2.8)));
     assert_eq!(fem2d_entity_model_point(&doc, "nope"), None);
 }
 
@@ -110,7 +111,7 @@ fn merge_mode_maps_every_modifier_combination() {
 
 #[test]
 fn select_and_hover_effects_carry_the_framework_wire_contract() {
-    let targets = [(FEM2D_GRANULARITY_NODE, "n1".to_string())];
+    let targets = [(FEM2D_GRANULARITY_NODE, "scope:1:4:node2:n1".to_string())];
     let Effect::ReplayShellCommand { action_id, args } = interaction_select_effect(&targets, "additive", "pick") else {
         panic!("interaction_select_effect must request a shell replay");
     };
@@ -120,7 +121,7 @@ fn select_and_hover_effects_carry_the_framework_wire_contract() {
     assert_eq!(args.get("merge").and_then(semio_framework_value::DslValue::as_str), Some("additive"));
     assert_eq!(args.get("method").and_then(semio_framework_value::DslValue::as_str), Some("pick"));
     let raw = args.get("targets").and_then(semio_framework_value::DslValue::as_str).expect("targets json");
-    assert!(raw.contains("\"granularity\":\"node\"") && raw.contains("\"id\":\"n1\""), "targets is a JSON-encoded Vec<InteractionTarget>: {raw}");
+    assert!(raw.contains("\"granularity\":\"node\"") && raw.contains("\"id\":\"scope:1:4:node2:n1\""), "targets is a JSON-encoded Vec<InteractionTarget>: {raw}");
 
     let Effect::ReplayShellCommand { action_id, args } = interaction_hover_effect(&targets) else {
         panic!("interaction_hover_effect must request a shell replay");
@@ -128,13 +129,190 @@ fn select_and_hover_effects_carry_the_framework_wire_contract() {
     assert_eq!(action_id, semio_framework::INTERACTION_HOVER_ACTION_ID);
     let args = args.expect("hover args");
     assert_eq!(args.get("channel").and_then(semio_framework_value::DslValue::as_str), Some(FEM2D_POINTER_CHANNEL));
-    assert!(args.get("targets").and_then(semio_framework_value::DslValue::as_str).is_some_and(|raw| raw.contains("\"id\":\"n1\"")));
+    assert!(args.get("targets").and_then(semio_framework_value::DslValue::as_str).is_some_and(|raw| raw.contains("\"id\":\"scope:1:4:node2:n1\"")));
     let empty: [(&str, String); 0] = [];
     let Effect::ReplayShellCommand { args, .. } = interaction_select_effect(&empty, "replace", "pick") else { panic!("replay") };
     assert_eq!(args.expect("args").get("targets").and_then(semio_framework_value::DslValue::as_str), Some("[]"), "a background click clears with an explicit empty batch");
     let decoded: Vec<protocol::InteractionTarget> = serde_json::from_str(raw).expect("the framework decodes targets with serde_json");
     assert_eq!(decoded.len(), 1);
     assert_eq!(decoded[0].granularity, FEM2D_GRANULARITY_NODE);
-    assert_eq!(decoded[0].id, "n1");
+    assert_eq!(decoded[0].id, "scope:1:4:node2:n1");
 }
 
+#[test]
+fn structure_layers_paint_stable_selected_and_hovered_emphasis() {
+    let doc = demo();
+    let snapshot = Fem2dInteractionSnapshot { selected_ids: vec!["scope:1:4:node2:n1".into(), "scope:1:7:element2:e3".into(), "scope:1:6:region2:r1".into(), "scope:1:7:support2:s1".into(), "scope:1:4:load4:live2:l6".into()], hovered_ids: vec!["scope:1:4:node2:n2".into()] };
+    let bare = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(model_window::fem2d_structure_layers(&doc, "#38bdf8", "#94a3b8", "#f97316")));
+    let painted = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(model_window::fem2d_structure_layers_with(&doc, "#38bdf8", "#94a3b8", "#f97316", &snapshot)));
+    for id in ["sel-node-n1", "sel-el-e3", "sel-region-r1", "sel-support-s1", "sel-load-scope:1:4:load4:live2:l6", "hov-node-n2"] {
+        assert!(painted.contains(id), "missing emphasis layer {id}");
+        assert!(!bare.contains(id), "the bare structure layers must stay free of interaction state ({id})");
+    }
+    assert!(painted.contains(model_window::SELECTION_COLOR_2D), "the selected emphasis carries its own colour");
+    assert!(painted.contains(model_window::HOVER_COLOR_2D), "the hovered emphasis carries the lighter colour");
+    assert_eq!(semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(model_window::fem2d_structure_layers_with(&doc, "#38bdf8", "#94a3b8", "#f97316", &Fem2dInteractionSnapshot::default()))), bare, "an empty interaction snapshot paints exactly the bare layers");
+}
+
+fn identity_fixture() -> (serde_json::Value, Fem2dSnapshot) {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🎮️commands/🗂️remove-selection/🧪️tests/🔬️unit/🔣️.json")).expect("shared JSON identity scenarios");
+    let document = semio_framework_pack_json::from_json_str(&fixture["before"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("native snapshot wire");
+    (fixture, document)
+}
+
+#[test]
+fn scoped_entity_identity_prevents_cross_kind_and_case_collisions() {
+    use semio_s_artifact_fem_2d_editor::editor::fem2d::{commands::{patch_load, remove_selection}, panels::{artifact, inspection}, terminology::fem2d_labels};
+    use semio_framework_plugin::ArtifactView;
+    use semio_framework_plugin::ConfigView;
+    use semio_framework_plugin::HistoryView;
+    use semio_framework_plugin::NoConfig;
+    use semio_framework_plugin::TreeWindows;
+    use semio_framework_plugin::ViewModel;
+    let (fixture, mut document) = identity_fixture();
+    let collision = &fixture["collision"];
+    document.materials[0].id = collision["materialId"].as_str().expect("shared identity").into();
+    match &mut document.elements[0] { crate::FemElement::Bar { material_id, .. } | crate::FemElement::Beam { material_id, .. } => *material_id = document.materials[0].id.clone() }
+    let mut live = document.load_cases[0].clone();
+    live.id = collision["liveCaseId"].as_str().expect("peer case").into();
+    live.name = "Live".into();
+    document.load_cases.push(live);
+    document.validate_interaction_identities().expect("distinct typed namespaces");
+    let target = |name: &str| collision["targets"][name].as_str().expect("canonical target");
+    assert_eq!(fem2d_entity_kind(&document, target("node")), Some(FEM2D_GRANULARITY_NODE));
+    assert_eq!(fem2d_entity_kind(&document, target("material")), Some(FEM2D_GRANULARITY_MATERIAL));
+    assert_eq!(fem2d_entity_kind(&document, "n1"), None, "raw ids are outside the interaction protocol");
+    assert_eq!(fem2d_load_owner(&document, target("deadLoad")).map(|(case, _)| case), Some("dead"));
+    assert_eq!(fem2d_load_owner(&document, target("liveLoad")).map(|(case, _)| case), Some("live"));
+    assert!(gumball::fem2d_transform_targets(&document, &[target("material").into()]).is_empty());
+    assert_eq!(gumball::fem2d_transform_targets(&document, &[target("node").into()]).node_ids, ["n1"]);
+    let view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let labels = fem2d_labels(&view);
+    let material = inspection::render(&document, &Fem2dInteractionSnapshot { selected_ids: vec![target("material").into()], ..Default::default() }, labels, &TreeWindows::unhosted()).expect("typed material inspector");
+    let material = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: material }).expect("inspector projection");
+    assert!(material.contains("fem2d-play-inspection.material.name.input") && !material.contains("fem2d-play-inspection.node.x.input"));
+    for (locale, key) in [(semio_framework_ui_locale::Locale::En, "en"), (semio_framework_ui_locale::Locale::De, "de")] {
+        let view = ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native);
+        let selected_ids = ["node", "material", "deadLoad", "liveLoad"].iter().map(|key| target(key).to_string()).collect();
+        let panel = inspection::render(&document, &Fem2dInteractionSnapshot { selected_ids, ..Default::default() }, fem2d_labels(&view), &TreeWindows::unhosted()).expect("typed selection labels");
+        let panel = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: panel }).expect("selection projection");
+        for label in collision["selectionLabels"][key].as_array().expect("portable localized selection labels") { assert!(panel.contains(label.as_str().unwrap()), "{locale:?}: {panel}"); }
+    }
+
+    let tree = artifact::render(&document, &Fem2dInteractionSnapshot::default(), labels, &TreeWindows::unhosted()).expect("case-owned load tree");
+    let tree = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: tree }).expect("tree projection");
+    assert!(tree.contains(target("deadLoad")) && tree.contains(target("liveLoad")));
+    let history = HistoryView::empty();
+    let document_view = ArtifactView::new(&document, &history);
+    let config = NoConfig::default();
+    let config_view = ConfigView { snapshot: &config, window: None };
+    let patch = patch_load::handle(&patch_load::PatchLoad { id: target("liveLoad").into(), field: "wy".into(), value: "-2000".into() }, &document_view, &config_view).expect("typed load edit");
+    let [semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation::ChangeLoad(change)] = patch.artifact_mutations.as_slice() else { panic!("one sparse load edit") };
+    assert_eq!((&*change.case_id, &*change.id), ("live", "l1"));
+    let removed = remove_selection::remove_ids(&document_view, &[target("liveLoad").into()]).expect("case-owned load removal");
+    assert_eq!(removed.artifact_mutations.len(), 1);
+    let mut after = document.clone();
+    semio_s_artifact_fem_2d_mutations::central_apply::apply_fem2d_mutation(&mut after, &removed.artifact_mutations[0]).expect("central deletion");
+    assert_eq!(after.load_cases[0], document.load_cases[0]);
+    assert!(after.load_cases[1].loads.is_empty());
+    let highlights = model_window::fem2d_structure_layers_with(&document, "#38bdf8", "#94a3b8", "#f97316", &Fem2dInteractionSnapshot { selected_ids: vec![target("material").into()], ..Default::default() });
+    assert!(!semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(highlights)).contains("sel-node-n1"));
+    println!("[DEBUG] FEM2d typed identities keep node/material collisions and duplicate load names separate through tree, details, geometry, patch and central deletion");
+}
+
+#[test]
+fn scoped_identity_admission_refuses_unaddressable_entities_and_duplicate_load_owners() {
+    use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node;
+    use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::create_load_case;
+    use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::add_load;
+    use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+    use protocol::Mutation;
+    use protocol::ColdMutation;
+    let (fixture, before) = identity_fixture();
+    let mut invalid = before.clone();
+    invalid.nodes[0].id.clear();
+    assert!(invalid.validate_interaction_identities().is_err());
+    let mut duplicate = before.clone();
+    let repeated_load = duplicate.load_cases[0].loads[0].clone();
+    duplicate.load_cases[0].loads.push(repeated_load);
+    assert!(duplicate.validate_interaction_identities().is_err());
+    let mut case = before.load_cases[0].clone();
+    case.id = "new-case".into();
+    case.loads.push(case.loads[0].clone());
+    let mut load = before.load_cases[0].loads[0].clone();
+    match &mut load { crate::FemLoad::Nodal { id, .. } | crate::FemLoad::MemberUdl { id, .. } | crate::FemLoad::Area { id, .. } => id.clear() }
+    for (operation, expected) in [
+        (Fem2dMutation::CreateNode(semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: semio_s_fem_node::planar::FemNodeValue { id: String::new(), x: 0.0, y: 0.0 }, index: None }), "emptyIdentityCode"),
+        (Fem2dMutation::AddLoad(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::add_load::AddLoad { case_id: "dead".into(), load: Box::new(load), index: None }), "emptyIdentityCode"),
+        (Fem2dMutation::CreateLoadCase(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::create_load_case::CreateLoadCase { load_case: case, index: None }), "duplicateLoadCode"),
+    ] {
+        let outcome = operation.diff(&before);
+        assert_eq!(outcome.diff(), &semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff::default());
+        assert_eq!(outcome.messages()[0].code.0, fixture["identityAdmission"][expected].as_str().expect("declared diagnostic"));
+        assert!(operation.inverse(&before).expect("refused aggregate inverse").is_empty());
+    }
+    println!("[DEBUG] FEM2d typed identity admission refuses empty ids and duplicate case-owned loads before any forward or inverse publication");
+}
+
+#[test]
+fn borrowed_identity_admission_precedes_native_snapshot_construction_and_observes_cancellation() {
+    let (_, before) = identity_fixture();
+    let record = before.__dsl_to_record();
+    let mut allow = |_| true;
+    let mut control = semio_framework_value::NativeDecodeControl::new(1 << 20, &mut allow);
+    crate::Fem2dSnapshot::validate_interaction_record(&record, &mut control).expect("borrowed identities admit");
+    let mut allow = |_| true;
+    let mut limited = semio_framework_value::NativeDecodeControl::new(0, &mut allow);
+    assert!(crate::Fem2dSnapshot::validate_interaction_record(&record, &mut limited).is_err());
+    assert_eq!(limited.owned_bytes(), 0);
+    let mut invalid = before.clone();
+    let repeated = invalid.load_cases[0].loads[0].clone();
+    invalid.load_cases[0].loads.push(repeated);
+    let record = invalid.__dsl_to_record();
+    let mut allow = |_| true;
+    let mut control = semio_framework_value::NativeDecodeControl::new(1 << 20, &mut allow);
+    assert!(crate::Fem2dSnapshot::validate_interaction_record(&record, &mut control).is_err());
+    let record = before.__dsl_to_record();
+    let mut callbacks = 0;
+    let mut cancel = |_| { callbacks += 1; false };
+    let mut control = semio_framework_value::NativeDecodeControl::new(1 << 20, &mut cancel);
+    assert!(crate::Fem2dSnapshot::validate_interaction_record(&record, &mut control).is_err());
+    drop(control);
+    assert!(callbacks > 0);
+    assert_eq!(before.nodes[0].id, "n1");
+    println!("[DEBUG] FEM2d borrowed identity admission checks original records, duplicate case owners and cancellation before constructing native snapshot roots");
+}
+
+#[test]
+fn public_json_snapshot_admission_refuses_invalid_owners_and_accepts_distinct_namespaces() {
+    let (fixture, before) = identity_fixture();
+    for row in fixture["publicAdmission"]["refused"].as_array().expect("declared refusal matrix") {
+        let mut candidate = serde_json::to_value(&fixture["before"]).expect("independent JSON tree");
+        match row.as_str().expect("scenario") {
+            "empty" => candidate["nodes"][0]["id"] = "".into(),
+            "oversized" => candidate["nodes"][0]["id"] = "x".repeat(protocol::wire::SCOPED_IDENTITY_MAX_BYTES).into(),
+            "duplicateNode" => candidate["nodes"][1]["id"] = candidate["nodes"][0]["id"].clone(),
+            "duplicateLoad" => { let load = candidate["loadCases"][0]["loads"][0].clone(); candidate["loadCases"][0]["loads"].as_array_mut().expect("loads").push(load); }
+            _ => panic!("unknown portable admission scenario"),
+        }
+        assert!(semio_framework_pack_json::from_json_str::<Fem2dSnapshot>(&candidate.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "{row}");
+        let value = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&candidate.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("borrowed native value fixture");
+        let mut allow = |_| true;
+        let mut control = semio_framework_value::NativeDecodeControl::new(1 << 22, &mut allow);
+        assert!(<Fem2dSnapshot as semio_framework_value::FromValue>::from_value_controlled(&value, &mut control).is_err(), "controlled {row}");
+    }
+    let mut accepted = fixture["before"].clone();
+    accepted["materials"][0]["id"] = accepted["nodes"][0]["id"].clone();
+    let mut case = accepted["loadCases"][0].clone();
+    case["id"] = fixture["collision"]["liveCaseId"].clone();
+    accepted["loadCases"].as_array_mut().expect("cases").push(case);
+    let snapshot = semio_framework_pack_json::from_json_str::<Fem2dSnapshot>(&accepted.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("separate namespaces admit");
+    assert_eq!(snapshot.nodes.len(), before.nodes.len());
+    assert_eq!(snapshot.load_cases.len(), 2);
+    let mut allow = |_| true;
+    let mut control = semio_framework_value::NativeDecodeControl::new(1 << 20, &mut allow);
+    snapshot.validate_interaction_identities_controlled(&mut control).expect("controlled cross namespaces admit");
+    assert!(control.owned_bytes() > 0, "semantic identity scratch carries original allocation authority");
+    <Fem2dSnapshot as semio_framework_value::FromValue>::retire_decoded(snapshot);
+    println!("[DEBUG] FEM2d public JSON snapshot admission refuses empty, oversized and duplicate owning IDs while allowing cross-kind and cross-case names");
+}

@@ -1,5 +1,5 @@
-//! 🗣️ Fem2d play app — the single `app_labels!` block plus the locale resolvers every taxonomy node
 //! (panels, windows, commands) reaches for. One struct for the whole app: the artifact tree, the
+//! 🗣️ Fem2d play app — the single `app_labels!` block plus the locale resolvers every taxonomy node
 //! inspector and the results/playback panel all resolve their nouns, field names and verbs here, so
 //! a term is spelled once per locale and never drifts between two panels showing the same entity.
 
@@ -18,6 +18,10 @@ semio_framework_ui_locale::app_labels! {
         schema: native_en "Schema", native_de "Schema", reuse_en "Schema", reuse_de "Schema";
         none: native_en "(none)", native_de "(keine)", reuse_en "(none)", reuse_de "(keine)";
         pending: native_en "Pending", native_de "In Arbeit", reuse_en "Pending", reuse_de "In Arbeit";
+        converged: native_en "Converged", native_de "Konvergiert", reuse_en "Converged", reuse_de "Konvergiert";
+        failed: native_en "Failed", native_de "Fehlgeschlagen", reuse_en "Failed", reuse_de "Fehlgeschlagen";
+        residual: native_en "Residual", native_de "Restkraft", reuse_en "Residual", reuse_de "Restkraft";
+        previous_results: native_en "Previous Results", native_de "Vorherige Ergebnisse", reuse_en "Previous Results", reuse_de "Vorherige Ergebnisse";
         selected: native_en "Selected", native_de "Ausgewählt", reuse_en "Selected", reuse_de "Ausgewählt";
         add_term: native_en "Add Term", native_de "Term hinzufügen", reuse_en "Add Term", reuse_de "Term hinzufügen";
 

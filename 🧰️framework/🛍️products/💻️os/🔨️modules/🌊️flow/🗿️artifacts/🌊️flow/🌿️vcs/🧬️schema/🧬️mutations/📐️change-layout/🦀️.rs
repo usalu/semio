@@ -16,6 +16,15 @@ pub struct ChangeLayout { pub entries: Vec<FlowLayoutEntry> }
 //#region 🎮️Behavior
 impl MutationKind<FlowHostSnapshot, FlowMutation> for ChangeLayout {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "layout", kind: "change-layout", record: "ChangedLayout" };
+
+
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native("Change layout", "Layout ändern")
+    }
+    fn target(&self) -> Vec<String> { vec!["layout".into()] }
+}
+
+impl crate::os_spr::ColdMutationKind<FlowHostSnapshot, FlowMutation> for ChangeLayout {
     fn diff(&self, _base: &FlowHostSnapshot) -> MutationOutcome<FlowDiff> {
         MutationOutcome::new(FlowDiff::from(FlowDelta::Layout(self.entries.clone())))
     }
@@ -33,10 +42,6 @@ impl MutationKind<FlowHostSnapshot, FlowMutation> for ChangeLayout {
             })
             .collect())
     }
-    fn label(&self) -> crate::LocalizedLabel {
-        crate::LocalizedLabel::native("Change layout", "Layout ändern")
-    }
-    fn target(&self) -> Vec<String> { vec!["layout".into()] }
 }
 
 //#endregion 🎮️Behavior

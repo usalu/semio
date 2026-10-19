@@ -1,0 +1,15 @@
+{
+ "schema":"framework.value.persistent-table-traversal.v1",
+ "prefix":"row-β/","stride":3,
+ "queries":[0,0,15,1,16,255,4096,0,1000000],
+ "cases":[
+  {"name":"empty","fullLeaves":0,"tailLeaves":[],"rowCount":0,"pageCount":0},
+  {"name":"singleton","fullLeaves":0,"tailLeaves":[1],"rowCount":1,"pageCount":1},
+  {"name":"full-leaf","fullLeaves":1,"tailLeaves":[],"rowCount":16,"pageCount":1},
+  {"name":"ragged-ranked-branches","fullLeaves":0,"tailLeaves":[3,1,16,2,15,7,1,16,3,5,2,16,4,1,14,8,1],"rowCount":115,"pageCount":20},
+  {"name":"rank-after-two-level-boundary","fullLeaves":16,"tailLeaves":[1],"rowCount":257,"pageCount":20},
+  {"name":"partial-siblings","fullLeaves":15,"tailLeaves":[1,16,1],"rowCount":258,"pageCount":21},
+  {"name":"rank-after-three-level-boundary","fullLeaves":256,"tailLeaves":[1],"rowCount":4097,"pageCount":277}
+ ],
+ "expected":{"fanout":16,"rowAddressesPreserved":true,"payloadCloneCalls":0,"scanHeapBytes":0,"scanReleaseBytes":0,"exactSize":true,"fused":true,"maximumIteratorBytes":1024,"fullScanVisitsEachPageOnce":true,"nthSkipsSubtrees":true,"recordShapeHeapBytes":0,"controlledOutputMatchesSqlite":true,"terminalDropBytes":0}
+}

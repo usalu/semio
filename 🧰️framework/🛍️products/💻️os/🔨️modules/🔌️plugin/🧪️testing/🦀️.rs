@@ -23,6 +23,10 @@ pub use semio_framework_value as __value;
 pub use semio_framework_plugin_testing_caller::{OriginalFixtureCaller, OriginalFixtureScope};
 use semio_framework_plugin_window_config::{WindowConfigOwner, WindowConfigOwnerRegistry};
 use semio_framework_plugin_window_transient::window_transient::{WindowTransientOwner, WindowTransientOwnerRegistry};
+#[path="🎟️caller/👷️work/🦀️.rs"]
+mod original_work_fixture;
+pub use original_work_fixture::OriginalWorkFixture;
+
 use semio_framework_value::DslValue;
 use protocol::{OpBinary, OpText};
 use semio_framework::kernel::UiDirtyScope;

@@ -1,5 +1,5 @@
-//! 🌐️ Edit-mode window option — the grid group: visibility and snap toggles plus the spacing
 //! slider (the same spacing `addTargetVolume` snaps new voxel volumes onto).
+//! 🌐️ Edit-mode window option — the grid group: visibility and snap toggles plus the spacing
 
 use semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_PLAY_CONTROLLER_ID;
 use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dRuntime;

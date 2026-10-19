@@ -19,6 +19,7 @@ fn mutations() -> Vec<FlowMutation> {
     let widget_id = widget.id().to_string();
     let synapse_id = synapse.id.clone();
     let entry = FlowLayoutEntry { id: widget_id.clone(), layout: fixture.layout.get(&widget_id).cloned() };
+    fixture.retire_cold();
     vec![
         FlowMutation::AddWidget(AddWidget { index: 0, widget: widget.clone() }),
         FlowMutation::RemoveWidget(RemoveWidget { id: widget_id.clone() }),

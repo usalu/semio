@@ -85,13 +85,6 @@ pub fn numerical_close_original<J>(cx: &mut StepContext<'_>, owner: &mut J, dema
     Ok(if terminal(owner) { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { step })
 }
 
-/// 🎟️ One close turn of a locally owned job under exactly its own quoted grant (batch adapters and contract tests).
-pub fn numerical_owned_close_turn<J: InteractiveJob>(job: &mut J, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
-    let (mut sequence, mut receipt) = (0, RetainedCloneProgress::default());
-    let mut context = StepContext::new(semio_framework_job::OperationId(0), semio_framework_job::Generation(0), StepBudget::new(u64::MAX, u64::MAX, grant), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
-    job.close_step(&mut context)
-}
-
 /// 🪜️ Maps one tuple-shaped owner ladder rung onto the job close vocabulary; `None` once the ladder is exhausted.
 pub fn numerical_owner_turn(rung: Result<Option<(usize, usize)>, ()>) -> Option<InteractiveJobCloseStep> {
     match rung {
@@ -108,9 +101,6 @@ pub fn numerical_ladder_turn(turn: (bool, usize, usize)) -> InteractiveJobCloseS
     if complete { InteractiveJobCloseStep::Complete { progress } } else { InteractiveJobCloseStep::Pending { progress } }
 }
 
-/// 🎟️ The wallet one batch-adapter step and one batch-adapter close turn may spend.
-pub const NUMERICAL_BATCH_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 };
-
 /// 🧭️ What one batch-adapter step learned from its borrowed outcome.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum NumericalBatchEnd {
@@ -120,33 +110,20 @@ pub enum NumericalBatchEnd {
     Cancelled,
 }
 
-/// ▶️ Runs one batch-adapter step with a fresh receipt; delivered payloads are paid back by the job's next step.
-pub fn numerical_batch_step<J: InteractiveJob>(job: &mut J, operation: Operation, preview_sequence: &mut u64) -> NumericalBatchEnd {
-    let mut receipt = RetainedCloneProgress::default();
-    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX, NUMERICAL_BATCH_GRANT), semio_framework_job::root_cancel_token(), || Some(0), preview_sequence, &mut receipt);
-    match job.step(&mut context).expect("numerical batch step admission") {
+/// ▶️ Advances one native numerical batch under its persistent caller's actual original context.
+pub fn numerical_batch_step<J: InteractiveJob>(job: &mut J, context: &mut StepContext<'_>) -> Result<NumericalBatchEnd, OriginalTurnFailure> {
+    Ok(match job.step(context)? {
         None | Some(JobOutcomeBorrow::Yield { .. } | JobOutcomeBorrow::PreviewReady { .. } | JobOutcomeBorrow::CheckpointReady { .. }) => NumericalBatchEnd::Continue,
         Some(JobOutcomeBorrow::Complete { .. }) => NumericalBatchEnd::Complete,
         Some(JobOutcomeBorrow::Fault { .. }) => NumericalBatchEnd::Fault,
         Some(JobOutcomeBorrow::Cancelled { .. }) => NumericalBatchEnd::Cancelled,
-    }
+    })
 }
 
-/// 🧹️ Closes a batch-adapter job through its own quoted close grants until it is terminal-empty.
-pub fn numerical_batch_close<J: InteractiveJob>(job: &mut J) {
+/// 🧹️ Advances one native numerical close under the same original caller without renewing stock or cancellation.
+pub fn numerical_batch_close<J: InteractiveJob>(job: &mut J, context: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
     job.begin_close();
-    while !job.terminal_is_empty() {
-        let copy_bytes = job.next_close_copy_byte_demand().expect("numerical batch job quotes its copy demand");
-        let grant = RetainedCloneGrant {
-            maximum_items: 1,
-            maximum_copy_bytes: copy_bytes,
-            maximum_capacity_bytes: job.next_close_capacity_byte_demand(copy_bytes).expect("numerical batch job quotes its capacity demand"),
-            maximum_release_bytes: job.next_close_release_byte_demand().expect("numerical batch job quotes its release demand"),
-            maximum_depth: job.next_close_depth_demand().expect("numerical batch job quotes its depth demand").max(1),
-        };
-        let step = numerical_owned_close_turn(job, grant);
-        assert!(matches!(step, Ok(InteractiveJobCloseStep::Pending { .. } | InteractiveJobCloseStep::Complete { .. })), "a locally owned numerical batch close has no external owner and no refusal");
-    }
+    job.close_step(context)
 }
 
 /// 🪺️ Maps a child job's close turn onto the parent's; a terminal child is removed by the caller after this turn.
@@ -357,7 +334,7 @@ pub fn close_vec_owner_step<T>(owner: &mut Vec<T>, maximum_bytes: usize) -> Resu
     Ok(Some((1, bytes)))
 }
 
-pub(super) fn close_paged_owner_step<T, const N: usize>(owner: &mut PagedList<T, N>, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
+pub fn close_paged_owner_step<T, const N: usize>(owner: &mut PagedList<T, N>, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
     if owner.pop().is_some() {
         return Ok(Some((1, 0)));
     }
@@ -371,8 +348,10 @@ pub(super) fn close_paged_owner_step<T, const N: usize>(owner: &mut PagedList<T,
         Err(())
     }
 }
+pub fn paged_owner_retirement_demand<T,const N:usize>(owner:&PagedList<T,N>)->Result<RetirementDemand,ValueError>{let failure=|error:semio_framework_value::list::PagedListError|ValueError::literal(ValueRefusalKind::InvariantViolated,error.reason);if owner.is_empty(){Ok(RetirementDemand{release_bytes:owner.next_release_allocation_bytes().map_err(failure)?,depth:owner.next_release_depth_demand().map_err(failure)?,..Default::default()})}else{Ok(RetirementDemand{depth:owner.next_pop_depth_demand().map_err(failure)?,..Default::default()})}}
 
-pub(super) fn paged_from_values<T>(values: Vec<T>) -> PagedList<T, SPARSE_INDEX_SPACE> {
+pub fn paged_from_values<T, I: IntoIterator<Item = T>>(values: I) -> PagedList<T, SPARSE_INDEX_SPACE> where I::IntoIter: ExactSizeIterator {
+    let values = values.into_iter();
     let target = values.len();
     let mut owner = PagedList::default();
     while owner.capacity() < target {

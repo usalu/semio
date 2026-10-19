@@ -207,7 +207,7 @@
         {
           "table": "energy_pv_system",
           "rows": 1,
-          "semanticBytes": 164
+          "semanticBytes": 238
         },
         {
           "table": "energy_referenced_model_link",
@@ -351,7 +351,7 @@
         }
       ],
       "rows": 129,
-      "semanticBytes": 8374
+      "semanticBytes": 8448
     },
     {
       "case": "0000000000000000",
@@ -559,7 +559,7 @@
         {
           "table": "energy_pv_system",
           "rows": 1,
-          "semanticBytes": 164
+          "semanticBytes": 238
         },
         {
           "table": "energy_referenced_model_link",
@@ -703,7 +703,7 @@
         }
       ],
       "rows": 129,
-      "semanticBytes": 8374
+      "semanticBytes": 8448
     },
     {
       "case": "8000000000000000",
@@ -911,7 +911,7 @@
         {
           "table": "energy_pv_system",
           "rows": 1,
-          "semanticBytes": 164
+          "semanticBytes": 238
         },
         {
           "table": "energy_referenced_model_link",
@@ -1055,7 +1055,7 @@
         }
       ],
       "rows": 129,
-      "semanticBytes": 8374
+      "semanticBytes": 8448
     },
     {
       "case": "7ff0000000000000",
@@ -1263,7 +1263,7 @@
         {
           "table": "energy_pv_system",
           "rows": 1,
-          "semanticBytes": 224
+          "semanticBytes": 328
         },
         {
           "table": "energy_referenced_model_link",
@@ -1407,7 +1407,7 @@
         }
       ],
       "rows": 129,
-      "semanticBytes": 10104
+      "semanticBytes": 10208
     },
     {
       "case": "fff0000000000000",
@@ -1615,7 +1615,7 @@
         {
           "table": "energy_pv_system",
           "rows": 1,
-          "semanticBytes": 224
+          "semanticBytes": 328
         },
         {
           "table": "energy_referenced_model_link",
@@ -1759,7 +1759,7 @@
         }
       ],
       "rows": 129,
-      "semanticBytes": 10104
+      "semanticBytes": 10208
     },
     {
       "case": "7ff8000000000042",
@@ -1967,7 +1967,7 @@
         {
           "table": "energy_pv_system",
           "rows": 1,
-          "semanticBytes": 98
+          "semanticBytes": 139
         },
         {
           "table": "energy_referenced_model_link",
@@ -2111,7 +2111,7 @@
         }
       ],
       "rows": 129,
-      "semanticBytes": 6471
+      "semanticBytes": 6512
     },
     {
       "case": "7ff0000000000042",
@@ -2319,7 +2319,7 @@
         {
           "table": "energy_pv_system",
           "rows": 1,
-          "semanticBytes": 98
+          "semanticBytes": 139
         },
         {
           "table": "energy_referenced_model_link",
@@ -2463,7 +2463,7 @@
         }
       ],
       "rows": 129,
-      "semanticBytes": 6471
+      "semanticBytes": 6512
     },
     {
       "case": "0000000000000001",
@@ -2671,7 +2671,7 @@
         {
           "table": "energy_pv_system",
           "rows": 1,
-          "semanticBytes": 164
+          "semanticBytes": 238
         },
         {
           "table": "energy_referenced_model_link",
@@ -2815,7 +2815,7 @@
         }
       ],
       "rows": 129,
-      "semanticBytes": 8374
+      "semanticBytes": 8448
     },
     {
       "case": "7fefffffffffffff",
@@ -3023,7 +3023,7 @@
         {
           "table": "energy_pv_system",
           "rows": 1,
-          "semanticBytes": 164
+          "semanticBytes": 238
         },
         {
           "table": "energy_referenced_model_link",
@@ -3167,7 +3167,7 @@
         }
       ],
       "rows": 129,
-      "semanticBytes": 8374
+      "semanticBytes": 8448
     },
     {
       "case": "head",
@@ -3375,7 +3375,7 @@
         {
           "table": "energy_pv_system",
           "rows": 1,
-          "semanticBytes": 164
+          "semanticBytes": 238
         },
         {
           "table": "energy_referenced_model_link",
@@ -3519,7 +3519,7 @@
         }
       ],
       "rows": 131,
-      "semanticBytes": 8448
+      "semanticBytes": 8522
     },
     {
       "case": "checkpoint",
@@ -3727,7 +3727,7 @@
         {
           "table": "energy_pv_system",
           "rows": 1,
-          "semanticBytes": 164
+          "semanticBytes": 238
         },
         {
           "table": "energy_referenced_model_link",
@@ -3871,7 +3871,7 @@
         }
       ],
       "rows": 131,
-      "semanticBytes": 8476
+      "semanticBytes": 8550
     },
     {
       "case": "snapshot",
@@ -4079,7 +4079,7 @@
         {
           "table": "energy_pv_system",
           "rows": 1,
-          "semanticBytes": 164
+          "semanticBytes": 238
         },
         {
           "table": "energy_referenced_model_link",
@@ -4223,7 +4223,7 @@
         }
       ],
       "rows": 131,
-      "semanticBytes": 8512
+      "semanticBytes": 8586
     }
   ]
 }

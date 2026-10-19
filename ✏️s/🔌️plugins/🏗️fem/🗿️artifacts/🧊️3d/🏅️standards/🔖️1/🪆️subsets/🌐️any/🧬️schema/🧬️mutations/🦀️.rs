@@ -1,5 +1,5 @@
-//! ⚡️ FEM 3D artifact — semantic mutation dispatch enum + laws (constitutional: op). Every variant
 //! wraps exactly one `🧬️mutations/<kind>/🦠️mutation` payload struct implementing
+//! ⚡️ FEM 3D artifact — semantic mutation dispatch enum + laws (constitutional: op). Every variant
 //! `protocol::MutationKind<Fem3dSnapshot, Fem3dMutation>`; `#[derive(dsl::Mutations)]` below
 //! generates `impl protocol::Mutation`/`impl protocol::SemanticMutation` by delegating to each
 //! payload's own `diff`/`inverse` — see `🧪️MutationsDeriveLaws` in
@@ -7,19 +7,23 @@
 
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemCombination;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_fem_material::volumetric::FemMaterialValue;
+use semio_s_fem_node::volumetric::FemNodeValue;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSection;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 use protocol::Mutation;
-use semio_framework_value_derive::{FromValue, ToValue};
-use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
+use protocol::ColdMutation;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
+use store::os_store::store_schema::ArtifactEnvelope;
+use store::ArtifactStore;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -36,38 +40,47 @@ use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = Fem3dSnapshot, diff = Fem3dDiff, schema = "fem.fem3d")]
+#[mutations(snapshot = Fem3dSnapshot, diff = Fem3dDiff, reference = Fem3dSnapshotValue, reference_diff = Fem3dDiff, schema = "fem.fem3d")]
 pub enum Fem3dMutation {
-    CreateNode(create_node::CreateNode),
-    DeleteNode(delete_node::DeleteNode),
-    CreateElement(create_element::CreateElement),
-    DeleteElement(delete_element::DeleteElement),
-    ReplaceElement(replace_element::ReplaceElement),
-    CreateMaterial(create_material::CreateMaterial),
-    DeleteMaterial(delete_material::DeleteMaterial),
-    ReplaceMaterial(replace_material::ReplaceMaterial),
-    CreateSection(create_section::CreateSection),
-    DeleteSection(delete_section::DeleteSection),
-    ReplaceSection(replace_section::ReplaceSection),
-    CreateSupport(create_support::CreateSupport),
-    DeleteSupport(delete_support::DeleteSupport),
-    ReplaceSupport(replace_support::ReplaceSupport),
-    CreateSolid(create_solid::CreateSolid),
-    DeleteSolid(delete_solid::DeleteSolid),
-    ReplaceSolid(replace_solid::ReplaceSolid),
-    CreateLoadCase(create_load_case::CreateLoadCase),
-    DeleteLoadCase(delete_load_case::DeleteLoadCase),
-    AddLoad(add_load::AddLoad),
-    RemoveLoad(remove_load::RemoveLoad),
-    ChangeLoadCaseSelfWeight(change_load_case_self_weight::ChangeLoadCaseSelfWeight),
-    CreateCombination(create_combination::CreateCombination),
-    DeleteCombination(delete_combination::DeleteCombination),
-    UpdateAnalysisSettings(update_analysis_settings::UpdateAnalysisSettings),
-    ReplaceNode(replace_node::ReplaceNode),
-    ReplaceLoad(replace_load::ReplaceLoad),
-    ChangeLoadCaseName(change_load_case_name::ChangeLoadCaseName),
-    ReplaceCombination(replace_combination::ReplaceCombination),
-    MoveSelection(move_selection::MoveSelection),
+    CreateNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node::CreateNode),
+    DeleteNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_node::DeleteNode),
+    CreateElement(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_element::CreateElement),
+    DeleteElement(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_element::DeleteElement),
+    ReplaceElement(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_element::ReplaceElement),
+    CreateMaterial(semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::create_material::CreateMaterial),
+    DeleteMaterial(semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::delete_material::DeleteMaterial),
+    ReplaceMaterial(semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::replace_material::ReplaceMaterial),
+    ChangeMaterial(semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::change_material::ChangeMaterial),
+    CreateSection(semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::create_section::CreateSection),
+    DeleteSection(semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::delete_section::DeleteSection),
+    ReplaceSection(semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::replace_section::ReplaceSection),
+    ChangeSection(semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::change_section::ChangeSection),
+    CreateSupport(semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::create_support::CreateSupport),
+    DeleteSupport(semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::delete_support::DeleteSupport),
+    ReplaceSupport(semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::replace_support::ReplaceSupport),
+    CreateSolid(semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid),
+    DeleteSolid(semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::delete_solid::DeleteSolid),
+    ReplaceSolid(semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::replace_solid::ReplaceSolid),
+    CreateLoadCase(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::create_load_case::CreateLoadCase),
+    DeleteLoadCase(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::delete_load_case::DeleteLoadCase),
+    AddLoad(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::add_load::AddLoad),
+    RemoveLoad(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::remove_load::RemoveLoad),
+    ChangeLoadCaseSelfWeight(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_load_case_self_weight::ChangeLoadCaseSelfWeight),
+    CreateCombination(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::create_combination::CreateCombination),
+    DeleteCombination(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::delete_combination::DeleteCombination),
+    UpdateAnalysisSettings(semio_s_artifact_fem_3d_analysis::standards::v1::subsets::any::schema::mutations::update_analysis_settings::UpdateAnalysisSettings),
+    ReplaceNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_node::ReplaceNode),
+    ChangeNode(semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::change_node::ChangeNode),
+    ChangeCombinationTerm(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_combination_term::ChangeCombinationTerm),
+    ChangeCombinationName(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_combination_name::ChangeCombinationName),
+    ChangeLoad(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_load::ChangeLoad),
+    ChangeElement(semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::change_element::ChangeElement),
+    ChangeSupport(semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::change_support::ChangeSupport),
+    ChangeSolid(semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::change_solid::ChangeSolid),
+    ReplaceLoad(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::replace_load::ReplaceLoad),
+    ChangeLoadCaseName(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_load_case_name::ChangeLoadCaseName),
+    ReplaceCombination(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::replace_combination::ReplaceCombination),
+    MoveSelection(semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::move_selection::MoveSelection),
 }
 //#endregion 🔖️Mutations
 
@@ -96,23 +109,77 @@ use semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutat
 use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::remove_load;
 use semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_element;
 use semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::replace_material;
+use semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::change_material;
 use semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::replace_section;
+use semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::change_section;
 use semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::replace_solid;
 use semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::replace_support;
 use semio_s_artifact_fem_3d_analysis::standards::v1::subsets::any::schema::mutations::update_analysis_settings;
 use semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_node;
+use semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::change_node;
+use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_combination_term;
+use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_combination_name;
+use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_load;
+use semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::change_element;
+use semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::change_support;
+use semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::change_solid;
 use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::replace_load;
 use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_load_case_name;
 use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::replace_combination;
 use semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::move_selection;
 //#endregion 🔖️LeafImports
 
+//#region 🛡️Guards
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//#endregion 🛡️Guards
 
 pub type Fem3dEnvelope = ArtifactEnvelope<Fem3dSnapshot, Fem3dMutation>;
 pub type Fem3dStore = ArtifactStore<Fem3dSnapshot, Fem3dMutation>;
 
 //#region 🔖️GenericDelegates
-pub fn inverse_fem3d_mutation(snapshot: &Fem3dSnapshot, mutation: &Fem3dMutation) -> Result<Vec<Fem3dMutation>, semio_framework_value::ValueError> {
+pub fn inverse_fem3d_mutation_cold(snapshot: &Fem3dSnapshotValue, mutation: &Fem3dMutation) -> Result<Vec<Fem3dMutation>, semio_framework_value::ValueError> {
     Ok({
     mutation.inverse(snapshot)?
 
@@ -141,9 +208,11 @@ pub const KINDS: &[&str] = &[
     "create-material",
     "delete-material",
     "replace-material",
+    "change-material",
     "create-section",
     "delete-section",
     "replace-section",
+    "change-section",
     "create-support",
     "delete-support",
     "replace-support",
@@ -159,6 +228,13 @@ pub const KINDS: &[&str] = &[
     "delete-combination",
     "update-analysis-settings",
     "replace-node",
+    "change-node",
+    "change-combination-term",
+    "change-combination-name",
+    "change-load",
+    "change-element",
+    "change-support",
+    "change-solid",
     "replace-load",
     "change-load-case-name",
     "replace-combination",

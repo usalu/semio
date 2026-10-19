@@ -185,7 +185,7 @@ pub struct PendingLatestWinsCommand<A: ArtifactApp> {
     pub admission: Option<AdmittedToolCommand>,
     pub meta: ActionMeta,
     pub operation: semio_framework_job::Operation,
-    pub source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation),
+    pub source_identity:semio_framework_job::OriginalSourceBinding,
     pub revision: [u8; 32],
     pub lease: Option<ToolCancellationLease>,
     pub key_copy: Option<ToolLatestWinsKeyCopy>,
@@ -203,7 +203,7 @@ pub struct PendingLatestWinsCommand<A: ArtifactApp> {
 impl<A: ArtifactApp> PendingLatestWinsCommand<A> {
     pub fn admit_original_lease(&mut self,issuer:&mut semio_framework_plugin_operation::ToolCancellationIssuer,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if self.closing||self.lease.is_some(){return Ok(self.lease.is_some())}
-        if self.source_identity!=(cx.operation(),cx.generation()){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"mounted pending lease requires its original command caller").into())}
+        if !self.source_identity.matches(cx){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"mounted pending lease requires its original command caller").into())}
         let key=semio_framework_plugin_operation::ToolOperationKey{app_instance_id:self.meta.instance_id,document:semio_framework_plugin_operation::ArtifactDocumentAuthority(self.meta.instance_id),operation_id:self.operation.operation,base_revision:self.operation.base_revision,generation:self.operation.generation};
         self.lease=issuer.begin_keyed(&key,cx)?;
         Ok(self.lease.is_some())

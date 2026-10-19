@@ -419,7 +419,7 @@ fn tree_pointer_toggles_on_the_marker_selects_on_the_label_and_activates_on_doub
     assert!(widget.set_hover(rect, Some(Pos { x: 5, y: 2 })));
     let buf = paint(&widget, rect, true);
     assert_eq!(rows_of(&buf, rect)[1], "▾ dev");
-    assert_eq!(rows_of(&buf, rect)[2], "  ▸ puzzle3d");
+    assert_eq!(rows_of(&buf, rect)[2], "│ ▸ puzzle3d");
     let right = MouseEvent { kind: MouseKind::Down(MouseButton::Right), pos: Pos { x: 8, y: 2 }, mods: 0, clicks: 1 };
     assert_eq!(widget.on_mouse(rect, &right), Some(WidgetSignal::ContextMenu { pos: Pos { x: 8, y: 2 }, item: Some(1) }));
     assert_eq!(widget.cursor(rect).map(|spec| spec.pos), Some(Pos { x: 2, y: 0 }));

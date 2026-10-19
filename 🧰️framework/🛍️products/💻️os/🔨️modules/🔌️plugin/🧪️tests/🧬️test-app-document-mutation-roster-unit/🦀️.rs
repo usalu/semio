@@ -15,9 +15,9 @@ fn direct_leaves_preserve_generic_document_codecs_and_laws() {
     ] {
         assert_eq!(TestMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         assert_eq!(TestMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
-        let after = protocol::apply_diff(mutation.diff(&base).diff(), &base).unwrap();
+        let after = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).unwrap();
         let inverse = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
         assert_eq!(inverse.len(), 1);
-        assert_eq!(protocol::apply_diff(inverse[0].diff(&after).diff(), &after).unwrap(), base);
+        assert_eq!(protocol::apply_diff_cold(inverse[0].diff(&after).diff(), &after).unwrap(), base);
     }
 }

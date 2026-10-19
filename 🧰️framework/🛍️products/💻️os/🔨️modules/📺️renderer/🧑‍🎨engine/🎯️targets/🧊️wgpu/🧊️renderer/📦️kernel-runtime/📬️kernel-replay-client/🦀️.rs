@@ -92,8 +92,9 @@ impl KernelClient {
     /// instance. `artifact_schema` is the document schema the app edits, empty for an app that edits
     /// none: the mounted component becomes that kind's codec in this process
     /// ([`semio_framework_os_kernel::os_store::codec_registry::register_component_document_codec`]).
-    pub async fn create_app(&self, wasm_path: PathBuf, plugin_id: String, app_id: String, artifact_schema: String) -> Result<u32, ProgramFault> {
-        match self.submit(KernelRequest::CreateApp { owner: CreateAppRequestOwner::new(wasm_path, plugin_id, app_id, artifact_schema) }).await {
+    pub async fn create_app(&self, wasm_path: &std::path::Path, plugin_id: &str, app_id: &str, artifact_schema: &str) -> Result<u32, ProgramFault> {
+        let owner=open_create_app_source(CreateAppBorrowed{path:wasm_path,plugin:plugin_id,app:app_id,schema:artifact_schema}).await.map_err(ProgramFault::from)?;
+        match self.submit(KernelRequest::CreateApp { owner }).await {
             KernelOutcome::Created(result) => result,
             KernelOutcome::Exchanged(_) => Err("kernel: unexpected Exchanged response for create_app".into()),
             KernelOutcome::ProductReplayMounted(_) => Err("kernel: unexpected product replay response for create_app".into()),

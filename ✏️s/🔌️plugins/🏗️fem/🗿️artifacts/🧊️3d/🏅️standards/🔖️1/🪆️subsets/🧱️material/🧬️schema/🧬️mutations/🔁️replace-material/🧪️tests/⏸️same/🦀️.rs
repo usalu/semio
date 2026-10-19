@@ -13,10 +13,10 @@
 //! Re-declaring C24 with its own five properties is a no-op WARNING; only an uncatalogued grade is `target-missing`.
 
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::{inverse_fem3d_mutation};
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::inverse_fem3d_mutation;
 use semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation;
 
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 
 static BEFORE: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🧱️material/🧪️tests/🧫️fixtures/🧬️mutations/🔁️replace-material/⏸️same/📸️snapshot/⬅️before/🔣️.json");
 static AFTER: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🧱️material/🧪️tests/🧫️fixtures/🧬️mutations/🔁️replace-material/⏸️same/📸️snapshot/➡️after/🔣️.json");
@@ -24,11 +24,11 @@ static MUTATION: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture
 static DIFF: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🧱️material/🧪️tests/🧫️fixtures/🧬️mutations/🔁️replace-material/⏸️same/🔺️diff/🔣️.json");
 static OUTCOME: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🧱️material/🧪️tests/🧫️fixtures/🧬️mutations/🔁️replace-material/⏸️same/🎯️outcome/🔣️.json");
 
-fn before() -> Fem3dSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+fn before() -> Fem3dSnapshotValue {
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
-fn expected_after() -> Fem3dSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+fn expected_after() -> Fem3dSnapshotValue {
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Fem3dMutation {
     semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
@@ -48,7 +48,7 @@ fn applies_to_committed_after() {
 /// address — `MutationOutcome::empty().warning(..)` is the 2-arg builder, which attaches none.
 #[test]
 fn a_redundant_write_is_a_warning_not_a_rejection() {
-    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "replace-material/same-material-950f90: a no-op must carry the identity diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "replace-material/same-material-950f90: exactly one diagnostic is expected, got {messages:?}");
@@ -57,12 +57,13 @@ fn a_redundant_write_is_a_warning_not_a_rejection() {
     assert!(messages[0].target.is_empty(), "replace-material/same-material-950f90: the 2-arg warn builder attaches no target address");
 }
 
-/// ↩️ The inverse of a no-op is itself a no-op, so the round trip is the identity twice over.
+/// ↩️ A no-op has no executable inverse and leaves its snapshot unchanged.
 #[test]
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
     let inverse = inverse_fem3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    assert!(inverse.is_empty(), "a no-op has no executable inverse: {inverse:?}");
     let mut snapshot = base.clone();
     apply_fem3d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {
@@ -77,7 +78,7 @@ fn declared_outcome_holds() {
     let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(semio_framework_value::DslValue::as_str), Some("no-op"), "replace-material/same-material-950f90: a no-op declares a no-op outcome");
     let declared = outcome.get("messages").and_then(semio_framework_value::DslValue::as_array).expect("the declared outcome carries messages");
-    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
     assert_eq!(declared.len(), produced.messages().len(), "replace-material/same-material-950f90: the declared diagnostic count must match the emitted one");
     assert_eq!(declared[0].get("code").and_then(semio_framework_value::DslValue::as_str), Some(produced.messages()[0].code.0.as_str()), "replace-material/same-material-950f90: the declared code must match the emitted one");
     assert_eq!(declared[0].get("level").and_then(semio_framework_value::DslValue::as_str), Some("warning"), "replace-material/same-material-950f90: the declared level must name the Warning the builder raises");
@@ -86,7 +87,7 @@ fn declared_outcome_holds() {
 /// 🔺️ The produced delta is exactly the committed all-null `🔺️diff/🔣️.json`.
 #[test]
 fn produces_committed_diff() {
-    let outcome = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
+    let outcome = <Fem3dMutation as protocol::Mutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());
     let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(produced, committed, "replace-material/same-material-950f90: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -104,16 +105,16 @@ fn committed_diff_is_canonical() {
 /// 🩹 Replaying the committed identity delta on `before` reproduces the committed `after`.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-material/same-material-950f90: committed diff did not carry before to after");
 }
 
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical: decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE.as_str()), ("after", AFTER.as_str())] {
-        let decoded: Fem3dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+        let decoded: Fem3dSnapshotValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = semio_framework_value::ToValue::to_value(&decoded);
         let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
         assert_eq!(reencoded, original, "replace-material/same-material-950f90: committed {label} JSON is not canonical");
@@ -126,7 +127,7 @@ fn committed_json_is_canonical() {
 /// 🪪️ The fixture is bound to this very kind's own semantic descriptor, never a sibling's.
 #[test]
 fn semantics_bind_the_declared_kind() {
-    let semantics = <Fem3dMutation as protocol::SemanticMutation<Fem3dSnapshot>>::semantics(&mutation());
+    let semantics = <Fem3dMutation as protocol::SemanticMutation<Fem3dSnapshotValue>>::semantics(&mutation());
     assert_eq!(
         (semantics.verb, semantics.entity, semantics.kind, semantics.record),
         ("replace", "material", "replace-material", "ReplacedMaterial"),

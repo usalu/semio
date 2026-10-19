@@ -93,8 +93,10 @@ function pruneOwnedAssetOutputs(artifacts: readonly AssetArtifact[]): void {
   for (const path of stale) rmSync(path, { recursive: true, force: true });
 }
 
+/** 🪞️ Preserves unchanged asset files and their readers while publishing changed bytes. */
 export function writeAssetArtifacts(artifacts: readonly AssetArtifact[]): void {
   for (const artifact of artifacts) {
+    if (existsSync(artifact.path) && readFileSync(artifact.path, "utf8") === artifact.content) continue;
     mkdirSync(dirname(artifact.path), { recursive: true });
     writeFileSync(artifact.path, artifact.content, "utf8");
   }

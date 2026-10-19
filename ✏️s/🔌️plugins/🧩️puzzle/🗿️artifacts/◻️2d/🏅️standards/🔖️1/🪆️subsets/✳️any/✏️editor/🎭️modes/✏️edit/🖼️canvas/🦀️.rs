@@ -22,7 +22,7 @@ const PUZZLE2D_VIEWPORT_ZOOM_BOOST: f64 = 2.5;
 fn puzzle2d_pane_zoom_scale(pane: &str) -> f64 {
     match pane {
         crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID => crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_ZOOM_SCALE,
-        crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID => crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_ZOOM_SCALE,
+        crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID => crate::standards::v1::subsets::any::schema::mutations::crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_ZOOM_SCALE,
         _ => crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_ZOOM_SCALE,
     }
 }

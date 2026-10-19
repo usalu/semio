@@ -44,9 +44,13 @@ fn puzzle3d_config_store_mutation_bytes(mutation: &Puzzle3dConfigMutation) -> Op
 }
 
 impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzzle3dConfig, Puzzle3dConfigMutation> for Puzzle3dConfigStorePreparation {
-    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
-        use protocol::{Mutation as _, MutationDiff as _};
-        use semio_framework_value::{retained_clone::RetainedCloneProgress, ValueError, ValueRefusalKind};
+    fn advance(&mut self, body:usize,grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        use protocol::ColdMutation;
+        use protocol::Mutation as _;
+        use protocol::MutationDiff as _;
+        use semio_framework_value::retained_clone::RetainedCloneProgress;
+        use semio_framework_value::ValueError;
+        use semio_framework_value::ValueRefusalKind;
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -65,7 +69,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
                 }
                 let completed_bytes = puzzle3d_config_store_bounded_bytes(base.get()).map_err(|message| ValueError::new(ValueRefusalKind::OwnershipLimit, message))?;
                 let inverse = mutation.inverse(base.get())?;
-                let post = protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|_| ValueError::literal(ValueRefusalKind::InvalidValue, "Puzzle3d Config mutation could not produce its post root"))?;
+                let post = protocol::apply_diff_cold(mutation.diff(base.get()).diff(), base.get()).map_err(|_| ValueError::literal(ValueRefusalKind::InvalidValue, "Puzzle3d Config mutation could not produce its post root"))?;
                 let mutation = self.owners.mutation.take().expect("observed original mutation owner");
                 *self.owners.candidate = Some((post, inverse, mutation));
                 self.completed_bytes = completed_bytes;
@@ -159,6 +163,8 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
     fn begin_demand(&self, _mutation: &Puzzle3dConfigMutation, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Puzzle3dConfigStorePreparation>(), depth: 1 })
     }
+    fn begin_copy_byte_demand(&self,input:&Puzzle3dConfigMutation,lane:store::os_store::store_schema::HistoryLane)->Result<usize,semio_framework_value::ValueError>{self.begin_demand(input,lane)?; std::mem::size_of::<store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Puzzle3dConfig, Puzzle3dConfigMutation, Puzzle3dConfigMutation>>().checked_add(std::mem::size_of::<Puzzle3dConfigStorePreparation>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original preparation header quote overflow"))}
+
 
     fn begin(
         &self,
@@ -202,6 +208,10 @@ pub(super) struct Puzzle3dArtifactStorePreparation {
 }
 
 impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Puzzle3dPlaySnapshot, Puzzle3dMutation> for Puzzle3dArtifactStorePreparationFactory {
+    fn operation_wire_source<'a>(&self, operation: &'a Puzzle3dMutation) -> Option<store::ArtifactPreparedOperationSource<'a>> {
+        semio_s_artifact_puzzle_3d_mutations::standards::v1::subsets::any::io::binary::mutations::prepared_operation_wire_source(operation)
+    }
+
     fn begin_batch_digest(
         &self,
         edit: &mut Option<Box<protocol::Edit<Puzzle3dMutation>>>,
@@ -223,6 +233,8 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
     fn begin_demand(&self, _mutation: &Puzzle3dMutation, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Puzzle3dArtifactStorePreparation>(), depth: 1 })
     }
+    fn begin_copy_byte_demand(&self,input:&Puzzle3dMutation,lane:store::os_store::store_schema::HistoryLane)->Result<usize,semio_framework_value::ValueError>{self.begin_demand(input,lane)?; std::mem::size_of::<store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Puzzle3dPlaySnapshot, Puzzle3dMutation, Puzzle3dMutation>>().checked_add(std::mem::size_of::<Puzzle3dArtifactStorePreparation>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original preparation header quote overflow"))}
+
 
     fn begin(
         &self,
@@ -245,9 +257,13 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
 }
 
 impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzzle3dPlaySnapshot, Puzzle3dMutation> for Puzzle3dArtifactStorePreparation {
-    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
-        use protocol::{Mutation as _, MutationDiff as _};
-        use semio_framework_value::{retained_clone::RetainedCloneProgress, ValueError, ValueRefusalKind};
+    fn advance(&mut self, body:usize,grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        use protocol::ColdMutation;
+        use protocol::Mutation as _;
+        use protocol::MutationDiff as _;
+        use semio_framework_value::retained_clone::RetainedCloneProgress;
+        use semio_framework_value::ValueError;
+        use semio_framework_value::ValueRefusalKind;
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -262,7 +278,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
                 let base = self.owners.base.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "Puzzle3d Artifact preparation lost its exact base root"))?;
                 let mutation = self.owners.mutation.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "Puzzle3d Artifact preparation lost its mutation owner"))?;
                 let inverse = mutation.inverse(base.get())?;
-                let post = protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|_| ValueError::literal(ValueRefusalKind::InvalidValue, "Puzzle3d Artifact mutation could not produce its post root"))?;
+                let post = protocol::apply_diff_cold(mutation.diff(base.get()).diff(), base.get()).map_err(|_| ValueError::literal(ValueRefusalKind::InvalidValue, "Puzzle3d Artifact mutation could not produce its post root"))?;
                 let mutation = self.owners.mutation.take().expect("observed original mutation owner");
                 *self.owners.candidate = Some((post, inverse, mutation));
                 self.completed_bytes = 1;

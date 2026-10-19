@@ -52,6 +52,7 @@ impl Default for BudgetedTreeCopy{fn default()->Self{Self::new()}}
 impl Drop for BudgetedTreeCopy{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original tree projection must finish explicit closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owners)}}}}
 struct CopyRetirement(BudgetedTreeCopy);
 impl RetirementCursor for CopyRetirement{
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.0.next_close_demands(body) }
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.0.close_step(grant){Ok(step) if step.progress()!=RetainedCloneProgress::default()=>RetirementStep::Progress(step.progress()),Ok(RetainedCloneStep::Complete(_))=>RetirementStep::Complete,Ok(_)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error)}}
  fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.next_close_demands(0)?.copy_bytes)}

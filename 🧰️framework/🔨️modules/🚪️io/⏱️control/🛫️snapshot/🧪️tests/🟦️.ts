@@ -23,7 +23,12 @@ test("original receiving Native route selects the actual generic IO owner mounte
  expect(project.targets[nativeOwner.target]?.options.command).toBe("bun ./📜️script.ts "+nativeOwner.target);
  const script=await read("🧰️framework/🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust/📜️script.ts");expect(script.includes('packages:["'+nativeOwner.package+'"]')).toBe(true);expect(script.includes('"'+nativeOwner.filter+'"')).toBe(true);
  const callerSchema=await Bun.file(resolve(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json")).json();const validateCaller=new Ajv({strict:true}).compile(callerSchema);
- for(const file of [".vscode/launch.json",".vscode/🧩️launch.seed.jsonc"]){const launch=await Bun.file(resolve(root,file)).json();const row=launch.configurations.find((row:{name:string})=>row.name==="⏱️ IO Control · Original Receiving Native");expect(row.command).toBe("bun repo run "+nativeOwner.project+":"+nativeOwner.target+" --skip-cache --exclude-dependencies");const authority=JSON.parse(row.env.SEMIO_SCRIPT_CAPABILITIES);expect(validateCaller(authority)).toBe(true);expect(validateJsonSchemaSubset(callerSchema,authority)).toEqual([]);expect(authority.arguments).toEqual(row.command.slice(4).split(" "));expect(authority.selection).toEqual(authority.arguments);expect(JSON.parse(row.env.SEMIO_SCRIPT_POLICY).maximumElapsedMilliseconds).toBe(nativeOwner.originalDeadlineMilliseconds);}
+ expect(project.name).toBe(nativeOwner.project);
+ const {createNativeNxCallerCapabilitiesV1}=await import(resolve(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️caller/🟦️.ts"));
+ const selected=["run",nativeOwner.project+":"+nativeOwner.target,"--skip-nx-cache","--excludeTaskDependencies"],authority=createNativeNxCallerCapabilitiesV1(root,["nx",...selected],selected,process.env);
+ expect(validateCaller(authority)).toBe(true);expect(validateJsonSchemaSubset(callerSchema,authority)).toEqual([]);expect(authority.arguments).toEqual(["nx",...selected]);expect(authority.selection).toEqual(authority.arguments);
+ console.error("[DEBUG] Original receiving native route and SQLite select six real mounted OS kernel laws through the owning Nx target and original native caller; actual allocator behavior requires the Native run");
+
 });
 test("original receiving result and terminal child shell have closed independent authority",()=>{
  expect(existsSync(resolve(import.meta.dir,"./🧬️schema/🔣️.json"))).toBe(false);

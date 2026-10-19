@@ -6,7 +6,13 @@
 //! literally, so the reference side exists the moment a second producer does. Handlers are registered by Scenario
 //! Outline base id and read their kind from the row.
 
-use semio_repo_test_host::{parse_json, Adapter, Context, Outcome};
+use semio_repo_test_host::parse_json;
+
+use semio_repo_test_host::Adapter;
+
+use semio_repo_test_host::Context;
+
+use semio_repo_test_host::Outcome;
 use semio_repo_test_host::law::vector::Vector;
 
 //#region 🔖️Vectors
@@ -45,7 +51,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::*;
     use semio_repo_test_host::law::vector;
-    use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::transient::io::text::mutations::fem_results_window_transient_mutation_report_json;
+    use semio_s_artifact_fem_2d_results_state::transient::io::text::mutations::fem_results_window_transient_mutation_report_json;
 
     fn report(committed: &Vector) -> Result<String, String> {
         fem_results_window_transient_mutation_report_json(committed.before, committed.mutation, committed.after)

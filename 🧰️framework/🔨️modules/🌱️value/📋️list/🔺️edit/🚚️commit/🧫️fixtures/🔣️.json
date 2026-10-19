@@ -1,0 +1,11 @@
+{
+ "version":1,
+ "cancelCuts":[0,1,2,3,5,11,23],
+ "cases":[
+  {"id":"unchanged","base":["one","two","three"],"removed":[],"added":[],"expected":["one","two","three"]},
+  {"id":"middle-remove-and-prepend","base":["one","two","three"],"removed":[1],"added":[{"index":0,"item":"new"}],"expected":["new","one","three"]},
+  {"id":"replace-ordered-container","base":["old-one","old-two"],"removed":[1,0],"added":[{"index":1,"item":"new-two"},{"index":0,"item":"new-one"}],"expected":["new-one","new-two"]},
+  {"id":"all-removed","base":["one","two","three"],"removed":[2,0,1],"added":[],"expected":[]},
+  {"id":"only-additions","base":[],"removed":[],"added":[{"index":2,"item":"three"},{"index":0,"item":"one"},{"index":1,"item":"two"}],"expected":["one","two","three"]}
+ ]
+}

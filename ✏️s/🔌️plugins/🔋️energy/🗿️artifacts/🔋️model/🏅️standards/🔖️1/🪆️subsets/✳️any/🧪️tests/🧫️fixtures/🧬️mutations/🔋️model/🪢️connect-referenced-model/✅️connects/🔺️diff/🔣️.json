@@ -1,9 +1,4 @@
 {
-  "artifact": null,
-  "schema": null,
-  "model": null,
-  "structure": null,
-  "zones": null,
   "referencedModel": {
     "kind": "attached",
     "link": {
@@ -20,7 +15,5 @@
       },
       "role": "model"
     }
-  },
-  "weatherLink": null,
-  "resultsJson": null
+  }
 }

@@ -90,7 +90,7 @@ pub use semio_framework_os_renderer_wgpu_host_base::{HostAppearance, HostAppeara
 pub(crate) use semio_framework_os_renderer_wgpu_host_base::KernelPoolFuture;
 pub(crate) use semio_framework_os_renderer_wgpu_host_base::{app_now_ms, appearance_is_dark, boot_axis, log_debug, log_debug_diagnostic, log_debug_diagnostic_once_per_transition, log_debug_once_per_transition, prefers_dark_scheme, renderer_worker_pool, resolve_environment_boot_descriptor, resolve_theme, spawn_app_task};
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) use semio_framework_os_renderer_wgpu_host_base::{RENDERER_IO_CHECKED_OUT, RENDERER_IO_EXHAUSTED, RENDERER_IO_LIVE, RENDERER_IO_PUMP_CURSOR, RENDERER_IO_SESSION_SLOTS, RENDERER_IO_SLOTS, RENDERER_IO_VACANT, RENDERER_IO_WAKE, RendererIoHandle, RendererIoNode, RendererIoSlot, actor_budget_from_turn_budget, drive_renderer_worker_task, pump_renderer_io_sessions, renderer_io_generation_live, renderer_io_sessions_pending, renderer_io_with_node, run_renderer_io, submit_renderer_io};
+pub(crate) use semio_framework_os_renderer_wgpu_host_base::{RENDERER_IO_CHECKED_OUT, RENDERER_IO_EXHAUSTED, RENDERER_IO_LIVE, RENDERER_IO_PUMP_CURSOR, RENDERER_IO_SESSION_SLOTS, RENDERER_IO_SLOTS, RENDERER_IO_VACANT, RENDERER_IO_WAKE, RendererIoHandle, RendererIoNode, RendererIoSlot, actor_budget_from_turn_budget, drive_renderer_worker_task, renderer_io_generation_live, renderer_io_sessions_pending, renderer_io_with_node, run_renderer_io, submit_renderer_io};
 
 //#region 🌓️HostAppearance
 /// 🌓️ wasm appearance hook — the browser twin of winit's `Window::theme()`. The frame Worker has no
@@ -216,3 +216,9 @@ pub fn semio_wgpu_set_agent_bridge_config(url: String, admission_proof: String) 
     shell::debug_log(&format!("[TRACE] wgpu-shell agent bridge config armed={armed}"));
 }
 //#endregion 🏠️ShellHostHooks
+
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) use semio_framework_os_renderer_wgpu_host_plumbing::native_launch;
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) use semio_framework_os_renderer_wgpu_host_plumbing::native_io::{RendererIoPath, RendererSourceIoHandle, RendererSourceIoError, RendererSourceIoFailureKind, open_renderer_source_io, read_renderer_source_bytes, read_renderer_resident_bytes, find_renderer_wasm_path, start_renderer_modified, renderer_source_io_pending, pump_renderer_io_sessions};
+

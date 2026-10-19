@@ -53,7 +53,7 @@ where
 
     /// 🚶️ Moves this replica's head to `(line, checkpoint)` and materializes the projection; a refused move keeps the head it
     /// had. Under [`Self::defer_local_replays`] a move whose replay is longer than one budget waits for later turns.
-    async fn move_head(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, head: (Option<String>, Option<String>)) -> Result<(), VcsError> {
+    async fn move_head(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, head: (Option<String>, Option<String>)) -> Result<(), VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let Some(PendingLocalStep { head, .. }) = self.defer_local_step(store_log, store_owners, store_wire, store_cursor, store_live, PendingLocalStep { envelopes: Vec::new(), head, finalizing: false }, store_log.clock).await? else {
             return Ok(());
         };
@@ -72,7 +72,7 @@ where
     ///
     /// ⚡️ `current` is always up to date (maintained by every mutating command below), so this
     /// is an O(1) clone instead of a full replay — see the `current` field doc.
-    pub async fn apply_command(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, mutations: Vec<Mutation>, lane: HistoryLane, transaction: Option<protocol::TransactionRef>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+    pub async fn apply_command(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, mutations: Vec<Mutation>, lane: HistoryLane, transaction: Option<protocol::TransactionRef>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> where P: Clone, Mutation: ColdMutation<P> {
         if mutations.is_empty() {
             return Err(VcsError::EmptyApply);
         }
@@ -218,7 +218,7 @@ where
     /// conflict were accepted and the resulting order is replayed from genesis under `LaissezFaire`.
     /// A `Fatal` outcome reports the replay and changes nothing; otherwise the withheld edits join the
     /// log, the conflict turns `Accepted`, and the projection follows the fold.
-    async fn accept_quarantined_events(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, index: usize, conflict_id: semio_framework_os_spr::ConflictId, envelopes: Vec<semio_framework_os_spr::MutationEnvelope>) -> Result<semio_framework_os_spr::MergeReport, VcsError> {
+    async fn accept_quarantined_events(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, index: usize, conflict_id: semio_framework_os_spr::ConflictId, envelopes: Vec<semio_framework_os_spr::MutationEnvelope>) -> Result<semio_framework_os_spr::MergeReport, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let mut admitted: Vec<Edit<Mutation>> = Vec::with_capacity(envelopes.len());
         for envelope in &envelopes {
             let mut edit = edit_from_operation_envelope::<Mutation>(envelope).await?;
@@ -242,9 +242,7 @@ where
                 return Err(error);
             }
         };
-        let edits_by_id: HashMap<String, Edit<Mutation>> = edits.iter().map(|edit| (edit.id.clone(), (*edit).clone())).collect();
-        let replay = Self::replay_suffix_partitioned(store_log.envelope.vcs.genesis.facts().share_snapshot(), &fold.applied, 0, &edits_by_id, &store_log.envelope.schema, &fold.supersessions, semio_framework_os_spr::MergePolicy::LaissezFaire);
-        retire_scratch_edits::<P, Mutation>(edits_by_id.into_values());
+        let  replay = Self::replay_suffix_partitioned(store_log.envelope.vcs.genesis.facts().share_snapshot(), &fold.applied, 0, &OriginalReplayEdits::new(&self.envelope.vcs.edits,&admitted), &store_log.envelope.schema, &fold.supersessions, semio_framework_os_spr::MergePolicy::LaissezFaire);
         let (state, quarantined_ids, mut rebased_inverse, replayed) = match replay {
             Ok(mut replay) => {
                 let taken = (replay.take_state(), replay.take_quarantined(), replay.take_rebased_undo_rows().into_iter().collect::<HashMap<String, semio_framework_value::list::PagedList<Mutation, {usize::MAX}>>>(), replay.take_replayed());

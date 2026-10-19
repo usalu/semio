@@ -17,7 +17,7 @@ where
         return Vec::new();
     }
     let existing = &base.model.pv_systems[index];
-    vec![vocabulary::create_pv_system(index as u32, existing.id, existing.dc_capacity_w, existing.area_m2, existing.tilt_deg, existing.azimuth_deg, existing.module_efficiency, existing.inverter_efficiency)]
+    vec![vocabulary::create_pv_system(index as u32, existing.id, existing.dc_capacity_w, existing.area_m2, existing.tilt_deg, existing.azimuth_deg, existing.module_efficiency, existing.inverter_efficiency, existing.temperature_coefficient, existing.faiman_heat_loss_constant_w_m2k, existing.faiman_heat_loss_wind_w_s_m3k, existing.mounting)]
 
     })())
 }

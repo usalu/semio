@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/fem/3d/1/load/mutation/change-combination-name/schema.json",
+  "title": "ChangeCombinationName",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "name"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeCombinationName"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Load combination",
+          "de": "Lastfallkombination"
+        },
+        "ref": {
+          "kind": "combination",
+          "domain": "fem3d",
+          "granularity": "combination"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Bezeichnung"
+        },
+        "group": "identity",
+        "order": 20
+      }
+    }
+  },
+  "description": "Changes only the authored combination name."
+}

@@ -2,7 +2,9 @@
 
 use semio_s_artifact_puzzle_3d_editor_config::puzzle3d_camera_distance;
 use semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx;
-use semio_framework_plugin::{apply_world3d_projection_action, world3d_projection_action_moves_pose, world3d_projection_pose};
+use semio_framework_plugin::apply_world3d_projection_action;
+use semio_framework_plugin::world3d_projection_action_moves_pose;
+use semio_framework_plugin::world3d_projection_pose;
 use semio_framework_pack_json::Value;
 
 /// 🧭️ `setProjection`/`setProjectionParam` share one arm — a projection change that also moves the

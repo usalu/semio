@@ -22,7 +22,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                 mounted.published_artifact = true;
                 self.as_dispatch().record_typed_operation_lane(mounted);
                 mounted.pending_child_publication = Some(pending);
-                return mounted.queue_page(TypedOperationResultPage::try_serialize(mounted.next_token(), TypedOperationResultLane::Child, &receipt)?);
+                return mounted.queue_page(TypedOperationResultPage::try_serialize_cold(mounted.next_token(), TypedOperationResultLane::Child, &receipt)?);
             }
             PendingChildGroupPublicationPhase::Faulted => {
                 let fault = pending.fault().unwrap_or_else(|| plugin_sdk_fault("typed-operation child publication fault lost its bounded detail"));
@@ -126,7 +126,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                     return Err(fault);
                 }
                 mounted.pending_child_publication = Some(pending);
-                mounted.queue_page(TypedOperationResultPage::try_serialize(mounted.next_token(), TypedOperationResultLane::Child, &receipt)?)
+                mounted.queue_page(TypedOperationResultPage::try_serialize_cold(mounted.next_token(), TypedOperationResultLane::Child, &receipt)?)
             }
             Err(fault) => {
                 let fault = pending.reject_and_fault(&fault);

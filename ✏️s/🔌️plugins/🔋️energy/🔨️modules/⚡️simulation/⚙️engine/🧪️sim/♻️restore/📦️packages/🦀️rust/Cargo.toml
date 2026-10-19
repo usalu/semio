@@ -23,3 +23,8 @@ semio-s-plugin-energy-engine-model = { workspace = true }
 semio-s-plugin-energy-engine-sim = { workspace = true }
 semio-s-plugin-energy-engine-sim-retirement = { workspace = true }
 semio-s-plugin-energy-engine-sim-wire = { workspace = true }
+
+[dev-dependencies]
+semio-s-plugin-energy-engine-sim = { workspace = true, features = ["testing"] }
+semio-s-plugin-energy-engine-site = { workspace = true }
+serde_json = { workspace = true }

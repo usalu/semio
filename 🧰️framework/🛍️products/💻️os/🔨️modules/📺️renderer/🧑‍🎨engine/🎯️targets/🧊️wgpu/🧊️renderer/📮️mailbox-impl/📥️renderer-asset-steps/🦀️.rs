@@ -182,7 +182,8 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                 }
             }
             if wake {
-                active.wake();
+                #[cfg(not(target_arch = "wasm32"))]
+        if let Ok(waker) = self.0.waker.try_lock() { if let Some(waker) = waker.as_ref() { waker(); } }
             }
             if active.terminal_is_empty() {
                 *slot = None;
@@ -197,27 +198,13 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         if matches!(probe.phase, RendererAssetProbePhase::Ready | RendererAssetProbePhase::Closing) {
             return Ok(None);
         }
-        #[cfg(not(target_arch = "wasm32"))]
-        let wake = match self.0.waker.try_lock() {
-            Ok(wake) => wake.clone(),
-            Err(_) => return Ok(Some(RendererAssetDecodeTurnKind::Pending)),
-        };
-        #[cfg(target_arch = "wasm32")]
-        let wake = None;
+        if cx.should_yield() || cx.retained_grant().maximum_items == 0 || cx.retained_grant().maximum_depth == 0 { return Ok(Some(RendererAssetDecodeTurnKind::Pending)); }
+        cx.consume_retained(semio_framework_value::RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
+        cx.consume_fuel(1);
         let Some(probe) = probe_slot.take() else { return Ok(Some(RendererAssetDecodeTurnKind::Pending)) };
-        let invocation = match RendererAssetDecodeInvocation::admit(cx) {
-            Ok(Some(invocation)) => invocation,
-            Ok(None) => {
-                *probe_slot = Some(probe);
-                return Ok(Some(RendererAssetDecodeTurnKind::Pending));
-            }
-            Err(failure) => {
-                *probe_slot = Some(probe);
-                return Err(failure);
-            }
-        };
-        let active = RendererAssetDecodeSession::new(probe, wake, invocation);
-        active.wake();
+        let active = RendererAssetDecodeSession::new(probe, cx);
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Ok(waker) = self.0.waker.try_lock() { if let Some(waker) = waker.as_ref() { waker(); } }
         *slot = Some(active);
         Ok(Some(RendererAssetDecodeTurnKind::Pending))
     }

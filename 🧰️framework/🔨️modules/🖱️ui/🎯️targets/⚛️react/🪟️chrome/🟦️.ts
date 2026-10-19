@@ -71,9 +71,9 @@ export {
   type PaneAxisBounds,
 } from "../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
 export { Navbar, SemioLogo, ShellBrandLogo, navbarFillItem, type NavbarItem, type NavbarProps } from "../../../🧱️elements/🔝️Navbar/🟦️.tsx";
-export { Icon, type IconName, type IconProps, type IconSource } from "../../../🧱️elements/🔣️Icons/🟦️.tsx";
+export { CatalogIcon as Icon, type IconName, type CatalogIconProps as IconProps } from "../../../🧱️elements/🔣️Icons/🟦️.tsx";
 export { DEFAULT_UI_DRIVER, type UiDriver } from "../../../🧱️elements/🚗️UiDriver/🟦️.tsx";
-export { UI_AVAILABLE_HEIGHT, UI_MOBILE_MAX_WIDTH_PX, UI_MOBILE_MEDIA_QUERY, UI_TABLET_MAX_WIDTH_PX, UI_TABLET_MEDIA_QUERY, elementsSurfaceDeviceForMatches, type ElementsSurfaceDevice } from "../../../📱️device/🟦️.ts";
+export { UI_AVAILABLE_HEIGHT, UI_MOBILE_MAX_WIDTH_PX, UI_MOBILE_MEDIA_QUERY, UI_TABLET_MAX_WIDTH_PX, UI_TABLET_MEDIA_QUERY, elementsSurfaceDeviceForLayout, elementsSurfaceDeviceForMatches, type ElementsSurfaceDevice, type ElementsSurfaceLayout } from "../../../📱️device/🟦️.ts";
 export {
   bootstrapElementsSurfaceChromeDocument,
   readStoredUiChromeAppearance,

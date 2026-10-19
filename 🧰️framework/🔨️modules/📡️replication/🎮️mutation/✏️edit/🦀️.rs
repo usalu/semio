@@ -410,3 +410,5 @@ mod owned_retirement {
         fn controlled_retirement_supported() -> bool { true }
     }
 }
+
+semio_framework_value::artifact_retire_struct!(TransactionRef{id,tool});

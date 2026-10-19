@@ -1,0 +1,11 @@
+{
+ "contract":"semio.original.snapshot-source/v1",
+ "cases":[
+  {"id":"held-empty","bytes":[],"expected":[],"registryHeld":true,"projectionHeld":false},
+  {"id":"held-byte-order","bytes":[0,255,17,128,17],"expected":[0,255,17,128,17],"registryHeld":true,"projectionHeld":true},
+  {"id":"orphan-empty","bytes":[],"expected":[],"registryHeld":false,"projectionHeld":false},
+  {"id":"orphan-byte-order","bytes":[255,0,127,128,42],"expected":[255,0,127,128,42],"registryHeld":false,"projectionHeld":true}
+ ],
+ "refusedCurrencies":["items","copy","capacity","release","depth"],
+ "maximumTurns":100000
+}

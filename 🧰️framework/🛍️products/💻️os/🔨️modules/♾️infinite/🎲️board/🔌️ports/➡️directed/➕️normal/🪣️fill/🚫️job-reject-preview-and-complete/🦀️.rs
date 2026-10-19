@@ -124,9 +124,7 @@ impl BoardFillJob {
         if context.is_cancelled() {
             return BoardFillOffer::Cancelled;
         }
-        if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return self.fault_outcome(self.naming.fill_stale_operation_fault);
-        }
+        
         if context.should_yield() {
             return BoardFillOffer::Yield;
         }

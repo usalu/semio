@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Retained Producer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "sourceSlots",
+    "jobOutput",
+    "context",
+    "carriedSources",
+    "rawCapacity",
+    "originalRelease",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.retained-command.original-producer.v1"
+    },
+    "sourceSlots": {
+      "const": [
+        "request",
+        "job"
+      ]
+    },
+    "jobOutput": {
+      "const": "samePrebornErasedBox"
+    },
+    "context": {
+      "const": "originalStepContext"
+    },
+    "carriedSources": {
+      "const": [
+        "producer_window_config",
+        "producer_instance_operation_owner",
+        "producer_output_chunks",
+        "producer_controller_id",
+        "producer_tool_id",
+        "producer_payload_schema_id"
+      ]
+    },
+    "rawCapacity": {
+      "const": "actualMeasuredCapacity"
+    },
+    "originalRelease": {
+      "const": "originalCommandBox"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "work",
+          "job",
+          "raw",
+          "actualRaw",
+          "extra",
+          "command",
+          "capacity"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "work": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "job": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "raw": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "actualRaw": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "extra": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "command": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "capacity": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

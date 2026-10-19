@@ -42,12 +42,8 @@ impl OpBinary for SetTransactionCountWithoutPreflight {
 }
 impl MutationKind<TxnSnapshot, TxnMutation> for SetTransactionCountWithoutPreflight {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "transaction-count-without-preflight", kind: "set-transaction-count-without-preflight", record: "SetTransactionCountWithoutPreflight" };
-    fn diff(&self, _: &TxnSnapshot) -> MutationOutcome<TxnDiff> {
-        MutationOutcome::new(TxnDiff { count: Some(self.value) })
-    }
-    fn inverse(&self, base: &TxnSnapshot) -> Result<Vec<TxnMutation>, semio_framework_value::ValueError> {
-        Ok((|| vec![SetTransactionCount { value: base.count }.into()])())
-    }
+
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set transaction count without preflight to {}", self.value), &format!("Transaktionsanzahl ohne Vorprüfung auf {} setzen", self.value))
     }
@@ -55,4 +51,20 @@ impl MutationKind<TxnSnapshot, TxnMutation> for SetTransactionCountWithoutPrefli
         panic!("no-foreign mutations must bypass foreign-step preflight")
     }
 }
+
+impl crate::os_spr::ColdMutationKind<TxnSnapshot, TxnMutation> for SetTransactionCountWithoutPreflight {
+    fn diff(&self, _: &TxnSnapshot) -> MutationOutcome<TxnDiff> {
+        MutationOutcome::new(TxnDiff { count: Some(self.value) })
+    }
+    fn inverse(&self, base: &TxnSnapshot) -> Result<Vec<TxnMutation>, semio_framework_value::ValueError> {
+        Ok((|| vec![SetTransactionCount { value: base.count }.into()])())
+    }
+    fn foreign_step_source<'a>(&'a self, _: &'a TxnSnapshot, _: usize) -> Result<Option<protocol::ForeignStepSource<'a>>, semio_framework_value::ValueError> {
+        panic!("no-foreign mutations must bypass foreign-step preflight")
+    }
+}
 use crate::testing_laws_unit_1::mutation_fixture::transaction::mutations::set_transaction_count::SetTransactionCount;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️sum-law/🦀️.rs"]
+mod sum_law_tests;

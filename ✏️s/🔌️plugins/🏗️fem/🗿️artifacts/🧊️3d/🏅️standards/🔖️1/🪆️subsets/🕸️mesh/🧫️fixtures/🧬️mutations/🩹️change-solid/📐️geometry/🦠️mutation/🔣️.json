@@ -1,0 +1,8 @@
+{
+  "mutation": "changeSolid",
+  "id": "sol1",
+  "patch": {
+    "holes": [],
+    "height": 0.3
+  }
+}

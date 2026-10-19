@@ -1,0 +1,913 @@
+{
+  "sourceCases": [
+    {
+      "request": {
+        "command": "open-source",
+        "file": "app/space 🧪 file.ts",
+        "line": 37,
+        "editor": "system"
+      },
+      "platform": "linux",
+      "environment": {
+        "SEMIO_SOURCE_OPENER": "[\"editor-fixture\",\"--goto\"]"
+      },
+      "command": "editor-fixture",
+      "args": [
+        "--goto",
+        "{file}:37"
+      ]
+    },
+    {
+      "request": {
+        "command": "open-source",
+        "file": "app/space 🧪 file.ts",
+        "line": 37,
+        "editor": "vscode"
+      },
+      "platform": "linux",
+      "command": "code",
+      "args": [
+        "--reuse-window",
+        "--goto",
+        "{file}:37"
+      ]
+    },
+    {
+      "request": {
+        "command": "open-source",
+        "file": "app/space 🧪 file.ts",
+        "editor": "codium"
+      },
+      "platform": "linux",
+      "command": "codium",
+      "args": [
+        "--reuse-window",
+        "{file}"
+      ]
+    },
+    {
+      "request": {
+        "command": "open-source",
+        "file": "app/space 🧪 file.ts",
+        "line": 8,
+        "editor": "sublime"
+      },
+      "platform": "darwin",
+      "command": "subl",
+      "args": [
+        "{file}:8"
+      ]
+    },
+    {
+      "request": {
+        "command": "open-source",
+        "file": "app/space 🧪 file.ts",
+        "editor": "system"
+      },
+      "platform": "win32",
+      "command": "explorer.exe",
+      "args": [
+        "{file}"
+      ]
+    },
+    {
+      "request": {
+        "command": "open-source",
+        "file": "app/space 🧪 file.ts",
+        "editor": "system"
+      },
+      "platform": "darwin",
+      "command": "open",
+      "args": [
+        "{file}"
+      ]
+    },
+    {
+      "request": {
+        "command": "open-source",
+        "file": "app/space 🧪 file.ts",
+        "editor": "system"
+      },
+      "platform": "linux",
+      "command": "xdg-open",
+      "args": [
+        "{file}"
+      ]
+    }
+  ],
+  "gitCases": [
+    {
+      "request": {
+        "command": "git-status"
+      },
+      "tail": [
+        "status",
+        "--short",
+        "--branch",
+        "--untracked-files=normal",
+        "--",
+        ":(literal)."
+      ]
+    },
+    {
+      "request": {
+        "command": "git-status",
+        "path": "space 🧪 file.ts",
+        "untracked": "no"
+      },
+      "tail": [
+        "status",
+        "--short",
+        "--branch",
+        "--untracked-files=no",
+        "--",
+        ":(literal)space 🧪 file.ts"
+      ]
+    },
+    {
+      "request": {
+        "command": "git-diff",
+        "path": "app/file.ts",
+        "revision": "HEAD~2",
+        "area": "staged"
+      },
+      "tail": [
+        "diff",
+        "--no-ext-diff",
+        "--no-textconv",
+        "--color=never",
+        "--cached",
+        "HEAD~2",
+        "--",
+        ":(literal)app/file.ts"
+      ]
+    },
+    {
+      "request": {
+        "command": "git-history",
+        "revision": "main..feature/path",
+        "count": 8
+      },
+      "tail": [
+        "log",
+        "--no-ext-diff",
+        "--no-textconv",
+        "--date=iso-strict",
+        "--format=%h %ad %an %s",
+        "--max-count=8",
+        "main..feature/path",
+        "--",
+        ":(literal)."
+      ]
+    },
+    {
+      "request": {
+        "command": "git-diff",
+        "revision": "HEAD~2..HEAD"
+      },
+      "tail": [
+        "diff",
+        "--no-ext-diff",
+        "--no-textconv",
+        "--color=never",
+        "HEAD~2..HEAD",
+        "--",
+        ":(literal)."
+      ]
+    },
+    {
+      "request": {
+        "command": "git-show",
+        "revision": "HEAD~1",
+        "path": "app/space 🧪 file.ts",
+        "view": "patch"
+      },
+      "tail": [
+        "show",
+        "--no-ext-diff",
+        "--no-textconv",
+        "--format=fuller",
+        "--stat",
+        "--patch",
+        "--color=never",
+        "HEAD~1",
+        "--",
+        ":(literal)app/space 🧪 file.ts"
+      ]
+    },
+    {
+      "request": {
+        "command": "git-show"
+      },
+      "tail": [
+        "show",
+        "--no-ext-diff",
+        "--no-textconv",
+        "--format=fuller",
+        "--stat",
+        "--color=never",
+        "HEAD",
+        "--",
+        ":(literal)."
+      ]
+    },
+    {
+      "request": {
+        "command": "git-blame",
+        "file": "app/space 🧪 file.ts",
+        "revision": "HEAD~1",
+        "line": 8,
+        "count": 3
+      },
+      "tail": [
+        "blame",
+        "--no-textconv",
+        "--date=short",
+        "-L",
+        "8,+3",
+        "HEAD~1",
+        "--",
+        "app/space 🧪 file.ts"
+      ]
+    },
+    {
+      "request": {
+        "command": "git-blame",
+        "file": "deleted/file.ts"
+      },
+      "tail": [
+        "blame",
+        "--no-textconv",
+        "--date=short",
+        "-L",
+        "1,+50",
+        "--",
+        "deleted/file.ts"
+      ]
+    }
+  ],
+  "admissionCases": [
+    {
+      "name": "staged base revision",
+      "request": {
+        "command": "git-diff",
+        "area": "staged",
+        "revision": "HEAD~1"
+      },
+      "accepted": true
+    },
+    {
+      "name": "staged range refused",
+      "request": {
+        "command": "git-diff",
+        "area": "staged",
+        "revision": "HEAD~2..HEAD"
+      },
+      "accepted": false
+    },
+    {
+      "name": "worktree range",
+      "request": {
+        "command": "git-diff",
+        "revision": "HEAD~2..HEAD"
+      },
+      "accepted": true
+    },
+    {
+      "name": "single commit inspection",
+      "request": {
+        "command": "git-show",
+        "revision": "HEAD"
+      },
+      "accepted": true
+    },
+    {
+      "name": "inspection range refused",
+      "request": {
+        "command": "git-show",
+        "revision": "HEAD~2..HEAD"
+      },
+      "accepted": false
+    },
+    {
+      "name": "bounded attribution",
+      "request": {
+        "command": "git-blame",
+        "file": "AGENTS.md",
+        "line": 1,
+        "count": 3
+      },
+      "accepted": true
+    },
+    {
+      "name": "attribution count bounded",
+      "request": {
+        "command": "git-blame",
+        "file": "AGENTS.md",
+        "count": 501
+      },
+      "accepted": false
+    }
+  ],
+  "runtimeCases": [
+    {
+      "name": "inspect commit metadata and summary",
+      "request": {
+        "command": "git-show",
+        "revision": "HEAD"
+      },
+      "contains": [
+        "commit ",
+        "Author:",
+        "Commit:"
+      ]
+    },
+    {
+      "name": "attribute selected source lines",
+      "request": {
+        "command": "git-blame",
+        "revision": "HEAD",
+        "file": "AGENTS.md",
+        "line": 1,
+        "count": 3
+      },
+      "contains": [
+        "You are a senior developer.",
+        "You MUST follow the following rules"
+      ]
+    },
+    {
+      "name": "compare staged files against one revision",
+      "request": {
+        "command": "git-diff",
+        "revision": "HEAD",
+        "path": "AGENTS.md",
+        "area": "staged"
+      }
+    }
+  ],
+  "refusals": [
+    {
+      "command": "git-show",
+      "view": "unknown"
+    },
+    {
+      "command": "git-diff",
+      "area": "staged",
+      "revision": "HEAD~2..HEAD"
+    },
+    {
+      "command": "git-show",
+      "revision": "HEAD~2..HEAD"
+    },
+    {
+      "command": "git-show",
+      "revision": "--output=outside"
+    },
+    {
+      "command": "git-blame",
+      "file": "../outside.ts"
+    },
+    {
+      "command": "git-blame",
+      "file": "app/file.ts",
+      "line": 0
+    },
+    {
+      "command": "git-blame",
+      "file": "app/file.ts",
+      "count": 501
+    },
+    {
+      "command": "git-blame",
+      "file": "app/file.ts",
+      "revision": "HEAD~2..HEAD"
+    },
+    {
+      "command": "open-source",
+      "file": "../outside.ts",
+      "editor": "system"
+    },
+    {
+      "command": "open-source",
+      "file": "/outside.ts",
+      "editor": "system"
+    },
+    {
+      "command": "open-source",
+      "file": "C:\\outside.ts",
+      "editor": "system"
+    },
+    {
+      "command": "open-source",
+      "file": "app/../file.ts",
+      "editor": "system"
+    },
+    {
+      "command": "open-source",
+      "file": "app/space 🧪 file.ts",
+      "editor": "system",
+      "line": 1
+    },
+    {
+      "command": "open-source",
+      "file": "app/space 🧪 file.ts",
+      "editor": "unknown"
+    },
+    {
+      "command": "git-diff",
+      "revision": "--output=outside"
+    },
+    {
+      "command": "git-diff",
+      "revision": "HEAD;echo injected"
+    },
+    {
+      "command": "git-history",
+      "count": 501
+    },
+    {
+      "command": "git-status",
+      "path": "../outside"
+    },
+    {
+      "command": "git-status",
+      "path": "app/../outside"
+    },
+    {
+      "command": "git-status",
+      "args": [
+        "reset",
+        "--hard"
+      ]
+    },
+    {
+      "shell": "system",
+      "command": "terminal",
+      "directory": "../outside"
+    },
+    {
+      "shell": "unknown",
+      "command": "terminal"
+    }
+  ],
+  "terminalCases": [
+    {
+      "command": "powershell.exe",
+      "args": [
+        "-NoLogo",
+        "-NoProfile",
+        "-NoExit"
+      ],
+      "platform": "win32",
+      "request": {
+        "shell": "system",
+        "command": "terminal",
+        "directory": "app"
+      }
+    },
+    {
+      "command": "zsh",
+      "args": [
+        "-f",
+        "-i"
+      ],
+      "platform": "darwin",
+      "request": {
+        "shell": "system",
+        "command": "terminal"
+      }
+    },
+    {
+      "command": "/bin/sh",
+      "args": [
+        "-i"
+      ],
+      "platform": "linux",
+      "request": {
+        "shell": "system",
+        "command": "terminal"
+      }
+    },
+    {
+      "command": "bash",
+      "args": [
+        "--noprofile",
+        "--norc",
+        "-i"
+      ],
+      "platform": "linux",
+      "request": {
+        "shell": "bash",
+        "command": "terminal"
+      }
+    },
+    {
+      "command": "cmd.exe",
+      "args": [
+        "/D",
+        "/Q",
+        "/K"
+      ],
+      "platform": "win32",
+      "request": {
+        "shell": "cmd",
+        "command": "terminal"
+      }
+    }
+  ],
+  "debugCases": [
+    {
+      "platform": "win32",
+      "request": {
+        "command": "debug",
+        "profile": "node-inspect",
+        "program": "app/space 🧪 file.ts",
+        "directory": "app",
+        "arguments": [
+          "value with spaces",
+          "; $(inert)",
+          "--flag"
+        ]
+      },
+      "command": "node",
+      "arguments": [
+        "inspect",
+        "--port=0",
+        "{program}",
+        "value with spaces",
+        "; $(inert)",
+        "--flag"
+      ]
+    },
+    {
+      "platform": "darwin",
+      "request": {
+        "command": "debug",
+        "profile": "node-inspect",
+        "program": "app/space 🧪 file.ts",
+        "directory": "app",
+        "arguments": [
+          "value with spaces",
+          "; $(inert)",
+          "--flag"
+        ]
+      },
+      "command": "node",
+      "arguments": [
+        "inspect",
+        "--port=0",
+        "{program}",
+        "value with spaces",
+        "; $(inert)",
+        "--flag"
+      ]
+    },
+    {
+      "platform": "linux",
+      "request": {
+        "command": "debug",
+        "profile": "node-inspect",
+        "program": "app/space 🧪 file.ts",
+        "directory": "app",
+        "arguments": [
+          "value with spaces",
+          "; $(inert)",
+          "--flag"
+        ]
+      },
+      "command": "node",
+      "arguments": [
+        "inspect",
+        "--port=0",
+        "{program}",
+        "value with spaces",
+        "; $(inert)",
+        "--flag"
+      ]
+    },
+    {
+      "platform": "win32",
+      "request": {
+        "command": "debug",
+        "profile": "python-pdb",
+        "program": "app/space 🧪 file.ts",
+        "directory": "app",
+        "arguments": [
+          "value with spaces",
+          "; $(inert)",
+          "--flag"
+        ]
+      },
+      "command": "python",
+      "arguments": [
+        "-X",
+        "utf8",
+        "-m",
+        "pdb",
+        "{program}",
+        "value with spaces",
+        "; $(inert)",
+        "--flag"
+      ]
+    },
+    {
+      "platform": "darwin",
+      "request": {
+        "command": "debug",
+        "profile": "python-pdb",
+        "program": "app/space 🧪 file.ts",
+        "directory": "app",
+        "arguments": [
+          "value with spaces",
+          "; $(inert)",
+          "--flag"
+        ]
+      },
+      "command": "python3",
+      "arguments": [
+        "-X",
+        "utf8",
+        "-m",
+        "pdb",
+        "{program}",
+        "value with spaces",
+        "; $(inert)",
+        "--flag"
+      ]
+    },
+    {
+      "platform": "linux",
+      "request": {
+        "command": "debug",
+        "profile": "python-pdb",
+        "program": "app/space 🧪 file.ts",
+        "directory": "app",
+        "arguments": [
+          "value with spaces",
+          "; $(inert)",
+          "--flag"
+        ]
+      },
+      "command": "python3",
+      "arguments": [
+        "-X",
+        "utf8",
+        "-m",
+        "pdb",
+        "{program}",
+        "value with spaces",
+        "; $(inert)",
+        "--flag"
+      ]
+    },
+    {
+      "platform": "win32",
+      "request": {
+        "command": "debug",
+        "profile": "gdb",
+        "program": "app/space 🧪 file.ts",
+        "directory": "app",
+        "arguments": [
+          "value with spaces",
+          "; $(inert)",
+          "--flag"
+        ]
+      },
+      "command": "gdb",
+      "arguments": [
+        "--nx",
+        "--quiet",
+        "--args",
+        "{program}",
+        "value with spaces",
+        "; $(inert)",
+        "--flag"
+      ],
+      "rejected": "developer.debug.windows-gdb-unicode"
+    },
+    {
+      "platform": "darwin",
+      "request": {
+        "command": "debug",
+        "profile": "gdb",
+        "program": "app/space 🧪 file.ts",
+        "directory": "app",
+        "arguments": [
+          "value with spaces",
+          "; $(inert)",
+          "--flag"
+        ]
+      },
+      "command": "gdb",
+      "arguments": [
+        "--nx",
+        "--quiet",
+        "--args",
+        "{program}",
+        "value with spaces",
+        "; $(inert)",
+        "--flag"
+      ]
+    },
+    {
+      "platform": "linux",
+      "request": {
+        "command": "debug",
+        "profile": "gdb",
+        "program": "app/space 🧪 file.ts",
+        "directory": "app",
+        "arguments": [
+          "value with spaces",
+          "; $(inert)",
+          "--flag"
+        ]
+      },
+      "command": "gdb",
+      "arguments": [
+        "--nx",
+        "--quiet",
+        "--args",
+        "{program}",
+        "value with spaces",
+        "; $(inert)",
+        "--flag"
+      ]
+    },
+    {
+      "platform": "win32",
+      "request": {
+        "command": "debug",
+        "profile": "lldb",
+        "program": "app/space 🧪 file.ts",
+        "directory": "app",
+        "arguments": [
+          "value with spaces",
+          "; $(inert)",
+          "--flag"
+        ]
+      },
+      "command": "lldb",
+      "arguments": [
+        "--no-lldbinit",
+        "--",
+        "{program}",
+        "value with spaces",
+        "; $(inert)",
+        "--flag"
+      ]
+    },
+    {
+      "platform": "darwin",
+      "request": {
+        "command": "debug",
+        "profile": "lldb",
+        "program": "app/space 🧪 file.ts",
+        "directory": "app",
+        "arguments": [
+          "value with spaces",
+          "; $(inert)",
+          "--flag"
+        ]
+      },
+      "command": "lldb",
+      "arguments": [
+        "--no-lldbinit",
+        "--",
+        "{program}",
+        "value with spaces",
+        "; $(inert)",
+        "--flag"
+      ]
+    },
+    {
+      "platform": "linux",
+      "request": {
+        "command": "debug",
+        "profile": "lldb",
+        "program": "app/space 🧪 file.ts",
+        "directory": "app",
+        "arguments": [
+          "value with spaces",
+          "; $(inert)",
+          "--flag"
+        ]
+      },
+      "command": "lldb",
+      "arguments": [
+        "--no-lldbinit",
+        "--",
+        "{program}",
+        "value with spaces",
+        "; $(inert)",
+        "--flag"
+      ]
+    }
+  ],
+  "debugRefusals": [
+    {
+      "command": "debug",
+      "profile": "shell",
+      "program": "app/space 🧪 file.ts"
+    },
+    {
+      "command": "debug",
+      "profile": "node-inspect",
+      "program": "../outside.js"
+    },
+    {
+      "command": "debug",
+      "profile": "node-inspect",
+      "program": "app/space 🧪 file.ts",
+      "directory": "../outside"
+    },
+    {
+      "command": "debug",
+      "profile": "python-pdb",
+      "program": "app/space 🧪 file.ts",
+      "arguments": "shell text"
+    },
+    {
+      "command": "debug",
+      "profile": "gdb",
+      "program": "app/space 🧪 file.ts",
+      "arguments": [
+        "nul\u0000value"
+      ]
+    },
+    {
+      "command": "debug",
+      "profile": "node-inspect",
+      "program": "app/space 🧪 file.ts",
+      "eval": "arbitrary"
+    }
+  ],
+  "debugPrograms": {
+    "node": "console.log(\"DEBUGGER_FIXTURE_OK\");\n",
+    "python": "import sys,json\nprint(\"DEBUGGER_ARGV:\"+json.dumps(sys.argv[1:]))\nprint(\"DEBUGGER_FIXTURE_OK\")\n",
+    "native": "#include <stdio.h>\nint main(int argc,char **argv){puts(\"DEBUGGER_FIXTURE_OK\");return 0;}\n"
+  },
+  "debugAvailabilityCases": [
+    {
+      "platform": "win32",
+      "installed": {
+        "node": "C:/Programs/node.exe"
+      },
+      "expected": [
+        {
+          "profile": "node-inspect",
+          "program": "node",
+          "path": "C:/Programs/node.exe",
+          "installed": true
+        },
+        {
+          "profile": "python-pdb",
+          "program": "python",
+          "installed": false
+        },
+        {
+          "profile": "gdb",
+          "program": "gdb",
+          "installed": false,
+          "constraint": "windows-ascii-paths"
+        },
+        {
+          "profile": "lldb",
+          "program": "lldb",
+          "installed": false
+        }
+      ]
+    },
+    {
+      "platform": "linux",
+      "installed": {
+        "python3": "/usr/bin/python3",
+        "gdb": "/usr/bin/gdb"
+      },
+      "expected": [
+        {
+          "profile": "node-inspect",
+          "program": "node",
+          "installed": false
+        },
+        {
+          "profile": "python-pdb",
+          "program": "python3",
+          "path": "/usr/bin/python3",
+          "installed": true
+        },
+        {
+          "profile": "gdb",
+          "program": "gdb",
+          "path": "/usr/bin/gdb",
+          "installed": true
+        },
+        {
+          "profile": "lldb",
+          "program": "lldb",
+          "installed": false
+        }
+      ]
+    }
+  ]
+}

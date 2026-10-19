@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/plugin/mounted-snapshot-read-preparation",
+  "title": "Mounted Snapshot Read Preparation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ready",
+    "progress"
+  ],
+  "properties": {
+    "ready": {
+      "type": "boolean"
+    },
+    "progress": {
+      "$ref": "https://semio.tech/framework/value/retained-clone-contract#/$defs/receipt"
+    }
+  },
+  "$defs": {
+    "sourceVersion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baseRevision",
+        "generation",
+        "canonicalRevision",
+        "overlay",
+        "history"
+      ],
+      "properties": {
+        "baseRevision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "canonicalRevision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "overlay": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "history": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "sourceTransition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "before",
+        "after",
+        "changed"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "before": {
+          "$ref": "#/$defs/sourceVersion"
+        },
+        "after": {
+          "$ref": "#/$defs/sourceVersion"
+        },
+        "changed": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

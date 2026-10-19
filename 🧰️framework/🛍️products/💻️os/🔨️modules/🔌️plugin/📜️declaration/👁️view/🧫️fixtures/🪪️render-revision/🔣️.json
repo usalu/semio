@@ -1,0 +1,13 @@
+{
+  "base": { "appInstanceId": 1, "baseRevision": "7", "generation": "3", "canonicalBaseRevision": "0101010101010101010101010101010101010101010101010101010101010101" },
+  "cases": [
+    { "id": "same-projection", "left": {}, "right": {}, "expected": true },
+    { "id": "another-instance", "left": {}, "right": { "appInstanceId": 2 }, "expected": false },
+    { "id": "another-local-revision", "left": {}, "right": { "baseRevision": "8" }, "expected": false },
+    { "id": "another-generation", "left": {}, "right": { "generation": "4" }, "expected": false },
+    { "id": "reused-counters-new-document", "left": {}, "right": { "canonicalBaseRevision": "0201010101010101010101010101010101010101010101010101010101010101" }, "expected": false },
+    { "id": "canonical-suffix-differs", "left": {}, "right": { "canonicalBaseRevision": "0101010101010101010101010101010101010101010101010101010101010102" }, "expected": false },
+    { "id": "maximum-counters", "left": { "baseRevision": "18446744073709551615", "generation": "18446744073709551615" }, "right": { "baseRevision": "18446744073709551615", "generation": "18446744073709551615" }, "expected": true },
+    { "id": "adjacent-large-counters", "left": { "baseRevision": "18446744073709551615" }, "right": { "baseRevision": "18446744073709551614" }, "expected": false }
+  ]
+}

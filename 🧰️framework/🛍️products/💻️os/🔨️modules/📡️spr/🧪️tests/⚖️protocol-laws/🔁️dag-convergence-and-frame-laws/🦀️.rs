@@ -112,13 +112,13 @@ pub async fn assert_channel_frame_round_trip(sample: &ChannelFrameSample<'_>) {
 /// `diff` leaf is expected to route through).
 pub async fn assert_missing_target_is_error<P, Op>(base: &P, mutation: &Op)
 where
-    Op: crate::Mutation<P>,
-    Op::Diff: PartialEq + std::fmt::Debug + Default,
+    Op: crate::Mutation<P> + crate::ColdMutation<P>,
+    Op::ReferenceDiff: PartialEq + std::fmt::Debug + Default,
 {
     let outcome = mutation.diff(base);
     let has_missing_target_error = outcome.messages().iter().any(|message| message.level == semio_framework_diagnostic::Severity::Error && message.code.0 == "mutation.target-missing");
     assert!(has_missing_target_error, "a mutation targeting an absent element must carry an Error message with code 'mutation.target-missing', got {:?}", outcome.messages());
-    assert_eq!(outcome.diff(), &Op::Diff::default(), "a mutation.target-missing outcome must carry no change (diff == Diff::default())");
+    assert_eq!(outcome.diff(), &Op::ReferenceDiff::default(), "a mutation.target-missing outcome must carry no change (diff == Diff::default())");
 }
 
 /// ✅️ LAW (§C2 law 1): whenever `outcome.worst_level()` is `Fatal`, `outcome.diff() ==
@@ -136,8 +136,8 @@ where
 /// repeated invocations.
 pub async fn assert_outcome_deterministic<P, Op>(base: &P, mutation: &Op)
 where
-    Op: crate::Mutation<P>,
-    Op::Diff: PartialEq + std::fmt::Debug,
+    Op: crate::Mutation<P> + crate::ColdMutation<P>,
+    Op::ReferenceDiff: PartialEq + std::fmt::Debug,
 {
     let a = mutation.diff(base);
     let b = mutation.diff(base);

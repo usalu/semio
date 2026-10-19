@@ -26,6 +26,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "site", kind: "change-site-time-zone", record: "ChangedSiteTimeZone" };
 
+
+
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change site time zone to UTC{:+}", self.new_time_zone_hours), &format!("Zeitzone des Standorts auf UTC{:+} ändern", self.new_time_zone_hours))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for ChangeSiteTimeZone
+where
+    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<ChangeSiteTimeZone>,
+{
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
@@ -36,9 +49,5 @@ where
     
     })
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change site time zone to UTC{:+}", self.new_time_zone_hours), &format!("Zeitzone des Standorts auf UTC{:+} ändern", self.new_time_zone_hours))
-    }
 }
 //#endregion 🔖️Mutation

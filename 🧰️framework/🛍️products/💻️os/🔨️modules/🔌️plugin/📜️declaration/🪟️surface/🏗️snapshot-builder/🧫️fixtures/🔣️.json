@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "base": 3,
+  "value": 8,
+  "cases": [
+    {
+      "id": "mutate-applied",
+      "entry": "mutate",
+      "semanticRefusal": false,
+      "applyRefusal": false,
+      "result": 8,
+      "error": false,
+      "mutationsRetired": 1,
+      "diffsRetired": 0,
+      "projectionsRetired": 1
+    },
+    {
+      "id": "mutate-semantic-refused",
+      "entry": "mutate",
+      "semanticRefusal": true,
+      "applyRefusal": false,
+      "result": 3,
+      "error": false,
+      "mutationsRetired": 1,
+      "diffsRetired": 1,
+      "projectionsRetired": 1
+    },
+    {
+      "id": "mutate-apply-refused",
+      "entry": "mutate",
+      "semanticRefusal": false,
+      "applyRefusal": true,
+      "result": 3,
+      "error": false,
+      "mutationsRetired": 1,
+      "diffsRetired": 1,
+      "projectionsRetired": 2
+    },
+    {
+      "id": "absorb-applied",
+      "entry": "absorb",
+      "semanticRefusal": false,
+      "applyRefusal": false,
+      "result": 8,
+      "error": false,
+      "mutationsRetired": 0,
+      "diffsRetired": 1,
+      "projectionsRetired": 1
+    },
+    {
+      "id": "absorb-apply-refused",
+      "entry": "absorb",
+      "semanticRefusal": false,
+      "applyRefusal": true,
+      "result": null,
+      "error": true,
+      "mutationsRetired": 0,
+      "diffsRetired": 1,
+      "projectionsRetired": 2
+    }
+  ],
+  "disposal": "owned-wire",
+  "nativeOperation": false
+}

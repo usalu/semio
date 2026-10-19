@@ -1,3 +1,4 @@
+use crate::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra,ColdMutationKind,ColdCompositeMutationKind};
 use super::mutation_laws_fixture::{foreign_step_fixture, AddCounter, AddCounterFourTimes, AddCounterThenNotifyForeign, AddCounterTwice, CounterDiff, CounterMutation};
 use super::*;
 use crate::fold::{fold_plan_diff, fold_plan_inverse};
@@ -49,10 +50,10 @@ impl Patchable<i64> for Item {
 fn operation_diff_apply_matches_backwards_inverse() {
     let base: i64 = 10;
     let op = CounterMutation::AddCounter(AddCounter { delta: 5 });
-    let forward = protocol::apply_diff(op.diff(&base).diff(), &base).expect("valid forward diff");
+    let forward = protocol::apply_diff_cold(op.diff(&base).diff(), &base).expect("valid forward diff");
     assert_eq!(forward, 15);
     let [undo] = <[CounterMutation; 1]>::try_from(op.inverse(&base).expect("valid retained mutation inverse fixture")).unwrap();
-    let restored = protocol::apply_diff(undo.diff(&forward).diff(), &forward).expect("valid inverse diff");
+    let restored = protocol::apply_diff_cold(undo.diff(&forward).diff(), &forward).expect("valid inverse diff");
     assert_eq!(restored, base);
 }
 
@@ -61,7 +62,7 @@ fn operation_diff_absorb_accumulates() {
     let mut a = CounterDiff { deltas: vec![3] };
     a.absorb(CounterDiff { deltas: vec![4] });
     assert_eq!(a.deltas, vec![3, 4]);
-    assert_eq!(protocol::apply_diff(&a, &0), Ok(7));
+    assert_eq!(protocol::apply_diff_cold(&a, &0), Ok(7));
 }
 
 #[test]
@@ -74,7 +75,7 @@ fn operation_defaults_are_stable() {
     assert_eq!(op.timestamp(), None);
     assert_eq!(op.undo_policy(), protocol::UndoPolicy::ExactBaseOnly);
     assert_eq!(op.state_class(), semio_framework_schema_state::StateClass::Artifact);
-    assert!(op.foreign_step_source(&0, 0).expect("original local source").is_none());
+    assert!(Mutation::foreign_step_source(&op,&0,0).expect("original local source").is_none());
 }
 //#endregion 🧪️MutationLaws
 
@@ -281,11 +282,11 @@ fn derive_mutations_wires_complete_leaf_and_atomic_registration() {
     let mutation: MiniMutation = semio_framework_pack_json::from_json_str(&witness.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed rename-mini wire witness");
     assert_eq!(mutation, RenameMini { new_name: "b".into() }.into());
     assert_eq!(json_oracle(&mutation), witness);
-    let after = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("valid forward diff");
+    let after = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("valid forward diff");
     assert_eq!(after.name, "b");
     let inverse = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1);
-    assert_eq!(protocol::apply_diff(inverse[0].diff(&after).diff(), &after), Ok(base));
+    assert_eq!(protocol::apply_diff_cold(inverse[0].diff(&after).diff(), &after), Ok(base));
     assert_eq!(MiniMutation::DESCRIPTORS, &[RenameMini::DESCRIPTOR]);
     assert_eq!(mutation.descriptor(), &RenameMini::DESCRIPTOR);
     assert_eq!(MiniMutation::kinds(), &[<RenameMini as MutationKind<MiniDoc, MiniMutation>>::SEMANTICS]);
@@ -701,11 +702,11 @@ fn inference_diff_consistency_law() {
     let base: i64 = 10;
     let noop = CounterDiff { deltas: vec![0] };
     assert!(!noop.touches().intersects_any(AddInference::fields()[0].reads));
-    assert_eq!(AddInference::infer(&protocol::apply_diff(&noop, &base).expect("valid no-op diff")).expect("valid materialized inference fixture"), AddInference::infer(&base).expect("valid materialized inference fixture"));
+    assert_eq!(AddInference::infer(&protocol::apply_diff_cold(&noop, &base).expect("valid no-op diff")).expect("valid materialized inference fixture"), AddInference::infer(&base).expect("valid materialized inference fixture"));
 
     let real = CounterDiff { deltas: vec![1] };
     assert!(real.touches().intersects_any(AddInference::fields()[0].reads));
-    assert_ne!(AddInference::infer(&protocol::apply_diff(&real, &base).expect("valid real diff")).expect("valid materialized inference fixture"), AddInference::infer(&base).expect("valid materialized inference fixture"));
+    assert_ne!(AddInference::infer(&protocol::apply_diff_cold(&real, &base).expect("valid real diff")).expect("valid materialized inference fixture"), AddInference::infer(&base).expect("valid materialized inference fixture"));
 }
 
 #[test]
@@ -772,28 +773,28 @@ fn fold_plan_diff_equals_sequential_apply() {
     let base: i64 = 10;
     let kind = AddCounterTwice { delta: 3 };
     let diff = fold_plan_diff(&kind, &base);
-    assert_eq!(protocol::apply_diff(diff.diff(), &base), Ok(16));
+    assert_eq!(protocol::apply_diff_cold(diff.diff(), &base), Ok(16));
 
     let steps = plan_of(&kind, &base).expect("plan succeeds");
     let mut sequential = base;
     for step in &steps {
         if let PlanStep::Local(op) = step {
-            sequential = protocol::apply_diff(op.diff(&sequential).diff(), &sequential).expect("valid planned diff");
+            sequential = protocol::apply_diff_cold(op.diff(&sequential).diff(), &sequential).expect("valid planned diff");
         }
     }
-    assert_eq!(protocol::apply_diff(diff.diff(), &base), Ok(sequential), "fold_plan_diff must equal sequential application of the plan's local steps");
+    assert_eq!(protocol::apply_diff_cold(diff.diff(), &base), Ok(sequential), "fold_plan_diff must equal sequential application of the plan's local steps");
 }
 
 #[test]
 fn fold_plan_inverse_restores_base() {
     let base: i64 = 10;
     let kind = AddCounterTwice { delta: 3 };
-    let forward = protocol::apply_diff(fold_plan_diff(&kind, &base).diff(), &base).expect("valid folded diff");
+    let forward = protocol::apply_diff_cold(fold_plan_diff(&kind, &base).diff(), &base).expect("valid folded diff");
     assert_ne!(forward, base);
     let inverses = fold_plan_inverse(&kind, &base).expect("valid retained mutation inverse fixture");
     let mut restored = forward;
     for op in inverses.iter().rev() {
-        restored = protocol::apply_diff(op.diff(&restored).diff(), &restored).expect("valid inverse diff");
+        restored = protocol::apply_diff_cold(op.diff(&restored).diff(), &restored).expect("valid inverse diff");
     }
     assert_eq!(restored, base, "fold_plan_inverse applied after the composite must restore base");
 }
@@ -803,7 +804,7 @@ fn composite_of_composite_nests_and_folds_identically_to_flattened_plan() {
     let base: i64 = 0;
     let quad = AddCounterFourTimes { delta: 2 };
     let diff = fold_plan_diff(&quad, &base);
-    assert_eq!(protocol::apply_diff(diff.diff(), &base), Ok(8), "two nested AddCounterTwice{{delta:2}} embeds must fold to +8");
+    assert_eq!(protocol::apply_diff_cold(diff.diff(), &base), Ok(8), "two nested AddCounterTwice{{delta:2}} embeds must fold to +8");
 
     let steps = plan_of(&quad, &base).expect("plan succeeds");
     let local_deltas: Vec<i64> = steps
@@ -816,9 +817,9 @@ fn composite_of_composite_nests_and_folds_identically_to_flattened_plan() {
     assert_eq!(local_deltas, vec![2, 2, 2, 2], "nesting must flatten to four local steps, identical to the un-nested plan");
 
     let inverses = fold_plan_inverse(&quad, &base).expect("valid retained mutation inverse fixture");
-    let mut restored = protocol::apply_diff(diff.diff(), &base).expect("valid folded diff");
+    let mut restored = protocol::apply_diff_cold(diff.diff(), &base).expect("valid folded diff");
     for op in inverses.iter().rev() {
-        restored = protocol::apply_diff(op.diff(&restored).diff(), &restored).expect("valid inverse diff");
+        restored = protocol::apply_diff_cold(op.diff(&restored).diff(), &restored).expect("valid inverse diff");
     }
     assert_eq!(restored, base);
 }
@@ -847,7 +848,7 @@ fn foreign_steps_are_excluded_from_fold_plan_diff() {
     let base: i64 = 5;
     let kind = AddCounterThenNotifyForeign { delta: 4, foreign_count: 2 };
     let diff = fold_plan_diff(&kind, &base);
-    assert_eq!(protocol::apply_diff(diff.diff(), &base), Ok(9), "only the local AddCounter{{delta:4}} may contribute to the folded diff");
+    assert_eq!(protocol::apply_diff_cold(diff.diff(), &base), Ok(9), "only the local AddCounter{{delta:4}} may contribute to the folded diff");
 
     let planned = plan_of(&kind, &base).expect("original independent cold plan");
     let foreign: Vec<_> = planned.iter().filter_map(|step| if let PlanStep::Foreign(value) = step { Some(value) } else { None }).collect();
@@ -872,12 +873,12 @@ fn foreign_steps_are_excluded_from_fold_plan_diff() {
 fn derive_composite_mutation_wires_delegating_mutation_kind() {
     let base: i64 = 1;
     let kind = AddCounterTwice { delta: 5 };
-    let diff = MutationKind::<i64, CounterMutation>::diff(&kind, &base);
-    assert_eq!(protocol::apply_diff(diff.diff(), &base), Ok(11));
-    let inverse = MutationKind::<i64, CounterMutation>::inverse(&kind, &base).expect("valid retained mutation inverse fixture");
-    let mut restored = protocol::apply_diff(diff.diff(), &base).expect("valid folded diff");
+    let diff = ColdMutationKind::<i64, CounterMutation>::diff(&kind, &base);
+    assert_eq!(protocol::apply_diff_cold(diff.diff(), &base), Ok(11));
+    let inverse = ColdMutationKind::<i64, CounterMutation>::inverse(&kind, &base).expect("valid retained mutation inverse fixture");
+    let mut restored = protocol::apply_diff_cold(diff.diff(), &base).expect("valid folded diff");
     for op in inverse.iter().rev() {
-        restored = protocol::apply_diff(op.diff(&restored).diff(), &restored).expect("valid inverse diff");
+        restored = protocol::apply_diff_cold(op.diff(&restored).diff(), &restored).expect("valid inverse diff");
     }
     assert_eq!(restored, base);
     assert_eq!(<AddCounterTwice as MutationKind<i64, CounterMutation>>::SEMANTICS.kind, "add-counter-twice");

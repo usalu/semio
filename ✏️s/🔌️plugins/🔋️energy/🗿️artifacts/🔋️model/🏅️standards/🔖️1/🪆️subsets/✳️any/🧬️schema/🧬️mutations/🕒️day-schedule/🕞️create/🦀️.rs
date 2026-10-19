@@ -29,18 +29,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateDailySchedule
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateDailySchedule> + From<crate::DeleteDailySchedule>,
 {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "daily-schedule", kind: "create-daily-schedule", record: "CreatedDailySchedule" };
 
-    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-        super::diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create Daily Schedule {} at index {}", self.id.0, self.index), &format!("Tageszeitplan {} an Index {} erstellen", self.id.0, self.index))
@@ -49,5 +38,26 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.id.0.to_string()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for CreateDailySchedule
+where
+    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<CreateDailySchedule> + From<crate::DeleteDailySchedule>,
+{
+    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
+        super::diff::diff(self, base)
+    }
+
+
+
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "daily-schedule", kind: "create-daily-schedule", record: "CreatedDailySchedule" };
+
+
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Mutation

@@ -13,6 +13,7 @@ pub trait OriginalActorJobProvider{
  fn is_cancelled(&self,job:u64)->Option<bool>;
  fn cancel(&mut self,job:u64,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>;
  fn step(&mut self,job:u64,cx:&mut StepContext<'_>)->Result<Option<OriginalJobStep>,OriginalTurnFailure>;
+ fn close(&mut self,job:u64,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>;
 
 }
 

@@ -1,5 +1,5 @@
-//! 🧭️ Fem2d transform gumball commands — translate, rotate and scale the selection through the gumball TOOL
 //! (`🕹️interaction/🧭️gumball`): one dispatch without a `phase` is ONE tool transaction; a host streaming a gesture
+//! 🧭️ Fem2d transform gumball commands — translate, rotate and scale the selection through the gumball TOOL
 //! sends `phase: "stream"` ticks that accumulate in the window's ONE open transaction (previewed by every window,
 //! never history) until `phase: "commit"` commits the net `move-selection` leaf as one edit or `phase: "abort"`
 //! (with a `reason`) drops it with zero trace — plus the per-window handle flags the Transform utility's options
@@ -17,9 +17,19 @@ use crate::editor::fem2d::Fem2dPlayApp;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
-use semio_framework_plugin::{AppOperationContext, ArtifactView, ConfigView, EditorApp, Emit, EphemeralEmit, Fault, NoConfig, NoConfigMutation, ViewModel};
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::EphemeralEmit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::ViewModel;
 use semio_framework_tool_machine::GesturePhase;
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 
 type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 

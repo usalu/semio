@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "wide"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/case"
+      }
+    },
+    "wide": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prefixLength",
+        "pageBytes"
+      ],
+      "properties": {
+        "prefixLength": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "pageBytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "observation": {
+      "type": "object",
+      "required": [
+        "originalOrdinals",
+        "deniedCurrencies",
+        "capacityBytes",
+        "releaseBytes"
+      ],
+      "properties": {
+        "releaseBytes": {
+          "const": 0
+        },
+        "originalOrdinals": {
+          "const": true
+        },
+        "deniedCurrencies": {
+          "maxItems": 3,
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "enum": [
+              "items",
+              "copy",
+              "depth"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "capacityBytes": {
+          "const": 0
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "strings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "base",
+        "removed",
+        "modified",
+        "added",
+        "indices",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "base": {
+          "$ref": "#/$defs/strings"
+        },
+        "removed": {
+          "$ref": "#/$defs/strings"
+        },
+        "modified": {
+          "$ref": "#/$defs/strings"
+        },
+        "added": {
+          "$ref": "#/$defs/strings"
+        },
+        "indices": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "expected": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "removed",
+                "modified",
+                "output"
+              ],
+              "properties": {
+                "removed": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "modified": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "output": {
+                  "$ref": "#/$defs/strings"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

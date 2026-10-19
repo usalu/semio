@@ -290,7 +290,7 @@ impl<E: ArtifactEditor> semio_framework_job::InteractiveJob for NaturalFileImpor
     fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_owned_demands(body)?.capacity_bytes)}
     fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_owned_demands(0)?.release_bytes)}
     fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_owned_demands(0)?.depth)}
-    fn terminal_is_empty(&self)->bool{self.closing&&self.port.capacity()==0&&self.media.is_none()&&self.decoder.is_none()&&self.completion.is_none()&&self.emit.is_none()&&self.pending_completion_rejection.is_none()&&self.retirement.is_none()&&self.outcomes.terminal_is_empty()}
+    fn terminal_is_empty(&self)->bool{self.closing&&self.port.capacity()==0&&self.media.is_none()&&self.decoder.is_none()&&self.completion.is_none()&&self.emit.is_none()&&self.pending_completion_rejection.is_none()&&self.retirement.is_none()&&self.pending_bytes.is_none()&&self.pending_media_value.is_none()&&self.pending_media_text.is_none()&&self.pending_port.is_none()&&self.outcomes.terminal_is_empty()}
 }
 
 impl<E: ArtifactEditor> ArtifactReservedJob for NaturalFileImportJob<E> {}
@@ -300,6 +300,10 @@ impl<E:ArtifactEditor> NaturalFileImportJob<E>{
         use semio_framework_value::retirement::owned_retirement_birth_bytes;
         if !self.outcomes.terminal_is_empty(){return self.outcomes.close_demands();}
         if let Some(ticket)=self.retirement.as_ref(){return semio_framework_value::factory_ticket_demands(ticket,body);}
+        if self.pending_bytes.is_some(){return Ok(RetirementDemand{capacity_bytes:owned_retirement_birth_bytes::<Vec<u8>>(),depth:1,..Default::default()});}
+        if self.pending_media_value.is_some(){return Ok(RetirementDemand{capacity_bytes:owned_retirement_birth_bytes::<(String,DslValue)>(),depth:1,..Default::default()});}
+        if self.pending_media_text.is_some(){return Ok(RetirementDemand{capacity_bytes:owned_retirement_birth_bytes::<(String,String)>(),depth:1,..Default::default()});}
+        if self.pending_port.is_some(){return Ok(RetirementDemand{capacity_bytes:owned_retirement_birth_bytes::<String>(),depth:1,..Default::default()});}
         if let Some(decoder)=self.decoder.as_ref(){return match decoder{
             NaturalFileDecodeOwner::Controlled(owner) if owner.terminal_is_empty()=>Ok(RetirementDemand{release_bytes:size_of_val(&**owner),depth:1,..Default::default()}),
             NaturalFileDecodeOwner::Controlled(owner)=>owner.retirement_demands(body),
@@ -316,6 +320,10 @@ impl<E:ArtifactEditor> NaturalFileImportJob<E>{
         let demand=self.close_owned_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(PluginLifecycleStep::Progress(Default::default()));}
         if self.retirement.is_some(){let step=semio_framework_value::close_factory_ticket(&mut self.retirement,grant)?;return Ok(PluginLifecycleStep::Progress(step.progress()));}
+        if let Some(original)=self.pending_bytes.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant){Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.pending_bytes=Some(original);Err(error)}};}
+        if let Some(original)=self.pending_media_value.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant){Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.pending_media_value=Some(original);Err(error)}};}
+        if let Some(original)=self.pending_media_text.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant){Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.pending_media_text=Some(original);Err(error)}};}
+        if let Some(original)=self.pending_port.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant){Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.pending_port=Some(original);Err(error)}};}
         if let Some(decoder)=self.decoder.as_mut(){match decoder{
             NaturalFileDecodeOwner::Controlled(owner)=>{
                 if owner.terminal_is_empty(){let released_bytes=size_of_val(&**owner);self.decoder.take();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()}));}

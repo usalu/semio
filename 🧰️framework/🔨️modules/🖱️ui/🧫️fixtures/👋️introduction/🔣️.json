@@ -1,0 +1,85 @@
+{
+  "viewport": {
+    "left": 100,
+    "top": 50,
+    "width": 200,
+    "height": 100
+  },
+  "projection": [
+    {
+      "ndc": {
+        "x": 0,
+        "y": 0
+      },
+      "expected": {
+        "x": 200,
+        "y": 100
+      }
+    },
+    {
+      "ndc": {
+        "x": -1,
+        "y": -1
+      },
+      "expected": {
+        "x": 100,
+        "y": 150
+      }
+    },
+    {
+      "ndc": {
+        "x": 1,
+        "y": 1
+      },
+      "expected": {
+        "x": 300,
+        "y": 50
+      }
+    }
+  ],
+  "surface": {
+    "windowId": "test.introduction.surface",
+    "worldPoint": [
+      1,
+      2,
+      3
+    ],
+    "expected": {
+      "x": 80,
+      "y": 60
+    }
+  },
+  "paragraphs": {
+    "input": "One.\n\nTwo.\n\n\nThree.",
+    "expected": [
+      "One.",
+      "Two.",
+      "Three."
+    ]
+  },
+  "introduction": {
+    "title": "Welcome",
+    "steps": [
+      {
+        "id": "fixture.introduction.welcome",
+        "title": "Welcome",
+        "body": "One.\n\nTwo.\n\n\nThree.",
+        "introduce": null,
+        "show": [],
+        "placement": "center",
+        "interactions": [],
+        "ordered": false,
+        "logos": [],
+        "demonstrations": []
+      }
+    ]
+  },
+  "chrome": {
+    "en": {
+      "done": "Done"
+    },
+    "de": {
+      "done": "Fertig"
+    }
+  }
+}

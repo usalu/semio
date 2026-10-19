@@ -1,5 +1,5 @@
-//! 🏅️ Standard root — `standard() -> StandardDeclaration` (`terra-fleet-trinity-recipe` recipe,
 //! `📓️terra-fleet-trinity-recipe-report.md`), mounts subset `any`. `mimes`/`extensions`: no real MIME
+//! 🏅️ Standard root — `standard() -> StandardDeclaration` (`terra-fleet-trinity-recipe` recipe,
 //! registration exists for `s.puzzle2d` outside the old `ArtifactDefinition`'s capability rows
 //! (`definition()`, kept — debt D1) — that channel only ever claimed a codec id
 //! (`board.ports.directed.v1:puzzle2d-play`) and an extension (`puzzle2d-play`, the EDITOR's own
@@ -10,7 +10,8 @@
 //! real, carried-over value from `definition()`'s `s.puzzle2d.codec.document-1` row.
 
 use crate::standards::v1::subsets;
-use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
+use semio_framework_plugin::app::declarations::MediaDeclaration;
+use semio_framework_plugin::app::declarations::StandardDeclaration;
 use {semio_framework_artifact_reference::StandardId};
 
 pub fn standard<PA: crate::ArtifactApps>() -> StandardDeclaration<PA> {

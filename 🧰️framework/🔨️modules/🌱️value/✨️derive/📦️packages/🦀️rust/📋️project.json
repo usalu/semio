@@ -9,6 +9,39 @@
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
+    },
+    "value-admission-check": {
+      "cache": false,
+      "dependsOn": [],
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "value-admission-check"
+          ]
+        }
+      },
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts value-admission-check"
+      },
+      "executor": "repo:script"
+    },
+    "value-admission-native-check": {
+      "cache": false,
+      "dependsOn": [],
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "value-admission-check",
+            "--native"
+          ]
+        }
+      },
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts value-admission-check --native"
+      },
+      "executor": "repo:script"
     }
   },
   "namedInputs": {

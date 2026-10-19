@@ -1,6 +1,7 @@
 //! 🧮️ Exact authored FEM cells shared by owned SQL rows and borrowed Native admission.
 use semio_framework_io_sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{Cell,FloatColumn,Projection,insert_ieee754,insert_key_ieee754}};
-use semio_framework_value::{ValueError,ValueRefusalKind};
+use semio_framework_value::ValueError;
+use semio_framework_value::ValueRefusalKind;
 fn refused(kind:ValueRefusalKind,message:&str)->ValueError{ValueError::new(kind,message)}
 enum Rows<'c,'p>{Owned(Projection<'c,'p>),Forecast{control:&'c mut SqliteSnapshotControl<'p>,count:usize,bytes:usize,phase:SqliteSnapshotPhase}}
 pub struct RowWriter<'c,'p>{rows:Rows<'c,'p>}

@@ -1,3 +1,5 @@
+
+// #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/✏️TextEditor/component.tsx
 /** 📝️ `✏️TextEditor` — the text/code document scene host: wasm editor-engine canvas surface
  * (grammar highlighting, hover tokens, F2 rename with multi-span preview, alt-click completions),
@@ -39,7 +41,7 @@ export function WasmEditorSurface(props: WasmEditorSurfaceProps) {
   Object.assign(core, useEditorSessionPresence(core));
   Object.assign(core, useEditorCompletionsRenameAndMenu(core));
   const { surfaceId } = props;
-  const { applyCompletion, cancelRename, caretScreenPosition, commitRename, completionIndex, completions, completionsOpen, contextMenu, contextMenuTitleLabel, descriptionId, dismissContextMenu, dispatch, editorLabel, emitSelection, invalid, lastHoverRangeRef, moveExplicitHistory, newlineGates, onSessionReady, openCompletions, presenceFrame, presenceWindowId, projectPeerCaret, publishCaretPresence, readOnly, readOnlyRef, renameDraft, renameInfo, renamePosition, requestContextMenu, scene, sessionEpoch, sessionFactory, sessionRef, setCompletionIndex, setCompletionsOpen, setContextMenu, setPresenceFrame, shellContextMenuFallback, sinkRef, startRename, surfaceRef, textEditorMenuKeysByActionId, updateRenamePreview } = core;
+  const { applyCompletion, cancelRename, caretScreenPosition, commitRename, completionIndex, completions, completionsOpen, contextMenu, contextMenuTitleLabel, descriptionId, dismissContextMenu, dispatch, editorLabel, emitSelection, invalid, lastHoverRangeRef, moveExplicitHistory, newlineGates, onSessionReady, openCompletions, presenceFrame, presenceWindowId, projectPeerCaret, publishCaretPresence, readOnly, readOnlyRef, renameDraft, renameInfo, renamePosition, requestContextMenu, scene, sessionEpoch, sessionFactory, sessionRef, setCompletionIndex, setCompletionsOpen, setContextMenu, setPresenceFrame, shellContextMenuFallback, sinkRef, startRename, surfaceRef, textEditorMenuKeysByActionId, updateRenamePreview , presenceRuntimeKey } = core;
 
   return (
     <div ref={surfaceRef} className="relative min-h-0 flex-1">

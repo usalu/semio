@@ -34,6 +34,10 @@
   stroke-linecap: round;
 }
 
+.pet[data-pet-shiny] {
+  filter: var(--pet-shiny-filter, brightness(1.15) saturate(1.35) drop-shadow(0 0 2px #fff4b8) drop-shadow(0 0 5px #e3b341));
+}
+
 /* What the pets bring along: the ladders that stand on the stage (behind the actors) and the particles of their tricks
    and states (in front of them), each one drawing at the layer's origin, in the units of the stage and scaled to the
    size the pets are drawn at. The tools an actor carries (`pet-gear`) live inside its own drawing and need no rule:

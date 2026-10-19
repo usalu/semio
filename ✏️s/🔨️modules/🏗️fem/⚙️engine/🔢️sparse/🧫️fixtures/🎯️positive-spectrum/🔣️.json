@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "oracle": "NumPy 2.3.5 symmetric eigvalsh after Cholesky congruence",
+  "residualTolerance": 0.000001,
+  "cases": [
+    { "name": "hidden-positive-dominant-negative", "stiffnessDiagonal": [1,1,1,1,1,1,1,1,1,1,1,1,1,1], "rightDiagonal": [-100,-99,-98,-97,-96,-95,-94,-93,-92,-91,-90,-89,2,1], "requested": 1, "positiveCount": 2, "values": [0.5] },
+    { "name": "semidefinite", "stiffnessDiagonal": [2,3,4], "rightDiagonal": [1,0,0], "requested": 3, "positiveCount": 1, "values": [2] },
+    { "name": "tension-only", "stiffnessDiagonal": [2,3,4], "rightDiagonal": [-1,0,-2], "requested": 3, "positiveCount": 0, "values": [] },
+    { "name": "mixed-indefinite", "stiffness": [[4,1],[1,3]], "right": [[2,-0.5],[-0.5,-1]], "requested": 2, "positiveCount": 1, "values": [1.6427344100918364] },
+    { "name": "spd-modal", "stiffness": [[6,-2,0],[-2,5,-1],[0,-1,4]], "right": [[2,0.1,0],[0.1,1,0],[0,0,0.5]], "requested": 2, "positiveCount": 3, "values": [2.0636407759857107,5.500287655858315] },
+    { "name": "small-positive-scale", "stiffnessDiagonal": [2,3], "rightDiagonal": [0.00000000000000000001,0], "requested": 2, "positiveCount": 1, "values": [200000000000000000000] },
+    { "name": "hidden-positive-below-negative-relative-scale", "stiffnessDiagonal": [1,1,1,1,1,1,1,1,1,1,1,1,1,1], "rightDiagonal": [-100000000000000000000,-100000000000000000000,-100000000000000000000,-100000000000000000000,-100000000000000000000,-100000000000000000000,-100000000000000000000,-100000000000000000000,-100000000000000000000,-100000000000000000000,-100000000000000000000,-100000000000000000000,2,1], "requested": 1, "positiveCount": 2, "values": [0.5] },
+    { "name": "full-span-crosses-original-owner-pages", "stiffnessDiagonal": [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], "rightDiagonal": [2,1,0.5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], "requested": 41, "positiveCount": 3, "values": [0.5,1,2] }
+  ]
+}

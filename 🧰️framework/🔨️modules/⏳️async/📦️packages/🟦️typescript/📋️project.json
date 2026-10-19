@@ -4,7 +4,8 @@
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
-      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🧪️tests/🎚️config/🟦️.ts"
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🧪️tests/🎚️config/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/**/*"
     ]
   },
   "targets": {

@@ -7,6 +7,10 @@
 //! list of receivers each can shade, the approximate view factors and gray-body exchange factors of
 //! every zone enclosure, and the sky-diffuse shading ratios of every sunlit receiver.
 
+/// 🔲️ Original scalar radiosity preparation uses the shared retained inverse.
+#[path="🔲️enclosure/⚡️exchange/🦀️.rs"]
+pub mod enclosure_exchange;
+
 extern crate semio_s_plugin_energy_engine_envelope as envelope;
 extern crate semio_s_plugin_energy_engine_fenestration as fenestration;
 extern crate semio_s_plugin_energy_engine_geometry as geometry;
@@ -40,3 +44,11 @@ pub use geometry_and_enclosure_factors::*;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path="♻️retirement/🧪️tests/🦀️.rs"]
+mod retirement_tests;
+
+#[cfg(test)]
+#[global_allocator]
+static ENERGY_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;

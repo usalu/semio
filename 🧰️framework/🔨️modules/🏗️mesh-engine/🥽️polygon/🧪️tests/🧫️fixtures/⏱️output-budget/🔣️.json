@@ -497,5 +497,12 @@
     "closedKind": "solid",
     "closedArea": 2.3660254037844384,
     "closedVolume": 0.16666666666666666
+  },
+  "retainedFixture": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 268435456,
+    "maximumReleaseBytes": 268435456,
+    "maximumDepth": 4096
   }
 }

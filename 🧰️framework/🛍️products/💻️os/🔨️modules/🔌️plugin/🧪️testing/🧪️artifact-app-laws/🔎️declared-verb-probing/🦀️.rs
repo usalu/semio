@@ -4,6 +4,7 @@ use super::*;
 
 /// 🏷️ The stable lower-case name of one published result lane.
 fn declared_verb_lane_name(lane: TypedOperationResultLane) -> &'static str {
+
     match lane {
         TypedOperationResultLane::Artifact => "artifact",
         TypedOperationResultLane::Config => "config",
@@ -20,7 +21,8 @@ fn declared_verb_lane_name(lane: TypedOperationResultLane) -> &'static str {
         TypedOperationResultLane::Download => "download",
         TypedOperationResultLane::Terminal => "terminal",
         TypedOperationResultLane::Fault => "fault",
-    }
+    TypedOperationResultLane::Diagnostic => "diagnostic",
+        }
 }
 
 /// #️⃣ FNV-1a over every observed part of one settled dispatch.
@@ -39,7 +41,7 @@ fn declared_verb_fingerprint<'a>(parts: impl IntoIterator<Item = &'a [u8]>) -> u
 /// `interactive-job.app-owned-output` is the code a retained job's fault page carries when the
 /// handler's own `Fault` crossed the publication boundary, so it is the handler's refusal.
 fn declared_verb_refusal(failure:impl Into<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>)->DeclaredVerbOutcome{
-    let failure=failure.into();let(code,detail)=match &failure.primary{semio_framework_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Fault(fault)=>(fault.code.0.clone(),fault.message.clone()),semio_framework_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Value(error)=>("interactive-job.owner-refused".to_string(),format!("{error:?}")),semio_framework_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Domain(domain)=>(domain.code().to_owned(),domain.message().to_owned())};
+    let failure=failure.into();let(code,detail)=match &failure.primary{crate::PluginLifecyclePrimary::Fault(fault)=>(fault.code.0.clone(),fault.message.clone()),crate::PluginLifecyclePrimary::Value(error)=>("interactive-job.owner-refused".to_string(),format!("{error:?}")),semio_framework_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Domain(domain)=>(domain.code().to_owned(),domain.message().to_owned()),crate::PluginLifecyclePrimary::Receiving(original)=>("interactive-job.receiving-refused".to_owned(),original.message().to_owned())};
     if(code.starts_with("interactive-job.")&&code!="interactive-job.app-owned-output")||code=="app.command.unsupported"{DeclaredVerbOutcome::Unreachable{code,detail,failure:Some(failure)}}else{DeclaredVerbOutcome::Refused{code,detail,failure:Some(failure)}}
 }
 

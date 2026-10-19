@@ -1,0 +1,6 @@
+{
+  "input":{"id":"original β"},
+  "expected":{"id":"original β","values":[],"scale":0,"enabled":false,"media":"Empty","optional":null},
+  "zeroHeapBirth":true,
+  "sameOriginalSource":true
+}

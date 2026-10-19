@@ -1,0 +1,129 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "text",
+    "operation",
+    "generation",
+    "work",
+    "totalGrant",
+    "callPolicy",
+    "cases",
+    "expected"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "operation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "work": {
+      "type": "object",
+      "required": [
+        "fuel",
+        "absoluteDeadlineUs",
+        "clockBinding"
+      ],
+      "properties": {
+        "fuel": {
+          "type": "integer",
+          "minimum": 16
+        },
+        "absoluteDeadlineUs": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "clockBinding": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "totalGrant": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "callPolicy": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "capacity",
+          "semanticFailure",
+          "admitted"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "capacity": {
+            "enum": [
+              "zero",
+              "exact"
+            ]
+          },
+          "semanticFailure": {
+            "type": "boolean"
+          },
+          "admitted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sameLedger",
+        "sameRecipient",
+        "decoderBeforeSource",
+        "terminalDropBytes"
+      ],
+      "properties": {
+        "sameLedger": {
+          "const": true
+        },
+        "sameRecipient": {
+          "const": true
+        },
+        "decoderBeforeSource": {
+          "const": true
+        },
+        "terminalDropBytes": {
+          "const": 0
+        }
+      }
+    }
+  }
+}

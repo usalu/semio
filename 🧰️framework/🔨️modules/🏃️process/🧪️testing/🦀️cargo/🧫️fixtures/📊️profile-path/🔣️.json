@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "cases": [
+    { "platform": "win32", "directory": "C:\\repo\\coverage", "native": "C:\\repo\\coverage", "expected": "C:\\repo\\coverage", "nativeCalls": 0 },
+    { "platform": "win32", "directory": "C:\\repo\\🧬️coverage", "native": "C:\\repo\\COVERA~1", "expected": "C:\\repo\\COVERA~1", "nativeCalls": 1 },
+    { "platform": "linux", "directory": "/repo/🧬️coverage", "native": "/unused", "expected": "/repo/🧬️coverage", "nativeCalls": 0 },
+    { "platform": "darwin", "directory": "/repo/🧬️coverage", "native": "/unused", "expected": "/repo/🧬️coverage", "nativeCalls": 0 }
+  ]
+}

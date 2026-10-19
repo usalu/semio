@@ -350,6 +350,7 @@ export function teardownPluginActor(actorId: string): void {
     for (const waiter of payload.waiters) waiter.reject(fault);
   });
   getThunkScheduler().teardownActor(`command-ingress:${actorId}`, (payload) => payload.reject(fault));
+  typedOperationRoutersByActor.get(actorId)?.closeAll();
   typedOperationRoutersByActor.delete(actorId);
   // 🪃️ The teardown marker is dropped on the next unthrottled continuation, not a timer: a hidden
   // renderer clamps a zero-delay timer to ~1 s, which would keep a re-activated actor id looking

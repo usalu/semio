@@ -29,6 +29,7 @@ impl<P: Send + Sync, Mutation: Send + 'static> ArtifactStoreBatchItemAuthority<P
     }
 
     fn begin_demand(&self, input: &MemberStoreOneItemWire, lane: HistoryLane) -> Result<RetainedCloneBirthDemand, ValueError> { self.as_ref().begin_demand(input, lane) }
+    fn begin_copy_byte_demand(&self,input:&MemberStoreOneItemWire,lane:HistoryLane)->Result<usize,ValueError>{self.as_ref().begin_copy_byte_demand(input,lane)}
     fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, MemberStoreOneItemWire, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<P, MemberStoreOneItemWire, Mutation>)> {
         self.as_ref().begin(request, grant)
     }

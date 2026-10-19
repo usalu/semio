@@ -22,6 +22,8 @@ use crate::editor::puzzle2d::snapshot::Puzzle2dEditor;
 use crate::editor::puzzle2d::{interaction, recorder, snapshot};
 use crate::editor::puzzle2d::snapshot::{PUZZLE2D_GENERIC_TOOL_IDS};
 use semio_s_artifact_puzzle_2d_unit_tests::{editor::puzzle2d::snapshot::Puzzle2dCommand, editor::puzzle2d::engine::board_host::puzzle_board_host};
+use semio_framework_value::scratch_hash::{ScratchHashMap,ScratchHashSet};
+
 
 #[path = "🧱️board-event-limits-window-export-and-dispatch-work/🦀️.rs"]
 mod board_event_limits_window_export_and_dispatch_work;
@@ -45,3 +47,11 @@ pub use force_layout_work::Puzzle2dForceLayoutWork;
 #[path = "🎨️force-layout-command-and-redraw-handles-work/🦀️.rs"]
 mod force_layout_command_and_redraw_handles_work;
 pub use force_layout_command_and_redraw_handles_work::Puzzle2dRedrawHandlesWork;
+
+
+
+
+
+
+
+

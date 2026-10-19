@@ -1,0 +1,351 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/store/prepared/group-binding-custody.json",
+  "title": "Prepared Group Binding Custody",
+  "type": "object",
+  "required": [
+    "originalPieces",
+    "fieldTransition",
+    "snapshotClones",
+    "implicitOriginalDrop",
+    "receiptCases",
+    "inlineTerminalRetirement",
+    "storeClosure",
+    "editProjection"
+  ],
+  "properties": {
+    "originalPieces": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 8,
+      "maxItems": 8,
+      "uniqueItems": true
+    },
+    "fieldTransition": {
+      "type": "object"
+    },
+    "snapshotClones": {
+      "const": 0
+    },
+    "implicitOriginalDrop": {
+      "const": false
+    },
+    "packPlanning": {
+      "type": "object",
+      "required": [
+        "codec",
+        "maximumBytes",
+        "cancelTurn",
+        "maximumTurns",
+        "snapshotClones",
+        "prefixHex"
+      ],
+      "properties": {
+        "codec": {
+          "const": 1
+        },
+        "maximumBytes": {
+          "const": 491520
+        },
+        "cancelTurn": {
+          "const": 100
+        },
+        "maximumTurns": {
+          "const": 4000000
+        },
+        "snapshotClones": {
+          "const": 0
+        },
+        "prefixHex": {
+          "type": "string",
+          "pattern": "^[0-9a-f]+$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "planningOutput": {
+      "type": "object",
+      "required": [
+        "maximumBytes",
+        "deniedAxes",
+        "sources",
+        "cancelPhases"
+      ],
+      "properties": {
+        "maximumBytes": {
+          "const": 162000
+        },
+        "deniedAxes": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "items",
+              "copyBytes",
+              "capacityBytes",
+              "depth"
+            ]
+          },
+          "minItems": 4,
+          "maxItems": 4,
+          "uniqueItems": true
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2
+        },
+        "cancelPhases": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "measure",
+              "allocate",
+              "write"
+            ]
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true
+        },
+        "refusals": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": [
+              "kind",
+              "count",
+              "maximum"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "depth",
+                  "items"
+                ]
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "maximum": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "durableExecution": {
+      "type": "object",
+      "required": [
+        "maximumItems",
+        "retirementIssuer",
+        "retirementIssuerOwnership",
+        "encodedOutputCustody",
+        "currentFactorySlotsDuringRetirement",
+        "planningSteps",
+        "cases"
+      ],
+      "properties": {
+        "maximumItems": {
+          "const": 1
+        },
+        "retirementIssuer": {
+          "const": "captured-original"
+        },
+        "retirementIssuerOwnership": {
+          "const": "moves-with-candidate"
+        },
+        "encodedOutputCustody": {
+          "const": "retained-through-stage-or-refusal"
+        },
+        "currentFactorySlotsDuringRetirement": {
+          "const": "empty"
+        },
+        "planningSteps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 8,
+          "maxItems": 8,
+          "uniqueItems": true
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "stopStep",
+              "transferCount",
+              "originalCount",
+              "groupMetadataCount"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "stopStep": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 11
+              },
+              "oversizedJsonBytes": {
+                "const": 162001
+              },
+              "validDependencyCount": {
+                "const": 129
+              },
+              "invalidDependency": {
+                "const": "bad\nidentity"
+              },
+              "transferCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 3
+              },
+              "originalCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 3
+              },
+              "groupMetadataCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 3
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "receiptCases": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": [
+          "copiedItems",
+          "copiedBytes",
+          "retainedCapacityBytes",
+          "releasedBytes",
+          "visible"
+        ],
+        "properties": {
+          "copiedItems": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "copiedBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "retainedCapacityBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "releasedBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "visible": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "inlineTerminalRetirement": {
+      "type": "object",
+      "required": [
+        "frameCopyMultiplier",
+        "cases"
+      ],
+      "properties": {
+        "frameCopyMultiplier": {
+          "const": 2
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "required": [
+              "funded",
+              "retained",
+              "visible"
+            ],
+            "properties": {
+              "funded": {
+                "type": "boolean"
+              },
+              "retained": {
+                "type": "boolean"
+              },
+              "visible": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "storeClosure": {
+      "type": "object",
+      "required": [
+        "maximumTurns",
+        "maximumBodyBytes",
+        "requiresVisibleProgress"
+      ],
+      "properties": {
+        "maximumTurns": {
+          "const": 4000000
+        },
+        "maximumBodyBytes": {
+          "const": 512
+        },
+        "requiresVisibleProgress": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "editProjection": {
+      "type": "object",
+      "required": [
+        "sequenceNumber",
+        "semanticIncludesSequence",
+        "recoveryIncludesSequence"
+      ],
+      "properties": {
+        "sequenceNumber": {
+          "const": 3
+        },
+        "semanticIncludesSequence": {
+          "const": false
+        },
+        "recoveryIncludesSequence": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "description": "A refused binding returns the same original sealed candidate and staged temporary owners; public PreparedParts cannot manufacture a seal."
+}

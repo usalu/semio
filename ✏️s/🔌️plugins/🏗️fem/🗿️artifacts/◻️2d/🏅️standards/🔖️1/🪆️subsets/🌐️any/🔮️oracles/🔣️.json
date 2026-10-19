@@ -16,7 +16,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "A second implementation of the `s.fem.fem2d` model and all twenty-nine typed mutations, in Python, at `../../../../../🧪️tests/mutate-fem2d-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️.json` (the nine members and the analysis settings record), `../🚪️io/📝️text/🧬️mutations/📖️.grammar.semio` (the twenty-nine verbs) and the twenty-nine committed `(before, mutation, after, outcome)` specification vectors — which is also where the RECORD shapes and the cascade rules are actually written down. It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: `code_aster`, `OpenSees`, `anastruct` and `PyNite` compute displacements and forces FROM a model, while every one of the twenty-nine kinds edits the model document itself — `replace-section` swaps a profile record, `add-load` appends to a case's load list, `change-load-case-self-weight` flips a boolean — and none of them reads `.dsl.semio`. DEFECT FOUND WHILE WRITING IT, reported rather than worked around: `../🧬️schema/🧬️mutations/🔣️.json` is a verbatim copy of the SNAPSHOT schema with the title changed, and in the snapshot schema every one of `FemNode`, `FemElement`, `FemRegion`, `FemMaterial`, `FemSection`, `FemSupport`, `FemLoadCase` and `FemCombination` is an EMPTY object with no properties at all. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `fem2d-1-mutate`'s external-oracle requirement for its 29-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
+      "rationale": "An independently implemented Python structural-model mutation oracle. The material slice includes create, delete, whole-value replace and sparse change events. Its field-change implementation validates supplied properties, preserves stable identity and computes inverses only for authored fields.",
       "kind": "cross-semio-implementation",
       "engine": {
         "family": "none",
@@ -227,6 +227,68 @@
       ],
       "homepage": "https://scipy.org",
       "rationale": "🎵️ THE EIGENSOLVER, FOR THE TWO ANALYSES anastruct DOES NOT EXPRESS. This artifact's engine solves free vibration and linear buckling with its OWN subspace iteration (`⚙️engine/🔢️sparse/🦀️.rs`), and until this entry the only checks on it were in-repo closed forms at a 10 % tolerance. `scipy.linalg.eigh` (LAPACK's generalised symmetric-definite solver) and `scipy.linalg.eig` (the generalised non-symmetric pencil, for `K φ = λ(−K_g) φ`) are given an independently assembled Euler-Bernoulli stiffness, consistent mass and consistent geometric stiffness, and answer without any knowledge of this repository.\n\nWHAT IT IS HELD TO, and why the closed forms are the real judge: a numerical eigenvalue is only as good as the matrices it is given, so the reference is required to land within 2 % of `βₙ²/(2πL²)·√(EI/ρA)` for `βₙL` of 1.8751, 4.6941 and 7.8548, and within 2 % of `π²EI/(KL)²` for the four standard effective-length factors `K = 2.0` (fixed-free), `1.0` (pinned-pinned), `0.6992` (fixed-pinned, the exact `π/4.493409` rather than the code value 0.7) and `0.5` (fixed-guided). MEASURED on the committed corpus: the three cantilever frequencies come out at 10.0187 / 62.7911 / 175.9097 Hz against closed forms of 10.0184 / 62.7838 / 175.8235, and the four buckling factors at 1.202696 / 4.810932 / 9.842969 / 19.252952 against 1.20279 / 4.81116 / 9.84120 / 19.24463 — worst case 0.05 %. The cantilever is six metres, not three, on purpose: at three metres the first LONGITUDINAL mode (431 Hz) falls between bending modes two and three and `βₙL = 7.8548` would be compared against the wrong mode.\n\nA frame-solver package is the right judge for statics and the wrong one here; a LAPACK eigensolver is the right judge here and says nothing about a frame. Both are registered rather than one being stretched over the other."
+    },
+    {
+      "id": "json-patch-fem2d-fields",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "fast-json-patch",
+      "version": "3.1.1",
+      "source": {
+        "license": "MIT",
+        "repository": "https://github.com/Starcounter-Jack/JSON-Patch"
+      },
+      "engine": {
+        "version": "3.1.1",
+        "implementation": "RFC 6902 replace operations",
+        "family": "json-patch"
+      },
+      "capabilities": [
+        "fem2d-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "rationale": "The material field-intent test replays language-neutral sparse field events and independently applies equivalent RFC 6902 replace operations with fast-json-patch. Both results must equal the authored expected material in either arrival order."
+    },
+    {
+      "id": "skfem-fem2d-continuum",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "scikit-fem",
+      "version": "12.0.2",
+      "source": {
+        "repository": "https://github.com/kinnala/scikit-fem",
+        "license": "BSD-3-Clause"
+      },
+      "engine": {
+        "family": "scikit-fem",
+        "implementation": "Plane-stress CST elasticity, consistent mass and initial-stress assembly; SciPy restrained generalized eigenproblems",
+        "version": "12.0.2"
+      },
+      "capabilities": [
+        "fem2d-1-analysis"
+      ],
+      "comparisonProfiles": [
+        "semantic-fem2d-continuum-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://scikit-fem.readthedocs.io",
+      "rationale": "Independent scikit-fem plane-stress numerical reference, assembled on its own SciPy Delaunay mesh. Coarse triangle and mixed bar/triangle fixtures compare all authored displacements, restrained reactions, continuum stress extrema, natural frequencies and area-load/self-weight prestress factors. Hole and 1000-times-scaled hole fixtures use exact constant-stress boundary tractions and compare all authored displacements, reactions and every recovered stress extremum, independently of triangulation. This reference witnesses continuum response beyond frame mutation invariance."
     }
   ],
   "mutationCatalogs": [
@@ -248,9 +310,122 @@
         "delete-region",
         "replace-region",
         "replace-node",
-        "move-selection"
+        "move-selection",
+        "change-node",
+        "change-section",
+        "change-region",
+        "change-element"
       ],
-      "vectors": []
+      "vectors": [
+        {
+          "mutationId": "change-node",
+          "sourceMutationDirectoryName": "🩹️change-node",
+          "mutationDirectoryName": "🩹️change-node",
+          "scenarios": [
+            {
+              "id": "changes",
+              "directoryName": "🩹️changes"
+            },
+            {
+              "id": "coordinates",
+              "directoryName": "📐️coordinates"
+            },
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "empty",
+              "directoryName": "⚗️empty"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-section",
+          "sourceMutationDirectoryName": "🩹️change-section",
+          "mutationDirectoryName": "🩹️change-section",
+          "scenarios": [
+            {
+              "id": "changes",
+              "directoryName": "🩹️changes"
+            },
+            {
+              "id": "coordinates",
+              "directoryName": "📐️coordinates"
+            },
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "invalid",
+              "directoryName": "⚗️invalid"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-region",
+          "sourceMutationDirectoryName": "🩹️change-region",
+          "mutationDirectoryName": "🩹️change-region",
+          "scenarios": [
+            {
+              "id": "changes",
+              "directoryName": "🩹️changes"
+            },
+            {
+              "id": "geometry",
+              "directoryName": "📐️geometry"
+            },
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "invalid",
+              "directoryName": "⚗️invalid"
+            }
+          ]
+        },
+        {
+          "scenarios": [
+            {
+              "id": "changes",
+              "directoryName": "🩹️changes"
+            },
+            {
+              "id": "variant",
+              "directoryName": "🔀️variant"
+            },
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "invalid",
+              "directoryName": "⚗️invalid"
+            }
+          ],
+          "mutationId": "change-element",
+          "sourceMutationDirectoryName": "🩹️change-element",
+          "mutationDirectoryName": "🩹️change-element"
+        }
+      ]
     },
     {
       "id": "fem2d-1-any-material",
@@ -260,9 +435,38 @@
       "kinds": [
         "create-material",
         "delete-material",
-        "replace-material"
+        "replace-material",
+        "change-material"
       ],
-      "vectors": []
+      "vectors": [
+        {
+          "mutationId": "change-material",
+          "sourceMutationDirectoryName": "🩹️change-material",
+          "mutationDirectoryName": "🩹️change-material",
+          "scenarios": [
+            {
+              "id": "renames-a-field",
+              "directoryName": "🩹️renames"
+            },
+            {
+              "id": "softens-properties",
+              "directoryName": "📉️softens"
+            },
+            {
+              "id": "keeps-the-same-value",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "rejects-a-missing-target",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "rejects-zero-modulus",
+              "directoryName": "⚗️invalid"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "fem2d-1-any-boundary",
@@ -272,9 +476,38 @@
       "kinds": [
         "create-support",
         "delete-support",
-        "replace-support"
+        "replace-support",
+        "change-support"
       ],
-      "vectors": []
+      "vectors": [
+        {
+          "scenarios": [
+            {
+              "id": "changes",
+              "directoryName": "🩹️changes"
+            },
+            {
+              "id": "toggles",
+              "directoryName": "📌️toggles"
+            },
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "invalid",
+              "directoryName": "⚗️invalid"
+            }
+          ],
+          "mutationId": "change-support",
+          "sourceMutationDirectoryName": "🩹️change-support",
+          "mutationDirectoryName": "🩹️change-support"
+        }
+      ]
     },
     {
       "id": "fem2d-1-any-load",
@@ -291,9 +524,94 @@
         "delete-combination",
         "replace-load",
         "change-load-case-name",
-        "replace-combination"
+        "replace-combination",
+        "change-load",
+        "change-combination-name",
+        "change-combination-term"
       ],
-      "vectors": []
+      "vectors": [
+        {
+          "mutationId": "change-load",
+          "sourceMutationDirectoryName": "🩹️change-load",
+          "mutationDirectoryName": "🩹️change-load",
+          "scenarios": [
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "invalid",
+              "directoryName": "⚗️invalid"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "target",
+              "directoryName": "📍️target"
+            },
+            {
+              "id": "changes",
+              "directoryName": "🩹️changes"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-combination-name",
+          "sourceMutationDirectoryName": "🩹️change-combination-name",
+          "mutationDirectoryName": "🩹️change-combination-name",
+          "scenarios": [
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "empty",
+              "directoryName": "⚗️empty"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "labels",
+              "directoryName": "✏️labels"
+            },
+            {
+              "id": "renames",
+              "directoryName": "🩹️renames"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-combination-term",
+          "sourceMutationDirectoryName": "🩹️change-combination-term",
+          "mutationDirectoryName": "🩹️change-combination-term",
+          "scenarios": [
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "weights",
+              "directoryName": "⚖️weights"
+            },
+            {
+              "id": "invalid",
+              "directoryName": "⚗️invalid"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "removes",
+              "directoryName": "🗑️removes"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "fem2d-1-any-analysis",
@@ -312,7 +630,7 @@
       "capabilities": [
         "fem2d-1-mutate-uncarried"
       ],
-      "rationale": "🧱 WHAT IS LEFT AFTER THE SOLVER ORACLE, stated narrowly because the debt this entry used to carry is now paid. It read: twenty-two of this subset's twenty-five kinds edit fields no mesh carrier can see, a third-party FE solver was surveyed and declined because \"a solver computes displacements FROM a model while these kinds edit the model DOCUMENT\", and a qualifying third-party reference was still owed. `anastruct-fem2d-solver` now discharges those twenty-two `fem2d-1-mutate` requirements by judging the ANALYSIS the mutated document produces rather than the document itself — see that entry's rationale, and `../../../📈️analysis/🧪️tests/🧮️solves-fem2d-1-benchmarks/`, which reaches all twenty-five kinds by mutate-then-solve.\n\nTHREE THINGS ARE STILL OWED, and they are named exactly rather than folded into the discharge.\n\n1. `analysis.deformationScale`. It scales a drawn deformed shape and enters no equation. No solver on earth can witness it; only the carrier oracle (`json-rust-fem2d-carrier-reader`) sees that the field moved, and the cross-implementation reference sees that it moved to the right value. `analysis.modalCount`/`bucklingCount` ARE witnessed — they change how many modes an analysis returns, and the case's modal scenario compares that count and those frequencies.\n\n2. The plane-stress response of a `FemRegion`. anastruct expresses 2D frames and no meshed continuum, so the CST stresses inside a region are judged by nothing here. The region's GEOMETRY has two third-party oracles (`three-fem2d-mesh-reader`, `manifold-fem2d-mesh-measure`) and the three region kinds are additionally held, by the solver case, to the frame invariance they must preserve — but a continuum-capable reference (scikit-fem is the obvious candidate, and is already a declared test dependency) is still owed for the stresses themselves.\n\n3. Human-readable names — `material.name`, `section.name`, `region.name`, `loadCase.name`, `combination.name`. A solver never reads them. They are carrier-level facts and `json-rust-fem2d-carrier-reader` witnesses every one, so this is a note about scope rather than an undischarged requirement.\n\nRecorded as a debt, not a verdict, on the same terms as before: what is owed is item 2, and it is owed against `fem2d-1-analysis` for continuum elements, not against `fem2d-1-mutate`.",
+      "rationale": "The registered anastruct solver judges frame response and skfem-fem2d-continuum now judges plane-stress region displacement, stress and reactions, including holes and coordinate scale, and region/mixed-model modal and area/self-weight buckling answers. Display-only deformationScale and human-readable names are intentionally carrier-level facts because they enter no equilibrium equation; the json-rust carrier reference witnesses them. Native execution is recorded separately and is never implied by oracle registration.",
       "substitutes": [
         "metamorphic-laws",
         "independent-implementations"
@@ -1392,6 +1710,294 @@
           "invariants": {
             "local": [
               "not-encoded-by-any-exported-carrier"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "change-material",
+          "subset": "material",
+          "capability": "fem2d-1-mutate",
+          "payloadSchema": "../../🧱️material/🧬️schema/🧬️mutations/🩹️change-material/🦀️.rs#ChangeMaterial",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "bridgeVersion": 1,
+            "variant": "ChangeMaterial",
+            "operation": "change-material"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem2d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "json-patch-fem2d-fields"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "stable-identity-preserved",
+              "only-supplied-fields-change"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "change-node",
+          "subset": "mesh",
+          "capability": "fem2d-1-mutate",
+          "payloadSchema": "../../🕸️mesh/🧬️schema/🧬️mutations/🩹️change-node/🦀️.rs#ChangeNode",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "bridgeVersion": 1,
+            "variant": "ChangeNode",
+            "operation": "change-node"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem2d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "json-patch-fem2d-fields"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "stable-identity-preserved",
+              "only-supplied-fields-change"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "change-section",
+          "subset": "mesh",
+          "capability": "fem2d-1-mutate",
+          "payloadSchema": "../../🕸️mesh/🧬️schema/🧬️mutations/🩹️change-section/🦀️.rs#ChangeSection",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "bridgeVersion": 1,
+            "variant": "ChangeSection",
+            "operation": "change-section"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem2d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "json-patch-fem2d-fields"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "stable-identity-preserved",
+              "only-supplied-fields-change"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "change-region",
+          "subset": "mesh",
+          "capability": "fem2d-1-mutate",
+          "payloadSchema": "../../🕸️mesh/🧬️schema/🧬️mutations/🩹️change-region/🦀️.rs#ChangeRegion",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "bridgeVersion": 1,
+            "variant": "ChangeRegion",
+            "operation": "change-region"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem2d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "json-patch-fem2d-fields"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "stable-identity-preserved",
+              "only-supplied-fields-change"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "change-support",
+          "subset": "boundary",
+          "capability": "fem2d-1-mutate",
+          "payloadSchema": "../../🛡️boundary/🧬️schema/🧬️mutations/🩹️change-support/🦀️.rs#ChangeSupport",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "bridgeVersion": 1,
+            "variant": "ChangeSupport",
+            "operation": "change-support"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem2d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "json-patch-fem2d-fields"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "stable-identity-preserved",
+              "only-supplied-fields-change"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "change-element",
+          "subset": "mesh",
+          "capability": "fem2d-1-mutate",
+          "payloadSchema": "../../🕸️mesh/🧬️schema/🧬️mutations/🩹️change-element/🦀️.rs#ChangeElement",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "bridgeVersion": 1,
+            "variant": "ChangeElement",
+            "operation": "change-element"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem2d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "json-patch-fem2d-fields"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "stable-identity-preserved",
+              "only-supplied-fields-change"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "change-load",
+          "subset": "load",
+          "capability": "fem2d-1-mutate",
+          "payloadSchema": "../../🏋️load/🧬️schema/🧬️mutations/🩹️change-load/🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "bridgeVersion": 1,
+            "variant": "ChangeLoad",
+            "operation": "change-load"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem2d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "json-patch-fem2d-fields"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "stable-identity-preserved",
+              "only-supplied-fields-change"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "change-combination-name",
+          "subset": "load",
+          "capability": "fem2d-1-mutate",
+          "payloadSchema": "../../🏋️load/🧬️schema/🧬️mutations/🩹️change-combination-name/🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "bridgeVersion": 1,
+            "variant": "ChangeCombinationName",
+            "operation": "change-combination-name"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem2d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "json-patch-fem2d-fields"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "stable-identity-preserved",
+              "only-supplied-fields-change"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "change-combination-term",
+          "subset": "load",
+          "capability": "fem2d-1-mutate",
+          "payloadSchema": "../../🏋️load/🧬️schema/🧬️mutations/🩹️change-combination-term/🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "bridgeVersion": 1,
+            "variant": "ChangeCombinationTerm",
+            "operation": "change-combination-term"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem2d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "json-patch-fem2d-fields"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "stable-identity-preserved",
+              "only-supplied-fields-change"
             ],
             "enclosing": [
               "document-remains-well-formed"
@@ -3441,6 +4047,45 @@
       "family": "mechanical",
       "notes": "A deterministic fem2d model carrying at least two of every collection, with the replace-combination mutation applied as an edit to the JSON CARRIER and read back through json-rust — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
       "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "id": "skfem-fem2d-continuum-results",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "analysis"
+      },
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-results-json",
+          "path": "../../📈️analysis/🧫️fixtures/🧱️solves-fem2d-1-continuum/📊️expected.results.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:478fa55d7d5d97c0d16f782a897beb7a34a6e41792d38085e71a8cb9e36c39f5",
+          "bytes": 7585
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "BSD-3-Clause (scikit-fem, SciPy)",
+        "attribution": "Independent scikit-fem plane-stress assembly and SciPy static/eigen solutions"
+      },
+      "generator": {
+        "oracle": "skfem-fem2d-continuum",
+        "packageVersion": "12.0.2",
+        "engineFamily": "scikit-fem",
+        "engineVersion": "12.0.2",
+        "command": "bun run nx run @semio-tech/repo-test-domain:test-oracle -- exhaustive --case 🧱️solves-fem2d-1-continuum",
+        "platform": "win32-x64"
+      },
+      "comparisonProfile": "semantic-fem2d-continuum-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "All authored displacement/reaction responses and continuum stress extrema; triangle and mixed bar/region eigen answers include area load and self-weight prestress. Holes use manufactured constant-stress traction patches including a 1000-times coordinate scale."
     }
   ],
   "probes": [
@@ -3600,6 +4245,12 @@
       "description": "🧮️ A fem2d linear-static answer as two implementations can compare it: the three projection axes (`nodes`, `reactions`, `members` — every node a `bar`/`beam` element references in document order, every restrained-and-active `(node, dof)` pair, and the members) followed by one entry per load case and per combination, in document order, each carrying nodal displacements `[ux, uy, rz]`, the reactions in axis order, and per member the local end-force six-vector `[N, V, M]` at both ends. Array order is significant everywhere, because both sides derive it from the same document and a reordering would be a real disagreement about which node is which.\n\nWHY EVERY NUMBER IS SCALE-NORMALISED. A comparison profile carries ONE absolute tolerance. A raw fem2d answer mixes displacements at 1e-5 m with reactions at 1e5 N, and no single absolute number can judge both: 1e-9 is meaningless slack on a metre and impossible tightness on a newton. So every projected value is divided by one of four decades — translation, rotation, force, moment — committed per model in the case's own `🧫️fixtures/📊️expected.results.json` and read by BOTH implementations from that same file, which makes every projected number order one and makes this profile's `tolerance` read as a fraction of the model's own peak response.\n\nWHY 1e-6 AND NOT TIGHTER. The two sides are different codes: this repository factors with its own LDLT over an RCM-reordered sparse matrix, the reference solves a dense system through LAPACK. A frame stiffness matrix mixes axial `EA/L` at ~1e9 with bending `12EI/L³` at ~1e5, so its condition number reaches 1e8-1e10 and the achievable agreement is bounded by `ε·κ` at roughly 1e-7 relative. 1e-6 sits one order above that floor and many orders below any real defect: a wrong element, a wrong load attachment, a dropped support or a sign error all move the answer by O(1). The same-implementation half is judged far harder — each side holds its own numbers to the committed SI reference at 1e-9 relative, in role, before the projection is ever built.",
       "arrays": "ordered",
       "tolerance": 1e-06
+    },
+    {
+      "id": "semantic-fem2d-continuum-v1",
+      "description": "Complete authored displacements, restrained active reactions, continuum stress mean and extrema, plus modal frequencies and buckling factors when declared. Each physical response is normalized by a committed independent reference scale, so the tolerance is relative to its own peak response. The reference independently assembles and solves; no subject values are inputs.",
+      "tolerance": 1e-06,
+      "arrays": "ordered"
     }
   ],
   "toleranceProfiles": [

@@ -1,7 +1,7 @@
 //! ➕️ Add gestures of the puzzle 5d editor kit: the retained add-node and add-brush-part work. See [`super`].
 use crate::standards::v1::subsets::any::schema::mutations::PUZZLE5D_FLAT_TO_WORLD;
 
-use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use semio_framework_plugin::kernel::UiDirtyScope;
 use semio_framework_plugin::EditorApp;
@@ -88,6 +88,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let projection = puzzle5d_editor_projection(snapshot);
@@ -161,6 +163,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle5dAddNodeStage::Complete => Err(Fault::from("puzzle5d-add-node-complete-repolled")),
             Puzzle5dAddNodeStage::Closing => Err(Fault::from("puzzle5d-add-node-closing")),
         }
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
@@ -172,8 +176,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            self.close_owners.close_step(grant)
+        semio_framework_job::close_original_nested_step(cx,|cx,_grant|{
+            self.close_owners.close_step(cx)
         })
     }
 
@@ -203,7 +207,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Puzzle5dAddBrushPartStage {
+pub(super) enum Puzzle5dAddBrushPartStage {
     Catalog,
     Grips,
     Target,
@@ -272,18 +276,14 @@ impl Puzzle5dAddBrushPartWork {
             target_direction: None,
             created_id: None,
             created_grip_id: None,
-            grips: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
-            mutations: Vec::with_capacity(2),
+            grips: Vec::new(),
+            mutations: Vec::new(),
             operation_nonce: 0,
             fresh_cursor: 0,
         }
     }
 
-    pub fn from_board_payload(payload: Value) -> Self {
-        let mut work = Self::new("addBrushPart");
-        work.payload = Some(payload);
-        work
-    }
+
 
     /// 🌉️ `self.payload` (materialized once via `take_payload`/`parse`) and `command.args()` are
     /// both this file's own first-party `Value` now, so no bridge is needed — an in-progress board
@@ -351,6 +351,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction, hover: _hover, context: _context, .. } = *input;
         let projection = puzzle5d_editor_projection(snapshot);
@@ -460,6 +462,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle5dAddBrushPartStage::Complete => Err(Fault::from("puzzle5d-add-brush-part-complete-repolled")),
             Puzzle5dAddBrushPartStage::Closing => Err(Fault::from("puzzle5d-add-brush-part-closing")),
         }
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
@@ -471,8 +475,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            self.close_owners.close_step(grant)
+        semio_framework_job::close_original_nested_step(cx,|cx,_grant|{
+            self.close_owners.close_step(cx)
         })
     }
 
@@ -502,3 +506,29 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
 }
 //#endregion 🧵️RetainedCommands
 //#endregion 🔖️PlayApp
+
+impl Puzzle5dAddNodeWork {
+    pub fn original_birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+  let capacity=0_usize.checked_add((crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS as usize).checked_mul(std::mem::size_of::<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original Puzzle5D vector extent overflow"))?).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original Puzzle5D vector extent overflow"))?;
+  Ok(semio_framework_value::RetirementDemand{capacity_bytes:capacity,depth:1,..Default::default()})
+ }
+
+    pub fn from_original_construction(scope:&mut semio_framework_action_bus::OriginalToolConstructionScope<'_>)->Result<(Self,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>{
+  scope.admit_owner(Self::original_birth_demands()?)?;
+  let work=Self{grips:Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),..Self::default()};let capacity=work.grips.capacity()*std::mem::size_of::<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip>();
+  Ok((work,semio_framework_value::RetainedCloneProgress{retained_capacity_bytes:capacity,..Default::default()}))
+ }
+}
+
+impl Puzzle5dAddBrushPartWork {
+    pub fn original_birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+  let capacity=0_usize.checked_add((crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS as usize).checked_mul(std::mem::size_of::<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original Puzzle5D vector extent overflow"))?).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original Puzzle5D vector extent overflow"))?.checked_add((2 as usize).checked_mul(std::mem::size_of::<Puzzle5dMutation>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original Puzzle5D vector extent overflow"))?).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original Puzzle5D vector extent overflow"))?;
+  Ok(semio_framework_value::RetirementDemand{capacity_bytes:capacity,depth:1,..Default::default()})
+ }
+
+    pub fn from_original_construction(tool_id: &'static str, scope:&mut semio_framework_action_bus::OriginalToolConstructionScope<'_>)->Result<(Self,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>{
+  scope.admit_owner(Self::original_birth_demands()?)?;
+  let work=Self{grips:Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),mutations:Vec::with_capacity(2),..Self::new(tool_id)};let capacity=work.grips.capacity()*std::mem::size_of::<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip>() + work.mutations.capacity()*std::mem::size_of::<Puzzle5dMutation>();
+  Ok((work,semio_framework_value::RetainedCloneProgress{retained_capacity_bytes:capacity,..Default::default()}))
+ }
+}

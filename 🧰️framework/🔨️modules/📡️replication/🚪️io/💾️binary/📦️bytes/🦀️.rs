@@ -157,6 +157,7 @@ impl OwnedOperationBytes {
 }
 
 impl semio_framework_value::ErasedSnapshotRetirement for OwnedOperationBytes{
+    fn next_demand(&self,_:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:usize::from(!self.closed&&self.len()!=0),release_bytes:if self.closed||self.len()!=0||self.allocated_bytes()==0{0}else{self.next_close_byte_demand().map_err(|fault|semio_framework_value::ValueError::new(fault.kind,fault.reason))?},depth:usize::from(!self.closed),..Default::default()})}
     fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
         let empty=RetainedCloneProgress::default();if self.closed{return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}if grant.maximum_depth<1{return Err(semio_framework_value::ValueError::literal(ValueRefusalKind::DepthLimit,"original operation source retirement requires admitted depth"))}

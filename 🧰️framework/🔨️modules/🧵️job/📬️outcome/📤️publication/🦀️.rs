@@ -15,6 +15,13 @@ struct OriginalPublicationSource{address:usize,extent:usize,operation:OperationI
 /// 🧳️ Enclosing admission owns this inline storage; each turn funds one original frontier.
 pub struct RetainedJobPublication{builder:RetainedPayloadBuilder,stream:JobPayloadStream,binding:Option<OriginalPublicationSource>,cursor:usize,delivered:bool,closing:bool}
 impl RetainedJobPublication{
+ /// 📏️ Quotes only initialized empty publication metadata, leaving payload bindings untouched.
+ pub fn empty_carrier_copy_bytes()->usize{RetainedPayloadBuilder::empty_carrier_copy_bytes()+size_of::<JobPayloadStream>()+size_of::<Option<OriginalPublicationSource>>()+size_of::<usize>()+2*size_of::<bool>()}
+ /// 🖋️ Initializes an original enclosing destination without moving or zeroing payload bindings.
+ /// # Safety
+ /// The destination must be exclusive uninitialized storage whose original caller paid the empty metadata quote.
+ pub unsafe fn initialize_empty_at(target:*mut Self){unsafe{RetainedPayloadBuilder::initialize_empty_at(std::ptr::addr_of_mut!((*target).builder),JobPayloadStream::Preview);std::ptr::addr_of_mut!((*target).stream).write(JobPayloadStream::Preview);std::ptr::addr_of_mut!((*target).binding).write(None);std::ptr::addr_of_mut!((*target).cursor).write(0);std::ptr::addr_of_mut!((*target).delivered).write(false);std::ptr::addr_of_mut!((*target).closing).write(false);}}
+
  pub fn new()->Self{Self{builder:RetainedPayloadBuilder::new(JobPayloadStream::Preview),stream:JobPayloadStream::Preview,binding:None,cursor:0,delivered:false,closing:false}}
  fn original(kind:JobPublicationKind,source:&[u8],cx:&StepContext<'_>)->OriginalPublicationSource{OriginalPublicationSource{address:source.as_ptr()as usize,extent:source.len(),operation:cx.operation(),generation:cx.generation(),kind}}
  fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"publication requires its same original source extent kind and operation until physical closure")}
@@ -26,7 +33,7 @@ impl RetainedJobPublication{
   let binding=Self::original(kind,source,cx);if self.binding.is_some_and(|original|original!=binding)||self.closing{return Err(Self::invalid())}
   if self.delivered{return Ok(Default::default())}
   if self.binding.is_none(){return Ok(RetirementDemand{depth:1,..Default::default()})}
-  let mut demand=if self.stream!=kind.stream(){RetirementDemand{depth:1,..Default::default()}}else if !self.builder.is_initialized(){self.builder.initialization_demand()}else if self.cursor<source.len(){self.builder.append_demand(cx.retained_grant())?}else{RetirementDemand{depth:1,..Default::default()}};
+  let mut demand=if self.stream!=kind.stream(){RetirementDemand{depth:1,..Default::default()}}else if !self.builder.is_initialized(){self.builder.initialization_demand()}else if self.cursor<source.len(){self.builder.append_demand(cx.retained_grant())?}else if self.builder.published().is_none(){RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()}}else{RetirementDemand{depth:1,..Default::default()}};
   demand.depth=demand.depth.checked_add(1).ok_or_else(Self::invalid)?;Ok(demand)
  }
  /// ✍️ Advances one paid source frontier and lends the original sealed payload on a separate turn.

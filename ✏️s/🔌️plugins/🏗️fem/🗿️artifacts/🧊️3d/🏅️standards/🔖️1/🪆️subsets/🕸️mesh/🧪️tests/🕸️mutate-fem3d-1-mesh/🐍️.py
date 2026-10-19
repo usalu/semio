@@ -54,7 +54,7 @@ COLLECTIONS = {
 """🗂️ Per noun: its collection, the argument `create-` carries, and the one `replace-` carries when
 the vocabulary has a `replace-` for it at all."""
 
-KINDS = ("create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-section", "delete-section", "replace-section", "create-solid", "delete-solid", "replace-solid", "replace-node", "move-selection")
+KINDS = ("create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-section", "delete-section", "replace-section", "create-solid", "delete-solid", "replace-solid", "replace-node", "move-selection", "change-node", "change-section", "change-solid", "change-element")
 """🏷️ This subset's own kinds, in the catalog's declared order."""
 
 
@@ -296,6 +296,47 @@ def refuse(document, kind, mutation):
 def apply_mutation(document, mutation):
     """🧬️ Applies one typed mutation, returning the resulting model."""
     kind = kind_of(mutation)
+    if kind == "change-element":
+        result = copy.deepcopy(document)
+        collection = "elements"
+        at = find(result[collection], mutation["id"])
+        if at is None:
+            raise AssertionError("Target does not exist.")
+        patch = mutation["patch"]
+        if not isinstance(patch, dict) or set(patch) - {"kind", "start", "end", "materialId", "sectionId", "roll"} or any(value is None for value in patch.values()):
+            raise AssertionError("Invalid sparse field patch.")
+        row = copy.deepcopy(result[collection][at])
+        row.update(copy.deepcopy(patch))
+        if row["kind"] not in ("bar", "frame") or row["kind"] == "bar" and "roll" in patch:
+            raise AssertionError("Invalid sparse field patch.")
+        if row["kind"] == "bar": row.pop("roll", None)
+        else: row.setdefault("roll", 0.0)
+        for field, target in [("start", "nodes"), ("end", "nodes"), ("materialId", "materials"), ("sectionId", "sections")]:
+            if find(result[target], row[field]) is None: raise AssertionError("Referenced target does not exist.")
+        if row.get("kind") == "frame" and not finite(row["roll"]): raise AssertionError("Finite roll required.")
+        if row == result[collection][at]:
+            return result
+        result[collection][at] = row
+        validate(result)
+        return result
+    if kind in ("change-node", "change-section", "change-solid"):
+        noun = kind.split("-", 1)[1]
+        collection = COLLECTIONS[noun][0]
+        result = copy.deepcopy(document)
+        at = find(result[collection], mutation["id"])
+        if at is None:
+            raise AssertionError("Target does not exist.")
+        patch = mutation["patch"]
+        allowed = RECORDS[collection] - {"id"}
+        if not isinstance(patch, dict) or set(patch) - allowed or any(value is None for value in patch.values()):
+            raise AssertionError("Invalid sparse field patch.")
+        row = dict(result[collection][at], **patch)
+        if not holds(noun, row): raise AssertionError("Field patch violates domain bounds.")
+        if row == result[collection][at]:
+            return result
+        result[collection][at] = row
+        validate(result)
+        return result
     if kind == "move-selection":
         result = move_selection(copy.deepcopy(document), mutation)
         validate(result)
@@ -414,6 +455,24 @@ def inverse_mutation(document, mutation):
     accordingly and say so.
     """
     kind = kind_of(mutation)
+    if kind == "change-element":
+        collection = "elements"
+        at = find(document[collection], mutation["id"])
+        if at is None: raise AssertionError("Target does not exist for inverse.")
+        row = document[collection][at]
+        patch = {}
+        for key in mutation["patch"]:
+            if key in ("tx", "ty", "tz", "rx", "ry", "rz"):
+                patch[key] = key[0].upper() + key[1:] in row["fixed"]
+            elif key in row: patch[key] = copy.deepcopy(row[key])
+        if "kind" in mutation["patch"] and row["kind"] == "frame" and mutation["patch"]["kind"] == "bar": patch["roll"] = row["roll"]
+        return {"mutation": TAGS[kind], "id": mutation["id"], "patch": patch}
+    if kind in ("change-node", "change-section", "change-solid"):
+        collection = COLLECTIONS[kind.split("-", 1)[1]][0]
+        at = find(document[collection], mutation["id"])
+        if at is None:
+            raise AssertionError("Target does not exist for inverse.")
+        return {"mutation": TAGS[kind], "id": mutation["id"], "patch": {key: document[collection][at][key] for key in mutation["patch"]}}
     if kind == "update-analysis-settings":
         return {"mutation": TAGS[kind], "settings": copy.deepcopy(document["analysis"])}
     if kind == "add-load":

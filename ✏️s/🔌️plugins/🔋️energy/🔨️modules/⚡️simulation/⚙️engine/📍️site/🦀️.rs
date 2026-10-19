@@ -10,7 +10,8 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖️WeatherRecord
 /// 🌡️ One timestep of outdoor weather.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct WeatherRecord {
     pub year: u16,
     pub month: u8,
@@ -42,10 +43,21 @@ impl WeatherRecord {
 
 // #endregion 🔖️WeatherRecord
 
+/// 📅️ Authored dates and representative yearly weather have explicit matching policies.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub enum WeatherCalendar { ActualDates, TypicalYear }
+
+/// 📆️ Validates hourly source chronology and selects exact authored calendar keys.
+#[path = "📅️chronology/🦀️.rs"]
+pub mod chronology;
+
 // #region 🔖️WeatherData
 /// 📄️ Site metadata and typed weather records consumed by the simulation.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct WeatherData {
+    pub calendar: WeatherCalendar,
     pub location: String,
     pub latitude_deg: f64,
     pub longitude_deg: f64,

@@ -8,7 +8,7 @@ const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 
-/** 🧪️ Vitest for `@semio-tech/framework-server` (inline `import.meta.vitest`). */
+/** 🧪️ Vitest for `@semio-tech/framework-server` (owned standalone wire tests). */
 export default defineConfig({
   root: testRoot,
   resolve: {
@@ -17,10 +17,11 @@ export default defineConfig({
   test: {
     root: testRoot,
     name: "@semio-tech/framework-server",
+    cache: false,
+    mode: "test",
     environment: "node",
-    include: [],
+    include: ["../../🧪️tests/🔬️wire/🟦️.ts"],
     coverage: { include: ["../../🟦️.ts"] },
-    includeSource: ["../../🟦️.ts"],
     passWithNoTests: false,
   },
 });

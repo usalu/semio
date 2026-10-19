@@ -1,5 +1,5 @@
-//! ⏱️ FEM play app command — `result-animation-tick`: one playback clock tick — advances the
 //! window's running clock and re-arms itself through `Effect::DispatchAction` while the transport
+//! ⏱️ FEM play app command — `result-animation-tick`: one playback clock tick — advances the
 //! plays. ONE implementation for every FEM editor ([`result_animation_tick_step`] over a
 //! [`FemPlaybackTransport`]).
 //!
@@ -14,13 +14,25 @@
 //! clears the transient — and re-arms nothing. That is how a pause, a closed window or a second
 //! chain that raced the first dies out instead of spinning the guest forever.
 
-use semio_s_fem_app_surface::{FemResultsAnimation, ANIMATION_TICK_SECONDS};
-use crate::editor::fem2d::commands::set_result_animation::{rearm_effect, resting_step, FemPlaybackStep, FemPlaybackTransport};
-use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::transient::addressed_to;
-use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::transient::FemPlaybackClock;
+use semio_s_fem_app_surface::FemResultsAnimation;
+
+use semio_s_fem_app_surface::ANIMATION_TICK_SECONDS;
+use crate::editor::fem2d::commands::set_result_animation::rearm_effect;
+use crate::editor::fem2d::commands::set_result_animation::resting_step;
+use crate::editor::fem2d::commands::set_result_animation::FemPlaybackStep;
+use crate::editor::fem2d::commands::set_result_animation::FemPlaybackTransport;
+use semio_s_artifact_fem_2d_results_state::transient::addressed_to;
+use semio_s_artifact_fem_2d_results_state::transient::FemPlaybackClock;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation, ViewModel};
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::ViewModel;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 
 type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 

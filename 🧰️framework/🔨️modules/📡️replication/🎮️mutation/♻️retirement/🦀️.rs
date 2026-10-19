@@ -93,6 +93,7 @@ impl<M> ReplayMutationsRetirement<M>{
     fn empty(&self)->bool{self.owners.is_none()&&self.pending.is_none()&&self.active.is_none()&&self.factory.is_none()&&self.closing_factory.is_none()}
 }
 impl<M:Send+'static> ErasedSnapshotRetirement for ReplayMutationsRetirement<M>{
+    fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.demands(body)}
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         let empty=RetainedCloneProgress::default();if self.empty(){return Ok(RetainedCloneStep::Complete(empty));}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
         let demand=self.demands(grant.maximum_copy_bytes)?;if !permits(grant,demand){return Ok(RetainedCloneStep::Progress(empty));}

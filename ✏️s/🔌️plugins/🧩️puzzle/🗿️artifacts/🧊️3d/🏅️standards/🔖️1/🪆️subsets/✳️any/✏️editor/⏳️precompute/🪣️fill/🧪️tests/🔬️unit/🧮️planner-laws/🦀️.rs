@@ -20,7 +20,7 @@ fn constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently() {
     let roots = |branch: HostileRoot, count| {
         let mut scene =
             SceneConfig { scene_snapshot: EngineSceneSnapshot::default(), kind_catalogs: Some(KindCatalogBundle::default()), kind_compatibility: Vec::new(), contact_tolerance: 0.0, seed: 31, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() };
-        let mut meshes = HashMap::new();
+        let mut meshes = FillMeshMap::new();
         match branch {
             HostileRoot::EngineSceneObjects => scene.scene_snapshot.objects.extend((0..count).map(object)),
             HostileRoot::SceneAttractions => scene.scene_snapshot.attractions.extend((0..count).map(|index| AttractionProps {
@@ -37,15 +37,15 @@ fn constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently() {
                 y: 0.0,
             })),
             HostileRoot::SceneTargetVolumes => scene.scene_snapshot.target_volumes.extend((0..count).map(|index| WorldVolumeProps { id: format!("volume-{index:02}"), origin: [0.0; 3], orientation: None, scale: None })),
-            HostileRoot::Meshes => meshes.extend((0..count).map(|index| (format!("mesh-{index:02}"), body.clone()))),
+            HostileRoot::Meshes => {for index in 0..count{meshes.cold_insert(format!("mesh-{index:02}"),body.clone());}},
             HostileRoot::CatalogObjects => scene.kind_catalogs.as_mut().expect("catalogs").objects.extend((0..count).map(|index| ObjectKind { id: format!("catalog-object-{index:02}"), ..Default::default() })),
             HostileRoot::CatalogVortices => scene.kind_catalogs.as_mut().expect("catalogs").vortices.extend((0..count).map(|index| VortexKindCatalog { id: format!("catalog-vortex-{index:02}"), ..Default::default() })),
             HostileRoot::CatalogCables => scene.kind_catalogs.as_mut().expect("catalogs").cables.extend((0..count).map(|index| CableKindCatalog { id: format!("catalog-cable-{index:02}"), ..Default::default() })),
             HostileRoot::KindCompatibility => {
                 scene.kind_compatibility.extend((0..count).map(|index| KindCompatEntry { source: format!("compat-{index:02}"), target: format!("target-{index:02}"), bidirectional: false, important: false, specificity: None }))
             }
-            HostileRoot::ObjectWeights => scene.weights.object_weights.extend((0..count).map(|index| (format!("object-weight-{index:04}"), index as f64 + 0.25))),
-            HostileRoot::VortexWeights => scene.weights.vortex_weights.extend((0..count).map(|index| (format!("vortex-weight-{index:04}"), index as f64 + 0.5))),
+            HostileRoot::ObjectWeights => {for index in 0..count{scene.weights.object_weights.cold_insert(format!("object-weight-{index:04}"),index as f64+0.25);}},
+            HostileRoot::VortexWeights => {for index in 0..count{scene.weights.vortex_weights.cold_insert(format!("vortex-weight-{index:04}"),index as f64+0.5);}},
         }
         FillPreparationRoots::new(Arc::new(scene), Arc::new(meshes))
     };
@@ -63,7 +63,7 @@ fn constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently() {
     ];
     for (offset, (branch, expected_branch, cap)) in branches.into_iter().enumerate() {
         let operation = Operation::new(OperationId(31 + offset as u64), RevisionId(1), Generation(1), 31);
-        let mut accepted = FillBuilder::begin_preparation(roots(branch, cap), operation, TEST_REQUESTED_COUNT);
+        let mut accepted = FillBuilderFixture::new(FillBuilder::begin_preparation(roots(branch, cap), operation, TEST_REQUESTED_COUNT));
         let mut turns = 0;
         while accepted.stage != FillJobStage::PrepareTargets {
             accepted.prepare_one();
@@ -72,7 +72,7 @@ fn constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently() {
         }
         assert!(turns >= cap, "{expected_branch} cap must be installed cooperatively");
 
-        let mut rejected = FillBuilder::begin_preparation(roots(branch, cap + 1), operation, TEST_REQUESTED_COUNT);
+        let mut rejected = FillBuilderFixture::new(FillBuilder::begin_preparation(roots(branch, cap + 1), operation, TEST_REQUESTED_COUNT));
         let (actual_branch, exact_index, exact_owner, exact_weight) = rejected.preparation_refusal_owner_for_test().expect("attributable omitted owner");
         assert_eq!(actual_branch, expected_branch);
         assert_eq!(exact_index, cap);
@@ -99,12 +99,10 @@ fn constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently() {
             ),
             (0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         );
-        let mut preview_sequence = 0;
-        let mut context = test_context(&rejected, root_cancel_token(), &mut preview_sequence);
-        let JobTurn::Fault(fault) = rejected.advance(&mut context) else { panic!("{expected_branch} cap + 1 faults the planner before it installs anything") };
+        let JobTurn::Fault(fault) = rejected.advance(100,10) else { panic!("{expected_branch} cap + 1 faults the planner before it installs anything") };
         assert_eq!(fault.as_slice(), format!("preparation-capacity:{expected_branch}:{cap}").as_bytes());
         assert!(faulted(JobTurn::Fault(fault)));
-        assert!(faulted(rejected.advance(&mut context)), "the refusal is permanent: every later step faults again");
+        assert!(faulted(rejected.advance(100,10)), "the refusal is permanent: every later step faults again");
         assert_eq!(
             (
                 rejected.base.objects.len(),
@@ -127,9 +125,7 @@ fn constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently() {
 fn stale_generation_stops_preparation_before_installing_any_entry() {
     let mut builder = empty_builder();
     let before = (builder.base.objects.len(), builder.placed.len(), builder.placed_lookup.len());
-    let mut sequence = 0;
-    let mut context = StepContext::new(builder.operation.operation, Generation(builder.operation.generation.0 + 1), StepBudget::new(1, 1, semio_s_plugin_puzzle_jobs::testing::unbounded_grant()), root_cancel_token(), || Some(0), &mut sequence, semio_s_plugin_puzzle_jobs::testing::test_progress());
-    assert!(faulted(builder.advance(&mut context)));
+    assert!(faulted(builder.advance_foreign(1,1)));
     assert_eq!((builder.base.objects.len(), builder.placed.len(), builder.placed_lookup.len()), before);
 }
 
@@ -260,11 +256,8 @@ fn occupied_fixed_slot_returns_the_distinct_input_owners_without_replacing_store
 #[test]
 fn cancellation_is_observed_before_the_next_transition() {
     let mut builder = empty_builder();
-    let cancel = root_cancel_token();
-    cancel.cancel_now();
-    let mut sequence = 0;
-    let mut context = test_context(&builder, cancel, &mut sequence);
-    assert_eq!(builder.advance(&mut context), JobTurn::Cancelled);
+    builder.cancel();
+    assert_eq!(builder.advance(100,10), JobTurn::Cancelled);
 }
 
 #[test]
@@ -273,9 +266,7 @@ fn stale_generation_faults_without_progress() {
         Some(0)
     }
     let mut builder = empty_builder();
-    let mut sequence = 0;
-    let mut context = StepContext::new(OperationId(builder.operation.operation.0), Generation(builder.operation.generation.0 + 1), StepBudget::new(100, 10, semio_s_plugin_puzzle_jobs::testing::unbounded_grant()), root_cancel_token(), now, &mut sequence, semio_s_plugin_puzzle_jobs::testing::test_progress());
-    let JobTurn::Fault(fault) = builder.advance(&mut context) else { panic!("a stale generation must fault") };
+    let JobTurn::Fault(fault) = builder.advance_foreign(100,10) else { panic!("a stale generation must fault") };
     assert_eq!(fault.as_slice(), b"stale-fill-operation".as_slice());
     assert!(faulted(JobTurn::Fault(fault)));
     assert_eq!(builder.operation.base_revision, RevisionId(1));
@@ -289,11 +280,9 @@ const EMPTY_FILL_TRANSITION_TURNS: usize = 64;
 #[test]
 fn empty_fill_transition_stays_below_watchdog_ceiling() {
     let mut builder = empty_builder();
-    let mut sequence = 0;
     for _ in 0..EMPTY_FILL_TRANSITION_TURNS {
-        let mut context = test_context(&builder, root_cancel_token(), &mut sequence);
         let before = precompute_work_done();
-        let _ = builder.advance(&mut context);
+        let _ = builder.advance(100,10);
         let work = precompute_work_done() - before;
         assert!(work <= FILL_STEP_WORK_CEILING, "one empty-scene step cost {work} units of primitive work, over {FILL_STEP_WORK_CEILING}");
         if matches!(builder.stage, FillJobStage::Complete(_)) {
@@ -340,7 +329,7 @@ fn adversarial_broad_phase_fill_is_end_to_end_resumable_below_eight_ms() {
     let positions = [-4.0, -4.0, 0.0, 4.0, -4.0, 0.0, 0.0, 4.0, 0.0, 0.0, 0.0, 8.0];
     let indices = [0, 1, 2, 0, 1, 3, 1, 2, 3, 2, 0, 3];
     let body = collision_body_from_buffers(&positions, &indices).expect("stress body");
-    let meshes = HashMap::from([("/stress/box.glb".to_string(), body)]);
+    let meshes = FillMeshMap::from([("/stress/box.glb".to_string(), body)]);
     let scene = Arc::new(SceneConfig {
         scene_snapshot: EngineSceneSnapshot { objects, attractions: Vec::new(), target_volumes: Vec::new() },
         kind_catalogs: Some(catalogs),
@@ -350,14 +339,12 @@ fn adversarial_broad_phase_fill_is_end_to_end_resumable_below_eight_ms() {
         host_rules: BrushHostRules::default(),
         weights: BrushKindWeights::default(),
     });
-    let mut builder = FillBuilder::begin_preparation(FillPreparationRoots::new(scene, Arc::new(meshes)), Operation::new(OperationId(29), RevisionId(1), Generation(1), 29), TEST_REQUESTED_COUNT);
-    let mut sequence = 0;
+    let mut builder = FillBuilderFixture::new(FillBuilder::begin_preparation(FillPreparationRoots::new(scene, Arc::new(meshes)), Operation::new(OperationId(29), RevisionId(1), Generation(1), 29), TEST_REQUESTED_COUNT));
     let started = precompute_work_done();
     let mut first_candidate = None;
     for _ in 0..50_000 {
-        let mut context = test_context(&builder, root_cancel_token(), &mut sequence);
         let before = precompute_work_done();
-        let outcome = builder.advance(&mut context);
+        let outcome = builder.advance(100,10);
         let work = precompute_work_done() - before;
         assert!(work <= FILL_STEP_WORK_CEILING, "stage {:?} cost {work} units of primitive work, over {FILL_STEP_WORK_CEILING}", builder.stage);
         if first_candidate.is_none() && builder.current_preview.is_some() {
@@ -457,19 +444,17 @@ fn nakagin_scale_roots() -> FillPreparationRoots {
         host_rules: BrushHostRules::default(),
         weights: BrushKindWeights::default(),
     });
-    FillPreparationRoots::new(scene, Arc::new(HashMap::from([(NAKAGIN_MESH_URL.to_string(), body)])))
+    FillPreparationRoots::new(scene, Arc::new(FillMeshMap::from([(NAKAGIN_MESH_URL.to_string(), body)])))
 }
 
 /// 🏢️ Drives a document-scale preparation until it places its first object, refusing to accept a
 /// fault, a capacity refusal, or a terminal outcome that placed nothing.
-fn drive_nakagin_scale_fill() -> FillBuilder {
-    let mut builder = FillBuilder::begin_preparation(nakagin_scale_roots(), Operation::new(OperationId(43), RevisionId(1), Generation(1), 43), TEST_REQUESTED_COUNT);
+fn drive_nakagin_scale_fill() -> FillBuilderFixture {
+    let mut builder = FillBuilderFixture::new(FillBuilder::begin_preparation(nakagin_scale_roots(), Operation::new(OperationId(43), RevisionId(1), Generation(1), 43), TEST_REQUESTED_COUNT));
     assert!(builder.preparation_capacity_refusal.is_none(), "a Nakagin-scale document must not be refused before preparation starts");
-    let mut sequence = 0;
     let mut turns = 0;
     while builder.sequence.is_empty() {
-        let mut context = test_context(&builder, root_cancel_token(), &mut sequence);
-        let outcome = builder.advance(&mut context);
+        let outcome = builder.advance(100,10);
         turns += 1;
         let terminal = outcome.is_terminal();
         assert!(!faulted(outcome), "Nakagin-scale fill faulted at stage {:?} after {turns} turns: {:?}", builder.stage, builder.last_rejection);
@@ -510,21 +495,19 @@ fn nakagin_scale_fill_places_an_object_under_a_fragmented_guest_reservation_ceil
 }
 
 /// 🔁️ Drives a planner until it settles — either it reached what was asked for or it named a stall.
-fn drive_until_settled(builder: &mut FillBuilder, turns: usize) {
-    let mut sequence = 0;
+fn drive_until_settled(builder: &mut FillBuilderFixture, turns: usize) {
     for _ in 0..turns {
         if matches!(builder.stage, FillJobStage::Complete(_)) {
             return;
         }
-        let mut context = test_context(builder, root_cancel_token(), &mut sequence);
-        let outcome = builder.advance(&mut context);
+        let outcome = builder.advance(100,10);
         assert!(!faulted(outcome), "a settled planner never faults: {:?} / end {:?}", builder.last_rejection, builder.end());
     }
     panic!("planner did not settle in {turns} turns at stage {:?} with {} placements", builder.stage, builder.sequence.len());
 }
 
-fn nakagin_plan(requested: usize, turns: usize) -> FillBuilder {
-    let mut builder = FillBuilder::begin_preparation(nakagin_scale_roots(), Operation::new(OperationId(61), RevisionId(1), Generation(1), 43), requested);
+fn nakagin_plan(requested: usize, turns: usize) -> FillBuilderFixture {
+    let mut builder = FillBuilderFixture::new(FillBuilder::begin_preparation(nakagin_scale_roots(), Operation::new(OperationId(61), RevisionId(1), Generation(1), 43), requested));
     drive_until_settled(&mut builder, turns);
     builder
 }
@@ -536,9 +519,9 @@ fn nakagin_plan(requested: usize, turns: usize) -> FillBuilder {
 #[test]
 fn fill_plan_retries_one_drawn_vortex_until_it_places_or_is_marked_and_never_draws_a_marked_vortex() {
     let (roots, _, _) = example_fill_roots("nakagin", 1);
-    let mut builder = FillBuilder::begin_preparation(roots, Operation::new(OperationId(101), RevisionId(1), Generation(1), 1), 1_000_000);
+    let mut builder = FillBuilderFixture::new(FillBuilder::begin_preparation(roots, Operation::new(OperationId(101), RevisionId(1), Generation(1), 1), 1_000_000));
     builder.observe_run();
-    let (mut sequence, mut events) = (0, Vec::new());
+    let mut events=Vec::new();
     let (mut last_target, mut open): (Option<String>, Option<String>) = (None, None);
     let mut marked = std::collections::HashSet::new();
     let (mut placements, mut retries) = (0usize, 0usize);
@@ -546,8 +529,7 @@ fn fill_plan_retries_one_drawn_vortex_until_it_places_or_is_marked_and_never_dra
         if matches!(builder.stage, FillJobStage::Complete(_)) {
             break;
         }
-        let mut context = test_context(&builder, root_cancel_token(), &mut sequence);
-        let outcome = builder.advance(&mut context);
+        let outcome = builder.advance(100,10);
         assert!(!faulted(outcome), "the planner never faults: {:?}", builder.last_rejection);
         let current = builder.current_target.as_ref().map(|target| target.full_id.clone());
         builder.swap_run_events(&mut events);

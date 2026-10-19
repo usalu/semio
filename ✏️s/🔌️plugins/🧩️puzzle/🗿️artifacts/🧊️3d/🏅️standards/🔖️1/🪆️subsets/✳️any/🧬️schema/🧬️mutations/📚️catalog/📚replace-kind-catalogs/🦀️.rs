@@ -1,5 +1,5 @@
-//! 📚 Puzzle3d mutation — `ReplaceKindCatalogs`: whole-value swap of the scene_snapshot-carried typed
 //! kind-catalog bundle (`objects`/`vortices`/`cables`/`attractions` catalogs together, one
+//! 📚 Puzzle3d mutation — `ReplaceKindCatalogs`: whole-value swap of the scene_snapshot-carried typed
 //! manifest-import gesture).
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
 use {semio_s_artifact_puzzle_3d_model::Puzzle3dKindCatalogs, semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot};
@@ -25,20 +25,29 @@ pub fn replace_kind_catalogs<Op: From<ReplaceKindCatalogs>>(new_catalogs: Option
 impl<Op> protocol::MutationKind<Puzzle3dSnapshot, Op> for ReplaceKindCatalogs
 where
     Op: protocol::Mutation<Puzzle3dSnapshot, Diff = Puzzle3dDiff> + From<ReplaceKindCatalogs>,
-{
+ {
+
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "kind-catalogs", kind: "replace-kind-catalogs", record: "ReplacedKindCatalogs" };
 
-    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace kind catalogs", "Artkataloge ersetzen")
+    }
+
+}
+impl<Op> protocol::ColdMutationKind<Puzzle3dSnapshot, Op> for ReplaceKindCatalogs
+where
+    Op: protocol::ColdMutation<Puzzle3dSnapshot, ReferenceDiff = Puzzle3dDiff> + From<ReplaceKindCatalogs>,
+ {
+fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+fn inverse(&self, base: &Puzzle3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace kind catalogs", "Artkataloge ersetzen")
-    }
 }
 //#endregion 🔖️Mutation

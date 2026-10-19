@@ -1,0 +1,43 @@
+{
+  "targets": {
+    "test-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test",
+            "native"
+          ]
+        }
+      },
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏗️fem/⚙️engine/🧱️material/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test native"
+      }
+    },
+    "test-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test",
+            "source"
+          ]
+        }
+      },
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏗️fem/⚙️engine/🧱️material/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test source"
+      }
+    }
+  },
+  "name": "@semio-tech/fem-material-rs",
+  "projectType": "library",
+  "tags": [
+    "language:rust",
+    "role:module",
+    "family:fem"
+  ]
+}

@@ -238,6 +238,87 @@
               "directoryName": "🪪️renames"
             }
           ]
+        },
+        {
+          "mutationId": "change-load",
+          "sourceMutationDirectoryName": "🩹️change-load",
+          "mutationDirectoryName": "🩹️change-load",
+          "scenarios": [
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "invalid",
+              "directoryName": "⚗️invalid"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "target",
+              "directoryName": "📍️target"
+            },
+            {
+              "id": "changes",
+              "directoryName": "🩹️changes"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-combination-name",
+          "sourceMutationDirectoryName": "🩹️change-combination-name",
+          "mutationDirectoryName": "🩹️change-combination-name",
+          "scenarios": [
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "empty",
+              "directoryName": "⚗️empty"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "labels",
+              "directoryName": "✏️labels"
+            },
+            {
+              "id": "renames",
+              "directoryName": "🩹️renames"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-combination-term",
+          "sourceMutationDirectoryName": "🩹️change-combination-term",
+          "mutationDirectoryName": "🩹️change-combination-term",
+          "scenarios": [
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "weights",
+              "directoryName": "⚖️weights"
+            },
+            {
+              "id": "invalid",
+              "directoryName": "⚗️invalid"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "removes",
+              "directoryName": "🗑️removes"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -250,7 +331,10 @@
         "delete-combination",
         "replace-load",
         "change-load-case-name",
-        "replace-combination"
+        "replace-combination",
+        "change-load",
+        "change-combination-name",
+        "change-combination-term"
       ]
     }
   ],

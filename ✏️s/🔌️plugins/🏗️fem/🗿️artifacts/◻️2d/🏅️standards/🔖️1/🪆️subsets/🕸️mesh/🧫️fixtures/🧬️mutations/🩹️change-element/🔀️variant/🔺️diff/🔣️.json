@@ -1,0 +1,23 @@
+{
+  "nodes": null,
+  "elements": {
+    "removed": [],
+    "moved": [],
+    "inserted": [],
+    "modified": [
+      {
+        "patch": {
+          "kind": "beam"
+        },
+        "id": "e1"
+      }
+    ]
+  },
+  "regions": null,
+  "materials": null,
+  "sections": null,
+  "supports": null,
+  "loadCases": null,
+  "combinations": null,
+  "analysis": null
+}

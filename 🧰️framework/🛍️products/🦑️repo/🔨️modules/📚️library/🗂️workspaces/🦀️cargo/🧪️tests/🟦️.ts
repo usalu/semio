@@ -1,3 +1,4 @@
+import {cargoWorkspaceForManifestControlledV1} from "../🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import {stripVTControlCharacters} from "node:util";
 import {cargoPreparationRuntimeV1,observedCargoPreparationV1,cargoPreparationFixtureEnvironmentV1,prepareCargoFixtureV1,captureCargoFixtureV1} from "./🧰️runtime/🟦️.ts";
@@ -359,4 +360,25 @@ test("named dependency preparation agrees with actual Cargo root graph reachabil
  put(root,"framework/Cargo.toml",workspace([...row.frameworkMembers,"orphan"]).replace('[workspace]\n','[workspace]\nexclude=["product"]\n'));put(root,"framework/product/Cargo.toml",pkg(row.rootPackage,'[dependencies]\ngeneral={workspace=true}\n').replace('[package]\n','[package]\nworkspace="'+row.rootPackageWorkspace+'"\n'));put(root,"framework/product/🦀️.rs","pub fn product() {}\n");put(root,"framework/general/Cargo.toml",pkg(row.frameworkPackage));put(root,"framework/general/🦀️.rs","pub fn general() {}\n");put(root,"framework/orphan/Cargo.toml",pkg("unreachable-module"));put(root,"framework/orphan/🦀️.rs","pub fn orphan() {}\n");
  const selected=discoverCargoWorkspaces(root).find(scope=>scope.directory===".")!;
  for(const selection of fixture.reachablePreparation){let valid=false,diagnostic="";try{await captureCargoFixtureV1(root,["tree","--offline","--manifest-path",join(root,"Cargo.toml"),...selection.names.flatMap((name:string)=>["-p",name])]);valid=true;}catch(error){diagnostic=String(error);if(!/exited with status/u.test(diagnostic))throw error;}expect(valid,diagnostic).toBe(selection.valid);if(selection.valid)expect(()=>prepareCargoOwners(root,selected,selection.names)).not.toThrow();else expect(()=>prepareCargoOwners(root,selected,selection.names)).toThrow();}
+});
+
+
+test("reachable inherited development aliases match Cargo metadata without expanding production preparation",()=>{
+ const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🎯️selected-preparation/🔣️.json",import.meta.url),"utf8")).inheritedAliases;
+ for(const row of law.cases){
+  const root=mkdtempSync(join(artifactRoot!,"cargo-alias-"));
+  put(root,"Cargo.toml",workspace(["kernel"]));put(root,"kernel/Cargo.toml",pkg("neutral-kernel"));put(root,"kernel/🦀️.rs","");put(root,"application/Cargo.toml",workspace(["app"]));put(root,"application/app/Cargo.toml",pkg("selected-app",'[dependencies]\nowned-dependency={path="../../dependency/member"}\n'));put(root,"application/app/🦀️.rs","");
+  put(root,"dependency/Cargo.toml",workspace(["member"],row.declared?'[workspace.dependencies]\n'+law.alias+'={path="../observer/member"}\n':""));put(root,"dependency/member/Cargo.toml",pkg("owned-dependency",'['+row.section+']\n'+law.alias+'={workspace=true}\n'));put(root,"dependency/member/🦀️.rs","");
+  put(root,"observer/Cargo.toml",workspace(["member"]));put(root,"observer/member/Cargo.toml",pkg(law.alias));put(root,"observer/member/🦀️.rs","");
+  const manifests=["Cargo.toml","application/Cargo.toml","dependency/Cargo.toml","observer/Cargo.toml"],before=manifests.map(path=>readFileSync(join(root,path),"utf8")),native=cargo(root,"application/Cargo.toml");expect(native.status===0,row.id+"\n"+native.text).toBe(row.valid);
+  if(row.valid){const prepared=prepareCargoOwners(root,cargoWorkspaceForManifest(root,"application/Cargo.toml"),["selected-app"]);expect([...prepared.owners].sort()).toEqual(law.productionOwners);expect(JSON.parse(native.text).workspace_members).toHaveLength(1);}else expect(()=>prepareCargoOwners(root,cargoWorkspaceForManifest(root,"application/Cargo.toml"),["selected-app"])).toThrow("Missing inherited Cargo dependency");
+  expect(manifests.map(path=>readFileSync(join(root,path),"utf8"))).toEqual(before);
+  console.log("[DEBUG] Cargo inherited alias case="+row.id+" valid="+row.valid+" productionOwners="+law.productionOwners.join(","));
+ }
+});
+
+
+ test("controlled native owner resolution preserves original cancellation and independent Cargo ownership",async()=>{
+ for(const row of fixture.controlledSelection){const root=mkdtempSync(join(artifactRoot!,"ctrl-"));put(root,"Cargo.toml",workspace(["framework/*"]));put(root,"framework/kernel/Cargo.toml",pkg("neutral-kernel"));put(root,"framework/kernel/🦀️.rs","pub fn kernel() {}\n");const controller=new AbortController(),reason=Error("neutral original cancellation");let completed=0;if(row.cancelAfter===0)controller.abort(reason);const control={signal:controller.signal,async advance(){completed++;if(row.cancelAfter===completed)controller.abort(reason);}};if(row.expectedOwner===null){await expect(cargoWorkspaceForManifestControlledV1(root,row.manifest,control)).rejects.toBe(reason);expect(completed).toBe(row.cancelAfter);}else{const selected=await cargoWorkspaceForManifestControlledV1(root,row.manifest,control);expect(selected.directory).toBe(row.expectedOwner);const independent=cargo(root,selected.manifest);expect(independent.status,independent.text).toBe(0);expect(JSON.parse(independent.text).workspace_root.replaceAll("\\","/")).toBe(root.replaceAll("\\","/"));expect(completed).toBeGreaterThan(0);}}
+ console.log("[DEBUG] controlled native owner neutral vectors=4 original cancellation preserved");
 });

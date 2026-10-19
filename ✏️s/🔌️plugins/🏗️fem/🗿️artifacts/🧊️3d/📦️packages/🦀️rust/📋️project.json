@@ -8,6 +8,40 @@
     "family:fem"
   ],
   "targets": {
+    "verify-fem3d-results-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify fem3d-results source"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem3d-results",
+            "source"
+          ]
+        }
+      }
+    },
+    "verify-fem3d-results-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify fem3d-results native"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem3d-results",
+            "native"
+          ]
+        }
+      }
+    },
     "build": {
       "executor": "repo:script",
       "cache": true,
@@ -40,6 +74,41 @@
         "forwardAllArgs": true
       }
     },
+    "verify-fem3d-transform-intent": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify fem3d-transform-intent native",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem3d-transform-intent",
+            "native"
+          ]
+        }
+      }
+    },
+    "verify-fem3d-transform-intent-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify fem3d-transform-intent source"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem3d-transform-intent",
+            "source"
+          ]
+        }
+      }
+    },
     "verify-fem3d-numerical-child-native": {
       "executor": "repo:script",
       "cache": false,
@@ -53,6 +122,22 @@
           "workspaceCommand": [
             "verify",
             "fem3d-numerical-child-native"
+          ]
+        }
+      }
+    },
+    "verify-fem3d-numerical-child-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify fem3d-numerical-child-source"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem3d-numerical-child-source"
           ]
         }
       }
@@ -80,6 +165,38 @@
         "command": "bun ./📜️script.ts test-snapshot-sqlite source",
         "forwardAllArgs": true
       }
+    },
+    "test-material-source": {
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-material",
+            "source"
+          ]
+        }
+      },
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-material source"
+      },
+      "cache": false,
+      "executor": "repo:script"
+    },
+    "test-material-native": {
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-material",
+            "native"
+          ]
+        }
+      },
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-material native"
+      },
+      "cache": false,
+      "executor": "repo:script"
     }
   }
 }

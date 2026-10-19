@@ -17,6 +17,7 @@ export async function runViteBunxDev(
     runtimeChannels:readonly ViteRuntimeChannelV1[];
     config: string;
     configLoader?: ViteConfigLoaderV1;
+    runtime?: "bun" | "node";
     artifactInputs?: readonly RepositoryArtifactRequestV1[];
     portEnv?: string;
     defaultPort?: string;
@@ -69,6 +70,6 @@ export async function runViteBunxDev(
     if(flag==="--host")selectedHost=value;else selectedPort=Number(value);
   }
   const {serveViteCommandV1}=await import("../🟦️.ts");
-  await serveViteCommandV1({runtimeChannels,invocation,control,root:bundleRoot,config:resolve(bundleRoot,opts.config),configLoader:opts.configLoader,mode:readBuildMode(spawnEnv.SEMIO_BUILD_MODE),host:selectedHost,port:selectedPort,strictPort,environment:spawnEnv,artifactInputs:opts.artifactInputs,signal:invocation.control.signal});
+  await serveViteCommandV1({runtimeChannels,invocation,control,root:bundleRoot,config:resolve(bundleRoot,opts.config),configLoader:opts.configLoader,mode:readBuildMode(spawnEnv.SEMIO_BUILD_MODE),host:selectedHost,port:selectedPort,strictPort,environment:spawnEnv,artifactInputs:opts.artifactInputs,runtime:opts.runtime,signal:invocation.control.signal});
 }
 

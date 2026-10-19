@@ -123,8 +123,8 @@ pub trait ArtifactViewer: Default + Send + 'static {
         true
     }
 
-    fn mounted_job_prepare_snapshot_read(_operation: AppRenderOperationContext, _snapshot: &Self::Snapshot) -> bool {
-        false
+    fn mounted_job_prepare_snapshot_read(_operation: AppRenderOperationContext, _snapshot: &Self::Snapshot, _windows: &WindowConfigOwnerRegistry, _view: Option<&ViewModel>, _grant: RetainedCloneGrant) -> crate::MountedSnapshotReadPreparation {
+        crate::MountedSnapshotReadPreparation::default()
     }
 
     fn register_window_transient_owners(_registry: &mut WindowTransientOwnerRegistry) -> Result<(), Fault> {
@@ -188,8 +188,8 @@ pub trait ArtifactViewer: Default + Send + 'static {
     }
 
     /// 🏗️ Author-owned payload builder paired with `register_tool_job_factories`.
-    fn build_tool_job(_request: ArtifactOwnedToolJobRequest<ViewerApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        Ok(None)
+    fn build_tool_job(_request:&mut Option<ArtifactOwnedToolJobRequest<ViewerApp<Self>>>,_output:&mut Option<semio_framework::ErasedToolJob>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered surface tool lacks its original source-preserving producer").into())
     }
 
     /// 🧭️ Builds a persistent producer/import job for one explicitly registered viewer route.

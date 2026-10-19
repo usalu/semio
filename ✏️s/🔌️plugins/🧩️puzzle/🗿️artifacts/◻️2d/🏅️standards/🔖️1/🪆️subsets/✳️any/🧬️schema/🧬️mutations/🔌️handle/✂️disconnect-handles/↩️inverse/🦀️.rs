@@ -1,5 +1,5 @@
-//! ↩️ Inverse for `DisconnectHandles` — reconstructs a `connect-handles` of the captured BASE
 //! edge. Missing target ⇒ `Vec::new()`.
+//! ↩️ Inverse for `DisconnectHandles` — reconstructs a `connect-handles` of the captured BASE
 use crate::standards::v1::subsets::any::schema::mutations::change_edge_visible::ChangeEdgeVisible;
 use crate::standards::v1::subsets::any::schema::mutations::change_edge_locked::ChangeEdgeLocked;
 use crate::standards::v1::subsets::any::schema::mutations::connect_handles::ConnectHandles;

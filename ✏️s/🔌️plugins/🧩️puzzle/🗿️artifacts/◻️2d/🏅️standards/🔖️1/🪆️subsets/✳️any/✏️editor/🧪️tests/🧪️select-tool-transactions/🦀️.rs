@@ -1,5 +1,5 @@
-//! 🛠️ Laws for the select tool's ONE promise: one logical selection operation is one `ToolTransaction` — one
 //! edit, one history row stamped with its `TransactionRef`, one parametric leaf carrying the literal targets and
+//! 🛠️ Laws for the select tool's ONE promise: one logical selection operation is one `ToolTransaction` — one
 //! parameters — and a cancelled gesture leaves zero trace. The board laws drive the REAL engine: press, move and
 //! release on a host painted from the app's own snapshot, the release batch filtered exactly as both coalescers
 //! filter it (`🖥️Board2dHost/🧫️fixtures/🧫️board-event-coalescing`), then dispatched as `applyBoardEvents`. The
@@ -191,7 +191,7 @@ pub(crate) fn release(host: &mut BoardHost, x: f64, y: f64) {
 }
 
 pub(crate) fn flush(app: &mut Puzzle2dApp, rows: &[Value]) -> InvocationResult {
-    dispatch(app, "applyBoardEvents", Some(&json!({ "eventsJson": semio_framework_pack_json::to_json_string(rows) })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("applyBoardEvents")
+    dispatch(app, "applyBoardEvents", Some(&json!({ "eventsJson": semio_framework_pack_json::to_json_string(&rows.to_vec()) })), Some(overview::WINDOW_KIND_ID)).expect("applyBoardEvents")
 }
 
 fn node_at(app: &Puzzle2dApp, id: &str) -> (f64, f64) {

@@ -25,5 +25,31 @@
       null
     ],
     "nativeDigestOracle": "replication.canonical-edit.native-seal.NodeSHA256"
+  },
+  "diagnostics": [
+    {
+      "level": "info",
+      "code": "group.staged",
+      "message": "Member staged",
+      "target": [],
+      "opIndex": 0
+    },
+    {
+      "level": "warning",
+      "code": "group.geometry",
+      "message": "Geometrie geändert",
+      "target": [
+        "nodes",
+        "n1"
+      ],
+      "opIndex": 0
+    }
+  ],
+  "worst": "warning",
+  "assemblyDiagnosticTransfer": {
+    "phase": "TakingPrepared",
+    "sameTurnPreparationGrantReuse": false,
+    "receipt": "checked-sum-of-three-original-handoffs",
+    "preflight": "all-three-copy-extents-before-first-transfer"
   }
 }

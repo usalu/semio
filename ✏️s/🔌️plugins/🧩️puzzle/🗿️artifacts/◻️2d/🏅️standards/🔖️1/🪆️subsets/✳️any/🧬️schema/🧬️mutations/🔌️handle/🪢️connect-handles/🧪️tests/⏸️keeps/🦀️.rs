@@ -8,7 +8,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
-use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::inverse_puzzle2d_mutation;
 use semio_framework_test_fixtures::fixture_text;
 
 use crate::Puzzle2dSnapshot;
@@ -44,25 +44,24 @@ fn applies_to_committed_after() {
 fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str((*OUTCOME)).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "connect-handles/keeps-an-edge-the-tower-already-holds declares a no-op outcome");
-    let produced = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Puzzle2dMutation as protocol::ColdMutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a no-op vector carries a diagnostic");
     assert_eq!(message.code.0, "mutation.no-op", "connect-handles/keeps-an-edge-the-tower-already-holds: a duplicate id is reported as a no-op, never as an error");
     assert_eq!(message.level, semio_framework_diagnostic::Severity::Warning, "connect-handles/keeps-an-edge-the-tower-already-holds: mutation.no-op is a warning — nothing to do is not a breach");
     assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff::default(), "connect-handles/keeps-an-edge-the-tower-already-holds: a no-op answers the default diff");
 }
 
-/// ↩️ `connect-handles`'s inverse is PAYLOAD-derived, so it is emitted even for a no-op — and it does NOT
-/// restore this board, because the record the payload names was already there.
+/// ↩️ A no-op produces no executable inverse and preserves the existing board record.
 #[test]
-fn inverse_is_payload_derived_and_does_not_restore() {
+fn inverse_of_noop_is_empty_and_preserves_existing_record() {
     let base = before();
     let inverse = inverse_puzzle2d_mutation(&base, &mutation()).expect("valid retained mutation inverse snapshot");
-    assert_eq!(inverse.len(), 1, "connect-handles/keeps-an-edge-the-tower-already-holds: this kind undoes in exactly one step, got {inverse:?}");
+    assert!(inverse.is_empty(), "connect-handles/keeps-an-edge-the-tower-already-holds: got {inverse:?}");
     let mut snapshot = base.clone();
     for step in inverse.iter().rev() {
         apply_puzzle2d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
-    assert_ne!(snapshot, base, "connect-handles/keeps-an-edge-the-tower-already-holds: undoing a no-op removes the record the board already held — that asymmetry is the point of this vector");
+    assert_eq!(snapshot, base, "connect-handles/keeps-an-edge-the-tower-already-holds: a no-op inverse preserves the board");
 }
 
 /// 🔣️ Both committed snapshots and the committed `connect-handles` payload are already canonical.
@@ -83,7 +82,7 @@ fn committed_json_is_canonical() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &base);
+    let outcome = <Puzzle2dMutation as protocol::ColdMutation<Puzzle2dSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "connect-handles/keeps-an-edge-the-tower-already-holds: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -96,6 +95,6 @@ fn produces_committed_diff() {
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "connect-handles/keeps-an-edge-the-tower-already-holds: committed diff did not carry before to after");
 }

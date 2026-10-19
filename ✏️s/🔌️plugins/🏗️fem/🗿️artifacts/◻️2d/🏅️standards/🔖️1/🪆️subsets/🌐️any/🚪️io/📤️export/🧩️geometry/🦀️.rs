@@ -2,7 +2,10 @@
 
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
-use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMesh;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioPrimitive;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioTopology;
 
 //#region 🔖️SemioMeshBridge
 /// 🌉️ Builds a real `SemioMeshSnapshot` from every `FemRegion`'s genuinely triangulated,

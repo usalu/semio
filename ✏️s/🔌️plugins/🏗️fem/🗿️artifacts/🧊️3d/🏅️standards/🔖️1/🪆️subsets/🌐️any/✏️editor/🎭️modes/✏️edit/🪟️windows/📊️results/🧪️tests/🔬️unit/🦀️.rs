@@ -1,6 +1,9 @@
 use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results::*;
 use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results::config::Fem3dResultsWindowConfig;
-use semio_s_fem_app_surface::{normalize_mode_shape, DisplayMode, ResultDisplay, MODE_SHAPE_AMPLITUDE_RATIO};
+use semio_s_fem_app_surface::normalize_mode_shape;
+use semio_s_fem_app_surface::DisplayMode;
+use semio_s_fem_app_surface::ResultDisplay;
+use semio_s_fem_app_surface::MODE_SHAPE_AMPLITUDE_RATIO;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::gumball::fem3d_selection_json;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::Fem3dInteractionSnapshot;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_NODE;
@@ -8,10 +11,34 @@ use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3
 use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_scene_parts;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_contract::{Buildable, HasChildren, HasStackLayout};
+use semio_framework_ui_contract::Buildable;
+use semio_framework_ui_contract::HasChildren;
+use semio_framework_ui_contract::HasStackLayout;
 use std::collections::HashMap;
-use crate::context::{dispatch, fem3d_app, fem3d_empty_app, render as render_body, Fem3dApp};
+use crate::context::dispatch;
+use crate::context::fem3d_app;
+use crate::context::fem3d_empty_app;
+use crate::context::render as render_body;
+use crate::context::Fem3dApp;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
+
+#[test]
+fn mounted_results_frames_never_invoke_synchronous_solvers() {
+    let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 };
+    let operation = semio_framework_plugin::AppRenderOperationContext { app_instance_id: 9001, base_revision: semio_framework_job::RevisionId(11), generation: semio_framework_job::Generation(19), canonical_base_revision: [23; 32], mounted_policy: semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } };
+    reset_results_cache();
+    let mut doc = Fem3dSnapshot::default();
+    doc.analysis.modal_count = 1;
+    for result_mode in [semio_s_fem_app_surface::ResultMode::Static, semio_s_fem_app_surface::ResultMode::Modal] {
+        let cfg = Fem3dResultsWindowConfig { result_mode, ..Default::default() };
+        for _ in 0..3 { render(&doc, &cfg, &Fem3dInteractionSnapshot::default(), Some(operation), Some("fixture-results")).expect("mounted frame"); }
+    }
+    assert_eq!(results_solve_count(), 0);
+    assert!(matches!(crate::live_visual::close_step(operation.app_instance_id, grant), semio_framework_plugin::PluginLifecycleStep::Progress(_)));
+    for _ in 0..64 { if crate::live_visual::terminal_is_empty(operation.app_instance_id) { break; } crate::live_visual::close_step(operation.app_instance_id, grant); }
+    assert!(crate::live_visual::terminal_is_empty(operation.app_instance_id));
+    eprintln!("[DEBUG] FEM3D mounted static/modal result frames synchronously solved zero times");
+}
 
 async fn app_with_example() -> Fem3dApp {
     let mut app = fem3d_app();
@@ -79,13 +106,13 @@ async fn playback_phase_moves_the_deformed_scene() {
         scene.instances_json
     };
     let mut config = Fem3dResultsWindowConfig::default();
-    let full = render(&snapshot, &config, &interaction, None).expect("full frame");
+    let full = render(&snapshot, &config, &interaction, None, None).expect("full frame");
     config.animation.phase = 0.0;
-    let rest = render(&snapshot, &config, &interaction, None).expect("rest frame");
+    let rest = render(&snapshot, &config, &interaction, None, None).expect("rest frame");
     assert_ne!(instances(&full), instances(&rest), "phase 1 and phase 0 draw different poses");
     config.animation.playing = true;
     config.animation.phase = 0.42;
-    let node = render(&snapshot, &config, &interaction, None).expect("running frame");
+    let node = render(&snapshot, &config, &interaction, None, None).expect("running frame");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("fixture projection");
     assert!(json.contains("phase 0.42"), "a running window carries its transport read-out: {json}");
 }
@@ -112,7 +139,7 @@ async fn results_window_renders_buckling_mode_shape_3d() {
 async fn results_caption_column_grows_so_world_scene_fills_window_3d() {
     let snapshot = <Fem3dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::FEM3D_EXAMPLE_TEXT).expect("default example snapshot");
     let config = Fem3dResultsWindowConfig::default();
-    let node = render(&snapshot, &config, &Fem3dInteractionSnapshot::default(), None).expect("fixture surface admission");
+    let node = render(&snapshot, &config, &Fem3dInteractionSnapshot::default(), None, None).expect("fixture surface admission");
     let stack_grows = |layout: &semio_framework_ui_contract::LayoutSpec| {
         matches!(layout, semio_framework_ui_contract::LayoutSpec::Stack(stack) if stack.grow)
     };
@@ -126,7 +153,7 @@ async fn results_scene_includes_solid_vertex_colors_3d() {
     let app = app_with_example().await;
     let snapshot = app.snapshot().expect("snapshot");
     let config = Fem3dResultsWindowConfig { result_source_id: Some("dead".into()), result_mode: semio_s_fem_app_surface::ResultMode::Static, ..Fem3dResultsWindowConfig::default() };
-    let node = render(&snapshot, &config, &Fem3dInteractionSnapshot::default(), None).expect("fixture surface admission");
+    let node = render(&snapshot, &config, &Fem3dInteractionSnapshot::default(), None, None).expect("fixture surface admission");
     let scene_stack = node.children.get(1).expect("caption + growing scene stack");
     let surface = scene_stack.children.iter().find(|child| matches!(&child.component, semio_framework_ui_contract::Component::Surface(_))).expect("world surface child");
     let scene: semio_framework_ui_scene::World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(surface).expect("assemble world scene");
@@ -151,4 +178,20 @@ async fn results_scene_captions_name_mode_and_factor_3d() {
 #[semio_framework_async_macros::async_test]
 async fn fem3d_model_extent_degenerate_model_returns_one() {
     assert_eq!(fem3d_model_extent(&Fem3dSnapshot::default()), 1.0);
+}
+
+/// 🧵️ Mounted rendering publishes pending scenes without executing a numerical solve.
+#[semio_framework_async_macros::async_test]
+async fn mounted_results_render_borrows_jobs_without_synchronous_solves() {
+    let doc = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot();
+    reset_results_cache();
+    let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 };
+    let operation = semio_framework_plugin::AppRenderOperationContext { app_instance_id: 107, base_revision: semio_framework_job::RevisionId(1), generation: semio_framework_job::Generation(1), canonical_base_revision: [1; 32], mounted_policy: semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } };
+    for revision in [operation, semio_framework_plugin::AppRenderOperationContext { canonical_base_revision: [2; 32], ..operation }] {
+        let node = render(&doc, &Fem3dResultsWindowConfig::default(), &Fem3dInteractionSnapshot::default(), Some(revision), Some("fixture-results")).unwrap();
+        let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();
+        assert!(json.contains("Analysis running"));
+    }
+    eprintln!("[DEBUG] FEM3D mounted results revisions render with {} synchronous solver calls", results_solve_count());
+    assert_eq!(results_solve_count(), 0);
 }

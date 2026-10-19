@@ -129,4 +129,19 @@ pub enum Fem3dVisualJobStage {
     Complete,
 }
 
+
+impl Fem3dNumericalStage {
+    pub fn progress_stage(self) -> &'static str {
+        match self {
+            Self::SolidMeshBegin | Self::SolidMesh => "fem3d.meshing",
+            Self::MountAssembly | Self::PrepareAssembly | Self::Assembly | Self::BuildCsr => "fem3d.assembly",
+            Self::BeginPcg | Self::PreparePcg | Self::Pcg => "fem3d.statics",
+            Self::BeginModal | Self::PrepareModal | Self::BeginLdlt | Self::Ldlt | Self::BeginSubspace | Self::Subspace | Self::ReadModeScalar | Self::PublishModeScalar => "fem3d.modes",
+            Self::ReadNodeScalar | Self::RecoverReaction | Self::PublishNodeScalar | Self::RecoverStressElement | Self::PublishStressScalar | Self::PublishProgress => "fem3d.validation",
+            Self::Complete => "fem3d.validated",
+            _ => "fem3d.preparation",
+        }
+    }
+}
+
 //#endregion 🔖️Contract

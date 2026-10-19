@@ -1,5 +1,5 @@
-//! 🎛 `flat-position` — one named inference: absolute flatten pose (plane + center) per part.
 //! `FlattenPlane`/`FlattenPose` (the result types) stay owned by `puzzle3d::schema::inferences::flatten`
+//! 🎛 `flat-position` — one named inference: absolute flatten pose (plane + center) per part.
 //! (that sibling artifact's own low-level pose math); this leaf owns the puzzle5d-side projection —
 //! mapping parts/grips/fasteners onto the 3d object/vortex/attraction graph and running puzzle3d's
 //! solver — directly, so `🦀️.rs` has a `flat_position` mount matching puzzle3d's own shape.
@@ -15,6 +15,11 @@
 use {semio_s_artifact_puzzle_3d_inferences::flatten::flatten_objects, semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction, semio_s_artifact_puzzle_3d_model::Puzzle3dObject, semio_s_artifact_puzzle_3d_model::Puzzle3dObjectAnchor, semio_s_artifact_puzzle_3d_model::Puzzle3dVortex, semio_s_artifact_puzzle_3d_inferences::flatten::DIAGRAM_HORIZONTAL_SCALE, semio_s_artifact_puzzle_3d_inferences::flatten::DIAGRAM_RADIUS, semio_s_artifact_puzzle_3d_inferences::flatten::DIAGRAM_VERTICAL_V_EXTRA};
 use crate::{Puzzle5dSnapshot};
 use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dScale};
+
+
+
+
+
 use std::collections::HashMap;
 
 // 🔗️ Kept public (the pre-relocation shim's own surface): the result TYPES stay owned by

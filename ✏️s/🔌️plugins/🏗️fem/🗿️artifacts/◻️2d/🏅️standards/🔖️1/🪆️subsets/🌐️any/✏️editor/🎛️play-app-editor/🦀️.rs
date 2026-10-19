@@ -46,15 +46,15 @@ impl ArtifactEditor for Fem2dPlayApp {
     }
 
     fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(semio_framework_plugin::no_presence_store_disposer())
+        Some(semio_framework_plugin::bounded_presence_store_disposer::<Self::Presence, Self::PresenceMutation>())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+        Some(semio_framework_plugin::bounded_presence_root_retirement_factory::<Self::Presence>())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+        Some(semio_framework_plugin::bounded_presence_root_retirement_factory::<Self::Presence>())
     }
 
     fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
@@ -150,43 +150,17 @@ impl ArtifactEditor for Fem2dPlayApp {
         registry.register(Fem2dRetainedCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !FEM2D_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            return Ok(None);
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original FEM request is absent"))?;
+        if !FEM2D_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
+            return Ok(false);
         }
-        if request.command.command_id() != request.tool_id {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "fem2d retained command does not match its exact registered tool"));
+        if original.command.command_id() != original.tool_id {
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "fem2d retained command does not match its exact registered tool").into());
         }
-        let tool_id = request.command.command_id();
-        let work = Box::new(Fem2dRetainedWork { tool_id, consumed: false });
-        let operation_context = AppOperationContext {
-            app_instance_id: request.app_instance_id,
-            parent_document_id: request.parent_document_id.clone(),
-            operation_id: request.operation.operation.0,
-            generation: request.operation.generation.0,
-            canonical_base_revision: request.canonical_base_revision,
-            retained: request.retained,
-            authoring_seed: request.authoring_seed.clone(),
-        };
-        let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
-                command: *request.command,
-                snapshot: request.snapshot,
-                snapshot_read: request.snapshot_read,
-                config: request.config,
-                history: request.history,
-                interaction_state: request.interaction_state,
-                interaction_hover: request.interaction_hover,
-                context: Some(request.context),
-                operation: operation_context,
-                completion: request.completion,
-            },
-            Fem2dCommand::command_id,
-            FEM2D_RETAINED_RAW_BYTES,
-            FEM2D_RETAINED_WORK_ITEMS,
-            work,
-        );
-        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+
+        let tool_id = original.command.command_id();
+        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Fem2dCommand::command_id, FEM2D_RETAINED_RAW_BYTES, FEM2D_RETAINED_WORK_ITEMS, false, |_original| Fem2dRetainedWork { tool_id, consumed: false })
     }
 
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
@@ -208,27 +182,27 @@ impl ArtifactEditor for Fem2dPlayApp {
     }
 
     fn mounted_job_maintenance_demands(instance_id: u32, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::close_demands(instance_id))
+        semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::close_demands(instance_id)
     }
 
     fn mounted_job_close_demands(instance_id: u32, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::close_demands(instance_id))
+        semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::close_demands(instance_id)
     }
 
     fn mounted_job_maintenance_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_plugin::PluginLifecycleFailure> {
-        Ok(semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::maintenance_step(instance_id, cx, grant))
+        semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::maintenance_step(instance_id, cx, grant)
     }
 
     fn mounted_job_close_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_plugin::PluginLifecycleFailure> {
-        Ok(semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::close_step(instance_id, cx, grant))
+        semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::close_step(instance_id, cx, grant)
     }
 
     fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
         semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::terminal_is_empty(instance_id)
     }
 
-    fn mounted_job_prepare_snapshot_read(operation: semio_framework_plugin::AppRenderOperationContext, snapshot: &Self::Snapshot) -> bool {
-        semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::prepare_snapshot_read(operation, snapshot)
+    fn mounted_job_prepare_snapshot_read(operation: semio_framework_plugin::AppRenderOperationContext, snapshot: &Self::Snapshot, windows: &semio_framework_plugin::WindowConfigOwnerRegistry, view: Option<&ViewModel>, grant: semio_framework_value::RetainedCloneGrant) -> semio_framework_plugin::MountedSnapshotReadPreparation {
+        semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::prepare_snapshot_read(operation, snapshot, windows, view, grant)
     }
 
     /// 🎞️ `"artifact:out"` reproduces the trait's default whole-document pack (overriding `export_media`
@@ -283,7 +257,7 @@ impl ArtifactEditor for Fem2dPlayApp {
                     None => Vec::new(),
                 };
                 let material_id = doc.snapshot.materials.first().map_or_else(|| "unassigned".into(), |material| material.id.clone());
-                let id = semio_s_fem_app_surface::next_id(doc.snapshot.regions.iter().map(|r| r.id.clone()), "r");
+                let id = doc.operation().and_then(|operation| operation.entity_id("r", "regions")).map_err(|fault| MediaError::Payload(port.into(), format!("{fault:?}")))?;
                 let region = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion { id, name: "Imported Geometry".into(), outline, holes, thickness: 0.02, material_id, mesh_size: 0.25 };
                 Ok(Emit::mutations(vec![Fem2dMutation::CreateRegion(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion { region, index: None })]))
             }
@@ -500,7 +474,9 @@ impl ArtifactEditor for Fem2dPlayApp {
             }
             Fem2dCommand::SetTransformGumballFlag(payload) => set_transform_gumball_flag::handle_window(payload, view_state.ok_or_else(|| Fault::from("fem2d.gumball-flag.window-context-required"))?),
             Fem2dCommand::SetCamera(payload) => set_camera::handle_window(payload, cfg, view_state.ok_or_else(|| Fault::from("fem2d.camera.window-context-required"))?),
-            Fem2dCommand::SetResultDisplay(payload) => set_result_display::handle_window(payload, cfg, view_state.ok_or_else(|| Fault::from("fem2d.results.window-context-required"))?),
+            Fem2dCommand::SetResultDisplay(payload) => {
+                set_result_display::handle_window(payload, cfg, view_state.ok_or_else(|| Fault::from("fem2d.results.window-context-required"))?)
+            },
             Fem2dCommand::CanvasPointerDown(payload) => canvas_pointer_down::handle_window(payload, doc, cfg, view_state.ok_or_else(|| Fault::from("fem2d.pointer.window-context-required"))?),
             Fem2dCommand::CanvasPointerMove(payload) => canvas_pointer_move::handle_window(payload, doc, cfg, view_state.ok_or_else(|| Fault::from("fem2d.pointer.window-context-required"))?),
             Fem2dCommand::CanvasPointerUp(payload) => canvas_pointer_up::handle_window(payload, doc, cfg, view_state.ok_or_else(|| Fault::from("fem2d.pointer.window-context-required"))?),
@@ -511,7 +487,7 @@ impl ArtifactEditor for Fem2dPlayApp {
         }
     }
 
-    fn pending_effects(_owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view: Option<&ViewModel>) -> Vec<semio_framework::kernel::Effect> {
+    fn pending_effects(_owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_framework_plugin::ArtifactPendingView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view: Option<&ViewModel>) -> Vec<semio_framework::kernel::Effect> {
         semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::reconcile(doc)
     }
 
@@ -586,7 +562,9 @@ impl Fem2dPlayApp {
                     &interaction,
                     doc.render_operation(),
                     window_id.as_deref(),
+                    cfg.window.map(|window|window.authority()),
                     active_utility,
+                    labels,
                 )
             }
             artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, &interaction, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, artifact_panel::BODY_KEY)),

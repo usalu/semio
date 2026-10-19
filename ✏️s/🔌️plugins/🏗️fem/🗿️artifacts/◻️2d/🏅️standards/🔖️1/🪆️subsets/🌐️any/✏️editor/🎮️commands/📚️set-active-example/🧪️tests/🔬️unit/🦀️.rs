@@ -1,8 +1,13 @@
 use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_active_example::*;
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 use pack::snapshot::ArtifactDsl;
 use semio_framework::kernel::Effect;
 

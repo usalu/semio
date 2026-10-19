@@ -20,6 +20,7 @@ use semio_framework_os_store_codec_registry::register_document_codec;
 use semio_framework_os_store_text_io::ArtifactCodec;
 use semio_framework_os_store_space_schema::ArtifactCommand;
 use semio_framework_os_store_space_member::lifted_store::BlobStore;
+use semio_framework_os_spr::ColdMutationDiff;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 

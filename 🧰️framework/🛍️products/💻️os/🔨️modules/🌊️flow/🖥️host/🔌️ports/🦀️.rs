@@ -2,9 +2,13 @@
 
 use super::*;
 
-pub(super) fn dedupe_host_snapshot_widgets(host_snapshot: &mut FlowHostSnapshot) {
+pub(super) /// 📥️ Load normalization of a freshly decoded document: the first widget of every identity stays and each later duplicate is retired cold.
+fn deduplicated_loaded_widgets(mut loaded: FlowHostSnapshot) -> FlowHostSnapshot {
     let mut seen = BTreeSet::new();
-    host_snapshot.widgets.retain(|widget| seen.insert(widget_id_for(widget).to_string()));
+    let (kept, duplicates): (Vec<_>, Vec<_>) = loaded.widgets.into_iter().partition(|widget| seen.insert(widget_id_for(widget).to_string()));
+    loaded.widgets = kept;
+    duplicates.into_iter().for_each(|widget| widget.retire_cold());
+    loaded
 }
 
 

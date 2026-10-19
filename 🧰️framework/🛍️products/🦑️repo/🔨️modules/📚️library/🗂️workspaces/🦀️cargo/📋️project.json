@@ -34,6 +34,14 @@
         "forwardAllArgs": true
       }
     },
+    "original-control-contract-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
+        "command": "bun ./📜️script.ts original-control-contract-check"
+      }
+    },
     "queued-contract-check": {
       "executor": "repo:script",
       "cache": false,
@@ -64,6 +72,14 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
         "command": "bun ./📜️script.ts capability-contract-check"
+      }
+    },
+    "controlled-contract-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
+        "command": "bun ./📜️script.ts contract-check controlled-owner"
       }
     }
   }

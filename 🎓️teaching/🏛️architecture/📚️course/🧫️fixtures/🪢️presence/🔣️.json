@@ -1,0 +1,9 @@
+{
+  "cases": [
+    { "id": "opens", "server": "open", "abort": "never", "timeoutMs": 1000, "expected": "opened", "upgrade": 101 },
+    { "id": "refused", "server": "refuse", "abort": "never", "timeoutMs": 1000, "expected": "failed", "upgrade": 403 },
+    { "id": "deadline", "server": "hang", "abort": "never", "timeoutMs": 30, "expected": "timed-out", "upgrade": "timed-out" },
+    { "id": "parent-cancelled", "server": "hang", "abort": "later", "timeoutMs": 1000, "expected": "aborted", "upgrade": "aborted" },
+    { "id": "already-cancelled", "server": "hang", "abort": "before", "timeoutMs": 1000, "expected": "aborted", "upgrade": "aborted" }
+  ]
+}

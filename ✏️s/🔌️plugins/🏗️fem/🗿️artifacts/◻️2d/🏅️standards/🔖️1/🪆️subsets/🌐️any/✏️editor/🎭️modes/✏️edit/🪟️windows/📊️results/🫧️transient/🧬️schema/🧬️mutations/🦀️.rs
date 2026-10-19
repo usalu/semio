@@ -1,6 +1,10 @@
 //! 🫧️ FEM results window-transient mutation aggregate (fem 2d and fem 3d share it).
 
-use super::{FemPlaybackClockChange, FemResultsWindowTransient, FemResultsWindowTransientDiff};
+use super::FemPlaybackClockChange;
+
+use super::FemResultsWindowTransient;
+
+use super::FemResultsWindowTransientDiff;
 
 #[path = "⏱️set-playback-clock/🦀️.rs"]
 mod set_playback_clock;

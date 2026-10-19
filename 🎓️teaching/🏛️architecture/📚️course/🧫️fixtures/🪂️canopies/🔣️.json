@@ -1,0 +1,667 @@
+{
+  "species": [
+    {
+      "id": "sunny",
+      "motif": {
+        "en": "Sun-ray crown",
+        "de": "Sonnenstrahlenkrone"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -30 0 L -26 -8 L -28 -15 L -20 -18 L -21 -26 L -12 -24 L -7 -32 L 0 -27 L 7 -32 L 12 -24 L 21 -26 L 20 -18 L 28 -15 L 26 -8 L 30 0 Z M -19 -2 Q -18 -18 0 -20 Q 18 -18 19 -2 M -10 -5 L -8 -14 M 10 -5 L 8 -14"
+      },
+      "rim": [
+        -30,
+        0,
+        30,
+        0
+      ]
+    },
+    {
+      "id": "cloudy",
+      "motif": {
+        "en": "Layered cloud puffs",
+        "de": "Geschichtete Wolkenpolster"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -32 0 C -36 -3 -35 -14 -25 -15 C -27 -29 -8 -32 -1 -22 C 13 -34 29 -26 27 -13 C 36 -13 37 -2 32 0 Q 15 -5 0 0 Q -15 -5 -32 0 Z M -24 -9 Q -14 -17 -6 -10 M 3 -12 Q 14 -20 24 -11"
+      },
+      "rim": [
+        -32,
+        0,
+        32,
+        0
+      ]
+    },
+    {
+      "id": "housy",
+      "motif": {
+        "en": "Gabled house roof",
+        "de": "Giebelhausdach"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -30 0 L -30 -9 L -21 -9 L 0 -28 L 21 -9 L 30 -9 L 30 0 Z M -18 -3 V -9 L 0 -23 L 18 -9 V -3 M -6 -4 V -11 H 6 V -4 Z M 0 -11 V -4"
+      },
+      "rim": [
+        -30,
+        0,
+        30,
+        0
+      ]
+    },
+    {
+      "id": "solary",
+      "motif": {
+        "en": "Solar-panel grid",
+        "de": "Solarpanelraster"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -30 0 L -20 -9 L 20 -9 L 30 0 Q 0 -5 -30 0 Z M -10 -9 L -10 -2.6 M 10 -9 L 10 -2.6 M 0 -9 L 0 -2.5 M -25 -4.5 L 25 -4.5"
+      },
+      "rim": [
+        -30,
+        0,
+        30,
+        0
+      ]
+    },
+    {
+      "id": "radiatory",
+      "motif": {
+        "en": "Radiator fins and heat waves",
+        "de": "Heizkörperrippen und Wärmewellen"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -30 0 L -30 -13 Q -30 -23 -24 -23 L 24 -23 Q 30 -23 30 -13 L 30 0 Z M -20 -2 V -20 M -10 -2 V -20 M 0 -2 V -20 M 10 -2 V -20 M 20 -2 V -20 M -25 -8 H 25 M -16 -24 Q -20 -28 -16 -31 M 0 -24 Q -4 -28 0 -31 M 16 -24 Q 12 -28 16 -31"
+      },
+      "rim": [
+        -30,
+        0,
+        30,
+        0
+      ]
+    },
+    {
+      "id": "pumpy",
+      "motif": {
+        "en": "Heat-pump coil",
+        "de": "Wärmepumpenwendel"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -30 0 Q -28 -21 0 -23 Q 28 -21 30 0 Q 20 -5 10 0 Q 0 -5 -10 0 Q -20 -5 -30 0 Z M -24 -9 Q 0 -18 24 -9 M -15 -16 Q 0 -21.5 15 -16"
+      },
+      "rim": [
+        -30,
+        0,
+        30,
+        0
+      ]
+    },
+    {
+      "id": "windowy",
+      "motif": {
+        "en": "Window frame and mullions",
+        "de": "Fensterrahmen und Sprossen"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -24 0 C -24 -12 -13 -20 0 -20 C 13 -20 24 -12 24 0 Z M 0 -20 L 0 0 M -22 -8 L 22 -8"
+      },
+      "rim": [
+        -24,
+        0,
+        24,
+        0
+      ]
+    },
+    {
+      "id": "waly",
+      "motif": {
+        "en": "Stepped brick courses",
+        "de": "Gestufte Ziegelreihen"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -32 0 L -32 -14 L -24 -14 L -24 -24 L 24 -24 L 24 -14 L 32 -14 L 32 0 Z M -24 -14 H 24 M -32 -7 H 32 M -12 -24 V -14 M 12 -24 V -14 M -22 -14 V -7 M 0 -14 V -7 M 22 -14 V -7 M -12 -7 V 0 M 12 -7 V 0"
+      },
+      "rim": [
+        -32,
+        0,
+        32,
+        0
+      ]
+    },
+    {
+      "id": "battery",
+      "motif": {
+        "en": "Charged battery with terminal",
+        "de": "Geladene Batterie mit Pol"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -28 0 L -28 -20 Q -28 -24 -24 -24 L -9 -24 L -9 -29 L 9 -29 L 9 -24 L 24 -24 Q 28 -24 28 -20 L 28 0 Z M -20 -6 V -19 H -10 V -6 Z M -5 -6 V -19 H 5 V -6 Z M 10 -6 V -19 H 20 V -6 Z M -4 -26 H 4"
+      },
+      "rim": [
+        -28,
+        0,
+        28,
+        0
+      ]
+    },
+    {
+      "id": "windy",
+      "motif": {
+        "en": "Three-blade turbine sail",
+        "de": "Dreiblättriges Turbinensegel"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -30 0 C -30 -12 -13 -13 -7 -17 C -15 -27 -12 -31 -2 -30 C 7 -29 12 -26 8 -18 C 23 -22 32 -14 30 0 Q 15 -5 0 0 Q -15 -5 -30 0 Z M 0 -15 L -20 -4 M 0 -15 L 0 -27 M 0 -15 L 21 -6 M -3 -15 A 3 3 0 1 1 3 -15 A 3 3 0 1 1 -3 -15 Z"
+      },
+      "rim": [
+        -30,
+        0,
+        30,
+        0
+      ]
+    },
+    {
+      "id": "boily",
+      "motif": {
+        "en": "Boiler vessel and flame",
+        "de": "Kesselbehälter und Flamme"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -26 0 V -15 C -26 -32 26 -32 26 -15 V 0 Z M -19 -5 H 19 M -19 -17 H 19 M -7 -6 C -12 -13 -2 -14 -3 -22 C 5 -17 12 -11 7 -6 Z M -17 -2 V -24 M 17 -2 V -24"
+      },
+      "rim": [
+        -26,
+        0,
+        26,
+        0
+      ]
+    },
+    {
+      "id": "roofy",
+      "motif": {
+        "en": "Roof tiles",
+        "de": "Dachziegel"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -30 0 L -26.5 -2.5 L 0 -22 L 26.5 -2.5 L 30 0 Q 22.5 -3 15 0 Q 7.5 -3 0 0 Q -7.5 -3 -15 0 Q -22.5 -3 -30 0 Z M -16 -9.5 Q -13 -7.5 -10 -9.5 Q -7 -7.5 -4 -9.5 M 4 -9.5 Q 7 -7.5 10 -9.5 Q 13 -7.5 16 -9.5"
+      },
+      "rim": [
+        -30,
+        0,
+        30,
+        0
+      ]
+    },
+    {
+      "id": "insuly",
+      "motif": {
+        "en": "Fluffy insulation rosette",
+        "de": "Flauschige Dämmrosette"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M 17.5 -20 Q 21.13 -14.34 15.15 -11.25 Q 15.46 -4.54 8.75 -4.85 Q 5.66 1.13 0 -2.5 Q -5.66 1.13 -8.75 -4.85 Q -15.46 -4.54 -15.15 -11.25 Q -21.13 -14.34 -17.5 -20 Q -21.13 -25.66 -15.15 -28.75 Q -15.46 -35.46 -8.75 -35.15 Q -5.66 -41.13 0 -37.5 Q 5.66 -41.13 8.75 -35.15 Q 15.46 -35.46 15.15 -28.75 Q 21.13 -25.66 17.5 -20 Z M 0 -23.5 A 3.5 3.5 0 1 1 0 -16.5 A 3.5 3.5 0 1 1 0 -23.5 Z"
+      },
+      "rim": [
+        -17.5,
+        -20,
+        17.5,
+        -20
+      ]
+    },
+    {
+      "id": "shady",
+      "motif": {
+        "en": "Shading parasol",
+        "de": "Sonnenschutzschirm"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -18 0 Q -18 -16 0 -16 Q 18 -16 18 0 Q 13.5 2.8 9 0 Q 4.5 2.8 0 0 Q -4.5 2.8 -9 0 Q -13.5 2.8 -18 0 Z M -9 0 Q -10 -9 -5.5 -14.5 M 9 0 Q 10 -9 5.5 -14.5 M 0 0 V -16"
+      },
+      "rim": [
+        -18,
+        0,
+        18,
+        0
+      ]
+    },
+    {
+      "id": "venty",
+      "motif": {
+        "en": "Ventilation grille with fan",
+        "de": "Lüftungsgitter mit Ventilator"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -30 0 L -30 -12 L -18 -25 L 18 -25 L 30 -12 L 30 0 Z M -11 -12 A 11 11 0 1 1 11 -12 A 11 11 0 1 1 -11 -12 Z M 0 -12 Q -9 -23 -9 -14 Q -7 -8 0 -12 M 0 -12 Q 11 -21 6 -10 Q 3 -7 0 -12 M 0 -12 Q -2 0 -6 -5 Q -8 -9 0 -12 M -25 -5 V -12 M -21 -5 V -16 M 21 -5 V -16 M 25 -5 V -12"
+      },
+      "rim": [
+        -30,
+        0,
+        30,
+        0
+      ]
+    },
+    {
+      "id": "chilly",
+      "motif": {
+        "en": "Snowflake",
+        "de": "Schneeflocke"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M 17 -15 L 3.64 -12.9 L 8.5 -0.28 L 0 -10.8 L -8.5 -0.28 L -3.64 -12.9 L -17 -15 L -3.64 -17.1 L -8.5 -29.72 L 0 -19.2 L 8.5 -29.72 L 3.64 -17.1 Z M 12.25 -11.1 L 10 -15 L 12.25 -18.9 M 2.75 -2.44 L 5 -6.34 L 9.5 -6.34 M -9.5 -6.34 L -5 -6.34 L -2.75 -2.44 M -12.25 -18.9 L -10 -15 L -12.25 -11.1 M -2.75 -27.56 L -5 -23.66 L -9.5 -23.66 M 9.5 -23.66 L 5 -23.66 L 2.75 -27.56"
+      },
+      "rim": [
+        -17,
+        -15,
+        17,
+        -15
+      ]
+    },
+    {
+      "id": "kettly",
+      "motif": {
+        "en": "Kettle lid",
+        "de": "Wasserkocherdeckel"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -20 0 Q 0 -22 20 0 Z M -22 0.5 L 22 0.5 M -3 -10.5 Q -3 -14.5 0 -14.5 Q 3 -14.5 3 -10.5 Z"
+      },
+      "rim": [
+        -22,
+        0.5,
+        22,
+        0.5
+      ]
+    },
+    {
+      "id": "flamy",
+      "motif": {
+        "en": "Candle lantern",
+        "de": "Kerzenlaterne"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -11 0 L -11 -20 Q -11 -26 0 -26 Q 11 -26 11 -20 L 11 0 Z M -11 -9 L 11 -9 M -11 -17 L 11 -17"
+      },
+      "rim": [
+        -11,
+        0,
+        11,
+        0
+      ]
+    },
+    {
+      "id": "thermy",
+      "motif": {
+        "en": "Temperature chart",
+        "de": "Temperaturkurve"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -17 0 Q -15 -13 0 -14 Q 15 -13 17 0 Q 0 -4 -17 0 Z M -8.5 -1.6 L -8 -12.6 M 0 -2 L 0 -14 M 8.5 -1.6 L 8 -12.6 M -14.5 -6.5 Q 0 -10.5 14.5 -6.5 M -12 -4 L -6 -9 L 0 -6 L 6 -11 L 11 -8"
+      },
+      "rim": [
+        -17,
+        0,
+        17,
+        0
+      ]
+    },
+    {
+      "id": "servy",
+      "motif": {
+        "en": "Server rack with status lights",
+        "de": "Serverrack mit Statusleuchten"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -30 0 L -30 -24 L 30 -24 L 30 0 Z M -26 -18 H 26 M -26 -10 H 26 M -26 -3 H 26 M -20 -21 H 10 M -20 -14 H 10 M -20 -6 H 10 M 18 -21 L 22 -21 M 18 -14 L 22 -14 M 18 -6 L 22 -6 M -26 -24 V 0 M 26 -24 V 0"
+      },
+      "rim": [
+        -30,
+        0,
+        30,
+        0
+      ]
+    },
+    {
+      "id": "rhino",
+      "motif": {
+        "en": "Rhinoceros horn and hide",
+        "de": "Nashornhorn und Hautfalten"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -32 0 C -32 -12 -24 -20 -12 -22 L -6 -33 L -1 -24 C 14 -28 29 -18 32 0 Q 0 -5 -32 0 Z M -25 -4 Q -17 -13 -8 -11 M 0 -7 Q 8 -18 20 -10 M -13 -21 Q -9 -16 -5 -17"
+      },
+      "rim": [
+        -32,
+        0,
+        32,
+        0
+      ]
+    },
+    {
+      "id": "grasshopper",
+      "motif": {
+        "en": "Paired grasshopper wings",
+        "de": "Gepaarte Grashüpferflügel"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -30 0 Q -25 -26 -8 -20 L 0 -7 L 8 -20 Q 25 -26 30 0 Q 0 -4 -30 0 Z M -26 -2 L -11 -18 M -22 -7 L -13 -7 M -18 -13 L -10 -13 M 26 -2 L 11 -18 M 22 -7 L 13 -7 M 18 -13 L 10 -13"
+      },
+      "rim": [
+        -30,
+        0,
+        30,
+        0
+      ]
+    },
+    {
+      "id": "slider",
+      "motif": {
+        "en": "Slider track and thumb",
+        "de": "Schiebereglerbahn und Griff"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -32 0 V -9 Q -32 -15 -26 -15 H 26 Q 32 -15 32 -9 V 0 Z M -26 -7 H -9 M 9 -7 H 26 M -8 -2 V -19 H 8 V -2 Z M -3 -5 V -15 M 3 -5 V -15"
+      },
+      "rim": [
+        -32,
+        0,
+        32,
+        0
+      ]
+    },
+    {
+      "id": "colour-wheel",
+      "motif": {
+        "en": "Segmented colour-wheel fan",
+        "de": "Segmentierter Farbradfächer"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -28 0 A 28 28 0 0 1 28 0 Z M 0 0 V -28 M 0 0 L -24 -14 M 0 0 L -14 -24 M 0 0 L 14 -24 M 0 0 L 24 -14 M -12 0 A 12 12 0 0 1 12 0"
+      },
+      "rim": [
+        -28,
+        0,
+        28,
+        0
+      ]
+    },
+    {
+      "id": "workbook",
+      "motif": {
+        "en": "Open workbook pages",
+        "de": "Aufgeschlagene Arbeitsmappe"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -30 0 L -30 -21 Q -14 -25 0 -16 Q 14 -25 30 -21 L 30 0 Q 15 -4 0 2 Q -15 -4 -30 0 Z M 0 -16 V 2 M -24 -16 Q -14 -18 -6 -13 M -24 -9 Q -14 -11 -6 -6 M 24 -16 Q 14 -18 6 -13 M 24 -9 Q 14 -11 6 -6"
+      },
+      "rim": [
+        -30,
+        0,
+        30,
+        0
+      ]
+    },
+    {
+      "id": "worksheet",
+      "motif": {
+        "en": "Folded worksheet with rows",
+        "de": "Gefaltetes Tabellenblatt mit Zeilen"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -24 0 L -24 -25 L 10 -25 L 24 -11 L 24 0 Z M 10 -25 V -11 H 24 M -18 -18 H 4 M -18 -11 H 4 M -18 -4 H 18 M -9 -21 V -1 M 0 -21 V -1"
+      },
+      "rim": [
+        -24,
+        0,
+        24,
+        0
+      ]
+    },
+    {
+      "id": "cell",
+      "motif": {
+        "en": "Selected spreadsheet cell",
+        "de": "Ausgewählte Tabellenzelle"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -23 0 V -18 H 23 V 0 Z M -19 -3 V -15 H 19 V -3 Z M -12 -7 H 10 M -12 -11 H 4 M 18 -4 H 23 V 0 H 18 Z"
+      },
+      "rim": [
+        -23,
+        0,
+        23,
+        0
+      ]
+    },
+    {
+      "id": "formula",
+      "motif": {
+        "en": "Formula ribbon with function sign",
+        "de": "Formelband mit Funktionszeichen"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -30 0 Q -34 -10 -25 -20 Q 0 -25 25 -20 Q 34 -10 30 0 Z M -19 -4 Q -25 -10 -19 -16 M 19 -4 Q 25 -10 19 -16 M 6 -18 Q -2 -24 -4 -14 L -7 -3 M -12 -12 H 9 M 11 -9 L 16 -4 M 16 -9 L 11 -4"
+      },
+      "rim": [
+        -30,
+        0,
+        30,
+        0
+      ]
+    },
+    {
+      "id": "double-curved-surface",
+      "motif": {
+        "en": "Twisted double-curved ribbon",
+        "de": "Verdrehtes doppelt gekrümmtes Band"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -30 0 C -31 -23 -9 -30 0 -14 C 9 2 29 -4 30 -23 L 32 0 C 10 -5 -12 3 -30 0 Z M -23 -2 C -22 -17 -11 -21 2 -10 M -14 -2 C -11 -14 -3 -13 8 -7 M -27 -10 C -9 -20 11 4 30 -14"
+      },
+      "rim": [
+        -30,
+        0,
+        32,
+        0
+      ]
+    },
+    {
+      "id": "continuous-parameter",
+      "motif": {
+        "en": "Smooth parameter wave",
+        "de": "Stetige Parameterwelle"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -30 0 C -22 -24 -13 -4 -3 -20 C 8 -36 23 -6 30 0 Q 0 -6 -30 0 Z M -24 -4 C -16 -20 -8 -6 1 -18 C 10 -27 19 -8 24 -4 M -18 -3 V -8 M -6 -3 V -10 M 6 -3 V -13 M 18 -3 V -8"
+      },
+      "rim": [
+        -30,
+        0,
+        30,
+        0
+      ]
+    },
+    {
+      "id": "discrete-parameter",
+      "motif": {
+        "en": "Discrete parameter steps",
+        "de": "Diskrete Parameterstufen"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -30 0 V -8 H -20 V -16 H -8 V -24 H 8 V -16 H 20 V -8 H 30 V 0 Z M -24 -2 V -5 M -15 -2 V -12 M 0 -2 V -20 M 15 -2 V -12 M 24 -2 V -5"
+      },
+      "rim": [
+        -30,
+        0,
+        30,
+        0
+      ]
+    },
+    {
+      "id": "execution-plan",
+      "motif": {
+        "en": "BIM workflow clipboard",
+        "de": "BIM-Ablaufplan-Klemmbrett"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -30 0 V -18 H -18 V -24 H 18 V -18 H 30 V 0 Z M -24 -5 V -12 H -12 V -5 Z M -6 -5 V -12 H 6 V -5 Z M 12 -5 V -12 H 24 V -5 Z M -12 -9 H -6 M 6 -9 H 12 M -10 -19 H 10"
+      },
+      "rim": [
+        -30,
+        0,
+        30,
+        0
+      ]
+    },
+    {
+      "id": "model-3d",
+      "motif": {
+        "en": "Isometric building roof",
+        "de": "Isometrisches Gebäudedach"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -32 0 L -24 -14 L 0 -27 L 24 -14 L 32 0 L 0 -8 Z M -24 -14 L 0 -2 L 24 -14 M 0 -27 V -2 M -12 -8 V -18 M 12 -8 V -18"
+      },
+      "rim": [
+        -32,
+        0,
+        32,
+        0
+      ]
+    },
+    {
+      "id": "plan-2d",
+      "motif": {
+        "en": "Floor-plan rooms and doorway",
+        "de": "Grundrissräume und Türöffnung"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -31 0 V -22 H 31 V 0 Z M -25 -3 V -16 H 25 V -3 Z M -5 -16 V -3 M -25 -9 H -5 M 11 -16 V -10 M 11 -3 V -7 Q 18 -7 18 -14 M -1 -10 H 11"
+      },
+      "rim": [
+        -31,
+        0,
+        31,
+        0
+      ]
+    },
+    {
+      "id": "quantities",
+      "motif": {
+        "en": "Quantity ruler with tally marks",
+        "de": "Mengenskala mit Zählstrichen"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -32 0 L -30 -12 Q 0 -25 30 -12 L 32 0 Z M -27 -3 H 27 M -24 -3 V -10 M -16 -3 V -7 M -8 -3 V -10 M 0 -3 V -7 M 8 -3 V -10 M 16 -3 V -7 M 24 -3 V -10 M -9 -13 L -6 -19 M -4 -13 L -1 -19 M 1 -13 L 4 -19 M 6 -13 L 9 -19 M -10 -17 L 10 -15"
+      },
+      "rim": [
+        -32,
+        0,
+        32,
+        0
+      ]
+    },
+    {
+      "id": "pareto",
+      "motif": {
+        "en": "Pareto frontier with trade-off points",
+        "de": "Paretofront mit Abwägungspunkten"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -30 0 V -4 C -26 -19 -8 -26 10 -26 H 30 V 0 Z M -24 -3 C -20 -14 -7 -21 12 -21 H 24 M -20 -8 L -16 -8 M -8 -17 L -4 -17 M 10 -21 L 14 -21 M -24 -3 H 24"
+      },
+      "rim": [
+        -30,
+        0,
+        30,
+        0
+      ]
+    },
+    {
+      "id": "heatmap",
+      "motif": {
+        "en": "Heatmap tile mosaic",
+        "de": "Heatmap-Kachelmosaik"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -30 0 L -26 -16 L -14 -24 H 14 L 26 -16 L 30 0 Z M -26 -16 H 26 M -28 -8 H 28 M -14 -24 V 0 M 0 -24 V 0 M 14 -24 V 0 M -24 -12 L -18 -12 M -10 -20 L -4 -20 M 4 -4 L 10 -4 M 18 -12 L 24 -12"
+      },
+      "rim": [
+        -30,
+        0,
+        30,
+        0
+      ]
+    },
+    {
+      "id": "minimized-surface",
+      "motif": {
+        "en": "Minimum-surface saddle mesh",
+        "de": "Minimalflächen-Sattelnetz"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -30 0 Q -30 -27 -15 -24 Q 0 -4 15 -24 Q 30 -27 30 0 Q 0 -12 -30 0 Z M -24 -2 Q -20 -24 -12 -19 Q 0 -7 12 -19 Q 20 -24 24 -2 M -18 -3 Q -8 -11 0 -10 Q 8 -11 18 -3 M -27 -12 Q 0 -1 27 -12"
+      },
+      "rim": [
+        -30,
+        0,
+        30,
+        0
+      ]
+    },
+    {
+      "id": "bar-chart",
+      "motif": {
+        "en": "Column-chart skyline",
+        "de": "Säulendiagramm-Silhouette"
+      },
+      "shape": {
+        "kind": "path",
+        "d": "M -30 0 V -12 H -18 V -23 H -6 V -32 H 6 V -20 H 18 V -14 H 30 V 0 Z M -18 0 V -12 M -6 0 V -23 M 6 0 V -20 M 18 0 V -14 M -26 -7 H -22 M -14 -17 H -10 M -2 -26 H 2 M 10 -14 H 14 M 22 -8 H 26"
+      },
+      "rim": [
+        -30,
+        0,
+        30,
+        0
+      ]
+    }
+  ]
+}

@@ -10,10 +10,10 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fe
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dCombinationsModification;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ReplaceCombination, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
+pub fn diff(payload: &ReplaceCombination, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<Fem2dDiff> {
     let Some(existing) = base.combinations.iter().find(|combination| combination.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Combination \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
@@ -29,6 +29,6 @@ pub fn diff(payload: &ReplaceCombination, base: &Fem2dSnapshot) -> protocol::Mut
     if *existing == payload.new_combination {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Combination \"{}\" is already equal to the replacement value.", payload.id));
     }
-    protocol::MutationOutcome::new(Fem2dDiff { combinations: Some(Fem2dCombinationsDelta { modified: vec![Fem2dCombinationsModification { id: payload.id.clone(), patch: payload.new_combination.clone() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem2dDiff { combinations: Some(Fem2dCombinationsDelta { modified: vec![Fem2dCombinationsModification { id: payload.id.clone(), patch: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dCombinationPatch::replacement(existing, &payload.new_combination) }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

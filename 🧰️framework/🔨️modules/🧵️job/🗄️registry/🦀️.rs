@@ -95,6 +95,17 @@ impl<T: FixedOperationOwner, const CAPACITY: usize> FixedOperationRegistry<T, CA
         self.slots.get_mut(index)?.as_mut().filter(|entry| entry.key == key && !entry.closing).map(|entry| &mut entry.owner)
     }
 
+    /// 🧷️ Cleanup borrows the same exact owner even after cancellation marks its slot closing.
+    pub fn retained_owner_mut(&mut self,key:FixedOperationKey)->Option<&mut T>{let index=self.index(key);self.slots.get_mut(index)?.as_mut().filter(|entry|entry.key==key).map(|entry|&mut entry.owner)}
+
+    /// 🧮️ Quotes the next scheduler event or the exact currently selected close owner without moving custody.
+    pub fn close_demands_with(&self,quote:impl FnOnce(&T)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        if self.is_empty(){return Ok(Default::default())}
+        let Some(entry)=self.slots.get(self.close_cursor).and_then(Option::as_ref)else{return Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})};
+        if !entry.closing||entry.owner.terminal_is_empty(){return Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
+        quote(&entry.owner)
+    }
+
     pub fn get_operation(&self, operation: OperationId) -> Option<(FixedOperationKey, &T)> {
         self.slots.iter().flatten().find(|entry| entry.key.operation == operation && !entry.closing).map(|entry| (entry.key, &entry.owner))
     }

@@ -1,0 +1,16 @@
+{
+  "cases": [
+    {"id":"contained-member","selection":[[0,0],[10,0],[10,10],[0,10]],"entity":[[2,5],[8,5]],"holes":[],"enclosing":true,"expected":true},
+    {"id":"member-extends-outside","selection":[[0,0],[10,0],[10,10],[0,10]],"entity":[[-2,5],[12,5]],"holes":[],"enclosing":true,"expected":false},
+    {"id":"concave-enclosure-gap","selection":[[0,0],[10,0],[10,10],[7,10],[7,3],[3,3],[3,10],[0,10]],"entity":[[1,8],[9,8]],"holes":[],"enclosing":true,"expected":false},
+    {"id":"concave-box-enclosure-gap","selection":[[0,0],[10,0],[10,10],[7,10],[7,3],[3,3],[3,10],[0,10]],"entity":[[1,8],[9,8],[9,9],[1,9]],"holes":[],"enclosing":true,"expected":false},
+    {"id":"boundary-member","selection":[[0,0],[10,0],[10,10],[0,10]],"entity":[[0,0],[10,0]],"holes":[],"enclosing":true,"expected":true},
+    {"id":"crossing-member","selection":[[0,0],[10,0],[10,10],[0,10]],"entity":[[-2,5],[12,5]],"holes":[],"enclosing":false,"expected":true},
+    {"id":"enclosed-region","selection":[[0,0],[10,0],[10,10],[0,10]],"entity":[[2,2],[8,2],[8,8],[2,8]],"holes":[],"enclosing":true,"expected":true},
+    {"id":"region-outside-lasso","selection":[[0,0],[10,0],[10,10],[0,10]],"entity":[[-2,2],[8,2],[8,8],[-2,8]],"holes":[],"enclosing":true,"expected":false},
+    {"id":"selection-within-region","selection":[[3,3],[4,3],[4,4],[3,4]],"entity":[[0,0],[10,0],[10,10],[0,10]],"holes":[],"enclosing":false,"expected":true},
+    {"id":"selection-within-hole","selection":[[3,3],[4,3],[4,4],[3,4]],"entity":[[0,0],[10,0],[10,10],[0,10]],"holes":[[[2,2],[8,2],[8,8],[2,8]]],"enclosing":false,"expected":false},
+    {"id":"region-edges-cross-without-contained-corners","selection":[[4,-2],[6,-2],[6,12],[4,12]],"entity":[[0,4],[10,4],[10,6],[0,6]],"holes":[],"enclosing":false,"expected":true},
+    {"id":"disjoint-triangle-bounds-overlap","selection":[[7,7],[9,7],[9,9],[7,9]],"entity":[[0,0],[10,0],[0,10]],"holes":[],"enclosing":false,"expected":false}
+  ]
+}

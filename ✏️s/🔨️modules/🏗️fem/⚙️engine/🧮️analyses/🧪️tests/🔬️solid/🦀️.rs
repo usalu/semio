@@ -1,6 +1,6 @@
 use semio_s_fem_algebra::*;
-use semio_s_fem_elements3d::*;
-use semio_s_fem_model::*;
+use semio_s_fem_algebra::*;
+use semio_s_fem_algebra::*;
 use semio_s_fem_static::Elements;
 
 /// 🧮️ Linear displacement field `u=ux·x+uy·y+uz·z` (and analogous `v`,`w`) shared by the Tet4/Hex8
@@ -220,7 +220,8 @@ fn hex8_rigid_translation_gives_zero_force() {
 /// past what the dense `solve_linear_static` path is meant for). Returns the mean tip `Tz`.
 fn hex8_cantilever_tip_deflection(nx: usize, ny: usize, nz: usize) -> f64 {
     use crate::solve_multi_case;
-    use semio_s_fem_analyses_model::{AnalysisModel, LoadCase};
+    use semio_s_fem_analyses_model::AnalysisModel;
+    use semio_s_fem_analyses_model::LoadCase;
     let (e, nu) = (200e9, 0.3);
     let (length, width, height) = (4.0_f64, 1.0_f64, 2.0_f64);
     let id = |i: usize, j: usize, k: usize| format!("n{i}_{j}_{k}");

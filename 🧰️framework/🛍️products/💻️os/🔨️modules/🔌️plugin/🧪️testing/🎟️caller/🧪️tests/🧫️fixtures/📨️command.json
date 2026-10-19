@@ -1,0 +1,26 @@
+{
+  "cases": [
+    {
+      "variant": "Noop",
+      "action": "fixture.noop",
+      "value": 0,
+      "expectedArgs": null
+    },
+    {
+      "variant": "Set",
+      "action": "fixture.set",
+      "value": 7,
+      "expectedArgs": {
+        "value": 7
+      }
+    },
+    {
+      "variant": "Set",
+      "action": "fixture.set",
+      "value": 42,
+      "expectedArgs": {
+        "value": 42
+      }
+    }
+  ]
+}

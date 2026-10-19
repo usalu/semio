@@ -27,6 +27,20 @@ pub fn clear_default_app(dialect: ArtifactDialect, role: AppRole) -> OpeningConf
 impl MutationKind<OpeningPreferences, OpeningConfigMutation> for ClearDefaultApp {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "clear", entity: "default-app", kind: "clear-default-app", record: "Cleared" };
 
+
+
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Clear default {} for \"{}\"", role_name(self.role), format!("{} ({}, {})",self.dialect.artifact_kind,self.dialect.standard,self.dialect.subset)), &format!("Standard-{} für \"{}\" entfernen", role_name_de(self.role), format!("{} ({}, {})",self.dialect.artifact_kind,self.dialect.standard,self.dialect.subset)))
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec![self.dialect.artifact_kind.clone(),self.dialect.standard.clone(),self.dialect.subset.clone(),role_name(self.role).to_string()]
+    }
+}
+
+impl crate::os_spr::ColdMutationKind<OpeningPreferences, OpeningConfigMutation> for ClearDefaultApp {
     fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningDiff> {
         if !base.defaults.iter().any(|entry| entry.dialect == self.dialect && entry.role == self.role) {
             let role = role_name(self.role);
@@ -34,7 +48,6 @@ impl MutationKind<OpeningPreferences, OpeningConfigMutation> for ClearDefaultApp
         }
         MutationOutcome::new(OpeningDiff { pins: vec![DefaultAppPin { dialect: self.dialect.clone(), role: self.role, app: None }] })
     }
-
     fn inverse(&self, base: &OpeningPreferences) -> Result<Vec<OpeningConfigMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         base.defaults
@@ -45,14 +58,6 @@ impl MutationKind<OpeningPreferences, OpeningConfigMutation> for ClearDefaultApp
     
     })())
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Clear default {} for \"{}\"", role_name(self.role), format!("{} ({}, {})",self.dialect.artifact_kind,self.dialect.standard,self.dialect.subset)), &format!("Standard-{} für \"{}\" entfernen", role_name_de(self.role), format!("{} ({}, {})",self.dialect.artifact_kind,self.dialect.standard,self.dialect.subset)))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.dialect.artifact_kind.clone(),self.dialect.standard.clone(),self.dialect.subset.clone(),role_name(self.role).to_string()]
-    }
 }
 
 fn role_name(role: AppRole) -> &'static str {

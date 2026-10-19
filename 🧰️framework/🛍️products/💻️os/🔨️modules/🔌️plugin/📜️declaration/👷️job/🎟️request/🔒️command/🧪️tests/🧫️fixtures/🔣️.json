@@ -1,0 +1,45 @@
+{
+  "schema": "semio.plugin.original-command-wire.v1",
+  "commands": [
+    {
+      "channel": 0,
+      "text": ""
+    },
+    {
+      "channel": 0,
+      "text": "größer"
+    },
+    {
+      "channel": 1,
+      "text": "🧩️日本語"
+    },
+    {
+      "channel": 1,
+      "text": "\"\\\n"
+    }
+  ],
+  "cases": [
+    {
+      "relation": "same",
+      "extent": "exact",
+      "admitted": true
+    },
+    {
+      "relation": "same",
+      "extent": "minusOne",
+      "admitted": false
+    },
+    {
+      "relation": "differentWire",
+      "extent": "exact",
+      "admitted": false
+    },
+    {
+      "relation": "differentSource",
+      "extent": "exact",
+      "admitted": false
+    }
+  ],
+  "mutable": false,
+  "cloneable": false
+}

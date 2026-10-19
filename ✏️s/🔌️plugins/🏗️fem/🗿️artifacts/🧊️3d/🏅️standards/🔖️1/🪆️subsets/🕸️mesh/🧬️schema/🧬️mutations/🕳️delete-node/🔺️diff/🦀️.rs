@@ -11,10 +11,10 @@ use super::DeleteNode;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dNodesDelta;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dNodeRemoval;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &DeleteNode, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {
+pub fn diff(payload: &DeleteNode, base: &Fem3dSnapshotValue) -> protocol::MutationOutcome<Fem3dDiff> {
     let Some(at) = base.nodes.iter().position(|node| node.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

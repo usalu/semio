@@ -130,7 +130,7 @@ impl Ui {
             }
             if session.poll() == semio_framework_job_worker::WorkerJobPoll::CheckedOut {
                 if let Some(failure) = session.checked_out_failure() {
-                    let refusal=UiWorkerRetirementRefusal{stage:"Layout.WorkerRefusal",kind:failure.primary_value().map_or(semio_framework_value::ValueRefusalKind::InvariantViolated,|error|error.kind),progress:failure.primary.retained_progress()};
+                    let refusal=UiWorkerRetirementRefusal{stage:"Layout.WorkerRefusal",kind:failure.primary_value().map_or(semio_framework_value::ValueRefusalKind::InvariantViolated,|error|error.kind),progress:failure.retained_progress()};
                     window.layout_retirement_refusal = Some(refusal);
                     session.begin_close();
                     window.layout_closing = true;

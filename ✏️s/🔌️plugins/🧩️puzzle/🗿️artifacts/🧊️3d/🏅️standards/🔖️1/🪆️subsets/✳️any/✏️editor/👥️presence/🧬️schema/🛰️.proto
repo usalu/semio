@@ -1,28 +1,2 @@
 syntax = "proto3";
-package semio.app.puzzle.puzzle3d;
-message Puzzle3dPresence {
-  // @state presence
-  repeated string selected_object_ids = 1;
-  // @state presence
-  repeated string selected_vortex_ids = 2;
-  // @state presence
-  repeated string selected_attraction_ids = 3;
-  // @state presence
-  repeated string selected_target_volume_ids = 4;
-  // @state presence
-  repeated string selected_reference_ids = 5;
-  // @state presence
-  optional string hovered_object_id = 6;
-  // @state presence
-  optional string hovered_vortex_full_id = 7;
-  // @state presence
-  repeated double camera_position = 8;
-  // @state presence
-  repeated double camera_target = 9;
-  // @state presence
-  double camera_zoom = 10;
-  // @state presence
-  string active_utility_id = 11;
-  // @state presence
-  optional string active_tool_id = 12;
-}
+message Puzzle3dPresence {}

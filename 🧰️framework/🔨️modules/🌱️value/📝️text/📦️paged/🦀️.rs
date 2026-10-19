@@ -60,6 +60,7 @@ impl<const N:usize> PagedText<N>{
     }
 }
 impl<const N:usize> ErasedSnapshotRetirement for PagedText<N>{
+ fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{copy_bytes:usize::from(!self.bytes.is_empty()),release_bytes:if !self.bytes.is_empty(){0}else{self.bytes.next_release_allocation_bytes().map_err(error)?},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         let empty=RetainedCloneProgress::default();
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
@@ -84,6 +85,7 @@ impl<const N:usize> ErasedSnapshotRetirement for PagedText<N>{
 }
 struct PagedTextRetirement<const N:usize>{owner:PagedText<N>}
 impl<const N:usize> crate::retirement::RetirementCursor for PagedTextRetirement<N>{
+ fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{ErasedSnapshotRetirement::next_demand(&self.owner,body)}
     fn close_step(&mut self,grant:RetainedCloneGrant)->crate::retirement::RetirementStep{match self.owner.close_step(grant){Err(error)=>crate::retirement::RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>crate::retirement::RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>crate::retirement::RetirementStep::Progress(progress)}}
     fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.owner.next_copy_byte_demand()}

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../🧰️framework/🛍️products/❓️quiz/🧬️schema/🔣️.json#/$defs/Quiz",
+  "$schema": "../../../../../🧰️framework/🛍️products/📚️course/🧬️schema/🔣️.json#/$defs/Quiz",
   "schema": "semio.quiz/v1",
   "id": "physics",
   "emoji": "🧲",
@@ -24,8 +24,8 @@
         "motion": "pulse"
       },
       "prompt": {
-        "en": "Decide for each quantity whether it is a power (a rate: energy per unit of time, measured in watts) or an energy or energy demand (an amount, measured in watt-hours, joules or kilocalories; demands per year such as kWh/a count as energy demand).",
-        "de": "Entscheide für jede Größe, ob sie eine Leistung ist (Energie pro Zeit, gemessen in Watt) oder Arbeit (eine Energiemenge, gemessen in Wattstunden, Joule oder Kilokalorien; auch Jahresbedarfe wie kWh/a zählen dazu)."
+        "en": "Decide for each quantity whether it is a power (a rate: energy per unit of time, measured in watts) or an energy or energy demand (an amount, measured in watt-hours, joules or kilocalories; demands per year such as kWh/a count as energy demand). Allow about five minutes: compare every item, check units, and review your answer. New design examples use representative teaching estimates rather than universal limits.",
+        "de": "Entscheide für jede Größe, ob sie eine Leistung ist (Energie pro Zeit, gemessen in Watt) oder Arbeit (eine Energiemenge, gemessen in Wattstunden, Joule oder Kilokalorien; auch Jahresbedarfe wie kWh/a zählen dazu). Plane etwa fünf Minuten ein: Vergleiche alle Beispiele, prüfe die Einheiten und kontrolliere deine Antwort. Neue Auslegungsbeispiele verwenden typische Lehrannahmen statt allgemeingültiger Grenzwerte."
       },
       "categories": [
         {
@@ -359,9 +359,1062 @@
             "en": "Given in kWh per m² and year (German Buildings Energy Act, GEG, § 85): an energy demand related to floor area and one year, not a power.",
             "de": "Angegeben in kWh pro m² und Jahr (GEG § 85): Arbeit bezogen auf Fläche und Jahr, keine Leistung."
           }
+        },
+        {
+          "id": "led-desk-lamp-rate",
+          "label": {
+            "en": "LED desk lamp at typical operating brightness (rate of energy transfer)",
+            "de": "LED-Schreibtischlampe bei typischer Helligkeit (Energieumsatz pro Zeit)"
+          },
+          "icon": {
+            "emoji": "💡",
+            "motion": "bounce"
+          },
+          "category": "power",
+          "explanation": {
+            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
+            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+          },
+          "short": {
+            "en": "LED desk lamp",
+            "de": "LED-Schreibtischlampe"
+          }
+        },
+        {
+          "id": "ten-people-rate",
+          "label": {
+            "en": "Body heat from ten seated adults together (rate of energy transfer)",
+            "de": "Körperwärme von zehn sitzenden Erwachsenen zusammen (Energieumsatz pro Zeit)"
+          },
+          "icon": {
+            "emoji": "👥",
+            "motion": "bounce"
+          },
+          "category": "power",
+          "explanation": {
+            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
+            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+          },
+          "short": {
+            "en": "Body heat of ten seated adults",
+            "de": "Körperwärme von zehn Erwachsenen"
+          }
+        },
+        {
+          "id": "motorcycle-engine-rate",
+          "label": {
+            "en": "Touring motorcycle engine at rated output (rate of energy transfer)",
+            "de": "Tourenmotorrad bei Nennleistung (Energieumsatz pro Zeit)"
+          },
+          "icon": {
+            "emoji": "🏍️",
+            "motion": "bounce"
+          },
+          "category": "power",
+          "explanation": {
+            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
+            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+          },
+          "short": {
+            "en": "Touring motorcycle engine",
+            "de": "Tourenmotorradmotor"
+          }
+        },
+        {
+          "id": "offshore-turbine-rate",
+          "label": {
+            "en": "Large offshore wind turbine at rated wind (rate of energy transfer)",
+            "de": "Große Offshore-Windanlage bei Nennwind (Energieumsatz pro Zeit)"
+          },
+          "icon": {
+            "emoji": "🌬️",
+            "motion": "bounce"
+          },
+          "category": "power",
+          "explanation": {
+            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
+            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+          },
+          "short": {
+            "en": "Offshore wind turbine",
+            "de": "Offshore-Windanlage"
+          }
+        },
+        {
+          "id": "laptop-office-rate",
+          "label": {
+            "en": "Laptop doing ordinary office work (rate of energy transfer)",
+            "de": "Laptop bei gewöhnlicher Büroarbeit (Energieumsatz pro Zeit)"
+          },
+          "icon": {
+            "emoji": "💻",
+            "motion": "bounce"
+          },
+          "category": "power",
+          "explanation": {
+            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
+            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+          },
+          "short": {
+            "en": "Laptop doing ordinary office work",
+            "de": "Laptop bei gewöhnlicher Büroarbeit"
+          }
+        },
+        {
+          "id": "compact-hair-dryer-rate",
+          "label": {
+            "en": "Compact hair dryer on its warm setting (rate of energy transfer)",
+            "de": "Kompakter Haartrockner auf warmer Stufe (Energieumsatz pro Zeit)"
+          },
+          "icon": {
+            "emoji": "💨",
+            "motion": "bounce"
+          },
+          "category": "power",
+          "explanation": {
+            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
+            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+          },
+          "short": {
+            "en": "Compact hair dryer on its warm setting",
+            "de": "Kompakter Haartrockner auf warmer Stufe"
+          }
+        },
+        {
+          "id": "workshop-motor-rate",
+          "label": {
+            "en": "Large workshop electric drive motor (rate of energy transfer)",
+            "de": "Großer elektrischer Werkstattantrieb (Energieumsatz pro Zeit)"
+          },
+          "icon": {
+            "emoji": "⚙️",
+            "motion": "bounce"
+          },
+          "category": "power",
+          "explanation": {
+            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
+            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+          },
+          "short": {
+            "en": "Large workshop electric drive motor",
+            "de": "Großer elektrischer Werkstattantrieb"
+          }
+        },
+        {
+          "id": "industrial-compressor-rate",
+          "label": {
+            "en": "Large industrial compressor drive (rate of energy transfer)",
+            "de": "Großer industrieller Verdichterantrieb (Energieumsatz pro Zeit)"
+          },
+          "icon": {
+            "emoji": "⚙️",
+            "motion": "pulse"
+          },
+          "category": "power",
+          "explanation": {
+            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
+            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+          },
+          "short": {
+            "en": "Large industrial compressor drive",
+            "de": "Großer industrieller Verdichterantrieb"
+          }
+        },
+        {
+          "id": "incandescent-lamp-rate",
+          "label": {
+            "en": "Traditional incandescent room lamp (rate of energy transfer)",
+            "de": "Herkömmliche Raumglühlampe (Energieumsatz pro Zeit)"
+          },
+          "icon": {
+            "emoji": "💡",
+            "motion": "spin"
+          },
+          "category": "power",
+          "explanation": {
+            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
+            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+          },
+          "short": {
+            "en": "Traditional incandescent room lamp",
+            "de": "Herkömmliche Raumglühlampe"
+          }
+        },
+        {
+          "id": "electric-oven-rate",
+          "label": {
+            "en": "Domestic electric oven during heating (rate of energy transfer)",
+            "de": "Haushaltsbackofen während des Aufheizens (Energieumsatz pro Zeit)"
+          },
+          "icon": {
+            "emoji": "🍳",
+            "motion": "bounce"
+          },
+          "category": "power",
+          "explanation": {
+            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
+            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+          },
+          "short": {
+            "en": "Domestic electric oven during heating",
+            "de": "Haushaltsbackofen während des Aufheizens"
+          }
+        },
+        {
+          "id": "electric-car-drive-rate",
+          "label": {
+            "en": "Family electric car at rated drive output (rate of energy transfer)",
+            "de": "Familien-E-Auto bei Nennantriebsleistung (Energieumsatz pro Zeit)"
+          },
+          "icon": {
+            "emoji": "🚗",
+            "motion": "bounce"
+          },
+          "category": "power",
+          "explanation": {
+            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
+            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+          },
+          "short": {
+            "en": "Electric family-car drive",
+            "de": "Antrieb eines Familien-E-Autos"
+          }
+        },
+        {
+          "id": "thermal-unit-rate",
+          "label": {
+            "en": "Large thermal power-station electrical block (rate of energy transfer)",
+            "de": "Großer elektrischer Wärmekraftwerksblock (Energieumsatz pro Zeit)"
+          },
+          "icon": {
+            "emoji": "🏭",
+            "motion": "bounce"
+          },
+          "category": "power",
+          "explanation": {
+            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
+            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+          },
+          "short": {
+            "en": "Thermal power-station electrical block",
+            "de": "Elektrischer Wärmekraftwerksblock"
+          }
+        },
+        {
+          "id": "desk-fan-rate",
+          "label": {
+            "en": "Small desk fan at medium speed (rate of energy transfer)",
+            "de": "Kleiner Tischventilator bei mittlerer Drehzahl (Energieumsatz pro Zeit)"
+          },
+          "icon": {
+            "emoji": "🌀",
+            "motion": "bounce"
+          },
+          "category": "power",
+          "explanation": {
+            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
+            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+          },
+          "short": {
+            "en": "Desk fan at medium speed",
+            "de": "Tischventilator auf mittlerer Stufe"
+          }
+        },
+        {
+          "id": "sauna-heater-rate",
+          "label": {
+            "en": "Small domestic sauna heater (rate of energy transfer)",
+            "de": "Kleiner häuslicher Saunaofen (Energieumsatz pro Zeit)"
+          },
+          "icon": {
+            "emoji": "🧖",
+            "motion": "bounce"
+          },
+          "category": "power",
+          "explanation": {
+            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
+            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+          },
+          "short": {
+            "en": "Small domestic sauna heater",
+            "de": "Kleiner häuslicher Saunaofen"
+          }
+        },
+        {
+          "id": "fast-charger-rate",
+          "label": {
+            "en": "Public electric car fast charger (rate of energy transfer)",
+            "de": "Öffentlicher E-Auto-Schnelllader (Energieumsatz pro Zeit)"
+          },
+          "icon": {
+            "emoji": "🔌",
+            "motion": "pulse"
+          },
+          "category": "power",
+          "explanation": {
+            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
+            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+          },
+          "short": {
+            "en": "Public electric car fast charger",
+            "de": "Öffentlicher E-Auto-Schnelllader"
+          }
+        },
+        {
+          "id": "hydro-complex-rate",
+          "label": {
+            "en": "Large hydroelectric generating complex (rate of energy transfer)",
+            "de": "Großer Wasserkraftwerkskomplex (Energieumsatz pro Zeit)"
+          },
+          "icon": {
+            "emoji": "🌊",
+            "motion": "bounce"
+          },
+          "category": "power",
+          "explanation": {
+            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
+            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+          },
+          "short": {
+            "en": "Large hydroelectric generating complex",
+            "de": "Großer Wasserkraftwerkskomplex"
+          }
+        },
+        {
+          "id": "vacuum-cleaner-rate",
+          "label": {
+            "en": "Compact vacuum cleaner at rated input (rate of energy transfer)",
+            "de": "Kompakter Staubsauger bei Nennaufnahme (Energieumsatz pro Zeit)"
+          },
+          "icon": {
+            "emoji": "🧹",
+            "motion": "bounce"
+          },
+          "category": "power",
+          "explanation": {
+            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
+            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+          },
+          "short": {
+            "en": "Compact vacuum cleaner at rated input",
+            "de": "Kompakter Staubsauger bei Nennaufnahme"
+          }
+        },
+        {
+          "id": "instant-water-heater-rate",
+          "label": {
+            "en": "Three-phase instantaneous shower water heater (rate of energy transfer)",
+            "de": "Dreiphasiger Durchlauferhitzer für die Dusche (Energieumsatz pro Zeit)"
+          },
+          "icon": {
+            "emoji": "🚿",
+            "motion": "bounce"
+          },
+          "category": "power",
+          "explanation": {
+            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
+            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+          },
+          "short": {
+            "en": "Shower instantaneous water heater",
+            "de": "Dusch-Durchlauferhitzer"
+          }
+        },
+        {
+          "id": "hydro-generator-rate",
+          "label": {
+            "en": "Medium hydroelectric generator unit (rate of energy transfer)",
+            "de": "Mittlerer Wasserkraftgenerator (Energieumsatz pro Zeit)"
+          },
+          "icon": {
+            "emoji": "🌊",
+            "motion": "pulse"
+          },
+          "category": "power",
+          "explanation": {
+            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
+            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+          },
+          "short": {
+            "en": "Medium hydroelectric generator unit",
+            "de": "Mittlerer Wasserkraftgenerator"
+          }
+        },
+        {
+          "id": "wind-farm-rate",
+          "label": {
+            "en": "Large wind farm at combined rated output (rate of energy transfer)",
+            "de": "Großer Windpark bei summierter Nennleistung (Energieumsatz pro Zeit)"
+          },
+          "icon": {
+            "emoji": "🌬️",
+            "motion": "pulse"
+          },
+          "category": "power",
+          "explanation": {
+            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
+            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+          },
+          "short": {
+            "en": "Large wind farm at rated output",
+            "de": "Großer Windpark bei Nennleistung"
+          }
+        },
+        {
+          "id": "small-radiator-rate",
+          "label": {
+            "en": "Small electric resistance radiator (rate of energy transfer)",
+            "de": "Kleiner elektrischer Widerstandsheizkörper (Energieumsatz pro Zeit)"
+          },
+          "icon": {
+            "emoji": "♨️",
+            "motion": "bounce"
+          },
+          "category": "power",
+          "explanation": {
+            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
+            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+          },
+          "short": {
+            "en": "Electric resistance radiator",
+            "de": "Elektrischer Widerstandsheizkörper"
+          }
+        },
+        {
+          "id": "small-house-heat-rate",
+          "label": {
+            "en": "Design heating load of a moderately insulated house (rate of energy transfer)",
+            "de": "Heizlast eines mäßig gedämmten Hauses (Energieumsatz pro Zeit)"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "bounce"
+          },
+          "category": "power",
+          "explanation": {
+            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
+            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+          },
+          "short": {
+            "en": "House design heating load",
+            "de": "Auslegungsheizlast eines Wohnhauses"
+          }
+        },
+        {
+          "id": "electric-locomotive-rate",
+          "label": {
+            "en": "Electric main-line locomotive at full output (rate of energy transfer)",
+            "de": "Elektrische Streckenlokomotive unter Volllast (Energieumsatz pro Zeit)"
+          },
+          "icon": {
+            "emoji": "🚂",
+            "motion": "bounce"
+          },
+          "category": "power",
+          "explanation": {
+            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
+            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+          },
+          "short": {
+            "en": "Main-line locomotive at full output",
+            "de": "Streckenlokomotive unter Volllast"
+          }
+        },
+        {
+          "id": "reactor-heat-rate",
+          "label": {
+            "en": "Thermal output of a large reactor block (rate of energy transfer)",
+            "de": "Thermische Leistung eines großen Reaktorblocks (Energieumsatz pro Zeit)"
+          },
+          "icon": {
+            "emoji": "🏭",
+            "motion": "pulse"
+          },
+          "category": "power",
+          "explanation": {
+            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
+            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+          },
+          "short": {
+            "en": "Reactor block thermal output",
+            "de": "Thermische Leistung eines Reaktorblocks"
+          }
+        },
+        {
+          "id": "laptop-battery-amount",
+          "label": {
+            "en": "Full ordinary laptop battery (total energy)",
+            "de": "Voller gewöhnlicher Laptopakku (gesamte Energiemenge)"
+          },
+          "icon": {
+            "emoji": "🔋",
+            "motion": "bounce"
+          },
+          "category": "energy",
+          "explanation": {
+            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
+            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+          },
+          "short": {
+            "en": "Full ordinary laptop battery",
+            "de": "Voller gewöhnlicher Laptopakku"
+          }
+        },
+        {
+          "id": "kettle-half-hour-amount",
+          "label": {
+            "en": "Energy used by a 2 kW kettle in half an hour (total energy)",
+            "de": "Energie eines 2-kW-Wasserkochers in einer halben Stunde (gesamte Energiemenge)"
+          },
+          "icon": {
+            "emoji": "🫖",
+            "motion": "pulse"
+          },
+          "category": "energy",
+          "explanation": {
+            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
+            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+          },
+          "short": {
+            "en": "Half-hour kettle electricity",
+            "de": "Halbstundenstrom eines Wasserkochers"
+          }
+        },
+        {
+          "id": "small-ev-battery-amount",
+          "label": {
+            "en": "Full small electric car battery (total energy)",
+            "de": "Voller kleiner E-Auto-Akku (gesamte Energiemenge)"
+          },
+          "icon": {
+            "emoji": "🔋",
+            "motion": "pulse"
+          },
+          "category": "energy",
+          "explanation": {
+            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
+            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+          },
+          "short": {
+            "en": "Full small electric car battery",
+            "de": "Voller kleiner E-Auto-Akku"
+          }
+        },
+        {
+          "id": "home-pump-year-amount",
+          "label": {
+            "en": "Annual electricity for a 1 kW device running 2,000 hours (total energy)",
+            "de": "Jahresstrom für ein 1-kW-Gerät über 2.000 Stunden (gesamte Energiemenge)"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "spin"
+          },
+          "category": "energy",
+          "explanation": {
+            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
+            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+          },
+          "short": {
+            "en": "Annual electricity of a small pump",
+            "de": "Jahresstrom einer kleinen Pumpe"
+          }
+        },
+        {
+          "id": "camera-battery-amount",
+          "label": {
+            "en": "Full digital camera battery (total energy)",
+            "de": "Voller Digitalkameraakku (gesamte Energiemenge)"
+          },
+          "icon": {
+            "emoji": "📷",
+            "motion": "bounce"
+          },
+          "category": "energy",
+          "explanation": {
+            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
+            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+          },
+          "short": {
+            "en": "Full digital camera battery",
+            "de": "Voller Digitalkameraakku"
+          }
+        },
+        {
+          "id": "people-day-amount",
+          "label": {
+            "en": "Heat from ten seated adults over one hour at 100 W each (total energy)",
+            "de": "Wärme von zehn sitzenden Erwachsenen in einer Stunde bei je 100 W (gesamte Energiemenge)"
+          },
+          "icon": {
+            "emoji": "👥",
+            "motion": "pulse"
+          },
+          "category": "energy",
+          "explanation": {
+            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
+            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+          },
+          "short": {
+            "en": "Hourly heat from ten adults",
+            "de": "Stundenwärme von zehn Erwachsenen"
+          }
+        },
+        {
+          "id": "large-ev-battery-amount",
+          "label": {
+            "en": "Full large electric car battery (total energy)",
+            "de": "Voller großer E-Auto-Akku (gesamte Energiemenge)"
+          },
+          "icon": {
+            "emoji": "🔋",
+            "motion": "spin"
+          },
+          "category": "energy",
+          "explanation": {
+            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
+            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+          },
+          "short": {
+            "en": "Full large electric car battery",
+            "de": "Voller großer E-Auto-Akku"
+          }
+        },
+        {
+          "id": "home-pv-year-amount",
+          "label": {
+            "en": "Annual yield of a 3 kWp array at 950 full-load hours (total energy)",
+            "de": "Jahresertrag einer 3-kWp-Anlage bei 950 Volllaststunden (gesamte Energiemenge)"
+          },
+          "icon": {
+            "emoji": "🔆",
+            "motion": "bounce"
+          },
+          "category": "energy",
+          "explanation": {
+            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
+            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+          },
+          "short": {
+            "en": "Small domestic solar annual yield",
+            "de": "Jahresertrag einer kleinen Haus-PV"
+          }
+        },
+        {
+          "id": "half-litre-water-amount",
+          "label": {
+            "en": "Heat half a litre of water from 20 °C to boiling (total energy)",
+            "de": "Einen halben Liter Wasser von 20 °C zum Kochen erwärmen (gesamte Energiemenge)"
+          },
+          "icon": {
+            "emoji": "🫖",
+            "motion": "spin"
+          },
+          "category": "energy",
+          "explanation": {
+            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
+            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+          },
+          "short": {
+            "en": "Half-litre water heating",
+            "de": "Erwärmter halber Liter Wasser"
+          }
+        },
+        {
+          "id": "petrol-litre-amount",
+          "label": {
+            "en": "Energy in one litre of petrol (total energy)",
+            "de": "Energie in einem Liter Benzin (gesamte Energiemenge)"
+          },
+          "icon": {
+            "emoji": "⛽",
+            "motion": "bounce"
+          },
+          "category": "energy",
+          "explanation": {
+            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
+            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+          },
+          "short": {
+            "en": "Energy in one litre of petrol",
+            "de": "Energie in einem Liter Benzin"
+          }
+        },
+        {
+          "id": "diesel-tank-amount",
+          "label": {
+            "en": "Energy in a full 40-litre diesel tank (total energy)",
+            "de": "Energie in einer vollen 40-Liter-Dieseltankfüllung (gesamte Energiemenge)"
+          },
+          "icon": {
+            "emoji": "⛽",
+            "motion": "pulse"
+          },
+          "category": "energy",
+          "explanation": {
+            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
+            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+          },
+          "short": {
+            "en": "Full forty-litre diesel tank",
+            "de": "Voller Vierzig-Liter-Dieseltank"
+          }
+        },
+        {
+          "id": "retrofit-house-year-amount",
+          "label": {
+            "en": "Annual useful heating of a 150 m² retrofit at 100 kWh/(m²·a) (total energy)",
+            "de": "Jahresnutzwärme einer 150-m²-Sanierung bei 100 kWh/(m²·a) (gesamte Energiemenge)"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "sway"
+          },
+          "category": "energy",
+          "explanation": {
+            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
+            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+          },
+          "short": {
+            "en": "Retrofit-house annual useful heat",
+            "de": "Jahresnutzwärme eines sanierten Hauses"
+          }
+        },
+        {
+          "id": "usb-power-bank-amount",
+          "label": {
+            "en": "Energy in a fully charged 20 Ah USB power bank at 3.7 V (total energy)",
+            "de": "Energie in voller 20-Ah-USB-Powerbank bei 3,7 V (gesamte Energiemenge)"
+          },
+          "icon": {
+            "emoji": "🔋",
+            "motion": "sway"
+          },
+          "category": "energy",
+          "explanation": {
+            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
+            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+          },
+          "short": {
+            "en": "Full twenty-amp-hour USB power bank",
+            "de": "Volle Zwanzig-Amperestunden-Powerbank"
+          }
+        },
+        {
+          "id": "wood-pellets-amount",
+          "label": {
+            "en": "Energy in two kilograms of dry wood pellets (total energy)",
+            "de": "Energie in zwei Kilogramm trockenen Holzpellets (gesamte Energiemenge)"
+          },
+          "icon": {
+            "emoji": "🪵",
+            "motion": "bounce"
+          },
+          "category": "energy",
+          "explanation": {
+            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
+            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+          },
+          "short": {
+            "en": "Two kilograms of dry wood pellets",
+            "de": "Zwei Kilogramm trockene Holzpellets"
+          }
+        },
+        {
+          "id": "heat-pump-day-amount",
+          "label": {
+            "en": "Useful heat from a 5 kW heater running for 24 hours (total energy)",
+            "de": "Nutzwärme einer 5-kW-Heizung über 24 Stunden (gesamte Energiemenge)"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "float"
+          },
+          "category": "energy",
+          "explanation": {
+            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
+            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+          },
+          "short": {
+            "en": "Full day of five-kilowatt useful heat",
+            "de": "Tageswärme einer Fünf-Kilowatt-Heizung"
+          }
+        },
+        {
+          "id": "school-heat-year-amount",
+          "label": {
+            "en": "Annual heating for a 500 m² school wing at 80 kWh/(m²·a) (total energy)",
+            "de": "Jahresheizung eines 500-m²-Schulflügels bei 80 kWh/(m²·a) (gesamte Energiemenge)"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "flip"
+          },
+          "category": "energy",
+          "explanation": {
+            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
+            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+          },
+          "short": {
+            "en": "Annual heating for a 500 m² school wing",
+            "de": "Jahresheizung eines 500-m²-Schulflügels"
+          }
+        },
+        {
+          "id": "radiator-hour-amount",
+          "label": {
+            "en": "Energy used by a 1 kW radiator in one hour (total energy)",
+            "de": "Energie eines 1-kW-Heizkörpers in einer Stunde (gesamte Energiemenge)"
+          },
+          "icon": {
+            "emoji": "♨️",
+            "motion": "pulse"
+          },
+          "category": "energy",
+          "explanation": {
+            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
+            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+          },
+          "short": {
+            "en": "Radiator electricity over an hour",
+            "de": "Strom einer Heizkörperstunde"
+          }
+        },
+        {
+          "id": "radiator-day-amount",
+          "label": {
+            "en": "Energy used by a 1 kW radiator over ten hours (total energy)",
+            "de": "Energie eines 1-kW-Heizkörpers über zehn Stunden (gesamte Energiemenge)"
+          },
+          "icon": {
+            "emoji": "♨️",
+            "motion": "spin"
+          },
+          "category": "energy",
+          "explanation": {
+            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
+            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+          },
+          "short": {
+            "en": "Ten hours of radiator electricity",
+            "de": "Strom von zehn Heizkörperstunden"
+          }
+        },
+        {
+          "id": "single-household-year-amount",
+          "label": {
+            "en": "Annual electricity use of a one-person household, teaching estimate (total energy)",
+            "de": "Jahresstromverbrauch eines Einpersonenhaushalts, Lehrannahme (gesamte Energiemenge)"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "bounce"
+          },
+          "category": "energy",
+          "explanation": {
+            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
+            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+          },
+          "short": {
+            "en": "Single-person annual electricity",
+            "de": "Jahresstrom eines Einpersonenhaushalts"
+          }
+        },
+        {
+          "id": "roof-pv-year-amount",
+          "label": {
+            "en": "Annual yield of a 30 kWp roof at 1,000 full-load hours (total energy)",
+            "de": "Jahresertrag eines 30-kWp-Dachs bei 1.000 Volllaststunden (gesamte Energiemenge)"
+          },
+          "icon": {
+            "emoji": "🔆",
+            "motion": "spin"
+          },
+          "category": "energy",
+          "explanation": {
+            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
+            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+          },
+          "short": {
+            "en": "Annual rooftop photovoltaic yield",
+            "de": "Jahresertrag einer Dach-PV-Anlage"
+          }
+        },
+        {
+          "id": "rice-food-amount",
+          "label": {
+            "en": "Food energy of a 100 g serving of dry rice (total energy)",
+            "de": "Nahrungsenergie von 100 g trockenem Reis (gesamte Energiemenge)"
+          },
+          "icon": {
+            "emoji": "🍚",
+            "motion": "bounce"
+          },
+          "category": "energy",
+          "explanation": {
+            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
+            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+          },
+          "short": {
+            "en": "Dry rice serving food energy",
+            "de": "Nahrungsenergie einer Trockenreisportion"
+          }
+        },
+        {
+          "id": "hot-water-store-amount",
+          "label": {
+            "en": "Heat stored in 200 litres of water over a 40 K rise (total energy)",
+            "de": "Wärme in 200 Litern Wasser bei 40 K Temperaturhub (gesamte Energiemenge)"
+          },
+          "icon": {
+            "emoji": "🫖",
+            "motion": "sway"
+          },
+          "category": "energy",
+          "explanation": {
+            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
+            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+          },
+          "short": {
+            "en": "Two-hundred-litre hot-water store",
+            "de": "Zweihundert-Liter-Warmwasserspeicher"
+          }
+        },
+        {
+          "id": "family-household-year-amount",
+          "label": {
+            "en": "Annual electricity use of a four-person household, teaching estimate (total energy)",
+            "de": "Jahresstromverbrauch eines Vierpersonenhaushalts, Lehrannahme (gesamte Energiemenge)"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "pulse"
+          },
+          "category": "energy",
+          "explanation": {
+            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
+            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+          },
+          "short": {
+            "en": "Four-person annual electricity",
+            "de": "Jahresstrom für vier Personen"
+          }
+        },
+        {
+          "id": "old-duplex-year-amount",
+          "label": {
+            "en": "Annual heating for a 200 m² duplex at 180 kWh/(m²·a) (total energy)",
+            "de": "Jahresheizung eines 200-m²-Doppelhauses bei 180 kWh/(m²·a) (gesamte Energiemenge)"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "spin"
+          },
+          "category": "energy",
+          "explanation": {
+            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
+            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+          },
+          "short": {
+            "en": "Older duplex annual heating",
+            "de": "Jahreswärme eines alten Doppelhauses"
+          }
         }
       ],
-      "draw": 12
+      "draw": 12,
+      "pool": {
+        "seconds": 300,
+        "slots": [
+          [
+            "tea-light",
+            "car-engine",
+            "led-desk-lamp-rate",
+            "ten-people-rate",
+            "motorcycle-engine-rate",
+            "offshore-turbine-rate"
+          ],
+          [
+            "kettle",
+            "wallbox",
+            "laptop-office-rate",
+            "compact-hair-dryer-rate",
+            "workshop-motor-rate",
+            "industrial-compressor-rate"
+          ],
+          [
+            "resting-person",
+            "incandescent-lamp-rate",
+            "electric-oven-rate",
+            "electric-car-drive-rate",
+            "thermal-unit-rate"
+          ],
+          [
+            "pv-module-peak",
+            "desk-fan-rate",
+            "sauna-heater-rate",
+            "fast-charger-rate",
+            "hydro-complex-rate"
+          ],
+          [
+            "heating-load",
+            "vacuum-cleaner-rate",
+            "instant-water-heater-rate",
+            "hydro-generator-rate",
+            "wind-farm-rate"
+          ],
+          [
+            "nuclear-unit",
+            "small-radiator-rate",
+            "small-house-heat-rate",
+            "electric-locomotive-rate",
+            "reactor-heat-rate"
+          ],
+          [
+            "household-electricity",
+            "phone-charge",
+            "laptop-battery-amount",
+            "kettle-half-hour-amount",
+            "small-ev-battery-amount",
+            "home-pump-year-amount"
+          ],
+          [
+            "ev-battery",
+            "energy-certificate",
+            "camera-battery-amount",
+            "people-day-amount",
+            "large-ev-battery-amount",
+            "home-pv-year-amount"
+          ],
+          [
+            "heating-oil-litre",
+            "half-litre-water-amount",
+            "petrol-litre-amount",
+            "diesel-tank-amount",
+            "retrofit-house-year-amount"
+          ],
+          [
+            "heating-demand-house",
+            "usb-power-bank-amount",
+            "wood-pellets-amount",
+            "heat-pump-day-amount",
+            "school-heat-year-amount"
+          ],
+          [
+            "chocolate-bar",
+            "radiator-hour-amount",
+            "radiator-day-amount",
+            "single-household-year-amount",
+            "roof-pv-year-amount"
+          ],
+          [
+            "pv-annual-yield",
+            "rice-food-amount",
+            "hot-water-store-amount",
+            "family-household-year-amount",
+            "old-duplex-year-amount"
+          ]
+        ]
+      }
     },
     {
       "kind": "sorting",
@@ -375,8 +1428,8 @@
         "motion": "spin"
       },
       "prompt": {
-        "en": "Sort the powers in ascending order, smallest first. Quantity: power in watts (W); the values span about 25 orders of magnitude.",
-        "de": "Sortiere die Leistungen aufsteigend, die kleinste zuerst. Größe: Leistung in Watt (W); die Werte umfassen rund 25 Größenordnungen."
+        "en": "Sort the powers in ascending order, smallest first. Quantity: power in watts (W); the values span about 25 orders of magnitude. Allow about five minutes: compare every item, check units, and review your answer. New design examples use representative teaching estimates rather than universal limits.",
+        "de": "Sortiere die Leistungen aufsteigend, die kleinste zuerst. Größe: Leistung in Watt (W); die Werte umfassen rund 25 Größenordnungen. Plane etwa fünf Minuten ein: Vergleiche alle Beispiele, prüfe die Einheiten und kontrolliere deine Antwort. Neue Auslegungsbeispiele verwenden typische Lehrannahmen statt allgemeingültiger Grenzwerte."
       },
       "quantity": {
         "label": {
@@ -661,9 +1714,888 @@
             "en": "382.8 YW (3.828 × 10²⁶ W, IAU 2015 nominal solar luminosity); the Earth catches less than a billionth of it.",
             "de": "382,8 YW (3,828 × 10²⁶ W, nominale Sonnenleuchtkraft der IAU 2015); die Erde fängt davon weniger als ein Milliardstel auf."
           }
+        },
+        {
+          "id": "led-desk-lamp",
+          "label": {
+            "en": "LED desk lamp at typical operating brightness",
+            "de": "LED-Schreibtischlampe bei typischer Helligkeit"
+          },
+          "icon": {
+            "emoji": "💡",
+            "motion": "bounce"
+          },
+          "value": 10,
+          "explanation": {
+            "en": "10 W. Small device and human heat outputs are in tens to hundreds of watts.",
+            "de": "10 W. Kleine Geräte und menschliche Wärmeabgaben liegen bei zehn bis einigen hundert Watt."
+          },
+          "short": {
+            "en": "LED desk lamp",
+            "de": "LED-Schreibtischlampe"
+          }
+        },
+        {
+          "id": "laptop-office",
+          "label": {
+            "en": "Laptop doing ordinary office work",
+            "de": "Laptop bei gewöhnlicher Büroarbeit"
+          },
+          "icon": {
+            "emoji": "💻",
+            "motion": "bounce"
+          },
+          "value": 45,
+          "explanation": {
+            "en": "45 W. Small device and human heat outputs are in tens to hundreds of watts.",
+            "de": "45 W. Kleine Geräte und menschliche Wärmeabgaben liegen bei zehn bis einigen hundert Watt."
+          },
+          "short": {
+            "en": "Laptop doing ordinary office work",
+            "de": "Laptop bei gewöhnlicher Büroarbeit"
+          }
+        },
+        {
+          "id": "incandescent-lamp",
+          "label": {
+            "en": "Traditional incandescent room lamp",
+            "de": "Herkömmliche Raumglühlampe"
+          },
+          "icon": {
+            "emoji": "💡",
+            "motion": "pulse"
+          },
+          "value": 60,
+          "explanation": {
+            "en": "60 W. Small device and human heat outputs are in tens to hundreds of watts.",
+            "de": "60 W. Kleine Geräte und menschliche Wärmeabgaben liegen bei zehn bis einigen hundert Watt."
+          },
+          "short": {
+            "en": "Traditional incandescent room lamp",
+            "de": "Herkömmliche Raumglühlampe"
+          }
+        },
+        {
+          "id": "desk-fan",
+          "label": {
+            "en": "Small desk fan at medium speed",
+            "de": "Kleiner Tischventilator bei mittlerer Drehzahl"
+          },
+          "icon": {
+            "emoji": "🌀",
+            "motion": "bounce"
+          },
+          "value": 30,
+          "explanation": {
+            "en": "30 W. Small device and human heat outputs are in tens to hundreds of watts.",
+            "de": "30 W. Kleine Geräte und menschliche Wärmeabgaben liegen bei zehn bis einigen hundert Watt."
+          },
+          "short": {
+            "en": "Desk fan at medium speed",
+            "de": "Tischventilator auf mittlerer Stufe"
+          }
+        },
+        {
+          "id": "vacuum-cleaner",
+          "label": {
+            "en": "Compact vacuum cleaner at rated input",
+            "de": "Kompakter Staubsauger bei Nennaufnahme"
+          },
+          "icon": {
+            "emoji": "🧹",
+            "motion": "bounce"
+          },
+          "value": 1000,
+          "explanation": {
+            "en": "1 kW. These examples deliver about one kilowatt: ten people at about 100 W each, sunshine on one square metre at 1,000 W/m², or an appliance of similar rating.",
+            "de": "1 kW. Diese Beispiele liefern etwa ein Kilowatt: zehn Menschen zu etwa 100 W, Sonne auf einem Quadratmeter bei 1.000 W/m² oder ein ähnlich bemessenes Gerät."
+          },
+          "short": {
+            "en": "Compact vacuum cleaner at rated input",
+            "de": "Kompakter Staubsauger bei Nennaufnahme"
+          }
+        },
+        {
+          "id": "small-radiator",
+          "label": {
+            "en": "Small electric resistance radiator",
+            "de": "Kleiner elektrischer Widerstandsheizkörper"
+          },
+          "icon": {
+            "emoji": "♨️",
+            "motion": "bounce"
+          },
+          "value": 1000,
+          "explanation": {
+            "en": "1 kW. These examples deliver about one kilowatt: ten people at about 100 W each, sunshine on one square metre at 1,000 W/m², or an appliance of similar rating.",
+            "de": "1 kW. Diese Beispiele liefern etwa ein Kilowatt: zehn Menschen zu etwa 100 W, Sonne auf einem Quadratmeter bei 1.000 W/m² oder ein ähnlich bemessenes Gerät."
+          },
+          "short": {
+            "en": "Electric resistance radiator",
+            "de": "Elektrischer Widerstandsheizkörper"
+          }
+        },
+        {
+          "id": "ten-people",
+          "label": {
+            "en": "Body heat from ten seated adults together",
+            "de": "Körperwärme von zehn sitzenden Erwachsenen zusammen"
+          },
+          "icon": {
+            "emoji": "👥",
+            "motion": "bounce"
+          },
+          "value": 1000,
+          "explanation": {
+            "en": "1 kW. These examples deliver about one kilowatt: ten people at about 100 W each, sunshine on one square metre at 1,000 W/m², or an appliance of similar rating.",
+            "de": "1 kW. Diese Beispiele liefern etwa ein Kilowatt: zehn Menschen zu etwa 100 W, Sonne auf einem Quadratmeter bei 1.000 W/m² oder ein ähnlich bemessenes Gerät."
+          },
+          "short": {
+            "en": "Body heat of ten seated adults",
+            "de": "Körperwärme von zehn Erwachsenen"
+          }
+        },
+        {
+          "id": "compact-hair-dryer",
+          "label": {
+            "en": "Compact hair dryer on its warm setting",
+            "de": "Kompakter Haartrockner auf warmer Stufe"
+          },
+          "icon": {
+            "emoji": "💨",
+            "motion": "bounce"
+          },
+          "value": 1200,
+          "explanation": {
+            "en": "1.2 kW. These examples deliver about one kilowatt: ten people at about 100 W each, sunshine on one square metre at 1,000 W/m², or an appliance of similar rating.",
+            "de": "1,2 kW. Diese Beispiele liefern etwa ein Kilowatt: zehn Menschen zu etwa 100 W, Sonne auf einem Quadratmeter bei 1.000 W/m² oder ein ähnlich bemessenes Gerät."
+          },
+          "short": {
+            "en": "Compact hair dryer on its warm setting",
+            "de": "Kompakter Haartrockner auf warmer Stufe"
+          }
+        },
+        {
+          "id": "electric-oven",
+          "label": {
+            "en": "Domestic electric oven during heating",
+            "de": "Haushaltsbackofen während des Aufheizens"
+          },
+          "icon": {
+            "emoji": "🍳",
+            "motion": "bounce"
+          },
+          "value": 3000,
+          "explanation": {
+            "en": "3 kW. Several kilowatts suit household charging, cooking or a small building heating system.",
+            "de": "3 kW. Mehrere Kilowatt passen zum Laden, Kochen oder zu kleinen Gebäudeheizungen."
+          },
+          "short": {
+            "en": "Domestic electric oven during heating",
+            "de": "Haushaltsbackofen während des Aufheizens"
+          }
+        },
+        {
+          "id": "sauna-heater",
+          "label": {
+            "en": "Small domestic sauna heater",
+            "de": "Kleiner häuslicher Saunaofen"
+          },
+          "icon": {
+            "emoji": "🧖",
+            "motion": "bounce"
+          },
+          "value": 6000,
+          "explanation": {
+            "en": "6 kW. Several kilowatts suit household charging, cooking or a small building heating system.",
+            "de": "6 kW. Mehrere Kilowatt passen zum Laden, Kochen oder zu kleinen Gebäudeheizungen."
+          },
+          "short": {
+            "en": "Small domestic sauna heater",
+            "de": "Kleiner häuslicher Saunaofen"
+          }
+        },
+        {
+          "id": "instant-water-heater",
+          "label": {
+            "en": "Three-phase instantaneous shower water heater",
+            "de": "Dreiphasiger Durchlauferhitzer für die Dusche"
+          },
+          "icon": {
+            "emoji": "🚿",
+            "motion": "bounce"
+          },
+          "value": 21000,
+          "explanation": {
+            "en": "21 kW. Several kilowatts suit household charging, cooking or a small building heating system.",
+            "de": "21 kW. Mehrere Kilowatt passen zum Laden, Kochen oder zu kleinen Gebäudeheizungen."
+          },
+          "short": {
+            "en": "Shower instantaneous water heater",
+            "de": "Dusch-Durchlauferhitzer"
+          }
+        },
+        {
+          "id": "small-house-heat",
+          "label": {
+            "en": "Design heating load of a moderately insulated house",
+            "de": "Heizlast eines mäßig gedämmten Hauses"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "bounce"
+          },
+          "value": 12000,
+          "explanation": {
+            "en": "12 kW. Several kilowatts suit household charging, cooking or a small building heating system.",
+            "de": "12 kW. Mehrere Kilowatt passen zum Laden, Kochen oder zu kleinen Gebäudeheizungen."
+          },
+          "short": {
+            "en": "House design heating load",
+            "de": "Auslegungsheizlast eines Wohnhauses"
+          }
+        },
+        {
+          "id": "motorcycle-engine",
+          "label": {
+            "en": "Touring motorcycle engine at rated output",
+            "de": "Tourenmotorrad bei Nennleistung"
+          },
+          "icon": {
+            "emoji": "🏍️",
+            "motion": "bounce"
+          },
+          "value": 70000,
+          "explanation": {
+            "en": "70 kW. Vehicle and small commercial equipment outputs are in tens to hundreds of kilowatts.",
+            "de": "70 kW. Fahrzeuge und kleine gewerbliche Anlagen liegen bei zehn bis einigen hundert Kilowatt."
+          },
+          "short": {
+            "en": "Touring motorcycle engine",
+            "de": "Tourenmotorradmotor"
+          }
+        },
+        {
+          "id": "workshop-motor",
+          "label": {
+            "en": "Large workshop electric drive motor",
+            "de": "Großer elektrischer Werkstattantrieb"
+          },
+          "icon": {
+            "emoji": "⚙️",
+            "motion": "bounce"
+          },
+          "value": 75000,
+          "explanation": {
+            "en": "75 kW. Vehicle and small commercial equipment outputs are in tens to hundreds of kilowatts.",
+            "de": "75 kW. Fahrzeuge und kleine gewerbliche Anlagen liegen bei zehn bis einigen hundert Kilowatt."
+          },
+          "short": {
+            "en": "Large workshop electric drive motor",
+            "de": "Großer elektrischer Werkstattantrieb"
+          }
+        },
+        {
+          "id": "electric-car-drive",
+          "label": {
+            "en": "Family electric car at rated drive output",
+            "de": "Familien-E-Auto bei Nennantriebsleistung"
+          },
+          "icon": {
+            "emoji": "🚗",
+            "motion": "bounce"
+          },
+          "value": 150000,
+          "explanation": {
+            "en": "150 kW. Vehicle and small commercial equipment outputs are in tens to hundreds of kilowatts.",
+            "de": "150 kW. Fahrzeuge und kleine gewerbliche Anlagen liegen bei zehn bis einigen hundert Kilowatt."
+          },
+          "short": {
+            "en": "Electric family-car drive",
+            "de": "Antrieb eines Familien-E-Autos"
+          }
+        },
+        {
+          "id": "fast-charger",
+          "label": {
+            "en": "Public electric car fast charger",
+            "de": "Öffentlicher E-Auto-Schnelllader"
+          },
+          "icon": {
+            "emoji": "🔌",
+            "motion": "pulse"
+          },
+          "value": 100000,
+          "explanation": {
+            "en": "100 kW. Vehicle and small commercial equipment outputs are in tens to hundreds of kilowatts.",
+            "de": "100 kW. Fahrzeuge und kleine gewerbliche Anlagen liegen bei zehn bis einigen hundert Kilowatt."
+          },
+          "short": {
+            "en": "Public electric car fast charger",
+            "de": "Öffentlicher E-Auto-Schnelllader"
+          }
+        },
+        {
+          "id": "hydro-generator",
+          "label": {
+            "en": "Medium hydroelectric generator unit",
+            "de": "Mittlerer Wasserkraftgenerator"
+          },
+          "icon": {
+            "emoji": "🌊",
+            "motion": "bounce"
+          },
+          "value": 4000000,
+          "explanation": {
+            "en": "4 MW. Large transport drives and renewable generators reach megawatts.",
+            "de": "4 MW. Große Verkehrsantriebe und erneuerbare Generatoren erreichen Megawatt."
+          },
+          "short": {
+            "en": "Medium hydroelectric generator unit",
+            "de": "Mittlerer Wasserkraftgenerator"
+          }
+        },
+        {
+          "id": "electric-locomotive",
+          "label": {
+            "en": "Electric main-line locomotive at full output",
+            "de": "Elektrische Streckenlokomotive unter Volllast"
+          },
+          "icon": {
+            "emoji": "🚂",
+            "motion": "bounce"
+          },
+          "value": 6000000,
+          "explanation": {
+            "en": "6 MW. Large transport drives and renewable generators reach megawatts.",
+            "de": "6 MW. Große Verkehrsantriebe und erneuerbare Generatoren erreichen Megawatt."
+          },
+          "short": {
+            "en": "Main-line locomotive at full output",
+            "de": "Streckenlokomotive unter Volllast"
+          }
+        },
+        {
+          "id": "offshore-turbine",
+          "label": {
+            "en": "Large offshore wind turbine at rated wind",
+            "de": "Große Offshore-Windanlage bei Nennwind"
+          },
+          "icon": {
+            "emoji": "🌬️",
+            "motion": "bounce"
+          },
+          "value": 12000000,
+          "explanation": {
+            "en": "12 MW. Large transport drives and renewable generators reach megawatts.",
+            "de": "12 MW. Große Verkehrsantriebe und erneuerbare Generatoren erreichen Megawatt."
+          },
+          "short": {
+            "en": "Offshore wind turbine",
+            "de": "Offshore-Windanlage"
+          }
+        },
+        {
+          "id": "industrial-compressor",
+          "label": {
+            "en": "Large industrial compressor drive",
+            "de": "Großer industrieller Verdichterantrieb"
+          },
+          "icon": {
+            "emoji": "⚙️",
+            "motion": "pulse"
+          },
+          "value": 3000000,
+          "explanation": {
+            "en": "3 MW. Large transport drives and renewable generators reach megawatts.",
+            "de": "3 MW. Große Verkehrsantriebe und erneuerbare Generatoren erreichen Megawatt."
+          },
+          "short": {
+            "en": "Large industrial compressor drive",
+            "de": "Großer industrieller Verdichterantrieb"
+          }
+        },
+        {
+          "id": "thermal-unit",
+          "label": {
+            "en": "Large thermal power-station electrical block",
+            "de": "Großer elektrischer Wärmekraftwerksblock"
+          },
+          "icon": {
+            "emoji": "🏭",
+            "motion": "bounce"
+          },
+          "value": 1000000000,
+          "explanation": {
+            "en": "1 GW. A large power-station block produces around a gigawatt.",
+            "de": "1 GW. Ein großer Kraftwerksblock erzeugt etwa ein Gigawatt."
+          },
+          "short": {
+            "en": "Thermal power-station electrical block",
+            "de": "Elektrischer Wärmekraftwerksblock"
+          }
+        },
+        {
+          "id": "hydro-complex",
+          "label": {
+            "en": "Large hydroelectric generating complex",
+            "de": "Großer Wasserkraftwerkskomplex"
+          },
+          "icon": {
+            "emoji": "🌊",
+            "motion": "pulse"
+          },
+          "value": 2000000000,
+          "explanation": {
+            "en": "2 GW. A large power-station block produces around a gigawatt.",
+            "de": "2 GW. Ein großer Kraftwerksblock erzeugt etwa ein Gigawatt."
+          },
+          "short": {
+            "en": "Large hydroelectric generating complex",
+            "de": "Großer Wasserkraftwerkskomplex"
+          }
+        },
+        {
+          "id": "wind-farm",
+          "label": {
+            "en": "Large wind farm at combined rated output",
+            "de": "Großer Windpark bei summierter Nennleistung"
+          },
+          "icon": {
+            "emoji": "🌬️",
+            "motion": "pulse"
+          },
+          "value": 1200000000,
+          "explanation": {
+            "en": "1.2 GW. A large power-station block produces around a gigawatt.",
+            "de": "1,2 GW. Ein großer Kraftwerksblock erzeugt etwa ein Gigawatt."
+          },
+          "short": {
+            "en": "Large wind farm at rated output",
+            "de": "Großer Windpark bei Nennleistung"
+          }
+        },
+        {
+          "id": "reactor-heat",
+          "label": {
+            "en": "Thermal output of a large reactor block",
+            "de": "Thermische Leistung eines großen Reaktorblocks"
+          },
+          "icon": {
+            "emoji": "🏭",
+            "motion": "pulse"
+          },
+          "value": 3950000000,
+          "explanation": {
+            "en": "3.95 GW. A large power-station block produces around a gigawatt.",
+            "de": "3,95 GW. Ein großer Kraftwerksblock erzeugt etwa ein Gigawatt."
+          },
+          "short": {
+            "en": "Reactor block thermal output",
+            "de": "Thermische Leistung eines Reaktorblocks"
+          }
+        },
+        {
+          "id": "france-primary-power",
+          "label": {
+            "en": "France average primary energy use in 2023",
+            "de": "Frankreichs mittlerer Primärenergieverbrauch 2023"
+          },
+          "icon": {
+            "emoji": "🇫🇷",
+            "motion": "bounce"
+          },
+          "value": 288242009132.4201,
+          "explanation": {
+            "en": "About 288 GW: 2,525 TWh of primary energy divided by 8,760 hours in 2023 (SDES). Primary energy includes transformation losses.",
+            "de": "Rund 288 GW: 2.525 TWh Primärenergie geteilt durch 8.760 Stunden im Jahr 2023 (SDES). Primärenergie umfasst Umwandlungsverluste."
+          },
+          "short": {
+            "en": "France’s primary power use in 2023",
+            "de": "Frankreichs Primärleistung 2023"
+          }
+        },
+        {
+          "id": "france-final-power",
+          "label": {
+            "en": "France average final energy use for energy purposes in 2023",
+            "de": "Frankreichs mittlerer energetischer Endenergieverbrauch 2023"
+          },
+          "icon": {
+            "emoji": "🇫🇷",
+            "motion": "pulse"
+          },
+          "value": 170776255707.76254,
+          "explanation": {
+            "en": "About 171 GW: 1,496 TWh of final energy for energy use divided by 8,760 hours in 2023 (SDES). This total includes fuels and electricity delivered to consumers.",
+            "de": "Rund 171 GW: 1.496 TWh energetische Endenergie geteilt durch 8.760 Stunden im Jahr 2023 (SDES). Darin sind Brennstoffe und Strom bei den Verbrauchern enthalten."
+          },
+          "short": {
+            "en": "France’s final power use in 2023",
+            "de": "Frankreichs Endenergieleistung 2023"
+          }
+        },
+        {
+          "id": "germany-primary-power",
+          "label": {
+            "en": "Germany average primary energy use in 2024",
+            "de": "Deutschlands mittlerer Primärenergieverbrauch 2024"
+          },
+          "icon": {
+            "emoji": "🇩🇪",
+            "motion": "bounce"
+          },
+          "value": 332991803278.68854,
+          "explanation": {
+            "en": "About 333 GW: the teaching reference of 2,925 TWh of primary energy in 2024 divided by 8,784 hours in that leap year. This is much larger than electricity use alone.",
+            "de": "Rund 333 GW: Lehrreferenz von 2.925 TWh Primärenergie im Jahr 2024 geteilt durch 8.784 Stunden dieses Schaltjahres. Das liegt deutlich über dem Stromverbrauch allein."
+          },
+          "short": {
+            "en": "Germany’s primary power use in 2024",
+            "de": "Deutschlands Primärleistung 2024"
+          }
+        },
+        {
+          "id": "france-electric-final-power",
+          "label": {
+            "en": "France average final electricity use in 2023, approximate",
+            "de": "Frankreichs mittlerer Endstromverbrauch 2023, näherungsweise"
+          },
+          "icon": {
+            "emoji": "🇫🇷",
+            "motion": "spin"
+          },
+          "value": 46109589041.095894,
+          "explanation": {
+            "en": "About 46 GW: electricity accounts for approximately 27% of France’s 1,496 TWh of final energy in 2023 (SDES). 1,496 × 0.27 / 8,760 gives the average in TW.",
+            "de": "Rund 46 GW: Strom macht näherungsweise 27 % von Frankreichs 1.496 TWh Endenergie 2023 aus (SDES). 1.496 × 0,27 / 8.760 ergibt den Mittelwert in TW."
+          },
+          "short": {
+            "en": "France’s final electric power in 2023",
+            "de": "Frankreichs Endstromleistung 2023"
+          }
+        },
+        {
+          "id": "world-half-reference",
+          "label": {
+            "en": "Half of the global primary-power teaching benchmark",
+            "de": "Hälfte des globalen Primärleistungs-Lehrvergleichs"
+          },
+          "icon": {
+            "emoji": "🌍",
+            "motion": "bounce"
+          },
+          "value": 9350000000000,
+          "explanation": {
+            "en": "9.35 TW. The existing global teaching benchmark is about 19 TW; aggregate examples scale that reference explicitly.",
+            "de": "9,35 TW. Der bestehende globale Lehrvergleich liegt bei etwa 19 TW; aggregierte Beispiele skalieren diesen Bezug ausdrücklich."
+          },
+          "short": {
+            "en": "Half a global primary-power benchmark",
+            "de": "Halber globaler Primärleistungsmaßstab"
+          }
+        },
+        {
+          "id": "world-double-reference",
+          "label": {
+            "en": "Two simultaneous global primary-power teaching benchmarks",
+            "de": "Zwei gleichzeitige globale Primärleistungs-Lehrvergleiche"
+          },
+          "icon": {
+            "emoji": "🌍",
+            "motion": "pulse"
+          },
+          "value": 37400000000000,
+          "explanation": {
+            "en": "37.4 TW. The existing global teaching benchmark is about 19 TW; aggregate examples scale that reference explicitly.",
+            "de": "37,4 TW. Der bestehende globale Lehrvergleich liegt bei etwa 19 TW; aggregierte Beispiele skalieren diesen Bezug ausdrücklich."
+          },
+          "short": {
+            "en": "Two global primary-power benchmarks",
+            "de": "Doppelter globaler Primärmaßstab"
+          }
+        },
+        {
+          "id": "world-quarter-reference",
+          "label": {
+            "en": "A quarter of the global primary-power teaching benchmark",
+            "de": "Viertel des globalen Primärleistungs-Lehrvergleichs"
+          },
+          "icon": {
+            "emoji": "🌍",
+            "motion": "sway"
+          },
+          "value": 4675000000000,
+          "explanation": {
+            "en": "4.675 TW. The existing global teaching benchmark is about 19 TW; aggregate examples scale that reference explicitly.",
+            "de": "4,675 TW. Der bestehende globale Lehrvergleich liegt bei etwa 19 TW; aggregierte Beispiele skalieren diesen Bezug ausdrücklich."
+          },
+          "short": {
+            "en": "Quarter of global primary power",
+            "de": "Viertel der globalen Primärleistung"
+          }
+        },
+        {
+          "id": "world-three-reference",
+          "label": {
+            "en": "Three global primary-power teaching benchmarks combined",
+            "de": "Drei globale Primärleistungs-Lehrvergleiche zusammen"
+          },
+          "icon": {
+            "emoji": "🌍",
+            "motion": "float"
+          },
+          "value": 56100000000000,
+          "explanation": {
+            "en": "56.1 TW. The existing global teaching benchmark is about 19 TW; aggregate examples scale that reference explicitly.",
+            "de": "56,1 TW. Der bestehende globale Lehrvergleich liegt bei etwa 19 TW; aggregierte Beispiele skalieren diesen Bezug ausdrücklich."
+          },
+          "short": {
+            "en": "Three global primary-power benchmarks",
+            "de": "Dreifacher globaler Primärmaßstab"
+          }
+        },
+        {
+          "id": "earth-double-disc",
+          "label": {
+            "en": "Sunlight intercepted by two Earth-sized discs together",
+            "de": "Sonnenlicht auf zwei erdgroßen Scheiben zusammen"
+          },
+          "icon": {
+            "emoji": "🌅",
+            "motion": "bounce"
+          },
+          "value": 348000000000000000,
+          "explanation": {
+            "en": "348 PW. The Earth intercepts about 174 PW; these geometric examples change the illuminated cross-sectional area at the same solar constant.",
+            "de": "348 PW. Die Erde fängt etwa 174 PW auf; diese geometrischen Beispiele verändern die bestrahlte Querschnittsfläche bei gleicher Solarkonstante."
+          },
+          "short": {
+            "en": "Sunlight on two Earth-sized discs",
+            "de": "Sonnenlicht auf zwei Erdscheiben"
+          }
+        },
+        {
+          "id": "earth-half-disc",
+          "label": {
+            "en": "Sunlight intercepted by half an Earth cross-section",
+            "de": "Sonnenlicht auf einem halben Erdquerschnitt"
+          },
+          "icon": {
+            "emoji": "🌅",
+            "motion": "pulse"
+          },
+          "value": 87000000000000000,
+          "explanation": {
+            "en": "87 PW. The Earth intercepts about 174 PW; these geometric examples change the illuminated cross-sectional area at the same solar constant.",
+            "de": "87 PW. Die Erde fängt etwa 174 PW auf; diese geometrischen Beispiele verändern die bestrahlte Querschnittsfläche bei gleicher Solarkonstante."
+          },
+          "short": {
+            "en": "Sunlight on half an Earth-sized disc",
+            "de": "Sonnenlicht auf eine halbe Erdscheibe"
+          }
+        },
+        {
+          "id": "earth-double-radius",
+          "label": {
+            "en": "Sunlight on a disc with twice Earth radius at Earth orbit",
+            "de": "Sonnenlicht auf Scheibe mit doppeltem Erdradius in Erdbahn"
+          },
+          "icon": {
+            "emoji": "🌅",
+            "motion": "spin"
+          },
+          "value": 696000000000000000,
+          "explanation": {
+            "en": "696 PW. The Earth intercepts about 174 PW; these geometric examples change the illuminated cross-sectional area at the same solar constant.",
+            "de": "696 PW. Die Erde fängt etwa 174 PW auf; diese geometrischen Beispiele verändern die bestrahlte Querschnittsfläche bei gleicher Solarkonstante."
+          },
+          "short": {
+            "en": "Sunlit disc with twice Earth radius",
+            "de": "Sonnenscheibe mit doppeltem Erdradius"
+          }
+        },
+        {
+          "id": "earth-half-radius",
+          "label": {
+            "en": "Sunlight on a disc with half Earth radius at Earth orbit",
+            "de": "Sonnenlicht auf Scheibe mit halbem Erdradius in Erdbahn"
+          },
+          "icon": {
+            "emoji": "🌅",
+            "motion": "sway"
+          },
+          "value": 43500000000000000,
+          "explanation": {
+            "en": "43.5 PW. The Earth intercepts about 174 PW; these geometric examples change the illuminated cross-sectional area at the same solar constant.",
+            "de": "43,5 PW. Die Erde fängt etwa 174 PW auf; diese geometrischen Beispiele verändern die bestrahlte Querschnittsfläche bei gleicher Solarkonstante."
+          },
+          "short": {
+            "en": "Sunlit disc with half Earth radius",
+            "de": "Sonnenscheibe mit halbem Erdradius"
+          }
+        },
+        {
+          "id": "binary-sun",
+          "label": {
+            "en": "Combined luminosity of two ideal Sun-like stars",
+            "de": "Summierte Leuchtkraft zweier idealer sonnenähnlicher Sterne"
+          },
+          "icon": {
+            "emoji": "⭐",
+            "motion": "bounce"
+          },
+          "value": 7.656e+26,
+          "explanation": {
+            "en": "765.6 YW. Nominal solar luminosity is 3.828 × 10²⁶ W (IAU 2015); multiple ideal Sun-like stars add their radiant outputs.",
+            "de": "765,6 YW. Die nominale Sonnenleuchtkraft beträgt 3,828 × 10²⁶ W (IAU 2015); mehrere ideale sonnenähnliche Sterne addieren ihre Strahlungsleistungen."
+          },
+          "short": {
+            "en": "Luminosity of two Sun-like stars",
+            "de": "Leuchtkraft zweier Sonnenzwillinge"
+          }
+        },
+        {
+          "id": "triple-sun",
+          "label": {
+            "en": "Combined luminosity of three ideal Sun-like stars",
+            "de": "Summierte Leuchtkraft dreier idealer sonnenähnlicher Sterne"
+          },
+          "icon": {
+            "emoji": "⭐",
+            "motion": "pulse"
+          },
+          "value": 1.1484e+27,
+          "explanation": {
+            "en": "1.148E27 W. Nominal solar luminosity is 3.828 × 10²⁶ W (IAU 2015); multiple ideal Sun-like stars add their radiant outputs.",
+            "de": "1,148E27 W. Die nominale Sonnenleuchtkraft beträgt 3,828 × 10²⁶ W (IAU 2015); mehrere ideale sonnenähnliche Sterne addieren ihre Strahlungsleistungen."
+          },
+          "short": {
+            "en": "Luminosity of three Sun-like stars",
+            "de": "Leuchtkraft dreier Sonnenzwillinge"
+          }
+        },
+        {
+          "id": "four-suns",
+          "label": {
+            "en": "Combined luminosity of four ideal Sun-like stars",
+            "de": "Summierte Leuchtkraft vierer idealer sonnenähnlicher Sterne"
+          },
+          "icon": {
+            "emoji": "🌟",
+            "motion": "bounce"
+          },
+          "value": 1.5312e+27,
+          "explanation": {
+            "en": "1.531E27 W. Nominal solar luminosity is 3.828 × 10²⁶ W (IAU 2015); multiple ideal Sun-like stars add their radiant outputs.",
+            "de": "1,531E27 W. Die nominale Sonnenleuchtkraft beträgt 3,828 × 10²⁶ W (IAU 2015); mehrere ideale sonnenähnliche Sterne addieren ihre Strahlungsleistungen."
+          },
+          "short": {
+            "en": "Luminosity of four Sun-like stars",
+            "de": "Leuchtkraft von vier Sonnenzwillingen"
+          }
+        },
+        {
+          "id": "five-suns",
+          "label": {
+            "en": "Combined luminosity of five ideal Sun-like stars",
+            "de": "Summierte Leuchtkraft fünfer idealer sonnenähnlicher Sterne"
+          },
+          "icon": {
+            "emoji": "🌟",
+            "motion": "pulse"
+          },
+          "value": 1.914e+27,
+          "explanation": {
+            "en": "1.914E27 W. Nominal solar luminosity is 3.828 × 10²⁶ W (IAU 2015); multiple ideal Sun-like stars add their radiant outputs.",
+            "de": "1,914E27 W. Die nominale Sonnenleuchtkraft beträgt 3,828 × 10²⁶ W (IAU 2015); mehrere ideale sonnenähnliche Sterne addieren ihre Strahlungsleistungen."
+          },
+          "short": {
+            "en": "Luminosity of five Sun-like stars",
+            "de": "Leuchtkraft von fünf Sonnenzwillingen"
+          }
         }
       ],
-      "draw": 10
+      "draw": 10,
+      "pool": {
+        "seconds": 300,
+        "slots": [
+          [
+            "tea-light",
+            "resting-person",
+            "led-desk-lamp",
+            "laptop-office",
+            "incandescent-lamp",
+            "desk-fan"
+          ],
+          [
+            "sunlight-square-metre",
+            "kettle",
+            "vacuum-cleaner",
+            "small-radiator",
+            "ten-people",
+            "compact-hair-dryer"
+          ],
+          [
+            "wallbox",
+            "heating-load-old-house",
+            "electric-oven",
+            "sauna-heater",
+            "instant-water-heater",
+            "small-house-heat"
+          ],
+          [
+            "car-engine",
+            "motorcycle-engine",
+            "workshop-motor",
+            "electric-car-drive",
+            "fast-charger"
+          ],
+          [
+            "wind-turbine",
+            "ice-train",
+            "hydro-generator",
+            "electric-locomotive",
+            "offshore-turbine",
+            "industrial-compressor"
+          ],
+          [
+            "nuclear-unit",
+            "thermal-unit",
+            "hydro-complex",
+            "wind-farm",
+            "reactor-heat"
+          ],
+          [
+            "germany-electricity",
+            "france-primary-power",
+            "france-final-power",
+            "germany-primary-power",
+            "france-electric-final-power"
+          ],
+          [
+            "world-primary-power",
+            "world-half-reference",
+            "world-double-reference",
+            "world-quarter-reference",
+            "world-three-reference"
+          ],
+          [
+            "sunlight-on-earth",
+            "earth-double-disc",
+            "earth-half-disc",
+            "earth-double-radius",
+            "earth-half-radius"
+          ],
+          [
+            "sun",
+            "binary-sun",
+            "triple-sun",
+            "four-suns",
+            "five-suns"
+          ]
+        ]
+      }
     },
     {
       "kind": "sorting",
@@ -677,8 +2609,8 @@
         "motion": "bounce"
       },
       "prompt": {
-        "en": "Sort the amounts of energy in ascending order, smallest first. Quantity: energy in watt-hours (Wh); the values span about 16 orders of magnitude.",
-        "de": "Sortiere die Energiemengen aufsteigend, die kleinste zuerst. Größe: Energie in Wattstunden (Wh); die Werte umfassen rund 16 Größenordnungen."
+        "en": "Sort the amounts of energy in ascending order, smallest first. Quantity: energy in watt-hours (Wh); the values span about 16 orders of magnitude. Allow about five minutes: compare every item, check units, and review your answer. New design examples use representative teaching estimates rather than universal limits.",
+        "de": "Sortiere die Energiemengen aufsteigend, die kleinste zuerst. Größe: Energie in Wattstunden (Wh); die Werte umfassen rund 16 Größenordnungen. Plane etwa fünf Minuten ein: Vergleiche alle Beispiele, prüfe die Einheiten und kontrolliere deine Antwort. Neue Auslegungsbeispiele verwenden typische Lehrannahmen statt allgemeingültiger Grenzwerte."
       },
       "quantity": {
         "label": {
@@ -933,9 +2865,800 @@
             "en": "About 164.4 PWh (164,400 TWh): 592 EJ in 2024 (Energy Institute, Statistical Review of World Energy 2025). The Sun delivers this much to the Earth in about one hour.",
             "de": "Rund 164,4 PWh (164.400 TWh): 592 EJ im Jahr 2024 (Energy Institute, Statistical Review of World Energy 2025). So viel liefert die Sonne der Erde in etwa einer Stunde."
           }
+        },
+        {
+          "id": "laptop-battery",
+          "label": {
+            "en": "Full ordinary laptop battery",
+            "de": "Voller gewöhnlicher Laptopakku"
+          },
+          "icon": {
+            "emoji": "🔋",
+            "motion": "bounce"
+          },
+          "value": 60,
+          "explanation": {
+            "en": "60 Wh. Stored charge and small water-heating tasks require tens to hundreds of watt-hours; use E = P × t or heat capacity × mass × temperature rise.",
+            "de": "60 Wh. Gespeicherte Ladung und kleine Wassererwärmungen benötigen zehn bis einige hundert Wattstunden; nutze E = P × t oder Wärmekapazität × Masse × Temperaturanstieg."
+          },
+          "short": {
+            "en": "Full ordinary laptop battery",
+            "de": "Voller gewöhnlicher Laptopakku"
+          }
+        },
+        {
+          "id": "camera-battery",
+          "label": {
+            "en": "Full digital camera battery",
+            "de": "Voller Digitalkameraakku"
+          },
+          "icon": {
+            "emoji": "📷",
+            "motion": "bounce"
+          },
+          "value": 14,
+          "explanation": {
+            "en": "14 Wh. Stored charge and small water-heating tasks require tens to hundreds of watt-hours; use E = P × t or heat capacity × mass × temperature rise.",
+            "de": "14 Wh. Gespeicherte Ladung und kleine Wassererwärmungen benötigen zehn bis einige hundert Wattstunden; nutze E = P × t oder Wärmekapazität × Masse × Temperaturanstieg."
+          },
+          "short": {
+            "en": "Full digital camera battery",
+            "de": "Voller Digitalkameraakku"
+          }
+        },
+        {
+          "id": "half-litre-water",
+          "label": {
+            "en": "Heat half a litre of water from 20 °C to boiling",
+            "de": "Einen halben Liter Wasser von 20 °C zum Kochen erwärmen"
+          },
+          "icon": {
+            "emoji": "🫖",
+            "motion": "bounce"
+          },
+          "value": 46.5,
+          "explanation": {
+            "en": "46.5 Wh. Stored charge and small water-heating tasks require tens to hundreds of watt-hours; use E = P × t or heat capacity × mass × temperature rise.",
+            "de": "46,5 Wh. Gespeicherte Ladung und kleine Wassererwärmungen benötigen zehn bis einige hundert Wattstunden; nutze E = P × t oder Wärmekapazität × Masse × Temperaturanstieg."
+          },
+          "short": {
+            "en": "Half-litre water heating",
+            "de": "Erwärmter halber Liter Wasser"
+          }
+        },
+        {
+          "id": "usb-power-bank",
+          "label": {
+            "en": "Energy in a fully charged 20 Ah USB power bank at 3.7 V",
+            "de": "Energie in voller 20-Ah-USB-Powerbank bei 3,7 V"
+          },
+          "icon": {
+            "emoji": "🔋",
+            "motion": "pulse"
+          },
+          "value": 74,
+          "explanation": {
+            "en": "74 Wh. Stored charge and small water-heating tasks require tens to hundreds of watt-hours; use E = P × t or heat capacity × mass × temperature rise.",
+            "de": "74 Wh. Gespeicherte Ladung und kleine Wassererwärmungen benötigen zehn bis einige hundert Wattstunden; nutze E = P × t oder Wärmekapazität × Masse × Temperaturanstieg."
+          },
+          "short": {
+            "en": "Full twenty-amp-hour USB power bank",
+            "de": "Volle Zwanzig-Amperestunden-Powerbank"
+          }
+        },
+        {
+          "id": "radiator-hour",
+          "label": {
+            "en": "Energy used by a 1 kW radiator in one hour",
+            "de": "Energie eines 1-kW-Heizkörpers in einer Stunde"
+          },
+          "icon": {
+            "emoji": "♨️",
+            "motion": "bounce"
+          },
+          "value": 1000,
+          "explanation": {
+            "en": "1 kWh. Food energy and a few hours of appliance use are comparable on the kilowatt-hour scale.",
+            "de": "1 kWh. Nahrungsenergie und einige Betriebsstunden von Geräten sind auf Kilowattstundenebene vergleichbar."
+          },
+          "short": {
+            "en": "Radiator electricity over an hour",
+            "de": "Strom einer Heizkörperstunde"
+          }
+        },
+        {
+          "id": "rice-food",
+          "label": {
+            "en": "Food energy of a 100 g serving of dry rice",
+            "de": "Nahrungsenergie von 100 g trockenem Reis"
+          },
+          "icon": {
+            "emoji": "🍚",
+            "motion": "bounce"
+          },
+          "value": 400,
+          "explanation": {
+            "en": "400 Wh. Food energy and a few hours of appliance use are comparable on the kilowatt-hour scale.",
+            "de": "400 Wh. Nahrungsenergie und einige Betriebsstunden von Geräten sind auf Kilowattstundenebene vergleichbar."
+          },
+          "short": {
+            "en": "Dry rice serving food energy",
+            "de": "Nahrungsenergie einer Trockenreisportion"
+          }
+        },
+        {
+          "id": "kettle-half-hour",
+          "label": {
+            "en": "Energy used by a 2 kW kettle in half an hour",
+            "de": "Energie eines 2-kW-Wasserkochers in einer halben Stunde"
+          },
+          "icon": {
+            "emoji": "🫖",
+            "motion": "pulse"
+          },
+          "value": 1000,
+          "explanation": {
+            "en": "1 kWh. Food energy and a few hours of appliance use are comparable on the kilowatt-hour scale.",
+            "de": "1 kWh. Nahrungsenergie und einige Betriebsstunden von Geräten sind auf Kilowattstundenebene vergleichbar."
+          },
+          "short": {
+            "en": "Half-hour kettle electricity",
+            "de": "Halbstundenstrom eines Wasserkochers"
+          }
+        },
+        {
+          "id": "people-day",
+          "label": {
+            "en": "Heat from ten seated adults over one hour at 100 W each",
+            "de": "Wärme von zehn sitzenden Erwachsenen in einer Stunde bei je 100 W"
+          },
+          "icon": {
+            "emoji": "👥",
+            "motion": "bounce"
+          },
+          "value": 1000,
+          "explanation": {
+            "en": "1 kWh. Food energy and a few hours of appliance use are comparable on the kilowatt-hour scale.",
+            "de": "1 kWh. Nahrungsenergie und einige Betriebsstunden von Geräten sind auf Kilowattstundenebene vergleichbar."
+          },
+          "short": {
+            "en": "Hourly heat from ten adults",
+            "de": "Stundenwärme von zehn Erwachsenen"
+          }
+        },
+        {
+          "id": "petrol-litre",
+          "label": {
+            "en": "Energy in one litre of petrol",
+            "de": "Energie in einem Liter Benzin"
+          },
+          "icon": {
+            "emoji": "⛽",
+            "motion": "bounce"
+          },
+          "value": 8800,
+          "explanation": {
+            "en": "8.8 kWh. Fuel stores and modest household heat stores hold several to tens of kilowatt-hours.",
+            "de": "8,8 kWh. Brennstoffspeicher und kleine häusliche Wärmespeicher enthalten einige bis zehn Kilowattstunden."
+          },
+          "short": {
+            "en": "Energy in one litre of petrol",
+            "de": "Energie in einem Liter Benzin"
+          }
+        },
+        {
+          "id": "wood-pellets",
+          "label": {
+            "en": "Energy in two kilograms of dry wood pellets",
+            "de": "Energie in zwei Kilogramm trockenen Holzpellets"
+          },
+          "icon": {
+            "emoji": "🪵",
+            "motion": "bounce"
+          },
+          "value": 9600,
+          "explanation": {
+            "en": "9.6 kWh. Fuel stores and modest household heat stores hold several to tens of kilowatt-hours.",
+            "de": "9,6 kWh. Brennstoffspeicher und kleine häusliche Wärmespeicher enthalten einige bis zehn Kilowattstunden."
+          },
+          "short": {
+            "en": "Two kilograms of dry wood pellets",
+            "de": "Zwei Kilogramm trockene Holzpellets"
+          }
+        },
+        {
+          "id": "radiator-day",
+          "label": {
+            "en": "Energy used by a 1 kW radiator over ten hours",
+            "de": "Energie eines 1-kW-Heizkörpers über zehn Stunden"
+          },
+          "icon": {
+            "emoji": "♨️",
+            "motion": "spin"
+          },
+          "value": 10000,
+          "explanation": {
+            "en": "10 kWh. Fuel stores and modest household heat stores hold several to tens of kilowatt-hours.",
+            "de": "10 kWh. Brennstoffspeicher und kleine häusliche Wärmespeicher enthalten einige bis zehn Kilowattstunden."
+          },
+          "short": {
+            "en": "Ten hours of radiator electricity",
+            "de": "Strom von zehn Heizkörperstunden"
+          }
+        },
+        {
+          "id": "hot-water-store",
+          "label": {
+            "en": "Heat stored in 200 litres of water over a 40 K rise",
+            "de": "Wärme in 200 Litern Wasser bei 40 K Temperaturhub"
+          },
+          "icon": {
+            "emoji": "🫖",
+            "motion": "spin"
+          },
+          "value": 9300,
+          "explanation": {
+            "en": "9.3 kWh. Fuel stores and modest household heat stores hold several to tens of kilowatt-hours.",
+            "de": "9,3 kWh. Brennstoffspeicher und kleine häusliche Wärmespeicher enthalten einige bis zehn Kilowattstunden."
+          },
+          "short": {
+            "en": "Two-hundred-litre hot-water store",
+            "de": "Zweihundert-Liter-Warmwasserspeicher"
+          }
+        },
+        {
+          "id": "small-ev-battery",
+          "label": {
+            "en": "Full small electric car battery",
+            "de": "Voller kleiner E-Auto-Akku"
+          },
+          "icon": {
+            "emoji": "🔋",
+            "motion": "spin"
+          },
+          "value": 40000,
+          "explanation": {
+            "en": "40 kWh. Vehicle energy storage and long heating periods reach tens to hundreds of kilowatt-hours.",
+            "de": "40 kWh. Fahrzeugenergiespeicher und lange Heizperioden erreichen zehn bis einige hundert Kilowattstunden."
+          },
+          "short": {
+            "en": "Full small electric car battery",
+            "de": "Voller kleiner E-Auto-Akku"
+          }
+        },
+        {
+          "id": "large-ev-battery",
+          "label": {
+            "en": "Full large electric car battery",
+            "de": "Voller großer E-Auto-Akku"
+          },
+          "icon": {
+            "emoji": "🔋",
+            "motion": "sway"
+          },
+          "value": 90000,
+          "explanation": {
+            "en": "90 kWh. Vehicle energy storage and long heating periods reach tens to hundreds of kilowatt-hours.",
+            "de": "90 kWh. Fahrzeugenergiespeicher und lange Heizperioden erreichen zehn bis einige hundert Kilowattstunden."
+          },
+          "short": {
+            "en": "Full large electric car battery",
+            "de": "Voller großer E-Auto-Akku"
+          }
+        },
+        {
+          "id": "diesel-tank",
+          "label": {
+            "en": "Energy in a full 40-litre diesel tank",
+            "de": "Energie in einer vollen 40-Liter-Dieseltankfüllung"
+          },
+          "icon": {
+            "emoji": "⛽",
+            "motion": "spin"
+          },
+          "value": 392000,
+          "explanation": {
+            "en": "392 kWh. Vehicle energy storage and long heating periods reach tens to hundreds of kilowatt-hours.",
+            "de": "392 kWh. Fahrzeugenergiespeicher und lange Heizperioden erreichen zehn bis einige hundert Kilowattstunden."
+          },
+          "short": {
+            "en": "Full forty-litre diesel tank",
+            "de": "Voller Vierzig-Liter-Dieseltank"
+          }
+        },
+        {
+          "id": "heat-pump-day",
+          "label": {
+            "en": "Useful heat from a 5 kW heater running for 24 hours",
+            "de": "Nutzwärme einer 5-kW-Heizung über 24 Stunden"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "bounce"
+          },
+          "value": 120000,
+          "explanation": {
+            "en": "120 kWh. Vehicle energy storage and long heating periods reach tens to hundreds of kilowatt-hours.",
+            "de": "120 kWh. Fahrzeugenergiespeicher und lange Heizperioden erreichen zehn bis einige hundert Kilowattstunden."
+          },
+          "short": {
+            "en": "Full day of five-kilowatt useful heat",
+            "de": "Tageswärme einer Fünf-Kilowatt-Heizung"
+          }
+        },
+        {
+          "id": "single-household-year",
+          "label": {
+            "en": "Annual electricity use of a one-person household, teaching estimate",
+            "de": "Jahresstromverbrauch eines Einpersonenhaushalts, Lehrannahme"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "pulse"
+          },
+          "value": 1500000,
+          "explanation": {
+            "en": "1.5 MWh. A household annual total is a few megawatt-hours, depending on equipment and occupancy.",
+            "de": "1,5 MWh. Eine Haushaltsjahresmenge liegt bei wenigen Megawattstunden, abhängig von Geräten und Belegung."
+          },
+          "short": {
+            "en": "Single-person annual electricity",
+            "de": "Jahresstrom eines Einpersonenhaushalts"
+          }
+        },
+        {
+          "id": "family-household-year",
+          "label": {
+            "en": "Annual electricity use of a four-person household, teaching estimate",
+            "de": "Jahresstromverbrauch eines Vierpersonenhaushalts, Lehrannahme"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "spin"
+          },
+          "value": 4000000,
+          "explanation": {
+            "en": "4 MWh. A household annual total is a few megawatt-hours, depending on equipment and occupancy.",
+            "de": "4 MWh. Eine Haushaltsjahresmenge liegt bei wenigen Megawattstunden, abhängig von Geräten und Belegung."
+          },
+          "short": {
+            "en": "Four-person annual electricity",
+            "de": "Jahresstrom für vier Personen"
+          }
+        },
+        {
+          "id": "home-pump-year",
+          "label": {
+            "en": "Annual electricity for a 1 kW device running 2,000 hours",
+            "de": "Jahresstrom für ein 1-kW-Gerät über 2.000 Stunden"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "sway"
+          },
+          "value": 2000000,
+          "explanation": {
+            "en": "2 MWh. A household annual total is a few megawatt-hours, depending on equipment and occupancy.",
+            "de": "2 MWh. Eine Haushaltsjahresmenge liegt bei wenigen Megawattstunden, abhängig von Geräten und Belegung."
+          },
+          "short": {
+            "en": "Annual electricity of a small pump",
+            "de": "Jahresstrom einer kleinen Pumpe"
+          }
+        },
+        {
+          "id": "home-pv-year",
+          "label": {
+            "en": "Annual yield of a 3 kWp array at 950 full-load hours",
+            "de": "Jahresertrag einer 3-kWp-Anlage bei 950 Volllaststunden"
+          },
+          "icon": {
+            "emoji": "🔆",
+            "motion": "bounce"
+          },
+          "value": 2850000,
+          "explanation": {
+            "en": "2.85 MWh. A household annual total is a few megawatt-hours, depending on equipment and occupancy.",
+            "de": "2,85 MWh. Eine Haushaltsjahresmenge liegt bei wenigen Megawattstunden, abhängig von Geräten und Belegung."
+          },
+          "short": {
+            "en": "Small domestic solar annual yield",
+            "de": "Jahresertrag einer kleinen Haus-PV"
+          }
+        },
+        {
+          "id": "retrofit-house-year",
+          "label": {
+            "en": "Annual useful heating of a 150 m² retrofit at 100 kWh/(m²·a)",
+            "de": "Jahresnutzwärme einer 150-m²-Sanierung bei 100 kWh/(m²·a)"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "float"
+          },
+          "value": 15000000,
+          "explanation": {
+            "en": "15 MWh. Annual heat or generation for a building is in tens of megawatt-hours; peak power alone is insufficient.",
+            "de": "15 MWh. Jahreswärme oder Gebäudeerzeugung liegen bei einigen zehn Megawattstunden; die Spitzenleistung allein genügt nicht."
+          },
+          "short": {
+            "en": "Retrofit-house annual useful heat",
+            "de": "Jahresnutzwärme eines sanierten Hauses"
+          }
+        },
+        {
+          "id": "school-heat-year",
+          "label": {
+            "en": "Annual heating for a 500 m² school wing at 80 kWh/(m²·a)",
+            "de": "Jahresheizung eines 500-m²-Schulflügels bei 80 kWh/(m²·a)"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "flip"
+          },
+          "value": 40000000,
+          "explanation": {
+            "en": "40 MWh. Annual heat or generation for a building is in tens of megawatt-hours; peak power alone is insufficient.",
+            "de": "40 MWh. Jahreswärme oder Gebäudeerzeugung liegen bei einigen zehn Megawattstunden; die Spitzenleistung allein genügt nicht."
+          },
+          "short": {
+            "en": "Annual heating for a 500 m² school wing",
+            "de": "Jahresheizung eines 500-m²-Schulflügels"
+          }
+        },
+        {
+          "id": "roof-pv-year",
+          "label": {
+            "en": "Annual yield of a 30 kWp roof at 1,000 full-load hours",
+            "de": "Jahresertrag eines 30-kWp-Dachs bei 1.000 Volllaststunden"
+          },
+          "icon": {
+            "emoji": "🔆",
+            "motion": "pulse"
+          },
+          "value": 30000000,
+          "explanation": {
+            "en": "30 MWh. Annual heat or generation for a building is in tens of megawatt-hours; peak power alone is insufficient.",
+            "de": "30 MWh. Jahreswärme oder Gebäudeerzeugung liegen bei einigen zehn Megawattstunden; die Spitzenleistung allein genügt nicht."
+          },
+          "short": {
+            "en": "Annual rooftop photovoltaic yield",
+            "de": "Jahresertrag einer Dach-PV-Anlage"
+          }
+        },
+        {
+          "id": "old-duplex-year",
+          "label": {
+            "en": "Annual heating for a 200 m² duplex at 180 kWh/(m²·a)",
+            "de": "Jahresheizung eines 200-m²-Doppelhauses bei 180 kWh/(m²·a)"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "bounce"
+          },
+          "value": 36000000,
+          "explanation": {
+            "en": "36 MWh. Annual heat or generation for a building is in tens of megawatt-hours; peak power alone is insufficient.",
+            "de": "36 MWh. Jahreswärme oder Gebäudeerzeugung liegen bei einigen zehn Megawattstunden; die Spitzenleistung allein genügt nicht."
+          },
+          "short": {
+            "en": "Older duplex annual heating",
+            "de": "Jahreswärme eines alten Doppelhauses"
+          }
+        },
+        {
+          "id": "solar-farm-year",
+          "label": {
+            "en": "Annual yield of a 10 MW solar farm at 1,000 full-load hours",
+            "de": "Jahresertrag eines 10-MW-Solarparks bei 1.000 Volllaststunden"
+          },
+          "icon": {
+            "emoji": "🔆",
+            "motion": "spin"
+          },
+          "value": 10000000000,
+          "explanation": {
+            "en": "10 GWh. Annual generator output is rated power multiplied by equivalent full-load hours.",
+            "de": "10 GWh. Die jährliche Generatorerzeugung ist Nennleistung mal äquivalente Volllaststunden."
+          },
+          "short": {
+            "en": "Solar-farm annual electricity",
+            "de": "Jahresstrom eines Solarparks"
+          }
+        },
+        {
+          "id": "hydro-unit-year",
+          "label": {
+            "en": "Annual yield of a 4 MW hydro unit at 4,000 full-load hours",
+            "de": "Jahresertrag eines 4-MW-Wasserblocks bei 4.000 Volllaststunden"
+          },
+          "icon": {
+            "emoji": "🌊",
+            "motion": "bounce"
+          },
+          "value": 16000000000,
+          "explanation": {
+            "en": "16 GWh. Annual generator output is rated power multiplied by equivalent full-load hours.",
+            "de": "16 GWh. Die jährliche Generatorerzeugung ist Nennleistung mal äquivalente Volllaststunden."
+          },
+          "short": {
+            "en": "Hydropower annual electricity",
+            "de": "Jahresstrom eines Wasserblocks"
+          }
+        },
+        {
+          "id": "offshore-unit-year",
+          "label": {
+            "en": "Annual yield of an 8 MW offshore unit at 3,500 full-load hours",
+            "de": "Jahresertrag einer 8-MW-Offshoreanlage bei 3.500 Volllaststunden"
+          },
+          "icon": {
+            "emoji": "🌬️",
+            "motion": "bounce"
+          },
+          "value": 28000000000,
+          "explanation": {
+            "en": "28 GWh. Annual generator output is rated power multiplied by equivalent full-load hours.",
+            "de": "28 GWh. Die jährliche Generatorerzeugung ist Nennleistung mal äquivalente Volllaststunden."
+          },
+          "short": {
+            "en": "Offshore wind annual electricity",
+            "de": "Jahresstrom einer Offshore-Windanlage"
+          }
+        },
+        {
+          "id": "community-wind-year",
+          "label": {
+            "en": "Annual yield of a 3 MW wind turbine at 2,000 full-load hours",
+            "de": "Jahresertrag eines 3-MW-Windrads bei 2.000 Volllaststunden"
+          },
+          "icon": {
+            "emoji": "🌬️",
+            "motion": "pulse"
+          },
+          "value": 6000000000,
+          "explanation": {
+            "en": "6 GWh. Annual generator output is rated power multiplied by equivalent full-load hours.",
+            "de": "6 GWh. Die jährliche Generatorerzeugung ist Nennleistung mal äquivalente Volllaststunden."
+          },
+          "short": {
+            "en": "Community-wind annual electricity",
+            "de": "Jahresstrom eines Bürgerwindrads"
+          }
+        },
+        {
+          "id": "france-primary-energy",
+          "label": {
+            "en": "France annual primary energy consumption in 2023",
+            "de": "Frankreichs jährlicher Primärenergieverbrauch 2023"
+          },
+          "icon": {
+            "emoji": "🇫🇷",
+            "motion": "bounce"
+          },
+          "value": 2525000000000000,
+          "explanation": {
+            "en": "2.525 PWh. National annual energy is in terawatt-hours. France 2023: primary 2,525 TWh, final energy for energy use 1,496 TWh; SDES: https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023",
+            "de": "2,525 PWh. Landesjahresenergie liegt bei Terawattstunden. Frankreich 2023: primär 2.525 TWh, energetische Endenergie 1.496 TWh; SDES: https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023"
+          },
+          "short": {
+            "en": "France’s primary energy in 2023",
+            "de": "Frankreichs Primärenergie 2023"
+          }
+        },
+        {
+          "id": "france-final-energy",
+          "label": {
+            "en": "France annual final energy use for energy purposes in 2023",
+            "de": "Frankreichs jährlicher energetischer Endenergieverbrauch 2023"
+          },
+          "icon": {
+            "emoji": "🇫🇷",
+            "motion": "pulse"
+          },
+          "value": 1496000000000000,
+          "explanation": {
+            "en": "1.496 PWh. National annual energy is in terawatt-hours. France 2023: primary 2,525 TWh, final energy for energy use 1,496 TWh; SDES: https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023",
+            "de": "1,496 PWh. Landesjahresenergie liegt bei Terawattstunden. Frankreich 2023: primär 2.525 TWh, energetische Endenergie 1.496 TWh; SDES: https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023"
+          },
+          "short": {
+            "en": "France’s final energy use in 2023",
+            "de": "Frankreichs Endenergie 2023"
+          }
+        },
+        {
+          "id": "germany-electricity-year",
+          "label": {
+            "en": "Germany gross annual electricity consumption in 2024",
+            "de": "Deutschlands jährlicher Bruttostromverbrauch 2024"
+          },
+          "icon": {
+            "emoji": "🇩🇪",
+            "motion": "bounce"
+          },
+          "value": 527000000000000,
+          "explanation": {
+            "en": "527 TWh. National annual energy is in terawatt-hours. France 2023: primary 2,525 TWh, final energy for energy use 1,496 TWh; SDES: https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023",
+            "de": "527 TWh. Landesjahresenergie liegt bei Terawattstunden. Frankreich 2023: primär 2.525 TWh, energetische Endenergie 1.496 TWh; SDES: https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023"
+          },
+          "short": {
+            "en": "Germany’s annual electricity in 2024",
+            "de": "Deutschlands Jahresstrom 2024"
+          }
+        },
+        {
+          "id": "france-final-electricity-year",
+          "label": {
+            "en": "France annual final electricity use in 2023, approximate",
+            "de": "Frankreichs jährlicher Endstromverbrauch 2023, näherungsweise"
+          },
+          "icon": {
+            "emoji": "🇫🇷",
+            "motion": "spin"
+          },
+          "value": 403920000000000,
+          "explanation": {
+            "en": "403.9 TWh. National annual energy is in terawatt-hours. France 2023: primary 2,525 TWh, final energy for energy use 1,496 TWh; SDES: https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023",
+            "de": "403,9 TWh. Landesjahresenergie liegt bei Terawattstunden. Frankreich 2023: primär 2.525 TWh, energetische Endenergie 1.496 TWh; SDES: https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023"
+          },
+          "short": {
+            "en": "France’s final electricity in 2023",
+            "de": "Frankreichs Endstrom 2023"
+          }
+        },
+        {
+          "id": "earth-sunlight-hour",
+          "label": {
+            "en": "Sunlight intercepted by Earth over one hour at 174 PW",
+            "de": "Sonnenlicht auf die Erde in einer Stunde bei 174 PW"
+          },
+          "icon": {
+            "emoji": "🌅",
+            "motion": "bounce"
+          },
+          "value": 174000000000000000,
+          "explanation": {
+            "en": "174 PWh. Global and planetary comparisons are on the petawatt-hour scale. Integrate the stated average reference power over the specified duration.",
+            "de": "174 PWh. Globale und planetare Vergleiche liegen auf Petawattstundenebene. Integriere die genannte mittlere Bezugsleistung über die angegebene Dauer."
+          },
+          "short": {
+            "en": "Earth-intercepted sunlight in one hour",
+            "de": "Stundensonnenenergie auf die Erde"
+          }
+        },
+        {
+          "id": "world-power-day",
+          "label": {
+            "en": "Global primary energy over half a 365-day year at 19 TW",
+            "de": "Globale Primärenergie über ein halbes 365-Tage-Jahr bei 19 TW"
+          },
+          "icon": {
+            "emoji": "🌍",
+            "motion": "bounce"
+          },
+          "value": 83220000000000000,
+          "explanation": {
+            "en": "83.22 PWh. Global and planetary comparisons are on the petawatt-hour scale. Integrate the stated average reference power over the specified duration.",
+            "de": "83,22 PWh. Globale und planetare Vergleiche liegen auf Petawattstundenebene. Integriere die genannte mittlere Bezugsleistung über die angegebene Dauer."
+          },
+          "short": {
+            "en": "Half-day global primary energy",
+            "de": "Halbtages-Primärenergie der Welt"
+          }
+        },
+        {
+          "id": "earth-sunlight-half-hour",
+          "label": {
+            "en": "Sunlight intercepted by Earth over half an hour at 174 PW",
+            "de": "Sonnenlicht auf die Erde in einer halben Stunde bei 174 PW"
+          },
+          "icon": {
+            "emoji": "🌅",
+            "motion": "pulse"
+          },
+          "value": 87000000000000000,
+          "explanation": {
+            "en": "87 PWh. Global and planetary comparisons are on the petawatt-hour scale. Integrate the stated average reference power over the specified duration.",
+            "de": "87 PWh. Globale und planetare Vergleiche liegen auf Petawattstundenebene. Integriere die genannte mittlere Bezugsleistung über die angegebene Dauer."
+          },
+          "short": {
+            "en": "Earth-intercepted sunlight in half-hour",
+            "de": "Halbstundensonnenenergie auf die Erde"
+          }
+        },
+        {
+          "id": "world-power-decade",
+          "label": {
+            "en": "Annual energy of a continuous worldwide average of 10 TW",
+            "de": "Jahresenergie eines weltweiten durchgehenden Mittelwerts von 10 TW"
+          },
+          "icon": {
+            "emoji": "🌍",
+            "motion": "pulse"
+          },
+          "value": 87600000000000000,
+          "explanation": {
+            "en": "87.6 PWh. Global and planetary comparisons are on the petawatt-hour scale. Integrate the stated average reference power over the specified duration.",
+            "de": "87,6 PWh. Globale und planetare Vergleiche liegen auf Petawattstundenebene. Integriere die genannte mittlere Bezugsleistung über die angegebene Dauer."
+          },
+          "short": {
+            "en": "Annual energy of twice global power",
+            "de": "Jahresenergie doppelter Weltleistung"
+          }
         }
       ],
-      "draw": 9
+      "draw": 9,
+      "pool": {
+        "seconds": 300,
+        "slots": [
+          [
+            "phone-charge",
+            "boil-water",
+            "laptop-battery",
+            "camera-battery",
+            "half-litre-water",
+            "usb-power-bank"
+          ],
+          [
+            "chocolate-bar",
+            "daily-food",
+            "radiator-hour",
+            "rice-food",
+            "kettle-half-hour",
+            "people-day"
+          ],
+          [
+            "heating-oil-litre",
+            "petrol-litre",
+            "wood-pellets",
+            "radiator-day",
+            "hot-water-store"
+          ],
+          [
+            "ev-battery",
+            "petrol-tank",
+            "small-ev-battery",
+            "large-ev-battery",
+            "diesel-tank",
+            "heat-pump-day"
+          ],
+          [
+            "household-electricity",
+            "single-household-year",
+            "family-household-year",
+            "home-pump-year",
+            "home-pv-year"
+          ],
+          [
+            "heating-demand-house",
+            "retrofit-house-year",
+            "school-heat-year",
+            "roof-pv-year",
+            "old-duplex-year"
+          ],
+          [
+            "wind-turbine-year",
+            "solar-farm-year",
+            "hydro-unit-year",
+            "offshore-unit-year",
+            "community-wind-year"
+          ],
+          [
+            "germany-primary-energy",
+            "france-primary-energy",
+            "france-final-energy",
+            "germany-electricity-year",
+            "france-final-electricity-year"
+          ],
+          [
+            "world-primary-energy",
+            "earth-sunlight-hour",
+            "world-power-day",
+            "earth-sunlight-half-hour",
+            "world-power-decade"
+          ]
+        ]
+      }
     }
   ],
   "short": {

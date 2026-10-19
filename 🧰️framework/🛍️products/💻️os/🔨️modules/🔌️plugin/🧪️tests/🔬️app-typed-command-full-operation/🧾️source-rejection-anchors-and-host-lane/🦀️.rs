@@ -58,8 +58,9 @@
         let dispatch_start = source.rfind("async fn start_typed_command_operation").expect("production typed operation setup");
         let dispatch_end = source[dispatch_start..].find("pub fn dispatch_typed").map(|offset| dispatch_start + offset).expect("production setup end");
         let dispatch = &source[dispatch_start..dispatch_end];
-        assert!(dispatch.contains("dispatch_wire_retained_with_spec"));
-        assert!(dispatch.contains("retained_wire.take()"));
+        assert!(dispatch.contains("PendingLatestWinsCommand {"));
+        assert!(dispatch.contains("admission: Some(admission)"));
+        assert!(dispatch.contains("source_identity:(cx.operation(),cx.generation())"));
 
         let publisher_start = source.rfind("fn publish_mounted_typed_operation_unit").expect("production one-page publisher");
         let publisher_end = source[publisher_start..].find("pub async fn advance_typed_operation_publication_one").map(|offset| publisher_start + offset).expect("publisher end");
@@ -87,8 +88,11 @@
         assert!(reactor.contains("take_typed_operation_effect"));
         assert!(reactor.contains("take_typed_operation_event"));
         assert!(reactor.contains("take_typed_operation_ui_scope"));
-        assert!(reactor.contains("output.typed_operation_results.iter()"));
-        assert!(reactor.contains("page.renderer_exchange_bytes()"));
+        let receiving=include_str!("../../../⚛️reactor/🏃️runtime/📮️publication/🦀️.rs");
+        assert!(receiving.contains("ResultPageWireReceiver"));
+        assert!(receiving.contains("cx.consume_retained(p)"));
+        assert!(!reactor.contains("page.renderer_exchange_bytes()"));
+        assert!(reactor.contains("plugin_drive_result_pages"));
         assert!(reactor.contains("TypedOperationResultPage::renderer_ack_token"));
         assert!(reactor.contains("plugin_acknowledge_typed_operation_result(runtime, token)"));
         assert!(!reactor.contains("typed_operation_results: _"), "the old typed-result drop route must remain unreachable");

@@ -92,7 +92,8 @@ impl protocol::OpBinary for Fem2dResultsWindowConfigMutation {
     }
 }
 
-impl protocol::Mutation<Fem2dResultsWindowConfig> for Fem2dResultsWindowConfigMutation {
+impl protocol::Mutation<Fem2dResultsWindowConfig> for Fem2dResultsWindowConfigMutation  {
+
     type Diff = Fem2dResultsWindowConfigPatch;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
@@ -113,7 +114,13 @@ impl protocol::Mutation<Fem2dResultsWindowConfig> for Fem2dResultsWindowConfigMu
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         &Self::DESCRIPTORS[0]
     }
-    fn diff(&self, base: &Fem2dResultsWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
+
+
+
+}
+impl protocol::ColdMutation<Fem2dResultsWindowConfig> for Fem2dResultsWindowConfigMutation  {
+type ReferenceDiff = Fem2dResultsWindowConfigPatch;
+fn diff(&self, base: &Fem2dResultsWindowConfig) -> protocol::MutationOutcome<Self::ReferenceDiff> {
         let Self::Update(Fem2dResultsWindowConfigUpdate { patch }) = self;
         let changed = patch.against(base);
         if changed == Fem2dResultsWindowConfigPatch::default() {
@@ -122,10 +129,10 @@ impl protocol::Mutation<Fem2dResultsWindowConfig> for Fem2dResultsWindowConfigMu
             protocol::MutationOutcome::new(changed)
         }
     }
-    fn inverse(&self, base: &Fem2dResultsWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+fn inverse(&self, base: &Fem2dResultsWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         let Self::Update(Fem2dResultsWindowConfigUpdate { patch }) = self;
         let changed = patch.against(base);
-        Ok(if changed == Fem2dResultsWindowConfigPatch::default() { Vec::new() } else { vec![Self::Update(Fem2dResultsWindowConfigUpdate { patch: Box::new(protocol::DiffAlgebra::inverse(&changed, base)) })] })
+        Ok(if changed == Fem2dResultsWindowConfigPatch::default() { Vec::new() } else { vec![Self::Update(Fem2dResultsWindowConfigUpdate { patch: Box::new(protocol::ColdDiffAlgebra::inverse(&changed, base)) })] })
     }
 }
 
@@ -168,9 +175,8 @@ impl semio_framework_plugin::WindowConfigOwner for Fem2dResultsWindowConfigOwner
     fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
         std::sync::Arc::new(semio_framework_plugin::WindowConfigApplyEdit::new())
     }
-    fn build_store_owners() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
-        semio_framework_plugin::bounded_window_config_store_owners::<Self>()
-    }
+    fn preparation_source_birth()->semio_framework_value::retained_clone::RetainedCloneBirthDemand{semio_framework_plugin::bounded_window_config_preparation_source_birth::<Self>()}
+    fn build_store_owners(grant:semio_framework_value::RetainedCloneGrant)->Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State,Self::Mutation>,semio_framework_value::RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State,Self::Mutation>>{semio_framework_plugin::bounded_window_config_store_owners::<Self>(grant)}
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
         semio_framework_plugin::bounded_window_config_preparation_factory::<Self>()
     }

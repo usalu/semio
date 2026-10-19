@@ -32,7 +32,7 @@ test("both lower owners have actual workspace membership, registry and editor co
  for(const [directory,slug]of[["⚠️error","replication-error"],["🔐️crypto","replication-crypto"]]){
   const root="🧰️framework/🔨️modules/📡️replication/"+directory+"/📦️packages/🦀️rust",name="@semio-tech/"+slug+"-rs";expect(framework.workspace.members).toContain(root.slice("🧰️framework/".length));expect(registry.owners.filter((row:any)=>row.name===name)).toEqual([{name,root,manifest:root+"/📋️project.json",packages:[]}]);
   const metadata=JSON.parse(readFileSync(join(repo,root,"📋️project.json"),"utf8"));expect(metadata.name).toBe(name);expect(metadata.targets["test-native"].options.command).toBe("bun ./📜️script.ts test-native");expect(metadata.targets["test-contract"].options.command).toBe("bun ./📜️script.ts test-contract");
-  for(const file of[".vscode/launch.json",".vscode/🧩️launch.seed.jsonc"]){const parsed=ts.parseConfigFileTextToJson(file,readFileSync(join(repo,file),"utf8"));expect(parsed.error).toBeUndefined();for(const command of["test-contract","test-native"])for(const mode of["prototype","release"])expect(parsed.config.configurations.filter((row:any)=>row.command==="bun repo run "+name+":"+command+" --configuration="+mode)).toHaveLength(1);}
+  {const dashboard=JSON.parse(readFileSync(process.cwd()+"/📋️project.json","utf8")).metadata.semio.dashboard,tool=dashboard.tools.find((row:any)=>row.id==="run-script");expect(tool.command).toEqual(["bun","repo","exec","--projects={project}","--","bun","{workspace}/{script}"]);expect(tool.parameters.find((row:any)=>row.id==="script")).toMatchObject({kind:"text",required:true});}
  }
 });
 test("all host cfg production and unit closures fit the real lower compiler Source caps",async()=>{

@@ -231,7 +231,7 @@ where
 /// `typed command raw JSON exceeds its registered retained-page admission`.
 pub const CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES: usize = 49_152;
 
-pub const TYPED_OPERATION_RESULT_PAGE_BYTES: usize = 4_096;
+
 
 pub const TYPED_OPERATION_MAXIMUM_RETRIES: u8 = 2;
 
@@ -359,15 +359,7 @@ pub const TYPED_OPERATION_STALL_PUBLISHING_STAGE: u8 = 1;
 #[doc(hidden)]
 pub const TYPED_OPERATION_HOST_OUTBOX_SLOTS: usize = 64;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct TypedOperationResultToken {
-    pub receiver: u32,
-    pub operation: u64,
-    pub generation: u64,
-    pub sequence: u32,
-    pub attempt: u8,
-}
+pub use semio_framework_actor::typed_operation_page::{TypedOperationResultToken,TypedOperationResultPage,TYPED_OPERATION_RESULT_PAGE_BYTES};
 
 /// 🏁️ One mounted typed operation's terminal witness, captured the instant its Terminal result
 /// page is minted and drained exactly once by `advance_typed_operation_output` into an
@@ -418,13 +410,6 @@ pub struct TypedOperationCompletionWitness {
     pub ui_scope: UiDirtyScope,
 }
 
-#[derive(Clone)]
-pub struct TypedOperationResultPage {
-    pub token: TypedOperationResultToken,
-    pub lane: TypedOperationResultLane,
-    pub bytes: [u8; TYPED_OPERATION_RESULT_PAGE_BYTES],
-    pub len: usize,
-}
 
 /// 📦️ The Download lane's wire shape is a flat 4-element JSON array — matching what
 /// `serde_json` produced for the ad hoc `(&str, &str, Option<&str>, usize)` tuple this
@@ -445,78 +430,7 @@ impl semio_framework_value::ToValue for DownloadResultPayload<'_> {
     }
 }
 
-impl TypedOperationResultPage {
-    pub const RENDERER_PAGE_MAGIC: &'static [u8] = b"semio.typed-operation-page.v1\0";
-    pub const RENDERER_ACK_MAGIC: &'static [u8] = b"semio.typed-operation-ack.v1\0";
 
-    pub fn try_new(token: TypedOperationResultToken, lane: TypedOperationResultLane, bytes: &[u8]) -> Result<Self, Fault> {
-        if bytes.len() > TYPED_OPERATION_RESULT_PAGE_BYTES {
-            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.result-page-capacity"), "one typed-operation result exceeds its fixed page authority"));
-        }
-        let mut page = Self { token, lane, bytes: [0; TYPED_OPERATION_RESULT_PAGE_BYTES], len: bytes.len() };
-        page.bytes[..bytes.len()].copy_from_slice(bytes);
-        Ok(page)
-    }
-
-    pub fn try_serialize<T: semio_framework_value::ToValue>(token: TypedOperationResultToken, lane: TypedOperationResultLane, value: &T) -> Result<Self, Fault> {
-        let text = semio_framework_pack_json::to_json_string(value);
-        let encoded = text.as_bytes();
-        if encoded.len() > TYPED_OPERATION_RESULT_PAGE_BYTES {
-            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.result-page-capacity"), "one typed-operation result exceeds its fixed incremental encoder authority"));
-        }
-        let mut page = Self { token, lane, bytes: [0; TYPED_OPERATION_RESULT_PAGE_BYTES], len: encoded.len() };
-        page.bytes[..encoded.len()].copy_from_slice(encoded);
-        Ok(page)
-    }
-
-    pub fn bytes(&self) -> &[u8] {
-        &self.bytes[..self.len]
-    }
-
-    pub fn renderer_exchange_bytes(&self) -> Vec<u8> {
-        let mut bytes = Vec::with_capacity(Self::RENDERER_PAGE_MAGIC.len() + 30 + self.len);
-        bytes.extend_from_slice(Self::RENDERER_PAGE_MAGIC);
-        bytes.extend_from_slice(&self.token.receiver.to_le_bytes());
-        bytes.extend_from_slice(&self.token.operation.to_le_bytes());
-        bytes.extend_from_slice(&self.token.generation.to_le_bytes());
-        bytes.extend_from_slice(&self.token.sequence.to_le_bytes());
-        bytes.push(self.token.attempt);
-        bytes.push(match self.lane {
-            TypedOperationResultLane::Artifact => 0,
-            TypedOperationResultLane::Config => 1,
-            TypedOperationResultLane::Draft => 2,
-            TypedOperationResultLane::Presence => 3,
-            TypedOperationResultLane::Transient => 4,
-            TypedOperationResultLane::Child => 5,
-            TypedOperationResultLane::Effect => 6,
-            TypedOperationResultLane::Event => 7,
-            TypedOperationResultLane::Ui => 8,
-            TypedOperationResultLane::Download => 9,
-            TypedOperationResultLane::Terminal => 10,
-            TypedOperationResultLane::Fault => 11,
-            TypedOperationResultLane::Interaction => 12,
-            TypedOperationResultLane::WindowTransient => 13,
-            TypedOperationResultLane::WindowConfig => 14,
-        });
-        bytes.extend_from_slice(&(self.len as u32).to_le_bytes());
-        bytes.extend_from_slice(self.bytes());
-        bytes
-    }
-
-    pub fn renderer_ack_token(bytes: &[u8]) -> Option<TypedOperationResultToken> {
-        let body = bytes.strip_prefix(Self::RENDERER_ACK_MAGIC)?;
-        if body.len() != 25 {
-            return None;
-        }
-        Some(TypedOperationResultToken {
-            receiver: u32::from_le_bytes(body[0..4].try_into().ok()?),
-            operation: u64::from_le_bytes(body[4..12].try_into().ok()?),
-            generation: u64::from_le_bytes(body[12..20].try_into().ok()?),
-            sequence: u32::from_le_bytes(body[20..24].try_into().ok()?),
-            attempt: body[24],
-        })
-    }
-}
 
 /// 📸️ Every root one typed command is reduced against — see `VcsArtifactApp::capture_typed_command_roots`.
 #[doc(hidden)]
@@ -840,7 +754,7 @@ impl<A:ArtifactApp> ChildEmissionPreviewJob<A>{
         if self.retirement_fault.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<Fault>(),depth:1,..Default::default()});}
         if self.rejection.is_some(){return Ok(RetirementDemand{copy_bytes:0,depth:1,..Default::default()});}
         if self.emit.is_some()||self.ephemeral.is_some(){return Ok(RetirementDemand{copy_bytes:0,depth:1,..Default::default()});}
-        if let Some(owner)=self.completion_retirement.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?});}
+        if let Some(owner)=self.completion_retirement.as_ref(){return Ok(owner.next_demand(copy)?);}
         Ok(RetirementDemand{depth:usize::from(self.completion.is_some()),..Default::default()})
     }
     pub fn close_owned_turn(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
@@ -863,6 +777,8 @@ pub struct AgentLanePreview<A:ArtifactApp>{
     pub key:Option<semio_framework_plugin_operation::ToolOperationKey>,
     pub caller:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceLoan>>,
     pub starting:bool,
+    pub producer_request:Option<semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobRequest<A>>,
+    pub producer_request_retirement:Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobRequest<A>>>,
     pub producer:Option<OriginalPreviewDrive<semio_framework::ErasedToolJob>>,
     pub children:Option<OriginalPreviewDrive<ChildEmissionPreviewJob<A>>>,
     pub completion:Option<ArtifactToolCompletion<A>>,
@@ -879,6 +795,7 @@ pub struct AgentLanePreview<A:ArtifactApp>{
 }
 impl<A:ArtifactApp> AgentLanePreview<A>{
     pub fn retirement_demands(&self,body:usize,canonical:Option<&semio_framework_plugin_operation::ToolCancellationHandle>)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        if self.producer_request.is_some()||self.producer_request_retirement.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.producer_request,&self.producer_request_retirement,body)}
         if let Some(owner)=self.producer.as_ref(){return owner.retirement_demands(body).map(|demand|if demand==Default::default(){semio_framework_value::RetirementDemand{depth:1,..Default::default()}}else{demand})}
         if let Some(owner)=self.children.as_ref(){return owner.retirement_demands(body).map(|demand|if demand==Default::default(){semio_framework_value::RetirementDemand{depth:1,..Default::default()}}else{demand})}
         if self.completion.is_some()||self.completion_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.completion,&self.completion_close,body)}
@@ -887,10 +804,11 @@ impl<A:ArtifactApp> AgentLanePreview<A>{
         if self.lease.is_some(){return Ok(semio_framework_value::RetirementDemand{capacity_bytes:std::mem::size_of::<semio_framework_plugin_operation::ToolCancellationLeaseRetirement>(),copy_bytes:std::mem::size_of::<semio_framework_plugin_operation::ToolCancellationLease>(),depth:1,..Default::default()})}
         Ok(self.caller.as_ref().map_or(semio_framework_value::RetirementDemand{depth:1,..Default::default()},|caller|caller.retirement_demands()))
     }
-    pub fn terminal_is_empty(&self)->bool{self.key.is_none()&&self.caller.is_none()&&self.producer.is_none()&&self.children.is_none()&&self.completion.is_none()&&self.completion_close.is_none()&&self.publication.is_none()&&self.publication_close.is_none()&&self.lease.is_none()&&self.lease_close.is_none()}
+    pub fn terminal_is_empty(&self)->bool{self.key.is_none()&&self.caller.is_none()&&self.producer_request.is_none()&&self.producer_request_retirement.is_none()&&self.producer.is_none()&&self.children.is_none()&&self.completion.is_none()&&self.completion_close.is_none()&&self.publication.is_none()&&self.publication_close.is_none()&&self.lease.is_none()&&self.lease_close.is_none()}
     pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,canonical:Option<&semio_framework_plugin_operation::ToolCancellationHandle>)->Result<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         use semio_framework_job::InteractiveJobCloseStep as Close;
         self.closing=true;if cx.should_yield(){return Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(Default::default()))}
+        if self.producer_request.is_some()||self.producer_request_retirement.is_some(){let step=semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.producer_request,&mut self.producer_request_retirement,cx.retained_grant())?;cx.consume_retained(step.progress())?;return Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(step.progress()))}
         if let Some(owner)=self.producer.as_mut(){let step=owner.cancel_step(cx)?;if owner.cancellation_terminal_is_empty(){self.producer.take();}return Ok(match step{Close::Pending{progress}|Close::Complete{progress}=>semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress),Close::Blocked=>semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked{reason:"original preview producer awaits paid closure"}})}
         if let Some(owner)=self.children.as_mut(){let step=owner.cancel_step(cx)?;if owner.cancellation_terminal_is_empty(){self.children.take();}return Ok(match step{Close::Pending{progress}|Close::Complete{progress}=>semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress),Close::Blocked=>semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked{reason:"original preview child producer awaits paid closure"}})}
         let grant=cx.retained_grant();

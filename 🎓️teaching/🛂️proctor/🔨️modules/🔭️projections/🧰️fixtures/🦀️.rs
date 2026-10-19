@@ -4,14 +4,14 @@ use super::*;
 use crate::actors::fixtures::{admission, envelope, perfect};
 use crate::actors::{deciders, enrollment, ProctorDeciders};
 use teaching_proctor_base::storage::Database;
-use quiz::{Challenge, Command};
+use course::{Challenge, Command};
 use server::authority::{AuthorityDirectory, CommandBus};
 use server::contract::{CommandOutcome, HybridLogicalClock, PolicyDecision};
 
 /// 🎬️ A bus over `database` with the proctor's deciders, allowing every command.
-pub async fn bus(database: &Database, catalog: &Arc<LoadedCatalog>) -> CommandBus<SqliteAuthorityStore, ProctorDeciders> {
+pub async fn bus(database: &Database, course: &Arc<LoadedCourse>) -> CommandBus<SqliteAuthorityStore, ProctorDeciders> {
     let mut bus = CommandBus::new(AuthorityDirectory::new(), SqliteAuthorityStore::new(database.clone()), Box::new(|_| PolicyDecision::Allow));
-    for decider in deciders(catalog, &admission(0)) {
+    for decider in deciders(course, &admission(0)) {
         bus.register(decider).await;
     }
     bus
@@ -35,10 +35,10 @@ pub fn command_id(number: usize, run: &str) -> String {
 
 /// ▶️ Start a run of `quiz` at `challenge` as `learner` and answer every sheet task perfectly — on a
 /// timed run each right after opening it —, without submitting.
-pub async fn answer(bus: &mut CommandBus<SqliteAuthorityStore, ProctorDeciders>, catalog: &LoadedCatalog, learner: &str, run: &str, quiz: &str, challenge: Challenge, millis: u64) {
+pub async fn answer(bus: &mut CommandBus<SqliteAuthorityStore, ProctorDeciders>, course: &LoadedCourse, learner: &str, run: &str, quiz: &str, challenge: Challenge, millis: u64) {
     submit(bus, &Command::StartRun { id: command_id(1, run), learner: learner.into(), run: run.into(), quiz: quiz.into(), challenge, at: millis }, millis).await;
-    let document = &catalog.current()[quiz].quiz;
-    for (index, task) in quiz::sheet_of(document, quiz::run_seed(run), challenge).tasks.iter().enumerate() {
+    let document = &course.current()[quiz].quiz;
+    for (index, task) in course::sheet_of(document, course::run_seed(run), challenge).tasks.iter().enumerate() {
         if task.seconds().is_some() {
             let opened = submit(bus, &Command::OpenTask { id: command_id(50 + index, run), learner: learner.into(), run: run.into(), task: task.id().clone(), at: millis }, millis).await;
             assert!(matches!(opened, CommandOutcome::Accepted { .. }), "{opened:?}");
@@ -50,7 +50,7 @@ pub async fn answer(bus: &mut CommandBus<SqliteAuthorityStore, ProctorDeciders>,
 }
 
 /// 🏁️ Play one perfect run of `quiz` at `challenge` as `learner`.
-pub async fn play(bus: &mut CommandBus<SqliteAuthorityStore, ProctorDeciders>, catalog: &LoadedCatalog, learner: &str, run: &str, quiz: &str, challenge: Challenge, millis: u64) {
-    answer(bus, catalog, learner, run, quiz, challenge, millis).await;
+pub async fn play(bus: &mut CommandBus<SqliteAuthorityStore, ProctorDeciders>, course: &LoadedCourse, learner: &str, run: &str, quiz: &str, challenge: Challenge, millis: u64) {
+    answer(bus, course, learner, run, quiz, challenge, millis).await;
     assert!(matches!(submit(bus, &Command::SubmitRun { id: command_id(99, run), learner: learner.into(), run: run.into() }, millis + 2).await, CommandOutcome::Accepted { .. }));
 }

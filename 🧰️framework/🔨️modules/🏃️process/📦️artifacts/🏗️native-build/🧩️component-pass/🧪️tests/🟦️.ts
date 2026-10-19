@@ -1,5 +1,6 @@
 import "../📋️contract/🧪️tests/🟦️.ts";
 import "./📥️inputs/🟦️.ts";
+import {pathToFileURL} from "node:url";
 import { phaseCompilerAdmissionControlV1, scriptCompilerAdmissionControlV1 } from "../../../../🏗️build/🎟️capacity/🟦️.ts";
 import { withBuildTestInvocationV1 } from "../../../../🧪️testing/📥️invocation/🟦️.ts";
 import { captureOwnedCommandV1 } from "../../../../🎛️owned-execution/🟦️.ts";
@@ -89,7 +90,7 @@ test("the native build plan is schema-first, agrees with Ajv, and refuses duplic
 });
 
 test("unit-graph identities, closures and announced identities follow the language-agnostic vectors", () => {
-  const vector = fixture.unitGraph as any;
+  const vector = JSON.parse(JSON.stringify(fixture.unitGraph).replaceAll("path+file:///w", "path+" + pathToFileURL(resolve("/w")).href));
   expect(vector.graph.units.map(unitGraphIdentityV1)).toEqual(vector.identities);
   const closures = unitGraphClosuresV1(vector.graph, vector.pass);
   expect(Object.fromEntries([...closures].map(([name, closure]) => [name, [...closure].sort()]))).toEqual(vector.closures);

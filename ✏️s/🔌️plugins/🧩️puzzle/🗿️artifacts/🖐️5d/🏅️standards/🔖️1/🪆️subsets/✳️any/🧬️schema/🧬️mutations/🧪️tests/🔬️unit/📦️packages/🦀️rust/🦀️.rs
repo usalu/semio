@@ -13,7 +13,7 @@ pub use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 pub use semio_s_plugin_puzzle_jobs as puzzle_job;
 pub use semio_s_plugin_puzzle_retained as retained_command;
 #[cfg(test)]
-pub use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
+pub use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 pub use semio_s_artifact_puzzle_5d_snapshot::{PUZZLE_5D_SCHEMA};
 pub use semio_s_artifact_puzzle_5d_mut_any_5::{apply_puzzle5d_mutation};
 pub use semio_s_artifact_puzzle_5d_mut_any_8::{PUZZLE5D_DIALECT};

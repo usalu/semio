@@ -1,5 +1,5 @@
-//! 🧵️ Puzzle 3d editing session — one document instance's resident state (precompute engine, instance residency, mesh
 //! lane), the process-global session registry that keeps it across calls, the action context every command arm reads,
+//! 🧵️ Puzzle 3d editing session — one document instance's resident state (precompute engine, instance residency, mesh
 //! the engine bridge from the transient scene to the precompute session, and the context menu.
 
 #![allow(clippy::result_large_err)]

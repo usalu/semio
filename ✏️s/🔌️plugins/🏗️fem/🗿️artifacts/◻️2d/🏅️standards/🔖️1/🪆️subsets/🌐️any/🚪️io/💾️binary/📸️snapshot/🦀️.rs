@@ -36,13 +36,14 @@ use crate::standards::v1::subsets::any::schema::snapshot::*;
 use crate::standards::v1::subsets::any::schema::structure::FemCombination;
 use crate::standards::v1::subsets::any::schema::structure::FemElement;
 use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use crate::standards::v1::subsets::any::schema::structure::FemMaterial;
-use crate::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_fem_material::planar::FemMaterialValue;
+use semio_s_fem_node::planar::FemNodeValue;
 use crate::standards::v1::subsets::any::schema::structure::FemRegion;
 use crate::standards::v1::subsets::any::schema::structure::FemSection;
 use crate::standards::v1::subsets::any::schema::structure::FemSupport;
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 
@@ -59,7 +60,12 @@ impl pack::snapshot::ArtifactPack for Fem2dSnapshot {
             return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as pack::snapshot::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)
+        let snapshot = Self::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)?;
+        if let Err(error) = snapshot.validate_interaction_identities() {
+            <Self as semio_framework_value::FromValue>::retire_decoded(snapshot);
+            return Err(store::PackError::from(error));
+        }
+        Ok(snapshot)
     }
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
@@ -72,7 +78,7 @@ fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSql
 #[cfg(test)] pub use snapshot_codec::*;
 
 /// 🫴️ Declares this owner’s actual controlled native record factories.
-impl pack::snapshot::ArtifactNativeSnapshot for Fem2dSnapshot {
- fn decode_native_snapshot(payload:pack::snapshot::NativeSnapshotInput<'_>,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{store::decode_native_snapshot_record(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|Self::__dsl_from_record_controlled(record,native),control)}
- fn encode_native_snapshot(&self,encoding:pack::snapshot::NativeSnapshotEncoding,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{store::encode_native_snapshot_record(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)}
+impl store::ArtifactNativeSnapshot for Fem2dSnapshot {
+ fn decode_native_snapshot(payload:store::NativeSnapshotInput<'_>,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{store::decode_native_snapshot_record(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|{Self::validate_interaction_record(record,native)?;Self::__dsl_from_record_controlled(record,native)},control)}
+ fn encode_native_snapshot(&self,encoding:store::NativeSnapshotEncoding,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{store::encode_native_snapshot_record(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)}
 }

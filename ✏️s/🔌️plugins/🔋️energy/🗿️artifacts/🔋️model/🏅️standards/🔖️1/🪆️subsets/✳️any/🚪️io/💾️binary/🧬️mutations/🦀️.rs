@@ -1,6 +1,6 @@
 //! ⚖️ EnergyModel artifact — the binary operation surface (`spr`) and its laws. Tags are the
-//! aggregate's own variant ordinals, emitted by `dsl::variants_binary` from the `dsl::DslEnum`
-//! derive: there is no hand-maintained tag registry to collide on.
+//! declared tags in `📡️.protocol.semio`; `dsl::variants_binary` pairs each tag with the aggregate's
+//! derived record body and rejects noncanonical frames.
 
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).

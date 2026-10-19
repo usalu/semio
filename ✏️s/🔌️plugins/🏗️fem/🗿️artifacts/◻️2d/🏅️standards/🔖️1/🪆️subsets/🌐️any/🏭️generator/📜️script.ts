@@ -32,6 +32,8 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
+import { receiveScriptProcessInvocation } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
@@ -211,6 +213,10 @@ const RECIPE_DIRECTORIES = {
 const EXPORTED_FILE_NAMES = { stl: "🧊️expected.stl", obj: "🗿️expected.obj" } as const;
 
 const CARRIER_FIXTURES = {
+  "create-region": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/🗺️create-region" },
+  "delete-region": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/🚫️delete-region" },
+  "replace-region": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/🔄️replace-region" },
+  "move-selection": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/🧭️move-selection" },
   "create-node": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/⚪️create-node" },
   "delete-node": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/🕳️delete-node" },
   "create-element": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/🧩️create-element" },
@@ -219,6 +225,16 @@ const CARRIER_FIXTURES = {
   "create-material": { subset: "material", path: "🧱️material/🧫️fixtures/🌱️create-material" },
   "delete-material": { subset: "material", path: "🧱️material/🧫️fixtures/🗑️delete-material" },
   "replace-material": { subset: "material", path: "🧱️material/🧫️fixtures/🔁️replace-material" },
+  "change-material": { subset: "material", path: "🧱️material/🧫️fixtures/🩹️change-material" },
+  "change-load": { subset: "load", path: "🏋️load/🧫️fixtures/🩹️change-load" },
+  "change-combination-name": { subset: "load", path: "🏋️load/🧫️fixtures/🩹️change-combination-name" },
+  "change-combination-term": { subset: "load", path: "🏋️load/🧫️fixtures/🩹️change-combination-term" },
+
+  "change-element": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/🩹️change-element" },
+  "change-support": { subset: "boundary", path: "🛡️boundary/🧫️fixtures/🩹️change-support" },
+  "change-region": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/🩹️change-region" },
+  "change-section": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/🩹️change-section" },
+  "change-node": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/🩹️change-node" },
   "create-section": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/📐️create-section" },
   "delete-section": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/✂️delete-section" },
   "replace-section": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/📏️replace-section" },
@@ -378,6 +394,11 @@ async function generateOne(t: NonNullable<typeof toolkit>, recipe: Recipe, outDi
 //#region 🚪️Entry
 async function main(argv: readonly string[]): Promise<number> {
   const [command = "generate", ...rest] = argv;
+  if (command === "test-carrier") {
+    const engineDir = join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust");
+    await receiveScriptProcessInvocation(process.env, invocation => runRepositoryCargoTests(["fem2d-1-any-json-engine"], engineDir, invocation, ["--lib", "--bins", ...rest]));
+    return 0;
+  }
   const value = (flag: string): string | null => {
     const index = rest.indexOf(flag);
     return index === -1 ? null : (rest[index + 1] ?? null);
@@ -465,7 +486,7 @@ async function main(argv: readonly string[]): Promise<number> {
     process.stdout.write(`${JSON.stringify(entries, null, 2)}\n`);
     return 0;
   }
-  console.error(`[generator] unknown command ${JSON.stringify(command)} — expected generate | manifests | carrier | carrier-manifests`);
+  console.error(`[generator] unknown command ${JSON.stringify(command)} — expected generate | manifests | carrier | carrier-manifests | test-carrier`);
   return 1;
 }
 

@@ -1,0 +1,36 @@
+{
+  "before": {
+    "id": "row1",
+    "name": "Original structural row",
+    "value": 42
+  },
+  "expected": {
+    "id": "row1",
+    "name": "Original structural row",
+    "value": 42
+  },
+  "refusals": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "foreignSourceAccepted": false,
+  "coldConstructionRequired": false,
+  "refusedEntries": [
+    [
+      "id",
+      "row1"
+    ],
+    [
+      "id",
+      "row2"
+    ],
+    [
+      "value",
+      42
+    ]
+  ],
+  "callbackRefusalAt": "after-first-seal"
+}

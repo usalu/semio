@@ -82,11 +82,11 @@ fn nested(mut demand: RetirementDemand) -> Result<RetirementDemand, ValueError> 
 }
 
 /// 🔁️ The framework-default [`ArtifactStoreInitializationAuthority`]: it replays one completed envelope's history ledger — the
-/// genesis snapshot plus the applied edits' forwards, each through [`Mutation::diff`](super::Mutation) and `apply_diff`, under
+/// genesis snapshot plus the applied edits' forwards, each through [`Mutation::diff`](super::Mutation) and `apply_diff_cold`, under
 /// the supersessions the log folds to ([`admit_replacement`](super::admit_replacement)) — into a store, one bounded turn at a time,
 /// and loads every document whose initialization is nothing more than that replay.
 ///
-/// ⛓️ Traversal bound: one turn performs at most ONE operation's `diff` + `apply_diff` (the single traversal of the projection it
+/// ⛓️ Traversal bound: one turn performs at most ONE operation's `diff` + `apply_diff_cold` (the single traversal of the projection it
 /// patches) and otherwise O(1) work; validation, history seeding, supersession folding, applied/redo cursor building and every
 /// retirement are one id, one edit or one funded retirement frame per turn. The projection a fold produces is the mutation's own
 /// allocation and is not a grant currency; everything the initializer itself allocates (owner catalog, history pages, returned-read
@@ -229,17 +229,20 @@ where
     }
 
     pub fn turn(&mut self, cx: &mut StepContext<'_>) -> Turn {
-        if cx.operation() != self.operation || cx.generation() != self.generation || cx.is_cancelled() {
+        let grant = cx.retained_grant();
+        let stale = cx.operation() != self.operation || cx.generation() != self.generation || cx.is_cancelled();
+        let unclaimed = self.phase == Phase::Complete && !self.terminal_handoff && self.candidate.is_some();
+        let closing = unclaimed && (self.cancel_requested || stale);
+        if (!matches!(self.phase, Phase::Complete | Phase::Cancelled | Phase::Fault) || closing) && (cx.should_yield() || grant.maximum_items == 0 || grant.maximum_depth == 0) {
+            return Turn::Yield;
+        }
+        if stale {
             self.cancel_requested = true;
         }
-        if self.cancel_requested && self.running() {
+        if self.cancel_requested && (self.running() || unclaimed) {
             self.phase = Phase::RetireCancelled;
         }
         if self.running() && self.settle(cx) {
-            return Turn::Yield;
-        }
-        let grant = cx.retained_grant();
-        if self.running() && (grant.maximum_items == 0 || grant.maximum_depth == 0) {
             return Turn::Yield;
         }
         match self.phase {
@@ -468,7 +471,7 @@ where
         let envelope = self.envelope.as_ref().expect("replay envelope remains retained while its forwards fold");
         let entry = envelope.vcs.edits.get(edit).expect("replay applied edit remains retained");
         let runtime = self.runtime.as_mut().expect("replay runtime remains retained while its forwards fold");
-        match runtime.fold_next_forward(entry, mutation, &envelope.schema, ARTIFACT_STORE_REPLAY_FIELD_BYTES, grant.maximum_copy_bytes) {
+        match runtime.fold_reference_next_forward(entry, mutation, &envelope.schema, ARTIFACT_STORE_REPLAY_FIELD_BYTES, grant.maximum_copy_bytes) {
             Ok(ArtifactStoreInitializationNext::Exhausted) => {
                 self.phase = Phase::CommitApplied { position, edit };
                 self.tick(cx)
@@ -617,7 +620,7 @@ where
             return if actor.terminal_is_empty() {
                 Ok(RetirementDemand { copy_bytes: size_of::<Option<ControlledRetirement<ActorId>>>(), depth: 1, ..Default::default() })
             } else {
-                nested(RetirementDemand { copy_bytes: actor.next_copy_byte_demand()?, capacity_bytes: actor.next_capacity_byte_demand(body)?, release_bytes: actor.next_release_byte_demand()?, depth: actor.next_depth_demand()? })
+                nested(actor.next_demand(body)?)
             };
         }
         if self.actor.is_some() {
@@ -764,8 +767,8 @@ where
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + RetireOwned + Send + 'static + semio_framework_pack_json::ArtifactCanonicalJsonTree,
     C:DocumentStoreOwnerProducer<P,M>,
 {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
-        match self.turn(cx) {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure> {
+        (match self.turn(cx) {
             Turn::Yield => JobOutcomeBorrow::admit_yield(cx),
             Turn::Complete => JobOutcomeBorrow::admit_complete(cx, None, None),
             Turn::Cancelled => JobOutcomeBorrow::admit_cancelled(cx),
@@ -773,7 +776,7 @@ where
                 let detail = self.fault_detail.as_deref().unwrap_or("replay.fault").as_bytes();
                 self.publication.advance_from_source(JobPublicationKind::Fault, detail, cx)
             }
-        }
+        }).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
@@ -795,7 +798,7 @@ where
     }
 
     fn take_candidate(&mut self) -> Option<ArtifactStore<P, M>> {
-        if self.phase != Phase::Complete || self.terminal_handoff {
+        if self.phase != Phase::Complete || self.terminal_handoff || self.cancel_requested {
             return None;
         }
         let candidate = self.candidate.take()?;
@@ -814,7 +817,11 @@ where
         }
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>) -> Result<RetainedCloneStep,semio_framework_job::OriginalTurnFailure> {
+        self.begin_close();
+        if self.terminal_is_empty(){return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))}
+        let demand=self.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{
         self.begin_close();
         let step = self.close_original(grant)?;
         if self.close_is_terminal() {
@@ -822,6 +829,9 @@ where
             return Ok(RetainedCloneStep::Complete(step.progress()));
         }
         Ok(RetainedCloneStep::Progress(step.progress()))
+
+        })?;
+        Ok(if self.terminal_is_empty(){semio_framework_value::retained_clone::RetainedCloneStep::Complete(step.progress())}else{semio_framework_value::retained_clone::RetainedCloneStep::Progress(step.progress())})
     }
 
     fn terminal_is_empty(&self) -> bool {

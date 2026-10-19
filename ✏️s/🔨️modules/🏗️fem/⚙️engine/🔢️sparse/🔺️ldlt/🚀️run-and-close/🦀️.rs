@@ -3,95 +3,87 @@
 use super::*;
 
 impl LdltJob {
-    fn run(&mut self, context: &mut StepContext<'_>) -> NumericalRun {
+    fn run(&mut self, context: &mut StepContext<'_>) -> Result<NumericalRun, OriginalTurnFailure> {
+        if context.is_cancelled() { return Ok(NumericalRun::Cancelled); }
+        if context.should_yield() { return Ok(NumericalRun::Yield); }
+        let result = self.run_admitted(context);
+        context.consume_fuel(1);
+        result
+    }
+
+    fn run_admitted(&mut self, context: &mut StepContext<'_>) -> Result<NumericalRun, OriginalTurnFailure> {
+        if self.terminal_published { return Ok(NumericalRun::Yield); }
         if context.is_cancelled() {
-            return NumericalRun::Cancelled;
+            return Ok(NumericalRun::Cancelled);
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return NumericalRun::Fault;
+            return Ok(NumericalRun::Fault);
         }
         if self.state.admission_fault {
-            return NumericalRun::Fault;
+            return Ok(NumericalRun::Fault);
         }
         if self.state.checkpoint_due || self.checkpoint_writer.is_some() {
             context.set_stage("fem.ldlt.checkpoint-page");
+            if self.checkpoint_writer.is_some() && self.checkpoint_cursor.field == u16::MAX {
+                if !RetainedJobPayloadWriter::finish_funded(&mut self.checkpoint_writer, &mut self.desk.lent, context)? { return Ok(NumericalRun::Yield); }
+                let payload = self.desk.lent.take().expect("finished numerical writer retained its original payload");
+                return Ok(self.desk.lend_checkpoint(payload, self.state.column as u64));
+            }
+
             if context.should_yield() {
                 return NumericalRun::Yield;
             }
-            context.consume_fuel(1);
             if self.checkpoint_writer.is_none() {
-                self.state.checkpoint_due = false;
-                self.checkpoint_cursor = NumericalPageCursor::new();
-                self.checkpoint_writer = Some(RetainedJobPayloadWriter::new(JobPayloadStream::CheckpointState));
-                return NumericalRun::Yield;
+                self.checkpoint_writer = RetainedJobPayloadWriter::new_funded(JobPayloadStream::CheckpointState, context)?;
+                if self.checkpoint_writer.is_some() { self.state.checkpoint_due = false; self.checkpoint_cursor = NumericalPageCursor::new(); }
+                return Ok(NumericalRun::Yield);
             }
             let Some(writer) = self.checkpoint_writer.as_mut() else {
-                return NumericalRun::Fault;
+                return Ok(NumericalRun::Fault);
             };
             if writer.staged_page_len().is_none() {
-                return match writer.begin_staged_page(context) {
-                    Ok(()) => NumericalRun::Yield,
-                    Err(_) => NumericalRun::Fault,
-                };
+                writer.begin_staged_page_funded(context)?;
+                return Ok(NumericalRun::Yield);
             }
-            let complete = match Self::advance_checkpoint_entry(&self.state, &mut self.checkpoint_cursor, writer) {
-                Ok(complete) => complete,
-                Err(_) => return NumericalRun::Fault,
-            };
+            let complete = Self::advance_checkpoint_entry(&self.state, &mut self.checkpoint_cursor, writer, context)?;
             if !complete {
                 return NumericalRun::Yield;
             }
-            let Some(writer) = self.checkpoint_writer.take() else {
-                return NumericalRun::Fault;
-            };
-            let state = match writer.finish() {
-                Ok(state) => state,
-                Err(writer) => {
-                    self.checkpoint_writer = Some(writer);
-                    return NumericalRun::Fault;
-                }
-            };
-            return self.desk.lend_checkpoint(state, self.state.column as u64);
+            return Ok(NumericalRun::Yield);
         }
         if self.state.column == self.state.a.n {
             context.set_stage("fem.ldlt.output-entry");
+            if self.output_writer.is_some() && self.state.publication_stage == 3 {
+                let mut demand = RetainedJobPayloadWriter::finish_demand();
+                demand.copy_bytes = demand.copy_bytes.checked_add(size_of::<bool>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "numerical terminal metadata overflow"))?;
+                if !semio_s_fem_sparse::numerical_grant_covers(context.retained_grant(), demand) { return Ok(NumericalRun::Yield); }
+                if !RetainedJobPayloadWriter::finish_funded(&mut self.output_writer, &mut self.desk.lent, context)? { return Ok(NumericalRun::Yield); }
+                self.terminal_published = true;
+                context.consume_retained(RetainedCloneProgress { copied_bytes: size_of::<bool>(), ..Default::default() })?;
+                let payload = self.desk.lent.take().expect("finished numerical writer retained its original payload");
+                return Ok(self.desk.lend_complete(payload));
+            }
+
             if context.should_yield() {
-                return NumericalRun::Yield;
+                return Ok(NumericalRun::Yield);
             }
             if self.output_writer.is_none() {
-                context.consume_fuel(1);
-                self.output_writer = Some(RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput));
+                self.output_writer = RetainedJobPayloadWriter::new_funded(JobPayloadStream::CommitOutput, context)?;
                 self.output_page_cursor = 0;
-                return NumericalRun::Yield;
+                return Ok(NumericalRun::Yield);
             }
-            context.consume_fuel(1);
             let Some(writer) = self.output_writer.as_mut() else {
-                return NumericalRun::Fault;
+                return Ok(NumericalRun::Fault);
             };
             if writer.staged_page_len().is_none() {
-                return match writer.begin_staged_page(context) {
-                    Ok(()) => NumericalRun::Yield,
-                    Err(_) => NumericalRun::Fault,
-                };
+                writer.begin_staged_page_funded(context)?;
+                return Ok(NumericalRun::Yield);
             }
-            let complete = match Self::advance_output_entry(&mut self.state, self.operation, writer) {
-                Ok(complete) => complete,
-                Err(_) => return NumericalRun::Fault,
-            };
+            let complete = Self::advance_output_entry(&mut self.state, self.operation, writer, context)?;
             if !complete {
                 return NumericalRun::Yield;
             }
-            let Some(writer) = self.output_writer.take() else {
-                return NumericalRun::Fault;
-            };
-            let output = match writer.finish() {
-                Ok(output) => output,
-                Err(writer) => {
-                    self.output_writer = Some(writer);
-                    return NumericalRun::Fault;
-                }
-            };
-            return self.desk.lend_complete(output);
+            return Ok(NumericalRun::Yield);
         }
         context.set_stage(match self.state.cursor.stage {
             LdltColumnStage::ReserveColumn => "fem.ldlt.reserve-column",
@@ -103,37 +95,23 @@ impl LdltJob {
             LdltColumnStage::EmitRow => "fem.ldlt.emit-row",
             LdltColumnStage::PublishColumn => "fem.ldlt.publish-column",
             LdltColumnStage::CompleteColumn => "fem.ldlt.complete-column",
+            LdltColumnStage::SortRows => "fem.ldlt.sort-touched-rows",
         });
         if context.should_yield() {
-            return NumericalRun::Yield;
+            return Ok(NumericalRun::Yield);
         }
-        context.consume_fuel(1);
-        if self.advance_column_microcursor().is_err() {
-            return NumericalRun::Fault;
+        if self.advance_column_microcursor(context).is_err() {
+            return Ok(NumericalRun::Fault);
         }
         if context.is_cancelled() {
-            return NumericalRun::Cancelled;
+            return Ok(NumericalRun::Cancelled);
         }
-        NumericalRun::Yield
+        Ok(NumericalRun::Yield)
     }
 
-    fn largest_owner_bytes(&self) -> usize {
-        let state = &self.state;
-        [state.a.colptr.capacity() * size_of::<u32>(), state.a.rowind.capacity() * size_of::<u32>(), state.a.vals.capacity() * size_of::<f64>(), state.d.capacity() * size_of::<f64>()]
-            .into_iter()
-            .chain(state.l_cols.iter().map(|column| column.capacity() * size_of::<(u32, f64)>()))
-            .chain(state.row_lists.iter().map(|row| row.capacity() * size_of::<usize>()))
-            .max()
-            .unwrap_or(0)
-    }
 
-    fn rung_demand(&self) -> RetirementDemand {
-        let mut demand = numerical_rung_demand(self.close_terminal_is_empty());
-        if self.state.admission_fault {
-            demand.release_bytes = demand.release_bytes.max(self.largest_owner_bytes());
-        }
-        demand
-    }
+
+    fn rung_demand(&self) -> RetirementDemand { numerical_rung_demand(self.close_terminal_is_empty()) }
 
     pub(super) fn close_frontier(&self) -> Result<Option<RetirementDemand>, ValueError> {
         if let Some(demand) = self.desk.retirement_demands() {
@@ -145,7 +123,7 @@ impl LdltJob {
         if let Some(demand) = numerical_writer_demand(&self.output_writer) {
             return demand.map(Some);
         }
-        Ok(None)
+        ldlt_checkpoint_retirement_demand(&self.state)
     }
 
     fn close_demand(&self) -> Result<RetirementDemand, ValueError> {
@@ -178,7 +156,7 @@ impl InteractiveJob for LdltJob {
         }
         let run = match self.desk.take_pending() {
             Some(run) => run,
-            None => self.run(cx),
+            None => self.run(cx)?,
         };
         Ok(self.desk.admit(cx, run)?)
     }

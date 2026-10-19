@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:value:retained-index-sort-corpus",
+  "type": "object", "additionalProperties": false, "required": ["cases"],
+  "properties": {
+    "cases": {
+      "type": "array", "minItems": 5,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["id", "keys", "order"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "keys": {
+            "type": "array",
+            "items": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "integer", "minimum": 0, "maximum": 4294967295 } }
+          },
+          "order": { "type": "array", "uniqueItems": true, "items": { "type": "integer", "minimum": 0 } }
+        }
+      }
+    }
+  }
+}

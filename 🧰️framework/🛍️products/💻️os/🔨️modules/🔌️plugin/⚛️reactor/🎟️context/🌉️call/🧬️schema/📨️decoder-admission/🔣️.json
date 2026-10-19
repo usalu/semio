@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "generation",
+    "admissionGrant",
+    "bodyGrant",
+    "originalInputCapacity",
+    "phases",
+    "sameOriginalInput",
+    "sameCancelAndPayload"
+  ],
+  "properties": {
+    "operation": {
+      "const": 71
+    },
+    "generation": {
+      "const": 3
+    },
+    "admissionGrant": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 5,
+      "maxItems": 5
+    },
+    "bodyGrant": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 5,
+      "maxItems": 5
+    },
+    "originalInputCapacity": {
+      "const": 97
+    },
+    "phases": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phase",
+          "admitted",
+          "ready",
+          "items"
+        ],
+        "properties": {
+          "phase": {
+            "type": "string"
+          },
+          "admitted": {
+            "type": "boolean"
+          },
+          "ready": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    "sameOriginalInput": {
+      "const": true
+    },
+    "sameCancelAndPayload": {
+      "const": true
+    }
+  }
+}

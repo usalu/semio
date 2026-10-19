@@ -42,14 +42,17 @@ pub fn go_binary_path(root: &Path) -> PathBuf {
 /// functions the `semio` verbs call — and the Go implementation answers the same variant by
 /// spawning `semio-repo` with [`RepoAction::go_argv`] into a pseudo-terminal window.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub enum RepoAction {
     TicketShow { id: String },
     TicketFiles { id: String },
     TicketClose { id: String },
-    TicketReopen { id: String },
+    TicketReopen { id: String, prompt: String },
+    DraftStart { title: String },
+    DraftDiscard { slug: String },
     GoalsList,
     GoalsTree,
-    Analyze { scope: String },
+    Analyze { scope: String, #[serde(deserialize_with = "explicit_policy")] policy: Option<String> },
     TreeMonorepo,
     TreeGoal,
     TreeStatute,
@@ -59,7 +62,48 @@ pub enum RepoAction {
 
 impl RepoAction {
     /// ⚠️ Whether the operation changes repository state, so a view asks before running it.
-    pub fn mutates(&self) -> bool { matches!(self, RepoAction::TicketClose { .. } | RepoAction::TicketReopen { .. }) }
+    pub fn mutates(&self) -> bool { matches!(self, RepoAction::TicketClose { .. } | RepoAction::TicketReopen { .. } | RepoAction::DraftStart { .. } | RepoAction::DraftDiscard { .. }) }
+
+    /// 🛡️ Checks the schema's text, identity and supported analysis choices.
+    pub fn validate(&self) -> Result<(), String> {
+        let human = |value: &str| !value.trim().is_empty() && value.chars().count() <= 1024 && !value.chars().any(|c| c <= '\u{1f}' || c == '\u{7f}');
+        let slug = |value: &str| value.len() <= 1024 && value.split('-').all(|word| !word.is_empty() && word.bytes().all(|c| c.is_ascii_uppercase() || c.is_ascii_digit()));
+        let ticket = |id: &str| { let parts = id.split('/').collect::<Vec<_>>(); parts.len() >= 4 && parts[..3].iter().all(|part| part.len() == 2 && part.bytes().all(|c| c.is_ascii_digit())) && parts[3..].iter().all(|part| slug(part)) };
+        let valid = match self {
+            Self::TicketShow { id } | Self::TicketFiles { id } | Self::TicketClose { id } => ticket(id),
+            Self::TicketReopen { id, prompt } => ticket(id) && human(prompt),
+            Self::DraftStart { title } => human(title),
+            Self::DraftDiscard { slug: value } => slug(value),
+            Self::Analyze { scope, policy } => ANALYZE_SCOPES.iter().any(|(name, _)| name == scope) && policy.as_deref().is_none_or(|value| value == "code"),
+            _ => true,
+        };
+        if valid { Ok(()) } else { Err("invalid repo action parameters".into()) }
+    }
+
+    /// 🎛️ Binds the request's typed values before either implementation is selected.
+    pub fn selected(&self, value: &impl Fn(&str) -> Option<String>) -> Result<Self, String> {
+        let required = |name: &str| value(name).ok_or_else(|| format!("required parameter {name}"));
+        let selected = match self {
+            Self::DraftStart { .. } => Self::DraftStart { title: required("title")? },
+            Self::DraftDiscard { .. } => Self::DraftDiscard { slug: required("slug")? },
+            Self::TicketReopen { id, .. } => Self::TicketReopen { id: id.clone(), prompt: required("prompt")? },
+            Self::Analyze { scope, .. } => Self::Analyze { scope: scope.clone(), policy: value("policy").filter(|policy| policy != "all") },
+            _ => self.clone(),
+        };
+        selected.validate()?;
+        Ok(selected)
+    }
+
+    /// 📁️ Admits filesystem targets before either implementation receives the action.
+    pub fn admit_root(&self, root: &Path) -> Result<(), String> {
+        self.validate()?;
+        match self {
+            Self::DraftStart { title } => { draft_path(root, &semio_framework_repo_identity::slugify(title))?; },
+            Self::DraftDiscard { slug } => { draft_path(root, slug)?; },
+            _ => {},
+        }
+        Ok(())
+    }
 
     /// 🧷️ The `semio-repo` argv that performs the same operation in the Go implementation.
     pub fn go_argv(&self) -> Vec<String> {
@@ -68,10 +112,12 @@ impl RepoAction {
             RepoAction::TicketShow { id } => owned(&["ticket", "show", id]),
             RepoAction::TicketFiles { id } => owned(&["ticket", "files", id]),
             RepoAction::TicketClose { id } => owned(&["ticket", "close", id, "--summary", DASHBOARD_CLOSE_SUMMARY, "--no-management"]),
-            RepoAction::TicketReopen { id } => owned(&["ticket", "reopen", id, "--client", DASHBOARD_CLIENT, "--no-management"]),
+            RepoAction::TicketReopen { id, prompt } => owned(&["ticket", "reopen", id, "--prompt", prompt, "--client", DASHBOARD_CLIENT, "--no-management"]),
+            RepoAction::DraftStart { title } => owned(&["draft", "create", title]),
+            RepoAction::DraftDiscard { slug } => owned(&["draft", "delete", slug]),
             RepoAction::GoalsList => owned(&["goal", "list"]),
             RepoAction::GoalsTree => owned(&["goal", "tree"]),
-            RepoAction::Analyze { scope } => owned(&["analyze", scope]),
+            RepoAction::Analyze { scope, policy } => match policy { Some(policy) => owned(&["analyze", scope, "--policy", policy]), None => owned(&["analyze", scope]) },
             RepoAction::TreeMonorepo => owned(&["tree", "monorepo"]),
             RepoAction::TreeGoal => owned(&["tree", "goal"]),
             RepoAction::TreeStatute => owned(&["tree", "statute"]),
@@ -82,22 +128,32 @@ impl RepoAction {
 
     /// ⚙️ Runs the operation against the Rust domain crates and renders what it answered.
     pub fn execute(&self, root: &Path) -> String {
-        match self {
+        self.execute_result(root).unwrap_or_else(|error| format!("{error}\n"))
+    }
+
+    /// 🧾️ Preserves operation failures for supervised process exit status.
+    pub fn execute_result(&self, root: &Path) -> Result<String, String> {
+        self.validate()?;
+        Ok(match self {
             RepoAction::TicketShow { id } => ticket_show(root, id),
             RepoAction::TicketFiles { id } => ticket_files(root, id),
             RepoAction::TicketClose { id } => ticket_close(root, id),
-            RepoAction::TicketReopen { id } => ticket_reopen(root, id),
+            RepoAction::TicketReopen { id, prompt } => return ticket_reopen(root, id, prompt),
+            RepoAction::DraftStart { title } => return draft_start(root, title),
+            RepoAction::DraftDiscard { slug } => return draft_discard(root, slug),
             RepoAction::GoalsList => goals_list(root),
             RepoAction::GoalsTree => goals_tree(root),
-            RepoAction::Analyze { scope } => analyze(root, scope),
+            RepoAction::Analyze { scope, .. } => analyze(root, scope),
             RepoAction::TreeMonorepo => tree_monorepo(root),
             RepoAction::TreeGoal => tree_goal(root),
             RepoAction::TreeStatute => tree_statute(root),
             RepoAction::TreeTerritory => tree_territory(root),
             RepoAction::StatutesCatalog => statutes_catalog(),
-        }
+        })
     }
 }
+
+fn explicit_policy<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<Option<String>, D::Error> { serde::Deserialize::deserialize(deserializer) }
 
 /// 🪪️ The client alias a dashboard-driven ticket interaction is recorded under.
 pub const DASHBOARD_CLIENT: &str = "claude-code";
@@ -271,14 +327,54 @@ pub fn ticket_close(root: &Path, id: &str) -> String {
 }
 
 /// 🔓️ Reopens a closed ticket through the ticket lifecycle.
-pub fn ticket_reopen(root: &Path, id: &str) -> String {
+pub fn ticket_reopen(root: &Path, id: &str, prompt: &str) -> Result<String, String> {
     with_service(root, |service| {
-        let request = tickets::TicketReopenRequest { id: id.to_string(), prompt: "Reopened from the semio dashboard".to_string(), client: DASHBOARD_CLIENT.to_string(), no_management: true, ..Default::default() };
+        let request = ticket_reopen_request(id, prompt);
         match service.reopen(&request) {
-            Ok(outcome) => format!("reopened {} -> {}\n{}\n", outcome.id, outcome.status, outcome.warnings.join("\n")),
-            Err(error) => format!("reopen {id}: {}\n", error.message),
+            Ok(outcome) => Ok(format!("reopened {} -> {}\n{}\n", outcome.id, outcome.status, outcome.warnings.join("\n"))),
+            Err(error) => Err(format!("reopen {id}: {}", error.message)),
         }
     })
+}
+
+fn ticket_reopen_request(id: &str, prompt: &str) -> tickets::TicketReopenRequest { tickets::TicketReopenRequest { id: id.into(), prompt: prompt.into(), client: DASHBOARD_CLIENT.into(), no_management: true, ..Default::default() } }
+
+fn draft_path(root: &Path, slug: &str) -> Result<PathBuf, String> {
+    RepoAction::DraftDiscard { slug: slug.into() }.validate()?;
+    let root = root.canonicalize().map_err(|error| error.to_string())?;
+    let path = root.join(".🧬semio/🦑️repo/✍️notes").join(slug);
+    if path.as_os_str().to_string_lossy().encode_utf16().count() > 256 { return Err("invalid draft path: exceeds 256 characters".into()); }
+    let mut ancestor = path.as_path();
+    loop {
+        match std::fs::symlink_metadata(ancestor) {
+            Ok(metadata) if metadata.file_type().is_symlink() => return Err("invalid draft path: symlink".into()),
+            Ok(_) => { if !ancestor.canonicalize().map_err(|error| error.to_string())?.starts_with(&root) { return Err("invalid draft path: outside workspace".into()); } },
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {},
+            Err(error) => return Err(error.to_string()),
+        }
+        if ancestor == root { break; }
+        ancestor = ancestor.parent().ok_or("invalid draft path")?;
+    }
+    Ok(path)
+}
+
+/// ✍️ Starts an empty draft through the filesystem-only domain service.
+pub fn draft_start(root: &Path, title: &str) -> Result<String, String> {
+    let slug = semio_framework_repo_identity::slugify(title);
+    draft_path(root, &slug)?;
+    match semio_framework_repo_todos::create_draft(&semio_framework_repo_todos::FsDraftStore::new(root), title, &[]) {
+        Ok(draft) => Ok(format!("created draft {}\n", draft.id)),
+        Err(error) => Err(format!("draft start: {error}")),
+    }
+}
+
+/// 🗑️ Discards one explicitly selected draft through the filesystem-only domain service.
+pub fn draft_discard(root: &Path, slug: &str) -> Result<String, String> {
+    draft_path(root, slug)?;
+    match semio_framework_repo_todos::delete_draft(&semio_framework_repo_todos::FsDraftStore::new(root), slug) {
+        Ok(()) => Ok(format!("discarded draft {slug}\n")),
+        Err(error) => Err(format!("draft discard: {error}")),
+    }
 }
 
 fn goal_seeds(root: &Path) -> Vec<goals::GoalSeed> {
@@ -319,6 +415,7 @@ fn scope_files(root: &Path, scope: &str) -> Vec<String> {
 
 /// ⚖️ Runs the statute analysis over one scope of the codebase and lists every breach.
 pub fn analyze(root: &Path, scope: &str) -> String {
+    println!("[dashboard] analyze {scope}: scanning workspace");
     let files = scope_files(root, scope);
     let sources: Vec<statutes::SourceFile> = files
         .iter()
@@ -436,10 +533,12 @@ pub fn action_key(action: &RepoAction) -> String {
         RepoAction::TicketShow { id } => format!("ticket.show:{id}"),
         RepoAction::TicketFiles { id } => format!("ticket.files:{id}"),
         RepoAction::TicketClose { id } => format!("ticket.close:{id}"),
-        RepoAction::TicketReopen { id } => format!("ticket.reopen:{id}"),
+        RepoAction::TicketReopen { id, .. } => format!("ticket.reopen:{id}"),
+        RepoAction::DraftStart { .. } => "draft.start".into(),
+        RepoAction::DraftDiscard { .. } => "draft.discard".into(),
         RepoAction::GoalsList => "goals.list".to_string(),
         RepoAction::GoalsTree => "goals.tree".to_string(),
-        RepoAction::Analyze { scope } => format!("analyze:{scope}"),
+        RepoAction::Analyze { scope, .. } => format!("analyze:{scope}"),
         RepoAction::TreeMonorepo => "tree.monorepo".to_string(),
         RepoAction::TreeGoal => "tree.goal".to_string(),
         RepoAction::TreeStatute => "tree.statute".to_string(),
@@ -453,8 +552,8 @@ pub fn action_key(action: &RepoAction) -> String {
 /// 🛡️ Executes an owned repo action in a managed process so expensive queries remain cancellable.
 pub fn run_action(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> i32 {
     match parsed.flag("action").and_then(|value| serde_json::from_str::<RepoAction>(value).ok()) {
-        Some(action) => { println!("{}", action.execute(root)); 0 },
-        None => { eprintln!("[dashboard] invalid repo action"); 2 }
+        Some(action) => match action.execute_result(root) { Ok(output) => { println!("{output}"); 0 }, Err(error) => { eprintln!("[dashboard] {error}"); 1 } },
+        _ => { eprintln!("[dashboard] invalid repo action"); 2 }
     }
 }
 // #endregion 🔖️Command

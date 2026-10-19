@@ -30,7 +30,7 @@ pub fn widest(left: RetirementDemand, right: RetirementDemand) -> RetirementDema
 }
 
 pub(super) fn erased_demand<T: store::ErasedSnapshotRetirement + ?Sized>(owner: &T, body: usize) -> Result<RetirementDemand, ValueError> {
-    Ok(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(body)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()?.max(1) })
+    Ok({let mut demand=owner.next_demand(body)?;demand.depth=demand.depth.max(1);demand})
 }
 
 pub(super) fn erased_step<T: store::ErasedSnapshotRetirement + ?Sized>(owner: &mut T, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {

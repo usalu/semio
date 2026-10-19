@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/retained-state.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "authority", "snapshotFields", "storage", "laws", "cases", "refusals", "model"],
+  "properties": {
+    "schema": {"const": "semio.energy.retained-model-state/v1"},
+    "authority": {"const": "model"},
+    "snapshotFields": {"const": ["schema", "model", "referencedModel", "weatherLink"]},
+    "storage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["rows", "variableFields", "fanout", "maximumCopyBytes", "simulationInput"],
+      "properties": {
+        "rows": {"const": "PersistentList"},
+        "variableFields": {"const": "SealedSharedOrPersistentList"},
+        "fanout": {"const": 16},
+        "maximumCopyBytes": {"const": 4096},
+        "simulationInput": {"const": "originalBoundPaidMaterialization"}
+      }
+    },
+    "laws": {"type": "array", "minItems": 10, "items": {"type": "string"}, "uniqueItems": true},
+    "model": {"type":"object","minProperties":44,"maxProperties":44},
+    "refusals": {"type":"array","minItems":3,"items":{"type":"object","additionalProperties":false,"required":["id","patch","admitted"],"properties":{"id":{"type":"string"},"patch":{"type":"object","additionalProperties":false,"properties":{"volume_m3":{"type":"number"},"multiplier":{"type":"integer"}}},"admitted":{"const":false}}}},
+    "cases": {
+      "type": "array", "minItems": 4,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "before", "forward", "inverse", "after", "unchangedAuthorities"],
+        "properties": {
+          "id": {"type": "string"}, "before": {"type": "object"}, "after": {"type": "object"},
+          "forward": {"type": "array", "items": {"type": "object"}},
+          "inverse": {"type": "array", "items": {"type": "object"}},
+          "unchangedAuthorities": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    }
+  }
+}

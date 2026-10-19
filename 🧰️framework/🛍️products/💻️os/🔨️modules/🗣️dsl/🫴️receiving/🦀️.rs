@@ -2,7 +2,7 @@
 pub use semio_framework_dsl_record::BorrowedDslVariants;
 use semio_framework_dsl_record::{FieldValue,receiving::{DslOwnedReceivingVariants,OwnedFieldReceiving,OwnedSlot}};
 pub use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueError};
-pub use protocol::OpBinaryReceiving;
+pub use protocol::{OpBinaryReceiving,OpBinaryReceivingCursor};
 use semio_framework_value::{NativeDecodeControl,RetainedCloneStep,RetirementDemand,ValueRefusalKind,retirement::{RetireOwned,RetirementCursor,RetirementStep}};
 use semio_framework_os_pack::record::RetainedRecordReceiving;
 use std::mem::{ManuallyDrop,size_of};
@@ -55,11 +55,11 @@ impl<M:DslOwnedReceivingVariants+BorrowedDslVariants> OriginalOperationReceiving
    _=>RetirementDemand{depth:1,..Default::default()},
   };if self.phase==4||self.phase==5{demand.depth+=1}Ok(demand)
  }
- fn step_inner(&mut self,source:&[u8],native:&mut NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
-  let demand=self.demands_inner(source,grant.maximum_copy_bytes)?;if self.phase==6||self.closing!=0||!funded(grant,demand){return Ok(Default::default())}
+ fn step_inner(&mut self,source:&[u8],native:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+  let demand=self.demands_inner(source,body)?;if self.phase==6||self.closing!=0||!funded(grant,demand){return Ok(Default::default())}
   match self.phase{
    4 if !self.record.as_ref().unwrap().is_ready()=>return self.record.as_mut().unwrap().step(source,native,grant_child(grant)),
-   5 if !self.binding.as_ref().unwrap().is_ready()=>return self.binding.as_mut().unwrap().step(&mut self.generic.value,native,grant_child(grant)),
+   5 if !self.binding.as_ref().unwrap().is_ready()=>return self.binding.as_mut().unwrap().step(&mut self.generic.value,native,body,grant_child(grant)),
    _=>{}
   }
   native.checkpoint()?;
@@ -91,7 +91,7 @@ impl<M:DslOwnedReceivingVariants+BorrowedDslVariants> OriginalOperationReceiving
 }
 impl<M:DslOwnedReceivingVariants+BorrowedDslVariants> protocol::OpBinaryReceivingCursor<M> for OriginalOperationReceiving<M>{
  fn demands(&self,source:&[u8],body:usize)->Result<RetirementDemand,ValueError>{self.demands_inner(source,body)}
- fn step(&mut self,source:&[u8],native:&mut NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{self.step_inner(source,native,grant)}
+ fn step(&mut self,source:&[u8],native:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{self.step_inner(source,native,body,grant)}
  fn is_ready(&self)->bool{self.phase==6&&self.closing==0&&self.output.value.is_some()}
  fn take_into(&mut self,recipient:&mut Option<M>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{let demand=metadata::<M>();if self.phase!=6||self.closing!=0||recipient.is_some()||self.output.value.is_none()||!funded(grant,demand){return Ok(Default::default())}*recipient=self.output.value.take();Ok(receipt(demand))}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demand(body)}

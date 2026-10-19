@@ -13,21 +13,21 @@
 //! 🚫️ A colliding node id is FATAL `mutation.duplicate-id`, not the Error-level `target-missing` the delete/replace verbs raise — a duplicate identity is an invariant breach, not a miss.
 
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::inverse_fem2d_mutation;
 use semio_s_artifact_fem_2d_mutations::central_apply::apply_fem2d_mutation;
 
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
 static BEFORE: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/⚪️create-node/🚫️rejects-a-duplicate-eb0df0/📸️snapshot/⬅️before/🔣️.json");
 static AFTER: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/⚪️create-node/🚫️rejects-a-duplicate-eb0df0/📸️snapshot/➡️after/🔣️.json");
 static MUTATION: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/⚪️create-node/🚫️rejects-a-duplicate-eb0df0/🦠️mutation/🔣️.json");
 static OUTCOME: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/⚪️create-node/🚫️rejects-a-duplicate-eb0df0/🎯️outcome/🔣️.json");
 
-fn before() -> Fem2dSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+fn before() -> Fem2dSnapshotValue {
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
-fn expected_after() -> Fem2dSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+fn expected_after() -> Fem2dSnapshotValue {
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Fem2dMutation {
     semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
@@ -48,26 +48,32 @@ fn rejection_leaves_the_document_untouched() {
 /// 🚨️ The refusal is the diagnostic this kind's own diff builder raises, at its own level.
 #[test]
 fn the_refusal_is_the_declared_diagnostic() {
-    let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff::default(), "create-node/rejects-a-duplicate-eb0df0: a rejecting create-node must carry the empty diff, never a half-built delta");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.duplicate-id", "create-node/rejects-a-duplicate-eb0df0: the refusal is reported as mutation.duplicate-id");
     assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Fatal, "a duplicate identity is an invariant breach — Fatal, and no merge policy may absorb it");
     assert_eq!(messages[0].target, vec!["n3".to_string()], "the diagnostic addresses the offending id");
-    let semantics = <Fem2dMutation as protocol::SemanticMutation<Fem2dSnapshot>>::semantics(&mutation());
+    let semantics = <Fem2dMutation as protocol::SemanticMutation<Fem2dSnapshotValue>>::semantics(&mutation());
     assert_eq!(semantics.kind, "create-node", "the fixture must be bound to create-node's own descriptor");
 }
 
-/// ↩️ `create-node`'s inverse is PAYLOAD-derived, not base-derived: it is a `delete-node` of the id it was asked to create even when the create itself was refused.
+/// ↩️ A refused aggregate mutation has no executable inverse and preserves its fixture snapshot.
 #[test]
 fn inverse_of_the_refused_mutation() {
-    let inverse = inverse_fem2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
-    assert_eq!(inverse.len(), 1, "create-node/rejects-a-duplicate-eb0df0: create-node always undoes with exactly one step, got {inverse:?}");
-    let Fem2dMutation::DeleteNode(undo) = &inverse[0] else {
-        panic!("create-node's inverse must be a delete-node, got {:?}", inverse[0]);
-    };
-    assert_eq!(undo.id, "n3", "the inverse addresses exactly the id the payload carried");
+    let base = before();
+    let operation = mutation();
+    let inverse = inverse_fem2d_mutation(&base, &operation).expect("aggregate inverse admission");
+    assert!(inverse.is_empty(), "refused mutations cannot publish inverse candidates: {inverse:?}");
+    let mut snapshot = base.clone();
+    apply_fem2d_mutation(&mut snapshot, &operation).expect("unchanged forward outcome");
+    for step in &inverse {
+        apply_fem2d_mutation(&mut snapshot, step).expect("admitted inverse step");
+    }
+    assert_eq!(snapshot, expected_after());
+    assert_eq!(snapshot, base);
+    println!("[DEBUG] FEM2d refused fixture retains its snapshot with an empty aggregate inverse");
 }
 
 /// 🎯️ The declared rejection — status, code and path — is exactly what the diff builder emits.
@@ -75,7 +81,7 @@ fn inverse_of_the_refused_mutation() {
 fn declared_outcome_holds() {
     let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(semio_framework_value::DslValue::as_str), Some("rejected"), "create-node/rejects-a-duplicate-eb0df0 declares a rejected outcome");
-    let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
     assert_eq!(outcome.get("code").and_then(semio_framework_value::DslValue::as_str), Some(message.code.0.as_str()), "the declared code must match the emitted one");
     let declared: Vec<String> = outcome.get("path").and_then(semio_framework_value::DslValue::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
@@ -85,8 +91,8 @@ fn declared_outcome_holds() {
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE.as_str()), ("after", AFTER.as_str())] {
-        let decoded: Fem2dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+        let decoded: Fem2dSnapshotValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = semio_framework_value::ToValue::to_value(&decoded);
         let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
         assert_eq!(reencoded, original, "create-node/rejects-a-duplicate-eb0df0: committed {label} JSON is not canonical");

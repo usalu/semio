@@ -11,7 +11,7 @@ import { pluginHandleForBridge } from "../../🐚️plugin-bridge/🟦️.ts";
  * what a structured-cloned protocol message carries. */
 export type BrowserRendererWorkerHandle = OriginalBrowserFrameNative & {
   enqueueBatch(eventsJson: string, generation: bigint): void;
-  assetDecodeStep(): string;
+  assetDecodeStep(operation:bigint,generation:bigint,epoch:bigint,items:number,copy:number,capacity:number,release:number,depth:number,fuel:bigint,deadline:bigint):number;
   pollAssetRequest(): string;
   assetResponseCurrent(): boolean;
   beginReferenceImage(width: number, height: number, digest: string): number;
@@ -33,7 +33,6 @@ type BrowserRendererBootstrapHandle = {
 
 export type BrowserRendererBootStep = { readonly stage: string; readonly progress: number; readonly shellBoot: boolean; readonly complete: boolean; readonly elapsedUs: number };
 
-export type RendererAssetDecodeStep = { readonly kind: "pending" | "published" | "cancelled" | "idle" | "fault"; readonly pending: boolean; readonly detail?: string };
 
 export type RendererBindings = RuntimeAssetBindings & {
   default?: (moduleOrPath?: WebAssembly.Module | RequestInfo | URL) => Promise<unknown>;

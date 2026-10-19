@@ -244,7 +244,7 @@ impl AppPresenter {
                 };
                 if runtime.interaction.is_none() {
                     drop(runtime);
-                    match self.runtime.restore_presenter_interaction_step() {
+                    match self.runtime.presenter_interaction_status() {
                         PresenterInteractionStep::Ready | PresenterInteractionStep::Restored => {
                             cursor.input_wait = AppPresentInputWait::None;
                             cursor.input_progress = cursor.input_progress.saturating_add(1);
@@ -379,7 +379,7 @@ impl AppPresenter {
                 };
                 if runtime.interaction.is_none() {
                     drop(runtime);
-                    match self.runtime.restore_presenter_interaction_step() {
+                    match self.runtime.presenter_interaction_status() {
                         PresenterInteractionStep::Ready | PresenterInteractionStep::Restored => {
                             cursor.input_wait = AppPresentInputWait::None;
                             cursor.input_progress = cursor.input_progress.saturating_add(1);

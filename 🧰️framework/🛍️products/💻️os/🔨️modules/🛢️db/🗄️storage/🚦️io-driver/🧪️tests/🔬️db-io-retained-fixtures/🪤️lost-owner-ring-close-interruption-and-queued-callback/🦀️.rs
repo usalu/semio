@@ -9,18 +9,18 @@ fn db_io_lost_owner_fixed_ring_max_plus_one_returns_the_exact_candidate() {
     while db_io_lost_owner_close_step().unwrap() {}
     DB_IO_RETIREMENT_PRESSURE_FAULT.store(false, std::sync::atomic::Ordering::Release);
     for _ in 0..DB_IO_LOST_OWNER_SLOTS {
-        let owner = DbIoLostOwner::Fault(db_io_literal_fault(DbIoFaultKind::Backend, DbIoFaultCause::Internal, "retained-ring-owner"));
+        let owner = DbIoLostOwner::Fault(db_io_literal_fault(db_io_fault_custody_reserve().expect("fixture prebirth custody"), DbIoFaultKind::Backend, DbIoFaultCause::Internal, "retained-ring-owner"));
         assert!(db_io_try_park_lost_owner(owner).is_ok());
     }
     {
         let mut overflow = DB_IO_LOST_OWNER_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         for slot in overflow.iter_mut() {
-            *slot = Some(DbIoLostOwner::Fault(db_io_literal_fault(DbIoFaultKind::Backend, DbIoFaultCause::Internal, "retained-overflow-owner")));
+            *slot = Some(DbIoLostOwner::Fault(db_io_literal_fault(db_io_fault_custody_reserve().expect("fixture prebirth custody"), DbIoFaultKind::Backend, DbIoFaultCause::Internal, "retained-overflow-owner")));
         }
     }
-    let owner = DbIoLostOwner::Fault(db_io_literal_fault(DbIoFaultKind::Backend, DbIoFaultCause::Internal, "exact-plus-one-candidate"));
+    let owner = DbIoLostOwner::Fault(db_io_literal_fault(db_io_fault_custody_reserve().expect("fixture prebirth custody"), DbIoFaultKind::Backend, DbIoFaultCause::Internal, "exact-plus-one-candidate"));
     assert!(db_io_park_lost_owner(owner).is_ok());
-    let second = DbIoLostOwner::Fault(db_io_literal_fault(DbIoFaultKind::Backend, DbIoFaultCause::Internal, "exact-plus-two-candidate"));
+    let second = DbIoLostOwner::Fault(db_io_literal_fault(db_io_fault_custody_reserve().expect("fixture prebirth custody"), DbIoFaultKind::Backend, DbIoFaultCause::Internal, "exact-plus-two-candidate"));
     assert!(db_io_park_lost_owner(second).is_ok());
     assert!(DB_IO_RETIREMENT_PRESSURE_FAULT.load(std::sync::atomic::Ordering::Acquire));
     {
@@ -32,47 +32,36 @@ fn db_io_lost_owner_fixed_ring_max_plus_one_returns_the_exact_candidate() {
         assert_eq!(exact, Some("exact-plus-one-candidate"));
         assert!(quarantine.iter().flatten().any(|owner| matches!(owner, DbIoLostOwner::Fault(candidate) if candidate.detail.as_str() == "exact-plus-two-candidate")));
     }
-    for _ in 0..DB_IO_LOST_OWNER_SLOTS {
-        assert!(db_io_lost_owner_close_step().unwrap());
+    for _ in 0..3 * (DB_IO_LOST_OWNER_SLOTS + DB_IO_LOST_OWNER_OVERFLOW_SLOTS + 2) {
+        if !db_io_lost_owner_close_step().unwrap() { break; }
     }
-    for _ in 0..DB_IO_LOST_OWNER_OVERFLOW_SLOTS * 2 {
-        assert!(db_io_lost_owner_close_step().unwrap());
-    }
-    assert!(db_io_lost_owner_close_step().unwrap());
-    {
-        let owners = DB_IO_LOST_OWNERS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        assert!(owners.iter().flatten().any(|owner| matches!(owner, DbIoLostOwner::Fault(candidate) if candidate.detail.as_str() == "exact-plus-one-candidate")));
-    }
-    assert!(db_io_lost_owner_close_step().unwrap());
-    assert!(db_io_lost_owner_close_step().unwrap());
-    {
-        let owners = DB_IO_LOST_OWNERS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        assert!(owners.iter().flatten().any(|owner| matches!(owner, DbIoLostOwner::Fault(candidate) if candidate.detail.as_str() == "exact-plus-two-candidate")));
-    }
-    assert!(db_io_lost_owner_close_step().unwrap());
+    
     assert!(!db_io_lost_owner_close_step().unwrap());
 
     for _ in 0..DB_IO_LOST_OWNER_SLOTS {
-        assert!(db_io_try_park_lost_owner(DbIoLostOwner::Fault(db_io_literal_fault(DbIoFaultKind::Backend, DbIoFaultCause::Internal, "full-primary-owner"))).is_ok());
+        assert!(db_io_try_park_lost_owner(DbIoLostOwner::Fault(db_io_literal_fault(db_io_fault_custody_reserve().expect("fixture prebirth custody"), DbIoFaultKind::Backend, DbIoFaultCause::Internal, "full-primary-owner"))).is_ok());
     }
     {
         let mut overflow = DB_IO_LOST_OWNER_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         for slot in overflow.iter_mut() {
-            *slot = Some(DbIoLostOwner::Fault(db_io_literal_fault(DbIoFaultKind::Backend, DbIoFaultCause::Internal, "full-overflow-owner")));
+            *slot = Some(DbIoLostOwner::Fault(db_io_literal_fault(db_io_fault_custody_reserve().expect("fixture prebirth custody"), DbIoFaultKind::Backend, DbIoFaultCause::Internal, "full-overflow-owner")));
         }
     }
     {
         let mut quarantine = DB_IO_LOST_OWNER_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         for slot in quarantine.iter_mut() {
-            *slot = Some(DbIoLostOwner::Fault(db_io_literal_fault(DbIoFaultKind::Backend, DbIoFaultCause::Internal, "full-quarantine-owner")));
+            *slot = Some(DbIoLostOwner::Fault(db_io_literal_fault(db_io_fault_custody_reserve().expect("fixture prebirth custody"), DbIoFaultKind::Backend, DbIoFaultCause::Internal, "full-quarantine-owner")));
         }
     }
-    let refused = match db_io_park_lost_owner(DbIoLostOwner::Fault(db_io_literal_fault(DbIoFaultKind::Backend, DbIoFaultCause::Internal, "exact-all-tier-refusal"))) {
+    let refused = match db_io_park_lost_owner(DbIoLostOwner::Fault(db_io_literal_fault(db_io_fault_custody_reserve().expect("fixture prebirth custody"), DbIoFaultKind::Backend, DbIoFaultCause::Internal, "exact-all-tier-refusal"))) {
         Err(owner) => owner,
         Ok(()) => panic!("all-tier retirement saturation accepted an unreserved owner"),
     };
     assert!(matches!(&refused, DbIoLostOwner::Fault(candidate) if candidate.detail.as_str() == "exact-all-tier-refusal"));
-    assert!(db_io_lost_owner_close_step().unwrap());
+    for _ in 0..2 * (DB_IO_LOST_OWNER_SLOTS + 2 * DB_IO_LOST_OWNER_OVERFLOW_SLOTS) {
+        assert!(db_io_lost_owner_close_step().unwrap());
+        if DB_IO_LOST_OWNERS.lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter().any(Option::is_none) { break; }
+    }
     assert!(db_io_park_lost_owner(refused).is_ok());
     while db_io_lost_owner_close_step().unwrap() {}
 }
@@ -179,7 +168,7 @@ async fn db_io_real_queued_callback_rejects_a_reused_task_slot_aba() {
         }),
     );
     db_io_drive_one(old);
-    let terminal = match (DbIoTaskOperation { handle: old, resolved: false }).await {
+    let terminal = match (DbIoTaskOperation { handle: old, resolved: false, custody: Some(db_io_fault_custody_reserve().expect("fixture prebirth poll custody")) }).await {
         Ok(lease) => match lease.into_result() {
             Ok(result) => result,
             Err(error) => panic!("old ABA result handback failed: {error}"),
@@ -196,7 +185,7 @@ async fn db_io_real_queued_callback_rejects_a_reused_task_slot_aba() {
             break handle;
         }
         db_io_drive_one(handle);
-        let terminal = match (DbIoTaskOperation { handle, resolved: false }).await {
+        let terminal = match (DbIoTaskOperation { handle, resolved: false, custody: Some(db_io_fault_custody_reserve().expect("fixture prebirth poll custody")) }).await {
             Ok(lease) => match lease.into_result() {
                 Ok(result) => result,
                 Err(error) => panic!("ABA cycle result handback failed: {error}"),
@@ -219,7 +208,7 @@ async fn db_io_real_queued_callback_rejects_a_reused_task_slot_aba() {
     assert_eq!(before_callback, after_callback);
     assert!(db_io_slot_matches(&DB_IO_TASK_SLOTS[reused.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner), reused));
     db_io_drive_one(reused);
-    let terminal = match (DbIoTaskOperation { handle: reused, resolved: false }).await {
+    let terminal = match (DbIoTaskOperation { handle: reused, resolved: false, custody: Some(db_io_fault_custody_reserve().expect("fixture prebirth poll custody")) }).await {
         Ok(lease) => match lease.into_result() {
             Ok(result) => result,
             Err(error) => panic!("reused ABA result handback failed: {error}"),

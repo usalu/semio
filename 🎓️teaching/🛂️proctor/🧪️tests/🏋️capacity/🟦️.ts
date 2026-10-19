@@ -2,7 +2,7 @@
  *
  * **What runs.** The release build of `proctor serve` in production mode (origin allowlist, trusted proxy forwarding,
  * the production limits stated explicitly: {@link LIMITS}) on a throw-away loopback port over a throw-away data
- * directory and the architecture catalog. The client is this file on Bun's own `fetch`, `WebSocket` and sockets — an
+ * directory and the architecture course. The client is this file on Bun's own `fetch`, `WebSocket` and sockets — an
  * HTTP and WebSocket implementation that shares no code with the proctor — speaking the quiz client's real envelopes
  * ({@link ProctorClient}) and presence frames.
  *
@@ -19,7 +19,7 @@
  *
  * **The script.** In the second phase a worker thread plays one abusive client from another address beside the hall:
  * it tries to fill the roster — registrations, anonymous and under handles, as fast as it can post them — while the
- * hall signs up, floods malformed commands and queries on connections it keeps open ({@link Wire}), sends oversized
+ * hall signs up, floods malformed commands and queries on connections it keeps open ({@link CapacityWire}), sends oversized
  * bodies, pushes sockets into the hall's own roster room and sends oversized frames.
  *
  * **The load generator measures itself.** The hall is dealt to {@link HALL_THREADS} threads, and every thread probes
@@ -40,14 +40,22 @@
  *
  * @see ../../README.md — the limits the proctor enforces and their variables
  * @see ../../../../🧰️framework/🛍️products/🖥️server/🔨️modules/🚦️throttle/🦀️.rs — the throttle
- * @see ../../../../🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/🛂️proctor/🟦️.ts — the client mapping driven here
+ * @see ../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🛂️proctor/🟦️.ts — the client mapping driven here
  */
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { Worker, isMainThread, parentPort, workerData } from "node:worker_threads";
-import { PROCTOR_DEV_CATALOG, buildProctor, launchProctor, type ProctorProcess } from "../../🏗️bootstrap/🟦️.ts";
-import { BUDGET, CAPACITY_DEFAULTS, type CapacityOptions, GENERATOR_LAG_MS, GENERATOR_STALL_MS, HALL, HALL_THREADS, type LatencyRow, LIMITS, measurements, type Measurements, MEMORY_BUDGET_MIB, percentile, PRESENCE_SHARE, REAL, RESENT_SHARE, ROSTER_CAP, ROSTER_SHARE, rows, SITE } from "./📊️settings-and-measurements/🟦️.ts";
+import { PROCTOR_DEV_COURSE, buildProctor, launchProctor, type ProctorArtifact, type ProctorProcess } from "../../🏗️bootstrap/🟦️.ts";
+import { receiveScriptProcessInvocation, type ScriptInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { ticketOutput } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🎫️output/🟦️.ts";
+
+/** 🎫️ Locates disposable capacity work beneath the active ticket or development cache. */
+export function capacityWorkDirectory(repoRoot: string, environment: NodeJS.ProcessEnv = process.env): string {
+  return environment.SEMIO_TICKET_DIR ? join(ticketOutput(repoRoot, [], environment), "capacity") : join(repoRoot, ".🧬semio", "🎓️teaching", "proctor-capacity");
+}
+
+import { BUDGET, CAPACITY_DEFAULTS, capacityProgress, type CapacityOptions, GENERATOR_LAG_MS, GENERATOR_STALL_MS, HALL, HALL_THREADS, type LatencyRow, LIMITS, measurements, type Measurements, MEMORY_BUDGET_MIB, percentile, PRESENCE_SHARE, REAL, RESENT_SHARE, ROSTER_CAP, ROSTER_SHARE, rows, SITE } from "./📊️settings-and-measurements/🟦️.ts";
 import { pause } from "./🚚️transport/🟦️.ts";
 import { type HallOrders, type HallSlice, lecture } from "./🎒️hall-learner/🟦️.ts";
 import { script, type ScriptOrders, type ScriptReport } from "./🎭️abusive-script/🟦️.ts";
@@ -90,6 +98,7 @@ export interface CapacityReport {
 /** 🏫️ Play one lecture and measure it: the hall's latencies and what the proctor and this process spent on it. The
  * learners are dealt to {@link HALL_THREADS} threads; after twice the arrival window every thread drops its sockets. */
 async function phase(hall: Omit<HallOrders, "role" | "learners">, options: CapacityOptions, proctor: number | undefined): Promise<PhaseReport> {
+  capacityProgress(hall.progressFile, "phase started");
   const spentBefore = proctor === undefined ? undefined : await processorSeconds(proctor);
   const [started, usedBefore] = [performance.now(), process.cpuUsage()];
   const threads = Math.min(HALL_THREADS, options.learners);
@@ -109,8 +118,10 @@ async function phase(hall: Omit<HallOrders, "role" | "learners">, options: Capac
     if (playing) for (const worker of workers) worker.postMessage("drop");
   });
   const slices = await Promise.all(played).finally(() => (playing = false));
+  capacityProgress(hall.progressFile, "phase worker reports complete");
   await dropping;
   await Promise.all(workers.map((worker) => worker.terminate()));
+  capacityProgress(hall.progressFile, "phase workers terminated");
   const seconds = (performance.now() - started) / 1000;
   const used = process.cpuUsage(usedBefore);
   const spentAfter = proctor === undefined ? undefined : await processorSeconds(proctor);
@@ -143,8 +154,9 @@ async function phase(hall: Omit<HallOrders, "role" | "learners">, options: Capac
 }
 
 /** ⚖️ Everything a phase of the hall violates: an error, a refusal or a percentile over `budget`. */
-function hallViolations(name: string, phase: PhaseReport, budget: { readonly p95: number; readonly p99: number }): string[] {
+export function hallViolations(name: string, phase: PhaseReport, budget: { readonly p95: number; readonly p99: number }): string[] {
   const violations: string[] = [];
+  if (phase.reconnected === 0) violations.push(`the hall ${name} skipped the connection drop: no presence socket reconnected`);
   if (phase.errors.length > 0) violations.push(`the hall ${name} saw ${phase.errors.length} error(s), first: ${phase.errors[0]}`);
   if (phase.throttled > 0) violations.push(`the hall ${name} was refused ${phase.throttled} time(s) with 429/503`);
   if (phase.resent > phase.requests * RESENT_SHARE) violations.push(`the hall ${name} had to send ${phase.resent} of ${phase.requests} requests again, more than ${RESENT_SHARE * 100} %`);
@@ -218,16 +230,27 @@ function table(title: string, phase: PhaseReport): string {
 /** 🏋️ Build the release proctor, serve it on a throw-away port and data directory with its default cap of learners, play
  * the hall alone and beside the script, stop the proctor, count its roster and return the report; `violations` is empty
  * exactly when the gate holds. */
-export async function runCapacity(repoRoot: string, options: CapacityOptions = CAPACITY_DEFAULTS): Promise<CapacityReport> {
-  const executable = options.executable === undefined ? await buildProctor(repoRoot, process.env, undefined, "release") : resolve(options.executable);
-  const data = mkdtempSync(join(tmpdir(), "proctor-capacity-"));
+export async function runCapacity(repoRoot: string, invocation: ScriptInvocation, options: CapacityOptions = CAPACITY_DEFAULTS): Promise<CapacityReport> {
+  const artifact = options.executable === undefined ? await buildProctor(repoRoot, invocation, process.env, undefined, "release") : undefined;
+  const launcher = artifact ?? { launch: (args: readonly string[], env?: NodeJS.ProcessEnv, log?: string) => launchProctor(resolve(options.executable!), repoRoot, args, env, log) };
+  try { return await measureCapacity(repoRoot, launcher, options); } finally { await artifact?.close(); }
+}
+
+/** 📊️ Retains the native executable owner through load measurement and the final roster command. */
+async function measureCapacity(repoRoot: string, artifact: Pick<ProctorArtifact, "launch">, options: CapacityOptions): Promise<CapacityReport> {
+  const work = capacityWorkDirectory(repoRoot);
+  mkdirSync(work, { recursive: true });
+  const data = mkdtempSync(join(work, "run-"));
+  const progressFile = options.report ? `${resolve(options.report)}.progress.jsonl` : join(data, "progress.jsonl");
+  mkdirSync(dirname(progressFile), { recursive: true });
+  writeFileSync(progressFile, "");
   const port = await freePort();
   const base = `http://127.0.0.1:${port}`;
-  const catalogPath = resolve(repoRoot, ...PROCTOR_DEV_CATALOG);
-  const catalog = JSON.parse(readFileSync(catalogPath, "utf8")) as { id: string; quizzes: string[] };
-  const quizzes = catalog.quizzes.map((path) => (JSON.parse(readFileSync(resolve(dirname(catalogPath), path), "utf8")) as { id: string }).id);
+  const coursePath = resolve(repoRoot, ...PROCTOR_DEV_COURSE);
+  const course = JSON.parse(readFileSync(coursePath, "utf8")) as { id: string; quizzes: string[] };
+  const quizzes = course.quizzes.map((path) => (JSON.parse(readFileSync(resolve(dirname(coursePath), path), "utf8")) as { id: string }).id);
   const { PROCTOR_MAX_LEARNERS: _default, ...inherited } = process.env;
-  const env: NodeJS.ProcessEnv = { ...inherited, PROCTOR_PORT: String(port), PROCTOR_BIND: "127.0.0.1", PROCTOR_MODE: "production", PROCTOR_ALLOWED_ORIGINS: SITE, PROCTOR_TRUSTED_FORWARDING: "proxy", PROCTOR_DATA: data, PROCTOR_CATALOG: catalogPath, PROCTOR_LIMIT_COMMANDS_PER_SECOND: String(LIMITS.commandsPerSecond), PROCTOR_LIMIT_COMMANDS_BURST: String(LIMITS.commandsBurst), PROCTOR_LIMIT_QUERIES_PER_SECOND: String(LIMITS.queriesPerSecond), PROCTOR_LIMIT_QUERIES_BURST: String(LIMITS.queriesBurst), PROCTOR_LIMIT_SIGNUPS_PER_HOUR: String(LIMITS.signUpsPerHour), PROCTOR_LIMIT_SIGNUPS_BURST: String(LIMITS.signUpsBurst), PROCTOR_LIMIT_SOCKETS_PER_ADDRESS: String(LIMITS.socketsPerAddress), PROCTOR_LIMIT_BODY_BYTES: String(LIMITS.bodyBytes) };
+  const env: NodeJS.ProcessEnv = { ...inherited, PROCTOR_PORT: String(port), PROCTOR_BIND: "127.0.0.1", PROCTOR_MODE: "production", PROCTOR_ALLOWED_ORIGINS: SITE, PROCTOR_TRUSTED_FORWARDING: "proxy", PROCTOR_DATA: data, PROCTOR_COURSE: coursePath, PROCTOR_LIMIT_COMMANDS_PER_SECOND: String(LIMITS.commandsPerSecond), PROCTOR_LIMIT_COMMANDS_BURST: String(LIMITS.commandsBurst), PROCTOR_LIMIT_QUERIES_PER_SECOND: String(LIMITS.queriesPerSecond), PROCTOR_LIMIT_QUERIES_BURST: String(LIMITS.queriesBurst), PROCTOR_LIMIT_SIGNUPS_PER_HOUR: String(LIMITS.signUpsPerHour), PROCTOR_LIMIT_SIGNUPS_BURST: String(LIMITS.signUpsBurst), PROCTOR_LIMIT_SOCKETS_PER_ADDRESS: String(LIMITS.socketsPerAddress), PROCTOR_LIMIT_BODY_BYTES: String(LIMITS.bodyBytes) };
   let proctor: ProctorProcess | undefined;
   let peak: number | undefined;
   const sample = async (): Promise<number | undefined> => {
@@ -236,7 +259,7 @@ export async function runCapacity(repoRoot: string, options: CapacityOptions = C
     return now;
   };
   try {
-    proctor = launchProctor(executable, repoRoot, ["serve"], env, join(data, "proctor.log"));
+    proctor = artifact.launch(["serve"], env, join(data, "proctor.log"));
     if (!(await ready(base, 120_000))) throw new Error(`the capacity proctor did not come up on ${base}:\n${readFileSync(join(data, "proctor.log"), "utf8").slice(-2000)}`);
     const instance = (await (await fetch(`${base}/instance`, { headers: { "x-forwarded-proto": "https" } })).json()) as { id: string };
     console.log(`[INFO] capacity: ${instance.id} on ${base}, ${options.learners} learners from ${HALL}, think time ÷ ${options.compression}`);
@@ -248,7 +271,7 @@ export async function runCapacity(repoRoot: string, options: CapacityOptions = C
         await sample();
       }
     })();
-    const hall = { base, tenant: catalog.id, quizzes, scale: 1 / options.compression };
+    const hall = { base, tenant: course.id, quizzes, scale: 1 / options.compression, progressFile };
 
     const alone = await phase(hall, options, proctor.pid);
     console.log(table("the hall alone", alone));
@@ -257,7 +280,7 @@ export async function runCapacity(repoRoot: string, options: CapacityOptions = C
     let beside: PhaseReport | undefined;
     let scriptReport: ScriptReport | undefined;
     if (options.hallOnly !== true) {
-      const orders: ScriptOrders = { role: "script", base, tenant: catalog.id, quiz: quizzes[0], bodyLimit: LIMITS.bodyBytes, socketsPerAddress: LIMITS.socketsPerAddress };
+      const orders: ScriptOrders = { role: "script", base, tenant: course.id, quiz: quizzes[0], bodyLimit: LIMITS.bodyBytes, socketsPerAddress: LIMITS.socketsPerAddress, progressFile };
       const worker = new Worker(new URL(import.meta.url), { workerData: orders });
       const scripted = new Promise<ScriptReport>((reported, failed) => {
         worker.once("message", reported);
@@ -266,7 +289,9 @@ export async function runCapacity(repoRoot: string, options: CapacityOptions = C
       await pause(1_000);
       beside = await phase(hall, options, proctor.pid);
       worker.postMessage("stop");
+      capacityProgress(progressFile, "script stop requested");
       scriptReport = await scripted;
+      capacityProgress(progressFile, "script report complete");
       await worker.terminate();
       console.log(table("the hall beside the script", beside));
       console.log(`the script — ${scriptReport.seconds.toFixed(1)} s, sign-ups ${JSON.stringify(scriptReport.signUps)} (allowance ${signUpAllowance(scriptReport.seconds)}), commands ${JSON.stringify(scriptReport.commands)}, malformed ${JSON.stringify(scriptReport.malformed)}, queries ${JSON.stringify(scriptReport.queries)}, oversized bodies ${JSON.stringify(scriptReport.oversizedBody)}, sockets ${JSON.stringify(scriptReport.sockets)}, oversized frames ${JSON.stringify(scriptReport.oversizedFrame)}`);
@@ -285,7 +310,7 @@ export async function runCapacity(repoRoot: string, options: CapacityOptions = C
     console.log(`the proctor — memory idle ${idle?.toFixed(0) ?? "?"} MiB, peak ${peak?.toFixed(0) ?? "?"} MiB, end ${end?.toFixed(0) ?? "?"} MiB; healthy at the end: ${healthyAtEnd}`);
     await proctor.stop();
     proctor = undefined;
-    const roster = await rosterOf(executable, repoRoot, env, join(data, "prune.log"));
+    const roster = await rosterOf(artifact, env, join(data, "prune.log"));
     violations.push(...rosterViolations(roster, options.learners * (beside === undefined ? 1 : 2), scriptReport));
     console.log(roster === undefined ? "the roster — not counted" : `the roster — ${roster.idle + roster.registrations} registrations of a cap of ${ROSTER_CAP} (${(((roster.idle + roster.registrations) / ROSTER_CAP) * 100).toFixed(1)} %): ${roster.registrations} of the ${roster.played} learners who played, ${roster.idle} nobody played under, which a prune removes`);
     const report: CapacityReport = { options, alone, beside, script: scriptReport, roster: roster === undefined ? undefined : { ...roster, cap: ROSTER_CAP }, memoryMiB: { idle, peak, end }, healthyAtEnd, violations };
@@ -301,7 +326,7 @@ export async function runCapacity(repoRoot: string, options: CapacityOptions = C
 }
 
 /** ⌨️ `bun <this file> [--learners n] [--compression n] [--report file] [--executable proctor] [--hall-only]`, run from the repository root. */
-export async function capacityMain(repoRoot: string, args: readonly string[]): Promise<void> {
+export async function capacityMain(repoRoot: string, invocation: ScriptInvocation, args: readonly string[]): Promise<void> {
   const value = (name: string): string | undefined => {
     const index = args.indexOf(name);
     return index < 0 ? undefined : args[index + 1];
@@ -312,7 +337,7 @@ export async function capacityMain(repoRoot: string, args: readonly string[]): P
     if (!/^[1-9][0-9]*$/u.test(stated)) throw new Error(`${name} must be a positive whole number, got ${JSON.stringify(stated)}`);
     return Number(stated);
   };
-  const report = await runCapacity(repoRoot, { learners: whole("--learners", CAPACITY_DEFAULTS.learners), compression: whole("--compression", CAPACITY_DEFAULTS.compression), report: value("--report"), executable: value("--executable"), hallOnly: args.includes("--hall-only") });
+  const report = await runCapacity(repoRoot, invocation, { learners: whole("--learners", CAPACITY_DEFAULTS.learners), compression: whole("--compression", CAPACITY_DEFAULTS.compression), report: value("--report"), executable: value("--executable"), hallOnly: args.includes("--hall-only") });
   if (report.violations.length > 0) {
     for (const violation of report.violations) console.error(`[ERROR] capacity: ${violation}`);
     process.exitCode = 1;
@@ -321,15 +346,15 @@ export async function capacityMain(repoRoot: string, args: readonly string[]): P
   console.log(report.beside === undefined ? "[INFO] capacity: the hall alone saw no error and no refusal and stayed inside its latency budget (the script was not played: this is not the gate)" : "[INFO] capacity: the hall saw no error and no refusal and stayed inside its latency budget alone and beside the script; the script was throttled, capped and cut off, and its sign-ups left the roster far below the cap");
 }
 
-if (isMainThread && import.meta.main) await capacityMain(process.cwd(), process.argv.slice(2));
+if (isMainThread && import.meta.main) await receiveScriptProcessInvocation(process.env, invocation => capacityMain(process.cwd(), invocation, process.argv.slice(2)));
 if (!isMainThread && (workerData as HallOrders | ScriptOrders).role === "hall") {
-  parentPort!.postMessage(await lecture(workerData as HallOrders, new Promise((dropped) => parentPort!.on("message", (message) => (message === "drop" ? dropped() : undefined)))));
+  void lecture(workerData as HallOrders, new Promise((dropped) => parentPort!.on("message", (message) => (message === "drop" ? dropped() : undefined)))).then(report => parentPort!.postMessage(report), error => queueMicrotask(() => { throw error; }));
 }
 if (!isMainThread && (workerData as HallOrders | ScriptOrders).role === "script") {
   let stop = false;
   parentPort!.on("message", (message) => {
-    if (message === "stop") stop = true;
+    if (message === "stop") { stop = true; capacityProgress((workerData as ScriptOrders).progressFile, "script received stop"); }
   });
-  parentPort!.postMessage(await script(workerData as ScriptOrders, () => stop));
+  void script(workerData as ScriptOrders, () => stop).then(report => parentPort!.postMessage(report), error => queueMicrotask(() => { throw error; }));
 }
 //#endregion 🏋️Gate

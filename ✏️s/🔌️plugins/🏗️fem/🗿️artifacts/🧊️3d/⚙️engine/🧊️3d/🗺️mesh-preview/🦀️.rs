@@ -1,7 +1,9 @@
-//! 🗺️ FEM 3D module engine — cheap solid mesh preview + nodal-averaged stress (pure FE algorithm,
 //! moved out of the artifact tree).
+//! 🗺️ FEM 3D module engine — cheap solid mesh preview + nodal-averaged stress (pure FE algorithm,
 
-use crate::fem3d_engine::{meshing, Fem3dError};
+use crate::fem3d_engine::meshing;
+
+use crate::fem3d_engine::Fem3dError;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use std::collections::HashMap;
 

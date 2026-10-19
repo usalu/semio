@@ -27,7 +27,12 @@ pub mod metadata_retirement;
 #[path="🎟️admission/🦀️.rs"]
 pub mod admission;
 pub use crate::admission::ArtifactRetainedAdmissionRefusal;
+#[path="🏭️factory/🦀️.rs"]
+pub mod factory;
+#[path="🏭️producer/🦀️.rs"]
+pub mod producer;
 #[doc(hidden)]
+
 #[path="📸️checkpoint/👣️cursor/🦀️.rs"]
 pub mod checkpoint_cursor;
 pub use crate::checkpoint_cursor::ArtifactCommandCheckpointCursor;

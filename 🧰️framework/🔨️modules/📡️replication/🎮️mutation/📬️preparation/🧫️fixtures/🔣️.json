@@ -1,0 +1,15 @@
+{
+  "base":{"scalar":7,"rowCount":1000000,"rowBytes":64,"storage":"paged"},
+  "grant":{"maximumItems":1,"maximumCopyBytes":4096,"maximumCapacityBytes":4096,"maximumReleaseBytes":4096,"maximumDepth":64},
+  "cases":[
+    {"name":"Info Scalar in Large Projection","delta":5,"level":"info","targetRow":999999,"lateRefusal":false,"cancelStage":null,"expected":{"publishedScalar":12,"published":true,"diffDecisions":1,"inverseCalls":1,"applyCalls":1,"wholeSnapshotClones":0,"terminalEmpty":true}},
+    {"name":"Warning Scalar in Large Projection","delta":5,"level":"warning","targetRow":999999,"lateRefusal":false,"cancelStage":null,"expected":{"publishedScalar":12,"published":true,"diffDecisions":1,"inverseCalls":1,"applyCalls":1,"wholeSnapshotClones":0,"terminalEmpty":true}},
+    {"name":"Error Owns Valid Delta Without Execution","delta":5,"level":"error","targetRow":999999,"lateRefusal":false,"cancelStage":null,"expected":{"publishedScalar":7,"published":false,"diffDecisions":1,"inverseCalls":0,"applyCalls":0,"wholeSnapshotClones":0,"terminalEmpty":true}},
+    {"name":"Fatal Owns Valid Delta Without Execution","delta":5,"level":"fatal","targetRow":999999,"lateRefusal":false,"cancelStage":null,"expected":{"publishedScalar":7,"published":false,"diffDecisions":1,"inverseCalls":0,"applyCalls":0,"wholeSnapshotClones":0,"terminalEmpty":true}},
+    {"name":"Late Apply Refusal Keeps Published Base","delta":5,"level":"warning","targetRow":999999,"lateRefusal":true,"cancelStage":null,"expected":{"publishedScalar":7,"published":false,"diffDecisions":1,"inverseCalls":1,"applyCalls":1,"wholeSnapshotClones":0,"terminalEmpty":true}},
+    {"name":"Cancel During Decision","delta":5,"level":"warning","targetRow":999999,"lateRefusal":false,"cancelStage":"decision","expected":{"publishedScalar":7,"published":false,"diffDecisions":0,"inverseCalls":0,"applyCalls":0,"wholeSnapshotClones":0,"terminalEmpty":true}},
+    {"name":"Cancel Before Inverse","delta":5,"level":"warning","targetRow":999999,"lateRefusal":false,"cancelStage":"inverse","expected":{"publishedScalar":7,"published":false,"diffDecisions":1,"inverseCalls":0,"applyCalls":0,"wholeSnapshotClones":0,"terminalEmpty":true}},
+    {"name":"Cancel During Apply","delta":5,"level":"warning","targetRow":999999,"lateRefusal":false,"cancelStage":"apply","expected":{"publishedScalar":7,"published":false,"diffDecisions":1,"inverseCalls":1,"applyCalls":1,"wholeSnapshotClones":0,"terminalEmpty":true}},
+    {"name":"Cancel Before Publication","delta":5,"level":"warning","targetRow":999999,"lateRefusal":false,"cancelStage":"publication","expected":{"publishedScalar":7,"published":false,"diffDecisions":1,"inverseCalls":1,"applyCalls":1,"wholeSnapshotClones":0,"terminalEmpty":true}}
+  ]
+}

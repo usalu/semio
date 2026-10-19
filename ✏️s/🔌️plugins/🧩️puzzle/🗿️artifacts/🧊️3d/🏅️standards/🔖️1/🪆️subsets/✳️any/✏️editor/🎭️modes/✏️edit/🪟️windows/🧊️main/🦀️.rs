@@ -1,5 +1,5 @@
-//! 🧊️ Puzzle 3d play app — the one `World3d` window kind. Owns the viewport's whole scene
 //! projection: the instance/mesh/vortex/attraction/target-volume/reference payloads, the selection
+//! 🧊️ Puzzle 3d play app — the one `World3d` window kind. Owns the viewport's whole scene
 //! and gumball descriptor, the LOD/chunking/environment blocks and the interaction channel (active
 //! utility, suggestion popup) the host renderer reads. Also
 //! owns the engagement HUD and collects its chrome measures from the mode's `☑️options/*` and its own
@@ -15,13 +15,16 @@ use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dRuntime;
 use crate::options;
 use semio_s_artifact_puzzle_3d_precompute::Puzzle3dPrecomputeSession;
 use crate::tools::fill as fill_tool;
-use semio_s_artifact_puzzle_3d_editor_terminology::{puzzle3d_localized, Puzzle3dLabels};
+use semio_s_artifact_puzzle_3d_editor_terminology::puzzle3d_localized;
+use semio_s_artifact_puzzle_3d_editor_terminology::Puzzle3dLabels;
 use {semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_action, semio_s_artifact_puzzle_3d_model::puzzle3d_vortex_full_id, semio_s_artifact_puzzle_3d_model::quat_rotate_vector, semio_s_artifact_puzzle_3d_editor_snapshot::target_volume_scale_json, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dSceneSnapshot, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dSceneMetadata, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dInteractionSnapshot, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dObject, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dVortex, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_INTERACTION_DOMAIN, semio_s_artifact_puzzle_3d_editor_config::PUZZLE3D_VORTEX_SHOW_ALWAYS};
 use {semio_framework_plugin::world3d_camera_projection_json, semio_framework_plugin::world3d_chunking_json, semio_framework_plugin::world3d_environment_json, semio_framework_plugin::world3d_fit_json, semio_framework_plugin::World3dScene, semio_framework_plugin::world3d_selection_json, semio_framework_plugin::SurfaceKind, semio_framework_plugin::WindowEngagement, semio_framework_plugin::WindowEngagementInput, semio_framework_plugin::WindowEngagementSlot, semio_framework_plugin::WindowKindDefinition, semio_framework_plugin::WindowMeasure, semio_framework_plugin::WindowOptions, semio_framework_plugin::ToolRunView};
 use semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsFound;
 use semio_framework_ui_contract::BuiltNode;
-use serde_json::{json, Value};
-use std::hash::{Hash, Hasher};
+use serde_json::json;
+use serde_json::Value;
+use std::hash::Hash;
+use std::hash::Hasher;
 
 //#region 🔖️Constants
 

@@ -147,11 +147,11 @@ fn drain_clone_cursor<T: RetainedClone>(ledger: &mut Ledger, cursor: &mut T::Cur
     panic!("clone cursor did not close");
 }
 
-fn clone_owner<S: RetainedClone>(ledger: &mut Ledger, source: &RetainedCloneSource<S, S>, grant: RetainedCloneGrant) -> S {
+fn clone_owner<S: RetainedClone>(ledger: &mut Ledger, source: &RetainedCloneSource<S, S>, body:usize, grant: RetainedCloneGrant) -> S {
     let mut cursor = S::retained_clone_cursor();
     let mut idle = Idle::default();
     let owned = loop {
-        let (step, progress) = ledger.watch(grant, || { let step = limited(cursor.advance(source.borrow(), grant)); (step, step.progress()) });
+        let (step, progress) = ledger.watch(grant, || { let step = limited(cursor.advance(source.borrow(), body, grant)); (step, step.progress()) });
         if matches!(step, RetainedCloneStep::Complete(_)) { break cursor.take().expect("clone completes with its owner"); }
         idle.note(progress);
     };
@@ -166,14 +166,14 @@ struct Run { post: Value, inverse: Value, turns: usize }
 
 fn from_json<M: serde::de::DeserializeOwned>(json: &Value) -> impl Fn() -> M + '_ { move || serde_json::from_value(json.clone()).unwrap() }
 
-fn drive<S, M>(base_json: &Value, build: &dyn Fn() -> M, grant: RetainedCloneGrant, cancel_at: Option<usize>) -> Result<Option<Run>, ValueError>
+fn drive<S, M>(base_json: &Value, build: &dyn Fn() -> M, body:usize, grant: RetainedCloneGrant, cancel_at: Option<usize>) -> Result<Option<Run>, ValueError>
 where S: RetainedClone + serde::Serialize + serde::de::DeserializeOwned, M: WindowConfigApplyMutation<S> + serde::Serialize {
     let mut ledger = Ledger::default();
     let ((base, mutation), heap) = observe(|| (serde_json::from_value::<S>(base_json.clone()).unwrap(), build()));
     let held = heap.requested_bytes - heap.released_bytes;
     let (mut base_source, _) = ledger.watch(SETUP, || admit(base));
     let (mut mutation_source, _) = ledger.watch(SETUP, || admit(mutation));
-    let mut post = clone_owner(&mut ledger, &base_source, grant);
+    let mut post = clone_owner(&mut ledger, &base_source, body, grant);
     let edit = WindowConfigApplyEdit::<S, M>::new();
     let (mut cursor, _) = ledger.watch(grant, || limited(edit.begin(grant)));
     let (mut turns, mut idle, mut complete, mut failure) = (0, Idle::default(), false, None);
@@ -181,12 +181,12 @@ where S: RetainedClone + serde::Serialize + serde::de::DeserializeOwned, M: Wind
         if cancel_at == Some(turns) { cursor.cancel(); break; }
         let before = serde_json::to_value(&post).unwrap();
         for denied in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_depth: 1, ..grant }] {
-            let (result, heap) = observe(|| cursor.advance(base_source.borrow(), &mut post, mutation_source.borrow(), denied));
+            let (result, heap) = observe(|| cursor.advance(base_source.borrow(), &mut post, mutation_source.borrow(), body, denied));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             assert_eq!(result.unwrap(), RetainedCloneEditStep::Progress(Default::default()));
             assert_eq!(serde_json::to_value(&post).unwrap(), before);
         }
-        let (result, heap) = observe(|| cursor.advance(base_source.borrow(), &mut post, mutation_source.borrow(), grant));
+        let (result, heap) = observe(|| cursor.advance(base_source.borrow(), &mut post, mutation_source.borrow(), body, grant));
         ledger.record(heap);
         match result {
             Ok(step) => {
@@ -205,7 +205,7 @@ where S: RetainedClone + serde::Serialize + serde::de::DeserializeOwned, M: Wind
     assert!(cursor.take_inverse().is_none());
     let run = complete.then(|| Run { post: serde_json::to_value(&post).unwrap(), inverse: Value::Array(rows.iter().flatten().map(|row| serde_json::to_value(row).unwrap()).collect()), turns });
     if !complete {
-        let (result, heap) = observe(|| cursor.advance(base_source.borrow(), &mut post, mutation_source.borrow(), grant));
+        let (result, heap) = observe(|| cursor.advance(base_source.borrow(), &mut post, mutation_source.borrow(), body, grant));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert_eq!(result.unwrap(), RetainedCloneEditStep::Progress(Default::default()));
     }
@@ -244,7 +244,7 @@ where S: RetainedClone + serde::Serialize + serde::de::DeserializeOwned, M: Wind
     let mut copy = 1usize;
     loop {
         let grant = RetainedCloneGrant { maximum_copy_bytes: copy, ..wide };
-        if matches!(catch_unwind(AssertUnwindSafe(|| drive::<S, M>(base, &from_json(mutation), grant, None))), Ok(Ok(Some(_)))) { return copy; }
+        if matches!(catch_unwind(AssertUnwindSafe(|| drive::<S, M>(base, &from_json(mutation), body, grant, None))), Ok(Ok(Some(_)))) { return copy; }
         copy *= 2;
         assert!(copy <= 1 << 20, "no copy grant completes the case");
     }
@@ -260,15 +260,15 @@ where S: RetainedClone + serde::Serialize + serde::de::DeserializeOwned, M: Wind
     let floor = floor::<S, M>(base, mutation, WIDE);
     let mut turns = Vec::new();
     for named in policy["grants"].as_array().unwrap() {
-        let grant = RetainedCloneGrant { maximum_items: named["items"].as_u64().unwrap() as usize, maximum_copy_bytes: floor + named["copyExtra"].as_u64().unwrap() as usize, ..WIDE };
-        let run = drive::<S, M>(base, &from_json(mutation), grant, None).unwrap().expect("uncancelled run completes");
+        let body=floor+named["copyExtra"].as_u64().unwrap()as usize;let grant = RetainedCloneGrant { maximum_items: named["items"].as_u64().unwrap() as usize, maximum_copy_bytes: body, ..WIDE };
+        let run = drive::<S, M>(base, &from_json(mutation), body, grant, None).unwrap().expect("uncancelled run completes");
         assert_eq!(run.post, case["post"], "post of {} under {}", case["name"], named["name"]);
         assert_eq!(run.inverse, json!([case["inverse"]]), "inverse of {} under {}", case["name"], named["name"]);
-        let restored = drive::<S, M>(&run.post, &from_json(&run.inverse[0]), grant, None).unwrap().expect("inverse run completes");
+        let restored = drive::<S, M>(&run.post, &from_json(&run.inverse[0]), body, grant, None).unwrap().expect("inverse run completes");
         assert_eq!(&restored.post, base, "inverse restores the base exactly for {}", case["name"]);
         assert_eq!(restored.inverse, json!([mutation]), "double inverse restores the forward row for {}", case["name"]);
         for cancel_at in policy["cancelAt"].as_array().unwrap().iter().map(|turn| turn.as_u64().unwrap() as usize) {
-            let outcome = drive::<S, M>(base, &from_json(mutation), grant, Some(cancel_at)).unwrap();
+            let outcome = drive::<S, M>(base, &from_json(mutation), body, grant, Some(cancel_at)).unwrap();
             assert_eq!(outcome.is_some(), cancel_at >= run.turns, "cancel at {cancel_at} of {} turns", run.turns);
         }
         turns.push((named["name"].as_str().unwrap().to_owned(), run.turns));
@@ -299,8 +299,8 @@ fn window_config_apply_pages_long_text_across_small_grants() {
     let base = json!({ "activeRegister": "main", "label": "l", "ids": [], "zoom": 1.5 });
     let mutation = json!({ "kind": "set-active-register", "activeRegister": long });
     let floor = floor::<TextState, TextMutation>(&base, &mutation, WIDE);
-    let tight = drive::<TextState, TextMutation>(&base, &from_json(&mutation), RetainedCloneGrant { maximum_copy_bytes: floor, ..WIDE }, None).unwrap().unwrap();
-    let large = drive::<TextState, TextMutation>(&base, &from_json(&mutation), RetainedCloneGrant { maximum_copy_bytes: 1 << 20, ..WIDE }, None).unwrap().unwrap();
+    let tight = drive::<TextState, TextMutation>(&base, &from_json(&mutation), floor, RetainedCloneGrant { maximum_copy_bytes: floor, ..WIDE }, None).unwrap().unwrap();
+    let large = drive::<TextState, TextMutation>(&base, &from_json(&mutation), 1<<20, RetainedCloneGrant { maximum_copy_bytes: 1 << 20, ..WIDE }, None).unwrap().unwrap();
     assert_eq!(tight.post, json!({ "activeRegister": mutation["activeRegister"], "label": "l", "ids": [], "zoom": 1.5 }));
     assert_eq!(tight.post, large.post);
     assert_eq!(tight.inverse, large.inverse);
@@ -320,7 +320,7 @@ fn window_config_apply_refuses_invalid_lane_payload_and_exchange() {
     assert!(edit.preflight(&oversize, store::os_store::store_schema::HistoryLane::Document).is_err());
     let base = json!({ "activeRegister": "main", "label": "keep", "ids": ["a"], "zoom": 1.5 });
     let grant = RetainedCloneGrant { maximum_copy_bytes: 1 << 16, ..WIDE };
-    let refused = drive::<TextState, TextMutation>(&base, &|| infinite.clone(), grant, None).unwrap_err();
+    let refused = drive::<TextState, TextMutation>(&base, &|| infinite.clone(), 1<<16, grant, None).unwrap_err();
     assert_eq!(refused.kind, ValueRefusalKind::InvalidValue);
 }
 

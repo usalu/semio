@@ -230,6 +230,13 @@ pub fn format_f64(value: f64) -> String {
     }
 }
 
+/// 🧮️ Writes the canonical finite and exact IEEE word into a caller's bounded scalar buffer.
+pub fn format_f64_into(value:f64,output:&mut[u8])->Result<usize,std::fmt::Error>{
+ struct Buffer<'a>{output:&'a mut[u8],length:usize}
+ impl std::fmt::Write for Buffer<'_>{fn write_str(&mut self,text:&str)->std::fmt::Result{let end=self.length.checked_add(text.len()).ok_or(std::fmt::Error)?;self.output.get_mut(self.length..end).ok_or(std::fmt::Error)?.copy_from_slice(text.as_bytes());self.length=end;Ok(())}}
+ let mut buffer=Buffer{output,length:0};if value.is_nan(){std::fmt::write(&mut buffer,format_args!("nan64_{:016x}",value.to_bits()))?;}else{std::fmt::write(&mut buffer,format_args!("{value}"))?;}Ok(buffer.length)
+}
+
 pub fn format_f32(value: f32) -> String {
     if value.is_nan() {
         format!("nan32_{:08x}",value.to_bits())

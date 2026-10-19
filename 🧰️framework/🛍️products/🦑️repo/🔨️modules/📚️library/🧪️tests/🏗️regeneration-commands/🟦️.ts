@@ -1,4 +1,4 @@
-/** 🧪️ Regeneration commands: 2 tests covering neutral regeneration commands round-trip with independent schema and canonical JSON oracles; neutral regeneration gate has declared script and bilingual editor entry points. */
+/** 🧪️ Regeneration commands: 2 tests covering neutral regeneration commands round-trip with independent schema and canonical JSON oracles; neutral regeneration gate has declared script and typed dashboard entry points. */
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import stableStringify from "fast-json-stable-stringify";
@@ -26,8 +26,8 @@ test("neutral regeneration commands round-trip with independent schema and canon
   }
 });
 
-/** 🎛️ The independently parsed editor and project entry points select the same neutral owner. */
-test("neutral regeneration gate has declared script and bilingual editor entry points", () => {
+/** 🎛️ The authored project and typed dashboard entry points select the same neutral owner. */
+test("neutral regeneration gate has declared script and typed dashboard entry points", () => {
   const library = resolve(import.meta.dir, "../.."), root = resolve(library, "../../../../.."), fixture = JSON.parse(readFileSync(join(library, "🧪️tests/🧫️fixtures/🏗️regeneration-commands/🔣️.json"), "utf8")), expected = fixture.registration, project = JSON.parse(readFileSync(join(library, "📦️packages/🟦️typescript/📋️project.json"), "utf8")), router = readFileSync(join(library, "📦️packages/🟦️typescript/📜️script.ts"), "utf8");
   expect(project.targets[expected.target]).toEqual({ executor: "repo:script", options: { cwd: "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript", command: "bun ./📜️script.ts test " + expected.route } });
   const source = ts.createSourceFile("script.ts", router, ts.ScriptTarget.Latest, true), routes: ts.IfStatement[] = [];
@@ -35,11 +35,5 @@ test("neutral regeneration gate has declared script and bilingual editor entry p
   visit(source);
   expect(routes).toHaveLength(1);
   expect(routes[0]!.thenStatement.getText(source)).toContain("🧪️tests/🏗️regeneration-commands/🟦️.ts");
-  for (const path of [".vscode/launch.json", ".vscode/🧩️launch.seed.jsonc"]) {
-    const document = ts.parseConfigFileTextToJson(path, readFileSync(join(root, path), "utf8"));
-    expect(document.error).toBeUndefined();
-    const entries = document.config.configurations.filter((entry: { command?: string }) => entry.command === expected.command);
-    expect(entries.map((entry: { name: string }) => entry.name)).toEqual(expected.launchNames);
-    for (const entry of entries) expect(entry.env).toEqual({ BUN_RUNTIME_TRANSPILER_CACHE_PATH: "0", NODE_DISABLE_COMPILE_CACHE: "1" });
-  }
+  {const dashboard=JSON.parse(readFileSync(process.cwd()+"/📋️project.json","utf8")).metadata.semio.dashboard,tool=dashboard.tools.find((row:any)=>row.id==="run-script");expect(tool.command).toEqual(["bun","repo","exec","--projects={project}","--","bun","{workspace}/{script}"]);expect(tool.parameters.find((row:any)=>row.id==="script")).toMatchObject({kind:"text",required:true});}
 });

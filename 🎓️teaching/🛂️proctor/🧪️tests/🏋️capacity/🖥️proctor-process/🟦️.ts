@@ -2,7 +2,7 @@
 import { execFile } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { createServer } from "node:net";
-import { launchProctor } from "../../../🏗️bootstrap/🟦️.ts";
+import { launchProctor, type ProctorArtifact } from "../../../🏗️bootstrap/🟦️.ts";
 import { RESERVED_PORTS } from "../📊️settings-and-measurements/🟦️.ts";
 import { pause } from "../🚚️transport/🟦️.ts";
 
@@ -67,8 +67,8 @@ export interface Roster {
 
 /** 🪣️ Count the roster of the stopped proctor of `env` with its own `prune --older-than 0s --dry-run`, which changes
  * nothing; `undefined` when the count cannot be read. */
-export async function rosterOf(executable: string, repoRoot: string, env: NodeJS.ProcessEnv, log: string): Promise<Roster | undefined> {
-  await launchProctor(executable, repoRoot, ["prune", "--older-than", "0s", "--dry-run"], env, log).exited;
+export async function rosterOf(artifact: Pick<ProctorArtifact, "launch">, env: NodeJS.ProcessEnv, log: string): Promise<Roster | undefined> {
+  await artifact.launch(["prune", "--older-than", "0s", "--dry-run"], env, log).exited;
   const counted = existsSync(log) ? readFileSync(log, "utf8") : "";
   const idle = /^would prune (\d+) registrations /mu.exec(counted)?.[1];
   const staying = /^ {2}staying: (\d+) learners \((\d+) of them submitted a run\), \d+ handles, (\d+) registrations$/mu.exec(counted);

@@ -15,7 +15,7 @@ import type { BoardCore4 } from "../👆️board-pointer-and-keyboard/🟦️.ts
 // #region Board2dHost
 /** 🖱️ Builds the context menu and catalogue drop handlers and the tool-run trace lanes. */
 export function useBoardContextMenuAndDrop(core: BoardCore4) {
-  const { containerRef, dispatch, mapContextMenu, node, peerScope, readContainerSize, requestContextMenu, scene, sceneRef, sessionRef, setContextMenu, shellContextMenuFallback, windowInstanceId } = core;
+  const { containerRef, dispatch, mapContextMenu, node, peerScope, readContainerSize, requestContextMenu, scene, sceneRef, sessionRef, setContextMenu, shellContextMenuFallback, windowInstanceId , presenceRuntimeKey } = core;
 
   //#region ContextMenu
   const onContextMenu = useCallback(
@@ -197,7 +197,7 @@ export function useBoardContextMenuAndDrop(core: BoardCore4) {
   //#endregion DropPreviewHandlers
 
   useEffect(() => {
-    publishLocalActiveToolV1("local", scene?.activeUtility ?? null);
+    if (presenceRuntimeKey) publishLocalActiveToolV1(presenceRuntimeKey, scene?.activeUtility ?? null);
   }, [scene?.activeUtility]);
 
   const toolRunTraceCamera = useMemo(() => parseBoardCamera(scene?.cameraJson ?? "") ?? { x: 0, y: 0, zoom: 1 }, [scene?.cameraJson]);

@@ -1,6 +1,10 @@
 //! 🖌️ `register-brush-mesh` command.
 
-use semio_s_artifact_puzzle_3d_precompute::{decode_brush_mesh_page_values, Puzzle3dMeshUploadFault, PUZZLE3D_MESH_PAGE_VALUES};
+use semio_s_artifact_puzzle_3d_precompute::decode_brush_mesh_page_values;
+
+use semio_s_artifact_puzzle_3d_precompute::Puzzle3dMeshUploadFault;
+
+use semio_s_artifact_puzzle_3d_precompute::PUZZLE3D_MESH_PAGE_VALUES;
 use semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx;
 use semio_framework_pack_json::Value;
 use semio_framework::kernel::Effect;

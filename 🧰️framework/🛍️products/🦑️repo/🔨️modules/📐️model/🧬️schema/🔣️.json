@@ -1581,6 +1581,10 @@
           "items": {
             "type": "string"
           }
+        },
+        "interactions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Interaction" }
         }
       },
       "required": [

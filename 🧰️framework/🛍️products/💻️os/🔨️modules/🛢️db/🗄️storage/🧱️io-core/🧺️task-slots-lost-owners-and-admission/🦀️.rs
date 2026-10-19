@@ -22,7 +22,10 @@ pub struct DbIoTaskSlot {
     pub phase: DbIoTaskPhase,
     pub task: Option<DbIoTask>,
     pub terminal: Option<DbIoTerminal>,
-    pub pool: Option<Arc<WorkerPool>>,
+        pub fault_custody: Option<DbIoFaultCustody>,
+    pub poll_custody: Option<DbIoFaultCustody>,
+    pub cleanup_custody: Option<DbIoFaultCustody>,
+pub pool: Option<Arc<WorkerPool>>,
     pub retry_attempt: Option<u8>,
     pub terminal_submit_kind: Option<WorkerSubmitErrorKind>,
     pub waker: Option<std::task::Waker>,
@@ -76,7 +79,10 @@ impl DbIoTaskSlot {
             async_driver: None,
             async_driver_scheduled: false,
             async_driver_wake_requested: false,
-        }
+                    fault_custody: None,
+            poll_custody: None,
+            cleanup_custody: None,
+}
     }
 }
 

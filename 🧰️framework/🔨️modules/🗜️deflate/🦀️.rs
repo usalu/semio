@@ -34,6 +34,9 @@ pub use deflate_encoder::*;
 #[path="🫳️measure/🦀️.rs"]
 mod measurement;
 pub use measurement::DeflateMeasure;
+#[path = "🛫️encode/⏳️cursor/🦀️.rs"]
+mod retained_encoding;
+pub use retained_encoding::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, RetainedDeflateEncoder, RetainedDeflatePhase, RetainedDeflateProgress};
 //#endregion 🔖️Deflate
 
 #[path = "🎒️zip/🦀️.rs"]
@@ -42,3 +45,6 @@ pub mod zip_archive;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+#[cfg(test)]
+#[path = "🛫️encode/⏳️cursor/🧪️tests/🦀️.rs"]
+mod retained_encoder_tests;

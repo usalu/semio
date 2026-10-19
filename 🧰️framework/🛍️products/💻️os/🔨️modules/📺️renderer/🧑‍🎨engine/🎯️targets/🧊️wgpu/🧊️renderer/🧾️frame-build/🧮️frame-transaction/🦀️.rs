@@ -413,9 +413,10 @@ impl FrameTransaction {
             }
             AppFrameTransactionPhase::FrameDeferred => {
                 let mut deferred = app.pending_frame_deferred.take();
-                if deferred.is_some() && !RuntimeApply::start_frame_deferred(&mut deferred, &mut app, handle) {
+                if deferred.is_some() {
+                    let original = RuntimeApply::start_frame_deferred(&mut deferred, &mut app, handle, context);
                     app.pending_frame_deferred = deferred;
-                    return AppFrameTransactionStep::Pending;
+                    match original { Ok(true) => {}, Ok(false) => return AppFrameTransactionStep::Pending, Err(failure) => return AppFrameTransactionStep::CloseFailure(failure) }
                 }
                 self.phase = AppFrameTransactionPhase::BoardAuthority;
                 AppFrameTransactionStep::Pending
@@ -711,6 +712,7 @@ impl FrameTransaction {
                 };
                 let cursor = self.finish_cursor.get_or_insert_with(Default::default);
                 match app.frame_after_input_step(runtime, partial, cursor, context) {
+                    FrameFinishBoundaryStep::CloseFailure(failure) => AppFrameTransactionStep::CloseFailure(failure),
                     FrameFinishBoundaryStep::Pending => AppFrameTransactionStep::Pending,
                     FrameFinishBoundaryStep::Complete(frame) => {
                         self.after_chrome = None;
@@ -892,11 +894,9 @@ pub async fn boot_runtime(
         #[cfg(not(target_arch = "wasm32"))]
         plugin_modules_root: plugin_modules_root.clone(),
         #[cfg(not(target_arch = "wasm32"))]
-        native_plugin_mtimes: std::collections::HashMap::new(),
-        #[cfg(not(target_arch = "wasm32"))]
         native_hot_swap_scan: None,
         #[cfg(not(target_arch = "wasm32"))]
-        native_hot_swap_modified: None,
+        native_hot_swap_program: None,
         #[cfg(not(target_arch = "wasm32"))]
         native_hot_swap_cursor: 0,
         #[cfg(not(target_arch = "wasm32"))]

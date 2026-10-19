@@ -23,6 +23,10 @@ use semio_framework_manifest_actions::InteractiveJobClassification;
 use semio_framework_manifest_app_surface::AppDefinition;
 
 //#region 🎯️ToolJobBus
+
+#[path="🚪️admission/🦀️.rs"]
+pub mod admission;
+pub use admission::{ToolJobAdmissionDemand,OriginalToolSourceBinding,OriginalToolJobIdentity,admit_original_tool_job,admit_original_tool_job_measured,admit_original_tool_job_controlled,admit_original_tool_construction,OriginalToolConstructionScope,admit_original_tool_construction_scoped};
 //#region 🧬️Contract
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ToolFactoryKey {
@@ -38,39 +42,30 @@ impl ToolFactoryKey {
 
 pub struct ToolPayload {
     pub schema_id: String,
-    value: Box<dyn Any + Send>,
+    value: Option<Box<dyn Any + Send>>,
 }
 
 impl ToolPayload {
-    pub fn new<T: Send + 'static>(schema_id: impl Into<String>, value: T) -> Self {
-        Self { schema_id: schema_id.into(), value: Box::new(value) }
-    }
-
-    fn downcast<T: Send + 'static>(self) -> Result<T, ToolJobFactoryError> {
-        self.value.downcast::<T>().map(|value| *value).map_err(|_| ToolJobFactoryError::new(format!("tool payload '{}' has the wrong Rust payload type", self.schema_id)))
-    }
+    /// 🎒️ The caller transfers the exact already-born payload allocation without another Box.
+    pub fn from_owned<T:Send+'static>(schema_id:String,value:Box<T>)->Self{Self{schema_id,value:Some(value)}}
+    /// 🫴️ Returns the exact original typed source for its caller's bounded retirement without another allocation.
+    pub fn take_original<T:Send+'static>(&mut self)->Result<Option<Box<T>>,semio_framework_value::ValueError>{match self.value.take(){None=>Ok(None),Some(original)=>match original.downcast::<T>(){Ok(original)=>Ok(Some(original)),Err(original)=>{self.value=Some(original);Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original payload retirement requested a different defining type"))}}}}
+    /// 👁️ A refused admission leaves its original payload allocation in the caller's specification.
+    pub fn retained_payload(&self)->Option<&(dyn Any+Send)>{self.value.as_deref()}
 }
 
 pub struct ToolOperationSpec {
-    pub controller_id: String,
-    pub tool_id: String,
+    pub key: ToolFactoryKey,
     pub payload: ToolPayload,
     pub operation: Operation,
+    pub source: OriginalToolJobIdentity,
 }
 
 impl ToolOperationSpec {
-    pub fn new<T: Send + 'static>(controller_id: impl Into<String>, tool_id: impl Into<String>, schema_id: impl Into<String>, payload: T, operation: Operation) -> Self {
-        Self { controller_id: controller_id.into(), tool_id: tool_id.into(), payload: ToolPayload::new(schema_id, payload), operation }
-    }
-
-    pub fn key(&self) -> ToolFactoryKey {
-        ToolFactoryKey::new(self.controller_id.clone(), self.tool_id.clone())
-    }
-}
-
-pub struct ToolJobDispatch {
-    pub spec: ToolOperationSpec,
-    pub job: ErasedToolJob,
+    /// 🧳️ Original owned metadata and payload enter without another allocation or identity copy.
+    pub fn from_owned<T:Send+'static>(key:ToolFactoryKey,schema_id:String,payload:Box<T>,operation:Operation,source:OriginalToolJobIdentity)->Self{Self{key,payload:ToolPayload::from_owned(schema_id,payload),operation,source}}
+    /// 🔑️ Borrows the exact owned lookup key without allocating on a denied factory turn.
+    pub fn key(&self)->&ToolFactoryKey{&self.key}
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -203,11 +198,7 @@ impl RetainedToolWireInput {
     }
 }
 
-pub struct RetainedToolWireDispatchRejected {
-    pub error: ToolDispatchError,
-    pub input: RetainedToolWireInput,
-    pub checkpoint: Option<RetainedToolWireInput>,
-}
+
 
 /// 🔒️ Exact, reviewable admission bounds owned by one UI-reachable command factory.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -301,11 +292,7 @@ pub struct ErasedToolJob {
 }
 
 impl ErasedToolJob {
-    fn new<J: InteractiveJob + Send + 'static>(job: J) -> Self {
-        Self { inner: std::mem::ManuallyDrop::new(Some(Box::new(job))) }
-    }
-
-    /// 🎒️ Receives a preborn typed job allocation without cloning or allocating another wrapper.
+/// 🎒️ Receives a preborn typed job allocation without cloning or allocating another wrapper.
     pub fn from_owned(inner: Box<dyn InteractiveJob + Send>) -> Self { Self { inner: std::mem::ManuallyDrop::new(Some(inner)) } }
 
     /// 👁️ Borrows the exact original erased allocation while its physical owner remains retained.
@@ -392,35 +379,12 @@ pub trait ToolJobFactory: Send + 'static {
     fn payload_schema_id(&self) -> &str;
     fn classification(&self) -> InteractiveJobClassification;
     fn execution_contract(&self) -> ToolExecutionContract;
-    fn create_job(&mut self, operation: Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError>;
+    /// 📏️ Quotes actual construction from borrowed original sources before any transfer.
+    fn admission_demands(&self,operation:&Operation,payload:&Self::Payload,input:Option<&RetainedToolWireInput>,checkpoint:Option<&RetainedToolWireInput>)->Result<ToolJobAdmissionDemand,semio_framework_value::ValueError>;
 
-    /// 🌉 Decodes the owned cold-job wire payload without exposing a serialization dependency
-    /// through the action-bus API. Factories mounted on a wire route override this explicitly; UI-only
-    /// factories retain the typed [`ToolOperationSpec`] path and reject wire dispatch.
-    fn create_job_from_wire(&mut self, _operation: Operation, _payload: &[u8], _checkpoint: Option<Vec<u8>>) -> Result<Self::Job, ToolJobFactoryError> {
-        Err(ToolJobFactoryError::new("tool factory does not own a wire payload decoder"))
-    }
+    /// 🧳️ The caller retains all denied sources and any born unpublished candidate on refusal.
+    fn admit_job(&mut self,context:&mut StepContext<'_>,operation:&Operation,payload:&mut Option<Box<Self::Payload>>,input:&mut Option<RetainedToolWireInput>,checkpoint:&mut Option<RetainedToolWireInput>,output:&mut Option<Box<Self::Job>>)->Result<bool,semio_framework_job::OriginalTurnFailure>;
 
-    /// 🧬️ Takes the already-admitted raw page owner before application parsing or identity
-    /// construction. Rejection returns every retained owner to the caller for bounded retirement.
-    #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Refusal returns existing wire page and checkpoint owners directly, avoiding an additional heap wrapper."))]
-    fn create_job_from_wire_pages(&mut self, _operation: Operation, input: RetainedToolWireInput, checkpoint: Option<RetainedToolWireInput>) -> Result<Self::Job, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)> {
-        Err((ToolJobFactoryError::new("tool factory does not own a retained wire page decoder"), input, checkpoint))
-    }
-
-    /// 🧬️ Builds the concrete factory payload while transferring the already-admitted raw
-    /// pages into the same production job. Factories with a domain decoder override this so their job
-    /// consumes one retained page per step; the default preserves the pages only as factory authority.
-    #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Refusal returns existing wire page and checkpoint owners directly, avoiding an additional heap wrapper."))]
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: Operation,
-        _payload: Self::Payload,
-        input: RetainedToolWireInput,
-        checkpoint: Option<RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)> {
-        Err((ToolJobFactoryError::new("tool factory does not own retained wire pages alongside its typed payload"), input, checkpoint))
-    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -490,57 +454,34 @@ impl Error for ToolDispatchError {}
 //#endregion 🚫️Rejection
 //#region 🚌️Bus
 
-trait ErasedToolJobFactory: Send {
-    fn create_job(&mut self, spec: &mut ToolOperationSpec) -> Result<ErasedToolJob, ToolJobFactoryError>;
-    fn create_job_from_wire(&mut self, operation: Operation, payload: &[u8], checkpoint: Option<Vec<u8>>) -> Result<ErasedToolJob, ToolJobFactoryError>;
-    #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Refusal returns existing wire page and checkpoint owners directly, avoiding an additional heap wrapper."))]
-    fn create_job_from_wire_pages(&mut self, operation: Operation, input: RetainedToolWireInput, checkpoint: Option<RetainedToolWireInput>) -> Result<ErasedToolJob, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)>;
-    #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Refusal returns existing wire page and checkpoint owners directly, avoiding an additional heap wrapper."))]
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        spec: &mut ToolOperationSpec,
-        input: RetainedToolWireInput,
-        checkpoint: Option<RetainedToolWireInput>,
-    ) -> Result<ErasedToolJob, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)>;
+trait ErasedToolJobFactory:Send{
+    fn admission_demands(&self,spec:&ToolOperationSpec,input:Option<&RetainedToolWireInput>,checkpoint:Option<&RetainedToolWireInput>)->Result<ToolJobAdmissionDemand,semio_framework_value::ValueError>;
+    fn admit_job(&mut self,context:&mut StepContext<'_>,spec:&mut ToolOperationSpec,input:&mut Option<RetainedToolWireInput>,checkpoint:&mut Option<RetainedToolWireInput>,output:&mut Option<ErasedToolJob>)->Result<bool,semio_framework_job::OriginalTurnFailure>;
 }
 
-struct ToolJobFactoryAdapter<F: ToolJobFactory> {
-    factory: F,
+struct ToolJobFactoryAdapter<F:ToolJobFactory>{factory:F}
+impl<F:ToolJobFactory> ToolJobFactoryAdapter<F>{
+    fn original_payload<'a>(&self,spec:&'a ToolOperationSpec)->Result<&'a F::Payload,semio_framework_value::ValueError>{
+        use semio_framework_value::{ValueError,ValueRefusalKind};
+        if spec.payload.schema_id!=self.factory.payload_schema_id(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original tool payload schema does not match its registered factory"));}
+        spec.payload.value.as_ref().and_then(|value|value.downcast_ref::<F::Payload>()).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original tool payload type does not match its registered factory"))
+    }
 }
-
-impl<F: ToolJobFactory> ErasedToolJobFactory for ToolJobFactoryAdapter<F> {
-    fn create_job(&mut self, spec: &mut ToolOperationSpec) -> Result<ErasedToolJob, ToolJobFactoryError> {
-        if spec.payload.schema_id != self.factory.payload_schema_id() {
-            return Err(ToolJobFactoryError::new(format!("expected payload schema '{}', got '{}'", self.factory.payload_schema_id(), spec.payload.schema_id)));
-        }
-        let placeholder = ToolPayload::new(spec.payload.schema_id.clone(), ());
-        let payload = std::mem::replace(&mut spec.payload, placeholder).downcast::<F::Payload>()?;
-        self.factory.create_job(spec.operation, payload).map(ErasedToolJob::new)
-    }
-
-    fn create_job_from_wire(&mut self, operation: Operation, payload: &[u8], checkpoint: Option<Vec<u8>>) -> Result<ErasedToolJob, ToolJobFactoryError> {
-        self.factory.create_job_from_wire(operation, payload, checkpoint).map(ErasedToolJob::new)
-    }
-
-    fn create_job_from_wire_pages(&mut self, operation: Operation, input: RetainedToolWireInput, checkpoint: Option<RetainedToolWireInput>) -> Result<ErasedToolJob, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)> {
-        self.factory.create_job_from_wire_pages(operation, input, checkpoint).map(ErasedToolJob::new)
-    }
-
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        spec: &mut ToolOperationSpec,
-        input: RetainedToolWireInput,
-        checkpoint: Option<RetainedToolWireInput>,
-    ) -> Result<ErasedToolJob, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)> {
-        if spec.payload.schema_id != self.factory.payload_schema_id() {
-            return Err((ToolJobFactoryError::new(format!("expected payload schema '{}', got '{}'", self.factory.payload_schema_id(), spec.payload.schema_id)), input, checkpoint));
-        }
-        let placeholder = ToolPayload::new(spec.payload.schema_id.clone(), ());
-        let payload = match std::mem::replace(&mut spec.payload, placeholder).downcast::<F::Payload>() {
-            Ok(payload) => payload,
-            Err(error) => return Err((error, input, checkpoint)),
-        };
-        self.factory.create_job_from_wire_pages_with_payload(spec.operation, payload, input, checkpoint).map(ErasedToolJob::new)
+impl<F:ToolJobFactory> ErasedToolJobFactory for ToolJobFactoryAdapter<F>{
+    fn admission_demands(&self,spec:&ToolOperationSpec,input:Option<&RetainedToolWireInput>,checkpoint:Option<&RetainedToolWireInput>)->Result<ToolJobAdmissionDemand,semio_framework_value::ValueError>{self.factory.admission_demands(&spec.operation,self.original_payload(spec)?,input,checkpoint)}
+    fn admit_job(&mut self,context:&mut StepContext<'_>,spec:&mut ToolOperationSpec,input:&mut Option<RetainedToolWireInput>,checkpoint:&mut Option<RetainedToolWireInput>,output:&mut Option<ErasedToolJob>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_value::{ValueError,ValueRefusalKind};
+        self.original_payload(spec)?;
+        if !spec.source.matches(context){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original tool specification belongs to different source roots or clock").into());}
+        if output.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original erased tool candidate slot is occupied").into());}
+        let original=spec.payload.value.take().expect("validated original payload");
+        let typed=match original.downcast::<F::Payload>(){Ok(typed)=>typed,Err(original)=>{spec.payload.value=Some(original);return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original tool payload changed after validation").into());}};
+        let mut payload=Some(typed);
+        let mut candidate=None;
+        let result=self.factory.admit_job(context,&spec.operation,&mut payload,input,checkpoint,&mut candidate);
+        spec.payload.value=payload.map(|value|value as Box<dyn Any+Send>);
+        *output=candidate.map(|job|ErasedToolJob::from_owned(job as Box<dyn InteractiveJob+Send>));
+        match result{Ok(true) if output.is_none()=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original factory omitted its admitted job candidate").into()),result=>result}
     }
 }
 
@@ -702,109 +643,24 @@ impl ActionBus {
     /// 🧬️ Moves one sealed raw-page owner into the exact registered application factory.
     /// No generic command or serialization value exists before this boundary.
     #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Refusal returns existing wire page and checkpoint owners directly, avoiding an additional heap wrapper."))]
-    pub fn dispatch_wire_retained(&self, admission: ToolWireAdmission, input: RetainedToolWireInput, checkpoint: Option<RetainedToolWireInput>, operation: Operation) -> Result<ToolJobDispatch, RetainedToolWireDispatchRejected> {
-        let reject = |error, input, checkpoint| RetainedToolWireDispatchRejected { error, input, checkpoint };
-        let controller_id = admission.key.controller_id.clone();
-        let tool_id = admission.key.tool_id.clone();
-        if !input.sealed || input.closing || input.declared_bytes != input.admitted_bytes || input.maximum_bytes != admission.contract.max_raw_wire_bytes {
-            return Err(reject(ToolDispatchError::Factory { controller_id, tool_id, detail: "retained tool wire owner is not exactly sealed to its admission".to_string() }, input, checkpoint));
-        }
-        let mut inner = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let Some(index) = inner.factory_by_key.get(&admission.key).copied() else {
-            return Err(reject(ToolDispatchError::UnknownController { controller_id: format!("{controller_id}/{tool_id}") }, input, checkpoint));
-        };
-        let Some((factory_type_id, factory_type_name, schema_id)) = inner.factory_identity_by_key.get(&admission.key) else {
-            return Err(reject(ToolDispatchError::UnknownController { controller_id: format!("{controller_id}/{tool_id}") }, input, checkpoint));
-        };
-        let current_contract = *inner.contract_by_key.get(&admission.key).expect("factory contract is registered atomically with its key");
-        if *factory_type_id != admission.factory_type_id || *factory_type_name != admission.factory_type_name || schema_id != &admission.schema_id || current_contract != admission.contract {
-            return Err(reject(ToolDispatchError::Factory { controller_id, tool_id, detail: "tool wire admission became stale before factory transfer".to_string() }, input, checkpoint));
-        }
-        let factory = inner.factories.get_mut(index).expect("factory index is registered atomically with its keys");
-        let job = match factory.create_job_from_wire_pages(operation, input, checkpoint) {
-            Ok(job) => job,
-            Err((error, input, checkpoint)) => {
-                return Err(reject(ToolDispatchError::Factory { controller_id, tool_id, detail: error.detail }, input, checkpoint));
-            }
-        };
-        inner.dispatch_count = inner.dispatch_count.saturating_add(1);
-        let spec = ToolOperationSpec::new(admission.key.controller_id, admission.key.tool_id, admission.schema_id, (), operation);
-        Ok(ToolJobDispatch { spec, job })
+    /// 📏️ Borrows the exact registered factory and original input owners without allocating a lookup key.
+    pub fn admission_demands(&self,spec:&ToolOperationSpec,input:Option<&RetainedToolWireInput>,checkpoint:Option<&RetainedToolWireInput>)->Result<ToolJobAdmissionDemand,semio_framework_value::ValueError>{
+        use semio_framework_value::{ValueError,ValueRefusalKind};
+        let inner=self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let index=inner.factory_by_key.get(spec.key()).copied().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool factory key is not registered"))?;
+        inner.factories[index].admission_demands(spec,input,checkpoint)
     }
 
-    /// 🧬️ Transfers a concrete app payload and its exact retained ingress pages through the
-    /// same registered factory. This is the production route for factories whose worker performs the
-    /// domain decode incrementally before it starts the prepared reducer payload.
-    #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Refusal returns existing wire page and checkpoint owners directly, avoiding an additional heap wrapper."))]
-    pub fn dispatch_wire_retained_with_spec(&self, admission: &ToolWireAdmission, input: RetainedToolWireInput, checkpoint: Option<RetainedToolWireInput>, mut spec: ToolOperationSpec) -> Result<ToolJobDispatch, RetainedToolWireDispatchRejected> {
-        let reject = |error, input, checkpoint| RetainedToolWireDispatchRejected { error, input, checkpoint };
-        let controller_id = admission.key.controller_id.clone();
-        let tool_id = admission.key.tool_id.clone();
-        if spec.key() != admission.key || spec.payload.schema_id != admission.schema_id {
-            return Err(reject(ToolDispatchError::Factory { controller_id, tool_id, detail: "typed payload does not match its retained wire admission".to_string() }, input, checkpoint));
-        }
-        if !input.sealed || input.closing || input.declared_bytes != input.admitted_bytes || input.maximum_bytes != admission.contract.max_raw_wire_bytes {
-            return Err(reject(ToolDispatchError::Factory { controller_id, tool_id, detail: "retained tool wire owner is not exactly sealed to its admission".to_string() }, input, checkpoint));
-        }
-        let mut inner = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let Some(index) = inner.factory_by_key.get(&admission.key).copied() else {
-            return Err(reject(ToolDispatchError::UnknownController { controller_id: format!("{controller_id}/{tool_id}") }, input, checkpoint));
-        };
-        let Some((factory_type_id, factory_type_name, schema_id)) = inner.factory_identity_by_key.get(&admission.key) else {
-            return Err(reject(ToolDispatchError::UnknownController { controller_id: format!("{controller_id}/{tool_id}") }, input, checkpoint));
-        };
-        let current_contract = *inner.contract_by_key.get(&admission.key).expect("factory contract is registered atomically with its key");
-        if *factory_type_id != admission.factory_type_id || *factory_type_name != admission.factory_type_name || schema_id != &admission.schema_id || current_contract != admission.contract {
-            return Err(reject(ToolDispatchError::Factory { controller_id, tool_id, detail: "tool wire admission became stale before concrete factory transfer".to_string() }, input, checkpoint));
-        }
-        let factory = inner.factories.get_mut(index).expect("factory index is registered atomically with its keys");
-        let job = match factory.create_job_from_wire_pages_with_payload(&mut spec, input, checkpoint) {
-            Ok(job) => job,
-            Err((error, input, checkpoint)) => {
-                return Err(reject(ToolDispatchError::Factory { controller_id, tool_id, detail: error.detail }, input, checkpoint));
-            }
-        };
-        inner.dispatch_count = inner.dispatch_count.saturating_add(1);
-        Ok(ToolJobDispatch { spec, job })
+    /// 🚪️ Pending and refused turns retain caller slots; born candidates remain owned before receipt acceptance.
+    pub fn admit_job(&self,context:&mut StepContext<'_>,spec:&mut ToolOperationSpec,input:&mut Option<RetainedToolWireInput>,checkpoint:&mut Option<RetainedToolWireInput>,output:&mut Option<ErasedToolJob>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_value::{ValueError,ValueRefusalKind};
+        let mut inner=self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let index=inner.factory_by_key.get(spec.key()).copied().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool factory key is not registered"))?;
+        let admitted=inner.factories[index].admit_job(context,spec,input,checkpoint,output)?;
+        if admitted{inner.dispatch_count=inner.dispatch_count.saturating_add(1);}
+        Ok(admitted)
     }
 
-    pub fn dispatch(&self, mut spec: ToolOperationSpec) -> Result<ToolJobDispatch, ToolDispatchError> {
-        let key = spec.key();
-        let controller_id = key.controller_id.clone();
-        let tool_id = key.tool_id.clone();
-        let mut inner = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let index = inner.factory_by_key.get(&key).copied().ok_or_else(|| ToolDispatchError::UnknownController { controller_id: format!("{controller_id}/{tool_id}") })?;
-        let factory = inner.factories.get_mut(index).expect("factory index is registered atomically with its keys");
-        let job = factory.create_job(&mut spec).map_err(|error| ToolDispatchError::Factory { controller_id, tool_id, detail: error.detail })?;
-        inner.dispatch_count = inner.dispatch_count.saturating_add(1);
-        Ok(ToolJobDispatch { spec, job })
-    }
-
-    /// 🌉 Resolves an owned byte payload through the same exact controller/tool identity as a
-    /// typed UI dispatch. The factory alone owns decoding into its schema-first payload type; an
-    /// optional lossless checkpoint is supplied separately so a cold-job restart never has to mutate
-    /// or reinterpret the authoritative input bytes.
-    pub fn dispatch_wire(&self, controller_id: impl Into<String>, tool_id: impl Into<String>, schema_id: impl Into<String>, payload: &[u8], checkpoint: Option<Vec<u8>>, operation: Operation) -> Result<ToolJobDispatch, ToolDispatchError> {
-        let controller_id = controller_id.into();
-        let tool_id = tool_id.into();
-        let schema_id = schema_id.into();
-        let key = ToolFactoryKey::new(controller_id.clone(), tool_id.clone());
-        let mut inner = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let index = inner.factory_by_key.get(&key).copied().ok_or_else(|| ToolDispatchError::UnknownController { controller_id: format!("{controller_id}/{tool_id}") })?;
-        let contract = *inner.contract_by_key.get(&key).expect("execution contract is registered atomically with its key");
-        if payload.len() > contract.max_raw_wire_bytes {
-            return Err(ToolDispatchError::RawWireLimit { controller_id, tool_id, actual: payload.len(), maximum: contract.max_raw_wire_bytes });
-        }
-        let expected_schema = inner.factory_identity_by_key.get(&key).map(|(_, _, schema)| schema.clone()).expect("factory identity is registered atomically with its key");
-        if expected_schema != schema_id {
-            return Err(ToolDispatchError::Factory { controller_id, tool_id, detail: format!("expected payload schema '{expected_schema}', got '{schema_id}'") });
-        }
-        let factory = inner.factories.get_mut(index).expect("factory index is registered atomically with its keys");
-        let job = factory.create_job_from_wire(operation, payload, checkpoint).map_err(|error| ToolDispatchError::Factory { controller_id: controller_id.clone(), tool_id: tool_id.clone(), detail: error.detail })?;
-        inner.dispatch_count = inner.dispatch_count.saturating_add(1);
-        let spec = ToolOperationSpec::new(controller_id, tool_id, schema_id, (), operation);
-        Ok(ToolJobDispatch { spec, job })
-    }
 }
 
 //#endregion 🚌️Bus

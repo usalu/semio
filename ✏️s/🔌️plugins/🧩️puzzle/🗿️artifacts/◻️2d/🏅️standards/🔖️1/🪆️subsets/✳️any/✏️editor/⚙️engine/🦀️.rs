@@ -1,5 +1,5 @@
-//! ⚙️ Puzzle 2d app engine — headless compute + interactive host over the board scene, rehomed
 //! app-side (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1e: an artifact is a `🧬️schema`
+//! ⚙️ Puzzle 2d app engine — headless compute + interactive host over the board scene, rehomed
 //! plus a `🚪️io` system, never an engine — the puzzle2d artifact's old `⚙️engine` owned a genuinely
 //! stateful/interactive `BoardHost`, so it moves to the app that edits the artifact). Thin domain
 //! facade over the `infinite-board` port-directed graph kernel: it re-exports that kernel's whole
@@ -22,8 +22,11 @@
 //! that consumer's file; two or more consumers put it here.
 
 pub use semio_framework_canvas as canvas;
-pub use canvas::{CubicBez, Point, Vec2};
-pub use semio_framework_os_infinite::{self as graph, *};
+pub use canvas::CubicBez;
+pub use canvas::Point;
+pub use canvas::Vec2;
+pub use semio_framework_os_infinite::self as graph;
+pub use semio_framework_os_infinite::*;
 
 //#region 🔖️Puzzle2dExtension
 /// 🧩️ Puzzle 2d domain extension over the property graph canvas.

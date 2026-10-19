@@ -16,8 +16,17 @@ pub struct RemoveWidget { pub id: String }
 //#region 🎮️Behavior
 impl MutationKind<FlowHostSnapshot, FlowMutation> for RemoveWidget {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "widget", kind: "remove-widget", record: "RemovedWidget" };
+
+
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native(&format!("Remove widget {}", self.id), &format!("Widget {} entfernen", self.id))
+    }
+    fn target(&self) -> Vec<String> { vec!["widgets".into(), self.id.clone()] }
+}
+
+impl crate::os_spr::ColdMutationKind<FlowHostSnapshot, FlowMutation> for RemoveWidget {
     fn diff(&self, _base: &FlowHostSnapshot) -> MutationOutcome<FlowDiff> {
-        MutationOutcome::new(FlowDiff::from(FlowDelta::Widgets(FlowCollectionDelta { removed: vec![self.id.clone()], inserted: vec![], replaced: vec![] })))
+        MutationOutcome::new(FlowDiff::from(FlowDelta::Widgets(FlowCollectionDelta { removed: vec![self.id.clone()], inserted: vec![], replaced: vec![], moved: vec![] })))
     }
     fn inverse(&self, base: &FlowHostSnapshot) -> Result<Vec<FlowMutation>, semio_framework_value::ValueError> {
     Ok((|| {
@@ -25,10 +34,6 @@ impl MutationKind<FlowHostSnapshot, FlowMutation> for RemoveWidget {
     
     })())
 }
-    fn label(&self) -> crate::LocalizedLabel {
-        crate::LocalizedLabel::native(&format!("Remove widget {}", self.id), &format!("Widget {} entfernen", self.id))
-    }
-    fn target(&self) -> Vec<String> { vec!["widgets".into(), self.id.clone()] }
 }
 
 //#endregion 🎮️Behavior

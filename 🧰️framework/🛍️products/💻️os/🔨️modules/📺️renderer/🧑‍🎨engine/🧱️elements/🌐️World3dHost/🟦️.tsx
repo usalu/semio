@@ -14,7 +14,9 @@ import { Suspense } from "react";
 import { cn, ContextMenuController, glassClass, IconShotFrame, SelectionMarquee, sunPositionFromAzimuthElevation, chromePanelSafeAreaStyle, windowChromeClearedTopOffset } from "@semio-tech/ui-react";
 import { toolRunTraceDataAttributes } from "./⏯️tool-run-trace/🟦️.tsx";
 import { World3dAnnotationOverlay, World3dAnnotationProjector, World3dScalarLegendView, World3dSectionClip, world3dModellingDataAttributes, world3dModellingStrings } from "./📏️modelling/🟦️.tsx";
-import { type ComponentSceneHostProps } from "@semio-tech/framework";
+import { type ComponentSceneHostProps, type InteractionTarget,
+  type MergeMode
+} from "@semio-tech/framework";
 import { DEFAULT_LOD_GRID_FACTOR, DEFAULT_MANUAL_LOD, WorldCanvas, WorldLodBridge, WorldOrbitGated, WorldOrbitViewControls, WorldOrbitViewSnapGateProvider, WorldProjectionRig, WorldReferenceLayer, WorldVolumeLayer } from "@semio-tech/infinite-world-r3f";
 
 import { WorldTerrainLayer } from "../🗺️WorldTerrainLayer/🟦️.tsx";
@@ -22,7 +24,7 @@ import { world3dMarqueeOverlayShape } from "../🛠️ShellHelpers/🛑️extens
 import { NOTE_WORLD_NAVIGATION_ACTION_ID } from "../🛠️ShellHelpers/🔩️plumbing/🆔️action-ids/🟦️.ts";
 
 import { suggestionSubmenuTarget, withSuggestionSubmenu } from "../🎣️suggestion-submenu/🟦️.ts";
-import { CanvasPresenceOverlayV1 } from "../👕️canvas-presence/🟦️.tsx";
+import { CanvasPresenceOverlayV1, usePresenceRuntimeKeyV1 } from "../👕️canvas-presence/🟦️.tsx";
 
 // #endregion 🔌️Adapters
 
@@ -69,7 +71,7 @@ export function World3dHost(props: ComponentSceneHostProps) {
   Object.assign(core, useWorldPaintAndProjection(core));
   Object.assign(core, useWorldMarqueeAndGumball(core));
   Object.assign(core, useWorldPointerAndDrop(core));
-  const { activeUtility, altHeldRef, annotationLayer, annotationStore, attractions, autoFitBounds, autoFitKey, autoFitUserMoved, brushMeshRevisions, brushMeshUrls, brushMode, cameraRef, cameraSeedKey, cameraState, catalogueDropPreview, colors, computeStatus, connectDragHoverPosition, connectDragSource, contentBounds, contextMenu, contextMenuOpenEpochRef, contextMenuTitleLabel, dismissContextMenu, dispatch, emptySceneLabel, engagementPreview, environment, externalPendingProjectionSpec, faceDragSession, fit, fitProjectionContent, frame, geometryRevisionRef, gridFactor, gridSnapEnabled, gumballDragActive, gumballLiveDispatch, gumballTransformPreviewSourceId, handleAutoFitCameraChange, handleBrushPlace, handleCameraChange, handleCameraNavigate, handleComponentHover, handleConnectDragDrop, handleConnectDragHover, handleEmptyClick, handleFaceDragStart, handleGizmoCameraChange, handleGumballDrag, handleGumballDragEnd, handleGumballDragStart, handleInstancePointerDown, handleInstancePointerMove, handlePaintAt, handlePointerDown, handlePointerMove, handlePointerUp, handleProjectionContentFrame, handleProjectionKindChange, handleReferenceHover, handleReferenceSelect, handleRegisterBrushMesh, handleSuggestionClose, handleTargetVolumeRelocate, handleTargetVolumeSelect, handleVortexHover, handleVortexPointerArm, handleVortexPointerMove, handleVortexPointerUp, handleVortexSelect, handleWorldOrbitRightPointerDown, handleWorldPick, heatmap, hostRef, hoveredVortexFullIdRef, instances, instancesGroupRef, interaction, interactionDomainId, localPresenceActor, lod, lodRef, mapWorldContextMenuSpecs, marqueeCoverage, marqueeDown, marqueeDragActive, marqueeEnd, marqueePath, marqueeStart, meshStylePalette, meshVisuals, meshes, method, modellingOptions, node, onCatalogueDragEnter, onCatalogueDragLeave, onCatalogueDragOver, onCatalogueDrop, overlayRailRef, overlayRailSafeArea, paintMode, pendingProjectionSpec, pendingProjectionSpecRef, persistentSelectionMode, presenceObjectWorldPositions, presenceWindowId, previewAttractions, previewVortices, projectionContentFrameMounted, projectionFramePending, publishHoverPaint, referenceHoveredId, referenceSelectedIds, references, releaseLocalHover, requestContextMenu, scalarField, scene, sceneCamera, sectionCapHex, sectionExtent, selection, selectionMode, setContextMenu, setExternalPendingProjectionSpec, setGumballDragActive, setPendingProjectionSpec, sharedGumballTransformPreview, shellContextMenuFallback, shellScope, subElementPaint, subscribeLocalHoverRelease, suggestionFocus, suggestionMenuTitleLabel, suggestionPopupOwnsThisWindow, suggestionRows, suggestionsRightDownDispatchedAtRef, targetVolumeSelectedIds, targetVolumes, toolRunTrace, visibleSelectionPreview, volumeBrushMode, volumeGumballConfig, volumeLayersInteractive, vortices, voxelHoverOrigin, windowInstanceId, worldOrbitConstraints, worldProjectionSpec } = core;
+  const { activeUtility, altHeldRef, annotationLayer, annotationStore, attractions, autoFitBounds, autoFitKey, autoFitUserMoved, brushMeshRevisions, brushMeshUrls, brushMode, cameraRef, cameraSeedKey, cameraState, catalogueDropPreview, colors, computeStatus, connectDragHoverPosition, connectDragSource, contentBounds, contextMenu, contextMenuOpenEpochRef, contextMenuTitleLabel, dismissContextMenu, dispatch, emptySceneLabel, engagementPreview, environment, externalPendingProjectionSpec, faceDragSession, fit, fitProjectionContent, frame, geometryRevisionRef, gridFactor, gridSnapEnabled, gumballDragActive, gumballLiveDispatch, gumballTransformPreviewSourceId, handleAutoFitCameraChange, handleBrushPlace, handleCameraChange, handleCameraNavigate, handleComponentHover, handleConnectDragDrop, handleConnectDragHover, handleEmptyClick, handleFaceDragStart, handleGizmoCameraChange, handleGumballDrag, handleGumballDragEnd, handleGumballDragStart, handleInstancePointerDown, handleInstancePointerMove, handlePaintAt, handlePointerDown, handlePointerMove, handlePointerUp, handleProjectionContentFrame, handleProjectionKindChange, handleReferenceHover, handleReferenceSelect, handleRegisterBrushMesh, handleSuggestionClose, handleTargetVolumeRelocate, handleTargetVolumeSelect, handleVortexHover, handleVortexPointerArm, handleVortexPointerMove, handleVortexPointerUp, handleVortexSelect, handleWorldOrbitRightPointerDown, handleWorldPick, heatmap, hostRef, hoveredVortexFullIdRef, instances, instancesGroupRef, interaction, interactionDomainId, localPresenceActor, lod, lodRef, mapWorldContextMenuSpecs, marqueeCoverage, marqueeDown, marqueeDragActive, marqueeEnd, marqueePath, marqueeStart, meshStylePalette, meshVisuals, meshes, method, modellingOptions, node, onCatalogueDragEnter, onCatalogueDragLeave, onCatalogueDragOver, onCatalogueDrop, overlayRailRef, overlayRailSafeArea, paintMode, pendingProjectionSpec, pendingProjectionSpecRef, persistentSelectionMode, presenceObjectWorldPositions, presenceWindowId, previewAttractions, previewVortices, projectionContentFrameMounted, projectionFramePending, publishHoverPaint, referenceHoveredId, referenceSelectedIds, references, releaseLocalHover, requestContextMenu, scalarField, scene, sceneCamera, sectionCapHex, sectionExtent, selection, selectionMode, setContextMenu, setExternalPendingProjectionSpec, setGumballDragActive, setPendingProjectionSpec, sharedGumballTransformPreview, shellContextMenuFallback, shellScope, subElementPaint, subscribeLocalHoverRelease, suggestionFocus, suggestionMenuTitleLabel, suggestionPopupOwnsThisWindow, suggestionRows, suggestionsRightDownDispatchedAtRef, targetVolumeSelectedIds, targetVolumes, toolRunTrace, visibleSelectionPreview, volumeBrushMode, volumeGumballConfig, volumeLayersInteractive, vortices, voxelHoverOrigin, windowInstanceId, worldOrbitConstraints, worldProjectionSpec , presenceRuntimeKey } = core;
 
   if (!scene) return <div className="semio-world-3d-empty">{emptySceneLabel}</div>;
 
@@ -141,7 +143,7 @@ export function World3dHost(props: ComponentSceneHostProps) {
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
-      onPointerLeave={releaseLocalHover}
+      onPointerLeave={() => { releaseLocalHover(); publishWorldPresenceView(null); }}
       onDragEnter={onCatalogueDragEnter}
       onDragLeave={onCatalogueDragLeave}
       onDragOver={onCatalogueDragOver}
@@ -187,7 +189,7 @@ export function World3dHost(props: ComponentSceneHostProps) {
               <WorldComputeStatusPane status={computeStatus} glassClass={glassClass} locale={shellScope?.i18n.language} onCancel={() => dispatch(computeStatus.cancelAction, computeStatus.cancelArgs)} />
             </div>
             <CanvasPresenceOverlayV1
-              runtimeKey="local"
+              runtimeKey={presenceRuntimeKey}
               windowId={presenceWindowId}
               space="world"
               myActor={localPresenceActor ?? ""}

@@ -9,16 +9,16 @@
 package cli
 
 import (
-	context "context"
-	json "encoding/json"
-	errors "errors"
-	fmt "fmt"
-	os "os"
-	time "time"
-
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"os"
+	"time"
 	graphqlpkg "github.com/usalu/semio/repo/graphql"
-	providers "github.com/usalu/semio/repo/providers"
-	workspace "github.com/usalu/semio/repo/workspace"
+	"github.com/usalu/semio/repo/providers"
+	"github.com/usalu/semio/repo/workspace"
+
 )
 
 // #region 🌧️Cli Adapter
@@ -114,6 +114,7 @@ func NewRootWithConfig(factory EngineFactory) (*Command, *Config) {
 	root.AddCommand(locCommand(factory, &config))
 	root.AddCommand(technologyCommand(factory, &config))
 	root.AddCommand(bundleCommand(factory, &config))
+	analyzeCmd.Flags().StringSlice("policy", nil, "Analyze only the selected registered policies")
 	root.AddCommand(analyzeCmd)
 	root.AddCommand(entityEmojisCommand(&config))
 	root.AddCommand(configureCommand(factory, &config))

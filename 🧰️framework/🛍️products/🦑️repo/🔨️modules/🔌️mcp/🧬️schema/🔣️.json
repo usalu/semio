@@ -10,6 +10,17 @@
     "profiles": { "type": "array", "items": { "$ref": "#/$defs/Profile" } }
   },
   "$defs": {
+    "ResourceContent": {
+      "type": "object",
+      "required": ["uri"],
+      "oneOf": [{ "required": ["text"] }, { "required": ["blob"] }],
+      "properties": {
+        "uri": { "type": "string", "minLength": 1 },
+        "mimeType": { "type": "string" },
+        "text": { "type": "string" },
+        "blob": { "type": "string" }
+      }
+    },
     "ProtocolVersion": {
       "description": "🗓️ Negotiated protocol version. The first entry is preferred; any other listed version is echoed back unchanged, anything else negotiates down to the preferred one.",
       "type": "string",
@@ -168,9 +179,10 @@
     "TicketReopenArguments": {
       "type": "object",
       "additionalProperties": false,
+      "required": ["prompt"],
       "properties": {
         "path": { "type": "string" },
-        "prompt": { "type": "string" },
+        "prompt": { "type": "string", "minLength": 1, "pattern": "\\S" },
         "llm": { "type": "string" },
         "effort": { "type": "string" },
         "client": { "type": "string" },

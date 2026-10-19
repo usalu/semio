@@ -150,7 +150,7 @@ pub fn plugin_text_close(text: &mut String, grant: RetainedCloneGrant) -> Option
 /// 📏️ Quotes the next turn of an original typed owner: its controlled frame admission, then its live frontier.
 pub fn plugin_typed_owner_demand<T: semio_framework_value::retirement::RetireOwned>(original: &Option<T>, active: &Option<ControlledRetirement<T>>, body: usize) -> Result<RetirementDemand, ValueError> {
     if let Some(owner) = active.as_ref() {
-        return Ok(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(body)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()?.max(1) });
+        return Ok({let mut demand=owner.next_demand(body)?;demand.depth=demand.depth.max(1);demand});
     }
     Ok(if original.is_some() { RetirementDemand { depth: 1, ..Default::default() } } else { RetirementDemand::default() })
 }
@@ -433,3 +433,6 @@ pub fn plugin_grant_funds(demand: RetirementDemand, grant: RetainedCloneGrant) -
 pub fn runtime_lifecycle_step(demand: RetirementDemand, grant: RetainedCloneGrant, owner: impl FnOnce(RetainedCloneGrant)->Result<(PluginLifecycleStep,bool),Fault>)->Result<PluginLifecycleStep,Fault> {
     semio_framework_value::advance_retirement_turn(demand,grant,owner).map_err(|error|match error{semio_framework_value::RetirementTurnError::Owner(fault)=>fault,semio_framework_value::RetirementTurnError::Receipt(error)=>Fault::from(error.into_message())})
 }
+
+/// 🧮️ Intersects the authored policy with the original caller's remaining physical authority.
+pub fn original_plugin_turn_grant(policy:RetainedCloneGrant,remaining:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:policy.maximum_items.min(remaining.maximum_items),maximum_copy_bytes:policy.maximum_copy_bytes.min(remaining.maximum_copy_bytes),maximum_capacity_bytes:policy.maximum_capacity_bytes.min(remaining.maximum_capacity_bytes),maximum_release_bytes:policy.maximum_release_bytes.min(remaining.maximum_release_bytes),maximum_depth:policy.maximum_depth.min(remaining.maximum_depth)}}

@@ -1,5 +1,5 @@
-//! 🧊️ Laws for the target-volume family and the Volume Brush — the one fill-adjacent 3d feature the
 //! 5d editor used to lack entirely. Every law drives the REAL app through the same typed-command
+//! 🧊️ Laws for the target-volume family and the Volume Brush — the one fill-adjacent 3d feature the
 //! channel the shell uses, so a verb that is registered but unreachable fails here.
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::editor::puzzle5d::commands::add_target_volume;
@@ -11,7 +11,7 @@ use semio_framework_pack_json::Value;
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::entities::puzzle5d_grip_full_id;
 #[allow(unused_imports)]
-use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 #[allow(unused_imports)]
 use crate::Puzzle5dSnapshot;
 #[allow(unused_imports)]
@@ -343,7 +343,7 @@ fn the_flat_rectangle_is_the_volume_footprint_under_the_shared_board_world_map()
     let volume = Puzzle5dTargetVolume { id: "volume-1".into(), origin: [2.0, -3.0, 1.0], orientation: None, scale: Some(semio_framework_pack_json::json!([4.0, 6.0, 2.0])), hidden: false, locked: false };
     let [x, y, width, height] = target_volume_flat_rect(&volume);
     let to_flat = 1.0 / PUZZLE5D_FLAT_TO_WORLD;
-    assert_eq!([x, y], [2.0 * to_flat, 3.0 * to_flat], "the board's Y axis points the other way, exactly as add_palette_part reads it");
+    assert_eq!([x, y], [2.0 * to_flat, 3.0 * to_flat], "the board's Y axis points the other way, exactly as the flat-position inference reads it");
     assert_eq!([width, height], [4.0 * to_flat, 6.0 * to_flat]);
 }
 

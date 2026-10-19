@@ -158,17 +158,12 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn try_take_abandoned_frame_maintenance(&self) -> Option<FrameMaintenanceRefusal> {
-        let (generation, owner) = self.0.frame_maintenance_executions.try_take_abandoned()?;
+    pub fn try_take_returned_frame_maintenance(&self) -> Option<FrameMaintenanceRefusal> {
+        let (generation, owner) = self.0.frame_maintenance_executions.try_take_returned()?;
         let _ = self.0.frame_maintenance.release(generation);
         Some(FrameMaintenanceRefusal { owner, reservation_live: false })
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn try_take_abandoned_frame_deferred(&self) -> Option<FrameDeferredExecutionOwner> {
-        let (_, owner) = self.0.frame_deferred_executions.try_take_abandoned()?;
-        owner.try_take()
-    }
 
     #[cfg(not(target_arch = "wasm32"))]
     pub fn spawn_interaction_reserved<F>(&self, _key: Option<&'static str>, future: F)
@@ -287,12 +282,12 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                     mailbox.record_frame_fault("frame maintenance execution lost its exact owner");
                     return;
                 };
-                let FrameMaintenanceOwner { interaction, cursor, deadline_ms } = owner;
+                let FrameMaintenanceOwner { interaction, cursor, deadline_ms, restart } = owner;
                 let (Some(interaction), Some(cursor)) = (interaction.as_mut(), cursor.as_mut()) else {
                     mailbox.record_frame_fault("frame maintenance exact owner pair was incomplete");
                     return;
                 };
-                let cancelled = cursor.cancel.is_cancelled_now();
+                let cancelled = cursor.cancel.as_ref().is_none_or(|cancel| cancel.is_cancelled_now());
                 stale = !mailbox.0.frame_maintenance.is_live(generation) || mailbox.0.presentation_authority.witness_for(generation).is_none();
                 let deadline_exceeded = deadline_ms.is_none_or(|deadline| worker_pool.now_ms() > deadline);
                 if let Some(fault) = frame_maintenance_terminal_fault(cancelled, stale, deadline_exceeded) {
@@ -308,6 +303,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                         cursor.begin_close();
                     }
                 }
+                *restart = false;
                 if !mailbox.0.frame_maintenance.release(generation) && !stale {
                     interaction.frame_fault = Some("frame maintenance authority release faulted".to_string());
                     cursor.begin_close();

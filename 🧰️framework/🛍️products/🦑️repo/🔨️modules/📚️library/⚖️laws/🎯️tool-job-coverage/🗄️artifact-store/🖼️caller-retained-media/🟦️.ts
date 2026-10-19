@@ -1,355 +1,155 @@
+import { WORKSPACE_ROOT } from "../../../../🗂️workspaces/📍️checkout-root/🟦️.ts";
+import { inspectRustModuleGraph, inspectRustModuleGraphFacts } from "../../../../🔍️discovery/🟦️.ts";
+import { policyReadFileSafe } from "../../../../🔍️discovery/📖️source-access/🟦️.ts";
+import { policyAllRustFiles } from "../../../🧩️plugin-consistency/🏛️foundation/🟦️.ts";
 import { toolJobStoreInitializerRetainedExact } from "../📄️caller-retained-documents/🟦️.ts";
-import { toolJobRustBlock } from "../../📋️inventory/🟦️.ts";
+import { toolJobRustBlock, toolJobProductionProtocolSource } from "../../📋️inventory/🟦️.ts";
 
-export function toolJobRasterEnvelopeCallerRetainedExact(store: string, raster: string, editor: string, plugin: string): boolean {
-  const variants = [
-    "CreateLayer(payload)",
-    "DeleteLayer(payload)",
-    "ReorderLayers(payload)",
-    "RenameLayer(payload)",
-    "ChangeLayerVisible(payload)",
-    "ChangeLayerOpacity(payload)",
-    "ChangeLayerBlendMode(payload)",
-    "MoveLayer(payload)",
-    "ResizeLayer(payload)",
-    "ChangeLayerAdjustmentKind(payload)",
-    "AddLayerAsset(payload)",
-    "RemoveLayerAsset(payload)",
-  ];
-  const credits = editor.indexOf("begin_artifact_envelope_ingress(pages, ");
-  const page = editor.indexOf("let mut bytes = [0; store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]");
-  const construct = editor.indexOf("store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, ");
-  const admit = editor.indexOf("admit_artifact_envelope_ingress_page(handle, page)");
-  const rasterOwnedMapSerializeBound = /impl(?:\s*<[^>]*>)?\s*(?:serde::)?Serialize\s+for\s+RasterOwnedMap\b/s.test(raster);
-  const rasterOwnedMapWholeSerializeMap = /serialize_map\s*\(\s*Some\s*\(\s*self\.length\s*\)\s*\)/s.test(raster);
-  const rasterOwnedMapWholeSerializeEntry = /\.serialize_entry\s*\(/s.test(raster);
-  const rasterOwnedMapSerdeGuards = (raster.match(/serde\(serialize_with = "crate::artifacts::raster::serialize_empty_owned_map"\)/g) ?? []).length;
-  const rasterOwnedMapFieldSites = (raster.match(/^\s*(?:pub )?[a-z_]+: RasterOwnedMap</gm) ?? []).length;
-  const rasterWholeJoinedOutput = /\.collect\s*::\s*<\s*Vec\s*<\s*_\s*>\s*>\s*\(\s*\)\s*\.join\s*\(/s.test(raster);
-  const rasterPerValueJsonOutput = /serde_json::to_vec\s*\(\s*v\s*\)/s.test(raster);
-  const rasterDirectMapOutput = /for\s*\(\s*k\s*,\s*v\s*\)\s*in\s*(?:map|params)\b/s.test(raster);
-  const rasterEmptyMapOutputGuards = (raster.match(/assert!\((?:map|params)\.is_empty\(\), "\{RASTER_POPULATED_OUTPUT_ERROR\}"\);/g) ?? []).length;
-  const rasterEmptyLayerOutputGuards = (raster.match(/assert!\(list\.is_empty\(\), "\{RASTER_POPULATED_OUTPUT_ERROR\}"\);/g) ?? []).length;
-  const rasterSnapshotOutputPreflights = (raster.match(/s\.require_empty_output_shell\(\)\.expect\(RASTER_POPULATED_OUTPUT_ERROR\);/g) ?? []).length;
-  const rasterMountedOutputEntryPoints = (raster.match(/pub fn serialize_bytes\(snapshot: &RasterSnapshot\) -> Result<Vec<u8>, String> \{/g) ?? []).length;
-  const rasterMountedPixelComposites = (raster.match(/raster_composite_image\(snapshot\)/g) ?? []).length;
-  const rasterMountedPixelDialects = (raster.match(/semio_image_to_format\(&image, /g) ?? []).length;
-  const rasterMountedStdioEncoders = (raster.match(/semio_s_artifact_stdio_[a-z0-9_]*::[A-Za-z0-9_:]*io::encode_[a-z0-9]+\(/g) ?? []).length;
-  const rasterMountedVectorComposites = (raster.match(/raster_document_json_to_svg\(snapshot\)/g) ?? []).length;
-  const rasterMountedTypedDeclines = (raster.match(/Err\(RASTER_(?:PDF|DWG)_EXPORT_UNSUPPORTED\.to_string\(\)\)/g) ?? []).length;
-  const rasterMountedOutputGuards = (raster.match(/snapshot\.require_empty_output_shell\(\)\.map_err\(str::to_owned\)\?;/g) ?? []).length;
-  const rasterMountedOutputCallers = (raster.match(/Ok\(<RasterSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl\(snapshot\)\.into_bytes\(\)\)/g) ?? []).length;
-  const rasterOutputFixtureStart = raster.indexOf("fn raster_populated_snapshot_output_max_plus_one_nested_cancel_fault_panic_and_close_are_exact()");
-  const rasterOutputFixtureEnd = raster.indexOf("fn raster_maximum_combined_layer_and_value_depth_retires_to_terminal()", rasterOutputFixtureStart);
-  const rasterOutputFixture = rasterOutputFixtureStart >= 0 && rasterOutputFixtureEnd > rasterOutputFixtureStart ? raster.slice(rasterOutputFixtureStart, rasterOutputFixtureEnd) : "";
-  const rasterRejectedParamValueCapture = rasterOutputFixture.indexOf("let plus_one_param_value_pointer = plus_one_param_value.as_ptr();");
-  const rasterRejectedParamInsert = rasterOutputFixture.indexOf("params.insert(plus_one_param_key, dsl::DslValue::String(plus_one_param_value))");
-  const rasterRejectedParamValueBinding = rasterOutputFixture.indexOf("let rejected_param_value = match &rejected_param.value");
-  const rasterRejectedParamValueAssertion = rasterOutputFixture.indexOf(
-    'assert_eq!(rejected_param_value.as_ptr(), plus_one_param_value_pointer, "rejected output parameter returns the exact value allocation");',
-  );
-  const rasterRejectedParamRetirement = rasterOutputFixture.indexOf(
-    "RasterOwnedRetirement::new(RasterRetirementOwner::ValueEntry { key: rejected_param.key, value: Some(rejected_param.value) })",
-  );
-  const rasterRejectedAssetChildCapture = rasterOutputFixture.indexOf("let plus_one_asset_child_pointer = plus_one_asset_child.child_id.as_ptr();");
-  const rasterRejectedAssetInsert = rasterOutputFixture.indexOf("assets.insert(plus_one_asset_key, plus_one_asset_child)");
-  const rasterRejectedAssetChildBinding = rasterOutputFixture.indexOf("rejected_asset.value.child_id.as_ptr()");
-  const rasterRejectedAssetChildAssertion = rasterOutputFixture.indexOf(
-    ', plus_one_asset_child_pointer, "rejected output asset returns the exact child allocation");',
-    rasterRejectedAssetChildBinding,
-  );
-  const rasterRejectedAssetRetirement = rasterOutputFixture.indexOf(
-    "RasterOwnedRetirement::new(RasterRetirementOwner::AssetEntry { key: rejected_asset.key, child: Some(rejected_asset.value) })",
-  );
-  return (
-    store.includes("pub fn artifact_owned_spr_edit_history_decoder") &&
-    store.includes("struct ArtifactOwnedSprMutationArrayAuthority") &&
-    raster.includes("pub struct RasterEnvelopeOwnedFieldCatalog") &&
-    raster.includes("artifact_owned_spr_edit_history_decoder") &&
-    raster.includes("RasterSnapshotDecodeAuthority") &&
-    raster.includes("RasterMutationDecodeAuthority") &&
-    raster.includes("OwnedSchemaHexAuthority<RASTER_OWNED_FIELD_BYTES>") &&
-    raster.includes("struct RasterSnapshotBoundsAuthority") &&
-    raster.includes("struct RasterSnapshotCloneAuthority") &&
-    raster.includes("struct RasterMutationCandidateAuthority") &&
-    raster.includes("RASTER_RETIREMENT_STACK_CAPACITY") &&
-    raster.includes("pages: std::mem::ManuallyDrop<[Option<Box<RasterRetirementFramePage>>; RASTER_RETIREMENT_STACK_PAGE_COUNT]>") &&
-    raster.includes("pending_push: std::mem::ManuallyDrop<Option<RasterRetirementOwner>>") &&
-    raster.includes("struct RasterStoreInitializationAuthority") &&
-    raster.includes("impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot, RasterMutation> for RasterStoreInitializationAuthority") &&
-    raster.includes("RasterStoreInitializationPhase::ValidateEdit { index }") &&
-    raster.includes("self.edit_index.admit(&envelope.vcs.edits, index,") &&
-    raster.includes("RasterStoreInitializationPhase::SeedHistory") &&
-    raster.includes("RasterStoreInitializationPhase::BuildCandidate") &&
-    (raster.match(/if cx\.should_yield\(\)/g) ?? []).length === 3 &&
-    raster.includes("fn raster_reserve_unit(cx: &mut semio_framework_job::StepContext<'_>) -> bool") &&
-    raster.includes("cx.consume_fuel(1)") &&
-    raster.includes("self.cancel_requested || cx.is_cancelled()") &&
-    raster.includes("ArtifactStoreInitializationRuntime::new") &&
-    raster.includes("ArtifactStore::from_initialized_runtime_with_owners") &&
-    raster.includes("self.generation.0.checked_add(1)") &&
-    raster.includes("value.layers.pop()") &&
-    raster.includes("value.assets.take_last_entry()") &&
-    raster.includes("value.assets.take_empty_page_backing()") &&
-    raster.includes("RasterRetirementOwner::AssetMapPage(page)") &&
-    raster.includes("RasterRetirementOwner::ValueMapPage(page)") &&
-    raster.includes("RasterOwnedMap::<V>::conservative_page_credit_bytes()") &&
-    raster.includes("fn observe_candidate_capacity(") &&
-    raster.includes("fn raster_exact_string_from_parts(") &&
-    raster.includes("const RASTER_CONTROL_BACKING_BYTES: usize = RASTER_OWNED_FIELD_BYTES") &&
-    raster.includes("const RASTER_MAXIMUM_CONTROL_BACKINGS: usize = RASTER_RETIREMENT_STACK_PAGE_COUNT + RASTER_NON_STACK_CONTROL_BACKINGS") &&
-    raster.includes("const RASTER_MAXIMUM_CONTROL_BYTES: usize = RASTER_MAXIMUM_CONTROL_BACKINGS * RASTER_CONTROL_BACKING_BYTES") &&
-    raster.includes("source_control_bytes: usize") &&
-    raster.includes("self.source_control_bytes = RASTER_MAXIMUM_CONTROL_BYTES") &&
-    raster.includes("raster-store.control-backing-double-reservation") &&
-    raster.includes("static RASTER_RETIREMENT_PROCESS_PAGES: std::sync::atomic::AtomicUsize") &&
-    raster.includes("static RASTER_INITIALIZATION_PROCESS_CONTROLS: std::sync::atomic::AtomicUsize") &&
-    raster.includes("static RASTER_STANDALONE_PROCESS_CONTROLS: std::sync::atomic::AtomicUsize") &&
-    raster.includes("held_items: usize") &&
-    raster.includes("held_bytes: usize") &&
-    (raster.match(/control: std::mem::ManuallyDrop<Option<RasterStandaloneControlCredit>>/g) ?? []).length === 2 &&
-    (raster.match(/let control = RasterStandaloneControlCredit::try_claim\(\)\.ok\(\);/g) ?? []).length === 2 &&
-    raster.includes("fn claim_control_if_available(&mut self) -> Result<bool, String>") &&
-    raster.includes("Err(\"raster-store.standalone-control-capacity\") => Ok(false)") &&
-    raster.includes("control_returned: bool") &&
-    raster.includes("remaining: RASTER_NON_STACK_CONTROL_BACKINGS") &&
-    raster.includes("control_reservation: std::mem::ManuallyDrop<Option<RasterInitializationControlReservation>>") &&
-    raster.includes("normal completion returns every non-stack process control credit") &&
-    raster.includes("standalone Box control credit is returned before terminal-empty") &&
-    raster.includes("standalone Arc and inner Box control credits return before terminal-empty") &&
-    raster.includes("fn reserve_page_credit(&mut self, page_index: usize)") &&
-    raster.includes("compare_exchange(current, next") &&
-    raster.includes("self.return_page_credit(page_index)?") &&
-    raster.includes("pages: std::mem::ManuallyDrop<[Option<Box<RasterOwnedMapPage<V>>>; RASTER_OWNED_MAP_PAGE_COUNT]>") &&
-    raster.includes("Raster owned map reached Drop before every entry and page backing was explicitly retired") &&
-    raster.includes("Populated Raster owned maps require the retained page clone authority") &&
-    raster.includes("Raster maps require the retained page decoder") &&
-    raster.includes("impl<V> dsl::ToValue for RasterOwnedMap<V>") &&
-    raster.includes("impl<V> dsl::FromValue for RasterOwnedMap<V>") &&
-    raster.includes("Populated Raster owned map serialization is forbidden; interactive production routes require the retained page output authority") &&
-    rasterOwnedMapFieldSites === 3 &&
-    (rasterOwnedMapSerdeGuards === 0 || raster.includes("fn serialize_empty_owned_map<S: serde::Serializer, V>")) &&
-    !rasterOwnedMapSerializeBound &&
-    !rasterOwnedMapWholeSerializeMap &&
-    !rasterOwnedMapWholeSerializeEntry &&
-    raster.includes("pub(crate) fn require_empty_output_shell(&self) -> Result<(), &'static str>") &&
-    raster.includes("self.layers.is_empty() && self.assets.is_empty()") &&
-    raster.includes("Populated Raster snapshot output is forbidden; interactive production routes require the retained page output authority") &&
-    raster.includes("pub(crate) fn enc_asset_map(map: &RasterOwnedMap<RasterAssetChild>) -> String") &&
-    raster.includes("pub(crate) fn enc_params(params: &RasterOwnedMap<dsl::DslValue>) -> String") &&
-    raster.includes("fn write_asset_map(out: &mut Vec<u8>, map: &RasterOwnedMap<RasterAssetChild>)") &&
-    raster.includes("fn write_params(out: &mut Vec<u8>, params: &RasterOwnedMap<dsl::DslValue>)") &&
-    raster.includes("fn print_raster_snapshot_body(s: &RasterSnapshot) -> String") &&
-    raster.includes("fn encode_raster_snapshot_binary(s: &RasterSnapshot) -> Vec<u8>") &&
-    !raster.includes("async fn write_asset_map(out: &mut Vec<u8>, map: &RasterOwnedMap<RasterAssetChild>)") &&
-    !raster.includes("async fn write_params(out: &mut Vec<u8>, params: &RasterOwnedMap<dsl::DslValue>)") &&
-    !raster.includes("async fn print_raster_snapshot_body(s: &RasterSnapshot) -> String") &&
-    !raster.includes("async fn encode_raster_snapshot_binary(s: &RasterSnapshot) -> Vec<u8>") &&
-    raster.includes("self.require_empty_output_shell().expect(RASTER_POPULATED_OUTPUT_ERROR);") &&
-    raster.includes("self.require_empty_output_shell().map_err(|error| store::PackError::Schema(error.to_owned()))?;") &&
-    rasterEmptyMapOutputGuards === 4 &&
-    rasterEmptyLayerOutputGuards === 2 &&
-    rasterSnapshotOutputPreflights === 2 &&
-    rasterMountedOutputEntryPoints === 8 &&
-    rasterMountedPixelComposites === 5 &&
-    rasterMountedPixelDialects === 5 &&
-    rasterMountedStdioEncoders === 5 &&
-    rasterMountedVectorComposites === 1 &&
-    rasterMountedTypedDeclines === 2 &&
-    raster.includes("pub const RASTER_PDF_EXPORT_UNSUPPORTED: &str =") &&
-    raster.includes("pub const RASTER_DWG_EXPORT_UNSUPPORTED: &str =") &&
-    rasterMountedOutputGuards === 0 &&
-    rasterMountedOutputCallers === 0 &&
-    rasterRejectedParamValueCapture >= 0 &&
-    rasterRejectedParamInsert > rasterRejectedParamValueCapture &&
-    rasterRejectedParamValueBinding > rasterRejectedParamInsert &&
-    rasterRejectedParamValueAssertion > rasterRejectedParamValueBinding &&
-    rasterRejectedParamRetirement > rasterRejectedParamValueAssertion &&
-    rasterRejectedAssetChildCapture >= 0 &&
-    rasterRejectedAssetInsert > rasterRejectedAssetChildCapture &&
-    rasterRejectedAssetChildBinding > rasterRejectedAssetInsert &&
-    rasterRejectedAssetChildAssertion > rasterRejectedAssetChildBinding &&
-    rasterRejectedAssetRetirement > rasterRejectedAssetChildAssertion &&
-    !rasterWholeJoinedOutput &&
-    !rasterPerValueJsonOutput &&
-    !rasterDirectMapOutput &&
-    raster.includes("Populated Raster owned map DSL materialization is forbidden; interactive production routes require the retained page output authority") &&
-    raster.includes("dsl::FieldValue::Map(Vec::new())") &&
-    raster.includes("pub fn remove_entry(&mut self, key: &str) -> Option<RasterOwnedMapEntry<V>>") &&
-    !raster.includes("pub fn remove(&mut self, key: &str)") &&
-    !raster.includes("result.insert(key.clone(), value.clone())") &&
-    !raster.includes("while let Some((key, value)) = source.next_entry") &&
-    raster.includes("RasterRetirementOwner::BoxedLayer(Some(layer))") &&
-    raster.includes("const RASTER_RETIREMENT_ADMITTED_FRAME_CAPACITY: usize = RASTER_RETIREMENT_LAYER_FRAMES + RASTER_RETIREMENT_VALUE_FRAMES + RASTER_RETIREMENT_WRAPPER_FRAMES") &&
-    raster.includes("const RASTER_RETIREMENT_STACK_CAPACITY: usize = RASTER_RETIREMENT_ADMITTED_FRAME_CAPACITY + RASTER_RETIREMENT_REJECTED_OWNER_MARGIN") &&
-    raster.includes("dsl::DslValue::Array(values)") &&
-    raster.includes("dsl::DslValue::Object(values)") &&
-    variants.every((variant) => raster.includes(variant)) &&
-    raster.includes("Raster store initialization authority reached Drop before exact candidate handoff or retained rejection close") &&
-    raster.includes("raster_store_initializer_publishes_next_generation_and_candidate_closes_incrementally") &&
-    raster.includes("raster_store_initializer_cancel_and_stale_generation_return_every_owner_terminal_empty") &&
-    raster.includes("raster_store_initializer_zero_budget_advances_no_owner_or_phase") &&
-    raster.includes("raster_nested_snapshot_and_child_handles_retire_one_owner_per_grant") &&
-    raster.includes("raster_owner_caps_and_all_mutation_variants_retire_one_owner_per_grant") &&
-    raster.includes("raster_envelope_caps_and_plus_one_page_return_the_exact_fixed_owner") &&
-    raster.includes("raster_snapshot_bounds_and_clone_advance_one_pre_admitted_unit_with_low_nonzero_fuel") &&
-    raster.includes("raster_empty_bounds_and_mounted_sixty_four_fuel_progress_across_second_map_page") &&
-    raster.includes("raster_expired_deadline_advances_no_bounds_clone_or_mutation_owner") &&
-    raster.includes("raster_small_mutation_against_deep_snapshot_is_cursorized_and_atomic") &&
-    raster.includes("raster_cancel_after_complete_retires_the_unclaimed_candidate_before_terminal") &&
-    raster.includes("raster_retirement_uses_allocation_capacity_and_fixed_iterative_depth") &&
-    raster.includes("raster_nested_owner_item_and_byte_capacity_plus_one_reject_before_clone") &&
-    raster.includes("raster_retirement_page_credit_is_claimed_before_allocation_and_returned_with_backing") &&
-    raster.includes("raster_owned_map_removal_returns_exact_pair_and_populated_drop_refuses") &&
-    raster.includes("raster_empty_asset_map_retirement_has_no_hidden_allocation_release") &&
-    raster.includes("raster_owned_map_cap_plus_one_returns_exact_owner_and_populated_pages_retire_explicitly") &&
-    raster.includes("raster_observed_capacity_and_combined_retirement_depth_are_exact") &&
-    raster.includes("raster_box_and_arc_control_backings_require_and_report_fixed_credit") &&
-    raster.includes("raster_standalone_control_max_plus_one_returns_exact_owner_and_resumes_after_full_saturation") &&
-    raster.includes("raster_arc_factory_full_saturation_preserves_exact_producer_through_every_control_phase") &&
-    raster.includes("raster_populated_dsl_materialization_max_plus_one_nested_cancel_fault_panic_and_close_are_exact") &&
-    raster.includes("raster_populated_serde_output_max_plus_one_nested_cancel_fault_panic_and_close_are_exact") &&
-    raster.includes("raster_populated_snapshot_output_max_plus_one_nested_cancel_fault_panic_and_close_are_exact") &&
-    raster.includes("std::mem::size_of::<RasterOwnedRetirement>() <= RASTER_CONTROL_BACKING_BYTES") &&
-    raster.includes("std::mem::size_of::<RasterRetirementFramePage>() <= RASTER_CONTROL_BACKING_BYTES") &&
-    raster.includes("raster_maximum_combined_layer_and_value_depth_retires_to_terminal") &&
-    (raster.match(/RasterOwnedMapInsert::Replaced/g) ?? []).length >= 1 &&
-    raster.includes("replacement returns the exact displaced pair") &&
-    raster.includes("assert_eq!(previous_key.as_ptr(), old_key_pointer)") &&
-    raster.includes("candidate_disposer") &&
-    raster.includes("let released_bytes = value.capacity();") &&
-    raster.includes("let bytes = value.capacity();") &&
-    !raster.includes("serde_json::to_vec(source)") &&
-    !raster.includes("source.clone()") &&
-    !raster.includes("source.assets.clone()") &&
-    !raster.includes("serde_json::to_value(&source.assets)") &&
-    !raster.includes("source.assets.to_value()") &&
-    !raster.includes("entries.push((key.clone(), value.to_value()))") &&
-    !raster.includes("drop(populated_map)") &&
-    !raster.includes("operation.diff(current)") &&
-    !raster.includes("diff.apply(current)") &&
-    !raster.includes("active: Box<RasterOwnedRetirement>") &&
-    !raster.includes("artifact_bounded_history_entry_decoder") &&
-    editor.includes("fn build_envelope_decode_owner_bundle()") &&
-    editor.includes("raster_envelope_decode_owner_bundle()") &&
-    editor.includes("fn build_document_store_initialization_job(") &&
-    editor.includes("raster_document_store_initialization_job(envelope, operation, generation)") &&
-    editor.includes("-> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle") &&
-    editor.includes("assert_eq!(handle.generation, base_generation)") &&
-    editor.includes("chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
-    credits >= 0 &&
-    page > credits &&
-    construct > page &&
-    admit > construct &&
-    editor.includes("seal_artifact_envelope_ingress(handle)") &&
-    editor.includes("app.maintenance_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
-    editor.includes("advance_artifact_envelope_load(handle)") &&
-    editor.includes("acknowledge_artifact_store_replacement(handle)") &&
-    editor.includes("duplicate Raster load acknowledgement is a no-op") &&
-    editor.includes("cancel_artifact_envelope_load(handle)") &&
-    editor.includes("close_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
-    editor.includes("raster_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed") &&
-    editor.includes("raster_live_envelope_cancel_closes_retained_pages_without_publication") &&
-    plugin.includes("envelope_ingress: ArtifactFixedRegistry<ActiveArtifactEnvelopeIngress>") &&
-    toolJobStoreInitializerRetainedExact(plugin) &&
-    plugin.includes("artifact store initialization job reached Drop before exact candidate handoff or terminal retained close") &&
-    plugin.includes("artifact_envelope_ingress_saturation_returns_exact_plus_one_owner_and_closes_fifo_slots") &&
-    plugin.includes("artifact_envelope_ingress_cancel_and_interrupted_close_release_one_real_page_per_grant") &&
-    !editor.includes("envelope_json: &str") &&
-    !editor.includes("reject_whole_buffer_artifact_envelope_ingress") &&
-    !editor.includes("ArtifactStore::new") &&
-    !editor.includes("source.to_vec()") &&
-    !editor.includes("while let") &&
-    !editor.includes("loop {")
-  );
+
+type RasterEnvelopeSourceEvidence = Readonly<{ store: string; raster: string; editor: string; plugin: string; laws: string; productionPaths: readonly string[]; testPaths: readonly string[] }>;
+
+/** 🖨️ Reads the current declared Raster owners and their mounted tests as distinct source evidence. */
+export function toolJobRasterEnvelopeSourceEvidence(root: string = WORKSPACE_ROOT): RasterEnvelopeSourceEvidence {
+  const raster = "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster", subset = raster + "/🏅️standards/🔖️1/🪆️subsets/✳️any";
+  const store = "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store", plugin = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin", value = "🧰️framework/🔨️modules/🌱️value";
+  const domainPaths = [raster + "/🦀️.rs", raster + "/🔨️modules/🏠️host/🧰️owned/🦀️.rs", subset + "/🧬️schema/📸️snapshot/🦀️.rs", subset + "/🧬️schema/🧬️mutations/🦀️.rs", subset + "/🚪️io/💾️binary/🧬️mutations/🦀️.rs", subset + "/🚪️io/🦀️.rs", ...["🔣️json/🔖️rfc8259/✳️any", "📷️png/🔖️1.2/✳️any", "🪟️bmp/🔖️v3/✳️any", "🖼️tiff/🔖️6.0/✳️any", "📸️jpg/🔖️jfif-1.01/♾️any", "🎞️gif/🔖️87a/✳️any", "🎨️svg/🔖️1.1/✳️any"].map(path => subset + "/🚪️io/📤️export/🧵️serializers/🗿️artifacts/" + path + "/🦀️.rs")];
+  const editorPaths = [subset + "/✏️editor/🦀️.rs", subset + "/✏️editor/📤️export/🦀️.rs"];
+  const testPaths = [raster + "/🔨️modules/🏠️host/🧰️owned/🧪️tests/🦀️.rs", subset + "/✏️editor/🧪️tests/🔬️unit/🦀️.rs", subset + "/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs", subset + "/✏️editor/📤️export/🧪️tests/🦀️.rs"];
+  const retainedMutation = "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained";
+  const sharedPaths = [store + "/📦️codec/🧬️owned-schema/🦀️.rs", store + "/📬️paged-one-item/🦀️.rs", store + "/📬️paged-one-item/🧬️mutation-apply/🦀️.rs", store + "/🏗️initialization/🔁️replay/🦀️.rs", retainedMutation + "/🦀️.rs", retainedMutation + "/🔺️diff/🦀️.rs", value + "/🧬️retained-clone/🧺️std-collections/🦀️.rs", value + "/♻️retirement/🦀️.rs", value + "/♻️retirement/🔗️shared/🦀️.rs", value + "/♻️retirement/🎮️controlled/🦀️.rs"];
+  const pluginPaths = [plugin + "/🦀️.rs", plugin + "/🏛️ownership/🦀️.rs", plugin + "/🧵️instance/🦀️.rs", plugin + "/🌱️initialization/♻️retirement/🦀️.rs", plugin + "/👷️job/🏛️reserved/🦀️.rs", plugin + "/♻️lifecycle/🦀️.rs", plugin + "/🗃️document/🦀️.rs", plugin + "/📜️declaration/🧩️app/🦀️.rs", plugin + "/📜️declaration/🪟️surface/🦀️.rs", plugin + "/👷️job/🚪️session/🦀️.rs"];
+  const files = [...policyAllRustFiles(root).filter(path => path.startsWith(raster + "/")), raster + "/📦️packages/🦀️rust/Cargo.toml"];
+  const graph = inspectRustModuleGraph(files, path => policyReadFileSafe(root, path) || undefined);
+  for (const path of [...domainPaths, ...editorPaths, ...testPaths]) if (!graph.contexts.get(path)?.some(context => context.crateRoot === raster + "/🦀️.rs")) throw new Error("[raster evidence] current owner is not mounted: " + path);
+  const read = (path: string) => { const source = policyReadFileSafe(root, path); if (!source) throw new Error("[raster evidence] source absent: " + path); return source; };
+  const production = (paths: readonly string[]) => paths.map(path => toolJobProductionProtocolSource(read(path))).join("\n");
+  const host = read(domainPaths[1]!);
+  const declaredHostTests = inspectRustModuleGraphFacts(host).modules.some(module => module.conditional && module.pathTarget === "🧪️tests/🦀️.rs");
+  const mounts = declaredHostTests ? "mounted-raster-host-laws" : "";
+  return { store: production(sharedPaths), raster: production(domainPaths), editor: production(editorPaths), plugin: production(pluginPaths), laws: mounts + "\n" + testPaths.map(read).join("\n"), productionPaths: [...domainPaths, ...editorPaths, ...sharedPaths, ...pluginPaths], testPaths };
+}
+
+/** 🧾️ Current Raster obligations follow original typed owners, quoted currencies and the single shared apply/seal path. */
+export function toolJobRasterEnvelopeCallerFailures(store: string, raster: string, editor: string, plugin: string, laws: string): string[] {
+  const failures: string[] = [], require = (id: string, condition: boolean) => { if (!condition) failures.push(id); }, compact = (source: string) => source.replaceAll(/\s+/g, "");
+  const body = (source: string, anchor: string) => { const start = source.indexOf(anchor); return start < 0 ? "" : toolJobRustBlock(source, source.indexOf("{", start))?.body ?? ""; };
+  const preparationStart = editor.search(/fn\s+build_artifact_store_one_item_preparation_factory\s*\(/);
+  const preparation = preparationStart < 0 ? "" : toolJobRustBlock(editor, editor.indexOf("{", preparationStart))?.body ?? "";
+  require("central-factory", compact(preparation) === "Some(store::mutation_apply_preparation_factory::<RasterSnapshot,RasterMutation>())");
+  const forbidden = ["struct RasterStoreInitializationAuthority", "struct RasterMutationCandidateAuthority", "struct RasterOneItemApply", "struct RasterSnapshotCloneAuthority", "struct RasterLayerCloneAuthority", "struct RasterLayerLocator", "struct RasterStorePreparationFactory", "fn build_document_store_initialization_job", "raster_document_store_initialization_job", "fn node_at_mut", "fn container_mut", "snapshot_mut", "operation.diff(", "diff.apply("];
+  require("single-apply-owner", forbidden.every(anchor => !raster.includes(anchor) && !editor.includes(anchor)) && !editor.includes("apply_diff_cold(") && !editor.includes("apply_diff_into("));
+  require("original-field-catalog", ["pub struct RasterEnvelopeOwnedFieldCatalog", "artifact_owned_spr_edit_history_decoder", "RasterSnapshotDecodeAuthority", "RasterMutationDecodeAuthority", "OwnedSchemaHexAuthority<RASTER_OWNED_FIELD_BYTES>", "pub fn raster_envelope_decode_owner_bundle()", "pub fn raster_document_store_owners()"].every(anchor => raster.includes(anchor)));
+  require("shared-history-decoder", store.includes("pub fn artifact_owned_spr_edit_history_decoder") && store.includes("struct ArtifactOwnedSprMutationArrayAuthority") && !raster.includes("artifact_bounded_history_entry_decoder"));
+  require("owned-retirement-issuers", raster.includes("pub struct RasterSnapshotRetirementFactory") && raster.includes("pub struct RasterMutationRetirementFactory") && (raster.match(/retirement::admit_owned_retirement\(value, grant\)/g) ?? []).length === 2);
+  require("shared-retirement-issuer", raster.includes("retirement::shared::admit_shared_retirement(snapshot, grant, true)"));
+  const ownedBirth = compact(body(store, "pub fn admit_typed_controlled_retirement<")), sharedBirth = compact(body(store, "pub fn admit_shared_retirement<"));
+  require("shared-owned-birth", ownedBirth.includes("grant.maximum_items==0") && ownedBirth.includes("grant.maximum_depth==0") && ownedBirth.includes("layout.size()>grant.maximum_capacity_bytes") && ownedBirth.indexOf("layout.size()>grant.maximum_capacity_bytes") < ownedBirth.indexOf("std::alloc::alloc(layout)") && ownedBirth.includes("retained_capacity_bytes:layout.size()") && ownedBirth.includes("value));"));
+  require("shared-arc-birth", sharedBirth.includes("grant.maximum_items==0") && sharedBirth.includes("grant.maximum_depth==0") && sharedBirth.includes("layout.size()>grant.maximum_capacity_bytes") && sharedBirth.indexOf("layout.size()>grant.maximum_capacity_bytes") < sharedBirth.indexOf("std::alloc::alloc(layout)") && sharedBirth.includes("retained_capacity_bytes:layout.size()") && sharedBirth.includes("source));"));
+  require("shared-physical-retirement", store.includes("controlled retirement abandoned before terminal-empty") && store.includes("shared retirement abandoned actual Arc allocation ownership") && compact(store).includes("Arc::try_unwrap(source)") && compact(store).includes("Arc::weak_count(source)==0") && compact(store).includes("grant.maximum_release_bytes<extent"));
+
+  const quotedBirth = (owner: string, source: string, message: string) => owner.includes("iflayout.size()>grant.maximum_capacity_bytes{returnErr((ValueError::literal(ValueRefusalKind::OwnershipLimit,\"" + compact(message) + "\")," + source + "));}") && owner.includes("copied_items:1") && !owner.includes("expect(") && !owner.includes("unwrap(") && !owner.includes("panic!(");
+  require("exact-controlled-producer-refusal", quotedBirth(ownedBirth, "value", "typed retirement frame exceeds admitted capacity"));
+  require("exact-shared-producer-refusal", quotedBirth(sharedBirth, "source", "shared frame exceeds admitted capacity"));
+  const controlledOwner = body(store, "impl<T: RetireOwned> ControlledRetirement<T>"), controlledDemand = compact(body(controlledOwner, "pub fn next_demand("));
+  const controlled = compact(body(controlledOwner, "fn step_original(&mut self, grant: RetainedCloneGrant)"));
+  const controlledAdmission = ["letdemand=self.next_demand(grant.maximum_copy_bytes)?;", "grant.maximum_depth<demand.depth", "grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes", "self.cursors.release_empty_page(grant.maximum_release_bytes)"].map(anchor => controlled.indexOf(anchor));
+  require("controlled-body-quote", controlledAdmission.every((position, index) => position >= 0 && (index === 0 || position > controlledAdmission[index - 1]!)) && (controlled.match(/self\.next_demand\(grant\.maximum_copy_bytes\)/g) ?? []).length === 1 && controlledDemand.includes("letmutd=cursor.next_demand(body)?;") && controlled.includes("letbody_bytes=grant.maximum_copy_bytes;") && controlled.includes("letminimum_work_bytes=demand.copy_bytes;") && controlled.includes("letbirth=demand.capacity_bytes;"));
+  require("controlled-turn-currencies", controlled.includes("grant.maximum_items==0") && controlled.includes("grant.maximum_depth<demand.depth") && controlled.includes("grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes") && controlled.includes("body_bytes<minimum_work_bytes") && controlled.includes("maximum_items:1,maximum_capacity_bytes:birth,maximum_depth:grant.maximum_depth-1") && controlled.includes("progress.fits(cursor_grant)") && controlled.includes("self.cursors.release_empty_page(grant.maximum_release_bytes)"));
+  require("controlled-frame-physical-return", controlled.includes("cursor.terminal_release_bytes()") && controlled.includes("ifbytes>grant.maximum_release_bytes") && controlled.includes("released_bytes:bytes") && controlledDemand.includes("d.depth=d.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,\"retirementfrontierdepthoverflow\"))?;"));
+  const bytes = compact(body(store, "impl RetirementCursor for Bytes"));
+  require("original-string-byte-capacity", compact(body(store, "impl RetireOwned for String")).includes("bytes(self.into_bytes())") && bytes.includes("letbytes=self.0.capacity()") && bytes.includes("ifbytes>grant.maximum_release_bytes") && bytes.includes("RetirementStep::Bytes(bytes)") && bytes.includes("Some(ifself.0.is_empty(){self.0.capacity()}else{0})") && store.includes("owned bytes retired before terminal-empty"));
+  const shared = compact(body(store, "impl<T:RetireOwned+Sync> SharedControlledRetirement<T>"));
+  require("exact-shared-owner-return", shared.includes("Arc::strong_count(source)!=1") && shared.includes("Arc::weak_count(source)==0") && shared.includes("Err(source)=>{*self.source=Some(source)") && shared.includes("released_bytes:extent") && shared.includes("self.source.is_none()&&self.owned.is_none()"));
+
+  const collection = compact(body(store, "impl<T: RetireOwned> RetirementCursor for Collection<T>"));
+  require("original-vector-backing", collection.includes("self.0.capacity()*size_of::<T>()") && collection.includes("ifbytes>maximum_bytes") && collection.includes("self.0.is_empty()&&(self.0.capacity()==0||size_of::<T>()==0)") && collection.includes("RetirementStep::Child(value.retirement())") && collection.includes("grant.maximum_capacity_bytes<birth") && store.includes("owned collection retired before terminal-empty"));
+  const registry = compact(body(plugin, "impl<T> ArtifactFixedRegistry<T>"));
+  const registryRelease = compact(body(plugin, "pub(crate) fn close_empty_backing_granted("));
+  require("fixed-registry-retains-physical-owner", registry.includes("slots.try_reserve_exact(capacity).is_ok()") && registry.includes("self.allocation_admitted&&self.entry(slot).is_none()") && registry.includes("self.entry(index).is_none_or(|(candidate,_)|*candidate!=id)") && registry.includes("self.occupied&=!(1u64<<index)") && registry.includes("self.slots[index].assume_init_read().1") && registry.includes("size_of_val(self.slots.as_ref())") && registryRelease.includes("grant.maximum_items==0||grant.maximum_release_bytes<bytes||grant.maximum_depth==0") && registryRelease.includes("released_bytes:bytes") && plugin.includes("fixed artifact owner registry reached Drop before every exact owner was transferred to bounded retirement"));
+  require("fixed-registry-saturated-original-refusal", compact(plugin).includes("!self.jobs.can_insert(self.operation.0){returnErr(envelope);") && compact(plugin).indexOf("!self.jobs.can_insert(self.operation.0)") < compact(plugin).indexOf("letjob=A::build_document_store_initialization_job(envelope,self.operation,self.generation,self.actor.clone())?"));
+  const fields = compact(body(raster, "fn accept_token(")), close = compact(body(raster, "fn close_step(&mut self, grant: RetainedCloneGrant)"));
+  require("field-identity", fields.includes("cx.operation()!=self.operation||cx.generation()!=self.generation"));
+  require("field-cancellation", fields.includes("ifcx.is_cancelled()"));
+  require("field-deadline", fields.includes("ifcx.should_yield()"));
+  require("field-close-admission", close.includes("grant.maximum_items==0") && close.includes("grant.maximum_depth<demand.depth") && close.includes("raster_short(grant,demand)") && compact(raster).includes("grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes"));
+  require("field-original-close", close.includes("artifact_retirement_box_close_step(&mutself.retirement,grant)") && close.includes("artifact_retirement_admit_owned(&mutself.value,&mutself.retirement,grant)") && raster.includes("decode reached Drop before publication or bounded retirement"));
+  require("fixed-map-backing", compact(raster).includes("pubconstRASTER_OWNED_MAP_CAPACITY:usize=64;") && compact(raster).includes("pubconstRASTER_OWNED_MAP_PAGE_CAPACITY:usize=8;") && compact(raster).includes("pages:std::mem::ManuallyDrop<[Option<Box<RasterOwnedMapPage<V>>>;RASTER_OWNED_MAP_PAGE_COUNT]>"));
+  const mapInsert = compact(body(raster, "pub(crate) fn insert_pre_admitted("));
+  require("map-cap-refusal", mapInsert.includes("self.length>=RASTER_OWNED_MAP_CAPACITY") && mapInsert.includes("RasterOwnedMapRejected{key,value,reason:\"raster-map.item-capacity\"}") && mapInsert.includes("std::mem::replace(entry,(key,value))") && mapInsert.includes("RasterOwnedMapEntry::new(previous_key,previous_value)"));
+  require("map-key-handback", raster.includes("pub fn remove_entry(&mut self, key: &str) -> Option<RasterOwnedMapEntry<V>>") && !raster.includes("pub fn remove(&mut self, key: &str)"));
+  require("map-terminal-drop", compact(body(raster, "impl<V> Drop for RasterOwnedMap<V>")).includes("self.length==0&&self.pages.iter().all(Option::is_none)"));
+  const mapRetirement = compact(body(raster, "impl<V: semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetirementCursor for RasterOwnedMapRetirement<V>"));
+  require("map-owner-retirement", mapRetirement.includes("grant.maximum_items==0||grant.maximum_depth==0") && mapRetirement.includes("RetirementStep::Child(entry.retirement())") && mapRetirement.includes("bytes>grant.maximum_release_bytes") && mapRetirement.includes("take_empty_page_backing()") && mapRetirement.includes("page.release();") && mapRetirement.includes("self.map.length==0&&self.map.allocated_page_count()==0"));
+  require("map-page-physical-size", compact(raster).includes("size_of::<RasterOwnedMapPage<V>>()") && compact(raster).includes("Some(size_of::<Self>())") && raster.includes("Raster owned map retirement abandoned before terminal-empty"));
+  const mapQuote = compact(body(raster, "fn insertion_demands(building:"));
+  require("map-clone-admission", raster.includes("RetainedCloneEntriesCursor<Self>") && mapQuote.includes("map.page_required_for_insert(key)") && mapQuote.includes("size_of::<RasterOwnedMapPage<V>>()") && mapQuote.includes("copy_bytes:size_of::<(String,V)>()+RASTER_OWNED_MAP_CAPACITY+capacity") && mapQuote.includes("capacity_bytes:capacity") && compact(raster).includes("self.insert(key,value).map_err(|rejected|(rejected.key,rejected.value))"));
+  const insertAt = store.indexOf("            INSERT => {"), insertEnd = store.indexOf("            DONE =>", insertAt), insert = compact(insertAt < 0 ? "" : store.slice(insertAt, insertEnd));
+  const admission = insert.indexOf("grant.maximum_copy_bytes<bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth");
+  require("shared-map-original-quote", insert.includes("M::insertion_demands(self.building.as_ref(),self.key.as_ref()") && admission >= 0 && insert.indexOf("self.key.take()") > admission && insert.indexOf("self.value.take()") > admission && insert.includes("retained_capacity_bytes:demand.capacity_bytes,released_bytes:demand.release_bytes") && compact(store).includes("INSERT=>returnOk(M::insertion_demands(self.building.as_ref(),self.key.as_ref()"));
+  require("typed-mutation-retirement", /derive\([^\]]*RetireOwned[^\]]*\)\][\s\S]{0,400}pub enum RasterMutation/.test(raster) && raster.includes("RemoveLayerAsset(remove_layer_asset::RemoveLayerAsset)") && raster.includes("params: RasterOwnedMap<semio_framework_value::DslValue>"));
+  require("typed-clone", /derive\([^\]]*RetainedClone[^\]]*\)\][\s\S]{0,200}pub struct RasterSnapshot/.test(raster) && /derive\([^\]]*RetainedClone[^\]]*\)\][\s\S]{0,200}pub enum RasterLayerNode/.test(raster));
+  require("paged-original-birth", store.includes("if !grant.permits_one() || self.cancelled || self.closing") && store.includes("base.admit_retained_clone_source(clone_grant)") && store.includes("source.try_borrow()?") && store.includes("admit_retained_clone_progress") && store.includes("self.sealer.as_mut().and_then(ArtifactStoreOneItemSealer::take_prepared)"));
+  const central = compact(store), commit = compact(body(store, "pub fn commit_retained_diff<")), inverse = compact(body(store, "pub fn inverse_retained_mutation<"));
+  const preflightPhase = compact(body(store, "Stage::Preflight=>")), inversePhase = compact(body(store, "Stage::Inverse=>")), demand = compact(body(store, "pub fn retained_mutation_demand_fits("));
+  require("single-central-mutation", preflightPhase.includes("RetainedDiffPreflightStep::Admitted(_,rows)=>{self.messages[1]=Some(rows);self.stage=Stage::Inverse;}") && inversePhase.includes("inverse_admission(self.source.as_ref().unwrap().try_borrow()?,before)") && inversePhase.includes("RetainedMutationInverseStep::Ready(_,rows)=result{*self.inverse=Some(rows);self.stage=Stage::Commit;}") && central.includes("preflight_retained_diff(self.plan.as_mut().unwrap(),self.source.as_ref().unwrap().try_borrow()?,before,post,g)") && central.includes("inverse_retained_mutation(self.semantics.as_mut().unwrap(),mutation,&a,g)") && central.includes("commit_retained_diff(self.plan.as_mut().unwrap(),self.source.as_ref().unwrap().try_borrow()?,before,post,g)") && ["g.maximum_items>0", "g.maximum_copy_bytes>=d.copy_bytes", "g.maximum_capacity_bytes>=d.capacity_bytes", "g.maximum_release_bytes>=d.release_bytes", "g.maximum_depth>=d.depth"].every(axis => demand.includes(axis)) && inverse.includes("if!retained_mutation_demand_fits(d,grant)") && commit.includes("if!retained_mutation_demand_fits(demand,grant)") && commit.includes("diff.bind(&mutowner.diff,grant)?.is_some()") && commit.includes("original.bind(&mutowner.original,grant)?.is_some()") && commit.includes("super::super::mint_capability()") && commit.includes("admit_retained_clone_progress(grant,receipt"));
+  require("funded-sealer", store.includes("retained.maximum_capacity_bytes < wrapped") && store.includes("retained.maximum_copy_bytes < ArtifactStoreOneItemSealer::<S, M>::constructor_copy_byte_demand()") && store.includes("authority.begin_one_item_seal(edit, Arc::new(post), mutation_retirement, snapshot_retirement, retained)"));
+  require("default-replay-owner", plugin.includes("Ok(bounded_document_store_initialization_job(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))") && compact(plugin).includes("store::ArtifactStoreReplayInitializer::new(envelope,schema,operation,generation,actor)"));
+  const replay = compact(body(store, "fn turn(&mut self, cx: &mut StepContext<'_>) -> Turn"));
+  require("replay-entry-denial", replay.includes("cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0") && replay.indexOf("cx.should_yield()") < replay.indexOf("self.settle(cx)") && replay.includes("letunclaimed=self.phase==Phase::Complete&&!self.terminal_handoff&&self.candidate.is_some()"));
+  require("replay-candidate-cancellation", compact(store).includes("self.phase!=Phase::Complete||self.terminal_handoff||self.cancel_requested") && store.includes("self.generation.0.checked_add(1)"));
+  require("retained-replacement-session", compact(plugin).includes("session:ManuallyDrop<Option<semio_framework_job::MountedWorkerJobSession<ArtifactStoreInitializationJob<P,Mutation>>>>") && compact(plugin).includes("session_rejected:ManuallyDrop<Option<crate::reserved_job_session::RefusedWorkerSource<ArtifactStoreInitializationJob<P,Mutation>>>>") && compact(plugin).includes("crate::reserved_job_session::admit_mounted(job,params,retained)") && compact(plugin).includes("self.jobs.insert_admitted(self.operation.0,ActiveArtifactStoreReplacement::new(self.operation,self.generation,self.child_content_generation,job,self.retained))") && plugin.includes("artifact store replacement reached Drop before initializer/candidate/displaced-store ownership was terminal empty") && plugin.includes("envelope_ingress: ArtifactFixedRegistry<ActiveArtifactEnvelopeIngress>") && plugin.includes("artifact store initialization job reached Drop before exact candidate handoff or terminal retained close"));
+  const credit = laws.indexOf("begin_artifact_envelope_ingress(pages, "), page = laws.indexOf("let mut bytes = [0; store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]"), construct = laws.indexOf("ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len())"), admitted = laws.indexOf("admit_artifact_envelope_ingress_page(handle, page)");
+  require("ingress-order", credit >= 0 && page > credit && construct > page && admitted > construct && laws.includes("chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") && laws.includes("-> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle"));
+  require("ingress-owned-pump", laws.includes("seal_artifact_envelope_ingress(handle)") && laws.includes("fixture_mounted_policy().maintenance") && laws.includes("advance_artifact_envelope_load(handle)") && laws.includes("assert_eq!(handle.generation, base_generation)") && laws.includes("duplicate Raster load acknowledgement is a no-op") && laws.includes("cancel_artifact_envelope_load(handle)"));
+  require("ingress-no-whole-bypass", !editor.includes("envelope_json: &str") && !editor.includes("reject_whole_buffer_artifact_envelope_ingress") && !editor.includes("ArtifactStore::new"));
+  require("editor-owned-decode", compact(body(editor, "fn build_envelope_decode_owner_bundle()")) === "Some(crate::host::owned::raster_envelope_decode_owner_bundle())");
+  require("bounded-mounted-output", editor.includes("if context.should_yield(){return Ok(None);}") && editor.includes("context.is_cancelled()") && editor.includes("bytes.len()>BASE64_INPUT_BYTES") && editor.includes("credit.credit(chunk.len())?") && editor.includes("self.chunks.as_ref().unwrap().push(chunk)?") && editor.includes("self.work.preparing.take()") && editor.includes("self.work.encoding.take()") && editor.includes("raster export snapshot has no live close witness"));
+  require("output-domain-preflight", raster.includes("if depth>32") && raster.includes("self.nodes>1024") && raster.includes("validate_extent(image.width,image.height)") && raster.includes("frame.rgba8.len()!=count*4") && editor.includes("raster_retained_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1)"));
+  require("serializer-real-output", (raster.match(/pub fn serialize_bytes\(snapshot: &RasterSnapshot\)/g) ?? []).length === 7 && raster.includes("write_json_pretty(&serialize(snapshot)?.value)") && raster.includes("let image = raster_composite_image(snapshot)") && raster.includes("raster_document_json_to_svg(snapshot)?") && !raster.includes("snapshot.require_empty_output_shell()"));
+  const names = ["raster_generic_initializer_retains_genesis_identity_next_generation_and_second_map_page", "raster_empty_generic_initializer_progresses_under_mounted_sixty_four_fuel", "raster_generic_initializer_zero_fuel_items_and_expired_deadline_preserve_phase_and_owners", "raster_generic_initializer_cancel_stale_and_completed_candidate_retire_all_exact_owners", "raster_mounted_preparation_deep_atomic_inverse_and_unclaimed_result_retirement", "raster_fixed_map_clone_prices_exact_page_births_and_denies_unfunded_insertions", "raster_mounted_partial_clone_and_before_prepared_cancellation_retain_source_and_retire_owners", "raster_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed", "raster_live_envelope_cancel_closes_retained_pages_without_publication", "a_demo_edit_archive_loads_back_through_the_document_archive_door", "raster_nested_snapshot_and_child_handles_retire_one_owner_per_grant", "raster_owner_caps_and_all_mutation_variants_retire_one_owner_per_grant", "raster_envelope_caps_and_plus_one_page_return_the_exact_fixed_owner", "raster_owned_map_removal_returns_exact_pair_and_populated_drop_refuses", "raster_maximum_combined_layer_and_value_depth_retires_to_terminal", "raster_populated_snapshot_output_max_plus_one_nested_cancel_fault_panic_and_close_are_exact", "raster_owned_map_cap_plus_one_returns_exact_owner_and_populated_pages_retire_explicitly", "raster_populated_serde_output_max_plus_one_nested_cancel_fault_panic_and_close_are_exact", "raster_populated_dsl_materialization_max_plus_one_nested_cancel_fault_panic_and_close_are_exact"];
+  require("mounted-laws", laws.includes("mounted-raster-host-laws") && names.every(name => new RegExp("\\b(?:async\\s+)?fn\\s+" + name + "\\s*\\(").test(laws)));
+
+  const mapBody = body(raster, "pub struct RasterOwnedMap<V>");
+  require("private-map-backing", !/\bpub(?:\([^)]*\))?\s+(?:pages|order|length)\s*:/.test(mapBody));
+  const serializerBodies = Array.from(raster.matchAll(/pub fn serialize_bytes\(snapshot: &RasterSnapshot\)/g), match => compact(toolJobRustBlock(raster, raster.indexOf("{", match.index))?.body ?? ""));
+  require("each-mounted-format", serializerBodies.length === 7 && ["encode_png(&target)", "encode_bmp(&target)", "encode_tiff(&target)", "encode_jpg(&target,", "encode_gif(&gif87a::from_89a(&gif89a))", "write_json_pretty(&serialize(snapshot)?.value)", "raster_document_json_to_svg(snapshot)?"].every(call => serializerBodies.some(owner => owner.includes(call))) && serializerBodies.filter(owner => owner.includes("letimage=raster_composite_image(snapshot)")).length === 5 && !serializerBodies.some(owner => owner.includes("Ok(Vec::new())") || owner.includes("print_dsl(")));
+  require("exact-replaced-fixture", /assert_eq!\(previous_key\.as_ptr\(\),\s*old_key_pointer\)/.test(laws) && /assert_eq!\(previous_child\.child_id(?:\(\))?\.as_ptr\(\),\s*old_child_pointer\)/.test(laws) && /assert_eq!\(installed_key\.as_ptr\(\),\s*replacement_key_pointer\)/.test(laws) && /assert_eq!\(installed_child\.child_id(?:\(\))?\.as_ptr\(\),\s*replacement_child_pointer\)/.test(laws));
+  const capture = laws.indexOf("let plus_one_param_value_pointer = plus_one_param_value.as_ptr();"), rejected = laws.indexOf("let rejected_param = params.insert("), observed = laws.indexOf("assert_eq!(rejected_param_value.as_ptr(), plus_one_param_value_pointer"), retired = laws.indexOf("retire_raster_value_cold((rejected_param.key, rejected_param.value))");
+  require("rejected-output-value-identity", capture >= 0 && rejected > capture && observed > rejected && retired > observed);
+  const childCapture = laws.search(/let plus_one_asset_child_pointer = plus_one_asset_child\.child_id(?:\(\))?\.as_ptr\(\);/), childRejected = laws.indexOf("let rejected_asset = assets.insert("), childObserved = laws.search(/assert_eq!\(rejected_asset\.value\.child_id(?:\(\))?\.as_ptr\(\),\s*plus_one_asset_child_pointer/), childRetired = laws.indexOf("retire_raster_value_cold((rejected_asset.key, rejected_asset.value))");
+  require("rejected-output-child-identity", childCapture >= 0 && childRejected > childCapture && childObserved > childRejected && childRetired > childObserved);
+  require("exact-physical-fixture", laws.includes("demand.capacity_bytes-1") && laws.includes("output.allocated_page_count(),2") && laws.includes("Arc::try_unwrap(root)") && laws.includes("measured midpoint and final-minus-one cuts remain partial") && laws.includes("serde_json::to_value(&actual)"));
+  return failures;
+}
+
+export function toolJobRasterEnvelopeCallerRetainedExact(store: string, raster: string, editor: string, plugin: string, editorTestLaws: string): boolean {
+  return toolJobRasterEnvelopeCallerFailures(store, raster, editor, plugin, editorTestLaws).length === 0;
 }
 
 export function toolJobDrawingEnvelopeCallerRetainedExact(store: string, drawing: string, editor: string, plugin: string, editorTestLaws: string = editor): boolean {
-  const variants = [
-    "SetLayerVisible(payload)",
-    "SetLayerLocked(payload)",
-    "SetLayerOpacity(payload)",
-    "SetLayerBlendMode(payload)",
-    "RenameLayer(payload)",
-    "UpdateLayerTransform(payload)",
-    "ReplaceLayerFill(payload)",
-    "ReplaceLayerStroke(payload)",
-    "SetLayerBooleanOperation(payload)",
-    "UpdateLayerTraceParams(payload)",
-    "CreateLayer(payload)",
-    "DuplicateLayer(payload)",
-    "DeleteLayer(payload)",
-    "ReorderLayer(payload)",
+  const secondApplyLane = [
+    "struct DrawingStoreInitializationAuthority",
+    "struct DrawingMutationCandidateAuthority",
+    "struct DrawingContainerRebuildAuthority",
+    "struct DrawingDuplicateRewriteAuthority",
+    "struct DrawingMutationArenaPool",
+    "fn node_at_mut",
+    "fn container_mut",
+    "fn apply_selection_transform",
+    "&mut DrawingSnapshot",
+    "snapshot_mut",
+    "operation.diff(",
+    "diff.apply(",
+    "source.assets.remove(",
   ];
-  const owners = [
-    "DrawingRetirementOwner::Layer(value)",
-    "DrawingRetirementOwner::Fill(fill)",
-    "DrawingRetirementOwner::Stroke(stroke)",
-    "DrawingRetirementOwner::Segments(values)",
-    "DrawingRetirementOwner::Stops(values)",
-    "DrawingRetirementOwner::Points(values)",
-    "DrawingRetirementOwner::AssetEntry",
+  const ownedInitializerHooks = [
+    "fn build_document_store_initialization_job",
+    "drawing_document_store_initialization_job",
+    "request_drawing_mutation_arena_pool",
+    "drawing_mutation_arena_pool_fault",
+    "arena_boot_fault",
   ];
-  const digestFields = [
-    "FillStyle::Solid { color }",
-    "FillStyle::LinearGradient { x1, y1, x2, y2, stops }",
-    "FillStyle::RadialGradient { cx: center_x, cy: center_y, r, stops }",
-    "stop.offset",
-    "stop.color",
-    "value.color[(self.phase - 1) as usize]",
-    "value.width",
-    "observe_owned_string(digest, 246, &value.cap",
-    "observe_owned_string(digest, 247, &value.join",
-    "value.dash.is_some()",
-    "base.visible",
-    "base.locked",
-    "base.opacity",
-    "observe_owned_string(digest, 106, &base.blend_mode",
-    "base.transform.rotation",
-    "observe_owned_string(digest, 340, &value.shape_kind",
-    "value.rect.is_some()",
-    "value.ellipse.is_some()",
-    "value.circle.is_some()",
-    "value.line.is_some()",
-    "value.polygon.is_some()",
-    "PathSegment::Move",
-    "PathSegment::Line",
-    "PathSegment::Quad",
-    "PathSegment::Cubic",
-    "PathSegment::Arc",
-    "PathSegment::Close",
-    "observe_owned_string(digest, 382, &value.content",
-    "observe_owned_string(digest, 390, &value.image_key",
-    "observe_owned_string(digest, 410, &value.operation",
-    "value.children.len()",
-    "observe_owned_string(digest, 420, &value.source_key",
-    "value.params.threshold",
-    "Self::variant(mutation)",
-    "value.visible",
-    "value.locked",
-    "value.opacity",
-    "observe_owned_string(digest, 3, &value.blend_mode",
-    "observe_owned_string(digest, 3, &value.new_name",
-    "value.transform.rotation",
-    "value.fill.as_ref()",
-    "value.stroke.as_ref()",
-    "observe_owned_string(digest, 3, &value.boolean_operation",
-    "value.params.simplify_epsilon",
-    "value.parent_id.is_some()",
-    "value.index",
-    "value.layer",
-  ];
-  const requestStart = drawing.indexOf("pub fn request_drawing_mutation_arena_pool()");
-  const requestAuthority = requestStart >= 0 ? toolJobRustBlock(drawing, drawing.indexOf("{", requestStart)) : undefined;
-  const requestBlock = requestAuthority?.body ?? "";
-  const borrowStart = drawing.indexOf("fn borrow_drawing_mutation_arena()");
-  const borrowAuthority = borrowStart >= 0 ? toolJobRustBlock(drawing, drawing.indexOf("{", borrowStart)) : undefined;
-  const borrowBlock = borrowAuthority?.body ?? "";
-  const defaultStart = editor.indexOf("impl Default for DrawingPlayApp");
-  const defaultAuthority = defaultStart >= 0 ? toolJobRustBlock(editor, editor.indexOf("{", defaultStart)) : undefined;
-  const defaultBlock = defaultAuthority?.body ?? "";
-  const governedBootstrapArm = /DrawingStoreInitializationPhase::InitializeArena\s*=>\s*\{\s*match\s+self\.arena_bootstrap_job\.step\(cx\)/s.test(drawing);
-  const exactSourceUndo = /if let Some\(undo\) = self\.source_undo\s*\{[\s\S]*?self\.start_rebuild\(source, undo\.parent, None, Some\(undo\.index\), DrawingContainerRebuildRole::CloseSourceUndo\)\?;/s.test(drawing);
+  const ingress = `${editor}\n${editorTestLaws}`;
   return (
     store.includes("pub fn artifact_owned_spr_edit_history_decoder") &&
     store.includes("struct ArtifactOwnedSprMutationArrayAuthority") &&
@@ -357,6 +157,25 @@ export function toolJobDrawingEnvelopeCallerRetainedExact(store: string, drawing
     store.includes("artifact-spr.mutation-array-cancelled") &&
     store.includes("id_digest: [u8; 32]") &&
     store.includes('Self::push_revision_record(&mut self.revision.applied, identity_digest, b"applied", &id, edit_digest)?') &&
+    !store.includes("id.clone(), edit_digest") &&
+    ingress.includes("pub struct DrawingEnvelopeLoadHandle") &&
+    ingress.includes("source: &js_sys::Uint8Array") &&
+    ingress.includes("begin_artifact_envelope_ingress(maximum_pages, maximum_bytes)") &&
+    ingress.includes("admit_artifact_envelope_ingress_page(handle.runtime_handle(), page)") &&
+    ingress.includes("seal_artifact_envelope_ingress(handle.runtime_handle())") &&
+    ingress.includes("app.maintenance_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
+    ingress.includes("advance_artifact_envelope_load(handle.runtime_handle())") &&
+    ingress.includes("acknowledge_artifact_store_replacement(handle.runtime_handle())") &&
+    ingress.includes("cancel_artifact_envelope_load(handle.runtime_handle())") &&
+    !ingress.includes("reject_whole_buffer_artifact_envelope_ingress") &&
+    !ingress.includes("envelope_json: Option<String>") &&
+    !ingress.includes("while let") &&
+    !ingress.includes("loop {") &&
+    store.includes("pub fn artifact_owned_spr_edit_history_decoder") &&
+    store.includes("struct ArtifactOwnedSprMutationArrayAuthority") &&
+    store.includes("self.scalar_entry") &&
+    store.includes("artifact-spr.mutation-array-cancelled") &&
+    store.includes("id_digest: [u8; 32]") &&
     drawing.includes("pub struct DrawingEnvelopeOwnedFieldCatalog") &&
     drawing.includes("artifact_owned_spr_edit_history_decoder") &&
     drawing.includes("DrawingSnapshotDecodeAuthority") &&
@@ -364,184 +183,21 @@ export function toolJobDrawingEnvelopeCallerRetainedExact(store: string, drawing
     drawing.includes("OwnedSchemaHexAuthority<DRAWING_OWNED_FIELD_BYTES>") &&
     drawing.includes("const DRAWING_MAXIMUM_NESTED_ITEMS: usize = 4_096") &&
     drawing.includes("const DRAWING_MAXIMUM_LAYER_DEPTH: usize = 64") &&
-    drawing.includes("struct DrawingSnapshotBoundsAuthority") &&
-    drawing.includes("struct DrawingFixedOwnerCensus") &&
-    drawing.includes("slots: [DrawingOwnerCreditSlot; DRAWING_MAXIMUM_NESTED_ITEMS]") &&
-    drawing.includes("const DRAWING_MUTATION_OVERLAY_PAGE_CAPACITY: usize = 16") &&
-    drawing.includes("const DRAWING_MUTATION_CONTAINER_SLOT_CAPACITY: usize = 64") &&
-    drawing.includes("const DRAWING_MUTATION_ARENA_POOL_CAPACITY: usize = 4") &&
-    drawing.includes("struct DrawingMutationArenaOwner") &&
-    drawing.includes("struct DrawingMutationArenaPool {") &&
-    drawing.includes("DrawingMutationArenaProcessState::Building") &&
-    drawing.includes("#[cfg(test)]\n    fn try_new()") &&
-    drawing.includes("struct DrawingMutationArenaOwnerBuilder") &&
-    drawing.includes("struct DrawingMutationArenaPoolBootstrap") &&
-    drawing.includes("struct DrawingMutationArenaBootstrapJob") &&
-    drawing.includes("fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> DrawingMutationArenaBootstrapStep") &&
-    drawing.includes("DrawingMutationArenaProcessState::Inert") &&
-    drawing.includes("DrawingMutationArenaBootstrapAdmission::fixed()") &&
-    drawing.includes("DrawingMutationArenaBootstrapStep::Blocked") &&
-    governedBootstrapArm &&
-    exactSourceUndo &&
-    requestBlock.includes("DrawingMutationArenaProcessState::Inert") &&
-    requestBlock.includes("DRAWING_MUTATION_ARENA_BOOTSTRAP_REQUESTED.store(true") &&
-    !requestBlock.includes("bootstrap.step(") &&
-    !requestBlock.includes("try_reserve_exact") &&
-    !requestBlock.includes("DrawingMutationArenaPoolBootstrap::production") &&
-    borrowBlock.includes("DrawingMutationArenaBorrowError::NotReady") &&
-    borrowBlock.includes("request_drawing_mutation_arena_pool()") &&
-    !borrowBlock.includes("bootstrap.step(") &&
-    !borrowBlock.includes("try_reserve_exact") &&
-    !borrowBlock.includes("DrawingMutationArenaPoolBootstrap::production") &&
-    drawing.includes("DrawingStoreInitializationPhase::InitializeArena") &&
-    drawing.includes("DrawingMutationArenaProcessTransition::Retire") &&
-    drawing.includes("drawing_mutation_arena_pool_fault") &&
-    drawing.includes("borrow_drawing_mutation_arena_from") &&
-    drawing.includes("drawing-store.mutation-arena-pool-saturated") &&
-    drawing.includes("drawing-store.mutation-arena-stale-generation") &&
-    drawing.includes("owner.terminal_is_empty()") &&
-    drawing.includes("arena_return_phase: u8") &&
-    drawing.includes("Ok(Some(false)) => return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })") &&
-    drawing.includes("reverse.try_reserve_exact(DRAWING_MUTATION_CONTAINER_SLOT_CAPACITY)") &&
-    drawing.includes("pages.try_reserve_exact(DRAWING_MUTATION_OVERLAY_PAGE_CAPACITY)") &&
-    drawing.includes("page.try_reserve_exact(DRAWING_MUTATION_RETAINED_PAGE_BYTES)") &&
-    drawing.includes("total.checked_add(page.capacity())") &&
-    drawing.includes("fn write_overlay_string") &&
-    drawing.includes("target.capacity() < source.len()") &&
-    drawing.includes("struct DrawingMutationOverlayPatch") &&
-    drawing.includes("drawing-store.mutation-overlay-owner-changed") &&
-    drawing.includes("struct DrawingAssetBoundsCursor") &&
-    drawing.includes("assets.range::<str, _>") &&
-    drawing.includes("drawing-store.preflight-depth-capacity") &&
-    drawing.includes("drawing-store.preflight-item-capacity") &&
-    drawing.includes("drawing-store.preflight-byte-capacity") &&
-    drawing.includes("struct DrawingLayerCloneAuthority") &&
-    drawing.includes("self.bounds.step(source, cx)") &&
-    drawing.includes("layer.step(source.layers.get(self.index)") &&
-    drawing.includes("target.children.push(Self::skeleton(child)?)") &&
-    drawing.includes("struct DrawingStoreInitializationAuthority") &&
-    drawing.includes("struct DrawingSemanticDigestCredit") &&
-    drawing.includes("semantic: Option<semio_framework_hash::Sha256>") &&
-    drawing.includes('digest.observe(b"drawing.semantic.sha256")') &&
-    drawing.includes("struct DrawingFillDigestAuthority") &&
-    drawing.includes("struct DrawingStrokeDigestAuthority") &&
-    drawing.includes("struct DrawingPathSegmentDigestAuthority") &&
-    drawing.includes("struct DrawingLayerVariantDigestAuthority") &&
-    drawing.includes("struct DrawingLayerDigestAuthority") &&
-    drawing.includes("struct DrawingMutationDigestAuthority") &&
-    drawing.includes("struct DrawingMutationAggregateReservation") &&
-    drawing.includes("mutation_source_items") &&
-    drawing.includes("mutation_derived_items") &&
-    drawing.includes("duplicate_candidate_items") &&
-    drawing.includes("source_owner_bytes") &&
-    drawing.includes("derived_owner_bytes") &&
-    drawing.includes("DRAWING_MUTATION_AGGREGATE_ITEMS") &&
-    drawing.includes("DRAWING_MUTATION_AGGREGATE_BYTES") &&
-    drawing.includes("DRAWING_MUTATION_RETAINED_PAGE_ITEMS") &&
-    drawing.includes("DRAWING_MUTATION_RETAINED_PAGE_BYTES") &&
-    drawing.includes("drawing-store.mutation-aggregate-item-capacity") &&
-    drawing.includes("drawing-store.mutation-aggregate-byte-capacity") &&
-    drawing.includes("struct DrawingMutationCandidateAuthority") &&
-    drawing.includes("drawing-store.mutation-candidate-stale-authority") &&
-    drawing.includes("drawing-store.mutation-candidate-cancelled") &&
-    drawing.includes("struct DrawingDuplicateRewriteAuthority") &&
-    drawing.includes("material: [u8; DRAWING_DUPLICATE_MATERIAL_BYTES]") &&
-    drawing.includes("self.hash_cursor + DRAWING_OWNED_FIELD_BYTES") &&
-    drawing.includes('update(b"semio.drawing.duplicate-id.v1")') &&
-    drawing.includes("update(&(self.id_len as u64).to_be_bytes())") &&
-    drawing.includes("update(&(self.name_len as u64).to_be_bytes())") &&
-    drawing.includes("pending_name: std::mem::ManuallyDrop<Option<String>>") &&
-    drawing.includes("drawing-store.duplicate-destination-capacity") &&
-    drawing.includes("DrawingMutationCandidatePhase::PreflightSource") &&
-    drawing.includes("DrawingMutationCandidatePhase::PreflightMutation") &&
-    drawing.includes("struct DrawingContainerRebuildAuthority") &&
-    drawing.includes("const DRAWING_CONTAINER_REBUILD_MOVE_CAPACITY") &&
-    drawing.includes("enum DrawingContainerRebuildMove") &&
-    drawing.includes("rebuild.rollback_step()?") &&
-    drawing.includes("DrawingContainerRebuildRole::CloseSourceUndo") &&
-    drawing.includes("source_undo: Option<DrawingContainerSourceUndo>") &&
-    drawing.includes("source.capacity() < output_capacity") &&
-    drawing.includes("self.source.as_mut().ok_or(\"drawing-store.container-source\")?.push(value)") &&
-    drawing.includes("DrawingStoreInitializationPhase::ValidateEditId") &&
-    drawing.includes("DrawingStoreInitializationPhase::ValidateEditMeta") &&
-    drawing.includes("DrawingStoreInitializationPhase::PrepareApplied") &&
-    drawing.includes("DrawingStoreInitializationPhase::PrepareRedo") &&
-    drawing.includes("impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapshot, DrawingMutation> for DrawingStoreInitializationAuthority") &&
-    drawing.includes("DrawingStoreInitializationPhase::ValidateEdit { index }") &&
-    drawing.includes("self.edit_index.admit(&envelope.vcs.edits, index,") &&
-    drawing.includes("DrawingStoreInitializationPhase::SeedHistory") &&
-    drawing.includes("DrawingStoreInitializationPhase::BuildCandidate") &&
-    drawing.includes("ArtifactStore::from_initialized_runtime_with_owners") &&
-    drawing.includes("ArtifactStoreInitializationOwnerCatalog::try_new()") &&
-    drawing.includes("ArtifactStoreInitializationRuntime::new_with_owner_catalog") &&
-    drawing.includes("DrawingStoreInitializationPhase::MoveInitialOwner") &&
-    drawing.includes("self.generation.0.checked_add(1)") &&
-    owners.every((owner) => drawing.includes(owner)) &&
-    digestFields.every((field) => drawing.includes(field)) &&
-    variants.every((variant) => drawing.includes(variant)) &&
-    drawing.includes("retained_drawing_mutation_candidate_covers_all_fourteen_variants_and_returns_exact_owners") &&
-    drawing.includes("retained_drawing_depth_plus_one_and_hostile_fields_fault_then_close_terminal_empty") &&
-    drawing.includes("retained_drawing_container_false_terminal_saturation_and_interrupted_close_preserve_exact_owner") &&
-    drawing.includes("retained_drawing_schema_digest_distinguishes_every_nested_semantic_field") &&
-    drawing.includes("retained_drawing_aggregate_credit_admits_exact_4096_rejects_plus_one_with_owner_handback") &&
-    drawing.includes("retained_drawing_duplicate_hash_frames_domain_id_and_name_lengths_without_concatenation_collision") &&
-    drawing.includes("retained_drawing_process_arena_pool_cap_plus_one_returns_exact_slots_and_rejects_stale_aba") &&
-    drawing.includes("retained_drawing_duplicate_name_uses_preadmitted_page_and_returns_exact_rejection_owner") &&
-    drawing.includes("retained_drawing_cancel_stale_each_replay_candidate_container_stage_preserves_last_valid") &&
-    drawing.includes("retained_drawing_rebuild_fault_after_every_phase_rolls_back_exact_container_and_reuses_pool_slot") &&
-    drawing.includes("retained_drawing_reorder_fault_after_source_handoff_restores_exact_nested_fifo_and_pool_roots") &&
-    drawing.includes("retained_drawing_arena_bootstrap_failure_at_each_allocation_retires_one_exact_root_per_grant") &&
-    drawing.includes("retained_drawing_arena_bootstrap_failure_after_each_bundle_keeps_every_root_until_terminal_close") &&
-    drawing.includes("retained_drawing_arena_bootstrap_advances_one_allocation_per_turn_and_withholds_incomplete_pool") &&
-    drawing.includes("retained_drawing_arena_bootstrap_exact_cap_and_plus_one_rejection_preserve_every_owner_until_close") &&
-    drawing.includes("retained_drawing_arena_default_second_app_and_borrow_only_request_without_allocation") &&
-    drawing.includes("retained_drawing_arena_bootstrap_job_cancel_budget_contention_and_saturation_are_governed") &&
-    !drawing.includes("source.clone()") &&
-    !drawing.includes("snapshot.clone()") &&
-    !drawing.includes("operation.encode_op()") &&
-    !drawing.includes("operation.diff(") &&
-    !drawing.includes("diff.apply(") &&
-    !drawing.includes("serde_json::from_value") &&
-    !drawing.includes("serde_json::from_str") &&
-    !drawing.includes("serde_json::to_vec") &&
-    !drawing.includes("mutation_meta.iter().any") &&
-    !drawing.includes("exact_for_test") &&
-    !drawing.includes("iter().nth") &&
-    !drawing.includes("structural_copies") &&
-    !drawing.includes("DRAWING_ASSET_MAP_NODE_POINTERS") &&
-    !drawing.includes("DrawingStoreInitializationPhase::CloneInitial") &&
-    !drawing.includes("base.name.try_reserve_exact") &&
-    !drawing.includes("DrawingMutationArenaOwner::try_new()?") &&
-    !drawing.includes("rposition(Option::is_some)") &&
-    !store.includes("id.clone(), edit_digest") &&
-    !drawing.includes("drop(value.layers)") &&
-    editor.includes("drawing_document_store_initialization_job(envelope, operation, generation)") &&
+    drawing.includes("struct DrawingNativeCloneAuthority") &&
+    drawing.includes("struct DrawingLayerCloneWorkAuthority") &&
+    drawing.includes("struct DrawingLayerLocator") &&
+    secondApplyLane.every((forbidden) => !drawing.includes(forbidden)) &&
+    ownedInitializerHooks.every((forbidden) => !editor.includes(forbidden) && !drawing.includes(forbidden)) &&
     editorTestLaws.includes("drawing_live_envelope_submit_recursive_clone_swap_displaced_store_and_exact_ack_succeed") &&
     editorTestLaws.includes("drawing_live_envelope_cancel_closes_retained_pages_without_publication") &&
     editorTestLaws.includes("drawing_live_envelope_rejects_single_and_final_edit_id_plus_one_before_mutation_candidate") &&
     editorTestLaws.includes("drawing_live_initializer_candidate_container_commit_ack_cancel_stale_preserve_last_valid_and_exact_handle") &&
-    editor.includes("arena_boot_fault: Option<&'static str>") &&
-    editor.includes("drawing_mutation_arena_pool_fault") &&
     editorTestLaws.includes('"forwards": [crate::artifacts::drawing::mutations::DrawingMutation::RenameLayer') &&
-    editor.includes("pub struct DrawingEnvelopeLoadHandle") &&
-    editor.includes("source: &js_sys::Uint8Array") &&
-    editor.includes("begin_artifact_envelope_ingress(maximum_pages, maximum_bytes)") &&
-    editor.includes("admit_artifact_envelope_ingress_page(handle.runtime_handle(), page)") &&
-    editor.includes("seal_artifact_envelope_ingress(handle.runtime_handle())") &&
-    editor.includes("app.maintenance_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
-    editor.includes("advance_artifact_envelope_load(handle.runtime_handle())") &&
-    editor.includes("acknowledge_artifact_store_replacement(handle.runtime_handle())") &&
-    editor.includes("cancel_artifact_envelope_load(handle.runtime_handle())") &&
-    editor.includes("request_drawing_mutation_arena_pool()") &&
-    defaultBlock.includes("request_drawing_mutation_arena_pool()") &&
-    !defaultBlock.includes("bootstrap.step(") &&
-    !defaultBlock.includes("try_reserve_exact") &&
-    !defaultBlock.includes("initialize_drawing_mutation_arena_pool") &&
+    editorTestLaws.includes("drawing_live_envelope_replay_equals_the_central_apply_fold_of_every_forward") &&
+    editorTestLaws.includes("protocol::apply_diff_cold(outcome.diff(), &expected)") &&
     plugin.includes("envelope_ingress: ArtifactFixedRegistry<ActiveArtifactEnvelopeIngress>") &&
-    toolJobStoreInitializerRetainedExact(plugin) &&
+    plugin.includes("Ok(bounded_document_store_initialization_job(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))") &&
     !editor.includes("reject_whole_buffer_artifact_envelope_ingress") &&
-    !editor.includes("envelope_json: Option<String>") &&
-    !editor.includes("while let") &&
-    !editor.includes("loop {")
+    !editor.includes("envelope_json: Option<String>")
   );
 }

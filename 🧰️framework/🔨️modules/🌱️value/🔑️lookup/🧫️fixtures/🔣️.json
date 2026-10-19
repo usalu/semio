@@ -1,0 +1,15 @@
+{
+ "version":1,
+ "wordBytes":[4,8],
+ "cases":[
+  {"id":"opaque-scoped","key":"fem:node:33","candidates":["fem:node:1","fem:node:33","puzzle:node:33"],"expected":1,"pageBytes":3},
+  {"id":"exact-prefix","key":"node:a","candidates":["node:ab","fem:node:a","node:a"],"expected":2,"pageBytes":2},
+  {"id":"missing-prefix","key":"node:","candidates":["node:a","node:b"],"expected":null,"pageBytes":1},
+  {"id":"empty-key","key":"","candidates":["a","","b"],"expected":1,"pageBytes":1},
+  {"id":"empty-directory","key":"a","candidates":[],"expected":null,"pageBytes":1},
+  {"id":"unicode","key":"😀:节点:é","candidates":["😀:节点:ö","😀:节点:é"],"expected":1,"pageBytes":1},
+  {"id":"first-exact-key","key":"same","candidates":["same","same"],"expected":0,"pageBytes":1},
+  {"id":"case-sensitive","key":"a","candidates":["A"],"expected":null,"pageBytes":1}
+ ],
+ "wide":{"prefixLength":65537,"suffixes":["a","b","c"],"wanted":"b","expected":1,"pageBytes":257,"cancelCuts":[0,1,2,17,257]}
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["items", "cases", "emphasisAttribute"],
+  "additionalProperties": false,
+  "properties": {
+    "emphasisAttribute": { "const": "bold" },
+    "items": { "type": "array", "items": { "type": "array", "prefixItems": [{ "type": "string" }, { "type": "integer", "minimum": 0 }], "minItems": 2, "maxItems": 2 } },
+    "cases": { "type": "array", "items": {
+      "type": "object",
+      "required": ["name", "expanded", "query", "selected", "hover", "rows"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "expanded": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "query": { "type": "string" },
+        "selected": { "type": "integer", "minimum": 0 },
+        "hover": { "type": ["integer", "null"], "minimum": 0 },
+        "rows": { "type": "array", "items": {
+          "type": "object",
+          "required": ["item", "label", "background", "guides"],
+          "additionalProperties": false,
+          "properties": {
+            "item": { "type": "integer", "minimum": 0 },
+            "label": { "enum": ["foreground", "muted", "emphasized", "active"] },
+            "background": { "enum": ["window", "hover", "active"] },
+            "guides": { "type": "array", "items": { "enum": ["normal", "emphasized"] } }
+          }
+        } }
+      }
+    } }
+  }
+}

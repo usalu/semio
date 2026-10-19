@@ -31,10 +31,12 @@ ui_contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/�
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-os-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-host-plumbing = { path = "../../../🔧️host-plumbing/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-actor = { workspace = true }
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-framework-job = { workspace = true }
+semio-framework-job-worker = { path = "../../../../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"], package = "semio-framework-os-kernel" }
 semio-framework-os-services = { workspace = true }
 semio-framework-plugin = { path = "../../../../../../../🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }

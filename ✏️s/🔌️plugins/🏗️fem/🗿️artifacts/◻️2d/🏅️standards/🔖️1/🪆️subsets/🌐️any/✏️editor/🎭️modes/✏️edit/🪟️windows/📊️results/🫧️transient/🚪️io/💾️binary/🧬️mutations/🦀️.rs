@@ -3,8 +3,8 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::fem2d::modes::edit::windows::results::transient::mutations::*;
-use crate::editor::fem2d::modes::edit::windows::results::transient::FemResultsWindowTransient;
+use crate::transient::mutations::*;
+use crate::transient::FemResultsWindowTransient;
 
 impl protocol::OpBinary for FemResultsWindowTransientMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

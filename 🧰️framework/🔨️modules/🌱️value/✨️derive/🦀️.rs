@@ -11,6 +11,9 @@ fn observe_compiler_resources<R>(run: impl FnOnce() -> R) -> R {
 #[path = "⚙️expansion/🦀️.rs"]
 mod component;
 
+#[path="📽️projection/🦀️.rs"]
+mod snapshot_projection;
+
 #[path = "🧬️retained-clone/🦀️.rs"]
 mod retained_clone;
 
@@ -104,3 +107,16 @@ pub fn derive_canonical_json_tree(input:TokenStream)->TokenStream {
  let input=parse_macro_input!(input as DeriveInput);
  component::expand_canonical_tree(&input).unwrap_or_else(|error|error.to_compile_error()).into()
 }
+
+/// 📽️ Composes original immutable record field projections with paid assembly and cancellation.
+#[proc_macro_derive(SnapshotProjection)]
+pub fn derive_snapshot_projection(input:TokenStream)->TokenStream{let input=parse_macro_input!(input as DeriveInput);snapshot_projection::expand(&input).unwrap_or_else(|error|error.to_compile_error()).into()}
+
+#[path="🟰️equality/🦀️.rs"] mod retained_equality;
+/// 🟰️ Derives bounded native field equality independently of codec skips, defaults, and roles.
+#[proc_macro_derive(RetainedEquality)]
+pub fn derive_retained_equality(input:TokenStream)->TokenStream{let input=parse_macro_input!(input as DeriveInput);retained_equality::expand(&input).unwrap_or_else(|error|error.to_compile_error()).into()}
+
+/// 🛬️ Derives funded native receiving from genuine original fields independently of cold wire admission.
+#[proc_macro_derive(NativeReceive,attributes(value))]
+pub fn derive_native_receive(input:TokenStream)->TokenStream{let input=parse_macro_input!(input as DeriveInput);component::expand_native_receive(&input).unwrap_or_else(|error|error.to_compile_error()).into()}

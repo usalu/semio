@@ -343,3 +343,6 @@ export { Section, type SectionProps } from "./🖲️section/🟦️.tsx";
 export { DesktopTitlebar, NavbarTrailingChromeSlot, publishShellNavbarTrailingEndWidthPx, readDocumentFullscreenActive, toggleDocumentFullscreen, type DesktopTitlebarProps, useDocumentFullscreen } from "./🖥️fullscreen/🟦️.tsx";
 export { WINDOW_SEARCH_USER, engagementActionTokenEquals, isSearchSuggestionActionTarget, searchActiveCompletionSuffix, searchCompletionSuffix } from "./🔎️window-search/🟦️.ts";
 export { ChromeAwareWindowScrollSurface, shellChromeSectionTitleClassName, windowChromeControlButtonClass, windowControlsCapActiveSplitClass, windowEngagementMaxWidthPx, windowMeasureControlClass, windowMeasureGroupChildrenClass, windowMeasureGroupHeaderClass, windowMeasureLabelClass, windowMeasureSectionClass, windowMeasureTileClass, windowMeasureTileNestedClass, windowMeasureToggleClass, windowMeasureToggleCompactClass, windowMeasuresStackInnerClass, windowRailChromeLabelActionClass } from "./🧱️window-chrome/🟦️.tsx";
+
+export { CatalogIcon, type CatalogIconProps } from "../../🧱️elements/🔣️Icons/🟦️.tsx";
+export { INTRODUCTION_DEMO_GESTURE_DEFAULT_CURSOR } from "./🎬️introduction-demo/🟦️.tsx";

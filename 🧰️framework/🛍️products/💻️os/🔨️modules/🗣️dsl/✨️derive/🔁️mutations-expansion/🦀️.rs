@@ -4,16 +4,19 @@ use quote::quote;
 use super::{Data, DeriveInput, Fields, MutationAggregateSourceAuthority, Path, TokenStream, Type, mutation_aggregate_source_authority, mutation_authority_canonical, mutation_authority_relative, mutation_authority_workspace_token, mutation_leaf_include_path, parse_macro_input, to_kebab};
 
 //#region 🔖️Mutations
-/// 🗣️ `#[mutations(snapshot = ..., diff = ..., schema = "..." [, retire_cold = path])]` container
+/// 🗣️ `#[mutations(snapshot = ..., diff = ..., schema = "..." [, reference = ..., reference_diff = ..., retire_cold = path])]` container
 /// attrs for `#[derive(Mutations)]` — see that macro's doc. `retire_cold` names a `fn(Self)` that
 /// disposes an operation owning fail-closed roots; the generated `Mutation::retire_cold` calls it.
 #[derive(Default)]
 #[doc(hidden)]
 pub struct MutationsAttrs {
+    pub(super) reference: Option<Type>,
+    pub(super) reference_diff: Option<Type>,
     pub(super) snapshot: Option<Type>,
     pub(super) diff: Option<Type>,
     pub(super) schema: Option<String>,
     retire_cold: Option<syn::Path>,
+    retained: Option<()>,
 }
 
 // 🚫️async: E1 pure accessor consumed by external-trait/E3 proc-macro entry points — see R9
@@ -30,17 +33,29 @@ pub struct MutationsAttrs {
             } else if meta.path.is_ident("diff") {
                 if out.diff.is_some() { return Err(meta.error("duplicate mutations diff")); }
                 out.diff = Some(meta.value()?.parse()?);
-            } else if meta.path.is_ident("schema") {
+                        } else if meta.path.is_ident("reference") {
+                if out.reference.is_some() { return Err(meta.error("duplicate mutations reference")); }
+                out.reference = Some(meta.value()?.parse()?);
+            } else if meta.path.is_ident("reference_diff") {
+                if out.reference_diff.is_some() { return Err(meta.error("duplicate mutations reference_diff")); }
+                out.reference_diff = Some(meta.value()?.parse()?);
+} else if meta.path.is_ident("schema") {
                 if out.schema.is_some() { return Err(meta.error("duplicate mutations schema")); }
                 let value: syn::LitStr = meta.value()?.parse()?;
                 out.schema = Some(value.value());
             } else if meta.path.is_ident("retire_cold") {
                 if out.retire_cold.is_some() { return Err(meta.error("duplicate mutations retire_cold")); }
                 out.retire_cold = Some(meta.value()?.parse()?);
-            } else { return Err(meta.error("unsupported mutations attribute")); }
+                        } else if meta.path.is_ident("retained") {
+                if out.retained.is_some() { return Err(meta.error("duplicate mutations retained")); }
+                out.retained = Some(());
+} else { return Err(meta.error("unsupported mutations attribute")); }
             Ok(())
         })?;
-    }
+        }
+    if out.reference.is_some() != out.reference_diff.is_some() {
+        return Err(syn::Error::new_spanned(input, "mutations reference and reference_diff must be supplied together"));
+}
     Ok(out)
 }
 
@@ -64,7 +79,11 @@ pub fn expand_derive_mutations(input: TokenStream) -> TokenStream {
     }
 }
 
-#[doc(hidden)] pub fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuthority) -> syn::Result<proc_macro2::TokenStream> {
+#[path="../🧳️retained/🦀️.rs"]
+mod retained_mutations;
+
+#[doc(hidden)]
+pub fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuthority) -> syn::Result<proc_macro2::TokenStream> {
     let name = &input.ident;
     let Data::Enum(data) = &input.data else {
         return Err(syn::Error::new_spanned(input, "#[derive(Mutations)] only supports enums"));
@@ -76,7 +95,9 @@ pub fn expand_derive_mutations(input: TokenStream) -> TokenStream {
         return Err(syn::Error::new_spanned(input, "Mutations does not permit conditional aggregate metadata"));
     }
     let attrs = parse_mutations_attrs(input)?;
-    let retire_cold = attrs.retire_cold.map(|retire| quote! {
+        let reference = attrs.reference.zip(attrs.reference_diff);
+    let retained = attrs.retained.is_some();
+let retire_cold = attrs.retire_cold.map(|retire| quote! {
         fn retire_cold(self) {
             #retire(self)
         }
@@ -130,9 +151,11 @@ pub fn expand_derive_mutations(input: TokenStream) -> TokenStream {
     }).collect::<Vec<_>>();
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     let aggregate_ty = quote! { #name #ty_generics };
-    let mut diff_arms = Vec::new();
+        let retained_dispatch = if retained { retained_mutations::expand(input,&snapshot_ty)? } else { proc_macro2::TokenStream::new() };
+let mut diff_arms = Vec::new();
     let mut inverse_arms = Vec::new();
-    let mut timestamp_arms = Vec::new();
+        let mut cold_foreign_source_arms = Vec::new();
+let mut timestamp_arms = Vec::new();
     let mut descriptor_arms = Vec::new();
     let mut semantics_arms = Vec::new();
     let mut label_arms = Vec::new();
@@ -169,10 +192,14 @@ pub fn expand_derive_mutations(input: TokenStream) -> TokenStream {
         }
         let expected_variant = variant_ident.to_string();
         let expected_kebab = to_kebab(&expected_variant);
-        let kind = quote! { <#payload_ty as ::semio_framework_os_command::MutationKind<#snapshot_ty, #aggregate_ty>> };
-        let leaf = quote! { <#payload_ty as ::protocol::MutationLeaf> };
-        diff_arms.push(quote! { Self::#variant_ident(payload) => #kind::diff(payload, base) });
-        inverse_arms.push(quote! { Self::#variant_ident(payload) => #kind::inverse(payload, base) });
+        let kind = quote! { <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #aggregate_ty>> };
+        let leaf = quote! { <#payload_ty as ::semio_framework_os_kernel::MutationLeaf> };
+        if let Some((reference_ty, _)) = &reference {
+            let cold_kind = quote! { <#payload_ty as ::semio_framework_os_kernel::ColdMutationKind<#reference_ty, #aggregate_ty>> };
+            diff_arms.push(quote! { Self::#variant_ident(payload) => #cold_kind::diff(payload, base) });
+            inverse_arms.push(quote! { Self::#variant_ident(payload) => #cold_kind::inverse(payload, base) });
+            cold_foreign_source_arms.push(quote! { Self::#variant_ident(payload) => #cold_kind::foreign_step_source(payload, base, index) });
+        }
         timestamp_arms.push(quote! { Self::#variant_ident(payload) => #kind::timestamp(payload) });
         descriptor_arms.push(quote! { Self::#variant_ident(_) => &<Self as ::protocol::Mutation<#snapshot_ty>>::DESCRIPTORS[#index] });
         semantics_arms.push(quote! { Self::#variant_ident(_) => &#kind::SEMANTICS });
@@ -222,7 +249,26 @@ pub fn expand_derive_mutations(input: TokenStream) -> TokenStream {
     }
 
     let register_fn_ident = syn::Ident::new(&format!("register_{}_descriptors", to_kebab(&name.to_string()).replace('-', "_")), name.span());
-    let payload_law = mutation_payload_law_test(name, &snapshot_ty, authority, &input.generics);
+    let cold_reference = reference.as_ref().map(|(reference_ty, reference_diff_ty)| quote! {
+        impl #impl_generics ::semio_framework_os_kernel::ColdMutation<#reference_ty> for #aggregate_ty #where_clause {
+            type ReferenceDiff = #reference_diff_ty;
+            fn diff(&self, base: &#reference_ty) -> ::semio_framework_os_kernel::MutationOutcome<Self::ReferenceDiff> {
+                let _ = <Self as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::DESCRIPTORS;
+                match self { #(#diff_arms),* }
+            }
+            fn inverse(&self, base: &#reference_ty) -> Result<Vec<Self>, ::semio_framework_value::ValueError> {
+                let outcome = <Self as ::semio_framework_os_kernel::ColdMutation<#reference_ty>>::diff(self, base);
+                if !outcome.admit_inverse::<#reference_ty>(|| {
+                    Ok(<Self as ::semio_framework_os_kernel::ColdMutation<#reference_ty>>::foreign_step_source(self, base, 0)?.is_some())
+                })? { return Ok(Vec::new()); }
+                match self { #(#inverse_arms),* }
+            }
+            fn foreign_step_source<'a>(&'a self, base: &'a #reference_ty, index: usize) -> Result<Option<::semio_framework_os_kernel::ForeignStepSource<'a>>, ::semio_framework_value::ValueError> {
+                match self { #(#cold_foreign_source_arms),* }
+            }
+        }
+    });
+    let payload_law = mutation_payload_law_test(name, &snapshot_ty, reference.as_ref().map(|(wire,_)|wire), authority, &input.generics);
     let eager_check = input.generics.params.is_empty().then(|| quote! {
         const _: () = { let _ = <#name as ::protocol::Mutation<#snapshot_ty>>::DESCRIPTORS; };
     });
@@ -231,7 +277,9 @@ pub fn expand_derive_mutations(input: TokenStream) -> TokenStream {
         #eager_check
         #(#conversions)*
 
-        impl #impl_generics ::protocol::Mutation<#snapshot_ty> for #aggregate_ty #where_clause {
+                #retained_dispatch
+        #cold_reference
+impl #impl_generics ::protocol::Mutation<#snapshot_ty> for #aggregate_ty #where_clause {
             type Diff = #diff_ty;
             const DESCRIPTORS: &'static [::protocol::MutationLeafDescriptor] = {
                 const SCOPES: &[::protocol::ValidatedMutationLeafSourceScope] = &[#(#scopes),*];
@@ -246,14 +294,7 @@ pub fn expand_derive_mutations(input: TokenStream) -> TokenStream {
             fn descriptor(&self) -> &'static ::protocol::MutationLeafDescriptor {
                 match self { #(#descriptor_arms),* }
             }
-            fn diff(&self, base: &#snapshot_ty) -> ::protocol::MutationOutcome<Self::Diff> {
-                let _ = <Self as ::protocol::Mutation<#snapshot_ty>>::DESCRIPTORS;
-                match self { #(#diff_arms),* }
-            }
-            fn inverse(&self, base: &#snapshot_ty) -> Result<Vec<Self>, ::semio_framework_value::ValueError> {
-                let _ = <Self as ::protocol::Mutation<#snapshot_ty>>::DESCRIPTORS;
-                match self { #(#inverse_arms),* }
-            }
+            
             fn timestamp(&self) -> Option<::protocol::HybridLogicalTimestamp> {
                 let _ = <Self as ::protocol::Mutation<#snapshot_ty>>::DESCRIPTORS;
                 match self { #(#timestamp_arms),* }
@@ -291,7 +332,18 @@ pub fn expand_derive_mutations(input: TokenStream) -> TokenStream {
             #retire_cold
         }
 
-        impl #impl_generics ::semio_framework_os_command::SemanticMutation<#snapshot_ty> for #aggregate_ty #where_clause {
+        impl #impl_generics ::protocol::ColdMutation<#snapshot_ty> for #aggregate_ty #where_clause {
+type ReferenceDiff= #diff_ty;
+fn diff(&self, base: &#snapshot_ty) -> ::protocol::MutationOutcome<Self::Diff> {
+                let _ = <Self as ::protocol::Mutation<#snapshot_ty>>::DESCRIPTORS;
+                match self { #(#diff_arms),* }
+            }
+fn inverse(&self, base: &#snapshot_ty) -> Result<Vec<Self>, ::semio_framework_value::ValueError> {
+                let _ = <Self as ::protocol::Mutation<#snapshot_ty>>::DESCRIPTORS;
+                match self { #(#inverse_arms),* }
+            }
+}
+impl #impl_generics ::semio_framework_os_command::SemanticMutation<#snapshot_ty> for #aggregate_ty #where_clause {
             fn kinds() -> &'static [::semio_framework_os_command::SemanticDescriptor] {
                 let _ = <Self as ::protocol::Mutation<#snapshot_ty>>::DESCRIPTORS;
                 &[#(#kind_consts),*]
@@ -334,7 +386,7 @@ pub fn expand_derive_mutations(input: TokenStream) -> TokenStream {
 /// (`mutation_inverse_rows_failures`, design §20.5) — walked over every subset of the owner's standard, since a subset's
 /// fixtures replay through the aggregate too. Nothing is emitted when the owner directory cannot be addressed from the
 /// compiling crate.
-fn mutation_payload_law_test(name: &syn::Ident, snapshot_ty: &Type, authority: &MutationAggregateSourceAuthority, generics: &syn::Generics) -> proc_macro2::TokenStream {
+fn mutation_payload_law_test(name: &syn::Ident, snapshot_ty: &Type, reference_ty: Option<&Type>, authority: &MutationAggregateSourceAuthority, generics: &syn::Generics) -> proc_macro2::TokenStream {
     if !generics.params.is_empty() {
         return quote! {};
     }
@@ -351,7 +403,11 @@ fn mutation_payload_law_test(name: &syn::Ident, snapshot_ty: &Type, authority: &
     let signature = format!("demo_mutation_cases() -> Vec<{name}>");
     let demo_cases = source.lines().any(|line| ["fn ", "pub fn ", "pub(crate) fn "].iter().any(|prefix| line.strip_prefix(prefix).is_some_and(|rest| rest.starts_with(&signature)))).then(|| quote! { ops.extend(demo_mutation_cases()); });
     let test_ident = syn::Ident::new(&format!("semio_payload_law_{}", to_kebab(&name.to_string()).replace('-', "_")), name.span());
-    quote! {
+        let cold_footprint = reference_ty.map(|wire| quote! {
+        let (footprint_failures, _) = ::semio_framework_os_kernel::os_spr::fold::mutation_inverse_rows_failures::<#snapshot_ty, #wire, #name>(&::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join(#footprint_relative));
+        failures.extend(footprint_failures);
+    });
+quote! {
         #[cfg(test)]
         #[test]
         fn #test_ident() {

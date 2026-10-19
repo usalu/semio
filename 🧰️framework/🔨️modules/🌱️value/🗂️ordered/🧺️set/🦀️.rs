@@ -19,7 +19,7 @@ impl OrderedSet {
     /// 🧊️ Cold synchronous lookup; retained membership uses begin_lookup.
     pub fn contains(&self, key: &str) -> bool { self.values.contains_key(key) }
     /// 🧊️ Cold synchronous insertion; retained callers use begin_insert.
-    pub fn insert(&mut self, key: String) -> bool { self.values.insert(key, ()).is_none() }
+    pub fn insert(&mut self, key: String) -> bool { let fresh = !self.values.contains_key(&key); self.values.insert(key, ()); fresh }
     /// 🧊️ Cold synchronous removal; retained callers use begin_remove.
     pub fn remove(&mut self, key: &str) -> bool { self.values.remove(key).is_some() }
     pub fn begin_insert(&self, key: String) -> UpdateCursor<()> { self.values.begin_set(key, ()) }

@@ -183,6 +183,12 @@ impl SurfaceEnergyTable {
         self.len() == 0
     }
 
+    /// 📖️ Borrows one original publication row in opaque-then-window order.
+    pub(crate) fn publication_entry(&self,index:usize)->Option<(EntityId,&SurfaceEnergy)>{let entry=if index<self.opaque.len(){self.opaque.entry_index(index)}else{self.windows.entry_index(index-self.opaque.len())};entry.map(|(id,energy)|(*id,energy))}
+
+    /// 🪟️ Original sorted partition extents define the complete indexed publication.
+    pub(crate) fn publication_counts(&self)->[usize;2]{[self.opaque.len(),self.windows.len()]}
+
     /// 🔥️ Whether any row has integrated anything yet. Before the run period starts every row is a
     /// flat zero, which is indistinguishable from a real uniform result once it reaches a colour map —
     /// so the run job holds the payload back until this is true.

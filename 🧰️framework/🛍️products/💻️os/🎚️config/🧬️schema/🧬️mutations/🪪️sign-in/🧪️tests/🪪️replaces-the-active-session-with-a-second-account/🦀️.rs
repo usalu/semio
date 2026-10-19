@@ -16,6 +16,7 @@
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1).
 
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::{Identity, IdentityConfigMutation, IdentityDiff, IdentitySetting};
 use semio_framework_test_fixtures::fixture_path;
 
@@ -47,7 +48,7 @@ fn session(setting: &IdentitySetting) -> Identity {
 fn replaces_the_whole_active_session() {
     let base = before();
     let outcome = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::diff(&mutation(), &base);
-    let applied = protocol::apply_diff(outcome.diff(), &base).expect("sign-in applies to its committed before-setting");
+    let applied = protocol::apply_diff_cold(outcome.diff(), &base).expect("sign-in applies to its committed before-setting");
     assert_eq!(applied, expected_after(), "sign-in/replaces-the-active-session-with-a-second-account: the replaced session differs from the committed after-snapshot");
     assert_eq!(session(&applied).user_id, "grace", "sign-in/replaces-the-active-session-with-a-second-account: the payload's account must land verbatim on the setting");
     assert_ne!(session(&applied).email, session(&base).email, "sign-in/replaces-the-active-session-with-a-second-account: the prior account must not survive a replacement");
@@ -67,10 +68,10 @@ fn restoring_the_prior_session_restores_before() {
     };
     assert_eq!(undo.user_id, "ada", "sign-in/replaces-the-active-session-with-a-second-account: the undo must carry BASE's own prior account");
     let forward = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::diff(&mutation(), &base);
-    let mut snapshot = protocol::apply_diff(forward.diff(), &base).expect("forward sign-in applies");
+    let mut snapshot = protocol::apply_diff_cold(forward.diff(), &base).expect("forward sign-in applies");
     for step in &inverse {
         let redo = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::diff(step, &snapshot);
-        snapshot = protocol::apply_diff(redo.diff(), &snapshot).expect("the sign-in inverse step applies");
+        snapshot = protocol::apply_diff_cold(redo.diff(), &snapshot).expect("the sign-in inverse step applies");
     }
     assert_eq!(snapshot, base, "sign-in/replaces-the-active-session-with-a-second-account: restoring the prior account did not restore the before-setting");
 }
@@ -126,7 +127,7 @@ fn committed_diff_is_canonical() {
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: IdentityDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed sign-in diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-setting");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-setting");
     assert_eq!(produced, expected_after(), "sign-in/replaces-the-active-session-with-a-second-account: committed diff did not carry before to after");
 }
 

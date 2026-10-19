@@ -26,10 +26,14 @@ export function toolJobFactoryProofJoinSelfTests(): number {
     else if (law.change !== "none") candidate[field[law.change as keyof typeof field]] = "other-authority";
     if (oracle(candidate) !== law.accepted) throw new Error(`factory runtime oracle disagrees for ${law.id}`);
   }
-  const source = readSourceFamilySource(base);
+  const owners = ["🦀️.rs", "🧵️instance/🦀️.rs", "👷️job/🏛️reserved/🦀️.rs", "📜️declaration/👷️job/🦀️.rs", "⚛️reactor/🔌️app/🦀️.rs", "⚛️reactor/🏃️runtime/🦀️.rs", "👷️job/🦀️.rs"] as const;
+  const rootSource = readSourceFamilySource(base);
+  for (const owner of owners.slice(1)) if (!rootSource.includes(`#[path = "${owner}"]`)) throw new Error(`factory runtime owner is not mounted: ${owner}`);
+  const source = owners.map(owner => readFileSync(join(base, owner), "utf8")).join("\n");
   if (!toolJobRuntimeProofQualified(source)) throw new Error("production runtime factory join is not exact");
   const hostile = [
     "A::register_tool_job_factories(&mut app_tool_registry)",
+    "crate::reserved_jobs::tool_job_registration::<A>(&registry, &app_id, A::DOCUMENT_SCHEMA,",
     "row.factory_type_id == Some(registration.factory_type_id)",
     "row.factory_type_name == Some(registration.factory_type_name)",
     "registration.owner == owner",

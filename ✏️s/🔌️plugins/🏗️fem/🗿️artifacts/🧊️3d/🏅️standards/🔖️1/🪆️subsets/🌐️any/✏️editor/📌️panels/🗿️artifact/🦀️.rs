@@ -1,5 +1,5 @@
-//! 📄️ Fem3d play app panel — the artifact tree (outliner): every document entity as one row, in the
 //! order an engineer builds a model (geometry, then restraints, then actions, then the properties
+//! 📄️ Fem3d play app panel — the artifact tree (outliner): every document entity as one row, in the
 //! they reference, then the analysis settings).
 //!
 //! 🕹️ The tree is bound to the framework-owned `"fem3d"` interaction domain and every row's key is
@@ -11,6 +11,8 @@
 //! full `total` beside it. A document past one viewport streams; it never truncates and it never
 //! closes a section with a `+N` row (see `semio_framework_plugin::TreeWindows`).
 
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_load_target;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::Fem3dInteractionSnapshot;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_COMBINATION;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_ELEMENT;
@@ -27,17 +29,17 @@ use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::ui_l
 use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::FEM3D_PLAY_CONTROLLER_ID;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemCombination;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_fem_material::volumetric::FemMaterialValue;
+use semio_s_fem_node::volumetric::FemNodeValue;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSection;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 use semio_framework_plugin::plugin_app_close_prelude::Buildable;
 use semio_framework_plugin::plugin_app_close_prelude::BuiltNode;
 use semio_framework_plugin::plugin_app_close_prelude::HasBase;
@@ -123,7 +125,7 @@ pub fn dof_symbol(dof: FemDof) -> &'static str {
     }
 }
 
-pub fn fem3d_node_label(node: &FemNode) -> String {
+pub fn fem3d_node_label(node: &FemNodeValue) -> String {
     format!("{} · ({}, {}, {})", node.id, fem3d_coordinate(node.x), fem3d_coordinate(node.y), fem3d_coordinate(node.z))
 }
 
@@ -177,7 +179,7 @@ pub fn fem3d_combination_label(combination: &FemCombination) -> String {
 }
 
 /// 🧱️ `E` in gigapascals — the unit an engineer reads a stiffness in, never the raw 2.1e11 Pa.
-pub fn fem3d_material_label(material: &FemMaterial) -> String {
+pub fn fem3d_material_label(material: &FemMaterialValue) -> String {
     format!("{} · E {} GPa", material.name, fem3d_scalar(material.e / 1e9))
 }
 
@@ -206,7 +208,12 @@ pub fn fem3d_analysis_description(document: &Fem3dSnapshot, labels: &Fem3dLabels
 /// one-page `UiValue` argument arena and starves every panel rendered beside the tree, and focus and
 /// delete live in the inspector for the same reason.
 fn entity_item(id: &str, granularity: &str, label: &str, description: &LabelText, icon: &str, dimmed: bool) -> UiAssemblyResult<ui::TreeItemBuilder> {
-    let item = ui::tree_item(UiLabel(UiText::clipped(label))).try_id(id).map_err(|_| capacity_error("fem3d artifact row id admission failed"))?;
+    let identity = if granularity == FEM3D_GRANULARITY_LOAD {
+        let segments = protocol::wire::decode_scoped_identity(id).map_err(|_| capacity_error("fem3d load identity refused"))?;
+        if !matches!(segments.as_slice(), [FEM3D_GRANULARITY_LOAD, _, _]) { return Err(capacity_error("fem3d load identity shape refused")); }
+        id.to_string()
+    } else { fem3d_entity_target(granularity, id).map_err(|_| capacity_error("fem3d entity identity refused"))? };
+    let item = ui::tree_item(UiLabel(UiText::clipped(label))).try_id(&identity).map_err(|_| capacity_error("fem3d artifact row id admission failed"))?;
     Ok(item.icon(icon_text(icon)?).description(UiText::clipped(description.as_str())).dimmed(dimmed).granularity(granularity_text(granularity)?))
 }
 
@@ -307,8 +314,8 @@ pub fn build_artifact_tree(document: &Fem3dSnapshot, interaction: &Fem3dInteract
             |case| {
                 let dimmed = case.loads.is_empty() && !case.self_weight;
                 let item = entity_item(&case.id, FEM3D_GRANULARITY_LOAD_CASE, &fem3d_load_case_label(case, labels), &labels.load_case, "list", dimmed)?;
-                tree_window_item(windows, item, &case.id, true, &case.loads, |load| {
-                    entity_row(load_id(load), FEM3D_GRANULARITY_LOAD, &fem3d_load_label(load, labels), &labels.load, "arrow-down", load_is_dangling(document, load))
+                tree_window_item(windows, item, &fem3d_entity_target(FEM3D_GRANULARITY_LOAD_CASE, &case.id).map_err(|_| capacity_error("fem3d load case identity refused"))?, true, &case.loads, |load| {
+                    entity_row(&fem3d_load_target(&case.id, load_id(load)).map_err(|_| capacity_error("fem3d load identity refused"))?, FEM3D_GRANULARITY_LOAD, &fem3d_load_label(load, labels), &labels.load, "arrow-down", load_is_dangling(document, load))
                 })
             },
             placeholder.clone(),
@@ -323,7 +330,7 @@ pub fn build_artifact_tree(document: &Fem3dSnapshot, interaction: &Fem3dInteract
                 let dimmed = combination.terms.keys().any(|case_id| !document.load_cases.iter().any(|case| &case.id == case_id));
                 let item = entity_item(&combination.id, FEM3D_GRANULARITY_COMBINATION, &fem3d_combination_label(combination), &labels.combination, "link", dimmed)?;
                 let terms: Vec<(&String, &f64)> = combination.terms.iter().collect();
-                tree_window_item(windows, item, &combination.id, true, &terms, |(case_id, factor)| term_row(combination, case_id, **factor, labels))
+                tree_window_item(windows, item, &fem3d_entity_target(FEM3D_GRANULARITY_COMBINATION, &combination.id).map_err(|_| capacity_error("fem3d combination identity refused"))?, true, &terms, |(case_id, factor)| term_row(combination, case_id, **factor, labels))
             },
             placeholder.clone(),
         )?

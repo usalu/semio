@@ -1,0 +1,9 @@
+{
+  "cases": [
+    { "name": "puzzle object", "domain": "puzzle3d", "defaultGranularity": "object", "instance": { "id": "piece:one" }, "expected": { "granularity": "object", "id": "piece:one" } },
+    { "name": "FEM node", "domain": "fem3d", "defaultGranularity": "node", "instance": { "id": "scope:1:4:node2:n1", "interactionGranularityId": "node" }, "expected": { "granularity": "node", "id": "scope:1:4:node2:n1" } },
+    { "name": "FEM element", "domain": "fem3d", "defaultGranularity": "node", "instance": { "id": "scope:1:7:element2:e1", "interactionGranularityId": "element" }, "expected": { "granularity": "element", "id": "scope:1:7:element2:e1" } },
+    { "name": "FEM load glyph", "domain": "fem3d", "defaultGranularity": "node", "instance": { "id": "glyph:head", "interactionGranularityId": "load", "interactionId": "scope:1:4:load4:live2:l6" }, "expected": { "granularity": "load", "id": "scope:1:4:load4:live2:l6" } },
+    { "name": "arbitrary generic target", "domain": "custom", "defaultGranularity": "item", "instance": { "id": "reference:datum-a", "interactionGranularityId": "cell", "interactionId": "custom:cell:α" }, "expected": { "granularity": "cell", "id": "custom:cell:α" } }
+  ]
+}

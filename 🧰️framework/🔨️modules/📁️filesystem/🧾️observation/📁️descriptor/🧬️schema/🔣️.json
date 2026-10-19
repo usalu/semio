@@ -1039,6 +1039,7 @@
         "fileOpenReparse": 2097152,
         "objectDontReparse": 4096,
         "shareRead": 1,
+        "shareWrite": 2,
         "genericRead": 2147483648,
         "genericWrite": 1073741824,
         "delete": 65536,
@@ -2278,7 +2279,7 @@
         "overwriteCapsule": false,
         "durability": "intent-capsule-parent-before-exchange-receipt-capsule-parent-before-result",
         "unknownDisplaced": "retain-and-refuse-without-rollback",
-        "windows": "pre-effect-refusal-until-rooted-sharing-qualified",
+        "windows": "held-source-no-replace-move-before-binding-under-domain-ex",
         "receiver": "original-root-frame-only",
         "identityTransition": "same-seven-fields-except-nondecreasing-ctime-after-own-exchange",
         "combinedExpectations": "shares-existing-binding-counter",
@@ -2738,7 +2739,7 @@
             ]
           }
         },
-        "windows": "pre-effect-refusal-until-rooted-sharing-qualified"
+        "windows": "held-source-no-replace-move-before-binding-under-domain-ex"
       }
     },
     "RelativeRetentionCase": {
@@ -3148,7 +3149,16 @@
         "publication": "absent-no-replace-or-retaining-exchange",
         "retained": "exact-displaced-inode-and-sha256-no-unlink-no-rollback",
         "authority": "ordinary-filesystem-only",
-        "windows": "pre-effect-refusal-until-atomic-preserving-owner-qualified",
+        "windows": "held-prior-preserve-then-absent-no-replace-publish-under-domain-ex",
+        "windowsRename": {
+          "informationClass": 10,
+          "replaceExisting": false,
+          "rootOffset": 8,
+          "nameLengthOffset": 16,
+          "nameOffset": 20,
+          "minimumBytes": 24,
+          "failure": "retain-prior-and-stage-without-rollback-or-unlink"
+        },
         "finalFence": "resource-free-descriptor-relative-nofollow-seven-fields-after-all-file-directory-and-publication-library-closes",
         "linuxStatx": {
           "symbol": "statx",

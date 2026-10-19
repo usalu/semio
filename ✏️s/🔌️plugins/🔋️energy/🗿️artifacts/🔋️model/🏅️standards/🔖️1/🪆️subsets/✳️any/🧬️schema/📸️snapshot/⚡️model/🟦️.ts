@@ -34,7 +34,8 @@ export interface EnergyThermalEnclosure{id:number;name:string;zone_ids:number[]}
 export interface EnergyAdjacencyPair{surface_a_id:number;surface_b_id:number}
 export interface EnergyAirflowNetwork{zone_node_ids:[number,number][];outdoor_node_id:number;link_ids:number[]}
 export interface EnergyElectricalLoadCenter{id:number;name:string;generator_ids:number[];pv_ids:number[];battery_ids:number[]}
-export interface EnergyPvSystem{id:number;dc_capacity_w:EnergyFloat;area_m2:EnergyFloat;tilt_deg:EnergyFloat;azimuth_deg:EnergyFloat;module_efficiency:EnergyFloat;inverter_efficiency:EnergyFloat}
+export type EnergyPhotovoltaicMounting="OpenRack"|"CloseRoof"|"InsulatedBack";
+export interface EnergyPvSystem{temperature_coefficient:EnergyFloat;faiman_heat_loss_constant_w_m2k:EnergyFloat;faiman_heat_loss_wind_w_s_m3k:EnergyFloat;mounting:EnergyPhotovoltaicMounting;id:number;dc_capacity_w:EnergyFloat;area_m2:EnergyFloat;tilt_deg:EnergyFloat;azimuth_deg:EnergyFloat;module_efficiency:EnergyFloat;inverter_efficiency:EnergyFloat}
 export interface EnergyBattery{id:number;capacity_kwh:EnergyFloat;max_charge_w:EnergyFloat;max_discharge_w:EnergyFloat;round_trip_efficiency:EnergyFloat}
 export interface EnergyShwSystem{id:number;heater_capacity_w:EnergyFloat;storage_volume_m3:EnergyFloat;setpoint_c:EnergyFloat;schedule_id:number}
 export interface EnergySolarThermal{id:number;collector_area_m2:EnergyFloat;efficiency:EnergyFloat;storage_volume_m3:EnergyFloat;tilt_deg:EnergyFloat;azimuth_deg:EnergyFloat}

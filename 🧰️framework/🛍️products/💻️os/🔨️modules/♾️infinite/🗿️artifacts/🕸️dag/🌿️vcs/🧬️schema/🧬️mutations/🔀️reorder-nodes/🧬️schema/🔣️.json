@@ -5,33 +5,48 @@
   "propertyNames": {
     "enum": [
       "operation",
-      "order"
+      "moves"
     ]
   },
   "type": "object",
   "additionalProperties": false,
   "required": [
     "operation",
-    "order"
+    "moves"
   ],
   "properties": {
     "operation": {
       "const": "reorderNodes"
     },
-    "order": {
+    "moves": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "to"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "to": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 18446744073709551615
+          }
+        }
       },
       "x-semio-ui": {
         "role": "value",
         "label": {
-          "en": "Node order",
-          "de": "Knotenreihenfolge"
+          "en": "Node moves",
+          "de": "Knotenverschiebungen"
         },
         "description": {
-          "en": "Every node id in its new order.",
-          "de": "Alle Knoten-IDs in ihrer neuen Reihenfolge."
+          "en": "Each step places one node at a z-stack position, counted in the order left by the steps before it.",
+          "de": "Jeder Schritt setzt einen Knoten an eine Position im Z-Stapel, gezählt in der Reihenfolge nach den vorigen Schritten."
         },
         "group": "record",
         "order": 10

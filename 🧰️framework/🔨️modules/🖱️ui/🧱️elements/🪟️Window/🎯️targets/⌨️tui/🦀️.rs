@@ -7,7 +7,7 @@
 //! can reach them.
 
 use semio_framework_ui_tui_core::cell::{attr, Cell, CellBuffer};
-use crate::chrome::{window_chip_layout, ChromeMode, TabKind, WindowChipLayout, WindowCornerTab, WindowHit, WindowState, WindowTab};
+use crate::chrome::{window_chip_layout, window_drag_glyph, ChromeMode, TabKind, WindowChipLayout, WindowCornerTab, WindowHit, WindowState, WindowTab};
 use semio_framework_ui_tui_core::geometry::{Pos, Rect};
 use crate::layout::WindowStackCorner;
 use semio_framework_ui_tui_core::theme::{Glyph, GlyphSet, Rgb, Role, Surface, Theme};
@@ -34,6 +34,7 @@ struct Frame<'a> {
     bg: Rgb,
     left: u16,
     right: u16,
+    emphasized: bool,
 }
 
 const LIGHT: Lines = Lines { h: '\u{2500}', v: '\u{2502}', tl: '\u{250c}', tr: '\u{2510}', bl: '\u{2514}', br: '\u{2518}', up: '\u{2534}', down: '\u{252c}', right: '\u{251c}', left: '\u{2524}' };
@@ -64,18 +65,36 @@ struct ChipPaint {
 
 fn chip_paint(w: &WindowState, theme: &Theme, tab: &WindowCornerTab, window_bg: Rgb) -> ChipPaint {
     let hovered = match (w.hover, tab.kind) {
-        (Some(WindowHit::Tab(i) | WindowHit::Close(i)), TabKind::Tab) => i == tab.index,
+        (Some(WindowHit::Tab(i) | WindowHit::Close(i) | WindowHit::Maximize(i)), TabKind::Tab) => i == tab.index,
         (Some(WindowHit::OverflowPrev(t)), TabKind::OverflowPrev(target)) => t == target,
         (Some(WindowHit::OverflowNext(t)), TabKind::OverflowNext(target)) => t == target,
         _ => false,
     };
     if tab.kind == TabKind::Tab && tab.index == w.active_stack_tab {
-        return ChipPaint { fg: theme.role(Role::ActiveForeground), bg: theme.role(Role::ActiveBase), attrs: attr::BOLD };
+        return ChipPaint { fg: theme.role(Role::Foreground), bg: window_bg, attrs: attr::BOLD };
     }
     if hovered || (tab.kind == TabKind::Tab && w.drop_target == Some(tab.index)) {
         return ChipPaint { fg: theme.role(Role::Foreground), bg: theme.role(Role::HoverInteractive), attrs: 0 };
     }
     ChipPaint { fg: theme.role(Role::MutedForeground), bg: window_bg, attrs: 0 }
+}
+
+fn chip_border_role(w: &WindowState, tab: &WindowCornerTab, emphasized: bool) -> Role {
+    if tab.kind == TabKind::Tab && tab.index == w.active_stack_tab {
+        return Role::ActiveBase;
+    }
+    let hovered = match (w.hover, tab.kind) {
+        (Some(WindowHit::Tab(i) | WindowHit::Close(i) | WindowHit::Maximize(i)), TabKind::Tab) => i == tab.index,
+        (Some(WindowHit::OverflowPrev(i)), TabKind::OverflowPrev(target)) => i == target,
+        (Some(WindowHit::OverflowNext(i)), TabKind::OverflowNext(target)) => i == target,
+        (Some(WindowHit::Maximize(_) | WindowHit::NewTab(_)), TabKind::Controls) => true,
+        _ => false,
+    };
+    if emphasized || hovered { Role::BorderEmphasized } else { Role::BorderNormal }
+}
+
+fn chip_border(w: &WindowState, theme: &Theme, tab: &WindowCornerTab, emphasized: bool) -> Rgb {
+    theme.role(chip_border_role(w, tab, emphasized))
 }
 
 /// 🪟 Paints the interior text of one chip and lights the hovered control glyph.
@@ -87,6 +106,11 @@ fn paint_chip_text(buf: &mut CellBuffer, w: &WindowState, theme: &Theme, tab: &W
     let mut draw = |x: u16, glyph: &str, fg: Rgb| {
         buf.put_str(Pos { x, y }, glyph, fg, paint.bg, paint.attrs, clip);
     };
+    match tab.kind {
+        TabKind::OverflowPrev(_) => draw(tab.x + 1 + if tab.interior_width == 1 { 0 } else { 1 }, set.glyph(Glyph::PreviousOption), paint.fg),
+        TabKind::OverflowNext(_) => draw(tab.x + 1 + if tab.interior_width == 1 { 0 } else { tab.interior_width - 2 }, set.glyph(Glyph::NextOption), paint.fg),
+        _ => {}
+    }
     if let (TabKind::Tab, Some(status)) = (tab.kind, tab.status) {
         let active = tab.index == w.active_stack_tab;
         draw(tab.x + 2, status.glyph(set, w.spin), if active { paint.fg } else { theme.role(status.role()) });
@@ -97,15 +121,51 @@ fn paint_chip_text(buf: &mut CellBuffer, w: &WindowState, theme: &Theme, tab: &W
     if let Some(x) = tab.maximize_x {
         draw(x, if w.zoomed { restore_glyph(set) } else { set.glyph(Glyph::Maximize) }, paint.fg);
     }
+    if let Some(x) = tab.drag_x {
+        draw(x, window_drag_glyph(set), paint.fg);
+    }
+    if let Some(x) = tab.drag_x {
+        if let Some(cell) = buf.get(x, y).copied() {
+            let attrs = (paint.attrs & !attr::BOLD) | if w.hover_drag == Some(tab.index) { attr::BOLD } else { 0 };
+            buf.put(x, y, Cell { attrs, ..cell });
+        }
+    }
     let lit = match (w.hover, tab.kind) {
         (Some(WindowHit::Close(i)), TabKind::Tab) if i == tab.index => tab.close_x,
-        (Some(WindowHit::Maximize(_)), TabKind::Controls) => tab.maximize_x,
+        (Some(WindowHit::Maximize(i)), TabKind::Tab) if i == tab.index => tab.maximize_x,
         (Some(WindowHit::NewTab(_)), TabKind::Controls) => tab.new_x,
         _ => None,
     };
     if let Some(x) = lit {
         if let Some(cell) = buf.get(x, y).copied() {
             buf.put(x, y, Cell { fg: theme.role(Role::Foreground), bg: theme.role(Role::HoverInteractive), attrs: attr::BOLD, ..cell });
+        }
+    }
+}
+
+/// 🔮️ Paints only the projected selected tab with the same cap, grip, controls and open seam as its committed window.
+pub(crate) fn paint_window_tab_preview(w: &WindowState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+    let layout = window_chip_layout(w, rect);
+    if layout.mode == ChromeMode::Flat { return; }
+    let g = lines(w.focused);
+    let bg = theme.surface(Surface::Window);
+    let frame = Frame { lines: g, border: theme.role(if w.focused { Role::ActiveBase } else { Role::BorderNormal }), bg, left: rect.x, right: rect.x + rect.width - 1, emphasized: false };
+    for group in &layout.groups {
+        for tab in group.tabs.iter().filter(|tab| tab.kind == TabKind::Tab && tab.index == w.active_stack_tab) {
+            let paint = chip_paint(w, theme, tab, bg);
+            let tab_border = chip_border(w, theme, tab, false);
+            if layout.mode == ChromeMode::Compact {
+                let end = tab.x + tab.interior_width + 1;
+                buf.put(tab.x, rect.y, Cell { ch: if tab.x == frame.left { g.tl } else { g.down }, fg: tab_border, bg, attrs: 0, width: 1 });
+                paint_chip_text(buf, w, theme, tab, rect.y, &paint);
+                buf.put(end, rect.y, Cell { ch: if end == frame.right { g.tr } else { g.down }, fg: tab_border, bg, attrs: 0, width: 1 });
+            } else {
+                let bottom = !group.corner.is_top();
+                let seam = if bottom { layout.bottom_body_y.unwrap() } else { layout.top_body_y };
+                let y = if bottom { seam } else { rect.y };
+                paint_corner_tab(buf, y, tab, bottom, &Frame { border: tab_border, ..frame }, &|buf, tab, text_y| paint_chip_text(buf, w, theme, tab, text_y, &paint));
+                paint_tab_seam(buf, &tab.as_window_tab(), seam, true, bottom, &frame, tab_border);
+            }
         }
     }
 }
@@ -135,8 +195,8 @@ fn paint_corner_tab(buf: &mut CellBuffer, y: u16, tab: &WindowCornerTab, is_bott
 }
 
 /// 🪡 Joins one tab to the body hairline. Inactive tabs keep that edge; only the active tab leaves it open.
-fn paint_tab_seam(buf: &mut CellBuffer, tab: &WindowTab, y: u16, active: bool, is_bottom: bool, frame: &Frame<'_>) {
-    let Frame { lines: g, border, bg, left: window_left, right: window_right } = *frame;
+fn paint_tab_seam(buf: &mut CellBuffer, tab: &WindowTab, y: u16, active: bool, is_bottom: bool, frame: &Frame<'_>, tab_border: Rgb) {
+    let Frame { lines: g, border, bg, left: window_left, right: window_right, .. } = *frame;
     let left = tab.x;
     let right = tab.x + tab.interior_width + 1;
     let at_left = left == window_left;
@@ -147,12 +207,13 @@ fn paint_tab_seam(buf: &mut CellBuffer, tab: &WindowTab, y: u16, active: bool, i
         (false, true) => (if at_left { g.v } else { g.br }, if at_right { g.v } else { g.bl }),
         (false, false) => (if at_left { g.right } else { g.up }, if at_right { g.left } else { g.up }),
     };
-    buf.put(left, y, Cell { ch: left_ch, fg: border, bg, attrs: 0, width: 1 });
+    let junction = if active { tab_border } else { border };
+    buf.put(left, y, Cell { ch: left_ch, fg: junction, bg, attrs: 0, width: 1 });
     if tab.interior_width > 0 {
         let ch = if active { ' ' } else { g.h };
         buf.hline(Pos { x: left + 1, y }, tab.interior_width, ch, if active { bg } else { border }, bg);
     }
-    buf.put(right, y, Cell { ch: right_ch, fg: border, bg, attrs: 0, width: 1 });
+    buf.put(right, y, Cell { ch: right_ch, fg: junction, bg, attrs: 0, width: 1 });
 }
 
 /// 🚪 Fills the union of the body and raised chips. Notches stay on the parent surface.
@@ -202,29 +263,39 @@ fn paint_compact(buf: &mut CellBuffer, rect: Rect, w: &WindowState, theme: &Them
     for group in &layout.groups {
         for tab in &group.tabs {
             let paint = chip_paint(w, theme, tab, bg);
+            let tab_border = chip_border(w, theme, tab, frame.emphasized);
             let wall = if tab.x == rect.x { g.tl } else { g.down };
-            buf.put(tab.x, rect.y, Cell { ch: wall, fg: border, bg, attrs: 0, width: 1 });
+            buf.put(tab.x, rect.y, Cell { ch: wall, fg: tab_border, bg, attrs: 0, width: 1 });
             paint_chip_text(buf, w, theme, tab, rect.y, &paint);
             let end = tab.x + tab.interior_width + 1;
             let end_ch = if end == right_x { g.tr } else { g.down };
-            buf.put(end, rect.y, Cell { ch: end_ch, fg: border, bg, attrs: 0, width: 1 });
+            buf.put(end, rect.y, Cell { ch: end_ch, fg: tab_border, bg, attrs: 0, width: 1 });
+        }
+    }
+    for role in [Role::BorderEmphasized, Role::ActiveBase] {
+        for tab in layout.groups.iter().flat_map(|group| &group.tabs).filter(|tab| chip_border_role(w, tab, frame.emphasized) == role) {
+            for x in [tab.x, tab.x + tab.interior_width + 1] {
+                if let Some(cell) = buf.get(x, rect.y).copied() {
+                    buf.put(x, rect.y, Cell { fg: theme.role(role), ..cell });
+                }
+            }
         }
     }
 }
 
 /// 🖌️ Paints one closed window outline. Raised chips step out of the body and the notches beside them stay outside it.
-pub fn paint_window(w: &WindowState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+pub fn paint_window(w: &WindowState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, emphasized: bool) {
     if rect.width < 2 || rect.height < 2 {
         return;
     }
     let bg = theme.surface(Surface::Window);
-    let border = if w.focused { theme.role(Role::ActiveBase) } else { theme.role(Role::BorderNormal) };
+    let border = theme.role(if emphasized { Role::BorderEmphasized } else if w.focused { Role::ActiveBase } else { Role::BorderNormal });
     let fg = theme.role(Role::Foreground);
     let g = lines(w.focused);
     let bottom_y = rect.y + rect.height - 1;
     let right_x = rect.x + rect.width - 1;
     let layout = window_chip_layout(w, rect);
-    let frame = Frame { lines: g, border, bg, left: rect.x, right: right_x };
+    let frame = Frame { lines: g, border, bg, left: rect.x, right: right_x, emphasized };
     fill_silhouette(buf, rect, &layout, Cell::blank(fg, bg));
 
     if layout.mode == ChromeMode::Flat {
@@ -271,7 +342,8 @@ pub fn paint_window(w: &WindowState, theme: &Theme, rect: Rect, buf: &mut CellBu
         let y = if is_bottom { layout.bottom_body_y.unwrap_or(rect.y + rect.height.saturating_sub(3)) } else { rect.y };
         for tab in &group.tabs {
             let paint = chip_paint(w, theme, tab, bg);
-            paint_corner_tab(buf, y, tab, is_bottom, &frame, &|buf, tab, text_y| paint_chip_text(buf, w, theme, tab, text_y, &paint));
+            let tab_frame = Frame { border: chip_border(w, theme, tab, emphasized), ..frame };
+            paint_corner_tab(buf, y, tab, is_bottom, &tab_frame, &|buf, tab, text_y| paint_chip_text(buf, w, theme, tab, text_y, &paint));
         }
     }
 
@@ -291,7 +363,7 @@ pub fn paint_window(w: &WindowState, theme: &Theme, rect: Rect, buf: &mut CellBu
         for group in layout.groups.iter().filter(|group| group.corner.is_top()) {
             for tab in &group.tabs {
                 let open = tab.kind == TabKind::Tab && tab.index == w.active_stack_tab;
-                paint_tab_seam(buf, &tab.as_window_tab(), top_body_y, open, false, &frame);
+                paint_tab_seam(buf, &tab.as_window_tab(), top_body_y, open, false, &frame, chip_border(w, theme, tab, emphasized));
             }
         }
     }
@@ -311,7 +383,7 @@ pub fn paint_window(w: &WindowState, theme: &Theme, rect: Rect, buf: &mut CellBu
         for group in layout.groups.iter().filter(|group| !group.corner.is_top()) {
             for tab in &group.tabs {
                 let open = tab.kind == TabKind::Tab && tab.index == w.active_stack_tab;
-                paint_tab_seam(buf, &tab.as_window_tab(), bottom_body_y, open, true, &frame);
+                paint_tab_seam(buf, &tab.as_window_tab(), bottom_body_y, open, true, &frame, chip_border(w, theme, tab, emphasized));
             }
         }
     }

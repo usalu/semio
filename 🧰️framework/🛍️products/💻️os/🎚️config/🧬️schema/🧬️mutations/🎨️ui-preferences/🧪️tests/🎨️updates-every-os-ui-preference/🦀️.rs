@@ -1,5 +1,6 @@
 //! 🧪️ Language-neutral OS UI-preference mutation fixture.
 
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::super::super::UiPreferences;
 use super::super::UiPreferencesConfigMutation;
 use semio_framework_test_fixtures::fixture_path;
@@ -32,14 +33,14 @@ fn every_persisted_ui_preference_folds_and_inverts() {
     for mutation in mutations() {
         inverses.push(<UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::inverse(&mutation, &snapshot).expect("valid retained mutation inverse fixture"));
         let outcome = <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::diff(&mutation, &snapshot);
-        snapshot = protocol::apply_diff(outcome.diff(), &snapshot).expect("UI-preferences mutation applies");
+        snapshot = protocol::apply_diff_cold(outcome.diff(), &snapshot).expect("UI-preferences mutation applies");
         assert!(outcome.messages().is_empty(), "fixture mutations must change their requested preference");
     }
     assert_eq!(snapshot, preferences(AFTER.as_str()));
     for group in inverses.into_iter().rev() {
         for mutation in group {
             let outcome = <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::diff(&mutation, &snapshot);
-            snapshot = protocol::apply_diff(outcome.diff(), &snapshot).expect("inverse UI-preferences mutation applies");
+            snapshot = protocol::apply_diff_cold(outcome.diff(), &snapshot).expect("inverse UI-preferences mutation applies");
         }
     }
     assert_eq!(snapshot, original);

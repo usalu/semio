@@ -1,0 +1,21 @@
+{
+  "title": "Prepare Architektur und Technologie for End-to-End Deployment",
+  "emoji": "🎓️",
+  "status": "open",
+  "description": "Resume the existing Architektur und Technologie readiness objective against current October 19 source. The old 26/10/14/GENERALIZE-QUIZ-INTO-COURSE directory contains only generated files and repo MCP ticket_reopen confirms its ticket metadata is absent. Repair current course command/router/E2E/deployment integration regressions, preserve owned compiler authority and runtime-only packaging, register all executable commands in launch.json following current order/group/naming, and verify actual current-source end-to-end release readiness without changing Git/worktrees/AGENTS or losing concurrent work.",
+  "goal": "runningproducts",
+  "sessions": [
+    "b72bedb9-211c-448e-ac81-5db8996a7716"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-10-19 03:02:46",
+      "author": "",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Resume the existing Architektur und Technologie readiness objective against current October 19 source. The old 26/10/14/GENERALIZE-QUIZ-INTO-COURSE directory contains only generated files and repo MCP ticket_reopen confirms its ticket metadata is absent. Repair current course command/router/E2E/deployment integration regressions, preserve owned compiler authority and runtime-only packaging, register all executable commands in launch.json following current order/group/naming, and verify actual current-source end-to-end release readiness without changing Git/worktrees/AGENTS or losing concurrent work."
+    }
+  ]
+}

@@ -10,6 +10,8 @@ pub mod standards {
             pub mod any {
                 #[path = "."]
                 pub mod schema {
+pub use semio_s_artifact_puzzle_5d_mut_any_5::standards::v1::subsets::any::schema::play_snapshot;
+
                     pub use semio_s_artifact_puzzle_5d_schema::standards::v1::subsets::any::schema::*;
                     pub use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records;
                     pub use semio_s_artifact_puzzle_5d_snapshot::standards::v1::subsets::any::schema::snapshot;
@@ -99,7 +101,7 @@ pub mod editor {
             #[path = "../../../../../../../✏️editor/🖌️session/🧱️support/🦀️.rs"]
             pub mod support;
         }
-        pub use semio_s_artifact_puzzle_5d_mut_any_5::editor::puzzle5d::snapshot;
+
         pub use semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities;
         #[path = "../../../../../../../✏️editor/🧭️view/🦀️.rs"]
         pub mod view;

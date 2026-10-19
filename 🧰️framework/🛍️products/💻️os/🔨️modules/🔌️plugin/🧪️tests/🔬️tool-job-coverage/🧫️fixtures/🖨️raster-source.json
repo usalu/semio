@@ -1,0 +1,1823 @@
+{
+  "schemaVersion": 1,
+  "acceptedIdentity": "original",
+  "cases": [
+    {
+      "id": "original",
+      "owner": "raster",
+      "before": "",
+      "after": "",
+      "accepted": true,
+      "category": "actual mounted source"
+    },
+    {
+      "id": "second-owner-struct-RasterStoreInitializationAuthority",
+      "owner": "raster",
+      "before": "",
+      "after": "struct RasterStoreInitializationAuthority",
+      "accepted": false,
+      "category": "single semantic apply owner"
+    },
+    {
+      "id": "second-owner-struct-RasterMutationCandidateAuthority",
+      "owner": "raster",
+      "before": "",
+      "after": "struct RasterMutationCandidateAuthority",
+      "accepted": false,
+      "category": "single semantic apply owner"
+    },
+    {
+      "id": "second-owner-struct-RasterOneItemApply",
+      "owner": "raster",
+      "before": "",
+      "after": "struct RasterOneItemApply",
+      "accepted": false,
+      "category": "single semantic apply owner"
+    },
+    {
+      "id": "second-owner-struct-RasterSnapshotCloneAuthority",
+      "owner": "raster",
+      "before": "",
+      "after": "struct RasterSnapshotCloneAuthority",
+      "accepted": false,
+      "category": "single semantic apply owner"
+    },
+    {
+      "id": "second-owner-struct-RasterLayerCloneAuthority",
+      "owner": "raster",
+      "before": "",
+      "after": "struct RasterLayerCloneAuthority",
+      "accepted": false,
+      "category": "single semantic apply owner"
+    },
+    {
+      "id": "second-owner-struct-RasterLayerLocator",
+      "owner": "raster",
+      "before": "",
+      "after": "struct RasterLayerLocator",
+      "accepted": false,
+      "category": "single semantic apply owner"
+    },
+    {
+      "id": "second-owner-struct-RasterStorePreparationFactory",
+      "owner": "raster",
+      "before": "",
+      "after": "struct RasterStorePreparationFactory",
+      "accepted": false,
+      "category": "single semantic apply owner"
+    },
+    {
+      "id": "second-owner-fn-build-document-store-initialization-job",
+      "owner": "raster",
+      "before": "",
+      "after": "fn build_document_store_initialization_job",
+      "accepted": false,
+      "category": "single semantic apply owner"
+    },
+    {
+      "id": "second-owner-raster-document-store-initialization-job",
+      "owner": "raster",
+      "before": "",
+      "after": "raster_document_store_initialization_job",
+      "accepted": false,
+      "category": "single semantic apply owner"
+    },
+    {
+      "id": "second-owner-fn-node-at-mut",
+      "owner": "raster",
+      "before": "",
+      "after": "fn node_at_mut",
+      "accepted": false,
+      "category": "single semantic apply owner"
+    },
+    {
+      "id": "second-owner-fn-container-mut",
+      "owner": "raster",
+      "before": "",
+      "after": "fn container_mut",
+      "accepted": false,
+      "category": "single semantic apply owner"
+    },
+    {
+      "id": "second-owner-snapshot-mut",
+      "owner": "raster",
+      "before": "",
+      "after": "snapshot_mut",
+      "accepted": false,
+      "category": "single semantic apply owner"
+    },
+    {
+      "id": "second-owner-operation-diff-",
+      "owner": "raster",
+      "before": "",
+      "after": "operation.diff(",
+      "accepted": false,
+      "category": "single semantic apply owner"
+    },
+    {
+      "id": "second-owner-diff-apply-",
+      "owner": "raster",
+      "before": "",
+      "after": "diff.apply(",
+      "accepted": false,
+      "category": "single semantic apply owner"
+    },
+    {
+      "id": "factory-None",
+      "owner": "editor",
+      "before": "Some(store::mutation_apply_preparation_factory::<RasterSnapshot, RasterMutation>())",
+      "after": "None",
+      "accepted": false,
+      "category": "funded shared factory"
+    },
+    {
+      "id": "factory-Some-std-sync-Arc-new-RasterStorePreparationFactory-",
+      "owner": "editor",
+      "before": "Some(store::mutation_apply_preparation_factory::<RasterSnapshot, RasterMutation>())",
+      "after": "Some(std::sync::Arc::new(RasterStorePreparationFactory))",
+      "accepted": false,
+      "category": "funded shared factory"
+    },
+    {
+      "id": "factory-Some-unfunded-factory-",
+      "owner": "editor",
+      "before": "Some(store::mutation_apply_preparation_factory::<RasterSnapshot, RasterMutation>())",
+      "after": "Some(unfunded_factory())",
+      "accepted": false,
+      "category": "funded shared factory"
+    },
+    {
+      "id": "field-catalog",
+      "owner": "raster",
+      "before": "pub struct RasterEnvelopeOwnedFieldCatalog",
+      "after": "pub struct RemovedFieldCatalog",
+      "accepted": false,
+      "category": "owned field catalog"
+    },
+    {
+      "id": "whole-edit-decoder",
+      "owner": "raster",
+      "before": "artifact_owned_spr_edit_history_decoder",
+      "after": "artifact_bounded_history_entry_decoder",
+      "accepted": false,
+      "category": "owned wire decoding"
+    },
+    {
+      "id": "shared-array-authority",
+      "owner": "store",
+      "before": "struct ArtifactOwnedSprMutationArrayAuthority",
+      "after": "struct WholeMutationArray",
+      "accepted": false,
+      "category": "owned wire decoding"
+    },
+    {
+      "id": "owned-grant",
+      "owner": "raster",
+      "before": "retirement::admit_owned_retirement(value, grant)",
+      "after": "retirement::admit_owned_retirement(value, Default::default())",
+      "accepted": false,
+      "category": "original typed frame admission"
+    },
+    {
+      "id": "shared-lease",
+      "owner": "raster",
+      "before": "retirement::shared::admit_shared_retirement(snapshot, grant, true)",
+      "after": "retirement::shared::admit_shared_retirement(snapshot, grant, false)",
+      "accepted": false,
+      "category": "original shared alias custody"
+    },
+    {
+      "id": "field-stale",
+      "owner": "raster",
+      "before": "cx.operation() != self.operation || cx.generation() != self.generation",
+      "after": "false",
+      "accepted": false,
+      "category": "generation identity"
+    },
+    {
+      "id": "field-cancel",
+      "owner": "raster",
+      "before": "if cx.is_cancelled()",
+      "after": "if false",
+      "accepted": false,
+      "category": "cancellation"
+    },
+    {
+      "id": "field-deadline",
+      "owner": "raster",
+      "before": "if cx.should_yield()",
+      "after": "if false",
+      "accepted": false,
+      "category": "fuel deadline admission"
+    },
+    {
+      "id": "field-close-copy",
+      "owner": "raster",
+      "before": "grant.maximum_copy_bytes < demand.copy_bytes",
+      "after": "false",
+      "accepted": false,
+      "category": "copy currency"
+    },
+    {
+      "id": "field-close-capacity",
+      "owner": "raster",
+      "before": "grant.maximum_capacity_bytes < demand.capacity_bytes",
+      "after": "false",
+      "accepted": false,
+      "category": "capacity currency"
+    },
+    {
+      "id": "field-close-release",
+      "owner": "raster",
+      "before": "grant.maximum_release_bytes < demand.release_bytes",
+      "after": "false",
+      "accepted": false,
+      "category": "release currency"
+    },
+    {
+      "id": "field-close-depth",
+      "owner": "raster",
+      "before": "grant.maximum_depth < demand.depth",
+      "after": "false",
+      "accepted": false,
+      "category": "depth currency"
+    },
+    {
+      "id": "field-close-items",
+      "owner": "raster",
+      "before": "grant.maximum_items == 0",
+      "after": "false",
+      "accepted": false,
+      "category": "item currency"
+    },
+    {
+      "id": "field-value-drop",
+      "owner": "raster",
+      "before": "artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant)",
+      "after": "drop(self.value.take())",
+      "accepted": false,
+      "category": "nested owner retirement"
+    },
+    {
+      "id": "field-drop",
+      "owner": "raster",
+      "before": "decode reached Drop before publication or bounded retirement",
+      "after": "silently drop decode",
+      "accepted": false,
+      "category": "terminal-empty refusal"
+    },
+    {
+      "id": "map-capacity",
+      "owner": "raster",
+      "before": "pub const RASTER_OWNED_MAP_CAPACITY: usize = 64;",
+      "after": "pub const RASTER_OWNED_MAP_CAPACITY: usize = 65;",
+      "accepted": false,
+      "category": "fixed map saturation"
+    },
+    {
+      "id": "map-page-items",
+      "owner": "raster",
+      "before": "pub const RASTER_OWNED_MAP_PAGE_CAPACITY: usize = 8;",
+      "after": "pub const RASTER_OWNED_MAP_PAGE_CAPACITY: usize = 64;",
+      "accepted": false,
+      "category": "bounded map pages"
+    },
+    {
+      "id": "map-growable",
+      "owner": "raster",
+      "before": "pages: std::mem::ManuallyDrop<[Option<Box<RasterOwnedMapPage<V>>>; RASTER_OWNED_MAP_PAGE_COUNT]>",
+      "after": "pages: Vec<Box<RasterOwnedMapPage<V>>>",
+      "accepted": false,
+      "category": "fixed backing custody"
+    },
+    {
+      "id": "map-plus-one",
+      "owner": "raster",
+      "before": "if self.length >= RASTER_OWNED_MAP_CAPACITY",
+      "after": "if false",
+      "accepted": false,
+      "category": "capacity plus one original refusal"
+    },
+    {
+      "id": "map-displaced-key",
+      "owner": "raster",
+      "before": "RasterOwnedMapEntry::new(previous_key, previous_value)",
+      "after": "RasterOwnedMapEntry::new(String::new(), previous_value)",
+      "accepted": false,
+      "category": "exact displaced key handback"
+    },
+    {
+      "id": "map-remove-pair",
+      "owner": "raster",
+      "before": "pub fn remove_entry(&mut self, key: &str)",
+      "after": "pub fn remove(&mut self, key: &str)",
+      "accepted": false,
+      "category": "exact removed pair handback"
+    },
+    {
+      "id": "map-drop-empty",
+      "owner": "raster",
+      "before": "self.length == 0 && self.pages.iter().all(Option::is_none)",
+      "after": "true",
+      "accepted": false,
+      "category": "terminal backing refusal"
+    },
+    {
+      "id": "map-deep-drop",
+      "owner": "raster",
+      "before": "RetirementStep::Child(entry.retirement())",
+      "after": "RetirementStep::Complete",
+      "accepted": false,
+      "category": "nested original retirement"
+    },
+    {
+      "id": "map-release",
+      "owner": "raster",
+      "before": "bytes > grant.maximum_release_bytes",
+      "after": "false",
+      "accepted": false,
+      "category": "physical page release admission"
+    },
+    {
+      "id": "map-page-release",
+      "owner": "raster",
+      "before": "page.release();",
+      "after": "drop(page);",
+      "accepted": false,
+      "category": "exact page handback"
+    },
+    {
+      "id": "map-terminal-page",
+      "owner": "raster",
+      "before": "self.map.length == 0 && self.map.allocated_page_count() == 0",
+      "after": "self.map.length == 0",
+      "accepted": false,
+      "category": "backing terminal witness"
+    },
+    {
+      "id": "map-monolithic-clone",
+      "owner": "raster",
+      "before": "RetainedCloneEntriesCursor<Self>",
+      "after": "WholeMapClone<Self>",
+      "accepted": false,
+      "category": "bounded clone owner"
+    },
+    {
+      "id": "map-page-quote",
+      "owner": "raster",
+      "before": "map.page_required_for_insert(key)",
+      "after": "false",
+      "accepted": false,
+      "category": "page before allocation"
+    },
+    {
+      "id": "map-copy-quote",
+      "owner": "raster",
+      "before": "copy_bytes:size_of::<(String,V)>()+RASTER_OWNED_MAP_CAPACITY+capacity",
+      "after": "copy_bytes:0",
+      "accepted": false,
+      "category": "actual pair page order copying"
+    },
+    {
+      "id": "map-birth-receipt",
+      "owner": "raster",
+      "before": "capacity_bytes:capacity",
+      "after": "capacity_bytes:0",
+      "accepted": false,
+      "category": "physical page allocation receipt"
+    },
+    {
+      "id": "map-rejected-key",
+      "owner": "raster",
+      "before": "self.insert(key,value).map_err(|rejected|(rejected.key,rejected.value))",
+      "after": "self.insert(key,value).map_err(|rejected|(String::new(),rejected.value))",
+      "accepted": false,
+      "category": "exact rejected producer"
+    },
+    {
+      "id": "collection-admission",
+      "owner": "store",
+      "before": "grant.maximum_copy_bytes < bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth",
+      "after": "false",
+      "accepted": false,
+      "category": "all currencies before key/value move"
+    },
+    {
+      "id": "collection-receipt",
+      "owner": "store",
+      "before": "retained_capacity_bytes: demand.capacity_bytes, released_bytes: demand.release_bytes",
+      "after": "retained_capacity_bytes: 0, released_bytes: 0",
+      "accepted": false,
+      "category": "reported allocator currencies"
+    },
+    {
+      "id": "snapshot-clone",
+      "owner": "raster",
+      "before": "RetireOwned, semio_framework_value::RetainedClone)]",
+      "after": "RetireOwned)]",
+      "accepted": false,
+      "category": "snapshot typed clone issuer"
+    },
+    {
+      "id": "preparation-grant",
+      "owner": "store",
+      "before": "if !grant.permits_one() || self.cancelled || self.closing",
+      "after": "if false",
+      "accepted": false,
+      "category": "one item and cancellation authority"
+    },
+    {
+      "id": "source-grant",
+      "owner": "store",
+      "before": "base.admit_retained_clone_source(clone_grant)",
+      "after": "base.admit_retained_clone_source(Default::default())",
+      "accepted": false,
+      "category": "exact original source admission"
+    },
+    {
+      "id": "central-apply",
+      "owner": "store",
+      "before": "commit_retained_diff(self.plan.as_mut().unwrap(),self.source.as_ref().unwrap().try_borrow()?,before,post,g)",
+      "after": "domain_apply_again(self.plan.as_mut().unwrap(),self.source.as_ref().unwrap().try_borrow()?,before,post,g)",
+      "accepted": false,
+      "category": "central single application"
+    },
+    {
+      "id": "central-preflight",
+      "owner": "store",
+      "before": "preflight_retained_diff(self.plan.as_mut().unwrap(),self.source.as_ref().unwrap().try_borrow()?,before,post,g)",
+      "after": "skip_original_preflight(self.plan.as_mut().unwrap(),self.source.as_ref().unwrap().try_borrow()?,before,post,g)",
+      "accepted": false,
+      "category": "original typed central preflight"
+    },
+    {
+      "id": "preflight-skips-inverse",
+      "owner": "store",
+      "before": "RetainedDiffPreflightStep::Admitted(_,rows)=>{self.messages[1]=Some(rows);self.stage=Stage::Inverse;}",
+      "after": "RetainedDiffPreflightStep::Admitted(_,rows)=>{self.messages[1]=Some(rows);self.stage=Stage::Commit;}",
+      "accepted": false,
+      "category": "ordered inverse before central commit"
+    },
+    {
+      "id": "inverse-never-commits",
+      "owner": "store",
+      "before": "RetainedMutationInverseStep::Ready(_,rows)=result{*self.inverse=Some(rows);self.stage=Stage::Commit;}",
+      "after": "RetainedMutationInverseStep::Ready(_,rows)=result{*self.inverse=Some(rows);self.stage=Stage::Inverse;}",
+      "accepted": false,
+      "category": "completed inverse reaches central commit"
+    },
+    {
+      "id": "eager-editor-apply",
+      "owner": "editor",
+      "before": "",
+      "after": "fn eager_editor_apply() { apply_diff_cold(diff, post); }",
+      "accepted": false,
+      "category": "interactive apply remains retained"
+    },
+    {
+      "id": "central-commit-receipt",
+      "owner": "store",
+      "before": "admit_retained_clone_progress(grant,receipt,\"retained central diff commit\")",
+      "after": "unpriced_commit_receipt(grant,receipt,\"retained central diff commit\")",
+      "accepted": false,
+      "category": "exact central commit receipt"
+    },
+    {
+      "id": "central-commit-capability",
+      "owner": "store",
+      "before": "super::super::mint_capability()",
+      "after": "unbound_domain_capability()",
+      "accepted": false,
+      "category": "central apply authority"
+    },
+    {
+      "id": "inverse",
+      "owner": "store",
+      "before": "inverse_retained_mutation(self.semantics.as_mut().unwrap(),mutation,&a,g)",
+      "after": "Vec::new()",
+      "accepted": false,
+      "category": "ordered inverse"
+    },
+    {
+      "id": "inverse-capacity",
+      "owner": "store",
+      "before": "g.maximum_capacity_bytes>=d.capacity_bytes",
+      "after": "true",
+      "accepted": false,
+      "category": "inverse row birth admission"
+    },
+    {
+      "id": "central-release-admission",
+      "owner": "store",
+      "before": "g.maximum_release_bytes>=d.release_bytes",
+      "after": "true",
+      "accepted": false,
+      "category": "exact retained release funding"
+    },
+    {
+      "id": "central-depth-admission",
+      "owner": "store",
+      "before": "g.maximum_depth>=d.depth",
+      "after": "true",
+      "accepted": false,
+      "category": "exact retained depth funding"
+    },
+    {
+      "id": "seal-capacity",
+      "owner": "store",
+      "before": "retained.maximum_capacity_bytes < wrapped",
+      "after": "false",
+      "accepted": false,
+      "category": "sealer original birth admission"
+    },
+    {
+      "id": "seal-copy",
+      "owner": "store",
+      "before": "retained.maximum_copy_bytes < ArtifactStoreOneItemSealer::<S, M>::constructor_copy_byte_demand()",
+      "after": "false",
+      "accepted": false,
+      "category": "sealer copy admission"
+    },
+    {
+      "id": "replay-denial",
+      "owner": "store",
+      "before": "cx.should_yield() || grant.maximum_items == 0 || grant.maximum_depth == 0",
+      "after": "false",
+      "accepted": false,
+      "category": "no hidden phase on denied turn"
+    },
+    {
+      "id": "replay-cancel-result",
+      "owner": "store",
+      "before": "self.phase != Phase::Complete || self.terminal_handoff || self.cancel_requested",
+      "after": "self.phase != Phase::Complete || self.terminal_handoff",
+      "accepted": false,
+      "category": "unclaimed cancelled result"
+    },
+    {
+      "id": "replay-generation",
+      "owner": "store",
+      "before": "self.generation.0.checked_add(1)",
+      "after": "Some(self.generation.0.wrapping_add(1))",
+      "accepted": false,
+      "category": "generation overflow"
+    },
+    {
+      "id": "default-replay",
+      "owner": "plugin",
+      "before": "store::ArtifactStoreReplayInitializer::new(envelope,schema,operation,generation,actor)",
+      "after": "custom_initializer(envelope,schema,operation,generation,actor)",
+      "accepted": false,
+      "category": "shared replay owner"
+    },
+    {
+      "id": "worker-refusal",
+      "owner": "plugin",
+      "before": "RefusedWorkerSource<ArtifactStoreInitializationJob<P, Mutation>>",
+      "after": "WholeInitializationJob<P, Mutation>",
+      "accepted": false,
+      "category": "saturation rejected owner retention"
+    },
+    {
+      "id": "worker-admission",
+      "owner": "plugin",
+      "before": "crate::reserved_job_session::admit_mounted(job, params, retained)",
+      "after": "crate::reserved_job_session::admit_mounted(job, params, Default::default())",
+      "accepted": false,
+      "category": "session retained wallet"
+    },
+    {
+      "id": "replacement-drop",
+      "owner": "plugin",
+      "before": "artifact store replacement reached Drop before initializer/candidate/displaced-store ownership was terminal empty",
+      "after": "replacement drops partial owners",
+      "accepted": false,
+      "category": "displaced candidate close"
+    },
+    {
+      "id": "initializer-drop",
+      "owner": "plugin",
+      "before": "artifact store initialization job reached Drop before exact candidate handoff or terminal retained close",
+      "after": "initializer silently drops",
+      "accepted": false,
+      "category": "initializer terminal refusal"
+    },
+    {
+      "id": "ingress-credits",
+      "owner": "laws",
+      "before": "begin_artifact_envelope_ingress(pages, wire.len().max(1))",
+      "after": "begin_artifact_envelope_ingress(1, wire.len())",
+      "accepted": false,
+      "category": "preflight page credits"
+    },
+    {
+      "id": "ingress-page",
+      "owner": "laws",
+      "before": "let mut bytes = [0; store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]",
+      "after": "let mut bytes = Vec::new()",
+      "accepted": false,
+      "category": "fixed input page"
+    },
+    {
+      "id": "ingress-construct",
+      "owner": "laws",
+      "before": "ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len())",
+      "after": "ArtifactEnvelopeDecodePage::try_from_vec(wire.to_vec())",
+      "accepted": false,
+      "category": "construct before page admission"
+    },
+    {
+      "id": "ingress-chunks",
+      "owner": "laws",
+      "before": "chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)",
+      "after": "chunks(wire.len())",
+      "accepted": false,
+      "category": "bounded multi-page wire"
+    },
+    {
+      "id": "ingress-seal",
+      "owner": "laws",
+      "before": "seal_artifact_envelope_ingress(handle)",
+      "after": "submit_all()",
+      "accepted": false,
+      "category": "sealed input transfer"
+    },
+    {
+      "id": "ingress-pump",
+      "owner": "laws",
+      "before": "fixture_mounted_policy().maintenance",
+      "after": "Default::default()",
+      "accepted": false,
+      "category": "autonomous mounted progress"
+    },
+    {
+      "id": "ingress-poll",
+      "owner": "laws",
+      "before": "advance_artifact_envelope_load(handle)",
+      "after": "await_whole_load(handle)",
+      "accepted": false,
+      "category": "bounded poll acknowledgement"
+    },
+    {
+      "id": "ingress-generation",
+      "owner": "laws",
+      "before": "assert_eq!(handle.generation, base_generation)",
+      "after": "let _=handle",
+      "accepted": false,
+      "category": "exact generation handle"
+    },
+    {
+      "id": "ingress-ack",
+      "owner": "laws",
+      "before": "duplicate Raster load acknowledgement is a no-op",
+      "after": "acknowledge again replaces again",
+      "accepted": false,
+      "category": "exact single terminal acknowledgement"
+    },
+    {
+      "id": "ingress-cancel",
+      "owner": "laws",
+      "before": "cancel_artifact_envelope_load(handle)",
+      "after": "cancel_everything()",
+      "accepted": false,
+      "category": "exact cancellation"
+    },
+    {
+      "id": "decode-hook",
+      "owner": "editor",
+      "before": "Some(crate::host::owned::raster_envelope_decode_owner_bundle())",
+      "after": "None",
+      "accepted": false,
+      "category": "installed field owner catalog"
+    },
+    {
+      "id": "export-deadline",
+      "owner": "editor",
+      "before": "if context.should_yield(){return Ok(None);}",
+      "after": "if false{return Ok(None);}",
+      "accepted": false,
+      "category": "export deadline"
+    },
+    {
+      "id": "export-page-limit",
+      "owner": "editor",
+      "before": "bytes.len()>BASE64_INPUT_BYTES",
+      "after": "false",
+      "accepted": false,
+      "category": "output page plus one"
+    },
+    {
+      "id": "export-credit",
+      "owner": "editor",
+      "before": "credit.credit(chunk.len())?",
+      "after": "credit.credit(0)?",
+      "accepted": false,
+      "category": "output original credit before append"
+    },
+    {
+      "id": "export-chunk",
+      "owner": "editor",
+      "before": "self.chunks.as_ref().unwrap().push(chunk)?",
+      "after": "drop(chunk)",
+      "accepted": false,
+      "category": "retained output chunk ownership"
+    },
+    {
+      "id": "export-cancel-encoder",
+      "owner": "editor",
+      "before": "self.work.encoding.take()",
+      "after": "None",
+      "accepted": false,
+      "category": "interrupted encoder retirement"
+    },
+    {
+      "id": "export-snapshot",
+      "owner": "editor",
+      "before": "raster export snapshot has no live close witness",
+      "after": "drop shared snapshot",
+      "accepted": false,
+      "category": "snapshot close witness"
+    },
+    {
+      "id": "export-depth",
+      "owner": "raster",
+      "before": "if depth>32",
+      "after": "if false",
+      "accepted": false,
+      "category": "combined layer depth preflight"
+    },
+    {
+      "id": "export-count",
+      "owner": "raster",
+      "before": "self.nodes>1024",
+      "after": "false",
+      "accepted": false,
+      "category": "compositor node bound"
+    },
+    {
+      "id": "export-extent",
+      "owner": "raster",
+      "before": "validate_extent(image.width,image.height)",
+      "after": "Ok(0usize)",
+      "accepted": false,
+      "category": "image extent preflight"
+    },
+    {
+      "id": "export-pixels",
+      "owner": "raster",
+      "before": "frame.rgba8.len()!=count*4",
+      "after": "false",
+      "accepted": false,
+      "category": "decoded pixel body shape"
+    },
+    {
+      "id": "command-preflight",
+      "owner": "editor",
+      "before": "raster_retained_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1)",
+      "after": "false",
+      "accepted": false,
+      "category": "command work bound"
+    },
+    {
+      "id": "json-output",
+      "owner": "raster",
+      "before": "write_json_pretty(&serialize(snapshot)?.value)",
+      "after": "String::from(\"{}\")",
+      "accepted": false,
+      "category": "real populated JSON output"
+    },
+    {
+      "id": "pixel-output",
+      "owner": "raster",
+      "before": "let image = raster_composite_image(snapshot)",
+      "after": "let image = empty_image(snapshot)",
+      "accepted": false,
+      "category": "real mounted composite"
+    },
+    {
+      "id": "vector-output",
+      "owner": "raster",
+      "before": "raster_document_json_to_svg(snapshot)?",
+      "after": "empty_svg(snapshot)?",
+      "accepted": false,
+      "category": "real vector composite"
+    },
+    {
+      "id": "host-mount",
+      "owner": "laws",
+      "before": "mounted-raster-host-laws",
+      "after": "unmounted-raster-laws",
+      "accepted": false,
+      "category": "declared host test mount"
+    },
+    {
+      "id": "output-parameter-pointer",
+      "owner": "laws",
+      "before": "assert_eq!(rejected_param_value.as_ptr(), plus_one_param_value_pointer",
+      "after": "assert_eq!(0usize,0usize",
+      "accepted": false,
+      "category": "exact rejected parameter value"
+    },
+    {
+      "id": "output-child-pointer",
+      "owner": "laws",
+      "before": "rejected_asset.value.child_id.as_ptr()",
+      "after": "0usize",
+      "accepted": false,
+      "category": "exact rejected asset child"
+    },
+    {
+      "id": "page-minus-one",
+      "owner": "laws",
+      "before": "demand.capacity_bytes-1",
+      "after": "demand.capacity_bytes",
+      "accepted": false,
+      "category": "capacity plus one denial"
+    },
+    {
+      "id": "second-page",
+      "owner": "laws",
+      "before": "output.allocated_page_count(),2",
+      "after": "output.allocated_page_count(),0",
+      "accepted": false,
+      "category": "second page backing"
+    },
+    {
+      "id": "original-root",
+      "owner": "laws",
+      "before": "Arc::try_unwrap(root)",
+      "after": "Arc::into_inner(root)",
+      "accepted": false,
+      "category": "root exact original handback"
+    },
+    {
+      "id": "partial-cuts",
+      "owner": "laws",
+      "before": "measured midpoint and final-minus-one cuts remain partial",
+      "after": "always complete",
+      "accepted": false,
+      "category": "late preparation cancellation"
+    },
+    {
+      "id": "map-oracle",
+      "owner": "laws",
+      "before": "serde_json::to_value(&actual)",
+      "after": "serde_json::to_value(&expected)",
+      "accepted": false,
+      "category": "independent populated map oracle"
+    },
+    {
+      "id": "law-raster_generic_initializer_retains_genesis_identity_next_generation_and_second_map_page",
+      "owner": "laws",
+      "before": "raster_generic_initializer_retains_genesis_identity_next_generation_and_second_map_page",
+      "after": "omitted_law",
+      "accepted": false,
+      "category": "mounted adversarial runtime law"
+    },
+    {
+      "id": "law-raster_empty_generic_initializer_progresses_under_mounted_sixty_four_fuel",
+      "owner": "laws",
+      "before": "raster_empty_generic_initializer_progresses_under_mounted_sixty_four_fuel",
+      "after": "omitted_law",
+      "accepted": false,
+      "category": "mounted adversarial runtime law"
+    },
+    {
+      "id": "law-raster_generic_initializer_zero_fuel_items_and_expired_deadline_preserve_phase_and_owners",
+      "owner": "laws",
+      "before": "raster_generic_initializer_zero_fuel_items_and_expired_deadline_preserve_phase_and_owners",
+      "after": "omitted_law",
+      "accepted": false,
+      "category": "mounted adversarial runtime law"
+    },
+    {
+      "id": "law-raster_generic_initializer_cancel_stale_and_completed_candidate_retire_all_exact_owners",
+      "owner": "laws",
+      "before": "raster_generic_initializer_cancel_stale_and_completed_candidate_retire_all_exact_owners",
+      "after": "omitted_law",
+      "accepted": false,
+      "category": "mounted adversarial runtime law"
+    },
+    {
+      "id": "law-raster_mounted_preparation_deep_atomic_inverse_and_unclaimed_result_retirement",
+      "owner": "laws",
+      "before": "raster_mounted_preparation_deep_atomic_inverse_and_unclaimed_result_retirement",
+      "after": "omitted_law",
+      "accepted": false,
+      "category": "mounted adversarial runtime law"
+    },
+    {
+      "id": "law-raster_fixed_map_clone_prices_exact_page_births_and_denies_unfunded_insertions",
+      "owner": "laws",
+      "before": "raster_fixed_map_clone_prices_exact_page_births_and_denies_unfunded_insertions",
+      "after": "omitted_law",
+      "accepted": false,
+      "category": "mounted adversarial runtime law"
+    },
+    {
+      "id": "law-raster_mounted_partial_clone_and_before_prepared_cancellation_retain_source_and_retire_owners",
+      "owner": "laws",
+      "before": "raster_mounted_partial_clone_and_before_prepared_cancellation_retain_source_and_retire_owners",
+      "after": "omitted_law",
+      "accepted": false,
+      "category": "mounted adversarial runtime law"
+    },
+    {
+      "id": "law-raster_nested_snapshot_and_child_handles_retire_one_owner_per_grant",
+      "owner": "laws",
+      "before": "raster_nested_snapshot_and_child_handles_retire_one_owner_per_grant",
+      "after": "omitted_law",
+      "accepted": false,
+      "category": "mounted adversarial runtime law"
+    },
+    {
+      "id": "law-raster_owner_caps_and_all_mutation_variants_retire_one_owner_per_grant",
+      "owner": "laws",
+      "before": "raster_owner_caps_and_all_mutation_variants_retire_one_owner_per_grant",
+      "after": "omitted_law",
+      "accepted": false,
+      "category": "mounted adversarial runtime law"
+    },
+    {
+      "id": "law-raster_envelope_caps_and_plus_one_page_return_the_exact_fixed_owner",
+      "owner": "laws",
+      "before": "raster_envelope_caps_and_plus_one_page_return_the_exact_fixed_owner",
+      "after": "omitted_law",
+      "accepted": false,
+      "category": "mounted adversarial runtime law"
+    },
+    {
+      "id": "law-raster_owned_map_removal_returns_exact_pair_and_populated_drop_refuses",
+      "owner": "laws",
+      "before": "raster_owned_map_removal_returns_exact_pair_and_populated_drop_refuses",
+      "after": "omitted_law",
+      "accepted": false,
+      "category": "mounted adversarial runtime law"
+    },
+    {
+      "id": "law-raster_maximum_combined_layer_and_value_depth_retires_to_terminal",
+      "owner": "laws",
+      "before": "raster_maximum_combined_layer_and_value_depth_retires_to_terminal",
+      "after": "omitted_law",
+      "accepted": false,
+      "category": "mounted adversarial runtime law"
+    },
+    {
+      "id": "law-raster_populated_snapshot_output_max_plus_one_nested_cancel_fault_panic_and_close_are_exact",
+      "owner": "laws",
+      "before": "raster_populated_snapshot_output_max_plus_one_nested_cancel_fault_panic_and_close_are_exact",
+      "after": "omitted_law",
+      "accepted": false,
+      "category": "mounted adversarial runtime law"
+    },
+    {
+      "id": "law-raster_populated_serde_output_max_plus_one_nested_cancel_fault_panic_and_close_are_exact",
+      "owner": "laws",
+      "before": "raster_populated_serde_output_max_plus_one_nested_cancel_fault_panic_and_close_are_exact",
+      "after": "omitted_law",
+      "accepted": false,
+      "category": "mounted adversarial runtime law"
+    },
+    {
+      "id": "law-raster_populated_dsl_materialization_max_plus_one_nested_cancel_fault_panic_and_close_are_exact",
+      "owner": "laws",
+      "before": "raster_populated_dsl_materialization_max_plus_one_nested_cancel_fault_panic_and_close_are_exact",
+      "after": "omitted_law",
+      "accepted": false,
+      "category": "mounted adversarial runtime law"
+    },
+    {
+      "id": "typed-birth-items",
+      "owner": "store",
+      "before": "if grant.maximum_items == 0",
+      "after": "if false",
+      "accepted": false,
+      "category": "original typed/shared frame admission"
+    },
+    {
+      "id": "typed-birth-depth",
+      "owner": "store",
+      "before": "if grant.maximum_depth == 0",
+      "after": "if false",
+      "accepted": false,
+      "category": "original typed/shared frame admission"
+    },
+    {
+      "id": "typed-birth-capacity",
+      "owner": "store",
+      "before": "if layout.size() > grant.maximum_capacity_bytes",
+      "after": "if false",
+      "accepted": false,
+      "category": "original typed/shared frame admission"
+    },
+    {
+      "id": "typed-birth-producer",
+      "owner": "store",
+      "before": "return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit, \"typed retirement frame exceeds admitted capacity\"), value));",
+      "after": "return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit, \"typed retirement frame exceeds admitted capacity\"), value.clone()));",
+      "accepted": false,
+      "category": "exact constructor rejected producer"
+    },
+    {
+      "id": "typed-birth-receipt",
+      "owner": "store",
+      "before": "retained_capacity_bytes: layout.size()",
+      "after": "retained_capacity_bytes:0",
+      "accepted": false,
+      "category": "actual constructor backing receipt"
+    },
+    {
+      "id": "typed-birth-items-receipt",
+      "owner": "store",
+      "before": "copied_items: 1, copied_bytes: 0, retained_capacity_bytes: layout.size()",
+      "after": "copied_items:0,retained_capacity_bytes:layout.size()",
+      "accepted": false,
+      "category": "actual constructor item receipt"
+    },
+    {
+      "id": "shared-birth-items",
+      "owner": "store",
+      "before": "if grant.maximum_items==0",
+      "after": "if false",
+      "accepted": false,
+      "category": "original typed/shared frame admission"
+    },
+    {
+      "id": "shared-birth-depth",
+      "owner": "store",
+      "before": "if grant.maximum_depth==0",
+      "after": "if false",
+      "accepted": false,
+      "category": "original typed/shared frame admission"
+    },
+    {
+      "id": "shared-birth-capacity",
+      "owner": "store",
+      "before": "if layout.size()>grant.maximum_capacity_bytes",
+      "after": "if false",
+      "accepted": false,
+      "category": "original typed/shared frame admission"
+    },
+    {
+      "id": "shared-birth-producer",
+      "owner": "store",
+      "before": "return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,\"shared frame exceeds admitted capacity\"),source));",
+      "after": "return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,\"shared frame exceeds admitted capacity\"),source.clone()));",
+      "accepted": false,
+      "category": "exact constructor rejected producer"
+    },
+    {
+      "id": "shared-birth-receipt",
+      "owner": "store",
+      "before": "retained_capacity_bytes:layout.size()",
+      "after": "retained_capacity_bytes:0",
+      "accepted": false,
+      "category": "actual constructor backing receipt"
+    },
+    {
+      "id": "shared-birth-items-receipt",
+      "owner": "store",
+      "before": "copied_items:1,retained_capacity_bytes:layout.size()",
+      "after": "copied_items:0,retained_capacity_bytes:layout.size()",
+      "accepted": false,
+      "category": "actual constructor item receipt"
+    },
+    {
+      "id": "controlled-items",
+      "owner": "store",
+      "before": "if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }",
+      "after": "if false { return Ok(RetainedCloneStep::Progress(empty)); }",
+      "accepted": false,
+      "category": "original iterative retirement"
+    },
+    {
+      "id": "controlled-depth",
+      "owner": "store",
+      "before": "grant.maximum_depth < demand.depth",
+      "after": "false",
+      "accepted": false,
+      "category": "combined retirement depth"
+    },
+    {
+      "id": "controlled-capacity",
+      "owner": "store",
+      "before": "grant.maximum_capacity_bytes < demand.capacity_bytes",
+      "after": "false",
+      "accepted": false,
+      "category": "original cursor page backing admission"
+    },
+    {
+      "id": "controlled-release",
+      "owner": "store",
+      "before": "grant.maximum_release_bytes < demand.release_bytes",
+      "after": "false",
+      "accepted": false,
+      "category": "original cursor page backing admission"
+    },
+    {
+      "id": "controlled-copy",
+      "owner": "store",
+      "before": "body_bytes < minimum_work_bytes",
+      "after": "false",
+      "accepted": false,
+      "category": "original iterative retirement"
+    },
+    {
+      "id": "controlled-child-depth",
+      "owner": "store",
+      "before": "maximum_depth: grant.maximum_depth - 1",
+      "after": "maximum_depth: grant.maximum_depth",
+      "accepted": false,
+      "category": "combined retirement depth"
+    },
+    {
+      "id": "controlled-child-item",
+      "owner": "store",
+      "before": "maximum_items: 1, maximum_capacity_bytes: birth",
+      "after": "maximum_items: usize::MAX, maximum_capacity_bytes: birth",
+      "accepted": false,
+      "category": "original iterative retirement"
+    },
+    {
+      "id": "controlled-child-receipt",
+      "owner": "store",
+      "before": "progress.fits(cursor_grant)",
+      "after": "true",
+      "accepted": false,
+      "category": "actual child retirement receipt"
+    },
+    {
+      "id": "controlled-empty-page",
+      "owner": "store",
+      "before": "self.cursors.release_empty_page(grant.maximum_release_bytes)",
+      "after": "self.cursors.release_empty_page(usize::MAX)",
+      "accepted": false,
+      "category": "empty backing page release admission"
+    },
+    {
+      "id": "controlled-frame-size",
+      "owner": "store",
+      "before": "cursor.terminal_release_bytes()",
+      "after": "Some(0)",
+      "accepted": false,
+      "category": "physical control frame release"
+    },
+    {
+      "id": "controlled-frame-release",
+      "owner": "store",
+      "before": "if bytes > grant.maximum_release_bytes",
+      "after": "if false",
+      "accepted": false,
+      "category": "physical control frame release"
+    },
+    {
+      "id": "controlled-depth-overflow",
+      "owner": "store",
+      "before": "d.depth.checked_add(1)",
+      "after": "d.depth.checked_add(0)",
+      "accepted": false,
+      "category": "combined retirement depth"
+    },
+    {
+      "id": "controlled-demand-omitted",
+      "owner": "store",
+      "before": "let demand=self.next_demand(grant.maximum_copy_bytes)?;",
+      "after": "let demand=crate::RetirementDemand::default();",
+      "accepted": false,
+      "category": "original supplied-body demand"
+    },
+    {
+      "id": "controlled-demand-default-body",
+      "owner": "store",
+      "before": "let demand=self.next_demand(grant.maximum_copy_bytes)?;",
+      "after": "let demand=self.next_demand(0)?;",
+      "accepted": false,
+      "category": "original supplied-body demand"
+    },
+    {
+      "id": "controlled-child-default-body",
+      "owner": "store",
+      "before": "let mut d=cursor.next_demand(body)?;",
+      "after": "let mut d=cursor.next_demand(0)?;",
+      "accepted": false,
+      "category": "original supplied-body demand"
+    },
+    {
+      "id": "controlled-terminal-drop",
+      "owner": "store",
+      "before": "controlled retirement abandoned before terminal-empty",
+      "after": "silent controlled drop",
+      "accepted": false,
+      "category": "typed terminal-empty refusal"
+    },
+    {
+      "id": "shared-terminal-drop",
+      "owner": "store",
+      "before": "shared retirement abandoned actual Arc allocation ownership",
+      "after": "silent shared drop",
+      "accepted": false,
+      "category": "shared terminal-empty refusal"
+    },
+    {
+      "id": "shared-weak-backing",
+      "owner": "store",
+      "before": "Arc::weak_count(source)==0",
+      "after": "false",
+      "accepted": false,
+      "category": "original shared backing custody"
+    },
+    {
+      "id": "shared-exact-return",
+      "owner": "store",
+      "before": "Err(source)=>{*self.source=Some(source)",
+      "after": "Err(source)=>{*self.source=None",
+      "accepted": false,
+      "category": "exact original shared handback"
+    },
+    {
+      "id": "shared-strong-custody",
+      "owner": "store",
+      "before": "Arc::strong_count(source)!=1",
+      "after": "false",
+      "accepted": false,
+      "category": "original shared backing custody"
+    },
+    {
+      "id": "shared-release-receipt",
+      "owner": "store",
+      "before": "released_bytes:extent",
+      "after": "released_bytes:0",
+      "accepted": false,
+      "category": "physical shared backing receipt"
+    },
+    {
+      "id": "shared-terminal-payload",
+      "owner": "store",
+      "before": "self.source.is_none()&&self.owned.is_none()",
+      "after": "self.source.is_none()",
+      "accepted": false,
+      "category": "original shared backing custody"
+    },
+    {
+      "id": "string-retirement",
+      "owner": "store",
+      "before": "bytes(self.into_bytes())",
+      "after": "bytes(Vec::new())",
+      "accepted": false,
+      "category": "original string backing retirement"
+    },
+    {
+      "id": "bytes-capacity",
+      "owner": "store",
+      "before": "let bytes=self.0.capacity();",
+      "after": "let bytes=self.0.len();",
+      "accepted": false,
+      "category": "original byte backing retirement"
+    },
+    {
+      "id": "bytes-release",
+      "owner": "store",
+      "before": "if bytes>grant.maximum_release_bytes",
+      "after": "if false",
+      "accepted": false,
+      "category": "original byte backing retirement"
+    },
+    {
+      "id": "bytes-receipt",
+      "owner": "store",
+      "before": "RetirementStep::Bytes(bytes)",
+      "after": "RetirementStep::Bytes(0)",
+      "accepted": false,
+      "category": "original byte backing receipt"
+    },
+    {
+      "id": "bytes-terminal",
+      "owner": "store",
+      "before": "owned bytes retired before terminal-empty",
+      "after": "silent byte drop",
+      "accepted": false,
+      "category": "original byte terminal refusal"
+    },
+    {
+      "id": "vector-backing-quote",
+      "owner": "store",
+      "before": "self.0.capacity()*size_of::<T>()",
+      "after": "self.0.len()*size_of::<T>()",
+      "accepted": false,
+      "category": "original byte vector capacity retirement"
+    },
+    {
+      "id": "vector-backing-release",
+      "owner": "store",
+      "before": "if bytes>maximum_bytes",
+      "after": "if false",
+      "accepted": false,
+      "category": "original byte vector capacity retirement"
+    },
+    {
+      "id": "vector-terminal-backing",
+      "owner": "store",
+      "before": "self.0.is_empty() && (self.0.capacity()==0 || size_of::<T>()==0)",
+      "after": "self.0.is_empty()",
+      "accepted": false,
+      "category": "original byte vector capacity retirement"
+    },
+    {
+      "id": "vector-nested-child",
+      "owner": "store",
+      "before": "RetirementStep::Child(value.retirement())",
+      "after": "RetirementStep::Complete",
+      "accepted": false,
+      "category": "original recursive retirement"
+    },
+    {
+      "id": "vector-child-birth",
+      "owner": "store",
+      "before": "grant.maximum_capacity_bytes < birth",
+      "after": "false",
+      "accepted": false,
+      "category": "original recursive retirement"
+    },
+    {
+      "id": "vector-terminal-refusal",
+      "owner": "store",
+      "before": "owned collection retired before terminal-empty",
+      "after": "silent collection drop",
+      "accepted": false,
+      "category": "original recursive retirement"
+    },
+    {
+      "id": "registry-reservation",
+      "owner": "plugin",
+      "before": "slots.try_reserve_exact(capacity).is_ok()",
+      "after": "true",
+      "accepted": false,
+      "category": "bounded registry backing admission"
+    },
+    {
+      "id": "registry-saturation",
+      "owner": "plugin",
+      "before": "self.allocation_admitted && self.entry(slot).is_none()",
+      "after": "true",
+      "accepted": false,
+      "category": "fixed registry saturation"
+    },
+    {
+      "id": "registry-exact-removal",
+      "owner": "plugin",
+      "before": "self.entry(index).is_none_or(|(candidate, _)| *candidate != id)",
+      "after": "false",
+      "accepted": false,
+      "category": "fixed registry exact owner handback"
+    },
+    {
+      "id": "registry-removed-mask",
+      "owner": "plugin",
+      "before": "self.occupied &= !(1u64 << index);",
+      "after": "self.occupied = self.occupied;",
+      "accepted": false,
+      "category": "fixed registry exact owner handback"
+    },
+    {
+      "id": "registry-backing-quote",
+      "owner": "plugin",
+      "before": "size_of_val(self.slots.as_ref())",
+      "after": "0",
+      "accepted": false,
+      "category": "fixed registry backing release"
+    },
+    {
+      "id": "registry-backing-release",
+      "owner": "plugin",
+      "before": "grant.maximum_items==0||grant.maximum_release_bytes<bytes||grant.maximum_depth==0",
+      "after": "false",
+      "accepted": false,
+      "category": "fixed registry backing release"
+    },
+    {
+      "id": "registry-backing-receipt",
+      "owner": "plugin",
+      "before": "copied_items:1,released_bytes:bytes,..idle",
+      "after": "copied_items:1,released_bytes:0,..idle",
+      "accepted": false,
+      "category": "fixed registry backing release"
+    },
+    {
+      "id": "registry-terminal-refusal",
+      "owner": "plugin",
+      "before": "fixed artifact owner registry reached Drop before every exact owner was transferred to bounded retirement",
+      "after": "silent registry drop",
+      "accepted": false,
+      "category": "fixed registry terminal refusal"
+    },
+    {
+      "id": "registry-refused-envelope",
+      "owner": "plugin",
+      "before": "!self.jobs.can_insert(self.operation.0)",
+      "after": "false",
+      "accepted": false,
+      "category": "fixed registry saturation original envelope"
+    },
+    {
+      "id": "registry-refused-producer",
+      "owner": "plugin",
+      "before": "return Err(envelope);",
+      "after": "return Err(envelope.clone());",
+      "accepted": false,
+      "category": "fixed registry saturation original envelope"
+    },
+    {
+      "id": "typed-saturated-panic",
+      "owner": "store",
+      "before": "let layout = std::alloc::Layout::new::<ControlledRetirement<T>>();",
+      "after": "panic!(\"saturated owner\"); let layout = std::alloc::Layout::new::<ControlledRetirement<T>>();",
+      "accepted": false,
+      "category": "original constructor saturation refusal"
+    },
+    {
+      "id": "shared-saturated-panic",
+      "owner": "store",
+      "before": "let layout=std::alloc::Layout::new::<SharedControlledRetirement<T>>();",
+      "after": "panic!(\"saturated owner\"); let layout=std::alloc::Layout::new::<SharedControlledRetirement<T>>();",
+      "accepted": false,
+      "category": "original constructor saturation refusal"
+    },
+    {
+      "id": "map-public-backing",
+      "owner": "raster",
+      "before": "    pages: std::mem::ManuallyDrop<[Option<Box<RasterOwnedMapPage<V>>>; RASTER_OWNED_MAP_PAGE_COUNT]>",
+      "after": "    pub pages: std::mem::ManuallyDrop<[Option<Box<RasterOwnedMapPage<V>>>; RASTER_OWNED_MAP_PAGE_COUNT]>",
+      "accepted": false,
+      "category": "private fixed backing custody"
+    },
+    {
+      "id": "parameter-substituted-capture",
+      "owner": "laws",
+      "before": "let plus_one_param_value_pointer = plus_one_param_value.as_ptr();",
+      "after": "let plus_one_param_value_pointer = plus_one_param_key.as_ptr();",
+      "accepted": false,
+      "category": "exact rejected parameter observation order"
+    },
+    {
+      "id": "parameter-substituted-value",
+      "owner": "laws",
+      "before": "assert_eq!(rejected_param_value.as_ptr(), plus_one_param_value_pointer",
+      "after": "assert_eq!(plus_one_param_value_pointer, plus_one_param_value_pointer",
+      "accepted": false,
+      "category": "exact rejected parameter observation order"
+    },
+    {
+      "id": "parameter-before-insert-observation",
+      "owner": "laws",
+      "before": "let rejected_param = params.insert(",
+      "after": "assert_eq!(rejected_param_value.as_ptr(), plus_one_param_value_pointer); let rejected_param = params.insert(",
+      "accepted": false,
+      "category": "exact rejected parameter observation order"
+    },
+    {
+      "id": "parameter-retired-before-observation",
+      "owner": "laws",
+      "before": "assert_eq!(rejected_param_value.as_ptr(), plus_one_param_value_pointer",
+      "after": "retire_raster_value_cold((rejected_param.key, rejected_param.value)); assert_eq!(rejected_param_value.as_ptr(), plus_one_param_value_pointer",
+      "accepted": false,
+      "category": "exact rejected parameter observation order"
+    },
+    {
+      "id": "asset-substituted-capture",
+      "owner": "laws",
+      "before": "let plus_one_asset_child_pointer = plus_one_asset_child.child_id.as_ptr();",
+      "after": "let plus_one_asset_child_pointer = plus_one_asset_key.as_ptr();",
+      "accepted": false,
+      "category": "exact rejected asset observation order"
+    },
+    {
+      "id": "asset-substituted-child",
+      "owner": "laws",
+      "before": "assert_eq!(rejected_asset.value.child_id.as_ptr(), plus_one_asset_child_pointer",
+      "after": "assert_eq!(plus_one_asset_child_pointer, plus_one_asset_child_pointer",
+      "accepted": false,
+      "category": "exact rejected asset observation order"
+    },
+    {
+      "id": "asset-before-insert-observation",
+      "owner": "laws",
+      "before": "let rejected_asset = assets.insert(",
+      "after": "assert_eq!(rejected_asset.value.child_id.as_ptr(), plus_one_asset_child_pointer); let rejected_asset = assets.insert(",
+      "accepted": false,
+      "category": "exact rejected asset observation order"
+    },
+    {
+      "id": "asset-retired-before-observation",
+      "owner": "laws",
+      "before": "assert_eq!(rejected_asset.value.child_id.as_ptr(), plus_one_asset_child_pointer",
+      "after": "retire_raster_value_cold((rejected_asset.key, rejected_asset.value)); assert_eq!(rejected_asset.value.child_id.as_ptr(), plus_one_asset_child_pointer",
+      "accepted": false,
+      "category": "exact rejected asset observation order"
+    },
+    {
+      "id": "replaced-original-key",
+      "owner": "laws",
+      "before": "assert_eq!(previous_key.as_ptr(), old_key_pointer)",
+      "after": "assert_eq!(old_key_pointer, old_key_pointer)",
+      "accepted": false,
+      "category": "exact replaced original pair"
+    },
+    {
+      "id": "replaced-original-child",
+      "owner": "laws",
+      "before": "assert_eq!(previous_child.child_id.as_ptr(), old_child_pointer)",
+      "after": "assert_eq!(old_child_pointer, old_child_pointer)",
+      "accepted": false,
+      "category": "exact replaced original pair"
+    },
+    {
+      "id": "replaced-installed-key",
+      "owner": "laws",
+      "before": "assert_eq!(installed_key.as_ptr(), replacement_key_pointer)",
+      "after": "assert_eq!(replacement_key_pointer, replacement_key_pointer)",
+      "accepted": false,
+      "category": "exact replacement original pair"
+    },
+    {
+      "id": "replaced-installed-child",
+      "owner": "laws",
+      "before": "assert_eq!(installed_child.child_id.as_ptr(), replacement_child_pointer)",
+      "after": "assert_eq!(replacement_child_pointer, replacement_child_pointer)",
+      "accepted": false,
+      "category": "exact replacement original pair"
+    },
+    {
+      "id": "format-png",
+      "owner": "raster",
+      "before": "encode_png(&target",
+      "after": "removed_png(&target",
+      "accepted": false,
+      "category": "each actual mounted native format"
+    },
+    {
+      "id": "format-bmp",
+      "owner": "raster",
+      "before": "encode_bmp(&target",
+      "after": "removed_bmp(&target",
+      "accepted": false,
+      "category": "each actual mounted native format"
+    },
+    {
+      "id": "format-tiff",
+      "owner": "raster",
+      "before": "encode_tiff(&target",
+      "after": "removed_tiff(&target",
+      "accepted": false,
+      "category": "each actual mounted native format"
+    },
+    {
+      "id": "format-jpg",
+      "owner": "raster",
+      "before": "encode_jpg(&target",
+      "after": "removed_jpg(&target",
+      "accepted": false,
+      "category": "each actual mounted native format"
+    },
+    {
+      "id": "format-gif",
+      "owner": "raster",
+      "before": "encode_gif(&gif87a::from_89a(&gif89a))",
+      "after": "removed_gif(&gif87a::from_89a(&gif89a))",
+      "accepted": false,
+      "category": "each actual mounted native format"
+    },
+    {
+      "id": "map-physical-frame-size",
+      "owner": "raster",
+      "before": "Some(size_of::<Self>())",
+      "after": "Some(0)",
+      "accepted": false,
+      "category": "actual map frame release"
+    },
+    {
+      "id": "typed-mutation-variant",
+      "owner": "raster",
+      "before": "RemoveLayerAsset(remove_layer_asset::RemoveLayerAsset)",
+      "after": "RemoveLayerAsset(RemovedAsset)",
+      "accepted": false,
+      "category": "closed typed mutation retirement"
+    },
+    {
+      "id": "editor-whole-buffer",
+      "owner": "editor",
+      "before": "",
+      "after": "envelope_json: &str",
+      "accepted": false,
+      "category": "mounted wire output boundary"
+    },
+    {
+      "id": "editor-eager-store",
+      "owner": "editor",
+      "before": "",
+      "after": "ArtifactStore::new",
+      "accepted": false,
+      "category": "mounted wire output boundary"
+    },
+    {
+      "id": "law-raster_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed",
+      "owner": "laws",
+      "before": "fn raster_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed(",
+      "after": "fn omitted_law(",
+      "accepted": false,
+      "category": "mounted adversarial runtime law"
+    },
+    {
+      "id": "law-raster_live_envelope_cancel_closes_retained_pages_without_publication",
+      "owner": "laws",
+      "before": "fn raster_live_envelope_cancel_closes_retained_pages_without_publication(",
+      "after": "fn omitted_law(",
+      "accepted": false,
+      "category": "mounted adversarial runtime law"
+    },
+    {
+      "id": "law-a_demo_edit_archive_loads_back_through_the_document_archive_door",
+      "owner": "laws",
+      "before": "fn a_demo_edit_archive_loads_back_through_the_document_archive_door(",
+      "after": "fn omitted_law(",
+      "accepted": false,
+      "category": "mounted adversarial runtime law"
+    },
+    {
+      "id": "law-raster_owned_map_cap_plus_one_returns_exact_owner_and_populated_pages_retire_explicitly",
+      "owner": "laws",
+      "before": "fn raster_owned_map_cap_plus_one_returns_exact_owner_and_populated_pages_retire_explicitly(",
+      "after": "fn omitted_law(",
+      "accepted": false,
+      "category": "mounted adversarial runtime law"
+    }
+  ],
+  "scrubberCases": [
+    {
+      "id": "same-line-field",
+      "source": "struct Owner { #[cfg(test)] test_hook: u8, production: u64, backing: [u8; 8] }",
+      "kept": [
+        "production: u64",
+        "backing: [u8; 8]"
+      ],
+      "removed": [
+        "test_hook"
+      ]
+    },
+    {
+      "id": "nested-field",
+      "source": "struct Owner { #[cfg(all(test, feature=\"probe\"))] #[allow(dead_code)] pub(crate) test_hook: Option<(Vec<u8>, [u8; {8}])>, production: u64 }",
+      "kept": [
+        "production: u64"
+      ],
+      "removed": [
+        "test_hook"
+      ]
+    },
+    {
+      "id": "generic-function",
+      "source": "#[cfg(test)] fn probe<const N: usize>(value: [u8; {8}]) -> [u8; {4}] { [0; 4] } fn production() {}",
+      "kept": [
+        "fn production() {}"
+      ],
+      "removed": [
+        "fn probe"
+      ]
+    },
+    {
+      "id": "tuple-variant",
+      "source": "enum Owner { #[cfg(test)] Probe(Vec<(u8,u8)>), Production }",
+      "kept": [
+        "Production"
+      ],
+      "removed": [
+        "Probe"
+      ]
+    },
+    {
+      "id": "struct-variant",
+      "source": "enum Owner { #[cfg(test)] Probe { test_hook: u8 }, Production }",
+      "kept": [
+        "Production"
+      ],
+      "removed": [
+        "Probe",
+        "test_hook"
+      ]
+    },
+    {
+      "id": "external-module",
+      "source": "#[cfg(test)] #[path=\"test.rs\"] mod probe; fn production() {}",
+      "kept": [
+        "fn production() {}"
+      ],
+      "removed": [
+        "mod probe"
+      ]
+    },
+    {
+      "id": "production-negation",
+      "source": "#[cfg(not(test))] mod shipping { pub fn production() {} }",
+      "kept": [
+        "mod shipping",
+        "fn production() {}"
+      ],
+      "removed": []
+    },
+    {
+      "id": "production-alternative",
+      "source": "#[cfg(any(test, feature=\"shipping\"))] fn production() {}",
+      "kept": [
+        "fn production() {}"
+      ],
+      "removed": []
+    },
+    {
+      "id": "string-and-comment",
+      "source": "const KEEP: &str = r###\"#[cfg(test)] fake { , ; }\"###; // #[cfg(test)]\nfn production() {}",
+      "kept": [
+        "const KEEP",
+        "fn production() {}",
+        "fake { , ; }"
+      ],
+      "removed": []
+    },
+    {
+      "id": "comparison-constant",
+      "source": "#[cfg(test)] const PROBE: bool = 1 < 2; const PRODUCTION: bool = true;",
+      "kept": [
+        "const PRODUCTION"
+      ],
+      "removed": [
+        "const PROBE"
+      ]
+    },
+    {
+      "id": "parameter-field",
+      "source": "fn production(#[cfg(test)] test_hook: Vec<u8>, real: u64) {}",
+      "kept": [
+        "fn production(",
+        "real: u64"
+      ],
+      "removed": [
+        "test_hook"
+      ]
+    }
+  ],
+  "obligations": [
+    "central-factory",
+    "single-apply-owner",
+    "original-field-catalog",
+    "shared-history-decoder",
+    "owned-retirement-issuers",
+    "shared-retirement-issuer",
+    "shared-owned-birth",
+    "shared-arc-birth",
+    "shared-physical-retirement",
+    "exact-controlled-producer-refusal",
+    "exact-shared-producer-refusal",
+    "controlled-turn-currencies",
+    "controlled-body-quote",
+    "controlled-frame-physical-return",
+    "original-string-byte-capacity",
+    "exact-shared-owner-return",
+    "original-vector-backing",
+    "fixed-registry-retains-physical-owner",
+    "fixed-registry-saturated-original-refusal",
+    "field-identity",
+    "field-cancellation",
+    "field-deadline",
+    "field-close-admission",
+    "field-original-close",
+    "fixed-map-backing",
+    "map-cap-refusal",
+    "map-key-handback",
+    "map-terminal-drop",
+    "map-owner-retirement",
+    "map-page-physical-size",
+    "map-clone-admission",
+    "shared-map-original-quote",
+    "typed-mutation-retirement",
+    "typed-clone",
+    "paged-original-birth",
+    "single-central-mutation",
+    "funded-sealer",
+    "default-replay-owner",
+    "replay-entry-denial",
+    "replay-candidate-cancellation",
+    "retained-replacement-session",
+    "ingress-order",
+    "ingress-owned-pump",
+    "ingress-no-whole-bypass",
+    "editor-owned-decode",
+    "bounded-mounted-output",
+    "output-domain-preflight",
+    "serializer-real-output",
+    "mounted-laws",
+    "private-map-backing",
+    "each-mounted-format",
+    "exact-replaced-fixture",
+    "rejected-output-value-identity",
+    "rejected-output-child-identity",
+    "exact-physical-fixture"
+  ]
+}

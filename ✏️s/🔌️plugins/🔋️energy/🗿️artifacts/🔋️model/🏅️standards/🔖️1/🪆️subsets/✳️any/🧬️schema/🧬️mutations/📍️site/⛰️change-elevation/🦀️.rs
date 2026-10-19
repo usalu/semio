@@ -26,6 +26,19 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "site", kind: "change-site-elevation", record: "ChangedSiteElevation" };
 
+
+
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change site elevation to {} m", self.new_elevation_m), &format!("Höhe des Standorts auf {} m ändern", self.new_elevation_m))
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for ChangeSiteElevation
+where
+    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<ChangeSiteElevation>,
+{
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
@@ -36,9 +49,5 @@ where
     
     })
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change site elevation to {} m", self.new_elevation_m), &format!("Höhe des Standorts auf {} m ändern", self.new_elevation_m))
-    }
 }
 //#endregion 🔖️Mutation

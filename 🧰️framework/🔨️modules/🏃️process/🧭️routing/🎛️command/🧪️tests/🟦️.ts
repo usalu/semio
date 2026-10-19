@@ -1,12 +1,29 @@
 import {test,expect} from "bun:test";
 import {readFileSync,mkdirSync,mkdtempSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
+import {fileURLToPath} from "node:url";
 import Ajv from "ajv";
 import {setImmediate} from "node:timers/promises";
 import {type ScriptInvocation} from "../../📥️invocation/🟦️.ts";
 
 const corpus=JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
 const schema=JSON.parse(readFileSync(new URL("../📥️request/🧬️schema/🔣️.json",import.meta.url),"utf8"));
+
+test("configured compiler policies preserve the selected portable build mode",async()=>{
+ const {parseCommandArgumentsV1,resolveCommandConfigurationV1}=await import("../⚙️configuration/🟦️.ts");
+ const fixture=JSON.parse(readFileSync(new URL("../../../🏗️build/🎚️mode/🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
+ const policySchema=JSON.parse(readFileSync(new URL("../../../📦️artifacts/🏗️native-build/🧬️schema/🔣️.json",import.meta.url),"utf8")),oracle=new Ajv({strict:true}).compile(policySchema);
+ const configuration=fileURLToPath(new URL("../../../../../⚙️configuration/🏃️process/🔣️.json",import.meta.url));
+ const request=parseCommandArgumentsV1(["--config",configuration,"--cwd","📦️packages/🟦️typescript","--",process.execPath]);
+ for(const row of fixture.modes){
+  const plan=resolveCommandConfigurationV1(request,{SEMIO_BUILD_MODE:row.mode});
+  expect(plan.policy.cargoArtifactPolicy!.mode).toBe(row.mode);
+  expect(plan.environment.SEMIO_BUILD_MODE).toBe(row.mode);
+  expect(oracle(plan.policy.cargoArtifactPolicy)).toBe(true);
+ }
+ expect(()=>resolveCommandConfigurationV1(request,{})).toThrow("Build mode");
+ console.log("[DEBUG] configured command compiler policies preserve both schema-owned build modes");
+});
 
 /** 🎟️ Authors each independent neutral test caller before its first process admission. */
 function originalInvocation(controller=new AbortController(), milliseconds=corpus.originalCaller.maximumElapsedMilliseconds, publication:string[]=[]):ScriptInvocation {

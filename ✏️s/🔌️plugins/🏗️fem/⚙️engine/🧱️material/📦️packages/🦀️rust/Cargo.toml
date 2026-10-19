@@ -1,0 +1,21 @@
+[package]
+workspace = "../.."
+name = "semio-s-fem-material"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.95"
+[package.metadata.semio]
+role = "module"
+[lib]
+path = "../../🦀️.rs"
+[dependencies]
+semio-framework-trace = { path = "../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+semio-framework-dsl = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
+semio-framework-replication = { path = "../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust" }
+[dev-dependencies]
+serde_json = "1"
+semio-framework-trace = { path = "../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }

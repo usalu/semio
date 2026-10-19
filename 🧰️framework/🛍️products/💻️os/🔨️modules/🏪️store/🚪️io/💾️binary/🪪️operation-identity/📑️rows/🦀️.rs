@@ -10,6 +10,7 @@ impl OperationWireRows{
     pub fn take(&mut self)->Vec<Vec<u8>>{self.rows.take().expect("admitted wire rows")}
 }
 impl ErasedSnapshotRetirement for OperationWireRows{
+    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand {release_bytes:self.active.as_ref().map(Vec::capacity).or_else(||self.rows.as_ref().map(|rows|rows.last().map(Vec::capacity).unwrap_or_else(||rows.capacity()*size_of::<Vec<u8>>()))).unwrap_or(0),depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
     fn next_capacity_byte_demand(&self,_copy:usize)->Result<usize,ValueError>{Ok(0)}
     fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.active.as_ref().map(Vec::capacity).or_else(||self.rows.as_ref().map(|rows|rows.last().map(Vec::capacity).unwrap_or_else(||rows.capacity()*size_of::<Vec<u8>>()))).unwrap_or(0))}

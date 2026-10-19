@@ -1,0 +1,9 @@
+{
+  "maximumPageBytes": 4096,
+  "maximumInlineBytes": 1024,
+  "vectors": [
+    { "id": "empty-fixed-block", "raw": [], "stored": [3,0] },
+    { "id": "literal-hello", "raw": [104,101,108,108,111], "stored": [203,72,205,201,201,7,0] }
+  ],
+  "cancellationPhases": ["initialize", "input", "search", "compare", "token", "insert", "output", "finish", "complete"]
+}

@@ -17,7 +17,7 @@ fn json_key<'a>(value:&'a JsonError,path:&[usize],index:usize)->Result<&'a str,V
  if let JsonError::Native(original)=value{if path[0]==1{return semio_framework_job::key_original_value_error(original,&path[1..],index)}}Err(absent())
 }
 impl EvaluationFailure{
- pub fn retained_progress(&self)->RetainedCloneProgress{match self{Self::Pack(value)=>value.reason.retained_progress(),Self::Native(value)|Self::Json(JsonError::Native(value))=>value.retained_progress(),Self::Operator(value)=>value.domain_retained_progress(),Self::Work(value)=>value.retained_progress(),Self::Original(value)=>value.primary.retained_progress(),Self::Json(_)|Self::Literal(_)=>Default::default()}}
+ pub fn retained_progress(&self)->RetainedCloneProgress{match self{Self::Pack(value)=>value.reason.retained_progress(),Self::Native(value)|Self::Json(JsonError::Native(value))=>value.retained_progress(),Self::Operator(value)=>value.domain_retained_progress(),Self::Work(value)=>value.retained_progress(),Self::Original(value)=>value.retained_progress(),Self::Json(_)|Self::Literal(_)=>Default::default()}}
 }
 impl OriginalDomainProjection for EvaluationFailure{
  fn projection_identity(&self)->usize{match self{Self::Pack(value)=>value.reason.message.as_ptr()as usize,Self::Native(value)|Self::Json(JsonError::Native(value))=>value.message.as_ptr()as usize,Self::Operator(value)=>value.projection_identity(),Self::Work(value)=>value.projection_identity(),Self::Original(value)=>value.primary.message().as_ptr()as usize,Self::Json(JsonError::DuplicateMember{name,..})=>name.as_ptr()as usize,Self::Literal(value)=>value.as_ptr()as usize,Self::Json(_)=>self as*const _ as usize}}

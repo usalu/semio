@@ -1,6 +1,6 @@
 //! 🎞️ Original tick wire chunks enter the same preadmitted payload and caller context one paid unit at a time.
 use semio_framework_job::{RetainedPayloadBuilder, StepContext};
-use semio_framework_tool_run::{ToolRunTickWriter, ToolRunTickWireCursor};
+use semio_framework_tool_run::{ToolRunTickWriter, ToolRunTickWireCursor,ToolRunTickPayloadSource};
 use semio_framework_value::ValueError;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 
@@ -10,13 +10,13 @@ use semio_framework_value::retained_clone::RetainedCloneProgress;
 pub mod tests;
 
 /// 🤝️ Borrows the original writer, cursor, preadmitted payload storage and append position throughout the turn.
-pub fn advance_original_tick_payload(writer:&ToolRunTickWriter,cursor:&mut ToolRunTickWireCursor,payload:&mut RetainedPayloadBuilder,position:&mut usize,cx:&mut StepContext<'_>)->Result<bool,ValueError>{
+pub fn advance_original_tick_payload(writer:&ToolRunTickWriter,source:Option<&dyn ToolRunTickPayloadSource>,cursor:&mut ToolRunTickWireCursor,payload:&mut RetainedPayloadBuilder,position:&mut usize,cx:&mut StepContext<'_>)->Result<bool,ValueError>{
  if !payload.is_initialized(){payload.advance_initialization(cx)?;return Ok(false);}
  if !cursor.chunk().is_empty(){
   if *position<cursor.chunk().len(){payload.append_original(cx,cursor.chunk(),position)?;return Ok(false);}
   let receipt=cursor.acknowledge_chunk(cx.retained_grant());cx.consume_retained(receipt)?;if receipt.copied_items>0{*position=0;}return Ok(false);
  }
- if !cursor.is_complete(){let receipt=cursor.advance(writer,cx.retained_grant())?;cx.consume_retained(receipt)?;return Ok(false);}
+ if !cursor.is_complete(){let receipt=cursor.advance(writer,source,cx.retained_grant())?;cx.consume_retained(receipt)?;return Ok(false);}
  if payload.published().is_none(){return payload.seal(cx);}
  Ok(true)
 }

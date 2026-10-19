@@ -1,10 +1,10 @@
 use super::*;
 use teaching_proctor_domain::actors::fixtures::{id, ADA, BOB, TENANT};
-use teaching_proctor_base::catalog::fixtures::{fixture, fixture_path};
+use teaching_proctor_base::course::fixtures::{fixture, fixture_path};
 use teaching_proctor_domain::projections::fixtures::{bus, play, submit};
 use teaching_proctor_base::storage::fixtures::{scratch, Scratch};
 use teaching_proctor_base::storage::{ErasedActor, Inspection};
-use quiz::{Challenge, Command};
+use course::{Challenge, Command};
 use server::contract::CommandOutcome;
 
 fn code(exit: ExitCode) -> String {
@@ -15,12 +15,12 @@ fn arguments(line: &[&str]) -> Vec<String> {
     line.iter().map(|argument| (*argument).to_string()).collect()
 }
 
-/// 🌱️ The environment of a proctor over `data` and the fixture catalog.
+/// 🌱️ The environment of a proctor over `data` and the fixture course.
 fn environment(data: &Path) -> impl Fn(&str) -> Option<String> {
-    let (data, catalog) = (data.to_string_lossy().into_owned(), fixture_path().to_string_lossy().into_owned());
+    let (data, course) = (data.to_string_lossy().into_owned(), fixture_path().to_string_lossy().into_owned());
     move |name: &str| match name {
         "PROCTOR_DATA" => Some(data.clone()),
-        "PROCTOR_CATALOG" => Some(catalog.clone()),
+        "PROCTOR_COURSE" => Some(course.clone()),
         _ => None,
     }
 }
@@ -35,22 +35,22 @@ fn files(directory: &Path) -> Vec<String> {
 /// registered and Ada and Bob each submitted a perfect run.
 async fn played(label: &str) -> Scratch {
     let directory = scratch(label);
-    let catalog = Arc::new(fixture());
-    let mut bus = bus(&Database::open(&directory.0).expect("open"), &catalog).await;
+    let course = Arc::new(fixture());
+    let mut bus = bus(&Database::open(&directory.0).expect("open"), &course).await;
     for (seed, learner, identity) in [(1, ADA, Identity::Name { handle: "Ada Lovelace".into() }), (2, BOB, Identity::Anonymous), (3, &*id(0xc), Identity::Pseudonym { handle: "Cy".into() })] {
         assert!(matches!(submit(&mut bus, &Command::IdentifyLearner { id: id(seed), learner: learner.into(), identity }, 100).await, CommandOutcome::Accepted { .. }));
     }
-    play(&mut bus, &catalog, ADA, &id(10), "power", Challenge::Medium, 200).await;
-    play(&mut bus, &catalog, BOB, &id(11), "power", Challenge::Medium, 300).await;
+    play(&mut bus, &course, ADA, &id(10), "power", Challenge::Medium, 200).await;
+    play(&mut bus, &course, BOB, &id(11), "power", Challenge::Medium, 300).await;
     directory
 }
 
 #[test]
-fn check_accepts_the_fixture_and_refuses_a_broken_catalog() {
+fn check_accepts_the_fixture_and_refuses_a_broken_course() {
     assert_eq!(code(check(&fixture_path())), code(ExitCode::SUCCESS));
     let directory = scratch("cli-check");
-    std::fs::write(directory.0.join("catalog.json"), "{\"schema\":\"semio.quiz.catalog/v1\"}").unwrap();
-    assert_eq!(code(check(&directory.0.join("catalog.json"))), code(ExitCode::FAILURE));
+    std::fs::write(directory.0.join("course.json"), "{\"schema\":\"semio.course/v1\"}").unwrap();
+    assert_eq!(code(check(&directory.0.join("course.json"))), code(ExitCode::FAILURE));
 }
 
 #[tokio::test]
@@ -80,7 +80,7 @@ async fn rebuild_fails_over_a_log_it_cannot_read() {
         let mut log = SqliteAuthorityStore::new(Database::open(&directory.0).expect("open"));
         let stream = learner_key(TENANT, BOB);
         let seq = log.last_seq(&stream).await.unwrap() + 1;
-        let recalled = server::contract::EventRecord { stream: stream.clone(), seq, hlc: server::contract::HybridLogicalClock::default(), kind: "quiz.learner-recalled".into(), payload: format!(r#"{{"type":"learner-recalled","learner":"{BOB}","at":5}}"#).into_bytes() };
+        let recalled = server::contract::EventRecord { stream: stream.clone(), seq, hlc: server::contract::HybridLogicalClock::default(), kind: "course.learner-recalled".into(), payload: format!(r#"{{"type":"learner-recalled","learner":"{BOB}","at":5}}"#).into_bytes() };
         log.append_events(&stream, &[recalled], &[]).await.unwrap();
     }
     assert_eq!(code(run(&arguments(&["rebuild"]), environment(&directory.0)).await), code(ExitCode::FAILURE), "an event of another vocabulary is no reason to skip it");
@@ -225,9 +225,9 @@ async fn a_selector_names_the_learner_and_every_handle_it_holds() {
     let ada = Subject { tenant: TENANT.into(), learner: ADA.into(), identity: Some(Identity::Name { handle: "Ada Lovelace".into() }), handles: vec!["ada lovelace".into()] };
     let bob = Subject { tenant: TENANT.into(), learner: BOB.into(), identity: Some(Identity::Anonymous), handles: Vec::new() };
     assert_eq!(subjects(&log, &Selector::Handle("  ADA   lovelace ".into())).await.unwrap(), vec![ada.clone()], "a handle is found however it is typed");
-    assert_eq!(subjects(&log, &Selector::Tag(quiz::learner_tag(ADA))).await.unwrap(), vec![ada.clone()]);
+    assert_eq!(subjects(&log, &Selector::Tag(course::learner_tag(ADA))).await.unwrap(), vec![ada.clone()]);
     assert_eq!(subjects(&log, &Selector::Learner(ADA.into())).await.unwrap(), vec![ada.clone()]);
-    assert_eq!(subjects(&log, &Selector::Tag(quiz::learner_tag(BOB))).await.unwrap(), vec![bob.clone()]);
+    assert_eq!(subjects(&log, &Selector::Tag(course::learner_tag(BOB))).await.unwrap(), vec![bob.clone()]);
     assert_eq!(subjects(&log, &Selector::Handle("Grace".into())).await.unwrap(), Vec::new());
     assert_eq!(subjects(&log, &Selector::Learner(id(0x99))).await.unwrap(), Vec::new());
     assert_eq!(ada.actors(), vec![learner_key(TENANT, ADA), handle_key(TENANT, "ada lovelace")]);
@@ -237,9 +237,9 @@ async fn a_selector_names_the_learner_and_every_handle_it_holds() {
     }
     let erasure = Erasure { actors: vec![ErasedActor { actor: learner_key(TENANT, ADA), events: 9, receipts: 8, outbox: 9, snapshots: 0, leases: 0 }, ErasedActor { actor: handle_key(TENANT, "ada lovelace"), events: 1, receipts: 1, outbox: 1, snapshots: 0, leases: 0 }], projections: 12 };
     let dry = erasure_report(&ada, &erasure, true);
-    assert_eq!(dry, format!("would erase learner #{} name \"Ada Lovelace\" of catalog {TENANT}\n  learner stream: 9 events, 8 receipts, 9 outbox rows, 0 snapshots, 0 leases\n  handle \"ada lovelace\": 1 events, 1 receipts, 1 outbox rows, 0 snapshots, 0 leases\n  read models: 12 rows dropped; the next start rebuilds them from the events that are left\ndry run: nothing was changed\n", quiz::learner_tag(ADA)));
+    assert_eq!(dry, format!("would erase learner #{} name \"Ada Lovelace\" of course {TENANT}\n  learner stream: 9 events, 8 receipts, 9 outbox rows, 0 snapshots, 0 leases\n  handle \"ada lovelace\": 1 events, 1 receipts, 1 outbox rows, 0 snapshots, 0 leases\n  read models: 12 rows dropped; the next start rebuilds them from the events that are left\ndry run: nothing was changed\n", course::learner_tag(ADA)));
     assert!(!dry.contains(ADA), "the report names the public tag, not the learner id");
-    assert!(erasure_report(&bob, &erasure, false).starts_with(&format!("erased learner #{} anonymous of catalog", quiz::learner_tag(BOB))));
+    assert!(erasure_report(&bob, &erasure, false).starts_with(&format!("erased learner #{} anonymous of course", course::learner_tag(BOB))));
 }
 
 #[tokio::test]
@@ -255,7 +255,7 @@ async fn erase_removes_one_learner_from_a_stopped_proctor_and_frees_its_handle()
     assert_eq!(code(run(&arguments(&["erase", "--handle", NAME]), environment(&directory.0)).await), code(ExitCode::FAILURE), "a served database is never erased from");
     drop(serving);
     assert_eq!(code(run(&arguments(&["erase", "--handle", NAME, "--dry-run"]), environment(&directory.0)).await), code(ExitCode::SUCCESS));
-    assert_eq!(code(run(&arguments(&["erase", "--dry-run", "--tag", &quiz::learner_tag(ADA)]), environment(&directory.0)).await), code(ExitCode::SUCCESS));
+    assert_eq!(code(run(&arguments(&["erase", "--dry-run", "--tag", &course::learner_tag(ADA)]), environment(&directory.0)).await), code(ExitCode::SUCCESS));
     assert_eq!((Database::inspect(&directory.0.join(DATABASE_FILE)).expect("whole"), holds(NAME)), (before, true), "a dry run changes nothing");
     assert_eq!(code(run(&arguments(&["erase", "--handle", "Grace"]), environment(&directory.0)).await), code(ExitCode::FAILURE), "nobody holds it");
     assert_eq!(code(run(&arguments(&["erase", "--handle", "A\u{200b}da"]), environment(&directory.0)).await), code(ExitCode::FAILURE));
@@ -265,13 +265,13 @@ async fn erase_removes_one_learner_from_a_stopped_proctor_and_frees_its_handle()
     assert_eq!(code(run(&arguments(&["erase", "--handle", "ada  LOVELACE"]), environment(&directory.0)).await), code(ExitCode::SUCCESS));
     let after = Database::inspect(&directory.0.join(DATABASE_FILE)).expect("whole");
     assert!(after.events < before.events && after.head == before.head, "{before:?} {after:?}");
-    assert!(!holds(NAME) && !holds(&NAME.to_lowercase()) && !holds(ADA) && !holds(&quiz::handle_actor_id("ada lovelace")) && holds(BOB), "neither the name nor the learner id is in any file");
+    assert!(!holds(NAME) && !holds(&NAME.to_lowercase()) && !holds(ADA) && !holds(&course::handle_actor_id("ada lovelace")) && holds(BOB), "neither the name nor the learner id is in any file");
     assert_eq!(code(run(&arguments(&["erase", "--handle", NAME]), environment(&directory.0)).await), code(ExitCode::FAILURE), "an erased learner is nobody");
     assert_eq!(code(run(&arguments(&["erase", "--learner", ADA]), environment(&directory.0)).await), code(ExitCode::FAILURE));
 
     assert_eq!(code(run(&arguments(&["rebuild"]), environment(&directory.0)).await), code(ExitCode::SUCCESS), "the proctor starts over the log that is left");
     assert!(!holds(NAME) && !holds(ADA), "the rebuilt read models do not know the learner");
-    let catalog = Arc::new(fixture());
+    let course = Arc::new(fixture());
     let database = Database::open(&directory.0).expect("open");
     let projections = teaching_proctor_base::storage::SqliteProjectionStore::new(database.clone());
     {
@@ -281,7 +281,7 @@ async fn erase_removes_one_learner_from_a_stopped_proctor_and_frees_its_handle()
         assert_eq!(projections.list(teaching_proctor_domain::projections::LEADERBOARD, "").await.iter().map(|(learner, _)| learner.clone()).collect::<Vec<_>>(), [BOB], "the scores of the erased learner are gone, the others stay");
         assert_eq!(projections.get(teaching_proctor_domain::projections::META, teaching_proctor_domain::projections::LEARNER_COUNT_KEY).await, Some(b"2".to_vec()));
     }
-    let mut bus = bus(&database, &catalog).await;
+    let mut bus = bus(&database, &course).await;
     let claimed = submit(&mut bus, &Command::IdentifyLearner { id: id(0x50), learner: id(0xd), identity: Identity::Pseudonym { handle: NAME.into() } }, 900).await;
     assert!(matches!(claimed, CommandOutcome::Accepted { .. }), "the handle is free again: {claimed:?}");
     let reused = submit(&mut bus, &Command::IdentifyLearner { id: id(1), learner: ADA.into(), identity: Identity::Anonymous }, 901).await;
@@ -313,8 +313,8 @@ const GUS: &str = "Gus Halfway";
 /// 100 ms and one at 5000 ms.
 async fn cluttered(label: &str) -> Scratch {
     let directory = played(label).await;
-    let catalog = Arc::new(fixture());
-    let mut bus = bus(&Database::open(&directory.0).expect("open"), &catalog).await;
+    let course = Arc::new(fixture());
+    let mut bus = bus(&Database::open(&directory.0).expect("open"), &course).await;
     let registrations = [
         (0x20, id(0xd0), Identity::Pseudonym { handle: DORA.into() }, 100),
         (0x21, id(0xd1), Identity::Anonymous, 100),
@@ -329,7 +329,7 @@ async fn cluttered(label: &str) -> Scratch {
     for (seed, learner, identity, millis) in registrations {
         assert!(matches!(submit(&mut bus, &Command::IdentifyLearner { id: id(seed), learner, identity }, millis).await, CommandOutcome::Accepted { .. }), "registration {seed:#x}");
     }
-    teaching_proctor_domain::projections::fixtures::answer(&mut bus, &catalog, &id(0xe0), &id(0x12), "power", Challenge::Medium, 200).await;
+    teaching_proctor_domain::projections::fixtures::answer(&mut bus, &course, &id(0xe0), &id(0x12), "power", Challenge::Medium, 200).await;
     directory
 }
 
@@ -339,7 +339,7 @@ async fn the_stale_registrations_are_those_nobody_played_under_before_the_horizo
     let log = SqliteAuthorityStore::new(Database::open(&directory.0).expect("open"));
     let subject = |learner: String, identity: Identity, handles: &[&str]| Subject { tenant: TENANT.into(), learner, identity: Some(identity), handles: handles.iter().map(|handle| (*handle).to_string()).collect() };
     let found = stale(&log, 1_000).expect("read");
-    let [stale_now] = found.as_slice() else { panic!("one catalog: {found:?}") };
+    let [stale_now] = found.as_slice() else { panic!("one course: {found:?}") };
     let expected = Stale {
         tenant: TENANT.into(),
         learners: vec![
@@ -358,7 +358,7 @@ async fn the_stale_registrations_are_those_nobody_played_under_before_the_horizo
     assert_eq!(stale_now, &expected, "whoever submitted a run stays whenever it registered, and so does what was registered since the horizon");
     assert_eq!(stale_now.registrations(), 8, "two anonymous learners, the five handles of the learners and the handle beside Ada's name");
     let batches = stale_now.batches();
-    let relay = enrollment_receipt(TENANT, &quiz::handle_actor_id("spare early"));
+    let relay = enrollment_receipt(TENANT, &course::handle_actor_id("spare early"));
     assert_eq!(batches, vec![Batch { actors: expected.learners.iter().flat_map(Subject::actors).collect(), relays: Vec::new() }, Batch { actors: vec![handle_key(TENANT, "spare early")], relays: vec![relay.clone()] }], "a learner goes in one transaction with every handle it holds; a handle beside an identity goes with the receipt of its relay");
     assert_eq!((batches[0].actors.len(), log.receipt(&relay).await.expect("read").map(|receipt| receipt.actor)), (10, Some(learner_key(TENANT, ADA))), "the receipt of that relay is one Ada's stream holds");
 
@@ -371,11 +371,11 @@ async fn the_stale_registrations_are_those_nobody_played_under_before_the_horizo
     let report = pruning_report(&found, &pruning, UNIX_EPOCH + Duration::from_secs(1_790_899_200));
     assert_eq!(
         report,
-        format!("would prune 8 registrations of catalog {TENANT} older than 7d (registered before 20261002T000000Z)\n  learners that never submitted a run: 5 (2 anonymous, 2 under a pseudonym, 1 under a name), holding 5 handles\n  handles claimed beside the identity of a learner that stays: 1\n  staying: 3 learners (2 of them submitted a run), 2 handles, 4 registrations\ndry run: nothing was changed\n")
+        format!("would prune 8 registrations of course {TENANT} older than 7d (registered before 20261002T000000Z)\n  learners that never submitted a run: 5 (2 anonymous, 2 under a pseudonym, 1 under a name), holding 5 handles\n  handles claimed beside the identity of a learner that stays: 1\n  staying: 3 learners (2 of them submitted a run), 2 handles, 4 registrations\ndry run: nothing was changed\n")
     );
     assert!(!report.contains(&id(0xd1)) && !report.contains("Dora") && !report.contains("dora"), "the report counts, it names nobody");
     let real = Pruning { dry_run: false, ..pruning };
-    assert!(pruning_report(&found, &real, UNIX_EPOCH).starts_with("pruning 8 registrations of catalog") && !pruning_report(&found, &real, UNIX_EPOCH).contains("nothing"));
+    assert!(pruning_report(&found, &real, UNIX_EPOCH).starts_with("pruning 8 registrations of course") && !pruning_report(&found, &real, UNIX_EPOCH).contains("nothing"));
     assert!(pruning_report(&stale(&log, 100).expect("read"), &real, UNIX_EPOCH).ends_with("nothing to prune: nothing was changed\n"));
     assert_eq!(pruning_report(&[], &real, UNIX_EPOCH), "the database holds no registration\nnothing to prune: nothing was changed\n");
 }
@@ -409,7 +409,7 @@ async fn prune_removes_what_nobody_played_under_from_a_stopped_proctor_and_every
     let after = Database::inspect(&directory.0.join(DATABASE_FILE)).expect("whole");
     assert_eq!(after.events + 16, before.events, "the nine events of six learners, their five handles and the two handles beside Ada's name: {before:?} {after:?}");
     assert!(junk.iter().all(|name| !holds(name)), "no name nobody played under is a byte of any file: {:?}", junk.iter().filter(|name| holds(name)).collect::<Vec<_>>());
-    assert!([id(0xd0), id(0xd1), id(0xe0), id(0xe1), id(0xf0), quiz::handle_actor_id("dormant dora"), quiz::handle_actor_id("spare early")].iter().all(|gone| !holds(gone)), "nor is a learner id or a handle stream of theirs");
+    assert!([id(0xd0), id(0xd1), id(0xe0), id(0xe1), id(0xf0), course::handle_actor_id("dormant dora"), course::handle_actor_id("spare early")].iter().all(|gone| !holds(gone)), "nor is a learner id or a handle stream of theirs");
     assert!(holds(ADA) && holds(BOB) && holds("Ada Lovelace"), "who played is still there");
     assert_eq!(registrations().await, None, "the read models are dropped");
     assert_eq!(code(run(&arguments(&["prune", "--older-than", "1s"]), environment(&directory.0)).await), code(ExitCode::SUCCESS), "a second prune finds nothing");
@@ -418,7 +418,7 @@ async fn prune_removes_what_nobody_played_under_from_a_stopped_proctor_and_every
     assert_eq!(code(run(&arguments(&["rebuild"]), environment(&directory.0)).await), code(ExitCode::SUCCESS), "the proctor starts over the log that is left");
     assert_eq!(registrations().await.as_deref(), Some("2"), "the count of registrations went down to Bob and Ada's name");
     assert!(junk.iter().all(|name| !holds(name)), "the rebuilt read models know none of them");
-    let catalog = Arc::new(fixture());
+    let course = Arc::new(fixture());
     let database = Database::open(&directory.0).expect("open");
     {
         use server::storage::ProjectionStore;
@@ -427,12 +427,12 @@ async fn prune_removes_what_nobody_played_under_from_a_stopped_proctor_and_every
         assert_eq!(projections.list(teaching_proctor_domain::projections::HANDLES, "").await.iter().map(|(key, _)| key.clone()).collect::<Vec<_>>(), ["ada lovelace"]);
         assert_eq!((projections.get(teaching_proctor_domain::projections::LEARNERS, &id(0xd1)).await, projections.get(teaching_proctor_domain::projections::LEARNERS, &id(0xe0)).await), (None, None));
     }
-    let mut bus = bus(&database, &catalog).await;
+    let mut bus = bus(&database, &course).await;
     let claimed = submit(&mut bus, &Command::IdentifyLearner { id: id(0x60), learner: id(0x61), identity: Identity::Name { handle: DORA.into() } }, 900).await;
     assert!(matches!(claimed, CommandOutcome::Accepted { ref events, .. } if events.len() == 1), "a pruned handle is free again: {claimed:?}");
     let reused = submit(&mut bus, &Command::IdentifyLearner { id: id(0x21), learner: id(0xd1), identity: Identity::Anonymous }, 901).await;
     assert!(matches!(reused, CommandOutcome::Accepted { ref events, .. } if events.len() == 1), "a pruned learner id and its command id are unknown again: {reused:?}");
-    let stranger = submit(&mut bus, &Command::StartRun { id: id(0x62), learner: id(0xe0), run: id(0x63), quiz: "power".into(), challenge: Challenge::Medium, at: 902 }, 902).await;
+    let stranger = submit(&mut bus, &Command::StartRun { origin: None, id: id(0x62), learner: id(0xe0), run: id(0x63), quiz: "power".into(), challenge: Challenge::Medium, at: 902 }, 902).await;
     assert!(matches!(stranger, CommandOutcome::Rejected { .. }), "a pruned learner starts no run: {stranger:?}");
     let successor = submit(&mut bus, &Command::IdentifyLearner { id: id(0x64), learner: id(0x65), identity: Identity::Pseudonym { handle: "Spare Early".into() } }, 903).await;
     assert!(matches!(successor, CommandOutcome::Accepted { ref events, .. } if events.len() == 1), "{successor:?}");

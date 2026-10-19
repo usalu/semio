@@ -1,5 +1,5 @@
-//! 🎯️ Edit-mode window option — the selection group: which `vortex` granularity (node / handle /
 //! edge) a pick may even reach. Per window instance (`Puzzle2dWindowConfig`), mirroring puzzle3d's
+//! 🎯️ Edit-mode window option — the selection group: which `vortex` granularity (node / handle /
 //! `☑️options/🎯️select` over objects/vortices/attractions. 🕹️ The marquee method and the default merge
 //! mode are framework-owned (`interactionSelect`'s `method`/`merge` args) and deliberately absent here.
 

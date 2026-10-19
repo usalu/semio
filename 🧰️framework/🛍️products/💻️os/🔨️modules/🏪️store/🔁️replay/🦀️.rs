@@ -2,6 +2,7 @@
 //! ring, and pair merges. The engine, history reads and time travel replay through it; it never names the engine.
 //!
 //! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).
+use crate::os_spr::{ColdDiffAlgebra};
 #[path = "📥️lifted/🏪️store/🦀️.rs"]
 pub mod lifted_store;
 #[path = "🎮️operation/🦀️.rs"]
@@ -13,7 +14,7 @@ pub mod lifted_snapshot_read;
 #[cfg(any(test, feature = "hot-path-census"))] use semio_framework_os_store_ledger::hot_path_census;
 
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
-use semio_framework_value::retained_clone::RetainedCloneGrant;
+use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
 use crate::replay_preparation::{ArtifactReplayPreparation, ArtifactReplayPreparationFactory, ArtifactReplayPreparationProgress, ArtifactReplayPreparationRetirement, ArtifactReplayPreparationTask};
 use semio_framework_os_spr::command::ArtifactReplayPrepared;
 use semio_framework_os_spr::command::ArtifactMessageSource;

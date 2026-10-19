@@ -4,13 +4,18 @@
       "phase": "sessionTransfer",
       "headers": [
         "session",
-        "sessionCursor"
+        "session",
+        "session",
+        "sessionCursor",
+        "sessionCursor",
+        "sessionOption"
       ]
     },
     {
       "phase": "sessionRemoval",
       "headers": [
-        "sessionCursor",
+        "sessionOption",
+        "sessionOption",
         "retiredFlag"
       ]
     },
@@ -561,6 +566,44 @@
       "ticket": false,
       "done": true,
       "mayDrop": true
+    }
+  ],
+  "physicalVectors": [
+    {
+      "name": "empty-zero-sized-mutation",
+      "length": 0,
+      "width": 0,
+      "capacity": 0,
+      "virtualCapacity": true,
+      "allocatedBytes": 0,
+      "terminal": true
+    },
+    {
+      "name": "live-zero-sized-mutations",
+      "length": 3,
+      "width": 0,
+      "capacity": 0,
+      "virtualCapacity": true,
+      "allocatedBytes": 0,
+      "terminal": false
+    },
+    {
+      "name": "empty-retained-storage",
+      "length": 0,
+      "width": 8,
+      "capacity": 16,
+      "virtualCapacity": false,
+      "allocatedBytes": 128,
+      "terminal": false
+    },
+    {
+      "name": "empty-released-storage",
+      "length": 0,
+      "width": 8,
+      "capacity": 0,
+      "virtualCapacity": false,
+      "allocatedBytes": 0,
+      "terminal": true
     }
   ]
 }

@@ -35,23 +35,28 @@ impl Fem2dModelWindowConfigPatch {
 }
 
 impl protocol::MutationDiff<Fem2dModelWindowConfig> for Fem2dModelWindowConfigPatch {
-    fn apply(&self, base: &Fem2dModelWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Fem2dModelWindowConfig> {
-        Ok(Fem2dModelWindowConfig {
-            camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()),
-        })
-    }
+
+}
+impl protocol::ColdMutationDiff<Fem2dModelWindowConfig> for Fem2dModelWindowConfigPatch {
     fn absorb(&mut self, other: Self) {
         self.camera = other.camera.or_else(|| self.camera.take());
+    }
+
+    fn apply(&self, base: &mut Fem2dModelWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        if let Some(value) = &self.camera { base.camera = value.clone(); }
+        Ok(())
     }
 }
 
 impl protocol::DiffAlgebra<Fem2dModelWindowConfig> for Fem2dModelWindowConfigPatch {
+    fn is_empty(&self) -> bool {
+        self.camera.is_none()
+    }
+}
+impl protocol::ColdDiffAlgebra<Fem2dModelWindowConfig> for Fem2dModelWindowConfigPatch {
     fn inverse(&self, base: &Fem2dModelWindowConfig) -> Self {
         Self {
             camera: self.camera.as_ref().map(|_| base.camera.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.camera.is_none()
     }
 }

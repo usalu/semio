@@ -317,5 +317,27 @@
       "maximumBytes": 134217728,
       "maximumLines": 65536
     }
-  }
+  },
+  "controlledSelection": [
+    {
+      "manifest": "framework/kernel/Cargo.toml",
+      "cancelAfter": null,
+      "expectedOwner": "."
+    },
+    {
+      "manifest": "framework/kernel/Cargo.toml",
+      "cancelAfter": 0,
+      "expectedOwner": null
+    },
+    {
+      "manifest": "framework/kernel/Cargo.toml",
+      "cancelAfter": 1,
+      "expectedOwner": null
+    },
+    {
+      "manifest": "framework/kernel/Cargo.toml",
+      "cancelAfter": 3,
+      "expectedOwner": null
+    }
+  ]
 }

@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.history.original-source/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "cases", "indexRows", "vectorGrowth", "lookups", "removals", "pops", "varints", "utf8", "identities"],
+  "properties": {
+    "schema": {"const": "semio.history.original-source/v1"},
+    "identities":{"type":"array","minItems":5,"items":{"type":"object","additionalProperties":false,"required":["edit","index","expected"],"properties":{"edit":{"type":"string"},"index":{"type":"string","pattern":"^[0-9]+$"},"expected":{"type":"string"}}}},
+    "utf8":{"type":"array","minItems":6,"items":{"type":"object","additionalProperties":false,"required":["bytes","text","position","offset","refusal"],"properties":{"bytes":{"type":"array","items":{"type":"integer","minimum":0,"maximum":255}},"text":{"type":["string","null"]},"position":{"type":"integer","minimum":0},"offset":{"type":"integer","minimum":0},"refusal":{"enum":[null,"invalid UTF-8","truncated UTF-8"]}}}},
+    "varints":{"type":"array","minItems":8,"items":{"type":"object","additionalProperties":false,"required":["bytes","value","position","refusal"],"properties":{"bytes":{"type":"array","items":{"type":"integer","minimum":0,"maximum":255}},"value":{"type":["string","null"],"pattern":"^[0-9]+$"},"position":{"type":"integer","minimum":0},"refusal":{"enum":[null,"truncated","overflow"]}}}},
+    "removals": {"type":"array","minItems":3,"items":{"type":"object","additionalProperties":false,"required":["key","value"],"properties":{"key":{"type":"string"},"value":{"type":["integer","null"],"minimum":0}}}},
+    "pops": {"type":"array","minItems":3,"items":{"type":"object","additionalProperties":false,"required":["prefix","key","value"],"properties":{"prefix":{"type":"integer","minimum":0},"key":{"type":"string"},"value":{"type":"integer","minimum":0}}}},
+    "lookups": {"type":"array","minItems":3,"items":{"type":"object","additionalProperties":false,"required":["key","value"],"properties":{"key":{"type":"string"},"value":{"type":["integer","null"],"minimum":0}}}},
+    "vectorGrowth": {"type":"array","minItems":4,"items":{"type":"object","additionalProperties":false,"required":["length","capacity"],"properties":{"length":{"type":"integer","minimum":0},"capacity":{"type":"integer","minimum":0}}}},
+    "indexRows": {"type":"array","minItems":3,"items":{"type":"object","additionalProperties":false,"required":["key","value"],"properties":{"key":{"type":"string"},"value":{"type":"integer","minimum":0}}}},
+    "cases": {"type": "array", "minItems": 4, "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["events", "expected"],
+      "properties": {
+        "events": {"type": "array", "items": {"enum": ["deny", "birth", "fold", "take", "closeFold", "closeSource"]}},
+        "expected": {"type": "object", "additionalProperties": false, "required": ["input", "source", "alias", "output"], "properties": {"input": {"type": "boolean"}, "source": {"type": "boolean"}, "alias": {"type": "boolean"}, "output": {"type": "boolean"}}}
+      }
+    }}
+  }
+}

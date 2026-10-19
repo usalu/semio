@@ -23,7 +23,7 @@ testkit = ["teaching-proctor-base/testkit"]
 
 [dependencies]
 teaching-proctor-base = { path = "../../../🧱️base/📦️packages/🦀️rust" }
-semio-framework-quiz = { workspace = true }
+semio-framework-course = { workspace = true }
 semio-framework-server = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }

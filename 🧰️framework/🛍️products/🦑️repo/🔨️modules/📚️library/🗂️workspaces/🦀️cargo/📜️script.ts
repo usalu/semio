@@ -55,6 +55,9 @@ class QueuedContractScript extends Script {
     await runRepositoryCommand(this.invocation,"bun",["test", join(import.meta.dir, "🧪️tests/🕰️queued-preparation/🟦️.ts")],this.root,"cargo-queued-preparation-contract",{version:1,maximumElapsedMilliseconds:45_000,output:{maximumBytes:134217728,maximumLines:65536}},{env: repoTestArtifactEnvironment(this.root, "cargo-queued-preparation-contract")});
   }
 }
+class OriginalControlContractScript extends Script {
+ async run(args:string[]):Promise<void>{if(args.length)throw Error("original-control-contract-check accepts no overrides");await runRepositoryCommand(this.invocation,"bun",["test",join(import.meta.dir,"🧪️tests/📥️original-control/🟦️.ts"),join(import.meta.dir,"🧪️tests/🎛️preparation/🟦️.ts")],this.root,"cargo-original-control-contract",{version:1,maximumElapsedMilliseconds:45_000,output:{maximumBytes:134217728,maximumLines:65536}},{env:repoTestArtifactEnvironment(this.root,"cargo-original-control-contract")});}
+}
 class BunContractScript extends Script {
   async run(args: string[]): Promise<void> { if(args.length)throw new Error("bun-contract-check accepts no overrides");await runRepositoryCommand(this.invocation,"bun",["test",join(import.meta.dir,"../🟦️bun/🧪️tests/🟦️.ts")],this.root,"bun-workspace-contract",{version:1,maximumElapsedMilliseconds:15_000,output:{maximumBytes:134217728,maximumLines:65536}}); }
 }
@@ -65,4 +68,4 @@ class CapabilityContractScript extends Script {
     console.log(`cargo capability contract: ${runCargoCapabilityContributionChecks() + runCargoCapabilityPhysicalChecks()} laws`);
   }
 }
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => new ScriptRouter(getWorkspaceRoot()).register("capability-contract-check", CapabilityContractScript).register("runtime-contract-check",RuntimeContractScript).register("runtime-input-check",RuntimeInputScript).register("bun-contract-check",BunContractScript).register("members", MembersScript).register("contract-check", ContractScript).register("queued-contract-check", QueuedContractScript).register("native-input-check", NativeInputScript).run(process.argv.slice(2), original));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => new ScriptRouter(getWorkspaceRoot()).register("capability-contract-check", CapabilityContractScript).register("runtime-contract-check",RuntimeContractScript).register("runtime-input-check",RuntimeInputScript).register("bun-contract-check",BunContractScript).register("members", MembersScript).register("contract-check", ContractScript).register("queued-contract-check", QueuedContractScript).register("original-control-contract-check", OriginalControlContractScript).register("native-input-check", NativeInputScript).run(process.argv.slice(2), original));

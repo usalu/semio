@@ -88,6 +88,39 @@
         }
       }
     },
+    "test-operation-diagnostics-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-operation-diagnostics source"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-operation-diagnostics",
+            "source"
+          ]
+        }
+      },
+      "dependsOn": []
+    },
+    "test-operation-diagnostics-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-operation-diagnostics native"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-operation-diagnostics",
+            "native"
+          ]
+        }
+      }
+    },
     "test-original-owned-async-source": {
       "executor": "repo:script",
       "cache": false,

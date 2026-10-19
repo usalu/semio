@@ -1,57 +1,7 @@
-use semio_s_artifact_fem_3d_editor::editor::fem3d::*;
-use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results::results_window_instance_id;
-use semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::reset_document_effect;
-use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::gumball::{rotate_selection, scale_selection, set_transform_gumball_flag, translate_selection};
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_area_load;
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_bar;
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_combination;
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_frame;
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_load_case;
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_material;
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_member_udl;
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_nodal_load;
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_node;
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_section;
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_solid;
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_support;
-use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::focus_entity;
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_combination;
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_element;
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_load;
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_load_case;
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_material;
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_node;
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_section;
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_solid;
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_support;
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::remove_selection;
-use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::result_animation_tick;
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::set_active_example;
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::set_analysis_settings;
-use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::set_camera;
-use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::set_result_animation;
-use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::set_result_display;
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::set_self_weight;
-use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::gumball::Fem3dGumballMotion;
-use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_interaction_definition;
-use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_transform_armed;
-use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::Fem3dInteractionSnapshot;
-use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_INTERACTION_DOMAIN;
-use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_UTILITY_TRANSFORM;
-use semio_s_artifact_fem_3d_editor::editor::fem3d::modes::edit;
-use semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model as window_model;
-use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results as window_results;
-use semio_s_artifact_fem_3d_editor_panels::editor::fem3d::panels::artifact as artifact_panel;
-use semio_s_artifact_fem_3d_editor_panels::editor::fem3d::panels::inspection as inspection_panel;
-use semio_s_artifact_fem_3d_editor_panels::editor::fem3d::panels::results as results_panel;
-use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::fem3d_labels;
-use semio_s_fem_model::{Dof, ElementResult};
-use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-use semio_framework_pack_json::Value;
-use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::built_text_node;
+use crate::context;
+
+
+use super::*;
 use semio_framework_plugin::create_default_layout;
 use semio_framework_plugin::ActionArgDef;
 use semio_framework_plugin::ActionArgOption;
@@ -197,7 +147,7 @@ async fn every_boot_document_mutation_is_admissible_on_the_artifact_lane() {
         assert!(factory.preflight(&mutation, store::os_store::store_schema::HistoryLane::Document).is_ok(), "node {} exceeds the artifact one-item envelope", node.id);
     }
     assert!(factory
-        .preflight(&Fem3dMutation::CreateNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNode { id: "n0".into(), x: 0.0, y: 0.0, z: 0.0 }, index: None }), store::os_store::store_schema::HistoryLane::Interaction)
+        .preflight(&Fem3dMutation::CreateNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: semio_s_fem_node::volumetric::FemNodeValue { id: "n0".into(), x: 0.0, y: 0.0, z: 0.0 }, index: None }), store::os_store::store_schema::HistoryLane::Interaction)
         .is_err());
 }
 
@@ -212,7 +162,11 @@ async fn initial_snapshot_is_the_bundled_example_not_empty() {
 }
 //#endregion 🧪️RetainedCommandEnvelope
 
-use crate::context::{dispatch, fem3d_app, Fem3dApp};
+use crate::context::dispatch;
+
+use crate::context::fem3d_app;
+
+use crate::context::Fem3dApp;
 use semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip;
 
 //#region 🔖️CommandSurface
@@ -234,9 +188,9 @@ fn every_command() -> Vec<Fem3dCommand> {
         Fem3dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: "[[\"dead\",1.35],[\"live\",1.5]]".into() }),
         Fem3dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id: "dead".into(), enabled: true }),
         Fem3dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: Some(30.0), field: None, value: None, window_id: None }),
-        Fem3dCommand::RemoveSelection(remove_selection::RemoveSelection { ids: vec!["n1".into(), "e1".into()] }),
+        Fem3dCommand::RemoveSelection(remove_selection::RemoveSelection { ids: vec!["scope:1:4:node2:n1".into(), "scope:1:7:element2:e1".into()] }),
         Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_fem_3d_io::examples::demo::ID.into() }),
-        Fem3dCommand::SetCamera(set_camera::SetCamera { camera: semio_framework_os_kernel::Viewport3dOrbit { position: [8.0, -3.0, 5.0], target: [0.0; 3], zoom: 1.25, up: None } }),
+        Fem3dCommand::SetCamera(set_camera::SetCamera { camera: crate::Viewport3dOrbit { position: [8.0, -3.0, 5.0], target: [0.0; 3], zoom: 1.25, up: None } }),
         Fem3dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0, field: None, value: None, window_id: None }),
         Fem3dCommand::PatchNode(patch_node::PatchNode { id: "n1".into(), field: "x".into(), value: "1.5".into() }),
         Fem3dCommand::PatchElement(patch_element::PatchElement { id: "e1".into(), field: "roll".into(), value: "0.1".into() }),
@@ -244,15 +198,15 @@ fn every_command() -> Vec<Fem3dCommand> {
         Fem3dCommand::PatchSection(patch_section::PatchSection { id: "hea200".into(), field: "area".into(), value: "0.006".into() }),
         Fem3dCommand::PatchSupport(patch_support::PatchSupport { id: "s1".into(), field: "tz".into(), value: "true".into() }),
         Fem3dCommand::PatchSolid(patch_solid::PatchSolid { id: "sol1".into(), field: "axis".into(), value: "y".into() }),
-        Fem3dCommand::PatchLoad(patch_load::PatchLoad { id: "l1".into(), field: "value".into(), value: "-1000".into() }),
+        Fem3dCommand::PatchLoad(patch_load::PatchLoad { id: "scope:1:4:load4:live2:l2".into(), field: "value".into(), value: "-1000".into() }),
         Fem3dCommand::PatchLoadCase(patch_load_case::PatchLoadCase { id: "live".into(), field: "name".into(), value: "Imposed".into() }),
         Fem3dCommand::PatchCombination(patch_combination::PatchCombination { id: "uls".into(), field: "term:live".into(), value: "1.5".into() }),
         Fem3dCommand::SetResultAnimation(set_result_animation::SetResultAnimation { phase: Some(0.5), playing: Some(true), speed: None, loop_mode: Some("pingPong".into()), waveform: None, field: None, value: None, window_id: Some("results-left".into()) }),
         Fem3dCommand::ResultAnimationTick(result_animation_tick::ResultAnimationTick { window_id: "results-left".into() }),
-        Fem3dCommand::FocusEntity(focus_entity::FocusEntity { id: "n1".into() }),
-        Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: vec!["n1".into()], dx: 0.5, dy: 0.0, dz: -0.25, phase: Some("stream".into()), reason: None }),
+        Fem3dCommand::FocusEntity(focus_entity::FocusEntity { id: "scope:1:4:node2:n1".into() }),
+        Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: vec!["scope:1:4:node2:n1".into()], dx: 0.5, dy: 0.0, dz: -0.25, phase: Some("stream".into()), reason: None }),
         Fem3dCommand::RotateSelection(rotate_selection::RotateSelection { ids: Vec::new(), ax: 0.0, ay: 0.0, az: 1.0, angle: 0.1, phase: Some("abort".into()), reason: Some("blur".into()) }),
-        Fem3dCommand::ScaleSelection(scale_selection::ScaleSelection { ids: vec!["sol1".into()], sx: 2.0, sy: 1.0, sz: 1.0, phase: None, reason: None }),
+        Fem3dCommand::ScaleSelection(scale_selection::ScaleSelection { ids: vec!["scope:1:5:solid4:sol1".into()], sx: 2.0, sy: 1.0, sz: 1.0, phase: None, reason: None }),
         Fem3dCommand::SetTransformGumballFlag(set_transform_gumball_flag::SetTransformGumballFlag { flag: "rotate".into(), pressed: Some(false) }),
     ]
 }
@@ -282,13 +236,13 @@ async fn every_command_round_trips_through_text_and_binary() {
 /// `every_command()`. Rows 1–18 carry the values the old `📡️protocol` crate's baseline dump used
 /// (ticket `26/08/05/FEM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION`,
 /// `🧪️wire-baseline-before-3d.txt`); `setActiveExample` was re-pinned when the example became `demo`
-/// and `setResultDisplay` when its `field`/`value`/`window_id` triple was appended, rows 19–36 were
+/// and `setResultDisplay` when its `field`/`value`/`window_id` triple was appended, rows 19–34 were
 /// pinned at their introduction (ticket `26/09/16/FEM-3D-INTERACTIVE-FEATURE-COMPLETE`). Row order
 /// is the binary variant ordinal, so a reordering — which no round-trip law can catch — shows up
 /// here as a leading-byte mismatch. `addNodalLoad`'s `None` case is pinned separately below because
 /// `every_command()` only carries its `Some` shape.
 #[semio_framework_async_macros::async_test]
-async fn every_command_keeps_its_pre_migration_bytes() {
+async fn every_command_keeps_its_current_bytes() {
     use protocol::OpBinary;
     let expected = [
         "010000030005000000000000f03f0105000000000000004002050000000000000840",
@@ -305,7 +259,7 @@ async fn every_command_keeps_its_pre_migration_bytes() {
         "010b0203554c531c5b5b2264656164222c312e33355d2c5b226c697665222c312e355d5d02000600010601",
         "010c010464656164020006000102",
         "010d000200040502050000000000003e40",
-        "010e02026531026e3101000c0206010600",
+        "010e021273636f70653a313a343a6e6f6465323a6e311573636f70653a313a373a656c656d656e74323a653101000c0206000601",
         "010f010464656d6f01000600",
         "01100001000e0d03011503000000000000204000000000000008c000000000000014400215030000000000000000000000000000000000000000000000000305000000000000f43f",
         "0111020464656164056d6f64616c03000600010601020400",
@@ -315,18 +269,16 @@ async fn every_command_keeps_its_pre_migration_bytes() {
         "01150305302e30303604617265610668656132303003000602010601020600",
         "011603027331047472756502747a03000600010602020601",
         "011703046178697304736f6c31017903000601010600020602",
-        "011803052d31303030026c310576616c756503000601010602020600",
+        "011803052d313030301873636f70653a313a343a6c6f6164343a6c697665323a6c320576616c756503000601010602020600",
         "01190307496d706f736564046c697665046e616d6503000601010602020600",
         "011a0303312e35097465726d3a6c69766503756c7303000602010601020600",
         "011b020870696e67506f6e670c726573756c74732d6c656674040005000000000000e03f0102030600070601",
         "011c010c726573756c74732d6c65667401000600",
-        "011d01026e3101000600",
-        "011e01026e3104000c0106000105000000000000e03f020500000000000000000305000000000000d0bf",
+        "011d011273636f70653a313a343a6e6f6465323a6e3101000600",
+        "011e011273636f70653a313a343a6e6f6465323a6e3104000c0106000105000000000000e03f020500000000000000000305000000000000d0bf",
         "011f0005000c0001050000000000000000020500000000000000000305000000000000f03f04059a9999999999b93f",
-        "01200104736f6c3104000c010600010500000000000000400205000000000000f03f0305000000000000f03f",
+        "0120011573636f70653a313a353a736f6c6964343a736f6c3104000c010600010500000000000000400205000000000000f03f0305000000000000f03f",
         "01210106726f74617465020006000101",
-        "01220000",
-        "01230000",
     ];
     let commands = every_command();
     assert_eq!(commands.len(), expected.len(), "the baseline hex list must cover every command row");
@@ -379,8 +331,6 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         "rotate-selection",
         "scale-selection",
         "set-transform-gumball-flag",
-        "transform-begin",
-        "transform-end",
     ];
     let commands = every_command();
     assert_eq!(commands.len(), expected_keys.len(), "every command row names its wire keyword");
@@ -416,11 +366,63 @@ async fn manifest_labels_resolve_german_3d() {
 //#endregion 🔖️ManifestSanity
 
 //#region 🔖️CrossCutting
+/// 📡️ Disconnected mounted edits catch up through their original events without replacing sibling intent.
+#[semio_framework_async_macros::async_test]
+async fn mounted_peer_catch_up_preserves_independent_fields_and_deduplicates_events() {
+    use semio_framework_plugin::PluginApp;
+    use crate::context::dispatch;
+    use crate::context::fem3d_peer_app;
+    async fn events(app: &context::Fem3dApp) -> Vec<protocol::MutationEnvelope> {
+        let files = app.document_pack().await.expect("export mounted peer");
+        let parsed = store::os_store::text_format::parse_document_pack::<Fem3dSnapshot, Fem3dMutation>(&files.pack, &files.spr).await.expect("read retained peer events");
+        let mut envelope = parsed.into_envelope();
+        let mut events = Vec::new();
+        for edit in &envelope.vcs.edits {
+            events.extend(store::os_spr::mutation_envelope_from_edit::<Fem3dSnapshot, Fem3dMutation>(edit, &protocol::ArtifactId(envelope.id.clone()), &protocol::SchemaId(envelope.schema.clone())).expect("original causal envelope"));
+        }
+        events.extend(std::mem::take(&mut envelope.transitions));
+        envelope.retire_unadopted();
+        events
+    }
+    let fixture: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(include_str!("../../🕹️interaction/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("peer vectors");
+    let row = &fixture["peerCatchUp"];
+    let mut first = fem3d_peer_app("fem3d-peer-a");
+    let mut second = fem3d_peer_app("fem3d-peer-b");
+    for app in [&mut first, &mut second] {
+        dispatch(app, Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_fem_3d_io::examples::demo::ID.into() })).await;
+    }
+    assert_eq!(first.document_identity(), second.document_identity());
+    let target = row["id"].as_str().expect("target id");
+    let base = first.snapshot().expect("genesis");
+    assert_eq!(base, second.snapshot().expect("same genesis"));
+    let before = base.nodes.iter().find(|node| node.id == target).expect("fixture target");
+    assert_eq!(before.x, row["before"]["x"].as_f64().expect("x"));
+    assert_eq!(before.y, row["before"]["y"].as_f64().expect("y"));
+    dispatch(&mut first, Fem3dCommand::PatchNode(patch_node::PatchNode { id: target.into(), field: "x".into(), value: row["after"]["x"].as_f64().expect("authored x").to_string() })).await;
+    dispatch(&mut second, Fem3dCommand::PatchNode(patch_node::PatchNode { id: target.into(), field: "y".into(), value: row["after"]["y"].as_f64().expect("authored y").to_string() })).await;
+    assert_ne!(first.snapshot().expect("disconnected first"), second.snapshot().expect("disconnected second"));
+    let from_first = protocol::encode_envelopes(&events(&first).await);
+    let from_second = protocol::encode_envelopes(&events(&second).await);
+    first.ingest_operations(&from_second, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("reconnect first");
+    second.ingest_operations(&from_first, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("reconnect second");
+    let combined = first.snapshot().expect("combined first");
+    assert_eq!(combined, second.snapshot().expect("combined second"));
+    let node = combined.nodes.iter().find(|node| node.id == target).expect("combined target");
+    assert_eq!(node.x, row["after"]["x"].as_f64().expect("x"));
+    assert_eq!(node.y, row["after"]["y"].as_f64().expect("y"));
+    assert_eq!(node.z, before.z);
+    let duplicates = first.ingest_operations(&from_second, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("duplicate catch-up");
+    assert!(duplicates.iter().all(|report| !report.accepted));
+    assert_eq!(first.snapshot().expect("unchanged duplicate"), combined);
+    assert_eq!(events(&first).await.len(), events(&second).await.len());
+    eprintln!("[DEBUG] FEM3d two mounted editors authored while disconnected, replayed original causal envelopes and deduplicated catch-up with both sparse fields intact");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn undo_restores_document_after_add_node() {
     let mut app = fem3d_app();
     let before = app.snapshot().expect("snapshot").nodes.len();
-    assert_undo_redo_round_trip(&mut app.0, Fem3dCommand::AddNode(add_node::AddNode { x: 1.0, y: 2.0, z: 3.0 }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    assert_undo_redo_round_trip(&mut app.0, Fem3dCommand::AddNode(add_node::AddNode { x: 1.0, y: 2.0, z: 3.0 }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
 }
 
 /// 🛡️ The same round trip for `addSupport`, the verb 🏗️fem3d's own bar presses. B3f measured it
@@ -433,7 +435,7 @@ async fn undo_restores_document_after_add_support() {
     let mut app = fem3d_app();
     let node_id = app.snapshot().expect("snapshot").nodes.first().map(|node| node.id.clone()).expect("the bundled example has nodes");
     let before = app.snapshot().expect("snapshot").supports.len();
-    assert_undo_redo_round_trip(&mut app.0, Fem3dCommand::AddSupport(add_support::AddSupport { node_id, fixed: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::ALL.to_vec() }), |app| app.snapshot().expect("snapshot").supports.len(), before, before + 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
+    assert_undo_redo_round_trip(&mut app.0, Fem3dCommand::AddSupport(add_support::AddSupport { node_id, fixed: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::ALL.to_vec() }), |app| app.snapshot().expect("snapshot").supports.len(), before, before + 1, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
     .await;
 }
 
@@ -568,3 +570,22 @@ async fn fem3d_camera_scene_encoding_preserves_the_typed_pose() {
 }
 //#endregion 🎬️SceneRender
 use store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory;
+
+/// 👥️ The mounted camera and declared interaction use the shared transport and retire on departure.
+#[semio_framework_async_macros::async_test]
+async fn mounted_camera_and_interaction_presence_reach_peers_without_document_edits() {
+    use semio_framework_value::FromValue;
+    use semio_framework_plugin::artifact_app_laws::assert_registered_presence_round_trip;
+    use semio_framework_plugin::artifact_app_laws::fixture_identity;
+    use semio_framework_plugin::artifact_app_laws::fixture_mounted_policy;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/📷️camera/🧫️fixtures/🔣️.json")).expect("portable shared presence fixture");
+    let expected = protocol::PresenceWindowView::from_value(semio_framework_value::DslValue::from(&fixture["admission"][1]["value"])).expect("admitted shared camera");
+    let boot = <Fem3dPlayApp as ArtifactEditor>::initial_snapshot();
+    let node = boot.nodes.first().expect("bundled structural node");
+    let selected = protocol::wire::encode_scoped_identity(&["node", &node.id]).expect("canonical node target");
+    let window_kind = edit::windows::model::FEM3D_WINDOW_MODEL;
+    let view = semio_framework_plugin::ViewModel { window_id: Some("model-presence".into()), window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "model-presence".into(), window_kind_id: window_kind.into() }], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let protocol::PresenceViewKind::Orbit { position, target, up, .. } = expected.kind else { panic!("portable orbit pose") };
+    let command = Fem3dCommand::SetCamera(set_camera::SetCamera { camera: crate::Viewport3dOrbit { position, target, up: Some(up), zoom: 1.0 } });
+    assert_registered_presence_round_trip::<EditorApp<Fem3dPlayApp>, _, _>(|| async { context::manifest() }, command, view, expected, ("fem3d", Some(("node", &selected))), fixture_mounted_policy(), &mut fixture_identity()).await;
+}

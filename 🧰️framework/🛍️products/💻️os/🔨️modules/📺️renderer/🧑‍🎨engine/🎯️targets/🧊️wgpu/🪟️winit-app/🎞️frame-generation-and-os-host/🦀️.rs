@@ -193,14 +193,12 @@ impl OsHost {
     /// changes (`enqueue_host_event`/`enqueue_host_metrics`) and when a redraw finds no build to
     /// invalidate — never underneath a live one.
     ///
-    /// 🩸️ `frame_ready` is only ever set by the native `HostUserEvent::FrameReady` proxy; the browser
-    /// worker has no such proxy, so this used to renumber the inputs on EVERY tick. A build was
+    /// 🩸️ The same original caller now drives native and browser frame continuation. Renumbering inputs on every tick previously left a build
     /// therefore superseded one tick after it was admitted and could never take a second step: on
     /// 6118 exactly one build ever ran (`frame build admitted generation=Generation(3)`), the next
     /// tick superseded it, and the shell produced no further frame for the rest of the session
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
-    fn prepare_redraw(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
-        let _ = semio_framework_os_renderer_wgpu_host_plumbing::surface_lane::MountedSurfaceResizeLane::close_abandoned_step(cx)?;
+    fn prepare_redraw(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
         if self.frame_ready {
             self.frame_ready = false;
         } else if !self.frame_build.has_live_session() {

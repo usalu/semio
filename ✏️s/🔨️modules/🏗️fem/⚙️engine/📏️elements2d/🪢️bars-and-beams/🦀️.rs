@@ -278,6 +278,22 @@ pub struct BeamEb2 {
     pub density: f64,
 }
 
+
+impl BeamEb2 {
+    /// 🍃️ Integrates linear and Hermite member-load rows including consistent translational gravity.
+    pub fn mounted_load_row(&self, positions: &[[f64; 3]], row: usize, udl: &MemberUdl, gravity: [f64; 2]) -> Option<f64> {
+        if row >= 6 { return None; }
+        let (length, cosine, sine) = mounted_segment_geometry(positions)?;
+        let wx = udl.wx + self.density * self.area * gravity[0];
+        let wy = udl.wy + self.density * self.area * gravity[1];
+        Some(match row % 3 {
+            0 => wx * length / 2.0,
+            1 => wy * length / 2.0,
+            _ => (-wx * sine + wy * cosine) * length * length / 12.0 * if row < 3 { 1.0 } else { -1.0 },
+        })
+    }
+}
+
 impl Element for BeamEb2 {
     fn id(&self) -> &str {
         &self.id

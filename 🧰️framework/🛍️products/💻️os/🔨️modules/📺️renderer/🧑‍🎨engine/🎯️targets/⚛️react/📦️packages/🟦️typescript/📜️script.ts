@@ -35,6 +35,22 @@ function ownedExport(repoRoot: string, scope: keyof typeof MODULE_SCHEMAS, expor
   return compiled as ValidateFunction;
 }
 
+/** 👥️ Verifies canonical viewport presence on actual mounted generic Canvas2d and World3d hosts. */
+class ViewportPresenceCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("viewport-presence-check accepts no arguments");
+    process.env.SEMIO_TEST_LEVEL = "long";
+    await runVitest(this.root, ["../../../../🧱️elements/👕️canvas-presence/🧪️tests/✏️text-carets/🟦️.tsx", "../../../../🧱️elements/👕️canvas-presence/🧪️tests/🔬️unit/🟦️.ts", "../../../../🧱️elements/📐️Canvas2dHost/🧪️tests/👕️peer-presence/🟦️.tsx", "../../../../🧪️tests/🖱️world3d-interaction/🟦️.tsx", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
+  }
+}
+/** 📬️ Executes original diagnostic command identity, replay, progress and before-ACK terminal laws. */
+class OperationDiagnosticHostCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw Error("operation-diagnostic-host-check accepts no arguments");
+    process.env.SEMIO_TEST_LEVEL = "long";
+    await runVitest(this.root, ["../../../../🧱️elements/🔌️PluginRuntime/🟦️.tsx", "--silent=false", "--reporter=verbose", "--testNamePattern=typed-operation diagnostic|routes a foreign typed-operation|bounds parked typed-operation"], "../../🧪️tests/🎚️config/🟦️.ts");
+  }
+}
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
@@ -774,11 +790,11 @@ class ViewStateCarriageCheckScript extends BundleScript {
 class World3dInteractionCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length !== 0) throw new Error("world3d-interaction-check accepts no arguments");
+    process.env.SEMIO_TEST_LEVEL = "long";
+    await runVitest(this.root, ["../../../../🧪️tests/🖱️world3d-interaction/🟦️.tsx", "../../../../🧪️tests/🎯️world3d-pick-bounds/🟦️.ts", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
     console.log(`world3d-pointer-gesture-oracle: checks=${world3dPointerGestureOracle(this.repoRoot)} clean`);
     console.log(`interaction-selection-set-oracle: checks=${interactionSelectionSetOracle(this.repoRoot)} clean`);
     console.log(`selection-merge-vocabulary-oracle: checks=${selectionMergeVocabularyOracle(this.repoRoot)} clean`);
-    process.env.SEMIO_TEST_LEVEL = "long";
-    await runVitest(this.root, ["../../../../🧪️tests/🖱️world3d-interaction/🟦️.tsx", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -966,7 +982,9 @@ class LintScript extends BundleScript {
 //#endregion 🔖️LintScript
 
 const router = new ScriptRouter(fileURLToPath(new URL(".", import.meta.url)))
-  .register("test", TestScript)
+  .register("operation-diagnostic-host-check", OperationDiagnosticHostCheckScript)
+    .register("test", TestScript)
+  .register("viewport-presence-check", ViewportPresenceCheckScript)
   .register("lint", LintScript)
   .register("typecheck", TypecheckScript)
   .register("causal-input-publication-check", CausalInputPublicationCheckScript)

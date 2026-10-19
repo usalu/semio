@@ -1,7 +1,10 @@
 //! 📨️ Diagnostic fragments borrow original optional-text intent owners verbatim.
-use super::{Puzzle2dTextDisposition, Puzzle2dTextIntent, Puzzle2dTextPlan};
+use super::Puzzle2dTextDisposition;
+use super::Puzzle2dTextIntent;
+use super::Puzzle2dTextPlan;
 use crate::standards::v1::subsets::any::schema::lookup::Puzzle2dLookupScope;
-use protocol::os_store::{ArtifactMessageFragment, ArtifactMessageSource};
+use protocol::os_store::ArtifactMessageFragment;
+use protocol::os_store::ArtifactMessageSource;
 use semio_framework_diagnostic::Severity;
 use semio_framework_value::paged::Utf8Text;
 

@@ -158,54 +158,1345 @@
       "accepted": false
     }
   ],
-  "launchFiles": [
-    ".vscode/launch.json",
-    ".vscode/🧩️launch.seed.jsonc"
+  "devcontainerRuntime": {
+    "postCreateCommand": [
+      "bun",
+      "repo",
+      "run",
+      "workspace:setup"
+    ],
+    "postStartCommand": [
+      "bun",
+      "repo",
+      "run",
+      "workspace:setup-devcontainer-start"
+    ],
+    "postAttachCommand": [
+      "bun",
+      "repo",
+      "run",
+      "workspace:setup-devcontainer-attach"
+    ],
+    "mounts": [
+      "source=semio-claude,target=/home/vscode/.claude,type=volume",
+      "source=semio-codex,target=/home/vscode/.codex,type=volume"
+    ]
+  },
+  "devcontainerCases": [
+    {
+      "name": "dashboard lifecycle and retained headless agents",
+      "add": {},
+      "accepted": true
+    },
+    {
+      "name": "direct lifecycle script bypasses Nx owner",
+      "add": {
+        "postStartCommand": [
+          "bun",
+          "./📜️script.ts",
+          "setup",
+          "devcontainer",
+          "start"
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "name": "IDE extensions customize the runtime container",
+      "add": {
+        "customizations": {
+          "vscode": {
+            "extensions": [
+              "ms-vscode.cpptools"
+            ]
+          }
+        }
+      },
+      "accepted": false
+    },
+    {
+      "name": "IDE settings customize the runtime container",
+      "add": {
+        "settings": {
+          "editor.formatOnSave": true
+        }
+      },
+      "accepted": false
+    },
+    {
+      "name": "Codeium IDE configuration persists in a volume",
+      "add": {
+        "mounts": [
+          "source=semio-codeium,target=/home/vscode/.codeium,type=volume"
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "name": "Kiro IDE configuration persists in a volume",
+      "add": {
+        "mounts": [
+          "source=semio-kiro,target=/home/vscode/.kiro,type=volume"
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "name": "compiler toolchains and base image Linux account remain valid",
+      "add": {
+        "remoteUser": "vscode",
+        "features": {
+          "toolchain": {}
+        },
+        "onCreateCommand": [
+          "sudo",
+          "chown",
+          "vscode:vscode",
+          "/workspaces/semio/node_modules"
+        ]
+      },
+      "accepted": true
+    }
   ],
-  "launchCases": [
+  "ownerCommandCases": [
     {
-      "command": "bun repo run workspace:test",
+      "command": "bun ./📜️script.ts test authority",
       "accepted": true
     },
     {
-      "command": "bun repo run-many --target=test",
+      "command": "bun \"domain/📜️script.ts\" build --release",
       "accepted": true
     },
     {
-      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/fixture/📜️script.ts\" --source",
+      "command": "bun domain/📜️script.ts test",
       "accepted": true
     },
     {
-      "command": "bun nx run workspace:test",
-      "accepted": false
-    },
-    {
-      "command": "npx nx run workspace:test",
-      "accepted": false
-    },
-    {
-      "command": "nx run workspace:test",
-      "accepted": false
-    },
-    {
-      "command": "bun repo run workspace:test && nx run workspace:build",
-      "accepted": false
-    },
-    {
-      "command": "bun ./node_modules/nx/bin/nx.js run workspace:test",
-      "accepted": false
-    },
-    {
-      "command": "bazel build //:all",
-      "accepted": false
-    },
-    {
-      "command": "bazelisk test //:all",
-      "accepted": false
-    },
-    {
-      "command": "bun repo run workspace:test --tool=bazel",
+      "command": "bun ../../📜️script.ts sync",
       "accepted": true
+    },
+    {
+      "command": "bun 📜️script.ts generate",
+      "accepted": true
+    },
+    {
+      "command": "bun domain\\📜️script.ts test",
+      "accepted": true
+    },
+    {
+      "command": "bun --watch ./📜️script.ts generate-logo",
+      "accepted": true
+    },
+    {
+      "command": "bun ./📜️script.ts test --filter=\"test(a) | test(b)\"",
+      "accepted": true
+    },
+    {
+      "command": "bun ./📜️script.ts test 'quoted;argument'",
+      "accepted": true
+    },
+    {
+      "command": "bun ./📜️script.ts",
+      "accepted": false
+    },
+    {
+      "command": "bun ./📜️script.ts test ",
+      "accepted": false
+    },
+    {
+      "command": "bun ./📜️script.ts test && cargo test",
+      "accepted": false
+    },
+    {
+      "command": "bun ./📜️script.ts test;cargo test",
+      "accepted": false
+    },
+    {
+      "command": "bun ./📜️script.ts test | tee log",
+      "accepted": false
+    },
+    {
+      "command": "bun ./📜️script.ts test \"literal | value\" | tee log",
+      "accepted": false
+    },
+    {
+      "command": "bun ./📜️script.ts test $(whoami)",
+      "accepted": false
+    },
+    {
+      "command": "bun ./📜️script.ts test \"$(whoami)\"",
+      "accepted": false
+    },
+    {
+      "command": "bun ./📜️script.ts test `whoami`",
+      "accepted": false
+    },
+    {
+      "command": "bun ./📜️script.ts test \"`whoami`\"",
+      "accepted": false
+    },
+    {
+      "command": "bun ./📜️script.ts test $TASK_ARGS",
+      "accepted": false
+    },
+    {
+      "command": "bun ./📜️script.ts test ${TASK_ARGS}",
+      "accepted": false
+    },
+    {
+      "command": "bun ./📜️script.ts test\ncargo test",
+      "accepted": false
+    },
+    {
+      "command": "bun .🧬semio/🦑️repo/🎫️tickets/probe.mjs",
+      "accepted": false
+    },
+    {
+      "command": "cargo test",
+      "accepted": false
+    },
+    {
+      "command": "npm run build",
+      "accepted": false
+    },
+    {
+      "command": "bun nx run owner:build",
+      "accepted": false
+    },
+    {
+      "command": "bun ./script.ts test",
+      "accepted": false
+    },
+    {
+      "command": "bun \"./📜️script.ts build",
+      "accepted": false
+    }
+  ],
+  "ownerTargetCases": [
+    {
+      "target": {
+        "executor": "repo:script",
+        "options": {
+          "command": "bun ./📜️script.ts build"
+        }
+      },
+      "accepted": true
+    },
+    {
+      "target": {
+        "options": {
+          "command": "bun ./📜️script.ts build"
+        }
+      },
+      "accepted": true
+    },
+    {
+      "target": {
+        "command": "bun ./📜️script.ts test"
+      },
+      "accepted": true
+    },
+    {
+      "target": {
+        "executor": "repo:noop",
+        "dependsOn": [
+          "build"
+        ]
+      },
+      "accepted": true
+    },
+    {
+      "target": {
+        "options": {
+          "commands": [
+            "bun ./📜️script.ts build",
+            {
+              "command": "bun ./📜️script.ts test",
+              "forwardAllArgs": true
+            }
+          ]
+        }
+      },
+      "accepted": true
+    },
+    {
+      "target": {
+        "options": {
+          "command": "bun ./📜️script.ts build"
+        },
+        "configurations": {
+          "release": {
+            "command": "bun ./📜️script.ts build --release"
+          }
+        }
+      },
+      "accepted": true
+    },
+    {
+      "target": {
+        "executor": "nx:run-commands"
+      },
+      "accepted": false
+    },
+    {
+      "target": {
+        "options": {
+          "commands": []
+        }
+      },
+      "accepted": false
+    },
+    {
+      "target": {
+        "executor": "@nx/js:node",
+        "options": {
+          "command": "bun ./📜️script.ts build"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "target": {
+        "options": {
+          "command": "bun ./📜️script.ts build"
+        },
+        "configurations": {
+          "release": {
+            "command": "cargo build"
+          }
+        }
+      },
+      "accepted": false
+    },
+    {
+      "target": {
+        "options": {
+          "commands": [
+            "bun ./📜️script.ts build",
+            {
+              "command": "cargo test"
+            }
+          ]
+        }
+      },
+      "accepted": false
+    },
+    {
+      "target": {
+        "executor": "repo:noop",
+        "options": {
+          "command": "cargo test"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "bun ./📜️script.ts build"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "target": {
+        "executor": "nx:noop",
+        "dependsOn": [
+          "build"
+        ]
+      },
+      "accepted": false
+    }
+  ],
+  "developerDocuments": [
+    "README.md",
+    ".devcontainer/README.md",
+    "AGENTS.md",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/README.md",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/README.md"
+  ],
+  "instructionCases": [
+    {
+      "text": "Start bun run dashboard and choose workspace:setup.",
+      "accepted": true
+    },
+    {
+      "text": "An editor may navigate source files while dashboard owns all development operations.",
+      "accepted": true
+    },
+    {
+      "text": "MCP clients use .mcp.json and .codex/config.toml.",
+      "accepted": true
+    },
+    {
+      "text": "Configure .vscode/launch.json and press Run.",
+      "accepted": false
+    },
+    {
+      "text": "The generator writes .vscode/mcp.json.",
+      "accepted": false
+    },
+    {
+      "text": "Configure .cursor/hooks.json.",
+      "accepted": false
+    },
+    {
+      "text": "Use .windsurf/mcp.json or .kiro/settings/mcp.json.",
+      "accepted": false
+    },
+    {
+      "text": "IDE startup runs the root script.",
+      "accepted": false
+    },
+    {
+      "text": "Select Dev Containers: Reopen in Container.",
+      "accepted": false
+    },
+    {
+      "text": "Install VS Code with the Dev Containers extension.",
+      "accepted": false
+    },
+    {
+      "text": "Configure domain/.idea/workspace.xml to build.",
+      "accepted": false
+    },
+    {
+      "text": "Launch from .zed/tasks.json or .fleet/run.json.",
+      "accepted": false
+    },
+    {
+      "text": "Set .kiro/settings/mcp.json.",
+      "accepted": false
+    },
+    {
+      "text": "Edit .cursor/settings.json and .cursor/rules/build.mdc.",
+      "accepted": false
+    },
+    {
+      "text": "Configure .cursor/config.toml.",
+      "accepted": false
+    },
+    {
+      "text": "Run from .cursor/launch.json.",
+      "accepted": false
+    },
+    {
+      "text": "Edit .vscode\\tasks.json.",
+      "accepted": false
+    },
+    {
+      "text": "Use app.sublime-build or app.sublime-project.",
+      "accepted": false
+    },
+    {
+      "text": "Configure CMakeSettings.json.",
+      "accepted": false
+    },
+    {
+      "text": "Use compiler-owned CMakePresets.json through workspace:build.",
+      "accepted": true
+    },
+    {
+      "text": "Consult .cursor/plans/archive.md for historical planning evidence.",
+      "accepted": true
+    },
+    {
+      "text": "Configure .vscode/🧩️launch.seed.jsonc.",
+      "accepted": false
+    },
+    {
+      "text": "- All devs are using `launch.json` and never use the cli.\n  - You MUST register all executable commands there by following the existing order, grouping and naming.",
+      "accepted": false
+    }
+  ],
+  "forbiddenDirectories": [
+    ".vscode",
+    ".vscode-insiders",
+    ".idea",
+    ".fleet",
+    ".zed",
+    ".vs",
+    ".run",
+    ".nova",
+    ".settings",
+    ".metadata",
+    ".windsurf",
+    ".kiro",
+    ".atom",
+    ".brackets"
+  ],
+  "forbiddenExtensions": [
+    ".sln",
+    ".slnx",
+    ".code-workspace",
+    ".iml",
+    ".ipr",
+    ".iws",
+    ".suo",
+    ".user",
+    ".userosscache",
+    ".sln.docstates",
+    ".sublime-project",
+    ".sublime-workspace",
+    ".sublime-build"
+  ],
+  "forbiddenFiles": [
+    ".project",
+    ".classpath",
+    ".vsconfig",
+    ".cursorrules",
+    ".windsurfrules",
+    "cmakesettings.json"
+  ],
+  "forbiddenPaths": [
+    ".cursor/mcp.json",
+    ".cursor/hooks.json",
+    ".devcontainer/editor-overlay.json",
+    ".cursor/settings.json",
+    ".cursor/rules"
+  ],
+  "pathCases": [
+    {
+      "path": ".cursor",
+      "accepted": true
+    },
+    {
+      "path": ".cursor/launch.json",
+      "accepted": false
+    },
+    {
+      "path": ".cursor/extensions.json",
+      "accepted": false
+    },
+    {
+      "path": ".cursor/config.toml",
+      "accepted": false
+    },
+    {
+      "path": "domain/.cursor/plans-notes/settings.json",
+      "accepted": false
+    },
+    {
+      "path": "domain/.vscode-insiders/tasks.json",
+      "accepted": false
+    },
+    {
+      "path": ".kiro/settings/mcp.json",
+      "accepted": false
+    },
+    {
+      "path": "domain/.kiro/steering/development.md",
+      "accepted": false
+    },
+    {
+      "path": ".atom/config.cson",
+      "accepted": false
+    },
+    {
+      "path": "domain/.brackets/settings.json",
+      "accepted": false
+    },
+    {
+      "path": "domain/.cursorrules",
+      "accepted": false
+    },
+    {
+      "path": ".windsurfrules",
+      "accepted": false
+    },
+    {
+      "path": "domain/app.sublime-project",
+      "accepted": false
+    },
+    {
+      "path": "domain/app.sublime-workspace",
+      "accepted": false
+    },
+    {
+      "path": "domain/app.sublime-build",
+      "accepted": false
+    },
+    {
+      "path": ".vsconfig",
+      "accepted": false
+    },
+    {
+      "path": "domain/.vsconfig",
+      "accepted": false
+    },
+    {
+      "path": "domain/CMakeSettings.json",
+      "accepted": false
+    },
+    {
+      "path": "domain/CMakePresets.json",
+      "accepted": true
+    },
+    {
+      "path": ".vscode",
+      "accepted": false
+    },
+    {
+      "path": "domain/.vscode/tasks.json",
+      "accepted": false
+    },
+    {
+      "path": "domain/.idea/workspace.xml",
+      "accepted": false
+    },
+    {
+      "path": "domain/.fleet/settings.json",
+      "accepted": false
+    },
+    {
+      "path": "domain/.zed/settings.json",
+      "accepted": false
+    },
+    {
+      "path": "domain/.vs/cache",
+      "accepted": false
+    },
+    {
+      "path": "domain/.run/test.run.xml",
+      "accepted": false
+    },
+    {
+      "path": "domain/application.sln",
+      "accepted": false
+    },
+    {
+      "path": "domain/application.slnx",
+      "accepted": false
+    },
+    {
+      "path": "domain/application.code-workspace",
+      "accepted": false
+    },
+    {
+      "path": "domain/application.iml",
+      "accepted": false
+    },
+    {
+      "path": "domain/application.csproj.user",
+      "accepted": false
+    },
+    {
+      "path": "domain/.project",
+      "accepted": false
+    },
+    {
+      "path": ".cursor/mcp.json",
+      "accepted": false
+    },
+    {
+      "path": "domain/.cursor/hooks.json",
+      "accepted": false
+    },
+    {
+      "path": ".devcontainer/editor-overlay.json",
+      "accepted": false
+    },
+    {
+      "path": ".devcontainer/devcontainer.json",
+      "accepted": true
+    },
+    {
+      "path": ".cursor/plans/audit.md",
+      "accepted": true
+    },
+    {
+      "path": ".cursor/plans/mcp.json",
+      "accepted": true
+    },
+    {
+      "path": ".codex/config.toml",
+      "accepted": true
+    },
+    {
+      "path": ".mcp.json",
+      "accepted": true
+    },
+    {
+      "path": "domain/application.csproj",
+      "accepted": true
+    },
+    {
+      "path": "domain/application.fsproj",
+      "accepted": true
+    },
+    {
+      "path": "domain/application.vcxproj",
+      "accepted": true
+    },
+    {
+      "path": "domain/Cargo.toml",
+      "accepted": true
+    },
+    {
+      "path": "domain/CMakeLists.txt",
+      "accepted": true
+    },
+    {
+      "path": ".windsurf/mcp.json",
+      "accepted": false
+    },
+    {
+      "path": "domain/.windsurf/hooks.json",
+      "accepted": false
+    },
+    {
+      "path": ".cursor/settings.json",
+      "accepted": false
+    },
+    {
+      "path": "domain/.cursor/rules",
+      "accepted": false
+    },
+    {
+      "path": "domain/.cursor/rules/development.mdc",
+      "accepted": false
+    },
+    {
+      "path": ".vscode/launch.json",
+      "accepted": false
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "accepted": false
+    },
+    {
+      "path": ".vscode",
+      "accepted": false
+    },
+    {
+      "path": "domain/build/.vscode/launch.json",
+      "accepted": false
+    },
+    {
+      "path": "domain/dist/.vscode/🧩️launch.seed.jsonc",
+      "accepted": false
+    }
+  ],
+  "liveControls": [
+    {
+      "id": "@semio-tech/framework-os-dev:s-host-foreign-kind-s",
+      "parameters": {},
+      "args": [
+        "http://127.0.0.1:6070/",
+        "--tag",
+        "authority",
+        "dag"
+      ],
+      "env": {},
+      "commandIds": [
+        "@semio-tech/framework-os-dev:s-host-foreign-kind-s"
+      ],
+      "words": [
+        "repo",
+        "run",
+        "@semio-tech/framework-os-dev:s-host-foreign-kind-s",
+        "--",
+        "http://127.0.0.1:6070/",
+        "--tag",
+        "authority",
+        "dag"
+      ]
+    },
+    {
+      "id": "@semio-tech/framework-os-dev:s-host-pinch-diagram-contrast-s",
+      "parameters": {},
+      "args": [
+        "http://127.0.0.1:6070/",
+        "--tag",
+        "authority"
+      ],
+      "env": {},
+      "commandIds": [
+        "@semio-tech/framework-os-dev:s-host-pinch-diagram-contrast-s"
+      ],
+      "words": [
+        "repo",
+        "run",
+        "@semio-tech/framework-os-dev:s-host-pinch-diagram-contrast-s",
+        "--",
+        "http://127.0.0.1:6070/",
+        "--tag",
+        "authority"
+      ]
+    },
+    {
+      "id": "@semio-tech/stdio-plugin:parent-removal-check",
+      "parameters": {
+        "snapshot": "{workspace}/witness"
+      },
+      "args": [],
+      "env": {},
+      "commandIds": [
+        "@semio-tech/stdio-plugin:parent-removal-check"
+      ],
+      "words": [
+        "repo",
+        "run",
+        "@semio-tech/stdio-plugin:parent-removal-check",
+        "--",
+        "{workspace}/witness"
+      ]
+    },
+    {
+      "id": "@semio-tech/framework-renderer-wgpu:browser-dock-acceptance",
+      "parameters": {
+        "mode": "wgpu",
+        "serve": "http://127.0.0.1:7301/",
+        "output": "{workspace}/witness-output"
+      },
+      "args": [],
+      "env": {},
+      "commandIds": [
+        "@semio-tech/framework-renderer-wgpu:browser-dock-acceptance"
+      ],
+      "words": [
+        "repo",
+        "run",
+        "@semio-tech/framework-renderer-wgpu:browser-dock-acceptance",
+        "--",
+        "run",
+        "wgpu",
+        "http://127.0.0.1:7301/",
+        "--output",
+        "{workspace}/witness-output"
+      ]
+    },
+    {
+      "id": "@semio-tech/framework-renderer-wgpu:browser-media-acceptance",
+      "parameters": {
+        "serve": "http://127.0.0.1:7303/",
+        "locale": "de",
+        "output": "{workspace}/witness-output"
+      },
+      "args": [],
+      "env": {},
+      "commandIds": [
+        "@semio-tech/framework-renderer-wgpu:browser-media-acceptance"
+      ],
+      "words": [
+        "repo",
+        "run",
+        "@semio-tech/framework-renderer-wgpu:browser-media-acceptance",
+        "--",
+        "--serve",
+        "http://127.0.0.1:7303/",
+        "--locale",
+        "de",
+        "--output",
+        "{workspace}/witness-output"
+      ]
+    },
+    {
+      "id": "@semio-tech/framework-renderer-wgpu:browser-embedded-acceptance",
+      "parameters": {
+        "configuration": "{workspace}/witness.json",
+        "output": "{workspace}/witness-output"
+      },
+      "args": [],
+      "env": {},
+      "commandIds": [
+        "@semio-tech/framework-renderer-wgpu:browser-embedded-acceptance"
+      ],
+      "words": [
+        "repo",
+        "run",
+        "@semio-tech/framework-renderer-wgpu:browser-embedded-acceptance",
+        "--",
+        "--configuration",
+        "{workspace}/witness.json",
+        "--output",
+        "{workspace}/witness-output"
+      ]
+    },
+    {
+      "id": "@semio-tech/framework-os-dev:parity-journey",
+      "parameters": {
+        "renderer": "paired",
+        "react-serve": "http://127.0.0.1:7300/",
+        "wgpu-serve": "http://127.0.0.1:7301/",
+        "locale": "en",
+        "output": "{workspace}/witness-output"
+      },
+      "args": [],
+      "env": {},
+      "commandIds": [
+        "@semio-tech/framework-os-dev:parity-journey"
+      ],
+      "words": [
+        "repo",
+        "run",
+        "@semio-tech/framework-os-dev:parity-journey",
+        "--",
+        "--renderer",
+        "paired",
+        "--react-serve",
+        "http://127.0.0.1:7300/",
+        "--wgpu-serve",
+        "http://127.0.0.1:7301/",
+        "--locale",
+        "en",
+        "--output",
+        "{workspace}/witness-output"
+      ]
+    },
+    {
+      "id": "@semio-tech/bim-model-rs:sqlite-oracle-words",
+      "parameters": {
+        "word": "7ff8000000000042",
+        "file": "witness.sqlite"
+      },
+      "args": [],
+      "env": {},
+      "commandIds": [
+        "@semio-tech/bim-model-rs:sqlite-oracle-words"
+      ],
+      "words": [
+        "repo",
+        "run",
+        "@semio-tech/bim-model-rs:sqlite-oracle-words",
+        "--",
+        "7ff8000000000042",
+        "--file",
+        "witness.sqlite"
+      ]
+    },
+    {
+      "id": "@semio-tech/bim-model-rs:sqlite-oracle-edit",
+      "parameters": {
+        "file": "witness.sqlite"
+      },
+      "args": [],
+      "env": {},
+      "commandIds": [
+        "@semio-tech/bim-model-rs:sqlite-oracle-edit"
+      ],
+      "words": [
+        "repo",
+        "run",
+        "@semio-tech/bim-model-rs:sqlite-oracle-edit",
+        "--",
+        "--file",
+        "witness.sqlite"
+      ]
+    },
+    {
+      "id": "tool:workspace/run-targets",
+      "parameters": {
+        "targets": "test-snapshot-sqlite-source",
+        "projects": "@semio-tech/stdio-step-rs,@semio-tech/stdio-ifc-rs",
+        "parallel": "1",
+        "cache": "skip-all"
+      },
+      "args": [
+        "--output=stream"
+      ],
+      "env": {
+        "SEMIO_CONTROL_PROBE": "explicit"
+      },
+      "commandIds": [
+        "tool:workspace/run-targets"
+      ],
+      "words": [
+        "repo",
+        "run-many",
+        "--targets=test-snapshot-sqlite-source",
+        "--projects=@semio-tech/stdio-step-rs,@semio-tech/stdio-ifc-rs",
+        "--parallel=1",
+        "--skip-cache",
+        "--skip-remote-cache",
+        "--output=stream"
+      ]
+    },
+    {
+      "id": "tool:workspace/run-script",
+      "parameters": {
+        "script": "📜️script.ts",
+        "project": "workspace",
+        "directory": "{workspace}"
+      },
+      "args": [
+        "--help"
+      ],
+      "env": {
+        "SEMIO_CONTROL_PROBE": "explicit"
+      },
+      "commandIds": [
+        "tool:workspace/run-script"
+      ],
+      "words": [
+        "repo",
+        "exec",
+        "--projects=workspace",
+        "--",
+        "bun",
+        "{workspace}/📜️script.ts",
+        "--help"
+      ]
+    },
+    {
+      "id": "tool:workspace/bun-test",
+      "parameters": {
+        "file": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️authority/🟦️.ts",
+        "project": "workspace"
+      },
+      "args": [
+        "--timeout",
+        "300000"
+      ],
+      "env": {
+        "SEMIO_CONTROL_PROBE": "explicit"
+      },
+      "commandIds": [
+        "tool:workspace/bun-test"
+      ],
+      "words": [
+        "repo",
+        "exec",
+        "--projects=workspace",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️authority/🟦️.ts",
+        "--timeout",
+        "300000"
+      ]
+    },
+    {
+      "id": "compound:@teaching/architecture-course/course-with-proctor",
+      "parameters": {},
+      "args": [],
+      "env": {},
+      "commandIds": [
+        "@teaching/proctor:dev",
+        "@teaching/architecture-course:dev"
+      ],
+      "stop": "together",
+      "ports": [
+        8791,
+        6061
+      ]
+    },
+    {
+      "id": "@semio-tech/repo-dashboard-rs:test-authority",
+      "parameters": {},
+      "args": [],
+      "env": {},
+      "commandIds": [
+        "@semio-tech/repo-dashboard-rs:test-authority"
+      ]
+    },
+    {
+      "id": "@semio-tech/repo-dashboard-rs:test-execution",
+      "parameters": {},
+      "args": [],
+      "env": {},
+      "commandIds": [
+        "@semio-tech/repo-dashboard-rs:test-execution"
+      ]
+    },
+    {
+      "id": "@semio-tech/repo-dashboard-rs:daemon",
+      "parameters": {
+        "action": "status"
+      },
+      "args": [],
+      "env": {},
+      "commandIds": [
+        "@semio-tech/repo-dashboard-rs:daemon"
+      ],
+      "words": [
+        "repo",
+        "run",
+        "@semio-tech/repo-dashboard-rs:daemon",
+        "--",
+        "status"
+      ]
+    },
+    {
+      "id": "workspace:test-build-tool-bazel",
+      "parameters": {
+        "phase": "cache"
+      },
+      "args": [],
+      "env": {},
+      "commandIds": [
+        "workspace:test-build-tool-bazel"
+      ],
+      "words": [
+        "repo",
+        "run",
+        "workspace:test-build-tool-bazel",
+        "--",
+        "cache"
+      ]
+    },
+    {
+      "id": "workspace:test-build-tool-bazel",
+      "parameters": {
+        "phase": "nested"
+      },
+      "args": [],
+      "env": {},
+      "commandIds": [
+        "workspace:test-build-tool-bazel"
+      ],
+      "words": [
+        "repo",
+        "run",
+        "workspace:test-build-tool-bazel",
+        "--",
+        "nested"
+      ]
+    },
+    {
+      "id": "workspace:test-build-tool-bazel",
+      "parameters": {
+        "phase": "uncached"
+      },
+      "args": [],
+      "env": {},
+      "commandIds": [
+        "workspace:test-build-tool-bazel"
+      ],
+      "words": [
+        "repo",
+        "run",
+        "workspace:test-build-tool-bazel",
+        "--",
+        "uncached"
+      ]
+    },
+    {
+      "id": "workspace:test-build-tool-bazel",
+      "parameters": {
+        "phase": "birth"
+      },
+      "args": [],
+      "env": {},
+      "commandIds": [
+        "workspace:test-build-tool-bazel"
+      ],
+      "words": [
+        "repo",
+        "run",
+        "workspace:test-build-tool-bazel",
+        "--",
+        "birth"
+      ]
+    },
+    {
+      "id": "workspace:test-build-tool-bazel",
+      "parameters": {
+        "phase": "services"
+      },
+      "args": [],
+      "env": {},
+      "commandIds": [
+        "workspace:test-build-tool-bazel"
+      ],
+      "words": [
+        "repo",
+        "run",
+        "workspace:test-build-tool-bazel",
+        "--",
+        "services"
+      ]
+    },
+    {
+      "id": "workspace:test-build-tool-bazel",
+      "parameters": {
+        "phase": "refusals"
+      },
+      "args": [],
+      "env": {},
+      "commandIds": [
+        "workspace:test-build-tool-bazel"
+      ],
+      "words": [
+        "repo",
+        "run",
+        "workspace:test-build-tool-bazel",
+        "--",
+        "refusals"
+      ]
+    },
+    {
+      "id": "workspace:test-build-tool-bazel",
+      "parameters": {
+        "phase": "cancellation"
+      },
+      "args": [],
+      "env": {},
+      "commandIds": [
+        "workspace:test-build-tool-bazel"
+      ],
+      "words": [
+        "repo",
+        "run",
+        "workspace:test-build-tool-bazel",
+        "--",
+        "cancellation"
+      ]
+    },
+    {
+      "id": "workspace:test-build-tool-bazel",
+      "parameters": {
+        "phase": "configuration"
+      },
+      "args": [],
+      "env": {},
+      "commandIds": [
+        "workspace:test-build-tool-bazel"
+      ],
+      "words": [
+        "repo",
+        "run",
+        "workspace:test-build-tool-bazel",
+        "--",
+        "configuration"
+      ]
+    },
+    {
+      "id": "workspace:test-build-tool-bazel",
+      "parameters": {
+        "phase": "offline"
+      },
+      "args": [],
+      "env": {},
+      "commandIds": [
+        "workspace:test-build-tool-bazel"
+      ],
+      "words": [
+        "repo",
+        "run",
+        "workspace:test-build-tool-bazel",
+        "--",
+        "offline"
+      ]
+    }
+  ],
+  "agentCases": [
+    {
+      "client": "claude-code",
+      "accepted": true
+    },
+    {
+      "client": "codex",
+      "accepted": true
+    },
+    {
+      "client": "vscode",
+      "accepted": false
+    },
+    {
+      "client": "cursor",
+      "accepted": false
+    }
+  ],
+  "inventoryPolicy": {
+    "boundaryDirectories": [
+      ".git",
+      "node_modules",
+      ".venv"
+    ],
+    "excludedRoots": [
+      ".cache",
+      ".nx",
+      ".pytest_cache",
+      ".ruff_cache",
+      "storybook-static",
+      "test-results",
+      ".🧬semio/🦑️repo/🎫️tickets",
+      ".🧬semio/🦑️repo/⚡️cache",
+      ".🧬semio/🦑️repo/🧹️tmp",
+      ".repo/cache",
+      "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/dist",
+      "✏️s/🔌️plugins/🏭️process/dist",
+      "✏️s/🔌️plugins/🪵️sourcing/dist"
+    ]
+  },
+  "inventoryCases": [
+    {
+      "path": "domain/build/.vscode/launch.json",
+      "inspected": true
+    },
+    {
+      "path": "domain/dist/.idea/workspace.xml",
+      "inspected": true
+    },
+    {
+      "path": "domain/target/.vscode/launch.json",
+      "inspected": true
+    },
+    {
+      "path": "domain/node_modules/vendor/.vscode/launch.json",
+      "inspected": false
+    },
+    {
+      "path": ".cache/tool/.vscode/launch.json",
+      "inspected": false
+    },
+    {
+      "path": "domain/.cache/.vscode/launch.json",
+      "inspected": true
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/history/.vscode/launch.json",
+      "inspected": false
+    },
+    {
+      "path": ".repo/cache/tool/.idea/workspace.xml",
+      "inspected": false
+    },
+    {
+      "path": "domain/.repo/cache/.vscode/launch.json",
+      "inspected": true
+    },
+    {
+      "path": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/dist/.vscode/launch.json",
+      "inspected": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/dist/.vscode/launch.json",
+      "inspected": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/dist/.vscode/launch.json",
+      "inspected": false
+    }
+  ],
+  "protectedInstructions": [
+    {
+      "path": "AGENTS.md",
+      "text": "- All devs are using `launch.json` and never use the cli.\n  - You MUST register all executable commands there by following the existing order, grouping and naming."
+    }
+  ],
+  "protectedInstructionCases": [
+    {
+      "path": "AGENTS.md",
+      "text": "- All devs are using `launch.json` and never use the cli.\n  - You MUST register all executable commands there by following the existing order, grouping and naming.",
+      "accepted": true
+    },
+    {
+      "path": "README.md",
+      "text": "- All devs are using `launch.json` and never use the cli.\n  - You MUST register all executable commands there by following the existing order, grouping and naming.",
+      "accepted": false
+    },
+    {
+      "path": "domain/AGENTS.md",
+      "text": "- All devs are using `launch.json` and never use the cli.\n  - You MUST register all executable commands there by following the existing order, grouping and naming.",
+      "accepted": false
+    },
+    {
+      "path": "AGENTS.md",
+      "text": "- All devs are using `launch.json` and never use the cli.\n  - You MUST register all executable commands there by following the existing order, grouping and naming.\nRun .vscode/launch.json.",
+      "accepted": false
     }
   ]
 }

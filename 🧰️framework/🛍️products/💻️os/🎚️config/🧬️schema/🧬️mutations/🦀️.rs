@@ -13,7 +13,7 @@ pub use super::set_default_app::{set_default_app, SetDefaultApp};
 /// 🎚️ Typed, invertible opening-preferences mutation vocabulary.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = OpeningPreferences, diff = OpeningDiff, schema = "os.config.opening")]
+#[mutations(snapshot = OpeningPreferences, diff = OpeningDiff, schema = "os.config.opening", reference = OpeningPreferences, reference_diff = OpeningDiff)]
 pub enum OpeningConfigMutation {
     SetDefaultApp(SetDefaultApp),
     ClearDefaultApp(ClearDefaultApp),
@@ -29,7 +29,7 @@ pub use super::ui_preferences::{
 /// 🎨️ Typed, invertible OS UI-preferences mutation vocabulary.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = UiPreferences, diff = UiPreferencesDiff, schema = "os.config.ui-preferences")]
+#[mutations(snapshot = UiPreferences, diff = UiPreferencesDiff, schema = "os.config.ui-preferences", reference = UiPreferences, reference_diff = UiPreferencesDiff)]
 pub enum UiPreferencesConfigMutation {
     SetAppearance(SetAppearance),
     SetLayout(SetLayout),
@@ -52,7 +52,7 @@ pub use super::change_merge_policy::{
 /// 🛡️ Typed, invertible merge-policy mutation vocabulary.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = MergePolicySetting, diff = MergePolicyDiff, schema = "os.config.merge-policy")]
+#[mutations(snapshot = MergePolicySetting, diff = MergePolicyDiff, schema = "os.config.merge-policy", reference = MergePolicySetting, reference_diff = MergePolicyDiff)]
 pub enum MergePolicyConfigMutation {
     ChangeMergePolicy(ChangeMergePolicy),
 }
@@ -69,7 +69,7 @@ pub use super::sign_out::{sign_out, SignOut};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = IdentitySetting, diff = IdentityDiff, schema = "os.config.identity")]
+#[mutations(snapshot = IdentitySetting, diff = IdentityDiff, schema = "os.config.identity", reference = IdentitySetting, reference_diff = IdentityDiff)]
 pub enum IdentityConfigMutation {
     SignIn(SignIn),
     SignOut(SignOut),
@@ -87,7 +87,7 @@ pub use super::retire_local_document::{retire_local_document, RetireLocalDocumen
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = LocalCatalog, diff = LocalCatalogDiff, schema = "os.config.local-catalog")]
+#[mutations(snapshot = LocalCatalog, diff = LocalCatalogDiff, schema = "os.config.local-catalog", reference = LocalCatalog, reference_diff = LocalCatalogDiff)]
 pub enum LocalCatalogConfigMutation {
     AdmitLocalDocument(AdmitLocalDocument),
     RetireLocalDocument(RetireLocalDocument),
@@ -104,7 +104,7 @@ pub use super::detach_local_folder::{detach_local_folder, DetachLocalFolder};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = LocalFolderBindings, diff = LocalFoldersDiff, schema = "os.config.local-folders")]
+#[mutations(snapshot = LocalFolderBindings, diff = LocalFoldersDiff, schema = "os.config.local-folders", reference = LocalFolderBindings, reference_diff = LocalFoldersDiff)]
 pub enum LocalFoldersConfigMutation {
     AttachLocalFolder(AttachLocalFolder),
     DetachLocalFolder(DetachLocalFolder),

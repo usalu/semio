@@ -42,6 +42,7 @@ impl OperationIdentityCursor{
 }
 
 impl ErasedSnapshotRetirement for OperationIdentityCursor{
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.cursor.retirement_demands() }
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let step=self.cursor.close(grant).map_err(|error|error.reason)?;self.terminal=step.complete;let progress=RetainedCloneProgress{copied_items:step.processed_items,copied_bytes:step.copied_bytes,retained_capacity_bytes:step.retained_capacity_bytes,released_bytes:step.released_bytes};Ok(if step.complete{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
     fn next_capacity_byte_demand(&self,_copy:usize)->Result<usize,ValueError>{Ok(0)}

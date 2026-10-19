@@ -1,8 +1,12 @@
-//! 🎵️ FEM 3D module engine — modal + linear buckling analyses (pure FE algorithm, moved out of the
 //! artifact tree).
+//! 🎵️ FEM 3D module engine — modal + linear buckling analyses (pure FE algorithm, moved out of the
 
-use crate::fem3d_engine::{meshing, Fem3dError};
-use semio_s_fem_model::{Dof, Element, Node};
+use crate::fem3d_engine::meshing;
+
+use crate::fem3d_engine::Fem3dError;
+use semio_s_fem_model::Dof;
+use semio_s_fem_model::Element;
+use semio_s_fem_model::Node;
 use semio_s_fem_static::Elements;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 

@@ -11,10 +11,10 @@ use semio_framework_ui_tui_core::theme::{Role, Surface, Theme};
 
 const STATUS_GAP: u16 = 1;
 
-pub fn paint_footer(f: &FooterState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+pub fn paint_footer(f: &FooterState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, emphasized: bool) {
     let bg = theme.surface(Surface::Base);
     let (hairline, content) = rect.split_top(1);
-    buf.hline(Pos { x: hairline.x, y: hairline.y }, hairline.width, '\u{2500}', theme.role(Role::BorderNormal), bg);
+    buf.hline(Pos { x: hairline.x, y: hairline.y }, hairline.width, '\u{2500}', theme.role(if emphasized { Role::BorderEmphasized } else { Role::BorderNormal }), bg);
     buf.fill_rect(content, Cell::blank(theme.role(Role::Foreground), bg));
     let status_width = display_width(&f.status);
     let reserve = status_width.min(content.width / 3);

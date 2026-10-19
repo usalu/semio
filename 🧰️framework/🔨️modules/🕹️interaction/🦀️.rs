@@ -13,6 +13,7 @@ use semio_framework_ui_declaration::IconName;
 
 #[path = "👆️gesture/🦀️.rs"]
 pub mod gesture;
+pub use ::replication::wire::{encode_scoped_identity, decode_scoped_identity, validate_scoped_identity_segments, ScopedIdentityError, SCOPED_IDENTITY_MAX_BYTES, SCOPED_IDENTITY_MAX_SEGMENTS};
 
 //#region 🔖️Definition
 pub use ::replication::{next_hover, next_selection, validate_state, HoverInput, PresenceDomain, PresenceInteraction, SelectionInput};

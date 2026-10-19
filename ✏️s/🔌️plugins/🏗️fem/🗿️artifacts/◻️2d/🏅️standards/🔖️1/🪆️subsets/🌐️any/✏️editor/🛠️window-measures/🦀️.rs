@@ -1,7 +1,8 @@
 //! 🎛️ Per-window chrome measures shared by the fem2d model and results canvas windows.
 
 use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels;
-use semio_framework_plugin::{ViewModel, WindowMeasure};
+use semio_framework_plugin::ViewModel;
+use semio_framework_plugin::WindowMeasure;
 
 /// 🎛️ Window chrome measures for each fem2d canvas window instance.
 pub fn fem2d_window_measures(view: &ViewModel, labels: &Fem2dLabels) -> Vec<WindowMeasure> {

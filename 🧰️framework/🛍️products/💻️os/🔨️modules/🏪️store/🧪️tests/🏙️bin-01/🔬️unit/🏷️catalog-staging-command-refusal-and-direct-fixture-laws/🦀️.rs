@@ -27,7 +27,8 @@ async fn original_member_group_stage_and_adoption_preserve_physical_receipts_and
  let id=fixture["edit"].as_str().unwrap();stage.applied_edit_id=id.into();stage.tail_edit_id=id.into();stage.post=Some(Arc::new(DemoSnapshot{n:Some(after)}));stage.local_actor=Some(authority.actor().into());stage.folded=1;stage.completed_items=1;stage.digest=[7;32];
  stage.mutation_retirement=(*store.owners.mutation_retirement_factory).clone();stage.snapshot_retirement=(*store.owners.snapshot_retirement_factory).clone();stage.unit_flags.reserve_exact(2);
  let edit=stage.edit.as_mut().unwrap();edit.id=id.into();edit.actor=Some(authority.actor_utf8().clone());edit.forwards.push(mutation);edit.inverse.push(DemoMutation::SetN(SetN{n:before}));edit.mutation_meta.push(MutationMeta{mutation_id:Some(MutationId(fixture["mutation"].as_str().unwrap().into())),dependencies:Vec::new(),base_version:0,author_id:Some(ActorId(authority.actor_utf8().clone().into())),timestamp:authority.next_clock(),undo_policy:UndoPolicy::ExactBaseOnly,payload_hash:None,semantic_kind:None,label:None,group_id:None,origin:protocol::MutationOrigin::Owner,transaction:None});
- publication.stage=Some(Box::new(stage));publication.phase=ArtifactStoreOneItemPublicationPhase::Publishing;
+  let diagnostic_rows:Vec<_>=fixture["diagnostics"].as_array().unwrap().iter().map(|row|semio_framework_os_spr::MutationMessage{level:semio_framework_diagnostic::Severity::from_value(row["level"].clone().into()).unwrap(),code:row["code"].as_str().unwrap().to_owned().into(),message:row["message"].as_str().unwrap().to_owned(),target:row["target"].as_array().unwrap().iter().map(|target|target.as_str().unwrap().to_owned()).collect(),op_index:Some(row["opIndex"].as_u64().unwrap()as u32)}).collect();let diagnostic_pointers:Vec<_>=diagnostic_rows.iter().map(|row|row.message.as_ptr()).collect();let mut diagnostic_owner=semio_framework_os_spr::command::MutationMessagePublication::new(diagnostic_rows);while !diagnostic_owner.ready(){diagnostic_owner.advance(grant.retained_grant()).unwrap();}stage.diagnostics=super::ArtifactStoreDiagnosticStage::from_publication(Some(diagnostic_owner));
+publication.stage=Some(Box::new(stage));publication.phase=ArtifactStoreOneItemPublicationPhase::Publishing;
  let original_stage=std::ptr::from_ref(publication.stage.as_ref().unwrap().as_ref());let original_flags=publication.stage.as_ref().unwrap().unit_flags.as_ptr();
  let mut publisher=semio_framework_os_vcs::ArtifactGroupVisibilityOwner::new();let visibility=publisher.view();
  publication.group_preparation=Some(semio_framework_os_store_one_item_batch::lifted_member_group::MemberGroupPreparation::new(&visibility,None,None));
@@ -41,7 +42,8 @@ async fn original_member_group_stage_and_adoption_preserve_physical_receipts_and
  assert!(prepared);assert!(publication.stage.as_ref().unwrap().edit.is_none());assert!(publication.stage.as_ref().unwrap().applied_edit_id.capacity()>0);assert!(publication.stage.as_ref().unwrap().unit_flags.capacity()>0);
  let((),heap)=original_heap(||{assert!(publisher.commit());});assert_eq!((heap.0,heap.1),(0,0));
  let(step,heap)=original_heap(||store.adopt_apply_batch_group(&mut publication,&visibility,grant).unwrap());let receipt=step.ownership_progress();assert!(matches!(step,ArtifactStoreOneItemPreparationStep::Prepared(..)));assert!(receipt.fits(grant.retained_grant()));assert_eq!((heap.0,heap.1),(receipt.retained_capacity_bytes,receipt.released_bytes));assert_eq!(store.snapshot().unwrap().n,Some(after));
- assert!(publication.acknowledge());
+  assert_eq!(store.messages_for_edit(id).iter().map(|row|row.message.as_ptr()).collect::<Vec<_>>(),diagnostic_pointers);assert_eq!(store.pending_report.messages.len(),1);assert_eq!(store.pending_report.messages[0].edit_id,id);assert_eq!(store.pending_report.messages[0].messages,store.messages_for_edit(id));assert_eq!(store.pending_report.worst,Some(semio_framework_diagnostic::Severity::Warning));for(original,report)in store.messages_for_edit(id).iter().zip(&store.pending_report.messages[0].messages){assert_ne!(original.message.as_ptr(),report.message.as_ptr());}eprintln!("[DEBUG] Original group diagnostic publication operation=919 generation={} edit={} rows={} worst=warning beforeACK=true",store.generation,id,store.messages_for_edit(id).len());
+assert!(publication.acknowledge());
  for _ in 0..fixture["maximumTurns"].as_u64().unwrap(){if publication.terminal_is_empty(){break;}let(step,heap)=original_heap(||publication.close_step(grant.retained_grant()).unwrap());let receipt=step.progress();assert!(receipt.fits(grant.retained_grant()));assert_eq!((heap.0,heap.1),(receipt.retained_capacity_bytes,receipt.released_bytes));}
  assert!(publication.terminal_is_empty());let((),heap)=original_heap(||drop(publication));assert_eq!((heap.0,heap.1),(0,fixture["law"]["terminalDropBytes"].as_u64().unwrap()as usize));
 }
@@ -118,7 +120,7 @@ fn direct_fixture_cases() -> serde_json::Value {
 
 fn assert_fixture_case<Op>(row: &serde_json::Value)
 where
-    Op: Mutation<DemoSnapshot, Diff = DemoDiff> + OpText + OpBinary + PartialEq + std::fmt::Debug,
+    Op: Mutation<DemoSnapshot, Diff = DemoDiff> + ColdMutation<DemoSnapshot,ReferenceDiff=DemoDiff> + ToValue + FromValue + OpText + OpBinary + PartialEq + std::fmt::Debug,
 {
     let mut value = row["payload"].clone();
     value["operation"] = row["operation"].clone();
@@ -140,15 +142,15 @@ where
     let before = DemoSnapshot { n: serde_json::from_value(row["before"].clone()).unwrap() };
     let outcome = mutation.diff(&before);
     let (diff, messages) = outcome.into_parts();
-    let actual = semio_framework_os_spr::apply_diff(&diff, &before).unwrap();
+    let actual = protocol::apply_diff_cold(&diff, &before).unwrap();
     let decoded_diff = serde_json::from_value::<DemoDiff>(serde_json::to_value(&diff).unwrap()).unwrap();
-    assert_eq!(semio_framework_os_spr::apply_diff(&decoded_diff, &before).unwrap(), actual);
+    assert_eq!(protocol::apply_diff_cold(&decoded_diff, &before).unwrap(), actual);
     assert_eq!(actual.n, serde_json::from_value::<Option<i32>>(row["after"].clone()).unwrap());
     let level = messages.first().map(|message| format!("{:?}", message.level).to_lowercase());
     assert_eq!(level.as_deref(), row["level"].as_str());
     let mut restored = actual;
     for inverse in mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().rev() {
-        restored = semio_framework_os_spr::apply_diff(inverse.diff(&restored).diff(), &restored).unwrap();
+        restored = protocol::apply_diff_cold(inverse.diff(&restored).diff(), &restored).unwrap();
     }
     assert_eq!(restored, before);
     assert_eq!(Op::from_value(serde_json::from_slice::<serde_json::Value>(&serde_json::to_vec(&serde_json::Value::from(mutation.to_value())).unwrap()).unwrap().into()).unwrap(), mutation);
@@ -164,7 +166,7 @@ where
 
 fn assert_fixture_text_codecs<Op>(fixture: &serde_json::Value, family: &str, canonical: impl Fn(&serde_json::Value) -> Op)
 where
-    Op: Mutation<DemoSnapshot, Diff = DemoDiff> + OpText + OpBinary + PartialEq + std::fmt::Debug,
+    Op: Mutation<DemoSnapshot, Diff = DemoDiff> + ColdMutation<DemoSnapshot,ReferenceDiff=DemoDiff> + ToValue + FromValue + OpText + OpBinary + PartialEq + std::fmt::Debug,
 {
     for row in fixture["textCodecs"].as_array().unwrap().iter().filter(|row| row["family"] == family) {
         let mutation = canonical(row);
@@ -204,9 +206,9 @@ fn direct_store_fixture_absence_inverse_boundary() {
     }
     let before = DemoSnapshot { n: Some(i32::MIN) };
     let mutation = DemoMutation::DeleteN(DeleteN {});
-    let deleted = semio_framework_os_spr::apply_diff(mutation.diff(&before).diff(), &before).unwrap();
+    let deleted = protocol::apply_diff_cold(mutation.diff(&before).diff(), &before).unwrap();
     assert_eq!(deleted.n, None);
-    assert_eq!(semio_framework_os_spr::apply_diff(mutation.inverse(&before).expect("valid retained mutation inverse fixture")[0].diff(&deleted).diff(), &deleted).unwrap(), before);
+    assert_eq!(protocol::apply_diff_cold(mutation.inverse(&before).expect("valid retained mutation inverse fixture")[0].diff(&deleted).diff(), &deleted).unwrap(), before);
 }
 
 #[test]
@@ -218,16 +220,16 @@ fn direct_store_fixture_structural_diff_composition() {
         let mut combined = DemoDiff::default();
         for value in row["diffs"].as_array().unwrap() {
             let diff = serde_json::from_value::<DemoDiff>(value.clone()).unwrap();
-            actual = semio_framework_os_spr::apply_diff(&diff, &actual).unwrap();
+            actual = protocol::apply_diff_cold(&diff, &actual).unwrap();
             combined.absorb(diff);
         }
         let expected = DemoSnapshot { n: serde_json::from_value(row["after"].clone()).unwrap() };
         assert_eq!(actual, expected);
-        assert_eq!(semio_framework_os_spr::apply_diff(&combined, &before).unwrap(), expected);
+        assert_eq!(protocol::apply_diff_cold(&combined, &before).unwrap(), expected);
         let round_trip = serde_json::from_value::<DemoDiff>(serde_json::to_value(&combined).unwrap()).unwrap();
-        assert_eq!(semio_framework_os_spr::apply_diff(&round_trip, &before).unwrap(), expected);
+        assert_eq!(protocol::apply_diff_cold(&round_trip, &before).unwrap(), expected);
         let restore = DemoMutation::AssignN(AssignN { n: before.n });
-        assert_eq!(semio_framework_os_spr::apply_diff(restore.diff(&actual).diff(), &actual).unwrap(), before);
+        assert_eq!(protocol::apply_diff_cold(restore.diff(&actual).diff(), &actual).unwrap(), before);
     }
 }
 

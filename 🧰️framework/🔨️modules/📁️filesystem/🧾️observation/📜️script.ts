@@ -14,10 +14,11 @@ class TestScript extends BundleScript{
    return;
   }
   if(segments.length)throw Error("physical observation test accepts no arguments");
+  await runOwnedCommand(process.execPath,["test",resolve(this.root,"🧪️tests/📁️descriptor/🟦️.ts"),resolve(this.root,"🧪️tests/📄️publication/🟦️.ts")],this.repoRoot,"filesystem:rooted-descriptors",cmdBudgetMs(),{env:process.env});
   await runOwnedCommand(process.execPath,[resolve(this.root,"📜️script.ts"),"test-worker"],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
-  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions",resolve(this.root,"🟦️.ts")],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
+  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions",resolve(this.root,"🟦️.ts"),resolve(this.root,"📁️current/🟦️.ts"),resolve(this.root,"🧪️tests/🟦️.ts")],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
  }
 }
 /** 🧪️ Executes the complete portable fixture roster in its defining source owner. */
-class WorkerScript extends BundleScript{async run(segments:string[]):Promise<void>{if(segments.length)throw Error("physical observation worker accepts no arguments");const {runFileObservationChecksV1}=await import("./🧪️tests/🟦️.ts");await runFileObservationChecksV1();}}
+class WorkerScript extends BundleScript{async run(segments:string[]):Promise<void>{if(segments.length)throw Error("physical observation worker accepts no arguments");const {runFileObservationChecksV1,runCurrentFileRecheckChecksV1}=await import("./🧪️tests/🟦️.ts");await runCurrentFileRecheckChecksV1();await runFileObservationChecksV1();}}
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test",TestScript).register("test-worker",WorkerScript), { invocation: original, ...({defaultCommand:"test"}) }));

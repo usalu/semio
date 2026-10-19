@@ -7,6 +7,8 @@ import { OverviewCard, OverviewCardAction } from "../../../🃏️OverviewCard/�
 import { LayeredOverview } from "../../🟦️.tsx";
 import { capturePosterFromCanvases } from "../../🧰️pane-helpers/🟦️.ts";
 import { type LayeredCardState, type LayeredOverviewProps, type LayeredPane } from "../../📋️types/🟦️.ts";
+import chunk from "lodash/chunk";
+import swipeVectors from "../../🧫️fixtures/👀️controlled-swipe/🔣️.json";
 // #endregion 🔌️Adapters
 
 // #region 🥞️LayeredOverviewBehaviour
@@ -59,6 +61,82 @@ afterEach(() => {
 });
 
 describe("LayeredOverview", () => {
+  it("paints a controlled camera and reveal in an inactive observation without emitting input", () => {
+    const camera = vi.fn();
+    const revealed = vi.fn();
+    const props = { panes: pages(HOME), cells: GRID, renderCard: card, labels: LABELS, lifecycle: LATER, interactive: false, routing: "none" as const, reducedMotion: "always" as const, onCameraChange: camera, onRevealedIdChange: revealed };
+    const result = render(<LayeredOverview {...props} camera={{ x: 1, y: 1 }} revealedId={null} />);
+    const root = result.container.querySelector<HTMLElement>("[data-layered-overview]")!;
+    const transform = () => root.querySelector<HTMLElement>("[data-layered-strip]")!.style.transform;
+    expect(offsetOf(transform(), 3, 3).x).toBeCloseTo(2);
+    expect(offsetOf(transform(), 3, 3).y).toBeCloseTo(2);
+    result.rerender(<LayeredOverview {...props} camera={{ x: 1, y: 1 }} revealedId="board" revealedBy="focus" />);
+    expect(root.querySelector<HTMLElement>('[data-layered-card="board"]')!.hasAttribute("data-revealed")).toBe(true);
+    expect(offsetOf(transform(), 3, 3).x).toBeCloseTo(1);
+    expect(offsetOf(transform(), 3, 3).y).toBeCloseTo(1);
+    expect(root.querySelector<HTMLElement>('[data-layered-card="board"]')!.dataset.reveal).toBe("focus");
+    result.rerender(<LayeredOverview {...props} camera={{ x: 0, y: 0 }} revealedId={null} />);
+    expect(root.querySelector<HTMLElement>('[data-layered-card="board"]')!.hasAttribute("data-revealed")).toBe(false);
+    expect(offsetOf(transform(), 3, 3).x).toBeCloseTo(0);
+    expect(offsetOf(transform(), 3, 3).y).toBeCloseTo(0);
+    expect(camera).not.toHaveBeenCalled();
+    expect(revealed).not.toHaveBeenCalled();
+  });
+
+  it("reports bounded normalized camera input and leaves a controlled reveal to its owner", () => {
+    const camera = vi.fn();
+    const revealed = vi.fn();
+    const { root, cardOf } = renderHome({ camera: { x: 0, y: 0 }, revealedId: null, onCameraChange: camera, onRevealedIdChange: revealed });
+    sized(root);
+    moveMouse(1800, -90);
+    expect(camera).toHaveBeenLastCalledWith({ x: 1, y: 0 });
+    fireEvent.pointerEnter(cardOf("board"), { pointerType: "mouse" });
+    expect(revealed).toHaveBeenLastCalledWith("board", "pointer");
+    expect(cardOf("board").closest("[data-layered-card]")!.hasAttribute("data-revealed")).toBe(false);
+  });
+
+  it("clears a hover reveal when an overview becomes an inactive preview", () => {
+    const props = { panes: pages(HOME), cells: GRID, renderCard: card, labels: LABELS, lifecycle: LATER, reducedMotion: "always" as const };
+    const result = render(<LayeredOverview {...props} />);
+    const host = result.container.querySelector<HTMLElement>('[data-layered-card="board"]')!;
+    fireEvent.pointerEnter(host, { pointerType: "mouse" });
+    expect(host.hasAttribute("data-revealed")).toBe(true);
+    result.rerender(<LayeredOverview {...props} interactive={false} />);
+    expect(host.hasAttribute("data-revealed")).toBe(false);
+    expect(result.container.querySelector<HTMLElement>("[data-layered-veil]")!.dataset.veil).toBe("whole");
+    result.rerender(<LayeredOverview {...props} />);
+    expect(host.hasAttribute("data-revealed")).toBe(false);
+  });
+
+  it("keeps inactive preview grids painted while ignoring pointer, focus and open commands", () => {
+    const opened = vi.fn();
+    const revealed = vi.fn();
+    const { root, strip, cardOf } = renderHome({ interactive: false, reducedMotion: "always", onOpenedIdChange: opened, onRevealedIdChange: revealed });
+    expect(root.dataset.pan).toBe("none");
+    expect(root.querySelector("[data-layered-overlay]")?.hasAttribute("inert")).toBe(true);
+    fireEvent.pointerEnter(cardOf("board"), { pointerType: "mouse" });
+    fireEvent.focus(cardOf("board").querySelector("a")!);
+    fireEvent.click(within(cardOf("board")).getByRole("button", { name: "Open Board" }));
+    expect(strip().style.transform).toBe("translate3d(0%, 0%, 0)");
+    expect(opened).not.toHaveBeenCalled();
+    expect(revealed).not.toHaveBeenCalled();
+  });
+
+  it("leaves an inactive ancestor's controlled opened pane available without handling Escape or stealing focus", () => {
+    const opened = vi.fn();
+    const outside = document.createElement("button");
+    document.body.append(outside);
+    outside.focus();
+    const { root, strip } = renderHome({ interactive: false, openedId: "board", routing: "none", reducedMotion: "always", onOpenedIdChange: opened });
+    expect(pane(root, "board").hasAttribute("inert")).toBe(false);
+    expect(document.activeElement).toBe(outside);
+    expect(strip().style.transform).toBe("translate3d(-33.3333%, -33.3333%, 0)");
+    expect(screen.queryByRole("button", { name: "Overview" })).toBeNull();
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(opened).not.toHaveBeenCalled();
+    outside.remove();
+  });
+
   it("stacks an inert strip, one dialog-level glass and nine card regions in reading order", () => {
     const { root, strip, veil } = renderHome();
     expect(root.dataset.mode).toBe("strip");
@@ -92,7 +170,7 @@ describe("LayeredOverview", () => {
     expect(cardOf("board").closest("[data-layered-card]")!.hasAttribute("data-revealed")).toBe(true);
     expect(within(cardOf("board")).getByText("revealed")).toBeTruthy();
     expect(chrome).toHaveBeenLastCalledWith({ revealed: true, opened: false });
-    expect(revealed).toHaveBeenLastCalledWith("board");
+    expect(revealed).toHaveBeenLastCalledWith("board", "pointer");
     fireEvent.pointerLeave(cardOf("board"), { pointerType: "mouse" });
     expect(veil()!.dataset.veil).toBe("whole");
     expect(veil()!.style.visibility).toBe("visible");
@@ -117,6 +195,53 @@ describe("LayeredOverview", () => {
     fireEvent.pointerEnter(cardOf("board"), { pointerType: "touch" });
     expect(cardOf("board").closest("[data-layered-card]")!.hasAttribute("data-revealed")).toBe(false);
     expect(veil()!.dataset.veil).toBe("whole");
+  });
+
+  it("hides every other card while the pointer hovers one and restores them on leave", () => {
+    const { cardOf } = renderHome({ reducedMotion: "always" });
+    const host = (id: string) => cardOf(id).closest<HTMLElement>("[data-layered-card]")!;
+    fireEvent.pointerEnter(cardOf("board"), { pointerType: "mouse" });
+    const opacity = (id: string) => host(id).querySelector<HTMLElement>(":scope > *")?.style.opacity ?? "";
+    expect(host("board").dataset.reveal).toBe("pointer");
+    expect(opacity("board")).toBe("");
+    expect(host("board").hasAttribute("data-concealed")).toBe(false);
+    expect(host("board").hasAttribute("data-tinted")).toBe(true);
+    for (const id of HOME) {
+      if (id === "board") continue;
+      expect(opacity(id), id).toBe("0");
+      expect(host(id).hasAttribute("data-concealed"), id).toBe(true);
+      expect(host(id).hasAttribute("data-tinted"), id).toBe(false);
+      expect(host(id).hasAttribute("aria-hidden"), id).toBe(false);
+    }
+    fireEvent.pointerLeave(cardOf("board"), { pointerType: "mouse" });
+    for (const id of HOME) {
+      expect(opacity(id), id).toBe("");
+      expect(host(id).hasAttribute("data-concealed"), id).toBe(false);
+      expect(host(id).hasAttribute("data-tinted"), id).toBe(false);
+    }
+  });
+
+  it("keeps every card visible when keyboard focus reveals one", () => {
+    const { cardOf } = renderHome({ reducedMotion: "always" });
+    const host = (id: string) => cardOf(id).closest<HTMLElement>("[data-layered-card]")!;
+    act(() => within(cardOf("badges")).getByRole("link", { name: "Badges" }).focus());
+    expect(host("badges").dataset.reveal).toBe("focus");
+    for (const id of HOME) {
+      expect(host(id).querySelector<HTMLElement>(":scope > *")?.style.opacity ?? "", id).toBe("");
+      expect(host(id).hasAttribute("data-concealed"), id).toBe(false);
+      expect(host(id).hasAttribute("data-tinted"), id).toBe(false);
+    }
+  });
+
+  it("hides the other cards of a swipe grid while the pointer hovers one", () => {
+    const { cardOf } = renderHome({ mode: "swipe", reducedMotion: "always" });
+    const host = (id: string) => cardOf(id).closest<HTMLElement>("[data-layered-card]")!;
+    fireEvent.pointerEnter(cardOf("cooling"), { pointerType: "mouse" });
+    expect(host("cooling").dataset.reveal).toBe("pointer");
+    expect(host("cooling").hasAttribute("data-tinted")).toBe(true);
+    expect(host("learner").hasAttribute("data-tinted")).toBe(false);
+    expect(host("learner").querySelector<HTMLElement>(":scope > *")?.style.opacity).toBe("0");
+    expect(host("cooling").querySelector<HTMLElement>(":scope > *")?.style.opacity ?? "").toBe("");
   });
 
   it("glides 500 ms from the CURRENT offset and cuts the hole from it every frame", () => {
@@ -458,6 +583,21 @@ describe("LayeredOverview", () => {
     expect(veil()!.dataset.veil).toBe("whole");
   });
 
+  it("reports the pointer while a card stays zoomed, without moving that page", () => {
+    fakeClock();
+    const camera = vi.fn();
+    const { root, strip, cardOf } = renderHome({ reducedMotion: "never", onCameraChange: camera });
+    sized(root);
+    fireEvent.pointerEnter(cardOf("board"), { pointerType: "mouse" });
+    frames(600);
+    expect(strip().style.transform).toBe("translate3d(-33.3333%, -33.3333%, 0)");
+    camera.mockClear();
+    moveMouse(900, 900);
+    frames(600);
+    expect(camera).toHaveBeenLastCalledWith({ x: 1, y: 1 });
+    expect(strip().style.transform).toBe("translate3d(-33.3333%, -33.3333%, 0)");
+  });
+
 });
 
 describe("LayeredOverview swipe", () => {
@@ -488,6 +628,41 @@ describe("LayeredOverview swipe", () => {
     const { x, y } = offsetOf(strip.style.transform, columns, rows);
     return { x: Math.round(x * 1e4) / 1e4 + 0, y: Math.round(y * 1e4) / 1e4 + 0 };
   };
+
+  it("mirrors public settled swipe pages across an inactive overview without emitting commands", () => {
+    const changed = vi.fn();
+    const props = { panes: pages(swipeVectors.pages), cells: GRID, renderCard: card, labels: LABELS, lifecycle: LATER, mode: "swipe" as const, interactive: false, routing: "none" as const, onSwipeIdChange: changed };
+    const result = render(<LayeredOverview {...props} swipeId="learner" />);
+    const root = result.container.querySelector<HTMLElement>("[data-layered-overview]")!;
+    const strip = root.querySelector<HTMLElement>("[data-layered-strip]")!;
+    const rows = chunk(swipeVectors.pages, swipeVectors.columns);
+    for (const vector of swipeVectors.steps) {
+      result.rerender(<LayeredOverview {...props} swipeId={vector.page} />);
+      const row = rows.findIndex((entry) => entry.includes(vector.page));
+      const oracle = { x: rows[row]!.indexOf(vector.page), y: row };
+      expect(cellsAt(strip, 3, 3)).toEqual(vector.offset);
+      expect(cellsAt(strip, 3, 3)).toEqual(oracle);
+      expect(root.dataset.layeredResting).toBe(vector.page);
+    }
+    result.rerender(<LayeredOverview {...props} swipeId="unknown" />);
+    expect(cellsAt(strip, 3, 3)).toEqual(swipeVectors.steps.at(-1)!.offset);
+    expect(changed).not.toHaveBeenCalled();
+  });
+
+  it("publishes only settled page ids through normal and wrapped touch swipes", () => {
+    const changed = vi.fn();
+    const { root } = swipeHome({ onSwipeIdChange: changed });
+    expect(changed).toHaveBeenLastCalledWith("learner");
+    changed.mockClear();
+    for (const vector of swipeVectors.gestures) {
+      swipe(root, vector.from as [number, number], vector.to as [number, number], 100);
+      expect(changed).not.toHaveBeenCalled();
+      frames(400);
+      expect(changed).toHaveBeenCalledExactlyOnceWith(vector.page);
+      expect(root.dataset.layeredResting).toBe(vector.page);
+      changed.mockClear();
+    }
+  });
 
   it("lays the cards on a layer of the strip's own grid that moves with it, each centred in its page's cell, one glass below them", () => {
     const { root, strip, cards } = swipeHome();

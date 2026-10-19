@@ -1,0 +1,19 @@
+{
+  "version": "semio.nx.entrypoints/v1",
+  "cases": [
+    {
+      "id": "cli",
+      "source": "⚡️caching/🚀️bootstrap/🛠️tools/📜️script.ts",
+      "pattern": "cli: require\\.resolve\\(\"([^\"\\n]+)\"\\)",
+      "specifier": "nx/bin/nx.js",
+      "target": "dist/bin/nx.js"
+    },
+    {
+      "id": "daemon",
+      "source": "⚡️caching/🚀️bootstrap/📜️script.ts",
+      "pattern": "const daemon = createRequire\\(nxCli\\)\\.resolve\\(\"([^\"\\n]+)\"\\)",
+      "specifier": "nx/src/daemon/server/start.js",
+      "target": "dist/src/daemon/server/start.js"
+    }
+  ]
+}

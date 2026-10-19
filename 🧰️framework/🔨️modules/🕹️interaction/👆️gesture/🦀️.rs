@@ -1,5 +1,23 @@
 //! 🤏️ Pure pointer-set, pinch-frame, and 2D camera laws shared by native viewport hosts.
 
+/// 🔲️ Retains the path required by an area-selection gesture and latches drag activation.
+pub fn append_selection_drag_points(points: &mut Vec<(f64, f64)>, active: &mut bool, lasso: bool, samples: &[(f64, f64)], threshold: f64) {
+    let Some(&start) = points.first() else { return };
+    for &(x, y) in samples {
+        if !x.is_finite() || !y.is_finite() {
+            continue;
+        }
+        *active |= (x - start.0).hypot(y - start.1) >= threshold;
+        if points.last() == Some(&(x, y)) {
+            continue;
+        }
+        if !lasso {
+            points.truncate(1);
+        }
+        points.push((x, y));
+    }
+}
+
 /// 👆️ One active contact in surface-local pixels.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct GesturePointer {
@@ -188,6 +206,22 @@ pub fn apply_pinch_to_camera(camera: Camera2d, step: PinchStep, viewport: [f64; 
 mod tests {
     use super::*;
     use serde::Deserialize;
+
+    #[test]
+    fn selection_drag_matches_the_neutral_typescript_and_shapely_cases() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🔲️selection-drag.json")).expect("selection drag fixture");
+        let point = |value: &serde_json::Value| (value[0].as_f64().expect("x"), value[1].as_f64().expect("y"));
+        for case in fixture["cases"].as_array().expect("cases") {
+            let mut points = vec![point(&case["start"])];
+            let mut active = false;
+            let lasso = case["method"].as_str() == Some("lasso");
+            let samples = case["samples"].as_array().expect("samples").iter().map(point).collect::<Vec<_>>();
+            append_selection_drag_points(&mut points, &mut active, lasso, &samples, 4.0);
+            append_selection_drag_points(&mut points, &mut active, lasso, &[point(&case["release"])], 4.0);
+            assert_eq!(points, case["retained"].as_array().expect("retained").iter().map(point).collect::<Vec<_>>(), "{}", case["id"]);
+            assert_eq!(active, case["active"].as_bool().expect("active"), "{}", case["id"]);
+        }
+    }
 
     #[derive(Deserialize)]
     #[serde(rename_all = "camelCase")]

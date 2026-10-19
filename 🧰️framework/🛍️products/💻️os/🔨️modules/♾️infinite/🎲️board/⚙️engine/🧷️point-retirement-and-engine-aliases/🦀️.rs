@@ -22,7 +22,8 @@ impl RetireOwned for PointBuffer{
 }
 
 impl RetirementCursor for PointRetirement{
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
+     fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand {copy_bytes:usize::from(!self.source.is_empty()),release_bytes:if self.source.is_empty(){self.source.capacity()*size_of::<Point>()}else{0},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
+fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
   if grant.maximum_items==0{return RetirementStep::BudgetExhausted}
   if !self.source.is_empty(){let remaining=size_of::<Point>()-self.tail_bytes;let bytes=remaining.min(grant.maximum_copy_bytes);if bytes==0{return RetirementStep::BudgetExhausted}self.tail_bytes+=bytes;if self.tail_bytes==size_of::<Point>(){self.source.pop();self.tail_bytes=0;}return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})}
   let bytes=self.source.capacity()*size_of::<Point>();if bytes>grant.maximum_release_bytes{return RetirementStep::BudgetExhausted}if bytes>0{drop(std::mem::take(&mut *self.source));return RetirementStep::Bytes(bytes)}RetirementStep::Complete

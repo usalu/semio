@@ -114,7 +114,7 @@ impl Coo {
                 vals.push(v);
             }
         }
-        CscSym { n, colptr, rowind, vals }
+        CscSym::from_owned_parts(n, colptr, rowind, vals)
     }
 
     /// 🪞️ Dense form for testing/cross-validation against `MatD::lu_solve`.
@@ -167,6 +167,11 @@ impl Csr {
 
     pub fn value(&self, index: usize) -> Option<f64> {
         self.vals.get(index).copied()
+    }
+
+    /// 📦️ Queries the actual retained physical backing without traversing matrix values.
+    pub fn allocated_bytes(&self) -> usize {
+        self.indptr.allocated_bytes() + self.indices.allocated_bytes() + self.vals.allocated_bytes()
     }
 
     /// 🧮️ Returns the exact initialized compressed-entry count.
@@ -270,12 +275,20 @@ impl semio_framework_value::FromValue for Csr {
 #[derive(Clone, Debug, PartialEq)]
 pub struct CscSym {
     pub n: usize,
-    pub colptr: Vec<u32>,
-    pub rowind: Vec<u32>,
-    pub vals: Vec<f64>,
+    pub colptr: PagedList<u32, SPARSE_INDEX_SPACE>,
+    pub rowind: PagedList<u32, SPARSE_INDEX_SPACE>,
+    pub vals: PagedList<f64, SPARSE_INDEX_SPACE>,
 }
 
 impl CscSym {
+    /// 📚️ Cold callers consume contiguous input once; mounted producers transfer paged owners directly.
+    pub fn from_owned_parts(n: usize, colptr: Vec<u32>, rowind: Vec<u32>, vals: Vec<f64>) -> Self {
+        Self { n, colptr: paged_from_values(colptr), rowind: paged_from_values(rowind), vals: paged_from_values(vals) }
+    }
+    pub fn from_paged_parts(n: usize, colptr: PagedList<u32, SPARSE_INDEX_SPACE>, rowind: PagedList<u32, SPARSE_INDEX_SPACE>, vals: PagedList<f64, SPARSE_INDEX_SPACE>) -> Self { Self { n, colptr, rowind, vals } }
+    pub fn terminal_is_empty(&self) -> bool { self.colptr.terminal_is_empty() && self.rowind.terminal_is_empty() && self.vals.terminal_is_empty() }
+    pub fn allocated_bytes(&self) -> usize { self.colptr.allocated_bytes() + self.rowind.allocated_bytes() + self.vals.allocated_bytes() }
+
     /// 🔍️ Reads `(row, col)` — storage-column is the smaller index, stored-row the larger.
     pub fn get(&self, row: usize, col: usize) -> f64 {
         let (lo, hi) = if row <= col { (row, col) } else { (col, row) };
@@ -290,13 +303,13 @@ impl CscSym {
     }
 
     pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
-        match close_vec_owner_step(&mut self.vals, maximum_bytes) {
+        match close_paged_owner_step(&mut self.vals, maximum_bytes) {
             Ok(Some((items, bytes))) => return (false, items, bytes),
             Err(()) => return (false, 0, 0),
             Ok(None) => {}
         }
         for owner in [&mut self.rowind, &mut self.colptr] {
-            match close_vec_owner_step(owner, maximum_bytes) {
+            match close_paged_owner_step(owner, maximum_bytes) {
                 Ok(Some((items, bytes))) => return (false, items, bytes),
                 Err(()) => return (false, 0, 0),
                 Ok(None) => {}
@@ -324,6 +337,238 @@ impl CscSym {
     }
 }
 // #endregion 🔖️CscSym
+
+pub fn restore_paged_usize_entry<const N: usize>(owner: &mut PagedList<usize, N>, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize, cursor: &mut NumericalOwnerRestoreCursor, context: &mut StepContext<'_>) -> Result<bool, NumericalCheckpointFault> { restore_numerical_owner(owner, page, maximum, entry, cursor, false, context) }
+pub fn restore_paged_pair_entry<const N: usize>(owner: &mut PagedList<(u32, f64), N>, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize, cursor: &mut NumericalOwnerRestoreCursor, context: &mut StepContext<'_>) -> Result<bool, NumericalCheckpointFault> { restore_numerical_owner(owner, page, maximum, entry, cursor, false, context) }
+pub fn restore_paged_u64_entry<const N: usize>(owner: &mut PagedList<u64, N>, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize, cursor: &mut NumericalOwnerRestoreCursor, context: &mut StepContext<'_>) -> Result<bool, NumericalCheckpointFault> { restore_numerical_owner(owner, page, maximum, entry, cursor, false, context) }
+pub fn restore_contributor_entry(owner: &mut PagedList<RowContributor, SPARSE_INDEX_SPACE>, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize, cursor: &mut NumericalOwnerRestoreCursor, context: &mut StepContext<'_>) -> Result<bool, NumericalCheckpointFault> { restore_numerical_owner(owner, page, maximum, entry, cursor, false, context) }
+
+
+// #endregion 🔖️Ldlt
+
+// #region 🔖️Pcg
+
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum PencilConstructionStage {
+    ValidateMass,
+    ReserveColptr,
+    CopyUpper,
+    ReserveMassIndptr,
+    ReserveMassIndices,
+    ReserveMassValues,
+    CopyMountedMass,
+    RetireMountedMass,
+    BuildMass,
+    Complete,
+}
+
+/// 🎼️ Original paged symmetric pencils support physical modal and signed geometric analyses.
+pub struct SymmetricPencilConstruction {
+    matrix: Option<Csr>,
+    mass: Option<VecD>,
+    mounted_mass: Option<MountedScalarSlots>,
+    second: Option<Csr>,
+    stage: PencilConstructionStage,
+    row: usize,
+    entry: usize,
+    colptr: PagedList<u32, SPARSE_INDEX_SPACE>,
+    rowind: PagedList<u32, SPARSE_INDEX_SPACE>,
+    values: PagedList<f64, SPARSE_INDEX_SPACE>,
+    mass_indptr: PagedList<u32, SPARSE_INDEX_SPACE>,
+    mass_indices: PagedList<u32, SPARSE_INDEX_SPACE>,
+    mass_values: PagedList<f64, SPARSE_INDEX_SPACE>,
+    complete: Option<(CscSym, Csr)>,
+}
+
+impl SymmetricPencilConstruction {
+    /// 📏️ Lend the completed order while retaining both original matrices.
+    pub fn completed_order(&self) -> Option<usize> { self.complete.as_ref().map(|(matrix, _)| matrix.n) }
+
+    pub fn new(matrix: Csr, mass: VecD) -> Self {
+        Self { matrix: Some(matrix), mass: Some(mass), mounted_mass: None, second: None, stage: PencilConstructionStage::ValidateMass, row: 0, entry: 0, colptr: PagedList::empty(), rowind: PagedList::empty(), values: PagedList::empty(), mass_indptr: PagedList::empty(), mass_indices: PagedList::empty(), mass_values: PagedList::empty(), complete: None }
+    }
+
+    pub fn new_mounted(matrix: Csr, mass: MountedScalarSlots) -> Self { let mut owner = Self::new(matrix, VecD::from_vec(Vec::new())); owner.mass = None; owner.mounted_mass = Some(mass); owner }
+
+    /// 🎼️ Retain an original symmetric pencil for modal or signed geometric analysis.
+    pub fn new_pair(matrix: Csr, second: Csr) -> Self { let mut owner = Self::new(matrix, VecD::from_vec(Vec::new())); owner.mass = None; owner.second = Some(second); owner }
+
+    fn reserve<T>(owner: &mut PagedList<T, SPARSE_INDEX_SPACE>, count: usize, context: &mut StepContext<'_>) -> Result<bool, &'static [u8]> {
+        if owner.capacity() >= count { return Ok(true); }
+        let progress = owner.reserve_capacity_one_funded(count, context.retained_grant()).map_err(|_| b"pencil-capacity" as &'static [u8])?;
+        context.consume_retained(progress).map_err(|_| b"pencil-capacity-receipt" as &'static [u8])?;
+        Ok(false)
+    }
+    fn admit(context: &mut StepContext<'_>, depth: usize, bytes: usize) -> Result<bool, &'static [u8]> {
+        let demand = RetirementDemand { copy_bytes: size_of::<Self>() * 2 + bytes, depth: depth.max(1), ..Default::default() };
+        if !numerical_grant_covers(context.retained_grant(), demand) { return Ok(false); }
+        context.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }).map_err(|_| b"pencil-copy" as &'static [u8])?;
+        Ok(true)
+    }
+    fn depth<T>(owner: &PagedList<T, SPARSE_INDEX_SPACE>, index: usize) -> Result<usize, &'static [u8]> { owner.next_get_depth_demand(index).map_err(|_| b"pencil-path" as &'static [u8]) }
+    fn push_depth<T>(owner: &PagedList<T, SPARSE_INDEX_SPACE>) -> Result<usize, &'static [u8]> { owner.next_push_depth_demand().map_err(|_| b"pencil-path" as &'static [u8]) }
+
+    pub fn step_one(&mut self, context: &mut StepContext<'_>) -> Result<bool, &'static [u8]> {
+        if context.is_cancelled() || context.should_yield() { return Ok(false); }
+        let matrix = self.matrix.as_ref().ok_or(b"pencil-matrix-owner" as &'static [u8])?;
+        let n = matrix.n;
+        match self.stage {
+            PencilConstructionStage::ValidateMass => {
+                let length = self.second.as_ref().map(|second| second.n).or_else(|| self.mass.as_ref().map(VecD::len)).or_else(|| self.mounted_mass.as_ref().map(MountedScalarSlots::len)).ok_or(b"pencil-second-owner" as &'static [u8])?;
+                if length != n || n > u32::MAX as usize { return Err(b"pencil-order"); }
+                if !Self::admit(context, 1, 16)? { return Ok(false); }
+                if self.second.is_some() || self.row == n { self.row = 0; self.entry = 0; self.stage = PencilConstructionStage::ReserveColptr; }
+                else {
+                    let value = self.mass.as_ref().map(|mass| mass.get(self.row)).or_else(|| self.mounted_mass.as_ref().and_then(|mass| mass.get(self.row))).ok_or(b"pencil-mass-owner" as &'static [u8])?;
+                    if !value.is_finite() || value <= 0.0 { return Err(b"pencil-mass-value"); }
+                    self.row += 1;
+                }
+            }
+            PencilConstructionStage::ReserveColptr => {
+                if !Self::reserve(&mut self.colptr, n.saturating_add(1), context)? { return Ok(false); }
+                if !Self::admit(context, Self::push_depth(&self.colptr)?, 4)? { return Ok(false); }
+                self.colptr.push_reserved(0).map_err(|_| b"pencil-offset" as &'static [u8])?;
+                self.stage = PencilConstructionStage::CopyUpper;
+            }
+            PencilConstructionStage::CopyUpper => {
+                if self.row == n {
+                    if !Self::admit(context, 1, 1)? { return Ok(false); }
+                    self.stage = PencilConstructionStage::ReserveMassIndptr;
+                } else {
+                    let end = matrix.indptr(self.row + 1).ok_or(b"pencil-row-end" as &'static [u8])? as usize;
+                    if end > matrix.vals.len() || self.entry > end { return Err(b"pencil-row-shape"); }
+                    if self.entry < end {
+                        let column = matrix.index(self.entry).ok_or(b"pencil-column" as &'static [u8])? as usize;
+                        let value = matrix.value(self.entry).ok_or(b"pencil-value" as &'static [u8])?;
+                        if column >= n || !value.is_finite() { return Err(b"pencil-entry"); }
+                        if column >= self.row {
+                            let target = self.rowind.len() + 1;
+                            if target > u32::MAX as usize { return Err(b"pencil-offset-overflow"); }
+                            if !Self::reserve(&mut self.rowind, target, context)? || !Self::reserve(&mut self.values, target, context)? { return Ok(false); }
+                        }
+                        let mut depth = Self::depth(&matrix.indptr, self.row + 1)? + Self::depth(&matrix.indices, self.entry)? + Self::depth(&matrix.vals, self.entry)?;
+                        if column >= self.row { depth += Self::push_depth(&self.rowind)? + Self::push_depth(&self.values)?; }
+                        if !Self::admit(context, depth, 32)? { return Ok(false); }
+                        if column >= self.row { self.rowind.push_reserved(column as u32).map_err(|_| b"pencil-row" as &'static [u8])?; self.values.push_reserved(value).map_err(|_| b"pencil-value" as &'static [u8])?; }
+                        self.entry += 1;
+                    } else {
+                        let depth = Self::depth(&matrix.indptr, self.row + 1)? + Self::push_depth(&self.colptr)?;
+                        if !Self::admit(context, depth, 16)? { return Ok(false); }
+                        self.colptr.push_reserved(self.rowind.len() as u32).map_err(|_| b"pencil-offset" as &'static [u8])?;
+                        self.row += 1;
+                        self.entry = end;
+                    }
+                }
+            }
+            PencilConstructionStage::ReserveMassIndptr => {
+                if self.second.is_some() {
+                    if !Self::admit(context, 1, size_of::<CscSym>() + size_of::<Csr>())? { return Ok(false); }
+                    let first = CscSym::from_paged_parts(n, std::mem::take(&mut self.colptr), std::mem::take(&mut self.rowind), std::mem::take(&mut self.values));
+                    self.complete = Some((first, self.second.take().expect("original pencil"))); self.stage = PencilConstructionStage::Complete;
+                } else {
+                    if !Self::reserve(&mut self.mass_indptr, n.saturating_add(1), context)? { return Ok(false); }
+                    if !Self::admit(context, Self::push_depth(&self.mass_indptr)?, 4)? { return Ok(false); }
+                    self.mass_indptr.push_reserved(0).map_err(|_| b"pencil-mass-offset" as &'static [u8])?; self.stage = PencilConstructionStage::ReserveMassIndices;
+                }
+            }
+            PencilConstructionStage::ReserveMassIndices => {
+                if !Self::reserve(&mut self.mass_indices, n, context)? { return Ok(false); }
+                if !Self::admit(context, 1, 1)? { return Ok(false); } self.stage = PencilConstructionStage::ReserveMassValues;
+            }
+            PencilConstructionStage::ReserveMassValues => {
+                if !Self::reserve(&mut self.mass_values, n, context)? { return Ok(false); }
+                if !Self::admit(context, 1, 16)? { return Ok(false); } self.row = 0; self.stage = PencilConstructionStage::CopyMountedMass;
+            }
+            PencilConstructionStage::CopyMountedMass => {
+                if self.row < n {
+                    let value = self.mass.as_ref().map(|mass| mass.get(self.row)).or_else(|| self.mounted_mass.as_ref().and_then(|mass| mass.get(self.row))).ok_or(b"pencil-mass-owner" as &'static [u8])?;
+                    if !Self::admit(context, Self::push_depth(&self.mass_values)?, 16)? { return Ok(false); }
+                    self.mass_values.push_reserved(value).map_err(|_| b"pencil-mass-value" as &'static [u8])?; self.row += 1;
+                } else if Self::admit(context, 1, 1)? { self.stage = PencilConstructionStage::RetireMountedMass; }
+            }
+            PencilConstructionStage::RetireMountedMass => {
+                if let Some(mass) = self.mass.as_mut() {
+                    let demand = if mass.0.is_empty() { mass.0.capacity().saturating_mul(size_of::<f64>()) } else { 0 };
+                    if !numerical_grant_covers(context.retained_grant(), RetirementDemand { copy_bytes: size_of::<Self>() * 2 + 8, release_bytes: demand, depth: 1, ..Default::default() }) { return Ok(false); }
+                    match close_vec_owner_step(&mut mass.0, context.retained_grant().maximum_release_bytes) {
+                        Ok(Some((items, bytes))) => { context.consume_retained(RetainedCloneProgress { copied_items: items.max(1), copied_bytes: size_of::<Self>() * 2 + 8, released_bytes: bytes, ..Default::default() }).map_err(|_| b"pencil-mass-close" as &'static [u8])?; return Ok(false); },
+                        Err(()) => return Ok(false), Ok(None) => {},
+                    }
+                    if !Self::admit(context, 1, size_of::<VecD>())? { return Ok(false); } self.mass = None;
+                } else if let Some(mass) = self.mounted_mass.as_mut() {
+                    if !Self::admit(context, 1, 8)? { return Ok(false); }
+                    if !mass.close_step() { return Ok(false); } self.mounted_mass = None;
+                } else {
+                    if !Self::admit(context, 1, 16)? { return Ok(false); } self.row = 0; self.stage = PencilConstructionStage::BuildMass;
+                }
+            }
+            PencilConstructionStage::BuildMass => {
+                if self.row < n {
+                    if !Self::admit(context, Self::push_depth(&self.mass_indices)? + Self::push_depth(&self.mass_indptr)?, 16)? { return Ok(false); }
+                    self.mass_indices.push_reserved(self.row as u32).map_err(|_| b"pencil-mass-index" as &'static [u8])?;
+                    self.mass_indptr.push_reserved((self.row + 1) as u32).map_err(|_| b"pencil-mass-offset" as &'static [u8])?; self.row += 1;
+                } else {
+                    if !Self::admit(context, 1, size_of::<CscSym>() + size_of::<Csr>())? { return Ok(false); }
+                    let first = CscSym::from_paged_parts(n, std::mem::take(&mut self.colptr), std::mem::take(&mut self.rowind), std::mem::take(&mut self.values));
+                    let second = Csr::from_paged_parts(n, std::mem::take(&mut self.mass_indptr), std::mem::take(&mut self.mass_indices), std::mem::take(&mut self.mass_values));
+                    self.complete = Some((first, second)); self.stage = PencilConstructionStage::Complete;
+                }
+            }
+            PencilConstructionStage::Complete => return Ok(true),
+        }
+        Ok(self.stage == PencilConstructionStage::Complete)
+    }
+
+    pub fn take_complete(&mut self, grant: RetainedCloneGrant) -> Option<((CscSym, Csr), RetainedCloneProgress)> {
+        let copied_bytes = (size_of::<CscSym>() + size_of::<Csr>()) * 2;
+        if self.stage != PencilConstructionStage::Complete || !numerical_grant_covers(grant, RetirementDemand { copy_bytes: copied_bytes, depth: 1, ..Default::default() }) { return None; }
+        self.complete.take().map(|owners| (owners, RetainedCloneProgress { copied_items: 1, copied_bytes, ..Default::default() }))
+    }
+
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        if let Some((first, second)) = self.complete.as_mut() {
+            let step = first.close_step(maximum_bytes); if !step.0 { return step; }
+            let step = second.close_step(maximum_bytes); if !step.0 { return step; }
+            self.complete = None; return (false, 1, 0);
+        }
+        for slot in [&mut self.matrix, &mut self.second] {
+            if let Some(matrix) = slot.as_mut() { let step = matrix.close_step(maximum_bytes); if !step.0 { return step; } *slot = None; return (false, 1, 0); }
+        }
+        if let Some(mass) = self.mass.as_mut() {
+            match close_vec_owner_step(&mut mass.0, maximum_bytes) { Ok(Some((items, bytes))) => return (false, items, bytes), Err(()) => return (false, 0, 0), Ok(None) => {} }
+            self.mass = None; return (false, 1, 0);
+        }
+        if let Some(mass) = self.mounted_mass.as_mut() { if !mass.close_step() { return (false, 1, 0); } self.mounted_mass = None; return (false, 1, 0); }
+        for owner in [&mut self.values, &mut self.mass_values] { match close_paged_owner_step(owner, maximum_bytes) { Ok(Some((items, bytes))) => return (false, items, bytes), Err(()) => return (false, 0, 0), Ok(None) => {} } }
+        for owner in [&mut self.colptr, &mut self.rowind, &mut self.mass_indptr, &mut self.mass_indices] { match close_paged_owner_step(owner, maximum_bytes) { Ok(Some((items, bytes))) => return (false, items, bytes), Err(()) => return (false, 0, 0), Ok(None) => {} } }
+        (true, 0, 0)
+    }
+}
+
+
+// #endregion 🔖️Pcg
+
+// #region 🔖️DenseEigen
+
+
+
+
+// #endregion 🔖️DenseEigen
+
+// #region 🔖️SubspaceIteration
+
+
+
+/// 🎯️ Only certified physical positive eigenpairs or explicit full-span absence are publishable.
+
+
+pub trait NumericalMatrixRestore{type Owner:NumericalRestoreOwner<f64>;fn owner(&mut self)->&mut Self::Owner;fn shape(&mut self,rows:usize,columns:usize);}
+impl NumericalMatrixRestore for MatD{type Owner=Vec<f64>;fn owner(&mut self)->&mut Self::Owner{&mut self.data}fn shape(&mut self,rows:usize,columns:usize){self.rows=rows;self.cols=columns;}}
+impl NumericalMatrixRestore for semio_s_fem_algebra::PagedMatD{type Owner=PagedList<f64,SPARSE_INDEX_SPACE>;fn owner(&mut self)->&mut Self::Owner{&mut self.data}fn shape(&mut self,rows:usize,columns:usize){self.rows=rows;self.cols=columns;}}
+
+
+// #endregion 🔖️SubspaceIteration
 
 // #region 🔖️Rcm
 fn bfs_distances(start: usize, adjacency: &[Vec<usize>]) -> Vec<i64> {

@@ -205,6 +205,7 @@ fn close_request(request: &mut ManuallyDrop<Option<MemberOpenRequest>>, grant: R
 }
 
 impl ErasedSnapshotRetirement for MemberHistoryVerification {
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands(body) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -233,6 +234,7 @@ impl MemberHistoryVerification {
 }
 
 impl ErasedSnapshotRetirement for VerifiedMemberHistoryInput {
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands(body) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }

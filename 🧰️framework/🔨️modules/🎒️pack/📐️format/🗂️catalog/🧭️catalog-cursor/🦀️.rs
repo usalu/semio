@@ -48,6 +48,30 @@ pub struct RetainedPackCatalogCursor {
 }
 
 impl RetainedPackCatalogCursor {
+    pub fn original_step_demands(&self) -> Result<RetirementDemand, RetainedPackCatalogFault> {
+        if let Some(fault)=self.fault{return Err(fault)}
+        let mapped=|error|RetainedPackCatalogFault::from_paged_refusal(error,"retained-pack.catalog-original-demand",self.document_bytes);
+        if let Some((owner,target,offset))=self.allocation_need()?{
+            let capacity=self.requested_allocation_bytes(owner,target,offset)?;
+            if self.allocated_bytes_checked().and_then(|owned|owned.checked_add(capacity)).is_none_or(|total|total>self.maximum_allocation_bytes){return Err(RetainedPackCatalogFault::refusal(ValueRefusalKind::OwnershipLimit,"retained-pack.catalog-original-demand",offset))}
+            let (copy,depth)=match owner{
+                RetainedPackCatalogAllocationOwner::SymbolSpans=>(self.symbols.symbols.next_reserve_copy_byte_demand(),self.symbols.symbols.next_reserve_depth_demand()),
+                RetainedPackCatalogAllocationOwner::SymbolScalars=>(self.symbols.scalars.next_reserve_copy_byte_demand(),self.symbols.scalars.next_reserve_depth_demand()),
+                RetainedPackCatalogAllocationOwner::Chunks=>(self.chunks.next_reserve_copy_byte_demand(),self.chunks.next_reserve_depth_demand()),
+                RetainedPackCatalogAllocationOwner::ObservedChunks=>(self.observed_chunks.next_reserve_copy_byte_demand(),self.observed_chunks.next_reserve_depth_demand()),
+            };
+            return Ok(RetirementDemand{copy_bytes:copy.map_err(mapped)?,capacity_bytes:capacity,depth:depth.map_err(mapped)?,..Default::default()})
+        }
+        let depth=self.symbols.symbols.next_push_depth_demand().map_err(mapped)?.max(self.symbols.scalars.next_push_depth_demand().map_err(mapped)?).max(self.chunks.next_push_depth_demand().map_err(mapped)?).max(self.observed_chunks.next_push_depth_demand().map_err(mapped)?).max(1);
+        Ok(RetirementDemand{copy_bytes:std::mem::size_of::<RetainedPackSegmentEvent>(),depth,..Default::default()})
+    }
+    pub fn original_close_depth_demand(&self) -> Result<usize, PagedListError> {
+        let mut depth=1;
+        depth=depth.max(self.symbols.scalars.next_pop_depth_demand()?).max(self.symbols.symbols.next_pop_depth_demand()?).max(self.chunks.next_pop_depth_demand()?).max(self.observed_chunks.next_pop_depth_demand()?);
+        depth=depth.max(self.symbols.scalars.next_release_depth_demand()?).max(self.symbols.symbols.next_release_depth_demand()?).max(self.chunks.next_release_depth_demand()?).max(self.observed_chunks.next_release_depth_demand()?);
+        Ok(depth)
+    }
+
     /// 📏️ Borrows the exact currently retained catalog frame or page path for close.
     pub fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
         if self.terminal_is_empty() { return Ok(Default::default()); }
@@ -461,6 +485,7 @@ impl RetainedPackCatalogCursor {
         {
             return self.remember(Err(RetainedPackCatalogFault::refusal(ValueRefusalKind::InvalidValue,"retained-pack.catalog-manifest-count",superblock.footer.manifest_offset)));
         }
+        if !semio_framework_pack_format::chunk_custody_matches(superblock.header.required_flags,raw.chunk_count,raw.chunk_table_span){return self.remember(Err(RetainedPackCatalogFault::refusal(ValueRefusalKind::InvalidValue,"retained-pack.catalog-required-chunked",12)));}
         if self.document_hash.finalize().as_bytes() != &superblock.footer.content_hash.0 {
             return self.remember(Err(RetainedPackCatalogFault::refusal(ValueRefusalKind::InvalidValue,"retained-pack.catalog-content-hash",superblock.footer.file_len)));
         }

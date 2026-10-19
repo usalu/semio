@@ -19,12 +19,14 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"strings"
 	"sync"
 	"testing"
+	"github.com/usalu/semio/repo/providers"
+	"github.com/usalu/semio/repo/workspace"
 
-	"github.com/usalu/semio/repo/client"
 )
 
 // #region 🤝️ProtocolContract
@@ -44,6 +46,11 @@ type entrypointContractFixture struct {
 	Schema             string   `json:"schema"`
 	ProfileEnvironment string   `json:"profileEnvironment"`
 	Arguments          []string `json:"arguments"`
+	ResourceContents []json.RawMessage `json:"resourceContents"`
+	ReopenPrompt struct {
+		Invalid []json.RawMessage `json:"invalid"`
+		Valid []string `json:"valid"`
+	} `json:"reopenPrompt"`
 	ProtocolVersions   []string `json:"protocolVersions"`
 	Profiles           []struct {
 		Slug       string `json:"slug"`
@@ -89,8 +96,8 @@ func TestRepositoryEntrypointContract(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if string(kind) != profile.Kind || client.McpServerName(kind) != profile.ServerName {
-				t.Fatalf("profile %q resolved kind=%q server=%q", profile.Slug, kind, client.McpServerName(kind))
+			if string(kind) != profile.Kind || providers.McpServerName(kind) != profile.ServerName {
+				t.Fatalf("profile %q resolved kind=%q server=%q", profile.Slug, kind, providers.McpServerName(kind))
 			}
 			server, err := NewRepositoryServerFor(&testRepository{}, kind)
 			if err != nil {
@@ -148,6 +155,52 @@ func TestRepositoryEntrypointContract(t *testing.T) {
 	}
 	if _, err := resolveMCPProfile([]string{"mcp", "client"}, func(string) (string, bool) { return "", false }); err == nil {
 		t.Fatal("legacy CLI delegation arguments must be rejected")
+	}
+}
+
+func TestRepositoryReopenPromptContract(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join("..", "..", "🔌️mcp", "🧫️fixtures", "🚪️entrypoint-contract.json"))
+	if err != nil { t.Fatal(err) }
+	var fixture entrypointContractFixture
+	if err := decodeExact(data, &fixture); err != nil { t.Fatal(err) }
+	root, err := os.MkdirTemp(os.TempDir(), "rp")
+	if err != nil { t.Fatal(err) }
+	t.Cleanup(func() { os.RemoveAll(root) })
+	if err := os.Mkdir(filepath.Join(root, ".git"), 0700); err != nil { t.Fatal(err) }
+	previous := workspace.GetRootDir()
+	workspace.SetRootDir(root)
+	t.Cleanup(func() { workspace.SetRootDir(previous) })
+	if workspace.GetRootDir() != root { t.Fatal("private repository root refused") }
+	for _, prompt := range fixture.ReopenPrompt.Invalid {
+		arguments := json.RawMessage(fmt.Sprintf(`{"path":"26/09/23/PROMPT-CONTRACT","prompt":%s,"no_management":true}`, prompt))
+		_, err := NewClientRepository(providers.McpClientGeneric).Call(context.Background(), "ticket_reopen", arguments)
+		var failure *HandlerError
+		if !errors.As(err, &failure) || failure.Code != -32010 || failure.Message != "invalid ticket_reopen arguments" {
+			t.Errorf("prompt=%s: expected domain argument refusal, got %v", prompt, err)
+		}
+	}
+	_, err = NewClientRepository(providers.McpClientGeneric).Call(context.Background(), "ticket_reopen", json.RawMessage(`{"path":"26/09/23/PROMPT-CONTRACT","no_management":true}`))
+	var failure *HandlerError
+	if !errors.As(err, &failure) || failure.Code != -32010 || failure.Message != "invalid ticket_reopen arguments" { t.Errorf("missing prompt: got %v", err) }
+	entries, err := os.ReadDir(root)
+	if err != nil { t.Fatal(err) }
+	if len(entries) != 1 || entries[0].Name() != ".git" { t.Fatal("refused prompt changed repository metadata") }
+}
+
+func TestResourceContentContract(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join("..", "..", "🔌️mcp", "🧫️fixtures", "🚪️entrypoint-contract.json"))
+	if err != nil { t.Fatal(err) }
+	var fixture entrypointContractFixture
+	if err := decodeExact(data, &fixture); err != nil { t.Fatal(err) }
+	for _, expected := range fixture.ResourceContents {
+		var content ResourceContent
+		if err := decodeExact(expected, &content); err != nil { t.Fatal(err) }
+		actual, err := json.Marshal(content)
+		if err != nil { t.Fatal(err) }
+		var actualValue, expectedValue any
+		if err := json.Unmarshal(actual, &actualValue); err != nil { t.Fatal(err) }
+		if err := json.Unmarshal(expected, &expectedValue); err != nil { t.Fatal(err) }
+		if !reflect.DeepEqual(actualValue, expectedValue) { t.Errorf("resource content got=%s want=%s", actual, expected) }
 	}
 }
 

@@ -1,0 +1,526 @@
+{
+  "version": 1,
+  "tolerance": 1e-07,
+  "cases": [
+    {
+      "id": "horizontal-clear",
+      "sun": [
+        60,
+        180
+      ],
+      "collector": [
+        0,
+        180
+      ],
+      "irradiance": [
+        800,
+        120
+      ],
+      "elevation": 1650,
+      "reflectance": 0.2,
+      "weather": [
+        25,
+        2
+      ],
+      "pv": [
+        5000,
+        10,
+        0.2,
+        0.8
+      ],
+      "expected": [
+        692.8203230275509,
+        120.0,
+        0.0,
+        48.45243002356949,
+        1178.5118016598333
+      ],
+      "thermal": {
+        "constant": 25,
+        "coefficient": -0.004,
+        "mounting": "OpenRack",
+        "wind": 6.84
+      }
+    },
+    {
+      "id": "horizontal-diffuse",
+      "sun": [
+        40,
+        180
+      ],
+      "collector": [
+        0,
+        180
+      ],
+      "irradiance": [
+        0,
+        120
+      ],
+      "elevation": 0,
+      "reflectance": 0.2,
+      "weather": [
+        10,
+        2
+      ],
+      "pv": [
+        5000,
+        10,
+        0.2,
+        0.8
+      ],
+      "expected": [
+        0.0,
+        120.0,
+        0.0,
+        13.462378490175801,
+        200.86089331954497
+      ],
+      "thermal": {
+        "constant": 25,
+        "coefficient": -0.004,
+        "mounting": "OpenRack",
+        "wind": 6.84
+      }
+    },
+    {
+      "id": "north-facing-diffuse",
+      "sun": [
+        30,
+        180
+      ],
+      "collector": [
+        90,
+        0
+      ],
+      "irradiance": [
+        800,
+        120
+      ],
+      "elevation": 0,
+      "reflectance": 0.2,
+      "weather": [
+        20,
+        2
+      ],
+      "pv": [
+        5000,
+        10,
+        0.2,
+        0.8
+      ],
+      "expected": [
+        0.0,
+        55.11812659615062,
+        51.99999999999999,
+        23.09069581195367,
+        172.69793751528553
+      ],
+      "thermal": {
+        "constant": 25,
+        "coefficient": -0.004,
+        "mounting": "OpenRack",
+        "wind": 6.84
+      }
+    },
+    {
+      "id": "south-facing-beam-and-diffuse",
+      "sun": [
+        30,
+        180
+      ],
+      "collector": [
+        90,
+        180
+      ],
+      "irradiance": [
+        800,
+        120
+      ],
+      "elevation": 0,
+      "reflectance": 0.2,
+      "weather": [
+        20,
+        2
+      ],
+      "pv": [
+        5000,
+        10,
+        0.2,
+        0.8
+      ],
+      "expected": [
+        692.820323027551,
+        155.2884495286728,
+        51.99999999999999,
+        45.970977107643435,
+        1319.3666091224984
+      ],
+      "thermal": {
+        "constant": 25,
+        "coefficient": -0.004,
+        "mounting": "OpenRack",
+        "wind": 6.84
+      }
+    },
+    {
+      "id": "west-tilted",
+      "sun": [
+        25,
+        220
+      ],
+      "collector": [
+        45,
+        270
+      ],
+      "irradiance": [
+        650,
+        160
+      ],
+      "elevation": 0,
+      "reflectance": 0.2,
+      "weather": [
+        30,
+        3
+      ],
+      "pv": [
+        5000,
+        10,
+        0.2,
+        0.8
+      ],
+      "expected": [
+        462.00100745768054,
+        194.41354311909424,
+        12.732122996702914,
+        46.707498754759925,
+        977.6714739841372
+      ],
+      "thermal": {
+        "constant": 25,
+        "coefficient": -0.004,
+        "mounting": "OpenRack",
+        "wind": 6.84
+      }
+    },
+    {
+      "id": "below-horizon",
+      "sun": [
+        -5,
+        180
+      ],
+      "collector": [
+        30,
+        180
+      ],
+      "irradiance": [
+        800,
+        120
+      ],
+      "elevation": 0,
+      "reflectance": 0.2,
+      "weather": [
+        20,
+        2
+      ],
+      "pv": [
+        5000,
+        10,
+        0.2,
+        0.8
+      ],
+      "expected": [
+        0.0,
+        0.0,
+        0.0,
+        20.0,
+        0.0
+      ],
+      "thermal": {
+        "constant": 25,
+        "coefficient": -0.004,
+        "mounting": "OpenRack",
+        "wind": 6.84
+      }
+    },
+    {
+      "id": "on-horizon",
+      "sun": [
+        0,
+        180
+      ],
+      "collector": [
+        30,
+        180
+      ],
+      "irradiance": [
+        800,
+        120
+      ],
+      "elevation": 0,
+      "reflectance": 0.2,
+      "weather": [
+        20,
+        2
+      ],
+      "pv": [
+        5000,
+        10,
+        0.2,
+        0.8
+      ],
+      "expected": [
+        0.0,
+        0.0,
+        0.0,
+        20.0,
+        0.0
+      ],
+      "thermal": {
+        "constant": 25,
+        "coefficient": -0.004,
+        "mounting": "OpenRack",
+        "wind": 6.84
+      }
+    },
+    {
+      "id": "still-air",
+      "sun": [
+        60,
+        180
+      ],
+      "collector": [
+        30,
+        180
+      ],
+      "irradiance": [
+        1000,
+        100
+      ],
+      "elevation": 0,
+      "reflectance": 0.2,
+      "weather": [
+        25,
+        0
+      ],
+      "pv": [
+        5000,
+        10,
+        0.2,
+        0.8
+      ],
+      "expected": [
+        1000.0,
+        113.29409001473047,
+        12.942286340599471,
+        73.4281641832792,
+        1452.912217251297
+      ],
+      "thermal": {
+        "constant": 25,
+        "coefficient": -0.004,
+        "mounting": "OpenRack",
+        "wind": 6.84
+      }
+    },
+    {
+      "id": "wind-cooled",
+      "sun": [
+        60,
+        180
+      ],
+      "collector": [
+        30,
+        180
+      ],
+      "irradiance": [
+        1000,
+        100
+      ],
+      "elevation": 0,
+      "reflectance": 0.2,
+      "weather": [
+        25,
+        5
+      ],
+      "pv": [
+        5000,
+        10,
+        0.2,
+        0.8
+      ],
+      "expected": [
+        1000.0,
+        113.29409001473047,
+        12.942286340599471,
+        47.402972243176286,
+        1640.4995315845672
+      ],
+      "thermal": {
+        "constant": 25,
+        "coefficient": -0.004,
+        "mounting": "OpenRack",
+        "wind": 6.84
+      }
+    },
+    {
+      "id": "dc-capacity-clipping",
+      "sun": [
+        60,
+        180
+      ],
+      "collector": [
+        30,
+        180
+      ],
+      "irradiance": [
+        1000,
+        100
+      ],
+      "elevation": 0,
+      "reflectance": 0.2,
+      "weather": [
+        25,
+        5
+      ],
+      "pv": [
+        100,
+        10,
+        0.2,
+        0.8
+      ],
+      "expected": [
+        1000.0,
+        113.29409001473047,
+        12.942286340599471,
+        47.402972243176286,
+        80.0
+      ],
+      "thermal": {
+        "constant": 25,
+        "coefficient": -0.004,
+        "mounting": "OpenRack",
+        "wind": 6.84
+      }
+    },
+    {
+      "weather": [
+        25,
+        5
+      ],
+      "elevation": 0,
+      "irradiance": [
+        1000,
+        100
+      ],
+      "collector": [
+        30,
+        180
+      ],
+      "sun": [
+        60,
+        180
+      ],
+      "id": "zero-temperature-coefficient",
+      "thermal": {
+        "constant": 25,
+        "coefficient": 0,
+        "mounting": "OpenRack",
+        "wind": 6.84
+      },
+      "expected": [
+        1000.0,
+        113.29409001473047,
+        12.942286340599471,
+        47.402972243176286,
+        1801.9782021685278
+      ],
+      "pv": [
+        5000,
+        10,
+        0.2,
+        0.8
+      ],
+      "reflectance": 0.2
+    },
+    {
+      "weather": [
+        25,
+        5
+      ],
+      "elevation": 0,
+      "irradiance": [
+        1000,
+        100
+      ],
+      "collector": [
+        30,
+        180
+      ],
+      "sun": [
+        60,
+        180
+      ],
+      "id": "authored-close-roof",
+      "thermal": {
+        "constant": 18,
+        "coefficient": -0.003,
+        "mounting": "CloseRoof",
+        "wind": 2.5
+      },
+      "expected": [
+        1000.0,
+        113.29409001473047,
+        12.942286340599471,
+        63.05201920767762,
+        1596.2714746863285
+      ],
+      "pv": [
+        5000,
+        10,
+        0.2,
+        0.8
+      ],
+      "reflectance": 0.2
+    },
+    {
+      "weather": [
+        25,
+        5
+      ],
+      "elevation": 0,
+      "irradiance": [
+        1000,
+        100
+      ],
+      "collector": [
+        30,
+        180
+      ],
+      "sun": [
+        60,
+        180
+      ],
+      "id": "authored-insulated-back",
+      "thermal": {
+        "constant": 15,
+        "coefficient": -0.006,
+        "mounting": "InsulatedBack",
+        "wind": 0
+      },
+      "expected": [
+        1000.0,
+        113.29409001473047,
+        12.942286340599471,
+        100.08242509035533,
+        990.1968418958977
+      ],
+      "pv": [
+        5000,
+        10,
+        0.2,
+        0.8
+      ],
+      "reflectance": 0.2
+    }
+  ]
+}

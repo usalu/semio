@@ -240,6 +240,8 @@ impl RasterPoolRetirement {
     fn pixel_capacity(slot:&RasterSlot)->usize{match &slot.state{RasterSlotState::Vacant=>0,RasterSlotState::Writing(row)=>row.pixels.as_ref().map_or(0,Vec::capacity),RasterSlotState::Ready(row)=>row.pixels.capacity(),RasterSlotState::Retiring(row)=>row.pixels.capacity()}}
 }
 impl semio_framework_value::retirement::RetirementCursor for RasterPoolRetirement {
+    fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{release_bytes:if let Some(slot)=self.state.slots.last(){Self::pixel_capacity(slot)}else if self.state.slots.capacity()!=0{self.state.slots.capacity()*size_of::<RasterSlot>()}else if !self.state.gpu_residents.is_empty(){0}else{self.state.gpu_residents.capacity()*size_of::<Option<SceneRasterGpuRecord>>()},..Default::default()})}
+
     fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{
         use semio_framework_value::{retained_clone::RetainedCloneProgress,retirement::RetirementStep};
         if self.terminal_is_empty(){return RetirementStep::Complete}

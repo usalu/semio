@@ -1,8 +1,11 @@
 //! 🛫️ Explicit owned field projection under one native output control.
 use super::{DslField,DslVariants,FieldValue,RecordValue,NativeEncodeControl,ValueError,RecordFields};
+#[path="🧮️expression/🦀️.rs"]
+mod expression;
+pub use expression::{BorrowedExpressionSource,BorrowedExpressionView,RetainedExpressionCursor,RetainedExpressionStep};
 
 /// 🔎️ One immutable authored field at an ordinal path, without constructing a source mirror.
-pub enum FieldProjectionView<'a>{Absent,Bool(bool),Int(i64),UInt(u64),Float(f64),Enum(u32),Text(&'a str),TextSource(semio_framework_value::paged_text::TextReadView<'a>),Bytes(&'a [u8]),Record(&'static [u16]),List(usize),Tuple(usize),Map(usize),Block,Statements(usize),Wire(Option<bool>),IntrinsicNull,IntrinsicBool(bool),IntrinsicNumber(semio_framework_value::Number),IntrinsicText(&'a str),IntrinsicTextSource(semio_framework_value::paged_text::TextReadView<'a>),IntrinsicBytes(&'a [u8]),IntrinsicArray(usize),IntrinsicObject(usize)}
+pub enum FieldProjectionView<'a>{Absent,Bool(bool),Int(i64),UInt(u64),Float(f64),Enum(u32),Text(&'a str),TextSource(semio_framework_value::paged_text::TextReadView<'a>),Bytes(&'a [u8]),Record(&'static [u16]),List(usize),Tuple(usize),Map(usize),Block,Statements(usize),Wire(Option<bool>),Expr(&'a dyn BorrowedExpressionSource),IntrinsicNull,IntrinsicBool(bool),IntrinsicNumber(semio_framework_value::Number),IntrinsicText(&'a str),IntrinsicTextSource(semio_framework_value::paged_text::TextReadView<'a>),IntrinsicBytes(&'a [u8]),IntrinsicArray(usize),IntrinsicObject(usize)}
 
 /// 🌱️ The retained operation keeps this source immutable until projection and publication finish.
 pub trait FieldProjectionSource{
@@ -11,6 +14,8 @@ pub trait FieldProjectionSource{
     fn projection_view(&self,path:&[usize])->Result<FieldProjectionView<'_>,ValueError>;
     /// 🔤️ Borrows one output key from the same ordinal source without scanning previous entries.
     fn projection_key(&self,_path:&[usize],_index:usize)->Result<&str,ValueError>{Err(ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"field owner has no retained ranked key projection"))}
+    /// 🌿️ Borrows native key bytes without requiring contiguous string custody.
+    fn projection_key_view(&self,path:&[usize],index:usize)->Result<semio_framework_value::paged_text::TextReadView<'_>,ValueError>{self.projection_key(path,index).map(semio_framework_value::paged_text::TextReadView::from_str)}
 }
 impl<T:DslField> FieldProjectionSource for T{
     fn projection_view(&self,path:&[usize])->Result<FieldProjectionView<'_>,ValueError>{DslField::projection_view(self,path)}
@@ -84,7 +89,7 @@ impl RetainedFieldProjection{
         use FieldProjectionView as V;
         let mut frame=FieldProjectionFrame{value:FieldValue::Absent,kind:0,length:0,next:0,position:0,ids:&[],key:None,key_length:0};
         frame.value=match view{
-            V::TextSource(_)|V::IntrinsicTextSource(_)=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"paged semantic source requires its direct retained encoding route")),
+            V::TextSource(_)|V::IntrinsicTextSource(_)|V::Expr(_)=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native semantic source requires its direct retained encoding route")),
             V::Absent=>FieldValue::Absent,V::Bool(value)=>FieldValue::Bool(value),V::Int(value)=>FieldValue::Int(value),V::UInt(value)=>FieldValue::UInt(value),V::Float(value)=>FieldValue::Float(value),V::Enum(value)=>FieldValue::Enum(value),
             V::Text(text)=>{control.charge(text.len())?;let mut value=String::new();value.try_reserve_exact(text.len()).map_err(|_|ValueError::new(semio_framework_value::ValueRefusalKind::AllocationFailed,"retained field text allocation failed"))?;frame.kind=1;frame.length=text.len();FieldValue::Text(value)},
             V::Bytes(bytes)=>{frame.kind=2;frame.length=bytes.len();FieldValue::Bytes64(control.allocate_vec(bytes.len())?)},

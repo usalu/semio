@@ -8,7 +8,7 @@
 import * as React from "react";
 import { ephemeralMap } from "../../../🫧️transient/🟦️.ts";
 import { formatKeybindingShortcut, keybindingPlatformUsesMetaV1 } from "../🔤️keybinding-text-interpretation/🟦️.ts";
-import { reactHostPort } from "../../🧱️elements/🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
 import { resolveControlLabelId } from "../../🧱️elements/🚗️UiDriver/🟦️.tsx";
 import { activeShellRoot, useShellScopeOptional } from "../../🧱️elements/🐚️ShellScope/🟦️.tsx";
 // #endregion 🔌️Adapters

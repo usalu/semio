@@ -1,3 +1,5 @@
+import * as vitest from "vitest";
+import * as serverWire from "../../🟦️.ts";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -57,6 +59,15 @@ export async function registerServerWireTests(vitest: NonNullable<ImportMeta["vi
 
     it("covers every wire type the fixture names", () => {
       expect(new Set(fixture.vectors.map((vector) => vector.type))).toEqual(new Set(Object.keys(roundTrips)));
+    });
+
+    it("validates the shared course root query with the owned codec and Ajv", async () => {
+      const { default: Ajv } = await import("ajv");
+      const vector = fixture.vectors.find((entry) => entry.name === "course-root-query-envelope")!;
+      const validate = new Ajv({ strict: true }).compile({ type: "object", additionalProperties: false, required: ["queryId", "kind", "version", "scope", "principal", "arguments", "consistency", "cursor"], properties: { queryId: { type: "string" }, kind: { const: "course.course" }, version: { const: 8 }, scope: { type: "string" }, principal: { type: "object", required: ["kind"], properties: { kind: { const: "anonymous" } }, additionalProperties: false }, arguments: { type: "array", items: { type: "integer", minimum: 0, maximum: 255 } }, consistency: { type: "object", required: ["kind"], properties: { kind: { const: "authority" } }, additionalProperties: false }, cursor: { type: "null" } } });
+      expect(validate(vector.json)).toBe(true);
+      expect(encodeQueryEnvelope(decodeQueryEnvelope(vector.json))).toEqual(vector.json);
+      expect(JSON.parse(new TextDecoder().decode(decodeQueryEnvelope(vector.json).arguments))).toEqual({ type: "course" });
     });
 
     it("refuses a payload byte outside 0..=255", () => {
@@ -211,3 +222,5 @@ export async function registerServerWireTests(vitest: NonNullable<ImportMeta["vi
     });
   });
 }
+
+await registerServerWireTests(vitest,serverWire,{directory:resolve(dirname(fileURLToPath(import.meta.url)),"../.."),url:new URL("../../🟦️.ts",import.meta.url).href});

@@ -1,5 +1,5 @@
-//! 🎲️ Puzzle 2d app engine — the themed board hosts: `BoardHost` constructors wired to this
 //! plugin's metabolism icon table, plus the scene-sync, camera/LOD, hit-test, selection and
+//! 🎲️ Puzzle 2d app engine — the themed board hosts: `BoardHost` constructors wired to this
 //! area-select laws they must satisfy.
 
 use crate::editor::puzzle2d::engine::{BoardFillStage, BoardHost, BoardNaming};

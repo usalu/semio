@@ -76,7 +76,7 @@ async fn results_panel_tag_resolves_to_the_partition_the_command_writes() {
     };
     let tag = semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::results_window_instance_id(&split).expect("a panel projection resolves a results window");
     assert_eq!(tag, "results-left", "the panel tags the focused results pane");
-    let resolved = semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::config::addressed_window_id(&cfg, &split, Some(&tag)).expect("the tag addresses an open results window");
+    let resolved = semio_s_artifact_fem_2d_results_state::config::addressed_window_id(&cfg, &split, Some(&tag)).expect("the tag addresses an open results window");
     assert_eq!(resolved, tag);
     let json = panel_json(&Fem2dResultsWindowConfig::default());
     assert!(json.contains("results-left"), "every control carries the tag: {json}");

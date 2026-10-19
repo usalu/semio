@@ -13,7 +13,7 @@ export default defineConfig({
     ...rendererConfig.test,
     root,
     name: "puzzle-renderer-contract",
-    include: ["🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️tests/🪪️session-factory/🟦️.ts", "🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🥽️brush-mesh-upload/🟦️.ts", "🧪️tests/🚀️renderer-boot-variants/🟦️.ts"],
+    include: ["🗿️artifacts/**/🧪️tests/🪪️session-factory/🟦️.ts", "🗿️artifacts/**/🧪️tests/🥽️brush-mesh-upload/🟦️.ts", "🧪️tests/🚀️renderer-boot-variants/🟦️.ts"],
     includeSource: [],
     passWithNoTests: false,
     testNamePattern: undefined,

@@ -33,3 +33,13 @@ export function signOut(): IdentityConfigMutation {
   return { mutation: "signOut" };
 }
 //#endregion 🔖️Dispatch
+
+
+export interface IdentitySessionEdit {
+  readonly value?: Identity;
+}
+
+
+export interface IdentityDiff {
+  readonly session?: IdentitySessionEdit;
+}

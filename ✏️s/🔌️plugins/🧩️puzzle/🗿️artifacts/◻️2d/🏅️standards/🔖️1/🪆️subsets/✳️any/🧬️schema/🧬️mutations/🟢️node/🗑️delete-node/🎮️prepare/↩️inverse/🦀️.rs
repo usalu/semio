@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dCloseAxis;
 use super::{Puzzle2dDeleteNodePreparationCursor, Puzzle2dDeleteNodePreparationStep};
-use crate::standards::v1::subsets::any::schema::mutations::{DeleteNode};
+use crate::standards::v1::subsets::any::schema::mutations::DeleteNode;
 use {crate::Puzzle2dSnapshot, crate::standards::v1::subsets::any::schema::records::Puzzle2dNode, crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation, crate::standards::v1::subsets::any::schema::mutations::create_node::CreateNode, crate::standards::v1::subsets::any::schema::mutations::connect_handles::ConnectHandles, crate::standards::v1::subsets::any::schema::mutations::change_edge_visible::ChangeEdgeVisible, crate::standards::v1::subsets::any::schema::mutations::change_edge_locked::ChangeEdgeLocked};
 use semio_framework_value::{ValueError,ValueRefusalKind,list::PagedList,paged::PagedUtf8,retirement::controlled::ControlledRetirement,retained_clone::{RetainedClone,RetainedCloneBinding, RetainedFieldCursor,RetainedCloneCursor,RetainedCloneRef,RetainedCloneGrant,RetainedCloneStep,RetainedCloneProgress}};
 use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dPreparationChild;
@@ -40,7 +40,7 @@ impl Default for Puzzle2dDeleteNodeInverseCursor {
 }
 
 impl Puzzle2dDeleteNodeInverseCursor {
-    pub fn advance(&mut self,source:RetainedCloneRef<'_,Puzzle2dSnapshot>,mutation:RetainedCloneRef<'_,DeleteNode>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+    pub fn advance(&mut self,source:RetainedCloneRef<'_,Puzzle2dSnapshot>,mutation:RetainedCloneRef<'_,DeleteNode>,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
         if self.closing || self.phase==21 { return Err(refusal("delete inverse is closing or spent")); }
         if grant.maximum_items==0 || grant.maximum_depth==0 { return Ok(progress(0,0,0)); }
         if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(RetainedCloneStep::Progress(progress))}if let Some(progress)=mutation.bind(&mut self.mutation,grant)?{return Ok(RetainedCloneStep::Progress(progress))}
@@ -58,7 +58,7 @@ impl Puzzle2dDeleteNodeInverseCursor {
             }
             1 => {
                 let index=self.node_index;
-                let step=self.node.advance(source.project(1,|snapshot|&snapshot.nodes).project(1,|nodes|nodes.get(index).expect("immutable inverse node ordinal")),grant)?;
+                let step=self.node.advance(source.project(1,|snapshot|&snapshot.nodes).project(1,|nodes|nodes.get(index).expect("immutable inverse node ordinal")),body,grant)?;
                 if matches!(step,RetainedCloneStep::Complete(_)) {self.phase=2;}
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
@@ -82,7 +82,7 @@ impl Puzzle2dDeleteNodeInverseCursor {
             }
             5 => {
                 let index=self.edge_index;
-                let step=self.edge.advance(source.project(1,|snapshot|&snapshot.edges).project(1,|edges|edges.get(index).expect("immutable inverse edge ordinal")),grant)?;
+                let step=self.edge.advance(source.project(1,|snapshot|&snapshot.edges).project(1,|edges|edges.get(index).expect("immutable inverse edge ordinal")),body,grant)?;
                 if matches!(step,RetainedCloneStep::Complete(_)) {self.phase=6;}
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
@@ -124,7 +124,7 @@ impl Puzzle2dDeleteNodeInverseCursor {
             }
             11 => {
                 let index=self.edge_index;
-                let step=self.identifier.advance(source.project(1,|snapshot|&snapshot.edges).project(1,|edges|edges.get(index).expect("immutable inverse flag edge")).project(1,|edge|&edge.id),grant)?;
+                let step=self.identifier.advance(source.project(1,|snapshot|&snapshot.edges).project(1,|edges|edges.get(index).expect("immutable inverse flag edge")).project(1,|edge|&edge.id),body,grant)?;
                 if matches!(step,RetainedCloneStep::Complete(_)) {self.phase=12;}
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }

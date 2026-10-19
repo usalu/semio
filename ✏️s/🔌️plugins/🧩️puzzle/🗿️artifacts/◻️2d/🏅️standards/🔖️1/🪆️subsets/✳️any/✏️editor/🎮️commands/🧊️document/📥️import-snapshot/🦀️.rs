@@ -1,5 +1,5 @@
-//! 📥 Loads an imported snapshot JSON file as the whole document — the artifact's load path (`Effect::LoadDocument`, outside
 //! history), never a mutation and never a difference of the imported board against the current one. The host's chunked inbound lane
+//! 📥 Loads an imported snapshot JSON file as the whole document — the artifact's load path (`Effect::LoadDocument`, outside
 //! (`Effect::RequestFileOpen` → one `importSnapshot {payload, name, chunk, chunkCount}` per
 //! `IMPORT_CHUNK_BYTES` page) is reassembled by the framework before this action runs
 //! (`semio_framework::kernel::ImportStaging`, admitted in the SDK's `dispatch_action`), so the action reads
@@ -7,7 +7,8 @@
 
 use {crate::editor::puzzle2d::snapshot::puzzle2d_load_document_effect, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx, crate::editor::puzzle2d::snapshot::PUZZLE2D_BOARD_SNAPSHOT_SCHEMA};
 use crate::retained_command::PUZZLE_IMPORT_TOTAL_BYTES;
-use semio_framework::kernel::{UiDirtyScope, IMPORT_ARGUMENT_PAYLOAD};
+use semio_framework::kernel::UiDirtyScope;
+use semio_framework::kernel::IMPORT_ARGUMENT_PAYLOAD;
 use semio_framework_pack_json::Value;
 
 //#region 🔖️Vocabulary

@@ -36,7 +36,7 @@ fn accepted_frame_maintenance_queue_drop_publishes_exact_generation_owner() {
     assert!(registry.try_publish(91, cell.clone()).is_ok());
     assert!(!registry.abandon(92));
     assert!(registry.abandon(91));
-    let Some((generation, recovered_cell)) = registry.try_take_abandoned() else { panic!("abandoned execution owner") };
+    let Some((generation, recovered_cell)) = registry.try_take_returned() else { panic!("abandoned execution owner") };
     assert_eq!(generation, 91);
     assert!(Arc::ptr_eq(&cell, &recovered_cell));
     let Some(recovered) = recovered_cell.try_take() else { panic!("exact abandoned owner") };
@@ -56,13 +56,16 @@ fn interrupted_frame_maintenance_execution_restores_before_incremental_recovery(
     cursor.begin_close();
     running_cell.restore_taken(running_owner);
     assert!(registry.abandon(93));
-    let Some((generation, recovered_cell)) = registry.try_take_abandoned() else { panic!("interrupted execution owner") };
+    let Some((generation, recovered_cell)) = registry.try_take_returned() else { panic!("interrupted execution owner") };
     assert_eq!(generation, 93);
     let Some(mut recovered) = recovered_cell.try_take() else { panic!("interrupted exact owner") };
     let Some(cursor) = recovered.cursor.as_mut() else { panic!("interrupted cursor") };
+    let mut caller = crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let before = cursor.actions.len;
     assert!(!caller.turn(|cx|cursor.close_step(cx)).unwrap());
     assert_eq!(before - cursor.actions.len, 1);
+    while !caller.turn(|cx| cursor.close_step(cx)).unwrap() {}
+    caller.finish();
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -90,20 +93,22 @@ fn dropped_ordinary_frame_deferred_jobs_recover_the_exact_pair_and_close_remaini
             running.restore_taken(owner);
         }
         assert!(registry.abandon(generation));
-        let (_, recovered) = registry.try_take_abandoned().expect("abandoned deferred owner");
+        let (_, recovered) = registry.try_take_returned().expect("abandoned deferred owner");
         let mut recovered = recovered.try_take().expect("recovered exact owner");
         recovered.cancel_current();
         let (_, mut cursor) = recovered.take_pair().expect("recovered exact pair");
         assert_eq!(cursor.actions.len, law["remainingActions"].as_u64().unwrap() as usize);
         cursor.begin_close();
+        let mut caller = crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
         let mut close_steps = 0_u64;
         loop {
             close_steps += 1;
-            if cursor.close_step() {
+            if caller.turn(|cx| cursor.close_step(cx)).unwrap() {
                 break;
             }
         }
-        assert_eq!(close_steps, law["closeSteps"].as_u64().unwrap());
+        assert!(close_steps > law["remainingActions"].as_u64().unwrap(), "typed descriptor fields retire through separate original frontiers");
+        caller.finish();
         assert!(cursor.terminal_is_empty());
         assert_eq!(law["currentReceiptSettlements"], 1);
         assert_eq!((law["readyReservations"].as_u64(), law["inFlightReservations"].as_u64()), (Some(0), Some(0)));

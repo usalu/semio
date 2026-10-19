@@ -13,7 +13,7 @@ where
     }
 
     fn preview_progress(&self) -> Option<store::os_store::replay::ReplayProgress> {
-        self.preview_job.as_ref().map(store::os_store::snapshot_read::ArtifactDerivedHistoryPreview::progress)
+        self.preview_job.as_ref().map(store::os_store::snapshot_read::ArtifactDerivedHistoryPreview::progress).or_else(||self.preview_derived.as_ref().filter(|owner|!owner.is_closing()).map(|owner|store::os_store::replay::ReplayProgress{done:u32::try_from(owner.progress().items).unwrap_or(u32::MAX),total:0}))
     }
 
     fn processed(&self) -> Option<u32> {
@@ -21,11 +21,11 @@ where
     }
 
     fn has_pending_work(&self) -> bool {
-        self.snapshot_aliases.iter().any(Option::is_some) || self.snapshot_close.is_some() || self.snapshot_issuers.is_some() || self.snapshot_issuer_close.iter().any(Option::is_some) || self.discard_effects.as_ref().is_some_and(|owner|owner.closing) || self.preview_job.is_some() || self.retirements.capacity()!=0 || self.discarded.capacity()!=0 || self.discarded_pending.is_some() || self.discarded_active.is_some() || self.discarded_factory.is_some() || self.discarded_factory_close.is_some()
+        self.snapshot_aliases.iter().any(Option::is_some) || self.snapshot_close.is_some() || self.snapshot_issuers.is_some() || self.snapshot_issuer_close.iter().any(Option::is_some) || self.discard_effects.as_ref().is_some_and(|owner|owner.closing) || self.preview_job.is_some()||self.preview_derived.as_ref().is_some_and(|owner|owner.is_closing())||self.preview_cancelled&&(self.preview_original.is_some()||self.preview_input.is_some()||self.preview_source.is_some()||self.preview_native_input.is_some())||self.preview_input_close.is_some()||self.preview_original_close.is_some() || self.retirements.capacity()!=0 || !self.discarded.is_empty() || self.discarded_has_physical_capacity() || self.discarded_pending.is_some() || self.discarded_active.is_some() || self.discarded_factory.is_some() || self.discarded_factory_close.is_some()
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.snapshot_aliases.iter().all(Option::is_none) && self.snapshot_close.is_none() && self.snapshot_issuers.is_none() && self.snapshot_issuer_close.iter().all(Option::is_none) && self.discard_effects.is_none() && self.staged.is_none() && self.kind.is_none() && self.preview.is_none() && self.preview_job.is_none() && self.preview_input.is_none() && self.replay.is_none() && self.finished.is_none() && self.head.is_none() && self.retirements.capacity()==0 && self.discarded.capacity()==0 && self.discarded_pending.is_none() && self.discarded_active.is_none() && self.discarded_factory.is_none() && self.discarded_factory_close.is_none()
+        self.snapshot_aliases.iter().all(Option::is_none) && self.snapshot_close.is_none() && self.snapshot_issuers.is_none() && self.snapshot_issuer_close.iter().all(Option::is_none) && self.discard_effects.is_none() && self.staged.is_none() && self.kind.is_none() && self.preview.is_none() && self.preview_job.is_none() && self.preview_input.is_none()&&self.preview_base.is_none()&&self.preview_original.is_none()&&self.preview_source.is_none()&&self.preview_native_input.is_none()&&self.preview_derived.is_none()&&self.preview_input_close.is_none()&&self.preview_original_close.is_none() && self.replay.is_none() && self.finished.is_none() && self.head.is_none() && self.retirements.capacity()==0 && self.discarded_terminal_is_empty() && self.discarded_pending.is_none() && self.discarded_active.is_none() && self.discarded_factory.is_none() && self.discarded_factory_close.is_none()
     }
 
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { self.original_retirement_demands(body) }
@@ -45,12 +45,12 @@ where
 /// ✍️ One typed history-edit command against a composed member's store (design §12): creates the member's owners on the
 /// first visit, then runs the command on them.
 #[doc(hidden)]
-pub struct TimeTravelMemberRun<'a> {
+pub  struct TimeTravelMemberRun<'a,'c> {
     pub owners: &'a mut Option<Box<dyn TimeTravelOwners>>,
-    pub command: TimeTravelStoreCommand,
+    pub command: TimeTravelStoreCommand,pub receiving:Option<&'a mut semio_framework_value::NativeDecodeControl<'c>>,
 }
 
-impl store::MemberStoreVisitorMut for TimeTravelMemberRun<'_> {
+impl store::MemberStoreVisitorMut for TimeTravelMemberRun<'_,'_> {
     type Output = Result<TimeTravelStoreOutput, Fault>;
 
     async fn visit_mut<P, Mu>(self, store: &mut ArtifactStore<P, Mu>) -> Self::Output
@@ -63,7 +63,7 @@ impl store::MemberStoreVisitorMut for TimeTravelMemberRun<'_> {
         }
         let owners = self.owners.get_or_insert_with(|| Box::new(TimeTravelStoreState::<P, Mu>::new(|op| protocol::SemanticMutation::<P>::label(op))) as Box<dyn TimeTravelOwners>);
         let state = owners.as_any_mut().downcast_mut::<TimeTravelStoreState<P, Mu>>().ok_or_else(|| Fault::new(FaultOrigin::Plugin, FaultCode::new("timeTravel.member-store-kind"), "a composed member's history-edit owners belong to another store kind"))?;
-        state.run(store, self.command).await
+        state.run(store, self.command,self.receiving).await
     }
 }
 

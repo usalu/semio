@@ -1,5 +1,5 @@
-//! 🖍️ Overview-window utility — Area Brush: alt+click paints grid-snapped target regions that
 //! constrain where the Fill tool may place. Its Utility Options are the width/height steppers that
+//! 🖍️ Overview-window utility — Area Brush: alt+click paints grid-snapped target regions that
 //! size each painted region (in grid cells) — the 2d twin of puzzle3d's `🧊️volume-brush`, whose
 //! voxel W/D/H trio collapses to a W/H pair on a flat board.
 

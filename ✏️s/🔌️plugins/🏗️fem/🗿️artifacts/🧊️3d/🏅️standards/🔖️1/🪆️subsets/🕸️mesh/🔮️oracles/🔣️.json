@@ -327,6 +327,114 @@
               "directoryName": "🫓️flattens"
             }
           ]
+        },
+        {
+          "mutationId": "change-node",
+          "sourceMutationDirectoryName": "🩹️change-node",
+          "mutationDirectoryName": "🩹️change-node",
+          "scenarios": [
+            {
+              "id": "changes",
+              "directoryName": "🩹️changes"
+            },
+            {
+              "id": "coordinates",
+              "directoryName": "📐️coordinates"
+            },
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "empty",
+              "directoryName": "⚗️empty"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-section",
+          "sourceMutationDirectoryName": "🩹️change-section",
+          "mutationDirectoryName": "🩹️change-section",
+          "scenarios": [
+            {
+              "id": "changes",
+              "directoryName": "🩹️changes"
+            },
+            {
+              "id": "coordinates",
+              "directoryName": "📐️coordinates"
+            },
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "invalid",
+              "directoryName": "⚗️invalid"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-solid",
+          "sourceMutationDirectoryName": "🩹️change-solid",
+          "mutationDirectoryName": "🩹️change-solid",
+          "scenarios": [
+            {
+              "id": "changes",
+              "directoryName": "🩹️changes"
+            },
+            {
+              "id": "geometry",
+              "directoryName": "📐️geometry"
+            },
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "invalid",
+              "directoryName": "⚗️invalid"
+            }
+          ]
+        },
+        {
+          "sourceMutationDirectoryName": "🩹️change-element",
+          "mutationId": "change-element",
+          "scenarios": [
+            {
+              "id": "changes",
+              "directoryName": "🩹️changes"
+            },
+            {
+              "id": "variant",
+              "directoryName": "🔀️variant"
+            },
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "invalid",
+              "directoryName": "⚗️invalid"
+            }
+          ],
+          "mutationDirectoryName": "🩹️change-element"
         }
       ],
       "kinds": [
@@ -342,7 +450,11 @@
         "delete-solid",
         "replace-solid",
         "replace-node",
-        "move-selection"
+        "move-selection",
+        "change-node",
+        "change-section",
+        "change-solid",
+        "change-element"
       ]
     }
   ],

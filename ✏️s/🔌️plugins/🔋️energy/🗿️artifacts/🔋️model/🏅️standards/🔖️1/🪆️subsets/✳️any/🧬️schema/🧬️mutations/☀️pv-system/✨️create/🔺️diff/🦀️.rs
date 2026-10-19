@@ -13,6 +13,9 @@ pub fn diff(payload: &super::CreatePvSystem, base: &EnergyModelSnapshot) -> prot
     if payload.index as usize > base.model.pv_systems.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} pv_systems.", payload.index, base.model.pv_systems.len()), [payload.id.0.to_string()]);
     }
+    if !payload.temperature_coefficient.is_finite() || !payload.faiman_heat_loss_constant_w_m2k.is_finite() || payload.faiman_heat_loss_constant_w_m2k <= 0.0 || !payload.faiman_heat_loss_wind_w_s_m3k.is_finite() || payload.faiman_heat_loss_wind_w_s_m3k < 0.0 {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "PV thermal parameters require a finite coefficient, a positive finite constant and a nonnegative finite wind coefficient.", [payload.id.0.to_string()]);
+    }
     protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { pv_systems: Rows::inserting(payload.index as usize, crate::model::PvSystemAssignment {
             id: payload.id,
             dc_capacity_w: payload.dc_capacity_w,
@@ -21,6 +24,11 @@ pub fn diff(payload: &super::CreatePvSystem, base: &EnergyModelSnapshot) -> prot
             azimuth_deg: payload.azimuth_deg,
             module_efficiency: payload.module_efficiency,
             inverter_efficiency: payload.inverter_efficiency,
+            temperature_coefficient: payload.temperature_coefficient,
+            faiman_heat_loss_constant_w_m2k: payload.faiman_heat_loss_constant_w_m2k,
+            faiman_heat_loss_wind_w_s_m3k: payload.faiman_heat_loss_wind_w_s_m3k,
+            mounting: payload.mounting,
+
         }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

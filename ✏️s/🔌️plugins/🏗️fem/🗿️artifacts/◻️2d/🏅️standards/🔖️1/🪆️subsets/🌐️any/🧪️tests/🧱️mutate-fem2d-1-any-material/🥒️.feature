@@ -62,6 +62,7 @@ Feature: Apply every typed fem2d material mutation twice — once in Rust, once 
     | create-material  | {"mutation":"createMaterial","material":{"id":"s355","name":"Steel S355","e":210000000000.0,"nu":0.3,"rho":7850.0}}                   |
     | delete-material  | {"mutation":"deleteMaterial","id":"c30"}                                                                                              |
     | replace-material | {"mutation":"replaceMaterial","id":"steel","newMaterial":{"id":"steel","name":"Steel S355","e":210000000000.0,"nu":0.3,"rho":7900.0}} |
+    | change-material | {"mutation":"changeMaterial","id":"steel","patch":{"name":"Structural Steel"}} |
 
   @id-inverse
   @level-exhaustive
@@ -78,3 +79,8 @@ Feature: Apply every typed fem2d material mutation twice — once in Rust, once 
     | create-material  | {"mutation":"createMaterial","material":{"id":"s355","name":"Steel S355","e":210000000000.0,"nu":0.3,"rho":7850.0}}                   |
     | delete-material  | {"mutation":"deleteMaterial","id":"c30"}                                                                                              |
     | replace-material | {"mutation":"replaceMaterial","id":"steel","newMaterial":{"id":"steel","name":"Steel S355","e":210000000000.0,"nu":0.3,"rho":7900.0}} |
+    | change-material-1 | 🩹️change-material | ⏸️same |
+    | change-material-2 | 🩹️change-material | ⛔️missing |
+    | change-material-3 | 🩹️change-material | ⚗️invalid |
+    | change-material | {"mutation":"changeMaterial","id":"steel","patch":{"name":"Structural Steel"}} |
+

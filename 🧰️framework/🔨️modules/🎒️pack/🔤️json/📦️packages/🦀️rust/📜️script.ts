@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import{createIssuedResourceControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { runOwnedCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -14,6 +15,16 @@ import {configuredExactCargoLawPolicyV1} from "../../../../🏃️process/📦�
 import { buildBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { scriptInvocationBudget } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
+/** 📋️ Verifies original persistent canonical arrays and sealed payloads through actual native traversal. */
+class PersistentCanonicalCheckScript extends BundleScript{
+ async run(args:string[]):Promise<void>{
+  if(args.length!==1||!["source","native"].includes(args[0]!))throw Error("test-persistent-canonical requires source or native");
+  const source=resolve(this.root,"../../🛫️encode/🧭️tree/📋️persistent/🧪️tests/🟦️.ts");
+  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,"pack:persistent-canonical:types",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
+  await runOwnedCommand(process.execPath,["test",source],this.repoRoot,"pack:persistent-canonical:source",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
+  if(args[0]==="native"){const policy=readCargoTestPolicyV1(process.env);await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:policy.buildBudgetMs},cwd:this.repoRoot,cargoTargetDir:policy.targetDirectory,artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,manifestPaths:{"semio-framework-pack-json":resolve(this.root,"Cargo.toml")},groups:[{package:"semio-framework-pack-json",target:{kind:"lib",name:"semio_framework_pack_json"},laws:["native_tree::persistent_tests::original_persistent_canonical_tree_preserves_native_rows_and_exact_wire","native_tree::immutable_tests::canonical_immutable_table_views_preserve_original_rows_and_zero_heap","native_tree::immutable_tests::canonical_immutable_table_every_frontier_matches_wire_oracle_and_closes"]}]});}
+ }
+}
 /** 🧩️ Runs strict schema, canonical ownership and mandatory JSON source-policy laws. */
 class ReadPolicyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -66,5 +77,28 @@ class NativeScript extends BundleScript {
 
 /** 📨️ Differential neutral laws for the original typed Tree wire source. */
 class TreeWireSourceScript extends BundleScript{async run(args:string[]):Promise<void>{if(args.length)throw Error("test-tree-wire-source accepts no arguments");const file=resolve(this.root,"../../🛫️encode/🧭️tree/📨️wire/🧪️tests/🟦️.ts");for(const arguments_ of [[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",file],["test",file]])await runBudgetedTestCommand(process.execPath,arguments_,{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal,throwOnFailure:true})}}
-const router = new ScriptRouter(import.meta.dir).register("test-tree-wire-source",TreeWireSourceScript).register("test-read-policy-source", ReadPolicyScript).register("test-reference", ReferenceScript).register("test-ownership", OwnershipScript).register("test-native", NativeScript);
+
+
+
+/** 🔒️ Validates original immutable canonical views and every funded output frontier. */
+class ImmutableTreeScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length!==1||!["source","native"].includes(segments[0]!))throw Error("test-immutable-tree source|native");
+  const {immutableCanonicalOracle}=await import("../../🛫️encode/🧭️tree/🔒️immutable/🧪️tests/🟦️.ts");immutableCanonicalOracle();
+  if(segments[0]==="source")return;
+  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-pack-json"],cwd:this.root,extraArgs:["--lib","canonical_immutable_","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env));
+ }
+}
+
+/** 🧳️ Runs actual original JSON native receiving and canonical operation-input custody. */
+class OriginalReceivingScript extends BundleScript{
+ async run(args:string[]):Promise<void>{
+  if(args.length!==1||!["source","native"].includes(args[0]!))throw Error("test-original-receiving source|native");
+  const source=resolve(this.root,"../../📥️decode/🧳️receiving/🧪️tests/🟦️.ts");
+  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,"pack:original-receiving:types",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
+  await runOwnedCommand(process.execPath,["test",source],this.repoRoot,"pack:original-receiving:source",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
+  if(args[0]==="native"){const policy=readCargoTestPolicyV1(process.env);await runExactCargoLaws({invocation:this.invocation,policy:configuredExactCargoLawPolicyV1(),cwd:this.repoRoot,manifestPaths:{"semio-framework-pack-json":resolve(this.root,"Cargo.toml")},cargoTargetDir:policy.targetDirectory,env:process.env,nativeEnv:{RUST_MIN_STACK:policy.rustMinStack},artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,groups:[{package:"semio-framework-pack-json",target:{kind:"lib",name:"semio_framework_pack_json"},cargoArgs:["--locked"],laws:["original_receiving::tests::original_json_receiving_keeps_native_source_and_exact_physical_custody"]}]});}
+ }
+}
+const router = new ScriptRouter(import.meta.dir).register("test-tree-wire-source",TreeWireSourceScript).register("test-read-policy-source", ReadPolicyScript).register("test-reference", ReferenceScript).register("test-ownership", OwnershipScript).register("test-native", NativeScript).register("test-immutable-tree",ImmutableTreeScript).register("test-persistent-canonical",PersistentCanonicalCheckScript).register("test-original-receiving",OriginalReceivingScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test-ownership" }));

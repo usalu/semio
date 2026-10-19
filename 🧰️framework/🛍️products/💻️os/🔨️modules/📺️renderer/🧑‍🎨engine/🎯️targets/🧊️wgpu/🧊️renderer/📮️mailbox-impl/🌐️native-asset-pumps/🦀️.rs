@@ -293,9 +293,13 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                     fetch.begin_close();
                     (None, false, false)
                 }
-                Err(NativeAssetStreamFailure::CancelledPage { payload }) => {
-                    fetch.begin_close();
-                    (Some(payload), false, false)
+                Err(NativeAssetStreamFailure::Original(error))=>{
+                    log_debug(&format!("native renderer retained I/O refusal: {error}"));
+                    match error.kind{
+                        RendererSourceIoFailureKind::NativeFault=>(None,false,true),
+                        RendererSourceIoFailureKind::Cancelled=>{fetch.begin_close();(None,false,false)},
+                        _=>{fetch.begin_close();mailbox.record_frame_fault("native renderer original I/O or response capacity refused");(None,false,false)}
+                    }
                 }
                 Err(NativeAssetStreamFailure::Unavailable(detail)) => {
                     log_debug(&format!("native renderer asset unavailable: {detail}"));
@@ -306,11 +310,6 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                     log_debug(&format!("native renderer asset fetch failed: {detail}"));
                     mailbox.record_frame_fault("native renderer asset fetch failed");
                     (None, false, false)
-                }
-                Err(NativeAssetStreamFailure::Page { detail, payload }) => {
-                    fetch.begin_close();
-                    mailbox.record_frame_fault(detail);
-                    (Some(payload), false, false)
                 }
             };
             mailbox.retain_native_asset_handoff(fetch, payload, seal, reject);

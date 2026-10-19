@@ -40,7 +40,7 @@ use semio_framework_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCan
 use semio_framework_os_store_backbone::resolve_backbone;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use semio_framework_os_store_backbone::local_storage_backbone_key;
-use semio_framework_os_store_space_member::lifted_store::{ArtifactRefs, MemberFactory, SpaceMember};
+use semio_framework_os_store_space_member::lifted_store::{ArtifactRefs, MemberFactory, SpaceMember, ReferenceSpaceMember};
 
 // 🧩️ Atomic composite dispatch across a parent `SpaceMember` and N child `SpaceMember`s — the
 // mechanism that makes ONE user gesture spanning a parent and several `🔖️Composition` children
@@ -577,7 +577,7 @@ impl TransactionCoordinator {
     /// `dispatch_group`'s doc comment for why every already-applied member must still get a
     /// best-effort rollback attempt even if an earlier one in this same pass failed. Relation-
     /// agnostic: undoing a member does not need to know WHY it was dispatched.
-    pub async fn compensate<Mp: SpaceMember, Mc: SpaceMember>(parent_ref: &semio_framework_artifact_reference::ArtifactRef, parent: &mut Mp, children: &mut [(&mut Mc, ChildDispatch<'_>)], applied_children: &[(usize, String)], parent_applied: Option<&str>, identity: &mut EntityIdentityAuthority<'_>) -> GroupUndoReport {
+    pub async fn compensate<Mp: ReferenceSpaceMember, Mc: ReferenceSpaceMember>(parent_ref: &semio_framework_artifact_reference::ArtifactRef, parent: &mut Mp, children: &mut [(&mut Mc, ChildDispatch<'_>)], applied_children: &[(usize, String)], parent_applied: Option<&str>, identity: &mut EntityIdentityAuthority<'_>) -> GroupUndoReport {
         let mut undone = Vec::new();
         let mut skipped = Vec::new();
         if let Some(edit_id) = parent_applied {
@@ -600,7 +600,7 @@ impl TransactionCoordinator {
     /// `self.graph`) and may create brand-new `genesis` children. See `dispatch_relation_group` for
     /// the shared two-phase/compensation engine this delegates to unchanged — this method's own
     /// behaviour is byte-identical to before `MemberRelation` existed.
-    pub async fn dispatch_group<Mp: SpaceMember, Mc: SpaceMember + MemberFactory>(
+    pub async fn dispatch_group<Mp: ReferenceSpaceMember, Mc: ReferenceSpaceMember + MemberFactory>(
         &mut self,
         parent_ref: &semio_framework_artifact_reference::ArtifactRef,
         parent: &mut Mp,
@@ -617,7 +617,7 @@ impl TransactionCoordinator {
     /// No `genesis` parameter — a peer transaction never creates a child, only touches existing
     /// artifacts. See `MemberRelation::Peer`'s doc comment for exactly what differs from
     /// `dispatch_group`, and `dispatch_relation_group` for the shared engine.
-    pub async fn dispatch_peer_group<Mp: SpaceMember, Mc: SpaceMember + MemberFactory>(
+    pub async fn dispatch_peer_group<Mp: ReferenceSpaceMember, Mc: ReferenceSpaceMember + MemberFactory>(
         &mut self,
         initiator_ref: &semio_framework_artifact_reference::ArtifactRef,
         initiator: &mut Mp,
@@ -694,7 +694,7 @@ impl TransactionCoordinator {
     /// this can only fail if a CONCURRENT graph mutation raced us between the two — not
     /// worth failing an already-applied transaction over; the cycle guard still holds for
     /// every edge that DID get recorded.
-    async fn dispatch_relation_group<Mp: SpaceMember, Mc: SpaceMember + MemberFactory>(
+    async fn dispatch_relation_group<Mp: ReferenceSpaceMember, Mc: ReferenceSpaceMember + MemberFactory>(
         &mut self,
         relation: MemberRelation,
         parent_ref: &semio_framework_artifact_reference::ArtifactRef,
@@ -815,7 +815,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// children pass (genuinely different types, `Mp` vs `Mc`, since `dispatch_group`'s split — see
     /// that fn's own doc comment) share one tail-group-check/undo/skip code path instead of two
     /// copies of it.
-    async fn undo_one<M: SpaceMember>(reference: &semio_framework_artifact_reference::ArtifactRef, member: &mut M, group_id: &str, undone: &mut Vec<(semio_framework_artifact_reference::ArtifactRef, String)>, skipped: &mut Vec<(semio_framework_artifact_reference::ArtifactRef, VcsError)>, identity: &mut EntityIdentityAuthority<'_>) {
+    async fn undo_one<M: ReferenceSpaceMember>(reference: &semio_framework_artifact_reference::ArtifactRef, member: &mut M, group_id: &str, undone: &mut Vec<(semio_framework_artifact_reference::ArtifactRef, String)>, skipped: &mut Vec<(semio_framework_artifact_reference::ArtifactRef, VcsError)>, identity: &mut EntityIdentityAuthority<'_>) {
         let tail_group = member.tail_group_id().await;
         if tail_group.as_deref() == Some(group_id) {
             let edit_id = member.tail_edit_id().await.unwrap_or_default();
@@ -842,7 +842,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// `self.graph`/ownership at all, only each member's own `tail_group_id()`, so a `Peer`-relation
     /// group reverses as one exactly the same way an `Owned`-relation group does — no separate code
     /// path needed.
-    pub async fn undo_group<Mp: SpaceMember, Mc: SpaceMember>(parent_ref: &semio_framework_artifact_reference::ArtifactRef, parent: &mut Mp, children: &mut [(&semio_framework_artifact_reference::ArtifactRef, &mut Mc)], group_id: &str, identity: &mut EntityIdentityAuthority<'_>) -> GroupUndoReport {
+    pub async fn undo_group<Mp: ReferenceSpaceMember, Mc: ReferenceSpaceMember>(parent_ref: &semio_framework_artifact_reference::ArtifactRef, parent: &mut Mp, children: &mut [(&semio_framework_artifact_reference::ArtifactRef, &mut Mc)], group_id: &str, identity: &mut EntityIdentityAuthority<'_>) -> GroupUndoReport {
         let mut undone = Vec::new();
         let mut skipped = Vec::new();
         Self::undo_one(parent_ref, parent, group_id, &mut undone, &mut skipped, identity).await;
@@ -858,7 +858,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// the same order it was originally applied) — again only ordering the returned report, since
     /// each member's own `redo_tail()` group id is checked independently. Relation-agnostic for the
     /// same reason `undo_group` is.
-    pub async fn redo_group<Mp: SpaceMember, Mc: SpaceMember>(parent_ref: &semio_framework_artifact_reference::ArtifactRef, parent: &mut Mp, children: &mut [(&semio_framework_artifact_reference::ArtifactRef, &mut Mc)], group_id: &str, identity: &mut EntityIdentityAuthority<'_>) -> GroupUndoReport {
+    pub async fn redo_group<Mp: ReferenceSpaceMember, Mc: ReferenceSpaceMember>(parent_ref: &semio_framework_artifact_reference::ArtifactRef, parent: &mut Mp, children: &mut [(&semio_framework_artifact_reference::ArtifactRef, &mut Mc)], group_id: &str, identity: &mut EntityIdentityAuthority<'_>) -> GroupUndoReport {
         let mut undone = Vec::new();
         let mut skipped = Vec::new();
         for (reference, member) in children.iter_mut() {

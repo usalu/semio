@@ -1,5 +1,5 @@
-//! 📚 Puzzle2d mutation — `ReplaceKindCatalogs`: whole-value swap of the snapshot-carried typed
 //! kind-catalog bundle (`nodes`/`🐙️handles`/`edges`/`wires` catalogs together, one manifest-import
+//! 📚 Puzzle2d mutation — `ReplaceKindCatalogs`: whole-value swap of the snapshot-carried typed
 //! gesture).
 
 
@@ -27,20 +27,29 @@ pub fn replace_kind_catalogs<Op: From<ReplaceKindCatalogs>>(new_catalogs: Option
 impl<Op> protocol::MutationKind<Puzzle2dSnapshot, Op> for ReplaceKindCatalogs
 where
     Op: protocol::Mutation<Puzzle2dSnapshot, Diff = Puzzle2dDiff> + From<ReplaceKindCatalogs>,
-{
+ {
+
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "kind-catalogs", kind: "replace-kind-catalogs", record: "ReplacedKindCatalogs" };
 
-    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace kind catalogs", "Artkataloge ersetzen")
+    }
+
+}
+impl<Op> protocol::ColdMutationKind<Puzzle2dSnapshot, Op> for ReplaceKindCatalogs
+where
+    Op: protocol::ColdMutation<Puzzle2dSnapshot, ReferenceDiff = Puzzle2dDiff> + From<ReplaceKindCatalogs>,
+ {
+fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Replace kind catalogs", "Artkataloge ersetzen")
-    }
 }
 //#endregion 🔖️Mutation

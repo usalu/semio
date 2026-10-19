@@ -7,7 +7,7 @@ pub struct RetainedCloneOwner<T:RetainedClone>{cursor:ManuallyDrop<T::Cursor>,cl
 impl<T:RetainedClone> Default for RetainedCloneOwner<T>{fn default()->Self{Self{cursor:ManuallyDrop::new(T::retained_clone_cursor()),closing:false}}}
 impl<T:RetainedClone> RetainedCloneOwner<T>{
  pub fn advance_demands(&self,source:RetainedCloneRef<'_,T>,copy:usize)->Result<RetirementDemand,ValueError>{self.cursor.advance_demands(source,copy)}
- pub fn advance(&mut self,source:RetainedCloneRef<'_,T>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.cursor.advance(source,grant)}
+ pub fn advance(&mut self,source:RetainedCloneRef<'_,T>,body: usize, grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.cursor.advance(source,body,grant)}
  pub fn take(&mut self)->Option<T>{self.cursor.take()}
  pub fn terminal_is_empty(&self)->bool{self.cursor.terminal_is_empty()}
  pub fn selected_close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Ok(RetirementDemand{depth:1,..Default::default()})}Ok(RetirementDemand{copy_bytes:self.cursor.next_close_copy_byte_demand()?,capacity_bytes:self.cursor.next_close_capacity_byte_demand(body)?,release_bytes:self.cursor.next_close_release_byte_demand()?,depth:self.cursor.next_close_depth_demand()?})}

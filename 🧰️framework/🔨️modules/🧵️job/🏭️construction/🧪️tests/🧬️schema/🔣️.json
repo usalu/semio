@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "axes",
+    "cases",
+    "bindings"
+  ],
+  "properties": {
+    "axes": {
+      "const": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "quote",
+          "grant",
+          "accepted"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "quote": {
+            "$ref": "#/$defs/currencies"
+          },
+          "grant": {
+            "$ref": "#/$defs/currencies"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "bindings": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "origin",
+          "current",
+          "matches"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "origin": {
+            "$ref": "#/$defs/binding"
+          },
+          "current": {
+            "$ref": "#/$defs/binding"
+          },
+          "matches": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "currencies": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 5,
+      "maxItems": 5
+    },
+    "binding": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 6,
+      "maxItems": 6
+    }
+  }
+}

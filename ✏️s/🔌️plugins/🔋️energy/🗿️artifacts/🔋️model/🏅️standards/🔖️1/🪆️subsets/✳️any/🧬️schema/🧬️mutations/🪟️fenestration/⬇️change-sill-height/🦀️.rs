@@ -25,18 +25,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeFenestrationS
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeFenestrationSillHeight>,
 {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fenestration", kind: "change-fenestration-sill-height", record: "ChangedFenestrationSillHeight" };
 
-    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-        super::diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change fenestration {} sill height to {} m", self.id.0, self.new_sill_height_m), &format!("Brüstungshöhe von Fenster {} auf {} m ändern", self.id.0, self.new_sill_height_m))
@@ -45,5 +34,26 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.id.0.to_string()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for ChangeFenestrationSillHeight
+where
+    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<ChangeFenestrationSillHeight>,
+{
+    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
+        super::diff::diff(self, base)
+    }
+
+
+
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fenestration", kind: "change-fenestration-sill-height", record: "ChangedFenestrationSillHeight" };
+
+
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Mutation

@@ -1,7 +1,9 @@
 
 use crate::editor::puzzle5d::create_puzzle5d_app;
-use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
-use semio_framework_plugin::{WindowLayoutChild, WindowLayoutRoot};
+use crate::editor::puzzle5d::modes::edit::windows::board2d;
+use crate::editor::puzzle5d::modes::edit::windows::world3d;
+use semio_framework_plugin::WindowLayoutChild;
+use semio_framework_plugin::WindowLayoutRoot;
 
 #[test]
 fn default_layout_is_board_left_two_fifths_and_world_right_three_fifths() {

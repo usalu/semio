@@ -11,7 +11,7 @@ use semio_framework_artifact_workflow_workflow_snapshot::*;
 mod workflow_mutations;
 pub use workflow_mutations::{
     AddInput, AddNode, AddParameter, BindInput, BindOutput, BindParameterField, ChangeParameter, ConnectPorts, DisconnectEdge, MoveNode, MoveNodes, RemoveInput, RemoveNode, RemoveParameter, RenameNode, SetNodePositions, UnbindInput, UnbindOutput,
-    UnbindParameterField, UpdateNodePorts, WorkflowMutation, WorkflowNodePosition,
+    SetNodePorts, UnbindParameterField, UpdateNodePorts, WorkflowMutation, WorkflowNodePorts, WorkflowNodePosition,
 };
 
 pub fn apply_workflow_operation(document: &WorkflowSnapshot, operation: &WorkflowMutation) -> WorkflowSnapshot {
@@ -69,6 +69,14 @@ pub fn apply_workflow_operation(document: &WorkflowSnapshot, operation: &Workflo
         }
         WorkflowMutation::UpdateNodePorts(UpdateNodePorts {}) => {
             next.graph = sync_workflow_parameter_ports(&next.graph, &next.parameter_bindings);
+        }
+        WorkflowMutation::SetNodePorts(SetNodePorts { nodes }) => {
+            for row in nodes {
+                for node in next.graph.nodes.iter_mut().filter(|node| node.id == row.node_id) {
+                    node.inputs = row.inputs.clone();
+                    node.height = row.height;
+                }
+            }
         }
         WorkflowMutation::AddInput(AddInput { input }) => next.inputs.push(input.clone()),
         WorkflowMutation::RemoveInput(RemoveInput { input_id }) => {
@@ -153,7 +161,9 @@ pub enum WorkflowDiff {
         node_id: String,
         field_path: String,
     },
-    SyncNodePorts,
+    SetNodePorts {
+        nodes: Vec<WorkflowNodePorts>,
+    },
     DeclareInput {
         input: WorkflowInput,
     },
@@ -200,7 +210,13 @@ impl WorkflowDiff {
     /// step by step by the store, which absorbs the per-step inverses.
     fn undo_rows(&self, base: &WorkflowSnapshot, earlier: &[&WorkflowDiff]) -> Vec<WorkflowDiff> {
         match self {
-            WorkflowDiff::Empty | WorkflowDiff::SyncNodePorts | WorkflowDiff::Sequence { .. } => Vec::new(),
+            WorkflowDiff::Empty | WorkflowDiff::Sequence { .. } => Vec::new(),
+            WorkflowDiff::SetNodePorts { nodes } => vec![WorkflowDiff::SetNodePorts {
+                nodes: nodes
+                    .iter()
+                    .filter_map(|row| base.graph.nodes.iter().find(|node| node.id == row.node_id).map(|node| WorkflowNodePorts { node_id: node.id.clone(), inputs: node.inputs.clone(), height: node.height }))
+                    .collect(),
+            }],
             WorkflowDiff::AddNode { node } => vec![WorkflowDiff::RemoveNode { node_id: node.id.clone() }],
             WorkflowDiff::RemoveNode { node_id } => {
                 let Some(node) = base.graph.nodes.iter().find(|node| node.id == *node_id).or_else(|| earlier.iter().rev().find_map(|atom| if let WorkflowDiff::AddNode { node } = atom { (node.id == *node_id).then_some(node) } else { None })) else { return Vec::new() };
@@ -271,7 +287,17 @@ impl WorkflowDiff {
 
     fn apply_atom(&self, document: &WorkflowSnapshot) -> protocol::MutationApplyResult<WorkflowSnapshot> {
         match self {
-            WorkflowDiff::Empty | WorkflowDiff::SyncNodePorts => {}
+            WorkflowDiff::Empty => {}
+            WorkflowDiff::SetNodePorts { nodes } => {
+                for (at, row) in nodes.iter().enumerate() {
+                    if nodes[..at].iter().any(|earlier| earlier.node_id == row.node_id) {
+                        return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "workflow node ports are set more than once").at(["nodes", row.node_id.as_str()]));
+                    }
+                    if !document.graph.nodes.iter().any(|node| node.id == row.node_id) {
+                        return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow node does not exist").at(["nodes", row.node_id.as_str()]));
+                    }
+                }
+            }
             WorkflowDiff::Sequence { .. } => return Err(protocol::MutationApplyError::new("mutation.apply.conflicting-target", "workflow diff sequences apply step by step")),
             WorkflowDiff::AddNode { node } => {
                 if document.graph.nodes.iter().any(|entry| entry.id == node.id) {
@@ -401,7 +427,7 @@ impl WorkflowDiff {
             WorkflowDiff::PatchParameter { parameter_id, parameter } => WorkflowMutation::ChangeParameter(ChangeParameter { parameter_id: parameter_id.clone(), parameter: Box::new(parameter.clone()) }),
             WorkflowDiff::BindParameterField { binding } => WorkflowMutation::BindParameterField(BindParameterField { binding: binding.clone() }),
             WorkflowDiff::UnbindParameterField { node_id, field_path } => WorkflowMutation::UnbindParameterField(UnbindParameterField { node_id: node_id.clone(), field_path: field_path.clone() }),
-            WorkflowDiff::SyncNodePorts => WorkflowMutation::UpdateNodePorts(UpdateNodePorts {}),
+            WorkflowDiff::SetNodePorts { nodes } => WorkflowMutation::SetNodePorts(SetNodePorts { nodes: nodes.clone() }),
             WorkflowDiff::DeclareInput { input } => WorkflowMutation::AddInput(AddInput { input: input.clone() }),
             WorkflowDiff::RemoveInput { input_id } => WorkflowMutation::RemoveInput(RemoveInput { input_id: input_id.clone() }),
             WorkflowDiff::BindInput { binding } => WorkflowMutation::BindInput(BindInput { binding: binding.clone() }),
@@ -413,31 +439,40 @@ impl WorkflowDiff {
     }
 }
 
-impl protocol::MutationDiff<WorkflowSnapshot> for WorkflowDiff {
-    fn apply(&self, document: &WorkflowSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<WorkflowSnapshot> {
-        let mut current = document.clone();
-        for atom in self.atoms() {
-            current = atom.apply_atom(&current)?;
-        }
-        Ok(current)
-    }
+impl protocol::MutationDiff<WorkflowSnapshot> for WorkflowDiff {}
+
+impl protocol::ColdMutationDiff<WorkflowSnapshot> for WorkflowDiff {
 
     fn absorb(&mut self, other: Self) {
         let mut atoms: Vec<WorkflowDiff> = std::mem::take(self).atoms().into_iter().cloned().collect();
         atoms.extend(other.atoms().into_iter().cloned());
         *self = WorkflowDiff::sequence(atoms);
     }
+
+    fn apply(&self, document: &mut WorkflowSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let mut prepared = protocol::PreparedField::new(document.clone(), <Self as protocol::MutationDiff<WorkflowSnapshot>>::retire_projection, _capability);
+        let mut current = prepared.value_mut();
+        for atom in self.atoms() {
+            protocol::PreparedField::new(atom.apply_atom(current)?, <Self as protocol::MutationDiff<WorkflowSnapshot>>::retire_projection, _capability).install(current);
+        }
+        prepared.install(document);
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<WorkflowSnapshot> for WorkflowDiff {
+
+
+    fn is_empty(&self) -> bool {
+        self.atoms().is_empty()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<WorkflowSnapshot> for WorkflowDiff {
     fn inverse(&self, base: &WorkflowSnapshot) -> Self {
         let atoms = self.atoms();
         let rows: Vec<Vec<WorkflowDiff>> = atoms.iter().enumerate().map(|(index, atom)| atom.undo_rows(base, &atoms[..index])).collect();
         WorkflowDiff::sequence(rows.into_iter().rev().flatten().collect())
-    }
-
-    fn is_empty(&self) -> bool {
-        self.atoms().is_empty()
     }
 }
 

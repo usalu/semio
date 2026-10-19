@@ -37,7 +37,10 @@ where
             parent_publication: std::mem::ManuallyDrop::new(None),
             drawing_publication: std::mem::ManuallyDrop::new(None),
             value_publication: std::mem::ManuallyDrop::new(None),
-            prepared: std::mem::ManuallyDrop::new(None),
+                        parent_prepared: None,
+            drawing_prepared: None,
+            value_prepared: None,
+prepared: std::mem::ManuallyDrop::new(None),
             host: std::mem::ManuallyDrop::new(None),
             sink: std::mem::ManuallyDrop::new(Some(sink)),
             phase: DurableOwnedThreeStoreMapAssemblyPhaseV1::AdmittingParent,
@@ -85,7 +88,7 @@ where
         }
     }
 
-    pub fn advance(&mut self, grant: semio_framework_os_store_one_item::ArtifactStoreOneItemGrant) -> Result<DurableOwnedThreeStoreMapAssemblyAdvanceV1, DurableOwnedGroupDecisionError> {
+    pub fn advance(&mut self, body:usize, grant: semio_framework_os_store_one_item::ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<DurableOwnedThreeStoreMapAssemblyAdvanceV1, DurableOwnedGroupDecisionError> {
         if !grant.permits_one() {
             return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked);
         }
@@ -150,9 +153,10 @@ where
             DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingParent => {
                 let store = self.parent.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let publication = self.parent_publication.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                match store.advance_apply_batch(publication, grant) {
-                    Ok(semio_framework_os_store_one_item_publication::ArtifactStoreOneItemAdvance::Blocked) => return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked),
-                    Ok(_) if publication.phase() == semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPublicationPhase::Publishing => self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingDrawing,
+                match store.advance_apply_batch(publication, body, grant,receiving) {
+                    Ok(semio_framework_os_store_one_item_publication::ArtifactStoreOneItemAdvance::Blocked)=> return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked),
+                    Ok(semio_framework_os_store_one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(_,receipt))=>{if publication.phase()==super::ArtifactStoreOneItemPublicationPhase::Publishing{self.phase=DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingDrawing;}return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,receipt));}
+                    Ok(_) if publication.phase() == super::ArtifactStoreOneItemPublicationPhase::Publishing => self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingDrawing,
                     Ok(_) => {}
                     Err(error) => self.fail(DurableOwnedThreeStoreMapAssemblyFailureV1::Preparation { role: PARENT_ROLE, reason: error.to_string() }),
                 }
@@ -160,9 +164,10 @@ where
             DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingDrawing => {
                 let store = self.drawing.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let publication = self.drawing_publication.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                match store.advance_apply_batch(publication, grant) {
-                    Ok(semio_framework_os_store_one_item_publication::ArtifactStoreOneItemAdvance::Blocked) => return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked),
-                    Ok(_) if publication.phase() == semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPublicationPhase::Publishing => self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingValue,
+                match store.advance_apply_batch(publication, body, grant,receiving) {
+                    Ok(semio_framework_os_store_one_item_publication::ArtifactStoreOneItemAdvance::Blocked)=> return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked),
+                    Ok(semio_framework_os_store_one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(_,receipt))=>{if publication.phase()==super::ArtifactStoreOneItemPublicationPhase::Publishing{self.phase=DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingValue;}return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,receipt));}
+                    Ok(_) if publication.phase() == super::ArtifactStoreOneItemPublicationPhase::Publishing => self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingValue,
                     Ok(_) => {}
                     Err(error) => self.fail(DurableOwnedThreeStoreMapAssemblyFailureV1::Preparation { role: DRAWING_ROLE, reason: error.to_string() }),
                 }
@@ -170,9 +175,10 @@ where
             DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingValue => {
                 let store = self.value.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let publication = self.value_publication.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                match store.advance_apply_batch(publication, grant) {
-                    Ok(semio_framework_os_store_one_item_publication::ArtifactStoreOneItemAdvance::Blocked) => return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked),
-                    Ok(_) if publication.phase() == semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPublicationPhase::Publishing => {
+                match store.advance_apply_batch(publication, body, grant,receiving) {
+                    Ok(semio_framework_os_store_one_item_publication::ArtifactStoreOneItemAdvance::Blocked)=> return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked),
+                    Ok(semio_framework_os_store_one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(_,receipt))=>{if publication.phase()==super::ArtifactStoreOneItemPublicationPhase::Publishing{self.phase=DurableOwnedThreeStoreMapAssemblyPhaseV1::TakingPrepared;}return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,receipt));}
+                    Ok(_) if publication.phase() == super::ArtifactStoreOneItemPublicationPhase::Publishing => {
                         let parent = take_assembly_prepared(&mut self.parent_publication)?;
                         let drawing = take_assembly_prepared(&mut self.drawing_publication)?;
                         let value = take_assembly_prepared(&mut self.value_publication)?;
@@ -208,7 +214,11 @@ where
             DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingParent => {
                 if close_assembly_publication(&mut self.parent_publication, grant)? {
                     if self.failure.is_some() {
-                        drop(self.prepared.take());
+                                                if let Some(owner) = self.parent_prepared.as_mut() { if !retire_binding_member(owner, self.parent.as_mut().unwrap(), grant)? { return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,owner.retirement_progress)); } self.parent_prepared = None; return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Progress(self.phase)); }
+                        if let Some(owner) = self.drawing_prepared.as_mut() { if !retire_binding_member(owner, self.drawing.as_mut().unwrap(), grant)? { return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,owner.retirement_progress)); } self.drawing_prepared = None; return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Progress(self.phase)); }
+                        if let Some(owner) = self.value_prepared.as_mut() { if !retire_binding_member(owner, self.value.as_mut().unwrap(), grant)? { return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,owner.retirement_progress)); } self.value_prepared = None; return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Progress(self.phase)); }
+                        if let Some(prepared) = self.prepared.as_mut() { if !prepared.retire_originals_step(self.parent.as_mut().unwrap(), self.drawing.as_mut().unwrap(), self.value.as_mut().unwrap(), grant)? { return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,prepared.retirement_progress)); } }
+drop(self.prepared.take());
                         self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::Terminal;
                     } else {
                         self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::Binding;
@@ -221,10 +231,12 @@ where
                     self.parent.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
                     self.drawing.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
                     self.value.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
-                );
+                                    grant,
+);
                 match bound.and_then(DurableOwnedThreeStoreBoundV1::begin_retained_commit) {
                     Ok(coordinator) => {
-                        let host = coordinator.mount_map(
+                                                drop(self.prepared.take());
+let host = coordinator.mount_map(
                             self.parent.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
                             self.drawing.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
                             self.value.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
@@ -232,10 +244,11 @@ where
                         );
                         *self.host = Some(host);
                         self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::Mounted;
-                    }
-                    Err(error) => {
-                        self.failure = Some(DurableOwnedThreeStoreMapAssemblyFailureV1::Binding(error));
-                        self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::Terminal;
+                                            return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(self.phase,semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:capacity,..Default::default()}));
+}
+                    Err((error, bound)) => {
+                        prepared.parent.bound = Some(bound.parent); prepared.drawing.bound = Some(bound.drawing); prepared.value.bound = Some(bound.value); prepared.decision = Some(bound.decision); prepared.decision_pack = bound.decision_pack;
+                        self.fail(DurableOwnedThreeStoreMapAssemblyFailureV1::Binding(error));
                     }
                 }
             }
@@ -316,6 +329,9 @@ where
             && self.parent_publication.is_none()
             && self.drawing_publication.is_none()
             && self.value_publication.is_none()
+            && self.parent_prepared.is_none()
+            && self.drawing_prepared.is_none()
+            && self.value_prepared.is_none()
             && self.prepared.is_none()
             && self.host.is_none()
             && self.sink.is_none()
@@ -325,12 +341,12 @@ where
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedThreeStoreMapAssemblyV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: Clone + ValueToValue + ValueFromValue,
-    ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue,
-    DrawingP: Clone + ValueToValue + ValueFromValue,
-    DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue,
-    ValueP: Clone + ValueToValue + ValueFromValue,
-    ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
+    ParentP: ValueToValue,
+    ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    DrawingP: ValueToValue,
+    DrawingMutation: StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
+    ValueP: ValueToValue,
+    ValueMutation: StoreMutation<ValueP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue,
 {
     fn drop(&mut self) {
         assert!(
@@ -345,6 +361,9 @@ where
                 && self.parent_publication.is_none()
                 && self.drawing_publication.is_none()
                 && self.value_publication.is_none()
+                && self.parent_prepared.is_none()
+                && self.drawing_prepared.is_none()
+                && self.value_prepared.is_none()
                 && self.prepared.is_none()
                 && self.host.is_none()
                 && self.sink.is_none(),
@@ -354,12 +373,11 @@ where
 }
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStoreBoundV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
-    pub fn begin_retained_commit(self) -> Result<DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>, DurableOwnedGroupDecisionError> {
-        self.decision.validate()?;
-        let decision_pack = self.decision.encode_pack_with(&PackEncodeOptions::default()).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
-        if decision_pack.len() > DURABLE_OWNED_GROUP_EVENT_MAX_BYTES {
-            return Err(DurableOwnedGroupDecisionError::EventTooLarge);
+    pub fn begin_retained_commit(mut self) -> Result<DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>, (DurableOwnedGroupDecisionError, Self)> {
+        if self.decision_pack.is_none() {
+            return Err((DurableOwnedGroupDecisionError::InvalidOutcome,self));
         }
+        let decision_pack = self.decision_pack.take().expect("decision admission retains its exact pack");
         let decision_sha256 = self.decision.decision_sha256.clone();
         let visibility_owner = semio_framework_os_vcs::ArtifactGroupVisibilityOwner::new();
         let visibility = visibility_owner.view();
@@ -368,7 +386,8 @@ impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> 
             drawing: Some(self.drawing),
             value: Some(self.value),
             decision: Some(self.decision),
-            decision_pack: Some(decision_pack),
+                        decision_retirement:None,output_retirement:None,
+decision_pack: Some(decision_pack),
             decision_sha256,
             visibility_owner: Some(visibility_owner),
             visibility: Some(visibility),
@@ -395,7 +414,8 @@ impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> 
             drawing: Some(self.drawing),
             value: Some(self.value),
             decision: Some(self.decision),
-            decision_pack: None,
+                        decision_retirement:None,output_retirement:None,
+decision_pack: None,
             decision_sha256,
             visibility_owner: Some(visibility_owner),
             visibility: Some(visibility),

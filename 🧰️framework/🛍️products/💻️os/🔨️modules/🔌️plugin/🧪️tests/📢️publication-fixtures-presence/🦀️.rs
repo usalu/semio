@@ -44,23 +44,34 @@ pub struct PublicationPresenceDiff {
 }
 
 impl protocol::DiffAlgebra<PublicationPresence> for PublicationPresenceDiff {
-    fn inverse(&self, base: &PublicationPresence) -> Self {
-        Self { revision: self.revision.map(|_| base.revision) }
-    }
+
     fn is_empty(&self) -> bool {
         self.revision.is_none()
     }
 }
 
-impl protocol::MutationDiff<PublicationPresence> for PublicationPresenceDiff {
-    fn apply(&self, base: &PublicationPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<PublicationPresence> {
-        Ok(PublicationPresence { revision: self.revision.unwrap_or(base.revision) })
+impl protocol::ColdDiffAlgebra<PublicationPresence> for PublicationPresenceDiff {
+    fn inverse(&self, base: &PublicationPresence) -> Self {
+        Self { revision: self.revision.map(|_| base.revision) }
     }
+}
 
+impl protocol::MutationDiff<PublicationPresence> for PublicationPresenceDiff {
+
+
+
+}
+
+impl protocol::ColdMutationDiff<PublicationPresence> for PublicationPresenceDiff {
     fn absorb(&mut self, other: Self) {
         if other.revision.is_some() {
             self.revision = other.revision;
         }
+    }
+
+    fn apply(&self, base: &mut PublicationPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+                if let Some(value) = self.revision { base.revision = value; }
+        Ok(())
     }
 }
 

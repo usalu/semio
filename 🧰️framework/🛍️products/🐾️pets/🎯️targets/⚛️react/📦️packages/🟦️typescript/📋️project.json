@@ -4,6 +4,9 @@
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🪂️canopies/🔣️.json",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🐾️pets/🔣️.json",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🐾️pets/*/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🟦️.tsx",
       "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🎨️.css",
       "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🔨️modules/**/*",

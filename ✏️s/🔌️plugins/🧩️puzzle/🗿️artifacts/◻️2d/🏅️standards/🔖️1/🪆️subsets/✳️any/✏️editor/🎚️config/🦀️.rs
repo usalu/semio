@@ -312,25 +312,11 @@ impl Puzzle2dConfigDiff {
 }
 
 impl protocol::MutationDiff<Puzzle2dConfig> for Puzzle2dConfigDiff {
-    fn apply(&self, base: &Puzzle2dConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Puzzle2dConfig> {
-        let mut next = base.clone();
-        if let Some(value) = &self.node_kind_weights {
-            next.node_kind_weights = value.clone();
-        }
-        if let Some(value) = &self.handle_kind_weights {
-            next.handle_kind_weights = value.clone();
-        }
-        if let Some(value) = &self.fill_count {
-            next.fill_count = *value;
-        }
-        if let Some(value) = &self.contact_tolerance {
-            next.contact_tolerance = *value;
-        }
-        if let Some(value) = &self.brush_placement_overlap_budget {
-            next.brush_placement_overlap_budget = *value;
-        }
-        Ok(next)
-    }
+
+
+}
+
+impl protocol::ColdMutationDiff<Puzzle2dConfig> for Puzzle2dConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.node_kind_weights.is_some() {
             self.node_kind_weights = other.node_kind_weights;
@@ -348,14 +334,37 @@ impl protocol::MutationDiff<Puzzle2dConfig> for Puzzle2dConfigDiff {
             self.brush_placement_overlap_budget = other.brush_placement_overlap_budget;
         }
     }
+
+    fn apply(&self, next: &mut Puzzle2dConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        if let Some(value) = &self.node_kind_weights {
+            next.node_kind_weights = value.clone();
+        }
+        if let Some(value) = &self.handle_kind_weights {
+            next.handle_kind_weights = value.clone();
+        }
+        if let Some(value) = &self.fill_count {
+            next.fill_count = *value;
+        }
+        if let Some(value) = &self.contact_tolerance {
+            next.contact_tolerance = *value;
+        }
+        if let Some(value) = &self.brush_placement_overlap_budget {
+            next.brush_placement_overlap_budget = *value;
+        }
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<Puzzle2dConfig> for Puzzle2dConfigDiff {
-    fn inverse(&self, base: &Puzzle2dConfig) -> Self {
-        self.restoring(base)
-    }
+
     fn is_empty(&self) -> bool {
         self.node_kind_weights.is_none() && self.handle_kind_weights.is_none() && self.fill_count.is_none() && self.contact_tolerance.is_none() && self.brush_placement_overlap_budget.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Puzzle2dConfig> for Puzzle2dConfigDiff {
+    fn inverse(&self, base: &Puzzle2dConfig) -> Self {
+        self.restoring(base)
     }
 }
 
@@ -451,6 +460,13 @@ impl protocol::Mutation<Puzzle2dConfig> for Puzzle2dConfigMutation {
         }
     }
 
+
+
+
+}
+
+impl protocol::ColdMutation<Puzzle2dConfig> for Puzzle2dConfigMutation {
+    type ReferenceDiff = Puzzle2dConfigDiff;
     fn diff(&self, base: &Puzzle2dConfig) -> protocol::MutationOutcome<Puzzle2dConfigDiff> {
         let diff = match self {
             Self::SetNodeKindWeights(Puzzle2dConfigSetNodeKindWeights{ value }) => Puzzle2dConfigDiff { node_kind_weights: (value != &base.node_kind_weights).then(|| value.clone()), ..Default::default() },
@@ -464,7 +480,6 @@ impl protocol::Mutation<Puzzle2dConfig> for Puzzle2dConfigMutation {
         }
         protocol::MutationOutcome::new(diff)
     }
-
     fn inverse(&self, base: &Puzzle2dConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
             Self::SetNodeKindWeights(Puzzle2dConfigSetNodeKindWeights{ .. }) => Self::SetNodeKindWeights(Puzzle2dConfigSetNodeKindWeights{ value: base.node_kind_weights.clone() }),

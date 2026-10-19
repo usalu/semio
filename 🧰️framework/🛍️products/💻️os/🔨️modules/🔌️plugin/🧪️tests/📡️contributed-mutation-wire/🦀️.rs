@@ -33,25 +33,36 @@ pub(crate) struct WireTestDiff {
 }
 
 impl protocol::DiffAlgebra<WireTestSnapshot> for WireTestDiff {
-    fn inverse(&self, _base: &WireTestSnapshot) -> Self {
-        Self { deltas: self.deltas.iter().rev().map(|delta| delta.saturating_neg()).collect() }
-    }
+
     fn is_empty(&self) -> bool {
         self.deltas.iter().all(|delta| *delta == 0)
     }
 }
 
+impl protocol::ColdDiffAlgebra<WireTestSnapshot> for WireTestDiff {
+    fn inverse(&self, _base: &WireTestSnapshot) -> Self {
+        Self { deltas: self.deltas.iter().rev().flat_map(|delta| if *delta == i32::MIN { vec![i32::MAX, 1] } else { vec![-delta] }).collect() }
+    }
+}
+
 impl protocol::MutationDiff<WireTestSnapshot> for WireTestDiff {
-    fn apply(&self, base: &WireTestSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<WireTestSnapshot> {
+
+
+
+}
+
+impl protocol::ColdMutationDiff<WireTestSnapshot> for WireTestDiff {
+    fn absorb(&mut self, other: Self) {
+        self.deltas.extend(other.deltas);
+    }
+
+    fn apply(&self, base: &mut WireTestSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         let mut value = base.value;
         for delta in &self.deltas {
             value = value.checked_add(*delta).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.overflow", "contributed wire value exceeds i32").at(["value"]))?;
         }
-        Ok(WireTestSnapshot { value })
-    }
-
-    fn absorb(&mut self, other: Self) {
-        self.deltas.extend(other.deltas);
+                base.value = value;
+        Ok(())
     }
 }
 

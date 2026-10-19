@@ -202,7 +202,8 @@ fn fresh_vcs_active_history_decoder_propagates_physical_release_demand() {
 fn envelope_and_genesis_preserve_terminal_cursor_physical_grants() {
     struct TerminalCursor<const N: usize>([u8; N]);
     impl<const N: usize> ErasedSnapshotRetirement for TerminalCursor<N> {
-        fn close_step(&mut self, _: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
+            fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}
+fn close_step(&mut self, _: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
         fn terminal_is_empty(&self) -> bool { true }
         fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
         fn next_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}
@@ -266,7 +267,8 @@ fn envelope_and_genesis_preserve_terminal_cursor_physical_grants() {
 fn displaced_store_owner_preserves_terminal_physical_grants() {
     struct TerminalOwner<const N: usize>([u8; N]);
     impl<const N: usize> ErasedSnapshotRetirement for TerminalOwner<N> {
-        fn close_step(&mut self, _: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
+            fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}
+fn close_step(&mut self, _: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
         fn terminal_is_empty(&self) -> bool { true }
         fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
         fn next_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(0) }
@@ -317,7 +319,8 @@ async fn installed_store_disposer_preserves_terminal_physical_grant() {
         fn uninstalled_terminal_is_empty(&self) -> bool { true }
     }
     impl<const N: usize> ErasedSnapshotRetirement for TerminalDisposer<N> {
-        fn close_step(&mut self, _: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
+            fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}
+fn close_step(&mut self, _: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
         fn terminal_is_empty(&self) -> bool { true }
         fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
         fn next_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(0) }

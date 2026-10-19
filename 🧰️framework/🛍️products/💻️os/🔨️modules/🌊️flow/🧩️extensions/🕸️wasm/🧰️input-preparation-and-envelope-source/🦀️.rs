@@ -172,7 +172,8 @@ impl Drop for EvaluationInputPreparation {fn drop(&mut self) {assert!(std::threa
 struct EvaluationInputRetirement(EvaluationInputPreparation);
 
 impl semio_framework_value::retirement::RetirementCursor for EvaluationInputRetirement {
-    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep {
+        fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.0.retirement_demands(body) }
+fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep {
         use semio_framework_value::retirement::RetirementStep;
         match self.0.close_step(grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress)) if progress==RetainedCloneProgress::default()=>RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress)}
     }

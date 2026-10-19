@@ -1,5 +1,5 @@
 //! 🔀️ Move Synapse direct payload and owned behavior.
-use super::super::{FlowHostSnapshot, FlowDiff, FlowDelta, FlowCollectionDelta, FlowMutation, flow_wire_index};
+use super::super::{FlowHostSnapshot, FlowDiff, FlowDelta, FlowCollectionDelta, FlowMove, FlowMutation, flow_wire_index};
 use crate::os_spr::{MutationKind, MutationOutcome, SemanticDescriptor, Identified};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -16,8 +16,18 @@ pub struct MoveSynapse { pub id: String, pub to_index: u32 }
 //#region 🎮️Behavior
 impl MutationKind<FlowHostSnapshot, FlowMutation> for MoveSynapse {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "synapse", kind: "move-synapse", record: "MovedSynapse" };
+
+
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native(&format!("Move synapse {}", self.id), &format!("Synapse {} verschieben", self.id))
+    }
+    fn target(&self) -> Vec<String> { vec!["synapses".into(), self.id.clone()] }
+}
+
+impl crate::os_spr::ColdMutationKind<FlowHostSnapshot, FlowMutation> for MoveSynapse {
     fn diff(&self, base: &FlowHostSnapshot) -> MutationOutcome<FlowDiff> {
-        MutationOutcome::new(FlowDiff::from(FlowDelta::Synapses(FlowCollectionDelta { removed: vec![self.id.clone()], inserted: base.synapses.iter().find(|item| item.id() == &self.id).map(|item| (self.to_index, item.clone())).into_iter().collect(), replaced: vec![] })))
+        let from = base.synapses.iter().position(|item| item.id() == &self.id).and_then(|index| flow_wire_index(index).ok()).unwrap_or(u32::MAX);
+        MutationOutcome::new(FlowDiff::from(FlowDelta::Synapses(FlowCollectionDelta { moved: vec![FlowMove { id: self.id.clone(), from, to: self.to_index }], ..FlowCollectionDelta::default() })))
     }
     fn inverse(&self, base: &FlowHostSnapshot) -> Result<Vec<FlowMutation>, semio_framework_value::ValueError> {
     Ok((|| {
@@ -25,10 +35,6 @@ impl MutationKind<FlowHostSnapshot, FlowMutation> for MoveSynapse {
     
     })())
 }
-    fn label(&self) -> crate::LocalizedLabel {
-        crate::LocalizedLabel::native(&format!("Move synapse {}", self.id), &format!("Synapse {} verschieben", self.id))
-    }
-    fn target(&self) -> Vec<String> { vec!["synapses".into(), self.id.clone()] }
 }
 
 //#endregion 🎮️Behavior

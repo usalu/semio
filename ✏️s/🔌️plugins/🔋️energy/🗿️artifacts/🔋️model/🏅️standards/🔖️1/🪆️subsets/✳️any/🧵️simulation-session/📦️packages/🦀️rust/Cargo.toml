@@ -16,6 +16,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-math-rank = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧮️math/📶️rank/📦️packages/🦀️rust" }
+
 semio-framework-job-publication = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-tool-run = { workspace = true }
@@ -31,5 +33,8 @@ semio-s-plugin-energy-engine-sim-retirement = { workspace = true }
 semio-s-plugin-energy-engine-sim-wire = { workspace = true }
 
 [dev-dependencies]
+semio-s-plugin-energy-engine-sim = { workspace = true, features = ["testing"] }
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-trace = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-s-artifact-energy-model-examples = { workspace = true }
 serde_json = { workspace = true }

@@ -8,7 +8,7 @@
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::apply_puzzle5d_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle5d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::inverse_puzzle5d_mutation;
 use semio_framework_test_fixtures::fixture_text;
 
 use crate::Puzzle5dSnapshot;
@@ -34,7 +34,7 @@ fn outcome() -> serde_json::Value {
 
 /// 🗣️ `(level, code, target)` of every message `rotate-selection3d` raises on the committed base.
 fn produced_messages() -> Vec<(semio_framework_diagnostic::Severity, String, Vec<String>)> {
-    let produced = <Puzzle5dMutation as protocol::Mutation<Puzzle5dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Puzzle5dMutation as protocol::ColdMutation<Puzzle5dSnapshot>>::diff(&mutation(), &before());
     produced.messages().iter().map(|message| (message.level, message.code.0.clone(), message.target.clone())).collect()
 }
 
@@ -71,7 +71,7 @@ fn declared_messages() -> Vec<(semio_framework_diagnostic::Severity, String, Vec
 /// every patched record whole.
 #[test]
 fn produces_committed_diff() {
-    let outcome = <Puzzle5dMutation as protocol::Mutation<Puzzle5dSnapshot>>::diff(&mutation(), &before());
+    let outcome = <Puzzle5dMutation as protocol::ColdMutation<Puzzle5dSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "rotate-selection3d/turns: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -82,7 +82,7 @@ fn produces_committed_diff() {
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: Puzzle5dDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rotate-selection3d/turns: committed diff did not carry before to after");
 }
 

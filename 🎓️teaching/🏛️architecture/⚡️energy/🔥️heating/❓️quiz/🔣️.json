@@ -1,9 +1,12 @@
 {
-  "$schema": "../../../../../🧰️framework/🛍️products/❓️quiz/🧬️schema/🔣️.json#/$defs/Quiz",
+  "$schema": "../../../../../🧰️framework/🛍️products/📚️course/🧬️schema/🔣️.json#/$defs/Quiz",
   "schema": "semio.quiz/v1",
   "id": "heating",
   "emoji": "🔥",
-  "title": { "en": "Heating", "de": "Heizen" },
+  "title": {
+    "en": "Heating",
+    "de": "Heizen"
+  },
   "description": {
     "en": "U-values of building components from single glazing to the passive-house roof, and heating loads and heating demands of buildings from the 1960s to the passive house.",
     "de": "U-Werte von Bauteilen von der Einfachverglasung bis zum Passivhausdach sowie Heizlasten und Heizwärmebedarfe von Gebäuden aus den 1960er-Jahren bis zum Passivhaus."
@@ -12,360 +15,2494 @@
     {
       "kind": "matching",
       "id": "u-values",
-      "title": { "en": "U-values of Building Components", "de": "U-Werte von Bauteilen" },
-      "icon": { "emoji": "🧱", "motion": "flip" },
+      "title": {
+        "en": "U-values of Building Components",
+        "de": "U-Werte von Bauteilen"
+      },
+      "icon": {
+        "emoji": "🧱",
+        "motion": "flip"
+      },
       "prompt": {
-        "en": "Assign each building component its thermal transmittance (U-value) in W/(m²·K): the heat flow through 1\u00a0m² per kelvin of temperature difference. Smaller means better insulated.",
-        "de": "Ordne jedem Bauteil seinen Wärmedurchgangskoeffizienten (U-Wert) in W/(m²·K) zu: den Wärmestrom durch 1\u00a0m² je Kelvin Temperaturdifferenz. Kleiner heißt besser gedämmt."
+        "en": "Assign each building component its thermal transmittance (U-value) in W/(m²·K): the heat flow through 1 m² per kelvin of temperature difference. Smaller means better insulated. Allow about five minutes: compare every item, check units, and review your answer. New design examples use representative teaching estimates rather than universal limits.",
+        "de": "Ordne jedem Bauteil seinen Wärmedurchgangskoeffizienten (U-Wert) in W/(m²·K) zu: den Wärmestrom durch 1 m² je Kelvin Temperaturdifferenz. Kleiner heißt besser gedämmt. Plane etwa fünf Minuten ein: Vergleiche alle Beispiele, prüfe die Einheiten und kontrolliere deine Antwort. Neue Auslegungsbeispiele verwenden typische Lehrannahmen statt allgemeingültiger Grenzwerte."
       },
       "dimensions": [
         {
           "id": "u-value",
-          "icon": { "emoji": "🌡️", "motion": "pulse" },
-          "quantity": { "label": { "en": "U-value", "de": "U-Wert" }, "unit": "W/(m²·K)", "scale": "logarithmic", "prefixed": false, "additive": false }
+          "icon": {
+            "emoji": "🌡️",
+            "motion": "pulse"
+          },
+          "quantity": {
+            "label": {
+              "en": "U-value",
+              "de": "U-Wert"
+            },
+            "unit": "W/(m²·K)",
+            "scale": "logarithmic",
+            "prefixed": false,
+            "additive": false
+          }
         }
       ],
       "items": [
         {
           "id": "single-glazing",
-          "label": { "en": "Single glazing (one pane of glass)", "de": "Einfachverglasung (eine Glasscheibe)" },
-          "short": { "en": "Single glazing", "de": "Einfachverglasung" },
-          "icon": { "emoji": "🪟", "motion": "sway" },
-          "values": { "u-value": 5.8 },
+          "label": {
+            "en": "Single glazing (one pane of glass)",
+            "de": "Einfachverglasung (eine Glasscheibe)"
+          },
+          "short": {
+            "en": "Single glazing",
+            "de": "Einfachverglasung"
+          },
+          "icon": {
+            "emoji": "🪟",
+            "motion": "sway"
+          },
+          "values": {
+            "u-value": 5.8
+          },
           "familiar": true,
           "explanation": {
-            "en": "5.8\u00a0W/(m²·K) (Ug): a single pane has practically nothing but its surface resistances (0.13 + 0.04\u00a0m²·K/W). Source: Federal Gazette (BAnz AT 04.12.2020 B1), Table 3 (windows before 1979).",
-            "de": "5,8\u00a0W/(m²·K) (Ug): eine Einzelscheibe hat praktisch nur ihre Wärmeübergangswiderstände (0,13 + 0,04\u00a0m²·K/W). Quelle: BAnz AT 04.12.2020 B1, Tabelle 3 (Fenster bis 1978)."
+            "en": "5.8 W/(m²·K) (Ug): a single pane has practically nothing but its surface resistances (0.13 + 0.04 m²·K/W). Source: Federal Gazette (BAnz AT 04.12.2020 B1), Table 3 (windows before 1979).",
+            "de": "5,8 W/(m²·K) (Ug): eine Einzelscheibe hat praktisch nur ihre Wärmeübergangswiderstände (0,13 + 0,04 m²·K/W). Quelle: BAnz AT 04.12.2020 B1, Tabelle 3 (Fenster bis 1978)."
           }
         },
         {
           "id": "aluminium-window-1970s",
-          "label": { "en": "Aluminium or steel window with double insulating glass, before 1984", "de": "Aluminium- oder Stahlfenster mit Isolierverglasung, vor 1984" },
-          "short": { "en": "Old aluminium or steel window", "de": "Altes Aluminium- oder Stahlfenster" },
-          "icon": { "emoji": "🪟", "motion": "flip" },
-          "values": { "u-value": 4.3 },
+          "label": {
+            "en": "Aluminium or steel window with double insulating glass, before 1984",
+            "de": "Aluminium- oder Stahlfenster mit Isolierverglasung, vor 1984"
+          },
+          "short": {
+            "en": "Old aluminium or steel window",
+            "de": "Altes Aluminium- oder Stahlfenster"
+          },
+          "icon": {
+            "emoji": "🪟",
+            "motion": "flip"
+          },
+          "values": {
+            "u-value": 4.3
+          },
           "explanation": {
-            "en": "4.3\u00a0W/(m²·K) (Uw): the metal frame without thermal break conducts heat far better than the glass. Source: BAnz AT 04.12.2020 B1, Table 3.",
-            "de": "4,3\u00a0W/(m²·K) (Uw): der Metallrahmen ohne thermische Trennung leitet Wärme viel besser als das Glas. Quelle: BAnz AT 04.12.2020 B1, Tabelle 3."
+            "en": "4.3 W/(m²·K) (Uw): the metal frame without thermal break conducts heat far better than the glass. Source: BAnz AT 04.12.2020 B1, Table 3.",
+            "de": "4,3 W/(m²·K) (Uw): der Metallrahmen ohne thermische Trennung leitet Wärme viel besser als das Glas. Quelle: BAnz AT 04.12.2020 B1, Tabelle 3."
           }
         },
         {
           "id": "roller-shutter-box",
-          "label": { "en": "Uninsulated roller-shutter box, before 1995", "de": "Ungedämmter Rollladenkasten, vor 1995" },
-          "short": { "en": "Uninsulated roller-shutter box", "de": "Ungedämmter Rollladenkasten" },
-          "icon": { "emoji": "📦", "motion": "bounce" },
-          "values": { "u-value": 3.6 },
+          "label": {
+            "en": "Uninsulated roller-shutter box, before 1995",
+            "de": "Ungedämmter Rollladenkasten, vor 1995"
+          },
+          "short": {
+            "en": "Uninsulated roller-shutter box",
+            "de": "Ungedämmter Rollladenkasten"
+          },
+          "icon": {
+            "emoji": "📦",
+            "motion": "bounce"
+          },
+          "values": {
+            "u-value": 3.6
+          },
           "familiar": true,
           "explanation": {
-            "en": "3.6\u00a0W/(m²·K): only a thin wooden or chipboard cover separates the room from the ventilated box. Source: BAnz AT 04.12.2020 B1, Table 2.",
-            "de": "3,6\u00a0W/(m²·K): nur eine dünne Holz- oder Spanplattenblende trennt den Raum vom belüfteten Kasten. Quelle: BAnz AT 04.12.2020 B1, Tabelle 2."
+            "en": "3.6 W/(m²·K): only a thin wooden or chipboard cover separates the room from the ventilated box. Source: BAnz AT 04.12.2020 B1, Table 2.",
+            "de": "3,6 W/(m²·K): nur eine dünne Holz- oder Spanplattenblende trennt den Raum vom belüfteten Kasten. Quelle: BAnz AT 04.12.2020 B1, Tabelle 2."
           }
         },
         {
           "id": "box-type-window",
-          "label": { "en": "Wooden box-type or coupled window with two panes, before 1995", "de": "Holz-Kasten- oder Verbundfenster mit zwei Scheiben, vor 1995" },
-          "short": { "en": "Old wooden box-type window", "de": "Altes Holz-Kastenfenster" },
-          "icon": { "emoji": "🖼️", "motion": "sway" },
-          "values": { "u-value": 2.7 },
+          "label": {
+            "en": "Wooden box-type or coupled window with two panes, before 1995",
+            "de": "Holz-Kasten- oder Verbundfenster mit zwei Scheiben, vor 1995"
+          },
+          "short": {
+            "en": "Old wooden box-type window",
+            "de": "Altes Holz-Kastenfenster"
+          },
+          "icon": {
+            "emoji": "🖼️",
+            "motion": "sway"
+          },
+          "values": {
+            "u-value": 2.7
+          },
           "explanation": {
-            "en": "2.7\u00a0W/(m²·K) (Uw): the air layer between the two panes roughly halves the loss of single glazing. Source: BAnz AT 04.12.2020 B1, Table 3.",
-            "de": "2,7\u00a0W/(m²·K) (Uw): die Luftschicht zwischen den beiden Scheiben halbiert etwa den Verlust der Einfachverglasung. Quelle: BAnz AT 04.12.2020 B1, Tabelle 3."
+            "en": "2.7 W/(m²·K) (Uw): the air layer between the two panes roughly halves the loss of single glazing. Source: BAnz AT 04.12.2020 B1, Table 3.",
+            "de": "2,7 W/(m²·K) (Uw): die Luftschicht zwischen den beiden Scheiben halbiert etwa den Verlust der Einfachverglasung. Quelle: BAnz AT 04.12.2020 B1, Tabelle 3."
           }
         },
         {
           "id": "solid-roof-1950s",
-          "label": { "en": "Uninsulated solid (concrete) roof, before 1958", "de": "Ungedämmtes massives Dach (Beton), vor 1958" },
-          "short": { "en": "Uninsulated concrete roof", "de": "Ungedämmtes Betondach" },
-          "icon": { "emoji": "🏚️", "motion": "sway" },
-          "values": { "u-value": 2.1 },
+          "label": {
+            "en": "Uninsulated solid (concrete) roof, before 1958",
+            "de": "Ungedämmtes massives Dach (Beton), vor 1958"
+          },
+          "short": {
+            "en": "Uninsulated concrete roof",
+            "de": "Ungedämmtes Betondach"
+          },
+          "icon": {
+            "emoji": "🏚️",
+            "motion": "sway"
+          },
+          "values": {
+            "u-value": 2.1
+          },
           "explanation": {
-            "en": "2.1\u00a0W/(m²·K): a concrete slab without any insulation layer. Source: BAnz AT 04.12.2020 B1, Table 2 (roof, solid construction, up to 1957).",
-            "de": "2,1\u00a0W/(m²·K): eine Betondecke ganz ohne Dämmschicht. Quelle: BAnz AT 04.12.2020 B1, Tabelle 2 (Dach, massive Konstruktion, bis 1957)."
+            "en": "2.1 W/(m²·K): a concrete slab without any insulation layer. Source: BAnz AT 04.12.2020 B1, Table 2 (roof, solid construction, up to 1957).",
+            "de": "2,1 W/(m²·K): eine Betondecke ganz ohne Dämmschicht. Quelle: BAnz AT 04.12.2020 B1, Tabelle 2 (Dach, massive Konstruktion, bis 1957)."
           }
         },
         {
           "id": "front-door-geg",
-          "label": { "en": "Front door of the GEG reference building", "de": "Haustür des GEG-Referenzgebäudes" },
-          "short": { "en": "GEG reference front door", "de": "Referenzhaustür nach GEG" },
-          "icon": { "emoji": "🚪", "motion": "sway" },
-          "values": { "u-value": 1.8 },
+          "label": {
+            "en": "Front door of the GEG reference building",
+            "de": "Haustür des GEG-Referenzgebäudes"
+          },
+          "short": {
+            "en": "GEG reference front door",
+            "de": "Referenzhaustür nach GEG"
+          },
+          "icon": {
+            "emoji": "🚪",
+            "motion": "sway"
+          },
+          "values": {
+            "u-value": 1.8
+          },
           "familiar": true,
           "explanation": {
-            "en": "1.8\u00a0W/(m²·K): reference value for external doors. Source: German Buildings Energy Act (Gebäudeenergiegesetz, GEG) 2024, Annex 1.",
-            "de": "1,8\u00a0W/(m²·K): Referenzwert für Außentüren. Quelle: Gebäudeenergiegesetz (GEG) 2024, Anlage 1."
+            "en": "1.8 W/(m²·K): reference value for external doors. Source: German Buildings Energy Act (Gebäudeenergiegesetz, GEG) 2024, Annex 1.",
+            "de": "1,8 W/(m²·K): Referenzwert für Außentüren. Quelle: Gebäudeenergiegesetz (GEG) 2024, Anlage 1."
           }
         },
         {
           "id": "half-timbered-wall",
-          "label": { "en": "Half-timbered wall with clay infill, uninsulated, before 1958", "de": "Fachwerkwand mit Lehmausfachung, ungedämmt, vor 1958" },
-          "short": { "en": "Uninsulated half-timbered wall", "de": "Ungedämmte Fachwerkwand" },
-          "icon": { "emoji": "🪵", "motion": "bounce" },
-          "values": { "u-value": 1.5 },
+          "label": {
+            "en": "Half-timbered wall with clay infill, uninsulated, before 1958",
+            "de": "Fachwerkwand mit Lehmausfachung, ungedämmt, vor 1958"
+          },
+          "short": {
+            "en": "Uninsulated half-timbered wall",
+            "de": "Ungedämmte Fachwerkwand"
+          },
+          "icon": {
+            "emoji": "🪵",
+            "motion": "bounce"
+          },
+          "values": {
+            "u-value": 1.5
+          },
           "explanation": {
-            "en": "1.5\u00a0W/(m²·K): timber frame with clay infill up to 25\u00a0cm thick including plaster. Source: BAnz AT 04.12.2020 B1, Table 2.",
-            "de": "1,5\u00a0W/(m²·K): Holzfachwerk mit Lehmausfachung bis 25\u00a0cm Dicke einschließlich Putz. Quelle: BAnz AT 04.12.2020 B1, Tabelle 2."
+            "en": "1.5 W/(m²·K): timber frame with clay infill up to 25 cm thick including plaster. Source: BAnz AT 04.12.2020 B1, Table 2.",
+            "de": "1,5 W/(m²·K): Holzfachwerk mit Lehmausfachung bis 25 cm Dicke einschließlich Putz. Quelle: BAnz AT 04.12.2020 B1, Tabelle 2."
           }
         },
         {
           "id": "window-geg",
-          "label": { "en": "Window of the GEG reference building", "de": "Fenster des GEG-Referenzgebäudes" },
-          "short": { "en": "GEG reference window", "de": "Referenzfenster nach GEG" },
-          "icon": { "emoji": "🪟", "motion": "pulse" },
-          "values": { "u-value": 1.3 },
+          "label": {
+            "en": "Window of the GEG reference building",
+            "de": "Fenster des GEG-Referenzgebäudes"
+          },
+          "short": {
+            "en": "GEG reference window",
+            "de": "Referenzfenster nach GEG"
+          },
+          "icon": {
+            "emoji": "🪟",
+            "motion": "pulse"
+          },
+          "values": {
+            "u-value": 1.3
+          },
           "explanation": {
-            "en": "1.3\u00a0W/(m²·K) (Uw): double low-e glazing with argon in an insulated frame. Source: Gebäudeenergiegesetz (GEG) 2024, Annex 1.",
-            "de": "1,3\u00a0W/(m²·K) (Uw): Zweifach-Wärmeschutzverglasung mit Argon im gedämmten Rahmen. Quelle: Gebäudeenergiegesetz (GEG) 2024, Anlage 1."
+            "en": "1.3 W/(m²·K) (Uw): double low-e glazing with argon in an insulated frame. Source: Gebäudeenergiegesetz (GEG) 2024, Annex 1.",
+            "de": "1,3 W/(m²·K) (Uw): Zweifach-Wärmeschutzverglasung mit Argon im gedämmten Rahmen. Quelle: Gebäudeenergiegesetz (GEG) 2024, Anlage 1."
           }
         },
         {
           "id": "hollow-brick-wall-1970s",
-          "label": { "en": "Wall of perforated bricks or hollow blocks, 1969–1978", "de": "Wand aus Hochlochziegeln oder Hohlblocksteinen, 1969–1978" },
-          "short": { "en": "Perforated brick wall from the 1970s", "de": "Hochlochziegelwand der 1970er-Jahre" },
-          "icon": { "emoji": "🧱", "motion": "flip" },
-          "values": { "u-value": 1.0 },
+          "label": {
+            "en": "Wall of perforated bricks or hollow blocks, 1969–1978",
+            "de": "Wand aus Hochlochziegeln oder Hohlblocksteinen, 1969–1978"
+          },
+          "short": {
+            "en": "Perforated brick wall from the 1970s",
+            "de": "Hochlochziegelwand der 1970er-Jahre"
+          },
+          "icon": {
+            "emoji": "🧱",
+            "motion": "flip"
+          },
+          "values": {
+            "u-value": 1
+          },
           "explanation": {
-            "en": "1.0\u00a0W/(m²·K): porous, perforated masonry insulates better than solid brick, but there is no insulation layer yet. Source: BAnz AT 04.12.2020 B1, Table 2.",
-            "de": "1,0\u00a0W/(m²·K): poröses, gelochtes Mauerwerk dämmt besser als Vollziegel, aber noch ohne Dämmschicht. Quelle: BAnz AT 04.12.2020 B1, Tabelle 2."
+            "en": "1.0 W/(m²·K): porous, perforated masonry insulates better than solid brick, but there is no insulation layer yet. Source: BAnz AT 04.12.2020 B1, Table 2.",
+            "de": "1,0 W/(m²·K): poröses, gelochtes Mauerwerk dämmt besser als Vollziegel, aber noch ohne Dämmschicht. Quelle: BAnz AT 04.12.2020 B1, Tabelle 2."
           }
         },
         {
           "id": "window-passive-house",
-          "label": { "en": "Passive-house window (triple glazing, insulated frame)", "de": "Passivhausfenster (Dreifachverglasung, gedämmter Rahmen)" },
-          "short": { "en": "Passive-house window", "de": "Passivhausfenster" },
-          "icon": { "emoji": "🪟", "motion": "float" },
-          "values": { "u-value": 0.8 },
+          "label": {
+            "en": "Passive-house window (triple glazing, insulated frame)",
+            "de": "Passivhausfenster (Dreifachverglasung, gedämmter Rahmen)"
+          },
+          "short": {
+            "en": "Passive-house window",
+            "de": "Passivhausfenster"
+          },
+          "icon": {
+            "emoji": "🪟",
+            "motion": "float"
+          },
+          "values": {
+            "u-value": 0.8
+          },
           "explanation": {
-            "en": "0.8\u00a0W/(m²·K) (Uw): criterion for passive-house suitable windows in the cool-temperate climate, so that no radiator is needed below the window. Source: Passive House Institute.",
-            "de": "0,8\u00a0W/(m²·K) (Uw): Kriterium für passivhaustaugliche Fenster im kühl-gemäßigten Klima, damit unter dem Fenster kein Heizkörper nötig ist. Quelle: Passivhaus Institut."
+            "en": "0.8 W/(m²·K) (Uw): criterion for passive-house suitable windows in the cool-temperate climate, so that no radiator is needed below the window. Source: Passive House Institute.",
+            "de": "0,8 W/(m²·K) (Uw): Kriterium für passivhaustaugliche Fenster im kühl-gemäßigten Klima, damit unter dem Fenster kein Heizkörper nötig ist. Quelle: Passivhaus Institut."
           }
         },
         {
           "id": "masonry-wall-1980s",
-          "label": { "en": "Masonry wall, 1984–1994 (Thermal Insulation Ordinance 1982)", "de": "Mauerwerkswand, 1984–1994 (Wärmeschutzverordnung 1982)" },
-          "short": { "en": "Masonry wall to WSchVO 1982", "de": "Mauerwerkswand nach WSchVO 1982" },
-          "icon": { "emoji": "🧱", "motion": "bounce" },
-          "values": { "u-value": 0.6 },
+          "label": {
+            "en": "Masonry wall, 1984–1994 (Thermal Insulation Ordinance 1982)",
+            "de": "Mauerwerkswand, 1984–1994 (Wärmeschutzverordnung 1982)"
+          },
+          "short": {
+            "en": "Masonry wall to WSchVO 1982",
+            "de": "Mauerwerkswand nach WSchVO 1982"
+          },
+          "icon": {
+            "emoji": "🧱",
+            "motion": "bounce"
+          },
+          "values": {
+            "u-value": 0.6
+          },
           "explanation": {
-            "en": "0.6\u00a0W/(m²·K): porous perforated bricks or a thin insulation layer to meet the Thermal Insulation Ordinance (WSchVO) 1982. Source: BAnz AT 04.12.2020 B1, Table 2.",
-            "de": "0,6\u00a0W/(m²·K): porosierte Hochlochziegel oder eine dünne Dämmschicht zur Erfüllung der WSchVO 1982. Quelle: BAnz AT 04.12.2020 B1, Tabelle 2."
+            "en": "0.6 W/(m²·K): porous perforated bricks or a thin insulation layer to meet the Thermal Insulation Ordinance (WSchVO) 1982. Source: BAnz AT 04.12.2020 B1, Table 2.",
+            "de": "0,6 W/(m²·K): porosierte Hochlochziegel oder eine dünne Dämmschicht zur Erfüllung der WSchVO 1982. Quelle: BAnz AT 04.12.2020 B1, Tabelle 2."
           }
         },
         {
           "id": "triple-glazing",
-          "label": { "en": "Triple insulating glass (glazing only)", "de": "Dreifach-Wärmeschutzverglasung (nur Glas)" },
-          "short": { "en": "Triple insulating glass", "de": "Dreifach-Wärmeschutzglas" },
-          "icon": { "emoji": "🪟", "motion": "bounce" },
-          "values": { "u-value": 0.5 },
+          "label": {
+            "en": "Triple insulating glass (glazing only)",
+            "de": "Dreifach-Wärmeschutzverglasung (nur Glas)"
+          },
+          "short": {
+            "en": "Triple insulating glass",
+            "de": "Dreifach-Wärmeschutzglas"
+          },
+          "icon": {
+            "emoji": "🪟",
+            "motion": "bounce"
+          },
+          "values": {
+            "u-value": 0.5
+          },
           "explanation": {
-            "en": "0.5\u00a0W/(m²·K) (Ug): three panes, two low-e coatings and two gas-filled cavities (calculated per EN 673). The glass alone beats the whole window, whose frame and spacer are weaker.",
-            "de": "0,5\u00a0W/(m²·K) (Ug): drei Scheiben, zwei Low-E-Beschichtungen und zwei gasgefüllte Zwischenräume (berechnet nach EN 673). Das Glas allein ist besser als das ganze Fenster, dessen Rahmen und Randverbund schwächer sind."
+            "en": "0.5 W/(m²·K) (Ug): three panes, two low-e coatings and two gas-filled cavities (calculated per EN 673). The glass alone beats the whole window, whose frame and spacer are weaker.",
+            "de": "0,5 W/(m²·K) (Ug): drei Scheiben, zwei Low-E-Beschichtungen und zwei gasgefüllte Zwischenräume (berechnet nach EN 673). Das Glas allein ist besser als das ganze Fenster, dessen Rahmen und Randverbund schwächer sind."
           }
         },
         {
           "id": "floor-geg",
-          "label": { "en": "Floor slab or basement ceiling of the GEG reference building", "de": "Bodenplatte oder Kellerdecke des GEG-Referenzgebäudes" },
-          "short": { "en": "GEG reference floor slab", "de": "Referenz-Bodenplatte nach GEG" },
-          "icon": { "emoji": "🪨", "motion": "pulse" },
-          "values": { "u-value": 0.35 },
+          "label": {
+            "en": "Floor slab or basement ceiling of the GEG reference building",
+            "de": "Bodenplatte oder Kellerdecke des GEG-Referenzgebäudes"
+          },
+          "short": {
+            "en": "GEG reference floor slab",
+            "de": "Referenz-Bodenplatte nach GEG"
+          },
+          "icon": {
+            "emoji": "🪨",
+            "motion": "pulse"
+          },
+          "values": {
+            "u-value": 0.35
+          },
           "explanation": {
-            "en": "0.35\u00a0W/(m²·K): reference value for components against the ground or unheated rooms; the ground is warmer than winter air, so less insulation pays off. Source: GEG 2024, Annex 1.",
-            "de": "0,35\u00a0W/(m²·K): Referenzwert für Bauteile gegen Erdreich oder unbeheizte Räume; das Erdreich ist wärmer als die Winterluft, daher lohnt weniger Dämmung. Quelle: GEG 2024, Anlage 1."
+            "en": "0.35 W/(m²·K): reference value for components against the ground or unheated rooms; the ground is warmer than winter air, so less insulation pays off. Source: GEG 2024, Annex 1.",
+            "de": "0,35 W/(m²·K): Referenzwert für Bauteile gegen Erdreich oder unbeheizte Räume; das Erdreich ist wärmer als die Winterluft, daher lohnt weniger Dämmung. Quelle: GEG 2024, Anlage 1."
           }
         },
         {
           "id": "wall-geg",
-          "label": { "en": "External wall of the GEG reference building", "de": "Außenwand des GEG-Referenzgebäudes" },
-          "short": { "en": "GEG reference external wall", "de": "Referenz-Außenwand nach GEG" },
-          "icon": { "emoji": "🧱", "motion": "pulse" },
-          "values": { "u-value": 0.28 },
+          "label": {
+            "en": "External wall of the GEG reference building",
+            "de": "Außenwand des GEG-Referenzgebäudes"
+          },
+          "short": {
+            "en": "GEG reference external wall",
+            "de": "Referenz-Außenwand nach GEG"
+          },
+          "icon": {
+            "emoji": "🧱",
+            "motion": "pulse"
+          },
+          "values": {
+            "u-value": 0.28
+          },
           "explanation": {
-            "en": "0.28\u00a0W/(m²·K): e.g. masonry with about 12\u00a0cm of insulation (λ\u00a0=\u00a00.035\u00a0W/(m·K)). Source: GEG 2024, Annex 1.",
-            "de": "0,28\u00a0W/(m²·K): z. B. Mauerwerk mit rund 12\u00a0cm Dämmung (λ\u00a0=\u00a00,035\u00a0W/(m·K)). Quelle: GEG 2024, Anlage 1."
+            "en": "0.28 W/(m²·K): e.g. masonry with about 12 cm of insulation (λ = 0.035 W/(m·K)). Source: GEG 2024, Annex 1.",
+            "de": "0,28 W/(m²·K): z. B. Mauerwerk mit rund 12 cm Dämmung (λ = 0,035 W/(m·K)). Quelle: GEG 2024, Anlage 1."
           }
         },
         {
           "id": "roof-geg",
-          "label": { "en": "Roof of the GEG reference building", "de": "Dach des GEG-Referenzgebäudes" },
-          "short": { "en": "GEG reference roof", "de": "Referenzdach nach GEG" },
-          "icon": { "emoji": "🏠", "motion": "float" },
-          "values": { "u-value": 0.2 },
+          "label": {
+            "en": "Roof of the GEG reference building",
+            "de": "Dach des GEG-Referenzgebäudes"
+          },
+          "short": {
+            "en": "GEG reference roof",
+            "de": "Referenzdach nach GEG"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "float"
+          },
+          "values": {
+            "u-value": 0.2
+          },
           "explanation": {
-            "en": "0.20\u00a0W/(m²·K): reference value for roofs and top-floor ceilings, roughly 17\u00a0cm of insulation (λ\u00a0=\u00a00.035\u00a0W/(m·K)). Source: GEG 2024, Annex 1.",
-            "de": "0,20\u00a0W/(m²·K): Referenzwert für Dächer und oberste Geschossdecken, rund 17\u00a0cm Dämmung (λ\u00a0=\u00a00,035\u00a0W/(m·K)). Quelle: GEG 2024, Anlage 1."
+            "en": "0.20 W/(m²·K): reference value for roofs and top-floor ceilings, roughly 17 cm of insulation (λ = 0.035 W/(m·K)). Source: GEG 2024, Annex 1.",
+            "de": "0,20 W/(m²·K): Referenzwert für Dächer und oberste Geschossdecken, rund 17 cm Dämmung (λ = 0,035 W/(m·K)). Quelle: GEG 2024, Anlage 1."
           }
         },
         {
           "id": "wall-passive-house",
-          "label": { "en": "External wall of a passive house", "de": "Außenwand eines Passivhauses" },
-          "short": { "en": "Passive-house external wall", "de": "Passivhaus-Außenwand" },
-          "icon": { "emoji": "🧱", "motion": "sway" },
-          "values": { "u-value": 0.15 },
+          "label": {
+            "en": "External wall of a passive house",
+            "de": "Außenwand eines Passivhauses"
+          },
+          "short": {
+            "en": "Passive-house external wall",
+            "de": "Passivhaus-Außenwand"
+          },
+          "icon": {
+            "emoji": "🧱",
+            "motion": "sway"
+          },
+          "values": {
+            "u-value": 0.15
+          },
           "explanation": {
-            "en": "0.15\u00a0W/(m²·K): guide value for opaque components of passive houses in the cool-temperate climate, about 24\u00a0cm of insulation. Source: Passive House Institute.",
-            "de": "0,15\u00a0W/(m²·K): Richtwert für opake Bauteile von Passivhäusern im kühl-gemäßigten Klima, rund 24\u00a0cm Dämmung. Quelle: Passivhaus Institut."
+            "en": "0.15 W/(m²·K): guide value for opaque components of passive houses in the cool-temperate climate, about 24 cm of insulation. Source: Passive House Institute.",
+            "de": "0,15 W/(m²·K): Richtwert für opake Bauteile von Passivhäusern im kühl-gemäßigten Klima, rund 24 cm Dämmung. Quelle: Passivhaus Institut."
           }
         },
         {
           "id": "roof-passive-house",
-          "label": { "en": "Roof of a passive house", "de": "Dach eines Passivhauses" },
-          "short": { "en": "Passive-house roof", "de": "Passivhausdach" },
-          "icon": { "emoji": "🏡", "motion": "float" },
-          "values": { "u-value": 0.1 },
+          "label": {
+            "en": "Roof of a passive house",
+            "de": "Dach eines Passivhauses"
+          },
+          "short": {
+            "en": "Passive-house roof",
+            "de": "Passivhausdach"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "float"
+          },
+          "values": {
+            "u-value": 0.1
+          },
           "explanation": {
-            "en": "0.10\u00a0W/(m²·K): about 35\u00a0cm of insulation (λ\u00a0=\u00a00.035\u00a0W/(m·K), R\u00a0≈\u00a010\u00a0m²·K/W), typical for passive-house roofs. Source: Passive House Institute.",
-            "de": "0,10\u00a0W/(m²·K): rund 35\u00a0cm Dämmung (λ\u00a0=\u00a00,035\u00a0W/(m·K), R\u00a0≈\u00a010\u00a0m²·K/W), typisch für Passivhausdächer. Quelle: Passivhaus Institut."
+            "en": "0.10 W/(m²·K): about 35 cm of insulation (λ = 0.035 W/(m·K), R ≈ 10 m²·K/W), typical for passive-house roofs. Source: Passive House Institute.",
+            "de": "0,10 W/(m²·K): rund 35 cm Dämmung (λ = 0,035 W/(m·K), R ≈ 10 m²·K/W), typisch für Passivhausdächer. Quelle: Passivhaus Institut."
+          }
+        },
+        {
+          "id": "superinsulated-roof",
+          "label": {
+            "en": "Roof with thick continuous insulation",
+            "de": "Dach mit dicker durchgehender Dämmung"
+          },
+          "icon": {
+            "emoji": "🧱",
+            "motion": "spin"
+          },
+          "values": {
+            "u-value": 0.11
+          },
+          "explanation": {
+            "en": "0.11 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "0,11 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Roof + thick continuous insulation",
+            "de": "Dach + dicker durchgehender Dämmung"
+          }
+        },
+        {
+          "id": "superinsulated-floor",
+          "label": {
+            "en": "Superinsulated floor slab",
+            "de": "Hochgedämmte Bodenplatte"
+          },
+          "icon": {
+            "emoji": "🧱",
+            "motion": "float"
+          },
+          "values": {
+            "u-value": 0.12
+          },
+          "explanation": {
+            "en": "0.12 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "0,12 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Superinsulated floor slab",
+            "de": "Gedämmte Bodenplatte"
+          }
+        },
+        {
+          "id": "superinsulated-panel",
+          "label": {
+            "en": "Superinsulated timber wall panel",
+            "de": "Hochgedämmte Holztafelwand"
+          },
+          "icon": {
+            "emoji": "🪟",
+            "motion": "spin"
+          },
+          "values": {
+            "u-value": 0.14
+          },
+          "explanation": {
+            "en": "0.14 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "0,14 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Superinsulated timber wall panel",
+            "de": "Gedämmte Holztafelwand"
+          }
+        },
+        {
+          "id": "superinsulated-retrofit",
+          "label": {
+            "en": "Wall with deep external insulation retrofit",
+            "de": "Wand mit umfassender Außendämmsanierung"
+          },
+          "icon": {
+            "emoji": "🚪",
+            "motion": "bounce"
+          },
+          "values": {
+            "u-value": 0.16
+          },
+          "explanation": {
+            "en": "0.16 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "0,16 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Deeply externally insulated wall",
+            "de": "Umfassend außengedämmte Wand"
+          }
+        },
+        {
+          "id": "insulated-attic",
+          "label": {
+            "en": "Well-insulated pitched attic roof",
+            "de": "Gut gedämmtes geneigtes Dach"
+          },
+          "icon": {
+            "emoji": "🚪",
+            "motion": "pulse"
+          },
+          "values": {
+            "u-value": 0.18
+          },
+          "explanation": {
+            "en": "0.18 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "0,18 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Well-insulated pitched attic roof",
+            "de": "Gut gedämmtes geneigtes Dach"
+          }
+        },
+        {
+          "id": "insulated-flat-roof",
+          "label": {
+            "en": "Modern insulated flat roof",
+            "de": "Modern gedämmtes Flachdach"
+          },
+          "icon": {
+            "emoji": "🚪",
+            "motion": "spin"
+          },
+          "values": {
+            "u-value": 0.21
+          },
+          "explanation": {
+            "en": "0.21 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "0,21 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Modern insulated flat roof",
+            "de": "Modern gedämmtes Flachdach"
+          }
+        },
+        {
+          "id": "insulated-timber-wall",
+          "label": {
+            "en": "Well-insulated timber frame wall",
+            "de": "Gut gedämmte Holzrahmenwand"
+          },
+          "icon": {
+            "emoji": "🚪",
+            "motion": "float"
+          },
+          "values": {
+            "u-value": 0.22
+          },
+          "explanation": {
+            "en": "0.22 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "0,22 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Well-insulated timber frame wall",
+            "de": "Gut gedämmte Holzrahmenwand"
+          }
+        },
+        {
+          "id": "insulated-basement",
+          "label": {
+            "en": "Well-insulated basement ceiling",
+            "de": "Gut gedämmte Kellerdecke"
+          },
+          "icon": {
+            "emoji": "🚪",
+            "motion": "flip"
+          },
+          "values": {
+            "u-value": 0.2
+          },
+          "explanation": {
+            "en": "0.2 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "0,2 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Well-insulated basement ceiling",
+            "de": "Gut gedämmte Kellerdecke"
+          }
+        },
+        {
+          "id": "retrofit-facade",
+          "label": {
+            "en": "Retrofitted brick facade with external insulation",
+            "de": "Sanierte Backsteinfassade mit Außendämmung"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "bounce"
+          },
+          "values": {
+            "u-value": 0.3
+          },
+          "explanation": {
+            "en": "0.3 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "0,3 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Externally insulated brick facade",
+            "de": "Außengedämmte Backsteinfassade"
+          }
+        },
+        {
+          "id": "modern-block-wall",
+          "label": {
+            "en": "Modern insulated masonry wall",
+            "de": "Modern gedämmte Mauerwerkswand"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "pulse"
+          },
+          "values": {
+            "u-value": 0.27
+          },
+          "explanation": {
+            "en": "0.27 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "0,27 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Modern insulated masonry wall",
+            "de": "Modern gedämmte Mauerwerkswand"
+          }
+        },
+        {
+          "id": "insulated-ground-floor",
+          "label": {
+            "en": "Insulated ground-floor slab",
+            "de": "Gedämmte Erdgeschossbodenplatte"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "spin"
+          },
+          "values": {
+            "u-value": 0.33
+          },
+          "explanation": {
+            "en": "0.33 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "0,33 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Insulated ground-floor slab",
+            "de": "Gedämmte Erdgeschossbodenplatte"
+          }
+        },
+        {
+          "id": "retrofit-roof",
+          "label": {
+            "en": "Roof with moderate added insulation",
+            "de": "Dach mit mäßiger Zusatzdämmung"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "sway"
+          },
+          "values": {
+            "u-value": 0.32
+          },
+          "explanation": {
+            "en": "0.32 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "0,32 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Roof + moderate added insulation",
+            "de": "Dach + mäßiger Zusatzdämmung"
+          }
+        },
+        {
+          "id": "older-insulated-wall",
+          "label": {
+            "en": "Wall with thin 1980s external insulation",
+            "de": "Wand mit dünner Außendämmung der 1980er"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "flip"
+          },
+          "values": {
+            "u-value": 0.55
+          },
+          "explanation": {
+            "en": "0.55 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "0,55 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Wall + thin 1980s external insulation",
+            "de": "Wand + dünner Außendämmung der 1980er"
+          }
+        },
+        {
+          "id": "low-e-triple-pane",
+          "label": {
+            "en": "Low-emissivity triple glazing, glass only",
+            "de": "Dreifachglas mit Low-E-Beschichtung, nur Glas"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "bounce"
+          },
+          "values": {
+            "u-value": 0.6
+          },
+          "explanation": {
+            "en": "0.6 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "0,6 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Low-emissivity triple glass pane",
+            "de": "Low-E-Dreifachglasscheibe"
+          }
+        },
+        {
+          "id": "moderate-roof",
+          "label": {
+            "en": "Roof with moderate legacy insulation",
+            "de": "Dach mit mäßiger älterer Dämmung"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "pulse"
+          },
+          "values": {
+            "u-value": 0.48
+          },
+          "explanation": {
+            "en": "0.48 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "0,48 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Roof + moderate legacy insulation",
+            "de": "Dach + mäßiger älterer Dämmung"
+          }
+        },
+        {
+          "id": "insulated-door-panel",
+          "label": {
+            "en": "Well-insulated door panel, panel only",
+            "de": "Gut gedämmte Türfüllung, nur Füllung"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "spin"
+          },
+          "values": {
+            "u-value": 0.5
+          },
+          "explanation": {
+            "en": "0.5 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "0,5 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Well-insulated door panel panel only",
+            "de": "Gut gedämmte Türfüllung nur Füllung"
+          }
+        },
+        {
+          "id": "triple-timber-window",
+          "label": {
+            "en": "Whole triple-glazed timber window",
+            "de": "Gesamtes dreifachverglastes Holzfenster"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "sway"
+          },
+          "values": {
+            "u-value": 0.82
+          },
+          "explanation": {
+            "en": "0.82 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "0,82 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Whole triple-glazed timber window",
+            "de": "Gesamtes dreifachverglastes Holzfenster"
+          }
+        },
+        {
+          "id": "triple-pvc-window",
+          "label": {
+            "en": "Whole triple-glazed PVC window",
+            "de": "Gesamtes dreifachverglastes Kunststofffenster"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "flip"
+          },
+          "values": {
+            "u-value": 0.78
+          },
+          "explanation": {
+            "en": "0.78 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "0,78 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Whole triple-glazed PVC window",
+            "de": "Dreifachverglastes PVC-Gesamtfenster"
+          }
+        },
+        {
+          "id": "insulated-entrance-door",
+          "label": {
+            "en": "Highly insulated whole entrance door",
+            "de": "Hochgedämmte gesamte Haustür"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "bounce"
+          },
+          "values": {
+            "u-value": 0.85
+          },
+          "explanation": {
+            "en": "0.85 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "0,85 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Insulated whole entrance door",
+            "de": "Gedämmte gesamte Haustür"
+          }
+        },
+        {
+          "id": "triple-retrofit-window",
+          "label": {
+            "en": "Whole triple-glazed retrofit window",
+            "de": "Gesamtes dreifachverglastes Sanierungsfenster"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "pulse"
+          },
+          "values": {
+            "u-value": 0.9
+          },
+          "explanation": {
+            "en": "0.9 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "0,9 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Triple glazing retrofit window",
+            "de": "Dreifachglas-Sanierungsfenster"
+          }
+        },
+        {
+          "id": "double-low-e-window",
+          "label": {
+            "en": "Whole modern low-e double-glazed window",
+            "de": "Gesamtes modernes Low-E-Doppelfenster"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "spin"
+          },
+          "values": {
+            "u-value": 1.2
+          },
+          "explanation": {
+            "en": "1.2 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "1,2 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Whole modern low-e double-glazed window",
+            "de": "Gesamtes modernes Low-E-Doppelfenster"
+          }
+        },
+        {
+          "id": "older-hollow-wall",
+          "label": {
+            "en": "Older hollow-block wall without added insulation",
+            "de": "Ältere Hohlblockwand ohne Zusatzdämmung"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "sway"
+          },
+          "values": {
+            "u-value": 1.1
+          },
+          "explanation": {
+            "en": "1.1 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "1,1 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Bare older hollow-block wall",
+            "de": "Alte ungedämmte Hohlblockwand"
+          }
+        },
+        {
+          "id": "thinly-insulated-panel",
+          "label": {
+            "en": "Concrete panel with thin internal insulation",
+            "de": "Betonplatte mit dünner Innendämmung"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "float"
+          },
+          "values": {
+            "u-value": 1
+          },
+          "explanation": {
+            "en": "1 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "1 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Concrete panel with thin insulation",
+            "de": "Dünn gedämmte Betonplatte"
+          }
+        },
+        {
+          "id": "double-low-e-glass",
+          "label": {
+            "en": "Low-e double glazing, glass only",
+            "de": "Low-E-Doppelverglasung, nur Glas"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "flip"
+          },
+          "values": {
+            "u-value": 1.1
+          },
+          "explanation": {
+            "en": "1.1 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "1,1 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Low-e double glazing glass only",
+            "de": "Low-E-Doppelverglasung nur Glas"
+          }
+        },
+        {
+          "id": "old-solid-brick",
+          "label": {
+            "en": "Uninsulated solid brick external wall",
+            "de": "Ungedämmte massive Ziegelaußenwand"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "bounce"
+          },
+          "values": {
+            "u-value": 1.6
+          },
+          "explanation": {
+            "en": "1.6 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "1,6 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Bare solid brick external wall",
+            "de": "Alte massive Ziegelaußenwand"
+          }
+        },
+        {
+          "id": "older-wood-door",
+          "label": {
+            "en": "Older timber entrance door",
+            "de": "Ältere Holzhaustür"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "pulse"
+          },
+          "values": {
+            "u-value": 1.8
+          },
+          "explanation": {
+            "en": "1.8 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "1,8 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Older timber entrance door",
+            "de": "Ältere Holzhaustür"
+          }
+        },
+        {
+          "id": "old-stone-wall",
+          "label": {
+            "en": "Thick uninsulated stone external wall",
+            "de": "Dicke ungedämmte Steinaußenwand"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "spin"
+          },
+          "values": {
+            "u-value": 1.7
+          },
+          "explanation": {
+            "en": "1.7 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "1,7 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Thick uninsulated stone external wall",
+            "de": "Dicke ungedämmte Steinaußenwand"
+          }
+        },
+        {
+          "id": "thin-insulated-roof",
+          "label": {
+            "en": "Concrete roof with very thin insulation",
+            "de": "Betondach mit sehr dünner Dämmung"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "sway"
+          },
+          "values": {
+            "u-value": 1.5
+          },
+          "explanation": {
+            "en": "1.5 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "1,5 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Concrete roof + very thin insulation",
+            "de": "Betondach + sehr dünner Dämmung"
+          }
+        },
+        {
+          "id": "old-double-window",
+          "label": {
+            "en": "Older whole double-glazed wooden window",
+            "de": "Älteres gesamtes Holz-Doppelfenster"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "float"
+          },
+          "values": {
+            "u-value": 2.8
+          },
+          "explanation": {
+            "en": "2.8 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "2,8 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Older whole double-glazed wooden window",
+            "de": "Älteres gesamtes Holz-Doppelfenster"
+          }
+        },
+        {
+          "id": "uninsulated-concrete",
+          "label": {
+            "en": "Uninsulated concrete external panel",
+            "de": "Ungedämmte Betonaußenplatte"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "flip"
+          },
+          "values": {
+            "u-value": 2.6
+          },
+          "explanation": {
+            "en": "2.6 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "2,6 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Bare concrete external panel",
+            "de": "Alte Betonaußenplatte"
+          }
+        },
+        {
+          "id": "old-solid-ceiling",
+          "label": {
+            "en": "Old solid ceiling without insulation",
+            "de": "Alte Massivdecke ohne Dämmung"
+          },
+          "icon": {
+            "emoji": "🏭",
+            "motion": "bounce"
+          },
+          "values": {
+            "u-value": 2.2
+          },
+          "explanation": {
+            "en": "2.2 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "2,2 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Old solid ceiling without insulation",
+            "de": "Alte Massivdecke ohne Dämmung"
+          }
+        },
+        {
+          "id": "coupled-timber-window",
+          "label": {
+            "en": "Older coupled timber window",
+            "de": "Älteres Holz-Verbundfenster"
+          },
+          "icon": {
+            "emoji": "🏭",
+            "motion": "pulse"
+          },
+          "values": {
+            "u-value": 2.7
+          },
+          "explanation": {
+            "en": "2.7 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "2,7 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Older coupled timber window",
+            "de": "Älteres Holz-Verbundfenster"
+          }
+        },
+        {
+          "id": "old-metal-frame",
+          "label": {
+            "en": "Unbroken metal frame with older double glazing",
+            "de": "Metallrahmen ohne Trennung mit altem Doppelglas"
+          },
+          "icon": {
+            "emoji": "🏭",
+            "motion": "spin"
+          },
+          "values": {
+            "u-value": 4.2
+          },
+          "explanation": {
+            "en": "4.2 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "4,2 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Unbroken old metal window frame",
+            "de": "Alter ungetrennter Metallfensterrahmen"
+          }
+        },
+        {
+          "id": "thin-concrete-panel",
+          "label": {
+            "en": "Thin exposed concrete wall panel",
+            "de": "Dünne exponierte Betonwandplatte"
+          },
+          "icon": {
+            "emoji": "🏭",
+            "motion": "sway"
+          },
+          "values": {
+            "u-value": 3.8
+          },
+          "explanation": {
+            "en": "3.8 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "3,8 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Thin exposed concrete wall panel",
+            "de": "Dünne exponierte Betonwandplatte"
+          }
+        },
+        {
+          "id": "uninsulated-service-door",
+          "label": {
+            "en": "Uninsulated metal service door",
+            "de": "Ungedämmte Metall-Nebentür"
+          },
+          "icon": {
+            "emoji": "🏭",
+            "motion": "float"
+          },
+          "values": {
+            "u-value": 4
+          },
+          "explanation": {
+            "en": "4 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "4 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Bare metal service door",
+            "de": "Alte Metall-Nebentür"
+          }
+        },
+        {
+          "id": "old-shutter-box",
+          "label": {
+            "en": "Older hollow shutter box without insulation",
+            "de": "Alter hohler Rollladenkasten ohne Dämmung"
+          },
+          "icon": {
+            "emoji": "🏭",
+            "motion": "flip"
+          },
+          "values": {
+            "u-value": 3.5
+          },
+          "explanation": {
+            "en": "3.5 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "3,5 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Bare old hollow shutter box",
+            "de": "Alter ungedämmter Rollladenkasten"
+          }
+        },
+        {
+          "id": "single-shop-pane",
+          "label": {
+            "en": "Single shopfront glass, glass only",
+            "de": "Einfaches Schaufensterglas, nur Glas"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "bounce"
+          },
+          "values": {
+            "u-value": 5.7
+          },
+          "explanation": {
+            "en": "5.7 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "5,7 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Single shopfront glass glass only",
+            "de": "Einfaches Schaufensterglas nur Glas"
+          }
+        },
+        {
+          "id": "single-roof-pane",
+          "label": {
+            "en": "Single rooflight glass, glass only",
+            "de": "Einfaches Dachlichtglas, nur Glas"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "pulse"
+          },
+          "values": {
+            "u-value": 5.8
+          },
+          "explanation": {
+            "en": "5.8 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "5,8 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Single rooflight glass glass only",
+            "de": "Einfaches Dachlichtglas nur Glas"
+          }
+        },
+        {
+          "id": "single-greenhouse-pane",
+          "label": {
+            "en": "Single greenhouse pane, glass only",
+            "de": "Einzelne Gewächshausscheibe, nur Glas"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "spin"
+          },
+          "values": {
+            "u-value": 5.9
+          },
+          "explanation": {
+            "en": "5.9 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "5,9 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Single greenhouse pane glass only",
+            "de": "Einzelne Gewächshausscheibe nur Glas"
+          }
+        },
+        {
+          "id": "single-clear-pane",
+          "label": {
+            "en": "Clear single window glass, glass only",
+            "de": "Klares einfaches Fensterglas, nur Glas"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "sway"
+          },
+          "values": {
+            "u-value": 5.8
+          },
+          "explanation": {
+            "en": "5.8 W/(m²·K). Representative teaching U-value for the stated component. U refers to the whole component unless glass or panel only is specified; lower values mean less heat flow per area and kelvin.",
+            "de": "5,8 W/(m²·K). Typischer Lehr-U-Wert für das genannte Bauteil. U gilt für das gesamte Bauteil, sofern nicht nur Glas oder Füllung genannt wird; kleinere Werte bedeuten weniger Wärmestrom je Fläche und Kelvin."
+          },
+          "short": {
+            "en": "Clear single window glass glass only",
+            "de": "Klares einfaches Fensterglas nur Glas"
           }
         }
       ],
-      "draw": 10
+      "draw": 10,
+      "pool": {
+        "seconds": 300,
+        "slots": [
+          [
+            "roof-passive-house",
+            "wall-passive-house",
+            "superinsulated-roof",
+            "superinsulated-floor",
+            "superinsulated-panel",
+            "superinsulated-retrofit"
+          ],
+          [
+            "roof-geg",
+            "insulated-attic",
+            "insulated-flat-roof",
+            "insulated-timber-wall",
+            "insulated-basement"
+          ],
+          [
+            "floor-geg",
+            "wall-geg",
+            "retrofit-facade",
+            "modern-block-wall",
+            "insulated-ground-floor",
+            "retrofit-roof"
+          ],
+          [
+            "masonry-wall-1980s",
+            "triple-glazing",
+            "older-insulated-wall",
+            "low-e-triple-pane",
+            "moderate-roof",
+            "insulated-door-panel"
+          ],
+          [
+            "window-passive-house",
+            "triple-timber-window",
+            "triple-pvc-window",
+            "insulated-entrance-door",
+            "triple-retrofit-window"
+          ],
+          [
+            "hollow-brick-wall-1970s",
+            "window-geg",
+            "double-low-e-window",
+            "older-hollow-wall",
+            "thinly-insulated-panel",
+            "double-low-e-glass"
+          ],
+          [
+            "half-timbered-wall",
+            "front-door-geg",
+            "old-solid-brick",
+            "older-wood-door",
+            "old-stone-wall",
+            "thin-insulated-roof"
+          ],
+          [
+            "solid-roof-1950s",
+            "box-type-window",
+            "old-double-window",
+            "uninsulated-concrete",
+            "old-solid-ceiling",
+            "coupled-timber-window"
+          ],
+          [
+            "roller-shutter-box",
+            "aluminium-window-1970s",
+            "old-metal-frame",
+            "thin-concrete-panel",
+            "uninsulated-service-door",
+            "old-shutter-box"
+          ],
+          [
+            "single-glazing",
+            "single-shop-pane",
+            "single-roof-pane",
+            "single-greenhouse-pane",
+            "single-clear-pane"
+          ]
+        ]
+      }
     },
     {
       "kind": "matching",
       "id": "heating-load-and-demand",
-      "title": { "en": "Heating Load and Heating Demand", "de": "Heizlast und Heizwärmebedarf" },
-      "icon": { "emoji": "🔥", "motion": "float" },
+      "title": {
+        "en": "Heating Load and Heating Demand",
+        "de": "Heizlast und Heizwärmebedarf"
+      },
+      "icon": {
+        "emoji": "🔥",
+        "motion": "float"
+      },
       "prompt": {
-        "en": "Assign each building its specific design heating load in W/m² (the heat flow needed on the coldest design day) and its annual heating demand in kWh/(m²·a) (the useful heat per year), both per m² of heated floor area.",
-        "de": "Ordne jedem Gebäude seine spezifische Heizlast in W/m² (den Wärmestrom am kältesten Auslegungstag) und seinen Jahres-Heizwärmebedarf in kWh/(m²·a) (die Nutzwärme pro Jahr) zu, beide je m² beheizter Fläche."
+        "en": "Assign each building its specific design heating load in W/m² (the heat flow needed on the coldest design day) and its annual heating demand in kWh/(m²·a) (the useful heat per year), both per m² of heated floor area. Allow about five minutes: compare every item, check units, and review your answer. New design examples use representative teaching estimates rather than universal limits.",
+        "de": "Ordne jedem Gebäude seine spezifische Heizlast in W/m² (den Wärmestrom am kältesten Auslegungstag) und seinen Jahres-Heizwärmebedarf in kWh/(m²·a) (die Nutzwärme pro Jahr) zu, beide je m² beheizter Fläche. Plane etwa fünf Minuten ein: Vergleiche alle Beispiele, prüfe die Einheiten und kontrolliere deine Antwort. Neue Auslegungsbeispiele verwenden typische Lehrannahmen statt allgemeingültiger Grenzwerte."
       },
       "dimensions": [
         {
           "id": "heating-load",
-          "icon": { "emoji": "🌡️", "motion": "pulse" },
-          "quantity": { "label": { "en": "Specific heating load", "de": "Spezifische Heizlast" }, "short": { "en": "Heating load", "de": "Heizlast" }, "unit": "W/m²", "scale": "logarithmic", "prefixed": false, "additive": false }
+          "icon": {
+            "emoji": "🌡️",
+            "motion": "pulse"
+          },
+          "quantity": {
+            "label": {
+              "en": "Specific heating load",
+              "de": "Spezifische Heizlast"
+            },
+            "short": {
+              "en": "Heating load",
+              "de": "Heizlast"
+            },
+            "unit": "W/m²",
+            "scale": "logarithmic",
+            "prefixed": false,
+            "additive": false
+          }
         },
         {
           "id": "heating-demand",
-          "icon": { "emoji": "📅", "motion": "flip" },
-          "quantity": { "label": { "en": "Annual heating demand", "de": "Jahres-Heizwärmebedarf" }, "short": { "en": "Heating demand", "de": "Heizwärmebedarf" }, "unit": "kWh/(m²·a)", "scale": "logarithmic", "prefixed": false, "additive": false }
+          "icon": {
+            "emoji": "📅",
+            "motion": "flip"
+          },
+          "quantity": {
+            "label": {
+              "en": "Annual heating demand",
+              "de": "Jahres-Heizwärmebedarf"
+            },
+            "short": {
+              "en": "Heating demand",
+              "de": "Heizwärmebedarf"
+            },
+            "unit": "kWh/(m²·a)",
+            "scale": "logarithmic",
+            "prefixed": false,
+            "additive": false
+          }
         }
       ],
       "items": [
         {
           "id": "passive-house",
-          "label": { "en": "New passive house", "de": "Neues Passivhaus" },
-          "icon": { "emoji": "🌱", "motion": "sway" },
-          "values": { "heating-load": 10, "heating-demand": 15 },
+          "label": {
+            "en": "New passive house",
+            "de": "Neues Passivhaus"
+          },
+          "icon": {
+            "emoji": "🌱",
+            "motion": "sway"
+          },
+          "values": {
+            "heating-load": 10,
+            "heating-demand": 15
+          },
           "explanation": {
-            "en": "At most 10\u00a0W/m² or 15\u00a0kWh/(m²·a): the certification criteria of the Passive House Institute, so little that the fresh supply air alone can carry the heat.",
-            "de": "Höchstens 10\u00a0W/m² bzw. 15\u00a0kWh/(m²·a): die Zertifizierungskriterien des Passivhaus Instituts, so wenig, dass die frische Zuluft allein die Wärme bringen kann."
+            "en": "At most 10 W/m² or 15 kWh/(m²·a): the certification criteria of the Passive House Institute, so little that the fresh supply air alone can carry the heat.",
+            "de": "Höchstens 10 W/m² bzw. 15 kWh/(m²·a): die Zertifizierungskriterien des Passivhaus Instituts, so wenig, dass die frische Zuluft allein die Wärme bringen kann."
           }
         },
         {
           "id": "gruenderzeit-retrofit",
-          "label": { "en": "Gründerzeit apartment building (1860–1918) retrofitted with passive-house components", "de": "Gründerzeit-Mehrfamilienhaus (1860–1918), mit Passivhaus-Komponenten saniert" },
-          "short": { "en": "Retrofitted Gründerzeit building", "de": "Sanierter Gründerzeitbau" },
-          "icon": { "emoji": "🛠️", "motion": "sway" },
-          "values": { "heating-load": 16, "heating-demand": 20 },
+          "label": {
+            "en": "Gründerzeit apartment building (1860–1918) retrofitted with passive-house components",
+            "de": "Gründerzeit-Mehrfamilienhaus (1860–1918), mit Passivhaus-Komponenten saniert"
+          },
+          "short": {
+            "en": "Retrofitted Gründerzeit building",
+            "de": "Sanierter Gründerzeitbau"
+          },
+          "icon": {
+            "emoji": "🛠️",
+            "motion": "sway"
+          },
+          "values": {
+            "heating-load": 16,
+            "heating-demand": 20
+          },
           "explanation": {
-            "en": "About 16\u00a0W/m² and 20\u00a0kWh/(m²·a): IWU (Institute for Housing and Environment) modernisation package 2 for type MFH_B (0.39\u00a0W/(m²·K) transmission per m² plus heat-recovery ventilation). A compact old building can reach new-build level. Source: IWU German residential building typology 2015.",
-            "de": "Rund 16\u00a0W/m² und 20\u00a0kWh/(m²·a): IWU-Modernisierungspaket 2 für den Typ MFH_B (0,39\u00a0W/(m²·K) Transmission je m² plus Lüftung mit Wärmerückgewinnung). Ein kompakter Altbau erreicht Neubauniveau. Quelle: IWU Deutsche Wohngebäudetypologie 2015."
+            "en": "About 16 W/m² and 20 kWh/(m²·a): IWU (Institute for Housing and Environment) modernisation package 2 for type MFH_B (0.39 W/(m²·K) transmission per m² plus heat-recovery ventilation). A compact old building can reach new-build level. Source: IWU German residential building typology 2015.",
+            "de": "Rund 16 W/m² und 20 kWh/(m²·a): IWU-Modernisierungspaket 2 für den Typ MFH_B (0,39 W/(m²·K) Transmission je m² plus Lüftung mit Wärmerückgewinnung). Ein kompakter Altbau erreicht Neubauniveau. Quelle: IWU Deutsche Wohngebäudetypologie 2015."
           }
         },
         {
           "id": "kfw-40",
-          "label": { "en": "New single-family house, KfW Efficiency House 40", "de": "Neues Einfamilienhaus, KfW-Effizienzhaus 40" },
-          "short": { "en": "KfW Efficiency House 40", "de": "KfW-Effizienzhaus 40" },
-          "icon": { "emoji": "🏡", "motion": "float" },
-          "values": { "heating-load": 20, "heating-demand": 26 },
+          "label": {
+            "en": "New single-family house, KfW Efficiency House 40",
+            "de": "Neues Einfamilienhaus, KfW-Effizienzhaus 40"
+          },
+          "short": {
+            "en": "KfW Efficiency House 40",
+            "de": "KfW-Effizienzhaus 40"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "float"
+          },
+          "values": {
+            "heating-load": 20,
+            "heating-demand": 26
+          },
           "explanation": {
-            "en": "About 20\u00a0W/m² and 26\u00a0kWh/(m²·a) for this funding standard of KfW (German state development bank): envelope loss H′T at most 55% of the GEG reference building plus heat-recovery ventilation; IWU calculates 21.7\u00a0kWh/(m²·a) per usable floor area A_N, about 26 per m² of living area (German residential building typology 2015, Table 26).",
-            "de": "Rund 20\u00a0W/m² und 26\u00a0kWh/(m²·a): Hüllflächenverlust H′T höchstens 55\u00a0% des GEG-Referenzgebäudes plus Lüftung mit Wärmerückgewinnung; das IWU berechnet 21,7\u00a0kWh/(m²·a) je Gebäudenutzfläche A_N, rund 26 je m² Wohnfläche (Deutsche Wohngebäudetypologie 2015, Tabelle 26)."
+            "en": "About 20 W/m² and 26 kWh/(m²·a) for this funding standard of KfW (German state development bank): envelope loss H′T at most 55% of the GEG reference building plus heat-recovery ventilation; IWU calculates 21.7 kWh/(m²·a) per usable floor area A_N, about 26 per m² of living area (German residential building typology 2015, Table 26).",
+            "de": "Rund 20 W/m² und 26 kWh/(m²·a): Hüllflächenverlust H′T höchstens 55 % des GEG-Referenzgebäudes plus Lüftung mit Wärmerückgewinnung; das IWU berechnet 21,7 kWh/(m²·a) je Gebäudenutzfläche A_N, rund 26 je m² Wohnfläche (Deutsche Wohngebäudetypologie 2015, Tabelle 26)."
           }
         },
         {
           "id": "kfw-55",
-          "label": { "en": "New single-family house, KfW Efficiency House 55", "de": "Neues Einfamilienhaus, KfW-Effizienzhaus 55" },
-          "short": { "en": "KfW Efficiency House 55", "de": "KfW-Effizienzhaus 55" },
-          "icon": { "emoji": "🏠", "motion": "pulse" },
-          "values": { "heating-load": 25, "heating-demand": 35 },
+          "label": {
+            "en": "New single-family house, KfW Efficiency House 55",
+            "de": "Neues Einfamilienhaus, KfW-Effizienzhaus 55"
+          },
+          "short": {
+            "en": "KfW Efficiency House 55",
+            "de": "KfW-Effizienzhaus 55"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "pulse"
+          },
+          "values": {
+            "heating-load": 25,
+            "heating-demand": 35
+          },
           "explanation": {
-            "en": "About 25\u00a0W/m² and 35\u00a0kWh/(m²·a): envelope loss H′T at most 70% of the GEG reference building; IWU calculates 29.9\u00a0kWh/(m²·a) per usable floor area A_N, about 35 per m² of living area (German residential building typology 2015, Table 26).",
-            "de": "Rund 25\u00a0W/m² und 35\u00a0kWh/(m²·a): Hüllflächenverlust H′T höchstens 70\u00a0% des GEG-Referenzgebäudes; das IWU berechnet 29,9\u00a0kWh/(m²·a) je Gebäudenutzfläche A_N, rund 35 je m² Wohnfläche (Deutsche Wohngebäudetypologie 2015, Tabelle 26)."
+            "en": "About 25 W/m² and 35 kWh/(m²·a): envelope loss H′T at most 70% of the GEG reference building; IWU calculates 29.9 kWh/(m²·a) per usable floor area A_N, about 35 per m² of living area (German residential building typology 2015, Table 26).",
+            "de": "Rund 25 W/m² und 35 kWh/(m²·a): Hüllflächenverlust H′T höchstens 70 % des GEG-Referenzgebäudes; das IWU berechnet 29,9 kWh/(m²·a) je Gebäudenutzfläche A_N, rund 35 je m² Wohnfläche (Deutsche Wohngebäudetypologie 2015, Tabelle 26)."
           }
         },
         {
           "id": "geg-2024",
-          "label": { "en": "New single-family house to GEG 2024 with the minimum envelope and a heat pump", "de": "Neues Einfamilienhaus nach GEG 2024 mit Mindest-Gebäudehülle und Wärmepumpe" },
-          "short": { "en": "New house to GEG 2024", "de": "Neubau nach GEG 2024" },
-          "icon": { "emoji": "🏗️", "motion": "sway" },
-          "values": { "heating-load": 40, "heating-demand": 50 },
+          "label": {
+            "en": "New single-family house to GEG 2024 with the minimum envelope and a heat pump",
+            "de": "Neues Einfamilienhaus nach GEG 2024 mit Mindest-Gebäudehülle und Wärmepumpe"
+          },
+          "short": {
+            "en": "New house to GEG 2024",
+            "de": "Neubau nach GEG 2024"
+          },
+          "icon": {
+            "emoji": "🏗️",
+            "motion": "sway"
+          },
+          "values": {
+            "heating-load": 40,
+            "heating-demand": 50
+          },
           "explanation": {
-            "en": "About 40\u00a0W/m² (design practice for new builds since 2016: 30–50\u00a0W/m²) and 50\u00a0kWh/(m²·a): § 16 GEG still allows an envelope loss H′T up to that of the reference building (Annex 1: wall 0.28, window 1.3\u00a0W/(m²·K)); the 55% primary-energy limit of § 15 is met by the heat pump, not by insulation. IWU calculates 43.7\u00a0kWh/(m²·a) per usable floor area A_N at this envelope level (Table 26), about 50 per m² of living area.",
-            "de": "Rund 40\u00a0W/m² (Auslegungspraxis für Neubauten seit 2016: 30–50\u00a0W/m²) und 50\u00a0kWh/(m²·a): § 16 GEG erlaubt weiterhin einen Hüllflächenverlust H′T bis zu dem des Referenzgebäudes (Anlage 1: Wand 0,28, Fenster 1,3\u00a0W/(m²·K)); die 55-%-Primärenergiegrenze des § 15 erfüllt die Wärmepumpe, nicht die Dämmung. Das IWU berechnet auf diesem Hüllenniveau 43,7\u00a0kWh/(m²·a) je Gebäudenutzfläche A_N (Tabelle 26), rund 50 je m² Wohnfläche."
+            "en": "About 40 W/m² (design practice for new builds since 2016: 30–50 W/m²) and 50 kWh/(m²·a): § 16 GEG still allows an envelope loss H′T up to that of the reference building (Annex 1: wall 0.28, window 1.3 W/(m²·K)); the 55% primary-energy limit of § 15 is met by the heat pump, not by insulation. IWU calculates 43.7 kWh/(m²·a) per usable floor area A_N at this envelope level (Table 26), about 50 per m² of living area.",
+            "de": "Rund 40 W/m² (Auslegungspraxis für Neubauten seit 2016: 30–50 W/m²) und 50 kWh/(m²·a): § 16 GEG erlaubt weiterhin einen Hüllflächenverlust H′T bis zu dem des Referenzgebäudes (Anlage 1: Wand 0,28, Fenster 1,3 W/(m²·K)); die 55-%-Primärenergiegrenze des § 15 erfüllt die Wärmepumpe, nicht die Dämmung. Das IWU berechnet auf diesem Hüllenniveau 43,7 kWh/(m²·a) je Gebäudenutzfläche A_N (Tabelle 26), rund 50 je m² Wohnfläche."
           }
         },
         {
           "id": "sfh-2000s",
-          "label": { "en": "Single-family house 2002–2009 (EnEV 2002)", "de": "Einfamilienhaus 2002–2009 (EnEV 2002)" },
-          "short": { "en": "House to EnEV 2002", "de": "Haus nach EnEV 2002" },
-          "icon": { "emoji": "🏘️", "motion": "bounce" },
-          "values": { "heating-load": 50, "heating-demand": 89 },
+          "label": {
+            "en": "Single-family house 2002–2009 (EnEV 2002)",
+            "de": "Einfamilienhaus 2002–2009 (EnEV 2002)"
+          },
+          "short": {
+            "en": "House to EnEV 2002",
+            "de": "Haus nach EnEV 2002"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "bounce"
+          },
+          "values": {
+            "heating-load": 50,
+            "heating-demand": 89
+          },
           "explanation": {
-            "en": "About 50\u00a0W/m² and 89\u00a0kWh/(m²·a) under the Energy Saving Ordinance (EnEV): IWU type EFH_J with 1.14\u00a0W/(m²·K) transmission per m² of living area; load\u00a0=\u00a0(transmission + ventilation at 0.5\u00a01/h, the airtight envelope required since EnEV 2002)\u00a0×\u00a032\u00a0K (20\u00a0°C inside, −12\u00a0°C outside).",
-            "de": "Rund 50\u00a0W/m² und 89\u00a0kWh/(m²·a): IWU-Typ EFH_J mit 1,14\u00a0W/(m²·K) Transmission je m² Wohnfläche; Last\u00a0=\u00a0(Transmission + Lüftung mit 0,5\u00a01/h, der seit der EnEV 2002 geforderten luftdichten Hülle)\u00a0×\u00a032\u00a0K (20\u00a0°C innen, −12\u00a0°C außen)."
+            "en": "About 50 W/m² and 89 kWh/(m²·a) under the Energy Saving Ordinance (EnEV): IWU type EFH_J with 1.14 W/(m²·K) transmission per m² of living area; load = (transmission + ventilation at 0.5 1/h, the airtight envelope required since EnEV 2002) × 32 K (20 °C inside, −12 °C outside).",
+            "de": "Rund 50 W/m² und 89 kWh/(m²·a): IWU-Typ EFH_J mit 1,14 W/(m²·K) Transmission je m² Wohnfläche; Last = (Transmission + Lüftung mit 0,5 1/h, der seit der EnEV 2002 geforderten luftdichten Hülle) × 32 K (20 °C innen, −12 °C außen)."
           }
         },
         {
           "id": "plattenbau",
-          "label": { "en": "GDR large-panel apartment block 1969–1978, unrenovated", "de": "DDR-Plattenbau 1969–1978, unsaniert" },
-          "short": { "en": "Unrenovated GDR panel block", "de": "Unsanierter DDR-Plattenbau" },
-          "icon": { "emoji": "🏢", "motion": "bounce" },
-          "values": { "heating-load": 60, "heating-demand": 122 },
+          "label": {
+            "en": "GDR large-panel apartment block 1969–1978, unrenovated",
+            "de": "DDR-Plattenbau 1969–1978, unsaniert"
+          },
+          "short": {
+            "en": "Unrenovated GDR panel block",
+            "de": "Unsanierter DDR-Plattenbau"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "bounce"
+          },
+          "values": {
+            "heating-load": 60,
+            "heating-demand": 122
+          },
           "familiar": true,
           "explanation": {
-            "en": "About 60\u00a0W/m² and 122\u00a0kWh/(m²·a): thin concrete sandwich panels, but a very compact block with little envelope per m² of floor. Source: IWU German residential building typology 2015, type NBL_GMH_F.",
-            "de": "Rund 60\u00a0W/m² und 122\u00a0kWh/(m²·a): dünne Beton-Sandwichplatten, aber ein sehr kompakter Block mit wenig Hüllfläche je m² Wohnfläche. Quelle: IWU Deutsche Wohngebäudetypologie 2015, Typ NBL_GMH_F."
+            "en": "About 60 W/m² and 122 kWh/(m²·a): thin concrete sandwich panels, but a very compact block with little envelope per m² of floor. Source: IWU German residential building typology 2015, type NBL_GMH_F.",
+            "de": "Rund 60 W/m² und 122 kWh/(m²·a): dünne Beton-Sandwichplatten, aber ein sehr kompakter Block mit wenig Hüllfläche je m² Wohnfläche. Quelle: IWU Deutsche Wohngebäudetypologie 2015, Typ NBL_GMH_F."
           }
         },
         {
           "id": "sfh-1990s",
-          "label": { "en": "Single-family house 1995–2001 (WSchVO 1995)", "de": "Einfamilienhaus 1995–2001 (WSchVO 1995)" },
-          "short": { "en": "House to WSchVO 1995", "de": "Haus nach WSchVO 1995" },
-          "icon": { "emoji": "🏠", "motion": "sway" },
-          "values": { "heating-load": 73, "heating-demand": 135 },
+          "label": {
+            "en": "Single-family house 1995–2001 (WSchVO 1995)",
+            "de": "Einfamilienhaus 1995–2001 (WSchVO 1995)"
+          },
+          "short": {
+            "en": "House to WSchVO 1995",
+            "de": "Haus nach WSchVO 1995"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "sway"
+          },
+          "values": {
+            "heating-load": 73,
+            "heating-demand": 135
+          },
           "explanation": {
-            "en": "About 73\u00a0W/m² and 135\u00a0kWh/(m²·a): IWU type EFH_I with 1.78\u00a0W/(m²·K) transmission per m² of living area; a detached house has much envelope per m² of floor.",
-            "de": "Rund 73\u00a0W/m² und 135\u00a0kWh/(m²·a): IWU-Typ EFH_I mit 1,78\u00a0W/(m²·K) Transmission je m² Wohnfläche; ein freistehendes Haus hat viel Hülle je m² Wohnfläche."
+            "en": "About 73 W/m² and 135 kWh/(m²·a): IWU type EFH_I with 1.78 W/(m²·K) transmission per m² of living area; a detached house has much envelope per m² of floor.",
+            "de": "Rund 73 W/m² und 135 kWh/(m²·a): IWU-Typ EFH_I mit 1,78 W/(m²·K) Transmission je m² Wohnfläche; ein freistehendes Haus hat viel Hülle je m² Wohnfläche."
           }
         },
         {
           "id": "gruenderzeit",
-          "label": { "en": "Gründerzeit apartment building 1860–1918, unrenovated", "de": "Gründerzeit-Mehrfamilienhaus 1860–1918, unsaniert" },
-          "short": { "en": "Unrenovated Gründerzeit building", "de": "Unsanierter Gründerzeitbau" },
-          "icon": { "emoji": "🏛️", "motion": "pulse" },
-          "values": { "heating-load": 95, "heating-demand": 197 },
+          "label": {
+            "en": "Gründerzeit apartment building 1860–1918, unrenovated",
+            "de": "Gründerzeit-Mehrfamilienhaus 1860–1918, unsaniert"
+          },
+          "short": {
+            "en": "Unrenovated Gründerzeit building",
+            "de": "Unsanierter Gründerzeitbau"
+          },
+          "icon": {
+            "emoji": "🏛️",
+            "motion": "pulse"
+          },
+          "values": {
+            "heating-load": 95,
+            "heating-demand": 197
+          },
           "familiar": true,
           "explanation": {
-            "en": "About 95\u00a0W/m² and 197\u00a0kWh/(m²·a): thick brick walls and shared party walls keep it well below a detached house of similar age. Source: IWU German residential building typology 2015, type MFH_B.",
-            "de": "Rund 95\u00a0W/m² und 197\u00a0kWh/(m²·a): dicke Ziegelwände und gemeinsame Brandwände halten es deutlich unter einem freistehenden Haus ähnlichen Alters. Quelle: IWU Deutsche Wohngebäudetypologie 2015, Typ MFH_B."
+            "en": "About 95 W/m² and 197 kWh/(m²·a): thick brick walls and shared party walls keep it well below a detached house of similar age. Source: IWU German residential building typology 2015, type MFH_B.",
+            "de": "Rund 95 W/m² und 197 kWh/(m²·a): dicke Ziegelwände und gemeinsame Brandwände halten es deutlich unter einem freistehenden Haus ähnlichen Alters. Quelle: IWU Deutsche Wohngebäudetypologie 2015, Typ MFH_B."
           }
         },
         {
           "id": "sfh-1970s",
-          "label": { "en": "Single-family house 1969–1978, unrenovated", "de": "Einfamilienhaus 1969–1978, unsaniert" },
-          "short": { "en": "Unrenovated 1970s house", "de": "Unsaniertes Haus der 1970er-Jahre" },
-          "icon": { "emoji": "🏚️", "motion": "sway" },
-          "values": { "heating-load": 115, "heating-demand": 224 },
+          "label": {
+            "en": "Single-family house 1969–1978, unrenovated",
+            "de": "Einfamilienhaus 1969–1978, unsaniert"
+          },
+          "short": {
+            "en": "Unrenovated 1970s house",
+            "de": "Unsaniertes Haus der 1970er-Jahre"
+          },
+          "icon": {
+            "emoji": "🏚️",
+            "motion": "sway"
+          },
+          "values": {
+            "heating-load": 115,
+            "heating-demand": 224
+          },
           "explanation": {
-            "en": "About 115\u00a0W/m² and 224\u00a0kWh/(m²·a): built just before the first Thermal Insulation Ordinance of 1977. Source: IWU German residential building typology 2015, type EFH_F.",
-            "de": "Rund 115\u00a0W/m² und 224\u00a0kWh/(m²·a): gebaut kurz vor der ersten Wärmeschutzverordnung von 1977. Quelle: IWU Deutsche Wohngebäudetypologie 2015, Typ EFH_F."
+            "en": "About 115 W/m² and 224 kWh/(m²·a): built just before the first Thermal Insulation Ordinance of 1977. Source: IWU German residential building typology 2015, type EFH_F.",
+            "de": "Rund 115 W/m² und 224 kWh/(m²·a): gebaut kurz vor der ersten Wärmeschutzverordnung von 1977. Quelle: IWU Deutsche Wohngebäudetypologie 2015, Typ EFH_F."
           }
         },
         {
           "id": "sfh-1960s",
-          "label": { "en": "Single-family house 1958–1968, unrenovated", "de": "Einfamilienhaus 1958–1968, unsaniert" },
-          "short": { "en": "Unrenovated 1960s house", "de": "Unsaniertes Haus der 1960er-Jahre" },
-          "icon": { "emoji": "🏚️", "motion": "bounce" },
-          "values": { "heating-load": 160, "heating-demand": 303 },
+          "label": {
+            "en": "Single-family house 1958–1968, unrenovated",
+            "de": "Einfamilienhaus 1958–1968, unsaniert"
+          },
+          "short": {
+            "en": "Unrenovated 1960s house",
+            "de": "Unsaniertes Haus der 1960er-Jahre"
+          },
+          "icon": {
+            "emoji": "🏚️",
+            "motion": "bounce"
+          },
+          "values": {
+            "heating-load": 160,
+            "heating-demand": 303
+          },
           "familiar": true,
           "explanation": {
-            "en": "About 160\u00a0W/m² and 303\u00a0kWh/(m²·a): 4.5\u00a0W/(m²·K) transmission per m² of living area (IWU type EFH_E). Measured consumption is typically about 40% lower than this calculated demand (prebound effect).",
-            "de": "Rund 160\u00a0W/m² und 303\u00a0kWh/(m²·a): 4,5\u00a0W/(m²·K) Transmission je m² Wohnfläche (IWU-Typ EFH_E). Der gemessene Verbrauch liegt meist rund 40\u00a0% unter diesem berechneten Bedarf (Prebound-Effekt)."
+            "en": "About 160 W/m² and 303 kWh/(m²·a): 4.5 W/(m²·K) transmission per m² of living area (IWU type EFH_E). Measured consumption is typically about 40% lower than this calculated demand (prebound effect).",
+            "de": "Rund 160 W/m² und 303 kWh/(m²·a): 4,5 W/(m²·K) Transmission je m² Wohnfläche (IWU-Typ EFH_E). Der gemessene Verbrauch liegt meist rund 40 % unter diesem berechneten Bedarf (Prebound-Effekt)."
+          }
+        },
+        {
+          "id": "passive-terrace",
+          "label": {
+            "en": "Compact passive-house terrace",
+            "de": "Kompaktes Passivhaus-Reihenhaus"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "bounce"
+          },
+          "values": {
+            "heating-load": 9,
+            "heating-demand": 14
+          },
+          "explanation": {
+            "en": "9 W/m²; 14 kWh/(m²·a). Excellent insulation limits both peak heat loss and annual useful heat.",
+            "de": "9 W/m²; 14 kWh/(m²·a). Sehr gute Dämmung begrenzt Spitzen-Wärmeverlust und jährliche Nutzwärme."
+          },
+          "short": {
+            "en": "Compact passive-house terrace",
+            "de": "Kompaktes Passivhaus-Reihenhaus"
+          }
+        },
+        {
+          "id": "passive-apartment",
+          "label": {
+            "en": "Passive-house apartment in a compact block",
+            "de": "Passivhauswohnung im kompakten Block"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "spin"
+          },
+          "values": {
+            "heating-load": 8,
+            "heating-demand": 12
+          },
+          "explanation": {
+            "en": "8 W/m²; 12 kWh/(m²·a). Excellent insulation limits both peak heat loss and annual useful heat.",
+            "de": "8 W/m²; 12 kWh/(m²·a). Sehr gute Dämmung begrenzt Spitzen-Wärmeverlust und jährliche Nutzwärme."
+          },
+          "short": {
+            "en": "Compact passive-house apartment",
+            "de": "Kompakte Passivhauswohnung"
+          }
+        },
+        {
+          "id": "passive-school",
+          "label": {
+            "en": "School with a passive-house envelope",
+            "de": "Schule mit Passivhaushülle"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "float"
+          },
+          "values": {
+            "heating-load": 12,
+            "heating-demand": 16
+          },
+          "explanation": {
+            "en": "12 W/m²; 16 kWh/(m²·a). Excellent insulation limits both peak heat loss and annual useful heat.",
+            "de": "12 W/m²; 16 kWh/(m²·a). Sehr gute Dämmung begrenzt Spitzen-Wärmeverlust und jährliche Nutzwärme."
+          },
+          "short": {
+            "en": "School + a passive-house envelope",
+            "de": "Schule + Passivhaushülle"
+          }
+        },
+        {
+          "id": "passive-timber",
+          "label": {
+            "en": "Airtight timber passive house",
+            "de": "Luftdichtes Holz-Passivhaus"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "flip"
+          },
+          "values": {
+            "heating-load": 10,
+            "heating-demand": 15
+          },
+          "explanation": {
+            "en": "10 W/m²; 15 kWh/(m²·a). Excellent insulation limits both peak heat loss and annual useful heat.",
+            "de": "10 W/m²; 15 kWh/(m²·a). Sehr gute Dämmung begrenzt Spitzen-Wärmeverlust und jährliche Nutzwärme."
+          },
+          "short": {
+            "en": "Airtight timber passive house",
+            "de": "Luftdichtes Holz-Passivhaus"
+          }
+        },
+        {
+          "id": "retrofit-courtyard",
+          "label": {
+            "en": "Deeply retrofitted courtyard apartment",
+            "de": "Umfassend sanierte Hofwohnung"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "bounce"
+          },
+          "values": {
+            "heating-load": 15,
+            "heating-demand": 22
+          },
+          "explanation": {
+            "en": "15 W/m²; 22 kWh/(m²·a). A deep retrofit reduces transmission loss while retaining the existing structure.",
+            "de": "15 W/m²; 22 kWh/(m²·a). Eine umfassende Sanierung verringert Transmissionsverluste bei erhaltener Struktur."
+          },
+          "short": {
+            "en": "Retrofitted courtyard apartment",
+            "de": "Sanierte Hofwohnung"
+          }
+        },
+        {
+          "id": "retrofit-terrace",
+          "label": {
+            "en": "Terrace house with passive-house retrofit",
+            "de": "Reihenhaus mit Passivhaussanierung"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "pulse"
+          },
+          "values": {
+            "heating-load": 18,
+            "heating-demand": 25
+          },
+          "explanation": {
+            "en": "18 W/m²; 25 kWh/(m²·a). A deep retrofit reduces transmission loss while retaining the existing structure.",
+            "de": "18 W/m²; 25 kWh/(m²·a). Eine umfassende Sanierung verringert Transmissionsverluste bei erhaltener Struktur."
+          },
+          "short": {
+            "en": "Terrace house + passive-house retrofit",
+            "de": "Reihenhaus + Passivhaussanierung"
+          }
+        },
+        {
+          "id": "retrofit-school",
+          "label": {
+            "en": "School with insulated envelope and heat recovery",
+            "de": "Schule mit gedämmter Hülle und Wärmerückgewinnung"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "spin"
+          },
+          "values": {
+            "heating-load": 17,
+            "heating-demand": 24
+          },
+          "explanation": {
+            "en": "17 W/m²; 24 kWh/(m²·a). A deep retrofit reduces transmission loss while retaining the existing structure.",
+            "de": "17 W/m²; 24 kWh/(m²·a). Eine umfassende Sanierung verringert Transmissionsverluste bei erhaltener Struktur."
+          },
+          "short": {
+            "en": "Insulated school with heat recovery",
+            "de": "Gedämmte Schule mit Wärmerückgewinnung"
+          }
+        },
+        {
+          "id": "retrofit-loft",
+          "label": {
+            "en": "Loft with deep envelope retrofit",
+            "de": "Loft mit umfassender Hüllsanierung"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "sway"
+          },
+          "values": {
+            "heating-load": 19,
+            "heating-demand": 28
+          },
+          "explanation": {
+            "en": "19 W/m²; 28 kWh/(m²·a). A deep retrofit reduces transmission loss while retaining the existing structure.",
+            "de": "19 W/m²; 28 kWh/(m²·a). Eine umfassende Sanierung verringert Transmissionsverluste bei erhaltener Struktur."
+          },
+          "short": {
+            "en": "Loft + deep envelope retrofit",
+            "de": "Loft + umfassender Hüllsanierung"
+          }
+        },
+        {
+          "id": "efficient-timber",
+          "label": {
+            "en": "Very efficient timber detached house",
+            "de": "Sehr effizientes freistehendes Holzhaus"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "flip"
+          },
+          "values": {
+            "heating-load": 19,
+            "heating-demand": 25
+          },
+          "explanation": {
+            "en": "19 W/m²; 25 kWh/(m²·a). A compact efficient envelope needs little useful heat.",
+            "de": "19 W/m²; 25 kWh/(m²·a). Eine kompakte effiziente Hülle benötigt wenig Nutzwärme."
+          },
+          "short": {
+            "en": "Efficient timber detached house",
+            "de": "Effiziente freistehendes Holzhaus"
+          }
+        },
+        {
+          "id": "efficient-block",
+          "label": {
+            "en": "Very efficient compact apartment block",
+            "de": "Sehr effizienter kompakter Wohnblock"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "pulse"
+          },
+          "values": {
+            "heating-load": 18,
+            "heating-demand": 24
+          },
+          "explanation": {
+            "en": "18 W/m²; 24 kWh/(m²·a). A compact efficient envelope needs little useful heat.",
+            "de": "18 W/m²; 24 kWh/(m²·a). Eine kompakte effiziente Hülle benötigt wenig Nutzwärme."
+          },
+          "short": {
+            "en": "Efficient compact apartment block",
+            "de": "Effiziente kompakter Wohnblock"
+          }
+        },
+        {
+          "id": "efficient-office",
+          "label": {
+            "en": "Very efficient office with heat recovery",
+            "de": "Sehr effizientes Büro mit Wärmerückgewinnung"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "spin"
+          },
+          "values": {
+            "heating-load": 22,
+            "heating-demand": 28
+          },
+          "explanation": {
+            "en": "22 W/m²; 28 kWh/(m²·a). A compact efficient envelope needs little useful heat.",
+            "de": "22 W/m²; 28 kWh/(m²·a). Eine kompakte effiziente Hülle benötigt wenig Nutzwärme."
+          },
+          "short": {
+            "en": "Efficient heat-recovery office",
+            "de": "Effizientes Büro mit Wärmerückgewinnung"
+          }
+        },
+        {
+          "id": "efficient-terrace",
+          "label": {
+            "en": "Very efficient end-of-terrace house",
+            "de": "Sehr effizientes Reihenendhaus"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "sway"
+          },
+          "values": {
+            "heating-load": 23,
+            "heating-demand": 30
+          },
+          "explanation": {
+            "en": "23 W/m²; 30 kWh/(m²·a). A compact efficient envelope needs little useful heat.",
+            "de": "23 W/m²; 30 kWh/(m²·a). Eine kompakte effiziente Hülle benötigt wenig Nutzwärme."
+          },
+          "short": {
+            "en": "Efficient end-of-terrace house",
+            "de": "Effiziente Reihenendhaus"
+          }
+        },
+        {
+          "id": "low-energy-duplex",
+          "label": {
+            "en": "Well-insulated duplex with heat recovery",
+            "de": "Gut gedämmtes Doppelhaus mit Wärmerückgewinnung"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "float"
+          },
+          "values": {
+            "heating-load": 26,
+            "heating-demand": 37
+          },
+          "explanation": {
+            "en": "26 W/m²; 37 kWh/(m²·a). Good insulation lowers demand; useful heat excludes boiler and heat-pump efficiency.",
+            "de": "26 W/m²; 37 kWh/(m²·a). Gute Dämmung senkt den Bedarf; Nutzwärme enthält weder Kessel- noch Wärmepumpenwirkungsgrad."
+          },
+          "short": {
+            "en": "Insulated heat-recovery duplex",
+            "de": "Gedämmtes Doppelhaus mit WRG"
+          }
+        },
+        {
+          "id": "low-energy-school",
+          "label": {
+            "en": "Well-insulated school with controlled ventilation",
+            "de": "Gut gedämmte Schule mit geregelter Lüftung"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "flip"
+          },
+          "values": {
+            "heating-load": 28,
+            "heating-demand": 40
+          },
+          "explanation": {
+            "en": "28 W/m²; 40 kWh/(m²·a). Good insulation lowers demand; useful heat excludes boiler and heat-pump efficiency.",
+            "de": "28 W/m²; 40 kWh/(m²·a). Gute Dämmung senkt den Bedarf; Nutzwärme enthält weder Kessel- noch Wärmepumpenwirkungsgrad."
+          },
+          "short": {
+            "en": "Insulated mechanically ventilated school",
+            "de": "Gedämmte Schule mit geregelter Lüftung"
+          }
+        },
+        {
+          "id": "low-energy-flat",
+          "label": {
+            "en": "Well-insulated top-floor flat",
+            "de": "Gut gedämmte Dachgeschosswohnung"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "pulse"
+          },
+          "values": {
+            "heating-load": 29,
+            "heating-demand": 42
+          },
+          "explanation": {
+            "en": "29 W/m²; 42 kWh/(m²·a). Good insulation lowers demand; useful heat excludes boiler and heat-pump efficiency.",
+            "de": "29 W/m²; 42 kWh/(m²·a). Gute Dämmung senkt den Bedarf; Nutzwärme enthält weder Kessel- noch Wärmepumpenwirkungsgrad."
+          },
+          "short": {
+            "en": "Well-insulated top-floor flat",
+            "de": "Gut gedämmte Dachgeschosswohnung"
+          }
+        },
+        {
+          "id": "low-energy-office",
+          "label": {
+            "en": "Well-insulated compact office",
+            "de": "Gut gedämmtes kompaktes Büro"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "spin"
+          },
+          "values": {
+            "heating-load": 24,
+            "heating-demand": 34
+          },
+          "explanation": {
+            "en": "24 W/m²; 34 kWh/(m²·a). Good insulation lowers demand; useful heat excludes boiler and heat-pump efficiency.",
+            "de": "24 W/m²; 34 kWh/(m²·a). Gute Dämmung senkt den Bedarf; Nutzwärme enthält weder Kessel- noch Wärmepumpenwirkungsgrad."
+          },
+          "short": {
+            "en": "Well-insulated compact office",
+            "de": "Gut gedämmtes kompaktes Büro"
+          }
+        },
+        {
+          "id": "modern-terrace",
+          "label": {
+            "en": "Modern insulated terrace house",
+            "de": "Modern gedämmtes Reihenhaus"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "sway"
+          },
+          "values": {
+            "heating-load": 35,
+            "heating-demand": 48
+          },
+          "explanation": {
+            "en": "35 W/m²; 48 kWh/(m²·a). A modern envelope has moderate design loss and a shorter heating season.",
+            "de": "35 W/m²; 48 kWh/(m²·a). Eine moderne Hülle hat mäßige Auslegungsverluste und eine kürzere Heizperiode."
+          },
+          "short": {
+            "en": "Modern insulated terrace house",
+            "de": "Modern gedämmtes Reihenhaus"
+          }
+        },
+        {
+          "id": "modern-bungalow",
+          "label": {
+            "en": "Modern insulated bungalow",
+            "de": "Modern gedämmter Bungalow"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "float"
+          },
+          "values": {
+            "heating-load": 45,
+            "heating-demand": 60
+          },
+          "explanation": {
+            "en": "45 W/m²; 60 kWh/(m²·a). A modern envelope has moderate design loss and a shorter heating season.",
+            "de": "45 W/m²; 60 kWh/(m²·a). Eine moderne Hülle hat mäßige Auslegungsverluste und eine kürzere Heizperiode."
+          },
+          "short": {
+            "en": "Modern insulated bungalow",
+            "de": "Modern gedämmter Bungalow"
+          }
+        },
+        {
+          "id": "modern-school",
+          "label": {
+            "en": "Modern school with insulated envelope",
+            "de": "Moderne Schule mit gedämmter Hülle"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "flip"
+          },
+          "values": {
+            "heating-load": 38,
+            "heating-demand": 52
+          },
+          "explanation": {
+            "en": "38 W/m²; 52 kWh/(m²·a). A modern envelope has moderate design loss and a shorter heating season.",
+            "de": "38 W/m²; 52 kWh/(m²·a). Eine moderne Hülle hat mäßige Auslegungsverluste und eine kürzere Heizperiode."
+          },
+          "short": {
+            "en": "Modern school + insulated envelope",
+            "de": "Moderne Schule + gedämmter Hülle"
+          }
+        },
+        {
+          "id": "modern-duplex",
+          "label": {
+            "en": "Modern insulated duplex",
+            "de": "Modern gedämmtes Doppelhaus"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "bounce"
+          },
+          "values": {
+            "heating-load": 40,
+            "heating-demand": 55
+          },
+          "explanation": {
+            "en": "40 W/m²; 55 kWh/(m²·a). A modern envelope has moderate design loss and a shorter heating season.",
+            "de": "40 W/m²; 55 kWh/(m²·a). Eine moderne Hülle hat mäßige Auslegungsverluste und eine kürzere Heizperiode."
+          },
+          "short": {
+            "en": "Modern insulated duplex",
+            "de": "Modern gedämmtes Doppelhaus"
+          }
+        },
+        {
+          "id": "partial-retrofit-flat",
+          "label": {
+            "en": "Older flat with new windows but original walls",
+            "de": "Altbauwohnung mit neuen Fenstern und alten Wänden"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "pulse"
+          },
+          "values": {
+            "heating-load": 55,
+            "heating-demand": 100
+          },
+          "explanation": {
+            "en": "55 W/m²; 100 kWh/(m²·a). Partly improved older buildings retain significant envelope and ventilation losses.",
+            "de": "55 W/m²; 100 kWh/(m²·a). Teilweise verbesserte Altbauten behalten erhebliche Hüll- und Lüftungsverluste."
+          },
+          "short": {
+            "en": "Older flat with replacement windows",
+            "de": "Altbauwohnung mit neuen Fenstern"
+          }
+        },
+        {
+          "id": "partial-retrofit-roof",
+          "label": {
+            "en": "1980s house with upgraded roof insulation",
+            "de": "Haus der 1980er mit verbesserter Dachdämmung"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "spin"
+          },
+          "values": {
+            "heating-load": 58,
+            "heating-demand": 110
+          },
+          "explanation": {
+            "en": "58 W/m²; 110 kWh/(m²·a). Partly improved older buildings retain significant envelope and ventilation losses.",
+            "de": "58 W/m²; 110 kWh/(m²·a). Teilweise verbesserte Altbauten behalten erhebliche Hüll- und Lüftungsverluste."
+          },
+          "short": {
+            "en": "Roof-retrofitted eighties house",
+            "de": "Achtzigerjahre-Haus mit saniertem Dach"
+          }
+        },
+        {
+          "id": "partial-retrofit-school",
+          "label": {
+            "en": "Older school with partial envelope retrofit",
+            "de": "Ältere Schule mit teilweiser Hüllsanierung"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "sway"
+          },
+          "values": {
+            "heating-load": 65,
+            "heating-demand": 120
+          },
+          "explanation": {
+            "en": "65 W/m²; 120 kWh/(m²·a). Partly improved older buildings retain significant envelope and ventilation losses.",
+            "de": "65 W/m²; 120 kWh/(m²·a). Teilweise verbesserte Altbauten behalten erhebliche Hüll- und Lüftungsverluste."
+          },
+          "short": {
+            "en": "Older school + partial envelope retrofit",
+            "de": "Ältere Schule + teilweiser Hüllsanierung"
+          }
+        },
+        {
+          "id": "partial-retrofit-block",
+          "label": {
+            "en": "Panel block with repaired windows",
+            "de": "Plattenbau mit erneuerten Fenstern"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "float"
+          },
+          "values": {
+            "heating-load": 60,
+            "heating-demand": 115
+          },
+          "explanation": {
+            "en": "60 W/m²; 115 kWh/(m²·a). Partly improved older buildings retain significant envelope and ventilation losses.",
+            "de": "60 W/m²; 115 kWh/(m²·a). Teilweise verbesserte Altbauten behalten erhebliche Hüll- und Lüftungsverluste."
+          },
+          "short": {
+            "en": "Panel block + repaired windows",
+            "de": "Plattenbau + erneuerten Fenstern"
+          }
+        },
+        {
+          "id": "old-masonry-flat",
+          "label": {
+            "en": "Unrenovated apartment in solid masonry",
+            "de": "Unsanierte Wohnung im Massivmauerwerk"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "flip"
+          },
+          "values": {
+            "heating-load": 90,
+            "heating-demand": 190
+          },
+          "explanation": {
+            "en": "90 W/m²; 190 kWh/(m²·a). Older minimally insulated construction needs substantial winter heat.",
+            "de": "90 W/m²; 190 kWh/(m²·a). Ältere schwach gedämmte Konstruktionen benötigen viel Winterwärme."
+          },
+          "short": {
+            "en": "Old apartment in solid masonry",
+            "de": "Alte Wohnung im Massivmauerwerk"
+          }
+        },
+        {
+          "id": "old-terrace",
+          "label": {
+            "en": "Unrenovated 1980s terrace house",
+            "de": "Unsaniertes Reihenhaus der 1980er"
+          },
+          "icon": {
+            "emoji": "🏚️",
+            "motion": "pulse"
+          },
+          "values": {
+            "heating-load": 80,
+            "heating-demand": 155
+          },
+          "explanation": {
+            "en": "80 W/m²; 155 kWh/(m²·a). Older minimally insulated construction needs substantial winter heat.",
+            "de": "80 W/m²; 155 kWh/(m²·a). Ältere schwach gedämmte Konstruktionen benötigen viel Winterwärme."
+          },
+          "short": {
+            "en": "Old 1980s terrace house",
+            "de": "Alte Reihenhaus der 1980er"
+          }
+        },
+        {
+          "id": "old-school",
+          "label": {
+            "en": "Unrenovated brick school with draughty windows",
+            "de": "Unsanierte Backsteinschule mit undichten Fenstern"
+          },
+          "icon": {
+            "emoji": "🏚️",
+            "motion": "spin"
+          },
+          "values": {
+            "heating-load": 100,
+            "heating-demand": 210
+          },
+          "explanation": {
+            "en": "100 W/m²; 210 kWh/(m²·a). Older minimally insulated construction needs substantial winter heat.",
+            "de": "100 W/m²; 210 kWh/(m²·a). Ältere schwach gedämmte Konstruktionen benötigen viel Winterwärme."
+          },
+          "short": {
+            "en": "Draughty old brick school",
+            "de": "Zugige alte Backsteinschule"
+          }
+        },
+        {
+          "id": "old-office",
+          "label": {
+            "en": "Unrenovated 1970s office building",
+            "de": "Unsaniertes Bürogebäude der 1970er"
+          },
+          "icon": {
+            "emoji": "🏚️",
+            "motion": "float"
+          },
+          "values": {
+            "heating-load": 95,
+            "heating-demand": 200
+          },
+          "explanation": {
+            "en": "95 W/m²; 200 kWh/(m²·a). Older minimally insulated construction needs substantial winter heat.",
+            "de": "95 W/m²; 200 kWh/(m²·a). Ältere schwach gedämmte Konstruktionen benötigen viel Winterwärme."
+          },
+          "short": {
+            "en": "Old 1970s office building",
+            "de": "Alte Bürogebäude der 1970er"
+          }
+        },
+        {
+          "id": "old-bungalow",
+          "label": {
+            "en": "Uninsulated 1960s bungalow",
+            "de": "Ungedämmter Bungalow der 1960er"
+          },
+          "icon": {
+            "emoji": "🏚️",
+            "motion": "flip"
+          },
+          "values": {
+            "heating-load": 150,
+            "heating-demand": 290
+          },
+          "explanation": {
+            "en": "150 W/m²; 290 kWh/(m²·a). An exposed uninsulated envelope combines high peak loss with a long heating season.",
+            "de": "150 W/m²; 290 kWh/(m²·a). Eine exponierte ungedämmte Hülle verbindet hohe Spitzenverluste mit einer langen Heizperiode."
+          },
+          "short": {
+            "en": "Bare 1960s bungalow",
+            "de": "Alte Bungalow der 1960er"
+          }
+        },
+        {
+          "id": "old-farmhouse",
+          "label": {
+            "en": "Exposed uninsulated farmhouse",
+            "de": "Exponiertes ungedämmtes Bauernhaus"
+          },
+          "icon": {
+            "emoji": "🏭",
+            "motion": "bounce"
+          },
+          "values": {
+            "heating-load": 170,
+            "heating-demand": 320
+          },
+          "explanation": {
+            "en": "170 W/m²; 320 kWh/(m²·a). An exposed uninsulated envelope combines high peak loss with a long heating season.",
+            "de": "170 W/m²; 320 kWh/(m²·a). Eine exponierte ungedämmte Hülle verbindet hohe Spitzenverluste mit einer langen Heizperiode."
+          },
+          "short": {
+            "en": "Exposed uninsulated farmhouse",
+            "de": "Exponiertes ungedämmtes Bauernhaus"
+          }
+        },
+        {
+          "id": "old-villa",
+          "label": {
+            "en": "Unrenovated detached villa with single glazing",
+            "de": "Unsanierte freistehende Villa mit Einfachglas"
+          },
+          "icon": {
+            "emoji": "🏭",
+            "motion": "pulse"
+          },
+          "values": {
+            "heating-load": 145,
+            "heating-demand": 275
+          },
+          "explanation": {
+            "en": "145 W/m²; 275 kWh/(m²·a). An exposed uninsulated envelope combines high peak loss with a long heating season.",
+            "de": "145 W/m²; 275 kWh/(m²·a). Eine exponierte ungedämmte Hülle verbindet hohe Spitzenverluste mit einer langen Heizperiode."
+          },
+          "short": {
+            "en": "Old detached villa + single glazing",
+            "de": "Alte freistehende Villa + Einfachglas"
+          }
+        },
+        {
+          "id": "old-workshop",
+          "label": {
+            "en": "Heated uninsulated masonry workshop",
+            "de": "Beheizte ungedämmte Mauerwerkswerkstatt"
+          },
+          "icon": {
+            "emoji": "🏭",
+            "motion": "spin"
+          },
+          "values": {
+            "heating-load": 180,
+            "heating-demand": 340
+          },
+          "explanation": {
+            "en": "180 W/m²; 340 kWh/(m²·a). An exposed uninsulated envelope combines high peak loss with a long heating season.",
+            "de": "180 W/m²; 340 kWh/(m²·a). Eine exponierte ungedämmte Hülle verbindet hohe Spitzenverluste mit einer langen Heizperiode."
+          },
+          "short": {
+            "en": "Heated uninsulated masonry workshop",
+            "de": "Beheizte ungedämmte Mauerwerkswerkstatt"
           }
         }
       ],
-      "draw": 8
+      "draw": 8,
+      "pool": {
+        "seconds": 300,
+        "slots": [
+          [
+            "passive-house",
+            "passive-terrace",
+            "passive-apartment",
+            "passive-school",
+            "passive-timber"
+          ],
+          [
+            "gruenderzeit-retrofit",
+            "retrofit-courtyard",
+            "retrofit-terrace",
+            "retrofit-school",
+            "retrofit-loft"
+          ],
+          [
+            "kfw-40",
+            "efficient-timber",
+            "efficient-block",
+            "efficient-office",
+            "efficient-terrace"
+          ],
+          [
+            "kfw-55",
+            "low-energy-duplex",
+            "low-energy-school",
+            "low-energy-flat",
+            "low-energy-office"
+          ],
+          [
+            "geg-2024",
+            "modern-terrace",
+            "modern-bungalow",
+            "modern-school",
+            "modern-duplex"
+          ],
+          [
+            "sfh-2000s",
+            "plattenbau",
+            "partial-retrofit-flat",
+            "partial-retrofit-roof",
+            "partial-retrofit-school",
+            "partial-retrofit-block"
+          ],
+          [
+            "sfh-1990s",
+            "gruenderzeit",
+            "old-masonry-flat",
+            "old-terrace",
+            "old-school",
+            "old-office"
+          ],
+          [
+            "sfh-1970s",
+            "sfh-1960s",
+            "old-bungalow",
+            "old-farmhouse",
+            "old-villa",
+            "old-workshop"
+          ]
+        ]
+      }
     }
   ]
 }

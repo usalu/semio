@@ -1,5 +1,5 @@
-//! 🛍️ Puzzle 2d play app panel — the kind catalogue: node/handle/edge kind rows read from the
 //! snapshot's `meta.kindCatalogs` (falling back to the kinds actually present in the document). Node
+//! 🛍️ Puzzle 2d play app panel — the kind catalogue: node/handle/edge kind rows read from the
 //! rows are drag sources for the canvas; every row also adds a node on click — a catalogue row owns
 //! its own `addNode` binding, so it stays an ordinary interactive row.
 //!
@@ -24,7 +24,8 @@ use semio_framework_plugin::UiText;
 use semio_framework_plugin::UiValue;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
-use semio_framework_pack_json::{json,Value};
+use semio_framework_pack_json::json;
+use semio_framework_pack_json::Value;
 
 //#region 🔖️Constants
 pub const PUZZLE2D_PLAY_BODY_CATALOGUE: &str = "puzzle2d.play.catalogue";

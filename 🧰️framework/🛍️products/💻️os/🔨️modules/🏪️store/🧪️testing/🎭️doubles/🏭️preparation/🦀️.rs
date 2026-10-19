@@ -175,6 +175,8 @@ impl ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation> for Demo
         let capacity_bytes = std::mem::size_of::<DemoOneItemPreparation>().checked_add(identity_bytes).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "original preparation frame and identity capacity overflow"))?;
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes, depth: 1 })
     }
+    fn begin_copy_byte_demand(&self,input:&DemoMutation,lane:HistoryLane)->Result<usize,semio_framework_value::ValueError>{self.begin_demand(input,lane)?; std::mem::size_of::<ArtifactStoreOneItemPreparationRequest<DemoSnapshot, DemoMutation, DemoMutation>>().checked_add(std::mem::size_of::<DemoOneItemPreparation>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original preparation header quote overflow"))}
+
 
     fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<DemoSnapshot, DemoMutation, DemoMutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation>>, RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<DemoSnapshot, DemoMutation, DemoMutation>)> {
         let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
@@ -227,7 +229,7 @@ impl DemoOneItemPreparation {
 }
 
 impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItemPreparation {
-    fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
+    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
         if !grant.permits_one() {
             return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -239,7 +241,7 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItem
             return Ok(ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()));
         }
         if let Some(sealer)=self.sealer.as_mut(){
-            let step=sealer.advance(grant)?;
+            let step=sealer.advance(grant,receiving)?;
             let progress=step.ownership_progress();
             if let Some(mut prepared)=sealer.take_prepared(){
                 if self.forge_digest{prepared.sealed_parts_mut().1[0]^=0xff;}
@@ -278,7 +280,7 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItem
             self.mutation=Some(mutation);
             return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "demo retained mutation rejected against its base"));
         }
-        let post=match semio_framework_os_spr::apply_diff(outcome.diff(),base.get()){Ok(post)=>post,Err(error)=>{self.mutation=Some(mutation);*self.semantic_refusal = Some(error);return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "original mutation application refused"));}};
+        let post=match protocol::apply_diff_cold(outcome.diff(),base.get()){Ok(post)=>post,Err(error)=>{self.mutation=Some(mutation);*self.semantic_refusal = Some(error);return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "original mutation application refused"));}};
         let post_snapshot = Arc::new(post);
         let inverse = mutation.inverse(base.get()).expect("valid retained mutation inverse fixture");
         let sequence_number = authority.next_sequence_number();

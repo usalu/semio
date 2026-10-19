@@ -1,1 +1,41 @@
-{}
+{
+  "beams": {
+    "b-a": {
+      "axis": {
+        "Arc": {
+          "bulge": 0.0954145724,
+          "end": {
+            "x": 0.922967039,
+            "y": -0.592582404
+          },
+          "start": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      },
+      "entry": "Patched"
+    },
+    "b-b": {
+      "axis": {
+        "Arc": {
+          "bulge": 0.29338803022,
+          "end": {
+            "x": 4.0,
+            "y": 0.0
+          },
+          "start": {
+            "x": 0.922967039,
+            "y": -0.592582404
+          }
+        }
+      },
+      "beam_type": "bt-30x50",
+      "entry": "Created",
+      "name": "Beam A",
+      "phase": "New",
+      "storey": "st-ground",
+      "top_offset": -0.1
+    }
+  }
+}

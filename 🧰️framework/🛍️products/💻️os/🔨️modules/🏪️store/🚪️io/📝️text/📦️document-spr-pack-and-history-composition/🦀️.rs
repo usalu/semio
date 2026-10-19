@@ -152,7 +152,7 @@ where
 /// binding to a bare drop at the end of the function, which aborts the process for any artifact
 /// whose projection owns a fail-closed root: every `.pack`/`.spr` load of a generation3d document
 /// with a layout entry died in `OrderedMap<WidgetLayout>::drop`
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). `ReplayProjection` now retires it on every early
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). `ColdReplayProjection` now retires it on every early
 /// `?` above as well, which the explicit call below never covered.
 pub async fn parse_decoded_document_spr<P, Mutation>(pack: &[u8], mut log: semio_framework_os_spr::HistoryLog, producer:&(impl ArtifactGenesisProducer<P> + Sync)) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
@@ -258,7 +258,7 @@ where
         None => Ok(()),
     };
     match composed {
-        Ok(()) => settle_parsed_envelope(envelope).await,
+        Ok(()) => validate_parsed_envelope(envelope).await,
         Err(error) => {
             discard_parsed_envelope(envelope);
             Err(error)

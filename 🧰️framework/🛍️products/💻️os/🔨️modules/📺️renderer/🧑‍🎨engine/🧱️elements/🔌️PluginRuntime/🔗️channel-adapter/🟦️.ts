@@ -1,3 +1,5 @@
+import { OperationDiagnosticObservers } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/📣️delivery/🟦️.ts";
+import { operationDiagnosticFanouts, type PluginOperationDiagnostic } from "../📬️typed-result/🟦️.ts";
 /** 🔗️ `adaptPluginHandle`, the `AppChannelClient` adapter over the kernel handle, with the bounded history-read retry and the shell actor identity.
  *
  * 🧱️ Child module of {@link ../🟦️.tsx | PluginRuntime}, which re-exports every public name below so import specifiers stay unchanged.
@@ -257,7 +259,6 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
     transactionRedo: async (instanceId, groupId) => {
       await requireChannel(instanceId).transactionRedo(groupId);
     },
-
     //#region 🔖️Merge
     setMergePolicy: async (instanceId, policy) => {
       const frames = await requireChannel(instanceId).setMergePolicy(policy);
@@ -283,7 +284,6 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       return conflictsFrame ? decodeConflictsFromWire(conflictsFrame.Conflicts.conflicts, decodePackValue) : [];
     },
     //#endregion 🔖️Merge
-
     readLocalInteraction: async (instanceId, signal) => {
       const pages: Uint8Array[] = [];
       let length = 0;
@@ -301,6 +301,14 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       const capture = decodeLocalInteractionCaptureJson(bytes);
       if (!localInteractionIdentityEquals(capture.identity, identity)) throw new Error("local-interaction.capture-authority");
       return capture;
+    },
+    subscribeOperationDiagnostics: (instanceId, listener) => {
+      requireChannel(instanceId);
+      let listeners = operationDiagnosticFanouts.get(instanceId);
+      if (!listeners) { listeners = new OperationDiagnosticObservers<PluginOperationDiagnostic>(64, error => console.error("plugin.diagnostic-observer-failed", error)); operationDiagnosticFanouts.set(instanceId, listeners); }
+      const returned = listeners.subscribe(listener);
+      const original = listeners;
+      return () => { returned(); if (original.size === 0 && operationDiagnosticFanouts.get(instanceId) === original) operationDiagnosticFanouts.delete(instanceId); };
     },
     subscribeOperationCompletions: (instanceId, listener) => {
       const channel = requireChannel(instanceId);

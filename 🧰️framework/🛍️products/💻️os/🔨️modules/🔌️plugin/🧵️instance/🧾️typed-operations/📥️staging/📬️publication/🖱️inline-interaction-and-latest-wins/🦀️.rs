@@ -104,7 +104,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                 window_transient_authority: None,
                 publication_lanes: &[], contract: Some(semio_framework::ToolExecutionContract::bounded_first_step(1 << 20, 1 << 20, 1 << 20, 1 << 20, 7_999)),
                 session: None,
-                session_rejected: None,
+                session_rejected: None,producer_source:None,producer_request:None,producer_request_retirement:None,
                 reserved_producer: None,
                 completion: None,
                 completion_retirement:None,

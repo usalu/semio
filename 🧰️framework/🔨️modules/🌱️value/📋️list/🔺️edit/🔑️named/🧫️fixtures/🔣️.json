@@ -1,0 +1,319 @@
+{
+  "cases": [
+    {
+      "id": "empty",
+      "base": [],
+      "removed": [],
+      "modified": [],
+      "added": [],
+      "indices": [],
+      "expected": {
+        "removed": [],
+        "modified": [],
+        "output": []
+      }
+    },
+    {
+      "id": "authored-order",
+      "base": [
+        "z",
+        "a",
+        "m"
+      ],
+      "removed": [
+        "m",
+        "z"
+      ],
+      "modified": [
+        "a"
+      ],
+      "added": [
+        "q",
+        "p"
+      ],
+      "indices": [
+        2,
+        0
+      ],
+      "expected": {
+        "removed": [
+          2,
+          0
+        ],
+        "modified": [
+          1
+        ],
+        "output": [
+          "p",
+          "a",
+          "q"
+        ]
+      }
+    },
+    {
+      "id": "replace-identity",
+      "base": [
+        "a",
+        "b"
+      ],
+      "removed": [
+        "a"
+      ],
+      "modified": [],
+      "added": [
+        "a"
+      ],
+      "indices": [
+        1
+      ],
+      "expected": {
+        "removed": [
+          0
+        ],
+        "modified": [],
+        "output": [
+          "b",
+          "a"
+        ]
+      }
+    },
+    {
+      "id": "unicode",
+      "base": [
+        "é",
+        "e",
+        "é",
+        "😺"
+      ],
+      "removed": [
+        "é"
+      ],
+      "modified": [
+        "é"
+      ],
+      "added": [
+        "Ö"
+      ],
+      "indices": [
+        1
+      ],
+      "expected": {
+        "removed": [
+          2
+        ],
+        "modified": [
+          0
+        ],
+        "output": [
+          "é",
+          "Ö",
+          "e",
+          "😺"
+        ]
+      }
+    },
+    {
+      "id": "opaque-prefix",
+      "base": [
+        "abc",
+        "abcdef"
+      ],
+      "removed": [
+        "abc"
+      ],
+      "modified": [
+        "abcdef"
+      ],
+      "added": [
+        "ABC"
+      ],
+      "indices": [
+        0
+      ],
+      "expected": {
+        "removed": [
+          0
+        ],
+        "modified": [
+          1
+        ],
+        "output": [
+          "ABC",
+          "abcdef"
+        ]
+      }
+    },
+    {
+      "id": "empty-key",
+      "base": [
+        "",
+        "x"
+      ],
+      "removed": [],
+      "modified": [
+        ""
+      ],
+      "added": [
+        "y"
+      ],
+      "indices": [
+        2
+      ],
+      "expected": {
+        "removed": [],
+        "modified": [
+          0
+        ],
+        "output": [
+          "",
+          "x",
+          "y"
+        ]
+      }
+    },
+    {
+      "id": "duplicate-base",
+      "base": [
+        "a",
+        "a"
+      ],
+      "removed": [],
+      "modified": [],
+      "added": [],
+      "indices": [],
+      "expected": null
+    },
+    {
+      "id": "missing-remove",
+      "base": [
+        "abcdef"
+      ],
+      "removed": [
+        "abc"
+      ],
+      "modified": [],
+      "added": [],
+      "indices": [],
+      "expected": null
+    },
+    {
+      "id": "missing-modify",
+      "base": [
+        "a"
+      ],
+      "removed": [],
+      "modified": [
+        "b"
+      ],
+      "added": [],
+      "indices": [],
+      "expected": null
+    },
+    {
+      "id": "duplicate-remove",
+      "base": [
+        "a",
+        "b"
+      ],
+      "removed": [
+        "a",
+        "a"
+      ],
+      "modified": [],
+      "added": [],
+      "indices": [],
+      "expected": null
+    },
+    {
+      "id": "remove-modify-conflict",
+      "base": [
+        "a"
+      ],
+      "removed": [
+        "a"
+      ],
+      "modified": [
+        "a"
+      ],
+      "added": [],
+      "indices": [],
+      "expected": null
+    },
+    {
+      "id": "duplicate-added",
+      "base": [],
+      "removed": [],
+      "modified": [],
+      "added": [
+        "a",
+        "a"
+      ],
+      "indices": [
+        0,
+        1
+      ],
+      "expected": null
+    },
+    {
+      "id": "retained-name-conflict",
+      "base": [
+        "a"
+      ],
+      "removed": [],
+      "modified": [],
+      "added": [
+        "a"
+      ],
+      "indices": [
+        1
+      ],
+      "expected": null
+    },
+    {
+      "id": "invalid-add-hole",
+      "base": [
+        "a"
+      ],
+      "removed": [],
+      "modified": [],
+      "added": [
+        "b"
+      ],
+      "indices": [
+        2
+      ],
+      "expected": null
+    },
+    {
+      "id": "duplicate-add-position",
+      "base": [
+        "a"
+      ],
+      "removed": [],
+      "modified": [],
+      "added": [
+        "b",
+        "c"
+      ],
+      "indices": [
+        1,
+        1
+      ],
+      "expected": null
+    }
+  ],
+  "wide": {
+    "prefixLength": 65537,
+    "pageBytes": 3
+  },
+  "observation": {
+    "releaseBytes": 0,
+    "originalOrdinals": true,
+    "deniedCurrencies": [
+      "items",
+      "copy",
+      "depth"
+    ],
+    "capacityBytes": 0
+  }
+}

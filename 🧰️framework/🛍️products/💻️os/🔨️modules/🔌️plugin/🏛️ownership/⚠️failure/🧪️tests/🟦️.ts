@@ -15,3 +15,12 @@ test("public lifecycle failure exposes its exact defining owner and original con
 });
 
 import "../../../👷️job/🚪️session/🫴️refusal/🧪️tests/🟦️.ts";
+
+import {Database} from "bun:sqlite";
+test("mounted receiving reconciles child and whole effects once and keeps both failures",()=>{
+ expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);const law=fixture.publicationReceiving,db=new Database(":memory:");try{for(const body of law.bodyPolicy){expect(body).toBeLessThanOrEqual(law.physicalCopy);for(const axis of ["items","copy","capacity","release"] as const){const child=law.child[axis],whole=law.whole[axis],oracle=db.query<{unposted:number;posted:number;outerUnposted:number},[number,number]>("SELECT ?2-?1 AS unposted,?1+(?2-?1) AS posted,?2-(?1+(?2-?1)) AS outerUnposted").get(child,whole)!;expect(oracle.unposted).toBe(law.unposted[axis]);expect(oracle.posted).toBe(whole);expect(oracle.outerUnposted).toBe(law.outerUnposted[axis]);}}for(const row of law.cases){const original={semantic:row.semantic,receipt:null as string|null};const result=applyPatch(original,[{op:"replace",path:"/receipt",value:row.receipt}],true,false).newDocument;expect(result).toEqual({semantic:row.semantic,receipt:row.receipt});expect(original.receipt).toBe(null);}console.log("[DEBUG] independent SQLite proves single child/parent/outer receipt debit for1/7/4096policy; JSONPatch preserves simultaneous complete primary and recipient refusal");}finally{db.close();}
+});
+test("mounted native publication uses the actual parent decoder and unchanged policy",()=>{
+ const owner=readFileSync(new URL("../../../🧵️retained-command/🔄️full-operation/🦀️.rs",import.meta.url),"utf8"),source=readFileSync(new URL("../../../🧵️instance/🧾️typed-operations/🦀️.rs",import.meta.url),"utf8");
+ expect(owner).toContain("source_identity:semio_framework_job::OriginalSourceBinding");expect(source).toContain("let body=self.mounted_policy.preparation.maximum_copy_bytes;");expect(source).toContain("cx.with_native_receiving");expect(source).toContain("cx.consume_receiving_retained");expect(source).toContain("failure.context_refusal=Some(receipt)");expect(source).toContain("Published(receipt, ownership)");expect(source).toContain(".advance_apply_batch(publication, body, grant,receiving)");expect(source).not.toContain("self.store.advance_apply_batch(publication, grant)");
+});

@@ -17,9 +17,8 @@
         fn execution_contract(&self) -> ToolExecutionContract {
             ToolJobFactory::execution_contract(&self.0)
         }
-        fn create_job(&mut self, operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-            ToolJobFactory::create_job(&mut self.0, operation, payload)
-        }
+        fn admission_demands(&self,operation:&semio_framework_job::Operation,payload:&Self::Payload,input:Option<&action_bus::RetainedToolWireInput>,checkpoint:Option<&action_bus::RetainedToolWireInput>)->Result<action_bus::ToolJobAdmissionDemand,semio_framework_value::ValueError>{ToolJobFactory::admission_demands(&self.0,operation,payload,input,checkpoint)}
+fn admit_job(&mut self,cx:&mut semio_framework_job::StepContext<'_>,operation:&semio_framework_job::Operation,payload:&mut Option<Box<Self::Payload>>,input:&mut Option<action_bus::RetainedToolWireInput>,checkpoint:&mut Option<action_bus::RetainedToolWireInput>,output:&mut Option<Box<Self::Job>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{ToolJobFactory::admit_job(&mut self.0,cx,operation,payload,input,checkpoint,output)}
     }
 
     impl ArtifactOwnedToolJobFactory for OtherTestRetainedCommandFactory {
@@ -162,7 +161,7 @@ pub fn instance_source() -> String {
         assert_eq!(error.code.0, "interactive-job.not-ui-safe");
         assert_eq!(platform.action_bus.dispatch_count(), before);
         artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -234,7 +233,7 @@ pub fn instance_source() -> String {
         }
         let mut app = app;
         artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
     //#endregion 🧪️SharedFrameworkActionRouteTests

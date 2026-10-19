@@ -1,0 +1,11 @@
+{
+  "schema": "semio.course.onboarding/v1",
+  "pages": ["learner", "quizzes", "board", "badges", "prefs"],
+  "visits": [
+    { "introduced": false, "identified": false, "screen": "home" },
+    { "introduced": true, "identified": false, "screen": "home" },
+    { "introduced": false, "identified": true, "screen": "home" },
+    { "introduced": true, "identified": true, "screen": "home" }
+  ],
+  "anchors": [null, "course.home.learner", "course.home.quizzes", "course.home.board", "course.home.badges", "course.home.prefs"]
+}

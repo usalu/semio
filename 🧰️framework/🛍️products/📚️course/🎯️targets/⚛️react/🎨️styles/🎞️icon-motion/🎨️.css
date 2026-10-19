@@ -1,0 +1,129 @@
+/* 🎞 Icons stand still until their host is reached for: the looping microanimations and their keyframes. */
+
+/* 🎞️ Icons stand still until someone reaches for what they stand in — their host, an element marked `data-icon-host`
+   or the title chip of a card (hosts never nest). Hovering a host (desktop) or a keyboard focus on or inside it loops its
+   icons from the start; a tap on it (tablet, phone) marks it `data-icon-tapped` for one loop. All of it only where
+   the client says so (`data-icon-motion="on"`): on until the learner turns them off in the preferences, including on a
+   device that asks for reduced motion. Each glyph names its keyframes in `--course-icon-animation`. */
+.course-glyph[data-motion] {
+  display: inline-block;
+}
+
+.course-glyph[data-motion="bounce"] {
+  --course-icon-animation: course-icon-bounce;
+}
+
+.course-glyph[data-motion="pulse"] {
+  --course-icon-animation: course-icon-pulse;
+}
+
+.course-glyph[data-motion="spin"] {
+  --course-icon-animation: course-icon-spin;
+}
+
+.course-glyph[data-motion="sway"] {
+  --course-icon-animation: course-icon-sway;
+}
+
+.course-glyph[data-motion="float"] {
+  --course-icon-animation: course-icon-float;
+}
+
+.course-glyph[data-motion="flip"] {
+  --course-icon-animation: course-icon-flip;
+}
+
+@media (hover: hover) {
+  .course-app[data-icon-motion="on"] :is([data-icon-host], [data-slot="course-card-title-chip"]):hover .course-glyph[data-motion] {
+    animation: var(--course-icon-animation) 3.2s ease-in-out infinite;
+  }
+}
+
+.course-app[data-icon-motion="on"] :is([data-icon-host], [data-slot="course-card-title-chip"]):is(:focus-visible, :has(:focus-visible)) .course-glyph[data-motion] {
+  animation: var(--course-icon-animation) 3.2s ease-in-out infinite;
+}
+
+.course-app[data-icon-motion="on"] [data-icon-tapped] .course-glyph[data-motion] {
+  animation: var(--course-icon-animation) 3.2s ease-in-out 1;
+}
+
+@keyframes course-icon-bounce {
+  0%,
+  50%,
+  100% {
+    transform: translateY(0);
+  }
+
+  15% {
+    transform: translateY(-0.3em);
+  }
+
+  30% {
+    transform: translateY(0);
+  }
+
+  38% {
+    transform: translateY(-0.1em);
+  }
+}
+
+@keyframes course-icon-pulse {
+  0%,
+  60%,
+  100% {
+    transform: scale(1);
+  }
+
+  30% {
+    transform: scale(1.25);
+  }
+}
+
+@keyframes course-icon-spin {
+  0%,
+  40% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes course-icon-sway {
+  0%,
+  50%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  15% {
+    transform: rotate(-12deg);
+  }
+
+  35% {
+    transform: rotate(12deg);
+  }
+}
+
+@keyframes course-icon-float {
+  0%,
+  100% {
+    transform: translateY(0.08em);
+  }
+
+  50% {
+    transform: translateY(-0.12em);
+  }
+}
+
+@keyframes course-icon-flip {
+  0%,
+  45% {
+    transform: rotateY(0deg);
+  }
+
+  100% {
+    transform: rotateY(360deg);
+  }
+}

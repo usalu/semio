@@ -1,0 +1,127 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Ordered Retained Diff Sequence",
+  "type": "object",
+  "required": [
+    "schema",
+    "base",
+    "cases",
+    "cancelCuts",
+    "bodyBytes",
+    "deniedCurrencies",
+    "wideText"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "semio.retained-diff-sequence/v1"
+    },
+    "base": {
+      "type": "object",
+      "required": [
+        "a",
+        "b",
+        "text"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "a": {
+          "type": "integer"
+        },
+        "b": {
+          "type": "integer"
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "edits",
+          "accepted",
+          "messageCount"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "edits": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "setA": {
+                  "type": "integer"
+                },
+                "setB": {
+                  "type": "integer"
+                },
+                "requireA": {
+                  "type": "integer"
+                },
+                "warning": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "expected": {
+            "type": "object"
+          },
+          "messageCount": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "cancelCuts": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "bodyBytes": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "deniedCurrencies": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ]
+    },
+    "wideText": {
+      "type": "object",
+      "required": [
+        "text",
+        "repeat"
+      ],
+      "properties": {
+        "repeat": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

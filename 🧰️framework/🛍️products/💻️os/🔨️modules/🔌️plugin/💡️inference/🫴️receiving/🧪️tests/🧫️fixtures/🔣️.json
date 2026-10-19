@@ -1,0 +1,45 @@
+{
+  "maximumDecodedBytes": 4096,
+  "valid": [
+    {
+      "id": "empty",
+      "pack": "",
+      "spr": "",
+      "packBytes": [],
+      "sprBytes": []
+    },
+    {
+      "id": "independent-pair",
+      "pack": "AAEC/w==",
+      "spr": "c3ByAAEC",
+      "packBytes": [
+        0,
+        1,
+        2,
+        255
+      ],
+      "sprBytes": [
+        115,
+        112,
+        114,
+        0,
+        1,
+        2
+      ]
+    }
+  ],
+  "invalid": [
+    "Zg=",
+    "Zh==",
+    "Zm9=",
+    "AA=A",
+    "A===",
+    " AA="
+  ],
+  "deniedAxes": [
+    "items",
+    "copy",
+    "capacity",
+    "depth"
+  ]
+}

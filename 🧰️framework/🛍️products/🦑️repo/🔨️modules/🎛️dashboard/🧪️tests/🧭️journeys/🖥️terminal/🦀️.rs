@@ -23,6 +23,7 @@ pub struct Terminal {
     child: Box<dyn portable_pty::Child + Send + Sync>,
     screen: Arc<Mutex<vt100::Parser>>,
     raw: Arc<Mutex<Vec<u8>>>,
+    inputs: Vec<Vec<u8>>,
 }
 
 impl Terminal {
@@ -58,11 +59,12 @@ impl Terminal {
                 }
             }
         });
-        Self { master: pair.master, writer, child, screen, raw }
+        Self { master: pair.master, writer, child, screen, raw, inputs: Vec::new() }
     }
 
     /// 🎹 Types bytes exactly as a keyboard would.
     pub fn send(&mut self, bytes: &[u8]) {
+        self.inputs.push(bytes.to_vec());
         let mut writer = self.writer.lock().unwrap();
         writer.write_all(bytes).expect("write to the pseudo-terminal");
         writer.flush().expect("flush the pseudo-terminal");
@@ -114,6 +116,17 @@ impl Terminal {
     /// 📜️ Every byte received so far.
     pub fn raw_bytes(&self) -> Vec<u8> { self.raw.lock().unwrap().clone() }
 
+    /// 📼️ Records human input events and independent terminal output under the declared artifact directory.
+    pub fn checkpoint(&self, name: &str) {
+        let Some(directory) = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR") else { return };
+        let directory = std::path::PathBuf::from(directory);
+        std::fs::create_dir_all(&directory).unwrap();
+        std::fs::write(directory.join(format!("{name}-input.json")), serde_json::to_vec(&self.inputs).unwrap()).unwrap();
+        std::fs::write(directory.join(format!("{name}-screen.txt")), self.text()).unwrap();
+        std::fs::write(directory.join(format!("{name}-output.bin")), self.raw_bytes()).unwrap();
+        println!("[DEBUG] recorded {name}: {} input events and {} output bytes", self.inputs.len(), self.raw_bytes().len());
+    }
+
     /// 🔡 Every byte received so far, lossily decoded.
     pub fn transcript(&self) -> String { String::from_utf8_lossy(&self.raw.lock().unwrap()).into_owned() }
 
@@ -129,6 +142,7 @@ impl Terminal {
             let text = self.text();
             if accept(&text) { return Ok(text); }
             if Instant::now() >= deadline {
+                self.checkpoint(&format!("pty-{}-failure", std::process::id()));
                 if let Some(directory) = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR") {
                     let directory = std::path::PathBuf::from(directory);
                     let _ = std::fs::create_dir_all(&directory);

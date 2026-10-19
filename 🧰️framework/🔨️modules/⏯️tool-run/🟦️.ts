@@ -8,6 +8,8 @@
  * `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️13/INTERACTIVE-TOOLS-VISIBLE-PROCESS/📋️tool-run-contract.md` §2, §3.1, §3.2.
  */
 
+import{validatePayloadUpdate,type PayloadUpdate}from"./📨️payload/🌊️stream/🟦️.ts";
+
 //#region 🔖️Limits
 export const TOOL_RUN_STEP_RING_CAPACITY = 64;
 export const TOOL_RUN_STEP_ARGS_MAX = 4;

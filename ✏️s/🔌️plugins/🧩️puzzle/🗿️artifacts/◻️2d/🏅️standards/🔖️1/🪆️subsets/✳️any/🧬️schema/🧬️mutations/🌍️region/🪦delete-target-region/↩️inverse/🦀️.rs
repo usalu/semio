@@ -1,5 +1,5 @@
-//! ↩️ Inverse for `DeleteTargetRegion` — reconstructs a `create-target-region` of the captured BASE
 //! entry. Missing target ⇒ `Vec::new()`.
+//! ↩️ Inverse for `DeleteTargetRegion` — reconstructs a `create-target-region` of the captured BASE
 use crate::standards::v1::subsets::any::schema::mutations::create_target_region::CreateTargetRegion;
 use crate::Puzzle2dSnapshot;
 

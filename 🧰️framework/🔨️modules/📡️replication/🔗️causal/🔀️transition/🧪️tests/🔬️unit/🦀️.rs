@@ -128,6 +128,41 @@ fn none() -> std::collections::HashSet<String> {
     std::collections::HashSet::new()
 }
 
+/// 🪪️ Operation ownership is unique and tied HLC events follow UTF-8 order across reload and arrival permutations.
+#[test]
+fn history_invariants_follow_portable_ownership_and_utf8_vectors() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🪪️history-invariants/🔣️.json")).expect("history invariants fixture");
+    let strings = |value: &serde_json::Value| value.as_array().unwrap().iter().map(|id| id.as_str().unwrap().to_owned()).collect::<Vec<_>>();
+    for case in fixture["cases"].as_array().unwrap() {
+        let mut edits: Vec<_> = case["edits"].as_array().unwrap().iter().map(|row| {
+            let mut edit = edit(row["id"].as_str().unwrap(), row["actor"].as_str().unwrap(), row["logicalMs"].as_u64().unwrap());
+            edit.mutation_ids = strings(&row["mutationIds"]).into_iter().map(MutationId).collect();
+            edit
+        }).collect();
+        let mut transitions: Vec<_> = case["transitions"].as_array().unwrap().iter().map(|row| {
+            let mutation_ids = strings(&row["mutationIds"]).into_iter().map(MutationId).collect();
+            let transition = if row["kind"] == "revert" { HistoryTransition::Revert { mutation_ids } } else { HistoryTransition::Reinstate { mutation_ids } };
+            let mut envelope = at(transition, row["actor"].as_str().unwrap(), row["logicalMs"].as_u64().unwrap());
+            envelope.mutation_id = MutationId(row["id"].as_str().unwrap().into());
+            envelope
+        }).collect();
+        for reversed in [false, true] {
+            if reversed { edits.reverse(); transitions.reverse(); }
+            let expected = &case["expected"];
+            let folded = fold_history(&ArtifactId("doc".into()), &edits, &transitions, &none());
+            if expected["outcome"] == "malformed" {
+                assert!(matches!(folded, Err(semio_framework_replication_error::ProtocolError::Malformed { what: "history fold", detail, .. }) if detail == expected["detail"].as_str().unwrap()), "{}: ambiguous ownership must reject before publication", case["id"]);
+            } else {
+                let folded = folded.unwrap();
+                assert_eq!(folded.applied, strings(&expected["applied"]), "{}", case["id"]);
+                assert_eq!(folded.redo, strings(&expected["redo"]), "{}", case["id"]);
+                assert_eq!(folded.refused, strings(&expected["refused"]), "{}", case["id"]);
+            }
+        }
+    }
+    eprintln!("[DEBUG] history ownership and tied-HLC UTF-8 vectors preserve author-scoped undo across arrival permutations");
+}
+
 /// 🧮️ Edits fold into HLC order regardless of the order they are listed in.
 #[test]
 fn fold_orders_edits_by_hlc_whatever_their_arrival() {
@@ -527,11 +562,11 @@ fn bounded_history_fold_obeys_the_neutral_law() {
     for grant in law["workGrants"].as_array().unwrap() {
         let grant = grant.as_u64().unwrap() as usize;
         let captured = input.clone();
-        let mut job = HistoryFoldJob::new(move |control| async move { let excluded = none(); fold_history_for_controlled(&captured.0, &captured.1, &captured.2, &|id| excluded.contains(id), &ViewerHead::canonical_trunk(&captured.0), &control).await });
+        let mut job = HistoryFoldJob::new(move |control| async move { let excluded = HistoryFoldIndex::<String,()>::new(); fold_history_for_controlled(&captured.0, &captured.1, &captured.2, &excluded, &ViewerHead::canonical_trunk(&captured.0), &control).await });
         let mut done = 0;
         let mut result = None;
         for _ in 0..100000 {
-            match job.step(job.next_step_grant(grant,bytes.as_u64().unwrap() as usize).unwrap(), &mut || false).unwrap() {
+            match job.step(job.next_step_grant(grant,bytes.as_u64().unwrap() as usize).unwrap(),bytes.as_u64().unwrap() as usize, &mut || false).unwrap() {
                 HistoryFoldJobStep::Pending { completed, .. } => { assert!(completed >= done && completed-done <= grant as u64); done = completed; },
                 HistoryFoldJobStep::Ready { value: fold, .. } => { result = Some(fold); break; },
                 HistoryFoldJobStep::Rejected { .. } => panic!("bounded fold: {:?}", job.rejection()),
@@ -543,8 +578,8 @@ fn bounded_history_fold_obeys_the_neutral_law() {
     }
     for cancelled_at in law["cancelAt"].as_array().unwrap() {
         let captured = input.clone();
-        let mut job = HistoryFoldJob::new(move |control| async move { let excluded = none(); fold_history_for_controlled(&captured.0, &captured.1, &captured.2, &|id| excluded.contains(id), &ViewerHead::canonical_trunk(&captured.0), &control).await });
-        for _ in 0..cancelled_at.as_u64().unwrap() { let _ = job.step(job.next_step_grant(1,7).unwrap(), &mut || false).unwrap(); }
+        let mut job = HistoryFoldJob::new(move |control| async move { let excluded = HistoryFoldIndex::<String,()>::new(); fold_history_for_controlled(&captured.0, &captured.1, &captured.2, &excluded, &ViewerHead::canonical_trunk(&captured.0), &control).await });
+        for _ in 0..cancelled_at.as_u64().unwrap() { let _ = job.step(job.next_step_grant(1,7).unwrap(),7, &mut || false).unwrap(); }
         let done = job.completed();
         job.request_cancel();
         let mut closed = false;
@@ -574,7 +609,7 @@ fn bounded_history_transition_decoding_obeys_the_neutral_law() {
             let mut job = HistoryFoldJob::new(move |control| async move { decode_history_transition_controlled(&input, &control).await });
             let mut actual = None;
             for _ in 0..100000 {
-                match job.step(job.next_step_grant(1,grant.as_u64().unwrap() as usize).unwrap(), &mut || false).unwrap() {
+                match job.step(job.next_step_grant(1,grant.as_u64().unwrap() as usize).unwrap(),grant.as_u64().unwrap() as usize, &mut || false).unwrap() {
                     HistoryFoldJobStep::Pending { .. } => {},
                     HistoryFoldJobStep::Ready { value, .. } => { actual = Some(Ok(value)); break; },
                     HistoryFoldJobStep::Rejected { .. } => { actual = Some(Err(job.take_rejection().expect("closed decoder retains original refusal"))); break; },
@@ -610,7 +645,7 @@ fn bounded_history_envelope_decoding_obeys_the_neutral_law() {
             let mut job = HistoryFoldJob::new(move |control| async move { decode_history_envelope_controlled(&input, &control).await });
             let mut outcome = None;
             for _ in 0..100000 {
-                match job.step(job.next_step_grant(1,grant.as_u64().unwrap() as usize).unwrap(), &mut || false).unwrap() {
+                match job.step(job.next_step_grant(1,grant.as_u64().unwrap() as usize).unwrap(),grant.as_u64().unwrap() as usize, &mut || false).unwrap() {
                     HistoryFoldJobStep::Pending { .. } => {},
                     HistoryFoldJobStep::Ready { value, .. } => { outcome = Some(Ok(value)); break; },
                     HistoryFoldJobStep::Rejected { .. } => { outcome = Some(Err(job.take_rejection().expect("closed envelope retains original refusal"))); break; },
@@ -624,7 +659,7 @@ fn bounded_history_envelope_decoding_obeys_the_neutral_law() {
         for stop in law["cancelAt"].as_array().unwrap() {
             let input = source.clone();
             let mut job = HistoryFoldJob::new(move |control| async move { decode_history_envelope_controlled(&input, &control).await });
-            for _ in 0..stop.as_u64().unwrap() { let _ = job.step(job.next_step_grant(1,1).unwrap(), &mut || false).unwrap(); }
+            for _ in 0..stop.as_u64().unwrap() { let _ = job.step(job.next_step_grant(1,1).unwrap(),1, &mut || false).unwrap(); }
             let completed = job.completed();
             job.request_cancel();
             for _ in 0..100000 { if matches!(job.close_step(job.next_step_grant(1,7).unwrap()).unwrap(),semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) { break; } }
@@ -650,7 +685,7 @@ fn history_fold_terminal_output_preserves_actual_cleanup_receipt() {
         let mut total_released = 0;
         let mut outcome = None;
         for _ in 0..64 {
-            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| job.step(grant, &mut || false).unwrap());
+            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| job.step(grant,4096, &mut || false).unwrap());
             let (progress, done) = match step {
                 HistoryFoldJobStep::Pending { progress, .. } => (progress, false),
                 HistoryFoldJobStep::Ready { value: (), progress } => { assert!(!refused); (progress, true) },

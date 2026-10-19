@@ -1,0 +1,149 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "expected",
+    "deniedAxes",
+    "cancelCuts",
+    "refusalCases",
+    "composition"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "items"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65536
+          }
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "normalTurns",
+        "rootBirths",
+        "payloadClones",
+        "sourceIdentityPreserved",
+        "transferRequiresGrant"
+      ],
+      "properties": {
+        "normalTurns": {
+          "const": 2
+        },
+        "rootBirths": {
+          "const": 0
+        },
+        "payloadClones": {
+          "const": 0
+        },
+        "sourceIdentityPreserved": {
+          "const": true
+        },
+        "transferRequiresGrant": {
+          "const": true
+        }
+      }
+    },
+    "deniedAxes": {
+      "const": [
+        "items",
+        "copy",
+        "depth"
+      ]
+    },
+    "cancelCuts": {
+      "const": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    "refusalCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "excessCopyBytes",
+          "ready",
+          "aliasesAfterCapture",
+          "aliasesAfterClose"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "excessCopyBytes": {
+            "const": 1
+          },
+          "ready": {
+            "const": false
+          },
+          "aliasesAfterCapture": {
+            "const": 2
+          },
+          "aliasesAfterClose": {
+            "const": 1
+          }
+        }
+      }
+    },
+    "composition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fields",
+        "epoch",
+        "maximumTurns",
+        "payloadClones",
+        "sourceRootIdentityPreserved"
+      ],
+      "properties": {
+        "fields": {
+          "const": [
+            "epoch",
+            "primary",
+            "secondary"
+          ]
+        },
+        "epoch": {
+          "const": 7
+        },
+        "maximumTurns": {
+          "const": 128
+        },
+        "payloadClones": {
+          "const": 0
+        },
+        "sourceRootIdentityPreserved": {
+          "const": true
+        }
+      }
+    }
+  }
+}

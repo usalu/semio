@@ -28,18 +28,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ReplaceAirflowNetwo
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ReplaceAirflowNetwork>,
 {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "airflow-network", kind: "replace-airflow-network", record: "ReplacedAirflowNetwork" };
 
-    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-        super::diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&{
@@ -56,5 +45,26 @@ where
         }
         })
     }
+}
+
+impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for ReplaceAirflowNetwork
+where
+    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<ReplaceAirflowNetwork>,
+{
+    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
+        super::diff::diff(self, base)
+    }
+
+
+
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "airflow-network", kind: "replace-airflow-network", record: "ReplacedAirflowNetwork" };
+
+
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+
+    })
+}
 }
 //#endregion 🔖️Mutation

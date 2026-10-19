@@ -1,16 +1,74 @@
 import {exactExecutableFingerprint,generatedOutputHasLiveLease,originalNativeLibraryEnvironment}from"../🟦️.ts";
 import {readExactCargoExecutableV1,selectExactCargoLawsV1,requireExactCargoLawResultV1,requireExactCargoFingerprintV1,requireExactCargoTargetBoundaryV1,readExactCargoLawNamesV1}from"../📋️protocol/🟦️.ts";
 import "./📥️inputs/🟦️.ts";
+import "./📦️executable/🟦️.ts";
 import {test,expect}from"bun:test";
 import{readFileSync,mkdtempSync,renameSync,writeFileSync,mkdirSync,utimesSync}from"node:fs";
 import glob from"fast-glob";
 import{join,resolve}from"node:path";
 import{createHash}from"node:crypto";
+import Ajv2020 from "ajv/dist/2020";
+import loaderSchema from "../📚️loader/🧬️schema/🔣️.json";
+import loaderFixture from "../📚️loader/🧫️fixtures/🔣️.json";
+import { rustCompilerLoaderEnvironment } from "../📚️loader/🟦️.ts";
 import{Database}from"bun:sqlite";
 import Ajv from"ajv";
 import ts from"typescript";
 import schema from"../📋️protocol/🧬️schema/🔣️.json";
 import fixture from"./🧫️fixtures/🔣️.json";
+test("compiler runtime loader matches neutral platform vectors and independent SQLite environment projection", () => {
+  expect(new Ajv2020({ strict: true }).compile(loaderSchema)(loaderFixture)).toBe(true);
+  const oracle = new Database(":memory:");
+  try {
+    for (const row of loaderFixture.cases) {
+      const key = row.platform === "win32" ? "PATH" : row.platform === "linux" ? "LD_LIBRARY_PATH" : "DYLD_FALLBACK_LIBRARY_PATH";
+      const delimiter = row.platform === "win32" ? ";" : ":";
+      const prior = oracle.query("SELECT value FROM json_each(?) WHERE CASE WHEN ? THEN lower(key)=lower(?) ELSE key=? END ORDER BY key COLLATE BINARY LIMIT 1").get(JSON.stringify(row.environment), Number(row.platform === "win32"), key, key) as { value: string } | null;
+      const rows = oracle.query("SELECT key,value FROM json_each(?) WHERE NOT CASE WHEN ? THEN lower(key)=lower(?) ELSE key=? END UNION ALL SELECT ?,? || CASE WHEN ?='' THEN '' ELSE ? || ? END").all(JSON.stringify(row.environment), Number(row.platform === "win32"), key, key, key, row.directory, prior?.value ?? "", delimiter, prior?.value ?? "") as { key: string; value: string }[];
+      const expected: Record<string, string | undefined> = Object.fromEntries(rows.map(({ key, value }) => [key, value]));
+      expect(expected, row.name).toEqual(row.expected);
+      expect(rustCompilerLoaderEnvironment(row.platform as "win32" | "linux" | "darwin", row.environment, row.directory), row.name).toEqual(expected);
+    }
+  } finally { oracle.close(); }
+  expect(() => rustCompilerLoaderEnvironment("linux", {}, "relative")).toThrow();
+  expect(() => rustCompilerLoaderEnvironment("win32", {}, "C:\\rust;injected")).toThrow();
+  expect(() => rustCompilerLoaderEnvironment("darwin", {}, "/rust\n/injected")).toThrow();
+  console.log("[DEBUG] compiler loader environment matches seven portable cases and SQLite projection");
+});
+
+for (const outcome of ["admitted", "failed", "relative", "multiline", "cancelled"] as const) {
+  test(`proc-macro exact laws discover controlled compiler runtime: ${outcome}`, async () => {
+    const root = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "proc-macro-loader-"));
+    const executable = join(root, "native.exe"), directory = join(root, "compiler-lib");
+    mkdirSync(directory);
+    const controller = new AbortController(), original = originalInvocation();
+    const invocation: ScriptInvocation = { ...original, control: { ...original.control, signal: controller.signal } };
+    const calls: string[] = [];
+    const port: ExactCargoLawPort = {
+      fingerprint: path => ({ path, sha256: "12".repeat(32) }),
+      async probe(command, args, options) {
+        calls.push(command);
+        expect(options.invocation).toBe(invocation);
+        if (command === "cargo") return { status: 0, signal: null, stderr: "", stdout: JSON.stringify({ reason: "compiler-artifact", package_id: "registry#fixture@1.0.0", profile: { test: true }, target: { name: "fixture", kind: ["proc-macro"] }, executable }) };
+        if (command === "rustc") {
+          expect(args).toEqual(["--print", "target-libdir"]);
+          expect(options.budgetMs).toBeGreaterThan(0);
+          expect(options.env.COMPILER_AUTHORITY).toBe("original");
+          if (outcome === "cancelled") controller.abort();
+          return { status: outcome === "failed" ? 1 : 0, signal: null, stderr: "", stdout: outcome === "relative" ? "relative\n" : outcome === "multiline" ? directory + "\n/injected\n" : directory + "\r\n" };
+        }
+        const key = process.platform === "win32" ? "PATH" : process.platform === "darwin" ? "DYLD_FALLBACK_LIBRARY_PATH" : "LD_LIBRARY_PATH";
+        expect(options.env[key]).toBe(directory);
+        expect(options.env.COMPILER_AUTHORITY).toBe("native");
+        return { status: 0, signal: null, stderr: "", stdout: args[0] === "--list" ? "fixture::law: test\n" : "test fixture::law ... ok\ntest result: ok. 1 passed; 0 failed; 0 ignored;\n" };
+      },
+    };
+    const result = runExactCargoLaws({ invocation, policy: configuredExactCargoLawPolicyV1(), cwd: root, artifactDir: root, cargoTargetDir: join(root, "target"), env: { COMPILER_AUTHORITY: "original" }, nativeEnv: { COMPILER_AUTHORITY: "native" }, groups: [{ package: "fixture", target: { kind: "lib", name: "fixture" }, laws: ["fixture::law"] }], manifestPaths: { fixture: join(root, "Cargo.toml") } }, port);
+    if (outcome === "admitted") { expect((await result)[0]?.assertions).toBe(1); expect(calls).toEqual(["cargo", "rustc", executable, executable]); }
+    else { await expect(result).rejects.toThrow(); expect(calls).toEqual(["cargo", "rustc"]); }
+  });
+}
+
 test("generated cleanup preserves fresh live managed owners and admits terminal, dead or stale output", () => {
   const law = JSON.parse(readFileSync(new URL("🧫️fixtures/📨️managed-output.json", import.meta.url), "utf8"));
   const root = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "managed-output-protection-"));
@@ -77,3 +135,27 @@ test("native exact laws preserve original environment and actual toolchain libra
 });
 
 test("neutral actual runner consumes each pure protocol and SQLite independently classifies terminal DATA",()=>{const source=readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("exact.ts",source,ts.ScriptTarget.Latest,true),calls=new Set<string>();const visit=(node:ts.Node)=>{if(ts.isCallExpression(node)&&ts.isIdentifier(node.expression))calls.add(node.expression.text);ts.forEachChild(node,visit);};visit(tree);for(const name of["readExactCargoExecutableV1","selectExactCargoLawsV1","requireExactCargoLawResultV1","requireExactCargoFingerprintV1","requireExactCargoTargetBoundaryV1","readExactCargoLawNamesV1"])expect(calls.has(name)).toBe(true);const db=new Database(":memory:"),admits=new Ajv({strict:true}).addSchema(schema).compile({$ref:schema.$id+"#/definitions/Capture"});db.exec("create table lines(value text)");try{for(const row of fixture.cases){const count=row.mutation==="zero-pass"?0:row.mutation==="two-pass"?2:1,ignored=row.mutation==="ignored-law"?1:0,result={status:row.mutation==="native-exit"?101:0,signal:null,stdout:`test first_law ... ${ignored?"ignored":"ok"}\n${row.mutation==="terminal-spoof"?"test result: ok. 1 passed; 0 failed; 0 ignored;\n":""}test result: ok. ${count} passed; 0 failed; ${ignored} ignored; 0 measured; 0 filtered out; finished in 0.00s\n`,stderr:""};expect(admits(result)).toBe(true);db.exec("delete from lines");for(const line of result.stdout.split("\n"))db.query("insert into lines values(?)").run(line);const oracle=db.query("select case when ?=0 and sum(value like 'test result: ok.%')=1 and sum(value like 'test result: ok. 1 passed; 0 failed; 0 ignored;%')=1 and sum(value='test first_law ... ok')=1 then 1 else 0 end accepted from lines").get(result.status);let accepted=false;try{requireExactCargoLawResultV1(result,"first_law");accepted=true;}catch{}expect(oracle).toEqual({accepted:Number(accepted)});}}finally{db.close();}});
+
+test("controlled fingerprint obeys neutral progress and interruption vectors with independent SHA-256", async () => {
+ const {controlledExactExecutableFingerprint}=await import("../🔬️fingerprint/🟦️.ts"),{sha256}=await import("@noble/hashes/sha2.js"),law=JSON.parse(readFileSync(new URL("../🔬️fingerprint/🧫️fixtures/🔣️.json",import.meta.url),"utf8")),schema=JSON.parse(readFileSync(new URL("../🔬️fingerprint/🧬️schema/🔣️.json",import.meta.url),"utf8"));
+ expect(new Ajv2020({strict:true}).compile(schema)(law)).toBe(true);
+ const bytes=Buffer.alloc(law.byteLength,law.byte);expect(Buffer.from(sha256(bytes)).toString("hex")).toBe(law.sha256);
+ for(const row of law.cases){
+  const root=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"controlled-fingerprint-")),path=join(root,"fixture");writeFileSync(path,bytes,{mode:0o700});
+  const controller=new AbortController(),reason=Error(row.name),progress:number[]=[],publications:string[]=[];let expired=row.interruption==="deadline-before",yielded=0;
+  const invocation:ScriptInvocation={policy:{version:1,owner:"controlled-fingerprint",maximumElapsedMilliseconds:30000},capabilities:{},control:{signal:controller.signal,remainingMilliseconds:()=>expired?0:30000,publish:row=>{publications.push(row.command);},yieldContinuation:async()=>{yielded++;await new Promise<void>(done=>setImmediate(done));}}};
+  if(row.interruption==="cancel-before")controller.abort(reason);
+  const operation=controlledExactExecutableFingerprint(path,{invocation,progress:async completed=>{
+   progress.push(completed);await new Promise<void>(done=>setImmediate(done));
+   if(row.interruption==="cancel-publication")controller.abort(reason);
+   if(row.interruption==="deadline-publication")expired=true;
+   if(row.interruption==="reject-publication")throw reason;
+   if(row.interruption==="replace-publication"&&progress.length===1){renameSync(path,path+".retained");writeFileSync(path,bytes,{mode:0o700});}
+  }});
+  if(row.admitted){const actual=await operation;expect(actual).toEqual({path,sha256:law.sha256,byteLength:law.byteLength});expect(yielded).toBe(row.progress.length);expect(publications.length).toBe(row.progress.length);}
+  else if(row.interruption.startsWith("cancel")||row.interruption==="reject-publication")await expect(operation).rejects.toBe(reason);
+  else await expect(operation).rejects.toThrow(row.interruption.startsWith("deadline")?"Original Script deadline refused":"changed while hashing");
+  expect(progress,row.name).toEqual(row.progress);
+ }
+ console.log("[DEBUG] controlled executable fingerprint matches seven neutral interruption vectors, awaited progress and noble SHA-256");
+});

@@ -10,7 +10,7 @@ pub use rename_mini::RenameMini;
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl_derive::Mutations, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
-#[mutations(snapshot = super::MiniDoc, diff = super::MiniDiff, schema = "mini.doc")]
+#[mutations(snapshot = super::MiniDoc, diff = super::MiniDiff, schema = "mini.doc", reference = super::MiniDoc, reference_diff = super::MiniDiff)]
 pub enum MiniMutation {
     RenameMini(RenameMini),
 }

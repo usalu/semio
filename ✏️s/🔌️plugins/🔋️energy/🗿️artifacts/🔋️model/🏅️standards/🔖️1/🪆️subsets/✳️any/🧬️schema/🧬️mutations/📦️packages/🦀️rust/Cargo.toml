@@ -74,5 +74,6 @@ semio-s-artifact-energy-model-mut-zone-equipment = { workspace = true }
 semio-s-artifact-energy-model-snapshot = { workspace = true }
 
 [dev-dependencies]
+semio-s-plugin-energy-engine-model = { path = "../../../../../../../../../../🔨️modules/⚡️simulation/⚙️engine/🔋️model/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

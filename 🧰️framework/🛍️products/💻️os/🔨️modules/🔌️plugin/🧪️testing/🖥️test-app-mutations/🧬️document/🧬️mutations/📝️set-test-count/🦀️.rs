@@ -16,14 +16,19 @@ pub struct SetCount {
 
 impl MutationKind<TestSnapshot, TestMutation> for SetCount {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "count", kind: "set-count", record: "SetCount" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set count to {}", self.value), &format!("Anzahl auf {} setzen", self.value))
+    }
+}
+
+impl crate::os_spr::ColdMutationKind<TestSnapshot, TestMutation> for SetCount {
     fn diff(&self, _: &TestSnapshot) -> MutationOutcome<TestDiff> {
         MutationOutcome::new(TestDiff { count: Some(self.value), label: None, slot: None })
     }
     fn inverse(&self, base: &TestSnapshot) -> Result<Vec<TestMutation>, semio_framework_value::ValueError> {
         Ok((|| vec![Self { value: base.count }.into()])())
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set count to {}", self.value), &format!("Anzahl auf {} setzen", self.value))
     }
 }
 
@@ -31,4 +36,8 @@ impl MutationKind<TestSnapshot, TestMutation> for SetCount {
 #[cfg(test)]
 #[path = "../../../../../🧪️tests/📝️test-app-document-set-count-unit/🦀️.rs"]
 pub mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️sum-law/🦀️.rs"]
+mod sum_law_tests;
 //#endregion 🔢️SetCount

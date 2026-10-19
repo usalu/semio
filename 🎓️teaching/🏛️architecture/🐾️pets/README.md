@@ -1,28 +1,28 @@
 # 🐾️ Pets — the architecture menagerie
 
-The twenty pets of **quizze.architektur-und-technologie.de**: small animated companions that stand on the cards of the
-quiz site, look at the pointer, blink, wander a little and meet each other. Every pet is the likeness of a thing the quiz
-items are about, so the pets on screen always fit the topic: the home screen shows the owner's nine in turn together
-with one visitor from the other eleven, a quiz's page and its runs show the troupe of that quiz.
+The thirty-nine pets of **architektur-und-technologie.de**: small animated companions that stand on the cards of the
+course site, look at the pointer, blink, wander a little and meet each other. Every pet is the likeness of a thing the quiz
+items or teaching topics are about. Home offers the complete menagerie, topic pages show their concepts, quiz pages
+show their quiz troupe, and running questions show companions grounded in their public subject.
 
 This folder is the domain-specific half. The domain-neutral half is the pets product
 ([`🧰️framework/🛍️products/🐾️pets`](../../../🧰️framework/🛍️products/🐾️pets/README.md)): the schema of a species, the
 deterministic stage that folds events into frames and the React layer that draws them. The quiz knows no species either:
-the site hands this menagerie to `mountQuiz` (`../❓️quiz/🟦️.ts`, option `pets`) as a function that imports
+the site hands this menagerie to `mountCourse` (`../📚️course/🟦️.ts`, option `pets`) as a function that imports
 `🟦️.ts` lazily, so the menagerie is a script chunk of its own that only a learner who wants pets downloads, and nothing
 is fetched at run time (the release document's Content-Security-Policy admits connections to the proctor alone).
 
 | Path | What |
 |---|---|
 | `🔣️.json` | the ensemble (`semio.pets.ensemble/v1`, id `architecture`): the species paths in roster order, the bonds, the casts, the chemistry |
-| `<emoji><id>/🔣️.json` | one species each (`$defs/Species`): names and thing in English and German, grounds, size, palette, bones, parts, face, clips, repertoire, locomotion, temperament, states, tricks, purr, emitters, gear, grip, reach, mood (and optionally a canopy) |
+| `<emoji><id>/🔣️.json` | one species each (`$defs/Species`): names and thing in English and German, grounds, size, palette, bones, parts, face, clips, repertoire, locomotion, temperament, states, tricks, purr, emitters, gear, grip, reach, mood and its own canopy |
 | `🟦️.ts` | static imports of all of the above → `ARCHITECTURE_MENAGERIE`, its only export |
 
 ## Roster
 
-The owner's nine come first, in the owner's order; the other eleven were derived from the quiz items. Sizes are CSS
-pixels at scale 1 (width × height). A ground is `<quiz>`, `<quiz>/<task>` or `<quiz>/<task>/<item>` and must exist in
-the quiz files.
+The owner's nine come first, followed by eleven more energy companions and nineteen authored topic concepts. Sizes
+are CSS pixels at scale 1 (width × height). Grounds are `<quiz>`, `<quiz>/<task>`, `<quiz>/<task>/<item>` from quiz
+files, or `topic/<topic>` from the course. Question casts use explicit task or item grounds.
 
 | # | Directory | Thing (en / de) | Size, gait | Grounded in |
 |---:|---|---|---|---|
@@ -47,14 +47,76 @@ the quiz files.
 | 19 | `🌡️thermy` | thermometer / Thermometer | 32 × 52, walks | heating and cooling as topics (20 °C, −12 °C, 26 °C); a 2000s house, cooling loads (task), attic flat, boiling water |
 | 20 | `🖥️servy` | server rack / Serverschrank | 46 × 56, walks | cooling: the data centre |
 
+| Topic | Added species | Authored distinguishing detail |
+|---|---|---|
+| Grasshopper | `rhino`, `grasshopper`, `slider`, `colour-wheel` | horn and modelling lines; segmented insect and flexing hind legs; travelling slider thumb; rotating six-segment colour wheel |
+| Excel | `workbook`, `worksheet`, `cell`, `formula` | bound pages and tabs; folded sheet with grid; selected cell and blinking caret; animated formula glyph |
+| Parametrics | `double-curved-surface`, `continuous-parameter`, `discrete-parameter` | flexing saddle grid; smoothly travelling value; stepped integer positions |
+| BIM | `execution-plan`, `model-3d`, `plan-2d`, `quantities` | clipboard and checks; isometric cube; flat floor-plan walls and door swing; quantity-table highlight |
+| Optimization | `pareto`, `heatmap`, `minimized-surface`, `bar-chart` | frontier and candidate point; coloured matrix; bowl-shaped surface and minimum; independently growing bar |
+
+Each new species has bilingual names, an animated `concept` bone, a `rest` state and an `exploring` state returning
+after 12 seconds. Clicking or circling demonstrates its concept; circling back or shaking resets it. All have hand
+poses, walking, greeting, cuddling, landing and parachute clips. Their silhouettes and concept geometry are authored
+SVG shapes in species JSON; they have no external assets or runtime dependencies.
+
 The display name of a pet is `<Nickname>, the <thing>` / `<Nickname>, <Artikel> <Ding>` (`Species.name`). The pets
 themselves are decoration and hidden from assistive technology, so they carry no accessible name; the preferences of the
 quiz list the names of the pets that are on stage right now as text, in the learner's language.
 
+## Custom parachutes
+
+Every species authors a distinct `canopy` SVG path shaped after its character. The canopy uses that species’ accent
+colour and an ink outline; suspension lines attach to the authored rim. The complete roster and its bilingual motifs
+are held in `../📚️course/🧫️fixtures/🪂️canopies/🔣️.json`. The renderer tests hold the real outlines and four cord endpoints
+to this fixture and the independent gl-matrix oracle.
+
+| Pet | Canopy motif (English / German) |
+|---|---|
+| `sunny` | Sun-ray crown / Sonnenstrahlenkrone |
+| `cloudy` | Layered cloud puffs / Geschichtete Wolkenpolster |
+| `housy` | Gabled house roof / Giebelhausdach |
+| `solary` | Solar-panel grid / Solarpanelraster |
+| `radiatory` | Radiator fins and heat waves / Heizkörperrippen und Wärmewellen |
+| `pumpy` | Heat-pump coil / Wärmepumpenwendel |
+| `windowy` | Window frame and mullions / Fensterrahmen und Sprossen |
+| `waly` | Stepped brick courses / Gestufte Ziegelreihen |
+| `battery` | Charged battery with terminal / Geladene Batterie mit Pol |
+| `windy` | Three-blade turbine sail / Dreiblättriges Turbinensegel |
+| `boily` | Boiler vessel and flame / Kesselbehälter und Flamme |
+| `roofy` | Roof tiles / Dachziegel |
+| `insuly` | Fluffy insulation rosette / Flauschige Dämmrosette |
+| `shady` | Shading parasol / Sonnenschutzschirm |
+| `venty` | Ventilation grille with fan / Lüftungsgitter mit Ventilator |
+| `chilly` | Snowflake / Schneeflocke |
+| `kettly` | Kettle lid / Wasserkocherdeckel |
+| `flamy` | Candle lantern / Kerzenlaterne |
+| `thermy` | Temperature chart / Temperaturkurve |
+| `servy` | Server rack with status lights / Serverrack mit Statusleuchten |
+| `rhino` | Rhinoceros horn and hide / Nashornhorn und Hautfalten |
+| `grasshopper` | Paired grasshopper wings / Gepaarte Grashüpferflügel |
+| `slider` | Slider track and thumb / Schiebereglerbahn und Griff |
+| `colour-wheel` | Segmented colour-wheel fan / Segmentierter Farbradfächer |
+| `workbook` | Open workbook pages / Aufgeschlagene Arbeitsmappe |
+| `worksheet` | Folded worksheet with rows / Gefaltetes Tabellenblatt mit Zeilen |
+| `cell` | Selected spreadsheet cell / Ausgewählte Tabellenzelle |
+| `formula` | Formula ribbon with function sign / Formelband mit Funktionszeichen |
+| `double-curved-surface` | Twisted double-curved ribbon / Verdrehtes doppelt gekrümmtes Band |
+| `continuous-parameter` | Smooth parameter wave / Stetige Parameterwelle |
+| `discrete-parameter` | Discrete parameter steps / Diskrete Parameterstufen |
+| `execution-plan` | BIM workflow clipboard / BIM-Ablaufplan-Klemmbrett |
+| `model-3d` | Isometric building roof / Isometrisches Gebäudedach |
+| `plan-2d` | Floor-plan rooms and doorway / Grundrissräume und Türöffnung |
+| `quantities` | Quantity ruler with tally marks / Mengenskala mit Zählstrichen |
+| `pareto` | Pareto frontier with trade-off points / Paretofront mit Abwägungspunkten |
+| `heatmap` | Heatmap tile mosaic / Heatmap-Kachelmosaik |
+| `minimized-surface` | Minimum-surface saddle mesh / Minimalflächen-Sattelnetz |
+| `bar-chart` | Column-chart skyline / Säulendiagramm-Silhouette |
+
 ## Casts
 
-A scene is `home` or the id of a quiz. The layer shows at most six pets from 1024 px of width, four from 768 px and two
-below; a scene the ensemble does not name falls back to `home`. Whenever a scene has a rotation and room for two, one
+A scene is `home`, `topic-<topic>`, a quiz id, or `question-<quiz>-<task>`. An unknown scoped scene has no cast. The
+layer shows at most six pets from 1024 px of width, four from 768 px and two below. Whenever a scene has a rotation and room for two, one
 place belongs to a visitor from the rotation and the core has the others: a core that fits is on stage as a whole, a
 larger one takes turns (at home on a desktop: five of the owner's nine and one visitor; on a phone: one and one). Places
 the core leaves empty go to further visitors. Turns change every one to two minutes, never while the pets are `still` or
@@ -62,11 +124,21 @@ a run is on.
 
 | Scene | Core | Rotation |
 |---|---|---|
-| `home` | sunny, cloudy, housy, solary, radiatory, pumpy, windowy, waly, battery | windy, boily, roofy, insuly, shady, venty, chilly, kettly, flamy, thermy, servy |
+| `home` | sunny, cloudy, housy, solary, radiatory, pumpy, windowy, waly, battery | all thirty remaining species |
 | `physics` | kettly, battery, sunny | flamy, windy, solary, cloudy |
+| `ventilation` | venty, windowy | none |
 | `heating` | radiatory, waly, windowy | housy, insuly, roofy, thermy |
 | `cooling` | chilly, shady, venty | sunny, cloudy, servy, thermy |
 | `demand` | pumpy, boily, solary | housy, insuly, venty, radiatory |
+
+`topic-energy` offers all twenty energy companions. Other topic casts offer exactly their concepts in the table above:
+the first three are core and remaining concepts rotate. The eleven question casts are authored independently of answers
+and correctness in `🔣️.json` and asserted against `../📚️course/🧫️fixtures/🐾️context-casts/🔣️.json`. For example,
+air-change rates offers only venty and windowy; U-values offers waly, windowy and insuly with roofy, radiatory and shady.
+
+The five additional domain reactions R65–R69 connect adjacent concepts: exploring Rhino invites Hopper's
+demonstration, Workbook invites Worksheet, Double Curved Surface invites Continuous Parameter, Execution Plan invites
+3D Model, and Pareto invites Heatmap. Each pair reacts within 90 px once per 18 seconds, with curiosity and rapport.
 
 Every species in the cast of a quiz carries at least one ground in that quiz, every species is in the cast of `home`,
 and the core of every quiz holds at least one pair with a bond, so there is always somebody to like or to bicker with.
@@ -76,7 +148,8 @@ and the core of every quiz holds at least one pair with a bond, so there is alwa
 A bond is the authored affinity of two species, from −1 (they squabble) to +1 (they adore each other); a pair that is
 not listed is neutral. From 0.4 two pets mostly cuddle when they meet, from −0.3 downwards they mostly squabble and
 sulk, in between they greet; shared history shifts the feeling a little and drifts back. Disputes stay small: the core
-never lets the effective affinity fall below −0.6. All 67 bonds, strongest first:
+never lets the effective affinity fall below −0.6. The 67 energy bonds follow, strongest first. Fourteen additional
+topic bonds connect adjacent concepts in each new topic cast with affinity +0.8, giving 81 bonds in the ensemble.
 
 | Pair | Affinity | Why |
 |---|---:|---|
@@ -320,12 +393,13 @@ What the shape of a reaction cannot say, and what stands in for it:
    `gear` (by its nature; a floater owns a parachute or nothing), `grip`, `reach` and its resting `mood`. Every pet
    has a clip for `hang`, `tumble`, `purr`, `dizzy`, `shrug` and `push`, and for what its gear brings (`climb` →
    `climb`, `mantle`, `slide`; `ladder` → `carry`, `climb`; `grapple` → `aim`, `reel`; `parachute` → `glide`).
+   Author a character-specific `canopy` path and add its unique bilingual motif and rim to the canopy fixture.
 3. **Grounds.** Name every quiz item, task or topic the pet stands for. A pet may only join the cast of a quiz it is
    grounded in.
 4. **Ensemble.** In `🔣️.json` add the path to `species`, the bonds of the pet (each with a physical reason, recorded in
    the table above) and the pet to the rotation of `home` and to the casts of the quizzes it belongs to.
 5. **Module.** In `🟦️.ts` add the import and the species to the list, in the order of the ensemble.
-6. **Check.** `bun repo run @teaching/architecture-quiz:test` (suite `🐾️pet-cast`: schema with ajv, the product's own
+6. **Check.** `bun repo run @teaching/architecture-course:test` (suite `🐾️pet-cast`: schema with ajv, the product's own
    validators, grounds, casts, bonds, states, tricks, gear and chemistry, the module against the documents) and look at
    the pet in the gallery.
 
@@ -356,7 +430,7 @@ ground — and a sandbox with mock cards on which a chosen cast lives (scene, mo
 | Where | Entry | Address |
 |---|---|---|
 | Dashboard (`bun run dashboard`, `Ctrl+B n`) | `@semio-tech/pets-react:dev` with parameters `stories-port=6074` and `menagerie=🎓️teaching/🏛️architecture/🐾️pets/🟦️.ts` | http://127.0.0.1:6074/ |
-| Agents and scripts | `bun run dashboard run @semio-tech/pets-react:dev --param stories-port=6074 --param menagerie=🎓️teaching/🏛️architecture/🐾️pets/🟦️.ts --detach --wait-ready` (prints the URL) | http://127.0.0.1:6074/ |
+| Agents and scripts | `bun repo run @semio-tech/pets-react:dev --param stories-port=6074 --param menagerie=🎓️teaching/🏛️architecture/🐾️pets/🟦️.ts --detach --wait-ready` (prints the URL) | http://127.0.0.1:6074/ |
 
 Both run `bun repo run @semio-tech/pets-react:dev` with `PETS_STORIES_PORT=6074` and
 `PETS_MENAGERIE=🎓️teaching/🏛️architecture/🐾️pets/🟦️.ts`. In the real site the pets are on by default (`calm`); the
@@ -369,5 +443,5 @@ the switch holds on every device.
 
 | Suite | What |
 |---|---|
-| `../❓️quiz/🧪️tests/🐾️pet-cast/🟦️.ts` (vitest) | every species and the ensemble against the draft-07 contract (ajv) and the product's validators; the assembled menagerie has no issue and equals what `🟦️.ts` exports; grounds exist in the quiz files; every cast member of a quiz is grounded in it; every quiz and `home` have a cast; bonds join existing species; every state, trick and purr names clips, particles and states its species has; every state can be reached from the resting state and leads back to it (tricks, states that run out, chemistry); circling a pet one way or the other changes its resting state; every pet has the clips of the hand and of its gear; the chemistry implements R01–R64 but R06 and G1, G3–G6, its sides and effects exist and can happen, it looks at least as far as both species reach and at most 400 px, rests 1 to 600 s, and every scene has something to react to |
-| `../❓️quiz/🧪️tests/🐕️pet-walk/🟦️.ts` (Playwright, end-to-end gate, project `pets`) | pets appear on the home screen, hidden from assistive technology, never a hit target of their own and standing on what the cards show; a click says hello, the next asks for a trick, the ones after it for a purr; a pet picked up hangs in the hand and, let go high, opens its parachute, glides and lands; circling the pointer round a pet on a quiz's page changes its state; during a lively minute in which pets are dragged over each other and thrown no two bodies overlap on any frame; a card under a falling pet still receives its click; the play group of the settings (hello, trick, pet, toss) and the footer switch work by keyboard; the cast follows the learner into a quiz's page and run; `still` gives motionless pets and `off` removes them; a device that asks for reduced motion gives still pets that answer no hand until the learner chooses, and calm pets the learner chose walk (at the test tempo); forced colours show none; a phone shows at most two small ones; no console error, failed request or policy violation. Mischief on lifted copies and the routes of the gear wait for the stage (`fixme`) |
+| `../📚️course/🧪️tests/🐾️pet-cast/🟦️.ts` (vitest) | AJV and owned schema validation of all 39 species and the assembled menagerie; static imports equal documents; quiz and topic grounds exist; exact fixture topic and question casts; home includes every species; bilingual concept names, distinct silhouettes and animated details; unique canopy paths for every species; bonds, reachable states, tricks, hand and gear clips; R01–R69 except R06 and G1, G3–G6; bounded, executable chemistry in every scene |
+| `../📚️course/🧪️tests/🐕️pet-walk/🟦️.ts` (Playwright, end-to-end gate, project `pets`) | pets appear on the home screen, hidden from assistive technology, never a hit target of their own and standing on what the cards show; a click says hello, the next asks for a trick, the ones after it for a purr; a pet picked up hangs in the hand and, let go high, opens its authored custom parachute, glides and lands; circling the pointer round a pet on a quiz's page changes its state; during a lively minute in which pets are dragged over each other and thrown no two bodies overlap on any frame; a card under a falling pet still receives its click; the play group of the settings (hello, trick, pet, toss) and the footer switch work by keyboard; the cast follows the learner into a quiz's page and run; `still` gives motionless pets and `off` removes them; a device that asks for reduced motion gives still pets that answer no hand until the learner chooses, and calm pets the learner chose walk (at the test tempo); forced colours show none; a phone shows at most two small ones; no console error, failed request or policy violation. Mischief on lifted copies and the routes of the gear wait for the stage (`fixme`) |

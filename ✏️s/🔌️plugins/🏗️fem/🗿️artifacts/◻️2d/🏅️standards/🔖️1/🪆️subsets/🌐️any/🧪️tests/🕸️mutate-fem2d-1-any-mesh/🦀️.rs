@@ -1,5 +1,5 @@
-//! 🏗️ `s.fem.fem2d` mesh mutation case — Rust SUBJECT adapter. Relocated out of the
 //! Duplicated (relative paths adjusted, the extra spec-vector-replay Outline dropped — its committed-fixture references only resolve from the real owning subset, which the escape guard blocks a ✳️any-owned case from reaching sideways into) from `../../../🕸️mesh/🧪️tests/🕸️mutate-fem2d-1-mesh/` by shard F4 (this ticket) to close `unregistered-mutation-vocabulary` at the `✳️any/🧬️schema/🧬️mutations` owner — same mechanism E3 already proved on `sequence`: reuse the already-manifested `fem2d-1-mutate` capability, no new v2 manifest entry or runtime-inventory coordinate. The dropped Outline's own replay evidence stays intact, undiminished, at the original subset-owned case above — this duplicate only needs to satisfy the coverage gate's mutate-<kind>/inverse-<kind> requirement.
+//! 🏗️ `s.fem.fem2d` mesh mutation case — Rust SUBJECT adapter. Relocated out of the
 //! artifact-level `mutate-fem2d-1` case in ticket
 //! `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION` so
 //! this subset's own kinds have a subset-owned test.
@@ -16,14 +16,18 @@
 //! report shapes rather than parts of the document, so they stay asserted HERE, in role, in
 //! [`subject::spec_vector`].
 
-use semio_repo_test_host::{parse_json, Adapter, Json};
+use semio_repo_test_host::parse_json;
+
+use semio_repo_test_host::Adapter;
+
+use semio_repo_test_host::Json;
 
 //#region 🔖️Kinds
 /// 🏷️ This subset's own slice of `KINDS` in `../../../🕸️mesh/🧬️schema/🧬️mutations/🦀️.rs` — duplicated, not
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and that file's own
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against both the enum and the manifest.
-const KINDS: &[&str] = &["create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-section", "delete-section", "replace-section", "create-region", "delete-region", "replace-region", "replace-node", "move-selection"];
+const KINDS: &[&str] = &["change-region", "change-element", "change-node", "change-section", "create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-section", "delete-section", "replace-section", "create-region", "delete-region", "replace-region", "replace-node", "move-selection"];
 
 /// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
 /// [`law::mutation_is_observable`] must not demand one of them.
@@ -54,6 +58,37 @@ struct Vector {
 
 fn vector(kind: &str) -> Vector {
     match kind {
+        "change-region" => Vector {
+            before: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-region/🩹️changes/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-region/🩹️changes/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-region/🩹️changes/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-region/🩹️changes/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-region/🩹️changes/🎯️outcome/🔣️.json"),
+        },
+
+        "change-element" => Vector {
+            before: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-element/🩹️changes/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-element/🩹️changes/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-element/🩹️changes/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-element/🩹️changes/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-element/🩹️changes/🎯️outcome/🔣️.json"),
+        },
+
+        "change-node" => Vector {
+            before: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-node/🩹️changes/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-node/🩹️changes/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-node/🩹️changes/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-node/🩹️changes/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-node/🩹️changes/🎯️outcome/🔣️.json"),
+        },
+        "change-section" => Vector {
+            before: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-section/🩹️changes/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-section/🩹️changes/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-section/🩹️changes/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-section/🩹️changes/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-section/🩹️changes/🎯️outcome/🔣️.json"),
+        },
+
         "create-node" => Vector {
             before: include_str!("../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/⚪️create-node/📍️appends-node-n3/📸️snapshot/⬅️before/🔣️.json"),
             mutation: include_str!("../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/⚪️create-node/📍️appends-node-n3/🦠️mutation/🔣️.json"),
@@ -159,8 +194,14 @@ fn canonical(text: &str) -> Json {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{canonical, vector, DERIVED_ASSET, UNOBSERVABLE};
-    use semio_repo_test_host::{parse_json, Context, Json, Outcome};
+    use super::canonical;
+    use super::vector;
+    use super::DERIVED_ASSET;
+    use super::UNOBSERVABLE;
+    use semio_repo_test_host::parse_json;
+    use semio_repo_test_host::Context;
+    use semio_repo_test_host::Json;
+    use semio_repo_test_host::Outcome;
     use semio_repo_test_host::law;
     use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::io::text::mutations::fem2d_mutation_report_json;
 

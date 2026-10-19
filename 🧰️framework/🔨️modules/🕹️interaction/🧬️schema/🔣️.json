@@ -356,6 +356,7 @@
     },
     "DomainTopology": {
       "title": "DomainTopology",
+      "description": "Traversal visits each identity once, including cyclic parent references. Selection batches merge the ordered union of target descendant closures; duplicate targets toggle once.",
       "type": "object",
       "additionalProperties": false,
       "required": [

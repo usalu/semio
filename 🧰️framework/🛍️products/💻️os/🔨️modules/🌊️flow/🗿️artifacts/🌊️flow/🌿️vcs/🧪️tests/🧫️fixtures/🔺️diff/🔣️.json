@@ -11,6 +11,10 @@
     { "name": "layout-assignments", "value": { "deltas": [
       { "delta": "layout", "value": [{ "id": "a", "layout": { "x": 3.0, "y": 4.0 } }, { "id": "a", "layout": null }] }
     ] } },
+    { "name": "positional-move-rows", "value": { "deltas": [
+      { "delta": "widgets", "value": { "removed": [], "inserted": [], "replaced": [], "moved": [{ "id": "a", "from": 0, "to": 2 }, { "id": "c", "from": 1, "to": 0 }] } },
+      { "delta": "synapses", "value": { "removed": [], "inserted": [], "replaced": [], "moved": [{ "id": "s2", "from": 1, "to": 0 }] } }
+    ] } },
     { "name": "maximum-wire-position", "value": { "deltas": [
       { "delta": "widgets", "value": { "removed": [], "inserted": [[4294967295, { "kind": "inputNote", "id": "x", "text": "" }]], "replaced": [] } }
     ] } }
@@ -22,6 +26,9 @@
     { "name": "unknown-delta", "value": { "deltas": [{ "delta": "unknown", "value": {} }] } },
     { "name": "missing-fragment-fields", "value": { "deltas": [{ "delta": "widgets", "value": { "removed": [] } }] } },
     { "name": "unknown-fragment-field", "value": { "deltas": [{ "delta": "widgets", "value": { "removed": [], "inserted": [], "replaced": [], "unknown": true } }] } },
+    { "name": "move-row-wide-position", "value": { "deltas": [{ "delta": "widgets", "value": { "removed": [], "inserted": [], "replaced": [], "moved": [{ "id": "a", "from": 0, "to": 4294967296 }] } }] } },
+    { "name": "move-row-missing-target-position", "value": { "deltas": [{ "delta": "widgets", "value": { "removed": [], "inserted": [], "replaced": [], "moved": [{ "id": "a", "from": 0 }] } }] } },
+    { "name": "move-row-unknown-field", "value": { "deltas": [{ "delta": "widgets", "value": { "removed": [], "inserted": [], "replaced": [], "moved": [{ "id": "a", "from": 0, "to": 1, "order": [] }] } }] } },
     { "name": "wide-position", "value": { "deltas": [{ "delta": "widgets", "value": { "removed": [], "inserted": [[4294967296, { "kind": "inputNote", "id": "x" }]], "replaced": [] } }] } },
     { "name": "incomplete-insertion-tuple", "value": { "deltas": [{ "delta": "widgets", "value": { "removed": [], "inserted": [[0]], "replaced": [] } }] } },
     { "name": "layout-missing-identity", "value": { "deltas": [{ "delta": "layout", "value": [{ "layout": null }] }] } },

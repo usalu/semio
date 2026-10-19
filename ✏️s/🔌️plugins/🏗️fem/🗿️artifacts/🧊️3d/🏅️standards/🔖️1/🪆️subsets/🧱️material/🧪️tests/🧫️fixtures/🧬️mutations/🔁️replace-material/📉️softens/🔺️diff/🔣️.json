@@ -2,14 +2,13 @@
   "nodes": null,
   "elements": null,
   "materials": {
-    "inserted": [],
     "removed": [],
+    "inserted": [],
     "moved": [],
     "modified": [
       {
         "id": "steel",
         "patch": {
-          "id": "steel",
           "name": "Steel S235",
           "e": 210000000000.0,
           "g": 78000000000.0,

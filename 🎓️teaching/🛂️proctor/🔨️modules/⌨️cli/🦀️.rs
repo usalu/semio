@@ -3,7 +3,7 @@
 //! | Verb | What it does | Needs |
 //! |---|---|---|
 //! | `serve` | serves the API (the §9 environment) | everything |
-//! | `check <catalog>` | validates a catalog and its quizzes, non-zero exit on issues | nothing |
+//! | `check <course>` | validates a course and its quizzes, non-zero exit on issues | nothing |
 //! | `rebuild` | drops and refolds every read model from the event log, with progress; Ctrl+C stops between batches and the next start resumes | a stopped proctor |
 //! | `health` | exits 0 exactly when the listener of this environment answers `GET /instance` with `200`, asked as the TLS-terminating proxy asks | `PROCTOR_BIND`, `PROCTOR_PORT` |
 //! | `backup <directory/\|file\|->` | writes a whole, consistent, verified copy of the database while a proctor serves it: into a directory (an existing one, or a path ending in `/`) as `proctor-<UTC time>.sqlite`, to a file that does not exist yet, or to stdout; prints the path; never overwrites; progress on stderr, Ctrl+C removes the partial copy | `PROCTOR_DATA` |
@@ -27,20 +27,20 @@ use std::process::ExitCode;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use quiz::{Event, Identity};
+use course::{Event, Identity};
 use semio_framework_async::CancelToken;
 use server::contract::{ActorKey, IdempotencyKey};
 use server::storage::{AuthorityStore, StorageProfile};
 
 use teaching_proctor_domain::actors::{enrollment_receipt, handle_key, learner_key, HANDLE, LEARNER, RUN_SUBMITTED};
-use teaching_proctor_base::catalog::{load_catalog, CatalogError, LoadedCatalog};
+use teaching_proctor_base::course::{load_course, CourseError, LoadedCourse};
 use teaching_proctor_base::config::ProctorConfig;
 use crate::instance::Proctor;
 use teaching_proctor_domain::projections::{CatchUp, Progress};
 use teaching_proctor_base::storage::{Database, Erasure, Removed, SqliteAuthorityStore, DATABASE_FILE};
 
 /// 📖️ The one-line usage.
-pub const USAGE: &str = "usage: proctor serve | proctor check <catalog 🔣️.json> | proctor rebuild | proctor health | proctor backup <directory/|file|-> | proctor restore <file|-> | proctor erase (--handle <handle>|--tag <tag>|--learner <id>) [--dry-run] | proctor prune --older-than <age: 90m|36h|7d|2w> [--dry-run]";
+pub const USAGE: &str = "usage: proctor serve | proctor check <course 🔣️.json> | proctor rebuild | proctor health | proctor backup <directory/|file|-> | proctor restore <file|-> | proctor erase (--handle <handle>|--tag <tag>|--learner <id>) [--dry-run] | proctor prune --older-than <age: 90m|36h|7d|2w> [--dry-run]";
 
 /// 🧺️ The learners one transaction of a `prune` removes: what an interrupt waits for at most.
 pub const PRUNE_BATCH: usize = 512;
@@ -55,7 +55,7 @@ pub const PROBE_TIMEOUT: Duration = Duration::from_secs(3);
 pub async fn run(arguments: &[String], environment: impl Fn(&str) -> Option<String>) -> ExitCode {
     let outcome = match arguments.iter().map(String::as_str).collect::<Vec<_>>().as_slice() {
         ["serve"] => serve(&environment).await,
-        ["check", catalog] => return check(Path::new(catalog)),
+        ["check", course] => return check(Path::new(course)),
         ["rebuild"] => rebuild(&environment).await,
         ["health"] => health(&environment),
         ["backup", target] => backup(&environment, target).await,
@@ -85,11 +85,11 @@ pub async fn run(arguments: &[String], environment: impl Fn(&str) -> Option<Stri
     })
 }
 
-/// ✅️ Validate a catalog and every quiz it lists.
+/// ✅️ Validate a course and every quiz it lists.
 pub fn check(path: &Path) -> ExitCode {
-    match load_catalog(path) {
+    match load_course(path) {
         Ok(loaded) => {
-            println!("catalog {} ({}): {} quizzes, {} badges, fingerprint {}", loaded.id(), path.display(), loaded.entries.len(), loaded.catalog.badges.len(), loaded.fingerprint);
+            println!("course {} ({}): {} quizzes, {} badges, fingerprint {}", loaded.id(), path.display(), loaded.entries.len(), loaded.course.badges.len(), loaded.fingerprint);
             for entry in &loaded.entries {
                 println!("  quiz {} ({} tasks) {} revision {}", entry.quiz.id, entry.quiz.tasks.len(), entry.entry, entry.revision);
             }
@@ -102,16 +102,16 @@ pub fn check(path: &Path) -> ExitCode {
     }
 }
 
-fn report(error: &CatalogError) {
+fn report(error: &CourseError) {
     match error {
-        CatalogError::Invalid { issues } => {
+        CourseError::Invalid { issues } => {
             for issue in issues {
                 match &issue.quiz {
                     Some(quiz) => println!("[ERROR] {} {} ({quiz})", issue.path, issue.code),
                     None => println!("[ERROR] {} {}", issue.path, issue.code),
                 }
             }
-            println!("[ERROR] {} issue(s); the catalog is refused", issues.len());
+            println!("[ERROR] {} issue(s); the course is refused", issues.len());
         }
         other => println!("[ERROR] {other}"),
     }
@@ -120,11 +120,11 @@ fn report(error: &CatalogError) {
 async fn serve(environment: &impl Fn(&str) -> Option<String>) -> Result<ExitCode, Box<dyn std::error::Error>> {
     let config = ProctorConfig::from_environment(environment)?;
     eprintln!(
-        "[INFO] proctor {} mode {}, data {}, catalog {}, cross-origin {}, trusted forwarding {}, presence tick {} ms, at most {} learners and {} started runs per learner, sign-ups per address {} at once and {} per hour",
+        "[INFO] proctor {} mode {}, data {}, course {}, cross-origin {}, trusted forwarding {}, presence tick {} ms, at most {} learners and {} started runs per learner, sign-ups per address {} at once and {} per hour",
         env!("CARGO_PKG_VERSION"),
         config.mode.label(),
         config.data.display(),
-        config.catalog.display(),
+        config.course.display(),
         config.origins.describe(),
         config.forwarding.label(),
         config.presence_tick.as_millis(),
@@ -133,11 +133,11 @@ async fn serve(environment: &impl Fn(&str) -> Option<String>) -> Result<ExitCode
         config.sign_ups().burst,
         config.sign_ups().tokens
     );
-    let Some(catalog) = loaded(&config) else { return Ok(ExitCode::FAILURE) };
+    let Some(course) = loaded(&config) else { return Ok(ExitCode::FAILURE) };
     let interrupt = interrupt();
-    let proctor = Proctor::assemble(profile(&config), Arc::new(catalog), config.gate(), config.presence()).await?.capped(config.caps);
+    let proctor = Proctor::assemble(profile(&config), Arc::new(course), config.gate(), config.presence()).await?.capped(config.caps);
     if proctor.prepare().await? {
-        eprintln!("[INFO] projections were built for another catalog or projector revision; rebuilding them");
+        eprintln!("[INFO] projections were built for another course or projector revision; rebuilding them");
     }
     if let Some(code) = settled(&proctor, &interrupt, "catch-up").await? {
         return Ok(code);
@@ -151,9 +151,9 @@ async fn serve(environment: &impl Fn(&str) -> Option<String>) -> Result<ExitCode
 
 async fn rebuild(environment: &impl Fn(&str) -> Option<String>) -> Result<ExitCode, Box<dyn std::error::Error>> {
     let config = ProctorConfig::from_environment(environment)?;
-    let Some(catalog) = loaded(&config) else { return Ok(ExitCode::FAILURE) };
+    let Some(course) = loaded(&config) else { return Ok(ExitCode::FAILURE) };
     let interrupt = interrupt();
-    let proctor = Proctor::assemble(profile(&config), Arc::new(catalog), config.gate(), config.presence()).await?;
+    let proctor = Proctor::assemble(profile(&config), Arc::new(course), config.gate(), config.presence()).await?;
     proctor.reset_projections().await?;
     eprintln!("[INFO] projections dropped; refolding every committed event");
     Ok(settled(&proctor, &interrupt, "rebuild").await?.unwrap_or(ExitCode::SUCCESS))
@@ -291,7 +291,7 @@ impl Selector {
     }
 }
 
-/// 🧑‍🎓️ One learner an erasure removes: its catalog, its id, how it registered if it did, and the
+/// 🧑‍🎓️ One learner an erasure removes: its course, its id, how it registered if it did, and the
 /// handle keys it holds.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Subject {
@@ -313,10 +313,10 @@ impl Subject {
 /// that cannot be read is an error, because an erasure must not miss a name.
 pub async fn subjects(log: &SqliteAuthorityStore, selector: &Selector) -> Result<Vec<Subject>, Box<dyn std::error::Error>> {
     let wanted = match selector {
-        Selector::Handle(handle) => Some(quiz::normalize_handle(handle).ok_or("the handle is outside the handle policy, so nobody can hold it")?.key),
+        Selector::Handle(handle) => Some(course::normalize_handle(handle).ok_or("the handle is outside the handle policy, so nobody can hold it")?.key),
         Selector::Tag(tag) if tag.len() == 8 && tag.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)) => None,
         Selector::Tag(_) => return Err("a tag is 8 lowercase hex digits".into()),
-        Selector::Learner(learner) if quiz::is_id(learner) => None,
+        Selector::Learner(learner) if course::is_id(learner) => None,
         Selector::Learner(_) => return Err("a learner id is 32 lowercase hex digits".into()),
     };
     let mut found = Vec::new();
@@ -324,14 +324,14 @@ pub async fn subjects(log: &SqliteAuthorityStore, selector: &Selector) -> Result
         let mut holders: Vec<(String, String)> = Vec::new();
         for event in log.stream_events(&tenant, HANDLE)? {
             let unreadable = || format!("event {} of {}/{} ({}) is no registration this proctor can read", event.seq, event.stream.kind, event.stream.id, event.kind);
-            let key = quiz::handle_key_of(&event.stream.id).ok_or_else(unreadable)?;
+            let key = course::handle_key_of(&event.stream.id).ok_or_else(unreadable)?;
             let Ok(Event::LearnerRegistered { learner, .. }) = serde_json::from_slice::<Event>(&event.payload) else { return Err(unreadable().into()) };
             holders.push((key, learner));
         }
         let streams = log.streams(&tenant, LEARNER)?;
         let mut learners: Vec<&String> = match selector {
             Selector::Handle(_) => holders.iter().filter(|(key, _)| Some(key) == wanted.as_ref()).map(|(_, learner)| learner).collect(),
-            Selector::Tag(tag) => streams.iter().chain(holders.iter().map(|(_, learner)| learner)).filter(|learner| quiz::learner_tag(learner) == *tag).collect(),
+            Selector::Tag(tag) => streams.iter().chain(holders.iter().map(|(_, learner)| learner)).filter(|learner| course::learner_tag(learner) == *tag).collect(),
             Selector::Learner(id) => streams.iter().chain(holders.iter().map(|(_, learner)| learner)).filter(|learner| *learner == id).collect(),
         };
         learners.sort();
@@ -375,16 +375,16 @@ fn described(subject: &Subject) -> String {
         Some(Identity::Name { handle }) => format!("name {handle:?}"),
         None => "never registered".to_string(),
     };
-    format!("#{} {identity}", quiz::learner_tag(&subject.learner))
+    format!("#{} {identity}", course::learner_tag(&subject.learner))
 }
 
 /// 📋️ What an erasure removed, or with `dry_run` would remove, line by line.
 pub fn erasure_report(subject: &Subject, erasure: &Erasure, dry_run: bool) -> String {
     let verb = if dry_run { "would erase" } else { "erased" };
-    let mut lines = vec![format!("{verb} learner {} of catalog {}", described(subject), subject.tenant)];
+    let mut lines = vec![format!("{verb} learner {} of course {}", described(subject), subject.tenant)];
     for erased in &erasure.actors {
         let stream = match erased.actor.kind.as_str() {
-            HANDLE => format!("handle {:?}", quiz::handle_key_of(&erased.actor.id).unwrap_or_default()),
+            HANDLE => format!("handle {:?}", course::handle_key_of(&erased.actor.id).unwrap_or_default()),
             _ => "learner stream".to_string(),
         };
         lines.push(format!("  {stream}: {} events, {} receipts, {} outbox rows, {} snapshots, {} leases", erased.events, erased.receipts, erased.outbox, erased.snapshots, erased.leases));
@@ -437,7 +437,7 @@ pub fn age(text: &str) -> Option<Duration> {
     count.parse::<u64>().ok()?.checked_mul(seconds).map(Duration::from_secs)
 }
 
-/// 🕸️ The registrations of one catalog nobody played under, as of a horizon: the learners that
+/// 🕸️ The registrations of one course nobody played under, as of a horizon: the learners that
 /// never submitted a run and registered before it, each with the handles it holds; the handles
 /// claimed before it beside the identity of a learner that stays (a learner is the identity it
 /// registered first — a later claim only occupies a name); and what stays: every other learner,
@@ -466,7 +466,7 @@ impl Stale {
     /// with the receipt its relay left with the learner that stays.
     pub fn batches(&self) -> Vec<Batch> {
         let learners = self.learners.chunks(PRUNE_BATCH).map(|batch| Batch { actors: batch.iter().flat_map(Subject::actors).collect(), relays: Vec::new() });
-        let surplus = self.surplus.chunks(PRUNE_BATCH).map(|batch| Batch { actors: batch.iter().map(|key| handle_key(&self.tenant, key)).collect(), relays: batch.iter().map(|key| enrollment_receipt(&self.tenant, &quiz::handle_actor_id(key))).collect() });
+        let surplus = self.surplus.chunks(PRUNE_BATCH).map(|batch| Batch { actors: batch.iter().map(|key| handle_key(&self.tenant, key)).collect(), relays: batch.iter().map(|key| enrollment_receipt(&self.tenant, &course::handle_actor_id(key))).collect() });
         learners.chain(surplus).collect()
     }
 }
@@ -481,7 +481,7 @@ pub struct Batch {
 }
 
 /// 🕯️ What a `prune` of everything registered before `before` (milliseconds since the epoch) finds,
-/// catalog by catalog: read from the streams themselves, never from a read model. A registration
+/// course by course: read from the streams themselves, never from a read model. A registration
 /// that cannot be read is an error, like for an erasure.
 pub fn stale(log: &SqliteAuthorityStore, before: u64) -> Result<Vec<Stale>, Box<dyn std::error::Error>> {
     let registration = |event: &server::contract::EventRecord| match serde_json::from_slice::<Event>(&event.payload) {
@@ -497,13 +497,13 @@ pub fn stale(log: &SqliteAuthorityStore, before: u64) -> Result<Vec<Stale>, Box<
         }
         let mut held: BTreeMap<String, Vec<(String, u64)>> = BTreeMap::new();
         for event in log.stream_events(&tenant, HANDLE)? {
-            let key = quiz::handle_key_of(&event.stream.id).ok_or_else(|| format!("{}/{} is no handle stream this proctor can read", event.stream.kind, event.stream.id))?;
+            let key = course::handle_key_of(&event.stream.id).ok_or_else(|| format!("{}/{} is no handle stream this proctor can read", event.stream.kind, event.stream.id))?;
             held.entry(registration(&event)?.0).or_default().push((key, event.hlc.millis));
         }
         let doomed: BTreeSet<&str> = spans.iter().filter(|span| span.marked == 0 && span.since < before).map(|span| span.id.as_str()).collect();
         let learners: Vec<Subject> = doomed.iter().map(|learner| Subject { tenant: tenant.clone(), learner: (*learner).to_string(), identity: identities.get(*learner).cloned(), handles: held.get(*learner).into_iter().flatten().map(|(key, _)| key.clone()).collect() }).collect();
         let own = |learner: &str| match identities.get(learner) {
-            Some(Identity::Pseudonym { handle } | Identity::Name { handle }) => quiz::normalize_handle(handle).map(|normalized| normalized.key),
+            Some(Identity::Pseudonym { handle } | Identity::Name { handle }) => course::normalize_handle(handle).map(|normalized| normalized.key),
             _ => None,
         };
         let staying = |learner: &str| identities.contains_key(learner) && !doomed.contains(learner);
@@ -570,14 +570,14 @@ fn announce_pruned(done: usize, streams: usize, reported: &mut usize) {
     }
 }
 
-/// 🫙️ What a `prune` removes, or with `dry_run` would remove, catalog by catalog: counts, never
+/// 🫙️ What a `prune` removes, or with `dry_run` would remove, course by course: counts, never
 /// names.
 pub fn pruning_report(found: &[Stale], pruning: &Pruning, before: SystemTime) -> String {
     let verb = if pruning.dry_run { "would prune" } else { "pruning" };
     let mut lines = Vec::new();
     for stale in found {
         let kind = |wanted: fn(&Identity) -> bool| stale.learners.iter().filter(|subject| subject.identity.as_ref().is_some_and(wanted)).count();
-        lines.push(format!("{verb} {} registrations of catalog {} older than {} (registered before {})", stale.registrations(), stale.tenant, pruning.older_than, timestamp(before)));
+        lines.push(format!("{verb} {} registrations of course {} older than {} (registered before {})", stale.registrations(), stale.tenant, pruning.older_than, timestamp(before)));
         lines.push(format!(
             "  learners that never submitted a run: {} ({} anonymous, {} under a pseudonym, {} under a name), holding {} handles",
             stale.learners.len(),
@@ -609,10 +609,10 @@ fn profile(config: &ProctorConfig) -> StorageProfile {
     StorageProfile::Embedded { data_dir: config.data.to_string_lossy().into_owned() }
 }
 
-fn loaded(config: &ProctorConfig) -> Option<LoadedCatalog> {
-    match load_catalog(&config.catalog) {
+fn loaded(config: &ProctorConfig) -> Option<LoadedCourse> {
+    match load_course(&config.course) {
         Ok(loaded) => {
-            eprintln!("[INFO] catalog {}: {} quizzes, {} badges", loaded.id(), loaded.entries.len(), loaded.catalog.badges.len());
+            eprintln!("[INFO] course {}: {} quizzes, {} badges", loaded.id(), loaded.entries.len(), loaded.course.badges.len());
             Some(loaded)
         }
         Err(error) => {

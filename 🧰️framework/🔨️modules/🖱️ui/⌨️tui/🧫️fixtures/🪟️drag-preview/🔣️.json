@@ -1,0 +1,24 @@
+{
+  "handle":{"unicode":"⠿","ascii":":","paddingColumn":1},
+  "preview":"committed-active-tab-and-seam",
+  "scope":"mounted-canvas-node-identities",
+  "overflowPriority":["counted","glyph","one-glyph","active-controls"],
+  "cases":[
+    {"name":"last-source-top-left","size":[100,40],"weights":[1,3],"sourcePeer":false,"sameStack":false,"compact":false,"placement":"top-left"},
+    {"name":"last-source-top-right","size":[100,40],"weights":[3,1],"sourcePeer":false,"sameStack":false,"compact":false,"placement":"top-right"},
+    {"name":"last-source-bottom-left","size":[100,40],"weights":[1,3],"sourcePeer":false,"sameStack":false,"compact":false,"placement":"bottom-left"},
+    {"name":"last-source-bottom-right","size":[100,40],"weights":[3,1],"sourcePeer":false,"sameStack":false,"compact":false,"placement":"bottom-right"},
+    {"name":"peer-source-top-right","size":[100,40],"weights":[1,3],"sourcePeer":true,"sameStack":false,"compact":false,"placement":"top-right"},
+    {"name":"last-source-left","size":[100,40],"weights":[1,3],"sourcePeer":false,"sameStack":false,"compact":false,"placement":"left"},
+    {"name":"last-source-right","size":[100,40],"weights":[3,1],"sourcePeer":false,"sameStack":false,"compact":false,"placement":"right"},
+    {"name":"last-source-top","size":[100,40],"weights":[1,3],"sourcePeer":false,"sameStack":false,"compact":false,"placement":"top"},
+    {"name":"last-source-bottom","size":[100,40],"weights":[3,1],"sourcePeer":false,"sameStack":false,"compact":false,"placement":"bottom"},
+    {"name":"same-stack-corner","size":[100,40],"weights":[1,3],"sourcePeer":false,"sameStack":true,"compact":false,"placement":"bottom-right"},
+    {"name":"same-stack-reorder","size":[100,40],"weights":[1,3],"sourcePeer":false,"sameStack":true,"compact":false,"placement":"reorder"},
+    {"name":"compact-top-right","size":[100,7],"weights":[1,3],"sourcePeer":false,"sameStack":false,"compact":true,"placement":"top-right"},
+    {"name":"clipped-source-chip","size":[27,40],"weights":[3,1],"sourcePeer":false,"sameStack":false,"compact":false,"placement":"top-right"},
+    {"name":"overflow-insertion","size":[100,40],"weights":[1,3],"sourcePeer":true,"sameStack":false,"compact":false,"overflow":true,"placement":"top-left"},
+    {"name":"overflow-arrow-corner","size":[72,40],"weights":[3,1],"sourcePeer":true,"sameStack":false,"compact":false,"overflow":true,"placement":"overflow-next"},
+    {"name":"overflow-arrow-cap","size":[100,40],"weights":[1,3],"sourcePeer":true,"sameStack":false,"compact":false,"overflow":true,"cap":true,"placement":"overflow-next"}
+  ]
+}

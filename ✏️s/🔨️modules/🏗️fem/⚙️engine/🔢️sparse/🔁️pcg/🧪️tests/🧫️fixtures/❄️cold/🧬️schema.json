@@ -1,0 +1,18 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "type":"object","additionalProperties":false,"required":["version","cases"],
+  "$defs":{"vector":{"type":"array","items":{"type":"number"}}},
+  "properties":{
+    "version":{"const":1},
+    "cases":{"type":"array","minItems":1,"items":{
+      "type":"object","additionalProperties":false,
+      "required":["name","matrix","rhs","initial","tolerance","maximumIterations","solution","iterations","converged"],
+      "properties":{
+        "name":{"type":"string"},"matrix":{"type":"array","items":{"$ref":"#/$defs/vector"}},
+        "rhs":{"$ref":"#/$defs/vector"},"initial":{"$ref":"#/$defs/vector"},"solution":{"$ref":"#/$defs/vector"},
+        "tolerance":{"type":"number","exclusiveMinimum":0},"maximumIterations":{"type":"integer","minimum":0},
+        "iterations":{"type":"integer","minimum":0},"converged":{"type":"boolean"}
+      }
+    }}
+  }
+}

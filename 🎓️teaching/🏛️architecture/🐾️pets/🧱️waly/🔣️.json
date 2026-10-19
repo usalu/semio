@@ -519,5 +519,9 @@
   "gear": ["ladder"],
   "grip": 41.5,
   "reach": 8,
-  "mood": "content"
+  "mood": "content",
+  "canopy": {
+    "kind": "path",
+    "d": "M -32 0 L -32 -14 L -24 -14 L -24 -24 L 24 -24 L 24 -14 L 32 -14 L 32 0 Z M -24 -14 H 24 M -32 -7 H 32 M -12 -24 V -14 M 12 -24 V -14 M -22 -14 V -7 M 0 -14 V -7 M 22 -14 V -7 M -12 -7 V 0 M 12 -7 V 0"
+  }
 }

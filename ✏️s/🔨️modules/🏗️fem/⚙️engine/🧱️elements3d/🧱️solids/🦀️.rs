@@ -95,12 +95,16 @@ struct Tet4Geometry {
 
 /// 🔺️ Resolves tetrahedral volume and barycentric gradients with fixed-size vector products.
 fn tet4_geometry(ctx: &ElementContext) -> Option<Tet4Geometry> {
-    if ctx.positions.len() != 4 {
+    tet4_geometry_of_positions(&ctx.positions)
+}
+
+fn tet4_geometry_of_positions(positions: &[[f64; 3]]) -> Option<Tet4Geometry> {
+    if positions.len() != 4 {
         return None;
     }
-    let first = vec3d_sub(ctx.positions[1], ctx.positions[0]);
-    let second = vec3d_sub(ctx.positions[2], ctx.positions[0]);
-    let third = vec3d_sub(ctx.positions[3], ctx.positions[0]);
+    let first = vec3d_sub(positions[1], positions[0]);
+    let second = vec3d_sub(positions[2], positions[0]);
+    let third = vec3d_sub(positions[3], positions[0]);
     let first_gradient_numerator = vec3d_cross(second, third);
     let determinant = first[0] * first_gradient_numerator[0] + first[1] * first_gradient_numerator[1] + first[2] * first_gradient_numerator[2];
     if !determinant.is_finite() || determinant.abs() <= f64::EPSILON {
@@ -117,7 +121,36 @@ fn tet4_geometry(ctx: &ElementContext) -> Option<Tet4Geometry> {
     gradients.iter().flatten().all(|component| component.is_finite()).then_some(Tet4Geometry { volume: determinant.abs() / 6.0, gradients })
 }
 
+/// 🧊️ Contracts one tetrahedral geometric cell through the original full signed stress tensor.
+fn tet4_geometric_cell(geometry: Tet4Geometry, stress: &SolidStress, row: usize, column: usize) -> f64 {
+    if row % 3 != column % 3 { return 0.0; }
+    let left = geometry.gradients[row / 3];
+    let right = geometry.gradients[column / 3];
+    geometry.volume * (
+        left[0] * (stress.sxx * right[0] + stress.sxy * right[1] + stress.sxz * right[2])
+        + left[1] * (stress.sxy * right[0] + stress.syy * right[1] + stress.syz * right[2])
+        + left[2] * (stress.sxz * right[0] + stress.syz * right[1] + stress.szz * right[2])
+    )
+}
+
 impl Tet4 {
+    /// 🪨️ Recovers the constant tetrahedral stress without allocating scratch matrices or vectors.
+    pub fn mounted_recover_stress(&self, positions: &[[f64; 3]; 4], displacement: &[f64; 12]) -> Option<SolidStress> {
+        let geometry = tet4_geometry_of_positions(positions)?;
+        Some(self.recover_stress(geometry, displacement))
+    }
+
+    /// 🪨️ Resolves the signed stress tensor using fixed-size strain and constitutive contractions.
+    fn recover_stress(&self, geometry: Tet4Geometry, displacement: &[f64; 12]) -> SolidStress {
+        let mut strain = [0.0; 6];
+        for local in 0..12 {
+            let column = solid_b_column(geometry.gradients[local / 3], local % 3);
+            for axis in 0..6 { strain[axis] += column[axis] * displacement[local]; }
+        }
+        let stress: [f64; 6] = std::array::from_fn(|axis| solid_constitutive_bilinear(self.e, self.nu, std::array::from_fn(|component| f64::from(u8::from(component == axis))), strain));
+        let [sxx, syy, szz, sxy, syz, sxz] = stress;
+        SolidStress { sxx, syy, szz, sxy, syz, sxz, von_mises: von_mises_solid(sxx, syy, szz, sxy, syz, sxz) }
+    }
     /// 🧭️ Signed volume via the scalar triple product of edge vectors from node 0.
     fn volume(ctx: &ElementContext) -> f64 {
         tet4_geometry(ctx).expect("non-degenerate tet4").volume
@@ -222,24 +255,25 @@ impl Element for Tet4 {
     /// stress state under `u_elem` — the 3D analogue of `elements2d::plane_geometric_stiffness`,
     /// `σ̂` the full 3x3 stress tensor built from the recovered `[sxx,syy,szz,sxy,syz,sxz]`.
     fn geometric_stiffness(&self, ctx: &ElementContext, u_elem: &VecD) -> Option<MatD> {
-        let v = Self::volume(ctx);
-        let grads = Self::gradients(ctx);
-        let b = solid_b_matrix(&grads);
-        let d = d_matrix_solid(self.e, self.nu);
-        let strain = b.mul_vec(u_elem);
-        let stress = d.mul_vec(&strain);
-        let (sxx, syy, szz, sxy, syz, sxz) = (stress.get(0), stress.get(1), stress.get(2), stress.get(3), stress.get(4), stress.get(5));
+        let geometry = tet4_geometry(ctx)?;
+        let displacement = std::array::from_fn(|index| u_elem.get(index));
+        let stress = self.recover_stress(geometry, &displacement);
         let mut kg = MatD::zeros(12, 12);
-        for (i, gi) in grads.iter().enumerate() {
-            for (j, gj) in grads.iter().enumerate() {
-                let s = gi[0] * (sxx * gj[0] + sxy * gj[1] + sxz * gj[2]) + gi[1] * (sxy * gj[0] + syy * gj[1] + syz * gj[2]) + gi[2] * (sxz * gj[0] + syz * gj[1] + szz * gj[2]);
-                let val = s * v;
-                for a in 0..3 {
-                    kg.add_at(3 * i + a, 3 * j + a, val);
-                }
+        for row in 0..12 {
+            for column in 0..12 {
+                kg.set(row, column, tet4_geometric_cell(geometry, &stress, row, column));
             }
         }
         Some(kg)
+    }
+
+    fn mounted_geometric_stiffness_cell(&self, ctx: &ElementContext, displacement: &[f64], row: usize, column: usize) -> Option<f64> {
+        let displacement: &[f64; 12] = displacement.try_into().ok()?;
+        if row >= 12 || column >= 12 || !displacement.iter().all(|value| value.is_finite()) { return None; }
+        let geometry = tet4_geometry(ctx)?;
+        let stress = self.recover_stress(geometry, displacement);
+        let value = tet4_geometric_cell(geometry, &stress, row, column);
+        value.is_finite().then_some(value)
     }
 }
 // #endregion 🔖️Tet4

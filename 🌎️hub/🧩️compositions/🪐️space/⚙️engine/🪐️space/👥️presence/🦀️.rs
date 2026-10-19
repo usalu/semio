@@ -4,6 +4,7 @@
 //! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — see `create_space_app`'s `.interaction(...)`
 //! declaration for the `graph` domain.
 
+use protocol::ColdMutation;
 use crate::config::SpaceWindowCamera;
 use protocol::Mutation;
 use std::collections::BTreeMap;
@@ -153,7 +154,14 @@ impl Mutation<SpacePresence> for SpacePresenceMutation {
 
     type Diff = SpacePresenceDiff;
 
-    fn diff(&self, base: &SpacePresence) -> protocol::MutationOutcome<SpacePresenceDiff> {
+
+
+
+}
+
+impl protocol::ColdMutation<SpacePresence> for SpacePresenceMutation {
+ type ReferenceDiff = SpacePresenceDiff;
+fn diff(&self, base: &SpacePresence) -> protocol::MutationOutcome<SpacePresenceDiff> {
         protocol::MutationOutcome::new(match self {
             Self::SetActiveNode { node_id } => SpacePresenceDiff { active_node_id: (base.active_node_id != *node_id).then(|| node_id.clone()), ..Default::default() },
             Self::SetFocusedNode { node_id } => SpacePresenceDiff { focused_node_id: (base.focused_node_id != *node_id).then(|| node_id.clone()), ..Default::default() },
@@ -172,8 +180,7 @@ impl Mutation<SpacePresence> for SpacePresenceMutation {
             }
         })
     }
-
-    fn inverse(&self, base: &SpacePresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+fn inverse(&self, base: &SpacePresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
             Self::SetActiveNode { .. } => Self::SetActiveNode { node_id: base.active_node_id.clone() },
             Self::SetFocusedNode { .. } => Self::SetFocusedNode { node_id: base.focused_node_id.clone() },

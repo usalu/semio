@@ -65,8 +65,8 @@ impl MemberDirectory for SpaceHost {
 /// program drops): the registry's kind-keying now lives in the generated enum's own `match kind`.
 pub async fn create_member_store<P, Mutation, G, C>(schema: &str, id: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, initial_pack: &[u8], actor: ActorId, producer:&G,catalog:&C) -> Result<ArtifactStore<P, Mutation>, VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
     G: ArtifactGenesisProducer<P> + ArtifactStorePublication<P> + Sync,
     C:MemberStoreProducer<P,Mutation>,
 {
@@ -90,8 +90,8 @@ where
 /// without consulting the parent.
 pub async fn open_member_store<P, Mutation, G, C>(schema: &str, expected: &semio_framework_artifact_reference::ArtifactRef, owner: Option<&OwnerRef>, envelope_pack: &[u8], actor: ActorId, producer:&G,catalog:&C) -> Result<ArtifactStore<P, Mutation>, VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
     G: ArtifactGenesisProducer<P> + ArtifactStorePublication<P> + Sync,
     C:MemberStoreProducer<P,Mutation>,
 {
@@ -107,8 +107,8 @@ where
 /// 🔐️ Installs a completed catalog and retires it exactly when the store refuses its transfer.
 pub fn install_unscheduled_catalog<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, owners: Result<DocumentStoreOwners<P, Mutation>, ValueError>) -> Result<(), VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     let owners = owners.map_err(|error| VcsError::ValidationFailed(error.into_message()))?;
     store.install_document_store_owners_exact(owners).map_err(|(error, owners)| { close_unscheduled_catalog(owners); VcsError::ValidationFailed(error.into_message()) })
@@ -117,8 +117,8 @@ where
 /// 🔐️ Installs a self-funded member catalog and leaves the store retaining every original owner on refusal.
 pub fn install_funded_member_store_owners<P, Mutation, C>(store: &mut ArtifactStore<P, Mutation>,producer:&C) -> Result<(), VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
     C:MemberStoreProducer<P,Mutation>,
 {
     install_unscheduled_catalog(store, funded_member_store_owners::<P, Mutation,C>(producer))
@@ -268,7 +268,7 @@ impl<M: SpaceMember> SpaceHost<M> {
     /// (`space_vcs_host_meta_document_is_backbone_attachable_and_detachable`, 0 checkpoints instead
     /// of 1). Re-sending is not a risk — `flush_outbound` drains a queue of PENDING events, so an
     /// event announced once is not announced again.
-    pub async fn commit_space_checkpoint(&mut self, message: String, authors: Vec<Author>, identity: &mut EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
+    pub async fn commit_space_checkpoint(&mut self, message: String, authors: Vec<Author>, identity: &mut EntityIdentityAuthority<'_>) -> Result<String, VcsError>  where M:ReferenceSpaceMember {
         let mut document_ids: Vec<String> = self.members.keys().cloned().collect();
         document_ids.sort();
         let mut pins = Vec::with_capacity(document_ids.len());
@@ -284,7 +284,7 @@ impl<M: SpaceMember> SpaceHost<M> {
         let checkpoint_id = identity.encode(|control|mint_space_checkpoint_id(&message,&pins_fingerprint,control))?;
         let parent_id = self.meta.snapshot()?.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
         let checkpoint = SpaceCheckpoint { id: checkpoint_id.clone(), parent_id, message: message.clone(), authors, timestamp: HybridLogicalTimestamp::new(0, now_ms()), members: pins };
-        self.meta.dispatch(ArtifactCommand::Apply { mutations: vec![SpaceHistoryMutation::CommitSpaceCheckpoint(CommitSpaceCheckpoint { checkpoint })], transaction: None }, identity).await?;
+        self.meta.dispatch(ArtifactCommand::Apply { mutations: vec![SpaceHistoryMutation::CommitSpaceCheckpoint(CommitSpaceCheckpoint { checkpoint , index: None })], transaction: None }, identity).await?;
         self.meta.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }, identity).await?;
         Ok(checkpoint_id)
     }
@@ -301,7 +301,7 @@ impl<M: SpaceMember> SpaceHost<M> {
 
     /// 🔀️ Fans out to every member pinned by `checkpoint_id`'s `SpaceCheckpoint`, restoring
     /// each to its exact recorded `(checkpoint, alternative)`.
-    pub async fn checkout_space_checkpoint(&mut self, checkpoint_id: &str, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+    pub async fn checkout_space_checkpoint(&mut self, checkpoint_id: &str, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError>  where M:ReferenceSpaceMember {
         let snapshot = self.meta.snapshot()?;
         let checkpoint = snapshot.checkpoints.iter().find(|checkpoint| checkpoint.id == checkpoint_id).ok_or(VcsError::NoCheckpoint)?;
         for pin in &checkpoint.members {
@@ -313,7 +313,7 @@ impl<M: SpaceMember> SpaceHost<M> {
     }
 
     /// 🔀️ Switches the studio's active alternative and fans out to its tip checkpoint's pins.
-    pub async fn switch_space_alternative(&mut self, alternative_id: &str, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+    pub async fn switch_space_alternative(&mut self, alternative_id: &str, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError>  where M:ReferenceSpaceMember {
         let snapshot = self.meta.snapshot()?;
         let alternative = snapshot.alternatives.iter().find(|alternative| alternative.id == alternative_id).ok_or_else(|| VcsError::UnknownAlternative(alternative_id.to_string()))?;
         let checkpoint_id = alternative.checkpoint_ids.last().cloned().ok_or(VcsError::NoCheckpoint)?;
@@ -325,7 +325,7 @@ impl<M: SpaceMember> SpaceHost<M> {
     /// `last_local_edit_timestamp` (by {@link HybridLogicalTimestamp::cmp_key}) and undoes just that
     /// member. Never dispatched against the meta-document — space-level undo has no `SpaceHistoryMutation`
     /// of its own, it is purely a cross-member ordering policy.
-    pub async fn undo(&mut self, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+    pub async fn undo(&mut self, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError>  where M:ReferenceSpaceMember {
         let mut candidates = Vec::new();
         for (document_id, member) in self.members.iter() {
             if let Some(timestamp) = member.last_local_edit_timestamp().await {
@@ -339,7 +339,7 @@ impl<M: SpaceMember> SpaceHost<M> {
 
     /// ↪️ Derived, local-only redo: mirrors `undo`, targeting the member with the most
     /// recent `last_undone_local_edit_timestamp`.
-    pub async fn redo(&mut self, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+    pub async fn redo(&mut self, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError>  where M:ReferenceSpaceMember {
         let mut candidates = Vec::new();
         for (document_id, member) in self.members.iter() {
             if let Some(timestamp) = member.last_undone_local_edit_timestamp().await {

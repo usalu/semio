@@ -1,7 +1,7 @@
 //! 🧵️ Canonical JSON projects the original semantic protocol fields only within text IO.
 #[path="🔏️seal/🦀️.rs"]
 mod seal;
-pub use seal::ArtifactCanonicalEditSealCursor;
+pub use seal::{ArtifactCanonicalEditSealCursor,canonical_edit_seal_header_byte};
 use crate::{Edit, MutationMeta, MutationOrigin, TransactionRef};
 use semio_framework_pack_json::{ArtifactCanonicalJsonTree, ArtifactCanonicalJsonNode as Node, ArtifactCanonicalJsonText};
 use semio_framework_value::{ValueError, ValueRefusalKind};
@@ -31,6 +31,23 @@ impl<M:ArtifactCanonicalJsonTree> ArtifactCanonicalJsonTree for Edit<M> {
  fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{Ok(self.canonical_field(ordinal)?.1)}
  fn canonical_tree_key(&self,ordinal:usize)->Result<ArtifactCanonicalJsonText<'_>,ValueError>{Ok(self.canonical_field(ordinal)?.0.into())}
 }
+/// 📦️ Borrows the full recovery wire from the original edit allocation while semantic seals keep their independent fields.
+#[repr(transparent)]
+pub struct EditWireTree<M>(Edit<M>);
+impl<M:ArtifactCanonicalJsonTree> EditWireTree<M>{
+    pub fn view(original:&Edit<M>)->&Self{unsafe{&*(std::ptr::from_ref(original).cast::<Self>())}}
+    fn field(&self,ordinal:usize)->Result<(&'static str,&dyn ArtifactCanonicalJsonTree),ValueError>{
+        let sequence=3+usize::from(self.0.actor.is_some())+usize::from(!self.0.mutation_meta.is_empty())+usize::from(self.0.verb.is_some());
+        if ordinal==sequence{return Ok(("sequenceNumber",&self.0.sequence_number));}
+        self.0.canonical_field(ordinal-usize::from(ordinal>sequence))
+    }
+}
+impl<M:ArtifactCanonicalJsonTree> ArtifactCanonicalJsonTree for EditWireTree<M>{
+    fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{match self.0.canonical_tree_node()?{Node::Object(count)=>Ok(Node::Object(count+1)),_=>Err(absent())}}
+    fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{Ok(self.field(ordinal)?.1)}
+    fn canonical_tree_key(&self,ordinal:usize)->Result<ArtifactCanonicalJsonText<'_>,ValueError>{Ok(self.field(ordinal)?.0.into())}
+}
+
 impl MutationMeta {
  fn canonical_field(&self,mut ordinal:usize)->Result<(&'static str,&dyn ArtifactCanonicalJsonTree),ValueError>{
   if selected(&mut ordinal,self.mutation_id.is_some()){return Ok(("mutation_id",&self.mutation_id));}

@@ -4,7 +4,7 @@ use semio_framework_pack_json::{parse, Value};
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::entities::puzzle5d_grip_full_id;
 #[allow(unused_imports)]
-use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::commands::{apply_sun, cycle_brush_candidate, delete_selection, duplicate_selection, engagement_abort, engagement_control_select, engagement_input, engagement_repeat_last, engagement_submit, register_brush_mesh, rotate_selection, scale_selection, select_same_kind, set_brush_placement_contact_tolerance, set_camera, set_camera_2d, set_camera_3d, set_fill_count, set_grid_factor, set_grid_snap_enabled, set_kind_weight, set_lod_mode, set_selection_flag, set_suggestion_offset, target_brush_suggestions, translate_selection, world_relocate};
 #[allow(unused_imports)]
@@ -193,7 +193,10 @@ fn puzzle5d_host_admission_neutral_projection_and_granular_inverse_match_indepen
     let before = admit("before");
     let after = admit("after");
     assert_eq!(after.parts[0].part_2d.x, independent["after"]["parts"][0]["2d"]["x"].as_f64().expect("independent coordinate"));
-    use crate::standards::v1::subsets::any::schema::mutations::{create_part, delete_part, move_part_2d, move_part_3d};
+    use crate::standards::v1::subsets::any::schema::mutations::create_part;
+    use crate::standards::v1::subsets::any::schema::mutations::delete_part;
+    use crate::standards::v1::subsets::any::schema::mutations::move_part_2d;
+    use crate::standards::v1::subsets::any::schema::mutations::move_part_3d;
     let operations = vec![delete_part("p1".into()), move_part_2d("p2".into(), 9.0, 0.0), move_part_3d("p2".into(), [9.0, 0.0, 0.0]), create_part(after.parts[1].clone(), None)];
     assert!(operations.iter().any(|operation| matches!(operation, Puzzle5dMutation::CreatePart(_))));
     assert!(operations.iter().any(|operation| matches!(operation, Puzzle5dMutation::DeletePart(_))));
@@ -202,11 +205,11 @@ fn puzzle5d_host_admission_neutral_projection_and_granular_inverse_match_indepen
     let mut inverses = Vec::new();
     for operation in &operations {
         inverses.extend(protocol::Mutation::<Puzzle5dSnapshot>::inverse(operation, &state).expect("typed inverse"));
-        state = protocol::apply_diff(protocol::Mutation::<Puzzle5dSnapshot>::diff(operation, &state).diff(), &state).expect("typed intent");
+        state = protocol::apply_diff_cold(protocol::Mutation::<Puzzle5dSnapshot>::diff(operation, &state).diff(), &state).expect("typed intent");
     }
     assert_eq!(state, after);
     for inverse in inverses.iter().rev() {
-        state = protocol::apply_diff(protocol::Mutation::<Puzzle5dSnapshot>::diff(inverse, &state).diff(), &state).expect("typed inverse intent");
+        state = protocol::apply_diff_cold(protocol::Mutation::<Puzzle5dSnapshot>::diff(inverse, &state).diff(), &state).expect("typed inverse intent");
     }
     assert_eq!(state, before);
     let projected = puzzle5d_document_from_snapshot(&after).expect("owned native projection");

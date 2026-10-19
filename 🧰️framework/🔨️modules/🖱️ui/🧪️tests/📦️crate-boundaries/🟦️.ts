@@ -5,8 +5,8 @@ import { resolve, dirname } from "node:path";
 import { Database } from "bun:sqlite";
 import TOML from "@iarna/toml";
 import Ajv from "ajv";
-import { readRustSourceClosureV1 } from "@semio-tech/process/artifacts/native-build/source";
-import { rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
+import { readRustSourceClosureV1 } from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+import { rustTokens } from "../../../📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 
 const ui = resolve(import.meta.dir, "../.."), read = (path: string) => readFileSync(resolve(ui, path), "utf8");
 type Manifest = { package: { name: string }; lib: { path: string }; dependencies: Record<string, { package?: string; path?: string }>; target?: Record<string, { dependencies?: Record<string, { package?: string; path?: string }> }> };
@@ -21,9 +21,10 @@ for (const row of corpus.crates) test(row.package + " owns an acyclic production
   expect(own).toEqual(oracle);
   expect(own.package.name).toBe(row.package);
   const project = JSON.parse(read(row.manifest.replace("Cargo.toml", "📋️project.json"))) as { name: string };
-  const launches = JSON.parse(readFileSync(resolve(ui, "../../..", ".vscode/launch.json"), "utf8")) as { configurations: { command?: string }[] };
-  for (const target of ["build", "check", "test"]) for (const mode of ["prototype", "release"])
-    expect(launches.configurations.some(launch => launch.command === `bun repo run ${project.name}:${target} --configuration=${mode} --parallel=1 -- --lib --offline`)).toBe(true);
+  const owners = JSON.parse(readFileSync(resolve(process.cwd(), "📋️build-owners.json"), "utf8")).owners as { name: string; manifest: string }[];
+  const owner = owners.find(owner => owner.name === project.name);
+  expect(owner, project.name).toBeDefined();
+  expect(resolve(process.cwd(), owner!.manifest)).toBe(resolve(ui, row.manifest.replace("Cargo.toml", "📋️project.json")));
   expect(resolve(ui, row.manifest, "..", own.lib.path)).toBe(resolve(ui, row.entry));
   const declared = Object.assign({}, own.dependencies, ...Object.values(own.target ?? {}).map(target => target.dependencies ?? {})) as Manifest["dependencies"];
   const dependencies = Object.entries(declared).map(([alias, edge]) => edge.package ?? alias).sort();

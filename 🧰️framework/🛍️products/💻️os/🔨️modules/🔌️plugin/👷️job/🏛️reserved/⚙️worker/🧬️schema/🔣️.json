@@ -1,0 +1,65 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.configuration-worker-custody.v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "event",
+          "before",
+          "after",
+          "binding",
+          "failure"
+        ],
+        "properties": {
+          "event": {
+            "enum": [
+              "pending",
+              "admit",
+              "pump",
+              "terminal",
+              "close",
+              "cancel",
+              "refusal",
+              "wrongRoot"
+            ]
+          },
+          "before": {
+            "enum": [
+              "source",
+              "session",
+              "closed"
+            ]
+          },
+          "after": {
+            "enum": [
+              "source",
+              "session",
+              "closed"
+            ]
+          },
+          "binding": {
+            "enum": [
+              "same",
+              "foreign"
+            ]
+          },
+          "failure": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

@@ -10,11 +10,11 @@ pub async fn test_mounted_original_owned_publication<A: ArtifactApp, M: SpaceMem
             verb: "compositeEdit".into(), meta, operation, canonical_revision: revision,
             artifact_generation: operation.generation.0, config_generation: 0, draft_generation: 0, presence_generation: 0, transient_generation: 0,
             window_config_authority: None, window_transient_authority: None, publication_lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Child], contract: Some(semio_framework::ToolExecutionContract::bounded_first_step(1 << 20, 1 << 20, 1 << 20, 1 << 20, 7_999)),
-            session: None, session_rejected: None, reserved_producer: None, completion: None, completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input: None, output_chunks: None, cancellation_lease: Some(lease), identity: None, identity_progress: semio_framework_value::native_encoding::NativeEncodeProgress { completed: 0, total: 0, owned_bytes: 0 }, worker_semantic_pending: false, worker_outcome_pending: false, worker_fault_capture: None, terminal_seen: true, worker_resume_pending: false,
+            session: None, session_rejected: None,producer_source:None,producer_request:None,producer_request_retirement:None, reserved_producer: None, completion: None, completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input: None, output_chunks: None, cancellation_lease: Some(lease), identity: None, identity_progress: semio_framework_value::native_encoding::NativeEncodeProgress { completed: 0, total: 0, owned_bytes: 0 }, worker_semantic_pending: false, worker_outcome_pending: false, worker_fault_capture: None, terminal_seen: true, worker_resume_pending: false,
             publication: Some(ArtifactToolCompletionValue::Emit(Ok(emit), EphemeralEmit::default())), pending_artifact_publication: None, pending_publication_outcome: PendingPublicationOutcome::new(), pending_window_config_receipt: None, cancellation_retirement: None, pending_child_publication: None,
             owned_child_group: None, owned_child_committed: false, owned_child_result_pending: false,
             captured_child_content: Some(std::sync::Arc::new(ChildContentView::clone(&app.child_composition.child_content_root))), captured_child_content_generation: app.child_composition.child_content_generation,
-            result_page: None, result_page_presented: false, result_sequence: 0, publication_progress: 0, publication_checkpoint: None, publication_ownership_progress: None, original_retirement_receipt: None, actor_capture: None, publication_attempt: 0,
+            result_page: None, diagnostics:None, result_page_presented: false, result_sequence: 0, publication_progress: 0, publication_checkpoint: None, publication_ownership_progress: None, original_retirement_receipt: None, actor_capture: None, publication_attempt: 0,
             ui_pending: true, progress: None, progress_pending: false, user_cancel_requested: false, published_artifact: false, published_config: false, published_window_config: false,
             command_logged: false, interaction_revalidated: false, retained_close_fault: None,retained_close_fault_retirement:None,retained_close_fault_refusal:None, terminal_fault: None, stage: MountedTypedCommandFullOperationStage::Publishing,
         };
@@ -38,7 +38,7 @@ pub async fn test_mounted_original_owned_publication<A: ArtifactApp, M: SpaceMem
             assert!(changed.iter().all(|changed| *changed) || changed.iter().all(|changed| !*changed), "all original child lanes share one visibility decision");
             if parent_touched { assert_eq!(app.stores.store.content_revision_now() != revision, changed[0], "original parent and every child flip together"); }
             if mounted.stage == MountedTypedCommandFullOperationStage::AwaitingAck {
-                let page = mounted.take_result_page().unwrap();
+                let mut page = mounted.take_fixture_result_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation).unwrap();
                 let bytes = page.bytes().to_vec();
                 let token = page.token;
                 assert!(mounted.take_result_page().is_none());
@@ -47,7 +47,8 @@ pub async fn test_mounted_original_owned_publication<A: ArtifactApp, M: SpaceMem
                 assert_eq!(mounted.result_page.as_ref().unwrap().token, token);
                 if page.lane == TypedOperationResultLane::Child { child_page = true; assert!(mounted.owned_child_committed); assert_eq!(app.history.command_log.len(),command_count+1); assert_eq!(app.history.command_log.iter().next_back().unwrap().action_id,"compositeEdit"); }
                 let terminal = matches!(page.lane, TypedOperationResultLane::Terminal | TypedOperationResultLane::Fault);
-                assert!(mounted.acknowledge_result_page(token).unwrap());
+                let closed=crate::app_testing::artifact_app_laws::close_fixture_result_page(&mut page,crate::app_testing::artifact_app_laws::fixture_mounted_policy().close);assert_eq!(closed,token);assert!(mounted.acknowledge_result_page(token).unwrap());
+mounted.close_fixture_original_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().close);
                 if terminal { break; }
             }
         }

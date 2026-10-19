@@ -151,7 +151,8 @@ impl<S: PackSink> PackWriter<S> {
     /// failed at `encode: UnsupportedCodec(1)`, i.e. no document with a blob past
     /// `chunk_threshold` could be written at all.
     pub async fn begin_identity_chunk(&mut self, payload_len: usize) -> Result<PackIdentityChunk<'_, S>, S::Error> {
-        let base = self.sink.position().await;
+                if self.options.required_flags&REQUIRED_CHUNKED==0{return Err(PackRefusal::RetainedMalformed{kind:ValueRefusalKind::InvalidValue,what:"required_chunked",offset:12,detail:"append-only chunk writer requires declared REQUIRED_CHUNKED"}.into());}
+let base = self.sink.position().await;
         let mut length = [0u8; 10];
         let mut remaining = payload_len as u64;
         let mut count = 0usize;
@@ -203,7 +204,8 @@ impl<S: PackSink> PackWriter<S> {
     /// chunk table `finish` will emit.
     #[cfg(any(test, feature = "testkit"))]
     pub async fn write_chunk(&mut self, payload: &[u8]) -> Result<ChunkId, S::Error> {
-        if self.options.codec.0 == 0 {
+                if self.options.required_flags&REQUIRED_CHUNKED==0{return Err(PackRefusal::RetainedMalformed{kind:ValueRefusalKind::InvalidValue,what:"required_chunked",offset:12,detail:"append-only chunk writer requires declared REQUIRED_CHUNKED"}.into());}
+if self.options.codec.0 == 0 {
             let mut chunk = self.begin_identity_chunk(payload.len()).await?;
             chunk.write_fragment(payload).await?;
             return chunk.finish().await;
@@ -223,7 +225,8 @@ impl<S: PackSink> PackWriter<S> {
     /// 🏁️ Writes the chunk table (if any chunks were written), the manifest, an `End`
     /// segment, then the footer — and returns the underlying sink.
     pub async fn finish(mut self, manifest: &Manifest) -> Result<S, S::Error> {
-        let chunk_count = self.chunks.len() as u64;
+                if (self.options.required_flags&REQUIRED_CHUNKED!=0)!=!self.chunks.is_empty(){return Err(PackRefusal::RetainedMalformed{kind:ValueRefusalKind::InvalidValue,what:"required_chunked",offset:12,detail:"writer REQUIRED_CHUNKED disagrees with completed chunk custody"}.into());}
+let chunk_count = self.chunks.len() as u64;
         let mut chunk_table_span = ByteRange { offset: 0, len: 0 };
         if !self.chunks.is_empty() {
             let base = self.sink.position().await;

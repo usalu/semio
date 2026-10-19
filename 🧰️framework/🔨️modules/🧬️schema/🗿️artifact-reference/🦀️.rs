@@ -20,7 +20,7 @@ impl SubsetId { pub const ANY:Self=Self("*"); }
 pub struct Dialect { pub artifact_kind:&'static str,pub standard:StandardId,pub subset:SubsetId }
 
 /// 🧭️ An owned artifact dialect with three exact identity fields.
-#[derive(Clone,Debug,PartialEq,Eq,PartialOrd,Ord,Hash,Serialize,Deserialize,ToValue,FromValue,semio_framework_value::RetainedClone)]
+#[derive(Clone,Debug,PartialEq,Eq,PartialOrd,Ord,Hash,Serialize,Deserialize,ToValue,FromValue,semio_framework_value::RetainedClone,semio_framework_value::RetainedEquality,semio_framework_value::NativeReceive)]
 #[serde(crate="semio_framework_value::serde",rename_all="camelCase")]
 #[value(rename_all="camelCase",deny_unknown_fields)]
 pub struct ArtifactDialect { pub artifact_kind:String,pub standard:String,pub subset:String }
@@ -74,7 +74,7 @@ impl std::fmt::Display for ArtifactKindId {
 pub use semio_framework_artifact_reference_borrow::{BorrowedArtifactRef, is_canonical_artifact_kind};
 
 /// 🔗️ One artifact identity and its owned dialect.
-#[derive(Clone,Debug,PartialEq,Eq,Hash,ToValue,FromValue,semio_framework_value::RetainedClone)]
+#[derive(Clone,Debug,PartialEq,Eq,Hash,ToValue,FromValue,semio_framework_value::RetainedClone,semio_framework_value::RetainedEquality,semio_framework_value::NativeReceive)]
 #[value(rename_all="camelCase",deny_unknown_fields)]
 pub struct ArtifactRef{pub artifact_id:String,pub dialect:ArtifactDialect}
 

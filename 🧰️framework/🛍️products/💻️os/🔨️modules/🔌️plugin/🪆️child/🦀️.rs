@@ -1,4 +1,5 @@
 //! 🪆️ Child members and child content: member keys and paths, the member registry, owned document ingress and child content views.
+use semio_framework_value::ErasedSnapshotRetirement as _;
 extern crate semio_framework_os_kernel as store;
 use std::mem::ManuallyDrop;
 use semio_framework_plugin_decl_views::child_view::CHILD_CONTENT_SLOTS;

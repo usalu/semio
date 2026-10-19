@@ -22,6 +22,17 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rotate", entity: "part", kind: "rotate-part3d", record: "RotatedPart3d" };
 
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate part \"{}\" (3d)", self.id), &format!("Bauteil \"{}\" (3D) drehen", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for RotatePart3d {
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
@@ -31,12 +42,6 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate part \"{}\" (3d)", self.id), &format!("Bauteil \"{}\" (3D) drehen", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation
 

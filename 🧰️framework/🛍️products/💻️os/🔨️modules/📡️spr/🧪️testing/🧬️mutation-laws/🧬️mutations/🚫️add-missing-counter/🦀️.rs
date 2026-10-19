@@ -14,6 +14,11 @@ pub struct AddMissingCounter {}
 //#region ⚙️Behavior
 impl MutationKind<i64, CounterMutation> for AddMissingCounter {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "missing-counter", kind: "add-missing-counter", record: "AddedMissingCounter" };
+
+
+}
+
+impl crate::os_spr::ColdMutationKind<i64, CounterMutation> for AddMissingCounter {
     fn diff(&self, _base: &i64) -> MutationOutcome<CounterDiff> {
         MutationOutcome::error("mutation.target-missing", "target absent", ["thing"])
     }
@@ -46,6 +51,6 @@ impl OpText for AddMissingCounter {
 
 //#region 🧪️Contract
 #[cfg(test)]
-#[path = "../../../../🧪️tests/🧬️mutation-laws-mutations-add-missing-counter/🦀️.rs"]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Contract

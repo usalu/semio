@@ -1,5 +1,5 @@
-//! ↩️ Inverse for `EditTargetRegionLabel` — restores the BASE field values on the addressed region. Missing
 //! target ⇒ `Vec::new()`.
+//! ↩️ Inverse for `EditTargetRegionLabel` — restores the BASE field values on the addressed region. Missing
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Inverse

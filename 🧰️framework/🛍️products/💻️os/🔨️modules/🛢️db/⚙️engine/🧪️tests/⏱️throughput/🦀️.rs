@@ -58,7 +58,7 @@ fn opaque_edit(document: &protocol::ArtifactId, mutation_id: String, previous: O
     protocol::MutationEnvelope {
         mutation_id: protocol::MutationId(mutation_id),
         document_id: document.clone(),
-        actor: protocol::ActorId("throughput-author".to_string()),
+        actor: protocol::ActorId("throughput-author".to_string().into()),
         dependencies: previous.into_iter().cloned().collect(),
         observed: None,
         target: Vec::new(),
@@ -122,7 +122,7 @@ async fn greet(database: &Database, document: &protocol::ArtifactId, session: St
     let asked = std::time::Instant::now();
     let handle = database.ensure_document(document).await.unwrap();
     let mounted = asked.elapsed();
-    let mut greeting = database.hello(document.clone(), None, session, protocol::ActorId("semio_hub".to_string()), 64 * 1024).await.unwrap();
+    let mut greeting = database.hello(document.clone(), None, session, protocol::ActorId("semio_hub".to_string().into()), 64 * 1024).await.unwrap();
     greeting.take_welcome().unwrap().acknowledge().unwrap();
     let welcomed = asked.elapsed();
     let mut frames = 0;
@@ -213,7 +213,7 @@ async fn throughput_law(target: ThroughputTarget) {
     let mounted = db_io_registry::db_io_census().since(&before);
     let before = db_io_registry::db_io_census();
     let hello_started = std::time::Instant::now();
-    let mut greeting = database.hello(cost_document.clone(), None, "throughput-solo".to_string(), protocol::ActorId("semio_hub".to_string()), 64 * 1024).await.unwrap();
+    let mut greeting = database.hello(cost_document.clone(), None, "throughput-solo".to_string(), protocol::ActorId("semio_hub".to_string().into()), 64 * 1024).await.unwrap();
     greeting.take_welcome().unwrap().acknowledge().unwrap();
     let hello = hello_started.elapsed();
     while let Some(frame) = greeting.next_frame().await.unwrap() {

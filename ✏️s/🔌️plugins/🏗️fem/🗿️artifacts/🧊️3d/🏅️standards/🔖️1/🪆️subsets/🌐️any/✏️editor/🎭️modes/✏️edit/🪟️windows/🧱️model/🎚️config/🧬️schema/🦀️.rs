@@ -43,26 +43,31 @@ impl Fem3dModelWindowConfigPatch {
 }
 
 impl protocol::MutationDiff<Fem3dModelWindowConfig> for Fem3dModelWindowConfigPatch {
-    fn apply(&self, base: &Fem3dModelWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Fem3dModelWindowConfig> {
-        Ok(Fem3dModelWindowConfig {
-            camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()),
-            gumball: self.gumball.clone().unwrap_or_else(|| base.gumball.clone()),
-        })
-    }
+
+}
+impl protocol::ColdMutationDiff<Fem3dModelWindowConfig> for Fem3dModelWindowConfigPatch {
     fn absorb(&mut self, other: Self) {
         self.camera = other.camera.or_else(|| self.camera.take());
         self.gumball = other.gumball.or_else(|| self.gumball.take());
     }
+
+    fn apply(&self, base: &mut Fem3dModelWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        if let Some(value) = &self.camera { base.camera = value.clone(); }
+        if let Some(value) = &self.gumball { base.gumball = value.clone(); }
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<Fem3dModelWindowConfig> for Fem3dModelWindowConfigPatch {
+    fn is_empty(&self) -> bool {
+        self.camera.is_none() && self.gumball.is_none()
+    }
+}
+impl protocol::ColdDiffAlgebra<Fem3dModelWindowConfig> for Fem3dModelWindowConfigPatch {
     fn inverse(&self, base: &Fem3dModelWindowConfig) -> Self {
         Self {
             camera: self.camera.as_ref().map(|_| base.camera.clone()),
             gumball: self.gumball.as_ref().map(|_| base.gumball.clone()),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.camera.is_none() && self.gumball.is_none()
     }
 }

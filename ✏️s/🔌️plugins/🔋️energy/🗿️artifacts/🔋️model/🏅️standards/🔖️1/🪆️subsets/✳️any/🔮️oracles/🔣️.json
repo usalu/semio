@@ -4916,7 +4916,12 @@
         "change-gas-material-thickness",
         "change-gas-material-gas",
         "rename-gas-material",
-        "change-material-roughness"
+        "change-material-roughness",
+        "change-glazing-material-solar-reflectance-front",
+        "change-glazing-material-solar-reflectance-back",
+        "change-glazing-material-visible-reflectance-front",
+        "change-glazing-material-visible-reflectance-back",
+        "change-glazing-material-infrared-transmittance"
       ]
     }
   ],
@@ -11062,6 +11067,111 @@
             "operation": "change-material-roughness",
             "bridgeVersion": 1,
             "variant": "ChangeMaterialRoughness"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-glazing-material-solar-reflectance-front",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🥂️window-layer/🔅️solar-front/🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-glazing-material-solar-reflectance-front",
+            "bridgeVersion": 1,
+            "variant": "ChangeGlazingMaterialSolarReflectanceFront"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-glazing-material-solar-reflectance-back",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🥂️window-layer/🔆️solar-back/🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-glazing-material-solar-reflectance-back",
+            "bridgeVersion": 1,
+            "variant": "ChangeGlazingMaterialSolarReflectanceBack"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-glazing-material-visible-reflectance-front",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🥂️window-layer/🔎️visible-front/🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-glazing-material-visible-reflectance-front",
+            "bridgeVersion": 1,
+            "variant": "ChangeGlazingMaterialVisibleReflectanceFront"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-glazing-material-visible-reflectance-back",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🥂️window-layer/🪞️visible-back/🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-glazing-material-visible-reflectance-back",
+            "bridgeVersion": 1,
+            "variant": "ChangeGlazingMaterialVisibleReflectanceBack"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-glazing-material-infrared-transmittance",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🥂️window-layer/🌡️infrared-transmittance/🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-glazing-material-infrared-transmittance",
+            "bridgeVersion": 1,
+            "variant": "ChangeGlazingMaterialInfraredTransmittance"
           },
           "oracleRequirements": [
             {

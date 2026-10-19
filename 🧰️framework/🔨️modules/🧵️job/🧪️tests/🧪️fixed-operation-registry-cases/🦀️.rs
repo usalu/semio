@@ -1,7 +1,7 @@
 // 🧪️ Generated from 📇️fixed-operation-registry-law.json by the root verifier.
 #[test]
 fn language_neutral_fixed_operation_registry_laws_execute_production_registry() {
-    let source=RetainedCloneGrant{maximum_items:16,maximum_copy_bytes:32768,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128};let mut caller=OriginalJobFixtureCaller::admit(OperationId(97841),Generation(1),source,caller_clock,2,1);
+    let source=FIXTURE_ORIGINAL_STOCK;let mut caller=OriginalJobFixtureCaller::admit(OperationId(97841),Generation(1),source,caller_clock,2,FIXTURE_ORIGINAL_FUEL);
     {
         let mut registry = FixedOperationRegistry::<Owner, 1>::new(1);
         let mut output = Vec::new();

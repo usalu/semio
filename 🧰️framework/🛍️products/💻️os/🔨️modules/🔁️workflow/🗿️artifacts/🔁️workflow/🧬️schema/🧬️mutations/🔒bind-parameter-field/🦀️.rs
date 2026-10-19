@@ -15,6 +15,17 @@ pub struct BindParameterField {
 //#region ⚙️Semantics
 impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for BindParameterField {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "workflow", kind: "bind-parameter-field", record: "BoundWorkflowParameterField" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Bind workflow parameter {}", self.binding.parameter_id), &format!("Arbeitsablaufparameter {} binden", self.binding.parameter_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["parameter-bindings".into(), self.binding.node_id.clone(), self.binding.field_path.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<WorkflowSnapshot, WorkflowMutation> for BindParameterField {
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
         protocol::MutationOutcome::new(WorkflowDiff::BindParameterField { binding: self.binding.clone() })
     }
@@ -23,12 +34,6 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for BindParamete
             Some(prior) => WorkflowMutation::BindParameterField(Self { binding: prior.clone() }),
             None => WorkflowMutation::UnbindParameterField(UnbindParameterField { node_id: self.binding.node_id.clone(), field_path: self.binding.field_path.clone() }),
         }])
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Bind workflow parameter {}", self.binding.parameter_id), &format!("Arbeitsablaufparameter {} binden", self.binding.parameter_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["parameter-bindings".into(), self.binding.node_id.clone(), self.binding.field_path.clone()]
     }
 }
 //#endregion ⚙️Semantics

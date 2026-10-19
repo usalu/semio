@@ -1,0 +1,11 @@
+{
+  "vectors": [
+    {"id":"stable-replacement","base":[{"id":"a","value":1},{"id":"b","value":2}],"patches":[{"target":"a","row":{"id":"a","value":7}}],"accepted":true,"expected":[{"id":"a","value":7},{"id":"b","value":2}]},
+    {"id":"renamed-row","base":[{"id":"a","value":1}],"patches":[{"target":"a","row":{"id":"c","value":7}}],"accepted":false,"expected":[{"id":"a","value":1}]},
+    {"id":"colliding-row","base":[{"id":"a","value":1},{"id":"b","value":2}],"patches":[{"target":"a","row":{"id":"b","value":7}}],"accepted":false,"expected":[{"id":"a","value":1},{"id":"b","value":2}]},
+    {"id":"later-refusal-is-atomic","base":[{"id":"a","value":1},{"id":"b","value":2}],"patches":[{"target":"a","row":{"id":"a","value":7}},{"target":"b","row":{"id":"c","value":8}}],"accepted":false,"expected":[{"id":"a","value":1},{"id":"b","value":2}]},
+    {"id":"missing-target","base":[{"id":"a","value":1}],"patches":[{"target":"missing","row":{"id":"missing","value":7}}],"accepted":false,"expected":[{"id":"a","value":1}]},
+    {"id":"ordered-repeated-patches","base":[{"id":"a","value":1}],"patches":[{"target":"a","row":{"id":"a","value":7}},{"target":"a","row":{"id":"a","value":9}}],"accepted":true,"expected":[{"id":"a","value":9}]},
+    {"id":"two-independent-patches","base":[{"id":"a","value":1},{"id":"b","value":2}],"patches":[{"target":"a","row":{"id":"a","value":7}},{"target":"b","row":{"id":"b","value":8}}],"accepted":true,"expected":[{"id":"a","value":7},{"id":"b","value":8}]}
+  ]
+}

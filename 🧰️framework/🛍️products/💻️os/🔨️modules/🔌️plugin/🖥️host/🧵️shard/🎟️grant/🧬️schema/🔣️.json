@@ -9,7 +9,9 @@
     "replayMissing",
     "closeMissing",
     "receiverCarrier",
-    "dispatch"
+    "dispatch",
+    "loan",
+    "loanCases"
   ],
   "additionalProperties": false,
   "properties": {
@@ -27,6 +29,11 @@
           "maximumCapacityBytes": 128,
           "maximumReleaseBytes": 97,
           "maximumDepth": 8
+        },
+        "work": {
+          "clockBinding": 1271,
+          "absoluteDeadlineUs": 1000000,
+          "fuel": 64
         }
       }
     },
@@ -100,10 +107,72 @@
           "maxFrames": 1
         },
         "singleAuthorityWire": {
-          "byteLength": 112,
-          "hex": "02470000000000000040000000000000000300000000004000000000004000000004000100000040000000010000004700000000000000030000000000000013000000000000000100000000000000000000000000000080000000000000006100000000000000080000000000000000"
+          "byteLength": 192,
+          "hex": "0247000000000000004000000000000000030000000000400000000000400000000400010000004000000001000000470000000000000003000000000000001300000000000000f70400000000000040420f0000000000400000000000000001000000000000000000000000000000800000000000000061000000000000000800000000000000010000000000000000000000000000008000000000000000610000000000000008000000000000002000000000000000a0bb0d000000000000"
         }
       }
+    },
+    "loan": {
+      "const": {
+        "retainedPolicy": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 0,
+          "maximumCapacityBytes": 128,
+          "maximumReleaseBytes": 97,
+          "maximumDepth": 8
+        },
+        "workFuel": 32,
+        "deadlineUs": 900000
+      }
+    },
+    "loanCases": {
+      "const": [
+        {
+          "axis": "same",
+          "value": 0,
+          "admitted": true
+        },
+        {
+          "axis": "maximumItems",
+          "value": 2,
+          "admitted": false
+        },
+        {
+          "axis": "maximumCopyBytes",
+          "value": 1,
+          "admitted": false
+        },
+        {
+          "axis": "maximumCapacityBytes",
+          "value": 129,
+          "admitted": false
+        },
+        {
+          "axis": "maximumReleaseBytes",
+          "value": 98,
+          "admitted": false
+        },
+        {
+          "axis": "maximumDepth",
+          "value": 9,
+          "admitted": false
+        },
+        {
+          "axis": "workFuel",
+          "value": 65,
+          "admitted": false
+        },
+        {
+          "axis": "deadlineUs",
+          "value": 1000001,
+          "admitted": false
+        },
+        {
+          "axis": "deadlineUs",
+          "value": 0,
+          "admitted": false
+        }
+      ]
     }
   }
 }

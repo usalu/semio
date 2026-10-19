@@ -7,7 +7,15 @@ use std::collections::{HashMap, HashSet};
 use crate::standards::v1::subsets::any::schema::transfer::{owning_part_id};
 
 use crate::standards::v1::subsets::any::schema::transfer::*;
-use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dCatalogPartKind, Puzzle5dCompatSpecificity, Puzzle5dGrip, Puzzle5dGripTemplate, Puzzle5dKindCatalogs, Puzzle5dKindCompatibility, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor};
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dCatalogPartKind;
+use crate::Puzzle5dCompatSpecificity;
+use crate::Puzzle5dGrip;
+use crate::Puzzle5dGripTemplate;
+use crate::Puzzle5dKindCatalogs;
+use crate::Puzzle5dKindCompatibility;
+use crate::Puzzle5dPart2d;
+use crate::Puzzle5dPart3d;
+use crate::Puzzle5dPartAnchor;
 
 fn part_at(id: &str, x: f64, y: f64) -> Puzzle5dPart {
     Puzzle5dPart {

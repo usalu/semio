@@ -64,7 +64,9 @@ pub struct KeyedTestCommandDisposer {
 
     #[doc(hidden)]
 pub struct KeyedTestJobSources {
-        pub raw_wire: Option<semio_framework_plugin_decl_app::tool_contract::ArtifactToolRawInput>,
+        controller_id:Option<String>,
+        tool_id:Option<String>,
+        schema_id:Option<String>,
         pub read: Option<store::os_store::snapshot_read::SnapshotRead<TestSnapshot>>,
         pub snapshot: Option<std::sync::Arc<TestSnapshot>>,
         pub config: Option<std::sync::Arc<TestConfig>>,
@@ -84,9 +86,9 @@ pub struct KeyedTestJobSources {
         pub fn demands(&self) -> Result<Option<semio_framework_value::RetirementDemand>, semio_framework_value::ValueError> {
             macro_rules! owned { ($field:ident) => { if self.$field.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.$field).map(Some); } }; }
             macro_rules! lease { ($field:ident) => { if self.$field.is_some() { return store::os_store::snapshot_read::artifact_retirement_shared_lease_birth_demands(&self.$field).map(Some); } }; }
-            if self.raw_wire.is_some() { return Ok(Some(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() })); }
-            if self.window_config.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "keyed fixture has no retirement lane for a window config snapshot")); }
-            owned!(read); owned!(context); owned!(instance_owner); owned!(output); owned!(parent_document_id); owned!(authoring_seed);
+
+
+            owned!(controller_id);owned!(tool_id);owned!(schema_id);owned!(window_config);owned!(read); owned!(context); owned!(instance_owner); owned!(output); owned!(parent_document_id); owned!(authoring_seed);
             lease!(snapshot); lease!(config); lease!(history); lease!(interaction); lease!(hover);
             Ok(None)
         }
@@ -94,8 +96,8 @@ pub struct KeyedTestJobSources {
         pub fn step(&mut self, active: &mut Option<Box<dyn store::ErasedSnapshotRetirement>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<semio_framework_value::retained_clone::RetainedCloneStep>, semio_framework_value::ValueError> {
             macro_rules! owned { ($field:ident) => { if self.$field.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.$field, active, grant).map(Some); } }; }
             macro_rules! lease { ($field:ident) => { if self.$field.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_shared_lease(&mut self.$field, active, grant).map(Some); } }; }
-            if self.raw_wire.take().is_some() { return Ok(Some(semio_framework_value::retained_clone::RetainedCloneStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }))); }
-            owned!(read); owned!(context); owned!(instance_owner); owned!(output); owned!(parent_document_id); owned!(authoring_seed);
+
+            owned!(controller_id);owned!(tool_id);owned!(schema_id);owned!(window_config);owned!(read); owned!(context); owned!(instance_owner); owned!(output); owned!(parent_document_id); owned!(authoring_seed);
             lease!(snapshot); lease!(config); lease!(history); lease!(interaction); lease!(hover);
             Ok(None)
         }
@@ -225,20 +227,9 @@ pub struct KeyedTestFactory {
         fn execution_contract(&self) -> ToolExecutionContract {
             ToolExecutionContract::resumable(32_768, 4, 1, 4_096, 500, 1, 1)
         }
-        fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-            Ok(payload)
-        }
-        fn create_job_from_wire_pages_with_payload(
-            &mut self,
-            _operation: semio_framework_job::Operation,
-            mut payload: Self::Payload,
-            input: action_bus::RetainedToolWireInput,
-            checkpoint: Option<action_bus::RetainedToolWireInput>,
-        ) -> Result<Self::Job, (ToolJobFactoryError, action_bus::RetainedToolWireInput, Option<action_bus::RetainedToolWireInput>)> {
-            assert!(checkpoint.is_none());
-            payload.raw = Some(input);
-            Ok(payload)
-        }
+        fn admission_demands(&self,_operation:&semio_framework_job::Operation,payload:&Self::Payload,input:Option<&semio_framework::RetainedToolWireInput>,checkpoint:Option<&semio_framework::RetainedToolWireInput>)->Result<semio_framework::action_bus::ToolJobAdmissionDemand,semio_framework_value::ValueError>{if checkpoint.is_some()||(input.is_some()&&payload.raw.is_some()){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original typed job refuses a replacement wire owner or restart checkpoint"));}Ok(semio_framework::action_bus::ToolJobAdmissionDemand::reused_job())}
+fn admit_job(&mut self,context:&mut semio_framework_job::StepContext<'_>,operation:&semio_framework_job::Operation,payload:&mut Option<Box<Self::Payload>>,input:&mut Option<semio_framework::RetainedToolWireInput>,checkpoint:&mut Option<semio_framework::RetainedToolWireInput>,output:&mut Option<Box<Self::Job>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let demand=self.admission_demands(operation,payload.as_deref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typed job payload is absent"))?,input.as_ref(),checkpoint.as_ref())?;semio_framework::action_bus::admit_original_tool_job_controlled(context,operation,payload,input,checkpoint,output,demand,|_,payload,input,_|{if input.is_some(){payload.as_mut().expect("retained original job").raw=input.take();}let job=payload.take().expect("admitted same original job");Ok((job,semio_framework_job::RetainedCloneProgress{copied_items:1,..Default::default()}))})}
+
     }
 
     impl ArtifactOwnedToolJobFactory for KeyedTestFactory {
@@ -283,13 +274,13 @@ pub struct KeyedTestFactory {
         fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, Self>) -> Result<(), Fault> {
             registry.register(KeyedTestFactory { keys: vec![ToolFactoryKey::new(registry.controller_id(), "compositeEdit")] })
         }
-        async fn build_tool_job(request: ArtifactOwnedToolJobRequest<Self>) -> Result<Option<ToolOperationSpec>, Fault> {
+        fn build_tool_job(request:&mut Option<ArtifactOwnedToolJobRequest<Self>>,output:&mut Option<semio_framework::ErasedToolJob>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{crate::app_testing::mutation_fixture::job_close::admit_fixture_tool_job(request,output,cx,|mut request|{
             assert!(request.snapshot.label.is_empty());
             let base_count = request.snapshot.count;
-            let sources = KeyedTestJobSources { raw_wire: Some(request.raw_wire), read: Some(request.snapshot_read), snapshot: Some(request.snapshot), config: Some(request.config), history: Some(request.history), window_config: request.window_config, interaction: Some(request.interaction_state), hover: Some(request.interaction_hover), context: Some(request.context), instance_owner: Some(request.instance_operation_owner), output: Some(request.output_chunks), parent_document_id: Some(request.parent_document_id), authoring_seed: Some(request.authoring_seed) };
-            let job = KeyedTestJob { command: Some(request.command), completion: Some(request.completion), raw: None, page: 0, base_count, closing: false, sources: Some(sources), rejected: None, admitted: false, retirement: None };
-            Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, job, request.operation)))
-        }
+            let sources = KeyedTestJobSources { controller_id:Some(request.controller_id),tool_id:Some(request.tool_id),schema_id:Some(request.payload_schema_id), read: Some(request.snapshot_read), snapshot: Some(request.snapshot), config: Some(request.config), history: Some(request.history), window_config: request.window_config, interaction: Some(request.interaction_state), hover: Some(request.interaction_hover), context: Some(request.context), instance_owner: Some(request.instance_operation_owner), output: Some(request.output_chunks), parent_document_id: Some(request.parent_document_id), authoring_seed: Some(request.authoring_seed) };
+            let job = KeyedTestJob { command: Some(request.command), completion: Some(request.completion), raw: request.input.take(), page: 0, base_count, closing: false, sources: Some(sources), rejected: None, admitted: false, retirement: None };
+
+job})}
         fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
             Some(store::mutation_apply_preparation_factory::<TestSnapshot, TestMutation>())
         }

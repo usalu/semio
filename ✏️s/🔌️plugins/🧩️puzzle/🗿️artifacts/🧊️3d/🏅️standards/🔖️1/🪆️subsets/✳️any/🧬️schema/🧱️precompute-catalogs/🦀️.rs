@@ -62,10 +62,10 @@ impl Default for BrushHostRules {
 pub struct BrushKindWeights {
     #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub object_weights: std::collections::BTreeMap<String, f64>,
+    pub object_weights: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, f64>,
     #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub vortex_weights: std::collections::BTreeMap<String, f64>,
+    pub vortex_weights: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, f64>,
 }
 
 #[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

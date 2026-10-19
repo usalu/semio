@@ -6,7 +6,7 @@ struct FaultingEphemeralTask {
 }
 
 impl ArtifactEphemeralPreparationTask<DemoSnapshot, DemoMutation> for FaultingEphemeralTask {
-    fn advance(&mut self, _: &DemoSnapshot, _: &mut Option<DemoMutation>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactEphemeralPreparationTaskStep<DemoSnapshot>, ValueError> {
+    fn advance(&mut self, _: &DemoSnapshot, _: &mut Option<DemoMutation>, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactEphemeralPreparationTaskStep<DemoSnapshot>, ValueError> {
         if !self.invalid_receipt {
             return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"injected construction failure"));
         }
@@ -20,7 +20,8 @@ impl ArtifactEphemeralPreparationTask<DemoSnapshot, DemoMutation> for FaultingEp
 }
 
 impl ErasedSnapshotRetirement for FaultingEphemeralTask {
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() })}
+fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         assert!(self.closing);
         let empty = RetainedCloneProgress::default();
         Ok(if grant.maximum_items == 0 { RetainedCloneStep::Progress(empty) } else { RetainedCloneStep::Complete(empty) })
@@ -69,9 +70,9 @@ fn ephemeral_transfer_preparation_faults_close_presence_and_transient_owners() {
         let mut presence_publication = presence.begin_publish_one(semio_framework_job::OperationId(1), 0, mutation(), Some(&factory), Some(presence_root_factory)).unwrap();
         let mut transient = TransientStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { n: Some(0) });
         let mut transient_publication = transient.begin_publish_one_leased(semio_framework_job::OperationId(2), 0, mutation(), &factory, Arc::new(DemoInitialSnapshotRetirementFactory)).unwrap();
-        let presence_advance = presence.advance_publish_one(&mut presence_publication, grant);
+        let presence_advance = receiving_fixture.receive(|receiving|presence.advance_publish_one(&mut presence_publication, grant,receiving));
         let presence_error = ephemeral_refusal(presence_advance, presence_publication.fault());
-        let transient_advance = transient.advance_publish_one(&mut transient_publication, grant);
+        let transient_advance = receiving_fixture.receive(|receiving|transient.advance_publish_one(&mut transient_publication, grant,receiving));
         let transient_error = ephemeral_refusal(transient_advance, transient_publication.fault());
         assert_eq!(presence_error, row["fault"].as_str().unwrap());
         assert_eq!(transient_error, presence_error);
@@ -99,7 +100,8 @@ fn ephemeral_transfer_preparation_faults_close_presence_and_transient_owners() {
 /// checkpoint the same way.
 #[semio_framework_async_macros::async_test]
 async fn an_ephemeral_one_item_publication_reports_monotone_progress_across_owner_release() {
-    let grant = ephemeral_test_close_grant();
+        let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
+let grant = ephemeral_test_close_grant();
     let factory = DemoEphemeralPreparationFactory::admissible();
     let mut transient = TransientStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { n: Some(0) });
     let mut publication = transient.begin_publish_one(semio_framework_job::OperationId(41), 0, DemoMutation::SetN(SetN { n: 4 }), Some(&factory), Some(Arc::new(DemoSnapshotRetirementFactory))).expect("ephemeral publication admits");
@@ -116,9 +118,9 @@ async fn an_ephemeral_one_item_publication_reports_monotone_progress_across_owne
         *seen = next;
     };
     loop {
-        let advance = transient.advance_publish_one(&mut publication, grant).expect("ephemeral step");
+        let advance = receiving_fixture.receive(|receiving|transient.advance_publish_one(&mut publication, grant,receiving)).expect("ephemeral step");
         check(publication.progress(), &mut seen, "advance");
-        if matches!(advance, ArtifactStoreOneItemAdvance::Published(_)) {
+        if matches!(advance, ArtifactStoreOneItemAdvance::Published(_, _)) {
             break;
         }
     }
@@ -138,7 +140,8 @@ async fn an_ephemeral_one_item_publication_reports_monotone_progress_across_owne
 
 #[semio_framework_async_macros::async_test]
 async fn presence_and_transient_one_item_publications_are_retained_stale_safe_cancelable_and_exactly_closed() {
-    let grant = ephemeral_test_close_grant();
+        let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
+let grant = ephemeral_test_close_grant();
     let presence_factory = DemoEphemeralPreparationFactory::admissible();
     let mut presence = PresenceStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { n: Some(0) });
     let root_factory: Arc<dyn SnapshotRetirementFactory<DemoSnapshot>> = Arc::new(DemoSnapshotRetirementFactory);
@@ -146,7 +149,7 @@ async fn presence_and_transient_one_item_publications_are_retained_stale_safe_ca
     let old_presence_root = Arc::downgrade(presence.local_root().expect("live local presence owner"));
     let mut presence_publication = presence.begin_publish_one(semio_framework_job::OperationId(5), 0, DemoMutation::SetN(SetN { n: 5 }), Some(&presence_factory), Some(root_factory.clone())).expect("presence factory admits");
     let presence_receipt = loop {
-        if let ArtifactStoreOneItemAdvance::Published(receipt) = presence.advance_publish_one(&mut presence_publication, grant).expect("presence step") {
+        if let ArtifactStoreOneItemAdvance::Published(receipt, _) = receiving_fixture.receive(|receiving|presence.advance_publish_one(&mut presence_publication, grant,receiving)).expect("presence step") {
             break receipt;
         }
     };
@@ -180,7 +183,7 @@ async fn presence_and_transient_one_item_publications_are_retained_stale_safe_ca
     let mut transient_publication =
         transient.begin_publish_one(semio_framework_job::OperationId(8), 0, DemoMutation::SetN(SetN { n: 11 }), Some(&transient_factory), Some(Arc::new(DemoSnapshotRetirementFactory))).expect("transient publication admits");
     let transient_receipt = loop {
-        if let ArtifactStoreOneItemAdvance::Published(receipt) = transient.advance_publish_one(&mut transient_publication, grant).expect("transient step") {
+        if let ArtifactStoreOneItemAdvance::Published(receipt, _) = receiving_fixture.receive(|receiving|transient.advance_publish_one(&mut transient_publication, grant,receiving)).expect("transient step") {
             break receipt;
         }
     };

@@ -2,13 +2,13 @@
   "nodes": null,
   "elements": null,
   "materials": {
-    "inserted": [],
     "removed": [
       {
         "id": "gl32c",
         "index": 4
       }
     ],
+    "inserted": [],
     "moved": [],
     "modified": []
   },

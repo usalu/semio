@@ -1,9 +1,10 @@
 //! 📥️ `AdmitLocalDocument` is the authoritative direct Rust leaf for listing one document in this device's local catalog.
 
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::super::{absorb_keyed_rows, KeyedEdit};
 use super::retire_local_document::RetireLocalDocument;
 use super::LocalCatalogConfigMutation;
-use protocol::{MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
+use protocol::{MutationDiff, ColdMutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Schema
@@ -49,7 +50,17 @@ pub struct LocalCatalogDiff {
 }
 
 impl MutationDiff<LocalCatalog> for LocalCatalogDiff {
-    fn apply(&self, base: &LocalCatalog, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<LocalCatalog> {
+
+
+
+}
+
+impl ColdMutationDiff<LocalCatalog> for LocalCatalogDiff {
+    fn absorb(&mut self, other: Self) {
+        absorb_keyed_rows(&mut self.documents, other.documents);
+    }
+
+    fn apply(&self, base: &mut LocalCatalog, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         let mut documents = base.documents.clone();
         for row in &self.documents {
             documents.retain(|entry| entry.document_id != row.key);
@@ -58,21 +69,22 @@ impl MutationDiff<LocalCatalog> for LocalCatalogDiff {
             }
         }
         documents.sort_by(|left, right| left.document_id.cmp(&right.document_id));
-        Ok(LocalCatalog { documents })
-    }
-
-    fn absorb(&mut self, other: Self) {
-        absorb_keyed_rows(&mut self.documents, other.documents);
+                base.documents = documents;
+        Ok(())
     }
 }
 
 impl protocol::DiffAlgebra<LocalCatalog> for LocalCatalogDiff {
-    fn inverse(&self, base: &LocalCatalog) -> Self {
-        Self { documents: self.documents.iter().map(|row| KeyedEdit::new(row.key.clone(), base.documents.iter().find(|entry| entry.document_id == row.key).cloned())).collect() }
-    }
+
 
     fn is_empty(&self) -> bool {
         self.documents.is_empty()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<LocalCatalog> for LocalCatalogDiff {
+    fn inverse(&self, base: &LocalCatalog) -> Self {
+        Self { documents: self.documents.iter().map(|row| KeyedEdit::new(row.key.clone(), base.documents.iter().find(|entry| entry.document_id == row.key).cloned())).collect() }
     }
 }
 //#endregion 🔖️Schema
@@ -112,6 +124,20 @@ impl From<&AdmitLocalDocument> for LocalDocument {
 impl MutationKind<LocalCatalog, LocalCatalogConfigMutation> for AdmitLocalDocument {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "local-document", kind: "admit-local-document", record: "Set" };
 
+
+
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Keep \"{}\" on this device", self.name), &format!("\"{}\" auf diesem Gerät behalten", self.name))
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec![self.document_id.clone()]
+    }
+}
+
+impl crate::os_spr::ColdMutationKind<LocalCatalog, LocalCatalogConfigMutation> for AdmitLocalDocument {
     fn diff(&self, base: &LocalCatalog) -> MutationOutcome<LocalCatalogDiff> {
         let admitted = LocalDocument::from(self);
         if base.documents.iter().any(|entry| *entry == admitted) {
@@ -119,7 +145,6 @@ impl MutationKind<LocalCatalog, LocalCatalogConfigMutation> for AdmitLocalDocume
         }
         MutationOutcome::new(LocalCatalogDiff { documents: vec![KeyedEdit::new(self.document_id.clone(), Some(admitted))] })
     }
-
     fn inverse(&self, base: &LocalCatalog) -> Result<Vec<LocalCatalogConfigMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         match base.documents.iter().find(|entry| entry.document_id == self.document_id) {
@@ -129,14 +154,6 @@ impl MutationKind<LocalCatalog, LocalCatalogConfigMutation> for AdmitLocalDocume
     
     })())
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Keep \"{}\" on this device", self.name), &format!("\"{}\" auf diesem Gerät behalten", self.name))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.document_id.clone()]
-    }
 }
 //#endregion 🔖️Mutation
 

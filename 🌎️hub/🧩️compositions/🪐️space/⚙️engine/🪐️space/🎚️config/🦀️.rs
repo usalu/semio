@@ -2,6 +2,7 @@
 //! at app level: `Config`/`ConfigMutation` are inherently app-scoped, and this app owns no
 //! document-side artifact — see `🦀️.rs`'s module doc for why).
 
+use protocol::ColdMutation;
 use crate::S_PLAY_CATALOGUE_TAB_ID;
 use semio_framework_os::OsWorkflowCamera;
 use std::collections::BTreeMap;
@@ -581,7 +582,14 @@ impl protocol::Mutation<SpaceConfig> for SpaceConfigMutation {
 
     type Diff = SpaceConfigDiff;
 
-    fn diff(&self, base: &SpaceConfig) -> protocol::MutationOutcome<SpaceConfigDiff> {
+
+
+
+}
+
+impl protocol::protocol::ColdMutation<SpaceConfig> for SpaceConfigMutation {
+ type ReferenceDiff = SpaceConfigDiff;
+fn diff(&self, base: &SpaceConfig) -> protocol::MutationOutcome<SpaceConfigDiff> {
         protocol::MutationOutcome::new(match self {
             SpaceConfigMutation::SetActiveNode(ActiveNodeSetting { node_id }) => SpaceConfigDiff { active_node_id: (base.active_node_id != *node_id).then(|| node_id.clone()), ..Default::default() },
             SpaceConfigMutation::SetFocusedNode(FocusedNodeSetting { node_id }) => SpaceConfigDiff { focused_node_id: (base.focused_node_id != *node_id).then(|| node_id.clone()), ..Default::default() },
@@ -610,8 +618,7 @@ impl protocol::Mutation<SpaceConfig> for SpaceConfigMutation {
             SpaceConfigMutation::SetActivePanelTab(ActivePanelTabSetting { tab_id }) => SpaceConfigDiff { active_panel_tab: (base.active_panel_tab != *tab_id).then(|| tab_id.clone()), ..Default::default() },
         })
     }
-
-    fn inverse(&self, base: &SpaceConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+fn inverse(&self, base: &SpaceConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
             SpaceConfigMutation::SetActiveNode(_) => SpaceConfigMutation::SetActiveNode(ActiveNodeSetting { node_id: base.active_node_id.clone() }),
             SpaceConfigMutation::SetFocusedNode(_) => SpaceConfigMutation::SetFocusedNode(FocusedNodeSetting { node_id: base.focused_node_id.clone() }),

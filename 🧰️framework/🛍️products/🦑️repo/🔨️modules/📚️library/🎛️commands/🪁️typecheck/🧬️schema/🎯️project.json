@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schemas/repo/typecheck/project-selection",
+  "title": "Owned TypeScript Project Selection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["project", "args"],
+  "properties": {
+    "project": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^(?![/~\\\\])(?![A-Za-z]:)(?!(.*/)?\\.\\.(/|$))[^\\u0000\\\\]+\\.json$" },
+    "args": { "type": "array", "maxItems": 8, "uniqueItems": true, "items": { "enum": ["--extendedDiagnostics", "--diagnostics", "--pretty", "--listFiles", "--listFilesOnly", "--explainFiles", "--traceResolution", "--noErrorTruncation"] } }
+  }
+}

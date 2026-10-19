@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "base": {"title": "source", "nodes": [{"id": "n", "text": "before"}]},
+  "mutation": {"kind": "set-text", "index": 0, "text": "after"},
+  "cases": [
+    {"boundary": "decision", "inverseRows": 0, "issuerCalls": 0, "postText": "before"},
+    {"boundary": "inverse", "inverseRows": 1, "issuerCalls": 1, "postText": "before"}
+  ]
+}

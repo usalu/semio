@@ -57,8 +57,7 @@
     ],
     "dotnet": [
       "{projectRoot}/**/*.cs",
-      "{projectRoot}/**/*.csproj",
-      "{workspaceRoot}/Monorepo.sln"
+      "{projectRoot}/**/*.csproj"
     ],
     "nativeSources": [
       "production"

@@ -25,6 +25,17 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "part", kind: "replace-part2d-geometry", record: "ReplacedPart2dGeometry" };
 
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace part \"{}\" 2d geometry", self.id), &format!("2D-Geometrie von Bauteil \"{}\" ersetzen", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ReplacePart2dGeometry {
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
@@ -34,12 +45,6 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace part \"{}\" 2d geometry", self.id), &format!("2D-Geometrie von Bauteil \"{}\" ersetzen", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation
 

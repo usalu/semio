@@ -20,14 +20,12 @@ where
     Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     /// 📬️ Captures one immutable projection or inference input from the current reconciled snapshot.
-    pub fn projection_event<Previous, Policy>(&self, store_log: &StoreLog<P, Mutation>, store_wire: &StoreWire<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, cause: ArtifactProjectionCause, previous: Option<Previous>, cache_mode: ArtifactProjectionCacheMode, policy: Policy) -> Result<ArtifactProjectionEvent<P, Previous, Policy>, VcsError> {
-        Ok(ArtifactProjectionEvent { stamp: store_cursor.projection_stamp(store_log, store_wire), cause, state: self.snapshot(store_wire)?, previous, cache_mode, policy })
-    }
+    
 
     /// ⚡️ The live snapshot: the incrementally-maintained `current` fold, as-is. Always `Ok`
     /// in practice (kept as `Result` for API stability); O(1) instead of a full replay. See the
     /// `current` field doc for the maintenance invariant.
-    pub fn snapshot(&self, store_wire: &StoreWire<P, Mutation>) -> Result<P, VcsError> {
+    pub fn snapshot(&self, store_wire: &StoreWire<P, Mutation>) -> Result<P, VcsError>  where P: Clone {
         Ok(store_wire.durable_group_read_root().map_or(self.current.as_ref(), |root| root.current.as_ref().expect("unadopted durable group root retains its current snapshot").as_ref()).clone())
     }
 
@@ -48,102 +46,10 @@ where
     }
 
     /// ⏭️ Resolves identities or folds at most one operation between deadline checks; downstream operations are excluded.
-    pub fn step_derived_history_preview(&self, store_log: &StoreLog<P, Mutation>, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, preview: &mut ArtifactDerivedHistoryPreview<P, Mutation>, retirement_grant:RetainedCloneGrant, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
-        store_cursor.admit_derived_source(store_owners, store_wire, &preview.registry, preview.generation, preview.revision)?;
-        if preview.plan_retirement.is_some() {
-            preview.retire_completed_plan(retirement_grant).map_err(|error|VcsError::ValidationFailed(error.into_message()))?;
-            return Ok(ReplayStep::Pending(preview.progress));
-        }
-        if let Some(plan) = preview.plan.as_mut() {
-            if !self.step_history_read_plan(store_log, store_wire, store_cursor, plan, deadline)? {
-                return Ok(ReplayStep::Pending(plan.progress));
-            }
-            let live_until=preview.retain_completed_plan();
-            let (start, base) = self.live_base(store_log, store_cursor, live_until);
-            preview.cursor = start;
-            preview.state = Some(base);
-            return Ok(ReplayStep::Pending(preview.progress));
-        }
-        let (position, op_index) = preview.target.ok_or_else(|| VcsError::ValidationFailed("history preview lost its target".into()))?;
-        while !preview.finished {
-            if preview.cursor == position && preview.operation == op_index {
-                preview.finished = true;
-                break;
-            }
-            let edit = store_cursor.applied_edit(store_log, store_wire, preview.cursor)?;
-            if preview.operation == edit.forwards.len() {
-                preview.cursor += 1;
-                preview.operation = 0;
-                continue;
-            }
-            let index = preview.operation;
-            if index == 0 {
-                let count = if preview.cursor == position { op_index } else { edit.forwards.len() };
-                preview.progress.total = preview.progress.total.saturating_add(u32::try_from(count).unwrap_or(u32::MAX));
-            }
-            let id = semio_framework_os_spr::mutation_id_for_edit_operation::<P, Mutation>(edit, index).expect("recorded operation identity");
-            let draft = preview.drafts.get(&id).map(|replacement| protocol::EffectiveSupersession { transition_id: DRAFT_SUPERSESSION_ID.into(), actor: semio_framework_value::SharedUtf8::default(), timestamp: HybridLogicalTimestamp::new(0, 0), scope: None, replacement: replacement.clone() });
-            let effective = effective_operation_with_supersession::<P, Mutation>(&edit.forwards[index], index as u32, id.clone(), &store_log.envelope.schema, draft.as_ref().or_else(|| self.supersessions.get(&id)));
-            if let Some(operation) = effective.operation() {
-                let running = preview.state.as_mut().expect("preview running projection");
-                if let (Some(next), _) = fold_operation::<P, Mutation>(running, operation, index as u32) {
-                    <Arc<P> as FoldProjection<P, Mutation>>::advance(running, next);
-                }
-            }
-            preview.operation += 1;
-            preview.progress.done = preview.progress.done.saturating_add(1);
-            if deadline() {
-                return Ok(ReplayStep::Pending(preview.progress));
-            }
-        }
-        Ok(ReplayStep::Finished(preview.progress))
-    }
+    
 
     /// ⏭️ Steps sealed planning and replay against this store's actual immutable frontier.
-    pub fn step_derived_report_replay(&self, store_log: &StoreLog<P, Mutation>, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, owner: &mut ArtifactDerivedReplay<P, Mutation>, retirement_grant:RetainedCloneGrant, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
-        store_cursor.admit_derived_source(store_owners, store_wire, &owner.registry, owner.generation, owner.revision)?;
-        if owner.plan_retirement.is_some() {
-            owner.retire_completed_plan(retirement_grant).map_err(|error|VcsError::ValidationFailed(error.into_message()))?;
-            return Ok(ReplayStep::Pending(owner.replay.as_ref().map_or_else(ReplayProgress::default,|replay|replay.progress())));
-        }
-        if let Some(plan) = owner.plan.as_mut() {
-            if !self.step_history_read_plan(store_log, store_wire, store_cursor, plan, deadline)? {
-                return Ok(ReplayStep::Pending(plan.progress));
-            }
-            let generation=owner.generation;let revision=owner.revision;
-            let plan=owner.retain_completed_plan();
-            let from = plan.first_input;
-            let horizon = plan.last_draft;
-            let (start, base) = self.live_base(store_log, store_cursor, from);
-            let total = plan.operations.saturating_sub(plan.counts[from]);
-            let mut replay = EditReplay::new_counted(ReplayMode::Report, base, std::mem::replace(&mut plan.order,semio_framework_os_vcs::HistoryPageStack::empty()), from, &store_log.envelope.schema, std::mem::take(&mut plan.supersessions), total)?;
-            replay.cursor = start;
-            replay.prefix_work_progress = true;
-            replay.progress.total = replay.progress.total.saturating_add(plan.counts[from].saturating_sub(plan.counts[start]));
-            replay.progress.done = plan.progress.done;
-            replay.progress.total = replay.progress.total.saturating_add(plan.progress.done);
-            replay = replay.with_base(generation, revision).with_drafts(std::mem::take(&mut plan.drafts));
-            replay.operation_preparation_factory = (*store_owners.replay_preparation_factory).clone();
-            if let (Some(snapshots), Some(mutations)) = ((*store_owners.initial_snapshot_retirement_factory).clone(), (*store_owners.mutation_retirement_factory).clone()) {
-                replay = replay.with_retirement_factories(snapshots, mutations);
-            } else if replay.operation_preparation_factory.is_some() {
-                let _ = replay.retire_unscheduled();
-                return Err(VcsError::ValidationFailed("interactive operation preparation requires exact replay retirement factories".into()));
-            }
-            if let (Some(horizon), Some(equal)) = (horizon, self.snapshot_equality) {
-                match self.convergence_checkpoints(store_log, store_cursor, horizon, equal) {
-                    Ok(checkpoints) => replay = replay.with_convergence(Some(checkpoints)),
-                    Err(error) => {
-                        let _ = replay.retire_unscheduled();
-                        return Err(error);
-                    }
-                }
-            }
-            owner.replay = Some(replay);
-            return Ok(ReplayStep::Pending(owner.replay.as_ref().expect("planned replay").progress()));
-        }
-        owner.replay.as_mut().ok_or_else(|| VcsError::ValidationFailed("derived replay lost its cursor".into()))?.step(&IndexedAppliedReplayEdits { edits: &store_log.envelope.vcs.edits, revision: &store_cursor.revision_accumulator, ids: &store_log.applied_edit_ids }, deadline)
-    }
+    
 
     fn step_history_read_plan(&self, store_log: &StoreLog<P, Mutation>, store_wire: &StoreWire<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, plan: &mut HistoryReadPlan, deadline: &mut dyn FnMut() -> bool) -> Result<bool, VcsError> {
         use std::ops::Bound::{Excluded, Unbounded};
@@ -448,7 +354,7 @@ where
     /// order, WITHOUT the final `Mutation::reconcile` pass — the from-scratch computation `current`
     /// is an incrementally-maintained cache of. Used to recompute `current` on the cold paths that
     /// reassign `applied_edit_ids` wholesale instead of appending/popping its tail.
-    pub async fn fold_current(&self, store_log: &StoreLog<P, Mutation>) -> Result<P, VcsError> {
+    pub async fn fold_current(&self, store_log: &StoreLog<P, Mutation>) -> Result<P, VcsError>  where P: Clone, Mutation: ColdMutation<P> {
         fold_history(&store_log.envelope, &*store_log.applied_edit_ids, &self.supersessions).await
     }
 

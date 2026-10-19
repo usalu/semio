@@ -205,6 +205,7 @@ impl Drop for BudgetedEvalTopology {
 }
 struct TopologyRetirement(BudgetedEvalTopology);
 impl semio_framework_value::retirement::RetirementCursor for TopologyRetirement {
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.0.next_close_demands(body) }
     fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;match self.0.close_step(grant){Ok(step) if step.progress()!=RetainedCloneProgress::default()=>RetirementStep::Progress(step.progress()),Ok(RetainedCloneStep::Complete(_))=>RetirementStep::Complete,Ok(_)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error)}}
     fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.next_close_demands(0)?.copy_bytes)}

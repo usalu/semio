@@ -3,7 +3,7 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/mesh/mutation/move-selection/schema.json",
   "title": "MoveSelection",
   "x-semio-inverse-rows": { "perTarget": { "nodeIds": 1, "regionIds": 1 } },
-  "description": "The `move-selection` mutation payload as it travels the wire: internally tagged with `\"mutation\": \"moveSelection\"`, camelCase throughout. Its hard bounds (positive factors, targets named once) state exactly the payload-intrinsic breaches the diff refuses as `mutation.invariant`, so every such payload fails this schema; refusals that depend on the base (no named target exists) belong to the diff alone.",
+  "description": "The `move-selection` mutation payload as it travels the wire: internally tagged with `\"mutation\": \"moveSelection\"`, camelCase throughout. Its hard bounds (positive factors, targets named once) state exactly the payload-intrinsic breaches the diff refuses as `mutation.invariant`, so every such payload fails this schema; refusals that depend on the base (no named target exists) belong to the diff alone. The forward diff authors only changed node ordinates and region outline/hole fields. Its inverse restores exactly those fields, preserving independent collaborator edits. Mapped geometry must remain finite and admissible before any field is published.",
   "type": "object",
   "additionalProperties": false,
   "required": [

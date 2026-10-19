@@ -27,6 +27,30 @@
         "type": "string"
       }
     },
+    "moves": {
+      "description": "Positional reorder rows applied last and in order: the item `id` leaves position `from` and lands at position `to`, both read in the list as it stands when the row applies.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "from",
+          "to"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "from": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Index"
+          },
+          "to": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Index"
+          }
+        }
+      }
+    },
     "widgetCollection": {
       "type": "object",
       "additionalProperties": false,
@@ -72,6 +96,9 @@
             ],
             "additionalItems": false
           }
+        },
+        "moved": {
+          "$ref": "#/definitions/moves"
         }
       }
     },
@@ -120,6 +147,9 @@
             ],
             "additionalItems": false
           }
+        },
+        "moved": {
+          "$ref": "#/definitions/moves"
         }
       }
     },

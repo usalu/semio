@@ -201,7 +201,9 @@ impl<P, Mutation: super::Mutation<P> + OpBinary> EditReplay<P, Mutation> {
         if self.retiring { return Err(VcsError::HistoryReplaying); }
         self.original.step(edits, deadline)
     }
-    pub fn step_operations(&mut self, edits: &impl ReplayEdits<Mutation>, maximum_operations: usize, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
+        /// 🎟️ Executes one replay operation frontier under the caller's unchanged original resource allowance.
+    pub fn step_granted(&mut self,edits:&impl ReplayEdits<Mutation>,grant:RetainedCloneGrant,control:&mut semio_framework_value::NativeDecodeControl<'_>,deadline:&mut dyn FnMut()->bool)->Result<ReplayStep,VcsError>{if self.retiring{return Err(VcsError::HistoryReplaying);}if deadline()||grant.maximum_items==0{return Ok(ReplayStep::Pending(self.progress));}{self.native_receipt=Default::default();self.original.step_with_operation_cap(edits,1,Some(grant),Some(control),&mut||true)}}
+pub fn step_operations(&mut self, edits: &impl ReplayEdits<Mutation>, maximum_operations: usize, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
         if self.retiring { return Err(VcsError::HistoryReplaying); }
         self.original.step_operations(edits, maximum_operations, deadline)
     }

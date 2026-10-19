@@ -7,6 +7,9 @@ use super::*;
 #[derive(Debug, Default)]
 pub struct Registry {
     pub(super) root: PathBuf,
+    pub(super) source_projects: Vec<(String, String)>,
+    pub(super) source_cancelled: std::sync::Mutex<HashSet<u64>>,
+    pub(super) source_discovery: std::sync::Mutex<HashMap<String, SourceDiscovery>>,
     pub(super) entries: Vec<Entry>,
     pub(super) index: HashMap<String, usize>,
     pub(super) axes: Vec<Parameter>,

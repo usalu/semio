@@ -52,7 +52,6 @@ semio-s-plugin-puzzle-jobs = { workspace = true }
 semio-s-plugin-puzzle-retained = { workspace = true }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
-js-sys = { workspace = true }
 pack = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 serde_json = { workspace = true }

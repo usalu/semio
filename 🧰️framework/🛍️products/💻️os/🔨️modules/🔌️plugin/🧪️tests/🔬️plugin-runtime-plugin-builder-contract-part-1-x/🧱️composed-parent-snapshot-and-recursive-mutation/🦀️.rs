@@ -25,9 +25,9 @@ struct ComposedParentSnapshot {
 
 
 impl store::os_store::serialization::ArtifactSqliteSnapshotHost for ComposedParentSnapshot {
-    
-    
-    
+
+
+
 }
 impl pack::snapshot::ArtifactSqliteSnapshot for ComposedParentSnapshot {
 const SQLITE_SCHEMA: &'static str = include_str!("../../🧩️composition/🪴️parent.sql");
@@ -134,23 +134,34 @@ struct ComposedParentDiff {
 }
 
 impl protocol::DiffAlgebra<ComposedParentSnapshot> for ComposedParentDiff {
-    fn inverse(&self, base: &ComposedParentSnapshot) -> Self {
-        Self { revision: self.revision.map(|_| base.revision) }
-    }
+
     fn is_empty(&self) -> bool {
         self.revision.is_none()
     }
 }
 
-impl protocol::MutationDiff<ComposedParentSnapshot> for ComposedParentDiff {
-    fn apply(&self, base: &ComposedParentSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<ComposedParentSnapshot> {
-        Ok(ComposedParentSnapshot { slot: base.slot.clone(), revision: self.revision.unwrap_or(base.revision) })
+impl protocol::ColdDiffAlgebra<ComposedParentSnapshot> for ComposedParentDiff {
+    fn inverse(&self, base: &ComposedParentSnapshot) -> Self {
+        Self { revision: self.revision.map(|_| base.revision) }
     }
+}
 
+impl protocol::MutationDiff<ComposedParentSnapshot> for ComposedParentDiff {
+
+
+
+}
+
+impl protocol::ColdMutationDiff<ComposedParentSnapshot> for ComposedParentDiff {
     fn absorb(&mut self, other: Self) {
         if other.revision.is_some() {
             self.revision = other.revision;
         }
+    }
+
+    fn apply(&self, base: &mut ComposedParentSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+                if let Some(value) = self.revision { base.revision = value; }
+        Ok(())
     }
 }
 
@@ -158,9 +169,15 @@ impl Mutation<ComposedParentSnapshot> for RecursiveFixtureMutation {
     type Diff = ComposedParentDiff;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[RECURSIVE_FIXTURE_MUTATION_DESCRIPTOR];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &RECURSIVE_FIXTURE_MUTATION_DESCRIPTOR }
-    fn diff(&self, _base: &ComposedParentSnapshot) -> protocol::MutationOutcome<Self::Diff> { protocol::MutationOutcome::new(ComposedParentDiff { revision: Some(self.value) }) }
+
+
+}
+
+impl crate::os_spr::ColdMutation<ComposedParentSnapshot> for RecursiveFixtureMutation {
+    type ReferenceDiff = ComposedParentDiff;
+    fn diff(&self, _base: &ComposedParentSnapshot) -> protocol::MutationOutcome<Self::ReferenceDiff> { protocol::MutationOutcome::new(ComposedParentDiff { revision: Some(self.value) }) }
     fn inverse(&self, base: &ComposedParentSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| { vec![Self { value: base.revision }] 
+    Ok((|| { vec![Self { value: base.revision }]
     })())
 }
 }
@@ -178,7 +195,7 @@ impl pack::snapshot::ArtifactDsl for ComposedParentSnapshot {
 
 impl ArtifactPack for ComposedParentSnapshot {
     /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    
+
 
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         Ok(semio_framework_pack_json::to_json_string(self).into_bytes())

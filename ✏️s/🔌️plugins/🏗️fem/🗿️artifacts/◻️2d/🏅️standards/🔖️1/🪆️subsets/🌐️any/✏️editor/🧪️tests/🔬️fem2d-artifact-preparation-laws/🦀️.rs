@@ -1,7 +1,9 @@
 use super::*;
 use semio_framework_value::retained_clone::RetainedCloneStep;
-use semio_framework_value::retirement::{OwnedValueRetirementFactory, SharedValueRetirementFactory};
-use store::{os_store::one_item_publication::ArtifactStoreOneItemPreparation, os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory};
+use semio_framework_value::retirement::OwnedValueRetirementFactory;
+use semio_framework_value::retirement::SharedValueRetirementFactory;
+use store::os_store::one_item_publication::ArtifactStoreOneItemPreparation;
+use store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory;
 
 #[test]
 fn admitted_document_mutations_make_bounded_progress_and_retire() {
@@ -9,7 +11,7 @@ fn admitted_document_mutations_make_bounded_progress_and_retire() {
     let id = String::from("original n1 雪 λ🙂");
     let pointer = id.as_ptr();
     let capacity = id.capacity();
-    let mutation = Fem2dMutation::CreateNode(semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode { id, x: 0.0, y: 0.0 }, index: None });
+    let mutation = Fem2dMutation::CreateNode(semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: semio_s_fem_node::planar::FemNodeValue { id, x: 0.0, y: 0.0 }, index: None });
     assert_eq!(factory.preflight(&mutation, store::os_store::store_schema::HistoryLane::Document).expect("document admission").work_items, store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
     let owners = store::OneItemOwners::detached(mutation, std::sync::Arc::new(OwnedValueRetirementFactory::<Fem2dMutation>::default()), std::sync::Arc::new(SharedValueRetirementFactory::<Fem2dSnapshot>::default()));
     let mut work = Fem2dArtifactPreparation { owners, checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), cancelled: false };

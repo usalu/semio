@@ -3,8 +3,10 @@
 use super::*;
 
 pub struct StagedRootRetirement<P, Mutation> {
-    pub edit: Option<semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement<Mutation>>,
-    pub external_strings: [Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>; 2],
+        pub planning_output: Option<semio_framework_value::retirement::controlled::ControlledRetirement<DurablePlanningOutputV1>>,
+    pub diagnostics: Option<semio_framework_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage>,
+pub edit: Option<semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement<Mutation>>,
+    pub external_strings: [Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>; 3],
     pub cursor: Option<semio_framework_os_store_read::ArtifactStoreCursorRetirement>,
     pub applied: Option<semio_framework_os_store_read::ArtifactStoreStringVectorRetirement>,
     pub redo: Option<semio_framework_os_store_read::ArtifactStoreStringVectorRetirement>,
@@ -21,7 +23,7 @@ pub struct StagedRootRetirement<P, Mutation> {
 
 impl<P, Mutation> StagedRootRetirement<P, Mutation> {
     pub fn new(factory: Arc<dyn semio_framework_value::SnapshotRetirementFactory<P>>) -> Self {
-        Self { edit: None, external_strings: Default::default(), cursor: None, applied: None, redo: None, revision: None, report: None, tail_id: None, authority: None, snapshots: [None, None], active: None, factory: Some(factory), factory_close: None, phase: 0 }
+        Self { planning_output: None, diagnostics: None, edit: None, external_strings: Default::default(), cursor: None, applied: None, redo: None, revision: None, report: None, tail_id: None, authority: None, snapshots: [None, None], active: None, factory: Some(factory), factory_close: None, phase: 0 }
     }
 
     fn inline_owner(&self) -> Option<&dyn semio_framework_value::ErasedSnapshotRetirement> {
@@ -68,10 +70,12 @@ impl<P: Send + Sync, Mutation: Send + 'static> StagedRootRetirement<P, Mutation>
     pub fn demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
         let nested = |mut demand: RetirementDemand| { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "staged root child depth overflow"))?; Ok(demand) };
-        if let Some(active) = self.active.as_ref() { return nested(semio_framework_os_store_read::artifact_retirement_box_demands(active, maximum_body_bytes)?); }
+                if let Some(owner)=self.planning_output.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<DurablePlanningOutputV1>>(),depth:1,..Default::default()});}return nested(owner.next_demand(maximum_body_bytes)?);}
+        if let Some(owner)=self.diagnostics.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<semio_framework_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage>(),depth:1,..Default::default()});}return nested(owner.close_demands(maximum_body_bytes)?);}
+if let Some(active) = self.active.as_ref() { return nested(semio_framework_os_store_read::artifact_retirement_box_demands(active, maximum_body_bytes)?); }
         if self.edit.is_some() { return semio_framework_os_store_read::retirement_owner_demands(&self.edit, maximum_body_bytes); }
         if self.external_strings.iter().any(Option::is_some) { return Ok(RetirementDemand { capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>(), depth: 2, ..Default::default() }); }
-        if let Some(owner) = self.inline_owner() { return nested(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(maximum_body_bytes)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()? }); }
+        if let Some(owner) = self.inline_owner() { return nested(owner.next_demand(maximum_body_bytes)?); }
         if (7..9).contains(&self.phase) {
             if let Some(snapshot) = self.snapshots[usize::from(self.phase - 7)].as_ref() { return Ok(RetirementDemand { capacity_bytes: self.factory.as_ref().expect("staged root retains its snapshot factory").retirement_birth_bytes(snapshot), depth: 2, ..Default::default() }); }
         }
@@ -82,7 +86,8 @@ impl<P: Send + Sync, Mutation: Send + 'static> StagedRootRetirement<P, Mutation>
 }
 
 impl<P: Send + Sync, Mutation: Send + 'static> semio_framework_value::ErasedSnapshotRetirement for StagedRootRetirement<P, Mutation> {
-    fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.demands(0)?.copy_bytes) }
+        fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands(body) }
+fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.demands(0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, maximum_body_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.demands(maximum_body_bytes)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.demands(0)?.depth) }
@@ -95,7 +100,9 @@ impl<P: Send + Sync, Mutation: Send + 'static> semio_framework_value::ErasedSnap
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "staged root exceeds admitted depth")); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        if self.active.is_some() { return semio_framework_os_store_read::artifact_retirement_box_close_step(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress())); }
+                if let Some(owner)=self.planning_output.as_mut(){if owner.terminal_is_empty(){self.planning_output=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}return owner.step(child).map(|step|RetainedCloneStep::Progress(step.progress()));}
+        if let Some(owner)=self.diagnostics.as_mut(){if owner.terminal_is_empty(){self.diagnostics=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}owner.begin_close();return owner.close_step(child).map(|step|RetainedCloneStep::Progress(step.progress()));}
+if self.active.is_some() { return semio_framework_os_store_read::artifact_retirement_box_close_step(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if self.edit.is_some() { return semio_framework_os_store_read::retirement_owner_close(&mut self.edit, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(slot)=self.external_strings.iter_mut().find(|slot|slot.is_some()){let original=slot.take().unwrap();return match semio_framework_value::retirement::admit_owned_retirement(original,child){Ok((owner,receipt))=>{self.active=Some(owner);Ok(RetainedCloneStep::Progress(receipt))},Err((error,original))=>{*slot=Some(original);Err(error)}};}
         if let Some(owner) = self.inline_owner_mut() {
@@ -129,12 +136,12 @@ impl<P: Send + Sync, Mutation: Send + 'static> semio_framework_value::ErasedSnap
         }
         Ok(RetainedCloneStep::Complete(empty))
     }
-    fn terminal_is_empty(&self) -> bool { self.edit.is_none() && self.external_strings.iter().all(Option::is_none) && self.cursor.is_none() && self.applied.is_none() && self.redo.is_none() && self.revision.is_none() && self.report.is_none() && self.tail_id.is_none() && self.authority.is_none() && self.snapshots.iter().all(Option::is_none) && self.active.is_none() && self.factory.is_none() && self.factory_close.is_none() }
+    fn terminal_is_empty(&self) -> bool { self.planning_output.is_none() && self.diagnostics.is_none() && self.edit.is_none() && self.external_strings.iter().all(Option::is_none) && self.cursor.is_none() && self.applied.is_none() && self.redo.is_none() && self.revision.is_none() && self.report.is_none() && self.tail_id.is_none() && self.authority.is_none() && self.snapshots.iter().all(Option::is_none) && self.active.is_none() && self.factory.is_none() && self.factory_close.is_none() }
 }
 
 impl<P, Mutation> Drop for StagedRootRetirement<P, Mutation> {
     fn drop(&mut self) {
-        assert!(std::thread::panicking() || (self.edit.is_none() && self.external_strings.iter().all(Option::is_none) && self.cursor.is_none() && self.applied.is_none() && self.redo.is_none() && self.revision.is_none() && self.report.is_none() && self.tail_id.is_none() && self.authority.is_none() && self.snapshots.iter().all(Option::is_none) && self.active.is_none() && self.factory.is_none() && self.factory_close.is_none()), "staged root retirement dropped before all exact outgoing owners were closed");
+        assert!(std::thread::panicking() || (self.planning_output.is_none() && self.diagnostics.is_none() && self.edit.is_none() && self.external_strings.iter().all(Option::is_none) && self.cursor.is_none() && self.applied.is_none() && self.redo.is_none() && self.revision.is_none() && self.report.is_none() && self.tail_id.is_none() && self.authority.is_none() && self.snapshots.iter().all(Option::is_none) && self.active.is_none() && self.factory.is_none() && self.factory_close.is_none()), "staged root retirement dropped before all exact outgoing owners were closed");
     }
 }
 
@@ -192,7 +199,8 @@ pub enum DurableOwnedThreeStoreCommitPhaseV1 {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DurableOwnedThreeStoreCommitAdvanceV1 {
     Progress(DurableOwnedThreeStoreCommitPhaseV1),
-    Blocked,
+        DiagnosticProgress(DurableOwnedThreeStoreCommitPhaseV1,semio_framework_value::retained_clone::RetainedCloneProgress),
+Blocked,
     AwaitingAck(DurableOwnedGroupJournalReceiptV1),
     Complete,
 }
@@ -210,7 +218,8 @@ pub struct DurableOwnedThreeStoreSnapshotV1<ParentP, DrawingP, ValueP> {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DurableOwnedMapRecoveryAdvanceV1 {
     Progress(DurableOwnedThreeStoreCommitPhaseV1),
-    Blocked,
+        DiagnosticProgress(DurableOwnedThreeStoreCommitPhaseV1, semio_framework_value::retained_clone::RetainedCloneProgress),
+Blocked,
     Fault(DurableOwnedGroupDecisionError),
     AwaitingAcknowledgement,
     Complete,
@@ -249,7 +258,8 @@ pub enum DurableOwnedThreeStoreMapAssemblyPhaseV1 {
     PreparingParent,
     PreparingDrawing,
     PreparingValue,
-    ClosingValue,
+        TakingPrepared,
+ClosingValue,
     ClosingDrawing,
     ClosingParent,
     Binding,
@@ -262,7 +272,8 @@ pub enum DurableOwnedThreeStoreMapAssemblyPhaseV1 {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DurableOwnedThreeStoreMapAssemblyAdvanceV1 {
     Progress(DurableOwnedThreeStoreMapAssemblyPhaseV1),
-    Blocked,
+        OwnershipProgress(DurableOwnedThreeStoreMapAssemblyPhaseV1,semio_framework_value::retained_clone::RetainedCloneProgress),
+Blocked,
     Mounted,
     Terminal,
 }
@@ -282,10 +293,10 @@ pub fn close_assembly_publication<P: Send + Sync + 'static, Mutation: Send + 'st
     }
 }
 
-pub fn take_assembly_prepared<P, Mutation>(publication: &mut Option<semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication<P, Mutation>>) -> Result<ArtifactStoreOneItemPrepared<P, Mutation>, DurableOwnedGroupDecisionError> {
+pub fn take_assembly_prepared<P, Mutation>(publication: &mut Option<semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication<P, Mutation>>, grant: super::ArtifactStoreOneItemGrant) -> Result<(ArtifactStoreOneItemPrepared<P, Mutation>,semio_framework_value::retained_clone::RetainedCloneProgress), DurableOwnedGroupDecisionError> {
     let publication = publication.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
     if publication.phase() != semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPublicationPhase::Publishing {
         return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
     }
-    publication.take_staged_prepared().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)
+    publication.take_staged_prepared(grant.retained_grant()).ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)
 }

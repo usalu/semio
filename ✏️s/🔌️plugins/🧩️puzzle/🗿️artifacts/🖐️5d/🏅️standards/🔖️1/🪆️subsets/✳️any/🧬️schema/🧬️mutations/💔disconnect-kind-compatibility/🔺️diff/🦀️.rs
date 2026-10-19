@@ -1,5 +1,7 @@
 //! 🔺️ Sparse diff builder for `DisconnectKindCompatibility` — removes one row from `kindCompatibility`.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dKindCompatibilityDelta, Puzzle5dKindCompatibilityKey};
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dKindCompatibilityDelta;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dKindCompatibilityKey;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff

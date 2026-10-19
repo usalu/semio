@@ -26,13 +26,19 @@ class TestGraphqlTypesScript extends BundleScript {
   }
 }
 
-/** ⏱️The extension-host Mocha case (`🧪️tests/🧩️extension/🟦️.ts`) is this package's only test and can
- * only run inside the VSCode test harness, so it is added at `long` and above. */
+/** ⏱️Checks dashboard ownership at every level and runs extension-host navigation cases at `long` and above. */
 /** 🧪️ Executes only Source, DATA and genuine ordinary component laws under the carried Original. */
 class TestCustodyScript extends BundleScript{async run(args:string[]):Promise<void>{if(args.length)throw Error("test-custody accepts no arguments");const control=scriptCompilerAdmissionControlV1(this.invocation,"vscode:source-custody",120000);await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../🧪️tests/🏗️custody/🟦️.ts")],this.repoRoot,"vscode:source-custody",compilerAdmissionBudgetV1(control),{signal:control.signal,env:scriptResourceProcessEnvironmentV1(control,{...process.env,BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0",NODE_DISABLE_COMPILE_CACHE:"1"})});}}
 
+class DashboardOnlyTestScript extends BundleScript {
+  async run(): Promise<void> {
+    await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/🎛️dashboard-only/🟦️.ts")], this.root, "repo-vscode:dashboard-only", 30_000, { signal: this.invocation.control.signal });
+  }
+}
+
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    await new DashboardOnlyTestScript(this.root, this.repoRoot, this.invocation).run();
     const { level } = resolveTestLevel(segments);
     await new TestGraphqlTypesScript(this.root, this.repoRoot, this.invocation).run([]);
     if (TEST_LEVELS.indexOf(level) < TEST_LEVELS.indexOf("long")) return;
@@ -56,6 +62,7 @@ class BuildVsixScript extends BundleScript{async run(args:string[]):Promise<void
 const router = new ScriptRouter(import.meta.dir)
   .register("dev", DevScript)
   .register("test", TestScript)
+  .register("test-dashboard-only", DashboardOnlyTestScript)
   .register("test-custody", TestCustodyScript)
   .register("build", BuildScript)
   .register("compile-extension", CompileExtensionScript)

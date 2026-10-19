@@ -1,5 +1,8 @@
-use crate::standards::v1::subsets::any::io::export::serializers::artifacts::{png::v1_2::any as png_out, txt::v_utf_8::any as txt_out, zip::v2_0::any as zip_out};
-use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::{txt::v_utf_8::any as txt_in, zip::v2_0::any as zip_in};
+use crate::standards::v1::subsets::any::io::export::serializers::artifacts::png::v1_2::any as png_out;
+use crate::standards::v1::subsets::any::io::export::serializers::artifacts::txt::v_utf_8::any as txt_out;
+use crate::standards::v1::subsets::any::io::export::serializers::artifacts::zip::v2_0::any as zip_out;
+use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::txt::v_utf_8::any as txt_in;
+use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::zip::v2_0::any as zip_in;
 use crate::Puzzle5dSnapshot;
 use std::io::Read;
 

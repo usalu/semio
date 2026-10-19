@@ -1,0 +1,7 @@
+{
+ "contract":"semio.original.record-projection/v1","maximumBytes":4096,"maximumTurns":10000,"cancelCuts":[0,1,2,5,20,80,180,10000],
+ "cases":[
+  {"id":"empty-original-fields","values":["","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","",""],"expected":["","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","" ]},
+  {"id":"unicode-original-fields","values":["alpha","β","🔋","zero","alpha","β","🔋","zero","alpha","β","🔋","zero","alpha","β","🔋","zero","alpha","β","🔋","zero","alpha","β","🔋","zero","alpha","β","🔋","zero","alpha","β","🔋","zero"],"expected":["alpha","β","🔋","zero","alpha","β","🔋","zero","alpha","β","🔋","zero","alpha","β","🔋","zero","alpha","β","🔋","zero","alpha","β","🔋","zero","alpha","β","🔋","zero","alpha","β","🔋","zero"]}
+ ]
+}

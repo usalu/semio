@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-pv-system-faiman-heat-loss-wind/schema.json",
+  "title": "ChangePvSystemFaimanHeatLossWind",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newFaimanHeatLossWindWSM3k"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changePvSystemFaimanHeatLossWind"
+    },
+    "id": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "PV system",
+          "de": "PV-Anlage"
+        },
+        "ref": {
+          "kind": "pvSystem"
+        }
+      }
+    },
+    "newFaimanHeatLossWindWSM3k": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Wind heat loss",
+          "de": "Windwärmeverlust"
+        },
+        "group": "thermal",
+        "order": 20,
+        "displayUnit": "W·s/(m³·K)",
+        "precision": 2
+      }
+    }
+  }
+}

@@ -38,6 +38,7 @@ fn durable_group_test_revision(bytes: &[u8]) -> [u8; 32] {
     std::array::from_fn(|index| u8::from_str_radix(&digest[index * 2..index * 2 + 2], 16).expect("SHA-256 hexadecimal byte"))
 }
 
+/// 🧪️ One caller-issued fixture candidate and the exact issuers that close its original owners.
 #[cfg(feature = "durable-group-testing")]
 pub fn durable_group_test_outcome<P, Mutation>(recovery_schema: &str, ordinal: u64, edit: Edit<Mutation>, post_snapshot: P) -> Result<DurableStorePreparedOutcomeV1, DurableOwnedGroupDecisionError>
 where
@@ -62,6 +63,38 @@ where
     DurableStorePreparedOutcomeV1::from_prepared(recovery_schema, &prepared)
 }
 
+#[cfg(feature = "durable-group-testing")]
+fn durable_group_test_outcome<P, Mutation>(recovery_schema: &str, ordinal: u64, member: DurableOwnedGroupTestMember<P, Mutation>) -> Result<DurableStorePreparedOutcomeV1, DurableOwnedGroupDecisionError>
+where
+    P: ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
+    Mutation: ValueToValue + ValueFromValue + semio_framework_value::retirement::RetireOwned,
+{
+    let mut owners = super::OneItemOwners::from_returned(member.edit, member.post_snapshot, member.mutation_retirement, member.snapshot_retirement);
+    let outcome = (|| {
+        let (edit, _) = owners.refused.as_ref().expect("original fixture candidates");
+        let actor = edit.actor.clone().ok_or(DurableOwnedGroupDecisionError::InvalidIdentity)?;
+        let meta = edit.mutation_meta.first().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+        *owners.authority = Some(Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(10_000 + ordinal), semio_framework_job::Generation(ordinal), durable_group_test_revision(format!("durable-group-test-base-{ordinal}").as_bytes()), 0, edit.sequence_number, meta.timestamp, actor, edit.line.clone(), meta.group_id.clone(), None)));
+        let (edit, post) = owners.refused.take().expect("original fixture handoff");
+        match owners.authority.as_ref().expect("original fixture authority").prepare_one_item(edit, post) {
+            Ok(prepared) => *owners.prepared = Some(prepared),
+            Err((error, edit, post)) => {
+                *owners.refused = Some((edit, post));
+                return Err(DurableOwnedGroupDecisionError::Preparation(error));
+            }
+        }
+        DurableStorePreparedOutcomeV1::from_prepared(recovery_schema, owners.prepared.as_ref().expect("sealed original fixture"))
+    })();
+    owners.begin_returned_close().expect("original returned fixture cursor admission");
+    while !owners.terminal_is_empty() {
+        let copy = owners.close_demands(0).expect("fixture original copy quote").copy_bytes;
+        let demand = owners.close_demands(copy).expect("fixture original close quote");
+        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        let step = owners.close_step(grant).expect("caller-issued fixture original closure");
+        assert!(step.progress().fits(grant));
+    }
+    outcome
+}
 #[cfg(feature = "durable-group-testing")]
 pub fn durable_group_test_member(role: &str, reference: semio_framework_artifact_reference::ArtifactRef, owner: Option<OwnerRef>, outcome: &DurableStorePreparedOutcomeV1) -> Result<DurableOwnedGroupMemberV1, DurableOwnedGroupDecisionError> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};

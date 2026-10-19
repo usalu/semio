@@ -8,6 +8,74 @@
     "family:fem"
   ],
   "targets": {
+    "verify-fem2d-numerical-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify fem2d-invariants numerical"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem2d-invariants",
+            "numerical"
+          ]
+        }
+      }
+    },
+    "verify-fem2d-mounted-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify fem2d-invariants mounted"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem2d-invariants",
+            "mounted"
+          ]
+        }
+      }
+    },
+    "verify-fem2d-invariants": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify fem2d-invariants native"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem2d-invariants",
+            "native"
+          ]
+        }
+      }
+    },
+    "verify-fem2d-invariants-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify fem2d-invariants source"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem2d-invariants",
+            "source"
+          ]
+        }
+      }
+    },
     "build": {
       "executor": "repo:script",
       "cache": true,
@@ -62,6 +130,87 @@
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite source",
         "forwardAllArgs": true
+      }
+    },
+    "verify-fem2d-presence-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify fem2d-invariants presence"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "fem2d-invariants",
+            "presence"
+          ]
+        }
+      }
+    },
+    "test-material-source": {
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-material",
+            "source"
+          ]
+        }
+      },
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-material source"
+      },
+      "cache": false,
+      "executor": "repo:script"
+    },
+    "test-material-native": {
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-material",
+            "native"
+          ]
+        }
+      },
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-material native"
+      },
+      "cache": false,
+      "executor": "repo:script"
+    },
+    "test-fixed-dofs-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-fixed-dofs source"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-fixed-dofs",
+            "source"
+          ]
+        }
+      }
+    },
+    "test-fixed-dofs-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-fixed-dofs native"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-fixed-dofs",
+            "native"
+          ]
+        }
       }
     }
   }

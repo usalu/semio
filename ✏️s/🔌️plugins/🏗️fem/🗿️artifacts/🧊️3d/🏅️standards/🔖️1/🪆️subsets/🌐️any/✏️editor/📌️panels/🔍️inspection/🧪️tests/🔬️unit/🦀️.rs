@@ -33,7 +33,10 @@ use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structur
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind};
+use semio_framework_plugin::plugin_app_close_prelude::Buildable;
+use semio_framework_plugin::plugin_app_close_prelude::HasBase;
+use semio_framework_plugin::plugin_app_close_prelude::HasChildren;
+use semio_framework_plugin::plugin_app_close_prelude::InputKind;
 use semio_framework_plugin::tree_item;
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::tree_item_with_action;
@@ -58,12 +61,13 @@ use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
 use semio_framework_ui_contract as ui;
 use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::set_active_example::SetActiveExample;
 use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::fem3d_labels;
-use crate::context::{dispatch, fem3d_app, render as render_body};
+use crate::context::dispatch;
+use crate::context::fem3d_app;
+use crate::context::render as render_body;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
 use semio_framework_plugin::ComponentTree;
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::Terminology;
-use semio_framework_plugin::TreeWindows;
 use semio_framework_plugin::ViewModel;
 
 /// 🎬️ The bundled `demo` fixture — the only built-in document carrying solids, supports and both
@@ -77,13 +81,25 @@ fn boot() -> Fem3dSnapshot {
     semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot()
 }
 
-fn selecting(ids: &[&str]) -> Fem3dInteractionSnapshot {
-    Fem3dInteractionSnapshot { selected_ids: ids.iter().map(|id| (*id).to_string()).collect(), ..Default::default() }
+fn selecting(doc: &Fem3dSnapshot, ids: &[&str]) -> Fem3dInteractionSnapshot {
+    let targets = ids.iter().map(|id| {
+        if let Some(case) = doc.load_cases.iter().find(|case| case.loads.iter().any(|load| load_id(load) == *id)) { return fem3d_load_target(&case.id, id).unwrap(); }
+        let kind = if doc.elements.iter().any(|element| element_id(element) == *id) { "element" }
+            else if doc.solids.iter().any(|solid| solid.id == *id) { "solid" }
+            else if doc.supports.iter().any(|support| support.id == *id) { "support" }
+            else if doc.materials.iter().any(|material| material.id == *id) { "material" }
+            else if doc.sections.iter().any(|section| section.id == *id) { "section" }
+            else if doc.load_cases.iter().any(|case| case.id == *id) { "loadCase" }
+            else if doc.combinations.iter().any(|combination| combination.id == *id) { "combination" }
+            else { "node" };
+        semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target(kind, id).unwrap()
+    });
+    Fem3dInteractionSnapshot::selecting(targets)
 }
 
 fn panel(doc: &Fem3dSnapshot, ids: &[&str], view_state: &ViewModel) -> String {
-    let built = render(doc, &selecting(ids), fem3d_labels(view_state), &TreeWindows::unhosted()).expect("fem3d inspector assembly");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(ComponentTree::new(built)).expect("fem3d inspector projection")
+    let built = render(doc, &selecting(doc, ids), fem3d_labels(view_state), &TreeWindows::unhosted()).expect("fem3d inspector assembly");
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(ComponentTree { root: built }).expect("fem3d inspector projection")
 }
 
 fn english(doc: &Fem3dSnapshot, ids: &[&str]) -> String {
@@ -197,8 +213,8 @@ async fn a_selected_load_case_lists_its_loads_as_picks_3d() {
     assert_eq!(component_at(&json, "fem3d-play-inspection.load-case.self-weight.toggle"), "toggle");
     assert!(json.contains("patchLoadCase"));
     assert!(json.contains("interactionSelect"), "a load row hands the load to the framework-owned selection");
-    assert_eq!(component_at(&json, "q_l_spine"), "treeItem", "a pick row is an activatable tree item");
-    assert_eq!(component_at(&json, "q_l_b0"), "treeItem");
+    assert_eq!(component_at(&json, &fem3d_load_target("live", "q_l_spine").unwrap()), "treeItem", "a pick row is an activatable tree item");
+    assert_eq!(component_at(&json, &fem3d_load_target("live", "q_l_b0").unwrap()), "treeItem");
     assert!(carries_a_tree(&json), "{json}");
 }
 
@@ -223,6 +239,21 @@ async fn a_multi_selection_headers_the_count_and_inspects_the_first_3d() {
     let json = english(&boot(), &["lc1b", "lc2b", "l_col1"]);
     assert!(json.contains("3 Selected"), "{json}");
     assert!(json.contains("fem3d-play-inspection.node.x.input"), "the fields belong to the first selected id");
+    assert!(json.contains("Node lc1b") && json.contains("Node lc2b"), "selection text must expose entity nouns and semantic ids");
+    let de = panel(&boot(), &["lc1b", "lc2b"], &ViewModel::new(Locale::De, Terminology::Native));
+    assert!(de.contains("Knoten lc1b") && de.contains("Knoten lc2b"));
+    let fixture: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(include_str!("../../../../🕹️interaction/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("localized selection vectors");
+    for row in fixture["selectionLabels"].as_array().expect("selection label cases") {
+        let locale = match row["locale"].as_str().unwrap() { "en" => Locale::En, "de" => Locale::De, _ => panic!("explicit supported locale") };
+        let view = ViewModel::new(locale, Terminology::Native);
+        let identity = row["identity"].as_str().unwrap();
+        let built = selection_row(identity, fem3d_labels(&view)).unwrap();
+        let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(ComponentTree { root: built }).unwrap();
+        let decoded: serde_json::Value = serde_json::from_str(&projection).unwrap();
+        assert!(decoded.to_string().contains(row["expected"].as_str().unwrap()));
+        assert_eq!(decoded["key"].as_str(), Some(format!("{ROOT}.selection.{identity}").as_str()));
+    }
+    eprintln!("[DEBUG] FEM3d selected rows display localized semantic entity labels while their stable keys retain canonical scoped identities");
 }
 
 /// 🎯️ Focus and delete are activatable tree rows in the Actions section.

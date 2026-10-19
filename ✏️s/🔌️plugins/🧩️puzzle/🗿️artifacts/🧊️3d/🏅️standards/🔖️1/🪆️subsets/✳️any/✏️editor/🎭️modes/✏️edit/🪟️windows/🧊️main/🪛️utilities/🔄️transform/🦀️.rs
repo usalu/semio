@@ -1,5 +1,5 @@
-//! 🔄️ Main-window utility — Transform: the world gumball. Its Utility Options are the Move/Rotate
 //! flags that compose which handles the gumball draws (scale handles are deliberately absent — a
+//! 🔄️ Main-window utility — Transform: the world gumball. Its Utility Options are the Move/Rotate
 //! puzzle-3d object's scale comes from its kind catalog, not from a free drag).
 //!
 //! 🛠️ It is also the transform TOOL: a `🔄️machine` statechart whose effects are `ToolYield`s, driven by the
@@ -34,7 +34,9 @@ use machine::Command;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::UtilityDefinition;
 use semio_framework_plugin::WindowMeasure;
-use semio_framework_tool_machine::{GestureChart, GesturePhase, ToolYield};
+use semio_framework_tool_machine::GestureChart;
+use semio_framework_tool_machine::GesturePhase;
+use semio_framework_tool_machine::ToolYield;
 use std::sync::Arc;
 
 pub const UTILITY_ID: &str = "transform";

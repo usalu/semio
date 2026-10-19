@@ -72,7 +72,7 @@ class TestScript extends Script {
       return;
     }
     if (args.length) throw Error("Workspace build tests accept no arguments");
-    await runOwnedCommand(process.execPath, ["test", resolve(import.meta.dir, "🧪️tests/🟦️.ts"), resolve(import.meta.dir,"🧪️tests/🕸️graph/🟦️.ts"),resolve(import.meta.dir,"👁️observation/🧪️tests/🟦️.ts"),resolve(import.meta.dir,"../⚡️caching/🕸️graph/🏗️scheduling/🧪️tests/🟦️.ts")], this.repoRoot, "workspace-build:contract", scriptInvocationBudget(this.invocation, 300_000), { signal: this.invocation.control.signal });
+    await runOwnedCommand(process.execPath, ["test", resolve(import.meta.dir, "🧪️tests/🟦️.ts"), resolve(import.meta.dir,"🧪️tests/🕸️graph/🟦️.ts"),resolve(import.meta.dir,"👁️observation/🧪️tests/🟦️.ts"),resolve(import.meta.dir,"🩺️preflight/🧪️tests/🟦️.ts"),resolve(import.meta.dir,"../⚡️caching/🕸️graph/🏗️scheduling/🧪️tests/🟦️.ts")], this.repoRoot, "workspace-build:contract", scriptInvocationBudget(this.invocation, 300_000), { signal: this.invocation.control.signal });
   }
 }
 
@@ -85,7 +85,10 @@ export class RepoScript extends Script {
 /** 🌳️ Preserves caller cancellation and deadline while selecting configured build resources. */
 export async function runOwnedBuildInvocationV1(root:string,args:readonly string[],parent:import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void> {
  requireIssuedResourceControlInvocationV1(phaseControl,parent);checkResourceLeaseControl(phaseControl);const{readOwnedBuildInvocationV1}=await import("./📥️caller/🟦️.ts");readOwnedBuildInvocationV1(root,parent,args);
- const {openRepositoryCachePartitionV1}=await import("../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts"),control=phaseControl,leases=await openRepositoryCachePartitionV1(root,"leases",control);let failed=false;try{const {withRepositoryCacheStoreV1}=await import("../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts");await withRepositoryCacheStoreV1(root,"diagnostics",parent,control,async(diagnostics,diagnosticPhase)=>{const previous=process.env.SEMIO_DIAGNOSTIC_DIRECTORY;process.env.SEMIO_DIAGNOSTIC_DIRECTORY=diagnostics.environment.SEMIO_DIAGNOSTIC_DIRECTORY;try{await runOwnedBuildInLeasesV1(root,args,parent,diagnosticPhase);}finally{if(previous===undefined)delete process.env.SEMIO_DIAGNOSTIC_DIRECTORY;else process.env.SEMIO_DIAGNOSTIC_DIRECTORY=previous;}});}catch(error){failed=true;throw error;}finally{try{await leases.close();}catch(error){if(!failed)throw error;}}
+ const{parseBuildInvocationV1,buildInvocationRequestsHelpV1}=await import("./🧭️invocation/🟦️.ts"),selected=parseBuildInvocationV1(args,{SEMIO_BUILD_TOOL:(parent.capabilities as {tool?:string}).tool});
+ if(buildInvocationRequestsHelpV1(selected.args)){console.log("bun repo [--tool=nx|bazel] run <project:target[:configuration]> | run-many --targets=<targets> [--projects=<projects>] | affected --targets=<targets> | exec --projects=<projects> -- <command> | graph | show projects|project <name>|targets | watch --projects=<projects> -- <command> | reset | tools setup [nx|bazel|all] | preflight --scope <owner> | dependencies sync|lock --all|--scope <owner> | cargo --store=shared|isolated --configuration=prototype|release [--parallelism=<cores>] -- <cargo subcommand> <args>");return;}
+ if(selected.args[0]==="preflight"){const{runBuildPreflightV1}=await import("./🩺️preflight/🟦️.ts");await runBuildPreflightV1(root,selected.args,parent);return;}
+ const {openRepositoryCachePartitionV1}=await import("../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts"),control=phaseControl,leases=await openRepositoryCachePartitionV1(root,"leases",control);let failed=false;try{const {withRepositoryCacheStoreV1}=await import("../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts");await withRepositoryCacheStoreV1(root,"diagnostics",parent,control,(diagnostics,diagnosticPhase)=>withRepositoryCacheStoreV1(root,"dependencies",parent,diagnosticPhase,async(_dependencies,phaseControl)=>{const previous=process.env.SEMIO_DIAGNOSTIC_DIRECTORY;process.env.SEMIO_DIAGNOSTIC_DIRECTORY=diagnostics.environment.SEMIO_DIAGNOSTIC_DIRECTORY;try{await runOwnedBuildInLeasesV1(root,args,parent,phaseControl);}finally{if(previous===undefined)delete process.env.SEMIO_DIAGNOSTIC_DIRECTORY;else process.env.SEMIO_DIAGNOSTIC_DIRECTORY=previous;}}));}catch(error){failed=true;throw error;}finally{try{await leases.close();}catch(error){if(!failed)throw error;}}
 }
 
 async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent:import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void> {
@@ -110,9 +113,6 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
       }
     }
     const command=resolved.args[0];
-    if(!command||resolved.args.slice(0,resolved.args.indexOf("--")<0?undefined:resolved.args.indexOf("--")).includes("--help")){
-      console.log("bun repo [--tool=nx|bazel] run <project:target[:configuration]> | run-many --targets=<targets> [--projects=<projects>] | affected --targets=<targets> | exec --projects=<projects> -- <command> | graph | show projects|project <name>|targets | watch --projects=<projects> -- <command> | reset | tools setup [nx|bazel|all] | dependencies sync|lock --all|--scope <owner> | cargo --store=shared|isolated --configuration=prototype|release [--parallelism=<cores>] -- <cargo subcommand> <args>");return;
-    }
     if(["run","run-many","affected","exec","watch"].includes(command)){
       const {validateBuildTaskArgumentsV1}=await import("./🧭️selection/🟦️.ts");
       validateBuildTaskArgumentsV1(resolved.args);

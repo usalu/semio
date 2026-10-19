@@ -1,0 +1,1 @@
+{"threshold":262144,"chunkBytes":1048576,"pattern":[0,1,255],"repeat":90000,"rawBodyHex":"0100090100","requiredFlags":3,"chunks":1,"hashOracle":"BLAKE3 third-party crate","cancelFrontiers":["ChunkBirth","ChunkRead","ChunkHash","ChunkCatalog","ChunkPrefix","ChunkEmit","ChunkChecksum","TablePrefix","TableBody","TableChecksum"]}

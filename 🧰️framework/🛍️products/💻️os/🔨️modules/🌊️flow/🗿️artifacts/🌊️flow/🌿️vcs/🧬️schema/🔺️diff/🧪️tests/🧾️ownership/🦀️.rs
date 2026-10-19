@@ -1,4 +1,5 @@
 //! 🧪️ Borrowed validation preserves retained Flow owners through ordered rejection.
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::*;
 use crate::os_spr::Identified;
 use crate::vcs::apply_flow_collection_delta;
@@ -17,8 +18,8 @@ fn every_delta_variant_retires_cold_without_a_bare_drop() {
     let widget = base.widgets.first().cloned().unwrap();
     let synapse = base.synapses.first().cloned().unwrap();
     let deltas = vec![
-        FlowDelta::Widgets(FlowCollectionDelta { removed: vec!["gone".into()], inserted: vec![(0, widget.clone())], replaced: vec![(widget.id().clone(), widget)] }),
-        FlowDelta::Synapses(FlowCollectionDelta { removed: vec!["gone".into()], inserted: vec![(0, synapse.clone())], replaced: vec![(synapse.id.clone(), synapse)] }),
+        FlowDelta::Widgets(FlowCollectionDelta { removed: vec!["gone".into()], inserted: vec![(0, widget.clone())], replaced: vec![(widget.id().clone(), widget)], ..Default::default() }),
+        FlowDelta::Synapses(FlowCollectionDelta { removed: vec!["gone".into()], inserted: vec![(0, synapse.clone())], replaced: vec![(synapse.id.clone(), synapse)], ..Default::default() }),
         FlowDelta::Layout(base.layout.iter().map(|(id, layout)| FlowLayoutEntry { id: id.clone(), layout: Some(layout.clone()) }).collect()),
     ];
     assert_eq!(deltas.len(), 3);
@@ -35,7 +36,7 @@ fn retained_payload_projection_matches_neutral_vectors() {
         let diff: FlowDiff = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(row.get("diff").unwrap())).unwrap();
         let diff_json = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&diff));
         let name = row.get("name").and_then(semio_framework_pack_json::Value::as_str).unwrap_or_default();
-        match crate::os_spr::apply_diff(&diff, &base) {
+        match protocol::apply_diff_cold(&diff, &base) {
             Ok(result) => {
                 assert!(row.get("errorCode").is_none(), "{name}");
                 let widget_ids: Vec<String> = result.widgets.iter().map(|widget| widget.id().clone()).collect();
@@ -55,27 +56,27 @@ fn retained_payload_projection_matches_neutral_vectors() {
     base.retire_cold();
 }
 
-/// ↩️ A declaratively built structural diff (a move is remove plus insert, never a whole snapshot) and its `inverse` that reads
+/// ↩️ A declaratively built structural diff (a move is one `{id, from, to}` row, never a whole snapshot) and its `inverse` that reads
 /// the base rows: applying the diff and then its inverse returns to the base.
 #[test]
 fn a_structural_diff_and_its_inverse_read_the_base_rows() {
     let vectors = semio_framework_pack_json::parse(include_str!("../../../../🧪️tests/🧫️fixtures/🔺️diff/🧾️ownership/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let base: FlowHostSnapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(vectors.get("base").unwrap())).unwrap();
     assert!(base.widgets.len() >= 2);
-    let (moved, dropped) = (base.widgets[0].clone(), base.synapses.last().cloned().unwrap());
+    let (moved_id, dropped) = (base.widgets[0].id().clone(), base.synapses.last().cloned().unwrap());
     let mut other = base.clone();
     other.widgets.rotate_left(1);
     other.synapses.pop();
     let diff = FlowDiff {
         deltas: vec![
-            FlowDelta::Widgets(FlowCollectionDelta { removed: vec![moved.id().clone()], inserted: vec![((base.widgets.len() - 1) as _, moved)], replaced: Vec::new() }),
-            FlowDelta::Synapses(FlowCollectionDelta { removed: vec![dropped.id.clone()], inserted: Vec::new(), replaced: Vec::new() }),
+            FlowDelta::Widgets(FlowCollectionDelta { moved: vec![FlowMove { id: moved_id, from: 0, to: (base.widgets.len() - 1) as _ }], ..Default::default() }),
+            FlowDelta::Synapses(FlowCollectionDelta { removed: vec![dropped.id.clone()], ..Default::default() }),
         ],
     };
-    let applied = crate::os_spr::apply_diff(&diff, &base).expect("the diff applies");
+    let applied = protocol::apply_diff_cold(&diff, &base).expect("the diff applies");
     assert_eq!(applied, other);
     let inverse = DiffAlgebra::<FlowHostSnapshot>::inverse(&diff, &base);
-    let restored = crate::os_spr::apply_diff(&inverse, &applied).expect("inverse applies");
+    let restored = protocol::apply_diff_cold(&inverse, &applied).expect("inverse applies");
     assert_eq!(restored, base);
     assert!(DiffAlgebra::<FlowHostSnapshot>::is_empty(&FlowDiff::default()));
     for snapshot in [applied, restored, other, base] {
@@ -115,14 +116,14 @@ fn collection_validation_never_clones_or_drops_payloads() {
     let make = |id: &str| Payload { id: id.into(), clones: clones.clone(), drops: drops.clone() };
     let a = make("a");
     let b = make("b");
-    let delta = FlowCollectionDelta { removed: vec!["b".into()], replaced: vec![("a".into(), make("renamed"))], inserted: Vec::new() };
+    let delta = FlowCollectionDelta { removed: vec!["b".into()], replaced: vec![("a".into(), make("renamed"))], inserted: Vec::new(), moved: Vec::new() };
     let mut items = vec![&a, &b];
     apply_flow_collection_delta(&mut items, &delta).unwrap();
     assert!(std::ptr::eq(items[0], &delta.replaced[0].1));
     assert_eq!(items.len(), 1);
     assert_eq!(clones.get(), 0);
     assert_eq!(drops.get(), 0);
-    let invalid = FlowCollectionDelta { removed: vec!["renamed".into(), "missing".into()], replaced: Vec::new(), inserted: Vec::new() };
+    let invalid = FlowCollectionDelta { removed: vec!["renamed".into(), "missing".into()], replaced: Vec::new(), inserted: Vec::new(), moved: Vec::new() };
     assert_eq!(apply_flow_collection_delta(&mut items, &invalid).unwrap_err().code, "mutation.apply.missing-target");
     assert_eq!(clones.get(), 0);
     assert_eq!(drops.get(), 0);

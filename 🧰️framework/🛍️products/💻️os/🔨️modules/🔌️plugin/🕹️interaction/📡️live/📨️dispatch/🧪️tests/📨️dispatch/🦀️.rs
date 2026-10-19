@@ -565,7 +565,7 @@ async fn query_app() -> VcsArtifactApp<TestApp> {
     let mut receiving = original_receiving_recipient();
     install_original_interaction_owners(&mut interaction, &mut receiving);
     let mut app = interaction_app_raw(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
-    let mut previous = std::mem::replace(&mut app.stores.interaction_store, interaction);
+    let mut previous = std::mem::replace(&mut app.stores.interaction_store,  Box::new(interaction));
     previous.close_owned_unscheduled().unwrap();
     assert!(previous.close_owned_terminal_is_empty());
     app.bind_instance_id(7).await;

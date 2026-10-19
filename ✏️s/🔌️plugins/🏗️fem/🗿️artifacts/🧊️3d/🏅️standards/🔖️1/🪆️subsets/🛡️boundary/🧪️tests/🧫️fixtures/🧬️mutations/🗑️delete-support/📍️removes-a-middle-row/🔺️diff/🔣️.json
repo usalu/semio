@@ -5,13 +5,13 @@
   "sections": null,
   "solids": null,
   "supports": {
-    "inserted": [],
     "removed": [
       {
         "id": "sup_ext_a",
         "index": 7
       }
     ],
+    "inserted": [],
     "moved": [],
     "modified": []
   },

@@ -46,11 +46,14 @@ pub(super) enum MountedStage {
     PrepareDomain,
     Mesh,
     BuildModel,
+    RetireRegion,
     PrepareAssembly,
     Assembly,
     BuildCsr,
+    BuildLoads,
     PreparePcg,
     Pcg,
+    RecoverReactions,
     SyncPcgVisual,
     CommitReady,
     PublishFinalVisual,
@@ -89,6 +92,7 @@ pub(super) enum ModelBuildStage {
     RegionElementMaterial,
     RegionElementIdReserve,
     RegionElementIdOwner,
+    RegionElementIdentity,
     RegionElementNodeOwner,
     RegionElementCommit,
     Complete,
@@ -96,27 +100,28 @@ pub(super) enum ModelBuildStage {
 
 pub(super) struct MountedModelBuild {
     pub(super) stage: ModelBuildStage,
-    node_cursor: usize,
-    element_cursor: usize,
-    support_cursor: usize,
-    region_point_cursor: usize,
-    region_triangle_cursor: usize,
-    lookup_cursor: usize,
-    resolved_material: usize,
-    resolved_section: usize,
+    pub(super) node_cursor: usize,
+    pub(super) element_cursor: usize,
+    pub(super) support_cursor: usize,
+    pub(super) region_point_cursor: usize,
+    pub(super) region_cursor: usize,
+    pub(super) region_triangle_cursor: usize,
+    pub(super) lookup_cursor: usize,
+    pub(super) resolved_material: usize,
+    pub(super) resolved_section: usize,
     pub(super) pending_region_id: Option<String>,
     pub(super) pending_node_id: Option<String>,
     pub(super) pending_element_id: Option<String>,
     pub(super) pending_element_start: Option<String>,
     pub(super) pending_element_end: Option<String>,
-    pub(super) pending_support: Option<semio_s_fem_model::Support>,
+    pub(super) pending_support: Option<MountedAnalysisSupport>,
     pub(super) pending_region_element_id: Option<String>,
     pub(super) pending_region_element_nodes: [Option<String>; 3],
-    pending_region_element_node_cursor: usize,
-    pending_region_insert: bool,
+    pub(super) pending_region_element_node_cursor: usize,
+    pub(super) pending_region_insert: bool,
     pub(super) mesh: Option<TriMesh2>,
     pub(super) region_node_ids: Vec<String>,
-    pub(super) model: AnalysisModel,
+    pub(super) model: MountedAnalysisModel,
     pub(super) close_lane: u8,
 }
 
@@ -128,6 +133,7 @@ impl MountedModelBuild {
             element_cursor: 0,
             support_cursor: 0,
             region_point_cursor: 0,
+            region_cursor: 0,
             region_triangle_cursor: 0,
             lookup_cursor: 0,
             resolved_material: 0,
@@ -144,7 +150,7 @@ impl MountedModelBuild {
             pending_region_insert: false,
             mesh,
             region_node_ids: Vec::new(),
-            model: AnalysisModel { nodes: Vec::new(), elements: Vec::new(), supports: Vec::new() },
+            model: MountedAnalysisModel::new(),
             close_lane: 0,
         }
     }
@@ -157,30 +163,22 @@ impl MountedModelBuild {
             || snapshot.supports.len() > SESSION_MAXIMUM_SUPPORTS
             || mesh_points > SESSION_MAXIMUM_MESH_POINTS
             || mesh_triangles > SESSION_MAXIMUM_MESH_TRIANGLES
-            || snapshot.regions.len() > 1
         {
             return Err(b"fem2d.model-fixed-capacity".to_vec());
         }
         match self.stage {
             ModelBuildStage::ReserveNodes => {
-                self.model.nodes.try_reserve_exact(snapshot.nodes.len() + mesh_points).map_err(|_| b"fem2d.model-node-allocation".to_vec())?;
-                if self.model.nodes.capacity() * size_of::<semio_s_fem_model::Node>() > SESSION_OWNER_PAGE_BYTES {
-                    return Err(b"fem2d.model-node-page-capacity".to_vec());
-                }
+                let target = snapshot.nodes.len().max(self.model.nodes_len()) + mesh_points;
+                if !self.model.admit_node_one(target, SESSION_OWNER_PAGE_BYTES).map_err(|_| b"fem2d.model-node-admission".to_vec())?.complete { return Ok(false); }
                 self.stage = ModelBuildStage::ReserveElements;
             }
             ModelBuildStage::ReserveElements => {
-                self.model.elements.try_reserve_exact(snapshot.elements.len() + mesh_triangles).map_err(|_| b"fem2d.model-element-allocation".to_vec())?;
-                if self.model.elements.capacity() * size_of::<semio_s_fem_static::Elements>() > SESSION_OWNER_PAGE_BYTES {
-                    return Err(b"fem2d.model-element-page-capacity".to_vec());
-                }
+                let target = snapshot.elements.len().max(self.model.elements_len()) + mesh_triangles;
+                if !self.model.admit_element_one(target, SESSION_OWNER_PAGE_BYTES).map_err(|_| b"fem2d.model-element-admission".to_vec())?.complete { return Ok(false); }
                 self.stage = ModelBuildStage::ReserveSupports;
             }
             ModelBuildStage::ReserveSupports => {
-                self.model.supports.try_reserve_exact(snapshot.supports.len()).map_err(|_| b"fem2d.model-support-allocation".to_vec())?;
-                if self.model.supports.capacity() * size_of::<semio_s_fem_model::Support>() > SESSION_OWNER_PAGE_BYTES {
-                    return Err(b"fem2d.model-support-page-capacity".to_vec());
-                }
+                if !self.model.admit_support_one(snapshot.supports.len(), SESSION_OWNER_PAGE_BYTES).map_err(|_| b"fem2d.model-support-admission".to_vec())?.complete { return Ok(false); }
                 self.stage = ModelBuildStage::ReserveRegionNodeIds;
             }
             ModelBuildStage::ReserveRegionNodeIds => {
@@ -188,7 +186,7 @@ impl MountedModelBuild {
                 if self.region_node_ids.capacity() * size_of::<String>() > SESSION_OWNER_PAGE_BYTES {
                     return Err(b"fem2d.model-region-node-page-capacity".to_vec());
                 }
-                self.stage = ModelBuildStage::Nodes;
+                self.stage = if self.region_cursor == 0 { ModelBuildStage::Nodes } else { ModelBuildStage::RegionNodeCoordinate };
             }
             ModelBuildStage::Nodes => {
                 if let Some(node) = snapshot.nodes.get(self.node_cursor) {
@@ -202,7 +200,7 @@ impl MountedModelBuild {
                 let node = snapshot.nodes.get(self.node_cursor).ok_or_else(|| b"fem2d.model-node-owner-missing".to_vec())?;
                 bounded_derived_string(self.pending_node_id.as_ref().ok_or_else(|| b"fem2d.model-node-id-owner-missing".to_vec())?)?;
                 let id = self.pending_node_id.take().ok_or_else(|| b"fem2d.model-node-id-owner-missing".to_vec())?;
-                self.model.nodes.push(semio_s_fem_model::Node { id, pos: [node.x, node.y, 0.0] });
+                self.model.push_node(semio_s_fem_model::Node { id, pos: [node.x, node.y, 0.0] }).map_err(|_| b"fem2d.model-node-capacity".to_vec())?;
                 self.node_cursor += 1;
                 self.stage = ModelBuildStage::Nodes;
             }
@@ -322,13 +320,13 @@ impl MountedModelBuild {
                     }
                     .into(),
                 };
-                self.model.elements.push(resolved);
+                self.model.push_element(resolved).map_err(|_| b"fem2d.model-element-capacity".to_vec())?;
                 self.element_cursor += 1;
                 self.stage = ModelBuildStage::ElementStart;
             }
             ModelBuildStage::Supports => {
                 if let Some(support) = snapshot.supports.get(self.support_cursor) {
-                    self.pending_support = Some(semio_s_fem_model::Support { node_id: support.node_id.clone(), fixed: Vec::new() });
+                    self.pending_support = Some(MountedAnalysisSupport::new(support.node_id.clone()));
                     self.stage = ModelBuildStage::SupportReserveDofs;
                 } else {
                     self.stage = ModelBuildStage::RegionNodeCoordinate;
@@ -336,19 +334,16 @@ impl MountedModelBuild {
             }
             ModelBuildStage::SupportReserveDofs => {
                 let source = snapshot.supports.get(self.support_cursor).ok_or_else(|| b"fem2d.model-support-owner-missing".to_vec())?;
-                let owner = self.pending_support.as_mut().ok_or_else(|| b"fem2d.model-support-candidate-missing".to_vec())?;
-                bounded_derived_string(&owner.node_id)?;
-                owner.fixed.try_reserve_exact(source.fixed.len()).map_err(|_| b"fem2d.model-support-dof-allocation".to_vec())?;
-                if owner.fixed.capacity() * size_of::<semio_s_fem_model::Dof>() > SESSION_OWNER_PAGE_BYTES {
-                    return Err(b"fem2d.model-support-dof-page-capacity".to_vec());
-                }
+                if self.pending_support.is_none() { return Err(b"fem2d.model-support-candidate-missing".to_vec()); }
+                bounded_derived_string(&source.node_id)?;
+                if source.fixed.len() > 6 { return Err(b"fem2d.model-support-dof-capacity".to_vec()); }
                 self.lookup_cursor = 0;
                 self.stage = ModelBuildStage::SupportDofs;
             }
             ModelBuildStage::SupportDofs => {
                 let source = snapshot.supports.get(self.support_cursor).ok_or_else(|| b"fem2d.model-support-owner-missing".to_vec())?;
                 if let Some(dof) = source.fixed.get(self.lookup_cursor).copied() {
-                    self.pending_support.as_mut().ok_or_else(|| b"fem2d.model-support-candidate-missing".to_vec())?.fixed.push(dof.into());
+                    self.pending_support.as_mut().ok_or_else(|| b"fem2d.model-support-candidate-missing".to_vec())?.push_fixed(dof.into()).map_err(|_| b"fem2d.model-support-dof-capacity".to_vec())?;
                     self.lookup_cursor += 1;
                 } else {
                     self.lookup_cursor = 0;
@@ -356,7 +351,7 @@ impl MountedModelBuild {
                 }
             }
             ModelBuildStage::SupportCommit => {
-                self.model.supports.push(self.pending_support.take().ok_or_else(|| b"fem2d.model-support-candidate-missing".to_vec())?);
+                self.model.push_support(self.pending_support.take().ok_or_else(|| b"fem2d.model-support-candidate-missing".to_vec())?).map_err(|_| b"fem2d.model-support-capacity".to_vec())?;
                 self.support_cursor += 1;
                 self.stage = ModelBuildStage::Supports;
             }
@@ -369,8 +364,8 @@ impl MountedModelBuild {
                     self.stage = ModelBuildStage::RegionElementMaterial;
                     return Ok(false);
                 };
-                if let Some(node) = snapshot.nodes.get(self.lookup_cursor) {
-                    if (node.x - point[0]).abs() < 1e-9 && (node.y - point[1]).abs() < 1e-9 {
+                if let Some(node) = self.model.node(self.lookup_cursor) {
+                    if (node.pos[0] - point[0]).abs() < 1e-9 && (node.pos[1] - point[1]).abs() < 1e-9 {
                         self.pending_region_id = Some(node.id.clone());
                         self.pending_region_insert = false;
                         self.lookup_cursor = 0;
@@ -383,7 +378,7 @@ impl MountedModelBuild {
                 }
             }
             ModelBuildStage::RegionNodeIdReserve => {
-                let region = snapshot.regions.first().ok_or_else(|| b"fem2d.model-region-owner-missing".to_vec())?;
+                let region = snapshot.regions.get(self.region_cursor).ok_or_else(|| b"fem2d.model-region-owner-missing".to_vec())?;
                 let required = region.id.len().checked_add(24).ok_or_else(|| b"fem2d.model-generated-node-id-overflow".to_vec())?;
                 if required > SESSION_MAXIMUM_STRING_BYTES {
                     return Err(b"fem2d.model-generated-node-id-capacity".to_vec());
@@ -397,7 +392,7 @@ impl MountedModelBuild {
                 self.stage = ModelBuildStage::RegionNodeIdWrite;
             }
             ModelBuildStage::RegionNodeIdWrite => {
-                let region = snapshot.regions.first().ok_or_else(|| b"fem2d.model-region-owner-missing".to_vec())?;
+                let region = snapshot.regions.get(self.region_cursor).ok_or_else(|| b"fem2d.model-region-owner-missing".to_vec())?;
                 let id = self.pending_region_id.as_mut().ok_or_else(|| b"fem2d.model-generated-node-id-owner-missing".to_vec())?;
                 use std::fmt::Write as _;
                 write!(id, "{}_m{}", region.id, self.region_point_cursor).map_err(|_| b"fem2d.model-generated-node-id-format".to_vec())?;
@@ -407,7 +402,7 @@ impl MountedModelBuild {
             }
             ModelBuildStage::RegionNodeId => {
                 let id = self.pending_region_id.as_ref().expect("region node id retained");
-                if let Some(node) = self.model.nodes.get(self.lookup_cursor) {
+                if let Some(node) = self.model.node(self.lookup_cursor) {
                     if node.id == *id {
                         return Err(b"fem2d.model-generated-node-id-collision".to_vec());
                     }
@@ -420,7 +415,7 @@ impl MountedModelBuild {
             ModelBuildStage::RegionNodeModelOwner => {
                 let point = self.mesh.as_ref().and_then(|mesh| mesh.points.get(self.region_point_cursor)).copied().ok_or_else(|| b"fem2d.model-region-point-missing".to_vec())?;
                 let id = self.pending_region_id.as_ref().ok_or_else(|| b"fem2d.model-region-node-owner-missing".to_vec())?.clone();
-                self.model.nodes.push(semio_s_fem_model::Node { id, pos: [point[0], point[1], 0.0] });
+                self.model.push_node(semio_s_fem_model::Node { id, pos: [point[0], point[1], 0.0] }).map_err(|_| b"fem2d.model-region-node-capacity".to_vec())?;
                 self.pending_region_insert = false;
                 self.stage = ModelBuildStage::RegionNodeCommit;
             }
@@ -438,7 +433,7 @@ impl MountedModelBuild {
                 self.stage = ModelBuildStage::RegionNodeCoordinate;
             }
             ModelBuildStage::RegionElementMaterial => {
-                let Some(region) = snapshot.regions.first() else {
+                let Some(region) = snapshot.regions.get(self.region_cursor) else {
                     self.stage = ModelBuildStage::Complete;
                     return Ok(false);
                 };
@@ -457,7 +452,7 @@ impl MountedModelBuild {
                 }
             }
             ModelBuildStage::RegionElementIdReserve => {
-                let region = snapshot.regions.first().ok_or_else(|| b"fem2d.model-region-owner-missing".to_vec())?;
+                let region = snapshot.regions.get(self.region_cursor).ok_or_else(|| b"fem2d.model-region-owner-missing".to_vec())?;
                 let required = region.id.len().checked_add(24).ok_or_else(|| b"fem2d.model-generated-element-id-overflow".to_vec())?;
                 if required > SESSION_MAXIMUM_STRING_BYTES {
                     return Err(b"fem2d.model-generated-element-id-capacity".to_vec());
@@ -471,12 +466,20 @@ impl MountedModelBuild {
                 self.stage = ModelBuildStage::RegionElementIdOwner;
             }
             ModelBuildStage::RegionElementIdOwner => {
-                let region = snapshot.regions.first().ok_or_else(|| b"fem2d.model-region-owner-missing".to_vec())?;
+                let region = snapshot.regions.get(self.region_cursor).ok_or_else(|| b"fem2d.model-region-owner-missing".to_vec())?;
                 let id = self.pending_region_element_id.as_mut().ok_or_else(|| b"fem2d.model-generated-element-id-owner-missing".to_vec())?;
                 use std::fmt::Write as _;
                 write!(id, "{}_t{}", region.id, self.region_triangle_cursor).map_err(|_| b"fem2d.model-generated-element-id-format".to_vec())?;
                 self.pending_region_element_node_cursor = 0;
-                self.stage = ModelBuildStage::RegionElementNodeOwner;
+                self.lookup_cursor = 0;
+                self.stage = ModelBuildStage::RegionElementIdentity;
+            }
+            ModelBuildStage::RegionElementIdentity => {
+                let id = self.pending_region_element_id.as_ref().ok_or_else(|| b"fem2d.model-generated-element-id-owner-missing".to_vec())?;
+                if let Some(element) = self.model.element(self.lookup_cursor) {
+                    if element.id() == id { return Err(b"fem2d.model-generated-element-id-collision".to_vec()); }
+                    self.lookup_cursor += 1;
+                } else { self.stage = ModelBuildStage::RegionElementNodeOwner; }
             }
             ModelBuildStage::RegionElementNodeOwner => {
                 bounded_derived_string(self.pending_region_element_id.as_ref().ok_or_else(|| b"fem2d.model-region-element-id-owner-missing".to_vec())?)?;
@@ -496,10 +499,10 @@ impl MountedModelBuild {
                 for owner in &self.pending_region_element_nodes {
                     bounded_derived_string(owner.as_ref().ok_or_else(|| b"fem2d.model-region-element-node-owner-missing".to_vec())?)?;
                 }
-                let region = snapshot.regions.first().expect("region element retains region");
+                let region = snapshot.regions.get(self.region_cursor).expect("region element retains region");
                 let material = &snapshot.materials[self.resolved_material];
                 let nodes = std::array::from_fn(|index| self.pending_region_element_nodes[index].take().expect("region element node owner retained"));
-                self.model.elements.push(
+                self.model.push_element(
                     semio_s_fem_elements2d::Tri3Cst {
                         id: self.pending_region_element_id.take().ok_or_else(|| b"fem2d.model-region-element-id-owner-missing".to_vec())?,
                         nodes,
@@ -510,7 +513,7 @@ impl MountedModelBuild {
                         density: material.rho,
                     }
                     .into(),
-                );
+                ).map_err(|_| b"fem2d.model-region-element-capacity".to_vec())?;
                 self.region_triangle_cursor += 1;
                 self.stage = ModelBuildStage::RegionElementMaterial;
             }

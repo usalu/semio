@@ -3,10 +3,10 @@
 //!
 //! **Composition.** One module (`teaching.proctor`) contributes the handle and learner deciders,
 //! the enrollment saga, three policy templates and the admission of commands and presence states;
-//! six [`QuizQuery`] handlers answer the reads; the four storage roles live in one SQLite file. No
+//! six [`CourseQuery`] handlers answer the reads; the four storage roles live in one SQLite file. No
 //! principal resolver exists: identity without passwords is carried by the learner id inside every
-//! command, so every caller is `anonymous` and the `quiz-learner` template admits exactly the four
-//! command kinds, the six query kinds and the learner event streams for it. The `quiz-proctor`
+//! command, so every caller is `anonymous` and the `course-learner` template admits exactly the four
+//! command kinds, the six query kinds and the learner event streams for it. The `course-proctor`
 //! template admits the enrollment relay for the `proctor` service account only.
 //!
 //! **One count, one board.** The projector keeps the number of registered learners and the
@@ -14,10 +14,10 @@
 //! reads the first (the learner cap) and the leaderboard read answers from the second, as its
 //! period stands at the wall clock, so neither walks a log or a table per request.
 //!
-//! **Presence.** The `quiz-presence` template lets every caller join, publish in and watch a
-//! presence room, and it is assigned inside the catalog's room scopes only ([`Rooms`]), so a socket
+//! **Presence.** The `course-presence` template lets every caller join, publish in and watch a
+//! presence room, and it is assigned inside the course's room scopes only ([`Rooms`]), so a socket
 //! to — or a watch of — any other scope is closed by policy. The module admits a state only when it
-//! is the room's type, passes the quiz core's rules and names only ids the catalog renders; a socket
+//! is the room's type, passes the quiz core's rules and names only ids the course renders; a socket
 //! whose `Origin` the cross-origin policy does not admit is refused before it opens.
 //!
 //! **Read-your-writes.** A `POST /commands` answers only after the enrollment saga has seen the
@@ -67,7 +67,7 @@ use axum::http::{header, HeaderMap, HeaderValue, Method, StatusCode, Uri};
 use axum::middleware::{from_fn_with_state, Next};
 use axum::response::{IntoResponse, Response};
 use axum::serve::ListenerExt;
-use quiz::WIRE_VERSION;
+use course::WIRE_VERSION;
 use semio_framework_async::CancelToken;
 use server::contract::{CommandDescriptor, CommandEnvelope, CommandOutcome, ModuleManifest, OfflinePolicy, OpaqueJson, PolicyGrant, PolicyPoint, PolicyTemplate, QueryDescriptor, Rejection, Scope, ServerInstanceDefinition};
 use server::gateway::{undelayed, ClientAddressing, GatewayRouter, InstanceDisclosure, InstanceStores, NoDocumentAuthority, PresenceSettings, RouteGroups, Server, ServerError, ServerInstance, ServerModule, ServerState, PRESENCE_JOIN, PRESENCE_PUBLISH, PRESENCE_RESOURCE, PRESENCE_WATCH};
@@ -75,11 +75,11 @@ use server::policy::{Credential, PrincipalResolver, Resolved};
 use server::storage::{AuthorityStore, StorageError, StorageProfile};
 
 use teaching_proctor_domain::actors::{deciders, unrelayed, Admission, EnrollmentSaga, ProctorDeciders, ENROLL, HANDLE, IDENTIFY, LEARNER, PROCTOR_SERVICE};
-use teaching_proctor_base::catalog::LoadedCatalog;
+use teaching_proctor_base::course::LoadedCourse;
 use teaching_proctor_base::config::{CrossOriginPolicy, Forwarding, Gate, SIGN_UP};
 use teaching_proctor_base::presence::Rooms;
 use teaching_proctor_domain::projections::{CatchUp, Progress, Projector, CROWDS, HANDLES, LEADERBOARD, LEARNERS, META, RUNS, STATES, TALLIES};
-use teaching_proctor_domain::queries::{wall_clock, QueryKind, QuizQuery};
+use teaching_proctor_domain::queries::{wall_clock, QueryKind, CourseQuery};
 use teaching_proctor_base::storage::{Database, SqliteAuthorityStore, SqliteBlobStore, SqliteProjectionStore, SqliteSessionStore};
 
 /// 🏷️ The instance id `GET /instance` reports.
@@ -87,11 +87,11 @@ pub const INSTANCE_ID: &str = "teaching-proctor";
 /// 🧩️ The id of the proctor's one module.
 pub const MODULE_ID: &str = "teaching.proctor";
 /// 🎓️ The template every caller holds.
-pub const LEARNER_TEMPLATE: &str = "quiz-learner";
+pub const LEARNER_TEMPLATE: &str = "course-learner";
 /// 🤖️ The template of the proctor's own service account.
-pub const PROCTOR_TEMPLATE: &str = "quiz-proctor";
-/// 👥️ The template every caller holds inside each presence room of the catalog.
-pub const PRESENCE_TEMPLATE: &str = "quiz-presence";
+pub const PROCTOR_TEMPLATE: &str = "course-proctor";
+/// 👥️ The template every caller holds inside each presence room of the course.
+pub const PRESENCE_TEMPLATE: &str = "course-presence";
 /// 🙈️ The principal key of every caller, the proctor resolving no identity.
 pub const ANONYMOUS: &str = "anonymous";
 /// ⏱️ How often the supervisor settles sagas and projections.
@@ -111,7 +111,7 @@ pub struct ProctorInstance;
 
 impl ServerInstance for ProctorInstance {
     type Modules = ProctorModule;
-    type Queries = QuizQuery;
+    type Queries = CourseQuery;
     type Documents = NoDocumentAuthority;
     type Deciders = ProctorDeciders;
     type Sagas = EnrollmentSaga;
@@ -144,21 +144,21 @@ impl PrincipalResolver for ProctorResolvers {
     }
 }
 
-/// 🧩️ The quiz lifecycle module over one loaded catalog, its presence rooms and the admission its
+/// 🧩️ The quiz lifecycle module over one loaded course, its presence rooms and the admission its
 /// commands pass.
 pub struct ProctorModule {
-    catalog: Arc<LoadedCatalog>,
+    course: Arc<LoadedCourse>,
     rooms: Rooms,
     admission: Arc<Admission>,
 }
 
 impl ProctorModule {
-    /// 🌱️ The module serving `catalog`, admitting commands through `admission`.
-    pub fn new(catalog: Arc<LoadedCatalog>, admission: Arc<Admission>) -> Self {
-        Self { rooms: Rooms::of(&catalog), catalog, admission }
+    /// 🌱️ The module serving `course`, admitting commands through `admission`.
+    pub fn new(course: Arc<LoadedCourse>, admission: Arc<Admission>) -> Self {
+        Self { rooms: Rooms::of(&course), course, admission }
     }
 
-    /// 🗺️ The presence rooms of the served catalog.
+    /// 🗺️ The presence rooms of the served course.
     pub fn rooms(&self) -> &Rooms {
         &self.rooms
     }
@@ -168,11 +168,11 @@ impl ServerModule for ProctorModule {
     type Instance = ProctorInstance;
 
     async fn manifest(&self) -> ModuleManifest {
-        manifest(self.catalog.id())
+        manifest(self.course.id())
     }
 
     async fn deciders(&self) -> Vec<ProctorDeciders> {
-        deciders(&self.catalog, &self.admission)
+        deciders(&self.course, &self.admission)
     }
 
     async fn sagas(&self) -> Vec<EnrollmentSaga> {
@@ -205,10 +205,10 @@ pub fn manifest(tenant: &str) -> ModuleManifest {
         id: MODULE_ID.to_string(),
         commands: vec![
             command(IDENTIFY, HANDLE, OfflinePolicy::AuthorityRequired),
-            command("quiz.start-run", LEARNER, OfflinePolicy::AuthorityRequired),
-            command("quiz.open-task", LEARNER, OfflinePolicy::Optimistic),
-            command("quiz.record-answer", LEARNER, OfflinePolicy::Optimistic),
-            command("quiz.submit-run", LEARNER, OfflinePolicy::AuthorityRequired),
+            command("course.start-run", LEARNER, OfflinePolicy::AuthorityRequired),
+            command("course.open-task", LEARNER, OfflinePolicy::Optimistic),
+            command("course.record-answer", LEARNER, OfflinePolicy::Optimistic),
+            command("course.submit-run", LEARNER, OfflinePolicy::AuthorityRequired),
             command(ENROLL, LEARNER, OfflinePolicy::AuthorityRequired),
         ],
         queries: QueryKind::ALL.iter().map(|kind| QueryDescriptor { kind: kind.wire().to_string(), version: WIRE_VERSION, projection: projection_of(*kind).to_string() }).collect(),
@@ -220,7 +220,7 @@ pub fn manifest(tenant: &str) -> ModuleManifest {
 
 fn projection_of(kind: QueryKind) -> &'static str {
     match kind {
-        QueryKind::Catalog => "quiz.catalog",
+        QueryKind::Course => "course.course",
         QueryKind::Learner => LEARNERS,
         QueryKind::Run => RUNS,
         QueryKind::Leaderboard => LEADERBOARD,
@@ -234,7 +234,7 @@ fn projection_of(kind: QueryKind) -> &'static str {
 pub fn learner_template(tenant: &str) -> PolicyTemplate {
     let grant = |point: PolicyPoint, resource: String, action: &str| PolicyGrant { point, resource, action: action.to_string() };
     let mut grants = vec![grant(PolicyPoint::CommandAdmission, format!("{HANDLE}/*"), IDENTIFY)];
-    grants.extend([IDENTIFY, "quiz.start-run", "quiz.open-task", "quiz.record-answer", "quiz.submit-run"].map(|action| grant(PolicyPoint::CommandAdmission, format!("{LEARNER}/*"), action)));
+    grants.extend([IDENTIFY, "course.start-run", "course.open-task", "course.record-answer", "course.submit-run"].map(|action| grant(PolicyPoint::CommandAdmission, format!("{LEARNER}/*"), action)));
     grants.extend(QueryKind::ALL.map(|kind| grant(PolicyPoint::QueryAccess, kind.wire().to_string(), "read")));
     grants.push(grant(PolicyPoint::EventDelivery, format!("stream:{tenant}/{LEARNER}/*"), "read"));
     grants.push(grant(PolicyPoint::Subscription, format!("stream:{tenant}/{LEARNER}/*"), "subscribe"));
@@ -468,20 +468,20 @@ pub struct Proctor {
     server: Server<ProctorInstance>,
     settler: Settler,
     router: GatewayRouter,
-    catalog: Arc<LoadedCatalog>,
+    course: Arc<LoadedCourse>,
     admission: Arc<Admission>,
 }
 
 impl Proctor {
-    /// 🔨️ Compose the API server over `profile` for `catalog` behind `gate` and its limits, its
+    /// 🔨️ Compose the API server over `profile` for `course` behind `gate` and its limits, its
     /// presence rooms ticking as `presence` says. The projector, the command admission and the
     /// leaderboard read share one learner count and one leaderboard; the quiz caps are the defaults
     /// until [`Proctor::capped`] states others.
-    pub async fn assemble(profile: StorageProfile, catalog: Arc<LoadedCatalog>, gate: Gate, presence: PresenceSettings) -> Result<Self, ProctorError> {
-        let view = Arc::new(serde_json::to_vec(&catalog.view()).map_err(|error| ProctorError::Io(error.to_string()))?);
-        let projector = Arc::new(Projector::new(Arc::clone(&catalog)));
-        let admission = Arc::new(Admission::new(catalog.id(), projector.learners()));
-        let module = ProctorModule::new(Arc::clone(&catalog), Arc::clone(&admission));
+    pub async fn assemble(profile: StorageProfile, course: Arc<LoadedCourse>, gate: Gate, presence: PresenceSettings) -> Result<Self, ProctorError> {
+        let view = Arc::new(serde_json::to_vec(&course.view()).map_err(|error| ProctorError::Io(error.to_string()))?);
+        let projector = Arc::new(Projector::new(Arc::clone(&course)));
+        let admission = Arc::new(Admission::new(course.id(), projector.learners()));
+        let module = ProctorModule::new(Arc::clone(&course), Arc::clone(&admission));
         let rooms = module.rooms().scopes();
         let origins = gate.origins.clone();
         let mut builder = Server::<ProctorInstance>::builder(profile)
@@ -497,7 +497,7 @@ impl Proctor {
             .disclosure(InstanceDisclosure::Public)
             .origin_admission(Arc::new(move |origin: &str| origins.admits(origin)));
         for kind in QueryKind::ALL {
-            builder = builder.query(QuizQuery { kind, tenant: catalog.id().to_string(), catalog: Arc::clone(&view), board: projector.board(), now: wall_clock });
+            builder = builder.query(CourseQuery { kind, tenant: course.id().to_string(), course: Arc::clone(&view), board: projector.board(), now: wall_clock });
         }
         let server = builder.build().await?;
         {
@@ -509,15 +509,15 @@ impl Proctor {
             }
         }
         let log = server.state().store.read().await.clone();
-        let settler = Settler { state: server.state().clone(), log, projector, tenant: catalog.id().to_string(), relaying: Arc::new(Flight::default()), folding: Arc::new(Flight::default()) };
+        let settler = Settler { state: server.state().clone(), log, projector, tenant: course.id().to_string(), relaying: Arc::new(Flight::default()), folding: Arc::new(Flight::default()) };
         let served = server.router().fallback(|method: Method, uri: Uri| async move { ServerError::NotFound(format!("{method} {}", uri.path())).into_response() }).layer(from_fn_with_state(settler.clone(), consistency));
         let router = server.throttled(served).layer(from_fn_with_state(Arc::new(gate), gatekeeping));
-        Ok(Self { server, settler, router, catalog, admission })
+        Ok(Self { server, settler, router, course, admission })
     }
 
     /// 🧱️ The same proctor deciding under `caps`: how many learners it registers, how many runs a
     /// learner submits and how many answers a run records.
-    pub fn capped(self, caps: quiz::Limits) -> Self {
+    pub fn capped(self, caps: course::Limits) -> Self {
         self.admission.cap(caps);
         self
     }
@@ -537,12 +537,12 @@ impl Proctor {
         self.server.definition()
     }
 
-    /// 📚️ The catalog being served.
-    pub fn catalog(&self) -> &LoadedCatalog {
-        &self.catalog
+    /// 📚️ The course being served.
+    pub fn course(&self) -> &LoadedCourse {
+        &self.course
     }
 
-    /// 🧾️ Set up fresh projections and reset those built for another catalog or projector revision;
+    /// 🧾️ Set up fresh projections and reset those built for another course or projector revision;
     /// `true` when such projections were dropped.
     pub async fn prepare(&self) -> Result<bool, StorageError> {
         let mut projections = self.settler.state.projections.write().await;

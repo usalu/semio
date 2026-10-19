@@ -37,6 +37,7 @@ impl<M:RetireOwned+ArtifactCanonicalJsonTree+Send+Sync+'static> ArtifactStoreBat
  fn begin_close(&mut self){self.original.begin_close();}
 }
 impl<M:RetireOwned+ArtifactCanonicalJsonTree+Send+Sync+'static> ErasedSnapshotRetirement for NativeBatchDigest<M>{
+ fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{nested(self.original.next_demand()?)}
  fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.original.begin_close();if self.original.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}if !admitted(nested(self.original.next_demand()?)?,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}self.original.advance(child(grant))}
  fn terminal_is_empty(&self)->bool{self.original.terminal_is_empty()}
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(nested(self.original.next_demand()?)?.copy_bytes)}

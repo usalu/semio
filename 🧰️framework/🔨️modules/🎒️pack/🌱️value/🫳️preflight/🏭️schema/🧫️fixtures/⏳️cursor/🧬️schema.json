@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "physicalPageBytes", "oracle", "cases", "cancelTurns"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "physicalPageBytes": { "const": 4096 },
+    "oracle": { "type": "string" },
+    "cancelTurns": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "canonicalBytes": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
+          "fieldCount": { "type": "integer", "minimum": 1 },
+          "key": { "type": "string" },
+          "shapeTag": { "type": "integer", "minimum": 1, "maximum": 27 }
+        }
+      }
+    }
+  }
+}

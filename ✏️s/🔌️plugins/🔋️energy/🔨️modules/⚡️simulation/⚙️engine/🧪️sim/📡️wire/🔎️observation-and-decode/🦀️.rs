@@ -4,21 +4,15 @@ use super::*;
 
 pub fn observed_weather_records(config: &SimulationConfig) -> usize {
     config.weather.as_ref().map_or_else(
-        || match config.environment {
-            SimulationEnvironment::HeatingDesignDay | SimulationEnvironment::CoolingDesignDay => 24,
-            SimulationEnvironment::WeatherRunPeriod | SimulationEnvironment::CustomDesignPeriod => 8_760,
-        },
+        || SimulationKernel::run_period(config).total_hours().max(24) as usize,
         |weather| weather.records.capacity().max(weather.records.len().max(1)),
     )
 }
 
 pub fn weather_copy_target(config: &SimulationConfig) -> usize {
     config.weather.as_ref().map_or_else(
-        || match config.environment {
-            SimulationEnvironment::HeatingDesignDay | SimulationEnvironment::CoolingDesignDay => 24,
-            SimulationEnvironment::WeatherRunPeriod | SimulationEnvironment::CustomDesignPeriod => 8_760,
-        },
-        |weather| weather.records.len().max(1),
+        || SimulationKernel::run_period(config).total_hours().max(24) as usize,
+        |weather| weather.records.len(),
     )
 }
 

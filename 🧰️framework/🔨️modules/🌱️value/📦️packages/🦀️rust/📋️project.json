@@ -8,6 +8,308 @@
     ]
   },
   "targets": {
+    "test-native-payload-enum-source": {
+      "executor": "repo:script",
+      "options": {
+        "command": "bun ./📜️script.ts test-native-payload-enum source",
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+      }
+    },
+    "test-native-payload-enum-native": {
+      "executor": "repo:script",
+      "options": {
+        "command": "bun ./📜️script.ts test-native-payload-enum native",
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+      }
+    },
+    "test-immutable-root-clone-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-immutable-root-clone source"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-immutable-root-clone",
+            "source"
+          ]
+        }
+      }
+    },
+    "test-immutable-root-clone-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-immutable-root-clone native"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-immutable-root-clone",
+            "native"
+          ]
+        }
+      }
+    },
+    "test-close-demand-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-close-demand source"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-close-demand",
+            "source"
+          ]
+        }
+      }
+    },
+    "test-close-demand-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-close-demand native"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-close-demand",
+            "native"
+          ]
+        }
+      }
+    },
+    "test-slice-equality-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-slice-equality source"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-slice-equality",
+            "source"
+          ]
+        }
+      }
+    },
+    "test-slice-equality-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-slice-equality native"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-slice-equality",
+            "native"
+          ]
+        }
+      }
+    },
+    "test-named-edit-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-named-edit source"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-named-edit",
+            "source"
+          ]
+        }
+      }
+    },
+    "test-named-edit-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-named-edit native"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-named-edit",
+            "native"
+          ]
+        }
+      }
+    },
+    "test-exact-key-lookup-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-exact-key-lookup source"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-exact-key-lookup",
+            "source"
+          ]
+        }
+      }
+    },
+    "test-exact-key-lookup-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-exact-key-lookup native"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-exact-key-lookup",
+            "native"
+          ]
+        }
+      }
+    },
+    "test-indexed-edit-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-indexed-edit source"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-indexed-edit",
+            "source"
+          ]
+        }
+      }
+    },
+    "test-indexed-edit-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-indexed-edit native"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-indexed-edit",
+            "native"
+          ]
+        }
+      }
+    },
+    "test-fixed-request-owners-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-fixed-request-owners source"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-fixed-request-owners",
+            "source"
+          ]
+        }
+      }
+    },
+    "test-fixed-request-owners-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-fixed-request-owners native"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-fixed-request-owners",
+            "native"
+          ]
+        }
+      }
+    },
+    "test-fixed-key-slots-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-fixed-key-slots source"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-fixed-key-slots",
+            "source"
+          ]
+        }
+      }
+    },
+    "test-fixed-key-slots-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-fixed-key-slots native"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-fixed-key-slots",
+            "native"
+          ]
+        }
+      }
+    },
+    "test-owned-projection-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-owned-projection source"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-owned-projection",
+            "source"
+          ]
+        }
+      }
+    },
+    "test-owned-projection-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-owned-projection native"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-owned-projection",
+            "native"
+          ]
+        }
+      }
+    },
     "test-native-literal-refusal-source": {
       "executor": "repo:script",
       "cache": false,
@@ -329,6 +631,442 @@
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test long --lib --success-output immediate -- --nocapture",
         "forwardAllArgs": false
+      }
+    },
+    "test-factory-owned-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-factory-owned-source"
+      }
+    },
+    "test-factory-owned-source-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test --lib factory_owned_source_preserves_actual_payload_and_custom_issuer --no-fail-fast --success-output immediate"
+      }
+    },
+    "test-compound-demands": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-compound-demands"
+      }
+    },
+    "test-compound-demands-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test --lib retained_clone_normal_demand_generic_compounds --no-fail-fast --success-output immediate"
+      }
+    },
+    "test-bulk-vec-retained-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-bulk-vec-retained native"
+      }
+    },
+    "test-original-retirement-demand": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-retirement-demand source"
+      }
+    },
+    "test-original-retirement-demand-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-retirement-demand native"
+      }
+    },
+    "test-persistent-traversal": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-persistent-traversal source"
+      }
+    },
+    "test-persistent-traversal-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-persistent-traversal native"
+      }
+    },
+    "test-immutable-projection": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-immutable-projection"
+      }
+    },
+    "test-immutable-projection-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test quick --lib quick_immutable_snapshot_projection --no-fail-fast --success-output immediate"
+      }
+    },
+    "test-retained-utf8-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-retained-utf8 source",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-retained-utf8-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-retained-utf8 native",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-sealed-frontier-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-sealed-frontier source"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-sealed-frontier",
+            "source"
+          ]
+        }
+      }
+    },
+    "test-sealed-frontier-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-sealed-frontier native"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-sealed-frontier",
+            "native"
+          ]
+        }
+      }
+    },
+    "test-original-vector-concat": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-original-vector-concat source",
+        "cwd": null
+      }
+    },
+    "test-original-vector-concat-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-original-vector-concat native",
+        "cwd": null
+      }
+    },
+    "test-borrowed-observations-source": {
+      "options": {
+        "command": "bun ./📜️script.ts test-borrowed-observations source",
+        "cwd": "{projectRoot}"
+      },
+      "cache": false,
+      "executor": "repo:script"
+    },
+    "test-borrowed-observations-native": {
+      "options": {
+        "command": "bun ./📜️script.ts test-borrowed-observations native",
+        "cwd": "{projectRoot}"
+      },
+      "cache": false,
+      "executor": "repo:script"
+    },
+    "test-native-receiving-original-source": {
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-native-receiving-original-source"
+          ]
+        }
+      },
+      "cache": false,
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-native-receiving-original-source"
+      }
+    },
+    "test-persistent-build-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-persistent-build source"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-persistent-build",
+            "source"
+          ]
+        }
+      }
+    },
+    "test-persistent-build-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-persistent-build native"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-persistent-build",
+            "native"
+          ]
+        }
+      }
+    },
+    "test-retained-equality-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-retained-equality source"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-retained-equality",
+            "source"
+          ]
+        }
+      }
+    },
+    "test-retained-equality-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-retained-equality native"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-retained-equality",
+            "native"
+          ]
+        }
+      }
+    },
+    "test-native-persistent-receive-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-native-persistent-receive source"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-native-persistent-receive",
+            "source"
+          ]
+        }
+      }
+    },
+    "test-native-persistent-receive-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-native-persistent-receive native"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-native-persistent-receive",
+            "native"
+          ]
+        }
+      }
+    },
+    "test-native-shared-receive-source": {
+      "options": {
+        "command": "bun ./📜️script.ts test-native-shared-receive source",
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+      },
+      "cache": false,
+      "executor": "repo:script",
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-native-shared-receive",
+            "source"
+          ]
+        }
+      }
+    },
+    "test-native-shared-receive-native": {
+      "options": {
+        "command": "bun ./📜️script.ts test-native-shared-receive native",
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+      },
+      "cache": false,
+      "executor": "repo:script",
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-native-shared-receive",
+            "native"
+          ]
+        }
+      }
+    },
+    "test-named-root-receive-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-named-root-receive source"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-named-root-receive",
+            "source"
+          ]
+        }
+      }
+    },
+    "test-named-root-receive-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-named-root-receive native"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-named-root-receive",
+            "native"
+          ]
+        }
+      }
+    },
+    "test-named-key-index-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-named-key-index source"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-named-key-index",
+            "source"
+          ]
+        }
+      }
+    },
+    "test-named-key-index-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-named-key-index native"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-named-key-index",
+            "native"
+          ]
+        }
+      }
+    },
+    "test-native-retirement-loan-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-native-retirement-loan source"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-native-retirement-loan",
+            "source"
+          ]
+        }
+      }
+    },
+    "test-native-retirement-loan-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust --manifest 🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-native-retirement-loan native"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "test-native-retirement-loan",
+            "native"
+          ]
+        }
+      }
+    },
+    "test-plain-element-retirement-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🌱️value/📦️packages/🦀️rust -- bun ./📜️script.ts test-plain-element-retirement-source",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
+    "test-bulk-vec-retained-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-bulk-vec-retained source"
       }
     }
   }

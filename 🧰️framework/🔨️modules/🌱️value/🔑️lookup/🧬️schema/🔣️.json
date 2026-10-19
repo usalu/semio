@@ -1,0 +1,26 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "title":"Exact Immutable Key Lookup",
+ "type":"object",
+ "additionalProperties":false,
+ "required":["version","wordBytes","cases","wide"],
+ "properties":{
+  "version":{"const":1},
+  "wordBytes":{"type":"array","items":{"enum":[4,8]}},
+  "cases":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["id","key","candidates","expected","pageBytes"],"properties":{
+   "id":{"type":"string","minLength":1},
+   "key":{"type":"string"},
+   "candidates":{"type":"array","items":{"type":"string"}},
+   "expected":{"type":["integer","null"],"minimum":0},
+   "pageBytes":{"type":"integer","minimum":1}
+  }}},
+  "wide":{"type":"object","additionalProperties":false,"required":["prefixLength","suffixes","wanted","expected","pageBytes","cancelCuts"],"properties":{
+   "prefixLength":{"type":"integer","minimum":1},
+   "suffixes":{"type":"array","items":{"type":"string"}},
+   "wanted":{"type":"string"},
+   "expected":{"type":"integer","minimum":0},
+   "pageBytes":{"type":"integer","minimum":1},
+   "cancelCuts":{"type":"array","items":{"type":"integer","minimum":0}}
+  }}
+ }
+}

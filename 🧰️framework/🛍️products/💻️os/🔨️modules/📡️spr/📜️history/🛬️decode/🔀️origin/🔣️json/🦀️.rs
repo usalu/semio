@@ -1,4 +1,5 @@
 //! 🔣️ Original History origin JSON retains its native grammar while borrowing the same source under complete caller policy.
+use semio_framework_value::native_decoding::NativeDecodeCloseControl;
 use super::{RetainedHistoryOriginProjection,permits,metadata};
 use semio_framework_pack_json::{JsonGrammarCursor,JsonSourceCursor,JsonReadLimits,JsonMemberPolicy,JsonError,JsonReadSource};
 use semio_framework_value::{DslValue,NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,ValueError,ValueRefusalKind};
@@ -24,14 +25,14 @@ impl RetainedHistoryOriginJsonDecode{
   let view=OriginalHistoryJsonRange{source,range};let cursor=JsonSourceCursor::<_,DslValue>::new(&view,JsonMemberPolicy::Reject,limits)?;let(_,grammar)=cursor.into_grammar();
   Ok(Some(Self{source:source.original_source_identity(),control_identity:(control.ledger_identity(),control.retirement_recipient_identity()),range,allocation_limit:limits.maximum_allocation_bytes,grammar:ManuallyDrop::new(Some(grammar)),parsed:ManuallyDrop::new(None),projection:ManuallyDrop::new(None),failure:ManuallyDrop::new(None),grammar_complete:false,closing:false,closed:false,receipt:Some((g,metadata()))}))
  }
- fn validate<S:RetainedWireByteSource+?Sized>(&self,source:&S,control:&NativeDecodeControl<'_>)->Result<(),ValueError>{if self.source!=source.original_source_identity()||self.control_identity!=(control.ledger_identity(),control.retirement_recipient_identity()){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"origin JSON changed its original source or cumulative receiving limit"))}Ok(())}
+ fn validate<S:RetainedWireByteSource+?Sized>(&self,source:&S,control:&dyn NativeDecodeCloseControl)->Result<(),ValueError>{if self.source!=source.original_source_identity()||self.control_identity!=(control.ledger_identity(),control.retirement_recipient_identity()){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"origin JSON changed its original source or cumulative receiving limit"))}Ok(())}
  pub fn source_identity(&self)->OriginalWireSourceIdentity{self.source}
  pub fn receipt(&self)->Option<(RetainedCloneGrant,RetainedCloneProgress)>{self.receipt}
  pub fn take_receipt(&mut self)->Option<(RetainedCloneGrant,RetainedCloneProgress)>{self.receipt.take()}
  fn publish(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->Result<(),ValueError>{self.receipt=Some((g,p));if !p.fits(g){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"origin JSON exceeded original parent authority").with_retained_progress(p))}Ok(())}
  pub fn failure(&self)->Option<&JsonError>{self.failure.as_ref()}
  pub fn grammar_is_receivable(&self)->bool{self.grammar.is_some()&&(self.grammar_complete||self.closing||self.failure.is_some())}
- pub fn demands<S:RetainedWireByteSource+?Sized>(&self,source:&S,control:&NativeDecodeControl<'_>,body:usize)->Result<RetirementDemand,JsonError>{
+ pub fn demands<S:RetainedWireByteSource+?Sized>(&self,source:&S,control:&dyn NativeDecodeCloseControl,body:usize)->Result<RetirementDemand,JsonError>{
   self.validate(source,control)?;if self.receipt.is_some()||self.closed{return Ok(Default::default())}
   let view=OriginalHistoryJsonRange{source,range:self.range};let mut d=if !self.closing&&self.failure.is_none()&&!self.grammar_complete{self.grammar.as_ref().unwrap().normal_step_demands(&view)?}
   else if let Some(projection)=self.projection.as_ref(){projection.demands(body)?}

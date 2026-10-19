@@ -65,6 +65,15 @@ pub struct ToolKeyedDocumentCancellationScope {
     pub(crate) active: usize,
 }
 
+impl ToolDocumentCancellationScope {
+    /// ♻️ Transfers the original token and claim together into their issuing retirement owner.
+    pub fn into_retirement_parts(self) -> (semio_framework_job::CancelToken, PublicationClaimHandle) { (self.token, self.publication_claim) }
+}
+impl ToolKeyedDocumentCancellationScope {
+    /// ♻️ Transfers the original token and claim together into their issuing retirement owner.
+    pub fn into_retirement_parts(self) -> (semio_framework_job::CancelToken, PublicationClaimHandle) { (self.token, self.publication_claim) }
+}
+
 #[doc(hidden)]
 pub struct ToolCancellationState {
     slots: Box<[std::mem::MaybeUninit<ToolDocumentCancellationScope>]>,
@@ -273,7 +282,7 @@ pub mod completion_effects;
 #[path = "../📬️completion/♻️vacant/🦀️.rs"]
 pub mod completion_vacant;
 #[path = "../🌱️initialization/🏪️catalog/🦀️.rs"]
-pub mod original_catalog_constructor;
+pub pub(crate) mod original_catalog_constructor;
 #[path = "🛬️lifted/👁️view/🦀️.rs"]
 mod lifted_view;
 pub use lifted_view::*;

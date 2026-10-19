@@ -1,5 +1,5 @@
-//! 🗣️ Puzzle 5d play app — the complete UI label set: one field per label, so every
 //! terminology×locale combination is compile-checked by `semio_framework_plugin::app_labels!`
+//! 🗣️ Puzzle 5d play app — the complete UI label set: one field per label, so every
 //! (see ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND).
 
 use semio_framework_ui_locale::AppLabels;
@@ -7,7 +7,9 @@ use semio_framework_ui_locale::LabelText;
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_ui_locale::Terminology;
-use semio_framework_tool_run::{ToolRunCounterDefinition, ToolRunReasonDefinition, ToolRunStageDefinition};
+use semio_framework_tool_run::ToolRunCounterDefinition;
+use semio_framework_tool_run::ToolRunReasonDefinition;
+use semio_framework_tool_run::ToolRunStageDefinition;
 use {semio_s_artifact_puzzle_3d_model::BrushSuggestionsRunCounter, semio_s_artifact_puzzle_3d_model::BrushSuggestionsRunReason, semio_s_artifact_puzzle_3d_model::BrushSuggestionsRunStage, semio_s_artifact_puzzle_3d_model::FillRunCounter, semio_s_artifact_puzzle_3d_model::FillRunReason, semio_s_artifact_puzzle_3d_model::FillRunStage};
 
 //#region 🔖️Labels

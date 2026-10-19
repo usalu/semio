@@ -1,11 +1,14 @@
+import "../💾️storage/🧪️tests/🌐️platform/🟦️.ts";
 import {boundedNxNamespaceV1} from "../../../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
 /** 📦️ Portable locked-install and owner-requested lock refresh command laws. */
 import { expect, test } from "bun:test";
-import { openSync, readFileSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
-import { resolve, join } from "node:path";
+import { openSync, readFileSync, mkdirSync, mkdtempSync, writeFileSync, renameSync, rmSync } from "node:fs";
+import { resolve, join, dirname, isAbsolute } from "node:path";
 import { pathToFileURL } from "node:url";
 import Ajv from "ajv";
-import { build } from "esbuild";
+import { build, transform } from "esbuild";
+import glob from "fast-glob";
+import * as bunOwnership from "../../../../🗂️workspaces/🟦️bun/🟦️.ts";
 import { createSourceFile, isFunctionDeclaration, parseConfigFileTextToJson, ScriptTarget } from "typescript";
 import {prepareJavascriptDependencies,javascriptDependencyProducerArgumentsV1} from "../💾️storage/🟦️.ts";
 import dependencyInstallSchema from "../💾️storage/🧬️schema/📥️install.json"with{type:"json"};
@@ -19,6 +22,44 @@ import { ChildProcess } from "node:child_process";
 
 const owner = resolve(import.meta.dir, "..");
 const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8")) as { operations: { mode: "sync" | "lock"; arguments: string[] }[]; platforms: string[]; rejections: string[][] };
+
+/** 🧭️ Executes neutral output churn while retaining authored topology, manifest and cancellation fences. */
+async function outputCensus(root:string,input:any,mutation:string,api:typeof bunOwnership):Promise<any>{
+ const base=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!);if(!isAbsolute(root)||dirname(root)!==base||dirname(root+"-retired")!==base)throw Error("Neutral census root escaped");
+ const put=(path:string,value:any):void=>{mkdirSync(join(root,path,".."),{recursive:true});writeFileSync(join(root,path),JSON.stringify(value));};
+ put("package.json",{name:"neutral-census",private:true,workspaces:["source/member"],semio:{workspace:{schemaVersion:1,members:input.members,owners:[]}}});
+ put("source/member/package.json",{name:"neutral-source",version:"1.0.0"});
+ if(mutation!=="generatedBirth")for(const name of input.outputs)put("source/"+name+"/runtime/package.json",{name:"neutral-output-"+input.outputs.indexOf(name),version:"1.0.0"});
+ const controller=new AbortController(),visited:string[]=[];let changed=false;
+ try{const report=await api.publishBunWorkspaceOwnership(root,{signal:controller.signal,advance:async progress=>{
+  visited.push(progress.path);
+  const at=mutation==="cancel"||mutation==="authoredDirectory"?join(root,"source"):join(root,"source/member/package.json");
+  if(!changed&&progress.path===at&&progress.operation===(mutation==="cancel"||mutation==="authoredDirectory"?"list":"readText")){
+   changed=true;
+   if(mutation==="cancel")controller.abort(Error("Neutral census canceled"));
+   else if(mutation==="authoredManifest")put("source/member/package.json",{name:"neutral-changed",version:"1.0.0"});
+   else if(mutation==="authoredDirectory"){renameSync(join(root,"source/member"),join(root,"source/retired"));put("source/member/package.json",{name:"neutral-source",version:"1.0.0"});}
+   else if(mutation==="authoredRoot"){renameSync(root,root+"-retired");put("package.json",{name:"neutral-census",private:true,workspaces:["source/member"],semio:{workspace:{schemaVersion:1,members:input.members,owners:[]}}});put("source/member/package.json",{name:"neutral-source",version:"1.0.0"});}
+   else for(const name of input.outputs){const path=join(root,"source",name);if(dirname(path)!==join(root,"source"))throw Error("Neutral output path escaped");if(mutation==="generatedRemoval"){rmSync(path,{recursive:true,force:true});continue;}put("source/"+name+"/leases/late/package.json",{name:"neutral-late-output",version:"1.0.0"});mkdirSync(join(root,"source",name,"captures"),{recursive:true});}
+  }
+  await new Promise<void>(done=>setImmediate(done));
+ }});return {outcome:"admitted",packages:report.packages,visitedOutputs:input.outputs.filter((name:string)=>visited.some(path=>path===join(root,"source",name)||path.startsWith(join(root,"source",name)+"/"))) };}
+ catch(error){return {outcome:controller.signal.aborted?"canceled":"rejected",error:String(error),changed};}
+}
+
+test("Bun ownership excludes mutable outputs and preserves authored custody against Node and esbuild",async()=>{
+ const censusOwner=resolve(owner,"../../../🗂️workspaces/🟦️bun"),input=JSON.parse(readFileSync(join(censusOwner,"🧫️fixtures/🔣️.json"),"utf8")).outputCensus,schema=JSON.parse(readFileSync(join(censusOwner,"🧬️schema/🔣️.json"),"utf8"));expect(new Ajv({strict:true}).compile(schema.$defs.OutputCensus)(input)).toBe(true);
+ const source=createSourceFile("census.ts",readFileSync(import.meta.path,"utf8"),ScriptTarget.Latest),operation=source.statements.find(statement=>isFunctionDeclaration(statement)&&statement.name?.text==="outputCensus")!;
+ const compiled=await transform(operation.getText(source),{loader:"ts",format:"esm",target:"es2022"});
+ for(const row of input.cases){
+  const root=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"q")),actual=await outputCensus(root,input,row.mutation,bunOwnership);expect(actual.outcome,JSON.stringify(actual)).toBe(row.outcome);
+  if(row.outcome==="admitted"){expect(actual.packages).toEqual(["source/member"]);expect(actual.visitedOutputs).toEqual([]);expect(glob.sync("source/**/package.json",{cwd:root,ignore:input.outputs.map((name:string)=>"**/"+name+"/**"),onlyFiles:true}).map(path=>path.replace(/\/package.json$/u,""))).toEqual(actual.packages);}
+  else {expect(actual.changed).toBe(true);expect(actual.error).toContain(row.outcome==="canceled"?"Neutral census canceled":"Bun current");}
+  const oracleRoot=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"q")),entry='import {mkdirSync,writeFileSync,renameSync,rmSync} from "node:fs";import {join,dirname} from "node:path";import {createRequire} from "node:module";const api=createRequire(import.meta.url)('+JSON.stringify(join(censusOwner,"🟨️.cjs"))+');'+compiled.code+'console.log(JSON.stringify(await outputCensus('+JSON.stringify(oracleRoot)+','+JSON.stringify(input)+','+JSON.stringify(row.mutation)+',api)));';
+  const child=Bun.spawn(["node","--input-type=module","-e",entry.replace('import {join,dirname}', 'import {join,dirname,resolve,isAbsolute}')],{stdout:"pipe",stderr:"pipe",signal:new AbortController().signal}),[stdout,stderr,status]=await Promise.all([new Response(child.stdout).text(),new Response(child.stderr).text(),child.exited]);expect(status,stderr).toBe(0);const reference=JSON.parse(stdout);expect(reference.outcome).toBe(row.outcome);if(row.outcome==="admitted")expect(reference).toEqual(actual);else expect(reference.changed).toBe(true);
+ }
+ console.log("[DEBUG] Bun output census and independent esbuild/Node/fast-glob agree: generated birth/churn/removal admitted; authored manifest/directory/root drift and original cancellation refused");
+});
 
 test("source watchers have stable independent graph stores and sockets for each activation binding", () => {
   const workspace = resolve(owner), environment:Record<string,string|undefined> = { S_OS_PORT: "6064", PLAYGROUND_LOCKED_EXAMPLE_ID: "🎬️demo",...boundedNxNamespaceV1(workspace,workspace,"a".repeat(64),workspace,null,"d".repeat(64)).environment,SEMIO_NX_TOOLING_IDENTITY:"a".repeat(64),SEMIO_NX_SOCKET_STORAGE:"/c/l/m" }, target = "a:activate-react";
@@ -81,15 +122,15 @@ test("selects portable pinned Bun archives and extracts the same bytes as fflate
   const bunOwner = resolve(owner, "../🛠️tools/🟦️bun"), bunSchema = JSON.parse(readFileSync(join(bunOwner, "🧬️schema/🔣️.json"), "utf8")), bunManifest = bunSchema.definitions.Release.const;
   expect(new Ajv({ strict: true }).validate(bunSchema, bunManifest)).toBe(true);
   for (const platform of ["win32", "darwin", "linux"]) for (const arch of ["x64", "arm64"]) for (const musl of platform === "linux" ? [false, true] : [false]) {
-    const distribution = bunDistribution("1.3.14", platform, arch, musl);
+    const distribution = bunDistribution("1.4.2", platform, arch, musl);
     const member = distribution.archive.slice(0, -4) + (platform === "win32" ? "/bun.exe" : "/bun");
     const archive = zipSync({ [member]: new TextEncoder().encode("pinned executable"), "ignored.txt": new Uint8Array([1, 2]) });
     expect(bunArchiveExecutable(Buffer.from(archive), member)).toEqual(Buffer.from(unzipSync(archive)[member]!));
     expect(() => bunArchiveExecutable(Buffer.from(archive), "absent/bun")).toThrow();
     expect(distribution.sha256).toMatch(/^[a-f0-9]{64}$/);
   }
-  expect(() => bunDistribution("1.4.2", "win32", "x64", false)).toThrow();
-  expect(() => bunDistribution("1.3.14", "freebsd", "x64", false)).toThrow();
+  expect(() => bunDistribution("1.3.14", "win32", "x64", false)).toThrow();
+  expect(() => bunDistribution("1.4.2", "freebsd", "x64", false)).toThrow();
   expect(() => bunArchiveExecutable(Buffer.from("invalid"), "bun")).toThrow();
 });
 

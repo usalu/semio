@@ -14,6 +14,8 @@ import { testLevelBudgetMs } from "../../../🏃️process/📦️packages/🟦�
 import { cmdBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import assert from "node:assert/strict";
 import{unsignedLebOracleV1}from"../../../🎒️pack/📦️packages/🟦️typescript/📐️format/🧪️testing/🔮️oracles/🔢️leb/🟦️.ts";
+import {runOwnedCommand} from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
+import {scriptInvocationBudget} from "../../../🏃️process/🧭️routing/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { join, resolve } from "node:path";
@@ -46,6 +48,61 @@ class OriginalConflictSourceScript extends BundleScript {
  async run():Promise<void>{const{testOriginalConflictSource}=await import("../../⚔️conflict/♻️retirement/🧪️tests/🟦️.ts");testOriginalConflictSource();}
 }
 
+/** ⚠️ Original semantic diagnostic targets keep their declared code, row and funded custody. */
+class RetainedDiagnosticScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  assert(segments.length===1&&["source","native"].includes(segments[0]!),"test-retained-diagnostic requires source or native");
+  const{testRetainedMutationOracle}=await import("../../🎮️mutation/🧳️retained/🧪️tests/🟦️.ts");testRetainedMutationOracle();
+  if(segments[0]==="source")return;
+  const policy=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");assert.equal(resolve(policy.manifestPath),manifest);
+  const laws=["retained_semantic_diagnostics_match_neutral_original_code_level_text_and_target","retained_semantic_diagnostic_cancellation_closes_all_original_construction_frontiers","retained_literal_diagnostic_targets_match_portable_outputs_and_partial_cancellation"].map(law=>"mutation::retained::diagnostic::tests::"+law);
+  const receipts=await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:policy.buildBudgetMs,lawMilliseconds:policy.assertionBudgets[policy.level]},artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,manifestPaths:{"semio-framework-replication":manifest},cargoTargetDir:policy.targetDirectory,nativeEnv:{RUST_MIN_STACK:policy.rustMinStack},cwd:this.repoRoot,groups:[{package:"semio-framework-replication",target:{kind:"lib",name:"protocol"},cargoArgs:["--locked"],laws}]});
+  assert.equal(receipts[0]!.assertions,laws.length);console.log("[DEBUG] original semantic diagnostic native laws="+laws.length+" executable="+receipts[0]!.sha256);
+ }
+}
+
+/** 🎚️ Proves typed sparse field decisions and original child cancellation through their declared owner. */
+class RetainedFieldChangeScript extends BundleScript{
+ async run(segments:string[]):Promise<void>{
+  assert(segments.length===1&&["source","native"].includes(segments[0]!),"test-retained-field-change requires source or native");
+  const path=resolve(this.root,"../../🎮️mutation/🧳️retained/🪡️field/🟰️change/🧪️tests/🟦️.ts");
+  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",path],this.repoRoot,"replication:field-change:types",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
+  const{testFieldChangeOracle}=await import("../../🎮️mutation/🧳️retained/🪡️field/🟰️change/🧪️tests/🟦️.ts");testFieldChangeOracle();
+  if(segments[0]==="source")return;
+  const policy=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");assert.equal(resolve(policy.manifestPath),manifest);
+  const laws=["optional_field_sparse_changes_and_inverse_preserve_original_sources","optional_field_partial_cancellation_and_foreign_sources_remain_owned","typed_field_changes_plain_text_bytes_and_ieee_preserve_original_children"].map(law=>"mutation::retained::field::change::tests::"+law);
+  const receipts=await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:policy.buildBudgetMs,lawMilliseconds:policy.assertionBudgets[policy.level]},artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,manifestPaths:{"semio-framework-replication":manifest},cargoTargetDir:policy.targetDirectory,nativeEnv:{RUST_MIN_STACK:policy.rustMinStack},cwd:this.repoRoot,groups:[{package:"semio-framework-replication",target:{kind:"lib",name:"protocol"},cargoArgs:["--locked"],laws}]});
+  assert.equal(receipts[0]!.assertions,laws.length);console.log("[DEBUG] original typed-field native laws="+laws.length+" executable="+receipts[0]!.sha256);
+ }
+}
+/** 🎚️ Proves one funded original record field frontier at a time. */
+class RetainedRecordChangeScript extends BundleScript{
+ async run(segments:string[]):Promise<void>{
+  assert(segments.length===1&&["source","native"].includes(segments[0]!),"test-retained-record-change requires source or native");
+  const path=resolve(this.root,"../../🎮️mutation/🧳️retained/🪡️field/🟰️change/🎚️record/🧪️tests/🟦️.ts");
+  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",path],this.repoRoot,"replication:field-change:types",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
+  const{testRecordFieldChangeOracle}=await import("../../🎮️mutation/🧳️retained/🪡️field/🟰️change/🎚️record/🧪️tests/🟦️.ts");testRecordFieldChangeOracle();
+  if(segments[0]==="source")return;
+  const policy=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");assert.equal(resolve(policy.manifestPath),manifest);
+  const laws=["record_changes_original_sparse_fields_and_paid_frontier_match_neutral_cases","record_changes_partial_original_output_and_child_frontier_close"].map(law=>"mutation::retained::field::change::record::tests::"+law);
+  const receipts=await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:policy.buildBudgetMs,lawMilliseconds:policy.assertionBudgets[policy.level]},artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,manifestPaths:{"semio-framework-replication":manifest},cargoTargetDir:policy.targetDirectory,nativeEnv:{RUST_MIN_STACK:policy.rustMinStack},cwd:this.repoRoot,groups:[{package:"semio-framework-replication",target:{kind:"lib",name:"protocol"},cargoArgs:["--locked"],laws}]});
+  assert.equal(receipts[0]!.assertions,laws.length);console.log("[DEBUG] original typed-field native laws="+laws.length+" executable="+receipts[0]!.sha256);
+ }
+}
+/** 📋️ Proves original whole indexed replacements and paid payload transfer. */
+class RetainedIndexedReplacementScript extends BundleScript{
+ async run(segments:string[]):Promise<void>{
+  assert(segments.length===1&&["source","native"].includes(segments[0]!),"test-retained-indexed-replacement requires source or native");
+  const path=resolve(this.root,"../../🎮️mutation/🧳️retained/🪡️field/🟰️change/📋️indexed/🧪️tests/🟦️.ts");
+  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",path],this.repoRoot,"replication:field-change:types",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
+  const{testIndexedReplacementOracle}=await import("../../🎮️mutation/🧳️retained/🪡️field/🟰️change/📋️indexed/🧪️tests/🟦️.ts");testIndexedReplacementOracle();
+  if(segments[0]==="source")return;
+  const policy=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");assert.equal(resolve(policy.manifestPath),manifest);
+  const laws=["indexed_replacement_original_rows_and_moved_payloads_match_neutral_cases","indexed_replacement_partial_original_deque_and_output_children_close"].map(law=>"mutation::retained::field::change::indexed::tests::"+law);
+  const receipts=await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:policy.buildBudgetMs,lawMilliseconds:policy.assertionBudgets[policy.level]},artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,manifestPaths:{"semio-framework-replication":manifest},cargoTargetDir:policy.targetDirectory,nativeEnv:{RUST_MIN_STACK:policy.rustMinStack},cwd:this.repoRoot,groups:[{package:"semio-framework-replication",target:{kind:"lib",name:"protocol"},cargoArgs:["--locked"],laws}]});
+  assert.equal(receipts[0]!.assertions,laws.length);console.log("[DEBUG] original typed-field native laws="+laws.length+" executable="+receipts[0]!.sha256);
+ }
+}
 class SourceTestScript extends BundleScript {
   async run(): Promise<void> {
     await import("../../🚪️io/🧪️tests/🏛️ownership/🟦️.ts");
@@ -423,7 +480,177 @@ class CratePartitionLawScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test-command-ingress-ownership", CommandIngressOwnershipScript).register("test-command-ingress-native", CommandIngressNativeScript).register("test", TestScript)
-  .register("test-original-conflict-source",OriginalConflictSourceScript).register("build", BuildScript).register("test-source", SourceTestScript).register("test-local-interaction-source", LocalInteractionSourceTestScript).register("test-local-interaction-native", LocalInteractionNativeTestScript).register("retained-verification-check", RetainedVerificationScript).register("retained-record-observation-check", RetainedRecordObservationScript).register("presence-peer-codec-check", PresencePeerCodecScript).register("test-crate-partition", CratePartitionLawScript);
 
+/** 🧾️ Compares shared portable field publication with an independent SQLite transaction. */
+class PreparedFieldsScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.some(segment => segment !== "--native")) throw Error("prepared-fields-check accepts only --native");
+    const { Database } = await import("bun:sqlite");
+    const { default: Ajv } = await import("ajv/dist/2020");
+    const owner = join(this.root, "../../🎮️mutation");
+    const corpus = JSON.parse(readFileSync(join(owner, "🧫️fixtures/📦️prepared-fields/🔣️.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(owner, "🧬️schema/📦️prepared-fields/🔣️.json"), "utf8"));
+    const validator = new Ajv({ strict: true }).compile(schema);
+    assert(validator(corpus), JSON.stringify(validator.errors));
+    const database = new Database(":memory:");
+    try {
+      database.exec("CREATE TABLE projection (first INTEGER NOT NULL, second INTEGER NOT NULL)");
+      for (const row of corpus.cases) {
+        database.exec("DELETE FROM projection");
+        database.query("INSERT INTO projection VALUES (?, ?)").run(corpus.base.first, corpus.base.second);
+        database.exec("BEGIN");
+        if (row.diff.first !== undefined) database.query("UPDATE projection SET first = ?").run(row.diff.first);
+        if (row.diff.second !== undefined) database.query("UPDATE projection SET second = ?").run(row.diff.second);
+        database.exec(row.refused ? "ROLLBACK" : "COMMIT");
+        assert.deepEqual(database.query("SELECT first, second FROM projection").get(), row.expected, row.id);
+      }
+    } finally { database.close(); }
+    console.log("[DEBUG] Prepared-field portable atomic outcomes agree with Ajv and independent SQLite transactions");
+    if (!segments.includes("--native")) return;
+    const laws = ["unpublished_owner_applies_without_projection_clones", "unpublished_owner_refusal_is_atomic_and_retires_prepared_fields", "cold_owner_refusal_retires_scratch_and_preserves_original", "prepared_fields_follow_portable_atomic_outcomes"];
+    const receipts = await runExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 600_000 }, artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, manifestPaths: { "semio-framework-replication": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory, cwd: this.repoRoot, groups: [{ package: "semio-framework-replication", target: { kind: "lib", name: "protocol" }, laws: laws.map(law => "mutation::unpublished_owner_tests::" + law) }] });
+    assert.equal(receipts[0]!.assertions, laws.length);
+  }
+}
+
+/** 🪪️ Checks shared history ownership and UTF-8 event order against SQLite and the native retained fold. */
+class HistoryInvariantsScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const { testHistoryInvariants } = await import("../../🔗️causal/🧪️tests/🪪️history-invariants/🟦️.ts");
+    testHistoryInvariants();
+    if (!segments.includes("--native")) return;
+    const receipts = await runExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, manifestPaths: { "semio-framework-replication": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory, cwd: this.repoRoot, groups: [{ package: "semio-framework-replication", target: { kind: "lib", name: "protocol" }, laws: ["causal::transition::tests::history_invariants_follow_portable_ownership_and_utf8_vectors"] }] });
+    assert.equal(receipts[0]!.assertions, 1);
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("history-invariants-check", HistoryInvariantsScript).register("prepared-fields-check", PreparedFieldsScript).register("test-command-ingress-ownership", CommandIngressOwnershipScript).register("test-command-ingress-native", CommandIngressNativeScript).register("test", TestScript)
+  .register("test-retained-indexed-replacement",RetainedIndexedReplacementScript).register("test-retained-record-change",RetainedRecordChangeScript).register("test-retained-field-change",RetainedFieldChangeScript).register("test-retained-diagnostic",RetainedDiagnosticScript).register("test-original-conflict-source",OriginalConflictSourceScript).register("build", BuildScript).register("test-source", SourceTestScript).register("test-local-interaction-source", LocalInteractionSourceTestScript).register("test-local-interaction-native", LocalInteractionNativeTestScript).register("retained-verification-check", RetainedVerificationScript).register("retained-record-observation-check", RetainedRecordObservationScript).register("presence-peer-codec-check", PresencePeerCodecScript).register("test-crate-partition", CratePartitionLawScript);
+
+/** 🎯️ Checks ordered set selection and bounded topology traversal in both implementations. */
+class InteractionSetLawsScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.some(segment => segment !== "--native")) throw Error("interaction-set-laws-check accepts only --native");
+    const { testInteractionSetLaws } = await import("../../../🕹️interaction/🧪️tests/🎯️set-laws/🟦️.ts");
+    testInteractionSetLaws();
+    await runBudgetedTestCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--esModuleInterop", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--jsx", "react-jsx", "--types", "bun,vite/client", resolve(this.root, "../../../🕹️interaction/🧪️tests/🎯️set-laws/🟦️.ts")], { cwd: this.repoRoot, budgetMs: cmdBudgetMs(), throwOnFailure: true });
+    if (!segments.includes("--native")) return;
+    const receipts = await runExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 600_000 }, artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, manifestPaths: { "semio-framework-replication": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory, cwd: this.repoRoot, groups: [{ package: "semio-framework-replication", target: { kind: "lib", name: "protocol" }, laws: ["wire::frames::interaction_tests::interaction_set_laws_follow_portable_vectors"] }] });
+    assert.equal(receipts[0]!.assertions, 1);
+  }
+}
+router.register("interaction-set-laws-check", InteractionSetLawsScript);
+
+/** 🏷️ Checks shared scoped interaction identities against the independent UTF-8 oracle. */
+class ScopedIdentityScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.some(segment => segment !== "--native")) throw Error("scoped-identity-check accepts only --native");
+    const { runOwnedCommand } = await import("../../../🏃️process/🎛️owned-execution/🟦️.ts");
+    const { scriptInvocationBudget } = await import("../../../🏃️process/🧭️routing/🟦️.ts");
+    await runOwnedCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", resolve(this.root, "../../🧾️wire/🪪️scoped-identity/🧪️tests/🟦️.ts")], this.repoRoot, "scoped-identity:source-typecheck", scriptInvocationBudget(this.invocation, 120000), { signal: this.invocation.control.signal, output: { maximumBytes: 8388608, maximumLines: 65536 } });
+    const { testScopedIdentities } = await import("../../🧾️wire/🪪️scoped-identity/🧪️tests/🟦️.ts");
+    testScopedIdentities();
+    if (!segments.includes("--native")) return;
+    const receipts = await runExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 600_000 }, artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, manifestPaths: { "semio-framework-replication": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory, cwd: this.repoRoot, groups: [{ package: "semio-framework-replication", target: { kind: "lib", name: "protocol" }, cargoArgs: ["--locked"], laws: ["wire::scoped_identity::tests::scoped_identities_follow_portable_vectors_and_bounds", "wire::scoped_identity::tests::scoped_identity_visitor_is_atomic_ordered_and_allocation_free"] }] });
+    assert.equal(receipts.length, 1);
+    assert.equal(receipts[0]!.assertions, 2);
+    console.log(`[DEBUG] Scoped identity exact native verification passed ${receipts[0]!.assertions} laws; executable ${receipts[0]!.sha256}`);
+  }
+}
+router.register("scoped-identity-check", ScopedIdentityScript);
+
+/** ↩️ Verifies cold inverse admission and the aggregate derive against the neutral contract. */
+class InverseAdmissionScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.some(segment => segment !== "--native")) throw Error("inverse-admission-check accepts only --native");
+    const { testInverseAdmission } = await import("../../🎮️mutation/🧪️tests/↩️inverse-admission/🟦️.ts");
+    testInverseAdmission();
+    if (!segments.includes("--native")) return;
+    const deriveManifest = resolve(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/Cargo.toml");
+    const receipts = await runExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 600_000 }, artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, manifestPaths: { "semio-framework-replication": resolve(this.root, "Cargo.toml"), "semio-framework-os-kernel-dsl-derive": deriveManifest }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory, cwd: this.repoRoot, groups: [
+      { package: "semio-framework-replication", target: { kind: "lib", name: "protocol" }, cargoArgs: ["--locked"], laws: ["mutation::inverse_admission_tests::inverse_admission_follows_portable_outcomes_and_retires_each_diff"] },
+      { package: "semio-framework-os-kernel-dsl-derive", target: { kind: "lib", name: "dsl_derive" }, cargoArgs: ["--locked"], laws: ["mandatory_mutations_tests::expanded_aggregate_matches_neutral_contract_and_syn_ast"] },
+    ] });
+    assert.deepEqual(receipts.map(receipt => receipt.assertions), [1, 1]);
+  }
+}
+router.register("inverse-admission-check", InverseAdmissionScript);
+
+
+/** 🚚️ Common sparse central application verifies portable fields and original physical cancellation. */
+class RetainedRowPatchApplyScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  assert(segments.length===1&&["source","native"].includes(segments[0]!),"test-retained-patch-apply requires source or native");
+  const source=resolve(this.root,"../../🎮️mutation/🧳️retained/🩹️patch/🧪️tests/🟦️.ts");
+  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--resolveJsonModule","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:cmdBudgetMs(),throwOnFailure:true});
+  const {verifyRetainedRowPatchOracle}=await import("../../🎮️mutation/🧳️retained/🩹️patch/🧪️tests/🟦️.ts");verifyRetainedRowPatchOracle();
+  if(segments[0]==="source")return;
+  const policy=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");
+  const laws=["retained_row_patch_inverse_and_owned_exchange_match_neutral_sparse_fields","retained_row_patch_inverse_cancellation_closes_every_original_field","retained_row_patch_apply_preserves_portable_rows_and_every_cancelled_frontier","close_demand::retained_row_patch_close_quote_visits_original_child_once"].map(law=>"mutation::retained::patch::tests::"+law);
+  const receipts=await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:policy.buildBudgetMs},artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,manifestPaths:{"semio-framework-replication":manifest},cargoTargetDir:policy.targetDirectory,nativeEnv:{RUST_MIN_STACK:policy.rustMinStack},cwd:this.repoRoot,groups:[{package:"semio-framework-replication",target:{kind:"lib",name:"protocol"},cargoArgs:["--locked"],laws}]});
+  assert.equal(receipts[0]!.assertions,laws.length);console.log("[DEBUG] original sparse row apply exact native laws="+laws.length+" executable="+receipts[0]!.sha256);
+ }
+}
+router.register("test-retained-patch-apply",RetainedRowPatchApplyScript);
+
+/** 🪢️ Original ordered children retain intermediate source, diagnostic and candidate custody. */
+class RetainedDiffSequenceScript extends BundleScript{
+ async run(args:string[]):Promise<void>{
+  assert(args.length===1&&["source","native"].includes(args[0]!),"test-retained-diff-sequence requires source or native");
+  const source=resolve(this.root,"../../🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🧪️tests/🟦️.ts");
+  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,"replication:retained-diff-sequence:types",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
+  await runOwnedCommand(process.execPath,["test",source],this.repoRoot,"replication:retained-diff-sequence:source",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
+  if(args[0]==="native"){const policy=readCargoTestPolicyV1(process.env);await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:policy.buildBudgetMs},cwd:this.repoRoot,cargoTargetDir:policy.targetDirectory,artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,manifestPaths:{"semio-framework-replication":resolve(this.root,"Cargo.toml")},groups:[{package:"semio-framework-replication",target:{kind:"test",name:"retained_diff_sequence"},laws:["retained_diff_sequence_matches_original_intermediate_sqlite_values_and_refusal","retained_diff_sequence_cancellation_closes_original_sources_diagnostics_and_candidates","retained_diff_sequence_wide_original_projection_and_every_custody_cut_are_genuine"]}]});}
+ }
+}
+router.register("test-retained-diff-sequence",RetainedDiffSequenceScript);
+/** 🫴️ Original receiving control reaches the required central typed apply owner unchanged. */
+class RetainedDiffReceivingScript extends BundleScript{
+ async run(args:string[]):Promise<void>{
+  assert(args.length===1&&["source","native"].includes(args[0]!),"test-retained-diff-receiving requires source or native");
+  const oracle=await import("../../🎮️mutation/🧳️retained/🔺️diff/🫴️receiving/🧪️tests/🟦️.ts");oracle.retainedDiffReceivingOracle();
+  if(args[0]==="native"){const p=readCargoTestPolicyV1(process.env);await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,p.buildBudgetMs>0?p.buildBudgetMs:600000)},cwd:this.repoRoot,cargoTargetDir:p.targetDirectory,artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,manifestPaths:{"semio-framework-replication":resolve(this.root,"Cargo.toml")},groups:[{package:"semio-framework-replication",target:{kind:"lib",name:"protocol"},cargoArgs:["--locked"],laws:["mutation::retained::diff::tests::receiving::retained_central_diff_forwards_actual_original_receiving_control_and_ledger"]}]});}
+ }
+}
+router.register("test-retained-diff-receiving",RetainedDiffReceivingScript);
+/** 🧳️ Native persisted deltas do not require synchronous receiving or unpriced coalescing. */
+class NativeDiffContractScript extends BundleScript{
+ async run(args:string[]):Promise<void>{
+  assert(args.length===1&&['source','native'].includes(args[0]!), 'test-native-diff-contract requires source or native');
+  const source=resolve(this.root,'../../🎮️mutation/🧪️tests/🧳️native-contract/🧪️tests/🟦️.ts');
+  await runOwnedCommand(process.execPath,[Bun.resolveSync('typescript/bin/tsc',this.root),'--noEmit','--strict','--noUncheckedIndexedAccess','--skipLibCheck','--resolveJsonModule','--allowImportingTsExtensions','--esModuleInterop','--target','ESNext','--module','ESNext','--moduleResolution','bundler','--types','bun',source],this.repoRoot,'replication:native-diff-contract:types',scriptInvocationBudget(this.invocation,120000),{signal:this.invocation.control.signal});
+  const{verifyNativeDiffContractOracle}=await import('../../🎮️mutation/🧪️tests/🧳️native-contract/🧪️tests/🟦️.ts');verifyNativeDiffContractOracle();if(args[0]==='source')return;
+  const{runRepositoryExactCargoLaws}=await import('../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts');
+  const receipts=await runRepositoryExactCargoLaws({invocation:this.invocation,policy:configuredExactCargoLawPolicyV1(),cwd:this.repoRoot,manifestPath:resolve(this.root,'Cargo.toml'),artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,groups:[{package:'semio-framework-replication',target:{kind:'lib',name:'protocol'},laws:['mutation::native_diff_contract_tests::native_delta_vocabulary_does_not_require_cold_coalescing_or_receiving']}]});
+  assert.equal(receipts[0]!.assertions,1);console.log('[DEBUG] Native delta contract exact runtime law='+receipts[0]!.assertions+' executable='+receipts[0]!.sha256);
+ }
+}
+router.register('test-native-diff-contract',NativeDiffContractScript);
+/** 🏗️ Fold backing admission retains unborn allocations and exact original cancellation frames. */
+class HistoryBackingBirthScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  assert(args.length===1&&["source","native"].includes(args[0]!),"test-history-backing-birth requires source or native");
+  const source=resolve(this.root,"../../🔗️causal/🔀️transition/🔁️fold/🏗️birth/🧪️tests/🟦️.ts");
+  await runOwnedCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,"replication:fold-backing-birth:types",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
+  await runOwnedCommand(process.execPath,["test",source],this.repoRoot,"replication:fold-backing-birth:source",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
+  if(args[0]==="source")return;
+  const policy=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");
+  const laws=["granted_fold_backing_birth_waits_before_frame_and_vector_allocation","granted_fold_waiting_backing_cancellation_never_allocates_the_unborn_vector","granted_trunk_identity_matches_the_cold_blake3_wire_oracle"].map(name=>"causal::transition::retained_fold::original_backing_birth::tests::"+name);
+  await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:policy.buildBudgetMs},cwd:this.repoRoot,cargoTargetDir:policy.targetDirectory,artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,manifestPaths:{"semio-framework-replication":manifest},groups:[{package:"semio-framework-replication",target:{kind:"lib",name:"protocol"},cargoArgs:["--locked"],laws}]});
+ }
+}
+router.register("test-history-backing-birth",HistoryBackingBirthScript);
+/** 📏️ Qualifies original logical body independently of physical protocol headers. */
+class RetainedLogicalBodyScript extends BundleScript{
+ async run(args:string[]):Promise<void>{
+  assert(args.length===1&&["source","native"].includes(args[0]!),"test-retained-logical-body requires source or native");
+  const source=resolve(this.root,"../../🎮️mutation/🧳️retained/📏️body/🧪️tests/🟦️.ts"),budget=scriptInvocationBudget(this.invocation,120000);
+  await runOwnedCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,"replication:retained-logical-body:types",budget,{signal:this.invocation.control.signal});
+  await runOwnedCommand(process.execPath,["test","--timeout",String(scriptInvocationBudget(this.invocation,budget)),source],this.repoRoot,"replication:retained-logical-body:source",scriptInvocationBudget(this.invocation,budget),{signal:this.invocation.control.signal});
+  if(args[0]==="source")return;
+  const policy=readCargoTestPolicyV1(process.env);
+  await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,policy.buildBudgetMs>0?policy.buildBudgetMs:600000)},cwd:this.repoRoot,cargoTargetDir:policy.targetDirectory,artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,manifestPaths:{"semio-framework-replication":resolve(this.root,"Cargo.toml")},groups:[{package:"semio-framework-replication",target:{kind:"lib",name:"protocol"},cargoArgs:["--locked"],laws:["mutation::retained::field::tests::retained_field_logical_body_survives_expanded_physical_headers","mutation::retained::span::tests::retained_byte_span_logical_body_survives_expanded_physical_headers"]}]});
+ }
+}
+router.register("test-retained-logical-body",RetainedLogicalBodyScript);
 if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

@@ -1,9 +1,19 @@
-use super::translate_selection::{handle, TranslateSelection};
-use crate::context::{close, dispatch, dispatch_rows, fem2d_mounted_app, history_verb, render, Fem2dApp};
+use super::translate_selection::handle;
+use super::translate_selection::TranslateSelection;
+use crate::context::close;
+use crate::context::dispatch;
+use crate::context::dispatch_rows;
+use crate::context::fem2d_mounted_app;
+use crate::context::history_verb;
+use crate::context::render;
+use crate::context::Fem2dApp;
 use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework::kernel::HistoryEntry;
-use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::HistoryView;
+use semio_framework_plugin::NoConfig;
 use pack::snapshot::ArtifactDsl;
 
 type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
@@ -13,7 +23,7 @@ fn demo() -> Fem2dSnapshot {
 }
 
 fn translate(dx: f64, phase: Option<&str>) -> Fem2dCommand {
-    Fem2dCommand::TranslateSelection(TranslateSelection { ids: vec!["n1".into()], dx, dy: 0.0, dz: 0.0, phase: phase.map(str::to_string), reason: None })
+    Fem2dCommand::TranslateSelection(TranslateSelection { ids: vec!["scope:1:4:node2:n1".into()], dx, dy: 0.0, dz: 0.0, phase: phase.map(str::to_string), reason: None })
 }
 
 fn x_of(app: &Fem2dApp, id: &str) -> f64 {
@@ -32,10 +42,10 @@ fn the_unmounted_route_commits_one_relative_leaf_and_refuses_a_stream() {
     let history = HistoryView::empty();
     let view = ArtifactView::new(&doc, &history);
     let cfg = ConfigView { snapshot: &NoConfig::default(), window: None };
-    let emit = handle(&TranslateSelection { ids: vec!["n1".into()], dx: 0.5, dy: -0.25, dz: 0.0, phase: None, reason: None }, &view, &cfg).expect("emit");
+    let emit = handle(&TranslateSelection { ids: vec!["scope:1:4:node2:n1".into()], dx: 0.5, dy: -0.25, dz: 0.0, phase: None, reason: None }, &view, &cfg).expect("emit");
     let [Fem2dMutation::MoveSelection(leaf)] = emit.artifact_mutations.as_slice() else { panic!("one relative leaf: {:?}", emit.artifact_mutations) };
     assert_eq!((leaf.node_ids.clone(), leaf.dx, leaf.dy), (vec!["n1".to_string()], 0.5, -0.25));
-    assert!(handle(&TranslateSelection { ids: vec!["n1".into()], dx: 0.5, dy: 0.0, dz: 0.0, phase: Some("stream".into()), reason: None }, &view, &cfg).is_err());
+    assert!(handle(&TranslateSelection { ids: vec!["scope:1:4:node2:n1".into()], dx: 0.5, dy: 0.0, dz: 0.0, phase: Some("stream".into()), reason: None }, &view, &cfg).is_err());
 }
 
 /// 🛠️ LAW: one gumball drag is one edit and one history row keyed by its tool transaction, labelled from the leaf.
@@ -81,7 +91,7 @@ async fn an_abort_leaves_zero_trace_and_two_drags_are_two_transactions() {
     let mut app = fem2d_mounted_app();
     let before = x_of(&app, "n1");
     dispatch(&mut app, translate(0.25, Some("stream"))).await;
-    let aborted = dispatch_rows(&mut app, Fem2dCommand::TranslateSelection(TranslateSelection { ids: vec!["n1".into()], dx: 0.0, dy: 0.0, dz: 0.0, phase: Some("abort".into()), reason: Some("blur".into()) })).await;
+    let aborted = dispatch_rows(&mut app, Fem2dCommand::TranslateSelection(TranslateSelection { ids: vec!["scope:1:4:node2:n1".into()], dx: 0.0, dy: 0.0, dz: 0.0, phase: Some("abort".into()), reason: Some("blur".into()) })).await;
     assert!(aborted.is_empty(), "an abort publishes nothing");
     assert_eq!(x_of(&app, "n1"), before);
     let first = dispatch_rows(&mut app, translate(0.5, None)).await;

@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "text": "actor π\u0000🌱",
+  "operation": 914,
+  "generation": 27,
+  "work": {
+    "fuel": 4096,
+    "absoluteDeadlineUs": 1000000,
+    "clockBinding": 513
+  },
+  "totalGrant": [
+    4096,
+    1048576,
+    1048576,
+    1048576,
+    128
+  ],
+  "callPolicy": [
+    16,
+    65536,
+    65536,
+    65536,
+    64
+  ],
+  "cases": [
+    {
+      "id": "denied-capacity-before-birth",
+      "capacity": "zero",
+      "semanticFailure": false,
+      "admitted": false
+    },
+    {
+      "id": "first-authentic-construction",
+      "capacity": "exact",
+      "semanticFailure": false,
+      "admitted": true
+    },
+    {
+      "id": "semantic-failure-retains-born-candidate",
+      "capacity": "exact",
+      "semanticFailure": true,
+      "admitted": true
+    },
+    {
+      "id": "later-denial-keeps-same-receiver",
+      "capacity": "zero",
+      "semanticFailure": true,
+      "admitted": false
+    }
+  ],
+  "expected": {
+    "sameLedger": true,
+    "sameRecipient": true,
+    "decoderBeforeSource": true,
+    "terminalDropBytes": 0
+  }
+}

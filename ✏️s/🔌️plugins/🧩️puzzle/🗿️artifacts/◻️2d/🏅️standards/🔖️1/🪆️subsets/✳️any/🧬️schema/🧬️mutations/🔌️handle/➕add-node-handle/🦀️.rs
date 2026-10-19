@@ -31,23 +31,32 @@ pub fn add_node_handle<Op: From<AddNodeHandle>>(node_id: PagedUtf8<{ usize::MAX 
 impl<Op> protocol::MutationKind<Puzzle2dSnapshot, Op> for AddNodeHandle
 where
     Op: protocol::Mutation<Puzzle2dSnapshot, Diff = Puzzle2dDiff> + From<AddNodeHandle> + From<RemoveNodeHandle>,
-{
+ {
+
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "node-handle", kind: "add-node-handle", record: "AddedNodeHandle" };
 
-    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Add handle \"{}\" to node \"{}\"", self.handle.id, self.node_id), &format!("Griff \"{}\" zu Knoten \"{}\" hinzufügen", self.handle.id, self.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node_id.to_string_owner(), self.handle.id.to_string_owner()]
     }
+
+}
+impl<Op> protocol::ColdMutationKind<Puzzle2dSnapshot, Op> for AddNodeHandle
+where
+    Op: protocol::ColdMutation<Puzzle2dSnapshot, ReferenceDiff = Puzzle2dDiff> + From<AddNodeHandle> + From<RemoveNodeHandle>,
+ {
+fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+        super::diff::diff(self, base)
+    }
+fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Mutation

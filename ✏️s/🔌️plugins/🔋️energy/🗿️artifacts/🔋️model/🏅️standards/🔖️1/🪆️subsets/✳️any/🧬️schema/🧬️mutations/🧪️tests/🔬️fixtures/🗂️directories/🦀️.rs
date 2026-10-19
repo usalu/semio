@@ -4,6 +4,16 @@
 /// 🗂️ `(semanticKind, domain/operation owner directory)` for every declared kind — the single place the
 /// emoji-carrying directory names are stated in Rust.
 pub const DIRECTORIES: &[(&str, &str)] = &[
+    ("change-glazing-material-solar-reflectance-front", "🔅️solar-front"),
+    ("change-glazing-material-solar-reflectance-back", "🔆️solar-back"),
+    ("change-glazing-material-visible-reflectance-front", "🔎️visible-front"),
+    ("change-glazing-material-visible-reflectance-back", "🪞️visible-back"),
+    ("change-glazing-material-infrared-transmittance", "🌡️infrared-transmittance"),
+    ("change-pv-system-temperature-coefficient", "🌡️change-pv-temperature"),
+    ("change-pv-system-faiman-heat-loss-constant", "🧊️change-pv-heat-loss"),
+    ("change-pv-system-faiman-heat-loss-wind", "💨️change-pv-wind-loss"),
+    ("change-pv-system-mounting", "🏠️change-pv-mounting"),
+
     ("rename-model", "🔋️model/🏷️rename"),
     ("change-model-version", "🔋️model/🔢️change-version"),
     ("change-site-latitude", "📍️site/🌍️change-latitude"),

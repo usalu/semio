@@ -9,6 +9,12 @@ use serde::{Deserialize, Serialize};
 // 🌱️ `Serialize`/`Deserialize` stay for `MutationKind`'s own (untouched) supertrait bound below;
 // `ToValue`/`FromValue` are the newer `CompositeMutationKind` supertrait bound (see that trait's
 // own doc) — this fixture implements both traits, so both derive pairs coexist here.
+impl protocol::ColdCompositeMutationKind<WireTestSnapshot, WireTestMutation> for AddValue {
+    fn plan(&self, _base: &WireTestSnapshot, planner: &mut protocol::Planner<WireTestSnapshot, WireTestMutation>) -> Result<(), protocol::PlanError> {
+        planner.call(WireTestMutation::AddValue(self.clone()))
+    }
+}
+
 #[doc(hidden)]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
@@ -21,19 +27,9 @@ pub struct AddValue {
 impl protocol::MutationKind<WireTestSnapshot, WireTestMutation> for AddValue {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "value", kind: "add-value", record: "AddedValue" };
 
-    fn diff(&self, _base: &WireTestSnapshot) -> protocol::MutationOutcome<WireTestDiff> {
-        protocol::MutationOutcome::new(WireTestDiff { deltas: vec![self.delta] })
-    }
 
-    fn inverse(&self, _base: &WireTestSnapshot) -> Result<Vec<WireTestMutation>, semio_framework_value::ValueError> {
-        Ok((|| {
-            if self.delta == i32::MIN {
-                vec![WireTestMutation::AddValue(Self { delta: 1 }), WireTestMutation::AddValue(Self { delta: i32::MAX })]
-            } else {
-                vec![WireTestMutation::AddValue(Self { delta: -self.delta })]
-            }
-        })())
-    }
+
+
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Add {} to value", self.delta), &format!("{} zu Wert hinzufügen", self.delta))
@@ -44,12 +40,25 @@ impl protocol::MutationKind<WireTestSnapshot, WireTestMutation> for AddValue {
     }
 }
 
+impl protocol::ColdMutationKind<WireTestSnapshot, WireTestMutation> for AddValue {
+    fn diff(&self, _base: &WireTestSnapshot) -> protocol::MutationOutcome<WireTestDiff> {
+        protocol::MutationOutcome::new(WireTestDiff { deltas: vec![self.delta] })
+    }
+    fn inverse(&self, _base: &WireTestSnapshot) -> Result<Vec<WireTestMutation>, semio_framework_value::ValueError> {
+        Ok((|| {
+            if self.delta == i32::MIN {
+                vec![WireTestMutation::AddValue(Self { delta: 1 }), WireTestMutation::AddValue(Self { delta: i32::MAX })]
+            } else {
+                vec![WireTestMutation::AddValue(Self { delta: -self.delta })]
+            }
+        })())
+    }
+}
+
 impl protocol::CompositeMutationKind<WireTestSnapshot, WireTestMutation> for AddValue {
     const SEMANTICS: protocol::SemanticDescriptor = <Self as protocol::MutationKind<WireTestSnapshot, WireTestMutation>>::SEMANTICS;
 
-    fn plan(&self, _base: &WireTestSnapshot, planner: &mut protocol::Planner<WireTestSnapshot, WireTestMutation>) -> Result<(), protocol::PlanError> {
-        planner.call(WireTestMutation::AddValue(self.clone()))
-    }
+
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         <Self as protocol::MutationKind<WireTestSnapshot, WireTestMutation>>::label(self)
@@ -65,3 +74,7 @@ impl protocol::CompositeMutationKind<WireTestSnapshot, WireTestMutation> for Add
 #[path = "../../../../🧪️tests/➕️contributed-mutation-wire-add-value-unit/🦀️.rs"]
 pub mod tests;
 //#endregion ➕️ContributedWireAddValue
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️sum-law/🦀️.rs"]
+mod sum_law_tests;

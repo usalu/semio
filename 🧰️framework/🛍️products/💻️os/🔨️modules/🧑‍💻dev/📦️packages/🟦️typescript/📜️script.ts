@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 /** 🧭️ Routes OS development commands to their semantic owners. */
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -53,6 +54,19 @@ class PlaygroundSessionScript extends BundleScript {
     else await new PlaygroundSessionGenerateScript(this.root, this.repoRoot, this.invocation, request).run(args);
   }
 }
+/** 🧪️ Runs retained authored ticket probes through the OS owner's cancellable command boundary. */
+class TicketProbeScript extends BundleScript {
+  async run([probe, ...args]: string[]): Promise<void> {
+    const probes = { "foreign-kind-s": "🐍️s3-foreign-kind-in-s.mjs", "pinch-diagram-contrast-s": "🐍️u4-pinch-diagram-contrast-probe.mjs" } as const;
+    const file = probes[probe as keyof typeof probes];
+    if (!file) throw new Error("ticket-probe requires foreign-kind-s or pinch-diagram-contrast-s");
+    const { runOwnedCommand } = await import("../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts"), { join } = await import("node:path");
+    const input = join(this.repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️18/OS-HUB-COLLABORATION-AI-END-TO-END", file);
+    await runOwnedCommand(process.execPath, [input, ...args], this.repoRoot, `ticket-probe:${probe}`, this.invocation.control.remainingMilliseconds() ?? 0, { signal: this.invocation.control.signal });
+  }
+}
+
+
 const router = new ScriptRouter(import.meta.dir)
   .registerLazy("verify-staged", async () => (await import("../../🔎️verification/🧾️convergence/🟦️.ts")).VerifyStagedScript)
   .register("playground-session", PlaygroundSessionScript)
@@ -67,7 +81,7 @@ const router = new ScriptRouter(import.meta.dir)
     /** 🛎️ `serve-hold --serve <url> [--hub <url>] [--variant <v>]`: holds the shared development serve owner (`ensureDevServe`) until
      * SIGINT/SIGTERM, then stops only what it started — the zero-touch serve provider of the repository goal gate. */
     async run(segments: string[]): Promise<void> {
-      const { devServePortV1, ensureDevServe } = await import("../../🚀️local-hub/🏃️execution/🟦️.ts");
+      const { devServePortV1, ensureDevServe } = await import("../../🚀️local-hub/🏃️execution/🟦️.ts").register("ticket-probe", TicketProbeScript);
       const flag = (name: string): string | undefined => (segments.indexOf(name) >= 0 ? segments[segments.indexOf(name) + 1] : undefined);
       const serveUrl = flag("--serve");
       if (!serveUrl) throw new Error("usage: serve-hold --serve <url> [--hub <url>] [--variant <v>]");

@@ -1,4 +1,5 @@
 use protocol::MutationDiff;
+use protocol::ColdMutationDiff;
 use serde::{Deserialize, Serialize};
 use pack::snapshot::ArtifactPack;
 
@@ -68,6 +69,13 @@ impl Default for TestConfigDiff {
     }
 }
 impl protocol::DiffAlgebra<TestConfig> for TestConfigDiff {
+
+    fn is_empty(&self) -> bool {
+        matches!(self, Self::Identity)
+    }
+}
+
+impl protocol::ColdDiffAlgebra<TestConfig> for TestConfigDiff {
     fn inverse(&self, base: &TestConfig) -> Self {
         match (self, &base.selected) {
             (Self::Identity, _) => Self::Identity,
@@ -75,22 +83,26 @@ impl protocol::DiffAlgebra<TestConfig> for TestConfigDiff {
             (_, Some(value)) => Self::Set(value.clone()),
         }
     }
-    fn is_empty(&self) -> bool {
-        matches!(self, Self::Identity)
-    }
 }
 impl MutationDiff<TestConfig> for TestConfigDiff {
-    fn apply(&self, base: &TestConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<TestConfig> {
-        Ok(match self {
-            Self::Identity => base.clone(),
-            Self::Clear => TestConfig { selected: None },
-            Self::Set(value) => TestConfig { selected: Some(value.clone()) },
-        })
-    }
+
+
+}
+
+impl ColdMutationDiff<TestConfig> for TestConfigDiff {
     fn absorb(&mut self, other: Self) {
         if !matches!(other, Self::Identity) {
             *self = other;
         }
+    }
+
+    fn apply(&self, base: &mut TestConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        match self {
+            Self::Identity => {},
+            Self::Clear => base.selected = None,
+            Self::Set(value) => base.selected = Some(value.clone()),
+        }
+        Ok(())
     }
 }
 //#endregion 🔺️Diff

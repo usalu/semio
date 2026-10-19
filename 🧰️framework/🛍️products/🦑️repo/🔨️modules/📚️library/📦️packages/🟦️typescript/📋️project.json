@@ -535,15 +535,6 @@
       },
       "outputs": []
     },
-    "test-launch-catalog": {
-      "executor": "repo:script",
-      "cache": false,
-      "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test launch-catalog"
-      },
-      "outputs": []
-    },
     "test-lib-wiring-budget": {
       "executor": "repo:script",
       "cache": true,
@@ -777,7 +768,6 @@
       "cache": true,
       "inputs": [
         "sharedGlobals",
-        "{workspaceRoot}/.vscode/settings.json",
         "{workspaceRoot}/📜️script.ts",
         "{workspaceRoot}/**/📜️script.ts",
         "{workspaceRoot}/**/📋️project.json",
@@ -804,7 +794,6 @@
       "cache": true,
       "inputs": [
         "sharedGlobals",
-        "{workspaceRoot}/.vscode/settings.json",
         "{workspaceRoot}/📜️script.ts",
         "{workspaceRoot}/♻️mit-bestand/🎤️präsentation/📅️33.projektetage/{🏗️builder/🌐️vite/🟦️.ts,📦️packages/🟦️typescript/{📋️project.json,📜️script.ts}}",
         "{workspaceRoot}/♻️mit-bestand/🧺️demonstrator/{🏗️builder/🌐️vite/🟦️.ts,🔨️modules/{📦️site,🧩️runtime,🧪️e2e}/📜️script.ts,🔨️modules/🧪️e2e/🎚️config/🟦️.ts,📋️project.json}",
@@ -904,6 +893,39 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test typescript-declaration-facts"
       }
+    },
+    "typecheck-project": {
+      "metadata": {
+        "semio": {
+          "execution": { "version": 1, "kind": "source" },
+          "dashboard": {
+            "title": { "en": "Check an authored TypeScript project", "de": "Verfasstes TypeScript-Projekt prüfen" },
+            "description": { "en": "Select an authored configuration; the current compiler owner retains state, progress and cancellation.", "de": "Verfasste Konfiguration auswählen; der aktuelle Compiler-Eigentümer verwaltet Zustand, Fortschritt und Abbruch." },
+            "verb": "check",
+            "parameters": [
+              { "id": "config", "title": { "en": "Project configuration", "de": "Projektkonfiguration" }, "description": { "en": "Choose an authored configuration used by the TypeScript compiler.", "de": "Verfasste Konfiguration für den TypeScript-Compiler auswählen." }, "kind": "text", "default": "tsconfig.json", "valuePositional": true, "suggestions": { "source": "configs" } },
+              { "id": "diagnostics", "title": { "en": "Diagnostic detail", "de": "Diagnoseumfang" }, "kind": "choice", "default": "none", "values": [
+                { "id": "none" },
+                { "id": "basic", "args": ["--diagnostics"] },
+                { "id": "extended", "args": ["--extendedDiagnostics"] },
+                { "id": "files", "args": ["--listFiles"] },
+                { "id": "files-only", "args": ["--listFilesOnly"] },
+                { "id": "explain-files", "args": ["--explainFiles"] },
+                { "id": "resolution", "args": ["--traceResolution"] },
+                { "id": "full-errors", "args": ["--noErrorTruncation"] },
+                { "id": "pretty", "args": ["--pretty"] }
+              ] }
+            ]
+          }
+        }
+      },
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts typecheck project",
+        "forwardAllArgs": true
+      },
+      "outputs": []
     },
     "typecheck": {
       "metadata": {
@@ -1874,13 +1896,27 @@
       ]
     },
     "test-build-discovery": {
-      "executor":"repo:script",
-      "cache":false,
-      "dependsOn":[],
-      "inputs":["default","{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**/*","{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/**/*"],
-      "outputs":[],
-      "metadata":{"semio":{"execution":{"version":1,"kind":"source"}}},
-      "options":{"cwd":".","command":"bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts\" test build-discovery"}
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/**/*"
+      ],
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      },
+      "options": {
+        "cwd": ".",
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts\" test build-discovery"
+      }
     },
     "test-nx-project-inference": {
       "executor": "repo:script",
@@ -2490,6 +2526,31 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test build-surfaces"
       }
+    },
+    "test-agent-clients": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test agent-clients"
+      }
+    },
+    "test-derived-config": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test derived-config"
+      }
+    },
+    "test-dashboard-control": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test dashboard-control"
+      },
+      "outputs": []
     }
   }
 }

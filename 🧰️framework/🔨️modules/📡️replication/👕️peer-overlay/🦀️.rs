@@ -150,6 +150,7 @@ pub fn canvas_peer_viewport_rect(peer_view: (f64, f64, f64), peer_size: [f64; 2]
 
 
 pub fn orbit_point_to_screen(position: [f64; 3], target: [f64; 3], up: [f64; 3], fov_deg: f64, local_size_px: [f64; 2], world: [f64; 3]) -> Option<[f32; 2]> {
+    if local_size_px.iter().any(|size| !size.is_finite() || *size <= 0.0) { return None; }
     let forward = normalize([target[0] - position[0], target[1] - position[1], target[2] - position[2]]);
     let right = normalize(cross(forward, up));
     let true_up = cross(right, forward);
@@ -160,7 +161,7 @@ pub fn orbit_point_to_screen(position: [f64; 3], target: [f64; 3], up: [f64; 3],
     }
     let cam_x = rel[0] * right[0] + rel[1] * right[1] + rel[2] * right[2];
     let cam_y = rel[0] * true_up[0] + rel[1] * true_up[1] + rel[2] * true_up[2];
-    let aspect = local_size_px[0] / if local_size_px[1] == 0.0 { 1.0 } else { local_size_px[1] };
+    let aspect = local_size_px[0] / local_size_px[1];
     let half_v = (fov_deg.to_radians() / 2.0).tan();
     let half_h = half_v * aspect;
     let ndc_x = cam_x / (cam_z * half_h);

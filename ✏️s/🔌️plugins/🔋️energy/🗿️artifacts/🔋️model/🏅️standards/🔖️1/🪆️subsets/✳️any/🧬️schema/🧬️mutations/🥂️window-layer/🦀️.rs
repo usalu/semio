@@ -121,3 +121,63 @@ pub use change_gas_material_thickness::{change_gas_material_thickness, ChangeGas
 pub use change_gas_material_gas::{change_gas_material_gas, ChangeGasMaterialGas};
 pub use change_glazing_material_visible_transmittance::{change_glazing_material_visible_transmittance, ChangeGlazingMaterialVisibleTransmittance};
 pub use change_glazing_material_infrared_emissivity::{change_glazing_material_infrared_emissivity, ChangeGlazingMaterialInfraredEmissivity};
+
+#[path = "."]
+pub mod change_glazing_material_solar_reflectance_front {
+    #[path = "🔅️solar-front/🦀️.rs"]
+    mod component;
+    pub use component::*;
+    #[path = "🔅️solar-front/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "🔅️solar-front/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+}
+pub use change_glazing_material_solar_reflectance_front::{change_glazing_material_solar_reflectance_front, ChangeGlazingMaterialSolarReflectanceFront};
+
+#[path = "."]
+pub mod change_glazing_material_solar_reflectance_back {
+    #[path = "🔆️solar-back/🦀️.rs"]
+    mod component;
+    pub use component::*;
+    #[path = "🔆️solar-back/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "🔆️solar-back/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+}
+pub use change_glazing_material_solar_reflectance_back::{change_glazing_material_solar_reflectance_back, ChangeGlazingMaterialSolarReflectanceBack};
+
+#[path = "."]
+pub mod change_glazing_material_visible_reflectance_front {
+    #[path = "🔎️visible-front/🦀️.rs"]
+    mod component;
+    pub use component::*;
+    #[path = "🔎️visible-front/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "🔎️visible-front/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+}
+pub use change_glazing_material_visible_reflectance_front::{change_glazing_material_visible_reflectance_front, ChangeGlazingMaterialVisibleReflectanceFront};
+
+#[path = "."]
+pub mod change_glazing_material_visible_reflectance_back {
+    #[path = "🪞️visible-back/🦀️.rs"]
+    mod component;
+    pub use component::*;
+    #[path = "🪞️visible-back/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "🪞️visible-back/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+}
+pub use change_glazing_material_visible_reflectance_back::{change_glazing_material_visible_reflectance_back, ChangeGlazingMaterialVisibleReflectanceBack};
+
+#[path = "."]
+pub mod change_glazing_material_infrared_transmittance {
+    #[path = "🌡️infrared-transmittance/🦀️.rs"]
+    mod component;
+    pub use component::*;
+    #[path = "🌡️infrared-transmittance/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "🌡️infrared-transmittance/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+}
+pub use change_glazing_material_infrared_transmittance::{change_glazing_material_infrared_transmittance, ChangeGlazingMaterialInfraredTransmittance};

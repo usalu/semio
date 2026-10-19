@@ -1,8 +1,12 @@
 //! 🧬️ Puzzle5d artifact schema — every field of the artifact with its state class.
 
-use crate::{Puzzle5dSnapshot};
+use crate::Puzzle5dSnapshot;
 use crate::standards::v1::subsets::any::schema::kind_catalogs::{Puzzle5dKindCatalogsExtra};
 use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dTargetVolume};
+
+
+
+
 use ::semio_framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 use std::collections::HashSet;

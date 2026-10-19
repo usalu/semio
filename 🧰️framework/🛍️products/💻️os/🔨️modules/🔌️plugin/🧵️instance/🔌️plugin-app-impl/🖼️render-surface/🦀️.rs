@@ -234,37 +234,18 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
     /// (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`, contract §3.7). The document itself
     /// stays the COMMITTED snapshot: a poll decides about work over what has landed, never over a
     /// run's own provisional overlay.
-    pub(super) async fn pending_effects(&mut self, view: Option<&ViewModel>) -> Vec<Effect> {
-        if self.render_ctx().refresh_cache().await.is_err() {
-            return Vec::new();
-        }
-        let render_operation = self.tools.live_render_operation(&self.mounted_policy, &self.stores);
-        let parent_document_id = self.stores.store.envelope().id.clone();
-        let snapshot_is_admitted = {
-            let (_, snapshot, _, _) = self.history.cache.as_ref().expect("cache refreshed above");
-            A::mounted_job_prepare_snapshot_read(render_operation, snapshot.as_ref())
+    pub(super)  async fn pending_effects(&mut self,view:Option<&ViewModel>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Vec<Effect>,Fault>{
+        if cx.should_yield(){return Ok(Vec::new())}
+        self.render_ctx().refresh_cache().await?;
+        let render_operation=self.tools.live_render_operation(&self.mounted_policy, &self.stores);
+        let snapshot_read={let(_,snapshot,_,_)=self.history.cache.as_ref().ok_or_else(||plugin_sdk_fault("pending poll cache unavailable"))?;if A::mounted_job_prepare_snapshot_read(render_operation,snapshot.as_ref()){Some(self.stores.store.snapshot_read().map_err(|error|error.into_fault())?)}else{None}};
+        let effects={
+            let(_,snapshot,config,_)=self.history.cache.as_ref().ok_or_else(||plugin_sdk_fault("pending poll cache unavailable"))?;
+            let doc=crate::ArtifactPendingView::new(snapshot.as_ref(),&self.child_composition.child_content_root,render_operation,&self.stores.store.envelope().id,snapshot_read,self.tool_runs.poll_view_for(view.and_then(|view|view.window_id.as_deref())),self.tool_machines.provisional_generation(),&self.tools.instance_operation_owner);
+            let cfg=ConfigView{snapshot:config.as_ref(),window:None};
+            ArtifactApp::pending_effects(&self.tools.instance_operation_owner,&doc,&cfg,view).await
         };
-        let snapshot_read = if snapshot_is_admitted {
-            match self.stores.store.snapshot_read() {
-                Ok(snapshot_read) => Some(snapshot_read),
-                Err(_) => return Vec::new(),
-            }
-        } else {
-            None
-        };
-        let instance_operation_owner = self.tools.instance_operation_owner.clone();
-        let effects = {
-            let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, tool_machines, .. } = self;
-            let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, snapshot_read)
-                .await
-                .with_instance(instance_operation_owner.clone())
-                .with_tool_run(tool_runs.view_for(view.and_then(|view| view.window_id.as_deref())))
-                .with_provisional_generation(tool_machines.provisional_generation());
-            let cfg = ConfigView { snapshot: config.as_ref(), window: None };
-            A::pending_effects(&instance_operation_owner, &doc, &cfg, view).await
-        };
-        self.stores.stamp_polled_load_document_effects(effects)
+        Ok(self.stamp_polled_load_document_effects(effects))
     }
 
     /// 🗂️ Every context menu is organized (D2 of the grouped-context-menu mechanism design) at this

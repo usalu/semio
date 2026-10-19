@@ -12,7 +12,9 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
-use semio_framework_plugin::{WorldProjectionConfig, WorldSunConfig};
+use semio_framework_plugin::WorldProjectionConfig;
+
+use semio_framework_plugin::WorldSunConfig;
 use std::collections::HashMap;
 
 //#region 🔖️Defaults
@@ -365,25 +367,11 @@ impl Puzzle3dConfigDiff {
 }
 
 impl protocol::MutationDiff<Puzzle3dConfig> for Puzzle3dConfigDiff {
-    fn apply(&self, base: &Puzzle3dConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Puzzle3dConfig> {
-        let mut next = base.clone();
-        if let Some(value) = &self.fill_count {
-            next.fill_count = *value;
-        }
-        if let Some(value) = &self.contact_tolerance {
-            next.contact_tolerance = *value;
-        }
-        if let Some(value) = &self.object_kind_weights {
-            next.object_kind_weights = value.clone();
-        }
-        if let Some(value) = &self.vortex_kind_weights {
-            next.vortex_kind_weights = value.clone();
-        }
-        if let Some(value) = &self.active_example_id {
-            next.active_example_id = value.clone();
-        }
-        Ok(next)
-    }
+
+
+}
+
+impl protocol::ColdMutationDiff<Puzzle3dConfig> for Puzzle3dConfigDiff {
     fn absorb(&mut self, other: Self) {
         if other.fill_count.is_some() {
             self.fill_count = other.fill_count;
@@ -401,14 +389,37 @@ impl protocol::MutationDiff<Puzzle3dConfig> for Puzzle3dConfigDiff {
             self.active_example_id = other.active_example_id;
         }
     }
+
+    fn apply(&self, next: &mut Puzzle3dConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        if let Some(value) = &self.fill_count {
+            next.fill_count = *value;
+        }
+        if let Some(value) = &self.contact_tolerance {
+            next.contact_tolerance = *value;
+        }
+        if let Some(value) = &self.object_kind_weights {
+            next.object_kind_weights = value.clone();
+        }
+        if let Some(value) = &self.vortex_kind_weights {
+            next.vortex_kind_weights = value.clone();
+        }
+        if let Some(value) = &self.active_example_id {
+            next.active_example_id = value.clone();
+        }
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<Puzzle3dConfig> for Puzzle3dConfigDiff {
-    fn inverse(&self, base: &Puzzle3dConfig) -> Self {
-        self.restoring(base)
-    }
+
     fn is_empty(&self) -> bool {
         self.fill_count.is_none() && self.contact_tolerance.is_none() && self.object_kind_weights.is_none() && self.vortex_kind_weights.is_none() && self.active_example_id.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<Puzzle3dConfig> for Puzzle3dConfigDiff {
+    fn inverse(&self, base: &Puzzle3dConfig) -> Self {
+        self.restoring(base)
     }
 }
 
@@ -504,6 +515,13 @@ impl protocol::Mutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
         }
     }
 
+
+
+
+}
+
+impl protocol::ColdMutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
+    type ReferenceDiff = Puzzle3dConfigDiff;
     fn diff(&self, base: &Puzzle3dConfig) -> protocol::MutationOutcome<Puzzle3dConfigDiff> {
         let diff = match self {
             Self::SetFillCount(Puzzle3dConfigSetFillCount{ count }) => Puzzle3dConfigDiff { fill_count: (count != &base.fill_count).then_some(*count), ..Default::default() },
@@ -517,7 +535,6 @@ impl protocol::Mutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
         }
         protocol::MutationOutcome::new(diff)
     }
-
     fn inverse(&self, base: &Puzzle3dConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
             Self::SetFillCount(Puzzle3dConfigSetFillCount{ .. }) => Self::SetFillCount(Puzzle3dConfigSetFillCount{ count: base.fill_count }),

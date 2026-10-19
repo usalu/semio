@@ -723,6 +723,11 @@ pub fn hover_step(hover: Hover, pointer: Point, body: Rect, tick: Ticks, guards:
 pub fn hover_busy(hover: &Hover) -> bool {
     hover.circling.steps > 0 || hover.stroking.way != 0
 }
+
+/// 🌪️ A started circle holds attention until its last quarter turn times out.
+pub fn circled(hover: &Hover, tick: Ticks) -> bool {
+    hover.circling.steps > 0 && tick - hover.circling.last <= CIRCLE_SLOW
+}
 //#endregion 🔖️Hover
 
 #[cfg(test)]

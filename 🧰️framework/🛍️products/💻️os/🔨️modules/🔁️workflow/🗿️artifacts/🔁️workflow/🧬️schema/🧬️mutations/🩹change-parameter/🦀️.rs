@@ -18,6 +18,17 @@ pub struct ChangeParameter {
 //#region ⚙️Semantics
 impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for ChangeParameter {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "workflow", kind: "change-parameter", record: "ChangedWorkflowParameter" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change workflow parameter {}", self.parameter_id), &format!("Arbeitsablaufparameter {} ändern", self.parameter_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["parameters".into(), self.parameter_id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<WorkflowSnapshot, WorkflowMutation> for ChangeParameter {
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
         protocol::MutationOutcome::new(WorkflowDiff::PatchParameter { parameter_id: self.parameter_id.clone(), parameter: (*self.parameter).clone() })
     }
@@ -30,11 +41,5 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for ChangeParame
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change workflow parameter {}", self.parameter_id), &format!("Arbeitsablaufparameter {} ändern", self.parameter_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["parameters".into(), self.parameter_id.clone()]
-    }
 }
 //#endregion ⚙️Semantics

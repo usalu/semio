@@ -1,0 +1,12 @@
+{
+  "proxy": { "image": "caddy:sha256-0c994536bddb66445885237f1a5dcc1916bccea922661c76b4e9fc24061f9b52", "pull_policy": "never" },
+  "cases": [
+    { "tag": "latest", "images": ["ghcr.io/usalu/architecture-course-proctor:latest", "caddy:2.11.4@sha256:0c994536bddb66445885237f1a5dcc1916bccea922661c76b4e9fc24061f9b52"] },
+    { "tag": "sha-0123456789ab", "images": ["ghcr.io/usalu/architecture-course-proctor:sha-0123456789ab", "caddy:2.11.4@sha256:0c994536bddb66445885237f1a5dcc1916bccea922661c76b4e9fc24061f9b52"] }
+  ],
+  "invalid": [
+    { "id": "missing-proxy", "replace": "caddy:", "with": "proxy:", "error": "The offline stack requires exactly its proctor and pinned Caddy images" },
+    { "id": "unpinned-proxy", "replace": "@sha256:0c994536bddb66445885237f1a5dcc1916bccea922661c76b4e9fc24061f9b52", "with": "", "error": "The offline stack requires exactly its proctor and pinned Caddy images" },
+    { "id": "extra-image", "append": "\n  extra:\n    image: busybox:latest\n", "error": "The offline stack requires exactly its proctor and pinned Caddy images" }
+  ]
+}

@@ -4,14 +4,18 @@ use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fe
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadCaseInsertion;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadCasesDelta;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::resolve_load;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &CreateLoadCase, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {
+pub fn diff(payload: &CreateLoadCase, base: &Fem3dSnapshotValue) -> protocol::MutationOutcome<Fem3dDiff> {
+    if let Some(message) = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::entity_identity_breach("loadCase", &payload.load_case.id) { return protocol::MutationOutcome::fatal("mutation.invariant", message, [payload.load_case.id.clone()]); }
     if base.load_cases.iter().any(|case| case.id == payload.load_case.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A load case with id \"{}\" already exists.", payload.load_case.id), [payload.load_case.id.clone()]);
     }
+    let mut seen = std::collections::HashSet::new();
     for load in &payload.load_case.loads {
+        let id = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id(load);
+        if protocol::wire::validate_scoped_identity_segments(&["load", &payload.load_case.id, id]).is_err() || !seen.insert(id) { return protocol::MutationOutcome::fatal("mutation.invariant", "Load identity is repeated in its case or exceeds scoped identity bounds.", [payload.load_case.id.clone(), id.into()]); }
         if let Some(refusal) = resolve_load(base, load) {
             return refusal;
         }

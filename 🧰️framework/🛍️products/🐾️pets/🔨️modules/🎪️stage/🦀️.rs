@@ -1,76 +1,25 @@
-//! 🎪️ The stage: the pure fold that makes pets alive. `advance` folds events into a stage, `frame_of` projects a stage into what a render target draws; the same seed and the same events yield the same frames, bit for bit, as the TypeScript twin.
+//! 🎪️ The deterministic event fold and complete frame projection shared with the TypeScript stage.
 //!
-//! NORMATIVE ORDER (the twin's, step by step). Actors are kept in `menagerie.species` order. One tick:
-//! 1. per actor, in that order: fade (out while leaving and not walking, gone at 0; otherwise towards its presence —
-//!    whole, or see-through while the pointer rests on it) → turning round (an actor that does not face its heading
-//!    faces it at once and its drawing follows over 8 ticks, up to `faced`; a walker strides only once it faces its
-//!    goal squarely) → motion (`walk`: on every beat the end at the goal or before a neighbour, else `stride_to`;
-//!    `hop`: `hop_step` + `landing_of`, a floating gait glides straight; `fall`: `fall_step` + `landing_of`; a sleeper
-//!    wakes when the pointer is near; an idle one perks up when the pointer has come to rest beside it) → gaze spring
-//!    → blink schedule → mood → the end of its activity when `tick ≥ until`;
-//! 2. the stage: a pair whose partners both wait begins its encounter; on every whole second a new pair may be drawn,
-//!    and then whoever is wanted but not on stage arrives when a perch has room.
+//! A tick expires claims, puffs and ladders, handles held gestures, seats simultaneous scoots,
+//! advances actors, updates hover, chemistry, encounters and pairing, runs pranks, and admits arrivals.
+//! Motion follows guarded claimed courses and gear trips; surveys ride bodies rigidly, release invalid
+//! footholds, and reseat displaced actors within complete body clearance. Independent random streams
+//! preserve decision, gear, wind and mischief determinism. Quiet stages jump only across ticks at
+//! which no motion, gesture, state, feeling, chemistry, prank or population horizon can change.
+//! Floating expressions retain the twin's order without reassociation or fused multiply-add.
 //!
-//! DISTANCE. Actors of one surface never stand in each other. Whoever arrives, lands or picks a goal keeps a
-//! comfortable gap (8 px between the bodies); a walker stops before a neighbour (6 px); a ride on a perch that shrank
-//! sets the actors apart again; and whoever does not fit — a perch holds as many as fit with the comfortable gap — is
-//! crowded out: it fades where it stood and, while it is wanted, arrives anew on a perch with room. Newcomers spread
-//! out: they arrive on a perch that holds the fewest, on the ground — the lowest perches of the stage — only when no
-//! higher one is as empty. And when a survey brings new ground, the scenery has changed: whoever stood on ground that
-//! vanished is gone with it and arrives anew (without new ground it falls), and whoever shares a perch moves to one
-//! that holds nobody.
-//!
-//! THE POINTER. Outside a time of concentration a pet that stands idle by itself attends to the pointer while it is
-//! worth a look (it moved within the last 4 s): its pupils follow it, the bone that carries its first eye leans
-//! after the pupils, it turns round when the pointer is clearly behind it (at most once a second), and when the
-//! pointer has come to rest beside it for half a second and it is curious enough it greets it, which costs curiosity.
-//! Pupils and lean follow the gaze, which reaches half of its way at 32 px from the eyes: `look_offset(…, 32)`.
-//!
-//! DRAWS. One key per draw, `[seed, stream, counter]` as `u32` words, words in the order listed:
-//! - actor (`stream` = index of the species, `counter` = `actor.draws`, which starts at the tick of its arrival and
-//!   wraps at 2³²): arrival and thaw `[idle dwell, idle clip, first blink]`; coming to rest `[idle dwell, idle clip]`;
-//!   decision `random_pick` on word 0, then `[·, dwell, clip, goal or target]`; blink `[gap, double]`; perking up
-//!   `[dwell, clip]`; sulk `[dwell, clip]`;
-//! - stage (`stream` = `STAGE_STREAM`, `counter` = `stage.draws`): arrival `[perch, place, facing]`; pairing
-//!   `random_pick` on word 0, then `[·, chance]`; encounter `[kind, span, clip of the first, clip of the second]`.
-//!
-//! LAZINESS. Needs are settled when an activity ends (`needs_after` over its whole span) and rapports when they are
-//! touched (`rapport_faded` since `stage.met`, the tick of the last change of any rapport), so neither depends on how
-//! time is cut into `ticked` events. Ticks in which nothing can change are jumped over: an actor at rest (no motion,
-//! no turn, no fade, gaze and mood on their targets) only has scheduled changes — the end of its activity, the end of
-//! its blink, the pointer losing its interest, the next whole second on which a pair may be drawn or somebody who
-//! waits off stage may arrive.
-//!
-//! BITS. Every expression is the twin's, term for term and in its order (no reassociation, no `mul_add`); the larger
-//! and the smaller of two numbers are JavaScript's (`larger`, `smaller`), whole ticks are `i64` and enter floating
-//! point exactly, a word becomes a unit by one division, and `floor(x)` of a unit expression becomes ticks or an index
-//! by one cast. `advance` takes the stage by value and answers it: a fold owns what it folds, and whoever wants to
-//! keep the stage it had clones it.
-//!
-//! PARTS. This file is the façade of the stage — `open_stage`, `advance` and `frame_of` are all the crate exports of
-//! it — over ten modules that share the working copy of a stage (the draft): the gaps between actors, the schedule of
-//! the stage, attention, locomotion, sociability, choice, population, the clock and the projection. The order above is
-//! the order of the clock.
-//!
-//! @see ../📝️draft/🦀️.rs — the working copy of a stage, its lookups and the smallest changes of an actor
-//! @see ../📏️spacing/🦀️.rs — the gaps between grounded actors
-//! @see ../🗓️schedule/🦀️.rs — the whole seconds on which a pair may be drawn or somebody may arrive
-//! @see ../👀️attention/🦀️.rs — eyes, head and facing: presence, turning round, gaze, blinks, mood, perking up
-//! @see ../🚶️locomotion/🦀️.rs — walking, hopping, gliding, falling, landing, leaving
-//! @see ../💞️sociability/🦀️.rs — pairing, encounters, sulks, rapport
-//! @see ../🎯️choice/🦀️.rs — what an actor does next when its time is up
-//! @see ../👥️population/🦀️.rs — surveys, arrivals, spreading out, summons, liveliness
-//! @see ../🕰️clock/🦀️.rs — one tick in the normative order, the lulls, time passing
-//! @see ../🎥️projection/🦀️.rs — poses, the rate and `frame_of`
-//! @see ../🧠️behavior/🦀️.rs — limits, weights, dwells, encounters, needs, rapport
-//! @see ../🏞️terrain/🦀️.rs — perches, strides, falls, hops
-//! @see ../🎞️animation/🦀️.rs — clips, springs, blinks
-//! @see ../🦴️rig/🦀️.rs — poses and matrices
-//! @see ../🎲️randomness/🦀️.rs — counter-based draws
-//! @see ../../🧬️schema/🦀️.rs — `Stage`, `Actor`, `StageEvent`, `Frame`
+//! @see ../🕰️clock/🦀️.rs — tick order and safe lulls
+//! @see ../🚶️locomotion/🦀️.rs — claimed courses, gear trips and hand motion
+//! @see ../👥️population/🦀️.rs — rigid survey rides and clearance seating
+//! @see ../🎥️projection/🦀️.rs — poses, tools, scenery and wake horizons
 //! @see ../🎪️stage/🟦️.ts — the TypeScript twin
+//! @see ../../🧬️schema/🦀️.rs — owned events, stage and frame
 
 use crate::clock::pass;
+use crate::attention::{grasp, tossed, touched_at, unhovered};
+use crate::sociability::{clicked, played};
+use crate::choice::reclaimed;
+use crate::locomotion::unlifted;
 use crate::draft::{draft_of, sealed, Draft};
 use crate::population::{summon, survey, tune};
 use semio_framework_pets_contract::schema::{Menagerie, Over, PetMode, Point, Stage, StageEvent};
@@ -125,7 +74,7 @@ pub fn open_stage(seed: u32) -> Stage {
     }
 }
 
-/// 📨️ One event folded into the draft. What the learner permits, what the pointer is over and the ticks of the learner's last input and of the last scroll are kept; a press, a drag, a release, a cancellation, a reclaimed fixture and a deed change nothing yet.
+/// 📨️ Fold pointer, hand, consent, scenery and reclamation events in their normative order.
 fn apply<'a>(menagerie: &'a Menagerie, draft: &mut Draft<'a>, event: &StageEvent) {
     match event {
         StageEvent::Ticked(event) => pass(menagerie, draft, event.ticks),
@@ -134,7 +83,7 @@ fn apply<'a>(menagerie: &'a Menagerie, draft: &mut Draft<'a>, event: &StageEvent
             draft.stage.pointed = draft.stage.tick;
             draft.stage.over = event.over;
         }
-        StageEvent::Unpointed(_) => draft.stage.pointer = None,
+        StageEvent::Unpointed(_) => { draft.stage.pointer = None; unhovered(draft, draft.stage.tick); },
         StageEvent::Glanced(event) => draft.stage.glances.clone_from(&event.points),
         StageEvent::Surveyed(event) => survey(menagerie, draft, event),
         StageEvent::Summoned(event) => summon(menagerie, draft, &event.species),
@@ -143,11 +92,48 @@ fn apply<'a>(menagerie: &'a Menagerie, draft: &mut Draft<'a>, event: &StageEvent
         StageEvent::Permitted(event) => {
             draft.stage.play = event.play;
             draft.stage.mischief = event.mischief;
+            if !event.mischief { unlifted(draft, draft.stage.tick); }
+            if !event.play && draft.stage.press.phase != PressPhase::Idle {
+                let touched = draft.stage.touched.clone();
+                grasp(draft, Some(PressSignal::Abort), touched.as_deref(), draft.stage.tick);
+                draft.stage.press = IDLE;
+                draft.stage.touched = None;
+            }
         }
         StageEvent::Stirred(_) => draft.stage.stirred = draft.stage.tick,
         StageEvent::Scrolled(_) => draft.stage.scrolled = draft.stage.tick,
-        StageEvent::Pressed(_) | StageEvent::Dragged(_) | StageEvent::Released(_) | StageEvent::Cancelled(_) | StageEvent::Reclaimed(_) | StageEvent::Played(_) => {}
+        StageEvent::Played(event) => { if event.deed == Deed::Toss { tossed(draft, &event.species, draft.stage.tick); } else { played(draft, &event.species, event.deed); } },
+        StageEvent::Pressed(event) => {
+            let step = press_step(draft.stage.press, PressInput::Pressed(*event), draft.stage.tick, Guards { quiet: draft.stage.quiet, still: draft.stage.mode == PetMode::Still, ..Guards::default() });
+            let touched = draft.stage.touched.clone();
+            grasp(draft, step.signal, touched.as_deref(), draft.stage.tick);
+            draft.stage.press = step.state;
+            draft.stage.touched = if step.state.phase == PressPhase::Idle { None } else { touched_at(draft, event.x, event.y) };
+        }
+        StageEvent::Dragged(event) => {
+            draft.stage.pointer = Some(Point { x: event.x, y: event.y });
+            draft.stage.pointed = draft.stage.tick;
+            pressed_step(draft, PressInput::Dragged(*event));
+        }
+        StageEvent::Released(event) => {
+            draft.stage.pointer = Some(Point { x: event.x, y: event.y });
+            draft.stage.pointed = draft.stage.tick;
+            let (signal, touched) = pressed_step(draft, PressInput::Released(*event));
+            if signal == Some(PressSignal::Click) { if let Some(touched) = touched { clicked(draft, &touched, event.x); } }
+        }
+        StageEvent::Cancelled(_) => { pressed_step(draft, PressInput::Cancelled); },
+        StageEvent::Reclaimed(event) => reclaimed(draft, &event.fixture, draft.stage.tick)
     }
+}
+
+/// 🖱️ Fold a follow-up pointer event through the press machine and its held actor.
+fn pressed_step(draft: &mut Draft<'_>, input: PressInput) -> (Option<PressSignal>, Option<String>) {
+    let step = press_step(draft.stage.press, input, draft.stage.tick, Guards { quiet: draft.stage.quiet, still: draft.stage.mode == PetMode::Still, ..Guards::default() });
+    draft.stage.press = step.state;
+    let touched = draft.stage.touched.clone();
+    grasp(draft, step.signal, touched.as_deref(), draft.stage.tick);
+    if step.state.phase == PressPhase::Idle { draft.stage.touched = None; }
+    (step.signal, touched)
 }
 
 /// 🧵️ The stage after the events, folded in order. The stage is taken by value and answered: without events it comes back untouched, with events its actors come back in `menagerie.species` order.

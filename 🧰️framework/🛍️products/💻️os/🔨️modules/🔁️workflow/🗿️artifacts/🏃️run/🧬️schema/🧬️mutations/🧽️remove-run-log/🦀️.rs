@@ -16,6 +16,17 @@ pub struct RemoveRunLog {
 //#region ⚙️Semantics
 impl protocol::MutationKind<RunArtifact, RunMutation> for RemoveRunLog {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "run-log", kind: "remove-run-log", record: "RemovedRunLog" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove {} run log lines", self.count), &format!("{} Laufprotokollzeilen zurücknehmen", self.count))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["logs".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<RunArtifact, RunMutation> for RemoveRunLog {
     fn diff(&self, base: &RunArtifact) -> protocol::MutationOutcome<RunDiff> {
         if self.count == 0 {
             return protocol::MutationOutcome::empty();
@@ -28,12 +39,6 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for RemoveRunLog {
     fn inverse(&self, base: &RunArtifact) -> Result<Vec<RunMutation>, semio_framework_value::ValueError> {
         let kept = base.logs.len().saturating_sub(usize::try_from(self.count).unwrap_or(usize::MAX));
         Ok(base.logs[kept..].iter().rev().map(|line| RunMutation::AppendRunLog(AppendRunLog { node_id: line.node_id.clone(), level: line.level.clone(), message: line.message.clone(), at: line.at.clone() })).collect())
-    }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove {} run log lines", self.count), &format!("{} Laufprotokollzeilen zurücknehmen", self.count))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["logs".into()]
     }
 }
 //#endregion ⚙️Semantics

@@ -10,7 +10,9 @@
     "R13": "V1-SNAPSHOT-DIFF",
     "R14": "V2-RESTORE-INVERSE",
     "R15": "V4-LAW-UNTESTED",
-    "R16": "V3-LEAF-APPLY"
+    "R16": "V3-LEAF-APPLY",
+    "R17": "V3-LEAF-APPLY",
+    "R18": "V1-SNAPSHOT-DIFF"
   },
   "cases": [
     {
@@ -134,6 +136,29 @@
       "oracle": [
         "R10"
       ]
+    },
+    {
+      "id": "r10-renamed-between",
+      "description": "A diff leaf differencing two snapshots through a renamed helper that is not geometry.",
+      "segments": [
+        "r10-renamed-between",
+        "🧬️mutations",
+        "a",
+        "🔺️diff",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "pub fn diff(payload: &P, base: &S) -> protocol::MutationOutcome<D> {",
+        "    protocol::MutationOutcome::new(snapshot_between(base, &payload.next))",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 2,
+          "rule": "R10"
+        }
+      ],
+      "oracle": []
     },
     {
       "id": "r11-diff-derived-inverse",
@@ -484,7 +509,7 @@
     },
     {
       "id": "ephemeral-window-transient-type",
-      "description": "R13/R14 enforce sparse diff and concrete inverse for this original presence/transient lane or type.",
+      "description": "R13 still enforces the sparse diff of a window-transient mutation type; its whole-root `Self::Snapshot` setter inverse (carrying the base root) is the one R14 exemption.",
       "segments": [
         "ephemeral-window-transient-type",
         "🪟️window",
@@ -509,9 +534,88 @@
         {
           "line": 5,
           "rule": "R13"
+        }
+      ],
+      "oracle": []
+    },
+    {
+      "id": "ephemeral-setter-sparse-compliant",
+      "description": "Compliant ephemeral control outside any lane directory: a sparse diff type and a `Self::Snapshot` setter inverse in `*TransientMutation` and `*PresenceMutation` impls fire nothing — the exemption follows the mutation TYPE, not a path.",
+      "segments": [
+        "ephemeral-setter-sparse-compliant",
+        "🧬️mutations",
+        "a",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "impl Mutation<Pane> for PaneTransientMutation {",
+        "    type Diff = PaneTransientDiff;",
+        "    fn inverse(&self, base: &Pane) -> Result<Vec<Self>, E> {",
+        "        Ok(vec![Self::Snapshot { transient: base.clone() }])",
+        "    }",
+        "}",
+        "impl protocol::Mutation<Cursor> for CursorPresenceMutation {",
+        "    type Diff = CursorPresenceDiff;",
+        "    fn inverse(&self, base: &Cursor) -> Result<Vec<Self>, E> {",
+        "        Ok(vec![Self::Snapshot { presence: base.clone() }])",
+        "    }",
+        "}"
+      ],
+      "breaches": [],
+      "oracle": []
+    },
+    {
+      "id": "ephemeral-setter-other-restore-fires",
+      "description": "The ephemeral exemption is the single `Self::…Snapshot` setter only: a `Restore…` variant or a `*_state` record in a transient/presence mutation inverse still fires R14.",
+      "segments": [
+        "ephemeral-setter-other-restore-fires",
+        "🪟️window",
+        "🫧️transient",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "impl Mutation<Pane> for PaneTransientMutation {",
+        "    fn inverse(&self, base: &Pane) -> Result<Vec<Self>, E> {",
+        "        Ok(vec![Self::RestoreRoot { transient: base.clone() }])",
+        "    }",
+        "}",
+        "impl Mutation<Cursor> for CursorPresenceMutation {",
+        "    fn inverse(&self, base: &Cursor) -> Result<Vec<Self>, E> {",
+        "        Ok(vec![Self::Set { prior_state: base.clone() }])",
+        "    }",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 3,
+          "rule": "R14"
         },
         {
-          "line": 7,
+          "line": 8,
+          "rule": "R14"
+        }
+      ],
+      "oracle": []
+    },
+    {
+      "id": "persisted-config-mutation-snapshot-fires",
+      "description": "A persisted window-config mutation type gets no exemption even inside a window/transient directory: its `Self::Snapshot` inverse fires R14.",
+      "segments": [
+        "persisted-config-mutation-snapshot-fires",
+        "🪟️window",
+        "🫧️transient",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "impl Mutation<PaneConfig> for PaneConfigMutation {",
+        "    fn inverse(&self, base: &PaneConfig) -> Result<Vec<Self>, E> {",
+        "        Ok(vec![Self::Snapshot { config: base.clone() }])",
+        "    }",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 3,
           "rule": "R14"
         }
       ],
@@ -519,7 +623,7 @@
     },
     {
       "id": "ephemeral-window-presence-type",
-      "description": "R13/R14 enforce sparse diff and concrete inverse for this original presence/transient lane or type.",
+      "description": "R13 still enforces the sparse diff of a presence mutation type; its whole-root `Self::Snapshot` setter inverse (carrying the base root) is the one R14 exemption.",
       "segments": [
         "ephemeral-window-presence-type",
         "🪟️window",
@@ -544,10 +648,6 @@
         {
           "line": 5,
           "rule": "R13"
-        },
-        {
-          "line": 7,
-          "rule": "R14"
         }
       ],
       "oracle": []
@@ -1049,6 +1149,26 @@
       "oracle": []
     },
     {
+      "id": "compliant-geometric-between",
+      "description": "Pure geometry named `…_between` (the angle, distance or gap between two vectors) is not snapshot differencing.",
+      "segments": [
+        "compliant-geometric-between",
+        "🧬️mutations",
+        "a",
+        "🔺️diff",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "pub fn diff(payload: &P, base: &S) -> protocol::MutationOutcome<D> {",
+        "    let turn = angle_between(payload.from - base.centre, payload.to - base.centre);",
+        "    let run = geometry::distance_between(payload.from, payload.to) + wall_gap_between(base, payload);",
+        "    protocol::MutationOutcome::new(D::turned(turn, run))",
+        "}"
+      ],
+      "breaches": [],
+      "oracle": []
+    },
+    {
       "id": "compliant-non-leaf",
       "description": "Files outside every mutations directory without a mutation impl are not leaves.",
       "segments": [
@@ -1077,6 +1197,545 @@
       ],
       "breaches": [],
       "oracle": []
+    },
+    {
+      "id": "r17-mutate-then-diff",
+      "description": "B-01: a mesh edit mutates a copy and differences before/after through `object_patch_diff(&before, &after)` — the helper and its call fire.",
+      "segments": ["r17-mutate-then-diff", "✏️editor", "🖌️session", "🦀️.rs"],
+      "lines": [
+        "fn object_patch_diff(before: &LowpolyObject, after: &LowpolyObject) -> ObjectPatch {",
+        "    ObjectPatch::default()",
+        "}",
+        "fn mesh_edit(doc: &Doc) -> ObjectPatch {",
+        "    let before = doc.objects[0].clone();",
+        "    let after = extrude(&before);",
+        "    object_patch_diff(&before, &after)",
+        "}"
+      ],
+      "breaches": [{"line": 1, "rule": "R17"}, {"line": 7, "rule": "R17"}],
+      "oracle": []
+    },
+    {
+      "id": "r17-snapshot-mut",
+      "description": "B-02/B-03: a `snapshot_mut` escape hatch and its caller writing a field through it.",
+      "segments": ["r17-snapshot-mut", "✏️editor", "⚙️engine", "🦀️.rs"],
+      "lines": [
+        "impl Engine {",
+        "    pub fn snapshot_mut(&mut self) -> &mut LowpolySnapshot {",
+        "        &mut self.snapshot",
+        "    }",
+        "}",
+        "fn smooth(doc: &mut Engine, index: usize) {",
+        "    doc.snapshot_mut().objects[index].smooth_shading = true;",
+        "}"
+      ],
+      "breaches": [{"line": 2, "rule": "R17"}, {"line": 7, "rule": "R17"}],
+      "oracle": ["R17"]
+    },
+    {
+      "id": "r17-host-candidate-applier",
+      "description": "B-05/B-07/B-11: host appliers writing a `&mut <X>Snapshot` parameter (`remove`, field assignment, `mem::replace`, `push`).",
+      "segments": ["r17-host-candidate-applier", "🔨️modules", "🏠️host", "🧰️owned", "🦀️.rs"],
+      "lines": [
+        "fn apply_selection_transform(source: &mut DrawingSnapshot, ids: &[String]) {",
+        "    source.assets.remove(\"old\");",
+        "    source.layers[0].transform = None;",
+        "}",
+        "fn replay(snapshot: &mut Generation3dSnapshot, index: usize, next: Widget) {",
+        "    let _old = std::mem::replace(&mut snapshot.host_snapshot.widgets[index], next);",
+        "    snapshot.workshop.machines.push(Machine::default());",
+        "}"
+      ],
+      "breaches": [{"line": 2, "rule": "R17"}, {"line": 3, "rule": "R17"}, {"line": 6, "rule": "R17"}, {"line": 7, "rule": "R17"}],
+      "oracle": []
+    },
+    {
+      "id": "r17-apply-initialization-replay",
+      "description": "B-08/B-09: an `🌉️apply` initialization replay assigns fields and replaces the whole snapshot without `apply_diff`.",
+      "segments": ["r17-apply-initialization-replay", "🌉️apply", "🦀️.rs"],
+      "lines": [
+        "pub fn generation2d_apply_initialization_mutation(snapshot: &mut Generation2dSnapshot, operation: &Op) {",
+        "    snapshot.nodes = operation.nodes.clone();",
+        "    *snapshot = Generation2dSnapshot::default();",
+        "}"
+      ],
+      "breaches": [{"line": 2, "rule": "R17"}, {"line": 3, "rule": "R17"}],
+      "oracle": []
+    },
+    {
+      "id": "r17-preparation-in-place",
+      "description": "B-13/B-14/B-15: a second apply lane in a preparation — an in-place applier and a `post` advance mutating the owned snapshot.",
+      "segments": ["r17-preparation-in-place", "✏️editor", "📬️preparation", "🦀️.rs"],
+      "lines": [
+        "fn apply_addressed_xml_mutation_in_place(snapshot: &mut DocxSnapshot, edit: &Edit) {",
+        "    *snapshot.node_mut(edit.at) = edit.replacement.clone();",
+        "}",
+        "impl Edit {",
+        "    fn advance(&mut self, post: &mut DocxSnapshot) {",
+        "        post.entries.get_mut(0).unwrap().name = String::new();",
+        "    }",
+        "}"
+      ],
+      "breaches": [{"line": 2, "rule": "R17"}, {"line": 6, "rule": "R17"}],
+      "oracle": []
+    },
+    {
+      "id": "r17-framework-os-snapshot",
+      "description": "B-12: framework os code writes a `&mut <X>Snapshot`; its own `*Document` containers (a VCS document) are not artifact snapshots and stay silent.",
+      "segments": ["🧰️framework", "🛍️products", "💻️os", "🔨️modules", "r17-framework-os-snapshot", "🦀️.rs"],
+      "lines": [
+        "fn commit(timeline: &mut Timeline, snapshot: &mut Process3dSnapshot, steps: Vec<Step>) {",
+        "    snapshot.steps = steps;",
+        "}",
+        "fn keep(document: &mut FlowVcsDocument) {",
+        "    document.versions.push(Version::default());",
+        "}"
+      ],
+      "breaches": [{"line": 2, "rule": "R17"}],
+      "oracle": []
+    },
+    {
+      "id": "r17-ts-local-catalog",
+      "description": "B-16: the shell writes a snapshot ref from a local apply, directly and through a local bound to it; the twin-applier projection stays silent.",
+      "segments": ["r17-ts-local-catalog", "🏛️ShellHost", "🟦️.tsx"],
+      "lines": [
+        "const base = localCatalogRef.current;",
+        "const next = applyLocalCatalogMutation(base, mutation);",
+        "localCatalogRef.current = next;",
+        "localSnapshotRef.current = applyLocalSnapshotMutation(base, mutation);",
+        "const projected = foldLocalCatalogEnvelopesV1(base, [envelope]);",
+        "localCatalogRef.current = projected;"
+      ],
+      "breaches": [{"line": 3, "rule": "R17"}, {"line": 4, "rule": "R17"}],
+      "oracle": []
+    },
+    {
+      "id": "r17-ts-whole-archive-put",
+      "description": "B-17/B-18: handlers that apply a catalog/identity change locally and put the whole archive (`kind: \"localDocumentArchive\"`), directly or through a helper that a non-import handler also calls.",
+      "segments": ["r17-ts-whole-archive-put", "🏛️ShellHost", "🟦️.tsx"],
+      "lines": [
+        "const saveCatalog = (mutation) => {",
+        "  const next = applyLocalCatalogMutation(base, mutation);",
+        "  const bytes = encodeDocumentArchiveBytes(archiveOf(next));",
+        "  worker.postMessage({ wire: encode({ kind: \"send\", message: { kind: \"localDocumentArchive\", archive: Array.from(bytes) } }) });",
+        "};",
+        "const saveIdentity = useCallback((record) => {",
+        "  ensureBackboneWorker().postMessage({ wire: { kind: \"send\", documentId: IDENTITY_CONFIG_SCHEMA, message: { kind: \"localDocumentArchive\", archive: record } } });",
+        "}, []);",
+        "const putArchive = (bytes) => {",
+        "  worker.postMessage({ wire: { kind: \"send\", message: { kind: \"localDocumentArchive\", archive: bytes } } });",
+        "};",
+        "const importFile = async (admission) => {",
+        "  putArchive(admission.archive);",
+        "};",
+        "const onCatalogEdit = (mutation) => {",
+        "  putArchive(archiveOf(mutation));",
+        "};"
+      ],
+      "breaches": [{"line": 4, "rule": "R17"}, {"line": 7, "rule": "R17"}, {"line": 10, "rule": "R17"}],
+      "oracle": []
+    },
+    {
+      "id": "r17-ts-shared-handler-branches",
+      "description": "B-17 in a shared effect handler: the helper's put is reached from an admission branch (exempt) and a retire branch (an edit) of the SAME handler, so the branch, not the handler, decides — the put fires.",
+      "segments": ["r17-ts-shared-handler-branches", "🏛️ShellHost", "🟦️.tsx"],
+      "lines": [
+        "const record = (mutation) => {",
+        "  worker.postMessage({ wire: { kind: \"send\", message: { kind: \"localDocumentArchive\", archive: build(mutation) } } });",
+        "};",
+        "const onAction = async (actionId, argsRecord) => {",
+        "  if (actionId === \"admit\") {",
+        "    const admission = admitLocal(argsRecord);",
+        "    record(admission);",
+        "  } else if (actionId === \"retire\") {",
+        "    record(retire(argsRecord));",
+        "  }",
+        "};"
+      ],
+      "breaches": [{"line": 2, "rule": "R17"}],
+      "oracle": []
+    },
+    {
+      "id": "r17-ts-archive-restore-revert",
+      "description": "B-19: a tutorial stop restores a captured whole archive over the user's edits; the `restore…Archive` wrapper itself (a pass-through) stays silent.",
+      "segments": ["r17-ts-archive-restore-revert", "🏛️ShellHost", "🟦️.tsx"],
+      "lines": [
+        "const restoreDocumentArchive = useCallback((plugin, program, archive, current) =>",
+        "  restoreDocumentArchiveV1(archive, current, ports(plugin, program)), [ports]);",
+        "const stopTutorial = useCallback(async () => {",
+        "  if (captured) await restoreDocumentArchive(plugin, session, captured, () => true);",
+        "}, [captured]);"
+      ],
+      "breaches": [{"line": 4, "rule": "R17"}],
+      "oracle": []
+    },
+    {
+      "id": "compliant-host-ts-import-and-persistence",
+      "description": "Compliant (L-04/L-05): an admission handler putting the admitted archive, the persistence lane putting the archive READ BACK from the plugin after its central apply, a helper only import handlers call, and an import that restores on failure.",
+      "segments": ["compliant-host-ts-import-and-persistence", "🏛️ShellHost", "🟦️.tsx"],
+      "lines": [
+        "writeLocalDocumentRef.current = async (admission: LocalCatalogAdmissionV1) => {",
+        "  worker.postMessage({ wire: encode({ kind: \"send\", message: { kind: \"localDocumentArchive\", archive: Array.from(admission.archive) } }) });",
+        "};",
+        "const persistToFolder = async () => {",
+        "  const archive = await plugin.readAppDocumentArchive(instanceId);",
+        "  const archiveBytes = encodeDocumentArchiveBytes(archive);",
+        "  worker.postMessage({ wire: encode({ kind: \"send\", message: { kind: \"localDocumentArchive\", archive: Array.from(archiveBytes) } }) });",
+        "};",
+        "const putAdmitted = (bytes) => {",
+        "  worker.postMessage({ wire: { kind: \"send\", message: { kind: \"localDocumentArchive\", archive: bytes } } });",
+        "};",
+        "const importFile = async (admission) => {",
+        "  putAdmitted(admission.archive);",
+        "};",
+        "const importPack = async (pack) => {",
+        "  const archive = decodeDocumentArchive(pack);",
+        "  try {",
+        "    await loadDocumentArchive(plugin, instanceId, archive);",
+        "  } catch {",
+        "    await restoreDocumentArchive(plugin, session, previous, () => true);",
+        "  }",
+        "};",
+        "const drive = async (archive, ports: FolderReadBackPortsV1) => {",
+        "  await restoreDocumentArchiveV1(archive, ports);",
+        "};"
+      ],
+      "breaches": [],
+      "oracle": []
+    },
+    {
+      "id": "compliant-host-central-apply-wrappers",
+      "description": "Compliant: `🌉️apply` wrappers whose only write is `*snapshot = <central apply result>` (inline `apply_diff`, a bound `apply_diff` result, a bound `vcs::apply_mutation` result).",
+      "segments": ["compliant-host-central-apply-wrappers", "🌉️apply", "🦀️.rs"],
+      "lines": [
+        "pub fn apply_writer_mutation(snapshot: &mut WriterSnapshot, mutation: &WriterMutation) -> protocol::MutationApplyResult<()> {",
+        "    *snapshot = protocol::apply_diff(mutation.diff(snapshot).diff(), snapshot)?;",
+        "    Ok(())",
+        "}",
+        "pub fn apply_writer_outcome(snapshot: &mut WriterSnapshot, mutation: &WriterMutation) {",
+        "    let outcome = mutation.diff(snapshot);",
+        "    if let Ok(next) = protocol::apply_diff(outcome.diff(), &*snapshot) {",
+        "        *snapshot = next;",
+        "    }",
+        "}",
+        "pub fn apply_vcs_mutation(projection: &mut VcsSnapshot, mutation: &VcsMutation) -> protocol::MutationApplyResult<()> {",
+        "    let (next, _) = vcs::apply_mutation(projection, mutation)?;",
+        "    *projection = next;",
+        "    Ok(())",
+        "}"
+      ],
+      "breaches": [],
+      "oracle": []
+    },
+    {
+      "id": "compliant-host-snapshot-decoder",
+      "description": "Compliant: a snapshot decoder under `🚪️io` fills a fresh snapshot (load, not an apply lane).",
+      "segments": ["compliant-host-snapshot-decoder", "✏️editor", "🚪️io", "🦀️.rs"],
+      "lines": [
+        "fn decode(snapshot: &mut DocxSnapshot) {",
+        "    snapshot.nodes.push(Node::default());",
+        "}"
+      ],
+      "breaches": [],
+      "oracle": []
+    },
+    {
+      "id": "compliant-host-genesis-helper",
+      "description": "Compliant: a private helper of a `LoadDocument` builder fills a freshly parsed document.",
+      "segments": ["compliant-host-genesis-helper", "✏️editor", "🎮️commands", "🦀️.rs"],
+      "lines": [
+        "pub fn handle(text: &str) -> Emit {",
+        "    let mut next = parse(text);",
+        "    example_media_content(&mut next);",
+        "    Emit { effects: vec![reset_document_effect(&next)] }",
+        "}",
+        "fn example_media_content(next: &mut RemodelingSnapshot) {",
+        "    next.assets.insert(String::new(), Handle::default());",
+        "}"
+      ],
+      "breaches": [],
+      "oracle": []
+    },
+    {
+      "id": "r17-helper-without-exempt-call-sites",
+      "description": "A snapshot-writing helper is exempt only when EVERY call site is in an exempt context: a normalizer name earns nothing, a call from a non-load fn does not exempt it, and a helper without any call site is unproven.",
+      "segments": ["r17-helper-without-exempt-call-sites", "🔨️modules", "🏠️host", "🦀️.rs"],
+      "lines": [
+        "fn dedupe_widgets(host: &mut FlowHostSnapshot) {",
+        "    host.widgets.retain(|widget| keep(widget));",
+        "}",
+        "fn resync(host: FlowHostSnapshot) {",
+        "    let mut host = host;",
+        "    dedupe_widgets(&mut host);",
+        "}",
+        "fn orphan(host: &mut FlowHostSnapshot) {",
+        "    host.widgets.clear();",
+        "}"
+      ],
+      "breaches": [{"line": 2, "rule": "R17"}, {"line": 9, "rule": "R17"}],
+      "oracle": []
+    },
+    {
+      "id": "r17-helper-with-mixed-call-sites",
+      "description": "One exempt call site (a `reset_document_effect` builder) does not exempt a helper that a non-load fn also calls.",
+      "segments": ["r17-helper-with-mixed-call-sites", "✏️editor", "🎮️commands", "🦀️.rs"],
+      "lines": [
+        "fn fill(next: &mut RemodelingSnapshot) {",
+        "    next.assets.clear();",
+        "}",
+        "pub fn handle() -> Emit {",
+        "    let mut next = parse();",
+        "    fill(&mut next);",
+        "    Emit { effects: vec![reset_document_effect(&next)] }",
+        "}",
+        "pub fn edit(snapshot: &mut RemodelingSnapshot) {",
+        "    fill(snapshot);",
+        "}"
+      ],
+      "breaches": [{"line": 2, "rule": "R17"}],
+      "oracle": []
+    },
+    {
+      "id": "compliant-host-helper-chain-to-load",
+      "description": "Compliant: helpers whose every call site is a load builder, or a helper that itself is only called from one (transitively), or test code.",
+      "segments": ["compliant-host-helper-chain-to-load", "✏️editor", "🎮️commands", "🦀️.rs"],
+      "lines": [
+        "fn tidy(next: &mut XSnapshot) {",
+        "    next.items.sort();",
+        "}",
+        "fn prepare(next: &mut XSnapshot) {",
+        "    tidy(next);",
+        "    next.items.push(1);",
+        "}",
+        "pub fn build() -> Effect {",
+        "    let mut next = parse();",
+        "    prepare(&mut next);",
+        "    Effect::LoadDocument(next)",
+        "}",
+        "fn only_tested(next: &mut XSnapshot) {",
+        "    next.items.clear();",
+        "}",
+        "#[cfg(test)]",
+        "mod tests {",
+        "    fn t() {",
+        "        only_tested(&mut parse());",
+        "    }",
+        "}"
+      ],
+      "breaches": [],
+      "oracle": []
+    },
+    {
+      "id": "compliant-host-diff-machinery",
+      "description": "Compliant: helpers the diff type's own `apply` calls (`apply_into`) are the central applier's machinery.",
+      "segments": ["compliant-host-diff-machinery", "✏️editor", "🧮️history", "🦀️.rs"],
+      "lines": [
+        "impl protocol::MutationDiff<DagSnapshot> for DagDiff {",
+        "    fn apply(&self, base: &DagSnapshot, capability: ApplyCapability) -> MutationApplyResult<DagSnapshot> {",
+        "        let mut next = base.clone();",
+        "        self.steps.iter().try_for_each(|step| step.apply_into(&mut next))?;",
+        "        Ok(next)",
+        "    }",
+        "}",
+        "impl DagDelta {",
+        "    fn apply_into(&self, next: &mut DagSnapshot) -> MutationApplyResult<()> {",
+        "        next.nodes.insert(0, Node::default());",
+        "        Ok(())",
+        "    }",
+        "}"
+      ],
+      "breaches": [],
+      "oracle": []
+    },
+    {
+      "id": "compliant-host-out-of-scope",
+      "description": "Compliant: a `&mut <X>Snapshot` writer outside every host/editor/apply/preparation/crate-root/framework-os position is not R17's lane.",
+      "segments": ["compliant-host-out-of-scope", "plain", "🦀️.rs"],
+      "lines": [
+        "fn bump(snapshot: &mut XSnapshot) {",
+        "    snapshot.count += 1;",
+        "}"
+      ],
+      "breaches": [],
+      "oracle": []
+    },
+    {
+      "id": "compliant-host-tests-and-cfg-test",
+      "description": "Compliant: `#[cfg(test)]` items never count, and neither does anything under `🧪️tests`.",
+      "segments": ["compliant-host-tests-and-cfg-test", "✏️editor", "🎮️commands", "🦀️.rs"],
+      "lines": [
+        "pub fn read(snapshot: &XSnapshot) -> usize {",
+        "    snapshot.count",
+        "}",
+        "#[cfg(test)]",
+        "mod tests {",
+        "    fn poke(snapshot: &mut XSnapshot) {",
+        "        snapshot.count = 3;",
+        "    }",
+        "}"
+      ],
+      "breaches": [],
+      "oracle": []
+    },
+    {
+      "id": "compliant-host-test-directory",
+      "description": "Compliant: a test oracle under `🧪️tests` of an editor writes snapshots freely.",
+      "segments": ["compliant-host-test-directory", "✏️editor", "🧪️tests", "🦀️.rs"],
+      "lines": [
+        "fn poke(snapshot: &mut XSnapshot) {",
+        "    snapshot.count = 3;",
+        "}"
+      ],
+      "breaches": [],
+      "oracle": []
+    },
+    {
+      "id": "compliant-host-ts-twin-projection",
+      "description": "Compliant: the shell renders the twin-applier projection, a commented-out local apply never counts.",
+      "segments": ["compliant-host-ts-twin-projection", "🏛️ShellHost", "🟦️.tsx"],
+      "lines": [
+        "const next = foldLocalCatalogEnvelopesV1(base, [envelope]);",
+        "localCatalogRef.current = next;",
+        "// localSnapshotRef.current = applyLocalSnapshotMutation(base, mutation);"
+      ],
+      "breaches": [],
+      "oracle": []
+    },
+    {
+      "id": "compliant-host-ts-test-file",
+      "description": "Compliant: TypeScript tests may apply locally.",
+      "segments": ["compliant-host-ts-test-file", "🏛️ShellHost", "🟦️.test.tsx"],
+      "lines": [
+        "localCatalogRef.current = applyLocalCatalogMutation(base, mutation);"
+      ],
+      "breaches": [],
+      "oracle": []
+    },
+    {
+      "id": "r18-commit-built",
+      "description": "A gesture that builds the whole mesh with a kernel builder and commits the assembled rows.",
+      "segments": [
+        "r18-commit-built",
+        "🧬️mutations",
+        "a",
+        "🕸️mesh-gestures",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "pub fn record(overlay: &Overlay, faces: &[u32]) {",
+        "    let built = overlay.base().extrude_faces_job(faces, 0.5).finish();",
+        "    overlay.commit_built(built);",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 2,
+          "rule": "R18"
+        },
+        {
+          "line": 3,
+          "rule": "R18"
+        }
+      ],
+      "oracle": []
+    },
+    {
+      "id": "r18-equals-base-filter",
+      "description": "A journal that drops a written row when it equals the base row, and a sparsifier that compares whole arenas.",
+      "segments": [
+        "r18-equals-base-filter",
+        "🥽️mesh",
+        "📝️journal",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "fn write(index: u32, row: T, equals_base: bool) {",
+        "    if equals_base { return; }",
+        "    rows.insert(index, row);",
+        "}",
+        "fn rows_of(base: &[T], result: &[T]) -> Vec<T> {",
+        "    sparse_rows(base, result)",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 1,
+          "rule": "R18"
+        },
+        {
+          "line": 2,
+          "rule": "R18"
+        },
+        {
+          "line": 6,
+          "rule": "R18"
+        }
+      ],
+      "oracle": []
+    },
+    {
+      "id": "compliant-row-emitter",
+      "description": "A row emitter states the faces it replaces and appends through the face editor; comments naming the old shapes and test oracles are not code.",
+      "segments": [
+        "compliant-row-emitter",
+        "🥽️mesh",
+        "📝️journal",
+        "🏗️gestures",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "// never commit_built: a gesture names its rows.",
+        "pub fn extrude(overlay: &Overlay, face: u32) {",
+        "    overlay.replace_face(face, &moved);",
+        "    overlay.add_face(&side, smooth);",
+        "}",
+        "#[cfg(test)]",
+        "fn sparse_rows<T>(base: &[T], result: &[T]) -> Vec<T> {",
+        "    Vec::new()",
+        "}"
+      ],
+      "breaches": [],
+      "oracle": []
+    },
+    {
+      "id": "compliant-row-emitter-tests",
+      "description": "Test files may use the oracles.",
+      "segments": [
+        "compliant-row-emitter-tests",
+        "🧬️mutations",
+        "a",
+        "🧪️tests",
+        "x",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "fn oracle() { overlay.commit_built(mesh); let rows = Rows::produced(&a, &b); }"
+      ],
+      "breaches": [],
+      "oracle": []
+    }
+  ],
+  "hostApplyGroups": [
+    {
+      "id": "r17-group-helper-mixed",
+      "description": "A helper in an editor file is called from an `🚪️io` decoder (exempt) and from a non-load editor command: its call sites are resolved across the artifact's files, so the write fires.",
+      "files": {
+        "✏️s/🔌️plugins/g/🗿️artifacts/a/✏️editor/helpers.rs": ["pub fn fill(next: &mut XSnapshot) {", "    next.items.clear();", "}"],
+        "✏️s/🔌️plugins/g/🗿️artifacts/a/🚪️io/decode.rs": ["pub fn decode() -> X {", "    let mut next = parse();", "    fill(&mut next);", "    next", "}"],
+        "✏️s/🔌️plugins/g/🗿️artifacts/a/✏️editor/commands.rs": ["pub fn handle(snapshot: &mut XSnapshot) {", "    fill(snapshot);", "}"]
+      },
+      "breaches": ["✏️s/🔌️plugins/g/🗿️artifacts/a/✏️editor/helpers.rs:2"]
+    },
+    {
+      "id": "compliant-group-helper-load-only",
+      "description": "Compliant: the same helper is called only from an `🚪️io` decoder, a test file and a `LoadDocument` builder in another file.",
+      "files": {
+        "✏️s/🔌️plugins/g/🗿️artifacts/a/✏️editor/helpers.rs": ["pub fn fill(next: &mut XSnapshot) {", "    next.items.clear();", "}"],
+        "✏️s/🔌️plugins/g/🗿️artifacts/a/🚪️io/decode.rs": ["pub fn decode() -> X {", "    let mut next = parse();", "    fill(&mut next);", "    next", "}"],
+        "✏️s/🔌️plugins/g/🗿️artifacts/a/🧪️tests/law.rs": ["fn law() {", "    fill(&mut parse());", "}"],
+        "✏️s/🔌️plugins/g/🗿️artifacts/a/✏️editor/load.rs": ["pub fn open() -> Effect {", "    let mut next = parse();", "    fill(&mut next);", "    Effect::LoadDocument(next)", "}"]
+      },
+      "breaches": []
     }
   ],
   "leafTrees": [
@@ -1119,6 +1778,54 @@
         "p/🧬️mutations/shared/🔺️diff/🦀️.rs",
         "p/🧬️mutations/untested/🔺️diff/🦀️.rs",
         "p/🧬️mutations/weak/🔺️diff/🦀️.rs"
+      ]
+    },
+    {
+      "id": "inverse-sum-law-kind-leaves",
+      "description": "A leaf without a `🔺️diff` directory is a `🦀️.rs` implementing `MutationKind`; it is tested by a law call under its own `🧪️tests` or by a family test of its subset whose law-calling fn (or a same-file helper/caller of it) NAMES its payload type. A shared loop over cases defined elsewhere, a test in another subset, a type spelled in a fn that never reaches the law, a leaf without a `MutationKind` impl and a composite do not count.",
+      "files": {
+        "a/🪆️subsets/x/🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs": [
+          "pub fn rules() {}"
+        ],
+        "a/🪆️subsets/x/🧬️schema/🧬️mutations/✏️set-named/🦀️.rs": [
+          "impl protocol::MutationKind<S, M> for SetNamed {}"
+        ],
+        "a/🪆️subsets/x/🧬️schema/🧬️mutations/✏️set-via-helper/🦀️.rs": [
+          "impl protocol::MutationKind<S, M> for SetViaHelper {}"
+        ],
+        "a/🪆️subsets/x/🧬️schema/🧬️mutations/✏️set-own/🦀️.rs": [
+          "impl protocol::MutationKind<S, M> for SetOwn {}"
+        ],
+        "a/🪆️subsets/x/🧬️schema/🧬️mutations/✏️set-own/🧪️tests/🖼️repaints/🦀️.rs": [
+          "async fn t() { assert_mutation_inverse_sum_law(&m, &before).await; }"
+        ],
+        "a/🪆️subsets/x/🧬️schema/🧬️mutations/✏️set-looped/🦀️.rs": [
+          "impl protocol::MutationKind<S, M> for SetLooped {}"
+        ],
+        "a/🪆️subsets/x/🧬️schema/🧬️mutations/✏️set-unreached/🦀️.rs": [
+          "impl protocol::MutationKind<S, M> for SetUnreached {}"
+        ],
+        "a/🪆️subsets/x/🧬️schema/🧬️mutations/🧩️composed/🦀️.rs": [
+          "impl protocol::MutationKind<S, M> for Composed {}"
+        ],
+        "a/🪆️subsets/x/🧬️schema/🧬️mutations/🧩️composed/🧩️plan/🦀️.rs": [
+          "pub fn plan() {}"
+        ],
+        "a/🪆️subsets/x/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs": [
+          "async fn round_trip(m: M, b: S) { assert_mutation_inverse_sum_law(&m, &b).await; }",
+          "async fn named_leaf_inverts() { let m = M::SetNamed(SetNamed { a: 1 }); assert_mutation_inverse_sum_law(&m, &b).await; }",
+          "async fn helper_leaf_inverts() { round_trip(M::SetViaHelper(SetViaHelper { a: 1 }), b()).await; }",
+          "async fn looped_cases_invert() { for m in demo_cases() { assert_mutation_inverse_sum_law(&m, &b).await; } }",
+          "fn unrelated_names_a_leaf() { let m = M::SetUnreached(SetUnreached { a: 1 }); drop(m); }"
+        ],
+        "a/🪆️subsets/y/🧬️schema/🧬️mutations/✏️set-named/🦀️.rs": [
+          "impl protocol::MutationKind<S, M> for SetNamed {}"
+        ]
+      },
+      "breaches": [
+        "a/🪆️subsets/x/🧬️schema/🧬️mutations/✏️set-looped/🦀️.rs",
+        "a/🪆️subsets/x/🧬️schema/🧬️mutations/✏️set-unreached/🦀️.rs",
+        "a/🪆️subsets/y/🧬️schema/🧬️mutations/✏️set-named/🦀️.rs"
       ]
     }
   ]

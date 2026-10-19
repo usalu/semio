@@ -117,7 +117,7 @@ mod tests {
     }
 
     fn no_compression_options() -> WriteOptions {
-        WriteOptions { required_flags: 0, optional_flags: semio_framework_pack_format::OPTIONAL_STREAMED, codec: CodecId(0) }
+        WriteOptions { required_flags: semio_framework_pack_format::REQUIRED_CHUNKED, optional_flags: semio_framework_pack_format::OPTIONAL_STREAMED, codec: CodecId(0) }
     }
 
     #[semio_framework_async_macros::async_test]

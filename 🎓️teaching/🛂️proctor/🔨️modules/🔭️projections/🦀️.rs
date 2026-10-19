@@ -1,15 +1,15 @@
 //! 🔭️ The proctor's read models, folded from the committed event log.
 //!
-//! **What is kept.** Per learner the folded `LearnerState` (`quiz.learner-state`, with the last
-//! folded stream sequence), its `LearnerView` (`quiz.learner`) and — once it submitted a run — its
+//! **What is kept.** Per learner the folded `LearnerState` (`course.learner-state`, with the last
+//! folded stream sequence), its `LearnerView` (`course.learner`) and — once it submitted a run — its
 //! transcript, the submitted runs and badges every leaderboard row of the learner is made of, beside
-//! the learner id (`quiz.leaderboard`); per run its
-//! `RunView` (`quiz.run`); per handle key its holder (`quiz.handle`), which is what recalling a
-//! handle reads; per quiz its crowd tally (`quiz.crowd-tally`) and `CrowdView` (`quiz.crowd`,
-//! present for every quiz of the catalog from the first fold on); the number of registrations —
+//! the learner id (`course.leaderboard`); per run its
+//! `RunView` (`course.run`); per handle key its holder (`course.handle`), which is what recalling a
+//! handle reads; per quiz its crowd tally (`course.crowd-tally`) and `CrowdView` (`course.crowd`,
+//! present for every quiz of the course from the first fold on); the number of registrations —
 //! every anonymous learner and every claimed handle, which is the number of learners as long as no
 //! learner claims a second handle and bounds both kinds of stream whatever a client does — and the
-//! stamp of the projector revision and catalog the models were built against (`quiz.meta`).
+//! stamp of the projector revision and course the models were built against (`course.meta`).
 //! The views come from the quiz core's view functions — the projector only decides *when* to
 //! recompute them.
 //!
@@ -19,7 +19,7 @@
 //! that can change it, and a transcript only by a registration, a submission or a badge.
 //!
 //! **The leaderboards** are the [`Board`]: every transcript, kept in memory next to the
-//! `quiz.leaderboard` rows it is loaded from once, and one rank index per leaderboard that was asked
+//! `course.leaderboard` rows it is loaded from once, and one rank index per leaderboard that was asked
 //! for — a period (daily, weekly, monthly, all-time) of every quiz or of one. An index holds what
 //! orders a learner and nothing else (32 bytes per learner), for the window its period had at the
 //! instant it was built for. A changed transcript moves one entry per index (`O(log n)` to find, one
@@ -45,47 +45,47 @@
 //! acknowledged regardless; a checkpointed fold holds its position until the write landed.
 //!
 //! @see ../../../../🧰️framework/🛍️products/🖥️server/🔨️modules/🗄️storage/🦀️.rs — `ProjectionStore`
-//! @see ../../../../🧰️framework/🛍️products/❓️quiz/🔨️modules/👁️views/🦀️.rs — the view functions
+//! @see ../../../../🧰️framework/🛍️products/📚️course/🔨️modules/👁️views/🦀️.rs — the view functions
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, PoisonError, RwLock};
 
-use quiz::{BoardScope, CatalogView, Event, HandleHolder, Identity, Leaderboard, LeaderboardPeriod, LeaderboardRow, LearnerState, Merit, Timestamp, Transcript, LEADERBOARD_TOP};
+use course::{BoardScope, CourseView, Event, HandleHolder, Identity, Leaderboard, LeaderboardPeriod, LeaderboardRow, LearnerState, Merit, Timestamp, Transcript, LEADERBOARD_TOP};
 use semio_framework_async::CancelToken;
 use serde::{Deserialize, Serialize};
 use server::storage::{ProjectionStore, StorageError};
 use tokio::sync::Mutex;
 
 use crate::actors::{HANDLE, LEARNER};
-use teaching_proctor_base::catalog::LoadedCatalog;
+use teaching_proctor_base::course::LoadedCourse;
 use teaching_proctor_base::crowd::CrowdTally;
 use teaching_proctor_base::storage::{LoggedEvent, ProjectionWrite, SqliteAuthorityStore, SqliteProjectionStore};
 
 /// 🚩️ The checkpoint every quiz read model advances together.
-pub const CHECKPOINT: &str = "quiz";
+pub const CHECKPOINT: &str = "course";
 /// 🧠️ Folded learner states by learner id.
-pub const STATES: &str = "quiz.learner-state";
+pub const STATES: &str = "course.learner-state";
 /// 🙋️ Learner views by learner id.
-pub const LEARNERS: &str = "quiz.learner";
+pub const LEARNERS: &str = "course.learner";
 /// 🏃️ Run views by run id.
-pub const RUNS: &str = "quiz.run";
+pub const RUNS: &str = "course.run";
 /// 🏆️ Transcripts — the submitted runs and badges of a ranked learner beside its id — by learner id.
-pub const LEADERBOARD: &str = "quiz.leaderboard";
+pub const LEADERBOARD: &str = "course.leaderboard";
 /// ✒️ Handle holders by handle key.
-pub const HANDLES: &str = "quiz.handle";
+pub const HANDLES: &str = "course.handle";
 /// 👪️ Crowd views by quiz id.
-pub const CROWDS: &str = "quiz.crowd";
+pub const CROWDS: &str = "course.crowd";
 /// 🧮️ Crowd tallies by quiz id.
-pub const TALLIES: &str = "quiz.crowd-tally";
+pub const TALLIES: &str = "course.crowd-tally";
 /// 🧾️ Build metadata.
-pub const META: &str = "quiz.meta";
-/// 🔑️ The key of [`META`] stamping the projector revision and catalog fingerprint.
-pub const FINGERPRINT_KEY: &str = "catalog";
+pub const META: &str = "course.meta";
+/// 🔑️ The key of [`META`] stamping the projector revision and course fingerprint.
+pub const FINGERPRINT_KEY: &str = "course";
 /// 🔢️ The key of [`META`] counting the registrations: anonymous learners and claimed handles.
 pub const LEARNER_COUNT_KEY: &str = "learners";
 /// 🧬️ The revision of what the projector folds; raising it rebuilds every store an earlier
-/// projector built, exactly like a changed catalog does.
+/// projector built, exactly like a changed course does.
 pub const PROJECTOR_REVISION: u32 = 6;
 /// 📦️ Events folded per transaction.
 pub const BATCH: usize = 256;
@@ -113,12 +113,12 @@ pub enum CatchUp {
 }
 
 //#region 🔖️Board
-/// 🥇️ The leaderboards of one catalog: the transcript of every ranked learner and a rank index per
+/// 🥇️ The leaderboards of one course: the transcript of every ranked learner and a rank index per
 /// leaderboard that was asked for. Shared by the projector, which moves one entry per index for
 /// every fact that changes a transcript, and the leaderboard read, which never touches a row beyond
 /// the top and the caller's own.
 pub struct Board {
-    catalog: Arc<LoadedCatalog>,
+    course: Arc<LoadedCourse>,
     ledger: RwLock<Ledger>,
 }
 
@@ -146,43 +146,43 @@ struct Ranked {
 }
 
 impl Ranking {
-    fn of<'a>(scope: BoardScope, transcripts: impl Iterator<Item = &'a Arc<Transcript>>, catalog: &CatalogView) -> Self {
-        let mut order: Vec<Ranked> = transcripts.filter_map(|transcript| Some(Ranked { merit: quiz::standing(transcript, catalog, &scope)?.merit(), transcript: Arc::clone(transcript) })).collect();
+    fn of<'a>(scope: BoardScope, transcripts: impl Iterator<Item = &'a Arc<Transcript>>, course: &CourseView) -> Self {
+        let mut order: Vec<Ranked> = transcripts.filter_map(|transcript| Some(Ranked { merit: course::standing(transcript, course, &scope)?.merit(), transcript: Arc::clone(transcript) })).collect();
         order.sort_by(|left, right| left.merit.compare(&left.transcript.learner, &right.merit, &right.transcript.learner));
         Self { scope, order }
     }
 
-    fn merit(&self, transcript: &Transcript, catalog: &CatalogView) -> Option<Merit> {
-        quiz::standing(transcript, catalog, &self.scope).map(|standing| standing.merit())
+    fn merit(&self, transcript: &Transcript, course: &CourseView) -> Option<Merit> {
+        course::standing(transcript, course, &self.scope).map(|standing| standing.merit())
     }
 
     fn place(&self, merit: &Merit, learner: &str) -> Result<usize, usize> {
         self.order.binary_search_by(|ranked| ranked.merit.compare(&ranked.transcript.learner, merit, learner))
     }
 
-    fn replace(&mut self, previous: Option<&Transcript>, next: &Arc<Transcript>, catalog: &CatalogView) {
-        if let Some(position) = previous.and_then(|previous| self.merit(previous, catalog)).and_then(|merit| self.place(&merit, &next.learner).ok()) {
+    fn replace(&mut self, previous: Option<&Transcript>, next: &Arc<Transcript>, course: &CourseView) {
+        if let Some(position) = previous.and_then(|previous| self.merit(previous, course)).and_then(|merit| self.place(&merit, &next.learner).ok()) {
             self.order.remove(position);
         }
-        if let Some(merit) = self.merit(next, catalog) {
+        if let Some(merit) = self.merit(next, course) {
             let position = self.place(&merit, &next.learner).unwrap_or_else(|free| free);
             self.order.insert(position, Ranked { merit, transcript: Arc::clone(next) });
         }
     }
 
-    fn row(&self, position: usize, catalog: &CatalogView) -> Option<LeaderboardRow> {
-        quiz::standing(&self.order.get(position)?.transcript, catalog, &self.scope).map(|standing| standing.row(position + 1))
+    fn row(&self, position: usize, course: &CourseView) -> Option<LeaderboardRow> {
+        course::standing(&self.order.get(position)?.transcript, course, &self.scope).map(|standing| standing.row(position + 1))
     }
 }
 
 impl Ledger {
-    fn answer(&self, period: LeaderboardPeriod, ranking: &Ranking, caller: Option<&str>, catalog: &CatalogView) -> Leaderboard {
-        let own = caller.and_then(|caller| self.transcripts.get(caller)).and_then(|transcript| ranking.place(&ranking.merit(transcript, catalog)?, &transcript.learner).ok()).and_then(|position| ranking.row(position, catalog));
+    fn answer(&self, period: LeaderboardPeriod, ranking: &Ranking, caller: Option<&str>, course: &CourseView) -> Leaderboard {
+        let own = caller.and_then(|caller| self.transcripts.get(caller)).and_then(|transcript| ranking.place(&ranking.merit(transcript, course)?, &transcript.learner).ok()).and_then(|position| ranking.row(position, course));
         Leaderboard {
             period,
             quiz: ranking.scope.quiz.clone(),
             window: ranking.scope.window,
-            rows: (0..ranking.order.len().min(LEADERBOARD_TOP)).filter_map(|position| ranking.row(position, catalog)).collect(),
+            rows: (0..ranking.order.len().min(LEADERBOARD_TOP)).filter_map(|position| ranking.row(position, course)).collect(),
             learners: ranking.order.len(),
             submissions: self.submissions,
             own,
@@ -191,9 +191,9 @@ impl Ledger {
 }
 
 impl Board {
-    /// 🆕️ The empty, unloaded board of `catalog`.
-    pub fn new(catalog: Arc<LoadedCatalog>) -> Self {
-        Self { catalog, ledger: RwLock::default() }
+    /// 🆕️ The empty, unloaded board of `course`.
+    pub fn new(course: Arc<LoadedCourse>) -> Self {
+        Self { course, ledger: RwLock::default() }
     }
 
     /// 📥️ Whether the transcripts were loaded since the last [`clear`](Self::clear).
@@ -234,7 +234,7 @@ impl Board {
         let previous = ledger.transcripts.insert(next.learner.clone(), Arc::clone(&next));
         ledger.submissions = ledger.submissions - previous.as_ref().map_or(0, |previous| previous.runs.len()) + next.runs.len();
         for ranking in ledger.rankings.values_mut() {
-            ranking.replace(previous.as_deref(), &next, self.catalog.view());
+            ranking.replace(previous.as_deref(), &next, self.course.view());
         }
     }
 
@@ -250,28 +250,28 @@ impl Board {
 
     /// 🏟️ The leaderboard of `period` — of `quiz` only when it names one — at the instant `at`, as
     /// `caller` is answered: the top rows, the count of ranked learners, the count of submissions
-    /// and the caller's own row when the caller is ranked; `None` for a quiz the catalog does not
+    /// and the caller's own row when the caller is ranked; `None` for a quiz the course does not
     /// list. The rank index is built on the first query for it and whenever `at` lies in another
     /// window than the one it was built for.
     pub fn view(&self, period: LeaderboardPeriod, quiz: Option<&str>, at: Timestamp, caller: Option<&str>) -> Option<Leaderboard> {
-        if quiz.is_some_and(|quiz| !self.catalog.current().contains_key(quiz)) {
+        if quiz.is_some_and(|quiz| !self.course.current().contains_key(quiz)) {
             return None;
         }
-        let catalog = self.catalog.view();
+        let course = self.course.view();
         let scope = BoardScope::of(period, quiz, at);
         let key = (period, scope.quiz.clone());
         {
             let ledger = self.ledger.read().unwrap_or_else(PoisonError::into_inner);
             if let Some(ranking) = ledger.rankings.get(&key).filter(|ranking| ranking.scope == scope) {
-                return Some(ledger.answer(period, ranking, caller, catalog));
+                return Some(ledger.answer(period, ranking, caller, course));
             }
         }
         let mut ledger = self.ledger.write().unwrap_or_else(PoisonError::into_inner);
         if ledger.rankings.get(&key).is_none_or(|ranking| ranking.scope != scope) {
-            let ranking = Ranking::of(scope, ledger.transcripts.values(), catalog);
+            let ranking = Ranking::of(scope, ledger.transcripts.values(), course);
             ledger.rankings.insert(key.clone(), ranking);
         }
-        ledger.rankings.get(&key).map(|ranking| ledger.answer(period, ranking, caller, catalog))
+        ledger.rankings.get(&key).map(|ranking| ledger.answer(period, ranking, caller, course))
     }
 }
 //#endregion 🔖️Board
@@ -279,7 +279,7 @@ impl Board {
 //#region 🔖️Projector
 /// 🛰️ Folds committed events into the quiz read models.
 pub struct Projector {
-    catalog: Arc<LoadedCatalog>,
+    course: Arc<LoadedCourse>,
     board: Arc<Board>,
     learners: Arc<AtomicU64>,
     mirror: Mutex<Option<Mirror>>,
@@ -305,9 +305,9 @@ struct Fold {
 }
 
 impl Projector {
-    /// 🆕️ A projector for one loaded catalog, with an empty board and a learner count of zero.
-    pub fn new(catalog: Arc<LoadedCatalog>) -> Self {
-        Self { board: Arc::new(Board::new(Arc::clone(&catalog))), catalog, learners: Arc::new(AtomicU64::new(0)), mirror: Mutex::new(None) }
+    /// 🆕️ A projector for one loaded course, with an empty board and a learner count of zero.
+    pub fn new(course: Arc<LoadedCourse>) -> Self {
+        Self { board: Arc::new(Board::new(Arc::clone(&course))), course, learners: Arc::new(AtomicU64::new(0)), mirror: Mutex::new(None) }
     }
 
     /// 🏅️ The leaderboards this projector keeps.
@@ -321,12 +321,12 @@ impl Projector {
         Arc::clone(&self.learners)
     }
 
-    /// 🏷️ The stamp of read models this projector builds for this catalog.
+    /// 🏷️ The stamp of read models this projector builds for this course.
     pub fn stamp(&self) -> Vec<u8> {
-        format!("{PROJECTOR_REVISION}:{}", self.catalog.fingerprint).into_bytes()
+        format!("{PROJECTOR_REVISION}:{}", self.course.fingerprint).into_bytes()
     }
 
-    /// 🧰️ Set up fresh read models, and reset those another projector revision or catalog built;
+    /// 🧰️ Set up fresh read models, and reset those another projector revision or course built;
     /// `true` exactly when such read models were dropped.
     pub async fn prepare(&self, projections: &mut SqliteProjectionStore) -> Result<bool, StorageError> {
         let stamped = projections.get(META, FINGERPRINT_KEY).await;
@@ -345,7 +345,7 @@ impl Projector {
             projections.clear(projection).await?;
         }
         let mut writes = vec![ProjectionWrite { projection: META.to_string(), key: FINGERPRINT_KEY.to_string(), value: self.stamp() }];
-        for (id, loaded) in self.catalog.current() {
+        for (id, loaded) in self.course.current() {
             writes.push(write(CROWDS, id, &CrowdTally::default().view(&loaded.quiz))?);
         }
         projections.commit(&writes, (CHECKPOINT, 0))?;
@@ -407,7 +407,7 @@ impl Projector {
         if !fold.learners.contains_key(learner) {
             let folded = match projections.get(STATES, learner).await {
                 Some(bytes) => decoded::<Folded>(STATES, learner, &bytes)?,
-                None => Folded { seq: 0, state: quiz::empty_learner_state(learner) },
+                None => Folded { seq: 0, state: course::empty_learner_state(learner) },
             };
             fold.learners.insert(learner.clone(), folded);
         }
@@ -421,15 +421,15 @@ impl Projector {
         }
         entry.seq = logged.event.seq;
         let known = entry.state.identity.is_some();
-        quiz::evolve_learner(&mut entry.state, &fact);
+        course::evolve_learner(&mut entry.state, &fact);
         match &fact {
             Event::LearnerRegistered { identity, .. } => {
                 fold.registered += u64::from(!known && *identity == Identity::Anonymous);
                 fold.ranked.insert(learner.clone());
             }
             Event::RunSubmitted { result, .. } => {
-                if let Some(loaded) = self.catalog.current().get(&result.quiz) {
-                    fold.crowds.entry(result.quiz.clone()).or_insert_with(|| mirror.crowds.get(&result.quiz).cloned().unwrap_or_default()).fold(&loaded.quiz, result);
+                if self.course.current().contains_key(&result.quiz) {
+                    fold.crowds.entry(result.quiz.clone()).or_insert_with(|| mirror.crowds.get(&result.quiz).cloned().unwrap_or_default()).fold(result);
                 }
                 fold.ranked.insert(learner.clone());
             }
@@ -453,18 +453,18 @@ impl Projector {
             writes.push(write(STATES, learner, folded)?);
         }
         for learner in &fold.viewed {
-            if let Some(view) = fold.learners.get(learner).and_then(|folded| quiz::learner_view(&folded.state, self.catalog.view())) {
+            if let Some(view) = fold.learners.get(learner).and_then(|folded| course::learner_view(&folded.state, self.course.view())) {
                 writes.push(write(LEARNERS, learner, &view)?);
             }
         }
         for (learner, run) in &fold.runs {
-            if let Some(view) = fold.learners.get(learner).and_then(|folded| quiz::run_view(&folded.state, run, self.catalog.current())) {
+            if let Some(view) = fold.learners.get(learner).and_then(|folded| course::run_view(&folded.state, run, self.course.current())) {
                 writes.push(write(RUNS, run, &view)?);
             }
         }
         let mut transcripts = Vec::new();
         for learner in &fold.ranked {
-            let Some(transcript) = fold.learners.get(learner).and_then(|folded| quiz::transcript(&folded.state)) else { continue };
+            let Some(transcript) = fold.learners.get(learner).and_then(|folded| course::transcript(&folded.state)) else { continue };
             if self.board.transcript(learner).as_deref() != Some(&transcript) {
                 writes.push(write(LEADERBOARD, learner, &transcript)?);
                 transcripts.push(transcript);
@@ -478,7 +478,7 @@ impl Projector {
         }
         for (quiz, tally) in &fold.crowds {
             writes.push(write(TALLIES, quiz, tally)?);
-            if let Some(loaded) = self.catalog.current().get(quiz) {
+            if let Some(loaded) = self.course.current().get(quiz) {
                 writes.push(write(CROWDS, quiz, &tally.view(&loaded.quiz))?);
             }
         }
@@ -493,7 +493,7 @@ async fn claim(projections: &SqliteProjectionStore, fold: &mut Fold, logged: &Lo
     let Event::LearnerRegistered { learner, identity: identity @ (Identity::Pseudonym { handle } | Identity::Name { handle }), .. } = &fact else {
         return Err(unreadable(logged, format!("a handle stream holds registrations under a handle, not {}", fact.type_name())));
     };
-    let key = quiz::normalize_handle(handle).filter(|normalized| quiz::handle_actor_id(&normalized.key) == logged.event.stream.id).map(|normalized| normalized.key);
+    let key = course::normalize_handle(handle).filter(|normalized| course::handle_actor_id(&normalized.key) == logged.event.stream.id).map(|normalized| normalized.key);
     let key = key.ok_or_else(|| unreadable(logged, "the registered handle is not the one this stream is named after"))?;
     if !fold.handles.contains_key(&key) && projections.get(HANDLES, &key).await.is_none() {
         fold.handles.insert(key, HandleHolder { learner: learner.clone(), identity: identity.clone() });

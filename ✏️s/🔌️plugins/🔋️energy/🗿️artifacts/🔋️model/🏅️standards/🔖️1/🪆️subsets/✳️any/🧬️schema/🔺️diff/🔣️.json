@@ -1298,7 +1298,11 @@
         "tilt_deg",
         "azimuth_deg",
         "module_efficiency",
-        "inverter_efficiency"
+        "inverter_efficiency",
+        "temperature_coefficient",
+        "faiman_heat_loss_constant_w_m2k",
+        "faiman_heat_loss_wind_w_s_m3k",
+        "mounting"
       ],
       "properties": {
         "id": {
@@ -1322,6 +1326,25 @@
         },
         "inverter_efficiency": {
           "type": "number"
+        },
+        "temperature_coefficient": {
+          "type": "number"
+        },
+        "faiman_heat_loss_constant_w_m2k": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "faiman_heat_loss_wind_w_s_m3k": {
+          "type": "number",
+          "minimum": 0
+        },
+        "mounting": {
+          "type": "string",
+          "enum": [
+            "OpenRack",
+            "CloseRoof",
+            "InsulatedBack"
+          ]
         }
       }
     },
@@ -4598,6 +4621,25 @@
         },
         "inverter_efficiency": {
           "type": "number"
+        },
+        "temperature_coefficient": {
+          "type": "number"
+        },
+        "faiman_heat_loss_constant_w_m2k": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "faiman_heat_loss_wind_w_s_m3k": {
+          "type": "number",
+          "minimum": 0
+        },
+        "mounting": {
+          "type": "string",
+          "enum": [
+            "OpenRack",
+            "CloseRoof",
+            "InsulatedBack"
+          ]
         }
       }
     },

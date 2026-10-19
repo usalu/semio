@@ -1,11 +1,21 @@
 use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_node::*;
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::{add_frame, add_material, add_section, add_solid};
-use crate::context::{dispatch, fem3d_empty_app, Fem3dApp};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_frame;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_material;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_section;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_solid;
+use crate::context::dispatch;
+use crate::context::fem3d_empty_app;
+use crate::context::Fem3dApp;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
 
 #[semio_framework_async_macros::async_test]

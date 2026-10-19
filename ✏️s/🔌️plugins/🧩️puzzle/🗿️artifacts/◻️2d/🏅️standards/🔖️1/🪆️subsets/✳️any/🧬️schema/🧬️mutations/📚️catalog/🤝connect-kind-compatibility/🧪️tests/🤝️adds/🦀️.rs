@@ -10,7 +10,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
-use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle2d_mutation};
+use crate::standards::v1::subsets::any::schema::mutations::inverse_puzzle2d_mutation;
 use semio_framework_test_fixtures::fixture_text;
 
 use crate::Puzzle2dSnapshot;
@@ -97,12 +97,12 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &base);
+    let outcome = <Puzzle2dMutation as protocol::ColdMutation<Puzzle2dSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str((*DIFF)).expect("committed diff decodes");
     assert_eq!(produced, committed, "connect-kind-compatibility/adds-handle-kind-pair: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert_eq!(committed["meta"]["kindCompatibility"].as_array().map(Vec::len), Some(2), "connect-kind-compatibility/adds-handle-kind-pair: the republished meta must carry both rows");
-    assert_eq!(committed["meta"]["kindCompatibility"][1]["specificity"].as_str(), Some("wire"), "connect-kind-compatibility/adds-handle-kind-pair: the specificity must survive onto the new row");
+    assert_eq!(committed["meta"]["kindCompatibility"]["inserted"].as_array().map(Vec::len), Some(1), "connect-kind-compatibility/adds-handle-kind-pair: the diff must insert exactly the new row");
+    assert_eq!(committed["meta"]["kindCompatibility"]["inserted"][0]["row"]["specificity"].as_str(), Some("wire"), "connect-kind-compatibility/adds-handle-kind-pair: the specificity must survive onto the new row");
 }
 
 /// 🔣️ The committed `connect-kind-compatibility` diff is itself canonical and decodes to `Puzzle2dDiff`.
@@ -119,7 +119,7 @@ fn committed_diff_is_canonical() {
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "connect-kind-compatibility/adds-handle-kind-pair: committed diff did not carry before to after");
 }
 

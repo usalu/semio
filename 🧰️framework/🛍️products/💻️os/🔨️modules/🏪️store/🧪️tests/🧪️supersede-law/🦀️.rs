@@ -3,6 +3,7 @@
 //! (`🧫️fixtures/🧫️supersede-law`, whose independent twin is `🟦️.ts` beside this file) holds for `admit_replacement`, for what a
 //! replica folds and persists, and for what authoring a supersession answers. A withdrawn operation that plans foreign steps
 //! folds as a no-op at every fold site and on every replica, and its undo — its own recorded input — restores it.
+use semio_framework_os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::*;
 
 //#region 🧰️Harness
@@ -66,16 +67,9 @@ impl Mutation<DemoSnapshot> for LawOp {
         self.0.descriptor()
     }
 
-    fn diff(&self, base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<Self::Diff> {
-        self.0.diff(base)
-    }
 
-    fn inverse(&self, base: &DemoSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-        if matches!(&self.0, DemoMutation::SetN(SetN { n: 13 })) && base.n.is_some_and(|n| n >= 100) {
-            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "a setN of 13 has no inverse on a base of 100 or more"));
-        }
-        Ok(self.0.inverse(base)?.into_iter().map(Self).collect())
-    }
+
+
 
     fn conflict_target(&self) -> Vec<String> {
         self.0.conflict_target()
@@ -90,8 +84,24 @@ impl Mutation<DemoSnapshot> for LawOp {
     }
 }
 
-impl MemberStoreProducer<DemoSnapshot,LawOp> for semio_framework_os_store_testing_doubles::DemoMemberStoreProducer<LawOp> {
-    type SnapshotOpen = UnsupportedMemberSnapshotOpen<DemoSnapshot>;
+impl semio_framework_os_spr::ColdMutation<DemoSnapshot> for LawOp {
+    type ReferenceDiff = <DemoMutation as Mutation<DemoSnapshot>>::Diff;
+    fn diff(&self, base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<Self::ReferenceDiff> {
+        self.0.diff(base)
+    }
+    fn inverse(&self, base: &DemoSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+        if matches!(&self.0, DemoMutation::SetN(SetN { n: 13 })) && base.n.is_some_and(|n| n >= 100) {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "a setN of 13 has no inverse on a base of 100 or more"));
+        }
+        Ok(self.0.inverse(base)?.into_iter().map(Self).collect())
+    }
+    fn foreign_step_source<'a>(&'a self, _base: &'a DemoSnapshot, index: usize) -> Result<Option<semio_framework_os_spr::ForeignStepSource<'a>>, semio_framework_value::ValueError> {
+        Ok((index == 0 && self.delta().is_some_and(|delta| delta >= 2000)).then_some(semio_framework_os_spr::ForeignStepSource { artifact_id: "elsewhere", artifact_kind: "demo", dialect: None, mutation_id: "demo/v1#setN", payload: &[1], label: "notify" }))
+    }
+}
+
+impl MemberStoreOwner<LawOp> for DemoSnapshot {
+    type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
 
     fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         super::fixture_authoring_birth_demand::<LawOp>()

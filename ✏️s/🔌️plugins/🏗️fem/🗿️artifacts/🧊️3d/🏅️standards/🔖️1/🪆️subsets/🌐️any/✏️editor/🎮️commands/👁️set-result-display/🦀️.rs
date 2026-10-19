@@ -1,12 +1,18 @@
-//! 👁️ Fem3d play app command — `result-display`: the results window's source/mode selection —
 //! window config only. The staged form speaks the TYPED fields; a results-panel control speaks
+//! 👁️ Fem3d play app command — `result-display`: the results window's source/mode selection —
 //! `{field, value, windowId}`, because the host merges a control's own scalar under `value`.
 
 use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
@@ -25,7 +31,10 @@ pub struct SetResultDisplay {
 fn apply_field(config: &mut results::config::Fem3dResultsWindowConfig, field: &str, value: &str) -> Result<(), Fault> {
     match field {
         "sourceId" => config.result_source_id = Some(value.to_string()).filter(|id| !id.is_empty()),
-        "mode" => config.result_mode = semio_s_fem_app_surface::ResultMode::try_from(value).map_err(Fault::from)?,
+        "mode" => {
+            config.result_mode = semio_s_fem_app_surface::ResultMode::try_from(value).map_err(Fault::from)?;
+            if config.result_mode == semio_s_fem_app_surface::ResultMode::Buckling && config.result_source_id.as_deref().map(semio_s_fem_analyses_model::validate_result_source_identity).transpose().map_err(|error| Fault::from(error.to_string()))? == Some("combination") { config.result_source_id = None; }
+        },
         "modeIndex" => {
             let index = value.trim().parse::<f64>().map_err(|_| Fault::from(format!("fem3d.results.value: '{value}' is not a number")))?;
             config.result_mode_index = index.max(0.0) as u32;
@@ -50,6 +59,7 @@ pub fn handle_window(payload: &SetResultDisplay, cfg: &ConfigView<'_, NoConfig>,
             next.result_mode_index = payload.mode_index;
         }
     }
+    next.validate_result_source().map_err(|error| Fault::from(error.to_string()))?;
     Ok(Emit { window_config_mutations: vec![results::config::addressed_to(&window_id, next)], ui_scope: <crate::editor::fem3d::commands::set_result_animation::Fem3dResultsPlayback as crate::editor::fem3d::commands::set_result_animation::FemPlaybackTransport>::dirty_scope(), ..Default::default() })
 }
 

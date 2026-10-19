@@ -51,3 +51,4 @@ repo/hooks/* text eol=lf
 *.ttf binary
 *.woff binary
 *.woff2 binary
+*.epw binary

@@ -3,6 +3,15 @@
   "$schema": "../../../📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "repo:script",
+      "outputs": ["{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/🗃️bin/semio-repo.exe", "{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/🗃️bin/semio-repo"],
+      "metadata": { "semio": { "dashboard": { "verb": "build", "title": { "en": "Build Go Repository Commands", "de": "Go-Repository-Befehle Bauen" }, "description": { "en": "Build the current Go implementation used by repository tasks in the dashboard.", "de": "Die aktuelle Go-Implementierung für Repository-Aufgaben im Dashboard bauen." } } } },
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go",
+        "command": "bun ./📜️script.ts build"
+      }
+    },
     "test": {
       "executor": "repo:script",
       "options": {

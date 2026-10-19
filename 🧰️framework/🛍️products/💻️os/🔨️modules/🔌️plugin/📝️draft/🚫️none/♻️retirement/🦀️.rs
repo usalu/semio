@@ -17,6 +17,8 @@ struct ZeroPayloadRetirement<T> {
 }
 
 impl<T: Send + 'static> store::ErasedSnapshotRetirement for ZeroPayloadRetirement<T> {
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Ok(semio_framework_value::RetirementDemand{depth:usize::from(self.value.is_some()),..Default::default()})}
+
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.value.is_none() {
             return Ok(RetainedCloneStep::Complete(Default::default()));

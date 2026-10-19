@@ -18,13 +18,13 @@ import (
 	"strings"
 	"testing"
 	"text/template"
+	"github.com/usalu/semio/repo/client/internal/command"
+	"github.com/usalu/semio/repo/client/internal/eventstore"
+	"github.com/usalu/semio/repo/client/internal/glob"
+	"github.com/usalu/semio/repo/search"
+	"github.com/usalu/semio/repo/client/internal/templatefunc"
+	"github.com/usalu/semio/repo/yaml"
 
-	command "github.com/usalu/semio/repo/client/internal/command"
-	eventstore "github.com/usalu/semio/repo/client/internal/eventstore"
-	glob "github.com/usalu/semio/repo/client/internal/glob"
-	search "github.com/usalu/semio/repo/search"
-	templatefunc "github.com/usalu/semio/repo/client/internal/templatefunc"
-	yaml "github.com/usalu/semio/repo/yaml"
 )
 
 // #region 📜️Fixture

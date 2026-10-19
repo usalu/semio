@@ -99,3 +99,9 @@ test("native Rust, Python, Go and C# hosts resolve the same neutral workspace ve
     }
   }
 }, 120_000);
+
+test("workspace identity production consumers mount their actual neutral helper",()=>{
+ const source=readFileSync(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs"),"utf8");
+ expect(source).toContain("workspace_identity::is_workspace_root(path,");expect(source).toContain("mod workspace_identity;");expect(source).not.toMatch(/#\[cfg\(test\)\]\s*#\[path\s*=\s*"[^"\n]+workspace\/🦀️\.rs"\]\s*mod workspace_identity;/);
+ console.log("[DEBUG] MCP production path admission mounts the defining tool-neutral workspace identity outside test-only cfg; native compilation remains separate");
+});

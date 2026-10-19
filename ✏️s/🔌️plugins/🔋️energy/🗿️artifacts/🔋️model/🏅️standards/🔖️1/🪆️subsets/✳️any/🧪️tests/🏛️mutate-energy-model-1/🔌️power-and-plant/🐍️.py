@@ -235,8 +235,10 @@ def create_pv_system(before, payload):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if payload["index"] > len(rows):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
+    if not math.isfinite(payload["temperatureCoefficient"]) or not math.isfinite(payload["faimanHeatLossConstantWM2k"]) or payload["faimanHeatLossConstantWM2k"] <= 0 or not math.isfinite(payload["faimanHeatLossWindWSM3k"]) or payload["faimanHeatLossWindWSM3k"] < 0:
+        return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     after = copy.deepcopy(before)
-    after["model"]["pv_systems"].insert(payload["index"], {"id": payload["id"], "dc_capacity_w": payload["dcCapacityW"], "area_m2": payload["areaM2"], "tilt_deg": payload["tiltDeg"], "azimuth_deg": payload["azimuthDeg"], "module_efficiency": payload["moduleEfficiency"], "inverter_efficiency": payload["inverterEfficiency"]})
+    after["model"]["pv_systems"].insert(payload["index"], {"id": payload["id"], "dc_capacity_w": payload["dcCapacityW"], "area_m2": payload["areaM2"], "tilt_deg": payload["tiltDeg"], "azimuth_deg": payload["azimuthDeg"], "module_efficiency": payload["moduleEfficiency"], "inverter_efficiency": payload["inverterEfficiency"],"temperature_coefficient":payload["temperatureCoefficient"],"faiman_heat_loss_constant_w_m2k":payload["faimanHeatLossConstantWM2k"],"faiman_heat_loss_wind_w_s_m3k":payload["faimanHeatLossWindWSM3k"],"mounting":payload["mounting"]})
     return after, applied()
 
 
@@ -262,7 +264,7 @@ def _invert_delete_pv_system(before, payload):
     rows = before["model"]["pv_systems"]
     index = next(position for position, row in enumerate(rows) if row["id"] == payload["id"])
     item = rows[index]
-    return [("create-pv-system", {"index": index, "id": item["id"], "dcCapacityW": item["dc_capacity_w"], "areaM2": item["area_m2"], "tiltDeg": item["tilt_deg"], "azimuthDeg": item["azimuth_deg"], "moduleEfficiency": item["module_efficiency"], "inverterEfficiency": item["inverter_efficiency"]})]
+    return [("create-pv-system", {"index": index, "id": item["id"], "dcCapacityW": item["dc_capacity_w"], "areaM2": item["area_m2"], "tiltDeg": item["tilt_deg"], "azimuthDeg": item["azimuth_deg"], "moduleEfficiency": item["module_efficiency"], "inverterEfficiency": item["inverter_efficiency"],"temperatureCoefficient":item["temperature_coefficient"],"faimanHeatLossConstantWM2k":item["faiman_heat_loss_constant_w_m2k"],"faimanHeatLossWindWSM3k":item["faiman_heat_loss_wind_w_s_m3k"],"mounting":item["mounting"]})]
 
 
 def change_pv_system_dc_capacity(before, payload):

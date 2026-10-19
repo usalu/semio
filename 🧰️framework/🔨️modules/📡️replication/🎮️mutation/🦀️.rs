@@ -12,35 +12,26 @@
 pub mod map;
 pub use map::{MapDelta, MapDeltaTarget, MapEntryDelta, MapEntryOperation, MapPresence};
 
+#[path="❄️reference/🦀️.rs"]
+mod cold_reference;
+pub use cold_reference::ColdMutation;
 /// 📏️ Portable visible diagnostic envelope independent of machine pointer width.
 pub const MUTATION_MESSAGE_ENTRY_BYTES: usize = 4096;
 /// 🧳️ Normative owned diagnostic row charge shared by bounded history ledgers.
 pub const MUTATION_MESSAGE_OWNER_BYTES: usize = 96;
 /// 🧭️ Every target segment consumes normative owner credit, including empty text.
 pub const MUTATION_MESSAGE_TARGET_BYTES: usize = 24;
-
 //#region 🔖️Mutation
-pub use semio_framework_mutation_diff::{MutationApplyError,MutationApplyResult,ApplyCapability,apply_diff,MutationDiff,DiffAlgebra};
+pub use semio_framework_mutation_diff::{MutationApplyError,MutationApplyResult,ApplyCapability,apply_diff_cold,apply_diff_cold_into,PreparedField,MutationDiff,DiffAlgebra,ColdMutationDiff,ColdDiffAlgebra,with_retained_apply_capability};
 
-/// 🔁️ Stored operation: emits a [`MutationOutcome`] (diff plus messages) and computes inverse
-/// from pre-state. Moved from `os_store::Mutation` verbatim except: `mutation_id`/
-/// `dependencies`/`author_id` now return the `protocol_core` id newtypes (were bare `String`) and
-/// `base_version` now returns `Option<crate::ids::ArtifactVersion>` (was a bare `u64`
-/// defaulting to `0`, which conflated "no base" with "based on version 0" — `None` fixes that);
-/// `state_class` is a new defaulted method so every existing `impl` recompiles unchanged.
-/// `validate` and its CRDT-era merge/reconcile hooks are GONE (ticket
-/// `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C4): every rejection or
-/// merge-policy concern a technology used to express through those hooks now travels as a
-/// [`MutationMessage`] on `diff`'s own [`MutationOutcome`].
-pub trait Mutation<P>: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue {
+/// 🔁️ Stored operation metadata and native delta vocabulary; retained preparation owns decision, diagnostics and inverse production.
+pub trait Mutation<P>: Sized + Sync + semio_framework_value::ToValue + semio_framework_value::FromValue {
     type Diff: MutationDiff<P>;
     /// 🧷️ Every direct mutation leaf's static metadata, in aggregate-variant order.
     const DESCRIPTORS: &'static [MutationLeafDescriptor];
 
     /// 🧷️ This value's own direct mutation leaf descriptor.
     fn descriptor(&self) -> &'static MutationLeafDescriptor;
-    fn diff(&self, base: &P) -> MutationOutcome<Self::Diff>;
-    fn inverse(&self, base: &P) -> Result<Vec<Self>, semio_framework_value::ValueError> ;
 
     /// 🧊️ Explicit cold disposal of one owned operation, for the same reason [`MutationDiff::retire_cold`]
     /// exists: a row that carries a domain value with a fail-closed root cannot be dropped.
@@ -84,7 +75,7 @@ pub trait Mutation<P>: Clone + semio_framework_value::ToValue + semio_framework_
     fn may_emit_foreign_steps(&self) -> bool {
         true
     }
-    /// 🧾️ The upper bound of the rows [`Self::inverse`] yields for this operation on any base: what a one-item Store preparation
+    /// 🧾️ The upper bound of the rows [`ColdMutation::inverse`] yields for this operation on any base: what a one-item Store preparation
     /// declares as its fold footprint (`ArtifactStoreOneItemFootprint::for_leaf`). `#[derive(Mutations)]` answers the wrapped
     /// leaf's schema-declared [`MutationLeaf::inverse_rows`] (design §20.5); a hand-written aggregate without leaf schemas is
     /// point-invertible.
@@ -154,28 +145,44 @@ pub use outcome_and_message::*;
 #[path = "🧪️tests/🔬️mutation-leaf-metadata/🦀️.rs"]
 mod mutation_leaf_metadata_tests;
 
+
+
+
+
+
+
 //#region 🔖️Foreign
 #[path = "🌐️foreign/🦀️.rs"]
 mod foreign_output;
 pub use foreign_output::{ForeignTarget,ForeignStep,ForeignStepSource,ForeignStepCopy,ForeignStepRetirement,ForeignStepsOwner,ForeignStepsPreparation};
 //#endregion 🔖️Foreign
 
-#[cfg(test)]
-#[path = "🧪️tests/🧪️outcome-code/🦀️.rs"]
-mod outcome_code_tests;
+
+
+
 
 /// 🎯️ The one store step from an operation to its next projection: computes the op-stamped diff, applies it through
 /// [`protocol::apply_diff`] and retires the diff cold. Every store lane, replay, merge and backbone fold routes through
 /// here; the apply refusal stays structured for callers that must fail instead of record.
 pub fn apply_operation<P, Mutation>(state: &P, operation: &Mutation, op_index: u32) -> (semio_framework_mutation_diff::MutationApplyResult<P>, Vec<crate::MutationMessage>)
 where
-    Mutation: self::Mutation<P>,
+    P:Clone,
+    Mutation: self::Mutation<P>+ColdMutation<P>,
 {
     let (diff, messages) = operation.diff(state).stamp_op_index(op_index).into_parts();
-    let applied = semio_framework_mutation_diff::apply_diff(&diff, state);
-    <Mutation::Diff as MutationDiff<P>>::retire_cold(diff);
+    let applied = semio_framework_mutation_diff::apply_diff_cold(&diff, state);
+    <Mutation::ReferenceDiff as MutationDiff<P>>::retire_cold(diff);
     (applied, messages)
 }
+
+
+
+
+
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️outcome-code/🦀️.rs"]
+mod outcome_code_tests;
 
 mod owned_retirement {
     use super::*;

@@ -1,5 +1,5 @@
-//! 💡️ Fem2d inference schema — the fourth schema family alongside snapshot/diff/mutations
 //! (ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING). Directory
+//! 💡️ Fem2d inference schema — the fourth schema family alongside snapshot/diff/mutations
 //! shape mirrors `🧬️mutations/`: this file is the family-root assembly (never mod's/includes the
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `📦bounds/`).
@@ -7,7 +7,8 @@
 use super::bounds::compute_fem2d_bounds;
 use crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a fem2d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `bounds`, backed by the `📦bounds/` slug dir).

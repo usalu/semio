@@ -83,7 +83,7 @@ impl Discover<'_>{
             V::Statements(length)=>{for index in 0..length{let keyword=source.projection_key(&path[..depth],index)?;self.scratch.note(source,SourceTextLocator::new(&path[..depth],SourceTextKind::Key(index))?,true,control)?;let spec=statements_variants(shape).and_then(|variants|variants.iter().find(|(key,_)|*key==keyword)).map(|(_,producer)|read_record(*producer,control)).transpose()?;let next=child(path,depth,index,maximum)?;let ids=record_ids(source,&path[..next])?;self.projected_fields(source,spec.as_ref(),ids,path,next,level+1,maximum,control)?;}},
             V::Wire(_)=>{for index in 0..6{let next=child(path,depth,index,maximum)?;match source.projection_view(&path[..next])?{V::Text(_)|V::TextSource(_)=>self.scratch.note(source,SourceTextLocator::new(&path[..next],SourceTextKind::Text)?,false,control)?,V::Absent=>{},_=>return Err(mismatch())}}let next=child(path,depth,8,maximum)?;self.projected_dynamic(source,path,next,level+1,maximum,control)?;},
             V::IntrinsicNull|V::IntrinsicBool(_)|V::IntrinsicNumber(_)|V::IntrinsicText(_)|V::IntrinsicTextSource(_)|V::IntrinsicBytes(_)|V::IntrinsicArray(_)|V::IntrinsicObject(_)=>self.projected_dynamic(source,path,depth,level+1,maximum,control)?,
-            V::Absent|V::Bool(_)|V::Int(_)|V::UInt(_)|V::Float(_)|V::Enum(_)|V::Bytes(_)=>{},
+            V::Expr(_)|V::Absent|V::Bool(_)|V::Int(_)|V::UInt(_)|V::Float(_)|V::Enum(_)|V::Bytes(_)=>{},
         }Ok(())
     }
     fn projected_fields<T:FieldProjectionSource>(&mut self,source:&T,spec:Option<&S>,ids:&[u16],path:&mut[usize;64],depth:usize,level:u16,maximum:u16,control:&mut NativeEncodeControl<'_>)->Result<(),PackRefusal>{
@@ -134,6 +134,7 @@ impl<T:FieldProjectionSource> BorrowedEncoder<'_,'_,'_,T>{
             },
             V::Statements(length)=>{output.byte(TAG_STATEMENTS,self.control)?;output.varint(length as u64,self.control)?;for index in 0..length{self.control.checkpoint()?;let key=source.projection_key(&path[..depth],index)?;self.forced(key,output)?;let spec=statements_variants(shape).and_then(|variants|variants.iter().find(|(keyword,_)|*keyword==key)).map(|(_,producer)|read_record(*producer,self.control)).transpose()?;let next=child(path,depth,index,self.options.limits.max_depth.min(64))?;self.projected_fields(source,spec.as_ref(),path,next,level+1,output)?;}Ok(())},
             V::Wire(directed)=>{output.byte(TAG_WIRE,self.control)?;self.projected_wire(source,directed,path,depth,level,output)},
+            V::Expr(expression)=>{let symbols=self.symbols;super::expression::encode(expression,usize::from(self.options.limits.max_depth).saturating_sub(usize::from(level)),symbols.len()?,|index|symbols.locator(index)?.resolve(source),output,self.control)},
             _=>Err(mismatch()),
         }
     }

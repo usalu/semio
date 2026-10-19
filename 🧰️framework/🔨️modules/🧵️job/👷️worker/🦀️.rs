@@ -92,6 +92,9 @@ static JOB_OWNER_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::
 mod retained_ownership_tests;
 
 #[cfg(test)]
+#[path="🧪️tests/⛽️staged-projection/🦀️.rs"]
+mod original_staged_projection_tests;
+#[cfg(test)]
 #[path="⏱️budget/🧪️tests/🦀️.rs"]
 mod microsecond_budget_tests;
 

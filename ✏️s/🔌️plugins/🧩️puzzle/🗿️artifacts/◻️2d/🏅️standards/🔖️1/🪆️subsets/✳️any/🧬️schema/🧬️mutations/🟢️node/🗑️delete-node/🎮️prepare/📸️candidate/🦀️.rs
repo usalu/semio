@@ -2,8 +2,8 @@
 
 use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dCloseAxis;
 use super::{Puzzle2dDeleteNodePreparationCursor, Puzzle2dDeleteNodePreparationStep};
-use crate::standards::v1::subsets::any::schema::mutations::{DeleteNode};
-use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::DeleteNode;
+use crate::standards::v1::subsets::any::schema::snapshot::super::Puzzle2dSnapshot;
 use {crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::records::Puzzle2dNode};
 use semio_framework_value::{ValueError, ValueRefusalKind, list::{PagedList, PagedListEditCursor}, retirement::controlled::ControlledRetirement, retained_clone::{RetainedCloneBinding, RetainedFieldCursor, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, paged::PagedUtf8BoundedOrdCursor, ordered_map::{BoundedOrdCursor, BoundedOrdGrant, BoundedOrdProgress, BoundedOrdStep}}};
 use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dPreparationChild;
@@ -51,7 +51,7 @@ impl Default for Puzzle2dDeleteNodeCandidateCursor {
 }
 
 impl Puzzle2dDeleteNodeCandidateCursor {
-    pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, mutation: RetainedCloneRef<'_, DeleteNode>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, mutation: RetainedCloneRef<'_, DeleteNode>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.closing || self.phase == 23 { return Err(refusal("delete candidate is closing or spent")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(RetainedCloneStep::Progress(progress))}
@@ -116,7 +116,7 @@ impl Puzzle2dDeleteNodeCandidateCursor {
             }
             9 => { self.phase = if self.disposition == Puzzle2dDeleteNodeDisposition::Changed { 10 } else { 21 };Ok(payload_progress(0)) }
             10 => {
-                let step = self.snapshot_clone.advance(source, grant)?;
+                let step = self.snapshot_clone.advance(source,body, grant)?;
                 if matches!(step, RetainedCloneStep::Complete(_)) { self.phase = 11; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }

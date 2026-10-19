@@ -1,0 +1,49 @@
+{
+  "codec": 1,
+  "frameBytes": 1048576,
+  "frameSplitBytes": 64,
+  "frameText": "α repeated frame β ",
+  "frameRepeat": 20,
+  "copyGrants": [
+    1,
+    2,
+    64
+  ],
+  "outputGrants": [
+    1,
+    3,
+    64
+  ],
+  "cancelStops": [
+    0,
+    1,
+    37,
+    33000,
+    100000,
+    350000
+  ],
+  "records": [
+    {
+      "name": "",
+      "enabled": false
+    },
+    {
+      "name": "hello β",
+      "enabled": true
+    },
+    {
+      "name": "repeated canonical text",
+      "enabled": true
+    }
+  ],
+  "compressedOracle": "system zlib.inflateRawSync",
+  "defaultChunks": false,
+  "controlBookkeeping": {
+    "field": "needRaw",
+    "copyBytes": 1,
+    "minimumGrantCopyBytes": 2,
+    "deniedGrantCopyBytes": 1,
+    "sourceUnchanged": true,
+    "visibleProgress": true
+  }
+}

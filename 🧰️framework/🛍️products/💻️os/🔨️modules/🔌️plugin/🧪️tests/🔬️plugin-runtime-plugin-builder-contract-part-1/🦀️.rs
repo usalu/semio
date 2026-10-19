@@ -141,7 +141,7 @@ include!("../🔬️plugin-runtime-plugin-builder-contract-part-1-x/🦀️.rs")
         app.maintenance.maintenance_stage = 20;
         assert!(matches!(app_maintenance_turn(&mut app,cx).unwrap(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(_)));
         close_member_admission_app(&mut app,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -173,7 +173,7 @@ include!("../🔬️plugin-runtime-plugin-builder-contract-part-1-x/🦀️.rs")
         assert!(restored.child_content_root.typed_read::<TestSnapshot>("slot", "child-1").is_ok());
         close_member_admission_app(&mut restored,cx);
         close_member_admission_app(&mut app,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 

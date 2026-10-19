@@ -147,6 +147,38 @@ pub struct SnapshotReadLeaseRegistry {
 }
 
 impl SnapshotReadLeaseRegistry {
+    /// 🪴️ Begins original registry custody without allocating any resident backing page.
+    fn vacant() -> Self {
+        let mut free = [0; SNAPSHOT_READ_LEASE_CAPACITY];
+        for (index, slot) in free.iter_mut().enumerate() { *slot = index as u16; }
+        Self { state: SnapshotReadLeaseStateLock::new(SnapshotReadLeaseRegistryState {
+            slots: SnapshotReadSlotPages { pages: std::array::from_fn(|_| None) },
+            occupied: [0; SNAPSHOT_READ_LEASE_CAPACITY / 64], free, free_read: 0, free_len: SNAPSHOT_READ_LEASE_CAPACITY, next_generation: 0, cleanup_cursor: 0 }),
+            returned: std::sync::atomic::AtomicUsize::new(0),
+            lease_generations: SnapshotReadGenerationPages { pages: std::array::from_fn(|_| None) },
+            authority_sequence: std::sync::atomic::AtomicU64::new(0), authority_generation: std::sync::atomic::AtomicU64::new(0),
+            authority_revision: std::array::from_fn(|_| std::sync::atomic::AtomicU64::new(0)) }
+    }
+
+    /// 🧮️ Quotes one exact absent lease-slot or generation page before original birth.
+    fn birth_page_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        let state = self.state.try_lock().map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "unpublished snapshot registry is busy"))?;
+        let capacity = if state.slots.pages.iter().any(Option::is_none) { size_of::<SnapshotReadSlotPage>() }
+            else if self.lease_generations.pages.iter().any(Option::is_none) { size_of::<SnapshotReadGenerationPage>() } else { 0 };
+        Ok(semio_framework_value::RetirementDemand { capacity_bytes: capacity, depth: usize::from(capacity != 0), ..Default::default() })
+    }
+
+    /// 🌿️ Installs only the page already paid by its original registry construction control.
+    fn admit_birth_page(&mut self) -> Result<(), ValueError> {
+        let state = self.state.get_mut().map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "unpublished snapshot registry is poisoned"))?;
+        if let Some(page) = state.slots.pages.iter_mut().find(|page| page.is_none()) {
+            *page = Some(Box::new([const { std::mem::MaybeUninit::uninit() }; SNAPSHOT_READ_SLOT_PAGE]));
+        } else if let Some(page) = self.lease_generations.pages.iter_mut().find(|page| page.is_none()) {
+            *page = Some(Box::new(std::array::from_fn(|_| std::sync::atomic::AtomicU64::new(0))));
+        }
+        Ok(())
+    }
+
     pub fn returned_count(&self) -> usize { self.returned.load(std::sync::atomic::Ordering::Acquire) }
 
     pub fn new() -> Self {
@@ -877,3 +909,7 @@ impl ErasedSnapshotRead {
         std::mem::replace(&mut self.owner, owner)
     }
 }
+
+#[path="🔗️source/🦀️.rs"]
+pub mod captured_snapshot_source;
+pub use captured_snapshot_source::CapturedSnapshotSource;

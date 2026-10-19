@@ -7,9 +7,14 @@
 
 use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 
 type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
@@ -31,7 +36,11 @@ pub struct SetResultDisplay {
 /// 👁️ Applies ONE named display field, leaving the rest of the window's state alone.
 fn apply_field(config: &mut results::config::Fem2dResultsWindowConfig, field: &str, value: &str) -> Result<(), Fault> {
     match field {
-        "sourceId" => config.result_source_id = Some(value.to_string()).filter(|id| !id.is_empty()),
+        "sourceId" => {
+            let source = Some(value.to_string()).filter(|id| !id.is_empty());
+            if let Some(source) = source.as_deref() { semio_s_fem_analyses_model::decode_result_source_identity(source).map_err(|error| Fault::from(error.to_string()))?; }
+            config.result_source_id = source;
+        }
         "mode" => config.result_mode = semio_s_fem_app_surface::ResultMode::try_from(value).map_err(Fault::from)?,
         "modeIndex" => {
             let index = value.trim().parse::<f64>().map_err(|_| Fault::from(format!("fem2d.results.value: '{value}' is not a number")))?;
@@ -52,11 +61,12 @@ pub fn handle_window(payload: &SetResultDisplay, cfg: &ConfigView<'_, NoConfig>,
     match payload.field.as_deref().filter(|field| !field.is_empty()) {
         Some(field) => apply_field(&mut next, field, payload.value.as_deref().unwrap_or_default())?,
         None => {
-            next.result_source_id = payload.source_id.clone();
+            next.result_source_id = payload.source_id.clone().filter(|id| !id.is_empty());
             next.result_mode = semio_s_fem_app_surface::ResultMode::try_from(payload.mode.as_str()).map_err(Fault::from)?;
             next.result_mode_index = payload.mode_index;
         }
     }
+    if let Some(source) = next.result_source_id.as_deref() { semio_s_fem_analyses_model::decode_result_source_identity(source).map_err(|error| Fault::from(error.to_string()))?; }
     Ok(Emit { window_config_mutations: vec![results::config::addressed_to(&window_id, next)], ui_scope: semio_framework::kernel::UiDirtyScope::Partial { window_bodies: vec![results::BODY_KEY.to_owned()], panel_bodies: vec![semio_s_artifact_fem_2d_editor_panels::editor::fem2d::panels::results::BODY_KEY.to_owned()], utilities: false, tools: false, engagements: false, measures: false, labels: false }, ..Default::default() })
 }
 //#endregion 🔖️SetResultDisplay

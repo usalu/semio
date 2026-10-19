@@ -1,5 +1,5 @@
-//! 🗑 Puzzle5d mutation — `DeletePart`: removes an id-keyed part (captures cascade — any fastener
 //! touching one of this part's grips is severed too, re-`connect-grips`ed by the inverse).
+//! 🗑 Puzzle5d mutation — `DeletePart`: removes an id-keyed part (captures cascade — any fastener
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::Puzzle5dSnapshot;
 
@@ -30,6 +30,17 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "part", kind: "delete-part", record: "DeletedPart" };
 
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete part \"{}\"", self.id), &format!("Bauteil \"{}\" löschen", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for DeletePart {
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
@@ -39,11 +50,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete part \"{}\"", self.id), &format!("Bauteil \"{}\" löschen", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation

@@ -1,12 +1,18 @@
-//! 🤏️ 3D-window options — how grip markers are surfaced in the world pane: WHEN they are emitted
 //! (always, or only for the hovered/selected parts the live `vortex` interaction names) and HOW their
+//! 🤏️ 3D-window options — how grip markers are surfaced in the world pane: WHEN they are emitted
 //! direction arrows point (outwards from the grip point, or inwards onto it). Both are per-window
 //! chrome, never document state.
 
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
-use crate::editor::puzzle5d::entities::{puzzle5d_action, PUZZLE5D_GRIP_DIRECTION_INWARDS, PUZZLE5D_GRIP_DIRECTION_OUTWARDS, PUZZLE5D_GRIP_SHOW_ALWAYS, PUZZLE5D_GRIP_SHOW_SELECTED, PUZZLE5D_PLAY_CONTROLLER_ID};
-use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
+use crate::editor::puzzle5d::entities::puzzle5d_action;
+use crate::editor::puzzle5d::PUZZLE5D_GRIP_DIRECTION_INWARDS;
+use crate::editor::puzzle5d::PUZZLE5D_GRIP_DIRECTION_OUTWARDS;
+use crate::editor::puzzle5d::PUZZLE5D_GRIP_SHOW_ALWAYS;
+use crate::editor::puzzle5d::PUZZLE5D_GRIP_SHOW_SELECTED;
+use crate::editor::puzzle5d::PUZZLE5D_PLAY_CONTROLLER_ID;
+use semio_framework_plugin::MeasureSelectItem;
+use semio_framework_plugin::WindowMeasure;
 
 /// 🤏️ `puzzle5d-play-world-grip-show` — Always (every part) or Selected (hovered/selected only).
 pub fn show_measure(runtime: &Puzzle5dRuntime, labels: &Puzzle5dLabels) -> WindowMeasure {

@@ -1558,6 +1558,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
+ "semio-framework-value-snapshot-read",
 ]
 
 [[package]]
@@ -2650,6 +2651,7 @@ dependencies = [
  "semio-framework-value-shared-issuance",
  "serde",
  "serde_json",
+ "semio-framework-hash",
 ]
 
 [[package]]
@@ -2920,7 +2922,6 @@ dependencies = [
 name = "semio-s-artifact-puzzle-3d-editor"
 version = "0.1.0"
 dependencies = [
- "js-sys",
  "semio-framework",
  "semio-framework-2d-compute",
  "semio-framework-action-bus",
@@ -3797,6 +3798,7 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework",
 ]
 
 [[package]]

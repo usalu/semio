@@ -86,8 +86,8 @@
     "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust",
-    "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript",
-    "🧰️framework/🛍️products/❓️quiz/📦️packages/🟦️typescript",
+    "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+    "🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react",
     "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript",
@@ -113,7 +113,6 @@
     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/pkg",
     "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript",
@@ -129,13 +128,12 @@
     "bun": ">=1.2.0",
     "node": "24.15.0"
   },
-  "packageManager": "bun@1.3.14",
+  "packageManager": "bun@1.4.2",
   "scripts": {
     "repo": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts repo",
     "setup": "bun repo run workspace:setup",
     "dashboard": "bun repo run @semio-tech/repo-dashboard-rs:run --output=stream",
-    "dashboard:install": "bun repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream",
-    "test-reserved-producer-native": "bun repo run @semio-tech/framework-plugin:test-reserved-producer-native"
+    "dashboard:install": "bun repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream"
   },
   "devDependencies": {
     "@babel/parser": "7.29.8",

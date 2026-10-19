@@ -150,6 +150,43 @@ pub const WINDOW_GAP: u16 = 1;
 /// 🤏 The smallest share a tiled stack keeps when a splitter is dragged.
 pub const SPLIT_MIN_FRACTION: f64 = 0.08;
 
+/// 🧲️ A tab joins a group or creates a sibling on one of its four edges.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DockPlacement { Tabs, Corner(WindowStackCorner), Left, Right, Top, Bottom }
+
+impl DockPlacement {
+    /// 🗺️ Resolves corner tab pads before the regular UI body split on its dominant axis.
+    pub fn at(area: Rect, pos: crate::tui::geometry::Pos) -> Option<Self> {
+        if !area.contains(pos) || area.width < 3 || area.height < 3 { return None; }
+        for corner in [WindowStackCorner::TopLeft, WindowStackCorner::TopRight, WindowStackCorner::BottomLeft, WindowStackCorner::BottomRight] {
+            if Self::Corner(corner).preview(area).contains(pos) { return Some(Self::Corner(corner)); }
+        }
+        let x = 2 * i32::from(pos.x - area.x) - i32::from(area.width);
+        let y = 2 * i32::from(pos.y - area.y) - i32::from(area.height);
+        Some(if x.abs() >= y.abs() { if x < 0 { Self::Left } else { Self::Right } } else if y < 0 { Self::Top } else { Self::Bottom })
+    }
+
+    /// 🔲️ The exact proposed area, including the cell reserved for the future splitter.
+    pub fn preview(self, area: Rect) -> Rect {
+        let gap_x = WINDOW_GAP.min(area.width);
+        let gap_y = WINDOW_GAP.min(area.height);
+        let width = area.width.saturating_sub(gap_x).div_ceil(2);
+        let height = area.height.saturating_sub(gap_y).div_ceil(2);
+        match self {
+            Self::Left => Rect::new(area.x, area.y, width, area.height),
+            Self::Right => Rect::new(area.x + width + gap_x, area.y, area.width.saturating_sub(width + gap_x), area.height),
+            Self::Top => Rect::new(area.x, area.y, area.width, height),
+            Self::Bottom => Rect::new(area.x, area.y + height + gap_y, area.width, area.height.saturating_sub(height + gap_y)),
+            Self::Tabs => area,
+            Self::Corner(corner) => {
+                let width = (if corner.is_left() { area.width.div_ceil(2) } else { area.width / 2 }).min(24);
+                let height = area.height.min(2);
+                Rect::new(if corner.is_left() { area.x } else { area.x + area.width - width }, if corner.is_top() { area.y } else { area.y + area.height - height }, width, height)
+            }
+        }
+    }
+}
+
 /// 🧭️ Corner of a window stack where a tab chip docks.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum WindowStackCorner {
@@ -389,14 +426,15 @@ pub fn zoom_window(layout: &mut WindowLayout, window_kind_id: Option<&str>) {
 
 /// 🏷️ Activates `tab_id` inside its stack.
 pub fn activate_stack_tab(layout: &mut WindowLayout, tab_id: &str) -> bool {
-    with_stack_mut(&mut layout.root, tab_id, &mut |s| {
-        if stack_contains(s, tab_id) {
-            s.active_window_kind_id = Some(tab_id.to_string());
-            true
-        } else {
-            false
-        }
-    })
+    let zoomed = layout.zoomed.as_deref();
+    let mut keep_zoom = false;
+    let activated = with_stack_mut(&mut layout.root, tab_id, &mut |stack| {
+        keep_zoom = zoomed.is_some_and(|id| stack_contains(stack, id));
+        stack.active_window_kind_id = Some(tab_id.into());
+        true
+    });
+    if keep_zoom { layout.zoomed = Some(tab_id.into()); }
+    activated
 }
 
 /// 🔁 Cycles the active tab in the stack containing `window_kind_id` by `delta`.
@@ -422,6 +460,7 @@ pub fn split_window(layout: &mut WindowLayout, window_kind_id: &str, direction: 
         for i in 0..axis.children.len() {
             match &axis.children[i] {
                 WindowLayoutChild::Stack(s) if stack_contains(s, window_kind_id) => {
+                    let parent_size = axis_child_size(&axis.children[i]);
                     let old = axis.children[i].clone();
                     let old = match old {
                         WindowLayoutChild::Stack(mut s) => {
@@ -430,7 +469,6 @@ pub fn split_window(layout: &mut WindowLayout, window_kind_id: &str, direction: 
                         }
                         other => other,
                     };
-                    let parent_size = axis_child_size(&old);
                     axis.children[i] = WindowLayoutChild::Axis(WindowLayoutAxisNode { kind: direction.to_string(), size: Some(parent_size), children: vec![old, new_stack.clone()] });
                     return true;
                 }
@@ -505,36 +543,97 @@ pub fn resize_window(layout: &mut WindowLayout, window_kind_id: &str, delta: f64
 
 /// 🚚 Moves `window_kind_id` into the stack that hosts `target_window_kind_id` as a new tab.
 pub fn move_window_to_stack(layout: &mut WindowLayout, window_kind_id: &str, target_window_kind_id: &str) -> bool {
-    if window_kind_id == target_window_kind_id {
-        return false;
+    dock_window(layout, window_kind_id, target_window_kind_id, DockPlacement::Tabs, None)
+}
+
+/// 🧹️ Removes empty groups and collapses single-child axes while retaining the parent's weight.
+fn compact_layout(layout: &mut WindowLayout) {
+    fn compact(child: WindowLayoutChild) -> Option<WindowLayoutChild> {
+        match child {
+            WindowLayoutChild::Stack(stack) => (!stack.children.is_empty()).then_some(WindowLayoutChild::Stack(stack)),
+            WindowLayoutChild::Axis(mut axis) => {
+                axis.children = axis.children.into_iter().filter_map(compact).collect();
+                match axis.children.len() {
+                    0 => None,
+                    1 => {
+                        let mut only = axis.children.remove(0);
+                        match &mut only { WindowLayoutChild::Stack(s) => s.size = axis.size, WindowLayoutChild::Axis(a) => a.size = axis.size }
+                        Some(only)
+                    }
+                    _ => Some(WindowLayoutChild::Axis(axis)),
+                }
+            }
+        }
     }
-    let Some(node) = take_window_node(&mut layout.root, window_kind_id) else {
-        return false;
+    let root = match &layout.root { WindowLayoutRoot::Axis(a) => WindowLayoutChild::Axis(a.clone()), WindowLayoutRoot::Stack(s) => WindowLayoutChild::Stack(s.clone()) };
+    layout.root = match compact(root) {
+        Some(WindowLayoutChild::Axis(a)) => WindowLayoutRoot::Axis(a),
+        Some(WindowLayoutChild::Stack(s)) => WindowLayoutRoot::Stack(s),
+        None => WindowLayoutRoot::Stack(WindowLayoutStackNode::default()),
     };
-    let node_id = node.window_kind_id.clone();
-    let placed = with_stack_mut(&mut layout.root, target_window_kind_id, &mut |s| {
-        s.children.push(node.clone());
-        s.active_window_kind_id = Some(node_id.clone());
-        true
-    });
-    if placed {
-        return true;
-    }
-    match &mut layout.root {
-        WindowLayoutRoot::Axis(a) => {
-            a.children.push(WindowLayoutChild::Stack(WindowLayoutStackNode { size: Some(1.0), active_window_kind_id: Some(node.window_kind_id.clone()), children: vec![node] }));
+}
+
+/// 🚚️ Commits one docking command atomically, preserving the held window and pruning its vacated group.
+pub fn dock_window(layout: &mut WindowLayout, source: &str, target: &str, placement: DockPlacement, tab_index: Option<usize>) -> bool {
+    if stack_hosting(layout, target).is_none() { return false; }
+    if source == target {
+        let DockPlacement::Corner(corner) = placement else { return false };
+        return with_stack_mut(&mut layout.root, source, &mut |stack| {
+            let Some(index) = stack.children.iter().position(|node| node.window_kind_id == source) else { return false };
+            let mut node = stack.children.remove(index);
+            node.corner = Some(corner);
+            let slots: Vec<usize> = stack.children.iter().enumerate().filter_map(|(i, node)| (node.corner.unwrap_or_default() == corner).then_some(i)).collect();
+            let insert = tab_index.and_then(|i| slots.get(i).copied()).unwrap_or_else(|| slots.last().map_or(stack.children.len(), |i| i + 1));
+            stack.children.insert(insert, node);
+            stack.active_window_kind_id = Some(source.into());
             true
-        }
-        WindowLayoutRoot::Stack(s) => {
-            s.children.push(node);
-            true
+        });
+    }
+    let mut next = layout.clone();
+    let Some(mut node) = take_window_node(&mut next.root, source) else { return false; };
+    if let DockPlacement::Corner(corner) = placement { node.corner = Some(corner); }
+    fn place(child: &mut WindowLayoutChild, target: &str, node: &WindowLayoutWindowNode, placement: DockPlacement, index: Option<usize>) -> bool {
+        match child {
+            WindowLayoutChild::Stack(stack) if stack_contains(stack, target) => {
+                if matches!(placement, DockPlacement::Tabs | DockPlacement::Corner(_)) {
+                    let insert = if let DockPlacement::Corner(corner) = placement {
+                        let slots: Vec<usize> = stack.children.iter().enumerate().filter_map(|(i, node)| (node.corner.unwrap_or_default() == corner).then_some(i)).collect();
+                        index.and_then(|i| slots.get(i).copied()).unwrap_or_else(|| slots.last().map_or(stack.children.len(), |i| i + 1))
+                    } else { index.unwrap_or(stack.children.len()).min(stack.children.len()) };
+                    stack.children.insert(insert, node.clone());
+                    stack.active_window_kind_id = Some(node.window_kind_id.clone());
+                } else {
+                    let parent_size = stack.size;
+                    let mut old = stack.clone();
+                    old.size = Some(1.0);
+                    let fresh = WindowLayoutChild::Stack(WindowLayoutStackNode { size: Some(1.0), active_window_kind_id: Some(node.window_kind_id.clone()), children: vec![node.clone()] });
+                    let old = WindowLayoutChild::Stack(old);
+                    let before = matches!(placement, DockPlacement::Left | DockPlacement::Top);
+                    *child = WindowLayoutChild::Axis(WindowLayoutAxisNode {
+                        kind: if matches!(placement, DockPlacement::Left | DockPlacement::Right) { "row" } else { "column" }.into(),
+                        size: parent_size, children: if before { vec![fresh, old] } else { vec![old, fresh] },
+                    });
+                }
+                true
+            }
+            WindowLayoutChild::Axis(axis) => axis.children.iter_mut().any(|child| place(child, target, node, placement, index)),
+            _ => false,
         }
     }
+    let mut root = match next.root { WindowLayoutRoot::Axis(a) => WindowLayoutChild::Axis(a), WindowLayoutRoot::Stack(s) => WindowLayoutChild::Stack(s) };
+    if !place(&mut root, target, &node, placement, tab_index) { return false; }
+    next.root = match root { WindowLayoutChild::Axis(a) => WindowLayoutRoot::Axis(a), WindowLayoutChild::Stack(s) => WindowLayoutRoot::Stack(s) };
+    next.zoomed = None;
+    compact_layout(&mut next);
+    *layout = next;
+    true
 }
 
 /// 🗑️ Removes `window_kind_id` from the layout tree.
 pub fn remove_window(layout: &mut WindowLayout, window_kind_id: &str) -> bool {
-    take_window_node(&mut layout.root, window_kind_id).is_some()
+    let removed = take_window_node(&mut layout.root, window_kind_id).is_some();
+    if removed { compact_layout(layout); }
+    removed
 }
 
 /// 📎️ Appends a window tab to the stack containing `host_window_kind_id`.

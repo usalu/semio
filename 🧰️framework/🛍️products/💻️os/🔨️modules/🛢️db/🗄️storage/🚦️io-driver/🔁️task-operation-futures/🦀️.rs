@@ -168,7 +168,7 @@ impl DbIoTaskOperation {
                 Err(fault)
             }
             DbIoTerminal::Cancelled(None) => {
-                let mut fault = db_io_literal_fault(DbIoFaultKind::Cancelled, DbIoFaultCause::Closed, "DB I/O task cancelled");
+                let mut fault = db_io_literal_fault(self.custody.take().expect("preborn poll fault custody"), DbIoFaultKind::Cancelled, DbIoFaultCause::Closed, "DB I/O task cancelled");
                 fault.result_handback = Some(DbIoResultHandback { handle: self.handle, retained_credit });
                 Err(fault)
             }
@@ -185,12 +185,12 @@ impl Future for DbIoTaskOperation {
         match self.take() {
             Ok(Some(terminal)) => return std::task::Poll::Ready(terminal),
             Ok(None) => {}
-            Err(error) => return std::task::Poll::Ready(Err(db_io_task_fault(DbIoFaultKind::Stale, &error))),
+            Err(error) => return std::task::Poll::Ready(Err(db_io_task_fault(self.custody.take().expect("preborn poll fault custody"), DbIoFaultKind::Stale, error))),
         }
         let terminal_published = {
             let mut owner = DB_IO_TASK_SLOTS[self.handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             if !db_io_slot_matches(&owner, self.handle) {
-                return std::task::Poll::Ready(Err(db_io_literal_fault(DbIoFaultKind::Stale, DbIoFaultCause::Internal, "stale DB I/O terminal handle")));
+                return std::task::Poll::Ready(Err(db_io_literal_fault(self.custody.take().expect("preborn poll fault custody"), DbIoFaultKind::Stale, DbIoFaultCause::Internal, "stale DB I/O terminal handle")));
             }
             if owner.terminal.is_some() && !matches!(owner.terminal, Some(DbIoTerminal::Cancelled(Some(_)))) {
                 true
@@ -202,8 +202,8 @@ impl Future for DbIoTaskOperation {
         if terminal_published {
             return std::task::Poll::Ready(match self.take() {
                 Ok(Some(terminal)) => terminal,
-                Ok(None) => Err(db_io_literal_fault(DbIoFaultKind::Stale, DbIoFaultCause::Internal, "DB I/O terminal owner changed during poll")),
-                Err(error) => Err(db_io_task_fault(DbIoFaultKind::Stale, &error)),
+                Ok(None) => Err(db_io_literal_fault(self.custody.take().expect("preborn poll fault custody"), DbIoFaultKind::Stale, DbIoFaultCause::Internal, "DB I/O terminal owner changed during poll")),
+                Err(error) => Err(db_io_task_fault(self.custody.take().expect("preborn poll fault custody"), DbIoFaultKind::Stale, error)),
             });
         }
         std::task::Poll::Pending

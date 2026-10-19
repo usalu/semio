@@ -14,6 +14,14 @@
 #[path = "🎲️seeded-generators/🦀️.rs"]
 mod seeded_generators;
 pub use seeded_generators::*;
+use crate::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+//#region 🔖️Gen
+// Inline splitmix64 PRNG (NOT arbitrary/quickcheck/proptest — repo precedent, `crate::os_pack::record_codec_laws::
+// RecordValueGen`'s convention). Every generated string is built from an ASCII word alphabet plus,
+// in `adversarial` mode, a small curated pool of multi-byte unicode characters spliced onto word
+// boundaries — never at the very start/end and never containing `'\n'` or `'#'`, so a generated
+// value is always safe to embed as an opaque single-line `.ops` op line (see `next_text`'s doc)
+// while still exercising `dsl_schema`'s quoted-text escaping for every other field.
 
 #[path = "📼️history-log-laws/🦀️.rs"]
 mod history_log_laws;

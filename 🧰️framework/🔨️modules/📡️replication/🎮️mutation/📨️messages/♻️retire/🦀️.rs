@@ -10,12 +10,44 @@ pub struct MutationMessageLedgerRetirement {
     context: ManuallyDrop<[Option<String>; 2]>,
     messages: ManuallyDrop<Vec<MutationMessage>>,
     active: Option<MutationMessageRetirement>,
+    transfer_closed: bool,
 }
 
 impl MutationMessageLedgerRetirement {
-    pub fn new(context: String, messages: Vec<MutationMessage>) -> Self { Self { context: ManuallyDrop::new([Some(context),None]), messages: ManuallyDrop::new(messages), active: None } }
+    /// 🫙️ An allocation-free terminal shell admits future displaced original custody.
+    pub fn empty() -> Self { Self { context: ManuallyDrop::new([None, None]), messages: ManuallyDrop::new(Vec::new()), active: None, transfer_closed: true } }
+    /// 👁️ Borrows original diagnostics while their publication or refusal still owns them.
+    pub fn retained_messages(&self) -> &[MutationMessage] { &self.messages }
+    pub(crate) fn retained_messages_mut(&mut self) -> &mut [MutationMessage] { &mut self.messages }
+    pub(crate) fn retained_message_rows(&self)->&Vec<MutationMessage>{&self.messages}
+    pub(crate) fn retained_message_rows_mut(&mut self)->&mut Vec<MutationMessage>{&mut self.messages}
 
-    pub fn from_replay_outcome(outcome: MutationReplayOutcome) -> Self { Self { context: ManuallyDrop::new([Some(outcome.mutation_id.0),Some(outcome.edit_id)]), messages: ManuallyDrop::new(outcome.messages), active: None } }
+    /// 📏️ Moving the original vector frame preserves its payload allocations without copying rows.
+    pub fn transfer_copy_byte_demand(&self) -> usize { size_of::<Vec<MutationMessage>>() }
+
+    /// 📤️ Transfers the original bundle once under the caller's unspent physical grant.
+    pub fn take_messages_controlled(&mut self, grant: RetainedCloneGrant) -> Result<Option<(Vec<MutationMessage>, RetainedCloneProgress)>, ValueError> {
+        if self.transfer_closed || self.active.is_some() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "diagnostic transfer follows closure or prior transfer")); }
+        let copy = self.transfer_copy_byte_demand();
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < copy { return Ok(None); }
+        self.transfer_closed = true;
+        Ok(Some((std::mem::take(&mut *self.messages), RetainedCloneProgress { copied_items: 1, copied_bytes: copy, ..Default::default() })))
+    }
+
+    /// 🧾️ Transfers one actual edit context and its original vector as a fully owned ledger record.
+    pub fn take_edit_messages_controlled(&mut self, grant: RetainedCloneGrant) -> Result<Option<(EditMessages, RetainedCloneProgress)>, ValueError> {
+        if self.transfer_closed || self.active.is_some() || self.context[1].is_some() || self.context[0].as_ref().is_none_or(String::is_empty) { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "edit diagnostic transfer lacks an original live edit context")); }
+        let copy = size_of::<EditMessages>();
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < copy { return Ok(None); }
+        self.transfer_closed = true;
+        let edit_id = self.context[0].take().expect("admitted original edit context");
+        let messages = std::mem::take(&mut *self.messages);
+        Ok(Some((EditMessages { edit_id, messages }, RetainedCloneProgress { copied_items: 1, copied_bytes: copy, ..Default::default() })))
+    }
+
+    pub fn new(context: String, messages: Vec<MutationMessage>) -> Self { Self { context: ManuallyDrop::new([Some(context),None]), messages: ManuallyDrop::new(messages), active: None, transfer_closed: false } }
+
+    pub fn from_replay_outcome(outcome: MutationReplayOutcome) -> Self { Self { context: ManuallyDrop::new([Some(outcome.mutation_id.0),Some(outcome.edit_id)]), messages: ManuallyDrop::new(outcome.messages), active: None, transfer_closed: false } }
 
     pub fn next_copy_byte_demand(&self) -> usize {
         if self.context.iter().any(Option::is_some) { return 0; }
@@ -38,6 +70,7 @@ impl MutationMessageLedgerRetirement {
         let idle = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(idle)); }
         if grant.maximum_items == 0 || grant.maximum_depth < self.next_depth_demand()? || grant.maximum_copy_bytes < self.next_copy_byte_demand() || grant.maximum_release_bytes < self.next_release_byte_demand()? { return Ok(RetainedCloneStep::Progress(idle)); }
+        self.transfer_closed = true;
         let progress = if let Some(index) = self.context.iter().position(Option::is_some) {
             let released_bytes = self.context[index].as_ref().expect("selected context remains owned").capacity();
             drop(self.context[index].take());
@@ -62,6 +95,7 @@ impl MutationMessageLedgerRetirement {
 }
 
 impl ErasedSnapshotRetirement for MutationMessageLedgerRetirement {
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(semio_framework_value::RetirementDemand { copy_bytes: Self::next_copy_byte_demand(self), capacity_bytes: Self::next_capacity_byte_demand(self,body)?, release_bytes: Self::next_release_byte_demand(self)?, depth: Self::next_depth_demand(self)? }) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Self::close_step(self, grant) }
     fn terminal_is_empty(&self) -> bool { Self::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(Self::next_copy_byte_demand(self)) }
@@ -112,6 +146,7 @@ impl EditMessageLedgerRetirement {
 }
 
 impl ErasedSnapshotRetirement for EditMessageLedgerRetirement {
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { if let Some(active)=self.active.as_ref() { let mut demand=active.next_demand(body)?; demand.depth+=1; return Ok(demand); } Ok(semio_framework_value::RetirementDemand { copy_bytes: usize::from(!self.entries.is_empty())*size_of::<EditMessages>(), release_bytes: if self.entries.is_empty(){self.entries.capacity()*size_of::<EditMessages>()}else{0}, depth: usize::from(!self.terminal_is_empty()), ..Default::default() }) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Self::close_step(self,grant) }
     fn terminal_is_empty(&self) -> bool { Self::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Self::next_copy_byte_demand(self) }

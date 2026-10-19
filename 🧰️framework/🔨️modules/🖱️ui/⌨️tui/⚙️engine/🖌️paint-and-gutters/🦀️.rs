@@ -4,14 +4,14 @@ use super::*;
 
 impl Tui {
     fn paint(&mut self) {
-        fn walk(scene: &Scene, theme: &Theme, focus: Option<NodeId>, id: NodeId, buf: &mut CellBuffer) {
+        fn walk(scene: &Scene, theme: &Theme, focus: Option<NodeId>, hovered_chrome: &[NodeId], id: NodeId, buf: &mut CellBuffer) {
             let node = scene.node(id);
             if !node.visible {
                 return;
             }
             let rect = node.rect;
             match &node.content {
-                NodeContent::Chrome(c) => c.paint(theme, rect, buf),
+                NodeContent::Chrome(c) => c.paint_emphasized(theme, rect, buf, hovered_chrome.contains(&id)),
                 NodeContent::Widget(w) => w.paint(theme, rect, buf, Some(id) == focus),
                 NodeContent::Text(s) => {
                     let bg = buf.get(rect.x, rect.y).map_or(theme.surface(semio_framework_ui_tui_core::theme::Surface::Base), |c| c.bg);
@@ -21,14 +21,17 @@ impl Tui {
                 NodeContent::Box => {}
             }
             for &child in node.children() {
-                walk(scene, theme, focus, child, buf);
+                walk(scene, theme, focus, hovered_chrome, child, buf);
             }
         }
         let blank = Cell::blank([0, 0, 0], [0, 0, 0]);
         self.back.resize(self.size, blank);
         let focus = self.focus();
-        walk(&self.scene, &self.theme, focus, self.scene.root(), &mut self.back);
-        walk(&self.scene, &self.theme, focus, self.scene.overlay_root(), &mut self.back);
+        walk(&self.scene, &self.theme, focus, &self.hovered_chrome, self.scene.root(), &mut self.back);
+        walk(&self.scene, &self.theme, focus, &self.hovered_chrome, self.scene.overlay_root(), &mut self.back);
+        if let Some(preview) = &self.dock_preview {
+            crate::tui::window::paint_window_tab_preview(&preview.window, &self.theme, preview.window_rect, &mut self.back);
+        }
     }
 
     /// 🖨️ Solves layout if dirty, repaints, diffs against the last frame and emits the patch; an unchanged scene emits nothing.
@@ -39,7 +42,17 @@ impl Tui {
             return AnsiPatch::default();
         }
         self.ensure_layout();
-        self.paint();
+                let held = match &self.press { Some(Press::Tab { chrome, source, pos, moved: true, .. }) => Some((*chrome, source.clone(), *pos)), _ => None };
+        if let Some((chrome, source, pos)) = held {
+            self.dock_preview = self.scene.hit(pos).and_then(|hit| self.window_of(hit)).and_then(|node| {
+                self.propose_dock(node, chrome, &source, pos)
+            });
+        }
+        if let Some(pos) = self.hover_pos {
+            let hit = self.scene.hit(pos).filter(|&hit| self.inside_modal(Some(hit)));
+            self.update_hover(hit, Some(pos));
+        }
+self.paint();
         let mut patch = AnsiPatch::default();
         if self.full_redraw {
             let rows: Vec<DiffRun> = (0..self.size.height).map(|y| DiffRun { y, x: 0, len: self.size.width }).collect();

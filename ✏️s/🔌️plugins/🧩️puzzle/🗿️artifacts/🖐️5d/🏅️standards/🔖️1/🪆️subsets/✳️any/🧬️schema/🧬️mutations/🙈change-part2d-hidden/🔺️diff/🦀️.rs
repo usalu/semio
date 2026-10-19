@@ -1,5 +1,8 @@
 //! 🔺️ Sparse diff builder for `ChangePart2dHidden` — patches the one addressed part in place.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dPart2dPatch, Puzzle5dPartPatch, Puzzle5dPartsDelta};
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dPart2dPatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dPartPatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle5dPartsDelta;
 use protocol::list_delta::RowPatch;
 use crate::Puzzle5dSnapshot;
 

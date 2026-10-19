@@ -130,7 +130,9 @@ pub enum DbIoFaultKind {
 /// backend returning it violates the layer contract and is retained as Internal.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DbIoFaultCause {
-    Io,
+        Pack(pack::PackCauseKind),
+    Protocol,
+Io,
     NotFound,
     AlreadyExists,
     InvalidArgument,
@@ -150,7 +152,9 @@ pub enum DbIoFaultCause {
 impl DbIoFaultCause {
     pub fn from_db_error(error: &DbError) -> Self {
         match error {
-            DbError::Io(_) => Self::Io,
+                        DbError::Pack(error) => Self::Pack(error.cause_kind()),
+            DbError::Protocol(_) => Self::Protocol,
+DbError::Io(_) => Self::Io,
             DbError::NotFound(_) => Self::NotFound,
             DbError::AlreadyExists(_) => Self::AlreadyExists,
             DbError::InvalidArgument(_) => Self::InvalidArgument,
@@ -170,11 +174,53 @@ impl DbIoFaultCause {
     }
 }
 
+const DB_IO_FAULT_CUSTODY_SLOTS: usize = DB_IO_TOTAL_PAGES + DB_IO_PROCESS_CONTROL_CREDIT + 4 * DB_IO_OPERATION_ITEMS + DB_IO_BACKEND_CONTROLS;
+
+struct DbIoFaultCustodyCell { generation: u64, reserved: bool, owner: Option<DbIoFault> }
+struct DbIoFaultCustodyArena { next_generation: u64, cells: [DbIoFaultCustodyCell; DB_IO_FAULT_CUSTODY_SLOTS] }
+static DB_IO_FAULT_CUSTODY: std::sync::Mutex<DbIoFaultCustodyArena> = std::sync::Mutex::new(DbIoFaultCustodyArena { next_generation: 1, cells: [const { DbIoFaultCustodyCell { generation: 0, reserved: false, owner: None } }; DB_IO_FAULT_CUSTODY_SLOTS] });
+pub const DB_IO_FAULT_CUSTODY_STATIC_BACKING_BYTES: u64 = size_of::<std::sync::Mutex<DbIoFaultCustodyArena>>() as u64;
+
+pub struct DbIoFaultCustody { slot: usize, generation: u64 }
+
+pub fn db_io_fault_custody_reserve() -> Result<DbIoFaultCustody, DbError> {
+    let mut arena = DB_IO_FAULT_CUSTODY.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let slot = arena.cells.iter().position(|cell| !cell.reserved).filter(|_| arena.next_generation != u64::MAX).ok_or(DbError::LimitExceeded("db_io fault custody"))?;
+    let generation = arena.next_generation;
+    arena.next_generation += 1;
+    arena.cells[slot].generation = generation;
+    arena.cells[slot].reserved = true;
+    Ok(DbIoFaultCustody { slot, generation })
+}
+
+impl Drop for DbIoFaultCustody {
+    fn drop(&mut self) {
+        db_io_fault_custody_release(self.slot, self.generation).expect("original fault custody reservation");
+        db_io_admission_released();
+    }
+}
+
+fn db_io_fault_custody_release(slot: usize, generation: u64) -> Result<(), DbError> {
+    let mut arena = DB_IO_FAULT_CUSTODY.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let cell = &mut arena.cells[slot];
+    if !cell.reserved || cell.generation != generation { return Err(DbError::StaleGeneration { expected: GenerationId(generation), actual: GenerationId(if cell.reserved { cell.generation } else { 0 }) }); }
+    if cell.owner.is_some() { return Err(DbError::LimitExceeded("db_io fault custody remains occupied")); }
+    cell.reserved = false;
+    Ok(())
+}
+
+fn db_io_fault_custody_take(arena: &mut DbIoFaultCustodyArena, slot: usize, generation: u64) -> Result<Option<DbIoFault>, DbError> {
+    let cell = &mut arena.cells[slot];
+    if !cell.reserved || cell.generation != generation { return Err(DbError::StaleGeneration { expected: GenerationId(generation), actual: GenerationId(if cell.reserved { cell.generation } else { 0 }) }); }
+    Ok(cell.owner.take())
+}
+
 pub struct DbIoFault {
     pub kind: DbIoFaultKind,
     pub cause: DbIoFaultCause,
     pub detail: DbIoText,
-    pub result_handback: Option<DbIoResultHandback>,
+        pub structured: Option<DbError>,
+pub result_handback: Option<DbIoResultHandback>,
 }
 
 impl std::fmt::Debug for DbIoFault {
@@ -185,9 +231,14 @@ impl std::fmt::Debug for DbIoFault {
 
 impl DbIoFault {
     pub fn into_db_error(mut self) -> DbError {
-        let detail = self.detail.as_str().to_string();
+                if let Some(error) = self.structured.take() {
+            while self.close_step() {}
+            return error;
+        }
+let detail = self.detail.as_str().to_string();
         let error = match self.cause {
-            DbIoFaultCause::Io => DbError::Io(detail),
+                        DbIoFaultCause::Pack(_) | DbIoFaultCause::Protocol => panic!("typed DB I/O fault lost its original error owner"),
+DbIoFaultCause::Io => DbError::Io(detail),
             DbIoFaultCause::NotFound => DbError::NotFound(detail),
             DbIoFaultCause::AlreadyExists => DbError::AlreadyExists(detail),
             DbIoFaultCause::InvalidArgument => DbError::InvalidArgument(detail),
@@ -217,19 +268,29 @@ impl DbIoFault {
                 return true;
             }
         }
-        false
+        if self.structured.is_some() {
+            let progressed = db_io_close_structured_fault(&mut self.structured);
+            if self.structured.is_none() && self.result_handback.is_none() { self.custody.take(); }
+            return progressed;
+        }
+        self.result_handback.is_none() && self.custody.take().is_some()
     }
 }
 
 impl Drop for DbIoFault {
     fn drop(&mut self) {
-        if self.detail.terminal_is_empty() && self.result_handback.is_none() {
+        if self.detail.terminal_is_empty() && self.result_handback.is_none() && self.structured.is_none() {
             return;
         }
-        let owner = Self { kind: self.kind, cause: self.cause, detail: std::mem::replace(&mut self.detail, DbIoText::new()), result_handback: self.result_handback.take() };
-        if let Err(DbIoLostOwner::Fault(owner)) = db_io_park_lost_owner(DbIoLostOwner::Fault(owner)) {
-            *self = owner;
-        }
+        let custody = self.custody.take().expect("fault admitted before its original cause");
+        let (slot, generation) = (custody.slot, custody.generation);
+        let owner = Self { kind: self.kind, cause: self.cause, detail: std::mem::replace(&mut self.detail, DbIoText::new()), structured: self.structured.take(), result_handback: self.result_handback.take(), custody: Some(custody) };
+        let mut arena = DB_IO_FAULT_CUSTODY.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let cell = &mut arena.cells[slot];
+        assert!(cell.reserved && cell.generation == generation && cell.owner.is_none(), "exact original fault parking cell");
+        cell.owner = Some(owner);
+        drop(arena);
+        db_io_request_lost_owner_maintenance();
     }
 }
 
@@ -239,3 +300,22 @@ pub enum DbIoTerminal {
     Cancelled(Option<DbIoResult>),
 }
 //#endregion 🔖️Limits
+
+const DB_IO_STRUCTURED_FAULT_CLOSE_GRANT: semio_framework_value::retained_clone::RetainedCloneGrant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: DB_IO_PAGE_BYTES, maximum_depth: 1 };
+
+fn db_io_close_structured_fault(owner: &mut Option<DbError>) -> bool {
+    let Some(error) = owner.take() else { return false; };
+    let (mut cause, pack_owner) = match error {
+        DbError::Pack(error) => (protocol::ProtocolError::Pack(error), true),
+        DbError::Protocol(error) => (error, false),
+        error => { *owner = Some(error); return false; }
+    };
+    let policy = DB_IO_STRUCTURED_FAULT_CLOSE_GRANT;
+    let step = protocol::protocol_cause_retirement_demand(&cause).ok().filter(|demand| policy.maximum_items != 0 && demand.copy_bytes <= policy.maximum_copy_bytes && demand.capacity_bytes <= policy.maximum_capacity_bytes && demand.release_bytes <= policy.maximum_release_bytes && demand.depth <= policy.maximum_depth).map(|_| protocol::close_protocol_cause_one(&mut cause, policy));
+    if matches!(step, Some(Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)))) { return true; }
+    *owner = Some(if pack_owner {
+        let protocol::ProtocolError::Pack(error) = cause else { unreachable!("Pack retirement preserves its original protocol wrapper"); };
+        DbError::Pack(error)
+    } else { DbError::Protocol(cause) });
+    step.is_some_and(|step| step.is_ok())
+}

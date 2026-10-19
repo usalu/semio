@@ -33,15 +33,35 @@ function capture(value: JsonSyntaxControl): JsonSyntaxControl {
   return snapshot as unknown as JsonSyntaxControl;
 }
 
+type JsonTextSource = Pick<String, "length" | "charAt" | "charCodeAt" | "slice">;
+class SegmentedJsonText implements JsonTextSource {
+  readonly length: number;
+  private part = 0;
+  private start = 0;
+  constructor(readonly parts: readonly string[]) { this.length = parts.reduce((size, part) => size + part.length, 0); }
+  charAt(index: number): string {
+    if (index < 0 || index >= this.length) return "";
+    while (this.part > 0 && index < this.start) this.start -= this.parts[--this.part]!.length;
+    while (index >= this.start + this.parts[this.part]!.length) this.start += this.parts[this.part++]!.length;
+    return this.parts[this.part]!.charAt(index - this.start);
+  }
+  charCodeAt(index: number): number { return this.charAt(index).charCodeAt(0); }
+  slice(start: number, end = this.length): string {
+    const parts: string[] = [];
+    while (start < end) { this.charAt(start); const part = this.parts[this.part]!, stop = Math.min(end, this.start + part.length); parts.push(part.slice(start - this.start, stop - this.start)); start = stop; }
+    return parts.join("");
+  }
+}
+
 class JsonSyntaxReader {
   #offset = 0;
   #bytes = 0;
   #nodes = 0;
   #chunk = 0;
-  constructor(readonly source: string, readonly policy: JsonMemberPolicy, readonly control: JsonSyntaxControl) {}
+  constructor(readonly source: JsonTextSource, readonly policy: JsonMemberPolicy, readonly control: JsonSyntaxControl) {}
   #check(): void { if (this.control.cancelled()) reject("cancelled", this.#offset, "JSON operation cancelled"); }
   #emit(): void { this.#check(); this.control.progress(Object.freeze({ bytes: this.#bytes, nodes: this.#nodes })); }
-  #peek(): string { return this.source[this.#offset] ?? ""; }
+  #peek(): string { return this.source.charAt(this.#offset); }
   async #take(): Promise<string> {
     this.#check();
     if (this.#offset >= this.source.length) reject("malformed-json", this.#offset, "Unexpected end of source");
@@ -50,7 +70,7 @@ class JsonSyntaxReader {
     if (unit >= 0xd800 && unit <= 0xdbff) { if (!(next >= 0xdc00 && next <= 0xdfff)) reject("invalid-unicode", this.#offset, "Raw source has an unpaired surrogate"); bytes = 4; }
     else if (unit >= 0xdc00 && unit <= 0xdfff) { if (!(previous >= 0xd800 && previous <= 0xdbff)) reject("invalid-unicode", this.#offset, "Raw source has an unpaired surrogate"); bytes = 0; }
     if (this.#bytes + bytes > this.control.maximumBytes) reject("byte-budget", this.#offset, "Raw byte limit reached");
-    const result = this.source[this.#offset++]!; this.#bytes += bytes;
+    const result = this.source.charAt(this.#offset++); this.#bytes += bytes;
     if (++this.#chunk >= this.control.chunk) { this.#chunk = 0; this.#emit(); await this.control.yield(); this.#check(); }
     return result;
   }
@@ -124,4 +144,23 @@ export async function decodeJsonSyntax(source: string, policy: JsonMemberPolicy,
   if (typeof source !== "string") reject("invalid-source", 0, "Expected raw JSON text");
   if (policy !== JsonMemberPolicy.Reject && policy !== JsonMemberPolicy.Replace) reject("invalid-policy", 0, "Decoded member policy is mandatory");
   return await new JsonSyntaxReader(source, policy, capture(control)).read();
+}
+
+/** 🪟️ Captures immutable text segments under original finite authority without joining the raw document. */
+export async function decodeJsonSyntaxSegments(segments: readonly string[], policy: JsonMemberPolicy, original: JsonSyntaxControl): Promise<JsonSyntaxNode> {
+  const control = capture(original);
+  if (policy !== JsonMemberPolicy.Reject && policy !== JsonMemberPolicy.Replace) reject("invalid-policy", 0, "Decoded member policy is mandatory");
+  if (!Array.isArray(segments) || segments.length > control.maximumBytes) reject("invalid-source", 0, "Expected bounded JSON text segments");
+  const parts: string[] = [];
+  let units = 0;
+  for (let index = 0; index < segments.length; index++) {
+    if (control.cancelled()) reject("cancelled", units, "JSON operation cancelled");
+    const part = segments[index];
+    if (typeof part !== "string") reject("invalid-source", units, "Expected immutable text segment");
+    if (part.length > control.maximumBytes - units) reject("byte-budget", units, "Raw byte limit reached");
+    units += part.length;
+    if (part.length) parts.push(part);
+    if ((index + 1) % control.chunk === 0) await control.yield();
+  }
+  return await new JsonSyntaxReader(new SegmentedJsonText(parts), policy, control).read();
 }

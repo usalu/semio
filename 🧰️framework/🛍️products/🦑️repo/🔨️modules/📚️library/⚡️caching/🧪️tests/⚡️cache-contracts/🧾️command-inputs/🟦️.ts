@@ -51,7 +51,7 @@ export async function testCommandInputs(workspace: string, output: string, invoc
   await testCiResolution();
   await testCiBaselineCommand(workspace, output);
   testDevcontainerContext(workspace);
-  const catalogApi=await import("../../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs"),contributions=await testMethodV1(catalogApi.cacheInternals,"workspaceCatalogBuildContributionsV1",workspace);assert.ok(Array.isArray(contributions));const contribution=contributions[0],catalogOutput=testRecordV1(contribution,"publication").outputRoot;assert.equal(typeof catalogOutput,"string");if(typeof catalogOutput!=="string")throw Error("Actual catalog output DATA required");testContainerRuntimeBootstrap(workspace,join(workspace,catalogOutput));
+  const catalogApi=await import("../../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs"),contributions=await testMethodV1(catalogApi.cacheInternals,"workspaceCatalogBuildContributionsV1",workspace);assert.ok(Array.isArray(contributions));const contribution=contributions[0],catalogOutput=testRecordV1(contribution,"publication").outputRoot;assert.equal(typeof catalogOutput,"string");if(typeof catalogOutput!=="string")throw Error("Actual catalog output DATA required");await testContainerRuntimeBootstrap(workspace,invocation);
   await testDevcontainerLifecycle(workspace, output);
   await testDerivedConfig(workspace);
   const { testExtensionHostBuild } = await import("repo-vscode/testing/host-build");

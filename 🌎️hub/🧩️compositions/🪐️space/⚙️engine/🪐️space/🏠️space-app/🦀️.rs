@@ -145,22 +145,8 @@ impl semio_framework::ToolJobFactory for SpaceCommandJobFactory {
         space_bounded_contract()
     }
 
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
+    semio_framework_plugin::retained_command_factory_admission!(maximum_raw_bytes: SPACE_BOUNDED_RAW_BYTES, checkpoint_resume: false);
 
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > SPACE_BOUNDED_RAW_BYTES || checkpoint.is_some() {
-            return Err((ToolJobFactoryError::new("bounded Space command rejects oversized wire or checkpoint owner"), input, checkpoint));
-        }
-        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
-    }
 }
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SpaceCommandJobFactory {
@@ -305,35 +291,20 @@ impl ArtifactApp for SpaceApp {
         Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
-    async fn build_tool_job(request: ArtifactOwnedToolJobRequest<Self>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !SPACE_BOUNDED_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            return Ok(None);
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<Self>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original tool producer request is absent"))?;
+
+        if !SPACE_BOUNDED_TOOL_IDS.contains(&original.tool_id.as_str()) {
+            return Ok(false);
         }
-        if request.command.command_id() != request.tool_id {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("s.space.retained.tool-mismatch"), "Space command does not match its exact registered tool"));
+        if original.command.command_id() != original.tool_id {
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("s.space.retained.tool-mismatch"), "Space command does not match its exact registered tool").into());
         }
-        if space_bounded_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("s.space.retained.extent"), "Space bounded route exceeded its declared work extent"));
+        if space_bounded_extent(&original.command, &original.snapshot, &original.interaction_state).is_none() {
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("s.space.retained.extent"), "Space bounded route exceeded its declared work extent").into());
         }
-        let tool_id = request.command.command_id();
-        let work = Box::new(BoundedArtifactCommandWork::new(tool_id, space_bounded_reduce, space_bounded_extent));
-        let operation_context = AppOperationContext {
-            app_instance_id: request.app_instance_id,
-            parent_document_id: request.parent_document_id,
-            operation_id: request.operation.operation.0,
-            generation: request.operation.generation.0,
-            canonical_base_revision: request.canonical_base_revision,
-            retained: request.retained,
-            authoring_seed: request.authoring_seed.clone(),
-        };
-        let payload = ArtifactRetainedCommandPayload::new(
-            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
-            SpaceCommand::command_id,
-            SPACE_BOUNDED_RAW_BYTES,
-            SPACE_BOUNDED_WORK_ITEMS,
-            work,
-        );
-        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+        let tool_id = original.command.command_id();
+        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, SpaceCommand::command_id, SPACE_BOUNDED_RAW_BYTES, SPACE_BOUNDED_WORK_ITEMS, false, |_original| BoundedArtifactCommandWork::new(tool_id, space_bounded_reduce, space_bounded_extent))
     }
 
     async fn initial_snapshot() -> WorkflowSnapshot {

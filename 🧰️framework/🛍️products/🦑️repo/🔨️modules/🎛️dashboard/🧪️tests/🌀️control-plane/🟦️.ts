@@ -109,6 +109,13 @@ test("strip-ansi and a regular expression independently decide the ready table",
   }
 });
 
+test("Node environment projection independently isolates task process authority", () => {
+  const boundary = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🌀️control-plane/🔣️.json", import.meta.url), "utf8")).environmentBoundary;
+  const client = Object.fromEntries(boundary.client.filter(([key]:string[]) => !boundary.discarded.includes(key)));
+  const projected = { ...client, ...Object.fromEntries(boundary.declared), TERM:"xterm-256color", COLORTERM:"truecolor" };
+  expect(Object.entries(projected)).toEqual(boundary.expected);
+});
+
 test("every independent oracle of this file proves a named scenario of its feature", () => {
   const own = readFileSync(new URL(import.meta.url), "utf8");
   const proofs: [string, string, string][] = [

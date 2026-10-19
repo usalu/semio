@@ -118,7 +118,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                 TimeTravelEffect::ShowPreview { target, replacement } => self.show_time_travel_preview(&target, &replacement).await?,
                 TimeTravelEffect::StartReplay { drafts, from } => queue.extend(self.start_time_travel_replay(drafts, &from).await?),
                 TimeTravelEffect::CancelReplay => {
-                    self.time_travel_run(TimeTravelStoreCommand::CancelReplay).await?;
+                    self.time_travel_run(TimeTravelStoreCommand::CancelReplay,None).await?;
                 }
                 TimeTravelEffect::OpenFinalizePrompt => {
                     let args = meta

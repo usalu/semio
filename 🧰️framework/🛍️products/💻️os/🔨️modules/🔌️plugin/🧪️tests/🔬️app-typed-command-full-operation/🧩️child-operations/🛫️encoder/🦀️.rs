@@ -25,7 +25,7 @@ pub fn grant_funds(demand:RetirementDemand,grant:RetainedCloneGrant)->Result<boo
 /// 📏️ A parent forwarding into a nested owner needs one level more than that owner.
 pub fn deeper(demand:RetirementDemand)->RetirementDemand{RetirementDemand{depth:demand.depth+1,..demand}}
 /// 📏️ Reads the four independent quotes of an erased owner.
-pub fn quote(owner:&dyn ErasedSnapshotRetirement)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(0)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})}
+pub fn quote(owner:&dyn ErasedSnapshotRetirement)->Result<RetirementDemand,ValueError>{Ok(owner.next_demand(0)?)}
 /// 🤝️ Hands one retained authority off without moving payload.
 pub fn handoff()->RetainedCloneStep{RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})}
 /// 💤️ A turn that cannot yet fund its quote spends nothing.
@@ -78,6 +78,8 @@ impl ChildSymbolOwner{
  fn demands(&self,_:usize)->Result<RetirementDemand,ValueError>{if self.terminal_is_empty(){return Ok(Default::default())}if !self.entries.is_empty(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<TextOrdinal>(),depth:1,..Default::default()})}Ok(RetirementDemand{release_bytes:self.entries.next_release_allocation_bytes().map_err(ValueError::from)?,depth:1,..Default::default()})}
 }
 impl ErasedSnapshotRetirement for ChildSymbolOwner{
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.demands(maximum_body_bytes)}
+
  fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child retirement exceeds caller depth"))}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}if self.entries.pop().is_some(){return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}let step=self.entries.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..empty}))}
  fn terminal_is_empty(&self)->bool{self.entries.terminal_is_empty()}
 

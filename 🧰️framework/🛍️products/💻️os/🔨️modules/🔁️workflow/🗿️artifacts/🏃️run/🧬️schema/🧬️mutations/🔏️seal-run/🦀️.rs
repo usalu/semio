@@ -15,17 +15,22 @@ pub struct SealRun {
 //#region ⚙️Semantics
 impl protocol::MutationKind<RunArtifact, RunMutation> for SealRun {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "seal", entity: "run", kind: "seal-run", record: "SealedRun" };
-    fn diff(&self, _base: &RunArtifact) -> protocol::MutationOutcome<RunDiff> {
-        protocol::MutationOutcome::new(RunDiff::step(RunStep::Seal(RunSealEdit { sealed: true, status: self.status, finished_at: Some(store::os_store::document_materialize::now_iso()) })))
-    }
-    fn inverse(&self, base: &RunArtifact) -> Result<Vec<RunMutation>, semio_framework_value::ValueError> {
-        Ok(vec![RunMutation::SetRunSeal(SetRunSeal { sealed: base.sealed, status: base.status, finished_at: base.finished_at.clone() })])
-    }
+
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Seal run", "Lauf versiegeln")
     }
     fn target(&self) -> Vec<String> {
         vec!["sealed".into()]
+    }
+}
+
+impl protocol::ColdMutationKind<RunArtifact, RunMutation> for SealRun {
+    fn diff(&self, _base: &RunArtifact) -> protocol::MutationOutcome<RunDiff> {
+        protocol::MutationOutcome::new(RunDiff::step(RunStep::Seal(RunSealEdit { sealed: true, status: self.status, finished_at: Some(store::os_store::document_materialize::now_iso()) })))
+    }
+    fn inverse(&self, base: &RunArtifact) -> Result<Vec<RunMutation>, semio_framework_value::ValueError> {
+        Ok(vec![RunMutation::SetRunSeal(SetRunSeal { sealed: base.sealed, status: base.status, finished_at: base.finished_at.clone() })])
     }
 }
 //#endregion ⚙️Semantics

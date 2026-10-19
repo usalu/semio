@@ -111,6 +111,15 @@ impl<'a,'b> IoRunControl<'a,'b>{
  pub fn snapshot_decode(&mut self)->Result<NativeSnapshotDecodeOwner<'_,'b>,ValueError>{self.select(IoNativeDirection::Decode)?;match &mut self.owner{Owner::Native{decode,grant,..}|Owner::Decode{native:decode,grant}=>{let mut owner=NativeSnapshotDecodeOwner::borrowed(decode,*grant,&mut self.progress);owner.pending=self.pending.as_deref_mut();Ok(owner)},_=>Err(Self::opposite())}}
  /// 🎟️ Reborrows an actual encoder with its original independent snapshot ownership grant.
  pub fn snapshot_encode(&mut self)->Result<NativeSnapshotEncodeOwner<'_,'b>,ValueError>{self.select(IoNativeDirection::Encode)?;match &mut self.owner{Owner::Native{encode,grant,..}|Owner::Encode{native:encode,grant}=>Ok(NativeSnapshotEncodeOwner::borrowed_pending(encode,*grant,&mut self.progress,self.pending.as_deref_mut())),_=>Err(Self::opposite())}}
+ /// 🧮️ Keeps every original IO currency already consumed by accepted producer spans.
+ pub fn remaining_grant(&self)->RetainedCloneGrant{let grant=match &self.owner{Owner::Native{grant,..}|Owner::Decode{grant,..}|Owner::Encode{grant,..}=>*grant};NativeSnapshotBodyWallet{grant,progress:self.progress}.remaining_grant()}
+ /// ♻️ Borrows the original decoder for funded cleanup without selecting or checkpointing another phase.
+ pub fn with_native_retirement(&mut self,grant:RetainedCloneGrant,operation:impl FnOnce(&mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, 'b>)->Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError>)->Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError>{
+  let original=match &self.owner{Owner::Native{grant,..}|Owner::Decode{grant,..}=>*grant,Owner::Encode{..}=>return Err(Self::opposite())};
+  let mut wallet=NativeSnapshotBodyWallet{grant:original,progress:self.progress};wallet.admit_frontier(grant)?;
+  let result=match &mut self.owner{Owner::Native{decode,..}|Owner::Decode{native:decode,..}=>decode.with_retirement(grant,operation),Owner::Encode{..}=>unreachable!()};
+  let performed=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};let settled=wallet.record_progress(performed);self.progress=wallet.progress();settled.map_err(|error|error.with_retained_progress(performed))?;result
+ }
  fn opposite()->ValueError{ValueError::literal(ValueRefusalKind::UnsupportedOwner,"IO foreign receiving phase requires completion before the opposite direction begins")}
 }
 impl Drop for IoRunControl<'_, '_>{fn drop(&mut self){if let Some(wallet)=self.wallet.as_deref_mut(){*wallet=self.progress;}}}
@@ -120,3 +129,6 @@ mod tests;
 #[cfg(test)]
 #[path="🧪️tests/nested-io.rs"]
 mod nested_io_tests;
+#[cfg(test)]
+#[path="♻️retirement/🧪️tests/🦀️.rs"]
+mod retirement_tests;

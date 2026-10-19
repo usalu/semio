@@ -16,8 +16,17 @@ pub struct AddSynapse { pub index: u32, #[dsl(block)] pub synapse: SynapseSpec }
 //#region 🎮️Behavior
 impl MutationKind<FlowHostSnapshot, FlowMutation> for AddSynapse {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "synapse", kind: "add-synapse", record: "AddedSynapse" };
+
+
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native(&format!("Add synapse {}", self.synapse.id()), &format!("Synapse {} hinzufügen", self.synapse.id()))
+    }
+    fn target(&self) -> Vec<String> { vec!["synapses".into(), self.synapse.id().clone()] }
+}
+
+impl crate::os_spr::ColdMutationKind<FlowHostSnapshot, FlowMutation> for AddSynapse {
     fn diff(&self, _base: &FlowHostSnapshot) -> MutationOutcome<FlowDiff> {
-        MutationOutcome::new(FlowDiff::from(FlowDelta::Synapses(FlowCollectionDelta { removed: vec![], inserted: vec![(self.index, self.synapse.clone())], replaced: vec![] })))
+        MutationOutcome::new(FlowDiff::from(FlowDelta::Synapses(FlowCollectionDelta { removed: vec![], inserted: vec![(self.index, self.synapse.clone())], replaced: vec![], moved: vec![] })))
     }
     fn inverse(&self, _base: &FlowHostSnapshot) -> Result<Vec<FlowMutation>, semio_framework_value::ValueError> {
     Ok((|| {
@@ -25,10 +34,6 @@ impl MutationKind<FlowHostSnapshot, FlowMutation> for AddSynapse {
     
     })())
 }
-    fn label(&self) -> crate::LocalizedLabel {
-        crate::LocalizedLabel::native(&format!("Add synapse {}", self.synapse.id()), &format!("Synapse {} hinzufügen", self.synapse.id()))
-    }
-    fn target(&self) -> Vec<String> { vec!["synapses".into(), self.synapse.id().clone()] }
 }
 
 //#endregion 🎮️Behavior

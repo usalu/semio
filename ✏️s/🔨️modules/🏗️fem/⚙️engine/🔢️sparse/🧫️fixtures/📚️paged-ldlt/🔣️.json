@@ -1,0 +1,57 @@
+{
+  "tolerance": 1e-11,
+  "cases": [
+    {
+      "id": "single-equation",
+      "order": 1,
+      "diagonal": 3,
+      "offDiagonal": -1,
+      "samples": [
+        {
+          "row": 0,
+          "solution": 0.3333333333333333
+        }
+      ]
+    },
+    {
+      "id": "past-former-forty-equation-refusal",
+      "order": 41,
+      "diagonal": 3,
+      "offDiagonal": -1,
+      "samples": [
+        {
+          "row": 0,
+          "solution": 0.6180339887498948
+        },
+        {
+          "row": 20,
+          "solution": 0.9999999966615174
+        },
+        {
+          "row": 40,
+          "solution": 0.6180339887498949
+        }
+      ]
+    },
+    {
+      "id": "past-checkpoint-field-collision",
+      "order": 513,
+      "diagonal": 3,
+      "offDiagonal": -1,
+      "samples": [
+        {
+          "row": 0,
+          "solution": 0.6180339887498949
+        },
+        {
+          "row": 256,
+          "solution": 1
+        },
+        {
+          "row": 512,
+          "solution": 0.6180339887498949
+        }
+      ]
+    }
+  ]
+}

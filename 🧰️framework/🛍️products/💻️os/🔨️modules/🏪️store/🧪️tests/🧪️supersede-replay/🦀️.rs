@@ -1,6 +1,7 @@
 //! ✏️ Store laws of non-destructive history editing: effective forwards under supersessions, Report-mode replays with
 //! per-mutation outcomes, the finalize gate, scoped and unscoped supersessions, replica convergence, cancellation,
 //! persistence, convergence early exit and the prefix-snapshot ring (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING).
+use semio_framework_os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::*;
 
 include!("🧰️supersede-replay-harness-fixtures/🦀️.rs");

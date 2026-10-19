@@ -2,7 +2,8 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::snapshot::Puzzle3dSnapshot;
 use crate::*;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 use store::{
     sqlite_snapshot::{
         artifact::{Cell, Projection, Reconstruction},
@@ -10,7 +11,8 @@ use store::{
     },
     os_store::serialization::ArtifactSqliteSnapshotHost,
 };
-use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value::ValueError;
+use semio_framework_value::ValueRefusalKind;
 fn invalid(message: impl Into<String>) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 
 const TABLES: [(&str, usize); 23] = [

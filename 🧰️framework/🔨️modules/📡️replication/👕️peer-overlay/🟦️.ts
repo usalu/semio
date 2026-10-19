@@ -167,7 +167,7 @@ export function canvasPeerViewportRect(
 }
 
 
-/** Project a world-space point through a local orbit camera into screen pixels. Returns null when behind the camera. */
+/** 🧭️ Projects a world point into a measured orbit viewport, omitting invisible or unmeasured points. */
 export function orbitPointToScreen(
   localView: {
     readonly position: readonly [number, number, number];
@@ -178,6 +178,7 @@ export function orbitPointToScreen(
   localSizePx: readonly [number, number],
   world: readonly [number, number, number],
 ): readonly [number, number] | null {
+  if (localSizePx.some(size => !Number.isFinite(size) || size <= 0)) return null;
   const forward = normalize([localView.target[0] - localView.position[0], localView.target[1] - localView.position[1], localView.target[2] - localView.position[2]]);
   const right = normalize(cross(forward, localView.up));
   const trueUp = cross(right, forward);
@@ -186,7 +187,7 @@ export function orbitPointToScreen(
   if (camZ <= 1e-9) return null;
   const camX = rel[0] * right[0] + rel[1] * right[1] + rel[2] * right[2];
   const camY = rel[0] * trueUp[0] + rel[1] * trueUp[1] + rel[2] * trueUp[2];
-  const aspect = localSizePx[0] / (localSizePx[1] || 1);
+  const aspect = localSizePx[0] / localSizePx[1];
   const halfV = Math.tan((localView.fov * Math.PI) / 360);
   const halfH = halfV * aspect;
   const ndcX = camX / (camZ * halfH);

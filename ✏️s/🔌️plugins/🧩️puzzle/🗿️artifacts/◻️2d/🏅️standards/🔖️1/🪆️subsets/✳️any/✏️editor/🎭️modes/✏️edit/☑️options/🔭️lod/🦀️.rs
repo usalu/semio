@@ -1,10 +1,11 @@
-//! 🔭️ Edit-mode window option — the per-pane level-of-detail select: "Automatic" plus every board
 //! scale tier (minimap…micro), persisted through `setLodModeForPane`. Shared by all three canvas
+//! 🔭️ Edit-mode window option — the per-pane level-of-detail select: "Automatic" plus every board
 //! windows, which only differ in which pane id they bind it to.
 
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use {crate::editor::puzzle2d::snapshot::puzzle2d_action, crate::editor::puzzle2d::config::PUZZLE2D_LOD_MODE_AUTOMATIC};
-use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
+use semio_framework_plugin::MeasureSelectItem;
+use semio_framework_plugin::WindowMeasure;
 use semio_framework_pack_json::Value;
 
 fn puzzle2d_lod_tier_ids() -> Vec<String> {

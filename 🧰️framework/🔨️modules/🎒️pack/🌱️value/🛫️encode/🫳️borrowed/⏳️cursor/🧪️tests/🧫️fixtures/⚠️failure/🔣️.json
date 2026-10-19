@@ -43,7 +43,7 @@
   "depthProbe": {
     "fieldId": 1,
     "source": true,
-    "maximumDepth": 1,
+    "maximumDepth": 8,
     "expectedHex": "0001011102"
   }
 }

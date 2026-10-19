@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "tolerance",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "tolerance": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "sun",
+          "collector",
+          "irradiance",
+          "elevation",
+          "reflectance",
+          "weather",
+          "pv",
+          "expected",
+          "thermal"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sun": {
+            "$ref": "#/definitions/pair"
+          },
+          "collector": {
+            "$ref": "#/definitions/pair"
+          },
+          "irradiance": {
+            "$ref": "#/definitions/pair"
+          },
+          "elevation": {
+            "type": "number"
+          },
+          "reflectance": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "weather": {
+            "$ref": "#/definitions/pair"
+          },
+          "pv": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "number"
+            }
+          },
+          "expected": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 5,
+            "items": {
+              "type": "number"
+            }
+          },
+          "thermal": {
+            "required": [
+              "coefficient",
+              "constant",
+              "wind",
+              "mounting"
+            ],
+            "additionalProperties": false,
+            "type": "object",
+            "properties": {
+              "constant": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "coefficient": {
+                "type": "number"
+              },
+              "mounting": {
+                "enum": [
+                  "OpenRack",
+                  "CloseRoof",
+                  "InsulatedBack"
+                ]
+              },
+              "wind": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "pair": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      }
+    }
+  }
+}

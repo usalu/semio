@@ -4,7 +4,8 @@ use super::*;
 
 /// 🧵️ Persistent worker-owned fill search over a Send board snapshot.
 pub struct BoardFillJob {
-    pub operation: semio_framework_job::Operation,
+        original_source: Option<semio_framework_action_bus::OriginalToolSourceBinding>,
+pub operation: semio_framework_job::Operation,
     pub naming: &'static BoardNaming,
     pub state: Option<BoardFillJobState>,
     pub checkpoint: Option<BoardFillCheckpoint>,
@@ -24,16 +25,43 @@ pub struct BoardFillJob {
 pub(super) enum BoardFillOffer { Yield, Preview, Checkpoint(u64), Complete, Fault, Cancelled }
 
 // #region board_host
-//#region 🪣️Fill
-/// 📸️ Begins a fixed-page snapshot capture without traversing a host collection.
-pub fn begin_board_fill_snapshot(style: &BoardStyleState, brush: &BoardBrushState) -> BoardFillSnapshotCapture {
-    BoardFillSnapshotCapture::new(brush.suggestion_offset, style.naming)
+pub fn begin_board_fill_snapshot(style: &BoardStyleState, brush: &BoardBrushState, output: &mut Option<BoardFillSnapshotCapture>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    BoardFillSnapshotCapture::admit_original(brush.suggestion_offset, style.naming, output, cx)
 }
 
 impl BoardFillSnapshotCapture {
-    pub fn new(suggestion_offset: f64, naming: &'static BoardNaming) -> Self {
+    pub fn admission_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let mut demand = BoardFillSnapshot::descriptor_demands(); demand.copy_bytes += size_of::<Self>(); Ok(demand)
+    }
+    pub fn admit_original(suggestion_offset: f64, naming: &'static BoardNaming, output: &mut Option<Self>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        use semio_framework_action_bus::{admit_original_tool_construction_scoped, ToolJobAdmissionDemand};
+        use semio_framework_value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
+        let demand = Self::admission_demands()?;
+        let mut allocation_failed = false;
+        let mut constructed_progress = RetainedCloneProgress::default();
+        let admitted = admit_original_tool_construction_scoped(cx, output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: 0, depth: demand.depth }, |scope| {
+            scope.admit_owner(demand)?;
+            let mut candidate = Self::unallocated(suggestion_offset, naming);
+            let snapshot = candidate.snapshot.as_mut().expect("original snapshot construction carrier");
+            snapshot.original_source = Some(scope.identity().source_binding());
+            let mut progress = RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Self>(), ..Default::default() };
+            macro_rules! descriptor {
+                ($field:ident) => { if !allocation_failed { match BoardFillFixedPages::try_new() {
+                    Ok(pages) => { let bytes = size_of_val(pages.pages.as_ref()); progress.retained_capacity_bytes += bytes; progress.copied_bytes += bytes; snapshot.$field = pages; },
+                    Err(()) => allocation_failed = true,
+                } } };
+            }
+            descriptor!(nodes); descriptor!(handles); descriptor!(kinds); descriptor!(rules);
+            constructed_progress = progress;
+            Ok((candidate, progress))
+        })?;
+        if allocation_failed { return Err(ValueError::literal(ValueRefusalKind::AllocationFailed, "board fill retains its partial snapshot owner for original close").with_retained_progress(constructed_progress).into()); }
+        Ok(admitted)
+    }
+
+    fn unallocated(suggestion_offset: f64, naming: &'static BoardNaming) -> Self {
         Self {
-            snapshot: Some(BoardFillSnapshot { nodes: BoardFillFixedPages::new(), handles: BoardFillFixedPages::new(), kinds: BoardFillFixedPages::new(), rules: BoardFillFixedPages::new(), suggestion_offset, naming }),
+            snapshot: Some(BoardFillSnapshot { original_source: None, nodes: BoardFillFixedPages::unallocated(), handles: BoardFillFixedPages::unallocated(), kinds: BoardFillFixedPages::unallocated(), rules: BoardFillFixedPages::unallocated(), suggestion_offset, naming }),
             phase: BoardFillCapturePhase::Nodes,
             last_key: None,
             node: None,
@@ -328,23 +356,55 @@ impl BoardFillSnapshotCapture {
         Ok(())
     }
 
-    pub fn step(&mut self, scene: &BoardSceneState, style: &BoardStyleState, brush: &BoardBrushState) -> BoardFillCaptureStep {
-        if self.closing {
-            return BoardFillCaptureStep::Fault(BoardFillCaptureFault::GenerationExhausted);
+    pub fn next_step_demands(&self, style: &BoardStyleState) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        fn page<T, const N: usize>(pages: &BoardFillFixedPages<T, N>) -> usize {
+            if pages.len < BoardFillFixedPages::<T, N>::item_capacity() && pages.pages.get(pages.len / BOARD_FILL_PAGE_ITEMS).is_some_and(Option::is_none) { BOARD_FILL_PAGE_ITEMS * size_of::<T>() } else { 0 }
         }
-        let result = match self.phase {
-            BoardFillCapturePhase::Nodes => self.capture_node(scene, style),
-            BoardFillCapturePhase::Handles => self.capture_handle(scene, style, brush),
-            BoardFillCapturePhase::Kinds => self.capture_kind(style, brush),
-            BoardFillCapturePhase::Rules => self.capture_rule(style),
-            BoardFillCapturePhase::Complete => return BoardFillCaptureStep::Complete,
-            BoardFillCapturePhase::Closing => return BoardFillCaptureStep::Fault(BoardFillCaptureFault::GenerationExhausted),
+        let capacity_bytes = match self.phase {
+            BoardFillCapturePhase::Nodes if self.node.as_ref().is_some_and(|node| node.bounds.is_some()) => self.snapshot.as_ref().map_or(0, |snapshot| page(&snapshot.nodes)),
+            BoardFillCapturePhase::Handles if self.handle.as_ref().is_some_and(|handle| matches!(handle.stage, BoardFillHandleCaptureStage::Publish)) => self.snapshot.as_ref().map_or(0, |snapshot| page(&snapshot.handles)),
+            BoardFillCapturePhase::Kinds => match self.kind.as_ref() {
+                None if self.next_map_entry(&style.node_kinds).is_some() => BoardFillFixedPages::<BoardFillTemplateSnapshot, { BOARD_FILL_KIND_HANDLE_CAPACITY / BOARD_FILL_PAGE_ITEMS }>::descriptor_bytes(),
+                None => 0,
+                Some(kind) if matches!(kind.stage, BoardFillKindCaptureStage::Publish) => self.snapshot.as_ref().map_or(0, |snapshot| page(&snapshot.kinds)),
+                Some(kind) if matches!(kind.stage, BoardFillKindCaptureStage::Templates) && kind.template.as_ref().is_some_and(|template| matches!(template.stage, BoardFillTemplateCaptureStage::Publish)) => page(&kind.value.handles),
+                _ => 0,
+            },
+            BoardFillCapturePhase::Rules if self.rule.as_ref().is_some_and(|rule| matches!(rule.stage, BoardFillRuleCaptureStage::Publish)) => self.snapshot.as_ref().map_or(0, |snapshot| page(&snapshot.rules)),
+            _ => 0,
         };
-        match result {
-            Ok(()) if self.phase == BoardFillCapturePhase::Complete => BoardFillCaptureStep::Complete,
-            Ok(()) => BoardFillCaptureStep::Pending,
-            Err(fault) => BoardFillCaptureStep::Fault(fault),
-        }
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>() + capacity_bytes, capacity_bytes, release_bytes: 0, depth: 2 })
+    }
+
+    pub fn step(&mut self, scene: &BoardSceneState, style: &BoardStyleState, brush: &BoardBrushState, cx: &mut semio_framework_job::StepContext<'_>) -> Result<BoardFillCaptureStep, semio_framework_job::OriginalTurnFailure> {
+        use semio_framework_action_bus::{admit_original_tool_construction_scoped, ToolJobAdmissionDemand};
+        use semio_framework_value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
+        cx.original_source_parent()?.validate_borrowed_context(cx)?;
+        let snapshot = self.snapshot.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "board capture original snapshot is absent"))?;
+        if !snapshot.original_source.is_some_and(|source| source.matches(cx)) { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "board capture refused a foreign original source").into()); }
+        if self.closing { return Ok(BoardFillCaptureStep::Fault(BoardFillCaptureFault::GenerationExhausted)); }
+        if matches!(self.phase, BoardFillCapturePhase::Complete) { return Ok(BoardFillCaptureStep::Complete); }
+        let demand = self.next_step_demands(style)?;
+        let mut output = None;
+        admit_original_tool_construction_scoped(cx, &mut output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: 0, depth: demand.depth }, |scope| {
+            scope.admit_owner(demand)?;
+            let result = match self.phase {
+                BoardFillCapturePhase::Nodes => self.capture_node(scene, style),
+                BoardFillCapturePhase::Handles => self.capture_handle(scene, style, brush),
+                BoardFillCapturePhase::Kinds => self.capture_kind(style, brush),
+                BoardFillCapturePhase::Rules => self.capture_rule(style),
+                BoardFillCapturePhase::Complete => Ok(()),
+                BoardFillCapturePhase::Closing => Err(BoardFillCaptureFault::GenerationExhausted),
+            };
+            let capacity_bytes = if result.is_ok() { demand.capacity_bytes } else { 0 };
+            let outcome = match result {
+                Ok(()) if self.phase == BoardFillCapturePhase::Complete => BoardFillCaptureStep::Complete,
+                Ok(()) => BoardFillCaptureStep::Pending,
+                Err(fault) => BoardFillCaptureStep::Fault(fault),
+            };
+            Ok((outcome, RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Self>() + capacity_bytes, retained_capacity_bytes: capacity_bytes, released_bytes: 0 }))
+        })?;
+        Ok(output.unwrap_or(BoardFillCaptureStep::Pending))
     }
 
     pub fn take_snapshot(&mut self) -> Option<BoardFillSnapshot> {

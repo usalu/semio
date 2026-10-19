@@ -535,7 +535,7 @@
       "cache": false,
       "options": {
         "cwd": ".",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️18/OS-HUB-COLLABORATION-AI-END-TO-END/🐍️s3-foreign-kind-in-s.mjs",
+        "command": "bun 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts ticket-probe foreign-kind-s",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -554,7 +554,7 @@
       "cache": false,
       "options": {
         "cwd": ".",
-        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️18/OS-HUB-COLLABORATION-AI-END-TO-END/🐍️u4-pinch-diagram-contrast-probe.mjs",
+        "command": "bun 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts ticket-probe pinch-diagram-contrast-s",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -826,6 +826,128 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts parity journey",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "verb": "test",
+            "parameters": [
+              {
+                "id": "renderer",
+                "kind": "choice",
+                "required": true,
+                "values": [
+                  {
+                    "id": "paired",
+                    "args": [
+                      "--renderer",
+                      "paired"
+                    ]
+                  },
+                  {
+                    "id": "react",
+                    "args": [
+                      "--renderer",
+                      "react"
+                    ]
+                  },
+                  {
+                    "id": "wgpu",
+                    "args": [
+                      "--renderer",
+                      "wgpu"
+                    ]
+                  }
+                ],
+                "title": {
+                  "en": "Renderer",
+                  "de": "Renderer"
+                },
+                "description": {
+                  "en": "Choose a paired run or one renderer.",
+                  "de": "Gepaarten Lauf oder einzelnen Renderer auswählen."
+                }
+              },
+              {
+                "id": "react-serve",
+                "kind": "text",
+                "valueFlag": "--react-serve",
+                "title": {
+                  "en": "React server",
+                  "de": "React-Server"
+                },
+                "description": {
+                  "en": "Address of the React server.",
+                  "de": "Adresse des React-Servers."
+                }
+              },
+              {
+                "id": "wgpu-serve",
+                "kind": "text",
+                "valueFlag": "--wgpu-serve",
+                "title": {
+                  "en": "WGPU server",
+                  "de": "WGPU-Server"
+                },
+                "description": {
+                  "en": "Address of the WGPU server.",
+                  "de": "Adresse des WGPU-Servers."
+                }
+              },
+              {
+                "id": "locale",
+                "kind": "choice",
+                "required": true,
+                "values": [
+                  {
+                    "id": "en",
+                    "args": [
+                      "--locale",
+                      "en"
+                    ]
+                  },
+                  {
+                    "id": "de",
+                    "args": [
+                      "--locale",
+                      "de"
+                    ]
+                  }
+                ],
+                "title": {
+                  "en": "Language",
+                  "de": "Sprache"
+                },
+                "description": {
+                  "en": "Choose the language explicitly.",
+                  "de": "Sprache ausdrücklich auswählen."
+                }
+              },
+              {
+                "id": "output",
+                "kind": "text",
+                "required": true,
+                "valueFlag": "--output",
+                "title": {
+                  "en": "Output directory",
+                  "de": "Ausgabeverzeichnis"
+                },
+                "description": {
+                  "en": "Directory for generated verification artifacts.",
+                  "de": "Verzeichnis für erzeugte Prüfartefakte."
+                }
+              }
+            ],
+            "title": {
+              "en": "Compare renderer journeys",
+              "de": "Renderer-Abläufe vergleichen"
+            },
+            "description": {
+              "en": "Compare interactive journeys across the selected renderers.",
+              "de": "Interaktive Abläufe der ausgewählten Renderer vergleichen."
+            }
+          }
+        }
       }
     },
     "channel-version-ownership-check": {

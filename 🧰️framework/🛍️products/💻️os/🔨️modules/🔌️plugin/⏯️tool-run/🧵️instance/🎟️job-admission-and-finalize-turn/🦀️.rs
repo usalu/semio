@@ -119,7 +119,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     }
 
     /// 🏁️ Finalize (§2.7.4): freshness refold on the head, optional revalidate job, one outbound batched `Edit`.
-    pub(super) async fn finalize_tool_run_turn(&mut self, deadline: u64,grant:RetainedCloneGrant,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
+    pub(super)  async fn finalize_tool_run_turn(&mut self, deadline: u64,grant:RetainedCloneGrant,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(), Fault> {
         let store_generation = self.stores.store.generation();
         let member_generation = self.shared().tool_run_member_generation();
         let entry = selected_entry_mut!(self.tool_runs).expect("finalizing slot");
@@ -176,7 +176,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                 Ok(())
             }
             ToolRunFinalizePhase::Revalidating => self.step_tool_run_job(deadline,grant),
-            ToolRunFinalizePhase::Publishing => self.publish_tool_run(deadline,grant,identity).await,
+            ToolRunFinalizePhase::Publishing => self.publish_tool_run(deadline,grant,identity,receiving).await,
             ToolRunFinalizePhase::Closing => self.close_tool_run_publication(grant),
         }
     }

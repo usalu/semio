@@ -1,0 +1,36 @@
+{
+  "sourceProducer": "@teaching/architecture-course:typecheck",
+  "release": {
+    "configurationJob": "configuration",
+    "runnerVariable": "ARCHITECTURE_COURSE_RUNNER",
+    "runner": "${{ needs.configuration.outputs.runner }}",
+    "consumerRunner": "${{ needs.check.outputs.runner }}",
+    "job": "check",
+    "condition": "${{ (inputs.site || inputs.proctor) && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}",
+    "siteCondition": "${{ inputs.site && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}",
+    "proctorCondition": "${{ inputs.proctor && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}",
+    "commands": [
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo preflight --scope @teaching/architecture-course",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo dependencies sync --all",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo run @teaching/architecture-course:test",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo run @teaching/architecture-course:typecheck",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo run @teaching/architecture-course:ci-browser-prepare",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo run @teaching/architecture-course:test-e2e -- --topology rehearsal --"
+    ],
+    "consumers": ["site", "proctor"],
+    "siteCommands": [
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo preflight --scope @teaching/architecture-course",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo dependencies sync --all",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo run @teaching/architecture-course:publish --configuration=release"
+    ],
+    "proctorSteps": [
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo preflight --scope @teaching/architecture-course",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo dependencies sync --all",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo run @teaching/architecture-course:docker-image-build",
+      "docker/login-action",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo run @teaching/architecture-course:docker-image-publish"
+    ],
+    "imageBuildTarget": "docker-image-build",
+    "imagePublishTarget": "docker-image-publish"
+  }
+}

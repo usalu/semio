@@ -166,7 +166,7 @@ async fn sample_envelope(id: &str, seq: u64) -> protocol::MutationEnvelope {
     protocol::MutationEnvelope {
         mutation_id: protocol::MutationId(id.to_string()),
         document_id: protocol::ArtifactId("doc-1".to_string()),
-        actor: protocol::ActorId("actor-1".to_string()),
+        actor: protocol::ActorId("actor-1".to_string().into()),
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),

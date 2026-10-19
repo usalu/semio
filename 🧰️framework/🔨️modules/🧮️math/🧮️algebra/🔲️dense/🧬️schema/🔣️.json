@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "tolerance",
+    "oracle",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "tolerance": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "oracle": {
+      "const": "mathjs.lusolve"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "order",
+          "matrix",
+          "rhs",
+          "initialSnapshot"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "matrix": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "rhs": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "solution": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "fault": {
+            "enum": [
+              "singular",
+              "dimensions"
+            ]
+          },
+          "initialSnapshot": {
+            "type": "array",
+            "minItems": 12,
+            "maxItems": 12,
+            "items": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            }
+          }
+        }
+      }
+    }
+  }
+}

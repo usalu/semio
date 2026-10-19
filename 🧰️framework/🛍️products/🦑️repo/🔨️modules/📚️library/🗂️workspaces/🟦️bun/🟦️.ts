@@ -5,7 +5,7 @@ export type BunRepositoryMembership = Readonly<{ scopes: readonly BunWorkspaceSc
 /** 🎯️ Selects all authored installation scopes or exactly one declared owner. */
 export type BunWorkspaceSelection = Readonly<{kind:"all"}> | Readonly<{kind:"scope";owner:string}>;
 /** 📣️ Reports actual physical and ownership visits of one fresh verification. */
-export type BunWorkspaceProgress = Readonly<{ operation: "state" | "list" | "readText" | "selection" | "publication"; path: string; completedOperations: number }>;
+export type BunWorkspaceProgress = Readonly<{ operation: "state" | "list" | "readText" | "membership" | "selection" | "publication"; path: string; completedOperations: number }>;
 /** 🎛️ Receives the original operation signal and continuation without constructing authority. */
 export interface BunWorkspaceControl { readonly signal: AbortSignal; advance(progress: BunWorkspaceProgress): Promise<void> }
 /** 🧾️ Publishes current native patterns and independently owned source packages after manifest revalidation. */

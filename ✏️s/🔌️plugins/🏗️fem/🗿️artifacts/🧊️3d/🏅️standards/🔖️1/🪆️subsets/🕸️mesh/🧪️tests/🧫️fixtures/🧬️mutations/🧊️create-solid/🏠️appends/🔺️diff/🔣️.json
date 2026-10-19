@@ -4,6 +4,7 @@
   "materials": null,
   "sections": null,
   "solids": {
+    "removed": [],
     "inserted": [
       {
         "index": 0,
@@ -38,7 +39,6 @@
         }
       }
     ],
-    "removed": [],
     "moved": [],
     "modified": []
   },

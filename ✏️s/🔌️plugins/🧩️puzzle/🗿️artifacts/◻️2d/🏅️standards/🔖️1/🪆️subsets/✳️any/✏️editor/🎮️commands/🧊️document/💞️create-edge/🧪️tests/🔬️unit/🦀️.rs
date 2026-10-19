@@ -1,11 +1,12 @@
-//! 🧪️ `createEdge` / `deleteEdge` laws: the compatibility gate, the occupied-handle refusal, and the
 //! engagement line that drives the same arm.
+//! 🧪️ `createEdge` / `deleteEdge` laws: the compatibility gate, the occupied-handle refusal, and the
 
 use crate::editor::puzzle2d::testkit::*;
 use {crate::editor::puzzle2d::snapshot::board_snapshot_edges, crate::editor::puzzle2d::snapshot::board_snapshot_nodes};
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::InvocationResult;
-use semio_framework_pack_json::{json, Value};
+use semio_framework_pack_json::json;
+use semio_framework_pack_json::Value;
 
 fn notices(result: &InvocationResult) -> Vec<String> {
     result

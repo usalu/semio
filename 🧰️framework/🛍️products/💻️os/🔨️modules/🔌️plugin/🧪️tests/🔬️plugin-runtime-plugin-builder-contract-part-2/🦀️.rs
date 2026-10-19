@@ -185,12 +185,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             let mut more = scan.runnable || scan.contended;
             if let Some((receiver, output)) = output {
                 assert_eq!(receiver, id);
-                for page in output.typed_operation_results {
+            }
+            {
+                for page in native_pages {
                     assert_ne!(page.lane, TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
                     lanes.push(page.lane);
                     if page.lane == TypedOperationResultLane::Child {
                         assert_eq!(page.token.attempt, acknowledgement_fixture["resultAck"]["attempt"].as_u64().unwrap() as u8);
-                        let delayed_token = page.token;
+                        let delayed_token = page.close(mounted_policy.close);
                         {
                             let active = cell.instance.lock().expect("delayed ACK retained app");
                             assert!(active.app.has_pending_typed_operations());
@@ -232,7 +234,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                         semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_acknowledge_typed_operation_result(&runtime, delayed_token).await.expect("delayed exact retained result ACK");
                         more = true;
                     } else {
-                        semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_acknowledge_typed_operation_result(&runtime, page.token).await.expect("ack exact retained result");
+                        semio_framework_plugin_runtime_ops::ops_typed_operations::semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_acknowledge_typed_operation_result(&runtime, page.close(mounted_policy.close)).await.expect("ack exact retained result");
                         more = true;
                     }
                 }
@@ -258,7 +260,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             artifact_app_laws::settle_registered_typed_operation(&mut active.app, id, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(),cx).await.expect("undo publication");
             let skipped: Vec<String> = undone.diagnostics.iter().map(|diagnostic| diagnostic.message.clone()).collect();
             assert!(skipped.is_empty(), "the group undo skips no member of its own gesture: {skipped:?}");
-            assert_eq!(active.app.snapshot().expect("undone parent snapshot").count, 0, "the parent's edit of the gesture is undone with its group (parent tail group {:?})", store::SpaceMember::tail_group_id(&active.app.store).await);
+            assert_eq!(active.app.snapshot().expect("undone parent snapshot").count, 0, "the parent's edit of the gesture is undone with its group (parent tail group {:?})", store::SpaceMember::tail_group_id(&*active.app.store).await);
             let TestMembers::Child(child) = &mut active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("undone child").member;
             assert_eq!(child.snapshot().expect("undone child snapshot").count, 0);
 
@@ -281,7 +283,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         }
         assert!(runtime.close_quarantine.borrow().get(id).is_none());
         assert!(retired.upgrade().is_none());
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -336,12 +338,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 app_maintenance_turn(&mut app,cx).map_err(|error| format!("maintenance: {error:?}"))?;
                 original_publication_turn(&mut app,&mut identity,&mut publication_caller,mounted_policy.maintenance).map_err(|error| format!("turn {turns}: {error:?}"))?;
                 turns += 1;
-                while let Some(page) = app.take_typed_operation_result_page(id) {
+                while let Some(mut page) = crate::app_testing::artifact_app_laws::take_fixture_result_page(&mut app,id,crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation).expect("original fixture page presentation") {
                     if page.lane == TypedOperationResultLane::Fault {
                         return Err(format!("turn {turns}: fault page {}", String::from_utf8_lossy(page.bytes())));
                     }
                     lanes.push(page.lane);
-                    if !app.acknowledge_typed_operation_result(page.token).map_err(|error| format!("ack: {error:?}"))? {
+                    if !app.acknowledge_typed_operation_result(crate::app_testing::artifact_app_laws::close_fixture_result_page(&mut page,crate::app_testing::artifact_app_laws::fixture_mounted_policy().close)).map_err(|error| format!("ack: {error:?}"))? {
                         return Err(format!("turn {turns}: exact result ACK rejected"));
                     }
                 }

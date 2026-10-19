@@ -33,13 +33,19 @@ pub struct ArtifactRetainedCommandPayload<A: ArtifactApp> {
     pub maximum_work_items: usize,
     pub admission_refusal:Option<ArtifactRetainedAdmissionRefusal>,
     pub work: Box<dyn ArtifactCommandWork<A>>,
+    pub(crate) producer_window_config:Option<crate::window_config::WindowConfigSnapshot>,
+    pub(crate) producer_instance_operation_owner:Option<crate::tool_contract::ArtifactInstanceOperationOwnerHandle>,
+    pub(crate) producer_output_chunks:Option<crate::tool_contract::ArtifactOutputChunks>,
+    pub(crate) producer_controller_id:Option<String>,
+    pub(crate) producer_tool_id:Option<String>,
+    pub(crate) producer_payload_schema_id:Option<String>,
 }
 
 impl<A: ArtifactApp> ArtifactRetainedCommandPayload<A> {
     pub fn new(inputs: ArtifactRetainedCommandInputs<A>, command_id: fn(&A::Command) -> &'static str, maximum_raw_bytes: usize, maximum_work_items: usize, work: Box<dyn ArtifactCommandWork<A>>) -> Self {
         let admission_refusal=admission::admit_limits(maximum_raw_bytes,maximum_work_items);
         let ArtifactRetainedCommandInputs { command, snapshot, snapshot_read, config, history, interaction_state, interaction_hover, context, operation, completion } = inputs;
-        Self { command, snapshot, snapshot_read, config, history, interaction_state, interaction_hover, context, operation, completion, command_id, maximum_raw_bytes, maximum_work_items, admission_refusal,work }
+        Self { command, snapshot, snapshot_read, config, history, interaction_state, interaction_hover, context, operation, completion, command_id, maximum_raw_bytes, maximum_work_items, admission_refusal,work,producer_window_config:None,producer_instance_operation_owner:None,producer_output_chunks:None,producer_controller_id:None,producer_tool_id:None,producer_payload_schema_id:None }
 
     }
 }
@@ -66,6 +72,13 @@ enum ArtifactCommandPublication {
 }
 
 pub struct ArtifactRetainedCommandJob<A: ArtifactApp> {
+    pub(super) producer_window_config:Option<semio_framework_plugin_window_config::WindowConfigSnapshot>,
+    pub(super) producer_instance_operation_owner:Option<semio_framework_plugin_decl_app::tool_contract::ArtifactInstanceOperationOwnerHandle>,
+    pub(super) producer_output_chunks:Option<semio_framework_plugin_decl_app::tool_contract::ArtifactOutputChunks>,
+    pub(super) producer_controller_id:Option<String>,
+    pub(super) producer_tool_id:Option<String>,
+    pub(super) producer_payload_schema_id:Option<String>,
+    source_binding:Option<semio_framework::action_bus::OriginalToolSourceBinding>,
     pub command: Option<A::Command>,
     pub(super) command_received:bool,
     pub snapshot: Option<Arc<A::Snapshot>>,
@@ -139,7 +152,7 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
             else if self.interaction_state.is_some(){Some(store::os_store::snapshot_read::artifact_retirement_admit_shared_lease(&mut self.interaction_state,&mut self.input_retirement,grant))}
             else if self.interaction_hover.is_some(){Some(store::os_store::snapshot_read::artifact_retirement_admit_shared_lease(&mut self.interaction_hover,&mut self.input_retirement,grant))}
             else if self.operation.is_some(){Some(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.operation,&mut self.input_retirement,grant))}
-            else if self.context.is_some(){Some(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.context,&mut self.input_retirement,grant))}else{None};
+            else if self.context.is_some(){Some(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.context,&mut self.input_retirement,grant))}else if self.producer_controller_id.is_some(){Some(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.producer_controller_id,&mut self.input_retirement,grant))}else if self.producer_tool_id.is_some(){Some(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.producer_tool_id,&mut self.input_retirement,grant))}else if self.producer_payload_schema_id.is_some(){Some(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.producer_payload_schema_id,&mut self.input_retirement,grant))}else if self.producer_window_config.is_some(){Some(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.producer_window_config,&mut self.input_retirement,grant))}else if self.producer_instance_operation_owner.is_some(){Some(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.producer_instance_operation_owner,&mut self.input_retirement,grant))}else if self.producer_output_chunks.is_some(){Some(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.producer_output_chunks,&mut self.input_retirement,grant))}else{None};
         if let Some(step)=admitted{return Self::controlled_close_step(step)}
         if let Some(completion)=self.completion.take(){match ControlledRetirement::new(completion){Ok(owner)=>self.completion_retirement=Some(owner),Err((error,original))=>{self.completion=Some(original);return Err(error.into())}}return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}
         if let Some(owner)=self.completion_retirement.as_mut(){if owner.terminal_is_empty(){self.completion_retirement.take();return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}return Self::controlled_close_step(owner.step(grant))}
@@ -177,6 +190,12 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         if self.interaction_hover.is_some(){return store::os_store::snapshot_read::artifact_retirement_shared_lease_birth_demands(&self.interaction_hover);}
         if self.operation.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.operation);}
         if self.context.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.context);}
+        if self.producer_window_config.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.producer_window_config);}
+        if self.producer_instance_operation_owner.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.producer_instance_operation_owner);}
+        if self.producer_output_chunks.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.producer_output_chunks);}
+        if self.producer_controller_id.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.producer_controller_id);}
+        if self.producer_tool_id.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.producer_tool_id);}
+        if self.producer_payload_schema_id.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.producer_payload_schema_id);}
         if self.completion.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
         if let Some(owner)=self.completion_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{Ok(owner.selected_demand(copy)?)};}
         Ok(Default::default())
@@ -195,7 +214,12 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         Self::from_payload(payload, Some(input), Some(checkpoint))
     }
 
+    #[cfg(any(test, feature = "artifact-app-testing"))]
+    pub fn test_admit_original_source(&mut self,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if self.source_binding.is_some(){return Ok(self.source_binding.unwrap().matches(cx))}let mut output=None;let admitted=semio_framework::action_bus::admit_original_tool_construction(cx,&mut output,semio_framework::action_bus::ToolJobAdmissionDemand::reused_job(),|identity|Ok((identity.source_binding(),RetainedCloneProgress{copied_items:1,..Default::default()})))?;if admitted{self.source_binding=output;}Ok(admitted)
+    }
     pub fn from_payload(payload: ArtifactRetainedCommandPayload<A>, raw_input: Option<RetainedToolWireInput>, checkpoint_input: Option<RetainedToolWireInput>) -> Self {
+
         let (raw,admission_refusal)=match (payload.admission_refusal,raw_input.as_ref()) {
             (None,Some(input))=>admission::admit_raw(input.declared_bytes(),payload.maximum_raw_bytes),
             (refusal,_)=>(Vec::new(),refusal),
@@ -208,6 +232,7 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
             ArtifactRetainedCommandPhase::Preflight
         };
         Self {
+            source_binding:None,
             command: Some(payload.command),
             command_received:false,
             snapshot: Some(payload.snapshot),
@@ -223,6 +248,12 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
             maximum_raw_bytes: payload.maximum_raw_bytes,
             maximum_work_items: payload.maximum_work_items,
             work: Some(payload.work),
+            producer_controller_id:payload.producer_controller_id,
+            producer_tool_id:payload.producer_tool_id,
+            producer_payload_schema_id:payload.producer_payload_schema_id,
+            producer_window_config:payload.producer_window_config,
+            producer_instance_operation_owner:payload.producer_instance_operation_owner,
+            producer_output_chunks:payload.producer_output_chunks,
             checkpoint_input,
             checkpoint_bytes: [0; ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES],
             checkpoint_target: [MaybeUninit::uninit(); ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES],
@@ -509,7 +540,7 @@ impl<A:ArtifactApp> ArtifactRetainedCommandJob<A>{
                 cx.set_stage("retained-command-work");
                 if !self.command_received{
                     let (Some(command),Some(operation),Some(work))=(self.command.as_mut(),self.operation.as_ref(),self.work.as_mut())else{return Err(Self::unadmitted_input().into())};
-                    if cx.operation().0!=operation.operation_id||cx.generation().0!=operation.generation{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original command receiving requires its admitted business identity").into())}
+                    if !self.source_binding.is_some_and(|source|source.matches(cx)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original command receiving requires its original physical source binding").into())}
                     let before=cx.retained_progress();let fuel=cx.fuel_remaining();
                     if !work.receive_original_command(command,cx)?{return Ok(None)}
                     if cx.retained_progress()==before&&!Self::metadata(cx)?{return Ok(None)}
@@ -519,7 +550,7 @@ impl<A:ArtifactApp> ArtifactRetainedCommandJob<A>{
                 let (Some(command), Some(snapshot), Some(config), Some(history), Some(interaction), Some(hover), Some(operation), Some(work)) = (self.command.as_ref(), self.snapshot.as_ref(), self.config.as_ref(), self.history.as_ref(), self.interaction_state.as_ref(), self.interaction_hover.as_ref(), self.operation.as_ref(), self.work.as_mut()) else { return Err(Self::unadmitted_input().into()); };
                 let before = cx.retained_progress();
                 let fuel = cx.fuel_remaining();
-                let input = ArtifactCommandInputs { command, snapshot, snapshot_owner: Some(snapshot), snapshot_read:ArtifactCommandSnapshotRead{original:&self.snapshot_read,operation}, config, history, interaction, hover, context: self.context.as_deref(), operation };
+                let input = ArtifactCommandInputs { command, snapshot, snapshot_owner: Some(snapshot), snapshot_read:ArtifactCommandSnapshotRead{original:Some(&self.snapshot_read),operation,source:self.source_binding}, config, history, interaction, hover, context: self.context.as_deref(), operation };
                 let demand = work.work_demands(&input, cx.retained_grant().maximum_copy_bytes)?;
                 if !cx.retained_work_can_enter(demand) {
                     if !semio_framework_job::retained_work::RetainedWorkBudget::new(cx.original_total_retained_grant()).can_enter(demand) { self.fault(b"retained command normal-work demand exceeds its original funding"); return Ok(None); }
@@ -530,6 +561,7 @@ impl<A:ArtifactApp> ArtifactRetainedCommandJob<A>{
                 if cx.retained_progress() == before { Self::metadata(cx)?; }
                 if cx.fuel_remaining() == fuel { cx.consume_fuel(1); }
                 match step {
+                    ArtifactCommandWorkStep::Pending { stage, preview } => { cx.set_stage(stage); self.checkpoint_due(); self.preview(preview); }
                     ArtifactCommandWorkStep::Replay { stage, preview } => { cx.set_stage(stage); self.checkpoint_due(); self.preview(preview); }
                     ArtifactCommandWorkStep::Progress { stage, preview } => { cx.set_stage(stage); self.work_progress = self.work_progress.saturating_add(1); self.checkpoint_due(); self.preview(preview); }
                     ArtifactCommandWorkStep::CompleteDownload { download, ephemeral } => {
@@ -586,7 +618,7 @@ impl<A:ArtifactApp> ArtifactRetainedCommandJob<A>{
 }
 
 impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
-    fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.advance_original(cx)}
+    fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{if !self.source_binding.is_some_and(|source|source.matches(cx)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original retained command source binding changed before work").into())}self.advance_original(cx)}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
         match descriptor.kind() {
@@ -617,6 +649,7 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
     fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}
     fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
     fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        if !self.source_binding.is_some_and(|source|source.matches(cx)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original retained command source binding changed before retirement").into())}
         if !self.closing{return Ok(InteractiveJobCloseStep::Blocked)}
         let grant=cx.retained_grant();let demand=self.close_demands(grant.maximum_copy_bytes)?;
         let step=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,loan|{
@@ -659,6 +692,12 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
             && self.operation.is_none()
             && self.completion.is_none()
             && self.completion_retirement.is_none()
+            && self.producer_controller_id.is_none()
+            && self.producer_tool_id.is_none()
+            && self.producer_payload_schema_id.is_none()
+            && self.producer_window_config.is_none()
+            && self.producer_instance_operation_owner.is_none()
+            && self.producer_output_chunks.is_none()
     }
 }
 //#endregion 🧵️Job

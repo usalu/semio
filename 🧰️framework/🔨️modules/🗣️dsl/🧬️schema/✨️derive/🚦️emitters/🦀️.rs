@@ -302,5 +302,58 @@ pub(super) fn emit_enum(input: DeriveInput) -> proc_macro2::TokenStream {
     let container=parse_container_attrs(&input);
     let ordinary=dsl_variants_codegen(&name,data,container.retire_with.as_ref());
     let borrowed=borrowed_variants_owner_codegen(&name,data);
-    quote!{#ordinary #borrowed}
+    let field = if container.variant_field { variant_field_codegen(&name) } else { quote!{} };
+    quote!{#ordinary #borrowed #field}
 }
+
+
+fn variant_field_codegen(name: &syn::Ident) -> proc_macro2::TokenStream {
+    quote! {
+        impl ::semio_framework_dsl_record::BorrowedDslField for #name {
+            const SHAPE: ::semio_framework_dsl_record::BorrowedShape = ::semio_framework_dsl_record::BorrowedShape::Statements(<Self as ::semio_framework_dsl_record::BorrowedDslVariants>::VARIANTS);
+        }
+        impl ::semio_framework_dsl_record::DslField for #name {
+            fn shape() -> ::semio_framework_dsl_record::Shape { ::semio_framework_dsl_record::Shape::Statements(<Self as ::semio_framework_dsl_record::DslVariants>::variants()) }
+            fn shape_controlled<C: ::semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<::semio_framework_dsl_record::Shape, ::semio_framework_value::ValueError> { <Self as ::semio_framework_dsl_record::DslVariants>::variants_controlled(control).map(::semio_framework_dsl_record::Shape::Statements) }
+            fn to_value(&self) -> ::semio_framework_dsl_record::FieldValue { ::semio_framework_dsl_record::FieldValue::Statements(vec![<Self as ::semio_framework_dsl_record::DslVariants>::to_named_record(self)]) }
+            fn from_value(value: &::semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+                match value {
+                    ::semio_framework_dsl_record::FieldValue::Statements(items) if items.len() == 1 => <Self as ::semio_framework_dsl_record::DslVariants>::from_named_record(&items[0].0, &items[0].1).map_err(|error| error.message),
+                    _ => Err("declared variant field requires exactly one named record".into()),
+                }
+            }
+            fn projection_view(&self, path: &[usize]) -> Result<::semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>, ::semio_framework_value::ValueError> {
+                match path.split_first() {
+                    None => Ok(::semio_framework_dsl_record::native_encoding::FieldProjectionView::Statements(1)),
+                    Some((0, rest)) => <Self as ::semio_framework_dsl_record::DslVariants>::projected_variant_view(self, rest),
+                    _ => Err(::semio_framework_dsl_record::native_encoding::projection_path_error()),
+                }
+            }
+            fn projection_key(&self, path: &[usize], index: usize) -> Result<&str, ::semio_framework_value::ValueError> {
+                match path.split_first() {
+                    None if index == 0 => Ok(<Self as ::semio_framework_dsl_record::DslVariants>::projected_variant_identity(self).0),
+                    Some((0, rest)) => <Self as ::semio_framework_dsl_record::DslVariants>::projected_variant_key(self, rest, index),
+                    _ => Err(::semio_framework_dsl_record::native_encoding::projection_path_error()),
+                }
+            }
+            fn to_value_controlled(&self, control: &mut ::semio_framework_value::NativeEncodeControl<'_>) -> Result<::semio_framework_dsl_record::FieldValue, ::semio_framework_value::ValueError> { ::semio_framework_dsl_record::native_encoding::project_statements::<Self, [Self]>(::std::slice::from_ref(self), control) }
+            fn from_value_controlled(value: &::semio_framework_dsl_record::FieldValue, control: &mut ::semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ::semio_framework_value::ValueError> {
+                control.checkpoint()?;
+                match value {
+                    ::semio_framework_dsl_record::FieldValue::Statements(items) if items.len() == 1 => control.scoped_stage(|control| {
+                        control.begin_stage(1)?;
+                        let decoded = ::semio_framework_value::DecodedValue::new(control.scoped_stage(|control| {
+                            control.begin_stage(0)?;
+                            <Self as ::semio_framework_dsl_record::DslVariants>::from_named_record_controlled(&items[0].0, &items[0].1, control)
+                        })?, <Self as ::semio_framework_dsl_record::DslVariants>::retire_decoded_variant);
+                        control.step()?;
+                        Ok(decoded.take())
+                    }),
+                    _ => Err(::semio_framework_value::ValueError::literal(::semio_framework_value::ValueRefusalKind::InvalidValue, "declared variant field requires exactly one named record")),
+                }
+            }
+            fn retire_decoded(self) { <Self as ::semio_framework_dsl_record::DslVariants>::retire_decoded_variant(self); }
+        }
+    }
+}
+

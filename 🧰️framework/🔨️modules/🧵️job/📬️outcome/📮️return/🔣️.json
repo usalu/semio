@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "capacity": 3,
+  "pageBytes": 16384,
+  "operationPages": 256,
+  "pageOrder": [2, 1, 0],
+  "restart": {"fileBytes": 65543, "offsets": [0, 65536], "lengths": [16384, 7], "eof": [false, true]},
+  "cases": [
+    {"name": "empty", "bytes": 0, "stockBytes": 8388608, "accepted": true},
+    {"name": "one-page", "bytes": 16384, "stockBytes": 8388608, "accepted": true},
+    {"name": "partial-last-page", "bytes": 4194303, "stockBytes": 8388608, "accepted": true},
+    {"name": "exact-original-ceiling", "bytes": 4194304, "stockBytes": 8388608, "accepted": true},
+    {"name": "one-byte-over", "bytes": 4194305, "stockBytes": 8388608, "accepted": false},
+    {"name": "world-max-exceeds-original", "bytes": 16777216, "stockBytes": 8388608, "accepted": false},
+    {"name": "source-stock-exact", "bytes": 32768, "stockBytes": 32768, "accepted": true},
+    {"name": "source-stock-plus-one", "bytes": 32769, "stockBytes": 32768, "accepted": false},
+    {"name": "fractional-stock-needs-whole-page", "bytes": 16385, "stockBytes": 32767, "accepted": false},
+    {"name": "no-payload-stock", "bytes": 1, "stockBytes": 0, "accepted": false}
+  ]
+}

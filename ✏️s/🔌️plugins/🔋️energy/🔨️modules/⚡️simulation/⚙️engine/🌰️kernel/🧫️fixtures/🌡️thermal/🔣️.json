@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "oracle": "mathjs.lusolve",
+  "matrix": [
+    13,
+    -3,
+    -3,
+    23
+  ],
+  "rhs": [
+    180,
+    440
+  ],
+  "tolerance": 1e-10,
+  "cases": [
+    {
+      "id": "free",
+      "target": null,
+      "delivered": 0,
+      "free": [
+        18.82758620689655,
+        21.586206896551726
+      ],
+      "required": 0,
+      "settled": [
+        18.82758620689655,
+        21.586206896551726
+      ]
+    },
+    {
+      "id": "heating-met",
+      "target": 25,
+      "delivered": 76.15384615384612,
+      "free": [
+        18.82758620689655,
+        21.586206896551726
+      ],
+      "required": 76.15384615384612,
+      "settled": [
+        19.615384615384617,
+        24.999999999999996
+      ]
+    },
+    {
+      "id": "heating-half",
+      "target": 25,
+      "delivered": 38.07692307692306,
+      "free": [
+        18.82758620689655,
+        21.586206896551726
+      ],
+      "required": 76.15384615384612,
+      "settled": [
+        19.22148541114058,
+        23.293103448275858
+      ]
+    },
+    {
+      "id": "cooling-met",
+      "target": 18,
+      "delivered": -80.00000000000004,
+      "free": [
+        18.82758620689655,
+        21.586206896551726
+      ],
+      "required": -80.00000000000004,
+      "settled": [
+        18,
+        18
+      ]
+    }
+  ],
+  "checkpoint": {
+    "words": 32,
+    "thermalPhase": 16,
+    "thermalCursor": 17,
+    "densePresent": 18,
+    "denseStart": 19,
+    "denseWords": 12,
+    "requiredBits": 31
+  }
+}

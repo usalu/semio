@@ -4,7 +4,7 @@
  *
  * @see ../../🧫️fixtures/🧭️journeys/🏗️workspace/📋️project.json
  */
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -67,31 +67,33 @@ export const sleep = Bun.sleep;
 const PORT_A = "47101";
 const PORT_B = "47102";
 
-/** 🏗️ A copy of the fixture workspace with free ports and its own daemon; `close` stops that daemon and removes the copy. */
+/** 🏗️ Isolated fixture metadata with free ports, its own daemon and immutable source behavior. */
 export class Workspace {
   private constructor(readonly root: string, readonly portA: number, readonly portB: number, private readonly runtime: string) {}
 
   static async open(name: string, options: { bulkTools?: number } = {}): Promise<Workspace> {
-    const base = mkdtempSync(join(tmpdir(), `semio-battle-${name}-`));
-    const root = join(base, "workspace");
+    const artifacts = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir());
+    mkdirSync(artifacts, { recursive: true });
+    const base = mkdtempSync(join(artifacts, "j-"));
+    const root = join(base, "w");
+    if (root.length > 152) throw new Error("journey roots must leave room for native logs within 256 UTF-16 units");
     mkdirSync(join(root, ".git"), { recursive: true });
     const [portA, portB] = [await freePort(), await freePort()];
     const source = join(dashboard, "🧪️tests/🧫️fixtures/🧭️journeys/🏗️workspace");
-    for (const entry of readdirSync(source)) {
-      const text = readFileSync(join(source, entry), "utf8").replaceAll(PORT_A, String(portA)).replaceAll(PORT_B, String(portB));
-      writeFileSync(join(root, entry), text);
-    }
+    const manifest = JSON.parse(readFileSync(join(source, "📋️project.json"), "utf8").replaceAll(PORT_A, String(portA)).replaceAll(PORT_B, String(portB)));
+    for (const tool of manifest.metadata.semio.dashboard.tools) tool.command = tool.command.map((argument: string) => argument === "{workspace}/📜️script.ts" ? join(source, "📜️script.ts") : argument);
+    writeFileSync(join(root, "📋️project.json"), JSON.stringify(manifest));
     if (options.bulkTools) {
       mkdirSync(join(root, "bulk"));
       const tools = Array.from({ length: options.bulkTools }, (_, index) => ({ id: `bulk-${String(index).padStart(6, "0")}`, verb: ["dev", "build", "test", "check"][index % 4], command: ["bun", "--version"] }));
       writeFileSync(join(root, "bulk/📋️project.json"), JSON.stringify({ name: "bulk", metadata: { semio: { dashboard: { tools } } } }));
     }
-    const runtime = join(base, "runtime");
+    const runtime = join(base, "r");
     mkdirSync(runtime);
     return new Workspace(root, portA, portB, runtime);
   }
 
-  get env(): Record<string, string> { return { SEMIO_DASHBOARD_RUNTIME_DIR: this.runtime, SEMIO_LOCALE: "en" }; }
+  get env(): Record<string, string> { return { SEMIO_DASHBOARD_RUNTIME_DIR: this.runtime, SEMIO_DASHBOARD_INSTANCE: "", SEMIO_DASHBOARD_CONFIG: join(this.runtime, "p.jsonl"), SEMIO_LOCALE: "en", SEMIO_APPEARANCE: "", SEMIO_LOCKED_TERMINOLOGY: "", SEMIO_DASHBOARD_RENDERER: "", SEMIO_DASHBOARD_LAYOUT: "", SEMIO_DASHBOARD_PREFIX: "", SEMIO_REPO_IMPLEMENTATION: "rust" }; }
 
   semio(args: string[], options: { env?: Record<string, string>; timeoutMs?: number } = {}): Promise<Run> {
     return semio(args, { cwd: this.root, env: { ...this.env, ...options.env }, timeoutMs: options.timeoutMs });

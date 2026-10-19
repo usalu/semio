@@ -3,18 +3,18 @@ use super::*;
 
 //#region 📮️RuntimeMailbox
 #[cfg(not(target_arch = "wasm32"))]
-fn native_renderer_asset_path(url: &str) -> Result<std::path::PathBuf, String> {
+fn native_renderer_asset_path(url: &str) -> Result<RendererIoPath<'_>, String> {
     if url.starts_with("/mesh/") {
         let source = &mesh_assets::resolve_mesh_asset(url)?.source;
-        return Ok(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../../../../../..").join(source));
+        return Ok(RendererIoPath::new([env!("CARGO_MANIFEST_DIR"),"../../../../../../../../../../..",source]));
     }
     if let Some(path) = url.strip_prefix("file://") {
-        return Ok(std::path::PathBuf::from(path));
+        return Ok(RendererIoPath::new([path,"",""]));
     }
     if url.starts_with('/') {
-        return Ok(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../..").join(url.trim_start_matches('/')));
+        return Ok(RendererIoPath::new([env!("CARGO_MANIFEST_DIR"),"../../../../..",url.trim_start_matches('/')]));
     }
-    Ok(std::path::PathBuf::from(url))
+    Ok(RendererIoPath::new([url,"",""]))
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -22,46 +22,35 @@ pub async fn stream_native_renderer_asset<R: MailboxRuntime>(mailbox: &RuntimeMa
     if fetch.url().starts_with("http://") || fetch.url().starts_with("https://") {
         return stream_native_renderer_http_asset(mailbox, fetch).await;
     }
-    let path = native_renderer_asset_path(fetch.url()).map_err(NativeAssetStreamFailure::Unavailable)?;
-    let mut offset = 0u64;
+    let opened={let path=native_renderer_asset_path(fetch.url()).map_err(NativeAssetStreamFailure::Unavailable)?;let mut open=open_renderer_source_io(path);std::future::poll_fn(|context|{
+        if mailbox.renderer_asset_cancelled(fetch){return std::task::Poll::Ready(Err(None))}
+        match std::pin::Pin::new(&mut open).poll(context){std::task::Poll::Ready(answer)=>std::task::Poll::Ready(answer.map_err(Some)),std::task::Poll::Pending=>std::task::Poll::Pending}
+    }).await};
+    let mut source=match opened{Ok(source)=>source,Err(Some(error))=>return Err(NativeAssetStreamFailure::Original(error)),Err(None)=>return Err(NativeAssetStreamFailure::Cancelled)};
     loop {
         if mailbox.renderer_asset_cancelled(fetch) {
             return Err(NativeAssetStreamFailure::Cancelled);
         }
-        let value = run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadPage { path: path.clone(), offset, max_bytes: WORLD_ASSET_RESPONSE_PAGE_BYTES }).await.map_err(NativeAssetStreamFailure::Unavailable)?;
+        let next={let mut next=source.next_page();std::future::poll_fn(|context|{
+            if mailbox.renderer_asset_cancelled(fetch){return std::task::Poll::Ready(Err(None))}
+            match std::pin::Pin::new(&mut next).poll(context){std::task::Poll::Ready(answer)=>std::task::Poll::Ready(answer.map_err(Some)),std::task::Poll::Pending=>std::task::Poll::Pending}
+        }).await};
+        let page=match next{Ok(Some(page))=>page,Ok(None)=>break,Err(Some(kind))=>return Err(NativeAssetStreamFailure::Original(source.failure(kind))),Err(None)=>return Err(NativeAssetStreamFailure::Cancelled)};
         #[cfg(any(test, feature = "testkit"))]
         mailbox.wait_native_asset_page_test_barrier(fetch);
-        let semio_framework_os_services::NativeIoValue::Page { mut bytes, eof } = value else { return Err("native renderer asset I/O returned the wrong value".into()) };
         if mailbox.renderer_asset_cancelled(fetch) {
-            return Err(NativeAssetStreamFailure::CancelledPage { payload: bytes });
+            drop(page);return Err(NativeAssetStreamFailure::Cancelled);
         }
-        if bytes.is_empty() && !eof {
-            return Err("native renderer asset produced an empty nonterminal page".into());
-        }
-        let count = bytes.len();
-        if count != 0 {
-            if let Err(detail) = push_renderer_asset_page(fetch, &mut bytes) {
-                return Err(NativeAssetStreamFailure::Page { detail, payload: bytes });
-            }
-            offset = offset.checked_add(count as u64).ok_or_else(|| "native renderer asset offset overflow".to_string())?;
-        }
-        if eof {
-            break;
+        let ordinal=page.original_page_index() as u16;
+        let page=WorldAssetResponsePage::try_from_original(page).expect("the original native and World page extents agree");
+        if let Err(page)=fetch.owner_mut().push_page_at(ordinal,page){
+            drop(page);return Err(NativeAssetStreamFailure::Original(source.failure(RendererSourceIoFailureKind::RecipientRefused)));
         }
     }
     Ok(())
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-pub fn push_renderer_asset_page(fetch: &mut RendererAssetFetchOwner, bytes: &mut semio_framework_job::RetainedJobPayload) -> Result<(), &'static str> {
-    let source = bytes.single_page().ok_or("native renderer asset I/O must return one retained page")?;
-    if !source.is_empty() {
-        let page = WorldAssetResponsePage::try_from_owned(source.to_vec()).map_err(|_| "native renderer asset page exceeded fixed credits")?;
-        fetch.owner_mut().push_page(page).map_err(|_| "native renderer asset response exceeded its reserved credits")?;
-    }
-    let _ = semio_framework_os_renderer_wgpu_host_base::close_renderer_io_payload(bytes);
-    Ok(())
-}
+
 
 #[cfg(not(target_arch = "wasm32"))]
 async fn stream_native_renderer_http_asset<R: MailboxRuntime>(mailbox: &RuntimeMailbox<R>, fetch: &mut RendererAssetFetchOwner) -> Result<(), NativeAssetStreamFailure> {

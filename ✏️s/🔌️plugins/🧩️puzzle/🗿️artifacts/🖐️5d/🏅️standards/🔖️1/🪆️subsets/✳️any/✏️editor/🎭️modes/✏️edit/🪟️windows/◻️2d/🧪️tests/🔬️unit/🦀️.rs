@@ -39,7 +39,7 @@ fn renders_the_board_scene() {
 
 //#region 🕹️Interaction
 fn board_document() -> Puzzle5dDocument {
-    let projection = serde_json::json!({
+    let projection = semio_framework_pack_json::json!({
         "schema": "puzzle.5d",
         "parts": [{ "id": "teil-ä", "partKind": "Part", "2d": { "x": 1.0, "y": 2.0 }, "3d": { "origin": [0.0, 0.0, 0.0] }, "grips": [{ "id": "g1", "gripKind": "griff-ü", "2d": {}, "3d": {} }] }],
         "fasteners": []
@@ -129,7 +129,7 @@ fn the_board_publishes_the_open_grip_suggestion_menu() {
     let record: serde_json::Value = serde_json::from_str(&board_suggestion_menu_json(&open, labels, None).expect("an open menu publishes")).expect("board suggestion json");
     assert_eq!(
         record,
-        serde_json::json!({ "open": true, "x": 3.0, "y": 4.0, "windowId": WINDOW_KIND_ID, "handleId": "teil-ä:g1", "hoveredIndex": 2, "submenu": true, "pending": true, "candidates": [] })
+        semio_framework_pack_json::json!({ "open": true, "x": 3.0, "y": 4.0, "windowId": WINDOW_KIND_ID, "handleId": "teil-ä:g1", "hoveredIndex": 2, "submenu": true, "pending": true, "candidates": [] })
     );
 }
 

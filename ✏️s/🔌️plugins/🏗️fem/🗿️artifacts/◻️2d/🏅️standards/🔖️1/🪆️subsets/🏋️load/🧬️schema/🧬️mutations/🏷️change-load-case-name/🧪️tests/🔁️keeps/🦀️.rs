@@ -13,10 +13,10 @@
 //! 🔁️ The dead case is already named "Dead", so this is `change-load-case-name`'s no-op branch: a NO-OP with a Warning, an empty diff, and a document that does not move. `change-load-case-name` has no Fatal branch at all.
 
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::inverse_fem2d_mutation;
 use semio_s_artifact_fem_2d_mutations::central_apply::apply_fem2d_mutation;
 
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
 static BEFORE: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🔁️keeps/📸️snapshot/⬅️before/🔣️.json");
 static AFTER: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🔁️keeps/📸️snapshot/➡️after/🔣️.json");
@@ -24,11 +24,11 @@ static MUTATION: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture
 static DIFF: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🔁️keeps/🔺️diff/🔣️.json");
 static OUTCOME: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🔁️keeps/🎯️outcome/🔣️.json");
 
-fn before() -> Fem2dSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+fn before() -> Fem2dSnapshotValue {
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
-fn expected_after() -> Fem2dSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+fn expected_after() -> Fem2dSnapshotValue {
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Fem2dMutation {
     semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
@@ -49,7 +49,7 @@ fn no_op_leaves_the_document_untouched() {
 /// an Error and never a Fatal — the mutation applies, it just carries no change.
 #[test]
 fn the_no_op_is_a_warning_not_a_rejection() {
-    let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff::default(), "change-load-case-name/🔁️keeps: a no-op change-load-case-name must carry the empty diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
@@ -58,19 +58,21 @@ fn the_no_op_is_a_warning_not_a_rejection() {
     assert!(messages[0].target.is_empty(), "change-load-case-name raises its no-op through the 2-arg `warn` builder, which attaches no target address");
 }
 
-/// ↩️ `change-load-case-name` inverts from BASE: the case exists, so the inverse is a step restoring the name it already had.
+/// ↩️ An unchanged aggregate mutation has no executable inverse and preserves its fixture snapshot.
 #[test]
 fn inverse_restores_before() {
     let base = before();
-    let mutation = mutation();
-    let inverse = inverse_fem2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
-    assert_eq!(inverse.len(), 1, "change-load-case-name/🔁️keeps: change-load-case-name always emits exactly one inverse step, even for a no-op, got {inverse:?}");
+    let operation = mutation();
+    let inverse = inverse_fem2d_mutation(&base, &operation).expect("aggregate inverse admission");
+    assert!(inverse.is_empty(), "unchanged mutations cannot publish inverse candidates: {inverse:?}");
     let mut snapshot = base.clone();
-    apply_fem2d_mutation(&mut snapshot, &mutation).expect("forward applies");
+    apply_fem2d_mutation(&mut snapshot, &operation).expect("unchanged forward outcome");
     for step in &inverse {
-        apply_fem2d_mutation(&mut snapshot, step).expect("inverse step applies");
+        apply_fem2d_mutation(&mut snapshot, step).expect("admitted inverse step");
     }
-    assert_eq!(snapshot, base, "change-load-case-name/🔁️keeps: inverse did not restore the before-snapshot");
+    assert_eq!(snapshot, expected_after());
+    assert_eq!(snapshot, base);
+    println!("[DEBUG] FEM2d unchanged fixture retains its snapshot with an empty aggregate inverse");
 }
 
 /// 🎯️ The declared outcome — `no-op`, with exactly one `warn`-level `mutation.no-op` — is what this
@@ -79,7 +81,7 @@ fn inverse_restores_before() {
 fn declared_outcome_holds() {
     let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(semio_framework_value::DslValue::as_str), Some("no-op"), "change-load-case-name/🔁️keeps declares a no-op outcome");
-    let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &before());
     let declared = outcome.get("messages").and_then(semio_framework_value::DslValue::as_array).expect("a no-op outcome declares its diagnostics");
     assert_eq!(declared.len(), produced.messages().len(), "the declared diagnostic count must match the emitted one");
     assert_eq!(declared[0].get("level").and_then(semio_framework_value::DslValue::as_str), Some("warning"), "change-load-case-name's no-op is declared at warn level");
@@ -89,8 +91,8 @@ fn declared_outcome_holds() {
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE.as_str()), ("after", AFTER.as_str())] {
-        let decoded: Fem2dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+        let decoded: Fem2dSnapshotValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = semio_framework_value::ToValue::to_value(&decoded);
         let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-load-case-name/🔁️keeps: committed {label} JSON is not canonical");
@@ -102,11 +104,11 @@ fn committed_json_is_canonical() {
     assert_eq!(reencoded, original, "change-load-case-name/🔁️keeps: committed mutation JSON is not canonical");
 }
 
-/// 🔺️ A no-op produces the artifact's `Default` diff — all ten sparse slots left `None`.
+/// 🔺️ A no-op produces the artifact's `Default` diff — all nine sparse slots left `None`.
 #[test]
 fn produces_committed_diff() {
     let base = before();
-    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
+    let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshotValue>>::diff(&mutation(), &base);
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());
     let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-load-case-name/🔁️keeps: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -115,7 +117,7 @@ fn produces_committed_diff() {
 }
 
 /// 🔣️ The committed diff is itself canonical. `Fem2dDiff` carries a container-level `default` and no
-/// per-field skip, so all ten sparse slots must be present as `null`.
+/// per-field skip, so all nine sparse slots must be present as `null`.
 #[test]
 fn committed_diff_is_canonical() {
     let decoded: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
@@ -123,15 +125,15 @@ fn committed_diff_is_canonical() {
     let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-load-case-name/🔁️keeps: committed diff JSON is not canonical");
     let slots = original.as_object().expect("the committed diff is a JSON object");
-    assert_eq!(slots.len(), 10, "Fem2dDiff emits all ten sparse slots, got {slots:?}");
+    assert_eq!(slots.len(), 9, "Fem2dDiff emits all nine sparse slots, got {slots:?}");
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after`. For a no-op that
 /// is the identity — and still a real assertion: `apply` must leave every other member alone too.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-load-case-name/🔁️keeps: committed diff did not carry before to after");
 }
 

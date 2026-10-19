@@ -24,6 +24,8 @@ impl semio_framework_value::retirement::RetireOwned for PngInflater {
  fn controlled_retirement_supported()->bool{true}
 }
 impl semio_framework_value::retirement::RetirementCursor for PngInflaterRetirement {
+    fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let Some(owner)=self.owner.as_ref()else{return Ok(Default::default())};let release=owner.next_retained_release_allocation_bytes();Ok(semio_framework_value::RetirementDemand{copy_bytes:if release.is_some(){0}else{size_of::<PngInflater>()},release_bytes:release.unwrap_or(0),depth:1,..Default::default()})}
+
  fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep {
   use semio_framework_value::retirement::RetirementStep;
   let Some(owner)=self.owner.as_mut() else{return RetirementStep::Complete;};

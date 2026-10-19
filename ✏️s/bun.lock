@@ -2581,15 +2581,15 @@
         "@semio-tech/schema-ts": "workspace:*"
       }
     },
-    "../🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript": {
-      "name": "@semio-tech/quiz-react",
+    "../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/course-react",
       "version": "0.1.0",
       "dependencies": {
         "@semio-tech/framework": "workspace:*",
         "@semio-tech/framework-server": "workspace:*",
         "@semio-tech/pets": "workspace:*",
         "@semio-tech/pets-react": "workspace:*",
-        "@semio-tech/quiz": "workspace:*",
+        "@semio-tech/course": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
         "react": "^19.2.3",
         "react-dom": "^19.2.3"
@@ -2617,8 +2617,8 @@
         "vitest": "^4.0.17"
       }
     },
-    "../🧰️framework/🛍️products/❓️quiz/📦️packages/🟦️typescript": {
-      "name": "@semio-tech/quiz",
+    "../🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/course",
       "version": "0.1.0",
       "devDependencies": {
         "@semio-tech/assets": "workspace:*",
@@ -2883,6 +2883,102 @@
         "@semio-tech/process": "workspace:*",
         "@semio-tech/repo-lib": "workspace:*",
         "ajv": "8.20.0"
+      }
+    },
+    "../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/course-react",
+      "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/framework": "workspace:*",
+        "@semio-tech/framework-server": "workspace:*",
+        "@semio-tech/pets": "workspace:*",
+        "@semio-tech/pets-react": "workspace:*",
+        "@semio-tech/course": "workspace:*",
+        "@semio-tech/ui-react": "workspace:*",
+        "react": "^19.2.3",
+        "react-dom": "^19.2.3"
+      },
+      "devDependencies": {
+        "@semio-tech/process": "workspace:*",
+        "@testing-library/react": "^16.3.0",
+        "@testing-library/user-event": "^14.6.3",
+        "@types/aria-query": "5.0.4",
+        "@types/d3-scale": "^4.0.9",
+        "@types/lodash": "4.17.24",
+        "@types/opentype.js": "1.3.9",
+        "@types/react": "^19.2.8",
+        "@types/react-dom": "^19.2.3",
+        "@vitejs/plugin-react": "^5.1.2",
+        "aria-query": "5.3.0",
+        "colord": "2.10.0",
+        "d3-scale": "4.0.2",
+        "i18next": "25.10.10",
+        "jsdom": "^24.1.3",
+        "lightningcss": "1.32.0",
+        "lodash": "4.18.1",
+        "opentype.js": "1.3.4",
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.17"
+      }
+    },
+    "../🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/course",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@semio-tech/process": "workspace:*",
+        "ajv": "8.20.0",
+        "jstat": "1.9.6",
+        "mathjs": "14.0.0",
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.17"
+      }
+    },
+    "../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/course-react",
+      "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/framework": "workspace:*",
+        "@semio-tech/framework-server": "workspace:*",
+        "@semio-tech/pets": "workspace:*",
+        "@semio-tech/pets-react": "workspace:*",
+        "@semio-tech/course": "workspace:*",
+        "@semio-tech/ui-react": "workspace:*",
+        "react": "^19.2.3",
+        "react-dom": "^19.2.3"
+      },
+      "devDependencies": {
+        "@semio-tech/process": "workspace:*",
+        "@testing-library/react": "^16.3.0",
+        "@testing-library/user-event": "^14.6.3",
+        "@types/aria-query": "5.0.4",
+        "@types/d3-scale": "^4.0.9",
+        "@types/lodash": "4.17.24",
+        "@types/opentype.js": "1.3.9",
+        "@types/react": "^19.2.8",
+        "@types/react-dom": "^19.2.3",
+        "@vitejs/plugin-react": "^5.1.2",
+        "aria-query": "5.3.0",
+        "colord": "2.10.0",
+        "d3-scale": "4.0.2",
+        "i18next": "25.10.10",
+        "jsdom": "^24.1.3",
+        "lightningcss": "1.32.0",
+        "lodash": "4.18.1",
+        "opentype.js": "1.3.4",
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.17"
+      }
+    },
+    "../🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/course",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@semio-tech/process": "workspace:*",
+        "ajv": "8.20.0",
+        "jstat": "1.9.6",
+        "mathjs": "14.0.0",
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.17"
       }
     }
   },
@@ -7820,12 +7916,6 @@
     ],
     "@semio-tech/puzzle-js": [
       "@semio-tech/puzzle-js@workspace:🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript"
-    ],
-    "@semio-tech/quiz": [
-      "@semio-tech/quiz@workspace:../🧰️framework/🛍️products/❓️quiz/📦️packages/🟦️typescript"
-    ],
-    "@semio-tech/quiz-react": [
-      "@semio-tech/quiz-react@workspace:../🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript"
     ],
     "@semio-tech/raster-js": [
       "@semio-tech/raster-js@workspace:🔌️plugins/🖨️raster/📦️packages/🟦️typescript"
@@ -19491,6 +19581,12 @@
       "",
       {},
       "sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw=="
+    ],
+    "@semio-tech/course": [
+      "@semio-tech/course@workspace:../🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript"
+    ],
+    "@semio-tech/course-react": [
+      "@semio-tech/course-react@workspace:../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript"
     ]
   }
 }

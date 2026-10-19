@@ -15,6 +15,14 @@ pub struct AddValue {
 
 impl protocol::MutationKind<JobTestSnapshot, JobTestOp> for AddValue {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "value", kind: "add-value", record: "AddedValue" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add {} to value", self.delta), &format!("{} zu Wert hinzufügen", self.delta))
+    }
+}
+
+impl protocol::ColdMutationKind<JobTestSnapshot, JobTestOp> for AddValue {
     fn diff(&self, _: &JobTestSnapshot) -> protocol::MutationOutcome<JobTestDiff> {
         protocol::MutationOutcome::new(JobTestDiff { deltas: vec![self.delta] })
     }
@@ -24,18 +32,19 @@ impl protocol::MutationKind<JobTestSnapshot, JobTestOp> for AddValue {
             None => vec![JobTestOp::AddValue(Self { delta: 1 }), JobTestOp::AddValue(Self { delta: i32::MAX })],
         })())
     }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add {} to value", self.delta), &format!("{} zu Wert hinzufügen", self.delta))
-    }
 }
 
 impl protocol::CompositeMutationKind<JobTestSnapshot, JobTestOp> for AddValue {
     const SEMANTICS: protocol::SemanticDescriptor = <Self as protocol::MutationKind<JobTestSnapshot, JobTestOp>>::SEMANTICS;
-    fn plan(&self, _: &JobTestSnapshot, planner: &mut protocol::Planner<JobTestSnapshot, JobTestOp>) -> Result<(), protocol::PlanError> {
-        planner.call(JobTestOp::AddValue(self.clone()))
-    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         <Self as protocol::MutationKind<JobTestSnapshot, JobTestOp>>::label(self)
+    }
+}
+
+impl protocol::ColdCompositeMutationKind<JobTestSnapshot, JobTestOp> for AddValue {
+    fn plan(&self, _: &JobTestSnapshot, planner: &mut protocol::Planner<JobTestSnapshot, JobTestOp>) -> Result<(), protocol::PlanError> {
+        planner.call(JobTestOp::AddValue(self.clone()))
     }
 }
 
@@ -44,3 +53,7 @@ impl protocol::CompositeMutationKind<JobTestSnapshot, JobTestOp> for AddValue {
 #[path = "../../../../🧪️tests/🧬️job-test-mutations-mutations-add-value-unit/🦀️.rs"]
 pub mod tests;
 //#endregion ➕️AddJobTestValue
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️sum-law/🦀️.rs"]
+mod sum_law_tests;

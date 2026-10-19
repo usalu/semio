@@ -1,10 +1,16 @@
 //! 🧱️ 🧱️ FEM 3D app commands command — `add-solid`.
 
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_framework_plugin::NoConfig;
+
+use semio_framework_plugin::NoConfigMutation;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
@@ -25,8 +31,7 @@ pub struct AddSolid {
 /// 🧱️ Builds a rectangular footprint `[x,y]..[x+width,y+depth]` with `base_z`/`layers`/`mesh_size`/`axis`
 /// defaulted to `0.0`/`1`/`0.5`/`Z` when unspecified — mirrors the pre-migration `handle_action` defaults.
 pub fn handle(payload: &AddSolid, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
-    let snapshot = doc.snapshot;
-    let id = semio_s_fem_app_surface::next_id(snapshot.solids.iter().map(|s| s.id.clone()), "sol");
+    let id = doc.operation()?.entity_id("sol", "solids")?;
     let outline = vec![[payload.x, payload.y], [payload.x + payload.width, payload.y], [payload.x + payload.width, payload.y + payload.depth], [payload.x, payload.y + payload.depth]];
     let solid = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid {
         id,

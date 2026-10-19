@@ -23,6 +23,7 @@ impl<T:Send+'static> FactoryBoxedPublication<T>{
 }
 impl<T:Send+'static> RetireOwned for OriginalBoxSlot<T>{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(self)}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self>())}fn controlled_retirement_supported()->bool{true}}
 impl<T:Send+'static> RetirementCursor for OriginalBoxSlot<T>{
+ fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{release_bytes:if self.allocation.is_some(){size_of::<T>()}else{0},depth:usize::from(self.allocation.is_some()),..Default::default()})}
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete;}let bytes=size_of::<T>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_release_bytes<bytes{return RetirementStep::BudgetExhausted;}drop(self.allocation.take());RetirementStep::Bytes(bytes)}
  fn terminal_is_empty(&self)->bool{self.allocation.is_none()}
  fn next_close_byte_demand(&self)->Option<usize>{Some(if self.terminal_is_empty(){0}else{size_of::<T>()})}
@@ -56,6 +57,7 @@ impl<T:Send+'static> RetireOwned for FactoryBoxedValue<T>{
  fn controlled_retirement_supported()->bool{true}
 }
 impl<T:Send+'static> RetirementCursor for Cursor<T>{
+ fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.demands(body)}
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete;}match self.step(grant){Ok(progress)=>RetirementStep::Progress(progress),Err(error)=>RetirementStep::Failure(error)}}
  fn terminal_is_empty(&self)->bool{self.boxed.is_none()&&self.vacant.is_none()&&self.original.is_none()&&self.factory.is_none()&&self.unique.is_none()&&self.closing.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}

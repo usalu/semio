@@ -24456,17 +24456,6 @@
       "verification": "cmake --list-presets",
       "expires": null
     },
-    "root-dotnet-solution": {
-      "pathPattern": "Monorepo.sln",
-      "authority": ".NET SDK",
-      "reason": "Solution discovery",
-      "configurability": "unconfigurable",
-      "scope": {
-        "kind": "repository-root"
-      },
-      "verification": "dotnet restore",
-      "expires": null
-    },
     "root-bun-lock": {
       "pathPattern": "bun.lock",
       "authority": "Bun",

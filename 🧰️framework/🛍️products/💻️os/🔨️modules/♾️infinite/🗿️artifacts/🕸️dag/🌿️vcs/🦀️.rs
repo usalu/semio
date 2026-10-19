@@ -13,7 +13,7 @@ mod canonical;
 
 // #region 🔖️ArtifactVcs
 pub use crate::os_spr::ActorId;
-use crate::os_spr::{ApplyCapability, DiffAlgebra, Identified, MutationDiff, Patchable};
+use crate::os_spr::{ApplyCapability, DiffAlgebra, ColdDiffAlgebra, Identified, MutationDiff, ColdMutationDiff, Patchable};
 
 pub const DAG_DOCUMENT_SCHEMA: &str = "dag.host_snapshot";
 
@@ -221,6 +221,15 @@ pub struct RewrittenEdgeEndpoint {
     pub new_source: Option<String>,
     pub new_target: Option<String>,
 }
+
+/// 🔀️ `reorder-nodes`' positional row: the node `id` leaves position `from` and lands at position `to` of the z-stack, both read in the
+/// list as it stands when the row applies. A diff never carries a whole node-order list.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+pub struct ReorderedNode {
+    pub id: String,
+    pub from: u64,
+    pub to: u64,
+}
 //#endregion 🔖️DiffDeltas
 
 /// 🧬️ Direct leaf-owned mutation vocabulary and mechanical aggregate.
@@ -249,7 +258,7 @@ pub struct DagDelta {
     pub changed_node_operator_kind: Option<ChangedNodeOperatorKind>,
     pub replaced_node_kind: Option<ReplacedNodeKind>,
     pub replaced_node_properties: Option<ReplacedNodeProperties>,
-    pub reordered_nodes: Option<Vec<String>>,
+    pub reordered_nodes: Option<Vec<ReorderedNode>>,
     pub connected_edge: Option<DagHostSnapshotEdge>,
     pub connected_edge_at: Option<u64>,
     pub disconnected_edge_ids: Option<Vec<String>>,
@@ -259,6 +268,8 @@ pub struct DagDelta {
 }
 
 impl DagDelta {
+    /// ▶️ Validates and writes the populated slots in the order [`DagDelta::atoms`] lists them: created node, rename with its edge cascade, field
+    /// setters, node order rows, connected edge, disconnected edges, deleted nodes — a delete first severs its edges, so its undo first restores the node.
     fn apply_into(&self, next: &mut DagSnapshot) -> protocol::MutationApplyResult<()> {
         if self.created_node.is_some() != self.created_node_at.is_some() {
             return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "created node and its final index must be present together").at(["createdNode"]));
@@ -273,24 +284,36 @@ impl DagDelta {
             }
             next.nodes.insert(at, node.clone());
         }
-        if let Some(ids) = &self.deleted_node_ids {
-            let mut seen = HashSet::new();
-            for id in ids {
-                if !seen.insert(id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "node is deleted more than once").at(["nodes", id.as_str()]));
-                }
-                if !next.nodes.iter().any(|node| node.id == *id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "deleted node does not exist").at(["nodes", id.as_str()]));
-                }
-            }
-            next.nodes.retain(|node| !ids.contains(&node.id));
-        }
         if let Some(renamed) = &self.renamed_node {
             if next.nodes.iter().any(|node| node.id == renamed.new_id && node.id != renamed.id) {
                 return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "renamed node identity already exists").at(["nodes", renamed.new_id.as_str()]));
             }
             let node = next.nodes.iter_mut().find(|node| node.id == renamed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "renamed node does not exist").at(["nodes", renamed.id.as_str()]))?;
             node.id = renamed.new_id.clone();
+        }
+        if let Some(rewrites) = &self.rewritten_edge_endpoints {
+            let mut seen = HashSet::new();
+            for rewrite in rewrites {
+                if !seen.insert(&rewrite.id) {
+                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "edge endpoint is rewritten more than once").at(["edges", rewrite.id.as_str()]));
+                }
+                if rewrite.new_source.is_none() && rewrite.new_target.is_none() {
+                    return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "edge endpoint rewrite contains no endpoint").at(["edges", rewrite.id.as_str()]));
+                }
+                for endpoint in [rewrite.new_source.as_ref(), rewrite.new_target.as_ref()].into_iter().flatten() {
+                    let node_id = split_dag_endpoint(endpoint).0;
+                    if !next.nodes.iter().any(|node| node.id == node_id) {
+                        return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "rewritten edge endpoint node does not exist").at(["edges", rewrite.id.as_str(), node_id.as_str()]));
+                    }
+                }
+                let edge = next.edges.iter_mut().find(|edge| edge.id == rewrite.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "rewritten edge does not exist").at(["edges", rewrite.id.as_str()]))?;
+                if let Some(source) = &rewrite.new_source {
+                    edge.source = source.clone();
+                }
+                if let Some(target) = &rewrite.new_target {
+                    edge.target = target.clone();
+                }
+            }
         }
         if let Some(moved) = &self.moved_node {
             let node = next.nodes.iter_mut().find(|node| node.id == moved.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "moved node does not exist").at(["nodes", moved.id.as_str()]))?;
@@ -326,25 +349,22 @@ impl DagDelta {
             let node = next.nodes.iter_mut().find(|node| node.id == replaced.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "replaced node does not exist").at(["nodes", replaced.id.as_str()]))?;
             node.properties = replaced.new_properties.clone();
         }
-        if let Some(order) = &self.reordered_nodes {
-            if order.len() != next.nodes.len() {
-                return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", format!("node order has length {}, expected {}", order.len(), next.nodes.len())).at(["reorderedNodes"]));
-            }
-            let mut seen = HashSet::new();
-            for id in order {
-                if !seen.insert(id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "node appears more than once in order").at(["reorderedNodes", id.as_str()]));
+        if let Some(rows) = &self.reordered_nodes {
+            for row in rows {
+                let from = dag_index_from_wire(row.from)?;
+                if from >= next.nodes.len() {
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", format!("reordered node has no source position {from} in a list of length {}", next.nodes.len())).at(["reorderedNodes", row.id.as_str()]));
                 }
-                if !next.nodes.iter().any(|node| node.id == *id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered node does not exist").at(["reorderedNodes", id.as_str()]));
+                if next.nodes[from].id != row.id {
+                    return Err(protocol::MutationApplyError::new("mutation.apply.order-mismatch", "reordered node is not at its source position").at(["reorderedNodes", row.id.as_str()]));
                 }
+                let to = dag_index_from_wire(row.to)?;
+                if to >= next.nodes.len() {
+                    return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", format!("reordered node target position {to} is out of range for length {}", next.nodes.len())).at(["reorderedNodes", row.id.as_str()]));
+                }
+                let node = next.nodes.remove(from);
+                next.nodes.insert(to, node);
             }
-            let mut reordered: Vec<DagNodeSpec> = Vec::with_capacity(next.nodes.len());
-            for id in order {
-                let at = next.nodes.iter().position(|node| &node.id == id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered node does not exist").at(["reorderedNodes", id.as_str()]))?;
-                reordered.push(next.nodes.remove(at));
-            }
-            next.nodes = reordered;
         }
         if self.connected_edge.is_some() != self.connected_edge_at.is_some() {
             return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "connected edge and its final index must be present together").at(["connectedEdge"]));
@@ -377,29 +397,17 @@ impl DagDelta {
             }
             next.edges.retain(|edge| !ids.contains(&edge.id));
         }
-        if let Some(rewrites) = &self.rewritten_edge_endpoints {
+        if let Some(ids) = &self.deleted_node_ids {
             let mut seen = HashSet::new();
-            for rewrite in rewrites {
-                if !seen.insert(&rewrite.id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "edge endpoint is rewritten more than once").at(["edges", rewrite.id.as_str()]));
+            for id in ids {
+                if !seen.insert(id) {
+                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "node is deleted more than once").at(["nodes", id.as_str()]));
                 }
-                if rewrite.new_source.is_none() && rewrite.new_target.is_none() {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "edge endpoint rewrite contains no endpoint").at(["edges", rewrite.id.as_str()]));
-                }
-                for endpoint in [rewrite.new_source.as_ref(), rewrite.new_target.as_ref()].into_iter().flatten() {
-                    let node_id = split_dag_endpoint(endpoint).0;
-                    if !next.nodes.iter().any(|node| node.id == node_id) {
-                        return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "rewritten edge endpoint node does not exist").at(["edges", rewrite.id.as_str(), node_id.as_str()]));
-                    }
-                }
-                let edge = next.edges.iter_mut().find(|edge| edge.id == rewrite.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "rewritten edge does not exist").at(["edges", rewrite.id.as_str()]))?;
-                if let Some(source) = &rewrite.new_source {
-                    edge.source = source.clone();
-                }
-                if let Some(target) = &rewrite.new_target {
-                    edge.target = target.clone();
+                if !next.nodes.iter().any(|node| node.id == *id) {
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "deleted node does not exist").at(["nodes", id.as_str()]));
                 }
             }
+            next.nodes.retain(|node| !ids.contains(&node.id));
         }
         Ok(())
     }
@@ -423,17 +431,15 @@ impl From<DagDelta> for DagDiff {
 }
 
 impl DagDelta {
-    /// ⚛️ One single-slot delta per populated slot, in `apply_into` order, so each can be inverted against the exact state it ran on.
+    /// ⚛️ One single-slot delta per populated slot, in `apply_into` order, so each can be inverted against the exact state it ran on. A rename and its
+    /// edge cascade are ONE atom: the cascade rewrites endpoints to the id the rename just introduced, so the two only make sense together.
     fn atoms(&self) -> Vec<DagDelta> {
         let mut atoms = Vec::new();
         if self.created_node.is_some() || self.created_node_at.is_some() {
             atoms.push(DagDelta { created_node: self.created_node.clone(), created_node_at: self.created_node_at, ..DagDelta::default() });
         }
-        if self.deleted_node_ids.is_some() {
-            atoms.push(DagDelta { deleted_node_ids: self.deleted_node_ids.clone(), ..DagDelta::default() });
-        }
-        if self.renamed_node.is_some() {
-            atoms.push(DagDelta { renamed_node: self.renamed_node.clone(), ..DagDelta::default() });
+        if self.renamed_node.is_some() || self.rewritten_edge_endpoints.is_some() {
+            atoms.push(DagDelta { renamed_node: self.renamed_node.clone(), rewritten_edge_endpoints: self.rewritten_edge_endpoints.clone(), ..DagDelta::default() });
         }
         if self.moved_node.is_some() {
             atoms.push(DagDelta { moved_node: self.moved_node.clone(), ..DagDelta::default() });
@@ -468,27 +474,26 @@ impl DagDelta {
         if self.disconnected_edge_ids.is_some() {
             atoms.push(DagDelta { disconnected_edge_ids: self.disconnected_edge_ids.clone(), ..DagDelta::default() });
         }
-        if self.rewritten_edge_endpoints.is_some() {
-            atoms.push(DagDelta { rewritten_edge_endpoints: self.rewritten_edge_endpoints.clone(), ..DagDelta::default() });
+        if self.deleted_node_ids.is_some() {
+            atoms.push(DagDelta { deleted_node_ids: self.deleted_node_ids.clone(), ..DagDelta::default() });
         }
         atoms
     }
 
-    /// ↩️ The steps that undo one single-slot delta, in application order, read from `base`. The slots of one diff address distinct rows;
-    /// slots that edit a row an earlier slot of the same diff created are inverted step by step by the store, which absorbs the per-step inverses.
+    /// ↩️ The steps that undo one single-slot delta, in application order, read row by row from `base` (nothing is applied). The slots of one diff
+    /// address distinct rows; slots that edit a row an earlier slot of the same diff created are inverted step by step by the store, which absorbs
+    /// the per-step inverses. Removed nodes and edges come back one step each at their base position, ascending.
     fn atom_inverse(&self, base: &DagSnapshot) -> Vec<DagDelta> {
         let node = |id: &str| base.nodes.iter().find(|node| node.id == id);
         let mut steps = Vec::new();
         if let Some(created) = &self.created_node {
             steps.push(DagDelta { deleted_node_ids: Some(vec![created.id.clone()]), ..DagDelta::default() });
         }
-        if let Some(ids) = &self.deleted_node_ids {
-            for (at, node) in base.nodes.iter().enumerate().filter(|(_, node)| ids.contains(&node.id)) {
-                steps.push(DagDelta { created_node: Some(node.clone()), created_node_at: Some(dag_index_to_wire(at)), ..DagDelta::default() });
-            }
-        }
         if let Some(renamed) = &self.renamed_node {
-            steps.push(DagDelta { renamed_node: Some(RenamedNode { id: renamed.new_id.clone(), new_id: renamed.id.clone() }), ..DagDelta::default() });
+            let restored = self.rewritten_edge_endpoints.as_ref().map(|rewrites| dag_restored_endpoints(base, rewrites));
+            steps.push(DagDelta { renamed_node: Some(RenamedNode { id: renamed.new_id.clone(), new_id: renamed.id.clone() }), rewritten_edge_endpoints: restored, ..DagDelta::default() });
+        } else if let Some(rewrites) = &self.rewritten_edge_endpoints {
+            steps.push(DagDelta { rewritten_edge_endpoints: Some(dag_restored_endpoints(base, rewrites)), ..DagDelta::default() });
         }
         if let Some(moved) = &self.moved_node {
             steps.extend(node(&moved.id).map(|node| DagDelta { moved_node: Some(MovedNode { id: moved.id.clone(), x: node.x, y: node.y }), ..DagDelta::default() }));
@@ -514,8 +519,8 @@ impl DagDelta {
         if let Some(replaced) = &self.replaced_node_properties {
             steps.extend(node(&replaced.id).map(|node| DagDelta { replaced_node_properties: Some(ReplacedNodeProperties { id: replaced.id.clone(), new_properties: node.properties.clone() }), ..DagDelta::default() }));
         }
-        if self.reordered_nodes.is_some() {
-            steps.push(DagDelta { reordered_nodes: Some(base.nodes.iter().map(|node| node.id.clone()).collect()), ..DagDelta::default() });
+        if let Some(rows) = &self.reordered_nodes {
+            steps.push(DagDelta { reordered_nodes: Some(rows.iter().rev().map(|row| ReorderedNode { id: row.id.clone(), from: row.to, to: row.from }).collect()), ..DagDelta::default() });
         }
         if let Some(edge) = &self.connected_edge {
             steps.push(DagDelta { disconnected_edge_ids: Some(vec![edge.id.clone()]), ..DagDelta::default() });
@@ -525,45 +530,63 @@ impl DagDelta {
                 steps.push(DagDelta { connected_edge: Some(edge.clone()), connected_edge_at: Some(dag_index_to_wire(at)), ..DagDelta::default() });
             }
         }
-        if let Some(rewrites) = &self.rewritten_edge_endpoints {
-            let restored: Vec<RewrittenEdgeEndpoint> = rewrites
-                .iter()
-                .filter_map(|rewrite| {
-                    base.edges.iter().find(|edge| edge.id == rewrite.id).map(|edge| RewrittenEdgeEndpoint {
-                        id: rewrite.id.clone(),
-                        new_source: rewrite.new_source.as_ref().map(|_| edge.source.clone()),
-                        new_target: rewrite.new_target.as_ref().map(|_| edge.target.clone()),
-                    })
-                })
-                .collect();
-            steps.push(DagDelta { rewritten_edge_endpoints: Some(restored), ..DagDelta::default() });
+        if let Some(ids) = &self.deleted_node_ids {
+            for (at, node) in base.nodes.iter().enumerate().filter(|(_, node)| ids.contains(&node.id)) {
+                steps.push(DagDelta { created_node: Some(node.clone()), created_node_at: Some(dag_index_to_wire(at)), ..DagDelta::default() });
+            }
         }
         steps
     }
 }
 
+/// ↩️ The endpoint rows that put every rewritten edge side back to the base value, read edge by edge from `base`.
+fn dag_restored_endpoints(base: &DagSnapshot, rewrites: &[RewrittenEdgeEndpoint]) -> Vec<RewrittenEdgeEndpoint> {
+    rewrites
+        .iter()
+        .filter_map(|rewrite| {
+            base.edges.iter().find(|edge| edge.id == rewrite.id).map(|edge| RewrittenEdgeEndpoint {
+                id: rewrite.id.clone(),
+                new_source: rewrite.new_source.as_ref().map(|_| edge.source.clone()),
+                new_target: rewrite.new_target.as_ref().map(|_| edge.target.clone()),
+            })
+        })
+        .collect()
+}
+
 impl DiffAlgebra<DagSnapshot> for DagDiff {
-    fn inverse(&self, base: &DagSnapshot) -> Self {
-        let groups: Vec<Vec<DagDelta>> = self.steps.iter().flat_map(DagDelta::atoms).map(|atom| atom.atom_inverse(base)).collect();
-        Self { steps: groups.into_iter().rev().flatten().collect() }
-    }
+
 
     fn is_empty(&self) -> bool {
         self.steps.iter().all(|step| *step == DagDelta::default())
     }
 }
 
+impl ColdDiffAlgebra<DagSnapshot> for DagDiff {
+    fn inverse(&self, base: &DagSnapshot) -> Self {
+        let groups: Vec<Vec<DagDelta>> = self.steps.iter().flat_map(DagDelta::atoms).map(|atom| atom.atom_inverse(base)).collect();
+        Self { steps: groups.into_iter().rev().flatten().collect() }
+    }
+}
+
 impl MutationDiff<DagSnapshot> for DagDiff {
-    fn apply(&self, snapshot: &DagSnapshot, _capability: ApplyCapability) -> protocol::MutationApplyResult<DagSnapshot> {
-        let mut next = snapshot.clone();
+
+
+
+}
+
+impl ColdMutationDiff<DagSnapshot> for DagDiff {
+    fn absorb(&mut self, other: Self) {
+        self.steps.extend(other.steps);
+    }
+
+    fn apply(&self, snapshot: &mut DagSnapshot, _capability: ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let mut prepared = protocol::PreparedField::new(snapshot.clone(), <Self as protocol::MutationDiff<DagSnapshot>>::retire_projection, _capability);
+        let mut next = prepared.value_mut();
         for step in &self.steps {
             step.apply_into(&mut next)?;
         }
-        Ok(next)
-    }
-
-    fn absorb(&mut self, other: Self) {
-        self.steps.extend(other.steps);
+        prepared.install(snapshot);
+        Ok(())
     }
 }
 

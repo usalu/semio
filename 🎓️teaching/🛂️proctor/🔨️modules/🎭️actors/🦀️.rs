@@ -4,16 +4,16 @@
 //! adding domain rules; the actor state bytes are the serde JSON of the core's
 //! `HandleState`/`LearnerState`.
 //!
-//! **No roster.** A handle key is its own stream (`quiz-handle/<hex of the key's UTF-8 bytes>`), so
+//! **No roster.** A handle key is its own stream (`course-handle/<hex of the key's UTF-8 bytes>`), so
 //! claiming a handle is exactly-once by the turn of that one small actor: its state is the holder, a
 //! lookup is one indexed read, and nothing deserializes a map of every handle. A claimed handle is
-//! *recalled* by the `quiz.handle` read (`🔭️projections`), which writes nothing — a recall appends
+//! *recalled* by the `course.handle` read (`🔭️projections`), which writes nothing — a recall appends
 //! no event anywhere. An anonymous learner registers in its own learner stream.
 //!
 //! **Enrollment.** A learner actor only knows a learner once `learner-registered` is in its own
 //! stream. [`EnrollmentSaga`] relays the one fact of a handle stream to the learner it registered as
-//! a proctor-internal `quiz.enroll-learner` command, issued as the `proctor` service account under a
-//! key that is a function of the fact's stream (`enroll:<catalog>:<handle actor id>`, which names
+//! a proctor-internal `course.enroll-learner` command, issued as the `proctor` service account under a
+//! key that is a function of the fact's stream (`enroll:<course>:<handle actor id>`, which names
 //! no learner); the learner actor appends it unless it is already registered. [`unrelayed`] finds
 //! the registrations whose relay a crash lost.
 //!
@@ -34,20 +34,20 @@
 //! poisons the actor: its state records the failure, every later command answers
 //! `actorUnavailable` with it and the cause goes to stderr. Nothing is skipped silently.
 //!
-//! **Wire mapping** (design §9a): command kind `quiz.<type>`, version [`WIRE_VERSION`] of the contract, command id and
-//! idempotency key = the quiz command id, tenant and scope = the catalog id, target
-//! `quiz-learner/<learner>` for every command but a pseudonym or name `identify-learner`, which
-//! targets `quiz-handle/<handle actor id>`; event kind `quiz.<type>` with the quiz event JSON as
+//! **Wire mapping** (design §9a): command kind `course.<type>`, version [`WIRE_VERSION`] of the contract, command id and
+//! idempotency key = the quiz command id, tenant and scope = the course id, target
+//! `course-learner/<learner>` for every command but a pseudonym or name `identify-learner`, which
+//! targets `course-handle/<handle actor id>`; event kind `course.<type>` with the quiz event JSON as
 //! payload; a quiz rejection is the framework `invalid` rejection whose `detail` is the rejection
 //! string.
 //!
-//! @see ../../../../🧰️framework/🛍️products/❓️quiz/🔨️modules/🧾️lifecycle/🦀️.rs — decide/evolve
+//! @see ../../../../🧰️framework/🛍️products/📚️course/🔨️modules/🧾️lifecycle/🦀️.rs — decide/evolve
 //! @see ../../../../🧰️framework/🛍️products/🖥️server/🔨️modules/🎭️authority/🦀️.rs — `Decider`, `Saga`
 
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 
-use quiz::{Command, Event, HandleState, Identity, LearnerContext, LearnerState, Limits, WIRE_VERSION};
+use course::{Command, Event, HandleState, Identity, LearnerContext, LearnerState, Limits, WIRE_VERSION};
 use semio_framework_dispatch_macros::dyn_enum_close;
 use serde::{Deserialize, Serialize};
 use server::authority::{ActorState, Decider, Decision, DecisionContext, Saga};
@@ -55,58 +55,58 @@ use server::contract::{ActorKey, CommandEnvelope, CommandId, EventRecord, Idempo
 use server::storage::{AuthorityStore, StorageError};
 use server::__semio_dispatch_Decider;
 
-use teaching_proctor_base::catalog::LoadedCatalog;
+use teaching_proctor_base::course::LoadedCourse;
 use teaching_proctor_base::storage::SqliteAuthorityStore;
 
 /// ✒️ The actor kind of a handle key.
-pub const HANDLE: &str = "quiz-handle";
+pub const HANDLE: &str = "course-handle";
 /// 🧑‍🎓️ The actor kind of a learner.
-pub const LEARNER: &str = "quiz-learner";
+pub const LEARNER: &str = "course-learner";
 /// 🛎️ The command kind of a registration, anonymous or under a handle: the one kind a client sends
 /// that adds to the proctor's count of registrations.
-pub const IDENTIFY: &str = "quiz.identify-learner";
+pub const IDENTIFY: &str = "course.identify-learner";
 /// 📨️ The proctor-internal command relaying a registration to its learner.
-pub const ENROLL: &str = "quiz.enroll-learner";
+pub const ENROLL: &str = "course.enroll-learner";
 /// 🏁️ The event kind of a submitted run: what tells a learner that played from one that only
 /// registered.
-pub const RUN_SUBMITTED: &str = "quiz.run-submitted";
+pub const RUN_SUBMITTED: &str = "course.run-submitted";
 /// 🤖️ The service account the proctor's own workflows act as.
 pub const PROCTOR_SERVICE: &str = "proctor";
 /// 🧬️ The revision of the deciders' folds and of the encoding of their state bytes; a snapshot of
 /// another revision is ignored and the stream replayed.
 pub const STATE_FORMAT: u32 = 2;
 
-/// 🏷️ `quiz.<type>` of a quiz command.
+/// 🏷️ `course.<type>` of a quiz command.
 pub fn command_kind(command: &Command) -> String {
-    format!("quiz.{}", command.type_name())
+    format!("course.{}", command.type_name())
 }
 
-/// 🔖️ `quiz.<type>` of a quiz event.
+/// 🔖️ `course.<type>` of a quiz event.
 pub fn event_kind(event: &Event) -> String {
-    format!("quiz.{}", event.type_name())
+    format!("course.{}", event.type_name())
 }
 
-/// 🗝️ The actor of one handle key of a catalog.
+/// 🗝️ The actor of one handle key of a course.
 pub fn handle_key(tenant: &str, key: &str) -> ActorKey {
-    ActorKey { tenant: TenantId(tenant.to_string()), kind: HANDLE.to_string(), id: quiz::handle_actor_id(key) }
+    ActorKey { tenant: TenantId(tenant.to_string()), kind: HANDLE.to_string(), id: course::handle_actor_id(key) }
 }
 
-/// 🎓️ The actor of one learner of a catalog.
+/// 🎓️ The actor of one learner of a course.
 pub fn learner_key(tenant: &str, learner: &str) -> ActorKey {
     ActorKey { tenant: TenantId(tenant.to_string()), kind: LEARNER.to_string(), id: learner.to_string() }
 }
 
 /// 🎯️ The actor a quiz command is serialized through: the handle of a pseudonym or name being
 /// registered, the learner otherwise; `handle-invalid` for a handle outside the policy.
-pub fn command_target(command: &Command, tenant: &str) -> Result<ActorKey, quiz::Rejection> {
+pub fn command_target(command: &Command, tenant: &str) -> Result<ActorKey, course::Rejection> {
     match command {
-        Command::IdentifyLearner { identity: Identity::Pseudonym { handle } | Identity::Name { handle }, .. } => quiz::normalize_handle(handle).map(|normalized| handle_key(tenant, &normalized.key)).ok_or(quiz::Rejection::HandleInvalid),
+        Command::IdentifyLearner { identity: Identity::Pseudonym { handle } | Identity::Name { handle }, .. } => course::normalize_handle(handle).map(|normalized| handle_key(tenant, &normalized.key)).ok_or(course::Rejection::HandleInvalid),
         _ => Ok(learner_key(tenant, command.learner())),
     }
 }
 
 /// 🚫️ The framework rejection carrying a quiz rejection.
-pub fn rejection(rejection: quiz::Rejection) -> Rejection {
+pub fn rejection(rejection: course::Rejection) -> Rejection {
     Rejection::Invalid { detail: rejection.as_str().to_string() }
 }
 
@@ -123,14 +123,14 @@ pub struct Admission {
 }
 
 impl Admission {
-    /// 🌱️ The admission of one catalog under the default caps, reading the learner count from
+    /// 🌱️ The admission of one course under the default caps, reading the learner count from
     /// `learners` (the projector's gauge).
     pub fn new(tenant: &str, learners: Arc<AtomicU64>) -> Self {
-        let caps = quiz::DEFAULT_LIMITS;
+        let caps = course::DEFAULT_LIMITS;
         Self { tenant: tenant.to_string(), learners, cap_learners: AtomicU64::new(caps.learners), cap_runs_per_quiz: AtomicU64::new(caps.runs_per_quiz), cap_runs: AtomicU64::new(caps.runs), cap_answers_per_run: AtomicU64::new(caps.answers_per_run) }
     }
 
-    /// 📚️ The catalog id every envelope must name as tenant and scope.
+    /// 📚️ The course id every envelope must name as tenant and scope.
     pub fn tenant(&self) -> &str {
         &self.tenant
     }
@@ -167,7 +167,7 @@ impl Admission {
     /// when it registers a learner, finds the proctor below its cap of learners (`roster-full`).
     pub fn command(&self, envelope: &CommandEnvelope) -> Result<Command, Rejection> {
         let command = admitted(envelope, &self.tenant)?;
-        match (&command, quiz::registration_rejection(self.learners(), &self.caps())) {
+        match (&command, course::registration_rejection(self.learners(), &self.caps())) {
             (Command::IdentifyLearner { .. }, Some(full)) => Err(rejection(full)),
             _ => Ok(command),
         }
@@ -182,8 +182,8 @@ fn mismatch(detail: impl std::fmt::Display) -> Rejection {
 /// most three UTF-8 bytes for each of its code points).
 pub fn addressable(target: &ActorKey) -> bool {
     match target.kind.as_str() {
-        LEARNER => quiz::is_id(&target.id),
-        HANDLE => target.id.len() <= 6 * quiz::HANDLE_MAX && quiz::handle_key_of(&target.id).is_some(),
+        LEARNER => course::is_id(&target.id),
+        HANDLE => target.id.len() <= 6 * course::HANDLE_MAX && course::handle_key_of(&target.id).is_some(),
         _ => false,
     }
 }
@@ -197,16 +197,16 @@ pub fn admitted(envelope: &CommandEnvelope, tenant: &str) -> Result<Command, Rej
         return Err(mismatch(format!("version {} is not {WIRE_VERSION}", envelope.version)));
     }
     if envelope.target.tenant.0 != tenant || envelope.scope.0 != tenant {
-        return Err(mismatch(format!("tenant and scope must both be the catalog id {tenant:?}")));
+        return Err(mismatch(format!("tenant and scope must both be the course id {tenant:?}")));
     }
     if !addressable(&envelope.target) {
-        return Err(rejection(quiz::Rejection::IdInvalid));
+        return Err(rejection(course::Rejection::IdInvalid));
     }
     let command: Command = serde_json::from_slice(&envelope.payload).map_err(|error| Rejection::Invalid { detail: format!("command-malformed: {error}") })?;
     if envelope.kind != command_kind(&command) {
         return Err(mismatch(format!("kind {:?} does not carry a {} command", envelope.kind, command.type_name())));
     }
-    if let Some(malformed) = quiz::command_rejection(&command) {
+    if let Some(malformed) = course::command_rejection(&command) {
         return Err(rejection(malformed));
     }
     if envelope.command_id.0 != *command.id() || envelope.idempotency_key.as_ref().map(|key| &key.0) != Some(command.id()) {
@@ -226,7 +226,7 @@ pub fn enrolled(envelope: &CommandEnvelope, tenant: &str) -> Result<Event, Rejec
         return Err(Rejection::Unauthorized { detail: format!("{ENROLL} is issued by the proctor only") });
     }
     if envelope.version != WIRE_VERSION || envelope.target.tenant.0 != tenant || envelope.scope.0 != tenant || envelope.target.kind != LEARNER {
-        return Err(mismatch(format!("{ENROLL} must address a learner of catalog {tenant:?}")));
+        return Err(mismatch(format!("{ENROLL} must address a learner of course {tenant:?}")));
     }
     let fact: Event = serde_json::from_slice(&envelope.payload).map_err(|error| Rejection::Invalid { detail: format!("{ENROLL} carries no quiz event: {error}") })?;
     let Event::LearnerRegistered { learner, identity, .. } = &fact else {
@@ -234,9 +234,9 @@ pub fn enrolled(envelope: &CommandEnvelope, tenant: &str) -> Result<Event, Rejec
     };
     let key = match identity {
         Identity::Anonymous => None,
-        Identity::Pseudonym { handle } | Identity::Name { handle } => quiz::normalize_handle(handle).filter(|normalized| normalized.display == *handle).map(|normalized| enrollment_key(tenant, &quiz::handle_actor_id(&normalized.key))),
+        Identity::Pseudonym { handle } | Identity::Name { handle } => course::normalize_handle(handle).filter(|normalized| normalized.display == *handle).map(|normalized| enrollment_key(tenant, &course::handle_actor_id(&normalized.key))),
     };
-    if !quiz::is_id(learner) || key.is_none() || *learner != envelope.target.id || Some(&envelope.command_id.0) != key.as_ref() || envelope.idempotency_key.as_ref().map(|idempotency| &idempotency.0) != key.as_ref() {
+    if !course::is_id(learner) || key.is_none() || *learner != envelope.target.id || Some(&envelope.command_id.0) != key.as_ref() || envelope.idempotency_key.as_ref().map(|idempotency| &idempotency.0) != key.as_ref() {
         return Err(mismatch(format!("{ENROLL} relays the registration of {} under the key of its handle", envelope.target.id)));
     }
     Ok(fact)
@@ -250,9 +250,9 @@ pub struct HandleDecider {
 }
 
 /// 🎒️ One learner's registration, runs, answers, submissions and badges, decided against the loaded
-/// catalog and the caps in force.
+/// course and the caps in force.
 pub struct LearnerDecider {
-    pub catalog: Arc<LoadedCatalog>,
+    pub course: Arc<LoadedCourse>,
     pub admission: Arc<Admission>,
 }
 
@@ -329,15 +329,15 @@ impl Decider for HandleDecider {
             Stored::State(handle) => Some(handle),
             Stored::Fresh => None,
         };
-        match (self.admission.command(envelope), handle.or_else(|| quiz::handle_key_of(&envelope.target.id).map(|key| quiz::empty_handle_state(&key)))) {
-            (Ok(command), Some(handle)) => emitted(envelope, context, quiz::decide_handle(&handle, &command, context.now.millis)),
+        match (self.admission.command(envelope), handle.or_else(|| course::handle_key_of(&envelope.target.id).map(|key| course::empty_handle_state(&key)))) {
+            (Ok(command), Some(handle)) => emitted(envelope, context, course::decide_handle(&handle, &command, context.now.millis)),
             (Err(refusal), _) => Decision::Reject(refusal),
-            (_, None) => Decision::Reject(rejection(quiz::Rejection::IdInvalid)),
+            (_, None) => Decision::Reject(rejection(course::Rejection::IdInvalid)),
         }
     }
 
     async fn evolve(&self, state: &mut ActorState, event: &EventRecord) {
-        evolved(state, event, || quiz::handle_key_of(&event.stream.id).map(|key| quiz::empty_handle_state(&key)), quiz::evolve_handle);
+        evolved(state, event, || course::handle_key_of(&event.stream.id).map(|key| course::empty_handle_state(&key)), course::evolve_handle);
     }
 
     async fn state_format(&self) -> u32 {
@@ -354,7 +354,7 @@ impl Decider for LearnerDecider {
         let learner = match stored::<LearnerState>(state) {
             Stored::Corrupt(corrupt) => return unavailable(&envelope.target, &corrupt),
             Stored::State(learner) => learner,
-            Stored::Fresh => quiz::empty_learner_state(&envelope.target.id),
+            Stored::Fresh => course::empty_learner_state(&envelope.target.id),
         };
         if envelope.kind == ENROLL {
             return match enrolled(envelope, self.admission.tenant()) {
@@ -365,15 +365,15 @@ impl Decider for LearnerDecider {
         match self.admission.command(envelope) {
             Ok(command) => {
                 let caps = self.admission.caps();
-                let lifecycle = LearnerContext { now: context.now.millis, catalog: &self.catalog.catalog, quizzes: self.catalog.current(), limits: &caps };
-                emitted(envelope, context, quiz::decide_learner(&learner, &command, &lifecycle))
+                let lifecycle = LearnerContext { now: context.now.millis, course: &self.course.course, quizzes: self.course.current(), limits: &caps };
+                emitted(envelope, context, course::decide_learner(&learner, &command, &lifecycle))
             }
             Err(refusal) => Decision::Reject(refusal),
         }
     }
 
     async fn evolve(&self, state: &mut ActorState, event: &EventRecord) {
-        evolved(state, event, || quiz::is_id(&event.stream.id).then(|| quiz::empty_learner_state(&event.stream.id)), quiz::evolve_learner);
+        evolved(state, event, || course::is_id(&event.stream.id).then(|| course::empty_learner_state(&event.stream.id)), course::evolve_learner);
     }
 
     async fn state_format(&self) -> u32 {
@@ -389,15 +389,15 @@ dyn_enum_close! {
     }
 }
 
-/// 🧰️ The deciders of one catalog: the handle and the learner, sharing one admission.
-pub fn deciders(catalog: &Arc<LoadedCatalog>, admission: &Arc<Admission>) -> Vec<ProctorDeciders> {
-    vec![ProctorDeciders::Handle(HandleDecider { admission: Arc::clone(admission) }), ProctorDeciders::Learner(LearnerDecider { catalog: Arc::clone(catalog), admission: Arc::clone(admission) })]
+/// 🧰️ The deciders of one course: the handle and the learner, sharing one admission.
+pub fn deciders(course: &Arc<LoadedCourse>, admission: &Arc<Admission>) -> Vec<ProctorDeciders> {
+    vec![ProctorDeciders::Handle(HandleDecider { admission: Arc::clone(admission) }), ProctorDeciders::Learner(LearnerDecider { course: Arc::clone(course), admission: Arc::clone(admission) })]
 }
 
-fn emitted(envelope: &CommandEnvelope, context: &DecisionContext, decision: quiz::Decision) -> Decision {
+fn emitted(envelope: &CommandEnvelope, context: &DecisionContext, decision: course::Decision) -> Decision {
     match decision {
-        quiz::Decision::Events(events) => Decision::Emit { events: events.iter().map(|fact| record(&envelope.target, context, fact)).collect(), effects: Vec::new() },
-        quiz::Decision::Rejection(refused) => Decision::Reject(rejection(refused)),
+        course::Decision::Events(events) => Decision::Emit { events: events.iter().map(|fact| record(&envelope.target, context, fact)).collect(), effects: Vec::new() },
+        course::Decision::Rejection(refused) => Decision::Reject(rejection(refused)),
     }
 }
 

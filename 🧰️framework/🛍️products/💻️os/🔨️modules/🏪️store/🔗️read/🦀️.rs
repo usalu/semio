@@ -89,3 +89,5 @@ pub use semio_framework_value_snapshot_read::*;
 pub use semio_framework_value_retirement_owner::{retirement_owner_demands,retirement_owner_close};
 pub use semio_framework_os_store_replay::lifted_snapshot_read::{ARTIFACT_STORE_UNSCHEDULED_CLOSE_STEPS, ArtifactStoreStringVectorRetirement, ArtifactStoreSupersessionRetirement};
 pub use semio_framework_os_store_ledger::lifted_snapshot_read::{ArtifactStoreDisplacedOwnerReservation, ArtifactStoreEditMetadata, ArtifactStoreEditRetirement, ArtifactStoreEditRetirementState, ArtifactStoreHistoryMetadataRetirement, ArtifactStoreHistoryMetadataRetirementState, ArtifactStoreOperationRowOwners, ArtifactStoreStringRetirement};
+
+pub use semio_framework_value_snapshot_read::CapturedSnapshotSource;

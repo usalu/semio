@@ -1,8 +1,11 @@
 //! 🗑️ `delete-selection` command.
 use crate::editor::puzzle5d::entities::puzzle5d_grip_full_id;
+use crate::standards::v1::subsets::any::schema::mutations::disconnect_grips;
+use crate::standards::v1::subsets::any::schema::mutations::remove_part_grip;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 
 use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
-use crate::standards::v1::subsets::any::schema::mutations::{delete_part, disconnect_grips, remove_part_grip, Puzzle5dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::delete_part;
 use crate::{Puzzle5dSnapshot};
 use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dFastener};
 

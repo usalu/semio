@@ -9,25 +9,125 @@
   "cases": [
     {
       "name": "Uncaptured Filtered Library",
-      "arguments": ["--lib", "--filter-expr", "test(owner)", "--ignore-default-filter", "--nocapture", "--status-level", "pass", "--final-status-level", "all"],
-      "buildArgs": ["--lib"],
-      "executionArgs": ["--filter-expr", "test(owner)", "--ignore-default-filter", "--nocapture", "--status-level", "pass", "--final-status-level", "all"],
+      "arguments": [
+        "--lib",
+        "--filter-expr",
+        "test(owner)",
+        "--ignore-default-filter",
+        "--nocapture",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all"
+      ],
+      "buildArgs": [
+        "--lib"
+      ],
+      "executionArgs": [
+        "--filter-expr",
+        "test(owner)",
+        "--ignore-default-filter",
+        "--nocapture",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all"
+      ],
       "libtestArgs": []
     },
     {
       "name": "Separate Output Selection",
-      "arguments": ["--features", "component-app-assembly", "--success-output", "immediate", "--failure-output", "final", "--no-fail-fast", "--", "--nocapture"],
-      "buildArgs": ["--features", "component-app-assembly"],
-      "executionArgs": ["--success-output", "immediate", "--failure-output", "final", "--no-fail-fast"],
-      "libtestArgs": ["--nocapture"]
+      "arguments": [
+        "--features",
+        "component-app-assembly",
+        "--success-output",
+        "immediate",
+        "--failure-output",
+        "final",
+        "--no-fail-fast",
+        "--",
+        "--nocapture"
+      ],
+      "buildArgs": [
+        "--features",
+        "component-app-assembly"
+      ],
+      "executionArgs": [
+        "--success-output",
+        "immediate",
+        "--failure-output",
+        "final",
+        "--no-fail-fast"
+      ],
+      "libtestArgs": [
+        "--nocapture"
+      ]
     },
     {
       "name": "Inline Output Selection",
-      "arguments": ["--lib", "--success-output=immediate", "--failure-output=immediate", "--no-capture"],
-      "buildArgs": ["--lib"],
-      "executionArgs": ["--success-output=immediate", "--failure-output=immediate", "--no-capture"],
+      "arguments": [
+        "--lib",
+        "--success-output=immediate",
+        "--failure-output=immediate",
+        "--no-capture"
+      ],
+      "buildArgs": [
+        "--lib"
+      ],
+      "executionArgs": [
+        "--success-output=immediate",
+        "--failure-output=immediate",
+        "--no-capture"
+      ],
+      "libtestArgs": []
+    },
+    {
+      "name": "Separate Assertion Threads",
+      "arguments": [
+        "--lib",
+        "--test-threads",
+        "1"
+      ],
+      "buildArgs": [
+        "--lib"
+      ],
+      "executionArgs": [
+        "--test-threads",
+        "1"
+      ],
+      "libtestArgs": []
+    },
+    {
+      "name": "Inline Assertion Threads",
+      "arguments": [
+        "--lib",
+        "--test-threads=1"
+      ],
+      "buildArgs": [
+        "--lib"
+      ],
+      "executionArgs": [
+        "--test-threads=1"
+      ],
       "libtestArgs": []
     }
   ],
-  "invalid": [["--success-output"], ["--failure-output="], ["--success-output", "--lib"]]
+  "invalid": [
+    [
+      "--success-output"
+    ],
+    [
+      "--failure-output="
+    ],
+    [
+      "--success-output",
+      "--lib"
+    ],
+    [
+      "--test-threads"
+    ],
+    [
+      "--test-threads="
+    ]
+  ]
 }

@@ -4,7 +4,7 @@ use semio_framework_value::DslValue;
 use protocol::{Mutation, MutationOutcome, MutationLeafDescriptor, MutationInvertibility, MutationDiffParticipation, MutationOutcomeClass, MutationComposition, MutationLanguageSurface};
 
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct ChangeChartValue {
     pub path: Vec<String>,
     pub value: Option<DslValue>,
@@ -18,6 +18,13 @@ impl Mutation<ChartSnapshot> for ChangeChartValue {
     type Diff = ChartDiff;
     const DESCRIPTORS: &'static [MutationLeafDescriptor] = &[CHANGE_CHART_VALUE];
     fn descriptor(&self) -> &'static MutationLeafDescriptor { &CHANGE_CHART_VALUE }
+
+
+    fn conflict_target(&self) -> Vec<String> { std::iter::once("chart".into()).chain(self.path.clone()).collect() }
+}
+
+impl protocol::ColdMutation<ChartSnapshot> for ChangeChartValue {
+    type ReferenceDiff = ChartDiff;
     fn diff(&self, base: &ChartSnapshot) -> MutationOutcome<ChartDiff> {
         match ChartEdit::authored(&base.chart, &self.path, self.value.as_ref()) {
             Ok(Some(edit)) => MutationOutcome::new(ChartDiff { edits: vec![edit] }),
@@ -41,5 +48,4 @@ impl Mutation<ChartSnapshot> for ChangeChartValue {
         }
         Ok(vec![Self { path: self.path.clone(), value: before }])
     }
-    fn conflict_target(&self) -> Vec<String> { std::iter::once("chart".into()).chain(self.path.clone()).collect() }
 }

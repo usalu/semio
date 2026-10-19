@@ -80,6 +80,7 @@
           "type": "number"
         },
         "snow_depth_mm": {
+          "description": "Snow depth in millimetres. EPW centimetres are converted at the format boundary.",
           "type": "number"
         }
       }
@@ -93,7 +94,8 @@
         "longitude_deg",
         "elevation_m",
         "time_zone_hours",
-        "records"
+        "records",
+        "calendar"
       ],
       "properties": {
         "location": {
@@ -116,6 +118,14 @@
           "items": {
             "$ref": "#/$defs/WeatherRecord"
           }
+        },
+        "calendar": {
+          "type": "string",
+          "enum": [
+            "ActualDates",
+            "TypicalYear"
+          ],
+          "description": "ActualDates matches full authored year/month/day/hour. TypicalYear matches month/day/hour while preserving original source timestamps and refuses unavailable leap-day hours."
         }
       }
     }

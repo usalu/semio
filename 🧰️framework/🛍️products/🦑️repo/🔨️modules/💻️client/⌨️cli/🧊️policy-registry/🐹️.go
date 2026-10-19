@@ -11,6 +11,7 @@ package client
 import (
 	"context"
 	"strings"
+
 )
 
 type PolicyFunc func(ctx *PolicyContext) []Breach
@@ -248,26 +249,11 @@ var policies = []PolicyDef{
 	{
 		ID:          "system",
 		Name:        "System",
-		Description: "Validates system configuration files like devcontainer and editor settings",
-		Scopes:      []string{".vscode/settings.json", ".vscode/extensions.json", ".devcontainer/devcontainer.json", ".devcontainer/editor-overlay.json"},
+		Description: "Enforces repository dashboard authority over developer configuration",
+		Scopes:      []string{"**/*"},
 		Priority:    BreachPriorityHigh,
-		Groups: []Territory{
-			{
-				Name:        "Devcontainer",
-				Description: "Devcontainer configuration breachs",
-				Groups: []Territory{
-					{
-						Name:        "VSCode",
-						Description: "The devcontainer editor block must equal its derivation from the host editor files",
-						Kinds: []Statute{
-							BreachSystemDevcontainerVscodeSettingsDrift,
-							BreachSystemDevcontainerVscodeExtensionsDrift,
-						},
-					},
-				},
-			},
-		},
-		Run: systemPolicy,
+		Groups:      []Territory{{Name: "Developer Configuration", Description: "Editor-owned configuration is forbidden", Kinds: []Statute{BreachSystemIdeConfiguration}}},
+		Run:         systemPolicy,
 	},
 	{
 		ID:          "folder",

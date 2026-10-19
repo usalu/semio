@@ -28,6 +28,14 @@ fn bar3_stiffness_cell(e: f64, area: f64, geometry: Line3Geometry, row: usize, c
     e * area / geometry.length * sign * geometry.direction[row % 3] * geometry.direction[column % 3]
 }
 
+/// 🧲️ Contracts the original signed axial strain with the transverse geometric projector.
+fn bar3_geometric_cell(e: f64, area: f64, geometry: Line3Geometry, displacement: &[f64; 6], row: usize, column: usize) -> f64 {
+    let extension: f64 = (0..3).map(|axis| geometry.direction[axis] * (displacement[axis + 3] - displacement[axis])).sum();
+    let sign = if row / 3 == column / 3 { 1.0 } else { -1.0 };
+    let identity = f64::from(u8::from(row % 3 == column % 3));
+    e * area * extension / geometry.length.powi(2) * sign * (identity - geometry.direction[row % 3] * geometry.direction[column % 3])
+}
+
 // #region 🔖️Bar3
 /// 🪵️ Two-node 3D axial truss element — carries only translational DOFs, stiffness `k = EA/L`
 /// projected onto the member's unit direction.
@@ -130,25 +138,22 @@ impl Element for Bar3 {
     /// 🌀️ 3D truss geometric stiffness under axial force `n` (tension-positive, `recover`'s convention):
     /// `N/L·(I₃ − ccᵀ)` per 3x3 node block — the 3D analogue of `elements2d::Bar2::geometric_stiffness`.
     fn geometric_stiffness(&self, ctx: &ElementContext, u_elem: &VecD) -> Option<MatD> {
-        let d = vec3d_sub(ctx.positions[1], ctx.positions[0]);
-        let l = vec3d_length(d);
-        let c = vec3d_normalize(d);
-        let k = self.e * self.a / l;
-        let du = [u_elem.get(3) - u_elem.get(0), u_elem.get(4) - u_elem.get(1), u_elem.get(5) - u_elem.get(2)];
-        let n = k * (c[0] * du[0] + c[1] * du[1] + c[2] * du[2]);
-        let coeff = n / l;
+        let geometry = line3_geometry(ctx)?;
+        let displacement = std::array::from_fn(|index| u_elem.get(index));
         let mut kg = MatD::zeros(6, 6);
-        for i in 0..3 {
-            for j in 0..3 {
-                let identity = if i == j { 1.0 } else { 0.0 };
-                let v = coeff * (identity - c[i] * c[j]);
-                kg.set(i, j, v);
-                kg.set(i, j + 3, -v);
-                kg.set(i + 3, j, -v);
-                kg.set(i + 3, j + 3, v);
+        for row in 0..6 {
+            for column in 0..6 {
+                kg.set(row, column, bar3_geometric_cell(self.e, self.a, geometry, &displacement, row, column));
             }
         }
         Some(kg)
+    }
+
+    fn mounted_geometric_stiffness_cell(&self, ctx: &ElementContext, displacement: &[f64], row: usize, column: usize) -> Option<f64> {
+        let displacement: &[f64; 6] = displacement.try_into().ok()?;
+        if row >= 6 || column >= 6 || !displacement.iter().all(|value| value.is_finite()) { return None; }
+        let value = bar3_geometric_cell(self.e, self.a, line3_geometry(ctx)?, displacement, row, column);
+        value.is_finite().then_some(value)
     }
 }
 // #endregion 🔖️Bar3
@@ -211,6 +216,38 @@ fn frame3_bending_cell(length: f64, rigidity: f64, row: usize, column: usize) ->
         [-12.0 * base / length_squared, -6.0 * base / length, 12.0 * base / length_squared, -6.0 * base / length],
         [6.0 * base / length, 2.0 * base, -6.0 * base / length, 4.0 * base],
     ][row][column]
+}
+
+/// 🌪️ One Hermite geometric bending cell retains the member's signed axial reference force.
+fn frame3_geometric_bending_cell(length: f64, axial: f64, row: usize, column: usize) -> f64 {
+    let square = length * length;
+    axial / length * [
+        [6.0 / 5.0, length / 10.0, -6.0 / 5.0, length / 10.0],
+        [length / 10.0, 2.0 * square / 15.0, -length / 10.0, -square / 30.0],
+        [-6.0 / 5.0, -length / 10.0, 6.0 / 5.0, -length / 10.0],
+        [length / 10.0, -square / 30.0, -length / 10.0, 2.0 * square / 15.0],
+    ][row][column]
+}
+
+/// 🧩️ Resolves the two geometric bending planes without allocating a local matrix.
+fn frame3_local_geometric_cell(length: f64, axial: f64, row: usize, column: usize) -> f64 {
+    for (indices, signs) in [([1usize, 5, 7, 11], [1.0; 4]), ([2usize, 4, 8, 10], Y_PLANE_SIGN)] {
+        if let (Some(i), Some(j)) = (indices.iter().position(|index| *index == row), indices.iter().position(|index| *index == column)) {
+            return signs[i] * signs[j] * frame3_geometric_bending_cell(length, axial, i, j);
+        }
+    }
+    0.0
+}
+
+/// 🧭️ Transforms one original geometric cell through the fixed rolled frame basis.
+fn frame3_global_geometric_cell(geometry: Frame3Geometry, axial: f64, row: usize, column: usize) -> f64 {
+    let mut value = 0.0;
+    for i in 0..3 {
+        for j in 0..3 {
+            value += geometry.axes[i][row % 3] * frame3_local_geometric_cell(geometry.length, axial, row / 3 * 3 + i, column / 3 * 3 + j) * geometry.axes[j][column % 3];
+        }
+    }
+    value
 }
 
 impl Frame3 {
@@ -311,26 +348,6 @@ impl Frame3 {
         m
     }
 
-    /// 🌀️ Local 12x12 geometric stiffness under axial force `n` (tension-positive, matches `recover`'s
-    /// convention), applied independently to both bending planes via the same `Kg_bend` beam-column
-    /// formula `beam_local_geometric_stiffness` in `elements2d` uses.
-    pub fn local_geometric_stiffness(&self, l: f64, n: f64) -> MatD {
-        let mut kg = MatD::zeros(12, 12);
-        let l2 = l * l;
-        let coeff = n / l;
-        let block = [[6.0 / 5.0, l / 10.0, -6.0 / 5.0, l / 10.0], [l / 10.0, 2.0 * l2 / 15.0, -l / 10.0, -l2 / 30.0], [-6.0 / 5.0, -l / 10.0, 6.0 / 5.0, -l / 10.0], [l / 10.0, -l2 / 30.0, -l / 10.0, 2.0 * l2 / 15.0]];
-        for (bi, &gi) in [1usize, 5, 7, 11].iter().enumerate() {
-            for (bj, &gj) in [1usize, 5, 7, 11].iter().enumerate() {
-                kg.set(gi, gj, coeff * block[bi][bj]);
-            }
-        }
-        for (bi, &gi) in [2usize, 4, 8, 10].iter().enumerate() {
-            for (bj, &gj) in [2usize, 4, 8, 10].iter().enumerate() {
-                kg.set(gi, gj, Y_PLANE_SIGN[bi] * Y_PLANE_SIGN[bj] * coeff * block[bi][bj]);
-            }
-        }
-        kg
-    }
 }
 
 /// 🌬️ Rotates a GLOBAL member UDL `(wx,wy,wz)` into LOCAL `(wx_l,wy_l,wz_l)` via the same 12x12
@@ -449,12 +466,23 @@ impl Element for Frame3 {
     /// 🌀️ Buckling geometric stiffness from the member's own axial force under `u_element` — same
     /// sign convention as `recover`'s `n` (tension-positive): `n = -k_local.mul_vec(u_loc).get(0)`.
     fn geometric_stiffness(&self, ctx: &ElementContext, u_element: &VecD) -> Option<MatD> {
-        let (l, k_local, t) = self.local_system(ctx);
-        let u_loc = t.mul_vec(u_element);
-        let f = k_local.mul_vec(&u_loc);
-        let n = -f.get(0);
-        let kg_local = self.local_geometric_stiffness(l, n);
-        Some(t.transpose().matmul(&kg_local).matmul(&t))
+        let geometry = frame3_geometry(ctx, self.roll)?;
+        let extension: f64 = (0..3).map(|axis| geometry.axes[0][axis] * (u_element.get(axis + 6) - u_element.get(axis))).sum();
+        let axial = self.e * self.a / geometry.length * extension;
+        let mut matrix = MatD::zeros(12, 12);
+        for row in 0..12 {
+            for column in 0..12 { matrix.set(row, column, frame3_global_geometric_cell(geometry, axial, row, column)); }
+        }
+        Some(matrix)
+    }
+
+    fn mounted_geometric_stiffness_cell(&self, ctx: &ElementContext, displacement: &[f64], row: usize, column: usize) -> Option<f64> {
+        let displacement: &[f64; 12] = displacement.try_into().ok()?;
+        if row >= 12 || column >= 12 || !displacement.iter().all(|value| value.is_finite()) { return None; }
+        let geometry = frame3_geometry(ctx, self.roll)?;
+        let extension: f64 = (0..3).map(|axis| geometry.axes[0][axis] * (displacement[axis + 6] - displacement[axis])).sum();
+        let value = frame3_global_geometric_cell(geometry, self.e * self.a / geometry.length * extension, row, column);
+        value.is_finite().then_some(value)
     }
 }
 // #endregion 🔖️Frame3

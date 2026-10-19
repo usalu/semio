@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "deadlineMilliseconds": 150,
+  "observationMilliseconds": 700,
+  "cases": [
+    {
+      "id": "direct-onWait-cancel",
+      "api": "direct",
+      "phase": "onWait",
+      "halt": "cancel",
+      "waiterAcquired": false
+    },
+    {
+      "id": "direct-publish-cancel",
+      "api": "direct",
+      "phase": "publish",
+      "halt": "cancel",
+      "waiterAcquired": false
+    },
+    {
+      "id": "direct-yield-cancel",
+      "api": "direct",
+      "phase": "yield",
+      "halt": "cancel",
+      "waiterAcquired": false
+    },
+    {
+      "id": "queued-onWait-cancel",
+      "api": "queued",
+      "phase": "onWait",
+      "halt": "cancel",
+      "waiterAcquired": false
+    },
+    {
+      "id": "direct-onWait-timeout",
+      "api": "direct",
+      "phase": "onWait",
+      "halt": "timeout",
+      "waiterAcquired": false
+    },
+    {
+      "id": "queued-onWait-timeout",
+      "api": "queued",
+      "phase": "onWait",
+      "halt": "timeout",
+      "waiterAcquired": false
+    },
+    {
+      "id": "direct-publish-deadline",
+      "api": "direct",
+      "phase": "publish",
+      "halt": "deadline",
+      "waiterAcquired": false
+    },
+    {
+      "id": "direct-yield-deadline",
+      "api": "direct",
+      "phase": "yield",
+      "halt": "deadline",
+      "waiterAcquired": false
+    },
+    {
+      "id": "direct-onWait-reject",
+      "api": "direct",
+      "phase": "onWait",
+      "halt": "reject",
+      "waiterAcquired": false
+    },
+    {
+      "id": "queued-onWait-reject",
+      "api": "queued",
+      "phase": "onWait",
+      "halt": "reject",
+      "waiterAcquired": false
+    }
+  ]
+}

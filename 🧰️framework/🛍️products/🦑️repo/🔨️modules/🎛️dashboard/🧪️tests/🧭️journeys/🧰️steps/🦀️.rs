@@ -81,5 +81,15 @@ pub fn assert_repaint_consistent(term: &mut Terminal, volatile: &[&str]) {
     let differing: Vec<String> = before.iter().zip(&after).enumerate()
         .filter(|(_, (left, right))| left.trim_end() != right.trim_end() && !volatile.iter().any(|word| left.contains(word) || right.contains(word)))
         .map(|(row, (left, right))| format!("row {row}:\n  incremental: {}\n  repainted:   {}", left.trim_end(), right.trim_end())).collect();
+    if !differing.is_empty() {
+        let thread = std::thread::current();
+        let name = format!("repaint-{}", thread.name().unwrap_or("unknown").chars().take(40).collect::<String>());
+        term.checkpoint(&name);
+        if let Some(directory) = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR") {
+            let directory = std::path::PathBuf::from(directory);
+            std::fs::write(directory.join(format!("{name}-before.txt")), before.join("\n")).unwrap();
+            std::fs::write(directory.join(format!("{name}-after.txt")), after.join("\n")).unwrap();
+        }
+    }
     assert!(differing.is_empty(), "the incrementally painted screen differs from a full repaint (stale cells):\n{}", differing.join("\n"));
 }

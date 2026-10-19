@@ -1,5 +1,6 @@
 {
   "schemaVersion": 1,
+  "inverseAdmissionCalls": 1,
   "cases": [
     { "name": "two-direct-leaves", "source": "#[mutations(snapshot = Doc, diff = Delta, schema = \"probe\")] enum Ops { InsertPage(insert_page::InsertPage), RemovePage(remove_page::RemovePage) }", "accepted": true, "leaves": 2, "generic": false },
     { "name": "generic-direct-leaf", "source": "#[mutations(snapshot = Doc<T>, diff = Delta<T>, schema = \"probe\")] enum Ops<T> where T: Clone { InsertPage(insert_page::InsertPage<T>) }", "accepted": true, "leaves": 1, "generic": true },

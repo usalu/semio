@@ -4566,6 +4566,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-job-native-decode",
+ "semio-framework-pack-json",
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -5568,6 +5569,7 @@ dependencies = [
  "js-sys",
  "semio-framework-dispatch-macros",
  "semio-framework-machine-derive",
+ "semio-framework-value",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -5714,6 +5716,22 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-math-dense"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-math-rank"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-trace",
+ "semio-framework-value",
  "serde_json",
 ]
 
@@ -6109,8 +6127,10 @@ name = "semio-framework-pack-record-encode"
 version = "0.1.0"
 dependencies = [
  "semio-framework-dsl-record",
+ "semio-framework-hash",
  "semio-framework-pack-error",
  "semio-framework-pack-format",
+ "semio-framework-pack-record-preflight",
  "semio-framework-pack-record-schema",
  "semio-framework-replication-codec",
  "semio-framework-trace",
@@ -6474,6 +6494,7 @@ name = "semio-framework-replication-mutation"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
+ "semio-framework-dsl-record",
  "semio-framework-mutation-diff",
  "semio-framework-pack-json",
  "semio-framework-replication-ids",
@@ -6494,6 +6515,7 @@ dependencies = [
  "semio-framework-replication-ids",
  "semio-framework-replication-mutation",
  "semio-framework-trace",
+ "semio-framework-trace-memory-testing",
  "semio-framework-value",
  "serde_json",
 ]
@@ -8412,6 +8434,8 @@ version = "0.1.0"
 name = "semio-framework-value"
 version = "0.1.0"
 dependencies = [
+ "blake3",
+ "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-schema-registry",
  "semio-framework-value-allocation-return",

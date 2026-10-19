@@ -15,6 +15,17 @@ pub struct AddInput {
 //#region ⚙️Semantics
 impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for AddInput {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "workflow", kind: "add-input", record: "AddedWorkflowInput" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add workflow input {}", self.input.id), &format!("Arbeitsablaufeingabe {} hinzufügen", self.input.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["inputs".into(), self.input.id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<WorkflowSnapshot, WorkflowMutation> for AddInput {
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
         protocol::MutationOutcome::new(WorkflowDiff::DeclareInput { input: self.input.clone() })
     }
@@ -24,11 +35,5 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for AddInput {
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add workflow input {}", self.input.id), &format!("Arbeitsablaufeingabe {} hinzufügen", self.input.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["inputs".into(), self.input.id.clone()]
-    }
 }
 //#endregion ⚙️Semantics

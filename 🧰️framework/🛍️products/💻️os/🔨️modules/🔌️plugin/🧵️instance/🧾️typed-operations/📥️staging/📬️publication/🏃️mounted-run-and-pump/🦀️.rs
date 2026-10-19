@@ -131,7 +131,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
             return Err(fault);
         }
         let token = mounted.next_token();
-        let page = TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::Interaction, &("accepted", writes.len()))?;
+        let page = TypedOperationResultPage::try_serialize_cold(token, TypedOperationResultLane::Interaction, &("accepted", writes.len()))?;
         mounted.queue_page(page)
     }
 

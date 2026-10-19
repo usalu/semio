@@ -10,10 +10,6 @@
  * COMPOSE_KIT_LANGUAGE holds the data fields for a COMPOSE_KIT_LANGUAGE record.
  **/
 export const COMPOSE_KIT_LANGUAGE = "json";
-/**
- * DIAGNOSTIC_SOURCE holds the data fields for a DIAGNOSTIC_SOURCE record.
- **/
-export const DIAGNOSTIC_SOURCE = "compose";
 
 /**
  * UI_STRINGS holds the data fields for a UI_STRINGS record.

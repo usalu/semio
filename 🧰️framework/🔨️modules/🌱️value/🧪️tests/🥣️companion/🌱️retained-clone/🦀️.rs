@@ -13,3 +13,6 @@ mod original_factory_source_tests;
 
 #[path = "📋️paged/🦀️.rs"]
 pub mod paged;
+
+#[path = "../../../🧬️retained-clone/♻️close/🎟️demand/🧪️tests/🦀️.rs"]
+mod close_demand_tests;

@@ -17,8 +17,8 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.zones.push(zone(2, "ZONE TWO"));
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::schedule::ScheduleId(1), value: 1.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::schedule::ScheduleId(2), value: 0.5 });
-    model.pv_systems.push(crate::model::PvSystemAssignment { id: crate::model::EntityId(300), dc_capacity_w: 5000.0, area_m2: 30.0, tilt_deg: 30.0, azimuth_deg: 180.0, module_efficiency: 0.18, inverter_efficiency: 0.96 });
-    model.pv_systems.push(crate::model::PvSystemAssignment { id: crate::model::EntityId(301), dc_capacity_w: 3000.0, area_m2: 18.0, tilt_deg: 20.0, azimuth_deg: 135.0, module_efficiency: 0.17, inverter_efficiency: 0.95 });
+    model.pv_systems.push(crate::model::PvSystemAssignment { id: crate::model::EntityId(300), dc_capacity_w: 5000.0, area_m2: 30.0, tilt_deg: 30.0, azimuth_deg: 180.0, module_efficiency: 0.18, inverter_efficiency: 0.96, temperature_coefficient: -0.004, faiman_heat_loss_constant_w_m2k: 25.0, faiman_heat_loss_wind_w_s_m3k: 6.84, mounting: crate::model::PhotovoltaicMounting::OpenRack});
+    model.pv_systems.push(crate::model::PvSystemAssignment { id: crate::model::EntityId(301), dc_capacity_w: 3000.0, area_m2: 18.0, tilt_deg: 20.0, azimuth_deg: 135.0, module_efficiency: 0.17, inverter_efficiency: 0.95, temperature_coefficient: -0.004, faiman_heat_loss_constant_w_m2k: 25.0, faiman_heat_loss_wind_w_s_m3k: 6.84, mounting: crate::model::PhotovoltaicMounting::OpenRack});
     model.battery_storage.push(crate::model::BatteryAssignment { id: crate::model::EntityId(310), capacity_kwh: 13.5, max_charge_w: 5000.0, max_discharge_w: 5000.0, round_trip_efficiency: 0.9 });
     (snapshot(model), super::change_pv_system_inverter_efficiency(crate::model::EntityId(300), 0.98))
 }

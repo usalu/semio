@@ -98,11 +98,11 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         let frozen=X::freezes_document(&*self.time_travel, &*self.tool_runs);
         let Some(original)=self.tool_machines.gesture_operations.iter_mut().flatten().find(|original|original.operation==operation&&!original.settled)else{return false};
         original.settled=true;
-        original.decision=original.slot.take();
+        if original.decision.is_none(){original.decision=original.slot.take();}
         let Some(decision)=original.decision.as_mut()else{return false};
         if publishes&&!frozen&&self.tool_machines.gestures.open(original.slot.window())==decision.admitted.as_ref(){
             if let Some(press)=decision.closing.take(){self.tool_machines.gestures.close(original.slot.window(),press);}
-            if let Some(decided)=decision.decided.take(){self.tool_machines.gestures.settle(original.slot.window(),decided);self.follow_tool_machines(true);}
+            if let Some(decided)=decision.decided.take(){if let Err(decided)=self.tool_machines.gestures.settle(original.slot.window(),decided){decision.decided=Some(decided);original.settled=false;self.tool_machines.refold_owed=true;return false;}self.follow_tool_machines(true);}
         }
         true
     }
@@ -225,6 +225,8 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// of the press the window already closed stays silent on every lane. One ledger step decides every lane, so a refused
     /// input leaves the press, its overlays and its held config exactly as they were until a retry or a host abort decides.
     /// Answers whether `emit` publishes the press.
+    pub(crate) fn tool_source_busy(&self,operation:u64)->bool{self.tool_machines.operation_tag(operation).is_some_and(|tag|match tag{ToolTag::Scrub(tag)=>self.tool_machines.presses.retained_read_pending(&tag.window),ToolTag::Typing(_)=>false})}
+
     pub fn settle_press<D>(&mut self, tag: &ScrubTag, base: &[u8], actor: &str, emit: &mut Emit<A::Mutation, A::ConfigMutation, D>) -> Result<bool, Fault> {
         let base: String = base.iter().map(|byte| format!("{byte:02x}")).collect();
         let leaves = std::mem::take(&mut emit.artifact_mutations)
@@ -234,12 +236,13 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
             .chain(std::mem::take(&mut emit.config_mutations).into_iter().map(PressLeaf::Config))
             .chain(std::mem::take(&mut emit.window_config_mutations).into_iter().map(PressLeaf::WindowConfig))
             .collect();
-        emit.transaction = None;
+        let transaction=emit.transaction.take();
+        let mut input=Some(tag.phase.clone().input(leaves));
         let step = self
             .tool_machines
             .presses
-            .send(&tag.window, &tag.tool, &ActorId(actor.into()), &base, tag.phase.clone().input(leaves), semio_framework_tool_machine::authoring_clock(0))
-            .map_err(|refusal| Fault::new(FaultOrigin::Framework, FaultCode::new(refusal.code()), format!("continuous control {:?} refused its press", tag.tool)))?;
+            .send(&tag.window, &tag.tool, &ActorId(actor.into()), &base, &mut input, semio_framework_tool_machine::authoring_clock(0));
+        let step=match step{Ok(step)=>step,Err(refusal)=>{if let Some(semio_framework_tool_machine::ScrubInput::Tick{leaves,..}|semio_framework_tool_machine::ScrubInput::Commit{leaves,..})=input.take(){for leaf in leaves{match leaf{PressLeaf::Member(leaf)=>emit.artifact_mutations.push(leaf),PressLeaf::Child(leaf)=>emit.child_emits.push(leaf),PressLeaf::Config(leaf)=>emit.config_mutations.push(leaf),PressLeaf::WindowConfig(leaf)=>emit.window_config_mutations.push(leaf)}}emit.transaction=transaction;}return Err(Fault::new(FaultOrigin::Framework,FaultCode::new(refusal.code()),"original continuous-control input waits for its source owners"));}};
         let ToolStep::Committed(transaction, leaves) = step else { return Ok(false) };
         for leaf in leaves {
             match leaf {
@@ -315,7 +318,7 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceEx
     fn gesture_retirement_pending(&self)->bool{self.tool_machines.gesture_retirement.is_some()||self.tool_machines.gesture_operations.iter().flatten().any(|original|original.settled)}
 
     fn gesture_retirement_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
-        if let Some(owner)=self.tool_machines.gesture_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<GestureOperation<A::Mutation>>>>(),depth:1,..Default::default()})}else{Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})};}
+        if let Some(owner)=self.tool_machines.gesture_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<GestureOperation<A::Mutation>>>>(),depth:1,..Default::default()})}else{Ok(owner.next_demand(body)?)};}
         Ok(RetirementDemand{copy_bytes:size_of::<GestureOperation<A::Mutation>>(),depth:1,..Default::default()})
     }
 
@@ -331,7 +334,7 @@ impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceEx
         if self.tool_machines.pending_overlay_aliases.is_some(){return Ok(ToolOriginalAliasBatch::<A::Snapshot>::constructor_demand());}
         if let Some(owner)=self.tool_machines.config_alias_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<ToolOriginalAliasBatch<A::Config>>>(),depth:1,..Default::default()})}else{owner.next_demand(ArtifactStore::<A::Config,A::ConfigMutation>::snapshot_alias_retirement_birth_bytes())};}
         if self.tool_machines.pending_config_aliases.is_some(){return Ok(ToolOriginalAliasBatch::<A::Config>::constructor_demand());}
-        self.stores.window_config_store.preview_retirement_demand()
+        self.stores.window_config_store.preview_retirement_demand(body)
     }
 }
 //#endregion 🔖️Driver

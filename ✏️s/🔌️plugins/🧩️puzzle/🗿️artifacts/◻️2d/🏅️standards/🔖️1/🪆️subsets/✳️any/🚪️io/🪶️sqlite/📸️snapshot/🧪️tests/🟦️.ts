@@ -93,7 +93,7 @@ test("Puzzle2d native snapshot ownership has retained clone and retirement dispa
 test("Puzzle2d borrowed mutation ownership has exhaustive native clone and retirement dispatch",async()=>{
  const corpus=await Bun.file(new URL("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧬️retained-clone/🔣️.json",import.meta.url)).json() as {mutationOwners:string[];borrowedJourneys:string[]};
  expect(corpus.mutationOwners.length).toBe(37);expect(corpus.borrowedJourneys).toEqual(["allAuthoredLeaves","zeroGrant","sourceSwap","cancelDuringCopy","largeUtf8","takeOnce","boundedClose"]);
- const directory=new URL("../../../../🧬️schema/🧬️mutations/",import.meta.url),files=Array.from(new Bun.Glob("**/🦀️.rs").scanSync({cwd:fileURLToPath(directory)})).filter(path=>path==="🦀️.rs"||path.split("/").length===2||path.split("/").length===3);
+ const directory=new URL("../../../../🧬️schema/🧬️mutations/",import.meta.url),files=Array.from(new Bun.Glob("**/🦀️.rs").scanSync({cwd:fileURLToPath(directory)})).map(path=>path.replaceAll("\\","/")).filter(path=>path==="🦀️.rs"||path.split("/").length===3||path.split("/").length===3);
  const source=(await Promise.all(files.map(path=>Bun.file(new URL(path,directory)).text()))).join("\n");
  for(const name of corpus.mutationOwners)for(const role of ["RetainedClone","RetireOwned"])expect(source).toMatch(new RegExp("#\\[derive\\([^\\]]*semio_framework_value::"+role+"[^\\]]*\\)\\][^#]*?(?:#\\[[^\\]]*\\][^#]*?)*pub (?:struct|enum) "+name+"\\b"));
 });
@@ -170,7 +170,7 @@ test("Puzzle2d create inverse retains unconditional literal intent under native 
  for(const row of corpus.cases){expect(row.inverse).toEqual({mutation:"delete-node",payload:{id:row.mutation.node.id}});const id=text(row.inverse.payload.id),db=new Database(":memory:");try{db.run("CREATE TABLE inverse_intent(id TEXT NOT NULL)");db.run("INSERT INTO inverse_intent VALUES(?)",[id]);expect(db.query("SELECT id,length(CAST(id AS BLOB)) AS bytes FROM inverse_intent").get()).toEqual({id,bytes:new TextEncoder().encode(id).length});}finally{db.close()}
   if(row.status==="changed")expect(applyPatch(row.after.map(text),[{op:"remove",path:`/${row.position}`}]).newDocument).toEqual(row.nodes.map(text));
  }
- const source=await Bun.file(new URL("↩️inverse/🦀️.rs",root)).text();expect(source).toContain("pub type Puzzle2dCreateNodeInverseCursor");expect(source).toContain("fn inverse_id(&self)");expect(source).toContain("&self.node.id");const owner=await Bun.file(new URL("../../../🏷️literal-id-inverse/🦀️.rs",root)).text();expect(owner).toContain("mutation.project(1, M::inverse_id)");expect(owner).toContain("PagedList<Puzzle2dMutation");expect(owner).toContain("ControlledRetirement");expect(owner).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);expect(source).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);
+ const source=await Bun.file(new URL("↩️inverse/🦀️.rs",root)).text();expect(source).toContain("pub type Puzzle2dCreateNodeInverseCursor");expect(source).toContain("fn inverse_id(&self)");expect(source).toContain("&self.node.id");const owner=await Bun.file(new URL("../../../../../🧬️schema/🧬️mutations/🏷️literal-id-inverse/🦀️.rs",import.meta.url)).text();expect(owner).toContain("mutation.project(1, M::inverse_id)");expect(owner).toContain("PagedList<Puzzle2dMutation");expect(owner).toContain("ControlledRetirement");expect(owner).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);expect(source).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);
 });
 
 
@@ -214,7 +214,7 @@ test("Puzzle2d edge restoration preserves original ordinals and all optional fla
  }finally{db.close()}}
  for(const row of corpus.insertions){const index=row.index===null?row.before.length:Math.min(row.index,row.before.length);expect(applyPatch([...row.before],[{op:"add",path:`/${index}`,value:"new"}]).newDocument).toEqual(row.after)}
  const schema=await Bun.file(new URL("../../../../🧬️schema/🧬️mutations/🔌️handle/🪢️connect-handles/🧬️schema/🔣️.json",import.meta.url)).json();expect(schema.properties.index.type).toEqual(["integer","null"]);expect(schema.properties.index.minimum).toBe(0);
- const source=await Bun.file(new URL("../../../../🧬️schema/🧬️mutations/🔌️handle/🪢️connect-handles/🦀️.rs",import.meta.url)).text();expect(source).toContain("pub index: Option<usize>");expect(source).toContain("pub fn restore_edge");
+ const source=await Bun.file(new URL("../../../../🧬️schema/🧬️mutations/🔌️handle/🪢️connect-handles/🦀️.rs",import.meta.url)).text();expect(source).toContain("pub index: Option<usize>");expect(source).toContain("pub fn restore_edge<");
 });
 
 
@@ -271,7 +271,7 @@ test("Puzzle2d connect inverse owns only unconditional literal ID intent",async(
  for(const row of corpus.cases){expect(row.inverse).toEqual([{kind:"disconnect-handles",id:row.id}]);const id=text(row.id),db=new Database(":memory:");try{db.run("CREATE TABLE inverse_intent(kind TEXT NOT NULL,id TEXT NOT NULL)");db.run("INSERT INTO inverse_intent VALUES(?,?)",["disconnect-handles",id]);expect(db.query("SELECT kind,id,length(CAST(id AS BLOB)) AS bytes FROM inverse_intent").get()).toEqual({kind:"disconnect-handles",id,bytes:new TextEncoder().encode(id).length});}finally{db.close()}
  if(row.changed){const forward=applyPatch(row.base.map(text),[{op:"add",path:`/${row.position}`,value:id}]).newDocument;expect(applyPatch(forward,[{op:"remove",path:`/${row.position}`}]).newDocument).toEqual(row.base.map(text));}
  }
- const source=await Bun.file(new URL("🦀️.rs",root)).text();expect(source).toContain("pub type Puzzle2dConnectHandlesInverseCursor");expect(source).toContain("impl Puzzle2dLiteralIdInverse for ConnectHandles");expect(source).toContain("&self.id");const owner=await Bun.file(new URL("../../../../🏷️literal-id-inverse/🦀️.rs",root)).text();expect(owner).toContain("mutation.project(1, M::inverse_id)");expect(owner).toContain("PagedList<Puzzle2dMutation");expect(owner).toContain("ControlledRetirement");expect(owner).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);expect(source).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);
+ const source=await Bun.file(new URL("🦀️.rs",root)).text();expect(source).toContain("pub type Puzzle2dConnectHandlesInverseCursor");expect(source).toContain("impl Puzzle2dLiteralIdInverse for ConnectHandles");expect(source).toContain("&self.id");const owner=await Bun.file(new URL("../../../../../🧬️schema/🧬️mutations/🏷️literal-id-inverse/🦀️.rs",import.meta.url)).text();expect(owner).toContain("mutation.project(1, M::inverse_id)");expect(owner).toContain("PagedList<Puzzle2dMutation");expect(owner).toContain("ControlledRetirement");expect(owner).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);expect(source).not.toMatch(/to_string_owner|\.clone\(|format!|serde_json|owned_retirement|Vec</);
 });
 
 

@@ -531,6 +531,198 @@
       }
     },
     {
+      "name": "a concealed card carries nothing, and the card beside it still does",
+      "viewport": {
+        "width": 1200,
+        "height": 800
+      },
+      "nodes": [
+        {
+          "key": "kept",
+          "tag": "article",
+          "attributes": {
+            "data-pet-surface": ""
+          },
+          "box": {
+            "left": 40,
+            "top": 80,
+            "width": 320,
+            "height": 180
+          },
+          "children": [
+            {
+              "key": "kept-text",
+              "tag": "p",
+              "attributes": {},
+              "box": {
+                "left": 56,
+                "top": 100,
+                "width": 200,
+                "height": 32
+              },
+              "children": []
+            },
+            {
+              "key": "kept-prop",
+              "tag": "div",
+              "attributes": {
+                "data-pet-prop": "shown"
+              },
+              "box": {
+                "left": 100,
+                "top": 140,
+                "width": 48,
+                "height": 24
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "key": "faded",
+          "tag": "div",
+          "attributes": {
+            "data-concealed": ""
+          },
+          "box": {
+            "left": 400,
+            "top": 40,
+            "width": 400,
+            "height": 400
+          },
+          "children": [
+            {
+              "key": "perch",
+              "tag": "article",
+              "attributes": {
+                "data-pet-surface": ""
+              },
+              "box": {
+                "left": 420,
+                "top": 80,
+                "width": 320,
+                "height": 180
+              },
+              "children": [
+                {
+                  "key": "perch-text",
+                  "tag": "p",
+                  "attributes": {},
+                  "box": {
+                    "left": 436,
+                    "top": 100,
+                    "width": 200,
+                    "height": 32
+                  },
+                  "children": []
+                }
+              ]
+            },
+            {
+              "key": "perch-button",
+              "tag": "button",
+              "attributes": {},
+              "box": {
+                "left": 420,
+                "top": 280,
+                "width": 96,
+                "height": 32
+              },
+              "children": []
+            },
+            {
+              "key": "perch-prop",
+              "tag": "div",
+              "attributes": {
+                "data-pet-prop": "hidden-topic"
+              },
+              "box": {
+                "left": 440,
+                "top": 160,
+                "width": 48,
+                "height": 24
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "key": "alone",
+          "tag": "article",
+          "attributes": {
+            "data-pet-surface": "",
+            "data-concealed": ""
+          },
+          "box": {
+            "left": 840,
+            "top": 80,
+            "width": 300,
+            "height": 180
+          },
+          "children": []
+        }
+      ],
+      "expected": {
+        "kind": "surveyed",
+        "width": 1200,
+        "height": 800,
+        "surfaces": [
+          {
+            "element": "kept",
+            "x0": 40,
+            "x1": 360,
+            "y": 80
+          },
+          {
+            "element": "floor",
+            "x0": 0,
+            "x1": 1200,
+            "y": 800
+          }
+        ],
+        "keepouts": [
+          {
+            "x": 52,
+            "y": 96,
+            "width": 208,
+            "height": 40
+          },
+          {
+            "x": 36,
+            "y": 80,
+            "width": 328,
+            "height": 180
+          }
+        ],
+        "walls": [
+          {
+            "element": "kept",
+            "side": -1,
+            "x": 40,
+            "y0": 80,
+            "y1": 260
+          },
+          {
+            "element": "kept",
+            "side": 1,
+            "x": 360,
+            "y0": 80,
+            "y1": 260
+          }
+        ],
+        "fixtures": [
+          {
+            "element": "kept-prop",
+            "key": "shown",
+            "x": 100,
+            "y": 140,
+            "width": 48,
+            "height": 24
+          }
+        ]
+      }
+    },
+    {
       "name": "narrow, boxless and off-stage elements are no surfaces, a surface may reach beyond the stage",
       "viewport": {
         "width": 1200,
@@ -5082,7 +5274,7 @@
                   "key": "pane-whole",
                   "tag": "div",
                   "attributes": {
-                    "data-pet-prop": "cooling/air-change-rates"
+                    "data-pet-prop": "ventilation/air-change-rates"
                   },
                   "box": {
                     "left": 110,
@@ -5273,7 +5465,7 @@
         "fixtures": [
           {
             "element": "pane-whole",
-            "key": "cooling/air-change-rates",
+            "key": "ventilation/air-change-rates",
             "x": 110,
             "y": 110,
             "width": 380,

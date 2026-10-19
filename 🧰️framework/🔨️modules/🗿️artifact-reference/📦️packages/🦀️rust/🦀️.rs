@@ -30,3 +30,5 @@ mod reference_binding;
 #[cfg(test)]
 #[path="../../../🚪️io/📝️text/🗿️artifact-reference/🪆️binding/🧪️tests/🏛️ownership/🦀️.rs"]
 mod binding_owner_tests;
+
+#[cfg(test)] #[path="../../../🧬️schema/🗿️artifact-reference/🟰️equal/🧪️tests/🦀️.rs"] mod equality_tests;

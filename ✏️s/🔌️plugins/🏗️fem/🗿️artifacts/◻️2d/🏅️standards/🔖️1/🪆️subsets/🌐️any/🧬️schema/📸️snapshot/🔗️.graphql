@@ -17,3 +17,21 @@ type FemAnalysisSettings {
   bucklingCount: Int!
   deformationScale: Float!
 }
+
+# 🧱️ Complete domain records referenced by snapshot, mutation and diff mirrors.
+enum FemDof { Tx Ty Tz Rx Ry Rz }
+type FemMaterial { id: String! name: String! e: Float! nu: Float! rho: Float!  }
+type FemSection { id: String! name: String! area: Float! iy: Float!  }
+type FemSupport { id: String! nodeId: String! fixed: [FemDof!]! }
+type FemLoadCase { id: String! name: String! loads: [FemLoad!]! selfWeight: Boolean! }
+type FemNodalLoad { id: String! nodeId: String! dof: FemDof! value: Float! }
+type FemMemberLoad { id: String! elementId: String! wx: Float! wy: Float!  }
+type FemAreaLoad { id: String! regionId: String! pressure: Float! }
+union FemLoad = FemNodalLoad | FemMemberLoad | FemAreaLoad
+type FemBar { id: String! start: String! end: String! materialId: String! sectionId: String! }
+type FemNode { id: String! x: Float! y: Float! }
+type FemBeam { id: String! start: String! end: String! materialId: String! sectionId: String! }
+union FemElement = FemBar | FemBeam
+type FemRegion { id: String! name: String! outline: [[Float!]!]! holes: [[[Float!]!]!]! thickness: Float! materialId: String! meshSize: Float! }
+type FemCombinationTerm { caseId: String! factor: Float! }
+type FemCombination { id: String! name: String! terms: [FemCombinationTerm!]! }

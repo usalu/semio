@@ -62,7 +62,7 @@ impl DemoEphemeralPreparation {
 }
 
 impl ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> for DemoEphemeralPreparation {
-    fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
+    fn advance(&mut self, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
         if !grant.permits_one() || self.cancelled {
             return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -80,7 +80,7 @@ impl ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> for DemoEph
         if outcome.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error) {
             return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "demo ephemeral mutation rejected against its base"));
         }
-        let original = match semio_framework_os_spr::apply_diff(outcome.diff(), &request.base) { Ok(original) => original, Err(error) => { *self.semantic_refusal = Some(error); return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "original ephemeral mutation application refused")); } };
+        let original = match protocol::apply_diff_cold(outcome.diff(), &request.base) { Ok(original) => original, Err(error) => { *self.semantic_refusal = Some(error); return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "original ephemeral mutation application refused")); } };
         let witness = self.published_root.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "ephemeral preparation lost its original witness"))?;
         let next_root = Arc::new(original);
         witness.publish(&next_root);
@@ -206,7 +206,8 @@ impl RetainedCloneEdit<DemoSnapshot, DemoMutation> for DemoRetainedCloneEdit {
 
 impl RetainedCloneEditCursor<DemoSnapshot, DemoMutation> for DemoRetainedCloneEditCursor {
     fn foreign_step_presence(&self)->bool{false}
-    fn advance(&mut self, base: RetainedCloneRef<'_, DemoSnapshot>, post: &mut DemoSnapshot, mutation: RetainedCloneRef<'_, DemoMutation>, grant: RetainedCloneGrant) -> Result<RetainedCloneEditStep, ValueError> {
+    fn advance_demands(&self, _: RetainedCloneRef<'_, DemoSnapshot>, _: &DemoSnapshot, _: RetainedCloneRef<'_, DemoMutation>, _: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(semio_framework_value::RetirementDemand { copy_bytes: if self.phase >= 2 { std::mem::size_of::<DemoSnapshot>() } else { 0 }, capacity_bytes: if self.phase == 1 { std::mem::size_of::<DemoMutation>() } else { 0 }, depth: 1, ..Default::default() }) }
+    fn advance(&mut self, base: RetainedCloneRef<'_, DemoSnapshot>, post: &mut DemoSnapshot, mutation: RetainedCloneRef<'_, DemoMutation>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneEditStep, ValueError> {
         if self.cancelled || self.closing || grant.maximum_items == 0 {
             return Ok(RetainedCloneEditStep::Progress(RetainedCloneProgress::default()));
         }
@@ -240,7 +241,7 @@ impl RetainedCloneEditCursor<DemoSnapshot, DemoMutation> for DemoRetainedCloneEd
         if outcome.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error) {
             return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "retained clone fixture mutation rejected against its immutable base"));
         }
-        let original = match semio_framework_os_spr::apply_diff(outcome.diff(), base.get()) { Ok(original) => original, Err(error) => { *self.semantic_refusal = Some(error); return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "original retained mutation application refused")); } };
+        let original = match protocol::apply_diff_cold(outcome.diff(), base.get()) { Ok(original) => original, Err(error) => { *self.semantic_refusal = Some(error); return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "original retained mutation application refused")); } };
         *post = original;
         self.phase = 3;
         Ok(RetainedCloneEditStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes, retained_capacity_bytes: 0, released_bytes: 0 }))
@@ -343,7 +344,9 @@ impl ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation> for Prob
             depth: child.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"probe source depth overflow"))?,
         })
     }
-    fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<DemoSnapshot, DemoMutation, DemoMutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation>>, RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<DemoSnapshot, DemoMutation, DemoMutation>)> {
+        fn begin_copy_byte_demand(&self,input:&DemoMutation,lane:HistoryLane)->Result<usize,semio_framework_value::ValueError>{self.begin_demand(input,lane)?; self.inner.begin_copy_byte_demand(input,lane)?.checked_add(std::mem::size_of::<ProbedRetainedClonePreparation>()*2).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original wrapper header quote overflow"))}
+
+fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<DemoSnapshot, DemoMutation, DemoMutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation>>, RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<DemoSnapshot, DemoMutation, DemoMutation>)> {
         let demand = match self.begin_demand(&request.mutation,request.lane) { Ok(demand)=>demand,Err(error)=>return Err((error,request)) };
         if let Err(error) = demand.admit(grant.retained_grant()) { return Err((error,request)); }
         let wrapper = std::mem::size_of::<ProbedRetainedClonePreparation>();
@@ -380,9 +383,9 @@ impl ProbedRetainedClonePreparation {
 }
 
 impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for ProbedRetainedClonePreparation {
-    fn advance(&mut self,grant:ArtifactStoreOneItemGrant)->Result<ArtifactStoreOneItemPreparationStep,ValueError> {
+    fn advance(&mut self,body:usize,grant:ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<ArtifactStoreOneItemPreparationStep,ValueError> {
         if self.closing || grant.maximum_depth<=1 { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
-        self.inner.as_mut().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"probe no longer owns its typed preparation"))?.advance(ArtifactStoreOneItemGrant { maximum_depth:grant.maximum_depth-1,..grant })
+        self.inner.as_mut().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"probe no longer owns its typed preparation"))?.advance(body,ArtifactStoreOneItemGrant { maximum_depth:grant.maximum_depth-1,..grant },receiving)
     }
     fn checkpoint(&self)->ArtifactStoreOneItemCheckpoint { self.inner.as_ref().map_or_else(ArtifactStoreOneItemCheckpoint::default,|inner|inner.checkpoint()) }
     fn prepared(&self)->Option<&ArtifactStoreOneItemPrepared<DemoSnapshot,DemoMutation>> { self.inner.as_ref().and_then(|inner|inner.prepared()) }
@@ -449,7 +452,8 @@ impl RetainedCloneEdit<RetainedTextSnapshot, RetainedTextMutation> for RetainedT
 
 impl RetainedCloneEditCursor<RetainedTextSnapshot, RetainedTextMutation> for RetainedTextEditCursor {
     fn foreign_step_presence(&self)->bool{false}
-    fn advance(&mut self, _base: RetainedCloneRef<'_, RetainedTextSnapshot>, _post: &mut RetainedTextSnapshot, _mutation: RetainedCloneRef<'_, RetainedTextMutation>, _grant: RetainedCloneGrant) -> Result<RetainedCloneEditStep, ValueError> {
+    fn advance_demands(&self, _: RetainedCloneRef<'_, RetainedTextSnapshot>, _: &RetainedTextSnapshot, _: RetainedCloneRef<'_, RetainedTextMutation>, _: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "retained text edit must not quote after contiguous-capacity refusal")) }
+    fn advance(&mut self, _base: RetainedCloneRef<'_, RetainedTextSnapshot>, _post: &mut RetainedTextSnapshot, _mutation: RetainedCloneRef<'_, RetainedTextMutation>, body:usize,_grant: RetainedCloneGrant) -> Result<RetainedCloneEditStep, ValueError> {
         Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"retained text edit must not run after contiguous-capacity refusal"))
     }
 

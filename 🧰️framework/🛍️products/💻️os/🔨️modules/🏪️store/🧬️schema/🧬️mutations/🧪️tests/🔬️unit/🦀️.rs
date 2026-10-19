@@ -1,3 +1,4 @@
+use crate::os_spr::ColdMutationKind;
 use super::*;
 use semio_framework_os_spr::SemanticMutation;
 
@@ -41,8 +42,8 @@ fn every_leaf_shape_has_a_canonical_tree_equal_to_its_value_document_parsed_by_a
     use crate::space_history_document::SpaceAlternative;
     let alternative = SpaceAlternative { id: "alt".into(), name: "Alt".into(), checkpoint_ids: vec!["x".into(), "y".into()] };
     for mutation in [
-        SpaceHistoryMutation::CommitSpaceCheckpoint(CommitSpaceCheckpoint { checkpoint: checkpoint(None, None) }),
-        SpaceHistoryMutation::CommitSpaceCheckpoint(CommitSpaceCheckpoint { checkpoint: checkpoint(Some("parent"), Some("avatar")) }),
+        SpaceHistoryMutation::CommitSpaceCheckpoint(CommitSpaceCheckpoint { checkpoint: checkpoint(None, None), index: None }),
+        SpaceHistoryMutation::CommitSpaceCheckpoint(CommitSpaceCheckpoint { checkpoint: checkpoint(Some("parent"), Some("avatar")), index: Some(1) }),
         SpaceHistoryMutation::CreateSpaceAlternative(CreateSpaceAlternative { alternative: alternative.clone() }),
         SpaceHistoryMutation::CreateSpaceAlternative(CreateSpaceAlternative { alternative: SpaceAlternative { checkpoint_ids: Vec::new(), ..alternative } }),
         SpaceHistoryMutation::SwitchSpaceAlternative(SwitchSpaceAlternative { alternative_id: "alt".into() }),
@@ -53,5 +54,34 @@ fn every_leaf_shape_has_a_canonical_tree_equal_to_its_value_document_parsed_by_a
     ] {
         let printed: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&mutation)).expect("the printed mutation is JSON");
         assert_eq!(walk(&mutation), printed, "{mutation:?}");
+        let source = crate::os_store::ArtifactCanonicalTreeSource::view(&mutation);
+        assert_eq!(indexed(source, &mut Vec::new()), printed, "the indexed wire is the same canonical tree");
+        assert!(crate::os_store::ArtifactCanonicalJson::canonical_json_node(source, &[usize::MAX]).is_err());
+        assert!(crate::os_store::ArtifactCanonicalJson::canonical_json_key(source, &[0], 9).is_err());
     }
+}
+
+fn indexed(source: &impl crate::os_store::ArtifactCanonicalJson, path: &mut Vec<usize>) -> serde_json::Value {
+    use crate::os_store::{ArtifactCanonicalJsonNode as N, ArtifactCanonicalJsonText as T};
+    match source.canonical_json_node(path).expect("indexed canonical node") {
+        N::Null => serde_json::Value::Null,
+        N::U64(value) => value.into(),
+        N::String(value) => value.into(),
+        N::Array(length) => serde_json::Value::Array((0..length).map(|ordinal| { path.push(ordinal); let value = indexed(source, path); path.pop(); value }).collect()),
+        N::Object(length) => serde_json::Value::Object((0..length).map(|ordinal| {
+            let T::Contiguous(key) = source.canonical_json_key(path, ordinal).expect("indexed canonical key") else { panic!("space history keys are contiguous") };
+            path.push(ordinal);
+            let value = indexed(source, path);
+            path.pop();
+            (key.to_string(), value)
+        }).collect()),
+        other => panic!("unsupported space history canonical node: {other:?}"),
+    }
+}
+
+#[test]
+fn the_space_history_wire_borrows_the_canonical_mutation_tree() {
+    let wire = crate::os_store::ArtifactOperationWire::<SpaceHistoryMutation>::semantic::<SpaceHistorySnapshot>();
+    let mutation = SpaceHistoryMutation::SwitchSpaceAlternative(SwitchSpaceAlternative { alternative_id: "alt".into() });
+    assert!(matches!(wire.source(&mutation), Some(crate::os_store::ArtifactPreparedOperationSource::CanonicalJson { .. })));
 }

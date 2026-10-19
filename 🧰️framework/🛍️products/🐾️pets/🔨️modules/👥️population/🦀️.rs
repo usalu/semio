@@ -19,7 +19,6 @@ use semio_framework_pets_kinematics::trigonometry::clamp;
 
 //#region 🔖️Constants
 pub(crate) const CENTRED: Gaze = Gaze { x: 0.0, y: 0.0, vx: 0.0, vy: 0.0 };
-const GRIP_BUDGET: f64 = 384.0;
 //#endregion 🔖️Constants
 
 //#region 🔖️Riding
@@ -27,188 +26,209 @@ const GRIP_BUDGET: f64 = 384.0;
 fn measure(menagerie: &Menagerie, draft: &mut Draft<'_>) {
     let mut tallest = 0.0;
     let mut widest = 0.0;
+    let mut smallest = f64::INFINITY;
     for kind in &menagerie.species {
         if !draft.stage.wanted.contains(&kind.id) && index_of(&draft.stage.actors, &kind.id).is_none() {
             continue;
         }
         tallest = larger(tallest, kind.size.height + hover_of(kind));
         widest = larger(widest, kind.size.width);
+        smallest = smaller(smallest, kind.size.height);
     }
     draft.stage.perches = perches_of(&draft.stage.surfaces, &draft.stage.keepouts, draft.stage.width, draft.stage.height, tallest, widest);
+    draft.stage.pitches = if smallest.is_infinite() { Vec::new() } else { walls_of(&draft.stage.walls, &draft.stage.keepouts, draft.stage.width, draft.stage.height, widest + 8.0, 0.5 * smallest) };
 }
 
-/// 🚚️ How far the surface an actor stands on moved its left end from where the surfaces were `before` (`None` when they did not change): 0 for an actor in the air and for a surface that is new or gone.
-fn haul(draft: &Draft<'_>, index: usize, before: Option<&[Surface]>) -> f64 {
-    let Some(surface) = draft.stage.actors[index].perch.as_deref() else {
-        return 0.0;
-    };
-    match (surface_of(before.unwrap_or(&draft.stage.surfaces), surface), surface_of(&draft.stage.surfaces, surface)) {
-        (Some(old), Some(fresh)) => fresh.x0 - old.x0,
-        _ => 0.0,
-    }
-}
-
-/// 🚡️ A grounded actor rides its surface: it moves with the surface's left end and height, and is held inside the nearest perch of that surface (fading in anew when that carries it farther than its own width). When that surface has no perch left it stays on a perch of another surface that lies exactly under its feet (an element that was replaced by its like); without one it falls — unless the survey also brought new ground (`uprooted`: the scenery changed, and a fall would pass in front of whatever is there now) or the stage is still: then it is gone with its ground and arrives anew. `before` are the surfaces as they were, `None` when they did not change. Answers how far the perch pulled the actor from where its surface carried it (0 for an actor in the air or falling), or `None` when the actor is gone.
-fn carry(draft: &mut Draft<'_>, index: usize, before: Option<&[Surface]>, uprooted: bool, now: Ticks) -> Option<f64> {
+/// 🚡️ Grounded actors ride rigidly with their surface before being seated.
+fn carry(draft: &mut Draft<'_>, index: usize, before: &[Surface], uprooted: bool, now: Ticks) -> bool {
     let kind = draft.kinds[index];
-    let moved = haul(draft, index, before);
     let body = &draft.stage.actors[index];
-    let Some(surface) = body.perch.as_deref() else {
-        return Some(0.0);
-    };
-    let x = body.x + moved;
-    let half = kind.size.width / 2.0;
-    let mut best: Option<&Perch> = None;
-    let mut least = f64::INFINITY;
-    for perch in &draft.stage.perches {
-        if perch.surface != surface {
-            continue;
-        }
-        let low = perch.x0 + half;
-        let high = perch.x1 - half;
-        let gap = if x < low {
-            low - x
-        } else if x > high {
-            x - high
-        } else {
-            0.0
-        };
-        if gap < least {
-            best = Some(perch);
-            least = gap;
-        }
+    let Some(surface) = body.perch.as_deref().filter(|_| body.footing == Footing::Perch) else { return true; };
+    let old = surface_of(before, surface);
+    let fresh = surface_of(&draft.stage.surfaces, surface);
+    let held = draft.stage.perches.iter().any(|perch| perch.surface == surface);
+    if let Some(fresh) = fresh.filter(|_| held) {
+        let moved = old.map_or(0.0, |old| fresh.x0 - old.x0);
+        let y = fresh.y - hover_of(kind);
+        let body = &mut draft.stage.actors[index];
+        body.x += moved;
+        body.goal += moved;
+        body.y = y;
+        return true;
     }
-    if best.is_none() {
-        best = landing_of(&draft.stage.perches, body.x, body.y + hover_of(kind), body.y + hover_of(kind));
-        least = 0.0;
+    if let Some(like) = landing_of(&draft.stage.perches, body.x, body.y + hover_of(kind), body.y + hover_of(kind)) {
+        draft.stage.actors[index].perch = Some(like.surface.clone());
+        return true;
     }
-    let Some(best) = best else {
-        if uprooted || draft.stage.mode == PetMode::Still {
-            vanish(draft, index, now);
-            return None;
-        }
-        drop(draft, index, now);
-        return Some(0.0);
-    };
-    let elsewhere = (best.surface != surface).then(|| best.surface.clone());
-    let (low, high, y) = (best.x0 + half, best.x1 - half, best.y - hover_of(kind));
-    let fades = least > kind.size.width && draft.stage.mode != PetMode::Still;
-    let body = &mut draft.stage.actors[index];
-    if elsewhere.is_some() {
-        body.perch = elsewhere;
-    }
-    body.x = clamp(x, low, high);
-    body.y = y;
-    body.goal = clamp(body.goal + moved, low, high);
-    if fades && !body.leaving {
-        body.opacity = 0.0;
-    }
-    Some(least)
+    if uprooted || draft.stage.mode == PetMode::Still { return vanish(draft, index, now); }
+    drop(draft, index, now);
+    true
 }
 
-/// 💺️ Nobody stands in anybody after a ride. Per perch, the actors it holds (leavers aside) must fit with a comfortable gap between their bodies (the sum of their widths plus 8 px per neighbour pair within the width of the perch; one actor always fits): while they do not, the one its perch pulled farthest (`strains`) — among equals the last in `menagerie.species` order — is crowded out where it stood (`places`), as visible as it was (`shown`), and arrives anew once a perch has room. The others are then set apart, each moved as little as possible, left to right and back: the feet of neighbours end at least as far apart as before the ride, held between half of both widths (bodies that touch) and 8 px more. On a still stage whoever is crowded out is gone at once.
-fn seat(draft: &mut Draft<'_>, places: &[f64], strains: &[f64], shown: &[f64]) {
+/// 🪑️ Seat each perch's actors in priority order without crossing bodies or corridors.
+fn seat(draft: &mut Draft<'_>) {
     let now = draft.stage.tick;
-    let mut gone: Vec<usize> = Vec::new();
+    let stranded: Vec<_> = draft.stage.actors.iter().enumerate().filter_map(|(index, body)| {
+        if body.footing != Footing::Perch || body.perch.is_none() { return None; }
+        let half = draft.kinds[index].size.width / 2.0;
+        let least = draft.stage.perches.iter().filter(|perch| Some(&perch.surface) == body.perch.as_ref()).map(|perch| larger(larger(perch.x0 + half - body.x, body.x - (perch.x1 - half)), 0.0)).fold(f64::INFINITY, smaller);
+        (least > 2.0 * draft.kinds[index].size.width).then(|| body.species.clone())
+    }).collect();
+    for species in stranded {
+        if let Some(index) = index_of(&draft.stage.actors, &species) { if draft.stage.mode == PetMode::Still { vanish(draft, index, now); } else { drop(draft, index, now); } }
+    }
     for at in 0..draft.stage.perches.len() {
-        let perch = &draft.stage.perches[at];
-        let (x0, x1) = (perch.x0, perch.x1);
-        let mut members: Vec<usize> = Vec::new();
+        let perch = draft.stage.perches[at].clone();
+        let mut members = Vec::new();
+        let mut strains = Vec::new();
         for (index, body) in draft.stage.actors.iter().enumerate() {
-            if body.leaving || body.perch.as_deref() != Some(perch.surface.as_str()) || body.x < x0 || body.x > x1 {
+            if body.footing != Footing::Perch || body.perch.as_deref() != Some(&perch.surface) { continue; }
+            let half = draft.kinds[index].size.width / 2.0;
+            let mut nearest = None;
+            let mut least = f64::INFINITY;
+            for (candidate_at, candidate) in draft.stage.perches.iter().enumerate() {
+                if candidate.surface != perch.surface { continue; }
+                let gap = larger(larger(candidate.x0 + half - body.x, body.x - (candidate.x1 - half)), 0.0);
+                if gap < least { nearest = Some(candidate_at); least = gap; }
+            }
+            if nearest != Some(at) { continue; }
+            let strain = if body.leaving { f64::INFINITY } else { least };
+            let mut slot = members.len();
+            while slot > 0 && strains[slot - 1] > strain { slot -= 1; }
+            members.insert(slot, index);
+            strains.insert(slot, strain);
+        }
+        if members.is_empty() { continue; }
+        for &member in &members {
+            let half = draft.kinds[member].size.width / 2.0;
+            let body = &mut draft.stage.actors[member];
+            if body.activity == Activity::Walk { body.goal = clamp(body.goal, perch.x0 + half, perch.x1 - half); }
+        }
+        let solids: Vec<_> = members.iter().map(|&member| Solid { owner: draft.stage.actors[member].species.clone(), extent: extent_of(&draft.stage.actors[member], draft.kinds[member]) }).collect();
+        let seating = seat_of(&solids, &perch, MARGIN);
+        for owner in seating.leavers {
+            let Some(index) = index_of(&draft.stage.actors, &owner) else { continue; };
+            let body = &draft.stage.actors[index];
+            if body.x < perch.x0 || body.x > perch.x1 { drop(draft, index, now); } else { poof(draft, index, now); }
+        }
+        for place in seating.seats {
+            if place.shift == 0.0 { continue; }
+            let Some(index) = index_of(&draft.stage.actors, &place.owner) else { continue; };
+            let half = draft.kinds[index].size.width / 2.0;
+            let target = clamp(draft.stage.actors[index].x + place.shift, perch.x0 + half, perch.x1 - half);
+            if draft.stage.mode == PetMode::Still {
+                let bodies = bodies_of(&draft.stage.actors, &draft.kinds);
+                let seated = shifted(bodies[index].extent, target - draft.stage.actors[index].x, 0.0);
+                if free_at(seated, &place.owner, &bodies, &draft.stage.claims, now) { draft.stage.actors[index].x = target; draft.stage.actors[index].goal = target; } else { vanish(draft, index, now); }
                 continue;
             }
-            let mut slot = members.len();
-            while slot > 0 && places[members[slot - 1]] > places[index] {
-                slot -= 1;
-            }
-            members.insert(slot, index);
+            release(draft, index, now);
+            if draft.stage.actors[index].activity != Activity::Scoot { shift(draft, index, Activity::Scoot, now); }
+            let body = &mut draft.stage.actors[index];
+            body.clip = clip_at(draft.kinds[index], Activity::Scoot, 0.0);
+            body.goal = target;
+            body.until = now + dwell_of(Activity::Scoot, draft.stage.mode, 0.0);
         }
-        while members.len() > 1 {
-            let mut need = (members.len() - 1) as f64 * COMFORT_GAP;
-            for &member in &members {
-                need += draft.kinds[member].size.width;
-            }
-            if need <= x1 - x0 {
-                break;
-            }
-            let mut worst = 0;
-            for slot in 1..members.len() {
-                let strain = strains[members[slot]];
-                let most = strains[members[worst]];
-                if strain > most || (strain == most && members[slot] > members[worst]) {
-                    worst = slot;
-                }
-            }
-            let index = members.remove(worst);
-            draft.stage.actors[index].x = places[index];
-            draft.stage.actors[index].opacity = shown[index];
-            crowd_out(draft, index, now);
-            gone.push(index);
-        }
-        for slot in 1..members.len() {
-            let (before, member) = (members[slot - 1], members[slot]);
-            let hard = shoulders(draft.kinds[before], draft.kinds[member]);
-            let apart = clamp(places[member] - places[before], hard, hard + COMFORT_GAP);
-            let held = draft.stage.actors[before].x;
-            if draft.stage.actors[member].x - held < apart {
-                draft.stage.actors[member].x = held + apart;
-            }
-        }
-        for slot in (0..members.len()).rev() {
-            let member = members[slot];
-            let high = x1 - draft.kinds[member].size.width / 2.0;
-            if draft.stage.actors[member].x > high {
-                draft.stage.actors[member].x = high;
-            }
-            if slot < members.len() - 1 {
-                let after = members[slot + 1];
-                let hard = shoulders(draft.kinds[after], draft.kinds[member]);
-                let apart = clamp(places[after] - places[member], hard, hard + COMFORT_GAP);
-                let held = draft.stage.actors[after].x;
-                if held - draft.stage.actors[member].x < apart {
-                    draft.stage.actors[member].x = held - apart;
-                }
-            }
-            let body = &mut draft.stage.actors[member];
-            if body.activity != Activity::Walk {
-                body.goal = body.x;
-            }
-        }
-    }
-    if draft.stage.mode != PetMode::Still {
-        return;
-    }
-    gone.sort_unstable_by(|one, other| other.cmp(one));
-    for index in gone {
-        remove(draft, index);
     }
 }
 
-/// 🆕️ Whether the surfaces of the stage hold one that was not there `before`: new ground.
+/// 🆕️ Detect newly added ground.
 fn widened(draft: &Draft<'_>, before: &[Surface]) -> bool {
     draft.stage.surfaces.iter().any(|surface| surface_of(before, &surface.id).is_none())
 }
 
-/// 🎠️ Every grounded actor rides its surface from where the surfaces were `before` (`uprooted`: new ground came with them), and is then seated so that nobody stands in anybody.
-fn ride(draft: &mut Draft<'_>, before: Option<&[Surface]>, uprooted: bool) {
+/// 🧗️ Moving terrain carries ladder riders and wall climbers or throws them clear.
+fn hold_on(menagerie: &Menagerie, draft: &mut Draft<'_>, walls: &[Wall], now: Ticks) {
+    let mut kept = Vec::new();
+    for ladder in draft.stage.ladders.clone() {
+        let stand = LadderStand { wall: ladder.wall.clone(), surface: ladder.surface.clone(), side: ladder.side, foot: ladder.foot, top: ladder.top };
+        let owner = menagerie.species.iter().find(|kind| kind.id == ladder.owner);
+        let next = owner.and_then(|owner| ladder_holds(&stand, &draft.stage.perches, &draft.stage.pitches, &draft.stage.keepouts, owner.size));
+        let rider = ladder.rider.as_deref().and_then(|rider| index_of(&draft.stage.actors, rider)).filter(|&rider| draft.stage.actors[rider].footing == Footing::Ladder);
+        if let Some(next) = next {
+            if let Some(rider) = rider {
+                let body = &mut draft.stage.actors[rider];
+                let share = clamp((body.y - ladder.foot.y) / (ladder.top.y - ladder.foot.y), 0.0, 1.0);
+                body.x = next.foot.x + (next.top.x - next.foot.x) * share;
+                body.y = next.foot.y + (next.top.y - next.foot.y) * share;
+            }
+            kept.push(crate::schema::Ladder { wall: next.wall, surface: next.surface, side: next.side, foot: next.foot, top: next.top, ..ladder });
+        } else if let Some(rider) = rider {
+            let toss = spill_of(&stand, draft.stage.actors[rider].y, draft.kinds[rider].size);
+            feel(draft, rider, Occasion::Startled, now);
+            unfoot(draft, rider, toss.map_or(0.0, |toss| toss.vx), toss.map_or(0.0, |toss| toss.vy), Activity::Fall, now);
+        }
+    }
+    draft.stage.ladders = kept;
+    for index in 0..draft.stage.actors.len() {
+        let body = &draft.stage.actors[index];
+        let Some(pitch) = body.pitch.as_ref().filter(|_| body.footing == Footing::Wall) else { continue; };
+        let size = draft.kinds[index].size;
+        let old = walls.iter().find(|wall| wall.id == pitch.wall);
+        let fresh = draft.stage.walls.iter().find(|wall| wall.id == pitch.wall);
+        let y = old.zip(fresh).map_or(body.y, |(old, fresh)| body.y + (fresh.y0 - old.y0));
+        if let Some(next) = wall_holds(pitch, &draft.stage.pitches, y, size) {
+            let x = cling_of(next, size);
+            let pitch = next.clone();
+            let body = &mut draft.stage.actors[index];
+            body.pitch = Some(pitch);
+            body.x = x;
+            body.y = y;
+        } else {
+            let toss = slip_of(pitch);
+            feel(draft, index, Occasion::Startled, now);
+            unfoot(draft, index, toss.vx, toss.vy, Activity::Fall, now);
+        }
+    }
+}
+
+/// 🎠️ Move surfaces, rank unmoved bodies first, then reserve legal seats.
+fn ride(menagerie: &Menagerie, draft: &mut Draft<'_>, before: &[Surface], walls: &[Wall], uprooted: bool, reshaped: bool) {
     let now = draft.stage.tick;
-    let mut places: Vec<f64> = Vec::with_capacity(draft.stage.actors.len());
-    let mut strains: Vec<f64> = Vec::with_capacity(draft.stage.actors.len());
-    let mut shown: Vec<f64> = Vec::with_capacity(draft.stage.actors.len());
+    if reshaped {
+        for index in 0..draft.stage.actors.len() {
+            let body = &draft.stage.actors[index];
+            if trip_of(&draft.stage.trips, &body.species).is_none() { continue; }
+            let perched = body.footing == Footing::Perch;
+            halt(draft, index, now);
+            if perched { settle(draft, index, now); }
+        }
+    }
+    for index in 0..draft.stage.actors.len() {
+        let body = &draft.stage.actors[index];
+        if course_of(&draft.stage.courses, &body.species).is_some() { let (vx, vy, activity) = (body.vx, body.vy, body.activity); unfoot(draft, index, vx, vy, activity, now); }
+    }
     let mut index = 0;
     while index < draft.stage.actors.len() {
-        let place = draft.stage.actors[index].x + haul(draft, index, before);
-        let opacity = draft.stage.actors[index].opacity;
-        let Some(strain) = carry(draft, index, before, uprooted, now) else {
-            continue;
-        };
-        places.push(place);
-        strains.push(strain);
-        shown.push(opacity);
-        index += 1;
+        let body = &draft.stage.actors[index];
+        if body.footing != Footing::Hand && (body.x < 0.0 || body.x > draft.stage.width) { vanish(draft, index, now); } else { index += 1; }
     }
-    seat(draft, &places, &strains, &shown);
+    let was: Vec<_> = draft.stage.actors.iter().map(|body| (body.species.clone(), body.x, body.y)).collect();
+    let mut index = 0;
+    while index < draft.stage.actors.len() { if carry(draft, index, before, uprooted, now) { index += 1; } }
+    if reshaped { hold_on(menagerie, draft, walls, now); }
+    for index in 0..draft.stage.actors.len() {
+        let body = &draft.stage.actors[index];
+        if body.footing != Footing::Head { continue; }
+        let Some(host) = body.host.as_deref().and_then(|host| index_of(&draft.stage.actors, host)) else { continue; };
+        let Some((_, x, y)) = was.iter().find(|(species, _, _)| species == &draft.stage.actors[host].species) else { continue; };
+        let (dx, dy) = (draft.stage.actors[host].x - x, draft.stage.actors[host].y - y);
+        draft.stage.actors[index].x += dx;
+        draft.stage.actors[index].y += dy;
+    }
+    for (index, body) in draft.stage.actors.iter_mut().enumerate() {
+        let half = draft.kinds[index].size.width / 2.0;
+        if body.footing != Footing::Hand && half <= draft.stage.width - half { body.x = clamp(body.x, half, draft.stage.width - half); }
+    }
+    let bodies = bodies_of(&draft.stage.actors, &draft.kinds);
+    let mut ranked = Vec::new();
+    let mut moved = Vec::new();
+    for (index, body) in draft.stage.actors.iter().enumerate() {
+        if was.iter().any(|(species, x, y)| species == &body.species && *x == body.x && *y == body.y) { ranked.push(bodies[index].clone()); } else { moved.push(bodies[index].clone()); }
+    }
+    ranked.extend(moved);
+    for owner in evicted(&ranked, &draft.stage.claims, now) { if let Some(index) = index_of(&draft.stage.actors, &owner) { poof(draft, index, now); } }
+    seat(draft);
 }
 //#endregion 🔖️Riding
 
@@ -273,7 +293,7 @@ fn arrive<'a>(draft: &mut Draft<'a>, kind: &'a Species, stream: u32) {
         hang: None,
         chute: None,
         rope: None,
-        emitters: Vec::new(),
+        emitters: kind.states.first().and_then(|state| state.emitter.as_ref()).map_or_else(Vec::new, |emitter| vec![Plume { emitter: emitter.clone(), since: now, until: None }]),
     };
     let at = draft.streams.iter().take_while(|&&earlier| earlier < stream).count();
     draft.stage.actors.insert(at, body);
@@ -324,7 +344,7 @@ fn spread(draft: &mut Draft<'_>) {
                 first = false;
                 continue;
             }
-            if body.activity != Activity::Idle || body.partner.is_some() {
+            if body.activity != Activity::Idle || body.partner.is_some() || circled(&body.hover, now) {
                 continue;
             }
             let width = draft.kinds[at].size.width;
@@ -351,15 +371,24 @@ fn spread(draft: &mut Draft<'_>) {
 //#region 🔖️Events
 /// 🗺️ The stage was measured anew: perches are cut again, grounded actors ride their surfaces, fall or — when the survey brought new ground — are gone with ground that vanished, and whoever waits for a perch arrives; over new ground the company then spreads out ([`spread`]), and on a still stage whoever it moved arrives at once. The walls and the fixtures of the survey are kept as they come.
 pub(crate) fn survey<'a>(menagerie: &'a Menagerie, draft: &mut Draft<'a>, event: &Surveyed) {
+    if let Some(lift) = &draft.stage.lift {
+        let was = draft.stage.fixtures.iter().find(|fixture| fixture.id == lift.fixture);
+        let fresh = event.fixtures.iter().find(|fixture| fixture.id == lift.fixture);
+        if was.zip(fresh).is_none_or(|(was, fresh)| (fresh.x - was.x).abs() > 0.5 || (fresh.y - was.y).abs() > 0.5 || (fresh.x + fresh.width - was.x - was.width).abs() > 0.5 || (fresh.y + fresh.height - was.y - was.height).abs() > 0.5) { unlifted(draft, draft.stage.tick); }
+    }
     let before = std::mem::replace(&mut draft.stage.surfaces, event.surfaces.clone());
+    let walls = std::mem::replace(&mut draft.stage.walls, event.walls.clone());
+    let perches = draft.stage.perches.clone();
+    let pitches = draft.stage.pitches.clone();
+    let keepouts = draft.stage.keepouts.clone();
     draft.stage.width = event.width;
     draft.stage.height = event.height;
     draft.stage.keepouts.clone_from(&event.keepouts);
-    draft.stage.walls.clone_from(&event.walls);
     draft.stage.fixtures.clone_from(&event.fixtures);
     let uprooted = widened(draft, &before);
     measure(menagerie, draft);
-    ride(draft, Some(&before), uprooted);
+    let reshaped = perches != draft.stage.perches || pitches != draft.stage.pitches || keepouts != draft.stage.keepouts;
+    ride(menagerie, draft, &before, &walls, uprooted, reshaped);
     spawn(menagerie, draft);
     if !uprooted {
         return;
@@ -376,7 +405,7 @@ pub(crate) fn summon<'a>(menagerie: &'a Menagerie, draft: &mut Draft<'a>, wanted
     while index < draft.stage.actors.len() {
         let body = &mut draft.stage.actors[index];
         let stays = wanted.contains(&body.species);
-        if stays && body.leaving && body.perch.is_some() {
+        if stays && body.leaving && body.footing == Footing::Perch {
             body.leaving = false;
             settle(draft, index, now);
         }
@@ -389,19 +418,31 @@ pub(crate) fn summon<'a>(menagerie: &'a Menagerie, draft: &mut Draft<'a>, wanted
         }
         index += 1;
     }
+    let perches = draft.stage.perches.clone();
+    let pitches = draft.stage.pitches.clone();
     measure(menagerie, draft);
-    ride(draft, None, false);
+    let surfaces = draft.stage.surfaces.clone();
+    let walls = draft.stage.walls.clone();
+    let reshaped = perches != draft.stage.perches || pitches != draft.stage.pitches;
+    ride(menagerie, draft, &surfaces, &walls, false, reshaped);
     spawn(menagerie, draft);
 }
 
 /// 🧊️ The stage turns still: leavers and whoever is in the air are gone (the wanted among them arrive anew at once, on a perch with room), and everyone else is idle at rest, whole, without a partner, with centred pupils, calm (the resting mood of its species at rest), cold and with no gesture under way.
 fn freeze(draft: &mut Draft<'_>, now: Ticks) {
+    unlifted(draft, now);
+    draft.stage.lift = None;
+    draft.stage.press = IDLE;
+    draft.stage.touched = None;
+    draft.stage.trail.clear();
+    draft.stage.origin = None;
     let mut index = 0;
     while index < draft.stage.actors.len() {
-        if draft.stage.actors[index].leaving || draft.stage.actors[index].perch.is_none() {
+        if draft.stage.actors[index].leaving || draft.stage.actors[index].footing != Footing::Perch {
             remove(draft, index);
             continue;
         }
+        halt(draft, index, now);
         shift(draft, index, Activity::Idle, now);
         let body = &mut draft.stage.actors[index];
         body.faced = now;
@@ -445,16 +486,18 @@ pub(crate) fn tune<'a>(menagerie: &'a Menagerie, draft: &mut Draft<'a>, mode: Pe
         }
         return;
     }
-    let mut movers = draft.stage.actors.iter().filter(|body| !body.leaving && body.activity == Activity::Hop).count();
+    let mut movers = draft.stage.actors.iter().filter(|body| !body.leaving && (body.activity == Activity::Hop || (body.footing != Footing::Perch && trip_of(&draft.stage.trips, &body.species).is_some()))).count();
     for index in 0..draft.stage.actors.len() {
         let body = &draft.stage.actors[index];
-        if body.leaving || body.activity != Activity::Walk {
+        let setting = body.footing == Footing::Perch && trip_of(&draft.stage.trips, &body.species).is_some();
+        if body.leaving || (body.activity != Activity::Walk && !setting) {
             continue;
         }
         movers += 1;
         if movers <= MODE_LIMITS[mode].movers {
             continue;
         }
+        halt(draft, index, now);
         release(draft, index, now);
         settle(draft, index, now);
     }

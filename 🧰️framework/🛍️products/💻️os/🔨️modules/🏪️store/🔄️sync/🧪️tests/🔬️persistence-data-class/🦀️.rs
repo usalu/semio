@@ -68,3 +68,22 @@ fn persistence_data_class_fixture_routes_bindings_and_lanes() {
     let hub = PersistenceBinding::Hub { base_url: "http://h".into(), space_id: "s".into(), surface: None };
     assert_eq!(bindings_data_class(&[hub]), PersistenceDataClass::PersistedShared);
 }
+
+#[test]
+fn persistence_data_class_is_independent_of_durable_peer_order() {
+    let corpus = fixture();
+    for row in corpus["bindingSets"].as_array().expect("binding sets") {
+        let bindings: Vec<_> = row["members"].as_array().unwrap().iter().map(|id| {
+            let case = corpus["cases"].as_array().unwrap().iter().find(|case| case["id"] == *id).unwrap();
+            let binding = &case["binding"];
+            match binding["kind"].as_str().unwrap() {
+                "folder" => PersistenceBinding::Folder { path: binding["path"].as_str().unwrap().into() },
+                "hub" => PersistenceBinding::Hub { base_url: binding["baseUrl"].as_str().unwrap().into(), space_id: binding["spaceId"].as_str().unwrap().into(), surface: None },
+                _ => panic!("durable binding required"),
+            }
+        }).collect();
+        assert_eq!(bindings_data_class(&bindings).as_str(), row["expected"].as_str().unwrap(), "{}", row["id"]);
+        let reversed: Vec<_> = bindings.into_iter().rev().collect();
+        assert_eq!(bindings_data_class(&reversed).as_str(), row["expected"].as_str().unwrap(), "{}", row["id"]);
+    }
+}

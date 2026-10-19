@@ -19,7 +19,7 @@ pub const RETAINED_CLONE_BULK_PAGE_BYTES: usize = 64 * 1024;
 /// 📏️ The number of `width`-byte elements one bulk turn may process under `grant`: one item and at most one page of payload, zero when the grant admits neither one item nor one element.
 pub fn bulk_run_elements(grant: RetainedCloneGrant, width: usize) -> usize {
     if grant.maximum_items == 0 { return 0; }
-    if width == 0 { return usize::MAX; }
+    if width == 0 { return RETAINED_CLONE_BULK_PAGE_ITEMS; }
     grant.maximum_copy_bytes.min(RETAINED_CLONE_BULK_PAGE_BYTES) / width
 }
 
@@ -34,11 +34,15 @@ pub fn clone_cursor_close_demand<T:RetainedClone>(cursor:&impl RetainedCloneCurs
 
 pub trait RetainedCloneCursor<T: RetainedClone>: Send {
     fn output_ready(&self)->bool{false}
-    /// 🎟️ Quotes the actual next immutable-source turn before any work or allocation.
+        /// 🚦️ Explicit cursor owners override their close lifecycle; absent closure intent is unstarted.
+    fn close_started(&self)->bool{false}
+    /// 🎟️ Quotes one close action from the actual paid currencies.
+    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{copy_bytes:self.next_close_copy_byte_demand()?,capacity_bytes:self.next_close_capacity_byte_demand(body)?,release_bytes:self.next_close_release_byte_demand()?,depth:self.next_close_depth_demand()?})}
+/// 🎟️ Quotes the actual next immutable-source turn before any work or allocation.
     fn advance_demands(&self, _source: RetainedCloneRef<'_, T>, _maximum_body_bytes: usize) -> Result<crate::RetirementDemand, crate::ValueError> {
         Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner, "clone cursor lacks an original-source advance quote"))
     }
-    fn advance(&mut self, source: RetainedCloneRef<'_, T>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError>;
+    fn advance(&mut self, source: RetainedCloneRef<'_, T>, body: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError>;
     fn take(&mut self) -> Option<T>;
     fn begin_close(&mut self) -> bool;
     
@@ -69,6 +73,7 @@ pub struct RetainedCloneClose {pub(super) retirement:ManuallyDrop<Option<Box<dyn
 impl RetainedCloneClose {
     /// 🪑️ Seats one already admitted original retirement so custody laws can quote and fund its close without a typed owner.
     #[doc(hidden)] pub fn from_admitted_original(retirement:Box<dyn ErasedSnapshotRetirement>)->Self{Self{retirement:ManuallyDrop::new(Some(retirement))}}
+    pub fn next_owner_demands<T:RetireOwned>(&self,present:bool,binding:&Option<RetainedCloneBinding>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(owner)=self.retirement.as_ref(){return crate::factory_ticket_demands(owner,body);}if present{if !T::controlled_retirement_supported(){return Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"typed clone owner lacks controlled close authority"));}return Ok(crate::RetirementDemand{capacity_bytes:crate::owned_retirement_birth_bytes::<T>(),depth:1,..Default::default()});}RetainedCloneBinding::close_demand(binding,body)}
     pub fn next_owner_depth_with_binding(&self,present:bool,binding:&Option<RetainedCloneBinding>)->Result<usize,crate::ValueError>{if !self.is_empty(){self.next_depth_demand()}else if present{Ok(1)}else{RetainedCloneBinding::depth_demand(binding)}}
     pub fn next_copy_with_binding(&self,binding:&Option<RetainedCloneBinding>)->Result<usize,crate::ValueError>{if self.is_empty(){RetainedCloneBinding::copy_demand(binding)}else{self.next_copy_byte_demand()}}
     pub fn next_release_with_binding(&self,binding:&Option<RetainedCloneBinding>)->Result<usize,crate::ValueError>{if self.is_empty(){RetainedCloneBinding::release_demand(binding)}else{self.next_release_byte_demand()}}

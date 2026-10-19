@@ -1,7 +1,11 @@
-//! 🔺️ Sparse diff builder for `ReplaceNodeHandle` — patches the presentation fields of one handle inside the owner
 //! node. An absent node or an absent handle is `mutation.target-missing`; a replacement that keeps every field is the
+//! 🔺️ Sparse diff builder for `ReplaceNodeHandle` — patches the presentation fields of one handle inside the owner
 //! `mutation.no-op` warning. A replacement keeps the addressed handle's id.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dHandlePatch, Puzzle2dHandlesDelta, Puzzle2dNodePatch, Puzzle2dNodesDelta};
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dHandlePatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dHandlesDelta;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dNodePatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dNodesDelta;
 use protocol::list_delta::RowPatch;
 use crate::Puzzle2dSnapshot;
 use crate::standards::v1::subsets::any::schema::records::puzzle2d_handle_invariant;

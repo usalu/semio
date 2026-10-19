@@ -30,10 +30,10 @@ fn retained_vcs_complete_route_rejects_hidden_scans_whole_apply_combined_publish
         "while ",
         "serde_json",
     ];
-    for swap in cursor.split("std::mem::replace(").skip(1) {
-        let target = &swap[..swap.find(", layout)").expect("a retained replace may only publish the persistent layout root the bounded `LayoutUpdate` cursor built")];
-        assert!(target.ends_with(".layout") && !target.contains('\n'), "a retained replace may only publish the persistent layout root the bounded `LayoutUpdate` cursor built: {target}");
+    for write in ["host_snapshot_mut", "snapshot_mut", "std::mem::replace(", ".layout ="] {
+        assert!(!cursor.contains(write), "a retained step turns a mutation into a version only through the central applier, never by writing the active version: {write}");
     }
+    assert!(cursor.contains("protocol::apply_diff_cold"), "the retained route applies through the central applier");
     for token in forbidden {
         assert!(!cursor.contains(token), "retained cursor admits forbidden whole-action mutation: {token}");
         let mutation = format!("{cursor}\n{token}");
@@ -61,11 +61,11 @@ fn sample_widget(id: &str) -> Widget {
 }
 
 fn round_trip(host_snapshot: &FlowHostSnapshot, operation: &FlowMutation) -> FlowHostSnapshot {
-    let forward = semio_framework_os_kernel::os_spr::apply_diff(operation.diff(host_snapshot).diff(), host_snapshot).expect("valid flow diff");
+    let forward = semio_framework_os_kernel::apply_diff_cold(operation.diff(host_snapshot).diff(), host_snapshot).expect("valid flow diff");
     let inverse = operation.inverse(host_snapshot).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in inverse.iter().rev() {
-        let next = semio_framework_os_kernel::os_spr::apply_diff(back.diff(&restored).diff(), &restored).expect("valid inverse flow diff");
+        let next = semio_framework_os_kernel::apply_diff_cold(back.diff(&restored).diff(), &restored).expect("valid inverse flow diff");
         restored.retire_cold();
         restored = next;
     }

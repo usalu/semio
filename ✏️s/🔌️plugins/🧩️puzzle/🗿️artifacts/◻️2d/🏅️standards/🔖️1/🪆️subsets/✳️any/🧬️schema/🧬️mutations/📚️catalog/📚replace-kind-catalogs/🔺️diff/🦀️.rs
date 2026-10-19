@@ -1,5 +1,6 @@
 //! 🔺️ Sparse diff builder for `ReplaceKindCatalogs` — sets `meta.kindCatalogs`.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dMetaPatch};
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dMetaPatch;
 use crate::Puzzle2dSnapshot;
 use crate::standards::v1::subsets::any::schema::records::puzzle2d_catalogs_invariant;
 

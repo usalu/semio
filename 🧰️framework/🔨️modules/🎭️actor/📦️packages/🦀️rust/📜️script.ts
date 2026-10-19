@@ -1,5 +1,7 @@
 #!/usr/bin/env bun
 import {verifyProducedWasmPackageV1, buildAdmittedWasmWebV1} from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
+import { runRepositoryCommand } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
+import { resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import {executeCargoRequestV1} from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
 import { buildBudgetMs } from '../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';
 import { scriptCompilerAdmissionControlV1 } from '../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts';
@@ -54,7 +56,7 @@ class OriginalContextNativeScript extends BundleScript {
     if (readBuildMode(process.env.SEMIO_BUILD_MODE) !== mode) throw Error("Original context build mode differs from its admitted caller");
     await executeCargoRequestV1({version:1,kind:"exact-laws",manifest:relative(this.repoRoot,resolve(this.root,"Cargo.toml")).replaceAll("\\","/"),cwd:".",groups: [
       { package: "semio-framework-actor-retained-turn", target: { kind: "lib" }, laws: ["retained_turn::original_loan_tests::original_actor_semantic_loan_preserves_exact_source_total_and_cutoff"] },
-      { package: "semio-framework-actor-retained-context", target: { kind: "lib" }, laws: ["tests::original_actor_epoch_is_exact_and_cannot_be_rebound_by_a_child", "tests::original_actor_context_preserves_input_and_paid_authorities_across_admission_loans_and_close", "tests::original_actor_retirement_binding_preserves_private_source_on_refusal"] },
+      { package: "semio-framework-actor-retained-context", target: { kind: "lib" }, laws: ["tests::original_decoder_tests::original_actor_decoder_keeps_native_candidate_ledger_receipt_and_root_close_order", "tests::original_actor_epoch_is_exact_and_cannot_be_rebound_by_a_child", "tests::original_actor_context_preserves_input_and_paid_authorities_across_admission_loans_and_close", "tests::original_actor_retirement_binding_preserves_private_source_on_refusal"] },
       { package: "semio-framework-actor", target: { kind: "test", name: "original-retained-receiving" }, laws: ["original_paired_admission::original_public_actor_paired_admission_retains_exact_host_input_and_native_guest_births", "original_paired_admission::original_public_actor_guest_call_returns_actual_failed_body_receipt_and_paid_same_context_close"] },
     ]},this.invocation);
   }
@@ -74,5 +76,17 @@ class WasmScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-ownership",OwnershipScript).register("test-original-receiving-source", OriginalReceivingSourceScript).register("test-original-owned-async",OriginalOwnedAsyncScript).register("test-original-context-native",OriginalContextNativeScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript).register("wasm", WasmScript);
+
+
+/** 📬️ Checks shared original diagnostic publication with independent wire oracles and native custody laws. */
+class OperationDiagnosticPublicationScript extends BundleScript{
+ async run(args:string[]):Promise<void>{
+  if(args.length!==1||!["source","native"].includes(args[0]!))throw Error("test-operation-diagnostics requires source or native");
+  const file=resolve(this.root,"../../🖼️wire-turn/⚠️diagnostic/🧪️tests/🟦️.ts"),receiving=resolve(this.root,"../../🖼️wire-turn/📬️typed-operation/📥️receiving/🧪️tests/🟦️.ts"),policy={version:1 as const,maximumElapsedMilliseconds:120000,output:{maximumBytes:1048576,maximumLines:4096}};
+  await runRepositoryCommand(this.invocation,process.execPath,["test",file,receiving],this.repoRoot,"operation-diagnostics-source",policy);
+  await runRepositoryCommand(this.invocation,process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",file,receiving],this.repoRoot,"operation-diagnostics-types",policy);
+  if(args[0]==="native")await executeCargoRequestV1({version:1,kind:"exact-laws",manifest:relative(this.repoRoot,resolve(this.root,"Cargo.toml")).replaceAll("\\","/"),cwd:".",groups:[{package:"semio-framework-actor",target:{kind:"lib"},laws:["component::typed_operation_diagnostics::tests::operation_diagnostics_original_pages_preserve_ack_custody_and_physical_receipts","component::typed_operation_diagnostics::tests::operation_diagnostics_cancel_every_original_frontier","component::typed_operation_diagnostics::tests::operation_diagnostics_original4096_capture_demand_fits_production_driver","component::typed_operation_page::receiving::tests::original_host_wire_receiver_preserves_golden_bytes_and_physical_receipts","component::typed_operation_page::receiving::tests::original_host_wire_receiver_cancels_every_actual_action_prefix"]}]},this.invocation);
+ }
+}
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-ownership",OwnershipScript).register("test-original-receiving-source", OriginalReceivingSourceScript).register("test-original-owned-async",OriginalOwnedAsyncScript).register("test-original-context-native",OriginalContextNativeScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript).register("wasm", WasmScript).register("test-operation-diagnostics",OperationDiagnosticPublicationScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

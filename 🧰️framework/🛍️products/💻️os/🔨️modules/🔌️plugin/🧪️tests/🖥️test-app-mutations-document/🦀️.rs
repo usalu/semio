@@ -208,23 +208,25 @@ fn test_slot_uris(snapshot: &TestSnapshot) -> Vec<String> {
 }
 
 impl protocol::DiffAlgebra<TestSnapshot> for TestDiff {
-    fn inverse(&self, base: &TestSnapshot) -> Self {
-        Self { count: self.count.map(|_| base.count), label: self.label.as_ref().map(|_| base.label.clone()), slot: self.slot.as_ref().map(|_| test_slot_uris(base)) }
-    }
+
     fn is_empty(&self) -> bool {
         *self == Self::default()
     }
 }
 
-impl protocol::MutationDiff<TestSnapshot> for TestDiff {
-    fn apply(&self, snapshot: &TestSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<TestSnapshot> {
-        let slot = match &self.slot {
-            None => snapshot.slot.clone(),
-            Some(rows) => rows.iter().map(|uri| test_child_handle(uri)).collect::<Result<Vec<_>, String>>().map_err(|error| protocol::MutationApplyError::new("mutation.apply.declared-child-uri", error))?,
-        };
-        Ok(TestSnapshot { count: self.count.unwrap_or(snapshot.count), label: self.label.clone().unwrap_or_else(|| snapshot.label.clone()), slot })
+impl protocol::ColdDiffAlgebra<TestSnapshot> for TestDiff {
+    fn inverse(&self, base: &TestSnapshot) -> Self {
+        Self { count: self.count.map(|_| base.count), label: self.label.as_ref().map(|_| base.label.clone()), slot: self.slot.as_ref().map(|_| test_slot_uris(base)) }
     }
+}
 
+impl protocol::MutationDiff<TestSnapshot> for TestDiff {
+
+
+
+}
+
+impl protocol::ColdMutationDiff<TestSnapshot> for TestDiff {
     fn absorb(&mut self, other: Self) {
         if other.count.is_some() {
             self.count = other.count;
@@ -235,6 +237,17 @@ impl protocol::MutationDiff<TestSnapshot> for TestDiff {
         if other.slot.is_some() {
             self.slot = other.slot;
         }
+    }
+
+    fn apply(&self, snapshot: &mut TestSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let slot = match &self.slot {
+            None => snapshot.slot.clone(),
+            Some(rows) => rows.iter().map(|uri| test_child_handle(uri)).collect::<Result<Vec<_>, String>>().map_err(|error| protocol::MutationApplyError::new("mutation.apply.declared-child-uri", error))?,
+        };
+                if let Some(value) = self.count { snapshot.count = value; }
+        if let Some(value) = &self.label { snapshot.label = value.clone(); }
+        snapshot.slot = slot;
+        Ok(())
     }
 }
 //#endregion 🔺️Diff

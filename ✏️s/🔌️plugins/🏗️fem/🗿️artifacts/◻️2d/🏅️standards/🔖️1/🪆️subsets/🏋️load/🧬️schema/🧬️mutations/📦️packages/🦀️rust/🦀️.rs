@@ -20,6 +20,39 @@ pub mod standards {
                     #[path = "."]
                     pub mod mutations {
                         #[path = "."]
+                        pub mod change_load {
+                            #[path = "../../🩹️change-load/🦀️.rs"]
+                            mod component;
+                            #[path = "../../🩹️change-load/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "../../🩹️change-load/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+
+                        #[path = "."]
+                        pub mod change_combination_term {
+                            #[path = "../../🩹️change-combination-term/🦀️.rs"]
+                            mod component;
+                            #[path = "../../🩹️change-combination-term/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "../../🩹️change-combination-term/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+
+                        #[path = "."]
+                        pub mod change_combination_name {
+                            #[path = "../../🩹️change-combination-name/🦀️.rs"]
+                            mod component;
+                            #[path = "../../🩹️change-combination-name/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "../../🩹️change-combination-name/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+
+                        #[path = "."]
                         pub mod create_load_case {
                             #[path = "../../📋️create-load-case/🦀️.rs"]
                             mod component;

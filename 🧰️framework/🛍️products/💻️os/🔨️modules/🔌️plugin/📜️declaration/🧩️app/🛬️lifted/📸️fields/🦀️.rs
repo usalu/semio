@@ -31,9 +31,9 @@ struct Cursor<A:ArtifactApp>{metadata:ControlledRetirement<ContextOwnedFields<A:
 fn nested(mut demand:RetirementDemand)->Result<RetirementDemand,ValueError>{demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original context lease depth overflow"))?;Ok(demand)}
 impl<A:ArtifactApp> Cursor<A>{
  fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
-  if !self.metadata.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:self.metadata.next_copy_byte_demand()?,capacity_bytes:self.metadata.next_capacity_byte_demand(body)?,release_bytes:self.metadata.next_release_byte_demand()?,depth:self.metadata.next_depth_demand()?});}
+  if !self.metadata.terminal_is_empty(){return self.metadata.next_demand(body);}
   if self.residual.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
-  if let Some(leases)=self.leases.as_ref(){return Ok(RetirementDemand{copy_bytes:leases.next_copy_byte_demand()?,capacity_bytes:leases.next_capacity_byte_demand(body)?,release_bytes:leases.next_release_byte_demand()?,depth:leases.next_depth_demand()?});}
+  if let Some(leases)=self.leases.as_ref(){return leases.next_demand(body);}
   if let Some(peers)=self.peers.as_ref(){return nested(peers.retirement_demands(body)?);}
   Ok(Default::default())
  }
@@ -44,6 +44,8 @@ impl<A:ArtifactApp> RetireOwned for ArtifactOwnedToolJobContext<A>{
  fn controlled_retirement_supported()->bool{true}
 }
 impl<A:ArtifactApp> RetirementCursor for Cursor<A>{
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.demands(maximum_body_bytes)}
+
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
   if self.terminal_is_empty(){return RetirementStep::Complete;}
   if grant.maximum_items==0{return RetirementStep::Progress(Default::default());}

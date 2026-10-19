@@ -81,40 +81,18 @@ impl MailboxRuntime for AppRuntime {
 
 impl AppRuntime {
     #[cfg(not(target_arch = "wasm32"))]
-    fn poll_native_plugin_hot_swap(&mut self) {
-        if let Some(entries) = self.native_hot_swap_modified.as_mut() {
-            if let Some((path, mtime)) = entries.pop() {
-                let previous = self.native_plugin_mtimes.get(&path);
-                if previous.is_some_and(|previous| *previous != mtime) {
-                    self.native_reload_pending = true;
-                }
-                self.native_plugin_mtimes.insert(path, mtime);
-                return;
-            }
-            self.native_hot_swap_modified = None;
-            return;
+    fn poll_native_plugin_hot_swap(&mut self){
+        if self.native_hot_swap_scan.is_none(){
+            if self.interaction.as_ref().is_none_or(|state|state.shell.plugins.plugins.is_empty()){return}
+            match start_renderer_modified(){Ok(scan)=>self.native_hot_swap_scan=Some(scan),Err(error)=>log_debug(&format!("plugin hot-swap source admission failed: {error}"))}return
         }
-        if let Some(scan) = self.native_hot_swap_scan.as_mut() {
-            let Some(result) = scan.try_take() else { return };
-            self.native_hot_swap_scan = None;
-            match result {
-                Ok(semio_framework_os_services::NativeIoValue::Modified(entries)) => self.native_hot_swap_modified = Some(entries),
-                Ok(_) => log_debug("plugin hot-swap scan returned the wrong native I/O value"),
-                Err(error) => log_debug(&format!("plugin hot-swap scan failed: {error}")),
-            }
-            return;
+        if self.native_hot_swap_program.is_none(){
+            let Some(state)=self.interaction.as_ref()else{self.native_hot_swap_scan.take();return};let cursor=self.native_hot_swap_cursor%state.shell.plugins.plugins.len().max(1);let Some(path)=state.shell.plugins.plugins.get(cursor).and_then(|program|program.wasm_artifact_path())else{self.native_hot_swap_cursor=self.native_hot_swap_cursor.wrapping_add(1);self.native_hot_swap_scan.take();return};
+            match self.native_hot_swap_scan.as_mut().unwrap().prepare_modified(path){Ok(true)=>{self.native_hot_swap_program=Some(cursor);self.native_hot_swap_cursor=self.native_hot_swap_cursor.wrapping_add(1)},Ok(false)=>{},Err(kind)=>{let error=self.native_hot_swap_scan.take().unwrap().failure(kind);log_debug(&format!("plugin hot-swap path receiving failed: {error}"));}}return
         }
-        let cursor = self.native_hot_swap_cursor % self.shell.plugins.plugins.len().max(1);
-        self.native_hot_swap_cursor = self.native_hot_swap_cursor.wrapping_add(1);
-        let Some(program) = self.shell.plugins.plugins.get(cursor) else { return };
-        let Some(path) = program.wasm_artifact_path().map(std::path::Path::to_path_buf) else { return };
-        let mut paths = semio_framework_os_services::NativePathSet::new();
-        if paths.try_push(path).is_err() {
-            return;
-        }
-        self.native_hot_swap_scan = submit_renderer_io(semio_framework_os_services::NativeIoRequest::Modified(paths)).ok();
+        let index=self.native_hot_swap_program.unwrap();let interaction=&mut self.interaction;let answer=self.native_hot_swap_scan.as_mut().unwrap().try_modified(|observation|observation.is_some_and(|(path,time)|interaction.as_mut().and_then(|state|state.shell.plugins.plugins.get_mut(index)).is_some_and(|program|program.observe_native_modification(path,time))));
+        match answer{None=>{},Some(Ok(changed))=>{self.native_reload_pending|=changed;self.native_hot_swap_scan.take();self.native_hot_swap_program=None},Some(Err(kind))=>{let error=self.native_hot_swap_scan.take().unwrap().failure(kind);self.native_hot_swap_program=None;log_debug(&format!("plugin hot-swap scan failed: {error}"));}}
     }
-
     /// 🎠️ Hot-reload preparation snapshots only the filter and module root. Loading runs on the
     /// process pool; its completion re-enters through the runtime mailbox.
     #[cfg(not(target_arch = "wasm32"))]
@@ -500,7 +478,6 @@ impl AppRuntime {
     /// now always has one of these behind it, however many builds were superseded in
     /// between.
     pub fn frame_after_input_step(&mut self, runtime: &AppMailbox, partial: &mut AppFrameAfterChrome, cursor: &mut FrameFinishCursor, context: &mut semio_framework_job::StepContext<'_>) -> FrameFinishBoundaryStep {
-        let cancel = context.cancel_token();
         match cursor.phase {
             FrameFinishPhase::Inputs => {
                 runtime.update_frame_inputs(self);
@@ -638,11 +615,12 @@ impl AppRuntime {
                 if has_deferred && self.pending_frame_deferred.is_some() {
                     let mut deferred = self.pending_frame_deferred.take();
                     let handle = runtime.downgrade();
-                    if !RuntimeApply::start_frame_deferred(&mut deferred, self, &handle) {
-                        self.pending_frame_deferred = deferred;
-                        return FrameFinishBoundaryStep::Pending;
-                    }
+                    let original = RuntimeApply::start_frame_deferred(&mut deferred, self, &handle, context);
+                    self.pending_frame_deferred = deferred;
+                    match original { Ok(true) => {}, Ok(false) => return FrameFinishBoundaryStep::Pending, Err(failure) => return FrameFinishBoundaryStep::CloseFailure(failure) }
                 }
+                if partial.resource_input.is_none() || partial.engine_packets.is_none() { return FrameFinishBoundaryStep::Fault("frame completion lost its original input or engine packets"); }
+                let cancel = if has_deferred { match context.admit_original_cancel_alias() { Ok(Some(cancel)) => Some(cancel), Ok(None) => return FrameFinishBoundaryStep::Pending, Err(error) => return FrameFinishBoundaryStep::CloseFailure(error.into()) } } else { None };
                 let Some(input) = partial.resource_input.take() else {
                     return FrameFinishBoundaryStep::Fault("frame completion lost resource input");
                 };
@@ -655,7 +633,7 @@ impl AppRuntime {
                     if !deferred_actions.is_empty() {
                         log_debug("[TRACE] frame deferred install carries an action");
                     }
-                    self.pending_frame_deferred = Some(FrameDeferredCursor::new(deferred_actions, cursor.pump_sync, cursor.flush_tutorial, cursor.shell_maintenance, cursor.settle, input.preview_generation, cancel));
+                    self.pending_frame_deferred = Some(FrameDeferredCursor::new(deferred_actions, cursor.pump_sync, cursor.flush_tutorial, cursor.shell_maintenance, cursor.settle, input.preview_generation, cancel.expect("admitted deferred original cancellation alias")));
                 }
                 return FrameFinishBoundaryStep::Complete(AppFrameBuild {
                     retained: partial.retained,

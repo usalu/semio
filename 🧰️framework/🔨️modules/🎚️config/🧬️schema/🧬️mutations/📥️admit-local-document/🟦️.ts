@@ -1,3 +1,4 @@
+import type { LocalCatalogDiff } from "../🗃️local-catalog-config-mutation/🟦️.ts";
 /** 📥️ Authoritative direct TypeScript leaf for listing one document in this device's local catalog. */
 
 import type { AdmitLocalDocument, LocalCatalogConfigMutation, LocalDocument } from "../🗃️local-catalog-config-mutation/🟦️.ts";
@@ -15,10 +16,10 @@ export const LOCAL_CATALOG_CONFIG_SCHEMA = "os.config.local-catalog";
 
 //#region 🔖️Mutation
 /** 🔺️ Replaces or inserts the entry for the payload's id, keeping the catalog ordered by id. */
-export function diff(payload: AdmitLocalDocument, base: LocalCatalog): LocalCatalog {
+export function diff(payload: AdmitLocalDocument, base: LocalCatalog): LocalCatalogDiff {
   const admitted: LocalDocument = { documentId: payload.documentId, schema: payload.schema, name: payload.name, storage: payload.storage, target: payload.target, admittedAtMs: payload.admittedAtMs };
-  if (base.documents.some((entry) => sameDocument(entry, admitted))) return base;
-  return { documents: [...base.documents.filter((entry) => entry.documentId !== admitted.documentId), admitted].sort((left, right) => (left.documentId < right.documentId ? -1 : left.documentId > right.documentId ? 1 : 0)) };
+  if (base.documents.some((entry) => sameDocument(entry, admitted))) return {};
+  return { documents: [{ key: admitted.documentId, value: admitted }] };
 }
 
 /** ↩️ Re-admits the prior entry, or retires the id that was not listed before. */

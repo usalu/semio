@@ -2,6 +2,7 @@
   "nodes": null,
   "elements": null,
   "regions": {
+    "removed": [],
     "inserted": [
       {
         "index": 2,
@@ -33,7 +34,6 @@
         }
       }
     ],
-    "removed": [],
     "moved": [],
     "modified": []
   },

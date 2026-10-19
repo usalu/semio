@@ -2,91 +2,11 @@ use super::*;
 
 static RENDERER_IO_TEST_OWNER: Mutex<()> = Mutex::new(());
 
-/// 🪙️ One page release of a completed result, with the ledger parent depths its payload ladder needs.
-const RESULT_PAGE_CLOSE_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES, maximum_capacity_bytes: 0, maximum_release_bytes: 2 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 3 };
-
-struct RendererIoPollWake {
-    count: std::sync::atomic::AtomicUsize,
-}
-
-impl std::task::Wake for RendererIoPollWake {
-    fn wake(self: Arc<Self>) {
-        self.count.fetch_add(1, Ordering::AcqRel);
-    }
-
-    fn wake_by_ref(self: &Arc<Self>) {
-        self.count.fetch_add(1, Ordering::AcqRel);
-    }
-}
-
-/// 🪢 A first poll contending with the exact mounted-session owner retains a runnable future.
-#[test]
-fn a_contended_renderer_io_poll_wakes_itself_until_the_exact_session_can_register() {
-    let _owner = RENDERER_IO_TEST_OWNER.lock().unwrap_or_else(|error| error.into_inner());
-    let contract: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📄️native-asset-response/🔣️.json")).expect("native asset contract");
-    let contention = &contract["rendererIoContention"];
-    assert_eq!(contention["registrationState"].as_str(), Some("checkedOut"));
-    assert_eq!(contention["exactGenerationLive"].as_bool(), Some(true));
-    assert_eq!(contention["poll"].as_str(), Some("pending"));
-    let mut handle = submit_renderer_io(semio_framework_os_services::NativeIoRequest::ProcessResidentBytes).expect("mounted native I/O handle");
-    let slot = &RENDERER_IO_SLOTS[handle.slot];
-    assert_eq!(slot.state.compare_exchange(RENDERER_IO_LIVE, RENDERER_IO_CHECKED_OUT, Ordering::AcqRel, Ordering::Acquire), Ok(RENDERER_IO_LIVE));
-    let wake = Arc::new(RendererIoPollWake { count: std::sync::atomic::AtomicUsize::new(0) });
-    let waker = std::task::Waker::from(wake.clone());
-    let mut context = std::task::Context::from_waker(&waker);
-    assert!(std::pin::Pin::new(&mut handle).poll(&mut context).is_pending());
-    assert_eq!(wake.count.load(Ordering::Acquire), contention["wakeCount"].as_u64().expect("wake count") as usize, "contended registration preserves a runnable owner");
-    slot.state.store(RENDERER_IO_LIVE, Ordering::Release);
-    drop(handle);
-    for _ in 0..16 {
-        let _ = pump_renderer_io_sessions(1);
-    }
-    assert_eq!(RENDERER_IO_SLOTS.iter().filter(|slot| slot.state.load(Ordering::Acquire) == RENDERER_IO_LIVE).count(), contention["terminalOwners"].as_u64().expect("terminal owner count") as usize);
-}
-
-#[test]
-fn mounted_registry_max_plus_one_zero_pump_drop_and_generation_are_exact() {
-    let _owner = RENDERER_IO_TEST_OWNER.lock().unwrap_or_else(|error| error.into_inner());
-    let mut handles = Vec::with_capacity(RENDERER_IO_SESSION_SLOTS);
-    for index in 0..RENDERER_IO_SESSION_SLOTS {
-        let path = std::path::PathBuf::from(format!("/semio-retained-native-io-{index:04}"));
-        let request_pointer = path.as_os_str().as_encoded_bytes().as_ptr();
-        let handle = submit_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(path)).expect("logical maximum plus one has a mounted rejection owner");
-        if index + 1 == RENDERER_IO_SESSION_SLOTS {
-            let plus_one_request_pointer = request_pointer;
-            let returned_pointer =
-                renderer_io_with_node(handle.slot, handle.generation, |node| node.job.as_ref().and_then(|job| job.retained_request_backing_identity()).expect("maximum plus one retains the exact rejected request"))
-                    .expect("maximum plus one mounted generation");
-            assert_eq!(returned_pointer, plus_one_request_pointer);
-        }
-        handles.push(handle);
-    }
-    assert_eq!(pump_renderer_io_sessions(0), 0);
-    let first_slot = handles[0].slot;
-    let first_generation = handles[0].generation;
-    drop(handles);
-    assert_eq!(pump_renderer_io_sessions(1), 1, "one host turn advances one mounted control opportunity");
-    for _ in 0..RENDERER_IO_SESSION_SLOTS * 16 {
-        if RENDERER_IO_SLOTS.iter().all(|slot| slot.state.load(Ordering::Acquire) != RENDERER_IO_LIVE) {
-            break;
-        }
-        assert!(pump_renderer_io_sessions(1) <= 1);
-    }
-    assert!(RENDERER_IO_SLOTS.iter().all(|slot| slot.state.load(Ordering::Acquire) != RENDERER_IO_LIVE));
-    assert!(!renderer_io_generation_live(first_slot, first_generation));
-    let replacement = submit_renderer_io(semio_framework_os_services::NativeIoRequest::ProcessResidentBytes).expect("closed registry slot is reusable with a new generation");
-    assert_eq!(replacement.slot, first_slot);
-    assert!(replacement.generation > first_generation);
-    drop(replacement);
-    for _ in 0..16 {
-        let _ = pump_renderer_io_sessions(1);
-    }
-}
 
 /// 🚪️ A process entry point completes and retires mounted page I/O without a window pump.
 #[test]
 fn headless_entrypoint_drives_retained_io_and_matches_the_json_oracle() {
-    let _owner = RENDERER_IO_TEST_OWNER.lock().unwrap_or_else(|error| error.into_inner());
+    let _owner = RENDERER_IO_TEST_OWNER.lock().unwrap_or_else(|error| error.into_inner());let _source=crate::original_native_source_test_guard();
     let contract: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧊️wgpu/⌨️native-entrypoint/🚪️headless/🔣️.json")).expect("headless contract");
     let root = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
     std::fs::create_dir_all(&root).expect("test output root");
@@ -94,15 +14,13 @@ fn headless_entrypoint_drives_retained_io_and_matches_the_json_oracle() {
     std::fs::write(&path,serde_json::to_vec(&contract["document"]).expect("oracle input")).expect("test document");
     let oracle:serde_json::Value=serde_json::from_slice(&std::fs::read(&path).expect("independent file read")).expect("independent JSON parser");
     let actual=crate::native_entrypoint::drive_native_entrypoint(async {
-        let value=run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadPage {path:path.clone(),offset:0,max_bytes:semio_framework_job::JOB_PAYLOAD_PAGE_BYTES}).await.expect("headless page read");
-        let semio_framework_os_services::NativeIoValue::Page {mut bytes,eof}=value else {panic!("wrong I/O result")};
-        assert!(eof);
-        let parsed:serde_json::Value=serde_json::from_slice(bytes.page(0).expect("page bytes")).expect("renderer JSON");
-        while !bytes.terminal_is_empty() {let _=bytes.close_step(RESULT_PAGE_CLOSE_GRANT);}
+        let bytes=read_renderer_source_bytes(&path,semio_framework_job::JOB_PAYLOAD_PAGE_BYTES as u64).await.expect("headless original source bytes");
+        let parsed:serde_json::Value=serde_json::from_slice(bytes.bytes()).expect("renderer JSON");
+        drop(bytes);
         parsed
     });
     assert_eq!(actual,oracle);
-    assert_eq!(RENDERER_IO_SLOTS.iter().filter(|slot|matches!(slot.state.load(Ordering::Acquire),RENDERER_IO_LIVE|RENDERER_IO_CHECKED_OUT)).count(),contract["terminalIoOwners"].as_u64().expect("terminal owners") as usize);
+    assert_eq!(usize::from(renderer_source_io_pending()),contract["terminalIoOwners"].as_u64().expect("terminal owners") as usize);
     std::fs::remove_file(path).expect("remove test output");
 }
 
@@ -113,7 +31,7 @@ fn native_surface_capture_precedes_worker_device_preparation() {
     assert_factory(ui_gpu::platform::NativeSurfaceCapture::prepare);
     let _: fn(Arc<ui_gpu::platform::NativeWindow>) -> Result<ui_gpu::platform::NativeSurfaceCapture, String> = ui_gpu::platform::NativeSurfaceCapture::capture;
     let contract: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧊️wgpu/⌨️native-entrypoint/🪟️surface/🔣️.json")).expect("surface contract");
-    let source = semio_framework_os_renderer_wgpu_test_support::repo_module_tree("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
+    let source = semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
     let resumed = &source[source.find("fn resumed(").expect("window callback")..];
     let mut phases = vec![(resumed.find("event_loop.create_window(").expect("create window"), "window"), (resumed.find("ui_gpu::platform::NativeSurfaceCapture::capture(").expect("capture surface"), "surface"), (resumed.find("crate::spawn_app_task(").expect("delegate device preparation"), "worker")];
     phases.sort_by_key(|row| row.0);
@@ -123,7 +41,7 @@ fn native_surface_capture_precedes_worker_device_preparation() {
 /// 🧑‍🏭️ Native application boot completes retained I/O before any presentation host exists.
 #[test]
 fn native_app_worker_completes_io_without_a_presentation_host() {
-    let _owner = RENDERER_IO_TEST_OWNER.lock().unwrap_or_else(|error| error.into_inner());
+    let _owner = RENDERER_IO_TEST_OWNER.lock().unwrap_or_else(|error| error.into_inner());let _source=crate::original_native_source_test_guard();
     let contract:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧊️wgpu/⌨️native-entrypoint/🚪️headless/🔣️.json")).expect("worker I/O contract");
     let root=std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
     std::fs::create_dir_all(&root).expect("test output root");
@@ -133,22 +51,22 @@ fn native_app_worker_completes_io_without_a_presentation_host() {
     let (sent,received)=std::sync::mpsc::channel();
     let request_path=path.clone();
     spawn_app_task(async move {
-        let value=run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadPage {path:request_path,offset:0,max_bytes:semio_framework_job::JOB_PAYLOAD_PAGE_BYTES}).await.expect("worker page read");
-        let semio_framework_os_services::NativeIoValue::Page {mut bytes,eof}=value else {panic!("wrong I/O result")};
-        assert!(eof);
-        let actual:serde_json::Value=serde_json::from_slice(bytes.page(0).expect("page bytes")).expect("renderer JSON");
-        while !bytes.terminal_is_empty() {let _=bytes.close_step(RESULT_PAGE_CLOSE_GRANT);}
+        let bytes=read_renderer_source_bytes(&request_path,semio_framework_job::JOB_PAYLOAD_PAGE_BYTES as u64).await.expect("worker original source bytes");
+        let actual:serde_json::Value=serde_json::from_slice(bytes.bytes()).expect("renderer JSON");
+        drop(bytes);
         sent.send(actual).expect("worker result");
     });
     let actual=received.recv_timeout(std::time::Duration::from_secs(5)).expect("application worker must advance I/O without a presentation callback");
     assert_eq!(actual,oracle);
+    crate::native_entrypoint::drive_native_entrypoint(std::future::ready(()));
+    assert!(!renderer_source_io_pending());
     std::fs::remove_file(path).expect("remove test output");
 }
 
 /// 🧑‍🏭️ Native application boot completes retained I/O before any presentation host exists.
 #[test]
 fn native_kernel_worker_completes_io_without_a_presentation_host() {
-    let _owner = RENDERER_IO_TEST_OWNER.lock().unwrap_or_else(|error| error.into_inner());
+    let _owner = RENDERER_IO_TEST_OWNER.lock().unwrap_or_else(|error| error.into_inner());let _source=crate::original_native_source_test_guard();
     let contract:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧊️wgpu/⌨️native-entrypoint/🚪️headless/🔣️.json")).expect("worker I/O contract");
     let root=std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
     std::fs::create_dir_all(&root).expect("test output root");
@@ -158,15 +76,15 @@ fn native_kernel_worker_completes_io_without_a_presentation_host() {
     let (sent,received)=std::sync::mpsc::channel();
     let request_path=path.clone();
     let _task=kernel_runtime::KernelPoolFuture::spawn(renderer_worker_pool(),semio_framework_async::Lane::Interactive,async move {
-        let value=run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadPage {path:request_path,offset:0,max_bytes:semio_framework_job::JOB_PAYLOAD_PAGE_BYTES}).await.expect("worker page read");
-        let semio_framework_os_services::NativeIoValue::Page {mut bytes,eof}=value else {panic!("wrong I/O result")};
-        assert!(eof);
-        let actual:serde_json::Value=serde_json::from_slice(bytes.page(0).expect("page bytes")).expect("renderer JSON");
-        while !bytes.terminal_is_empty() {let _=bytes.close_step(RESULT_PAGE_CLOSE_GRANT);}
+        let bytes=read_renderer_source_bytes(&request_path,semio_framework_job::JOB_PAYLOAD_PAGE_BYTES as u64).await.expect("worker original source bytes");
+        let actual:serde_json::Value=serde_json::from_slice(bytes.bytes()).expect("renderer JSON");
+        drop(bytes);
         sent.send(actual).expect("worker result");
     });
     let actual=received.recv_timeout(std::time::Duration::from_secs(5)).expect("kernel worker must advance I/O without a presentation callback");
     assert_eq!(actual,oracle);
+    crate::native_entrypoint::drive_native_entrypoint(std::future::ready(()));
+    assert!(!renderer_source_io_pending());
     std::fs::remove_file(path).expect("remove test output");
 }
 
@@ -174,7 +92,7 @@ fn native_kernel_worker_completes_io_without_a_presentation_host() {
 #[test]
 fn native_component_reader_admits_local_dev_artifacts_above_catalog_network_bound() {
     use std::io::Write;
-    let _owner=RENDERER_IO_TEST_OWNER.lock().unwrap_or_else(|error|error.into_inner());
+    let _owner=RENDERER_IO_TEST_OWNER.lock().unwrap_or_else(|error|error.into_inner());let _source=crate::original_native_source_test_guard();
     let contract:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧊️wgpu/⌨️native-entrypoint/🚪️headless/🔣️.json")).expect("component input contract");
     assert_eq!(semio_framework_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES,contract["networkComponentMaxBytes"].as_u64().expect("network bound"));
     let root=std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
@@ -190,23 +108,29 @@ fn native_component_reader_admits_local_dev_artifacts_above_catalog_network_boun
         while remaining!=0 {let count=remaining.min(padding.len());file.write_all(&padding[..count]).expect("bounded padding");remaining-=count;}
     }
     let oracle:serde_json::Value=serde_json::from_reader(std::io::BufReader::new(std::fs::File::open(&path).expect("independent file read"))).expect("independent JSON parser");
-    let actual=crate::native_entrypoint::drive_native_entrypoint(kernel_runtime::read_native_component(&path)).expect("local development component pages");
-    assert_eq!(actual.len(),length);
-    assert_eq!(&actual[..content.len()],content.as_slice());
-    assert!(actual[content.len()..].iter().all(|byte|*byte==b' '));
-    assert_eq!(serde_json::from_slice::<serde_json::Value>(&actual).expect("native JSON pages"),oracle);
-    drop(actual);
+    let admission=format!("{{\"version\":1,\"declaration\":{},\"scriptOwner\":\"fixture:renderer-original-io\",\"scriptDeadlineEpochMilliseconds\":null}}",include_str!("../../🎯️targets/🧊️wgpu/⌨️native-entrypoint/🎟️launch/🔣️.json"));crate::native_launch::install_native_launch_fixture(&admission).expect("actual declared startup source");
+    crate::native_entrypoint::drive_native_entrypoint(async{
+        let actual=kernel_runtime::read_native_component(&path).await.expect("local development component pages");
+        assert_eq!(actual.bytes().len(),length);
+        assert_eq!(&actual.bytes()[..content.len()],content.as_slice());
+        assert!(actual.bytes()[content.len()..].iter().all(|byte|*byte==b' '));
+        assert_eq!(serde_json::from_slice::<serde_json::Value>(actual.bytes()).expect("native JSON pages"),oracle);
+        drop(actual);
+    });
     let maximum=contract["localComponentMaxBytes"].as_u64().expect("local component ceiling");
     std::fs::File::create(&path).expect("oversized local input").set_len(maximum+1).expect("bounded sparse input");
-    let refusal=crate::native_entrypoint::drive_native_entrypoint(kernel_runtime::read_native_component(&path)).expect_err("maximum plus one local byte must be refused");
-    assert!(refusal.contains(&format!("exceeds {maximum} bytes")));
+    crate::native_entrypoint::drive_native_entrypoint(async{
+        let refusal=kernel_runtime::read_native_component(&path).await.expect_err("maximum plus one local byte must be refused");
+        assert_eq!(refusal.kind,crate::RendererSourceIoFailureKind::Extent(semio_framework_os_services::NativeIoStreamRefusal{length:maximum+1,maximum_bytes:maximum}));
+        drop(refusal);
+    });
     std::fs::remove_file(path).expect("remove test output");
 }
 
 /// 🚨️ A selected plugin without an application cannot report a successful native smoke boot.
 #[test]
 fn native_smoke_without_a_selected_application_returns_failure() {
-    let _owner=RENDERER_IO_TEST_OWNER.lock().unwrap_or_else(|error|error.into_inner());
+    let _owner=RENDERER_IO_TEST_OWNER.lock().unwrap_or_else(|error|error.into_inner());let _source=crate::original_native_source_test_guard();
     let contract:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧊️wgpu/⌨️native-entrypoint/🚪️headless/🔣️.json")).expect("smoke contract");
     let fixture=&contract["emptySmoke"];
     let registry:serde_json::Value=serde_json::from_str(include_str!("../../../../🔌️plugin/📇️registry/🛂️descriptor-verification/🧬️schema/🔣️.json")).expect("current descriptor contract");

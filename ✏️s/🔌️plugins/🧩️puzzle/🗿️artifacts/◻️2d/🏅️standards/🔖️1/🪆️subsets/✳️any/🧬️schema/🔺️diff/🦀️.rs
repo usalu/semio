@@ -4,9 +4,13 @@ use crate::standards::v1::subsets::any::schema::Puzzle2dArtifact;
 use {crate::standards::v1::subsets::any::schema::records::Puzzle2dCamera, crate::standards::v1::subsets::any::schema::records::Puzzle2dCompatSpecificity, crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::records::Puzzle2dHandle, crate::standards::v1::subsets::any::schema::records::Puzzle2dKindCatalogs, crate::standards::v1::subsets::any::schema::records::Puzzle2dKindCompatibility, crate::standards::v1::subsets::any::schema::records::Puzzle2dMeta, crate::standards::v1::subsets::any::schema::records::Puzzle2dNode, crate::standards::v1::subsets::any::schema::records::Puzzle2dNodeAnchor, crate::standards::v1::subsets::any::schema::records::Puzzle2dTargetRegion};
 use crate::Puzzle2dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
-use protocol::{DiffAlgebra, MutationDiff};
+use protocol::DiffAlgebra;
+use protocol::ColdDiffAlgebra;
+use protocol::MutationDiff;
+use protocol::ColdMutationDiff;
 use protocol::list_delta::RowPatch;
-use semio_framework_value::{list::PagedList, paged::PagedUtf8};
+use semio_framework_value::list::PagedList;
+use semio_framework_value::paged::PagedUtf8;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse typed delta for the puzzle2d artifact: per-field entity patches and id-keyed collection deltas.
@@ -649,31 +653,11 @@ impl RowPatch<Puzzle2dMeta> for Puzzle2dMetaPatch {
 }
 
 impl MutationDiff<Puzzle2dSnapshot> for Puzzle2dDiff {
-    fn apply(&self, base: &Puzzle2dSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Puzzle2dSnapshot> {
-        let mut item = match &self.artifact {
-            Some(artifact) => artifact.to_snapshot(),
-            None => base.clone(),
-        };
-        if let Some(value) = &self.schema {
-            item.schema = value.clone();
-        }
-        if let Some(value) = &self.camera {
-            item.camera = value.clone();
-        }
-        if let Some(delta) = &self.nodes {
-            item.nodes = delta.commit_onto(&item.nodes, capability).map_err(|error| error.under(["nodes"]))?;
-        }
-        if let Some(delta) = &self.edges {
-            item.edges = delta.commit_onto(&item.edges, capability).map_err(|error| error.under(["edges"]))?;
-        }
-        if let Some(delta) = &self.target_regions {
-            item.target_regions = delta.commit_onto(&item.target_regions, capability).map_err(|error| error.under(["targetRegions"]))?;
-        }
-        if let Some(patch) = &self.meta {
-            patch.commit_into(&mut item.meta, capability).map_err(|error| error.under(["meta"]))?;
-        }
-        Ok(item)
-    }
+
+
+}
+
+impl ColdMutationDiff<Puzzle2dSnapshot> for Puzzle2dDiff {
     fn absorb(&mut self, later: Self) {
         if later.artifact.is_some() {
             *self = later;
@@ -706,9 +690,44 @@ impl MutationDiff<Puzzle2dSnapshot> for Puzzle2dDiff {
             (Some(_), None) => {}
         }
     }
+
+    fn apply(&self, base: &mut Puzzle2dSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let mut prepared = protocol::PreparedField::new(match &self.artifact {
+            Some(artifact) => artifact.to_snapshot(),
+            None => base.clone(),
+        }, <Self as protocol::MutationDiff<Puzzle2dSnapshot>>::retire_projection, capability);
+        let mut item = prepared.value_mut();
+        if let Some(value) = &self.schema {
+            item.schema = value.clone();
+        }
+        if let Some(value) = &self.camera {
+            item.camera = value.clone();
+        }
+        if let Some(delta) = &self.nodes {
+            item.nodes = delta.commit_onto(&item.nodes, capability).map_err(|error| error.under(["nodes"]))?;
+        }
+        if let Some(delta) = &self.edges {
+            item.edges = delta.commit_onto(&item.edges, capability).map_err(|error| error.under(["edges"]))?;
+        }
+        if let Some(delta) = &self.target_regions {
+            item.target_regions = delta.commit_onto(&item.target_regions, capability).map_err(|error| error.under(["targetRegions"]))?;
+        }
+        if let Some(patch) = &self.meta {
+            patch.commit_into(&mut item.meta, capability).map_err(|error| error.under(["meta"]))?;
+        }
+        prepared.install(base);
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<Puzzle2dSnapshot> for Puzzle2dDiff {
+
+    fn is_empty(&self) -> bool {
+        self.artifact.is_none() && self.schema.is_none() && self.camera.is_none() && self.nodes.as_ref().is_none_or(Puzzle2dNodesDelta::is_empty) && self.edges.as_ref().is_none_or(Puzzle2dEdgesDelta::is_empty) && self.target_regions.as_ref().is_none_or(Puzzle2dTargetRegionsDelta::is_empty) && self.meta.as_ref().is_none_or(|patch| patch.is_empty())
+    }
+}
+
+impl ColdDiffAlgebra<Puzzle2dSnapshot> for Puzzle2dDiff {
     fn inverse(&self, base: &Puzzle2dSnapshot) -> Self {
         if self.artifact.is_some() {
             return Self { artifact: Some(Box::new(Puzzle2dArtifact::from_snapshot(base.clone()))), ..Default::default() };
@@ -722,8 +741,5 @@ impl DiffAlgebra<Puzzle2dSnapshot> for Puzzle2dDiff {
             target_regions: self.target_regions.as_ref().map(|delta| delta.inverse(&base.target_regions)),
             meta: self.meta.as_ref().map(|patch| patch.inverse(&base.meta)),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.artifact.is_none() && self.schema.is_none() && self.camera.is_none() && self.nodes.as_ref().is_none_or(Puzzle2dNodesDelta::is_empty) && self.edges.as_ref().is_none_or(Puzzle2dEdgesDelta::is_empty) && self.target_regions.as_ref().is_none_or(Puzzle2dTargetRegionsDelta::is_empty) && self.meta.as_ref().is_none_or(|patch| patch.is_empty())
     }
 }

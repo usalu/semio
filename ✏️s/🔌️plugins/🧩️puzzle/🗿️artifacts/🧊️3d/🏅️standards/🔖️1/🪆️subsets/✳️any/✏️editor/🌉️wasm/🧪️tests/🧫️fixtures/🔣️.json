@@ -1,0 +1,20 @@
+{
+  "parsers": [
+    {
+      "parserSha256": "c47ec76dbe0064ba0533e4a272861a177385eadec90963cb782df7bbc71d6b4b",
+      "artifact": "🧊️3d",
+      "rustFunction": "puzzle3d_parse_dsl_json",
+      "jsExport": "puzzle3dParseDslJson",
+      "story": "🎭️3d-world"
+    },
+    {
+      "parserSha256": "15558fd9c2a575cfc84a888f06d0febf21f19b35a16aa6a4889c5129f30356f5",
+      "artifact": "🖐️5d",
+      "rustFunction": "puzzle5d_parse_dsl_json",
+      "jsExport": "puzzle5dParseDslJson",
+      "story": "🎭️5d-timeline"
+    }
+  ],
+  "version": 1,
+  "sourceRef": "f856dff081373e131ebf72618120cb73e303a912"
+}

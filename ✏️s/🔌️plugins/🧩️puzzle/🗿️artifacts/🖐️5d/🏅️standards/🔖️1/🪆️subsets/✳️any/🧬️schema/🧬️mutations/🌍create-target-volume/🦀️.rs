@@ -1,7 +1,8 @@
 //! 🌍 Puzzle5d mutation — `CreateTargetVolume`: brings a new id-keyed target volume into existence.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::{Puzzle5dSnapshot};
-use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dTargetVolume};
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dTargetVolume;
+
 
 //#region 🔖️Mutation
 /// 🌍 `create-target-volume` payload — full initial payload at an optional FINAL-state `index`
@@ -33,6 +34,22 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "target volume", kind: "create-target-volume", record: "CreatedTargetVolume" };
 
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create target volume \"{}\"", self.target_volume.id), &format!("Zielvolumen \"{}\" erstellen", self.target_volume.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.target_volume.id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for CreateTargetVolume {
+
+
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for CreateTargetVolume {
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
@@ -42,11 +59,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create target volume \"{}\"", self.target_volume.id), &format!("Zielvolumen \"{}\" erstellen", self.target_volume.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.target_volume.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation

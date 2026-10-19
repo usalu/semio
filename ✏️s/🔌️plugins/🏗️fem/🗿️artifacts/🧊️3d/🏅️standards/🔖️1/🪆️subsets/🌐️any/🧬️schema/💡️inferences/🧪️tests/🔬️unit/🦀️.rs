@@ -1,10 +1,10 @@
 use super::*;
-use crate::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_fem_node::volumetric::FemNodeValue;
 use protocol::Inference;
 
 //#region 🧸️Fixtures
 fn sample_snapshot() -> Fem3dSnapshot {
-    Fem3dSnapshot { nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: 4.0, y: 0.0, z: 0.0 }, FemNode { id: "n3".into(), x: 4.0, y: 3.0, z: 2.0 }], ..Default::default() }
+    Fem3dSnapshot { nodes: vec![FemNodeValue { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNodeValue { id: "n2".into(), x: 4.0, y: 0.0, z: 0.0 }, FemNodeValue { id: "n3".into(), x: 4.0, y: 3.0, z: 2.0 }], ..Default::default() }
 }
 //#endregion 🧸️Fixtures
 

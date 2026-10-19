@@ -1,0 +1,89 @@
+{
+  "cantilever": {
+    "length": 2.0,
+    "young": 210000000000.0,
+    "area": 0.01,
+    "inertia": 1e-05,
+    "force": -1000.0
+  },
+  "axialChain": {
+    "nodes": 50,
+    "elements": 49,
+    "length": 2.0,
+    "force": 1000.0,
+    "tipX": 9.523809523809523e-07
+  },
+  "visual": {
+    "fields": 128,
+    "pageCapacity": 32,
+    "pageBytes": 4096,
+    "maximumBytes": 131072,
+    "entriesPerField": 5
+  },
+  "sources": [
+    {
+      "kind": "loadCase",
+      "id": "empty",
+      "factor": 0.0,
+      "tipY": 0.0,
+      "tipRz": 0.0
+    },
+    {
+      "kind": "loadCase",
+      "id": "tip",
+      "factor": 1.0,
+      "tipY": -0.0012698412698412698,
+      "tipRz": -0.0009523809523809524
+    },
+    {
+      "kind": "combination",
+      "id": "tip",
+      "factor": -2.0,
+      "tipY": 0.0025396825396825397,
+      "tipRz": 0.0019047619047619048
+    }
+  ],
+  "regions": {
+    "areaLoads": [
+      100.0,
+      200.0
+    ],
+    "freeCoordinates": [
+      [
+        0.0,
+        1.0
+      ],
+      [
+        1.0,
+        1.0
+      ]
+    ],
+    "freeDisplacements": [
+      [
+        -4.642201834862383e-08,
+        -7.743119266055042e-08
+      ],
+      [
+        -4.480695718654432e-08,
+        -2.0051605504587155e-08
+      ]
+    ],
+    "supportReactions": [
+      [
+        17.73700305810397,
+        66.66666666666666
+      ],
+      [
+        -17.737003058103966,
+        83.33333333333334
+      ]
+    ]
+  },
+  "oracle": "NumPy direct equilibrium; plane-stress CST matrices; cantilever closed form",
+  "generatedIdentityCollision": {
+    "regionId": "area",
+    "authoredElementId": "area_t0",
+    "triangleIndex": 0,
+    "diagnostic": "fem2d.model-generated-element-id-collision"
+  }
+}

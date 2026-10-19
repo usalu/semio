@@ -44,8 +44,8 @@ fn routes_shoot_from_where_the_actor_stands_when_that_works_else_from_the_point_
         Some(Leg::Grapple { at: 400.0, shot: shot_for(point(400.0, 480.0), std::slice::from_ref(&shelf), &boxed, PET).unwrap_or_else(|| panic!("no shot")) })
     );
     assert_eq!(shot(100.0, &floor()), Some(306.0));
-    assert_eq!(shot(100.0, &perch("floor", 0.0, 150.0, 480.0)), None);
-    assert_eq!([shot(100.0, &perch("floor", 0.0, 250.0, 480.0)), shot(600.0, &perch("floor", 540.0, 640.0, 480.0)), shot(630.0, &perch("floor", 540.0, 640.0, 480.0))], [Some(250.0), Some(600.0), Some(540.0)]);
+    assert_eq!(shot(100.0, &perch("floor", 0.0, 140.0, 480.0)), None);
+    assert_eq!([shot(100.0, &perch("floor", 0.0, 250.0, 480.0)), shot(600.0, &perch("floor", 540.0, 640.0, 480.0)), shot(700.0, &perch("floor", 540.0, 720.0, 480.0))], [Some(250.0), Some(600.0), Some(540.0)]);
     let need = (WALL_GRAB_TICKS + climb_ticks(480.0, rim_of(&left, PET)) + MANTLE_TICKS) as f64;
     let climbs = |gear: &[Gear], grip: f64| route_of(200.0, &floor(), &shelf, gear, PET, grip, &pitches, &[], &boxed).map(|legs| means(&legs));
     assert_eq!(climbs(&[Gear::Climb], need), Some(vec!["wall", "wall"]));
@@ -74,7 +74,7 @@ fn routes_lead_down_over_the_rim_by_the_wall_or_a_standing_ladder_never_by_a_rop
     let need = (WALL_HANG_TICKS + climb_ticks(rim_of(&left, PET), 480.0)) as f64;
     assert_eq!(route_of(400.0, &shelf, &floor(), &[Gear::Climb], PET, need, &pitches, &[], &boxed).map(|legs| legs.len()), Some(2));
     assert_eq!(route_of(400.0, &shelf, &floor(), &[Gear::Climb], PET, need - 1.0, &pitches, &[], &boxed), None);
-    let far = perch("far", 20.0, 120.0, 200.0);
+    let far = perch("far", 20.0, 120.0, 40.0);
     assert_eq!(route_of(200.0, &floor(), &far, &every, PET, GRIP_BUDGET, &pitches, &standing, &boxed), None);
     assert_eq!(route_of(400.0, &shelf, &shelf, &every, PET, GRIP_BUDGET, &pitches, &standing, &boxed), None);
     assert_eq!(route_of(200.0, &floor(), &floor(), &every, PET, GRIP_BUDGET, &pitches, &standing, &boxed), None);

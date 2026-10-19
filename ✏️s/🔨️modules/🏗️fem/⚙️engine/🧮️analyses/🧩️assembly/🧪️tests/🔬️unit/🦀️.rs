@@ -1,8 +1,13 @@
 use super::*;
-use semio_s_fem_analyses_model::*;
-use semio_s_fem_elements2d::{Bar2, BeamEb2};
-use semio_s_fem_model::*;
-use semio_s_fem_test_support::{pages_bytes, seen_of, test_operation, Seen, TEST_GRANT};
+use super::*;
+use semio_s_fem_elements2d::Bar2;
+use semio_s_fem_elements2d::BeamEb2;
+use super::*;
+use semio_s_fem_test_support::pages_bytes;
+use semio_s_fem_test_support::seen_of;
+use semio_s_fem_test_support::test_operation;
+use semio_s_fem_test_support::Seen;
+use semio_s_fem_test_support::TEST_GRANT;
 
 fn cantilever_analysis_model(e: f64, area: f64, iy: f64, l: f64, density: f64) -> (AnalysisModel, Vec<LoadCase>) {
     let model = AnalysisModel {
@@ -563,7 +568,8 @@ fn assembly_job_one_fuel_steps_stay_below_eight_milliseconds() {
 /// 🧪️ Mounted fixed-family cell cursors preserve numerical identity and every interruption seam.
 #[test]
 fn p6h_element_stiffness_microcursor_deadline_stale_cancel_close_and_stage_laws() {
-    use semio_s_fem_elements2d::{PlaneKind, Tri3Cst};
+    use semio_s_fem_elements2d::PlaneKind;
+    use semio_s_fem_elements2d::Tri3Cst;
 
     fn exercise(model: AnalysisModel, expected: Vec<f64>, operation: Operation) {
         let mut construction = AssemblyJobConstruction::new_owned(Arc::new(model), operation, 1);

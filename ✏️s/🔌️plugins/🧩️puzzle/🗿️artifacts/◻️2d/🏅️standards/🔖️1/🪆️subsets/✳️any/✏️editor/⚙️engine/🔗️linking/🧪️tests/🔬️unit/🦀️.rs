@@ -3,9 +3,19 @@ mod tests {
     use crate::editor::puzzle2d::engine::board_host::testkit::*;
 
     use crate::editor::puzzle2d::engine::canvas::Point;
-    use crate::editor::puzzle2d::engine::{
-        distance_between, handle_position_on_circle, handle_position_on_rectangle, BoardHost, EdgeDescriptor, EdgeStrokePattern, EdgeTipGeometry, GraphPortMode, HandleDescriptor, Interaction, NodeDescriptor, NodeShape, SceneDescriptor,
-    };
+    use crate::editor::puzzle2d::engine::distance_between;
+    use crate::editor::puzzle2d::engine::handle_position_on_circle;
+    use crate::editor::puzzle2d::engine::handle_position_on_rectangle;
+    use crate::editor::puzzle2d::engine::BoardHost;
+    use crate::editor::puzzle2d::engine::EdgeDescriptor;
+    use crate::editor::puzzle2d::engine::EdgeStrokePattern;
+    use crate::editor::puzzle2d::engine::EdgeTipGeometry;
+    use crate::editor::puzzle2d::engine::GraphPortMode;
+    use crate::editor::puzzle2d::engine::HandleDescriptor;
+    use crate::editor::puzzle2d::engine::Interaction;
+    use crate::editor::puzzle2d::engine::NodeDescriptor;
+    use crate::editor::puzzle2d::engine::NodeShape;
+    use crate::editor::puzzle2d::engine::SceneDescriptor;
     use semio_framework_pack_json::json;
 
     #[test]

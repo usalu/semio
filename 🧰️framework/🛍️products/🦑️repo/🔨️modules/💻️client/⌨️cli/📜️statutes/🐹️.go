@@ -65,8 +65,7 @@ const (
 	BreachCodeUnicodeEmojiVariation                    Statute = "code/unicode/emoji-variation"
 	BreachRepoMissingCommand                           Statute = "repo/missing-command"
 	BreachRepoMissingTicketTracking                    Statute = "repo/missing-ticket-tracking"
-	BreachSystemDevcontainerVscodeSettingsDrift      Statute = "system/devcontainer/vscode/settings-drift"
-	BreachSystemDevcontainerVscodeExtensionsDrift    Statute = "system/devcontainer/vscode/extensions-drift"
+	BreachSystemIdeConfiguration                       Statute = "system/ide-configuration"
 	BreachFolderIllegalEmpty                           Statute = "folder/illegal/empty"
 	BreachFolderNameMissingEmoji                       Statute = "folder/name/missing-emoji"
 	BreachFolderNameGenericEmoji                       Statute = "folder/name/generic-emoji"
@@ -458,18 +457,11 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 		Solution:    "Refactor to use triadic hook pattern with useSELECTOR",
 		Autofixable: false,
 	},
-	BreachSystemDevcontainerVscodeSettingsDrift: {
-		Kind:        BreachSystemDevcontainerVscodeSettingsDrift,
+	BreachSystemIdeConfiguration: {
+		Kind:        BreachSystemIdeConfiguration,
 		Priority:    BreachPriorityHigh,
-		Reason:      "The devcontainer editor settings are derived from .vscode/settings.json and .devcontainer/editor-overlay.json; a hand-edited copy drifts from the host editor",
-		Solution:    "Run `bun repo run workspace:generate-config` to rewrite the devcontainer editor block; edit .vscode/settings.json, .vscode/extensions.json or the overlay instead of the copy",
-		Autofixable: false,
-	},
-	BreachSystemDevcontainerVscodeExtensionsDrift: {
-		Kind:        BreachSystemDevcontainerVscodeExtensionsDrift,
-		Priority:    BreachPriorityHigh,
-		Reason:      "The devcontainer extensions are derived from .vscode/extensions.json and .devcontainer/editor-overlay.json; a hand-edited copy drifts from the host editor",
-		Solution:    "Run `bun repo run workspace:generate-config` to rewrite the devcontainer editor block; edit .vscode/settings.json, .vscode/extensions.json or the overlay instead of the copy",
+		Reason:      "Developer commands and configuration belong to the repository dashboard",
+		Solution:    "Remove editor-owned configuration and register the command in the repository dashboard",
 		Autofixable: false,
 	},
 	BreachFolderIllegalEmpty: {

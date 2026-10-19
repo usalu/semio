@@ -186,7 +186,8 @@ pub trait PluginApp: Send + 'static {
         false
     }
     /// 📤️ Borrows one fixed result page while its operation retains ACK authority.
-    fn take_typed_operation_result_page(&mut self, receiver: u32) -> Option<TypedOperationResultPage>;
+    fn typed_operation_result_page_demands(&self, receiver: u32) -> Result<RetirementDemand,Fault>;
+    fn take_typed_operation_result_page(&mut self, receiver: u32, grant: RetainedCloneGrant) -> Result<(Option<TypedOperationResultPage>,RetainedCloneProgress),Fault>;
     /// 📨️ ACKs one exact receiver/operation/generation/sequence/attempt token.
     fn acknowledge_typed_operation_result(&mut self, token: TypedOperationResultToken) -> Result<bool, Fault>;
     /// 📤️ Drains one effect already accepted by the typed-operation host receiver.
@@ -452,8 +453,8 @@ pub trait PluginApp: Send + 'static {
         String::from("{}")
     }
     /// ⏱️ Object-safe counterpart to `ArtifactApp::pending_effects` — called once per `refreshUi` pass.
-    async fn pending_effects(&mut self, _view: Option<&ViewModel>) -> Vec<Effect> {
-        Vec::new()
+    async fn pending_effects(&mut self, _view: Option<&ViewModel>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<Vec<Effect>, Fault> {
+        Ok(Vec::new())
     }
     /// 🖱️ Object-safe counterpart to `ArtifactApp::context_menu` — the WIT `context-menu` export's
     /// dispatch target.

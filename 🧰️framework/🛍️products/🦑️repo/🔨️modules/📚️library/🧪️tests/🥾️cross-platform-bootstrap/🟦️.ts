@@ -4,9 +4,10 @@
  * Every measurement is cross-checked against an independent implementation (iconv-lite, smol-toml, ignore, git). @see ../../🧫️fixtures/🥾️cross-platform-bootstrap/🔣️.json */
 import { describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
 import { existsSync, lstatSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { extname, join, relative, resolve } from "node:path";
+import { dirname, extname, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import Ajv from "ajv";
 import { build, type Plugin } from "esbuild";
@@ -19,11 +20,11 @@ type Fixture = Readonly<{
   scriptEncoding: Readonly<{ bomExtensions: readonly string[]; lfExtensions: readonly string[]; excludedPrefixes: readonly string[] }>;
   cargoLinker: Readonly<{ config: string; linuxTable: string; linuxRustflags: readonly string[]; forbiddenRustflagFragments: readonly string[] }>;
   repoLocalGitConfig: readonly (readonly [string, string])[];
-  unixBootstrap: Readonly<{ path: string; packageManagers: readonly string[]; requiredTools: readonly string[]; forbidden: readonly string[] }>;
+  unixBootstrap: Readonly<{ path: string; packageManagers: readonly string[]; requiredTools: readonly string[]; forbidden: readonly string[]; installerInvocations: number }>;
   windowsBootstrap: Readonly<{ path: string; required: readonly string[]; forbidden: readonly string[] }>;
   nodePin: Readonly<{ manifest: string; dockerfile: string; dockerfileArg: string }>;
   workspaceManifests: Readonly<{ rootManifest: string }>;
-  freshClone: Readonly<{ bootstrapSources: string; bootstrapSourcesSchema: string; entries: readonly string[] }>;
+  freshClone: Readonly<{ bootstrapSources: string; bootstrapSourcesSchema: string; entries: readonly string[]; deferredImports: Readonly<{ source: string; imports: readonly Readonly<{ path: string; kind: string }>[] }> }>;
 }>;
 type BootstrapSources = Readonly<{ sources: readonly Readonly<{ id: string; module: string; export: string; outputs: readonly string[]; requiredBy: string }>[] }>;
 
@@ -38,11 +39,12 @@ const bootstrapOutputs = new Set(bootstrapSources.sources.flatMap((source) => so
 const workspacePackages: Plugin = {
   name: "workspace-packages",
   setup(builder) {
+    builder.onResolve({ filter: /.*/ }, (args) => args.kind === "dynamic-import" ? { path: args.path, external: true } : undefined);
     builder.onResolve({ filter: /^[^./]/ }, (args) => {
       if (args.path.startsWith("node:")) return { path: args.path, external: true };
       try {
         const real = realpathSync(Bun.resolveSync(args.path, args.resolveDir));
-        return real.includes("/node_modules/") ? { path: args.path, external: true } : { path: real };
+        return real.split(/[\\/]/u).includes("node_modules") ? { path: args.path, external: true } : { path: real };
       } catch {
         return { path: args.path, external: true };
       }
@@ -95,6 +97,33 @@ function shellFunction(source: string, name: string): string {
 }
 
 describe("cross-platform bootstrap", () => {
+  test("Nx entrypoints resolve the declared package layout through independent loaders", () => {
+    const contract = JSON.parse(readFileSync(join(libraryRoot, "🧫️fixtures/🥾️nx-entrypoints/🔣️.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(libraryRoot, "🧬️schema/🥾️nx-entrypoints/🔣️.json"), "utf8"));
+    expect(new Ajv({ allErrors: true, strict: true }).compile(schema)(contract)).toBe(true);
+    const nodeOracle = spawnSync("node", ["--input-type=module", "-e", 'import {createRequire} from "node:module";import {readFileSync,realpathSync} from "node:fs";import {resolve} from "node:path";const rows=JSON.parse(readFileSync(0,"utf8")),load=createRequire(resolve("package.json"));process.stdout.write(JSON.stringify(rows.map(row=>realpathSync(load.resolve(row.specifier)))));'], { cwd: repoRoot, input: JSON.stringify(contract.cases), encoding: "utf8", windowsHide: true, timeout: 10_000 });
+    expect(nodeOracle.status).toBe(0);
+    const nodeTargets = JSON.parse(nodeOracle.stdout) as string[];
+    const load = createRequire(join(repoRoot, "package.json"));
+    const metadata = load("nx/package.json") as { bin: { nx: string } };
+    for (const row of contract.cases as { id: string; source: string; pattern: string; specifier: string; target: string }[]) {
+      const original = readFileSync(join(libraryRoot, row.source), "utf8").match(new RegExp(row.pattern))?.[1];
+      expect(original).toBe(row.specifier);
+      const independent = realpathSync(load.resolve(row.specifier));
+      expect(realpathSync(Bun.resolveSync(original!, repoRoot))).toBe(independent);
+      expect(nodeTargets[contract.cases.indexOf(row)]).toBe(independent);
+      expect(independent).toBe(realpathSync(join(dirname(load.resolve("nx/package.json")), row.target)));
+      if (row.id === "cli") expect(independent).toBe(realpathSync(join(dirname(load.resolve("nx/package.json")), metadata.bin.nx)));
+    }
+    console.log("[DEBUG] Nx entrypoints: two neutral declarations match Node/Bun loaders and the package bin");
+  });
+
+  test("keeps deferred command imports distinct from initial router imports", async () => {
+    const result = await build({ stdin: { contents: fixture.freshClone.deferredImports.source, resolveDir: repoRoot, loader: "ts" }, bundle: true, write: false, metafile: true, platform: "node", format: "esm", plugins: [workspacePackages] });
+    const imports = Object.values(result.metafile.outputs).flatMap((output) => output.imports.map(({ path, kind }) => ({ path, kind })));
+    expect(imports).toEqual(fixture.freshClone.deferredImports.imports);
+    expect(Object.keys(result.metafile.inputs)).toEqual(["<stdin>"]);
+  });
   test("validates the portable law fixture", () => {
     
     expect(fixture["pathBudget"]["unit"]).toEqual("utf16");
@@ -194,7 +223,8 @@ describe("cross-platform bootstrap", () => {
     expect(source).toContain(`report_missing_tools ${fixture.unixBootstrap.requiredTools.join(" ")}`);
     expect(source.match(/\bapt-get (update|install)\b/gu)?.length ?? 0).toBe(source.match(/run_privileged env DEBIAN_FRONTEND=noninteractive apt-get (update|install)\b/gu)?.length ?? 0);
     const calls = source.replace(/\\\n\s*/gu, " ").split("\n").filter((line) => /^\s*install_linux_packages\s/u.test(line));
-    expect(calls.length).toBeGreaterThan(1);
+    expect(calls.length).toBe(fixture.unixBootstrap.installerInvocations);
+    expect(shellFunction(source, "ensure_native_toolchain")).toContain('done < <(linux_toolchain_packages "$manager")');
     for (const call of calls) expect({ call: call.trim(), guarded: call.includes("|| log ") }).toEqual({ call: call.trim(), guarded: true });
     if (process.platform === "win32") return;
     for (const manager of fixture.unixBootstrap.packageManagers) {

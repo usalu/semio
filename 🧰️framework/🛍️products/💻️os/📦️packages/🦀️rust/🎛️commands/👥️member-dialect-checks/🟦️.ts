@@ -1,3 +1,7 @@
+import { join } from "node:path";
+import { runBudgetedTestCommand } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { runExactCargoLaws } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
 /** 👥️ Member commands: codec send, group visibility, backbone detach, member dialect, input census and group publication checks.
  *
  * @see ../../📜️script.ts — the package script that registers the commands of this module
@@ -118,4 +122,11 @@ export class MemberDialectCheckScript extends BundleScript {
       ] });
     console.log(`exact member admission laws: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed across ${receipts.length} verified test executables`);
   }
+}
+
+export class MemberFacetsScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  const mode=args[0];if(args.length!==1||(mode!=="source"&&mode!=="native"))throw Error("member-facets requires source or native");const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🪪️member-facets/🧪️tests/🟦️.ts");await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:Math.min(30000,this.invocation.control.remainingMilliseconds()),throwOnFailure:true});await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:Math.min(30000,this.invocation.control.remainingMilliseconds()),throwOnFailure:true});if(mode==="source")return;
+  const native=readCargoTestPolicyV1(process.env);await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:this.invocation.control.remainingMilliseconds()},cwd:this.repoRoot,cargoTargetDir:native.targetDirectory,nativeEnv:{RUST_MIN_STACK:native.rustMinStack},artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,manifestPaths:{"semio-framework-os-kernel":resolve(this.root,"Cargo.toml")},groups:[{package:"semio-framework-os-kernel",target:{kind:"lib",name:"semio_framework_os_kernel"},cargoArgs:["--locked"],laws:["os_store::component::member_facet_tests::native_member_facet_admits_non_clone_non_reference_types","os_store::component::member_facet_tests::original_member_profiles_match_explicit_authority_selection","os_store::tests::native_command_publication_preserves_original_context_issuer_and_denied_inputs"]}]});
+ }
 }

@@ -182,6 +182,7 @@ fn tick(value: &Value) -> ToolRunTick {
         append_entities: value["appendEntities"].as_array().expect("appendEntities").iter().map(u64_of).collect(),
         retract_to: value.get("retractTo").map(u32_of),
         payload: value.get("payload").map(hex),
+        payload_update:value.get("payloadUpdate").map(|update|serde_json::from_value(update.clone()).expect("closed fixture payload update")),
     }
 }
 
@@ -744,7 +745,7 @@ fn tick_writer_sequences_steps_pages_and_retracts_pending_appends() {
 #[test]
 fn tick_codec_enforces_the_tick_byte_cap() {
     let identity = ToolRunIdentity::new(ToolRunId { app_instance_id: 0, run: 0 }, [0; 32]);
-    let tick = ToolRunTick { identity, sequence: 0, progress: None, steps: Vec::new(), trace: Vec::new(), append_ops: vec![vec![0; TOOL_RUN_TICK_BYTES_MAX]], append_entities: Vec::new(), retract_to: None, payload: None };
+    let tick = ToolRunTick { identity, sequence: 0, progress: None, steps: Vec::new(), trace: Vec::new(), append_ops: vec![vec![0; TOOL_RUN_TICK_BYTES_MAX]], append_entities: Vec::new(), retract_to: None, payload: None,payload_update:None };
     assert_eq!(tick.encode(), Err(ToolRunCodecError::Limit("tick bytes")));
 }
 //#endregion 🔖️Tick

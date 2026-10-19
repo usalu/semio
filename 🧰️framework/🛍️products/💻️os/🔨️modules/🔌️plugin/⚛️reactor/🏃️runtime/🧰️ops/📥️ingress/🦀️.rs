@@ -280,7 +280,7 @@ pub struct PluginExchangeOutput {
     pub presence_pending: Option<u64>,
     pub presence_terminal: Option<u64>,
     pub presence_terminal_fault: Option<Vec<u8>>,
-    pub typed_operation_results: Vec<TypedOperationResultPage>,
+    pub typed_operation_pages: usize,
 }
 /// 🏷️ Names the one actual producer whose full physical receipt was posted in the initiating context.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]

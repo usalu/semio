@@ -25,7 +25,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
-import { applyIdentityConfigMutation, inverseIdentityConfigMutation, type Identity, type IdentityConfigMutation } from "@semio-tech/framework/config/mutations";
+import { applyIdentityConfigMutation, diffIdentityConfigMutation, inverseIdentityConfigMutation, type Identity, type IdentityConfigMutation } from "@semio-tech/framework/config/mutations";
 // #endregion 🔌️Adapters
 
 // #region 🔖️Fixtures
@@ -37,7 +37,7 @@ const FIXTURE_DIR: Record<string, string> = {
   "sign-out": join(CONFIG_MUTATIONS, "🚪️sign-out/🧫️fixtures/🪪️clears-the-active-session"),
 };
 
-type Vectors = { before: Identity | null; mutation: IdentityConfigMutation; after: Identity | null; outcome: { status: string } };
+type Vectors = { before: Identity | null; mutation: IdentityConfigMutation; diff: unknown; after: Identity | null; outcome: { status: string } };
 
 /** 🧫️ The committed `(before, mutation, after, outcome)` specification vector for one kind, read
  * literally — this IS the independently handcrafted vector the no-oracle decision rests on, never
@@ -48,6 +48,7 @@ function fixtures(kind: string): Vectors {
   return {
     before: JSON.parse(readFileSync(join(dir, "📸️snapshot/⬅️before/🔣️.json"), "utf8")) as Identity | null,
     mutation: JSON.parse(readFileSync(join(dir, "🦠️mutation/🔣️.json"), "utf8")) as IdentityConfigMutation,
+    diff: JSON.parse(readFileSync(join(dir, "🔺️diff/🔣️.json"), "utf8")) as unknown,
     after: JSON.parse(readFileSync(join(dir, "📸️snapshot/➡️after/🔣️.json"), "utf8")) as Identity | null,
     outcome: JSON.parse(readFileSync(join(dir, "🎯️outcome/🔣️.json"), "utf8")) as { status: string },
   };
@@ -75,7 +76,9 @@ function whenPayload(ctx: AdapterContext): { kind: string; account: string; wasA
  * the same laws `../🦀️.rs::subject::mutate` asserts, against the SAME committed evidence. */
 function mutate(ctx: AdapterContext): AdapterOutcome {
   const row = whenPayload(ctx);
-  const { before, mutation, after, outcome } = fixtures(row.kind);
+  const { before, mutation, diff, after, outcome } = fixtures(row.kind);
+  const named = diffIdentityConfigMutation(mutation, before);
+  if (JSON.stringify(named) !== JSON.stringify(diff)) throw new Error(`mutate-${row.kind}: the TypeScript leaf names a sparse diff other than the committed one\n     got: ${JSON.stringify(named)}\nexpected: ${JSON.stringify(diff)}`);
   if (account(before) !== row.wasAccount) throw new Error(`mutate-${row.kind}: the feature declares the record starts signed in as ${JSON.stringify(row.wasAccount)}, but the committed before-record holds ${JSON.stringify(account(before))}`);
   const applied = applyIdentityConfigMutation(before, mutation);
   if (JSON.stringify(applied) !== JSON.stringify(after)) throw new Error(`mutate-${row.kind}: the TypeScript-applied record does not match the committed after-record\n     got: ${JSON.stringify(applied)}\nexpected: ${JSON.stringify(after)}`);

@@ -54,8 +54,8 @@ async fn window_options_are_local_to_the_window_instance_not_shared_across_split
     }
     assert_eq!(render_window(&mut reopened, main::WINDOW_KIND_ID).await, base_render);
     assert_eq!(render_window(&mut reopened, second_window).await, second_render);
-    assert!(close_witness(reopened).expect("reopened app close"));
-    assert!(close_witness(app).expect("source app close"));
+    assert!(close_witness(&mut reopened).expect("reopened app close"));
+    assert!(close_witness(&mut app).expect("source app close"));
 }
 
 /// 📏 Wave B12: grid / spacing / LOD / vortex-show must publish into Puzzle3dWindowConfig and the
@@ -229,8 +229,8 @@ async fn window_transient_is_exact_instance_local_and_resets_on_reload() {
     // close witness, exactly as a host surrenders a rendered body before retiring its app.
     drop((transient_a, transient_b, closed));
     drop(reset);
-    assert!(close_witness(reopened).expect("reopened app close"));
-    assert!(close_witness(app).expect("source app close"));
+    assert!(close_witness(&mut reopened).expect("reopened app close"));
+    assert!(close_witness(&mut app).expect("source app close"));
 }
 
 /// 🧹️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave S. A mounted worker job session is admitted out of a

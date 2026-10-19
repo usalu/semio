@@ -17,9 +17,11 @@ impl Tui {
             back,
             focus: None,
             hovered: None,
-            capture: None,
+                        hovered_chrome: Vec::new(),
+capture: None,
             press: None,
-            last_click: None,
+                        dock_preview: None,
+last_click: None,
             overlays: Vec::new(),
             now_ms: 0,
             ticked: false,
@@ -47,7 +49,8 @@ impl Tui {
     }
 
     pub fn resize(&mut self, size: Size) {
-        self.size = size;
+                self.cancel_pointer();
+self.size = size;
         let blank = Cell::blank([0, 0, 0], [0, 0, 0]);
         self.front.resize(size, blank);
         self.back.resize(size, blank);

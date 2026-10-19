@@ -20,10 +20,17 @@ fn pack_round_trips_representative_document() {
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
-    use crate::host::owned::{close_puzzle5d_store,puzzle5d_store};
-    use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor};
-    use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{os_store::store_schema::ArtifactCommand, os_store::document_materialize::create_document_envelope};
+    use crate::host::owned::close_puzzle5d_store;
+    use crate::standards::v1::subsets::any::schema::document_records::host::owned::puzzle5d_store;
+    use crate::Puzzle5dPart;
+    use crate::Puzzle5dPart2d;
+    use crate::Puzzle5dPart3d;
+    use crate::Puzzle5dPartAnchor;
+    use protocol::ArtifactId;
+    use protocol::Edit;
+    use protocol::SchemaId;
+    use store::os_store::store_schema::ArtifactCommand;
+    use store::os_store::document_materialize::create_document_envelope;
 
     let mut store = (puzzle5d_store(create_document_envelope(crate::PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("store");
     let part = Puzzle5dPart { id: "p1".into(), anchor: Puzzle5dPartAnchor::Fixed, part_kind: None, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };

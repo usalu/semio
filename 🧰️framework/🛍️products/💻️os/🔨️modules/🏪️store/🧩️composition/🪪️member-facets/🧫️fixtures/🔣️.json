@@ -1,0 +1,105 @@
+{
+  "facets": {
+    "native": {
+      "ordinarySnapshotClone": false,
+      "coldMutation": false,
+      "originalReceiving": true,
+      "paidRetirement": true,
+      "ordinaryMutationClone": false
+    },
+    "reference": {
+      "ordinarySnapshotClone": true,
+      "coldMutation": true,
+      "explicitSelection": true,
+      "ordinaryMutationClone": true
+    }
+  },
+  "nativeMethods": [
+    "owned_publication_birth_bytes",
+    "begin_one_item_owned_publication",
+    "advance_one_item_publication",
+    "prepare_one_item_publication",
+    "stage_one_item_publication",
+    "adopt_one_item_publication",
+    "snapshot_read_erased_now",
+    "retire_snapshot_read_erased",
+    "close_owned_step"
+  ],
+  "referenceMethods": [
+    "begin_one_item_wire_publication",
+    "commit_checkpoint",
+    "checkout",
+    "create_alternative",
+    "undo",
+    "redo",
+    "preview_wire",
+    "dispatch_wire",
+    "dispatch_wire_with_policy",
+    "event_log_payload",
+    "announce_tail_edit_payload",
+    "ingest_remote_payload",
+    "stamp_tail_group_id",
+    "stamp_tail_origin",
+    "set_owner",
+    "document_pack_bytes",
+    "envelope_pack_bytes",
+    "merge_persisted_envelope",
+    "pack_at_checkpoint"
+  ],
+  "cases": [
+    {
+      "name": "Original Immutable Native Member",
+      "snapshotClone": false,
+      "coldMutation": false,
+      "referenceSelected": false,
+      "native": true,
+      "reference": false,
+      "mutationClone": false
+    },
+    {
+      "name": "Cold Capabilities Without Selection",
+      "snapshotClone": true,
+      "coldMutation": true,
+      "referenceSelected": false,
+      "native": true,
+      "reference": false,
+      "mutationClone": true
+    },
+    {
+      "name": "Explicit Reference Member",
+      "snapshotClone": true,
+      "coldMutation": true,
+      "referenceSelected": true,
+      "native": true,
+      "reference": true,
+      "mutationClone": true
+    },
+    {
+      "name": "Missing Reference Projection Clone",
+      "snapshotClone": false,
+      "coldMutation": true,
+      "referenceSelected": true,
+      "native": true,
+      "reference": false,
+      "mutationClone": true
+    },
+    {
+      "name": "Missing Reference Operation Vocabulary",
+      "snapshotClone": true,
+      "coldMutation": false,
+      "referenceSelected": true,
+      "native": true,
+      "reference": false,
+      "mutationClone": true
+    },
+    {
+      "name": "Missing Reference Operation Clone",
+      "snapshotClone": true,
+      "mutationClone": false,
+      "coldMutation": true,
+      "referenceSelected": true,
+      "native": true,
+      "reference": false
+    }
+  ]
+}

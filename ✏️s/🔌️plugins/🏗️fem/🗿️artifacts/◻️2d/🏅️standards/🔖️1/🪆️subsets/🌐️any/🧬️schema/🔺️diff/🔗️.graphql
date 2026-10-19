@@ -30,7 +30,7 @@ type Fem2dNodeRelocation {
 
 type Fem2dNodesModification {
   id: String!
-  patch: FemNode!
+  patch: Fem2dNodePatch!
 }
 
 type Fem2dNodesDelta {
@@ -58,7 +58,7 @@ type Fem2dElementRelocation {
 
 type Fem2dElementsModification {
   id: String!
-  patch: FemElement!
+  patch: Fem2dElementPatch!
 }
 
 type Fem2dElementsDelta {
@@ -86,7 +86,7 @@ type Fem2dRegionRelocation {
 
 type Fem2dRegionsModification {
   id: String!
-  patch: FemRegion!
+  patch: Fem2dRegionPatch!
 }
 
 type Fem2dRegionsDelta {
@@ -114,7 +114,7 @@ type Fem2dMaterialRelocation {
 
 type Fem2dMaterialsModification {
   id: String!
-  patch: FemMaterial!
+  patch: Fem2dMaterialPatch!
 }
 
 type Fem2dMaterialsDelta {
@@ -142,7 +142,7 @@ type Fem2dSectionRelocation {
 
 type Fem2dSectionsModification {
   id: String!
-  patch: FemSection!
+  patch: Fem2dSectionPatch!
 }
 
 type Fem2dSectionsDelta {
@@ -170,7 +170,7 @@ type Fem2dSupportRelocation {
 
 type Fem2dSupportsModification {
   id: String!
-  patch: FemSupport!
+  patch: Fem2dSupportPatch!
 }
 
 type Fem2dSupportsDelta {
@@ -232,7 +232,7 @@ type Fem2dLoadRelocation {
 
 type Fem2dLoadsModification {
   id: String!
-  patch: FemLoad!
+  patch: Fem2dLoadPatch!
 }
 
 type Fem2dLoadsDelta {
@@ -260,7 +260,7 @@ type Fem2dCombinationRelocation {
 
 type Fem2dCombinationsModification {
   id: String!
-  patch: FemCombination!
+  patch: Fem2dCombinationPatch!
 }
 
 type Fem2dCombinationsDelta {
@@ -275,3 +275,60 @@ type Fem2dAnalysisPatch {
   bucklingCount: Int
   deformationScale: Float
 }
+
+# 🧱️ Sparse material changes preserve independent fields.
+type Fem2dMaterialPatch {
+  name: String
+  e: Float
+  nu: Float
+  rho: Float
+}
+
+type Fem2dNodePatch {
+  x: Float
+  y: Float
+}
+
+type Fem2dSectionPatch {
+  name: String
+  area: Float
+  iy: Float
+}
+
+type Fem2dRegionPatch {
+  name: String
+  outline: [[Float!]!]
+  holes: [[[Float!]!]!]
+  materialId: String
+  meshSize: Float
+  thickness: Float
+}
+
+type Fem2dSupportPatch {
+  nodeId: String
+  fixed: [FemDof!]
+  tx: Boolean
+  ty: Boolean
+  rz: Boolean
+}
+
+type Fem2dElementPatch {
+  kind: String
+  start: String
+  end: String
+  materialId: String
+  sectionId: String
+}
+
+union Fem2dLoadPatch = Fem2dNodalLoadPatch | Fem2dMemberUdlLoadPatch | Fem2dAreaLoadPatch
+type Fem2dNodalLoadPatch { kind: String! nodeId: String dof: FemDof value: Float }
+type Fem2dMemberUdlLoadPatch { kind: String! elementId: String wx: Float wy: Float }
+type Fem2dAreaLoadPatch { kind: String! regionId: String pressure: Float }
+type Fem2dCombinationTermPatch { factor: Float }
+type Fem2dCombinationTermRemoval { id: String! index: Unsigned64! }
+type Fem2dCombinationTermInsertion { index: Unsigned64! row: FemCombinationTerm! }
+type Fem2dCombinationTermRelocation { id: String! from: Unsigned64! to: Unsigned64! }
+type Fem2dCombinationTermModification { id: String! patch: Fem2dCombinationTermPatch! }
+type Fem2dCombinationTermsDelta { removed: [Fem2dCombinationTermRemoval!]! inserted: [Fem2dCombinationTermInsertion!]! moved: [Fem2dCombinationTermRelocation!]! modified: [Fem2dCombinationTermModification!]! }
+type Fem2dCombinationPatch { name: String terms: Fem2dCombinationTermsDelta }
+scalar Unsigned64

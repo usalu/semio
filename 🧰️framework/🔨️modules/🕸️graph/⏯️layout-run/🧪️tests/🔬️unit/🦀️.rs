@@ -3,7 +3,7 @@
 //! accuracy, the step bound on a 5 000-node grid, close and cancellation.
 
 use super::*;
-use semio_framework_job::{default_now_us, drive_step, root_cancel_token, CancelToken, Generation, InteractiveStage, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView, OperationId, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, StepBudget, StepContextOwner, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US};
+use semio_framework_job::{drive_step, Generation, InteractiveStage, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView, OperationId, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, StepBudget, OriginalJobFixtureCaller, OriginalJobDecodeOwner, OriginalTurnFailure, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US};
 use semio_framework_tool_run::{ToolRunId, ToolRunStep, ToolRunTick, ToolRunTraceOp, ToolRunTraceStore};
 use serde_json::Value;
 use std::collections::BTreeSet;
@@ -170,29 +170,20 @@ pub(crate) fn wallet() -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 256, maximum_copy_bytes: 1 << 18, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 }
 }
 
-pub(crate) fn layout_run_close_job(job: &mut LayoutRunJob<TestEncoder>) {
-    job.begin_close();
-    for _ in 0..4096 {
-        if matches!(semio_framework_job::close_with_self_funded_context(wallet(), |cx| job.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Complete { .. }) {
-            return;
-        }
-    }
-    panic!("layout run job did not close");
+const ORIGINAL_STOCK:RetainedCloneGrant=RetainedCloneGrant{maximum_items:1<<28,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:4096};
+struct OriginalLayoutSource{caller:OriginalJobFixtureCaller,decoder:OriginalJobDecodeOwner}
+pub(crate) struct FixtureLayoutRunJob{job:LayoutRunJob<TestEncoder>,original:std::cell::RefCell<Option<OriginalLayoutSource>>}
+impl std::ops::Deref for FixtureLayoutRunJob{type Target=LayoutRunJob<TestEncoder>;fn deref(&self)->&Self::Target{&self.job}}
+impl std::ops::DerefMut for FixtureLayoutRunJob{fn deref_mut(&mut self)->&mut Self::Target{&mut self.job}}
+impl FixtureLayoutRunJob{
+ fn from_preborn(job:LayoutRunJob<TestEncoder>,clock:fn()->Option<u64>)->Self{Self{job,original:std::cell::RefCell::new(Some(OriginalLayoutSource{caller:OriginalJobFixtureCaller::admit(OperationId(1),Generation(1),ORIGINAL_STOCK,clock,u64::MAX,1<<28),decoder:OriginalJobDecodeOwner::empty()}))}}
+ fn turn<R>(&mut self,grant:RetainedCloneGrant,run:impl FnOnce(&mut LayoutRunJob<TestEncoder>,&mut StepContext<'_>)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure>{let source=self.original.get_mut().as_mut().expect("layout run keeps its initiating source");source.caller.turn_with_decoder(grant,&mut source.decoder,|cx|run(&mut self.job,cx))}
+ fn close_on_original(&mut self,grant:RetainedCloneGrant)->InteractiveJobCloseStep{self.turn(grant,|job,cx|cx.with_original_retirement(|cx|job.close_step(cx))).expect("same original layout close")}
+ fn cancel_original(&self){self.original.borrow().as_ref().unwrap().caller.cancel().cancel_now();}
+ fn finish_original(&mut self){let Some(mut source)=self.original.get_mut().take()else{return};for _ in 0..4096{if source.decoder.terminal_is_empty(){break}source.caller.turn(ORIGINAL_STOCK,|cx|{let demand=source.decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|loan|source.decoder.close_step(loan))?;Ok(())}).expect("layout original decoder close");}assert!(source.decoder.terminal_is_empty());source.caller.retire(ORIGINAL_STOCK);}
 }
-
-pub(crate) fn new_owner() -> StepContextOwner {
-    StepContextOwner::new(OperationId(1), Generation(1), wallet()).expect("step context owner").0
-}
-
-pub(crate) fn close_owner(mut owner: StepContextOwner) {
-    for _ in 0..4096 {
-        if owner.terminal_is_empty() {
-            return;
-        }
-        owner.close_step(wallet());
-    }
-    panic!("step context owner did not close");
-}
+impl Drop for FixtureLayoutRunJob{fn drop(&mut self){if !std::thread::panicking(){layout_run_close_job(self);self.finish_original();}}}
+pub(crate) fn layout_run_close_job(job:&mut FixtureLayoutRunJob){job.begin_close();for _ in 0..4096{if job.terminal_is_empty(){return}job.close_on_original(wallet());}panic!("layout run job did not close");}
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) enum Observed {
@@ -205,14 +196,10 @@ pub(crate) enum Observed {
 }
 
 /// 🎛️ One direct `step` call under the owner's ledger; the lent outcome becomes an owned descriptor.
-pub(crate) fn step_with(owner: &StepContextOwner, job: &mut LayoutRunJob<TestEncoder>, budget: StepBudget, cancel: &CancelToken, now: fn() -> Option<u64>) -> Option<JobOutcomeDescriptor> {
-    let (mut sequence, mut receipt) = (0, RetainedCloneProgress::default());
-    let mut cx = owner.context(budget, cancel.clone(), now, &mut sequence, &mut receipt).expect("step context");
-    job.step(&mut cx).expect("layout run step").map(JobOutcomeBorrow::into_descriptor)
-}
+pub(crate) fn step_with(job:&mut FixtureLayoutRunJob,budget:StepBudget)->Option<JobOutcomeDescriptor>{job.turn(budget.retained,|job,cx|{let mut result=None;cx.with_original_work_loan(budget.fuel,budget.deadline_us,|cx|{result=Some(job.step(cx)?.map(JobOutcomeBorrow::into_descriptor));Ok(())})?;Ok(result.unwrap())}).expect("same original layout step")}
 
 /// 👁️ Reads the lent outcome once, feeds the ledger and ends the descriptor loan.
-pub(crate) fn read_outcome(job: &LayoutRunJob<TestEncoder>, descriptor: Option<JobOutcomeDescriptor>, ledger: &mut Ledger) -> Observed {
+pub(crate) fn read_outcome(job: &FixtureLayoutRunJob, descriptor: Option<JobOutcomeDescriptor>, ledger: &mut Ledger) -> Observed {
     let Some(mut descriptor) = descriptor else { return Observed::Silent };
     let observed = match job.borrow_outcome(&descriptor).expect("outcome view") {
         JobOutcomeView::PreviewReady { payload, .. } => {
@@ -230,11 +217,9 @@ pub(crate) fn read_outcome(job: &LayoutRunJob<TestEncoder>, descriptor: Option<J
         JobOutcomeView::Cancelled { .. } => Observed::Cancelled,
         JobOutcomeView::Fault { detail, .. } => Observed::Fault(detail.page(0).unwrap_or_default().to_vec()),
     };
-    for _ in 0..4096 {
-        if matches!(descriptor.acknowledge(wallet()), RetainedCloneStep::Complete(_)) {
-            break;
-        }
-    }
+    let mut source=job.original.borrow_mut();let source=source.as_mut().expect("layout descriptor retains initiating source");
+    source.caller.turn_with_decoder(wallet(),&mut source.decoder,|cx|{semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{depth:1,..Default::default()},|loan|Ok(descriptor.acknowledge(loan)))?;Ok(())}).expect("same original descriptor acknowledgement");
+    assert!(descriptor.is_acknowledged());
     observed
 }
 
@@ -249,35 +234,31 @@ fn driven(observed: Observed) -> Option<Driven> {
 }
 
 /// 🎛️ One direct `step` call with `fuel` and a frozen clock whose deadline is `deadline_us` (`u64::MAX` = never).
-fn step_once(owner: &StepContextOwner, job: &mut LayoutRunJob<TestEncoder>, ledger: &mut Ledger, fuel: u64, deadline_us: u64, cancel: &CancelToken) -> (bool, Option<Driven>) {
-    let descriptor = step_with(owner, job, StepBudget::new(fuel, deadline_us, wallet()), cancel, frozen_now);
+fn step_once(job: &mut FixtureLayoutRunJob, ledger: &mut Ledger, fuel: u64, deadline_us: u64) -> (bool, Option<Driven>) {
+    let descriptor = step_with(job,StepBudget::new(fuel,deadline_us,wallet()));
     let observed = read_outcome(job, descriptor, ledger);
     (observed == Observed::Silent, driven(observed))
 }
 
-fn retire_delivered(owner: &StepContextOwner, job: &mut LayoutRunJob<TestEncoder>, ledger: &mut Ledger, cancel: &CancelToken) {
+fn retire_delivered(job: &mut FixtureLayoutRunJob, ledger: &mut Ledger) {
     for _ in 0..4096 {
         if !job.delivered {
             return;
         }
-        step_once(owner, job, ledger, INTERACTIVE_LANE_FUEL, u64::MAX, cancel);
+        step_once(job,ledger,INTERACTIVE_LANE_FUEL,u64::MAX);
     }
     panic!("delivered layout run publication did not retire");
 }
 
-pub(crate) fn run_to(job: &mut LayoutRunJob<TestEncoder>, ledger: &mut Ledger, fuel: u64, until: Driven) {
-    let cancel = root_cancel_token();
-    let owner = new_owner();
+pub(crate) fn run_to(job: &mut FixtureLayoutRunJob, ledger: &mut Ledger, fuel: u64, until: Driven) {
     for _ in 0..10_000_000 {
-        match step_once(&owner, job, ledger, fuel, u64::MAX, &cancel).1 {
+        match step_once(job,ledger,fuel,u64::MAX).1 {
             Some(Driven::Complete) => {
-                retire_delivered(&owner, job, ledger, &cancel);
-                close_owner(owner);
+                retire_delivered(job,ledger);
                 return;
             }
             Some(Driven::Checkpoint) if until == Driven::Checkpoint => {
-                retire_delivered(&owner, job, ledger, &cancel);
-                close_owner(owner);
+                retire_delivered(job,ledger);
                 return;
             }
             _ => {}
@@ -286,15 +267,13 @@ pub(crate) fn run_to(job: &mut LayoutRunJob<TestEncoder>, ledger: &mut Ledger, f
     panic!("layout run never reached {until:?}");
 }
 
-pub(crate) fn new_job(graph: &LayoutRunGraph, config: LayoutRunConfig) -> LayoutRunJob<TestEncoder> {
-    LayoutRunJob::new(identity(), graph, config, encode_move as TestEncoder).expect("valid run")
-}
+pub(crate) fn new_job(graph:&LayoutRunGraph,config:LayoutRunConfig)->FixtureLayoutRunJob{FixtureLayoutRunJob::from_preborn(LayoutRunJob::new(identity(),graph,config,encode_move as TestEncoder).expect("valid run"),frozen_now)}
 
 fn hex16(value: u64) -> String {
     format!("{value:016x}")
 }
 
-fn assert_run_laws(case: &str, graph: &LayoutRunGraph, job: &LayoutRunJob<TestEncoder>, ledger: &Ledger) {
+fn assert_run_laws(case: &str, graph: &LayoutRunGraph, job: &FixtureLayoutRunJob, ledger: &Ledger) {
     let positions = job.positions();
     assert!(ledger.max_tick_bytes <= JOB_PAYLOAD_PAGE_BYTES, "{case}: tick of {} bytes exceeds one page", ledger.max_tick_bytes);
     let moved: Vec<usize> = (0..graph.nodes.len()).filter(|index| job.moved(*index)).collect();
@@ -327,7 +306,7 @@ fn assert_run_laws(case: &str, graph: &LayoutRunGraph, job: &LayoutRunJob<TestEn
     assert_eq!(ledger.retracts, job.checkpoints() + 1, "{case}: every checkpoint compaction and the settle compaction retract the provisional list once");
 }
 
-fn actual_expectation(job: &LayoutRunJob<TestEncoder>, ledger: &Ledger) -> Value {
+fn actual_expectation(job: &FixtureLayoutRunJob, ledger: &Ledger) -> Value {
     serde_json::json!({
         "stop": match job.stop().expect("stopped") { LayoutRunStop::Converged => "converged", LayoutRunStop::IterationLimit => "iterationLimit" },
         "iterations": job.iteration(),
@@ -394,20 +373,18 @@ fn layout_run_is_independent_of_deadline_slicing() {
     run_to(&mut reference, &mut Ledger::default(), INTERACTIVE_LANE_FUEL, Driven::Complete);
     let mut job = new_job(&graph, config);
     let mut ledger = Ledger::default();
-    let cancel = root_cancel_token();
-    let owner = new_owner();
     let mut yields = 0;
     loop {
-        let (silent, driven) = step_once(&owner, &mut job, &mut ledger, INTERACTIVE_LANE_FUEL, 0, &cancel);
+        let (silent, driven) = step_once(&mut job,&mut ledger,INTERACTIVE_LANE_FUEL,0);
         if silent {
             yields += 1;
+            let _=step_once(&mut job,&mut ledger,INTERACTIVE_LANE_FUEL,u64::MAX);
         }
         if driven == Some(Driven::Complete) {
             break;
         }
     }
-    retire_delivered(&owner, &mut job, &mut ledger, &cancel);
-    close_owner(owner);
+    retire_delivered(&mut job,&mut ledger);
     assert!(yields > 0, "an expired deadline slices iterations into several steps");
     assert_eq!(job.positions_digest(), reference.positions_digest(), "slicing by deadline does not change the layout");
 }
@@ -432,7 +409,7 @@ fn layout_run_resumes_from_its_checkpoint_to_the_same_layout_and_refuses_foreign
     let positions = first.positions();
     let provisional = ledger.ops.len() as u32;
     let checkpoint_ops = ledger.ops.clone();
-    let mut resumed = LayoutRunJob::resume(identity(), &graph, config, encode_move as TestEncoder, &positions, &checkpoint, provisional).expect("own checkpoint resumes");
+    let mut resumed = FixtureLayoutRunJob::from_preborn(LayoutRunJob::resume(identity(), &graph, config, encode_move as TestEncoder, &positions, &checkpoint, provisional).expect("own checkpoint resumes"),frozen_now);
     run_to(&mut resumed, &mut ledger, INTERACTIVE_LANE_FUEL, Driven::Complete);
     assert_eq!(resumed.iteration(), reference.iteration(), "resume continues the iteration count");
     assert_eq!(resumed.positions_digest(), reference.positions_digest(), "resume from the checkpoint reproduces the uninterrupted layout");
@@ -448,7 +425,7 @@ fn layout_run_resumes_from_its_checkpoint_to_the_same_layout_and_refuses_foreign
     wrong_magic[0] ^= 1;
     assert_eq!(resume(&graph, &wrong_magic, provisional), Some(LayoutRunResumeError::Malformed));
     assert_eq!(LayoutRunJob::resume(identity(), &graph, config, encode_move as TestEncoder, &positions[1..], &checkpoint, provisional).err(), Some(LayoutRunResumeError::Positions));
-    let consumer = |bytes: &[u8], provisional_len: u32, positions: Vec<LayoutRunPoint>| layout_run_job(identity(), &graph, config, || encode_move as TestEncoder, Some(LayoutRunResume { checkpoint: bytes, positions, provisional_len })).expect("the consumer entry always yields a job");
+    let consumer = |bytes: &[u8], provisional_len: u32, positions: Vec<LayoutRunPoint>| FixtureLayoutRunJob::from_preborn(layout_run_job(identity(), &graph, config, || encode_move as TestEncoder, Some(LayoutRunResume { checkpoint: bytes, positions, provisional_len })).expect("the consumer entry always yields a job"),frozen_now);
     assert_eq!(consumer(&checkpoint, provisional, positions.clone()).iteration(), decoded.iteration, "the consumer entry resumes its own checkpoint");
     assert_eq!(consumer(&checkpoint[..43], provisional, positions.clone()).iteration(), 0, "a malformed checkpoint starts fresh");
     assert_eq!(consumer(&checkpoint, provisional, layout_run_overlay_positions(&graph, [])).iteration(), 0, "unplaced overlay positions start fresh");
@@ -456,7 +433,7 @@ fn layout_run_resumes_from_its_checkpoint_to_the_same_layout_and_refuses_foreign
     assert_eq!(layout_run_job(identity(), &other, LayoutRunConfig { max_iterations: 0, ..config }, || encode_move as TestEncoder, None).err(), Some(LayoutRunStartError::Config(LayoutRunConfigError { field: "maxIterations" })));
     assert_eq!(layout_run_entity("node-1"), u64::from_le_bytes(semio_framework_hash::hash(b"node-1").as_bytes()[..8].try_into().expect("digest")));
     let reconfigured = LayoutRunConfig { ideal_edge_length: 60.0, ..config };
-    let mut retargeted = LayoutRunJob::resume(identity(), &graph, reconfigured, encode_move as TestEncoder, &positions, &checkpoint, provisional).expect("changed settings resume");
+    let mut retargeted = FixtureLayoutRunJob::from_preborn(LayoutRunJob::resume(identity(), &graph, reconfigured, encode_move as TestEncoder, &positions, &checkpoint, provisional).expect("changed settings resume"),frozen_now);
     let mut retargeted_ledger = Ledger { ops: checkpoint_ops, ..Ledger::default() };
     run_to(&mut retargeted, &mut retargeted_ledger, INTERACTIVE_LANE_FUEL, Driven::Complete);
     assert_ne!(retargeted.positions_digest(), reference.positions_digest(), "new settings change the continued layout");
@@ -557,22 +534,15 @@ fn layout_run_step_stays_below_the_interactive_target_on_a_5000_node_grid() {
             *replay = attempt > 0;
             *cursor = 0;
         });
-        let mut job = new_job(&graph, config);
+        let mut job=FixtureLayoutRunJob::from_preborn(LayoutRunJob::new(identity(),&graph,config,encode_move as TestEncoder).expect("timing run"),replay_now);
         let mut ledger = Ledger::default();
-        let cancel = root_cancel_token();
-        let owner = new_owner();
-        let mut sequence = 0;
         let mut verdict = None;
         let mut step = 0;
         while ledger.checkpoints.is_empty() {
             let now = replay_now().expect("clock");
             let budget = StepBudget::from_duration(INTERACTIVE_LANE_FUEL, now, INTERACTIVE_LANE_WALL_US, wallet()).expect("budget");
-            let mut receipt = RetainedCloneProgress::default();
-            let started = std::time::Instant::now();
-            let descriptor = {
-                let mut cx = owner.context(budget, cancel.clone(), replay_now, &mut sequence, &mut receipt).expect("step context");
-                drive_step(&mut job, &mut cx, "layout-run-step-law", InteractiveStage::InteractiveStep, &mut verdict).expect("driven step").map(JobOutcomeBorrow::into_descriptor)
-            };
+            let started=std::time::Instant::now();
+            let descriptor=job.turn(wallet(),|job,cx|{let mut result=None;cx.with_original_work_loan(budget.fuel,budget.deadline_us,|cx|{result=Some(drive_step(job,cx,"layout-run-step-law",InteractiveStage::InteractiveStep,&mut verdict)?.map(JobOutcomeBorrow::into_descriptor));Ok(())})?;Ok(result.unwrap())}).expect("timed original layout step");
             let elapsed = started.elapsed().as_micros() as u64;
             match best.get_mut(step) {
                 Some(slot) => *slot = (*slot).min(elapsed),
@@ -581,9 +551,8 @@ fn layout_run_step_stays_below_the_interactive_target_on_a_5000_node_grid() {
             step += 1;
             driven(read_outcome(&job, descriptor, &mut ledger));
         }
-        retire_delivered(&owner, &mut job, &mut ledger, &cancel);
-        close_owner(owner);
-        assert_eq!(job.iteration(), iterations, "the law measures the configured iterations plus one 5 000-node compaction");
+        retire_delivered(&mut job,&mut ledger);
+            assert_eq!(job.iteration(), iterations, "the law measures the configured iterations plus one 5 000-node compaction");
         assert_eq!(ledger.ops.len(), graph.nodes.len(), "the compaction publishes every seeded node once");
         assert!(ledger.max_tick_bytes <= JOB_PAYLOAD_PAGE_BYTES);
         assert_eq!(step, best.len(), "every attempt replays the same step slicing");
@@ -638,13 +607,11 @@ fn layout_run_encoder_faults_and_cancellation_end_the_run() {
     let fixture = fixture();
     let graph = case_graph(&fixture["cases"][0]);
     let failing: TestEncoder = |_, _, _| Err(LayoutRunEncodeError("refused".to_string()));
-    let mut job = LayoutRunJob::new(identity(), &graph, LayoutRunConfig::default(), failing).expect("valid run");
-    let cancel = root_cancel_token();
+    let mut job = FixtureLayoutRunJob::from_preborn(LayoutRunJob::new(identity(), &graph, LayoutRunConfig::default(), failing).expect("valid run"),frozen_now);
     let mut faulted = false;
     let mut ledger = Ledger::default();
-    let owner = new_owner();
     for _ in 0..1000 {
-        let descriptor = step_with(&owner, &mut job, StepBudget::new(1, u64::MAX, wallet()), &cancel, frozen_now);
+        let descriptor = step_with(&mut job,StepBudget::new(1,u64::MAX,wallet()));
         if let Observed::Fault(detail) = read_outcome(&job, descriptor, &mut ledger) {
             assert_eq!(detail, b"refused");
             faulted = true;
@@ -654,17 +621,13 @@ fn layout_run_encoder_faults_and_cancellation_end_the_run() {
         }
     }
     assert!(faulted, "an encoder error faults the run");
-    retire_delivered(&owner, &mut job, &mut ledger, &cancel);
+    retire_delivered(&mut job,&mut ledger);
     layout_run_close_job(&mut job);
-    close_owner(owner);
     let mut cancelled = new_job(&graph, LayoutRunConfig::default());
-    let token = root_cancel_token();
-    token.cancel_now();
-    let owner = new_owner();
-    let descriptor = step_with(&owner, &mut cancelled, StepBudget::new(1, u64::MAX, wallet()), &token, frozen_now);
+    cancelled.cancel_original();
+    let descriptor = step_with(&mut cancelled,StepBudget::new(1,u64::MAX,wallet()));
     assert_eq!(read_outcome(&cancelled, descriptor, &mut ledger), Observed::Cancelled);
     layout_run_close_job(&mut cancelled);
-    close_owner(owner);
 }
 
 #[test]
@@ -674,11 +637,11 @@ fn layout_run_close_releases_every_owned_buffer_in_bounded_steps() {
     let mut job = new_job(&graph, LayoutRunConfig::default());
     run_to(&mut job, &mut Ledger::default(), INTERACTIVE_LANE_FUEL, Driven::Checkpoint);
     let grant = wallet();
-    assert_eq!(job.close_step(grant), InteractiveJobCloseStep::Blocked, "close waits for begin_close");
+    assert_eq!(job.close_on_original(grant), InteractiveJobCloseStep::Blocked, "close waits for begin_close");
     job.begin_close();
     let mut steps = 0;
     loop {
-        match job.close_step(grant) {
+        match job.close_on_original(grant) {
             InteractiveJobCloseStep::Pending { progress } => assert_eq!(progress.copied_items, 1),
             InteractiveJobCloseStep::Complete { .. } => break,
             InteractiveJobCloseStep::Blocked => panic!("close never blocks once begun"),
@@ -716,8 +679,11 @@ fn layout_run_definition_matches_the_schema_tool_run_table() {
     assert_eq!(LayoutRunConfig::from_value(config.to_value()).expect("config value round trip"), config);
     let graph = case_graph(&fixture()["cases"][3]);
     assert_eq!(LayoutRunGraph::from_value(graph.to_value()).expect("graph value round trip"), graph);
-    let boxed: Box<dyn InteractiveJob + Send> = Box::new(new_job(&graph, config));
-    assert!(!boxed.terminal_is_empty(), "the layout run boxes as the ToolRun ledger's job type");
+    let mut boxed:Option<Box<dyn InteractiveJob+Send>>=Some(Box::new(LayoutRunJob::new(identity(),&graph,config,encode_move as TestEncoder).unwrap()));
+    assert!(!boxed.as_ref().unwrap().terminal_is_empty(),"the layout run boxes as the ToolRun ledger's job type");
+    let mut original=OriginalJobFixtureCaller::admit(OperationId(1),Generation(1),ORIGINAL_STOCK,frozen_now,u64::MAX,1<<28);
+    boxed.as_mut().unwrap().begin_close();for _ in 0..4096{if boxed.as_ref().unwrap().terminal_is_empty(){break}original.turn(wallet(),|cx|{boxed.as_mut().unwrap().close_step(cx)?;Ok(())}).unwrap();}assert!(boxed.as_ref().unwrap().terminal_is_empty());
+    original.turn(wallet(),|cx|{semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{release_bytes:std::mem::size_of::<LayoutRunJob<TestEncoder>>(),depth:1,..Default::default()},|_|{drop(boxed.take());Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:std::mem::size_of::<LayoutRunJob<TestEncoder>>(),..Default::default()}))})?;Ok(())}).unwrap();original.retire(ORIGINAL_STOCK);
     let checkpoint = LayoutRunCheckpoint { node_count: 3, graph_digest: 9, iteration: 4, settle_streak: 2, provisional_len: 5, center: [1.5, -2.0] };
     assert_eq!(LayoutRunCheckpoint::decode(&checkpoint.encode()), Some(checkpoint));
 }

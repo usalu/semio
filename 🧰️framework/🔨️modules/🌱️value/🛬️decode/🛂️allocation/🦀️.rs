@@ -31,6 +31,7 @@ impl<'a> NativeDecodeControl<'a>{
 impl<'a> NativeForwardedDecodeControl<'a>{
  /// ⏸️ Ends this import loan while retaining the actual recipient identity and consuming ledger.
  pub fn detach(self)->Result<NativeForwardedDecodeReceipt,(ValueError,Self)>{
+  if self.inner.construction.is_some(){return Err((ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native construction loan cannot detach from its original receiving hop"),self));}
   let receipt=match self.inner.continuation(){Ok(receipt)=>receipt,Err(error)=>return Err((error,self))};
   let Some(recipient)=self.inner.retirement.as_ref()else{return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"detached native receiving requires its original retained recipient"),self))};
   Ok(NativeForwardedDecodeReceipt{receipt,recipient:recipient.identity})
@@ -41,7 +42,7 @@ impl<'a> NativeForwardedDecodeControl<'a>{
   let mut inner=NativeDecodeControl::resume(receipt.receipt,callback).expect("validated original native receiving receipt");inner.allocation=Binding::Forwarded(allocate);inner.retirement=Some(recipient);Ok(Self{inner})
  }
  /// ⏸️ Moves original allocation and retirement authority together with the cumulative receipt.
- pub fn pause(mut self)->Result<NativeForwardedDecodeContinuation<'a>,ValueError>{let receipt=self.inner.continuation()?;let Binding::Forwarded(allocate)=std::mem::replace(&mut self.inner.allocation,Binding::Local)else{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"forwarded decoder lacks original allocation port"))};Ok(NativeForwardedDecodeContinuation{receipt:Some(receipt),allocate,retirement:self.inner.retirement.take()})}
+ pub fn pause(mut self)->Result<NativeForwardedDecodeContinuation<'a>,ValueError>{if self.inner.construction.is_some(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native construction loan cannot pause outside its original receiving hop"));}let receipt=self.inner.continuation()?;let Binding::Forwarded(allocate)=std::mem::replace(&mut self.inner.allocation,Binding::Local)else{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"forwarded decoder lacks original allocation port"))};Ok(NativeForwardedDecodeContinuation{receipt:Some(receipt),allocate,retirement:self.inner.retirement.take()})}
  /// ▶️ Rebinds only progress while retaining original allocation and retirement authority.
  pub fn resume(receipt:NativeForwardedDecodeContinuation<'a>,callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool)->Result<Self,ValueError>{let mut inner=NativeDecodeControl::resume(receipt.receipt.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"forwarded decoder is already receiving"))?,callback)?;inner.allocation=Binding::Forwarded(receipt.allocate);inner.retirement=receipt.retirement;Ok(Self{inner})}
 }

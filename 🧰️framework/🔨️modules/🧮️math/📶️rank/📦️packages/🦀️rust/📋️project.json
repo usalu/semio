@@ -1,0 +1,22 @@
+{
+  "name": "@semio-tech/math-rank-rs",
+  "projectType": "library",
+  "targets": {
+    "test-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-source",
+        "cwd": "🧰️framework/🔨️modules/🧮️math/📶️rank/📦️packages/🦀️rust"
+      }
+    },
+    "test": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test",
+        "cwd": "🧰️framework/🔨️modules/🧮️math/📶️rank/📦️packages/🦀️rust"
+      }
+    }
+  }
+}

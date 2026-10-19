@@ -58,15 +58,25 @@ impl OpBinary for ChangePublicationTransient {
 impl MutationKind<PublicationTransient, PublicationTransientMutation> for ChangePublicationTransient {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "publication-transient", kind: "change-publication-transient", record: "ChangedPublicationTransient" };
 
-    fn diff(&self, _base: &PublicationTransient) -> MutationOutcome<crate::publication_fixture::transient::PublicationTransientDiff> {
-        MutationOutcome::new(crate::publication_fixture::transient::PublicationTransientDiff { revision: Some(self.revision) })
-    }
 
-    fn inverse(&self, base: &PublicationTransient) -> Result<Vec<PublicationTransientMutation>, semio_framework_value::ValueError> {
-        Ok((|| vec![Self { revision: base.revision }.into()])())
-    }
+
+
+
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change publication transient to {}", self.revision), &format!("Transiente Veröffentlichung auf {} ändern", self.revision))
     }
 }
+
+impl crate::os_spr::ColdMutationKind<PublicationTransient, PublicationTransientMutation> for ChangePublicationTransient {
+    fn diff(&self, _base: &PublicationTransient) -> MutationOutcome<crate::publication_fixture::transient::PublicationTransientDiff> {
+        MutationOutcome::new(crate::publication_fixture::transient::PublicationTransientDiff { revision: Some(self.revision) })
+    }
+    fn inverse(&self, base: &PublicationTransient) -> Result<Vec<PublicationTransientMutation>, semio_framework_value::ValueError> {
+        Ok((|| vec![Self { revision: base.revision }.into()])())
+    }
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️sum-law/🦀️.rs"]
+mod sum_law_tests;

@@ -1,0 +1,11 @@
+{
+  "cases": [
+    {"request": {"intent": "dev", "originalMode": "prototype"}, "mode": "prototype"},
+    {"request": {"intent": "dev", "originalMode": "release"}, "mode": "release"},
+    {"request": {"intent": "release", "originalMode": "release"}, "mode": "release"},
+    {"request": {"intent": "release", "originalMode": "prototype"}, "mode": null},
+    {"request": {"intent": "publish", "originalMode": "release"}, "mode": null},
+    {"request": {"intent": "release", "originalMode": "production"}, "mode": null},
+    {"request": {"intent": "release"}, "mode": null}
+  ]
+}

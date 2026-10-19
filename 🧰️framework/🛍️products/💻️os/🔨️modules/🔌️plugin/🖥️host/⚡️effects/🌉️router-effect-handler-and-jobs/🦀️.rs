@@ -63,7 +63,7 @@ impl InteractiveJob for DynRouterEffectJob {
         use semio_framework_job::OriginalTurnFailure;
         let grant=cx.retained_grant();
         if self.0.is_none(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}
-        if cx.should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
+        if cx.retirement_should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
         let demand=self.close_demands(grant.maximum_copy_bytes).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
         let original=self.0.as_mut().expect("original router close owns job");
@@ -71,7 +71,8 @@ impl InteractiveJob for DynRouterEffectJob {
             let progress=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()};
             cx.consume_retained(progress)?;drop(self.0.take());cx.consume_fuel(1);return Ok(InteractiveJobCloseStep::Complete{progress})
         }
-        let step=original.close_step(cx)?.admit(grant,original.terminal_is_empty()).map_err(OriginalTurnFailure::from)?;
+        let child=semio_framework_value::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
+        let step=cx.with_retained_loan(child,|cx|original.close_step(cx))?.admit(grant,original.terminal_is_empty()).map_err(OriginalTurnFailure::from)?;
         Ok(match step{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step})
     }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.copy_bytes) }
@@ -154,7 +155,7 @@ impl InteractiveJob for FaultRouterEffectJob {
 
     fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         self.begin_close();
-        let grant=cx.retained_grant();if cx.should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
+        let grant=cx.retained_grant();if cx.retirement_should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
         let step=close_router_effect_sources(&mut self.writer,&mut self.detail,grant).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
         cx.consume_retained(step.progress())?;if step.progress().copied_items!=0{cx.consume_fuel(1)}Ok(step)
     }
@@ -210,7 +211,7 @@ impl InteractiveJob for CompleteRouterEffectJob {
 
     fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         self.begin_close();
-        let grant=cx.retained_grant();if cx.should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
+        let grant=cx.retained_grant();if cx.retirement_should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
         let step=close_router_effect_sources(&mut self.writer,&mut self.output,grant).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
         cx.consume_retained(step.progress())?;if step.progress().copied_items!=0{cx.consume_fuel(1)}Ok(step)
     }

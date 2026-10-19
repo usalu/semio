@@ -1,0 +1,25 @@
+{
+  "name": "@semio-tech/framework-original-slot",
+  "tags": [
+    "framework",
+    "value"
+  ],
+  "targets": {
+    "verify-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot",
+        "command": "bun ./📜️script.ts verify source"
+      }
+    },
+    "verify-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot",
+        "command": "bun ./📜️script.ts verify native"
+      }
+    }
+  }
+}

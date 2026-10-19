@@ -11,7 +11,9 @@ impl semio_framework_pack_source::PackSink for SnapshotPageSink {
     async fn write_all(&mut self, bytes: &[u8]) -> Result<(), pack::PackError> {
         let mut cursor = 0;
         while cursor < bytes.len() {
-            cursor += self.writer.write_fragment(&bytes[cursor..]).map_err(|error| pack::PackError::Io(error.to_string()))?;
+            let written = self.writer.write_fragment(&bytes[cursor..])?;
+            if written == 0 { return Err(DbError::LimitExceeded("snapshot page writer accepted no bytes")); }
+            cursor += written;
             std::future::poll_fn(|context| {
                 context.waker().wake_by_ref();
                 std::task::Poll::Ready(())

@@ -1,6 +1,6 @@
 mod tests {
-    /// 🧪️ The store type aliases live in `crate::standards::v1::subsets::any::schema::mutations` (`Fem2dEnvelope`/`Fem2dStore`) and
-    /// are exercised by that node's own tests plus `crate::standards::v1::subsets::any::io::binary::mutations`'s
+    /// 🧪️ The store type aliases live in `semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations` (`Fem2dEnvelope`/`Fem2dStore`) and
+    /// are exercised by that node's own tests plus `semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::io::binary::mutations`'s
     /// `fem2d_document_text_round_trips_through_the_store`.
     #[test]
     fn fem2d_store_type_alias_constructs_from_an_empty_envelope() {
@@ -13,8 +13,6 @@ mod tests {
         .expect("valid store");
         store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot, semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
         assert!(store.snapshot().expect("snapshot").nodes.is_empty());
-        while !store.close_owned_terminal_is_empty() {
-            store.close_owned_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("fem2d document store closes through its exact bounded owners");
-        }
+        store.close_owned_unscheduled().expect("fem2d document store closes through its exact bounded owners");
     }
 }

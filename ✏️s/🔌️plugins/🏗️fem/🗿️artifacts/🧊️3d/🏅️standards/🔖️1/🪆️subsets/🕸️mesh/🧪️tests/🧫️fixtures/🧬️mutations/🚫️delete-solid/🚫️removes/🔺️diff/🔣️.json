@@ -4,13 +4,13 @@
   "materials": null,
   "sections": null,
   "solids": {
-    "inserted": [],
     "removed": [
       {
         "id": "slab",
         "index": 0
       }
     ],
+    "inserted": [],
     "moved": [],
     "modified": []
   },

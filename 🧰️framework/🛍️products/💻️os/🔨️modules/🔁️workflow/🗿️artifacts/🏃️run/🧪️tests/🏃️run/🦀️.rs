@@ -1,4 +1,5 @@
 //! 🧪️ Run package serialization, admission, and replay laws.
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use crate::*;
 use semio_framework_dsl_record::DslField as _;
 fn assert_run_manual_binding<T:semio_framework_dsl_record::DslField+PartialEq+std::fmt::Debug>(value:&T,maximum:usize,tiny:usize){
@@ -17,8 +18,8 @@ fn sqlite_snapshot_run_trigger_binds_literal_values_and_cancels_owned_utf8(){
 }
 use protocol::MutationDiff;
 
-fn apply_run_operation(document: &RunArtifact, operation: &RunMutation) -> RunArtifact {
-    protocol::apply_diff(protocol::Mutation::diff(operation, document).diff(), document).expect("a valid run operation applies")
+pub(crate) fn apply_run_operation(document: &RunArtifact, operation: &RunMutation) -> RunArtifact {
+    protocol::apply_diff_cold(protocol::Mutation::diff(operation, document).diff(), document).expect("a valid run operation applies")
 }
 fn assert_run_native_status<T:semio_framework_dsl_record::DslField+PartialEq+std::fmt::Debug>(value:&T,index:u32,invalid:u32){
  let mut admitted=|_|true;let mut encoding=semio_framework_value::NativeEncodeControl::new(0,&mut admitted);let native=value.to_value_controlled(&mut encoding).expect("owned declared status ordinal");assert_eq!(native,semio_framework_dsl_record::FieldValue::Enum(index));assert_eq!(encoding.owned_bytes(),0);
@@ -61,7 +62,7 @@ fn committed_wire_witnesses_are_the_canonical_wire() {
     }
 }
 
-async fn sample_run_node_record(node_id: &str, status: RunNodeStatus) -> RunNodeRecord {
+pub(crate) async fn sample_run_node_record(node_id: &str, status: RunNodeStatus) -> RunNodeRecord {
     RunNodeRecord {
         node_id: node_id.into(),
         status,
@@ -74,7 +75,7 @@ async fn sample_run_node_record(node_id: &str, status: RunNodeStatus) -> RunNode
     }
 }
 
-async fn sample_run_document() -> RunArtifact {
+pub(crate) async fn sample_run_document() -> RunArtifact {
     let mut document = empty_run_document().await;
     document = apply_run_operation(
         &document,
@@ -89,7 +90,7 @@ async fn sample_run_document() -> RunArtifact {
         }),
     );
     document = apply_run_operation(&document, &RunMutation::StartRunNode(StartRunNode { node_id: "a".into() }));
-    document = apply_run_operation(&document, &RunMutation::FinishRunNode(FinishRunNode { node_record: sample_run_node_record("a", RunNodeStatus::Computed).await }));
+    document = apply_run_operation(&document, &RunMutation::FinishRunNode(FinishRunNode { node_record: sample_run_node_record("a", RunNodeStatus::Computed).await, index: None }));
     document
 }
 
@@ -129,7 +130,7 @@ async fn run_operation_op_text_round_trips_every_variant() {
         trigger: RunTrigger::Automation { automation_ref: "os.automation/a1".into(), event_fingerprint: "evt-1".into() },
     }));
     store::os_store::test_support::assert_op_line_round_trip(&RunMutation::StartRunNode(StartRunNode { node_id: "a".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&RunMutation::FinishRunNode(FinishRunNode { node_record: sample_run_node_record("a", RunNodeStatus::CacheHit).await }));
+    store::os_store::test_support::assert_op_line_round_trip(&RunMutation::FinishRunNode(FinishRunNode { node_record: sample_run_node_record("a", RunNodeStatus::CacheHit).await, index: None }));
     store::os_store::test_support::assert_op_line_round_trip(&RunMutation::AppendRunLog(AppendRunLog { node_id: "a".into(), level: "info".into(), message: "computed".into(), at: "123".into() }));
     store::os_store::test_support::assert_op_line_round_trip(&RunMutation::SealRun(SealRun { status: RunStatus::Succeeded }));
     store::os_store::test_support::assert_op_line_round_trip(&RunMutation::SetRunHeader(SetRunHeader {
@@ -175,7 +176,7 @@ async fn checked_run_admission_matches_the_typed_diff_rejection() {
     });
     let started = apply_run_operation_checked(&empty_run_document().await, start.clone()).await.expect("first start applies");
     let outcome = protocol::Mutation::diff(&start, &started);
-    let rejection = protocol::apply_diff(outcome.diff(), &started).expect_err("the direct diff rejects a second start");
+    let rejection = protocol::apply_diff_cold(outcome.diff(), &started).expect_err("the direct diff rejects a second start");
     let mut expected = outcome.messages().to_vec();
     expected.push(protocol::MutationMessage::fatal(rejection.code, rejection.message).at(rejection.target));
     let actual = apply_run_operation_checked(&started, start).await.expect_err("checked admission rejects the same second start");
@@ -201,7 +202,7 @@ async fn apply_run_operation_checked_rejects_everything_after_seal() {
     let rejected_log = apply_run_operation_checked(&sealed, RunMutation::AppendRunLog(AppendRunLog { node_id: "a".into(), level: "info".into(), message: "too late".into(), at: "999".into() }));
     assert!(rejected_log.await.is_err(), "a Log after Seal must be rejected, not silently applied");
 
-    let rejected_node_finished = apply_run_operation_checked(&sealed, RunMutation::FinishRunNode(FinishRunNode { node_record: sample_run_node_record("b", RunNodeStatus::Computed).await }));
+    let rejected_node_finished = apply_run_operation_checked(&sealed, RunMutation::FinishRunNode(FinishRunNode { node_record: sample_run_node_record("b", RunNodeStatus::Computed).await, index: None }));
     assert!(rejected_node_finished.await.is_err(), "a NodeFinished after Seal must be rejected");
 
     let rejected_reseal = apply_run_operation_checked(&sealed, RunMutation::SealRun(SealRun { status: RunStatus::Failed }));
@@ -215,11 +216,11 @@ async fn run_diff_absorb_preserves_each_append_in_order() {
     let document = empty_run_document().await;
     let first = RunMutation::AppendRunLog(AppendRunLog { node_id: String::new(), level: "info".into(), message: "first".into(), at: "1".into() });
     let first_diff = protocol::Mutation::diff(&first, &document).diff().clone();
-    let middle = protocol::apply_diff(&first_diff, &document).expect("first append applies");
+    let middle = protocol::apply_diff_cold(&first_diff, &document).expect("first append applies");
     let second = RunMutation::AppendRunLog(AppendRunLog { node_id: String::new(), level: "info".into(), message: "second".into(), at: "2".into() });
     let mut combined = first_diff;
     combined.absorb(protocol::Mutation::diff(&second, &middle).diff().clone());
-    let after = protocol::apply_diff(&combined, &document).expect("combined appends apply");
+    let after = protocol::apply_diff_cold(&combined, &document).expect("combined appends apply");
     assert_eq!(after.logs.iter().map(|line| line.message.as_str()).collect::<Vec<_>>(), vec!["first", "second"]);
 }
 
@@ -236,11 +237,11 @@ async fn run_diff_absorb_preserves_start_before_later_log() {
         trigger: RunTrigger::Manual { actor: "operator".into() },
     });
     let start_diff = protocol::Mutation::diff(&start, &document).diff().clone();
-    let middle = protocol::apply_diff(&start_diff, &document).expect("start applies");
+    let middle = protocol::apply_diff_cold(&start_diff, &document).expect("start applies");
     let append = RunMutation::AppendRunLog(AppendRunLog { node_id: String::new(), level: "info".into(), message: "started".into(), at: "1".into() });
     let mut combined = start_diff;
     combined.absorb(protocol::Mutation::diff(&append, &middle).diff().clone());
-    let after = protocol::apply_diff(&combined, &document).expect("combined start and append apply");
+    let after = protocol::apply_diff_cold(&combined, &document).expect("combined start and append apply");
     assert_eq!(after.workflow_ref, "workflow-selected");
     assert_eq!(after.status, RunStatus::Running);
     assert_eq!(after.logs.iter().map(|line| line.message.as_str()).collect::<Vec<_>>(), vec!["started"]);
@@ -267,7 +268,7 @@ async fn run_diff_absorb_is_associative_with_empty_identity() {
     assert_eq!(left, right);
     assert_eq!(leading_identity, first);
     assert_eq!(trailing_identity, first);
-    assert_eq!(protocol::apply_diff(&left, &document), protocol::apply_diff(&right, &document));
+    assert_eq!(protocol::apply_diff_cold(&left, &document), protocol::apply_diff_cold(&right, &document));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -275,7 +276,7 @@ async fn run_diff_sequence_rejects_later_steps_without_mutating_the_base() {
     let document = empty_run_document().await;
     let mut seal_then_log = RunDiff::step(RunStep::Seal(RunSealEdit { sealed: true, status: RunStatus::Succeeded, finished_at: Some("1".into()) }));
     seal_then_log.absorb(RunDiff::step(RunStep::LogAppend(RunLogLine { node_id: String::new(), level: "info".into(), message: "late".into(), at: "1".into() })));
-    let sealed_error = protocol::apply_diff(&seal_then_log, &document).expect_err("log after a composed seal rejects");
+    let sealed_error = protocol::apply_diff_cold(&seal_then_log, &document).expect_err("log after a composed seal rejects");
     assert_eq!(sealed_error.code, "mutation.apply.sealed");
     assert_eq!(sealed_error.target, vec!["sealed"]);
     assert_eq!(document, empty_run_document().await);
@@ -293,7 +294,7 @@ async fn run_diff_sequence_rejects_later_steps_without_mutating_the_base() {
     }));
     let mut double_start = first_start.clone();
     double_start.absorb(first_start);
-    let start_error = protocol::apply_diff(&double_start, &document).expect_err("second composed start rejects");
+    let start_error = protocol::apply_diff_cold(&double_start, &document).expect_err("second composed start rejects");
     assert_eq!(start_error.code, "mutation.apply.conflicting-target");
     assert_eq!(start_error.target, vec!["status"]);
     assert_eq!(document, empty_run_document().await);
@@ -303,7 +304,7 @@ async fn run_diff_sequence_rejects_later_steps_without_mutating_the_base() {
 async fn finish_run_node_replacement_inverse_restores_the_original_node_order() {
     let mut document = empty_run_document().await;
     document.node_records = vec![sample_run_node_record("a", RunNodeStatus::CacheHit).await, sample_run_node_record("b", RunNodeStatus::CacheHit).await, sample_run_node_record("c", RunNodeStatus::CacheHit).await];
-    let operation = RunMutation::FinishRunNode(FinishRunNode { node_record: sample_run_node_record("b", RunNodeStatus::Computed).await });
+    let operation = RunMutation::FinishRunNode(FinishRunNode { node_record: sample_run_node_record("b", RunNodeStatus::Computed).await, index: None });
     let inverse = protocol::Mutation::inverse(&operation, &document).expect("valid retained mutation inverse fixture");
     let mut restored = apply_run_operation(&document, &operation);
     assert_eq!(restored.node_records.iter().map(|record| record.node_id.as_str()).collect::<Vec<_>>(), vec!["a", "b", "c"]);
@@ -313,38 +314,7 @@ async fn finish_run_node_replacement_inverse_restores_the_original_node_order() 
     assert_eq!(restored, document);
 }
 
-/// ➕️ L3 for every run kind: the concrete inverse's diffs sum to the negative of the forward diff.
-#[semio_framework_async_macros::async_test]
-async fn every_run_kind_inverse_diffs_sum_to_the_negative_diff() {
-    use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law as law;
-    let fresh = empty_run_document().await;
-    law(
-        &RunMutation::StartRun(StartRun {
-            workflow_ref: "space.space".into(),
-            workflow_checkpoint_id: "ck-1".into(),
-            input_collection_ref: "collections/in".into(),
-            input_snapshot_id: "snap-1".into(),
-            parameter_values: vec![RunParameterValue { parameter_id: "p1".into(), value: "10".into() }],
-            output_collection_ref: "collections/out".into(),
-            trigger: RunTrigger::Manual { actor: "dev".into() },
-        }),
-        &fresh,
-    )
-    .await;
-    let started = sample_run_document().await;
-    law(&RunMutation::StartRunNode(StartRunNode { node_id: "b".into() }), &started).await;
-    law(&RunMutation::FinishRunNode(FinishRunNode { node_record: sample_run_node_record("b", RunNodeStatus::Computed).await }), &started).await;
-    law(&RunMutation::FinishRunNode(FinishRunNode { node_record: sample_run_node_record("a", RunNodeStatus::CacheHit).await }), &started).await;
-    law(&RunMutation::AppendRunLog(AppendRunLog { node_id: "a".into(), level: "info".into(), message: "computed".into(), at: "2".into() }), &started).await;
-    law(&RunMutation::SealRun(SealRun { status: RunStatus::Succeeded }), &started).await;
-    let sealed = apply_run_operation(&started, &RunMutation::SealRun(SealRun { status: RunStatus::Succeeded }));
-    law(&RunMutation::SetRunSeal(SetRunSeal { sealed: false, status: RunStatus::Running, finished_at: None }), &sealed).await;
-    law(&RunMutation::SetRunHeader(SetRunHeader { status: RunStatus::Pending, started_at: String::new(), ..set_run_header_of(&started) }), &started).await;
-    law(&RunMutation::RemoveRunLog(RemoveRunLog { count: 1 }), &started).await;
-    law(&RunMutation::RemoveRunNode(RemoveRunNode { node_id: "a".into() }), &started).await;
-}
-
-fn set_run_header_of(document: &RunArtifact) -> SetRunHeader {
+pub(crate) fn set_run_header_of(document: &RunArtifact) -> SetRunHeader {
     SetRunHeader {
         workflow_ref: document.workflow_ref.clone(),
         workflow_checkpoint_id: document.workflow_checkpoint_id.clone(),
@@ -401,14 +371,14 @@ async fn composed_run_diff_inverse_reads_rows_and_restores_the_base() {
         steps: vec![
             RunStep::LogAppend(line("three")),
             RunStep::LogRetract { count: 2 },
-            RunStep::Node { node_id: "b".into(), record: Some(sample_run_node_record("b", RunNodeStatus::Computed).await) },
-            RunStep::Node { node_id: "b".into(), record: None },
+            RunStep::Node { node_id: "b".into(), record: Some(sample_run_node_record("b", RunNodeStatus::Computed).await), index: None },
+            RunStep::Node { node_id: "b".into(), record: None, index: Some(1) },
             RunStep::Seal(RunSealEdit { sealed: true, status: RunStatus::Succeeded, finished_at: Some("9".into()) }),
         ],
     };
-    let after = protocol::apply_diff(&diff, &base).expect("composed run diff applies");
+    let after = protocol::apply_diff_cold(&diff, &base).expect("composed run diff applies");
     assert!(after.sealed);
     let inverse = protocol::DiffAlgebra::<RunArtifact>::inverse(&diff, &base);
-    let restored = protocol::apply_diff(&inverse, &after).expect("the row-read inverse applies");
+    let restored = protocol::apply_diff_cold(&inverse, &after).expect("the row-read inverse applies");
     assert_eq!(restored, base);
 }

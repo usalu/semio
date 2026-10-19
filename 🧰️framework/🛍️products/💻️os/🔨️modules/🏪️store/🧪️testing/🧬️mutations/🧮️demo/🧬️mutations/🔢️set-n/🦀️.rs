@@ -14,6 +14,17 @@ pub struct SetN {
 
 impl semio_framework_os_spr::MutationKind<DemoSnapshot, DemoMutation> for SetN {
     const SEMANTICS: semio_framework_os_spr::SemanticDescriptor = semio_framework_os_spr::SemanticDescriptor { verb: "set", entity: "n", kind: "set-n", record: "SetN" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set N", "N setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["n".into()]
+    }
+}
+
+impl semio_framework_os_spr::ColdMutationKind<DemoSnapshot, DemoMutation> for SetN {
     fn diff(&self, base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<DemoDiff> {
         if base.n.is_none() {
             return semio_framework_os_spr::MutationOutcome::error("mutation.target-missing", "n was deleted by a concurrent edit", ["n"]);
@@ -29,10 +40,4 @@ impl semio_framework_os_spr::MutationKind<DemoSnapshot, DemoMutation> for SetN {
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set N", "N setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["n".into()]
-    }
 }

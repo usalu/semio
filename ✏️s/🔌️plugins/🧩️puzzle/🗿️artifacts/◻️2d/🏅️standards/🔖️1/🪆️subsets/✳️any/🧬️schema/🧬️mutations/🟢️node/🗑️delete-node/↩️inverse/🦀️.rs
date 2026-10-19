@@ -1,5 +1,5 @@
-//! ↩️ Inverse for `DeleteNode` — reconstructs a `create-node` of the captured BASE node, then
 //! re-`connect-handles`es every edge BASE shows touching one of its handles (severed cascade).
+//! ↩️ Inverse for `DeleteNode` — reconstructs a `create-node` of the captured BASE node, then
 //! Missing target ⇒ `Vec::new()`.
 use crate::standards::v1::subsets::any::schema::mutations::change_edge_visible::ChangeEdgeVisible;
 use crate::standards::v1::subsets::any::schema::mutations::change_edge_locked::ChangeEdgeLocked;

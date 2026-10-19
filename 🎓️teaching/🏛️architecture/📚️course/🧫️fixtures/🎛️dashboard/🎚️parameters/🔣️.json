@@ -1,0 +1,81 @@
+{
+  "targets": {
+    "test-e2e": ["execution-mode", "serial", "keep", "proctor", "topology", "grep", "project", "headed", "workers"],
+    "docker-stack-bundle": ["tag", "out"],
+    "docker-stack-check": ["tag", "http-port", "https-port", "keep"]
+  },
+  "cases": [
+    {
+      "id": "e2e-defaults",
+      "target": "test-e2e", "values": {}, "extra": [], "args": ["--topology", "both", "--"], "env": { "SEMIO_BUILD_MODE": "release" },
+      "parsed": { "topologies": ["dev", "rehearsal"], "serial": false, "keep": false, "proctor": null, "playwright": [] }
+    },
+    {
+      "id": "e2e-dev-diagnosis",
+      "target": "test-e2e",
+      "values": { "topology": "dev", "serial": true, "keep": true, "proctor": "dist/proctor selected", "grep": "leaderboard|presence", "project": "desktop", "headed": true, "workers": "1" },
+      "extra": ["--grep-invert", "@slow"],
+      "args": ["--serial", "--keep", "--proctor", "dist/proctor selected", "--topology", "dev", "--", "--grep", "leaderboard|presence", "--project", "desktop", "--headed", "--workers", "1", "--grep-invert", "@slow"],
+      "env": { "SEMIO_BUILD_MODE": "release" },
+      "parsed": { "topologies": ["dev"], "serial": true, "keep": true, "proctor": "dist/proctor selected", "playwright": ["--grep", "leaderboard|presence", "--project", "desktop", "--headed", "--workers", "1", "--grep-invert", "@slow"] }
+    },
+    {
+      "id": "e2e-rehearsal",
+      "target": "test-e2e", "values": { "topology": "rehearsal", "serial": false, "keep": false }, "extra": ["--list"],
+      "args": ["--topology", "rehearsal", "--", "--list"], "env": { "SEMIO_BUILD_MODE": "release" },
+      "parsed": { "topologies": ["rehearsal"], "serial": false, "keep": false, "proctor": null, "playwright": ["--list"] }
+    },
+    {
+      "id": "e2e-grep-topology-word",
+      "target": "test-e2e", "values": { "topology": "rehearsal", "grep": "dev" }, "extra": [],
+      "args": ["--topology", "rehearsal", "--", "--grep", "dev"], "env": { "SEMIO_BUILD_MODE": "release" },
+      "parsed": { "topologies": ["rehearsal"], "serial": false, "keep": false, "proctor": null, "playwright": ["--grep", "dev"] }
+    },
+    {
+      "id": "e2e-project-topology-word",
+      "target": "test-e2e", "values": { "topology": "dev", "project": "rehearsal" }, "extra": [],
+      "args": ["--topology", "dev", "--", "--project", "rehearsal"], "env": { "SEMIO_BUILD_MODE": "release" },
+      "parsed": { "topologies": ["dev"], "serial": false, "keep": false, "proctor": null, "playwright": ["--project", "rehearsal"] }
+    },
+    {
+      "id": "e2e-forwarded-control-words",
+      "target": "test-e2e", "values": { "topology": "rehearsal", "grep": "--proctor", "project": "--keep" }, "extra": ["--grep-invert", "--serial", "--", "dev", "rehearsal"],
+      "args": ["--topology", "rehearsal", "--", "--grep", "--proctor", "--project", "--keep", "--grep-invert", "--serial", "--", "dev", "rehearsal"], "env": { "SEMIO_BUILD_MODE": "release" },
+      "parsed": { "topologies": ["rehearsal"], "serial": false, "keep": false, "proctor": null, "playwright": ["--grep", "--proctor", "--project", "--keep", "--grep-invert", "--serial", "--", "dev", "rehearsal"] }
+    },
+    {
+      "id": "bundle-defaults",
+      "target": "docker-stack-bundle", "values": {}, "extra": [], "args": ["--tag", "latest", "--out", "dist/proctor"], "env": {},
+      "parsed": { "tag": "latest", "out": "dist/proctor" }
+    },
+    {
+      "id": "bundle-selected-release",
+      "target": "docker-stack-bundle", "values": { "tag": "v1.2.3", "out": "handoff/course stack" }, "extra": [],
+      "args": ["--tag", "v1.2.3", "--out", "handoff/course stack"], "env": {},
+      "parsed": { "tag": "v1.2.3", "out": "handoff/course stack" }
+    },
+    {
+      "id": "stack-defaults",
+      "target": "docker-stack-check", "values": {}, "extra": [], "args": ["--tag", "latest", "--http-port", "18080", "--https-port", "18443"], "env": {},
+      "parsed": { "tag": "latest", "http-port": "18080", "https-port": "18443", "keep": false }
+    },
+    {
+      "id": "stack-alternate-ports-retained",
+      "target": "docker-stack-check", "values": { "tag": "candidate", "http-port": "28080", "https-port": "28443", "keep": true }, "extra": [],
+      "args": ["--tag", "candidate", "--http-port", "28080", "--https-port", "28443", "--keep"], "env": {},
+      "parsed": { "tag": "candidate", "http-port": "28080", "https-port": "28443", "keep": true }
+    }
+  ],
+  "invalid": [
+    { "args": ["dev"], "error": "Unknown end-to-end option" },
+    { "args": ["--grep", "dev"], "error": "Unknown end-to-end option" },
+    { "args": ["--topology"], "error": "--topology needs both, dev or rehearsal" },
+    { "args": ["--topology", "unknown", "--"], "error": "--topology needs both, dev or rehearsal" },
+    { "args": ["--proctor"], "error": "--proctor needs the path of a proctor executable" },
+    { "args": ["--proctor", "--", "--headed"], "error": "--proctor needs the path of a proctor executable" },
+    { "args": ["--topology", "--", "dev"], "error": "--topology needs both, dev or rehearsal" },
+    { "args": ["--topology", "dev", "--topology", "rehearsal", "--"], "error": "Duplicate end-to-end option" },
+    { "args": ["--proctor", "--keep", "--topology", "both", "--"], "error": "--proctor needs the path of a proctor executable" },
+    { "args": ["--keep", "--keep", "--"], "error": "Duplicate end-to-end option" }
+  ]
+}

@@ -2,6 +2,6 @@
   "status": "rejected",
   "code": "mutation.invariant",
   "path": [
-    "not a uri"
+    "target"
   ]
 }

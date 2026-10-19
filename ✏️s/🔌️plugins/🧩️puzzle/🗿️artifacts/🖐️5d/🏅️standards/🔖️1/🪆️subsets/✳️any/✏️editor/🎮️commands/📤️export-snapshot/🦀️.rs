@@ -1,11 +1,12 @@
-//! 📤 Downloads the live document as round-trippable JSON — the 5d twin of
 //! `🧊️3d/…/📤️export-snapshot` and `◻️2d/…/📤️export-snapshot`: inline under one guest wire page,
+//! 📤 Downloads the live document as round-trippable JSON — the 5d twin of
 //! the framework's segmented-download lane above it, a notice above what one segmented download
 //! may carry.
 
 use crate::editor::puzzle5d::entities::Puzzle5dDocument;
 use crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES;
-use semio_framework_plugin::app::{ArtifactDownloadOutput, ArtifactOutputChunks};
+use semio_framework_plugin::app::ArtifactDownloadOutput;
+use semio_framework_plugin::app::ArtifactOutputChunks;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::Fault;
 use semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES;

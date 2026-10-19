@@ -184,6 +184,7 @@ impl ForeignStepCopy {
  pub fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}
 }
 impl ErasedSnapshotRetirement for ForeignStepCopy {
+ fn next_demand(&self,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{release_bytes:self.owner.capacity(self.owner.close_phase),depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
  fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{Self::close_step(self,g)}
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.next_close_copy_byte_demand()}
  fn next_capacity_byte_demand(&self,b:usize)->Result<usize,ValueError>{self.next_close_capacity_byte_demand(b)}
@@ -197,6 +198,7 @@ impl ForeignStepRetirement {
  pub fn admit(value:ForeignStep,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,ForeignStep)>{if !permits(grant,0,0){return Err((refusal(if grant.maximum_items==0{ValueRefusalKind::WorkLimit}else{ValueRefusalKind::DepthLimit}),value));}let mut owner=ForeignStepOwner::new(value);owner.closing=true;Ok((Self{owner},RetainedCloneProgress{copied_items:1,..Default::default()}))}
 }
 impl ErasedSnapshotRetirement for ForeignStepRetirement {
+ fn next_demand(&self,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{release_bytes:self.owner.capacity(self.owner.close_phase),depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
  fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.owner.close_step(g)}
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
  fn next_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}
@@ -240,6 +242,7 @@ impl ForeignStepsOwner {
  pub fn terminal_is_empty(&self)->bool{self.values.is_empty()&&self.values.capacity()==0&&self.child.is_none()}
 }
 impl ErasedSnapshotRetirement for ForeignStepsOwner {
+ fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{if let Some(child)=&self.child{let mut demand=child.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||refusal(ValueRefusalKind::DepthLimit))?;return Ok(demand);}Ok(semio_framework_value::RetirementDemand{release_bytes:if self.values.is_empty(){self.values.capacity().checked_mul(size_of::<ForeignStep>()).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit))?}else{0},depth:if self.values.is_empty(){usize::from(!self.terminal_is_empty())}else{2},..Default::default()})}
  fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.close_one(g)}
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{if let Some(c)=&self.child{c.next_copy_byte_demand()}else{Ok(0)}}
  fn next_capacity_byte_demand(&self,b:usize)->Result<usize,ValueError>{if let Some(c)=&self.child{c.next_capacity_byte_demand(b)}else{Ok(0)}}
@@ -313,6 +316,7 @@ impl ForeignStepsPreparation {
  }
 }
 impl ErasedSnapshotRetirement for ForeignStepsPreparation {
+ fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{let mut demand=if let Some(child)=&self.copy{ErasedSnapshotRetirement::next_demand(child,body)?}else if let Some(child)=&self.retiring{child.next_demand(body)?}else if self.pending.is_some(){semio_framework_value::RetirementDemand{depth:1,..Default::default()}}else{self.values.next_demand(body)?};demand.depth=demand.depth.checked_add(usize::from(!self.terminal_is_empty())).ok_or_else(||refusal(ValueRefusalKind::DepthLimit))?;Ok(demand)}
  fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.close_one(g)}
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{if let Some(v)=&self.copy{v.next_close_copy_byte_demand()}else if let Some(v)=&self.retiring{v.next_copy_byte_demand()}else{self.values.next_copy_byte_demand()}}
  fn next_capacity_byte_demand(&self,b:usize)->Result<usize,ValueError>{if let Some(v)=&self.copy{v.next_close_capacity_byte_demand(b)}else if let Some(v)=&self.retiring{v.next_capacity_byte_demand(b)}else{self.values.next_capacity_byte_demand(b)}}

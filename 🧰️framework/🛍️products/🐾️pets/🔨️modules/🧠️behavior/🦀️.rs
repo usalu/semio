@@ -28,6 +28,11 @@ use semio_framework_pets_kinematics::trigonometry::clamp;
 use serde::{Deserialize, Serialize};
 use std::ops::Index;
 
+/// 🎬️ The explicitly authored cast of a scene; unknown contexts show nobody.
+pub fn pet_cast<'a>(menagerie: &'a Menagerie, scene: &str) -> Option<&'a Cast> {
+    menagerie.casts.iter().find(|cast| cast.scene == scene)
+}
+
 //#region 🔖️Modes
 /// 🚦️ What a mode allows and how eager it makes a pet: how many actors may walk or hop at once (`movers`) and fidget at once (`fidgeters`), the range of an idle dwell in ticks, the weights of fidget, walk, hop, sleep and a trick on a whim beside an idle weight of 1, the longest walk in body widths (`stroll`), the least ticks between two encounters (`encounter_gap`, 0 = never) and the chance of one per second for a pair of full sociability (`encounter_rate`).
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]

@@ -12,7 +12,10 @@ use semio_s_artifact_puzzle_3d_model::Puzzle3dArtifact;
 use {semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction, semio_s_artifact_puzzle_3d_model::Puzzle3dCompatSpecificity, semio_s_artifact_puzzle_3d_model::Puzzle3dKindCatalogs, semio_s_artifact_puzzle_3d_model::Puzzle3dKindCompatibility, semio_s_artifact_puzzle_3d_model::Puzzle3dMeta, semio_s_artifact_puzzle_3d_model::Puzzle3dObject, semio_s_artifact_puzzle_3d_model::Puzzle3dObjectAnchor, semio_s_artifact_puzzle_3d_model::Puzzle3dReference, semio_s_artifact_puzzle_3d_model::Puzzle3dReferenceSource, semio_s_artifact_puzzle_3d_model::Puzzle3dScale, semio_s_artifact_puzzle_3d_model::Puzzle3dTargetVolume, semio_s_artifact_puzzle_3d_model::Puzzle3dVortex};
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
-use protocol::{DiffAlgebra, MutationDiff};
+use protocol::DiffAlgebra;
+use protocol::ColdDiffAlgebra;
+use protocol::MutationDiff;
+use protocol::ColdMutationDiff;
 use protocol::list_delta::RowPatch;
 
 //#region 🔖️Diff
@@ -598,34 +601,11 @@ impl RowPatch<Puzzle3dMeta> for Puzzle3dMetaPatch {
 }
 
 impl MutationDiff<Puzzle3dSnapshot> for Puzzle3dDiff {
-    fn apply(&self, base: &Puzzle3dSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Puzzle3dSnapshot> {
-        let mut item = match &self.artifact {
-            Some(artifact) => artifact.to_snapshot(),
-            None => base.clone(),
-        };
-        if let Some(value) = &self.schema {
-            item.schema = value.clone();
-        }
-        if let Some(value) = &self.domain {
-            item.domain = value.clone();
-        }
-        if let Some(patch) = &self.meta {
-            patch.commit_into(&mut item.meta, capability).map_err(|error| error.under(["meta"]))?;
-        }
-        if let Some(delta) = &self.objects {
-            item.objects = delta.commit_onto(&item.objects, capability).map_err(|error| error.under(["objects"]))?;
-        }
-        if let Some(delta) = &self.attractions {
-            item.attractions = delta.commit_onto(&item.attractions, capability).map_err(|error| error.under(["attractions"]))?;
-        }
-        if let Some(delta) = &self.target_volumes {
-            item.target_volumes = delta.commit_onto(&item.target_volumes, capability).map_err(|error| error.under(["targetVolumes"]))?;
-        }
-        if let Some(delta) = &self.references {
-            item.references = delta.commit_onto(&item.references, capability).map_err(|error| error.under(["references"]))?;
-        }
-        Ok(item)
-    }
+
+
+}
+
+impl ColdMutationDiff<Puzzle3dSnapshot> for Puzzle3dDiff {
     fn absorb(&mut self, later: Self) {
         if later.artifact.is_some() {
             *self = later;
@@ -663,9 +643,47 @@ impl MutationDiff<Puzzle3dSnapshot> for Puzzle3dDiff {
             (Some(_), None) => {}
         }
     }
+
+    fn apply(&self, base: &mut Puzzle3dSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        let mut prepared = protocol::PreparedField::new(match &self.artifact {
+            Some(artifact) => artifact.to_snapshot(),
+            None => base.clone(),
+        }, <Self as protocol::MutationDiff<Puzzle3dSnapshot>>::retire_projection, capability);
+        let mut item = prepared.value_mut();
+        if let Some(value) = &self.schema {
+            item.schema = value.clone();
+        }
+        if let Some(value) = &self.domain {
+            item.domain = value.clone();
+        }
+        if let Some(patch) = &self.meta {
+            patch.commit_into(&mut item.meta, capability).map_err(|error| error.under(["meta"]))?;
+        }
+        if let Some(delta) = &self.objects {
+            item.objects = delta.commit_onto(&item.objects, capability).map_err(|error| error.under(["objects"]))?;
+        }
+        if let Some(delta) = &self.attractions {
+            item.attractions = delta.commit_onto(&item.attractions, capability).map_err(|error| error.under(["attractions"]))?;
+        }
+        if let Some(delta) = &self.target_volumes {
+            item.target_volumes = delta.commit_onto(&item.target_volumes, capability).map_err(|error| error.under(["targetVolumes"]))?;
+        }
+        if let Some(delta) = &self.references {
+            item.references = delta.commit_onto(&item.references, capability).map_err(|error| error.under(["references"]))?;
+        }
+        prepared.install(base);
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<Puzzle3dSnapshot> for Puzzle3dDiff {
+
+    fn is_empty(&self) -> bool {
+        self.artifact.is_none() && self.schema.is_none() && self.domain.is_none() && self.meta.as_ref().is_none_or(|patch| patch.is_empty()) && self.objects.as_ref().is_none_or(Puzzle3dObjectsDelta::is_empty) && self.attractions.as_ref().is_none_or(Puzzle3dAttractionsDelta::is_empty) && self.target_volumes.as_ref().is_none_or(Puzzle3dTargetVolumesDelta::is_empty) && self.references.as_ref().is_none_or(Puzzle3dReferencesDelta::is_empty)
+    }
+}
+
+impl ColdDiffAlgebra<Puzzle3dSnapshot> for Puzzle3dDiff {
     fn inverse(&self, base: &Puzzle3dSnapshot) -> Self {
         if self.artifact.is_some() {
             return Self { artifact: Some(Box::new(Puzzle3dArtifact::from_snapshot(base.clone()))), ..Default::default() };
@@ -680,9 +698,6 @@ impl DiffAlgebra<Puzzle3dSnapshot> for Puzzle3dDiff {
             target_volumes: self.target_volumes.as_ref().map(|delta| delta.inverse(&base.target_volumes)),
             references: self.references.as_ref().map(|delta| delta.inverse(&base.references)),
         }
-    }
-    fn is_empty(&self) -> bool {
-        self.artifact.is_none() && self.schema.is_none() && self.domain.is_none() && self.meta.as_ref().is_none_or(|patch| patch.is_empty()) && self.objects.as_ref().is_none_or(Puzzle3dObjectsDelta::is_empty) && self.attractions.as_ref().is_none_or(Puzzle3dAttractionsDelta::is_empty) && self.target_volumes.as_ref().is_none_or(Puzzle3dTargetVolumesDelta::is_empty) && self.references.as_ref().is_none_or(Puzzle3dReferencesDelta::is_empty)
     }
 }
 

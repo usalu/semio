@@ -17,10 +17,10 @@ use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::resolve_load;
 
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ReplaceLoad, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {
+pub fn diff(payload: &ReplaceLoad, base: &Fem3dSnapshotValue) -> protocol::MutationOutcome<Fem3dDiff> {
     let Some(existing) = base.load_cases.iter().find(|case| case.id == payload.case_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Load case \"{}\" does not exist.", payload.case_id), [payload.case_id.clone()]);
     };
@@ -39,7 +39,12 @@ pub fn diff(payload: &ReplaceLoad, base: &Fem3dSnapshot) -> protocol::MutationOu
     if *held == *payload.new_load {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Load \"{}\" in case \"{}\" already has that value.", payload.load_id, payload.case_id));
     }
-    let loads = Fem3dLoadsDelta { modified: vec![Fem3dLoadsModification { id: payload.load_id.clone(), patch: payload.new_load.clone() }], ..Default::default() };
+    let loads = if std::mem::discriminant(held) == std::mem::discriminant(payload.new_load.as_ref()) {
+        Fem3dLoadsDelta { modified: vec![Fem3dLoadsModification { id: payload.load_id.clone(), patch: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadPatch::replacement(&payload.new_load) }], ..Default::default() }
+    } else {
+        let index = existing.loads.iter().position(|row| load_id(row) == payload.load_id).expect("validated load position");
+        Fem3dLoadsDelta { removed: vec![semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadRemoval { id: payload.load_id.clone(), index }], inserted: vec![semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadInsertion { index, row: (*payload.new_load).clone() }], ..Default::default() }
+    };
     protocol::MutationOutcome::new(Fem3dDiff {
         load_cases: Some(Fem3dLoadCasesDelta { modified: vec![Fem3dLoadCasesModification { id: payload.case_id.clone(), patch: Fem3dLoadCasePatch { loads: Some(loads), ..Default::default() } }], ..Default::default() }),
         ..Default::default()

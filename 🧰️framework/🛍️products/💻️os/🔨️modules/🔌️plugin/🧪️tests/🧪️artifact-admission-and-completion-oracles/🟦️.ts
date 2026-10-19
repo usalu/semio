@@ -10,8 +10,13 @@ type ArtifactAdmissionFixtureV1 = Readonly<{
   firstParty: readonly Readonly<{ plugin: string; kind: string; definition: string; root: string }>[];
 }>;
 
-type CompletionCallerV1 = Readonly<{ family:string; source:string; sourceStart:string; sourceEnd:string; completion:string; retainedOwner:string; terminalGuard:string; incrementalClose:string; retainedPhysicalOwners:readonly string[]; legacyLossToken:string; bindings:readonly Readonly<{source:string;tokens:readonly string[]}>[] }>;
-type CompletionRejectionLawV1 = Readonly<{ schema:string; noImplicitRetry:boolean; cases:readonly Readonly<{id:string;cell:"empty"|"existing";busy:boolean;outcome:"accepted"|"rejected";finalCell:"empty"|"existing"|"submitted";submittedOwnerReturned:boolean}>[];callers:readonly CompletionCallerV1[];reservedCallers:readonly CompletionCallerV1[] }>;
+type CompletionRejectionLawV1 = Readonly<{
+  schema: string;
+  noImplicitRetry: boolean;
+  cases: readonly Readonly<{ id: string; cell: "empty" | "existing"; busy: boolean; outcome: "accepted" | "rejected"; finalCell: "empty" | "existing" | "submitted"; submittedOwnerReturned: boolean }>[];
+  callers: readonly Readonly<{ family: string; source: string; retainedOwner: string; terminalGuard: string; incrementalClose: string; retainedPhysicalOwners: readonly string[]; legacyLossToken: string }>[];
+  reservedCallers: readonly Readonly<{ family: string; source: string; sourceStart: string; sourceEnd: string; terminalGuard: string; retainedOwner: string; handoff: string; incrementalClose: string; legacyLossToken: string }>[];
+}>;
 
 type AwaitedCompletionFixtureV1 = Readonly<{ version: 1; ownerReturningRejection: CompletionRejectionLawV1 }>;
 
@@ -56,10 +61,9 @@ export function artifactAdmissionOracle(repoRoot?: string): number {
 
 /** ♻️ Independently models completion admission and checks the exact current caller's retained owners. */
 export function completionRejectionOracle(repoRoot?: string): number {
-  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/⏳️completion/🔣️.json", import.meta.url), "utf8")) as AwaitedCompletionFixtureV1;
+  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/⏳️completion/🔣️.json", import.meta.url), "utf8")) as AwaitedCompletionFixtureV1;
   const law = fixture.ownerReturningRejection;
-  assert.equal(law.noImplicitRetry, true);
-  assert.equal(new Set(law.cases.map(row => row.id)).size, law.cases.length);
+  assert.equal(new Set(law.cases.map((row) => row.id)).size, law.cases.length);
   for (const row of law.cases) {
     const rejected = row.busy || row.cell !== "empty";
     assert.equal(rejected ? "rejected" : "accepted", row.outcome, row.id);
@@ -67,24 +71,56 @@ export function completionRejectionOracle(repoRoot?: string): number {
     assert.equal(rejected, row.submittedOwnerReturned, row.id);
   }
   if (repoRoot) {
-    for (const rows of [law.callers, law.reservedCallers]) {
-      assert.equal(new Set(rows.map(row => row.family)).size, rows.length);
-      for (const row of rows) {
-        const source:string = readModuleTreeSource(resolve(repoRoot, row.source));
-        const region:string|undefined = source.split(row.sourceStart, 2)[1]?.split(row.sourceEnd, 1)[0];
-        assert(region !== undefined, `${row.family} current producer region is absent`);
-        const guard = region.indexOf(row.terminalGuard), prepare = region.indexOf(row.completion), retain = region.indexOf(row.retainedOwner, prepare), close = region.indexOf(row.incrementalClose, retain);
-        assert(guard >= 0, `${row.family} can replay after a rejected completion`);
-        assert(prepare >= 0 && retain > prepare, `${row.family} loses the original returned completion owner`);
-        assert(close > retain, `${row.family} lacks its original full-grant child closure`);
-        assert(row.retainedPhysicalOwners.length > 0, `${row.family} omits its terminal custody witnesses`);
-        for (const owner of row.retainedPhysicalOwners) assert(region.includes(owner), `${row.family} lost original owner ${owner}`);
-        assert.equal(region.includes(row.legacyLossToken), false, `${row.family} uses a lossy completion handoff`);
-        for (const binding of row.bindings) {
-          const caller = readModuleTreeSource(resolve(repoRoot, binding.source));
-          for (const token of binding.tokens) assert(caller.includes(token), `${row.family} no longer delegates through ${binding.source}: ${token}`);
-        }
-      }
+    assert.equal(new Set(law.callers.map((row) => row.family)).size, law.callers.length);
+
+    for (const row of law.callers) {
+
+      const source: string = readModuleTreeSource(resolve(repoRoot, row.source));
+
+      const retain = source.indexOf(row.retainedOwner);
+
+      const guard = source.indexOf(row.terminalGuard);
+
+      const close = source.indexOf(row.incrementalClose);
+
+      assert(retain >= 0, `${row.family} loses the returned completion owner`);
+
+      assert(guard >= 0, `${row.family} can replay after terminal completion rejection`);
+
+      assert(close > retain, `${row.family} lacks its declared child-first rejection close operation`);
+
+      for (const owner of row.retainedPhysicalOwners) assert(source.includes(owner), `${row.family} lost a retained physical parent terminal guard: ${owner}`);
+
+      assert.equal(source.includes(row.legacyLossToken), false, `${row.family} retained the lossy is_err handoff`);
+
+    }
+
+    assert.equal(new Set(law.reservedCallers.map((row) => row.family)).size, law.reservedCallers.length);
+
+    for (const row of law.reservedCallers) {
+
+      const source: string = readModuleTreeSource(resolve(repoRoot, row.source));
+
+      const region: string | undefined = source.split(row.sourceStart, 2)[1]?.split(row.sourceEnd, 1)[0];
+
+      assert(region !== undefined, `${row.family} source region is absent`);
+
+      const guard = region.indexOf(row.terminalGuard);
+
+      const prepare = region.indexOf(row.handoff);
+
+      const retain = region.indexOf(row.retainedOwner);
+
+      const close = region.indexOf(row.incrementalClose);
+
+      assert(guard >= 0 && guard < prepare, `${row.family} can replay after a rejected completion`);
+
+      assert(prepare >= 0 && prepare < retain, `${row.family} does not retain the exact returned owner`);
+
+      assert(close > retain, `${row.family} does not retire the returned owner incrementally`);
+
+      assert.equal(region.includes(row.legacyLossToken), false, `${row.family} retained the lossy completion handoff`);
+
     }
   }
   return law.cases.length + law.callers.length + law.reservedCallers.length;

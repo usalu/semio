@@ -30,9 +30,11 @@ impl<A:ArtifactApp> Drop for ArtifactOwnedContextHandle<A>{fn drop(&mut self){as
 
 fn unadmitted()->ValueError{ValueError::literal(ValueRefusalKind::UnsupportedOwner,"captured context retains original child, peer, tool-run and gesture issuers")}
 struct Cursor<A:ArtifactApp>{source:ArtifactOwnedContextHandle<A>,owner:Option<ControlledRetirement<SealedShared<ArtifactOwnedToolJobContext<A>>>>}
-impl<A:ArtifactApp> Cursor<A>{fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{match self.source.source.as_ref(){Some(Source::Refused{..})=>Err(unadmitted()),Some(Source::Admitted(_))=>Ok(RetirementDemand{depth:1,..Default::default()}),None=>self.owner.as_ref().map_or(Ok(Default::default()),|owner|Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?}))}}}
+impl<A:ArtifactApp> Cursor<A>{fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{match self.source.source.as_ref(){Some(Source::Refused{..})=>Err(unadmitted()),Some(Source::Admitted(_))=>Ok(RetirementDemand{depth:1,..Default::default()}),None=>self.owner.as_ref().map_or(Ok(Default::default()),|owner|owner.next_demand(body))}}}
 impl<A:ArtifactApp> RetireOwned for ArtifactOwnedContextHandle<A>{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(Cursor{source:self,owner:None})}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Cursor<A>>())}fn controlled_retirement_supported()->bool{true}}
 impl<A:ArtifactApp> RetirementCursor for Cursor<A>{
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.demands(maximum_body_bytes)}
+
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
   if self.terminal_is_empty(){return RetirementStep::Complete;}
   if grant.maximum_items==0{return RetirementStep::Progress(Default::default());}

@@ -111,7 +111,7 @@ pub mod app {
     pub use super::child_emit_preparation::{ChildEmitPreparation,ChildEmitPreparationStep,OwnedChildEmit};
     pub use semio_framework_plugin_ownership::transient_publication::{bounded_transient_preparation_factory, bounded_transient_root_retirement_factory, bounded_transient_store_disposer, transient_store_disposer};
     pub use super::window_config::{
-        bounded_window_config_preparation_factory, bounded_window_config_store_disposer, bounded_window_config_store_owners, RejectedWindowConfigEmission, WindowConfigMutation, WindowConfigOwner, WindowConfigOwnerRegistry, WindowConfigPack,
+        bounded_window_config_preparation_source_birth, bounded_window_config_preparation_factory, bounded_window_config_store_disposer, bounded_window_config_store_owners, RejectedWindowConfigEmission, WindowConfigAuthorityIdentity, WindowConfigBorrow, WindowConfigMutation, WindowConfigOwner, WindowConfigOwnerRegistry, WindowConfigPack,
         WindowConfigPackLoad, WindowConfigPackLoadDiagnostic, WindowConfigPackLoadPhase, WindowConfigPackLoadProgress, WindowConfigPackLoadStep, WindowConfigApplyCursor, WindowConfigApplyEdit, WindowConfigApplyMutation, WindowConfigReplaceCursor, WindowConfigReplaceEdit, WindowConfigReplaceMutation, WindowConfigSnapshot,
     };
     pub use super::window_transient::{TransientView, WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientOwnerRegistry, WindowTransientSnapshot};
@@ -233,7 +233,7 @@ pub use app::authoring_law;
 pub use app::time_travel::{history_mutation_entry, HistoryMutationPage, HistoryMutationPages, SupersedeLedger, SupersedeRecord, SupersedeRole, TimeTravelActionOutcome, TimeTravelActionRefusal, TimeTravelEditor, TimeTravelEditorPanel, TimeTravelLedger, TimeTravelPanel, HISTORY_ROW_MUTATION_ROWS, TIME_TRAVEL_TURN_WALL_US};
 pub use app::tool_run::{is_tool_run_action_id, ToolRunActionOutcome, ToolRunDriver, ToolRunLedger, ToolRunTickReceipt};
 pub use app::ActionFactory;
-pub use app::{FRAMEWORK_TOOL_RUN_BODY_KEY, OriginalToolRunJobPortRetirement, ToolRunJob, ToolRunJobPort, ToolRunJobPurpose, ToolRunJobRequest, ToolRunRetargetableJob, ToolRunTraceKeys, ToolRunView, is_time_travel_action_id};
+pub use app::{FRAMEWORK_TOOL_RUN_BODY_KEY, OriginalToolRunJobPortRetirement, ToolRunJob, ToolRunJobPort, ToolRunJobPurpose, ToolRunJobRequest, ToolRunRetargetableJob, ToolRunTraceKeys, ToolRunView, ToolRunPollView, is_time_travel_action_id};
 pub use app::{AsyncTaskSource,AsyncTaskRun};
 pub use app::{activation_target, resolve_labels, row_action, row_target, selection_ids, tree_group, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, LabelAxes};
 pub use app::{
@@ -251,6 +251,7 @@ pub use app::{
     bounded_transient_preparation_factory,
     bounded_transient_root_retirement_factory,
     bounded_transient_store_disposer,
+    bounded_window_config_preparation_source_birth,
     bounded_window_config_preparation_factory,
     bounded_window_config_store_disposer,
     bounded_window_config_store_owners,
@@ -289,11 +290,13 @@ pub use app::{
     AppInstance,
     AppOperationContext,
     AppRenderOperationContext,
+    MountedSnapshotReadPreparation,
     ArtifactAnalysis,
     ArtifactAnalyzer,
     ArtifactApp,
     ArtifactBoundedFirstStepProof,
     ArtifactBuilder,
+    SnapshotBuilder,
     ArtifactCapability,
     NaturalFileCodec,
     NaturalFileDecodeCursor,
@@ -312,6 +315,7 @@ pub use app::{
     ArtifactDefinitionRegistry,
     ArtifactDeserializer,
     ArtifactDocumentPayload,
+    OriginalArtifactDocumentReceiving,
     ArtifactDocumentStoreDisposer,
     ArtifactDownloadOutput,
     ArtifactEditor,
@@ -356,6 +360,7 @@ pub use app::{
     ArtifactOwnedDisposer,
     ArtifactOwnedToolJobFactory,
     ArtifactOwnedToolJobRequest,
+    ArtifactOriginalToolCommand,
     ArtifactReservedJob,
     ArtifactReservedToolInput,
     ArtifactReservedToolJob,
@@ -375,6 +380,7 @@ pub use app::{
     ArtifactToolPublicationContract,
     ArtifactToolPublicationLane,
     ArtifactView,
+    ArtifactPendingView,
     ArtifactViewer,
     AsyncComposeFn,
     BuiltNode,
@@ -469,6 +475,8 @@ pub use app::{
     WindowConfigMutation,
     WindowConfigOwner,
     WindowConfigOwnerRegistry,
+    WindowConfigBorrow,
+    WindowConfigAuthorityIdentity,
     WindowConfigPack,
     WindowConfigPackLoad,
     WindowConfigPackLoadDiagnostic,

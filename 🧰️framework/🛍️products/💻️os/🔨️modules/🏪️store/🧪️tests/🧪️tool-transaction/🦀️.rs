@@ -77,6 +77,7 @@ fn remote_edit(name: &str, index: usize, operation: DemoMutation, physical_ms: u
 
 /// 📬️ Publishes one batched gesture as the plugin SDK's migrated route does, `open` keeping its tool transaction open.
 async fn publish_batch(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, operation: u64, mutations: Vec<DemoMutation>, reference: Option<&protocol::TransactionRef>, open: bool) {
+    let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
     let factory: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = Arc::new(DemoOneItemPreparationFactory::admissible());
     let mut publication = store
         .begin_outbound_apply_batch(semio_framework_job::OperationId(operation), store.generation_now(), store.content_revision_now(), store.local_actor_id().0.clone(), mutations, Some(&factory), reference.cloned())
@@ -84,7 +85,7 @@ async fn publish_batch(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, op
     publication.set_transaction_open(open);
     let grant = batch_turn_grant();
     for _ in 0..1_048_576 {
-        if let ArtifactStoreOneItemAdvance::Published(_) = store.advance_apply_batch(&mut publication, grant).expect("bounded batch step") {
+        if let ArtifactStoreOneItemAdvance::Published(_, _) = receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, grant,receiving)).expect("bounded batch step") {
             break;
         }
     }

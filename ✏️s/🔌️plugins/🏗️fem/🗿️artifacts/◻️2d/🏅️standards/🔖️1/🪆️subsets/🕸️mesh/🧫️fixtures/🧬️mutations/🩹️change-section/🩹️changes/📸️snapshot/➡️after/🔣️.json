@@ -1,0 +1,36 @@
+{
+  "nodes": [
+    {
+      "id": "n1",
+      "x": 1,
+      "y": 2
+    }
+  ],
+  "elements": [],
+  "regions": [],
+  "materials": [
+    {
+      "id": "steel",
+      "name": "Steel",
+      "e": 210000000000.0,
+      "nu": 0.3,
+      "rho": 7850.0
+    }
+  ],
+  "sections": [
+    {
+      "id": "s1",
+      "name": "Structural Section",
+      "area": 0.02,
+      "iy": 1E-05
+    }
+  ],
+  "supports": [],
+  "loadCases": [],
+  "combinations": [],
+  "analysis": {
+    "modalCount": 6,
+    "bucklingCount": 6,
+    "deformationScale": 1.0
+  }
+}

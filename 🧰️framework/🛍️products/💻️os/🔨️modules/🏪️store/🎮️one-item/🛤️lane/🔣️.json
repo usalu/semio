@@ -1,0 +1,124 @@
+{
+  "version": 1,
+  "ordering": [
+    {
+      "left": "",
+      "right": "",
+      "order": 0
+    },
+    {
+      "left": "a",
+      "right": "b",
+      "order": -1
+    },
+    {
+      "left": "abcdefghijklmnopA",
+      "right": "abcdefghijklmnopB",
+      "order": -1
+    },
+    {
+      "left": "λ",
+      "right": "💠",
+      "order": -1
+    },
+    {
+      "left": "same",
+      "right": "same-tail",
+      "order": -1
+    },
+    {
+      "left": "z",
+      "right": "a",
+      "order": 1
+    }
+  ],
+  "interaction": [
+    {
+      "name": "apply",
+      "initial": 0,
+      "values": [
+        7
+      ],
+      "expected": 7,
+      "generation": 1,
+      "edits": 1
+    },
+    {
+      "name": "reset",
+      "initial": 0,
+      "values": [
+        3,
+        0
+      ],
+      "expected": 0,
+      "generation": 2,
+      "edits": 2
+    },
+    {
+      "name": "default",
+      "initial": 0,
+      "values": [],
+      "expected": 0,
+      "generation": 0,
+      "edits": 0
+    }
+  ],
+  "grantCopy": [
+    0,
+    1,
+    2,
+    3,
+    16,
+    64
+  ],
+  "commandAuthority": [
+    {
+      "name": "original",
+      "job": true,
+      "generation": true,
+      "issuer": true,
+      "ready": true
+    },
+    {
+      "name": "foreign-job",
+      "job": false,
+      "generation": true,
+      "issuer": true,
+      "ready": false
+    },
+    {
+      "name": "foreign-generation",
+      "job": true,
+      "generation": false,
+      "issuer": true,
+      "ready": false
+    },
+    {
+      "name": "foreign-issuer-equal-version",
+      "job": true,
+      "generation": true,
+      "issuer": false,
+      "ready": false
+    }
+  ],
+  "envelope": [
+    {
+      "name": "empty-zero",
+      "initial": 0,
+      "expected": 0,
+      "discardedProjectionClones": 0
+    },
+    {
+      "name": "empty-seven",
+      "initial": 7,
+      "expected": 7,
+      "discardedProjectionClones": 0
+    },
+    {
+      "name": "empty-minimum",
+      "initial": -2147483648,
+      "expected": -2147483648,
+      "discardedProjectionClones": 0
+    }
+  ]
+}

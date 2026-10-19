@@ -287,7 +287,7 @@ pub struct Signature {
 }
 
 /// 🔀️ Maps `protocol::ProtocolError` (the error type `Signer`/`SignatureVerifier` return)
-/// onto this family's `DbError` by category, mirroring `db_core`'s `From<pack::PackError>`.
+/// onto the security gate's database categories, with signature refusal reported as unauthorized.
 // 🚫️async: E4 fn-pointer slot
 fn map_protocol_error(err: protocol::ProtocolError) -> DbError {
     match err {
@@ -505,7 +505,7 @@ async fn redact_fields_at(policy: &RoleBasedPolicy, principal: &Principal, docum
 pub async fn audit_decision<E: Emit>(emit: &E, principal: &Principal, scope: &AuthzScope, action: Action, decision: &Decision) {
     let name = if decision.is_allowed() { "security.authz_allowed" } else { "security.authz_denied" };
     let mut event = EmitEvent::new(name)
-        .field("actor", EmitField::Text(principal.actor.0.clone()))
+        .field("actor", EmitField::Text(principal.actor.0.as_str().to_owned()))
         .field("tenant", EmitField::Text(principal.tenant.0.clone()))
         .field("action", EmitField::Text(format!("{action:?}")))
         .field("scope", EmitField::Text(scope.segments().join("/")));
@@ -522,7 +522,7 @@ pub async fn audit_decision<E: Emit>(emit: &E, principal: &Principal, scope: &Au
 /// when `ReplayGuard` rejects an operation, so a replay attempt is auditable even though it never
 /// reaches a `Decision`.
 pub async fn audit_replay_rejected<E: Emit>(emit: &E, actor: &protocol::ActorId, mutation_id: &protocol::MutationId, document: &protocol::ArtifactId) {
-    emit.emit(EmitEvent::new("security.replay_rejected").with_document(ArtifactId::from(document.0.clone())).field("actor", EmitField::Text(actor.0.clone())).field("mutation_id", EmitField::Text(mutation_id.0.clone()))).await;
+    emit.emit(EmitEvent::new("security.replay_rejected").with_document(ArtifactId::from(document.0.clone())).field("actor", EmitField::Text(actor.0.as_str().to_owned())).field("mutation_id", EmitField::Text(mutation_id.0.clone()))).await;
 }
 
 /// 📣️ Emits a `security.budget_exceeded` event — `SecurityGate::admit_commands` calls this

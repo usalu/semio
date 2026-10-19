@@ -1,5 +1,5 @@
-//! 🚪️ IO s.puzzle3d (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from ⚙️engine::register), not per-leaf register().
+//! 🚪️ IO s.puzzle3d (1/✳️any) — registration now flows through 🎹️composer::register
 #![allow(clippy::result_large_err)]
 
 extern crate semio_framework_os_kernel as dsl;
@@ -175,15 +175,15 @@ pub mod derived_construction {
             Ok(Self { snapshot: <Puzzle3dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?, diagnostics: Vec::new() })
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match protocol::apply_diff(outcome.diff(), &self.snapshot) {
+            let outcome = <Self::Mutation as protocol::ColdMutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
+            match protocol::apply_diff_cold(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
                 Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
+            let snapshot = protocol::apply_diff_cold(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }

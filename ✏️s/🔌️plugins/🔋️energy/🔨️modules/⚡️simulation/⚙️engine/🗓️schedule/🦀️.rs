@@ -53,7 +53,7 @@ impl semio_framework_pack_json::ArtifactCanonicalJsonTree for ScheduleId {
 
 // #region 🔖️ScheduleType
 /// 📆️ Schedule interpolation mode.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum ScheduleInterpolation {
     Continuous,
@@ -61,21 +61,24 @@ pub enum ScheduleInterpolation {
 }
 
 /// 📆️ Schedule value limit.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct ScheduleLimits {
     pub min: f64,
     pub max: f64,
 }
 
 /// 📅️ Constant schedule.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct ConstantSchedule {
     pub id: ScheduleId,
     pub value: f64,
 }
 
 /// 📅️ Daily repeating schedule (24 hourly values).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct DailySchedule {
     pub id: ScheduleId,
     pub hourly_values: [f64; 24],
@@ -84,14 +87,16 @@ pub struct DailySchedule {
 }
 
 /// 📅️ Weekly schedule (7 daily schedule ids).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct WeeklySchedule {
     pub id: ScheduleId,
     pub daily_schedule_ids: [ScheduleId; 7],
 }
 
 /// 📅️ Compact rule-based annual schedule.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct CompactScheduleRule {
     pub start_month: u8,
     pub start_day: u8,
@@ -101,7 +106,8 @@ pub struct CompactScheduleRule {
 }
 
 /// 📅️ Annual schedule with holiday overrides.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct AnnualSchedule {
     pub id: ScheduleId,
     pub rules: Vec<CompactScheduleRule>,
@@ -111,7 +117,8 @@ pub struct AnnualSchedule {
 }
 
 /// 📅️ External time-series schedule.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct TimeSeriesSchedule {
     pub id: ScheduleId,
     pub values: Vec<f64>,
@@ -121,7 +128,8 @@ pub struct TimeSeriesSchedule {
 
 // #region 🔖️ScheduleSet
 /// 📚️ All schedules in a model.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct ScheduleSet {
     pub constants: Vec<ConstantSchedule>,
     pub daily: Vec<DailySchedule>,

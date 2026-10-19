@@ -79,18 +79,12 @@ impl semio_framework_schema_composition::ArtifactCompositionFields for Puzzle3dP
 }
 
 impl MutationDiff<Puzzle3dPlaySnapshot> for Puzzle3dDiff {
-    fn apply(&self, projection: &Puzzle3dPlaySnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Puzzle3dPlaySnapshot> {
-        MutationDiff::<Puzzle3dSnapshot>::apply(self, projection.typed(), capability).map(Puzzle3dPlaySnapshot::from_typed)
-    }
-    fn absorb(&mut self, other: Self) {
-        MutationDiff::<Puzzle3dSnapshot>::absorb(self, other);
-    }
+
+
 }
 
 impl DiffAlgebra<Puzzle3dPlaySnapshot> for Puzzle3dDiff {
-    fn inverse(&self, base: &Puzzle3dPlaySnapshot) -> Self {
-        DiffAlgebra::<Puzzle3dSnapshot>::inverse(self, base.typed())
-    }
+
     fn is_empty(&self) -> bool {
         DiffAlgebra::<Puzzle3dSnapshot>::is_empty(self)
     }
@@ -124,16 +118,9 @@ impl Mutation<Puzzle3dPlaySnapshot> for Puzzle3dMutation {
         Mutation::<Puzzle3dSnapshot>::inverse_rows(self)
     }
 
-    fn diff(&self, projection: &Puzzle3dPlaySnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
-        Mutation::<Puzzle3dSnapshot>::diff(self, projection.typed.as_ref())
-    }
 
-    fn inverse(&self, projection: &Puzzle3dPlaySnapshot) -> Result<Vec<Puzzle3dMutation>, semio_framework_value::ValueError> {
-    Ok({
-        Mutation::<Puzzle3dSnapshot>::inverse(self, projection.typed.as_ref())?
-    
-    })
-}
+
+
     fn may_emit_foreign_steps(&self) -> bool {
         Mutation::<Puzzle3dSnapshot>::may_emit_foreign_steps(self)
     }

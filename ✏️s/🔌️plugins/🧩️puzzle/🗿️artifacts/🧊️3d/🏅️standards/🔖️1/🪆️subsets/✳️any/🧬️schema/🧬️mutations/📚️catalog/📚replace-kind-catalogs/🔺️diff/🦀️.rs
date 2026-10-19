@@ -1,5 +1,6 @@
 //! 🔺️ Sparse diff builder for `ReplaceKindCatalogs` — sets `meta.kindCatalogs`.
-use semio_s_artifact_puzzle_3d_diff::{Puzzle3dDiff, Puzzle3dMetaPatch};
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dMetaPatch;
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Diff

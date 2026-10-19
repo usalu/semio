@@ -164,81 +164,57 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::begin_engine_surface_close_token(token)
     }
 
-    pub fn close_engine_surface_step(&self, token: semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken, operation: semio_framework_trace::OperationId, sequence: &mut u64, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> bool {
+    pub fn close_engine_surface_step(&self, token: semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken, context: &mut semio_framework_job::StepContext<'_>) -> bool {
         let Ok(mut runtime) = self.try_lock() else {
             return false;
         };
         let Some(interaction) = runtime.interaction_mut() else {
             return false;
         };
-        let now = semio_framework_job::default_now_us();
-        let deadline = match now.and_then(|now| now.checked_add(1_000)) {
-            Some(deadline) => deadline,
-            None => return false,
-        };
-        let mut retained_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default();
-        let mut context = semio_framework_job::StepContext::new(
-            operation,
-            semio_framework_trace::Generation(token.generation),
-            semio_framework_job::StepBudget::new(1, deadline, grant),
-            semio_framework_job::root_cancel_token(),
-            semio_framework_job::default_now_us,
-            sequence,
-            &mut retained_progress,
-        );
-        semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::close_engine_surface_step(token, &mut context, &mut interaction.input)
+        semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::close_engine_surface_step(token, context, &mut interaction.input)
     }
 
     pub fn engine_surface_terminal_is_empty(&self, token: semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken) -> Result<bool, ()> {
         semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::engine_surface_terminal_nonopaque_is_empty(token)
     }
 
-    pub fn close_input_step(&self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
-        let Ok(mut runtime) = self.try_lock() else {
-            return Ok(false);
-        };
+    pub fn close_input_step(&self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        let Ok(mut runtime) = self.try_lock() else { return Ok(false) };
         let returned = {
             let Ok(mut queue) = self.0.completions.try_lock() else { return Ok(false) };
             let index = queue.ready.iter().position(|completion| match completion.apply {
-                RuntimeApply::ResumeFrameDeferred { .. } | RuntimeApply::ResumeDispatch { .. } | RuntimeApply::DispatchEvents(_) => true,
+                RuntimeApply::Applied | RuntimeApply::ResumeFrameDeferred { .. } | RuntimeApply::ResumeDispatch { .. } | RuntimeApply::DispatchEvents(_) => true,
                 #[cfg(not(target_arch = "wasm32"))]
-                RuntimeApply::RestoreInteraction(_) => true,
+                RuntimeApply::RestoreInteraction(_) | RuntimeApply::FrameExecutionReturned => true,
                 _ => false,
             });
-            index.and_then(|index| queue.take_at(index).map(|completion| (index, completion)))
+            index.and_then(|index| queue.checkout_at(index).map(|(completion, checkout)| (index, completion, checkout)))
         };
-        if let Some((index, mut completion)) = returned {
-            let original=completion.apply.close_returned_interaction_step(&mut *runtime,cx);completion.restores_interaction=completion.apply.restores_interaction();if !matches!(original,Ok(true)){self.0.completions.lock().expect("runtime completion mailbox lock").restore_at(index,completion)}return original.map(|_|false);
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        if !runtime.interaction_available() && runtime.pending_frame_deferred().is_none() {
-            if let Some(mut owner) = self.try_take_abandoned_frame_deferred() {
-                owner.cancel_current();
-                let Some((interaction, cursor)) = owner.take_pair() else { return Ok(false) };
-                runtime.return_interaction(interaction);
-                *runtime.pending_frame_deferred_mut() = Some(cursor);
-                return Ok(false);
+        if let Some((index, mut completion, checkout)) = returned {
+            if matches!(completion.apply, RuntimeApply::Applied) {
+                let original = frame_action_metadata(cx);
+                let mut queue = self.0.completions.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                if matches!(original, Ok(true)) { queue.finish_checkout(checkout); } else { queue.return_checkout(index, completion, checkout); }
+                return original.map(|_| false);
             }
+            let original = completion.apply.close_returned_interaction_step(&mut *runtime, cx);
+            completion.restores_interaction = completion.apply.restores_interaction();
+            if matches!(original, Ok(true)) { completion.apply = RuntimeApply::Applied; }
+            self.0.completions.lock().unwrap_or_else(std::sync::PoisonError::into_inner).return_checkout(index, completion, checkout);
+            return original.map(|_| false);
         }
+        if self.recover_original_frame_step(&mut *runtime, cx)? { return Ok(false); }
         if let Some(cursor) = runtime.pending_frame_deferred_mut().as_mut() {
             cursor.begin_close();
-            if cursor.close_step() {
-                *runtime.pending_frame_deferred_mut() = None;
-            }
+            if cursor.close_step(cx)? && frame_action_metadata(cx)? { *runtime.pending_frame_deferred_mut() = None; }
             return Ok(false);
         }
-        if !runtime.frame_actions_mut().close_step() {
+        if !runtime.frame_actions_mut().close_step(cx)? {
             return Ok(false);
         }
         let Some(interaction) = runtime.interaction_mut() else { return Ok(true) };
-        if !semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::close_clipboard_io_step(&mut interaction.input,cx)?{return Ok(false)}
-        Ok(interaction
-            .input
-            .close_step_with_receipt(|receipt| {
-                settle_renderer_action_receipt(receipt, semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Cancelled);
-            })
-            .is_ok_and(|complete| complete)
-            && interaction.input.terminal_is_empty())
+        if !semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::close_clipboard_io_step(&mut interaction.input, cx)? { return Ok(false); }
+        Ok(interaction.input.close_step_with_receipt(|receipt| { settle_renderer_action_receipt(receipt, semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Cancelled); }).is_ok_and(|complete| complete) && interaction.input.terminal_is_empty())
     }
 
 }

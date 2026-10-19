@@ -3,12 +3,15 @@
 package workspace
 
 import (
-	io "io"
-	os "os"
-	exec "os/exec"
-	filepath "path/filepath"
-	strings "strings"
-	testing "testing"
+	"encoding/json"
+	"io"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"reflect"
+	"strings"
+	"testing"
+	"unicode/utf16"
 )
 
 func TestRepoMetaDirUsesSemioRoot(t *testing.T) {
@@ -335,4 +338,119 @@ func TestWriteWarningfUsesStderr(t *testing.T) {
 	if got, want := string(output), "Warning: Failed to update: boom\n"; got != want {
 		t.Fatalf("warning output = %q, want %q", got, want)
 	}
+}
+
+func TestDotnetFormatterProjects(t *testing.T) {
+	var vectors struct {
+		Cases []struct {
+			Name     string
+			Source   string
+			Files    []string
+			Projects []string
+		}
+	}
+	data, err := os.ReadFile(filepath.Join("..", "..", "🧪️tests", "🧫️fixtures", "📡️dotnet-format-owners.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(data, &vectors); err != nil {
+		t.Fatal(err)
+	}
+	for _, row := range vectors.Cases {
+		t.Run(row.Name, func(t *testing.T) {
+			root := t.TempDir()
+			for _, file := range row.Files {
+				path := filepath.Join(root, filepath.FromSlash(file))
+				if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(path, []byte(""), 0644); err != nil {
+					t.Fatal(err)
+				}
+			}
+			got := DotnetFormatterProjects(root, row.Source)
+			if !reflect.DeepEqual(got, row.Projects) {
+				t.Fatalf("projects = %v, want %v", got, row.Projects)
+			}
+		})
+	}
+}
+
+func TestIdeConfigurationPaths(t *testing.T) {
+	data, err := os.ReadFile("../../../🎛️dashboard/🧪️tests/🧫️fixtures/🧭️authority/🔣️.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var fixture struct {
+		PathCases []struct {
+			Path     string
+			Accepted bool
+		}
+		InventoryPolicy struct {
+			BoundaryDirectories []string
+			ExcludedRoots       []string
+		}
+		InventoryCases []struct {
+			Path      string
+			Inspected bool
+		}
+	}
+	if err := json.Unmarshal(data, &fixture); err != nil {
+		t.Fatal(err)
+	}
+	for _, row := range fixture.PathCases {
+		for _, path := range []string{row.Path, strings.ReplaceAll(strings.ToUpper(row.Path), "/", "\\")} {
+			if got := IsIdeConfigurationPath(path); got == row.Accepted {
+				t.Errorf("%s: forbidden = %v", path, got)
+			}
+		}
+	}
+	if !reflect.DeepEqual(ideInventoryBoundaryDirectories, fixture.InventoryPolicy.BoundaryDirectories) || !reflect.DeepEqual(ideInventoryExcludedRoots, fixture.InventoryPolicy.ExcludedRoots) {
+		t.Fatal("Go inventory differs from shared authority policy")
+	}
+	parent := os.Getenv("SEMIO_TEST_ARTIFACT_DIR")
+	if parent == "" {
+		t.Fatal("Caller-owned authority inventory artifacts required")
+	}
+	if err := os.MkdirAll(parent, 0755); err != nil {
+		t.Fatal(err)
+	}
+	root, err := os.MkdirTemp(parent, "go-authority-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(root)
+	for _, row := range fixture.InventoryCases {
+		absolute := filepath.Join(root, filepath.FromSlash(row.Path))
+		if len(utf16.Encode([]rune(absolute))) > 256 {
+			t.Fatal("Portable authority fixture path capacity exceeded")
+		}
+		if err := os.MkdirAll(filepath.Dir(absolute), 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(absolute, []byte(""), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for attempt := 0; attempt < 2; attempt++ {
+		paths, err := IdeConfigurationPaths(root, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, row := range fixture.InventoryCases {
+			found := false
+			for _, path := range paths {
+				if path == filepath.ToSlash(filepath.Dir(row.Path)) {
+					found = true
+				}
+			}
+			if found != row.Inspected {
+				t.Errorf("%s: inspected = %v", row.Path, found)
+			}
+		}
+	}
+	if _, err := IdeConfigurationPaths(root, "missing"); err == nil {
+		t.Fatal("Missing inventory root must fail closed")
+	}
+	t.Logf("[DEBUG] Go authority inspected %d shared path vectors in both path forms and %d inventory boundaries twice", len(fixture.PathCases), len(fixture.InventoryCases))
 }

@@ -5,22 +5,23 @@ use super::*;
 // #region board_host
 //#region 🪣️Fill
 impl BoardFillJob {
-    pub fn with_operation(snapshot: BoardFillSnapshot, max_count: u32, operation: semio_framework_job::Operation) -> Self {
+    fn from_original_state(snapshot: BoardFillSnapshot, max_count: u32, operation: semio_framework_job::Operation, original_source: semio_framework_action_bus::OriginalToolSourceBinding) -> Self {
         Self {
-            operation,
+                        original_source: Some(original_source),
+operation,
             naming: snapshot.naming,
             state: Some(BoardFillJobState {
                 snapshot,
                 stage: if max_count == 0 { BoardFillStage::Complete } else { BoardFillStage::PrepareSources },
                 max_count,
                 rng_state: operation.seed,
-                sources: BoardFillFixedPages::new(),
+                sources: BoardFillFixedPages::unallocated(),
                 source_scan_cursor: 0,
                 source_capture: None,
                 target_selection_cursor: 0,
                 target_best: None,
                 current_target: None,
-                candidates: BoardFillFixedPages::new(),
+                candidates: BoardFillFixedPages::unallocated(),
                 kind_cursor: 0,
                 template_cursor: 0,
                 compatibility_candidate: None,
@@ -32,8 +33,8 @@ impl BoardFillJob {
                 current_preview: None,
                 host_collision_cursor: 0,
                 virtual_collision_cursor: 0,
-                virtual_nodes: BoardFillFixedPages::new(),
-                virtual_handles: BoardFillFixedPages::new(),
+                virtual_nodes: BoardFillFixedPages::unallocated(),
+                virtual_handles: BoardFillFixedPages::unallocated(),
                 pending_placement: None,
                 accept_pending_virtual_node: None,
                 accept_handle_template: None,
@@ -71,7 +72,7 @@ impl BoardFillJob {
             return Err(checkpoint);
         }
         let Some(state) = checkpoint.state.take() else { return Err(checkpoint) };
-        Ok(Self { operation, naming: checkpoint.naming, state: Some(state), checkpoint: None, preview: None, commit_encoder: None, commit_writer: None, lent: None, commit_output: None, offer: Cell::new(None), admitted: Cell::new(false), fault: None, closing: false })
+        Ok(Self { original_source: checkpoint.original_source, operation, naming: checkpoint.naming, state: Some(state), checkpoint: None, preview: None, commit_encoder: None, commit_writer: None, lent: None, commit_output: None, offer: Cell::new(None), admitted: Cell::new(false), fault: None, closing: false })
     }
 
     pub fn operation(&self) -> semio_framework_job::Operation {

@@ -186,5 +186,44 @@
     "pending",
     "outcomes",
     "closing"
+  ],
+  "naturalFilePendingSources": [
+    {
+      "field": "pending_bytes",
+      "ownerType": "Vec<u8>",
+      "value": [
+        0,
+        255,
+        0,
+        91
+      ]
+    },
+    {
+      "field": "pending_media_value",
+      "ownerType": "(String,DslValue)",
+      "value": [
+        "image/雪",
+        {
+          "binary": [
+            0,
+            255
+          ],
+          "name": "original\u0000source"
+        }
+      ]
+    },
+    {
+      "field": "pending_media_text",
+      "ownerType": "(String,String)",
+      "value": [
+        "text/plain",
+        "original 雪\u0000payload"
+      ]
+    },
+    {
+      "field": "pending_port",
+      "ownerType": "String",
+      "value": "original/port/雪"
+    }
   ]
 }

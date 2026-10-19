@@ -1,0 +1,1 @@
+{"schema":"semio.native-tuple-receiving/v1","maximumCopyBytes":4096,"cases":[{"kind":"pair","input":[17,"β"],"output":[17,"β"]},{"kind":"triple","input":[2024,2,29],"output":[2024,2,29]}],"refusals":[[17],[17,"β",3]]}

@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Diff-only law gate lane vectors",
+  "description": "Per original ephemeral lane/type program of the diff-only law gate: the `line|rule` keys R13/R14 owe, derived independently by the TypeScript lexical scanner.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "cases"],
+  "properties": {
+    "version": {"const": 1},
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "expected"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "expected": {
+            "type": "array",
+            "items": {"type": "string", "pattern": "^[1-9][0-9]*\\|R1[34]$"}
+          }
+        }
+      }
+    }
+  }
+}

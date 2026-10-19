@@ -1,0 +1,4 @@
+[workspace]
+[package]
+name="synthetic"
+version="0.0.0"

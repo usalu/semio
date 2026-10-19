@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mode", "directory", "obsoleteDirectory", "releaseBytes", "obsoleteBytes"],
+  "properties": {
+    "mode": { "const": "release" },
+    "directory": { "const": "dist/build/release" },
+    "obsoleteDirectory": { "const": "dist/build" },
+    "releaseBytes": { "type": "string", "minLength": 1 },
+    "obsoleteBytes": { "type": "string", "minLength": 1 }
+  }
+}

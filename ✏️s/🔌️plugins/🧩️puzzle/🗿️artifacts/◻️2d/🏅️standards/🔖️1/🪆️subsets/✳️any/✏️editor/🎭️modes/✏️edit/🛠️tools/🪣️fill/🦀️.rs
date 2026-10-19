@@ -1,15 +1,26 @@
-//! 🪣️ Edit-mode tool — Fill: a whole-document generator (not a window utility) declared as a tool run. Its
 //! count is a mode-level tool measure over the shared config; progress, pause, single step, abort and finalize
+//! 🪣️ Edit-mode tool — Fill: a whole-document generator (not a window utility) declared as a tool run. Its
 //! are the framework ToolRun panel and actions (`📋️tool-run-contract.md` §2.4–§2.6), and tested candidates are
 //! `placement2d` trace records.
 
-use crate::editor::puzzle2d::precompute::fill::{FillRunCounter, FillRunReason, FillRunStage};
-use crate::editor::puzzle2d::terminology::{puzzle2d_localized, Puzzle2dLabels};
+use crate::editor::puzzle2d::precompute::fill::FillRunCounter;
+use crate::editor::puzzle2d::precompute::fill::FillRunReason;
+use crate::editor::puzzle2d::precompute::fill::FillRunStage;
+use crate::editor::puzzle2d::terminology::puzzle2d_localized;
+use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use {crate::editor::puzzle2d::snapshot::puzzle2d_action, crate::editor::puzzle2d::snapshot::Puzzle2dScene};
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ToolDefinition;
 use semio_framework_plugin::WindowMeasure;
-use semio_framework_tool_run::{JobKindId, ToolRunCounterDefinition, ToolRunDefinition, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunTraceKind};
+use semio_framework_tool_run::JobKindId;
+use semio_framework_tool_run::ToolRunCounterDefinition;
+use semio_framework_tool_run::ToolRunDefinition;
+use semio_framework_tool_run::ToolRunReasonDefinition;
+use semio_framework_tool_run::ToolRunRebasePolicy;
+use semio_framework_tool_run::ToolRunReconfigurePolicy;
+use semio_framework_tool_run::ToolRunSettingsReads;
+use semio_framework_tool_run::ToolRunStageDefinition;
+use semio_framework_tool_run::ToolRunTraceKind;
 use semio_s_artifact_puzzle_2d::editor::puzzle2d::modes::edit::options::brush::puzzle2d_distribution_measures;
 
 //#region 🔖️Constants

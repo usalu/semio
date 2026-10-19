@@ -2,7 +2,7 @@
 //!
 //! Renamed from the pre-migration `📡️protocol` crate: only `encode_op`/`decode_op` for `Fem2dMutation`
 //! live here. The old crate's hand-rolled `Fem2dCommand` enum does NOT move here — it is rebuilt by
-//! `app_commands!` in the app's `🦀️.rs` (see `crate::editor::fem2d::Fem2dCommand`).
+//! `app_commands!` in the app's `🦀️.rs` (see `semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::Fem2dCommand`).
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use protocol::OpBinary;

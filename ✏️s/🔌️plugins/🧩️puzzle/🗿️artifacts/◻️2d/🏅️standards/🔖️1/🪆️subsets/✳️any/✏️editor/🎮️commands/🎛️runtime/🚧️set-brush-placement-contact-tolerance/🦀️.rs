@@ -1,5 +1,5 @@
-//! ⚙️ `set-brush-placement-contact-tolerance` command — the world-unit margin every brush/fill
 //! placement footprint is grown by before the collision test, a shared `Puzzle2dConfig` preference a
+//! ⚙️ `set-brush-placement-contact-tolerance` command — the world-unit margin every brush/fill
 //! live fill run re-reads through `ToolRunSettingsReads`.
 
 use {crate::editor::puzzle2d::snapshot::puzzle2d_absolute_or_delta, crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLACEMENT_MEASURE_MAX};

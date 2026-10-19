@@ -89,77 +89,10 @@ pub fn test_app_command_emit<const RETAINED: bool, const TOOLS: u8>(job: &TestAp
     test_app_reduce(command, &doc, &cfg)
 }
 
-/// 🧵️ `TestApp`'s app-owned reducer job. Deliberately the SAME minimal shape as `TestRestartJob` and
-/// `DummyFixtureJob` rather than the generic `retained_command::ArtifactRetainedCommandJob`: that
-/// type inlines an `Emit`, an `EphemeralEmit`, a 512-byte checkpoint buffer and two wire-page
-/// owners, and the framework-reserved dispatch generator this fixture also drives is already
-/// measured at ~1.75 MiB of the 2 MiB bounded thread stack
-/// (`one_framework_reserved_route_fits_a_bounded_thread_stack`).
-#[doc(hidden)]
-pub struct TestRawLease(semio_framework_plugin_decl_app::tool_contract::ArtifactToolRawInput);
-
-#[doc(hidden)]
-pub struct TestRawLeaseCursor {
-    pub lease: std::mem::ManuallyDrop<Option<semio_framework_plugin_decl_app::tool_contract::ArtifactToolRawInput>>,
-}
-
-impl semio_framework_value::retirement::RetireOwned for TestRawLease {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        Box::new(TestRawLeaseCursor { lease: std::mem::ManuallyDrop::new(Some(self.0)) })
-    }
-
-    fn retirement_birth_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<TestRawLeaseCursor>())
-    }
-
-    fn controlled_retirement_supported() -> bool {
-        true
-    }
-}
-
-impl semio_framework_value::retirement::RetirementCursor for TestRawLeaseCursor {
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::retirement::RetirementStep {
-        use semio_framework_value::retirement::RetirementStep;
-        if self.lease.is_none() {
-            return RetirementStep::Complete;
-        }
-        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
-            return RetirementStep::BudgetExhausted;
-        }
-        drop(self.lease.take());
-        RetirementStep::Complete
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.lease.is_none()
-    }
-
-    fn next_birth_bytes(&self, _copy: usize) -> Option<usize> {
-        Some(0)
-    }
-
-    fn next_close_byte_demand(&self) -> Option<usize> {
-        Some(0)
-    }
-
-    fn terminal_release_bytes(&self) -> Option<usize> {
-        self.lease.is_none().then_some(std::mem::size_of::<Self>())
-    }
-}
-
-impl Drop for TestRawLeaseCursor {
-    fn drop(&mut self) {
-        assert!(std::thread::panicking() || self.lease.is_none(), "fixture raw wire lease reached Drop before it returned");
-        if self.lease.is_none() {
-            unsafe { std::mem::ManuallyDrop::drop(&mut self.lease) };
-        }
-    }
-}
-
-#[doc(hidden)]
-#[derive(semio_framework_value::RetireOwned)]
 pub struct TestAppCommandInputs {
-    pub raw_wire: TestRawLease,
+    controller_id:String,
+    tool_id:String,
+    schema_id:String,
     pub window_config: Option<semio_framework_plugin_window_config::WindowConfigSnapshot>,
     pub interaction_state: semio_framework_value::retirement::arc_custody::SharedControlledRetirement<InteractionState>,
     pub interaction_hover: semio_framework_value::retirement::arc_custody::SharedControlledRetirement<InteractionHoverState>,
@@ -311,22 +244,9 @@ impl<const RETAINED: bool, const TOOLS: u8> ToolJobFactory for TestAppCommandFac
     fn execution_contract(&self) -> ToolExecutionContract {
         test_app_command_contract()
     }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(payload)
-    }
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        mut payload: Self::Payload,
-        input: action_bus::RetainedToolWireInput,
-        checkpoint: Option<action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, action_bus::RetainedToolWireInput, Option<action_bus::RetainedToolWireInput>)> {
-        if checkpoint.is_some() {
-            return Err((ToolJobFactoryError::new("test app command resume starts a fresh command owner"), input, checkpoint));
-        }
-        payload.raw = Some(input);
-        Ok(payload)
-    }
+    fn admission_demands(&self,_operation:&semio_framework_job::Operation,payload:&Self::Payload,input:Option<&semio_framework::RetainedToolWireInput>,checkpoint:Option<&semio_framework::RetainedToolWireInput>)->Result<semio_framework::action_bus::ToolJobAdmissionDemand,semio_framework_value::ValueError>{if checkpoint.is_some()||(input.is_some()&&payload.raw.is_some()){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original typed job refuses a replacement wire owner or restart checkpoint"));}Ok(semio_framework::action_bus::ToolJobAdmissionDemand::reused_job())}
+fn admit_job(&mut self,context:&mut semio_framework_job::StepContext<'_>,operation:&semio_framework_job::Operation,payload:&mut Option<Box<Self::Payload>>,input:&mut Option<semio_framework::RetainedToolWireInput>,checkpoint:&mut Option<semio_framework::RetainedToolWireInput>,output:&mut Option<Box<Self::Job>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let demand=self.admission_demands(operation,payload.as_deref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typed job payload is absent"))?,input.as_ref(),checkpoint.as_ref())?;semio_framework::action_bus::admit_original_tool_job_controlled(context,operation,payload,input,checkpoint,output,demand,|_,payload,input,_|{if input.is_some(){payload.as_mut().expect("retained original job").raw=input.take();}let job=payload.take().expect("admitted same original job");Ok((job,semio_framework_job::RetainedCloneProgress{copied_items:1,..Default::default()}))})}
+
 }
 
 impl<const RETAINED: bool, const TOOLS: u8> ArtifactOwnedToolJobFactory for TestAppCommandFactory<RETAINED, TOOLS> {
@@ -375,27 +295,17 @@ pub fn test_restart_register<const RETAINED: bool, const TOOLS: u8>(registry: &m
 }
 
 #[doc(hidden)]
-pub async fn test_restart_build<const RETAINED: bool, const TOOLS: u8>(request: ArtifactOwnedToolJobRequest<TestApp<RETAINED, TOOLS>>) -> Result<Option<ToolOperationSpec>, Fault> {
-    if RETAINED {
-        assert!(matches!(request.command.as_ref(), TestCommand::ApplyCountFromTask { .. }));
-        assert!(request.snapshot.label.is_empty(), "restart fixture begins from its actual fresh snapshot");
-        return test_app_command_spec::<RETAINED, TOOLS>(request);
-    }
-    if TOOLS == TEST_APP_TOOLS_NONE || !TEST_APP_COMMAND_TOOL_IDS.contains(&request.tool_id.as_str()) {
-        return Ok(None);
-    }
-    test_app_command_spec::<RETAINED, TOOLS>(request)
-}
+pub fn test_restart_build<const RETAINED:bool,const TOOLS:u8>(request:&mut Option<ArtifactOwnedToolJobRequest<TestApp<RETAINED,TOOLS>>>,output:&mut Option<semio_framework::ErasedToolJob>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let original=request.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original fixture request absent"))?;if RETAINED{assert!(matches!(original.command.as_ref(),TestCommand::ApplyCountFromTask{..}));assert!(original.snapshot.label.is_empty());}else if TOOLS==TEST_APP_TOOLS_NONE||!TEST_APP_COMMAND_TOOL_IDS.contains(&original.tool_id.as_str()){return Ok(false)}test_app_command_job(request,output,cx)}
 
 /// 🧵️ Builds the job on its OWN synchronous frame — every real editor's
 /// `ArtifactEditor::build_tool_job` is sync for the same bounded-stack reason.
 #[doc(hidden)]
 #[inline(never)]
-pub fn test_app_command_spec<const RETAINED: bool, const TOOLS: u8>(request: ArtifactOwnedToolJobRequest<TestApp<RETAINED, TOOLS>>) -> Result<Option<ToolOperationSpec>, Fault> {
+pub fn test_app_command_job<const RETAINED:bool,const TOOLS:u8>(request:&mut Option<ArtifactOwnedToolJobRequest<TestApp<RETAINED,TOOLS>>>,output:&mut Option<semio_framework::ErasedToolJob>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{crate::app_testing::mutation_fixture::job_close::admit_fixture_tool_job(request,output,cx,|mut request|{
     let job = TestAppCommandJob {
         rejected: None,
         admitted: false,
-        residual: Some(TestAppCommandInputs { raw_wire: TestRawLease(request.raw_wire), window_config: request.window_config, interaction_state: semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(request.interaction_state), interaction_hover: semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(request.interaction_hover), instance_operation_owner: request.instance_operation_owner, output_chunks: request.output_chunks }),
+        residual: Some(TestAppCommandInputs { controller_id:request.controller_id,tool_id:request.tool_id,schema_id:request.payload_schema_id, window_config: request.window_config, interaction_state: semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(request.interaction_state), interaction_hover: semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(request.interaction_hover), instance_operation_owner: request.instance_operation_owner, output_chunks: request.output_chunks }),
         metadata: Some(AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: request.operation.operation.0, generation: request.operation.generation.0, canonical_base_revision: request.canonical_base_revision, retained: request.retained, authoring_seed: request.authoring_seed }),
         command: Some(request.command),
         snapshot: Some(request.snapshot),
@@ -405,12 +315,12 @@ pub fn test_app_command_spec<const RETAINED: bool, const TOOLS: u8>(request: Art
         history: Some(request.history),
         context: Some(request.context),
         completion: Some(request.completion),
-        raw: None,
+        raw: request.input.take(),
         page: 0,
         closing: false,
     };
-    Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, job, request.operation)))
-}
+
+job})}
 
 #[doc(hidden)]
 pub struct TestRestartFactory<const RETAINED: bool, const TOOLS: u8> { pub keys: Vec<ToolFactoryKey> }
@@ -422,12 +332,9 @@ impl<const RETAINED: bool, const TOOLS: u8> ToolJobFactory for TestRestartFactor
     fn payload_schema_id(&self) -> &str { TEST_RESTART_SCHEMA }
     fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
     fn execution_contract(&self) -> ToolExecutionContract { ToolExecutionContract::resumable(4_096, 4, 1, 4_096, 7_500, 1, 1) }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> { Ok(payload) }
-    fn create_job_from_wire_pages_with_payload(&mut self, _operation: semio_framework_job::Operation, mut payload: Self::Payload, input: action_bus::RetainedToolWireInput, checkpoint: Option<action_bus::RetainedToolWireInput>) -> Result<Self::Job, (ToolJobFactoryError, action_bus::RetainedToolWireInput, Option<action_bus::RetainedToolWireInput>)> {
-        if checkpoint.is_some() { return Err((ToolJobFactoryError::new("restart resume starts a fresh command owner"), input, checkpoint)); }
-        payload.raw = Some(input);
-        Ok(payload)
-    }
+    fn admission_demands(&self,_operation:&semio_framework_job::Operation,payload:&Self::Payload,input:Option<&semio_framework::RetainedToolWireInput>,checkpoint:Option<&semio_framework::RetainedToolWireInput>)->Result<semio_framework::action_bus::ToolJobAdmissionDemand,semio_framework_value::ValueError>{if checkpoint.is_some()||(input.is_some()&&payload.raw.is_some()){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original typed job refuses a replacement wire owner or restart checkpoint"));}Ok(semio_framework::action_bus::ToolJobAdmissionDemand::reused_job())}
+fn admit_job(&mut self,context:&mut semio_framework_job::StepContext<'_>,operation:&semio_framework_job::Operation,payload:&mut Option<Box<Self::Payload>>,input:&mut Option<semio_framework::RetainedToolWireInput>,checkpoint:&mut Option<semio_framework::RetainedToolWireInput>,output:&mut Option<Box<Self::Job>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let demand=self.admission_demands(operation,payload.as_deref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typed job payload is absent"))?,input.as_ref(),checkpoint.as_ref())?;semio_framework::action_bus::admit_original_tool_job_controlled(context,operation,payload,input,checkpoint,output,demand,|_,payload,input,_|{if input.is_some(){payload.as_mut().expect("retained original job").raw=input.take();}let job=payload.take().expect("admitted same original job");Ok((job,semio_framework_job::RetainedCloneProgress{copied_items:1,..Default::default()}))})}
+
 }
 
 impl<const RETAINED: bool, const TOOLS: u8> ArtifactOwnedToolJobFactory for TestRestartFactory<RETAINED, TOOLS> {

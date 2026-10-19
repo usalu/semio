@@ -25,26 +25,15 @@ impl BoardHostTestEvents for BoardHost {
 /// anything is allowed to be dropped, which is why only the laws that paint really need this.
 pub fn close_board_host(host: BoardHost) {
     let mut retirement = crate::editor::puzzle2d::engine::BoardHostRetirement::new(host);
-    let mut sequence = 0_u64;
+    let mut original = semio_s_plugin_puzzle_jobs::testing::OriginalFixture::new(
+        semio_framework_job::OperationId(1), semio_framework_job::Generation(1),
+        semio_s_plugin_puzzle_jobs::testing::fixture_stock(), semio_framework_job::default_now_us,
+        u64::MAX, 1 << 48,
+    );
     for turn in 0..1_u32 << 20 {
-        // 🕒️ `default_now_us`, never a clock that answers `None`: `StepContext::deadline_exceeded`
-        // is `now_us().is_none_or(|now| now >= deadline)`, so a `None`-returning clock makes
-        // `should_yield()` permanently TRUE — and `close_nonopaque_step` returns `false` on its
-        // first line without doing one unit of work. The ladder then never advances and this loop
-        // spun 2²⁰ times before panicking, which aborted the whole test binary from the
-        // `BoardHostRetirement` Drop assert.
-        let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
-        let mut context = semio_framework_job::StepContext::new(
-            semio_framework_job::OperationId(1),
-            semio_framework_job::Generation(1),
-            semio_framework_job::StepBudget::new(u64::MAX, u64::MAX, UNBOUNDED_STEP_GRANT),
-            semio_framework_job::root_cancel_token(),
-            semio_framework_job::default_now_us,
-            &mut sequence,
-            &mut context_retained,
-        );
-        if retirement.close_step(&mut context) {
+        if original.turn(semio_s_plugin_puzzle_jobs::testing::fixture_stock(), |cx| Ok(retirement.close_step(cx))).expect("original BoardHost retirement") {
             assert!(turn > 0, "a board host that admitted resources takes more than one close turn");
+            original.finish();
             return;
         }
     }

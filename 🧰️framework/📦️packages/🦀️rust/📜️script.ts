@@ -146,6 +146,18 @@ class ActionChoicesTestScript extends BundleScript {
   }
 }
 
+
+/** ⛽️ Proves original shared staged payload source, page birth and commit funding against Buffer and the system allocator. */
+class StagedPayloadFundingTestScript extends BundleScript {
+ async run(segments: string[]): Promise<void> {
+  const { rest } = resolveTestLevel(segments);
+  await runBudgetedTestCommand(process.execPath, ["test", resolve(this.repoRoot, "🔨️modules/🧵️job/🧪️tests/⛽️staged-projection/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs(), throwOnFailure: true });
+  await testCargo(this.repoRoot, "🔨️modules/🧵️job/📦️packages/🦀️rust/Cargo.toml", ["semio-framework-job"], rest.length ? rest : ["--lib", "-E", "test(original_staged_projection_admits_source_and_writer_frontiers_independently) | test(original_staged_projection_reuses_its_retained_refused_backing_without_allocation) | test(original_boxed_staged_payload_initializes_and_projects_under_fixed_small_copy_grants) | test(original_in_place_payload_builder_preserves_fixed_grants_source_pages_and_all_cancellation_frontiers) | test(original_payload_authority_admits_once_and_borrowed_contexts_preserve_original_ledger_and_receipts) | test(original_payload_pages_preserve_narrow_capacity_exact_extents_and_native_conservation) | test(original_session_frame_return_has_exact_custody) | test(payload_retirement::tests)", "--status-level", "pass", "--final-status-level", "all", "--", "--nocapture"]);
+  await runBudgetedTestCommand(process.execPath, ["test", resolve(this.repoRoot, "🔨️modules/⏯️tool-run/🎞️tick/🛫️encode/🧪️tests/🟦️.ts"), resolve(this.repoRoot, "🔨️modules/⏯️tool-run/🎞️tick/⏭️successor/🧪️tests/🟦️.ts"),resolve(this.repoRoot,"🔨️modules/⏯️tool-run/📨️payload/🌊️stream/🧪️tests/🟦️.ts"),resolve(this.repoRoot,"🔨️modules/⏯️tool-run/📨️payload/🌊️stream/📡️wire/🧪️tests/🟦️.ts"),resolve(this.repoRoot,"🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/🧪️tests/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs(), throwOnFailure: true });
+  await testCargo(this.repoRoot, "🔨️modules/⏯️tool-run/📦️packages/🦀️rust/Cargo.toml", ["semio-framework-tool-run"], ["--lib", "-E", "test(original_tick_wire_preserves_writer_columns_and_fixed_grants) | test(original_tick_successor_preserves_original_native_columns_and_funded_metadata_receipt) | test(original_payload_stream)", "--status-level", "pass", "--final-status-level", "all", "--", "--nocapture"]);
+ }
+}
+
 class CoreModulesTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const phaseControl=createIssuedResourceControlV1(this.invocation,"framework:tests",0);
@@ -155,6 +167,9 @@ class CoreModulesTestScript extends BundleScript {
 }
 
 /** 🗜️ Verifies admitted physical compression against the independent zlib and miniz oracles. */
+class RetainedPackEncodingTestScript extends BundleScript{
+ async run(segments:string[]):Promise<void>{const{rest}=resolveTestLevel(segments);await runBudgetedTestCommand(process.execPath,["test",resolve(this.repoRoot,"🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});await testCargo(this.repoRoot,"🔨️modules/🎒️pack/📦️packages/🦀️rust/Cargo.toml",["semio-framework-pack"],rest.length?rest:["--lib","-E","test(borrowed_projected_pack_section_replay_keeps_original_symbols_and_text_views) | test(borrowed_projected_pack_original_expression_ast_matches_independent_corpus_and_cancellation) | test(borrowed_projected_pack_standard_map_statements_wire_match_portable_oracle) | test(borrowed_projected_pack_native_paged_key_and_text_cross_unicode_pages) | test(borrowed_pack_document_default_codec_exact_original_output_and_cancellation) | test(borrowed_pack_document_derived_expression_joins_original_symbol_and_default_codec) | test(borrowed_pack_document_multiple_original_frames_match_canonical_oracle) | test(borrowed_pack_document_raw_body_limit_retains_refusal_receipt_and_output_custody) | test(borrowed_pack_document_source_depth_refuses_explicitly_without_grant_stall) | test(borrowed_pack_document_standard_chunks_preserve_original_and_independent_hash) | test(borrowed_pack_document_chunk_frontiers_cancel_with_exact_original_retirement) | test(required_chunked_forgery_with_valid_header_and_footer_crc_is_refused) | test(record_borrowed_schema_hash_retains_exact_paged_work_and_cancellation) | test(retained_pack_required_chunked_matches_actual_custody_and_independent_crc)","--status-level","pass","--final-status-level","all","--","--nocapture"]);}
+}
 class DeflateEncodingTestScript extends BundleScript{
   async run(segments:string[]):Promise<void>{
     const phaseControl=createIssuedResourceControlV1(this.invocation,"framework:tests",0);
@@ -307,9 +322,22 @@ class ViewModelOriginalScript extends BundleScript {
     await testCargo(this.invocation,phaseControl,this.repoRoot,"📦️packages/🦀️rust/Cargo.toml",["semio-framework-manifest-view-model"],["--lib","resolved_host_context_tests::view_model_original_retirement","--","--nocapture"]);
  }
 }
+/** 🧰️ Runs the shared exact-instance utility laws through the original framework owner. */
+class WindowUtilityNativeScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length)throw Error("test-window-utility-native accepts no arguments");
+  await testCargo(this.repoRoot,"📦️packages/🦀️rust/Cargo.toml",["semio-framework"],["--lib","manifest::window_view_context_tests","--","--nocapture"]);
+ }
+}
 const workspace=process.env.SEMIO_COMMAND_WORKSPACE;
 if(!workspace||!isAbsolute(workspace))throw Error("Explicit General command workspace required");
-const router = new ScriptRouter(import.meta.dir,workspace).register("test-view-model-original",ViewModelOriginalScript).register("test-source-projection",SourceProjectionScript).register("test-directory-discovery",DirectoryDiscoveryScript).register("test-command-ingress-consumer",CommandIngressConsumerScript).register("test-artifact-kind-source", ArtifactKindSourceScript).register("test", TestScript).register("test-fixture-ownership-source", FixtureOwnershipSourceScript).register("test-action-choices", ActionChoicesTestScript).register("test-tool-run-actions", ToolRunActionsTestScript).register("test-history-edit-actions", HistoryEditActionsTestScript).register("test-history-progress", HistoryProgressTestScript).register("test-mutation-inputs", MutationInputsTestScript).register("test-host-effect-invocation", HostEffectInvocationTestScript).register("test-snapshot-sqlite", SnapshotSqliteTestScript).register("test-core-modules", CoreModulesTestScript).register("test-deflate-encoding",DeflateEncodingTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("test-argument-retirement-native",ArgumentRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
+
+/** 🎟️ Exercises portable admission decisions and actual original-source factory capabilities. */
+class OriginalFactoryAdmissionScript extends BundleScript{async run(args:string[]):Promise<void>{if(args.length>1||(args.length===1&&args[0]!=="source"))throw Error("test-original-factory-admission [source]");await runBudgetedTestCommand(process.execPath,["test",resolve(this.root,"../../🔨️modules/🎯️action-bus/🚪️admission/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,budgetMs:15000});if(args[0]!=="source")await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework"],cwd:this.root,extraArgs:["--lib","action_bus::","--","--nocapture"]},readCargoTestPolicyV1(process.env),this.repoRoot,this.invocation);}}
+
+const router = new ScriptRouter(import.meta.dir,workspace).register("test-view-model-original",ViewModelOriginalScript).register("test-source-projection",SourceProjectionScript).register("test-directory-discovery",DirectoryDiscoveryScript).register("test-command-ingress-consumer",CommandIngressConsumerScript).register("test-artifact-kind-source", ArtifactKindSourceScript).register("test", TestScript).register("test-fixture-ownership-source", FixtureOwnershipSourceScript).register("test-action-choices", ActionChoicesTestScript).register("test-tool-run-actions", ToolRunActionsTestScript).register("test-history-edit-actions", HistoryEditActionsTestScript).register("test-history-progress", HistoryProgressTestScript).register("test-mutation-inputs", MutationInputsTestScript).register("test-host-effect-invocation", HostEffectInvocationTestScript).register("test-snapshot-sqlite", SnapshotSqliteTestScript).register("test-core-modules", CoreModulesTestScript).register("test-deflate-encoding",DeflateEncodingTestScript).register("test-retained-pack-encoding",RetainedPackEncodingTestScript).register("test-staged-payload-funding",StagedPayloadFundingTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("test-argument-retirement-native",ArgumentRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
 
 router.register("test-snapshot-receiving-source",SnapshotReceivingSourceScript);
+router.register("test-window-utility-native",WindowUtilityNativeScript);
+router.register("test-original-factory-admission",OriginalFactoryAdmissionScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

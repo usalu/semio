@@ -21,19 +21,9 @@ pub fn sign_out() -> IdentityConfigMutation {
 impl MutationKind<IdentitySetting, IdentityConfigMutation> for SignOut {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "clear", entity: "identity", kind: "sign-out", record: "Cleared" };
 
-    fn diff(&self, base: &IdentitySetting) -> MutationOutcome<IdentityDiff> {
-        if base.0.is_none() {
-            return MutationOutcome::empty();
-        }
-        MutationOutcome::new(IdentityDiff { session: Some(SettingEdit::new(None)) })
-    }
 
-    fn inverse(&self, base: &IdentitySetting) -> Result<Vec<IdentityConfigMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        base.0.clone().map(sign_in).into_iter().collect()
-    
-    })())
-}
+
+
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Sign out", "Abmelden")
@@ -42,5 +32,20 @@ impl MutationKind<IdentitySetting, IdentityConfigMutation> for SignOut {
     fn target(&self) -> Vec<String> {
         vec!["identity".to_string()]
     }
+}
+
+impl crate::os_spr::ColdMutationKind<IdentitySetting, IdentityConfigMutation> for SignOut {
+    fn diff(&self, base: &IdentitySetting) -> MutationOutcome<IdentityDiff> {
+        if base.0.is_none() {
+            return MutationOutcome::empty();
+        }
+        MutationOutcome::new(IdentityDiff { session: Some(SettingEdit::new(None)) })
+    }
+    fn inverse(&self, base: &IdentitySetting) -> Result<Vec<IdentityConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+        base.0.clone().map(sign_in).into_iter().collect()
+    
+    })())
+}
 }
 //#endregion 🔖️Mutation

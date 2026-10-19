@@ -1,0 +1,33 @@
+{
+  "cases": [
+    {
+      "id": "first-image",
+      "request": { "version": 1, "revision": "0123456789abcdef0123456789abcdef01234567", "imageId": "sha256:9d99a75171aea000c711b34c0e5e3f28d3d537dd99d110eafbfbc2bd8e52c2bf" },
+      "config": "{\"architecture\":\"amd64\",\"os\":\"linux\"}",
+      "tag": "sha-0123456789ab-9d99a75171aea000c711b34c0e5e3f28d3d537dd99d110eafbfbc2bd8e52c2bf"
+    },
+    {
+      "id": "same-revision-different-image",
+      "request": { "version": 1, "revision": "0123456789abcdef0123456789abcdef01234567", "imageId": "sha256:3187c840679bfc005019820869a7de8e07fa8923a47cab7830923b9eca14a3a8" },
+      "config": "{\"architecture\":\"amd64\",\"os\":\"linux\",\"config\":{\"Env\":[\"RELEASE=second\"]}}",
+      "tag": "sha-0123456789ab-3187c840679bfc005019820869a7de8e07fa8923a47cab7830923b9eca14a3a8"
+    },
+    {
+      "id": "same-image-stable-tag",
+      "request": { "version": 1, "revision": "0123456789abcdef0123456789abcdef01234567", "imageId": "sha256:9d99a75171aea000c711b34c0e5e3f28d3d537dd99d110eafbfbc2bd8e52c2bf" },
+      "config": "{\"architecture\":\"amd64\",\"os\":\"linux\"}",
+      "tag": "sha-0123456789ab-9d99a75171aea000c711b34c0e5e3f28d3d537dd99d110eafbfbc2bd8e52c2bf"
+    }
+  ],
+  "rejected": [
+    { "version": 1, "revision": "0123456789ab", "imageId": "sha256:9d99a75171aea000c711b34c0e5e3f28d3d537dd99d110eafbfbc2bd8e52c2bf" },
+    { "version": 1, "revision": "0123456789ABCDEF0123456789ABCDEF01234567", "imageId": "sha256:9d99a75171aea000c711b34c0e5e3f28d3d537dd99d110eafbfbc2bd8e52c2bf" },
+    { "version": 1, "revision": "0123456789abcdef0123456789abcdef01234567", "imageId": "sha256:9d99a75171ae" },
+    { "version": 1, "revision": "0123456789abcdef0123456789abcdef01234567", "imageId": "sha512:9d99a75171aea000c711b34c0e5e3f28d3d537dd99d110eafbfbc2bd8e52c2bf" },
+    { "version": 1, "revision": "0123456789abcdef0123456789abcdef01234567", "imageId": "sha256:9D99A75171AEA000C711B34C0E5E3F28D3D537DD99D110EAFBFBC2BD8E52C2BF" },
+    { "version": 1, "revision": "0123456789abcdef0123456789abcdef01234567" },
+    { "version": 1, "revision": "0123456789abcdef0123456789abcdef01234567", "imageId": "sha256:9d99a75171aea000c711b34c0e5e3f28d3d537dd99d110eafbfbc2bd8e52c2bf", "tag": "latest" },
+    { "version": 1, "revision": "0123456789abcdef0123456789abcdef01234567\n", "imageId": "sha256:9d99a75171aea000c711b34c0e5e3f28d3d537dd99d110eafbfbc2bd8e52c2bf" },
+    { "version": 1, "revision": "0123456789abcdef0123456789abcdef01234567", "imageId": "sha256:9d99a75171aea000c711b34c0e5e3f28d3d537dd99d110eafbfbc2bd8e52c2bf\n" }
+  ]
+}

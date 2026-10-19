@@ -1,18 +1,36 @@
 {
-  "$schema": "./📐️schema.json",
+  "$schema": "./🧬️schema/🔣️.json",
   "schema": "semio.component-close-frame-turn.v2",
   "closeHost": "component-a",
   "liveHost": "window-b",
   "maxCloseUnitsPerTurn": 1,
   "turns": [
-    { "closeOutcome": "frameRetirement", "inputSequence": 41, "snapshotRevision": null },
-    { "closeOutcome": "externalWait", "inputSequence": 42, "snapshotRevision": null },
-    { "closeOutcome": "terminal", "inputSequence": 43, "snapshotRevision": 8 }
+    {
+      "closeOutcome": "frameRetirement",
+      "inputSequence": 41,
+      "snapshotRevision": null
+    },
+    {
+      "closeOutcome": "externalWait",
+      "inputSequence": 42,
+      "snapshotRevision": null
+    },
+    {
+      "closeOutcome": "terminal",
+      "inputSequence": 43,
+      "snapshotRevision": 8
+    }
   ],
   "expected": {
     "closeTerminal": true,
-    "liveInputSequences": [41, 42, 43],
-    "publishedSnapshotRevisions": [8],
+    "liveInputSequences": [
+      41,
+      42,
+      43
+    ],
+    "publishedSnapshotRevisions": [
+      8
+    ],
     "closingHostPublications": [],
     "sameGenerationReadmitted": true
   }

@@ -16,6 +16,11 @@ pub struct AddCounter {
 //#region ⚙️Behavior
 impl MutationKind<i64, CounterMutation> for AddCounter {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "counter", kind: "add-counter", record: "AddedCounter" };
+
+
+}
+
+impl crate::os_spr::ColdMutationKind<i64, CounterMutation> for AddCounter {
     fn diff(&self, _base: &i64) -> MutationOutcome<CounterDiff> {
         MutationOutcome::new(CounterDiff::delta(self.delta))
     }
@@ -46,6 +51,6 @@ impl OpText for AddCounter {
 
 //#region 🧪️Contract
 #[cfg(test)]
-#[path = "../../../../🧪️tests/🧬️mutation-laws-mutations-add-counter/🦀️.rs"]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Contract

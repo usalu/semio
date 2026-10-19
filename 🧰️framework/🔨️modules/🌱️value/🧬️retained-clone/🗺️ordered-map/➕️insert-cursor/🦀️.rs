@@ -82,11 +82,60 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned+Sync> RetainedOrderedMapInsertC
         })},receipt))
     }
 
+    pub fn next_advance_demands(&self, maximum_copy_bytes: usize) -> Result<RetainedOrderedMapInsertGrant, crate::ValueError> {
+        let state = &*self.state;
+        let overflow = || crate::ValueError::literal(crate::ValueRefusalKind::OwnershipLimit, "ordered-map insertion next-action extent overflow");
+        let mut grant = RetainedOrderedMapInsertGrant::default();
+        if state.closing || state.spent {
+            return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "ordered-map insertion cannot advance after close or transfer"));
+        }
+        match state.phase {
+            0 => {
+                let demand = self.advance_retirement_demands(maximum_copy_bytes)?;
+                grant.retirement = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes,
+                    maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+                grant.comparison = BoundedOrdGrant { maximum_items: 1, maximum_bytes: maximum_copy_bytes.min(64) };
+            }
+            1 => {
+                let map = state.map.as_ref().ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "ordered-map insertion quote has no map"))?;
+                if map.len % RETAINED_ORDERED_MAP_PAGE_CAPACITY == 0 && map.pages.len() < map.pages.capacity() {
+                    grant.maximum_capacity_bytes = RETAINED_ORDERED_MAP_PAGE_CAPACITY.checked_mul(size_of::<(K,V)>()).ok_or_else(overflow)?;
+                } else { grant.maximum_moved_items = 1; }
+            }
+            2 => {
+                let ordinal = state.target.ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "ordered-map insertion quote has no target"))?;
+                let shift = state.shift_page.ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "ordered-map insertion quote has no shift page"))?;
+                if shift != ordinal / RETAINED_ORDERED_MAP_PAGE_CAPACITY {
+                    let page = state.map.as_ref().and_then(|map| map.pages.get(shift)).ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "ordered-map insertion quote has no shift owner"))?;
+                    grant.maximum_moved_items = page.len().checked_add(1).ok_or_else(overflow)?;
+                    grant.maximum_moved_bytes = grant.maximum_moved_items.checked_mul(size_of::<(K,V)>()).ok_or_else(overflow)?;
+                }
+            }
+            3 => {
+                let ordinal = state.target.ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "ordered-map insertion quote has no target"))?;
+                let page = state.map.as_ref().and_then(|map| map.pages.get(ordinal / RETAINED_ORDERED_MAP_PAGE_CAPACITY)).ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "ordered-map insertion quote has no target owner"))?;
+                grant.maximum_moved_items = page.len().saturating_sub(ordinal % RETAINED_ORDERED_MAP_PAGE_CAPACITY).checked_add(1).ok_or_else(overflow)?;
+                grant.maximum_moved_bytes = grant.maximum_moved_items.checked_mul(size_of::<(K,V)>()).ok_or_else(overflow)?;
+            }
+            10 => {
+                let map = state.map.as_ref().ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "ordered-map directory quote has no map"))?;
+                grant.maximum_capacity_bytes = map.pages.len().checked_mul(2).and_then(|n| n.checked_add(1)).and_then(|n| n.checked_mul(size_of::<Vec<(K,V)>>())).ok_or_else(overflow)?;
+            }
+            11 | 13 => { grant.maximum_moved_items = 1; grant.maximum_moved_bytes = size_of::<Vec<Vec<(K,V)>>>(); }
+            12 => {
+                let old = state.old_directory.as_ref().ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "ordered-map directory quote has no original owner"))?;
+                if state.directory_index != old.len() { grant.maximum_moved_items = 1; grant.maximum_moved_bytes = size_of::<Vec<(K,V)>>(); }
+            }
+            4 | 255 => {}
+            _ => return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "ordered-map insertion quote has an invalid phase")),
+        }
+        Ok(grant)
+    }
     pub fn advance_retirement_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{ let state=&*self.state;
         if state.phase!=0{return Ok(Default::default());}
         if !state.lookup.closing{return state.lookup.advance_retirement_demands(body);}
-        if !state.lookup.terminal_is_empty(){return Ok(crate::RetirementDemand{copy_bytes:state.lookup.next_close_copy_byte_demand()?,capacity_bytes:state.lookup.next_close_capacity_byte_demand(body)?,release_bytes:state.lookup.next_close_release_byte_demand()?,depth:state.lookup.next_close_depth_demand()?});}
-        Ok(crate::RetirementDemand{copy_bytes:state.lookup_lease.next_take_copy_byte_demand()?,capacity_bytes:state.lookup_lease.next_take_capacity_byte_demand(body)?,release_bytes:state.lookup_lease.next_take_release_byte_demand()?,depth:state.lookup_lease.next_take_depth_demand()?})
+        if !state.lookup.terminal_is_empty(){return state.lookup.close_demands(body);}
+        state.lookup_lease.next_take_demands(body)
     }
     pub fn advance(&mut self, grant: RetainedOrderedMapInsertGrant) -> Result<RetainedOrderedMapInsertStep, crate::ValueError> { let state=&mut *self.state;
         if state.closing {
@@ -99,7 +148,7 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned+Sync> RetainedOrderedMapInsertC
             0 => {
                 if state.lookup.closing{
                     if !state.lookup.terminal_is_empty(){let step=state.lookup.close_step(grant.retirement)?;return Ok(RetainedOrderedMapInsertStep::Progress(RetainedOrderedMapInsertProgress{retirement:step.progress(),..Default::default()}));}
-                    let demand=crate::RetirementDemand{copy_bytes:state.lookup_lease.next_take_copy_byte_demand()?,capacity_bytes:state.lookup_lease.next_take_capacity_byte_demand(grant.retirement.maximum_copy_bytes)?,release_bytes:state.lookup_lease.next_take_release_byte_demand()?,depth:state.lookup_lease.next_take_depth_demand()?};
+                    let demand=state.lookup_lease.next_take_demands(grant.retirement.maximum_copy_bytes)?;
                     if grant.retirement.maximum_items==0||demand.copy_bytes>grant.retirement.maximum_copy_bytes||demand.capacity_bytes>grant.retirement.maximum_capacity_bytes||demand.release_bytes>grant.retirement.maximum_release_bytes||demand.depth>grant.retirement.maximum_depth{return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));}
                     match state.lookup_lease.take_authority(grant.retirement)?{
                         super::super::RetainedCloneSourceTake::Pending(retirement)=>return Ok(RetainedOrderedMapInsertStep::Progress(RetainedOrderedMapInsertProgress{retirement,..Default::default()})),
@@ -287,18 +336,23 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned+Sync> RetainedOrderedMapInsertC
         true
     }
 
-    pub fn next_close_copy_byte_demand(&self) -> Result<usize, crate::ValueError> { let state=&*self.state; if !state.lookup.terminal_is_empty(){state.lookup.next_close_copy_byte_demand()}else if !state.close.is_empty(){state.close.next_copy_byte_demand()}else if state.key.is_some()||state.value.is_some()||state.old_directory.is_some()||state.new_directory.is_some()||state.map.is_some()||state.output.is_some(){Ok(0)}else{state.lookup_lease.next_close_copy_byte_demand()} }
-    pub fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, crate::ValueError> { let state=&*self.state;
-        if !state.lookup.terminal_is_empty(){return state.lookup.next_close_capacity_byte_demand(body);}
-        if !state.close.is_empty() { return state.close.next_capacity_byte_demand(body); }
-        if state.key.is_some() { return state.close.next_owner_capacity_byte_demand::<K>(true, body); }
-        if state.value.is_some() { return state.close.next_owner_capacity_byte_demand::<V>(true, body); }
-        if state.old_directory.is_some() || state.new_directory.is_some() { return state.close.next_owner_capacity_byte_demand::<Vec<Vec<(K,V)>>>(true, body); }
-        if state.map.is_some()||state.output.is_some(){state.close.next_owner_capacity_byte_demand::<RetainedOrderedMap<K,V>>(true,body)}else{state.lookup_lease.next_close_capacity_byte_demand(body)}
+    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError> {
+        let state=&*self.state;
+        if !state.lookup.terminal_is_empty(){return state.lookup.close_demands(body);}
+        if !state.close.is_empty(){return state.close.next_owner_demands::<K>(false,&None,body);}
+        if state.key.is_some(){return state.close.next_owner_demands::<K>(true,&None,body);}
+        if state.value.is_some(){return state.close.next_owner_demands::<V>(true,&None,body);}
+        if state.old_directory.is_some()||state.new_directory.is_some(){return state.close.next_owner_demands::<Vec<Vec<(K,V)>>>(true,&None,body);}
+        if state.map.is_some()||state.output.is_some(){return state.close.next_owner_demands::<RetainedOrderedMap<K,V>>(true,&None,body);}
+        state.lookup_lease.next_close_demand(body)
     }
-    pub fn next_close_release_byte_demand(&self) -> Result<usize, crate::ValueError> { let state=&*self.state; if !state.lookup.terminal_is_empty(){state.lookup.next_close_release_byte_demand()}else if !state.close.is_empty(){state.close.next_release_byte_demand()}else if state.key.is_some()||state.value.is_some()||state.old_directory.is_some()||state.new_directory.is_some()||state.map.is_some()||state.output.is_some(){Ok(0)}else{state.lookup_lease.next_close_release_byte_demand()} }
-    pub fn next_close_depth_demand(&self) -> Result<usize, crate::ValueError> { let state=&*self.state; if !state.lookup.terminal_is_empty(){state.lookup.next_close_depth_demand()}else if !state.close.is_empty(){state.close.next_depth_demand()}else if state.key.is_some()||state.value.is_some()||state.old_directory.is_some()||state.new_directory.is_some()||state.map.is_some()||state.output.is_some(){Ok(1)}else{state.lookup_lease.next_close_depth_demand()} }
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> { let state=&mut *self.state;
+    pub fn next_close_copy_byte_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
+    pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
+    pub fn next_close_release_byte_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.release_bytes)}
+    pub fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.depth)}
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+        if !super::retained_clone_grant_admits(grant,self.close_demands(grant.maximum_copy_bytes)?) {return Ok(RetainedCloneStep::Progress(Default::default()));}
+        let state=&mut *self.state;
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !state.closing { return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "ordered-map insertion must begin close before retiring ownership")); }
         if !state.lookup.terminal_is_empty(){state.lookup.begin_close();return state.lookup.close_step(grant);}

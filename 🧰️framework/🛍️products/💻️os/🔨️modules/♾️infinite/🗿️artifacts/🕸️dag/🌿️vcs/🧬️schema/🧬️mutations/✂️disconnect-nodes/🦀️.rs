@@ -12,6 +12,17 @@ pub struct DisconnectNodes {
 
 impl protocol::MutationKind<DagSnapshot, DagMutation> for DisconnectNodes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "disconnect", entity: "nodes", kind: "disconnect-nodes", record: "DisconnectedNodes" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Disconnect {}", self.id), &format!("{} trennen", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["edges".into(), self.id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<DagSnapshot, DagMutation> for DisconnectNodes {
     fn diff(&self, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         if !base.edges.iter().any(|edge| edge.id == self.id) {
             return protocol::MutationOutcome::new(DagDiff::default());
@@ -31,10 +42,4 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for DisconnectNodes {
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Disconnect {}", self.id), &format!("{} trennen", self.id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["edges".into(), self.id.clone()]
-    }
 }

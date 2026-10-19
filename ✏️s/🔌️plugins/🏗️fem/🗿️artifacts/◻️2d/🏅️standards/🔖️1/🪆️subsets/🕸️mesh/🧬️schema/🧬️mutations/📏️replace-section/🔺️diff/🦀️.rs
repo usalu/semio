@@ -5,13 +5,14 @@
 //! `create-section` runs (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ReplaceSection;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dSectionPatch;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dSectionsDelta;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dSectionsModification;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ReplaceSection, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
+pub fn diff(payload: &ReplaceSection, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<Fem2dDiff> {
     let Some(existing) = base.sections.iter().find(|section| section.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Section \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
@@ -24,6 +25,6 @@ pub fn diff(payload: &ReplaceSection, base: &Fem2dSnapshot) -> protocol::Mutatio
     if *existing == payload.new_section {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Section \"{}\" is already equal to the replacement value.", payload.id));
     }
-    protocol::MutationOutcome::new(Fem2dDiff { sections: Some(Fem2dSectionsDelta { modified: vec![Fem2dSectionsModification { id: payload.id.clone(), patch: payload.new_section.clone() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem2dDiff { sections: Some(Fem2dSectionsDelta { modified: vec![Fem2dSectionsModification { id: payload.id.clone(), patch: Fem2dSectionPatch::replacement(&payload.new_section) }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

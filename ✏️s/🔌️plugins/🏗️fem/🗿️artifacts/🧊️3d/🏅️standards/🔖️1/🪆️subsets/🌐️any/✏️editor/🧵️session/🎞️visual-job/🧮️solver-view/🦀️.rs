@@ -201,6 +201,7 @@ pub enum Fem3dNumericalStage {
     MapEquation,
     ReserveRhs,
     InitializeRhs,
+    ResolveSourceCase,
     ApplyLoad,
     ApplyNodalLoad,
     ResolveMemberLoad,
@@ -218,6 +219,8 @@ pub enum Fem3dNumericalStage {
     ReadNodeScalar,
     RecoverReaction,
     PublishNodeScalar,
+    RecoverStressElement,
+    PublishStressScalar,
     BeginModal,
     PrepareModal,
     BeginLdlt,
@@ -303,14 +306,21 @@ pub enum ChildEnd {
     Cancelled,
 }
 
-pub(super) fn child_end(result: Result<Option<JobOutcomeBorrow<'_>>, ValueError>) -> ChildEnd {
-    match result {
-        Ok(None | Some(JobOutcomeBorrow::Yield { .. })) => ChildEnd::Yield,
-        Ok(Some(JobOutcomeBorrow::PreviewReady { .. } | JobOutcomeBorrow::CheckpointReady { .. })) => ChildEnd::Lent,
-        Ok(Some(JobOutcomeBorrow::Complete { .. })) => ChildEnd::Complete,
-        Ok(Some(JobOutcomeBorrow::Fault { .. })) | Err(_) => ChildEnd::Fault,
-        Ok(Some(JobOutcomeBorrow::Cancelled { .. })) => ChildEnd::Cancelled,
-    }
+pub(super) pub enum Fem3dNumericalFailure {
+    Diagnostic(Vec<u8>),
+    Original(semio_framework_job::OriginalTurnFailure),
+}
+impl From<Vec<u8>> for Fem3dNumericalFailure { fn from(value: Vec<u8>) -> Self { Self::Diagnostic(value) } }
+impl From<semio_framework_job::OriginalTurnFailure> for Fem3dNumericalFailure { fn from(value: semio_framework_job::OriginalTurnFailure) -> Self { Self::Original(value) } }
+
+fn child_end(result: Result<Option<JobOutcomeBorrow<'_>>, semio_framework_job::OriginalTurnFailure>) -> Result<ChildEnd, semio_framework_job::OriginalTurnFailure> {
+    Ok(match result? {
+        None | Some(JobOutcomeBorrow::Yield { .. }) => ChildEnd::Yield,
+        Some(JobOutcomeBorrow::PreviewReady { .. } | JobOutcomeBorrow::CheckpointReady { .. }) => ChildEnd::Lent,
+        Some(JobOutcomeBorrow::Complete { .. }) => ChildEnd::Complete,
+        Some(JobOutcomeBorrow::Fault { .. }) => ChildEnd::Fault,
+        Some(JobOutcomeBorrow::Cancelled { .. }) => ChildEnd::Cancelled,
+    })
 }
 
 /// 🎟️ One close unit's receipt: `items` released owners and `bytes` of released backing.

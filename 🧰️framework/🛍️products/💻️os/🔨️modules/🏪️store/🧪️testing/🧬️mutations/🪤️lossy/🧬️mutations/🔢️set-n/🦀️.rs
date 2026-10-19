@@ -44,6 +44,17 @@ impl semio_framework_os_spr::OpBinary for SetN {
 
 impl semio_framework_os_spr::MutationKind<DemoSnapshot, LossyMutation> for SetN {
     const SEMANTICS: semio_framework_os_spr::SemanticDescriptor = semio_framework_os_spr::SemanticDescriptor { verb: "set", entity: "n", kind: "set-n", record: "SetN" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set N", "N setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["n".into()]
+    }
+}
+
+impl semio_framework_os_spr::ColdMutationKind<DemoSnapshot, LossyMutation> for SetN {
     fn diff(&self, _base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<LossyDiff> {
         semio_framework_os_spr::MutationOutcome::new(LossyDiff {})
     }
@@ -53,10 +64,4 @@ impl semio_framework_os_spr::MutationKind<DemoSnapshot, LossyMutation> for SetN 
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set N", "N setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["n".into()]
-    }
 }

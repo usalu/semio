@@ -70,14 +70,16 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     pub async fn dispatch_reserved_original_producer(&mut self,verb:&str,raw:&[u8],decoded_items:usize,job:ArtifactReservedToolJob,completion:ArtifactToolCompletion<A>,meta:&ActionMeta,admission:Option<semio_framework::ToolWireAdmission>,mut permit:FrameworkReservedCommitPermit, cx:&mut semio_framework_job::StepContext<'_>)->Result<InvocationResult,Fault>{
         let id=permit.operation.operation.0;
         let started=self.mount_original_reserved_owners(verb,None,Some(job),Some(completion),meta,Some((permit.operation,permit.lease,permit.identity.take().ok_or_else(||plugin_sdk_fault("original reserved producer lost its authoring receipt"))?)), cx).await?;
-        let proof=self.tools.qualified_tool_proof(&*self.stores, verb)?;
-        let key=proof.key();
-        let admitted=match admission{Some(admitted)=>admitted,None=>self.tools.tool_jobs.admit_exact_wire(key.controller_id.clone(),key.tool_id.clone(),proof.schema_id(),raw).map_err(|error|plugin_sdk_fault(error.to_string()))?};
-        if decoded_items>proof.contract().max_decoded_items||!proof.admits::<A>(&admitted){return Err(plugin_sdk_fault("original reserved producer failed its exact owner/factory/schema admission"));}
+        self.tools.tool_operations.get_mut(id).expect("original producer owns its admitted slot").producer_source=Some(semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx));
+        let validation=(||->Result<(),Fault>{
+            let proof=self.tools.qualified_tool_proof(&*self.stores,verb)?;
+            let key=proof.key();
+            let admitted=match admission{Some(admitted)=>admitted,None=>self.tools.tool_jobs.admit_exact_wire(key.controller_id.clone(),key.tool_id.clone(),proof.schema_id(),raw).map_err(|error|plugin_sdk_fault(error.to_string()))?};
+            if decoded_items>proof.contract().max_decoded_items||!proof.admits::<A>(&admitted){return Err(plugin_sdk_fault("original reserved producer failed its exact owner/factory/schema admission"));}
+            Ok(())
+        })();
         let mounted=self.tools.tool_operations.get_mut(id).expect("original producer owns its admitted slot");
-        let job=mounted.reserved_producer.as_ref().expect("original reserved producer remains retained").clone();
-        let dispatched=self.tools.tool_jobs.dispatch(semio_framework::ToolOperationSpec::new(key.controller_id,key.tool_id,proof.schema_id(),job,mounted.operation)).map_err(|error|plugin_sdk_fault(error.to_string()))?;
-        mounted.session_rejected=Some(semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(dispatched.job,mounted.source_identity));
+        if let Err(fault)=validation{mounted.user_cancel_requested=true;mounted.terminal_seen=true;mounted.stage=MountedTypedCommandFullOperationStage::Publishing;mounted.cancellation_lease.as_ref().expect("original reserved source cancellation lease").cancel();return Err(fault)}
         mounted.terminal_seen=false;
         mounted.stage=MountedTypedCommandFullOperationStage::Worker;
         Ok(started)
@@ -135,12 +137,13 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
 
     /// 🔬️ Exercises real reserved slot admission without exporting private producer authority.
     #[cfg(test)]
-    pub fn test_reserved_emit_admission_case(&mut self, occupied: usize, meta: &ActionMeta) -> bool {
+    pub fn test_reserved_emit_admission_case(&mut self, occupied: usize, meta: &ActionMeta,cx:&mut semio_framework_job::StepContext<'_>) -> bool {
         let before = self.tools.typed_operation_reservations;
         for slot in 0..occupied { self.tools.typed_operation_reservations[slot] = Some((slot + 128) as u64); }
         let original = self.tools.typed_operation_reservations;
-        let admitted = match self.admit_reserved_emit_producer("cut", meta) {
-            Ok(permit) => {
+        let mut result = Ok(None);for _ in 0..128{result= self.admit_reserved_emit_producer("cut", meta,cx) ;if !matches!(result,Ok(None)){break}}
+        let admitted = match result {
+            Ok(Some(permit)) => {
                 let id = permit.operation.operation.0;
                 let slot = id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS;
                 assert_eq!(slot, occupied);
@@ -154,7 +157,8 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                 assert_eq!(self.tools.typed_operation_reservations, original);
                 true
             }
-            Err(_) => { assert_eq!(self.tools.typed_operation_reservations, original); false }
+
+            Ok(None)|Err(_) => { assert_eq!(self.tools.typed_operation_reservations, original); false }
         };
         self.tools.typed_operation_reservations = before;
         admitted
@@ -162,21 +166,34 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
 
     /// 🧪️ Keeps cancelled worker completion tied to the actual original permit through handoff.
     #[cfg(test)]
-    pub async fn test_reserved_emit_cancelled_worker_handoff(&mut self, meta: &ActionMeta) -> bool {
-        let permit = self.admit_reserved_emit_producer("cut", meta).expect("original cut producer admission");
-        let id = permit.operation.operation;
-        permit.lease.cancel();
-        let job = ArtifactReservedToolJob::new(FrameworkCutJob::new(Vec::new(), 0));
-        match self.tools.run_framework_reserved_job(&self.mounted_policy, &mut *self.stores, "cut", &[], 0, job, meta, None, Some(permit)).await {
-            Ok(permit) => { assert_eq!(permit.operation.operation, id); assert_eq!(self.tools.typed_operation_reservations[id.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS], Some(id.0)); self.tools.finish_reserved_emit_producer(permit); true }
-            Err(_) => false,
-        }
+    pub async fn test_reserved_emit_cancelled_worker_handoff(&mut self,meta:&ActionMeta)->bool{
+        fn now()->Option<u64>{Some(1)}
+        let grant=crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation;
+        let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(899),semio_framework_job::Generation(3),grant,now,u64::MAX,1_000_000);
+        let mut permit=None;
+        for _ in 0..128{caller.turn(grant,|cx|{permit=self.admit_reserved_emit_producer("cut",meta,cx)?;Ok(())}).unwrap();if permit.is_some(){break}}
+        let permit=permit.expect("original cut producer admission");let id=permit.operation.operation;permit.lease.cancel();
+        let retained=permit.operation.operation==id&&self.tools.typed_operation_reservations[id.0 as usize%ARTIFACT_LIVE_OUTPUT_SLOTS]==Some(id.0);
+        self.tools.finish_reserved_emit_producer(permit);caller.retire(grant);retained
+    }
+
+    /// 🧷️ Preserves the mounted original reserved source across refused worker birth.
+    #[cfg(test)]
+    pub(crate) async fn test_reserved_original_before_birth(&mut self,meta:&ActionMeta,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        let mut permit=None;for _ in 0..128{permit=self.admit_reserved_emit_producer("cut",meta,cx)?;if permit.is_some(){break}}
+        let permit=permit.expect("original fixture reserved permit");let operation=permit.operation;let id=operation.operation.0;
+        let job=ArtifactReservedToolJob::new(FrameworkCutJob::new(Vec::new(),0));let original=job.test_source_identity();let completion=ArtifactToolCompletion::<A>::new();
+        self.dispatch_reserved_original_producer("cut",&[],0,job,completion,meta,None,permit,cx).await?;
+        let mounted=self.tools.tool_operations.get_mut(id).expect("actual original reserved producer mounted");assert!(mounted.reserved_producer.is_some()&&!mounted.terminal_seen);assert!(mounted.session.is_none()&&mounted.session_rejected.is_none());let before=cx.retained_progress();
+        let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(Default::default(),|same|mounted.drive_worker_step(same)));result?;assert_eq!(cx.retained_progress(),before);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(mounted.session_rejected.is_none());assert_eq!(mounted.reserved_producer.as_ref().unwrap().test_source_identity(),original);
+        mounted.drive_worker_step(cx)?;let retained=mounted.session_rejected.is_some()&&mounted.session.is_none()&&mounted.stage==MountedTypedCommandFullOperationStage::Worker&&mounted.reserved_producer.as_ref().unwrap().test_source_identity()==original&&mounted.reserved_producer.as_ref().unwrap().test_bound_operation()==Some(operation);
+        mounted.user_cancel_requested=true;mounted.terminal_seen=true;mounted.cancellation_lease.as_ref().unwrap().cancel();Ok(retained)
     }
 
     /// 🧫️ Observes busy original completion retention without exposing producer authority.
     #[cfg(test)]
     pub async fn test_reserved_emit_busy_completion_owner(&mut self, meta: &ActionMeta, cx:&mut semio_framework_job::StepContext<'_>) -> bool {
-        let permit=self.admit_reserved_emit_producer("cut",meta).expect("fixture cut admission");
+        let  mut permit=None;for _ in 0..128{permit=self.admit_reserved_emit_producer("cut",meta,cx).expect("fixture cut admission");if permit.is_some(){break}}let permit=permit.expect("fixture original cut permit");
         let id=permit.operation.operation.0;
         let completion=ArtifactToolCompletion::<A>::new();
         let mut emit=Emit::default();emit.artifact_mutations=Vec::with_capacity(3);
@@ -215,14 +232,14 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         let reservation=self.tools.typed_operation_reservations[operation_id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS];
         if !self.tools.tool_operations.can_insert(operation_id)||reservation.is_some_and(|owner|owner!=operation_id){return Err(plugin_sdk_fault("original emission lost its exact pre-admitted publication slot"));}
         let mounted=MountedTypedCommandFullOperation::<A>{
-            verb:verb.into(),meta:meta.clone(),operation,source_identity:(cx.operation(),cx.generation()),canonical_revision:revision,artifact_generation:generation.0,
+            verb:verb.into(),meta:meta.clone(),operation,source_identity:semio_framework_job::OriginalSourceBinding::borrow(cx),canonical_revision:revision,artifact_generation:generation.0,
             config_generation:self.stores.config_store.generation_now(),draft_generation:self.stores.draft_store.generation_now(),presence_generation:0,transient_generation:0,
             window_config_authority:None,window_transient_authority:None,publication_lanes:&[],contract:None,
-            session:None,session_rejected:None,reserved_producer,completion,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:lease,identity,identity_progress:semio_framework_value::native_encoding::NativeEncodeProgress{completed:0,total:0,owned_bytes:0},terminal_seen:true,worker_semantic_pending:false,worker_outcome_pending:false,worker_fault_capture:None,pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,original_retirement_receipt:None,
+            session:None,session_rejected:None,producer_source:None,producer_request:None,producer_request_retirement:None,reserved_producer,completion,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:lease,identity,identity_progress:semio_framework_value::native_encoding::NativeEncodeProgress{completed:0,total:0,owned_bytes:0},terminal_seen:true,worker_semantic_pending:false,worker_outcome_pending:false,worker_fault_capture:None,pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,original_retirement_receipt:None,
             publication,publication_ownership_progress:None,actor_capture:None,worker_resume_pending:false,pending_artifact_publication:None,pending_child_publication:None,
             owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,
             captured_child_content:Some(std::sync::Arc::new(ChildContentView::clone(&*self.child_composition.child_content_root))),captured_child_content_generation:self.child_composition.child_content_generation,
-            result_page:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_attempt:0,
+            result_page:None, diagnostics:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_attempt:0,
             ui_pending:true,progress:None,progress_pending:false,user_cancel_requested:false,published_artifact:false,published_config:false,published_window_config:false,
             command_logged:false,interaction_revalidated:false,retained_close_fault: None,retained_close_fault_retirement:None,retained_close_fault_refusal:None, terminal_fault:None,stage:MountedTypedCommandFullOperationStage::Publishing,
         };

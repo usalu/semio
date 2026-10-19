@@ -1,0 +1,16 @@
+{
+  "cases": [
+    { "id": "procedural-macro", "kinds": ["proc-macro"], "target": "lib", "accepted": true, "runtime": true },
+    { "id": "ordinary-library", "kinds": ["lib"], "target": "lib", "accepted": true, "runtime": false },
+    { "id": "rust-library", "kinds": ["rlib"], "target": "lib", "accepted": true, "runtime": false },
+    { "id": "shared-library", "kinds": ["dylib"], "target": "lib", "accepted": true, "runtime": false },
+    { "id": "c-library", "kinds": ["cdylib"], "target": "lib", "accepted": true, "runtime": false },
+    { "id": "static-library", "kinds": ["staticlib"], "target": "lib", "accepted": true, "runtime": false },
+    { "id": "mixed-library-kinds", "kinds": ["lib", "proc-macro"], "target": "lib", "accepted": true, "runtime": true },
+    { "id": "integration-test", "kinds": ["test"], "target": "test", "accepted": true, "runtime": false },
+    { "id": "binary", "kinds": ["bin"], "target": "bin", "accepted": true, "runtime": false },
+    { "id": "non-string-kind", "kinds": ["proc-macro", 3], "target": "lib", "accepted": false, "runtime": false },
+    { "id": "empty-kinds", "kinds": [], "target": "lib", "accepted": false, "runtime": false },
+    { "id": "wrong-target-kind", "kinds": ["bin"], "target": "lib", "accepted": false, "runtime": false }
+  ]
+}

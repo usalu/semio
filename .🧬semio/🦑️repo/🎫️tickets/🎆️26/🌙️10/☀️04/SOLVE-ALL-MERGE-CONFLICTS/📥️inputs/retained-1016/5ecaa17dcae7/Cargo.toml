@@ -1,0 +1,6 @@
+[package]
+name="member-060"
+version="0.1.0"
+edition.workspace=true
+[lib]
+path="🦀️.rs"

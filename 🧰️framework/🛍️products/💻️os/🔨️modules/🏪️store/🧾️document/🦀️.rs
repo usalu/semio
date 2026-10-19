@@ -17,7 +17,7 @@ use semio_framework_os_store_space_schema::{ArtifactBackboneRef, ArtifactCursor,
 use semio_framework_os_store_text_io::ArtifactCodecApplyFuture;
 use semio_framework_os_pack::pack_rt;
 use semio_framework_os_store_ledger::{ArtifactEditMessageLedger, fold_envelope_history};
-use semio_framework_os_store_ledger::ReplayProjection;
+use semio_framework_os_store_ledger::ColdReplayProjection;
 use semio_framework_os_store_replay::fold_effective_edit;
 #[cfg(target_arch = "wasm32")]
 use semio_framework_os_store_backbone::resolve_backbone;
@@ -36,14 +36,12 @@ where P: Clone,
 }
 
 pub fn create_document_envelope_from_genesis<P, Mutation>(schema: &str, id: &str, genesis: AdmittedArtifactGenesis<P>, backbone: Option<ArtifactBackboneRef>) -> ArtifactEnvelope<P, Mutation>
-where P: Clone,
 {
     create_document_envelope_from_genesis_owners(schema.into(), id.into(), genesis, backbone)
 }
 
 /// 📥️ Moves exact original metadata into the document constructor while preserving its native catalogs.
 pub fn create_document_envelope_from_genesis_owners<P, Mutation>(schema: String, id: String, genesis: AdmittedArtifactGenesis<P>, backbone: Option<ArtifactBackboneRef>) -> ArtifactEnvelope<P, Mutation>
-where P: Clone,
 {
     ArtifactEnvelope::from_owners(ArtifactEnvelopeOwners {
         schema,

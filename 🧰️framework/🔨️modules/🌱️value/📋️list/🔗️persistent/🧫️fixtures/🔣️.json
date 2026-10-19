@@ -1,0 +1,12 @@
+{
+ "fanout":16,
+ "phases":["retain-root","prepare-path","preflight","publish-root","close"],
+ "cases":[
+  {"id":"single-leaf","rowCount":1,"index":0,"before":0,"authored":-7,"after":-7,"changedPages":1,"unchangedReader":0},
+  {"id":"full-leaf","rowCount":16,"index":15,"before":30,"authored":-7,"after":-7,"changedPages":1,"unchangedReader":30},
+  {"id":"two-leaf-boundary","rowCount":17,"index":16,"before":32,"authored":-7,"after":-7,"changedPages":2,"unchangedReader":32},
+  {"id":"full-first-level","rowCount":256,"index":127,"before":254,"authored":-7,"after":-7,"changedPages":2,"unchangedReader":254},
+  {"id":"second-level-boundary","rowCount":257,"index":256,"before":512,"authored":-7,"after":-7,"changedPages":3,"unchangedReader":512},
+  {"id":"large-shared-reader","rowCount":4096,"index":2047,"before":4094,"authored":-7,"after":-7,"changedPages":3,"unchangedReader":4094}
+ ]
+}

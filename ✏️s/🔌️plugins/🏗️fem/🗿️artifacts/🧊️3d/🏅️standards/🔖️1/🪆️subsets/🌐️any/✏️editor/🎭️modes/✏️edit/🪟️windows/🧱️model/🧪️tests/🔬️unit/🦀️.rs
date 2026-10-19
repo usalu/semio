@@ -6,7 +6,8 @@ use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3
 use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_scene_parts;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model::config::Fem3dModelWindowConfig;
-use crate::context::{fem3d_app, render as render_body};
+use crate::context::fem3d_app;
+use crate::context::render as render_body;
 
 #[semio_framework_async_macros::async_test]
 async fn renders_fem3d_model_scene() {
@@ -37,17 +38,17 @@ async fn model_scene_renders_solid_mesh_and_oriented_member_instances_3d() {
 fn transform_utility_arms_the_gumball_over_the_selection() {
     let doc = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot();
     let window = Fem3dModelWindowConfig::default();
-    let armed = model_scene(&doc, &window, &Fem3dInteractionSnapshot::selecting(["n20_l1"]), true);
+    let armed = model_scene(&doc, &window, &Fem3dInteractionSnapshot::selecting([semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("node", "n20_l1").unwrap()]), true).unwrap();
     let record: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&armed.selection_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("selection json");
     assert_eq!(record.get("gumballActive").and_then(semio_framework_pack_json::Value::as_bool), Some(true));
     assert_eq!(record.get("gumballLiveDispatch").and_then(semio_framework_pack_json::Value::as_bool), Some(true));
     assert_eq!(record.get("transformMode").and_then(semio_framework_pack_json::Value::as_str), Some("transform"));
     let pivot: Vec<f64> = record.get("gumballTarget").and_then(semio_framework_pack_json::Value::as_array).expect("pivot").iter().filter_map(semio_framework_pack_json::Value::as_f64).collect();
     assert_eq!(pivot, vec![8.0, 0.0, 2.8]);
-    let idle = model_scene(&doc, &window, &Fem3dInteractionSnapshot::default(), true);
+    let idle = model_scene(&doc, &window, &Fem3dInteractionSnapshot::default(), true).unwrap();
     let record: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&idle.selection_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("selection json");
     assert_eq!(record.get("gumballActive").and_then(semio_framework_pack_json::Value::as_bool), Some(false));
-    let plain = model_scene(&doc, &window, &Fem3dInteractionSnapshot::selecting(["n20_l1"]), false);
+    let plain = model_scene(&doc, &window, &Fem3dInteractionSnapshot::selecting([semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_target("node", "n20_l1").unwrap()]), false).unwrap();
     let record: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&plain.selection_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("selection json");
     assert!(record.get("transformMode").is_none(), "no gumball descriptor without the transform utility");
     assert_eq!(record.get("ids").and_then(semio_framework_pack_json::Value::as_array).map(Vec::len), Some(1));

@@ -4,6 +4,7 @@ use super::*;
 use semio_framework_value::retirement::{RetireOwned, controlled::ControlledRetirement, arc_custody::SharedControlledRetirement};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+#[derive(semio_framework_value::RetireOwned)]
 struct TextInput {
     pub text: String,
     inverse_refused: bool,
@@ -11,6 +12,8 @@ struct TextInput {
 }
 
 struct TextPreparation {
+    original:Option<Arc<TextInput>>,
+    input_close:Option<SharedControlledRetirement<TextInput>>,
     pub base: Option<Arc<String>>,
     pub inverse: Option<String>,
     pub next: Option<String>,
@@ -26,8 +29,8 @@ struct TextPreparation {
 }
 
 impl TextPreparation {
-    fn new(base: Arc<String>, context: ArtifactReplayPreparationContext, calls: Arc<AtomicUsize>) -> Self {
-        Self { base: Some(base), inverse: None, next: None, prepared: None, active: None, shared: None, inverse_list: None, phase: 0, context, calls, cancelled: false, closing: false }
+    fn new(base: Arc<String>, context: ArtifactReplayPreparationContext, calls: Arc<AtomicUsize>,original:Arc<TextInput>) -> Self {
+        Self { original:Some(original),input_close:None,base: Some(base), inverse: None, next: None, prepared: None, active: None, shared: None, inverse_list: None, phase: 0, context, calls, cancelled: false, closing: false }
     }
 
     fn copy_scalar(source: &str, destination: &mut String, maximum_bytes: usize) -> RetainedCloneProgress {
@@ -40,13 +43,11 @@ impl TextPreparation {
 }
 
 impl ArtifactReplayPreparation<String, TextInput> for TextPreparation {
-    fn next_advance_copy_demand(&self, original: &TextInput, _: Option<&InputReplacement>) -> Result<usize, ValueError> { Ok(match self.phase { 1 => self.base.as_ref().unwrap().get(self.inverse.as_ref().unwrap().len()..).unwrap().chars().next().map_or(0,char::len_utf8), 3 => original.text.get(self.next.as_ref().unwrap().len()..).unwrap().chars().next().map_or(0,char::len_utf8), _ => 0 }) }
-    fn next_advance_capacity_demand(&self, original: &TextInput, _: Option<&InputReplacement>, _: usize) -> Result<usize, ValueError> { Ok(match self.phase { 0 => self.base.as_ref().unwrap().len(), 2 => original.text.len(), _ => 0 }) }
-    fn next_advance_release_demand(&self, _: &TextInput, _: Option<&InputReplacement>) -> Result<usize, ValueError> { Ok(0) }
-    fn next_advance_depth_demand(&self, _: &TextInput, _: Option<&InputReplacement>) -> Result<usize, ValueError> { Ok(1) }
-    fn advance(&mut self, original: &TextInput, replacement: Option<&InputReplacement>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactReplayPreparationStep, String> {
+    fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{let mut demand=if let Some(owner)=self.input_close.as_ref(){owner.next_demand(body)?}else if let Some(owner)=self.active.as_ref(){owner.next_demand(body)?}else if let Some(owner)=self.shared.as_ref(){owner.next_demand(body)?}else{self.inverse_list.as_ref().map_or(Ok(Default::default()),|owner|owner.next_demand(body))?};demand.depth=demand.depth.max(1);Ok(demand)}
+    fn advance_demands(&self,_body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:match self.phase{1=>self.base.as_ref().unwrap().get(self.inverse.as_ref().unwrap().len()..).unwrap().chars().next().map_or(0,char::len_utf8),3=>self.original.as_ref().unwrap().text.get(self.next.as_ref().unwrap().len()..).unwrap().chars().next().map_or(0,char::len_utf8),_=>0},capacity_bytes:match self.phase{0=>self.base.as_ref().unwrap().len(),2=>self.original.as_ref().unwrap().text.len(),_=>0},release_bytes:0,depth:1})}
+    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,_control:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactReplayPreparationStep, ValueError> {
         if self.cancelled || self.closing || !grant.permits_one() { return Ok(ArtifactReplayPreparationStep::Blocked); }
-        assert!(replacement.is_none());
+        let original=self.original.as_ref().unwrap();
         self.calls.fetch_add(1, Ordering::SeqCst);
         let base = self.base.as_ref().expect("immutable fixture base");
         let mut progress = RetainedCloneProgress { copied_items: 1, ..Default::default() };
@@ -54,7 +55,7 @@ impl ArtifactReplayPreparation<String, TextInput> for TextPreparation {
             0 => {
                 if base.len() > grant.maximum_capacity_bytes { return Ok(ArtifactReplayPreparationStep::Blocked); }
                 let mut inverse = String::new();
-                inverse.try_reserve_exact(base.len()).map_err(|error| error.to_string())?;
+                inverse.try_reserve_exact(base.len()).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"fixture inverse allocation refused"))?;
                 progress.retained_capacity_bytes = inverse.capacity();
                 self.inverse = Some(inverse);
                 self.phase = 1;
@@ -67,7 +68,7 @@ impl ArtifactReplayPreparation<String, TextInput> for TextPreparation {
             2 => {
                 if original.text.len() > grant.maximum_capacity_bytes { return Ok(ArtifactReplayPreparationStep::Blocked); }
                 let mut next = String::new();
-                next.try_reserve_exact(original.text.len()).map_err(|error| error.to_string())?;
+                next.try_reserve_exact(original.text.len()).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"fixture next allocation refused"))?;
                 progress.retained_capacity_bytes = next.capacity();
                 self.next = Some(next);
                 self.phase = 3;
@@ -116,13 +117,15 @@ impl ArtifactReplayPreparation<String, TextInput> for TextPreparation {
 
     fn begin_close(&mut self) { self.closing = true; }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { if let Some(owner)=self.active.as_ref(){return owner.next_copy_byte_demand();} if let Some(owner)=self.shared.as_ref(){return owner.next_copy_byte_demand();} self.inverse_list.as_ref().map_or(Ok(0),ControlledRetirement::next_copy_byte_demand) }
-    fn next_close_capacity_byte_demand(&self, bytes:usize) -> Result<usize, ValueError> { if let Some(owner)=self.active.as_ref(){return owner.next_capacity_byte_demand(bytes);} if let Some(owner)=self.shared.as_ref(){return owner.next_capacity_byte_demand(bytes);} self.inverse_list.as_ref().map_or(Ok(0),|owner|owner.next_capacity_byte_demand(bytes)) }
-    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { if let Some(owner)=self.active.as_ref(){return owner.next_release_byte_demand();} if let Some(owner)=self.shared.as_ref(){return owner.next_release_byte_demand();} self.inverse_list.as_ref().map_or(Ok(0),ControlledRetirement::next_release_byte_demand) }
-    fn next_close_depth_demand(&self) -> Result<usize, ValueError> { if let Some(owner)=self.active.as_ref(){return owner.next_depth_demand().map(|depth|depth.max(1));} if let Some(owner)=self.shared.as_ref(){return owner.next_depth_demand().map(|depth|depth.max(1));} self.inverse_list.as_ref().map_or(Ok(1),|owner|owner.next_depth_demand().map(|depth|depth.max(1))) }
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { if let Some(owner)=self.input_close.as_ref(){return owner.next_copy_byte_demand();} if let Some(owner)=self.active.as_ref(){return owner.next_copy_byte_demand();} if let Some(owner)=self.shared.as_ref(){return owner.next_copy_byte_demand();} self.inverse_list.as_ref().map_or(Ok(0),ControlledRetirement::next_copy_byte_demand) }
+    fn next_close_capacity_byte_demand(&self, bytes:usize) -> Result<usize, ValueError> { if let Some(owner)=self.input_close.as_ref(){return owner.next_capacity_byte_demand(bytes);} if let Some(owner)=self.active.as_ref(){return owner.next_capacity_byte_demand(bytes);} if let Some(owner)=self.shared.as_ref(){return owner.next_capacity_byte_demand(bytes);} self.inverse_list.as_ref().map_or(Ok(0),|owner|owner.next_capacity_byte_demand(bytes)) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { if let Some(owner)=self.input_close.as_ref(){return owner.next_release_byte_demand();} if let Some(owner)=self.active.as_ref(){return owner.next_release_byte_demand();} if let Some(owner)=self.shared.as_ref(){return owner.next_release_byte_demand();} self.inverse_list.as_ref().map_or(Ok(0),ControlledRetirement::next_release_byte_demand) }
+    fn next_close_depth_demand(&self) -> Result<usize, ValueError> { if let Some(owner)=self.input_close.as_ref(){return owner.next_depth_demand();} if let Some(owner)=self.active.as_ref(){return owner.next_depth_demand().map(|depth|depth.max(1));} if let Some(owner)=self.shared.as_ref(){return owner.next_depth_demand().map(|depth|depth.max(1));} self.inverse_list.as_ref().map_or(Ok(1),|owner|owner.next_depth_demand().map(|depth|depth.max(1))) }
+    fn close_step(&mut self,grant:RetainedCloneGrant,receiving:&mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>)->Result<RetainedCloneStep,ValueError>{
         let empty=RetainedCloneProgress::default();
         if !self.closing||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(empty));}
+        let demand=self.close_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(empty));}if demand.capacity_bytes!=0{receiving.charge(demand.capacity_bytes)?;}
+        if let Some(owner)=self.input_close.as_mut(){let step=owner.step(grant)?;if owner.terminal_is_empty(){self.input_close=None;}return Ok(step);}
         if let Some(owner)=self.active.as_mut(){let step=owner.step(grant)?;if owner.terminal_is_empty(){self.active=None;}return Ok(step);}
         if let Some(owner)=self.shared.as_mut(){let step=owner.step(grant)?;if owner.terminal_is_empty(){self.shared=None;}return Ok(step);}
         if let Some(owner)=self.inverse_list.as_mut(){let step=owner.step(grant)?;if owner.terminal_is_empty(){self.inverse_list=None;}return Ok(step);}
@@ -134,9 +137,10 @@ impl ArtifactReplayPreparation<String, TextInput> for TextPreparation {
         }
         if let Some(value)=self.inverse.take().or_else(||self.next.take()){self.active=Some(ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("fixture text retirement refused: {error}")));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
         if let Some(base)=self.base.take(){self.shared=Some(SharedControlledRetirement::lease(base));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
+        if let Some(input)=self.original.take(){self.input_close=Some(SharedControlledRetirement::lease(input));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
         Ok(RetainedCloneStep::Complete(empty))
     }
-    fn terminal_is_empty(&self)->bool{self.closing&&self.base.is_none()&&self.inverse.is_none()&&self.next.is_none()&&self.prepared.is_none()&&self.active.is_none()&&self.shared.is_none()&&self.inverse_list.is_none()}
+    fn terminal_is_empty(&self)->bool{self.closing&&self.original.is_none()&&self.input_close.is_none()&&self.base.is_none()&&self.inverse.is_none()&&self.next.is_none()&&self.prepared.is_none()&&self.active.is_none()&&self.shared.is_none()&&self.inverse_list.is_none()}
 
 }
 
@@ -144,12 +148,12 @@ impl Drop for TextPreparation {
     fn drop(&mut self) { assert!(self.terminal_is_empty() || std::thread::panicking(), "fixture replay producer dropped live owners"); }
 }
 
-fn close(mut retirement:ArtifactReplayPreparationRetirement<String,TextInput>){
+fn close(mut retirement:ArtifactReplayPreparationRetirement<String,TextInput>,control:&mut semio_framework_value::NativeDecodeControl<'_>){
     let mut last=None;
     for _ in 0..4096 {
         let body=retirement.next_copy_byte_demand().unwrap();
         let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:body,maximum_capacity_bytes:retirement.next_capacity_byte_demand(body).unwrap(),maximum_release_bytes:retirement.next_release_byte_demand().unwrap(),maximum_depth:retirement.next_depth_demand().unwrap()};
-        let step=retirement.close_step(grant).expect("exact admitted fixture close");assert!(step.progress().fits(grant));
+        let step=control.with_retirement(grant,|receiving|retirement.close_step(grant,receiving)).expect("exact admitted fixture close");assert!(step.progress().fits(grant));
         last=Some((grant,step));
         if retirement.terminal_is_empty(){return;}
     }
@@ -164,17 +168,17 @@ fn cooperative_history_operation_obeys_the_neutral_law() {
     for case in law["cases"].as_array().unwrap() {
         for bytes in law["grants"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize) {
             let base = Arc::new(case["base"].as_str().unwrap().to_string());
-            let input = TextInput { text: case["input"].as_str().unwrap().to_string(), inverse_refused: case["inverseRefused"].as_bool().unwrap(), apply_refused: case["applyRefused"].as_bool().unwrap() };
+            let input = Arc::new(TextInput { text: case["input"].as_str().unwrap().to_string(), inverse_refused: case["inverseRefused"].as_bool().unwrap(), apply_refused: case["applyRefused"].as_bool().unwrap() });
             let calls = Arc::new(AtomicUsize::new(0));
-            let cursor = Box::new(TextPreparation::new(base.clone(), context, calls.clone()));
+            let cursor = Box::new(TextPreparation::new(base.clone(), context, calls.clone(),Arc::clone(&input)));
             let mut task = ArtifactReplayPreparationTask::new(context, cursor);
             let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: bytes, maximum_capacity_bytes: bytes, maximum_release_bytes: 0, maximum_depth: 64 };
-            assert_eq!(task.step(&input, None, 7, [9; 32], grant, &mut || true).unwrap(), ArtifactReplayPreparationStep::Blocked);
+            assert_eq!(task.step(7, [9; 32], grant,&mut control, &mut || true).unwrap(), ArtifactReplayPreparationStep::Blocked);
             assert_eq!(calls.load(Ordering::SeqCst), 0);
-            assert!(task.step(&input, None, 8, [9; 32], grant, &mut || false).is_err());
+            assert!(task.step(8, [9; 32], grant,&mut control, &mut || false).is_err());
             assert_eq!(calls.load(Ordering::SeqCst), 0);
             for _ in 0..1024 {
-                if matches!(task.step(&input, None, 7, [9; 32], grant, &mut || false).unwrap(), ArtifactReplayPreparationStep::Prepared(_)) { break; }
+                if matches!(task.step(7, [9; 32], grant,&mut control, &mut || false).unwrap(), ArtifactReplayPreparationStep::Prepared(_)) { break; }
             }
             assert!(calls.load(Ordering::SeqCst) > 20);
             let mut prepared = task.take_prepared().expect("granted preparation exposed owners");
@@ -192,17 +196,17 @@ fn cooperative_history_operation_obeys_the_neutral_law() {
                     close_owned(value.text);
                 }
             }
-            close(task.into_retirement());
+            close(task.into_retirement(),&mut control);
             for cancel_at in law["cancelAt"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize) {
                 let calls = Arc::new(AtomicUsize::new(0));
-                let cursor = Box::new(TextPreparation::new(base.clone(), context, calls.clone()));
+                let cursor = Box::new(TextPreparation::new(base.clone(), context, calls.clone(),Arc::clone(&input)));
                 let mut task = ArtifactReplayPreparationTask::new(context, cursor);
-                for _ in 0..cancel_at { task.step(&input, None, 7, [9; 32], grant, &mut || false).unwrap(); }
+                for _ in 0..cancel_at { task.step(7, [9; 32], grant,&mut control, &mut || false).unwrap(); }
                 task.cancel();
                 let count = calls.load(Ordering::SeqCst);
-                assert_eq!(task.step(&input, None, 7, [9; 32], grant, &mut || false).unwrap(), ArtifactReplayPreparationStep::Blocked);
+                assert_eq!(task.step(7, [9; 32], grant,&mut control, &mut || false).unwrap(), ArtifactReplayPreparationStep::Blocked);
                 assert_eq!(calls.load(Ordering::SeqCst), count);
-                close(task.into_retirement());
+                close(task.into_retirement(),&mut control);
             }
         }
     }
@@ -211,11 +215,9 @@ fn cooperative_history_operation_obeys_the_neutral_law() {
 
 struct EmptyPreparation { pub payload: [u8; 513], pub closing: bool }
 impl ArtifactReplayPreparation<(), ()> for EmptyPreparation {
-    fn next_advance_copy_demand(&self, _: &(), _: Option<&InputReplacement>) -> Result<usize, ValueError> { Ok(0) }
-    fn next_advance_capacity_demand(&self, _: &(), _: Option<&InputReplacement>, _: usize) -> Result<usize, ValueError> { Ok(0) }
-    fn next_advance_release_demand(&self, _: &(), _: Option<&InputReplacement>) -> Result<usize, ValueError> { Ok(0) }
-    fn next_advance_depth_demand(&self, _: &(), _: Option<&InputReplacement>) -> Result<usize, ValueError> { Ok(1) }
-    fn advance(&mut self, _: &(), _: Option<&InputReplacement>, _: ArtifactStoreOneItemGrant) -> Result<ArtifactReplayPreparationStep, String> { Ok(ArtifactReplayPreparationStep::Blocked) }
+    fn close_demands(&self,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
+    fn advance_demands(&self,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
+    fn advance(&mut self,body:usize,_:ArtifactStoreOneItemGrant,_control:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactReplayPreparationStep, ValueError> { Ok(ArtifactReplayPreparationStep::Blocked) }
     fn take_prepared(&mut self) -> Option<ArtifactReplayPrepared<(), ()>> { None }
     fn cancel(&mut self) { self.payload[0] = 1; }
     fn begin_close(&mut self) { self.closing = true; }
@@ -223,7 +225,7 @@ impl ArtifactReplayPreparation<(), ()> for EmptyPreparation {
     fn next_close_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(0) }
     fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
     fn next_close_depth_demand(&self) -> Result<usize, ValueError> { Ok(0) }
-    fn close_step(&mut self, _: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
+    fn close_step(&mut self, _: RetainedCloneGrant, _: &mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
     fn terminal_is_empty(&self) -> bool { self.closing }
 }
 
@@ -238,25 +240,28 @@ fn cooperative_history_preparation_receipts_keep_each_physical_currency() {
     }
     let context = ArtifactReplayPreparationContext { mode: ArtifactReplayPreparationMode::Report, operation_index: 0, generation: 7, base_revision: [9; 32] };
     let calls = Arc::new(AtomicUsize::new(0));
-    let cursor = Box::new(TextPreparation::new(Arc::new("original 😀".into()), context, calls.clone()));
+    let input=Arc::new(TextInput{text:"replacement é".into(),inverse_refused:false,apply_refused:false});
+    let cursor = Box::new(TextPreparation::new(Arc::new("original 😀".into()), context, calls.clone(),Arc::clone(&input)));
     let mut task = ArtifactReplayPreparationTask::new(context, cursor);
-    let input = TextInput { text: "replacement é".into(), inverse_refused: false, apply_refused: false };
-    let (grant, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| task.next_grant(&input, None, 7, [9; 32]).unwrap());
+
+    let (demand, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| task.demands(7,[9;32],4096).unwrap());
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-    assert_eq!((grant.maximum_copy_bytes, grant.maximum_capacity_bytes, grant.maximum_release_bytes), (0, "original 😀".len(), 0));
-    assert!(task.next_grant(&input, None, 8, [9; 32]).is_err());
+    assert_eq!((demand.copy_bytes,demand.capacity_bytes,demand.release_bytes),(0,"original 😀".len(),0));
+    let grant=ArtifactStoreOneItemGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
+    assert!(task.demands(8,[9;32],4096).is_err());
     assert_eq!(calls.load(Ordering::SeqCst), 0);
-    let step = task.step(&input, None, 7, [9; 32], grant, &mut || false).unwrap();
+    let step = task.step(7, [9; 32], grant,&mut control, &mut || false).unwrap();
     assert_eq!(step.progress().retained_capacity_bytes, grant.maximum_capacity_bytes);
     assert_eq!(step.progress().copied_bytes, 0);
     task.cancel();
-    assert_eq!(task.next_grant(&input, None, 7, [9; 32]).unwrap().maximum_items, 0);
-    close(task.into_retirement());
+    assert_eq!(task.demands(7,[9;32],4096).unwrap(),Default::default());
+    close(task.into_retirement(),&mut control);
 }
 
 #[test]
 fn cooperative_history_preparation_retirement_releases_the_actual_cursor_frame() {
     use semio_framework_trace::observe_heap_allocations_on_this_thread;
+    let mut callback=|_:semio_framework_value::NativeDecodeProgress|true;let mut recipient=semio_framework_value::NativeDecodeRetirementRecipient::new();let mut control=semio_framework_value::NativeDecodeControl::new_retained(&mut callback);control.install_retirement_recipient(&mut recipient).unwrap();
     let cursor = Box::new(EmptyPreparation { payload: [0; 513], closing: false });
     let (mut owner, heap) = observe_heap_allocations_on_this_thread(|| ArtifactReplayPreparationRetirement::new(cursor));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
@@ -267,12 +272,12 @@ fn cooperative_history_preparation_retirement_releases_the_actual_cursor_frame()
     assert_eq!(owner.next_depth_demand().unwrap(), 1);
     let full = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: bytes, maximum_depth: 1 };
     for short in [RetainedCloneGrant::default(), RetainedCloneGrant { maximum_release_bytes: bytes - 1, ..full }, RetainedCloneGrant { maximum_depth: 0, ..full }] {
-        let (step, heap) = observe_heap_allocations_on_this_thread(|| owner.close_step(short).unwrap());
+        let (step, heap) = observe_heap_allocations_on_this_thread(|| control.with_retirement(short,|receiving|owner.close_step(short,receiving)).unwrap());
         assert_eq!(step.progress(), Default::default());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert!(!owner.terminal_is_empty());
     }
-    let (step, heap) = observe_heap_allocations_on_this_thread(|| owner.close_step(full).unwrap());
+    let (step, heap) = observe_heap_allocations_on_this_thread(|| control.with_retirement(full,|receiving|owner.close_step(full,receiving)).unwrap());
     assert_eq!(heap.requested_bytes, 0);
     assert_eq!(heap.released_bytes, bytes);
     assert_eq!(step.progress().released_bytes, bytes);

@@ -172,12 +172,24 @@ pub(super) fn durable_fixture_record(fixture: &serde_json::Value) -> DurableFixt
         let inverse = semio_framework_pack_json::to_json_string(&work.parent_inverse).into_bytes();
         let record = directory::os_store::durable_group::durable_owned_group_journal_test_record_from_edits(
             semio_framework_artifact_reference::ArtifactRef { artifact_id: document_key.into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() } },
-            durable_edit(1, identity, edit_actor, timestamp, work.parent, work.parent_inverse),
-            parent_post,
-            durable_edit(2, &format!("{identity}:drawing"), edit_actor, protocol::HybridLogicalTimestamp { logical: 1, ..timestamp }, work.drawing, work.drawing_inverse),
-            drawing_post,
-            durable_edit(3, &format!("{identity}:value"), edit_actor, protocol::HybridLogicalTimestamp { logical: 2, ..timestamp }, work.value, work.value_inverse),
-            value_post,
+            directory::os_store::durable_group::DurableOwnedGroupTestMember {
+                edit: durable_edit(1, identity, edit_actor, timestamp, work.parent, work.parent_inverse),
+                post_snapshot: Arc::new(parent_post),
+                mutation_retirement: Arc::new(semio_s_artifact_gis_gismap::host::owned::GisMapMutationRetirementFactory),
+                snapshot_retirement: Arc::new(semio_s_artifact_gis_gismap::host::owned::GisMapSnapshotRetirementFactory),
+            },
+            directory::os_store::durable_group::DurableOwnedGroupTestMember {
+                edit: durable_edit(2, &format!("{identity}:drawing"), edit_actor, protocol::HybridLogicalTimestamp { logical: 1, ..timestamp }, work.drawing, work.drawing_inverse),
+                post_snapshot: Arc::new(drawing_post),
+                mutation_retirement: Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::default()),
+                snapshot_retirement: Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::default()),
+            },
+            directory::os_store::durable_group::DurableOwnedGroupTestMember {
+                edit: durable_edit(3, &format!("{identity}:value"), edit_actor, protocol::HybridLogicalTimestamp { logical: 2, ..timestamp }, work.value, work.value_inverse),
+                post_snapshot: Arc::new(value_post),
+                mutation_retirement: Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::default()),
+                snapshot_retirement: Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::default()),
+            },
         )
         .expect("Store-owned typed fixed-three decision fixture");
         (record, proposal, inverse)

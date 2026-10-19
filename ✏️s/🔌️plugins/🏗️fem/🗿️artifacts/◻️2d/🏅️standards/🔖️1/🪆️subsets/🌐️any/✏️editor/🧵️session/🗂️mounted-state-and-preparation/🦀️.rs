@@ -5,6 +5,7 @@ use super::*;
 //#region 🧰️FixedArena
 pub(super) struct MountedState {
     pub(super) identity: MountedIdentity,
+    pub(super) source: Option<ResolvedResultSource>,
     pub(super) snapshot: Option<store::os_store::snapshot_read::SnapshotRead<Fem2dSnapshot>>,
     pub(super) snapshot_return: Option<store::os_store::snapshot_read::SnapshotReadReturn>,
     pub(super) cancel: semio_framework_job::CancelToken,
@@ -13,16 +14,19 @@ pub(super) struct MountedState {
     pub(super) graph_plans: Vec<FemStagePlan>,
     pub(super) graph: Option<FemJobGraph>,
     pub(super) domain: Option<PlanarDomain>,
-    domain_outer_cursor: usize,
-    domain_hole_cursor: usize,
-    domain_hole_point_cursor: usize,
+    pub(super) region_cursor: usize,
+    pub(super) domain_outer_cursor: usize,
+    pub(super) domain_hole_cursor: usize,
+    pub(super) domain_hole_point_cursor: usize,
     pub(super) domain_close_lane: u8,
     pub(super) mesh: Option<MeshJob>,
     pub(super) model_build: Option<MountedModelBuild>,
     pub(super) assembly_build: Option<AssemblyJobConstruction>,
     pub(super) assembly: Option<AssemblyJob<'static>>,
     pub(super) csr_build: Option<AssemblyCsrBuild>,
+    pub(super) load_build: Option<MountedLoadBuild>,
     pub(super) pcg_build: Option<PcgJobConstruction>,
+    pub(super) rejected_pcg_matrix: Option<Csr>,
     pub(super) pcg: Option<PcgJob>,
     pub(super) visual: Fem2dLiveVisual,
     pub(super) visual_region_owner: Option<(String, RegionVisualQuality)>,
@@ -32,8 +36,9 @@ pub(super) struct MountedState {
     pub(super) visual_displaced: Option<Fem2dMountedVisualLease>,
     pub(super) visual_dirty: bool,
     pub(super) visual_field_cursor: usize,
+    pub(super) reaction_entry: usize,
     pub(super) visual_pcg_complete: bool,
-    preview_sequence: u64,
+    pub(super) preview_sequence: u64,
     pub(super) close_cursor: u8,
     pub(super) fault: Option<Vec<u8>>,
 }
@@ -65,24 +70,22 @@ pub(super) enum ChildEnd {
     Cancelled,
 }
 
-pub(super) fn child_end(result: Result<Option<JobOutcomeBorrow<'_>>, ValueError>) -> ChildEnd {
-    match result {
-        Ok(None | Some(JobOutcomeBorrow::Yield { .. })) => ChildEnd::Yield,
-        Ok(Some(JobOutcomeBorrow::PreviewReady { payload, .. })) => ChildEnd::Preview { bytes: lent_bytes(payload, SESSION_MAXIMUM_OUTPUT_BYTES), quality: retained_payload_byte(payload, 8) },
-        Ok(Some(JobOutcomeBorrow::CheckpointReady { state, .. })) => ChildEnd::Checkpoint(lent_bytes(state, SESSION_MAXIMUM_OUTPUT_BYTES)),
-        Ok(Some(JobOutcomeBorrow::Complete { output, .. })) => ChildEnd::Complete(output.and_then(|payload| lent_bytes(payload, SESSION_MAXIMUM_OUTPUT_BYTES))),
-        Ok(Some(JobOutcomeBorrow::Fault { detail, .. })) => ChildEnd::Fault(lent_bytes(detail, SESSION_MAXIMUM_FAULT_BYTES)),
-        Ok(Some(JobOutcomeBorrow::Cancelled { .. })) => ChildEnd::Cancelled,
-        Err(_) => ChildEnd::Fault(None),
-    }
+pub(super) fn child_end(result: Result<Option<JobOutcomeBorrow<'_>>, semio_framework_job::OriginalTurnFailure>) -> Result<ChildEnd, semio_framework_job::OriginalTurnFailure> {
+    Ok(match result? {
+        None | Some(JobOutcomeBorrow::Yield { .. }) => ChildEnd::Yield,
+        Some(JobOutcomeBorrow::PreviewReady { payload, .. }) => ChildEnd::Preview { bytes: lent_bytes(payload, SESSION_MAXIMUM_OUTPUT_BYTES), quality: retained_payload_byte(payload, 8) },
+        Some(JobOutcomeBorrow::CheckpointReady { state, .. }) => ChildEnd::Checkpoint(lent_bytes(state, SESSION_MAXIMUM_OUTPUT_BYTES)),
+        Some(JobOutcomeBorrow::Complete { output, .. }) => ChildEnd::Complete(output.and_then(|payload| lent_bytes(payload, SESSION_MAXIMUM_OUTPUT_BYTES))),
+        Some(JobOutcomeBorrow::Fault { detail, .. }) => ChildEnd::Fault(lent_bytes(detail, SESSION_MAXIMUM_FAULT_BYTES)),
+        Some(JobOutcomeBorrow::Cancelled { .. }) => ChildEnd::Cancelled,
+    })
 }
 
 /// 🎟️ One close unit's receipt: `items` released owners and `bytes` of released backing.
-pub(super) fn session_child_step<E>(step: Result<InteractiveJobCloseStep, E>) -> Result<InteractiveJobCloseStep, PluginLifecycleStep> {
+pub(super) fn session_child_failure(step: InteractiveJobCloseStep) -> Option<PluginLifecycleStep> {
     match step {
-        Ok(InteractiveJobCloseStep::Blocked) => Err(PluginLifecycleStep::Blocked { reason: "mounted FEM child close is blocked" }),
-        Err(_) => Err(PluginLifecycleStep::Blocked { reason: "mounted FEM child close was refused" }),
-        Ok(step @ (InteractiveJobCloseStep::Pending { .. } | InteractiveJobCloseStep::Complete { .. })) => Ok(step),
+        InteractiveJobCloseStep::Blocked => Some(PluginLifecycleStep::Blocked { reason: "mounted FEM child close is blocked" }),
+        InteractiveJobCloseStep::Pending { .. } | InteractiveJobCloseStep::Complete { .. } => None,
     }
 }
 
@@ -103,7 +106,7 @@ const fn largest(sizes: &[usize]) -> usize {
 }
 
 /// 📏️ The largest logical element one close unit retires; every quote of the next close turn is bounded by it.
-pub(super) const SESSION_CLOSE_COPY_BYTES: usize = 4_096;
+pub(super) const SESSION_CLOSE_COPY_BYTES: usize = 4096;
 
 /// 🪜️ The deepest retained frontier one close unit reaches: session owner, job, writer and payload.
 pub(super) const SESSION_CLOSE_DEPTH: usize = 3;
@@ -120,6 +123,7 @@ pub(super) const SESSION_CLOSE_RELEASE_BYTES: usize = largest(&[
     size_of::<AssemblyCsrBuild>(),
     size_of::<PcgJobConstruction>(),
     size_of::<PcgJob>(),
+    size_of::<MountedLoadBuild>(),
     size_of::<store::os_store::snapshot_read::SnapshotRead<Fem2dSnapshot>>(),
     size_of::<store::os_store::snapshot_read::SnapshotReadReturn>(),
     size_of::<PendingSnapshotAdmission>(),
@@ -127,9 +131,18 @@ pub(super) const SESSION_CLOSE_RELEASE_BYTES: usize = largest(&[
 ]);
 
 impl MountedState {
+    pub(super) fn child_close_demands(&self, demand: &mut RetirementDemand) -> Result<(), ValueError> {
+        if let Some(child) = self.graph.as_ref() { merge_close_demand(demand, semio_s_fem_sparse::numerical_close_demand(child)?); }
+        if let Some(child) = self.mesh.as_ref() { merge_close_demand(demand, semio_s_fem_sparse::numerical_close_demand(child)?); }
+        if let Some(child) = self.pcg.as_ref() { merge_close_demand(demand, semio_s_fem_sparse::numerical_close_demand(child)?); }
+        if let Some(child) = self.pcg_build.as_ref() { merge_close_demand(demand, child.close_demand()?); }
+        Ok(())
+    }
+
     pub(super) fn new(identity: MountedIdentity, snapshot: store::os_store::snapshot_read::SnapshotRead<Fem2dSnapshot>, admitted_items: usize) -> Self {
         Self {
             identity,
+            source: None,
             snapshot: Some(snapshot),
             snapshot_return: None,
             cancel: semio_framework_job::root_cancel_token(),
@@ -138,6 +151,7 @@ impl MountedState {
             graph_plans: Vec::new(),
             graph: None,
             domain: None,
+            region_cursor: 0,
             domain_outer_cursor: 0,
             domain_hole_cursor: 0,
             domain_hole_point_cursor: 0,
@@ -147,7 +161,9 @@ impl MountedState {
             assembly_build: None,
             assembly: None,
             csr_build: None,
+            load_build: None,
             pcg_build: None,
+            rejected_pcg_matrix: None,
             pcg: None,
             visual: Fem2dLiveVisual::default(),
             visual_region_owner: None,
@@ -157,6 +173,7 @@ impl MountedState {
             visual_displaced: None,
             visual_dirty: true,
             visual_field_cursor: 0,
+            reaction_entry: 0,
             visual_pcg_complete: false,
             preview_sequence: 0,
             close_cursor: 0,
@@ -181,7 +198,7 @@ impl MountedState {
 
     pub(super) fn prepare_domain_one(&mut self) -> Result<bool, &'static [u8]> {
         let snapshot = self.snapshot.as_ref().ok_or(b"fem2d.session-snapshot-missing" as &'static [u8])?;
-        let Some(region) = snapshot.regions.first() else { return Ok(true) };
+        let Some(region) = snapshot.regions.get(self.region_cursor) else { return Ok(true) };
         if self.domain.is_none() {
             let mut outer = Vec::new();
             outer.try_reserve_exact(region.outline.len()).map_err(|_| b"fem2d.session-domain-outer-allocation" as &'static [u8])?;
@@ -281,7 +298,7 @@ impl MountedState {
             Ok(false) => Some(self.progress(b"fem2d.visual-candidate")),
             Ok(true) => {
                 let Some(lease) = candidate.take_complete() else { return Some(self.fail(b"fem2d.visual-complete-owner".to_vec())) };
-                let live = current_identity(self.identity.app_instance_id) == Some(self.identity) && snapshot.commit_authority_matches(self.identity.generation.0, self.identity.canonical_base_revision) && !self.cancel.is_cancelled_now();
+                let live = current_identity(self.identity) == Some(self.identity) && snapshot.commit_authority_matches(self.identity.generation.0, self.identity.canonical_base_revision) && !self.cancel.is_cancelled_now();
                 if !live {
                     self.visual_displaced = Some(lease);
                     self.visual_job_candidate = None;

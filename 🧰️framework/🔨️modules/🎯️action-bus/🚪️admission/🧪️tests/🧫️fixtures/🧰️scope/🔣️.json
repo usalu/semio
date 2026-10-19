@@ -1,0 +1,229 @@
+{
+  "schema": "semio.original-construction-scope.v1",
+  "cases": [
+    {
+      "name": "exact",
+      "quote": [
+        8,
+        16,
+        4,
+        3
+      ],
+      "owners": [
+        [
+          8,
+          16,
+          4,
+          3
+        ]
+      ],
+      "accepted": [
+        true
+      ],
+      "remaining": [
+        0,
+        0,
+        0,
+        3
+      ]
+    },
+    {
+      "name": "atomic-copy-refusal",
+      "quote": [
+        8,
+        16,
+        4,
+        3
+      ],
+      "owners": [
+        [
+          9,
+          1,
+          1,
+          1
+        ],
+        [
+          8,
+          16,
+          4,
+          3
+        ]
+      ],
+      "accepted": [
+        false,
+        true
+      ],
+      "remaining": [
+        0,
+        0,
+        0,
+        3
+      ]
+    },
+    {
+      "name": "atomic-capacity-refusal",
+      "quote": [
+        8,
+        16,
+        4,
+        3
+      ],
+      "owners": [
+        [
+          1,
+          17,
+          1,
+          1
+        ],
+        [
+          8,
+          16,
+          4,
+          3
+        ]
+      ],
+      "accepted": [
+        false,
+        true
+      ],
+      "remaining": [
+        0,
+        0,
+        0,
+        3
+      ]
+    },
+    {
+      "name": "atomic-release-refusal",
+      "quote": [
+        8,
+        16,
+        4,
+        3
+      ],
+      "owners": [
+        [
+          1,
+          1,
+          5,
+          1
+        ],
+        [
+          8,
+          16,
+          4,
+          3
+        ]
+      ],
+      "accepted": [
+        false,
+        true
+      ],
+      "remaining": [
+        0,
+        0,
+        0,
+        3
+      ]
+    },
+    {
+      "name": "atomic-depth-refusal",
+      "quote": [
+        8,
+        16,
+        4,
+        3
+      ],
+      "owners": [
+        [
+          1,
+          1,
+          1,
+          4
+        ],
+        [
+          8,
+          16,
+          4,
+          3
+        ]
+      ],
+      "accepted": [
+        false,
+        true
+      ],
+      "remaining": [
+        0,
+        0,
+        0,
+        3
+      ]
+    },
+    {
+      "name": "nested-exhaustion",
+      "quote": [
+        8,
+        16,
+        4,
+        3
+      ],
+      "owners": [
+        [
+          3,
+          7,
+          1,
+          3
+        ],
+        [
+          5,
+          9,
+          3,
+          2
+        ],
+        [
+          0,
+          1,
+          0,
+          1
+        ]
+      ],
+      "accepted": [
+        true,
+        true,
+        false
+      ],
+      "remaining": [
+        0,
+        0,
+        0,
+        3
+      ]
+    },
+    {
+      "name": "heapless-owner",
+      "quote": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "owners": [
+        [
+          0,
+          0,
+          0,
+          1
+        ]
+      ],
+      "accepted": [
+        true
+      ],
+      "remaining": [
+        0,
+        0,
+        0,
+        1
+      ]
+    }
+  ]
+}

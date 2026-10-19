@@ -1,15 +1,18 @@
-//! 🧪️ Laws of the kind-emitting recorder: every editor board edit is stated as the concrete kinds it consists of, one
 //! entity at a time, never as a whole board differenced against the document. Each law replays the recorded rows on the
+//! 🧪️ Laws of the kind-emitting recorder: every editor board edit is stated as the concrete kinds it consists of, one
 //! document they were recorded on, then their inverse rows last-to-first, and demands the document back; every row also
 //! passes the framework's inverse-sum law on the state it was applied to.
 
 use crate::editor::puzzle2d::snapshot;
 use crate::editor::puzzle2d::recorder::Puzzle2dRecorder;
 use {crate::editor::puzzle2d::snapshot::board_snapshot_edges, crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::snapshot_target_regions};
-use crate::standards::v1::subsets::any::schema::mutations::{delete_node, Puzzle2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::delete_node;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::Puzzle2dSnapshot;
 use protocol::Mutation;
-use semio_framework_pack_json::{json, Value};
+use protocol::ColdMutation;
+use semio_framework_pack_json::json;
+use semio_framework_pack_json::Value;
 use std::sync::Arc;
 
 /// 🧱️ Four nodes — `a` (two handles), `b` and `d` (one and two handles) in the middle of `c` — wired `a:v1 → b:v0`, with one
@@ -49,12 +52,12 @@ fn replay(base: &Puzzle2dSnapshot, rows: &[Puzzle2dMutation]) -> (Puzzle2dSnapsh
     for row in rows {
         ::semio_framework_async::poll::resolve_ready(protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(row, &state));
         inverses.push(Mutation::<Puzzle2dSnapshot>::inverse(row, &state).expect("every recorded row inverts"));
-        state = protocol::apply_diff(Mutation::<Puzzle2dSnapshot>::diff(row, &state).diff(), &state).expect("every recorded row applies");
+        state = protocol::apply_diff_cold(Mutation::<Puzzle2dSnapshot>::diff(row, &state).diff(), &state).expect("every recorded row applies");
     }
     let after = state.clone();
     for inverse in inverses.iter().rev() {
         for step in inverse.iter().rev() {
-            state = protocol::apply_diff(Mutation::<Puzzle2dSnapshot>::diff(step, &state).diff(), &state).expect("every inverse row applies");
+            state = protocol::apply_diff_cold(Mutation::<Puzzle2dSnapshot>::diff(step, &state).diff(), &state).expect("every inverse row applies");
         }
     }
     (after, state)
@@ -161,8 +164,8 @@ fn duplicating_nodes_records_clones_and_the_edge_between_them() {
     assert_eq!(clones.len(), 2);
     let rows = assert_round_trip(&base, recorder);
     assert!(matches!(rows.as_slice(), [Puzzle2dMutation::CreateNode(first), Puzzle2dMutation::CreateNode(second), Puzzle2dMutation::ConnectHandles(edge)]
-        if first.node.x == 24.0 && second.node.x == 124.0 && first.node.handles.iter().all(|handle| handle.id.as_str().starts_with(first.node.id.as_str()))
-        && edge.source.as_str().starts_with(first.node.id.as_str()) && edge.target.as_str().starts_with(second.node.id.as_str())), "{rows:?}");
+        if first.node.x == 24.0 && second.node.x == 124.0 && first.node.handles.iter().all(|handle| handle.id.to_string_owner().starts_with(&first.node.id.to_string_owner()))
+        && edge.source.to_string_owner().starts_with(&first.node.id.to_string_owner()) && edge.target.to_string_owner().starts_with(&second.node.id.to_string_owner())), "{rows:?}");
 }
 
 #[test]

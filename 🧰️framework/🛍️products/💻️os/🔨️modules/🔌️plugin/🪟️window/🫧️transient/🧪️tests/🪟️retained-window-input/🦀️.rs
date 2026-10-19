@@ -123,7 +123,7 @@ fn retained_window_input_replacement_rejects_old_authority_and_publication() {
         let authority = old.capture(Some(&view(id))).unwrap().unwrap();
         let mut publication = old.begin(semio_framework_job::OperationId(1), &authority, mutation(id, revision.as_u64().unwrap())).unwrap();
         for _ in 0..1024 {
-            if matches!(old.advance(publication.as_mut(), grant).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_)) {
+            if matches!(old.advance(publication.as_mut(), grant).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_, _)) {
                 assert!(publication.acknowledge());
                 break;
             }
@@ -188,16 +188,32 @@ impl ArtifactOwnedDisposer<WindowTransientStore<ReplacementWindow>> for PausedPa
         if self.paused.load(std::sync::atomic::Ordering::Acquire) {
             return Ok(PluginLifecycleStep::AwaitingInput { reason: "original paused transient disposer" });
         }
-        self.inner.close_step(owner, grant)
+        let Some(inner) = self.inner.as_mut() else {
+            return Ok(PluginLifecycleStep::Progress(Default::default()));
+        };
+        if inner.terminal_is_empty(owner) {
+            let released_bytes = inner.terminal_frame_release_bytes().ok_or_else(|| Fault::from("inner transient disposer has no original physical frame authority"))?;
+            self.inner = None;
+            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() }));
+        }
+        inner.close_step(owner, grant)
     }
 
-    fn retirement_demands(&self, owner: &WindowTransientStore<ReplacementWindow>, body: usize) -> Result<RetirementDemand, ValueError> { self.inner.retirement_demands(owner, body) }
-
-    fn terminal_is_empty(&self, owner: &WindowTransientStore<ReplacementWindow>) -> bool {
-        !self.paused.load(std::sync::atomic::Ordering::Acquire) && self.inner.terminal_is_empty(owner)
+    fn retirement_demands(&self, owner: &WindowTransientStore<ReplacementWindow>, body: usize) -> Result<RetirementDemand, ValueError> {
+        match self.inner.as_ref() {
+            None => Ok(Default::default()),
+            Some(inner) if inner.terminal_is_empty(owner) => Ok(RetirementDemand { release_bytes: inner.terminal_frame_release_bytes().unwrap_or_default(), depth: 1, ..Default::default() }),
+            Some(inner) => inner.retirement_demands(owner, body),
+        }
     }
 
-    fn terminal_frame_release_bytes(&self) -> Option<usize> { self.inner.terminal_frame_release_bytes().map(|inner| inner + std::mem::size_of::<Self>()) }
+    fn terminal_is_empty(&self, _: &WindowTransientStore<ReplacementWindow>) -> bool {
+        self.inner.is_none() && !self.paused.load(std::sync::atomic::Ordering::Acquire)
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        self.inner.is_none().then_some(std::mem::size_of::<Self>())
+    }
 }
 #[test]
 fn retained_window_input_retirement_reaches_later_partitions_and_kinds() {
@@ -208,7 +224,7 @@ fn retained_window_input_retirement_reaches_later_partitions_and_kinds() {
     for id in fairness["owners"].as_array().unwrap() {
         owner.partition(id.as_str().unwrap());
     }
-    owner.partitions.get_mut("first").unwrap().disposer = Some(Box::new(PausedPartitionDisposer { paused: paused.clone(), inner: transient_store_disposer(ReplacementWindow::build_owners().state_retirement) }));
+    owner.partitions.get_mut("first").unwrap().disposer = Some(Box::new(PausedPartitionDisposer { paused: paused.clone(), inner: Some(transient_store_disposer(ReplacementWindow::build_owners().state_retirement)) }));
     assert_eq!(owner.close_step(RetainedCloneGrant { maximum_items: 0, ..original_transient_grant() }).unwrap(), PluginLifecycleStep::Progress(Default::default()));
     assert_eq!(owner.partition_close_cursor, 0);
     for _ in 0..65_536 {
@@ -252,7 +268,7 @@ fn retained_window_input_refresh_admits_live_generation_after_a_committed_write(
     let publish = |registry: &mut WindowTransientOwnerRegistry, authority: &WindowTransientAuthority, revision: u64| {
         let mut publication = registry.begin(semio_framework_job::OperationId(1), authority, mutation(revision)).unwrap();
         for _ in 0..1024 {
-            if matches!(registry.advance(publication.as_mut(), grant).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_)) {
+            if matches!(registry.advance(publication.as_mut(), grant).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_, _)) {
                 assert!(publication.acknowledge());
                 break;
             }

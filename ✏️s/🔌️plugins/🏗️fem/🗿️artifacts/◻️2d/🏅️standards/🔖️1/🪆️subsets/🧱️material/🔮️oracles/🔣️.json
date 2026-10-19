@@ -81,12 +81,40 @@
               "directoryName": "⚗️denies"
             }
           ]
+        },
+        {
+          "mutationId": "change-material",
+          "sourceMutationDirectoryName": "🩹️change-material",
+          "mutationDirectoryName": "🩹️change-material",
+          "scenarios": [
+            {
+              "id": "renames-a-field",
+              "directoryName": "🩹️renames"
+            },
+            {
+              "id": "softens-properties",
+              "directoryName": "📉️softens"
+            },
+            {
+              "id": "keeps-the-same-value",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "rejects-a-missing-target",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "rejects-zero-modulus",
+              "directoryName": "⚗️invalid"
+            }
+          ]
         }
       ],
       "kinds": [
         "create-material",
         "delete-material",
-        "replace-material"
+        "replace-material",
+        "change-material"
       ]
     }
   ],

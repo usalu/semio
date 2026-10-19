@@ -2,10 +2,12 @@ import{readExactCargoExecutableV1,selectExactCargoLawsV1,requireExactCargoLawRes
 import{readExactCargoLawOutputSelectionV1,type ExactCargoLawOutputSelectionV1}from"./📦️outputs/🎯️selection/🟦️.ts";
 import exactOutputSchema from"./📦️outputs/🎯️selection/🧬️schema/🔣️.json";
 import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1,withScriptInvocationSignalV1}from"../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { controlledExactExecutableFingerprint, type ExactCargoFingerprintControl } from "./🔬️fingerprint/🟦️.ts";
 import {captureOwnedProcess,type OwnedProcessCaptureOptions,type OwnedProcessCaptureResult} from "../../../📥️capture/🟦️.ts";
 import { closeSync, existsSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { isAbsolute, join, resolve, sep } from "node:path";
 import { createHash } from "node:crypto";
+import { rustCompilerLoaderEnvironment } from "./📚️loader/🟦️.ts";
 import policySchema from "./📋️policy/🧬️schema/🔣️.json" with { type: "json" };
 import configuredPolicy from "./📋️policy/🔣️.json" with { type: "json" };
 import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -25,7 +27,7 @@ export type ExactCargoLawGroup = {
   laws: readonly string[];
   cargoArgs?: readonly string[];
 };
-export type ExactCargoLawStage = "build" | "list" | "native";
+export type ExactCargoLawStage = "build" | "runtime" | "list" | "native";
 /** 🔌️ Owned process/fingerprint port permits deterministic hostile runner laws without compiling Cargo. */
 export type ExactCargoLawPreparationOptionsV1=Omit<OwnedProcessCaptureOptions,"stdoutPath"|"stderrPath">&Readonly<{control:ResourceLeaseControl}>;
 /** 🎟️ Carries an admitted exact Cargo command and its actual resource phase. */
@@ -34,7 +36,7 @@ export type ExactCargoLawPort = {
   prepare?: (command:string,args:string[],options:ExactCargoLawPreparationOptionsV1)=>Promise<void>;
   withBuildInputs?: <T>(command:string,args:string[],options:ExactCargoLawPreparationOptionsV1,control:ResourceLeaseControl,body:(inputs:ExactCargoLawInputsV1)=>Promise<T>)=>Promise<T>;
   probe: (command: string, args: string[], options: OwnedProcessCaptureOptions) => Promise<OwnedProcessCaptureResult>;
-  fingerprint: (path: string) => { path: string; sha256: string };
+  fingerprint: (path: string, control: ExactCargoFingerprintControl) => { path: string; sha256: string } | Promise<{ path: string; sha256: string }>;
   nativeLibraryDirectory?: (options:OwnedProcessCaptureOptions)=>Promise<string>;
 };
 /** 📋️ Declares actual build, discovery, assertion and output authority. */
@@ -227,7 +229,7 @@ export function originalNativeLibraryEnvironment(env:Readonly<Record<string,stri
  const key=platform==="win32"?(Object.keys(env).find(key=>key.toLowerCase()==="path")??"PATH"):platform==="darwin"?"DYLD_LIBRARY_PATH":"LD_LIBRARY_PATH",separator=platform==="win32"?";":":";
  return {...env,[key]:[directory,resolve(directory,"../../.."),env[key]].filter(value=>value!==undefined&&value!=="").join(separator)};
 }
-const originalExactCargoPort:ExactCargoLawPort={probe:captureOwnedProcess,fingerprint:exactExecutableFingerprint,nativeLibraryDirectory:originalNativeLibraryDirectory};
+const originalExactCargoPort:ExactCargoLawPort={probe:captureOwnedProcess,fingerprint:controlledExactExecutableFingerprint,nativeLibraryDirectory:originalNativeLibraryDirectory};
 
 /** 🧪️ Compiles each explicit target once and executes only its hash-bound, exact-listed native laws. */
 export async function runExactCargoLaws(options: ExactCargoLawOptions, port: ExactCargoLawPort = originalExactCargoPort): Promise<readonly ExactCargoLawReceipt[]> {
@@ -247,10 +249,10 @@ export async function runExactCargoLaws(options: ExactCargoLawOptions, port: Exa
   if (!cargoTargetDir || !isAbsolute(cargoTargetDir)) throw new Error("Explicit absolute Cargo target directory required");
   requireExactCargoTargetBoundaryV1(options.cwd,cargoTargetDir);
   const env:Record<string,string|undefined> = { ...configuredEnv, CARGO_TARGET_DIR: cargoTargetDir };
-  const nativeEnv: Record<string, string | undefined> = { ...env, ...options.nativeEnv, CARGO_TARGET_DIR: cargoTargetDir };
-  delete nativeEnv.RUST_TEST_NOCAPTURE;
+  const baseNativeEnv: Record<string, string | undefined> = { ...env, ...options.nativeEnv, CARGO_TARGET_DIR: cargoTargetDir };
+  delete baseNativeEnv.RUST_TEST_NOCAPTURE;
   for(const path of [artifactRoot,cargoTargetDir,env.CARGO_HOME,env.CARGO_BUILD_BUILD_DIR]){if(!path)throw Error("Original bounded exact Cargo directories required");requireNativeStoragePathV1(storage.backing.root,path);}
-  for(const name of ["TMPDIR","TMP","TEMP","SEMIO_TEST_ARTIFACT_DIR"] as const)for(const environment of [env,nativeEnv])if(environment[name])requireNativeStoragePathV1(storage.backing.root,environment[name]!);
+  for(const name of ["TMPDIR","TMP","TEMP","SEMIO_TEST_ARTIFACT_DIR"] as const)for(const environment of [env,baseNativeEnv])if(environment[name])requireNativeStoragePathV1(storage.backing.root,environment[name]!);
   if (!isAbsolute(options.cwd) || !options.groups.length || options.groups.length > 64) throw new Error("Exact Cargo laws require a bounded nonempty target list and absolute cwd");
   const groupKeys = options.groups.map((group) => JSON.stringify([group.package, group.target.kind, group.target.name ?? ""]));
   if (new Set(groupKeys).size !== groupKeys.length) throw new Error("Exact Cargo groups must combine laws for the same package/target");
@@ -267,6 +269,7 @@ export async function runExactCargoLaws(options: ExactCargoLawOptions, port: Exa
     const outputDirectories=new Map<string,ExactOutputIdentity>();
     for (const [index, group] of options.groups.entries()) {
       let groupRoot = artifactRoot;
+      let nativeEnv = { ...baseNativeEnv };
       let stage: ExactCargoLawStage = "build";
       let last: OwnedProcessCaptureResult = { status: null, signal: null, stdout: "", stderr: "" };
       const fail = (detail: string): never => {
@@ -328,18 +331,30 @@ export async function runExactCargoLaws(options: ExactCargoLawOptions, port: Exa
         "build",
       );
       const protocol=<T>(read:()=>T):T=>{try{return read();}catch(error){return fail(error instanceof Error?error.message:String(error));}};
-      const executable=protocol(()=>readExactCargoExecutableV1(built,group.package,group.target));
-      const fingerprint = (): { path: string; sha256: string } => {
+      const {path:executable,kinds}=protocol(()=>readExactCargoExecutableV1(built,group.package,group.target));
+      if (kinds.includes("proc-macro")) {
+        const runtime = await capture("runtime", env.RUSTC || "rustc", ["--print", "target-libdir"], policy.listMilliseconds, "runtime");
+        if (runtime.status !== 0 || runtime.signal !== null || (runtime.reason && runtime.reason !== "exit")) fail(`compiler runtime discovery ${runtime.reason ?? "exit"}; ${runtime.stderr.slice(0, 4000)}`);
+        const directory = runtime.stdout.replace(/\r?\n$/u, "");
         try {
-          return port.fingerprint(executable);
+          nativeEnv = rustCompilerLoaderEnvironment(process.platform === "win32" ? "win32" : process.platform === "darwin" ? "darwin" : "linux", nativeEnv, directory);
+          if (!lstatSync(directory).isDirectory()) fail("Compiler runtime library directory does not exist");
+        } catch (error) { fail(String(error)); }
+      }
+      const fingerprint = async (): Promise<{ path: string; sha256: string }> => {
+        try {
+          checkpoint();
+          const result = await port.fingerprint(executable, { invocation: options.invocation, cancelled });
+          checkpoint();
+          return result;
         } catch (error) {
           return fail(String(error));
         }
       };
-      const initial = fingerprint();
-      const verify = (): void => {
+      const initial = await fingerprint();
+      const verify = async (): Promise<void> => {
         checkpoint();
-        const current = fingerprint();
+        const current = await fingerprint();
         protocol(()=>requireExactCargoFingerprintV1(initial,current));
       };
       protocol(()=>requireExactCargoFingerprintV1(initial,initial));
@@ -351,7 +366,7 @@ export async function runExactCargoLaws(options: ExactCargoLawOptions, port: Exa
         writeFileSync(join(groupRoot,"toolchain-runtime.json"),JSON.stringify({directory,cargoTargetDir}),{flag:"wx",mode:0o600});
       }
       const listed = await capture("list", initial.path, ["--list"], policy.listMilliseconds, "list");
-      verify();
+      await verify();
       const laws=protocol(()=>selectExactCargoLawsV1(listed,group.laws));
       for (const [lawIndex, law] of laws.entries()) {
         verify();

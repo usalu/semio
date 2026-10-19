@@ -89,6 +89,30 @@ impl<V> MapDelta<V> {
 }
 
 impl<V: Clone> MapDelta<V> {
+    /// ↩️ Reverses only authored keys, preserving sibling entries and the original refusal domain.
+    pub fn inverse(&self, base: &BTreeMap<String, V>) -> Self {
+        let mut entries = BTreeMap::new();
+        for (key, entry) in &self.entries {
+            let prior = base.get(key);
+            let inverse = if !entry.precondition.accepts(prior.is_some()) || matches!(entry.operation, MapEntryOperation::Reject) {
+                Some(MapEntryDelta { precondition: MapPresence::Never, operation: MapEntryOperation::Reject })
+            } else if let Some(value) = prior {
+                Some(MapEntryDelta { precondition: MapPresence::Any, operation: MapEntryOperation::Set(value.clone()) })
+            } else if matches!(entry.operation, MapEntryOperation::Set(_)) {
+                Some(MapEntryDelta { precondition: MapPresence::Present, operation: MapEntryOperation::Remove })
+            } else { None };
+            if let Some(inverse) = inverse { entries.insert(key.clone(), inverse); }
+        }
+        Self { entries }
+    }
+
+    /// 🔁️ Explicit whole-map intent includes every incoming key and every removed live key.
+    pub fn replacement(base: &BTreeMap<String, V>, replacement: &BTreeMap<String, V>) -> Self {
+        let mut result = Self::default();
+        for key in base.keys().filter(|key| !replacement.contains_key(*key)) { result.absorb(Self::remove(key.clone())); }
+        for (key, value) in replacement { result.absorb(Self::set(key.clone(), value.clone())); }
+        result
+    }
     /// 🛡️ Validates every original key before changing the first entry.
     pub fn apply_onto(&self, target: &mut impl MapDeltaTarget<V>) -> MutationApplyResult<()> {
         for (key, entry) in &self.entries {
@@ -130,24 +154,22 @@ impl<V: ToValue> ToValue for MapDelta<V> {
                 MapEntryOperation::Remove => DslValue::object([("kind".into(), "remove".to_value())]),
                 MapEntryOperation::Reject => DslValue::object([("kind".into(), "reject".to_value())]),
             };
-            DslValue::object([("key".into(), key.to_value()), ("precondition".into(), entry.precondition.name().to_value()), ("operation".into(), operation)])
-        }).collect();
-        DslValue::object([("entries".into(), DslValue::Array(entries))])
+            (key.clone(), DslValue::object([("operation".into(), operation), ("precondition".into(), entry.precondition.name().to_value())]))
+        });
+        DslValue::object([("entries".into(), DslValue::Object(entries.collect()))])
     }
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> { controlled::encode(self, control) }
 }
 
 impl<V: FromValue> FromValue for MapDelta<V> {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let mut root = record(value, &["entries"])?;
-        let DslValue::Array(entries) = root.remove("entries").unwrap() else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "map delta entries must be a list")); };
+        let DslValue::Object(entries) = root.remove("entries").unwrap() else { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "map delta entries must be a keyed object")); };
         let mut result = Self::default();
-        for value in entries {
-            let mut entry = record(value, &["key", "precondition", "operation"])?;
-            let key = String::from_value(entry.remove("key").unwrap())?;
-            let precondition = match String::from_value(entry.remove("precondition").unwrap())?.as_str() {
-                "any" => MapPresence::Any, "present" => MapPresence::Present, "absent" => MapPresence::Absent, "never" => MapPresence::Never,
-                _ => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unknown map presence requirement")),
-            };
+        for (key, value) in entries {
+            if result.entries.contains_key(&key) { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "duplicate map delta key")); }
+            let mut entry = record(value, &["precondition", "operation"])?;
+            let precondition = controlled::presence(entry.remove("precondition").unwrap().as_str())?;
             let raw = entry.remove("operation").unwrap();
             let set = raw.as_object().and_then(|fields| fields.iter().find(|(key, _)| key == "kind").map(|(_, value)| value)).and_then(DslValue::as_str) == Some("set");
             let mut operation = record(raw, if set { &["kind", "value"] } else { &["kind"] })?;
@@ -156,15 +178,24 @@ impl<V: FromValue> FromValue for MapDelta<V> {
                 "set" => MapEntryOperation::Set(V::from_value(operation.remove("value").unwrap())?),
                 "remove" => MapEntryOperation::Remove,
                 "reject" => MapEntryOperation::Reject,
-                _ => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unknown map operation")),
+                _ => return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "unknown map operation")),
             };
-            if (precondition == MapPresence::Never) != matches!(operation, MapEntryOperation::Reject) { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unsatisfiable map changes must be explicit rejections")); }
-            if result.entries.insert(key, MapEntryDelta { precondition, operation }).is_some() { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "duplicate map delta key")); }
+            controlled::compatible(precondition, &operation)?;
+            result.entries.insert(key, MapEntryDelta { precondition, operation });
         }
         Ok(result)
     }
+    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> { controlled::decode(value, control) }
+    fn default_value_controlled(control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> { control.checkpoint()?; Ok(Self::default()) }
+    fn retire_decoded(self) { for (_, entry) in self.entries { if let MapEntryOperation::Set(value) = entry.operation { V::retire_decoded(value); } } }
 }
 
+#[path = "🛬️controlled/🦀️.rs"]
+mod controlled;
+#[path = "🧭️canonical/🦀️.rs"]
+mod canonical;
+#[path = "🗣️dsl/🦀️.rs"]
+mod dsl;
 #[cfg(test)]
 #[path = "🧪️tests/🧪️shared-map-delta-native/🦀️.rs"]
 mod tests;

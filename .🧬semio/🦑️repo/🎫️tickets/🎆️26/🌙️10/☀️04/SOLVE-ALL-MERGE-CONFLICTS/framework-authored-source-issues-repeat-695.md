@@ -1,0 +1,11 @@
+# Authored Source Issues Preserved
+
+These are immutable authored source shapes, not repairs introduced by merging. The task excludes compile fixes and retains authored semantics. No compiler or test confirmed these source APIs.
+
+| Current source | Immutable provenance | Preserved issue |
+|---|---|---|
+| 🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🎒️document/⏳️cursor/🧬️schema/🔣️.json | 🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/🎒️document/⏳️cursor/🧬️schema/🔣️.json B=absent H=absent S=de8f190037dd6c43c69e3663c606b9cbef38ab52 | 630-byte JSON is already truncated in stash; B/H absent, current exact stash bytes. |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🚫️rejection/🦀️.rs | 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🚫️rejection/🦀️.rs B=b30f45f462527b21d91ea7f7c0d3386d37ce36bd H=b30f45f462527b21d91ea7f7c0d3386d37ce36bd S=e9b8d26b67aacd49edc9b79cdb3ccb360e046e3f | Two identical next_demand declarations in stash (B0,H0,S2). |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🧪️member-identity-and-group-testing-helpers/🦀️.rs | 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs B=38d9e0c9d8c1ccf0a30cdbcd39f1e14efe1d5b75 H=6be39b2df594f45dd626b9dc76c6f5c680476fd5 S=17e64bd8e0de62d80a86a2cabbc57a4de46ca0f0 | Stash itself has both four-argument and owned-member three-argument durable_group_test_outcome; both authored bodies preserved in current testing owner. |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/📜️space-history/🦀️.rs | 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/📜️space-history/🦀️.rs B=5b0f971d445a6943262a6b1375784919301505da H=5b0f971d445a6943262a6b1375784919301505da S=fb1ebcaaf84ccf24c37dfd892447302e8396368f | Stash itself repeats apply within MutationDiff and repeats that impl; no compile repair made. |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/🪡️list-delta/🧪️tests/🔬️unit/🦀️.rs | 🧰️framework/🛍️products/💻️os/🔨️modules/🪡️list-delta/🧪️tests/🔬️unit/🦀️.rs B=6194b9bf13d2081913d6af18e988994ff3df710e H=6194b9bf13d2081913d6af18e988994ff3df710e S=b438f7d194ac651ad954d9d57a72d9a505ab64e8 | Stash itself repeats ItemDelta apply in the same MutationDiff impl; no compile repair made. |

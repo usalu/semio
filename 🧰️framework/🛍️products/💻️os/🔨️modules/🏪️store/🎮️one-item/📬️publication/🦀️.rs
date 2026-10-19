@@ -21,6 +21,8 @@ pub mod lifted_member_owned_batch;
 pub mod lifted_canonical_edit;
 #[path = "📥️lifted/🧵️operation-wire/🦀️.rs"]
 pub mod lifted_prepared_operation_wire;
+#[path = "../📨️diagnostics/🦀️.rs"]
+pub mod diagnostics;
 use crate::batch_digest::ArtifactStoreBatchDigest;
 use crate::lifted_member_owned_batch as member_owned_batch;
 
@@ -289,7 +291,7 @@ impl ArtifactStoreOneItemLiveAuthority {
     pub fn seal_prepared_owned<P, Mutation>(self: &Arc<Self>, edit: Box<Edit<Mutation>>, post_snapshot: Arc<P>, edit_digest: [u8; 32], identities: [semio_framework_value::paged::PagedUtf8<{usize::MAX}>; 3]) -> ArtifactStoreOneItemPrepared<P, Mutation> {
         let [actor, applied_edit_id, tail_edit_id] = identities;
         let seal = ArtifactStoreOneItemSeal { authority: Arc::clone(self), edit_address: edit.as_ref() as *const Edit<Mutation> as usize, post_address: Arc::as_ptr(&post_snapshot) as usize, digest: edit_digest };
-        ArtifactStoreOneItemPrepared { foreign_step_presence: None, edit, post_snapshot, next_clock: self.next_clock, edit_digest, local_actor: Some(actor), applied_edit_id, tail_edit_id, seal }
+        ArtifactStoreOneItemPrepared { outcome_messages: None, foreign_step_presence: None, edit, post_snapshot, next_clock: self.next_clock, edit_digest, local_actor: Some(actor), applied_edit_id, tail_edit_id, seal }
     }
 
     pub fn validate_prepared<P, Mutation>(self: &Arc<Self>, prepared: &ArtifactStoreOneItemPrepared<P, Mutation>) -> Result<(), ValueError> {
@@ -316,6 +318,7 @@ pub struct ArtifactStoreOneItemSeal {
 /// mutation inverse/diff/apply/encoding result inside its retained cursor before exposing this
 /// value. The store publication turn only validates fixed authorities and moves these owners.
 pub struct ArtifactStoreOneItemPrepared<P, Mutation> {
+    outcome_messages: Option<crate::os_spr::command::MutationMessagePublication>,
     pub edit: Box<Edit<Mutation>>,
     pub post_snapshot: Arc<P>,
     pub next_clock: HybridLogicalTimestamp,
@@ -328,6 +331,14 @@ pub struct ArtifactStoreOneItemPrepared<P, Mutation> {
 }
 
 impl<P, Mutation> ArtifactStoreOneItemPrepared<P, Mutation> {
+    /// 📨️ Captures an original diagnostic owner and its separately funded report copy.
+    pub fn record_outcome_messages(&mut self, messages: crate::os_spr::command::MutationMessagePublication) {
+        assert!(self.outcome_messages.is_none() && messages.ready(), "sealed diagnostic transfer requires one ready original owner");
+        self.outcome_messages = Some(messages);
+    }
+    /// 👁️ Borrows semantic rows without surrendering the candidate's original owner.
+    pub fn outcome_messages(&self) -> &[crate::os_spr::MutationMessage] { self.outcome_messages.as_ref().map_or(&[], crate::os_spr::command::MutationMessagePublication::original_messages) }
+
     /// 🌐️ Captures the original domain producer's measured foreign-step decision.
     pub fn record_foreign_step_presence(&mut self, presence: bool) { self.foreign_step_presence = Some(presence); }
 
@@ -362,8 +373,8 @@ impl<P, Mutation> ArtifactStoreOneItemPrepared<P, Mutation> {
     /// 🧳️ Hands every owner of the sealed candidate to the Store that stages or retires it; the parts cannot be
     /// sealed again, so they never stand in for a prepared candidate.
     pub fn into_parts(self) -> ArtifactStoreOneItemPreparedParts<P, Mutation> {
-        let Self { edit, post_snapshot, next_clock, edit_digest, foreign_step_presence, local_actor, applied_edit_id, tail_edit_id, seal } = self;
-        ArtifactStoreOneItemPreparedParts { edit, post_snapshot, next_clock, edit_digest, foreign_step_presence, local_actor, applied_edit_id, tail_edit_id, authority: seal.authority }
+        let Self { outcome_messages, edit, post_snapshot, next_clock, edit_digest, foreign_step_presence, local_actor, applied_edit_id, tail_edit_id, seal } = self;
+        ArtifactStoreOneItemPreparedParts { outcome_messages, edit, post_snapshot, next_clock, edit_digest, foreign_step_presence, local_actor, applied_edit_id, tail_edit_id, authority: seal.authority }
     }
 }
 
@@ -388,6 +399,7 @@ impl<P, Mutation> ArtifactStoreOneItemPrepared<P, Mutation> {
 
 /// 🧳️ The owners of a consumed sealed candidate, taken apart by the Store that stages or retires them.
 pub struct ArtifactStoreOneItemPreparedParts<P, Mutation> {
+    pub outcome_messages: Option<crate::os_spr::command::MutationMessagePublication>,
     pub edit: Box<Edit<Mutation>>,
     pub post_snapshot: Arc<P>,
     pub next_clock: HybridLogicalTimestamp,
@@ -416,7 +428,10 @@ pub struct ArtifactStoreOneItemPreparationRequest<P, Input, Mutation> {
 /// invoked by the store: a domain that cannot split its mutation semantics into these turns is
 /// rejected at admission instead of receiving false resumability credit.
 pub trait ArtifactStoreOneItemPreparation<P, Mutation>: Send {
-    fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, ValueError>;
+    /// 📨️ Borrows the semantic diagnostics owned by this exact structural preparation.
+    fn outcome_messages(&self) -> &[crate::os_spr::MutationMessage] { &[] }
+
+    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError>;
     fn checkpoint(&self) -> ArtifactStoreOneItemCheckpoint;
     fn prepared(&self) -> Option<&ArtifactStoreOneItemPrepared<P, Mutation>>;
     fn take_prepared(&mut self) -> Option<ArtifactStoreOneItemPrepared<P, Mutation>>;
@@ -442,6 +457,7 @@ pub trait ArtifactStoreOneItemPreparationFactory<P, Mutation>: semio_framework_v
     fn operation_schema_parts<'a>(&'a self, _mutation: &'a Mutation) -> Option<(&'a str, &'a str)> { None }
     fn preflight(&self, mutation: &Mutation, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String>;
     fn begin_demand(&self, mutation: &Mutation, lane: HistoryLane) -> Result<RetainedCloneBirthDemand, ValueError>;
+    fn begin_copy_byte_demand(&self, mutation:&Mutation, lane:HistoryLane)->Result<usize,ValueError>;
     fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, Mutation, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<P, Mutation, Mutation>)>;
 
     /// 🕰️ Declares a server-derived publication clock the factory will stamp on its prepared edit,
@@ -471,6 +487,7 @@ pub trait ArtifactStoreBatchItemAuthority<P, Mutation>: Send + Sync {
 
     fn preflight(&self, input: &Self::Input, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String>;
     fn begin_demand(&self, input: &Self::Input, lane: HistoryLane) -> Result<RetainedCloneBirthDemand, ValueError>;
+    fn begin_copy_byte_demand(&self, input:&Self::Input, lane:HistoryLane)->Result<usize,ValueError>;
     fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, Self::Input, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<P, Self::Input, Mutation>)>;
 
     fn input_retirement_birth_bytes(&self, input: &Self::Input) -> usize;
@@ -500,6 +517,8 @@ impl<P: Send + Sync, Mutation: Send + 'static> ArtifactStoreBatchItemAuthority<P
     }
 
     fn begin_demand(&self, input: &Mutation, lane: HistoryLane) -> Result<RetainedCloneBirthDemand, ValueError> { self.preparation.as_ref().begin_demand(input, lane) }
+    fn begin_copy_byte_demand(&self,input:&Mutation,lane:HistoryLane)->Result<usize,semio_framework_value::ValueError>{self.preparation.as_ref().begin_copy_byte_demand(input, lane)}
+
     fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, Mutation, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<P, Mutation, Mutation>)> {
         self.preparation.as_ref().begin(request, grant)
     }
@@ -523,6 +542,7 @@ impl<P: Send + Sync, Mutation: Send + 'static> ArtifactStoreBatchItemAuthority<P
 pub struct ArtifactStoreWireRetirement { pub schema: Option<String>, pub bytes: Option<Vec<u8>> }
 
 impl ErasedSnapshotRetirement for ArtifactStoreWireRetirement {
+    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand {release_bytes:self.schema.as_ref().map(|value|value.capacity()).or_else(||self.bytes.as_ref().map(|value|value.capacity())).unwrap_or(0),depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
     fn next_capacity_byte_demand(&self, _body: usize) -> Result<usize, ValueError> { Ok(0) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.schema.as_ref().map(|value| value.capacity()).or_else(|| self.bytes.as_ref().map(|value| value.capacity())).unwrap_or(0)) }
@@ -562,6 +582,7 @@ pub trait ArtifactStoreBatchSource<P, Mutation>: Send {
     fn remaining(&self) -> usize;
     fn census_one(&mut self, lane: HistoryLane) -> Result<Option<ArtifactStoreOneItemFootprint>, String>;
     fn next_begin_demand(&self, lane: HistoryLane) -> Result<RetainedCloneBirthDemand, ValueError>;
+    fn next_begin_copy_byte_demand(&self, lane:HistoryLane)->Result<usize,ValueError>;
     fn begin_next(&mut self, request: ArtifactStoreBatchItemRequest<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, RetainedCloneProgress), (ValueError, ArtifactStoreBatchItemRequest<P, Mutation>)>;
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
     fn retirement_demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>;
@@ -582,6 +603,7 @@ pub struct ArtifactStoreBatchSourceOf<P, Mutation, A: ArtifactStoreBatchItemAuth
 }
 
 impl<P, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> ArtifactStoreBatchSourceOf<P, Mutation, A> {
+    fn input_transfer_copy_bytes()->Result<usize,ValueError>{size_of::<A::Input>().checked_mul(2).and_then(|bytes|size_of::<ArtifactStoreBatchItemRequest<P,Mutation>>().checked_mul(2).and_then(|headers|bytes.checked_add(headers))).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original batch input/header quote overflow"))}
     pub fn new(authority: A, inputs: Vec<A::Input>, issuer: Option<member_owned_batch::SourceRetirementIssuer<A::Input>>, wire: Option<ArtifactOperationWire<Mutation>>) -> Self {
         Self { authority: Some(authority), inputs: inputs.into(), census: 0, footprint: ArtifactStoreOneItemFootprint { work_items: 0, retained_bytes: 0 }, issuer, retirement: None, active_input: None, authority_close: Default::default(), wire, marker: PhantomData }
     }
@@ -605,19 +627,29 @@ impl<P: Send, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> Artifac
         let input=self.inputs.front().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"batch source has no original input before preparation birth"))?;
         authority.begin_demand(input,lane)
     }
+    fn next_begin_copy_byte_demand(&self,lane:HistoryLane)->Result<usize,ValueError>{
+        let authority=self.authority.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"batch source lost its original copy issuer"))?;
+        let input=self.inputs.front().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"batch source has no original input before header capture"))?;
+        authority.begin_copy_byte_demand(input,lane)?.checked_add(Self::input_transfer_copy_bytes()?).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original batch child header quote overflow"))
+    }
     fn begin_next(&mut self, request: ArtifactStoreBatchItemRequest<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, RetainedCloneProgress), (ValueError, ArtifactStoreBatchItemRequest<P, Mutation>)> {
         let demand=match self.next_begin_demand(request.lane){Ok(demand)=>demand,Err(error)=>return Err((error,request))};
         if let Err(error)=demand.admit(grant.retained_grant()){return Err((error,request));}
+        let copy=match self.next_begin_copy_byte_demand(request.lane){Ok(bytes)=>bytes,Err(error)=>return Err((error,request))};
+        if grant.maximum_copy_bytes<copy{return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original batch input/header transfer is not funded"),request));}
+        let transfer=match Self::input_transfer_copy_bytes(){Ok(bytes)=>bytes,Err(error)=>return Err((error,request))};
+        let child=ArtifactStoreOneItemGrant{maximum_copy_bytes:grant.maximum_copy_bytes-transfer,..grant};
         let authority=self.authority.as_ref().expect("observed original batch item authority");
         let mutation=self.inputs.pop_front().expect("observed original batch item input");
         let ArtifactStoreBatchItemRequest{operation,generation,base_revision,lane,authority:live,base,mutation_retirement,snapshot_retirement}=request;
         let item=ArtifactStoreOneItemPreparationRequest{operation,generation,base_revision,lane,authority:live,base,mutation,mutation_retirement,snapshot_retirement};
-        match authority.begin(item,grant){
-            Ok(preparation)=>Ok(preparation),
+        match authority.begin(item,child){
+            Ok((owner,mut progress))=>{progress.copied_bytes=progress.copied_bytes.checked_add(transfer).unwrap_or_else(||unreachable!("preflighted original batch header extent"));Ok((owner,progress))},
             Err((error,item))=>{
                 let ArtifactStoreOneItemPreparationRequest{operation,generation,base_revision,lane,authority,base,mutation,mutation_retirement,snapshot_retirement}=item;
                 self.inputs.push_front(mutation);
-                Err((error,ArtifactStoreBatchItemRequest{operation,generation,base_revision,lane,authority,base,mutation_retirement,snapshot_retirement}))
+                let mut progress=error.retained_progress();progress.copied_items=progress.copied_items.max(1);progress.copied_bytes=progress.copied_bytes.checked_add(transfer).unwrap_or_else(||unreachable!("preflighted original batch refusal header extent"));
+                Err((error.with_retained_progress(progress),ArtifactStoreBatchItemRequest{operation,generation,base_revision,lane,authority,base,mutation_retirement,snapshot_retirement}))
             }
         }
     }

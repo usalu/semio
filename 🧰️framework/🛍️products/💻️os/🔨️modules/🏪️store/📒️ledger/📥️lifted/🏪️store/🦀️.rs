@@ -5,15 +5,15 @@ use semio_framework_os_store_projection::retire_shared_projection;
 use semio_framework_os_spr::Mutation;
 
 
-impl<P, Mutation> FoldProjection<P, Mutation> for Arc<P>
+impl<P, Mutation> ColdFoldProjection<P, Mutation> for Arc<P>
 where
     Mutation: self::Mutation<P>,
 {
-    fn projection(&self) -> &P {
-        self
+    fn fold_operation(&mut self, operation: &Mutation, op_index: u32) {
+        if let (Some(next), _) = fold_operation::<P, Mutation>(self.as_ref(), operation, op_index) { <Self as ColdFoldProjection<P, Mutation>>::advance(self, next); }
     }
 
     fn advance(&mut self, next: P) {
-        retire_shared_projection::<P, Mutation>(std::mem::replace(self, Arc::new(next)));
+        match Arc::try_unwrap(std::mem::replace(self,Arc::new(next))){Ok(original)=><Mutation::ReferenceDiff as MutationDiff<P>>::retire_projection(original),Err(alias)=>drop(alias)}
     }
 }

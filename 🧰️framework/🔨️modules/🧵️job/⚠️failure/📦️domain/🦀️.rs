@@ -65,7 +65,7 @@ pub fn admit_original_domain_failure<T:OriginalDomainFailure>(original:&mut Opti
  let Some(pointer)=std::ptr::NonNull::new(unsafe{std::alloc::alloc(layout)}.cast::<DomainFrame<T>>())else{return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"original domain frame allocation refused").into())};
  let owner=match ControlledRetirement::new(original.take().expect("observed original domain source")){Ok(owner)=>owner,Err((error,value))=>{*original=Some(value);unsafe{std::alloc::dealloc(pointer.as_ptr().cast(),layout)};return Err(OriginalTurnFailure::debit_original(error.with_retained_progress(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:layout.size(),released_bytes:layout.size(),..Default::default()}),cx))}};
  let owner=unsafe{pointer.as_ptr().write(DomainFrame{owner});Box::from_raw(pointer.as_ptr())};
- let mut failure=OriginalTurnFailure{primary:OriginalTurnPrimary::Domain(OriginalDomainPrimary{owner}),receipt_refusal:None,context_refusal:None};
+ let mut failure={let original=OriginalTurnFailure::from(OriginalTurnPrimary::Domain(OriginalDomainPrimary{owner}));OriginalTurnFailure{receipt_refusal:None,context_refusal:None,..original}};
  failure.receipt_refusal=cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:layout.size(),..Default::default()}).err();
  Ok(Some(failure))
 }

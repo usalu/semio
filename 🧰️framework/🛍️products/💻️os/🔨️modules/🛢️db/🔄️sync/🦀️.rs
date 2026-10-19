@@ -27,6 +27,13 @@
 //! is fully real: `ResumeToken::encode` is public and exercised end to end.
 #![allow(async_fn_in_trait)]
 
+#[cfg(test)]
+#[path = "../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
+pub(crate) mod test_allocation;
+#[cfg(test)]
+#[global_allocator]
+static REQUESTED_ALLOCATOR: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;
+
 use db_durability::Frontier;
 use db_durability::{DurabilityClass, FrontierDelta, ResumeToken};
 use db_ids::{ActorId, ArtifactId, DbError, DbLimits, GenerationId, check_len};

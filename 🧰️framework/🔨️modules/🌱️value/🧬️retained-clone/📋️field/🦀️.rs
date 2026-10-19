@@ -16,12 +16,12 @@ impl<T: RetainedClone> RetainedCloneCursor<T> for RetainedFieldCursor<T> {
     fn output_ready(&self)->bool{self.child.as_ref().is_some_and(|child|child.output_ready())}
     fn advance_demands(&self,source:RetainedCloneRef<'_,T>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(demand)=source.binding_demand(&self.source)?{return Ok(demand)}if self.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"typed field original clone is closing"))}if let Some(child)=self.child.as_ref(){let mut demand=child.advance_demands(source,body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::DepthLimit,"typed field original quote depth overflow"))?;Ok(demand)}else{Ok(crate::RetirementDemand{capacity_bytes:size_of::<T::Cursor>(),depth:1,..Default::default()})}}
 
-    fn advance(&mut self, source: RetainedCloneRef<'_, T>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+    fn advance(&mut self, source: RetainedCloneRef<'_, T>, body: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained field cursor is closing")); }
         if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if grant.maximum_depth == 0 { return Err(crate::ValueError::new(crate::ValueRefusalKind::DepthLimit, "retained typed field structural depth limit exceeded")); }
         if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(RetainedCloneStep::Progress(progress));}
-        if let Some(child) = self.child.as_mut() { return child.advance(source, RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }); }
+        if let Some(child) = self.child.as_mut() { return child.advance(source,body, RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }); }
         let bytes = size_of::<T::Cursor>();
         let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: bytes, released_bytes: 0 };
         if !progress.fits(grant) { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())); }
@@ -31,52 +31,26 @@ impl<T: RetainedClone> RetainedCloneCursor<T> for RetainedFieldCursor<T> {
     fn take(&mut self) -> Option<T> { self.child.as_mut().and_then(|child| child.take()) }
     fn begin_close(&mut self) -> bool { if self.closing { return false; } self.closing = true; true }
     
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
-        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "typed field must begin close before granted retirement")); }
-        if let Some(child) = self.child.as_mut() {
-            if child.begin_close() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
-            if !child.terminal_is_empty() { let step = child.close_step(grant)?; return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, child.terminal_is_empty(), "retained child close")?.progress())); }
-            if grant.maximum_depth==0 { return Err(crate::ValueError::literal(crate::ValueRefusalKind::DepthLimit,"typed field scaffold release requires depth")); }
-            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes: size_of::<T::Cursor>() };
-            if !progress.fits(grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
-            self.child = None;
-            return Ok(RetainedCloneStep::Progress(progress));
+    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError> {
+        if !self.closing { return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"typed field must begin close before granted retirement")); }
+        if !retained_clone_grant_admits(grant,retained_clone_close_demands::<T>(self,grant.maximum_copy_bytes)?) { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if let Some(child)=self.child.as_mut() {
+            if child.begin_close() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..Default::default()})); }
+            if !child.terminal_is_empty() { let nested=nested_retained_clone_grant(grant)?;let step=child.close_step(nested)?;return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(nested,step,child.terminal_is_empty(),"field original child close")?.progress())); }
+            self.child=None;
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:size_of::<T::Cursor>(),..Default::default()}));
         }
-        close_retained_binding(&mut self.source, grant)
+        close_retained_binding(&mut self.source,grant)
     }
-    fn next_close_depth_demand(&self) -> Result<usize, crate::ValueError> {
-        if !self.closing { return Ok(0); }
-        match self.child.as_ref() {
-            Some(child) if child.terminal_is_empty() => Ok(1),
-            Some(child) => child.next_close_depth_demand(),
-            None => RetainedCloneBinding::depth_demand(&self.source),
-        }
+    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError> {
+        if !self.closing{return Ok(Default::default());}
+        if let Some(child)=self.child.as_ref(){return if child.terminal_is_empty(){Ok(crate::RetirementDemand{release_bytes:size_of::<T::Cursor>(),depth:1,..Default::default()})}else{nested_retained_clone_close_demands::<T>(child.as_ref(),body)};}
+        RetainedCloneBinding::close_demand(&self.source,body)
     }
-    fn next_close_copy_byte_demand(&self) -> Result<usize, crate::ValueError> {
-        if !self.closing { return Ok(0); }
-        match self.child.as_ref() {
-            Some(child) if !child.terminal_is_empty() => child.next_close_copy_byte_demand(),
-            None => RetainedCloneBinding::copy_demand(&self.source),
-            _ => Ok(0),
-        }
-    }
-    fn next_close_capacity_byte_demand(&self, maximum_release_bytes: usize) -> Result<usize, crate::ValueError> {
-        if !self.closing { return Ok(0); }
-        match self.child.as_ref() {
-            Some(child) if !child.terminal_is_empty() => child.next_close_capacity_byte_demand(maximum_release_bytes),
-            None => RetainedCloneBinding::capacity_demand(&self.source,maximum_release_bytes),
-            _ => Ok(0),
-        }
-    }
-    fn next_close_release_byte_demand(&self) -> Result<usize, crate::ValueError> {
-        if !self.closing { return Ok(0); }
-        match self.child.as_ref() {
-            Some(child) if child.terminal_is_empty() => Ok(size_of::<T::Cursor>()),
-            Some(child) => child.next_close_release_byte_demand(),
-            None => RetainedCloneBinding::release_demand(&self.source),
-        }
-    }
+    fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.depth)}
+    fn next_close_copy_byte_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.release_bytes)}
     fn terminal_is_empty(&self) -> bool { self.closing && self.child.is_none() && self.source.is_none() }
 }
 

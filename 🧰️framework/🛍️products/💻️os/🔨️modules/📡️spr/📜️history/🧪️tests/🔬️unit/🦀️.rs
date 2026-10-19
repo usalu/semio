@@ -1044,7 +1044,7 @@ fn retained_native_history_fold_obeys_the_neutral_law() {
             let mut completed = 0;
             let mut reached = false;
             for turn in 0..100000 {
-                match job.step(job.next_step_grant(work.as_u64().unwrap() as usize, bytes.as_u64().unwrap() as usize).unwrap(), &mut || false).unwrap() {
+                match job.step(job.next_step_grant(work.as_u64().unwrap() as usize, bytes.as_u64().unwrap() as usize).unwrap(),bytes.as_u64().unwrap() as usize, &mut || false).unwrap() {
                     protocol::HistoryFoldJobStep::Pending { completed: next, progress, .. } => { assert!(next >= completed && next-completed <= work.as_u64().unwrap()); if turn % 20000 == 19999 {  } completed = next; },
                     protocol::HistoryFoldJobStep::Ready { value: (fold, transitions, replay_order, conflicts), .. } => {
                         assert_eq!(conflicts.len(), source.conflicts.len());
@@ -1064,7 +1064,7 @@ fn retained_native_history_fold_obeys_the_neutral_law() {
     }
     for stop in law["cancelAt"].as_array().unwrap() {
         let mut job = HistoryLog::fold_job(source.clone(), protocol::HistoryShape::Document);
-        for _ in 0..stop.as_u64().unwrap() { let _ = job.step(job.next_step_grant(1, 7).unwrap(), &mut || false).unwrap(); }
+        for _ in 0..stop.as_u64().unwrap() { let _ = job.step(job.next_step_grant(1, 7).unwrap(),7, &mut || false).unwrap(); }
         let completed = job.completed();
         job.request_cancel();
         let mut closed = false;

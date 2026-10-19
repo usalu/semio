@@ -1,0 +1,52 @@
+{
+  "cases": [
+    { "id": "prototype", "request": { "version": 1, "mode": "prototype" }, "arguments": ["--package", "teaching-proctor", "--bin", "proctor", "--profile", "prototype"] },
+    { "id": "release", "request": { "version": 1, "mode": "release" }, "arguments": ["--package", "teaching-proctor", "--bin", "proctor", "--profile", "release"] },
+    { "id": "missing-mode", "request": { "version": 1 }, "arguments": null },
+    { "id": "unknown-mode", "request": { "version": 1, "mode": "dev" }, "arguments": null },
+    { "id": "storage-override", "request": { "version": 1, "mode": "release", "output": "outside" }, "arguments": null },
+    { "id": "unknown-version", "request": { "version": 2, "mode": "release" }, "arguments": null }
+  ],
+  "modes": [
+    { "id": "inherit-prototype", "request": { "version": 1, "originalMode": "prototype" }, "mode": "prototype" },
+    { "id": "inherit-release", "request": { "version": 1, "originalMode": "release" }, "mode": "release" },
+    { "id": "explicit-prototype", "request": { "version": 1, "originalMode": "prototype", "requestedMode": "prototype" }, "mode": "prototype" },
+    { "id": "explicit-release", "request": { "version": 1, "originalMode": "release", "requestedMode": "release" }, "mode": "release" },
+    { "id": "reject-prototype-to-release", "request": { "version": 1, "originalMode": "prototype", "requestedMode": "release" }, "mode": null },
+    { "id": "reject-release-to-prototype", "request": { "version": 1, "originalMode": "release", "requestedMode": "prototype" }, "mode": null },
+    { "id": "reject-unknown-original", "request": { "version": 1, "originalMode": "dev" }, "mode": null },
+    { "id": "reject-extra-authority", "request": { "version": 1, "originalMode": "release", "issuer": "fabricated" }, "mode": null }
+  ],
+  "authority": [
+    { "id": "missing", "invocation": null },
+    { "id": "empty", "invocation": {} },
+    { "id": "structural", "invocation": { "version": 1, "command": "build" } }
+  ],
+  "runtime": { "bytes": "immutable-proctor-generation", "generations": ["old", "new"] },
+  "lifecycle": {
+    "mode": "release",
+    "phases": ["store", "preparation", "sources", "compiler", "capture", "pin"],
+    "arguments": ["--package", "teaching-proctor", "--bin", "proctor", "--profile", "release"],
+    "children": 1,
+    "exports": 1
+  },
+  "sources": {
+    "packages": [
+      { "id": "proctor", "name": "teaching-proctor", "source": null, "manifest_path": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/Cargo.toml" },
+      { "id": "course", "name": "course", "source": null, "manifest_path": "🧰️framework/🛍️products/📚️course/📦️packages/🦀️rust/Cargo.toml" },
+      { "id": "server", "name": "server", "source": null, "manifest_path": "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust/Cargo.toml" },
+      { "id": "nested", "name": "nested", "source": null, "manifest_path": "🧰️framework/🛍️products/📚️course/nested/Cargo.toml" },
+      { "id": "dev", "name": "dev", "source": null, "manifest_path": "only-dev/Cargo.toml" },
+      { "id": "registry", "name": "registry", "source": "registry", "manifest_path": "registry/Cargo.toml" }
+    ],
+    "resolve": { "nodes": [
+      { "id": "proctor", "deps": [ { "pkg": "course", "dep_kinds": [ { "kind": null } ] }, { "pkg": "server", "dep_kinds": [ { "kind": "build" } ] }, { "pkg": "dev", "dep_kinds": [ { "kind": "dev" } ] }, { "pkg": "registry", "dep_kinds": [ { "kind": null } ] } ] },
+      { "id": "course", "deps": [ { "pkg": "nested", "dep_kinds": [ { "kind": null } ] } ] },
+      { "id": "server", "deps": [ { "pkg": "course", "dep_kinds": [ { "kind": null } ] } ] },
+      { "id": "nested", "deps": [] },
+      { "id": "dev", "deps": [] },
+      { "id": "registry", "deps": [] }
+    ] },
+    "owners": ["🎓️teaching/🛂️proctor", "🧰️framework/🛍️products/📚️course", "🧰️framework/🛍️products/🖥️server"]
+  }
+}

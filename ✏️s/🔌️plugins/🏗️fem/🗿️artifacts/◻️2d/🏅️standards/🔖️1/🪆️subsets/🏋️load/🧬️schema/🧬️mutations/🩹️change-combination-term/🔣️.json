@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🩹️change-combination-term",
+  "semanticKind": "change-combination-term",
+  "displayName": "Change Combination Term",
+  "emoji": "🩹️",
+  "aggregateVariant": "ChangeCombinationTerm",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-combination-term",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

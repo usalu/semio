@@ -1,5 +1,5 @@
 {
-  "_comment": "🔀️ Frozen specification vectors: one native payload per IDE, written from the hook configurations committed in .claude/settings.json, .cursor/hooks.json, .windsurf/hooks.json and .kiro/agents/repo.json, plus the payload shapes each of those IDEs documents. `expectedEvent` and `expectedParent` are the pinned answers — this file IS the specification, so a change to either column is a deliberate change of contract.",
+  "_comment": "🔀️ Frozen specification vectors captured from native client hook payload contracts. expectedEvent and expectedParent are the pinned answers; changing either column changes the specification.",
   "vectors": [
     {
       "id": "copilot-session-start",

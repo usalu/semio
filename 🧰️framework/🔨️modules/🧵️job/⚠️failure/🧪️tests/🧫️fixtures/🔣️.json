@@ -196,5 +196,91 @@
         "releasedBytes": 0
       }
     }
+  },
+  "receivingWire": {
+    "primary": {
+      "kind": "receiving",
+      "original": {
+        "primary": {
+          "kind": "invalidValue",
+          "message": "semantic 源",
+          "retainedProgress": {
+            "copiedItems": 1,
+            "copiedBytes": 2,
+            "retainedCapacityBytes": 3,
+            "releasedBytes": 4
+          }
+        },
+        "quoteRefusal": {
+          "kind": "invariantViolated",
+          "message": "quote 越",
+          "retainedProgress": {
+            "copiedItems": 5,
+            "copiedBytes": 6,
+            "retainedCapacityBytes": 7,
+            "releasedBytes": 8
+          }
+        },
+        "allocationRefusal": {
+          "kind": "ownershipLimit",
+          "message": "allocation 量",
+          "retainedProgress": {
+            "copiedItems": 9,
+            "copiedBytes": 10,
+            "retainedCapacityBytes": 11,
+            "releasedBytes": 12
+          }
+        },
+        "retainedProgress": {
+          "copiedItems": 2,
+          "copiedBytes": 3,
+          "retainedCapacityBytes": 5,
+          "releasedBytes": 7
+        }
+      }
+    },
+    "receiptRefusal": {
+      "kind": "depthLimit",
+      "message": "recipient 拒",
+      "retainedProgress": {
+        "copiedItems": 13,
+        "copiedBytes": 14,
+        "retainedCapacityBytes": 15,
+        "releasedBytes": 16
+      }
+    },
+    "contextRefusal": {
+      "kind": "workLimit",
+      "message": "context 界",
+      "retainedProgress": {
+        "copiedItems": 17,
+        "copiedBytes": 18,
+        "retainedCapacityBytes": 19,
+        "releasedBytes": 20
+      }
+    }
+  },
+  "effectSpan": {
+    "prior": {
+      "copiedItems": 2,
+      "copiedBytes": 17,
+      "retainedCapacityBytes": 128,
+      "releasedBytes": 5
+    },
+    "last": {
+      "copiedItems": 1,
+      "copiedBytes": 7,
+      "retainedCapacityBytes": 64,
+      "releasedBytes": 3
+    },
+    "whole": {
+      "copiedItems": 3,
+      "copiedBytes": 24,
+      "retainedCapacityBytes": 192,
+      "releasedBytes": 8
+    },
+    "primary": "Last original semantic 源",
+    "receipt": "Distinct original receipt refusal",
+    "context": "Distinct original context refusal"
   }
 }

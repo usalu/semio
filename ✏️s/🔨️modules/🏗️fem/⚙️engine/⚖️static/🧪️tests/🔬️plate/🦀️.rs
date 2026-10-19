@@ -1,7 +1,9 @@
-use crate::{solve_linear_static, Elements, Model};
+use crate::solve_linear_static;
+use crate::Elements;
+use crate::Model;
 use semio_s_fem_algebra::*;
-use semio_s_fem_model::*;
-use semio_s_fem_elements2d::*;
+use semio_s_fem_algebra::*;
+use semio_s_fem_algebra::*;
 
 const E: f64 = 1000.0;
 const NU: f64 = 0.25;

@@ -1,0 +1,23 @@
+{
+  "nodes": null,
+  "elements": null,
+  "regions": null,
+  "materials": null,
+  "sections": null,
+  "supports": null,
+  "loadCases": null,
+  "combinations": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "c1",
+        "patch": {
+          "name": ""
+        }
+      }
+    ]
+  },
+  "analysis": null
+}

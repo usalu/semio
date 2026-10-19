@@ -8,6 +8,16 @@
     ]
   },
   "targets": {
+    "test-selection-oracle": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": ["workspace:deps-python"],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test oracle selection",
+        "forwardAllArgs": true
+      }
+    },
     "test": {
       "executor": "repo:script",
       "options": {

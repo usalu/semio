@@ -1,0 +1,316 @@
+/* 🧩 The head of a run and the layouts of the classification, sorting and matching tasks, each taken for the room its card has. */
+
+/* ▶️ The head of a run: its tasks and how far the learner is. In a narrow card the tasks are a list, each with its
+   title on the left and its state on the right, and the progress fills the line below; from 40rem the tasks are chips
+   in a row; from 64rem the chips stand on the left and the progress on the right of one line. */
+.course-run-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-double);
+}
+
+.course-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-single);
+}
+
+.course-step {
+  display: flex;
+  inline-size: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-double);
+}
+
+.course-step-state {
+  flex: none;
+}
+
+.course-run-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-double);
+}
+
+.course-run-progress > .course-progress {
+  flex: 1 1 4rem;
+  inline-size: auto;
+  min-inline-size: 4rem;
+  max-inline-size: 24rem;
+}
+
+@container course-card (min-width: 40rem) {
+  .course-steps {
+    flex-flow: row wrap;
+  }
+
+  .course-steps > li {
+    min-inline-size: 0;
+  }
+
+  .course-step {
+    inline-size: auto;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+}
+
+@container course-card (min-width: 64rem) {
+  .course-run-head {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .course-run-progress {
+    flex: 0 1 24rem;
+    justify-content: flex-end;
+  }
+}
+
+/* 🗂️ Classification. An item is its grip, its label and its category select: on one line — the select on the right, as
+   wide as its neighbours' — where its list is at least 30rem wide, else the select below the label. The bins share the
+   width of the task in as many columns as fit. In a task of 84rem or more the pool stands beside the bins and stays in
+   view while they scroll, so no item is ever dragged across the whole page. */
+.course-classify {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-double);
+}
+
+.course-bins {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  gap: var(--spacing-double);
+}
+
+.course-chip {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--spacing-single);
+}
+
+.course-chip > select {
+  grid-column: 2;
+  inline-size: 100%;
+}
+
+@container course-rows (min-width: 30rem) {
+  .course-chip {
+    grid-template-columns: auto minmax(0, 1fr) clamp(10rem, 36%, 18rem);
+    column-gap: var(--spacing-double);
+  }
+
+  .course-chip > select {
+    grid-column: 3;
+  }
+}
+
+@container course-task (min-width: 84rem) {
+  .course-classify {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    align-items: start;
+  }
+
+  .course-pool {
+    position: sticky;
+    inset-block-start: 0;
+  }
+}
+
+/* ↕️ Sorting. An item is its grip, its place, its label, its guess and its two move buttons: one line from 36rem — the
+   guess and the buttons in columns of their own on the right, and from 56rem what the guess reads as beside it in a
+   column that is always there, so nothing moves when it appears —, else the label on the first line and the guess with
+   the buttons on the second. */
+.course-sort {
+  display: grid;
+  grid-template-columns: auto 2em minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "grip place label label label"
+    "grip . guess up down";
+  align-items: center;
+  gap: var(--spacing-single);
+}
+
+.course-sort > [data-course-grip] {
+  grid-area: grip;
+}
+
+.course-sort-place {
+  grid-area: place;
+}
+
+.course-sort-label {
+  grid-area: label;
+}
+
+.course-sort-up {
+  grid-area: up;
+}
+
+.course-sort-down {
+  grid-area: down;
+}
+
+.course-guess {
+  display: grid;
+  grid-area: guess;
+  grid-template-columns: minmax(0, 16rem);
+  align-items: center;
+  gap: var(--spacing-single) var(--spacing-double);
+}
+
+.course-guess-entry {
+  display: flex;
+  min-width: 0;
+  align-items: stretch;
+}
+
+.course-guess-entry > input {
+  min-width: 0;
+  flex: 1 1 auto;
+  inline-size: auto;
+}
+
+.course-guess-unit {
+  flex: 0 1 auto;
+  min-inline-size: 4.5rem;
+  max-inline-size: 11rem;
+  border-inline-start: 0;
+  padding-inline: var(--spacing-single);
+}
+
+@container course-rows (min-width: 36rem) {
+  .course-sort {
+    grid-template-columns: auto 2em minmax(0, 1fr) minmax(9rem, 13rem) auto auto;
+    grid-template-areas: "grip place label guess up down";
+    column-gap: var(--spacing-double);
+  }
+
+  .course-sort-up {
+    margin-inline-end: calc(var(--spacing-single) - var(--spacing-double));
+  }
+
+  .course-guess {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container course-rows (min-width: 56rem) {
+  .course-sort {
+    grid-template-columns: auto 2em minmax(0, 1fr) 28rem auto auto;
+  }
+
+  .course-guess {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .course-guess > [role="alert"] {
+    grid-column: 1 / -1;
+  }
+}
+
+/* 🃏️ Matching. The value cards of a quantity are a grid of equal chips — the value, and below it who uses it, on two
+   lines at most —, the items a list of rows: the label on the left, its select and its remove button on the right from
+   30rem, else below the label, the select as wide as the row. In a task of 64rem or more the cards stand in a column
+   beside the rows and stay in view while they scroll, so a card is never dragged far. */
+.course-match {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-single);
+}
+
+.course-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.5rem), 1fr));
+  gap: var(--spacing-single);
+}
+
+.course-value {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: var(--spacing-single);
+}
+
+.course-value-state {
+  display: -webkit-box;
+  grid-column: 2;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.course-slot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "label label"
+    "card clear";
+  align-items: center;
+  gap: var(--spacing-single);
+  padding-block: var(--spacing-single);
+  border-block-end: var(--stroke-hairline) solid var(--border-normal-color);
+}
+
+.course-slot:first-child {
+  border-block-start: var(--stroke-default) solid var(--border-normal-color);
+}
+
+.course-slot-label {
+  grid-area: label;
+}
+
+.course-slot > select {
+  grid-area: card;
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
+.course-slot > button {
+  grid-area: clear;
+}
+
+@container course-rows (min-width: 30rem) {
+  .course-slot {
+    grid-template-columns: minmax(0, 1fr) clamp(10rem, 40%, 20rem) auto;
+    grid-template-areas: "label card clear";
+    column-gap: var(--spacing-double);
+  }
+
+  .course-slot > button {
+    margin-inline-start: calc(var(--spacing-single) - var(--spacing-double));
+  }
+}
+
+@container course-task (min-width: 64rem) {
+  .course-match {
+    display: grid;
+    grid-template-columns: minmax(18rem, 1fr) minmax(0, 2.5fr);
+    grid-template-areas:
+      "title title"
+      "cards slots";
+    align-items: start;
+    gap: var(--spacing-single) var(--spacing-double);
+  }
+
+  .course-match > h3 {
+    grid-area: title;
+  }
+
+  .course-cards {
+    position: sticky;
+    inset-block-start: 0;
+    grid-area: cards;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 8.5rem), 1fr));
+  }
+
+  .course-slots {
+    grid-area: slots;
+  }
+}

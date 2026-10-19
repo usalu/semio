@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "owner": "semio.native-entrypoint",
+  "startup": {
+    "fuel": 67108864,
+    "maximumElapsedMicroseconds": 120000000,
+    "grant": {
+      "maximumItems": 33554432,
+      "maximumCopyBytes": 2147483648,
+      "maximumCapacityBytes": 1073741824,
+      "maximumReleaseBytes": 2147483648,
+      "maximumDepth": 256
+    },
+    "retirementReserve": {
+      "fuel": 8388608,
+      "grant": {
+        "maximumItems": 4194304,
+        "maximumCopyBytes": 16777216,
+        "maximumCapacityBytes": 8388608,
+        "maximumReleaseBytes": 1073741824,
+        "maximumDepth": 256
+      }
+    }
+  },
+  "hostIo": {
+    "fuel": 8388608,
+    "maximumElapsedMicroseconds": 30000000,
+    "grant": {
+      "maximumItems": 4194304,
+      "maximumCopyBytes": 536870912,
+      "maximumCapacityBytes": 268435456,
+      "maximumReleaseBytes": 536870912,
+      "maximumDepth": 256
+    },
+    "retirementReserve": {
+      "fuel": 1048576,
+      "grant": {
+        "maximumItems": 524288,
+        "maximumCopyBytes": 8388608,
+        "maximumCapacityBytes": 4194304,
+        "maximumReleaseBytes": 268435456,
+        "maximumDepth": 256
+      }
+    }
+  },
+  "compilerTask": {
+    "retirementReserve": {
+      "grant": {
+        "maximumCapacityBytes": 8388608,
+        "maximumDepth": 256,
+        "maximumCopyBytes": 16777216,
+        "maximumReleaseBytes": 67108864,
+        "maximumItems": 4194304
+      },
+      "fuel": 8388608
+    },
+    "grant": {
+      "maximumCapacityBytes": 67108864,
+      "maximumDepth": 256,
+      "maximumCopyBytes": 134217728,
+      "maximumReleaseBytes": 134217728,
+      "maximumItems": 33554432
+    },
+    "fuel": 67108864,
+    "maximumElapsedMicroseconds": 1800000000
+  }
+}

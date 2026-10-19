@@ -1,5 +1,5 @@
-//! 🧭️ Fem3d transform gumball commands — translate, rotate and scale the selection through the gumball TOOL
 //! (`🕹️interaction/🧭️gumball`): one dispatch without a `phase` is ONE tool transaction; a host streaming a gesture
+//! 🧭️ Fem3d transform gumball commands — translate, rotate and scale the selection through the gumball TOOL
 //! (the fem3d selection record asks `World3dHost` for `gumballLiveDispatch`) sends `phase: "stream"` ticks that
 //! accumulate in the window's ONE open transaction (previewed by both windows — the results window re-solves the
 //! moved structure while the drag goes on — never history) until `phase: "commit"` commits the net `move-selection`
@@ -15,9 +15,19 @@ use crate::editor::fem3d::Fem3dPlayApp;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
-use semio_framework_plugin::{AppOperationContext, ArtifactView, ConfigView, EditorApp, Emit, EphemeralEmit, Fault, NoConfig, NoConfigMutation, ViewModel};
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::EphemeralEmit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::ViewModel;
 use semio_framework_tool_machine::GesturePhase;
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::fem_gumball_drive;
 use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballTransientMutation;
 
@@ -54,7 +64,9 @@ pub fn gumball_step(
     operation: &AppOperationContext,
 ) -> Result<ArtifactCommandWorkStep<EditorApp<Fem3dPlayApp>>, Fault> {
     let phase = GesturePhase::parse(phase, reason).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("fem.gumball.phase-unknown"), "unknown gumball phase or abort reason"))?;
-    let tick = fem3d_gumball_tick(snapshot, if ids.is_empty() { selected } else { ids }, motion);
+    let targets = if ids.is_empty() { selected } else { ids };
+    if targets.iter().any(|id| semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_id(id).is_none()) { return Err(Fault::from("fem3d.gumball.identity-refused")); }
+    let tick = fem3d_gumball_tick(snapshot, targets, motion);
     let window = context.and_then(|context| context.view_state.as_ref()).and_then(|view| view.window_id.clone()).unwrap_or_default();
     let transient = context.map(|context| context.transient.as_ref().clone()).unwrap_or_default();
     let base_revision: String = operation.canonical_base_revision.iter().map(|byte| format!("{byte:02x}")).collect();
@@ -77,6 +89,7 @@ fn gumball_once(verb: &str, motion: Fem3dGumballMotion, ids: &[String], phase: O
         return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("fem.gumball.transient-context-required"), "a streamed gumball phase needs the retained route's transient"));
     }
     let seed = doc.operation_optional().map(|operation| operation.authoring_seed.clone()).unwrap_or_default();
+    if ids.iter().any(|id| semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_id(id).is_none()) { return Err(Fault::from("fem3d.gumball.identity-refused")); }
     let tick = fem3d_gumball_tick(doc.snapshot, ids, motion);
     let drive = fem_gumball_drive::<Fem3dGumballTool>(&Default::default(), "", verb, GesturePhase::Once, tick, &seed, "")?;
     Ok(match drive.committed {

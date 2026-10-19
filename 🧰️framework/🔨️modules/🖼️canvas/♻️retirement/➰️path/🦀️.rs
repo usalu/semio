@@ -38,6 +38,8 @@ impl CanvasPathRetirement {
 }
 
 impl ErasedSnapshotRetirement for CanvasPathRetirement {
+    fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:if !self.elements.is_empty(){size_of::<PathEl>()}else if self.elements.capacity()!=0{2*size_of::<Vec<PathEl>>()}else{0},release_bytes:if self.elements.is_empty(){self.elements.capacity().checked_mul(size_of::<PathEl>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"Canvas path backing extent overflow"))?}else{0},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
+
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }

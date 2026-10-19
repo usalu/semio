@@ -212,9 +212,7 @@ pub(super) fn set_fenestration_property(model: &crate::model::Model, fenestratio
     })
 }
 
-/// 🧊️ The glazing-material fields this artifact's vocabulary can actually name. The seven other
-/// optical scalars (`solar_reflectance_*`, `visible_reflectance_*`, `infrared_transmittance`) have no
-/// mutation kind, so they are refused here rather than written and then faulted by the probe.
+/// 🧊️ Each optical property publishes one semantic field intent through the central Store.
 pub(super) fn set_glazing_material_property(material: &crate::model::GlazingMaterial, property: &str, value: &str) -> Result<Vec<EnergyModelMutation>, Fault> {
     let id = material.id;
     let positive = |parsed: f64| parsed > 0.0;
@@ -232,6 +230,26 @@ pub(super) fn set_glazing_material_property(material: &crate::model::GlazingMate
         "solarTransmittance" => {
             let parsed = as_f64(property, value, fraction)?;
             step_if(material.solar_transmittance != parsed, || crate::window_layer_mutations::change_glazing_material_solar_transmittance(id, parsed))
+        }
+        "solarReflectanceFront" => {
+            let parsed = as_f64(property, value, fraction)?;
+            step_if(material.solar_reflectance_front != parsed, || mutations::change_glazing_material_solar_reflectance_front(id, parsed))
+        }
+        "solarReflectanceBack" => {
+            let parsed = as_f64(property, value, fraction)?;
+            step_if(material.solar_reflectance_back != parsed, || mutations::change_glazing_material_solar_reflectance_back(id, parsed))
+        }
+        "visibleReflectanceFront" => {
+            let parsed = as_f64(property, value, fraction)?;
+            step_if(material.visible_reflectance_front != parsed, || mutations::change_glazing_material_visible_reflectance_front(id, parsed))
+        }
+        "visibleReflectanceBack" => {
+            let parsed = as_f64(property, value, fraction)?;
+            step_if(material.visible_reflectance_back != parsed, || mutations::change_glazing_material_visible_reflectance_back(id, parsed))
+        }
+        "infraredTransmittance" => {
+            let parsed = as_f64(property, value, fraction)?;
+            step_if(material.infrared_transmittance != parsed, || mutations::change_glazing_material_infrared_transmittance(id, parsed))
         }
         "visibleTransmittance" => {
             let parsed = as_f64(property, value, fraction)?;

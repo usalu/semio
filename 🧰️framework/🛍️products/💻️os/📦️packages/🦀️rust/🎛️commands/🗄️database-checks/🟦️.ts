@@ -1,3 +1,4 @@
+import { SchemaCheck } from "../🧱️script-bases/🟦️.ts";
 /** 🗄️ Database commands: paged history stack, history completion, catalog read ownership, capability completion and shutdown checks.
  *
  * @see ../../📜️script.ts — the package script that registers the commands of this module
@@ -418,5 +419,71 @@ export class DatabaseShutdownCheckScript extends BundleScript {
         } });
       console.log(`database-shutdown-native-receipts: ${JSON.stringify(receipts)}`);
     }
+  }
+}
+
+export class DbErrorOwnershipCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const selectedLaw = segments[0] === "--native" ? segments.length === 3 && segments[1] === "--law" ? segments[2] : segments.length === 2 && segments[1].startsWith("--law=") ? segments[1].slice(6) : undefined : undefined;
+    if (segments.length && !(segments.length === 1 && segments[0] === "--native") && !selectedLaw) throw new Error("db-error-ownership-check accepts --native and optional --law <registered exact law>");
+    const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db");
+    const fixture = JSON.parse(readFileSync(join(owner, "🆔️ids/🧫️fixtures/⚠️error/🎒️pack/🔣️.json"), "utf8"));
+    const validate: SchemaCheck = semioSchemaAjvV1({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(owner, "🆔️ids/🧬️schema/⚠️error/🎒️pack/🔣️.json"), "utf8")));
+    assert(validate(fixture), JSON.stringify(validate.errors));
+    assert.equal(new Set(fixture.cases.map((row: { id: string }) => row.id)).size, fixture.cases.length);
+    assert.equal(fixture.cases.filter((row: { source: string }) => row.source === "ValueRefusal").length, 8);
+    for (const row of fixture.transport) assert.equal(row.transient, row.retry === "Transient");
+    const actors = JSON.parse(readFileSync(join(owner, "🔄️sync/🧫️fixtures/📝️actor-retirement/🔣️.json"), "utf8"));
+    assert.equal(actors.aliases, 2);
+    assert.equal(actors.firstLeaseReleasedBytes, 0);
+    assert.equal(actors.newAllocationsOnClose, 0);
+    for (const text of actors.actors) assert.equal(JSON.parse(JSON.stringify(text)), text);
+    const custody = JSON.parse(readFileSync(join(owner, "🗄️storage/🧫️fixtures/⚠️fault-custody/🔣️.json"), "utf8"));
+    const validateCustody: SchemaCheck = semioSchemaAjvV1({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(owner, "🗄️storage/🧬️schema/⚠️fault-custody/🔣️.json"), "utf8")));
+    assert(validateCustody(custody), JSON.stringify(validateCustody.errors));
+    const rotation = custody.fairness.owners.map((name: string) => ({ name, closed: false }));
+    for (const key of ["firstCycleReleasedBytes", "secondCycleReleasedBytes"]) {
+      const released = rotation.map(() => { const next = rotation.shift()!; rotation.push(next); if (next.name.endsWith("refused") || next.closed) return 0; next.closed = true; return custody.fairness.releaseCapacity; });
+      assert.deepEqual(released, custody.fairness[key]);
+    }
+    const admitted = new Map<string, number>();
+    let generation = 0;
+    for (const name of custody.reservation.admitted) { assert(admitted.size < custody.reservation.capacity); admitted.set(name, ++generation); }
+    let producerCalls = 0;
+    if (admitted.size < custody.reservation.capacity) { admitted.set(custody.reservation.refusedBeforeProducer, ++generation); producerCalls++; }
+    assert.equal(producerCalls, custody.reservation.producerCallsAtRefusal);
+    const firstGeneration = admitted.get(custody.reservation.admitted[0])!;
+    admitted.delete(custody.reservation.admitted[0]);
+    admitted.set(custody.reservation.refusedBeforeProducer, ++generation);
+    assert.equal(generation > firstGeneration, custody.reservation.reuseIncrementsGeneration);
+    const laws = [
+      "db_ids::tests::pack_error_conversion_preserves_complete_typed_semantic_cause",
+      "db_ids::tests::pack_refusal_preserves_kind_fields_and_original_owned_message",
+      "db_ids::tests::pack_transport_conversion_preserves_source_identity_and_retry_authority",
+      "db_ids::tests::spr_writer_conversion_returns_original_database_sink_owner",
+      "db_storage::tests::db_io_fault_returns_original_typed_pack_error_owner",
+      "db_storage::tests::db_io_fault_retirement_releases_one_original_semantic_allocation_at_a_time",
+      "db_storage::tests::db_io_fault_maintenance_serves_every_tier_while_retaining_unsupported_original",
+      "db_storage::tests::db_io_fault_prebirth_custody_preserves_full_denied_cancelled_and_stale_originals",
+      "db_storage::tests::db_io_fault_refused_task_handback_retains_original_custody_after_cause_close_or_transfer",
+      "db_storage::tests::db_io_fault_full_custody_refuses_actual_task_admission_before_backend_effects",
+      "db_storage::db_io_retained_fixtures::db_io_lost_owner_fixed_ring_max_plus_one_returns_the_exact_candidate",
+      "db_sync::tests::hello_shared_actor_retirement_releases_actual_final_allocation",
+      "db_wal::tests::single_segment_write_commit_flush_recovers_cleanly",
+      "db_artifact::tests::committed_durable_group_recovery_consumes_wal_witness_and_returns_exact_three_stores_on_pre_mutation_rejection",
+      "db_artifact::tests::bridge::envelope_from_operation_cold_uses_operation_and_diff_traits",
+    ];
+    for (const law of laws) {
+      const domain = law.split("::")[0].replace("db_", "");
+      const folder = ({ ids: "🆔️ids", storage: "🗄️storage", sync: "🔄️sync", wal: "📝️wal", artifact: "🗿️artifact" } as Record<string, string>)[domain];
+      const nativeFixture = law.includes("::db_io_retained_fixtures::") ? "🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs" : "🧪️tests/🔬️unit/🦀️.rs";
+      assert(readFileSync(join(owner, folder, nativeFixture), "utf8").includes(`fn ${law.split("::").at(-1)}(`), `missing exact native law ${law}`);
+    }
+    if (segments[0] === "--native") {
+      if (selectedLaw && !laws.includes(selectedLaw)) throw new Error("db-error-ownership-check requires an authored exact law");
+      const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, laws: selectedLaw ? [selectedLaw] : laws }], progress(event) { console.log(`[DEBUG] db-error-ownership ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
+      console.log(`[DEBUG] db-error-ownership-native-receipts: ${JSON.stringify(receipts)}`);
+    }
+    console.log(`[DEBUG] db-error-ownership-check: AJV validated ${fixture.cases.length} typed cases; ${laws.length} exact laws registered`);
   }
 }

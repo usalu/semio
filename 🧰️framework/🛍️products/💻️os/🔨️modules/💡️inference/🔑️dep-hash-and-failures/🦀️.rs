@@ -123,7 +123,7 @@ impl semio_framework_job::OriginalDomainProjection for InferenceWorkFailure{
 impl semio_framework_job::OriginalDomainFailure for InferenceWorkFailure{
  fn domain_code(&self)->&str{match self{Self::Field(original)=>&original.code,Self::Driver(_)=>"inference.driver",Self::Original(_)=>"inference.original"}}
  fn domain_message(&self)->&str{match self{Self::Field(original)=>&original.message,Self::Driver(InferenceError::MissingParent{..})=>"inference plan parent is missing",Self::Driver(InferenceError::Compute{fault,..})=>&fault.message,Self::Driver(InferenceError::Cancelled)=>"inference cancelled",Self::Original(original)=>original.primary.message()}}
- fn domain_retained_progress(&self)->semio_framework_value::RetainedCloneProgress{match self{Self::Original(original)=>original.primary.retained_progress(),_=>Default::default()}}
+ fn domain_retained_progress(&self)->semio_framework_value::RetainedCloneProgress{match self{Self::Original(original)=>original.retained_progress(),_=>Default::default()}}
 }
 
 fn inference_projection_refusal()->semio_framework_value::ValueError{semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original inference failure projection ordinal changed")}

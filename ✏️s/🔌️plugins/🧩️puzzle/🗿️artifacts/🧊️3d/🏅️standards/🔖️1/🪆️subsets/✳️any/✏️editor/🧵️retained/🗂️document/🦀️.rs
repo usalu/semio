@@ -1,5 +1,5 @@
-//! 🗂️ Puzzle 3d retained document works — the staged edits that read the document before they emit: kind weights,
 //! object kinds, the inspector patch, attraction creation and the active example switch. Every work is written against
+//! 🗂️ Puzzle 3d retained document works — the staged edits that read the document before they emit: kind weights,
 //! the [`Puzzle3dEditor`] contract, not the concrete editor.
 
 #![allow(clippy::result_large_err)]
@@ -23,7 +23,7 @@ use semio_framework_plugin::Fault;
 use semio_framework_plugin::InteractionWrite;
 use semio_framework_value::FromValue;
 use {semio_framework_pack_json::object, semio_framework_pack_json::to_string, semio_framework_pack_json::Value};
-use {std::collections::HashMap, std::collections::HashSet};
+use std::collections::HashMap;
 use std::sync::atomic::Ordering;
 use semio_s_artifact_puzzle_3d_model::puzzle3d_vortex_full_id;
 use semio_s_artifact_puzzle_3d_model::derive_attraction_params;

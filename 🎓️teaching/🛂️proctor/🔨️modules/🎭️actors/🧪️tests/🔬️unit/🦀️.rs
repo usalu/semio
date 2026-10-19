@@ -1,7 +1,7 @@
 use super::*;
 use super::fixtures::{admission, envelope, id, perfect, ADA, BOB, TENANT};
-use teaching_proctor_base::catalog::fixtures::fixture;
-use quiz::{Challenge, Identity};
+use teaching_proctor_base::course::fixtures::fixture;
+use course::{Challenge, Identity};
 use server::contract::HybridLogicalClock;
 
 fn context(millis: u64) -> DecisionContext {
@@ -22,20 +22,20 @@ fn invalid(detail: &str) -> Decision {
 }
 
 fn registration(stream: ActorKey, learner: &str, identity: Identity) -> EventRecord {
-    EventRecord { stream, seq: 1, hlc: HybridLogicalClock { millis: 10, counter: 0 }, kind: "quiz.learner-registered".into(), payload: serde_json::to_vec(&Event::LearnerRegistered { learner: learner.into(), identity, at: 10 }).unwrap() }
+    EventRecord { stream, seq: 1, hlc: HybridLogicalClock { millis: 10, counter: 0 }, kind: "course.learner-registered".into(), payload: serde_json::to_vec(&Event::LearnerRegistered { learner: learner.into(), identity, at: 10 }).unwrap() }
 }
 
 #[test]
 fn the_wire_names_follow_the_design() {
-    let start = Command::StartRun { id: id(2), learner: ADA.into(), run: id(3), quiz: "power".into(), challenge: Challenge::Medium, at: 0 };
-    assert_eq!(command_kind(&start), "quiz.start-run");
+    let start = Command::StartRun { origin: None, id: id(2), learner: ADA.into(), run: id(3), quiz: "power".into(), challenge: Challenge::Medium, at: 0 };
+    assert_eq!(command_kind(&start), "course.start-run");
     assert_eq!(command_target(&start, TENANT), Ok(learner_key(TENANT, ADA)));
     assert_eq!(command_target(&identify(ADA, Identity::Anonymous), TENANT), Ok(learner_key(TENANT, ADA)));
-    assert_eq!(command_target(&identify(ADA, Identity::Name { handle: " Ada  Lovelace ".into() }), TENANT), Ok(ActorKey { tenant: TenantId(TENANT.into()), kind: "quiz-handle".into(), id: "616461206c6f76656c616365".into() }));
-    assert_eq!(command_target(&identify(ADA, Identity::Name { handle: "A\u{200b}da".into() }), TENANT), Err(quiz::Rejection::HandleInvalid));
-    assert_eq!(handle_key(TENANT, "ada lovelace").id, quiz::handle_actor_id("ada lovelace"));
-    assert_eq!(event_kind(&Event::RunVoided { learner: ADA.into(), run: id(3), at: 1 }), "quiz.run-voided");
-    assert_eq!(rejection(quiz::Rejection::RunIncomplete), Rejection::Invalid { detail: "run-incomplete".into() });
+    assert_eq!(command_target(&identify(ADA, Identity::Name { handle: " Ada  Lovelace ".into() }), TENANT), Ok(ActorKey { tenant: TenantId(TENANT.into()), kind: "course-handle".into(), id: "616461206c6f76656c616365".into() }));
+    assert_eq!(command_target(&identify(ADA, Identity::Name { handle: "A\u{200b}da".into() }), TENANT), Err(course::Rejection::HandleInvalid));
+    assert_eq!(handle_key(TENANT, "ada lovelace").id, course::handle_actor_id("ada lovelace"));
+    assert_eq!(event_kind(&Event::RunVoided { learner: ADA.into(), run: id(3), at: 1 }), "course.run-voided");
+    assert_eq!(rejection(course::Rejection::RunIncomplete), Rejection::Invalid { detail: "run-incomplete".into() });
     assert_eq!(enrollment_key(TENANT, &handle_key(TENANT, "ada").id), format!("enroll:{TENANT}:616461"));
 }
 
@@ -54,7 +54,7 @@ fn an_envelope_must_agree_with_its_command() {
     assert!(refused(|envelope| envelope.version = WIRE_VERSION - 1).starts_with("envelope-mismatch"));
     assert!(refused(|envelope| envelope.version = WIRE_VERSION + 1).starts_with("envelope-mismatch"));
     assert!(refused(|envelope| envelope.scope = Scope("other".into())).starts_with("envelope-mismatch"));
-    assert!(refused(|envelope| envelope.kind = "quiz.start-run".into()).starts_with("envelope-mismatch"));
+    assert!(refused(|envelope| envelope.kind = "course.start-run".into()).starts_with("envelope-mismatch"));
     assert!(refused(|envelope| envelope.idempotency_key = None).starts_with("envelope-mismatch"));
     assert!(refused(|envelope| envelope.target = learner_key(TENANT, BOB)).starts_with("envelope-mismatch"));
     assert!(refused(|envelope| envelope.target = handle_key(TENANT, "ada")).starts_with("envelope-mismatch"));
@@ -71,13 +71,13 @@ fn no_malformed_id_and_no_refused_handle_is_admitted() {
     };
     let megabyte = "a".repeat(1 << 20);
     for learner in ["ADA", "enroll:proctor-fixture:roster:1", megabyte.as_str(), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n", ""] {
-        let start = Command::StartRun { id: id(2), learner: learner.into(), run: id(3), quiz: "power".into(), challenge: Challenge::Medium, at: 0 };
+        let start = Command::StartRun { origin: None, id: id(2), learner: learner.into(), run: id(3), quiz: "power".into(), challenge: Challenge::Medium, at: 0 };
         assert_eq!(refusal(&start, learner_key(TENANT, learner)), Err(Rejection::Invalid { detail: "id-invalid".into() }), "{:?}", &learner[..learner.len().min(40)]);
         assert_eq!(refusal(&identify(learner, Identity::Anonymous), learner_key(TENANT, learner)), Err(Rejection::Invalid { detail: "id-invalid".into() }));
     }
-    let run = Command::StartRun { id: id(2), learner: ADA.into(), run: "../run".into(), quiz: "power".into(), challenge: Challenge::Medium, at: 0 };
+    let run = Command::StartRun { origin: None, id: id(2), learner: ADA.into(), run: "../run".into(), quiz: "power".into(), challenge: Challenge::Medium, at: 0 };
     assert_eq!(admission.admit(&envelope(&run)), Err(Rejection::Invalid { detail: "id-invalid".into() }));
-    let quiz = Command::StartRun { id: id(2), learner: ADA.into(), run: id(3), quiz: "Power".into(), challenge: Challenge::Medium, at: 0 };
+    let quiz = Command::StartRun { origin: None, id: id(2), learner: ADA.into(), run: id(3), quiz: "Power".into(), challenge: Challenge::Medium, at: 0 };
     assert_eq!(admission.admit(&envelope(&quiz)), Err(Rejection::Invalid { detail: "id-invalid".into() }));
     let mut keyed = envelope(&Command::SubmitRun { id: id(2), learner: ADA.into(), run: id(3) });
     keyed.command_id = CommandId(format!("enroll:{TENANT}:616461"));
@@ -89,11 +89,11 @@ fn no_malformed_id_and_no_refused_handle_is_admitted() {
     let named = identify(ADA, Identity::Name { handle: "Ada".into() });
     assert_eq!(admission.admit(&envelope(&named)), Ok(()));
     assert!(matches!(refusal(&named, handle_key(TENANT, "bob")), Err(Rejection::Invalid { detail }) if detail.starts_with("envelope-mismatch")));
-    for (kind, target) in [(HANDLE, megabyte.as_str()), (HANDLE, "ADA"), (HANDLE, "616"), (HANDLE, "ff"), (HANDLE, ""), (LEARNER, "616461"), ("quiz-roster", "roster"), ("", ADA)] {
+    for (kind, target) in [(HANDLE, megabyte.as_str()), (HANDLE, "ADA"), (HANDLE, "616"), (HANDLE, "ff"), (HANDLE, ""), (LEARNER, "616461"), ("course-roster", "roster"), ("", ADA)] {
         let misaddressed = ActorKey { tenant: TenantId(TENANT.into()), kind: kind.into(), id: target.into() };
         assert_eq!((addressable(&misaddressed), refusal(&named, misaddressed)), (false, Err(Rejection::Invalid { detail: "id-invalid".into() })), "{kind}/{:?}", &target[..target.len().min(40)]);
     }
-    let longest = "\u{1e01}".repeat(quiz::HANDLE_MAX);
+    let longest = "\u{1e01}".repeat(course::HANDLE_MAX);
     assert_eq!((handle_key(TENANT, &longest).id.len(), addressable(&handle_key(TENANT, &longest)), admission.admit(&envelope(&identify(ADA, Identity::Name { handle: longest })))), (384, true, Ok(())), "the longest handle has an addressable actor");
     let mut unread = envelope(&named);
     unread.target = ActorKey { tenant: TenantId(TENANT.into()), kind: LEARNER.into(), id: "not-an-id".into() };
@@ -104,12 +104,12 @@ fn no_malformed_id_and_no_refused_handle_is_admitted() {
 #[test]
 fn a_full_proctor_admits_no_registration_but_every_other_command() {
     let full = admission(3);
-    full.cap(Limits { learners: 3, ..quiz::DEFAULT_LIMITS });
+    full.cap(Limits { learners: 3, ..course::DEFAULT_LIMITS });
     assert_eq!(full.caps().learners, 3);
     assert_eq!(full.admit(&envelope(&identify(ADA, Identity::Anonymous))), Err(Rejection::Invalid { detail: "roster-full".into() }));
     assert_eq!(full.admit(&envelope(&identify(ADA, Identity::Name { handle: "Ada".into() }))), Err(Rejection::Invalid { detail: "roster-full".into() }));
-    assert_eq!(full.admit(&envelope(&Command::StartRun { id: id(2), learner: ADA.into(), run: id(3), quiz: "power".into(), challenge: Challenge::Medium, at: 0 })), Ok(()));
-    full.cap(Limits { learners: 4, ..quiz::DEFAULT_LIMITS });
+    assert_eq!(full.admit(&envelope(&Command::StartRun { origin: None, id: id(2), learner: ADA.into(), run: id(3), quiz: "power".into(), challenge: Challenge::Medium, at: 0 })), Ok(()));
+    full.cap(Limits { learners: 4, ..course::DEFAULT_LIMITS });
     assert_eq!(full.admit(&envelope(&identify(ADA, Identity::Anonymous))), Ok(()));
 }
 
@@ -122,7 +122,7 @@ async fn a_handle_registers_its_first_claim_and_refuses_the_rest_through_the_fra
     let registered = handle.decide(&state, &claim, &context(10)).await;
     assert_eq!(events(&registered), vec![Event::LearnerRegistered { learner: ADA.into(), identity: Identity::Pseudonym { handle: "Ada Lovelace".into() }, at: 10 }]);
     let Decision::Emit { events: records, .. } = &registered else { unreachable!() };
-    assert_eq!((records[0].kind.as_str(), &records[0].stream), ("quiz.learner-registered", &handle_key(TENANT, "ada lovelace")));
+    assert_eq!((records[0].kind.as_str(), &records[0].stream), ("course.learner-registered", &handle_key(TENANT, "ada lovelace")));
     handle.evolve(&mut state, &EventRecord { seq: 1, ..records[0].clone() }).await;
     assert_eq!(stored::<HandleState>(&state), Stored::State(HandleState { key: "ada lovelace".into(), holder: Some(ADA.into()) }));
     assert_eq!(handle.decide(&state, &envelope(&identify(BOB, Identity::Name { handle: "ada lovelace".into() })), &context(11)).await, invalid("handle-claimed"));
@@ -131,7 +131,7 @@ async fn a_handle_registers_its_first_claim_and_refuses_the_rest_through_the_fra
 
 #[tokio::test]
 async fn enrollment_relays_a_handle_registration_to_its_learner_once() {
-    let learner = LearnerDecider { catalog: Arc::new(fixture()), admission: admission(0) };
+    let learner = LearnerDecider { course: Arc::new(fixture()), admission: admission(0) };
     let identity = Identity::Name { handle: "Ada Lovelace".into() };
     let registered = registration(handle_key(TENANT, "ada lovelace"), ADA, identity.clone());
     let relay = enrollment(&registered).expect("a handle registration is relayed");
@@ -168,9 +168,9 @@ async fn enrollment_relays_a_handle_registration_to_its_learner_once() {
 
 #[tokio::test]
 async fn an_anonymous_learner_registers_in_its_own_stream_and_runs_only_once_registered() {
-    let learner = LearnerDecider { catalog: Arc::new(fixture()), admission: admission(0) };
+    let learner = LearnerDecider { course: Arc::new(fixture()), admission: admission(0) };
     assert_eq!((learner.actor_kind().await, learner.state_format().await), (LEARNER, STATE_FORMAT));
-    let start = Command::StartRun { id: id(5), learner: ADA.into(), run: id(6), quiz: "power".into(), challenge: Challenge::Medium, at: 33 };
+    let start = Command::StartRun { origin: None, id: id(5), learner: ADA.into(), run: id(6), quiz: "power".into(), challenge: Challenge::Medium, at: 33 };
     assert_eq!(learner.decide(&ActorState::default(), &envelope(&start), &context(30)).await, invalid("unknown-learner"));
     let mut state = ActorState::default();
     let registered = learner.decide(&state, &envelope(&identify(ADA, Identity::Anonymous)), &context(31)).await;
@@ -179,41 +179,41 @@ async fn an_anonymous_learner_registers_in_its_own_stream_and_runs_only_once_reg
     learner.evolve(&mut state, &EventRecord { seq: 1, ..records[0].clone() }).await;
     assert_eq!(learner.decide(&state, &envelope(&identify(ADA, Identity::Anonymous)), &context(32)).await, invalid("learner-exists"));
     let started = events(&learner.decide(&state, &envelope(&start), &context(33)).await);
-    assert!(matches!(&started[..], [Event::RunStarted { quiz, seed, at: 33, .. }] if quiz == "power" && *seed == quiz::run_seed(&id(6))));
+    assert!(matches!(&started[..], [Event::RunStarted { quiz, seed, at: 33, .. }] if quiz == "power" && *seed == course::run_seed(&id(6))));
 }
 
 #[tokio::test]
 async fn the_caps_in_force_reach_the_learner_decisions() {
-    let learner = LearnerDecider { catalog: Arc::new(fixture()), admission: admission(0) };
-    learner.admission.cap(Limits { answers_per_run: 1, ..quiz::DEFAULT_LIMITS });
+    let learner = LearnerDecider { course: Arc::new(fixture()), admission: admission(0) };
+    learner.admission.cap(Limits { answers_per_run: 1, ..course::DEFAULT_LIMITS });
     let mut state = ActorState::default();
     learner.evolve(&mut state, &registration(learner_key(TENANT, ADA), ADA, Identity::Anonymous)).await;
     let run = id(6);
-    let start = Command::StartRun { id: id(5), learner: ADA.into(), run: run.clone(), quiz: "power".into(), challenge: Challenge::Medium, at: 40 };
+    let start = Command::StartRun { origin: None, id: id(5), learner: ADA.into(), run: run.clone(), quiz: "power".into(), challenge: Challenge::Medium, at: 40 };
     let Decision::Emit { events: started, .. } = learner.decide(&state, &envelope(&start), &context(40)).await else { panic!("the run starts") };
     learner.evolve(&mut state, &EventRecord { seq: 2, ..started[0].clone() }).await;
-    let catalog = fixture();
-    let power = &catalog.current()["power"].quiz;
-    let sheet = quiz::sheet_of(power, quiz::run_seed(&run), Challenge::Medium);
+    let course = fixture();
+    let power = &course.current()["power"].quiz;
+    let sheet = course::sheet_of(power, course::run_seed(&run), Challenge::Medium);
     let answer = |seed: u8| Command::RecordAnswer { id: id(seed), learner: ADA.into(), run: run.clone(), task: sheet.tasks[0].id().clone(), answer: perfect(power, &sheet.tasks[0]), at: 41 };
     let Decision::Emit { events: recorded, .. } = learner.decide(&state, &envelope(&answer(7)), &context(41)).await else { panic!("the first answer is recorded") };
     learner.evolve(&mut state, &EventRecord { seq: 3, ..recorded[0].clone() }).await;
     assert_eq!(learner.decide(&state, &envelope(&answer(8)), &context(42)).await, invalid("answers-exhausted"));
-    learner.admission.cap(Limits { runs_per_quiz: 3, ..quiz::DEFAULT_LIMITS });
+    learner.admission.cap(Limits { runs_per_quiz: 3, ..course::DEFAULT_LIMITS });
     for (seed, challenge) in [(20, Challenge::Easy), (21, Challenge::Medium)] {
-        let switch = Command::StartRun { id: id(seed), learner: ADA.into(), run: id(seed + 10), quiz: "power".into(), challenge, at: 43 };
+        let switch = Command::StartRun { origin: None, id: id(seed), learner: ADA.into(), run: id(seed + 10), quiz: "power".into(), challenge, at: 43 };
         let Decision::Emit { events: switched, .. } = learner.decide(&state, &envelope(&switch), &context(43)).await else { panic!("switching to {challenge:?} voids the open run") };
         for (offset, record) in switched.iter().enumerate() {
             learner.evolve(&mut state, &EventRecord { seq: 4 + u64::from(seed) * 2 + offset as u64, ..record.clone() }).await;
         }
     }
-    let again = Command::StartRun { id: id(22), learner: ADA.into(), run: id(32), quiz: "power".into(), challenge: Challenge::Hard, at: 44 };
+    let again = Command::StartRun { origin: None, id: id(22), learner: ADA.into(), run: id(32), quiz: "power".into(), challenge: Challenge::Hard, at: 44 };
     assert_eq!(learner.decide(&state, &envelope(&again), &context(44)).await, invalid("runs-exhausted"), "voided runs count against the cap, so switching back and forth stops");
 }
 
 #[tokio::test]
 async fn the_clock_of_a_timed_run_runs_from_the_instants_the_device_claims_and_the_proctors_clock_only_bounds_their_lead() {
-    let learner = LearnerDecider { catalog: Arc::new(fixture()), admission: admission(0) };
+    let learner = LearnerDecider { course: Arc::new(fixture()), admission: admission(0) };
     let mut state = ActorState::default();
     learner.evolve(&mut state, &registration(learner_key(TENANT, ADA), ADA, Identity::Anonymous)).await;
     let mut seq = 1;
@@ -228,10 +228,10 @@ async fn the_clock_of_a_timed_run_runs_from_the_instants_the_device_claims_and_t
         decision
     };
     let (run, plain) = (id(6), id(7));
-    assert!(matches!(&events(&decide(&mut state, Command::StartRun { id: id(5), learner: ADA.into(), run: run.clone(), quiz: "homes".into(), challenge: Challenge::Expert, at: 1_000 }, 1_000).await)[..], [Event::RunStarted { challenge: Challenge::Expert, at: 1_000, .. }]));
-    let catalog = fixture();
-    let homes = &catalog.current()["homes"].quiz;
-    let sheet = quiz::sheet_of(homes, quiz::run_seed(&run), Challenge::Expert);
+    assert!(matches!(&events(&decide(&mut state, Command::StartRun { origin: None, id: id(5), learner: ADA.into(), run: run.clone(), quiz: "homes".into(), challenge: Challenge::Expert, at: 1_000 }, 1_000).await)[..], [Event::RunStarted { challenge: Challenge::Expert, at: 1_000, .. }]));
+    let course = fixture();
+    let homes = &course.current()["homes"].quiz;
+    let sheet = course::sheet_of(homes, course::run_seed(&run), Challenge::Expert);
     let (task, seconds) = (sheet.tasks[0].id().clone(), sheet.tasks[0].seconds().expect("an expert sheet task has a clock"));
     let open = |seed: u8, at: u64| Command::OpenTask { id: id(seed), learner: ADA.into(), run: run.clone(), task: task.clone(), at };
     let answer = |seed: u8, at: u64| Command::RecordAnswer { id: id(seed), learner: ADA.into(), run: run.clone(), task: task.clone(), answer: perfect(homes, &sheet.tasks[0]), at };
@@ -244,27 +244,27 @@ async fn the_clock_of_a_timed_run_runs_from_the_instants_the_device_claims_and_t
     assert!(matches!(&events(&decide(&mut state, answer(13, limit), limit + 60_000).await)[..], [Event::AnswerRecorded { at, .. }] if *at == limit), "an answer the device made in time counts however late it arrives");
     assert_eq!(decide(&mut state, answer(14, limit + 1), 3_000).await, invalid("time-up"), "an answer the device made too late is refused however early it arrives: the proctor's own clock is no verdict");
     let ahead = id(17);
-    assert!(matches!(&events(&decide(&mut state, Command::StartRun { id: id(19), learner: ADA.into(), run: ahead.clone(), quiz: "power".into(), challenge: Challenge::Expert, at: limit + 61_000 }, limit + 61_000).await)[..], [Event::RunStarted { .. }]));
+    assert!(matches!(&events(&decide(&mut state, Command::StartRun { origin: None, id: id(19), learner: ADA.into(), run: ahead.clone(), quiz: "power".into(), challenge: Challenge::Expert, at: limit + 61_000 }, limit + 61_000).await)[..], [Event::RunStarted { .. }]));
     assert!(matches!(&events(&decide(&mut state, Command::OpenTask { id: id(20), learner: ADA.into(), run: ahead.clone(), task: "appliances".into(), at: limit + 61_000 + 240_000 }, limit + 61_000).await)[..], [Event::TaskOpened { at, .. }] if *at == limit + 61_000 + 240_000), "a device clock four minutes ahead of the proctor's is taken as it claims");
-    assert!(matches!(&events(&decide(&mut state, Command::OpenTask { id: id(21), learner: ADA.into(), run: ahead, task: "sources".into(), at: limit + 9_000_000 }, limit + 61_000).await)[..], [Event::TaskOpened { at, .. }] if *at == limit + 61_000 + quiz::CLOCK_LEAD), "a claim more than five minutes ahead of the proctor's clock is lowered to that lead");
-    assert!(matches!(&events(&decide(&mut state, Command::StartRun { id: id(15), learner: ADA.into(), run: plain.clone(), quiz: "power".into(), challenge: Challenge::Hard, at: limit + 61_000 }, limit + 61_000).await)[..], [Event::RunVoided { .. }, Event::RunStarted { challenge: Challenge::Hard, .. }]), "another challenge voids the open run of the quiz");
+    assert!(matches!(&events(&decide(&mut state, Command::OpenTask { id: id(21), learner: ADA.into(), run: ahead, task: "sources".into(), at: limit + 9_000_000 }, limit + 61_000).await)[..], [Event::TaskOpened { at, .. }] if *at == limit + 61_000 + course::CLOCK_LEAD), "a claim more than five minutes ahead of the proctor's clock is lowered to that lead");
+    assert!(matches!(&events(&decide(&mut state, Command::StartRun { origin: None, id: id(15), learner: ADA.into(), run: plain.clone(), quiz: "power".into(), challenge: Challenge::Hard, at: limit + 61_000 }, limit + 61_000).await)[..], [Event::RunVoided { .. }, Event::RunStarted { challenge: Challenge::Hard, .. }]), "another challenge voids the open run of the quiz");
     assert_eq!(decide(&mut state, Command::OpenTask { id: id(16), learner: ADA.into(), run: plain, task: "appliances".into(), at: limit + 61_000 }, limit + 61_000).await, invalid("run-untimed"));
 }
 
 #[tokio::test]
 async fn an_event_or_state_that_does_not_decode_poisons_the_actor_loudly() {
-    let learner = LearnerDecider { catalog: Arc::new(fixture()), admission: admission(0) };
+    let learner = LearnerDecider { course: Arc::new(fixture()), admission: admission(0) };
     let mut state = ActorState::default();
     learner.evolve(&mut state, &registration(learner_key(TENANT, ADA), ADA, Identity::Anonymous)).await;
     let healthy = state.bytes.clone();
-    let recalled = EventRecord { stream: learner_key(TENANT, ADA), seq: 2, hlc: HybridLogicalClock::default(), kind: "quiz.learner-recalled".into(), payload: br#"{"type":"learner-recalled","learner":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at":5}"#.to_vec() };
+    let recalled = EventRecord { stream: learner_key(TENANT, ADA), seq: 2, hlc: HybridLogicalClock::default(), kind: "course.learner-recalled".into(), payload: br#"{"type":"learner-recalled","learner":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","at":5}"#.to_vec() };
     learner.evolve(&mut state, &recalled).await;
     assert_ne!(state.bytes, healthy, "the fact is not skipped");
     let Stored::Corrupt(corrupt) = stored::<LearnerState>(&state) else { panic!("the actor is poisoned") };
-    assert!(corrupt.contains("event 2 of quiz-learner/") && corrupt.contains("quiz.learner-recalled") && corrupt.contains("learner-recalled"), "{corrupt}");
-    let start = Command::StartRun { id: id(5), learner: ADA.into(), run: id(6), quiz: "power".into(), challenge: Challenge::Medium, at: 0 };
+    assert!(corrupt.contains("event 2 of course-learner/") && corrupt.contains("course.learner-recalled") && corrupt.contains("learner-recalled"), "{corrupt}");
+    let start = Command::StartRun { origin: None, id: id(5), learner: ADA.into(), run: id(6), quiz: "power".into(), challenge: Challenge::Medium, at: 0 };
     let Decision::Reject(Rejection::ActorUnavailable { detail }) = learner.decide(&state, &envelope(&start), &context(50)).await else { panic!("a poisoned actor decides nothing") };
-    assert!(detail.starts_with("actor-corrupt: event 2 of quiz-learner/"), "{detail}");
+    assert!(detail.starts_with("actor-corrupt: event 2 of course-learner/"), "{detail}");
     let poisoned = state.bytes.clone();
     learner.evolve(&mut state, &registration(learner_key(TENANT, ADA), ADA, Identity::Anonymous)).await;
     assert_eq!(state.bytes, poisoned, "a poisoned actor stays poisoned");

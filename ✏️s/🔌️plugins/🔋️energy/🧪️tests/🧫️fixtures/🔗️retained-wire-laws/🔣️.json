@@ -3,7 +3,7 @@
   "version": 1,
   "magic_ascii": "SMENERGY",
   "header_bytes": 80,
-  "checkpoint_bytes": 164,
+  "checkpoint_bytes": 196,
   "preview_bytes": 100,
   "byte_order": "little-endian",
   "kinds": {
@@ -42,7 +42,8 @@
     "time_series_count",
     "meter_count",
     "history_count",
-    "numerical_graph_digest"
+    "numerical_graph_digest",
+    "canonical_input_sha256"
   ],
   "preview_fields": [
     "sequence",

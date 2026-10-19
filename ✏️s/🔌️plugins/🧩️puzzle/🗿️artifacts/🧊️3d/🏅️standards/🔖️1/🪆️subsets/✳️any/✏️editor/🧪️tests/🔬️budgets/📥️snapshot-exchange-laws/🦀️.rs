@@ -428,7 +428,9 @@ async fn export_snapshot_names_the_download_after_the_active_example() {
 /// `Fault`. The refusal names the file, its size and the budget, so the answer is readable.
 #[test]
 fn export_refuses_a_payload_above_the_declared_segmented_budget_with_a_notice() {
-    use semio_s_artifact_puzzle_3d_commands_document::export_snapshot::{puzzle3d_export_refusal, puzzle3d_export_segmented, puzzle3d_export_segmented_budget_bytes};
+    use semio_s_artifact_puzzle_3d_commands_document::export_snapshot::puzzle3d_export_refusal;
+    use semio_s_artifact_puzzle_3d_commands_document::export_snapshot::puzzle3d_export_segmented;
+    use semio_s_artifact_puzzle_3d_commands_document::export_snapshot::puzzle3d_export_segmented_budget_bytes;
     use semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_OUTPUT_BYTES;
     use semio_framework_plugin::app::ArtifactOutputChunks;
     let budget = puzzle3d_export_segmented_budget_bytes().expect("the declared output budget is within the framework cap");
@@ -454,7 +456,8 @@ fn export_refuses_a_payload_above_the_declared_segmented_budget_with_a_notice() 
 /// document — so a lane that publishes a handle but loses, reorders or truncates chunks fails here.
 #[semio_framework_async_macros::async_test]
 async fn export_over_the_inline_budget_streams_one_segmented_download_carrying_the_whole_fixture() {
-    use semio_s_artifact_puzzle_3d_commands_document::export_snapshot::{puzzle3d_export_inline_budget_bytes, puzzle3d_export_json};
+    use semio_s_artifact_puzzle_3d_commands_document::export_snapshot::puzzle3d_export_inline_budget_bytes;
+    use semio_s_artifact_puzzle_3d_commands_document::export_snapshot::puzzle3d_export_json;
     assert_eq!(
         puzzle3d_export_inline_budget_bytes(),
         semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES,

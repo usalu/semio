@@ -29,7 +29,7 @@ pub use change_layout::ChangeLayout;
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
-#[mutations(snapshot = FlowHostSnapshot, diff = FlowDiff, schema = "flow.host_snapshot", retire_cold = retire_flow_mutation)]
+#[mutations(snapshot = FlowHostSnapshot, diff = FlowDiff, schema = "flow.host_snapshot", retire_cold = retire_flow_mutation, reference = FlowHostSnapshot, reference_diff = FlowDiff)]
 pub enum FlowMutation {
     AddWidget(AddWidget),
     RemoveWidget(RemoveWidget),

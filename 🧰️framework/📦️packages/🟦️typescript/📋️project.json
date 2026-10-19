@@ -8,6 +8,14 @@
     ]
   },
   "targets": {
+    "window-utility-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": { "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🟦️typescript -- bun ./📜️script.ts window-utility-check", "cwd": "🧰️framework" },
+      "metadata": { "semio": { "workspaceCommand": ["window-utility-check"] } }
+    },
     "test-artifact-reference": {
       "executor": "repo:script",
       "cache": false,

@@ -282,3 +282,26 @@ fn original_operation_rows_preserve_each_buffer_and_paid_collection_cancel_cut()
   }
  }
 }
+
+#[test]
+fn the_operation_image_is_the_exact_default_authoring_wire_of_its_bytes() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap() {
+        let image_bytes = serde_json::to_vec(&row["body"]).unwrap();
+        let image = super::ArtifactOperationImage::from_bytes(image_bytes.clone());
+        let header: &'static [u8] = b"op";
+        let mut expected = header.to_vec();
+        expected.extend_from_slice(&image_bytes);
+        for maximum in [1usize, 7, 64] {
+            let mut cursor = ArtifactPreparedOperationCursor::default();
+            let mut actual = Vec::with_capacity(expected.len());
+            for _ in 0..expected.len() * 4 + 64 {
+                let mut output = [0; 64];
+                let progress = cursor.advance(ArtifactPreparedOperationSource::Text { header, body: &image }, &mut output, RetainedCloneGrant::one_payload_turn(maximum, 64)).unwrap();
+                actual.extend_from_slice(&output[..progress.written_bytes]);
+                if progress.complete { break; }
+            }
+            assert_eq!(actual, expected);
+        }
+    }
+}

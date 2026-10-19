@@ -14,16 +14,9 @@ pub fn set_appearance(appearance: Option<UiAppearance>) -> UiPreferencesConfigMu
 impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetAppearance {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "appearance", kind: "set-appearance", record: "Set" };
 
-    fn diff(&self, base: &UiPreferences) -> protocol::MutationOutcome<UiPreferencesDiff> {
-        if base.appearance == self.appearance {
-            return protocol::MutationOutcome::new(UiPreferencesDiff::default()).warning("mutation.no-op", "appearance is already selected.");
-        }
-        protocol::MutationOutcome::new(UiPreferencesDiff { appearance: Some(SettingEdit::new(self.appearance.clone())), ..UiPreferencesDiff::default() })
-    }
 
-    fn inverse(&self, base: &UiPreferences) -> Result<Vec<UiPreferencesConfigMutation>, semio_framework_value::ValueError> {
-        Ok(vec![UiPreferencesConfigMutation::SetAppearance(Self { appearance: base.appearance.clone() })])
-    }
+
+
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set appearance to {:?}", self.appearance), &format!("Erscheinungsbild auf {:?} setzen", self.appearance))
@@ -31,5 +24,17 @@ impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetA
 
     fn target(&self) -> Vec<String> {
         vec!["appearance".to_string()]
+    }
+}
+
+impl protocol::ColdMutationKind<UiPreferences, UiPreferencesConfigMutation> for SetAppearance {
+    fn diff(&self, base: &UiPreferences) -> protocol::MutationOutcome<UiPreferencesDiff> {
+        if base.appearance == self.appearance {
+            return protocol::MutationOutcome::new(UiPreferencesDiff::default()).warning("mutation.no-op", "appearance is already selected.");
+        }
+        protocol::MutationOutcome::new(UiPreferencesDiff { appearance: Some(SettingEdit::new(self.appearance.clone())), ..UiPreferencesDiff::default() })
+    }
+    fn inverse(&self, base: &UiPreferences) -> Result<Vec<UiPreferencesConfigMutation>, semio_framework_value::ValueError> {
+        Ok(vec![UiPreferencesConfigMutation::SetAppearance(Self { appearance: base.appearance.clone() })])
     }
 }

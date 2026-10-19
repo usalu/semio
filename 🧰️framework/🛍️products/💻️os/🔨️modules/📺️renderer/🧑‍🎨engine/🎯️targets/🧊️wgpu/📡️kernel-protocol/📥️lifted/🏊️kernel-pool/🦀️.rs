@@ -217,8 +217,9 @@ impl KernelRequestQueue {
                 (terminal, usize::from(terminal || page_released != 0), released, page_released)
             }
             KernelRequest::CreateApp { owner } => {
-                let (terminal, processed, released) = owner.close_step(maximum_bytes);
-                (terminal, processed, released, 0)
+                owner.begin_close();
+                let terminal=owner.terminal_is_empty();
+                (terminal,usize::from(terminal),0,0)
             }
             KernelRequest::DestroyApp { owner } => {
                 owner.finish(KernelCloseStatus::Fault);

@@ -1,0 +1,18 @@
+/* 🎨️ @semio-tech/course-react on the semio design system. Colours, type, spacing, glass and outlines are the system's
+   tokens and utilities (`🖱️ui` styles, loaded by the site); this sheet only holds what utilities cannot say: the
+   learner's text size as the root font size (every token is rem-based, so the whole system scales), the home grid at
+   the system's breakpoints (768 and 1024 px, `📱️device`), the adaptive layouts every part takes for the room it has
+   (container queries in rem, `🧫️fixtures/📐️adaptive-layout`), the drag states, the spider diagram's paint and a
+   handful of token-based accents. */
+
+@import "./🎨️styles/🔤️text-and-glyphs/🎨️.css";
+@import "./🎨️styles/🎞️icon-motion/🎨️.css";
+@import "./🎨️styles/🏠️chrome-and-home/🎨️.css";
+@import "./🎨️styles/🧩️task-layouts/🎨️.css";
+@import "./🎨️styles/🗃️record-tables/🎨️.css";
+@import "./🎨️styles/🏁️results-and-preferences/🎨️.css";
+@import "./🎨️styles/🤏️drag-and-spider/🎨️.css";
+@import "./🎨️styles/👥️peer-marks/🎨️.css";
+@import "./🎨️styles/📊️plots-and-crowd/🎨️.css";
+@import "./🎨️styles/⚖️footer-and-forced-colors/🎨️.css";
+@import "./🎨️styles/🎚️challenge-keys/🎨️.css";

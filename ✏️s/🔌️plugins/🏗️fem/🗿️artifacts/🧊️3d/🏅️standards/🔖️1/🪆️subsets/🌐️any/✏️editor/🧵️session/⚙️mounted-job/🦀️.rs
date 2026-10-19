@@ -15,38 +15,27 @@ pub(super) struct MountedJob {
 impl BoundedJob for MountedJob {
     /// ⏱️ Drives exact session units back to back until the host's step ceiling elapses, a unit
     /// publishes output, or the session leaves `Running`.
-    fn step(&mut self, budget: JobBudget, _original: &mut IoRunControl<'_, '_>, _snapshot: &mut SqliteSnapshotControl<'_>, cx: &mut StepContext<'_>) -> Result<JobStep, ValueError> {
-        let Ok(mut shell) = self.shell.try_borrow_mut() else { return Ok(JobStep::Running(None)) };
-        let Some(state) = shell.as_mut().filter(|state| state.identity == self.identity) else { return Ok(JobStep::Failed(b"fem3d.visual-stale-shell".to_vec())) };
+    fn step(&mut self, _original: &mut IoRunControl<'_, '_>, _snapshot: &mut SqliteSnapshotControl<'_>, cx: &mut StepContext<'_>) -> Result<JobStep, semio_framework_job::OriginalTurnFailure> {
+        let Ok(mut shell) = self.shell.try_borrow_mut() else { return Ok(JobStep::Running(None)); };
+        let Some(state) = shell.as_mut().filter(|state| state.identity == self.identity) else { return Ok(JobStep::Failed(b"fem3d.visual-stale-shell".to_vec())); };
         let started = semio_framework_job::default_now_us();
-        let ceiling_ms = u64::from(budget.deadline_ms).min(STEP_CEILING_MS);
-        let deadline = started.map(|started| started.saturating_add(ceiling_ms.saturating_mul(1_000)));
-        let mut fuel = budget.fuel;
+        let deadline = started.map(|started| started.saturating_add(STEP_CEILING_MS.saturating_mul(1_000)).min(cx.deadline_us()));
         let mut step = JobStep::Running(None);
         for _ in 0..UNITS_PER_STEP {
-            let Some(deadline) = deadline else {
-                step = state.step(budget, cx);
-                break;
-            };
-            let now = semio_framework_job::default_now_us().unwrap_or(deadline);
-            if fuel == 0 || now >= deadline || cx.should_yield() {
-                break;
-            }
-            let remaining_ms = u32::try_from(deadline.saturating_sub(now).div_ceil(1_000)).unwrap_or(u32::MAX).max(1);
-            step = state.step(JobBudget { fuel, deadline_ms: remaining_ms }, cx);
-            fuel = fuel.saturating_sub(1);
-            if !matches!(step, JobStep::Running(None)) {
-                break;
-            }
+            if cx.should_yield() { break; }
+            if let Some(deadline) = deadline { if semio_framework_job::default_now_us().unwrap_or(deadline) >= deadline { break; } }
+            step = state.step(cx)?;
+            if deadline.is_none() || !matches!(step, JobStep::Running(None)) { break; }
         }
         if matches!(&step, JobStep::Done(_)) {
+            record_terminal(self.identity, semio_framework_value::RequestTerminalKind::Validated);
             self.completed = true;
         }
         Ok(step)
     }
 
     /// 🧹️ The heavy session owner is retired by the registry's own close ladder; this handle releases its two original input buffers and itself.
-    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<bool, ValueError> {
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         let grant = cx.retained_grant();
         let demand = self.retirement_demands(0)?;
         if grant.maximum_items == 0 || grant.maximum_depth < demand.depth || grant.maximum_release_bytes < demand.release_bytes {
@@ -69,6 +58,7 @@ impl BoundedJob for MountedJob {
     }
 
     fn cancel(&mut self) {
+        record_terminal(self.identity, semio_framework_value::RequestTerminalKind::Cancelled);
         if let Ok(shell) = self.shell.try_borrow() {
             if let Some(state) = shell.as_ref() {
                 state.cancel.cancel_now();
@@ -93,7 +83,8 @@ impl BoundedJob for MountedJob {
 
 impl Drop for MountedJob {
     fn drop(&mut self) {
-        if self.completed {
+        if self.completed || self.shell.try_borrow().is_ok_and(|owner| owner.as_ref().is_some_and(|state| state.identity == self.identity && state.done)) {
+            record_terminal(self.identity, semio_framework_value::RequestTerminalKind::Validated);
             let _ = self.recovery.publish(self.identity, MountedRecoveryPublication::Retained);
             return;
         }

@@ -8,7 +8,7 @@ import { DEFAULT_LOD_GRID_FACTOR, DEFAULT_MANUAL_LOD, type WorldCameraState, typ
 import { CAMERA_SYNC_DEBOUNCE_MS } from "../../📐️Canvas2dHost/🟦️.tsx";
 import { createCoalescingActionDispatcher, declareSurfaceCancelAction } from "../../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
 import { suggestionMenuOwnsWindow, suggestionPopupOwnsWindow } from "../../🎣️suggestion-submenu/🟦️.ts";
-import { useLocalPresenceActorIdV1 } from "../../👕️canvas-presence/🟦️.tsx";
+import { useLocalPresenceActorIdV1 , usePresenceRuntimeKeyV1} from "../../👕️canvas-presence/🟦️.tsx";
 import { PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS, publishLocalPresenceWindowViewV1, clearLocalPresenceWindowViewV1, publishLocalActiveToolV1 } from "../../👕️canvas-presence/🟦️.ts";
 import { mergeWorldViewportCamera, worldCameraSetCameraDispatchArgs, type WorldVortexRecord } from "../🔭️scene-schema/🟦️.ts";
 import { WORLD3D_DEFAULT_MARKER_GRANULARITY, world3dMarkerInteractionTarget } from "../🔗️instance-selection/🟦️.ts";
@@ -65,8 +65,10 @@ export function useWorldFitAndPresence(core: WorldCore1) {
   const volumeLayersInteractive = !brushMode && !volumeBrushMode;
   const hostRef = useRef<HTMLDivElement | null>(null);
   const presencePublishAtRef = useRef(0);
+  const presencePointerRef = useRef<{ point: readonly [number, number, number]; ray: readonly [number, number, number] } | null>(null);
+  const presenceRuntimeKey = usePresenceRuntimeKeyV1();
   const presenceWindowId = windowInstanceId || node.surfaceId || "world";
-  const localPresenceActor = useLocalPresenceActorIdV1("local");
+  const localPresenceActor = useLocalPresenceActorIdV1(presenceRuntimeKey);
   const presenceObjectWorldPositions = useMemo(() => {
     const map: Record<string, readonly [number, number, number]> = {};
     for (const instance of instances) {
@@ -79,16 +81,17 @@ export function useWorldFitAndPresence(core: WorldCore1) {
     return map;
   }, [instances]);
 
-  useEffect(() => () => clearLocalPresenceWindowViewV1(presenceWindowId), [presenceWindowId]);
-  const publishWorldPresenceView = useCallback((pointer?: readonly [number, number, number], rayOrigin?: readonly [number, number, number]) => {
+  useEffect(() => presenceRuntimeKey ? () => clearLocalPresenceWindowViewV1(presenceWindowId, presenceRuntimeKey) : undefined, [presenceWindowId, presenceRuntimeKey]);
+  const publishWorldPresenceView = useCallback((pointer?: readonly [number, number, number] | null, rayOrigin?: readonly [number, number, number]) => {
+    if (pointer !== undefined) presencePointerRef.current = pointer === null ? null : { point: pointer, ray: rayOrigin ?? cameraState.position as [number, number, number] };
     const now = Date.now();
-    if (now - presencePublishAtRef.current < PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS) return;
+    if (pointer !== null && now - presencePublishAtRef.current < PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS) return;
     presencePublishAtRef.current = now;
     const rect = hostRef.current?.getBoundingClientRect();
     const size: [number, number] = [Math.max(1, rect?.width ?? 1), Math.max(1, rect?.height ?? 1)];
-    const tip = pointer ?? (cameraState.target as [number, number, number]);
-    const origin = rayOrigin ?? (cameraState.position as [number, number, number]);
-    publishLocalPresenceWindowViewV1("local", presenceWindowId, {
+    const cursor = presencePointerRef.current;
+    if (!presenceRuntimeKey) return;
+    publishLocalPresenceWindowViewV1(presenceRuntimeKey, presenceWindowId, {
       windowId: presenceWindowId,
       space: "world",
       kind: {
@@ -99,15 +102,19 @@ export function useWorldFitAndPresence(core: WorldCore1) {
         fov: cameraState.fov ?? 45,
       },
       size,
-      pointer: tip,
-      rayOrigin: origin,
+      ...(cursor ? { pointer: cursor.point, rayOrigin: cursor.ray } : {}),
     });
-    publishLocalActiveToolV1("local", activeUtility);
-  }, [presenceWindowId, cameraState, activeUtility]);
+    publishLocalActiveToolV1(presenceRuntimeKey, activeUtility);
+  }, [presenceWindowId, presenceRuntimeKey, cameraState, activeUtility]);
 
   useEffect(() => {
-    publishLocalActiveToolV1("local", activeUtility);
-  }, [activeUtility]);
+    const timer = setTimeout(() => publishWorldPresenceView(), PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS);
+    return () => clearTimeout(timer);
+  }, [publishWorldPresenceView]);
+
+  useEffect(() => {
+    if (presenceRuntimeKey) publishLocalActiveToolV1(presenceRuntimeKey, activeUtility);
+  }, [activeUtility, presenceRuntimeKey]);
 
   const overlayRailRef = useRef<HTMLDivElement | null>(null);
   const overlayRailSafeArea = useChromePanelSafeArea({ hostRef, affordanceRef: overlayRailRef, anchor: "top-right", yieldAxis: "either", gapPx: uiSpacingPx(1) });
@@ -405,7 +412,7 @@ export function useWorldFitAndPresence(core: WorldCore1) {
     },
     [dispatch],
   );
-  return { activeUtility, adoptViewportCamera, autoFitBounds, brushMode, cameraRef, catalogueDragDepthRef, catalogueDragEncodedRef, catalogueDropPreview, computeStatus, connectDragHoverPosition, connectDragSource, connectDropConsumedRef, contextMenu, contextMenuOpenEpochRef, contextMenuTitleLabel, dismissContextMenu, dispatch, dispatchSettled, dispatchWorldCameraDebounced, engagementPointerMoveInFlightRef, engagementPointerMoveLastPointRef, faceDragSession, gestureRecognizer, gridFactor, gridSnapEnabled, gumballDragActive, gumballDragChainRef, gumballGestureRef, gumballLiveDispatch, gumballTransformPreviewSourceId, handleReferenceHover, handleReferenceSelect, handleTargetVolumeRelocate, handleTargetVolumeSelect, hostRef, instancesGroupRef, instancesRef, localPresenceActor, lodRef, marqueeCommitHold, marqueeCoverage, marqueeDown, marqueeDragActive, marqueeEnd, marqueeMergeMode, marqueePath, marqueeStart, marqueeStartRef, meshesRef, method, overlayRailRef, overlayRailSafeArea, pendingCelebrateCatalogueDropIdsRef, presenceObjectWorldPositions, presenceWindowId, previewAttractions, previewVortices, publishWorldPresenceView, referenceHoveredId, referenceSelectedIds, relocateMode, relocateSessionRef, sectionExtent, selectionMode, setConnectDragHoverPosition, setConnectDragSource, setContextMenu, setFaceDragSession, setGumballDragActive, setMarqueeCommitHold, setMarqueeModifiers, setMarqueePath, setSuggestionFocus, setVortexPointerArm, setVoxelHoverOrigin, sharedGumballTransformPreview, sharedSelectionPreview, suggestionFocus, suggestionMenuCheckingPlacementLabel, suggestionMenuNoPlacementLabel, suggestionMenuOpen, suggestionMenuOwnsThisWindow, suggestionMenuTitleLabel, suggestionPopupOwnsThisWindow, targetVolumeSelectedIds, toolRunTrace, volumeBrushMode, volumeGumballConfig, volumeLayersInteractive, vorticesRef, voxelHoverOrigin, wasMarqueeDragRef };
+  return { activeUtility, adoptViewportCamera, autoFitBounds, brushMode, cameraRef, catalogueDragDepthRef, catalogueDragEncodedRef, catalogueDropPreview, computeStatus, connectDragHoverPosition, connectDragSource, connectDropConsumedRef, contextMenu, contextMenuOpenEpochRef, contextMenuTitleLabel, dismissContextMenu, dispatch, dispatchSettled, dispatchWorldCameraDebounced, engagementPointerMoveInFlightRef, engagementPointerMoveLastPointRef, faceDragSession, gestureRecognizer, gridFactor, gridSnapEnabled, gumballDragActive, gumballDragChainRef, gumballGestureRef, gumballLiveDispatch, gumballTransformPreviewSourceId, handleReferenceHover, handleReferenceSelect, handleTargetVolumeRelocate, handleTargetVolumeSelect, hostRef, instancesGroupRef, instancesRef, localPresenceActor, lodRef, marqueeCommitHold, marqueeCoverage, marqueeDown, marqueeDragActive, marqueeEnd, marqueeMergeMode, marqueePath, marqueeStart, marqueeStartRef, meshesRef, method, overlayRailRef, overlayRailSafeArea, pendingCelebrateCatalogueDropIdsRef, presenceObjectWorldPositions, presenceWindowId, previewAttractions, previewVortices, publishWorldPresenceView, referenceHoveredId, referenceSelectedIds, relocateMode, relocateSessionRef, sectionExtent, selectionMode, setConnectDragHoverPosition, setConnectDragSource, setContextMenu, setFaceDragSession, setGumballDragActive, setMarqueeCommitHold, setMarqueeModifiers, setMarqueePath, setSuggestionFocus, setVortexPointerArm, setVoxelHoverOrigin, sharedGumballTransformPreview, sharedSelectionPreview, suggestionFocus, suggestionMenuCheckingPlacementLabel, suggestionMenuNoPlacementLabel, suggestionMenuOpen, suggestionMenuOwnsThisWindow, suggestionMenuTitleLabel, suggestionPopupOwnsThisWindow, targetVolumeSelectedIds, toolRunTrace, volumeBrushMode, volumeGumballConfig, volumeLayersInteractive, vorticesRef, voxelHoverOrigin, wasMarqueeDragRef , presenceRuntimeKey };
 }
 
 export type WorldCore2 = WorldCore1 & ReturnType<typeof useWorldFitAndPresence>;

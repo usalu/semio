@@ -1,0 +1,121 @@
+{
+  "schema": "semio.quiz/v1",
+  "id": "balanced",
+  "emoji": "❓",
+  "title": {
+    "en": "Balanced pool",
+    "de": "Ausgewogener Pool"
+  },
+  "description": {
+    "en": "Reference quiz",
+    "de": "Referenzquiz"
+  },
+  "tasks": [
+    {
+      "kind": "sorting",
+      "id": "power",
+      "title": {
+        "en": "Power",
+        "de": "Leistung"
+      },
+      "prompt": {
+        "en": "Sort",
+        "de": "Sortieren"
+      },
+      "quantity": {
+        "label": {
+          "en": "Power",
+          "de": "Leistung"
+        },
+        "unit": "W",
+        "scale": "logarithmic",
+        "prefixed": true,
+        "additive": true
+      },
+      "draw": 2,
+      "pool": {
+        "seconds": 300,
+        "slots": [
+          [
+            "tiny-a",
+            "tiny-b",
+            "tiny-c",
+            "tiny-d"
+          ],
+          [
+            "large-a",
+            "large-b",
+            "large-c",
+            "large-d"
+          ]
+        ]
+      },
+      "items": [
+        {
+          "id": "tiny-a",
+          "label": {
+            "en": "tiny-a",
+            "de": "tiny-a"
+          },
+          "value": 10
+        },
+        {
+          "id": "tiny-b",
+          "label": {
+            "en": "tiny-b",
+            "de": "tiny-b"
+          },
+          "value": 11
+        },
+        {
+          "id": "tiny-c",
+          "label": {
+            "en": "tiny-c",
+            "de": "tiny-c"
+          },
+          "value": 12
+        },
+        {
+          "id": "tiny-d",
+          "label": {
+            "en": "tiny-d",
+            "de": "tiny-d"
+          },
+          "value": 13
+        },
+        {
+          "id": "large-a",
+          "label": {
+            "en": "large-a",
+            "de": "large-a"
+          },
+          "value": 1000
+        },
+        {
+          "id": "large-b",
+          "label": {
+            "en": "large-b",
+            "de": "large-b"
+          },
+          "value": 1100
+        },
+        {
+          "id": "large-c",
+          "label": {
+            "en": "large-c",
+            "de": "large-c"
+          },
+          "value": 1200
+        },
+        {
+          "id": "large-d",
+          "label": {
+            "en": "large-d",
+            "de": "large-d"
+          },
+          "value": 1300
+        }
+      ]
+    }
+  ]
+}

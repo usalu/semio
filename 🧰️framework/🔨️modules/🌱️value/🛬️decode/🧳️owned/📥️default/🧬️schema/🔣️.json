@@ -1,0 +1,12 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "type":"object","additionalProperties":false,"required":["id"],
+  "properties":{
+    "id":{"type":"string"},
+    "values":{"type":"array","items":{"type":"string"},"default":[]},
+    "scale":{"type":"number","default":0},
+    "enabled":{"type":"boolean","default":false},
+    "media":{"type":"string","enum":["Empty"],"default":"Empty"},
+    "optional":{"type":["string","null"],"default":null}
+  }
+}

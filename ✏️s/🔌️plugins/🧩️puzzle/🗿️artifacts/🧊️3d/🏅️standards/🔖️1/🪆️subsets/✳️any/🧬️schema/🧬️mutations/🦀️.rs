@@ -1,5 +1,5 @@
-//! 🧬️ Puzzle 3d artifact — semantic document mutation dispatch enum. Every variant is a
 //! single-field tuple wrapping a handcrafted `protocol::MutationKind` payload (see the
+//! 🧬️ Puzzle 3d artifact — semantic document mutation dispatch enum. Every variant is a
 //! `🧬️mutations/<slug>/` triad leaves); `#[derive(dsl::Mutations)]` generates
 //! `impl protocol::Mutation<Puzzle3dSnapshot>` and `impl protocol::SemanticMutation<Puzzle3dSnapshot>`
 //! from those payloads — no hand-written apply/diff/inverse dispatch here. `dsl::DslEnum` supplies
@@ -8,17 +8,12 @@
 //! The native editor owns its immutable play root; semantic mutation authority remains the
 //! canonical typed snapshot and its typed diff algebra.
 
-#![allow(clippy::result_large_err)]
-
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as vcs;
-extern crate semio_framework_value_derive as value_derive;
-
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
-use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
-use protocol::{DiffAlgebra, Mutation};
+use crate::Puzzle3dSnapshot;
+use protocol::ColdMutation;
+use protocol::ColdDiffAlgebra;
+use protocol::DiffAlgebra;
+use protocol::Mutation;
 
 //#region 🔖️Mutations
 /// 🧮️ Semantic puzzle-3d document mutation vocabulary: id-keyed object/target-volume/reference
@@ -33,8 +28,8 @@ use protocol::{DiffAlgebra, Mutation};
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[cfg_attr(any(test, feature = "testing"), serde(tag = "mutation", rename_all = "camelCase"))]
-#[mutations(snapshot = Puzzle3dSnapshot, diff = Puzzle3dDiff, schema = "puzzle.puzzle3d")]
+#[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
+#[mutations(snapshot = Puzzle3dSnapshot, diff = Puzzle3dDiff, schema = "puzzle.puzzle3d", reference = Puzzle3dSnapshot, reference_diff = Puzzle3dDiff)]
 pub enum Puzzle3dMutation {
     CreateObject(CreateObject),
     DeleteObject(DeleteObject),
@@ -174,6 +169,13 @@ pub fn inverse_puzzle3d_mutation(projection: &Puzzle3dSnapshot, mutation: &Puzzl
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+#[cfg(test)]
+#[path = "🧪️tests/🧪️selection-time-travel/🦀️.rs"]
+mod selection_time_travel;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️committed-fixtures/🦀️.rs"]
+mod committed_fixtures;
 //#endregion 🧪️Tests
 
 /// ▶️ Applies one mutation to a projection through the central applier (`vcs::apply_mutation`): the step of the editor tools' charts and of the mutation tests.

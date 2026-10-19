@@ -78,12 +78,16 @@ pub struct SpaceHistorySnapshot {
     pub active_alternative_id: Option<String>,
 }
 
-/// 🪜️ One ordered space-history step: a checkpoint or alternative row added or removed by id, or the active alternative set.
+/// 🪜️ One ordered space-history step: a checkpoint inserted or removed at its exact position, an alternative added or removed by id, or the active alternative set.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum SpaceHistoryStep {
-    AddCheckpoint(SpaceCheckpoint),
-    RemoveCheckpoint { checkpoint_id: String },
+    AddCheckpoint {
+        checkpoint: SpaceCheckpoint,
+        #[value(skip_serializing_if = "Option::is_none")]
+        index: Option<u64>,
+    },
+    RemoveCheckpoint { checkpoint_id: String, index: u64 },
     AddAlternative(SpaceAlternative),
     RemoveAlternative { alternative_id: String },
     SetActive { alternative_id: Option<String> },
@@ -108,14 +112,15 @@ impl SpaceHistoryStep {
     /// before `self` is the last earlier `SetActive` row, else the base's. Nothing is applied.
     fn undo_rows(&self, base: &SpaceHistorySnapshot, earlier: &[SpaceHistoryStep]) -> Vec<SpaceHistoryStep> {
         let active = || earlier.iter().rev().find_map(|step| if let Self::SetActive { alternative_id } = step { Some(alternative_id.clone()) } else { None }).unwrap_or_else(|| base.active_alternative_id.clone());
+        let length = || (base.checkpoints.len() + earlier.iter().filter(|step| matches!(step, Self::AddCheckpoint { .. })).count()).saturating_sub(earlier.iter().filter(|step| matches!(step, Self::RemoveCheckpoint { .. })).count()) as u64;
         match self {
-            Self::AddCheckpoint(checkpoint) => vec![Self::RemoveCheckpoint { checkpoint_id: checkpoint.id.clone() }],
-            Self::RemoveCheckpoint { checkpoint_id } => base
+            Self::AddCheckpoint { checkpoint, index } => vec![Self::RemoveCheckpoint { checkpoint_id: checkpoint.id.clone(), index: index.unwrap_or_else(length) }],
+            Self::RemoveCheckpoint { checkpoint_id, index } => base
                 .checkpoints
                 .iter()
                 .find(|checkpoint| checkpoint.id == *checkpoint_id)
-                .or_else(|| earlier.iter().rev().find_map(|step| if let Self::AddCheckpoint(checkpoint) = step { (checkpoint.id == *checkpoint_id).then_some(checkpoint) } else { None }))
-                .map(|checkpoint| vec![Self::AddCheckpoint(checkpoint.clone())])
+                .or_else(|| earlier.iter().rev().find_map(|step| if let Self::AddCheckpoint { checkpoint, .. } = step { (checkpoint.id == *checkpoint_id).then_some(checkpoint) } else { None }))
+                .map(|checkpoint| vec![Self::AddCheckpoint { checkpoint: checkpoint.clone(), index: Some(*index) }])
                 .unwrap_or_default(),
             Self::AddAlternative(alternative) => vec![Self::RemoveAlternative { alternative_id: alternative.id.clone() }],
             Self::RemoveAlternative { alternative_id } => base
@@ -131,17 +136,24 @@ impl SpaceHistoryStep {
 
     fn step_into(&self, next: &mut SpaceHistorySnapshot) -> semio_framework_os_spr::MutationApplyResult<()> {
         match self {
-            Self::AddCheckpoint(checkpoint) => {
+            Self::AddCheckpoint { checkpoint, index } => {
                 if next.checkpoints.iter().any(|existing| existing.id == checkpoint.id) {
                     return Err(semio_framework_os_spr::MutationApplyError::new("mutation.apply.duplicate-target", format!("checkpoint {} already exists", checkpoint.id)).at(["checkpoints", checkpoint.id.as_str()]));
                 }
-                next.checkpoints.push(checkpoint.clone());
+                let at = index.map_or(Some(next.checkpoints.len()), |index| usize::try_from(index).ok().filter(|at| *at <= next.checkpoints.len()));
+                let Some(at) = at else {
+                    return Err(crate::os_spr::MutationApplyError::new("mutation.apply.invalid-add-index", format!("checkpoint {} is inserted past the end", checkpoint.id)).at(["checkpoints", checkpoint.id.as_str()]));
+                };
+                next.checkpoints.insert(at, checkpoint.clone());
             }
-            Self::RemoveCheckpoint { checkpoint_id } => {
-                if !next.checkpoints.iter().any(|checkpoint| checkpoint.id == *checkpoint_id) {
+            Self::RemoveCheckpoint { checkpoint_id, index } => {
+                let Some(at) = next.checkpoints.iter().position(|checkpoint| checkpoint.id == *checkpoint_id) else {
                     return Err(semio_framework_os_spr::MutationApplyError::new("mutation.apply.missing-target", format!("checkpoint {checkpoint_id} does not exist")).at(["checkpoints", checkpoint_id.as_str()]));
+                };
+                if u64::try_from(at) != Ok(*index) {
+                    return Err(crate::os_spr::MutationApplyError::new("mutation.apply.order-mismatch", format!("checkpoint {checkpoint_id} is not at index {index}")).at(["checkpoints", checkpoint_id.as_str()]));
                 }
-                next.checkpoints.retain(|checkpoint| checkpoint.id != *checkpoint_id);
+                next.checkpoints.remove(at);
             }
             Self::AddAlternative(alternative) => {
                 if next.alternatives.iter().any(|existing| existing.id == alternative.id) {
@@ -175,18 +187,18 @@ impl semio_framework_os_spr::DiffAlgebra<SpaceHistorySnapshot> for SpaceHistoryD
         Self { steps: rows.into_iter().rev().flatten().collect() }
     }
 
-    fn is_empty(&self) -> bool {
-        self.steps.is_empty()
-    }
 }
 
 impl MutationDiff<SpaceHistorySnapshot> for SpaceHistoryDiff {
-    fn apply(&self, snapshot: &SpaceHistorySnapshot, _capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<SpaceHistorySnapshot> {
-        let mut next = snapshot.clone();
+    fn apply(&self, snapshot: &mut SpaceHistorySnapshot, _capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<()> {
+        let mut prepared =  crate::os_spr::PreparedField::new(snapshot.clone(), <Self as crate::os_spr::MutationDiff<SpaceHistorySnapshot>>::retire_projection, _capability);
+        let mut next = prepared.value_mut();
         for step in &self.steps {
             step.step_into(&mut next)?;
         }
-        Ok(next)
+
+        prepared.install(snapshot);
+        Ok(())
     }
 
     fn absorb(&mut self, other: Self) {
@@ -197,6 +209,27 @@ impl MutationDiff<SpaceHistorySnapshot> for SpaceHistoryDiff {
             }
         }
     }
+
+    fn apply(&self, snapshot: &mut SpaceHistorySnapshot, _capability: crate::os_spr::ApplyCapability) -> crate::os_spr::MutationApplyResult<()> {
+        let mut prepared = crate::os_spr::PreparedField::new(snapshot.clone(), <Self as crate::os_spr::MutationDiff<SpaceHistorySnapshot>>::retire_projection, _capability);
+        let mut next = prepared.value_mut();
+        for step in &self.steps {
+            step.step_into(&mut next)?;
+        }
+        prepared.install(snapshot);
+        Ok(())
+    }
+
+}
+
+impl crate::os_spr::ColdDiffAlgebra<SpaceHistorySnapshot> for SpaceHistoryDiff {
+    fn is_empty(&self) -> bool {
+        self.steps.is_empty()
+    }
+}
+
+impl MutationDiff<SpaceHistorySnapshot> for SpaceHistoryDiff {
+
 }
 
 impl DiffRegions for SpaceHistoryDiff {
@@ -204,7 +237,7 @@ impl DiffRegions for SpaceHistoryDiff {
         let mut regions = Vec::new();
         for step in &self.steps {
             let region = match step {
-                SpaceHistoryStep::AddCheckpoint(_) | SpaceHistoryStep::RemoveCheckpoint { .. } => "checkpoints",
+                SpaceHistoryStep::AddCheckpoint { .. } | SpaceHistoryStep::RemoveCheckpoint { .. } => "checkpoints",
                 SpaceHistoryStep::AddAlternative(_) | SpaceHistoryStep::RemoveAlternative { .. } => "alternatives",
                 SpaceHistoryStep::SetActive { .. } => "activeAlternativeId",
             };
@@ -215,4 +248,3 @@ impl DiffRegions for SpaceHistoryDiff {
         TouchedPaths::new(regions)
     }
 }
-

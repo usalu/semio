@@ -27,7 +27,7 @@ use semio_framework_value::retirement::controlled::ControlledRetirement;
 struct OriginalDisposer { pub body:Option<ControlledRetirement<String>>, pub started:bool }
 impl ArtifactOwnedDisposer<String> for OriginalDisposer {
  fn retirement_demands(&self,_:&String,copy:usize)->Result<RetirementDemand,ValueError>{
-  if let Some(body)=self.body.as_ref(){return Ok(RetirementDemand{copy_bytes:body.next_copy_byte_demand()?,capacity_bytes:body.next_capacity_byte_demand(copy)?,release_bytes:body.next_release_byte_demand()?,depth:body.next_depth_demand()?});}
+  if let Some(body)=self.body.as_ref(){return Ok(body.next_demand(copy)?);}
   Ok(RetirementDemand{copy_bytes:if self.started{0}else{std::mem::size_of::<String>()},depth:1,..Default::default()})
  }
  fn close_step(&mut self,source:&mut String,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>{

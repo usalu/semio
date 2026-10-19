@@ -1,0 +1,64 @@
+/* ⚖ The footer, reduced motion and the forced-colours (Windows high contrast) rules. */
+
+/* ⚖️ The footer: one quiet row under every screen. */
+.course-footer {
+  background: var(--base);
+}
+
+/* 🔲️ Forced colours (Windows high contrast): backgrounds, shadows and custom colours are replaced by system colours,
+   so every state that is shown through one of them gets a shape or a system colour pair of its own here. */
+@media (forced-colors: active) {
+  .course-app [aria-pressed="true"],
+  .course-app [aria-current="step"] {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    color: HighlightText;
+  }
+
+  .course-me {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+
+  .course-drop-active {
+    outline: 2px dashed Highlight;
+  }
+
+  .course-online,
+  .course-column-bar {
+    forced-color-adjust: none;
+    background-color: CanvasText;
+  }
+
+  .course-column[data-emphasis] > .course-column-bar {
+    background-color: Highlight;
+  }
+
+  .course-plot-own {
+    color: Highlight;
+  }
+
+  .course-peer-label,
+  .dark .course-peer-label {
+    forced-color-adjust: none;
+    background-color: CanvasText;
+    color: Canvas;
+  }
+
+  .course-radar-area {
+    fill: none;
+    stroke: Highlight;
+    stroke-width: 3;
+  }
+
+  .course-app [aria-disabled="true"],
+  .course-app :disabled {
+    color: GrayText;
+    border-color: GrayText;
+  }
+
+  .course-app :focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}

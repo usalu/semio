@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "source", "semantic", "stock", "loans", "identityActivity"],
+  "properties": {
+    "version": {"const": 1},
+    "source": {"type": "object", "additionalProperties": false, "required": ["operation", "generation", "fuel"], "properties": {"operation": {"type": "integer", "minimum": 1}, "generation": {"type": "integer", "minimum": 1}, "fuel": {"type": "integer", "minimum": 1}}},
+    "semantic": {"type": "object", "additionalProperties": false, "required": ["appInstanceId", "run"], "properties": {"appInstanceId": {"type": "integer", "minimum": 1}, "run": {"type": "integer", "minimum": 1}}},
+    "stock": {"type": "object", "additionalProperties": false, "required": ["items", "copyBytes", "capacityBytes", "releaseBytes", "depth"], "properties": {"items": {"type": "integer", "minimum": 1}, "copyBytes": {"type": "integer", "minimum": 1}, "capacityBytes": {"type": "integer", "minimum": 1}, "releaseBytes": {"type": "integer", "minimum": 1}, "depth": {"type": "integer", "minimum": 1}}},
+    "loans": {"type": "array", "minItems": 3, "items": {"type": "object", "additionalProperties": false, "required": ["parentFuel", "requestedFuel", "spentFuel", "remainingFuel"], "properties": {"parentFuel": {"type": "integer", "minimum": 0}, "requestedFuel": {"type": "integer", "minimum": 0}, "spentFuel": {"type": "integer", "minimum": 0}, "remainingFuel": {"type": "integer", "minimum": 0}}}},
+    "identityActivity": {"type": "array", "minItems": 3, "items": {"type": "object", "additionalProperties": false, "required": ["identityBytes", "completedBefore", "completedAfter", "timestep"], "properties": {"identityBytes": {"type": "integer", "minimum": 0}, "completedBefore": {"type": "integer", "minimum": 0}, "completedAfter": {"type": "integer", "minimum": 0}, "timestep": {"type": "boolean"}}}}
+  }
+}

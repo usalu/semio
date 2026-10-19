@@ -201,7 +201,7 @@ struct Fem3dVisualItemPayload {
 }
 
 impl Fem3dPageVisualJob {
-    pub fn backing_usage(&self) -> (usize, usize) {
+    fn backing_usage(&self) -> (usize, usize) {
         let region = usize::from(self.region_order.is_some());
         let element = usize::from(self.element_order.is_some());
         (region + element, region * FEM3D_REGION_ORDER_BYTES + element * FEM3D_ELEMENT_ORDER_BYTES)
@@ -215,7 +215,7 @@ impl Fem3dPageVisualJob {
         }
     }
 
-    pub fn new(freshness: Fem3dVisualFreshness, credit: Fem3dPageCredit) -> Self {
+    fn new(freshness: Fem3dVisualFreshness, credit: Fem3dPageCredit) -> Self {
         Self {
             freshness,
             credit,
@@ -382,7 +382,7 @@ impl Fem3dPageVisualJob {
         base + index / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY
     }
 
-    pub fn step_one(&mut self, doc: &Fem3dSnapshot, solver: &Fem3dSolverView, backing: &mut Fem3dBackingCredit, freshness: Fem3dVisualFreshness) -> Result<bool, Vec<u8>> {
+    fn step_one(&mut self, doc: &Fem3dSnapshot, solver: &Fem3dSolverView, backing: &mut Fem3dBackingCredit, freshness: Fem3dVisualFreshness) -> Result<bool, Vec<u8>> {
         match self.stage {
             Fem3dVisualJobStage::ReserveSnapshot => {
                 if doc.solids.len() > MAXIMUM_REGIONS || doc.nodes.len() > MAXIMUM_NODES || doc.elements.len() > MAXIMUM_ELEMENTS || doc.supports.len() > MAXIMUM_SUPPORTS || doc.nodes.len() > MAXIMUM_FIELDS {
@@ -452,7 +452,8 @@ impl Fem3dPageVisualJob {
                 }
                 let divisor = self.point_cursor.max(1) as f64;
                 let kind = if solid.layers == 1 { 1 } else { 2 };
-                self.push_item(1, [Some(&solid.id), Some(if kind == 1 { "tetrahedron" } else { "hexahedron" }), None, None], Fem3dVisualItemPayload { numbers: Self::instance_numbers(solid.axis.to_world(self.solid_sum[0] / divisor, self.solid_sum[1] / divisor, solid.base_z + solid.height * 0.5), [1.0, 1.0, solid.height]), number_len: 14, indexes: [kind, 0, 0, 0, 0, 0, 0, 0], index_len: 1, flags: 1 })?;
+                let identity = semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_entity_target("solid", &solid.id).map_err(|_| b"fem3d.visual-identity".to_vec())?;
+                self.push_item(1, [Some(&identity), Some(if kind == 1 { "tetrahedron" } else { "hexahedron" }), None, None], Fem3dVisualItemPayload { numbers: Self::instance_numbers(solid.axis.to_world(self.solid_sum[0] / divisor, self.solid_sum[1] / divisor, solid.base_z + solid.height * 0.5), [1.0, 1.0, solid.height]), number_len: 14, indexes: [kind, 0, 0, 0, 0, 0, 0, 0], index_len: 1, flags: 1 })?;
                 self.cursor += 1;
                 self.point_cursor = 0;
                 self.solid_sum = [0.0; 2];
@@ -465,7 +466,8 @@ impl Fem3dPageVisualJob {
             Fem3dVisualJobStage::BuildMeshElement => {
                 if self.item_phase == 0 {
                     if let Some(node) = doc.nodes.get(self.cursor) {
-                        self.push_item(2 + self.cursor / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, [Some(&node.id), None, None, None], Fem3dVisualItemPayload { numbers: Self::instance_numbers([node.x, node.y, node.z], [0.05; 3]), number_len: 14, indexes: [0; 8], index_len: 0, flags: 2 })?;
+                        let identity = semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_entity_target("node", &node.id).map_err(|_| b"fem3d.visual-identity".to_vec())?;
+                        self.push_item(2 + self.cursor / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, [Some(&identity), None, None, None], Fem3dVisualItemPayload { numbers: Self::instance_numbers([node.x, node.y, node.z], [0.05; 3]), number_len: 14, indexes: [0; 8], index_len: 0, flags: 2 })?;
                         self.cursor += 1;
                     } else {
                         self.cursor = 0;
@@ -506,7 +508,8 @@ impl Fem3dPageVisualJob {
                 let dy = self.endpoint_b[1] - self.endpoint_a[1];
                 let dz = self.endpoint_b[2] - self.endpoint_a[2];
                 let length = (dx * dx + dy * dy + dz * dz).sqrt();
-                self.push_item(4 + self.cursor / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, [Some(element_id(element)), None, None, None], Fem3dVisualItemPayload { numbers: Self::instance_numbers(midpoint, [0.05, 0.05, length]), number_len: 14, indexes: [0; 8], index_len: 0, flags: 3 })?;
+                let identity = semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_entity_target("element", element_id(element)).map_err(|_| b"fem3d.visual-identity".to_vec())?;
+                self.push_item(4 + self.cursor / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, [Some(&identity), None, None, None], Fem3dVisualItemPayload { numbers: Self::instance_numbers(midpoint, [0.05, 0.05, length]), number_len: 14, indexes: [0; 8], index_len: 0, flags: 3 })?;
                 self.cursor += 1;
                 self.item_phase = 1;
             }
@@ -515,7 +518,8 @@ impl Fem3dPageVisualJob {
                     self.advance(Fem3dVisualJobStage::BuildLoadGlyph);
                     return Ok(false);
                 };
-                self.push_item(6 + self.cursor / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, [Some(element_id(&doc.elements[index])), None, None, None], Fem3dVisualItemPayload { numbers: Self::instance_numbers([0.0; 3], [0.03; 3]), number_len: 14, indexes: [0; 8], index_len: 0, flags: 4 })?;
+                let identity = semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_entity_target("element", element_id(&doc.elements[index])).map_err(|_| b"fem3d.visual-identity".to_vec())?;
+                self.push_item(6 + self.cursor / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, [Some(&identity), None, None, None], Fem3dVisualItemPayload { numbers: Self::instance_numbers([0.0; 3], [0.03; 3]), number_len: 14, indexes: [0; 8], index_len: 0, flags: 4 })?;
                 self.cursor += 1;
             }
             Fem3dVisualJobStage::BuildLoadGlyph => {
@@ -528,7 +532,8 @@ impl Fem3dPageVisualJob {
                     self.load_cursor = 0;
                     return Ok(false);
                 };
-                self.push_item(8, [Some(load_id(load)), None, None, None], Fem3dVisualItemPayload { numbers: Self::instance_numbers([0.0, 0.0, 1.0], [0.03, 0.03, 0.3]), number_len: 14, indexes: [0; 8], index_len: 0, flags: 5 })?;
+                let identity = semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_load_target(&case.id, load_id(load)).map_err(|_| b"fem3d.visual-identity".to_vec())?;
+                self.push_item(8, [Some(&identity), None, None, None], Fem3dVisualItemPayload { numbers: Self::instance_numbers([0.0, 0.0, 1.0], [0.03, 0.03, 0.3]), number_len: 14, indexes: [0; 8], index_len: 0, flags: 5 })?;
                 self.load_cursor += 1;
             }
             Fem3dVisualJobStage::BuildSupportGlyph => {
@@ -536,7 +541,8 @@ impl Fem3dPageVisualJob {
                     self.advance(Fem3dVisualJobStage::BuildDisplacementEntry);
                     return Ok(false);
                 };
-                self.push_item(9, [Some(&support.id), None, None, None], Fem3dVisualItemPayload { numbers: Self::instance_numbers([0.0; 3], [0.1; 3]), number_len: 14, indexes: [0; 8], index_len: 0, flags: 6 })?;
+                let identity = semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_entity_target("support", &support.id).map_err(|_| b"fem3d.visual-identity".to_vec())?;
+                self.push_item(9, [Some(&identity), None, None, None], Fem3dVisualItemPayload { numbers: Self::instance_numbers([0.0; 3], [0.1; 3]), number_len: 14, indexes: [0; 8], index_len: 0, flags: 6 })?;
                 self.cursor += 1;
             }
             Fem3dVisualJobStage::BuildDisplacementEntry | Fem3dVisualJobStage::BuildResidualEntry | Fem3dVisualJobStage::BuildReactionEntry | Fem3dVisualJobStage::BuildContourEntry | Fem3dVisualJobStage::BuildModeEntry => {
@@ -559,7 +565,8 @@ impl Fem3dPageVisualJob {
                     Fem3dVisualJobStage::BuildContourEntry => ([0.0; 3], field.contour, 13),
                     _ => (field.mode_shape, field.eigen_estimate, 14),
                 };
-                self.push_item(Self::field_page(self.stage, self.cursor), [Some(&node.id), None, None, None], Fem3dVisualItemPayload { numbers: Self::field_numbers(field, [node.x, node.y, node.z], vector, scalar), number_len: 14, indexes: [0; 8], index_len: 0, flags: flag })?;
+                let identity = semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_entity_target("node", &node.id).map_err(|_| b"fem3d.visual-identity".to_vec())?;
+                self.push_item(Self::field_page(self.stage, self.cursor), [Some(&identity), None, None, None], Fem3dVisualItemPayload { numbers: Self::field_numbers(field, [node.x, node.y, node.z], vector, scalar), number_len: 14, indexes: [0; 8], index_len: 0, flags: flag })?;
                 self.cursor += 1;
             }
             Fem3dVisualJobStage::BuildLabelEntry => {
@@ -626,7 +633,7 @@ impl Fem3dPageVisualJob {
         Ok(self.stage == Fem3dVisualJobStage::Complete)
     }
 
-    pub fn take_complete(&mut self) -> Option<Fem3dPageVisualLease> {
+    fn take_complete(&mut self) -> Option<Fem3dPageVisualLease> {
         if self.stage == Fem3dVisualJobStage::Complete {
             self.complete.take()
         } else {

@@ -17,7 +17,9 @@
 //! about stiffness and equilibrium rather than about grammar, and keeps the generated host's
 //! dependency graph to the two crates it already links.
 
-use semio_repo_test_host::{Adapter, Json};
+use semio_repo_test_host::Adapter;
+
+use semio_repo_test_host::Json;
 
 //#region 🔖️Kinds
 /// 🏷️ Every kind of this artifact's vocabulary except `create-`/`delete-`/`replace-solid`, whose
@@ -130,11 +132,22 @@ fn significant_relative(value: f64, scale: f64) -> Json {
 //#region 🔖️Decode
 #[cfg(feature = "sut")]
 mod decode {
-    use super::{flag, number, numbers};
+    use super::flag;
+    use super::number;
+    use super::numbers;
     use semio_repo_test_host::Json;
-    use crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::{FemAnalysisSettings, FemDof};
-    use crate::standards::v1::subsets::any::schema::structure::{FemCombination, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemCombination;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemDof;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
+    use semio_s_fem_material::volumetric::FemMaterialValue;
+    use semio_s_fem_node::volumetric::FemNodeValue;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSection;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport;
     use std::collections::BTreeMap;
 
     /// 🔒️ One degree-of-freedom tag, as this artifact spells it on the wire.
@@ -227,9 +240,9 @@ mod decode {
         }
         let analysis = value.get("analysis").cloned().unwrap_or(Json::Null);
         Ok(Fem3dSnapshot {
-            nodes: value.array("nodes").iter().map(|node| FemNode { id: node.str("id"), x: number(node, "x"), y: number(node, "y"), z: number(node, "z") }).collect(),
+            nodes: value.array("nodes").iter().map(|node| FemNodeValue { id: node.str("id"), x: number(node, "x"), y: number(node, "y"), z: number(node, "z") }).collect(),
             elements,
-            materials: value.array("materials").iter().map(|material| FemMaterial { id: material.str("id"), name: material.str("name"), e: number(material, "e"), g: number(material, "g"), nu: number(material, "nu"), rho: number(material, "rho") }).collect(),
+            materials: value.array("materials").iter().map(|material| FemMaterialValue { id: material.str("id"), name: material.str("name"), e: number(material, "e"), g: number(material, "g"), nu: number(material, "nu"), rho: number(material, "rho") }).collect(),
             sections: value.array("sections").iter().map(|section| FemSection { id: section.str("id"), name: section.str("name"), area: number(section, "area"), iy: number(section, "iy"), iz: number(section, "iz"), j: number(section, "j") }).collect(),
             solids: value
                 .array("solids")
@@ -244,7 +257,7 @@ mod decode {
                     layers: number(solid, "layers").max(1.0) as usize,
                     mesh_size: number(solid, "meshSize"),
                     material_id: solid.str("materialId"),
-                    axis: crate::standards::v1::subsets::any::schema::structure::FemAxis::from_key(&solid.str("axis")).expect("solid axis"),
+                    axis: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis::from_key(&solid.str("axis")).expect("solid axis"),
                 })
                 .collect(),
             supports,
@@ -259,10 +272,19 @@ mod decode {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{decode, number, numbers, significant, significant_relative, DOFS, STATIC_TOLERANCE};
-    use semio_repo_test_host::{parse_json, Context, Json, Outcome};
+    use super::decode;
+    use super::number;
+    use super::numbers;
+    use super::significant;
+    use super::significant_relative;
+    use super::DOFS;
+    use super::STATIC_TOLERANCE;
+    use semio_repo_test_host::parse_json;
+    use semio_repo_test_host::Context;
+    use semio_repo_test_host::Json;
+    use semio_repo_test_host::Outcome;
     use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::io::text::mutations::fem3d_mutation_report_json;
-    use crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
     use semio_s_fem_model::Dof;
     use semio_s_fem_model::StaticResult;
     use semio_repo_test_host::law;
@@ -313,7 +335,7 @@ mod subject {
         let mut projected = document.clone();
         projected.solids.clear();
         for case in &mut projected.load_cases {
-            case.loads.retain(|load| !matches!(load, crate::standards::v1::subsets::any::schema::structure::FemLoad::Area { .. }));
+            case.loads.retain(|load| !matches!(load, semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad::Area { .. }));
         }
         let solved = semio_s_artifact_fem_3d_engine::fem3d_engine::fem3d_solve_all(&projected).map_err(|error| error.to_string())?;
         Ok(solved.into_iter().collect())
@@ -508,7 +530,7 @@ mod subject {
             let (material, section, length) = (&document.materials[0], &document.sections[0], document.nodes[1].x);
             let inertia = if axis == "Tz" { section.iy } else { section.iz };
             let load = match &document.load_cases[0].loads[0] {
-                crate::standards::v1::subsets::any::schema::structure::FemLoad::Nodal { value, .. } => *value,
+                semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad::Nodal { value, .. } => *value,
                 other => return Err(format!("the cantilever fixture's load is {other:?}, not a nodal force")),
             };
             let index = DOFS.iter().position(|name| *name == axis).unwrap_or(2);
@@ -530,7 +552,7 @@ mod subject {
             agrees_with_reference(&format!("closed-form-{needle}"), &answers, &reference(ctx)?)?;
             let (material, section, length) = (&document.materials[0], &document.sections[0], document.nodes[1].x);
             let torque = match &document.load_cases[0].loads[0] {
-                crate::standards::v1::subsets::any::schema::structure::FemLoad::Nodal { value, .. } => *value,
+                semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad::Nodal { value, .. } => *value,
                 other => return Err(format!("the torsion fixture's load is {other:?}, not a nodal moment")),
             };
             let answer = answers.get("tip").ok_or_else(|| "the torsion fixture declares a `tip` load case".to_string())?;
@@ -550,7 +572,7 @@ mod subject {
             agrees_with_reference(&format!("closed-form-{needle}"), &answers, &reference(ctx)?)?;
             let (material, section, length) = (&document.materials[0], &document.sections[0], document.nodes[2].x);
             let w = match &document.load_cases[0].loads[0] {
-                crate::standards::v1::subsets::any::schema::structure::FemLoad::MemberUdl { wz, .. } => *wz,
+                semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad::MemberUdl { wz, .. } => *wz,
                 other => return Err(format!("the simply supported fixture's load is {other:?}, not a member UDL")),
             };
             let answer = answers.get("udl").ok_or_else(|| "the simply supported fixture declares a `udl` load case".to_string())?;

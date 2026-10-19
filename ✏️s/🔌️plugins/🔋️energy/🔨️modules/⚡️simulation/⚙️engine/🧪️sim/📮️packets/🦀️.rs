@@ -9,6 +9,8 @@ impl EnergyJobAuthority {
 
     pub fn cursor(&self) -> EnergyJobCursor {
         EnergyJobCursor {
+            input_identity_bytes: self.input_identity.processed_bytes(),
+            input_identity_ready: self.input_identity.digest().is_some(),
             stage: self.stage,
             tier: self.tier,
             warmup_hour: self.warmup_hour,
@@ -127,39 +129,37 @@ impl EnergyJobAuthority {
     }
 
     /// 🌦️ Weather-table index of the first hour of the run period.
-    pub(super) fn run_start_record(&self) -> usize {
-        if self.weather.len() < 8_760 {
-            return 0;
-        }
-        let period = SimulationKernel::run_period(&self.config);
-        (calendar::SimDate::new(period.year, period.start_month, period.start_day).day_of_year() as usize - 1) * 24
+    pub(super) fn weather_calendar(&self)->crate::site::WeatherCalendar{self.config.weather.as_ref().map_or(crate::site::WeatherCalendar::ActualDates,|weather|weather.calendar)}
+
+    /// 🔎️ Exact authored calendar matching over the admitted timestamp sequence.
+    pub(super) fn weather_index(&self,date:crate::calendar::SimDate,hour:u8)->Option<usize>{crate::site::chronology::record_index(self.weather_calendar(),self.weather.len(),|i|self.weather.get_index(i).copied(),date,hour)}
+
+    /// 🌦️ The run starts at its authored first date, independent of weather-file length.
+    pub(super) fn run_start_record(&self)->Option<usize>{let period=SimulationKernel::run_period(&self.config);self.weather_index(calendar::SimDate::new(period.year,period.start_month,period.start_day),0)}
+
+    /// 🌗️ Continuous simulation keeps real neighbour timestamps; warmup explicitly repeats its selected day.
+    pub(super) fn hour_weather(&self,index:usize,repeat_day:bool)->Option<HourWeather>{let[previous,current,next]=crate::site::chronology::neighbours(self.weather.len(),|i|self.weather.get_index(i).copied(),index,if repeat_day{crate::site::chronology::NeighbourPolicy::RepeatDay}else{crate::site::chronology::NeighbourPolicy::Continuous})?;Some(HourWeather{previous,current,next})}
+
+    pub(super) fn weather_record(&self,index:usize)->WeatherRecord{
+        if let Some(weather)=&self.config.weather{return weather.records[index];}
+        let mut record=match self.config.environment{SimulationEnvironment::HeatingDesignDay=>design_day_hour((index%24)as u32,-10.0),SimulationEnvironment::CoolingDesignDay=>design_day_hour((index%24)as u32,35.0),SimulationEnvironment::WeatherRunPeriod|SimulationEnvironment::CustomDesignPeriod=>synthetic_hour(index as u32)};
+        let period=SimulationKernel::run_period(&self.config);let date=crate::site::chronology::date_after_days(calendar::SimDate::new(period.year,period.start_month,period.start_day),(index/24)as u32).expect("validated bounded synthetic calendar");record.year=date.year;record.month=date.month;record.day=date.day;record
     }
 
     /// 🌦️ The hour at `index` with its neighbours the way an hourly weather file is interpolated:
     /// the previous hour (the day's last hour when the run or the warmup day starts), the current
     /// hour, and the next hour of the same day (the day's first hour after its last).
-    pub(super) fn hour_weather(&self, index: usize, first_of_period: bool) -> HourWeather {
-        let len = self.weather.len().max(1);
-        let record = |i: usize| *self.weather.get_index(i % len).expect("admitted weather record");
-        let hour = index % 24;
-        let day_start = index - hour;
-        let previous = if hour == 0 && (first_of_period || index == 0) { record(day_start + 23) } else { record(index + len - 1) };
-        let next = if hour == 23 { record(day_start) } else { record(index + 1) };
-        HourWeather { previous, current: record(index), next }
+    pub fn step_input_identity(&mut self, context: &mut StepContext<'_>) -> Result<bool, EnergyWireRejection> {
+        if self.input_identity.digest().is_some() { return Ok(true); }
+        let progress = match self.input_identity.advance(&self.model, &self.config, context.retained_grant()) {
+            Ok(progress) => progress,
+            Err(error) => { let _ = context.consume_retained(error.retained_progress()); return Err(EnergyWireRejection::Backing); }
+        };
+        context.consume_retained(progress).map_err(|_| EnergyWireRejection::Backing)?;
+        Ok(self.input_identity.digest().is_some())
     }
 
-    pub(super) fn weather_record(&self, index: usize) -> WeatherRecord {
-        if let Some(epw) = &self.config.weather {
-            if let Some(record) = epw.records.get(index) {
-                return *record;
-            }
-        }
-        match self.config.environment {
-            SimulationEnvironment::HeatingDesignDay => site::design_day_hour(index as u32, -10.0),
-            SimulationEnvironment::CoolingDesignDay => site::design_day_hour(index as u32, 35.0),
-            SimulationEnvironment::WeatherRunPeriod | SimulationEnvironment::CustomDesignPeriod => site::synthetic_hour(index as u32),
-        }
-    }
+    
 
     pub fn wire_identity(&self, sequence: u64) -> EnergyWireIdentity {
         EnergyWireIdentity { operation: self.operation.operation.0, base_revision: self.operation.base_revision.0, generation: self.operation.generation.0, seed: self.operation.seed, sequence }
@@ -175,6 +175,7 @@ impl EnergyJobAuthority {
         if self.wire_build.is_some() || self.wire_ready.is_some() || self.commit_reservation.is_some() {
             return Err(EnergyWireRejection::Saturated);
         }
+        if kind == EnergyWireKind::Checkpoint && self.input_identity.digest().is_none() { return Err(EnergyWireRejection::Identity); }
         self.wire_build = Some(EnergyWireBuild { kind, identity: self.wire_identity(sequence), writer: semio_framework_job::RetainedJobPayloadWriter::new(stream), field: 0 });
         Ok(())
     }
@@ -214,6 +215,10 @@ impl EnergyJobAuthority {
                 bytes[32..40].copy_from_slice(&(self.zone_temperature_history.len() as u64).to_le_bytes());
                 bytes[40..48].copy_from_slice(&self.numerical_digest().to_le_bytes());
                 48
+            }
+            4 if kind == EnergyWireKind::Checkpoint => {
+                bytes[..32].copy_from_slice(self.input_identity.digest()?);
+                32
             }
             _ => return None,
         };

@@ -1,3 +1,66 @@
+import type { Fem3dLoadPatch } from "../🔺️diff/🟦️.ts";
+export type { Fem3dLoadPatch } from "../🔺️diff/🟦️.ts";
+/** 🩹️ Changes only supplied fields of a load with the addressed current kind. */
+export interface ChangeLoad { caseId: string; id: string; patch: Fem3dLoadPatch; }
+/** 🏷️ Owns one combination name. */
+export interface ChangeCombinationName { id: string; name: string; }
+/** ⚖️ Owns one keyed factor; null removes the term. */
+export interface ChangeCombinationTerm { id: string; caseId: string; factor: Binary64 | null; }
+
+import type { Fem3dElementPatch } from "../🔺️diff/🟦️.ts";
+export type { Fem3dElementPatch } from "../🔺️diff/🟦️.ts";
+
+/** 🩹️ Changes only supplied element fields. */
+export interface ChangeElement {
+  id: string;
+  patch: Fem3dElementPatch;
+}
+
+import type { Fem3dSupportPatch } from "../🔺️diff/🟦️.ts";
+export type { Fem3dSupportPatch } from "../🔺️diff/🟦️.ts";
+
+/** 🩹️ Changes only supplied support fields. */
+export interface ChangeSupport {
+  id: string;
+  patch: Fem3dSupportPatch;
+}
+
+import type { Fem3dSolidPatch } from "../🔺️diff/🟦️.ts";
+export type { Fem3dSolidPatch } from "../🔺️diff/🟦️.ts";
+
+/** 🩹️ Changes only supplied solid fields. */
+export interface ChangeSolid {
+  id: string;
+  patch: Fem3dSolidPatch;
+}
+
+import type { Fem3dSectionPatch } from "../🔺️diff/🟦️.ts";
+export type { Fem3dSectionPatch } from "../🔺️diff/🟦️.ts";
+
+/** 🩹️ Changes supplied section fields without replacing concurrent fields. */
+export interface ChangeSection {
+  id: string;
+  patch: Fem3dSectionPatch;
+}
+
+import type { Fem3dNodePatch } from "../🔺️diff/🟦️.ts";
+export type { Fem3dNodePatch } from "../🔺️diff/🟦️.ts";
+
+/** 🩹️ Changes supplied node fields without replacing concurrent fields. */
+export interface ChangeNode {
+  id: string;
+  patch: Fem3dNodePatch;
+}
+
+import type { Fem3dMaterialPatch } from "../🔺️diff/🟦️.ts";
+export type { Fem3dMaterialPatch } from "../🔺️diff/🟦️.ts";
+
+/** 🩹️ Changes supplied material fields without replacing concurrent fields. */
+export interface ChangeMaterial {
+  id: string;
+  patch: Fem3dMaterialPatch;
+}
+
 import type { FemNode, FemDof, FemAxis, FemElement, FemMaterial, FemSection, FemSupport, FemLoad, FemLoadCase, FemSolid, FemCombination, FemAnalysisSettings } from "../📸️snapshot/🟦️.ts";
 import type {Binary64} from "@semio-tech/framework/value/ieee754";
 export type {FemNode,FemDof,FemAxis,FemElement,FemMaterial,FemSection,FemSupport,FemLoad,FemLoadCase,FemSolid,FemCombination,FemAnalysisSettings} from "../📸️snapshot/🟦️.ts";
@@ -199,9 +262,11 @@ export type Fem3dMutation =
   | ({ mutation: "createMaterial" } & CreateMaterial)
   | ({ mutation: "deleteMaterial" } & DeleteMaterial)
   | ({ mutation: "replaceMaterial" } & ReplaceMaterial)
+  | ({ mutation: "changeMaterial" } & ChangeMaterial)
   | ({ mutation: "createSection" } & CreateSection)
   | ({ mutation: "deleteSection" } & DeleteSection)
   | ({ mutation: "replaceSection" } & ReplaceSection)
+  | ({ mutation: "changeSection" } & ChangeSection)
   | ({ mutation: "createSupport" } & CreateSupport)
   | ({ mutation: "deleteSupport" } & DeleteSupport)
   | ({ mutation: "replaceSupport" } & ReplaceSupport)
@@ -217,7 +282,14 @@ export type Fem3dMutation =
   | ({ mutation: "deleteCombination" } & DeleteCombination)
   | ({ mutation: "updateAnalysisSettings" } & UpdateAnalysisSettings)
   | ({ mutation: "replaceNode" } & ReplaceNode)
+  | ({ mutation: "changeNode" } & ChangeNode)
   | ({ mutation: "replaceLoad" } & ReplaceLoad)
   | ({ mutation: "changeLoadCaseName" } & ChangeLoadCaseName)
   | ({ mutation: "replaceCombination" } & ReplaceCombination)
-  | ({ mutation: "moveSelection" } & MoveSelection);
+  | ({ mutation: "moveSelection" } & MoveSelection)
+  | ({ mutation: "changeSolid" } & ChangeSolid)
+  | ({ mutation: "changeSupport" } & ChangeSupport)
+  | ({ mutation: "changeElement" } & ChangeElement)
+  | ({ mutation: "changeLoad" } & ChangeLoad)
+  | ({ mutation: "changeCombinationName" } & ChangeCombinationName)
+  | ({ mutation: "changeCombinationTerm" } & ChangeCombinationTerm);

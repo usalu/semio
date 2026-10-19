@@ -1,5 +1,5 @@
-//! 🪣️ Edit-mode tool — Fill: a whole-document generator declared as a framework tool run
 //! (`📋️tool-run-contract.md` §2.4, §3.7), not a window utility. The manifest carries its
+//! 🪣️ Edit-mode tool — Fill: a whole-document generator declared as a framework tool run
 //! [`ToolRunDefinition`]; the framework injects start/pause/resume/step/abort/finalize/dismiss, owns the
 //! provisional placements in its ledger and publishes them as ONE edit on finalize. The run job itself is the
 //! puzzle 3d planner behind the 5d translation of `🧠️precompute/🪣️fill`, so both projections see every
@@ -10,8 +10,12 @@
 //! plans toward and the part/grip distribution trees its candidate order reads. Progress, status and every run
 //! control belong to the framework ToolRun panel.
 use crate::editor::puzzle5d::modes::edit::options::brush::distribution_children;
+use crate::editor::puzzle5d::terminology::puzzle5d_fill_run_reasons;
+use crate::editor::puzzle5d::terminology::puzzle5d_fill_run_stages;
+use crate::editor::puzzle5d::terminology::puzzle5d_fill_run_unit;
+use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 
-use crate::editor::puzzle5d::terminology::{puzzle5d_fill_run_counters, puzzle5d_fill_run_reasons, puzzle5d_fill_run_stages, puzzle5d_fill_run_unit, Puzzle5dLabels};
+use crate::editor::puzzle5d::terminology::puzzle5d_fill_run_counters;
 use crate::editor::puzzle5d::entities::{puzzle5d_action, PUZZLE5D_PLAY_CONTROLLER_ID};
 use crate::editor::puzzle5d::view::Puzzle5dScene;
 use semio_framework_plugin::ActionDescriptor;
@@ -19,7 +23,15 @@ use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ToolDefinition;
 use semio_framework_plugin::ToolRunView;
 use semio_framework_plugin::WindowMeasure;
-use semio_framework_tool_run::{JobKindId, ToolRunDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunTraceKind, TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_ARG_GENERATION, TOOL_RUN_ARG_RUN_ID};
+use semio_framework_tool_run::JobKindId;
+use semio_framework_tool_run::ToolRunDefinition;
+use semio_framework_tool_run::ToolRunRebasePolicy;
+use semio_framework_tool_run::ToolRunReconfigurePolicy;
+use semio_framework_tool_run::ToolRunSettingsReads;
+use semio_framework_tool_run::ToolRunTraceKind;
+use semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID;
+use semio_framework_tool_run::TOOL_RUN_ARG_GENERATION;
+use semio_framework_tool_run::TOOL_RUN_ARG_RUN_ID;
 
 //#region 🔖️Constants
 pub const TOOL_ID: &str = crate::editor::puzzle5d::entities::PUZZLE5D_FILL_TOOL_ID;

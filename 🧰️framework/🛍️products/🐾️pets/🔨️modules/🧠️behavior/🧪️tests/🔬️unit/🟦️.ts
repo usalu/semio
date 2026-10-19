@@ -8,10 +8,11 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import find from "lodash/find";
 import { ACTIVITIES, PET_MODES, TICKS_PER_SECOND, type Activity, type Actor, type Bond, type Cast, type Menagerie, type Needs, type PetMode, type Rapport, type Species, type Temperament } from "../../../../🧬️schema/🟦️.ts";
 import { sampled } from "../../../../🧪️tests/🎚️config/🟦️.ts";
 import { CAST_STREAM, randomPick, randomUnit, randomWords, weightedIndex } from "../../../🎲️randomness/🟦️.ts";
-import { AFFINITY_FLOOR, ENCOUNTERS, MODE_LIMITS, RAPPORT_SPAN, type Situation, activityWeights, affinityOf, castOf, dwellOf, encounterOf, encounterShares, followersOf, needsAfter, needsOf, rapportAfter, rapportFaded } from "../../🟦️.ts";
+import { AFFINITY_FLOOR, ENCOUNTERS, MODE_LIMITS, RAPPORT_SPAN, type Situation, activityWeights, affinityOf, castOf, petCast, dwellOf, encounterOf, encounterShares, followersOf, needsAfter, needsOf, rapportAfter, rapportFaded } from "../../🟦️.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const TOLERANCE = 1e-9;
@@ -53,6 +54,16 @@ type BondVectors = {
 
 const CHOICE = fixture<ChoiceVectors>("🧠️behavior-choice");
 const BONDS = fixture<BondVectors>("🤝️bond-dynamics");
+
+describe("context casts", () => {
+  const vectors = fixture<{ casts: Cast[]; cases: { scene: string; expected: string[] | null }[] }>("🎬️context-casts");
+  const menagerie = { ...fixture<{ menagerie: Menagerie }>("🧬️schema-conformance").menagerie, casts: vectors.casts };
+  for (const vector of vectors.cases) it(vector.scene, () => {
+    const actual = petCast(menagerie, vector.scene);
+    expect(actual).toEqual(find(vectors.casts, { scene: vector.scene }) ?? null);
+    expect(actual === null ? null : [...actual.core, ...actual.rotation]).toEqual(vector.expected);
+  });
+});
 const RESTED: Needs = { energy: 0.9, sociability: 0.5, curiosity: 0.6 };
 const OPEN: Situation = { mode: "calm", quiet: false, movers: 0, fidgeters: 0, roam: true, hops: true, crowd: 0, watched: false, whims: false };
 

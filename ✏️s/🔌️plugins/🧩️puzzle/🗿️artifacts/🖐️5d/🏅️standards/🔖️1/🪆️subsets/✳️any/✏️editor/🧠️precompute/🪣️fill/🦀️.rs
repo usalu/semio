@@ -1,13 +1,23 @@
-//! 🪣️ Puzzle 5d fill tool run jobs: the puzzle 3d fill planner's run and revalidate jobs over the 5d document,
 //! behind the planner bridge's translation (`🧠️precompute`). The run's provisional 5d placements go to the planner
+//! 🪣️ Puzzle 5d fill tool run jobs: the puzzle 3d fill planner's run and revalidate jobs over the 5d document,
 //! as its own `create_object`/`connect_vortices` pairs.
 
 use crate::editor::puzzle5d::modes::edit::tools::fill::TOOL_ID;
-use crate::editor::puzzle5d::precompute::{editor_part, puzzle3d_config, puzzle3d_object, puzzle3d_snapshot, puzzle3d_target_volume, puzzle5d_authored_kind_catalogs, Puzzle5dPlannerBoard, Puzzle5dPlannerToolRunJob};
+use crate::editor::puzzle5d::precompute::puzzle3d_config;
+use crate::editor::puzzle5d::precompute::puzzle3d_object;
+use crate::editor::puzzle5d::precompute::puzzle3d_snapshot;
+use crate::editor::puzzle5d::precompute::puzzle3d_target_volume;
+use crate::editor::puzzle5d::precompute::puzzle5d_authored_kind_catalogs;
+use crate::editor::puzzle5d::precompute::Puzzle5dPlannerBoard;
+use crate::editor::puzzle5d::precompute::Puzzle5dPlannerToolRunJob;
+use crate::editor::puzzle5d::precompute::editor_part;
 use crate::editor::puzzle5d::interaction::Puzzle5dEditor;
 use crate::editor::puzzle5d::entities::Puzzle5dDocument;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
-use semio_framework_plugin::{EditorApp, Fault, ToolRunJob, ToolRunJobRequest};
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::ToolRunJob;
+use semio_framework_plugin::ToolRunJobRequest;
 use semio_s_artifact_puzzle_3d_editor_modes::tools::fill as fill3d;
 use {semio_s_artifact_puzzle_3d_mutations_volume::change_target_volume_hidden::mutation::change_target_volume_hidden, semio_s_artifact_puzzle_3d_mutations_volume::change_target_volume_locked::mutation::change_target_volume_locked, semio_s_artifact_puzzle_3d_mutations_vortex::connect_vortices::mutation::connect_vortices, semio_s_artifact_puzzle_3d_mutations_object::create_object::mutation::create_object, semio_s_artifact_puzzle_3d_mutations_volume::create_target_volume::mutation::create_target_volume, semio_s_artifact_puzzle_3d_mutations_volume::delete_target_volume::mutation::delete_target_volume, semio_s_artifact_puzzle_3d_mutations_volume::move_target_volume::mutation::move_target_volume, semio_s_artifact_puzzle_3d_mutations_volume::rotate_target_volume::mutation::rotate_target_volume, semio_s_artifact_puzzle_3d_mutations_volume::scale_target_volume::mutation::scale_target_volume, semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation};
 

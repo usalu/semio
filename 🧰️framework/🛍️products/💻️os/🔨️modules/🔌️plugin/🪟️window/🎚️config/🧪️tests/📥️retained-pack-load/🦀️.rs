@@ -46,10 +46,11 @@ fn window_config_paged_registry_opened_actor_owns_new_and_hydrated_partitions_be
         let fixture=retained_load_fixture();let law=fixture["actorAuthority"].clone();let history_actor=law["historyActor"].as_str().unwrap().to_string();let opened_actor=law["openedActor"].as_str().unwrap().to_string();let camera=saved_camera(&fixture);
         assert_ne!(history_actor,opened_actor);assert_eq!(law["binding"],"before-construction");assert_eq!(law["ambientDefault"],"refuse");
         block_on_retained_window_load(Box::pin(async move{
+            let law=&fixture["actorAuthority"];
             let mut identity_progress = |_| true;
             let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(fixture["identityMaximumCapacityBytes"].as_u64().unwrap() as usize, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original window fixture identity authority");
             let mut source=WindowConfigOwnerRegistry::new(protocol::ActorId(history_actor.clone().into()));source.register::<RetainedLoadOwnerA>().unwrap();let source_owner=source.owners.get_mut(RetainedLoadOwnerA::WINDOW_KIND_ID).unwrap();drop(source_owner.capture("actor-window").await.unwrap());source_owner.dispatch(&history_actor,WindowConfigMutation::of::<RetainedLoadOwnerA>("actor-window",RetainedLoadCameraConfigMutation::Snapshot{config:Box::new(camera.clone())}),&mut identity).await.unwrap();let pack=source.packs().await.unwrap().pop().unwrap();let history=pack.files.spr.clone();let stored_pack=pack.files.pack.clone();assert!(!history.is_empty());close_retained_load_registry(&mut source);
-            let mut reopened=WindowConfigOwnerRegistry::new(protocol::ActorId(opened_actor.clone().into()));reopened.register::<RetainedLoadOwnerA>().unwrap();let refused=reopened.owners.get_mut(RetainedLoadOwnerA::WINDOW_KIND_ID).unwrap().dispatch(&history_actor,WindowConfigMutation::of::<RetainedLoadOwnerA>("foreign-actor-window",RetainedLoadCameraConfigMutation::Snapshot{config:Box::new(camera.clone())}),&mut identity).await.unwrap_err();assert_eq!(refused.code.0,"window-config.actor");assert!(reopened.snapshot(RetainedLoadOwnerA::WINDOW_KIND_ID,"foreign-actor-window").is_none());let mut load=reopened.begin_retained_load(pack).unwrap();let mut ready=false;for _ in 0..65536{let grant=load.next_grant();match reopened.advance_retained_load(&mut load,grant){WindowConfigPackLoadStep::Ready=>{ready=true;break},WindowConfigPackLoadStep::Pending(_)=>{},other=>panic!("opened actor hydration {other:?}")}}assert!(ready);let candidate_actor=load.candidate_actor_for_test::<RetainedLoadOwnerA>().unwrap();let committed=reopened.commit_retained_load(&mut load);assert!(matches!(committed,WindowConfigPackLoadStep::Pending(_)|WindowConfigPackLoadStep::Complete));for _ in 0..65536{let grant=load.next_grant();if matches!(reopened.close_retained_load_step(&mut load,grant).unwrap(),PluginLifecycleStep::Complete(_))&&load.terminal_is_empty(){break}}assert!(load.terminal_is_empty());assert_eq!(reopened.snapshot(RetainedLoadOwnerA::WINDOW_KIND_ID,"actor-window").unwrap().get::<RetainedLoadOwnerA>(),Some(&camera));let restored=reopened.packs().await.unwrap().pop().unwrap();assert_eq!(restored.files.spr,history);assert_eq!(restored.files.pack,stored_pack);close_retained_load_registry(&mut reopened);
+            let mut reopened=WindowConfigOwnerRegistry::new(protocol::ActorId(opened_actor.clone().into()));reopened.register::<RetainedLoadOwnerA>().unwrap();let refused=reopened.owners.get_mut(RetainedLoadOwnerA::WINDOW_KIND_ID).unwrap().dispatch(&history_actor,WindowConfigMutation::of::<RetainedLoadOwnerA>("foreign-actor-window",RetainedLoadCameraConfigMutation::Snapshot{config:Box::new(camera.clone())}),&mut identity).await.unwrap_err();assert_eq!(refused.code.0,"window-config.actor");assert!(reopened.snapshot(RetainedLoadOwnerA::WINDOW_KIND_ID,"foreign-actor-window").is_none());let mut load=reopened.begin_retained_load(pack).unwrap();let mut ready=false;for _ in 0..65536{let grant=load.next_grant();match reopened.advance_retained_load(&mut load,grant){WindowConfigPackLoadStep::Ready=>{ready=true;break},WindowConfigPackLoadStep::Pending(_)|WindowConfigPackLoadStep::OwnershipProgress(_,_)=>{},other=>panic!("opened actor hydration {other:?}")}}assert!(ready);let candidate_actor=load.candidate_actor_for_test::<RetainedLoadOwnerA>().unwrap();let committed=reopened.commit_retained_load(&mut load);assert!(matches!(committed,WindowConfigPackLoadStep::Pending(_)|WindowConfigPackLoadStep::Complete));for _ in 0..65536{let grant=load.next_grant();if matches!(reopened.close_retained_load_step(&mut load,grant).unwrap(),PluginLifecycleStep::Complete(_))&&load.terminal_is_empty(){break}}assert!(load.terminal_is_empty());assert_eq!(reopened.snapshot(RetainedLoadOwnerA::WINDOW_KIND_ID,"actor-window").unwrap().get::<RetainedLoadOwnerA>(),Some(&camera));let restored=reopened.packs().await.unwrap().pop().unwrap();assert_eq!(restored.files.spr,history);assert_eq!(restored.files.pack,stored_pack);close_retained_load_registry(&mut reopened);
             let mut partition=TypedWindowConfigStoreOwner::<RetainedLoadOwnerA>{direct_ingress:ControlledRetirement::new(DirectIngress{mutations:Vec::new(),allocations:Vec::new(),addresses:Vec::new()}).map_err(|(error,_)|error).unwrap(),partitions:WindowRegistry::new(),partition_close_cursor:0,partition_address_retirement:None,actor:Some(protocol::ActorId(opened_actor.clone().into())),actor_retirement:None};let new_actor=partition.partition("fresh-actor-window").await.unwrap().store.local_actor_id().clone();for _ in 0..65536{if matches!(partition.close_step(retained_registry_grant()).unwrap(),PluginLifecycleStep::Complete(_))&&partition.terminal_is_empty(){break}}assert!(partition.terminal_is_empty());
             let mut empty=WindowConfigOwnerRegistry::new(protocol::ActorId(opened_actor.clone().into()));assert!(!empty.terminal_is_empty());let mut closed=false;let actor_grant=RetainedCloneGrant{maximum_items:law["retirementItems"].as_u64().unwrap()as usize,maximum_copy_bytes:law["retirementCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:law["retirementCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:law["retirementReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:law["retirementDepth"].as_u64().unwrap()as usize};for _ in 0..65536{let step=empty.close_step(actor_grant).unwrap();if let Some(progress)=step.progress(){assert!(progress.fits(actor_grant));}if matches!(step,PluginLifecycleStep::Complete(_))&&empty.terminal_is_empty(){closed=true;break}}assert!(closed);assert_eq!(candidate_actor.0.as_str(),opened_actor.as_str());assert_eq!(new_actor.0.as_str(),opened_actor.as_str());
         }));
@@ -129,21 +130,33 @@ pub(super) struct RetainedLoadCameraConfigDiff {
 }
 
 impl protocol::MutationDiff<RetainedLoadCameraConfig> for RetainedLoadCameraConfigDiff {
-    fn apply(&self, base: &RetainedLoadCameraConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<RetainedLoadCameraConfig> {
-        Ok(RetainedLoadCameraConfig { viewport: self.viewport.unwrap_or(base.viewport), eye: self.eye.unwrap_or(base.eye) })
-    }
+
+
+}
+
+impl protocol::ColdMutationDiff<RetainedLoadCameraConfig> for RetainedLoadCameraConfigDiff {
     fn absorb(&mut self, other: Self) {
         self.viewport = other.viewport.or(self.viewport);
         self.eye = other.eye.or(self.eye);
     }
+
+    fn apply(&self, base: &mut RetainedLoadCameraConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+                if let Some(value) = self.viewport { base.viewport = value; }
+        if let Some(value) = self.eye { base.eye = value; }
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<RetainedLoadCameraConfig> for RetainedLoadCameraConfigDiff {
-    fn inverse(&self, base: &RetainedLoadCameraConfig) -> Self {
-        Self { viewport: self.viewport.map(|_| base.viewport), eye: self.eye.map(|_| base.eye) }
-    }
+
     fn is_empty(&self) -> bool {
         self.viewport.is_none() && self.eye.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<RetainedLoadCameraConfig> for RetainedLoadCameraConfigDiff {
+    fn inverse(&self, base: &RetainedLoadCameraConfig) -> Self {
+        Self { viewport: self.viewport.map(|_| base.viewport), eye: self.eye.map(|_| base.eye) }
     }
 }
 
@@ -205,7 +218,13 @@ impl protocol::Mutation<RetainedLoadCameraConfig> for RetainedLoadCameraConfigMu
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         &Self::DESCRIPTORS[0]
     }
-    fn diff(&self, base: &RetainedLoadCameraConfig) -> protocol::MutationOutcome<Self::Diff> {
+
+
+}
+
+impl protocol::ColdMutation<RetainedLoadCameraConfig> for RetainedLoadCameraConfigMutation {
+    type ReferenceDiff = RetainedLoadCameraConfigDiff;
+    fn diff(&self, base: &RetainedLoadCameraConfig) -> protocol::MutationOutcome<Self::ReferenceDiff> {
         match self {
             Self::Snapshot { config } => protocol::MutationOutcome::new(RetainedLoadCameraConfigDiff { viewport: (config.viewport != base.viewport).then_some(config.viewport), eye: (config.eye != base.eye).then_some(config.eye) }),
         }
@@ -235,8 +254,9 @@ macro_rules! retained_load_owner {
             const MAXIMUM_PREPARATION_DEPTH:usize=64;
             fn build_retained_edit()->Arc<Self::Edit>{Arc::new(CameraRetainedEdit)}
 
-            fn build_store_owners() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
-                bounded_window_config_store_owners::<Self>()
+            fn preparation_source_birth()->semio_framework_value::retained_clone::RetainedCloneBirthDemand{crate::window_config::bounded_window_config_preparation_source_birth::<Self>()}
+    fn build_store_owners(grant:semio_framework_value::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>,semio_framework_value::RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State,Self::Mutation>> {
+                bounded_window_config_store_owners::<Self>(grant)
             }
 
             fn build_one_item_preparation_factory() -> Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {

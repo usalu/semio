@@ -11,9 +11,9 @@ pub struct SurfaceSnapshot {
 
 
 impl store::os_store::serialization::ArtifactSqliteSnapshotHost for SurfaceSnapshot {
-    
-    
-    
+
+
+
 }
 impl pack::snapshot::ArtifactSqliteSnapshot for SurfaceSnapshot {
 const SQLITE_SCHEMA: &'static str = include_str!("../🗄️.sql");
@@ -58,7 +58,7 @@ impl pack::snapshot::ArtifactDsl for SurfaceSnapshot {
 
 impl pack::snapshot::ArtifactPack for SurfaceSnapshot {
     /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    
+
 
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         serde_json::to_vec(self).map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())))
@@ -82,22 +82,33 @@ pub struct SurfaceDiff {
 }
 
 impl protocol::DiffAlgebra<SurfaceSnapshot> for SurfaceDiff {
-    fn inverse(&self, base: &SurfaceSnapshot) -> Self {
-        Self { count: self.count.map(|_| base.count) }
-    }
+
     fn is_empty(&self) -> bool {
         self.count.is_none()
     }
 }
 
-impl MutationDiff<SurfaceSnapshot> for SurfaceDiff {
-    fn apply(&self, snapshot: &SurfaceSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SurfaceSnapshot> {
-        Ok(SurfaceSnapshot { count: self.count.unwrap_or(snapshot.count) })
+impl protocol::ColdDiffAlgebra<SurfaceSnapshot> for SurfaceDiff {
+    fn inverse(&self, base: &SurfaceSnapshot) -> Self {
+        Self { count: self.count.map(|_| base.count) }
     }
+}
+
+impl MutationDiff<SurfaceSnapshot> for SurfaceDiff {
+
+
+}
+
+impl ColdMutationDiff<SurfaceSnapshot> for SurfaceDiff {
     fn absorb(&mut self, other: Self) {
         if other.count.is_some() {
             self.count = other.count;
         }
+    }
+
+    fn apply(&self, snapshot: &mut SurfaceSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+                if let Some(value) = self.count { snapshot.count = value; }
+        Ok(())
     }
 }
 

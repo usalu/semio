@@ -116,7 +116,8 @@ fn parse_record_fields(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> 
         record.fields.insert(field.id, value);
     }
     for field in keyed {
-        if !record.fields.contains_key(&field.id){record.fields.insert(field.id,FieldValue::Absent);}
+                if !field.optional { return Err(TextError::new(ValueRefusalKind::InvalidValue,format!("missing required field '{}'",field.key),cursor.span())); }
+if !record.fields.contains_key(&field.id){record.fields.insert(field.id,FieldValue::Absent);}
     }
 
     if let Some(field) = statements_field {
@@ -207,10 +208,12 @@ fn parse_table_soa(cursor: &mut Cursor, spec_fn: RecordSpecProducer, depth: usiz
     cursor.expect(TokenKind::LBrace)?;
     let mut rows = Vec::new();
     while cursor.peek().kind != TokenKind::RBrace {
-        let mut record = RecordValue::default();
+                if columns.is_empty(){return Err(TextError::new(ValueRefusalKind::InvalidValue,"table requires columns",cursor.span()));}
+let mut record = RecordValue::default();
         for field_spec in &columns {
             if cursor.peek().kind == TokenKind::Placeholder {
-                cursor.advance();
+                                if !field_spec.optional{return Err(TextError::new(ValueRefusalKind::InvalidValue,format!("missing required table field '{}'",field_spec.key),cursor.span()));}
+cursor.advance();
                 record.fields.insert(field_spec.id, FieldValue::Absent);
                 continue;
             }
@@ -218,7 +221,10 @@ fn parse_table_soa(cursor: &mut Cursor, spec_fn: RecordSpecProducer, depth: usiz
             record.fields.insert(field_spec.id, value);
         }
         for field_spec in &element_spec.fields {
-            if !record.fields.contains_key(&field_spec.id){record.fields.insert(field_spec.id,FieldValue::Absent);}
+            if !record.fields.contains_key(&field_spec.id){
+                if !field_spec.optional{return Err(TextError::new(ValueRefusalKind::InvalidValue,format!("missing required table column '{}'",field_spec.key),cursor.span()));}
+                record.fields.insert(field_spec.id,FieldValue::Absent);
+            }
         }
         rows.push(FieldValue::Record(record));
         cursor.limits.check_nodes(rows.len(), cursor.span())?;

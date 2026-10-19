@@ -1,0 +1,59 @@
+{
+  "cases": [
+    {
+      "entries": [],
+      "expected": "{}"
+    },
+    {
+      "entries": [
+        {
+          "key": "z",
+          "value": 1
+        },
+        {
+          "key": "a\u0000",
+          "value": 2
+        },
+        {
+          "key": "Ä",
+          "value": 3
+        },
+        {
+          "key": "a",
+          "value": 4
+        }
+      ],
+      "expected": "{\"a\":4,\"a\\u0000\":2,\"z\":1,\"Ä\":3}"
+    },
+    {
+      "entries": [
+        {
+          "key": "b",
+          "value": 1
+        },
+        {
+          "key": "a",
+          "value": 2
+        },
+        {
+          "key": "b",
+          "value": 7
+        }
+      ],
+      "expected": "{\"a\":2,\"b\":7}"
+    },
+    {
+      "entries": [
+        {
+          "key": "🧩",
+          "value": 1
+        },
+        {
+          "key": "",
+          "value": 2
+        }
+      ],
+      "expected": "{\"\":2,\"🧩\":1}"
+    }
+  ]
+}

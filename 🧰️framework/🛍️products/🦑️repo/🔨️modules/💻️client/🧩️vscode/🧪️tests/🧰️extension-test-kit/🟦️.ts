@@ -14,53 +14,28 @@ declare function suiteSetup(body: OwnedExtensionHostTestBody): void;
 // #endregion 🧪️OwnedExtensionHostTestContract
 // #region 🎞️Constants
 export const EXPECTED_COMMANDS = [
-  "compose.analyze",
-  "compose.analyzeFile",
-  "compose.autofix",
-  "compose.autofixFile",
-  "compose.policyList",
-  "compose.ticketOpen",
-  "compose.ticketList",
-  "compose.ticketClose",
-  "compose.ticketRead",
-  "compose.ticketOpen",
-  "compose.technologyList",
-  "compose.contributorAdd",
-  "compose.contributorList",
-  "compose.contributorRemove",
-  "compose.sectionTree",
-  "compose.definitionList",
-  "compose.folderTree",
-  "compose.folderCreate",
-  "compose.folderMove",
-  "compose.folderDelete",
-  "compose.folderList",
-  "compose.fileCreate",
-  "compose.fileMove",
-  "compose.fileDelete",
-  "compose.fileList",
-  "compose.fileTree",
-  "compose.sectionCreate",
-  "compose.sectionMove",
-  "compose.sectionDelete",
-  "compose.sectionIntegrate",
-  "compose.sectionList",
-  "compose.definitionTree",
-  "compose.technologyTree",
-  "compose.policyCheck",
-  "compose.refreshDiagnostics",
-  "compose.autofixBreach",
   "compose.copyId",
   "compose.mailto",
   "compose.openLink",
   "compose.refreshMonorepo",
   "compose.refreshCodebase",
-  "compose.copyCheckpointSha",
-  "compose.openCheckpointInGitHub",
-  "compose.ticketReopen",
   "compose.refreshItem",
+  "compose.filter.search",
+  "compose.filter.toggle",
+  "compose.filter.toggleYear",
+  "compose.filter.toggleMonth",
+  "compose.filter.toggleDay",
+  "compose.navigateToBundle",
+  "compose.navigateToFolder",
+  "compose.navigateToFile",
+  "compose.navigateToSection",
+  "compose.navigateToDefinition",
   "compose.navigate",
   "compose.navigateTo",
+  "compose.ticketOpen",
+  "compose.copyCheckpointSha",
+  "compose.openCheckpointInGitHub",
+  "compose.open"
 ];
 export const EXPECTED_CONSTRAINTS = [
   "guid-unique",
@@ -242,17 +217,7 @@ export async function collectNativeDefinitionScopes(document: vscode.TextDocumen
   return scopes;
 }
 
-export async function getAnalyzeLensIds(document: vscode.TextDocument): Promise<string[]> {
-  const lenses = await getCodeLenses(document);
-  const ids = lenses
-    .filter((lens) => lens.command?.command === "compose.analyze")
-    .map((lens) => String(lens.command?.arguments?.[0] ?? ""))
-    .filter((id) => id.length > 0);
-
-  return ids;
-}
-
-export async function getCodeLenses(document: vscode.TextDocument): Promise<vscode.CodeLens[]> {
+export export async function getCodeLenses(document: vscode.TextDocument): Promise<vscode.CodeLens[]> {
   await vscode.window.showTextDocument(document, { preview: true, preserveFocus: false });
   await new Promise((resolve) => setTimeout(resolve, 250));
   return (await vscode.commands.executeCommand<vscode.CodeLens[]>("vscode.executeCodeLensProvider", document.uri)) ?? [];

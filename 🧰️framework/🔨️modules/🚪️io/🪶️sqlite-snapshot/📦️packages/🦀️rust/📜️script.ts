@@ -85,6 +85,7 @@ class OriginalPhysicalScript extends BundleScript{
  }
 }
 
+
 const router = new ScriptRouter(import.meta.dir).register("test-original-fixed-limits",OriginalFixedLimitsScript).register("test-original-physical",OriginalPhysicalScript).register("test-ownership",OwnershipScript).register("test-operation",OperationScript).register("test-refusal", RefusalScript).register("test-native", NativeScript).register("test-receiving-schema",ReceivingSchemaScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test-refusal" }) }));
 

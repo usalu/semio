@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "modules": ["⛰️challenge", "🃏️sheet", "🧾️lifecycle", "👁️views", "🏅️badges", "✅️validation", "📏️scoring"],
+  "schemaCrate": "course_schema",
+  "supportCrate": "semio_framework_course_tests_support",
+  "factory": "course",
+  "forbidden": ["quiz_schema", "semio_framework_quiz_tests_support", "Catalog", "CatalogView", "catalog"],
+  "literalCases": [
+    { "id": "all-fields", "fields": ["id", "origin"], "missing": [], "extra": [] },
+    { "id": "optional-still-required-by-rust-literal", "fields": ["id"], "missing": ["origin"], "extra": [] },
+    { "id": "absent-required", "fields": ["origin"], "missing": ["id"], "extra": [] },
+    { "id": "unknown-field", "fields": ["id", "origin", "obsolete"], "missing": [], "extra": ["obsolete"] }
+  ]
+}

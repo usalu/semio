@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:value:heap-sort-snapshot",
+  "type": "array",
+  "minItems": 8,
+  "maxItems": 8,
+  "items": [
+    {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    {
+      "type": "integer",
+      "enum": [
+        0,
+        1
+      ]
+    },
+    {
+      "type": "integer",
+      "enum": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "type": "integer",
+      "const": 1
+    }
+  ],
+  "additionalItems": false
+}

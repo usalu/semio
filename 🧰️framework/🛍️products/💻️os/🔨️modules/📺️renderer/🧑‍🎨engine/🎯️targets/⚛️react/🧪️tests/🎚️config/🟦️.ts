@@ -299,6 +299,6 @@ export default defineConfig({
     // and quick deliberately select the bounded resident-composition file; long restores the default
     // package corpus plus moderate in-source suites; exhaustive adds the expensive incremental ownership
     // matrices. A file must never appear in both `include` and `includeSource`, which would double-count it.
-    includeSource: includeAgentBridge ? [] : includeBackboneWorker ? [backboneWorkerSuite] : testLevel === "exhaustive" ? [...exhaustiveInSourceSuites] : testLevel === "long" ? [...longInSourceSuites] : [],
+    includeSource: (includeAgentBridge ? [] : includeBackboneWorker ? [backboneWorkerSuite] : testLevel === "exhaustive" ? [...exhaustiveInSourceSuites] : testLevel === "long" ? [...longInSourceSuites] : []).map(path => path.replaceAll("\\", "/")),
   },
 });

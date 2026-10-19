@@ -1,5 +1,5 @@
-//! ↩️ Inverse for `RemovePartGrip` — reconstructs an `add-part-grip` of the captured BASE grip,
 //! then re-`connect-grips`es every fastener BASE shows touching it (severed cascade). Missing
+//! ↩️ Inverse for `RemovePartGrip` — reconstructs an `add-part-grip` of the captured BASE grip,
 //! target ⇒ `Vec::new()`.
 use crate::Puzzle5dSnapshot;
 

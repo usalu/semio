@@ -1,8 +1,17 @@
 use super::*;
-use semio_s_fem_elements2d::{Bar2, BeamEb2};
-use semio_s_fem_model::*;
-use semio_s_fem_static::{solve_linear_static, Elements, Model};
-use semio_s_fem_test_support::{close_job, pages_bytes, seen_of, Seen, TEST_GRANT};
+use semio_s_fem_elements2d::Bar2;
+use semio_s_fem_elements2d::BeamEb2;
+use crate::engine_test_vectors::close_job;
+use crate::engine_test_vectors::pages_bytes;
+use crate::engine_test_vectors::seen_of;
+use crate::engine_test_vectors::Seen;
+use crate::engine_test_vectors::TEST_GRANT;
+use semio_s_fem_static::solve_linear_static;
+use semio_s_fem_model::AxialSpring;
+use semio_s_fem_static::Model;
+use semio_s_fem_model::PlaneStress;
+use semio_s_fem_model::ShellState;
+use semio_s_fem_model::SolidStress;
 
 fn cantilever_analysis_model(e: f64, area: f64, iy: f64, l: f64, density: f64) -> (AnalysisModel, Vec<LoadCase>) {
     let model = AnalysisModel {
@@ -14,6 +23,947 @@ fn cantilever_analysis_model(e: f64, area: f64, iy: f64, l: f64, density: f64) -
     (model, cases)
 }
 
+fn axial_chain(element_count: usize) -> AnalysisModel {
+    AnalysisModel {
+        nodes: (0..=element_count).map(|index| Node { id: format!("n{index}"), pos: [index as f64, 0.0, 0.0] }).collect(),
+        elements: (0..element_count).map(|index| AxialSpring { id: format!("e{index}"), a: format!("n{index}"), b: format!("n{}", index + 1), k: 10.0 + index as f64 }.into()).collect(),
+        supports: vec![Support { node_id: "n0".to_string(), fixed: vec![Dof::Tx] }],
+    }
+}
+
+fn assembly_operation(id: u64) -> Operation {
+    Operation::new(semio_framework_job::OperationId(id), semio_framework_job::RevisionId(7), semio_framework_job::Generation(3), 11)
+}
+
+/// ⛽️ Assembly control, publication, and work transitions share the same exact grant admission.
+#[test]
+fn assembly_triplet_pages_control_transitions_preserve_state_until_granted() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⛽️step-grant/🔣️.json")).expect("assembly step grants");
+    for (index, case) in fixture["cases"].as_array().unwrap().iter().enumerate() {
+        let operation = assembly_operation(940 + index as u64);
+        let model = Arc::new(cantilever_analysis_model(210e9, 0.02, 8e-6, 3.0, 7_850.0).0);
+        let mut construction = AssemblyJobConstruction::new_owned(model, operation, 1);
+        while !construction.step_one().expect("step grant construction") {}
+        let mut job = construction.take_complete().expect("step grant job");
+        job.state.checkpoint_due = case["before"]["checkpointDue"].as_bool().unwrap();
+        job.state.preview_due = case["before"]["previewDue"].as_bool().unwrap();
+        if case["before"]["complete"].as_bool().unwrap() { job.state.stage = AssemblyJobStage::Complete; }
+        let mut sequence = 0;
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(case["fuel"].as_u64().unwrap(), case["deadline"].as_u64().unwrap(), TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+        let outcome = seen_of(job.step(&mut context));
+        let observed = serde_json::json!({ "checkpointDue": job.state.checkpoint_due, "previewDue": job.state.preview_due, "pendingBuild": job.state.pending_build.is_some(), "complete": job.state.stage == AssemblyJobStage::Complete });
+        assert_eq!(observed, case["after"], "fixture {index} preserves or advances exactly the admitted transition");
+        assert_eq!(context.fuel_remaining(), case["fuelRemaining"].as_u64().unwrap(), "fixture {index} fuel");
+        assert_eq!(match outcome { Seen::Yield => "yield", Seen::Complete(_) => "complete", _ => panic!("unexpected assembly control outcome") }, case["outcome"].as_str().unwrap());
+        let mut closed = false;
+        for _ in 0..20_000 {
+            let (terminal, items, bytes) = job.close_retained_step(MOUNTED_OWNER_PAGE_BYTES);
+            assert!(items <= 1 && bytes <= MOUNTED_OWNER_PAGE_BYTES);
+            if terminal { closed = true; break; }
+        }
+        assert!(closed, "step grant fixture releases every exact owner");
+    }
+}
+
+
+fn assembly_physical_fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../🧫️fixtures/📦️physical-owners/🔣️.json")).expect("assembly physical fixture")
+}
+
+/// 🧱 The mounted model moves as small metadata while payload pages require explicit admission.
+#[test]
+fn assembly_triplet_pages_mounted_model_has_no_inline_payload_arrays() {
+    let fixture = assembly_physical_fixture();
+    let bytes = size_of::<MountedAnalysisModel>();
+    assert!(bytes <= fixture["mountedModel"]["maximumInlineBytes"].as_u64().unwrap() as usize);
+}
+
+
+type MountedAdmissionQuery = fn(&MountedAnalysisModel, usize) -> Result<Option<usize>, MountedAnalysisFault>;
+type MountedAdmissionStep = fn(&mut MountedAnalysisModel, usize, usize) -> Result<MountedAnalysisAdmission, MountedAnalysisFault>;
+
+fn mounted_fixture_owners() -> [(&'static str, MountedAdmissionQuery, MountedAdmissionStep); 3] {
+    [
+        ("node", MountedAnalysisModel::next_node_allocation_bytes, MountedAnalysisModel::admit_node_one),
+        ("element", MountedAnalysisModel::next_element_allocation_bytes, MountedAnalysisModel::admit_element_one),
+        ("support", MountedAnalysisModel::next_support_allocation_bytes, MountedAnalysisModel::admit_support_one),
+    ]
+}
+
+fn mounted_fixture_coordinates(model: &MountedAnalysisModel, kind: &str) -> (usize, usize, usize) {
+    match kind {
+        "node" => (model.nodes.admitted, model.nodes.values.len(), model.nodes.values.capacity()),
+        "element" => (model.elements.admitted, model.elements.values.len(), model.elements.values.capacity()),
+        "support" => (model.supports.admitted, model.supports.values.len(), model.supports.values.capacity()),
+        _ => unreachable!(),
+    }
+}
+
+fn close_mounted_fixture(model: &mut MountedAnalysisModel) -> (usize, bool) {
+    let mut released = 0;
+    for _ in 0..4_096 {
+        let before = model.physical_backing_bytes().into_iter().sum::<usize>();
+        let step = model.close_step(MOUNTED_ANALYSIS_BACKING_BYTES);
+        let after = model.physical_backing_bytes().into_iter().sum::<usize>();
+        released += step.2;
+        assert!(step.1 <= 1 && step.2 <= MOUNTED_ANALYSIS_BACKING_BYTES);
+        assert_eq!(before, after + step.2);
+        if step.0 { return (released, model.terminal_is_empty()); }
+    }
+    (released, false)
+}
+
+/// 🎟️ Every model backing is separately queried, admitted and physically retired under exact grants.
+#[test]
+fn assembly_triplet_pages_mounted_model_admits_one_backing_and_preserves_refused_grants() {
+    let fixture = assembly_physical_fixture();
+    for (kind, query, admit) in mounted_fixture_owners() {
+        for target_name in fixture["mountedModel"]["targets"].as_array().unwrap() {
+            let maximum = fixture["mountedModel"]["logicalLimits"][kind].as_u64().unwrap() as usize;
+            let target = match target_name.as_str().unwrap() { "empty" => 0, "one" => 1, "maximum" => maximum, _ => unreachable!() };
+            let mut model = MountedAnalysisModel::new();
+            assert_eq!(model.physical_backing_bytes(), [0; 3]);
+            let mut allocated = 0;
+            let mut allocations = 0;
+            let mut complete = false;
+            for _ in 0..4_096 {
+                let before = model.physical_backing_bytes();
+                let coordinates = mounted_fixture_coordinates(&model, kind);
+                let demand = query(&model, target).expect("exact model allocation demand");
+                if let Some(bytes) = demand {
+                    for refused in [0, bytes.saturating_sub(1)] {
+                        assert_eq!(admit(&mut model, target, refused), Ok(MountedAnalysisAdmission::default()));
+                        assert_eq!(model.physical_backing_bytes(), before);
+                        assert_eq!(mounted_fixture_coordinates(&model, kind), coordinates);
+                    }
+                }
+                let step = admit(&mut model, target, demand.unwrap_or(0)).expect("model admission");
+                let after = model.physical_backing_bytes();
+                assert_eq!(after.into_iter().sum::<usize>(), before.into_iter().sum::<usize>() + step.allocated_bytes);
+                assert!(step.allocated_bytes <= MOUNTED_ANALYSIS_BACKING_BYTES);
+                if step.allocated_bytes != 0 {
+                    assert_eq!(mounted_fixture_coordinates(&model, kind).0, coordinates.0);
+                    allocations += 1;
+                }
+                allocated += step.allocated_bytes;
+                if step.complete { complete = true; break; }
+            }
+            assert!(complete);
+            assert_eq!(mounted_fixture_coordinates(&model, kind).0, target);
+            assert_eq!(mounted_fixture_coordinates(&model, kind).1, 0);
+            for _ in 0..target {
+                match kind {
+                    "node" => model.push_node(Node { id: String::new(), pos: [0.0; 3] }).unwrap(),
+                    "element" => model.push_element(BeamEb2 { id: String::new(), start: String::new(), end: String::new(), e: 1.0, area: 1.0, iy: 1.0, density: 1.0 }.into()).unwrap_or_else(|_| panic!("admitted element")),
+                    "support" => model.push_support(MountedAnalysisSupport::new(String::new())).unwrap_or_else(|_| panic!("admitted support")),
+                    _ => unreachable!(),
+                }
+            }
+            let before_close = model.physical_backing_bytes();
+            for _ in 0..1_024 {
+                let step = model.close_step(0);
+                assert_eq!(step.2, 0);
+                if step.0 || step.1 == 0 { break; }
+            }
+            assert_eq!(model.physical_backing_bytes(), before_close);
+            let (released, terminal) = close_mounted_fixture(&mut model);
+            eprintln!("mounted model {kind}/{target_name}: allocations={allocations}, allocated={allocated}, released={released}, terminal={terminal}");
+            assert_eq!(allocated, released);
+            assert!(terminal);
+            if target == maximum && kind != "support" { assert!(allocated > MOUNTED_ANALYSIS_BACKING_BYTES); }
+        }
+    }
+}
+
+/// 🛑 A partially admitted model retains its first fault and every real backing for cancellation.
+#[test]
+fn assembly_triplet_pages_mounted_model_partial_admission_and_fault_retain_every_backing() {
+    let fixture = assembly_physical_fixture();
+    for (kind, _, admit) in mounted_fixture_owners() {
+        let maximum = fixture["mountedModel"]["logicalLimits"][kind].as_u64().unwrap() as usize;
+        for cutoff in 1..=5 {
+            let mut model = MountedAnalysisModel::new();
+            let mut allocated = 0;
+            for _ in 0..cutoff {
+                allocated += admit(&mut model, maximum, MOUNTED_ANALYSIS_BACKING_BYTES).expect("partial model admission").allocated_bytes;
+            }
+            let before = model.physical_backing_bytes();
+            let coordinates = mounted_fixture_coordinates(&model, kind);
+            let expected = Err(MountedAnalysisFault::Capacity { requested: maximum + 1, maximum });
+            assert_eq!(admit(&mut model, maximum + 1, MOUNTED_ANALYSIS_BACKING_BYTES), expected);
+            assert_eq!(admit(&mut model, maximum, MOUNTED_ANALYSIS_BACKING_BYTES), expected);
+            assert_eq!(model.physical_backing_bytes(), before);
+            assert_eq!(mounted_fixture_coordinates(&model, kind), coordinates);
+            let (released, terminal) = close_mounted_fixture(&mut model);
+            assert_eq!(allocated, released);
+            assert!(terminal);
+        }
+    }
+}
+
+fn assembly_physical_empty_build(matrix: Option<Csr>) -> AssemblyCsrBuild {
+    AssemblyCsrBuild {
+        assembly: None,
+        csr: CsrTripletBuild {
+        entries: PagedList::default(),
+        stage: CsrTripletBuildStage::Complete,
+        sort: HeapSortCursor::new(0),
+        count_cursor: 0,
+        unique_count: 0,
+        count_key: None,
+        merge_cursor: 0,
+        row_cursor: 0,
+        row_counts: PagedList::default(),
+        indptr: PagedList::default(),
+        indices: PagedList::default(),
+        values: PagedList::default(),
+        last_key: None,
+        matrix,
+        n: 0,
+        },
+    }
+}
+
+/// 🪶 Clearing an inline assembly record has no physical backing release of its own.
+#[test]
+fn assembly_triplet_pages_inline_job_close_reports_no_struct_bytes() {
+    static EMPTY_MODEL: AnalysisModel = AnalysisModel { nodes: Vec::new(), elements: Vec::new(), supports: Vec::new() };
+    let fixture = assembly_physical_fixture();
+    let model = Arc::new(cantilever_analysis_model(210e9, 0.02, 8e-6, 3.0, 7_850.0).0);
+    let mut construction = AssemblyJobConstruction::new_owned(model, assembly_operation(956), 1);
+    let mut constructed = false;
+    for _ in 0..4_096 {
+        if construction.step_one().expect("inline assembly setup") { constructed = true; break; }
+    }
+    assert!(constructed);
+    let mut job = construction.take_complete().expect("inline assembly fixture job");
+    let mut job_closed = false;
+    for _ in 0..20_000 {
+        if job.close_retained_step(MOUNTED_OWNER_PAGE_BYTES).0 { job_closed = true; break; }
+    }
+    assert!(job_closed);
+    job.model = AnalysisModelOwner::Borrowed(&EMPTY_MODEL);
+    job.state.stage = AssemblyJobStage::Complete;
+    let mut build = AssemblyCsrBuild::new(job).unwrap_or_else(|_| panic!("closed inline fixture"));
+    let first = build.close_step(0);
+    let terminal = build.close_step(0);
+    assert_eq!(first, (false, fixture["release"]["maximumOwnersPerStep"].as_u64().unwrap() as usize, fixture["release"]["inlineOwnerBytes"].as_u64().unwrap() as usize));
+    assert_eq!(terminal, (true, 0, 0));
+}
+
+/// 🧮 Empty capacitated matrix pages remain live until their exact physical grant arrives.
+#[test]
+fn assembly_triplet_pages_inline_matrix_close_reports_only_actual_backing() {
+    let fixture = assembly_physical_fixture();
+    for case in fixture["cases"].as_array().unwrap() {
+        for grant in fixture["grants"].as_array().unwrap() {
+            let count = case["backingCount"].as_u64().unwrap();
+            let (mut indptr, mut indices, mut values) = (PagedList::default(), PagedList::default(), PagedList::default());
+            if count != 0 {
+                while indptr.capacity() < 1 { indptr.reserve_capacity_one(1, MOUNTED_OWNER_PAGE_BYTES).expect("row backing"); }
+                while indices.capacity() < 1 { indices.reserve_capacity_one(1, MOUNTED_OWNER_PAGE_BYTES).expect("index backing"); }
+                while values.capacity() < 1 { values.reserve_capacity_one(1, MOUNTED_OWNER_PAGE_BYTES).expect("value backing"); }
+            }
+            let next_bytes = if count == 0 { 0 } else { values.next_release_allocation_bytes().expect("next matrix backing") };
+            let matrix = Csr::from_paged_parts(0, indptr, indices, values);
+            let before = matrix.physical_backing_bytes();
+            let allocated: usize = before.into_iter().sum();
+            let bytes = match grant["relativeBytes"].as_str().unwrap() {
+                "zero" => 0,
+                "one-less" => next_bytes.saturating_sub(1),
+                "next-backing" => next_bytes,
+                _ => unreachable!(),
+            };
+            let mut build = assembly_physical_empty_build(Some(matrix));
+            let first = build.close_step(bytes);
+            let after = build.matrix.as_ref().map_or([0; 3], Csr::physical_backing_bytes);
+            let mut released = first.2;
+            let mut exact = allocated == after.into_iter().sum::<usize>() + first.2;
+            let mut terminal = first.0;
+            for _ in 0..100 {
+                let before_step = build.matrix.as_ref().map_or(0, |owner| owner.physical_backing_bytes().into_iter().sum::<usize>());
+                let step = build.close_step(MOUNTED_OWNER_PAGE_BYTES);
+                let after_step = build.matrix.as_ref().map_or(0, |owner| owner.physical_backing_bytes().into_iter().sum::<usize>());
+                exact &= step.1 <= 1 && step.2 <= MOUNTED_OWNER_PAGE_BYTES && before_step == after_step + step.2;
+                released += step.2;
+                if step.0 { terminal = true; break; }
+            }
+            assert!(terminal);
+            assert!(exact, "inline retirement cannot invent backing bytes");
+            assert_eq!(released, allocated);
+            if count != 0 && grant["releasedBackings"].as_u64().unwrap() == 0 {
+                assert_eq!(after, before);
+                assert_eq!(first, (false, 0, 0));
+            }
+        }
+    }
+}
+
+fn merge_fixture_triplet(value: &serde_json::Value) -> SparseTriplet {
+    SparseTriplet {
+        sequence: value["sequence"].as_u64().expect("triplet sequence"),
+        row: value["row"].as_u64().and_then(|value| value.try_into().ok()).expect("triplet row"),
+        col: value["column"].as_u64().and_then(|value| value.try_into().ok()).expect("triplet column"),
+        value: value["value"].as_f64().expect("triplet value"),
+    }
+}
+
+/// 🔀️ A full paged merge destination retains the exact selected producer and source cursor until
+/// capacity becomes available, then publishes and advances each exactly once in both merge lanes.
+#[test]
+fn assembly_triplet_pages_merge_refusal_retains_candidate_for_retry() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔀️merge-refusal/🔣️.json")).expect("merge refusal fixture");
+    for (case_index, case) in fixture["cases"].as_array().expect("merge refusal cases").iter().enumerate() {
+        let full = case["lane"].as_str().expect("merge lane") == "full";
+        let candidate = merge_fixture_triplet(&case["candidate"]);
+        let model = Arc::new(cantilever_analysis_model(210e9, 0.02, 8e-6, 3.0, 7_850.0).0);
+        let mut construction = AssemblyJobConstruction::new_owned(model, assembly_operation(900 + case_index as u64), 1);
+        while !construction.step_one().expect("merge refusal construction") {}
+        let mut job = construction.take_complete().expect("merge refusal job");
+        let partition = &mut job.state.partitions[0];
+        let source = if full { &mut partition.full } else { &mut partition.free };
+        source.push_reserved(candidate).expect("source candidate fits admitted partition");
+        let destination = if full { &mut job.state.merged_full } else { &mut job.state.merged_free };
+        let filler = SparseTriplet { sequence: 0, row: 0, col: 0, value: 0.0 };
+        while destination.has_reserved_slot() {
+            destination.push_reserved(filler).expect("destination filler fits advertised slot");
+        }
+        let destination_len = destination.len();
+        assert_eq!(job.advance_partition_merge(full), Ok(Some(false)), "scan selects the fixture candidate");
+        assert_eq!(job.state.merge_candidate, Some((0, candidate)));
+        assert_eq!(job.advance_partition_merge(full), Err(FemError::Singular), "full destination refuses exact candidate");
+        let cursor = if full { job.state.full_merge_cursors[0] } else { job.state.free_merge_cursors[0] };
+        assert_eq!(cursor, case["refused"]["sourceCursor"].as_u64().expect("refused cursor") as usize);
+        assert_eq!(job.state.merge_candidate, Some((0, candidate)));
+        let destination = if full { &mut job.state.merged_full } else { &mut job.state.merged_free };
+        assert_eq!(destination.len(), destination_len, "refusal leaves destination unchanged");
+        assert_eq!(destination.pop(), Some(filler), "one retired filler restores one exact reserved slot");
+        assert_eq!(job.advance_partition_merge(full), Ok(Some(true)), "retry publishes retained candidate");
+        let cursor = if full { job.state.full_merge_cursors[0] } else { job.state.free_merge_cursors[0] };
+        assert_eq!(cursor, case["retried"]["sourceCursor"].as_u64().expect("retried cursor") as usize);
+        assert_eq!(job.state.merge_candidate, None);
+        let destination = if full { &job.state.merged_full } else { &job.state.merged_free };
+        assert_eq!(destination.get(destination.len() - 1), Some(&candidate), "retry publishes the same fixture producer");
+        let mut closed = false;
+        for _ in 0..20_000 {
+            let (terminal, released_items, released_bytes) = job.close_retained_step(MOUNTED_OWNER_PAGE_BYTES);
+            assert!(released_items <= 1);
+            assert!(released_bytes <= MOUNTED_OWNER_PAGE_BYTES);
+            if terminal {
+                closed = true;
+                break;
+            }
+        }
+        assert!(closed, "refusal fixture closes under the 4 KiB grant");
+    }
+}
+
+#[test]
+fn mounted_assembly_construction_is_retained_and_preserves_the_exact_model_owner() {
+    let operation = assembly_operation(83);
+    let model = Arc::new(cantilever_analysis_model(210e9, 0.02, 8e-6, 3.0, 7_850.0).0);
+    let pointer = Arc::as_ptr(&model);
+    let mut construction = AssemblyJobConstruction::new_owned(model, operation, 1);
+    assert!(!construction.step_one().expect("first reservation opportunity"));
+    let mut opportunities = 1;
+    while !construction.step_one().expect("retained assembly construction") {
+        opportunities += 1;
+        assert!(opportunities < 4_096, "fixed construction reaches a finite terminal witness");
+    }
+    assert!(opportunities > 16, "validation, references, DOFs and partition outputs cannot collapse into one constructor turn");
+    let job = construction.take_complete().expect("terminal construction returns one exact job");
+    match &job.model {
+        AnalysisModelOwner::Owned(owner) => assert_eq!(Arc::as_ptr(owner), pointer),
+        AnalysisModelOwner::Borrowed(_) => panic!("mounted construction must preserve the owned model authority"),
+        AnalysisModelOwner::Mounted(_) => panic!("dynamic construction cannot substitute mounted fixed authority"),
+    }
+    assert!(construction.take_complete().is_none(), "completion transfers exactly once");
+}
+
+#[test]
+fn assembly_triplet_pages_cross_one_physical_page_without_extra_logical_partitions() {
+    let nodes = vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [2.0, 0.0, 0.0] }];
+    let mut model = MountedAnalysisModel::new();
+    while !model.admit_node_one(nodes.len(), MOUNTED_ANALYSIS_BACKING_BYTES).unwrap().complete {}
+    for node in nodes { model.push_node(node).unwrap(); }
+    while !model.admit_element_one(50, MOUNTED_ANALYSIS_BACKING_BYTES).unwrap().complete {}
+    for index in 0..50 {
+        let element = BeamEb2 { id: format!("e{index}"), start: "a".into(), end: "b".into(), e: 210e9, area: 0.02, iy: 8e-6, density: 7_850.0 }.into();
+        model.push_element(element).unwrap_or_else(|_| panic!("admitted mounted element"));
+    }
+    while !model.admit_support_one(1, MOUNTED_ANALYSIS_BACKING_BYTES).unwrap().complete {}
+    let mut support = MountedAnalysisSupport::new("a".into());
+    for dof in [Dof::Tx, Dof::Ty, Dof::Rz] { support.push_fixed(dof).unwrap(); }
+    model.push_support(support).unwrap_or_else(|_| panic!("admitted mounted support"));
+    let mut construction = AssemblyJobConstruction::new_mounted(model, assembly_operation(87), 1);
+    let mut previous_paged_bytes = 0;
+    let mut opportunities = 0;
+    loop {
+        let complete = construction.step_one().expect("paged assembly construction");
+        opportunities += 1;
+        let paged_bytes = construction.partitions.iter().map(|partition| partition.full.allocated_bytes() + partition.free.allocated_bytes()).sum::<usize>() + construction.merged_full.allocated_bytes() + construction.merged_free.allocated_bytes();
+        assert!(paged_bytes.saturating_sub(previous_paged_bytes) <= MOUNTED_OWNER_PAGE_BYTES);
+        previous_paged_bytes = paged_bytes;
+        if complete {
+            break;
+        }
+        assert!(opportunities < 16_384);
+    }
+    let mut job = construction.take_complete().expect("paged construction publishes one job");
+    assert_eq!(job.state.partitions.len(), 1);
+    let partition = &job.state.partitions[0];
+    for owner in [&partition.full, &partition.free, &job.state.merged_full, &job.state.merged_free] {
+        assert!(owner.capacity() >= 50 * 6 * 6);
+        assert!(owner.allocated_bytes() > MOUNTED_OWNER_PAGE_BYTES);
+    }
+    for _ in 0..100_000 {
+        let (terminal, released_items, released_bytes) = job.close_retained_step(MOUNTED_OWNER_PAGE_BYTES);
+        assert!(released_items <= 1);
+        assert!(released_bytes <= MOUNTED_OWNER_PAGE_BYTES);
+        if terminal {
+            return;
+        }
+    }
+    panic!("paged assembly close did not reach its exact terminal witness");
+}
+
+/// 🗂️ The neutral NumPy matrix order crosses DOF, index and compact pages with exact funded admission.
+#[test]
+fn assembly_order_pages_admit_exact_grants_and_retire_every_original_backing() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔢️sparse/🧪️tests/🧫️fixtures/📚️paged-csr/🔣️.json")).unwrap();
+    let order = fixture["order"].as_u64().unwrap() as usize;
+    let model = Arc::new(AnalysisModel {
+        nodes: (0..order / 3).map(|index| Node { id: format!("n{index}"), pos: [index as f64, 0.0, 0.0] }).collect(),
+        elements: (1..order / 3).map(|index| BeamEb2 { id: format!("e{index}"), start: format!("n{}", index - 1), end: format!("n{index}"), e: 210e9, area: 0.02, iy: 8e-6, density: 7_850.0 }.into()).collect(),
+        supports: vec![Support { node_id: "n0".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Rz] }],
+    });
+    let pointer = Arc::as_ptr(&model);
+    let mut construction = AssemblyJobConstruction::new_owned(model, assembly_operation(88), 1);
+    for _ in 0..1_000_000 {
+        if construction.stage == AssemblyConstructionStage::ReserveDofs && construction.plan.dof_map.order.capacity() < order * 2 {
+            let before = (construction.stage, construction.plan.dof_map.order.capacity(), construction.plan.dof_map.order.allocated_bytes());
+            let copy = construction.plan.dof_map.order.next_capacity_copy_byte_demand(order * 2).unwrap();
+            let capacity = construction.plan.dof_map.order.next_capacity_allocation_bytes(order * 2).unwrap().unwrap();
+            let depth = construction.plan.dof_map.order.next_capacity_depth_demand(order * 2).unwrap();
+            for grant in [
+                RetainedCloneGrant { maximum_items: 0, ..TEST_GRANT },
+                RetainedCloneGrant { maximum_copy_bytes: copy - 1, ..TEST_GRANT },
+                RetainedCloneGrant { maximum_capacity_bytes: capacity - 1, ..TEST_GRANT },
+                RetainedCloneGrant { maximum_depth: depth - 1, ..TEST_GRANT },
+            ] {
+                assert_eq!(construction.step_one_funded(grant).unwrap(), (false, RetainedCloneProgress::default()));
+                assert_eq!((construction.stage, construction.plan.dof_map.order.capacity(), construction.plan.dof_map.order.allocated_bytes()), before);
+            }
+            let (_, receipt) = construction.step_one_funded(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_depth: depth, ..TEST_GRANT }).unwrap();
+            assert_eq!(receipt.retained_capacity_bytes, capacity);
+            assert_eq!(receipt.copied_bytes, copy);
+            assert_eq!(receipt.copied_items, 1);
+        } else if construction.step_one_funded(TEST_GRANT).unwrap().0 { break; }
+    }
+    let mut job = construction.take_complete().expect("paged assembly order terminates");
+    assert_eq!(job.plan.ndof, order);
+    for bytes in [job.plan.dof_map.order.allocated_bytes(), job.plan.dof_map.slots.allocated_bytes(), job.plan.inv_perm.allocated_bytes(), job.plan.compact_of_new.allocated_bytes()] { assert!(bytes > MOUNTED_OWNER_PAGE_BYTES); }
+    for index in 0..order / 3 {
+        for (axis, dof) in [Dof::Tx, Dof::Ty, Dof::Rz].into_iter().enumerate() {
+            let full = index * 3 + axis;
+            assert_eq!(job.visual_equation_indices(&format!("n{index}"), dof), Some((full, full.checked_sub(3))));
+        }
+    }
+    assert!(matches!(&job.model, AnalysisModelOwner::Owned(model) if Arc::as_ptr(model) == pointer));
+    let mut preparation_closed = false;
+    for _ in 0..100_000 {
+        let (terminal, items, bytes) = construction.close_step(MOUNTED_OWNER_PAGE_BYTES);
+        assert!(items <= 1 && bytes <= MOUNTED_OWNER_PAGE_BYTES);
+        if terminal { preparation_closed = true; break; }
+    }
+    assert!(preparation_closed && construction.constrained_old.terminal_is_empty());
+    assert_eq!(job.close_retained_step(0), (false, 0, 0));
+    let mut closed = false;
+    for _ in 0..1_000_000 {
+        let (terminal, items, bytes) = job.close_retained_step(1 << 20);
+        assert!(items <= 1);
+        if terminal { closed = true; break; }
+        if job.close_lane <= 10 { assert!(bytes <= MOUNTED_OWNER_PAGE_BYTES); }
+    }
+    assert!(closed, "paged order releases all original backing");
+    assert!(job.plan.dof_map.order.terminal_is_empty() && job.plan.dof_map.slots.terminal_is_empty() && job.plan.inv_perm.terminal_is_empty() && job.plan.free_new.terminal_is_empty() && job.plan.compact_of_new.terminal_is_empty());
+    eprintln!("[DEBUG] FEM assembly paged order={order}, exact item/copy/capacity/depth refusals preserved source={pointer:p}, closed={closed}");
+}
+
+/// 📚️ Final compressed row pointers, columns, and values retain separate fixed physical pages
+/// while preserving one logical CSR and its exact matrix action.
+#[test]
+fn assembly_triplet_pages_build_final_csr_without_contiguous_arrays() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔢️sparse/🧪️tests/🧫️fixtures/📚️paged-csr/🔣️.json")).expect("paged CSR fixture");
+    let expected_order = fixture["order"].as_u64().expect("CSR order") as usize;
+    let node_count = expected_order / 3;
+    assert_eq!(node_count * 3, expected_order);
+    let model = Arc::new(AnalysisModel {
+        nodes: (0..node_count).map(|index| Node { id: format!("n{index}"), pos: [index as f64, 0.0, 0.0] }).collect(),
+        elements: (1..node_count).map(|index| BeamEb2 { id: format!("e{index}"), start: format!("n{}", index - 1), end: format!("n{index}"), e: 210e9, area: 0.02, iy: 8e-6, density: 7_850.0 }.into()).collect(),
+        supports: vec![Support { node_id: "n0".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Rz] }],
+    });
+    let plan = AssemblyPlan::prepare(&model).expect("beam CSR source plan");
+    let source_grant = [
+        model.nodes.capacity() * size_of::<Node>(),
+        model.elements.capacity() * size_of::<Elements>(),
+        model.supports.capacity() * size_of::<Support>(),
+        plan.dof_map.order.capacity() * size_of::<(String, Dof)>(),
+        plan.inv_perm.capacity() * size_of::<usize>(),
+        plan.free_new.capacity() * size_of::<usize>(),
+        plan.compact_of_new.capacity() * size_of::<Option<usize>>(),
+        MOUNTED_OWNER_PAGE_BYTES,
+    ].into_iter().max().unwrap();
+    let n = plan.ndof;
+    assert_eq!(n, expected_order);
+    let entry_count = n.checked_mul(3).and_then(|count| count.checked_sub(2)).expect("tridiagonal entry count");
+    assert_eq!(entry_count, fixture["entryCount"].as_u64().expect("CSR entry count") as usize);
+    let mut merged_full = cold_paged_owner(entry_count).expect("tridiagonal paged triplets");
+    let mut sequence = 0;
+    for row in 0..n {
+        for column in row.saturating_sub(1)..=(row + 1).min(n - 1) {
+            let value = if row == column {
+                if row == 0 || row + 1 == n {
+                    1.0
+                } else {
+                    2.0
+                }
+            } else {
+                -1.0
+            };
+            merged_full.push_reserved(SparseTriplet { sequence, row: row.try_into().expect("row index"), col: column.try_into().expect("column index"), value }).expect("tridiagonal triplet slot");
+            sequence += 1;
+        }
+    }
+    let operation = assembly_operation(88);
+    let model_signature = assembly_model_signature(&model);
+    let total_elements = model.elements.len();
+    let job: AssemblyJob<'static> = AssemblyJob {
+        model: AnalysisModelOwner::Owned(model),
+        operation,
+        model_signature,
+        plan,
+        state: AssemblyCheckpoint {
+            stage: AssemblyJobStage::Complete,
+            total_elements,
+            element_cursor: total_elements,
+            pending_build: None,
+            pending: None,
+            partitions: Vec::new(),
+            full_merge_cursors: Vec::new(),
+            free_merge_cursors: Vec::new(),
+            merged_full,
+            merged_free: PagedList::default(),
+            checkpoint_due: false,
+            preview_due: false,
+            preview_cursor: 0,
+            resume_target: 0,
+            merge_scan_partition: 0,
+            merge_candidate: None,
+        },
+        close_lane: 0,
+        desk: NumericalOutcomeDesk::default(),
+        model_close: AnalysisModelCloseCursor::default(),
+    };
+    let mut build = AssemblyCsrBuild::new(job).unwrap_or_else(|_| panic!("completed assembly enters CSR build"));
+    let mut previous_bytes = 0;
+    for _ in 0..100_000 {
+        let demand = build.next_demands().expect("original CSR demand");
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: 0, maximum_depth: demand.depth };
+        let (complete, progress) = build.step_one_funded(grant).expect("paged CSR build");
+        assert!(progress.fits(grant));
+        let current_bytes = build.csr.row_counts.allocated_bytes() + build.csr.indptr.allocated_bytes() + build.csr.indices.allocated_bytes() + build.csr.values.allocated_bytes();
+        assert!(current_bytes.saturating_sub(previous_bytes) <= MOUNTED_OWNER_PAGE_BYTES);
+        previous_bytes = current_bytes;
+        if complete {
+            break;
+        }
+    }
+    let demand = build.take_demands().expect("original matrix output demand");
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: demand.depth };
+        let before = build.csr.matrix.as_ref().map(|matrix| (matrix as *const Csr, matrix.allocated_bytes()));
+        let mut denied = grant;
+        denied.maximum_copy_bytes -= 1;
+        assert!(build.take_complete(denied).is_none());
+        assert_eq!(build.csr.matrix.as_ref().map(|matrix| (matrix as *const Csr, matrix.allocated_bytes())), before);
+        let (mut matrix, progress) = build.take_complete(grant).expect("funded original matrix output");
+        assert!(progress.fits(grant));
+    assert_eq!(matrix.entries_len(), entry_count);
+    let [indptr_bytes, index_bytes, value_bytes] = matrix.physical_backing_bytes();
+    assert!(indptr_bytes != 0);
+    let page_bytes = fixture["physicalPageBytes"].as_u64().expect("CSR physical page") as usize;
+    assert_eq!(page_bytes, MOUNTED_OWNER_PAGE_BYTES);
+    assert!(index_bytes > page_bytes);
+    assert!(value_bytes > page_bytes);
+    let rule = &fixture["vectorRule"];
+    let multiplier = rule["multiplier"].as_i64().expect("vector multiplier");
+    let modulus = rule["modulus"].as_i64().expect("vector modulus");
+    let offset = rule["offset"].as_i64().expect("vector offset");
+    let divisor = rule["divisor"].as_f64().expect("vector divisor");
+    let vector = VecD::from_vec((0..n).map(|index| ((index as i64 * multiplier) % modulus - offset) as f64 / divisor).collect());
+    let action = matrix.mul_vec(&vector);
+    for sample in fixture["actionSamples"].as_array().expect("CSR action samples") {
+        let index = sample["index"].as_u64().expect("action index") as usize;
+        let expected = sample["value"].as_f64().expect("action value");
+        assert!((action.get(index) - expected).abs() <= 1e-12, "NumPy action sample {index}");
+    }
+    let action_l1: f64 = action.0.iter().map(|value| value.abs()).sum();
+    assert!((action_l1 - fixture["actionL1"].as_f64().expect("action L1")).abs() <= 1e-10);
+    let mut build_closed = false;
+    for _ in 0..20_000 {
+        let grant = if build.assembly.is_some() { source_grant } else { MOUNTED_OWNER_PAGE_BYTES };
+        let (terminal, released_items, released_bytes) = build.close_step(grant);
+        assert!(released_items <= 1);
+        assert!(released_bytes <= grant);
+        if terminal {
+            build_closed = true;
+            break;
+        }
+    }
+    assert!(build_closed, "CSR construction closes under each source owner's exact physical grant");
+    let mut closed = false;
+    for _ in 0..20_000 {
+        let (terminal, released_items, released_bytes) = matrix.close_step(MOUNTED_OWNER_PAGE_BYTES);
+        assert!(released_items <= 1);
+        assert!(released_bytes <= MOUNTED_OWNER_PAGE_BYTES);
+        if terminal {
+            closed = true;
+            break;
+        }
+    }
+    assert!(closed, "paged CSR closes under the exact physical grant");
+}
+
+#[test]
+fn mounted_element_build_reserves_and_reclaims_one_exact_owner_per_turn() {
+    let operation = assembly_operation(89);
+    let model = Arc::new(cantilever_analysis_model(210e9, 0.02, 8e-6, 3.0, 7_850.0).0);
+    let mut construction = AssemblyJobConstruction::new_owned(model, operation, 1);
+    while !construction.step_one().expect("mounted construction") {}
+    let mut job = construction.take_complete().expect("mounted assembly job");
+    let mut sequence = 0;
+    fn step_once(job: &mut AssemblyJob<'static>, operation: Operation, sequence: &mut u64) -> Seen {
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), sequence, &mut sequence_receipt);
+        seen_of(job.step(&mut context))
+    }
+    assert!(matches!(step_once(&mut job, operation, &mut sequence), Seen::Yield));
+    let build = job.state.pending_build.as_ref().expect("first turn retains only the build shell");
+    assert_eq!((build.indices_new.capacity(), build.positions.capacity(), build.stiffness.capacity()), (0, 0, 0));
+    assert!(matches!(step_once(&mut job, operation, &mut sequence), Seen::Yield));
+    let build = job.state.pending_build.as_ref().expect("second turn retains the fixed index page");
+    assert!(build.indices_new.capacity() != 0);
+    assert_eq!((build.positions.capacity(), build.stiffness.capacity()), (0, 0));
+    let mut saw_positions = false;
+    let mut saw_stiffness = false;
+    let mut saw_reclaim = [false; 3];
+    for _ in 0..128 {
+        assert!(matches!(step_once(&mut job, operation, &mut sequence), Seen::Yield | Seen::Preview(_) | Seen::Checkpoint(_)));
+        if let Some(build) = job.state.pending_build.as_ref() {
+            saw_positions |= build.positions.capacity() != 0;
+            saw_stiffness |= build.stiffness.capacity() != 0;
+        }
+        if let Some(pending) = job.state.pending.as_ref() {
+            saw_reclaim[0] |= pending.complete && pending.reclaim_lane >= 1 && pending.stiffness.capacity() == 0;
+            saw_reclaim[1] |= pending.complete && pending.reclaim_lane >= 2 && pending.indices_new.capacity() == 0;
+            saw_reclaim[2] |= pending.complete && pending.reclaim_lane >= 3 && pending.positions.capacity() == 0;
+        }
+        if saw_reclaim.into_iter().all(|seen| seen) {
+            break;
+        }
+    }
+    assert!(saw_positions && saw_stiffness, "positions and stiffness are retained in distinct admitted stages");
+    assert!(saw_reclaim.into_iter().all(|seen| seen), "each element backing is returned in its own later worker opportunity");
+}
+
+#[test]
+fn mounted_element_stiffness_observes_before_admit_and_retires_rejected_backing() {
+    let mut rejected = Vec::<f64>::new();
+    assert!(!reserve_exact_owner_page(&mut rejected, MOUNTED_OWNER_PAGE_BYTES / size_of::<f64>() + 1));
+    let observed = rejected.capacity() * size_of::<f64>();
+    let pointer = rejected.as_ptr();
+    assert!(observed > MOUNTED_OWNER_PAGE_BYTES);
+    assert_eq!(close_vec_owner_step(&mut rejected, observed - 1), Err(()));
+    assert_eq!(rejected.as_ptr(), pointer, "an interrupted close preserves the exact rejected backing");
+    assert_eq!(close_vec_owner_step(&mut rejected, observed), Ok(Some((1, observed))), "the exact rejected allocation retires through the retained close helper");
+    assert_eq!(rejected.capacity(), 0);
+}
+
+/// ⏱️ The product's interactive-step law over one driven job, not one wall-clock sample: a step above
+/// the 8 ms ceiling is an overrun, and only `SUSTAINED_OVERRUN_QUARANTINE_STEPS` consecutive overruns
+/// attribute the latency to the step's own work — the job runtime's `StepOverrunLedger` quarantines on
+/// exactly that, while a lone overrun is the machine descheduling the thread (a peer build, a GC pause).
+#[derive(Default)]
+struct StepLatency {
+    consecutive: u32,
+    longest_run: u32,
+    overruns: u32,
+    worst: std::time::Duration,
+}
+
+impl StepLatency {
+    fn admit(&mut self, elapsed: std::time::Duration) {
+        self.worst = self.worst.max(elapsed);
+        if semio_framework_job::interactive_step_contract_violated(u64::try_from(elapsed.as_micros()).unwrap_or(u64::MAX)) {
+            self.consecutive += 1;
+            self.overruns += 1;
+            self.longest_run = self.longest_run.max(self.consecutive);
+        } else {
+            self.consecutive = 0;
+        }
+    }
+
+    fn assert_interactive(&self, what: &str) {
+        assert!(
+            self.longest_run < semio_framework_job::SUSTAINED_OVERRUN_QUARANTINE_STEPS,
+            "{what}: {} consecutive steps overran the 8 ms ceiling (worst {:?}, {} overruns in total)",
+            self.longest_run,
+            self.worst,
+            self.overruns
+        );
+    }
+}
+
+fn finish_assembly_job<'model>(mut job: AssemblyJob<'model>, operation: Operation, fuel: u64) -> (UnfactoredSystem, Vec<AssemblyPreview>, StepLatency) {
+    let mut sequence = 0;
+    let mut previews = Vec::new();
+    let mut latency = StepLatency::default();
+    loop {
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(fuel, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+        let started = std::time::Instant::now();
+        let outcome = seen_of(job.step(&mut context));
+        latency.admit(started.elapsed());
+        match outcome {
+            Seen::Preview(pages) => previews.push(decode_value(&pages_bytes(&pages)).expect("assembly preview decodes")),
+            Seen::Complete(_) => break,
+            Seen::Checkpoint(_) | Seen::Yield => {}
+            Seen::Cancelled | Seen::Fault(_) => panic!("assembly fixture must complete"),
+        }
+    }
+    job.retire_outcome();
+    (job.finish().expect("completed assembly yields matrices"), previews, latency)
+}
+
+/// 🧮️ Worker-local partition counts cannot alter triplet reduction order or matrix bytes.
+#[test]
+fn assembly_job_is_exact_across_partition_counts() {
+    let model = axial_chain(24);
+    let operation = assembly_operation(301);
+    let (single, single_previews, _) = finish_assembly_job(AssemblyJob::new(&model, operation, 1).expect("single partition prepares"), operation, 5);
+    let (fleet, fleet_previews, _) = finish_assembly_job(AssemblyJob::new(&model, operation, 7).expect("fleet partitions prepare"), operation, 3);
+    assert_eq!(single.k_full_coo.to_dense().data, fleet.k_full_coo.to_dense().data);
+    assert_eq!(single.k_ff_coo.to_dense().data, fleet.k_ff_coo.to_dense().data);
+    assert_eq!(single_previews.iter().map(|preview| preview.assembled_element_ids.len()).sum::<usize>(), model.elements.len());
+    assert_eq!(fleet_previews.iter().map(|preview| preview.assembled_element_ids.len()).sum::<usize>(), model.elements.len());
+    assert!(single_previews.iter().all(|preview| preview.assembled_element_ids.len() <= 1), "every preview carries only the ids assembled since the previous one");
+}
+
+/// 💾️ A serialized element-boundary checkpoint resumes to the exact same merged matrices.
+#[test]
+fn assembly_job_checkpoint_resume_is_byte_stable() {
+    let model = axial_chain(20);
+    let operation = assembly_operation(302);
+    let mut job = AssemblyJob::new(&model, operation, 4).expect("assembly prepares");
+    let mut sequence = 0;
+    let checkpoint = loop {
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(4, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+        match seen_of(job.step(&mut context)) {
+            Seen::Checkpoint(pages) => break pages_bytes(&pages),
+            outcome => assert!(!matches!(outcome, Seen::Complete(_)), "assembly must checkpoint before completing"),
+        }
+    };
+    let resumed = AssemblyJob::from_checkpoint(&model, operation, &checkpoint).expect("assembly checkpoint restores");
+    assert_eq!(resumed.checkpoint_bytes(), checkpoint);
+    let (original, _, _) = finish_assembly_job(job, operation, 9);
+    let (restored, _, _) = finish_assembly_job(resumed, operation, 2);
+    assert_eq!(original.k_full_coo.to_dense().data, restored.k_full_coo.to_dense().data);
+    assert_eq!(original.k_ff_coo.to_dense().data, restored.k_ff_coo.to_dense().data);
+}
+
+/// ⏱️ One-fuel adversarial stepping never sustains an overrun of the global eight-millisecond ceiling.
+#[test]
+fn assembly_job_one_fuel_steps_stay_below_eight_milliseconds() {
+    let model = axial_chain(512);
+    let operation = assembly_operation(303);
+    let (_, previews, latency) = finish_assembly_job(AssemblyJob::new(&model, operation, 8).expect("assembly prepares"), operation, 1);
+    assert!(!previews.is_empty());
+    latency.assert_interactive("one-fuel assembly");
+}
+
+/// 🧪️ Mounted fixed-family cell cursors preserve numerical identity and every interruption seam.
+#[test]
+fn p6h_element_stiffness_microcursor_deadline_stale_cancel_close_and_stage_laws() {
+    use semio_s_fem_elements2d::PlaneKind;
+    use semio_s_fem_elements2d::Tri3Cst;
+
+    fn exercise(model: AnalysisModel, expected: Vec<f64>, operation: Operation) {
+        let mut construction = AssemblyJobConstruction::new_owned(Arc::new(model), operation, 1);
+        while !construction.step_one().expect("owned assembly construction") {}
+        let mut job = construction.take_complete().expect("owned construction transfers mounted job");
+        assert!(matches!(&job.model, AnalysisModelOwner::Owned(_)));
+        let required = [
+            PendingElementBuildStage::Indices,
+            PendingElementBuildStage::PublishIndex,
+            PendingElementBuildStage::Positions,
+            PendingElementBuildStage::PublishPosition,
+            PendingElementBuildStage::ReferenceQuadraturePoint,
+            PendingElementBuildStage::ShapeFunctionDerivativeScalar,
+            PendingElementBuildStage::JacobianCell,
+            PendingElementBuildStage::DeterminantInverseCell,
+            PendingElementBuildStage::StrainDisplacementCell,
+            PendingElementBuildStage::ConstitutiveCell,
+            PendingElementBuildStage::LocalStiffnessMultiplyCell,
+            PendingElementBuildStage::BodyTractionLoadCell,
+            PendingElementBuildStage::LocalToGlobalTripletCell,
+        ];
+        let mut seen = HashSet::new();
+        let mut sequence = 0;
+        let mut maximum_micros = 0;
+        for _ in 0..1_024 {
+            let before = job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.lookup_cursor, build.lookup_match, build.indices_new.len(), build.positions.len(), build.stiffness.len()));
+            if let Some((stage, ..)) = before.filter(|(stage, ..)| required.contains(stage)) {
+                seen.insert(stage);
+                let mut sequence_receipt = RetainedCloneProgress::default();
+                let mut deadline = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, 0, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+                assert_eq!(seen_of(job.step(&mut deadline)), Seen::Yield);
+                assert_eq!(job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.lookup_cursor, build.lookup_match, build.indices_new.len(), build.positions.len(), build.stiffness.len())), before);
+                let mut stale =
+                    StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+                assert!(matches!(seen_of(job.step(&mut stale)), Seen::Fault(_)));
+                assert_eq!(job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.lookup_cursor, build.lookup_match, build.indices_new.len(), build.positions.len(), build.stiffness.len())), before);
+                let token = semio_framework_job::root_cancel_token();
+                semio_framework_async::block_on(token.cancel());
+                let mut sequence_receipt = RetainedCloneProgress::default();
+                let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, TEST_GRANT), token, || Some(0), &mut sequence, &mut sequence_receipt);
+                assert_eq!(seen_of(job.step(&mut cancelled)), Seen::Cancelled);
+                assert_eq!(job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.lookup_cursor, build.lookup_match, build.indices_new.len(), build.positions.len(), build.stiffness.len())), before);
+            }
+            let started = std::time::Instant::now();
+            let mut sequence_receipt = RetainedCloneProgress::default();
+            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+            assert!(matches!(seen_of(job.step(&mut context)), Seen::Yield | Seen::Preview(_) | Seen::Checkpoint(_)));
+            maximum_micros = maximum_micros.max(started.elapsed().as_micros());
+            if job.state.pending.is_some() {
+                break;
+            }
+        }
+        assert!(required.into_iter().all(|stage| seen.contains(&stage)));
+        let actual = &job.state.pending.as_ref().expect("mounted stiffness candidate published").stiffness;
+        assert_eq!(actual.len(), expected.len());
+        for (actual, expected) in actual.iter().zip(expected) {
+            assert!((actual - expected).abs() <= expected.abs().max(1.0) * 1e-12, "mounted stiffness mismatch: {actual} vs {expected}");
+        }
+        assert!(maximum_micros < 8_000, "fixed mounted cell exceeded timing ceiling: {maximum_micros} us");
+        let mut close_turns = 0;
+        loop {
+            close_turns += 1;
+            let (terminal, released_items, _) = job.close_retained_step(usize::MAX);
+            assert!(released_items <= 1);
+            if terminal {
+                break;
+            }
+            assert!(close_turns < 20_000);
+        }
+        assert!(job.close_lane > 11);
+    }
+
+    let bar = Bar2 { id: "bar".into(), start: "a".into(), end: "b".into(), e: 210e9, area: 0.02, density: 0.0 };
+    let bar_context = ElementContext { positions: vec![[0.0, 0.0, 0.0], [2.0, 1.0, 0.0]] };
+    let bar_expected = bar.stiffness_global(&bar_context).data;
+    exercise(AnalysisModel { nodes: vec![Node { id: "a".into(), pos: bar_context.positions[0] }, Node { id: "b".into(), pos: bar_context.positions[1] }], elements: vec![bar.into()], supports: Vec::new() }, bar_expected, assembly_operation(304));
+
+    let beam = BeamEb2 { id: "beam".into(), start: "a".into(), end: "b".into(), e: 205e9, area: 0.015, iy: 7e-6, density: 0.0 };
+    let beam_context = ElementContext { positions: vec![[0.0, 0.0, 0.0], [3.0, 2.0, 0.0]] };
+    let beam_expected = beam.stiffness_global(&beam_context).data;
+    exercise(AnalysisModel { nodes: vec![Node { id: "a".into(), pos: beam_context.positions[0] }, Node { id: "b".into(), pos: beam_context.positions[1] }], elements: vec![beam.into()], supports: Vec::new() }, beam_expected, assembly_operation(305));
+
+    let triangle = Tri3Cst { id: "tri".into(), nodes: ["a".into(), "b".into(), "c".into()], e: 70e9, nu: 0.27, thickness: 0.2, kind: PlaneKind::Stress, density: 0.0 };
+    let triangle_context = ElementContext { positions: vec![[0.0, 0.0, 0.0], [2.0, 0.0, 0.0], [0.25, 1.5, 0.0]] };
+    let triangle_expected = triangle.stiffness_global(&triangle_context).data;
+    exercise(
+        AnalysisModel {
+            nodes: vec![Node { id: "a".into(), pos: triangle_context.positions[0] }, Node { id: "b".into(), pos: triangle_context.positions[1] }, Node { id: "c".into(), pos: triangle_context.positions[2] }],
+            elements: vec![triangle.into()],
+            supports: Vec::new(),
+        },
+        triangle_expected,
+        assembly_operation(306),
+    );
+}
+
+/// 🔀️ Owned lookup and partition-min cursors interrupt and replay without hidden scans.
+#[test]
+fn p6h_owned_assembly_lookup_partition_scan_transfer_interrupt_replay_and_timing() {
+    fn model() -> AnalysisModel {
+        let nodes = (0..=4).map(|index| Node { id: format!("n{index}"), pos: [index as f64, (index % 2) as f64 * 0.25, 0.0] }).collect::<Vec<_>>();
+        let elements = (0..4).map(|index| Bar2 { id: format!("b{index}"), start: format!("n{index}"), end: format!("n{}", index + 1), e: 200e9, area: 0.01, density: 0.0 }.into()).collect();
+        AnalysisModel { nodes, elements, supports: Vec::new() }
+    }
+
+    fn run(operation: Operation) -> (Vec<f64>, Vec<f64>, u128) {
+        let mut construction = AssemblyJobConstruction::new_owned(Arc::new(model()), operation, 4);
+        while !construction.step_one().expect("owned assembly construction") {}
+        let mut job = construction.take_complete().expect("owned assembly job");
+        let mut sequence = 0;
+        let mut maximum_micros = 0;
+        for _ in 0..100_000 {
+            let merge = matches!(job.state.stage, AssemblyJobStage::MergeFull | AssemblyJobStage::MergeFree);
+            let lookup =
+                job.state.pending_build.as_ref().is_some_and(|build| matches!(build.stage, PendingElementBuildStage::Indices | PendingElementBuildStage::PublishIndex | PendingElementBuildStage::Positions | PendingElementBuildStage::PublishPosition));
+            if merge || lookup {
+                let before = (
+                    job.state.stage,
+                    job.state.merge_scan_partition,
+                    job.state.merge_candidate,
+                    job.state.full_merge_cursors.clone(),
+                    job.state.free_merge_cursors.clone(),
+                    job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.lookup_cursor, build.lookup_match)),
+                );
+                let mut sequence_receipt = RetainedCloneProgress::default();
+                let mut deadline = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, 0, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+                assert_eq!(seen_of(job.step(&mut deadline)), Seen::Yield);
+                assert_eq!(
+                    (
+                        job.state.stage,
+                        job.state.merge_scan_partition,
+                        job.state.merge_candidate,
+                        job.state.full_merge_cursors.clone(),
+                        job.state.free_merge_cursors.clone(),
+                        job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.lookup_cursor, build.lookup_match)),
+                    ),
+                    before
+                );
+                let mut stale =
+                    StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+                assert!(matches!(seen_of(job.step(&mut stale)), Seen::Fault(_)));
+                let token = semio_framework_job::root_cancel_token();
+                semio_framework_async::block_on(token.cancel());
+                let mut sequence_receipt = RetainedCloneProgress::default();
+                let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, TEST_GRANT), token, || Some(0), &mut sequence, &mut sequence_receipt);
+                assert_eq!(seen_of(job.step(&mut cancelled)), Seen::Cancelled);
+            }
+            let started = std::time::Instant::now();
+            let mut sequence_receipt = RetainedCloneProgress::default();
+            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+            if matches!(seen_of(job.step(&mut context)), Seen::Complete(_)) {
+                maximum_micros = maximum_micros.max(started.elapsed().as_micros());
+                let system = job.finish().expect("owned assembly completes");
+                return (system.k_full_coo.to_dense().data, system.k_ff_coo.to_dense().data, maximum_micros);
+            }
+            maximum_micros = maximum_micros.max(started.elapsed().as_micros());
+        }
+        panic!("owned assembly cursor law did not complete")
+    }
+
+    let first = run(assembly_operation(307));
+    let second = run(assembly_operation(307));
+    assert_eq!((first.0, first.1), (second.0, second.1));
+    assert!(first.2.max(second.2) < 8_000);
+}
+
 /// 🧮️ Cross-validates `solve_multi_case`'s sparse RCM-ordered pipeline (single case) against
 /// `solve_linear_static`'s already-correct dense pipeline on an equivalent model — same oracle
 /// strategy already used elsewhere in this crate.
@@ -22,7 +972,7 @@ fn solve_multi_case_matches_single_case_dense_solve() {
     let (e, area, iy, l) = (200e9, 0.01, 1e-5, 2.0);
     let (model, cases) = cantilever_analysis_model(e, area, iy, l, 0.0);
     let results = solve_multi_case(&model, &cases, &[], [0.0, 0.0, 0.0]).expect("solves");
-    let sparse_result = results.get("tip_load").expect("case present");
+    let sparse_result = results.get(&ResultSource::LoadCase("tip_load".into())).expect("case present");
 
     let dense_model = Model {
         nodes: model.nodes.clone(),
@@ -59,9 +1009,9 @@ fn combination_equals_manual_superposition() {
     let combo = Combination { id: "combo".into(), terms: vec![("a_case".into(), 1.35), ("b_case".into(), 1.5)] };
 
     let results = solve_multi_case(&model, &[case_a, case_b], &[combo], [0.0, 0.0, 0.0]).expect("solves");
-    let ra = results.get("a_case").unwrap().clone();
-    let rb = results.get("b_case").unwrap().clone();
-    let combined = results.get("combo").unwrap();
+    let ra = results.get(&ResultSource::LoadCase("a_case".into())).unwrap().clone();
+    let rb = results.get(&ResultSource::LoadCase("b_case".into())).unwrap().clone();
+    let combined = results.get(&ResultSource::Combination("combo".into())).unwrap();
 
     for cd in &combined.displacements {
         let ad = ra.displacements.iter().find(|d| d.node_id == cd.node_id).unwrap();
@@ -91,7 +1041,7 @@ fn self_weight_matches_total_mass_times_gravity() {
     };
     let case = LoadCase { id: "self_weight".into(), nodal_loads: vec![], member_loads: vec![], self_weight: true };
     let results = solve_multi_case(&model, &[case], &[], [0.0, -9.81, 0.0]).expect("solves");
-    let result = results.get("self_weight").unwrap();
+    let result = results.get(&ResultSource::LoadCase("self_weight".into())).unwrap();
 
     let total_ty_reaction: f64 = result.reactions.iter().filter(|r| r.dof == Dof::Ty).map(|r| r.value).sum();
     let expected = density * area * l * 9.81;
@@ -158,12 +1108,12 @@ fn buckling_euler_column_matches_analytical_load() {
         // Sanity-check the reference static solve first: pure axial compression should give nonzero Tx
         // displacement at the loaded end and ~zero Ty/Rz everywhere (no bending under a concentric load).
         let static_results = solve_multi_case(&model, std::slice::from_ref(&reference_case), &[], [0.0, 0.0, 0.0]).expect("reference solves");
-        let static_result = static_results.get("axial_compression").unwrap();
+        let static_result = static_results.get(&ResultSource::LoadCase("axial_compression".into())).unwrap();
         for d in &static_result.displacements {
             assert!(d.values[Dof::Ty.index()].abs() < 1e-9, "{name}: unexpected transverse displacement at {}: {}", d.node_id, d.values[Dof::Ty.index()]);
         }
 
-        let critical_load = buckling(&model, &reference_case, 1).expect("buckling solves").factors[0] * p_ref;
+        let critical_load = buckling(&model, &reference_case, 1, [0.0; 3]).expect("buckling solves").factors[0] * p_ref;
         let expected = std::f64::consts::PI.powi(2) * e * iy / (k_factor * total_l).powi(2);
         assert!(critical_load > 0.0, "{name}: critical load should be positive, got {critical_load}");
         assert!((critical_load - expected).abs() / expected < 0.02, "{name}: critical load {critical_load} vs analytical {expected}");
@@ -189,7 +1139,7 @@ fn solve_multi_case_supports_bar2_truss() {
     };
     let case = LoadCase { id: "axial".into(), nodal_loads: vec![NodalLoad { node_id: "b".into(), dof: Dof::Tx, value: p }], member_loads: vec![], self_weight: false };
     let results = solve_multi_case(&model, &[case], &[], [0.0, 0.0, 0.0]).expect("solves");
-    let result = results.get("axial").unwrap();
+    let result = results.get(&ResultSource::LoadCase("axial".into())).unwrap();
     let expected = p * l / (e * area);
     let b = result.displacements.iter().find(|d| d.node_id == "b").unwrap();
     assert!((b.values[Dof::Tx.index()] - expected).abs() / expected < 1e-8);
@@ -201,7 +1151,8 @@ fn solve_multi_case_supports_bar2_truss() {
 /// itself regardless of how many elements touch a node).
 #[test]
 fn nodal_averaged_scalar_patch_test_is_exact_under_uniform_stress() {
-    use semio_s_fem_elements2d::{PlaneKind, Tri3Cst};
+    use semio_s_fem_elements2d::PlaneKind;
+    use semio_s_fem_elements2d::Tri3Cst;
     let (e, nu, t) = (1000.0, 0.25, 1.0);
     let coords = [[0.0, 0.0], [2.0, 0.0], [2.0, 2.0], [0.0, 2.0]];
     let nodes: Vec<Node> = (0..4).map(|i| Node { id: format!("n{i}"), pos: [coords[i][0], coords[i][1], 0.0] }).collect();
@@ -231,7 +1182,8 @@ fn nodal_averaged_scalar_patch_test_is_exact_under_uniform_stress() {
 /// two elements' own values, while each element's exclusive nodes keep that element's exact value.
 #[test]
 fn nodal_averaged_scalar_shared_node_is_between_neighboring_element_values() {
-    use semio_s_fem_elements2d::{PlaneKind, Tri3Cst};
+    use semio_s_fem_elements2d::PlaneKind;
+    use semio_s_fem_elements2d::Tri3Cst;
     let (e, nu, t) = (1000.0, 0.25, 1.0);
     let el_a = Tri3Cst { id: "a".into(), nodes: ["shared".into(), "a1".into(), "a2".into()], e, nu, thickness: t, kind: PlaneKind::Stress, density: 0.0 };
     let el_b = Tri3Cst { id: "b".into(), nodes: ["shared".into(), "b1".into(), "b2".into()], e, nu, thickness: t, kind: PlaneKind::Stress, density: 0.0 };
@@ -316,7 +1268,7 @@ fn solve_multi_case_applies_member_udl_equivalent_loads() {
     };
     let case = LoadCase { id: "udl".into(), nodal_loads: vec![], member_loads: vec![("e1".into(), MemberUdl { wx: 0.0, wy: -w, wz: 0.0 })], self_weight: false };
     let results = solve_multi_case(&model, &[case], &[], [0.0, 0.0, 0.0]).expect("solves");
-    let sparse_result = results.get("udl").unwrap();
+    let sparse_result = results.get(&ResultSource::LoadCase("udl".into())).unwrap();
 
     let dense_model = Model {
         nodes: model.nodes.clone(),
@@ -332,70 +1284,6 @@ fn solve_multi_case_applies_member_udl_equivalent_loads() {
         for k in 0..6 {
             assert!((sd.values[k] - dd.values[k]).abs() < 1e-8, "displacement mismatch at {} dof {k}", sd.node_id);
         }
-    }
-}
-
-/// 🌱️ `zero_like` zero-initializes every non-`Beam` `ElementResult` variant (the `Beam` variant is
-/// covered by `combination_equals_manual_superposition` above), and `add_scaled_element_result` on
-/// a freshly-zeroed accumulator reduces to exactly `factor * term`, field-by-field, per variant.
-#[test]
-fn zero_like_and_add_scaled_element_result_handle_every_non_beam_variant() {
-    let factor = 2.5;
-
-    let bar = ElementResult::Bar { n: 4.0 };
-    let zero_bar = zero_like(&bar);
-    assert_eq!(zero_bar, ElementResult::Bar { n: 0.0 });
-    match add_scaled_element_result(&zero_bar, &bar, factor) {
-        ElementResult::Bar { n } => assert!((n - factor * 4.0).abs() < 1e-12),
-        other => panic!("expected bar, got {other:?}"),
-    }
-
-    let plane = ElementResult::Plane { gauss: vec![PlaneStress { sxx: 1.0, syy: 2.0, sxy: 3.0, von_mises: 4.0 }] };
-    let zero_plane = zero_like(&plane);
-    match &zero_plane {
-        ElementResult::Plane { gauss } => assert_eq!(gauss[0], PlaneStress { sxx: 0.0, syy: 0.0, sxy: 0.0, von_mises: 0.0 }),
-        other => panic!("expected plane, got {other:?}"),
-    }
-    match add_scaled_element_result(&zero_plane, &plane, factor) {
-        ElementResult::Plane { gauss } => {
-            assert!((gauss[0].sxx - factor * 1.0).abs() < 1e-12);
-            assert!((gauss[0].syy - factor * 2.0).abs() < 1e-12);
-            assert!((gauss[0].sxy - factor * 3.0).abs() < 1e-12);
-        }
-        other => panic!("expected plane, got {other:?}"),
-    }
-
-    let plate = ElementResult::Plate { gauss: vec![PlateMoments { mx: 1.0, my: 2.0, mxy: 3.0 }] };
-    let zero_plate = zero_like(&plate);
-    match add_scaled_element_result(&zero_plate, &plate, factor) {
-        ElementResult::Plate { gauss } => {
-            assert!((gauss[0].mx - factor * 1.0).abs() < 1e-12);
-            assert!((gauss[0].my - factor * 2.0).abs() < 1e-12);
-            assert!((gauss[0].mxy - factor * 3.0).abs() < 1e-12);
-        }
-        other => panic!("expected plate, got {other:?}"),
-    }
-
-    let solid = ElementResult::Solid { gauss: vec![SolidStress { sxx: 1.0, syy: 2.0, szz: 3.0, sxy: 4.0, syz: 5.0, sxz: 6.0, von_mises: 7.0 }] };
-    let zero_solid = zero_like(&solid);
-    match add_scaled_element_result(&zero_solid, &solid, factor) {
-        ElementResult::Solid { gauss } => {
-            assert!((gauss[0].sxx - factor * 1.0).abs() < 1e-12);
-            assert!((gauss[0].szz - factor * 3.0).abs() < 1e-12);
-            assert!((gauss[0].syz - factor * 5.0).abs() < 1e-12);
-        }
-        other => panic!("expected solid, got {other:?}"),
-    }
-
-    let shell = ElementResult::Shell { gauss: vec![ShellState { nxx: 1.0, nyy: 2.0, nxy: 3.0, mxx: 4.0, myy: 5.0, mxy: 6.0, von_mises_top: 7.0, von_mises_bottom: 8.0 }] };
-    let zero_shell = zero_like(&shell);
-    match add_scaled_element_result(&zero_shell, &shell, factor) {
-        ElementResult::Shell { gauss } => {
-            assert!((gauss[0].nxx - factor * 1.0).abs() < 1e-12);
-            assert!((gauss[0].mxy - factor * 6.0).abs() < 1e-12);
-            assert!((gauss[0].von_mises_bottom - factor * 8.0).abs() < 1e-12);
-        }
-        other => panic!("expected shell, got {other:?}"),
     }
 }
 
@@ -500,4 +1388,27 @@ fn fem_job_graph_rejects_stale_and_cancelled_steps_without_mutation() {
     let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(2, u64::MAX, TEST_GRANT), token, || Some(0), &mut sequence, &mut sequence_receipt);
     assert_eq!(seen_of(graph.step(&mut cancelled)), Seen::Cancelled);
     assert_eq!(graph.checkpoint_bytes(), before);
+}
+
+/// 🎟️ Resource admission refuses excess owners before allocation and never labels a mechanism.
+#[test]
+fn numerical_owner_page_admission_refuses_before_allocating_and_is_not_singularity() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️owner-admission/🔣️.json")).unwrap();
+    assert_eq!(fixture["pageBytes"].as_u64().unwrap() as usize, MOUNTED_OWNER_PAGE_BYTES);
+    assert_eq!(fixture["itemBytes"].as_u64().unwrap() as usize, size_of::<f64>());
+    for case in fixture["cases"].as_array().unwrap() {
+        let mut owner = Vec::<f64>::new();
+        let accepted = reserve_exact_owner_page(&mut owner, case["requested"].as_u64().unwrap() as usize);
+        assert_eq!(accepted, case["accepted"].as_bool().unwrap());
+        if !accepted { assert_eq!(owner.capacity(), 0); }
+    }
+    let model = Arc::new(AnalysisModel { nodes: vec![Node { id: "node".into(), pos: [0.0; 3] }], elements: vec![], supports: vec![] });
+    let operation = Operation::new(semio_framework_job::OperationId(1), semio_framework_job::RevisionId(1), semio_framework_job::Generation(1), 1);
+    let mut construction = AssemblyJobConstruction::new_owned(model, operation, MOUNTED_OWNER_PAGE_BYTES + 1);
+    assert_eq!(construction.step_one(), Err(FemError::ResourceAdmission));
+    assert!(!FemError::ResourceAdmission.to_string().contains("singular"));
+    let mut complete = false;
+    for _ in 0..100 { if construction.close_step(MOUNTED_OWNER_PAGE_BYTES).0 { complete = true; break; } }
+    assert!(complete);
+    eprintln!("[DEBUG] numerical owner over-capacity admission refused before allocation with resource classification");
 }

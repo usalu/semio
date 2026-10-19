@@ -1,0 +1,20 @@
+{
+  "cases": [
+    {"name":"Enabled Assignment","attributes":2,"count":1,"truncated":false,"expected":"enabled"},
+    {"name":"Disabled Assignment Can Be Enabled","attributes":0,"count":1,"truncated":false,"expected":"available"},
+    {"name":"Default Enabled Assignment","attributes":3,"count":1,"truncated":false,"expected":"enabled"},
+    {"name":"Absent Assignment","attributes":0,"count":0,"truncated":false,"expected":"absent"},
+    {"name":"Removed Assignment","attributes":4,"count":1,"truncated":false,"expected":"absent"},
+    {"name":"Duplicate Assignment","attributes":2,"count":2,"truncated":false,"expected":"refused"},
+    {"name":"Truncated Assignment","attributes":2,"count":1,"truncated":true,"expected":"refused"},
+    {"name":"Unbounded Privilege Inventory","attributes":2,"count":129,"truncated":false,"expected":"refused"}
+  ],
+  "checks": [
+    {"state":"enabled","accepted":true,"adjustments":0},
+    {"state":"disabled","accepted":true,"adjustments":1},
+    {"state":"absent","accepted":false,"adjustments":0},
+    {"state":"removed","accepted":false,"adjustments":0},
+    {"state":"adjust-refused","accepted":false,"adjustments":1},
+    {"state":"query-error","accepted":false,"adjustments":0}
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "rows",
+    "sourceGuards",
+    "byteRange"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "rows": {
+      "type": "array",
+      "minItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "body",
+          "overhead",
+          "physical",
+          "child",
+          "selected"
+        ],
+        "properties": {
+          "body": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "overhead": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "physical": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "child": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "selected": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "sourceGuards": {
+      "type": "array",
+      "minItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "file",
+          "contains"
+        ],
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "contains": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "byteRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "start",
+        "length",
+        "expected"
+      ],
+      "properties": {
+        "source": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "minItems": 32,
+          "maxItems": 32
+        },
+        "start": {
+          "const": 5
+        },
+        "length": {
+          "const": 21
+        },
+        "expected": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "minItems": 21,
+          "maxItems": 21
+        }
+      }
+    }
+  }
+}

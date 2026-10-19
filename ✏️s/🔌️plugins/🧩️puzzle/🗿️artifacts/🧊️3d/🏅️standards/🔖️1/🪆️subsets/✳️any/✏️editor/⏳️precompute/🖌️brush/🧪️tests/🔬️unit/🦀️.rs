@@ -10,20 +10,64 @@ extern crate semio_framework_value_derive as value_derive;
 
 use semio_s_artifact_puzzle_3d_precompute_brush::*;
 use semio_s_artifact_puzzle_3d_model::puzzle3d_vortex_full_id;
-use semio_s_artifact_puzzle_3d_model::{AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushKindWeights, BrushPlacePayload, BrushPreviewState, CableKindCatalog, EngineSceneSnapshot, EngineSceneObject, KindCatalogBundle, KindCompatEntry, ObjectKind, ObjectKindVortexTemplate, Quat, Vec3, VortexKindCatalog, VortexProps};
-use semio_s_artifact_puzzle_3d_precompute_geometry::{collision_body_from_buffers, compute_brush_placement_pose, normalize_vec3, pose_isometry, precompute_work, quat_rotate_vec, vec3_add, CollisionAabb, CollisionBody, CollisionPenetrationState, CollisionStepContext, CollisionStepResult, Pose3d};
-use semio_s_artifact_puzzle_3d_model::{BrushSuggestionsRunCounter, BrushSuggestionsRunReason, BrushSuggestionsRunStage, SceneConfig};
+use semio_s_artifact_puzzle_3d_model::AttractionProps;
+use semio_s_artifact_puzzle_3d_model::BrushCompatibleCandidate;
+use semio_s_artifact_puzzle_3d_model::BrushHostRules;
+use semio_s_artifact_puzzle_3d_model::BrushKindWeights;
+use semio_s_artifact_puzzle_3d_model::BrushPlacePayload;
+use semio_s_artifact_puzzle_3d_model::BrushPreviewState;
+use semio_s_artifact_puzzle_3d_model::CableKindCatalog;
+use semio_s_artifact_puzzle_3d_model::EngineSceneSnapshot;
+use semio_s_artifact_puzzle_3d_model::EngineSceneObject;
+use semio_s_artifact_puzzle_3d_model::KindCatalogBundle;
+use semio_s_artifact_puzzle_3d_model::KindCompatEntry;
+use semio_s_artifact_puzzle_3d_model::ObjectKind;
+use semio_s_artifact_puzzle_3d_model::ObjectKindVortexTemplate;
+use semio_s_artifact_puzzle_3d_model::Quat;
+use semio_s_artifact_puzzle_3d_model::Vec3;
+use semio_s_artifact_puzzle_3d_model::VortexKindCatalog;
+use semio_s_artifact_puzzle_3d_model::VortexProps;
+use semio_s_artifact_puzzle_3d_precompute_geometry::collision_body_from_buffers;
+use semio_s_artifact_puzzle_3d_precompute_geometry::compute_brush_placement_pose;
+use semio_s_artifact_puzzle_3d_precompute_geometry::normalize_vec3;
+use semio_s_artifact_puzzle_3d_precompute_geometry::pose_isometry;
+use semio_s_artifact_puzzle_3d_precompute_geometry::precompute_work;
+use semio_s_artifact_puzzle_3d_precompute_geometry::quat_rotate_vec;
+use semio_s_artifact_puzzle_3d_precompute_geometry::vec3_add;
+use semio_s_artifact_puzzle_3d_precompute_geometry::CollisionAabb;
+use semio_s_artifact_puzzle_3d_precompute_geometry::CollisionBody;
+use semio_s_artifact_puzzle_3d_precompute_geometry::CollisionPenetrationState;
+use semio_s_artifact_puzzle_3d_precompute_geometry::CollisionStepContext;
+use semio_s_artifact_puzzle_3d_precompute_geometry::CollisionStepResult;
+use semio_s_artifact_puzzle_3d_precompute_geometry::Pose3d;
+use semio_s_artifact_puzzle_3d_model::BrushSuggestionsRunCounter;
+use semio_s_artifact_puzzle_3d_model::BrushSuggestionsRunReason;
+use semio_s_artifact_puzzle_3d_model::BrushSuggestionsRunStage;
+use semio_s_artifact_puzzle_3d_model::SceneConfig;
 use semio_s_plugin_puzzle_jobs::JobTurn;
-use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, StepContext};
-use semio_framework_plugin::{ArtifactInstanceOperationOwnerHandle, ToolRunJobPort};
-use semio_framework_tool_run::{ToolRunCounter, ToolRunIdentity, ToolRunProgress, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTickWriter, ToolRunTraceSubject, ToolRunVerdict};
+use semio_framework_job::InteractiveJob;
+use semio_framework_job::InteractiveJobCloseStep;
+use semio_framework_job::StepContext;
+use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
+use semio_framework_plugin::ToolRunJobPort;
+use semio_framework_tool_run::ToolRunCounter;
+use semio_framework_tool_run::ToolRunIdentity;
+use semio_framework_tool_run::ToolRunProgress;
+use semio_framework_tool_run::ToolRunState;
+use semio_framework_tool_run::ToolRunStepArg;
+use semio_framework_tool_run::ToolRunStepKind;
+use semio_framework_tool_run::ToolRunStepRing;
+use semio_framework_tool_run::ToolRunTickWriter;
+use semio_framework_tool_run::ToolRunTraceSubject;
+use semio_framework_tool_run::ToolRunVerdict;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::sync::Arc;
 
 
 use semio_s_artifact_puzzle_3d_precompute::Puzzle3dCollision;
-use semio_s_artifact_puzzle_3d_precompute_geometry::{precompute_work_clock, precompute_work_done};
+use semio_s_artifact_puzzle_3d_precompute_geometry::precompute_work_clock;
+use semio_s_artifact_puzzle_3d_precompute_geometry::precompute_work_done;
 use semio_s_artifact_puzzle_3d_model::ObjectKindRepresentation;
 
 #[test]
@@ -47,10 +91,10 @@ fn fill_distribution_excludes_zero_weight_vortices() {
     };
     let candidates = vec![BrushCompatibleCandidate { object_kind_id: "Placed".to_string(), source_vortex_index: 0 }, BrushCompatibleCandidate { object_kind_id: "Placed".to_string(), source_vortex_index: 1 }];
     let mut weights = BrushKindWeights::default();
-    weights.vortex_weights.insert("c-b".to_string(), 0.0);
-    weights.vortex_weights.insert("c-t".to_string(), 0.0);
-    weights.vortex_weights.insert("b-s".to_string(), 1.0);
-    weights.object_weights.insert("Placed".to_string(), 1.0);
+    weights.vortex_weights.cold_insert("c-b".to_string(), 0.0);
+    weights.vortex_weights.cold_insert("c-t".to_string(), 0.0);
+    weights.vortex_weights.cold_insert("b-s".to_string(), 1.0);
+    weights.object_weights.cold_insert("Placed".to_string(), 1.0);
     let mut rng = 7u32;
     let ordered = order_brush_fill_compatible_candidates(&candidates, Some("b-s"), 1, Some("Host"), &catalogs, &weights, &mut rng);
     assert_eq!(ordered.len(), 1);
@@ -415,8 +459,8 @@ fn vortex_world_from_object_none_for_missing_index() {
 #[test]
 fn weight_lookup_helpers_default_to_one_or_gate_on_zero() {
     let mut weights = BrushKindWeights::default();
-    weights.object_weights.insert("A".into(), 2.0);
-    weights.vortex_weights.insert("v".into(), 0.0);
+    weights.object_weights.cold_insert("A".into(), 2.0);
+    weights.vortex_weights.cold_insert("v".into(), 0.0);
     assert_eq!(brush_kind_weight_value(&weights.object_weights, "A"), 2.0);
     assert_eq!(brush_kind_weight_value(&weights.object_weights, "missing"), 1.0);
     assert!(!brush_target_vortex_allows_suggestion(Some("v"), &weights));
@@ -540,8 +584,15 @@ fn apply_brush_placement_to_snapshot_rejects_duplicate_attraction_target() {
 /// tool run: every candidate it tests is a trace record, every verdict reaches the instance's link, and the job
 /// follows the link's target. The scene and the laws are read from `🧫️fixtures/🎞️brush-suggestions-run.json`.
 use semio_s_artifact_puzzle_3d_editor_session::Puzzle3dInstanceOperationOwner;
-use semio_framework_job::{root_cancel_token, Generation, OperationId, StepBudget};
-use semio_framework_tool_run::{ToolRunId, ToolRunStep, ToolRunTick, ToolRunTraceOp, ToolRunTraceStore};
+use semio_framework_job::root_cancel_token;
+use semio_framework_job::Generation;
+use semio_framework_job::OperationId;
+use semio_framework_job::StepBudget;
+use semio_framework_tool_run::ToolRunId;
+use semio_framework_tool_run::ToolRunStep;
+use semio_framework_tool_run::ToolRunTick;
+use semio_framework_tool_run::ToolRunTraceOp;
+use semio_framework_tool_run::ToolRunTraceStore;
 
 const BRUSH_SUGGESTIONS_RUN_FIXTURE: &str = include_str!("../🧫️fixtures/🎞️brush-suggestions-run.json");
 const BRUSH_SEARCH_TARGET: &str = "host:v0";
@@ -623,8 +674,13 @@ fn brush_run_link<R>(owner: &ArtifactInstanceOperationOwnerHandle, apply: impl F
     owner.with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| Ok(apply(&mut owner.brush_suggestions))).expect("the brush suggestions link")
 }
 
-fn brush_run_job(owner: &ArtifactInstanceOperationOwnerHandle, port: &ToolRunJobPort, scene: SceneConfig, lane: Vec<String>, meshes: BrushSuggestionsMeshSource, generation: u32) -> BrushSuggestionsRunJob<Puzzle3dInstanceOperationOwner> {
-    BrushSuggestionsRunJob::new(owner.clone(), port.clone(), brush_run_identity(generation), Arc::new(scene), lane, meshes, semio_s_artifact_puzzle_3d_editor_session::puzzle3d_fallback_mesh_buffers()).expect("fallback body")
+fn brush_run_job_on_clock(owner: &ArtifactInstanceOperationOwnerHandle, port: &ToolRunJobPort, scene: SceneConfig, lane: Vec<String>, meshes: BrushSuggestionsMeshSource, generation: u32, clock: fn() -> Option<u64>) -> BrushRunFixture {
+    let job = BrushSuggestionsRunJob::new(owner.clone(), port.clone(), brush_run_identity(generation), Arc::new(scene), lane, meshes, semio_s_artifact_puzzle_3d_editor_session::puzzle3d_fallback_mesh_buffers()).expect("fallback body");
+    BrushRunFixture { job: Some(job), original: Some(semio_s_plugin_puzzle_jobs::testing::OriginalFixture::new(OperationId(91), Generation(1), semio_s_plugin_puzzle_jobs::testing::fixture_stock(), clock, u64::MAX, 1 << 48)) }
+}
+
+fn brush_run_job(owner: &ArtifactInstanceOperationOwnerHandle, port: &ToolRunJobPort, scene: SceneConfig, lane: Vec<String>, meshes: BrushSuggestionsMeshSource, generation: u32) -> BrushRunFixture {
+    brush_run_job_on_clock(owner, port, scene, lane, meshes, generation, brush_run_never)
 }
 
 fn brush_run_never() -> Option<u64> {
@@ -632,10 +688,37 @@ fn brush_run_never() -> Option<u64> {
 }
 
 /// 🚦️ One job step with `fuel` units and no deadline, its retained tick page decoded and returned to its ledger.
-fn brush_run_step(job: &mut BrushSuggestionsRunJob<Puzzle3dInstanceOperationOwner>, fuel: u64) -> Option<ToolRunTick> {
-    let mut sequence = 0;
-    let mut context = StepContext::new(OperationId(91), Generation(1), StepBudget::new(fuel, u64::MAX, semio_s_plugin_puzzle_jobs::testing::unbounded_grant()), root_cancel_token(), brush_run_never, &mut sequence, semio_s_plugin_puzzle_jobs::testing::test_progress());
-    brush_run_settle(job.turn(&mut context))
+struct BrushRunFixture {
+    job: Option<BrushSuggestionsRunJob<Puzzle3dInstanceOperationOwner>>,
+    original: Option<semio_s_plugin_puzzle_jobs::testing::OriginalFixture>,
+}
+
+impl BrushRunFixture {
+    fn advance(&mut self, fuel: u64, deadline: u64) -> JobTurn {
+        let job = self.job.as_mut().expect("original brush job remains live");
+        let mut outcome = None;
+        self.original.as_mut().expect("original brush caller remains live").turn(semio_s_plugin_puzzle_jobs::testing::fixture_stock(), |cx| cx.with_original_work_loan(fuel, deadline, |cx| {
+            outcome = Some(job.turn(cx));
+            Ok(())
+        })).expect("original brush step");
+        outcome.expect("original brush loan returned its outcome")
+    }
+
+    fn close(&mut self) {
+        if let Some(mut original) = self.original.take() {
+            if let Some(job) = self.job.as_mut() { original.close_job(job); }
+            self.job.take();
+            original.finish();
+        }
+    }
+}
+
+impl Drop for BrushRunFixture {
+    fn drop(&mut self) { if !std::thread::panicking() { self.close(); } }
+}
+
+fn brush_run_step(job: &mut BrushRunFixture, fuel: u64) -> Option<ToolRunTick> {
+    brush_run_settle(job.advance(fuel, u64::MAX))
 }
 
 fn brush_run_settle(turn: JobTurn) -> Option<ToolRunTick> {
@@ -678,7 +761,7 @@ impl BrushRunMirror {
     }
 
     /// 🔁️ Steps until the job waits on its port; answers the steps it took.
-    fn drive(&mut self, job: &mut BrushSuggestionsRunJob<Puzzle3dInstanceOperationOwner>, port: &ToolRunJobPort, fuel: u64) -> usize {
+    fn drive(&mut self, job: &mut BrushRunFixture, port: &ToolRunJobPort, fuel: u64) -> usize {
         for step in 0..100_000 {
             if port.is_waiting() {
                 return step;
@@ -719,7 +802,7 @@ fn brush_suggestions_run_matches_the_language_neutral_fixture() {
         let name = case["name"].as_str().expect("name");
         let mut scene = brush_search_scene(case["blocker"].as_bool().expect("blocker"));
         for (kind, weight) in case["vortexWeights"].as_object().expect("vortex weights") {
-            scene.weights.vortex_weights.insert(kind.clone(), weight.as_f64().expect("weight"));
+            scene.weights.vortex_weights.cold_insert(kind.clone(), weight.as_f64().expect("weight"));
         }
         let target = case["target"].as_str().expect("target");
         let (owner, port) = (brush_run_owner(Some(target)), ToolRunJobPort::default());
@@ -830,9 +913,9 @@ fn a_closing_brush_suggestions_job_retires_only_its_own_result() {
     port.wake();
     let mut second = brush_run_job(&owner, &port, brush_search_scene(false), brush_search_lane(), brush_search_meshes, 1);
     BrushRunMirror::new(1).drive(&mut second, &port, u64::MAX);
-    semio_s_plugin_puzzle_jobs::testing::close_job(&mut first);
+    first.close();
     assert_eq!(brush_run_link(&owner, |link| link.found(BRUSH_SEARCH_TARGET).map(|found| found.writer)), Some((1, 1)), "the successor's result survives");
-    semio_s_plugin_puzzle_jobs::testing::close_job(&mut second);
+    second.close();
     assert!(brush_run_link(&owner, |link| link.found(BRUSH_SEARCH_TARGET).is_none()), "the last writer's close retires its result");
 }
 
@@ -925,16 +1008,14 @@ fn brush_suggestions_run_step_stays_below_the_interactive_ceiling_for_nakagin() 
     let (scene, lane, targets) = brush_run_example_scene(law["document"].as_str().expect("document"));
     let (budget, ceiling) = (law["budgetWork"].as_u64().expect("budget"), law["stepWorkCeiling"].as_u64().expect("ceiling"));
     let (owner, port) = (brush_run_owner(None), ToolRunJobPort::default());
-    let mut job = brush_run_job(&owner, &port, scene, lane, brush_run_no_meshes, 0);
+    let mut job = brush_run_job_on_clock(&owner, &port, scene, lane, brush_run_no_meshes, 0, precompute_work_clock);
     let (mut worst, mut steps) = (0_u64, 0_usize);
     for target in targets.iter().take(law["targets"].as_u64().expect("targets") as usize) {
         brush_run_link(&owner, |link| link.hover(Some(target.clone())));
         while !port.is_waiting() {
-            let mut sequence = 0;
             let start = precompute_work_done();
-            let step_budget = StepBudget::from_duration(semio_framework_job::INTERACTIVE_LANE_FUEL, start, budget, semio_s_plugin_puzzle_jobs::testing::unbounded_grant()).expect("budget");
-            let mut context = StepContext::new(OperationId(92), Generation(1), step_budget, root_cancel_token(), precompute_work_clock, &mut sequence, semio_s_plugin_puzzle_jobs::testing::test_progress());
-            let outcome = job.turn(&mut context);
+            let step_budget = StepBudget::from_duration(semio_framework_job::INTERACTIVE_LANE_FUEL, start, budget, semio_s_plugin_puzzle_jobs::testing::fixture_stock()).expect("budget");
+            let outcome = job.advance(step_budget.fuel, step_budget.deadline_us);
             worst = worst.max(precompute_work_done() - start);
             drop(brush_run_settle(outcome));
             steps += 1;

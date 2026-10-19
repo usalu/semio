@@ -1,5 +1,5 @@
-//! 🏗️ `s.fem.fem2d` material mutation case — Rust SUBJECT adapter. Relocated out of the
 //! Duplicated (relative paths adjusted, the extra spec-vector-replay Outline dropped — its committed-fixture references only resolve from the real owning subset, which the escape guard blocks a ✳️any-owned case from reaching sideways into) from `../../../🧱️material/🧪️tests/🧱️mutate-fem2d-1-material/` by shard F4 (this ticket) to close `unregistered-mutation-vocabulary` at the `✳️any/🧬️schema/🧬️mutations` owner — same mechanism E3 already proved on `sequence`: reuse the already-manifested `fem2d-1-mutate` capability, no new v2 manifest entry or runtime-inventory coordinate. The dropped Outline's own replay evidence stays intact, undiminished, at the original subset-owned case above — this duplicate only needs to satisfy the coverage gate's mutate-<kind>/inverse-<kind> requirement.
+//! 🏗️ `s.fem.fem2d` material mutation case — Rust SUBJECT adapter. Relocated out of the
 //! artifact-level `mutate-fem2d-1` case in ticket
 //! `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION` so
 //! this subset's own kinds have a subset-owned test.
@@ -16,14 +16,18 @@
 //! report shapes rather than parts of the document, so they stay asserted HERE, in role, in
 //! [`subject::spec_vector`].
 
-use semio_repo_test_host::{parse_json, Adapter, Json};
+use semio_repo_test_host::parse_json;
+
+use semio_repo_test_host::Adapter;
+
+use semio_repo_test_host::Json;
 
 //#region 🔖️Kinds
 /// 🏷️ This subset's own slice of `KINDS` in `../../../🧱️material/🧬️schema/🧬️mutations/🦀️.rs` — duplicated, not
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and that file's own
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against both the enum and the manifest.
-const KINDS: &[&str] = &["create-material", "delete-material", "replace-material"];
+const KINDS: &[&str] = &["create-material", "delete-material", "replace-material", "change-material"];
 
 /// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
 /// [`law::mutation_is_observable`] must not demand one of them.
@@ -54,6 +58,13 @@ struct Vector {
 
 fn vector(kind: &str) -> Vector {
     match kind {
+        "change-material" => Vector {
+            before: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/🎯️outcome/🔣️.json"),
+        },
         "create-material" => Vector {
             before: include_str!("../../../🧱️material/🧪️tests/🧫️fixtures/🧬️mutations/🌱️create-material/🧱️appends/📸️snapshot/⬅️before/🔣️.json"),
             mutation: include_str!("../../../🧱️material/🧪️tests/🧫️fixtures/🧬️mutations/🌱️create-material/🧱️appends/🦠️mutation/🔣️.json"),
@@ -89,8 +100,14 @@ fn canonical(text: &str) -> Json {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{canonical, vector, DERIVED_ASSET, UNOBSERVABLE};
-    use semio_repo_test_host::{parse_json, Context, Json, Outcome};
+    use super::canonical;
+    use super::vector;
+    use super::DERIVED_ASSET;
+    use super::UNOBSERVABLE;
+    use semio_repo_test_host::parse_json;
+    use semio_repo_test_host::Context;
+    use semio_repo_test_host::Json;
+    use semio_repo_test_host::Outcome;
     use semio_repo_test_host::law;
     use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::io::text::mutations::fem2d_mutation_report_json;
 

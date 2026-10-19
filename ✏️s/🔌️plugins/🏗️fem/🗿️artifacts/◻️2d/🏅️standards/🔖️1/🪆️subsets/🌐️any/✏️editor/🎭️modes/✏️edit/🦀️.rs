@@ -1,5 +1,5 @@
-//! ✏️ Fem2d play app — the `edit` mode: its id and the lookups that resolve which of its two Canvas2d windows a
 //! command addresses (kind, camera, body key). The mode owns both windows, so the interaction layer below them never
+//! ✏️ Fem2d play app — the `edit` mode: its id and the lookups that resolve which of its two Canvas2d windows a
 //! names a window.
 
 pub const MODE_ID: &str = "edit";
@@ -7,7 +7,10 @@ pub const MODE_ID: &str = "edit";
 use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model as model_window;
 use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results as results_window;
 use semio_framework_os_kernel::Viewport2d;
-use semio_framework_plugin::{ConfigView, Fault, NoConfig, ViewModel};
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::ViewModel;
 
 //#region 🔖️WindowCamera
 /// 🪟️ The kind id of the window one command is addressed to.

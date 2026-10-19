@@ -1,0 +1,19 @@
+{
+  "casts": [
+    { "scene": "home", "core": ["sunny"], "rotation": ["pumpy", "grassy"] },
+    { "scene": "topic-energy", "core": ["sunny"], "rotation": ["pumpy"] },
+    { "scene": "topic-grasshopper", "core": ["grassy"], "rotation": [] },
+    { "scene": "heating", "core": ["pumpy"], "rotation": [] },
+    { "scene": "question-heating-systems", "core": ["pumpy"], "rotation": [] }
+  ],
+  "cases": [
+    { "scene": "home", "expected": ["sunny", "pumpy", "grassy"] },
+    { "scene": "topic-energy", "expected": ["sunny", "pumpy"] },
+    { "scene": "topic-grasshopper", "expected": ["grassy"] },
+    { "scene": "heating", "expected": ["pumpy"] },
+    { "scene": "question-heating-systems", "expected": ["pumpy"] },
+    { "scene": "topic-unknown", "expected": null },
+    { "scene": "unknown", "expected": null },
+    { "scene": "question-heating-unknown", "expected": null }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Projected Source Laws",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "cases", "authorityOwnsRetirement", "projectionOwnsRetirement"],
+  "properties": {
+    "contract": {"const": "semio.original.projected-source/v1"},
+    "authorityOwnsRetirement": {"const": true},
+    "projectionOwnsRetirement": {"const": false},
+    "cases": {"type": "array", "minItems": 3, "items": {
+      "type": "object", "additionalProperties": false, "required": ["id", "bytes", "expected"],
+      "properties": {"id": {"type": "string"}, "bytes": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 255}}, "expected": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 255}}}
+    }}
+  }
+}

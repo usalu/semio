@@ -1,0 +1,12 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "site": {
+    "host": "architektur-und-technologie.de",
+    "legal": {}
+  },
+  "proctor": {
+    "host": "semio.iek.uni-hannover.de",
+    "image": "ghcr.io/usalu/architecture-course-proctor",
+    "port": 8791
+  }
+}

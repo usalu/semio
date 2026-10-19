@@ -1,0 +1,132 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/material/mutation/change-material/schema.json",
+  "title": "ChangeMaterial",
+  "description": "Changes only supplied material fields while preserving stable identity and independent concurrent edits. Omitted fields remain untouched; null values are refused.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "patch"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeMaterial",
+      "description": "The internally tagged discriminator `#[value(tag = \"mutation\")]` puts on the wire.",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Material",
+          "de": "Material"
+        },
+        "ref": {
+          "kind": "material",
+          "domain": "fem2d",
+          "granularity": "material"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "patch": {
+      "title": "Fem2dMaterialPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Bezeichnung"
+            },
+            "group": "identity",
+            "order": 20
+          }
+        },
+        "e": {
+          "type": "number",
+          "format": "double",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Young's modulus",
+              "de": "Elastizitätsmodul"
+            },
+            "unit": "Pa",
+            "displayUnit": "GPa",
+            "displayFactor": 1E-09,
+            "step": 1000000000.0,
+            "precision": 1,
+            "group": "material",
+            "order": 30
+          }
+        },
+        "nu": {
+          "type": "number",
+          "format": "double",
+          "exclusiveMinimum": -1,
+          "exclusiveMaximum": 0.5,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Poisson's ratio",
+              "de": "Querdehnzahl"
+            },
+            "step": 0.01,
+            "precision": 3,
+            "softMin": 0,
+            "softMax": 0.49,
+            "group": "material",
+            "order": 40
+          }
+        },
+        "rho": {
+          "type": "number",
+          "format": "double",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Density",
+              "de": "Dichte"
+            },
+            "unit": "kg/m³",
+            "step": 10,
+            "precision": 0,
+            "group": "material",
+            "order": 50
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "de": "Materialänderungen",
+          "en": "Material changes"
+        },
+        "group": "record",
+        "order": 30
+      }
+    }
+  }
+}

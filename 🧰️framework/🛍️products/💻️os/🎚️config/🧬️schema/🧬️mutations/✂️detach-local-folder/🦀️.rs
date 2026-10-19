@@ -26,19 +26,9 @@ pub fn detach_local_folder(document_id: &str) -> LocalFoldersConfigMutation {
 impl MutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for DetachLocalFolder {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "clear", entity: "local-folder", kind: "detach-local-folder", record: "Cleared" };
 
-    fn diff(&self, base: &LocalFolderBindings) -> MutationOutcome<LocalFoldersDiff> {
-        if !base.bindings.iter().any(|entry| entry.document_id == self.document_id) {
-            return MutationOutcome::new(LocalFoldersDiff::default()).warning("mutation.no-op", format!("\"{}\" is not attached to a folder on this device.", self.document_id));
-        }
-        MutationOutcome::new(LocalFoldersDiff { bindings: vec![KeyedEdit::new(self.document_id.clone(), None)] })
-    }
 
-    fn inverse(&self, base: &LocalFolderBindings) -> Result<Vec<LocalFoldersConfigMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        base.bindings.iter().find(|entry| entry.document_id == self.document_id).map(|prior| vec![attach_local_folder(prior.clone())]).unwrap_or_default()
-    
-    })())
-}
+
+
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Forget the folder of \"{}\"", self.document_id), &format!("Ordner von \"{}\" vergessen", self.document_id))
@@ -47,5 +37,20 @@ impl MutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for DetachLoc
     fn target(&self) -> Vec<String> {
         vec![self.document_id.clone()]
     }
+}
+
+impl crate::os_spr::ColdMutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for DetachLocalFolder {
+    fn diff(&self, base: &LocalFolderBindings) -> MutationOutcome<LocalFoldersDiff> {
+        if !base.bindings.iter().any(|entry| entry.document_id == self.document_id) {
+            return MutationOutcome::new(LocalFoldersDiff::default()).warning("mutation.no-op", format!("\"{}\" is not attached to a folder on this device.", self.document_id));
+        }
+        MutationOutcome::new(LocalFoldersDiff { bindings: vec![KeyedEdit::new(self.document_id.clone(), None)] })
+    }
+    fn inverse(&self, base: &LocalFolderBindings) -> Result<Vec<LocalFoldersConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+        base.bindings.iter().find(|entry| entry.document_id == self.document_id).map(|prior| vec![attach_local_folder(prior.clone())]).unwrap_or_default()
+    
+    })())
+}
 }
 //#endregion 🔖️Mutation

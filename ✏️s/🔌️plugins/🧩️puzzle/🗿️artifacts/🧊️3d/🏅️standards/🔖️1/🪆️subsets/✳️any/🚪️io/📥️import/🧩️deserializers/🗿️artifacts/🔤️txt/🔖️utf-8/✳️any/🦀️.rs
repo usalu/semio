@@ -1,5 +1,5 @@
-//! puzzle3d ← txt — the body of a `s.stdio.txt` carrier parsed as this artifact's own DSL, the inverse
 //! of the sibling export leaf (`IoFidelity::Exact`).
+//! puzzle3d ← txt — the body of a `s.stdio.txt` carrier parsed as this artifact's own DSL, the inverse
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 pub fn register() {}

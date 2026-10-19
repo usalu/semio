@@ -1,5 +1,7 @@
+import {encodeScopedIdentity} from "../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🟦️.ts";
 import {parseSchemaRecord} from "@semio-tech/framework/schema/record";
 import {type Binary64,parseBinary64} from "@semio-tech/framework/value/ieee754";
+
 /** 🧬️ Fem2d snapshot schema — artifact-lane fields only. */
 
 //#region 🔖️Entities
@@ -182,7 +184,7 @@ export function parseFemCombination(value: unknown, at = "$"): FemCombination {
 
 export function parseFem2dSnapshot(value: unknown, at = "$"): Fem2dSnapshot {
   const row = parseSchemaRecord(value, ["nodes", "elements", "materials", "sections", "supports", "loadCases", "combinations", "regions", "analysis"], at);
-  return {
+  const snapshot = {
     nodes: femFem2dSnapshotGuardArray(row["nodes"], `${at}.nodes`).map((item, index) => parseFemNode(item, `${at}.nodes[${index}]`)),
     elements: femFem2dSnapshotGuardArray(row["elements"], `${at}.elements`).map((item, index) => parseFemElement(item, `${at}.elements[${index}]`)),
     regions: femFem2dSnapshotGuardArray(row["regions"], `${at}.regions`).map((item, index) => parseFemRegion(item, `${at}.regions[${index}]`)),
@@ -193,6 +195,17 @@ export function parseFem2dSnapshot(value: unknown, at = "$"): Fem2dSnapshot {
     combinations: femFem2dSnapshotGuardArray(row["combinations"], `${at}.combinations`).map((item, index) => parseFemCombination(item, `${at}.combinations[${index}]`)),
     analysis: parseFemAnalysisSettings(row["analysis"], `${at}.analysis`),
   };
+  const seen = new Set<string>();
+  const admit = (segments: readonly string[]) => {
+    const identity = encodeScopedIdentity(segments);
+    if (seen.has(identity)) throw Error(`${at}: repeated entity identity`);
+    seen.add(identity);
+  };
+  for (const [kind, rows] of [["node", snapshot.nodes], ["element", snapshot.elements], ["region", snapshot.regions], ["material", snapshot.materials], ["section", snapshot.sections], ["support", snapshot.supports], ["loadCase", snapshot.loadCases], ["combination", snapshot.combinations]] as const) {
+    for (const row of rows) admit([kind, row.id]);
+  }
+  for (const loadCase of snapshot.loadCases) for (const load of loadCase.loads) admit(["load", loadCase.id, load.id]);
+  return snapshot;
 }
 
 
@@ -253,6 +266,14 @@ export function parseFemSupport(value: unknown, at = "$"): FemSupport {
   return {
     id: femFem2dSnapshotGuardString(row["id"], `${at}.id`),
     nodeId: femFem2dSnapshotGuardString(row["nodeId"], `${at}.nodeId`),
-    fixed: femFem2dSnapshotGuardArray(row["fixed"], `${at}.fixed`).map((item, index) => femFem2dSnapshotGuardMember(item, `${at}.fixed[${index}]`, ["Tx", "Ty", "Tz", "Rx", "Ry", "Rz"] as const)),
+    fixed: parseFemFixedDofs(row["fixed"], `${at}.fixed`),
   };
+}
+
+/** 🔒️ Admits a canonical unique subsequence of the authoritative DOF order. */
+export function parseFemFixedDofs(value: unknown, at = "$"): FemDof[] {
+  const order = ["Tx", "Ty", "Tz", "Rx", "Ry", "Rz"] as const;
+  const dofs = femFem2dSnapshotGuardArray(value, at).map((value, index) => femFem2dSnapshotGuardMember(value, `${at}[${index}]`, order));
+  if (dofs.some((dof, index) => index > 0 && order.indexOf(dofs[index - 1]!) >= order.indexOf(dof))) throw Error(`${at}: canonical unique DOF set required`);
+  return dofs;
 }

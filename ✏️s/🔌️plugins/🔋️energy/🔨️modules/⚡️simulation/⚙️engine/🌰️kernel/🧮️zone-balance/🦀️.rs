@@ -4,18 +4,14 @@ use super::*;
 
 // #region 🔖️TimestepJob
 impl TimestepWork {
-    pub(super) fn step_balance(&mut self, model: &Model, pre: &PrecomputedModel, state: &mut SimulationModel) {
-        let mut work = self.balance.take().unwrap_or_else(BalanceWork::new);
-        let finished = self.balance_unit(&mut work, model, pre, state);
-        if finished {
-            self.zone_cursor = 0;
-            self.stage = TimestepStage::ZoneCommit;
-        } else {
-            self.balance = Some(work);
-        }
+    pub(super) fn step_balance(&mut self,model:&Model,pre:&PrecomputedModel,state:&mut SimulationModel,budget:DenseSolveBudget)->TimestepStep {
+        let mut work=self.balance.take().unwrap_or_else(BalanceWork::new);let mut receipt=DenseSolveDemand::default();
+        let result=self.balance_unit(&mut work,model,pre,state,budget,&mut receipt);
+        let fault=match result {Ok(true)=>{self.zone_cursor=0;self.stage=TimestepStage::ZoneCommit;None},Ok(false)=>{self.balance=Some(work);None},Err(fault)=>{self.balance=Some(work);Some(fault)}};
+        TimestepStep {progress:RetainedCloneProgress {copied_items:receipt.items as usize,copied_bytes:receipt.copy_bytes as usize,retained_capacity_bytes:0,released_bytes:0},fault}
     }
 
-    fn balance_unit(&mut self, work: &mut BalanceWork, model: &Model, pre: &PrecomputedModel, state: &mut SimulationModel) -> bool {
+    fn balance_unit(&mut self, work: &mut BalanceWork, model: &Model, pre: &PrecomputedModel, state: &mut SimulationModel,budget:DenseSolveBudget,receipt:&mut DenseSolveDemand) -> Result<bool,DenseSolveFault> {
         match work.stage {
             BalanceStage::Weather => {
                 let zone_step = self.substep_cursor * self.zone_steps / self.substeps.max(1) + 1;
@@ -30,10 +26,10 @@ impl TimestepWork {
                 let Some(zone_id) = pre.zone_order.get(work.zone_cursor).copied() else {
                     self.substep_cursor += 1;
                     if self.substep_cursor >= self.substeps {
-                        return true;
+                        return Ok(true);
                     }
                     *work = BalanceWork::new();
-                    return false;
+                    return Ok(false);
                 };
                 let faces = pre.enclosures.get(&zone_id).map_or(0, |enclosure| enclosure.faces.len());
                 let solver = &mut state.solver;
@@ -54,7 +50,7 @@ impl TimestepWork {
                 let zone_id = pre.zone_order[work.zone_cursor];
                 let Some(enclosure) = pre.enclosures.get(&zone_id) else {
                     work.stage = BalanceStage::Faces;
-                    return false;
+                    return Ok(false);
                 };
                 let flux = work.zone_diffuse_w * enclosure.diffuse_solar_multiplier;
                 for (index, face) in enclosure.faces.iter().enumerate() {
@@ -75,7 +71,7 @@ impl TimestepWork {
             BalanceStage::Faces => self.unit_face(work, model, pre, state),
             BalanceStage::Solve => {
                 let loads = self.zone_loads[work.zone_cursor];
-                self.unit_solve(work, model, loads, pre, state);
+                let turn=self.unit_solve(work,model,loads,pre,state,budget);*receipt=turn.receipt;if let DenseSolveStatus::Fault(fault)=turn.status{return Err(fault);}
             }
             BalanceStage::IdealLoad => {
                 let zone_id = pre.zone_order[work.zone_cursor];
@@ -190,10 +186,10 @@ impl TimestepWork {
                     work.stage = BalanceStage::Settle;
                 }
             }
-            BalanceStage::Settle => self.unit_settle(work, model, pre, state),
+            BalanceStage::Settle => {let turn=self.unit_settle(work,model,pre,state,budget);*receipt=turn.receipt;if let DenseSolveStatus::Fault(fault)=turn.status{return Err(fault);}},
             BalanceStage::Commit => self.unit_commit(work, model, pre, state),
         }
-        false
+        Ok(false)
     }
 
     fn unit_window_solar(&mut self, work: &mut BalanceWork, pre: &PrecomputedModel, state: &mut SimulationModel) {
@@ -514,115 +510,110 @@ impl TimestepWork {
         }
     }
 
-    fn unit_solve(&mut self, work: &mut BalanceWork, model: &Model, loads: ZoneLoads, pre: &PrecomputedModel, state: &mut SimulationModel) {
-        let zone_id = pre.zone_order[work.zone_cursor];
-        let zone = &model.zones[work.zone_cursor];
-        let n = pre.enclosures.get(&zone_id).map_or(0, |enclosure| enclosure.faces.len());
-        let exact = pre.enclosures.get(&zone_id).is_none_or(|enclosure| matches!(enclosure.radiation, EnclosureRadiation::Exchange { .. }));
-        let weather = self.step_weather;
-        let Some(zone_state) = state.zones.get(&zone_id) else { return };
-        let capacity = zone_state.air.capacity_rate_w_k(zone.volume_m3 * zone.multiplier.max(1) as f64, weather.pressure_pa, self.dt_s);
-        let (storage, history) = zone_state.air.storage_terms(capacity);
-        let outdoor_capacity = loads.outdoor_air_m3_s * moist_air_density(weather.dry_bulb_c, weather.humidity_ratio, weather.pressure_pa) * moist_air_cp_j_per_kg_k(weather.humidity_ratio);
-        let base_diagonal = storage + outdoor_capacity;
-        work.air_rhs_w = history + outdoor_capacity * weather.dry_bulb_c + loads.convective_w;
-        let solver = &mut state.solver;
-        let order = n + 1;
-        let sums = work.mean_radiant_sums;
-        let free = if exact {
-            solver.matrix[n * order + n] = base_diagonal + work.air_diagonal_w_k;
-            solver.rhs[n] = work.air_rhs_w;
-            work.air_diagonal_w_k = base_diagonal + work.air_diagonal_w_k;
-            solver.scratch[..order * order].copy_from_slice(&solver.matrix[..order * order]);
-            solver.solution[..order].copy_from_slice(&solver.rhs[..order]);
-            if solve_dense_in_place(&mut solver.scratch[..order * order], &mut solver.solution[..order], order) { solver.solution[n] } else { zone_state.air.temp_c }
-        } else {
-            work.air_diagonal_w_k = base_diagonal + sums[0];
-            let determinant = work.air_diagonal_w_k * sums[3] - sums[1] * sums[4];
-            if determinant.abs() > 1e-12 { ((work.air_rhs_w + sums[2]) * sums[3] + sums[1] * sums[5]) / determinant } else { zone_state.air.temp_c }
-        };
-        work.free_temp_c = free;
-        work.target_temp_c = if !loads.controlled {
-            None
-        } else if free < loads.heating_setpoint_c {
-            Some(loads.heating_setpoint_c)
-        } else if free > loads.cooling_setpoint_c {
-            Some(loads.cooling_setpoint_c)
-        } else {
-            None
-        };
-        work.required_w = match work.target_temp_c {
-            None => 0.0,
-            Some(target) if exact => {
-                for row in 0..n {
-                    for column in 0..n {
-                        solver.scratch[row * n + column] = solver.matrix[row * order + column];
-                    }
-                    solver.solution[row] = solver.rhs[row] - solver.matrix[row * order + n] * target;
-                }
-                if solve_dense_in_place(&mut solver.scratch[..n * n], &mut solver.solution[..n], n) {
-                    work.air_diagonal_w_k * target + (0..n).map(|column| solver.matrix[n * order + column] * solver.solution[column]).sum::<f64>() - work.air_rhs_w
-                } else {
-                    0.0
-                }
-            }
-            Some(target) => {
-                let mean = if sums[3].abs() > 1e-12 { (sums[5] + sums[4] * target) / sums[3] } else { target };
-                work.air_diagonal_w_k * target - sums[1] * mean - work.air_rhs_w - sums[2]
-            }
-        };
-        work.remaining_heating_w = work.required_w.max(0.0);
-        work.remaining_cooling_w = (-work.required_w).max(0.0);
-        work.delivered_w = 0.0;
-        work.ideal_cursor = 0;
-        work.equipment_cursor = 0;
-        work.stage = BalanceStage::IdealLoad;
+
+    fn thermal_demand(&self) -> DenseSolveDemand {
+        let Some(work)=self.balance.as_ref() else {return DenseSolveDemand::default()};
+        if !matches!(work.stage,BalanceStage::Solve|BalanceStage::Settle){return DenseSolveDemand::default();}
+        match work.thermal_phase {
+            2|5=>work.dense.as_ref().map_or(DenseSolveDemand {items:1,copy_bytes:256,depth:1,capacity_bytes:0},|cursor|{let mut demand=cursor.demand();demand.items=demand.items.max(1);demand.depth=demand.depth.max(1);demand}),
+            1|4=>DenseSolveDemand {items:1,copy_bytes:24,depth:1,capacity_bytes:0},
+            _=>DenseSolveDemand {items:1,copy_bytes:256,depth:1,capacity_bytes:0},
+        }
     }
 
-    fn unit_settle(&mut self, work: &mut BalanceWork, model: &Model, pre: &PrecomputedModel, state: &mut SimulationModel) {
-        let _ = model;
-        let zone_id = pre.zone_order[work.zone_cursor];
-        let n = pre.enclosures.get(&zone_id).map_or(0, |enclosure| enclosure.faces.len());
-        let exact = pre.enclosures.get(&zone_id).is_none_or(|enclosure| matches!(enclosure.radiation, EnclosureRadiation::Exchange { .. }));
-        let met = work.target_temp_c.is_some() && (work.delivered_w - work.required_w).abs() <= 1e-9 * work.required_w.abs().max(1.0);
-        let solver = &mut state.solver;
-        let order = n + 1;
-        let sums = work.mean_radiant_sums;
-        let air_c = if exact {
-            if met {
-                let target = work.target_temp_c.expect("met target");
-                solver.solution[n] = target;
-                target
-            } else {
-                solver.scratch[..order * order].copy_from_slice(&solver.matrix[..order * order]);
-                solver.solution[..order].copy_from_slice(&solver.rhs[..order]);
-                solver.solution[n] += work.delivered_w;
-                if solve_dense_in_place(&mut solver.scratch[..order * order], &mut solver.solution[..order], order) {
-                    solver.solution[n]
+    fn unit_solve(&mut self,work:&mut BalanceWork,model:&Model,loads:ZoneLoads,pre:&PrecomputedModel,state:&mut SimulationModel,budget:DenseSolveBudget)->DenseSolveTurn {
+        let zone_id=pre.zone_order[work.zone_cursor];
+        let n=pre.enclosures.get(&zone_id).map_or(0,|enclosure|enclosure.faces.len());
+        let exact=pre.enclosures.get(&zone_id).is_none_or(|enclosure|matches!(enclosure.radiation,EnclosureRadiation::Exchange {..}));
+        let order=n+1;
+        let priced=|bytes|DenseSolveTurn {status:DenseSolveStatus::Pending,receipt:DenseSolveDemand {items:1,copy_bytes:bytes,depth:1,capacity_bytes:0}};
+        match work.thermal_phase {
+            0=>{
+                let Some(zone_state)=state.zones.get(&zone_id) else {return DenseSolveTurn {status:DenseSolveStatus::Fault(DenseSolveFault::Dimensions),receipt:Default::default()}};
+                let zone=&model.zones[work.zone_cursor];let weather=self.step_weather;
+                let capacity=zone_state.air.capacity_rate_w_k(zone.volume_m3*zone.multiplier.max(1) as f64,weather.pressure_pa,self.dt_s);
+                let (storage,history)=zone_state.air.storage_terms(capacity);
+                let outdoor=loads.outdoor_air_m3_s*moist_air_density(weather.dry_bulb_c,weather.humidity_ratio,weather.pressure_pa)*moist_air_cp_j_per_kg_k(weather.humidity_ratio);
+                work.air_rhs_w=history+outdoor*weather.dry_bulb_c+loads.convective_w;
+                if exact {
+                    work.air_diagonal_w_k+=storage+outdoor;
+                    state.solver.matrix[n*order+n]=work.air_diagonal_w_k;state.solver.rhs[n]=work.air_rhs_w;work.thermal_cursor=0;work.thermal_phase=1;
                 } else {
-                    work.free_temp_c
+                    let sums=work.mean_radiant_sums;work.air_diagonal_w_k=storage+outdoor+sums[0];
+                    state.solver.scratch[..4].copy_from_slice(&[work.air_diagonal_w_k,-sums[1],-sums[4],sums[3]]);
+                    state.solver.solution[..2].copy_from_slice(&[work.air_rhs_w+sums[2],sums[5]]);
+                    work.dense=Some(DenseSolveCursor::new(2,4,2));work.thermal_phase=2;
                 }
-            }
-        } else {
-            let air = if met {
-                work.target_temp_c.expect("met target")
-            } else {
-                let determinant = work.air_diagonal_w_k * sums[3] - sums[1] * sums[4];
-                if determinant.abs() > 1e-12 { ((work.air_rhs_w + sums[2] + work.delivered_w) * sums[3] + sums[1] * sums[5]) / determinant } else { work.free_temp_c }
-            };
-            solver.solution[0] = air;
-            solver.solution[1] = if sums[3].abs() > 1e-12 { (sums[5] + sums[4] * air) / sums[3] } else { air };
-            air
-        };
-        work.free_temp_c = air_c;
-        if let Some(zone_state) = state.zones.get_mut(&zone_id) {
-            zone_state.heating_demand_w = work.required_w.max(0.0);
-            zone_state.cooling_demand_w = (-work.required_w).max(0.0);
-            zone_state.unmet_heating_w = work.remaining_heating_w;
-            zone_state.unmet_cooling_w = work.remaining_cooling_w;
+                priced(256)
+            },
+            1=>{
+                let index=work.thermal_cursor;if index>=order*order+order{return DenseSolveTurn {status:DenseSolveStatus::Fault(DenseSolveFault::InvalidSnapshot),receipt:Default::default()}};
+                if index<order*order {state.solver.scratch[index]=state.solver.matrix[index];}
+                else {let row=index-order*order;state.solver.solution[row]=state.solver.rhs[row];}
+                work.thermal_cursor+=1;
+                if work.thermal_cursor==order*order+order {work.dense=Some(DenseSolveCursor::new(order,order*order,order));work.thermal_phase=2;}
+                priced(16)
+            },
+            2|5=>{
+                let Some(cursor)=work.dense.as_mut() else {return DenseSolveTurn {status:DenseSolveStatus::Fault(DenseSolveFault::InvalidSnapshot),receipt:Default::default()}};
+                let size=cursor.order();let expected=if work.thermal_phase==2 {if exact {order}else{2}}else if exact {n}else{1};if size!=expected||state.solver.scratch.len()<size*size||state.solver.solution.len()<size{return DenseSolveTurn {status:DenseSolveStatus::Fault(DenseSolveFault::Dimensions),receipt:Default::default()}};let mut turn=cursor.step(&mut state.solver.scratch[..size*size],&mut state.solver.solution[..size],budget);
+                if turn.status==DenseSolveStatus::Complete {turn.receipt.items=turn.receipt.items.max(1);turn.receipt.depth=turn.receipt.depth.max(1);work.dense=None;work.thermal_phase=if work.thermal_phase==2 {3}else{6};work.thermal_cursor=0;}
+                turn
+            },
+            3=>{
+                let free=state.solver.solution[if exact {n}else{0}];work.free_temp_c=free;
+                work.target_temp_c=if !loads.controlled {None}else if free<loads.heating_setpoint_c {Some(loads.heating_setpoint_c)}else if free>loads.cooling_setpoint_c {Some(loads.cooling_setpoint_c)}else{None};
+                if let Some(target)=work.target_temp_c {
+                    work.thermal_cursor=0;
+                    if exact {if n==0 {work.dense=Some(DenseSolveCursor::new(0,0,0));work.thermal_phase=5;}else{work.thermal_phase=4;}}
+                    else {let sums=work.mean_radiant_sums;state.solver.scratch[0]=sums[3];state.solver.solution[0]=sums[5]+sums[4]*target;work.dense=Some(DenseSolveCursor::new(1,1,1));work.thermal_phase=5;}
+                }else{work.required_w=0.0;work.thermal_phase=6;}
+                priced(256)
+            },
+            4=>{
+                let index=work.thermal_cursor;if n==0||index>=n*n+n{return DenseSolveTurn {status:DenseSolveStatus::Fault(DenseSolveFault::InvalidSnapshot),receipt:Default::default()}};
+                if index<n*n {let (row,column)=(index/n,index%n);state.solver.scratch[index]=state.solver.matrix[row*order+column];}
+                else {let row=index-n*n;state.solver.solution[row]=state.solver.rhs[row]-state.solver.matrix[row*order+n]*work.target_temp_c.expect("constrained target");}
+                work.thermal_cursor+=1;
+                if work.thermal_cursor==n*n+n {work.dense=Some(DenseSolveCursor::new(n,n*n,n));work.thermal_phase=5;}
+                priced(if index<n*n {16}else{24})
+            },
+            6=>{
+                if let Some(target)=work.target_temp_c {
+                    if work.thermal_cursor==0 {work.required_w=work.air_diagonal_w_k*target-work.air_rhs_w;if !exact {let sums=work.mean_radiant_sums;work.required_w-=sums[1]*state.solver.solution[0]+sums[2];}work.thermal_cursor=1;return priced(256);}
+                    if exact&&work.thermal_cursor<=n {let column=work.thermal_cursor-1;work.required_w+=state.solver.matrix[n*order+column]*state.solver.solution[column];work.thermal_cursor+=1;return priced(24);}
+                }
+                if !work.required_w.is_finite(){return DenseSolveTurn {status:DenseSolveStatus::Fault(DenseSolveFault::NonFiniteArithmetic),receipt:priced(256).receipt};}
+                work.remaining_heating_w=work.required_w.max(0.0);work.remaining_cooling_w=(-work.required_w).max(0.0);work.delivered_w=0.0;work.ideal_cursor=0;work.equipment_cursor=0;work.thermal_phase=0;work.stage=BalanceStage::IdealLoad;priced(256)
+            },
+            _=>DenseSolveTurn {status:DenseSolveStatus::Fault(DenseSolveFault::InvalidSnapshot),receipt:Default::default()},
         }
-        work.face_cursor = 0;
-        work.stage = BalanceStage::Commit;
+    }
+
+    fn unit_settle(&mut self,work:&mut BalanceWork,_model:&Model,pre:&PrecomputedModel,state:&mut SimulationModel,budget:DenseSolveBudget)->DenseSolveTurn {
+        let zone_id=pre.zone_order[work.zone_cursor];let n=pre.enclosures.get(&zone_id).map_or(0,|enclosure|enclosure.faces.len());
+        let exact=pre.enclosures.get(&zone_id).is_none_or(|enclosure|matches!(enclosure.radiation,EnclosureRadiation::Exchange {..}));let order=n+1;
+        let priced=|bytes|DenseSolveTurn {status:DenseSolveStatus::Pending,receipt:DenseSolveDemand {items:1,copy_bytes:bytes,depth:1,capacity_bytes:0}};
+        match work.thermal_phase {
+            0=>{
+                let met=work.target_temp_c.is_some()&&(work.delivered_w-work.required_w).abs()<=1e-9*work.required_w.abs().max(1.0);
+                if met {let target=work.target_temp_c.expect("met target");if exact {state.solver.solution[n]=target;}else{state.solver.solution[1]=state.solver.solution[0];state.solver.solution[0]=target;}work.thermal_phase=3;}
+                else if exact {work.thermal_cursor=0;work.thermal_phase=1;}
+                else {let sums=work.mean_radiant_sums;state.solver.scratch[..4].copy_from_slice(&[work.air_diagonal_w_k,-sums[1],-sums[4],sums[3]]);state.solver.solution[..2].copy_from_slice(&[work.air_rhs_w+sums[2]+work.delivered_w,sums[5]]);work.dense=Some(DenseSolveCursor::new(2,4,2));work.thermal_phase=2;}
+                priced(256)
+            },
+            1=>{
+                let index=work.thermal_cursor;if index>=order*order+order{return DenseSolveTurn {status:DenseSolveStatus::Fault(DenseSolveFault::InvalidSnapshot),receipt:Default::default()}};if index<order*order {state.solver.scratch[index]=state.solver.matrix[index];}else{let row=index-order*order;state.solver.solution[row]=state.solver.rhs[row]+if row==n {work.delivered_w}else{0.0};}
+                work.thermal_cursor+=1;if work.thermal_cursor==order*order+order {work.dense=Some(DenseSolveCursor::new(order,order*order,order));work.thermal_phase=2;}priced(16)
+            },
+            2=>{let Some(cursor)=work.dense.as_mut() else {return DenseSolveTurn {status:DenseSolveStatus::Fault(DenseSolveFault::InvalidSnapshot),receipt:Default::default()}};let size=cursor.order();let expected=if exact {order}else{2};if size!=expected||state.solver.scratch.len()<size*size||state.solver.solution.len()<size{return DenseSolveTurn {status:DenseSolveStatus::Fault(DenseSolveFault::Dimensions),receipt:Default::default()}};let mut turn=cursor.step(&mut state.solver.scratch[..size*size],&mut state.solver.solution[..size],budget);if turn.status==DenseSolveStatus::Complete {turn.receipt.items=turn.receipt.items.max(1);turn.receipt.depth=turn.receipt.depth.max(1);work.dense=None;work.thermal_phase=3;}turn},
+            3=>{
+                let air=state.solver.solution[if exact {n}else{0}];if !air.is_finite(){return DenseSolveTurn {status:DenseSolveStatus::Fault(DenseSolveFault::NonFiniteArithmetic),receipt:priced(256).receipt};}work.free_temp_c=air;
+                if let Some(zone)=state.zones.get_mut(&zone_id){zone.heating_demand_w=work.required_w.max(0.0);zone.cooling_demand_w=(-work.required_w).max(0.0);zone.unmet_heating_w=work.remaining_heating_w;zone.unmet_cooling_w=work.remaining_cooling_w;}
+                work.face_cursor=0;work.thermal_phase=0;work.stage=BalanceStage::Commit;priced(256)
+            },
+            _=>DenseSolveTurn {status:DenseSolveStatus::Fault(DenseSolveFault::InvalidSnapshot),receipt:Default::default()},
+        }
     }
 
     fn unit_commit(&mut self, work: &mut BalanceWork, model: &Model, pre: &PrecomputedModel, state: &mut SimulationModel) {

@@ -1,6 +1,15 @@
 use super::*;
-use semio_s_artifact_puzzle_3d_model::precompute_model_tests::context::*;
-use semio_s_artifact_puzzle_3d_model::{BrushHostRules, BrushKindWeights, CableKindCatalog, EngineSceneObject, KindCompatEntry, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexKindCatalog, VortexProps};
+use super::*;
+use semio_s_artifact_puzzle_3d_model::BrushHostRules;
+use semio_s_artifact_puzzle_3d_model::BrushKindWeights;
+use semio_s_artifact_puzzle_3d_model::CableKindCatalog;
+use semio_s_artifact_puzzle_3d_model::EngineSceneObject;
+use semio_s_artifact_puzzle_3d_model::KindCompatEntry;
+use semio_s_artifact_puzzle_3d_model::ObjectKind;
+use semio_s_artifact_puzzle_3d_model::ObjectKindRepresentation;
+use semio_s_artifact_puzzle_3d_model::ObjectKindVortexTemplate;
+use semio_s_artifact_puzzle_3d_model::VortexKindCatalog;
+use semio_s_artifact_puzzle_3d_model::VortexProps;
 
 fn catalog_host_engine() -> Puzzle3dCollision {
     let mut engine = Puzzle3dCollision::new();
@@ -195,9 +204,9 @@ fn precompute_session_native_wrapper_exercises_public_methods() {
     let _candidates: BrushCollisionFreeResult = session.brush_candidates("host:v0");
     assert!(session.brush_preview("host:v0", 0).is_none());
 
-    let mut object_weights = std::collections::BTreeMap::new();
-    object_weights.insert("Host".to_string(), 1.0);
-    session.dispatch(Puzzle3dEngineCommand::UpdateKindWeights { object_weights, vortex_weights: std::collections::BTreeMap::new() }).expect("update kind weights");
+    let mut object_weights = semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap::new();
+    object_weights.cold_insert("Host".to_string(), 1.0);
+    session.dispatch(Puzzle3dEngineCommand::UpdateKindWeights { object_weights, vortex_weights: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap::new() }).expect("update kind weights");
 
 }
 
@@ -223,7 +232,7 @@ fn enqueue_brush_target_appends_once() {
 /// 🖐️ Compile-guard for the 🖐️5d app, which builds its own `Puzzle5dPrecomputeSession` on top of
 /// this one (relocated from the former `⚙️engine` root's `the_5d_facing_engine_surface_stays_public`,
 /// ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): every item it names must stay
-/// publicly reachable — pure data under `crate::standards::v1::subsets::any::schema::…`, the session/dispatch
+/// publicly reachable — pure data under `semio_s_artifact_puzzle_3d_model::standards::v1::subsets::any::schema::…`, the session/dispatch
 /// surface under `crate::editor::puzzle3d::precompute::…`. A rename or a visibility narrowing breaks
 /// this test long before it breaks 5d.
 #[test]

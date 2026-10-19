@@ -186,7 +186,7 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
         if !outcome.is_applicable(protocol::MergePolicy::default()) {
             return None;
         }
-        protocol::apply_diff(outcome.diff(), snapshot).ok()
+        protocol::apply_diff_cold(outcome.diff(), snapshot).ok()
     }
 
     /// 🔁️ Folds provisional ops from `base` until the wall deadline; the overlay is replaced once every op is

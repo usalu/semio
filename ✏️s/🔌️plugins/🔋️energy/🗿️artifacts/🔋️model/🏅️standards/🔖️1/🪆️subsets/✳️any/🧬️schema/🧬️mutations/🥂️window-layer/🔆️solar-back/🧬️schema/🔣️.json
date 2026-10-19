@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-glazing-material-solar-reflectance-back/schema.json",
+  "title": "ChangeGlazingMaterialSolarReflectanceBack",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newSolarReflectanceBack"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeGlazingMaterialSolarReflectanceBack"
+    },
+    "id": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Glazing material",
+          "de": "Verglasungsmaterial"
+        },
+        "description": {
+          "en": "The glazing material this mutation changes, by id.",
+          "de": "Verglasungsmaterial, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "glazingMaterial",
+          "domain": "energyModel",
+          "granularity": "glazingMaterial"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSolarReflectanceBack": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Solar back reflectance",
+          "de": "Solarer Reflexionsgrad hinten"
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0,
+        "softMax": 1,
+        "group": "optics",
+        "order": 20
+      }
+    }
+  }
+}

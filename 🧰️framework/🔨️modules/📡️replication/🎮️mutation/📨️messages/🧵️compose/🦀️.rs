@@ -322,6 +322,7 @@ impl ArtifactMessageComposeCursor {
 }
 
 impl semio_framework_value::ErasedSnapshotRetirement for ArtifactMessageComposeCursor {
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(semio_framework_value::RetirementDemand { release_bytes: Self::next_release_byte_demand(self)?, depth: Self::next_depth_demand(self), ..Default::default() }) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Self::close_step(self, grant) }
     fn terminal_is_empty(&self) -> bool { Self::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }

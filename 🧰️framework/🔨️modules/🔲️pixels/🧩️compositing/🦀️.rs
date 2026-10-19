@@ -33,7 +33,8 @@ pub enum CompositeContent {Pixels(String),Group(Vec<CompositeLayer>),Adjustment 
 #[derive(semio_framework_value::RetireOwned)]
 pub struct CompositeLayer {pub opacity:f64,pub blend:CompositeBlend,pub visible:bool,pub transform:CompositeAffine,pub mask:Option<CompositeMask>,pub content:CompositeContent}
 #[derive(Clone,Debug)]
-pub struct CompositeInput {pub width:u32,pub height:u32,pub origin:[f64;2],pub images:BTreeMap<String,Arc<RasterImage>>,pub layers:Vec<CompositeLayer>}
+#[derive(semio_framework_value::RetireOwned)]
+pub struct CompositeInput {pub width:u32,pub height:u32,pub origin:[f64;2],pub images:BTreeMap<String,RasterLease>,pub layers:Vec<CompositeLayer>}
 
 #[derive(Clone,Debug)]
 #[derive(semio_framework_value::RetireOwned)]
@@ -157,7 +158,7 @@ impl Compiler<'_> {
 pub struct CompositeJob {#[doc(hidden)] pub images:Vec<(String,RasterLease)>,#[doc(hidden)] pub layers:Vec<CompositeLayer>,#[doc(hidden)] pub commands:Vec<Step>,#[doc(hidden)] pub buffers:Vec<Vec<[f64;4]>>,#[doc(hidden)] pub candidate:Option<RasterImage>,#[doc(hidden)] pub origin:[f64;2],#[doc(hidden)] pub width:usize,#[doc(hidden)] pub count:usize,#[doc(hidden)] pub total:usize,tile:usize,command:usize,offset:usize,#[doc(hidden)] pub completed:usize,cancelled:bool}
 impl CompositeJob {
     pub fn new(input:CompositeInput)->Result<Self,PixelEditError> {
-        Self::new_owned(input.width,input.height,input.origin,input.images.into_iter().map(|(key,image)|(key,RasterLease(image))).collect(),input.layers)
+        Self::new_owned(input.width,input.height,input.origin,input.images.into_iter().collect(),input.layers)
     }
     /// 🎟️ Retains original ordered image and layer backing for explicitly funded retirement.
     pub fn new_owned(width:u32,height:u32,origin:[f64;2],images:Vec<(String,RasterLease)>,layers:Vec<CompositeLayer>)->Result<Self,PixelEditError> {

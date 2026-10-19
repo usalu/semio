@@ -11,5 +11,13 @@
   "heapClone": false,
   "coldFallback": false,
   "childNarrowDelegation": true,
-  "rootCopyBytes": 0
+  "rootCopyBytes": 0,
+  "unsupportedOriginal": {
+    "retained": true,
+    "constructorHeapBytes": 0,
+    "demandRefusal": "UnsupportedOwner",
+    "stepRefusal": "UnsupportedOwner",
+    "refusalHeapBytes": 0,
+    "sameOriginalRecoverable": true
+  }
 }

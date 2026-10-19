@@ -1,0 +1,138 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/mesh/mutation/change-element/schema.json",
+  "title": "ChangeElement",
+  "description": "Changes only supplied element fields. Variant is omitted for ordinary scalar or reference edits.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "patch"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeElement",
+      "description": "The internally tagged discriminator `#[value(tag = \"mutation\")]` puts on the wire.",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Element",
+          "de": "Element"
+        },
+        "ref": {
+          "kind": "element",
+          "domain": "fem2d",
+          "granularity": "element"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "patch": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "kind": {
+          "x-semio-ui": {
+            "widget": "hidden",
+            "role": "discriminator",
+            "label": {
+              "en": "Element type",
+              "de": "Elementtyp"
+            }
+          },
+          "type": "string",
+          "enum": [
+            "bar",
+            "beam"
+          ]
+        },
+        "start": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Start node",
+              "de": "Anfangsknoten"
+            },
+            "ref": {
+              "kind": "node",
+              "domain": "fem2d",
+              "granularity": "node"
+            },
+            "group": "target",
+            "order": 30
+          }
+        },
+        "end": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "End node",
+              "de": "Endknoten"
+            },
+            "ref": {
+              "kind": "node",
+              "domain": "fem2d",
+              "granularity": "node"
+            },
+            "group": "target",
+            "order": 40
+          }
+        },
+        "materialId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Material",
+              "de": "Material"
+            },
+            "ref": {
+              "kind": "material",
+              "domain": "fem2d",
+              "granularity": "material"
+            },
+            "group": "target",
+            "order": 50
+          }
+        },
+        "sectionId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Cross-section",
+              "de": "Querschnitt"
+            },
+            "ref": {
+              "kind": "section",
+              "domain": "fem2d",
+              "granularity": "section"
+            },
+            "group": "target",
+            "order": 60
+          }
+        }
+      }
+    }
+  }
+}

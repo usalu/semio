@@ -1,0 +1,7 @@
+{
+  "mutation": "changeMaterial",
+  "id": "steel",
+  "patch": {
+    "name": "Steel"
+  }
+}

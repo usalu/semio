@@ -19,6 +19,17 @@ pub struct SetN {
 //#region ⚙️Behavior
 impl semio_framework_os_spr::MutationKind<DemoSnapshot, SeverityMutation> for SetN {
     const SEMANTICS: semio_framework_os_spr::SemanticDescriptor = semio_framework_os_spr::SemanticDescriptor { verb: "set", entity: "n", kind: "set-n", record: "SetN" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set N", "N setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["n".into()]
+    }
+}
+
+impl semio_framework_os_spr::ColdMutationKind<DemoSnapshot, SeverityMutation> for SetN {
     fn diff(&self, _base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<DemoDiff> {
         semio_framework_os_spr::MutationOutcome::new(DemoDiff::value(Some(self.n)))
     }
@@ -28,11 +39,5 @@ impl semio_framework_os_spr::MutationKind<DemoSnapshot, SeverityMutation> for Se
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set N", "N setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["n".into()]
-    }
 }
 //#endregion ⚙️Behavior

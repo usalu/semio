@@ -1,6 +1,8 @@
 //! 🧬️ Puzzle2d artifact schema — every field of the artifact with its state class.
 
-use semio_framework_value::{list::PagedList, paged::PagedUtf8};
+use semio_framework_value::list::PagedList;
+
+use semio_framework_value::paged::PagedUtf8;
 
 use ::semio_framework_schema::ArtifactSchema;
 

@@ -7,7 +7,7 @@
 mod draft;
 
 #[path = "../📏️spacing/🦀️.rs"]
-mod spacing;
+pub mod spacing;
 
 #[path = "../🗓️schedule/🦀️.rs"]
 mod schedule;

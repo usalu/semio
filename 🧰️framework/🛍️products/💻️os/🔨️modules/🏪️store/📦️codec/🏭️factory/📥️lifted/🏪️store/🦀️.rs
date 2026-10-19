@@ -127,7 +127,7 @@ where
     /// store, THEN propagate — the guest twin does the same (ticket 26/09/18 TC3e/TC5).
     fn apply_ops_binary_impl<'a, 'b, P, Mutation>(pack: &'a [u8], spr: &'a [u8], ops_vec: &'a [u8], identity: &'a mut EntityIdentityAuthority<'b>) -> ArtifactCodecApplyFuture<'a>
     where
-        P: Clone + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
+        P: ToValue + ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
         Mutation: ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
         {
         Box::pin(async move {
@@ -184,7 +184,7 @@ where
 
     fn replay_envelopes_impl<'a, P, Mutation>(pack: &'a [u8], spr: &'a [u8], envelopes: &'a [u8]) -> ArtifactCodecApplyFuture<'a>
     where
-        P: Clone + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
+        P: ToValue + ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
         Mutation: Clone + ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
         {
         Box::pin(async move {
@@ -230,8 +230,8 @@ pub const ARTIFACT_CODEC_APPLY_CLOSE_MAXIMUM_STEPS: usize = 1 << 20;
 /// [`ArtifactCodec::apply_ops_binary`] and [`replay_envelopes_onto_pair`].
 pub fn close_codec_reduction_store<P, Mutation>(mut store: ArtifactStore<P, Mutation>) -> Result<(), VcsError>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     let mut closed = Err(VcsError::ValidationFailed("artifact codec store did not reach terminal emptiness within its bounded close budget".into()));
     for _ in 0..ARTIFACT_CODEC_APPLY_CLOSE_MAXIMUM_STEPS {
@@ -286,8 +286,8 @@ where
 /// See `🌎️hub/🗿️artifact-authority/📌️check-in` and `db::artifact_ledger_tail`.
 pub async fn replay_envelopes_onto_pair<P, Mutation>(pack: &[u8], spr: &[u8], envelopes: &[u8], owners: impl FnOnce() -> Result<DocumentStoreOwners<P, Mutation>, ValueError>) -> Result<ArtifactPackFiles, VcsError>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     if pack.is_empty() || spr.is_empty() {
         return Err(VcsError::Deserialize("replay-envelopes has no pack+spr baseline".into()));

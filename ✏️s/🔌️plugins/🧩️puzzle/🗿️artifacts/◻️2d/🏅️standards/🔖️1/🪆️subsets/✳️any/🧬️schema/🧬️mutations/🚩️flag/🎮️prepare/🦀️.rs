@@ -1,5 +1,12 @@
 //! ⚑️ Borrowed typed node and edge flag intents preserve authored optional state.
-use crate::standards::v1::subsets::any::schema::mutations::{ChangeNodeLocked,ChangeNodeVisible,ChangeEdgeLocked,ChangeEdgeVisible,ChangeNodeRoot,ChangeTargetRegionHidden,ChangeTargetRegionLocked,Puzzle2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::ChangeNodeLocked;
+use super::ChangeNodeVisible;
+use super::ChangeEdgeLocked;
+use super::ChangeEdgeVisible;
+use super::ChangeNodeRoot;
+use super::ChangeTargetRegionHidden;
+use super::ChangeTargetRegionLocked;
+use super::Puzzle2dMutation;
 use crate::{Puzzle2dSnapshot,standards::v1::subsets::any::schema::lookup::{Puzzle2dLookupCursor,Puzzle2dLookupScope,Puzzle2dLookupStep}};
 use semio_framework_value::{paged::PagedUtf8,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep}};
 

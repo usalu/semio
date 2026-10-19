@@ -1,0 +1,228 @@
+# Repo Lane File Manifest — Repeat 691
+
+Paths in this manifest were applied, merged, or examined for preservation in the repo lane. The root router was examined and retained byte-for-byte as HEAD. No build, compiler, test, runtime or dependency operation was run.
+
+- `🧪️tests/🧪️diff-only-law-gate/🟦️.ts` — overlap
+- `🧪️tests/🧪️diff-only-law-gate/🫧️lanes/🟦️.ts` — overlap
+- `🧪️tests/🧫️fixtures/🧫️diff-only-law-gate/🔣️.json` — incoming
+- `🧪️tests/🧫️fixtures/🧫️diff-only-law-gate/🫧️lanes/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/README.md` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🐹️.go` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/📋️project.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/📜️script.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🔬️_test.go` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧫️fixtures/🏗️build/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧬️schema/🏗️build/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/README.md` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/⚙️preferences/⌨️keymap/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🌀️daemon/🧠️supervisor/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🌀️daemon/🧪️tests/🔬️unit/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎮️registry/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎮️registry/🧪️tests/🔬️unit/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🏛️repo-domain/📦️packages/🦀️rust/Cargo.toml` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🏛️repo-domain/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🏛️repo-domain/🧪️tests/🔬️unit/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🧬️schema/🎚️publication/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🧬️schema/🔒️custody/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📜️script.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/⌨️controls/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🌐️labels/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📋️panes/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📡️sessions/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust/Cargo.toml` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🚀️launcher/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🚀️launcher/🧪️tests/🔬️unit/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🧪️tests/🔬️unit/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🪟️windows/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🌀️control-plane/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎮️registry/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🥒️.feature` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧫️fixtures/⌨️keymap/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧫️fixtures/🌀️control-plane/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧫️fixtures/🧊️execution/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧫️fixtures/🧭️authority/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧫️fixtures/🧭️journeys/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️authority/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️authority/🥒️.feature` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️cli/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/🏗️workspace/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/💨️smoke/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/🖥️terminal/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/🥒️.feature` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/🧰️steps/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/🧰️support/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🪟️windows/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🪟️windows/🥒️.feature` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧫️fixtures/⌨️batch/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧫️fixtures/🌐️metadata/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧫️fixtures/🌐️open/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧫️fixtures/🏛️repo-action/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧫️fixtures/🪟️windows/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/⌨️batch/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🌐️open/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎮️registry/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🏛️repo-action/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🧭️authority/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🧭️journeys/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🪟️windows/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧭️cli/🌐️open/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧭️cli/🌐️open/🧪️tests/🔬️unit/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧭️cli/📦️packages/🦀️rust/Cargo.toml` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧭️cli/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🐹️go/🐹️.go` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🦀️rust/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/🧪️tests/🎫️ticket-document-codec/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/🧪️tests/🎫️ticket-document-codec/🥒️.feature` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/🧪️tests/🧫️fixtures/📄️ticket-document-codec/📄️documents.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/🧬️schema/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go/🐹️.go` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go/📜️script.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go/🔬️_test.go` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/🧪️tests/🧫️fixtures/📡️dotnet-format-owners.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧩️component/🐹️.go` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧪️tests/🔬️component/🐹️.go` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️protocol/🐹️.go` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🗄️repository/🐹️.go` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🧩️component/🐹️.go` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🧪️tests/🤝️protocol-contract/🐹️.go` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📋️project.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/📜️script.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/🧪️tests/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/🧫️fixtures/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools/🧬️schema/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/⌛️queries/🟦️.ts` — HEAD owner receiving relocated source
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/⌨️commands/🟦️.ts` — HEAD owner receiving relocated source
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/⚙️data-models/🟦️.ts` — HEAD owner receiving relocated source
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🌳️tree-providers/🟦️.ts` — HEAD owner receiving relocated source
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🎞️constants/🟦️.ts` — HEAD owner receiving relocated source
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🎩️globals/🟦️.ts` — HEAD owner receiving relocated source
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🎼️utilities/🟦️.ts` — HEAD owner receiving relocated source
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏬️uri-resolution/🟦️.ts` — HEAD owner receiving relocated source
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📋️project.json` — overlap
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📜️script.ts` — overlap
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🔎️code-lens/🟦️.ts` — HEAD owner receiving relocated source
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🗺️file-analysis/🟦️.ts` — HEAD owner receiving relocated source
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🟦️.ts` — overlap
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🎛️dashboard-only/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🧩️extension/🟦️.ts` — overlap
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧫️fixtures/🎛️dashboard-only/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧬️schema/🎛️dashboard-only/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📐️model/📦️packages/🐹️go/🐹️.go` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📐️model/📦️packages/🦀️rust/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📐️model/🧬️schema/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run/🟦️.ts` — HEAD owner receiving relocated source
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏭️factory/🟦️.ts` — HEAD owner receiving relocated source
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts` — HEAD owner receiving relocated source
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📤️publication/🟦️.ts` — HEAD owner receiving relocated source
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts` — HEAD owner receiving relocated source
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/🟦️.ts` — HEAD owner receiving relocated source
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🎯️mutation-outcome/🟦️.ts` — HEAD owner receiving relocated source
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🚧️authority-bans/🟦️.ts` — HEAD owner receiving relocated source
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧼️clean-mechanism/🟦️.ts` — HEAD owner receiving relocated source
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts` — overlap
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts` — overlap
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🐳️containers/🔁️lifecycle/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🐳️containers/🧪️tests/🔁️lifecycle/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🐳️containers/🧪️tests/🚀️runtime-bootstrap/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🐳️containers/🧪️tests/🧫️fixtures/🔁️lifecycle/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🐳️containers/🧪️tests/🧫️fixtures/🚀️runtime-bootstrap/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📝️derived-config/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📝️derived-config/🧪️tests/📝️derived-config/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📝️derived-config/🧪️tests/🧫️fixtures/📝️derived-config/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts` — overlap
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📥️invocation/🧪️tests/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📥️invocation/🧫️fixtures/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📥️invocation/🧬️schema/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🧪️tests/🥒️.feature` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🟦️.ts` — overlap
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎚️build-mode/🔐️custody/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎚️build-mode/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎮️playground-preparation/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎮️playground-preparation/🧪️tests/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎮️playground-preparation/🧫️fixtures/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎮️playground-preparation/🧬️schema/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️native-dependencies/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️live-activation/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️native-renderer-outputs/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️native-runtime/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/📉️pressure/🧪️tests/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🏭️generate/🟦️.ts` — HEAD owner receiving relocated source
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🛠️dev/🟦️.ts` — HEAD owner receiving relocated source
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/📤️child/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs` — overlap
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/🧪️tests/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/🧪️tests/🥒️.feature` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/🧫️fixtures/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/🧬️schema/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts` — overlap
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🔣️policy.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🧪️tests/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🧫️fixtures/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🧬️schema/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📓️schema-catalog.md` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/README.md` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json` — overlap
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json` — overlap
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/🟨️.mjs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧪️tests/🧫️fixtures/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧬️schema/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📋️project.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📜️script.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🔁️replan/🧪️tests/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts` — overlap
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/📥️original-control/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🧫️fixtures/🎯️selected-preparation/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🧫️fixtures/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/📥️original-control/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/📥️original-control/🧬️schema.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🤖️agent-clients/🎮️command/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🤖️agent-clients/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⏱️process-budgets/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎚️tool-configuration-ownership/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎚️vitest-configuration-ownership/🟦️.ts` — overlap
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔧️build-surfaces/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🤖️agent-client-configuration/🟦️.ts` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥾️cross-platform-bootstrap/🟦️.ts` — overlap
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🎚️vitest-configuration-ownership/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🤖️agent-client-configuration/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🥾️cross-platform-bootstrap/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️dependency-direction/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🪶️snapshot-test-selection/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🥾️nx-entrypoints/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🥾️nx-entrypoints/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/📦️packages/🐹️go/🐹️.go` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧬️schema/🔣️statutes.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/🔬️unit/🦀️.rs` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/🧫️fixtures/🚪️entrypoint-contract.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧬️schema/🔣️.json` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🐹️go/🔬️_test.go` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/README.md` — incoming
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🪝️hooks/🔮️oracles/🔣️.json` — incoming

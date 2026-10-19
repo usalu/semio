@@ -657,7 +657,7 @@ export function policyPackageLanguagePurityBreaches(repoRoot: string): BreachRec
 }
 
 //#region 🔧️PolicyRuleDerivedConfig
-/** 📝️ Derived-config rule: the devcontainer editor block, the nextest scopes and the dependabot directories equal their derivation.
+/** 📝️ Derived-config rule: nextest scopes and dependency update directories equal their derivation.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📝️derived-config/🟦️.ts */
 export function policyDerivedConfigBreaches(repoRoot: string): BreachRecord[] {
   return checkDerivedConfig(repoRoot).map((problem) => ({
@@ -667,7 +667,7 @@ export function policyDerivedConfigBreaches(repoRoot: string): BreachRecord[] {
     scope: /^[^:\s]+/.exec(problem)?.[0] ?? problem,
     priority: "high" as const,
     reason: "A checked-in file that derives from one canonical source must equal its derivation, otherwise two copies drift and the editor, container and test runners disagree.",
-    solution: "Run `bun repo run workspace:generate-config` to rewrite the derived files; edit the canonical source (.vscode/settings.json, .vscode/extensions.json, .devcontainer/editor-overlay.json, .config/nextest.toml) instead of the copy.",
+    solution: "Run `bun repo run workspace:generate-config` to rewrite the derived files; edit the canonical source (.config/nextest.toml and its declared scope overrides) instead of the copy.",
   }));
 }
 //#endregion 🔧️PolicyRuleDerivedConfig

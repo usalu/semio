@@ -98,6 +98,7 @@ impl<P> Drop for PresenceStoreRetirement<P> {
     fn drop(&mut self) { if !std::thread::panicking() { assert!(self.terminal_is_empty(), "presence store retirement requires its exact terminal-empty witness"); } }
 }
 impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for PresenceStoreRetirement<P> {
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.retirement_demands(body) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.retirement_demands(body)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.release_bytes) }
@@ -118,7 +119,7 @@ impl<P: Send + Sync + 'static> PresencePeersCommit<P> {
 //#endregion 🧹️StoreRetirement
 
 //#region 🔌️OwnerTransfer
-impl<P: Clone + Send + Sync + 'static, M: Mutation<P>> PresenceStore<P, M> {
+impl<P: Send + Sync + 'static, M: Mutation<P>> PresenceStore<P, M> {
     /// 🧹️ Detaches exact roots once after the concrete domain validates its empty terminal value.
     pub fn begin_retirement(&mut self, terminal_local: Arc<P>, terminal_is_empty: fn(&P) -> bool) -> Result<PresenceStoreRetirement<P>, (&'static str, Arc<P>)> {
         if self.close_started || !terminal_is_empty(terminal_local.as_ref()) {

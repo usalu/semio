@@ -1,43 +1,49 @@
 //! 🧬️ Fem2d snapshot schema — artifact-lane fields only.
 
-use crate::standards::v1::subsets::any::schema::structure::{FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
+use crate::standards::v1::subsets::any::schema::structure::FemCombination;
+use crate::standards::v1::subsets::any::schema::structure::FemElement;
+use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use semio_s_fem_node::planar::FemNodeValue;
+use crate::standards::v1::subsets::any::schema::structure::FemRegion;
+use crate::standards::v1::subsets::any::schema::structure::FemSection;
+use crate::standards::v1::subsets::any::schema::structure::FemSupport;
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 
+#[path="❄️reference/🦀️.rs"]mod reference;
+pub use reference::Fem2dSnapshotValue;
 //#region 🔖️Snapshot
 /// 📸️ Persisted fem2d document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, semio_framework_value::RetireOwned)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[dsl(id = "fem.fem2d", layout = "lines")]
+#[derive(Debug, Default, PartialEq, ToValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.fem.fem2d")]
 pub struct Fem2dSnapshot {
-    #[dsl(table)]
     #[state(artifact)]
-    pub nodes: Vec<FemNode>,
-    #[dsl(statements, block)]
+    pub nodes: semio_framework_value::list::persistent::PersistentList<semio_s_fem_node::planar::FemNode>,
     #[state(artifact)]
     pub elements: Vec<FemElement>,
-    #[dsl(table)]
     #[state(artifact)]
     pub regions: Vec<FemRegion>,
-    #[dsl(table)]
     #[state(artifact)]
-    pub materials: Vec<FemMaterial>,
-    #[dsl(table)]
+    pub materials: semio_framework_value::list::persistent::PersistentList<semio_s_fem_material::planar::FemMaterial>,
     #[state(artifact)]
     pub sections: Vec<FemSection>,
-    #[dsl(table)]
     #[state(artifact)]
     pub supports: Vec<FemSupport>,
-    #[dsl(table)]
     #[state(artifact)]
     pub load_cases: Vec<FemLoadCase>,
-    #[dsl(table)]
     #[state(artifact)]
     pub combinations: Vec<FemCombination>,
-    #[dsl(block)]
     #[state(artifact)]
     pub analysis: FemAnalysisSettings,
+}
+
+#[path = "🪪️identity/🦀️.rs"]
+mod interaction_identity;
+
+impl Fem2dSnapshot {
 }
 //#region 🔖️HandcraftedArtifactCodecs
 

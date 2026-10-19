@@ -7,16 +7,19 @@ import { policyDiffOnlyFileBreaches, policyInverseSumLawUntestedLeafBreaches } f
 
 const root=resolve(import.meta.dir,"../../.."),owner=join(root,"🧪️tests/🧫️fixtures/🧫️diff-only-law-gate"),vectors=JSON.parse(readFileSync(join(owner,"🔣️.json"),"utf8")) as {codes:Record<string,string>;cases:{id:string;segments:string[];lines:string[];breaches:{line:number;rule:string}[]}[];leafTrees:{id:string;files:Record<string,string[]>;breaches:string[]}[]},fixture=JSON.parse(readFileSync(join(owner,"🫧️lanes/🔣️.json"),"utf8")) as {version:1;cases:{id:string;expected:string[]}[]},validate=new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(owner,"🫧️lanes/🧬️schema/🔣️.json"),"utf8")));
 
-/** 🌳️ Derives whole-state type and restore tokens independently through the TypeScript lexical scanner. */
+/** 🌳️ Derives whole-state type and restore tokens independently through the TypeScript lexical scanner; a `Self::Snapshot {` setter is exempt only inside an `impl … for *TransientMutation|*PresenceMutation` (decided by that type name, never by a path). */
 function oracle(source:string):string[]{
  const scanner=ts.createScanner(ts.ScriptTarget.Latest,true,ts.LanguageVariant.Standard,source),tokens:{text:string;line:number}[]=[];
  for(let kind=scanner.scan();kind!==ts.SyntaxKind.EndOfFileToken;kind=scanner.scan())tokens.push({text:scanner.getTokenText(),line:source.slice(0,scanner.getTokenStart()).split("\n").length});
  const found=new Set<string>();
+ let ephemeralImpl=false;
  for(let index=0;index<tokens.length;index++){
   const token=tokens[index]!;
+  if(token.text==="impl"){let cursor=index+1;while(cursor<tokens.length&&tokens[cursor]!.text!=="{"&&tokens[cursor]!.text!=="for")cursor++;ephemeralImpl=tokens[cursor]?.text==="for"&&/^\w*(?:Transient|Presence)Mutation$/u.test(tokens[cursor+1]?.text??"");}
   if(token.text==="MutationDiff"&&tokens[index+1]?.text==="<"&&tokens[index+3]?.text===">"&&tokens[index+4]?.text==="for"&&tokens[index+2]?.text===tokens[index+5]?.text)found.add(token.line+"|R13");
   if(token.text==="type"&&tokens[index+1]?.text==="Diff"&&tokens[index+2]?.text==="=")found.add(token.line+"|R13");
-  if(["Restore","Snapshot"].includes(token.text)&&tokens[index+1]?.text==="{")found.add(token.line+"|R14");
+  const setter=token.text==="Snapshot"&&tokens[index-1]?.text===":"&&tokens[index-2]?.text===":"&&tokens[index-3]?.text==="Self";
+  if(["Restore","Snapshot"].includes(token.text)&&tokens[index+1]?.text==="{"&&!(setter&&ephemeralImpl))found.add(token.line+"|R14");
  }
  return [...found].sort();
 }
@@ -27,7 +30,7 @@ test("strict lane vectors retain their original programs and independent closed 
  for(const row of fixture.cases){const original=vectors.cases.find(candidate=>candidate.id===row.id);expect(original).toBeDefined();expect(oracle(original!.lines.join("\n"))).toEqual(row.expected);}
 });
 
-test("R13 and R14 reject whole-state diff and restore in every original ephemeral lane and type",()=>{
+test("R13 rejects whole-state diff in every original ephemeral lane and type and R14 exempts only the ephemeral Self::Snapshot setter",()=>{
  for(const row of fixture.cases){const original=vectors.cases.find(candidate=>candidate.id===row.id)!;const reports=policyDiffOnlyFileBreaches(original.segments.join("/"),original.lines.join("\n")).map(record=>{const match=/:(\d+) (R1[34]):/u.exec(record.summary);return match?match[1]+"|"+match[2]:null;}).filter(Boolean).sort();expect(reports).toEqual(row.expected);}
 });
 

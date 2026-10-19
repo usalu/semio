@@ -1,0 +1,108 @@
+{
+  "contract": "semio.history.original-read/v1",
+  "axes": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "cases": [
+    {
+      "id": "one-original",
+      "input": {
+        "counter": 0
+      },
+      "operations": [
+        {
+          "op": "replace",
+          "path": "/counter",
+          "value": 3
+        }
+      ],
+      "expected": {
+        "counter": 3
+      },
+      "readOrder": [
+        0
+      ],
+      "returnAfter": 1
+    },
+    {
+      "id": "ordered-originals",
+      "input": {
+        "counter": 0,
+        "label": "a"
+      },
+      "operations": [
+        {
+          "op": "replace",
+          "path": "/counter",
+          "value": 4
+        },
+        {
+          "op": "replace",
+          "path": "/label",
+          "value": "b"
+        },
+        {
+          "op": "replace",
+          "path": "/counter",
+          "value": 9
+        }
+      ],
+      "expected": {
+        "counter": 9,
+        "label": "b"
+      },
+      "readOrder": [
+        0,
+        1,
+        2
+      ],
+      "returnAfter": 3
+    },
+    {
+      "id": "repeat-read",
+      "input": {
+        "counter": 1
+      },
+      "operations": [
+        {
+          "op": "replace",
+          "path": "/counter",
+          "value": 8
+        }
+      ],
+      "expected": {
+        "counter": 8
+      },
+      "readOrder": [
+        0,
+        0
+      ],
+      "returnAfter": 2
+    },
+    {
+      "id": "empty-edit",
+      "input": {
+        "counter": 1
+      },
+      "operations": [],
+      "expected": {
+        "counter": 1
+      },
+      "readOrder": [],
+      "returnAfter": 0
+    }
+  ],
+  "refusals": [
+    "foreign-ledger",
+    "stale-generation",
+    "unpublished-group",
+    "read-before-birth",
+    "write-while-read",
+    "remove-while-read",
+    "return-with-live-projection"
+  ]
+}

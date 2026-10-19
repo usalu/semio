@@ -1,5 +1,5 @@
-//! 🔄️ Puzzle3d mutation — `RotateSelection`: a relative, parametric turn of a set of objects and target
 //! volumes, each about its own origin, by one world-axis rotation. The gesture's own inputs (which ids,
+//! 🔄️ Puzzle3d mutation — `RotateSelection`: a relative, parametric turn of a set of objects and target
 //! which axis, which angle) are the payload, so editing the turn in history re-derives every orientation
 //! from whatever base it replays on.
 use {semio_s_artifact_puzzle_3d_mutations_pose::move_object::mutation::MoveObject, semio_s_artifact_puzzle_3d_mutations_vortex::replace_attraction_geometry::mutation::ReplaceAttractionGeometry, semio_s_artifact_puzzle_3d_mutations_pose::rotate_object::mutation::RotateObject, semio_s_artifact_puzzle_3d_mutations_volume::rotate_target_volume::mutation::RotateTargetVolume, semio_s_artifact_puzzle_3d_mutations_pose::scale_object::mutation::ScaleObject};
@@ -28,18 +28,12 @@ pub struct RotateSelection {
 impl<Op> protocol::MutationKind<Puzzle3dSnapshot, Op> for RotateSelection
 where
     Op: protocol::Mutation<Puzzle3dSnapshot, Diff = Puzzle3dDiff> + From<RotateSelection> + From<MoveObject> + From<ReplaceAttractionGeometry> + From<RotateObject> + From<RotateTargetVolume> + From<ScaleObject>,
-{
+ {
+
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rotate", entity: "selection", kind: "rotate-selection", record: "RotatedSelection" };
 
-    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Puzzle3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
     
-    })
-}
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (degrees_en, degrees_de) = puzzle3d_selection_number(self.angle.to_degrees());
         let (en, de) = puzzle3d_selection_items(self.targets.len());
@@ -48,6 +42,21 @@ where
     fn target(&self) -> Vec<String> {
         self.targets.clone()
     }
+
+}
+impl<Op> protocol::ColdMutationKind<Puzzle3dSnapshot, Op> for RotateSelection
+where
+    Op: protocol::ColdMutation<Puzzle3dSnapshot, ReferenceDiff = Puzzle3dDiff> + From<RotateSelection> + From<MoveObject> + From<ReplaceAttractionGeometry> + From<RotateObject> + From<RotateTargetVolume> + From<ScaleObject>,
+ {
+fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+        super::diff::diff(self, base)
+    }
+fn inverse(&self, base: &Puzzle3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+
+    })
+}
 }
 //#endregion 🔖️Mutation
 

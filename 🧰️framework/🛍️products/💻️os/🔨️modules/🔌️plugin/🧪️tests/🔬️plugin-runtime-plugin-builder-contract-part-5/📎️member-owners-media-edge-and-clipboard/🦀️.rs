@@ -49,7 +49,7 @@
         assert_eq!(restored.count, 7, "the child arrives at the value its own history ended on");
         drain_and_close_composed_fixture(&mut consumer, mounted_policy,cx);
         drain_and_close_composed_fixture(&mut source, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -79,7 +79,7 @@
         assert!(entry.snapshot.typed::<TestSnapshot>().is_some(), "rejection preserves the exact erased owner and type identity");
         install_test_member_owners(&mut app, "child-a");
         drain_and_close_composed_fixture(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -107,7 +107,7 @@
         assert_eq!(app.stores.test_snapshot().await.count, 0, "undo retracts the document edit, never the config one");
         assert_eq!(app.stores.test_config().await.selected, Some("node-1".to_string()), "undo never steps over the config lane");
         close_reserved_app(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -139,7 +139,7 @@
         assert_eq!(result.requested_effects, vec![Effect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: Some(semio_framework::dsl_value!({ "themeId": "light" })) }]);
         assert_eq!(app.render_ctx().test_history().await.commands.len(), history.commands.len(), "bubbling the effect logs nothing new by itself");
         artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -163,7 +163,7 @@
         let Effect::ClipboardWrite { fragment } = &result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
         assert_eq!(fragment.dsl_text, "hello");
         assert_eq!(fragment.source_app, TestApp::<false>::APP_ID);
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -185,7 +185,7 @@
         let result = reserved_action(&mut app, "copy", None, &mut identity).await;
         assert!(result.mutations.is_empty());
         assert!(result.requested_effects.is_empty());
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -212,7 +212,7 @@
         assert!(matches!(&result.requested_effects[0], Effect::ClipboardWrite { fragment } if fragment.dsl_text == "hello"));
         reserved_action(&mut app, "undo", None, &mut identity).await;
         assert_eq!(app.stores.test_snapshot().await.label, "hello");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -242,7 +242,7 @@
         let args = dv(json!({ "fragment": fragment, "anchor": "original" }));
         reserved_action(&mut app, "paste", Some(&args), &mut identity).await;
         assert_eq!(app.stores.test_snapshot().await.label, "pasted");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -272,7 +272,7 @@
         let args = dv(json!({ "fragment": fragment, "anchor": "centroid" }));
         reserved_action(&mut app, "paste", Some(&args), &mut identity).await;
         assert_eq!(app.stores.test_snapshot().await.label, format!("pasted-{:?}", PasteAnchor::Centroid));
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -294,8 +294,8 @@
         let result = reserved_action(&mut app, "paste", None, &mut identity).await;
         assert!(result.mutations.is_empty());
         assert_eq!(app.stores.test_snapshot().await.label, "");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }

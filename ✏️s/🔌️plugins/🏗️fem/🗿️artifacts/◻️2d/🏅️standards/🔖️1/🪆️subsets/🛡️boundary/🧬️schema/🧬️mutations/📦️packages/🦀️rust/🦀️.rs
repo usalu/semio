@@ -20,6 +20,17 @@ pub mod standards {
                     #[path = "."]
                     pub mod mutations {
                         #[path = "."]
+                        pub mod change_support {
+                            #[path = "../../🩹️change-support/🦀️.rs"]
+                            mod component;
+                            #[path = "../../🩹️change-support/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "../../🩹️change-support/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+
+                        #[path = "."]
                         pub mod create_support {
                             #[path = "../../🛡️create-support/🦀️.rs"]
                             mod component;

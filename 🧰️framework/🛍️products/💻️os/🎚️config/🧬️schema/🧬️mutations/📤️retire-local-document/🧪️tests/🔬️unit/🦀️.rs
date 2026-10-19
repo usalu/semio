@@ -1,3 +1,4 @@
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::*;
 use crate::opening_config::mutations::{admit_local_document, apply_local_catalog_config_mutation_reporting, LocalDocument, LocalDocumentStorage};
 use protocol::Mutation;

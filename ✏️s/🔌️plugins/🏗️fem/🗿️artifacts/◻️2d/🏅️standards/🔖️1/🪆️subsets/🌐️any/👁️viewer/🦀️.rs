@@ -1,5 +1,5 @@
-//! 👁️ Fem2d viewer — the read-only counterpart of `✏️editor` for this subset (ticket
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.2). `Fem2dViewer` implements
+//! 👁️ Fem2d viewer — the read-only counterpart of `✏️editor` for this subset (ticket
 //! `ArtifactViewer`, never `ArtifactEditor`/`ArtifactApp` — `ViewerApp<Fem2dViewer>` (framework SDK) is
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
@@ -9,7 +9,8 @@ use crate::viewer::fem2d::modes::view::windows::model;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::FEM2D_DIALECT;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA;
-use semio_framework_plugin::app::{Dialect, InteractionView};
+use semio_framework_plugin::app::Dialect;
+use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;
 use semio_framework_plugin::ConfigView;
@@ -65,7 +66,7 @@ impl ArtifactViewer for Fem2dViewer {
 
     /// 🌱️ A real, non-empty default scene: the artifact-side boot document (the bundled `fem2d`
     /// example DSL, falling back to the empty document on a parse error) the sibling editor boots on
-    /// too — no editor import, this is `crate::standards::v1::subsets::any::schema`.
+    /// too — no editor import, this is `semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema`.
     fn initial_snapshot() -> Fem2dSnapshot {
         semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot()
     }

@@ -1,8 +1,8 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, extname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ecmaStringValue, ecmaTokens } from "@semio-tech/compiler-syntax-ecma-ts";
-import { rustAttributes, rustFindTopLevel, rustIdentifierSymbol, rustPathAttributes, rustStringValue, rustTokenPairs, rustTokens, rustVisibility } from "@semio-tech/compiler-syntax-rust-ts";
+import { ecmaStringValue, ecmaTokens } from "../🟨️ecma/📦️packages/🟦️typescript/🟦️.ts";
+import { rustAttributes, rustFindTopLevel, rustIdentifierSymbol, rustPathAttributes, rustStringValue, rustTokenPairs, rustTokens, rustVisibility } from "../🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 
 /** 🌳️ One `#[path = "..."] mod name;` declaration: the literal and the inline module names that enclose it. */
 export interface RustPathMount {

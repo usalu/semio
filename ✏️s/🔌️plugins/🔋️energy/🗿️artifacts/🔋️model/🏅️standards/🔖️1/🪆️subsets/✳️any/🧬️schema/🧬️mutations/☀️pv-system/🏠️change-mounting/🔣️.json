@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️change-pv-mounting",
+  "semanticKind": "change-pv-system-mounting",
+  "displayName": "Change Photovoltaic Mounting",
+  "emoji": "🏠️",
+  "aggregateVariant": "ChangePvSystemMounting",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-pv-system-mounting",
+  "binaryTag": 308,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

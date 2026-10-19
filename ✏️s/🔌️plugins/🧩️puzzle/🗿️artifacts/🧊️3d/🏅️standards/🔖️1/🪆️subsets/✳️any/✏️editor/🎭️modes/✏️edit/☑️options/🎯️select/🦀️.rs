@@ -1,5 +1,5 @@
-//! 🎯️ Edit-mode window option — the selection group: which entity kinds
 //! (objects/vortices/attractions) a pick may even reach. 🕹️ ticket
+//! 🎯️ Edit-mode window option — the selection group: which entity kinds
 //! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the marquee method (rectangle/lasso) and
 //! default merge mode toggles moved into the framework's `vortex` interaction domain
 //! (`interactionSelect`'s `method`/`merge` args, `setSelectionMode`) — no longer app config, and no

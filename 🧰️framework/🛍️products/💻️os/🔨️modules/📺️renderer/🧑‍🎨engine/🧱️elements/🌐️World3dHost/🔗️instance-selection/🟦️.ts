@@ -1,3 +1,4 @@
+import type { InteractionTarget } from "@semio-tech/framework";
 /** 🔗️ Instance, selection and leftover-overlay parsing and residency, interaction and LOD parsing, context-menu targets, raycast helpers and the world interaction domain.
  *
  * 🧱️ Child module of {@link ../🟦️.tsx | World3dHost}, which re-exports every public name below so import specifiers stay unchanged.
@@ -532,14 +533,10 @@ export function worldInstancePickBlocked(activeUtility: string | undefined): boo
   return activeUtility === "brush" || activeUtility === "volumeBrush" || activeUtility === "surfaceBrush";
 }
 
-/** 🎯️ The hover this pane is publishing, as an interaction target the background-click path may
- * pick instead of clearing. `null` for empty canvas and for every MARKER layer — a vortex
- * (`kind:fullId`) and a reference (`reference:id`) carry a `:` and own dedicated pick handlers, so the
- * background path must never select them. Pure and exported for
- * `🧪️tests/🎯️world3d-pick-bounds`. */
-export function hoveredInteractionTargetV1(hoveredId: string | null | undefined): { readonly granularity: string; readonly id: string } | null {
-  if (typeof hoveredId !== "string" || hoveredId.length === 0 || hoveredId.includes(":")) return null;
-  return { granularity: "object", id: hoveredId };
+/** 🎯️ The instance lane's resolved hover target, retained verbatim for a missed canvas pick.
+ * Marker lanes never publish to this lane; target ids remain opaque across every domain. */
+export function hoveredInteractionTargetV1(target: InteractionTarget | null | undefined): InteractionTarget | null {
+  return target?.id ? target : null;
 }
 
 /** 🚫️ `undefined` keeps the default mesh raycast; a no-op replaces it so a blocked instance cannot steal sibling vortex hits. */
@@ -683,7 +680,7 @@ export function interactionTargetsForInstances(instances: readonly WorldInstance
 
 /** 🎯️ The `{ granularity, id }` interaction target one rendered instance stands for — the record's own
  * `interactionGranularityId`/`interactionId` win, else the scene's default granularity and the id itself. */
-export function world3dInstanceInteractionTarget(instances: readonly WorldInstanceRecord[], id: string, defaultGranularity: string): { readonly granularity: string; readonly id: string } {
+export function world3dInstanceInteractionTarget(instances: readonly WorldInstanceRecord[], id: string, defaultGranularity: string): InteractionTarget {
   const record = instances.find((entry) => entry.id === id);
   return { granularity: record?.interactionGranularityId ?? defaultGranularity, id: record?.interactionId ?? id };
 }

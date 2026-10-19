@@ -27,6 +27,8 @@ extern crate semio_s_plugin_energy_engine_results as results;
 use crate::editor_config::ResultField;
 use crate::session::{ENERGY_SURFACE_PAYLOAD_HEADER_BYTES, ENERGY_SURFACE_PAYLOAD_MAGIC, ENERGY_SURFACE_PAYLOAD_ROW_BYTES};
 use std::collections::HashMap;
+#[path="🔎️indexed/🦀️.rs"]
+pub mod indexed;
 
 //#region 🎨️Ramp
 /// 🎨️ The 8 stops a surface is coloured by, blue (least) → red (most). Same eight hexes as fem's
@@ -214,3 +216,7 @@ pub fn legend_bounds_labels(min: f64, max: f64) -> (String, String) {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[global_allocator]
+static ENERGY_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;

@@ -9,26 +9,37 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "finish-run-node")]
 pub struct FinishRunNode {
     pub node_record: RunNodeRecord,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub index: Option<u64>,
 }
 //#endregion 🔖️Payload
 
 //#region ⚙️Semantics
 impl protocol::MutationKind<RunArtifact, RunMutation> for FinishRunNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "finish", entity: "run-node", kind: "finish-run-node", record: "FinishedRunNode" };
-    fn diff(&self, _base: &RunArtifact) -> protocol::MutationOutcome<RunDiff> {
-        protocol::MutationOutcome::new(RunDiff::step(RunStep::Node { node_id: self.node_record.node_id.clone(), record: Some(self.node_record.clone()) }))
-    }
-    fn inverse(&self, base: &RunArtifact) -> Result<Vec<RunMutation>, semio_framework_value::ValueError> {
-        Ok(vec![match base.node_records.iter().find(|entry| entry.node_id == self.node_record.node_id) {
-            Some(node_record) => RunMutation::FinishRunNode(Self { node_record: node_record.clone() }),
-            None => RunMutation::RemoveRunNode(RemoveRunNode { node_id: self.node_record.node_id.clone() }),
-        }])
-    }
+
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Finish run node {}", self.node_record.node_id), &format!("Laufknoten {} abschließen", self.node_record.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["nodes".into(), self.node_record.node_id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<RunArtifact, RunMutation> for FinishRunNode {
+    fn diff(&self, base: &RunArtifact) -> protocol::MutationOutcome<RunDiff> {
+        let present = base.node_records.iter().any(|entry| entry.node_id == self.node_record.node_id);
+        if !present && self.index.is_some_and(|index| usize::try_from(index).map_or(true, |index| index > base.node_records.len())) {
+            return protocol::MutationOutcome::error("mutation.target-missing", "run node record is inserted past the end", ["nodes", self.node_record.node_id.as_str()]);
+        }
+        protocol::MutationOutcome::new(RunDiff::step(RunStep::Node { node_id: self.node_record.node_id.clone(), record: Some(self.node_record.clone()), index: self.index.filter(|_| !present) }))
+    }
+    fn inverse(&self, base: &RunArtifact) -> Result<Vec<RunMutation>, semio_framework_value::ValueError> {
+        Ok(vec![match base.node_records.iter().find(|entry| entry.node_id == self.node_record.node_id) {
+            Some(node_record) => RunMutation::FinishRunNode(Self { node_record: node_record.clone(), index: None }),
+            None => RunMutation::RemoveRunNode(RemoveRunNode { node_id: self.node_record.node_id.clone() }),
+        }])
     }
 }
 //#endregion ⚙️Semantics

@@ -17,8 +17,8 @@ export default {
     root: testRoot,
     name: "@semio-tech/framework-async",
     environment: "node",
-    include: ["../../🧪️tests/🧱️boxed-fixed-slots/🟦️.ts", "../../🪃️continuation/🧪️tests/🪃️scheduler/🟦️.ts"],
-    coverage: { include: ["../../🟦️.ts", "../../🪃️continuation/🟦️.ts"] },
+    include: ["../../🧪️tests/🧱️boxed-fixed-slots/🟦️.ts", "../../🪃️continuation/🧪️tests/🪃️scheduler/🟦️.ts", "../../🔁️jittered-backoff/🧪️tests/🟦️.ts"],
+    coverage: { include: ["../../🟦️.ts", "../../🪃️continuation/🟦️.ts", "../../🔁️jittered-backoff/🟦️.ts"] },
     passWithNoTests: false,
   },
 };

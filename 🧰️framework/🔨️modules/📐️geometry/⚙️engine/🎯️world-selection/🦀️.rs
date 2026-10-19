@@ -1,6 +1,6 @@
 //! 🎯️ World selection of the geometry primitives: the world box, its inflation, containment and intersection tests and the cubic bezier selection helpers. See [`super`].
 
-use crate::{CubicBez, Point};
+use crate::{CubicBez, Point, Vec2};
 
 #[derive(Clone, Copy, Debug)]
 pub struct WorldBox {
@@ -65,6 +65,66 @@ pub fn point_in_polygon(point: Point, polygon: &[Point]) -> bool {
     inside
 }
 
+    /// 🔲️ Includes a polygon's boundary in selection containment.
+    pub fn polygon_covers_point(polygon: &[Point], point: Point) -> bool {
+        polygon.len() >= 3 && (point_in_polygon(point, polygon) || (0..polygon.len()).any(|i| point_on_segment(point, polygon[i], polygon[(i + 1) % polygon.len()])))
+    }
+
+    /// 📏️ Encloses every interval of a segment, including concave polygon crossings.
+    pub fn polygon_contains_segment(polygon: &[Point], start: Point, end: Point) -> bool {
+        if !polygon_covers_point(polygon, start) || !polygon_covers_point(polygon, end) {
+            return false;
+        }
+        let delta = end - start;
+        let length_squared = delta.dot(delta);
+        if length_squared <= 1e-18 {
+            return true;
+        }
+        let mut parameters = vec![0.0, 1.0];
+        for i in 0..polygon.len() {
+            let a = polygon[i];
+            let b = polygon[(i + 1) % polygon.len()];
+            let edge = b - a;
+            let offset = a - start;
+            let cross = |left: Vec2, right: Vec2| left.x * right.y - left.y * right.x;
+            let denominator = cross(delta, edge);
+            if denominator.abs() > 1e-12 {
+                let t = cross(offset, edge) / denominator;
+                let u = cross(offset, delta) / denominator;
+                if (0.0..=1.0).contains(&t) && (0.0..=1.0).contains(&u) {
+                    parameters.push(t);
+                }
+            } else if cross(offset, delta).abs() <= 1e-9 {
+                parameters.extend([offset.dot(delta) / length_squared, (b - start).dot(delta) / length_squared].into_iter().filter(|t| (0.0..=1.0).contains(t)));
+            }
+        }
+        parameters.sort_by(f64::total_cmp);
+        parameters.windows(2).all(|interval| polygon_covers_point(polygon, start + delta * ((interval[0] + interval[1]) * 0.5)))
+    }
+
+    /// 🧩️ Encloses an entire outline instead of its bounds or representative point.
+    pub fn polygon_contains_polygon(selection: &[Point], outline: &[Point]) -> bool {
+        outline.len() >= 3 && (0..outline.len()).all(|i| polygon_contains_segment(selection, outline[i], outline[(i + 1) % outline.len()]))
+    }
+
+    /// 🕳️ Crosses a filled polygon region while excluding selections wholly inside holes.
+    pub fn polygon_region_intersects_polygon(outline: &[Point], holes: &[Vec<Point>], selection: &[Point]) -> bool {
+        if outline.len() < 3 || selection.len() < 3 {
+            return false;
+        }
+        if (0..outline.len()).any(|i| segment_intersects_polygon(outline[i], outline[(i + 1) % outline.len()], selection)) {
+            return true;
+        }
+        if holes.iter().any(|hole| (0..hole.len()).any(|i| segment_intersects_polygon(hole[i], hole[(i + 1) % hole.len()], selection))) {
+            return true;
+        }
+        selection.iter().any(|&point| polygon_covers_point(outline, point) && !holes.iter().any(|hole| point_in_polygon(point, hole) && !polygon_boundary_contains_point(hole, point)))
+    }
+
+    fn polygon_boundary_contains_point(polygon: &[Point], point: Point) -> bool {
+        (0..polygon.len()).any(|i| point_on_segment(point, polygon[i], polygon[(i + 1) % polygon.len()]))
+    }
+
 fn point_on_segment(point: Point, start: Point, end: Point) -> bool {
     const EPS: f64 = 1e-9;
     point.x >= start.x.min(end.x) - EPS
@@ -126,13 +186,7 @@ fn polygon_segments(polygon: &[Point]) -> Vec<(Point, Point)> {
 }
 
 pub fn polygon_contains_world_box(polygon: &[Point], box_: WorldBox) -> bool {
-    let corners = world_box_corners(box_);
-    for p in corners {
-        if !point_in_polygon(p, polygon) {
-            return false;
-        }
-    }
-    true
+    polygon_contains_polygon(polygon, &world_box_corners(box_))
 }
 
 pub fn polygon_intersects_world_box(polygon: &[Point], box_: WorldBox) -> bool {
@@ -157,11 +211,14 @@ pub fn polygon_intersects_world_box(polygon: &[Point], box_: WorldBox) -> bool {
 }
 
 pub fn segment_intersects_polygon(start: Point, end: Point, polygon: &[Point]) -> bool {
-    if point_in_polygon(start, polygon) || point_in_polygon(end, polygon) {
+    if polygon.len() < 3 {
+            return false;
+        }
+        if polygon_covers_point(polygon, start) || polygon_covers_point(polygon, end) {
         return true;
     }
-    let segments = polygon_segments(polygon);
-    for (a, b) in segments {
+    for i in 0..polygon.len() {
+            let (a, b) = (polygon[i], polygon[(i + 1) % polygon.len()]);
         if segments_intersect(start, end, a, b) {
             return true;
         }

@@ -12,6 +12,9 @@ use semio_framework_diagnostic::TextError;
 use semio_framework_os_pack::{PackDecodeOptions, PackEncodeOptions};
 use semio_framework_os_pack::pack_rt;
 use semio_framework_dsl_record::{RecordSpecProducer,BorrowedRecordSpecProducer};
+/// 🧩️ Public capabilities required by retained typed Store recovery.
+pub use semio_framework_dsl_record::{BorrowedDslRecord, native_encoding::FieldProjectionSource};
+pub use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 use semio_framework_io_control::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
 #[cfg(target_arch = "wasm32")]
 use semio_framework_os_store_backbone::resolve_backbone;

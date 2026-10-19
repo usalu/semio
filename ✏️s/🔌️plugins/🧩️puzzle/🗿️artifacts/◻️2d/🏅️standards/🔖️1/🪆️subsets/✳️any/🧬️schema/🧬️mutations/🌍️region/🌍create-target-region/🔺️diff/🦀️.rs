@@ -1,6 +1,7 @@
-//! 🔺️ Sparse diff builder for `CreateTargetRegion` — a real append-only insert (never a
 //! whole-snapshot capture). Fatal when the id already exists in `base`.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dTargetRegionsDelta};
+//! 🔺️ Sparse diff builder for `CreateTargetRegion` — a real append-only insert (never a
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dTargetRegionsDelta;
 use crate::Puzzle2dSnapshot;
 use crate::standards::v1::subsets::any::schema::records::puzzle2d_region_invariant;
 

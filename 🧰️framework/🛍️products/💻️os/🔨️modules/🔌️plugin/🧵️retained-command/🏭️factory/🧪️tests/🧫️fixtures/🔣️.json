@@ -1,0 +1,130 @@
+{
+  "schema": "semio.plugin.retained-factory-admission.v1",
+  "payloadBytes": 13,
+  "jobBytes": 29,
+  "cases": [
+    {
+      "id": "typed",
+      "inputBytes": null,
+      "checkpoint": false,
+      "resume": false,
+      "ownerMaximum": 4096,
+      "payloadMaximum": 4096,
+      "payloadAdmitted": true,
+      "capacityBytes": 29,
+      "refusal": null
+    },
+    {
+      "id": "wire-declared",
+      "inputBytes": 80,
+      "checkpoint": false,
+      "resume": false,
+      "ownerMaximum": 16777216,
+      "payloadMaximum": 16777216,
+      "payloadAdmitted": true,
+      "capacityBytes": 109,
+      "refusal": null
+    },
+    {
+      "id": "wire-empty",
+      "inputBytes": 0,
+      "checkpoint": false,
+      "resume": false,
+      "ownerMaximum": 4096,
+      "payloadMaximum": 4096,
+      "payloadAdmitted": true,
+      "capacityBytes": 29,
+      "refusal": null
+    },
+    {
+      "id": "owner-ceiling",
+      "inputBytes": 4097,
+      "checkpoint": false,
+      "resume": false,
+      "ownerMaximum": 4096,
+      "payloadMaximum": 4096,
+      "payloadAdmitted": true,
+      "capacityBytes": null,
+      "refusal": "invalid-value"
+    },
+    {
+      "id": "checkpoint-without-wire",
+      "inputBytes": null,
+      "checkpoint": true,
+      "resume": true,
+      "ownerMaximum": 4096,
+      "payloadMaximum": 4096,
+      "payloadAdmitted": true,
+      "capacityBytes": null,
+      "refusal": "invalid-value"
+    },
+    {
+      "id": "checkpoint-refused",
+      "inputBytes": 80,
+      "checkpoint": true,
+      "resume": false,
+      "ownerMaximum": 4096,
+      "payloadMaximum": 4096,
+      "payloadAdmitted": true,
+      "capacityBytes": null,
+      "refusal": "invalid-value"
+    },
+    {
+      "id": "checkpoint-resume",
+      "inputBytes": 80,
+      "checkpoint": true,
+      "resume": true,
+      "ownerMaximum": 4096,
+      "payloadMaximum": 4096,
+      "payloadAdmitted": true,
+      "capacityBytes": 109,
+      "refusal": null
+    },
+    {
+      "id": "prior-payload-refusal",
+      "inputBytes": 80,
+      "checkpoint": false,
+      "resume": false,
+      "ownerMaximum": 4096,
+      "payloadMaximum": 4096,
+      "payloadAdmitted": false,
+      "capacityBytes": 29,
+      "refusal": null
+    },
+    {
+      "id": "payload-wire-refusal",
+      "inputBytes": 80,
+      "checkpoint": false,
+      "resume": false,
+      "ownerMaximum": 128,
+      "payloadMaximum": 64,
+      "payloadAdmitted": true,
+      "capacityBytes": 29,
+      "refusal": null
+    },
+    {
+      "id": "checkpoint-exact",
+      "inputBytes": 80,
+      "checkpoint": true,
+      "resume": true,
+      "ownerMaximum": 4096,
+      "payloadMaximum": 4096,
+      "payloadAdmitted": true,
+      "capacityBytes": 109,
+      "refusal": null,
+      "checkpointBytes": 512
+    },
+    {
+      "id": "checkpoint-oversized",
+      "inputBytes": 80,
+      "checkpoint": true,
+      "resume": true,
+      "ownerMaximum": 4096,
+      "payloadMaximum": 4096,
+      "payloadAdmitted": true,
+      "capacityBytes": null,
+      "refusal": "invalid-value",
+      "checkpointBytes": 513
+    }
+  ]
+}

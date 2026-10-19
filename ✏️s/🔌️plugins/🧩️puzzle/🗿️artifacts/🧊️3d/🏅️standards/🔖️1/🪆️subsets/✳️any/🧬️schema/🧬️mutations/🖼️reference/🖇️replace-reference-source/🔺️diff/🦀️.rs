@@ -1,5 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceReferenceSource` — patches the one addressed reference in place.
-use semio_s_artifact_puzzle_3d_diff::{Puzzle3dDiff, Puzzle3dReferencePatch, Puzzle3dReferencesDelta};
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dReferencePatch;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dReferencesDelta;
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Diff

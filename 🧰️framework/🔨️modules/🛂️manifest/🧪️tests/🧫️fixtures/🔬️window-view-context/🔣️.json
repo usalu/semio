@@ -72,6 +72,22 @@
       "activeUtilityId": "pan"
     }
   ],
+  "utilityCases": [
+    { "windowId": "left", "activeUtilityId": "pan" },
+    { "windowId": "right", "activeUtilityId": "measure" },
+    { "windowId": "third", "activeUtilityId": null },
+    { "windowId": "constructor", "activeUtilityId": null },
+    { "windowId": "missing", "activeUtilityId": null },
+    { "windowId": "graph", "activeUtilityId": "pan" },
+    { "windowId": null, "activeUtilityId": "pan" },
+    { "windowId": "graph", "currentWindowId": null, "activeUtilityId": "measure" },
+    { "windowId": "graph", "currentWindowId": null, "focusedWindowId": null, "activeUtilityId": null },
+    { "windowId": "graph", "currentWindowId": null, "focusedWindowId": "missing", "activeUtilityId": null },
+    { "windowId": "left", "utilities": { "left": "" }, "activeUtilityId": null },
+    { "windowId": "left", "utilities": { "left": "measure" }, "activeUtilityId": "measure" },
+    { "windowId": "graph", "currentWindowId": null, "focusedWindowId": null, "windows": [{ "id": "right", "windowKindId": "graph" }], "activeUtilityId": "measure" },
+    { "windowId": "graph", "currentWindowId": null, "focusedWindowId": null, "utilities": { "graph-left": "brush" }, "activeUtilityId": null }
+  ],
   "panelFocus": [
     {
       "id": "live",

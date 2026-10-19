@@ -19,6 +19,9 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicBool;
 use std::time::{Duration, Instant};
 
+#[path = "🌐️open/🦀️.rs"]
+pub mod browser;
+
 // #region 🔖️Arguments
 /// ✂️ The arguments of one verb: words, switches, valued flags (repeatable) and everything after `--`.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -310,10 +313,6 @@ pub fn run(root: &Path, argv: &[String]) -> i32 {
     let request = match arguments.request(&|name| accepted.iter().find(|parameter| parameter.id == name).map(|parameter| parameter.kind)) { Ok(request) => request, Err(error) => return refuse(&error) };
     let launch = match registry.resolve(id, &request) { Ok(launch) => launch, Err(error) => return refuse(&error) };
     if arguments.has("dry-run") { println!("{}", registry.launch_plan_json(&launch)); return 0; }
-    if let Some(action) = registry.find(id).and_then(|entry| entry.repo_action()).filter(|_| RunPolicy::current().repo == RepoImplementation::Rust) {
-        println!("{}", action.execute(&root));
-        return 0;
-    }
     let result = connect_or_start(&root).and_then(|mut connection| start(&mut connection, SpawnGroup::from_launch(&launch, &[]), &arguments));
     result.unwrap_or_else(|error| refuse(&error))
 }
@@ -440,15 +439,10 @@ pub fn open(root: &Path, argv: &[String]) -> i32 {
     let [needle] = arguments.words.as_slice() else { return refuse("usage: semio open <task> [--print]") };
     let sessions = sessions_of(&root_of(root, &arguments));
     let session = match pick(&sessions, needle).and_then(|picked| { let ready: Vec<&SessionInfo> = picked.sessions.iter().copied().filter(|session| session.ready_url.is_some()).collect(); only(&Picked { sessions: if ready.len() == 1 { ready } else { picked.sessions }, group: None }, needle) }) { Ok(session) => session, Err(error) => return refuse(&error) };
-    let Some(url) = session.ready_url.as_deref().filter(|_| session.status != SessionStatus::Interrupted) else { return refuse(&format!("{} has no ready address", label_text(session))) };
+    let Some(url) = browser::ready_url(session.status, session.ready_url.as_deref()) else { return refuse(&format!("{} has no ready address", label_text(session))) };
     println!("{url}");
     if arguments.has("print") { return 0; }
-    match browser(url) { Ok(()) => 0, Err(error) => refuse(&format!("cannot open a browser: {error}")) }
-}
-
-fn browser(url: &str) -> std::io::Result<()> {
-    let mut command = if cfg!(windows) { let mut command = std::process::Command::new("cmd"); command.args(["/c", "start", "", url]); command } else if cfg!(target_os = "macos") { let mut command = std::process::Command::new("open"); command.arg(url); command } else { let mut command = std::process::Command::new("xdg-open"); command.arg(url); command };
-    command.stdin(std::process::Stdio::null()).stdout(std::process::Stdio::null()).stderr(std::process::Stdio::null()).spawn().map(|_| ())
+    match browser::open(url) { Ok(()) => 0, Err(error) => refuse(&format!("cannot open a browser: {error}")) }
 }
 // #endregion 🔖️Tasks
 

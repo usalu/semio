@@ -4,7 +4,9 @@
   "name": { "en": "Venty, the ventilation unit", "de": "Venty, das Lüftungsgerät" },
   "thing": { "en": "ventilation unit", "de": "Lüftungsgerät" },
   "grounds": [
-    "cooling/air-change-rates",
+    "ventilation/ventilation-statements",
+    "ventilation/ventilation-profiles",
+    "ventilation/air-change-rates",
     "cooling/cooling-load-and-demand/office-passive-house",
     "demand/standard-profiles",
     "demand/final-energy/kfw-40-heat-pump",
@@ -451,5 +453,9 @@
   "gear": [],
   "grip": 35,
   "reach": 4.5,
-  "mood": "proud"
+  "mood": "proud",
+  "canopy": {
+    "kind": "path",
+    "d": "M -30 0 L -30 -12 L -18 -25 L 18 -25 L 30 -12 L 30 0 Z M -11 -12 A 11 11 0 1 1 11 -12 A 11 11 0 1 1 -11 -12 Z M 0 -12 Q -9 -23 -9 -14 Q -7 -8 0 -12 M 0 -12 Q 11 -21 6 -10 Q 3 -7 0 -12 M 0 -12 Q -2 0 -6 -5 Q -8 -9 0 -12 M -25 -5 V -12 M -21 -5 V -16 M 21 -5 V -16 M 25 -5 V -12"
+  }
 }

@@ -1,7 +1,7 @@
 //! 🏆️ The proctor end to end, the challenge sheets: every challenge deals its own sheet and earns its own points, expert and hard runs clock and score from the instants the device claims, an easy run questions far off cards until it closes and switching the challenge ends in runs exhausted.
 //!
 //! @see ../🦀️.rs — the end to end suite that mounts this module
-//! @see ../../../🧫️fixtures/📚️catalog/🔣️.json — the catalog played
+//! @see ../../../🧫️fixtures/📚️course/🔣️.json — the course played
 
 use super::*;
 
@@ -131,7 +131,7 @@ fn every_challenge_deals_its_own_sheet_and_earns_its_own_points() {
     let ranking = task_of(&run_view(&offline), "sorting");
     let sent = now();
     let lowered = accepted(&base, &open_task(&ada, &offline, &ranking, sent + 3_600_000, 53))[0]["at"].as_u64().expect("at");
-    assert!(sent + quiz::CLOCK_LEAD <= lowered && lowered <= now() + quiz::CLOCK_LEAD, "an opening dated an hour ahead is lowered to five minutes past the proctor's clock, so it buys no time: {lowered}");
+    assert!(sent + course::CLOCK_LEAD <= lowered && lowered <= now() + course::CLOCK_LEAD, "an opening dated an hour ahead is lowered to five minutes past the proctor's clock, so it buys no time: {lowered}");
     let views =|base: &str| [json!({ "type": "learner", "learner": ada }), json!({ "type": "run", "run": easy }), json!({ "type": "run", "run": hard }), json!({ "type": "run", "run": timed }), json!({ "type": "leaderboard", "period": "all-time", "learner": ada })].map(|asked| view(base, &asked));
     let before = views(&base);
     running.shut_down();
@@ -198,7 +198,7 @@ fn expert_and_hard_runs_clock_guess_and_score_sortings_and_matchings_from_the_in
     }
     malformed.as_object_mut().expect("a command").remove("at");
     assert!(rejected(&base, &malformed).starts_with("command-malformed"), "an opening is dated");
-    for at in [json!(quiz::MAX_TIMESTAMP + 1), json!(u64::MAX)] {
+    for at in [json!(course::MAX_TIMESTAMP + 1), json!(u64::MAX)] {
         malformed["at"] = at.clone();
         assert!(rejected(&base, &malformed).starts_with("id-invalid"), "an opening dated {at}, beyond a safe integer, is refused");
     }
@@ -208,7 +208,7 @@ fn expert_and_hard_runs_clock_guess_and_score_sortings_and_matchings_from_the_in
     malformed.as_object_mut().expect("a command").remove("task");
     assert!(rejected(&base, &malformed).starts_with("command-malformed"), "an opening names its task");
     let mut undated = record(&ada, &timed, &sorting, &perfect(&power, &sorting), 12);
-    for (at, refusal) in [(json!(-1), "command-malformed"), (json!(1.5), "command-malformed"), (json!(quiz::MAX_TIMESTAMP + 1), "id-invalid")] {
+    for (at, refusal) in [(json!(-1), "command-malformed"), (json!(1.5), "command-malformed"), (json!(course::MAX_TIMESTAMP + 1), "id-invalid")] {
         undated["at"] = at.clone();
         assert!(rejected(&base, &undated).starts_with(refusal), "an answer dated {at} is refused: {refusal}");
     }

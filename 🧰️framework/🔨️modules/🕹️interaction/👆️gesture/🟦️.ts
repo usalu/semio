@@ -42,6 +42,21 @@ export const EMPTY_GESTURE_POINTERS: GesturePointers = { pointers: [] };
 /** 🔢️ How many simultaneous contacts make a gesture a MULTI-touch gesture rather than a drag. */
 export const GESTURE_MULTI_TOUCH_POINTERS = 2;
 
+/** 🔲️ Retains the geometry an area-selection drag requires and latches activation. */
+export function appendSelectionDragPoints(points: [number, number][], active: boolean, lasso: boolean, samples: readonly (readonly [number, number])[], threshold: number): boolean {
+  const start = points[0];
+  if (!start) return active;
+  for (const [x, y] of samples) {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+    active ||= Math.hypot(x - start[0], y - start[1]) >= threshold;
+    const last = points.at(-1);
+    if (last?.[0] === x && last[1] === y) continue;
+    if (!lasso) points.length = 1;
+    points.push([x, y]);
+  }
+  return active;
+}
+
 /** 👆️ Adds (or re-seats, for a duplicate `pointerdown` the browser may replay) one contact, preserving
  * down-order for every pointer already tracked. */
 export const gesturePointerDown = (state: GesturePointers, pointer: GesturePointer): GesturePointers => {
@@ -459,6 +474,7 @@ if (import.meta.vitest) {
       recognizeGesturePointerUp,
       shortestAngleDelta,
       zoomAboutPoint,
+      appendSelectionDragPoints,
     },
     { directory: (await import("node:path")).dirname((await import("node:url")).fileURLToPath(import.meta.url)), url: import.meta.url },
   );

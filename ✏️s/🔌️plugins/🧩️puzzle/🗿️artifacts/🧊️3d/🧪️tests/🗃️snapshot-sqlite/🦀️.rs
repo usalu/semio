@@ -11,8 +11,9 @@ extern crate semio_framework_value_derive as value_derive;
 use semio_s_artifact_puzzle_3d_model::io::sqlite::snapshot::*;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
-use semio_s_artifact_puzzle_3d_model::*;
-use std::collections::{BTreeMap, BTreeSet};
+use semio_s_artifact_puzzle_3d_model::io::sqlite::snapshot::*;
+use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 use store::{
     sqlite_snapshot::{
         artifact::{Cell, Projection, Reconstruction},
@@ -20,7 +21,8 @@ use store::{
     },
     os_store::serialization::ArtifactSqliteSnapshotHost,
 };
-use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value::ValueError;
+use semio_framework_value::ValueRefusalKind;
 
 #[path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
 pub mod tests;

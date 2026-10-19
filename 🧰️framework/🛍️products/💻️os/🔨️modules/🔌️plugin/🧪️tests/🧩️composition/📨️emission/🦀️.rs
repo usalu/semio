@@ -256,9 +256,15 @@ impl protocol::Mutation<TestSnapshot> for RefusingChildOperation {
     type Diff = <TestMutation as protocol::Mutation<TestSnapshot>>::Diff;
     const DESCRIPTORS: &'static [::protocol::MutationLeafDescriptor] = <TestMutation as protocol::Mutation<TestSnapshot>>::DESCRIPTORS;
     fn descriptor(&self) -> &'static ::protocol::MutationLeafDescriptor { protocol::Mutation::descriptor(&self.inner) }
-    fn diff(&self, base: &TestSnapshot) -> ::protocol::MutationOutcome<Self::Diff> { protocol::Mutation::diff(&self.inner, base) }
-    fn inverse(&self, base: &TestSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> { Ok(protocol::Mutation::inverse(&self.inner, base)?.into_iter().map(|inner| Self { inner, refuse: self.refuse }).collect()) }
+
+
     fn retire_cold(self) { protocol::Mutation::<TestSnapshot>::retire_cold(self.inner); }
+}
+
+impl protocol::ColdMutation<TestSnapshot> for RefusingChildOperation {
+    type ReferenceDiff = <TestMutation as protocol::Mutation<TestSnapshot>>::Diff;
+    fn diff(&self, base: &TestSnapshot) -> ::protocol::MutationOutcome<Self::ReferenceDiff> { protocol::Mutation::diff(&self.inner, base) }
+    fn inverse(&self, base: &TestSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> { Ok(protocol::Mutation::inverse(&self.inner, base)?.into_iter().map(|inner| Self { inner, refuse: self.refuse }).collect()) }
 }
 
 impl protocol::SemanticMutation<TestSnapshot> for RefusingChildOperation {
@@ -321,9 +327,15 @@ impl protocol::Mutation<TestSnapshot> for TrackedChildOperation{
     type Diff=<RefusingChildOperation as protocol::Mutation<TestSnapshot>>::Diff;
     const DESCRIPTORS:&'static[::protocol::MutationLeafDescriptor]=<RefusingChildOperation as protocol::Mutation<TestSnapshot>>::DESCRIPTORS;
     fn descriptor(&self)->&'static ::protocol::MutationLeafDescriptor{protocol::Mutation::descriptor(&self.inner)}
-    fn diff(&self,base:&TestSnapshot)->::protocol::MutationOutcome<Self::Diff>{protocol::Mutation::diff(&self.inner,base)}
-    fn inverse(&self,_:&TestSnapshot)->Result<Vec<Self>,semio_framework_value::ValueError>{Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"tracked fixture mutation has no inverse source admission"))}
+
+
     fn retire_cold(self){panic!("actual owned emission must use the installed retirement continuation, not Mutation::retire_cold");}
+}
+
+impl protocol::ColdMutation<TestSnapshot> for TrackedChildOperation{
+    type ReferenceDiff = <RefusingChildOperation as protocol::Mutation<TestSnapshot>>::Diff;
+    fn diff(&self,base:&TestSnapshot)->::protocol::MutationOutcome<Self::ReferenceDiff>{protocol::Mutation::diff(&self.inner,base)}
+    fn inverse(&self,_:&TestSnapshot)->Result<Vec<Self>,semio_framework_value::ValueError>{Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"tracked fixture mutation has no inverse source admission"))}
 }
 impl protocol::SemanticMutation<TestSnapshot> for TrackedChildOperation{
     fn kinds()->&'static[protocol::SemanticDescriptor]{<RefusingChildOperation as protocol::SemanticMutation<TestSnapshot>>::kinds()}
@@ -333,6 +345,8 @@ impl protocol::SemanticMutation<TestSnapshot> for TrackedChildOperation{
 }
 struct TrackedChildRetirement{pub operation:Option<TrackedChildOperation>,refuse_once:bool}
 impl store::ErasedSnapshotRetirement for TrackedChildRetirement{
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Ok(semio_framework_value::RetirementDemand{release_bytes:self.operation.as_ref().map_or(0,|operation|operation.payload.capacity()),depth:usize::from(self.operation.is_some()),..Default::default()})}
+
     fn close_step(&mut self,grant:store::RetainedCloneGrant)->Result<store::RetainedCloneStep,semio_framework_value::ValueError>{
         let empty=store::RetainedCloneProgress::default();
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(store::RetainedCloneStep::Progress(empty));}

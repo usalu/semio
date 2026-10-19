@@ -128,6 +128,8 @@ export function relativeSourceInputs(value, workspace) {
 }
 
 /** ⏳️ Traverses bounded source batches through the caller's original progress and cancellation control.
+ * @param {unknown} value
+ * @param {string} workspace
  * @param {(index: number) => void | Promise<void>} [advance]
  */
 export async function relativeSourceInputsAsyncV1(value, workspace, advance = async () => {}) {

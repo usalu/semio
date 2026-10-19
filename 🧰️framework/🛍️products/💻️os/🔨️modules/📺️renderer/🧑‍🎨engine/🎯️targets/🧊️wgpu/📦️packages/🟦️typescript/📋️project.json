@@ -640,6 +640,112 @@
         "command": "bun ./📜️script.ts browser-dock-acceptance",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "verb": "test",
+            "parameters": [
+              {
+                "id": "mode",
+                "kind": "choice",
+                "default": "test",
+                "values": [
+                  {
+                    "id": "test",
+                    "args": [
+                      "test"
+                    ]
+                  },
+                  {
+                    "id": "react",
+                    "args": [
+                      "run",
+                      "react"
+                    ]
+                  },
+                  {
+                    "id": "wgpu",
+                    "args": [
+                      "run",
+                      "wgpu"
+                    ]
+                  }
+                ],
+                "title": {
+                  "en": "Run mode",
+                  "de": "Ausführungsmodus"
+                },
+                "description": {
+                  "en": "Choose tests or a renderer session.",
+                  "de": "Tests oder eine Renderer-Sitzung auswählen."
+                }
+              },
+              {
+                "id": "serve",
+                "kind": "text",
+                "valuePositional": true,
+                "title": {
+                  "en": "Server address",
+                  "de": "Serveradresse"
+                },
+                "description": {
+                  "en": "Address of the server to verify.",
+                  "de": "Adresse des zu prüfenden Servers."
+                }
+              },
+              {
+                "id": "output",
+                "kind": "text",
+                "valueFlag": "--output",
+                "title": {
+                  "en": "Output directory",
+                  "de": "Ausgabeverzeichnis"
+                },
+                "description": {
+                  "en": "Directory for generated verification artifacts.",
+                  "de": "Verzeichnis für erzeugte Prüfartefakte."
+                }
+              },
+              {
+                "id": "suite",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "docking",
+                    "args": [
+                      "--suite",
+                      "docking"
+                    ]
+                  },
+                  {
+                    "id": "widgets",
+                    "args": [
+                      "--suite",
+                      "widgets"
+                    ]
+                  }
+                ],
+                "title": {
+                  "en": "Test suite",
+                  "de": "Testsuite"
+                },
+                "description": {
+                  "en": "Choose docking or widget checks.",
+                  "de": "Andock- oder Widget-Prüfungen auswählen."
+                }
+              }
+            ],
+            "title": {
+              "en": "Verify browser docking",
+              "de": "Browser-Andocken prüfen"
+            },
+            "description": {
+              "en": "Choose docking tests or a renderer session.",
+              "de": "Andocktests oder eine Renderer-Sitzung auswählen."
+            }
+          }
+        }
       }
     },
     "browser-media-acceptance": {
@@ -650,6 +756,80 @@
         "command": "bun ./📜️script.ts browser-media-acceptance",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "verb": "test",
+            "parameters": [
+              {
+                "id": "serve",
+                "kind": "text",
+                "required": true,
+                "valueFlag": "--serve",
+                "title": {
+                  "en": "Server address",
+                  "de": "Serveradresse"
+                },
+                "description": {
+                  "en": "Address of the server to verify.",
+                  "de": "Adresse des zu prüfenden Servers."
+                }
+              },
+              {
+                "id": "locale",
+                "kind": "choice",
+                "required": true,
+                "values": [
+                  {
+                    "id": "en",
+                    "args": [
+                      "--locale",
+                      "en"
+                    ]
+                  },
+                  {
+                    "id": "de",
+                    "args": [
+                      "--locale",
+                      "de"
+                    ]
+                  }
+                ],
+                "title": {
+                  "en": "Language",
+                  "de": "Sprache"
+                },
+                "description": {
+                  "en": "Choose the language explicitly.",
+                  "de": "Sprache ausdrücklich auswählen."
+                }
+              },
+              {
+                "id": "output",
+                "kind": "text",
+                "required": true,
+                "valueFlag": "--output",
+                "title": {
+                  "en": "Output directory",
+                  "de": "Ausgabeverzeichnis"
+                },
+                "description": {
+                  "en": "Directory for generated verification artifacts.",
+                  "de": "Verzeichnis für erzeugte Prüfartefakte."
+                }
+              }
+            ],
+            "title": {
+              "en": "Verify browser media",
+              "de": "Browser-Medien prüfen"
+            },
+            "description": {
+              "en": "Run media checks with an explicit server and language.",
+              "de": "Medienprüfungen mit explizitem Server und Sprache ausführen."
+            }
+          }
+        }
       }
     },
     "test-browser": {
@@ -1021,6 +1201,51 @@
         "command": "bun ./📜️script.ts browser-embedded-acceptance",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "verb": "test",
+            "parameters": [
+              {
+                "id": "configuration",
+                "kind": "text",
+                "required": true,
+                "valueFlag": "--configuration",
+                "title": {
+                  "en": "Configuration file",
+                  "de": "Konfigurationsdatei"
+                },
+                "description": {
+                  "en": "Path to the browser verification configuration.",
+                  "de": "Pfad zur Browser-Prüfkonfiguration."
+                }
+              },
+              {
+                "id": "output",
+                "kind": "text",
+                "required": true,
+                "valueFlag": "--output",
+                "title": {
+                  "en": "Output directory",
+                  "de": "Ausgabeverzeichnis"
+                },
+                "description": {
+                  "en": "Directory for generated verification artifacts.",
+                  "de": "Verzeichnis für erzeugte Prüfartefakte."
+                }
+              }
+            ],
+            "title": {
+              "en": "Verify embedded browser",
+              "de": "Eingebetteten Browser prüfen"
+            },
+            "description": {
+              "en": "Run embedded browser checks with a selected configuration.",
+              "de": "Prüfungen des eingebetteten Browsers mit ausgewählter Konfiguration ausführen."
+            }
+          }
+        }
       }
     },
     "check-boot-cache-inputs": {
@@ -1069,6 +1294,14 @@
       "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-original-frame-source",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      },
+      "cache": false
+    },
+    "test-original-io-invocation-native": {
+      "executor": "repo:script",
+      "options": {
+        "command": "bun ./📜️script.ts test-original-io-invocation-native",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
       },
       "cache": false

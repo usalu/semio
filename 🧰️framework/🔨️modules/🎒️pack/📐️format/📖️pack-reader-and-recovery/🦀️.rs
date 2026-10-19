@@ -116,7 +116,8 @@ impl<S: PackSource> PackFile<S> {
             }
             if position!=bytes.len(){return Err((PackRefusal::Malformed{kind:ValueRefusalKind::InvalidValue,what:"chunk_table",offset:position as u64,detail:"trailing chunk data".into()}).into());}
         }
-        if raw.symbol_count!=this.symbols.len() as u64||raw.chunk_count!=this.chunk_table.len() as u64{return Err((PackRefusal::Malformed{kind:ValueRefusalKind::InvalidValue,what:"manifest",offset:0,detail:"declared catalog counts differ from contents".into()}).into());}
+                validate_chunk_custody(this.superblock.header.required_flags,raw.chunk_count,raw.chunk_table_span)?;
+if raw.symbol_count!=this.symbols.len() as u64||raw.chunk_count!=this.chunk_table.len() as u64{return Err((PackRefusal::Malformed{kind:ValueRefusalKind::InvalidValue,what:"manifest",offset:0,detail:"declared catalog counts differ from contents".into()}).into());}
         let mut manifest=Manifest{schema_name:String::new(),schema_hash:raw.schema_hash,doc_span:raw.doc_span,doc_frame_count:raw.doc_frame_count,symbols_span:raw.symbols_span,chunk_table_span:raw.chunk_table_span,field_index_span:raw.field_index_span,uncompressed_body_len:raw.uncompressed_body_len,field_count:raw.field_count,chunk_count:raw.chunk_count,symbol_count:raw.symbol_count};
         if !this.symbols.is_empty(){let index=usize::try_from(raw.schema_symref).map_err(|_|PackRefusal::LimitExceeded{kind:ValueRefusalKind::OwnershipLimit,limit:"schema symbol exceeds address space"})?;let text=this.symbols.get(index).ok_or(PackRefusal::Malformed{kind:ValueRefusalKind::InvalidValue,what:"manifest",offset:0,detail:"schema symbol out of range".into()})?;check_controlled_allocation(control,limits,text.len())?;manifest.schema_name=control.copy_text(text).map_err(PackRefusal::ValueRefusal)?;}
         else if raw.schema_symref!=0{return Err((PackRefusal::Malformed{kind:ValueRefusalKind::InvalidValue,what:"manifest",offset:0,detail:"schema symbol out of range".into()}).into());}
@@ -193,7 +194,9 @@ impl<S: PackSource> PackFile<S> {
         } else {
             Vec::new()
         };
-        let manifest = resolve_manifest(&raw, &symbols)?;
+                validate_chunk_custody(this.superblock.header.required_flags,raw.chunk_count,raw.chunk_table_span)?;
+        if raw.chunk_count!=chunk_table.len()as u64{return Err(PackRefusal::RetainedMalformed{kind:ValueRefusalKind::InvalidValue,what:"chunk_table",offset:raw.chunk_table_span.offset,detail:"chunk table count disagrees with manifest"}.into());}
+let manifest = resolve_manifest(&raw, &symbols)?;
         this.manifest = Some(manifest);
         this.symbols = symbols;
         this.chunk_table = chunk_table;

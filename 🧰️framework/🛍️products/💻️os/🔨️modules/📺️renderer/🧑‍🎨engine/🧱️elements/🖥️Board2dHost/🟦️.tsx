@@ -1,3 +1,5 @@
+import { useMapContextMenuSpecs } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
+import { WindowInstanceIdContext } from "../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🖥️Board2dHost/component.tsx
 /** 🧩️ `🖥️Board2dHost` — board-2d `ComponentSceneHost`: drives the board wasm session (snapshot
@@ -31,7 +33,7 @@ export function Board2dHost(props: ComponentSceneHostProps) {
   Object.assign(core, useBoardLifecycleAndSync(core));
   Object.assign(core, useBoardPointerAndKeyboard(core));
   Object.assign(core, useBoardContextMenuAndDrop(core));
-  const { boardStatusRef, boardVitals, canvasRef, closeSuggestionMenu, containerRef, contextMenu, contextMenuTitleLabel, emptySceneLabel, interactionDomainId, localPresenceActor, localSelectionJson, node, onContextMenu, onDragLeave, onDragOver, onDrop, onToolRunTraceCursor, presenceWindowId, readContainerSize, scene, sessionError, setContextMenu, suggestionFocus, suggestionMenu, suggestionMenuTitleLabel, suggestionPopupOwnsThisWindow, suggestionRows, toolRunTraceCamera, toolRunTracePathForShape, windowInstanceId } = core;
+  const { boardStatusRef, boardVitals, canvasRef, closeSuggestionMenu, containerRef, contextMenu, contextMenuTitleLabel, emptySceneLabel, interactionDomainId, localPresenceActor, localSelectionJson, node, onContextMenu, onDragLeave, onDragOver, onDrop, onToolRunTraceCursor, presenceWindowId, readContainerSize, scene, sessionError, setContextMenu, suggestionFocus, suggestionMenu, suggestionMenuTitleLabel, suggestionPopupOwnsThisWindow, suggestionRows, toolRunTraceCamera, toolRunTracePathForShape, windowInstanceId , presenceRuntimeKey } = core;
 
   if (sessionError) throw sessionError;
   if (!scene) return <div className="semio-board-2d-empty text-muted-foreground p-2 text-xs">{emptySceneLabel}</div>;
@@ -85,7 +87,7 @@ export function Board2dHost(props: ComponentSceneHostProps) {
         />
       ) : null}
       <CanvasPresenceOverlayV1
-        runtimeKey="local"
+        runtimeKey={presenceRuntimeKey}
         windowId={presenceWindowId}
         space="canvas"
         myActor={localPresenceActor ?? ""}

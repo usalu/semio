@@ -1,5 +1,5 @@
-//! 🏅️ Standard root — `standard() -> StandardDeclaration` (`terra-fleet-trinity-recipe` recipe,
 //! `📓️terra-fleet-trinity-recipe-report.md`), mounts subset `any`. `mimes`/`extensions`: no real MIME
+//! 🏅️ Standard root — `standard() -> StandardDeclaration` (`terra-fleet-trinity-recipe` recipe,
 //! registration exists for `s.fem3d` outside the old `ArtifactDefinition`'s capability rows
 //! (`definition()`, kept — debt D1) — that channel only ever claimed a codec id (`fem.3d:fem3d`) and
 //! an extension (`fem3d`), never a mime type. `mimes: ["application/vnd.semio.fem3d+json"]` is a
@@ -8,7 +8,8 @@
 //! `s.fem3d.codec.document.v1` row.
 
 use crate::standards::v1::subsets;
-use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
+use semio_framework_plugin::app::declarations::MediaDeclaration;
+use semio_framework_plugin::app::declarations::StandardDeclaration;
 use {semio_framework_artifact_reference::StandardId};
 
 pub fn standard<PA: crate::ArtifactApps>() -> StandardDeclaration<PA> {

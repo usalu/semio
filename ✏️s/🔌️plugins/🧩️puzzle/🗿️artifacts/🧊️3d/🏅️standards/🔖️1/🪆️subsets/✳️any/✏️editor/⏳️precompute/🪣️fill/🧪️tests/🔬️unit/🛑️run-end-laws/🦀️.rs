@@ -8,7 +8,7 @@ fn fill_run_job_reports_rule_refusals_as_warnings_and_the_stall_as_a_warning_ste
     let roots = nakagin_scale_roots();
     let mut scene = (*roots.scene).clone();
     scene.scene_snapshot.target_volumes.push(WorldVolumeProps { id: "elsewhere".into(), origin: [1.0e6, 1.0e6, 1.0e6], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None });
-    let mut job = FillRunJob::new(FillBuilder::begin_preparation(FillPreparationRoots::new(Arc::new(scene), roots.meshes.clone()), Operation::new(OperationId(89), RevisionId(1), Generation(1), 43), 10), fill_run_identity(), vec![NAKAGIN_MESH_URL.to_string()], [0; 32]);
+    let mut job = FillRunFixture::new(FillRunJob::new(FillBuilder::begin_preparation(FillPreparationRoots::new(Arc::new(scene), roots.meshes.clone()), Operation::new(OperationId(89), RevisionId(1), Generation(1), 43), 10), fill_run_identity(), vec![NAKAGIN_MESH_URL.to_string()], [0; 32]), never);
     let mut mirror = FillRunMirror::new();
     mirror.drive(&mut job, u64::MAX, 1_000_000);
     let [tested, locked, collisions, rejected, marked] = job.counters();
@@ -24,7 +24,7 @@ fn fill_run_job_reports_rule_refusals_as_warnings_and_the_stall_as_a_warning_ste
 /// 🏁️ How a run ended as its ledger saw it: `None` when the last step is `success:requested-reached` over a met request, else
 /// the declared stall reason its `warning` step names. A run that ended without a step, with an undeclared reason, or with
 /// zero verdicts and no stall reason fails the law.
-fn fill_run_visible_end(name: &str, job: &FillRunJob, mirror: &FillRunMirror, requested: usize) -> Option<&'static str> {
+fn fill_run_visible_end(name: &str, job: &FillRunFixture, mirror: &FillRunMirror, requested: usize) -> Option<&'static str> {
     let [tested, locked, _, _, _] = job.counters();
     assert_eq!(mirror.progress.as_ref().map(|progress| progress.state), Some(ToolRunState::Complete), "{name}: the run's last progress is complete");
     let last = mirror.steps.last().unwrap_or_else(|| panic!("{name}: the run ended with counters {:?} and no step", job.counters()));
@@ -84,7 +84,7 @@ fn fill_run_job_mid_plan_capacity_stall_ends_with_a_visible_warning_step() {
     let mut mirror = FillRunMirror::new();
     let mut sequence = 0;
     loop {
-        match fill_run_turn(&mut job, u64::MAX, &mut sequence) {
+        match fill_run_turn(&mut job, u64::MAX) {
             FillRunTurn::Tick(tick) => mirror.apply(tick),
             FillRunTurn::Checkpoint(bytes) => {
                 mirror.checkpoints.push(bytes);

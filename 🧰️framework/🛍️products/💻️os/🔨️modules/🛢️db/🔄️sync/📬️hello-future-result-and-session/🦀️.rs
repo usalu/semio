@@ -202,7 +202,7 @@ pub fn database_sync_hello_returned_frame_credit(frame: &protocol::ServerFrame) 
             let shell = envelopes.capacity().checked_mul(size_of::<protocol::MutationEnvelope>()).ok_or(DbError::LimitExceeded(label))?;
             let mut items = 0usize;
             let mut bytes = 0usize;
-            for capacity in [shell, origin.0.capacity(), frontier.document_id.0.capacity(), frontier.head_edit_id.capacity()] {
+            for capacity in [shell, origin.0.original_allocation_bytes(), frontier.document_id.0.capacity(), frontier.head_edit_id.capacity()] {
                 if capacity != 0 {
                     items = items.checked_add(1).ok_or(DbError::LimitExceeded(label))?;
                     bytes = bytes.checked_add(capacity).ok_or(DbError::LimitExceeded(label))?;

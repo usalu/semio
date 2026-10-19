@@ -12,7 +12,7 @@ pub use crate::builder_test_hosts::builder_unit_1::dependency_fixture::mutations
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum)]
 #[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
-#[mutations(snapshot = DependencyTestSnapshot, diff = DependencyTestDiff, schema = "dep-target.document")]
+#[mutations(snapshot = DependencyTestSnapshot, diff = DependencyTestDiff, schema = "dep-target.document", reference = DependencyTestSnapshot, reference_diff = DependencyTestDiff)]
 pub enum DependencyTestOp {
     AddValue(AddValue),
 }

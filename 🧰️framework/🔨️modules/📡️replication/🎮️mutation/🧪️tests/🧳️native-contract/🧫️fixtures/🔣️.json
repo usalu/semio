@@ -1,0 +1,1 @@
+{"cases":[{"name":"unchanged","value":null,"expected":{"empty":true,"wire":{}}},{"name":"zero","value":0,"expected":{"empty":false,"wire":{"value":0}}},{"name":"positive","value":37,"expected":{"empty":false,"wire":{"value":37}}},{"name":"negative","value":-9,"expected":{"empty":false,"wire":{"value":-9}}}]}

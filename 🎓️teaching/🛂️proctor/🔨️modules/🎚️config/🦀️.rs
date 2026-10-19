@@ -5,12 +5,12 @@
 //! | `PROCTOR_PORT` | TCP port | `8791` |
 //! | `PROCTOR_BIND` | IP address to bind | `127.0.0.1` |
 //! | `PROCTOR_DATA` | directory of `proctor.sqlite` | required |
-//! | `PROCTOR_CATALOG` | catalog `🔣️.json` | required |
+//! | `PROCTOR_COURSE` | course `🔣️.json` | required |
 //! | `PROCTOR_MODE` | `development` or `production` | loopback bind → development, else production |
 //! | `PROCTOR_ALLOWED_ORIGINS` | comma-separated `scheme://host[:port]` origins granted CORS | loopback bind → any loopback origin, else none |
 //! | `PROCTOR_TRUSTED_FORWARDING` | `none` or `proxy` (a TLS-terminating proxy is the only client) | `none` |
 //! | `PROCTOR_PRESENCE_TICK_MS` | how often, at most, a presence socket is sent what changed in its room, 10…1000 ms | `100` |
-//! | `PROCTOR_LIMIT_PRESENCE_FRAME_BYTES` | the most one presence frame carries — per socket and tick, and per socket and watch interval over everything it watches —, 4096…65536 bytes | `4096` |
+//! | `PROCTOR_LIMIT_PRESENCE_FRAME_BYTES` | the most one presence frame carries — per socket and tick, and per socket and watch interval over everything it watches —, 262144…1048576 bytes | `262144` |
 //! | `PROCTOR_LIMIT_PRESENCE_BYTES_PER_SECOND` | the most all presence rooms together send per second, 65536…4294967296 bytes | `16777216` |
 //! | `PROCTOR_LIMIT_BODY_BYTES` | largest request body, 1024…1048576 bytes | `16384` |
 //! | `PROCTOR_LIMIT_COMMANDS_PER_SECOND`, `…_COMMANDS_BURST` | per client address: sustained and burst `POST /commands` | `300`, `900` |
@@ -46,7 +46,7 @@
 //!
 //! A production proctor on a network interface requires all three statements together: the mode,
 //! an explicit origin allowlist (the origin the site is served from, e.g.
-//! `https://quizze.architektur-und-technologie.de`) and `PROCTOR_TRUSTED_FORWARDING=proxy`, exactly
+//! `https://architektur-und-technologie.de`) and `PROCTOR_TRUSTED_FORWARDING=proxy`, exactly
 //! like the hub. A development proctor binds loopback only.
 //!
 //! @see ../../../../🌎️hub/README.md — the production gating this mirrors
@@ -65,8 +65,8 @@ pub const PORT: &str = "PROCTOR_PORT";
 pub const BIND: &str = "PROCTOR_BIND";
 /// 🗄️ `PROCTOR_DATA`.
 pub const DATA: &str = "PROCTOR_DATA";
-/// 📚️ `PROCTOR_CATALOG`.
-pub const CATALOG: &str = "PROCTOR_CATALOG";
+/// 📚️ `PROCTOR_COURSE`.
+pub const COURSE: &str = "PROCTOR_COURSE";
 /// 🏭️ `PROCTOR_MODE`.
 pub const MODE: &str = "PROCTOR_MODE";
 /// 🌍️ `PROCTOR_ALLOWED_ORIGINS`.
@@ -128,7 +128,12 @@ pub const PRESENCE_TICK_MS_RANGE: std::ops::RangeInclusive<u64> = 10..=1000;
 
 /// 🖼️ The bounds of `PROCTOR_LIMIT_PRESENCE_FRAME_BYTES`: below, a frame no longer holds one state of
 /// the largest size next to another; above, a socket that stopped reading holds too much.
-pub const LIMIT_PRESENCE_FRAME_BYTES_RANGE: std::ops::RangeInclusive<u64> = 4096..=65_536;
+pub const LIMIT_PRESENCE_FRAME_BYTES_RANGE: std::ops::RangeInclusive<u64> = 262_144..=1_048_576;
+
+/// 🪞️ Quiz presence carries full public run presentations within a bounded 128 KiB state and 256 KiB frame.
+pub fn quiz_presence_settings() -> PresenceSettings {
+    PresenceSettings { max_state_bytes: 128 * 1024, max_frame_bytes: 256 * 1024, ..PresenceSettings::default() }
+}
 
 /// 🚰️ The bounds of `PROCTOR_LIMIT_PRESENCE_BYTES_PER_SECOND`: below, a handful of sockets already
 /// wait; above, the bound is none on any link a proctor is served over.
@@ -169,7 +174,7 @@ pub struct ProctorConfig {
     pub bind: IpAddr,
     pub port: u16,
     pub data: PathBuf,
-    pub catalog: PathBuf,
+    pub course: PathBuf,
     pub mode: ProctorMode,
     pub origins: CrossOriginPolicy,
     pub forwarding: Forwarding,
@@ -177,7 +182,7 @@ pub struct ProctorConfig {
     pub presence_frame_bytes: usize,
     pub presence_bytes_per_second: u64,
     pub limits: Limits,
-    pub caps: quiz::Limits,
+    pub caps: course::Limits,
 }
 
 /// 🧯️ A configuration the proctor refuses to boot with, naming the variable at fault.
@@ -208,7 +213,7 @@ impl ProctorConfig {
         let value = |name: &str| setting(&read, name);
         let (bind, port) = (bind(&read)?, port(&read)?);
         let data = Self::data_directory(&read)?;
-        let catalog = value(CATALOG).map(PathBuf::from).ok_or_else(|| ConfigError(format!("{CATALOG} must name the catalog 🔣️.json")))?;
+        let course = value(COURSE).map(PathBuf::from).ok_or_else(|| ConfigError(format!("{COURSE} must name the course 🔣️.json")))?;
         let mode = match value(MODE).as_deref() {
             Some("production") => ProctorMode::Production,
             Some("development") => ProctorMode::Development,
@@ -226,12 +231,12 @@ impl ProctorConfig {
             Some(text) => text.parse().ok().filter(|millis| PRESENCE_TICK_MS_RANGE.contains(millis)).map(Duration::from_millis).ok_or_else(|| ConfigError(format!("{PRESENCE_TICK_MS} must be a whole number of milliseconds in {}..={}, got {text:?}", PRESENCE_TICK_MS_RANGE.start(), PRESENCE_TICK_MS_RANGE.end())))?,
             None => PresenceSettings::default().tick,
         };
-        let presence = PresenceSettings::default();
+        let presence = quiz_presence_settings();
         let presence_frame_bytes = bounded(&read, LIMIT_PRESENCE_FRAME_BYTES, presence.max_frame_bytes as u64, &LIMIT_PRESENCE_FRAME_BYTES_RANGE)? as usize;
         let presence_bytes_per_second = bounded(&read, LIMIT_PRESENCE_BYTES_PER_SECOND, presence.max_bytes_per_second.unwrap_or(*LIMIT_PRESENCE_BYTES_PER_SECOND_RANGE.end()), &LIMIT_PRESENCE_BYTES_PER_SECOND_RANGE)?;
         let limits = limits(&read)?;
-        let caps = quiz::Limits { learners: bounded(&read, MAX_LEARNERS, quiz::DEFAULT_LIMITS.learners, &LIMIT_RANGE)?, runs: bounded(&read, MAX_RUNS, quiz::DEFAULT_LIMITS.runs, &LIMIT_RANGE)?, ..quiz::DEFAULT_LIMITS };
-        let config = Self { bind, port, data, catalog, mode, origins, forwarding, presence_tick, presence_frame_bytes, presence_bytes_per_second, limits, caps };
+        let caps = course::Limits { learners: bounded(&read, MAX_LEARNERS, course::DEFAULT_LIMITS.learners, &LIMIT_RANGE)?, runs: bounded(&read, MAX_RUNS, course::DEFAULT_LIMITS.runs, &LIMIT_RANGE)?, ..course::DEFAULT_LIMITS };
+        let config = Self { bind, port, data, course, mode, origins, forwarding, presence_tick, presence_frame_bytes, presence_bytes_per_second, limits, caps };
         config.validate()?;
         Ok(config)
     }
@@ -275,7 +280,7 @@ impl ProctorConfig {
     /// 👥️ The presence socket's settings: the protocol's defaults at this configuration's tick,
     /// frame size and total flow.
     pub fn presence(&self) -> PresenceSettings {
-        PresenceSettings { tick: self.presence_tick, max_frame_bytes: self.presence_frame_bytes, max_bytes_per_second: Some(self.presence_bytes_per_second), ..PresenceSettings::default() }
+        PresenceSettings { tick: self.presence_tick, max_frame_bytes: self.presence_frame_bytes, max_bytes_per_second: Some(self.presence_bytes_per_second), ..quiz_presence_settings() }
     }
 }
 

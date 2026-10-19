@@ -1,0 +1,7 @@
+{
+  "mutation": "changeSolid",
+  "id": "missing",
+  "patch": {
+    "name": "Structural Solid"
+  }
+}

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+
 import{createIssuedResourceControlV1}from"../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { typecheckAdmittedProjectV1 } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -422,6 +423,17 @@ class DocumentScopeScript extends BundleScript {
   }
 }
 
+/** 🪟️ Verifies shared utility routing and window ownership against the neutral context corpus. */
+class WindowUtilityScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw Error("window-utility-check accepts no arguments");
+    const source = fileURLToPath(new URL("../../🔨️modules/🛂️manifest/🧪️tests/🔬️window-view-context/🟦️.ts", import.meta.url));
+    await runOwnedCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", source], this.root, "framework:window-utility-types", 120_000, { signal: this.invocation.control.signal });
+    const { testWindowViewContext } = await import("../../🔨️modules/🛂️manifest/🧪️tests/🔬️window-view-context/🟦️.ts");
+    testWindowViewContext();
+  }
+}
+
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
@@ -446,6 +458,6 @@ class InstallationIdentityScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typecheck", TypecheckScript).register("installation-identity-check", InstallationIdentityScript).register("test-script-boundary", ScriptBoundaryScript).register("test-artifact-reference", ArtifactReferenceScript).register("test-io-ports", IoPortsScript).register("test-source-text", SourceTextScript).register("test-document-scope", DocumentScopeScript).register("test-polygon-mesh", PolygonMeshScript).register("test-sdk-surface", SdkSurfaceScript).register("test-module-package-surface", ModulePackageSurfaceScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typecheck", TypecheckScript).register("installation-identity-check", InstallationIdentityScript).register("test-script-boundary", ScriptBoundaryScript).register("test-artifact-reference", ArtifactReferenceScript).register("test-io-ports", IoPortsScript).register("test-source-text", SourceTextScript).register("test-document-scope", DocumentScopeScript).register("test-polygon-mesh", PolygonMeshScript).register("test-sdk-surface", SdkSurfaceScript).register("test-module-package-surface", ModulePackageSurfaceScript).register("window-utility-check", WindowUtilityScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

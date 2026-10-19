@@ -60,6 +60,12 @@ fn progress_spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(c
 fn identity_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:identity_spec_owned,decoding:|control|identity_spec_controlled(control),encoding:|control|identity_spec_controlled(control)}}
 fn step_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:step_spec_owned,decoding:|control|step_spec_controlled(control),encoding:|control|step_spec_controlled(control)}}
 fn progress_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:progress_spec_owned,decoding:|control|progress_spec_controlled(control),encoding:|control|progress_spec_controlled(control)}}
+fn payload_update_spec_owned()->RecordSpec{spec(vec![field(1,"kind",Shape::UInt),field(2,"publication",Shape::UInt).optional(),field(3,"totalBytes",Shape::UInt).optional(),field(4,"offset",Shape::UInt).optional(),field(5,"chunkBytes",Shape::UInt).optional(),field(6,"final",Shape::UInt).optional()])}
+fn payload_update_spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<RecordSpec,semio_framework_value::ValueError>{control.scoped_stage(|control|{control.begin_stage(6)?;let mut fields=control.allocate_vec(6)?;for(id,key)in[(1,"kind"),(2,"publication"),(3,"totalBytes"),(4,"offset"),(5,"chunkBytes"),(6,"final")]{let mut field=semio_framework_dsl_record::producer::field(id,key,Shape::UInt,control)?;field.optional=id!=1;fields.push(field);control.step()?;}semio_framework_dsl_record::producer::record(None,semio_framework_dsl_record::RecordLayout::Inline,fields,control)})}
+fn payload_update_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:payload_update_spec_owned,decoding:|control|payload_update_spec_controlled(control),encoding:|control|payload_update_spec_controlled(control)}}
+fn payload_update_record(update:ToolRunPayloadUpdate)->RecordValue{let mut record=RecordValue::default();for id in 1..=update.wire_field_count(){record.fields.insert(id as u16,FieldValue::UInt(update.wire_field(id).expect("closed payload update field")));}record}
+fn payload_update_from_record(record:&RecordValue)->Result<ToolRunPayloadUpdate,ToolRunCodecError>{let count=record.fields.values().filter(|value|!matches!(value,FieldValue::Absent)).count();match uint(record,1)?{0 if count==1=>Ok(ToolRunPayloadUpdate::Replace),1 if count==6=>{let final_chunk=match uint(record,6)?{0=>false,1=>true,_=>return Err(ToolRunCodecError::Malformed("payload finality"))};Ok(ToolRunPayloadUpdate::Range{publication:uint(record,2)?,total_bytes:uint(record,3)?,offset:uint(record,4)?,chunk_bytes:narrow(uint(record,5)?,"payload stride")?,final_chunk})},_=>Err(ToolRunCodecError::Malformed("closed payload update"))}}
+fn validate_tick_payload(payload:Option<&[u8]>,update:Option<ToolRunPayloadUpdate>)->Result<(),ToolRunCodecError>{if payload.is_some()!=update.is_some(){return Err(ToolRunCodecError::Malformed("payload and update must be paired"));}if let(Some(payload),Some(update))=(payload,update){update.validate(payload.len()).map_err(|_|ToolRunCodecError::Malformed("payload update range"))?;}Ok(())}
 
 pub(crate) fn page_spec() -> &'static RecordSpec {
     static SPEC: OnceLock<RecordSpec> = OnceLock::new();
@@ -90,6 +96,7 @@ pub(crate) fn tick_spec() -> &'static RecordSpec {
             field(7, "appendEntities", Shape::Bytes64).optional(),
             field(8, "retractTo", Shape::UInt).optional(),
             field(9, "payload", Shape::Bytes64).optional(),
+            field(10,"payloadUpdate",Shape::Record(payload_update_spec_producer())).optional(),
         ])
     })
 }

@@ -1,16 +1,6 @@
-//! 🧬️ schema leaf
+//! 🧬️ Empty app-presence schema; canonical framework owners carry live state.
 use ::semio_framework_schema::ArtifactSchema;
-
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase", default)]
+#[value(deny_unknown_fields)]
 #[artifact_schema(id = "s.puzzle.puzzle3d.presence")]
-pub struct Puzzle3dPresence {
-    #[state(presence)]
-    pub camera_position: [f64; 3],
-    #[state(presence)]
-    pub camera_target: [f64; 3],
-    #[state(presence)]
-    pub camera_zoom: f64,
-    #[state(presence)]
-    pub active_tool_id: Option<String>,
-}
+pub struct Puzzle3dPresence {}

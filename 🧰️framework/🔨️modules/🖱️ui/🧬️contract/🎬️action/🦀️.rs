@@ -158,3 +158,5 @@ mod typed_compare;
 #[cfg(test)]
 #[path="🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+impl<T:semio_framework_value::retirement::RetireOwned,const N:usize> semio_framework_value::retirement::RetireOwned for UiFixedList<T,N>{fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::RetireOwned::retirement(self.storage)}fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.storage)}fn controlled_retirement_supported()->bool{T::controlled_retirement_supported()}}

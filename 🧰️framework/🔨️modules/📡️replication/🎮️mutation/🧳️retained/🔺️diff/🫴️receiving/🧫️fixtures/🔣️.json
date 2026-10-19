@@ -1,0 +1,1 @@
+{"initialOwned":7,"text":"hello world","authoredBytes":11,"sealedBytes":40,"scaffoldBytes":9392,"maximumOwned":65536,"expected":{"finalOwned":9450,"foreignCalls":0,"deniedCalls":0,"originalControlForwarded":true,"cancelKeepsSource":true,"recipientRefusalKeepsBorn":true}}

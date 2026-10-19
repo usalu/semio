@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "framework.value.retained-clone.handwritten-demands.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "maximumPayloadCopyBytes", "maximumTurns", "deniedAxes", "cases", "expected"],
+  "properties": {
+    "schema": {"const": "framework.value.retained-clone.handwritten-demands.v1"},
+    "maximumPayloadCopyBytes": {"type": "integer", "minimum": 1},
+    "maximumTurns": {"type": "integer", "minimum": 1},
+    "deniedAxes": {"const": ["items", "copy", "capacity", "release", "depth"]},
+    "cases": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["name", "kind", "value"], "properties": {"name": {"type": "string", "minLength": 1}, "kind": {"enum": ["bytes", "text", "map", "list"]}, "value": {}}}},
+    "expected": {"const": {"quoteAllocatesBytes": 0, "shortGrantProgressesItems": 0, "shortGrantMovesBytes": 0, "everyNormalPrefixCloses": true, "sourceIdentityPreserved": true, "fundedOwnerMovementRequired": true, "physicalOwnerBytesConserved": true, "terminalDropBytes": 0}}
+  }
+}

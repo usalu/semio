@@ -16,6 +16,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-geometry = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust" }
 machine = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }

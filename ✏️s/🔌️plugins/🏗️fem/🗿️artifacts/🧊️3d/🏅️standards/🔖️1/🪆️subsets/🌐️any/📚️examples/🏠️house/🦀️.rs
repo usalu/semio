@@ -1,7 +1,7 @@
-//! 🏠️ Example `house` — a real-world single-storey masonry house built ENTIRELY from meshed
 //! continuum solids: a raft foundation, a ground slab and an attic slab, four load-bearing walls
+//! 🏠️ Example `house` — a real-world single-storey masonry house built ENTIRELY from meshed
 //! with window and door openings, and a gable roof — every solid extruded along its own
-//! [`crate::standards::v1::subsets::any::schema::structure::FemAxis`] so a wall is drawn in ELEVATION (openings are holes in its footprint) and the
+//! [`semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis`] so a wall is drawn in ELEVATION (openings are holes in its footprint) and the
 //! roof as its chevron SECTION swept along the ridge.
 //!
 //! 📐️ CONFORMITY, the whole point of the dimensions below: every solid is meshed independently and
@@ -18,13 +18,14 @@
 //! carries no rotations); each lies on the raft's own 0.5 m lattice, so the mesh reuses those nodes
 //! by id and the supports carry the model.
 
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::{FemAnalysisSettings, FemDof};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemCombination;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_fem_material::volumetric::FemMaterialValue;
+use semio_s_fem_node::volumetric::FemNodeValue;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
@@ -111,7 +112,7 @@ pub fn build() -> Fem3dSnapshot {
     for row in 0..=rows {
         for column in 0..=columns {
             let id = format!("f{column}_{row}");
-            nodes.push(FemNode { id: id.clone(), x: column as f64 * SUPPORT_GRID, y: row as f64 * SUPPORT_GRID, z: -RAFT_THICKNESS });
+            nodes.push(FemNodeValue { id: id.clone(), x: column as f64 * SUPPORT_GRID, y: row as f64 * SUPPORT_GRID, z: -RAFT_THICKNESS });
             supports.push(FemSupport { id: format!("s{column}_{row}"), node_id: id, fixed: vec![FemDof::Tx, FemDof::Ty, FemDof::Tz] });
         }
     }
@@ -130,9 +131,9 @@ pub fn build() -> Fem3dSnapshot {
         nodes,
         elements: vec![],
         materials: vec![
-            FemMaterial { id: "concrete".into(), name: "C30/37 Concrete".into(), e: 33e9, g: 13.75e9, nu: 0.2, rho: 2400.0 },
-            FemMaterial { id: "masonry".into(), name: "Clay Brick Masonry".into(), e: 5e9, g: 2e9, nu: 0.25, rho: 1800.0 },
-            FemMaterial { id: "timber".into(), name: "C24 Timber Roof".into(), e: 11e9, g: 0.69e9, nu: 0.3, rho: 420.0 },
+            FemMaterialValue { id: "concrete".into(), name: "C30/37 Concrete".into(), e: 33e9, g: 13.75e9, nu: 0.2, rho: 2400.0 },
+            FemMaterialValue { id: "masonry".into(), name: "Clay Brick Masonry".into(), e: 5e9, g: 2e9, nu: 0.25, rho: 1800.0 },
+            FemMaterialValue { id: "timber".into(), name: "C24 Timber Roof".into(), e: 11e9, g: 0.69e9, nu: 0.3, rho: 420.0 },
         ],
         sections: vec![],
         solids,

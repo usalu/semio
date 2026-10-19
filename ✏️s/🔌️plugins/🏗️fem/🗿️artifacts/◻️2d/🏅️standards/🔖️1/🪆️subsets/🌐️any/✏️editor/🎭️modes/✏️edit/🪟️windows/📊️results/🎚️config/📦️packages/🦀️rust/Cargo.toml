@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../../../../../../../../.."
+name = "semio-s-artifact-fem-2d-results-state"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "library"
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-s-artifact-fem-3d-scene = { path = "../../../../../../../../../../../../../🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🎬️scene/📦️packages/🦀️rust" }
+semio-s-fem-analyses-model = { path = "../../../../../../../../../../../../../../../../🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🗂️model/📦️packages/🦀️rust" }
+pack = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-fem-app-surface = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-async-macros = { workspace = true }

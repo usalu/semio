@@ -117,6 +117,7 @@ export async function testNativeDependencies(workspace: string, output: string,i
       assert.deepEqual(commands.map(args=>args[0]),["update","fetch"],"Each changed observed program requires one actual uncached pair");
       const currentLock=readFileSync(join(root,"Cargo.lock"),"utf8"), parsed=Bun.TOML.parse(currentLock);
       assert.deepEqual(parsed,require("smol-toml").parse(currentLock));
+      assert.ok("package"in parsed&&Array.isArray(parsed.package));
       const packages=testRecordV1(parsed).package;assert(Array.isArray(packages));assert.deepEqual(packages.map(value=>{const name=testRecordV1(value).name;assert.equal(typeof name,"string");return name;}).sort(),fixture.cargo.preparedPackages);
       if(preparedLock!==undefined)assert.equal(currentLock,preparedLock);preparedLock=currentLock;
       const actual=JSON.parse(await run("cargo",["metadata","--locked","--offline","--no-deps","--format-version=1"]));

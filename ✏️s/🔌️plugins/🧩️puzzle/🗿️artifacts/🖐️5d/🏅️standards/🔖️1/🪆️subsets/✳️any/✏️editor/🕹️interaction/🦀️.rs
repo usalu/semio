@@ -1,6 +1,6 @@
 //! 🕹️ Interaction of the puzzle 5d editor: copy and paste helpers, the context menu, the `Puzzle5dCommand` vocabulary with its variant macro and the action context every command arm reads and writes. See [`super`].
 
-use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::editor::puzzle5d::config::Puzzle5dConfigMutation;
 use semio_s_artifact_puzzle_3d_editor::Puzzle3dInstanceOperationOwner;
@@ -228,7 +228,10 @@ pub fn puzzle5d_context_menu_items(
     view_state: &semio_framework_plugin::ViewModel,
     registry: &semio_framework_plugin::AppActionRegistry,
 ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-    use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec, Menu, SelectionKind};
+    use semio_framework_plugin::selection_count_phrase;
+    use semio_framework_plugin::ContextMenuItemSpec;
+    use semio_framework_plugin::Menu;
+    use semio_framework_plugin::SelectionKind;
     let bespoke = |id: &str, label: String, icon: &str, action: &str, args: Option<Value>, destructive: bool| ContextMenuItemSpec {
         id: id.into(),
         label: Some(label),

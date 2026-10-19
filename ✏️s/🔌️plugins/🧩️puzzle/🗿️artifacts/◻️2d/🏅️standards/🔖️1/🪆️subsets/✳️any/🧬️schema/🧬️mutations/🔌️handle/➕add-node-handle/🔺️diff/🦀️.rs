@@ -1,6 +1,9 @@
-//! 🔺️ Sparse diff builder for `AddNodeHandle` — adds one handle to the owner node's `🐙️handles`. No-op
 //! when the handle id already exists on that node.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dHandlesDelta, Puzzle2dNodePatch, Puzzle2dNodesDelta};
+//! 🔺️ Sparse diff builder for `AddNodeHandle` — adds one handle to the owner node's `🐙️handles`. No-op
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dHandlesDelta;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dNodePatch;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dNodesDelta;
 use crate::Puzzle2dSnapshot;
 use crate::standards::v1::subsets::any::schema::records::puzzle2d_handle_invariant;
 

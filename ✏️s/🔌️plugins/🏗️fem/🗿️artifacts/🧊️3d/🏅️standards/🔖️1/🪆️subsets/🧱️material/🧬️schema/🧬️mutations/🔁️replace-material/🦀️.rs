@@ -1,9 +1,13 @@
 //! 🔁️ Fem3d mutation — `ReplaceMaterial` payload + `MutationKind` impl.
 
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
-use protocol::{MutationKind, SemanticDescriptor};
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_fem_material::volumetric::FemMaterialValue;
+use protocol::MutationKind;
+use protocol::SemanticDescriptor;
+use protocol::ColdMutationKind;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 
 //#region 🔖️Mutation
 /// 🔁️ Whole-value swap of an existing material's payload (structured, no field-by-field editor
@@ -15,29 +19,37 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "replace-material")]
 pub struct ReplaceMaterial {
     pub id: String,
-    pub new_material: FemMaterial,
+    pub new_material: FemMaterialValue,
 }
 
 impl<Op> MutationKind<Fem3dSnapshot, Op> for ReplaceMaterial
 where
-    Op: protocol::Mutation<Fem3dSnapshot, Diff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<replace_material::ReplaceMaterial>,
-{
-    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "material", kind: "replace-material", record: "ReplacedMaterial" };
+    Op: protocol::Mutation<Fem3dSnapshot, Diff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::replace_material::ReplaceMaterial>, {
 
-    fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> {
-        super::diff::diff(self, base)
-    }
-    fn inverse(&self, base: &Fem3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "material", kind: "replace-material", record: "ReplacedMaterial" };
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace material \"{}\"", self.id), &format!("Material \"{}\" ersetzen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
+
+}
+impl<Op> protocol::ColdMutationKind<Fem3dSnapshotValue, Op> for ReplaceMaterial
+where
+    Op: protocol::ColdMutation<Fem3dSnapshotValue, ReferenceDiff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::replace_material::ReplaceMaterial>, {
+
+
+    fn diff(&self, base: &Fem3dSnapshotValue) -> protocol::MutationOutcome<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> {
+        super::diff::diff(self, base)
+    }
+
+    fn inverse(&self, base: &Fem3dSnapshotValue) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
+
 }
 //#endregion 🔖️Mutation

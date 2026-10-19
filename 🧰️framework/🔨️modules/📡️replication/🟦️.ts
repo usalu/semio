@@ -4,6 +4,7 @@
 //! are the shared gate both sides must reproduce. Frame layout is `lane u8`, `frame tag u8`, then
 //! fields in declaration order — no length prefix, no per-field tags.
 
+export { encodeScopedIdentity, decodeScopedIdentity, SCOPED_IDENTITY_MAX_BYTES, SCOPED_IDENTITY_MAX_SEGMENTS } from "./🧾️wire/🪪️scoped-identity/🟦️.ts";
 import { artifactBootstrapSha256, artifactBootstrapAggregateHash, ArtifactBootstrapAssembler } from "./🚪️io/📥️bootstrap/🟦️.ts";
 export { ARTIFACT_BOOTSTRAP_FORMAT_VERSION, ARTIFACT_BOOTSTRAP_CHUNK_BYTES, ARTIFACT_BOOTSTRAP_MAX_TOTAL_BYTES, ARTIFACT_BOOTSTRAP_MAX_CHUNKS, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, artifactBootstrapSha256, artifactBootstrapAggregateHash, ArtifactBootstrapAssembler } from "./🚪️io/📥️bootstrap/🟦️.ts";
 export type { ArtifactBootstrapLimits, ArtifactBootstrapProgress, ArtifactBootstrapControl } from "./🚪️io/📥️bootstrap/🟦️.ts";

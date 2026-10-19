@@ -75,8 +75,9 @@ members = [
 ]
 exclude = [
     "**/🏭️bridge/**",
+      "**/🏭️bridge/**",
     "**/👽️guest/**",
-    "**/🔮️oracles/**",
+      "**/🔮️oracles/**",
 ]
 
 [workspace.metadata.semio.repository]

@@ -11,7 +11,8 @@
     "heapClone",
     "coldFallback",
     "childNarrowDelegation",
-    "rootCopyBytes"
+    "rootCopyBytes",
+    "unsupportedOriginal"
   ],
   "properties": {
     "copyPolicies": {
@@ -44,6 +45,38 @@
     },
     "rootCopyBytes": {
       "const": 0
+    },
+    "unsupportedOriginal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "retained",
+        "constructorHeapBytes",
+        "demandRefusal",
+        "stepRefusal",
+        "refusalHeapBytes",
+        "sameOriginalRecoverable"
+      ],
+      "properties": {
+        "retained": {
+          "const": true
+        },
+        "constructorHeapBytes": {
+          "const": 0
+        },
+        "demandRefusal": {
+          "const": "UnsupportedOwner"
+        },
+        "stepRefusal": {
+          "const": "UnsupportedOwner"
+        },
+        "refusalHeapBytes": {
+          "const": 0
+        },
+        "sameOriginalRecoverable": {
+          "const": true
+        }
+      }
     }
   }
 }

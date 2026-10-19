@@ -4,17 +4,16 @@
   "regions": null,
   "materials": null,
   "sections": {
-    "inserted": [],
     "removed": [],
+    "inserted": [],
     "moved": [],
     "modified": [
       {
         "id": "chs889",
         "patch": {
-          "id": "chs889",
           "name": "CHS 88.9x5.0",
           "area": 0.001318,
-          "iy": 1.16376e-06
+          "iy": 1.16376E-06
         }
       }
     ]

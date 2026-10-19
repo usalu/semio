@@ -8,6 +8,16 @@ use super::*;
 #[serde(rename_all = "lowercase")]
 pub enum ParameterKind { Choice, Text, Flag }
 
+/// 🔎️ Which current physical source values a text field can suggest.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum SuggestionSource { Projects, Scripts, Tests, Configs }
+
+/// 🧭️ Related editable fields filled by accepting an authored source suggestion.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SuggestionSpec { pub source: SuggestionSource, #[serde(skip_serializing_if = "Option::is_none")] pub project_parameter: Option<String>, #[serde(skip_serializing_if = "Option::is_none")] pub directory_parameter: Option<String> }
+
 #[derive(Debug, Clone, Default, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct AppliesTo { pub(super) verbs: Option<Vec<String>>, pub(super) playground: Option<bool> }
@@ -19,6 +29,7 @@ struct ValueDeclaration { pub(super) id: String, pub(super) env: Option<BTreeMap
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct ParameterDeclaration {
+    #[serde(default, deserialize_with = "localized_declaration")] pub(super) title: Option<LocalizedText>, #[serde(default, deserialize_with = "localized_declaration")] pub(super) description: Option<LocalizedText>,
     pub(super) id: String,
     pub(super) kind: ParameterKind,
     pub(super) applies_to: Option<AppliesTo>,
@@ -31,6 +42,7 @@ pub(super) struct ParameterDeclaration {
     pub(super) value_env: Option<String>,
     pub(super) value_flag: Option<String>,
     pub(super) value_positional: Option<bool>,
+    pub(super) suggestions: Option<SuggestionSpec>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Deserialize)]
@@ -39,7 +51,7 @@ pub(super) struct ReadyDeclaration { pub(super) port: Option<u32>, pub(super) po
 
 #[derive(Debug, Clone, Default, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub(super) struct TargetDeclaration { pub(super) verb: Option<String>, pub(super) ready: Option<ReadyDeclaration>, #[serde(default)] pub(super) requires: Vec<MemberDeclaration>, #[serde(default)] pub(super) parameters: Vec<ParameterDeclaration> }
+pub(super) struct TargetDeclaration { #[serde(default, deserialize_with = "localized_declaration")] pub(super) title: Option<LocalizedText>, #[serde(default, deserialize_with = "localized_declaration")] pub(super) description: Option<LocalizedText>, pub(super) verb: Option<String>, pub(super) ready: Option<ReadyDeclaration>, #[serde(default)] pub(super) requires: Vec<MemberDeclaration>, #[serde(default)] pub(super) parameters: Vec<ParameterDeclaration> }
 
 /// 🔌️ `#/$defs/McpExposure`: the tool is an MCP stdio server the listed agent clients start.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
@@ -51,12 +63,12 @@ pub struct Mcp { pub server: String, pub clients: BTreeMap<String, McpClient> }
 #[serde(deny_unknown_fields)]
 pub struct McpClient { #[serde(default, skip_serializing_if = "BTreeMap::is_empty")] pub parameters: BTreeMap<String, String> }
 
-/// 🧑‍💻️ The agent and editor clients whose MCP configuration the workspace derives (`#/$defs/AgentClientId`).
-pub const AGENT_CLIENTS: [&str; 4] = ["claude-code", "vscode", "cursor", "codex"];
+/// 🧑‍💻️ The agent clients whose MCP configuration the workspace derives (`#/$defs/AgentClientId`).
+pub const AGENT_CLIENTS: [&str; 2] = ["claude-code", "codex"];
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub(super) struct ToolDeclaration { pub(super) id: String, pub(super) verb: Option<String>, pub(super) command: Vec<String>, #[serde(default)] pub(super) cwd: String, #[serde(default)] pub(super) env: BTreeMap<String, String>, #[serde(default)] pub(super) continuous: bool, pub(super) ready: Option<ReadyDeclaration>, #[serde(default)] pub(super) requires: Vec<MemberDeclaration>, #[serde(default)] pub(super) parameters: Vec<ParameterDeclaration>, pub(super) mcp: Option<Mcp> }
+pub(super) struct ToolDeclaration { #[serde(default, deserialize_with = "localized_declaration")] pub(super) title: Option<LocalizedText>, #[serde(default, deserialize_with = "localized_declaration")] pub(super) description: Option<LocalizedText>, pub(super) id: String, pub(super) verb: Option<String>, pub(super) command: Vec<String>, #[serde(default)] pub(super) cwd: String, #[serde(default)] pub(super) env: BTreeMap<String, String>, #[serde(default)] pub(super) continuous: bool, pub(super) ready: Option<ReadyDeclaration>, #[serde(default)] pub(super) requires: Vec<MemberDeclaration>, #[serde(default)] pub(super) parameters: Vec<ParameterDeclaration>, pub(super) mcp: Option<Mcp> }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -78,11 +90,11 @@ impl<'de> Deserialize<'de> for MemberDeclaration {
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub(super) struct CompoundDeclaration { pub(super) id: String, pub(super) verb: Option<String>, pub(super) stop: Option<Stop>, pub(super) members: Vec<MemberDeclaration> }
+pub(super) struct CompoundDeclaration { #[serde(default, deserialize_with = "localized_declaration")] pub(super) title: Option<LocalizedText>, #[serde(default, deserialize_with = "localized_declaration")] pub(super) description: Option<LocalizedText>, pub(super) id: String, pub(super) verb: Option<String>, pub(super) stop: Option<Stop>, pub(super) members: Vec<MemberDeclaration> }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct GroupDeclaration { pub(super) id: String, pub(super) targets: Vec<String>, pub(super) projects: Vec<String> }
+struct GroupDeclaration { #[serde(default, deserialize_with = "localized_declaration")] pub(super) title: Option<LocalizedText>, #[serde(default, deserialize_with = "localized_declaration")] pub(super) description: Option<LocalizedText>, pub(super) id: String, pub(super) targets: Vec<String>, pub(super) projects: Vec<String> }
 
 #[derive(Debug, Clone, Default, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

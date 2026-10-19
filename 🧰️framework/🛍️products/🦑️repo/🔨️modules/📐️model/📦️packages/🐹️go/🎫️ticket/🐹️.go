@@ -9,12 +9,12 @@
 package model
 
 import (
-	json "encoding/json"
-	fmt "fmt"
-	strings "strings"
-	time "time"
+	"encoding/json"
+	"fmt"
+	"strings"
+	"time"
+	"github.com/usalu/semio/repo/workspace"
 
-	workspace "github.com/usalu/semio/repo/workspace"
 )
 
 // #region 🎫️Ticket
@@ -78,7 +78,7 @@ type Ticket struct {
 	Parent        string                `json:"-" yaml:"-"`
 	Plan          *TicketPlan           `json:"plan,omitempty" yaml:"plan,omitempty"`
 	Sessions      []string              `json:"sessions,omitempty" yaml:"sessions,omitempty"`
-	Interactions  []Interaction         `json:"-" yaml:"-"`
+	Interactions  []Interaction         `json:"interactions,omitempty" yaml:"interactions,omitempty"`
 	Agents        []TicketAgent         `json:"-" yaml:"-"`
 	FolderPath    string                `json:"-" yaml:"-"`
 	JsonPath      string                `json:"-" yaml:"-"`

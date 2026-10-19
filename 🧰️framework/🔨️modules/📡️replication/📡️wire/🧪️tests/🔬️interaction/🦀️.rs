@@ -1,6 +1,48 @@
 
 use super::*;
 
+#[semio_framework_async_macros::async_test]
+async fn interaction_set_laws_follow_portable_vectors() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🕹️interaction/🧫️fixtures/🎯️set-laws/🔣️.json")).unwrap();
+    let topology = |rows: &serde_json::Value| DomainTopology { ordered: rows.as_array().unwrap().iter().map(|row| TopologyNode { id: row["id"].as_str().unwrap().into(), granularity: row["granularity"].as_str().unwrap().into(), parent: row["parent"].as_str().map(Into::into) }).collect() };
+    let strings = |rows: &serde_json::Value| rows.as_array().unwrap().iter().map(|value| value.as_str().unwrap().to_string()).collect::<Vec<_>>();
+    let topo = topology(&corpus["topology"]);
+    for row in corpus["cases"].as_array().unwrap() {
+        let seed = DomainSelection { granularity: "node".into(), ids: strings(&row["seed"]), anchor_id: None };
+        let input = SelectionInput { targets: strings(&row["targets"]).into_iter().map(|id| InteractionTarget { granularity: "node".into(), id }).collect(), merge: MergeMode::from_wire_label(row["merge"].as_str().unwrap()).unwrap(), mode: SelectionMode::Multiple };
+        let next = next_selection(&spec(row["transitive"].as_bool().unwrap(), &[input.merge]).await, &seed, &topo, &input).await;
+        assert_eq!(next.ids, strings(&row["expected"]), "{}", row["id"]);
+        assert_eq!(next.anchor_id.as_deref(), input.targets.last().map(|target| target.id.as_str()));
+    }
+    for row in corpus["traversals"].as_array().unwrap() {
+        let topo = topology(&row["topology"]);
+        let root = row["root"].as_str().unwrap();
+        assert_eq!(topo.descendant_closure(root).await, strings(&row["descendants"]), "{}", row["id"]);
+        assert_eq!(topo.ancestors(root).await, strings(&row["ancestors"]), "{}", row["id"]);
+    }
+    let size = corpus["scale"].as_u64().unwrap() as usize;
+    let topo = DomainTopology { ordered: (0..size).map(|index| TopologyNode { id: format!("n{index}"), granularity: "node".into(), parent: index.checked_sub(1).map(|parent| format!("n{parent}")) }).collect() };
+    assert_eq!(topo.descendant_closure("n0").await.len(), size);
+    assert_eq!(topo.ancestors(&format!("n{}", size - 1)).await.len(), size - 1);
+    let ids: Vec<String> = topo.ordered.iter().map(|node| node.id.clone()).collect();
+    let targets: Vec<_> = ids.iter().flat_map(|id| [InteractionTarget { granularity: "node".into(), id: id.clone() }, InteractionTarget { granularity: "node".into(), id: id.clone() }]).collect();
+    let input = SelectionInput { targets: targets.clone(), merge: MergeMode::Invertive, mode: SelectionMode::Multiple };
+    assert!(next_selection(&spec(false, &[MergeMode::Invertive]).await, &DomainSelection { granularity: "node".into(), ids, anchor_id: None }, &topo, &input).await.ids.is_empty());
+    assert_eq!(next_hover(&HoverSpec { transitive: true, ..HoverSpec::default() }, &topo, &HoverInput { channel: "pointer".into(), targets }).await.ids.len(), size);
+    for domain in corpus["domains"].as_array().unwrap() {
+        let domain = domain.as_str().unwrap();
+        let mut def = sample_outline().await;
+        def.id = domain.to_string();
+        let mut state = InteractionState::default();
+        state.selection.insert(domain.to_string(), DomainSelection { granularity: "node".into(), ids: vec!["n0".into()], anchor_id: None });
+        state.hover.insert(domain.to_string(), DomainHover { channel: "pointer".into(), ids: vec!["n0".into()] });
+        let validated = validate_state(&[def], &InteractionTopology::default(), &state).await;
+        assert_eq!(validated.selection[domain].ids, ["n0"]);
+        assert_eq!(validated.hover[domain].ids, ["n0"]);
+    }
+    eprintln!("[DEBUG] Shared interaction set laws preserve ordered unions and terminate for {size} topology identities");
+}
+
 //#region 🔖️Fixtures
 /// 🌲️ root → {a → {a1, a2}, b → {b1}}, pre-order: root, a, a1, a2, b, b1.
 async fn sample_topology() -> DomainTopology {

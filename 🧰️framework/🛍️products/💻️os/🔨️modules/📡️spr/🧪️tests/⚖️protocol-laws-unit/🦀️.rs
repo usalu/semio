@@ -1,3 +1,4 @@
+use semio_framework_os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::*;
 
 //#region 🔖️Gen
@@ -200,7 +201,7 @@ mod exhaustive {
 //#endregion 🏃️exhaustive
 
 //#region 🧸️Fixtures
-use super::mutation_law_fixture::{AddCounter, AddMissingCounter, AddObservedCounter, AddRejectedCounter, AddUncheckedCounter, CounterDiff, CounterMutation};
+use super::mutation_law_fixture::{AddCounter, AddMissingCounter, AddObservedCounter, AddRejectedCounter, AddUncheckedCounter, CounterDiff, CounterMutation, RETIRED_DIFFS, RETIRED_PROJECTIONS};
 
 async fn sample_conflict(id: &str, kind: semio_framework_os_spr::ConflictKind) -> semio_framework_os_spr::Conflict {
     semio_framework_os_spr::Conflict { id: semio_framework_os_spr::ConflictId(id.to_string()), kind, status: semio_framework_os_spr::ConflictStatus::Open, messages: Vec::new(), actors: Vec::new(), timestamp: semio_framework_os_spr::HybridLogicalTimestamp::new(1, 100) }
@@ -219,10 +220,10 @@ async fn operation_diff_apply_matches_backwards_inverse() {
     use semio_framework_os_spr::{Mutation, MutationDiff};
     let base: i64 = 10;
     let op = CounterMutation::AddCounter(AddCounter { delta: 5 });
-    let forward = semio_framework_os_spr::apply_diff(op.diff(&base).diff(), &base).expect("valid forward diff");
+    let forward = protocol::apply_diff_cold(op.diff(&base).diff(), &base).expect("valid forward diff");
     assert_eq!(forward, 15);
     let [undo] = <[CounterMutation; 1]>::try_from(op.inverse(&base).expect("valid retained mutation inverse fixture")).unwrap();
-    assert_eq!(semio_framework_os_spr::apply_diff(undo.diff(&forward).diff(), &forward), Ok(base));
+    assert_eq!(protocol::apply_diff_cold(undo.diff(&forward).diff(), &forward), Ok(base));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -250,7 +251,7 @@ std::thread_local! {
 /// 🧊️ A counter operation with a FAIL-CLOSED drop, standing in for every real technology whose
 /// operation owns a root that cannot be plain-dropped — `neural_engine::Dictionary` (`final
 /// Dictionary ownership must be explicitly retired or owned by a cold boundary`), an `OrderedMap`,
-/// a retirement ladder. Its only legal disposal is [`crate::os_spr::Mutation::retire_cold`].
+/// a retirement ladder. Its only legal disposal is [`semio_framework_os_spr::Mutation::retire_cold`].
 #[derive(Clone, Debug, PartialEq)]
 struct ColdCounterMutation {
     inner: CounterMutation,
@@ -293,21 +294,27 @@ impl semio_framework_os_spr::Mutation<i64> for ColdCounterMutation {
         semio_framework_os_spr::Mutation::<i64>::descriptor(&self.inner)
     }
 
-    fn diff(&self, base: &i64) -> semio_framework_os_spr::MutationOutcome<Self::Diff> {
-        semio_framework_os_spr::Mutation::<i64>::diff(&self.inner, base)
-    }
 
-    fn inverse(&self, base: &i64) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok({
-        semio_framework_os_spr::Mutation::<i64>::inverse(&self.inner, base)?.into_iter().map(Self::wrap).collect()
-    
-    })
-}
+
+
 
     fn retire_cold(mut self) {
         self.live = false;
         COLD_COUNTER_RETIREMENTS.with(|count| count.set(count.get() + 1));
     }
+}
+
+impl semio_framework_os_spr::ColdMutation<i64> for ColdCounterMutation {
+    type ReferenceDiff = CounterDiff;
+    fn diff(&self, base: &i64) -> semio_framework_os_spr::MutationOutcome<Self::ReferenceDiff> {
+        semio_framework_os_spr::ColdMutation::<i64>::diff(&self.inner, base)
+    }
+    fn inverse(&self, base: &i64) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok({
+        semio_framework_os_spr::ColdMutation::<i64>::inverse(&self.inner, base)?.into_iter().map(Self::wrap).collect()
+    
+    })
+}
 }
 
 /// ✅️ LAW: [`assert_mutation_inverse_law`] itself owns everything it MINTS. `mutation.inverse(base)`
@@ -320,7 +327,7 @@ impl semio_framework_os_spr::Mutation<i64> for ColdCounterMutation {
 async fn mutation_inverse_law_retires_every_operation_it_mints() {
     COLD_COUNTER_RETIREMENTS.with(|count| count.set(0));
     let operation = ColdCounterMutation::add(5);
-    let minted = semio_framework_os_spr::Mutation::<i64>::inverse(&operation, &10i64).expect("valid retained mutation inverse fixture");
+    let minted = semio_framework_os_spr::ColdMutation::<i64>::inverse(&operation, &10i64).expect("valid retained mutation inverse fixture");
     let minted_count = minted.len();
     assert!(minted_count > 0, "the fixture operation must mint at least one inverse for this law to mean anything");
     for undo in minted {
@@ -332,16 +339,6 @@ async fn mutation_inverse_law_retires_every_operation_it_mints() {
     semio_framework_os_spr::Mutation::<i64>::retire_cold(operation);
 }
 
-/// ✅️ LAW: the `_cold` twin retires the minted inverses too — the same seam, with the projection
-/// and the diffs additionally routed through the caller's closures.
-#[semio_framework_async_macros::async_test]
-async fn mutation_inverse_law_cold_retires_every_operation_it_mints() {
-    COLD_COUNTER_RETIREMENTS.with(|count| count.set(0));
-    let operation = ColdCounterMutation::add(5);
-    assert_mutation_inverse_law_cold(&10i64, &operation, |projection: i64| drop(projection), |delta: CounterDiff| drop(delta)).await;
-    assert_eq!(COLD_COUNTER_RETIREMENTS.with(std::cell::Cell::get), 1, "the cold inverse law must retire the inverse operation it minted");
-    semio_framework_os_spr::Mutation::<i64>::retire_cold(operation);
-}
 //#endregion 🧊️ColdOperationOwnership
 
 //#region ➕️InverseSum
@@ -378,10 +375,16 @@ impl semio_framework_os_spr::Mutation<i64> for SumLawProbe {
         &SUM_LAW_PROBE_DESCRIPTOR
     }
 
+
+
+
+}
+
+impl semio_framework_os_spr::ColdMutation<i64> for SumLawProbe {
+    type ReferenceDiff = CounterDiff;
     fn diff(&self, _base: &i64) -> semio_framework_os_spr::MutationOutcome<CounterDiff> {
         semio_framework_os_spr::MutationOutcome::new(CounterDiff::delta(self.delta))
     }
-
     fn inverse(&self, _base: &i64) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(match self.inverse {
             0 => vec![Self { delta: -self.delta, inverse: 0 }],
@@ -400,18 +403,12 @@ async fn mutation_inverse_sum_law_holds_for_the_lawful_inverse() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn mutation_inverse_sum_law_cold_holds_and_retires_every_projection_and_diff() {
-    let projections = std::cell::Cell::new(0usize);
-    let diffs = std::cell::Cell::new(0usize);
-    assert_mutation_inverse_sum_law_cold(&SumLawProbe { delta: 5, inverse: 0 }, &10i64, |_: i64| projections.set(projections.get() + 1), |_: CounterDiff| diffs.set(diffs.get() + 1)).await;
-    assert!(projections.get() >= 3, "the applied, restored and summed projections are retired, not dropped");
-    assert!(diffs.get() >= 3, "the forward, canonical-sum and canonical-negative diffs are retired, not dropped");
-}
-
-#[semio_framework_async_macros::async_test]
-#[should_panic(expected = "must restore base")]
-async fn mutation_inverse_sum_law_cold_catches_a_wrong_inverse() {
-    assert_mutation_inverse_sum_law_cold(&SumLawProbe { delta: 5, inverse: 1 }, &10i64, |_: i64| {}, |_: CounterDiff| {}).await;
+async fn mutation_inverse_sum_law_retires_every_projection_and_diff_it_builds() {
+    RETIRED_PROJECTIONS.with(|count| count.set(0));
+    RETIRED_DIFFS.with(|count| count.set(0));
+    assert_mutation_inverse_sum_law(&SumLawProbe { delta: 5, inverse: 0 }, &10i64).await;
+    assert!(RETIRED_PROJECTIONS.with(std::cell::Cell::get) >= 3, "the applied, restored and summed projections are retired, not dropped");
+    assert!(RETIRED_DIFFS.with(std::cell::Cell::get) >= 3, "the forward, canonical-sum and canonical-negative diffs are retired, not dropped");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -495,7 +492,8 @@ fn generated_diffs_are_sparse_and_the_wire_round_trips() {
         assert_eq!(ProbeConfigSet::decode_op(&bytes).unwrap(),mutation);
     }
 
-    use semio_framework_os_spr::{apply_diff, DiffAlgebra, Mutation, MutationDiff, OpBinary, OpText};
+    use semio_framework_os_spr::{DiffAlgebra, Mutation, MutationDiff, OpBinary, OpText};
+    use protocol::apply_diff_cold;
     let base = probe_config();
     let set = ProbeConfigSet::SetCount(9);
     assert_eq!(*set.diff(&base).diff(), ProbeConfigDiff { count: Some(9), ..Default::default() });
@@ -507,8 +505,8 @@ fn generated_diffs_are_sparse_and_the_wire_round_trips() {
     let mut sum = ProbeConfigDiff { count: Some(2), ..Default::default() };
     sum.absorb(ProbeConfigDiff { count: Some(3), label: Some("x".into()), ..Default::default() });
     assert_eq!(sum, ProbeConfigDiff { count: Some(3), label: Some("x".into()), note: None });
-    assert_eq!(apply_diff(&sum, &base), Ok(ProbeConfig { label: "x".into(), count: 3, note: Some("n".into()) }));
-    assert_eq!(<ProbeConfigDiff as DiffAlgebra<ProbeConfig>>::inverse(&sum, &base), ProbeConfigDiff { count: Some(1), label: Some("base".into()), note: None });
+    assert_eq!(apply_diff_cold(&sum, &base), Ok(ProbeConfig { label: "x".into(), count: 3, note: Some("n".into()) }));
+    assert_eq!(<ProbeConfigDiff as ColdDiffAlgebra<ProbeConfig>>::inverse(&sum, &base), ProbeConfigDiff { count: Some(1), label: Some("base".into()), note: None });
     for mutation in [set, ProbeConfigSet::SetNote(None)] {
         let text = mutation.print_op();
         assert_eq!(ProbeConfigSet::parse_op(&text).expect("the text parses"), mutation, "{text}");
@@ -526,13 +524,14 @@ semio_framework_os_kernel::sparse_record_diff! { record: ProbeConfig, diff: Prob
 /// its algebra, absorb, apply and wire hold.
 #[test]
 fn the_whole_diff_replaces_an_indivisible_record() {
-    use semio_framework_os_spr::{apply_diff, DiffAlgebra, MutationDiff};
+    use semio_framework_os_spr::{DiffAlgebra, MutationDiff};
+    use protocol::apply_diff_cold;
     let base = probe_config();
     let other = ProbeConfig { count: 7, ..base.clone() };
     assert!(DiffAlgebra::<ProbeConfig>::is_empty(&ProbeConfigWholeDiff::changing(&base, &base)), "an identical record changes nothing");
     let diff = ProbeConfigWholeDiff::changing(&base, &other);
-    assert_eq!(apply_diff(&diff, &base), Ok(other.clone()));
-    assert_eq!(apply_diff(&DiffAlgebra::inverse(&diff, &base), &other), Ok(base.clone()));
+    assert_eq!(apply_diff_cold(&diff, &base), Ok(other.clone()));
+    assert_eq!(apply_diff_cold(&ColdDiffAlgebra::inverse(&diff, &base), &other), Ok(base.clone()));
     let mut sum = ProbeConfigWholeDiff::replacing(&base);
     sum.absorb(diff.clone());
     assert_eq!(sum, diff, "the later replacement wins");
@@ -555,17 +554,18 @@ semio_framework_os_kernel::sparse_record_diff! { record: KeyedProbe, diff: Keyed
 /// per key (insert then remove cancels, remove then insert is a replace), and the wire round trips.
 #[semio_framework_async_macros::async_test]
 async fn keyed_rows_replace_the_whole_map_slot() {
-    use semio_framework_os_spr::{apply_diff, DiffAlgebra, MutationDiff};
+    use semio_framework_os_spr::{DiffAlgebra, MutationDiff};
+    use protocol::apply_diff_cold;
     use semio_framework_mutation_diff::KeyedRow;
     let base = KeyedProbe { name: "n".into(), cameras: [("a".to_string(), 1), ("b".to_string(), 2)].into() };
     let next = KeyedProbe { name: "n".into(), cameras: [("b".to_string(), 5), ("c".to_string(), 3)].into() };
     let diff = KeyedProbeDiff::changing(&base, &next);
     assert_eq!(diff.name, None);
     assert_eq!(diff.cameras, [("a".to_string(), KeyedRow::Remove), ("b".to_string(), KeyedRow::Replace(5)), ("c".to_string(), KeyedRow::Insert(3))].into(), "one row per changed key");
-    assert_eq!(apply_diff(&diff, &base), Ok(next.clone()));
+    assert_eq!(apply_diff_cold(&diff, &base), Ok(next.clone()));
     assert_diff_algebra_inverse_law(&base, &diff).await;
-    assert_eq!(<KeyedProbeDiff as DiffAlgebra<KeyedProbe>>::inverse(&diff, &base).cameras, [("a".to_string(), KeyedRow::Insert(1)), ("b".to_string(), KeyedRow::Replace(2)), ("c".to_string(), KeyedRow::Remove)].into());
-    let refused = |rows: &[(&str, KeyedRow<u32>)]| apply_diff(&KeyedProbeDiff { cameras: rows.iter().map(|(key, row)| (key.to_string(), row.clone())).collect(), ..Default::default() }, &base).expect_err("refused").code;
+    assert_eq!(<KeyedProbeDiff as ColdDiffAlgebra<KeyedProbe>>::inverse(&diff, &base).cameras, [("a".to_string(), KeyedRow::Insert(1)), ("b".to_string(), KeyedRow::Replace(2)), ("c".to_string(), KeyedRow::Remove)].into());
+    let refused = |rows: &[(&str, KeyedRow<u32>)]| apply_diff_cold(&KeyedProbeDiff { cameras: rows.iter().map(|(key, row)| (key.to_string(), row.clone())).collect(), ..Default::default() }, &base).expect_err("refused").code;
     assert_eq!(refused(&[("a", KeyedRow::Insert(9))]), "mutation.apply.duplicate-target");
     assert_eq!(refused(&[("z", KeyedRow::Replace(9))]), "mutation.apply.missing-target");
     assert_eq!(refused(&[("z", KeyedRow::Remove)]), "mutation.apply.missing-target");
@@ -888,7 +888,7 @@ async fn fuzz_truncation_never_panics_recover() {
     let bytes = write_history_log(&log, true).await;
     let limits = semio_framework_os_spr::ProtocolLimits::default();
     let report = fuzz_truncation(&bytes, CorruptionLevel::Quick, |candidate| ::semio_framework_async::poll::resolve_ready(semio_framework_os_spr::format::recover(&candidate, &limits, semio_framework_os_spr::RecoveryMode::LastCommit)).map(|_| ()).map_err(|error| error.to_string()));
-    assert!(report.cases_panicked.is_empty(), "crate::os_spr::format::recover must never panic on a truncated buffer: {:?}", report.cases_panicked);
+    assert!(report.cases_panicked.is_empty(), "semio_framework_os_spr::format::recover must never panic on a truncated buffer: {:?}", report.cases_panicked);
 }
 //#endregion 🔖️Corrupt
 

@@ -42,14 +42,29 @@ function remaining(options: LeaseOptions, started: number,cleanup?:CleanupLeaseS
   return Math.min(original ?? Infinity, requested);
 }
 
+/** 🛎️ Awaits one observer under its unchanged signal, timeout and original deadline. */
+async function waitForLeaseContinuation(options:LeaseOptions,started:number,continuation:()=>void|Promise<void>):Promise<void>{
+ const budget=remaining(options,started);let timer:ReturnType<typeof setTimeout>|undefined,cancel!:()=>void;
+ const interrupted=new Promise<never>((_,reject)=>{
+  cancel=()=>reject(options.signal.reason);options.signal.addEventListener("abort",cancel,{once:true});
+  const arm=(milliseconds:number):void=>{if(Number.isFinite(milliseconds))timer=setTimeout(()=>{
+   try{const left=remaining(options,started);if(left<=0)throw Error(`Resource lease timed out: ${options.resource}`);arm(left);}catch(error){reject(error);}
+  },Math.max(1,Math.min(milliseconds,2147483647)));};
+  arm(budget);if(options.signal.aborted)cancel();
+ });
+ try{await Promise.race([Promise.resolve().then(()=>{remaining(options,started);return continuation();}),interrupted]);remaining(options,started);}
+ finally{options.signal.removeEventListener("abort",cancel);if(timer!==undefined)clearTimeout(timer);}
+}
+
 async function waitProgress(options: LeaseOptions, progress: LeaseWait, started: number,cleanup?:CleanupLeaseScope): Promise<void> {
   remaining(options, started,cleanup);
-  if (options.control) {
-    await options.control.publish(progress); remaining(options, started);
-    await options.control.yieldContinuation(); remaining(options, started);
+  const control=options.control,onWait=options.onWait;
+  if (control) {
+    await waitForLeaseContinuation(options,started,()=>control.publish(progress));
+    await waitForLeaseContinuation(options,started,()=>control.yieldContinuation());
   }
-  if (options.onWait) { await options.onWait(progress); remaining(options, started); }
-  else if (!options.control) console.log(`Waiting for ${options.mode} access to ${options.resource}`);
+  if (onWait) await waitForLeaseContinuation(options,started,()=>onWait(progress));
+  else if (!control) console.log(`Waiting for ${options.mode} access to ${options.resource}`);
 }
 
 export type ResourceLease = ResourceAccess & { release(): void };

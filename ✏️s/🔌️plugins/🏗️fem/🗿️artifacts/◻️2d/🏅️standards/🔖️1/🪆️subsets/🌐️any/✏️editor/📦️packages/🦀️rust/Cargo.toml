@@ -20,6 +20,8 @@ name = "editor_app"
 path = "../../🧪️tests/🔬️app/🦀️.rs"
 
 [dependencies]
+semio-s-artifact-fem-2d-results-state = { path = "../../🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config/📦️packages/🦀️rust" }
+semio-s-fem-analyses-model = { path = "../../../../../../../../../../../🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🗂️model/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-action-bus = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }

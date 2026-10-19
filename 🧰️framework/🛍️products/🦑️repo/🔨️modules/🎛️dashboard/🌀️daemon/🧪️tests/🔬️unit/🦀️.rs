@@ -530,6 +530,22 @@ fn a_task_starts_in_the_environment_of_the_client_with_a_terminal() {
 }
 
 #[test]
+fn each_task_owns_its_process_authority_instead_of_inheriting_the_views() {
+    let boundary = &control_plane()["environmentBoundary"];
+    let client: Vec<(String, String)> = serde_json::from_value(boundary["client"].clone()).unwrap();
+    let declared: Vec<(String, String)> = serde_json::from_value(boundary["declared"].clone()).unwrap();
+    let expected: Vec<(String, String)> = serde_json::from_value(boundary["expected"].clone()).unwrap();
+    assert_eq!(supervisor::child_environment(&client, &declared), expected);
+    if cfg!(windows) {
+        let lower: Vec<_> = client.iter().map(|(key, value)| (key.to_lowercase(), value.clone())).collect();
+        let actual = supervisor::child_environment(&lower, &[]);
+        for key in boundary["discarded"].as_array().unwrap() {
+            assert!(!actual.iter().any(|(name, _)| name.eq_ignore_ascii_case(key.as_str().unwrap())));
+        }
+    }
+}
+
+#[test]
 fn the_hello_of_a_connection_carries_only_variables_a_task_can_receive() {
     let environment = client::process_environment();
     assert!(!environment.is_empty());

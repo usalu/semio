@@ -13,10 +13,10 @@ use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::invariant;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::resolve_combination_terms;
 
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ReplaceCombination, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {
+pub fn diff(payload: &ReplaceCombination, base: &Fem3dSnapshotValue) -> protocol::MutationOutcome<Fem3dDiff> {
     let Some(existing) = base.combinations.iter().find(|combination| combination.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Combination \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
@@ -32,6 +32,6 @@ pub fn diff(payload: &ReplaceCombination, base: &Fem3dSnapshot) -> protocol::Mut
     if *existing == payload.new_combination {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Combination \"{}\" already has that value.", payload.id));
     }
-    protocol::MutationOutcome::new(Fem3dDiff { combinations: Some(Fem3dCombinationsDelta { modified: vec![Fem3dCombinationsModification { id: payload.id.clone(), patch: payload.new_combination.clone() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem3dDiff { combinations: Some(Fem3dCombinationsDelta { modified: vec![Fem3dCombinationsModification { id: payload.id.clone(), patch: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dCombinationPatch::replacement(existing, &payload.new_combination) }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -1,0 +1,30 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-course"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Course product core: the quiz contract types, bit-exact randomness, solution-free sheets, validation, partial-credit scoring, badges, the learner lifecycle (pure decide/evolve) and the proctor read models. Pure functions only; the TypeScript twin is @semio-tech/course."
+
+[package.metadata.semio]
+role = "product"
+id = "course"
+
+[lints]
+workspace = true
+
+[lib]
+name = "course"
+path = "🦀️.rs"
+
+[features]
+# 🪝️ Compiles the `testkit` hooks of the modules (forwarders of module-private helpers) for the companion crate `semio-framework-course-tests`.
+testkit = []
+
+[dependencies]
+semio-framework-course-schema = { path = "../../🧬️schema/📦️packages/🦀️rust" }
+serde = { workspace = true }
+semio-framework-pack-json = { path = "../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+# 🎯️ `float_roundtrip`: quiz documents are read correctly rounded, as `JSON.parse` and Python read them (`3.828e26` is
+# otherwise read one double low, and the twins' sheets and verdicts part).
+serde_json = { workspace = true, features = ["float_roundtrip"] }

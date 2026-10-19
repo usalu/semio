@@ -1,0 +1,35 @@
+{
+  "fairness": {
+    "releaseCapacity": 256,
+    "owners": ["primary-refused", "primary-progress", "overflow-progress", "quarantine-progress"],
+    "firstCycleReleasedBytes": [0, 256, 256, 256],
+    "secondCycleReleasedBytes": [0, 0, 0, 0],
+    "retainedOriginal": true,
+    "newBytes": 0
+  },
+  "task": { "document": "custody-task", "generation": 42, "payload": [0, 1, 255, 42], "newBytesOnRefusal": 0, "releasedBytesOnRefusal": 0, "backendEffectsOnRefusal": 0 },
+  "reservation": {
+    "capacity": 2,
+    "admitted": ["first", "second"],
+    "refusedBeforeProducer": "third",
+    "producerCallsAtRefusal": 0,
+    "handoffReleasesReservation": true,
+    "reuseIncrementsGeneration": true,
+    "parkedUnsupportedKeepsReservation": true,
+    "fullOtherTiersCannotStealReservation": true,
+    "deniedNewBytes": 0,
+    "deniedReleasedBytes": 0,
+    "sourceDropsBeforeHandoff": 0,
+    "sourceDropsAfterExplicitDrop": 1,
+    "staleTakePreservesOriginal": true,
+    "staleReleasePreservesOriginal": true,
+    "secondTakeOwners": 0,
+    "secondReleaseRefused": true,
+    "cancelBeforeProducerCalls": 0,
+    "cancelAfterBirthParksSameGeneration": true,
+    "failedTaskHandbackRetainsCustody": true,
+    "explicitCauseHandbackRetainsRefusedTaskCustody": true,
+    "terminalSemanticClosureReleasesReservation": true,
+    "closeRunsOutsideParkingGuard": true
+  }
+}

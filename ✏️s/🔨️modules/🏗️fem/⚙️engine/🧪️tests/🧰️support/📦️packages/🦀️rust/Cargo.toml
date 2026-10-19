@@ -16,5 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-job = { workspace = true }
+semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-value = { workspace = true }
+
+semio-framework-trace = { path = "../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }

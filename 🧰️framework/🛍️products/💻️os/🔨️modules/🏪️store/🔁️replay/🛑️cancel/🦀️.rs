@@ -143,6 +143,7 @@ impl<P, M: Mutation<P>> EditReplay<P, M> {
 }
 
 impl<P: Send + Sync + 'static, M: Mutation<P> + Send + 'static> ErasedSnapshotRetirement for EditReplay<P, M> {
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.retirement_demands(body) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { self.close_original_step(grant) }
     fn terminal_is_empty(&self) -> bool { self.originals_empty() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.copy_bytes) }
@@ -206,6 +207,7 @@ impl<P: 'static, M: Mutation<P> + 'static> EditReplayResult<P, M> {
 }
 
 impl<P: Send + Sync + 'static, M: Mutation<P> + Send + 'static> ErasedSnapshotRetirement for EditReplayResult<P, M> {
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.retirement_demands(body) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { self.close_original_step(grant) }
     fn terminal_is_empty(&self) -> bool { EditReplayResult::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.copy_bytes) }

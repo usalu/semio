@@ -59,6 +59,8 @@ impl RetireOwned for CancelToken{
     fn retirement_element_copy_bytes()->usize{size_of::<Self>()}
 }
 impl RetirementCursor for Cursor{
+    fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.0.retirement_demands()}
+
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
         match self.0.close_step(grant){
             Ok(step)=>{let progress=step.progress();if progress!=RetainedCloneProgress::default(){RetirementStep::Progress(progress)}else if self.0.terminal_is_empty(){RetirementStep::Complete}else{RetirementStep::BudgetExhausted}}

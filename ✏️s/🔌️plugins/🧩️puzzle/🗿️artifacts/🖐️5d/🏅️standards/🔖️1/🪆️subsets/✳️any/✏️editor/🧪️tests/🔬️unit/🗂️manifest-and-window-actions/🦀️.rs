@@ -12,7 +12,8 @@ use super::*;
 /// impl (not its `Mutation<Value>` bridge impl) is what the CW7 law is about.
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-    use crate::host::owned::{close_puzzle5d_store,puzzle5d_store};
+    use crate::host::owned::close_puzzle5d_store;
+    use crate::host::owned::puzzle5d_store;
 
     use crate::{PUZZLE_5D_SCHEMA};
 use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d};

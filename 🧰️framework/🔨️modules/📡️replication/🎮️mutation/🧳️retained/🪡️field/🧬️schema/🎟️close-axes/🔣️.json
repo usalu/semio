@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/replication/retained-field-close-axes",
+  "title": "Retained Field Close Axes",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["original", "cuts", "bodyBytes", "narrowCopyBytes", "narrowCapacityBytes", "expectedOriginal", "expectedTerminal"],
+  "properties": {
+    "original": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
+    "cuts": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 0 } },
+    "bodyBytes": { "type": "integer", "minimum": 1 },
+    "narrowCopyBytes": { "const": 1 },
+    "narrowCapacityBytes": { "const": 0 },
+    "expectedOriginal": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
+    "expectedTerminal": { "type": "boolean" }
+  }
+}

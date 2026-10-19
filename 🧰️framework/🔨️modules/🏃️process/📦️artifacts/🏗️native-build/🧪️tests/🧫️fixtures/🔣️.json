@@ -1,5 +1,9 @@
 {
   "schema": "semio.process.cargo-artifacts.fixture/v1",
+  "compilerCustody": [
+    { "id": "custody refusal", "operation": "refuse" },
+    { "id": "original cancellation", "operation": "cancel" }
+  ],
   "policy": {
     "version": 1,
     "cwd": "/owner",

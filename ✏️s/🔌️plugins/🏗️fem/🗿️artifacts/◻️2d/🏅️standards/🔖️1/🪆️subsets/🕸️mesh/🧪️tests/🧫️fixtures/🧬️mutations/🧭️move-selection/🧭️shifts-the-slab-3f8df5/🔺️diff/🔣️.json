@@ -1,13 +1,12 @@
 {
   "nodes": {
-    "inserted": [],
     "removed": [],
+    "inserted": [],
     "moved": [],
     "modified": [
       {
         "id": "rc0",
         "patch": {
-          "id": "rc0",
           "x": 10.5,
           "y": 3.0
         }
@@ -15,7 +14,6 @@
       {
         "id": "rc1",
         "patch": {
-          "id": "rc1",
           "x": 12.5,
           "y": 3.0
         }
@@ -23,7 +21,6 @@
       {
         "id": "rc2",
         "patch": {
-          "id": "rc2",
           "x": 12.5,
           "y": 3.1
         }
@@ -31,7 +28,6 @@
       {
         "id": "rc3",
         "patch": {
-          "id": "rc3",
           "x": 10.5,
           "y": 3.1
         }
@@ -40,15 +36,13 @@
   },
   "elements": null,
   "regions": {
-    "inserted": [],
     "removed": [],
+    "inserted": [],
     "moved": [],
     "modified": [
       {
         "id": "r1",
         "patch": {
-          "id": "r1",
-          "name": "First Floor Slab",
           "outline": [
             [
               10.5,
@@ -66,11 +60,7 @@
               10.5,
               3.1
             ]
-          ],
-          "holes": [],
-          "thickness": 0.2,
-          "materialId": "concrete",
-          "meshSize": 1.0
+          ]
         }
       }
     ]

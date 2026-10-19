@@ -26,6 +26,7 @@ reserved-producer-testing = []
 artifact-app-testing = []
 
 [dependencies]
+semio-framework-actor = { workspace = true }
 semio-framework-plugin-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }
 semio-framework-plugin-operation = { path = "../../../../♻️cancellation/📦️packages/🦀️rust" }
 semio-framework-plugin-window-config = { path = "../../../../🪟️window/🎚️config/📦️packages/🦀️rust" }

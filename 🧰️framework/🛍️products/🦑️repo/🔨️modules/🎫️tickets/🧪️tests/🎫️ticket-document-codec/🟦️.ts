@@ -28,6 +28,7 @@ type Ticket = {
   parent: string;
   plan: { client: string; id: string; source: string; local: string } | null;
   sessions: string[];
+  interactions: Record<string, unknown>[];
 };
 
 const VECTORS = "shared://📄️ticket-document-codec/📄️documents.json";
@@ -75,6 +76,13 @@ function decode(source: string): Ticket {
     parent: text(members, "parent"),
     plan: rawPlan === null ? null : { client: text(rawPlan, "client"), id: text(rawPlan, "id"), source: text(rawPlan, "source"), local: text(rawPlan, "local") },
     sessions: [],
+    interactions: interactions.filter((entry) => entry !== null && typeof entry === "object").map((entry) => {
+      const result: Record<string, unknown> = {};
+      for (const name of ["kind", "date", "author", "system", "client", "checkpoint"]) result[name] = text(entry, name);
+      for (const name of ["prompt", "summary", "llm", "effort"]) if (text(entry, name) !== "") result[name] = text(entry, name);
+      if (Array.isArray(entry.files) && entry.files.length > 0) result.files = entry.files.map((file: Record<string, unknown>) => { const result: Record<string, string> = { path: text(file, "path") }; for (const name of ["id", "uri"]) if (text(file, name) !== "") result[name] = text(file, name); return result; });
+      return result;
+    }),
   };
   const append = (value: unknown): void => {
     const trimmed = typeof value === "string" ? value.trim() : "";
@@ -116,12 +124,13 @@ function goString(value: string): string {
   return `${out}"`;
 }
 
-type Member = { name: string; kind: "text"; value: string } | { name: string; kind: "object"; value: { name: string; value: string }[] } | { name: string; kind: "strings"; value: string[] };
+type Member = { name: string; kind: "text"; value: string } | { name: string; kind: "object"; value: { name: string; value: string }[] } | { name: string; kind: "strings"; value: string[] } | { name: string; kind: "json"; value: unknown };
 
 /** 🖨️ Renders members the way `json.MarshalIndent(value, "", "  ")` renders a struct. */
 function render(members: Member[]): string {
   if (members.length === 0) return "{}";
   const lines = members.map((member) => {
+    if (member.kind === "json") return `  ${goString(member.name)}: ${JSON.stringify(member.value, null, 2).replace(/[<>&\u2028\u2029]/gu, (character) => `\\u${character.codePointAt(0)!.toString(16).padStart(4, "0")}`).replace(/\n/gu, "\n  ")}`;
     if (member.kind === "text") return `  ${goString(member.name)}: ${goString(member.value)}`;
     if (member.kind === "object") {
       if (member.value.length === 0) return `  ${goString(member.name)}: {}`;
@@ -149,6 +158,7 @@ function encode(ticket: Ticket): string {
     members.push({ name: "plan", kind: "object", value: nested });
   }
   if (ticket.sessions.length > 0) members.push({ name: "sessions", kind: "strings", value: ticket.sessions });
+  if (ticket.interactions.length > 0) members.push({ name: "interactions", kind: "json", value: ticket.interactions });
   return render(members);
 }
 //#endregion 📄️Codec

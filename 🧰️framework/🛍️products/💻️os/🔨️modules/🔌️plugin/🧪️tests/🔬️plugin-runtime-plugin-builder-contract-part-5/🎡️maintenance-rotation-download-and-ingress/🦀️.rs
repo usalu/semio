@@ -41,7 +41,7 @@ pub fn assert_maintenance_reports_block<A: ArtifactApp, M: SpaceMember + MemberF
         assert!(!app.media.segmented_downloads.contains(91));
         assert_eq!(app.take_segmented_download_chunk(91).await.expect_err("terminal none removes authority").code.0, "interactive-job.unknown-segmented-download");
         artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -64,11 +64,11 @@ pub fn assert_maintenance_reports_block<A: ArtifactApp, M: SpaceMember + MemberF
     //
     // The laws below pin both halves: the reservation is the command's DECLARED page count, and every
     // refusal on this path is a `Fault` the host can display rather than a panic.
-    
+
     /// 🔁️ Commands driven through the real ingress — over the 184 the browser reached before the
     /// prologue started refusing, so a per-command owner the authority never gives back shows up here.
     const INGRESS_COMMANDS: u64 = 320;
-    
+
     /// 🧮️ Retained bytes one command may leave behind. The authority is transient by construction: its
     /// pages are released as the command is assembled and its deque dies with the command.
     const INGRESS_COMMAND_RETENTION_CEILING_BYTES: isize = 512;
@@ -86,7 +86,7 @@ pub fn assert_maintenance_reports_block<A: ArtifactApp, M: SpaceMember + MemberF
         assert_eq!(page.0.page_count, 1, "the fixture command is one page, which is what the 4 Hz stream that broke build #29 was");
         page
     }
-    
+
     /// 🚚️ Drives one command to its terminal ingress status through the real `poll_kernel`: page 0 on the
     /// first turn, then plain turns while the guest steps the owner it retained, until it answers
     /// `CommandComplete` or `Fault`. Returns whether it completed and the turns it took.
@@ -158,6 +158,6 @@ pub fn assert_maintenance_reports_block<A: ArtifactApp, M: SpaceMember + MemberF
             "the command ingress retains {per_command} B per command (ceiling {INGRESS_COMMAND_RETENTION_CEILING_BYTES}) — the guest's linear memory is fixed and never shrinks: {census}"
         );
         reactor_native_lifecycle_finish(&runtime, lifetime, 9).await;
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original ingress fixture paid terminal retirement");result
     }

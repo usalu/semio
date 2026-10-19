@@ -7,9 +7,13 @@ use super::*;
 pub(super) struct Draft<'a> { pub(super) id: String, pub(super) kind: Kind, pub(super) verb: String, pub(super) path: Vec<Segment>, pub(super) owner: Vec<String>, pub(super) subject: String, pub(super) qualifier: String, pub(super) long_running: bool, pub(super) source: &'a str, pub(super) own: Vec<Parameter>, pub(super) action: Action }
 
 impl Entry {
+    /// 🏷️ A human command title in the selected language, or its source label.
+    pub fn display_title(&self, locale: Locale) -> &str { self.title.as_ref().map_or(self.label.as_str(), |text| text.get(locale)) }
+
+
     pub(super) fn new(draft: Draft<'_>) -> Self {
         let Draft { id, kind, verb, path, owner, subject, qualifier, long_running, source, own, action } = draft;
-        let mut entry = Self { id, kind, verb, path, label: String::new(), owner, subject, qualifier, long_running, listed: true, mutating: false, source: source.to_string(), mcp: None, own, action, haystack: String::new() };
+        let mut entry = Self { id, title: None, description: None, kind, verb, path, label: String::new(), owner, subject, qualifier, long_running, listed: true, mutating: false, source: source.to_string(), mcp: None, own, action, haystack: String::new() };
         entry.relabel();
         entry
     }
@@ -17,6 +21,7 @@ impl Entry {
     pub(super) fn relabel(&mut self) {
         self.label = std::iter::once(self.verb.as_str()).chain(self.path.iter().map(|part| part.label.as_str())).collect::<Vec<_>>().join(" / ");
         self.haystack = format!("{} {}", self.label, self.id).to_lowercase();
+        for text in self.title.iter().chain(self.description.iter()).chain(self.own.iter().flat_map(|parameter| parameter.title.iter().chain(parameter.description.iter()))) { self.haystack.push_str(&format!(" {} {}", text.en, text.de).to_lowercase()); }
     }
 
     /// 🛂 Who owns the port a command claims: commands of one owner are alternatives of the same service

@@ -9,7 +9,7 @@ fn end_use_scales_with_schedule() {
 
 #[test]
 fn pv_zero_at_night() {
-    let pv = PvSystem { dc_capacity_w: 10_000.0, module_efficiency: 0.2, area_m2: 50.0, inverter_efficiency: 0.96, temperature_coefficient: -0.004, tilt_deg: 30.0, azimuth_deg: 180.0 };
+    let pv = PvSystem { dc_capacity_w: 10_000.0, module_efficiency: 0.2, area_m2: 50.0, inverter_efficiency: 0.96, temperature_coefficient: -0.004, tilt_deg: 30.0, azimuth_deg: 180.0, faiman_heat_loss_constant_w_m2k:25.0,faiman_heat_loss_wind_w_s_m3k:6.84,mounting:crate::model::PhotovoltaicMounting::OpenRack};
     assert!(pv.simulate(0.0, 20.0).abs() < 1e-6);
 }
 

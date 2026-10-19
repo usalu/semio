@@ -383,6 +383,7 @@ pub async fn apply_long_edit(app: &mut ToyApp, count: i32, identity: &mut semio_
 /// 🪶️ Publishes one edit with an explicit author while preserving the opened instance actor.
 #[doc(hidden)]
 pub fn publish_as(app: &mut ToyApp, actor: &str, mutation: TestMutation) {
+    let mut receiving_job=crate::app_testing::artifact_app_laws::FixtureOriginalJob::new(semio_framework::kernel::RetainedTurnInput{operation:71,generation:3,epoch:1,grant:app.mounted_policy.close});
     let grant = store::os_store::one_item::ArtifactStoreOneItemGrant::from_retained(app.mounted_policy.preparation);
     let mut publication = app
         .stores.store

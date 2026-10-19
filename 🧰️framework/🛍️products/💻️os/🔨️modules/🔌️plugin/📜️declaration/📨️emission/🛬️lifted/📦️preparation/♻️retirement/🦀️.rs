@@ -3,6 +3,8 @@ use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementS
 /// ♻️ Original child emission sources retain their native close authority.
 struct OwnedChildEmitRetirement{original:ManuallyDrop<Option<OwnedChildEmit>>}
 impl RetirementCursor for OwnedChildEmitRetirement{
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.original.as_ref().map_or(Ok(Default::default()),|source|if source.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{source.retirement_demands(maximum_body_bytes)})}
+
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
   let Some(source)=self.original.as_mut()else{return RetirementStep::Complete};
   if grant.maximum_items==0{return RetirementStep::BudgetExhausted}
@@ -27,11 +29,13 @@ impl RetireOwned for OwnedChildEmit{
 struct ChildEmitPreparationRetirement{original:ManuallyDrop<Option<ChildEmitPreparation>>,fault:Option<ControlledRetirement<Fault>>}
 impl ChildEmitPreparationRetirement{
  fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
-  if let Some(fault)=self.fault.as_ref(){return Ok(RetirementDemand{copy_bytes:fault.next_copy_byte_demand()?,capacity_bytes:fault.next_capacity_byte_demand(copy)?,release_bytes:fault.next_release_byte_demand()?,depth:fault.next_depth_demand()?})}
+  if let Some(fault)=self.fault.as_ref(){return fault.next_demand(copy)}
   self.original.as_ref().map_or(Ok(Default::default()),|source|if source.terminal_is_empty(){Ok(RetirementDemand{release_bytes:source.owner_cell_bytes(),depth:1,..Default::default()})}else{source.retirement_demands(copy)})
  }
 }
 impl RetirementCursor for ChildEmitPreparationRetirement{
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.demands(maximum_body_bytes)}
+
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
   if grant.maximum_items==0{return RetirementStep::BudgetExhausted}
   if let Some(fault)=self.fault.as_mut(){return match fault.step(grant){Ok(step)=>{if fault.terminal_is_empty(){drop(self.fault.take());}RetirementStep::Progress(step.progress())},Err(error)=>RetirementStep::Failure(error)}}

@@ -1,5 +1,5 @@
-//! 🎛 `flat-position` — one named inference: absolute flatten pose (plane + center) per object.
 //! Two independent dependency-hash chains per the closed-ticket merkle design
+//! 🎛 `flat-position` — one named inference: absolute flatten pose (plane + center) per object.
 //! (26/04/17/OPTIMIZE-FLATTEN-DESIGN-WITH-MERKLE-HASH-CACHE) — an object's flatPosition entry
 //! changes iff its own vortex, an ancestor's plane/center, or the connecting attraction's params
 //! change; nothing else. The result TYPES (`FlattenPlane`/`FlattenPose`) and the low-level per-edge
@@ -7,7 +7,21 @@
 //! `⚙️engine/📐️geometry/🎛flatten`, ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES);
 //! this leaf holds the `InferredField` chains that drive incremental per-entity caching over that math.
 
-use crate::flatten::{compute_child_plane, diagram_center, find_vortex, flatten_objects_with_assignment, orientation_to_plane, vortex_geom, FlattenParent, FlattenPlane};
+use crate::flatten::compute_child_plane;
+
+use crate::flatten::diagram_center;
+
+use crate::flatten::find_vortex;
+
+use crate::flatten::flatten_objects_with_assignment;
+
+use crate::flatten::orientation_to_plane;
+
+use crate::flatten::vortex_geom;
+
+use crate::flatten::FlattenParent;
+
+use crate::flatten::FlattenPlane;
 use {semio_s_artifact_puzzle_3d_model::Puzzle3dObjectAnchor, semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot};
 use std::collections::HashMap;
 

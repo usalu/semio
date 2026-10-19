@@ -1,5 +1,9 @@
 #!/usr/bin/env bun
 import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"@semio-tech/process/compiler-capacity";
+import {runBudgetedTestCommand} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+import { runRepositoryCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
@@ -17,7 +21,9 @@ import assert from "node:assert/strict";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 
 
-import { resolve } from "node:path";
+import { join, resolve } from "node:path";
+import { readFileSync } from "node:fs";
+import { semioSchemaAjvV1 } from "../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 
 
 
@@ -66,7 +72,8 @@ class TestScript extends BundleScript {
     const { folderReloadRouteOracle } = await import("../../🧪️tests/🧪️folder-reload-route/🟦️.ts");
     const { composedChildHistoryOracle } = await import("../../🧪️tests/🧪️composed-child-history/🟦️.ts");
     const { checkpointActorOracle } = await import("../../⚛️reactor/📸️checkpoint/🧪️tests/🔬️unit/🟦️.ts");
-    await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../🎞️media/⚠️turn/🧪️tests/🟦️.ts"),resolve(this.root,"../../🧪️tests/🧪️history-edit-acceptance/🧪️tests/📥️action/🟦️.ts")],{cwd:this.repoRoot,budgetMs:15000});
+    await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../🧵️retained-command/🏭️factory/🧪️tests/🟦️.ts"),resolve(this.root,"../../🧵️retained-command/🏭️producer/🧪️tests/🟦️.ts"),resolve(this.root,"../../👷️job/🏛️reserved/⚙️worker/🧪️tests/🟦️.ts"),resolve(this.root,"../../📜️declaration/👷️job/🎟️request/♻️retirement/🧪️tests/🟦️.ts"),resolve(this.root,"../../📜️declaration/👷️job/🎟️request/🔒️command/🧪️tests/🟦️.ts"),resolve(this.root,"../../📜️declaration/🎞️media/🏭️construction/🧪️tests/🟦️.ts"),resolve(this.root,"../../🧵️retained-command/🔄️full-operation/🏭️producer/🧪️tests/🟦️.ts"),resolve(this.repoRoot,"🧰️framework/🔨️modules/🎯️action-bus/🚪️admission/🧪️tests/🟦️.ts"),resolve(this.repoRoot,"🧰️framework/🔨️modules/🧵️job/♻️retirement/🎟️context/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,budgetMs:15000});
+    await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../🎞️media/⚠️turn/🧪️tests/🟦️.ts"),resolve(this.root,"../../🖥️host/⚡️effects/🧪️tests/🟦️.ts"),resolve(this.root,"../../🧪️tests/🧪️history-edit-acceptance/🧪️tests/📥️action/🟦️.ts")],{cwd:this.repoRoot,budgetMs:15000});
     console.log(`[DEBUG] plugin-runner-oracle cases=${await pluginTestRunnerSelfTests()}`);
     console.log(`artifact-admission-oracle cases=${artifactAdmissionOracle(this.repoRoot)} firstParty=39`);
     console.log(`completion-rejection-oracle assertions=${completionRejectionOracle(this.repoRoot)}`);
@@ -140,7 +147,7 @@ class OriginalReactorReceivingSourceScript extends BundleScript{
   if(args.length)throw Error("test-original-reactor-receiving-source accepts no arguments");
   const {runOwnedCommand}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
   const laws=["⚛️reactor/🚪️lifetime/🏗️opening/🧪️tests/🟦️.ts","⚛️reactor/🔄️turn/📥️receiving/🧪️tests/🟦️.ts","🪟️window/🫧️transient/🔁️document-replacement/🧪️tests/🟦️.ts"].map(path=>resolve(this.root,"../..",path));
-  const remaining=()=>{const value=this.invocation.control.remainingMilliseconds();if(value===null||value<=0)throw Error("Original receiving verification requires its finite actual caller");return value};
+  const remaining=()=>{const value=scriptInvocationBudget(this.invocation,0);if(value===null||value<=0)throw Error("Original receiving verification requires its finite actual caller");return value};
   await runOwnedCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.repoRoot),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun,node",...laws],this.repoRoot,"plugin:original-receiving:strict",remaining(),{signal:this.invocation.control.signal});
   await runOwnedCommand(process.execPath,["test",...laws],this.repoRoot,"plugin:original-receiving:source",remaining(),{signal:this.invocation.control.signal});
  }
@@ -368,7 +375,7 @@ class SnapshotSqliteRefusalScript extends BundleScript {
    return;
   }
   const {runOwnedCommand}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
-  const remaining=()=>{const milliseconds=this.invocation.control.remainingMilliseconds();if(milliseconds!==null&&milliseconds<1)throw Error("Original snapshot source deadline exhausted");return milliseconds===null?0:Math.floor(milliseconds);};
+  const remaining=()=>{const milliseconds=scriptInvocationBudget(this.invocation,0);if(milliseconds!==null&&milliseconds<1)throw Error("Original snapshot source deadline exhausted");return milliseconds===null?0:Math.floor(milliseconds);};
   const source=resolve(this.root,"../../🧬️schema/🪶️sqlite/⚠️refusal/🧪️tests/🟦️.ts");
   await runOwnedCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,"snapshot:refusal:types",remaining(),{signal:this.invocation.control.signal});
   await runOwnedCommand(process.execPath,["test",source],this.repoRoot,"snapshot:refusal:source",remaining(),{signal:this.invocation.control.signal});
@@ -494,7 +501,7 @@ class OriginalFailureDebitSource extends BundleScript{
 }
 /** 🦀️ Owning exact original cause/debit and registered job entry laws. */
 class OriginalFailureDebitNative extends OriginalFailureDebitSource{
- async run(args:string[]):Promise<void>{await super.run(args);await runAdmittedCargoPackageTestsV1([],this.root,this.invocation,["--offline","--lib","-E","test(original_guest_failure_debit_) | test(original_guest_job_loan_retains_whole_value_error_and_actual_context) | test(original_extension_) | test(original_inference_gateway_failure_all_owned_causes) | test(original_plugin_fixture_caller_charges_root_finance_before_body_and_closes_same_stock) | test(original_receiving_cancelled_before_first_loan_retires_same_inputs_and_source) | test(erased_dispatch_clone_release_preserves_unique_bounded_job_disposal_authority) | test(original_query_output_width_does_not_price_or_renew_its_caller_receiving_grant) | test(test_config_original_record_receiving_preserves_nullable_selection)","--","--nocapture"]);}
+ async run(args:string[]):Promise<void>{await super.run(args);await runAdmittedCargoPackageTestsV1([],this.root,this.invocation,["--offline","--lib","-E","test(original_guest_failure_debit_) | test(original_guest_job_loan_retains_whole_value_error_and_actual_context) | test(original_extension_) | test(original_inference_gateway_failure_all_owned_causes) | test(original_plugin_fixture_) | test(original_fixture_command_projection_matches_the_closed_unit_and_data_cases) | test(original_receiving_cancelled_before_first_loan_retires_same_inputs_and_source) | test(erased_dispatch_clone_release_preserves_unique_bounded_job_disposal_authority) | test(original_query_output_width_does_not_price_or_renew_its_caller_receiving_grant) | test(test_config_original_record_receiving_preserves_nullable_selection)","--","--nocapture"]);}
 }
 /** 📬️ Checks every original Store command receiving ordinal and partial envelope custody. */
 class OriginalCommandReceivingSource extends BundleScript{
@@ -545,6 +552,24 @@ class OriginalMediaCustodyNative extends OriginalMediaCustodySource{
 class OriginalFixtureCloseSource extends BundleScript{
  async run(args:string[]):Promise<void>{if(args.length)throw Error("original fixture close takes no arguments");const sources=[resolve(this.root,"../../🧪️tests/🧬️mutation-fixtures-job-close/🧪️tests/🟦️.ts"),resolve(this.root,"../../🧵️retained-command/🧪️tests/🔬️unit/⛽️fuel/🟦️.ts"),resolve(this.root,"../../📬️completion/⚠️fault/🧪️tests/🟦️.ts")];const execute=(args:string[])=>runRepositoryTestCommand(process.execPath,args,{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal});await execute([Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",...sources]);await execute(["test",...sources]);}
 }
+
+
+/** 📷️ Checks canonical window presence and the existing native declared-interaction law. */
+class CameraPresenceContractScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length !== 1 || !["source", "native"].includes(segments[0]!)) throw Error("test-camera-presence requires source or native");
+    const file = resolve(this.root, "../../👥️presence/📷️camera/🧪️tests/🟦️.ts");
+    await runRepositoryCommand(this.invocation,process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",file],this.repoRoot,"presence-source-types",{version:1,maximumElapsedMilliseconds:120000,output:{maximumBytes:8388608,maximumLines:65536}});
+    const { testCameraPresenceContract } = await import("../../👥️presence/📷️camera/🧪️tests/🟦️.ts");
+    console.log(`[DEBUG] shared camera portable presence admission passed ${await testCameraPresenceContract(this.repoRoot)} assertions with Ajv`);
+    if (segments[0] === "source") return;
+    const native=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");assert.equal(resolve(native.manifestPath),manifest);const receipts=await runRepositoryExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:native.buildBudgetMs,lawMilliseconds:native.assertionBudgets[native.level]},cwd:this.repoRoot,nativeEnv:{RUST_MIN_STACK:native.rustMinStack},manifestPaths:{"semio-framework-plugin":manifest},groups:[{package:"semio-framework-plugin",target:{kind:"lib",name:"semio_framework_plugin"},cargoArgs:["--locked"],laws:["component::plugin_runtime::plugin_builder_contract_tests::ephemeral_snapshot_carries_encoded_interaction_from_declared_broadcast_specs"]}]});
+    console.log(`[DEBUG] canonical presence native receipts=${receipts.length}`);
+  }
+}
+/** 🏭️ Verifies real producer/source custody corpora against independent schema and physical-effect oracles. */
+class OriginalProducerSourceScript extends BundleScript{async run(args:string[]):Promise<void>{if(args.length)throw Error("test-original-producer-source accepts no arguments");await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../🧵️retained-command/🏭️producer/🧪️tests/🟦️.ts"),resolve(this.root,"../../👷️job/🏛️reserved/⚙️worker/🧪️tests/🟦️.ts"),resolve(this.root,"../../📜️declaration/👷️job/🎟️request/♻️retirement/🧪️tests/🟦️.ts"),resolve(this.root,"../../📜️declaration/👷️job/🎟️request/🔒️command/🧪️tests/🟦️.ts"),resolve(this.root,"../../📜️declaration/🎞️media/🏭️construction/🧪️tests/🟦️.ts"),resolve(this.root,"../../🧵️retained-command/🔄️full-operation/🏭️producer/🧪️tests/🟦️.ts"),resolve(this.root,"../../🧵️retained-command/🏭️factory/🧪️tests/🟦️.ts"),resolve(this.repoRoot,"🧰️framework/🔨️modules/🎯️action-bus/🚪️admission/🧪️tests/🟦️.ts"),resolve(this.repoRoot,"🧰️framework/🔨️modules/🧵️job/♻️retirement/🎟️context/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,budgetMs:15000});}}
+
 const router = new ScriptRouter(import.meta.dir).register("test-original-fixture-close-source",OriginalFixtureCloseSource).register("test-original-media-custody-source",OriginalMediaCustodySource).register("test-original-media-custody-native",OriginalMediaCustodyNative).register("test-original-command-receiving-source",OriginalCommandReceivingSource).register("test-original-command-receiving-native",OriginalCommandReceivingNative).register("test-original-pending-worker-source",OriginalPendingWorkerSource).register("test-original-pending-worker-native",OriginalPendingWorkerNative).register("test-original-inference-close-source",OriginalInferenceCloseSource).register("test-original-inference-close-native",OriginalInferenceCloseNative).register("test-original-paged-output-source",OriginalPagedOutputSource).register("test-original-paged-output-native",OriginalPagedOutputNative).register("test-original-lifecycle-source",OriginalLifecycleSource).register("test-original-lifecycle-native",OriginalLifecycleNative).register("test-original-failure-debit-source",OriginalFailureDebitSource).register("test-original-failure-debit-native",OriginalFailureDebitNative).register("test-window-mutation",WindowMutationScript).register("test-retained-raw",RetainedRawScript).register("test-retained-structural-refusal",RetainedStructuralRefusalScript).register("test-retained-metadata",RetainedMetadataScript).register("test-snapshot-sqlite-refusal",SnapshotSqliteRefusalScript).register("test-snapshot-sqlite-admission",SnapshotSqliteAdmissionScript).register("test-command-ingress-consumer",CommandIngressConsumerScript)
   .register("test-window-registry",WindowRegistryScript)
   .register("test-window-preparation-source",WindowPreparationSourceScript)
@@ -566,7 +591,7 @@ const router = new ScriptRouter(import.meta.dir).register("test-original-fixture
   .register("test-fixture-channel-interfaces", FixtureChannelInterfacesScript)
   .register("test-codec-send-source", CodecSendSourceScript)
   .register("artifact-admission-check", ArtifactAdmissionCheckScript)
-  .register("schema-document-authority-check", SchemaDocumentAuthorityCheckScript);
+  .register("schema-document-authority-check", SchemaDocumentAuthorityCheckScript).register("test-camera-presence", CameraPresenceContractScript);
 export async function pluginTestRunnerSelfTests(): Promise<number> {
   const { createPluginRunnerTests } = await import("../../🧪️tests/🏃️runner-self-tests/🟦️.ts");
   const [{ default: Ajv }, { parseArgs }, { readFileSync }] = await Promise.all([import("ajv"), import("node:util"), import("node:fs")]);
@@ -574,5 +599,107 @@ export async function pluginTestRunnerSelfTests(): Promise<number> {
 }
 
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "check" }) }));
+/** 📥️ Verifies accepted remote prefixes against SQLite and the mounted plugin runtime. */
+class RemoteIngestPrefixScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  if(args.length!==1||!["source","native"].includes(args[0]!))throw Error("test-remote-ingest-prefix source|native");
+  const owner=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/📥️remote-prefix"),law=JSON.parse(readFileSync(join(owner,"🔣️.json"),"utf8"));
+  const validate=semioSchemaAjvV1({strict:true,allErrors:true}).compile(JSON.parse(readFileSync(join(owner,"🧬️schema/🔣️.json"),"utf8")));assert.equal(validate(law),true,JSON.stringify(validate.errors));
+  const {Database}=await import("bun:sqlite"),oracle=new Database(":memory:");
+  try{oracle.exec("CREATE TABLE accepted(id TEXT PRIMARY KEY,payload TEXT NOT NULL CHECK(payload='valid'),amount INTEGER NOT NULL)");for(const row of law.cases){this.invocation.control.signal.throwIfAborted();oracle.exec("DELETE FROM accepted");let refused=false,notifications=0;for(const step of row.steps){try{const result=oracle.query("INSERT INTO accepted VALUES('original',?,1) ON CONFLICT DO NOTHING").run(step==="malformed"?"malformed":"valid");notifications+=Number(result.changes);}catch{refused=true;break;}}const value=oracle.query("SELECT COALESCE(SUM(amount),0) AS count FROM accepted").get()as{count:number};assert.equal(refused,row.refused,row.name);assert.equal(value.count,row.count,row.name);assert.equal(notifications,row.notifications,row.name);}console.log("[DEBUG] remote-prefix SQLite four neutral vectors preserve accepted prefixes and suppress duplicate notifications");}
+  finally{oracle.close();}
+  if(args[0]==="native")await runRepositoryCargoTests(["semio-framework-plugin"],this.root,this.invocation,["--lib","accepted_remote_prefix_notifies_before_later_refusal","--no-fail-fast","--success-output","immediate"]);
+ }
+}
+
+router.register("test-remote-ingest-prefix",RemoteIngestPrefixScript);
+/** 🏗️ Verifies central builder retirement with neutral SQL receipts and the native owner. */
+class SnapshotBuilderOwnershipScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length !== 1 || !["source", "native"].includes(args[0]!)) throw Error("test-snapshot-builder-ownership source|native");
+    await runRepositoryTestCommand(process.execPath, ["test", resolve(this.root, "../../📜️declaration/🪟️surface/🏗️snapshot-builder/🧪️tests/🟦️.ts")], { cwd: this.repoRoot, budgetMs: 15_000 });
+    if (args[0] === "native") {
+      const native=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");
+      assert.equal(resolve(native.manifestPath),manifest);
+      const receipts=await runRepositoryExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,0)},cwd:this.repoRoot,env:process.env,nativeEnv:{RUST_MIN_STACK:native.rustMinStack},manifestPaths:{"semio-framework-plugin":manifest},groups:[{package:"semio-framework-plugin",target:{kind:"test",name:"snapshot_builder_ownership"},cargoArgs:["--locked"],laws:["fixture::snapshot_builder_retires_original_owners_on_success_and_refusal"]}]});
+      assert.equal(receipts[0]!.assertions,1);
+    }
+  }
+}
+router.register("test-snapshot-builder-ownership", SnapshotBuilderOwnershipScript);
+/** 📬️ Checks returned completion owners through the neutral lifecycle and real typed close. */
+class CompletionRejectionCloseScript extends BundleScript {
+  async run(args:string[]):Promise<void>{
+    if(args.length!==1||!["source","native"].includes(args[0]!))throw Error("test-completion-rejection-close source|native");
+    await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../🧵️retained-command/🧪️tests/♻️completion-rejection/🟦️.ts")],{cwd:this.repoRoot,budgetMs:15000});
+    const {completionRejectionOracle}=await import("../../🧪️tests/🧪️artifact-admission-and-completion-oracles/🟦️.ts");
+    console.log(`[DEBUG] original completion owner source cases=${completionRejectionOracle(this.repoRoot)}`);
+    if(args[0]==="native")await runRepositoryCargoTests(["semio-framework-plugin"],this.root,this.invocation,["--lib","retained_rejected_completion_closes_original_artifact_and_ephemeral_owners","--no-fail-fast"]);
+  }
+}
+router.register("test-completion-rejection-close",CompletionRejectionCloseScript);
+/** 🧾️ Verifies original snapshot preparation receipt admission. */
+class SnapshotReadPreparationScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  if(args.length!==1||!["source","native"].includes(args[0]!))throw Error("test-snapshot-read-preparation source|native");
+  await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../📜️declaration/👁️view/📸️preparation/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,budgetMs:15000});
+  await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../⏪️time-travel/♻️retirement/🧪️tests/🟦️.ts"),"-t","original ZST"],{cwd:this.repoRoot,budgetMs:15000});
+  if(args[0]==="native"){const native=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");assert.equal(resolve(native.manifestPath),manifest);await runRepositoryExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:configuredExactCargoLawPolicyV1(),cwd:this.repoRoot,env:process.env,manifestPaths:{"semio-framework-plugin":manifest},nativeEnv:{RUST_MIN_STACK:native.rustMinStack},groups:[{package:"semio-framework-plugin",target:{kind:"test",name:"mounted_snapshot_preparation"},cargoArgs:["--locked","--features","artifact-app-testing"],laws:["receipts::mounted_snapshot_preparation_records_original_receipts_before_readiness","mounted_snapshot_preparation_boundary_uses_original_context_and_readiness","mounted_pending_source_version_compares_complete_original_authority"]}]});}
+ }
+}
+router.register("test-snapshot-read-preparation",SnapshotReadPreparationScript);
+/** 🎞️ Verifies original writer-owned and borrowed native tick sources through paid payload publication. */
+class OriginalTickPayloadSourcesScript extends BundleScript{
+ async run(args:string[]):Promise<void>{
+  if(args.length!==1||!["source","native"].includes(args[0]!))throw Error("test-original-tick-payload-sources source|native");
+  const file=resolve(this.root,"../../⏯️tool-run/🎞️tick/📦️payload/🧪️tests/🟦️.ts"),sourcePolicy={version:1 as const,maximumElapsedMilliseconds:120000,output:{maximumBytes:1048576,maximumLines:4096}};
+  await runRepositoryCommand(this.invocation,process.execPath,["test",file],this.repoRoot,"original-tick-payload-sources",sourcePolicy);
+  await runRepositoryCommand(this.invocation,process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",file],this.repoRoot,"original-tick-payload-source-types",sourcePolicy);
+  if(args[0]==="source")return;const native=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");assert.equal(resolve(native.manifestPath),manifest);
+  await runRepositoryExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:configuredExactCargoLawPolicyV1(),cwd:this.repoRoot,env:process.env,manifestPaths:{"semio-framework-plugin":manifest},groups:[{package:"semio-framework-plugin",target:{kind:"test",name:"original_tick_payload_sources"},cargoArgs:["--locked"],laws:["original_payload::tests::original_tick_payload_preserves_same_context_authority_and_cancellation"]}]});
+ }
+}
+router.register("test-original-tick-payload-sources",OriginalTickPayloadSourcesScript);
+
+/** 📮️ Verifies persistent Reactor original page custody with independent portable ABI and event-order oracles. */
+class ResultPublicationScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  if(args.length!==1||!["source","native"].includes(args[0]!))throw Error("test-result-publication source|native");
+  const file=resolve(this.root,"../../⚛️reactor/🏃️runtime/📮️publication/🧪️tests/🟦️.ts"),policy={version:1 as const,maximumElapsedMilliseconds:120000,output:{maximumBytes:1048576,maximumLines:4096}};
+  await runRepositoryCommand(this.invocation,process.execPath,["test",file],this.repoRoot,"result-publication-source",policy);
+  await runRepositoryCommand(this.invocation,process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",file],this.repoRoot,"result-publication-source-types",policy);
+  if(args[0]==="source")return;const native=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");assert.equal(resolve(native.manifestPath),manifest);
+  await runRepositoryExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,0)},cwd:this.repoRoot,env:process.env,manifestPaths:{"semio-framework-plugin":manifest},groups:[{package:"semio-framework-plugin",target:{kind:"lib"},cargoArgs:["--locked"],laws:["component::plugin_runtime::result_publication::tests::native_page_batch_preserves_eight_original_loans_through_funded_receiving","component::plugin_runtime::result_publication::tests::native_page_batch_cancellation_preserves_original_source_and_partial_destination_custody","component::plugin_runtime::result_publication::tests::native_page_publication_cancel_after_birth_keeps_destination_before_ack","component::plugin_runtime::plugin_builder_contract_tests::concurrent_typed_operations_hand_every_presentable_page_to_one_turn","component::plugin_runtime::plugin_builder_contract_tests::original_result_batch_retains_eight_under_separate_original_input","component::plugin_runtime::plugin_builder_contract_tests::retained_operation_continues_after_command_admission_until_publication_and_retirement","component::plugin_runtime::plugin_builder_contract_tests::retained_child_group_publishes_one_acknowledged_parent_child_gesture_and_retires","component::plugin_runtime::plugin_builder_contract_tests::a_many_mutation_publication_folds_every_mutation_and_is_never_terminated_as_stalled"]}]});
+ }
+}
+router.register("test-result-publication",ResultPublicationScript);
+/** 🏠️ Validates genuine Window catalog source admission, paired issuer identity and caller-funded closure. */
+class OriginalWindowCatalogScript extends BundleScript{async run(args:string[]):Promise<void>{if(args.length!==1||!['source','native'].includes(args[0]!))throw Error('test-original-window-catalog source|native');const {originalWindowCatalogOracle}=await import('../../🪟️window/🎚️config/🏠️catalog/🧪️tests/🟦️.ts');originalWindowCatalogOracle();if(args[0]==='source')return;const native=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,'Cargo.toml');await runRepositoryExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:240000,listMilliseconds:30000,lawMilliseconds:30000},cwd:this.repoRoot,env:process.env,manifestPaths:{'semio-framework-plugin':manifest},groups:[{package:'semio-framework-plugin',target:{kind:'lib'},cargoArgs:['--locked'],laws:['component::window_config::original_catalog_tests::original_window_catalog_sources_and_tickets_match_physical_original_grants']}]});}}
+router.register('test-original-window-catalog',OriginalWindowCatalogScript);
+/** 🫴️ Validates exact original artifact document source receiving against independent codecs and native custody laws. */
+class OriginalDocumentReceivingScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  if(args.length!==1||!["source","native"].includes(args[0]!))throw Error("test-original-document-receiving source|native");
+  const file=resolve(this.root,"../../💡️inference/🫴️receiving/🧪️tests/🟦️.ts"),policy={version:1 as const,maximumElapsedMilliseconds:120000,output:{maximumBytes:1048576,maximumLines:4096}};
+  await runRepositoryCommand(this.invocation,process.execPath,["test",file],this.repoRoot,"original-document-receiving-source",policy);
+  if(args[0]==="source")return;
+  const native=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");assert.equal(resolve(native.manifestPath),manifest);
+  await runRepositoryExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:configuredExactCargoLawPolicyV1(),cwd:this.repoRoot,env:process.env,manifestPaths:{"semio-framework-plugin":manifest},groups:[{package:"semio-framework-plugin",target:{kind:"lib"},cargoArgs:["--locked"],laws:["component::artifact_inference::document_receiving::tests::artifact_document_original_pair_receiving_preserves_exact_sources_and_physical_receipts","component::artifact_inference::document_receiving::tests::artifact_document_original_receiving_refusal_cancellation_and_foreign_source_retain_partial_custody"]}]});
+ }
+}
+router.register("test-original-document-receiving",OriginalDocumentReceivingScript);
+if(import.meta.main) router.register("test-original-producer-source",OriginalProducerSourceScript);
+/** 🏛️ Verifies genuine Reserved registry body bytes, original CPU and physical source custody. */
+class ReservedRegistryScript extends BundleScript{
+ async run(args:string[]):Promise<void>{
+  if(args.length!==1||!["source","native"].includes(args[0]!))throw Error("test-reserved-registry source|native");
+  const file=resolve(this.root,"../../⚛️reactor/💼️jobs/🏛️reserved/🧪️tests/🟦️.ts");
+  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",file],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal});
+  await runBudgetedTestCommand(process.execPath,["test",file],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal});
+  if(args[0]==="source")return;
+  await runRepositoryCargoTests(["semio-framework-plugin"],this.root,this.invocation,["--offline","--lib","-E","test(reserved_registry_original_body_bytes_and_actual_receipts_share_one_source) | test(reserved_registry_original_body_work_denials_preserve_input_and_last_unit_progress) | test(reserved_registry_original_partial_output_cancel_keeps_backings_until_same_source_close) | test(reserved_registry_original_expired_clock_closes_partial_output_without_renewal) | test(reserved_registry_original_expired_clock_closes_failed_and_bounded_slot_owners) | test(reserved_registry_original_global_close_rejects_foreign_source_and_keeps_expired_clock) | test(reserved_registry_original_child_release_denial_preserves_last_work_unit)","--","--nocapture"]);
+ }
+}
+router.register("test-reserved-registry",ReservedRegistryScript);
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "check" }) }));
 //#endregion 🎯️Tasks

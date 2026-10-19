@@ -4,10 +4,14 @@ use super::*;
 
 //#region 🧰️FixedArena
 #[derive(Clone, Copy)]
+pub(super) struct RetiringShell { pub(super) shell: u16, pub(super) app_instance_id: u32 }
+
+#[derive(Clone, Copy)]
 pub(super) struct CurrentSession {
     pub(super) app_instance_id: u32,
     pub(super) shell: u16,
     pub(super) identity: MountedIdentity,
+    pub(super) previous_valid: Option<u16>,
 }
 
 #[derive(Clone, Copy)]
@@ -57,11 +61,11 @@ impl SnapshotAdmissionCursor {
     pub(super) fn step_one(&mut self, snapshot: &Fem2dSnapshot) -> Result<bool, &'static [u8]> {
         if !self.owner_opened && !matches!(self.lane, 4 | 9 | 11) {
             let bytes = match self.lane {
-                0 => snapshot.nodes.capacity() * size_of::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode>(),
+                0 => snapshot.nodes.capacity() * size_of::<semio_s_fem_node::planar::FemNodeValue>(),
                 1 => snapshot.elements.capacity() * size_of::<FemElement>(),
                 2 => snapshot.regions.capacity() * size_of::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion>(),
                 3 => 0,
-                5 => snapshot.materials.capacity() * size_of::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemMaterial>(),
+                5 => snapshot.materials.capacity() * size_of::<semio_s_fem_material::planar::FemMaterialValue>(),
                 6 => snapshot.sections.capacity() * size_of::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection>(),
                 7 => snapshot.supports.capacity() * size_of::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport>(),
                 8 => snapshot.load_cases.capacity() * size_of::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoadCase>(),
@@ -92,7 +96,7 @@ impl SnapshotAdmissionCursor {
                 }
             }
             2 => {
-                if snapshot.regions.len() > 1 {
+                if snapshot.regions.len() > 64 {
                     return Err(b"fem2d.session-region-capacity");
                 }
                 match snapshot.regions.get(self.outer) {
@@ -259,14 +263,28 @@ pub(super) struct PendingSnapshotFault {
 }
 
 pub(super) struct MountedRegistry {
+    pub(super) app_slots: semio_framework_value::FixedKeySlots<u32, SESSION_ACTIVE_CAPACITY>,
+    pub(super) requests: semio_framework_value::FixedRequestOwners<RequestKey, ConsumerKey, SESSION_ACTIVE_CAPACITY, SESSION_CONSUMER_CAPACITY>,
+    pub(super) families: [semio_s_fem_app_surface::ResultMode; SESSION_ACTIVE_CAPACITY],
+    pub(super) mode_indices: [usize; SESSION_ACTIVE_CAPACITY],
+    pub(super) request_cancelled: [bool; SESSION_ACTIVE_CAPACITY],
+    pub(super) model_requests: [Option<RequestKey>; SESSION_ACTIVE_CAPACITY],
+    pub(super) snapshot_owners: [Option<semio_framework_value::FixedKeySlot>; SESSION_ACTIVE_CAPACITY],
+    pub(super) shell_requests: [Option<semio_framework_value::FixedKeySlot>; SESSION_SHELL_CAPACITY],
+    pub(super) request_cursor: usize,
+    pub(super) consumer_cursor: usize,
+    pub(super) verified_sources: [Option<(semio_framework_value::RequestCandidateVersion,RequestKey)>;SESSION_CONSUMER_CAPACITY],
+    pub(super) source_kinds: [u8;SESSION_ACTIVE_CAPACITY],
     pub(super) shells: [Rc<RefCell<Option<MountedState>>>; SESSION_SHELL_CAPACITY],
     pub(super) current: [Option<CurrentSession>; SESSION_ACTIVE_CAPACITY],
+    pub(super) sources: [Option<ResolvedResultSource>; SESSION_ACTIVE_CAPACITY],
+    pub(super) source_apps: [Option<u32>; SESSION_ACTIVE_CAPACITY],
     pub(super) preflight: [Option<PendingSnapshotAdmission>; SESSION_ACTIVE_CAPACITY],
     pub(super) preflight_fault: [Option<PendingSnapshotFault>; SESSION_ACTIVE_CAPACITY],
     pub(super) pending: [Option<PendingAdmission>; SESSION_ACTIVE_CAPACITY],
-    pub(super) retiring: [Option<u16>; SESSION_SHELL_CAPACITY],
-    free: [u16; SESSION_SHELL_CAPACITY],
-    free_read: usize,
+    pub(super) retiring: [Option<RetiringShell>; SESSION_SHELL_CAPACITY],
+    pub(super) free: [u16; SESSION_SHELL_CAPACITY],
+    pub(super) free_read: usize,
     pub(super) free_len: usize,
     pub(super) credit_items: [usize; SESSION_SHELL_CAPACITY],
     pub(super) credit_bytes: [usize; SESSION_SHELL_CAPACITY],
@@ -278,8 +296,22 @@ pub(super) struct MountedRegistry {
 impl MountedRegistry {
     pub(super) fn new() -> Self {
         Self {
+            app_slots: Default::default(),
+            requests: Default::default(),
+            families: [semio_s_fem_app_surface::ResultMode::Static; SESSION_ACTIVE_CAPACITY],
+            mode_indices: [0; SESSION_ACTIVE_CAPACITY],
+            request_cancelled: [false; SESSION_ACTIVE_CAPACITY],
+            model_requests: [None; SESSION_ACTIVE_CAPACITY],
+            snapshot_owners: [None; SESSION_ACTIVE_CAPACITY],
+            shell_requests: [None; SESSION_SHELL_CAPACITY],
+            request_cursor: 0,
+            consumer_cursor: 0,
+            verified_sources:[None;SESSION_CONSUMER_CAPACITY],
+            source_kinds:[2;SESSION_ACTIVE_CAPACITY],
             shells: std::array::from_fn(|_| Rc::new(RefCell::new(None))),
             current: [None; SESSION_ACTIVE_CAPACITY],
+            sources: std::array::from_fn(|_| None),
+            source_apps: [None; SESSION_ACTIVE_CAPACITY],
             preflight: [None; SESSION_ACTIVE_CAPACITY],
             preflight_fault: [None; SESSION_ACTIVE_CAPACITY],
             pending: [None; SESSION_ACTIVE_CAPACITY],
@@ -308,6 +340,7 @@ impl MountedRegistry {
     pub(super) fn release(&mut self, shell: u16) {
         assert_eq!(self.credit_items[shell as usize], 0, "mounted FEM shell released before its process item credit");
         assert_eq!(self.credit_bytes[shell as usize], 0, "mounted FEM shell released before its process byte credit");
+        self.shell_requests[shell as usize] = None;
         let write = (self.free_read + self.free_len) % SESSION_SHELL_CAPACITY;
         self.free[write] = shell;
         self.free_len += 1;
@@ -337,9 +370,9 @@ impl MountedRegistry {
         self.reserved_bytes -= bytes;
     }
 
-    pub(super) fn retain_retirement(&mut self, shell: u16) -> bool {
+    pub(super) fn retain_retirement(&mut self, shell: u16, app_instance_id: u32) -> bool {
         let Some(slot) = self.retiring.iter_mut().find(|slot| slot.is_none()) else { return false };
-        *slot = Some(shell);
+        *slot = Some(RetiringShell { shell, app_instance_id });
         true
     }
 }

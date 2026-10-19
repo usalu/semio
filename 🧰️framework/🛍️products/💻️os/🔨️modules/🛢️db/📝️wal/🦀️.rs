@@ -61,7 +61,7 @@ impl SegmentWriter {
 
     async fn resume_existing_verified(document: ArtifactId, index: u64, buf: SharedBuf, span: protocol::format::retained::VerifiedSprSpan) -> Result<Self, DbError> {
         let flushed_len = span.end();
-        let writer = match protocol::SprWriter::resume_verified(buf.clone(), span).await.map_err(protocol_err) {
+        let writer = match protocol::SprWriter::resume_verified(buf.clone(), span).await.map_err(DbError::from) {
             Ok(writer) => writer,
             Err(error) => {
                 let mut buf = buf;
@@ -86,7 +86,7 @@ impl SegmentWriter {
     ) -> Result<Self, DbError> {
         let mut buf = SharedBuf::at(0);
         buf.admit(protocol::format::HEADER_SIZE as u64)?;
-        let writer = match protocol::SprWriter::begin(buf.clone(), &segment_write_options()).await.map_err(protocol_err) {
+        let writer = match protocol::SprWriter::begin(buf.clone(), &segment_write_options()).await.map_err(DbError::from) {
             Ok(writer) => writer,
             Err(error) => {
                 while buf.close_step()? {
@@ -129,7 +129,7 @@ impl SegmentWriter {
         storage.create_segment(permit, index).await?;
         let mut buf = SharedBuf::at(0);
         buf.admit(protocol::format::HEADER_SIZE as u64)?;
-        let writer = match protocol::SprWriter::begin(buf.clone(), &segment_write_options()).await.map_err(protocol_err) {
+        let writer = match protocol::SprWriter::begin(buf.clone(), &segment_write_options()).await.map_err(DbError::from) {
             Ok(writer) => writer,
             Err(error) => {
                 while buf.close_step()? {
@@ -166,9 +166,9 @@ impl SegmentWriter {
     /// `WalRecord::Command` writes, without first staging the bytes in DB I/O pages.
     async fn append_command(&mut self, command: &[u8], now_ms: u64) -> Result<u64, DbError> {
         self.buf()?.admit(wal_frame_bytes(command.len())?)?;
-        let mut record = self.writer_mut()?.begin_identity_record(WAL_COMMAND, true, command.len()).await.map_err(protocol_err)?;
+        let mut record = self.writer_mut()?.begin_identity_record(WAL_COMMAND, true, command.len()).await.map_err(DbError::from)?;
         wal_record_write(&mut record, command).await?;
-        let offset = record.finish().await.map_err(protocol_err)?;
+        let offset = record.finish().await.map_err(DbError::from)?;
         self.appended(now_ms);
         Ok(offset)
     }
@@ -201,7 +201,7 @@ impl SegmentWriter {
             return Ok(None);
         }
         self.buf()?.admit(protocol::format::COMMIT_FRAME_LEN)?;
-        let commit = self.writer_mut()?.commit().await.map_err(protocol_err);
+        let commit = self.writer_mut()?.commit().await.map_err(DbError::from);
         let commit_offset = match commit {
             Ok(offset) => offset,
             Err(error) => {

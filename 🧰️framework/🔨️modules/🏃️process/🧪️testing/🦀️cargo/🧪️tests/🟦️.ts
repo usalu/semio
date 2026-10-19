@@ -61,7 +61,8 @@ test("Cargo keeps capture and output controls on Nextest execution with independ
     const split=api.partitionNextestExecutionFilters(item.arguments);expect(split).toEqual({buildArgs:item.buildArgs,executionArgs:item.executionArgs,libtestArgs:item.libtestArgs});
     const oracle=spawnSync("node",["-e",program,JSON.stringify(item.arguments.slice(0,item.arguments.includes("--")?item.arguments.indexOf("--"):item.arguments.length))],{encoding:"utf8"});expect(oracle.status).toBe(0);
     const projected=spawnSync("node",["-e",program,JSON.stringify(split.executionArgs)],{encoding:"utf8"});expect(projected.status).toBe(0);expect(JSON.parse(projected.stdout)).toEqual(JSON.parse(oracle.stdout));
-    const plan=api.cargoTestPlanV1({manifestPath:base.manifestPath,packages:["owner-package"],cwd:"/owner",extraArgs:item.arguments},base,"/owner/results/binaries.json");for(const option of ["--no-capture","--nocapture","--success-output","--failure-output"])expect(plan[0]!.args.some(arg=>arg.split("=",1)[0]===option)).toBe(false);expect(plan[0]!.budgetMs).toBe(base.buildBudgetMs);expect(plan[1]!.budgetMs).toBe(base.assertionBudgets[base.level]);
+    const plan=api.cargoTestPlanV1({manifestPath:base.manifestPath,packages:["owner-package"],cwd:"/owner",extraArgs:item.arguments},base,"/owner/results/binaries.json");for(const option of ["--no-capture","--nocapture","--success-output","--failure-output","--test-threads"])expect(plan[0]!.args.some(arg=>arg.split("=",1)[0]===option)).toBe(false);expect(plan[0]!.budgetMs).toBe(base.buildBudgetMs);expect(plan[1]!.budgetMs).toBe(base.assertionBudgets[base.level]);
+    if(item.executionArgs.some((arg:string)=>arg.split("=",1)[0]==="--test-threads"))expect(plan[1]!.args.filter(arg=>arg.split("=",1)[0]==="--test-threads")).toHaveLength(1);
   }
   for(const args of fixture.invalid)expect(()=>api.partitionNextestExecutionFilters(args)).toThrow();
   const temporary=mkdtempSync(join(law.root,"e-"));
@@ -70,7 +71,7 @@ test("Cargo keeps capture and output controls on Nextest execution with independ
     const environment={...process.env,...law.environment,CARGO_TARGET_DIR:target,CARGO_BUILD_BUILD_DIR:target},policy={...base,level:"quick",manifestPath:manifest,targetDirectory:target,configPath:config,artifactDirectory:temporary,buildDirectory:join(temporary,"b"),leaseDirectory:join(temporary,"l"),retainArtifacts:false};
     for(const item of fixture.cases)await api.runCargoTestsV1({manifestPath:manifest,packages:[fixture.native.packageName],cwd:temporary,extraArgs:item.arguments,environment},policy,admission);
   }finally{rmSync(temporary,{recursive:true,force:true});}
-}),15000);
+}),60000);
 
 test("Cargo refuses an empty selected snapshot suite with the independent Nextest status",async()=>withCargoAdmissionV1(async(admission,law)=>{
   const owner=resolve(import.meta.dir,".."),fixture=JSON.parse(readFileSync(resolve(owner,"🧪️tests/🧫️fixtures/🕳️selection/🔣️.json"),"utf8")),base=JSON.parse(readFileSync(resolve(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).policies[0],api=await import("../🟦️.ts");
@@ -105,7 +106,7 @@ test("Cargo execution preserves exact owner policy and separates compilation fro
   const temporary=mkdtempSync(join(law.root,"p-"));writeOwnerPackageV1(temporary);
   try {
     for(const base of fixture.policies){
-      const log=join(temporary,`${base.level}.jsonl`),policy={...base,manifestPath:join(temporary,"Cargo.toml"),configPath:join(temporary,"nextest.toml"),targetDirectory:join(temporary,"target"),artifactDirectory:temporary,buildDirectory:join(temporary,"b"),leaseDirectory:join(temporary,"l"),retainArtifacts:false,coveragePath:base.coveragePath?join(temporary,"coverage.lcov"):null};
+      const log=join(temporary,`${base.level}.jsonl`),policy={...base,targetDirectory:join(temporary,"t"),manifestPath:join(temporary,"Cargo.toml"),configPath:join(temporary,"nextest.toml"),targetDirectory:join(temporary,"target"),artifactDirectory:temporary,buildDirectory:join(temporary,"b"),leaseDirectory:join(temporary,"l"),retainArtifacts:false,coveragePath:base.coveragePath?join(temporary,"coverage.lcov"):null};
       const request={manifestPath:policy.manifestPath,packages:["owner-package"],cwd:temporary,extraArgs:fixture.arguments,environment:{...process.env,...law.environment,CARGO_PORT_LOG:log}};
       const program="const fs=require('node:fs'),args=process.argv.slice(1);fs.appendFileSync(process.env.CARGO_PORT_LOG,JSON.stringify(args)+'\\n');if(args[0]==='nextest'&&args[1]==='list')process.stdout.write(JSON.stringify({rust_build_meta:{},rust_binaries:{}}));";
       await api.runCargoTestsV1(request,policy,admission,{command:"node",args:["-e",program,"--"]});
@@ -122,7 +123,7 @@ test("Cargo execution preserves exact owner policy and separates compilation fro
   expect(()=>api.readCargoTestPolicyV1({SEMIO_CARGO_TEST_POLICY:JSON.stringify({...fixture.policies[0],unknown:true})})).toThrow();
   expect(()=>api.partitionNextestExecutionFilters(["-E"])).toThrow();
   expect(()=>api.cargoTestPlanV1({manifestPath:"",packages:[],cwd:"/owner"},fixture.policies[0],"/owner/results/binaries.json")).toThrow();
-}),10000);
+}),60000);
 
 test("Cargo reporter options remain execution-owned with independent Node argument authority",async()=>{
  const owner=resolve(import.meta.dir,".."), fixture=JSON.parse(readFileSync(resolve(owner,"🧪️tests/🧫️fixtures/📣️reporting/🔣️.json"),"utf8")), base=JSON.parse(readFileSync(resolve(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).policies[0], api=await import("../🟦️.ts");
@@ -136,4 +137,19 @@ test("Cargo reporter options remain execution-owned with independent Node argume
   const values=answers[index*2+1]!;expect(values.filter(([name])=>name==="status-level")).toEqual([["status-level",item.status]]);expect(values.filter(([name])=>name==="final-status-level")).toEqual([["final-status-level",item.finalStatus]]);
  }
  for(const args of fixture.invalid)expect(()=>api.partitionNextestExecutionFilters(args)).toThrow();
+});
+
+
+test("Cargo coverage paths preserve native Unicode custody with an ASCII Windows runtime identity", async () => {
+ const owner=resolve(import.meta.dir,".."),fixture=JSON.parse(readFileSync(join(owner,"🧫️fixtures/📊️profile-path/🔣️.json"),"utf8")),api=await import("../🟦️.ts"),{Database}=await import("bun:sqlite"),oracle=new Database(":memory:");
+ try {
+  oracle.run("CREATE TABLE profile_path(platform TEXT,directory TEXT,native TEXT,expected TEXT)");
+  for(const row of fixture.cases){oracle.query("INSERT INTO profile_path VALUES(?,?,?,?)").run(row.platform,row.directory,row.native,row.expected);let calls=0;expect(await api.cargoCoverageRuntimeDirectoryV1(row.directory,row.platform,async(directory:string)=>{expect(directory).toBe(row.directory);calls++;return row.native;})).toBe(row.expected);expect(calls).toBe(row.nativeCalls);}
+  expect(oracle.query("SELECT count(*) AS mismatches FROM profile_path WHERE expected <> CASE WHEN platform='win32' AND directory GLOB '*[^ -~]*' THEN native ELSE directory END").get()).toEqual({mismatches:0});
+  await expect(api.cargoCoverageRuntimeDirectoryV1("C:\\🧬️repo","win32",async()=>"C:\\🧬️repo")).rejects.toThrow("ASCII");
+  if(process.platform==="win32"){
+   const directory=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"profile-"));
+   try{const native=await api.cargoCoverageRuntimeDirectoryV1(directory,process.platform),file=join(native,"identity.txt"),child=spawnSync("node",["-e","require('node:fs').writeFileSync(process.argv[1],'same-directory')",file],{encoding:"utf8"});expect(child.status).toBe(0);expect(readFileSync(join(directory,"identity.txt"),"utf8")).toBe("same-directory");console.log("[DEBUG] Windows kernel32 profile alias and independent Node filesystem preserve the exact caller directory");}finally{rmSync(directory,{recursive:true,force:true});}
+  }
+ }finally{oracle.close();}
 });

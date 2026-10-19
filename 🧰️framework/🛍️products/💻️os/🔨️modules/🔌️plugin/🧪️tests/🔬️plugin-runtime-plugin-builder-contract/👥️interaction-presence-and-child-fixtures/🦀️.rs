@@ -253,6 +253,8 @@ pub struct TestTaskSource<F>(F);
 pub struct TestTaskDrop<F>(std::mem::ManuallyDrop<Option<F>>);
 
     impl<F: Send + 'static> semio_framework_value::retirement::RetirementCursor for TestTaskDrop<F> {
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Ok(semio_framework_value::RetirementDemand{depth:usize::from(self.0.is_some()),..Default::default()})}
+
         fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> semio_framework_value::retirement::RetirementStep {
             use semio_framework_value::retirement::RetirementStep;
             if self.0.is_none() { return RetirementStep::Complete; }

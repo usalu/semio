@@ -1,6 +1,8 @@
 //! 🪟️ The assembled puzzle3d app opens on the edit mode's default layout: a top view left third, a perspective right two thirds.
 
-use semio_framework_plugin::{WindowLayoutChild, WindowLayoutRoot};
+use semio_framework_plugin::WindowLayoutChild;
+
+use semio_framework_plugin::WindowLayoutRoot;
 use semio_s_artifact_puzzle_3d_editor::create_puzzle3d_app;
 use semio_s_artifact_puzzle_3d_editor_modes::windows::main;
 

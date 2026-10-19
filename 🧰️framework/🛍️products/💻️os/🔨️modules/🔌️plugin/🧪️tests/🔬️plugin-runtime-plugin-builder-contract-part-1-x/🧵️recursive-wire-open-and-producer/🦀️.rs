@@ -156,6 +156,8 @@ impl RecursiveBranchSnapshotOpen {
 }
 
 impl store::ErasedSnapshotRetirement for RecursiveBranchSnapshotOpen {
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.close_demands(maximum_body_bytes)}
+
     fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, semio_framework_value::ValueError> {
         let empty = store::RetainedCloneProgress::default();
         if self.terminal {

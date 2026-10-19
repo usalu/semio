@@ -74,3 +74,8 @@ mod publication;
 pub use publication::graph_file;
 
 // #endregion 🔖️RunPolicy
+
+#[path = "🔎️source-discovery/🦀️.rs"]
+mod source_discovery;
+pub use source_discovery::{Suggestion, Suggestions};
+use source_discovery::{SourceDiscovery, source_path};

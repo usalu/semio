@@ -1,7 +1,7 @@
 //! 🔀️ Guarded field edits; composition preserves every intermediate precondition.
 use crate::ChartSnapshot;
 use semio_framework_value::DslValue;
-use protocol::{MutationApplyError, MutationApplyResult, MutationDiff, DiffAlgebra, DiffRegions, TouchedPaths};
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff, ColdMutationDiff, DiffAlgebra, ColdDiffAlgebra, DiffRegions, TouchedPaths};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ChartEdit {
@@ -135,12 +135,11 @@ impl ChartEdit {
 }
 
 impl MutationDiff<ChartSnapshot> for ChartDiff {
-    fn apply(&self, base: &ChartSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<ChartSnapshot> {
-        let mut next = base.clone();
-        for edit in &self.edits { write_path(&mut next.chart, edit)?; }
-        if !self.edits.is_empty() { crate::inferences::validate_chart(&next).map_err(|message| MutationApplyError::new("mutation.apply.schema-invalid", message))?; }
-        Ok(next)
-    }
+
+
+}
+
+impl ColdMutationDiff<ChartSnapshot> for ChartDiff {
     fn absorb(&mut self, other: Self) {
         for edit in other.edits {
             match self.edits.last_mut() {
@@ -152,15 +151,28 @@ impl MutationDiff<ChartSnapshot> for ChartDiff {
             }
         }
     }
+
+    fn apply(&self, base: &mut ChartSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
+        let mut prepared = protocol::PreparedField::new(base.clone(), <Self as protocol::MutationDiff<ChartSnapshot>>::retire_projection, _capability);
+        let mut next = prepared.value_mut();
+        for edit in &self.edits { write_path(&mut next.chart, edit)?; }
+        if !self.edits.is_empty() { crate::inferences::validate_chart(&next).map_err(|message| MutationApplyError::new("mutation.apply.schema-invalid", message))?; }
+        prepared.install(base);
+        Ok(())
+    }
 }
 
 impl DiffAlgebra<ChartSnapshot> for ChartDiff {
+
+    fn is_empty(&self) -> bool { self.edits.is_empty() }
+}
+
+impl ColdDiffAlgebra<ChartSnapshot> for ChartDiff {
     /// ↩️ Reads every edit's undo rows from the base chart, last edit first; the edits of one diff address disjoint slots, and edits that
     /// share an array are inverted step by step by the store, which absorbs the per-step inverses.
     fn inverse(&self, base: &ChartSnapshot) -> Self {
         Self { edits: self.edits.iter().rev().flat_map(|edit| edit.undo_rows(&base.chart)).collect() }
     }
-    fn is_empty(&self) -> bool { self.edits.is_empty() }
 }
 
 impl DiffRegions for ChartDiff {

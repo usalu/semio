@@ -1,0 +1,9 @@
+{
+  "build": { "mode": "release", "owner": "architecture-course:site" },
+  "internalFiles": [".semio-artifact.json"],
+  "addedFiles": ["_headers"],
+  "cases": [
+    { "id": "release", "origin": "https://semio.iek.uni-hannover.de" },
+    { "id": "rehearsal", "origin": "http://127.0.0.1:8891" }
+  ]
+}

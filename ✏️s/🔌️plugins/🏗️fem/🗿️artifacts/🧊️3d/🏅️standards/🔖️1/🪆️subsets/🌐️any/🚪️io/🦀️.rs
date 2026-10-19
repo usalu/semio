@@ -1,5 +1,5 @@
-//! 🚪️ IO `s.fem.fem3d` (1/🌐️any) — `io() -> IoDeclaration`: this subset's native codecs plus every
 //! foreign hop, aggregated from the typed `Serializer<Fem3dSnapshot>`/`Deserializer<Fem3dSnapshot>`
+//! 🚪️ IO `s.fem.fem3d` (1/🌐️any) — `io() -> IoDeclaration`: this subset's native codecs plus every
 //! leaves under `📥️import/🧩️deserializers`/`📤️export/🧵️serializers`. Foreign io goes EXCLUSIVELY
 //! through the framework's `io_mechanism` registry, reached from the sibling `🪆️subsets/🌐️any/🦀️.rs`'s
 //! `io: io::io()` — the same wiring `🗒️note`/`🧱️block` use.
@@ -83,8 +83,12 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
     use crate::standards::v1::subsets::any::io::FEM3D_DIALECT;
     use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FEM_3D_SCHEMA;
-    use semio_framework_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
-    use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
+    use semio_framework_os_kernel::io::io_mechanism::deserializer_entry;
+    use semio_framework_os_kernel::io::io_mechanism::serializer_entry;
+    use semio_framework_os_kernel::io::io_mechanism::IoEntry;
+    use semio_framework_plugin::app::declarations::IoDeclaration;
+    use semio_framework_plugin::app::declarations::LanguagePair;
+    use semio_framework_plugin::app::declarations::NativeCodecs;
     use std::sync::OnceLock;
 
     /// 🎹️ One vtable row per typed leaf — the single place this subset advertises what it can and
@@ -156,14 +160,14 @@ pub mod derived_construction {
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match protocol::apply_diff(outcome.diff(), &self.snapshot) {
+            match protocol::apply_diff_cold(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
                 Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
+            let snapshot = protocol::apply_diff_cold(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
@@ -270,8 +274,8 @@ pub fn document_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 
 /// 🏷️ The `computation.fem3d` artifact kind — every load case/combination's solved
 /// `semio_s_fem_model::StaticResult`, pinned to this kind by the `results:out` media port (see
-/// `crate::editor::fem3d::fem3d_results_out_port`) and produced by
-/// `crate::editor::fem3d::Fem3dPlayApp::export_media`. Lifted verbatim out of the old ui crate's
+/// `semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::fem3d_results_out_port`) and produced by
+/// `semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::Fem3dPlayApp::export_media`. Lifted verbatim out of the old ui crate's
 /// `create_fem3d_app`'s inline `.artifact_kind(...)` call so the app's manifest can reference it by name.
 pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
@@ -376,8 +380,8 @@ pub fn fem3d_boot_snapshot() -> semio_s_artifact_fem_3d_model::standards::v1::su
 /// former "replace the whole document" gesture in this package (`import_media`'s `"artifact:in"`,
 /// `commands::set_active_example`) builds this effect instead of an `Emit::mutations([...])`.
 /// The spr is a fresh, edit-free op-log for `scene` — a genesis envelope with no history to encode.
-pub fn reset_document_effect(scene: &crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot) -> semio_framework::kernel::Effect {
-    let pack = <crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(scene);
+pub fn reset_document_effect(scene: &semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot) -> semio_framework::kernel::Effect {
+    let pack = <semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(scene);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("fem3d", semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FEM_3D_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }

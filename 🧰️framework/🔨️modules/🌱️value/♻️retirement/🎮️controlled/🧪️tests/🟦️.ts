@@ -64,7 +64,7 @@ test("controlled paged retirement closes appended UTF8 without unadmitted scaffo
  expect(validValue(value)).toBe(true);expect(new TextDecoder("utf-8",{fatal:true}).decode(new TextEncoder().encode(value))).toBe(value);expect(JSON.parse(JSON.stringify(value))).toBe(value);
  for(const pause of law.cancelAt)expect(patched({destination:value,pending:text,pause},[{op:"remove",path:"/pending"}])).toEqual({destination:value,pause});
  expect(law.constructorAllocationBytes).toBe(0);expect(law.maximumBytes).toBe(4096);expect(law.zeroGrantInert).toBe(true);
- const source=readFileSync(join(owner,"📦️paged/🎮️append/🦀️.rs"),"utf8");expect(source).toContain("pub fn close_step(");
+ const source=readFileSync(join(owner,"📦️paged/🎮️append/🦀️.rs"),"utf8");expect(source).toContain("pub fn close_step(");expect(source).toContain("self.controlled_close.next_owner_demands::<String>");expect(source).toContain("self.controlled_close.begin_granted(&mut self.pending, grant)");
 });
 
 test("controlled paged retirement exposes separate append birth and release demand",()=>{
@@ -94,12 +94,12 @@ test("controlled paged retirement exposes typed child metadata and exact scaffol
  }finally{database.close();}
  const trait=contractSource(),field=readFileSync(join(owner,"🧬️retained-clone/📋️field/🦀️.rs"),"utf8");
  expect(between(trait,"pub trait RetainedCloneCursor","pub struct RetainedCloneClose")).toContain("fn next_close_capacity_byte_demand(");
- expect(field).toContain("fn next_close_release_byte_demand(");expect(field).toContain("child.next_close_capacity_byte_demand(");
+ expect(field).toContain("fn next_close_release_byte_demand(");expect(field).toContain("nested_retained_clone_close_demands::<T>(child.as_ref(),body)");expect(field).toContain("Ok(self.close_demands(body)?.capacity_bytes)");
 });
 
 test("controlled paged retirement observes retained scalar and UTF8 leaf birth demand",()=>{
  const path=join(owner,"🧬️retained-clone/🧪️tests/🧫️fixtures/📏️release-authority"),corpus=JSON.parse(readFileSync(join(path,"🔣️.json"),"utf8")),law=corpus.leafCloseDemand;
- 
+
  for(const value of [law.scalar,law.text]){
   expect(validValue(value)).toBe(true);
   const moved=patched({pending:value,backing:128},[{op:"move",from:"/pending",path:"/retirement"}]);
@@ -132,12 +132,17 @@ test("controlled paged retirement observes one native paged and derived close fr
   }
   expect(remaining).toEqual({});
  }finally{database.close();}
- for(const path of ["🧬️retained-clone/📋️paged-list/🦀️.rs","🧬️retained-clone/📦️paged/🦀️.rs","✨️derive/🧬️retained-clone/🦀️.rs"]){const source=readFileSync(join(owner,path),"utf8");expect(source).toContain("fn next_close_capacity_byte_demand(");expect(source).toContain("fn next_close_release_byte_demand(");}
+ for(const path of ["🧬️retained-clone/📋️paged-list/🦀️.rs","🧬️retained-clone/📦️paged/🦀️.rs"]){const source=readFileSync(join(owner,path),"utf8");expect(source).toContain("fn next_close_capacity_byte_demand(");expect(source).toContain("fn next_close_release_byte_demand(");}
+ const derive=readFileSync(join(owner,"✨️derive/🧬️retained-clone/🦀️.rs"),"utf8"),methods=derive.slice(derive.indexOf("fn close_demand_methods"),derive.indexOf("fn expand_struct"));
+ for(const[method,axis]of[["next_close_capacity_byte_demand","capacity_bytes"],["next_close_release_byte_demand","release_bytes"]])expect(methods).toContain(`("${method}","${axis}")`);
+ expect(methods).toContain('if axis=="capacity_bytes" {(quote!(,maximum_body_bytes:usize),quote!(maximum_body_bytes))}');
+ expect(methods).toContain("fn #method(&self #argument)");expect(methods).toContain("RetainedCloneCursor::close_demands(self,#hint)?.#axis");
+ expect(methods).toContain("nested_retained_clone_close_demands::<#ty>(&self.#cursor,maximum_body_bytes)");
 });
 
 test("controlled retirement keeps logical UTF8 and ordered scalar work distinct from physical releases",()=>{
  const law=readRetirementPhysicalWorkLaw();
- 
+
  for(const row of law.cases){
   expect(JSON.parse(JSON.stringify(row.value))).toEqual(row.value);
   expect(retirementCopyDemand(row).totalCopyBytes).toBe(row.processedBytes);
@@ -148,7 +153,7 @@ test("controlled retirement keeps logical UTF8 and ordered scalar work distinct 
 
 test("controlled paged retirement exposes the next independent payload work demand",()=>{
  const law=readRetirementCopyDemandLaw();
- 
+
  const database=new Database(":memory:");try{
   database.exec("CREATE TABLE grants(bytes INTEGER PRIMARY KEY)");law.grants.forEach((bytes:number)=>database.query("INSERT INTO grants VALUES(?)").run(bytes));
   for(const row of law.cases){
@@ -164,7 +169,7 @@ test("controlled paged retirement exposes the next independent payload work dema
 
 test("controlled paged retirement preserves copy demand through native clone close frontiers",()=>{
  const law=readRetirementCopyDemandLaw();
- 
+
  const database=new Database(":memory:");try{
   database.exec("CREATE TABLE frontier(ordinal INTEGER PRIMARY KEY,kind TEXT,work INTEGER,backing INTEGER)");
   law.cases.forEach((row,ordinal:number)=>database.query("INSERT INTO frontier VALUES(?,?,?,128)").run(ordinal,row.kind,row.totalCopyBytes));
@@ -176,7 +181,9 @@ test("controlled paged retirement preserves copy demand through native clone clo
   }
   expect(database.query("SELECT COUNT(*) AS count FROM frontier").get()).toEqual({count:0});
  }finally{database.close();}
- for(const path of ["🧬️retained-clone/🧬️contract/🦀️.rs","🧬️retained-clone/📋️field/🦀️.rs","🧬️retained-clone/📋️paged-list/🦀️.rs","🧬️retained-clone/📦️paged/🦀️.rs","✨️derive/🧬️retained-clone/🦀️.rs","📦️paged/🎮️append/🦀️.rs"]){
+ const derive=readFileSync(join(owner,"✨️derive/🧬️retained-clone/🦀️.rs"),"utf8"),methods=derive.slice(derive.indexOf("fn close_demand_methods"),derive.indexOf("fn expand_struct"));
+ expect(methods).toContain('("next_close_copy_byte_demand","copy_bytes")');expect(methods).toContain("fn #method(&self #argument)");expect(methods).toContain("RetainedCloneCursor::close_demands(self,#hint)?.#axis");
+ for(const path of ["🧬️retained-clone/🧬️contract/🦀️.rs","🧬️retained-clone/📋️field/🦀️.rs","🧬️retained-clone/📋️paged-list/🦀️.rs","🧬️retained-clone/📦️paged/🦀️.rs","📦️paged/🎮️append/🦀️.rs"]){
   expect((join(owner,path)===CONTRACT_ROOT?contractSource():readFileSync(join(owner,path),"utf8")).includes("fn next_close_copy_byte_demand(")).toBe(true);
  }
 });
@@ -184,10 +191,10 @@ test("controlled paged retirement preserves copy demand through native clone clo
 
 test("cold shared retirement keeps logical work separate from exact physical backing",()=>{
  const path=join(owner,"♻️retirement/🧪️tests/🧫️fixtures/📏️shared-physical"),law=JSON.parse(readFileSync(join(path,"🔣️.json"),"utf8"));
- 
+
  for(const row of law.cases){const bytes=new TextEncoder().encode(row.text);expect(Buffer.byteLength(row.text,"utf8")).toBe(bytes.byteLength);expect(bytes.byteLength<=row.capacity).toBe(true);for(const work of law.workBytes){let remaining=bytes.byteLength,turns=0;while(remaining){remaining-=Math.min(remaining,work);turns++;}expect(turns<=law.maximumTurns).toBe(true);const owner={capacity:row.capacity,text:row.text};expect(patched(owner,[{op:"remove",path:"/text"}])).toEqual({capacity:row.capacity});}}
  expect(Math.ceil(law.buffer.bytes/law.buffer.workBytes)+4).toBe(law.buffer.maximumTurns);
- const shared=between(readFileSync(join(owner,"♻️retirement/🔗️arc-custody/🦀️.rs"),"utf8"),"RetirementCursor for SharedControlledRetirement<T>","RetireOwned for Arc<T>");expect(shared).toContain("fn next_close_byte_demand(");
+ const shared=between(readFileSync(join(owner,"♻️retirement/🔗️arc-custody/🦀️.rs"),"utf8"),"RetirementCursor for SharedControlledRetirement<T>","RetireOwned for Arc<T>");expect(shared).toContain("fn next_close_byte_demand(");expect(shared).toContain("Arc::try_unwrap(source)");expect(shared).toContain("owned.step(grant)");
 });
 
 test("original controlled reservation failure saves actual retained allocation before error",()=>{
@@ -203,7 +210,7 @@ test("original controlled root transfer preserves the same source under its inco
  const law=JSON.parse(readFileSync(new URL("🧫️fixtures/📥️root/🔣️.json",import.meta.url),"utf8"));const schema=JSON.parse(readFileSync(new URL("../🧬️schema/📥️root/🔣️.json",import.meta.url),"utf8"));expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);
  const db=new Database(":memory:");try{db.run("CREATE TABLE policy(copy INTEGER)");for(const copy of law.copyPolicies)db.query("INSERT INTO policy VALUES(?)").run(copy);expect(db.query("SELECT copy FROM policy WHERE copy>=0 ORDER BY copy").all()).toEqual(law.copyPolicies.map((copy:number)=>({copy})));}finally{db.close();}
  expect(patched({original:law.source},[{op:"move",from:"/original",path:"/retained"}])).toEqual({retained:law.source});
- const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");expect(source).toContain("if self.value.is_some() { return Ok(0); }");const root=source.slice(source.indexOf("let cursor = self.value.take().unwrap().retirement();"),source.indexOf("let index = self.cursors.len() - 1;"));expect(root).toContain("copied_bytes: 0");expect(source).not.toContain("if grant.maximum_copy_bytes < self.next_copy_byte_demand()?");expect(source).toContain("if work && body_bytes < minimum_work_bytes && (birth==0 || !self.cursors.get(index).unwrap().allows_admitted_narrow_work())");
+ const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");expect(source).toContain("if self.value.is_some() || self.cursors.is_empty() { return Ok(0); }");const root=source.slice(source.indexOf("let cursor = self.value.take().unwrap().retirement();"),source.indexOf("let index = self.cursors.len() - 1;"));expect(root).toContain("copied_bytes: 0");expect(source).not.toContain("if grant.maximum_copy_bytes < self.next_copy_byte_demand()?");expect(source).toContain("if work && body_bytes < minimum_work_bytes && (birth==0 || !self.cursors.get(index).unwrap().allows_admitted_narrow_work())");
 });
 
 
@@ -220,4 +227,8 @@ test("original controlled selected array leaf preserves future Float32 atoms and
  for(const row of law.source){const bytes=new DataView(new ArrayBuffer(law.futureArrayBytes));row.forEach((value:number,index:number)=>bytes.setFloat32(index*law.futureElementBytes,value,true));expect(row.map((_:number,index:number)=>bytes.getFloat32(index*law.futureElementBytes,true))).toEqual(row);let original:Record<string,unknown>={array:[...row],leaves:[]};for(let index=row.length-1;index>=0;index--){original=patched(original,[{op:"move",from:`/array/${index}`,path:"/leaves/-"}]);}expect(original.array).toEqual([]);expect(original.leaves).toEqual([...row].reverse());}
  expect(law.copyGrants).toEqual([1,3,64]);expect(law.quoteHeap).toEqual([0,0]);
  if(law.frontierBacking){expect(law.frontierBacking).toBe("sameOriginalReserveOneEvent");const db=new Database(":memory:");db.run("CREATE TABLE backing(event TEXT PRIMARY KEY, quoted INTEGER NOT NULL, reserved INTEGER NOT NULL CHECK (quoted=reserved))");db.run("INSERT INTO backing VALUES ('original-full-page',4096,4096)");expect(()=>db.run("INSERT INTO backing VALUES ('partial-quote',16,4096)")).toThrow();db.close();}
+});
+
+test("unsupported original root retains custody across zero-allocation refusal",()=>{
+ const law=JSON.parse(readFileSync(new URL("🧫️fixtures/📥️root/🔣️.json",import.meta.url),"utf8"));const schema=JSON.parse(readFileSync(new URL("../🧬️schema/📥️root/🔣️.json",import.meta.url),"utf8"));expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);const owner=law.unsupportedOriginal;const db=new Database(":memory:");try{const result=db.query("SELECT ? + ? AS heap, ? = ? AND ? AS exact").get(owner.constructorHeapBytes,owner.refusalHeapBytes,owner.demandRefusal,owner.stepRefusal,Number(owner.sameOriginalRecoverable)) as {heap:number;exact:number};expect(result).toEqual({heap:0,exact:1});}finally{db.close();}const original={text:law.source};const refused={original};expect(refused.original).toBe(original);const recovered=refused.original;expect(recovered).toBe(original);console.log("[DEBUG] retained unsupported root neutral/Ajv/SQLite ownership refusal contract passed");
 });

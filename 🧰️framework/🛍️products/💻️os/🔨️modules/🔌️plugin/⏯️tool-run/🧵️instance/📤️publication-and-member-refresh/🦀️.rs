@@ -15,9 +15,9 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
 
     /// ♻️ Each folded op leaves the root it was prepared against returned to the Store; reclaim it before the
     /// next fold, or a large finalize keeps one whole document per op (see `reclaim_document_snapshot_read_returns`).
-    pub(super) async fn publish_tool_run(&mut self, deadline: u64,grant:RetainedCloneGrant,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
+    pub(super)  async fn publish_tool_run(&mut self, deadline: u64,grant:RetainedCloneGrant,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(), Fault> {
         if selected_entry!(self.tool_runs).is_some_and(|entry| entry.member.is_some()) {
-            return self.publish_tool_run_member(deadline,grant).await;
+            return self.publish_tool_run_member(deadline,grant,receiving).await;
         }
         let entry = selected_entry_mut!(self.tool_runs).expect("finalizing slot");
         let (run, generation) = (entry.slot.run, entry.slot.generation);
@@ -42,6 +42,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
             match self.stores.store.admit_apply_batch(semio_framework_job::allocate_operation_id(),entry.base_generation,self.stores.store.content_revision(),&mut finalize.ingress.actor,&mut entry.provisional,HistoryLane::Document,self.stores.artifact_one_item_factory.as_ref(),&mut finalize.ingress.transaction,None,true,grant) {
                 Ok(Some((publication,progress)))=>{finalize.publication=Some(publication);self.tool_runs.retain_original_receipt(grant,progress)?;return Ok(());},
                 Ok(None)=>return Ok(()),
+                Err(store::os_vcs::VcsError::InverseRefused(error))=>{self.tool_runs.retain_original_receipt(grant,error.retained_progress())?;return Err(error.into_fault())},
                 Err(_) => return self.reject_tool_run_publication(run, generation),
             }
         }
@@ -54,8 +55,8 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
             }
             let entry = selected_entry_mut!(self.tool_runs).expect("finalizing slot");
             let publication = entry.finalize.as_mut().and_then(|finalize| finalize.publication.as_mut()).expect("admitted publication");
-            match self.stores.store.advance_apply_batch(publication, store::os_store::one_item::ArtifactStoreOneItemGrant{maximum_items:grant.maximum_items.min(1),maximum_copy_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes,maximum_depth:grant.maximum_depth}) {
-                Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_)) => {
+            match self.stores.store.advance_apply_batch(publication, store::os_store::one_item::ArtifactStoreOneItemGrant{maximum_items:grant.maximum_items.min(1),maximum_copy_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes,maximum_depth:grant.maximum_depth},receiving) {
+                Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_, _)) => {
                     let group_id = entry.identity.id.group_id();
                     let tool_id = entry.tool_id.clone();
                     let actor = entry.actor.clone();
@@ -76,6 +77,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                 Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked) => return Ok(()),
                 Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(_,progress))=>{self.tool_runs.retain_original_receipt(grant,progress)?;return Ok(());},
                 Ok(_) => {}
+                Err(store::os_vcs::VcsError::InverseRefused(error))=>{self.tool_runs.retain_original_receipt(grant,error.retained_progress())?;return Err(error.into_fault())},
                 Err(_) => return self.reject_tool_run_publication(run, generation),
             }
             return Ok(());
@@ -134,9 +136,9 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// the member's place once every op is shown. `true` while the fold still owns this turn — also while the retirement
     /// of the reads it replaced is saturated (retryable), so the job waits instead of leasing more; a fold that cannot
     /// apply its ops (they do not decode as the member's vocabulary) faults the run.
-    pub(super) fn refresh_tool_run_member(&mut self, deadline: u64) -> Result<bool, Fault> {
+    pub(super)  fn refresh_tool_run_member(&mut self, deadline: u64,grant:RetainedCloneGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<bool, Fault> {
         let Some(mut member) = selected_entry_mut!(self.tool_runs).and_then(|entry| entry.member.take()) else { return Ok(false) };
-        let outcome = self.child_composition.refresh_member_overlay(&mut member, deadline);
+        let outcome = self.child_composition.refresh_member_overlay(&mut member, deadline,grant,receiving);
         let entry = selected_entry_mut!(self.tool_runs).expect("a member run keeps its slot");
         entry.member = Some(member);
         let (run, generation) = (entry.slot.run, entry.slot.generation);
@@ -164,10 +166,10 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// 🪦️ A terminal member run holds no provisional op and shows none: the composed reads it replaced retire and its
     /// overlay rests on the member head again, so the run owes nothing. A member that is gone has no head to rest on; a
     /// saturated retirement ring (retryable) is retried on the next turn.
-    pub(super) fn settle_tool_run_member(&mut self, deadline: u64) -> Result<(), Fault> {
+    pub(super)  fn settle_tool_run_member(&mut self, deadline: u64,grant:RetainedCloneGrant) -> Result<(), Fault> {
         let Some(mut member) = selected_entry_mut!(self.tool_runs).and_then(|entry| entry.member.take()) else { return Ok(()) };
         let outcome = if self.child_composition.children.get(&(member.slot.clone(), member.child_id.clone())).is_some() {
-            self.child_composition.refresh_member_overlay(&mut member, deadline).map(|_| ())
+            self.child_composition.refresh_member_overlay(&mut member, deadline,grant,receiving).map(|_| ())
         } else {
             member.rebase = false;
             let stale = std::mem::take(&mut member.stale);
@@ -185,7 +187,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// carries the run's `TransactionRef` and group id: one history row whose mutations are the member's leaves, editable on
     /// that member store. A member that is gone or ops that do not decode reject the publication like a conflicting parent
     /// batch.
-    async fn publish_tool_run_member(&mut self, deadline: u64,grant:RetainedCloneGrant) -> Result<(), Fault> {
+    async fn publish_tool_run_member(&mut self, deadline: u64,grant:RetainedCloneGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(), Fault> {
         let app_instance_id = self.app.instance_id().await;
         let entry = selected_entry_mut!(self.tool_runs).expect("finalizing slot");
         let (run, generation) = (entry.slot.run, entry.slot.generation);

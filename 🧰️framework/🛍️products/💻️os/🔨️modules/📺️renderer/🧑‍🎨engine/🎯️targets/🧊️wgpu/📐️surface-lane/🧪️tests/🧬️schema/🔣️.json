@@ -1,0 +1,118 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "stock",
+    "rows",
+    "close",
+    "parentFuel",
+    "workUnits"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "stock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumReleaseBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "rows": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "width",
+          "height",
+          "scale",
+          "logicalWidth",
+          "logicalHeight"
+        ],
+        "properties": {
+          "width": {
+            "type": "number",
+            "minimum": 0
+          },
+          "height": {
+            "type": "number",
+            "minimum": 0
+          },
+          "scale": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "logicalWidth": {
+            "type": "number",
+            "minimum": 0
+          },
+          "logicalHeight": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "close": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "itemsPerOwner",
+        "capacityBytes",
+        "releaseBytes"
+      ],
+      "properties": {
+        "itemsPerOwner": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "parentFuel": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "workUnits": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

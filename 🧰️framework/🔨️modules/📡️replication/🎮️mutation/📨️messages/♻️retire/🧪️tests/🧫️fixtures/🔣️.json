@@ -1,9 +1,36 @@
 {
-  "outcomeIdentity": { "text": "mutation:ä🐚", "capacity": 337 },
+  "outcomeIdentity": {
+    "text": "mutation:ä🐚",
+    "capacity": 337
+  },
   "editLedgers": [
-    { "name": "unused-edit-vector", "capacity": 13, "rows": [], "expectedEntries": 0 },
-    { "name": "all-original-ledgers", "capacity": 17, "rows": [0, 1, 2, 3], "expectedEntries": 4 },
-    { "name": "repeated-independent-ledgers", "capacity": 8, "rows": [2, 0, 2], "expectedEntries": 3 }
+    {
+      "name": "unused-edit-vector",
+      "capacity": 13,
+      "rows": [],
+      "expectedEntries": 0
+    },
+    {
+      "name": "all-original-ledgers",
+      "capacity": 17,
+      "rows": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "expectedEntries": 4
+    },
+    {
+      "name": "repeated-independent-ledgers",
+      "capacity": 8,
+      "rows": [
+        2,
+        0,
+        2
+      ],
+      "expectedEntries": 3
+    }
   ],
   "cancelTurns": [
     0,
@@ -91,6 +118,179 @@
       "rowCapacity": 0,
       "messages": [],
       "expectedRows": 0
+    }
+  ],
+  "transferCases": [
+    {
+      "name": "original-bundle",
+      "copy": "exact",
+      "items": 1,
+      "closeFirst": false,
+      "expected": "transferred"
+    },
+    {
+      "name": "zero-work",
+      "copy": "exact",
+      "items": 0,
+      "closeFirst": false,
+      "expected": "blocked"
+    },
+    {
+      "name": "one-byte-short",
+      "copy": "short",
+      "items": 1,
+      "closeFirst": false,
+      "expected": "blocked"
+    },
+    {
+      "name": "zero-copy",
+      "copy": "zero",
+      "items": 1,
+      "closeFirst": false,
+      "expected": "blocked"
+    },
+    {
+      "name": "retirement-started",
+      "copy": "exact",
+      "items": 1,
+      "closeFirst": true,
+      "expected": "refused"
+    }
+  ],
+  "publicationCases": [
+    {
+      "rows": [
+        0
+      ],
+      "cancelAt": null,
+      "name": "independent-report",
+      "expectedCopies": 1
+    },
+    {
+      "rows": [
+        0,
+        2
+      ],
+      "cancelAt": null,
+      "name": "multi-row-independent-report",
+      "expectedCopies": 3
+    },
+    {
+      "rows": [
+        0
+      ],
+      "cancelAt": 0,
+      "name": "cancel-before-copy",
+      "expectedCopies": 0
+    },
+    {
+      "rows": [
+        0,
+        2
+      ],
+      "cancelAt": 5,
+      "name": "cancel-during-code",
+      "expectedCopies": 0
+    },
+    {
+      "rows": [
+        0,
+        2
+      ],
+      "cancelAt": 12,
+      "name": "cancel-during-payload",
+      "expectedCopies": 0
+    }
+  ],
+  "stampCases": [
+    {
+      "offset": 2,
+      "name": "batch-ordinal",
+      "expected": [
+        2,
+        3
+      ],
+      "indices": [
+        0,
+        1
+      ]
+    },
+    {
+      "offset": 7,
+      "name": "transaction-append",
+      "expected": [
+        7,
+        8
+      ],
+      "indices": [
+        0,
+        1
+      ]
+    }
+  ],
+  "joinCases": [
+    {
+      "rows": [
+        0,
+        2
+      ],
+      "name": "two-original-bundles",
+      "expectedRows": 3,
+      "cancelAt": null
+    },
+    {
+      "rows": [
+        0,
+        2
+      ],
+      "name": "cancel-before-reserve",
+      "expectedRows": 3,
+      "cancelAt": 0
+    },
+    {
+      "rows": [
+        0,
+        2
+      ],
+      "name": "cancel-during-row-transfer",
+      "expectedRows": 3,
+      "cancelAt": 4
+    },
+    {
+      "rows": [
+        0,
+        2
+      ],
+      "name": "cancel-during-source-close",
+      "expectedRows": 3,
+      "cancelAt": 14
+    }
+  ],
+  "borrowCases": [
+    {
+      "id": "committed-prefix",
+      "sourceCase": 0,
+      "cancelAt": null
+    },
+    {
+      "id": "multiline-prefix",
+      "sourceCase": 2,
+      "cancelAt": null
+    },
+    {
+      "id": "cancel-before-bind",
+      "sourceCase": 0,
+      "cancelAt": 0
+    },
+    {
+      "id": "cancel-first-scalar",
+      "sourceCase": 0,
+      "cancelAt": 5
+    },
+    {
+      "id": "cancel-partial-prefix",
+      "sourceCase": 2,
+      "cancelAt": 20
     }
   ]
 }

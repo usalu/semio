@@ -8,12 +8,19 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
-use semio_framework_job::{StepContext};
+use semio_framework_job::StepContext;
 #[cfg(any(test, feature = "testing"))] use semio_framework_job::{InteractiveJobCloseStep};
-use semio_framework_plugin::app::{ArtifactOwnedToolJobContext, InteractionHoverState};
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
-use semio_framework_plugin::{ArtifactApp, Emit, Fault, ViewModel};
-use semio_framework_value::{RetirementDemand, ValueError};
+use semio_framework_plugin::app::ArtifactOwnedToolJobContext;
+use semio_framework_plugin::app::InteractionHoverState;
+use semio_framework_plugin::retained_command::ArtifactCommandInputs;
+use semio_framework_plugin::retained_command::ArtifactCommandWork;
+use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
+use semio_framework_plugin::ArtifactApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::ViewModel;
+use semio_framework_value::RetirementDemand;
+use semio_framework_value::ValueError;
 
 //#region 🔖️Limits
 pub const PUZZLE_COMMAND_RAW_BYTES: usize = 8_192;
@@ -101,7 +108,7 @@ impl<A: ArtifactApp> ArtifactCommandWork<A> for BoundedFirstStepCommandWork<A> {
         step_demands::<A>(size_of::<Self>())
     }
 
-    pub fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("puzzle-command-bounded-work-repeated"));
@@ -144,7 +151,7 @@ impl<A: ArtifactApp> ArtifactCommandWork<A> for NoopPuzzleCommandWork<A> {
         step_demands::<A>(size_of::<Self>())
     }
 
-    pub fn step(&mut self, _input: &ArtifactCommandInputs<'_, A>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, _input: &ArtifactCommandInputs<'_, A>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("puzzle-command-noop-repeated"));
@@ -166,15 +173,17 @@ impl<A: ArtifactApp> ArtifactCommandWork<A> for NoopPuzzleCommandWork<A> {
 #[cfg(any(test, feature = "testing"))]
 pub mod testing {
     use super::*;
-    use semio_framework_job::{Generation, OperationId, StepBudget};
     use semio_framework_plugin::app::ArtifactToolCompletion;
-    use semio_framework_plugin::{AppOperationContext, HistoryView};
-    use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+    use semio_framework_plugin::AppOperationContext;
+    use semio_framework_plugin::HistoryView;
+    use semio_framework_value::retained_clone::RetainedCloneGrant;
+    use semio_framework_value::retained_clone::RetainedCloneProgress;
 
-    pub use semio_s_plugin_puzzle_jobs::testing::unbounded_grant;
+    pub use semio_s_plugin_puzzle_jobs::testing::{fixture_stock, OriginalFixture};
 
     /// 🧾️ One work step as a test reads it: the progress preview split into its two languages, an emission, or a segmented download.
     pub enum PuzzleCommandWorkStep<A: ArtifactApp> {
+        Pending { stage: &'static str, en: String, de: String },
         Progress { stage: &'static str, en: String, de: String },
         Complete(Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>),
         Download(semio_framework_plugin::app::ArtifactDownloadOutput),
@@ -187,42 +196,41 @@ pub mod testing {
         (language("en"), language("de"))
     }
 
-    /// ▶️ Runs one step of `work` under an unbounded budget and the bare operation facts a test needs.
+    /// ▶️ Runs pure work under the same explicitly owned original fixture; no Store-read authority is implied.
     pub fn step<A: ArtifactApp, W: ArtifactCommandWork<A> + ?Sized>(
-        work: &mut W,
-        command: &A::Command,
-        snapshot: &A::Snapshot,
-        config: &A::Config,
-        interaction: &protocol::InteractionState,
-        hover: &InteractionHoverState,
-        context: Option<&ArtifactOwnedToolJobContext<A>>,
-    ) -> Result<PuzzleCommandWorkStep<A>, Fault> {
+        original: &mut OriginalFixture, work: &mut W, command: &A::Command, snapshot: &A::Snapshot, config: &A::Config,
+        interaction: &protocol::InteractionState, hover: &InteractionHoverState, context: Option<&ArtifactOwnedToolJobContext<A>>,
+    ) -> Result<PuzzleCommandWorkStep<A>, semio_framework_job::OriginalTurnFailure> {
         let history = HistoryView::empty();
-        let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "test".to_string(), operation_id: 1, generation: 1, canonical_base_revision: [0; 32], retained: unbounded_grant(), authoring_seed: String::new() };
-        let input = ArtifactCommandInputs { command, snapshot, snapshot_owner: None, config, history: &history, interaction, hover, context, operation: &operation };
-        let mut sequence = 0u64;
-        let mut progress = RetainedCloneProgress::default();
-        let mut cx = StepContext::new(OperationId(1), Generation(1), StepBudget::new(u64::MAX, u64::MAX, unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut progress);
-        Ok(match work.step(&input, &mut cx)? {
-            ArtifactCommandWorkStep::Progress { stage, preview } | ArtifactCommandWorkStep::Replay { stage, preview } => {
-                let (en, de) = preview_languages(preview);
-                PuzzleCommandWorkStep::Progress { stage, en, de }
-            }
-            ArtifactCommandWorkStep::Complete(emit) | ArtifactCommandWorkStep::CompleteWithEphemeral { emit, .. } => PuzzleCommandWorkStep::Complete(emit),
-            ArtifactCommandWorkStep::CompleteDownload { download, .. } => PuzzleCommandWorkStep::Download(download),
+        let operation = AppOperationContext { app_instance_id: 1, parent_document_id: String::new(), operation_id: 1, generation: 1, canonical_base_revision: [0; 32], retained: fixture_stock(), authoring_seed: String::new() };
+        original.turn(fixture_stock(), |cx| {
+            let input = ArtifactCommandInputs { command, snapshot, snapshot_owner: None,
+                snapshot_read: semio_framework_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation),
+                config, history: &history, interaction, hover, context, operation: &operation };
+            let before = cx.retained_progress();
+            let fuel = cx.fuel_remaining();
+            let step = work.step(&input, cx)?;
+            if cx.retained_progress() == before { cx.consume_retained(RetainedCloneProgress { copied_items: 1, ..Default::default() })?; }
+            if cx.fuel_remaining() == fuel { cx.consume_fuel(1); }
+            Ok(match step {
+                ArtifactCommandWorkStep::Pending { stage, preview } => { let (en, de) = preview_languages(preview); PuzzleCommandWorkStep::Pending { stage, en, de } }
+                ArtifactCommandWorkStep::Progress { stage, preview } | ArtifactCommandWorkStep::Replay { stage, preview } => {
+                    let (en, de) = preview_languages(preview); PuzzleCommandWorkStep::Progress { stage, en, de }
+                }
+                ArtifactCommandWorkStep::Complete(emit) | ArtifactCommandWorkStep::CompleteWithEphemeral { emit, .. } => PuzzleCommandWorkStep::Complete(emit),
+                ArtifactCommandWorkStep::CompleteDownload { download, .. } => PuzzleCommandWorkStep::Download(download),
+            })
         })
     }
 
-    /// 🧹️ Closes `work` to its terminal-empty shell and answers how many granted turns that took.
-    pub fn close<A: ArtifactApp, W: ArtifactCommandWork<A> + ?Sized>(work: &mut W) -> usize {
+    /// 🧹️ Work closes under the exact caller and decoder that funded its previous steps.
+    pub fn close<A: ArtifactApp, W: ArtifactCommandWork<A> + ?Sized>(original: &mut OriginalFixture, work: &mut W) -> usize {
         work.begin_close();
-        let mut turns = 0;
-        while !matches!(semio_framework_job::close_with_self_funded_context(unbounded_grant(), |cx| work.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Complete { .. }) {
-            turns += 1;
-            assert!(turns < 100_000, "a work closes in a bounded number of turns");
+        for turn in 0..100_000 {
+            let step = original.turn(fixture_stock(), |cx| work.close_step(cx)).expect("original Puzzle work close");
+            if matches!(step, InteractiveJobCloseStep::Complete { .. }) { assert!(work.terminal_is_empty()); return turn; }
         }
-        assert!(work.terminal_is_empty(), "a closed work is terminal-empty");
-        turns
+        panic!("original Puzzle work remains in close custody");
     }
 
     /// 🔕️ A completion no test needs: tests that exercise a work never publish.

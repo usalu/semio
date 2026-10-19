@@ -1,0 +1,8 @@
+{
+  "mutation": "changeNode",
+  "id": "n1",
+  "patch": {
+    "y": 5,
+    "z": 6
+  }
+}

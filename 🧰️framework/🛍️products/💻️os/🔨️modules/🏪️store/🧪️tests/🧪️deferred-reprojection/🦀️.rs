@@ -3,6 +3,7 @@
 //! the history before the change, progress grows monotonically, cancelling at any step leaves the store untouched, a local
 //! edit meanwhile restarts the replay, and the adoption equals the undeferred one for every case of the language-agnostic
 //! supersede-replay corpus (whose independent fast-json-patch oracle is `🧪️supersede-replay/🟦️.ts`).
+use semio_framework_os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::*;
 use semio_framework_diagnostic::FaultFrom;
 use std::collections::HashSet;
@@ -80,7 +81,7 @@ async fn drive(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, budget: us
 }
 
 /// 🧳️ Captures the actual retained replay's diagnostic, convergence and cleanup cursors.
-fn replay_owner_work<M: super::Mutation<DemoSnapshot> + OpBinary>(store: &ArtifactStore<DemoSnapshot, M>) -> (usize, Option<(u64, bool)>, Option<usize>, bool) {
+fn replay_owner_work<M: Clone + super::Mutation<DemoSnapshot> + OpBinary>(store: &ArtifactStore<DemoSnapshot, M>) -> (usize, Option<(u64, bool)>, Option<usize>, bool) {
     let replay = store.replay.pending_reprojection.as_ref().and_then(|pending| pending.replay.as_ref()).map(|(_, replay)| replay);
     replay.map_or((0, None, None, false), |replay| (replay.cursor, replay.message_settlement.as_ref().map(|settlement| (settlement.completed_work(), settlement.is_finished())), replay.convergence_search, replay.replay_retirement.is_some()))
 }
@@ -302,17 +303,9 @@ impl Mutation<DemoSnapshot> for CountedOp {
         self.0.descriptor()
     }
 
-    fn diff(&self, base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<Self::Diff> {
-        COUNTED_FOLDS.with(|folds| folds.set(folds.get() + 1));
-        self.0.diff(base)
-    }
 
-    fn inverse(&self, base: &DemoSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok({
-        self.0.inverse(base)?.into_iter().map(|operation| Self(operation, self.1)).collect()
-    
-    })
-}
+
+
 
     fn conflict_target(&self) -> Vec<String> {
         self.0.conflict_target()
@@ -327,8 +320,22 @@ impl Mutation<DemoSnapshot> for CountedOp {
     }
 }
 
-impl MemberStoreProducer<DemoSnapshot,CountedOp> for semio_framework_os_store_testing_doubles::DemoMemberStoreProducer<CountedOp> {
-    type SnapshotOpen = UnsupportedMemberSnapshotOpen<DemoSnapshot>;
+impl semio_framework_os_spr::ColdMutation<DemoSnapshot> for CountedOp {
+    type ReferenceDiff = <DemoMutation as Mutation<DemoSnapshot>>::Diff;
+    fn diff(&self, base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<Self::ReferenceDiff> {
+        COUNTED_FOLDS.with(|folds| folds.set(folds.get() + 1));
+        self.0.diff(base)
+    }
+    fn inverse(&self, base: &DemoSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok({
+        self.0.inverse(base)?.into_iter().map(|operation| Self(operation, self.1)).collect()
+
+    })
+}
+}
+
+impl MemberStoreOwner<CountedOp> for DemoSnapshot {
+    type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
 
     fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         super::fixture_authoring_birth_demand::<CountedOp>()

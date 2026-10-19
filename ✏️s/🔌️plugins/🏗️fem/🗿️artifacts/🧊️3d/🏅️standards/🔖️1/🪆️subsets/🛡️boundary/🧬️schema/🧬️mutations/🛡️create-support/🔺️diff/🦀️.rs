@@ -3,16 +3,18 @@ use super::CreateSupport;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSupportInsertion;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSupportsDelta;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &CreateSupport, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {
+pub fn diff(payload: &CreateSupport, base: &Fem3dSnapshotValue) -> protocol::MutationOutcome<Fem3dDiff> {
+    if let Some(message) = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::entity_identity_breach("support", &payload.support.id) { return protocol::MutationOutcome::fatal("mutation.invariant", message, [payload.support.id.clone()]); }
     if base.supports.iter().any(|support| support.id == payload.support.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A support with id \"{}\" already exists.", payload.support.id), [payload.support.id.clone()]);
     }
     if !base.nodes.iter().any(|node| node.id == payload.support.node_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.support.node_id), [payload.support.node_id.clone()]);
     }
+    if !crate::FemDof::canonical(&payload.support.fixed) { return protocol::MutationOutcome::fatal("mutation.invariant", "Support restraints must be canonical.", [payload.support.id.clone()]); }
     if payload.index.is_some_and(|at| at > base.supports.len()) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Insert index {} is past the end of {} rows.", payload.index.unwrap_or_default(), base.supports.len()), [&payload.support.id.to_string()]);
     }

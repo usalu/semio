@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+ui_tui = { path = "../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["tui-terminal"], package = "semio-framework-ui" }
 dashboard_daemon = { path = "../../../🌀️daemon/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-daemon" }
 dashboard_inventory = { path = "../../../📚️inventory/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-inventory" }
 dashboard_registry = { path = "../../../🎮️registry/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-registry" }

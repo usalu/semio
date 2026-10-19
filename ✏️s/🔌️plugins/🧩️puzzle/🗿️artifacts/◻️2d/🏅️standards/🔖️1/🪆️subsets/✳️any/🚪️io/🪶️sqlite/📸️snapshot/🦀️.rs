@@ -2,9 +2,13 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
 use {crate::standards::v1::subsets::any::schema::records::Puzzle2dCamera, crate::standards::v1::subsets::any::schema::records::Puzzle2dNode, crate::standards::v1::subsets::any::schema::records::Puzzle2dNodeAnchor, crate::standards::v1::subsets::any::schema::records::Puzzle2dHandle, crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::records::Puzzle2dTargetRegion, crate::standards::v1::subsets::any::schema::records::Puzzle2dMeta, crate::standards::v1::subsets::any::schema::records::Puzzle2dKindCompatibility, crate::standards::v1::subsets::any::schema::records::Puzzle2dCompatSpecificity, crate::standards::v1::subsets::any::schema::records::Puzzle2dKindCatalogs, crate::standards::v1::subsets::any::schema::records::Puzzle2dCatalogNodeKind, crate::standards::v1::subsets::any::schema::records::Puzzle2dRepresentation, crate::standards::v1::subsets::any::schema::records::Puzzle2dHandleTemplate, crate::standards::v1::subsets::any::schema::records::Puzzle2dAttribute, crate::standards::v1::subsets::any::schema::records::Puzzle2dAuthor, crate::standards::v1::subsets::any::schema::records::Puzzle2dCatalogHandleKind, crate::standards::v1::subsets::any::schema::records::Puzzle2dCatalogEdgeKind, crate::standards::v1::subsets::any::schema::records::Puzzle2dCatalogWireKind};
-use std::collections::{BTreeMap,BTreeSet};
+use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{RowWriter,Cell,FloatColumn,read_binary64,ieee754_is_null}}};
-use semio_framework_value::{ValueError,ValueRefusalKind,list::PagedList,paged::PagedUtf8};
+use semio_framework_value::ValueError;
+use semio_framework_value::ValueRefusalKind;
+use semio_framework_value::list::PagedList;
+use semio_framework_value::paged::PagedUtf8;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 
 const CAMERA:&[FloatColumn]=&[FloatColumn::Binary64(2),FloatColumn::Binary64(3),FloatColumn::Binary64(4)];

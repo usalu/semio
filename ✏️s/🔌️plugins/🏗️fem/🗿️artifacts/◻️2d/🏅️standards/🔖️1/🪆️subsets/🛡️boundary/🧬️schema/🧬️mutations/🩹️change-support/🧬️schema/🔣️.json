@@ -1,0 +1,509 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/boundary/mutation/change-support/schema.json",
+  "title": "ChangeSupport",
+  "description": "Changes supplied support fields. A whole fixed set and individual membership setters are mutually exclusive.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "patch"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSupport",
+      "description": "The internally tagged discriminator `#[value(tag = \"mutation\")]` puts on the wire.",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Support",
+          "de": "Lager"
+        },
+        "ref": {
+          "kind": "support",
+          "domain": "fem2d",
+          "granularity": "support"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "patch": {
+      "title": "FemSupport",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nodeId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Node",
+              "de": "Knoten"
+            },
+            "ref": {
+              "kind": "node",
+              "domain": "fem2d",
+              "granularity": "node"
+            },
+            "group": "target",
+            "order": 20
+          }
+        },
+        "fixed": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Rx",
+              "Ry",
+              "Rz"
+            ],
+            "x-semio-ui": {
+              "options": {
+                "Tx": {
+                  "en": "Translation X",
+                  "de": "Verschiebung x"
+                },
+                "Ty": {
+                  "en": "Translation Y",
+                  "de": "Verschiebung y"
+                },
+                "Tz": {
+                  "en": "Translation Z",
+                  "de": "Verschiebung z"
+                },
+                "Rx": {
+                  "en": "Rotation about X",
+                  "de": "Verdrehung um x"
+                },
+                "Ry": {
+                  "en": "Rotation about Y",
+                  "de": "Verdrehung um y"
+                },
+                "Rz": {
+                  "en": "Rotation about Z",
+                  "de": "Verdrehung um z"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Fixed degrees of freedom",
+              "de": "Gesperrte Freiheitsgrade"
+            },
+            "group": "record",
+            "order": 30
+          },
+          "uniqueItems": true,
+          "enum": [
+            [],
+            [
+              "Tx"
+            ],
+            [
+              "Ty"
+            ],
+            [
+              "Tx",
+              "Ty"
+            ],
+            [
+              "Tz"
+            ],
+            [
+              "Tx",
+              "Tz"
+            ],
+            [
+              "Ty",
+              "Tz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Tz"
+            ],
+            [
+              "Rx"
+            ],
+            [
+              "Tx",
+              "Rx"
+            ],
+            [
+              "Ty",
+              "Rx"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Rx"
+            ],
+            [
+              "Tz",
+              "Rx"
+            ],
+            [
+              "Tx",
+              "Tz",
+              "Rx"
+            ],
+            [
+              "Ty",
+              "Tz",
+              "Rx"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Rx"
+            ],
+            [
+              "Ry"
+            ],
+            [
+              "Tx",
+              "Ry"
+            ],
+            [
+              "Ty",
+              "Ry"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Ry"
+            ],
+            [
+              "Tz",
+              "Ry"
+            ],
+            [
+              "Tx",
+              "Tz",
+              "Ry"
+            ],
+            [
+              "Ty",
+              "Tz",
+              "Ry"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Ry"
+            ],
+            [
+              "Rx",
+              "Ry"
+            ],
+            [
+              "Tx",
+              "Rx",
+              "Ry"
+            ],
+            [
+              "Ty",
+              "Rx",
+              "Ry"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Rx",
+              "Ry"
+            ],
+            [
+              "Tz",
+              "Rx",
+              "Ry"
+            ],
+            [
+              "Tx",
+              "Tz",
+              "Rx",
+              "Ry"
+            ],
+            [
+              "Ty",
+              "Tz",
+              "Rx",
+              "Ry"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Rx",
+              "Ry"
+            ],
+            [
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Rz"
+            ],
+            [
+              "Ty",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Rz"
+            ],
+            [
+              "Tz",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Tz",
+              "Rz"
+            ],
+            [
+              "Ty",
+              "Tz",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Rz"
+            ],
+            [
+              "Rx",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Rx",
+              "Rz"
+            ],
+            [
+              "Ty",
+              "Rx",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Rx",
+              "Rz"
+            ],
+            [
+              "Tz",
+              "Rx",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Tz",
+              "Rx",
+              "Rz"
+            ],
+            [
+              "Ty",
+              "Tz",
+              "Rx",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Rx",
+              "Rz"
+            ],
+            [
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Ty",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tz",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Tz",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Ty",
+              "Tz",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Rx",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Rx",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Ty",
+              "Rx",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Rx",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tz",
+              "Rx",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Tz",
+              "Rx",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Ty",
+              "Tz",
+              "Rx",
+              "Ry",
+              "Rz"
+            ],
+            [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Rx",
+              "Ry",
+              "Rz"
+            ]
+          ],
+          "description": "A unique subsequence of FemDof::ALL: Tx, Ty, Tz, Rx, Ry, Rz. Empty explicitly releases all fixed DOFs."
+        },
+        "tx": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "de": "Fest TX",
+              "en": "Fixed TX"
+            },
+            "widget": "toggle"
+          }
+        },
+        "ty": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "de": "Fest TY",
+              "en": "Fixed TY"
+            },
+            "widget": "toggle"
+          }
+        },
+        "rz": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "de": "Fest RZ",
+              "en": "Fixed RZ"
+            },
+            "widget": "toggle"
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "New support",
+          "de": "Neues Lager"
+        },
+        "group": "record",
+        "order": 30
+      },
+      "allOf": [
+        {
+          "not": {
+            "required": [
+              "fixed",
+              "tx"
+            ]
+          }
+        },
+        {
+          "not": {
+            "required": [
+              "fixed",
+              "ty"
+            ]
+          }
+        },
+        {
+          "not": {
+            "required": [
+              "fixed",
+              "rz"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

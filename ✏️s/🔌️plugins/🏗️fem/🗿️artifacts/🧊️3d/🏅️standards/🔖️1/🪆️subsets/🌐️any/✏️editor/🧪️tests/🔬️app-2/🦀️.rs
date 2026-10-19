@@ -33,7 +33,7 @@ pub mod context {
     impl Drop for Fem3dApp {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), self.1.cx()).expect("original caller paid app close");
             }
         }
     }
@@ -55,9 +55,12 @@ pub mod context {
     /// route instead of being refused with `interactive-job.live-instance`, and its publication
     /// actually settles into the stores. It boots on whatever `Fem3dPlayApp::initial_snapshot`
     /// boots on (the `concrete-forest` example); [`fem3d_demo_app`] loads the `demo` fixture.
-    pub fn fem3d_app() -> Fem3dApp {
+    pub fn fem3d_app() -> Fem3dApp { fem3d_peer_app(semio_framework_os_kernel::LOCAL_ACTOR_ID) }
+
+    /// 👥️ The mounted peer keeps its own original caller through every app operation.
+    pub fn fem3d_peer_app(actor: &str) -> Fem3dApp {
         let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-        let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry::<EditorApp<Fem3dPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
+        let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry::<EditorApp<Fem3dPlayApp>>(manifest, semio_framework_os_kernel::ActorId(actor.into()), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
         ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(FEM3D_TEST_INSTANCE));
         Fem3dApp(app, scope)
     }
@@ -84,7 +87,7 @@ pub mod context {
 
     /// 🧹️ Retires a mounted app the way the plugin host retires a closing instance.
     pub fn close(app: &mut Fem3dApp) {
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), app.1.cx()).expect("original caller paid app close");
     }
 
     /// 🪟️ The window kind a command is addressed to when the test names none.
@@ -108,7 +111,7 @@ pub mod context {
         // 🔁️ A mounted app answers before its retained typed operation has published: drive it home the
         // way the plugin host's continuation does, and fold the settled receipt's effects into the answer
         // (either surface may be the one carrying a `LoadDocument` or a playback re-arm).
-        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, FEM3D_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
+        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, FEM3D_TEST_INSTANCE, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
         result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {
             if let semio_framework_plugin::Effect::LoadDocument { pack, spr } = effect {
@@ -129,7 +132,7 @@ pub mod context {
         let mut rows = Vec::new();
         while app.has_pending_typed_operations() {
             assert!(std::time::Instant::now() < deadline, "the typed operation settles within 30 seconds");
-            app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("maintenance step");
+            app.0.maintenance_step(app.1.cx(), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().maintenance).expect("maintenance step");
             app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("advance the publication");
             while let Some(page) = app.take_typed_operation_result_page(FEM3D_TEST_INSTANCE) {
                 assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "the retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
@@ -145,7 +148,7 @@ pub mod context {
 
     /// ↩️ Runs a framework-reserved history verb (`undo`/`redo`) and settles its publication.
     pub async fn history_verb(app: &mut Fem3dApp, verb: &str) {
-        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, verb, FEM3D_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, verb, FEM3D_TEST_INSTANCE, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     }
 
     pub fn render(app: &mut Fem3dApp, body_key: &str) -> String {

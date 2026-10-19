@@ -27,6 +27,52 @@ pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.
 /// 🧭️ Identifies the artifact mutation grammar.
 pub const MUTATION_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️mutations.grammar.semio");
 
+/// 📖️ Recognizes exactly one mutation using the declared leaf field contracts.
+pub fn mutation_grammar_recognizer()->Result<semio_framework_dsl::Recognizer,semio_framework_diagnostic::TextError>{
+    let grammar=semio_framework_dsl::parse_grammar(MUTATION_GRAMMAR_SEMIO)?;
+    semio_framework_dsl::Recognizer::compile(&grammar,&semio_framework_dsl::FragmentRegistry::new(),vec![
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node::CreateNode>("create-node-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_node::DeleteNode>("delete-node-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_element::CreateElement>("create-element-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_element::DeleteElement>("delete-element-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_element::ReplaceElement>("replace-element-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::create_material::CreateMaterial>("create-material-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::delete_material::DeleteMaterial>("delete-material-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::replace_material::ReplaceMaterial>("replace-material-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::change_material::ChangeMaterial>("change-material-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::create_section::CreateSection>("create-section-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::delete_section::DeleteSection>("delete-section-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::replace_section::ReplaceSection>("replace-section-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::change_section::ChangeSection>("change-section-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::create_support::CreateSupport>("create-support-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::delete_support::DeleteSupport>("delete-support-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::replace_support::ReplaceSupport>("replace-support-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid>("create-solid-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::delete_solid::DeleteSolid>("delete-solid-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::replace_solid::ReplaceSolid>("replace-solid-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::create_load_case::CreateLoadCase>("create-load-case-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::delete_load_case::DeleteLoadCase>("delete-load-case-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::add_load::AddLoad>("add-load-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::remove_load::RemoveLoad>("remove-load-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_load_case_self_weight::ChangeLoadCaseSelfWeight>("change-load-case-self-weight-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::create_combination::CreateCombination>("create-combination-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::delete_combination::DeleteCombination>("delete-combination-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_analysis::standards::v1::subsets::any::schema::mutations::update_analysis_settings::UpdateAnalysisSettings>("update-analysis-settings-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_node::ReplaceNode>("replace-node-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::change_node::ChangeNode>("change-node-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_combination_term::ChangeCombinationTerm>("change-combination-term-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_combination_name::ChangeCombinationName>("change-combination-name-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_load::ChangeLoad>("change-load-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::change_element::ChangeElement>("change-element-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::change_support::ChangeSupport>("change-support-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<crate::standards::v1::subsets::any::schema::mutations::change_solid::ChangeSolid>("change-solid-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::replace_load::ReplaceLoad>("replace-load-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_load_case_name::ChangeLoadCaseName>("change-load-case-name-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::replace_combination::ReplaceCombination>("replace-combination-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::move_selection::MoveSelection>("move-selection-fields"),
+    ])
+}
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️mutation-grammar-conformance/🦀️.rs"]
 mod mutation_grammar_conformance;
@@ -39,16 +85,18 @@ use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fe
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemCombination;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_fem_material::volumetric::FemMaterialValue;
+use semio_s_fem_node::volumetric::FemNodeValue;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSection;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 use protocol::Mutation;
-use semio_framework_value_derive::{FromValue, ToValue};
+use protocol::ColdMutation;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 use store::os_store::store_schema::ArtifactEnvelope;
 /// 🌉️ Brings every triad leaf's `mutation` submodule into this file's own scope (declared as
 /// siblings back in `🦀️.rs`, not inside this file) — required for the dispatch enum's bare

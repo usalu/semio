@@ -40,7 +40,9 @@
 // #endregion 🧲️Header
 
 import { parseViewport2d, type Viewport2d } from "@semio-tech/framework-ui-viewport-ts/2d/schema";
-import { parseViewport3dOrbit, type Viewport3dOrbit } from "@semio-tech/framework-ui-viewport-ts/3d/schema";
+import { parseViewport3dOrbit, type Viewport3dOrbit } from "@semio-tech/framework-ui-viewport-ts/3d/🧬️schema/🟦️.ts";
+import { encodeScopedIdentity, nextHover, nextSelection, DEFAULT_HOVER_SPEC, type SelectionSpec } from "../../../../../🧰️framework/🔨️modules/🕹️interaction/🟦️.ts";
+import { parseInteractionTarget, parseMergeMode, type DomainHover, type DomainSelection, type DomainTopology } from "../../../../../🧰️framework/🔨️modules/🕹️interaction/schema";
 import { fem2dDemoDsl } from "@semio-tech/fem-2d/standards/1/subsets/any/assets/demo";
 import { fem3dDemoDsl } from "@semio-tech/fem-3d/standards/1/subsets/any/assets/demo";
 
@@ -741,15 +743,15 @@ export const FEM3D_BOX_MESHES: readonly Record<string, unknown>[] = [{ id: "box"
 /**
  * 🧊️ Port of `fem3d_structural_instances`: one small box per node, then one oriented box prism per
  * `Bar`/`Frame` member — positioned at the midpoint, scaled `[t,t,length]` so the mesh's long local Z axis
- * stretches along the member, rotated by `quat_z_to(dir) * quat_roll_z(roll)`. Ids are the Rust's own
- * (`node-<id>` / `el-<id>`). `displacements` are always absent here (no solver in the browser), so this is
+ * stretches along the member, rotated by `quat_z_to(dir) * quat_roll_z(roll)`. Ids use the native
+ * scoped interaction identity. `displacements` are always absent here (no solver in the browser), so this is
  * always the undeformed structure.
  */
 export function fem3dStructuralInstances(snapshot: Fem3dSnapshot): readonly Record<string, unknown>[] {
   const instances: Record<string, unknown>[] = [];
   const nodeById = new Map(snapshot.nodes.map((node) => [node.id, node]));
   for (const node of snapshot.nodes) {
-    instances.push({ id: `node-${node.id}`, meshId: "box", position: [node.x, node.y, node.z], rotation: [0, 0, 0, 1], scale: [FEM3D_NODE_SIZE, FEM3D_NODE_SIZE, FEM3D_NODE_SIZE], label: node.id });
+    instances.push({ id: encodeScopedIdentity(["node", node.id]), interactionGranularityId: "node", meshId: "box", position: [node.x, node.y, node.z], rotation: [0, 0, 0, 1], scale: [FEM3D_NODE_SIZE, FEM3D_NODE_SIZE, FEM3D_NODE_SIZE], label: node.id });
   }
   for (const element of snapshot.elements) {
     const start = nodeById.get(element.start);
@@ -760,7 +762,8 @@ export function fem3dStructuralInstances(snapshot: Fem3dSnapshot): readonly Reco
     const direction: FemVec3 = [delta[0] / length, delta[1] / length, delta[2] / length];
     const rotation = quatMul(quatZTo(direction), quatRollZ(element.kind === "frame" ? element.roll : 0));
     instances.push({
-      id: `el-${element.id}`,
+      id: encodeScopedIdentity(["element", element.id]),
+      interactionGranularityId: "element",
       meshId: "box",
       position: [(start.x + end.x) / 2, (start.y + end.y) / 2, (start.z + end.z) / 2],
       rotation,
@@ -774,14 +777,28 @@ export function fem3dStructuralInstances(snapshot: Fem3dSnapshot): readonly Reco
 /** 🎥️ Initial navigation for a newly opened FEM 3D window. */
 export const FEM3D_INITIAL_VIEWPORT: Viewport3dOrbit = { position: [4, -4, 3], target: [0, 0, 0], zoom: 1 };
 
-/** ✅️ `world3d_selection_json("rectangle", &[], None)`. */
-const FEM3D_SELECTION_JSON = JSON.stringify({ method: "rectangle", mode: "replace", ids: [], hoveredId: null });
+/** 🕹️ The native FEM 3D interaction domain and its initial local selection. */
+export const FEM3D_INTERACTION_DOMAIN = "fem3d";
+const FEM3D_INITIAL_SELECTION: DomainSelection = { granularity: "node", ids: [] };
+const FEM3D_INITIAL_HOVER: DomainHover = { channel: "pointer", ids: [] };
+const FEM3D_SELECTION_SPEC: SelectionSpec = { modes: ["multiple", "single"], methods: ["pick", "rectangle"], merges: ["replace", "additive", "subtractive", "invertive"], transitive: false, broadcast: true };
+const FEM3D_STORY_TOPOLOGIES = new WeakMap<Fem3dSnapshot, { readonly topology: DomainTopology; readonly granularities: ReadonlyMap<string, string> }>();
+
+/** 🪪️ Retains the shared node/member topology for one immutable story document snapshot. */
+function fem3dStoryTopology(snapshot: Fem3dSnapshot) {
+  const existing = FEM3D_STORY_TOPOLOGIES.get(snapshot);
+  if (existing) return existing;
+  const ordered = [...snapshot.nodes.map((row) => ({ id: encodeScopedIdentity(["node", row.id]), granularity: "node" })), ...snapshot.elements.map((row) => ({ id: encodeScopedIdentity(["element", row.id]), granularity: "element" }))];
+  const value = { topology: { ordered }, granularities: new Map(ordered.map((row) => [row.id, row.granularity])) };
+  FEM3D_STORY_TOPOLOGIES.set(snapshot, value);
+  return value;
+}
 
 /** 🌞️ `world3d_environment_json(&WorldSunConfig::default())`. */
 const FEM3D_ENVIRONMENT_JSON = JSON.stringify({ sun: { enabled: false, azimuth: 45, elevation: 35, intensity: 0.85, color: "#ffffff" } });
 
 /** 🌐️ The `world-3d` scene node a fem3d window renders, projected the way `crate::app_surface::world_3d_surface` encodes it — `surfaceId` is the window's own body key. */
-export function buildFem3dSceneNode(instances: readonly Record<string, unknown>[], camera: Viewport3dOrbit, bodyKey: string, controllerId: string) {
+export function buildFem3dSceneNode(instances: readonly Record<string, unknown>[], camera: Viewport3dOrbit, bodyKey: string, controllerId: string, selection: DomainSelection = FEM3D_INITIAL_SELECTION, hover: DomainHover = FEM3D_INITIAL_HOVER) {
   return {
     type: "componentScene",
     surfaceId: bodyKey,
@@ -791,7 +808,9 @@ export function buildFem3dSceneNode(instances: readonly Record<string, unknown>[
       cameraJson: JSON.stringify(camera),
       meshesJson: JSON.stringify(FEM3D_BOX_MESHES),
       instancesJson: JSON.stringify(instances),
-      selectionJson: FEM3D_SELECTION_JSON,
+      selectionJson: JSON.stringify({ method: "rectangle", mode: "replace", ids: selection.ids, hoveredId: hover.ids[0] ?? null }),
+      domainId: FEM3D_INTERACTION_DOMAIN,
+      domainGranularityId: "node",
       environmentJson: FEM3D_ENVIRONMENT_JSON,
       interactionJson: JSON.stringify({ activeUtility: "select" }),
     },
@@ -875,6 +894,8 @@ export type Fem3dStoryState = {
   readonly snapshot: Fem3dSnapshot;
   readonly camera: Viewport3dOrbit;
   readonly resultDisplay: FemStoryResultDisplay;
+  readonly selection: DomainSelection;
+  readonly hover: DomainHover;
 };
 
 /** 🎬️ Opens a story window with the registered example and explicit OS locale. */
@@ -885,16 +906,31 @@ export function fem3dStoryStateFor(exampleId: string, locale: FemStoryLocale): F
     snapshot: exampleId === FEM3D_STORY_EXAMPLE_ID ? FEM3D_DEMO_SNAPSHOT : EMPTY_FEM3D_SNAPSHOT,
     camera: FEM3D_INITIAL_VIEWPORT,
     resultDisplay: FEM_DEFAULT_RESULT_DISPLAY,
+    selection: FEM3D_INITIAL_SELECTION,
+    hover: FEM3D_INITIAL_HOVER,
   };
 }
 
 /** 🧩️ Mirrors document commands and exact-window preferences while preserving the supplied OS locale. */
 export function reduceFem3dStoryAction(state: Fem3dStoryState, action: string, rawArgs: unknown): Fem3dStoryState {
   const args = femStoryActionArgs(rawArgs);
+  if (action === "interactionSelect" || action === "interactionHover") {
+    if (args.domainId !== FEM3D_INTERACTION_DOMAIN) return state;
+    const rows: unknown = typeof args.targets === "string" ? JSON.parse(args.targets) : args.targets;
+    if (!Array.isArray(rows)) throw new TypeError("FEM interaction targets must be an array");
+    const targets = rows.map((row) => parseInteractionTarget(row));
+    const { topology, granularities } = fem3dStoryTopology(state.snapshot);
+    if (targets.some((target) => granularities.get(target.id) !== target.granularity)) return state;
+    if (action === "interactionHover") return { ...state, hover: nextHover(DEFAULT_HOVER_SPEC, topology, { channel: typeof args.channel === "string" ? args.channel : "pointer", targets }) };
+    const merge = parseMergeMode(args.merge);
+    if (!FEM3D_SELECTION_SPEC.merges.includes(merge)) return state;
+    const selection = targets.length === 0 && merge === "replace" ? FEM3D_INITIAL_SELECTION : nextSelection(FEM3D_SELECTION_SPEC, state.selection, topology, { targets, merge, mode: "multiple" });
+    return { ...state, selection };
+  }
   switch (action) {
     case "setActiveExample": {
       const exampleId = typeof args.exampleId === "string" ? args.exampleId : undefined;
-      return exampleId === undefined ? state : { ...state, exampleId, snapshot: fem3dStoryStateFor(exampleId, state.locale).snapshot };
+      return exampleId === undefined ? state : { ...state, exampleId, snapshot: fem3dStoryStateFor(exampleId, state.locale).snapshot, selection: FEM3D_INITIAL_SELECTION, hover: FEM3D_INITIAL_HOVER };
     }
     case "addNode": {
       const x = typeof args.x === "number" ? args.x : 0;

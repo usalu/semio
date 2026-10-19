@@ -1,5 +1,5 @@
-//! ➖ Puzzle5d mutation — `RemovePartGrip`: detaches a rim grip from a part (captures cascade —
 //! any fastener whose `source`/`target` referenced this grip is severed too).
+//! ➖ Puzzle5d mutation — `RemovePartGrip`: detaches a rim grip from a part (captures cascade —
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::Puzzle5dSnapshot;
 
@@ -31,6 +31,17 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "part-grip", kind: "remove-part-grip", record: "RemovedPartGrip" };
 
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove grip \"{}\" from part \"{}\"", self.grip_id, self.part_id), &format!("Griff \"{}\" aus Bauteil \"{}\" entfernen", self.grip_id, self.part_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.part_id.clone(), self.grip_id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for RemovePartGrip {
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
@@ -40,11 +51,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove grip \"{}\" from part \"{}\"", self.grip_id, self.part_id), &format!("Griff \"{}\" aus Bauteil \"{}\" entfernen", self.grip_id, self.part_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.part_id.clone(), self.grip_id.clone()]
-    }
 }
 //#endregion 🔖️Mutation

@@ -4,7 +4,8 @@ use super::*;
 
 // #region 🔖️Site
 /// 🌍️ Site location and orientation.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Site {
     pub latitude_deg: f64,
     pub longitude_deg: f64,
@@ -16,7 +17,8 @@ pub struct Site {
 
 // #region 🔖️Zone
 /// 🏠️ Thermal zone with volume and conditioning flags.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Zone {
     pub id: EntityId,
     pub name: String,
@@ -27,7 +29,8 @@ pub struct Zone {
 }
 
 /// 🪑️ Space within a zone.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Space {
     pub id: EntityId,
     pub name: String,
@@ -38,7 +41,7 @@ pub struct Space {
 
 // #region 🔖️Surface
 /// 🧱️ Surface boundary type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum SurfaceClass {
     ExteriorWall,
@@ -52,7 +55,8 @@ pub enum SurfaceClass {
 }
 
 /// 📐️ Planar polygon surface.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Surface {
     pub id: EntityId,
     pub name: String,
@@ -67,7 +71,8 @@ pub struct Surface {
 }
 
 /// 🌡️ Exterior boundary condition for surfaces.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum OutsideBoundary {
     OutdoorAir,
     Ground,
@@ -80,7 +85,7 @@ pub enum OutsideBoundary {
 /// surface, and `dsl::DslScalar` binds unit variants only, so a mutation payload names the boundary
 /// through this scalar and carries the partner in its own optional `EntityId` field — the same
 /// parallel-field shape `replace-airflow-network` uses for its `(zone, node)` pairs.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum OutsideBoundaryKind {
     OutdoorAir,
@@ -147,7 +152,8 @@ impl OutsideBoundary {
 pub const FENESTRATION_PLANE_TOLERANCE_M: f64 = 1e-3;
 
 /// See ANSI/ASHRAE 140 §5.2 cases 610/630/910/930, whose overhang and fins are exactly this shape.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Fenestration {
     pub id: EntityId,
     pub name: String,
@@ -183,7 +189,7 @@ pub struct Fenestration {
 // #region 🔖️Material
 /// 🪨️ Surface roughness class of an exterior face, which scales the forced part of its outside
 /// convection (EnergyPlus `Material` roughness keys).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum SurfaceRoughness {
     VeryRough,
@@ -209,7 +215,8 @@ impl SurfaceRoughness {
 }
 
 /// 🧱️ Opaque material layer.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Material {
     pub id: EntityId,
     pub name: String,
@@ -224,7 +231,8 @@ pub struct Material {
 }
 
 /// 🪟️ One glass pane of a layered glazing construction, by its normal-incidence spectral averages.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct GlazingMaterial {
     pub id: EntityId,
     pub name: String,
@@ -242,7 +250,7 @@ pub struct GlazingMaterial {
 }
 
 /// 🌫️ Fill gas of a glazing gap.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum GasKind {
     Air,
@@ -252,7 +260,8 @@ pub enum GasKind {
 }
 
 /// 🌫️ Gas-filled gap between two panes of a layered glazing construction.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct GasMaterial {
     pub id: EntityId,
     pub name: String,
@@ -262,7 +271,8 @@ pub struct GasMaterial {
 
 /// 🧱️ Layered construction. An opaque construction names [`Material`]s outside first; a glazing
 /// construction alternates [`GlazingMaterial`] panes and [`GasMaterial`] gaps, outside pane first.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Construction {
     pub id: EntityId,
     pub name: String,
@@ -272,7 +282,8 @@ pub struct Construction {
 
 // #region 🔖️Gains
 /// 👤️ People internal gain object.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct PeopleGain {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -285,7 +296,8 @@ pub struct PeopleGain {
 }
 
 /// 💡️ Lighting internal gain.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct LightingGain {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -297,7 +309,8 @@ pub struct LightingGain {
 }
 
 /// 🔌️ Electric equipment gain.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct EquipmentGain {
     pub id: EntityId,
     pub zone_id: EntityId,

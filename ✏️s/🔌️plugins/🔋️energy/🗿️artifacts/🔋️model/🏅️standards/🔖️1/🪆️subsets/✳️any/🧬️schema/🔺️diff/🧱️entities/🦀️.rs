@@ -431,6 +431,10 @@ row_patch! {
         Set azimuth_deg: f64,
         Set module_efficiency: f64,
         Set inverter_efficiency: f64,
+        Set temperature_coefficient: f64,
+        Set faiman_heat_loss_constant_w_m2k: f64,
+        Set faiman_heat_loss_wind_w_s_m3k: f64,
+        Set mounting: crate::model::PhotovoltaicMounting,
     }
 }
 

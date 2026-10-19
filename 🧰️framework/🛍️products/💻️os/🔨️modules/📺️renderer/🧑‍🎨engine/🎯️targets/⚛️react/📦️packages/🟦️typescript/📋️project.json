@@ -16,6 +16,21 @@
     ]
   },
   "targets": {
+    "viewport-presence-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts viewport-presence-check"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "viewport-presence-check"
+          ]
+        }
+      }
+    },
     "paint2d-editing-check": {
       "executor": "repo:script",
       "cache": false,
@@ -236,6 +251,22 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       },
       "outputs": []
+    },
+    "operation-diagnostic-host-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts operation-diagnostic-host-check"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "operation-diagnostic-host-check"
+          ]
+        }
+      }
     }
   },
   "tags": [

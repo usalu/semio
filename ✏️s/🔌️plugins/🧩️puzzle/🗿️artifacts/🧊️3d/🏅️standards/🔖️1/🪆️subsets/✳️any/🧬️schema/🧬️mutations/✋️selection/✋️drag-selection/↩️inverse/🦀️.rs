@@ -1,5 +1,5 @@
-//! ↩️ Inverse for `DragSelection` — the absolute setters restoring every BASE origin the drag moves
 //! (exact, never a negated offset that would accumulate float error). Nothing moved ⇒ `Vec::new()`.
+//! ↩️ Inverse for `DragSelection` — the absolute setters restoring every BASE origin the drag moves
 use super::mutation::DragSelection;
 use {semio_s_artifact_puzzle_3d_mutations_pose::move_object::mutation::MoveObject, semio_s_artifact_puzzle_3d_mutations_volume::move_target_volume::mutation::MoveTargetVolume, semio_s_artifact_puzzle_3d_mutations_pose::rotate_object::mutation::RotateObject, semio_s_artifact_puzzle_3d_mutations_pose::scale_object::mutation::ScaleObject};
 use {semio_s_artifact_puzzle_3d_mutations_pose::move_object::mutation::move_object, semio_s_artifact_puzzle_3d_mutations_volume::move_target_volume::mutation::move_target_volume, crate::puzzle3d_selection, crate::puzzle3d_selection_follow, semio_s_artifact_puzzle_3d_mutations_vortex::replace_attraction_geometry::mutation::replace_attraction_geometry, semio_s_artifact_puzzle_3d_mutations_pose::rotate_object::mutation::rotate_object, semio_s_artifact_puzzle_3d_mutations_pose::scale_object::mutation::scale_object, semio_s_artifact_puzzle_3d_model::Puzzle3dPose, semio_s_artifact_puzzle_3d_mutations_vortex::replace_attraction_geometry::mutation::ReplaceAttractionGeometry};

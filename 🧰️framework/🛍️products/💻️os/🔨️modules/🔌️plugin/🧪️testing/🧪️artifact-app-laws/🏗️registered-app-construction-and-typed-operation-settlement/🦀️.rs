@@ -195,7 +195,7 @@ pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiv
         if let Some(progress) = maintenance.progress() { receipt.ownership_receipts.push(TypedOperationFixtureOwnershipReceipt::Maintenance { grant, progress }); }
         app.advance_typed_operation_publication(identity,cx).await?;
         retain_registered_ownership_receipts(app, mounted_policy, &mut receipt)?;
-        while let Some(page) = app.take_typed_operation_result_page(receiver) {
+        while let Some(mut page) = crate::artifact_app_laws::take_fixture_result_page(app,receiver,mounted_policy.preparation).expect("original fixture page presentation") {
             let lane = page.lane;
             let fault = (lane == TypedOperationResultLane::Fault).then(|| semio_framework_plugin_decl_app::tool_contract::decode_typed_operation_fault_page(page.bytes()));
             if !app.acknowledge_typed_operation_result(page.token)? {

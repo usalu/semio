@@ -17,6 +17,10 @@ pub struct ArtifactHistoryReservation {
     pub(super) generation: u32,
 }
 
+#[path="🔗️read/🦀️.rs"]
+pub mod history_read;
+pub use history_read::ArtifactHistoryReadKey;
+
 pub(super) struct ArtifactHistorySlot<T> {
     pub(super) generation: u32,
     pub(super) visibility: Option<std::sync::Arc<ArtifactGroupVisibility>>,
@@ -24,6 +28,14 @@ pub(super) struct ArtifactHistorySlot<T> {
     pub(super) next: Option<u32>,
     free_next: Option<u32>,
     value: Option<T>,
+    read: Option<Box<dyn semio_framework_value::retained_clone::original_slot::RetainedOriginalReadOwner<T>>>,
+    read_previous:Option<u32>,
+    read_next:Option<u32>,
+}
+
+impl<T> ArtifactHistorySlot<T> {
+    fn get(&self)->Option<&T>{self.value.as_ref().or_else(||self.read.as_ref().map(|read|read.get()))}
+    fn is_occupied(&self)->bool{self.value.is_some()||self.read.is_some()}
 }
 
 pub(super) struct ArtifactHistorySlotPage<T> {
@@ -70,9 +82,14 @@ fn artifact_history_chunk<'a, T>(chunk: &'a ArtifactHistoryPageChunk<T>, remaini
 /// opens another fixed page instead of refusing the entry. `seek` remembers the `(position, slot)` of the last entry a
 /// positional read or a search reached, so reads that walk the order forward (applied order, replay order, a retained
 /// initializer's cursor) cost O(1) amortized instead of O(position); every structural change forgets it.
+static NEXT_HISTORY_READ_ISSUANCE:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(1);
+
 pub struct ArtifactHistoryLedger<T> {
     pub(super) pages: std::mem::ManuallyDrop<Option<Box<ArtifactHistoryPageChunk<T>>>>,
     page_count: u32,
+    read_issuance:u64,
+    read_count:usize,
+    read_head:Option<u32>,
     initialized: u32,
     pub(super) head: Option<u32>,
     tail: Option<u32>,
@@ -102,7 +119,7 @@ impl<T> Default for ArtifactHistoryLedger<T> {
 
 impl<T> ArtifactHistoryLedger<T> {
     /// 🪹️ Creates an inline ledger frame without native slot or directory backing.
-    pub fn empty() -> Self { Self { pages: std::mem::ManuallyDrop::new(None), page_count: 0, initialized: 0, head: None, tail: None, free_head: None, reservation: None, group: None, len: 0, seek: std::sync::atomic::AtomicU64::new(ARTIFACT_HISTORY_NO_SEEK) } }
+    pub fn empty() -> Self { Self { pages: std::mem::ManuallyDrop::new(None), page_count: 0, read_count:0, read_head:None, read_issuance:NEXT_HISTORY_READ_ISSUANCE.try_update(std::sync::atomic::Ordering::Relaxed,std::sync::atomic::Ordering::Relaxed,|value|value.checked_add(1)).expect("original history read issuance exhausted"), initialized: 0, head: None, tail: None, free_head: None, reservation: None, group: None, len: 0, seek: std::sync::atomic::AtomicU64::new(ARTIFACT_HISTORY_NO_SEEK) } }
 
     /// 🧮 Quotes the exact slot backing, original page and directory before birth.
     pub fn initial_page_birth_demand(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
@@ -254,7 +271,7 @@ impl<T> ArtifactHistoryLedger<T> {
             slot.value = Some(value);
         } else if index == self.initialized && (index as usize) < self.allocated_slots() {
             let offset = index as usize;
-            self.slot_page_mut(offset / ARTIFACT_HISTORY_PAGE_SLOTS).slots[offset % ARTIFACT_HISTORY_PAGE_SLOTS].write(ArtifactHistorySlot { generation, visibility: None, previous, next: None, free_next: None, value: Some(value) });
+            self.slot_page_mut(offset / ARTIFACT_HISTORY_PAGE_SLOTS).slots[offset % ARTIFACT_HISTORY_PAGE_SLOTS].write(ArtifactHistorySlot { generation, visibility: None, previous, next: None, free_next: None, value: Some(value), read: None, read_previous:None, read_next:None });
             self.initialized += 1;
         } else {
             return Err((reservation, value));
@@ -396,7 +413,7 @@ impl<T> ArtifactHistoryLedger<T> {
             return Err(key);
         }
         let slot = self.slot(key.index);
-        if slot.generation != key.generation || slot.value.is_none() {
+        if slot.generation != key.generation || slot.value.is_none() || slot.read.is_some() {
             return Err(key);
         }
         self.forget_seek();
@@ -438,7 +455,8 @@ impl<T> ArtifactHistoryLedger<T> {
         let mut cursor = self.head;
         while let Some(index) = cursor {
             let slot = self.slot(index);
-            if slot.value.as_ref().is_some_and(&mut remove) {
+            if slot.get().is_some_and(&mut remove) {
+                if slot.read.is_some(){return Err(ArtifactHistoryReservationFault::Busy);}
                 keys.push(ArtifactHistoryKey { index, generation: slot.generation });
             }
             cursor = slot.next;
@@ -453,11 +471,11 @@ impl<T> ArtifactHistoryLedger<T> {
     }
 
     pub fn first(&self) -> Option<&T> {
-        self.visible_bounds().0.and_then(|index| self.slot(index).value.as_ref())
+        self.visible_bounds().0.and_then(|index| self.slot(index).get())
     }
 
     pub fn last(&self) -> Option<&T> {
-        self.visible_bounds().1.and_then(|index| self.slot(index).value.as_ref())
+        self.visible_bounds().1.and_then(|index| self.slot(index).get())
     }
 
     pub fn last_mut(&mut self) -> Option<&mut T> {
@@ -471,7 +489,7 @@ impl<T> ArtifactHistoryLedger<T> {
     /// 🎯️ The entry at `position` of the visible order — O(1) amortized when reads walk forward (see `seek`).
     pub fn get(&self, position: usize) -> Option<&T> {
         let index = self.seek_slot(position)?;
-        self.slot(index).value.as_ref()
+        self.slot(index).get()
     }
 
     /// 🗝️ Reads an exact live slot generation while honoring its staged group decision.
@@ -479,7 +497,7 @@ impl<T> ArtifactHistoryLedger<T> {
         if key.index >= self.initialized { return None; }
         let slot = self.slot(key.index);
         if slot.generation != key.generation || slot.visibility.as_ref().is_some_and(|visibility| !visibility.committed()) { return None; }
-        slot.value.as_ref()
+        slot.get()
     }
 
     /// 🧭️ Captures the exact generation of the visible entry at `position`.
@@ -520,9 +538,9 @@ impl<T> ArtifactHistoryLedger<T> {
         for _ in 0..remaining {
             let (position, Some(index)) = cursor else { break };
             let slot = self.slot(index);
-            if slot.value.as_ref().is_some_and(&mut found) {
+            if slot.get().is_some_and(&mut found) {
                 self.remember_seek(position, index);
-                return slot.value.as_ref().map(|value| (position, ArtifactHistoryKey { index, generation: slot.generation }, value));
+                return slot.get().map(|value| (position, ArtifactHistoryKey { index, generation: slot.generation }, value));
             }
             cursor = match slot.next {
                 Some(next) if position + 1 < remaining => (position + 1, Some(next)),
@@ -558,7 +576,7 @@ impl<T> ArtifactHistoryLedger<T> {
             return None;
         }
         let (position, index) = ((packed >> 32) as usize, packed as u32);
-        (index < self.initialized && self.slot(index).value.is_some()).then_some((position, index))
+        (index < self.initialized && self.slot(index).is_occupied()).then_some((position, index))
     }
 
     fn remember_seek(&self, position: usize, index: u32) {
@@ -610,11 +628,12 @@ impl<T> ArtifactHistoryLedger<T> {
 
     pub fn iter_mut(&mut self) -> ArtifactHistoryIterMut<'_, T> {
         assert!(self.group.is_none(), "mutable history iteration requires its staged group to be adopted or aborted");
+        assert!(self.read_count==0, "mutable history iteration requires every original retained read to return");
         ArtifactHistoryIterMut { ledger: self, front: self.head, back: self.tail, remaining: self.len, marker: std::marker::PhantomData }
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.len == 0 && self.head.is_none() && self.tail.is_none() && self.reservation.is_none() && self.group.is_none()
+        self.read_count == 0 && self.len == 0 && self.head.is_none() && self.tail.is_none() && self.reservation.is_none() && self.group.is_none()
     }
 
     /// 🪹️ Observes the original native backing after logical entry ownership has left.
@@ -628,7 +647,7 @@ impl<T> ArtifactHistoryLedger<T> {
         if !self.terminal_is_empty() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history ledger still retains logical entry owners")); }
         if self.initialized == 0 { return Ok(None); }
         let slot = self.slot(self.initialized - 1);
-        if slot.value.is_some() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "terminal history header still contains its original value")); }
+        if slot.is_occupied() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "terminal history header still contains its original value")); }
         Ok(slot.visibility.as_ref())
     }
 
@@ -756,7 +775,7 @@ impl<'a, T> Iterator for ArtifactHistoryIter<'a, T> {
         let slot = self.ledger.slot(index);
         self.front = slot.next;
         self.remaining -= 1;
-        slot.value.as_ref()
+        slot.get()
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -773,7 +792,7 @@ impl<T> DoubleEndedIterator for ArtifactHistoryIter<'_, T> {
         let slot = self.ledger.slot(index);
         self.back = slot.previous;
         self.remaining -= 1;
-        slot.value.as_ref()
+        slot.get()
     }
 }
 

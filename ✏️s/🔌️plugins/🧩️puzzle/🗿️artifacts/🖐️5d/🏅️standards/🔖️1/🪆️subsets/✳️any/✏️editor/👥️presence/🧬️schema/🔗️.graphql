@@ -1,13 +1,1 @@
-type Puzzle5dPresence {
-  selectedPartIds: [String!]! @state(class: PRESENCE)
-  selectedGripIds: [String!]! @state(class: PRESENCE)
-  selectedFastenerIds: [String!]! @state(class: PRESENCE)
-  hoveredPartId: String @state(class: PRESENCE)
-  camera2dX: Float! @state(class: PRESENCE)
-  camera2dY: Float! @state(class: PRESENCE)
-  camera2dZoom: Float! @state(class: PRESENCE)
-  camera3dPosition: [Float!]! @state(class: PRESENCE)
-  camera3dTarget: [Float!]! @state(class: PRESENCE)
-  camera3dZoom: Float! @state(class: PRESENCE)
-  activeUtilityId: String! @state(class: PRESENCE)
-}
+type Puzzle5dPresence

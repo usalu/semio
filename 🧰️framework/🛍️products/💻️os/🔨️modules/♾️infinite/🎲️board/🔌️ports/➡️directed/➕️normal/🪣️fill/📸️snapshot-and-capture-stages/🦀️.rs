@@ -129,7 +129,8 @@ pub(super) struct BoardFillRuleCapture {
 
 /// 📸️ Fixed-page immutable input transferred after staged board capture.
 pub struct BoardFillSnapshot {
-    pub nodes: BoardFillFixedPages<BoardFillNodeSnapshot, { BOARD_FILL_NODE_CAPACITY / BOARD_FILL_PAGE_ITEMS }>,
+        original_source: Option<semio_framework_action_bus::OriginalToolSourceBinding>,
+pub nodes: BoardFillFixedPages<BoardFillNodeSnapshot, { BOARD_FILL_NODE_CAPACITY / BOARD_FILL_PAGE_ITEMS }>,
     pub handles: BoardFillFixedPages<BoardFillHandleSnapshot, { BOARD_FILL_HANDLE_CAPACITY / BOARD_FILL_PAGE_ITEMS }>,
     pub(super) kinds: BoardFillFixedPages<BoardFillKindSnapshot, { BOARD_FILL_KIND_CAPACITY / BOARD_FILL_PAGE_ITEMS }>,
     pub(super) rules: BoardFillFixedPages<BoardFillRuleSnapshot, { BOARD_FILL_RULE_CAPACITY / BOARD_FILL_PAGE_ITEMS }>,

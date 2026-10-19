@@ -43,6 +43,26 @@
     {
       "mutation": "zero-budget",
       "admitted": false
+    },
+    {
+      "mutation": "wrong-owned-session-grant",
+      "admitted": false
+    },
+    {
+      "mutation": "missing-parameter-custody",
+      "admitted": false
+    },
+    {
+      "mutation": "missing-job-custody",
+      "admitted": false
+    },
+    {
+      "mutation": "lost-refused-job",
+      "admitted": false
+    },
+    {
+      "mutation": "unfunded-constructor",
+      "admitted": false
     }
   ]
 }

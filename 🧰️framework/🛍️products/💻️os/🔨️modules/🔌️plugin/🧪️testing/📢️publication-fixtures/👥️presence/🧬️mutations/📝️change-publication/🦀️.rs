@@ -58,15 +58,25 @@ impl OpBinary for ChangePublicationPresence {
 impl MutationKind<PublicationPresence, PublicationPresenceMutation> for ChangePublicationPresence {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "publication-presence", kind: "change-publication-presence", record: "ChangedPublicationPresence" };
 
-    fn diff(&self, _base: &PublicationPresence) -> MutationOutcome<crate::publication_fixture::presence::PublicationPresenceDiff> {
-        MutationOutcome::new(crate::publication_fixture::presence::PublicationPresenceDiff { revision: Some(self.revision) })
-    }
 
-    fn inverse(&self, base: &PublicationPresence) -> Result<Vec<PublicationPresenceMutation>, semio_framework_value::ValueError> {
-        Ok((|| vec![Self { revision: base.revision }.into()])())
-    }
+
+
+
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change publication presence to {}", self.revision), &format!("Veröffentlichungspräsenz auf {} ändern", self.revision))
     }
 }
+
+impl crate::os_spr::ColdMutationKind<PublicationPresence, PublicationPresenceMutation> for ChangePublicationPresence {
+    fn diff(&self, _base: &PublicationPresence) -> MutationOutcome<crate::publication_fixture::presence::PublicationPresenceDiff> {
+        MutationOutcome::new(crate::publication_fixture::presence::PublicationPresenceDiff { revision: Some(self.revision) })
+    }
+    fn inverse(&self, base: &PublicationPresence) -> Result<Vec<PublicationPresenceMutation>, semio_framework_value::ValueError> {
+        Ok((|| vec![Self { revision: base.revision }.into()])())
+    }
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️sum-law/🦀️.rs"]
+mod sum_law_tests;

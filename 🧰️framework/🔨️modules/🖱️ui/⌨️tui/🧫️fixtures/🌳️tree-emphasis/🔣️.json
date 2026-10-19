@@ -1,0 +1,61 @@
+{
+  "emphasisAttribute": "bold",
+  "items": [["Root",0],["Folder",1],["Leaf",2],["Sibling",2],["Side",1],["SideLeaf",2],["Other",0],["OtherLeaf",1]],
+  "cases": [
+    { "name":"leaf-path", "expanded":[0,1,4,6], "query":"", "selected":6, "hover":2, "rows":[
+      {"item":0,"label":"emphasized","background":"window","guides":[]},
+      {"item":1,"label":"emphasized","background":"window","guides":["emphasized"]},
+      {"item":2,"label":"emphasized","background":"hover","guides":["emphasized","emphasized"]},
+      {"item":3,"label":"foreground","background":"window","guides":["emphasized","emphasized"]},
+      {"item":4,"label":"foreground","background":"window","guides":["emphasized"]},
+      {"item":5,"label":"foreground","background":"window","guides":["emphasized","normal"]},
+      {"item":6,"label":"active","background":"active","guides":[]},
+      {"item":7,"label":"foreground","background":"window","guides":["normal"]}
+    ]},
+    { "name":"selected-ancestor", "expanded":[0,1,4,6], "query":"", "selected":1, "hover":2, "rows":[
+      {"item":0,"label":"emphasized","background":"window","guides":[]},
+      {"item":1,"label":"active","background":"active","guides":["emphasized"]},
+      {"item":2,"label":"emphasized","background":"hover","guides":["emphasized","emphasized"]},
+      {"item":3,"label":"foreground","background":"window","guides":["emphasized","emphasized"]},
+      {"item":4,"label":"foreground","background":"window","guides":["emphasized"]},
+      {"item":5,"label":"foreground","background":"window","guides":["emphasized","normal"]},
+      {"item":6,"label":"foreground","background":"window","guides":[]},
+      {"item":7,"label":"foreground","background":"window","guides":["normal"]}
+    ]},
+    { "name":"filtered-path", "expanded":[], "query":"OtherLeaf", "selected":7, "hover":7, "rows":[
+      {"item":6,"label":"emphasized","background":"window","guides":[]},
+      {"item":7,"label":"active","background":"active","guides":["emphasized"]}
+    ]},
+    { "name":"filtered-selected-ancestor", "expanded":[], "query":"OtherLeaf", "selected":6, "hover":null, "rows":[
+      {"item":6,"label":"active","background":"active","guides":[]},
+      {"item":7,"label":"foreground","background":"window","guides":["normal"]}
+    ]},
+    { "name":"collapsed-folder", "expanded":[0,6], "query":"", "selected":6, "hover":1, "rows":[
+      {"item":0,"label":"emphasized","background":"window","guides":[]},
+      {"item":1,"label":"emphasized","background":"hover","guides":["emphasized"]},
+      {"item":4,"label":"foreground","background":"window","guides":["emphasized"]},
+      {"item":6,"label":"active","background":"active","guides":[]},
+      {"item":7,"label":"foreground","background":"window","guides":["normal"]}
+    ]},
+    { "name":"expanded-folder", "expanded":[0,1,4,6], "query":"", "selected":6, "hover":1, "rows":[
+      {"item":0,"label":"emphasized","background":"window","guides":[]},
+      {"item":1,"label":"emphasized","background":"hover","guides":["emphasized"]},
+      {"item":2,"label":"foreground","background":"window","guides":["emphasized","normal"]},
+      {"item":3,"label":"foreground","background":"window","guides":["emphasized","normal"]},
+      {"item":4,"label":"foreground","background":"window","guides":["emphasized"]},
+      {"item":5,"label":"foreground","background":"window","guides":["emphasized","normal"]},
+      {"item":6,"label":"active","background":"active","guides":[]},
+      {"item":7,"label":"foreground","background":"window","guides":["normal"]}
+    ]},
+    { "name":"cleared-path", "expanded":[0,1,4,6], "query":"", "selected":2, "hover":null, "rows":[
+      {"item":0,"label":"foreground","background":"window","guides":[]},
+      {"item":1,"label":"foreground","background":"window","guides":["normal"]},
+      {"item":2,"label":"active","background":"active","guides":["normal","normal"]},
+      {"item":3,"label":"foreground","background":"window","guides":["normal","normal"]},
+      {"item":4,"label":"foreground","background":"window","guides":["normal"]},
+      {"item":5,"label":"foreground","background":"window","guides":["normal","normal"]},
+      {"item":6,"label":"foreground","background":"window","guides":[]},
+      {"item":7,"label":"foreground","background":"window","guides":["normal"]}
+    ]}
+  ]
+}

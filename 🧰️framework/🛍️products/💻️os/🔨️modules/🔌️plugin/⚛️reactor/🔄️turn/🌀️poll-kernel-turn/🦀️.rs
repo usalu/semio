@@ -50,6 +50,7 @@ pub(super) async fn poll_kernel_turn<PA: semio_framework_plugin_reactor_app::Plu
     }
 
     trace_turn_phase_retention("continuation");
+    let result_page_work=crate::plugin_runtime::plugin_drive_result_pages(runtime,&mut effects,budget.max_effects as usize,cx)?;
     let now_ms = u64::try_from(semio_framework_plugin_actor_host::now_ms().await).unwrap_or(0);
 
     trace_turn_phase_retention("presence-clock");
@@ -58,7 +59,7 @@ pub(super) async fn poll_kernel_turn<PA: semio_framework_plugin_reactor_app::Plu
     let executors = drive_turn_executors(&mut effects);
     let resumes_remain = drain_task_resumes(runtime, &mut effects, 64, identity, cx);
     effects.extend(semio_framework_plugin_runtime_ops::ops_document::plugin_drain_document_backbones(runtime)?);
-    let more_work = settle_turn_work(runtime, TurnWorkInputs { events_pending: events.is_some(), executors, close_cleanup_work, typed_operation_runnable: typed_operation_scan.runnable, typed_operation_contended, reconcile_work, resumes_remain, document_load_work }, &effects)?;
+    let more_work = settle_turn_work(runtime, TurnWorkInputs { events_pending: events.is_some(), executors, close_cleanup_work, typed_operation_runnable: typed_operation_scan.runnable || result_page_work, typed_operation_contended, reconcile_work, resumes_remain, document_load_work }, &effects)?;
 
     let lifecycle_receipt = focus.map(|instance| runtime.guest_lifetimes.borrow_mut().prepare_turn(instance, &ReactorClosePeers)).transpose()?.flatten();
     let (ui_patches, ui_patch_receipt) = if cold_pair_loading { (semio_framework::kernel::UiTurnPatches::default(), None) } else { fill_turn_patch_page(runtime, turn_patch_budget_bytes(budget))? };

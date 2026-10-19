@@ -87,7 +87,7 @@
         assert!(!redo_resize_patch.can_redo);
         assert!(app.render_ctx().test_history().await.commands.iter().find(|entry| entry.action_id == "os.resizeWindow").is_some_and(|entry| entry.revertible));
         close_reserved_app(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -145,7 +145,7 @@
         assert!(redo.history_patch.is_some_and(|patch| patch.can_undo && !patch.can_redo));
         assert!(app.render_ctx().test_history().await.commands.iter().find(|entry| entry.action_id == replay_id).is_some_and(|entry| entry.revertible));
         close_reserved_app(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -261,9 +261,9 @@
         assert_eq!(update.peers[0].color, Some(3));
         assert!(update.peers[0].selected);
         assert!(!update.peers[0].hovered);
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -336,6 +336,6 @@
         let third: Vec<(String, bool)> = app.roster.pending_presence.drain(..).map(|update| (update.node_key, update.own.selected)).collect();
         assert_eq!(third, vec![("item-2".to_string(), true)], "an unchanged selection must cost exactly its own mark, never a repeated retirement");
         close_reserved_app(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }

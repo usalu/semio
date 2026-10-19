@@ -32,6 +32,11 @@ dashboard_labels! {
     row_cancel_discovery: "Cancel discovery", "Suche abbrechen";
     row_no_tasks: "No tasks yet — start one with New task", "Noch keine Aufgaben — mit Neue Aufgabe starten";
     row_back: "Back to tasks", "Zurück zu Aufgaben";
+    open_starting: "Opening ready address; {cancel} cancels", "Bereite Adresse öffnen; {cancel} bricht ab";
+    open_finished: "Ready address opened", "Bereite Adresse geöffnet";
+    open_unavailable: "The selected task has no active ready address", "Die ausgewählte Aufgabe hat keine aktive bereite Adresse";
+    open_failed: "Cannot open ready address: {problem}", "Bereite Adresse lässt sich nicht öffnen: {problem}";
+    open_cancelled: "Opening cancelled; task keeps running", "Öffnen abgebrochen; Aufgabe läuft weiter";
     status_pending: "waiting", "wartet";
     status_running: "running", "läuft";
     status_ready: "ready", "bereit";
@@ -79,6 +84,11 @@ dashboard_labels! {
     launcher_loading: "Discovering commands…", "Befehle werden gesucht…";
     form_prompt_text: "Type the value", "Wert eintippen";
     form_prompt_choice: "Left and Right choose a value", "Links und Rechts wählen einen Wert";
+    source_help: "Type to filter; {previous} / {next} select; {accept} accepts; {refresh} refreshes; {cancel} cancels", "Tippen zum Filtern; {previous} / {next} wählen; {accept} übernimmt; {refresh} aktualisiert; {cancel} bricht ab";
+    source_progress: "Source suggestions: {count} inspected", "Quellvorschläge: {count} geprüft";
+    source_scanning: "searching…", "Suche läuft…";
+    source_limited: "limited results; choose an owner, narrow the search or type an explicit value", "begrenzte Ergebnisse; Eigentümer wählen, Suche eingrenzen oder Wert direkt eingeben";
+    source_cancelled: "cancelled; refresh to resume", "abgebrochen; zum Fortsetzen aktualisieren";
     form_parameters: "Parameters", "Parameter";
     form_no_parameters: "No parameters", "Keine Parameter";
     form_extra_args: "Extra arguments", "Zusätzliche Argumente";
@@ -103,6 +113,7 @@ dashboard_labels! {
     help_terminal: "While a terminal has the keyboard only the prefix key is reserved; every other key reaches the program.", "Hat ein Terminal die Tastatur, ist nur die Präfixtaste reserviert; jede andere Taste erreicht das Programm.";
     help_customize: "Customize with: semio preferences set --prefix KEY --bindings JSON", "Anpassen mit: semio preferences set --prefix TASTE --bindings JSON";
     chrome_close: "Close tab", "Tab schließen";
+    chrome_drag: "Drag window", "Fenster ziehen";
     chrome_maximize: "Maximize window", "Fenster maximieren";
     chrome_restore: "Restore window", "Fenster wiederherstellen";
     chrome_new_tab: "New task in this stack", "Neue Aufgabe in diesem Stapel";
@@ -155,6 +166,8 @@ dashboard_labels! {
     action_cancel_discovery: "cancel discovery", "Suche abbrechen";
     action_restart_task: "restart", "neu starten";
     action_stop_task: "stop", "anhalten";
+    action_open_ready: "Open ready address", "Bereite Adresse öffnen";
+    action_cancel_open_ready: "Cancel opening", "Öffnen abbrechen";
     action_kill_task: "kill", "beenden";
     action_copy_selection: "copy selection", "Auswahl kopieren";
     action_search_output: "search output", "Ausgabe durchsuchen";
@@ -165,6 +178,27 @@ dashboard_labels! {
     action_previous_window: "previous window", "voriges Fenster";
     action_split_down: "split down", "unten teilen";
     action_split_right: "split right", "rechts teilen";
+    action_tab_top_left: "place tab at top left", "Tab oben links platzieren";
+    action_tab_top_right: "place tab at top right", "Tab oben rechts platzieren";
+    action_tab_bottom_left: "place tab at bottom left", "Tab unten links platzieren";
+    action_tab_bottom_right: "place tab at bottom right", "Tab unten rechts platzieren";
+    action_dock_left: "move tab left of next window", "Tab links vom nächsten Fenster";
+    action_dock_right: "move tab right of next window", "Tab rechts vom nächsten Fenster";
+    action_dock_top: "move tab above next window", "Tab über nächstes Fenster";
+    action_dock_bottom: "move tab below next window", "Tab unter nächstes Fenster";
+    action_join_window: "join next window as a tab", "als Tab in nächstes Fenster";
+    action_tab_left: "move tab left", "Tab nach links";
+    action_tab_right: "move tab right", "Tab nach rechts";
+    dock_top_left: "tab at top left", "Tab oben links";
+    dock_top_right: "tab at top right", "Tab oben rechts";
+    dock_bottom_left: "tab at bottom left", "Tab unten links";
+    dock_bottom_right: "tab at bottom right", "Tab unten rechts";
+    dock_tabs: "join tabs", "Tabs zusammenführen";
+    dock_left: "split left", "links teilen";
+    dock_right: "split right", "rechts teilen";
+    dock_top: "split above", "oben teilen";
+    dock_bottom: "split below", "unten teilen";
+    dock_preview: "{action} · Esc cancels · release to dock", "{action} · Esc bricht ab · zum Andocken loslassen";
     action_grow_window: "grow window", "Fenster vergrößern";
     action_shrink_window: "shrink window", "Fenster verkleinern";
     action_zoom: "zoom", "Zoom";
@@ -216,8 +250,12 @@ impl DashboardLabels {
             "new-task" => self.action_new_task, "show-tasks" => self.action_show_tasks, "show-settings" => self.action_show_settings, "show-help" => self.action_show_help,
             "show-hidden-tasks" => self.action_show_hidden_tasks, "refresh-commands" => self.action_refresh_commands, "cancel-discovery" => self.action_cancel_discovery,
             "search-output" => self.action_search_output, "restart-task" => self.action_restart_task, "stop-task" => self.action_stop_task, "kill-task" => self.action_kill_task, "copy-selection" => self.action_copy_selection,
+            "open-ready" => self.action_open_ready, "cancel-open-ready" => self.action_cancel_open_ready,
             "toggle-input" => self.action_toggle_input, "toggle-appearance" => self.action_toggle_appearance, "toggle-language" => self.action_toggle_language,
             "next-window" => self.action_next_window, "previous-window" => self.action_previous_window, "split-down" => self.action_split_down, "split-right" => self.action_split_right,
+            "dock-left" => self.action_dock_left, "dock-right" => self.action_dock_right, "dock-top" => self.action_dock_top, "dock-bottom" => self.action_dock_bottom,
+            "tab-top-left" => self.action_tab_top_left, "tab-top-right" => self.action_tab_top_right, "tab-bottom-left" => self.action_tab_bottom_left, "tab-bottom-right" => self.action_tab_bottom_right,
+            "join-window" => self.action_join_window, "tab-left" => self.action_tab_left, "tab-right" => self.action_tab_right,
             "grow-window" => self.action_grow_window, "shrink-window" => self.action_shrink_window, "zoom" => self.action_zoom, "close-window" => self.action_close_window,
             "detach" => self.action_detach, "shutdown" => self.action_shutdown, "cancel-prefix" => self.action_cancel_prefix, "send-prefix" => self.action_send_prefix,
             "up" => self.action_up, "down" => self.action_down, "left" => self.action_left, "right" => self.action_right, "page-up" => self.action_page_up, "page-down" => self.action_page_down,

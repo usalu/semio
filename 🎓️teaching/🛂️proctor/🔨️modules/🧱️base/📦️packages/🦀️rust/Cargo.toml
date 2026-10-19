@@ -22,7 +22,7 @@ path = "../../🦀️.rs"
 testkit = ["dep:semio-framework-test-fixtures"]
 
 [dependencies]
-semio-framework-quiz = { workspace = true }
+semio-framework-course = { workspace = true }
 semio-framework-server = { workspace = true }
 semio-framework-replication = { workspace = true }
 semio-framework-async = { workspace = true }

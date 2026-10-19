@@ -78,7 +78,7 @@
         );
         assert!(!app.child_composition.child_content_retirements.is_empty(), "terminal witness failure retains the registry authority");
         drain_and_close_composed_fixture(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -110,7 +110,7 @@
         let generation = app.child_composition.admit_child_content_publication().expect("later publication can reuse the fixed retirement registry");
         app.child_composition.publish_child_content_member(generation, "slot", "child-a").await.expect("later publication after bounded reclaim");
         drain_and_close_composed_fixture(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -145,7 +145,7 @@
         semio_framework_plugin_testing_laws::artifact_app_laws::drain_maintenance_pressure(&mut app,cx);
         assert!(app.child_composition.child_content_retirements.len() < MAINTENANCE_CHILD_RETIREMENT_PRESSURE_OCCUPANCY, "pressure maintenance returns the child roots below their quarter-occupancy bound");
         drain_and_close_composed_fixture(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -184,9 +184,9 @@
         assert!(result.mutations.is_empty(), "the public dispatch published mutations instead of deferring to its continuation");
         assert_eq!(MAXIMUM_CHILD_CLONES.load(std::sync::atomic::Ordering::Acquire), 0, "ChildContentView must clone only the existing Arc, never the maximum snapshot graph");
         assert_eq!(MAXIMUM_CHILD_ENCODINGS.load(std::sync::atomic::Ordering::Acquire), 0, "ChildContentView must not pack-encode maximum child content during public dispatch");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -221,6 +221,6 @@
         assert_eq!(entry.reference.dialect.artifact_kind, "s.test.child");
         assert_eq!(entry.member.document_id().await, "genesis-child");
         drain_and_close_composed_fixture(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }

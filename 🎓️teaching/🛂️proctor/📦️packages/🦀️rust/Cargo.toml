@@ -4,7 +4,7 @@ name = "teaching-proctor"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Teaching proctor: the quiz lifecycle (identity without passwords, randomized runs, whole-run scoring, badges, leaderboard) as a CQRS/event-sourced, API-only instance of the framework server product over one SQLite file, called cross-origin by the CDN-hosted quiz site."
+description = "Teaching proctor: the quiz lifecycle (identity without passwords, randomized runs, whole-run scoring, badges, leaderboard) as a CQRS/event-sourced, API-only instance of the framework server product over one SQLite file, called cross-origin by the CDN-hosted course site."
 
 # 🛂️ A deployable instance of the server product, like the hub it mirrors.
 [package.metadata.semio]
@@ -25,10 +25,10 @@ path = "../../🏗️bootstrap/🦀️.rs"
 [dependencies]
 teaching-proctor-base = { path = "../../🔨️modules/🧱️base/📦️packages/🦀️rust" }
 teaching-proctor-domain = { path = "../../🔨️modules/🧠️domain/📦️packages/🦀️rust" }
-semio-framework-quiz = { workspace = true }
+semio-framework-course = { workspace = true }
 semio-framework-server = { workspace = true }
 semio-framework-async = { workspace = true }
-# 🎯️ `float_roundtrip`: catalogs, commands and stored events are read correctly rounded, as the device reads them, so
+# 🎯️ `float_roundtrip`: courses, commands and stored events are read correctly rounded, as the device reads them, so
 # the proctor deals the device's sheets (`3.828e26` is otherwise read one double low).
 serde_json = { workspace = true, features = ["float_roundtrip"] }
 axum = { version = "0.8" }

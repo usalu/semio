@@ -1,4 +1,18 @@
 {
+  "recheckFences": {
+    "members": ["members/**"],
+    "packages": [{"path":"members/a","name":"neutral-a"},{"path":"members/b","name":"neutral-b"}],
+    "current": ["members/a","members/b"],
+    "cases": [
+      {"name":"original-cancel-during-recheck","action":"cancel","outcome":"canceled"},
+      {"name":"manifest-change-during-recheck","action":"manifest","outcome":"rejected"},
+      {"name":"topology-change-during-recheck","action":"topology","outcome":"rejected"},
+      {"name":"symlink-substitution-during-recheck","action":"symlink","outcome":"rejected"},
+      {"name":"manifest-change-after-fresh-plan","action":"late-manifest","outcome":"rejected"},
+      {"name":"unrelated-source-change-during-recheck","action":"unrelated","outcome":"accepted"},
+      {"name":"unchanged-recheck","action":"none","outcome":"accepted"}
+    ]
+  },
   "schemaVersion": 1,
   "accepted": [
     {
@@ -927,18 +941,453 @@
     "maximumAggregateManifestBytes": 67108864
   },
   "physicalObservations": [
-    {"name":"repeat-state", "pathCapacity":1,"factCapacity":2,"steps":[{"operation":"state","path":"/a","value":["directory","1","2",16877]},{"operation":"state","path":"/a","value":["directory","1","2",16877]}],"accepted":true,"paths":1,"facts":1},
-    {"name":"one-path-two-facts", "pathCapacity":1,"factCapacity":2,"steps":[{"operation":"state","path":"/a","value":["directory","1","2",16877]},{"operation":"list","path":"/a","value":[]}],"accepted":true,"paths":1,"facts":2},
-    {"name":"global-first-fact-order", "pathCapacity":2,"factCapacity":4,"steps":[{"operation":"state","path":"/a","value":["directory","1","2",16877]},{"operation":"state","path":"/b","value":["directory","1","3",16877]},{"operation":"list","path":"/a","value":[]},{"operation":"list","path":"/b","value":[]}],"accepted":true,"paths":2,"facts":4},
-    {"name":"new-path-capacity", "pathCapacity":2,"factCapacity":4,"steps":[{"operation":"state","path":"/a","value":["directory","1","2",16877]},{"operation":"state","path":"/b","value":["directory","1","3",16877]},{"operation":"state","path":"/c","value":["directory","1","4",16877]}],"accepted":false,"paths":2,"facts":2},
-    {"name":"new-fact-at-path-capacity", "pathCapacity":2,"factCapacity":4,"steps":[{"operation":"state","path":"/a","value":["directory","1","2",16877]},{"operation":"state","path":"/b","value":["directory","1","3",16877]},{"operation":"list","path":"/a","value":[]}],"accepted":true,"paths":2,"facts":3},
-    {"name":"new-fact-capacity", "pathCapacity":2,"factCapacity":2,"steps":[{"operation":"state","path":"/a","value":["directory","1","2",16877]},{"operation":"state","path":"/b","value":["directory","1","3",16877]},{"operation":"list","path":"/a","value":[]}],"accepted":false,"paths":2,"facts":2},
-    {"name":"new-path-fact-capacity-rollback", "pathCapacity":2,"factCapacity":1,"steps":[{"operation":"state","path":"/a","value":["directory","1","2",16877]},{"operation":"state","path":"/b","value":["directory","1","3",16877]}],"accepted":false,"paths":1,"facts":1},
-    {"name":"state-drift", "pathCapacity":2,"factCapacity":4,"steps":[{"operation":"state","path":"/a","value":["directory","1","2",16877]},{"operation":"state","path":"/a","value":["directory","1","3",16877]}],"accepted":false,"paths":1,"facts":1},
-    {"name":"topology-drift", "pathCapacity":2,"factCapacity":4,"steps":[{"operation":"state","path":"/a","value":["directory","1","2",16877]},{"operation":"list","path":"/a","value":[{"name":"b","kind":"directory"}]},{"operation":"list","path":"/a","value":[{"name":"b","kind":"symlink"}]}],"accepted":false,"paths":1,"facts":2},
-    {"name":"missing-appeared", "pathCapacity":2,"factCapacity":4,"steps":[{"operation":"state","path":"/a","value":["missing"]},{"operation":"state","path":"/a","value":["directory","1","2",16877]}],"accepted":false,"paths":1,"facts":1},
-    {"name":"listing-requires-own-state", "pathCapacity":2,"factCapacity":4,"steps":[{"operation":"list","path":"/a","value":[]}],"accepted":false,"paths":0,"facts":0},
-    {"name":"listing-repeat-no-recharge", "pathCapacity":1,"factCapacity":2,"steps":[{"operation":"state","path":"/a","value":["directory","1","2",16877]},{"operation":"list","path":"/a","value":[]},{"operation":"list","path":"/a","value":[]}],"accepted":true,"paths":1,"facts":2}
+    {
+      "name": "repeat-state",
+      "pathCapacity": 1,
+      "factCapacity": 2,
+      "steps": [
+        {
+          "operation": "state",
+          "path": "/a",
+          "value": [
+            "directory",
+            "1",
+            "2",
+            16877
+          ]
+        },
+        {
+          "operation": "state",
+          "path": "/a",
+          "value": [
+            "directory",
+            "1",
+            "2",
+            16877
+          ]
+        }
+      ],
+      "accepted": true,
+      "paths": 1,
+      "facts": 1
+    },
+    {
+      "name": "one-path-two-facts",
+      "pathCapacity": 1,
+      "factCapacity": 2,
+      "steps": [
+        {
+          "operation": "state",
+          "path": "/a",
+          "value": [
+            "directory",
+            "1",
+            "2",
+            16877
+          ]
+        },
+        {
+          "operation": "list",
+          "path": "/a",
+          "value": []
+        }
+      ],
+      "accepted": true,
+      "paths": 1,
+      "facts": 2
+    },
+    {
+      "name": "global-first-fact-order",
+      "pathCapacity": 2,
+      "factCapacity": 4,
+      "steps": [
+        {
+          "operation": "state",
+          "path": "/a",
+          "value": [
+            "directory",
+            "1",
+            "2",
+            16877
+          ]
+        },
+        {
+          "operation": "state",
+          "path": "/b",
+          "value": [
+            "directory",
+            "1",
+            "3",
+            16877
+          ]
+        },
+        {
+          "operation": "list",
+          "path": "/a",
+          "value": []
+        },
+        {
+          "operation": "list",
+          "path": "/b",
+          "value": []
+        }
+      ],
+      "accepted": true,
+      "paths": 2,
+      "facts": 4
+    },
+    {
+      "name": "new-path-capacity",
+      "pathCapacity": 2,
+      "factCapacity": 4,
+      "steps": [
+        {
+          "operation": "state",
+          "path": "/a",
+          "value": [
+            "directory",
+            "1",
+            "2",
+            16877
+          ]
+        },
+        {
+          "operation": "state",
+          "path": "/b",
+          "value": [
+            "directory",
+            "1",
+            "3",
+            16877
+          ]
+        },
+        {
+          "operation": "state",
+          "path": "/c",
+          "value": [
+            "directory",
+            "1",
+            "4",
+            16877
+          ]
+        }
+      ],
+      "accepted": false,
+      "paths": 2,
+      "facts": 2
+    },
+    {
+      "name": "new-fact-at-path-capacity",
+      "pathCapacity": 2,
+      "factCapacity": 4,
+      "steps": [
+        {
+          "operation": "state",
+          "path": "/a",
+          "value": [
+            "directory",
+            "1",
+            "2",
+            16877
+          ]
+        },
+        {
+          "operation": "state",
+          "path": "/b",
+          "value": [
+            "directory",
+            "1",
+            "3",
+            16877
+          ]
+        },
+        {
+          "operation": "list",
+          "path": "/a",
+          "value": []
+        }
+      ],
+      "accepted": true,
+      "paths": 2,
+      "facts": 3
+    },
+    {
+      "name": "new-fact-capacity",
+      "pathCapacity": 2,
+      "factCapacity": 2,
+      "steps": [
+        {
+          "operation": "state",
+          "path": "/a",
+          "value": [
+            "directory",
+            "1",
+            "2",
+            16877
+          ]
+        },
+        {
+          "operation": "state",
+          "path": "/b",
+          "value": [
+            "directory",
+            "1",
+            "3",
+            16877
+          ]
+        },
+        {
+          "operation": "list",
+          "path": "/a",
+          "value": []
+        }
+      ],
+      "accepted": false,
+      "paths": 2,
+      "facts": 2
+    },
+    {
+      "name": "new-path-fact-capacity-rollback",
+      "pathCapacity": 2,
+      "factCapacity": 1,
+      "steps": [
+        {
+          "operation": "state",
+          "path": "/a",
+          "value": [
+            "directory",
+            "1",
+            "2",
+            16877
+          ]
+        },
+        {
+          "operation": "state",
+          "path": "/b",
+          "value": [
+            "directory",
+            "1",
+            "3",
+            16877
+          ]
+        }
+      ],
+      "accepted": false,
+      "paths": 1,
+      "facts": 1
+    },
+    {
+      "name": "state-drift",
+      "pathCapacity": 2,
+      "factCapacity": 4,
+      "steps": [
+        {
+          "operation": "state",
+          "path": "/a",
+          "value": [
+            "directory",
+            "1",
+            "2",
+            16877
+          ]
+        },
+        {
+          "operation": "state",
+          "path": "/a",
+          "value": [
+            "directory",
+            "1",
+            "3",
+            16877
+          ]
+        }
+      ],
+      "accepted": false,
+      "paths": 1,
+      "facts": 1
+    },
+    {
+      "name": "topology-drift",
+      "pathCapacity": 2,
+      "factCapacity": 4,
+      "steps": [
+        {
+          "operation": "state",
+          "path": "/a",
+          "value": [
+            "directory",
+            "1",
+            "2",
+            16877
+          ]
+        },
+        {
+          "operation": "list",
+          "path": "/a",
+          "value": [
+            {
+              "name": "b",
+              "kind": "directory"
+            }
+          ]
+        },
+        {
+          "operation": "list",
+          "path": "/a",
+          "value": [
+            {
+              "name": "b",
+              "kind": "symlink"
+            }
+          ]
+        }
+      ],
+      "accepted": false,
+      "paths": 1,
+      "facts": 2
+    },
+    {
+      "name": "missing-appeared",
+      "pathCapacity": 2,
+      "factCapacity": 4,
+      "steps": [
+        {
+          "operation": "state",
+          "path": "/a",
+          "value": [
+            "missing"
+          ]
+        },
+        {
+          "operation": "state",
+          "path": "/a",
+          "value": [
+            "directory",
+            "1",
+            "2",
+            16877
+          ]
+        }
+      ],
+      "accepted": false,
+      "paths": 1,
+      "facts": 1
+    },
+    {
+      "name": "listing-requires-own-state",
+      "pathCapacity": 2,
+      "factCapacity": 4,
+      "steps": [
+        {
+          "operation": "list",
+          "path": "/a",
+          "value": []
+        }
+      ],
+      "accepted": false,
+      "paths": 0,
+      "facts": 0
+    },
+    {
+      "name": "listing-repeat-no-recharge",
+      "pathCapacity": 1,
+      "factCapacity": 2,
+      "steps": [
+        {
+          "operation": "state",
+          "path": "/a",
+          "value": [
+            "directory",
+            "1",
+            "2",
+            16877
+          ]
+        },
+        {
+          "operation": "list",
+          "path": "/a",
+          "value": []
+        },
+        {
+          "operation": "list",
+          "path": "/a",
+          "value": []
+        }
+      ],
+      "accepted": true,
+      "paths": 1,
+      "facts": 2
+    }
   ],
-  "listingCache": {"members": ["members/**"], "packages": [{"path": "members/a", "name": "cached-a"}, {"path": "members/b", "name": "cached-b"}], "added": {"path": "members/nested/c", "name": "cached-c"}, "settleMilliseconds": 2100}
+  "listingCache": {
+    "members": [
+      "members/**"
+    ],
+    "packages": [
+      {
+        "path": "members/a",
+        "name": "cached-a"
+      },
+      {
+        "path": "members/b",
+        "name": "cached-b"
+      }
+    ],
+    "added": {
+      "path": "members/nested/c",
+      "name": "cached-c"
+    },
+    "settleMilliseconds": 2100
+  },
+  "outputCensus": {
+    "members": [
+      "source/**",
+      "source/🤖️generated/**"
+    ],
+    "outputs": [
+      "🤖️generated",
+      "🗑️generated",
+      "node_modules",
+      "target",
+      "target-prototype",
+      "📤️dist",
+      "dist",
+      "build",
+      "storybook-static",
+      "temp",
+      "coverage",
+      "__pycache__",
+      "🔌️plugin-modules"
+    ],
+    "cases": [
+      {
+        "mutation": "generatedChurn",
+        "outcome": "admitted"
+      },
+      {
+        "mutation": "generatedBirth",
+        "outcome": "admitted"
+      },
+      {
+        "mutation": "generatedRemoval",
+        "outcome": "admitted"
+      },
+      {
+        "mutation": "authoredManifest",
+        "outcome": "rejected"
+      },
+      {
+        "mutation": "authoredDirectory",
+        "outcome": "rejected"
+      },
+      {
+        "mutation": "authoredRoot",
+        "outcome": "rejected"
+      },
+      {
+        "mutation": "cancel",
+        "outcome": "canceled"
+      }
+    ]
+  }
 }

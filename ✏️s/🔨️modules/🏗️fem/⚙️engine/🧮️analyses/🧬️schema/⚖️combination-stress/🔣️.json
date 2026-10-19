@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Load Combination Stress Recovery Vectors",
+  "description": "Unit right triangle (plane or shell) or unit right tetrahedron (solid), with nodes a=(0,0,0), b=(1,0,0), c=(0,1,0), d=(0,0,1). Young's modulus is 1000, Poisson's ratio 0.25, thickness 0.2 and density 0. All active DOFs are fixed except b.Tx, c.Ty and solid d.Tz. Each loads triple applies forces at those three free DOFs; expectedStress is the recovered normal stress triple (sxx, syy, szz). Shell expectations apply to both surfaces.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["cases"],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind", "loads", "factors", "expectedStress", "expectedVonMises"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "kind": { "enum": ["plane", "solid", "shell"] },
+          "loads": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "$ref": "#/definitions/triple" } },
+          "factors": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number" } },
+          "expectedStress": { "$ref": "#/definitions/triple" },
+          "expectedVonMises": { "type": "number", "minimum": 0 }
+        }
+      }
+    }
+  },
+  "definitions": { "triple": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } } }
+}

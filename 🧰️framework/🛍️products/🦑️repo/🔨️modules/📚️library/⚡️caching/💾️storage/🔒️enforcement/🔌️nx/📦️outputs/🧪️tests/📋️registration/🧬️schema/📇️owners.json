@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Neutral Toolkit Test Owners",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "targets"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "target",
+          "command",
+          "source"
+        ],
+        "properties": {
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "command": {
+            "type": "string",
+            "pattern": "^bun ./📜️script.ts test "
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

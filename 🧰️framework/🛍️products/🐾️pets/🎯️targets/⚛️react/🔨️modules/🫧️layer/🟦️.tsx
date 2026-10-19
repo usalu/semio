@@ -23,7 +23,8 @@
 
 //#region 🔌️Adapters
 import { useEffect, useImperativeHandle, useMemo, useRef, useSyncExternalStore, type ReactElement, type Ref } from "react";
-import { ROTATION_STREAM, TICKS_PER_SECOND, advance, castOf, frameOf, menagerieIssues, openStage, randomBetween, type ActorFrame, type Cast, type Deed, type Frame, type Menagerie, type PetMode, type Point, type Pointed, type Rect, type Slug, type Species, type Stage, type StageEvent, type Summoned, type Surveyed, type Unpointed } from "@semio-tech/pets";
+import { ROTATION_STREAM, TICKS_PER_SECOND, advance, castOf, frameOf, menagerieIssues, openStage, petCast, randomBetween, type ActorFrame, type Deed, type Frame, type Menagerie, type PetMode, type Point, type Pointed, type Rect, type Slug, type Species, type Stage, type StageEvent, type Summoned, type Surveyed, type Unpointed } from "@semio-tech/pets";
+export { petCast } from "@semio-tech/pets";
 import { depict, paint, type Depiction } from "../🖌️depiction/🟦️.ts";
 import { paintEffects, paintPuffs, retireEffects, stageEffects, stockEffects, strikeEffects, tintEffects } from "../✨️effects/🟦️.ts";
 import { equip, paintLadders, paintTools, rackLadders, type Equipment } from "../🧰️gear/🟦️.ts";
@@ -34,7 +35,7 @@ import { watchGrasp, type Grasped } from "../🤏️grasp/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔖️Defaults
-/** 🏠️ The scene whose cast stands in for a scene the menagerie does not know. */
+/** 🏠️ The scene of a host's general context. */
 export const PET_HOME_SCENE = "home";
 
 /** 🥞️ Where the layer sits in the stacking order unless the host says otherwise: above cards, below dialogs. */
@@ -74,10 +75,6 @@ export function petScale(width: number): number {
   return width < PET_NARROW_WIDTH ? 0.8 : 1;
 }
 
-/** 🎟️ The cast of `scene`; an unknown scene falls back to {@link PET_HOME_SCENE}, then to nothing. */
-export function petCast(menagerie: Menagerie, scene: string): Cast | null {
-  return menagerie.casts.find((cast) => cast.scene === scene) ?? menagerie.casts.find((cast) => cast.scene === PET_HOME_SCENE) ?? null;
-}
 //#endregion 🔖️Defaults
 
 //#region 🔖️Scenery
@@ -154,7 +151,7 @@ export function stageScenery(host: Element, kinds: ReadonlyMap<Slug, Species>, c
 
 //#region 🔖️Show
 /** 🎚️ Everything the host may change while a show runs. */
-type Direction = Pick<PetLayerProps, "scene" | "mode" | "quiet" | "play" | "mischief" | "capacity" | "surfaces" | "keepouts" | "controls" | "walls" | "props" | "glances" | "scale" | "zIndex" | "onCast">;
+type Direction = Pick<PetLayerProps, "scene" | "mode" | "quiet" | "play" | "mischief" | "shiny" | "capacity" | "surfaces" | "keepouts" | "controls" | "walls" | "props" | "glances" | "scale" | "zIndex" | "onCast">;
 
 /** 🎬️ A running show: `direct` hands it the host's current wishes, `play` a deed the learner asked a pet for without a pointer, `stop` ends it and leaves nothing behind. */
 type Show = { readonly direct: (direction: Direction) => void; readonly play: (species: Slug, deed: Deed) => void; readonly stop: () => void };
@@ -255,6 +252,7 @@ function startShow(host: HTMLElement, menagerie: Menagerie, seed: number, tempo:
   const coarse = typeof view.matchMedia === "function" ? view.matchMedia(PET_COARSE_POINTER) : null;
   const fine = typeof view.matchMedia === "function" ? view.matchMedia(PET_FINE_POINTER) : null;
   let direction = first;
+  let shiny = new Set(first.shiny);
   let stage: Stage = advance(menagerie, openStage(seed), [
     { kind: "tuned", mode: first.mode },
     { kind: "hushed", quiet: first.quiet === true },
@@ -382,6 +380,7 @@ function startShow(host: HTMLElement, menagerie: Menagerie, seed: number, tempo:
         depictions.set(actor.species, depiction);
       }
       paint(depiction, size === 1 ? actor : { ...actor, x: actor.x * size, y: actor.y * size }, size);
+      if (depiction.element.hasAttribute("data-pet-shiny") !== shiny.has(actor.species)) depiction.element.toggleAttribute("data-pet-shiny", shiny.has(actor.species));
       scenery.actor(depiction, actor);
       const place: Element | null = before === null ? host.firstElementChild : before.nextElementSibling;
       if (depiction.element !== place) host.insertBefore(depiction.element, place);
@@ -550,6 +549,13 @@ function startShow(host: HTMLElement, menagerie: Menagerie, seed: number, tempo:
       if (ended) return;
       const before = direction;
       direction = next;
+      if (next.shiny !== before.shiny) {
+        const updated = new Set(next.shiny);
+        if (updated.size !== shiny.size || [...updated].some(species => !shiny.has(species))) {
+          shiny = updated;
+          redraw = true;
+        }
+      }
       if (next.zIndex !== before.zIndex) host.style.zIndex = String(next.zIndex ?? PET_LAYER_Z_INDEX);
       const hushed = (next.quiet === true) !== (before.quiet === true);
       const permitted = (next.play !== false) !== (before.play !== false) || (next.mischief !== false) !== (before.mischief !== false);
@@ -584,8 +590,8 @@ export interface PetLayerHandle {
   readonly play: (species: Slug, deed: Deed) => void;
 }
 
-/** 🎛️ What a host tells the pet layer: the menagerie; the scene whose cast is on stage (an unknown scene falls back to
- * `home`, then to nothing); the liveliness (`off` is expressed by not rendering the layer); whether a time of
+/** 🎛️ What a host tells the pet layer: the menagerie; the scene whose explicitly authored cast is on stage (an unknown
+ * scene shows nobody); the liveliness (`off` is expressed by not rendering the layer); whether a time of
  * concentration runs; whether the learner lets the pets be played with — they answer clicks and can be picked up
  * (`play`, true when absent) — and lets them play with the page (`mischief`, true when absent), both handed to the
  * stage as `permitted`; the most actors at once (by viewport width when absent: below 768 px 2, below 1024 px 4, else
@@ -607,6 +613,7 @@ export interface PetLayerProps {
   readonly quiet?: boolean;
   readonly play?: boolean;
   readonly mischief?: boolean;
+  readonly shiny?: readonly Slug[];
   readonly capacity?: number;
   readonly surfaces?: string;
   readonly keepouts?: string;
@@ -641,7 +648,7 @@ function watchForcedColors(change: () => void): () => void {
  * menagerie with issues ({@link menagerieIssues}), the layer stays empty and runs nothing. When the layer goes or
  * play is switched off, a pet the learner holds is called off and the hand lets go of everything. */
 export function PetLayer(props: PetLayerProps): ReactElement {
-  const { menagerie, scene, mode, quiet, play, mischief, capacity, surfaces, keepouts, controls, walls, props: fixtures, glances, scale, seed, zIndex, onCast, tempo = 1, ref } = props;
+  const { menagerie, scene, mode, quiet, play, mischief, shiny, capacity, surfaces, keepouts, controls, walls, props: fixtures, glances, scale, seed, zIndex, onCast, tempo = 1, ref } = props;
   const host = useRef<HTMLDivElement>(null);
   const show = useRef<Show | null>(null);
   const forced = useSyncExternalStore(watchForcedColors, forcedColors, () => false);
@@ -649,7 +656,7 @@ export function PetLayer(props: PetLayerProps): ReactElement {
   useImperativeHandle(ref, () => ({ play: (species, deed) => show.current?.play(species, deed) }), []);
   useEffect(() => {
     if (forced || !sound || host.current === null) return;
-    const started = startShow(host.current, menagerie, seed ?? Math.floor(Math.random() * 0x1_0000_0000), tempo, { scene, mode, quiet, play, mischief, capacity, surfaces, keepouts, controls, walls, props: fixtures, glances, scale, zIndex, onCast });
+    const started = startShow(host.current, menagerie, seed ?? Math.floor(Math.random() * 0x1_0000_0000), tempo, { scene, mode, quiet, play, mischief, shiny, capacity, surfaces, keepouts, controls, walls, props: fixtures, glances, scale, zIndex, onCast });
     show.current = started;
     return () => {
       started.stop();
@@ -657,8 +664,8 @@ export function PetLayer(props: PetLayerProps): ReactElement {
     };
   }, [menagerie, sound, seed, tempo, forced]);
   useEffect(() => {
-    show.current?.direct({ scene, mode, quiet, play, mischief, capacity, surfaces, keepouts, controls, walls, props: fixtures, glances, scale, zIndex, onCast });
-  }, [scene, mode, quiet, play, mischief, capacity, surfaces, keepouts, controls, walls, fixtures, glances, scale, zIndex, onCast]);
-  return <div ref={host} className="pet-layer" aria-hidden="true" />;
+    show.current?.direct({ scene, mode, quiet, play, mischief, shiny, capacity, surfaces, keepouts, controls, walls, props: fixtures, glances, scale, zIndex, onCast });
+  }, [scene, mode, quiet, play, mischief, shiny, capacity, surfaces, keepouts, controls, walls, fixtures, glances, scale, zIndex, onCast]);
+  return <div ref={host} className="pet-layer" data-pet-scene={scene} aria-hidden="true" />;
 }
 //#endregion 🔖️Layer

@@ -1,0 +1,12 @@
+{
+  "domain": "fem3d",
+  "events": [
+    { "action": "interactionHover", "args": { "domainId": "fem3d", "channel": "pointer", "targets": "[{\"granularity\":\"element\",\"id\":\"scope:1:7:element2:e1\"}]" }, "selection": [], "hover": ["scope:1:7:element2:e1"] },
+    { "action": "interactionSelect", "args": { "domainId": "fem3d", "merge": "replace", "targets": "[{\"granularity\":\"element\",\"id\":\"scope:1:7:element2:e1\"}]" }, "selection": ["scope:1:7:element2:e1"], "hover": ["scope:1:7:element2:e1"] },
+    { "action": "interactionSelect", "args": { "domainId": "fem3d", "merge": "additive", "targets": "[{\"granularity\":\"node\",\"id\":\"scope:1:4:node5:n00_g\"}]" }, "selection": ["scope:1:7:element2:e1", "scope:1:4:node5:n00_g"], "hover": ["scope:1:7:element2:e1"] },
+    { "action": "interactionHover", "args": { "domainId": "fem3d", "channel": "pointer", "targets": "[]" }, "selection": ["scope:1:7:element2:e1", "scope:1:4:node5:n00_g"], "hover": [] },
+    { "action": "interactionSelect", "args": { "domainId": "fem3d", "merge": "invertive", "targets": "[{\"granularity\":\"node\",\"id\":\"scope:1:4:node5:n00_g\"}]" }, "selection": ["scope:1:7:element2:e1"], "hover": [] },
+    { "action": "interactionSelect", "args": { "domainId": "other", "merge": "replace", "targets": "[]" }, "selection": ["scope:1:7:element2:e1"], "hover": [] },
+    { "action": "interactionSelect", "args": { "domainId": "fem3d", "merge": "replace", "targets": "[]" }, "selection": [], "hover": [] }
+  ]
+}

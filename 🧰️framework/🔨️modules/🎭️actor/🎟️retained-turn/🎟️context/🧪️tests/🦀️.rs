@@ -254,3 +254,6 @@ fn original_actor_context_preserves_input_and_paid_authorities_across_admission_
     assert_eq!(released, births);
     assert_eq!(observe(|| drop(owner)).1, (0, 0));
 }
+
+#[path="🛬️decoder/🦀️.rs"]
+mod original_decoder_tests;

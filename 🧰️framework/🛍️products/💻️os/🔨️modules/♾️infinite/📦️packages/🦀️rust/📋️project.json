@@ -83,6 +83,14 @@
         "command": "bun ./📜️script.ts test-wgpu-world-terrain",
         "forwardAllArgs": true
       }
+    },
+    "test-original-board-fill-source": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-board-fill-source",
+        "forwardAllArgs": true
+      }
     }
   },
   "namedInputs": {

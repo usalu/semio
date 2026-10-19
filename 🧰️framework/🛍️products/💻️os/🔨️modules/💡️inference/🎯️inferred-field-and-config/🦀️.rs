@@ -10,6 +10,8 @@ pub trait InferencePending: Send {
     fn close_original(&mut self,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"pending inference has no original payload closure producer").into())}
     fn original_box_release_bytes(&self)->Option<usize>{None}
 
+    /// 📏️ Quotes the selected actual dynamic pending close event without issuing retirement authority.
+    fn original_retirement_demands(&self,_body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"pending inference has no declared original close frontier"))}
 }
 
 /// 🪜 One slice of a compute: it finished (`Done`) or yielded for another driver call (`Working`). Either way it reports the fuel it consumed.
@@ -43,20 +45,7 @@ pub trait InferredField<P>: Send + Sync + 'static {
     /// 🧭 Deterministic topological plan over `snapshot`'s entities (roots first — entries with no
     /// parents come before anything that depends on them).
     fn plan(snapshot: &P) -> Vec<InferenceStep<Self::Key>>;
-    /// 🪪️ Borrows the original semantic snapshot identity across temporary host input views.
-    fn source_identity(snapshot:&P)->usize{snapshot as*const P as usize}
-    /// 📋️ Borrows the admitted graph's source extents without constructing an owned plan.
-    fn plan_source_extent(_snapshot:&P)->Option<(usize,usize)>{None}
-    /// 🪪️ Borrows one original node identity by its document ordinal.
-    fn plan_source_node(_snapshot:&P,_ordinal:usize)->Option<&str>{None}
-    /// 🔑️ Borrows the typed key from the same original document ordinal.
-    fn plan_source_key(_snapshot:&P,_ordinal:usize)->Option<&Self::Key>{None}
-    /// 🔗️ Borrows one original directed link by its document ordinal.
-    fn plan_source_link(_snapshot:&P,_ordinal:usize)->Option<(&str,&str)>{None}
-    /// 🪢️ Copies one original parent header into a retained donor under the actual caller.
-    fn clone_original_parent(_original:&Self::Value,_output:&mut Option<Self::Value>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,InferenceWorkFailure>{
-        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"inferred parent value has no original copy producer").into())
-    }
+    
 
     /// 🔑 Owned dependency values for `key` — EXACTLY the snapshot fields `compute` may
     /// read for this key (excluding parents' OWN upstream values, which are folded in separately
@@ -78,15 +67,21 @@ pub trait InferredField<P>: Send + Sync + 'static {
         size_of::<Self::Value>()
     }
 
-    /// 🪜 Resumable, fallible variant of [`compute`](Self::compute): consumes at most `fuel` units and either finishes or parks its progress in `pending`
-    /// for the next call. The default finishes in one slice at the cost of one unit, so `compute` stays the single semantic source of every field that does not override this.
-    fn compute_step(_snapshot:&P,_key:&Self::Key,_parents:&[Self::Value],_pending:&mut Option<Box<dyn InferencePending>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure>{
-        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original inferred field has no funded compute producer").into())
     }
-    /// 🔄️ Produces the field's real cycle result for a row in the admitted plan's cyclic tail.
-    fn compute_cyclic_step(_snapshot:&P,_key:&Self::Key,_pending:&mut Option<Box<dyn InferencePending>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure>{
-        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original inferred field has no funded cyclic result producer").into())
+/// 🎟️ Native field work borrows its defining retained source through every original driver phase.
+pub trait OriginalInferredField<P>:InferredField<P>{
+ type Source:?Sized;
+ fn validate_source(snapshot:&P,source:&Self::Source,cx:&semio_framework_job::StepContext<'_>)->Result<(),InferenceWorkFailure>;
+ fn source_identity(snapshot:&P,_source:&Self::Source)->usize{snapshot as*const P as usize}
+ fn plan_source_extent(_snapshot:&P,_source:&Self::Source)->Option<(usize,usize)>{None}
+ fn plan_source_node<'view>(_snapshot:&'view P,_source:&'view Self::Source,_ordinal:usize)->Option<&'view str>{None}
+ fn plan_source_key<'view>(_snapshot:&'view P,_source:&'view Self::Source,_ordinal:usize)->Option<&'view Self::Key>{None}
+ fn plan_source_link<'view>(_snapshot:&'view P,_source:&'view Self::Source,_ordinal:usize)->Option<(&'view str,&'view str)>{None}
+ fn clone_original_parent(_original:&Self::Value,_output:&mut Option<Self::Value>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,InferenceWorkFailure>{
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"inferred parent value has no original copy producer").into())
     }
+    fn compute_step(_snapshot:&P,_source:&Self::Source,_key:&Self::Key,_parents:&[Self::Value],_pending:&mut Option<Box<dyn InferencePending>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure>;
+ fn compute_cyclic_step(_snapshot:&P,_source:&Self::Source,_key:&Self::Key,_pending:&mut Option<Box<dyn InferencePending>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure>;
 }
 //#endregion 🔖️InferredField
 

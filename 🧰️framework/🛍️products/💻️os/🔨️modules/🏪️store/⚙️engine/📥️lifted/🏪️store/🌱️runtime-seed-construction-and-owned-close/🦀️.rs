@@ -211,7 +211,7 @@ where
     /// checkpoint and alternative are the fold of its edits and transitions, so `Redo` survives
     /// round-tripping through a serialized envelope (e.g. one `dispatch` call per request). A history change still waiting
     /// for its replay belonged to the replaced log and is dropped with it.
-    pub(crate) async fn set_state(&mut self, envelope: ArtifactEnvelope<P, Mutation>) -> Result<(), VcsError> {
+    pub(crate) async fn set_state(&mut self, envelope: ArtifactEnvelope<P, Mutation>) -> Result<(), VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let mut candidate = Some(envelope);
         let adopted = self.adopt_state(&mut candidate).await;
         if let Some(rejected) = candidate {
@@ -224,7 +224,7 @@ where
     /// slot so {@link set_state} can retire it: the live store must survive a rejected reset, and a
     /// dropped populated envelope aborts on the terminal-shell witness instead of returning the
     /// `VcsError` the caller reads.
-    async fn adopt_state(&mut self, candidate: &mut Option<ArtifactEnvelope<P, Mutation>>) -> Result<(), VcsError> {
+    async fn adopt_state(&mut self, candidate: &mut Option<ArtifactEnvelope<P, Mutation>>) -> Result<(), VcsError> where P: Clone, Mutation: ColdMutation<P> {
         self.ensure_durable_group_idle()?;
         let envelope = candidate.as_mut().expect("a reload holds its candidate envelope");
         validate_durable_history(envelope).await?;

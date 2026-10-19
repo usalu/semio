@@ -1,5 +1,5 @@
-//! 🔓️ `open-vortex-suggestions` command — the world host's suggestion verb, aimed at a grip (the host calls
 //! every rim connector a vortex).
+//! 🔓️ `open-vortex-suggestions` command — the world host's suggestion verb, aimed at a grip (the host calls
 
 use crate::editor::puzzle5d::window::Puzzle5dSuggestionMenu;
 use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;

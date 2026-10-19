@@ -5,7 +5,7 @@
 
 import { type ShellDialogOriginV1 } from "../🗨️dialog-origin/🟦️.ts";
 import { type DocumentCheckInStatusV1 } from "@semio-tech/framework/document/check-in";
-import { OwnedTutorialRunV1 } from "../🗨️dialog-origin/🎥️tutorial/🟦️.ts";
+import { OwnedTutorialRunV1, type TutorialInverseV1 } from "../🗨️dialog-origin/🎥️tutorial/🟦️.ts";
 // #region 🔌️Adapters
 import {
   useCallback,
@@ -138,7 +138,7 @@ export type ShellForwardSlots = {
   activeUtilityByWindowIdRef: RefObject<Readonly<Record<string, string | null>>>;
   applyHostEffects: ApplyHostEffectsForward;
   onActionRef: RefObject<OnActionForward>;
-  tutorialRunRef: RefObject<OwnedTutorialRunV1<DocumentArchivePack> | null>;
+  tutorialRunRef: RefObject<OwnedTutorialRunV1<TutorialInverseV1> | null>;
   tutorialTransitionEpochRef: RefObject<number>;
   tutorialClockRef: RefObject<TutorialClock | null>;
   isViewerReadOnlyFault: (error: unknown) => boolean;

@@ -1,15 +1,23 @@
-//! 📊️ Fem2d play app — the results window: static/modal/buckling analysis views, nodal-averaged
 //! von-Mises stress contours, reaction labels and moment diagrams.
+//! 📊️ Fem2d play app — the results window: static/modal/buckling analysis views, nodal-averaged
 
-#[path = "🎚️config/🦀️.rs"]
-pub mod config;
-#[path = "🫧️transient/🦀️.rs"]
-pub mod transient;
+pub use semio_s_artifact_fem_2d_results_state::config;
+pub use semio_s_artifact_fem_2d_results_state::transient;
 
 /// 🌈️ Triangle coordinates and scalar stress values at its vertices.
 type StressContourTriangle = ([(f64, f64); 3], [f64; 3]);
 
-use semio_s_fem_app_surface::{hex_to_rgb01, normalize_mode_shape, DisplayMode, ResultDisplay, MODE_SHAPE_AMPLITUDE_RATIO, VON_MISES_BANDS};
+use semio_s_fem_app_surface::hex_to_rgb01;
+
+use semio_s_fem_app_surface::normalize_mode_shape;
+
+use semio_s_fem_app_surface::DisplayMode;
+
+use semio_s_fem_app_surface::ResultDisplay;
+
+use semio_s_fem_app_surface::MODE_SHAPE_AMPLITUDE_RATIO;
+
+use semio_s_fem_app_surface::VON_MISES_BANDS;
 use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::fem2d_deformed_shape_layers;
 use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::fem2d_model_extent;
 use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::fem2d_region_mesh_triangles;
@@ -257,15 +265,53 @@ pub fn render(
     interaction: &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot,
     operation: Option<semio_framework_plugin::AppRenderOperationContext>,
     window_instance_id: Option<&str>,
+    authority: Option<semio_framework_plugin::WindowConfigAuthorityIdentity>,
     active_utility: &str,
+    labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels,
 ) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let animation = &window.animation;
+    if let Some(operation) = operation {
+        return render_mounted(doc, display, camera, interaction, animation, operation, window_instance_id, authority, active_utility, labels);
+    }
     let key = results_cache_key(operation);
     match display.mode {
         DisplayMode::Static => render_static(doc, display.source_id.as_deref(), camera, interaction, animation, key, window_instance_id, active_utility),
         DisplayMode::Modal(mode_index) => render_modal(doc, mode_index, camera, interaction, animation, key, window_instance_id, active_utility),
         DisplayMode::Buckling(mode_index) => render_buckling(doc, display.source_id.as_deref(), mode_index, camera, interaction, animation, key, window_instance_id, active_utility),
     }
+}
+
+fn render_mounted(
+    doc: &Fem2dSnapshot,
+    display: &ResultDisplay,
+    camera: &Viewport2d,
+    interaction: &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot,
+    animation: &semio_s_fem_app_surface::FemResultsAnimation,
+    operation: semio_framework_plugin::AppRenderOperationContext,
+    window_instance_id: Option<&str>,
+    authority: Option<semio_framework_plugin::WindowConfigAuthorityIdentity>,
+    active_utility: &str,
+    labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels,
+) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let (family, index) = match display.mode { DisplayMode::Static => (semio_s_fem_app_surface::ResultMode::Static, 0), DisplayMode::Modal(index) => (semio_s_fem_app_surface::ResultMode::Modal, index), DisplayMode::Buckling(index) => (semio_s_fem_app_surface::ResultMode::Buckling, index) };
+    let layers = semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::with_live_fields(operation, authority, |visual| {
+        let mut layers = fem2d_structure_layers_with(doc, "#334155", "#334155", "#334155", interaction);
+        if family != semio_s_fem_app_surface::ResultMode::Static {
+            layers.push(semio_framework_pack_json::json!({ "id": "analysis-progress", "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 20.0], "text": { "content": labels.failed, "size": 11.0 } }));
+        }
+        if let Some(view) = visual {
+            let visual = view.progress;
+            let displacements = view.fields.iter().map(|field| (field.node_id.clone(), [field.displacement[0], field.displacement[1], 0.0, 0.0, 0.0, 0.0])).collect();
+            layers.extend(fem2d_deformed_shape_layers(doc, &displacements, doc.analysis.deformation_scale * animation.amplitude()));
+            let status = if matches!(visual.state, semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::FemVisualState::FaultedCancelled) { labels.failed.as_str() } else if visual.validated_final { labels.converged.as_str() } else { labels.pending.as_str() };
+            let retained = if view.retained { labels.previous_results.as_str() } else { "" };
+            layers.push(semio_framework_pack_json::json!({ "id": "analysis-progress", "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 20.0], "text": { "content": format!("{status} · {} / {} · {} {:.3e} {retained}", visual.progress_completed, visual.progress_total, labels.residual.as_str(), visual.residual_norm), "size": 11.0 } }));
+        }
+        layers.extend(playback_caption_layer(animation));
+        layers
+    });
+    let layers_json = finish_results_layers(doc, interaction, layers, window_instance_id, active_utility);
+    semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 
 /// 🎵️ The scale one mode-shape frame is drawn at: the unit-normalized shape lifted to
@@ -356,7 +402,7 @@ fn render_static(
 ) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let amplitude = animation.amplitude();
     let scene = with_static_results(doc, key, |results| {
-        let case_id = source_id.filter(|id| results.contains_key(*id)).map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone()));
+        let case_id = source_id.map(str::to_string).or_else(|| doc.load_cases.first().and_then(|case| semio_s_fem_analyses_model::encode_result_source_parts("loadCase", &case.id).ok()));
         let Some(case_id) = case_id else {
             return Err("No load case defined".to_string());
         };
@@ -535,7 +581,13 @@ fn render_buckling(
     window_instance_id: Option<&str>,
     active_utility: &str,
 ) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let Some(case_id) = source_id.map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone())) else {
+    let source = source_id.map(semio_s_fem_analyses_model::decode_result_source_identity).transpose().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("fem2d.result-source", "invalid buckling result source identity"))?;
+    let case_id = match source {
+        Some(semio_s_fem_analyses_model::ResultSource::LoadCase(id)) => Some(id),
+        Some(semio_s_fem_analyses_model::ResultSource::Combination(_)) => return Err(semio_framework_plugin::PluginAssemblyError::new("fem2d.buckling-source", "combination buckling requires an admitted prestress source")),
+        None => doc.load_cases.first().map(|case| case.id.clone()),
+    };
+    let Some(case_id) = case_id else {
         return placeholder(Label::data("No load case defined"));
     };
     let scale = mode_shape_scale(doc, animation.amplitude());

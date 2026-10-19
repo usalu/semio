@@ -81,7 +81,10 @@ impl RetainedJobPayloadWriter {
         self.staged.as_ref().map(|(_, _, length)| *length)
     }
 
-    pub fn write_staged(&mut self, bytes: &[u8]) -> Result<(), JobPayloadAdmissionFault> {
+        /// 🪪️ Identifies the same original staged backing across admitted and refused turns.
+    pub fn staged_backing_identity(&self) -> Option<*const MaybeUninit<u8>> { self.staged.as_ref().map(|(_, source, _)| source.backing_identity()) }
+
+pub fn write_staged(&mut self, bytes: &[u8]) -> Result<(), JobPayloadAdmissionFault> {
         let (_, source, length) = self.staged.as_mut().ok_or(JobPayloadAdmissionFault::OpportunityExhausted)?;
         if bytes.len() > source.allocated_capacity_bytes() - *length {
             return Err(JobPayloadAdmissionFault::StreamBytes);
@@ -92,7 +95,9 @@ impl RetainedJobPayloadWriter {
     }
 
     pub fn commit_staged_page(&mut self) -> Result<(), JobPayloadAdmissionFault> {
-        let index = self.payload.as_ref().ok_or(JobPayloadAdmissionFault::WriterSealed)?.pages.iter().position(Option::is_none).ok_or(JobPayloadAdmissionFault::WriterFull)?;
+        let payload = self.payload.as_ref().ok_or(JobPayloadAdmissionFault::WriterSealed)?;
+        let index = payload.page_count;
+        if index >= JOB_PAYLOAD_OPERATION_PAGES || payload.pages[index].is_some() { return Err(JobPayloadAdmissionFault::WriterFull); }
         let (ledger, source, length) = self.staged.take().ok_or(JobPayloadAdmissionFault::OpportunityExhausted)?;
         let payload = self.payload.as_mut().expect("staged page commit preflight retains writer payload");
         payload.pages[index] = Some(JobPayloadPage { source, length });
@@ -139,6 +144,9 @@ impl RetainedJobPayloadWriter {
     }
 }
 
+
+#[path="📬️outcome/✍️writer/⛽️staged/🦀️.rs"]
+mod original_staged_writer;
 impl Drop for RetainedJobPayloadWriter {
     fn drop(&mut self) {
         if self.payload.is_none() && self.rejected.is_none() && self.staged.is_none() && self.closing_ledger.is_none() {
@@ -196,7 +204,7 @@ impl JobPayloadPageGrant<'_> {
 
     pub fn commit(mut self) {
         let payload = self.writer.payload.as_mut().expect("retained payload writer owns payload while page is granted");
-        let index = payload.pages.iter().position(Option::is_none).expect("preflighted payload page slot remains vacant");
+        let index=payload.page_count;assert!(index<JOB_PAYLOAD_OPERATION_PAGES&&payload.pages[index].is_none(),"preflighted original page prefix slot remains vacant");
         let source = self.source.take().expect("committed job payload grant owns page source");
         payload.pages[index] = Some(JobPayloadPage { source, length: self.length });
         payload.page_count += 1;
@@ -226,3 +234,10 @@ impl Drop for JobPayloadPageGrant<'_> {
     }
 }
 //#endregion 📄️RetainedPayload
+
+pub trait JobPayloadStagedSource {
+    fn byte_len(&self) -> usize;
+    fn copy_byte_demand(&self) -> Result<usize, JobPayloadAdmissionFault>;
+    fn depth_demand(&self) -> Result<usize, JobPayloadAdmissionFault>;
+    fn write_bytes(&self, target: &mut [MaybeUninit<u8>]) -> Result<(), JobPayloadAdmissionFault>;
+}

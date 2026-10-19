@@ -72,6 +72,8 @@ impl GenerationId {
 /// any other foreign error type) — every crate below `db_artifact` wraps its own errors into this.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DbError {
+    Pack(pack::PackError),
+    Protocol(protocol::ProtocolError),
     Io(String),
     NotFound(String),
     AlreadyExists(String),
@@ -112,13 +114,15 @@ impl DbError {
     /// closed, fenced by a newer epoch or generation, an I/O fault) — so its author resends it; every other error is a
     /// verdict on the batch, final for it. The hub's refusal message and its rebuild decision both read this one predicate.
     pub fn is_transient(&self) -> bool {
-        matches!(self, Self::Unavailable(_) | Self::Timeout(_) | Self::Closed | Self::Fenced { .. } | Self::StaleGeneration { .. } | Self::Io(_))
+        matches!(self, Self::Unavailable(_) | Self::Timeout(_) | Self::Closed | Self::Fenced { .. } | Self::StaleGeneration { .. } | Self::Io(_)) || matches!(self, Self::Pack(pack::PackError::TransportFailure(error)) | Self::Protocol(protocol::ProtocolError::Pack(pack::PackError::TransportFailure(error))) if error.retry() == pack::PackRetryDisposition::Transient)
     }
 }
 
 impl std::fmt::Display for DbError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::Pack(error) => std::fmt::Display::fmt(error, formatter),
+            Self::Protocol(error) => std::fmt::Display::fmt(error, formatter),
             Self::Io(message) => write!(formatter, "io error: {message}"),
             Self::NotFound(message) => write!(formatter, "not found: {message}"),
             Self::AlreadyExists(message) => write!(formatter, "already exists: {message}"),
@@ -139,20 +143,26 @@ impl std::fmt::Display for DbError {
     }
 }
 
-impl std::error::Error for DbError {}
+impl std::error::Error for DbError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self { Self::Pack(error) => Some(error), Self::Protocol(error) => Some(error), _ => None }
+    }
+}
 
 impl From<pack::PackError> for DbError {
-    /// 🔀️ `db_wal`/`db_snapshot` sit directly on top of `pack`/`protocol`'s `.spr`/`.spk`
-    /// containers; this lets them use `?` without hand-rolling the same mapping repeatedly.
-    /// Corruption-flavored `PackError` variants map to `DbError::Corrupt`, resource-flavored ones
-    /// to `DbError::LimitExceeded`/`Io`, and schema mismatches to `DbError::InvalidArgument`.
+    /// 🔀️ Retains the complete Pack producer cause, original allocation, external source and retry authority.
     fn from(err: pack::PackError) -> Self {
-        match err {
-            pack::PackError::Io(message) => DbError::Io(message),
-            pack::PackError::LimitExceeded(what) => DbError::LimitExceeded(what),
-            pack::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message)) => DbError::InvalidArgument(message),
-            other => DbError::Corrupt(other.to_string()),
-        }
+        Self::Pack(err)
+    }
+}
+
+impl From<pack::PackRefusal> for DbError {
+    fn from(error: pack::PackRefusal) -> Self { Self::Pack(pack::PackError::Refusal(error)) }
+}
+
+impl From<protocol::SprWriteError<DbError>> for DbError {
+    fn from(error: protocol::SprWriteError<DbError>) -> Self {
+        match error { protocol::SprWriteError::Protocol(error) => Self::Protocol(error), protocol::SprWriteError::Sink(error) => error }
     }
 }
 //#endregion 🔖️Errors

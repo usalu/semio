@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/mesh/mutation/change-section/schema.json",
+  "title": "ChangeSection",
+  "description": "Changes only supplied section fields while preserving stable identity and independent concurrent edits. Omitted fields remain untouched; null values are refused.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "patch"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSection",
+      "description": "The internally tagged discriminator `#[value(tag = \"mutation\")]` puts on the wire.",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Cross-section",
+          "de": "Querschnitt"
+        },
+        "ref": {
+          "kind": "section",
+          "domain": "fem2d",
+          "granularity": "section"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "patch": {
+      "title": "Fem2dSectionPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Bezeichnung"
+            },
+            "group": "identity",
+            "order": 20
+          }
+        },
+        "area": {
+          "type": "number",
+          "format": "double",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Cross-sectional area",
+              "de": "Querschnittsfläche"
+            },
+            "unit": "m²",
+            "displayUnit": "cm²",
+            "displayFactor": 10000.0,
+            "step": 0.0001,
+            "precision": 2,
+            "group": "section",
+            "order": 30
+          }
+        },
+        "iy": {
+          "type": "number",
+          "format": "double",
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Second moment of area Iy",
+              "de": "Flächenträgheitsmoment Iy"
+            },
+            "unit": "m⁴",
+            "displayUnit": "cm⁴",
+            "displayFactor": 100000000.0,
+            "step": 1E-08,
+            "precision": 1,
+            "group": "section",
+            "order": 40
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "New cross-section",
+          "de": "Neuer Querschnitt"
+        },
+        "group": "record",
+        "order": 30
+      }
+    }
+  }
+}

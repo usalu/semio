@@ -11,6 +11,8 @@
 #![allow(async_fn_in_trait)]
 #![allow(clippy::too_many_arguments)]
 
+#[cfg(test)]
+extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_mut_air_loop as air_loop_mutations;
@@ -74,7 +76,7 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 #[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = EnergyModelSnapshot, diff = EnergyModelDiff, schema = "energy.model")]
+#[mutations(snapshot = EnergyModelSnapshot, diff = EnergyModelDiff, schema = "energy.model", reference = EnergyModelSnapshot, reference_diff = EnergyModelDiff)]
 pub enum EnergyModelMutation {
     RenameModel(crate::model_mutations::RenameModel),
     ChangeModelVersion(crate::model_mutations::ChangeModelVersion),
@@ -373,6 +375,15 @@ pub enum EnergyModelMutation {
     ChangeGasMaterialGas(crate::window_layer_mutations::ChangeGasMaterialGas),
     RenameGasMaterial(crate::window_layer_mutations::RenameGasMaterial),
     ChangeMaterialRoughness(crate::finish_mutations::ChangeMaterialRoughness),
+    ChangeGlazingMaterialSolarReflectanceFront(crate::window_layer_mutations::ChangeGlazingMaterialSolarReflectanceFront),
+    ChangeGlazingMaterialSolarReflectanceBack(crate::window_layer_mutations::ChangeGlazingMaterialSolarReflectanceBack),
+    ChangeGlazingMaterialVisibleReflectanceFront(crate::window_layer_mutations::ChangeGlazingMaterialVisibleReflectanceFront),
+    ChangeGlazingMaterialVisibleReflectanceBack(crate::window_layer_mutations::ChangeGlazingMaterialVisibleReflectanceBack),
+    ChangeGlazingMaterialInfraredTransmittance(crate::window_layer_mutations::ChangeGlazingMaterialInfraredTransmittance),
+    ChangePvSystemTemperatureCoefficient(crate::pv_system_mutations::ChangePvSystemTemperatureCoefficient),
+    ChangePvSystemFaimanHeatLossConstant(crate::pv_system_mutations::ChangePvSystemFaimanHeatLossConstant),
+    ChangePvSystemFaimanHeatLossWind(crate::pv_system_mutations::ChangePvSystemFaimanHeatLossWind),
+    ChangePvSystemMounting(crate::pv_system_mutations::ChangePvSystemMounting),
 }
 
 
@@ -384,3 +395,7 @@ pub mod text;
 #[path = "../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
 pub mod binary;
 //#endregion 🚪️Representations
+
+#[cfg(test)]
+#[path="🧪️tests/🪟️optics/🦀️.rs"]
+mod optical_field_tests;

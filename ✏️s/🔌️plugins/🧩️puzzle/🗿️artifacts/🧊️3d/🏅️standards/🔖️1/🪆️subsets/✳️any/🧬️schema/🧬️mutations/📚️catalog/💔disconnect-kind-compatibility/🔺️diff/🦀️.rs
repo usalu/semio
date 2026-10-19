@@ -1,5 +1,8 @@
 //! 🔺️ Sparse diff builder for `DisconnectKindCompatibility` — removes one row from `meta.kindCompatibility`.
-use semio_s_artifact_puzzle_3d_diff::{Puzzle3dDiff, Puzzle3dKindCompatibilityDelta, Puzzle3dKindCompatibilityKey, Puzzle3dMetaPatch};
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dKindCompatibilityDelta;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dKindCompatibilityKey;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dMetaPatch;
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Diff

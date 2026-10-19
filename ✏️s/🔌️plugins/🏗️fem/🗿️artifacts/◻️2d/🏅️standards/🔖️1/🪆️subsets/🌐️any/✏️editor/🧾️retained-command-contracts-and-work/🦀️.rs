@@ -174,13 +174,15 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Fem
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Fem2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Fem2dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Fem2dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+
         let original: Result<_, Fault> = (|| {
         use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::gumball::Fem2dGumballMotion;
         if self.consumed {
             return Err(Fault::from("fem2d-retained-work-repeated"));
         }
         self.consumed = true;
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config, history, interaction, hover, context, operation } = *input;
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, snapshot_read: _, command, snapshot, config, history, interaction, hover, context, operation } = *input;
         let selected = fem2d_interaction_selection_ids(interaction);
         match command {
             Fem2dCommand::TranslateSelection(payload) => crate::editor::fem2d::commands::gumball::gumball_step("translateSelection", Fem2dGumballMotion::Translate { dx: payload.dx, dy: payload.dy }, &payload.ids, payload.phase.as_deref(), payload.reason.as_deref(), snapshot, &selected, context, operation),
@@ -202,6 +204,9 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Fem
             }
             _ => fem2d_retained_reduce(command, snapshot, config, history, interaction, hover, context, operation).map(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete),
         }
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)

@@ -33,6 +33,22 @@ pub mod component_persistent_local {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! component_persistent_local {
+    ($( $(#[$attribute:meta])* static $name:ident: $value_type:ty = const $initialize:block; )+) => {
+        $(
+            #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+            $(#[$attribute])*
+            static $name: $crate::component_persistent_local::ComponentPersistentLocal<$value_type> =
+                $crate::component_persistent_local::ComponentPersistentLocal::new(|| $initialize);
+        )+
+
+        #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+        std::thread_local! {
+            $(
+                $(#[$attribute])*
+                static $name: $value_type = const $initialize;
+            )+
+        }
+    };
     ($( $(#[$attribute:meta])* $vis:vis static $name:ident: $value_type:ty = $initialize:expr; )+) => {
         $(
             #[cfg(all(target_arch = "wasm32", target_env = "p2"))]

@@ -356,13 +356,17 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
 
     fn publish_local_interaction_query_reply(&mut self, frames: &mut Vec<Vec<u8>>, maximum_frames: usize) -> bool { self.publish_local_interaction_query_reply(frames, maximum_frames) }
 
-    fn take_typed_operation_result_page(&mut self, receiver: u32) -> Option<TypedOperationResultPage> {
-        let (index, operation_id) = (0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|offset| {
+    fn take_typed_operation_result_page(&mut self, receiver: u32,grant:RetainedCloneGrant) -> Result<(Option<TypedOperationResultPage> ,RetainedCloneProgress),Fault>{
+        let selected = (0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|offset| {
             let index = (self.tools.typed_result_cursor + offset) % ARTIFACT_LIVE_OUTPUT_SLOTS;
             self.tools.tool_operations.entry(index).filter(|(_, operation)| operation.meta.instance_id == receiver && !operation.result_page_presented && operation.result_page.is_some()).map(|(id, _)| (index, *id))
-        })?;
-        self.tools.typed_result_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-        self.tools.tool_operations.get_mut(operation_id)?.take_result_page()
+        });
+        let Some((index,operation_id))=selected else{return Ok((None,Default::default()))};let demand=self.typed_operation_result_page_demands(receiver)?;
+        if !plugin_turn_admitted(demand,grant)?{return Ok((None,Default::default()))}
+        let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-std::mem::size_of::<usize>(),..grant};let(page,mut progress)=self.tools.tool_operations.get_mut(operation_id).expect("selected result owner remains mounted").take_result_page(child)?;
+        if page.is_some(){self.tools.typed_result_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+        progress.tools.copied_bytes+=std::mem::size_of::<usize>()
+    ;}Ok((page,progress))
     }
 
     fn acknowledge_typed_operation_result(&mut self, token: TypedOperationResultToken) -> Result<bool, Fault> { self.acknowledge_typed_operation_result(token) }
@@ -437,11 +441,11 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
     async fn handle_action_invocation(&mut self, address: &semio_framework::manifest::ActionAddress, source_args: &mut Option<DslValue>, original_fault: &mut Option<Fault>, active_mode_id: Option<&str>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure> { self.handle_action_invocation(address, source_args, original_fault, active_mode_id, meta, identity, cx).await }
 
     async fn handle_response_action(&mut self, action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
-        if !self.ingress.action_source_capture_ready(action, cx){return Ok(None)}
+        if !self.tool_machines.ingress.action_source_capture_ready(action, cx){return Ok(None)}
         let definition = self.tools.registry.app_command(action).await.ok_or_else(|| plugin_sdk_fault(format!("continuation command '{action}' is not owned by the receiving app")))?;
         validate_ui_dispatch_classification("receiving app", action, definition.semantics.execution.interactive_job)?;
         let kind = definition.kind;
-        let Some(command) = self.ingress.receive_action_command(action, args, original_fault, cx).await? else { return Ok(None) };
+        let Some(command) = self.tool_machines.ingress.receive_action_command(action, args, original_fault, cx).await? else { return Ok(None) };
         let wire = <A::Command as ::protocol::OpBinary>::encode_op(&command).map_err(|error| error.into_fault())?;
         let admission = self.tools.admit_command_wire(&self.stores, action, &wire, 1).await?;
         self.media.require_complete_tool_operation_pipeline(&admission)?;
@@ -477,9 +481,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
             return Err((Fault::new(FaultOrigin::App, FaultCode::new("app.intent.version-mismatch"), format!("intent action '{verb}' targets version {} but the intent bridge only resolves version-1 actions", intent.action.version))).into());
         }
         let _ = self.tools.qualified_tool_proof(&self.stores, verb)?;
-        if !self.ingress.action_source_capture_ready(verb, cx){return Ok(None)}
-        let mut merged = if self.ingress.action_source_pending(){None}else{merge_ui_values(intent.args.as_ref(), intent.input.as_ref()).await?};
-        let Some(command)=self.ingress.receive_action_command(verb, &mut merged, &mut None, cx).await?else{return Ok(None)};
+        if !self.tool_machines.ingress.action_source_capture_ready(verb, cx){return Ok(None)}
+        let mut merged = if self.tool_machines.ingress.action_source_pending(){None}else{merge_ui_values(intent.args.as_ref(), intent.input.as_ref()).await?};
+        let Some(command)=self.tool_machines.ingress.receive_action_command(verb, &mut merged, &mut None, cx).await?else{return Ok(None)};
         self.dispatch_ctx().dispatch_typed(command, meta, identity, cx).await.map(Some).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 

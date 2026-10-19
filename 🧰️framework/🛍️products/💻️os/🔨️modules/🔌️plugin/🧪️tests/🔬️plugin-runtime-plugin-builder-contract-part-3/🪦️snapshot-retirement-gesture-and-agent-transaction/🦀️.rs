@@ -6,6 +6,8 @@
     }
 
     impl store::ErasedSnapshotRetirement for TestSnapshotRetirement {
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.demands(maximum_body_bytes)}
+
         fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
             use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
             if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())); }
@@ -104,7 +106,7 @@ pub fn install_test_snapshot_retirement(app: &mut VcsArtifactApp<TestApp, TestMe
         assert!(app.child_composition.composition.graph_mut().await.owner_of("child-1").await.is_none());
         close_member_admission_fixture(&mut returned);
         close_member_admission_app(&mut app,cx);
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -171,7 +173,7 @@ pub fn install_test_snapshot_retirement(app: &mut VcsArtifactApp<TestApp, TestMe
         assert_eq!(carrying.len(), 1, "exactly one composite row names the child's own edit id: {:?}", composite_rows.iter().map(|row| (row.edit_id.clone(), row.child_edit_ids.clone())).collect::<Vec<_>>());
         assert_eq!(carrying[0].child_edit_ids.len(), 1, "the composite row names the child's own edit id exactly once: {:?}", carrying[0].child_edit_ids);
         assert!(carrying[0].edit_id.is_some(), "the row that names the child's edit also carries the parent's own edit: {:?}", carrying[0].edit_id);
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -232,8 +234,8 @@ pub fn install_test_snapshot_retirement(app: &mut VcsArtifactApp<TestApp, TestMe
         let stray = ChildEmit::encode_groups(&[test_child_emit("slot", "ghost", &[TestMutation::SetCount(SetCount { value: 1 })])]);
         let refused = app.transaction_prepare("txn-agent-3", "", &[], &[], &stray, Some(protocol::MutationOrigin::Owner)).await;
         assert_eq!(refused.rejection.expect("a child this instance does not hold is refused").code.0, "transaction.member-rejected");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }

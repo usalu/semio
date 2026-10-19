@@ -1,0 +1,30 @@
+{
+  "schema": "semio.energy.retained-model-state/v1",
+  "authority": "model",
+  "snapshotFields": ["schema", "model", "referencedModel", "weatherLink"],
+  "storage": {"rows": "PersistentList", "variableFields": "SealedSharedOrPersistentList", "fanout": 16, "maximumCopyBytes": 4096, "simulationInput": "originalBoundPaidMaterialization"},
+  "laws": ["onePersistedModel", "noChildMirrorFallback", "originalSourceBinding", "separateRootProjectionAndTransfer", "fieldLocalVariablePayloadSharing", "changedAncestorPagesOnly", "namedMembershipAdmission", "deterministicSparseDiff", "originalNegativeBeforeCommit", "centralApplierOnly", "exactAllocationAndRelease", "zeroEffectDeniedGrant", "controlledPrefixCancellation", "originalFactoryAfterCatalogRemoval"],
+  "model": {
+    "name":"Original Energy β","version":"1","site":{"latitude_deg":52,"longitude_deg":13,"elevation_m":34,"time_zone_hours":1,"north_axis_deg":0},
+    "zones":[{"id":1,"name":"A","volume_m3":100,"multiplier":1,"conditioned":true,"part_of_total_floor_area":true}],
+    "spaces":[],"surfaces":[],"fenestrations":[],"materials":[],"glazing_materials":[],"gas_materials":[],"constructions":[],
+    "people":[],"lighting":[],"equipment":[],"thermostats":[],"humidistats":[],"setpoint_managers":[],"ideal_loads":[],"zone_equipment":[],
+    "air_loops":[],"plant_loops":[],"outdoor_air_systems":[],"infiltrations":[],"mechanical_ventilations":[],"shading_surfaces":[],"space_lists":[],
+    "thermal_enclosures":[],"adjacency_pairs":[],"airflow_network":null,"electrical_load_centers":[],"pv_systems":[],"battery_storage":[],"shw_systems":[],
+    "solar_thermal_systems":[],"refrigeration_systems":[],"water_systems":[],"faults":[],"output_variables":[],"sizing_objects":[],"daylight_zones":[],"room_air_models":[],
+    "ground_temperature":{"building_surface_c":[10,10,10,10,10,10,10,10,10,10,10,10],"shallow_c":[9,9,9,9,9,9,9,9,9,9,9,9],"deep_c":8},
+    "run_period":{"start_month":1,"start_day":1,"end_month":1,"end_day":2,"year":2024},
+    "schedules":{"constants":[{"id":1,"value":1}],"daily":[],"weekly":[],"annual":[],"time_series":[]}
+  },
+  "refusals": [
+    {"id":"zero-volume","patch":{"volume_m3":0},"admitted":false},
+    {"id":"negative-volume","patch":{"volume_m3":-1},"admitted":false},
+    {"id":"zero-multiplier","patch":{"multiplier":0},"admitted":false}
+  ],
+  "cases": [
+    {"id": "zone-label", "before": {"zones": [{"id": 1, "name": "A", "volume_m3": 100,"multiplier":1,"conditioned":true,"part_of_total_floor_area":true}, {"id": 2, "name": "B", "volume_m3": 200,"multiplier":1,"conditioned":true,"part_of_total_floor_area":true}], "surfaces": [{"id": 9, "vertices_m": [[0,0,0],[1,0,0],[1,1,0]]}]}, "forward": [{"op": "replace", "path": "/zones/1/name", "value": "β"}], "inverse": [{"op": "replace", "path": "/zones/1/name", "value": "B"}], "after": {"zones": [{"id": 1, "name": "A", "volume_m3": 100,"multiplier":1,"conditioned":true,"part_of_total_floor_area":true}, {"id": 2, "name": "β", "volume_m3": 200,"multiplier":1,"conditioned":true,"part_of_total_floor_area":true}], "surfaces": [{"id": 9, "vertices_m": [[0,0,0],[1,0,0],[1,1,0]]}]}, "unchangedAuthorities": ["zones/0", "surfaces", "surfaces/0/vertices_m"]},
+    {"id": "zone-volume", "before": {"zones": [{"id": 1, "name": "A", "volume_m3": 100,"multiplier":1,"conditioned":true,"part_of_total_floor_area":true}]}, "forward": [{"op": "replace", "path": "/zones/0/volume_m3", "value": 120}], "inverse": [{"op": "replace", "path": "/zones/0/volume_m3", "value": 100}], "after": {"zones": [{"id": 1, "name": "A", "volume_m3": 120,"multiplier":1,"conditioned":true,"part_of_total_floor_area":true}]}, "unchangedAuthorities": ["zones/0/name"]},
+    {"id": "zone-insert", "before": {"zones": [{"id": 1, "name": "A", "volume_m3": 100,"multiplier":1,"conditioned":true,"part_of_total_floor_area":true}]}, "forward": [{"op": "add", "path": "/zones/1", "value": {"id": 2, "name": "B", "volume_m3": 200,"multiplier":1,"conditioned":true,"part_of_total_floor_area":true}}], "inverse": [{"op": "remove", "path": "/zones/1"}], "after": {"zones": [{"id": 1, "name": "A", "volume_m3": 100,"multiplier":1,"conditioned":true,"part_of_total_floor_area":true}, {"id": 2, "name": "B", "volume_m3": 200,"multiplier":1,"conditioned":true,"part_of_total_floor_area":true}]}, "unchangedAuthorities": ["zones/0"]},
+    {"id": "zone-remove", "before": {"zones": [{"id": 1, "name": "A", "volume_m3": 100,"multiplier":1,"conditioned":true,"part_of_total_floor_area":true}, {"id": 2, "name": "B", "volume_m3": 200,"multiplier":1,"conditioned":true,"part_of_total_floor_area":true}]}, "forward": [{"op": "remove", "path": "/zones/0"}], "inverse": [{"op": "add", "path": "/zones/0", "value": {"id": 1, "name": "A", "volume_m3": 100,"multiplier":1,"conditioned":true,"part_of_total_floor_area":true}}], "after": {"zones": [{"id": 2, "name": "B", "volume_m3": 200,"multiplier":1,"conditioned":true,"part_of_total_floor_area":true}]}, "unchangedAuthorities": ["zones/1"]}
+  ]
+}

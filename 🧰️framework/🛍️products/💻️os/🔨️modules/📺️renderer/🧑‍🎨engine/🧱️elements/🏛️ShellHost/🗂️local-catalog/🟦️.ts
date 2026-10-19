@@ -14,19 +14,21 @@
  * @see ../../../../../../🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🟦️.ts */
 // #endregion 🧲️Header
 
-import { decodePackValue, encodePackValue } from "@semio-tech/framework/packs";
+import { decodePackValue } from "@semio-tech/framework/packs";
 import { decodeDocumentArchiveBytes, encodeDocumentArchiveBytes } from "@semio-tech/framework/wire-contracts";
 import { type PersistenceBinding } from "@semio-tech/framework/backbone";
 import type { MutationEnvelope } from "@semio-tech/framework/replication";
+
 import {
   admitLocalDocument,
-  applyLocalCatalogConfigMutation,
   LOCAL_CATALOG_CONFIG_SCHEMA,
+  localCatalogMutationDiffPair,
   type LocalCatalog,
   type LocalCatalogConfigMutation,
   type LocalDocument,
   type LocalDocumentStorage
 } from "@semio-tech/framework/config/mutations";
+import { applyLocalCatalogDiff, decodeLocalCatalogDiff, decodeLocalCatalogValue } from "@semio-tech/framework/config/schema/mutations";
 
 //#region 🔖️Contract
 /** 🧭️ The lane's two guest commands and the landing app's re-hydration action. */
@@ -119,41 +121,38 @@ export function localCatalogDocumentIdV1(args: Readonly<Record<string, unknown>>
 //#endregion 🔖️Admission
 
 //#region 🔖️Facet
-/** 🧾️ One whole-record `MutationEnvelope` of the catalog facet (the identity facet's shape): the diff carries the next
- * catalog, the inverse the one before, so a cross-tab listener folds by replacement. */
+/** 🧾️ One `MutationEnvelope` of the catalog facet: `diff.payload` is the sparse catalog diff the mutation names and
+ * `inverse.inverseDiff` the sum of its concrete inverse mutations' diffs (`🎚️config/🧬️schema/🧬️mutations/🟦️.ts`). The store worker folds
+ * the diff through the twin of the central applier and persists the result; no record of the catalog travels. */
 export function localCatalogMutationEnvelopeV1(actor: string, mutation: LocalCatalogConfigMutation, base: LocalCatalog): MutationEnvelope {
+  const { diff, inverse } = localCatalogMutationDiffPair(mutation, base);
   return {
     id: `local-catalog-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
     actor,
     document: LOCAL_CATALOG_CONFIG_SCHEMA,
     schemaVersion: LOCAL_CATALOG_CONFIG_SCHEMA,
     payloadHash: "",
-    diff: { schemaId: LOCAL_CATALOG_CONFIG_SCHEMA, payload: applyLocalCatalogConfigMutation(base, mutation) },
-    inverse: { targetOperation: mutation.mutation, inverseDiff: { schemaId: LOCAL_CATALOG_CONFIG_SCHEMA, payload: base }, baseVersion: 0, undoPolicy: "exactBaseOnly" },
+    diff: { schemaId: LOCAL_CATALOG_CONFIG_SCHEMA, payload: diff },
+    inverse: { targetOperation: mutation.mutation, inverseDiff: { schemaId: LOCAL_CATALOG_CONFIG_SCHEMA, payload: inverse }, baseVersion: 0, undoPolicy: "exactBaseOnly" },
   };
 }
 
-/** 🔎️ A catalog carried by an envelope payload or a persisted archive, or `undefined` for anything else. */
-export function decodeLocalCatalogPayloadV1(payload: unknown): LocalCatalog | undefined {
-  if (payload === null || typeof payload !== "object" || !Array.isArray((payload as { documents?: unknown }).documents)) return undefined;
-  const documents: LocalDocument[] = [];
-  for (const entry of (payload as { documents: unknown[] }).documents) {
-    const candidate = entry as Partial<LocalDocument> | null;
-    if (candidate === null || typeof candidate !== "object" || typeof candidate.documentId !== "string" || typeof candidate.schema !== "string" || typeof candidate.name !== "string" || (candidate.storage !== "folder" && candidate.storage !== "file") || typeof candidate.target !== "string" || typeof candidate.admittedAtMs !== "number") return undefined;
-    documents.push({ documentId: candidate.documentId, schema: candidate.schema, name: candidate.name, storage: candidate.storage, target: candidate.target, admittedAtMs: candidate.admittedAtMs });
+/** 🧮️ The catalog the envelopes' diffs fold to from `base`, in order, through the twin of the central applier; an envelope whose
+ * payload is not a catalog diff is skipped. This is the shell's projection of another tab's mutations, and its optimistic
+ * projection of its own until the store's archive replaces it. */
+export function foldLocalCatalogEnvelopesV1(base: LocalCatalog, envelopes: readonly Pick<MutationEnvelope, "diff">[]): LocalCatalog {
+  let catalog = base;
+  for (const envelope of envelopes) {
+    const diff = decodeLocalCatalogDiff(envelope.diff.payload);
+    if (diff !== undefined) catalog = applyLocalCatalogDiff(catalog, diff);
   }
-  return { documents };
-}
-
-/** 🗃️ The facet's persisted form: the whole catalog as the archive's pack value (the identity facet's form). */
-export function localCatalogArchiveV1(catalog: LocalCatalog): Uint8Array {
-  return encodeDocumentArchiveBytes({ parent_pack: Array.from(encodePackValue(catalog)), parent_spr: [], members: [] });
+  return catalog;
 }
 
 /** 🗃️ The catalog a persisted archive holds, or `undefined` when the archive is not one. */
 export function decodeLocalCatalogArchiveV1(archive: Uint8Array): LocalCatalog | undefined {
   try {
-    return decodeLocalCatalogPayloadV1(decodePackValue(new Uint8Array(decodeDocumentArchiveBytes(archive).parent_pack)));
+    return decodeLocalCatalogValue(decodePackValue(new Uint8Array(decodeDocumentArchiveBytes(archive).parent_pack)));
   } catch {
     return undefined;
   }

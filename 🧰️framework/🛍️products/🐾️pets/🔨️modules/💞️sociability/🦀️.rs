@@ -81,9 +81,50 @@ pub(crate) fn reconcile(draft: &mut Draft<'_>, index: usize, now: Ticks) {
         recall(draft, now);
         bond(draft, index, other, Activity::Sulk);
     }
+    feel(draft, index, Occasion::Mended, now);
     draft.stage.actors[index].partner = None;
 }
 //#endregion 🔖️Rapport
+
+/// 🎚️ Chemistry changes a pair's faded rapport inside its authored bounds.
+pub(crate) fn nudge(draft: &mut Draft<'_>, first: usize, second: usize, delta: f64, now: Ticks) {
+    recall(draft, now);
+    let (early, late) = if first < second { (first, second) } else { (second, first) };
+    let a = draft.stage.actors[early].species.clone();
+    let b = draft.stage.actors[late].species.clone();
+    let mut found = false;
+    draft.stage.rapports.retain_mut(|rapport| {
+        if rapport.between != [a.clone(), b.clone()] { return true; }
+        found = true;
+        rapport.drift = clamp(rapport.drift + delta, -RAPPORT_SPAN, RAPPORT_SPAN);
+        rapport.drift != 0.0
+    });
+    if !found {
+        let drift = clamp(delta, -RAPPORT_SPAN, RAPPORT_SPAN);
+        if drift != 0.0 { draft.stage.rapports.push(Rapport { between: [a, b], drift }); }
+    }
+}
+
+/// 🔗️ A promise names a pair in either order.
+fn joins(between: &[String; 2], one: &str, other: &str) -> bool {
+    (between[0] == one && between[1] == other) || (between[0] == other && between[1] == one)
+}
+
+/// 💍️ An encounter promise replaces the pair's prior promise and expires after thirty seconds.
+pub(crate) fn pledge(draft: &mut Draft<'_>, one: &str, other: &str, encounter: Activity, now: Ticks) {
+    draft.stage.pledges.retain(|entry| entry.until > now && !joins(&entry.between, one, other));
+    draft.stage.pledges.push(Pledge { between: [one.to_owned(), other.to_owned()], encounter, until: now + LEAN_TICKS });
+}
+
+/// 🎫️ Redeem the first live promise for an encounter, forgetting expired promises.
+fn redeem(draft: &mut Draft<'_>, one: &str, other: &str, now: Ticks) -> Option<Activity> {
+    let mut promised = None;
+    draft.stage.pledges.retain(|entry| {
+        if entry.until <= now { return false; }
+        if promised.is_none() && joins(&entry.between, one, other) { promised = Some(entry.encounter); false } else { true }
+    });
+    promised
+}
 
 //#region 🔖️Encounters
 /// 💌️ On a whole second the stage may pair two sociable actors that stand near each other (no farther apart than 12 of their mean widths, no more than 3 in height): one stage draw picks a pair, weighted `(0.25 + |authored affinity|) × mean sociability` (pairs that feel something for each other meet more often than strangers, and whoever has just had company lets others go first), and decides with the chance `rate × mean sociability`. Sociability is the need as it stands now. The pair then approaches; when the mode has room for one mover only, the more sociable of the two walks.
@@ -93,7 +134,7 @@ pub(crate) fn pair(menagerie: &Menagerie, draft: &mut Draft<'_>, now: Ticks) {
     }
     let limits = MODE_LIMITS[draft.stage.mode];
     let actors = &draft.stage.actors;
-    let movers = actors.iter().filter(|body| matches!(body.activity, Activity::Walk | Activity::Hop)).count();
+    let movers = actors.iter().filter(|body| astir(draft, body)).count();
     if movers >= limits.movers {
         return;
     }
@@ -103,12 +144,12 @@ pub(crate) fn pair(menagerie: &Menagerie, draft: &mut Draft<'_>, now: Ticks) {
     let mut socials: Vec<f64> = Vec::new();
     let mut weights: Vec<f64> = Vec::new();
     for (first, one) in actors.iter().enumerate() {
-        if !sociable(one) {
+        if !sociable(one, now) {
             continue;
         }
         let eager = needs_after(one.needs, Activity::Idle, now - one.since, draft.kinds[first].temperament).sociability;
         for (second, two) in actors.iter().enumerate().skip(first + 1) {
-            if !sociable(two) {
+            if !sociable(two, now) {
                 continue;
             }
             let width = (draft.kinds[first].size.width + draft.kinds[second].size.width) / 2.0;
@@ -142,7 +183,7 @@ pub(crate) fn pair(menagerie: &Menagerie, draft: &mut Draft<'_>, now: Ticks) {
 fn parted(draft: &Draft<'_>, first: usize, second: usize) -> bool {
     let one = &draft.stage.actors[first];
     let two = &draft.stage.actors[second];
-    if one.perch != two.perch {
+    if one.footing != Footing::Perch || two.footing != Footing::Perch || one.perch != two.perch {
         return false;
     }
     let low = smaller(one.x, two.x);
@@ -165,7 +206,7 @@ fn approach(draft: &mut Draft<'_>, first: usize, second: usize, walker: u8, now:
     draft.stage.actors[second].partner = Some(partner);
     let one = draft.stage.actors[first].x;
     let two = draft.stage.actors[second].x;
-    let apart = (draft.kinds[first].size.width + draft.kinds[second].size.width) / 2.0 + MEET_GAP;
+    let apart = (draft.kinds[first].size.width + draft.kinds[second].size.width) / 2.0 + larger(draft.kinds[first].reach + draft.kinds[second].reach, COMFORT_GAP) + SEAM;
     let side = if two >= one { 1.0 } else { -1.0 };
     let close = (two - one).abs() <= apart;
     let middle = (one + two) / 2.0;
@@ -201,7 +242,11 @@ pub(crate) fn meet(menagerie: &Menagerie, draft: &mut Draft<'_>, now: Ticks) {
         let words = random_words(&stage_key(draft), 4);
         let one = &draft.stage.actors[first];
         let two = &draft.stage.actors[second];
-        let kind = encounter_of(affinity_of(menagerie, &draft.stage.rapports, &one.species, &two.species), unit_of(words[0]));
+        let leaning = encounter_bias(present(draft, first, now), present(draft, second, now));
+        let affinity = clamp(affinity_of(menagerie, &draft.stage.rapports, &one.species, &two.species) + leaning.affinity, AFFINITY_FLOOR, 1.0);
+        let picked = weighted_index(&swayed_shares(encounter_shares(affinity), leaning), unit_of(words[0]));
+        let names = [one.species.clone(), two.species.clone()];
+        let kind = redeem(draft, &names[0], &names[1], now).unwrap_or(ENCOUNTERS[picked.unwrap_or(0)]);
         let until = now + dwell_of(kind, draft.stage.mode, unit_of(words[1]));
         shift(draft, first, kind, now);
         shift(draft, second, kind, now);
@@ -214,9 +259,88 @@ pub(crate) fn meet(menagerie: &Menagerie, draft: &mut Draft<'_>, now: Ticks) {
         two.until = until;
         two.clip = clip;
         bond(draft, first, second, kind);
+        let occasion = match kind { Activity::Greet => Occasion::Welcomed, Activity::Cuddle => Occasion::Cuddled, _ => Occasion::Squabbled };
+        feel(draft, first, occasion, now);
+        feel(draft, second, occasion, now);
+        if kind == Activity::Greet {
+            if let Some(show) = leaning.show {
+                let shower = if show == 0 { first } else { second };
+                let watcher = if show == 0 { second } else { first };
+                let species = draft.kinds[shower];
+                if let Some(trick) = show_trick(species, &standing(draft, shower, now).state, present(draft, shower, now), unit_of(words[if show == 0 { 2 } else { 3 }])) {
+                    perform(draft, shower, trick, now);
+                    let end = Ticks::max(draft.stage.actors[shower].until, until);
+                    draft.stage.actors[shower].until = end;
+                    draft.stage.actors[watcher].until = end;
+                    feel(draft, watcher, Occasion::Entertained, now);
+                }
+            }
+        }
     }
 }
 //#endregion 🔖️Encounters
+
+/// 🦠️ Each staying actor catches neighbours' feelings from the same pre-beat snapshot.
+pub(crate) fn contagion(menagerie: &Menagerie, draft: &mut Draft<'_>, now: Ticks) {
+    let count = draft.stage.actors.len();
+    if count < 2 { return; }
+    let felt: Vec<_> = (0..count).map(|index| present(draft, index, now)).collect();
+    for catcher in 0..count {
+        let body = &draft.stage.actors[catcher];
+        if body.leaving { continue; }
+        let kind = draft.kinds[catcher];
+        let mut mine = felt[catcher];
+        for giver in 0..count {
+            let other = &draft.stage.actors[giver];
+            if giver == catcher || other.leaving { continue; }
+            let peer = draft.kinds[giver];
+            let across = (body.x - other.x).abs() - (kind.size.width + peer.size.width) / 2.0;
+            if across > (CONTAGION_REACH * (kind.size.width + peer.size.width)) / 2.0 || (body.y - other.y).abs() > kind.size.height + peer.size.height { continue; }
+            mine = caught(mine, felt[giver], affinity_of(menagerie, &draft.stage.rapports, &body.species, &other.species), kind.temperament.sociability, now);
+        }
+        if mine != felt[catcher] { draft.stage.actors[catcher].feeling = mine; }
+    }
+}
+
+/// 👆️ Click attention warms an actor through greetings, tricks, purring and a shrug.
+pub(crate) fn clicked(draft: &mut Draft<'_>, species: &str, x: f64) {
+    let Some(index) = index_of(&draft.stage.actors, species).filter(|_| draft.stage.mode != PetMode::Still && draft.stage.play) else { return; };
+    if draft.stage.actors[index].leaving { return; }
+    let now = draft.stage.tick;
+    let body = &mut draft.stage.actors[index];
+    body.warmth = warmth_after(body.warmth, now, Caress::Click);
+    let tier = body.warmth.tier;
+    if tier == Tier::Enough && body.warmth.run > 1 { return; }
+    let reached = loose(body) || (body.activity == Activity::Sulk && body.footing == Footing::Perch && body.perch.is_some());
+    if !reached {
+        feel(draft, index, match tier { Tier::Purr => Occasion::Purred, Tier::Enough => Occasion::Pestered, _ => Occasion::Greeted }, now);
+        return;
+    }
+    if body.activity == Activity::Sulk { reconcile(draft, index, now); }
+    if draft.stage.actors[index].activity == Activity::Sleep { feel(draft, index, Occasion::Woken, now); }
+    if tier == Tier::Enough { shrug(draft, index, x, now); return; }
+    if tier == Tier::Purr { feel(draft, index, Occasion::Purred, now); crate::draft::purr(draft, index, PURR_TICKS, now); heed(draft, index, x, now); return; }
+    let kind = draft.kinds[index];
+    let trick = (tier == Tier::Trick).then(|| crate::feeling::click_trick(kind, &standing(draft, index, now).state, present(draft, index, now), draft.stage.actors[index].warmth.tricks - 1)).flatten();
+    if let Some(trick) = trick { perform(draft, index, trick, now); heed(draft, index, x, now); } else { feel(draft, index, Occasion::Greeted, now); hail(draft, index, x, now); }
+}
+
+/// 🎮️ Keyboard deeds use the same authored greetings, tricks and purring as pointer attention.
+pub(crate) fn played(draft: &mut Draft<'_>, species: &str, deed: Deed) {
+    let Some(index) = index_of(&draft.stage.actors, species).filter(|_| draft.stage.mode != PetMode::Still && draft.stage.play && deed != Deed::Toss) else { return; };
+    if !loose(&draft.stage.actors[index]) { return; }
+    let now = draft.stage.tick;
+    let kind = draft.kinds[index];
+    if deed == Deed::Pet { feel(draft, index, Occasion::Purred, now); crate::draft::purr(draft, index, PURR_TICKS, now); return; }
+    let state = standing(draft, index, now).state;
+    let feeling = present(draft, index, now);
+    let trick = if deed == Deed::Trick { crate::feeling::click_trick(kind, &state, feeling, draft.stage.actors[index].warmth.tricks).or_else(|| crate::feeling::whim_trick(kind, &state, feeling, 0.0)) } else { None };
+    if let Some(trick) = trick { draft.stage.actors[index].warmth.tricks += 1; perform(draft, index, trick, now); } else {
+        feel(draft, index, Occasion::Greeted, now);
+        let body = &draft.stage.actors[index];
+        hail(draft, index, body.x + body.facing.sign(), now);
+    }
+}
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

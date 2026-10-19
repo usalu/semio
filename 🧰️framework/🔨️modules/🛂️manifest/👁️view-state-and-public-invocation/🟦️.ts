@@ -287,3 +287,22 @@ export function hostArmedViewContext(view: PluginViewState, hostActiveToolId: st
 //#endregion PluginRuntime
 //#endregion 🔌️PluginAndAppContract
 // #endregion 🛂️Manifest
+
+/** 🧰️ Resolves utilities through exact window ownership; kind requests need an addressed or unique live instance. */
+export function windowUtility(view: PluginViewState, windowId?: string): string | undefined {
+  const requested = windowId ?? view.windowId;
+  if (requested === undefined) return view.activeUtilityId || undefined;
+  const roster = view.windowInstances ?? [];
+  let id = requested;
+  if (!roster.some(window => window.id === requested)) {
+    const candidates = roster.filter(window => window.windowKindId === requested);
+    if (candidates.length) {
+      const instance = candidates.find(window => window.id === view.windowId) ?? candidates.find(window => window.id === view.focusedWindowId) ?? (candidates.length === 1 ? candidates[0] : undefined);
+      if (!instance) return undefined;
+      id = instance.id;
+    }
+  }
+  const utilities = view.activeUtilityByWindowId;
+  return (utilities && Object.hasOwn(utilities, id) ? utilities[id] : view.windowId === id ? view.activeUtilityId : undefined) || undefined;
+}
+

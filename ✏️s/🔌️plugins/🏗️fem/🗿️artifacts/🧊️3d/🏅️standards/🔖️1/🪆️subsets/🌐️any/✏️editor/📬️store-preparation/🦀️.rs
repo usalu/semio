@@ -50,6 +50,8 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
         }
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Fem3dArtifactPreparation>(), depth: 1 })
     }
+    fn begin_copy_byte_demand(&self,input:&Fem3dMutation,lane:store::os_store::store_schema::HistoryLane)->Result<usize,semio_framework_value::ValueError>{self.begin_demand(input,lane)?; std::mem::size_of::<store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Fem3dSnapshot, Fem3dMutation, Fem3dMutation>>().checked_add(std::mem::size_of::<Fem3dArtifactPreparation>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original preparation header quote overflow"))}
+
 
     fn begin(
         &self,
@@ -77,7 +79,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
 }
 
 impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Fem3dSnapshot, Fem3dMutation> for Fem3dArtifactPreparation {
-    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+    fn advance(&mut self, body:usize,grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use protocol::Mutation as _;
         let fault = |message: &'static str| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, message);
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
@@ -99,7 +101,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Fem3
                 return Err(error);
             }
         };
-        let post = match protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()) {
+        let post = match protocol::apply_diff_cold(mutation.diff(base.get()).diff(), base.get()) {
             Ok(post) => post,
             Err(_) => {
                 *self.owners.mutation = Some(mutation);

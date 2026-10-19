@@ -1,0 +1,213 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "bodyBytes",
+    "cancelCuts",
+    "cases",
+    "plainCases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "bodyBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cancelCuts": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "unchanged",
+          "original",
+          "authored",
+          "change",
+          "inverse"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "unchanged": {
+            "type": "boolean"
+          },
+          "original": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "authored": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "change": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "inverse": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "plainCases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "authored",
+          "original",
+          "unchanged"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "text",
+              "bytes",
+              "f64"
+            ]
+          },
+          "authored": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                }
+              }
+            ]
+          },
+          "original": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                }
+              }
+            ]
+          },
+          "unchanged": {
+            "type": "boolean"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "text"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "authored": {
+                  "type": "string"
+                },
+                "original": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "bytes"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "authored": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  }
+                },
+                "original": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "f64"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "authored": {
+                  "type": "string",
+                  "enum": [
+                    "nan",
+                    "+0",
+                    "-0",
+                    "1",
+                    "2"
+                  ]
+                },
+                "original": {
+                  "type": "string",
+                  "enum": [
+                    "nan",
+                    "+0",
+                    "-0",
+                    "1",
+                    "2"
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

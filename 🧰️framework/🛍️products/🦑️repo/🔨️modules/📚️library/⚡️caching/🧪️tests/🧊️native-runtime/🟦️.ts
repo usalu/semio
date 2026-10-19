@@ -1,6 +1,7 @@
 import {readNativeRuntimeManifestV1} from "@semio-tech/framework-renderer-wgpu/native-entrypoint/modules/contract";
 import {captureOwnedCommandResultV1} from "@semio-tech/process/execution";
 import {withCapturedCargoArtifactsTaskV1} from "@semio-tech/process/native-build";
+import {preparePlaygroundFixtureTargetsV1} from "../🎮️playground-preparation/🟦️.ts";
 import {scriptInvocationEnvironment,createRequestedIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
 import {buildRepositoryCargoArtifacts} from "../../📦️artifacts/🏗️native-build/🟦️.ts";
@@ -55,6 +56,7 @@ export async function testNativeRuntime(workspace:string,_output:string,invocati
   const {buildComponentClosureV1}=await import(join(plugin,"🏗️build/🧩️driver-stages/🟦️.ts"));
   await withInstalledNxFixtureV1(workspace,{kind:"products"},invocation,phaseControl,async(root,namespaceEnvironment,productOutput,actualPhase,toolkitRoot)=>{
   const put=(path:string,value:string)=>{if(join(root,path).length>256)throw Error("Bounded Native fixture path required");mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),value);};
+  const sourceRoot=join(root,"preparation-source"),receivedTargets=await preparePlaygroundFixtureTargetsV1(workspace,sourceRoot,invocation,actualPhase);assert(receivedTargets[`prepare-${fixture.variant}-native-${mode}`]);
   await buildComponentClosureV1(workspace,new Set([declaration.pluginId]),{facet:"model",invocation,network:repositoryCargoNetworkV1(invocation,workspace),control:actualPhase});checkResourceLeaseControl(actualPhase);
   put("package.json",'{"name":"native-runtime-fixture","private":true,"type":"module"}');put("nx.json",JSON.stringify({useDaemonProcess:false}));put("source/input","first");put(".gitignore","node_modules\n.nx\nout\n.counts\n*.pid\n");
   put("project.json",JSON.stringify({name:"fixture",targets:{prepare:{executor:"nx:run-commands",cache:true,inputs:["{workspaceRoot}/source/input","{workspaceRoot}/📜️script.ts"],outputs:["{workspaceRoot}/out/runtime"],options:{command:"bun ./📜️script.ts publish"}},consume:{executor:"nx:run-commands",cache:false,outputs:[],dependsOn:["prepare"],options:{command:"bun ./📜️script.ts run"}}}}));

@@ -62,3 +62,6 @@ pub use semio_framework_pets_traversal::swing::{
 
 /// 🧪️ The JSON codec the Protocol v2 subject hosts decode the shared vectors with.
 pub use serde_json;
+
+/// 📏️ The staging producer owns the shared grounded-spacing vocabulary.
+pub use semio_framework_pets_staging::spacing;

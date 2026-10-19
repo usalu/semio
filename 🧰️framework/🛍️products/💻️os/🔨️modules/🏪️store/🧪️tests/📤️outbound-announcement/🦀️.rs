@@ -74,6 +74,7 @@ fn drain_announced(remote: &ChannelBackboneRemote) -> (Vec<semio_framework_os_sp
 /// 🧺️ Publishes one gesture exactly as the plugin SDK does on a store with a backbone: an outbound batch advanced to its
 /// receipt, announced once, then acknowledged and closed.
 async fn publish_outbound_gesture(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, operation: u64, gesture: &Gesture, next_value: &mut i32) {
+    let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
     let factory: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = Arc::new(DemoOneItemPreparationFactory::admissible());
     let mutations = (0..gesture.items)
         .map(|_| {
@@ -86,7 +87,7 @@ async fn publish_outbound_gesture(store: &mut ArtifactStore<DemoSnapshot, DemoMu
         .unwrap_or_else(|rejected| panic!("outbound batch admission: {}", rejected.reason));
     let grant = batch_turn_grant();
     for _ in 0..1_048_576 {
-        if let ArtifactStoreOneItemAdvance::Published(_) = store.advance_apply_batch(&mut publication, grant).expect("bounded batch step") {
+        if let ArtifactStoreOneItemAdvance::Published(_, _) = receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, grant,receiving)).expect("bounded batch step") {
             break;
         }
     }

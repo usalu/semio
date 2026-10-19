@@ -9,6 +9,12 @@ impl protocol::Mutation<Snapshot> for Mutation {
     type Diff=Diff;
     const DESCRIPTORS:&'static[protocol::MutationLeafDescriptor]=&[];
     fn descriptor(&self)->&'static protocol::MutationLeafDescriptor{match *self{}}
+
+
+}
+
+impl protocol::ColdMutation<Snapshot> for Mutation {
+    type ReferenceDiff = Diff;
     fn diff(&self,_base:&Snapshot)->protocol::MutationOutcome<Diff>{match *self{}}
     fn inverse(&self,_base:&Snapshot)-> Result<Vec<Self>, semio_framework_value::ValueError> {
     Ok((|| {match *self{}

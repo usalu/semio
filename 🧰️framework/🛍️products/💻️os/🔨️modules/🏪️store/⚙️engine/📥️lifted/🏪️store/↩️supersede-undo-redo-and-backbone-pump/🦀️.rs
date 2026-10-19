@@ -200,7 +200,8 @@ where
     /// ⏪️ Shared body of `Undo`/`UndoWithPolicy`: picks the edit the policy names and reverts it.
     pub(super) async fn undo_with_policy(&mut self, policy: UndoPolicy, semantic_command: Option<Box<ArtifactCommand<Mutation>>>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError>
     where
-        P: Sync,
+        P:  Clone + Sync,
+     Mutation: ColdMutation<P> ,
     {
         match policy {
             UndoPolicy::ExactBaseOnly => {
@@ -250,7 +251,8 @@ where
     pub async fn dispatch_text(&mut self, command_text: &str, identity: &mut EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError>
     where
         Mutation: OpText,
-        P: Sync,
+        P:  Clone + Sync,
+     Mutation: ColdMutation<P> ,
     {
         let command = parse_command::<P, Mutation>(command_text).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
         self.dispatch(command, identity).await
@@ -261,7 +263,8 @@ where
     pub async fn dispatch_binary(&mut self, command_bytes: &[u8], identity: &mut EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError>
     where
         Mutation: OpBinary,
-        P: Sync,
+        P:  Clone + Sync,
+     Mutation: ColdMutation<P> ,
     {
         let command = ArtifactCommand::<Mutation>::decode_command::<P>(command_bytes).map_err(|error| VcsError::Deserialize(error.to_string()))?;
         self.dispatch(command, identity).await
@@ -285,7 +288,7 @@ where
     /// Inbound twin of {@link announce_tail_edit_payload}; each envelope goes through the same
     /// {@link ingest_remote} gate a parent-lane message does, so causal order and conflict
     /// quarantining are identical on both lanes.
-    pub async fn ingest_remote_payload(&mut self, envelopes: &[u8]) -> Result<Vec<semio_framework_os_spr::MergeReport>, VcsError> {
+    pub async fn ingest_remote_payload(&mut self, envelopes: &[u8]) -> Result<Vec<semio_framework_os_spr::MergeReport>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let envelopes = semio_framework_os_spr::decode_envelopes(envelopes).map_err(|error| VcsError::Deserialize(error.to_string()))?;
         let mut reports = Vec::with_capacity(envelopes.len());
         for envelope in envelopes {
@@ -330,7 +333,7 @@ where
     /// 🛟️ The sole public remote write gate ([`Self::ingest_remote_merge`]). While a tool transaction is open its
     /// unannounced edit is lifted off the applied tail for the merge and folded back onto the merged head after it, so a
     /// remote edit never reorders, quarantines or degrades it and it stays the tail its commit announces.
-    pub async fn ingest_remote(&mut self, envelope: semio_framework_os_spr::MutationEnvelope) -> Result<semio_framework_os_spr::MergeReport, VcsError> {
+    pub async fn ingest_remote(&mut self, envelope: semio_framework_os_spr::MutationEnvelope) -> Result<semio_framework_os_spr::MergeReport, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let Some((open, edit)) = self.lift_open_transaction().await? else {
             return self.ingest_remote_merge(envelope).await;
         };
@@ -341,7 +344,7 @@ where
 
     /// 🪞️ Delegates to [`semio_framework_os_store_engine_bundle::ingest_remote_merge`]: feeds one remote envelope through the causal DAG and merges it into the edit timeline.
     #[inline]
-    async fn ingest_remote_merge(&mut self, envelope: semio_framework_os_spr::MutationEnvelope) -> Result<semio_framework_os_spr::MergeReport, VcsError> {
+    async fn ingest_remote_merge(&mut self, envelope: semio_framework_os_spr::MutationEnvelope) -> Result<semio_framework_os_spr::MergeReport, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         semio_framework_os_store_engine_bundle::ingest_remote_merge(&mut self.parts(), envelope).await
     }
 
@@ -354,7 +357,7 @@ where
     /// resolve `(slot, child_id)` to a live member, so the message waits for its owner.
     ///
     /// A store never consumes acks (they flow store→actor); drain and ignore any that echo back.
-    async fn pump_with_reports(&mut self) -> Result<(bool, Vec<semio_framework_os_spr::MergeReport>), VcsError> {
+    async fn pump_with_reports(&mut self) -> Result<(bool, Vec<semio_framework_os_spr::MergeReport>), VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let Some(mut backbone) = self.wire.backbone.take() else {
             return Ok((false, Vec::new()));
         };

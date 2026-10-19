@@ -1,5 +1,5 @@
-//! 🗂️ `set-selection-flag` command, and the two set-verbs an outliner row names (`setSelectionHidden`,
 //! `setSelectionLocked`).
+//! 🗂️ `set-selection-flag` command, and the two set-verbs an outliner row names (`setSelectionHidden`,
 
 use crate::editor::puzzle2d::interaction::Puzzle2dActionCtx;
 use semio_framework_pack_json::Value;

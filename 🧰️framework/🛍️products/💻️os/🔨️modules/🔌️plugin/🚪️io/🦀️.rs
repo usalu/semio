@@ -193,15 +193,11 @@ where
     ComposerEntry { writes: S::INTO, reads: &[S::FROM], compose: erased_compose::<S> }
 }
 
-/// 🏗️ Incremental artifact materializer — snapshot/text/binary in, soft `Diagnostic`s out.
-/// `mutate` returns the authoritative mutation outcome alongside the mutated builder. The
-/// builder applies `outcome.diff()` once and returns that outcome intact, preserving every
-/// diagnostic message without a second semantics computation. Persisted diffs cross the
-/// fallible `absorb` boundary so malformed input cannot become an unchanged snapshot.
+/// ❄️ Explicit owned wire reference construction; native snapshots use their registered receiving and preparation owners.
 pub trait ArtifactBuilder: Sized {
     type Snapshot;
-    type Mutation: Mutation<Self::Snapshot, Diff = Self::Diff>;
-    type Diff;
+    type Mutation: protocol::ColdMutation<Self::Snapshot, ReferenceDiff = Self::Diff>;
+    type Diff: protocol::ColdMutationDiff<Self::Snapshot>;
     fn empty() -> Self;
     fn from_snapshot(snapshot: Self::Snapshot) -> Self;
     fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError>;
@@ -325,7 +321,7 @@ impl<S> ArtifactChildren for NoChildren<S> {
 /// 🧬️ Hook bundle from which all public artifact lifecycle types are derived.
 pub trait DerivedArtifactSpec: Sized + 'static {
     type Snapshot;
-    type Mutation: Mutation<Self::Snapshot, Diff = Self::Diff>;
+    type Mutation: protocol::ColdMutation<Self::Snapshot, ReferenceDiff = Self::Diff>;
     type Diff: MutationDiff<Self::Snapshot>;
     type Construction: ArtifactBuilder<Snapshot = Self::Snapshot, Mutation = Self::Mutation, Diff = Self::Diff>;
     type Analysis: ArtifactAnalysis;

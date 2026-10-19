@@ -1,0 +1,20 @@
+{
+  "name": "neutral-document-work",
+  "private": true,
+  "workspaces": [
+    "product",
+    "product/local/one",
+    "source/one"
+  ],
+  "semio": {
+    "workspace": {
+      "schemaVersion": 1,
+      "members": [
+        "**"
+      ],
+      "owners": [
+        "*/package.json"
+      ]
+    }
+  }
+}

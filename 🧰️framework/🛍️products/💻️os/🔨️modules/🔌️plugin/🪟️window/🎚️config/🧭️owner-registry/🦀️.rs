@@ -20,7 +20,7 @@ pub struct WindowConfigOwnerRegistry {
 }
 
 pub(super) fn controlled_owner_demands<T: semio_framework_value::retirement::RetireOwned>(owner: &ControlledRetirement<T>, body: usize) -> Result<RetirementDemand, ValueError> {
-    Ok(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(body)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()? })
+    Ok(owner.next_demand(body)?)
 }
 
 pub(super) fn window_actor_demands(actor: &Option<protocol::ActorId>, retirement: &Option<ControlledRetirement<semio_framework_value::SharedUtf8>>, body: usize) -> Result<RetirementDemand, ValueError> {
@@ -42,6 +42,14 @@ pub(super) fn close_window_actor(actor: &mut Option<protocol::ActorId>, retireme
 }
 
 impl WindowConfigOwnerRegistry {
+    /// 🧪️ Opens a real declared fixture partition and returns its original issued authority.
+    #[cfg(any(test, feature = "artifact-app-testing"))]
+    pub async fn fixture_partition_authority(&mut self, kind: &str, id: &str) -> Result<WindowConfigAuthorityIdentity, Fault> {
+        let owner = self.owners.get_mut(kind).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.fixture-owner"), "fixture partition requires its declared original owner"))?;
+        let original = owner.capture(id).await?;
+        Ok(original.snapshot.authority)
+    }
+
     pub fn new(actor: protocol::ActorId) -> Self {
         static NEXT_LIFETIME: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
         Self { owners: WindowRegistry::new(), owner_close_cursor: 0, retiring: Default::default(), lifetime: NEXT_LIFETIME.fetch_add(1, std::sync::atomic::Ordering::Relaxed), actor: Some(actor), actor_retirement: None }
@@ -66,6 +74,11 @@ impl WindowConfigOwnerRegistry {
     /// 📸️ The current config snapshot of window `window_id` of kind `window_kind_id`, without creating its partition.
     pub fn snapshot(&self, window_kind_id: &str, window_id: &str) -> Option<WindowConfigSnapshot> {
         self.owners.get(window_kind_id)?.snapshot(window_id)
+    }
+
+    /// 👁️ Lends committed window state without a new snapshot lease or address allocation.
+    pub fn borrow<'a>(&'a self, window_kind_id: &str, window_id: &'a str) -> Option<WindowConfigBorrow<'a>> {
+        self.owners.get(window_kind_id)?.borrow(window_id)
     }
 
     /// 🪞️ Window `window_id`'s committed config with `mutations` folded on it and never published — a press's provisional
@@ -126,6 +139,7 @@ impl WindowConfigOwnerRegistry {
         self.owners.get_mut(authority.window_kind_id.as_str()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.owner"), "window config emission has no registered concrete window owner"))?.dispatch(actor, mutation, identity).await
     }
 
+    pub(crate) fn admit_catalog(&mut self,authority:&WindowConfigAuthority,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{self.owners.get_mut(&authority.window_kind_id).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original Window catalog owner is absent"))?.admit_catalog(authority,grant)}
     #[doc(hidden)]
     pub fn admit_begin(
         &mut self, operation: semio_framework_job::OperationId,
@@ -180,7 +194,7 @@ impl WindowConfigOwnerRegistry {
                 }
             }
             match self.advance_retained_load(&mut load, grant) {
-                WindowConfigPackLoadStep::Pending(_) => {}
+                WindowConfigPackLoadStep::Pending(_)|WindowConfigPackLoadStep::OwnershipProgress(_,_) => {}
                 WindowConfigPackLoadStep::Ready => {
                     if let WindowConfigPackLoadStep::Rejected(diagnostic) = self.commit_retained_load(&mut load) {
                         rejected = Some(diagnostic);

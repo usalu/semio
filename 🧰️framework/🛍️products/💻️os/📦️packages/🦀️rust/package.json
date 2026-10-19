@@ -10,7 +10,9 @@
     "test-directory-checkpoint-pair-source": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-os-kernel:test-directory-checkpoint-pair-source",
     "test-directory-checkpoint-pair-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-os-kernel:test-directory-checkpoint-pair-native",
     "test-directory-descriptor-digest-source": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-os-kernel:test-directory-descriptor-digest-source",
-    "test-directory-descriptor-digest-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-os-kernel:test-directory-descriptor-digest-native"
+    "test-directory-descriptor-digest-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-os-kernel:test-directory-descriptor-digest-native",
+    "test-retained-lane-source": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-os-kernel:test-retained-lane-source",
+    "test-retained-lane-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-os-kernel:test-retained-lane-native"
   },
   "devDependencies": {
     "@semio-tech/framework-plugin": "workspace:*",

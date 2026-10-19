@@ -63,7 +63,13 @@ macro_rules! transient_root {
                 &Self::DESCRIPTORS[0]
             }
 
-            fn diff(&self, base: &$state) -> $crate::__kernel::MutationOutcome<$diff> {
+
+
+
+        }
+impl $crate::__kernel::ColdMutation<$state> for $mutation {
+type ReferenceDiff= $diff;
+fn diff(&self, base: &$state) -> $crate::__kernel::MutationOutcome<$diff> {
                 let Self::Snapshot { transient } = self;
                 let changed = <$diff>::changing(base, transient);
                 if changed == <$diff as Default>::default() {
@@ -71,8 +77,7 @@ macro_rules! transient_root {
                 }
                 $crate::__kernel::MutationOutcome::new(changed)
             }
-
-            fn inverse(&self, base: &$state) -> Result<Vec<Self>, $crate::__value::ValueError> {
+fn inverse(&self, base: &$state) -> Result<Vec<Self>, $crate::__value::ValueError> {
                 Ok(vec![Self::Snapshot { transient: base.clone() }])
             }
         }

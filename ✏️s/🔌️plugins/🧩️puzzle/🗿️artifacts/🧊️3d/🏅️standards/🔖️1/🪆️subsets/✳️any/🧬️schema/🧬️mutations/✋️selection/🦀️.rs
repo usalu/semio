@@ -1,5 +1,5 @@
-//! ✋️ Puzzle3d selection mutations — the three parametric selection transforms (`drag-`, `rotate-`, `scale-selection`)
 //! and the selection, outcome and attraction-follow helpers they share.
+//! ✋️ Puzzle3d selection mutations — the three parametric selection transforms (`drag-`, `rotate-`, `scale-selection`)
 
 #![allow(clippy::result_large_err)]
 
@@ -11,7 +11,11 @@ extern crate semio_framework_value_derive as value_derive;
 
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
-use semio_s_artifact_puzzle_3d_model::{PUZZLE3D_IDENTITY_QUATERNION, Puzzle3dPose, derive_attraction_params, puzzle3d_attraction_child_pose, puzzle3d_vortex_full_id};
+use semio_s_artifact_puzzle_3d_model::PUZZLE3D_IDENTITY_QUATERNION;
+use semio_s_artifact_puzzle_3d_model::Puzzle3dPose;
+use semio_s_artifact_puzzle_3d_model::derive_attraction_params;
+use semio_s_artifact_puzzle_3d_model::puzzle3d_attraction_child_pose;
+use semio_s_artifact_puzzle_3d_model::puzzle3d_vortex_full_id;
 
 /// 🧭️ The members of a parametric selection leaf's target set the transform acts on, in document order, with the
 /// `mutation.partial` warnings of the ones it skips. `targets` is classified by document membership against `base`:
@@ -65,7 +69,11 @@ pub fn puzzle3d_selection_outcome(
     base: &Puzzle3dSnapshot,
     volumes: Vec<semio_s_artifact_puzzle_3d_diff::Puzzle3dTargetVolumeModification>,
 ) -> protocol::MutationOutcome<Puzzle3dDiff> {
-    use semio_s_artifact_puzzle_3d_diff::{Puzzle3dAttractionsDelta, Puzzle3dObjectPatch, Puzzle3dObjectModification, Puzzle3dObjectsDelta, Puzzle3dTargetVolumesDelta};
+    use semio_s_artifact_puzzle_3d_diff::Puzzle3dAttractionsDelta;
+    use semio_s_artifact_puzzle_3d_diff::Puzzle3dObjectPatch;
+    use semio_s_artifact_puzzle_3d_diff::Puzzle3dObjectModification;
+    use semio_s_artifact_puzzle_3d_diff::Puzzle3dObjectsDelta;
+    use semio_s_artifact_puzzle_3d_diff::Puzzle3dTargetVolumesDelta;
     let mut messages = selection.warnings;
     let objects: Vec<Puzzle3dObjectModification> = base
         .objects
@@ -154,7 +162,8 @@ pub struct Puzzle3dSelectionFollow {
 /// ([`derive_attraction_params`]), so resolving the document afterwards never snaps a moved object back. Without
 /// `follow` (a scaling) nothing follows and no attraction changes.
 pub fn puzzle3d_selection_follow(base: &Puzzle3dSnapshot, targets: &[String], selection: &Puzzle3dSelection<'_>, pose: &dyn Fn(&semio_s_artifact_puzzle_3d_model::Puzzle3dObject) -> Puzzle3dPose, follow: bool) -> Puzzle3dSelectionFollow {
-    use semio_s_artifact_puzzle_3d_diff::{Puzzle3dAttractionPatch, Puzzle3dAttractionModification};
+    use semio_s_artifact_puzzle_3d_diff::Puzzle3dAttractionPatch;
+    use semio_s_artifact_puzzle_3d_diff::Puzzle3dAttractionModification;
     let survivors: std::collections::BTreeSet<&str> = selection.objects.iter().map(|entry| entry.id.as_str()).collect();
     let mut solved = Puzzle3dSelectionFollow { poses: vec![None; base.objects.len()], ..Default::default() };
     let mut queue = std::collections::VecDeque::new();

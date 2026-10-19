@@ -91,6 +91,7 @@ impl RetireOwned for GenerationPlayRoot {
 /// 🔗️ Closes one original generation lease and funds the complete final-owner backing separately.
 pub struct GenerationRootRetirement {owned:SharedControlledRetirement<GenerationPlayState>}
 impl store::ErasedSnapshotRetirement for GenerationRootRetirement {
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.owned.next_demand(body) }
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_value::ValueError>{self.owned.step(grant)}
     fn next_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.owned.next_copy_byte_demand()}
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{self.owned.next_capacity_byte_demand(copy)}

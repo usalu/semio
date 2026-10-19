@@ -2,6 +2,8 @@
 use super::*;
 
 fn caller_clock()->Option<u64>{Some(1)}
+const FIXTURE_ORIGINAL_STOCK:RetainedCloneGrant=RetainedCloneGrant{maximum_items:1<<16,maximum_copy_bytes:1<<24,maximum_capacity_bytes:1<<24,maximum_release_bytes:1<<24,maximum_depth:128};
+const FIXTURE_ORIGINAL_FUEL:u64=1<<16;
 
 #[derive(Debug)]
 struct Owner {
@@ -127,7 +129,7 @@ include!("../🧪️fixed-operation-registry-cases/🦀️.rs");
 
 #[test]
 fn maximum_plus_one_and_saturation_return_the_exact_owner() {
-    let source=crate::component::TEST_RETAINED_POLICY;let mut caller=OriginalJobFixtureCaller::admit(OperationId(97841),Generation(1),source,caller_clock,2,1);
+    let source=FIXTURE_ORIGINAL_STOCK;let mut caller=OriginalJobFixtureCaller::admit(OperationId(97841),Generation(1),source,caller_clock,2,FIXTURE_ORIGINAL_FUEL);
     let mut registry = FixedOperationRegistry::<Owner, 2>::new(4);
     let key = FixedOperationKey::new(OperationId(1), Generation(7));
     registry.admit(key, Owner::new(11, 4)).expect("exact maximum");
@@ -158,7 +160,7 @@ fn maximum_plus_one_and_saturation_return_the_exact_owner() {
 
 #[test]
 fn stale_generation_interrupted_close_and_aba_preserve_exact_authority() {
-    let source=crate::component::TEST_RETAINED_POLICY;let mut caller=OriginalJobFixtureCaller::admit(OperationId(97841),Generation(1),source,caller_clock,2,1);
+    let source=FIXTURE_ORIGINAL_STOCK;let mut caller=OriginalJobFixtureCaller::admit(OperationId(97841),Generation(1),source,caller_clock,2,FIXTURE_ORIGINAL_FUEL);
     let mut registry = FixedOperationRegistry::<Owner, 4>::new(8);
     let stale = FixedOperationKey::new(OperationId(9), Generation(1));
     registry.admit(stale, Owner::new(21, 2)).expect("stale owner");

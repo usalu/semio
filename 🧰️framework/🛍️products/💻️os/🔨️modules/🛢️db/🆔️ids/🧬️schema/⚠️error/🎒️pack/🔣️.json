@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["schemaVersion", "owner", "definingErrorOwner", "rule", "cases", "transport", "retirement", "sink"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "owner": { "const": "semio-framework-os-kernel-db" },
+    "definingErrorOwner": { "const": "semio-framework-pack-error" },
+    "rule": { "const": { "typedCause": "Pack", "preserveKind": true, "preserveOriginalMessageAllocation": true, "messageClassification": false } },
+    "cases": {
+      "type": "array", "minItems": 11, "maxItems": 11,
+      "items": {
+        "type": "object", "required": ["id", "source", "kind"], "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "source": { "enum": ["ValueRefusal", "BadMagic", "Truncated", "LimitExceeded"] },
+          "kind": { "enum": ["InvalidValue", "Canceled", "OwnershipLimit", "AllocationFailed", "WorkLimit", "DepthLimit", "UnsupportedOwner", "InvariantViolated"] },
+          "message": { "type": "string" }, "path": { "type": "array", "items": { "type": "string" } },
+          "offset": { "type": "integer", "minimum": 0 }, "limit": { "type": "string" }
+        }
+      }
+    },
+    "transport": {
+      "type": "array", "minItems": 2, "maxItems": 2,
+      "items": { "oneOf": [{ "const": { "retry": "Never", "transient": false } }, { "const": { "retry": "Transient", "transient": true } }] }
+    },
+    "retirement": { "const": { "parentReleasePolicy": "DB_IO_PAGE_BYTES", "deniedExtraBytes": 1, "deniedNewBytes": 0, "deniedReleasedBytes": 0, "preserveOriginal": true } },
+    "sink": { "type": "object", "required": ["message", "preserveOriginalMessageAllocation"], "additionalProperties": false, "properties": { "message": { "type": "string" }, "preserveOriginalMessageAllocation": { "const": true } } }
+  }
+}

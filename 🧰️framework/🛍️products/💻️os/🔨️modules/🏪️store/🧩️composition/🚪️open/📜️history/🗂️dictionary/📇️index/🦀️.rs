@@ -166,6 +166,7 @@ impl RetainedDictionaryIndex {
 }
 
 impl semio_framework_value::ErasedSnapshotRetirement for RetainedDictionaryIndex {
+    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand {release_bytes:if self.allocated==0{0}else{PAGE_BYTES},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { RetainedDictionaryIndex::close_step(self, grant) }
     fn terminal_is_empty(&self) -> bool { RetainedDictionaryIndex::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { RetainedDictionaryIndex::next_copy_byte_demand(self) }

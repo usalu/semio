@@ -1,5 +1,5 @@
-//! 🏗️ `s.fem.fem2d` load mutation case — Rust SUBJECT adapter. Relocated out of the
 //! Duplicated (relative paths adjusted, the extra spec-vector-replay Outline dropped — its committed-fixture references only resolve from the real owning subset, which the escape guard blocks a ✳️any-owned case from reaching sideways into) from `../../../🏋️load/🧪️tests/🏋️mutate-fem2d-1-load/` by shard F4 (this ticket) to close `unregistered-mutation-vocabulary` at the `✳️any/🧬️schema/🧬️mutations` owner — same mechanism E3 already proved on `sequence`: reuse the already-manifested `fem2d-1-mutate` capability, no new v2 manifest entry or runtime-inventory coordinate. The dropped Outline's own replay evidence stays intact, undiminished, at the original subset-owned case above — this duplicate only needs to satisfy the coverage gate's mutate-<kind>/inverse-<kind> requirement.
+//! 🏗️ `s.fem.fem2d` load mutation case — Rust SUBJECT adapter. Relocated out of the
 //! artifact-level `mutate-fem2d-1` case in ticket
 //! `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION` so
 //! this subset's own kinds have a subset-owned test.
@@ -16,14 +16,18 @@
 //! report shapes rather than parts of the document, so they stay asserted HERE, in role, in
 //! [`subject::spec_vector`].
 
-use semio_repo_test_host::{parse_json, Adapter, Json};
+use semio_repo_test_host::parse_json;
+
+use semio_repo_test_host::Adapter;
+
+use semio_repo_test_host::Json;
 
 //#region 🔖️Kinds
 /// 🏷️ This subset's own slice of `KINDS` in `../../../🏋️load/🧬️schema/🧬️mutations/🦀️.rs` — duplicated, not
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and that file's own
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against both the enum and the manifest.
-const KINDS: &[&str] = &["create-load-case", "delete-load-case", "add-load", "remove-load", "change-load-case-self-weight", "create-combination", "delete-combination", "replace-load", "change-load-case-name", "replace-combination"];
+const KINDS: &[&str] = &["change-load", "change-combination-name", "change-combination-term", "create-load-case", "delete-load-case", "add-load", "remove-load", "change-load-case-self-weight", "create-combination", "delete-combination", "replace-load", "change-load-case-name", "replace-combination"];
 
 /// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
 /// [`law::mutation_is_observable`] must not demand one of them.
@@ -54,6 +58,25 @@ struct Vector {
 
 fn vector(kind: &str) -> Vector {
     match kind {
+        "change-load" => Vector {
+            before: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🩹️change-load/🩹️changes/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🩹️change-load/🩹️changes/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🩹️change-load/🩹️changes/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🩹️change-load/🩹️changes/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🩹️change-load/🩹️changes/🎯️outcome/🔣️.json"),
+        },        "change-combination-name" => Vector {
+            before: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🩹️change-combination-name/🩹️renames/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🩹️change-combination-name/🩹️renames/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🩹️change-combination-name/🩹️renames/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🩹️change-combination-name/🩹️renames/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🩹️change-combination-name/🩹️renames/🎯️outcome/🔣️.json"),
+        },        "change-combination-term" => Vector {
+            before: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/🎯️outcome/🔣️.json"),
+        },
         "create-load-case" => Vector {
             before: include_str!("../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/📋️create-load-case/📍️appends/📸️snapshot/⬅️before/🔣️.json"),
             mutation: include_str!("../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/📋️create-load-case/📍️appends/🦠️mutation/🔣️.json"),
@@ -138,8 +161,14 @@ fn canonical(text: &str) -> Json {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{canonical, vector, DERIVED_ASSET, UNOBSERVABLE};
-    use semio_repo_test_host::{parse_json, Context, Json, Outcome};
+    use super::canonical;
+    use super::vector;
+    use super::DERIVED_ASSET;
+    use super::UNOBSERVABLE;
+    use semio_repo_test_host::parse_json;
+    use semio_repo_test_host::Context;
+    use semio_repo_test_host::Json;
+    use semio_repo_test_host::Outcome;
     use semio_repo_test_host::law;
     use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::io::text::mutations::fem2d_mutation_report_json;
 
@@ -230,7 +259,8 @@ mod subject {
     fn touches_one(scenario: &str, kind: &str, before: &Json, after: &Json) -> Result<(), String> {
         let written = match kind {
             "update-analysis-settings" => "analysis",
-            "add-load" | "remove-load" | "replace-load" | "change-load-case-self-weight" | "change-load-case-name" | "create-load-case" | "delete-load-case" => "loadCases",
+            "change-combination-name" | "change-combination-term" | "change-combination-name-empty" => "combinations",
+            "change-load" | "replace-load" | "change-load-case-name" | "add-load" | "remove-load" | "replace-load" | "change-load-case-self-weight" | "change-load-case-name" | "create-load-case" | "delete-load-case" => "loadCases",
             _ => match kind.split_once('-').map(|(_, noun)| noun).unwrap_or_default() {
                 "node" => "nodes",
                 "element" => "elements",
@@ -336,7 +366,7 @@ pub fn adapter() -> Adapter {
         let mut built = built;
         for kind in KINDS {
             built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind));
-            built = built.subject(&format!("inverse-{kind}"), subject::inverse(kind).expect("valid retained mutation inverse fixture"));
+            built = built.subject(&format!("inverse-{kind}"), subject::inverse(kind));
         }
         return built;
     }

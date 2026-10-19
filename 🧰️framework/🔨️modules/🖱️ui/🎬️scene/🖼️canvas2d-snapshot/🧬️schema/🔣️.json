@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Canvas2d Snapshot Page Admission",
+  "type": "object",
+  "properties": {
+    "snapshotCapacity": { "const": 8 },
+    "pageCapacity": { "const": 32 },
+    "pageBytes": { "const": 4096 }
+  },
+  "required": ["snapshotCapacity", "pageCapacity", "pageBytes"],
+  "additionalProperties": false
+}

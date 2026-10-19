@@ -1,0 +1,539 @@
+# Framework and Hub Inventory
+
+Authoritative refs: {'base': '36fbe9da786b71ec7b6946a1fc1cbb4e9d4d25ec', 'head': 'b84bf526c7ba26f99c4054b47da1c1a4d5064e3d', 'stash': '890df375465b64231521ef2c74d80c91efc7a2b3'}
+
+- ('incoming', '.github/workflows/architecture-course.yml'): 1
+- ('incoming', '.github/workflows/architecture-quiz.yml'): 1
+- ('incoming', '🌎️hub/💡️inference/🧾️wal'): 1
+- ('incoming', '🌎️hub/📇️directory/🧪️tests'): 1
+- ('incoming', '🌎️hub/🗿️artifact-authority/🌱️creation'): 1
+- ('incoming', '🌎️hub/🧩️compositions/➗️mathematical'): 1
+- ('incoming', '🌎️hub/🧩️compositions/🖨️raster'): 1
+- ('incoming', '🌎️hub/🧩️compositions/🗄️stdio'): 1
+- ('incoming', '🌎️hub/🧩️compositions/🪐️space'): 3
+- ('incoming', '🧰️framework/📦️packages/🟦️typescript'): 1
+- ('incoming', '🧰️framework/📦️packages/🦀️rust'): 2
+- ('incoming', '🧰️framework/🔨️modules/⏪️time-travel'): 1
+- ('incoming', '🧰️framework/🔨️modules/⏯️tool-run'): 27
+- ('incoming', '🧰️framework/🔨️modules/⏱️trace'): 2
+- ('incoming', '🧰️framework/🔨️modules/⏳️async'): 6
+- ('incoming', '🧰️framework/🔨️modules/◻️2d'): 9
+- ('incoming', '🧰️framework/🔨️modules/🌱️value'): 334
+- ('incoming', '🧰️framework/🔨️modules/🎒️pack'): 55
+- ('incoming', '🧰️framework/🔨️modules/🎭️actor'): 31
+- ('incoming', '🧰️framework/🔨️modules/🎯️action-bus'): 9
+- ('incoming', '🧰️framework/🔨️modules/🏃️process'): 19
+- ('incoming', '🧰️framework/🔨️modules/🏗️mesh-engine'): 1
+- ('incoming', '🧰️framework/🔨️modules/📁️filesystem'): 1
+- ('incoming', '🧰️framework/🔨️modules/📐️geometry'): 5
+- ('incoming', '🧰️framework/🔨️modules/📡️replication'): 173
+- ('incoming', '🧰️framework/🔨️modules/🔄️machine'): 1
+- ('incoming', '🧰️framework/🔨️modules/🕸️graph'): 2
+- ('incoming', '🧰️framework/🔨️modules/🕹️interaction'): 11
+- ('incoming', '🧰️framework/🔨️modules/🖱️ui'): 86
+- ('incoming', '🧰️framework/🔨️modules/🖼️assets'): 2
+- ('incoming', '🧰️framework/🔨️modules/🖼️canvas'): 2
+- ('incoming', '🧰️framework/🔨️modules/🗜️deflate'): 8
+- ('incoming', '🧰️framework/🔨️modules/🗣️dsl'): 29
+- ('incoming', '🧰️framework/🔨️modules/🗺️surface'): 1
+- ('incoming', '🧰️framework/🔨️modules/🗿️artifact-reference'): 3
+- ('incoming', '🧰️framework/🔨️modules/🚪️io'): 8
+- ('incoming', '🧰️framework/🔨️modules/🛂️manifest'): 5
+- ('incoming', '🧰️framework/🔨️modules/🧊️3d'): 13
+- ('incoming', '🧰️framework/🔨️modules/🧪️test'): 1
+- ('incoming', '🧰️framework/🔨️modules/🧬️schema'): 5
+- ('incoming', '🧰️framework/🔨️modules/🧮️math'): 24
+- ('incoming', '🧰️framework/🔨️modules/🧵️job'): 64
+- ('incoming', '🧰️framework/🛍️products/🐾️pets'): 36
+- ('incoming', '🧰️framework/🛍️products/💻️os'): 853
+- ('incoming', '🧰️framework/🛍️products/📓️print'): 4
+- ('incoming', '🧰️framework/🛍️products/🔣️.json'): 1
+- ('incoming', '🧰️framework/🛍️products/🖥️server'): 6
+- ('incoming', '🧰️framework/🛍️products/🦑️repo'): 173
+- ('overlap', '🌎️hub/README.md'): 1
+- ('overlap', '🌎️hub/bun.lock'): 1
+- ('overlap', '🌎️hub/package.json'): 1
+- ('overlap', '🌎️hub/📇️directory/🪶️sqlite'): 1
+- ('overlap', '🌎️hub/🧩️compositions/🗄️stdio'): 1
+- ('overlap', '🧰️framework/📦️packages/🟦️typescript'): 3
+- ('overlap', '🧰️framework/📦️packages/🦀️rust'): 2
+- ('overlap', '🧰️framework/🔨️modules/⏯️tool-run'): 6
+- ('overlap', '🧰️framework/🔨️modules/⏳️async'): 3
+- ('overlap', '🧰️framework/🔨️modules/⚠️diagnostic'): 2
+- ('overlap', '🧰️framework/🔨️modules/🌱️value'): 25
+- ('overlap', '🧰️framework/🔨️modules/🎒️pack'): 12
+- ('overlap', '🧰️framework/🔨️modules/🎭️actor'): 1
+- ('overlap', '🧰️framework/🔨️modules/🏃️process'): 8
+- ('overlap', '🧰️framework/🔨️modules/📁️filesystem'): 3
+- ('overlap', '🧰️framework/🔨️modules/📐️geometry'): 1
+- ('overlap', '🧰️framework/🔨️modules/📡️replication'): 8
+- ('overlap', '🧰️framework/🔨️modules/🔄️machine'): 1
+- ('overlap', '🧰️framework/🔨️modules/🔲️pixels'): 5
+- ('overlap', '🧰️framework/🔨️modules/🕸️graph'): 2
+- ('overlap', '🧰️framework/🔨️modules/🖱️ui'): 6
+- ('overlap', '🧰️framework/🔨️modules/🗣️dsl'): 1
+- ('overlap', '🧰️framework/🔨️modules/🗿️artifact-reference'): 1
+- ('overlap', '🧰️framework/🔨️modules/🚪️io'): 2
+- ('overlap', '🧰️framework/🔨️modules/🛂️manifest'): 1
+- ('overlap', '🧰️framework/🔨️modules/🛠️tool-machine'): 2
+- ('overlap', '🧰️framework/🔨️modules/🧮️math'): 1
+- ('overlap', '🧰️framework/🔨️modules/🧵️job'): 3
+- ('overlap', '🧰️framework/🛍️products/🎤️presentation'): 1
+- ('overlap', '🧰️framework/🛍️products/🐾️pets'): 3
+- ('overlap', '🧰️framework/🛍️products/💻️os'): 291
+- ('overlap', '🧰️framework/🛍️products/📓️print'): 2
+- ('overlap', '🧰️framework/🛍️products/🖥️server'): 2
+- ('overlap', '🧰️framework/🛍️products/🦑️repo'): 47
+
+## Overlap Paths
+
+- `🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/⚠️failure/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️queue/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🖼️set-theme/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🧬️job-test-mutations/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧵️turn-dispatch/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖥️Board2dHost/🟦️.tsx`
+- `🧰️framework/📦️packages/🟦️typescript/package.json`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🦀️.rs`
+- `🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/🦀️.rs`
+- `🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🧵️edit/🦀️.rs`
+- `🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🧪️tests/🖊️drawing-reader/🟦️.ts`
+- `🧰️framework/🔨️modules/⏯️tool-run/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️native-runtime/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧪️testing/♻️retirement/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🧾️metadata/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️testing/🧬️job-test-mutations/🧬️mutations/➕️add-value/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🔩️plumbing/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️testing/🧬️mutation-laws/🧬️mutations/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-demo-assign-n/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚗️set-custom-driver/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🏭️schema/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧩️component/🟦️.tsx`
+- `🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-frame-job-unit/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-timestamped-set-n/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📤️retire-local-document/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📐️model/📦️packages/🦀️rust/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/⚠️set-warning-n/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🛍️products/🐾️pets/🔨️modules/🚶️locomotion/🦀️.rs`
+- `🧰️framework/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🧪️tests/🗃️persistence-data-class/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts`
+- `🧰️framework/🔨️modules/🔲️pixels/📷️png/📥️decode/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🎚️mutate-os-config-identity/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪡️list-delta/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/🦀️.rs`
+- `🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/👕️canvas-presence/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/⚠️failure/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-renderer-renderer-io-retained/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/🧷️set-run-header/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/📥️lifted/🔗️read/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔒️identity-document-ports/🟦️.ts`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/✂️detach-local-folder/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🪢️handle-scope/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-retirement/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🗃️document/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🗂️set-named-layout/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/📥️staging/🔌️reactor-app/🛠️runtime-helpers/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🖼️set-theme/🧪️tests/🟰️keeps-theme/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🗣️set-locale/🧪️tests/🟰️keeps-locale/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎚️tool-configuration-ownership/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/↩️assign-n/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🎨️set-custom-theme/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-severity-set-n/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📥️retained/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏃️runtime/📥️lifted/🏪️store/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🔁️turn-settle/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🧪️tests/🌿️vcs/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/🟦️.ts`
+- `🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/🦀️.rs`
+- `🧰️framework/🔨️modules/⏳️async/🔔️wake/🧵️thread/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🧪️tests/🔬️quick/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🔧️host-plumbing/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧪️tests/✏️repins-the-cad-editor-to-the-drafting-app/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/🟨️.mjs`
+- `🧰️framework/🔨️modules/🌱️value/🔗️read/🪪️authority/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧼️clean-mechanism/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🧪️tests/🪪️clears-the-active-session/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/📤️outbound-announcement/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/📇️identity-records/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️deferred-reprojection/🦀️.rs`
+- `🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🏊️kernel-pool/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🕹️set-driver/🧪️tests/🟰️keeps-driver/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📤️publication/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🗑️delete-n/🦀️.rs`
+- `🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/🪵️append-run-log/🦀️.rs`
+- `🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🔨️modules/🏃️process/🧭️routing/🏠️workspace/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs`
+- `🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🗂️layers/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/package.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/↩️assign-n/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/📉️pressure/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧷️handle-contract/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/📸️snapshot/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/🌱️value/⚠️refusal/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🌗️set-appearance/🧪️tests/✏️sets-appearance/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📝️derived-config/🧪️tests/📝️derived-config/🟦️.ts`
+- `🧰️framework/🔨️modules/⏳️async/🛑️cancel/♻️retirement/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/✂️detach-local-folder/🧪️tests/✂️forgets-the-folder-and-keeps-its-sibling/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/README.md`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🚧️authority-bans/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/⌨️set-keybinding-override/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎥️tutorial-orchestration/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🛑️set-fatal-n/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/👕️canvas-presence/🧪️tests/🔬️unit/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🔀️origin/🔣️json/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🛂️directory-route/🟦️.ts`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🎨️set-custom-theme/🧪️tests/✏️sets-custom-theme/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🧪️tests/🪪️tightens-the-authority-to-vigilant/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧪️tests/🏃️run/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/🧽️remove-run-log/🦀️.rs`
+- `🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🕹️set-driver/🧪️tests/✏️sets-driver/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📖️set-terminology/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🗣️set-locale/🧪️tests/✏️sets-locale/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️replay-retirement/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs`
+- `🧰️framework/🔨️modules/⏳️async/♻️cancel-return/📬️claim/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🔀️transition/🛂️payload/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔐️identity-binding/🟦️.ts`
+- `🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/package.json`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📤️retire-local-document/🧪️tests/📤️unlists-the-studio-and-keeps-its-sibling/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/🗂️catalog/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🧬️job-test-mutations-mutations-add-value-unit/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📐️set-layout/🧪️tests/✏️sets-layout/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/📤️child/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🔗️channel-adapter/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🧮️kernel-core/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/⌨️set-keybinding-override/🧪️tests/🟰️keeps-keybinding/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧠️kernel-runtime/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗂️local-catalog/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/📇️mutate-os-config-local-catalog/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-demo-add-n/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws-unit/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🪤️lossy/🧬️mutations/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🦀️.rs`
+- `🧰️framework/🔨️modules/🏃️process/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/↩️assign-n/🦀️.rs`
+- `🧰️framework/🛍️products/🖥️server/🔨️modules/📡️gateway/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🪟️mounted/♻️frontier/🦀️.rs`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️.tsx`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📜️script.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🫧️ephemeral/📢️publication/🧩️preparation/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🏭️factory/📥️lifted/🏪️store/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️tool-transaction/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🖼️set-theme/🧪️tests/✏️sets-theme/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧾️frame-action-ledger/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/🔢️set-n/🦀️.rs`
+- `🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛫️encode/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🌗️set-appearance/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️native-renderer-outputs/🟦️.ts`
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧪️tests/🧪️shared-map-delta-source/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🟦️.tsx`
+- `🧰️framework/🛍️products/🎤️presentation/README.md`
+- `🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🚫️set-error-n/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔗️read/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws-mutations-add-counter-four-times/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🪤️lossy/🧬️mutations/🔢️set-n/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-demo-delete-n/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🔄️exchange/🔀️plugin-exchange/🦀️.rs`
+- `🌎️hub/bun.lock`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🧰️ops/📥️ingress/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🧰️ops/🧾️typed-operations/🦀️.rs`
+- `🧰️framework/🔨️modules/⚠️diagnostic/📤️wire/👣️cursor/🧩️domain/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏬️uri-resolution/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-timestamped-assign-n/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/➕️add-n/🦀️.rs`
+- `🧰️framework/🛍️products/🐾️pets/README.md`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🕹️set-driver/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📖️set-terminology/🧪️tests/✏️sets-terminology/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/📬️outcome/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/🔓️set-run-seal/🦀️.rs`
+- `🧰️framework/🔨️modules/⚠️diagnostic/🧾️retained/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔗️hub-projection-workspace/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🏭️factory/🦀️.rs`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🛎️frame-actions/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️graph/🤝️group/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🎯️mutation-outcome/🟦️.ts`
+- `🧰️framework/📦️packages/🦀️rust/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/🚀️start-run/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧵️backbone-worker/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/README.md`
+- `🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🗂️layers/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/👕️canvas-presence/🟦️.tsx`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚗️set-custom-driver/🧪️tests/🟰️keeps-custom-driver/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🗂️schema-document-index.json`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/⌨️set-keybinding-override/🧪️tests/✏️sets-keybinding/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🔀️transition/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/🔢️set-n/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/⚖️failure-debit/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️mutations/🎯️set-active-space-alternative/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🦀️.rs`
+- `🧰️framework/🛍️products/📓️print/🧪️tests/🧬️chart-mutations/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/📥️invocation-frames/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧪️tests/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📤️retire-local-document/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️native-dependencies/🟦️.ts`
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/package.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/🫥️remove-run-node/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/⚔️conflict/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-validated-set-n/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/🧵️instance/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪟️surface/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-severity-set-warning-n/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🏭️generate/🟦️.ts`
+- `🧰️framework/🔨️modules/🔄️machine/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs`
+- `🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/📦️instances/🔁️cleanup-turns/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎚️build-mode/🔐️custody/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🖱️world3d-interaction/🟦️.tsx`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🎞️command/📥️custody/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️canonical-error-progress/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧊️wgpu-os-host-standalone/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🏛️reserved/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎫️shell-holds/🟦️.ts`
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/⚙️expansion/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🗣️set-locale/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🔢️set-n/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚗️set-custom-driver/🧪️tests/✏️sets-custom-driver/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🎨️ui-preferences/🧪️tests/🌱️owned-customization/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📡️kernel-protocol/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/📦️packages/🟦️typescript/📋️project.json`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🎟️admission/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🗺️file-analysis/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-demo-set-n/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🧪️tests/👕️peer-presence/🟦️.tsx`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧬️retained-clone/🦀️.rs`
+- `🧰️framework/🔨️modules/🛠️tool-machine/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🧪️mutation-payload/🦀️.rs`
+- `🌎️hub/📇️directory/🪶️sqlite/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧱️model/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/▶️start-run-node/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/📔️registry/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/🖥️server/🧪️tests/🔬️wire/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏠️os-host/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🎨️ui-preferences/🧪️tests/🎨️updates-every-os-ui-preference/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/↩️assign-n/🦀️.rs`
+- `🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/♻️retirement/📦️backing/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📎️attach-local-folder/🧪️tests/📎️remembers-the-folder-beside-another-document/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/⚡️host-effects/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/⌨️commands/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️extension/📨️invoke/⚠️failure/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🔨️modules/⏯️tool-run/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx`
+- `🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🧪️tests/🧫️fixtures/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🗂️set-named-layout/🧪️tests/✏️sets-named-layout/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🧰️ops/🖥️surface-render/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏭️factory/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🦀️.rs`
+- `🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🧪️tests/🎚️config/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🫀️settle-pump/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🎨️set-custom-theme/🧪️tests/🟰️keeps-custom-theme/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🧪️tests/🪪️replaces-the-active-session-with-a-second-account/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️live-activation/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/♻️retirement/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-validated-assign-n/🦀️.rs`
+- `🌎️hub/README.md`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧵️backbone/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-renderer-async-boundary/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws-mutations-add-counter-twice/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📐️set-layout/🧪️tests/🟰️keeps-layout/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/🔏️seal-run/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⏱️process-budgets/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/♻️retirement/🦀️.rs`
+- `🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛫️encode/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📖️set-terminology/🧪️tests/🟰️keeps-terminology/🦀️.rs`
+- `🧰️framework/🛍️products/📓️print/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🔢️set-n/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎚️build-mode/🟦️.ts`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🗂️set-named-layout/🧪️tests/🟰️keeps-named-layout/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🔁️replay/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🛠️dev/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🦀️rust/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-law/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/📥️staging/♻️reactor-lifecycle/🛎️app-cell/🦀️.rs`
+- `🌎️hub/package.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/📥️lifted/🔗️read/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-run/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🧪️tests/📥️lists-a-persisted-studio-beside-an-imported-one/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪆️child/🦀️.rs`
+- `🧰️framework/🔨️modules/🛂️manifest/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔌️app/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-severity-assign-n/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/✅️finish-run-node/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🔗️read/🦀️.rs`
+- `🧰️framework/📦️packages/🟦️typescript/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws-mutations-add-counter-then-notify-foreign/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖋️InkCanvasHost/🟦️.tsx`
+- `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📐️set-layout/🦀️.rs`
+- `🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🧬️mutation-plan/🧪️tests/🧬️job-test-mutations-unit/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧩️shell-core-state/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🟦️.tsx`
+- `🧰️framework/🔨️modules/🌱️value/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📎️attach-local-folder/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🌗️set-appearance/🧪️tests/🟰️keeps-appearance/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🟦️.ts`

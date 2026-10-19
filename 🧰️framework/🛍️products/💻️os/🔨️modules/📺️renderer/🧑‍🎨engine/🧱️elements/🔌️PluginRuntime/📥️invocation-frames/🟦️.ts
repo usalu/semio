@@ -1,3 +1,5 @@
+import { TYPED_OPERATION_DIAGNOSTIC } from "../📬️typed-result/🟦️.ts";
+import type { Diagnostic as OwnedOperationDiagnostic } from "../../../../../../../../🔨️modules/⚠️diagnostic/🎛️controlled/🟦️.ts";
 /** 📥️ Invocation reassembly: command inspection, `performInvocation`, `invocationFromFrames`, context-menu calls and the guest-ingress generation counter.
  *
  * 🧱️ Child module of {@link ../🟦️.tsx | PluginRuntime}, which re-exports every public name below so import specifiers stay unchanged.
@@ -203,7 +205,8 @@ export function invocationFromFrames(frames: readonly AppFrameValue[], leftover:
   const terminalOutputs = leftover.filter((effect) => effect.tag === TYPED_OPERATION_TERMINAL_OUTPUT);
   if (terminalOutputs.length > 1) throw new Error("typed-operation returned more than one terminal output");
   if (terminalOutputs.length === 1) output = terminalOutputs[0]!.val;
-  const requestedEffects = leftover.filter((effect) => effect.tag !== TYPED_OPERATION_TERMINAL_OUTPUT && effect.tag !== TYPED_OPERATION_TERMINAL_SEEN).map(wireEffectToFriendly).filter((effect): effect is Effect => effect !== null);
+  diagnostics = [...diagnostics, ...leftover.filter(effect => effect.tag === TYPED_OPERATION_DIAGNOSTIC).map(effect => effect.val as OwnedOperationDiagnostic)];
+  const requestedEffects = leftover.filter((effect) => effect.tag !== TYPED_OPERATION_DIAGNOSTIC && effect.tag !== TYPED_OPERATION_TERMINAL_OUTPUT && effect.tag !== TYPED_OPERATION_TERMINAL_SEEN).map(wireEffectToFriendly).filter((effect): effect is Effect => effect !== null);
   return {
     output,
     mutations,

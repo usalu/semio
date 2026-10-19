@@ -1,12 +1,12 @@
 {
   "nodes": {
-    "inserted": [],
     "removed": [
       {
         "id": "n3",
         "index": 2
       }
     ],
+    "inserted": [],
     "moved": [],
     "modified": []
   },

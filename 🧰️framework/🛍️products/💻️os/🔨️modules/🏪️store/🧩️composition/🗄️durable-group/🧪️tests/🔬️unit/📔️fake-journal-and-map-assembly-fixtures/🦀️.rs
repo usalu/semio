@@ -90,7 +90,8 @@ impl DurableOwnedGroupJournalCommitV1 for FakeJournalCommit {
  }
 
 impl semio_framework_value::ErasedSnapshotRetirement for FakeJournalCommit {
-    fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.retirement_demands(0)?.copy_bytes) }
+        fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.retirement_demands(body) }
+fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.retirement_demands(0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.retirement_demands(body)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.retirement_demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.retirement_demands(0)?.depth) }
@@ -192,10 +193,15 @@ fn map_assembly(
 }
 
 fn drive_assembly_to_mounted(assembly: &mut DemoMapAssembly) {
-    let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
-    for _ in 0..65_536 {
-        match assembly.advance(grant).expect("fixed-three assembly turn") {
-            DurableOwnedThreeStoreMapAssemblyAdvanceV1::Mounted => return,
+        let mut receiving_fixture=super::super::tests::FixtureStoreReceiving::new(copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES).retained_grant());
+let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();assert_eq!(fixture["assemblyDiagnosticTransfer"]["sameTurnPreparationGrantReuse"],false);let mut handoff=false;let mut denied_mount=false;
+    for _ in 0..4_000_000 {
+        if !denied_mount&&assembly.phase==DurableOwnedThreeStoreMapAssemblyPhaseV1::Binding&&assembly.prepared.as_ref().is_some_and(|prepared|prepared.binding_step==14){let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||receiving_fixture.receive(|receiving|assembly.advance(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES,crate::os_store::one_item::ArtifactStoreOneItemGrant{maximum_capacity_bytes:0,..grant},receiving)));assert_eq!(result.unwrap(),DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(assembly.parent.is_some()&&assembly.drawing.is_some()&&assembly.value.is_some()&&assembly.prepared.is_some());denied_mount=true;}
+        let binding=assembly.phase==DurableOwnedThreeStoreMapAssemblyPhaseV1::Binding;let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||receiving_fixture.receive(|receiving|assembly.advance(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES,grant,receiving)));
+        match result.expect("fixed-three assembly turn") {
+            DurableOwnedThreeStoreMapAssemblyAdvanceV1::Mounted => {assert!(handoff&&denied_mount,"valid assembly exposes separate funded source and mount handoffs");return;},
+            DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(phase,receipt)=>{assert!(receipt.fits(grant.retained_grant()));if binding{assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));}if phase==DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingValue{handoff=true;}},
             DurableOwnedThreeStoreMapAssemblyAdvanceV1::Progress(_) | DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked => {}
             DurableOwnedThreeStoreMapAssemblyAdvanceV1::Terminal => panic!("valid assembly reached rejection terminal"),
         }
@@ -204,11 +210,13 @@ fn drive_assembly_to_mounted(assembly: &mut DemoMapAssembly) {
 }
 
 fn drain_assembly_rejection(assembly: &mut DemoMapAssembly) -> DurableOwnedThreeStoreMapAssemblyOwnersV1<DemoSnapshot, DemoMutation, DemoSnapshot, DemoMutation, DemoSnapshot, DemoMutation> {
-    let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
+        let mut receiving_fixture=super::super::tests::FixtureStoreReceiving::new(copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES).retained_grant());
+let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     for _ in 0..65_536 {
-        match assembly.advance(grant).expect("rejected fixed-three assembly cleanup turn") {
+        match receiving_fixture.receive(|receiving|assembly.advance(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES,grant,receiving)).expect("rejected fixed-three assembly cleanup turn") {
             DurableOwnedThreeStoreMapAssemblyAdvanceV1::Terminal => return assembly.take_terminal_owners().expect("terminal assembly returns every owner"),
-            DurableOwnedThreeStoreMapAssemblyAdvanceV1::Progress(_) | DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked => {}
+                        DurableOwnedThreeStoreMapAssemblyAdvanceV1::OwnershipProgress(_,receipt)=>assert!(receipt.fits(grant.retained_grant())),
+DurableOwnedThreeStoreMapAssemblyAdvanceV1::Progress(_) | DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked => {}
             DurableOwnedThreeStoreMapAssemblyAdvanceV1::Mounted => panic!("rejected assembly mounted a journal host"),
         }
     }

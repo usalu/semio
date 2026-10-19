@@ -1,0 +1,99 @@
+{
+  "grant": {
+    "items": 1,
+    "copy": 32768,
+    "capacity": 32768,
+    "release": 32768,
+    "depth": 24
+  },
+  "cases": [
+    {
+      "id": "independent-report",
+      "editId": "gesture-17",
+      "cancelAt": null,
+      "rows": [
+        {
+          "level": "warning",
+          "code": "NOTICE",
+          "message": "Geometrie geändert",
+          "target": [
+            "nodes",
+            "n1"
+          ],
+          "opIndex": 3
+        }
+      ],
+      "worst": "warning"
+    },
+    {
+      "id": "empty-report",
+      "editId": "gesture-18",
+      "cancelAt": null,
+      "rows": [],
+      "worst": null
+    },
+    {
+      "id": "cancel-original",
+      "editId": "gesture-19",
+      "cancelAt": 0,
+      "rows": [
+        {
+          "level": "warning",
+          "code": "NOTICE",
+          "message": "Original owned",
+          "target": [],
+          "opIndex": 0
+        }
+      ],
+      "worst": "warning"
+    },
+    {
+      "id": "cancel-identity",
+      "editId": "gesture-20",
+      "cancelAt": 4,
+      "rows": [
+        {
+          "level": "warning",
+          "code": "NOTICE",
+          "message": "Owned report",
+          "target": [],
+          "opIndex": 1
+        }
+      ],
+      "worst": "warning"
+    },
+    {
+      "id": "cancel-ready",
+      "editId": "gesture-21",
+      "cancelAt": 9,
+      "rows": [
+        {
+          "level": "fatal",
+          "code": "NOTICE",
+          "message": "Owned diagnostics",
+          "target": [],
+          "opIndex": 2
+        }
+      ],
+      "worst": "fatal"
+    }
+  ],
+  "finalSelection": {
+    "entryBound": 4096,
+    "context": "actual-edit-identity",
+    "policy": "shared-original-stable-severity",
+    "owners": [
+      "durable-original",
+      "independent-report"
+    ],
+    "measurement": "selected-row-and-target-frontiers"
+  },
+  "publication": {
+    "published": [
+      "generation-receipt",
+      "exact-diagnostic-handoff-receipt"
+    ],
+    "emptyDiagnosticReceipt": "zero",
+    "identity": "actual-admitted-edit"
+  }
+}

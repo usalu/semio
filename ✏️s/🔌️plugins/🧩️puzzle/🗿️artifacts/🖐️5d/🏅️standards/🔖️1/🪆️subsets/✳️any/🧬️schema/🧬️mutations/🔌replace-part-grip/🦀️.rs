@@ -1,8 +1,9 @@
-//! 🔌 Puzzle5d mutation — `ReplacePartGrip`: whole-value swap of one grip's presentation fields
 //! (kind/2d/3d together, one property-panel gesture).
+//! 🔌 Puzzle5d mutation — `ReplacePartGrip`: whole-value swap of one grip's presentation fields
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::{Puzzle5dSnapshot};
-use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dGrip};
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip;
+
 
 //#region 🔖️Mutation
 /// 🔌 `replace-part-grip` payload.
@@ -34,6 +35,22 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "part-grip", kind: "replace-part-grip", record: "ReplacedPartGrip" };
 
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace grip \"{}\" on part \"{}\"", self.grip_id, self.part_id), &format!("Griff \"{}\" an Bauteil \"{}\" ersetzen", self.grip_id, self.part_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.part_id.clone(), self.grip_id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ReplacePartGrip {
+
+
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ReplacePartGrip {
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
@@ -43,11 +60,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace grip \"{}\" on part \"{}\"", self.grip_id, self.part_id), &format!("Griff \"{}\" an Bauteil \"{}\" ersetzen", self.grip_id, self.part_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.part_id.clone(), self.grip_id.clone()]
-    }
 }
 //#endregion 🔖️Mutation

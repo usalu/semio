@@ -1,0 +1,358 @@
+{
+  "schemaVersion": 1,
+  "nativeSources": {
+    "script": "🧪️tests/🧫️fixtures/🧭️journeys/🏗️workspace/📜️script.ts",
+    "binaryEnvironment": "SEMIO_TEST_CLI",
+    "binaryCases": [
+      { "value": null, "accepted": false },
+      { "value": "", "accepted": false },
+      { "value": "🧭️owned executable/semio", "accepted": true }
+    ]
+  },
+  "widthProbe": {
+    "fixture": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧫️fixtures/📏️text-width/🪟️console/🔣️.json"
+  },
+  "tabPreview": {
+    "label": "Commands",
+    "controls": [
+      "⤢",
+      "✕"
+    ],
+    "rows": 3,
+    "corners": [
+      {
+        "x": 119,
+        "y": 31,
+        "right": true,
+        "bottom": true,
+        "label": "bottom right"
+      },
+      {
+        "x": 2,
+        "y": 31,
+        "right": false,
+        "bottom": true,
+        "label": "bottom left"
+      },
+      {
+        "x": 119,
+        "y": 4,
+        "right": true,
+        "bottom": false,
+        "label": "top right"
+      },
+      {
+        "x": 2,
+        "y": 4,
+        "right": false,
+        "bottom": false,
+        "label": "top left"
+      }
+    ],
+    "split": {
+      "x": 118,
+      "y": 17,
+      "right": true,
+      "bottom": false,
+      "label": "split right"
+    }
+  },
+  "localizedForm": {
+    "commandId": "tool:journey-fixture/configured",
+    "tool": {
+      "id": "configured",
+      "verb": "check",
+      "title": {
+        "en": "Configured command",
+        "de": "Konfigurierter Befehl"
+      },
+      "description": {
+        "en": "Submit launch options",
+        "de": "Startoptionen übergeben"
+      },
+      "command": [
+        "bun",
+        "{fixture-script}",
+        "configured"
+      ],
+      "env": {
+        "JOURNEY_ENABLED": "no"
+      },
+      "parameters": [
+        {
+          "id": "message",
+          "title": {
+            "en": "Message",
+            "de": "Nachricht"
+          },
+          "description": {
+            "en": "Text to print",
+            "de": "Auszugebender Text"
+          },
+          "kind": "text",
+          "required": true,
+          "valueEnv": "JOURNEY_MARK"
+        },
+        {
+          "id": "flavor",
+          "title": {
+            "en": "Flavor",
+            "de": "Variante"
+          },
+          "description": {
+            "en": "Choose a variant",
+            "de": "Variante auswählen"
+          },
+          "kind": "choice",
+          "default": "alpha",
+          "values": [
+            {
+              "id": "alpha",
+              "env": {
+                "JOURNEY_FLAVOR": "alpha"
+              }
+            },
+            {
+              "id": "beta",
+              "env": {
+                "JOURNEY_FLAVOR": "beta"
+              }
+            }
+          ]
+        },
+        {
+          "id": "enabled",
+          "title": {
+            "en": "Enabled",
+            "de": "Aktiviert"
+          },
+          "description": {
+            "en": "Enable the option",
+            "de": "Option aktivieren"
+          },
+          "kind": "flag",
+          "env": {
+            "JOURNEY_ENABLED": "yes"
+          }
+        }
+      ]
+    },
+    "input": {
+      "message": "Grüße aus Berlin",
+      "extraArguments": "--label 'wide value'",
+      "extraEnvironment": "JOURNEY_EXTRA='extra value'"
+    },
+    "expected": {
+      "message": "Grüße aus Berlin",
+      "flavor": "beta",
+      "enabled": true,
+      "args": [
+        "--label",
+        "wide value"
+      ],
+      "extra": "extra value"
+    },
+    "labels": {
+      "en": {
+        "newTask": "New task",
+        "commands": "commands",
+        "matched": "1 of",
+        "required": "required",
+        "extraArguments": "Extra arguments",
+        "extraEnvironment": "Extra environment",
+        "start": "[ Start ]",
+        "title": "Configured command",
+        "description": "Submit launch options",
+        "message": "Message",
+        "flavor": "Flavor",
+        "enabled": "Enabled"
+      },
+      "de": {
+        "newTask": "Neue Aufgabe",
+        "commands": "Befehle",
+        "matched": "1 von",
+        "required": "erforderlich",
+        "extraArguments": "Zusätzliche Argumente",
+        "extraEnvironment": "Zusätzliche Umgebung",
+        "start": "[ Starten ]",
+        "title": "Konfigurierter Befehl",
+        "description": "Startoptionen übergeben",
+        "message": "Nachricht",
+        "flavor": "Variante",
+        "enabled": "Aktiviert"
+      }
+    }
+  },
+  "preferences": {
+    "events": [
+      {
+        "language": "de"
+      },
+      {
+        "appearance": "light"
+      }
+    ],
+    "expected": {
+      "language": "de",
+      "appearance": "light"
+    },
+    "labels": [
+      "Sprache: de",
+      "Darstellung: light",
+      "Einstellungen gespeichert"
+    ]
+  },
+  "readyLifecycle": {
+    "commandId": "tool:journey-fixture/serve-a",
+    "path": "/health",
+    "openPrefix": "u",
+    "remappedOpenPrefix": "j",
+    "remappedCancelPrefix": "J",
+    "restartPrefix": "r",
+    "stopPrefix": "c",
+    "openComplete": "Ready address opened",
+    "openCancelled": "Opening cancelled",
+    "response": "journey-ok unset /health"
+  },
+  "workspaceTerminal": {
+    "commandId": "tool:journey-fixture/workspace-terminal",
+    "tool": {
+      "id": "workspace-terminal",
+      "verb": "run",
+      "title": {
+        "en": "Workspace Terminal",
+        "de": "Workspace-Terminal"
+      },
+      "description": {
+        "en": "Open an isolated supervised shell",
+        "de": "Eine isolierte überwachte Shell öffnen"
+      },
+      "continuous": true,
+      "command": [
+        "bun",
+        "{fixture-script}",
+        "terminal"
+      ],
+      "parameters": [
+        {
+          "id": "directory",
+          "kind": "text",
+          "required": true,
+          "title": {
+            "en": "Directory",
+            "de": "Verzeichnis"
+          },
+          "default": ".",
+          "valueFlag": "--directory"
+        },
+        {
+          "id": "shell",
+          "kind": "choice",
+          "title": {
+            "en": "Shell",
+            "de": "Shell"
+          },
+          "default": "system",
+          "values": [
+            {
+              "id": "system",
+              "args": [
+                "--shell",
+                "system"
+              ]
+            },
+            {
+              "id": "cmd",
+              "args": [
+                "--shell",
+                "cmd"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "windowsShell": "cmd",
+    "unixShell": "system",
+    "input": {
+      "windows": [
+        "echo. & echo SEMIO_TERMINAL_PROBE",
+        "exit"
+      ],
+      "unix": [
+        "echo; echo SEMIO_TERMINAL_PROBE",
+        "exit"
+      ]
+    },
+    "expectedArguments": {
+      "windows": [
+        "--directory",
+        ".",
+        "--shell",
+        "cmd"
+      ],
+      "unix": [
+        "--directory",
+        ".",
+        "--shell",
+        "system"
+      ]
+    },
+    "expectedLine": "SEMIO_TERMINAL_PROBE"
+  },
+  "repository": {
+    "commandId": "repo:goals.list",
+    "goalId": "PTY",
+    "document": {
+      "title": "PTY Read Only Goal",
+      "description": "Isolated terminal journey goal",
+      "prompt": "Read this goal through the dashboard",
+      "status": "open",
+      "client": "codex",
+      "llm": "gpt-6",
+      "dates": {}
+    },
+    "expectedLine": "PTY [open] PTY Read Only Goal"
+  },
+  "domainLifecycle": {
+    "confirmation": "changes the repository. Enter runs it",
+    "draft": {
+      "slug": "HUMAN-DRAFT",
+      "startLine": "created draft HUMAN-DRAFT",
+      "startId": "repo:draft.start",
+      "discardLine": "discarded draft HUMAN-DRAFT",
+      "title": "Human Draft",
+      "discardId": "repo:draft.discard",
+      "directory": ".🧬semio/🦑️repo/✍️notes/HUMAN-DRAFT"
+    },
+    "reopen": {
+      "prompt": "Continue the exact human request 🦑",
+      "expectedLine": "reopened 26/09/23/HUMAN-REOPEN -> open",
+      "commandId": "repo:ticket.reopen:26/09/23/HUMAN-REOPEN",
+      "documentPath": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/HUMAN-REOPEN/🎫️ticket.json",
+      "importantPath": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/HUMAN-REOPEN/📌️important/📝️.md",
+      "document": {
+        "goal": "TEST",
+        "interactions": [
+          {
+            "date": "2026-09-23 12:00:00",
+            "prompt": "Initial human request",
+            "kind": "ticket.open",
+            "client": "claude-code"
+          },
+          {
+            "date": "2026-09-23 12:01:00",
+            "summary": "Previous scope completed",
+            "kind": "ticket.close",
+            "client": "claude-code"
+          }
+        ],
+        "emoji": "🦑",
+        "client": "claude-code",
+        "title": "Human Reopen",
+        "status": "closed"
+      },
+      "id": "26/09/23/HUMAN-REOPEN"
+    }
+  }
+}

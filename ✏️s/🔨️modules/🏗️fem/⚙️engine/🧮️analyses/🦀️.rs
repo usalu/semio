@@ -1,18 +1,76 @@
-//! 📈️ Multi-case/combination linear-static analysis, self-weight load generation, modal analysis (frequencies and
 //! shapes), linear buckling and nodal-averaged stress recovery for contour rendering — sparse-backed (RCM-ordered,
+//! 📈️ Multi-case/combination linear-static analysis, self-weight load generation, modal analysis (frequencies and
 //! one LDLT factorization shared across every load case and eigen-solve) — plus the FEM job graph that stages them.
 
-use semio_framework_job::{OriginalTurnFailure, InteractiveJob, InteractiveJobCloseStep, JobOutcomeDescriptor, JobOutcomeBorrow, JobPayloadStream, Operation, RetainedCloneGrant, RetainedCloneProgress, StepContext};
-use semio_framework_value::{RetirementDemand, ValueError};
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_fem_algebra::MatD;
+use semio_s_fem_algebra::VecD;
+use semio_s_fem_model::Dof;
+use semio_s_fem_model::Element;
+use semio_s_fem_model::ElementContext;
+use semio_s_fem_model::ElementResult;
+use semio_s_fem_model::Elements;
+use semio_s_fem_model::FemError;
+use semio_s_fem_model::MemberUdl;
+use semio_s_fem_model::NodalLoad;
+use semio_s_fem_model::Node;
+use semio_s_fem_model::NodeDisplacement;
+use semio_s_fem_model::NodeReaction;
+use semio_s_fem_model::SolutionChecks;
+use semio_s_fem_model::StaticResult;
+use semio_s_fem_model::Support;
+use semio_s_fem_sparse::numerical_close_gate;
+use semio_s_fem_sparse::numerical_ladder_turn;
+use crate::sparse::numerical_rung_demand;
+use crate::sparse::NumericalBatchEnd;
+use semio_s_fem_sparse::NumericalOutcomeDesk;
+use semio_s_fem_sparse::NumericalRun;
+use crate::sparse::ldlt_factor;
+use crate::sparse::rcm_order;
+use semio_s_fem_sparse_subspace::subspace_iteration;
+use semio_s_fem_sparse::Coo;
+use crate::sparse::Csr;
+use semio_s_fem_sparse_subspace::EigenPairs;
+use crate::sparse::LdltFactor;
+use replication::value::list::PagedList;
+use semio_framework_job::InteractiveJob;
+use semio_framework_job::InteractiveJobCloseStep;
+use semio_framework_job::JobOutcomeDescriptor;
+use semio_framework_job::JobOutcomeBorrow;
+use semio_framework_job::JobPayloadStream;
+use semio_framework_job::Operation;
+use semio_framework_job::RetainedCloneGrant;
+use semio_framework_job::RetainedCloneProgress;
+use semio_framework_job::StepContext;
+use semio_framework_value::HeapSortCursor;
+use semio_framework_value::HeapSortWork;
+use semio_framework_value::RetirementDemand;
+use semio_framework_value::ValueError;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
+use std::collections::HashSet;
+use std::sync::Arc;
+use semio_framework_job::OriginalTurnFailure;
 use std::collections::HashMap;
-use semio_s_fem_analyses_model::{AnalysisModel, BucklingResult, Combination, LoadCase, ModalResult, decode_value, element_global_indices, encode_value, node_index_of, positions_of, validate_case};
-use semio_s_fem_analyses_assembly::{AssembledSystem, assemble_system, case_rhs_old};
-use semio_s_fem_algebra::{MatD, VecD};
-use semio_s_fem_model::{BeamStation, Element, ElementContext, ElementResult, FemError, NodeDisplacement, NodeReaction, PlaneStress, PlateMoments, ShellState, SolidStress, SolutionChecks, StaticResult};
-use semio_s_fem_sparse::{numerical_close_original, numerical_close_gate, numerical_ladder_turn, NumericalOutcomeDesk, NumericalRun, Coo};
-use semio_s_fem_sparse_subspace::{subspace_iteration, EigenPairs};
-
+use semio_s_fem_analyses_model::AnalysisModel;
+use semio_s_fem_analyses_model::BucklingResult;
+use semio_s_fem_analyses_model::Combination;
+use semio_s_fem_analyses_model::LoadCase;
+use semio_s_fem_analyses_model::ModalResult;
+use semio_s_fem_analyses_model::decode_value;
+use semio_s_fem_analyses_model::element_global_indices;
+use semio_s_fem_analyses_model::encode_value;
+use semio_s_fem_analyses_model::node_index_of;
+use semio_s_fem_analyses_model::positions_of;
+use semio_s_fem_analyses_model::validate_case;
+use semio_s_fem_analyses_assembly::AssembledSystem;
+use semio_s_fem_analyses_assembly::assemble_system;
+use semio_s_fem_analyses_assembly::case_rhs_old;
+use semio_s_fem_model::BeamStation;
+use semio_s_fem_model::PlaneStress;
+use semio_s_fem_model::PlateMoments;
+use semio_s_fem_model::ShellState;
+use semio_s_fem_model::SolidStress;
+use semio_s_fem_sparse::numerical_close_original;
 // #region 🧩️JobGraph
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(tag = "kind")]
@@ -311,22 +369,16 @@ fn add_scaled_element_result(acc: &ElementResult, term: &ElementResult, factor: 
     }
 }
 
-fn combine_results(case_results: &[StaticResult], cases: &[LoadCase], combo: &Combination) -> Result<StaticResult, FemError> {
-    let mut displacements: Vec<NodeDisplacement> = Vec::new();
+fn combine_results(model: &AnalysisModel, case_results: &[StaticResult], cases: &[LoadCase], combo: &Combination) -> Result<StaticResult, FemError> {
+    let mut displacements: Vec<NodeDisplacement> = model.nodes.iter().map(|node| NodeDisplacement { node_id: node.id.clone(), values: [0.0; 6] }).collect();
     let mut reactions: Vec<NodeReaction> = Vec::new();
-    let mut elements: Vec<(String, ElementResult)> = Vec::new();
+    let mut member_loads: HashMap<&str, MemberUdl> = HashMap::new();
     let mut reaction_sum = [0.0; 6];
     let mut residual_norm = 0.0;
-    let mut seeded = false;
 
     for (case_id, factor) in &combo.terms {
         let idx = cases.iter().position(|c| &c.id == case_id).ok_or_else(|| FemError::DanglingNodeRef(case_id.clone()))?;
         let cr = &case_results[idx];
-        if !seeded {
-            displacements = cr.displacements.iter().map(|d| NodeDisplacement { node_id: d.node_id.clone(), values: [0.0; 6] }).collect();
-            elements = cr.elements.iter().map(|(id, r)| (id.clone(), zero_like(r))).collect();
-            seeded = true;
-        }
         for (i, d) in cr.displacements.iter().enumerate() {
             for k in 0..6 {
                 displacements[i].values[k] += factor * d.values[k];
@@ -339,8 +391,13 @@ fn combine_results(case_results: &[StaticResult], cases: &[LoadCase], combo: &Co
                 reactions.push(NodeReaction { node_id: r.node_id.clone(), dof: r.dof, value: factor * r.value });
             }
         }
-        for (i, (_, res)) in cr.elements.iter().enumerate() {
-            elements[i].1 = add_scaled_element_result(&elements[i].1, res, *factor);
+        let mut seen = HashSet::new();
+        for (id, load) in &cases[idx].member_loads {
+            if !seen.insert(id.as_str()) { continue; }
+            let combined = member_loads.entry(id.as_str()).or_default();
+            combined.wx += factor * load.wx;
+            combined.wy += factor * load.wy;
+            combined.wz += factor * load.wz;
         }
         for (sum, reaction) in reaction_sum.iter_mut().zip(cr.checks.reaction_sum) {
             *sum += factor * reaction;
@@ -348,6 +405,7 @@ fn combine_results(case_results: &[StaticResult], cases: &[LoadCase], combo: &Co
         residual_norm += factor.abs() * cr.checks.residual_norm;
     }
 
+    let elements = recover_elements(model, &displacements, |id| member_loads.get(id).copied());
     Ok(StaticResult { displacements, reactions, elements, checks: SolutionChecks { residual_norm, reaction_sum } })
 }
 // #endregion 🔖️Combine
@@ -356,7 +414,7 @@ fn combine_results(case_results: &[StaticResult], cases: &[LoadCase], combo: &Co
 /// 🧮️ Assembles the model ONCE (sparse, RCM-ordered, free-free LDLT factored once), then solves every
 /// load case as one shared multi-RHS `solve_many` call, superposes `combinations` from the already-
 /// solved case results, and un-permutes everything back to original node identity.
-pub fn solve_multi_case(model: &AnalysisModel, cases: &[LoadCase], combinations: &[Combination], gravity: [f64; 3]) -> Result<HashMap<String, StaticResult>, FemError> {
+pub fn solve_multi_case(model: &AnalysisModel, cases: &[LoadCase], combinations: &[Combination], gravity: [f64; 3]) -> Result<HashMap<ResultSource, StaticResult>, FemError> {
     for case in cases {
         validate_case(model, case)?;
     }
@@ -378,7 +436,7 @@ pub fn solve_multi_case(model: &AnalysisModel, cases: &[LoadCase], combinations:
     }
     let u_compact = system.k_factor.solve_many(&rhs_compact);
 
-    let mut results: HashMap<String, StaticResult> = HashMap::new();
+    let mut results: HashMap<ResultSource, StaticResult> = HashMap::new();
     let mut case_results: Vec<StaticResult> = Vec::with_capacity(cases.len());
     let displacement_slot: HashMap<&str, usize> = model.nodes.iter().enumerate().map(|(slot, node)| (node.id.as_str(), slot)).collect();
 
@@ -412,17 +470,7 @@ pub fn solve_multi_case(model: &AnalysisModel, cases: &[LoadCase], combinations:
             }
         }
 
-        let mut elements_out = Vec::with_capacity(model.elements.len());
-        let node_slot = node_index_of(&model.nodes);
-        for element in &model.elements {
-            let node_ids = element.node_ids();
-            let dofs = element.dofs_per_node();
-            let Some(indices_old) = element_global_indices(dof_map, &node_ids, dofs) else { continue };
-            let ctx = ElementContext { positions: positions_of(&node_slot, &model.nodes, &node_ids) };
-            let u_local = VecD::from_vec(indices_old.iter().map(|&old| u_new.get(system.inv_perm[old])).collect());
-            let udl = case.member_loads.iter().find(|(id, _)| id.as_str() == element.id()).map(|(_, udl)| udl);
-            elements_out.push((element.id().to_string(), element.recover(&ctx, &u_local, udl)));
-        }
+        let elements_out = recover_elements(model, &displacements, |id| case.member_loads.iter().find(|(member, _)| member == id).map(|(_, load)| *load));
 
         let mut reaction_sum = [0.0; 6];
         for r in &reactions {
@@ -438,12 +486,12 @@ pub fn solve_multi_case(model: &AnalysisModel, cases: &[LoadCase], combinations:
 
         let result = StaticResult { displacements, reactions, elements: elements_out, checks: SolutionChecks { residual_norm, reaction_sum } };
         case_results.push(result.clone());
-        results.insert(case.id.clone(), result);
+        results.insert(ResultSource::LoadCase(case.id.clone()), result);
     }
 
     for combo in combinations {
-        let combined = combine_results(&case_results, cases, combo)?;
-        results.insert(combo.id.clone(), combined);
+        let combined = combine_results(model, &case_results, cases, combo)?;
+        results.insert(ResultSource::Combination(combo.id.clone()), combined);
     }
 
     Ok(results)
@@ -513,16 +561,15 @@ fn unpermute_shapes(system: &AssembledSystem, ndof: usize, vectors: &[VecD]) -> 
 /// 🌀️ Linear buckling: solves `reference_case` (via `solve_multi_case`) for `u_ref`, assembles the
 /// geometric stiffness `Kg` from every element's own axial state under `u_ref`, then solves
 /// `K φ = λ (−Kg) φ` via `subspace_iteration` — `factors[i] * reference_case` is the i-th critical load.
-pub fn buckling(model: &AnalysisModel, reference_case: &LoadCase, count: usize) -> Result<BucklingResult, FemError> {
-    let ref_results = solve_multi_case(model, std::slice::from_ref(reference_case), &[], [0.0, 0.0, 0.0])?;
-    let ref_result = ref_results.get(&reference_case.id).expect("reference case was just solved");
+pub fn buckling(model: &AnalysisModel, reference_case: &LoadCase, count: usize, gravity: [f64; 3]) -> Result<BucklingResult, FemError> {
+    let ref_results = solve_multi_case(model, std::slice::from_ref(reference_case), &[], gravity)?;
+    let ref_result = ref_results.get(&ResultSource::LoadCase(reference_case.id.clone())).expect("reference case was just solved");
 
     let system = assemble_system(model)?;
     let ndof = system.ndof;
     let n_free = system.n_free();
 
     let mut neg_kg_coo = Coo::new(n_free);
-    let mut diag_estimate = vec![0.0f64; n_free];
     let node_slot = node_index_of(&model.nodes);
     for element in &model.elements {
         let node_ids = element.node_ids();
@@ -546,30 +593,11 @@ pub fn buckling(model: &AnalysisModel, reference_case: &LoadCase, count: usize) 
                 let v = kg.get(local_row, local_col);
                 if v != 0.0 {
                     neg_kg_coo.add(compact_row, compact_col, -v);
-                    if compact_row == compact_col {
-                        diag_estimate[compact_row] += v.abs();
-                    }
                 }
             }
         }
     }
 
-    // 🩹️ Frame/truss `geometric_stiffness` (bar/beam bending block, truss `N/L·(I−ccᵀ)` transverse
-    // projector) still leaves SOME directions exactly unstressed (bending elements' own axial DOF,
-    // `PlateDkt`'s entire DOF set — see its struct doc — and any drilling/rotational DOF no element's
-    // Kg touches), so the assembled `−Kg` can still be singular or near-singular along those
-    // directions even now that continuum/solid/shell elements contribute a full Kg of their own.
-    // `subspace_iteration`'s B-orthonormalization divides by `sqrt(x·Bx)`, which blows up (→ NaN) for
-    // any seed vector with a nonzero component in an exact null space. A tiny diagonal regularization
-    // (Tikhonov-style, scaled off the assembled `−Kg`'s own diagonal magnitude) makes `−Kg` strictly
-    // positive-definite everywhere without perturbing the physically meaningful lowest eigenvalues,
-    // which are orders of magnitude below the huge spurious eigenvalues this regularization assigns
-    // to the null-space directions.
-    let max_diag = diag_estimate.iter().copied().fold(0.0_f64, f64::max);
-    let eps = max_diag.max(1e-12) * 1e-6;
-    for i in 0..n_free {
-        neg_kg_coo.add(i, i, eps);
-    }
     let neg_kg_csr = neg_kg_coo.to_csr();
 
     let pairs: EigenPairs = subspace_iteration(&system.k_factor, &neg_kg_csr, n_free, count, 30);
@@ -665,3 +693,5 @@ mod tests;
 #[path = "🧪️tests/🔬️solid/🦀️.rs"]
 mod solid_tests;
 // #endregion 🔖️Tests
+
+pub use semio_s_fem_analyses_model::{ResultSource, ResultSourceIdentity, ResultSourceIdentityError, encode_result_source_identity, encode_result_source_parts, validate_result_source_parts, borrow_result_source_identity, validate_result_source_identity, decode_result_source_identity};

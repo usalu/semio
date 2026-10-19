@@ -2,6 +2,36 @@ use super::*;
 use dashboard_registry::Facts;
 use semio_framework_ui_tui_widgets::widget::{TreeState, WidgetState};
 
+fn source_launcher() -> Harness {
+    let facts: Facts = serde_json::from_value(serde_json::json!({"projects":[{"name":"workspace","root":".","dashboard":{"tools":[{"id":"source","command":["bun","{project}"],"parameters":[{"id":"project","kind":"text","required":true,"suggestions":{"source":"projects"}}]}]}},{"name":"app","root":"app"}],"playgrounds":[],"tickets":[],"problems":[]})).unwrap();
+    let registry = Arc::new(Registry::build(std::path::Path::new("workspace"), &facts));
+    assert!(registry.problems().is_empty(), "{:?}", registry.problems());
+    let entry = registry.entries().iter().position(|entry| entry.id == "tool:workspace/source").unwrap();
+    let mut state = LauncherState::new(Preferences::default(), Locale::En);
+    state.set_registry(registry); state.set_page(40); state.open_form(entry); state.edited("app".into());
+    let widget = WidgetState::Tree(state.rebuild_tree(None));
+    Harness { state, widget }
+}
+
+#[test]
+fn editable_project_suggestions_share_keyboard_and_pointer_acceptance() {
+    let mut keyboard = source_launcher(); let mut pointer = source_launcher();
+    assert_eq!(keyboard.state.apply(&mut keyboard.widget, Input::SuggestAccept), Outcome::Idle);
+    let row = pointer.state.screen().items.iter().position(|row| row.contains("app · app · app")).unwrap();
+    assert_eq!(pointer.state.click(&mut pointer.widget, row), Outcome::Idle);
+    for state in [&keyboard.state, &pointer.state] { let form = state.form.as_ref().unwrap(); assert_eq!(Form::effective(&form.fields[0]), Some("app")); assert_eq!(form.focus, 1); }
+}
+
+#[test]
+fn suggestion_help_uses_the_selected_locale_and_customized_bindings() {
+    let mut harness = source_launcher();
+    harness.state.preferences.bindings.insert("view.suggest-accept".into(), vec!["alt+y".into()]);
+    assert!(harness.state.screen().caption.contains("Alt+Y"));
+    harness.state.set_locale(Locale::De);
+    let caption = harness.state.screen().caption;
+    assert!(caption.contains("Alt+Y")); assert!(caption.contains("übernimmt"));
+}
+
 fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔎️launcher/🔣️.json")).unwrap() }
 
 fn registry() -> Arc<Registry> {
@@ -116,4 +146,74 @@ fn every_scenario_of_the_launcher_feature_is_proved_by_a_test() {
         ("The verbs are filed in the language of the dashboard", &["the_verbs_are_filed_in_the_language_of_the_dashboard"]),
         ("A collapsed tree lists only verbs", &["a_collapsed_tree_lists_only_verbs_and_expanding_reveals_children"]),
     ]);
+}
+
+#[test]
+fn localized_metadata_is_visible_in_command_search_and_parameter_forms() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🌐️metadata/🔣️.json")).unwrap();
+    let facts: Facts = serde_json::from_value(fixture["workspace"].clone()).unwrap();
+    let registry = Arc::new(Registry::build(std::path::Path::new("workspace"), &facts));
+    for row in fixture["display"].as_array().unwrap() {
+        let locale = if row["locale"] == "en" { Locale::En } else { Locale::De };
+        let mut state = LauncherState::new(Preferences::default(), locale);
+        state.set_registry(registry.clone());
+        state.set_page(40);
+        let mut harness = Harness { widget: WidgetState::Tree(state.rebuild_tree(None)), state };
+        steps(&mut harness, &[serde_json::json!(format!("type:{}", row["title"].as_str().unwrap()))]);
+        assert_eq!(harness.ids(), ["tool:workspace/source-open"]);
+        assert!(harness.state.rows(harness.tree()).join(" ").contains(row["title"].as_str().unwrap()));
+        assert!(harness.state.caption(harness.tree()).contains(row["description"].as_str().unwrap()));
+        steps(&mut harness, &[serde_json::json!("enter")]);
+        let screen = harness.state.screen();
+        assert!(screen.items.iter().any(|item| item == row["title"].as_str().unwrap()));
+        assert!(screen.items.iter().any(|item| item == row["description"].as_str().unwrap()));
+        assert!(screen.items.iter().any(|item| item.contains(row["parameterTitle"].as_str().unwrap())));
+        assert!(screen.caption.contains(row["parameterDescription"].as_str().unwrap()));
+        assert_eq!(screen.placeholder, row["parameterTitle"].as_str().unwrap());
+        steps(&mut harness, &[serde_json::json!("type:a b.rs")]);
+        let start = harness.state.form.as_ref().unwrap().start().unwrap();
+        assert_eq!(start.id, "tool:workspace/source-open");
+        assert_eq!(start.chosen, [("path".to_string(), "a b.rs".to_string())]);
+    }
+}
+
+#[test]
+fn launcher_viewport_and_default_text_follow_the_shared_vectors() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/⌨️batch/🔣️.json")).unwrap();
+    for row in fixture["viewportCases"].as_array().unwrap() {
+        let mut harness = launcher();
+        harness.state.set_page(row["initialPage"].as_u64().unwrap() as usize);
+        steps(&mut harness, &[serde_json::json!("type:serve docs"), serde_json::json!("enter")]);
+        harness.state.set_page(row["page"].as_u64().unwrap() as usize);
+        assert_eq!(harness.state.offset, row["expectedTop"].as_u64().unwrap() as usize);
+        assert!(harness.state.screen().items.iter().any(|item| item == "tool:workspace/docs"));
+    }
+    for row in fixture["defaultTextCases"].as_array().unwrap() {
+        let mut harness = launcher();
+        steps(&mut harness, &[serde_json::json!("type:serve docs"), serde_json::json!("enter")]);
+        let form = harness.state.form.as_mut().unwrap();
+        form.fields[0].parameter.default = row["default"].as_str().map(str::to_string);
+        let screen = harness.state.screen();
+        assert_eq!(screen.input, row["expected"].as_str().unwrap());
+        if row["default"].is_string() { assert!(screen.items.iter().any(|item| item.contains(&format!("dir: {}", row["expected"].as_str().unwrap())))); }
+    }
+}
+
+#[test]
+fn launcher_pointer_rows_follow_localized_description_layout() {
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/⌨️batch/🔣️.json")).unwrap();
+    let metadata: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🌐️metadata/🔣️.json")).unwrap();
+    let facts: Facts = serde_json::from_value(metadata["workspace"].clone()).unwrap();
+    for row in vectors["pointerCases"].as_array().unwrap() {
+        let locale = if row["locale"] == "en" { Locale::En } else { Locale::De };
+        let mut state = LauncherState::new(Preferences::default(), locale);
+        state.set_registry(Arc::new(Registry::build(std::path::Path::new("workspace"), &facts)));
+        state.set_page(40);
+        let mut harness = Harness { widget:WidgetState::Tree(state.rebuild_tree(None)), state };
+        steps(&mut harness, &[serde_json::json!("type:source-open"), serde_json::json!("enter"), serde_json::json!("down")]);
+        let screen = harness.state.screen();
+        let clicked = screen.items.iter().position(|line| line.contains(row["expectedPlaceholder"].as_str().unwrap())).unwrap();
+        harness.state.click(&mut harness.widget, clicked);
+        assert_eq!(harness.state.screen().placeholder, row["expectedPlaceholder"].as_str().unwrap());
+    }
 }

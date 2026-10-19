@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "required": ["contract", "cases"], "additionalProperties": false,
+  "properties": {
+    "contract": { "const": "window-contour-v1" },
+    "cases": { "type": "array", "minItems": 11, "items": {
+      "type": "object", "required": ["name", "mode", "size", "body", "focused", "emphasized", "active", "bodyRole", "tabs"], "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" }, "mode": { "enum": ["full", "compact", "flat"] },
+        "size": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "integer", "minimum": 1 } },
+        "body": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "integer", "minimum": 0 } },
+        "focused": { "type": "boolean" }, "emphasized": { "type": "boolean" }, "active": { "type": "integer", "minimum": 0 },
+        "bodyRole": { "enum": ["active", "normal", "emphasized"] },
+        "rendered": { "type": "array", "items": { "type": "object", "required": ["corner", "x", "width", "index", "kind"], "additionalProperties": false, "properties": {
+          "corner": { "enum": ["top-left", "top-right", "bottom-left", "bottom-right"] }, "x": { "type": "integer", "minimum": 0 }, "width": { "type": "integer", "minimum": 3 }, "index": { "type": ["integer", "null"], "minimum": 0 }, "kind": { "enum": ["tab", "overflow-prev", "overflow-next"] }
+        } } },
+        "tabs": { "type": "array", "minItems": 1, "items": {
+          "type": "object", "required": ["label", "corner", "x", "width"], "additionalProperties": false,
+          "properties": { "label": { "type": "string" }, "corner": { "enum": ["top-left", "top-right", "bottom-left", "bottom-right"] }, "x": { "type": "integer", "minimum": 0 }, "width": { "type": "integer", "minimum": 3 } }
+        } }
+      }
+    } }
+  }
+}

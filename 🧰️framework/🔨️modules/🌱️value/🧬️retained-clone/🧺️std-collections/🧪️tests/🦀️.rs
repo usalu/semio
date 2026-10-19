@@ -60,17 +60,17 @@ fn clone_exactly<M: RetainedCloneEntries + Clone + PartialEq + Debug + Serialize
             Ok(demand) => {
                 let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
                 for denied in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_depth: 0, ..grant }] {
-                    assert_eq!(cursor.advance(source.borrow(), denied).unwrap().progress(), RetainedCloneProgress::default());
+                    assert_eq!(cursor.advance(source.borrow(), 1 << 16, denied).unwrap().progress(), RetainedCloneProgress::default());
                 }
                 if demand.copy_bytes > 0 {
-                    let smaller=RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant};let selected=cursor.advance_demands(source.borrow(),smaller.maximum_copy_bytes).unwrap();let step=cursor.advance(source.borrow(),smaller).unwrap();assert!(step.progress().fits(smaller));assert!(step.progress().copied_bytes<=selected.copy_bytes);if selected.copy_bytes>smaller.maximum_copy_bytes{assert_eq!(step.progress(),RetainedCloneProgress::default(),"selected atomic copy demand {selected:?} must be binding");}
+                    let selected_body=demand.copy_bytes-1;let smaller=RetainedCloneGrant{maximum_copy_bytes:selected_body,..grant};let selected=cursor.advance_demands(source.borrow(),selected_body).unwrap();let step=cursor.advance(source.borrow(), selected_body, smaller).unwrap();assert!(step.progress().fits(smaller));assert!(step.progress().copied_bytes<=selected.copy_bytes);if selected.copy_bytes>smaller.maximum_copy_bytes{assert_eq!(step.progress(),RetainedCloneProgress::default(),"selected atomic copy demand {selected:?} must be binding");}
                 }
                 quoted += 1;
                 grant
             }
             Err(_) => wide(),
         };
-        let step = cursor.advance(source.borrow(), grant).unwrap();
+        let step = cursor.advance(source.borrow(), 1 << 16, grant).unwrap();
         assert!(step.progress().fits(grant));
         copied_items += step.progress().copied_items;
         if let RetainedCloneStep::Complete(_) = step { output = cursor.take(); }
@@ -88,7 +88,7 @@ fn cancel_midway<M: RetainedCloneEntries + Clone>(original: M, stop_after: usize
     let source = Held::new(original);
     let mut cursor = M::retained_clone_cursor();
     for _ in 0..stop_after {
-        if let RetainedCloneStep::Complete(_) = cursor.advance(source.borrow(), wide()).unwrap() { break; }
+        if let RetainedCloneStep::Complete(_) = cursor.advance(source.borrow(), 1 << 16, wide()).unwrap() { break; }
     }
     close_all::<M>(&mut cursor);
 }
@@ -153,5 +153,5 @@ fn standard_collection_scalar_clones_are_fully_quoted_turn_by_turn() {
 
 #[test]
 fn reselected_string_copy_budget_matches_exact_utf8_prefix_and_actual_maximum(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();for row in fixture["copySelection"].as_array().unwrap(){let text=row["source"].as_str().unwrap();let source=Held::new(text.to_owned());let mut cursor=String::retained_clone_cursor();for _ in 0..4{if cursor.phase==1{break}let grant=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:text.len(),maximum_depth:1,..Default::default()};assert!(cursor.advance(source.borrow(),grant).unwrap().progress().fits(grant));}assert_eq!(cursor.phase,1);let requested=row["requestedBytes"].as_u64().unwrap()as usize;let maximum=row["admittedBytes"].as_u64().unwrap()as usize;let original=cursor.advance_demands(source.borrow(),requested).unwrap();let selected=cursor.advance_demands(source.borrow(),maximum).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:maximum,maximum_depth:selected.depth,..Default::default()};let step=cursor.advance(source.borrow(),grant).unwrap();assert!(step.progress().fits(grant));assert_eq!(step.progress().copied_bytes,row["expectedCopiedBytes"].as_u64().unwrap()as usize);assert!(step.progress().copied_bytes<=selected.copy_bytes);assert!(maximum<original.copy_bytes);let prefix=row["expectedPrefix"].as_str().unwrap();assert_eq!(cursor.output.as_deref().unwrap(),prefix);let oracle=String::from_utf8(text.as_bytes()[..prefix.len()].to_vec()).unwrap();assert_eq!(cursor.output.as_deref().unwrap(),oracle);close_all::<String>(&mut cursor);}
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();for row in fixture["copySelection"].as_array().unwrap(){let text=row["source"].as_str().unwrap();let source=Held::new(text.to_owned());let mut cursor=String::retained_clone_cursor();for _ in 0..4{if cursor.phase==1{break}let grant=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:text.len(),maximum_depth:1,..Default::default()};assert!(cursor.advance(source.borrow(), maximum, grant).unwrap().progress().fits(grant));}assert_eq!(cursor.phase,1);let requested=row["requestedBytes"].as_u64().unwrap()as usize;let maximum=row["admittedBytes"].as_u64().unwrap()as usize;let original=cursor.advance_demands(source.borrow(),requested).unwrap();let selected=cursor.advance_demands(source.borrow(),maximum).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:maximum,maximum_depth:selected.depth,..Default::default()};let step=cursor.advance(source.borrow(), maximum, grant).unwrap();assert!(step.progress().fits(grant));assert_eq!(step.progress().copied_bytes,row["expectedCopiedBytes"].as_u64().unwrap()as usize);assert!(step.progress().copied_bytes<=selected.copy_bytes);assert!(maximum<original.copy_bytes);let prefix=row["expectedPrefix"].as_str().unwrap();assert_eq!(cursor.output.as_deref().unwrap(),prefix);let oracle=String::from_utf8(text.as_bytes()[..prefix.len()].to_vec()).unwrap();assert_eq!(cursor.output.as_deref().unwrap(),oracle);close_all::<String>(&mut cursor);}
 }

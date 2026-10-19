@@ -3,10 +3,12 @@
     /// 🧱️ Mounted acceptance publishes every string, template, virtual owner, and source mutation as a distinct worker stage.
     #[test]
     fn board_fill_candidate_acceptance_exposes_every_retained_field_stage() {
+        let mut original = fixture(semio_framework_job::default_now_us);
         let host = frontier_fill_host();
         let operation = Operation::new(semio_framework_job::OperationId(271), semio_framework_job::RevisionId(37), semio_framework_job::Generation(11), 271);
-        let params = fill_params_with(operation, operation.generation, semio_framework_job::root_cancel_token(), "puzzle2d.fill.field-cursors", semio_framework_job::default_now_us);
-        let mut session = mount_fill_session(BoardFillJob::with_operation(capture_fill_snapshot(&host), 2, operation), params);
+        let params = fill_config("puzzle2d.fill.field-cursors");
+        let job = new_fill_job(&mut original, &host, 2, operation);
+        let mut session = mount_fill_session(&mut original, job, params);
         let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
         let mut seen = [false; 13];
         let mut checkpointed = false;
@@ -14,7 +16,7 @@
             match pump_fill_session(&mut session, &pool) {
                 WorkerJobPoll::Submitted | WorkerJobPoll::Rejected | WorkerJobPoll::Idle => std::thread::yield_now(),
                 WorkerJobPoll::Outcome | WorkerJobPoll::Terminal => {
-                    match seen_fill_outcome(&mut session) {
+                    match seen_fill_outcome(&mut original, &mut session) {
                         FillSeen::Preview => {
                             let job = session.checked_out_job_mut().expect("field cursor job");
                             match job.stage() {
@@ -34,22 +36,22 @@
                                 _ => {}
                             }
                             let _ = job.take_preview().expect("field cursor preview");
-                            acknowledge_fill_outcome(&mut session);
+                            acknowledge_fill_outcome(&mut original, &mut session);
                             session.resume().expect("field cursor resume");
                         }
                         FillSeen::Checkpoint => {
-                            retire_checked_out_fill_checkpoint(&mut session);
-                            acknowledge_fill_outcome(&mut session);
+                            retire_checked_out_fill_checkpoint(&mut original, &mut session);
+                            acknowledge_fill_outcome(&mut original, &mut session);
                             checkpointed = true;
                             break;
                         }
                         FillSeen::Yield => {
-                            acknowledge_fill_outcome(&mut session);
+                            acknowledge_fill_outcome(&mut original, &mut session);
                             session.resume().expect("field cursor yield resume");
                         }
                         ended @ (FillSeen::Complete(_) | FillSeen::Cancelled | FillSeen::Fault) => {
                             let fault = session.checked_out_job_mut().and_then(BoardFillJob::take_fault);
-                            acknowledge_fill_outcome(&mut session);
+                            acknowledge_fill_outcome(&mut original, &mut session);
                             panic!("field cursor job terminated before checkpoint: {ended:?} fault={fault:?} seen={seen:?}");
                         }
                     }
@@ -59,8 +61,10 @@
         }
         assert!(checkpointed);
         assert!(seen.into_iter().all(|value| value));
-        close_fill_session(&mut session);
+        close_fill_session(&mut original, &mut session);
         pool.shutdown().expect("bounded snapshot operation succeeds");
+        original.finish();
+        original.finish();
     }
 
     #[test]

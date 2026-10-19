@@ -1,4 +1,5 @@
 //! 🧪️ Verifies the mutation fixture leaf contract.
+use crate::os_spr::ColdCompositeMutationKind;
 use super::*;
 use semio_framework_test_fixtures::fixture_path;
 #[test]

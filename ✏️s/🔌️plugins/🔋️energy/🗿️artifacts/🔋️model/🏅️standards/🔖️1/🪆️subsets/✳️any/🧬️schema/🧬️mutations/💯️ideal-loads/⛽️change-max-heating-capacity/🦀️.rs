@@ -26,18 +26,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeIdealLoadsSys
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeIdealLoadsSystemMaxHeatingCapacity>,
 {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "ideal-loads-system", kind: "change-ideal-loads-system-max-heating-capacity", record: "ChangedIdealLoadsSystemMaxHeatingCapacity" };
 
-    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-        super::diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change ideal loads system {} maximum heating capacity to {:?}", self.id.0, self.new_capacity_present.then_some(self.new_max_heating_capacity_w)), &format!("Maximale Heizleistung von Ideallastsystem {} auf {:?} ändern", self.id.0, self.new_capacity_present.then_some(self.new_max_heating_capacity_w)))
@@ -46,5 +35,26 @@ where
     fn target(&self) -> Vec<String> {
         vec![self.id.0.to_string()]
     }
+}
+
+impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for ChangeIdealLoadsSystemMaxHeatingCapacity
+where
+    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<ChangeIdealLoadsSystemMaxHeatingCapacity>,
+{
+    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
+        super::diff::diff(self, base)
+    }
+
+
+
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "ideal-loads-system", kind: "change-ideal-loads-system-max-heating-capacity", record: "ChangedIdealLoadsSystemMaxHeatingCapacity" };
+
+
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 }
 //#endregion 🔖️Mutation

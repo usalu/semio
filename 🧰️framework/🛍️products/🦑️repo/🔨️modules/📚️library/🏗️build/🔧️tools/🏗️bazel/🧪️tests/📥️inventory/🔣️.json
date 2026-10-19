@@ -1,0 +1,15 @@
+{
+  "cases": [
+    {"patterns":[],"roots":[]},
+    {"patterns":["app/src/**/*.ts","app/src/other/*.json","app/src/**/*.ts"],"roots":["app/src"]},
+    {"patterns":["app/a.ts","app/b.ts","other/**/*.ts"],"roots":["app/a.ts","app/b.ts","other"]},
+    {"patterns":["app/src/*.ts","app2/**/*.ts","app/**/*"],"roots":["app","app2"]},
+    {"patterns":["app/a?.ts","app/{src,test}/**/*"],"roots":["app"]},
+    {"patterns":["app/src/**/file.ts","**/*.json"],"roots":[""]},
+    {"patterns":["./app/src/**/*.ts","app/src/"],"roots":["app/src"]}
+  ],
+  "files":["app/src/a.ts","app/src/deep/b.ts","app/src/dist/generated.ts","app/test/test.ts","other/private.ts"],
+  "selected":["app/src/**/*.ts"],
+  "expected":["app/src/a.ts","app/src/deep/b.ts"],
+  "visited":["app/src","app/src/deep"]
+}

@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "prefix",
+    "stride",
+    "firstRepeat",
+    "cases",
+    "cuts",
+    "invalidRows",
+    "interactionQuantum",
+    "ownedWrapperCuts"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "prefix": {
+      "type": "string"
+    },
+    "stride": {
+      "type": "integer"
+    },
+    "firstRepeat": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "cuts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "invalidRows": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "interactionQuantum": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copyBytes",
+        "workItems",
+        "maximumTurns"
+      ],
+      "properties": {
+        "copyBytes": {
+          "const": 4096
+        },
+        "workItems": {
+          "const": 257
+        },
+        "maximumTurns": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "ownedWrapperCuts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  }
+}

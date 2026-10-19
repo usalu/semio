@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "variant",
+          "action",
+          "value",
+          "expectedArgs"
+        ],
+        "properties": {
+          "variant": {
+            "type": "string",
+            "enum": [
+              "Noop",
+              "Set"
+            ]
+          },
+          "action": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "expectedArgs": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "value"
+                ],
+                "properties": {
+                  "value": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

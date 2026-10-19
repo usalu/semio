@@ -16,7 +16,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "A second implementation of the `s.fem.fem3d` model and all twenty-nine typed mutations, in Python, at `../../../../../🧪️tests/mutate-fem3d-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️.json`, `../🚪️io/📝️text/🧬️mutations/📖️.grammar.semio` and the committed `(before, mutation, after, outcome)` specification vectors of all twenty-nine kinds — which is also where the RECORD shapes and the cascade rules are actually written down, including the one only they state: an element is a `frame` carrying a `roll` about its own axis OR a `bar` carrying none. It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: `code_aster`, `OpenSees`, `anastruct` and `PyNite` compute displacements and forces FROM a model, while every one of the twenty-nine kinds edits the model document itself, and none of them reads `.dsl.semio`. DEFECT FOUND WHILE WRITING IT, reported rather than worked around and identical to the `◻️2d` sibling's: `../🧬️schema/🧬️mutations/🔣️.json` is a verbatim copy of the SNAPSHOT schema with the title changed, and in the snapshot schema every record `$def` is an EMPTY object with no properties. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `fem3d-1-mutate`'s external-oracle requirement for its 29-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
+      "rationale": "An independently implemented Python structural-model mutation oracle. The material slice includes create, delete, whole-value replace and sparse change events. Its field-change implementation validates supplied properties, preserves stable identity and computes inverses only for authored fields.",
       "kind": "cross-semio-implementation",
       "engine": {
         "family": "none",
@@ -261,6 +261,33 @@
       ],
       "homepage": "https://scikit-fem.readthedocs.io",
       "rationale": "🧱 An independent continuum finite-element library, adjudicating the one analysis path a frame solver structurally cannot see: a `FemSolid`, which `crate::fem3d_engine::meshing::resolve_geometry` triangulates, extrudes and splits into `Tet4` elements before solving it as a three-dimensional elastic continuum. It builds its OWN hexahedral mesh of the same prism, assembles its own isotropic elasticity operator from the Lamé parameters, and condenses and solves its own system; it never sees this artifact's triangulation, its extrusion, its tetrahedra or its solver — which is what makes the comparison worth making, since two different meshes of one continuum must still agree on the continuum's answer.\n\nWHY THE FIXTURE IS SHAPED THE WAY IT IS. `🧱️prismatic-solid-column.snapshot.json` gives its solid a `meshSize` larger than its own footprint diagonal, so the footprint triangulates into exactly its four corners — every base node is then a DOCUMENT node the fixture can name and restrain, which no ordinary solid fixture can do, because `resolve_geometry` synthesizes the rest. The restraint set it declares (`Tz` at all four corners, `Tx`+`Ty` at the origin, `Ty` at the +x corner, `Tx` at the +y corner) is precisely the one the uniform-stress solution already satisfies, so it removes the six rigid-body freedoms without fighting the Poisson contraction. Under a uniform 0.5 MPa top pressure the continuum answer is therefore exactly `σ = −p` and `δ_top = −pH/E`, which a constant-strain tetrahedron reproduces to machine precision and which this oracle reproduces to `8e-16` on its own mesh. Under self weight the answer is `−ρgH²/2E`, which a hexahedral mesh and a tetrahedral one approach from their own sides rather than hit — this oracle lands 0.26 % below it — so that case is a five-percent verdict, and nothing tighter would be honest about either discretisation.\n\nIT DOES NOT REPLACE THE GEOMETRY ORACLES. `three-fem3d-mesh-reader` and `manifold-fem3d-mesh-measure` adjudicate what the solid's mesh IS; this one adjudicates what it DOES under load. The three `create-`/`delete-`/`replace-solid` kinds carry all three requirements for that reason."
+    },
+    {
+      "id": "json-patch-fem3d-fields",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "fast-json-patch",
+      "version": "3.1.1",
+      "source": {
+        "license": "MIT",
+        "repository": "https://github.com/Starcounter-Jack/JSON-Patch"
+      },
+      "engine": {
+        "version": "3.1.1",
+        "implementation": "RFC 6902 replace operations",
+        "family": "json-patch"
+      },
+      "capabilities": [
+        "fem3d-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "rationale": "The material field-intent test replays language-neutral sparse field events and independently applies equivalent RFC 6902 replace operations with fast-json-patch. Both results must equal the authored expected material in either arrival order."
     }
   ],
   "mutationCatalogs": [
@@ -282,9 +309,122 @@
         "delete-solid",
         "replace-solid",
         "replace-node",
-        "move-selection"
+        "move-selection",
+        "change-node",
+        "change-section",
+        "change-solid",
+        "change-element"
       ],
-      "vectors": []
+      "vectors": [
+        {
+          "mutationId": "change-node",
+          "sourceMutationDirectoryName": "🩹️change-node",
+          "mutationDirectoryName": "🩹️change-node",
+          "scenarios": [
+            {
+              "id": "changes",
+              "directoryName": "🩹️changes"
+            },
+            {
+              "id": "coordinates",
+              "directoryName": "📐️coordinates"
+            },
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "empty",
+              "directoryName": "⚗️empty"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-section",
+          "sourceMutationDirectoryName": "🩹️change-section",
+          "mutationDirectoryName": "🩹️change-section",
+          "scenarios": [
+            {
+              "id": "changes",
+              "directoryName": "🩹️changes"
+            },
+            {
+              "id": "coordinates",
+              "directoryName": "📐️coordinates"
+            },
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "invalid",
+              "directoryName": "⚗️invalid"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-solid",
+          "sourceMutationDirectoryName": "🩹️change-solid",
+          "mutationDirectoryName": "🩹️change-solid",
+          "scenarios": [
+            {
+              "id": "changes",
+              "directoryName": "🩹️changes"
+            },
+            {
+              "id": "geometry",
+              "directoryName": "📐️geometry"
+            },
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "invalid",
+              "directoryName": "⚗️invalid"
+            }
+          ]
+        },
+        {
+          "sourceMutationDirectoryName": "🩹️change-element",
+          "mutationId": "change-element",
+          "scenarios": [
+            {
+              "id": "changes",
+              "directoryName": "🩹️changes"
+            },
+            {
+              "id": "variant",
+              "directoryName": "🔀️variant"
+            },
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "invalid",
+              "directoryName": "⚗️invalid"
+            }
+          ],
+          "mutationDirectoryName": "🩹️change-element"
+        }
+      ]
     },
     {
       "id": "fem3d-1-any-material",
@@ -294,9 +434,38 @@
       "kinds": [
         "create-material",
         "delete-material",
-        "replace-material"
+        "replace-material",
+        "change-material"
       ],
-      "vectors": []
+      "vectors": [
+        {
+          "mutationId": "change-material",
+          "sourceMutationDirectoryName": "🩹️change-material",
+          "mutationDirectoryName": "🩹️change-material",
+          "scenarios": [
+            {
+              "id": "renames-a-field",
+              "directoryName": "🩹️renames"
+            },
+            {
+              "id": "softens-properties",
+              "directoryName": "📉️softens"
+            },
+            {
+              "id": "keeps-the-same-value",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "rejects-a-missing-target",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "rejects-zero-modulus",
+              "directoryName": "⚗️invalid"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "fem3d-1-any-boundary",
@@ -306,9 +475,38 @@
       "kinds": [
         "create-support",
         "delete-support",
-        "replace-support"
+        "replace-support",
+        "change-support"
       ],
-      "vectors": []
+      "vectors": [
+        {
+          "sourceMutationDirectoryName": "🩹️change-support",
+          "mutationId": "change-support",
+          "scenarios": [
+            {
+              "id": "changes",
+              "directoryName": "🩹️changes"
+            },
+            {
+              "id": "toggles",
+              "directoryName": "📌️toggles"
+            },
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "invalid",
+              "directoryName": "⚗️invalid"
+            }
+          ],
+          "mutationDirectoryName": "🩹️change-support"
+        }
+      ]
     },
     {
       "id": "fem3d-1-any-load",
@@ -325,9 +523,94 @@
         "delete-combination",
         "replace-load",
         "change-load-case-name",
-        "replace-combination"
+        "replace-combination",
+        "change-load",
+        "change-combination-name",
+        "change-combination-term"
       ],
-      "vectors": []
+      "vectors": [
+        {
+          "mutationId": "change-load",
+          "sourceMutationDirectoryName": "🩹️change-load",
+          "mutationDirectoryName": "🩹️change-load",
+          "scenarios": [
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "invalid",
+              "directoryName": "⚗️invalid"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "target",
+              "directoryName": "📍️target"
+            },
+            {
+              "id": "changes",
+              "directoryName": "🩹️changes"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-combination-name",
+          "sourceMutationDirectoryName": "🩹️change-combination-name",
+          "mutationDirectoryName": "🩹️change-combination-name",
+          "scenarios": [
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "empty",
+              "directoryName": "⚗️empty"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "labels",
+              "directoryName": "✏️labels"
+            },
+            {
+              "id": "renames",
+              "directoryName": "🩹️renames"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-combination-term",
+          "sourceMutationDirectoryName": "🩹️change-combination-term",
+          "mutationDirectoryName": "🩹️change-combination-term",
+          "scenarios": [
+            {
+              "id": "same",
+              "directoryName": "⏸️same"
+            },
+            {
+              "id": "weights",
+              "directoryName": "⚖️weights"
+            },
+            {
+              "id": "invalid",
+              "directoryName": "⚗️invalid"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "removes",
+              "directoryName": "🗑️removes"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "fem3d-1-any-analysis",
@@ -1434,6 +1717,294 @@
           "invariants": {
             "local": [
               "not-encoded-by-any-exported-carrier"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "change-material",
+          "subset": "material",
+          "capability": "fem3d-1-mutate",
+          "payloadSchema": "../../🧱️material/🧬️schema/🧬️mutations/🩹️change-material/🦀️.rs#ChangeMaterial",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "bridgeVersion": 1,
+            "variant": "ChangeMaterial",
+            "operation": "change-material"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem3d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "json-patch-fem3d-fields"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "stable-identity-preserved",
+              "only-supplied-fields-change"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "change-node",
+          "subset": "mesh",
+          "capability": "fem3d-1-mutate",
+          "payloadSchema": "../../🕸️mesh/🧬️schema/🧬️mutations/🩹️change-node/🦀️.rs#ChangeNode",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "bridgeVersion": 1,
+            "variant": "ChangeNode",
+            "operation": "change-node"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem3d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "json-patch-fem3d-fields"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "stable-identity-preserved",
+              "only-supplied-fields-change"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "change-section",
+          "subset": "mesh",
+          "capability": "fem3d-1-mutate",
+          "payloadSchema": "../../🕸️mesh/🧬️schema/🧬️mutations/🩹️change-section/🦀️.rs#ChangeSection",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "bridgeVersion": 1,
+            "variant": "ChangeSection",
+            "operation": "change-section"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem3d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "json-patch-fem3d-fields"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "stable-identity-preserved",
+              "only-supplied-fields-change"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "change-solid",
+          "subset": "mesh",
+          "capability": "fem3d-1-mutate",
+          "payloadSchema": "../../🕸️mesh/🧬️schema/🧬️mutations/🩹️change-solid/🦀️.rs#ChangeSolid",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "bridgeVersion": 1,
+            "variant": "ChangeSolid",
+            "operation": "change-solid"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem3d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "json-patch-fem3d-fields"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "stable-identity-preserved",
+              "only-supplied-fields-change"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "change-support",
+          "subset": "boundary",
+          "capability": "fem3d-1-mutate",
+          "payloadSchema": "../../🛡️boundary/🧬️schema/🧬️mutations/🩹️change-support/🦀️.rs#ChangeSupport",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "bridgeVersion": 1,
+            "variant": "ChangeSupport",
+            "operation": "change-support"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem3d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "json-patch-fem3d-fields"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "stable-identity-preserved",
+              "only-supplied-fields-change"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "change-element",
+          "subset": "mesh",
+          "capability": "fem3d-1-mutate",
+          "payloadSchema": "../../🕸️mesh/🧬️schema/🧬️mutations/🩹️change-element/🦀️.rs#ChangeElement",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "bridgeVersion": 1,
+            "variant": "ChangeElement",
+            "operation": "change-element"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem3d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "json-patch-fem3d-fields"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "stable-identity-preserved",
+              "only-supplied-fields-change"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "change-load",
+          "subset": "load",
+          "capability": "fem3d-1-mutate",
+          "payloadSchema": "../../🏋️load/🧬️schema/🧬️mutations/🩹️change-load/🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "bridgeVersion": 1,
+            "variant": "ChangeLoad",
+            "operation": "change-load"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem3d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "json-patch-fem3d-fields"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "stable-identity-preserved",
+              "only-supplied-fields-change"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "change-combination-name",
+          "subset": "load",
+          "capability": "fem3d-1-mutate",
+          "payloadSchema": "../../🏋️load/🧬️schema/🧬️mutations/🩹️change-combination-name/🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "bridgeVersion": 1,
+            "variant": "ChangeCombinationName",
+            "operation": "change-combination-name"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem3d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "json-patch-fem3d-fields"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "stable-identity-preserved",
+              "only-supplied-fields-change"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "change-combination-term",
+          "subset": "load",
+          "capability": "fem3d-1-mutate",
+          "payloadSchema": "../../🏋️load/🧬️schema/🧬️mutations/🩹️change-combination-term/🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "bridgeVersion": 1,
+            "variant": "ChangeCombinationTerm",
+            "operation": "change-combination-term"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem3d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "json-patch-fem3d-fields"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "stable-identity-preserved",
+              "only-supplied-fields-change"
             ],
             "enclosing": [
               "document-remains-well-formed"

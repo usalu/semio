@@ -4,9 +4,95 @@ use crate::standards::v1::subsets::any::schema::kind_catalogs::{Puzzle5dCatalogF
 use semio_framework_test_fixtures::fixture_text;
 use store::sqlite_snapshot::{SqliteDatabase, SqliteValue, SqliteSnapshotControl, SqliteSnapshotPhase, SnapshotEncoding};
 use semio_framework_value::ValueError;
-use pack::snapshot::ArtifactSqliteSnapshot as _;
+
+//#region 🔖️NativeOwners
+/// 🎟️ The immutable caller policy every original native owner of these laws runs under.
+fn original_caller_grant() -> semio_framework_value::RetainedCloneGrant {
+    semio_framework_value::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 65536, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 4096 }
+}
+
+/// 🛬️ Runs one decode under the given SQL controller and a retained native recipient closed after the operation.
+pub(super) fn with_original_decode<O>(sql: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>, operation: impl FnOnce(&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>, &mut store::NativeSnapshotDecodeOwner<'_, '_>) -> O) -> O {
+    let policy = original_caller_grant();
+    let mut accepted = |_| true;
+    let mut recipient = semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();
+    let mut native = semio_framework_value::NativeDecodeControl::new(sql.limits().max_value_bytes, &mut accepted);
+    native.install_retirement_recipient(&mut recipient).unwrap();
+    let result = {
+        let mut owner = store::NativeSnapshotDecodeOwner::new(&mut native, policy);
+        operation(sql, &mut owner)
+    };
+    for _ in 0..4096 {
+        if !native.has_retirement_owner() {
+            break;
+        }
+        let step = native.close_retirement_recipient(policy).unwrap();
+        assert!(step.progress().fits(policy));
+    }
+    assert!(!native.has_retirement_owner());
+    result
+}
+
+/// 🛫️ Runs one encode or import under the given SQL controller and a retained native recipient closed after the operation.
+pub(super) fn with_original_encode<O>(sql: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>, operation: impl FnOnce(&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>, &mut store::NativeSnapshotEncodeOwner<'_, '_>) -> O) -> O {
+    let policy = original_caller_grant();
+    let mut accepted = |_| true;
+    let mut recipient = semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
+    let mut native = semio_framework_value::NativeEncodeControl::new(sql.limits().max_value_bytes, &mut accepted);
+    native.install_retirement_recipient(&mut recipient).unwrap();
+    let result = {
+        let mut owner = store::NativeSnapshotEncodeOwner::new(&mut native, policy);
+        operation(sql, &mut owner)
+    };
+    for _ in 0..4096 {
+        if !native.has_retirement_owner() {
+            break;
+        }
+        let step = native.close_retirement_recipient(policy).unwrap();
+        assert!(step.progress().fits(policy));
+    }
+    assert!(!native.has_retirement_owner());
+    result
+}
+
+/// 📸️ Decodes through the genuine supplied-owner typed definition.
+macro_rules! decode_native {
+    ($ty:ty; $payload:expr, $ctl:expr) => {
+        with_original_decode($ctl, |sql, owner| <$ty as store::os_store::serialization::ArtifactSqliteSnapshot>::decode_sqlite_snapshot_native($payload, sql, owner))
+    };
+}
+pub(super) use decode_native;
+
+/// 📸️ Encodes through the genuine supplied-owner typed definition.
+macro_rules! encode_native {
+    ($value:expr; $encoding:expr, $ctl:expr) => {
+        with_original_encode($ctl, |sql, owner| $value.encode_sqlite_snapshot_native($encoding, sql, owner))
+    };
+}
+pub(super) use encode_native;
+
+/// 📤️ Runs the registered codec's export (a decode of the payload) under an original native owner.
+macro_rules! export_native {
+    ($export:expr; $schema:expr, $dialect:expr, $payload:expr, $ctl:expr) => {
+        with_original_decode($ctl, |sql, owner| ($export)($schema, $dialect, $payload, sql, owner))
+    };
+}
+pub(super) use export_native;
+
+/// 📥️ Runs the registered codec's import (an encode of the database) under an original native owner.
+macro_rules! import_native {
+    ($import:expr; $schema:expr, $dialect:expr, $database:expr, $encoding:expr, $ctl:expr) => {
+        with_original_encode($ctl, |sql, owner| {
+            let mut imported = Some($database);
+            ($import)($schema, $dialect, &mut imported, $encoding, sql, owner)
+        })
+    };
+}
+pub(super) use import_native;
+//#endregion 🔖️NativeOwners
 use crate::standards::v1::subsets::any::schema::snapshot::Puzzle5dSnapshot;
-use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::*};
+use store::os_store::serialization::ArtifactSqliteSnapshotHost;
+use store::sqlite_snapshot::*;
 
 use semio_framework_test_original_snapshot_owners as original_owners;
 

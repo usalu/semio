@@ -71,5 +71,60 @@
     "sameOrigin": true,
     "differentProjection": false,
     "differentOrigin": false
+  },
+  "closeQuery": {
+    "method": "next_close_demand",
+    "callers": [
+      {
+        "path": "🧬️retained-clone/🗺️ordered-map/🦀️.rs",
+        "calls": 1,
+        "owner": "borrowAuthority"
+      },
+      {
+        "path": "🧬️retained-clone/🗺️ordered-map/➖️remove/🦀️.rs",
+        "calls": 1,
+        "owner": "borrowAuthority"
+      },
+      {
+        "path": "🛬️decode/🧳️owned/🧳️original/🦀️.rs",
+        "calls": 1,
+        "owner": "source"
+      },
+      {
+        "path": "📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🦀️.rs",
+        "calls": 1,
+        "owner": "source"
+      },
+      {
+        "path": "📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🦀️.rs",
+        "calls": 2,
+        "owner": "source"
+      },
+      {
+        "path": "📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🦀️.rs",
+        "calls": 1,
+        "owner": "source"
+      },
+      {
+        "path": "📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+        "calls": 1,
+        "owner": "source"
+      },
+      {
+        "path": "📋️list/🔗️persistent/🔎️traversal/🧪️tests/🦀️.rs",
+        "calls": 2,
+        "owner": "source"
+      },
+      {
+        "path": "📋️list/🔗️persistent/⚖️observation/🧪️tests/🦀️.rs",
+        "calls": 2,
+        "owner": "source"
+      },
+      {
+        "path": "🌳️tree/🟰️equal/🧪️tests/🦀️.rs",
+        "calls": 1,
+        "owner": "source"
+      }
+    ]
   }
 }

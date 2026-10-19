@@ -607,5 +607,9 @@
   "gear": ["ladder", "grapple"],
   "grip": 41.5,
   "reach": 2.5,
-  "mood": "content"
+  "mood": "content",
+  "canopy": {
+    "kind": "path",
+    "d": "M -26 0 V -15 C -26 -32 26 -32 26 -15 V 0 Z M -19 -5 H 19 M -19 -17 H 19 M -7 -6 C -12 -13 -2 -14 -3 -22 C 5 -17 12 -11 7 -6 Z M -17 -2 V -24 M 17 -2 V -24"
+  }
 }

@@ -1,7 +1,7 @@
 //! 🛠️ The proctor end to end, the operator: the built binary probes, backs up while serving and restores elsewhere, erases one learner on request and prunes the registrations nobody played under.
 //!
 //! @see ../🦀️.rs — the end to end suite that mounts this module
-//! @see ../../../🧫️fixtures/📚️catalog/🔣️.json — the catalog played
+//! @see ../../../🧫️fixtures/📚️course/🔣️.json — the course played
 
 use super::*;
 
@@ -44,7 +44,7 @@ fn the_operator_probes_backs_up_while_serving_and_restores_elsewhere() {
     let (ada, run) = (id(0xada), id(0x100));
     accepted(&base, &json!({ "type": "identify-learner", "id": id(1), "learner": ada, "identity": { "kind": "pseudonym", "handle": "Ada" } }));
     play(&base, &ada, &run, "power", "medium", 10);
-    let views = |base: &str| [json!({ "type": "learner", "learner": ada }), json!({ "type": "run", "run": run }), json!({ "type": "leaderboard", "period": "all-time", "learner": ada }), json!({ "type": "crowd", "quiz": "power" }), json!({ "type": "handle", "handle": "ada" }), json!({ "type": "catalog" })].map(|asked| view(base, &asked));
+    let views = |base: &str| [json!({ "type": "learner", "learner": ada }), json!({ "type": "run", "run": run }), json!({ "type": "leaderboard", "period": "all-time", "learner": ada }), json!({ "type": "crowd", "quiz": "power" }), json!({ "type": "handle", "handle": "ada" }), json!({ "type": "course" })].map(|asked| view(base, &asked));
     let before = views(&base);
 
     let (backed_up, backup) = operator(&data.0, port, &["backup", "-"], b"");
@@ -97,15 +97,15 @@ fn the_operator_erases_one_learner_on_request_and_its_handle_is_free_again() {
     assert!(!operator(&data.0, port, &["erase", "--handle", NAME], b"").0, "nobody is erased from a database that is being served");
     running.shut_down();
 
-    let tag = quiz::learner_tag(&ada);
+    let tag = course::learner_tag(&ada);
     let (dry, report) = operator(&data.0, port, &["erase", "--tag", &tag, "--dry-run"], b"");
     let report = String::from_utf8(report).expect("a report");
-    assert!(dry && report.starts_with(&format!("would erase learner #{tag} name {NAME:?} of catalog {TENANT}\n")) && report.contains("  handle \"ada lovelace\": 1 events") && report.ends_with("dry run: nothing was changed\n"), "{report}");
+    assert!(dry && report.starts_with(&format!("would erase learner #{tag} name {NAME:?} of course {TENANT}\n")) && report.contains("  handle \"ada lovelace\": 1 events") && report.ends_with("dry run: nothing was changed\n"), "{report}");
     assert!(holds(&data.0, NAME) && holds(&data.0, &ada), "a dry run changes nothing");
     assert!(!operator(&data.0, port, &["erase", "--handle", "Grace Hopper"], b"").0, "nobody holds that handle");
     let (erased, report) = operator(&data.0, port, &["erase", "--handle", " ada  LOVELACE "], b"");
     let report = String::from_utf8(report).expect("a report");
-    assert!(erased && report.starts_with(&format!("erased learner #{tag} name {NAME:?} of catalog {TENANT}\n")) && !report.contains(&ada), "{report}");
+    assert!(erased && report.starts_with(&format!("erased learner #{tag} name {NAME:?} of course {TENANT}\n")) && !report.contains(&ada), "{report}");
     assert!(!holds(&data.0, NAME) && !holds(&data.0, "ada lovelace") && !holds(&data.0, &ada) && holds(&data.0, &grace), "neither the name nor the learner id is left in any file of the data directory: {:?}", files(&data.0));
     assert!(!operator(&data.0, port, &["erase", "--learner", &ada], b"").0, "an erased learner is nobody");
 
@@ -132,8 +132,8 @@ fn the_operator_erases_one_learner_on_request_and_its_handle_is_free_again() {
 pub(super) fn registrations(data: &Path) -> u64 {
     let data = data.to_string_lossy().into_owned();
     tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_all().build().expect("runtime").block_on(async move {
-        let catalog = Arc::new(load_catalog(&fixtures().join("📚️catalog/🔣️.json")).expect("fixture catalog"));
-        let proctor = Proctor::assemble(StorageProfile::Embedded { data_dir: data }, catalog, development(), PresenceSettings::default()).await.expect("assembled");
+        let course = Arc::new(load_course(&fixtures().join("📚️course/🔣️.json")).expect("fixture course"));
+        let proctor = Proctor::assemble(StorageProfile::Embedded { data_dir: data }, course, development(), PresenceSettings::default()).await.expect("assembled");
         proctor.prepare().await.expect("prepared");
         proctor.reconcile().await.expect("reconciled");
         proctor.settle(&CancelToken::root_now(), |_| {}).await.expect("settled");
@@ -175,17 +175,17 @@ fn the_operator_prunes_the_registrations_nobody_played_under_and_every_player_st
     assert_eq!(registrations(&data.0), 72, "forty-two anonymous learners and thirty handles");
 
     let junk = ["Junk Number 07", "junk number 07", "Hoard Number 3", "Spare Number 1", "spare number 1", "Linus Halfway"];
-    let strangers = [id(0x5007), id(0x5107), id(0x6007), id(0x6107), hoarder.clone(), linus.clone(), quiz::handle_actor_id("junk number 07"), quiz::handle_actor_id("spare number 1")];
+    let strangers = [id(0x5007), id(0x5107), id(0x6007), id(0x6107), hoarder.clone(), linus.clone(), course::handle_actor_id("junk number 07"), course::handle_actor_id("spare number 1")];
     for wrong in [&["prune"][..], &["prune", "--older-than", "7"], &["prune", "--older-than", "soon"], &["prune", "--dry-run"]] {
         assert!(!operator(&data.0, port, wrong, b"").0, "{wrong:?}");
     }
     let (recent, report) = operator(&data.0, port, &["prune", "--older-than", "1h"], b"");
     let report = String::from_utf8(report).expect("a report");
-    assert!(recent && report.starts_with(&format!("pruning 0 registrations of catalog {TENANT} older than 1h (registered before 2")) && report.ends_with("nothing to prune: nothing was changed\n"), "{report}");
+    assert!(recent && report.starts_with(&format!("pruning 0 registrations of course {TENANT} older than 1h (registered before 2")) && report.ends_with("nothing to prune: nothing was changed\n"), "{report}");
     std::thread::sleep(Duration::from_millis(1500));
     let (dry, report) = operator(&data.0, port, &["prune", "--older-than", "1s", "--dry-run"], b"");
     let report = String::from_utf8(report).expect("a report");
-    assert!(dry && report.starts_with(&format!("would prune 70 registrations of catalog {TENANT} older than 1s (registered before 2")), "{report}");
+    assert!(dry && report.starts_with(&format!("would prune 70 registrations of course {TENANT} older than 1s (registered before 2")), "{report}");
     assert!(report.ends_with("Z)\n  learners that never submitted a run: 62 (41 anonymous, 20 under a pseudonym, 1 under a name), holding 26 handles\n  handles claimed beside the identity of a learner that stays: 3\n  staying: 2 learners (2 of them submitted a run), 1 handles, 2 registrations\ndry run: nothing was changed\n"), "{report}");
     assert!(junk.iter().all(|name| holds(&data.0, name)) && strangers.iter().all(|stranger| holds(&data.0, stranger)), "a dry run changes nothing");
     assert!(!junk.iter().any(|name| report.contains(name)) && !strangers.iter().any(|stranger| report.contains(stranger.as_str())), "and its report counts, it names nobody: {report}");

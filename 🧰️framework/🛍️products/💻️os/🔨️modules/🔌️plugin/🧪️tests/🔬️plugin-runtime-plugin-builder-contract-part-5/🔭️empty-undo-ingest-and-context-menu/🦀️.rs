@@ -16,7 +16,7 @@
         assert!(result.mutations.is_empty());
         assert!(result.events.is_empty());
         close_reserved_app(&mut app, mounted_policy,cx);
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
@@ -40,9 +40,9 @@
         let mut restored = contract_app(mounted_policy, &mut identity).await;
         artifact_app_laws::load_document(&mut restored, &files, &mut identity).await.expect("load document pack");
         assert_eq!(restored.test_snapshot().await, TestSnapshot { count: 1, label: "hi".into(), slot: Vec::new() });
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut restored.0,restored.1,cx).expect("original contract fixture paid terminal close");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -78,9 +78,9 @@
         receiver.ingest_operations(&operations, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("ingest once");
         receiver.ingest_operations(&operations, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("ingest twice");
         assert_eq!(receiver.test_snapshot().await.count, 1, "feeding the same operation twice must not double-apply");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut receiver.0,receiver.1,cx).expect("original contract fixture paid terminal close");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut sender.0,sender.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -118,7 +118,7 @@
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity,cx).await.expect("increment after re-attach");
         assert_eq!(app.stores.test_snapshot().await.count, 3);
         assert!(!far_again.receive().await.expect("receive after re-attach").is_empty(), "re-attaching resumes outbound convergence on the new backbone");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -155,7 +155,7 @@
         let with_label = app.context_menu(&request, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
         assert_eq!(with_label.len(), 2, "the guard must open once a label is set: {with_label:?}");
         assert_eq!(with_label[1], ContextMenuItemSpec { id: "incrementViaCommand".into(), label: Some("Increment".into()), icon: Some(increment_icon), action: Some("incrementViaCommand".into()), ..Default::default() });
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -230,7 +230,7 @@
         assert_eq!(view_children, vec!["flatLeaf5", "flatLeaf6"]);
         let actions_children: Vec<&str> = organized[6].children.as_ref().unwrap().iter().map(|child| child.id.as_str()).collect();
         assert_eq!(actions_children, vec!["flatLeaf9", "flatLeaf10"], "uncategorized overflow leaves default to menu.group.actions");
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -253,8 +253,8 @@
         assert!(result.mutations.is_empty(), "utility switching must not create history");
         let event = result.events.iter().find(|event| event.kind == "active-utility").expect("echoed active utility");
         assert_eq!(event.payload, semio_framework_value::DslValue::from(json!({ "utilityId": "brush" })));
-    
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
-    
+
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }

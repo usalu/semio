@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-glazing-material-visible-reflectance-front/schema.json",
+  "title": "ChangeGlazingMaterialVisibleReflectanceFront",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newVisibleReflectanceFront"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeGlazingMaterialVisibleReflectanceFront"
+    },
+    "id": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Glazing material",
+          "de": "Verglasungsmaterial"
+        },
+        "description": {
+          "en": "The glazing material this mutation changes, by id.",
+          "de": "Verglasungsmaterial, das diese Mutation ändert, per ID."
+        },
+        "ref": {
+          "kind": "glazingMaterial",
+          "domain": "energyModel",
+          "granularity": "glazingMaterial"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newVisibleReflectanceFront": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Visible front reflectance",
+          "de": "Sichtbarer Reflexionsgrad vorne"
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0,
+        "softMax": 1,
+        "group": "optics",
+        "order": 20
+      }
+    }
+  }
+}

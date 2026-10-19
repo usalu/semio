@@ -1,23 +1,14 @@
-//! 🏗️ The `fem2d@1/any` non-geometric mutation vocabulary, expressed over this subset's own JSON
-//! carrier and read back through `json` (json-rust) — a third-party JSON implementation and nothing of ours.
-//!
-//! Why this exists: the two mesh oracles already registered for this subset (`three-fem2d-mesh-reader`,
-//! `manifold-fem2d-mesh-measure`) read the STL/OBJ export, so they witness GEOMETRY. A material's
-//! Young's modulus, a support's restrained DOFs, a load case's self-weight flag and the analysis
-//! settings do not move a single triangle — which is why 26 of this subset's 29 kinds were recorded
-//! `-uncarried` against those two.
-//!
-//! But this subset's JSON export is not a stub. Unlike its csv/md/txt leaves, which wrap the DSL text
-//! in a single blob, `🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json` emits
-//! `semio_framework_value::ToValue::to_value(snapshot)` — the real structured tree, every `Fem2dSnapshot` field. So all
-//! nine arrays are carrier-level facts and a JSON reader witnesses every one of the 26.
-//!
-//! This is the same shape as the accepted `quick-xml`/svg and `burntsushi-csv`/mathematical readers:
-//! the judge is a third-party implementation of the CARRIER, and nothing here predicts its answer.
-
-use json::JsonValue;
+//! 🏗️ Every declared FEM semantic event has an independently readable owned snapshot JSON carrier.
+pub use json::JsonValue;
 
 pub const KINDS: &[&str] = &[
+    "create-region",
+    "delete-region",
+    "replace-region",
+    "move-selection",
+
+    "change-combination-name",
+    "change-combination-term",
     "create-node",
     "delete-node",
     "create-element",
@@ -26,6 +17,13 @@ pub const KINDS: &[&str] = &[
     "create-material",
     "delete-material",
     "replace-material",
+    "change-material",
+    "change-node",
+    "change-region",
+    "change-support",
+    "change-element",
+    "change-load",
+    "change-section",
     "create-section",
     "delete-section",
     "replace-section",
@@ -46,7 +44,7 @@ pub const KINDS: &[&str] = &[
     "replace-combination",
 ];
 
-/// 🌱️ A deterministic seed carrying at least TWO of every collection, because `delete-*` and
+/// 🌱️ A deterministic seed carrying used and spare records, because `delete-*` and
 /// `replace-*` are only observable when the collection does not empty to nothing, and a corpus whose
 /// mutations are not observable is not evidence. Field spelling follows the snapshot's value-codec
 /// contract: `#[value(rename_all = "camelCase")]` on every record, `#[value(tag = "kind")]` on the
@@ -105,17 +103,22 @@ fn array<'a>(value: &'a mut JsonValue, key: &str) -> Result<&'a mut Vec<JsonValu
     }
 }
 
-/// 🌾️ ARRANGEMENT — every kind's precondition already holds in the seed, which carries two of each
-/// collection and two loads in `lc1`. Kept as an explicit identity so the generator's shape matches
-/// the other subsets' and a future kind that DOES need a precondition has an obvious home.
-pub fn arrange(_kind: &str, doc: &JsonValue) -> JsonValue {
-    doc.clone()
+/// 🌾️ Geometry deletion owns one spare record not referenced by existing loads.
+pub fn arrange(kind: &str, doc: &JsonValue) -> JsonValue {
+    let mut doc=doc.clone();
+    if kind=="delete-region"{array(&mut doc,"regions").expect("declared snapshot geometry carrier").push(literal(r#"{"id":"r2","name":"Annex","outline":[[5.0,0.0],[7.0,0.0],[7.0,2.0],[5.0,2.0]],"holes":[],"thickness":0.25,"materialId":"m1","meshSize":0.5}"#));}
+    doc
 }
-
 /// ✍️ The forward mutation, as an edit to the JSON carrier.
 pub fn apply(kind: &str, doc: &JsonValue) -> Result<JsonValue, String> {
     let mut doc = doc.clone();
     match kind {
+        "create-region" => array(&mut doc,"regions")?.push(literal(r#"{"id":"r2","name":"Annex","outline":[[5.0,0.0],[7.0,0.0],[7.0,2.0],[5.0,2.0]],"holes":[],"thickness":0.25,"materialId":"m1","meshSize":0.5}"#)),
+        "delete-region" => array(&mut doc,"regions")?.retain(|row|row["id"]!="r2"),
+        "replace-region" => array(&mut doc,"regions")?[0]=literal(r#"{"id":"r1","name":"Expanded Slab","outline":[[0.0,0.0],[5.0,0.0],[5.0,3.0],[0.0,3.0]],"holes":[],"thickness":0.25,"materialId":"m1","meshSize":0.5}"#),
+        "move-selection" => {let node=&mut array(&mut doc,"nodes")?[0];node["x"]=1.0.into();node["y"]=2.0.into();},
+        "change-combination-name" => array(&mut doc, "combinations")?[0]["name"] = literal(r#""Structural Combination""#),
+        "change-combination-term" => array(&mut array(&mut doc, "combinations")?[0], "terms")?[0]["factor"] = 2.0.into(),
         "create-node" => array(&mut doc, "nodes")?.push(literal(r#"{"id": "n4", "x": 0.0, "y": 3.0}"#)),
         "delete-node" => {
             array(&mut doc, "nodes")?.retain(|n| n["id"] != "n3");
@@ -131,6 +134,16 @@ pub fn apply(kind: &str, doc: &JsonValue) -> Result<JsonValue, String> {
         "create-material" => array(&mut doc, "materials")?.push(literal(r#"{"id": "m3", "name": "GL24h", "e": 11500000000.0, "nu": 0.2, "rho": 420.0}"#)),
         "delete-material" => {
             array(&mut doc, "materials")?.retain(|m| m["id"] != "m2");
+        }
+        "change-support" => array(&mut doc, "supports")?[0]["fixed"] = literal(r#"["Tx","Rz"]"#),
+        "change-element" => array(&mut doc, "elements")?[0]["sectionId"] = literal(r#""s2""#),
+        "change-load" => array(&mut array(&mut doc, "loadCases")?[0], "loads")?[0]["value"] = (-1000.0).into(),
+        "change-region" => array(&mut doc, "regions")?[0]["name"] = literal(r#""Structural Region""#),
+        "change-node" => array(&mut doc, "nodes")?[0]["x"] = 1.0.into(),
+        "change-section" => array(&mut doc, "sections")?[0]["name"] = literal(r#""IPE220""#),
+        "change-material" => {
+            let materials = array(&mut doc, "materials")?;
+            materials[0]["name"] = literal(r#""S355""#);
         }
         "replace-material" => {
             let materials = array(&mut doc, "materials")?;
@@ -231,3 +244,7 @@ pub fn project(bytes: &[u8]) -> Result<JsonValue, String> {
     }
     Ok(JsonValue::Object(out))
 }
+
+/// 🧪️ Every semantic carrier must produce an observable owned projection.
+#[test]
+fn all_declared_semantic_carriers_are_observable(){assert_eq!(KINDS.len(),39);let seed=build_seed();for kind in KINDS{let before=arrange(kind,&seed);let after=apply(kind,&before).expect("declared carrier forward route");assert_ne!(project(render(&before).as_bytes()).unwrap(),project(render(&after).as_bytes()).unwrap(),"{kind}");}}

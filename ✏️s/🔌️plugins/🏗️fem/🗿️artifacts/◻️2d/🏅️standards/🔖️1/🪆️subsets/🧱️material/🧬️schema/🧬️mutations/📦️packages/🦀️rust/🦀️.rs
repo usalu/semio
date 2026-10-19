@@ -20,6 +20,17 @@ pub mod standards {
                     #[path = "."]
                     pub mod mutations {
                         #[path = "."]
+                        pub mod change_material {
+                            #[path = "../../🩹️change-material/🦀️.rs"]
+                            mod component;
+                            #[path = "../../🩹️change-material/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "../../🩹️change-material/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+
+                        #[path = "."]
                         pub mod create_material {
                             #[path = "../../🌱️create-material/🦀️.rs"]
                             mod component;

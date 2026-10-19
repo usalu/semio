@@ -1,5 +1,5 @@
 use super::*;
-use crate::catalog::fixtures::fixture;
+use crate::course::fixtures::fixture;
 use serde_json::json;
 
 fn rooms() -> Rooms {
@@ -15,7 +15,7 @@ fn thinking(answers: &OpaqueJson) -> OpaqueJson {
 }
 
 #[test]
-fn the_catalog_has_a_roster_four_pages_and_a_quiz_and_thinking_room_per_quiz() {
+fn the_course_has_a_roster_four_pages_and_a_quiz_and_thinking_room_per_quiz() {
     let rooms = rooms();
     assert_eq!(
         rooms.scopes(),
@@ -25,6 +25,8 @@ fn the_catalog_has_a_roster_four_pages_and_a_quiz_and_thinking_room_per_quiz() {
             "proctor-fixture/home",
             "proctor-fixture/introduction",
             "proctor-fixture/leaderboard",
+            "proctor-fixture/learner",
+            "proctor-fixture/preferences",
             "proctor-fixture/quiz/homes",
             "proctor-fixture/quiz/homes/thinking",
             "proctor-fixture/quiz/power",
@@ -35,7 +37,7 @@ fn the_catalog_has_a_roster_four_pages_and_a_quiz_and_thinking_room_per_quiz() {
     assert_eq!(rooms.room("proctor-fixture/badges"), Some(Room::Page));
     assert_eq!(rooms.room("proctor-fixture/quiz/power"), Some(Room::Quiz("power".into())));
     assert_eq!(rooms.room("proctor-fixture/quiz/power/thinking"), Some(Room::Thinking("power".into())));
-    for scope in ["other-catalog", "other-catalog/home", "proctor-fixture/identity", "proctor-fixture/learner", "proctor-fixture/preferences", "proctor-fixture/quiz/cooling", "proctor-fixture/quiz/cooling/thinking", "proctor-fixture/quiz", "proctor-fixture/", ""] {
+    for scope in ["other-course", "other-course/home", "proctor-fixture/identity", "proctor-fixture/quiz/cooling", "proctor-fixture/quiz/cooling/thinking", "proctor-fixture/quiz", "proctor-fixture/", ""] {
         assert_eq!(rooms.room(scope), None, "{scope}");
     }
 }
@@ -60,7 +62,7 @@ fn the_roster_admits_a_valid_presence_state_only() {
 #[test]
 fn a_page_admits_a_cursor_without_a_drag() {
     let rooms = rooms();
-    for scope in ["proctor-fixture/home", "proctor-fixture/leaderboard", "proctor-fixture/introduction", "proctor-fixture/badges"] {
+    for scope in ["proctor-fixture/home", "proctor-fixture/leaderboard", "proctor-fixture/introduction", "proctor-fixture/badges", "proctor-fixture/learner", "proctor-fixture/preferences"] {
         assert_eq!(rooms.admit(scope, &json!({ "tag": "0a1b2c3d", "cursor": { "anchor": "card:power", "x": 0.25, "y": 1.0 }, "focus": "card:power" })), Ok(()), "{scope}");
         assert_eq!(rooms.admit(scope, &json!({ "tag": "0a1b2c3d" })), Ok(()), "{scope}");
         assert_eq!(rooms.admit(scope, &json!({ "tag": "0a1b2c3d", "drag": { "item": "kettle" } })), Err("id-unknown /drag/item".to_string()), "{scope}");
@@ -69,6 +71,46 @@ fn a_page_admits_a_cursor_without_a_drag() {
     assert_eq!(rooms.admit("proctor-fixture/home", &json!({ "tag": "0a1b2c3d", "focus": "Card Power" })), Err("anchor-invalid /focus".to_string()));
     assert_eq!(rooms.admit("proctor-fixture/home", &json!({ "tag": "0a1b2c3d", "answer": ["kettle"] })), Err(STATE_INVALID.to_string()));
     assert_eq!(rooms.admit("proctor-fixture/home", &presence(&json!({ "screen": "home" }))), Err(STATE_INVALID.to_string()), "a presence state is no cursor state");
+}
+
+#[test]
+fn cursor_places_must_match_their_shared_surface() {
+    let rooms = rooms();
+    assert_eq!(rooms.admit("proctor-fixture/preferences", &json!({"tag":"0a1b2c3d","place":{"screen":"preferences"},"cursor":{"anchor":"viewport","x":0.3,"y":0.7}})), Ok(()));
+    assert_eq!(rooms.admit("proctor-fixture/home", &json!({"tag":"0a1b2c3d","place":{"screen":"preferences"}})), Err("scope-unknown /place".to_string()));
+    assert_eq!(rooms.admit("proctor-fixture/quiz/power", &json!({"tag":"0a1b2c3d","place":{"screen":"run","quiz":"homes"}})), Err("scope-unknown /place".to_string()));
+    assert_eq!(rooms.admit("proctor-fixture/quiz/power", &json!({"tag":"0a1b2c3d","place":{"screen":"run","quiz":"power","task":"missing"}})), Err("task-unknown /place/task".to_string()));
+}
+
+#[test]
+fn public_runs_are_admitted_only_for_the_presented_quiz_and_its_tasks() {
+    let course = fixture();
+    let quiz = &course.entries[0].quiz;
+    let sheet = course::sheet_of(quiz, 7, course::Challenge::Easy);
+    let rooms = Rooms::of(&course);
+    let mut state = presence(&json!({"screen":"run","quiz":quiz.id}));
+    state["view"] = json!({"locale":"en","run":{"quiz":quiz.id,"status":"open","sheet":sheet,"answers":{},"startedAt":1}});
+    assert_eq!(rooms.admit(course.id(), &state), Ok(()));
+    state["view"]["run"]["learner"] = json!("0123456789abcdef0123456789abcdef");
+    assert_eq!(rooms.admit(course.id(), &state), Err(STATE_INVALID.to_string()));
+    state["view"]["run"].as_object_mut().expect("public run").remove("learner");
+    state["view"]["run"]["quiz"] = json!("other");
+    assert_eq!(rooms.admit(course.id(), &state), Err("quiz-unknown /view/run/quiz".to_string()));
+    state["view"]["run"]["quiz"] = json!(quiz.id);
+    state["view"]["run"]["answers"]["missing"] = json!({"kind":"sorting","order":[]});
+    assert_eq!(rooms.admit(course.id(), &state), Err("task-unknown /view/run/answers/missing".to_string()));
+}
+
+#[test]
+fn public_display_preferences_follow_the_language_neutral_contract() {
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧰️framework/🛍️products/📚️course/🧫️fixtures/👥️presentation/🔣️.json")).expect("public display fixtures");
+    let rooms = rooms();
+    for vector in vectors.as_array().expect("vectors") {
+        let id = vector["id"].as_str().expect("fixture id");
+        if ["public-preference-", "public-explicit-", "public-settled-", "public-resolved-"].iter().any(|prefix| id.starts_with(prefix)) {
+            assert_eq!(rooms.admit("proctor-fixture", &vector["state"]).is_ok(), vector["valid"].as_bool().expect("valid"), "{id}");
+        }
+    }
 }
 
 #[test]
@@ -115,9 +157,9 @@ fn a_thinking_room_admits_drafts_over_the_ids_its_quiz_renders() {
 }
 
 #[test]
-fn a_scope_outside_the_catalog_admits_nothing() {
+fn a_scope_outside_the_course_admits_nothing() {
     let rooms = rooms();
-    assert_eq!(rooms.admit("other-catalog", &presence(&json!({ "screen": "home" }))), Err(SCOPE_UNKNOWN.to_string()));
+    assert_eq!(rooms.admit("other-course", &presence(&json!({ "screen": "home" }))), Err(SCOPE_UNKNOWN.to_string()));
     assert_eq!(rooms.admit("proctor-fixture/quiz/cooling", &json!({ "tag": "0a1b2c3d" })), Err(SCOPE_UNKNOWN.to_string()));
     assert_eq!(rooms.admit("proctor-fixture/quiz/cooling/thinking", &thinking(&json!({}))), Err(SCOPE_UNKNOWN.to_string()));
 }

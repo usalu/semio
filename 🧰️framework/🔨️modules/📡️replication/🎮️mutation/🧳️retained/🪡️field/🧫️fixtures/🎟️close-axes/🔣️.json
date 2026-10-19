@@ -1,0 +1,9 @@
+{
+  "original": [1, 2, 3],
+  "cuts": [8, 10, 12],
+  "bodyBytes": 4096,
+  "narrowCopyBytes": 1,
+  "narrowCapacityBytes": 0,
+  "expectedOriginal": [1, 2, 3],
+  "expectedTerminal": true
+}

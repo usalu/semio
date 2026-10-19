@@ -7,5 +7,9 @@
   "tiltDeg": 25.0,
   "azimuthDeg": 200.0,
   "moduleEfficiency": 0.19,
-  "inverterEfficiency": 0.97
+  "inverterEfficiency": 0.97,
+  "faimanHeatLossWindWSM3k": 6.84,
+  "mounting": "OpenRack",
+  "faimanHeatLossConstantWM2k": 25.0,
+  "temperatureCoefficient": -0.004
 }

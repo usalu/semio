@@ -576,25 +576,28 @@ pub use semio_framework_os_store_projection::retire_replayed_projection;
 /// return cannot silently miss it, and no technology has to override anything extra to be safe.
 pub struct ReplayProjection<P, Mutation>
 where
-    Mutation: self::Mutation<P>,
+    Mutation: crate::os_spr::ColdMutation<P>,
 {
     pub projection: Option<P>,
     technology: PhantomData<fn() -> Mutation>,
 }
 
-impl<P, Mutation> ReplayProjection<P, Mutation>
+impl<P, Mutation> ColdReplayProjection<P, Mutation>
 where
-    Mutation: self::Mutation<P>,
+    Mutation: crate::os_spr::ColdMutation<P>,
 {
     /// 🌱️ Takes ownership of a fold's base projection.
     pub fn new(projection: P) -> Self {
         Self { projection: Some(projection), technology: PhantomData }
     }
 
+    /// 🖊️ Lends the exclusive projection without handing away its terminal retirement.
+    pub(crate) fn projection_mut(&mut self) -> &mut P { self.projection.as_mut().expect("live exclusive replay projection") }
+
     /// ▶️ Installs the next projection and retires the one it displaces.
     pub fn advance(&mut self, next: P) {
         let displaced = self.projection.replace(next).expect("a live replay projection is present until it is handed out");
-        retire_replayed_projection::<P, Mutation>(displaced);
+        <Mutation::ReferenceDiff as crate::os_spr::MutationDiff<P>>::retire_projection(displaced);
     }
 
     /// 🎁️ Hands the finished projection to the caller, who owns its retirement from here on.
@@ -603,9 +606,9 @@ where
     }
 }
 
-impl<P, Mutation> std::ops::Deref for ReplayProjection<P, Mutation>
+impl<P, Mutation> std::ops::Deref for ColdReplayProjection<P, Mutation>
 where
-    Mutation: self::Mutation<P>,
+    Mutation: crate::os_spr::ColdMutation<P>,
 {
     type Target = P;
     fn deref(&self) -> &P {
@@ -613,13 +616,13 @@ where
     }
 }
 
-impl<P, Mutation> Drop for ReplayProjection<P, Mutation>
+impl<P, Mutation> Drop for ColdReplayProjection<P, Mutation>
 where
-    Mutation: self::Mutation<P>,
+    Mutation: crate::os_spr::ColdMutation<P>,
 {
     fn drop(&mut self) {
         if let Some(projection) = self.projection.take() {
-            retire_replayed_projection::<P, Mutation>(projection);
+            <Mutation::ReferenceDiff as crate::os_spr::MutationDiff<P>>::retire_projection(projection);
         }
     }
 }
@@ -692,15 +695,15 @@ pub fn edit_timestamp<Mutation>(edit: &Edit<Mutation>) -> HybridLogicalTimestamp
     edit.mutation_meta.first().map_or(HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 }, |meta| meta.timestamp)
 }
 
-impl<P, Mutation> FoldProjection<P, Mutation> for ReplayProjection<P, Mutation>
+impl<P, Mutation> ColdFoldProjection<P, Mutation> for ColdReplayProjection<P, Mutation>
 where
-    Mutation: self::Mutation<P>,
+    Mutation: crate::os_spr::ColdMutation<P>,
 {
-    fn projection(&self) -> &P {
-        self
+    fn fold_operation(&mut self, operation: &Mutation, op_index: u32) {
+        let _ = super::replay::fold_operation_into::<P, Mutation>(self.projection_mut(), operation, op_index);
     }
 
     fn advance(&mut self, next: P) {
-        ReplayProjection::advance(self, next);
+        ColdReplayProjection::advance(self, next);
     }
 }

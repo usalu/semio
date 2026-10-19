@@ -98,7 +98,7 @@ impl semio_framework_job::InteractiveJob for ToyMemberJob {
                 if self.done >= self.target {
                     return semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None).map_err(Into::into);
                 }
-                let unit = self.done + 1;
+                let unit = self.done.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "original Toy member unit overflow"))?;
                 if self.original.unit.advance(&mut self.original.writer, self.base_count, unit, cx)? {
                     self.done = unit;
                     self.phase = 1;
@@ -208,7 +208,7 @@ fn fresh_fold(base: &TestSnapshot, ops: &[Vec<u8>]) -> TestSnapshot {
     for bytes in ops {
         let op = <TestMutation as ::protocol::OpBinary>::decode_op(bytes).expect("a member op decodes");
         let outcome = <TestMutation as Mutation<TestSnapshot>>::diff(&op, &state);
-        state = protocol::apply_diff(outcome.diff(), &state).expect("a member op applies");
+        state = protocol::apply_diff_cold(outcome.diff(), &state).expect("a member op applies");
     }
     state
 }

@@ -216,6 +216,21 @@ impl ViewModel {
         })
     }
 
+    /// 🧰️ Resolves utilities through exact window ownership; kind requests need an addressed or unique live instance.
+    pub fn window_utility(&self, window_id: Option<&str>) -> Option<&str> {
+        let Some(requested) = window_id.or(self.window_id.as_deref()) else { return self.active_utility_id.as_deref().filter(|utility| !utility.is_empty()) };
+        let instance = |id: Option<&str>| id.and_then(|id| self.window_instances.iter().find(|window| window.id == id && window.window_kind_id == requested));
+        let id = if self.window_instances.iter().any(|window| window.id == requested) {
+            requested
+        } else if self.window_instances.iter().any(|window| window.window_kind_id == requested) {
+            let mut candidates = self.window_instances.iter().filter(|window| window.window_kind_id == requested);
+            let first = candidates.next()?;
+            let unique = candidates.next().is_none().then_some(first);
+            &instance(self.window_id.as_deref()).or_else(|| instance(self.focused_window_id.as_deref())).or(unique)?.id
+        } else { requested };
+        self.active_utility_by_window_id.get(id).map(String::as_str).or_else(|| (self.window_id.as_deref() == Some(id)).then_some(self.active_utility_id.as_deref()).flatten()).filter(|utility| !utility.is_empty())
+    }
+
     /// 🛠️ Overlays the host-owned mode tool, then binds the view to a window or the panel.
     pub fn for_host_armed_action(&self, host_active_tool_id: Option<&str>, window_id: Option<&str>) -> Option<Self> {
         let armed = Self { active_tool_id: host_active_tool_id.map(str::to_string), ..self.clone() };

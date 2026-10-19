@@ -126,3 +126,15 @@ fn retained_fixed_list_reservation_copy_quotes_actual_original_metadata_and_heap
  }
  assert!(metadata>0&&payload>0);assert_eq!(promotions,fixture["promotionPages"].as_array().unwrap().len());assert_eq!(owner.iter().copied().collect::<Vec<_>>(),oracle.iter().copied().collect::<Vec<_>>());while !oracle.is_empty(){assert_eq!(owner.pop(),oracle.pop_back());}let mut released=0;while !owner.terminal_is_empty(){let exact=owner.next_release_allocation_bytes().unwrap();let(result,physical)=crate::observe_retirement_allocations(||owner.release_empty_page(exact).unwrap());assert_eq!(physical,(0,result.released_allocation_bytes));released+=physical.1;}assert_eq!(born,released);
 }
+
+#[test]
+fn retained_fixed_list_capacity_funding_preserves_original_pages_before_items(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️reservation.json")).unwrap();let count=fixture["count"].as_u64().unwrap()as usize;
+ let mut owner=PagedList::<u64,600>::with_payload_page_bytes(fixture["payloadBytes"].as_u64().unwrap()as usize).unwrap();let mut born=0;
+ while let Some(capacity)=owner.next_capacity_allocation_bytes(count).unwrap(){let copy=owner.next_capacity_copy_byte_demand(count).unwrap();let before=(owner.len(),owner.capacity(),owner.allocated_bytes());let grant=crate::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:0,maximum_depth:owner.next_capacity_depth_demand(count).unwrap()};
+  for axis in fixture["deniedAxes"].as_array().unwrap(){let mut denied=grant;match axis.as_str().unwrap(){"items"=>denied.maximum_items=0,"copyBytes"=>denied.maximum_copy_bytes-=1,"capacityBytes"=>denied.maximum_capacity_bytes-=1,_=>denied.maximum_depth-=1};let(result,physical)=crate::observe_retirement_allocations(||owner.reserve_capacity_one_funded(count,denied).unwrap());assert_eq!(result,Default::default());assert_eq!(physical,(0,0));assert_eq!((owner.len(),owner.capacity(),owner.allocated_bytes()),before);}
+  let(result,physical)=crate::observe_retirement_allocations(||owner.reserve_capacity_one_funded(count,grant).unwrap());assert_eq!(physical,(capacity,0));assert_eq!(result.copied_bytes,copy);assert!(result.fits(grant));born+=physical.0;
+ }
+ assert_eq!(owner.next_capacity_copy_byte_demand(count).unwrap(),0);let mut oracle=std::collections::VecDeque::new();for value in 0..count as u64{owner.push_reserved(value).unwrap();oracle.push_back(value);}while !oracle.is_empty(){assert_eq!(owner.pop(),oracle.pop_back());}let mut released=0;while !owner.terminal_is_empty(){let exact=owner.next_release_allocation_bytes().unwrap();let(step,physical)=crate::observe_retirement_allocations(||owner.release_empty_page(exact).unwrap());assert_eq!(physical,(0,step.released_allocation_bytes));released+=physical.1;}assert_eq!(born,released);
+ println!("[DEBUG] independently funded full capacity retained every original allocation, refused all four underfunded axes, and matched VecDeque ordering");
+}

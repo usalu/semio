@@ -1,0 +1,61 @@
+{
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@teaching/architecture-course",
+  "version": "0.1.0",
+  "description": "Architektur und Technologie — the course website of architektur-und-technologie.de",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "bun nx run @teaching/architecture-course:build",
+    "test": "bun nx run @teaching/architecture-course:test",
+    "test:e2e": "bun nx run @teaching/architecture-course:test-e2e",
+    "typecheck": "bun nx run @teaching/architecture-course:typecheck"
+  },
+  "dependencies": {
+    "@semio-tech/pets": "workspace:*",
+    "@semio-tech/course": "workspace:*",
+    "@semio-tech/course-react": "workspace:*"
+  },
+  "devDependencies": {
+    "@noble/hashes": "2.4.0",
+    "@semio-tech/ui-styling": "workspace:*",
+    "@tailwindcss/vite": "^4.1.18",
+    "@vitejs/plugin-react": "^5.1.2",
+    "ajv": "8.20.0",
+    "jsonc-parser": "3.3.1",
+    "picomatch": "4.0.7",
+    "resolve.exports": "2.0.3",
+    "tar-stream": "2.2.0",
+    "terser": "5.49.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.17",
+    "yaml": "2.9.0",
+    "@semio-tech/process": "workspace:*"
+  },
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript"
+  },
+  "bundleKind": "application",
+  "semio": {
+    "app": {
+      "kind": "architecture-course",
+      "aliases": [
+        "architecture-course"
+      ],
+      "packageRoot": "🎓️teaching/🏛️architecture/📚️course",
+      "corePackage": "@teaching/architecture-course",
+      "hostKind": "architecture-course",
+      "port": {
+        "dev": 6061,
+        "env": "TEACHING_ARCHITECTURE_COURSE_PORT"
+      }
+    }
+  },
+  "nx": {
+    "includedScripts": []
+  }
+}

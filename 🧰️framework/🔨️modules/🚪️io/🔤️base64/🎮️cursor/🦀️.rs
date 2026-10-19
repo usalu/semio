@@ -85,6 +85,14 @@ impl<'input> Base64DecodeCursor<'input> {
         bytes + if self.phase == Base64Phase::Validate && self.offset + bytes < length { bytes } else { 0 }
     }
 
+    /// 📐️ Borrows the exact decoded extent from length and final padding; strict validation still precedes reconstruction.
+    pub fn expected_output_bytes(&self) -> usize { self.output_length }
+
+    /// 🎟️ Quotes the one actual retained output allocation before its decode-stage birth.
+    pub fn next_capacity_byte_demand(&self) -> usize {
+        if !self.complete && self.refusal.is_none() && self.phase == Base64Phase::Decode && !self.started { self.output_length } else { 0 }
+    }
+
     fn advance(&mut self, control: &mut Base64Control<'_>) -> Result<(), Base64ControlError> {
         control.admit(self.output_length)?;
         let bytes = if self.input.admits(self.range) { &self.input.bytes()[self.range.start..self.range.end] } else { &[] };

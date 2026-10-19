@@ -6,6 +6,10 @@ pub use semio_framework_value_retirement::retirement;
 pub use semio_framework_value_derive::FactoryPayloadRetirement;
 use std::{alloc::Layout, sync::Arc, mem::ManuallyDrop, marker::PhantomData};
 
+#[path="📋️vector/🦀️.rs"]
+pub mod vector;
+pub use vector::FactoryVectorRetirement;
+
 #[path="📦️owned/🦀️.rs"]
 pub mod owned;
 #[path="📦️boxed/🦀️.rs"]
@@ -110,6 +114,11 @@ impl<T:FactoryPayloadRetirement> FactoryRetirementTicket for FactoryTicket<T>{
 }
 
 impl<T:FactoryPayloadRetirement> ErasedSnapshotRetirement for FactoryTicket<T> {
+    fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
+        if !self.preparation_is_complete(){return self.preparation_demands(body);}
+        if self.alias.is_some(){return Ok(RetirementDemand{release_bytes:arc_extent::<T>(),depth:1,..Default::default()});}
+        let mut d=T::close_state_demands(&self.state,body)?;d.depth=d.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"factory retirement nested depth overflow"))?;Ok(d)
+    }
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
         let empty=RetainedCloneProgress::default();
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
@@ -178,6 +187,7 @@ impl crate::retirement::RetireOwned for FactoryAuthority{
     fn controlled_retirement_supported()->bool{true}
 }
 impl crate::retirement::RetirementCursor for FactoryAuthority{
+ fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.demands(body)}
     fn close_step(&mut self,grant:RetainedCloneGrant)->crate::retirement::RetirementStep{match self.step(grant){Err(error)=>crate::retirement::RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>crate::retirement::RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>crate::retirement::RetirementStep::Progress(progress)}}
     fn next_work_byte_demand(&self)->Result<usize,ValueError> {Ok(self.demands(0)?.copy_bytes)}
     fn allows_admitted_narrow_work(&self)->bool{true}

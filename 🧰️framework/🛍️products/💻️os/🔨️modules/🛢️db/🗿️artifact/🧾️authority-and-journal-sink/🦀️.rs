@@ -130,7 +130,8 @@ impl store::durable_group::DurableOwnedGroupJournalCommitV1 for ArtifactDurableG
 
 #[cfg(not(target_arch = "wasm32"))]
 impl semio_framework_value::ErasedSnapshotRetirement for ArtifactDurableGroupJournalCommitV1 {
-    fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(store::durable_group::DurableOwnedGroupJournalCommitV1::retirement_demands(self, 0)?.copy_bytes) }
+        fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { store::durable_group::DurableOwnedGroupJournalCommitV1::retirement_demands(self, body) }
+fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(store::durable_group::DurableOwnedGroupJournalCommitV1::retirement_demands(self, 0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(store::durable_group::DurableOwnedGroupJournalCommitV1::retirement_demands(self, body)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(store::durable_group::DurableOwnedGroupJournalCommitV1::retirement_demands(self, 0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(store::durable_group::DurableOwnedGroupJournalCommitV1::retirement_demands(self, 0)?.depth) }

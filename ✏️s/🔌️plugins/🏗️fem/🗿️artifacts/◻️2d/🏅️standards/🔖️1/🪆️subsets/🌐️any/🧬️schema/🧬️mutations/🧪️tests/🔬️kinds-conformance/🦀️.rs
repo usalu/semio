@@ -1,3 +1,4 @@
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 use super::*;
 use semio_framework_test_fixtures::fixture_text;
 
@@ -7,7 +8,7 @@ use semio_framework_test_fixtures::fixture_text;
 /// honest in both directions at once.
 #[test]
 fn kinds_match_the_enum_and_the_catalog() {
-    let descriptors = <Fem2dMutation as protocol::SemanticMutation<Fem2dSnapshot>>::kinds();
+    let descriptors = <Fem2dMutation as protocol::SemanticMutation<Fem2dSnapshotValue>>::kinds();
     assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared variant");
     for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
         assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");

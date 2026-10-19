@@ -24,6 +24,7 @@ impl OriginalInferenceScope {
 /// 🧷 The explicit, resumable position of one field run: the plan, the next entity, the dependency hash of every finished
 /// entity and the compute in flight. The caller owns it between [`infer_field_step`] calls and may [`cancel`](Self::cancel) it.
 pub struct InferenceCursor<K> {
+    pub(super) original_field_source: Option<usize>,
     pub(super) plan: Option<Vec<InferenceStep<K>>>,
     pub(super) next: usize,
     pub(super) hashes: HashMap<K, DepHash>,
@@ -43,7 +44,7 @@ pub(super) enum OriginalInferencePhase{#[default] CountParents,ReserveParents,Co
 
 impl<K> Default for InferenceCursor<K> {
     fn default() -> Self {
-        Self { plan: None, next: 0, hashes: HashMap::new(), pending: None, progress: 0.0, cancelled: false, original_caller:None,original_scope:None,original_plan:None,original_phase:Default::default(),original_edge:0,original_parent_count:0 }
+        Self { plan: None, next: 0, hashes: HashMap::new(), pending: None, progress: 0.0, cancelled: false, original_caller:None,original_field_source:None,original_scope:None,original_plan:None,original_phase:Default::default(),original_edge:0,original_parent_count:0 }
     }
 }
 
@@ -62,7 +63,11 @@ impl<K: Eq + std::hash::Hash> InferenceCursor<K> {
 
     /// 🧭️ Borrows the funded order and original source ordinals retained by this run.
     pub fn original_plan(&self)->Option<&OriginalInferencePlan>{self.original_plan.as_ref()}
-    /// 🧹️ Keeps original dynamic pending payload and box custody through every denied closure turn.
+        /// 📏️ Observes the exact native pending owner selected by the cursor without moving or closing it.
+    pub fn original_pending(&self)->Option<&dyn InferencePending>{self.pending.as_deref()}
+    /// 📏️ Quotes the exact retained plan close or its metadata/source return.
+    pub fn original_plan_retirement_demands(&self)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if self.pending.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original pending must close before plan demand"))}if let Some(plan)=self.original_plan.as_ref(){if !plan.terminal_is_empty(){return plan.close_demands()}}Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
+/// 🧹️ Keeps original dynamic pending payload and box custody through every denied closure turn.
     pub fn close_original_pending_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,InferenceWorkFailure>{
         if let Some(source)=self.original_scope.as_ref(){if !source.matches(cx)?{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original inference pending retirement source changed").into())}}
         if self.original_caller.is_some_and(|source|source.0!=cx.operation().0||source.1!=cx.generation().0){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original inference pending retirement caller changed").into())}
@@ -77,7 +82,7 @@ impl<K: Eq + std::hash::Hash> InferenceCursor<K> {
         if !self.close_original_pending_step(cx)?{return Ok(false)}
         if self.original_caller.is_some_and(|source|source.0!=cx.operation().0||source.1!=cx.generation().0){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original inference plan retirement caller changed").into())}
         if let Some(plan)=self.original_plan.as_mut(){if !plan.close_step(cx)?{return Ok(false)}if cx.retirement_should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(false)}cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_plan=None;return Ok(false)}
-        if self.original_caller.is_some(){if cx.retirement_should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(false)}cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_caller=None;self.original_scope=None;return Ok(false)}
+        if self.original_caller.is_some(){if cx.retirement_should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(false)}cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_caller=None;self.original_field_source=None;self.original_scope=None;return Ok(false)}
         Ok(true)
     }
 

@@ -8,32 +8,38 @@
     {
       "kind": "null",
       "value": null,
-      "payloadBytes": 0
+      "payloadBytes": 0,
+      "retirementCopyBytes": 0
     },
     {
       "kind": "bool",
       "value": true,
-      "payloadBytes": 0
+      "payloadBytes": 0,
+      "retirementCopyBytes": 0
     },
     {
       "kind": "uint",
       "value": 42,
-      "payloadBytes": 0
+      "payloadBytes": 0,
+      "retirementCopyBytes": 0
     },
     {
       "kind": "int",
       "value": -42,
-      "payloadBytes": 0
+      "payloadBytes": 0,
+      "retirementCopyBytes": 0
     },
     {
       "kind": "float",
       "value": 1.25,
-      "payloadBytes": 0
+      "payloadBytes": 0,
+      "retirementCopyBytes": 0
     },
     {
       "kind": "text",
       "value": "groß🧬",
-      "payloadBytes": 0
+      "payloadBytes": 0,
+      "retirementCopyBytes": 0
     },
     {
       "kind": "bytes",
@@ -42,7 +48,8 @@
         127,
         255
       ],
-      "payloadBytes": 3
+      "payloadBytes": 3,
+      "retirementCopyBytes": 3
     },
     {
       "kind": "array",
@@ -54,7 +61,8 @@
           null
         ]
       ],
-      "payloadBytes": 0
+      "payloadBytes": 0,
+      "retirementCopyBytes": 0
     },
     {
       "kind": "object",
@@ -65,31 +73,36 @@
         ],
         "ö": -7
       },
-      "payloadBytes": 0
+      "payloadBytes": 0,
+      "retirementCopyBytes": 0
     },
     {
       "kind": "reserved-text",
       "value": "",
       "capacity": 128,
-      "payloadBytes": 0
+      "payloadBytes": 0,
+      "retirementCopyBytes": 0
     },
     {
       "kind": "reserved-bytes",
       "value": [],
       "capacity": 17,
-      "payloadBytes": 0
+      "payloadBytes": 0,
+      "retirementCopyBytes": 0
     },
     {
       "kind": "reserved-array",
       "value": [],
       "capacity": 5,
-      "payloadBytes": 0
+      "payloadBytes": 0,
+      "retirementCopyBytes": 0
     },
     {
       "kind": "reserved-object",
       "value": {},
       "capacity": 5,
-      "payloadBytes": 0
+      "payloadBytes": 0,
+      "retirementCopyBytes": 0
     }
   ]
 }

@@ -1,9 +1,10 @@
 //! 🪪️ `SignIn` is the authoritative direct Rust leaf for establishing an OS identity session.
 
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::super::SettingEdit;
 use super::sign_out::SignOut;
 use super::IdentityConfigMutation;
-use protocol::{MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
+use protocol::{MutationDiff, ColdMutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use serde::{Deserialize, Serialize};
@@ -52,27 +53,35 @@ pub struct IdentityDiff {
 }
 
 impl MutationDiff<IdentitySetting> for IdentityDiff {
-    fn apply(&self, base: &IdentitySetting, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<IdentitySetting> {
-        Ok(match &self.session {
-            Some(edit) => IdentitySetting(edit.value.clone()),
-            None => base.clone(),
-        })
-    }
 
+
+
+}
+
+impl ColdMutationDiff<IdentitySetting> for IdentityDiff {
     fn absorb(&mut self, other: Self) {
         if other.session.is_some() {
             self.session = other.session;
         }
     }
+
+    fn apply(&self, base: &mut IdentitySetting, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+        if let Some(edit) = &self.session { base.0 = edit.value.clone(); }
+        Ok(())
+    }
 }
 
 impl protocol::DiffAlgebra<IdentitySetting> for IdentityDiff {
-    fn inverse(&self, base: &IdentitySetting) -> Self {
-        Self { session: self.session.as_ref().map(|_| SettingEdit::new(base.0.clone())) }
-    }
+
 
     fn is_empty(&self) -> bool {
         self.session.is_none()
+    }
+}
+
+impl protocol::ColdDiffAlgebra<IdentitySetting> for IdentityDiff {
+    fn inverse(&self, base: &IdentitySetting) -> Self {
+        Self { session: self.session.as_ref().map(|_| SettingEdit::new(base.0.clone())) }
     }
 }
 //#endregion 🔖️Schema
@@ -111,6 +120,20 @@ impl From<&SignIn> for Identity {
 impl MutationKind<IdentitySetting, IdentityConfigMutation> for SignIn {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "identity", kind: "sign-in", record: "Set" };
 
+
+
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Sign in \"{}\"", self.email), &format!("Als \"{}\" anmelden", self.email))
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec!["identity".to_string()]
+    }
+}
+
+impl crate::os_spr::ColdMutationKind<IdentitySetting, IdentityConfigMutation> for SignIn {
     fn diff(&self, base: &IdentitySetting) -> MutationOutcome<IdentityDiff> {
         let identity = Identity::from(self);
         if base.0.as_ref() == Some(&identity) {
@@ -118,7 +141,6 @@ impl MutationKind<IdentitySetting, IdentityConfigMutation> for SignIn {
         }
         MutationOutcome::new(IdentityDiff { session: Some(SettingEdit::new(Some(identity))) })
     }
-
     fn inverse(&self, base: &IdentitySetting) -> Result<Vec<IdentityConfigMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         match &base.0 {
@@ -128,14 +150,6 @@ impl MutationKind<IdentitySetting, IdentityConfigMutation> for SignIn {
     
     })())
 }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Sign in \"{}\"", self.email), &format!("Als \"{}\" anmelden", self.email))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec!["identity".to_string()]
-    }
 }
 //#endregion 🔖️Mutation
 

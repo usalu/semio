@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:fem:symmetric-pencil-corpus",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "order",
+          "kDiagonal",
+          "kOffDiagonal",
+          "bEvenDiagonal",
+          "bOddDiagonal",
+          "bOffDiagonal",
+          "kColptr",
+          "kRows",
+          "kValues",
+          "bIndptr",
+          "bIndices",
+          "bValues"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          },
+          "kDiagonal": {
+            "type": "number"
+          },
+          "kOffDiagonal": {
+            "type": "number"
+          },
+          "bEvenDiagonal": {
+            "type": "number"
+          },
+          "bOddDiagonal": {
+            "type": "number"
+          },
+          "bOffDiagonal": {
+            "type": "number"
+          },
+          "kColptr": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            }
+          },
+          "kRows": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            }
+          },
+          "kValues": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "bIndptr": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            }
+          },
+          "bIndices": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            }
+          },
+          "bValues": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    }
+  }
+}

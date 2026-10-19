@@ -87,9 +87,8 @@ export type EnergyModelFenestrationProperty =
 
 export type EnergyModelZoneProperty = "name" | "volumeM3" | "multiplier" | "conditioned" | "partOfTotalFloorArea";
 
-/** 🧊️ Only the fields `change-glazing-material-*`/`rename-glazing-material` name are addressable —
- * the four reflectances and the infrared transmittance still have no mutation kind. */
-export type EnergyModelGlazingMaterialProperty = "name" | "thicknessM" | "conductivityWMK" | "solarTransmittance" | "visibleTransmittance" | "infraredEmissivityFront" | "infraredEmissivityBack";
+/** 🧊️ Glazing properties publish explicit semantic field intents. */
+export type EnergyModelGlazingMaterialProperty = "name" | "thicknessM" | "conductivityWMK" | "solarTransmittance" | "visibleTransmittance" | "infraredEmissivityFront" | "infraredEmissivityBack" | "solarReflectanceFront" | "solarReflectanceBack" | "visibleReflectanceFront" | "visibleReflectanceBack" | "infraredTransmittance";
 
 export type EnergyModelGasMaterialProperty = "name" | "thicknessM" | "gas";
 

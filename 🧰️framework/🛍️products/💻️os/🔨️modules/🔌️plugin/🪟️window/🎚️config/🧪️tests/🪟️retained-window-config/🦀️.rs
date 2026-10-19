@@ -77,7 +77,7 @@ fn retained_window_config_context_identity_binds_owner_generation_and_revision()
     for row in fixture["cases"].as_array().unwrap() {
         let generation = row["generation"].as_u64().unwrap();
         let revision = [row["revisionByte"].as_u64().unwrap() as u8; 32];
-        let snapshot = WindowConfigSnapshot { window_id: row["windowId"].as_str().unwrap().into(), window_kind_id: "graph", generation, revision, snapshot: owner.snapshot_read().unwrap().into_erased() };
+        let snapshot = WindowConfigSnapshot { authority: WindowConfigAuthorityIdentity::issue().unwrap(), window_id: row["windowId"].as_str().unwrap().into(), window_kind_id: "graph", generation, revision, snapshot: owner.snapshot_read().unwrap().into_erased() };
         assert_eq!(snapshot.generation(), generation);
         assert_eq!(snapshot.revision(), revision);
         let digest = semio_framework_plugin_job::test_window_config_context_identity(Some(&snapshot));

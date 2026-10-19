@@ -1,0 +1,21 @@
+{
+  "name": "neutral-projection",
+  "private": true,
+  "workspaces": [
+    "product",
+    "product/local/one",
+    "source/one",
+    "source/two"
+  ],
+  "semio": {
+    "workspace": {
+      "schemaVersion": 1,
+      "members": [
+        "**"
+      ],
+      "owners": [
+        "*/package.json"
+      ]
+    }
+  }
+}

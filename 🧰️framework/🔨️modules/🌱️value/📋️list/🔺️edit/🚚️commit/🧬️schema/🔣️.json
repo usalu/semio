@@ -1,0 +1,18 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "title":"Indexed Collection Header Transfer",
+ "type":"object",
+ "additionalProperties":false,
+ "required":["version","cancelCuts","cases"],
+ "properties":{
+  "version":{"const":1},
+  "cancelCuts":{"type":"array","items":{"type":"integer","minimum":0}},
+  "cases":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["id","base","removed","added","expected"],"properties":{
+   "id":{"type":"string","minLength":1},
+   "base":{"type":"array","items":{"type":"string"}},
+   "removed":{"type":"array","items":{"type":"integer","minimum":0}},
+   "added":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["index","item"],"properties":{"index":{"type":"integer","minimum":0},"item":{"type":"string"}}}},
+   "expected":{"type":"array","items":{"type":"string"}}
+  }}}
+ }
+}

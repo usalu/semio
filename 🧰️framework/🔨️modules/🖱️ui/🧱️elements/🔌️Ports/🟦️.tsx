@@ -5,7 +5,6 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import * as React from "react";
 import { Box3, BoxGeometry, BufferAttribute, BufferGeometry, Camera, CanvasTexture, Color, DoubleSide, EdgesGeometry, Float32BufferAttribute, Group, HalfFloatType, LineBasicMaterial, LineSegments, LinearFilter, LinearSRGBColorSpace, MOUSE, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, OrthographicCamera as ThreeOrthographicCamera, PerspectiveCamera as ThreePerspectiveCamera, Plane, PlaneGeometry, Quaternion, RGBAFormat, Ray, Raycaster, Scene, ShaderMaterial, Texture, Vector2, Vector3, WebGLRenderTarget } from "three";
 import { Clone } from "@react-three/drei/core/Clone.js";
 import { GizmoHelper } from "@react-three/drei/core/GizmoHelper.js";
@@ -24,69 +23,7 @@ import { ReactFlow, ReactFlowProvider } from "@xyflow/react";
 // #endregion 🔌️Adapters
 
 //#region 🔌️Ports
-/**
- * 🆔️ `ReactHostPort` + the live `reactHostPort` binding, split out of the ui-react barrel into its own
- * `🧱️elements/` file (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE) — NOT deferred to a later
- * "core extraction" pass like the rest of `🔌️Ports`/`🔌️PortWiring`, because several already-extracted
- * elements (`Avatar`, `Tree`, `Panel`, `ToggleGroup`, `Canvas`, `ActionGroup`, `Scrollable`) call
- * `reactHostPort.forwardRef(...)`/`.memo(...)` at MODULE TOP LEVEL, not inside a component body. A
- * module-top-level read of a binding re-exported by the barrel (which in turn imports these same
- * elements) is a genuine ES-module circular-import initialization-order bug: whichever module the
- * loader reaches first in the cycle sees the other's `export let` still uninitialized. Elements that only
- * read `reactHostPort.*` inside function bodies (the overwhelming majority) are unaffected — evaluation
- * happens at render time, long after both modules have finished loading — so only THIS binding needed to
- * move early; `flowHostPort`/`threeHostPort`/`iconRenderPort`/`configureHostPorts` stay in the barrel for
- * now (no top-level consumer needs them yet, same deferred-core posture as everything else under
- * barrel-interim imports). `sceneHostPort` (below) needed the identical treatment once `Scene`
- * was extracted — same class of bug, same fix.
- */
-export interface ReactHostPort {
-  readonly createElement: typeof React.createElement;
-  readonly useState: typeof React.useState;
-  readonly useEffect: typeof React.useEffect;
-  readonly useMemo: typeof React.useMemo;
-  readonly useCallback: typeof React.useCallback;
-  readonly useRef: typeof React.useRef;
-  readonly useContext: typeof React.useContext;
-  readonly useLayoutEffect: typeof React.useLayoutEffect;
-  readonly useSyncExternalStore: typeof React.useSyncExternalStore;
-  readonly useId: typeof React.useId;
-  readonly useImperativeHandle: typeof React.useImperativeHandle;
-  readonly memo: typeof React.memo;
-  readonly forwardRef: typeof React.forwardRef;
-  readonly lazy: typeof React.lazy;
-  readonly Suspense: typeof React.Suspense;
-  readonly createContext: typeof React.createContext;
-}
-
-/** 🔌️ Default host port — inject a test double via {@link setReactHostPort} before render. */
-export let reactHostPort: ReactHostPort = {
-  createElement: React.createElement,
-  useState: React.useState,
-  useEffect: React.useEffect,
-  useMemo: React.useMemo,
-  useCallback: React.useCallback,
-  useRef: React.useRef,
-  useContext: React.useContext,
-  useLayoutEffect: React.useLayoutEffect,
-  useSyncExternalStore: React.useSyncExternalStore,
-  useId: React.useId,
-  useImperativeHandle: React.useImperativeHandle,
-  memo: React.memo,
-  forwardRef: React.forwardRef,
-  lazy: React.lazy,
-  Suspense: React.Suspense,
-  createContext: React.createContext,
-};
-
-/** 🔌️ ESM importers cannot assign an imported `export let` binding directly, so this is the only
- * way to swap {@link reactHostPort} from outside this module (the barrel's `configureHostPorts` calls
- * this instead of a direct assignment). Returns the previously-installed port. */
-export function setReactHostPort(port: ReactHostPort): ReactHostPort {
-  const previous = reactHostPort;
-  reactHostPort = port;
-  return previous;
-}
+export { reactHostPort, setReactHostPort, type ReactHostPort } from "./⚛️react/🟦️.ts";
 
 export { interactiveJobPort, setInteractiveJobPort, type InteractiveJobDescriptor, type InteractiveJobLease, type InteractiveJobPage, type InteractiveJobPort, type InteractiveJobPortSnapshot, type InteractiveJobTerminal } from "./📡️interactive-jobs/🟦️.ts";
 

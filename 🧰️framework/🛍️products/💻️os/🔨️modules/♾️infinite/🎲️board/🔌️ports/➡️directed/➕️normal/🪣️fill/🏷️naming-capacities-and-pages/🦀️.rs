@@ -119,19 +119,20 @@ pub struct BoardFillFixedPages<T, const CAPACITY: usize> {
 }
 
 impl<T, const CAPACITY: usize> BoardFillFixedPages<T, CAPACITY> {
-    pub fn new() -> Self {
+        fn unallocated() -> Self { Self { pages: Box::new([]), len: 0, page_count: 0 } }
+    fn descriptor_bytes() -> usize { size_of::<Option<BoardFillPage<T>>>() * CAPACITY }
+
+pub fn new() -> Self {
         Self::try_new().expect("Board fill fixed descriptor backing allocation")
     }
 
     pub fn try_new() -> Result<Self, ()> {
-        let _ = CAPACITY.checked_mul(size_of::<Option<BoardFillPage<T>>>()).ok_or(())?;
-        let mut pages = Vec::new();
-        pages.try_reserve_exact(CAPACITY).map_err(|_| ())?;
-        pages.resize_with(CAPACITY, || None);
-        let pages = pages.into_boxed_slice();
-        if pages.len() != CAPACITY {
-            return Err(());
-        }
+        let layout = std::alloc::Layout::array::<Option<BoardFillPage<T>>>(CAPACITY).map_err(|_| ())?;
+        if layout.size() == 0 { return Ok(Self::unallocated()); }
+        let pointer = unsafe { std::alloc::alloc(layout) }.cast::<Option<BoardFillPage<T>>>();
+        if pointer.is_null() { return Err(()); }
+        for index in 0..CAPACITY { unsafe { pointer.add(index).write(None); } }
+        let pages = unsafe { Box::from_raw(std::ptr::slice_from_raw_parts_mut(pointer, CAPACITY)) };
         Ok(Self { pages, len: 0, page_count: 0 })
     }
 

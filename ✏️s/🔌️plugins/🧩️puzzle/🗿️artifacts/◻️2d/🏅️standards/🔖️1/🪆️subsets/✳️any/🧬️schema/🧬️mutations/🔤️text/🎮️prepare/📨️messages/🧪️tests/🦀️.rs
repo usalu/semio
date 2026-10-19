@@ -7,10 +7,13 @@ use crate::standards::v1::subsets::any::schema::lookup::Puzzle2dLookupScope;
 #[allow(unused_imports)]
 use protocol::os_store::{ArtifactMessageFragment, ArtifactMessageSource};
 use crate::standards::v1::subsets::any::schema::preparation::text_preparation::messages::*;
-use crate::standards::v1::subsets::any::schema::mutations::{ChangeNodeIcon, EditTargetRegionLabel};
+use crate::standards::v1::subsets::any::schema::mutations::ChangeNodeIcon;
+use super::super::EditTargetRegionLabel;
 use protocol::os_store::ArtifactMessageComposeCursor;
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+use semio_framework_value::retained_clone::RetainedCloneProgress;
+use semio_framework_value::retained_clone::RetainedCloneStep;
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
 
 fn close(cursor: &mut ArtifactMessageComposeCursor) {
@@ -36,7 +39,7 @@ fn close(cursor: &mut ArtifactMessageComposeCursor) {
     panic!("diagnostic owner did not close");
 }
 
-fn advance<T: Puzzle2dTextIntent>(cursor: &mut ArtifactMessageComposeCursor, source: &Puzzle2dTextDiagnosticSource<'_, T>) -> RetainedCloneStep {
+fn advance<T: 'static + Puzzle2dTextIntent>(cursor: &mut ArtifactMessageComposeCursor, source: &Puzzle2dTextDiagnosticSource<'_, T>) -> RetainedCloneStep {
     let capacity = cursor.next_capacity_byte_demand(source).unwrap();
     let copy = if capacity == 0 { cursor.next_copy_byte_demand(source).unwrap() } else { 0 };
     assert!(capacity + copy <= 4096);
@@ -62,7 +65,7 @@ fn advance<T: Puzzle2dTextIntent>(cursor: &mut ArtifactMessageComposeCursor, sou
     step
 }
 
-fn law<T: Puzzle2dTextIntent>(payload: T, plan: Puzzle2dTextPlan, operation: Option<u32>, expected: &serde_json::Value) {
+fn law<T: 'static + Puzzle2dTextIntent>(payload: T, plan: Puzzle2dTextPlan, operation: Option<u32>, expected: &serde_json::Value) {
     let (source, heap) = observe_heap_allocations_on_this_thread(|| Puzzle2dTextDiagnosticSource::new(&payload, plan, operation));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     let Some(source) = source else { assert!(expected.is_null()); return; };

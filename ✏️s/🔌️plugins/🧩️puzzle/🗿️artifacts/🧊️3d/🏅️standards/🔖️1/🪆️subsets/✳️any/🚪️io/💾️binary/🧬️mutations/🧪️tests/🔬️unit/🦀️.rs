@@ -39,9 +39,9 @@ fn engine_command_brush_preview_binary_round_trips_and_agrees_with_text() {
 
 #[test]
 fn engine_command_update_kind_weights_binary_round_trips_and_agrees_with_text() {
-    let mut object_weights = std::collections::BTreeMap::new();
-    object_weights.insert("Host".to_string(), 0.5);
-    let command = Puzzle3dEngineCommand::UpdateKindWeights { object_weights, vortex_weights: std::collections::BTreeMap::new() };
+    let mut object_weights = semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap::new();
+    object_weights.cold_insert("Host".to_string(), 0.5);
+    let command = Puzzle3dEngineCommand::UpdateKindWeights { object_weights, vortex_weights: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap::new() };
     semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
     let bytes = encode_engine_command(&command).expect("encode");
     assert_eq!(decode_engine_command(&bytes).expect("decode"), command);

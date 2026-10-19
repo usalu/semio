@@ -8,7 +8,7 @@ fn environment(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
     move |name| values.get(name).cloned()
 }
 
-const REQUIRED: [(&str, &str); 2] = [(DATA, "data"), (CATALOG, "catalog.json")];
+const REQUIRED: [(&str, &str); 2] = [(DATA, "data"), (COURSE, "course.json")];
 
 #[test]
 fn a_loopback_proctor_defaults_to_development() {
@@ -18,11 +18,11 @@ fn a_loopback_proctor_defaults_to_development() {
 }
 
 #[test]
-fn data_and_catalog_are_required() {
-    let missing = ProctorConfig::from_environment(environment(&[(CATALOG, "catalog.json")])).expect_err("data is required");
+fn data_and_course_are_required() {
+    let missing = ProctorConfig::from_environment(environment(&[(COURSE, "course.json")])).expect_err("data is required");
     assert!(missing.0.contains(DATA));
-    let missing = ProctorConfig::from_environment(environment(&[(DATA, "data")])).expect_err("catalog is required");
-    assert!(missing.0.contains(CATALOG));
+    let missing = ProctorConfig::from_environment(environment(&[(DATA, "data")])).expect_err("course is required");
+    assert!(missing.0.contains(COURSE));
 }
 
 #[test]
@@ -52,10 +52,10 @@ fn malformed_values_are_refused_by_name() {
 fn the_presence_tick_is_configurable_within_bounds() {
     let tick = |millis: Option<&str>| ProctorConfig::from_environment(environment(&[&REQUIRED[..], &millis.map(|millis| (PRESENCE_TICK_MS, millis)).into_iter().collect::<Vec<_>>()[..]].concat())).map(|config| config.presence());
     let defaults = tick(None).expect("the default tick");
-    assert_eq!(defaults, PresenceSettings::default());
+    assert_eq!(defaults, quiz_presence_settings());
     assert_eq!(defaults.tick, Duration::from_millis(100));
     let fast = tick(Some("40")).expect("a faster tick");
-    assert_eq!(fast, PresenceSettings { tick: Duration::from_millis(40), ..PresenceSettings::default() });
+    assert_eq!(fast, PresenceSettings { tick: Duration::from_millis(40), ..quiz_presence_settings() });
     assert_eq!(tick(Some("10")).expect("the lower bound").tick, Duration::from_millis(10));
     assert_eq!(tick(Some("1000")).expect("the upper bound").tick, Duration::from_secs(1));
     for refused in ["9", "1001", "0", "-5", "fast", "100ms"] {
@@ -67,11 +67,11 @@ fn the_presence_tick_is_configurable_within_bounds() {
 fn what_presence_sends_is_bounded_per_frame_and_in_total_and_both_are_configurable() {
     let with = |extra: &[(&str, &str)]| ProctorConfig::from_environment(environment(&[&REQUIRED[..], extra].concat())).map(|config| config.presence());
     let defaults = with(&[]).expect("valid");
-    assert_eq!((defaults.max_frame_bytes, defaults.max_bytes_per_second), (4096, Some(16 * 1024 * 1024)));
+    assert_eq!((defaults.max_frame_bytes, defaults.max_bytes_per_second), (262_144, Some(16 * 1024 * 1024)));
     assert!(defaults.max_frame_bytes >= 2 * defaults.max_state_bytes, "a frame holds the largest state and another");
-    let stated = with(&[(LIMIT_PRESENCE_FRAME_BYTES, "8192"), (LIMIT_PRESENCE_BYTES_PER_SECOND, "1048576")]).expect("valid");
-    assert_eq!(stated, PresenceSettings { max_frame_bytes: 8192, max_bytes_per_second: Some(1_048_576), ..PresenceSettings::default() });
-    for (name, refused) in [(LIMIT_PRESENCE_FRAME_BYTES, "4095"), (LIMIT_PRESENCE_FRAME_BYTES, "65537"), (LIMIT_PRESENCE_FRAME_BYTES, "4k"), (LIMIT_PRESENCE_BYTES_PER_SECOND, "65535"), (LIMIT_PRESENCE_BYTES_PER_SECOND, "4294967297"), (LIMIT_PRESENCE_BYTES_PER_SECOND, "unlimited")] {
+    let stated = with(&[(LIMIT_PRESENCE_FRAME_BYTES, "524288"), (LIMIT_PRESENCE_BYTES_PER_SECOND, "1048576")]).expect("valid");
+    assert_eq!(stated, PresenceSettings { max_frame_bytes: 524288, max_bytes_per_second: Some(1_048_576), ..quiz_presence_settings() });
+    for (name, refused) in [(LIMIT_PRESENCE_FRAME_BYTES, "262143"), (LIMIT_PRESENCE_FRAME_BYTES, "1048577"), (LIMIT_PRESENCE_FRAME_BYTES, "4k"), (LIMIT_PRESENCE_BYTES_PER_SECOND, "65535"), (LIMIT_PRESENCE_BYTES_PER_SECOND, "4294967297"), (LIMIT_PRESENCE_BYTES_PER_SECOND, "unlimited")] {
         assert!(with(&[(name, refused)]).expect_err(refused).0.contains(name), "{name}={refused}");
     }
 }
@@ -113,7 +113,7 @@ fn the_edge_limits_default_to_the_production_sizing_and_every_one_is_configurabl
     assert_eq!((defaults.limits.sockets_per_client, defaults.limits.sockets, defaults.limits.in_flight), (2048, 8192, 2048));
     assert_eq!((SIGN_UP, defaults.sign_ups()), ("sign-up", Rate::per_hour(100, 1200)));
     let stated = with(&[
-        (LIMIT_BODY_BYTES, "8192"),
+        (LIMIT_BODY_BYTES, "524288"),
         (LIMIT_COMMANDS_PER_SECOND, "20"),
         (LIMIT_COMMANDS_BURST, "60"),
         (LIMIT_QUERIES_PER_SECOND, "10"),
@@ -128,7 +128,7 @@ fn the_edge_limits_default_to_the_production_sizing_and_every_one_is_configurabl
     ])
     .expect("valid");
     let expected = Limits {
-        body_bytes: Some(8192),
+        body_bytes: Some(524_288),
         writes: Rate::per_second(20, 60),
         reads: Rate::per_second(10, 30),
         upgrades: Rate::per_second(1, 6),
@@ -173,17 +173,17 @@ fn the_sign_up_allowance_never_refuses_a_lecture_hall_and_keeps_one_address_from
     }
     let (burst, hourly) = (u64::from(SIGN_UPS.burst), u64::from(SIGN_UPS.tokens));
     assert!((burst + 24 * hourly - 1..=burst + 24 * hourly).contains(&registered), "three sign-ups a second for a day are cut to the burst and a day's refill: {registered}");
-    let hours = (quiz::DEFAULT_LIMITS.learners - burst) / hourly;
-    assert_eq!((quiz::DEFAULT_LIMITS.learners, burst, hourly, hours, hours / 24), (100_000, 1200, 100, 988, 41), "one address needs (cap − burst) / refill hours to fill the default cap: 41 days");
+    let hours = (course::DEFAULT_LIMITS.learners - burst) / hourly;
+    assert_eq!((course::DEFAULT_LIMITS.learners, burst, hourly, hours, hours / 24), (100_000, 1200, 100, 988, 41), "one address needs (cap − burst) / refill hours to fill the default cap: 41 days");
     assert_eq!(SIGN_UPS.refill(), Duration::from_secs(12 * 3600), "an emptied allowance is whole again within half a day");
 }
 
 #[test]
 fn the_quiz_caps_default_to_the_cores_and_the_two_totals_are_configurable() {
     let with = |extra: &[(&str, &str)]| ProctorConfig::from_environment(environment(&[&REQUIRED[..], extra].concat()));
-    assert_eq!(with(&[]).expect("valid").caps, quiz::DEFAULT_LIMITS);
-    assert_eq!((quiz::DEFAULT_LIMITS.learners, quiz::DEFAULT_LIMITS.runs, quiz::DEFAULT_LIMITS.runs_per_quiz, quiz::DEFAULT_LIMITS.answers_per_run), (100_000, 1_000, 200, 2_000));
-    assert_eq!(with(&[(MAX_LEARNERS, "300"), (MAX_RUNS, "50")]).expect("valid").caps, quiz::Limits { learners: 300, runs: 50, ..quiz::DEFAULT_LIMITS });
+    assert_eq!(with(&[]).expect("valid").caps, course::DEFAULT_LIMITS);
+    assert_eq!((course::DEFAULT_LIMITS.learners, course::DEFAULT_LIMITS.runs, course::DEFAULT_LIMITS.runs_per_quiz, course::DEFAULT_LIMITS.answers_per_run), (100_000, 1_000, 200, 2_000));
+    assert_eq!(with(&[(MAX_LEARNERS, "300"), (MAX_RUNS, "50")]).expect("valid").caps, course::Limits { learners: 300, runs: 50, ..course::DEFAULT_LIMITS });
     for (name, refused) in [(MAX_LEARNERS, "0"), (MAX_LEARNERS, "1000001"), (MAX_LEARNERS, "many"), (MAX_RUNS, "0"), (MAX_RUNS, "-1"), (MAX_RUNS, "1e3")] {
         assert!(with(&[(name, refused)]).expect_err(refused).0.contains(name), "{name}={refused}");
     }

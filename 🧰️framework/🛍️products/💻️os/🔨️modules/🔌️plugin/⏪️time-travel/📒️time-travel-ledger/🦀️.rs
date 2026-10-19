@@ -39,7 +39,7 @@ pub struct TimeTravelLedger<A: ArtifactApp> {
 /// ✍️ The undo or redo of a finalize being authored resumably: the Report replay of its inputs over the applied history,
 /// stepped per reactor turn, and how it finalizes (unscoped, or within the history edit's own line).
 #[doc(hidden)]
-pub struct SupersedeAuthoring<P, Mu: ::protocol::Mutation<P>> {
+pub struct SupersedeAuthoring<P, Mu: ::protocol::Mutation<P>+Send+'static> {
     pub replay: store::os_store::snapshot_read::ArtifactDerivedReplay<P, Mu>,
     pub finalization: store::HistoryFinalization,
 }
@@ -103,6 +103,8 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
 
     /// 📨️ Borrows whether the mounted caller still owns an unconsumed original command receipt.
     pub fn has_command_receipt(&self)->bool{self.command_receipt.is_some()}
+    #[cfg(any(test, feature = "artifact-app-testing"))]
+    pub(crate) fn original_close_diagnostic(&self)->String{format!("closing={} sessionRetired={} sessionOwner={} sessionUntouched={} sessionEmpty={} sessionDemand={:?} commandReceipt={} pendingCommand={} discardCursor={} documentEmpty={} member={} authoring={} patch={} commandRetirementsEmpty={}",self.closing,self.session_retired,self.session_retirement.is_some(),self.session_retirement.as_ref().is_some_and(|owner|owner.original_is_untouched()),self.session_retirement.as_ref().is_none_or(|owner|owner.terminal_is_empty()),self.session_retirement_demands(32768),self.command_receipt.is_some(),self.pending_command.is_some(),self.discard_cursor.is_some(),self.document.terminal_is_empty(),self.member.is_some(),self.authoring.is_some(),self.patch.is_some(),self.command_retirements.terminal_is_empty())+&format!(" documentFrontier aliases={} snapshotClose={} issuers={} issuerClose={} discardedLen={} discardedCap={} discardedPending={} discardedActive={} discardedFactory={} discardedFactoryClose={} effects={} staged={} kind={} preview={} previewJob={} previewInput={} replay={} finished={} head={}",self.document.snapshot_aliases.iter().filter(|slot|slot.is_some()).count(),self.document.snapshot_close.is_some(),self.document.snapshot_issuers.is_some(),self.document.snapshot_issuer_close.iter().filter(|slot|slot.is_some()).count(),self.document.discarded.len(),self.document.discarded.capacity(),self.document.discarded_pending.is_some(),self.document.discarded_active.is_some(),self.document.discarded_factory.is_some(),self.document.discarded_factory_close.is_some(),self.document.discard_effects.is_some(),self.document.staged.is_some(),self.document.kind.is_some(),self.document.preview.is_some(),self.document.preview_job.is_some(),self.document.preview_input.is_some(),self.document.replay.is_some(),self.document.finished.is_some(),self.document.head.is_some())}
 
     /// ✏️ The draft editor while a mutation is being edited.
     pub fn editor(&self) -> Option<&TimeTravelEditor> {

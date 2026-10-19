@@ -27,4 +27,14 @@ class DictionaryScript extends BundleScript {
   }
 }
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, invocation => runScriptMain(new ScriptRouter(import.meta.dir).register("test-numeric-api", NumericApiScript).register("test-scalars-api", ScalarsApiScript).register("test-dictionary", DictionaryScript), { invocation }));
+/** 🗺️ Verifies actual fixed hash ownership against independent dictionary and JSON Patch oracles. */
+class ScratchHashScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw Error("Scratch hash checks accept no arguments");
+    const test = resolve(this.root, "../../🔑️hashed/🧮️scratch/🧪️tests/🟦️.ts");
+    await runOwnedCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun,node", test], this.repoRoot, "value:scratch-hash:types", scriptInvocationBudget(this.invocation, 30_000), { signal: this.invocation.control.signal });
+    await runOwnedCommand(process.execPath, ["test", test], this.repoRoot, "value:scratch-hash:source", scriptInvocationBudget(this.invocation, 30_000), { signal: this.invocation.control.signal });
+  }
+}
+
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, invocation => runScriptMain(new ScriptRouter(import.meta.dir).register("test-numeric-api", NumericApiScript).register("test-scalars-api", ScalarsApiScript).register("test-dictionary", DictionaryScript).register("test-scratch-hash", ScratchHashScript), { invocation }));

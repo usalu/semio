@@ -87,6 +87,11 @@ fn json_pair(value: &serde_json::Value) -> [f64; 2] {
 #[test]
 fn peer_overlay_v1_fixture() {
     let fixture = load_fixture();
+    for row in fixture["projectionCases"].as_array().expect("portable orbit projections") {
+        let actual = orbit_point_to_screen(json_triple(&row["position"]), json_triple(&row["target"]), json_triple(&row["up"]), row["fov"].as_f64().unwrap(), json_pair(&row["size"]), json_triple(&row["world"]));
+        let expected = row["expected"].as_array().map(|value| [value[0].as_f64().unwrap() as f32, value[1].as_f64().unwrap() as f32]);
+        assert_eq!(actual, expected, "{}", row["id"]);
+    }
     for row in fixture["cases"].as_array().unwrap() {
         let roster: Vec<PresencePeer> = row["roster"].as_array().unwrap().iter().map(peer_from_json).collect();
         let spec = peers_for_window(

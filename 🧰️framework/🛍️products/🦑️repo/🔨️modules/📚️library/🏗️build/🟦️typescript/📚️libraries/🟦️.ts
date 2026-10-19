@@ -1,5 +1,5 @@
 import rootConfig from"../../../../../../../../tsconfig.json"with{type:"json"};
-import{requireRecord,requireExactKeys,requireStringArray,validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
+import{requireRecord,requireExactKeys,requireStringArray,validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schemaData from"./🧬️schema/🔣️.json"with{type:"json"};
 const schema=structuredClone(schemaData);
 /** 📚️ Describes standard-library DATA separately from syntax lowering and runtime authority. */

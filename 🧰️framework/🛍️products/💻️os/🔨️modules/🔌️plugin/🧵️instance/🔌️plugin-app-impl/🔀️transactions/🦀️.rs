@@ -66,7 +66,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             if !outcome.is_applicable(protocol::MergePolicy::default()) {
                 return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(MediaTransfers::<A>::transaction_fault(FaultOrigin::App, "transaction.member-rejected", format!("mutation outcome was rejected: {:?}", outcome.messages()))) };
             }
-            running = match protocol::apply_diff(outcome.diff(), &running) {
+            running = match protocol::apply_diff_cold(outcome.diff(), &running) {
                 Ok(next) => next,
                 Err(error) => return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(MediaTransfers::<A>::transaction_fault(FaultOrigin::App, "transaction.member-rejected", error.to_string())) },
             };

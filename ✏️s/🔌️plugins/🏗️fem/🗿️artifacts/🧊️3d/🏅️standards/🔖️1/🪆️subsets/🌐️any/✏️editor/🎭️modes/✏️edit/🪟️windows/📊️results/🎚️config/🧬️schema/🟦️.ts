@@ -1,3 +1,4 @@
+import { decodeResultSourceIdentity } from "../../../../../../../../../../../../../../../🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🏷️result-source/🟦️.ts";
 import { parseViewport3dOrbit, type Viewport3dOrbit } from "@semio-tech/framework/ui/viewport/3d/schema";
 import { parseResultMode, type ResultMode } from "@semio-tech/fem-js/engine/app-surface/schema/result-mode";
 import { parseFemResultsAnimation, type FemResultsAnimation } from "@semio-tech/fem-js/engine/app-surface/schema/results-animation";
@@ -24,6 +25,10 @@ export function parseFem3dResultsWindowConfig(value: unknown): Fem3dResultsWindo
   const parsed = { camera: parseViewport3dOrbit(row.camera) };
   const mode = parseResultMode(row.resultMode);
   const resultSourceId = row.resultSourceId === undefined || row.resultSourceId === null ? row.resultSourceId : text(row.resultSourceId, "$.resultSourceId");
+  if (resultSourceId !== undefined && resultSourceId !== null) {
+    const source = decodeResultSourceIdentity(resultSourceId);
+    if (mode === "buckling" && source.kind !== "loadCase") throw new TypeError("$.resultSourceId must name a load case for buckling");
+  }
   return {
     ...parsed,
     ...(resultSourceId === undefined ? {} : { resultSourceId }),

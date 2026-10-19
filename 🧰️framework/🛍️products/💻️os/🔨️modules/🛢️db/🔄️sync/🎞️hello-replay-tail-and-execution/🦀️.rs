@@ -194,11 +194,11 @@ impl DatabaseSyncHelloTail {
         if self.reader.take().is_some() || self.handoff.lock().unwrap_or_else(std::sync::PoisonError::into_inner).page.take().is_some() {
             return true;
         }
-        database_sync_hello_retire_string(&mut self.origin.0) || database_sync_hello_retire_string(&mut self.document.0)
+        database_sync_hello_retire_shared_text(&mut self.origin.0) || database_sync_hello_retire_string(&mut self.document.0)
     }
 
     pub(super) fn terminal_is_empty(&self) -> bool {
-        self.reader.is_none() && self.handoff.lock().unwrap_or_else(std::sync::PoisonError::into_inner).page.is_none() && self.origin.0.capacity() == 0 && self.document.0.capacity() == 0
+        self.reader.is_none() && self.handoff.lock().unwrap_or_else(std::sync::PoisonError::into_inner).page.is_none() && !self.origin.0.has_owner() && self.document.0.capacity() == 0
     }
 }
 

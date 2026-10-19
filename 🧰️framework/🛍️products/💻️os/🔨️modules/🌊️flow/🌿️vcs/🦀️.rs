@@ -1,5 +1,6 @@
 //! 🌿️ Flow document VCS: operations, DSL, store, and forms bridge.
 
+use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use neural_engine as neural;
 
 use neural::{Neuron, Synapse};

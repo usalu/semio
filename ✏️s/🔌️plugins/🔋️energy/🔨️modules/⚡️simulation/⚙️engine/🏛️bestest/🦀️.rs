@@ -20,12 +20,16 @@ extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_plugin_energy_engine_results as results;
 extern crate semio_s_plugin_energy_engine_schedule as schedule;
 extern crate semio_s_plugin_energy_engine_sim as sim;
+pub use sim::{EnergyJob,Operation};
+/// 🫴️ Rejected preparation retains every caller-supplied weather or numerical owner.
+#[derive(Debug)]
+pub enum BestestJobFailure{UnknownCase{weather:WeatherData},InvalidModel{model:Model,weather:WeatherData,diagnostics:Diagnostics},Numerical(sim::EnergyAdmissionRejected)}
 extern crate semio_s_plugin_energy_engine_site as site;
 #[cfg(test)]
 extern crate semio_s_plugin_energy_engine_precompute as precompute;
 
 use crate::air_exchange::InfiltrationMethod;
-use crate::error::{Diagnostics, Error};
+use crate::error::Diagnostics;
 use crate::kernel::{SimulationConfig, SimulationEnvironment};
 use crate::model::{
     Construction, EntityId, EquipmentGain, Fenestration, GasKind, GasMaterial, GlazingMaterial, IdealLoadsSystem, Infiltration, Material, MechanicalVentilation, Model, OutsideBoundary, ShadingSurface, Site, Surface, SurfaceClass,
@@ -438,6 +442,7 @@ pub fn simulation_config(model: &Model, weather: Option<WeatherData>, warmup_day
         zone_timestep_minutes: 10,
         system_timestep_minutes: 10,
         warmup_days,
+        run_period_year: 2026,
         run_period_start_month: 1,
         run_period_start_day: 1,
         run_period_end_month: 12,
@@ -448,19 +453,14 @@ pub fn simulation_config(model: &Model, weather: Option<WeatherData>, warmup_day
     }
 }
 
-/// 🏛️ Validates and runs one case against caller-supplied weather records.
-pub fn run(case: &str, weather: WeatherData, warmup_days: u32) -> Result<Results, Diagnostics> {
-    let built = model(case).ok_or_else(|| single(Error::fatal(format!("no ANSI/ASHRAE 140 §5.2 case is registered as {case:?}"))))?;
-    built.validate()?;
+/// 🏛️ Prepares one resumable case for an actual original caller; no execution source is created here.
+pub fn simulation_job(operation:sim::Operation,case: &str, weather: WeatherData, warmup_days: u32) -> Result<sim::EnergyJob, BestestJobFailure> {
+    let Some(built)=model(case)else{return Err(BestestJobFailure::UnknownCase{weather})};
+    if let Err(diagnostics)=built.validate(){return Err(BestestJobFailure::InvalidModel{model:built,weather,diagnostics})}
     let config = simulation_config(&built, Some(weather), warmup_days);
-    sim::Engine::run(built, config).map_err(single)
+    sim::EnergyJob::new(operation,built,config).map_err(BestestJobFailure::Numerical)
 }
 
-fn single(error: Error) -> Diagnostics {
-    let mut diagnostics = Diagnostics::default();
-    diagnostics.push(error);
-    diagnostics
-}
 // #endregion 🔖️Run
 
 // #region 🔖️Projection
@@ -524,10 +524,7 @@ pub fn project(case: &str, results: &Results) -> CaseResults {
 /// 📄️ One case's results as the BESTEST comparison contract's own JSON — the crate-side bridge the
 /// language-neutral test adapter calls, since `Results`' tables are `pub(crate)` and unnameable
 /// outside this crate.
-pub fn results_report_json(case: &str, weather: WeatherData, weather_file: &str, weather_sha256: &str, warmup_days: u32) -> Result<String, String> {
-    let results = run(case, weather, warmup_days).map_err(|diagnostics| diagnostics.messages.iter().map(|message| message.message.clone()).collect::<Vec<_>>().join("; "))?;
-    Ok(report_json(&project(case, &results), weather_file, weather_sha256))
-}
+pub fn results_report_json(case:&str,results:&Results,weather_file:&str,weather_sha256:&str)->String{report_json(&project(case,results),weather_file,weather_sha256)}
 
 /// 📄️ Serialize a [`CaseResults`] into `semio.energy.bestest-results/1`.
 pub fn report_json(projected: &CaseResults, weather_file: &str, weather_sha256: &str) -> String {

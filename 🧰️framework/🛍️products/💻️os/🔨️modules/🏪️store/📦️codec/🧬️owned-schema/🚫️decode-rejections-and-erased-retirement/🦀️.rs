@@ -44,7 +44,9 @@ where
     P: Send,
     Mutation: Send,
 {
-    /// 🧱️ A retained decode page is a GRANULE: it is released whole or not at all, so a turn
+        fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(self.demands(body)?.unwrap_or(semio_framework_value::RetirementDemand{depth:1,..Default::default()}))}
+
+/// 🧱️ A retained decode page is a GRANULE: it is released whole or not at all, so a turn
     /// that cannot pay a full page buys nothing. The empty record husk still completes under
     /// any grant — its last page has already been paid for.
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {

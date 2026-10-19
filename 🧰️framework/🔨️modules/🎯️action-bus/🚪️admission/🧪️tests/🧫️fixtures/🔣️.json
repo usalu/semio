@@ -1,4 +1,7 @@
 {
+  "candidateSource":"callerOutputBeforeReceipt",
+  "receiptSource":"measuredOriginalPhysicalEffects",
+  "admissionVectors":[{"name":"exact","grant":[1,0,128,8,1],"demand":[1,0,128,8,1],"expected":true},{"name":"sameBox","grant":[1,0,0,0,1],"demand":[1,0,0,0,1],"expected":true},{"name":"denied0","grant":[0,5,128,8,1],"demand":[1,5,128,8,1],"expected":false},{"name":"denied1","grant":[1,4,128,8,1],"demand":[1,5,128,8,1],"expected":false},{"name":"denied2","grant":[1,5,127,8,1],"demand":[1,5,128,8,1],"expected":false},{"name":"denied3","grant":[1,5,128,7,1],"demand":[1,5,128,8,1],"expected":false},{"name":"denied4","grant":[1,5,128,8,0],"demand":[1,5,128,8,1],"expected":false},{"name":"zeroTurn","grant":[0,0,0,0,0],"demand":[1,0,0,0,1],"expected":false}],
   "schema": "semio.action-bus.original-factory-admission.v1",
   "sourceFields": [
     "payload",

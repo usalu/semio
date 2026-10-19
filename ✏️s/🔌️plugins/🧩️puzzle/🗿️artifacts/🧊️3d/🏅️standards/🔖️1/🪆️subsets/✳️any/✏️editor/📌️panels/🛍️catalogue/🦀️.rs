@@ -1,5 +1,5 @@
-//! 🛍️ Puzzle 3d play app panel — the kind catalogue: the object kinds available to place (draggable
 //! into the viewport, with their rim-vortex templates nested) plus the vortex/cable/attraction kind
+//! 🛍️ Puzzle 3d play app panel — the kind catalogue: the object kinds available to place (draggable
 //! rows the scene_snapshot's `meta.kindCatalogs` declares.
 //!
 //! 🪟️ Virtualised on the same window contract as the outliner: each section stamps the catalog's full
@@ -12,7 +12,9 @@ use semio_s_artifact_puzzle_3d_editor_snapshot::catalog_entry_label;
 use semio_s_artifact_puzzle_3d_editor_terminology::Puzzle3dLabels;
 use {semio_s_artifact_puzzle_3d_editor_session::ui_label, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_INTERACTION_DOMAIN, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_PLAY_CONTROLLER_ID};
 
-use semio_framework_pack_json::{json, Value};
+use semio_framework_pack_json::json;
+
+use semio_framework_pack_json::Value;
 use semio_framework_plugin::plugin_app_close_prelude::BuiltNode;
 use semio_framework_plugin::tree_window_item;
 use semio_framework_plugin::ActionFactory;

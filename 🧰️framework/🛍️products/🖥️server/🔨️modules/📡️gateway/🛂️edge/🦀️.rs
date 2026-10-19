@@ -128,29 +128,43 @@ pub async fn throttle_middleware(State(edge): State<Edge>, request: Request, nex
 }
 
 /// 📥️ `request` with its whole body in hand: at most `limit` bytes, delivered within `patience`.
-/// A body that declares or delivers more is [`ServerError::PayloadTooLarge`] and is not read past
-/// the limit; one that takes longer is [`ServerError::Stalled`].
+/// An oversized body discards transport chunks until crossing twice the limit, for at most 500 ms,
+/// allowing a modest transport tail to finish without storing it. A stalled accepted body is [`ServerError::Stalled`].
 pub async fn body_taken(request: Request, limit: usize, patience: Duration) -> Result<Request, ServerError> {
     let declared = request.headers().get(header::CONTENT_LENGTH).and_then(|value| value.to_str().ok()).and_then(|value| value.parse::<usize>().ok());
-    if declared.is_some_and(|declared| declared > limit) {
+    let discard_limit = limit.saturating_mul(2);
+    if declared.is_some_and(|declared| declared > discard_limit) {
         return Err(ServerError::PayloadTooLarge);
     }
     let (parts, body) = request.into_parts();
+    let mut oversized = declared.is_some_and(|declared| declared > limit);
     let taken = async {
         let mut chunks = body.into_data_stream();
-        let mut bytes = Vec::with_capacity(declared.unwrap_or_default());
-        while let Some(chunk) = chunks.next().await {
+        let mut bytes = Vec::with_capacity(if oversized { 0 } else { declared.unwrap_or_default() });
+        let mut received = 0usize;
+        let mut discard_deadline = oversized.then(|| tokio::time::Instant::now() + REFUSED_BODY_PATIENCE);
+        loop {
+            let next = match discard_deadline {
+                Some(deadline) => tokio::time::timeout_at(deadline, chunks.next()).await.map_err(|_| ServerError::PayloadTooLarge)?,
+                None => chunks.next().await,
+            };
+            let Some(chunk) = next else { break };
             let chunk = chunk.map_err(|error| ServerError::BadRequest(error.to_string()))?;
-            if bytes.len() + chunk.len() > limit {
+            received = received.saturating_add(chunk.len());
+            if received > limit {
+                oversized = true;
+                discard_deadline.get_or_insert_with(|| tokio::time::Instant::now() + REFUSED_BODY_PATIENCE);
+            }
+            if received > discard_limit {
                 return Err(ServerError::PayloadTooLarge);
             }
-            bytes.extend_from_slice(&chunk);
+            if !oversized { bytes.extend_from_slice(&chunk); }
         }
-        Ok(bytes)
+        if oversized { Err(ServerError::PayloadTooLarge) } else { Ok(bytes) }
     };
     match tokio::time::timeout(patience, taken).await {
         Ok(bytes) => Ok(Request::from_parts(parts, axum::body::Body::from(bytes?))),
-        Err(_) => Err(ServerError::Stalled),
+        Err(_) => Err(if oversized { ServerError::PayloadTooLarge } else { ServerError::Stalled }),
     }
 }
 

@@ -72,7 +72,11 @@ async fn right_clicking_an_unselected_object_opens_that_object_menu_not_an_empty
 /// delete just because the press landed on a particular member.
 #[semio_framework_async_macros::async_test]
 async fn a_hit_inside_the_selection_keeps_the_whole_selection_as_the_menu_subject() {
-    use semio_framework_plugin::{ContextMenuHit, ContextMenuRequest, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, UiMenuRef};
+    use semio_framework_plugin::ContextMenuHit;
+    use semio_framework_plugin::ContextMenuRequest;
+    use semio_framework_plugin::ContextMenuSelectionGroup;
+    use semio_framework_plugin::ContextMenuSurfaceTarget;
+    use semio_framework_plugin::UiMenuRef;
     let mut app = app().await;
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [4.0, 0.0, 0.0] })), None).await.expect("addObjectKind");
     let ids: Vec<String> = projection_of(&app).get("objects").and_then(Value::as_array).expect("objects").iter().filter_map(|object| object.get("id").and_then(Value::as_str)).map(str::to_string).collect();
@@ -548,7 +552,9 @@ async fn the_popup_search_is_aborted_on_close_and_an_accept_is_one_undoable_plac
 #[test]
 fn the_brush_utility_declares_a_read_only_tool_run_through_the_manifest() {
     use semio_s_artifact_puzzle_3d_model::BrushSuggestionsRunReason;
-    use semio_framework_tool_run::{ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunTraceKind};
+    use semio_framework_tool_run::ToolRunRebasePolicy;
+    use semio_framework_tool_run::ToolRunReconfigurePolicy;
+    use semio_framework_tool_run::ToolRunTraceKind;
     let definition = create_puzzle3d_app();
     let brush = definition.utilities.iter().find(|utility| utility.id == utilities::brush::UTILITY_ID).expect("brush utility");
     let run = brush.run.as_ref().expect("the brush declares its ToolRunDefinition");

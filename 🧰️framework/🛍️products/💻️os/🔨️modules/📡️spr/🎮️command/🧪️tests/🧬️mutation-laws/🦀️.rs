@@ -1,4 +1,5 @@
 use protocol::{DiffRegions, ForeignStep, ForeignTarget, MutationApplyError, MutationApplyResult, MutationDiff, TouchedPaths};
+use protocol::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use serde::{Deserialize, Serialize};
 
 pub type Counter = i64;
@@ -23,16 +24,31 @@ impl CounterDiff {
 }
 
 impl protocol::DiffAlgebra<Counter> for CounterDiff {
-    fn inverse(&self, _base: &Counter) -> Self { Self { deltas: self.deltas.iter().rev().flat_map(|delta| Self::from_wide(-i128::from(*delta)).deltas).collect() } }
+
     fn is_empty(&self) -> bool { self.deltas.iter().all(|delta| *delta == 0) }
+}
+impl protocol::ColdDiffAlgebra<Counter> for CounterDiff {
+fn inverse(&self, _base: &Counter) -> Self { Self { deltas: self.deltas.iter().rev().flat_map(|delta| Self::from_wide(-i128::from(*delta)).deltas).collect() } }
+}
+
+impl crate::ColdDiffAlgebra<Counter> for CounterDiff {
+    fn inverse(&self, _base: &Counter) -> Self { Self { deltas: self.deltas.iter().rev().flat_map(|delta| Self::from_wide(-i128::from(*delta)).deltas).collect() } }
 }
 
 impl MutationDiff<Counter> for CounterDiff {
-    fn apply(&self, base: &Counter, _capability: protocol::ApplyCapability) -> MutationApplyResult<Counter> {
-        self.deltas.iter().try_fold(*base, |value, delta| value.checked_add(*delta).ok_or_else(|| MutationApplyError::new("mutation.apply.invariant", "counter addition overflowed")))
-    }
+
+
+}
+
+impl ColdMutationDiff<Counter> for CounterDiff {
     fn absorb(&mut self, other: Self) {
         self.deltas.extend(other.deltas);
+    }
+
+    fn apply(&self, base: &mut Counter, _capability: crate::ApplyCapability) -> MutationApplyResult<()> {
+        let value = self.deltas.iter().try_fold(*base, |value, delta| value.checked_add(*delta).ok_or_else(|| MutationApplyError::new("mutation.apply.invariant", "counter addition overflowed")))?;
+        *base = value;
+        Ok(())
     }
 }
 
@@ -101,10 +117,10 @@ mod tests {
             assert_eq!(CounterMutation::decode_op(&op.encode_op().unwrap()).unwrap(), op);
             assert_eq!(op.timestamp(), None);
             let base = row["before"].as_i64().unwrap();
-            let mut current = protocol::apply_diff(op.diff(&base).diff(), &base).unwrap();
+            let mut current = protocol::apply_diff_cold(op.diff(&base).diff(), &base).unwrap();
             assert_eq!(current, row["after"].as_i64().unwrap());
             for inverse in op.inverse(&base).expect("valid retained mutation inverse fixture").iter().rev() {
-                current = protocol::apply_diff(inverse.diff(&current).diff(), &current).unwrap();
+                current = protocol::apply_diff_cold(inverse.diff(&current).diff(), &current).unwrap();
             }
             assert_eq!(current, base);
             let mut unknown = wire.clone();
@@ -132,16 +148,16 @@ mod tests {
             let base = row["before"].as_str().unwrap().parse::<i64>().unwrap();
             let deltas = row["deltas"].as_array().unwrap().iter().map(|delta| delta.as_str().unwrap().parse::<i64>().unwrap()).collect::<Vec<_>>();
             let diff = CounterDiff { deltas };
-            let result = protocol::apply_diff(&diff, &base);
+            let result = protocol::apply_diff_cold(&diff, &base);
             if row["error"] == true {
                 assert_eq!(result.unwrap_err().code, "mutation.apply.invariant");
                 continue;
             }
             let expected = row["after"].as_str().unwrap().parse::<i64>().unwrap();
             assert_eq!(result, Ok(expected));
-            assert_eq!(protocol::apply_diff(&semio_framework_pack_json::from_json_str::<CounterDiff>(&semio_framework_pack_json::to_json_string(&diff), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), &base), Ok(expected));
+            assert_eq!(protocol::apply_diff_cold(&semio_framework_pack_json::from_json_str::<CounterDiff>(&semio_framework_pack_json::to_json_string(&diff), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), &base), Ok(expected));
             assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&diff)).unwrap(), serde_json::to_value(&diff).unwrap());
-            assert_eq!(protocol::apply_diff(&serde_json::from_value::<CounterDiff>(serde_json::to_value(&diff).unwrap()).unwrap(), &base), Ok(expected));
+            assert_eq!(protocol::apply_diff_cold(&serde_json::from_value::<CounterDiff>(serde_json::to_value(&diff).unwrap()).unwrap(), &base), Ok(expected));
             let mut joined = CounterDiff::default();
             for delta in &diff.deltas {
                 joined.absorb(CounterDiff { deltas: vec![*delta] });
@@ -155,7 +171,7 @@ mod tests {
         for row in cases()["arithmetic"].as_array().unwrap().iter().filter(|row| row.get("storedInverse").is_some()) {
             let base = row["before"].as_str().unwrap().parse::<i64>().unwrap();
             let kind = AddCounterSequence { deltas: row["deltas"].as_array().unwrap().iter().map(|delta| delta.as_str().unwrap().parse::<i64>().unwrap()).collect() };
-            let mut current = protocol::apply_diff(fold_plan_diff(&kind, &base).diff(), &base).unwrap();
+            let mut current = protocol::apply_diff_cold(fold_plan_diff(&kind, &base).diff(), &base).unwrap();
             assert_eq!(current, row["after"].as_str().unwrap().parse::<i64>().unwrap());
             let stored = fold_plan_inverse(&kind, &base).expect("valid retained mutation inverse fixture");
             let deltas = stored
@@ -167,7 +183,7 @@ mod tests {
                 .collect::<Vec<_>>();
             assert_eq!(serde_json::to_value(deltas).unwrap(), row["storedInverse"]);
             for inverse in stored.iter().rev() {
-                current = protocol::apply_diff(inverse.diff(&current).diff(), &current).unwrap();
+                current = protocol::apply_diff_cold(inverse.diff(&current).diff(), &current).unwrap();
             }
             assert_eq!(current, base);
         }
@@ -193,7 +209,7 @@ mod tests {
     fn ordered_diff_preserves_step_admission_and_associativity() {
         let mut left = CounterDiff { deltas: vec![i64::MAX] };
         left.absorb(CounterDiff { deltas: vec![1] });
-        assert_eq!(protocol::apply_diff(&left, &i64::MIN), Ok(0));
+        assert_eq!(protocol::apply_diff_cold(&left, &i64::MIN), Ok(0));
         let mut joined = CounterDiff { deltas: vec![2] };
         joined.absorb(CounterDiff { deltas: vec![3] });
         joined.absorb(CounterDiff { deltas: vec![4] });
@@ -202,7 +218,7 @@ mod tests {
         let mut right_grouped = CounterDiff { deltas: vec![2] };
         right_grouped.absorb(suffix);
         assert_eq!(joined, right_grouped);
-        assert_eq!(protocol::apply_diff(&joined, &0), Ok(9));
-        assert!(protocol::apply_diff(&CounterDiff { deltas: vec![i64::MAX, 1, -1] }, &0).is_err());
+        assert_eq!(protocol::apply_diff_cold(&joined, &0), Ok(9));
+        assert!(protocol::apply_diff_cold(&CounterDiff { deltas: vec![i64::MAX, 1, -1] }, &0).is_err());
     }
 }

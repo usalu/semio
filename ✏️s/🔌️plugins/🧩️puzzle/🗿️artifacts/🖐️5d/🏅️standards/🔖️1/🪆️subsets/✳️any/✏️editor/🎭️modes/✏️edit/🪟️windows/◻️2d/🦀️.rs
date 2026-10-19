@@ -1,14 +1,17 @@
-//! ◻️ Puzzle 5d play app — the `Board2d` window kind: the flat projection of the unified 5d document.
 //! Owns the board scene payload (nodes/🐙️handles/edges plus the glyph catalogs and placement
+//! ◻️ Puzzle 5d play app — the `Board2d` window kind: the flat projection of the unified 5d document.
 //! compatibility the board host reads), binds the pointer utilities (`🪛️utilities/*`) and scopes the
 //! board-event/2D-camera actions (`🎬️actions`). Its only genuinely 2D-specific chrome measure is the
 //! LOD select in `☑️options/🔭️lod`; the brush Utility Options it shares with the 3D window come from the
 //! mode's own `☑️options/*`, and fill's from the mode-level tool `🛠️tools/🪣️fill`.
 
-use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dRuntime};
+use crate::editor::puzzle5d::config::Puzzle5dCamera2d;
+
+use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::modes::edit;
 use crate::editor::puzzle5d::modes::edit::options as mode_options;
-use crate::editor::puzzle5d::modes::edit::windows::board2d::{options, utilities};
+use crate::editor::puzzle5d::modes::edit::windows::board2d::options;
+use crate::editor::puzzle5d::modes::edit::windows::board2d::utilities;
 use crate::editor::puzzle5d::modes::edit::windows::world3d;
 use crate::editor::puzzle5d::precompute::PUZZLE5D_PLANNER_TRACE_TWIN_BIT;
 use crate::editor::puzzle5d::terminology::{puzzle5d_localized, Puzzle5dLabels};
@@ -16,7 +19,8 @@ use crate::editor::puzzle5d::entities::{puzzle5d_grip_full_id, target_volume_fla
 use crate::editor::puzzle5d::view::{puzzle5d_scene_mode, Puzzle5dScene};
 use semio_framework_plugin::{Board2dScene, SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 use semio_framework_ui_contract::BuiltNode;
-use semio_framework_pack_json::{json, Value};
+use semio_framework_pack_json::json;
+use semio_framework_pack_json::Value;
 use semio_framework_os_infinite::BoardPlacementNaming;
 
 //#region 🔖️Constants

@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "source": {
+    "fuel": 1048576,
+    "grant": {
+      "maximumItems": 16384,
+      "maximumCopyBytes": 16777216,
+      "maximumCapacityBytes": 16777216,
+      "maximumReleaseBytes": 16777216,
+      "maximumDepth": 64
+    },
+    "stepFuel": 1024,
+    "maximumStepMicroseconds": 8000
+  },
+  "owners": [
+    {
+      "kind": "started-request-path",
+      "capacity": 128
+    },
+    {
+      "kind": "filtered-scan-path",
+      "capacity": 96
+    },
+    {
+      "kind": "missing-modified-path",
+      "capacity": 64
+    },
+    {
+      "kind": "fault-error-text",
+      "capacity": 256
+    }
+  ],
+  "denials": [
+    "items",
+    "release",
+    "depth"
+  ],
+  "expected": {
+    "deniedBytes": 0,
+    "releasedBytes": 544,
+    "sameSource": true,
+    "quoteDoesNotGrant": true
+  },
+  "extensions": [
+    {
+      "capacity": 0,
+      "admitted": true,
+      "releaseGranted": 0,
+      "ownership": "borrowed",
+      "releasedBytes": 0
+    },
+    {
+      "capacity": 96,
+      "admitted": false,
+      "releaseGranted": 95,
+      "ownership": "owned",
+      "releasedBytes": 96
+    },
+    {
+      "capacity": 96,
+      "admitted": true,
+      "releaseGranted": 96,
+      "ownership": "owned",
+      "releasedBytes": 96
+    }
+  ]
+}

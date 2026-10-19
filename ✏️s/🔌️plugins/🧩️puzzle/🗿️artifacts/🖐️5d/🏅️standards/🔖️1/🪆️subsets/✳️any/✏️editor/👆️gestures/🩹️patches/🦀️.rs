@@ -1,6 +1,6 @@
 //! 🩹️ Patch gestures of the puzzle 5d editor: the retained part, fastener and grip patch work. See [`super`].
 
-use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use semio_framework_plugin::kernel::UiDirtyScope;
 use semio_framework_plugin::EditorApp;
@@ -28,14 +28,12 @@ enum Puzzle5dPatchPartStage {
 #[derive(semio_framework_value::RetireOwned)]
 struct Puzzle5dPatchPartWorkOwners {
     pub mutations: Vec<Puzzle5dMutation>,
-    pub selected: HashSet<String>,
 }
 
 pub struct Puzzle5dPatchPartWork {
     pub stage: Puzzle5dPatchPartStage,
     pub selection_cursor: usize,
     pub part_cursor: usize,
-    pub selected: HashSet<String>,
     pub mutations: Vec<Puzzle5dMutation>,
     pub close_owners: crate::puzzle_job::WorkClosing<Puzzle5dPatchPartWorkOwners>,
 }
@@ -46,13 +44,31 @@ impl Default for Puzzle5dPatchPartWork {
             stage: Puzzle5dPatchPartStage::Selection,
             selection_cursor: 0,
             part_cursor: 0,
-            selected: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
-            mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
+            mutations: Vec::new(),
         }
     }
 }
 
 impl Puzzle5dPatchPartWork {
+    /// 🪙️ The original construction quote owns the exact typed mutation buffer.
+    pub(super) fn original_birth_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let capacity = (crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS as usize).checked_mul(size_of::<Puzzle5dMutation>())
+            .ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Puzzle5D Puzzle5dPatchPartWork backing extent overflow"))?;
+        Ok(semio_framework_value::RetirementDemand { capacity_bytes: capacity, depth: 1, ..Default::default() })
+    }
+
+    /// 🏭️ Original scope custody precedes allocation and receives the actual native capacity.
+    pub(super) fn from_original_construction(scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+        scope.admit_owner(Self::original_birth_demands()?)?;
+        let work = Self { mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS), ..Self::default() };
+        let capacity = work.mutations.capacity() * size_of::<Puzzle5dMutation>();
+        Ok((work, semio_framework_value::RetainedCloneProgress { retained_capacity_bytes: capacity, ..Default::default() }))
+    }
+
+    fn targets(&self, command: &Puzzle5dCommand, id: &str) -> bool {
+        (0..self.selection_cursor).any(|index| Self::source_id(command, index) == Some(id))
+    }
+
     fn source_len(command: &Puzzle5dCommand) -> usize {
         let args = command.args();
         args.and_then(|args| args.get("partIds")).and_then(Value::as_array).map_or(0, Vec::len) + usize::from(args.and_then(|args| args.get("partId")).and_then(Value::as_str).is_some())
@@ -115,17 +131,17 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, semio_framework_job::OriginalTurnFailure> = (|| {
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
         let projection = puzzle5d_editor_projection(snapshot);
         match self.stage {
             Puzzle5dPatchPartStage::Selection => {
-                if let Some(id) = Self::source_id(command, self.selection_cursor) {
-                    if self.selected.len() >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
+                if Self::source_id(command, self.selection_cursor).is_some() {
+                    if self.selection_cursor >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
                         return Err(Fault::from("puzzle5d-patch-part-selection-capacity"));
                     }
-                    self.selected.insert(id.to_string());
                     self.selection_cursor += 1;
                     return Ok(crate::puzzle_progress_step!("puzzle5d-patch-part-selection", "Reading part target", "Teilziel wird gelesen"));
                 }
@@ -144,7 +160,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 };
                 self.part_cursor += 1;
                 let part: Puzzle5dPart = puzzle5d_record_from_projection(row).map_err(|_| Fault::from("puzzle5d-patch-part-malformed"))?;
-                if self.selected.contains(&part.id) {
+                if self.targets(command, &part.id) {
                     if let Some(mutation) = Self::mutation(command, &part) {
                         self.mutations.push(mutation);
                     }
@@ -154,6 +170,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle5dPatchPartStage::Complete => Err(Fault::from("puzzle5d-patch-part-complete-repolled")),
             Puzzle5dPatchPartStage::Closing => Err(Fault::from("puzzle5d-patch-part-closing")),
         }
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
@@ -161,12 +179,12 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
 
     fn begin_close(&mut self) {
         self.stage = Puzzle5dPatchPartStage::Closing;
-        self.close_owners.stage(Puzzle5dPatchPartWorkOwners { mutations: std::mem::take(&mut self.mutations), selected: std::mem::take(&mut self.selected) });
+        self.close_owners.stage(Puzzle5dPatchPartWorkOwners { mutations: std::mem::take(&mut self.mutations) });
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            self.close_owners.close_step(grant)
+        semio_framework_job::close_original_nested_step(cx,|cx,_grant|{
+            self.close_owners.close_step(cx)
         })
     }
 
@@ -199,14 +217,12 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
 #[derive(semio_framework_value::RetireOwned)]
 struct Puzzle5dPatchFastenerWorkOwners {
     pub mutations: Vec<Puzzle5dMutation>,
-    pub selected: HashSet<String>,
 }
 
 pub struct Puzzle5dPatchFastenerWork {
     pub stage: Puzzle5dPatchPartStage,
     pub selection_cursor: usize,
     pub fastener_cursor: usize,
-    pub selected: HashSet<String>,
     pub mutations: Vec<Puzzle5dMutation>,
     pub close_owners: crate::puzzle_job::WorkClosing<Puzzle5dPatchFastenerWorkOwners>,
 }
@@ -217,13 +233,31 @@ impl Default for Puzzle5dPatchFastenerWork {
             stage: Puzzle5dPatchPartStage::Selection,
             selection_cursor: 0,
             fastener_cursor: 0,
-            selected: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
-            mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
+            mutations: Vec::new(),
         }
     }
 }
 
 impl Puzzle5dPatchFastenerWork {
+    /// 🪙️ The original construction quote owns the exact typed mutation buffer.
+    pub(super) fn original_birth_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let capacity = (crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS as usize).checked_mul(size_of::<Puzzle5dMutation>())
+            .ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Puzzle5D Puzzle5dPatchFastenerWork backing extent overflow"))?;
+        Ok(semio_framework_value::RetirementDemand { capacity_bytes: capacity, depth: 1, ..Default::default() })
+    }
+
+    /// 🏭️ Original scope custody precedes allocation and receives the actual native capacity.
+    pub(super) fn from_original_construction(scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+        scope.admit_owner(Self::original_birth_demands()?)?;
+        let work = Self { mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS), ..Self::default() };
+        let capacity = work.mutations.capacity() * size_of::<Puzzle5dMutation>();
+        Ok((work, semio_framework_value::RetainedCloneProgress { retained_capacity_bytes: capacity, ..Default::default() }))
+    }
+
+    fn targets(&self, command: &Puzzle5dCommand, id: &str) -> bool {
+        (0..self.selection_cursor).any(|index| Self::source_id(command, index) == Some(id))
+    }
+
     fn source_len(command: &Puzzle5dCommand) -> usize {
         let args = command.args();
         args.and_then(|args| args.get("fastenerIds")).and_then(Value::as_array).map_or(0, Vec::len) + usize::from(args.and_then(|args| args.get("fastenerId")).and_then(Value::as_str).is_some())
@@ -279,16 +313,16 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, semio_framework_job::OriginalTurnFailure> = (|| {
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let projection = puzzle5d_editor_projection(snapshot);
         match self.stage {
             Puzzle5dPatchPartStage::Selection => {
-                if let Some(id) = Self::source_id(command, self.selection_cursor) {
-                    if self.selected.len() >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
+                if Self::source_id(command, self.selection_cursor).is_some() {
+                    if self.selection_cursor >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
                         return Err(Fault::from("puzzle5d-patch-fastener-selection-capacity"));
                     }
-                    self.selected.insert(id.to_string());
                     self.selection_cursor += 1;
                     return Ok(crate::puzzle_progress_step!("puzzle5d-patch-fastener-selection", "Reading fastener target", "Verbindungsziel wird gelesen"));
                 }
@@ -302,7 +336,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 };
                 self.fastener_cursor += 1;
                 let fastener: Puzzle5dFastener = puzzle5d_record_from_projection(row).map_err(|_| Fault::from("puzzle5d-patch-fastener-malformed"))?;
-                if self.selected.contains(&fastener.id) {
+                if self.targets(command, &fastener.id) {
                     if let Some(mutation) = Self::mutation(command, &fastener) {
                         self.mutations.push(mutation);
                     }
@@ -312,6 +346,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle5dPatchPartStage::Complete => Err(Fault::from("puzzle5d-patch-fastener-complete-repolled")),
             Puzzle5dPatchPartStage::Closing => Err(Fault::from("puzzle5d-patch-fastener-closing")),
         }
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
@@ -319,12 +355,12 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
 
     fn begin_close(&mut self) {
         self.stage = Puzzle5dPatchPartStage::Closing;
-        self.close_owners.stage(Puzzle5dPatchFastenerWorkOwners { mutations: std::mem::take(&mut self.mutations), selected: std::mem::take(&mut self.selected) });
+        self.close_owners.stage(Puzzle5dPatchFastenerWorkOwners { mutations: std::mem::take(&mut self.mutations) });
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            self.close_owners.close_step(grant)
+        semio_framework_job::close_original_nested_step(cx,|cx,_grant|{
+            self.close_owners.close_step(cx)
         })
     }
 
@@ -357,7 +393,6 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
 #[derive(semio_framework_value::RetireOwned)]
 struct Puzzle5dPatchGripWorkOwners {
     pub mutations: Vec<Puzzle5dMutation>,
-    pub selected: HashSet<String>,
 }
 
 pub struct Puzzle5dPatchGripWork {
@@ -366,7 +401,6 @@ pub struct Puzzle5dPatchGripWork {
     pub part_cursor: usize,
     pub grip_cursor: usize,
     processed_grips: usize,
-    pub selected: HashSet<String>,
     pub mutations: Vec<Puzzle5dMutation>,
     pub close_owners: crate::puzzle_job::WorkClosing<Puzzle5dPatchGripWorkOwners>,
 }
@@ -379,13 +413,33 @@ impl Default for Puzzle5dPatchGripWork {
             part_cursor: 0,
             grip_cursor: 0,
             processed_grips: 0,
-            selected: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
-            mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
+            mutations: Vec::new(),
         }
     }
 }
 
 impl Puzzle5dPatchGripWork {
+    /// 🪙️ The original construction quote owns the exact typed mutation buffer.
+    pub(super) fn original_birth_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let capacity = (crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS as usize).checked_mul(size_of::<Puzzle5dMutation>())
+            .ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Puzzle5D Puzzle5dPatchGripWork backing extent overflow"))?;
+        Ok(semio_framework_value::RetirementDemand { capacity_bytes: capacity, depth: 1, ..Default::default() })
+    }
+
+    /// 🏭️ Original scope custody precedes allocation and receives the actual native capacity.
+    pub(super) fn from_original_construction(scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+        scope.admit_owner(Self::original_birth_demands()?)?;
+        let work = Self { mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS), ..Self::default() };
+        let capacity = work.mutations.capacity() * size_of::<Puzzle5dMutation>();
+        Ok((work, semio_framework_value::RetainedCloneProgress { retained_capacity_bytes: capacity, ..Default::default() }))
+    }
+
+    fn targets(&self, command: &Puzzle5dCommand, part: &str, grip: &str) -> bool {
+        if grip.contains(':') { return (0..self.selection_cursor).any(|index| Self::source_id(command, index) == Some(grip)); }
+        (0..self.selection_cursor).any(|index| Self::source_id(command, index)
+            .and_then(|id| id.strip_prefix(part)).and_then(|id| id.strip_prefix(':')) == Some(grip))
+    }
+
     fn source_len(command: &Puzzle5dCommand) -> usize {
         let args = command.args();
         args.and_then(|args| args.get("gripFullIds")).and_then(Value::as_array).map_or(0, Vec::len) + usize::from(args.and_then(|args| args.get("gripFullId")).and_then(Value::as_str).is_some())
@@ -456,16 +510,16 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, semio_framework_job::OriginalTurnFailure> = (|| {
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let projection = puzzle5d_editor_projection(snapshot);
         match self.stage {
             Puzzle5dPatchPartStage::Selection => {
-                if let Some(id) = Self::source_id(command, self.selection_cursor) {
-                    if self.selected.len() >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
+                if Self::source_id(command, self.selection_cursor).is_some() {
+                    if self.selection_cursor >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
                         return Err(Fault::from("puzzle5d-patch-grip-selection-capacity"));
                     }
-                    self.selected.insert(id.to_string());
                     self.selection_cursor += 1;
                     return Ok(crate::puzzle_progress_step!("puzzle5d-patch-grip-selection", "Reading grip target", "Griffziel wird gelesen"));
                 }
@@ -489,8 +543,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 self.grip_cursor += 1;
                 let part_id = part.get("id").and_then(Value::as_str).ok_or_else(|| Fault::from("puzzle5d-patch-grip-part-id-malformed"))?;
                 let mut grip: crate::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip = <crate::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&grip_value)).map_err(|_| Fault::from("puzzle5d-patch-grip-malformed"))?;
-                let full_id = puzzle5d_grip_full_id(part_id, &grip.id);
-                if self.selected.contains(&full_id) && Self::patch(command, &mut grip) {
+                if self.targets(command, part_id, &grip.id) && Self::patch(command, &mut grip) {
                     let grip_id = grip.id.clone();
                     self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::replace_part_grip(part_id.to_string(), grip_id, grip));
                 }
@@ -499,6 +552,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle5dPatchPartStage::Complete => Err(Fault::from("puzzle5d-patch-grip-complete-repolled")),
             Puzzle5dPatchPartStage::Closing => Err(Fault::from("puzzle5d-patch-grip-closing")),
         }
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
@@ -506,12 +561,12 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
 
     fn begin_close(&mut self) {
         self.stage = Puzzle5dPatchPartStage::Closing;
-        self.close_owners.stage(Puzzle5dPatchGripWorkOwners { mutations: std::mem::take(&mut self.mutations), selected: std::mem::take(&mut self.selected) });
+        self.close_owners.stage(Puzzle5dPatchGripWorkOwners { mutations: std::mem::take(&mut self.mutations) });
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            self.close_owners.close_step(grant)
+        semio_framework_job::close_original_nested_step(cx,|cx,_grant|{
+            self.close_owners.close_step(cx)
         })
     }
 

@@ -1,5 +1,5 @@
-//! 🧭️ Host gesture protocol laws: the renderer and the panels report GESTURES (verbs with ids and values), never a scene,
 //! and every gesture the plugin turns into a document edit is the concrete mutation kinds it consists of. Each law
+//! 🧭️ Host gesture protocol laws: the renderer and the panels report GESTURES (verbs with ids and values), never a scene,
 //! builds the kinds from a typed base alone, replays them forward through the central applier and the recorded
 //! inverse rows last-to-first, and requires the base back.
 
@@ -29,11 +29,11 @@ fn replay(before: &Puzzle3dSnapshot, operations: &[Puzzle3dMutation]) -> (Puzzle
     let mut inverses = Vec::new();
     for operation in operations {
         inverses.extend(protocol::Mutation::<Puzzle3dSnapshot>::inverse(operation, &state).expect("concrete inverse"));
-        state = protocol::apply_diff(protocol::Mutation::<Puzzle3dSnapshot>::diff(operation, &state).diff(), &state).expect("central apply");
+        state = protocol::apply_diff_cold(protocol::Mutation::<Puzzle3dSnapshot>::diff(operation, &state).diff(), &state).expect("central apply");
     }
     let after = state.clone();
     for inverse in inverses.iter().rev() {
-        state = protocol::apply_diff(protocol::Mutation::<Puzzle3dSnapshot>::diff(inverse, &state).diff(), &state).expect("central inverse apply");
+        state = protocol::apply_diff_cold(protocol::Mutation::<Puzzle3dSnapshot>::diff(inverse, &state).diff(), &state).expect("central inverse apply");
     }
     (after, state)
 }

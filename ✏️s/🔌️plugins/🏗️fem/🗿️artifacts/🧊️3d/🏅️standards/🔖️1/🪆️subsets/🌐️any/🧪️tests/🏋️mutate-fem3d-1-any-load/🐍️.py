@@ -31,6 +31,7 @@ mutation moved exactly the one member it was meant to and left the other eight u
 # region 🔖️Imports
 import copy
 import json
+import math
 
 from semio_repo_test import Adapter, Context, Outcome
 
@@ -56,7 +57,7 @@ COLLECTIONS = {
 """🗂️ Per noun: its collection, the argument `create-` carries, and the one `replace-` carries when
 the vocabulary has a `replace-` for it at all."""
 
-KINDS = ("create-load-case", "delete-load-case", "add-load", "remove-load", "change-load-case-self-weight", "create-combination", "delete-combination", "replace-load", "change-load-case-name", "replace-combination")
+KINDS = ("create-load-case", "delete-load-case", "add-load", "remove-load", "change-load-case-self-weight", "create-combination", "delete-combination", "replace-load", "change-load-case-name", "replace-combination", "change-load", "change-combination-name", "change-combination-term")
 """🏷️ This subset's own kinds, in the catalog's declared order."""
 
 
@@ -317,6 +318,76 @@ def case_of(document, identifier, kind):
     return document["loadCases"][at]
 
 
+
+FIELD_KINDS = ("change-load", "change-combination-name", "change-combination-term")
+
+def field_refusal(code, target):
+    """🚫️ Raises the same addressed refusal class as the authored neutral contract."""
+    raise AssertionError("%s: %s" % (code, target))
+
+def field_target(document, collection, identifier):
+    """🎯️ Resolves the addressed row before any authored field is applied."""
+    at = find(document[collection], identifier)
+    if at is None:
+        field_refusal("mutation.target-missing", identifier)
+    return document[collection][at]
+
+def apply_field_mutation(document, mutation):
+    """🩹️ Applies only authored load, combination-name or keyed-term intent."""
+    kind = kind_of(mutation)
+    result = copy.deepcopy(document)
+    if kind == "change-load":
+        case = field_target(result, "loadCases", mutation["caseId"])
+        at = find(case["loads"], mutation["id"])
+        if at is None:
+            field_refusal("mutation.target-missing", mutation["id"])
+        load = case["loads"][at]
+        patch = mutation["patch"]
+        if patch.get("kind") != load["kind"]:
+            field_refusal("mutation.target-mismatch", mutation["id"])
+        fields = {"nodal": ("nodeId", "dof", "value"), "memberUdl": ("elementId", "wx", "wy", "wz"), "area": ("solidId", "pressure")}[load["kind"]]
+        if any(key != "kind" and key not in fields for key in patch) or any(value is None for value in patch.values()):
+            field_refusal("mutation.invariant", mutation["id"])
+        load.update(copy.deepcopy(patch))
+        resolve_load(result, load, kind)
+        if not finite(*(load[name] for name in {"nodal": ("value",), "memberUdl": ("wx", "wy", "wz"), "area": ("pressure",)}[load["kind"]])):
+            field_refusal("mutation.invariant", mutation["id"])
+    else:
+        combination = field_target(result, "combinations", mutation["id"])
+        if kind == "change-combination-name":
+            if not isinstance(mutation["name"], str):
+                field_refusal("mutation.invariant", mutation["id"])
+            combination["name"] = mutation["name"]
+        else:
+            case_id = mutation["caseId"]
+            if case_id == mutation["id"] or not any(find(result[name], case_id) is not None for name in ("loadCases", "combinations")):
+                field_refusal("mutation.target-missing", case_id)
+            if "factor" not in mutation or mutation["factor"] is not None and (isinstance(mutation["factor"], bool) or not isinstance(mutation["factor"], (float, int)) or not math.isfinite(mutation["factor"])):
+                field_refusal("mutation.invariant", mutation["id"])
+            factor = mutation["factor"]
+            if "index" in mutation:
+                field_refusal("mutation.invariant", mutation["id"])
+            if factor is None:
+                combination["terms"].pop(case_id, None)
+            else:
+                combination["terms"][case_id] = factor
+    validate(result)
+    return result
+
+def inverse_field_mutation(document, mutation):
+    """↩️ Captures only authored sibling fields or one keyed term with its list position."""
+    kind = kind_of(mutation)
+    if kind == "change-load":
+        case = field_target(document, "loadCases", mutation["caseId"])
+        load = case["loads"][find(case["loads"], mutation["id"])]
+        return {"mutation": mutation["mutation"], "caseId": mutation["caseId"], "id": mutation["id"], "patch": {key: copy.deepcopy(load[key]) for key in mutation["patch"]}}
+    combination = field_target(document, "combinations", mutation["id"])
+    if kind == "change-combination-name":
+        return {"mutation": mutation["mutation"], "id": mutation["id"], "name": combination["name"]}
+    inverse = {"mutation": mutation["mutation"], "id": mutation["id"], "caseId": mutation["caseId"], "factor": None}
+    inverse["factor"] = combination["terms"].get(mutation["caseId"])
+    return inverse
+
 def apply_mutation(document, mutation):
     """🧬️ Applies one typed mutation, returning the resulting model — or raising when the request is
     one the vocabulary refuses.
@@ -327,6 +398,8 @@ def apply_mutation(document, mutation):
     model exactly as it was, which is what a caller asked for either way.
     """
     kind = kind_of(mutation)
+    if kind in FIELD_KINDS:
+        return apply_field_mutation(document, mutation)
     result = copy.deepcopy(document)
     if kind == "update-analysis-settings":
         bounded(mutation["settings"], kind)
@@ -416,6 +489,8 @@ def inverse_mutation(document, mutation):
     record at its original position, whatever that is.
     """
     kind = kind_of(mutation)
+    if kind in FIELD_KINDS:
+        return inverse_field_mutation(document, mutation)
     if kind == "update-analysis-settings":
         return {"mutation": TAGS[kind], "settings": copy.deepcopy(document["analysis"])}
     if kind == "add-load":
@@ -471,10 +546,10 @@ def touches_one(scenario, kind, before, after):
     member it meant to write."""
     if kind == "update-analysis-settings":
         written = "analysis"
-    elif kind in ("add-load", "remove-load", "replace-load", "change-load-case-self-weight", "change-load-case-name"):
+    elif kind in ("add-load", "remove-load", "replace-load", "change-load", "change-load-case-self-weight", "change-load-case-name"):
         written = "loadCases"
     else:
-        written = COLLECTIONS[noun_of(kind)][0]
+        written = "combinations" if kind.startswith("change-combination-") else COLLECTIONS[noun_of(kind)][0]
     moved = [name for name in MEMBERS if before[name] != after[name]]
     if moved != [written]:
         raise AssertionError("%s: this verb writes %s and nothing else, but %r moved" % (scenario, written, moved))

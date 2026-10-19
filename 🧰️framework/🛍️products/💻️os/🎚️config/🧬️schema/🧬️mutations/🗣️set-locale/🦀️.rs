@@ -14,16 +14,9 @@ pub fn set_locale(locale: Option<UiLocale>) -> UiPreferencesConfigMutation {
 impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetLocale {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "locale", kind: "set-locale", record: "Set" };
 
-    fn diff(&self, base: &UiPreferences) -> protocol::MutationOutcome<UiPreferencesDiff> {
-        if base.locale == self.locale {
-            return protocol::MutationOutcome::new(UiPreferencesDiff::default()).warning("mutation.no-op", "locale is already selected.");
-        }
-        protocol::MutationOutcome::new(UiPreferencesDiff { locale: Some(SettingEdit::new(self.locale.clone())), ..UiPreferencesDiff::default() })
-    }
 
-    fn inverse(&self, base: &UiPreferences) -> Result<Vec<UiPreferencesConfigMutation>, semio_framework_value::ValueError> {
-        Ok(vec![UiPreferencesConfigMutation::SetLocale(Self { locale: base.locale.clone() })])
-    }
+
+
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set locale to {:?}", self.locale), &format!("Sprache auf {:?} setzen", self.locale))
@@ -31,5 +24,17 @@ impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetL
 
     fn target(&self) -> Vec<String> {
         vec!["locale".to_string()]
+    }
+}
+
+impl protocol::ColdMutationKind<UiPreferences, UiPreferencesConfigMutation> for SetLocale {
+    fn diff(&self, base: &UiPreferences) -> protocol::MutationOutcome<UiPreferencesDiff> {
+        if base.locale == self.locale {
+            return protocol::MutationOutcome::new(UiPreferencesDiff::default()).warning("mutation.no-op", "locale is already selected.");
+        }
+        protocol::MutationOutcome::new(UiPreferencesDiff { locale: Some(SettingEdit::new(self.locale.clone())), ..UiPreferencesDiff::default() })
+    }
+    fn inverse(&self, base: &UiPreferences) -> Result<Vec<UiPreferencesConfigMutation>, semio_framework_value::ValueError> {
+        Ok(vec![UiPreferencesConfigMutation::SetLocale(Self { locale: base.locale.clone() })])
     }
 }

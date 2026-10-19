@@ -1,5 +1,5 @@
-//! 🏗️ `s.fem.fem2d` mesh mutation case — Rust SUBJECT adapter. Relocated out of the
 //! artifact-level `mutate-fem2d-1` case in ticket
+//! 🏗️ `s.fem.fem2d` mesh mutation case — Rust SUBJECT adapter. Relocated out of the
 //! `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION` so
 //! this subset's own kinds have a subset-owned test.
 //!
@@ -15,14 +15,18 @@
 //! report shapes rather than parts of the document, so they stay asserted HERE, in role, in
 //! [`subject::spec_vector`].
 
-use semio_repo_test_host::{parse_json, Adapter, Json};
+use semio_repo_test_host::parse_json;
+
+use semio_repo_test_host::Adapter;
+
+use semio_repo_test_host::Json;
 
 //#region 🔖️Kinds
 /// 🏷️ This subset's own slice of `KINDS` in `../../🧬️schema/🧬️mutations/🦀️.rs` — duplicated, not
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and that file's own
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against both the enum and the manifest.
-const KINDS: &[&str] = &["create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-section", "delete-section", "replace-section", "create-region", "delete-region", "replace-region", "replace-node", "move-selection"];
+const KINDS: &[&str] = &["change-region", "change-element", "change-node", "change-section", "create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-section", "delete-section", "replace-section", "create-region", "delete-region", "replace-region", "replace-node", "move-selection"];
 
 /// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
 /// [`law::mutation_is_observable`] must not demand one of them.
@@ -43,6 +47,14 @@ const DERIVED_ASSET: &str = "shared://🕸️mutate-fem2d-1-mesh/🏗️timber-p
 /// 📇️ Every FORWARD committed vector this subset owns, as `(scenario id, kind)`. Two per kind:
 /// the pre-existing `spec-vector-<kind>` and the steel-frame `frame-vector-<kind>`.
 const COMMITTED: &[(&str, &str)] = &[
+    ("spec-vector-change-region", "change-region"),
+    ("frame-vector-change-region", "change-region"),
+    ("spec-vector-change-element", "change-element"),
+    ("frame-vector-change-element", "change-element"),
+    ("spec-vector-change-node", "change-node"),
+    ("frame-vector-change-node", "change-node"),
+    ("spec-vector-change-section", "change-section"),
+    ("frame-vector-change-section", "change-section"),
     ("spec-vector-create-element", "create-element"),
     ("frame-vector-create-element", "create-element"),
     ("spec-vector-create-node", "create-node"),
@@ -73,6 +85,19 @@ const COMMITTED: &[(&str, &str)] = &[
 
 /// 📇️ Every REFUSAL or no-op vector this subset owns, numbered in the catalog's own order.
 const REFUSED: &[(&str, &str)] = &[
+    ("reject-change-region-3", "change-region"),
+    ("reject-change-region-2", "change-region"),
+    ("reject-change-region-1", "change-region"),
+    ("reject-change-element-3", "change-element"),
+    ("reject-change-element-2", "change-element"),
+    ("reject-change-element-1", "change-element"),
+    ("reject-change-node-1", "change-node"),
+    ("reject-change-node-2", "change-node"),
+    ("reject-change-node-3", "change-node"),
+    ("reject-change-section-1", "change-section"),
+    ("reject-change-section-2", "change-section"),
+    ("reject-change-section-3", "change-section"),
+
     ("reject-create-element-1", "create-element"),
     ("reject-create-node-1", "create-node"),
     ("reject-create-region-1", "create-region"),
@@ -120,6 +145,155 @@ struct Vector {
 
 fn vector(scenario: &str) -> Vector {
     match scenario {
+        "reject-change-region-3" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-region/⚗️invalid/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-region/⚗️invalid/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-region/⚗️invalid/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-region/⚗️invalid/🎯️outcome/🔣️.json"),
+        },
+
+        "reject-change-region-2" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-region/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-region/⛔️missing/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-region/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-region/⛔️missing/🎯️outcome/🔣️.json"),
+        },
+
+        "reject-change-region-1" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-region/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-region/⏸️same/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-region/⏸️same/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-region/⏸️same/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-region/⏸️same/🎯️outcome/🔣️.json"),
+        },
+
+        "spec-vector-change-region" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-region/🩹️changes/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-region/🩹️changes/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-region/🩹️changes/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-region/🩹️changes/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-region/🩹️changes/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-change-region" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-region/📐️geometry/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-region/📐️geometry/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-region/📐️geometry/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-region/📐️geometry/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-region/📐️geometry/🎯️outcome/🔣️.json"),
+        },
+
+        "reject-change-element-3" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-element/⚗️invalid/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-element/⚗️invalid/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-element/⚗️invalid/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-element/⚗️invalid/🎯️outcome/🔣️.json"),
+        },
+
+        "reject-change-element-2" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-element/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-element/⛔️missing/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-element/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-element/⛔️missing/🎯️outcome/🔣️.json"),
+        },
+
+        "reject-change-element-1" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-element/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-element/⏸️same/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-element/⏸️same/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-element/⏸️same/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-element/⏸️same/🎯️outcome/🔣️.json"),
+        },
+
+        "spec-vector-change-element" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-element/🩹️changes/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-element/🩹️changes/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-element/🩹️changes/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-element/🩹️changes/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-element/🩹️changes/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-change-element" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-element/🔀️variant/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-element/🔀️variant/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-element/🔀️variant/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-element/🔀️variant/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-element/🔀️variant/🎯️outcome/🔣️.json"),
+        },
+
+        "spec-vector-change-node" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-node/🩹️changes/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-node/🩹️changes/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-node/🩹️changes/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-node/🩹️changes/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-node/🩹️changes/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-change-node" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-node/📐️coordinates/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-node/📐️coordinates/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-node/📐️coordinates/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-node/📐️coordinates/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-node/📐️coordinates/🎯️outcome/🔣️.json"),
+        },
+        "reject-change-node-1" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-node/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-node/⏸️same/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-node/⏸️same/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-node/⏸️same/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-node/⏸️same/🎯️outcome/🔣️.json"),
+        },
+        "reject-change-node-2" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-node/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-node/⛔️missing/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-node/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-node/⛔️missing/🎯️outcome/🔣️.json"),
+        },
+        "reject-change-node-3" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-node/⚗️empty/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-node/⚗️empty/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-node/⚗️empty/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-node/⚗️empty/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-node/⚗️empty/🎯️outcome/🔣️.json"),
+        },
+        "spec-vector-change-section" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-section/🩹️changes/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-section/🩹️changes/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-section/🩹️changes/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-section/🩹️changes/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-section/🩹️changes/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-change-section" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-section/📐️coordinates/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-section/📐️coordinates/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-section/📐️coordinates/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-section/📐️coordinates/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-section/📐️coordinates/🎯️outcome/🔣️.json"),
+        },
+        "reject-change-section-1" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-section/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-section/⏸️same/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-section/⏸️same/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-section/⏸️same/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-section/⏸️same/🎯️outcome/🔣️.json"),
+        },
+        "reject-change-section-2" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-section/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-section/⛔️missing/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-section/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-section/⛔️missing/🎯️outcome/🔣️.json"),
+        },
+        "reject-change-section-3" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-section/⚗️invalid/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-section/⚗️invalid/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-section/⚗️invalid/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-section/⚗️invalid/🎯️outcome/🔣️.json"),
+        },
+
         "spec-vector-create-element" => Vector {
             before: include_str!("../🧫️fixtures/🧬️mutations/🧩️create-element/➖️appends/📸️snapshot/⬅️before/🔣️.json"),
             mutation: include_str!("../🧫️fixtures/🧬️mutations/🧩️create-element/➖️appends/🦠️mutation/🔣️.json"),
@@ -526,8 +700,14 @@ fn canonical(text: &str) -> Json {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{canonical, vector, DERIVED_ASSET, UNOBSERVABLE};
-    use semio_repo_test_host::{parse_json, Context, Json, Outcome};
+    use super::canonical;
+    use super::vector;
+    use super::DERIVED_ASSET;
+    use super::UNOBSERVABLE;
+    use semio_repo_test_host::parse_json;
+    use semio_repo_test_host::Context;
+    use semio_repo_test_host::Json;
+    use semio_repo_test_host::Outcome;
     use semio_repo_test_host::law;
     use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::io::text::mutations::fem2d_mutation_report_json;
 

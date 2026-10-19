@@ -21,6 +21,23 @@ def load(domain):
     return json.loads((FIXTURES / domain / "🔣️.json").read_text(encoding="utf-8"))
 
 
+def test_selection_geometry_matches_language_neutral_cases():
+    for case in load("🔲️selection")["cases"]:
+        selection = Polygon(case["selection"])
+        entity = LineString(case["entity"]) if len(case["entity"]) == 2 else Polygon(case["entity"], case["holes"])
+        result = selection.covers(entity) if case["enclosing"] else selection.intersects(entity)
+        assert result == case["expected"], case["id"]
+
+
+def test_selection_drag_matches_language_neutral_cases():
+    source = GEOMETRY.parent / "🕹️interaction" / "👆️gesture" / "🧫️fixtures" / "🔲️selection-drag.json"
+    for case in json.loads(source.read_text(encoding="utf-8"))["cases"]:
+        points = [case["start"], *case["samples"], case["release"]]
+        retained = shapely.remove_repeated_points(LineString(points)).coords if case["method"] == "lasso" else [points[0], points[-1]]
+        assert [list(point) for point in retained] == case["retained"], case["id"]
+        assert any(Point(points[0]).distance(Point(point)) >= 4 for point in points) == case["active"], case["id"]
+
+
 def arc_points(seg, count=4000):
     start, end, bulge = seg["start"], seg["end"], seg["bulge"]
     if bulge == 0:

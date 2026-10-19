@@ -14,13 +14,15 @@ pub trait AsyncTaskRun<Mutation,ConfigMutation,DraftMutation>:Send{
 struct TypedAsyncTaskRun<T:semio_framework_value::retirement::RetireOwned,M,C,D>{source:ControlledRetirement<T>,kind:std::marker::PhantomData<fn()->(M,C,D)>}
 impl<T:AsyncTaskSource<M,C,D>,M:'static,C:'static,D:'static> AsyncTaskRun<M,C,D> for TypedAsyncTaskRun<T,M,C,D>{
  fn run(mut self:Box<Self>,context:TaskCtx)->Pin<Box<dyn Future<Output=Result<TaskResolution<M,C,D>,Fault>>>>{let source=self.source.take_original().expect("original task run must retain untouched source");Box::pin(source.run(context))}
- fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:self.source.next_copy_byte_demand()?,capacity_bytes:self.source.next_capacity_byte_demand(copy)?,release_bytes:self.source.next_release_byte_demand()?,depth:self.source.next_depth_demand()?})}
+ fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{self.source.next_demand(copy)}
  fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.source.step(grant)}
  fn terminal_is_empty(&self)->bool{self.source.terminal_is_empty()}
  fn allocation_bytes(&self)->usize{size_of::<Self>()}
 }
 struct AsyncTaskRunSource<M:'static,C:'static,D:'static>{original:ManuallyDrop<Option<Box<dyn AsyncTaskRun<M,C,D>>>>}
 impl<M:'static,C:'static,D:'static> semio_framework_value::retirement::RetirementCursor for AsyncTaskRunSource<M,C,D>{
+ fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let Some(source)=self.original.as_ref()else{return Ok(Default::default())};if source.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:source.allocation_bytes(),depth:1,..Default::default()})}source.demands(maximum_body_bytes)}
+
  fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;let Some(source)=self.original.as_mut()else{return RetirementStep::Complete};if grant.maximum_items==0{return RetirementStep::BudgetExhausted}if source.terminal_is_empty(){let bytes=source.allocation_bytes();if grant.maximum_release_bytes<bytes||grant.maximum_depth==0{return RetirementStep::BudgetExhausted}drop(self.original.take());return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()})}match source.close_step(grant){Ok(step)=>RetirementStep::Progress(step.progress()),Err(error)=>RetirementStep::Failure(error)}}
  fn terminal_is_empty(&self)->bool{self.original.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.original.as_ref().map_or(Ok(0),|source|source.demands(0).map(|d|d.copy_bytes))}

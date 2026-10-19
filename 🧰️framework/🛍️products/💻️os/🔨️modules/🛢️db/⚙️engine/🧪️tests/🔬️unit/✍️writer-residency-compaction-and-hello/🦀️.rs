@@ -250,7 +250,7 @@ async fn hello_returns_a_welcome_with_a_fresh_bootstrap_for_a_brand_new_replica(
     let batch = db_artifact_contract::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("x", serde_json::json!(1))]).await]).await.unwrap();
     db_actor::block_on(handle.submit(batch, db_artifact_contract::SubmitOptions::default())).unwrap().unwrap();
 
-    let mut session = database.hello(document, None, "session-1".to_string(), protocol::ActorId("semio_hub".to_string()), 4096).await.unwrap();
+    let mut session = database.hello(document, None, "session-1".to_string(), protocol::ActorId("semio_hub".to_string().into()), 4096).await.unwrap();
     let welcome = session.take_welcome().unwrap();
     assert!(matches!(welcome.frame().unwrap(), protocol::ServerFrame::Welcome { .. }));
     welcome.acknowledge().unwrap();
@@ -271,7 +271,7 @@ async fn hello_sessions_retire_when_drained_and_when_close_races_the_returned_fr
     let batch = db_artifact_contract::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("x", serde_json::json!(1))]).await]).await.unwrap();
     handle.submit(batch, db_artifact_contract::SubmitOptions::default()).await.unwrap().unwrap();
     for round in 0..8 {
-        let mut session = database.hello(document.clone(), None, format!("session-{round}"), protocol::ActorId("semio_hub".to_string()), 64 * 1024).await.unwrap();
+        let mut session = database.hello(document.clone(), None, format!("session-{round}"), protocol::ActorId("semio_hub".to_string().into()), 64 * 1024).await.unwrap();
         session.take_welcome().unwrap().acknowledge().unwrap();
         if round % 2 == 0 {
             while let Some(frame) = session.next_frame().await.unwrap() {
@@ -306,7 +306,7 @@ async fn hellos_beyond_the_admission_slots_wait_for_a_slot_instead_of_refusing()
     let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
     let batch = db_artifact_contract::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("x", serde_json::json!(1))]).await]).await.unwrap();
     handle.submit(batch, db_artifact_contract::SubmitOptions::default()).await.unwrap().unwrap();
-    let origin = protocol::ActorId("semio_hub".to_string());
+    let origin = protocol::ActorId("semio_hub".to_string().into());
     let mut held = Vec::new();
     for slot in 0..8 {
         let mut session = database.hello(document.clone(), None, format!("held-{slot}"), origin.clone(), 64 * 1024).await.unwrap();

@@ -4,6 +4,7 @@
 //! @see ../../../🎪️stage/🧪️tests/🔬️unit/🦀️.rs — the kit: the troupe, a meadow to stand on, the events and a pet at rest
 
 use super::*;
+use crate::spacing::COMFORT_GAP;
 use crate::draft::{BLINK_HIGH, BLINK_LOW};
 use crate::schedule::arrival_tick;
 use crate::stage::tests::{actor_of, clicked, meadow, rested, run, summoned, surveyed, ticked, troupe, FAR, TROUPE};

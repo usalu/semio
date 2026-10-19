@@ -62,35 +62,13 @@ test("owned interpreter selects all six original WIT job exports", () => {
   } finally { db.close(); runtimeTree.delete(); tree.delete(); }
 });
 
-/** 🚀️ GUI commands admit the actual outer Nx caller and declare source versus native execution explicitly. */
-test("job contract GUI launches match the supported original Nx caller", () => {
+/** 🚀️ Dashboard commands retain the actual owner and declare source versus native execution explicitly. */
+test("job contract dashboard targets declare source and native execution", () => {
   const root = resolve(owner, "../../../../../.."), target = JSON.parse(readFileSync(resolve(owner, "📦️packages/🦀️rust/📋️project.json"), "utf8"));
   const library = resolve(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library");
-  const admit = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(resolve(library, "⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json"), "utf8")));
   expect(target.targets[fixture.commands.source].metadata.semio.execution).toEqual({ version: 1, kind: "source" });
   expect(target.targets[fixture.commands.native].metadata.semio.execution).toEqual({ version: 1, kind: "native", scope: "test" });
-  for (const file of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const parsed = ts.parseConfigFileTextToJson(file, readFileSync(resolve(root, file), "utf8"));
-    expect(parsed.error).toBeUndefined();
-    for (const command of Object.values(fixture.commands)) {
-      const selected = "@semio-tech/framework-plugin-interpreter:" + command;
-      const rows = parsed.config.configurations.filter((row: { command?: string }) => row.command?.split(" ").includes(selected));
-      expect(rows.length).toBe(1);
-      const row = rows[0], policy = JSON.parse(row.env.SEMIO_SCRIPT_POLICY);
-      expect(policy.maximumElapsedMilliseconds).toBeGreaterThan(0);
-      expect(row.env.SEMIO_SCRIPT_PROCESS_INVOCATION).toBeUndefined();
-      if (command === fixture.commands.native) {
-        const replace = (value: string) => value.replaceAll("${workspaceFolder}", root);
-        const caller = JSON.parse(replace(row.env.SEMIO_SCRIPT_CAPABILITIES));
-        expect(admit(caller)).toBe(true);
-        expect(caller.selection).toEqual(["repo", "run", selected]);
-        expect(caller.arguments).toEqual(caller.selection);
-        expect(replace(row.env.CARGO_TARGET_DIR)).toBe(caller.native.artifactDirectory);
-        expect(row.env.CARGO_NET_OFFLINE).toBe(String(caller.native.network.offline));
-        expect(row.env.SEMIO_BUILD_MODE).toBe(caller.buildMode);
-      }
-    }
-  }
+  const registry=JSON.parse(readFileSync(resolve(root,"📋️build-owners.json"),"utf8")),registered=registry.owners.filter((row:any)=>row.name===target.name);expect(registered).toHaveLength(1);const parsed=ts.parseConfigFileTextToJson(registered[0].manifest,readFileSync(resolve(root,registered[0].manifest),"utf8"));expect(parsed.error).toBeUndefined();expect(parsed.config).toEqual(target);const dashboard=JSON.parse(readFileSync(resolve(root,"📋️project.json"),"utf8")).metadata.semio.dashboard;expect(dashboard.tools.find((row:any)=>row.id==="build-task").command).toEqual(["bun","repo","run","{task}","--output=stream"]);
   const bootstrap = readFileSync(resolve(library, "⚡️caching/🚀️bootstrap/📜️script.ts"), "utf8");
   expect(bootstrap).toContain("createScriptProcessEnvelope(policy, capabilities, Date.now())");
   expect(bootstrap).toContain("const encoded = process.env.SEMIO_SCRIPT_POLICY");

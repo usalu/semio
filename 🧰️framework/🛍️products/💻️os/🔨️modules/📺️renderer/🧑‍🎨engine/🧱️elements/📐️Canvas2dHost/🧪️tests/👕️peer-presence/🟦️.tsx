@@ -2,12 +2,13 @@
  * coordinates with its camera (`🧫️fixtures/👕️peer-presence`, derived independently by the fixture's own formula), and the
  * canvas presence overlay it mounts paints a peer published at that drawing position under the author's screen point for the
  * same camera, and at the forward-mapped point (`@semio-tech/framework-replication` `canvasPointToScreen`) for another. */
-import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
+import { act, cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { createElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { canvasPointToScreen } from "@semio-tech/framework/replication";
 import fixture from "../🧫️fixtures/👕️peer-presence/🔣️.json" with { type: "json" };
 import { clearArtifactPresenceRosterV1, clearLocalPresenceWindowViewV1, collectLocalPresenceWindowViewsV1, publishArtifactPresenceRosterV1, publishLocalPresenceActorV1 } from "../../../👕️canvas-presence/🟦️.ts";
+import { LocalDocumentOwnerContext, LocalDocumentOwnerRegistryV1 } from "../../../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
 
 vi.mock("@semio-tech/canvas-react-renderer", async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>;
@@ -27,6 +28,7 @@ import { Canvas2dHost } from "../../🟦️.tsx";
 type Row = (typeof fixture.rows)[number];
 
 let observedSize: readonly number[] = [0, 0];
+const owners = new LocalDocumentOwnerRegistryV1();
 vi.stubGlobal(
   "ResizeObserver",
   class {
@@ -39,13 +41,13 @@ vi.stubGlobal(
   },
 );
 
-function mount(row: Row, camera: { readonly x: number; readonly y: number; readonly zoom: number } = row.camera) {
+function mount(row: Row, camera: { readonly x: number; readonly y: number; readonly zoom: number } = row.camera, runtimeKey = "local") {
   observedSize = row.size;
   const view = render(
-    createElement(Canvas2dHost, {
+    createElement(LocalDocumentOwnerContext.Provider, { value: owners.acquire({ pluginId: "fem", appId: "fem2d", sessionInstanceId: 1, runtimeKey, clientInstanceId: runtimeKey }) }, createElement(Canvas2dHost, {
       node: { type: "componentScene", surfaceId: fixture.surfaceId, controllerId: "draw", componentKind: "canvas-2d", canvas2d: { cameraX: camera.x, cameraY: camera.y, zoom: camera.zoom, layersJson: "[]" } },
       onAction: () => Promise.resolve(),
-    } as never),
+    } as never)),
   );
   const host = view.container.querySelector(".semio-canvas-2d-host") as HTMLDivElement;
   host.getBoundingClientRect = () => ({ x: 0, y: 0, left: 0, top: 0, right: row.size[0], bottom: row.size[1], width: row.size[0], height: row.size[1], toJSON: () => ({}) }) as DOMRect;
@@ -53,12 +55,41 @@ function mount(row: Row, camera: { readonly x: number; readonly y: number; reado
 }
 
 afterEach(() => {
-  clearLocalPresenceWindowViewV1(fixture.surfaceId);
+  clearLocalPresenceWindowViewV1(fixture.surfaceId, "local");
+  owners.retireAll();
   clearArtifactPresenceRosterV1("local");
   cleanup();
 });
 
 describe("Canvas2dHost peer presence", () => {
+  it("keeps mounted same-id windows, camera publications and peer paint on their exact document owners", () => {
+    const row = fixture.rows[0]!;
+    const documents = ["mounted-presence-a", "mounted-presence-b"];
+    for (const [index, document] of documents.entries()) {
+      publishLocalPresenceActorV1(document, `self-${index}`);
+      publishArtifactPresenceRosterV1(document, [{ actor: `peer-${index}`, label: `Peer ${index}`, color: index + 2, connectedAtMs: 1, views: [{ windowId: fixture.surfaceId, space: "canvas", kind: { kind: "canvas", ...row.camera }, size: row.size as [number, number], pointer: [row.world[0], row.world[1], 0] }] }] as never);
+    }
+    const left = mount(row, row.camera, documents[0]);
+    const right = mount(row, fixture.peerCamera, documents[1]);
+    fireEvent.pointerMove(left.host, { clientX: row.client[0], clientY: row.client[1] });
+    fireEvent.pointerMove(right.host, { clientX: row.client[0], clientY: row.client[1] });
+    expect(collectLocalPresenceWindowViewsV1(documents[0])[0]?.kind).toEqual({ kind: "canvas", ...row.camera });
+    expect(collectLocalPresenceWindowViewsV1(documents[1])[0]?.kind).toEqual({ kind: "canvas", ...fixture.peerCamera });
+    expect(left.view.container.querySelector('[data-peer-actor="peer-0"]')).not.toBeNull();
+    expect(left.view.container.querySelector('[data-peer-actor="peer-1"]')).toBeNull();
+    expect(right.view.container.querySelector('[data-peer-actor="peer-1"]')).not.toBeNull();
+    expect(right.view.container.querySelector('[data-peer-actor="peer-0"]')).toBeNull();
+    left.view.unmount();
+    expect(collectLocalPresenceWindowViewsV1(documents[0])).toEqual([]);
+    expect(collectLocalPresenceWindowViewsV1(documents[1])).toHaveLength(1);
+    act(() => owners.retireAll());
+    expect(collectLocalPresenceWindowViewsV1(documents[1])).toEqual([]);
+    expect(right.view.container.querySelector('[data-peer-actor="peer-1"]')).toBeNull();
+    right.view.unmount();
+    for (const document of documents) { clearArtifactPresenceRosterV1(document); publishLocalPresenceActorV1(document, null); }
+    console.log("[DEBUG] mounted Canvas2d presence: exact document/window cameras and peer cursors isolated; foreign same-id owner survived first close; owner retirement cleared publication");
+  });
+
   it("publishes the author's pointer at the fixture's drawing position with the author's camera", () => {
     for (const row of fixture.rows) {
       const { host, view } = mount(row);
@@ -71,7 +102,7 @@ describe("Canvas2dHost peer presence", () => {
       host.dispatchEvent(new MouseEvent("pointerout", { bubbles: true, relatedTarget: document.body }));
       expect(collectLocalPresenceWindowViewsV1("local").find((candidate) => candidate.windowId === fixture.surfaceId)?.pointer, row.id).toBeUndefined();
       view.unmount();
-      clearLocalPresenceWindowViewV1(fixture.surfaceId);
+      clearLocalPresenceWindowViewV1(fixture.surfaceId, "local");
     }
   });
 

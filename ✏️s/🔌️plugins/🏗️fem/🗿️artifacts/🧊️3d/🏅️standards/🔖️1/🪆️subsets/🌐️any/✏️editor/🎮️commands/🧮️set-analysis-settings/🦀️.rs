@@ -1,13 +1,19 @@
-//! 🧮️ Fem3d play app command — `set-analysis-settings`: a partial update of the document's analysis
 //! settings. The staged form speaks the TYPED optional fields; a results-panel control speaks
+//! 🧮️ Fem3d play app command — `set-analysis-settings`: a partial update of the document's analysis
 //! `{field, value}` because the host merges a control's own scalar under `value`.
 
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_s_artifact_fem_3d_analysis::standards::v1::subsets::any::schema::mutations::update_analysis_settings;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
-use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::ToValue;
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
@@ -51,6 +57,6 @@ pub fn handle(payload: &SetAnalysisSettings, doc: &ArtifactView<'_, Fem3dSnapsho
     if settings == *current {
         return Ok(Emit::default());
     }
-    Ok(Emit::mutations(vec![Fem3dMutation::UpdateAnalysisSettings(update_analysis_settings::UpdateAnalysisSettings { settings })]))
+    Ok(Emit::mutations(vec![Fem3dMutation::UpdateAnalysisSettings(semio_s_artifact_fem_3d_analysis::standards::v1::subsets::any::schema::mutations::update_analysis_settings::UpdateAnalysisSettings { settings })]))
 }
 

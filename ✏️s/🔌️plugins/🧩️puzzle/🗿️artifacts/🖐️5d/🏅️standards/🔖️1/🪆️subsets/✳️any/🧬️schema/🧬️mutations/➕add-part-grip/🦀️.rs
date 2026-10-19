@@ -1,7 +1,8 @@
 //! ➕ Puzzle5d mutation — `AddPartGrip`: attaches a new rim grip to a part.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::{Puzzle5dSnapshot};
-use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dGrip};
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip;
+
 
 //#region 🔖️Mutation
 /// ➕ `add-part-grip` payload — owner part id + new grip payload at an optional FINAL-state
@@ -34,6 +35,22 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "part-grip", kind: "add-part-grip", record: "AddedPartGrip" };
 
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add grip \"{}\" to part \"{}\"", self.grip.id, self.part_id), &format!("Griff \"{}\" zu Bauteil \"{}\" hinzufügen", self.grip.id, self.part_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.part_id.clone(), self.grip.id.clone()]
+    }
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for AddPartGrip {
+
+
+}
+
+impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for AddPartGrip {
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
@@ -43,11 +60,5 @@ where
     
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add grip \"{}\" to part \"{}\"", self.grip.id, self.part_id), &format!("Griff \"{}\" zu Bauteil \"{}\" hinzufügen", self.grip.id, self.part_id))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.part_id.clone(), self.grip.id.clone()]
-    }
 }
 //#endregion 🔖️Mutation

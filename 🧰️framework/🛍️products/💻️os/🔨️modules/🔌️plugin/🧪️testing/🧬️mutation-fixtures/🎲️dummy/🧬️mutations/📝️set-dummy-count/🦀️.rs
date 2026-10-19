@@ -43,13 +43,22 @@ impl OpBinary for SetDummyCount {
 }
 impl MutationKind<DummySnapshot, DummyMutation> for SetDummyCount {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "dummy-count", kind: "set-dummy-count", record: "SetDummyCount" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set dummy count to {}", self.value), &format!("Platzhalteranzahl auf {} setzen", self.value))
+    }
+}
+
+impl crate::os_spr::ColdMutationKind<DummySnapshot, DummyMutation> for SetDummyCount {
     fn diff(&self, _: &DummySnapshot) -> MutationOutcome<DummyDiff> {
         MutationOutcome::new(DummyDiff { count: Some(self.value) })
     }
     fn inverse(&self, base: &DummySnapshot) -> Result<Vec<DummyMutation>, semio_framework_value::ValueError> {
         Ok((|| vec![Self { value: base.count }.into()])())
     }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set dummy count to {}", self.value), &format!("Platzhalteranzahl auf {} setzen", self.value))
-    }
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️sum-law/🦀️.rs"]
+mod sum_law_tests;

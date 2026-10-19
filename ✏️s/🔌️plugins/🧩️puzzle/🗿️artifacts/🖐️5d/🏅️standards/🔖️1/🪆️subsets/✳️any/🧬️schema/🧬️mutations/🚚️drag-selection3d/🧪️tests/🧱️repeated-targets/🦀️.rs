@@ -32,7 +32,7 @@ fn outcome() -> serde_json::Value {
 
 /// 🗣️ `(level, code, target)` of every message `drag-selection3d` raises on the committed base.
 fn produced_messages() -> Vec<(semio_framework_diagnostic::Severity, String, Vec<String>)> {
-    let produced = <Puzzle5dMutation as protocol::Mutation<Puzzle5dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Puzzle5dMutation as protocol::ColdMutation<Puzzle5dSnapshot>>::diff(&mutation(), &before());
     produced.messages().iter().map(|message| (message.level, message.code.0.clone(), message.target.clone())).collect()
 }
 
@@ -65,7 +65,7 @@ fn refusal_leaves_the_document_at_the_committed_after() {
 #[test]
 fn the_invariant_is_the_declared_refusal() {
     assert!((*DIFF_ABSENT).is_empty(), "drag-selection3d/repeated-targets: the D6 sentinel 🔺️diff/🚫️.absent must stay empty");
-    let produced = <Puzzle5dMutation as protocol::Mutation<Puzzle5dSnapshot>>::diff(&mutation(), &before());
+    let produced = <Puzzle5dMutation as protocol::ColdMutation<Puzzle5dSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &Puzzle5dDiff::default(), "drag-selection3d/repeated-targets: a Fatal outcome carries the default diff");
     let outcome = outcome();
     assert_eq!(outcome["status"].as_str(), Some("rejected"), "drag-selection3d/repeated-targets declares a rejected outcome");
@@ -77,6 +77,6 @@ fn the_invariant_is_the_declared_refusal() {
 /// 🌐️ The refusal does not depend on the scene: the empty scene refuses the same payload the same way.
 #[test]
 fn the_invariant_is_independent_of_the_base() {
-    let produced = <Puzzle5dMutation as protocol::Mutation<Puzzle5dSnapshot>>::diff(&mutation(), &Puzzle5dSnapshot::default());
+    let produced = <Puzzle5dMutation as protocol::ColdMutation<Puzzle5dSnapshot>>::diff(&mutation(), &Puzzle5dSnapshot::default());
     assert_eq!(produced.messages().iter().map(|message| (message.level, message.code.0.as_str())).collect::<Vec<_>>(), vec![(semio_framework_diagnostic::Severity::Fatal, "mutation.invariant")], "drag-selection3d/repeated-targets: an invariant is a property of the payload alone");
 }

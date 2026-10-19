@@ -1,5 +1,5 @@
-//! 🕹️ Fem3d play app — the framework-owned interaction domain: its definition, the selection/hover
 //! snapshot every render reads, the entity-kind and model-point lookups the panels and the camera
+//! 🕹️ Fem3d play app — the framework-owned interaction domain: its definition, the selection/hover
 //! share, the `World3d` selection record the host paints and arms its gumball from, and the
 //! `interactionSelect` request a panel row emits. The viewport itself never hit-tests here: the
 //! `World3dHost` raycasts the scene's instances and dispatches `interactionSelect`/`interactionHover`
@@ -25,6 +25,8 @@ use semio_framework_plugin::ViewModel;
 
 //#region 🔖️Constants
 pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_element_endpoints;
+pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_entity_target;
+pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_load_target;
 pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_node_point;
 pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_solid_centroid;
 pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_solid_top_point;
@@ -63,7 +65,7 @@ pub fn fem3d_interaction_definition() -> InteractionDefinition {
             granularity(FEM3D_GRANULARITY_COMBINATION, "Combination", "Kombination", "link"),
         ],
         hierarchy: HierarchyProvider::Flat,
-        hover: HoverSpec::default(),
+        hover: HoverSpec { enabled: true, transitive: false, channels: vec![FEM3D_POINTER_CHANNEL.into()], broadcast: true },
         selection: SelectionSpec {
             modes: vec![SelectionMode::Multiple, SelectionMode::Single],
             methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle],
@@ -96,10 +98,9 @@ impl Fem3dInteractionSnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️Utility
-/// 🧰️ The utility the addressed window has armed — the flat `active_utility_id` first, then the
-/// per-window map the shell keeps for split layouts; nothing armed means the host's own select lane.
+/// 🧰️ The shared window owner resolves the addressed pane's utility; an unarmed pane uses selection.
 pub fn fem3d_active_utility(view: &ViewModel) -> &str {
-    view.active_utility_id.as_deref().or_else(|| view.window_id.as_ref().and_then(|id| view.active_utility_by_window_id.get(id).map(String::as_str))).unwrap_or("")
+    view.window_utility(None).unwrap_or("")
 }
 
 /// 🧭️ Whether the addressed window has the transform gumball armed.
@@ -111,32 +112,32 @@ pub fn fem3d_transform_armed(view: &ViewModel) -> bool {
 //#region 🔖️Geometry
 /// 🪪️ The granularity one raw document id belongs to, searched in the same precedence the viewport
 /// picks with — the artifact tree and the inspector resolve a selected id through this one lookup.
-pub fn fem3d_entity_kind(doc: &Fem3dSnapshot, id: &str) -> Option<&'static str> {
-    if doc.nodes.iter().any(|node| node.id == id) {
+pub fn fem3d_entity_kind(doc: &Fem3dSnapshot, identity: &str) -> Option<&'static str> {
+    let segments = protocol::wire::decode_scoped_identity(identity).ok()?;
+    if matches!(segments.as_slice(), [FEM3D_GRANULARITY_LOAD, _, _]) { return fem3d_load_owner(doc, identity).map(|_| FEM3D_GRANULARITY_LOAD); }
+    let [kind, id] = segments.as_slice() else { return None };
+    if *kind == FEM3D_GRANULARITY_NODE && doc.nodes.iter().any(|node| node.id == *id) {
         return Some(FEM3D_GRANULARITY_NODE);
     }
-    if doc.elements.iter().any(|element| element_id(element) == id) {
+    if *kind == FEM3D_GRANULARITY_ELEMENT && doc.elements.iter().any(|element| element_id(element) == *id) {
         return Some(FEM3D_GRANULARITY_ELEMENT);
     }
-    if doc.solids.iter().any(|solid| solid.id == id) {
+    if *kind == FEM3D_GRANULARITY_SOLID && doc.solids.iter().any(|solid| solid.id == *id) {
         return Some(FEM3D_GRANULARITY_SOLID);
     }
-    if doc.supports.iter().any(|support| support.id == id) {
+    if *kind == FEM3D_GRANULARITY_SUPPORT && doc.supports.iter().any(|support| support.id == *id) {
         return Some(FEM3D_GRANULARITY_SUPPORT);
     }
-    if fem3d_load_owner(doc, id).is_some() {
-        return Some(FEM3D_GRANULARITY_LOAD);
-    }
-    if doc.materials.iter().any(|material| material.id == id) {
+    if *kind == FEM3D_GRANULARITY_MATERIAL && doc.materials.iter().any(|material| material.id == *id) {
         return Some(FEM3D_GRANULARITY_MATERIAL);
     }
-    if doc.sections.iter().any(|section| section.id == id) {
+    if *kind == FEM3D_GRANULARITY_SECTION && doc.sections.iter().any(|section| section.id == *id) {
         return Some(FEM3D_GRANULARITY_SECTION);
     }
-    if doc.load_cases.iter().any(|case| case.id == id) {
+    if *kind == FEM3D_GRANULARITY_LOAD_CASE && doc.load_cases.iter().any(|case| case.id == *id) {
         return Some(FEM3D_GRANULARITY_LOAD_CASE);
     }
-    if doc.combinations.iter().any(|combination| combination.id == id) {
+    if *kind == FEM3D_GRANULARITY_COMBINATION && doc.combinations.iter().any(|combination| combination.id == *id) {
         return Some(FEM3D_GRANULARITY_COMBINATION);
     }
     None
@@ -144,32 +145,46 @@ pub fn fem3d_entity_kind(doc: &Fem3dSnapshot, id: &str) -> Option<&'static str> 
 
 /// 🏋️ The load case owning one load id, plus the load itself — a load target carries only the raw
 /// load id, so every consumer (inspector patch, focus, highlight) resolves its case through here.
-pub fn fem3d_load_owner<'a>(doc: &'a Fem3dSnapshot, load: &str) -> Option<(&'a str, &'a FemLoad)> {
-    doc.load_cases.iter().find_map(|case| case.loads.iter().find(|candidate| load_id(candidate) == load).map(|found| (case.id.as_str(), found)))
+pub fn fem3d_load_owner<'a>(doc: &'a Fem3dSnapshot, identity: &str) -> Option<(&'a str, &'a FemLoad)> {
+    let segments = protocol::wire::decode_scoped_identity(identity).ok()?;
+    let [FEM3D_GRANULARITY_LOAD, owner, load] = segments.as_slice() else { return None };
+    let case = doc.load_cases.iter().find(|case| case.id == *owner)?;
+    case.loads.iter().find(|candidate| load_id(candidate) == *load).map(|found| (case.id.as_str(), found))
+}
+
+/// 🔎️ Extracts an entity's semantic ID from an admitted canonical interaction address.
+pub fn fem3d_entity_id(identity: &str) -> Option<&str> {
+    let segments = protocol::wire::decode_scoped_identity(identity).ok()?;
+    match segments.as_slice() {
+        [FEM3D_GRANULARITY_NODE | FEM3D_GRANULARITY_ELEMENT | FEM3D_GRANULARITY_SOLID | FEM3D_GRANULARITY_SUPPORT | FEM3D_GRANULARITY_MATERIAL | FEM3D_GRANULARITY_SECTION | FEM3D_GRANULARITY_LOAD_CASE | FEM3D_GRANULARITY_COMBINATION, id] | [FEM3D_GRANULARITY_LOAD, _, id] => Some(*id),
+        _ => None,
+    }
 }
 
 /// 🎯️ The world point one entity is framed on — a node's position, a member's midpoint, a solid's
 /// centroid, the carrying node for a support or a nodal load, the member midpoint for a member
 /// load, the top of the solid for a surface load.
-pub fn fem3d_entity_point(doc: &Fem3dSnapshot, id: &str) -> Option<[f64; 3]> {
-    if let Some(point) = fem3d_node_point(doc, id) {
-        return Some(point);
+pub fn fem3d_entity_point(doc: &Fem3dSnapshot, identity: &str) -> Option<[f64; 3]> {
+    let kind = fem3d_entity_kind(doc, identity)?;
+    let id = fem3d_entity_id(identity)?;
+    if kind == FEM3D_GRANULARITY_NODE {
+        return fem3d_node_point(doc, id);
     }
-    if let Some(element) = doc.elements.iter().find(|element| element_id(element) == id) {
+    if let Some(element) = doc.elements.iter().find(|element| kind == FEM3D_GRANULARITY_ELEMENT && element_id(element) == id) {
         let (start, end) = fem3d_element_endpoints(element);
         let (a, b) = (fem3d_node_point(doc, start)?, fem3d_node_point(doc, end)?);
         return Some([(a[0] + b[0]) * 0.5, (a[1] + b[1]) * 0.5, (a[2] + b[2]) * 0.5]);
     }
-    if let Some(solid) = doc.solids.iter().find(|solid| solid.id == id) {
+    if let Some(solid) = doc.solids.iter().find(|solid| kind == FEM3D_GRANULARITY_SOLID && solid.id == id) {
         return fem3d_solid_centroid(solid);
     }
-    if let Some(support) = doc.supports.iter().find(|support| support.id == id) {
+    if let Some(support) = doc.supports.iter().find(|support| kind == FEM3D_GRANULARITY_SUPPORT && support.id == id) {
         return fem3d_node_point(doc, &support.node_id);
     }
-    if let Some((_, load)) = fem3d_load_owner(doc, id) {
+    if let Some((_, load)) = fem3d_load_owner(doc, identity) {
         return match load {
             FemLoad::Nodal { node_id, .. } => fem3d_node_point(doc, node_id),
-            FemLoad::MemberUdl { element_id: target, .. } => fem3d_entity_point(doc, target),
+            FemLoad::MemberUdl { element_id: target, .. } => fem3d_entity_target(FEM3D_GRANULARITY_ELEMENT, target).ok().and_then(|target| fem3d_entity_point(doc, &target)),
             FemLoad::Area { solid_id, .. } => doc.solids.iter().find(|solid| &solid.id == solid_id).and_then(fem3d_solid_top_point),
         };
     }
@@ -185,8 +200,12 @@ fn targets_json<G: AsRef<str>, I: AsRef<str>>(targets: &[(G, I)]) -> String {
 
 /// 🕹️ Asks the shell to redispatch `interactionSelect` for these targets — selection is
 /// framework-owned state, so an app never writes it, it only reports WHICH ids to select.
-pub fn interaction_select_effect<G: AsRef<str>, I: AsRef<str>>(targets: &[(G, I)], merge: &str, method: &str) -> Effect {
-    Effect::ReplayShellCommand {
+pub fn interaction_select_effect<G: AsRef<str>, I: AsRef<str>>(targets: &[(G, I)], merge: &str, method: &str) -> Result<Effect, semio_framework_plugin::Fault> {
+    for (kind, identity) in targets {
+        let segments = protocol::wire::decode_scoped_identity(identity.as_ref()).map_err(|_| semio_framework_plugin::Fault::from("fem3d.interaction.identity-refused"))?;
+        if segments.first().copied() != Some(kind.as_ref()) || fem3d_entity_id(identity.as_ref()).is_none() { return Err(semio_framework_plugin::Fault::from("fem3d.interaction.identity-refused")); }
+    }
+    Ok(Effect::ReplayShellCommand {
         action_id: semio_framework::INTERACTION_SELECT_ACTION_ID.into(),
         args: Some(semio_framework_value::DslValue::object([
             ("domainId".to_string(), semio_framework_value::DslValue::String(FEM3D_INTERACTION_DOMAIN.to_string())),
@@ -194,7 +213,7 @@ pub fn interaction_select_effect<G: AsRef<str>, I: AsRef<str>>(targets: &[(G, I)
             ("merge".to_string(), semio_framework_value::DslValue::String(merge.to_string())),
             ("method".to_string(), semio_framework_value::DslValue::String(method.to_string())),
         ])),
-    }
+    })
 }
 //#endregion 🔖️Effects
 
@@ -205,4 +224,8 @@ pub mod gumball;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/👥️identity/🦀️.rs"]
+mod scoped_tests;
 //#endregion 🧪️Tests

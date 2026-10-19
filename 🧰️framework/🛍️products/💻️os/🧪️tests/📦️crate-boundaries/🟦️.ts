@@ -4,9 +4,9 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import Ajv from "ajv";
 import TOML from "@iarna/toml";
-import { readRustSourceClosureV1, selectRustSourceV1 } from "@semio-tech/process/artifacts/native-build/source";
-import { rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
-import { readModuleTreeSource, sliceModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { readRustSourceClosureV1, selectRustSourceV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+import { rustTokens } from "../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
+import { readModuleTreeSource, sliceModuleTreeSource } from "../../../../🔨️modules/📚️compiler/📦️packages/🟦️typescript/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const os = resolve(import.meta.dir, "../.."), workspace = resolve(os, "../../.."), read = (path: string) => readFileSync(resolve(os, path), "utf8");
 const cfg = ["target_arch=aarch64", "target_os=macos", "target_env=", "target_pointer_width=64", "unix"];
@@ -22,9 +22,10 @@ for (const row of corpus.crates) test(row.package + " has independent production
   expect(manifest).toEqual(TOML.parse(source) as unknown as Manifest);
   expect(manifest.package.name).toBe(row.package);
   const project = JSON.parse(read(row.manifest.replace("Cargo.toml", "📋️project.json"))) as { name: string };
-  const launches = JSON.parse(readFileSync(resolve(os, "../../..", ".vscode/launch.json"), "utf8")) as { configurations: { command?: string }[] };
-  for (const target of ["build", "check", "test"]) for (const mode of ["prototype", "release"])
-    expect(launches.configurations.some(launch => launch.command === `bun repo run ${project.name}:${target} --configuration=${mode} --parallel=1 -- --lib --offline`)).toBe(true);
+  const owners = JSON.parse(readFileSync(resolve(process.cwd(), "📋️build-owners.json"), "utf8")).owners as { name: string; manifest: string }[];
+  const owner = owners.find(owner => owner.name === project.name);
+  expect(owner, project.name).toBeDefined();
+  expect(resolve(process.cwd(), owner!.manifest)).toBe(resolve(os, row.manifest.replace("Cargo.toml", "📋️project.json")));
   expect(resolve(os, row.manifest, "..", manifest.lib.path)).toBe(resolve(os, row.entry));
   const dependencies = Object.entries(manifest.dependencies).map(([alias, edge]) => edge.package ?? alias);
   for (const forbidden of row.forbiddenDependencies) expect(dependencies).not.toContain(forbidden);

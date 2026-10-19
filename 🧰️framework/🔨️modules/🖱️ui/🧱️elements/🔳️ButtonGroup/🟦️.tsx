@@ -7,7 +7,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { Slot } from "../../🔨️modules/🏷️class-name-composition/🪆️slot/🟦️.tsx";
 import { styleVariants, type StyleVariantProps } from "../../🔨️modules/🧬️style-variants/🟦️.ts";

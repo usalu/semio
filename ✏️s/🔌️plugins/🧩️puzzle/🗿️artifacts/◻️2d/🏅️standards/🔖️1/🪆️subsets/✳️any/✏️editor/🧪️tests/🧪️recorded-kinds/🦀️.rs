@@ -1,5 +1,5 @@
-//! 🧪️ Every board-editing command emits the concrete kinds of its user action — never a board differenced against the
 //! document — and undoing the emitted rows (inverse rows replayed last-to-first) restores the board. Driven through
+//! 🧪️ Every board-editing command emits the concrete kinds of its user action — never a board differenced against the
 //! `puzzle2d_dispatch_emit`, the one pipeline every command runs; whole-document import leaves through the load path.
 
 use crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_NODE;
@@ -134,6 +134,7 @@ use crate::editor::puzzle2d::session::*;
 use crate::editor::puzzle2d::*;
 use crate::editor::puzzle2d::testkit::*;
 use protocol::Mutation;
+use protocol::ColdMutation;
 
 fn board() -> Value {
     json!({
@@ -164,7 +165,7 @@ fn emit_for(snapshot: &Puzzle2dPlaySnapshot, action: &str, args: Value, selected
 }
 
 fn apply(state: &crate::Puzzle2dSnapshot, row: &Puzzle2dMutation) -> crate::Puzzle2dSnapshot {
-    protocol::apply_diff(Mutation::<crate::Puzzle2dSnapshot>::diff(row, state).diff(), state).expect("the row applies")
+    protocol::apply_diff_cold(Mutation::<crate::Puzzle2dSnapshot>::diff(row, state).diff(), state).expect("the row applies")
 }
 
 fn assert_undo_restores(base: &Puzzle2dPlaySnapshot, rows: &[Puzzle2dMutation]) {

@@ -80,7 +80,7 @@ async fn retained_hello_replay_derives_the_server_frontier_without_decoding_the_
 /// envelopes and frontier, acknowledging each frame, plus the largest backing the hello held while a frame was out.
 async fn stream_hello_tail(storage: std::sync::Arc<db_storage::DbBackend>, document: ArtifactId, replica: Option<protocol::RuntimeFrontierSummary>) -> (protocol::RuntimeFrontierSummary, Vec<(Vec<protocol::MutationEnvelope>, protocol::RuntimeFrontierSummary)>, usize, usize) {
     let pool = std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)));
-    let result = DatabaseSyncHelloFuture::try_submit(pool, storage, document, replica, String::from("tail-stream-session"), protocol::ActorId(String::from("tail-stream-origin")), 64 * 1024).unwrap().await.unwrap();
+    let result = DatabaseSyncHelloFuture::try_submit(pool, storage, document, replica, String::from("tail-stream-session"), protocol::ActorId(String::from("tail-stream-origin").into()), 64 * 1024).unwrap().await.unwrap();
     let mut session = result.close_and_take_session().unwrap();
     let welcome = session.take_welcome().unwrap();
     let server = match welcome.frame().unwrap() {
@@ -212,7 +212,7 @@ async fn sample_envelope(id: &str, seq: u64) -> protocol::MutationEnvelope {
     protocol::MutationEnvelope {
         mutation_id: protocol::MutationId(id.to_string()),
         document_id: protocol::ArtifactId("doc-1".to_string()),
-        actor: protocol::ActorId("actor-1".to_string()),
+        actor: protocol::ActorId("actor-1".to_string().into()),
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),

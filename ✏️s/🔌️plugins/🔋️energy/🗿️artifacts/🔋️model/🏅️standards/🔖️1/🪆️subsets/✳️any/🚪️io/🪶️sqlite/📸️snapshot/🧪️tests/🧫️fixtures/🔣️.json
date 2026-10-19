@@ -2,7 +2,10 @@
   "dialect": "s.energy.model@1/*",
   "schema": "energy.custom\u0000🌍",
   "artifactPreview": "ephemeral preview",
-  "linkSlotDeltaKinds": ["detached", "attached"],
+  "linkSlotDeltaKinds": [
+    "detached",
+    "attached"
+  ],
   "capabilityExports": [
     "ENERGY_MODEL_SQLITE_SCHEMA",
     "energyModelToSqliteDatabase",
@@ -468,7 +471,11 @@
         "tilt_deg": 81.5,
         "azimuth_deg": 82.5,
         "module_efficiency": 83.5,
-        "inverter_efficiency": 84.5
+        "inverter_efficiency": 84.5,
+        "temperature_coefficient": -0.004,
+        "faiman_heat_loss_constant_w_m2k": 25.0,
+        "faiman_heat_loss_wind_w_s_m3k": 6.84,
+        "mounting": "OpenRack"
       }
     ],
     "battery_storage": [

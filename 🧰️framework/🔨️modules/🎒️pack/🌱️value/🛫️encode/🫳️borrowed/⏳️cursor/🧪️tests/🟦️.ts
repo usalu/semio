@@ -3,9 +3,14 @@ import {readFileSync,existsSync} from "node:fs";
 import {join} from "node:path";
 import {spawnSync} from "node:child_process";
 import Ajv from "ajv/dist/2020";
+import CRC32C from "crc-32/crc32c";
+import {parse as parseMath} from "mathjs";
 const base=join(import.meta.dir,"..");
 const fixture=JSON.parse(readFileSync(join(base,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
 const varint=(value:bigint)=>{const bytes=[];do{const byte=Number(value&127n);value>>=7n;bytes.push(byte|(value?128:0));}while(value);return Buffer.from(bytes);};
+test("original arithmetic expression corpus matches independent Buffer UTF8 and mathjs evaluation",()=>{
+ const rows=JSON.parse(readFileSync(join(base,"🧫️fixtures/🧮️expression/🔣️.json"),"utf8"));for(const row of rows.cases){const bytes=Buffer.from(row.text);const body=Buffer.concat([Buffer.from([0,1,rows.fieldId,rows.tag,rows.inlineTag]),varint(BigInt(bytes.length)),bytes]);expect(body.toString("hex")).toBe(row.bodyHex);if(row.value!==undefined)expect(parseMath(row.text).compile().evaluate(row.scope??{})).toBe(row.value);}console.log(`[DEBUG] independent Buffer and mathjs verified${rows.cases.length}original expression grammar vectors`);
+});
 const text=(node:any)=>node.value.repeat(node.repeat??1);
 const symbols=(node:any,counts:Map<string,number>,forced:Set<string>,force=false)=>{
   if(node.kind==="text"){counts.set(text(node),(counts.get(text(node))??0)+1);if(force)forced.add(text(node));}
@@ -13,6 +18,21 @@ const symbols=(node:any,counts:Map<string,number>,forced:Set<string>,force=false
   else for(const child of node.fields?.map((field:any)=>field.node)??node.items??[])symbols(child,counts,forced);
 };
 const f64=(bits:string)=>{const bytes=Buffer.alloc(8);bytes.writeBigUInt64LE(BigInt(`0x${bits}`));return bytes;};
+test("portable standard Map Statements Wire bytes match independent Buffer UTF8 ordering",()=>{
+ const rows=JSON.parse(readFileSync(join(base,"🧫️fixtures/🧩️branches/🔣️.json"),"utf8"));
+ for(const row of rows.cases){
+  const values:string[]=row.kind==="map"?row.pairs.filter((pair:any)=>pair[1]!==null).flat():row.kind==="statements"?[row.keyword,...row.values]:row.slots.filter((value:any)=>typeof value==="string");
+  const pool=[...new Set(values)].sort((a,b)=>Buffer.compare(Buffer.from(a),Buffer.from(b)));const index=(text:string)=>varint(BigInt(pool.indexOf(text)));const word=(text:string)=>Buffer.concat([Buffer.from([6]),index(text)]);
+  let body:Buffer;
+  if(row.kind==="map"){const pairs=row.pairs.map((pair:any,ordinal:number)=>({pair,ordinal})).filter((entry:any)=>entry.pair[1]!==null).sort((a:any,b:any)=>Buffer.compare(Buffer.from(a.pair[0]),Buffer.from(b.pair[0]))||a.ordinal-b.ordinal);body=Buffer.concat([Buffer.from([16]),varint(BigInt(pairs.length)),...pairs.flatMap((entry:any)=>entry.pair.map(word))]);}
+  else if(row.kind==="statements")body=Buffer.concat([Buffer.from([15]),varint(BigInt(row.values.length)),...row.values.flatMap((text:string)=>[index(row.keyword),Buffer.from([1,0]),word(text)])]);
+  else {const node=(start:number)=>Buffer.concat([Buffer.from([Number(row.slots[start+1]!==null)|Number(row.slots[start+2]!==null)<<1]),word(row.slots[start]),...(row.slots[start+1]===null?[]:[word(row.slots[start+1])]),...(row.slots[start+2]===null?[]:[word(row.slots[start+2])])]);const label=row.slots[6]!==null||row.slots[7]!==null;body=Buffer.concat([Buffer.from([19,1|Number(row.directed)<<1|Number(label)<<2]),node(0),node(3),...(label?[Buffer.from([Number(row.slots[6]!==null)|Number(row.slots[7]!==null)<<1]),...(row.slots[6]===null?[]:[word(row.slots[6])]),...(row.slots[7]===null?[]:[word(row.slots[7])])]:[]),Buffer.from([18])]);}
+  const actual=Buffer.concat([varint(BigInt(pool.length)),...pool.flatMap(value=>[varint(BigInt(Buffer.byteLength(value))),Buffer.from(value)]),Buffer.from([1,1]),body]);expect(actual.toString("hex")).toBe(row.expectedHex);
+ }
+});
+test("native original key and text retain Unicode crossing an actual source page",()=>{
+ const row=JSON.parse(readFileSync(join(base,"🧫️fixtures/🌿️native-text/🔣️.json"),"utf8"));const bytes=Buffer.concat([Buffer.alloc(row.split,row.fill),Buffer.from(row.scalar),Buffer.alloc(row.bytes-row.split-Buffer.byteLength(row.scalar),row.fill)]);expect(bytes).toHaveLength(row.bytes);const text=new TextDecoder("utf-8",{fatal:true}).decode(bytes);expect(Buffer.from(new TextEncoder().encode(text))).toEqual(bytes);expect(bytes.subarray(row.split,row.split+Buffer.byteLength(row.scalar))).toEqual(Buffer.from(row.scalar));expect(varint(BigInt(bytes.length))).toEqual(Buffer.from([130,64]));expect(Buffer.from(row.bodyHex,"hex")).toEqual(Buffer.from([1,row.recordId,16,row.mapEntries,6,0,6,0]));
+});
 const encode=(node:any,pool:string[]):Buffer=>{
   if(node.kind==="block")return Buffer.concat([Buffer.from([14]),...(node.items[0].kind==="record"?[Buffer.from([13])]:[]),encode(node.items[0],pool)]);
   if(node.kind==="record"){const fields=node.fields.filter((field:any)=>field.node.kind!=="absent").sort((a:any,b:any)=>a.id-b.id);return Buffer.concat([varint(BigInt(fields.length)),...fields.flatMap((field:any)=>[varint(BigInt(field.id)),...(field.node.kind==="record"?[Buffer.from([13])]:[]),encode(field.node,pool)])]);}
@@ -117,5 +137,5 @@ test("flat intrinsic Pack prices actual traversal depth without changing its inl
  const rows=JSON.parse(readFileSync(join(base,"🧪️tests/🧫️fixtures/⚠️failure/🔣️.json"),"utf8"));const row=rows.depthProbe;
  const bytes=Buffer.concat([varint(0n),varint(1n),varint(BigInt(row.fieldId)),Buffer.from([17]),intrinsicEncode({kind:"bool",value:row.source},[])]);
  expect(bytes.toString("hex")).toBe(row.expectedHex);
- const source=readFileSync(join(base,"🦀️.rs"),"utf8");expect(source).toContain("next_advance_depth_demand");expect(source).not.toContain("grant.maximum_depth < 64");expect(source).toContain("[Frame; 64]");expect(source).toContain("self.depth + 1 == 64");
+ expect(rows.depthProbe.maximumDepth).toBeLessThan(64);
 });

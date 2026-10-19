@@ -21,7 +21,7 @@ pub use add_counter_sequence::AddCounterSequence;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl_derive::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
-#[mutations(snapshot = Counter, diff = CounterDiff, schema = "command.test.counter")]
+#[mutations(snapshot = Counter, diff = CounterDiff, schema = "command.test.counter", reference = Counter, reference_diff = CounterDiff)]
 #[expect(clippy::enum_variant_names, reason = "Aggregate variants preserve the exact schema-owned mutation leaf names required by their descriptors.")]
 pub enum CounterMutation {
     AddCounter(AddCounter),

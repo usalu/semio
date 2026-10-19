@@ -44,7 +44,6 @@ pub use semio_framework_replication_crypto::RecordHasher;
 pub use semio_framework_deflate::RetainedInflateCloseStep;
 pub use semio_framework_replication_crypto::SignatureVerifier;
 pub use semio_framework_replication_crypto::Signer;
-pub use semio_framework_mutation_diff::apply_diff;
 pub use semio_framework_io_base64::base64_standard_decode;
 pub use semio_framework_io_base64::base64_standard_decode_controlled;
 pub use semio_framework_io_base64::base64_standard_encode;
@@ -110,6 +109,7 @@ pub mod dictionary {
 }
 
 pub mod format {
+    pub use semio_framework_replication_format::SprWriteError;
     pub use semio_framework_replication_wire_core::Blake3Hasher;
     pub use semio_framework_replication_format::{COMMIT_FRAME_LEN, COMMIT_PAYLOAD_LEN, CommitPayload, FORMAT_VERSION_MAJOR, FORMAT_VERSION_MINOR, FrameCursor, HEADER_SIZE, Header, MAGIC, RecordFrame, RecoveryMode, RecoveryReport, ReverseFrameCursor, SprIdentityRecord, SprWriter, VerificationLevel, WriteOptions, build_header_bytes, parse_commit_payload, parse_header_bytes, read_header, recover, write_commit_payload};
 
@@ -159,7 +159,16 @@ pub mod io {
     }
 }
 
+
+pub use semio_framework_replication_mutation::{ColdMutation, MutationAdmission};
+pub use semio_framework_mutation_diff::{apply_diff_cold,apply_diff_cold_into,PreparedField,ColdMutationDiff,ColdDiffAlgebra,with_retained_apply_capability};
+pub use semio_framework_replication_mutation_messages::{retained, RetainedMutation, RetainedMutationPreparation, RetainedMutationLeaf, RetainedMutationLeafPreparation, RetainedMutationOwner, RetainedMutationCloseContext, RetainedFieldPreparation,    RetainedFieldChange, RetainedRecordChange, RetainedRecordChangeField, RetainedRecordFieldChange, RetainedRecordChangeOwner, boxed_record_field, RetainedByteSpan, RetainedKeyLookup, RetainedKeyMatch, RetainedRowPatch, RetainedRowPatchFields, RetainedPatchSource, RetainedRowPatchApply, RetainedDiagnosticSpec, RetainedDiagnosticTarget, RetainedDiagnosticPreparation, RetainedMutationDecisionStep, RetainedMutationInverseStep, RetainedMutationAdvance, RetainedMutationDecision, RetainedDiff, RetainedDiffFragment, RetainedDiffSequence, RetainedDiffApply, RetainedDiffOwner, RetainedDiffAdmission, RetainedDiffPreflightAdvance, RetainedDiffPreflightStep, retained_diff_birth_demand, begin_retained_diff, preflight_retained_diff, commit_retained_diff, retained_mutation_birth_demand, begin_retained_mutation, decide_retained_mutation, inverse_retained_mutation, retained_mutation_demand_fits, FinalMessageSource,MutationMessageConcat,MutationMessageBorrowedPublication,MutationMessagePublication,MutationMessagePublicationBatch,MutationMessagePublicationJoin};
+
 pub mod mutation {
+    pub use semio_framework_replication_mutation::{ColdMutation, MutationAdmission};
+    pub use semio_framework_mutation_diff::{apply_diff_cold,apply_diff_cold_into,PreparedField,ColdMutationDiff,ColdDiffAlgebra,with_retained_apply_capability};
+    pub use semio_framework_replication_mutation_messages::{retained, RetainedMutation, RetainedMutationPreparation, RetainedMutationLeaf, RetainedMutationLeafPreparation, RetainedMutationOwner, RetainedMutationCloseContext, RetainedFieldPreparation,    RetainedFieldChange, RetainedRecordChange, RetainedRecordChangeField, RetainedRecordFieldChange, RetainedRecordChangeOwner, boxed_record_field, RetainedByteSpan, RetainedKeyLookup, RetainedKeyMatch, RetainedRowPatch, RetainedRowPatchFields, RetainedPatchSource, RetainedRowPatchApply, RetainedDiagnosticSpec, RetainedDiagnosticTarget, RetainedDiagnosticPreparation, RetainedMutationDecisionStep, RetainedMutationInverseStep, RetainedMutationAdvance, RetainedMutationDecision, RetainedDiff, RetainedDiffFragment, RetainedDiffSequence, RetainedDiffApply, RetainedDiffOwner, RetainedDiffAdmission, RetainedDiffPreflightAdvance, RetainedDiffPreflightStep, retained_diff_birth_demand, begin_retained_diff, preflight_retained_diff, commit_retained_diff, retained_mutation_birth_demand, begin_retained_mutation, decide_retained_mutation, inverse_retained_mutation, retained_mutation_demand_fits, FinalMessageSource,MutationMessageConcat,MutationMessageBorrowedPublication,MutationMessagePublication,MutationMessagePublicationBatch,MutationMessagePublicationJoin};
+
     pub use semio_framework_replication_mutation::{APPLY_OUTCOME_CODE_PREFIX, ForeignStep, ForeignStepCopy, ForeignStepRetirement, ForeignStepSource, ForeignStepsOwner, ForeignStepsPreparation, ForeignTarget, MUTATION_MESSAGE_ENTRY_BYTES, MUTATION_MESSAGE_OWNER_BYTES, MUTATION_MESSAGE_TARGET_BYTES, MapDelta, MapDeltaTarget, MapEntryDelta, MapEntryOperation, MapPresence, Mutation, MutationComposition, MutationDiffParticipation, MutationDomainOperation, MutationInvertibility, MutationLanguageSurface, MutationLeaf, MutationLeafDescriptor, MutationLeafDescriptorRosterValidationError, MutationLeafDescriptorValidationError, MutationLeafSourceScope, MutationLeafSourceValidationError, MutationMessage, MutationOutcome, MutationOutcomeClass, MutationOwnerLayout, MutationSourceProvenance, OUTCOME_CODES, OutcomeCode, ValidatedMutationLeafSourceScope, apply_operation, outcome_code_level, validate_mutation_leaf_descriptor, validate_mutation_leaf_descriptor_roster, validate_mutation_leaf_descriptor_roster_uniqueness, validate_mutation_leaf_source, worst_level};
     pub use semio_framework_replication_edit::{ArtifactCanonicalEditAuthority, ArtifactCanonicalEditAuthorityCursor, ArtifactCanonicalEditIdentityCursor, Edit, MutationMeta, MutationOrigin, TransactionRef};
     pub use semio_framework_replication_mutation_messages::{ArtifactMessageComposeCursor, ArtifactMessageComposeRefusal, ArtifactMessageFragment, ArtifactMessageSource, ArtifactReplayPrepared, ArtifactReplayRetirementFactory, EditMessageLedgerRetirement, FinalMessageSelection, MessageCopyCursor, MutationMessageLedgerRetirement, MutationMessageRetirement, OperationMessageDrain, ReplayMessageAccumulator, ReplayRetirement, registered_replay_retirement_factory};
@@ -168,7 +177,6 @@ pub mod mutation {
     pub use semio_framework_mutation_diff::MutationApplyError;
     pub use semio_framework_mutation_diff::MutationApplyResult;
     pub use semio_framework_mutation_diff::MutationDiff;
-    pub use semio_framework_mutation_diff::apply_diff;
 
     pub mod map {
         pub use semio_framework_replication_mutation::{MapDelta, MapDeltaTarget, MapEntryDelta, MapEntryOperation, MapPresence};
@@ -192,6 +200,8 @@ pub mod scalar {
 }
 
 pub mod wire {
+    pub use semio_framework_replication_wire_core::scoped_identity;
+    pub use scoped_identity::*;
     pub use semio_framework_replication_frames::{ARTIFACT_BOOTSTRAP_CHUNK_BYTES, ARTIFACT_BOOTSTRAP_FORMAT_VERSION, ARTIFACT_BOOTSTRAP_MAX_CHUNKS, ARTIFACT_BOOTSTRAP_MAX_TOTAL_BYTES, AckStage, ApplyOutcome, ArtifactBootstrap, ArtifactBootstrapAssembler, ArtifactBootstrapChunkBytes, ArtifactBootstrapControl, ArtifactBootstrapLimits, ArtifactBootstrapPair, ArtifactBootstrapProgress, Bootstrap, ClientFrame, Lane, REBOOTSTRAP_SCOPE_MAX_BYTES, RebootstrapRequired, SNAPSHOT_CHUNK_BACKING_BYTES, ServerFrame, SnapshotChunkBytes, artifact_bootstrap_aggregate_hash, decode_client_frame, decode_server_frame, encode_client_frame, encode_server_frame};
     pub use semio_framework_replication_ids::{ActorId, ArtifactId, ArtifactVersion, HybridLogicalTimestamp, LOCAL_ACTOR_ID, MutationId, PayloadHash, SchemaId, SchemaVersion};
     pub use semio_framework_replication_presence::{BorrowedPresenceDomain, BorrowedPresenceInteraction, BorrowedPresenceMetadata, BorrowedPresenceStrings, PRESENCE_PEER_WIRE_LIMITS_V1, PRESENCE_TYPING_EXCERPT_BYTES, PresenceDomain, PresenceHistoryEdit, PresenceHistoryEditStage, PresenceInteraction, PresencePeer, PresencePeerWireLimitsV1, PresencePrincipalKind, PresenceToolRun, PresenceToolRunState, PresenceTyping, PresenceUi, PresenceViewKind, PresenceWindowView, assemble_presence_interaction, borrow_presence_metadata, decode_presence_history_edit, decode_presence_interaction, decode_presence_peer, decode_presence_tool_run, encode_presence_history_edit, encode_presence_interaction, encode_presence_peer, encode_presence_tool_run};
@@ -219,3 +229,8 @@ pub mod wire {
 #[cfg(test)]
 #[path = "../../🧪️tests/🔬️facade/🦀️.rs"]
 mod facade_tests;
+
+pub use semio_framework_replication_mutation_messages::retained_row_patch;
+
+pub use semio_framework_replication_wire_core::scoped_identity::*;
+pub use semio_framework_replication_format::SprWriteError;

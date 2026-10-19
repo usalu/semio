@@ -7,6 +7,8 @@ impl RecordFields{
     pub fn from_empty_slots(entries:Vec<(u16,FieldValue)>)->Self{assert!(entries.is_empty());Self{entries}}
     /// 🔎️ Returns the number of committed fields.
     pub fn len(&self)->usize{self.entries.len()}
+    /// 🪪️ Borrows one actual ordinal and payload directly from its original rank.
+    pub fn get_index(&self,index:usize)->Option<(&u16,&FieldValue)>{self.entries.get(index).map(field_ref)}
     /// 🕳️ Reports whether any fields have been committed.
     pub fn is_empty(&self)->bool{self.entries.is_empty()}
     /// 📏️ Reports actual allocated slot capacity.

@@ -7,10 +7,10 @@ use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::invariant;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::resolve_combination_terms;
 
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &CreateCombination, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {
+pub fn diff(payload: &CreateCombination, base: &Fem3dSnapshotValue) -> protocol::MutationOutcome<Fem3dDiff> {
     if base.combinations.iter().any(|combination| combination.id == payload.combination.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A combination with id \"{}\" already exists.", payload.combination.id), [payload.combination.id.clone()]);
     }

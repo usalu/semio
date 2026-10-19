@@ -6,8 +6,8 @@
   "sections": null,
   "supports": null,
   "loadCases": {
-    "inserted": [],
     "removed": [],
+    "inserted": [],
     "moved": [],
     "modified": [
       {
@@ -16,6 +16,7 @@
           "name": null,
           "selfWeight": null,
           "loads": {
+            "removed": [],
             "inserted": [
               {
                 "index": 2,
@@ -28,7 +29,6 @@
                 }
               }
             ],
-            "removed": [],
             "moved": [],
             "modified": []
           }

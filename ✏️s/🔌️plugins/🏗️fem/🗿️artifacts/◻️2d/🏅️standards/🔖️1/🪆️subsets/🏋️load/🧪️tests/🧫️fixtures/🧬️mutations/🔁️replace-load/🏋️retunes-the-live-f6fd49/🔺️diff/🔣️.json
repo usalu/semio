@@ -6,8 +6,8 @@
   "sections": null,
   "supports": null,
   "loadCases": {
-    "inserted": [],
     "removed": [],
+    "inserted": [],
     "moved": [],
     "modified": [
       {
@@ -16,15 +16,14 @@
           "name": null,
           "selfWeight": null,
           "loads": {
-            "inserted": [],
             "removed": [],
+            "inserted": [],
             "moved": [],
             "modified": [
               {
                 "id": "l6",
                 "patch": {
                   "kind": "nodal",
-                  "id": "l6",
                   "nodeId": "p8_l1",
                   "dof": "Ty",
                   "value": -18000.0

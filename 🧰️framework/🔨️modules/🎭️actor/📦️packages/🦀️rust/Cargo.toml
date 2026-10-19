@@ -42,6 +42,8 @@ semio-framework-value-derive = { path = "../../../🌱️value/✨️derive/📦
 semio-framework-async = { workspace = true }
 wasm-bindgen = "0.2.106"
 
+semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
+
 [dev-dependencies]
 semio-framework-async = { workspace = true }
 semio-framework-job = { workspace = true, features = ["testkit"] }

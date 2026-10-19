@@ -1,8 +1,10 @@
-//! 👁️ Puzzle 5D viewer — the `view` mode: the read-only counterpart of the editor's paired-window
 //! `edit` mode, and paired the same way — a `◻️2d` board pane beside a `🧊️3d` world pane, so a
+//! 👁️ Puzzle 5D viewer — the `view` mode: the read-only counterpart of the editor's paired-window
 //! read-only 5d document shows BOTH projections instead of the world one alone.
 
-use crate::viewer::puzzle5d::modes::view::windows::{board2d, world3d};
+use crate::viewer::puzzle5d::modes::view::windows::board2d;
+
+use crate::viewer::puzzle5d::modes::view::windows::world3d;
 use semio_framework_plugin::create_default_layout;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;

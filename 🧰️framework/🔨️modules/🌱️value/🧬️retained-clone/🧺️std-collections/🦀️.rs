@@ -13,7 +13,10 @@ pub trait RetainedCloneEntries: RetainedClone {
     fn entry_at(&self, index: usize) -> Option<(&Self::Key, &Self::Value)>;
     fn empty() -> Self;
     fn insert_entry(&mut self, key: Self::Key, value: Self::Value) -> Result<(), (Self::Key, Self::Value)>;
+    const HAS_IMPLICIT_VALUE:bool=false;
     fn implicit_value() -> Option<Self::Value> { None }
+    /// 🪙️ Quotes the original collection backing and pair movement before an entry is inserted.
+    fn insertion_demands(_building: Option<&Self>, _key: &Self::Key) -> crate::RetirementDemand { crate::RetirementDemand { copy_bytes: size_of::<(Self::Key, Self::Value)>(), depth: 1, ..Default::default() } }
 }
 
 impl<K: RetainedClone + Hash + Eq, V: RetainedClone> RetainedCloneEntries for HashMap<K, V> {
@@ -53,6 +56,7 @@ impl<T: RetainedClone + Hash + Eq> RetainedCloneEntries for HashSet<T> {
         self.insert(key);
         Ok(())
     }
+    const HAS_IMPLICIT_VALUE:bool=true;
     fn implicit_value() -> Option<()> { Some(()) }
 }
 
@@ -67,6 +71,7 @@ impl<T: RetainedClone + Ord> RetainedCloneEntries for BTreeSet<T> {
         self.insert(key);
         Ok(())
     }
+    const HAS_IMPLICIT_VALUE:bool=true;
     fn implicit_value() -> Option<()> { Some(()) }
 }
 
@@ -113,32 +118,47 @@ const VALUE_CLOSE: u8 = 5;
 const INSERT: u8 = 6;
 const DONE: u8 = 7;
 
+impl<M:RetainedCloneEntries> RetainedCloneEntriesCursor<M>{
+    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{
+        if !self.closing{return Ok(Default::default());}
+        if !self.key_cursor.terminal_is_empty(){return super::nested_retained_clone_close_demands::<M::Key>(&self.key_cursor,body);}
+        if !self.value_cursor.terminal_is_empty(){return super::nested_retained_clone_close_demands::<M::Value>(&self.value_cursor,body);}
+        if self.key.is_some(){return self.close.next_owner_demands::<M::Key>(true,&self.source,body);}
+        if self.value.is_some(){return self.close.next_owner_demands::<M::Value>(true,&self.source,body);}
+        self.close.next_owner_demands::<M>(self.building.is_some()||self.output.is_some(),&self.source,body)
+    }
+}
 impl<M: RetainedCloneEntries> RetainedCloneCursor<M> for RetainedCloneEntriesCursor<M> {
     fn output_ready(&self)->bool{self.output.is_some()}
     fn advance_demands(&self, source: RetainedCloneRef<'_, M>, body: usize) -> Result<crate::RetirementDemand, crate::ValueError> {
         if self.closing || self.spent { return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "standard collection clone cannot quote a closing or spent owner")); }
-        if self.output.is_some() { return Ok(Default::default()); }
-        if self.source.is_none() { return Ok(crate::RetirementDemand { copy_bytes: source.binding_copy_bytes(), depth: 1, ..Default::default() }); }
+        if !source.check_binding(&self.source)? { return Ok(crate::RetirementDemand { copy_bytes: source.binding_copy_bytes(), depth: 1, ..Default::default() }); }
+        if self.output_ready() { return Ok(Default::default()); }
         let index = self.index;
         let mut demand = crate::RetirementDemand { depth: 1, ..Default::default() };
         match self.phase {
             SELECT => { if index == source.get().entry_count() { demand.copy_bytes = size_of::<M>(); } }
-            KEY => return self.key_cursor.advance_demands(source.project(index * 2 + 1, |map| map.entry_at(index).expect("validated standard collection entry").0), body),
-            KEY_CLOSE if !self.key_cursor.terminal_is_empty() => return Ok(crate::RetirementDemand { copy_bytes: self.key_cursor.next_close_copy_byte_demand()?, capacity_bytes: self.key_cursor.next_close_capacity_byte_demand(body)?, release_bytes: self.key_cursor.next_close_release_byte_demand()?, depth: self.key_cursor.next_close_depth_demand()?.max(1) }),
-            VALUE => return self.value_cursor.advance_demands(source.project(index * 2 + 2, |map| map.entry_at(index).expect("validated standard collection entry").1), body),
-            VALUE_CLOSE if !self.value_cursor.terminal_is_empty() => return Ok(crate::RetirementDemand { copy_bytes: self.value_cursor.next_close_copy_byte_demand()?, capacity_bytes: self.value_cursor.next_close_capacity_byte_demand(body)?, release_bytes: self.value_cursor.next_close_release_byte_demand()?, depth: self.value_cursor.next_close_depth_demand()?.max(1) }),
-            INSERT => demand.copy_bytes = size_of::<(M::Key, M::Value)>(),
-            KEY_CLOSE | VALUE_CLOSE | DONE => {}
+            KEY if self.key_cursor.output_ready() => demand.copy_bytes = size_of::<M::Key>(),
+            KEY => return super::nested_retained_clone_demands::<M::Key>(&self.key_cursor,source.project(index * 2 + 1, |map| map.entry_at(index).expect("validated standard collection entry").0),body),
+            KEY_CLOSE if !self.key_cursor.terminal_is_empty() => return super::nested_retained_clone_close_demands::<M::Key>(&self.key_cursor,body),
+            VALUE if self.value_cursor.output_ready() => demand.copy_bytes = size_of::<M::Value>(),
+            VALUE => return super::nested_retained_clone_demands::<M::Value>(&self.value_cursor,source.project(index * 2 + 2, |map| map.entry_at(index).expect("validated standard collection entry").1),body),
+            VALUE_CLOSE if !self.value_cursor.terminal_is_empty() => return super::nested_retained_clone_close_demands::<M::Value>(&self.value_cursor,body),
+            INSERT => return Ok(M::insertion_demands(self.building.as_ref(), self.key.as_ref().ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "collection insertion key missing"))?)),
+            KEY_CLOSE => demand.copy_bytes=size_of::<<M::Key as RetainedClone>::Cursor>().checked_add(if M::HAS_IMPLICIT_VALUE{size_of::<M::Value>()}else{0}).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::WorkLimit,"standard collection cursor reset extent overflow"))?,
+            VALUE_CLOSE => demand.copy_bytes=size_of::<<M::Value as RetainedClone>::Cursor>(),
+            DONE => {}
             _ => return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "standard collection clone quote state is invalid")),
         }
         Ok(demand)
     }
 
-    fn advance(&mut self, source: RetainedCloneRef<'_, M>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+    fn advance(&mut self, source: RetainedCloneRef<'_, M>, body: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained standard collection clone cursor is closing")); }
         if self.spent { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained standard collection clone cursor is spent")); }
-        if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if self.output.is_some() { return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())); }
+        let demand=self.advance_demands(source,body)?;
+        if self.output_ready() { return Ok(RetainedCloneStep::Complete(Default::default())); }
+        if !super::retained_clone_grant_admits(grant,demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if let Some(progress) = source.bind(&mut self.source, grant)? { return Ok(RetainedCloneStep::Progress(progress)); }
         let index = self.index;
         match self.phase {
@@ -155,19 +175,20 @@ impl<M: RetainedCloneEntries> RetainedCloneCursor<M> for RetainedCloneEntriesCur
                 self.phase = KEY;
                 Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
             }
-            KEY => match self.key_cursor.advance(source.project(index * 2 + 1, |map| map.entry_at(index).expect("validated standard collection entry").0), grant)? {
-                RetainedCloneStep::Progress(progress) => Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(grant, progress, "retained standard collection key")?)),
-                RetainedCloneStep::Complete(progress) => {
-                    let progress = admit_retained_clone_progress(grant, progress, "retained standard collection key")?;
-                    self.key = Some(self.key_cursor.take().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained standard collection key completed without an owner"))?);
-                    let _ = self.key_cursor.begin_close();
-                    self.phase = KEY_CLOSE;
-                    Ok(RetainedCloneStep::Progress(progress))
+            KEY => {
+                if self.key_cursor.output_ready() {
+                    self.key=Some(self.key_cursor.take().ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"standard collection ready key omitted owner"))?);
+                    self.key_cursor.begin_close();
+                    self.phase=KEY_CLOSE;
+                    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));
                 }
-            },
+                let nested=super::nested_retained_clone_grant(grant)?;
+                let step=self.key_cursor.advance(source.project(index*2+1,|map|map.entry_at(index).expect("validated standard collection entry").0),body,nested)?;
+                Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,step.progress(),"standard collection key")?))
+            }
             KEY_CLOSE => {
                 if !self.key_cursor.terminal_is_empty() {
-                    let step = self.key_cursor.close_step(grant)?;
+                    let step = self.key_cursor.close_step(super::nested_retained_clone_grant(grant)?)?;
                     return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, self.key_cursor.terminal_is_empty(), "retained standard collection key scaffold close")?.progress()));
                 }
                 self.key_cursor = <M::Key as RetainedClone>::retained_clone_cursor();
@@ -177,30 +198,32 @@ impl<M: RetainedCloneEntries> RetainedCloneCursor<M> for RetainedCloneEntriesCur
                 } else {
                     self.phase = VALUE;
                 }
-                Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+                Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes:demand.copy_bytes, ..Default::default() }))
             }
-            VALUE => match self.value_cursor.advance(source.project(index * 2 + 2, |map| map.entry_at(index).expect("validated standard collection entry").1), grant)? {
-                RetainedCloneStep::Progress(progress) => Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(grant, progress, "retained standard collection value")?)),
-                RetainedCloneStep::Complete(progress) => {
-                    let progress = admit_retained_clone_progress(grant, progress, "retained standard collection value")?;
-                    self.value = Some(self.value_cursor.take().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained standard collection value completed without an owner"))?);
-                    let _ = self.value_cursor.begin_close();
-                    self.phase = VALUE_CLOSE;
-                    Ok(RetainedCloneStep::Progress(progress))
+            VALUE => {
+                if self.value_cursor.output_ready() {
+                    self.value=Some(self.value_cursor.take().ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"standard collection ready value omitted owner"))?);
+                    self.value_cursor.begin_close();
+                    self.phase=VALUE_CLOSE;
+                    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));
                 }
-            },
+                let nested=super::nested_retained_clone_grant(grant)?;
+                let step=self.value_cursor.advance(source.project(index*2+2,|map|map.entry_at(index).expect("validated standard collection entry").1),body,nested)?;
+                Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,step.progress(),"standard collection value")?))
+            }
             VALUE_CLOSE => {
                 if !self.value_cursor.terminal_is_empty() {
-                    let step = self.value_cursor.close_step(grant)?;
+                    let step = self.value_cursor.close_step(super::nested_retained_clone_grant(grant)?)?;
                     return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, self.value_cursor.terminal_is_empty(), "retained standard collection value scaffold close")?.progress()));
                 }
                 self.value_cursor = <M::Value as RetainedClone>::retained_clone_cursor();
                 self.phase = INSERT;
-                Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+                Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes:demand.copy_bytes, ..Default::default() }))
             }
             INSERT => {
-                let bytes = size_of::<(M::Key, M::Value)>();
-                if grant.maximum_copy_bytes < bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
+                let demand = M::insertion_demands(self.building.as_ref(), self.key.as_ref().ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "collection insertion key missing"))?);
+                let bytes = demand.copy_bytes;
+                if grant.maximum_copy_bytes < bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(RetainedCloneStep::Progress(Default::default())); }
                 let key = self.key.take().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained standard collection key owner is missing"))?;
                 let value = match self.value.take() {
                     Some(value) => value,
@@ -210,7 +233,7 @@ impl<M: RetainedCloneEntries> RetainedCloneCursor<M> for RetainedCloneEntriesCur
                     Ok(()) => {
                         self.index += 1;
                         self.phase = SELECT;
-                        Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() }))
+                        Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, retained_capacity_bytes: demand.capacity_bytes, released_bytes: demand.release_bytes }))
                     }
                     Err((key, value)) => {
                         self.key = Some(key);
@@ -239,14 +262,15 @@ impl<M: RetainedCloneEntries> RetainedCloneCursor<M> for RetainedCloneEntriesCur
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "standard collection must begin close before granted retirement")); }
+        if !super::retained_clone_grant_admits(grant,super::retained_clone_close_demands::<M>(self,grant.maximum_copy_bytes)?) {return Ok(RetainedCloneStep::Progress(Default::default()));}
         if !self.key_cursor.terminal_is_empty() {
             if self.key_cursor.begin_close() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
-            let step = self.key_cursor.close_step(grant)?;
+            let step = self.key_cursor.close_step(super::nested_retained_clone_grant(grant)?)?;
             return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, self.key_cursor.terminal_is_empty(), "retained standard collection key close")?.progress()));
         }
         if !self.value_cursor.terminal_is_empty() {
             if self.value_cursor.begin_close() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
-            let step = self.value_cursor.close_step(grant)?;
+            let step = self.value_cursor.close_step(super::nested_retained_clone_grant(grant)?)?;
             return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, self.value_cursor.terminal_is_empty(), "retained standard collection value close")?.progress()));
         }
         if !self.close.is_empty() { return self.close.step_granted(grant); }
@@ -257,35 +281,10 @@ impl<M: RetainedCloneEntries> RetainedCloneCursor<M> for RetainedCloneEntriesCur
         close_retained_binding(&mut self.source, grant)
     }
 
-    fn next_close_depth_demand(&self) -> Result<usize, crate::ValueError> {
-        if !self.closing { return Ok(0); }
-        if !self.key_cursor.terminal_is_empty() { return self.key_cursor.next_close_depth_demand(); }
-        if !self.value_cursor.terminal_is_empty() { return self.value_cursor.next_close_depth_demand(); }
-        self.close.next_owner_depth_with_binding(self.key.is_some() || self.value.is_some() || self.building.is_some() || self.output.is_some(), &self.source)
-    }
-    fn next_close_copy_byte_demand(&self) -> Result<usize, crate::ValueError> {
-        if !self.closing { return Ok(0); }
-        if !self.key_cursor.terminal_is_empty() { return self.key_cursor.next_close_copy_byte_demand(); }
-        if !self.value_cursor.terminal_is_empty() { return self.value_cursor.next_close_copy_byte_demand(); }
-        self.close.next_copy_with_binding(&self.source)
-    }
-    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, crate::ValueError> {
-        if !self.closing { return Ok(0); }
-        if !self.key_cursor.terminal_is_empty() { return self.key_cursor.next_close_capacity_byte_demand(body); }
-        if !self.value_cursor.terminal_is_empty() { return self.value_cursor.next_close_capacity_byte_demand(body); }
-        if !self.close.is_empty() { return self.close.next_capacity_byte_demand(body); }
-        if self.key.is_some() { return self.close.next_owner_capacity_with_binding::<M::Key>(true, body, &self.source); }
-        if self.value.is_some() { return self.close.next_owner_capacity_with_binding::<M::Value>(true, body, &self.source); }
-        if self.building.is_some() { return self.close.next_owner_capacity_with_binding::<M>(true, body, &self.source); }
-        self.close.next_owner_capacity_with_binding::<M>(self.output.is_some(), body, &self.source)
-    }
-    fn next_close_release_byte_demand(&self) -> Result<usize, crate::ValueError> {
-        if !self.closing { return Ok(0); }
-        if !self.key_cursor.terminal_is_empty() { return self.key_cursor.next_close_release_byte_demand(); }
-        if !self.value_cursor.terminal_is_empty() { return self.value_cursor.next_close_release_byte_demand(); }
-        self.close.next_release_with_binding(&self.source)
-    }
-
+    fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.depth)}
+    fn next_close_copy_byte_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.release_bytes)}
     fn terminal_is_empty(&self) -> bool {
         self.closing
             && self.key.is_none()

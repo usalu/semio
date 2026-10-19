@@ -1,0 +1,110 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "cancelCuts",
+    "expected",
+    "nestedBodyQuotes"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "schema",
+          "count",
+          "octet",
+          "optionalPayload"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "schema": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "octet": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "optionalPayload": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "cancelCuts": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourcePreserved",
+        "wholeRecordClones",
+        "unfundedHeapBirths"
+      ],
+      "properties": {
+        "sourcePreserved": {
+          "const": true
+        },
+        "wholeRecordClones": {
+          "const": 0
+        },
+        "unfundedHeapBirths": {
+          "const": 0
+        }
+      }
+    },
+    "nestedBodyQuotes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "body",
+          "headers",
+          "payload",
+          "spent"
+        ],
+        "properties": {
+          "body": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "headers": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "payload": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "spent": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

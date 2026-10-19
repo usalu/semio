@@ -5,7 +5,6 @@ import { beginClose, fault, requestFault } from "../🧯️close-and-fault/🟦�
 import type { BrowserFrameUiMessage, BrowserFrameWorkerMessage } from "../../🚚️browser-frame-transport/📋️contract/🟦️.ts";
 import { cancelPageImageDecode } from "../🖼️page-image-decode/🟦️.ts";
 import { scheduleAssetPump } from "../📦️assets-and-host-io/🟦️.ts";
-import type { RendererAssetDecodeStep } from "../🧬️bindings-types/🟦️.ts";
 import type { BrowserMediaCommand } from "../../../../🎬️media/🌐️browser/🟦️.ts";
 
 export function runFrameTurn(): boolean {
@@ -74,13 +73,14 @@ function publishWorld3dAcceptedFrameDiagnostic(generation: number): void {
 export function runAssetDecodeTurn(): boolean {
   if (!runtime || closed || closing || failed || quarantined) return false;
   try {
-    const result = ownedStep("asset-decode-step", () => JSON.parse(runtime!.assetDecodeStep()) as RendererAssetDecodeStep);
+    const result = ownedStep("asset-decode-step", () => originalFrameSource!.assetDecode());
+    if (result === undefined) return true;
     if (!(["pending", "published", "cancelled", "idle", "fault"] as const).includes(result.kind) || typeof result.pending !== "boolean") {
       throw new Error("asset-decode-protocol: invalid step result");
     }
     if (result.kind === "published") post({ kind: "wake", lifecycle });
     if (result.kind === "fault") {
-      fault("asset-decode-fault", result.detail ?? "renderer asset decode faulted without detail");
+      fault("asset-decode-fault", "renderer asset decode rejected its retained response");
       return false;
     }
     return result.pending;

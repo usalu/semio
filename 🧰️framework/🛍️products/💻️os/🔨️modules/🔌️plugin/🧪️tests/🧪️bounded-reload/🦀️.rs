@@ -32,13 +32,20 @@ struct PhysicalInitializerAuthority {
 }
 
 impl ArtifactStoreInitializationAuthority<TestSnapshot, TestMutation> for PhysicalInitializerAuthority {
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, ValueError> { semio_framework_job::JobOutcomeBorrow::admit_yield(cx) }
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure> { semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from) }
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, ValueError> { semio_framework_plugin_testing_laws::artifact_app_laws::fixture_job_outcome(descriptor) }
     fn request_cancel(&mut self) {}
     fn take_candidate(&mut self) -> Option<store::ArtifactStore<TestSnapshot, TestMutation>> { None }
     fn retirement_demands(&self,_body:usize)->Result<RetirementDemand,ValueError>{Ok(self.buffer.as_ref().map_or(Default::default(),|buffer|RetirementDemand{copy_bytes:std::mem::size_of_val(&self.buffer),release_bytes:buffer.capacity(),depth:1,..Default::default()}))}
     fn begin_close(&mut self) {}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let empty=Default::default();let Some(buffer)=self.buffer.as_ref()else{return Ok(RetainedCloneStep::Complete(empty))};let copied_bytes=std::mem::size_of_val(&self.buffer);let released_bytes=buffer.capacity();if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_release_bytes<released_bytes||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(empty));}drop(self.buffer.take());Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes,released_bytes,..empty}))}
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,semio_framework_job::OriginalTurnFailure> {
+        self.begin_close();
+        if self.terminal_is_empty(){return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))}
+        let demand=self.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{let empty=Default::default();let Some(buffer)=self.buffer.as_ref()else{return Ok(RetainedCloneStep::Complete(empty))};let copied_bytes=std::mem::size_of_val(&self.buffer);let released_bytes=buffer.capacity();if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_release_bytes<released_bytes||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(empty));}drop(self.buffer.take());Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes,released_bytes,..empty}))
+        })?;
+        Ok(if self.terminal_is_empty(){semio_framework_value::retained_clone::RetainedCloneStep::Complete(step.progress())}else{semio_framework_value::retained_clone::RetainedCloneStep::Progress(step.progress())})
+    }
     fn terminal_is_empty(&self) -> bool { self.buffer.is_none() }
 }
 
@@ -53,6 +60,7 @@ fn initializer_job_retains_terminal_authority_until_its_physical_box_is_funded()
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json")).unwrap();
     let admission = fixture["admissionBytes"].as_u64().unwrap() as usize;
     for row in fixture["cases"].as_array().unwrap() {
+        let mut original=crate::app_testing::OriginalWorkFixture::new();
         let extent = row["physicalBytes"].as_u64().unwrap() as usize;
         let mut buffer = Vec::new(); buffer.try_reserve_exact(extent).unwrap();
         assert_eq!(buffer.capacity(), extent);
@@ -60,17 +68,17 @@ fn initializer_job_retains_terminal_authority_until_its_physical_box_is_funded()
         job.begin_close();
         let demand = job.next_close_release_byte_demand().unwrap();
         let original_grant=|release|RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:release,maximum_depth:4096};
-        let first = semio_framework_job::close_with_self_funded_context(original_grant(row["callerBytes"].as_u64().unwrap()as usize), |cx| job.close_step(cx)).expect("original fixture close turn");
-        if row["releasedBytes"].as_u64().unwrap() == 0 { semio_framework_job::close_with_self_funded_context(original_grant(admission), |cx| job.close_step(cx)).expect("original fixture close turn"); }
+        let first = original.turn(original_grant(row["callerBytes"].as_u64().unwrap()as usize), |cx| job.close_step(cx)).expect("original fixture close turn");
+        if row["releasedBytes"].as_u64().unwrap() == 0 { original.turn(original_grant(admission), |cx| job.close_step(cx)).expect("original fixture close turn"); }
         assert!(job.accept_terminal_failure());
         assert!(job.authority.is_some());
         assert!(!job.terminal_is_empty());
         let box_bytes = std::mem::size_of::<PhysicalInitializerAuthority>();
         let terminal_demand = job.next_close_release_byte_demand().unwrap();
-        let denied = semio_framework_job::close_with_self_funded_context(original_grant(box_bytes-1), |cx| job.close_step(cx)).expect("original fixture close turn");
+        let denied = original.turn(original_grant(box_bytes-1), |cx| job.close_step(cx)).expect("original fixture close turn");
         let retained = job.authority.is_some();
-        let released = semio_framework_job::close_with_self_funded_context(original_grant(box_bytes), |cx| job.close_step(cx)).expect("original fixture close turn");
-        for _ in 0..8 { if job.terminal_is_empty() { break; } semio_framework_job::close_with_self_funded_context(original_grant(admission), |cx| job.close_step(cx)).expect("original fixture close turn"); }
+        let released = original.turn(original_grant(box_bytes), |cx| job.close_step(cx)).expect("original fixture close turn");
+        for _ in 0..8 { if job.terminal_is_empty() { break; } original.turn(original_grant(admission), |cx| job.close_step(cx)).expect("original fixture close turn"); }
         assert!(job.terminal_is_empty());
         assert_eq!(demand, extent);
         assert_eq!(first, InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:usize::from(row["releasedBytes"].as_u64().unwrap()!=0),copied_bytes:if row["releasedBytes"].as_u64().unwrap()!=0{std::mem::size_of::<Option<Vec<u8>>>()}else{0},released_bytes:row["releasedBytes"].as_u64().unwrap()as usize,..Default::default()}});
@@ -78,6 +86,8 @@ fn initializer_job_retains_terminal_authority_until_its_physical_box_is_funded()
         assert_eq!(denied, InteractiveJobCloseStep::Pending{progress:Default::default()});
         assert!(retained);
         assert_eq!(released, InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<Box<dyn ArtifactStoreInitializationAuthority<TestSnapshot,TestMutation>>>>(),released_bytes:box_bytes,..Default::default()}});
+        original.finish();
+        eprintln!("[DEBUG] initializer job physical backing={extent} erased-authority-box={box_bytes} retained-denied-owner=true");
     }
 }
 
@@ -137,14 +147,9 @@ impl store::Mutation<TestSnapshot> for ReloadCountedOp {
         store::Mutation::<TestSnapshot>::descriptor(&self.0)
     }
 
-    fn diff(&self, base: &TestSnapshot) -> ::protocol::MutationOutcome<Self::Diff> {
-        RELOAD_FOLDS.with(|folds| folds.set(folds.get() + 1));
-        store::Mutation::<TestSnapshot>::diff(&self.0, base)
-    }
 
-    fn inverse(&self, base: &TestSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-        Ok({ store::Mutation::<TestSnapshot>::inverse(&self.0, base)?.into_iter().map(Self).collect() })
-    }
+
+
 
     fn conflict_target(&self) -> Vec<String> {
         store::Mutation::<TestSnapshot>::conflict_target(&self.0)
@@ -152,6 +157,17 @@ impl store::Mutation<TestSnapshot> for ReloadCountedOp {
 
     fn may_emit_foreign_steps(&self) -> bool {
         store::Mutation::<TestSnapshot>::may_emit_foreign_steps(&self.0)
+    }
+}
+
+impl store::ColdMutation<TestSnapshot> for ReloadCountedOp {
+    type ReferenceDiff = <TestMutation as store::ColdMutation<TestSnapshot>>::ReferenceDiff;
+    fn diff(&self, base: &TestSnapshot) -> ::protocol::MutationOutcome<Self::ReferenceDiff> {
+        RELOAD_FOLDS.with(|folds| folds.set(folds.get() + 1));
+        store::ColdMutation::<TestSnapshot>::diff(&self.0, base)
+    }
+    fn inverse(&self, base: &TestSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+        Ok({ store::ColdMutation::<TestSnapshot>::inverse(&self.0, base)?.into_iter().map(Self).collect() })
     }
 }
 
@@ -189,18 +205,18 @@ async fn a_long_history_reloads_one_operation_per_initializer_step() {
     store::install_unscheduled_catalog(&mut whole, store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<TestSnapshot, ReloadCountedOp>()).expect("whole owners");
     let (operation, generation) = (semio_framework_job::OperationId(97), semio_framework_job::Generation(0));
     let mut job = bounded_document_store_initialization_job::<_,_,::semio_framework_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, RELOAD_DOCUMENT_SCHEMA, operation, generation, source.local_actor_id().clone());
-    let mut sequence = 0u64;
+    let mut original_caller=crate::app_testing::OriginalWorkFixture::with_identity(operation,generation);
     let mut steps = 0usize;
     let mut folded = 0;
     loop {
         let before = RELOAD_FOLDS.with(std::cell::Cell::get);
-        let mut ownership=RetainedCloneProgress::default();
-        let mut cx=semio_framework_job::StepContext::new(operation,generation,semio_framework_job::StepBudget::new(1,u64::MAX,original),semio_framework_job::CancelToken::root_now(),semio_framework_job::default_now_us,&mut sequence,&mut ownership);
-        let finished = match semio_framework_job::InteractiveJob::step(&mut job, &mut cx) {
-            Ok(None) | Ok(Some(semio_framework_job::JobOutcomeBorrow::Yield { .. })) => false,
-            Ok(Some(semio_framework_job::JobOutcomeBorrow::Complete { .. })) => true,
-            _ => panic!("the reload stopped at initializer step {steps}"),
-        };
+        let finished=original_caller.work_turn(original,1,|cx|{
+            Ok(match semio_framework_job::InteractiveJob::step(&mut job,cx)?{
+                None|Some(semio_framework_job::JobOutcomeBorrow::Yield{..})=>false,
+                Some(semio_framework_job::JobOutcomeBorrow::Complete{..})=>true,
+                _=>panic!("the reload stopped at initializer step {steps}"),
+            })
+        }).expect("same original bounded reload turn");
         assert!(RELOAD_FOLDS.with(std::cell::Cell::get) - before <= 1, "initializer step {steps} folded more than one operation");
         let progress = job.progress();
         assert!(progress.1 <= 1 || progress.1 == 240, "initializer phases total one unit or the applied operations: {progress:?} at step {steps}");
@@ -223,13 +239,13 @@ async fn a_long_history_reloads_one_operation_per_initializer_step() {
     let authority_bytes=std::mem::size_of_val(job.authority.as_ref().unwrap().as_ref());
     let handoff_demand=semio_framework_job::InteractiveJob::next_close_release_byte_demand(&job).unwrap();
     assert!(job.authority.is_some());
-    assert_eq!(semio_framework_job::close_with_self_funded_context(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:authority_bytes-1,maximum_depth:4096}, |cx| semio_framework_job::InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn"), semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()});
+    assert_eq!(original_caller.turn(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:authority_bytes-1,maximum_depth:4096}, |cx| semio_framework_job::InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn"), semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()});
     for _ in 0..65_536 {
         if job.terminal_is_empty() {
             break;
         }
         let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:admission,maximum_depth:4096};
-        let step=semio_framework_job::close_with_self_funded_context(grant, |cx| semio_framework_job::InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn");
+        let step=original_caller.turn(grant, |cx| semio_framework_job::InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn");
         assert!(step.progress().fits(grant));
         if let semio_framework_job::InteractiveJobCloseStep::Pending{progress}=step{assert!(progress.copied_items<=1&&progress.released_bytes<=admission);}
     }
@@ -242,6 +258,7 @@ async fn a_long_history_reloads_one_operation_per_initializer_step() {
     assert_eq!(reloaded.mutation_outcomes().expect("reloaded outcomes"), source.mutation_outcomes().expect("source outcomes"));
     assert_eq!(reloaded.content_revision_now(), whole.content_revision_now(), "the retained reload names the revision a whole load names");
     drop(job);
+    original_caller.finish();
     close_reload_counted_store(&mut reloaded);
     close_reload_counted_store(&mut whole);
     close_reload_counted_store(&mut source);

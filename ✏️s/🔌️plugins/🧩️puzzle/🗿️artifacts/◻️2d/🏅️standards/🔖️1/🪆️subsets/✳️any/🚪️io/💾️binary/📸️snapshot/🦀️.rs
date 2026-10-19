@@ -1,5 +1,5 @@
-//! 🎒️ Puzzle 2d artifact — the binary document surface and its laws: `encode`/`decode` over the
 //! typed `Puzzle2dSnapshot`, agreeing byte-for-byte with what `🗣️dsl` prints and parses.
+//! 🎒️ Puzzle 2d artifact — the binary document surface and its laws: `encode`/`decode` over the
 
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).

@@ -19,6 +19,17 @@ pub struct SetWarningN {
 //#region ⚙️Behavior
 impl semio_framework_os_spr::MutationKind<DemoSnapshot, SeverityMutation> for SetWarningN {
     const SEMANTICS: semio_framework_os_spr::SemanticDescriptor = semio_framework_os_spr::SemanticDescriptor { verb: "set", entity: "warning-n", kind: "set-warning-n", record: "SetWarningN" };
+
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Warning N", "Warnung N setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["n".into()]
+    }
+}
+
+impl semio_framework_os_spr::ColdMutationKind<DemoSnapshot, SeverityMutation> for SetWarningN {
     fn diff(&self, _base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<DemoDiff> {
         semio_framework_os_spr::MutationOutcome::new(DemoDiff::value(Some(self.n))).warning("mutation.clamped", "n was clamped to a safe range")
     }
@@ -28,11 +39,5 @@ impl semio_framework_os_spr::MutationKind<DemoSnapshot, SeverityMutation> for Se
     
     })())
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Warning N", "Warnung N setzen")
-    }
-    fn target(&self) -> Vec<String> {
-        vec!["n".into()]
-    }
 }
 //#endregion ⚙️Behavior

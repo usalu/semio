@@ -1,0 +1,361 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "startup",
+    "hostIo",
+    "compilerTask"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "startup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fuel",
+        "maximumElapsedMicroseconds",
+        "grant",
+        "retirementReserve"
+      ],
+      "properties": {
+        "fuel": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maximumElapsedMicroseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "grant": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumItems",
+            "maximumCopyBytes",
+            "maximumCapacityBytes",
+            "maximumReleaseBytes",
+            "maximumDepth"
+          ],
+          "properties": {
+            "maximumItems": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maximumCopyBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maximumCapacityBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maximumReleaseBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maximumDepth": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "retirementReserve": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "fuel",
+            "grant"
+          ],
+          "properties": {
+            "fuel": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "grant": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "maximumItems",
+                "maximumCopyBytes",
+                "maximumCapacityBytes",
+                "maximumReleaseBytes",
+                "maximumDepth"
+              ],
+              "properties": {
+                "maximumItems": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "maximumCopyBytes": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "maximumCapacityBytes": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "maximumReleaseBytes": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "maximumDepth": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "hostIo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fuel",
+        "maximumElapsedMicroseconds",
+        "grant",
+        "retirementReserve"
+      ],
+      "properties": {
+        "fuel": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maximumElapsedMicroseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "grant": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumItems",
+            "maximumCopyBytes",
+            "maximumCapacityBytes",
+            "maximumReleaseBytes",
+            "maximumDepth"
+          ],
+          "properties": {
+            "maximumItems": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maximumCopyBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maximumCapacityBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maximumReleaseBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maximumDepth": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "retirementReserve": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "fuel",
+            "grant"
+          ],
+          "properties": {
+            "fuel": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "grant": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "maximumItems",
+                "maximumCopyBytes",
+                "maximumCapacityBytes",
+                "maximumReleaseBytes",
+                "maximumDepth"
+              ],
+              "properties": {
+                "maximumItems": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "maximumCopyBytes": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "maximumCapacityBytes": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "maximumReleaseBytes": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "maximumDepth": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "compilerTask": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fuel",
+        "maximumElapsedMicroseconds",
+        "grant",
+        "retirementReserve"
+      ],
+      "properties": {
+        "fuel": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maximumElapsedMicroseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "grant": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumItems",
+            "maximumCopyBytes",
+            "maximumCapacityBytes",
+            "maximumReleaseBytes",
+            "maximumDepth"
+          ],
+          "properties": {
+            "maximumItems": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maximumCopyBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maximumCapacityBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maximumReleaseBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maximumDepth": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "retirementReserve": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "fuel",
+            "grant"
+          ],
+          "properties": {
+            "fuel": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "grant": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "maximumItems",
+                "maximumCopyBytes",
+                "maximumCapacityBytes",
+                "maximumReleaseBytes",
+                "maximumDepth"
+              ],
+              "properties": {
+                "maximumItems": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "maximumCopyBytes": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "maximumCapacityBytes": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "maximumReleaseBytes": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "maximumDepth": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$id": "urn:semio:native-launch-declaration:v1"
+}

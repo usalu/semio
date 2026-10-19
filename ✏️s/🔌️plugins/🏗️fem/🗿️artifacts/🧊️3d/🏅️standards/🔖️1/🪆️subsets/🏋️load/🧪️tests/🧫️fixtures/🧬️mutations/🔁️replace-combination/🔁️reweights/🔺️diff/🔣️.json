@@ -7,18 +7,31 @@
   "supports": null,
   "loadCases": null,
   "combinations": {
-    "inserted": [],
     "removed": [],
+    "inserted": [],
     "moved": [],
     "modified": [
       {
         "id": "sls",
         "patch": {
-          "id": "sls",
           "name": "SLS characteristic",
           "terms": {
-            "dead": 1.1,
-            "wind": 0.55
+            "entries": {
+              "dead": {
+                "precondition": "any",
+                "operation": {
+                  "kind": "set",
+                  "value": 1.1
+                }
+              },
+              "wind": {
+                "precondition": "any",
+                "operation": {
+                  "kind": "set",
+                  "value": 0.55
+                }
+              }
+            }
           }
         }
       }

@@ -16,7 +16,8 @@ const pool = (tokens: number) => createJobserverV1({ version: 1, tokens, style: 
 function gnuMake(): string | null {
   for (const candidate of ["gmake", "make"]) {
     const version = /GNU Make (\d+)\.(\d+)/u.exec(spawnSync(candidate, ["--version"], { encoding: "utf8" }).stdout ?? "");
-    if (version && (Number(version[1]) > fixture.gnuMake.minimumVersion[0]! || Number(version[1]) === fixture.gnuMake.minimumVersion[0] && Number(version[2]) >= fixture.gnuMake.minimumVersion[1]!)) return candidate;
+    const capability = spawnSync(candidate, ["-s", "-j2", "--jobserver-style=fifo", "--eval=flags:;@echo supported", "flags"], { encoding: "utf8" });
+    if (capability.status === 0 && version && (Number(version[1]) > fixture.gnuMake.minimumVersion[0]! || Number(version[1]) === fixture.gnuMake.minimumVersion[0] && Number(version[2]) >= fixture.gnuMake.minimumVersion[1]!)) return candidate;
   }
   return null;
 }
@@ -37,7 +38,7 @@ test("MAKEFLAGS and --jobserver-auth follow the vectors and Cargo's precedence",
 test("the pool grants exactly its tokens first come first served, and a cancelled waiter leaves no token behind", async () => {
   const jobserver = await pool(fixture.pool.tokens);
   try {
-    expect(jobserverAuthFromEnvironmentV1(jobserver.environment())).toBe(`fifo:${jobserver.endpoint}`);
+    expect(jobserverAuthFromEnvironmentV1(jobserver.environment())).toBe(`${process.platform === "win32" ? "" : "fifo:"}${jobserver.endpoint}`);
     const held = await Promise.all(Array.from({ length: fixture.pool.tokens }, () => jobserver.acquire()));
     expect(held.filter((slot) => slot.implicit)).toHaveLength(1);
     expect(jobserver.held()).toBe(fixture.pool.tokens);
@@ -120,7 +121,8 @@ test("whole-pool reservations wait atomically, serialize successors, and return 
 
 const make = gnuMake();
 test.skipIf(make === null)(`GNU make ≥ ${fixture.gnuMake.minimumVersion.join(".")} --jobserver-style=fifo: its MAKEFLAGS parse here, and as a client of this pool it never exceeds the tokens`, async () => {
-  const directory = mkdtempSync(join(artifacts, "m-")), log = join(directory, "spans.log"), probe = `node -e "const fs=require('fs');fs.appendFileSync('${log}',Date.now()+' start\\n');setTimeout(()=>fs.appendFileSync('${log}',Date.now()+' end\\n'),${fixture.gnuMake.recipeMs})"`;
+  const directory = mkdtempSync(join(artifacts, "m-")), log = join(directory, "spans.log"), driver = join(directory, "📜️script.ts"), probe = `"${process.execPath}" "${driver}" "${log}" ${fixture.gnuMake.recipeMs}`;
+  writeFileSync(driver, `import { appendFileSync } from "node:fs"; appendFileSync(process.argv[2], Date.now() + " start\\n"); setTimeout(() => appendFileSync(process.argv[2], Date.now() + " end\\n"), Number(process.argv[3]));`);
   writeFileSync(join(directory, "Makefile"), `all: ${Array.from({ length: fixture.gnuMake.recipes }, (_, index) => `t${index}`).join(" ")}\nflags:\n\t+@node -e "console.log(process.env.MAKEFLAGS)"\nt%:\n\t@${probe}\n`);
   const served = spawnSync(make!, ["-s", "-j3", "--jobserver-style=fifo", "flags"], { cwd: directory, encoding: "utf8" });
   expect(jobserverAuthFromEnvironmentV1({ MAKEFLAGS: served.stdout.trim() })).toMatch(/^fifo:/u);

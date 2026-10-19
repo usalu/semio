@@ -1,4 +1,4 @@
-import { type LayeredLifecycle, panesOverBudget, nextWarmBoot, warmDelay, scheduleIdle, panesToRelease } from "../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
+import { type LayeredLifecycle, type LayeredRevealSource, panesOverBudget, nextWarmBoot, warmDelay, scheduleIdle, panesToRelease } from "../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
 import * as React from "react";
 import { type IconName, Icon } from "../../🔣️Icons/🟦️.tsx";
 import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
@@ -155,7 +155,7 @@ interface LayeredPaneViewProps {
 
 /** 🥞️ One pane: its live page, else its poster, else its placeholder (the last two only within the window). Inert and hidden from assistive
  * technology unless opened; opened, it is a labelled, focusable region. Pointer or key input inside marks it dirty. */
-export const LayeredPaneView = React.memo(function LayeredPaneView(props: LayeredPaneViewProps): React.ReactElement {
+export const LayeredPaneView = /* @__PURE__ */ React.memo(function LayeredPaneView(props: LayeredPaneViewProps): React.ReactElement {
   const { pane, opened, revealed, onContainer, onDirty } = props;
   const dirty = React.useCallback(() => onDirty(pane.id), [onDirty, pane.id]);
   const ref = React.useCallback((element: HTMLDivElement | null) => onContainer(pane.id, element), [onContainer, pane.id]);
@@ -189,13 +189,16 @@ export const LayeredPaneView = React.memo(function LayeredPaneView(props: Layere
 });
 
 /** 🃏️ The `display: contents` host of one card: pointer enter (mouse) or keyboard focus reveals its page, pointer leave or focus leaving the card
- * conceals it; the card itself is the app's. Memoized, so a reveal re-renders only the two cards whose state changed. */
-export const LayeredCardHost = React.memo(function LayeredCardHost(props: {
+ * conceals it; the card itself is the app's. Memoized, so a reveal re-renders only the two cards whose state changed. A pointer hover conceals
+ * the other hosts without rendering them again, and marks each one `data-concealed`: the slot and the hit target stay,
+ * and a survey of the page treats the host as unseen, so a pet that stood on that card falls. The hovered card is marked `data-tinted` and wears the veil's wash. */
+export const LayeredCardHost = /* @__PURE__ */ React.memo(function LayeredCardHost(props: {
   readonly pane: LayeredPane;
   readonly mode: LayeredMode;
   readonly revealed: boolean;
-  readonly onOpen: (id: string) => void;
-  readonly onReveal: (id: string) => void;
+    readonly source: LayeredRevealSource | null;
+readonly onOpen: (id: string) => void;
+  readonly onReveal: (id: string, source: LayeredRevealSource) => void;
   readonly onConceal: (id: string) => void;
   readonly onElement: (id: string, element: HTMLElement | null) => void;
   readonly renderCard: LayeredOverviewProps["renderCard"];
@@ -208,10 +211,11 @@ export const LayeredCardHost = React.memo(function LayeredCardHost(props: {
       ref={ref}
       data-layered-card={pane.id}
       data-revealed={props.revealed ? "" : undefined}
-      className="contents"
-      onPointerEnter={(event) => event.pointerType === "mouse" && onReveal(pane.id)}
+            data-reveal={props.source ?? undefined}
+className="contents"
+      onPointerEnter={(event) => event.pointerType === "mouse" && onReveal(pane.id, "pointer")}
       onPointerLeave={(event) => event.pointerType === "mouse" && onConceal(pane.id)}
-      onFocus={(event) => focusVisible(event.target) && onReveal(pane.id)}
+      onFocus={(event) => focusVisible(event.target) && onReveal(pane.id, "focus")}
       onBlur={(event) => !event.currentTarget.contains(event.relatedTarget as Node | null) && onConceal(pane.id)}
     >
       {props.renderCard(pane, { mode: props.mode, revealed: props.revealed, opened: false, open })}

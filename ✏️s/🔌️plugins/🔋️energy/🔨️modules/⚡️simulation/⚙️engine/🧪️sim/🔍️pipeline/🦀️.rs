@@ -176,7 +176,7 @@ impl EnergyJobAuthority {
                     4 => self.model.mechanical_ventilations.get(work.cursor).map(|value| value.zone_id),
                     5 => self.model.daylight_zones.get(work.cursor).map(|value| value.zone_id),
                     _ => {
-                        work.stage = ValidationStage::Complete;
+                        advance_validation(work, ValidationStage::CheckPvThermal);
                         None
                     }
                 };
@@ -189,6 +189,12 @@ impl EnergyJobAuthority {
                     work.zone_reference_family += 1;
                     work.cursor = 0;
                 }
+            }
+            ValidationStage::CheckPvThermal => {
+                if let Some(pv) = self.model.pv_systems.get(work.cursor) {
+                    if !pv.thermal_parameters_valid() { work.fatal_code = 15; }
+                    work.cursor += 1;
+                } else { advance_validation(work, ValidationStage::Complete); }
             }
             ValidationStage::Complete => return true,
         }

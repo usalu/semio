@@ -1,8 +1,9 @@
-use crate::{solve_linear_static, Model};
+use crate::solve_linear_static;
+use crate::Model;
 use semio_s_fem_algebra::*;
-use semio_s_fem_formulation::*;
-use semio_s_fem_model::*;
-use semio_s_fem_elements3d::*;
+use semio_s_fem_algebra::*;
+use semio_s_fem_algebra::*;
+use semio_s_fem_algebra::*;
 
 const E: f64 = 1000.0;
 const NU: f64 = 0.25;

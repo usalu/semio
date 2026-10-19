@@ -1,0 +1,16 @@
+[workspace]
+exclude = [
+
+]
+resolver="2"
+members = [
+    "framework/kernel",
+    "specific/artifact",
+]
+[workspace.metadata.semio.repository]
+schema-version=1
+exclude-patterns=[]
+owner-manifests=["*/Cargo.toml"]
+member-manifests=["*/*/Cargo.toml"]
+[workspace.package]
+edition="2021"

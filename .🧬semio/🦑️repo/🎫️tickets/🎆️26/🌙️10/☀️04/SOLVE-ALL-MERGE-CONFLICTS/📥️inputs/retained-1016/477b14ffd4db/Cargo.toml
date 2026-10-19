@@ -1,0 +1,9 @@
+[package]
+name="product-app"
+version="0.1.0"
+edition.workspace=true
+[lib]
+path="🦀️.rs"
+[dependencies]
+model-a={path="../../../specific/models/a"}
+neutral-kernel={path="../../../framework/kernel"}

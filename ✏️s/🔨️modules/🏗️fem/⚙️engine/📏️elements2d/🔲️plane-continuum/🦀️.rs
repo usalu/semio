@@ -118,6 +118,14 @@ pub struct Tri3Cst {
 }
 
 impl Tri3Cst {
+    /// 🌧️ Integrates one CST area-pressure and consistent translational gravity row.
+    pub fn mounted_load_row(&self, positions: &[[f64; 3]], row: usize, pressure: f64, gravity: [f64; 2]) -> Option<f64> {
+        if row >= 6 || positions.len() != 3 { return None; }
+        let determinant = (positions[1][0] - positions[0][0]) * (positions[2][1] - positions[0][1]) - (positions[2][0] - positions[0][0]) * (positions[1][1] - positions[0][1]);
+        if !determinant.is_finite() || determinant.abs() <= f64::EPSILON { return None; }
+        Some((self.density * self.thickness * gravity[row % 2] - if row % 2 == 1 { pressure } else { 0.0 }) * determinant.abs() / 6.0)
+    }
+
     fn rule(&self) -> Vec<(f64, f64, f64)> {
         gauss_tri(1)
     }

@@ -62,3 +62,7 @@ impl OriginalShardDispatch {
         self.decision.take()
     }
 }
+
+#[cfg(test)]
+#[path="🧪️tests/🦀️.rs"]
+mod tests;

@@ -1,6 +1,12 @@
 /** 📊️ The settings of one capacity run and its measurements: the options, defaults, limits and budgets, and the latency recorder with its generator lag probe. */
 import { availableParallelism } from "node:os";
-import { DEFAULT_LIMITS } from "../../../../../🧰️framework/🛍️products/❓️quiz/🟦️.ts";
+import { appendFileSync } from "node:fs";
+import { DEFAULT_LIMITS } from "../../../../../🧰️framework/🛍️products/📚️course/🟦️.ts";
+
+/** 🏋️ Records a capacity phase transition in the selected run's diagnostic file. */
+export function capacityProgress(file: string | undefined, stage: string): void {
+  if (file) appendFileSync(file, `${JSON.stringify({ at: new Date().toISOString(), stage })}\n`);
+}
 
 //#region 🎚️Settings
 /** 🎚️ What one capacity run plays. */

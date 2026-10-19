@@ -1,12 +1,12 @@
-//! 🤖️ The puzzle 5d editor's own tool-command job (`puzzle.5d.tool-command.v1`) on the agent lane: what the semio MCP gateway's
 //! `action_prepare` previews for the verbs its coverage battery reaches on a puzzle 5d document.
+//! 🤖️ The puzzle 5d editor's own tool-command job (`puzzle.5d.tool-command.v1`) on the agent lane: what the semio MCP gateway's
 
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::EditorApp;
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::entities::puzzle5d_grip_full_id;
 #[allow(unused_imports)]
-use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 #[allow(unused_imports)]
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 #[allow(unused_imports)]
@@ -182,7 +182,11 @@ use crate::editor::puzzle5d::dispatch::puzzle5d_handle_action;
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::modes::edit::windows::world3d::utilities::transform::puzzle5d_inspector_nudge;
 use crate::editor::puzzle5d::*;
-use semio_framework_plugin::artifact_app_laws::{declared_verb_agent_divergences, declared_verb_probe, declared_verb_wrote_document, probe_agent_lane, DeclaredVerbOutcome};
+use semio_framework_plugin::artifact_app_laws::declared_verb_agent_divergences;
+use semio_framework_plugin::artifact_app_laws::declared_verb_probe;
+use semio_framework_plugin::artifact_app_laws::declared_verb_wrote_document;
+use semio_framework_plugin::artifact_app_laws::probe_agent_lane;
+use semio_framework_plugin::artifact_app_laws::DeclaredVerbOutcome;
 
 /// 🤖️ The verbs the semio MCP coverage battery (`plugin-coverage-check`) tries on a fresh puzzle 5d document, in its order —
 /// every one was refused `interactive-job.preview-unsupported` before the agent lane ran the editor's own job.
@@ -199,7 +203,7 @@ const AGENT_LANE_DIVERGENCES: &[&str] = &["translateSelection", "rotateSelection
 /// transaction, never settles without it.
 #[semio_framework_async_macros::async_test]
 async fn the_agent_lane_runs_the_puzzle5d_editors_own_tool_command_job() {
-    let probes = semio_framework_plugin::with_authoring_identity!(|identity| probe_agent_lane::<semio_framework_plugin::EditorApp<Puzzle5dPlayApp>, <Puzzle5dPlayApp as semio_framework_plugin::ArtifactEditor>::Members>(create_puzzle5d_app, None, BATTERY_VERBS, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut identity).await);
+    let probes = semio_framework_plugin::with_authoring_identity!(|identity| probe_agent_lane::<semio_framework_plugin::EditorApp<Puzzle5dPlayApp>, <Puzzle5dPlayApp as semio_framework_plugin::ArtifactEditor>::Members>(create_puzzle5d_app, None, BATTERY_VERBS, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut identity).await);
     let outcomes = probes.iter().map(|probe| format!("{}: shell {:?} / agent {:?}", probe.verb, probe.windows.iter().map(|window| &window.staged).collect::<Vec<_>>(), probe.agent)).collect::<Vec<_>>();
     for probe in &probes {
         assert!(!matches!(&probe.agent, Some(DeclaredVerbOutcome::Unreachable { code, .. }) if code != "interactive-job.agent-lane-uncarried"), "{} is refused before its job ran: {outcomes:#?}", probe.verb);

@@ -214,6 +214,7 @@ impl FillRunCounter {
 
 /// 🏷️ Reason code of a fill run trace record or step; `id` spells the planner's own refusal string.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum FillRunReason {
     Fits,
     SolidOverlap,
@@ -361,7 +362,7 @@ pub enum Puzzle3dEngineCommand {
     #[dsl(key = "set-scene")]
     SetScene { scene: SceneConfig },
     #[dsl(key = "update-kind-weights")]
-    UpdateKindWeights { object_weights: std::collections::BTreeMap<String, f64>, vortex_weights: std::collections::BTreeMap<String, f64> },
+    UpdateKindWeights { object_weights: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, f64>, vortex_weights: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, f64> },
     #[dsl(key = "brush-preview")]
     BrushPreview { vortex_full_id: String, candidate_index: u32 },
 }

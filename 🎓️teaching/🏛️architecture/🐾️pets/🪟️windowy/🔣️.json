@@ -4,13 +4,15 @@
   "name": { "en": "Windowy, the window", "de": "Windowy, das Fenster" },
   "thing": { "en": "window", "de": "Fenster" },
   "grounds": [
+    "ventilation/ventilation-statements",
+    "ventilation/ventilation-profiles",
     "heating/u-values/single-glazing",
     "heating/u-values/aluminium-window-1970s",
     "heating/u-values/box-type-window",
     "heating/u-values/window-geg",
     "heating/u-values/window-passive-house",
     "heating/u-values/triple-glazing",
-    "cooling/air-change-rates/classroom",
+    "ventilation/air-change-rates/classroom",
     "cooling/cooling-load-and-demand/attic-flat",
     "cooling/cooling-load-and-demand/office-1970s",
     "demand/standard-profiles/plus-energy-house"

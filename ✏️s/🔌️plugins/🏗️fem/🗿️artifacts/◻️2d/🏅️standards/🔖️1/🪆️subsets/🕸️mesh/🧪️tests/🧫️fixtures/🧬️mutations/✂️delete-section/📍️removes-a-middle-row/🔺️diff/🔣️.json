@@ -4,13 +4,13 @@
   "regions": null,
   "materials": null,
   "sections": {
-    "inserted": [],
     "removed": [
       {
         "id": "ipe200_spare",
         "index": 5
       }
     ],
+    "inserted": [],
     "moved": [],
     "modified": []
   },

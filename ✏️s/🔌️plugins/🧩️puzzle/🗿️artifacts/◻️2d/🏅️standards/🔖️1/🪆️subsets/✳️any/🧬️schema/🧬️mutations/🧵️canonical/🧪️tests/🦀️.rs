@@ -1,8 +1,9 @@
 //! 🧪️ Every actual family payload preserves original projections and independently encoded Serde bytes.
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use semio_framework_pack_json::{ArtifactCanonicalJsonTree,ArtifactCanonicalJsonTreeCursor};
+use semio_framework_pack_json::ArtifactCanonicalJsonTree;
+use semio_framework_pack_json::ArtifactCanonicalJsonTreeCursor;
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_value::{RetirementDemand,retained_clone::{RetainedCloneSource,RetainedCloneGrant}};
+use semio_framework_value::{RetirementDemand,retained_clone::{RetainedCloneBirthDemand,RetainedCloneSource,RetainedCloneGrant}};
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
 static CASES: std::sync::LazyLock<[&str;36]> = std::sync::LazyLock::new(||[
     fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⚓change-node-anchor/⚓️derives/🦠️mutation/🔣️.json"),
@@ -42,6 +43,12 @@ static CASES: std::sync::LazyLock<[&str;36]> = std::sync::LazyLock::new(||[
     fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/⏸️keeps/🦠️mutation/🔣️.json"),
     fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪦delete-target-region/🪦️removes-middle-region/🦠️mutation/🔣️.json"),
 ]);
+fn birth_grant(demand:RetainedCloneBirthDemand)->RetainedCloneGrant{
+ RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:RetainedCloneSource::<Puzzle2dMutation>::constructor_copy_bytes(),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:0,maximum_depth:demand.depth}
+}
+fn birth_grant(demand:RetainedCloneBirthDemand)->RetainedCloneGrant{
+ RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:RetainedCloneSource::<Puzzle2dMutation>::constructor_copy_bytes(),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:0,maximum_depth:demand.depth}
+}
 fn grant(demand:RetirementDemand)->RetainedCloneGrant{
  assert!(demand.copy_bytes+demand.capacity_bytes<=4096);
  RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}
@@ -53,7 +60,7 @@ fn puzzle_canonical_native_all_mutation_fields_preserve_serde_originals_and_gran
   let raw:serde_json::Value=serde_json::from_str(input).unwrap();assert_eq!(raw["mutation"],fixture["cases"][ordinal]["tag"]);assert!(covered.insert(raw["mutation"].as_str().unwrap().to_owned()));
   for pause in [Some(0),Some(1),Some(3),Some(17),Some(129),None]{
    let mutation:Puzzle2dMutation=serde_json::from_str(input).unwrap();let oracle=serde_json::to_vec(&mutation).unwrap();
-   let birth=RetainedCloneSource::<Puzzle2dMutation>::owned_constructor_demand::<()>();let full=grant(birth);
+   let birth=RetainedCloneSource::<Puzzle2dMutation>::owned_constructor_demand::<()>();let full=birth_grant(birth);
    let((mut source,receipt),heap)=observe_heap_allocations_on_this_thread(||RetainedCloneSource::admit_owned(mutation,(),full).unwrap_or_else(|(error,_,_)|panic!("original Puzzle source: {error}")));assert!(receipt.fits(full));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,0));
    let(_,heap)=observe_heap_allocations_on_this_thread(||{
     let owner=source.borrow();let owner=owner.get();
@@ -63,7 +70,7 @@ fn puzzle_canonical_native_all_mutation_fields_preserve_serde_originals_and_gran
      _=>{}
     }
    });assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-   let projection=source.project_owned(0,|owner|owner as&dyn ArtifactCanonicalJsonTree);let demand=ArtifactCanonicalJsonTreeCursor::constructor_demand();let(mut cursor,receipt)=ArtifactCanonicalJsonTreeCursor::admit(projection,grant(demand)).unwrap_or_else(|(error,_)|panic!("original Puzzle traversal: {error}"));assert_eq!(receipt.copied_bytes,demand.copy_bytes);
+   let projection_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:source.borrow().binding_copy_bytes(),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};let(projection,_)=source.project_owned(0,|owner|owner as&dyn ArtifactCanonicalJsonTree,projection_grant).unwrap();let demand=ArtifactCanonicalJsonTreeCursor::constructor_demand();let(mut cursor,receipt)=ArtifactCanonicalJsonTreeCursor::admit(projection,grant(demand)).unwrap_or_else(|(error,_)|panic!("original Puzzle traversal: {error}"));assert_eq!(receipt.copied_bytes,demand.copy_bytes);
    let mut output=Vec::new();let mut turns=0;
    while !cursor.terminal_is_empty(){
     assert!(turns<100000,"Puzzle payload ordinal {ordinal} traversal did not settle");if pause==Some(turns){cursor.begin_close();}

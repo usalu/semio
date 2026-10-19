@@ -1,3 +1,4 @@
+use semio_framework_value::ErasedSnapshotRetirement as _;
 use semio_framework_plugin_decl_views::child_view::PreparedChildContentSlot;
 use semio_framework_plugin_decl_views::child_view::PreparedChildContentEntry;
 use semio_framework_plugin_decl_views::child_view::PreparedChildContentIdentity;
@@ -419,7 +420,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         let mut demand = if open.terminal_is_empty() {
             RetirementDemand { release_bytes: open.terminal_drop_byte_demand().ok_or_else(|| input_owner_error("terminal original open frame is undeclared"))?, depth: 1, ..Default::default() }
         } else {
-            RetirementDemand { copy_bytes: open.next_copy_byte_demand()?, capacity_bytes: open.next_capacity_byte_demand(body)?, release_bytes: open.next_release_byte_demand()?, depth: open.next_depth_demand()? }
+            open.next_demand(body)?
         };
         demand.depth = demand.depth.checked_add(2).ok_or_else(|| input_owner_error("original open row/group depth overflow"))?;
         Ok(demand)

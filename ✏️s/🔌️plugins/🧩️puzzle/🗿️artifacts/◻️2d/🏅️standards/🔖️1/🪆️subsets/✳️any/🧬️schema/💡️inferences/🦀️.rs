@@ -1,5 +1,5 @@
-//! 💡️ Puzzle2d inference schema — the fourth schema family alongside snapshot/diff/mutations
 //! (ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING). Directory
+//! 💡️ Puzzle2d inference schema — the fourth schema family alongside snapshot/diff/mutations
 //! shape mirrors `🧬️mutations/`: this file is the family-root assembly (never mod's/includes the
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🎛️flat-position/`, the same
@@ -73,7 +73,9 @@ use {crate::standards::v1::subsets::any::schema::records::Puzzle2dNode, crate::s
 /// (see that file's own `use super::fastened_layout_snapshot;`), so it lives at the inference family
 /// root rather than being duplicated into the slug dir.
 use {semio_s_artifact_puzzle_3d_inferences::flatten::DIAGRAM_HORIZONTAL_SCALE, semio_s_artifact_puzzle_3d_inferences::flatten::DIAGRAM_RADIUS};
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::HashMap;
+use std::collections::HashSet;
+use std::collections::VecDeque;
 fn round_f(v: f64) -> f64 {
     (v * 1_000_000.0).round() / 1_000_000.0
 }

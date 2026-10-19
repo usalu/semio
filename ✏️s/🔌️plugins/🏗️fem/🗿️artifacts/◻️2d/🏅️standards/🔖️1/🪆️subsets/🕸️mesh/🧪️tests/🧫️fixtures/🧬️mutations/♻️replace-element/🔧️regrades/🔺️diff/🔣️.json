@@ -1,15 +1,14 @@
 {
   "nodes": null,
   "elements": {
-    "inserted": [],
     "removed": [],
+    "inserted": [],
     "moved": [],
     "modified": [
       {
         "id": "b2",
         "patch": {
           "kind": "beam",
-          "id": "b2",
           "start": "n5",
           "end": "n6",
           "materialId": "steel_s355",

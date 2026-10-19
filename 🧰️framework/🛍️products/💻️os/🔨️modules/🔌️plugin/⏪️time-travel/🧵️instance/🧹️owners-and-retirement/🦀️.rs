@@ -5,15 +5,15 @@ use super::*;
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
     /// 📨️ Runs one typed command on the store the session edits: the document's own, or the composed member's through
     /// its typed visitor (design §12).
-    pub(super) async fn time_travel_run(&mut self, command: TimeTravelStoreCommand) -> Result<TimeTravelStoreOutput, Fault> {
+    pub(super)  async fn time_travel_run(&mut self, command: TimeTravelStoreCommand,receiving:Option<&mut semio_framework_value::NativeDecodeControl<'_>>) -> Result<TimeTravelStoreOutput, Fault> {
         let TimeTravelCtx { stores, time_travel, child_composition, .. } = self;
         let (store, children) = (&mut stores.store, &mut child_composition.children);
         match time_travel.member.as_mut() {
-            None => time_travel.document.run(store, command).await,
+            None => time_travel.document.run(store, command,receiving).await,
             Some(member) => {
                 let key = member.key.clone();
                 let entry = children.member_mut(key.borrowed()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new(TIME_TRAVEL_MEMBER_GONE_CODE), format!("the composed member {} a history edit targets is gone", member.store())))?;
-                entry.member.visit_member_mut(TimeTravelMemberRun { owners: &mut member.owners, command }).await
+                entry.member.visit_member_mut(TimeTravelMemberRun { owners: &mut member.owners, command,receiving }).await
             }
         }
     }
@@ -60,7 +60,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         let Some(member) = self.time_travel.member.as_ref() else { return Ok(()) };
         let (key, dialect) = (member.key.clone(), member.dialect.clone());
         let stage = self.time_travel.session.stage;
-        let next = match self.time_travel_run(TimeTravelStoreCommand::Read(stage)).await? {
+        let next = match self.time_travel_run(TimeTravelStoreCommand::Read(stage),None).await? {
             TimeTravelStoreOutput::Read(Some((read, revision))) => Some(self.child_composition.child_content_root.with_member_read(key.borrowed(), &dialect, revision, read)?),
             _ => None,
         };
@@ -101,8 +101,13 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     pub fn time_travel_close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep,Fault> {
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if self.time_travel.has_command_receipt(){return Ok(RetainedCloneStep::Progress(Default::default()))}
-        self.time_travel.begin_close();
-        self.time_travel.document.cancel_prepared_command();if let Some(owners)=self.time_travel.member.as_mut().and_then(|member|member.owners.as_deref_mut()){owners.cancel_prepared_command()}
+        if !self.time_travel.closing{
+            let demand=self.time_travel_close_demands(grant.maximum_copy_bytes).map_err(ValueError::into_fault)?;
+            if !protocol::retained_mutation_demand_fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}
+            self.time_travel.begin_close();
+            self.time_travel.document.cancel_prepared_command();if let Some(owners)=self.time_travel.member.as_mut().and_then(|member|member.owners.as_deref_mut()){owners.cancel_prepared_command()}
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))
+        }
         if self.drive_original_discard_command(grant)?{let (original,receipt)=self.time_travel.take_command_receipt().expect("close owns its original command turn receipt");assert_eq!(original,grant);return Ok(RetainedCloneStep::Progress(receipt))}
         if self.drive_original_review_children(grant)?{let (original,receipt)=self.time_travel.take_command_receipt().expect("close owns its original review view turn receipt");assert_eq!(original,grant);return Ok(RetainedCloneStep::Progress(receipt))}
         if let Some(step)=self.time_travel_retire_step(grant)?{return Ok(RetainedCloneStep::Progress(step.progress()));}
